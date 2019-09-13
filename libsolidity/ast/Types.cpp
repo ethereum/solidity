@@ -1781,10 +1781,17 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 		if (isDynamicallySized() && location() == DataLocation::Storage)
 		{
 			members.emplace_back("push", TypeProvider::function(
+				TypePointers{},
 				TypePointers{baseType()},
-				TypePointers{TypeProvider::uint256()},
+				strings{},
 				strings{string()},
+				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
+			));
+			members.emplace_back("push", TypeProvider::function(
+				TypePointers{baseType()},
+				TypePointers{},
 				strings{string()},
+				strings{},
 				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
 			));
 			members.emplace_back("pop", TypeProvider::function(

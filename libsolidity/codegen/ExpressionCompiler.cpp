@@ -842,41 +842,66 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::ArrayPush:
 		{
 			_functionCall.expression().accept(*this);
-			solAssert(function.parameterTypes().size() == 1, "");
-			solAssert(!!function.parameterTypes()[0], "");
-			TypePointer paramType = function.parameterTypes()[0];
-			ArrayType const* arrayType =
-				function.kind() == FunctionType::Kind::ArrayPush ?
-				TypeProvider::array(DataLocation::Storage, paramType) :
-				TypeProvider::array(DataLocation::Storage);
 
-			// stack: ArrayReference
-			arguments[0]->accept(*this);
-			TypePointer const& argType = arguments[0]->annotation().type;
-			// stack: ArrayReference argValue
-			utils().moveToStackTop(argType->sizeOnStack(), 1);
-			// stack: argValue ArrayReference
-			m_context << Instruction::DUP1;
-			ArrayUtils(m_context).incrementDynamicArraySize(*arrayType);
-			// stack: argValue ArrayReference newLength
-			m_context << Instruction::SWAP1;
-			// stack: argValue newLength ArrayReference
-			m_context << u256(1) << Instruction::DUP3 << Instruction::SUB;
-			// stack: argValue newLength ArrayReference (newLength-1)
-			ArrayUtils(m_context).accessIndex(*arrayType, false);
-			// stack: argValue newLength storageSlot slotOffset
-			utils().moveToStackTop(3, argType->sizeOnStack());
-			// stack: newLength storageSlot slotOffset argValue
-			TypePointer type = arguments[0]->annotation().type->closestTemporaryType(arrayType->baseType());
-			solAssert(type, "");
-			utils().convertType(*argType, *type);
-			utils().moveToStackTop(1 + type->sizeOnStack());
-			utils().moveToStackTop(1 + type->sizeOnStack());
-			// stack: newLength argValue storageSlot slotOffset
-			if (function.kind() == FunctionType::Kind::ArrayPush)
-				StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+			if (function.parameterTypes().size() == 0)
+			{
+				auto paramType = function.returnParameterTypes().at(0);
+				solAssert(paramType, "");
+
+				ArrayType const* arrayType =
+					function.kind() == FunctionType::Kind::ArrayPush ?
+					TypeProvider::array(DataLocation::Storage, paramType) :
+					TypeProvider::bytesStorage();
+
+				// stack: ArrayReference
+				m_context << u256(1) << Instruction::DUP2;
+				ArrayUtils(m_context).incrementDynamicArraySize(*arrayType);
+				// stack: ArrayReference 1 newLength
+				m_context << Instruction::SUB;
+				// stack: ArrayReference (newLength-1)
+				ArrayUtils(m_context).accessIndex(*arrayType, false);
+
+				if (arrayType->isByteArray())
+					setLValue<StorageByteArrayElement>(_functionCall);
+				else
+					setLValueToStorageItem(_functionCall);
+			}
 			else
-				StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
+			{
+				solAssert(function.parameterTypes().size() == 1, "");
+				solAssert(!!function.parameterTypes()[0], "");
+				TypePointer paramType = function.parameterTypes()[0];
+				ArrayType const* arrayType =
+					function.kind() == FunctionType::Kind::ArrayPush ?
+					TypeProvider::array(DataLocation::Storage, paramType) :
+					TypeProvider::bytesStorage();
+
+				// stack: ArrayReference
+				arguments[0]->accept(*this);
+				TypePointer const& argType = arguments[0]->annotation().type;
+				// stack: ArrayReference argValue
+				utils().moveToStackTop(argType->sizeOnStack(), 1);
+				// stack: argValue ArrayReference
+				m_context << Instruction::DUP1;
+				ArrayUtils(m_context).incrementDynamicArraySize(*arrayType);
+				// stack: argValue ArrayReference newLength
+				m_context << u256(1) << Instruction::SWAP1 << Instruction::SUB;
+				// stack: argValue ArrayReference (newLength-1)
+				ArrayUtils(m_context).accessIndex(*arrayType, false);
+				// stack: argValue storageSlot slotOffset
+				utils().moveToStackTop(2, argType->sizeOnStack());
+				// stack: storageSlot slotOffset argValue
+				TypePointer type = arguments[0]->annotation().type->closestTemporaryType(arrayType->baseType());
+				solAssert(type, "");
+				utils().convertType(*argType, *type);
+				utils().moveToStackTop(1 + type->sizeOnStack());
+				utils().moveToStackTop(1 + type->sizeOnStack());
+				// stack: argValue storageSlot slotOffset
+				if (function.kind() == FunctionType::Kind::ArrayPush)
+					StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+				else
+					StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
+			}
 			break;
 		}
 		case FunctionType::Kind::ArrayPop:

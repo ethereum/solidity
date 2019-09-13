@@ -4759,7 +4759,8 @@ BOOST_AUTO_TEST_CASE(array_push)
 				x = data[0];
 				data.push(4);
 				y = data[1];
-				l = data.push(3);
+				data.push(3);
+				l = data.length;
 				z = data[2];
 			}
 		}
@@ -4816,11 +4817,13 @@ BOOST_AUTO_TEST_CASE(byte_array_push)
 		contract c {
 			bytes data;
 			function test() public returns (bool x) {
-				if (data.push(0x05) != 1)  return true;
+				data.push(0x05);
+				if (data.length != 1)  return true;
 				if (data[0] != 0x05) return true;
 				data.push(0x04);
 				if (data[1] != 0x04) return true;
-				uint l = data.push(0x03);
+				data.push(0x03);
+				uint l = data.length;
 				if (data[2] != 0x03) return true;
 				if (l != 0x03) return true;
 			}
@@ -4860,7 +4863,8 @@ BOOST_AUTO_TEST_CASE(array_pop)
 			uint[] data;
 			function test() public returns (uint x, uint l) {
 				data.push(7);
-				x = data.push(3);
+				data.push(3);
+				x = data.length;
 				data.pop();
 				x = data.length;
 				data.pop();
@@ -4996,10 +5000,12 @@ BOOST_AUTO_TEST_CASE(byte_array_pop)
 			bytes data;
 			function test() public returns (uint x, uint y, uint l) {
 				data.push(0x07);
-				x = data.push(0x03);
+				data.push(0x03);
+				x = data.length;
 				data.pop();
 				data.pop();
-				y = data.push(0x02);
+				data.push(0x02);
+				y = data.length;
 				l = data.length;
 			}
 		}
