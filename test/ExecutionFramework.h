@@ -92,6 +92,12 @@ public:
 		return callFallbackWithValue(0);
 	}
 
+	bytes const& callLowLevel(bytes const& _data, u256 const& _value)
+	{
+		sendMessage(_data, false, _value);
+		return m_output;
+	}
+
 	bytes const& callContractFunctionWithValueNoEncoding(std::string _sig, u256 const& _value, bytes const& _arguments)
 	{
 		FixedHash<4> hash(dev::keccak256(_sig));
