@@ -1079,10 +1079,14 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			else
 				targetTypes = TypePointers{_functionCall.annotation().type};
 			if (
-				*firstArgType == ArrayType(DataLocation::CallData) ||
-				*firstArgType == ArrayType(DataLocation::CallData, true)
+				auto referenceType = dynamic_cast<ReferenceType const*>(firstArgType);
+				referenceType && referenceType->dataStoredIn(DataLocation::CallData)
 			)
+			{
+				solAssert(referenceType->isImplicitlyConvertibleTo(*TypeProvider::bytesCalldata()), "");
+				utils().convertType(*referenceType, *TypeProvider::bytesCalldata());
 				utils().abiDecode(targetTypes, false);
+			}
 			else
 			{
 				utils().convertType(*firstArgType, *TypeProvider::bytesMemory());
@@ -1503,90 +1507,149 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 
 	Type const& baseType = *_indexAccess.baseExpression().annotation().type;
 
-	if (baseType.category() == Type::Category::Mapping)
+	switch (baseType.category())
 	{
-		// stack: storage_base_ref
-		TypePointer keyType = dynamic_cast<MappingType const&>(baseType).keyType();
-		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
-		if (keyType->isDynamicallySized())
+		case Type::Category::Mapping:
 		{
-			_indexAccess.indexExpression()->accept(*this);
-			utils().fetchFreeMemoryPointer();
-			// stack: base index mem
-			// note: the following operations must not allocate memory!
-			utils().packedEncode(
-				TypePointers{_indexAccess.indexExpression()->annotation().type},
-				TypePointers{keyType}
-			);
-			m_context << Instruction::SWAP1;
-			utils().storeInMemoryDynamic(*TypeProvider::uint256());
-			utils().toSizeAfterFreeMemoryPointer();
-		}
-		else
-		{
-			m_context << u256(0); // memory position
-			appendExpressionCopyToMemory(*keyType, *_indexAccess.indexExpression());
-			m_context << Instruction::SWAP1;
-			solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
-			utils().storeInMemoryDynamic(*TypeProvider::uint256());
-			m_context << u256(0);
-		}
-		m_context << Instruction::KECCAK256;
-		m_context << u256(0);
-		setLValueToStorageItem(_indexAccess);
-	}
-	else if (baseType.category() == Type::Category::Array)
-	{
-		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
-		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
-
-		acceptAndConvert(*_indexAccess.indexExpression(), *TypeProvider::uint256(), true);
-		// stack layout: <base_ref> [<length>] <index>
-		switch (arrayType.location())
-		{
-		case DataLocation::Storage:
-			ArrayUtils(m_context).accessIndex(arrayType);
-			if (arrayType.isByteArray())
+			// stack: storage_base_ref
+			TypePointer keyType = dynamic_cast<MappingType const&>(baseType).keyType();
+			solAssert(_indexAccess.indexExpression(), "Index expression expected.");
+			if (keyType->isDynamicallySized())
 			{
-				solAssert(!arrayType.isString(), "Index access to string is not allowed.");
-				setLValue<StorageByteArrayElement>(_indexAccess);
+				_indexAccess.indexExpression()->accept(*this);
+				utils().fetchFreeMemoryPointer();
+				// stack: base index mem
+				// note: the following operations must not allocate memory!
+				utils().packedEncode(
+					TypePointers{_indexAccess.indexExpression()->annotation().type},
+					TypePointers{keyType}
+				);
+				m_context << Instruction::SWAP1;
+				utils().storeInMemoryDynamic(*TypeProvider::uint256());
+				utils().toSizeAfterFreeMemoryPointer();
 			}
 			else
-				setLValueToStorageItem(_indexAccess);
-			break;
-		case DataLocation::Memory:
-			ArrayUtils(m_context).accessIndex(arrayType);
-			setLValue<MemoryItem>(_indexAccess, *_indexAccess.annotation().type, !arrayType.isByteArray());
-			break;
-		case DataLocation::CallData:
-			ArrayUtils(m_context).accessCallDataArrayElement(arrayType);
+			{
+				m_context << u256(0); // memory position
+				appendExpressionCopyToMemory(*keyType, *_indexAccess.indexExpression());
+				m_context << Instruction::SWAP1;
+				solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
+				utils().storeInMemoryDynamic(*TypeProvider::uint256());
+				m_context << u256(0);
+			}
+			m_context << Instruction::KECCAK256;
+			m_context << u256(0);
+			setLValueToStorageItem(_indexAccess);
 			break;
 		}
-	}
-	else if (baseType.category() == Type::Category::FixedBytes)
-	{
-		FixedBytesType const& fixedBytesType = dynamic_cast<FixedBytesType const&>(baseType);
-		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
+		case Type::Category::ArraySlice:
+		{
+			auto const& arrayType = dynamic_cast<ArraySliceType const&>(baseType).arrayType();
+			solAssert(arrayType.location() == DataLocation::CallData && arrayType.isDynamicallySized(), "");
+			solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
-		acceptAndConvert(*_indexAccess.indexExpression(), *TypeProvider::uint256(), true);
-		// stack layout: <value> <index>
-		// check out-of-bounds access
-		m_context << u256(fixedBytesType.numBytes());
-		m_context << Instruction::DUP2 << Instruction::LT << Instruction::ISZERO;
-		// out-of-bounds access throws exception
-		m_context.appendConditionalInvalid();
+			acceptAndConvert(*_indexAccess.indexExpression(), *TypeProvider::uint256(), true);
+			ArrayUtils(m_context).accessCallDataArrayElement(arrayType);
+			break;
 
-		m_context << Instruction::BYTE;
-		utils().leftShiftNumberOnStack(256 - 8);
+		}
+		case Type::Category::Array:
+		{
+			ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
+			solAssert(_indexAccess.indexExpression(), "Index expression expected.");
+
+			acceptAndConvert(*_indexAccess.indexExpression(), *TypeProvider::uint256(), true);
+			// stack layout: <base_ref> [<length>] <index>
+			switch (arrayType.location())
+			{
+				case DataLocation::Storage:
+					ArrayUtils(m_context).accessIndex(arrayType);
+					if (arrayType.isByteArray())
+					{
+						solAssert(!arrayType.isString(), "Index access to string is not allowed.");
+						setLValue<StorageByteArrayElement>(_indexAccess);
+					}
+					else
+						setLValueToStorageItem(_indexAccess);
+					break;
+				case DataLocation::Memory:
+					ArrayUtils(m_context).accessIndex(arrayType);
+					setLValue<MemoryItem>(_indexAccess, *_indexAccess.annotation().type, !arrayType.isByteArray());
+					break;
+				case DataLocation::CallData:
+					ArrayUtils(m_context).accessCallDataArrayElement(arrayType);
+					break;
+			}
+			break;
+		}
+		case Type::Category::FixedBytes:
+		{
+			FixedBytesType const& fixedBytesType = dynamic_cast<FixedBytesType const&>(baseType);
+			solAssert(_indexAccess.indexExpression(), "Index expression expected.");
+
+			acceptAndConvert(*_indexAccess.indexExpression(), *TypeProvider::uint256(), true);
+			// stack layout: <value> <index>
+			// check out-of-bounds access
+			m_context << u256(fixedBytesType.numBytes());
+			m_context << Instruction::DUP2 << Instruction::LT << Instruction::ISZERO;
+			// out-of-bounds access throws exception
+			m_context.appendConditionalInvalid();
+
+			m_context << Instruction::BYTE;
+			utils().leftShiftNumberOnStack(256 - 8);
+			break;
+		}
+		case Type::Category::TypeType:
+		{
+			solAssert(baseType.sizeOnStack() == 0, "");
+			solAssert(_indexAccess.annotation().type->sizeOnStack() == 0, "");
+			// no-op - this seems to be a lone array type (`structType[];`)
+			break;
+		}
+		default:
+			solAssert(false, "Index access only allowed for mappings or arrays.");
+			break;
 	}
-	else if (baseType.category() == Type::Category::TypeType)
-	{
-		solAssert(baseType.sizeOnStack() == 0, "");
-		solAssert(_indexAccess.annotation().type->sizeOnStack() == 0, "");
-		// no-op - this seems to be a lone array type (`structType[];`)
-	}
+
+	return false;
+}
+
+bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
+{
+	CompilerContext::LocationSetter locationSetter(m_context, _indexAccess);
+	_indexAccess.baseExpression().accept(*this);
+
+	Type const& baseType = *_indexAccess.baseExpression().annotation().type;
+
+	ArrayType const *arrayType = dynamic_cast<ArrayType const*>(&baseType);
+	if (!arrayType)
+		if (ArraySliceType const* sliceType = dynamic_cast<ArraySliceType const*>(&baseType))
+			arrayType = &sliceType->arrayType();
+
+	solAssert(arrayType, "");
+	solUnimplementedAssert(arrayType->location() == DataLocation::CallData && arrayType->isDynamicallySized(), "");
+
+	if (_indexAccess.startExpression())
+		acceptAndConvert(*_indexAccess.startExpression(), *TypeProvider::uint256());
 	else
-		solAssert(false, "Index access only allowed for mappings or arrays.");
+		m_context << u256(0);
+	if (_indexAccess.endExpression())
+		acceptAndConvert(*_indexAccess.endExpression(), *TypeProvider::uint256());
+	else
+		m_context << Instruction::DUP2;
+
+	m_context.appendInlineAssembly(
+		Whiskers(R"({
+					if gt(sliceStart, sliceEnd) { revert(0, 0) }
+					if gt(sliceEnd, length) { revert(0, 0) }
+
+					offset := add(offset, mul(sliceStart, <stride>))
+					length := sub(sliceEnd, sliceStart)
+				})")("stride", toString(arrayType->calldataStride())).render(),
+		{"offset", "length", "sliceStart", "sliceEnd"}
+	);
+
+	m_context << Instruction::POP << Instruction::POP;
 
 	return false;
 }

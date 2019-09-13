@@ -162,8 +162,14 @@ private:
 	/// or to a type name. For this to be valid, path cannot be empty, but indices can be empty.
 	struct IndexAccessedPath
 	{
+		struct Index
+		{
+			ASTPointer<Expression> start;
+			std::optional<ASTPointer<Expression>> end;
+			langutil::SourceLocation location;
+		};
 		std::vector<ASTPointer<PrimaryExpression>> path;
-		std::vector<std::pair<ASTPointer<Expression>, langutil::SourceLocation>> indices;
+		std::vector<Index> indices;
 		bool empty() const;
 	};
 

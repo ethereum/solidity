@@ -981,6 +981,17 @@ void CompilerUtils::convertType(
 		}
 		break;
 	}
+	case Type::Category::ArraySlice:
+	{
+		auto& typeOnStack = dynamic_cast<ArraySliceType const&>(_typeOnStack);
+		solAssert(_targetType == typeOnStack.arrayType(), "");
+		solUnimplementedAssert(
+			typeOnStack.arrayType().location() == DataLocation::CallData &&
+			typeOnStack.arrayType().isDynamicallySized(),
+			""
+		);
+		break;
+	}
 	case Type::Category::Struct:
 	{
 		solAssert(targetTypeCategory == stackTypeCategory, "");

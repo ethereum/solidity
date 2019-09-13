@@ -1643,6 +1643,32 @@ private:
 };
 
 /**
+ * Index range access to an array. Example: a[2:3]
+ */
+class IndexRangeAccess: public Expression
+{
+public:
+	IndexRangeAccess(
+		SourceLocation const& _location,
+		ASTPointer<Expression> const& _base,
+		ASTPointer<Expression> const& _start,
+		ASTPointer<Expression> const& _end
+	):
+		Expression(_location), m_base(_base), m_start(_start), m_end(_end) {}
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	Expression const& baseExpression() const { return *m_base; }
+	Expression const* startExpression() const { return m_start.get(); }
+	Expression const* endExpression() const { return m_end.get(); }
+
+private:
+	ASTPointer<Expression> m_base;
+	ASTPointer<Expression> m_start;
+	ASTPointer<Expression> m_end;
+};
+
+/**
  * Primary expression, i.e. an expression that cannot be divided any further. Examples are literals
  * or variable references.
  */

@@ -823,11 +823,6 @@ string YulUtilFunctions::memoryArrayIndexAccessFunction(ArrayType const& _type)
 	});
 }
 
-string YulUtilFunctions::calldataArrayIndexAccessFunction(ArrayType const& /*_type*/)
-{
-	solUnimplemented("Calldata arrays not yet implemented!");
-}
-
 string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 {
 	solAssert(!_type.isByteArray(), "");

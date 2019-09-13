@@ -941,6 +941,11 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 		solAssert(false, "Index access only allowed for mappings or arrays.");
 }
 
+void IRGeneratorForStatements::endVisit(IndexRangeAccess const&)
+{
+	solUnimplementedAssert(false, "Index range accesses not yet implemented.");
+}
+
 void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 {
 	Declaration const* declaration = _identifier.annotation().referencedDeclaration;

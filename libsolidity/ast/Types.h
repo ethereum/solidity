@@ -161,7 +161,7 @@ public:
 
 	enum class Category
 	{
-		Address, Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array,
+		Address, Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array, ArraySlice,
 		FixedBytes, Contract, Struct, Function, Enum, Tuple,
 		Mapping, TypeType, Modifier, Magic, Module,
 		InaccessibleDynamic
@@ -771,6 +771,35 @@ private:
 	u256 m_length;
 	mutable boost::optional<TypeResult> m_interfaceType;
 	mutable boost::optional<TypeResult> m_interfaceType_library;
+};
+
+class ArraySliceType: public ReferenceType
+{
+public:
+	explicit ArraySliceType(ArrayType const& _arrayType): ReferenceType(_arrayType.location()), m_arrayType(_arrayType) {}
+	Category category() const override { return Category::ArraySlice; }
+
+	BoolResult isImplicitlyConvertibleTo(Type const& _other) const override;
+	std::string richIdentifier() const override;
+	bool operator==(Type const& _other) const override;
+	unsigned calldataEncodedSize(bool) const override { solAssert(false, ""); }
+	unsigned calldataEncodedTailSize() const override { return 32; }
+	bool isDynamicallySized() const override { return true; }
+	bool isDynamicallyEncoded() const override { return true; }
+	bool canLiveOutsideStorage() const override { return m_arrayType.canLiveOutsideStorage(); }
+	unsigned sizeOnStack() const override { return 2; }
+	std::string toString(bool _short) const override;
+
+	/// @returns true if this is valid to be stored in calldata
+	bool validForCalldata() const { return m_arrayType.validForCalldata(); }
+
+	ArrayType const& arrayType() const { return m_arrayType; }
+	u256 memoryDataSize() const override { solAssert(false, ""); }
+
+	std::unique_ptr<ReferenceType> copyForLocation(DataLocation, bool) const override { solAssert(false, ""); }
+
+private:
+	ArrayType const& m_arrayType;
 };
 
 /**

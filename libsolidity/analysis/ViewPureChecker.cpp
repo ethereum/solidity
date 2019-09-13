@@ -413,6 +413,13 @@ void ViewPureChecker::endVisit(IndexAccess const& _indexAccess)
 	}
 }
 
+void ViewPureChecker::endVisit(IndexRangeAccess const& _indexRangeAccess)
+{
+	bool writes = _indexRangeAccess.annotation().lValueRequested;
+	if (_indexRangeAccess.baseExpression().annotation().type->dataStoredIn(DataLocation::Storage))
+		reportMutability(writes ? StateMutability::NonPayable : StateMutability::View, _indexRangeAccess.location());
+}
+
 void ViewPureChecker::endVisit(ModifierInvocation const& _modifier)
 {
 	solAssert(_modifier.name(), "");

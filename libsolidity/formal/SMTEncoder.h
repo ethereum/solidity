@@ -86,6 +86,7 @@ protected:
 	void endVisit(Return const& _node) override;
 	bool visit(MemberAccess const& _node) override;
 	void endVisit(IndexAccess const& _node) override;
+	void endVisit(IndexRangeAccess const& _node) override;
 	bool visit(InlineAssembly const& _node) override;
 
 	/// Do not visit subtree if node is a RationalNumber.
