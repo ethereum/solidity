@@ -475,7 +475,8 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		[=]() -> Pattern {
 			return {Instruction::SHL, {Y, X}};
 		},
-		false
+		// Actually only changes the order, does not remove.
+		true
 	});
 	rules.push_back({
 		// MUL(SHL(X, 1), Y) -> SHL(X, Y)
@@ -492,7 +493,8 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		[=]() -> Pattern {
 			return {Instruction::SHR, {Y, X}};
 		},
-		false
+		// Actually only changes the order, does not remove.
+		true
 	});
 
 	std::function<bool()> feasibilityFunction = [=]() {
