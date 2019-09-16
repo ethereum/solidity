@@ -10,6 +10,8 @@ All function calls are virtual, which means that the most derived function
 is called, except when the contract name is explicitly given or the
 ``super`` keyword is used.
 
+All functions overriding a base function must specify the ``override`` keyword.
+
 When a contract inherits from other contracts, only a single
 contract is created on the blockchain, and the code from all the base contracts
 is compiled into the created contract. This means that all internal calls
@@ -74,7 +76,7 @@ Details are given in the following example.
         // types of output parameters, that causes an error.
         // Both local and message-based function calls take these overrides
         // into account.
-        function kill() public {
+        function kill() public override {
             if (msg.sender == owner) {
                 Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
                 NameReg(config.lookup(1)).unregister();
@@ -94,6 +96,7 @@ Details are given in the following example.
             if (msg.sender == owner) info = newInfo;
         }
 
+        function kill() public override (Mortal, Named) { Named.kill(); }
         function get() public view returns(uint r) { return info; }
 
         uint info;
@@ -117,20 +120,20 @@ seen in the following example::
     }
 
     contract Base1 is mortal {
-        function kill() public { /* do cleanup 1 */ mortal.kill(); }
+        function kill() public override { /* do cleanup 1 */ mortal.kill(); }
     }
 
     contract Base2 is mortal {
-        function kill() public { /* do cleanup 2 */ mortal.kill(); }
+        function kill() public override { /* do cleanup 2 */ mortal.kill(); }
     }
 
     contract Final is Base1, Base2 {
+        function kill() public override(Base1, Base2) { Base2.kill(); }
     }
 
-A call to ``Final.kill()`` will call ``Base2.kill`` as the most
-derived override, but this function will bypass
-``Base1.kill``, basically because it does not even know about
-``Base1``.  The way around this is to use ``super``::
+A call to ``Final.kill()`` will call ``Base2.kill`` because we specify it
+explicitly in the final override, but this function will bypass
+``Base1.kill``. The way around this is to use ``super``::
 
     pragma solidity >=0.4.22 <0.7.0;
 
@@ -146,15 +149,16 @@ derived override, but this function will bypass
     }
 
     contract Base1 is mortal {
-        function kill() public { /* do cleanup 1 */ super.kill(); }
+        function kill() public override { /* do cleanup 1 */ super.kill(); }
     }
 
 
     contract Base2 is mortal {
-        function kill() public { /* do cleanup 2 */ super.kill(); }
+        function kill() public override { /* do cleanup 2 */ super.kill(); }
     }
 
     contract Final is Base1, Base2 {
+        function kill() public override(Base1, Base2) { Base2.kill(); }
     }
 
 If ``Base2`` calls a function of ``super``, it does not simply

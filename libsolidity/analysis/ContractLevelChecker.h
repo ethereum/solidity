@@ -23,6 +23,7 @@
 
 #include <libsolidity/ast/ASTForward.h>
 #include <map>
+#include <set>
 
 namespace langutil
 {
@@ -34,6 +35,12 @@ namespace dev
 namespace solidity
 {
 
+struct LessFunction
+{
+	bool operator()(ModifierDefinition const* _a, ModifierDefinition const* _b) const;
+	bool operator()(FunctionDefinition const* _a, FunctionDefinition const* _b) const;
+};
+
 /**
  * Component that verifies overloads, abstract contracts, function clashes and others
  * checks at contract or function level.
@@ -41,6 +48,9 @@ namespace solidity
 class ContractLevelChecker
 {
 public:
+	using FunctionSet = std::multiset<FunctionDefinition const*, LessFunction>;
+	using ModifierSet = std::multiset<ModifierDefinition const*, LessFunction>;
+
 	/// @param _errorReporter provides the error logging functionality.
 	explicit ContractLevelChecker(langutil::ErrorReporter& _errorReporter):
 		m_errorReporter(_errorReporter)
@@ -51,6 +61,7 @@ public:
 	bool check(ContractDefinition const& _contract);
 
 private:
+
 	/// Checks that two functions defined in this contract with the same name have different
 	/// arguments and that there is at most one constructor.
 	void checkDuplicateFunctions(ContractDefinition const& _contract);
@@ -58,10 +69,12 @@ private:
 	template <class T>
 	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions, std::string _message);
 	void checkIllegalOverrides(ContractDefinition const& _contract);
-	/// Reports a type error with an appropriate message if overridden function signature differs.
+	/// Returns false and reports a type error with an appropriate
+	/// message if overridden function signature differs.
 	/// Also stores the direct super function in the AST annotations.
-	void checkFunctionOverride(FunctionDefinition const& function, FunctionDefinition const& super);
-	void overrideError(FunctionDefinition const& function, FunctionDefinition const& super, std::string message);
+	bool checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super);
+	void overrideListError(FunctionDefinition const& function, std::set<ContractDefinition const*> _secondary, std::string const& _message1, std::string const& _message2);
+	void overrideError(CallableDeclaration const& function, CallableDeclaration const& super, std::string message);
 	void checkAbstractFunctions(ContractDefinition const& _contract);
 	void checkBaseConstructorArguments(ContractDefinition const& _contract);
 	void annotateBaseConstructorArguments(
@@ -80,8 +93,22 @@ private:
 	void checkLibraryRequirements(ContractDefinition const& _contract);
 	/// Checks base contracts for ABI compatibility
 	void checkBaseABICompatibility(ContractDefinition const& _contract);
+	/// Checks for functions in different base contracts that conflict with each
+	/// other and thus need to be overridden explicitly
+	void checkAmbiguousOverrides(ContractDefinition const& _contract) const;
+	/// Resolves an override list of UserDefinedTypeNames to a list of contracts
+	std::set<ContractDefinition const*> resolveOverrideList(OverrideSpecifier const& _overrides) const;
+
+
+	FunctionSet const& getBaseFunctions(ContractDefinition const* _contract) const;
+	ModifierSet const& getBaseModifiers(ContractDefinition const* _contract) const;
 
 	langutil::ErrorReporter& m_errorReporter;
+
+	/// Map of multisets that contain all overridable functions for the given
+	/// contract
+	std::map<ContractDefinition const*, FunctionSet> mutable m_contractBaseFunctions;
+	std::map<ContractDefinition const*, ModifierSet> mutable m_contractBaseModifiers;
 };
 
 }

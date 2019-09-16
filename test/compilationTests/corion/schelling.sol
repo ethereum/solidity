@@ -134,13 +134,13 @@ contract schelling is module, announcementTypes, schellingVars {
     /*
         module callbacks
     */
-    function replaceModule(address payable addr) external returns (bool) {
+    function replaceModule(address payable addr) external override returns (bool) {
         require( super.isModuleHandler(msg.sender) );
         require( db.replaceOwner(addr) );
         super._replaceModule(addr);
         return true;
     }
-    function transferEvent(address payable from, address payable to, uint256 value) external returns (bool) {
+    function transferEvent(address payable from, address payable to, uint256 value) external override returns (bool) {
         /*
             Transaction completed. This function can be called only by the ModuleHandler.
             If this contract is the receiver, the amount will be added to the prize pool of the current round.

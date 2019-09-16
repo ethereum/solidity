@@ -8,10 +8,10 @@ interface I {
 }
 contract C is I {
     uint dummy;
-    function f(S memory) public pure {}
-    function g(S memory) public view { dummy; }
-    function h(S memory) public { dummy = 42; }
-    function i(S memory) public payable {}
+    function f(S memory) public override pure {}
+    function g(S memory) public override view { dummy; }
+    function h(S memory) public override { dummy = 42; }
+    function i(S memory) public override payable {}
 }
 // ----
 // Warning: (0-33): Experimental features are turned on. Do not use experimental features on live deployments.

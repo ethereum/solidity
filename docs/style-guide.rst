@@ -98,11 +98,11 @@ Yes::
 
 
     contract B is A {
-        function spam() public pure {
+        function spam() public override pure {
             // ...
         }
 
-        function ham() public pure {
+        function ham() public override pure {
             // ...
         }
     }

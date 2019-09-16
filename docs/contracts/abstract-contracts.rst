@@ -23,7 +23,7 @@ Such contracts cannot be compiled (even if they contain implemented functions al
     }
 
     contract Cat is Feline {
-        function utterance() public returns (bytes32) { return "miaow"; }
+        function utterance() public override returns (bytes32) { return "miaow"; }
     }
 
 If a contract inherits from an abstract contract and does not implement all non-implemented functions by overriding, it will itself be abstract.

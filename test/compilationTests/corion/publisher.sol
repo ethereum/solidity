@@ -9,7 +9,7 @@ contract publisher is announcementTypes, module, safeMath {
     /*
         module callbacks
     */
-    function transferEvent(address payable from, address payable to, uint256 value) external returns (bool success) {
+    function transferEvent(address payable from, address payable to, uint256 value) external override returns (bool success) {
         /*
             Transaction completed. This function is available only for moduleHandler
             If a transaction is carried out from or to an address which participated in the objection of an announcement, its objection purport is automatically set

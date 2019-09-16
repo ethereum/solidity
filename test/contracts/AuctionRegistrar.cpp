@@ -55,11 +55,11 @@ contract Registrar is NameRegister {
 	event PrimaryChanged(string indexed name, address indexed addr);
 
 	function owner(string memory _name) public view returns (address o_owner);
-	function addr(string memory _name) public view returns (address o_address);
+	function addr(string memory _name) public override view returns (address o_address);
 	function subRegistrar(string memory _name) public view returns (address o_subRegistrar);
 	function content(string memory _name) public view returns (bytes32 o_content);
 
-	function name(address _owner) public view returns (string memory o_name);
+	function name(address _owner) public override view returns (string memory o_name);
 }
 
 contract AuctionSystem {
@@ -119,7 +119,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		// TODO: Populate with hall-of-fame.
 	}
 
-	function onAuctionEnd(string memory _name) internal {
+	function onAuctionEnd(string memory _name) internal override {
 		Auction storage auction = m_auctions[_name];
 		Record storage record = m_toRecord[_name];
 		address previousOwner = record.owner;
@@ -204,11 +204,11 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		return true;
 	}
 
-	function owner(string memory _name) public view returns (address) { return m_toRecord[_name].owner; }
-	function addr(string memory _name) public view returns (address) { return m_toRecord[_name].primary; }
-	function subRegistrar(string memory _name) public view returns (address) { return m_toRecord[_name].subRegistrar; }
-	function content(string memory _name) public view returns (bytes32) { return m_toRecord[_name].content; }
-	function name(address _addr) public view returns (string memory o_name) { return m_toName[_addr]; }
+	function owner(string memory _name) public override view returns (address) { return m_toRecord[_name].owner; }
+	function addr(string memory _name) public override view returns (address) { return m_toRecord[_name].primary; }
+	function subRegistrar(string memory _name) public override view returns (address) { return m_toRecord[_name].subRegistrar; }
+	function content(string memory _name) public override view returns (bytes32) { return m_toRecord[_name].content; }
+	function name(address _addr) public override view returns (string memory o_name) { return m_toName[_addr]; }
 
 	mapping (address => string) m_toName;
 	mapping (string => Record) m_toRecord;
