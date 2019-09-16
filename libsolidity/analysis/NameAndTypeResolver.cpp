@@ -570,6 +570,7 @@ bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
 	m_globalContext.setCurrentContract(_contract);
 	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentThis(), nullptr, false, true);
 	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentSuper(), nullptr, false, true);
+	m_currentContract = &_contract;
 
 	registerDeclaration(_contract, true);
 	_contract.annotation().canonicalName = currentCanonicalName();
@@ -578,6 +579,7 @@ bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
 
 void DeclarationRegistrationHelper::endVisit(ContractDefinition&)
 {
+	m_currentContract = nullptr;
 	closeCurrentScope();
 }
 
@@ -615,6 +617,7 @@ bool DeclarationRegistrationHelper::visit(FunctionDefinition& _function)
 {
 	registerDeclaration(_function, true);
 	m_currentFunction = &_function;
+	_function.annotation().contract = m_currentContract;
 	return true;
 }
 
