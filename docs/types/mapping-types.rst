@@ -17,7 +17,8 @@ byte-representation is all zeros, a type's :ref:`default value <default-value>`.
 mapping, only its ``keccak256`` hash is used to look up the value.
 
 Because of this, mappings do not have a length or a concept of a key or
-value being set.
+value being set, and therefore cannot be erased without extra information
+regarding the assigned keys (see :ref:`clearing-mappings`).
 
 Mappings can only have a data location of ``storage`` and thus
 are allowed for state variables, as storage reference types
