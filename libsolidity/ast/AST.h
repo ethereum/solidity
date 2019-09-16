@@ -596,21 +596,25 @@ public:
 		ASTPointer<ASTString> const& _name,
 		Declaration::Visibility _visibility,
 		ASTPointer<ParameterList> const& _parameters,
+		ASTPointer<OverrideSpecifier> const& _overrides = nullptr,
 		ASTPointer<ParameterList> const& _returnParameters = ASTPointer<ParameterList>()
 	):
 		Declaration(_location, _name, _visibility),
 		m_parameters(_parameters),
+		m_overrides(_overrides),
 		m_returnParameters(_returnParameters)
 	{
 	}
 
 	std::vector<ASTPointer<VariableDeclaration>> const& parameters() const { return m_parameters->parameters(); }
+	ASTPointer<OverrideSpecifier> const& overrides() const { return m_overrides; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	ParameterList const& parameterList() const { return *m_parameters; }
 	ASTPointer<ParameterList> const& returnParameterList() const { return m_returnParameters; }
 
 protected:
 	ASTPointer<ParameterList> m_parameters;
+	ASTPointer<OverrideSpecifier> m_overrides;
 	ASTPointer<ParameterList> m_returnParameters;
 };
 
@@ -656,12 +660,11 @@ public:
 		ASTPointer<ParameterList> const& _returnParameters,
 		ASTPointer<Block> const& _body
 	):
-		CallableDeclaration(_location, _name, _visibility, _parameters, _returnParameters),
+		CallableDeclaration(_location, _name, _visibility, _parameters, _overrides, _returnParameters),
 		Documented(_documentation),
 		ImplementationOptional(_body != nullptr),
 		m_stateMutability(_stateMutability),
 		m_isConstructor(_isConstructor),
-		m_overrides(_overrides),
 		m_functionModifiers(_modifiers),
 		m_body(_body)
 	{}
@@ -671,8 +674,8 @@ public:
 
 	StateMutability stateMutability() const { return m_stateMutability; }
 	bool isConstructor() const { return m_isConstructor; }
-	ASTPointer<OverrideSpecifier> const& overrides() const { return m_overrides; }
 	bool isFallback() const { return !m_isConstructor && name().empty(); }
+	bool isOverridable() const { return !isFallback() && !isConstructor(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
@@ -700,7 +703,6 @@ public:
 private:
 	StateMutability m_stateMutability;
 	bool m_isConstructor;
-	ASTPointer<OverrideSpecifier> m_overrides;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
 	ASTPointer<Block> m_body;
 };
@@ -814,9 +816,10 @@ public:
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<ASTString> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
+		ASTPointer<OverrideSpecifier> const& _overrides,
 		ASTPointer<Block> const& _body
 	):
-		CallableDeclaration(_location, _name, Visibility::Internal, _parameters),
+		CallableDeclaration(_location, _name, Visibility::Internal, _parameters, _overrides),
 		Documented(_documentation),
 		m_body(_body)
 	{

@@ -808,9 +808,15 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 	}
 	else
 		parameters = createEmptyParameterList();
+
+	ASTPointer<OverrideSpecifier> overrides;
+
+	if (m_scanner->currentToken() == Token::Override)
+		overrides = parseOverrideSpecifier();
+
 	ASTPointer<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
-	return nodeFactory.createNode<ModifierDefinition>(name, docstring, parameters, block);
+	return nodeFactory.createNode<ModifierDefinition>(name, docstring, parameters, overrides, block);
 }
 
 ASTPointer<EventDefinition> Parser::parseEventDefinition()
