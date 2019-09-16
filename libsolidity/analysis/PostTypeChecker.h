@@ -37,6 +37,7 @@ namespace solidity
 /**
  * This module performs analyses on the AST that are done after type checking and assignments of types:
  *  - whether there are circular references in constant state variables
+ *  - whether override specifiers are actually contracts
  * @TODO factor out each use-case into an individual class (but do the traversal only once)
  */
 class PostTypeChecker: private ASTConstVisitor
@@ -53,6 +54,7 @@ private:
 
 	bool visit(ContractDefinition const& _contract) override;
 	void endVisit(ContractDefinition const& _contract) override;
+	void endVisit(OverrideSpecifier const& _overrideSpecifier) override;
 
 	bool visit(VariableDeclaration const& _variable) override;
 	void endVisit(VariableDeclaration const& _variable) override;
