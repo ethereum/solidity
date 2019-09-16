@@ -13,6 +13,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Fix internal error when popping a dynamic storage array of mappings.
 
 
 ### 0.5.11 (2019-08-12)
