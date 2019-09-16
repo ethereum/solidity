@@ -33,6 +33,18 @@ using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
+namespace {
+
+template <class T>
+bool hasEqualNameAndParameters(T const& _a, T const& _b)
+{
+	return _a.name() == _b.name() &&
+		FunctionType(_a).asCallableFunction(false)->hasEqualParameterTypes(
+			*FunctionType(_b).asCallableFunction(false)
+		);
+}
+
+}
 
 bool ContractLevelChecker::check(ContractDefinition const& _contract)
 {
@@ -111,9 +123,7 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 			SecondarySourceLocation ssl;
 
 			for (size_t j = i + 1; j < overloads.size(); ++j)
-				if (FunctionType(*overloads[i]).asCallableFunction(false)->hasEqualParameterTypes(
-					*FunctionType(*overloads[j]).asCallableFunction(false))
-				)
+				if (hasEqualNameAndParameters(*overloads[i], *overloads[j]))
 				{
 					ssl.append("Other declaration is here:", overloads[j]->location());
 					reported.insert(j);
