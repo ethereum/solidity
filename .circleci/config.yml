@@ -613,7 +613,7 @@ workflows:
       # basic checks
       - chk_spelling: *workflow_trigger_on_tags
       - chk_coding_style: *workflow_trigger_on_tags
-      - chk_docs_examples: *workflow_trigger_on_tags
+      # DISABLED FOR 0.6.0 - chk_docs_examples: *workflow_trigger_on_tags
       - chk_buglist: *workflow_trigger_on_tags
       - chk_proofs: *workflow_trigger_on_tags
 
