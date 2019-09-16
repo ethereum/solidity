@@ -19,7 +19,7 @@
  */
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
-#include <libdevcore/SwarmHash.h>
+#include <libdevcore/IpfsHash.h>
 #include <libevmasm/GasMeter.h>
 
 #include <cmath>
@@ -40,18 +40,18 @@ namespace test
 #define CHECK_DEPLOY_GAS(_gasNoOpt, _gasOpt) \
 	do \
 	{ \
-		u256 bzzr1Cost = GasMeter::dataGas(dev::bzzr1Hash(m_compiler.metadata(m_compiler.lastContractName())).asBytes(), true); \
+		u256 ipfsCost = GasMeter::dataGas(dev::ipfsHash(m_compiler.metadata(m_compiler.lastContractName())), true); \
 		u256 gasOpt{_gasOpt}; \
 		u256 gasNoOpt{_gasNoOpt}; \
 		u256 gas = m_optimiserSettings == OptimiserSettings::minimal() ? gasNoOpt : gasOpt; \
 		BOOST_CHECK_MESSAGE( \
-			m_gasUsed >= bzzr1Cost, \
+			m_gasUsed >= ipfsCost, \
 			"Gas used: " + \
 			m_gasUsed.str() + \
-			" is less than the data cost for the bzzr1 hash: " + \
-			u256(bzzr1Cost).str() \
+			" is less than the data cost for the IPFS hash: " + \
+			u256(ipfsCost).str() \
 		); \
-		u256 gasUsed = m_gasUsed - bzzr1Cost; \
+		u256 gasUsed = m_gasUsed - ipfsCost; \
 		BOOST_CHECK_MESSAGE( \
 			gas == gasUsed, \
 			"Gas used: " + \
@@ -96,17 +96,18 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	compileAndRun(sourceCode);
 
 	if (Options::get().evmVersion() <= EVMVersion::byzantium())
-		CHECK_DEPLOY_GAS(134071, 130763);
+		CHECK_DEPLOY_GAS(134209, 130895);
 	// This is only correct on >=Constantinople.
 	else if (Options::get().useABIEncoderV2)
 	{
 		if (Options::get().optimizeYul)
-			CHECK_DEPLOY_GAS(151455, 127653);
+			CHECK_DEPLOY_GAS(127785, 127785);
 		else
-			CHECK_DEPLOY_GAS(151455, 135371);
+			CHECK_DEPLOY_GAS(151587, 135371);
 	}
 	else
-		CHECK_DEPLOY_GAS(126861, 119591);
+		CHECK_DEPLOY_GAS(126993, 119723);
+
 	if (Options::get().evmVersion() >= EVMVersion::byzantium())
 	{
 		callContractFunction("f()");

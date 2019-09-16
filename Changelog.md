@@ -4,10 +4,12 @@ Breaking changes:
  * ABI: remove the deprecated ``constant`` and ``payable`` fields.
  * ABI: the ``type`` field is now required and no longer specified to default to ``function``.
  * Commandline interface: remove the text-based ast printer (``--ast``).
+ * Command line interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
+ * Command line interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
  * General: Disallow explicit conversions from external function types to ``address`` and add a member called ``address`` to them as replacement.
  * General: New reserved keywords: ``virtual``.
+ * Standard JSON Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
  * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
- * Command line interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
 
 
 Language Features:
