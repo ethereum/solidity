@@ -56,6 +56,7 @@ contract StandardMarket is Market {
     /// @param _funding Funding amount
     function fund(uint _funding)
         public
+        override
         isCreator
         atStage(Stages.MarketCreated)
     {
@@ -70,6 +71,7 @@ contract StandardMarket is Market {
 
     /// @dev Allows market creator to close the markets by transferring all remaining outcome tokens to the creator
     function close()
+        override
         public
         isCreator
         atStage(Stages.MarketFunded)
@@ -85,6 +87,7 @@ contract StandardMarket is Market {
     /// @return Fee amount
     function withdrawFees()
         public
+        override
         isCreator
         returns (uint fees)
     {
@@ -101,6 +104,7 @@ contract StandardMarket is Market {
     /// @return Cost in collateral tokens
     function buy(uint8 outcomeTokenIndex, uint outcomeTokenCount, uint maxCost)
         public
+        override
         atStage(Stages.MarketFunded)
         returns (uint cost)
     {
@@ -131,6 +135,7 @@ contract StandardMarket is Market {
     /// @return Profit in collateral tokens
     function sell(uint8 outcomeTokenIndex, uint outcomeTokenCount, uint minProfit)
         public
+        override
         atStage(Stages.MarketFunded)
         returns (uint profit)
     {
@@ -161,6 +166,7 @@ contract StandardMarket is Market {
     /// @return Cost to short sell outcome in collateral tokens
     function shortSell(uint8 outcomeTokenIndex, uint outcomeTokenCount, uint minProfit)
         public
+        override
         returns (uint cost)
     {
         // Buy all outcomes
@@ -186,6 +192,7 @@ contract StandardMarket is Market {
     /// @return Fee for trade
     function calcMarketFee(uint outcomeTokenCost)
         public
+        override
         view
         returns (uint)
     {

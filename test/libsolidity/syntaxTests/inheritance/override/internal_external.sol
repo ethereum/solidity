@@ -4,4 +4,3 @@ contract A {
 }
 // ----
 // DeclarationError: (17-61): Function with same name and arguments defined twice.
-// TypeError: (17-61): Overriding function visibility differs.

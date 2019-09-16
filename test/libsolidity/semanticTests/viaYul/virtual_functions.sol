@@ -19,7 +19,7 @@ contract C is X {
         // explicit call via base
         //x = super.g();
     }
-    function g() public returns (uint x) {
+    function g() public override returns (uint x) {
         x = 3;
     }
 }

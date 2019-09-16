@@ -100,7 +100,8 @@ contract TokenCreation is TokenCreationInterface, Token {
 
     }
 
-    function createTokenProxy(address payable _tokenHolder) payable public returns (bool success) {
+    function createTokenProxy(address payable _tokenHolder) payable public
+override returns (bool success) {
         if (now < closingTime && msg.value > 0
             && (privateCreation == 0x0000000000000000000000000000000000000000 || privateCreation == msg.sender)) {
 
@@ -119,7 +120,7 @@ contract TokenCreation is TokenCreationInterface, Token {
         revert();
     }
 
-    function refund() public {
+    function refund() public override {
         if (now > closingTime && !isFueled) {
             // Get extraBalance - will only succeed when called for the first time
             if (address(extraBalance).balance >= extraBalance.accumulatedInput())
@@ -136,7 +137,7 @@ contract TokenCreation is TokenCreationInterface, Token {
         }
     }
 
-    function divisor() public view returns (uint divisor) {
+    function divisor() public override view returns (uint divisor) {
         // The number of (base unit) tokens per wei is calculated
         // as `msg.value` * 20 / `divisor`
         // The fueling period starts with a 1:1 ratio

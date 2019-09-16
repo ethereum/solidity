@@ -6,8 +6,8 @@ interface I {
 }
 contract C is I {
     uint dummy;
-    function f(uint[] memory) public pure {}
-    function g(uint[] memory) public view { dummy; }
-    function h(uint[] memory) public { dummy = 42; }
-    function i(uint[] memory) public payable {}
+    function f(uint[] memory) public override pure {}
+    function g(uint[] memory) public override view { dummy; }
+    function h(uint[] memory) public override { dummy = 42; }
+    function i(uint[] memory) public override payable {}
 }

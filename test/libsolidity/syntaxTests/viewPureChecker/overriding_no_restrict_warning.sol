@@ -3,5 +3,5 @@ contract D {
     function f() public { x = 2; }
 }
 contract C is D {
-    function f() public {}
+    function f() public override {}
 }
