@@ -30,9 +30,12 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
-SMTPortfolio::SMTPortfolio(map<h256, string> const& _smtlib2Responses)
+SMTPortfolio::SMTPortfolio(
+	map<h256, string> const& _smtlib2Responses,
+	ReadCallback::Callback const& _smtCallback
+)
 {
-	m_solvers.emplace_back(make_unique<smt::SMTLib2Interface>(_smtlib2Responses));
+	m_solvers.emplace_back(make_unique<smt::SMTLib2Interface>(_smtlib2Responses, _smtCallback));
 #ifdef HAVE_Z3
 	m_solvers.emplace_back(make_unique<smt::Z3Interface>());
 #endif

@@ -34,6 +34,8 @@
 
 #include <libsolidity/formal/CHCSolverInterface.h>
 
+#include <libsolidity/interface/ReadFile.h>
+
 #include <set>
 
 namespace dev
@@ -47,7 +49,8 @@ public:
 	CHC(
 		smt::EncodingContext& _context,
 		langutil::ErrorReporter& _errorReporter,
-		std::map<h256, std::string> const& _smtlib2Responses
+		std::map<h256, std::string> const& _smtlib2Responses,
+		ReadCallback::Callback const& _smtCallback
 	);
 
 	void analyze(SourceUnit const& _sources);

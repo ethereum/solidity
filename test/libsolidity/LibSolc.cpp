@@ -22,6 +22,7 @@
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/JSON.h>
+#include <libsolidity/interface/ReadFile.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolc/libsolc.h>
 
@@ -137,9 +138,10 @@ BOOST_AUTO_TEST_CASE(with_callback)
 	)";
 
 	CStyleReadFileCallback callback{
-		[](char const* _path, char** o_contents, char** o_error)
+		[](char const* _kind, char const* _path, char** o_contents, char** o_error)
 		{
 			// Caller frees the pointers.
+			BOOST_CHECK(string(_kind) == ReadCallback::kindString(ReadCallback::Kind::ReadFile));
 			if (string(_path) == "found.sol")
 			{
 				static string content{"import \"missing.sol\"; contract B {}"};

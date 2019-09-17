@@ -46,6 +46,9 @@ function solcjs_test
     printLog "Copying contracts..."
     cp -Rf $SOLCJS_INPUT_DIR/DAO test/
 
+    printLog "Copying SMTChecker tests..."
+    cp -Rf "$TEST_DIR"/test/libsolidity/smtCheckerTests test/
+
     run_install install_fn
 
     # Update version (needed for some tests)

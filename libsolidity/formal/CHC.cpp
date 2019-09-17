@@ -35,17 +35,19 @@ using namespace dev::solidity;
 CHC::CHC(
 	smt::EncodingContext& _context,
 	ErrorReporter& _errorReporter,
-	map<h256, string> const& _smtlib2Responses
+	map<h256, string> const& _smtlib2Responses,
+	ReadCallback::Callback const& _smtCallback
 ):
 	SMTEncoder(_context),
 #ifdef HAVE_Z3
 	m_interface(make_shared<smt::Z3CHCInterface>()),
 #else
-	m_interface(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses)),
+	m_interface(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback)),
 #endif
 	m_outerErrorReporter(_errorReporter)
 {
 	(void)_smtlib2Responses;
+	(void)_smtCallback;
 }
 
 void CHC::analyze(SourceUnit const& _source)

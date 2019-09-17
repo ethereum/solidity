@@ -53,7 +53,12 @@ namespace solidity
 class BMC: public SMTEncoder
 {
 public:
-	BMC(smt::EncodingContext& _context, langutil::ErrorReporter& _errorReporter, std::map<h256, std::string> const& _smtlib2Responses);
+	BMC(
+		smt::EncodingContext& _context,
+		langutil::ErrorReporter& _errorReporter,
+		std::map<h256, std::string> const& _smtlib2Responses,
+		ReadCallback::Callback const& _smtCallback
+	);
 
 	void analyze(SourceUnit const& _sources, std::set<Expression const*> _safeAssertions);
 
