@@ -653,28 +653,36 @@ void ProtoConverter::visit(ArrayType const& _x)
 	if (_x.info_size() == 0 || _x.info_size() > (int)s_maxArrayDimensions)
 		return;
 
+	// Array type is dynamically encoded if one of the following is true
+	//   - array base type is "bytes" or "string"
+	//   - at least one array dimension is dynamically sized.
+	if (_x.base_type_oneof_case() == ArrayType::kDynbytesty)
+		m_isLastDynParamRightPadded = true;
+	else
+		for (auto const& dim: _x.info())
+			if (!dim.is_static())
+			{
+				m_isLastDynParamRightPadded = true;
+				break;
+			}
+
 	string baseType = {};
 	switch (_x.base_type_oneof_case())
 	{
 	case ArrayType::kInty:
 		baseType = getIntTypeAsString(_x.inty());
-		m_isLastDynParamRightPadded = false;
 		break;
 	case ArrayType::kByty:
 		baseType = getFixedByteTypeAsString(_x.byty());
-		m_isLastDynParamRightPadded = false;
 		break;
 	case ArrayType::kAdty:
 		baseType = getAddressTypeAsString(_x.adty());
-		m_isLastDynParamRightPadded = false;
 		break;
 	case ArrayType::kBoolty:
 		baseType = getBoolTypeAsString();
-		m_isLastDynParamRightPadded = false;
 		break;
 	case ArrayType::kDynbytesty:
 		baseType = bytesArrayTypeAsString(_x.dynbytesty());
-		m_isLastDynParamRightPadded = true;
 		break;
 	case ArrayType::kStty:
 	case ArrayType::BASE_TYPE_ONEOF_NOT_SET:

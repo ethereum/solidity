@@ -295,7 +295,6 @@ Expression zeroValue(solidity::TypePointer const& _type)
 			auto mappingType = dynamic_cast<MappingType const*>(_type);
 			solAssert(mappingType, "");
 			return Expression::const_array(Expression(mappingType), zeroValue(mappingType->valueType()));
-
 		}
 		solAssert(false, "");
 	}

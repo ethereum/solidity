@@ -6,9 +6,8 @@ contract C {
 			if (x > 10)
 				x = 2;
 			else
-				x = 10;
+				--x;
 		}
-		assert(x == 2);
+		assert(x < 2);
 	}
 }
-// ----

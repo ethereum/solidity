@@ -10,4 +10,3 @@ contract C {
     }
 }
 // ----
-// Warning: (213-226): Assertion violation happens here

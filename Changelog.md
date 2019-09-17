@@ -34,11 +34,13 @@ Language Features:
 Compiler Features:
  * ABI Output: Change sorting order of functions from selector to kind, name.
  * Optimizer: Add rule that replaces the BYTE opcode by 0 if the first argument is larger than 31.
+ * SMTChecker: Add loop support to the CHC engine.
  * Yul Optimizer: Take side-effect-freeness of user-defined functions into account.
  * Yul Optimizer: Remove redundant mload/sload operations.
 
 
 Bugfixes:
+ * Fix internal error when popping a dynamic storage array of mappings.
 
 
 ### 0.5.11 (2019-08-12)

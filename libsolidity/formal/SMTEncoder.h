@@ -88,6 +88,8 @@ protected:
 	void endVisit(IndexAccess const& _node) override;
 	void endVisit(IndexRangeAccess const& _node) override;
 	bool visit(InlineAssembly const& _node) override;
+	void endVisit(Break const&) override {}
+	void endVisit(Continue const&) override {}
 
 	/// Do not visit subtree if node is a RationalNumber.
 	/// Symbolic _expr is the rational literal.

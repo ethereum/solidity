@@ -25,6 +25,7 @@ PenaltyBreakBeforeFirstCallParameter: 2000
 SpaceAfterCStyleCast: true
 SpaceBeforeParens: ControlStatements
 TabWidth: 4
+UseTab: ForIndentation
 
 # Local Variables:
 # mode: yaml
