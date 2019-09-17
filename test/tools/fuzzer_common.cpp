@@ -28,6 +28,15 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+static vector<string> s_evmVersions = {
+	"homestead",
+	"tangerineWhistle",
+	"spuriousDragon",
+	"byzantium",
+	"constantinople",
+	"petersburg"
+};
+
 void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 {
 	if (!_quiet)
@@ -76,6 +85,7 @@ void FuzzerUtil::testCompiler(string const& _input, bool _optimize, bool _quiet)
 	config["settings"]["optimizer"] = Json::objectValue;
 	config["settings"]["optimizer"]["enabled"] = _optimize;
 	config["settings"]["optimizer"]["runs"] = 200;
+	config["settings"]["evmVersion"] = s_evmVersions[_input.size() % s_evmVersions.size()];
 
 	// Enable all SourceUnit-level outputs.
 	config["settings"]["outputSelection"]["*"][""][0] = "*";
