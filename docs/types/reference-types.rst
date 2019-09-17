@@ -109,8 +109,9 @@ restrictions for types apply, in that mappings can only be stored in the
 It is possible to mark state variable arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
 The numeric index becomes a required parameter for the getter.
 
-Accessing an array past its end causes a failing assertion. You can use the ``.push()`` method to append a new element at the end or assign to the ``.length`` :ref:`member <array-members>` to change the size (see below for caveats).
-method or increase the ``.length`` :ref:`member <array-members>` to add elements.
+Accessing an array past its end causes a failing assertion. Methods ``.push()`` and ``.push(value)`` can be used
+to append a new element at the end of the array, where ``.push()`` appends a zero-initialized element and returns
+a reference to it.
 
 ``bytes`` and ``strings`` as Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -221,7 +222,9 @@ Array Members
     removed elements. If you try to resize a non-dynamic array that isn't in
     storage, you receive a ``Value must be an lvalue`` error.
 **push**:
-     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that you can use to append an element at the end of the array. The element will be zero-initialised. The function returns the new length.
+     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that you can use to append an element at the end of the array.
+     If no argument is given, the element will be zero-initialised and a reference to the new element is returned.
+     If a value is given as argument, ``push`` returns nothing.
 **pop**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``pop`` that you can use to remove an element from the end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element.
 
@@ -315,7 +318,8 @@ Array Members
         }
 
         function addFlag(bool[2] memory flag) public returns (uint) {
-            return m_pairsOfFlags.push(flag);
+            m_pairsOfFlags.push(flag);
+            return m_pairsOfFlags.length;
         }
 
         function createMemoryArray(uint size) public pure returns (bytes memory) {

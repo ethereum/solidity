@@ -19,6 +19,8 @@ This section lists purely syntactic changes that do not affect the behavior of e
 * Conversions from ``address`` to ``address payable`` are now possible via ``payable(x)``, where
   ``x`` must be of type ``address``.
 
+* Function ``push(value)`` for dynamic storage arrays do not return the new length anymore.
+
 * New reserved keywords: ``virtual``.
 
 Semantic Only Changes
@@ -44,6 +46,9 @@ How to update your code
 This section gives detailed instructions on how to update prior code for every breaking change.
 
 * Change ``address(f)`` to ``f.address`` for ``f`` being of external function type.
+
+* Change ``uint length = array.push(value)`` to ``array.push(value);``. The new length can be
+  accessed via ``array.length``.
 
 Deprecated Elements
 ===================

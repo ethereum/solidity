@@ -1889,7 +1889,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	FunctionCallAnnotation& funcCallAnno = _functionCall.annotation();
 	FunctionTypePointer functionType = nullptr;
 
-	// Determine and assign function call kind, purity and function type for this FunctionCall node
+	// Determine and assign function call kind, lvalue, purity and function type for this FunctionCall node
 	switch (expressionType->category())
 	{
 	case Type::Category::Function:
@@ -1902,6 +1902,12 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			_functionCall.expression().annotation().isPure &&
 			functionType &&
 			functionType->isPure();
+
+		if (
+			functionType->kind() == FunctionType::Kind::ArrayPush ||
+			functionType->kind() == FunctionType::Kind::ByteArrayPush
+		)
+			funcCallAnno.isLValue = functionType->parameterTypes().empty();
 
 		break;
 
@@ -2625,7 +2631,10 @@ void TypeChecker::requireLValue(Expression const& _expression)
 					return "Calldata structs are read-only.";
 			}
 			else if (auto arrayType = dynamic_cast<ArrayType const*>(type(memberAccess->expression())))
-				if (memberAccess->memberName() == "length")
+				if (
+					memberAccess->memberName() == "length" ||
+					memberAccess->memberName() == "push"
+				)
 					switch (arrayType->location())
 					{
 						case DataLocation::Memory:
