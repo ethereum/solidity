@@ -15,21 +15,16 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <string>
+#include <test/tools/fuzzer_common.h>
 
-/**
- * Functions to be used for fuzz-testing of various components.
- * They throw exceptions or error.
- */
-struct FuzzerUtil
+using namespace std;
+
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
-	static void runCompiler(std::string const& _input, bool _quiet);
-	static void testCompiler(
-		std::string const& _input,
-		bool _optimize,
-		bool _quiet,
-		bool _yulOptimize
-	);
-	static void testConstantOptimizer(std::string const& _input, bool _quiet);
-	static void testStandardCompiler(std::string const& _input, bool _quiet);
-};
+	if (_size <= 600)
+	{
+		string input(reinterpret_cast<char const *>(_data), _size);
+		FuzzerUtil::testCompiler(input, /*optimize=*/true, /*quiet=*/true, /*yulOptimize=*/true);
+	}
+	return 0;
+}

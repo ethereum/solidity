@@ -2,6 +2,7 @@ add_custom_target(ossfuzz)
 add_dependencies(ossfuzz
         solc_opt_ossfuzz
         solc_noopt_ossfuzz
+        solc_yulgen_ossfuzz
         const_opt_ossfuzz
         strictasm_diff_ossfuzz
         strictasm_opt_ossfuzz
@@ -24,6 +25,10 @@ if (OSSFUZZ)
     add_executable(solc_noopt_ossfuzz solc_noopt_ossfuzz.cpp ../fuzzer_common.cpp)
     target_link_libraries(solc_noopt_ossfuzz PRIVATE libsolc evmasm)
     set_target_properties(solc_noopt_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+
+    add_executable(solc_yulgen_ossfuzz solc_yulgen_ossfuzz.cpp ../fuzzer_common.cpp)
+    target_link_libraries(solc_yulgen_ossfuzz PRIVATE libsolc evmasm)
+    set_target_properties(solc_yulgen_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(const_opt_ossfuzz const_opt_ossfuzz.cpp ../fuzzer_common.cpp)
     target_link_libraries(const_opt_ossfuzz PRIVATE libsolc evmasm)
@@ -89,6 +94,12 @@ else()
             ../fuzzer_common.cpp
             )
     target_link_libraries(solc_noopt_ossfuzz PRIVATE libsolc evmasm)
+
+    add_library(solc_yulgen_ossfuzz
+            solc_yulgen_ossfuzz.cpp
+            ../fuzzer_common.cpp
+            )
+    target_link_libraries(solc_yulgen_ossfuzz PRIVATE libsolc evmasm)
 
     add_library(const_opt_ossfuzz
             const_opt_ossfuzz.cpp

@@ -74,6 +74,7 @@ defaults:
         - test/tools/ossfuzz/const_opt_ossfuzz
         - test/tools/ossfuzz/solc_noopt_ossfuzz
         - test/tools/ossfuzz/solc_opt_ossfuzz
+        - test/tools/ossfuzz/solc_yulgen_ossfuzz
         - test/tools/ossfuzz/strictasm_assembly_ossfuzz
         - test/tools/ossfuzz/strictasm_diff_ossfuzz
         - test/tools/ossfuzz/strictasm_opt_ossfuzz

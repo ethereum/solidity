@@ -71,7 +71,12 @@ void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 		}
 }
 
-void FuzzerUtil::testCompiler(string const& _input, bool _optimize, bool _quiet)
+void FuzzerUtil::testCompiler(
+	string const& _input,
+	bool _optimize,
+	bool _quiet,
+	bool _yulOptimize
+)
 {
 	if (!_quiet)
 		cout << "Testing compiler " << (_optimize ? "with" : "without") << " optimizer." << endl;
@@ -86,6 +91,11 @@ void FuzzerUtil::testCompiler(string const& _input, bool _optimize, bool _quiet)
 	config["settings"]["optimizer"]["enabled"] = _optimize;
 	config["settings"]["optimizer"]["runs"] = 200;
 	config["settings"]["evmVersion"] = s_evmVersions[_input.size() % s_evmVersions.size()];
+	if (_optimize && _yulOptimize)
+	{
+		config["settings"]["optimizer"]["details"] = Json::objectValue;
+		config["settings"]["optimizer"]["details"]["yul"] = true;
+	}
 
 	// Enable all SourceUnit-level outputs.
 	config["settings"]["outputSelection"]["*"][""][0] = "*";
