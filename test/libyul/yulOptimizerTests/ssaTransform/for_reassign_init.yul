@@ -17,7 +17,14 @@
 //         a := a_2
 //     }
 //     a
-//     { mstore(0, a) }
-//     { mstore(0, a) }
-//     mstore(0, a)
+//     {
+//         let a_4 := a
+//         mstore(0, a_4)
+//     }
+//     {
+//         let a_3 := a
+//         mstore(0, a_3)
+//     }
+//     let a_5 := a
+//     mstore(0, a_5)
 // }

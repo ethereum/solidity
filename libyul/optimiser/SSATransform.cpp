@@ -50,8 +50,6 @@ public:
 
 private:
 	NameDispenser& m_nameDispenser;
-	/// This is a set of all variables that are assigned to anywhere in the code.
-	/// Variables that are only declared but never re-assigned are not touched.
 	set<YulString> const& m_variablesToReplace;
 };
 
@@ -130,7 +128,142 @@ void IntroduceSSA::operator()(Block& _block)
 }
 
 /**
- * Second step of SSA transform: Replace the references to variables-to-be-replaced
+ * Second step of SSA transform: Introduces new SSA variables at each control-flow join
+ * and at the beginning of functions.
+ */
+class IntroduceControlFlowSSA: public ASTModifier
+{
+public:
+	explicit IntroduceControlFlowSSA(
+		NameDispenser& _nameDispenser,
+		set<YulString> const& _variablesToReplace
+	):
+		m_nameDispenser(_nameDispenser), m_variablesToReplace(_variablesToReplace)
+	{ }
+
+	void operator()(FunctionDefinition& _function) override;
+	void operator()(ForLoop& _forLoop) override;
+	void operator()(Switch& _switch) override;
+	void operator()(Block& _block) override;
+
+private:
+	NameDispenser& m_nameDispenser;
+	set<YulString> const& m_variablesToReplace;
+	/// Variables (that are to be replaced) currently in scope.
+	set<YulString> m_variablesInScope;
+	/// Set of variables that do not have a specific value.
+	set<YulString> m_variablesToReassign;
+};
+
+void IntroduceControlFlowSSA::operator()(FunctionDefinition& _function)
+{
+	set<YulString> varsInScope;
+	std::swap(varsInScope, m_variablesInScope);
+	set<YulString> toReassign;
+	std::swap(toReassign, m_variablesToReassign);
+
+	for (auto const& param: _function.parameters)
+		if (m_variablesToReplace.count(param.name))
+		{
+			m_variablesInScope.insert(param.name);
+			m_variablesToReassign.insert(param.name);
+		}
+
+	ASTModifier::operator()(_function);
+
+	m_variablesInScope = std::move(varsInScope);
+	m_variablesToReassign = std::move(toReassign);
+}
+
+void IntroduceControlFlowSSA::operator()(ForLoop& _for)
+{
+	(*this)(_for.pre);
+
+	Assignments assignments;
+	assignments(_for.body);
+	assignments(_for.post);
+
+
+	for (auto const& var: assignments.names())
+		if (m_variablesInScope.count(var))
+			m_variablesToReassign.insert(var);
+
+	(*this)(_for.body);
+	(*this)(_for.post);
+}
+
+void IntroduceControlFlowSSA::operator()(Switch& _switch)
+{
+	yulAssert(m_variablesToReassign.empty(), "");
+
+	set<YulString> toReassign;
+	for (auto& c: _switch.cases)
+	{
+		(*this)(c.body);
+		toReassign += m_variablesToReassign;
+	}
+
+	m_variablesToReassign += toReassign;
+}
+
+void IntroduceControlFlowSSA::operator()(Block& _block)
+{
+	set<YulString> variablesDeclaredHere;
+	set<YulString> assignedVariables;
+
+	iterateReplacing(
+		_block.statements,
+		[&](Statement& _s) -> boost::optional<vector<Statement>>
+		{
+			vector<Statement> toPrepend;
+			for (YulString toReassign: m_variablesToReassign)
+			{
+				YulString newName = m_nameDispenser.newName(toReassign);
+				toPrepend.emplace_back(VariableDeclaration{
+					locationOf(_s),
+					{TypedName{locationOf(_s), newName, {}}},
+					make_unique<Expression>(Identifier{locationOf(_s), toReassign})
+				});
+				assignedVariables.insert(toReassign);
+			}
+			m_variablesToReassign.clear();
+
+			if (_s.type() == typeid(VariableDeclaration))
+			{
+				VariableDeclaration& varDecl = boost::get<VariableDeclaration>(_s);
+				for (auto const& var: varDecl.variables)
+					if (m_variablesToReplace.count(var.name))
+					{
+						variablesDeclaredHere.insert(var.name);
+						m_variablesInScope.insert(var.name);
+					}
+			}
+			else if (_s.type() == typeid(Assignment))
+			{
+				Assignment& assignment = boost::get<Assignment>(_s);
+				for (auto const& var: assignment.variableNames)
+					if (m_variablesToReplace.count(var.name))
+						assignedVariables.insert(var.name);
+			}
+			else
+				visit(_s);
+
+			if (toPrepend.empty())
+				return {};
+			else
+			{
+				toPrepend.emplace_back(std::move(_s));
+				return toPrepend;
+			}
+		}
+	);
+	m_variablesToReassign += assignedVariables;
+	m_variablesInScope -= variablesDeclaredHere;
+	m_variablesToReassign -= variablesDeclaredHere;
+}
+
+/**
+ * Third step of SSA transform: Replace the references to variables-to-be-replaced
  * by their current values.
  */
 class PropagateValues: public ASTModifier
@@ -166,13 +299,27 @@ void PropagateValues::operator()(VariableDeclaration& _varDecl)
 
 	if (_varDecl.variables.size() != 1)
 		return;
-	YulString name = _varDecl.variables.front().name;
-	if (!m_variablesToReplace.count(name))
-		return;
 
-	yulAssert(_varDecl.value->type() == typeid(Identifier), "");
-	m_currentVariableValues[name] = boost::get<Identifier>(*_varDecl.value).name;
-	m_clearAtEndOfBlock.insert(name);
+	YulString variable = _varDecl.variables.front().name;
+	if (m_variablesToReplace.count(variable))
+	{
+		// `let a := a_1` - regular declaration of non-SSA variable
+		yulAssert(_varDecl.value->type() == typeid(Identifier), "");
+		m_currentVariableValues[variable] = boost::get<Identifier>(*_varDecl.value).name;
+		m_clearAtEndOfBlock.insert(variable);
+	}
+	else if (_varDecl.value && _varDecl.value->type() == typeid(Identifier))
+	{
+		// `let a_1 := a` - assignment to SSA variable after a branch.
+		YulString value = boost::get<Identifier>(*_varDecl.value).name;
+		if (m_variablesToReplace.count(value))
+		{
+			// This is safe because `a_1` is not a "variable to replace" and thus
+			// will not be re-assigned.
+			m_currentVariableValues[value] = variable;
+			m_clearAtEndOfBlock.insert(value);
+		}
+	}
 }
 
 
@@ -186,7 +333,7 @@ void PropagateValues::operator()(Assignment& _assignment)
 	if (!m_variablesToReplace.count(name))
 		return;
 
-	yulAssert(_assignment.value->type() == typeid(Identifier), "");
+	yulAssert(_assignment.value && _assignment.value->type() == typeid(Identifier), "");
 	m_currentVariableValues[name] = boost::get<Identifier>(*_assignment.value).name;
 	m_clearAtEndOfBlock.insert(name);
 }
@@ -231,6 +378,7 @@ void SSATransform::run(Block& _ast, NameDispenser& _nameDispenser)
 	Assignments assignments;
 	assignments(_ast);
 	IntroduceSSA{_nameDispenser, assignments.names()}(_ast);
+	IntroduceControlFlowSSA{_nameDispenser, assignments.names()}(_ast);
 	PropagateValues{assignments.names()}(_ast);
 }
 
