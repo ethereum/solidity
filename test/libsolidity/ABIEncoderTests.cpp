@@ -429,7 +429,9 @@ BOOST_AUTO_TEST_CASE(structs)
 				s.a = 8;
 				s.b = 9;
 				s.c = 10;
-				s.sub.length = 3;
+				s.sub.push();
+				s.sub.push();
+				s.sub.push();
 				s.sub[0].x[0] = 11;
 				s.sub[1].x[0] = 12;
 				s.sub[2].x[1] = 13;
@@ -522,11 +524,10 @@ BOOST_AUTO_TEST_CASE(bool_arrays)
 			bool[4] y;
 			event E(bool[], bool[4]);
 			function f() public returns (bool[] memory, bool[4] memory) {
-				x.length = 4;
-				x[0] = true;
-				x[1] = false;
-				x[2] = true;
-				x[3] = false;
+				x.push(true);
+				x.push(false);
+				x.push(true);
+				x.push(false);
 				y[0] = true;
 				y[1] = false;
 				y[2] = true;
@@ -556,11 +557,10 @@ BOOST_AUTO_TEST_CASE(bool_arrays_split)
 			bool[4] y;
 			event E(bool[], bool[4]);
 			function store() public {
-				x.length = 4;
-				x[0] = true;
-				x[1] = false;
-				x[2] = true;
-				x[3] = false;
+				x.push(true);
+				x.push(false);
+				x.push(true);
+				x.push(false);
 				y[0] = true;
 				y[1] = false;
 				y[2] = true;
@@ -594,9 +594,8 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays)
 			bytesWIDTH[SIZE] y;
 			event E(bytes8[], bytesWIDTH[SIZE]);
 			function store() public {
-				x.length = 2;
-				x[0] = "abc";
-				x[1] = "def";
+				x.push("abc");
+				x.push("def");
 				for (uint i = 0; i < y.length; i ++)
 					y[i] = bytesWIDTH(uintUINTWIDTH(i + 1));
 			}
@@ -640,9 +639,8 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays_dyn)
 			bytesWIDTH[] y;
 			event E(bytesWIDTH[], bytes8[]);
 			function store() public {
-				x.length = 2;
-				x[0] = "abc";
-				x[1] = "def";
+				x.push("abc");
+				x.push("def");
 				for (uint i = 0; i < SIZE; i ++)
 					y.push(bytesWIDTH(uintUINTWIDTH(i + 1)));
 			}
