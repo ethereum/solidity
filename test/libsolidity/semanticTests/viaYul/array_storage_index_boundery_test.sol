@@ -1,14 +1,11 @@
 contract C {
-	uint[] storageArray;
-	function test_boundery_check(uint256 len, uint256 access) public returns
-(uint256)
-	{
-		storageArray.length = len;
-		return storageArray[access];
-	}
+    uint[] storageArray;
+    function test_boundery_check(uint256 len, uint256 access) public returns (uint256)
+    {
+        storageArray = new uint[](len);
+        return storageArray[access];
+    }
 }
-// ====
-// compileViaYul: true
 // ----
 // test_boundery_check(uint256, uint256): 10, 11 -> FAILURE
 // test_boundery_check(uint256, uint256): 10, 9 -> 0
