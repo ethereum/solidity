@@ -199,7 +199,7 @@ bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	int initialStackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, _statement.expression);
-	if (m_stackHeight != initialStackHeight)
+	if (success && m_stackHeight != initialStackHeight)
 	{
 		string msg =
 			"Top-level expressions are not supposed to return values (this expression returns " +
@@ -534,7 +534,7 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	m_stackHeight -= scope(&_block).numberOfVariables();
 
 	int const stackDiff = m_stackHeight - initialStackHeight;
-	if (stackDiff != 0)
+	if (success && stackDiff != 0)
 	{
 		m_errorReporter.declarationError(
 			_block.location,
@@ -559,7 +559,7 @@ bool AsmAnalyzer::expectExpression(Expression const& _expr)
 	int const initialHeight = m_stackHeight;
 	if (!boost::apply_visitor(*this, _expr))
 		success = false;
-	if (!expectDeposit(1, initialHeight, locationOf(_expr)))
+	if (success && !expectDeposit(1, initialHeight, locationOf(_expr)))
 		success = false;
 	return success;
 }
