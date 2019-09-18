@@ -37,11 +37,6 @@ void WordSizeTransform::operator()(FunctionDefinition& _fd)
 	(*this)(_fd.body);
 }
 
-void WordSizeTransform::operator()(FunctionalInstruction& _ins)
-{
-	rewriteFunctionCallArguments(_ins.arguments);
-}
-
 void WordSizeTransform::operator()(FunctionCall& _fc)
 {
 	if (BuiltinFunction const* fun = m_inputDialect.builtin(_fc.functionName.name))
@@ -89,7 +84,6 @@ void WordSizeTransform::operator()(Block& _block)
 				VariableDeclaration& varDecl = boost::get<VariableDeclaration>(_s);
 				if (
 					!varDecl.value ||
-					varDecl.value->type() == typeid(FunctionalInstruction) ||
 					varDecl.value->type() == typeid(FunctionCall)
 				)
 				{
@@ -123,10 +117,7 @@ void WordSizeTransform::operator()(Block& _block)
 			{
 				Assignment& assignment = boost::get<Assignment>(_s);
 				yulAssert(assignment.value, "");
-				if (
-					assignment.value->type() == typeid(FunctionalInstruction) ||
-					assignment.value->type() == typeid(FunctionCall)
-				)
+				if (assignment.value->type() == typeid(FunctionCall))
 				{
 					if (assignment.value) visit(*assignment.value);
 					rewriteIdentifierList(assignment.variableNames);

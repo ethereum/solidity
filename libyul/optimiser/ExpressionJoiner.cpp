@@ -34,11 +34,6 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-void ExpressionJoiner::operator()(FunctionalInstruction& _instruction)
-{
-	handleArguments(_instruction.arguments);
-}
-
 void ExpressionJoiner::operator()(FunctionCall& _funCall)
 {
 	handleArguments(_funCall.arguments);

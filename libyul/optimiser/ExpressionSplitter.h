@@ -62,7 +62,6 @@ public:
 		m_dialect(_dialect), m_nameDispenser(_nameDispenser)
 	{ }
 
-	void operator()(FunctionalInstruction&) override;
 	void operator()(FunctionCall&) override;
 	void operator()(If&) override;
 	void operator()(Switch&) override;

@@ -47,12 +47,6 @@ public:
 	}
 	void operator()(yul::Literal const&) {}
 	void operator()(yul::Identifier const&) {}
-	void operator()(yul::FunctionalInstruction const& _instr)
-	{
-		checkInstruction(_instr.location, _instr.instruction);
-		for (auto const& arg: _instr.arguments)
-			boost::apply_visitor(*this, arg);
-	}
 	void operator()(yul::ExpressionStatement const& _expr)
 	{
 		boost::apply_visitor(*this, _expr.expression);

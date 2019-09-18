@@ -42,7 +42,6 @@ public:
 	bool operator()(Expression const& _lhs, Expression const& _rhs);
 	bool operator()(Statement const& _lhs, Statement const& _rhs);
 
-	bool expressionEqual(FunctionalInstruction const& _lhs, FunctionalInstruction const& _rhs);
 	bool expressionEqual(FunctionCall const& _lhs, FunctionCall const& _rhs);
 	bool expressionEqual(Identifier const& _lhs, Identifier const& _rhs);
 	bool expressionEqual(Literal const& _lhs, Literal const& _rhs);

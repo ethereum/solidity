@@ -40,7 +40,6 @@ public:
 	virtual ~ExpressionCopier() = default;
 	virtual Expression operator()(Literal const& _literal) = 0;
 	virtual Expression operator()(Identifier const& _identifier) = 0;
-	virtual Expression operator()(FunctionalInstruction const& _instr) = 0;
 	virtual Expression operator()(FunctionCall const&) = 0;
 };
 
@@ -72,7 +71,6 @@ public:
 	Expression operator()(Literal const& _literal) override;
 	Statement operator()(Instruction const& _instruction) override;
 	Expression operator()(Identifier const& _identifier) override;
-	Expression operator()(FunctionalInstruction const& _instr) override;
 	Expression operator()(FunctionCall const&) override;
 	Statement operator()(ExpressionStatement const& _statement) override;
 	Statement operator()(Assignment const& _assignment) override;

@@ -35,12 +35,6 @@ using namespace dev;
 using namespace langutil;
 using namespace yul;
 
-void ExpressionSplitter::operator()(FunctionalInstruction& _instruction)
-{
-	for (auto& arg: _instruction.arguments | boost::adaptors::reversed)
-		outlineExpression(arg);
-}
-
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
 {
 	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))

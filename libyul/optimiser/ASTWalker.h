@@ -45,7 +45,6 @@ public:
 	virtual void operator()(Literal const&) {}
 	virtual void operator()(Instruction const&) { assertThrow(false, OptimizerException, ""); }
 	virtual void operator()(Identifier const&) {}
-	virtual void operator()(FunctionalInstruction const& _instr);
 	virtual void operator()(FunctionCall const& _funCall);
 	virtual void operator()(ExpressionStatement const& _statement);
 	virtual void operator()(Assignment const& _assignment);
@@ -80,7 +79,6 @@ public:
 	virtual void operator()(Literal&) {}
 	virtual void operator()(Instruction&) { assertThrow(false, OptimizerException, ""); }
 	virtual void operator()(Identifier&) {}
-	virtual void operator()(FunctionalInstruction& _instr);
 	virtual void operator()(FunctionCall& _funCall);
 	virtual void operator()(ExpressionStatement& _statement);
 	virtual void operator()(Assignment& _assignment);

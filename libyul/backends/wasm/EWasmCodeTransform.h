@@ -41,7 +41,6 @@ public:
 	wasm::Expression operator()(yul::Instruction const& _instruction);
 	wasm::Expression operator()(yul::Literal const& _literal);
 	wasm::Expression operator()(yul::Identifier const& _identifier);
-	wasm::Expression operator()(yul::FunctionalInstruction const& _instr);
 	wasm::Expression operator()(yul::FunctionCall const&);
 	wasm::Expression operator()(yul::ExpressionStatement const& _statement);
 	wasm::Expression operator()(yul::Assignment const& _assignment);

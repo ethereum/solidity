@@ -61,7 +61,6 @@ class WordSizeTransform: public ASTModifier
 {
 public:
 	void operator()(FunctionDefinition&) override;
-	void operator()(FunctionalInstruction&) override;
 	void operator()(FunctionCall&) override;
 	void operator()(If&) override;
 	void operator()(Switch&) override;

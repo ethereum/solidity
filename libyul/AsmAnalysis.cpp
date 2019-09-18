@@ -179,22 +179,6 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 	return success;
 }
 
-bool AsmAnalyzer::operator()(FunctionalInstruction const& _instr)
-{
-	solAssert(m_dialect.flavour != AsmFlavour::Yul, "");
-	bool success = true;
-	for (auto const& arg: _instr.arguments | boost::adaptors::reversed)
-		if (!expectExpression(arg))
-			success = false;
-	// Parser already checks that the number of arguments is correct.
-	auto const& info = instructionInfo(_instr.instruction);
-	solAssert(info.args == int(_instr.arguments.size()), "");
-	m_stackHeight += info.ret - info.args;
-	m_info.stackHeightInfo[&_instr] = m_stackHeight;
-	warnOnInstructions(_instr.instruction, _instr.location);
-	return success;
-}
-
 bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	int initialStackHeight = m_stackHeight;
