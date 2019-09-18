@@ -52,6 +52,7 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/LoadResolver.h>
+#include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/AsmAnalysis.h>
@@ -129,7 +130,8 @@ void OptimiserSuite::run(
 				RedundantAssignEliminator::name,
 				ExpressionSimplifier::name,
 				CommonSubexpressionEliminator::name,
-				LoadResolver::name
+				LoadResolver::name,
+				LoopInvariantCodeMotion::name
 			}, ast);
 		}
 
@@ -345,6 +347,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			FunctionHoister,
 			LiteralRematerialiser,
 			LoadResolver,
+			LoopInvariantCodeMotion,
 			RedundantAssignEliminator,
 			Rematerialiser,
 			SSAReverser,

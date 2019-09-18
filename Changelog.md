@@ -7,6 +7,7 @@ Language Features:
 
 Compiler Features:
  * Yul: When compiling via Yul, string literals from the Solidity code are kept as string literals if every character is safely printable.
+ * Yul Optimizer: Perform loop-invariant code motion.
 
 
 Bugfixes:
