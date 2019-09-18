@@ -337,7 +337,8 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		}
 	)))
 	{
-		m_errorReporter.declarationError(_funCall.functionName.location, "Function not found.");
+		if (!warnOnInstructions(_funCall.functionName.name.str(), _funCall.functionName.location))
+			m_errorReporter.declarationError(_funCall.functionName.location, "Function not found.");
 		success = false;
 	}
 	if (success)
@@ -653,7 +654,39 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 		);
 }
 
-void AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocation const& _location)
+// FIXME: copy'n'paste from AsmParser. make it more general (by putting it into dev::eth namespace)
+std::map<string, dev::eth::Instruction> const& instructions()
+{
+	// Allowed instructions, lowercase names.
+	static map<string, dev::eth::Instruction> s_instructions;
+	if (s_instructions.empty())
+	{
+		for (auto const& instruction: dev::eth::c_instructions)
+		{
+			if (
+				instruction.second == dev::eth::Instruction::JUMPDEST ||
+				dev::eth::isPushInstruction(instruction.second)
+			)
+				continue;
+			string name = instruction.first;
+			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
+			s_instructions[name] = instruction.second;
+		}
+	}
+	return s_instructions;
+}
+
+bool AsmAnalyzer::warnOnInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
+{
+	auto const& instructionMap = instructions();
+	auto const identifier = boost::to_lower_copy(_instructionIdentifier);
+	if (auto const i = instructionMap.find(identifier); i != instructionMap.end())
+		return warnOnInstructions(i->second, _location);
+	else
+		return false;
+}
+
+bool AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocation const& _location)
 {
 	// We assume that returndatacopy, returndatasize and staticcall are either all available
 	// or all not available.
@@ -725,4 +758,8 @@ void AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocatio
 			"Use functions, \"switch\", \"if\" or \"for\" statements instead."
 		);
 	}
+	else
+		return false;
+
+	return true;
 }

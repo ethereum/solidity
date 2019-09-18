@@ -106,7 +106,8 @@ private:
 
 	Scope& scope(Block const* _block);
 	void expectValidType(std::string const& type, langutil::SourceLocation const& _location);
-	void warnOnInstructions(dev::eth::Instruction _instr, langutil::SourceLocation const& _location);
+	bool warnOnInstructions(dev::eth::Instruction _instr, langutil::SourceLocation const& _location);
+	bool warnOnInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
 
 	int m_stackHeight = 0;
 	yul::ExternalIdentifierAccess::Resolver m_resolver;
