@@ -348,16 +348,6 @@ void CodeTransform::operator()(Literal const& _literal)
 	checkStackHeight(&_literal);
 }
 
-void CodeTransform::operator()(yul::Instruction const& _instruction)
-{
-	solAssert(!m_allowStackOpt, "");
-	solAssert(!m_evm15 || _instruction.instruction != dev::eth::Instruction::JUMP, "Bare JUMP instruction used for EVM1.5");
-	solAssert(!m_evm15 || _instruction.instruction != dev::eth::Instruction::JUMPI, "Bare JUMPI instruction used for EVM1.5");
-	m_assembly.setSourceLocation(_instruction.location);
-	m_assembly.appendInstruction(_instruction.instruction);
-	checkStackHeight(&_instruction);
-}
-
 void CodeTransform::operator()(If const& _if)
 {
 	visitExpression(*_if.condition);

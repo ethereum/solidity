@@ -56,7 +56,7 @@ public:
 	static std::map<std::string, dev::eth::Instruction> const& instructions();
 
 protected:
-	using ElementaryOperation = boost::variant<Instruction, Literal, Identifier, FunctionCall>;
+	using ElementaryOperation = boost::variant<Literal, Identifier, FunctionCall>;
 
 	/// Creates an inline assembly node with the given source location.
 	template <class T> T createWithLocation(langutil::SourceLocation const& _loc = {}) const

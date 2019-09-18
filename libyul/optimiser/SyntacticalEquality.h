@@ -58,8 +58,6 @@ public:
 	bool statementEqual(Continue const&, Continue const&) { return true; }
 	bool statementEqual(Block const& _lhs, Block const& _rhs);
 private:
-	bool statementEqual(Instruction const& _lhs, Instruction const& _rhs);
-
 	bool visitDeclaration(TypedName const& _lhs, TypedName const& _rhs);
 
 	template<typename U, typename V>

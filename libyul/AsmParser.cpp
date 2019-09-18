@@ -221,10 +221,7 @@ Statement Parser::parseStatement()
 		return ExpressionStatement{locationOf(expr), expr};
 	}
 	else
-	{
-		solAssert(elementary.type() == typeid(Instruction), "Invalid elementary operation.");
-		return boost::get<Instruction>(elementary);
-	}
+		solAssert(false, "Invalid elementary operation.");
 }
 
 Case Parser::parseCase()

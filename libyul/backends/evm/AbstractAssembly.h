@@ -43,7 +43,6 @@ enum class Instruction: uint8_t;
 
 namespace yul
 {
-struct Instruction;
 struct Identifier;
 
 ///

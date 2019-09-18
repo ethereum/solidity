@@ -27,7 +27,6 @@
 namespace yul
 {
 
-struct Instruction;
 struct Literal;
 struct Label;
 struct Identifier;
@@ -47,6 +46,6 @@ struct Block;
 struct TypedName;
 
 using Expression = boost::variant<FunctionCall, Identifier, Literal>;
-using Statement = boost::variant<ExpressionStatement, Instruction, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Block>;
+using Statement = boost::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Block>;
 
 }

@@ -39,13 +39,6 @@ using namespace yul;
 
 //@TODO source locations
 
-string AsmPrinter::operator()(yul::Instruction const& _instruction) const
-{
-	solAssert(!m_yul, "");
-	solAssert(isValidInstruction(_instruction.instruction), "Invalid instruction");
-	return boost::to_lower_copy(instructionInfo(_instruction.instruction).name);
-}
-
 string AsmPrinter::operator()(Literal const& _literal) const
 {
 	switch (_literal.kind)

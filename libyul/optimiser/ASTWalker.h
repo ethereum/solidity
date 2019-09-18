@@ -43,7 +43,6 @@ class ASTWalker: public boost::static_visitor<>
 public:
 	virtual ~ASTWalker() = default;
 	virtual void operator()(Literal const&) {}
-	virtual void operator()(Instruction const&) { assertThrow(false, OptimizerException, ""); }
 	virtual void operator()(Identifier const&) {}
 	virtual void operator()(FunctionCall const& _funCall);
 	virtual void operator()(ExpressionStatement const& _statement);
@@ -77,7 +76,6 @@ class ASTModifier: public boost::static_visitor<>
 public:
 	virtual ~ASTModifier() = default;
 	virtual void operator()(Literal&) {}
-	virtual void operator()(Instruction&) { assertThrow(false, OptimizerException, ""); }
 	virtual void operator()(Identifier&) {}
 	virtual void operator()(FunctionCall& _funCall);
 	virtual void operator()(ExpressionStatement& _statement);
