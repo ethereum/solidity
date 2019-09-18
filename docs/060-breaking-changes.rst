@@ -26,6 +26,10 @@ This section lists purely syntactic changes that do not affect the behavior of e
 
 * Libraries have to implement all their functions, not only the internal ones.
 
+* Member-access to ``length`` of arrays is now always read-only, even for storage arrays. It's no
+  longer possible to resize storage arrays assigning a new value to their length. Use ``push()``,
+  ``push(value)`` or ``pop()`` instead, or assign a full array, which will of course overwrite existing content.
+
 * New reserved keywords: ``virtual``.
 
 * The names of variables declared in inline assembly may no longer end in ``_slot`` or ``_offset``.
@@ -75,6 +79,9 @@ This section gives detailed instructions on how to update prior code for every b
 * Change ``uint length = array.push(value)`` to ``array.push(value);``. The new length can be
   accessed via ``array.length``.
 
+* Change ``array.length++`` to ``array.push()`` to increase, and use ``pop()`` to decrease
+  the length of a storage array.
+
 * For every named return parameter in a function's ``@dev`` documentation define a ``@return``
   entry which contains the parameter's name as the first word. E.g. if you have function ``f()`` defined
   like ``function f() public returns (uint value)`` and a ``@dev`` annotating it, document its return
@@ -84,6 +91,7 @@ This section gives detailed instructions on how to update prior code for every b
 * Choose unique identifiers for variable declarations in inline assembly that do not conflict with declartions outside the inline assembly block.
 
 * Add ``virtual`` to every non-interface function you intend to override.  For single inheritance, add ``override`` to every overriding function. For multiple inheritance, add ``override(A, B, ..)``, where you list all contracts that define the overridden function in the brackets. When multiple bases define the same function, the inheriting contract must override all conflicting functions.
+
 
 New Features
 ============

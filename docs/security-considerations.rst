@@ -278,7 +278,8 @@ a ``mapping``.
         mapping (uint => uint)[] array;
 
         function allocate(uint _newMaps) public {
-            array.length += _newMaps;
+            for (uint i = 0; i < _newMaps; i++)
+                array.push();
         }
 
         function writeMap(uint _map, uint _key, uint _value) public {
