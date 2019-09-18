@@ -800,14 +800,12 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				//m_context << Instruction::SWAP1 << Instruction::POP;
 				break;
 			case DataLocation::Storage:
-				setLValue(_memberAccess, make_unique<IRStorageArrayLength>(
-					m_context.utils(),
-					m_context.variable(_memberAccess.expression()),
-					*_memberAccess.annotation().type,
-					type
-				));
-
+			{
+				string slot = m_context.variable(_memberAccess.expression());
+				defineExpression(_memberAccess) <<
+					m_utils.arrayLengthFunction(type) + "(" + slot + ")\n";
 				break;
+			}
 			case DataLocation::Memory:
 				defineExpression(_memberAccess) <<
 					"mload(" <<

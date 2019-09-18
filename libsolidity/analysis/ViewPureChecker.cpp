@@ -381,7 +381,7 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 	{
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
 		if (member == "length" && type.isDynamicallySized() && type.dataStoredIn(DataLocation::Storage))
-			mutability = writes ? StateMutability::NonPayable : StateMutability::View;
+			mutability = StateMutability::View;
 		break;
 	}
 	default:

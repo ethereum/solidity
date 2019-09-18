@@ -2398,14 +2398,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	if (auto const* structType = dynamic_cast<StructType const*>(exprType))
 		annotation.isLValue = !structType->dataStoredIn(DataLocation::CallData);
 	else if (exprType->category() == Type::Category::Array)
-	{
-		auto const& arrayType(dynamic_cast<ArrayType const&>(*exprType));
-		annotation.isLValue = (
-			memberName == "length" &&
-			arrayType.location() == DataLocation::Storage &&
-			arrayType.isDynamicallySized()
-		);
-	}
+		annotation.isLValue = false;
 	else if (exprType->category() == Type::Category::FixedBytes)
 		annotation.isLValue = false;
 	else if (TypeType const* typeType = dynamic_cast<decltype(typeType)>(exprType))
@@ -2862,20 +2855,9 @@ void TypeChecker::requireLValue(Expression const& _expression)
 				if (structType->dataStoredIn(DataLocation::CallData))
 					return "Calldata structs are read-only.";
 			}
-			else if (auto arrayType = dynamic_cast<ArrayType const*>(type(memberAccess->expression())))
-				if (
-					memberAccess->memberName() == "length" ||
-					memberAccess->memberName() == "push"
-				)
-					switch (arrayType->location())
-					{
-						case DataLocation::Memory:
-							return "Memory arrays cannot be resized.";
-						case DataLocation::CallData:
-							return "Calldata arrays cannot be resized.";
-						case DataLocation::Storage:
-							break;
-					}
+			else if (dynamic_cast<ArrayType const*>(type(memberAccess->expression())))
+				if (memberAccess->memberName() == "length")
+					return "Member \"length\" is read-only and cannot be used to resize arrays.";
 		}
 
 		if (auto identifier = dynamic_cast<Identifier const*>(&_expression))

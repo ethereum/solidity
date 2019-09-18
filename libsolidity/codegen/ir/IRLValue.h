@@ -110,30 +110,6 @@ private:
 	boost::variant<std::string, unsigned> const m_offset;
 };
 
-/**
- * Reference to the "length" member of a dynamically-sized storage array. This is an LValue with special
- * semantics since assignments to it might reduce its length and thus the array's members have to be
- * deleted.
- */
-class IRStorageArrayLength: public IRLValue
-{
-public:
-	IRStorageArrayLength(
-		YulUtilFunctions _utils,
-		std::string _slot,
-		Type const& _type,
-		ArrayType const& _arrayType
-	);
-
-	std::string retrieveValue() const override;
-	std::string storeValue(std::string const& _value, Type const& _type) const override;
-	std::string setToZero() const override;
-
-private:
-	ArrayType const& m_arrayType;
-	std::string const m_slot;
-};
-
 class IRMemoryItem: public IRLValue
 {
 public:
