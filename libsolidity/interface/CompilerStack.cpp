@@ -152,6 +152,14 @@ void CompilerStack::setOptimiserSettings(OptimiserSettings _settings)
 	m_optimiserSettings = std::move(_settings);
 }
 
+void CompilerStack::setRevertStringBehaviour(RevertStrings _revertStrings)
+{
+	if (m_stackState >= ParsingPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set revert string settings before parsing."));
+	solUnimplementedAssert(_revertStrings == RevertStrings::Default || _revertStrings == RevertStrings::Strip, "");
+	m_revertStrings = _revertStrings;
+}
+
 void CompilerStack::useMetadataLiteralSources(bool _metadataLiteralSources)
 {
 	if (m_stackState >= ParsingPerformed)
@@ -187,6 +195,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_evmVersion = langutil::EVMVersion();
 		m_generateIR = false;
 		m_generateEWasm = false;
+		m_revertStrings = RevertStrings::Default;
 		m_optimiserSettings = OptimiserSettings::minimal();
 		m_metadataLiteralSources = false;
 		m_metadataHash = MetadataHash::IPFS;
@@ -972,7 +981,7 @@ void CompilerStack::compileContract(
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 
-	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimiserSettings);
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_revertStrings, m_optimiserSettings);
 	compiledContract.compiler = compiler;
 
 	bytes cborEncodedMetadata = createCBORMetadata(
@@ -1170,6 +1179,9 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 
 		meta["settings"]["optimizer"]["details"] = std::move(details);
 	}
+
+	if (m_revertStrings != RevertStrings::Default)
+		meta["settings"]["debug"]["revertStrings"] = revertStringsToString(m_revertStrings);
 
 	if (m_metadataLiteralSources)
 		meta["settings"]["metadata"]["useLiteralContent"] = true;

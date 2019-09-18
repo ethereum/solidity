@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/DebugSettings.h>
 #include <libyul/AssemblyStack.h>
 #include <liblangutil/EVMVersion.h>
 
@@ -111,6 +112,8 @@ private:
 	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
 	/// EVM version to use
 	langutil::EVMVersion m_evmVersion;
+	/// How to handle revert strings
+	RevertStrings m_revertStrings = RevertStrings::Default;
 	/// Chosen hash method for the bytecode metadata.
 	CompilerStack::MetadataHash m_metadataHash = CompilerStack::MetadataHash::IPFS;
 	/// Whether or not to colorize diagnostics output.

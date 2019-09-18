@@ -25,6 +25,7 @@
 #include <test/Options.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
+#include <libsolidity/interface/DebugSettings.h>
 
 #include <liblangutil/EVMVersion.h>
 
@@ -269,6 +270,7 @@ protected:
 	bytes const& logData(size_t _logIdx) const;
 
 	langutil::EVMVersion m_evmVersion;
+	solidity::RevertStrings m_revertStrings = solidity::RevertStrings::Default;
 	solidity::OptimiserSettings m_optimiserSettings = solidity::OptimiserSettings::minimal();
 	bool m_showMessages = false;
 	std::shared_ptr<EVMHost> m_evmHost;

@@ -65,6 +65,7 @@ private:
 		std::map<h256, std::string> smtLib2Responses;
 		langutil::EVMVersion evmVersion;
 		std::vector<CompilerStack::Remapping> remappings;
+		RevertStrings revertStrings = RevertStrings::Default;
 		OptimiserSettings optimiserSettings = OptimiserSettings::minimal();
 		std::map<std::string, h160> libraries;
 		bool metadataLiteralSources = false;

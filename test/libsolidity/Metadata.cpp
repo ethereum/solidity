@@ -284,6 +284,26 @@ BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
 	check(sourceCode, false);
 }
 
+BOOST_AUTO_TEST_CASE(metadata_revert_strings)
+{
+	CompilerStack compilerStack;
+	char const* sourceCodeA = R"(
+		pragma solidity >=0.0;
+		contract A {
+		}
+	)";
+	compilerStack.setSources({{"A", std::string(sourceCodeA)}});
+	compilerStack.setRevertStringBehaviour(RevertStrings::Strip);
+	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
+
+	std::string const& serialisedMetadata = compilerStack.metadata("A");
+	BOOST_CHECK(dev::test::isValidMetadata(serialisedMetadata));
+	Json::Value metadata;
+	BOOST_REQUIRE(jsonParseStrict(serialisedMetadata, metadata));
+
+	BOOST_CHECK_EQUAL(metadata["settings"]["debug"]["revertStrings"], "strip");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

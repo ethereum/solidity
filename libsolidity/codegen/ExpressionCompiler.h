@@ -25,6 +25,7 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/LValue.h>
+#include <libsolidity/interface/DebugSettings.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
 #include <libdevcore/Common.h>
@@ -55,8 +56,15 @@ class ArrayType;
 class ExpressionCompiler: private ASTConstVisitor
 {
 public:
-	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimiseOrderLiterals):
-		m_optimiseOrderLiterals(_optimiseOrderLiterals), m_context(_compilerContext) {}
+	ExpressionCompiler(
+		CompilerContext& _compilerContext,
+		RevertStrings _revertStrings,
+		bool _optimiseOrderLiterals
+	):
+		m_revertStrings(_revertStrings),
+		m_optimiseOrderLiterals(_optimiseOrderLiterals),
+		m_context(_compilerContext)
+	{}
 
 	/// Compile the given @a _expression and leave its value on the stack.
 	void compile(Expression const& _expression);
@@ -130,6 +138,7 @@ private:
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();
 
+	RevertStrings m_revertStrings;
 	bool m_optimiseOrderLiterals;
 	CompilerContext& m_context;
 	std::unique_ptr<LValue> m_currentLValue;

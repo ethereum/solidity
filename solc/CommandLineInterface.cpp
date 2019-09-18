@@ -32,6 +32,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/interface/DebugSettings.h>
 
 #include <libyul/AssemblyStack.h>
 
@@ -140,6 +141,17 @@ static string const g_strOptimizeRuns = "optimize-runs";
 static string const g_strOptimizeYul = "optimize-yul";
 static string const g_strOutputDir = "output-dir";
 static string const g_strOverwrite = "overwrite";
+static string const g_strRevertStrings = "revert-strings";
+
+/// Possible arguments to for --revert-strings
+static set<string> const g_revertStringsArgs
+{
+	revertStringsToString(RevertStrings::Default),
+	revertStringsToString(RevertStrings::Strip),
+	revertStringsToString(RevertStrings::Debug),
+	revertStringsToString(RevertStrings::VerboseDebug)
+};
+
 static string const g_strSignatureHashes = "hashes";
 static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
@@ -678,6 +690,11 @@ Allowed options)",
 			"Address is interpreted as a hex string optionally prefixed by 0x."
 		)
 		(
+			g_strRevertStrings.c_str(),
+			po::value<string>()->value_name(boost::join(g_revertStringsArgs, ",")),
+			"Strip revert (and require) reason strings or add additional debugging information."
+		)
+		(
 			(g_argOutputDir + ",o").c_str(),
 			po::value<string>()->value_name("path"),
 			"If given, creates one file per component and contract/file at the specified directory."
@@ -795,6 +812,23 @@ Allowed options)",
 	{
 		license();
 		return false;
+	}
+
+	if (m_args.count(g_strRevertStrings))
+	{
+		string revertStringsString = m_args[g_strRevertStrings].as<string>();
+		std::optional<RevertStrings> revertStrings = revertStringsFromString(revertStringsString);
+		if (!revertStrings)
+		{
+			serr() << "Invalid option for --" << g_strRevertStrings << ": " << revertStringsString << endl;
+			return false;
+		}
+		if (*revertStrings != RevertStrings::Default && *revertStrings != RevertStrings::Strip)
+		{
+			serr() << "Only \"default\" and \"strip\" are implemented for --" << g_strRevertStrings << " for now." << endl;
+			return false;
+		}
+		m_revertStrings = *revertStrings;
 	}
 
 	if (m_args.count(g_argCombinedJson))
@@ -985,6 +1019,7 @@ bool CommandLineInterface::processInput()
 			m_compiler->setLibraries(m_libraries);
 		m_compiler->setParserErrorRecovery(m_args.count(g_argErrorRecovery));
 		m_compiler->setEVMVersion(m_evmVersion);
+		m_compiler->setRevertStringBehaviour(m_revertStrings);
 		// TODO: Perhaps we should not compile unless requested
 
 		m_compiler->enableIRGeneration(m_args.count(g_argIR));

@@ -350,7 +350,7 @@ std::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"parserErrorRecovery", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings"};
+	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings"};
 	return checkKeys(_input, keys, "settings");
 }
 
@@ -649,6 +649,27 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 		ret.evmVersion = *version;
 	}
 
+	if (settings.isMember("debug"))
+	{
+		if (auto result = checkKeys(settings["debug"], {"revertStrings"}, "settings.debug"))
+			return *result;
+
+		if (settings["debug"].isMember("revertStrings"))
+		{
+			if (!settings["debug"]["revertStrings"].isString())
+				return formatFatalError("JSONError", "settings.debug.revertStrings must be a string.");
+			std::optional<RevertStrings> revertStrings = revertStringsFromString(settings["debug"]["revertStrings"].asString());
+			if (!revertStrings)
+				return formatFatalError("JSONError", "Invalid value for settings.debug.revertStrings.");
+			if (*revertStrings != RevertStrings::Default && *revertStrings != RevertStrings::Strip)
+				return formatFatalError(
+					"UnimplementedFeatureError",
+					"Only \"default\" and \"strip\" are implemented for settings.debug.revertStrings for now."
+				);
+			ret.revertStrings = *revertStrings;
+		}
+	}
+
 	if (settings.isMember("remappings") && !settings["remappings"].isArray())
 		return formatFatalError("JSONError", "\"settings.remappings\" must be an array of strings.");
 
@@ -751,6 +772,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.setParserErrorRecovery(_inputsAndSettings.parserErrorRecovery);
 	compilerStack.setRemappings(_inputsAndSettings.remappings);
 	compilerStack.setOptimiserSettings(std::move(_inputsAndSettings.optimiserSettings));
+	compilerStack.setRevertStringBehaviour(_inputsAndSettings.revertStrings);
 	compilerStack.setLibraries(_inputsAndSettings.libraries);
 	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
 	compilerStack.setMetadataHash(_inputsAndSettings.metadataHash);
@@ -990,6 +1012,8 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 		return formatFatalError("JSONError", "Field \"settings.remappings\" cannot be used for Yul.");
 	if (!_inputsAndSettings.libraries.empty())
 		return formatFatalError("JSONError", "Field \"settings.libraries\" cannot be used for Yul.");
+	if (_inputsAndSettings.revertStrings != RevertStrings::Default)
+		return formatFatalError("JSONError", "Field \"settings.debug.revertStrings\" cannot be used for Yul.");
 
 	Json::Value output = Json::objectValue;
 
