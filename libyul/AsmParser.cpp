@@ -321,12 +321,8 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		{
 			Identifier identifier{location(), literal};
 			advance();
-			if (m_scanner->currentToken() == Token::LParen)
-				return FunctionCall{identifier.location, identifier, {}};
-			else if (instructions().count(identifier.name.str()))
-				m_errorReporter.syntaxError(identifier.location, "Instructions must be invoked function style. Expecting an '(' after the instruction.");
-			else
-				m_errorReporter.syntaxError(identifier.location, "Invalid identifier.");
+			expectToken(Token::LParen, false);
+			return FunctionCall{identifier.location, identifier, {}};
 		}
 		else
 			ret = Identifier{location(), literal};
