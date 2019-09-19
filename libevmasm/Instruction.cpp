@@ -356,13 +356,13 @@ string dev::eth::disassemble(bytes const& _mem)
 	stringstream ret;
 	eachInstruction(_mem, [&](Instruction _instr, u256 const& _data) {
 		if (!isValidInstruction(_instr))
-			ret << "0x" << hex << int(_instr) << " ";
+			ret << "0x" << hex << nouppercase << int(_instr) << " ";
 		else
 		{
 			InstructionInfo info = instructionInfo(_instr);
 			ret << info.name << " ";
 			if (info.additional)
-				ret << "0x" << hex << _data << " ";
+				ret << "0x" << hex << nouppercase << _data << " ";
 		}
 	});
 	return ret.str();

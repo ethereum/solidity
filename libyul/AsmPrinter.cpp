@@ -81,7 +81,7 @@ string AsmPrinter::operator()(Literal const& _literal) const
 		else if (!isprint(c, locale::classic()))
 		{
 			ostringstream o;
-			o << std::hex << setfill('0') << setw(2) << (unsigned)(unsigned char)(c);
+			o << hex << nouppercase << setfill('0') << setw(2) << (unsigned)(unsigned char)(c);
 			out += "\\x" + o.str();
 		}
 		else

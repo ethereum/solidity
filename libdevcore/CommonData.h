@@ -242,7 +242,7 @@ inline std::string formatNumber(u256 const& _value)
 inline std::string toCompactHexWithPrefix(u256 val)
 {
 	std::ostringstream ret;
-	ret << std::hex << val;
+	ret << std::hex << std::nouppercase << val;
 	return "0x" + ret.str();
 }
 

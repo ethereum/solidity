@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(if_)
 {
 	// z is only removed after the if (after the jumpdest)
 	string out = assemble("{ let z := mload(0) if z { let x := z } let t := 3 }");
-	BOOST_CHECK_EQUAL(out, "PUSH1 0x0 MLOAD DUP1 ISZERO PUSH1 0xA JUMPI DUP1 POP JUMPDEST POP PUSH1 0x3 POP ");
+	BOOST_CHECK_EQUAL(out, "PUSH1 0x0 MLOAD DUP1 ISZERO PUSH1 0xa JUMPI DUP1 POP JUMPDEST POP PUSH1 0x3 POP ");
 }
 
 BOOST_AUTO_TEST_CASE(switch_)
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(function_retparam)
 		function f() -> x, y { }
 	})";
 	BOOST_CHECK_EQUAL(assemble(in),
-		"PUSH1 0xB JUMP "
+		"PUSH1 0xb JUMP "
 		"JUMPDEST PUSH1 0x0 PUSH1 0x0 SWAP1 SWAP2 JUMP "
 		"JUMPDEST "
 	);
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(function_params_and_retparams_partly_unused)
 		function f(a, b, c, d) -> x, y { b := 3 let s := 9 y := 2 mstore(s, y) }
 	})";
 	BOOST_CHECK_EQUAL(assemble(in),
-		"PUSH1 0x1E JUMP "
+		"PUSH1 0x1e JUMP "
 		"JUMPDEST PUSH1 0x0 PUSH1 0x0 "
 		"PUSH1 0x3 SWAP4 POP "
 		"PUSH1 0x9 PUSH1 0x2 SWAP2 POP "
@@ -256,10 +256,10 @@ BOOST_AUTO_TEST_CASE(function_call)
 		b := f(3, 4)
 	})";
 	BOOST_CHECK_EQUAL(assemble(in),
-		"PUSH1 0x9 PUSH1 0x2 PUSH1 0x1 PUSH1 0xD JUMP "
+		"PUSH1 0x9 PUSH1 0x2 PUSH1 0x1 PUSH1 0xd JUMP "
 		"JUMPDEST PUSH1 0x15 JUMP " // jump over f
 		"JUMPDEST PUSH1 0x0 SWAP3 SWAP2 POP POP JUMP " // f
-		"JUMPDEST PUSH1 0x1F PUSH1 0x4 PUSH1 0x3 PUSH1 0xD JUMP "
+		"JUMPDEST PUSH1 0x1f PUSH1 0x4 PUSH1 0x3 PUSH1 0xd JUMP "
 		"JUMPDEST SWAP1 POP POP "
 	);
 }
@@ -280,12 +280,12 @@ BOOST_AUTO_TEST_CASE(functions_multi_return)
 		"PUSH1 0x13 JUMP "
 		"JUMPDEST PUSH1 0x0 SWAP3 SWAP2 POP POP JUMP " // f
 		"JUMPDEST PUSH1 0x0 PUSH1 0x0 SWAP1 SWAP2 JUMP " // g
-		"JUMPDEST PUSH1 0x1D PUSH1 0x2 PUSH1 0x1 PUSH1 0x3 JUMP " // f(1, 2)
+		"JUMPDEST PUSH1 0x1d PUSH1 0x2 PUSH1 0x1 PUSH1 0x3 JUMP " // f(1, 2)
 		"JUMPDEST PUSH1 0x27 PUSH1 0x4 PUSH1 0x3 PUSH1 0x3 JUMP " // f(3, 4)
 		"JUMPDEST SWAP1 POP " // assignment to x
 		"POP " // remove x
-		"PUSH1 0x30 PUSH1 0xB JUMP " // g()
-		"JUMPDEST PUSH1 0x36 PUSH1 0xB JUMP " // g()
+		"PUSH1 0x30 PUSH1 0xb JUMP " // g()
+		"JUMPDEST PUSH1 0x36 PUSH1 0xb JUMP " // g()
 		"JUMPDEST SWAP2 POP SWAP2 POP " // assignments
 		"POP POP " // removal of y and z
 		"PUSH1 0x7 POP "
@@ -327,9 +327,9 @@ BOOST_AUTO_TEST_CASE(reuse_slots_function_with_gaps)
 	BOOST_CHECK_EQUAL(assemble(in),
 		"PUSH1 0x5 PUSH1 0x6 PUSH1 0x7 "
 		"DUP2 DUP4 MSTORE "
-		"PUSH1 0x1A JUMP " // jump across function
+		"PUSH1 0x1a JUMP " // jump across function
 		"JUMPDEST PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 SWAP1 SWAP2 SWAP3 SWAP4 JUMP "
-		"JUMPDEST PUSH1 0x20 PUSH1 0xC JUMP "
+		"JUMPDEST PUSH1 0x20 PUSH1 0xc JUMP "
 		// stack: x1 x2 x3 a b c d
 		"JUMPDEST SWAP6 POP " // move d into x1
 		// stack: d x2 x3 a b c

@@ -145,7 +145,7 @@ template <unsigned N>
 inline std::ostream& operator<<(std::ostream& _out, FixedHash<N> const& _h)
 {
 	boost::io::ios_all_saver guard(_out);
-	_out << std::noshowbase << std::hex << std::setfill('0');
+	_out << std::noshowbase << std::hex << std::nouppercase << std::setfill('0');
 	for (unsigned i = 0; i < N; ++i)
 		_out << std::setw(2) << (int)_h[i];
 	_out << std::dec;

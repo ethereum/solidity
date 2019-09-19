@@ -108,7 +108,7 @@ inline u256 exp256(u256 _base, u256 _exponent)
 inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
 {
 	std::ostringstream ss;
-	ss << std::hex;
+	ss << std::hex << std::nouppercase;
 	std::copy(_bytes.begin(), _bytes.end(), std::ostream_iterator<int>(ss, ","));
 	std::string result = ss.str();
 	result.pop_back();

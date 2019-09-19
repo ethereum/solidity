@@ -138,13 +138,13 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [tag]\",\"value\":\"1\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"JUMP\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH tag\",\"value\":\"Unused feature for pushing string\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH data\",\"value\":\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH data\",\"value\":\"a6885b3731702da62e8e4a8f584ac46a7f6822f4e2ba50fba902f67b1588d23b\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH #[$]\",\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [$]\",\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSHDEPLOYADDRESS\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"STOP\"}],"
 		"\".data\":{\"0\":{\".code\":[{\"begin\":6,\"end\":8,\"name\":\"INVALID\"}]},"
-		"\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\":\"01020304\"}}"
+		"\"a6885b3731702da62e8e4a8f584ac46a7f6822f4e2ba50fba902f67b1588d23b\":\"01020304\"}}"
 	);
 }
 
