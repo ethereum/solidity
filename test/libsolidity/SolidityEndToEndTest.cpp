@@ -5446,7 +5446,7 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base_with_gap)
 			}
 			uint public m_i;
 		}
-		contract Base1 is Base {
+		abstract contract Base1 is Base {
 			constructor(uint k) public {}
 		}
 		contract Derived is Base, Base1 {
@@ -10483,7 +10483,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 BOOST_AUTO_TEST_CASE(calling_nonexisting_contract_throws)
 {
 	char const* sourceCode = R"YY(
-		contract D { function g() public; }
+		abstract contract D { function g() public; }
 		contract C {
 			D d = D(0x1212);
 			function f() public returns (uint) {

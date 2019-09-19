@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(function_no_implementation)
 {
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
-		contract test {
+		abstract contract test {
 			function functionName(bytes32 input) public returns (bytes32 out);
 		}
 	)";
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 {
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
-		contract base { function foo() public; }
-		contract derived is base { function foo() public override {} }
+		abstract contract base { function foo() public; }
+		contract derived is base { function foo() public {} }
 	)";
 	sourceUnit = parseAndAnalyse(text);
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
 {
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
-		contract base { function foo(bool) public; }
-		contract derived is base { function foo(uint) public {} }
+		abstract contract base { function foo(bool) public; }
+		abstract contract derived is base { function foo(uint) public {} }
 	)";
 	sourceUnit = parseAndAnalyse(text);
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
 {
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
-		contract base { function foo() public; }
-		contract foo is base { constructor() public {} }
+		abstract contract base { function foo() public; }
+		abstract contract foo is base { constructor() public {} }
 	)";
 	sourceUnit = parseAndAnalyse(text);
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(string)
 BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 {
 	char const* sourceCode = R"(
-		contract C {
+		abstract contract C {
 			function f(uint) public returns (string memory);
 			function g() public {
 				string memory x = this.f(2);

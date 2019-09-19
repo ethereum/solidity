@@ -276,7 +276,7 @@ contract multiowned {
 // inheritable "property" contract that enables methods to be protected by placing a linear limit (specifiable)
 // on a particular resource per calendar day. is multiowned to allow the limit to be altered. resource that method
 // uses is specified in the modifier.
-contract daylimit is multiowned {
+abstract contract daylimit is multiowned {
 
 	// MODIFIERS
 
@@ -330,7 +330,7 @@ contract daylimit is multiowned {
 }
 
 // interface contract for multisig proxy contracts; see below for docs.
-contract multisig {
+abstract contract multisig {
 
 	// EVENTS
 
