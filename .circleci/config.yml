@@ -190,7 +190,7 @@ defaults:
         -i -H "Content-Type: application/json"
         -H "Accept: application/json"
         -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
-        -d '{"text":" ❌ Nightly job **'$CIRCLE_JOB'** failed. Please check '$CIRCLE_BUILD_URL' for details."}'
+        -d '{"text":" ❌ Nightly job **'$CIRCLE_JOB'** failed on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
       when: on_fail
 
   - gitter_notify_success: &gitter_notify_success
@@ -200,7 +200,7 @@ defaults:
         -i -H "Content-Type: application/json"
         -H "Accept: application/json"
         -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
-        -d '{"text":" ✅ Nightly job **'$CIRCLE_JOB'** succeeded. Please check '$CIRCLE_BUILD_URL' for details."}'
+        -d '{"text":" ✅ Nightly job **'$CIRCLE_JOB'** succeeded on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
       when: on_success
 
 # -----------------------------------------------------------------------------------------------
@@ -656,6 +656,7 @@ workflows:
             branches:
               only:
                 - develop
+                - develop_060
 
     jobs:
       # Emscripten builds and external tests
