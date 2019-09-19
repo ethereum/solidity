@@ -8,9 +8,9 @@ library L {
     function i(uint[] calldata, uint[] storage) external pure returns (S storage x) {return x; }
 }
 // ----
-// TypeError: (197-198): This variable is of storage pointer type and can be accessed without prior assignment.
-// TypeError: (203-204): This variable is of storage pointer type and can be accessed without prior assignment.
-// TypeError: (359-360): This variable is of storage pointer type and can be accessed without prior assignment.
-// TypeError: (365-366): This variable is of storage pointer type and can be accessed without prior assignment.
-// TypeError: (460-461): This variable is of storage pointer type and can be accessed without prior assignment.
-// TypeError: (557-558): This variable is of storage pointer type and can be accessed without prior assignment.
+// TypeError: (197-198): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError: (203-204): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError: (359-360): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError: (365-366): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError: (460-461): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError: (557-558): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
