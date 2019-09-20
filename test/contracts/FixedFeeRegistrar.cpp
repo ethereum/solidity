@@ -53,7 +53,7 @@ static char const* registrarCode = R"DELIMITER(
 // @authors:
 //   Gav Wood <g@ethdev.com>
 
-pragma solidity >=0.4.0 <0.6.0;
+pragma solidity >=0.4.0 <0.7.0;
 
 contract Registrar {
 	event Changed(string indexed name);
