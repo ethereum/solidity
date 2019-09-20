@@ -427,21 +427,44 @@ jobs:
     environment:
       TERM: xterm
       CMAKE_BUILD_TYPE: Debug
-      CMAKE_OPTIONS: -DLLL=ON
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}
       - run:
           name: Install build dependencies
-          command: |
-            brew unlink python
-            brew install z3
-            brew install boost
-            brew install cmake
-            brew install wget
-            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+          command: ./.circleci/osx_install_dependencies.sh
+      - save_cache:
+          key: dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}
+          paths:
+            - /usr/local/bin
+            - /usr/local/sbin
+            - /usr/local/lib
+            - /usr/local/include
+            - /usr/local/Cellar
+            - /usr/local/Homebrew
       - run: *run_build
       - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
+      - persist_to_workspace: *artifacts_build_dir
+
+  t_osx_soltest:
+    macos:
+      xcode: "11.0.0"
+    environment:
+      EVM: constantinople
+      OPTIMIZE: 0
+      TERM: xterm
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}
+      - attach_workspace:
+          at: build
+      - run: *run_soltest
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
 
   t_osx_cli:
     macos:
@@ -450,13 +473,11 @@ jobs:
       TERM: xterm
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}
       - attach_workspace:
           at: build
-      - run:
-          name: Install dependencies
-          command: |
-            brew unlink python
-            brew install z3
       - run: *run_cmdline_tests
       - store_artifacts: *artifacts_test_results
 
@@ -660,6 +681,7 @@ workflows:
       # OS/X build and tests
       - b_osx: *workflow_trigger_on_tags
       - t_osx_cli: *workflow_osx
+      - t_osx_soltest: *workflow_osx
 
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
