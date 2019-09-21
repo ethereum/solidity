@@ -31,7 +31,7 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 
-#include <boost/optional.hpp>
+#include <optional>
 #include <boost/algorithm/string/replace.hpp>
 
 #include <string>
@@ -61,7 +61,7 @@ bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorR
 			return (yul::AsmAnalyzer(
 				analysisInfo,
 				errorReporter,
-				boost::none,
+				std::nullopt,
 				_dialect
 			)).analyze(*parserResult);
 		}
@@ -73,7 +73,7 @@ bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorR
 	return false;
 }
 
-boost::optional<Error> parseAndReturnFirstError(string const& _source, Dialect const& _dialect, bool _allowWarnings = true)
+std::optional<Error> parseAndReturnFirstError(string const& _source, Dialect const& _dialect, bool _allowWarnings = true)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);

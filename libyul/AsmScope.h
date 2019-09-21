@@ -27,7 +27,7 @@
 #include <libdevcore/Visitor.h>
 
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <functional>
 #include <memory>

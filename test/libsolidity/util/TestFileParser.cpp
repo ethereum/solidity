@@ -24,7 +24,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 #include <boost/throw_exception.hpp>
 
 #include <fstream>

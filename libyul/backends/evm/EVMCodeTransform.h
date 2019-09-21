@@ -28,7 +28,7 @@
 #include <libyul/AsmScope.h>
 
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <stack>
 

@@ -350,7 +350,7 @@ void setupTerminal()
 #endif
 }
 
-boost::optional<TestStats> runTestSuite(
+std::optional<TestStats> runTestSuite(
 	TestCreator _testCaseCreator,
 	TestOptions const& _options,
 	fs::path const& _basePath,

@@ -117,7 +117,7 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 	AsmAnalyzer analyzer(
 		*_object.analysisInfo,
 		m_errorReporter,
-		boost::none,
+		std::nullopt,
 		languageToDialect(m_language, m_evmVersion),
 		{},
 		_object.dataNames()

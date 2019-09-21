@@ -26,7 +26,7 @@
 #include <libyul/optimiser/NameDispenser.h>
 
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <set>
 

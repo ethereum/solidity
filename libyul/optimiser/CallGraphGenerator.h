@@ -24,7 +24,7 @@
 
 #include <libdevcore/InvertibleMap.h>
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <set>
 #include <map>

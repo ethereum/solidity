@@ -26,7 +26,7 @@
 #include <libyul/AsmData.h>
 
 #include <boost/noncopyable.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <functional>
 #include <vector>
@@ -57,7 +57,7 @@ public:
 	/// by the constructor, but we had some issues with static initialization.
 	bool isInitialized() const;
 
-	static boost::optional<std::pair<dev::eth::Instruction, std::vector<Expression> const*>>
+	static std::optional<std::pair<dev::eth::Instruction, std::vector<Expression> const*>>
 	instructionAndArguments(Dialect const& _dialect, Expression const& _expr);
 
 private:

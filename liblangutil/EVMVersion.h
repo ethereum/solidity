@@ -24,7 +24,7 @@
 
 #include <string>
 
-#include <boost/optional.hpp>
+#include <optional>
 #include <boost/operators.hpp>
 
 
@@ -51,7 +51,7 @@ public:
 	static EVMVersion istanbul() { return {Version::Istanbul}; }
 	static EVMVersion berlin() { return {Version::Berlin}; }
 
-	static boost::optional<EVMVersion> fromString(std::string const& _version)
+	static std::optional<EVMVersion> fromString(std::string const& _version)
 	{
 		for (auto const& v: {homestead(), tangerineWhistle(), spuriousDragon(), byzantium(), constantinople(), petersburg(), istanbul(), berlin()})
 			if (_version == v.name())

@@ -26,7 +26,7 @@
 #include <libsolidity/ast/ASTEnums.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <map>
 #include <memory>
@@ -183,7 +183,7 @@ struct ExpressionAnnotation: ASTAnnotation
 
 	/// Types and - if given - names of arguments if the expr. is a function
 	/// that is called, used for overload resoultion
-	boost::optional<FuncCallArguments> arguments;
+	std::optional<FuncCallArguments> arguments;
 };
 
 struct IdentifierAnnotation: ExpressionAnnotation

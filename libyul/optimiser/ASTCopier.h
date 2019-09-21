@@ -25,7 +25,7 @@
 #include <libyul/YulString.h>
 
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <vector>
 #include <set>

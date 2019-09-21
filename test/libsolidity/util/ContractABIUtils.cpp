@@ -141,14 +141,14 @@ string functionSignatureFromABI(Json::Value const& _functionABI)
 
 }
 
-boost::optional<dev::solidity::test::ParameterList> ContractABIUtils::parametersFromJsonOutputs(
+std::optional<dev::solidity::test::ParameterList> ContractABIUtils::parametersFromJsonOutputs(
 	ErrorReporter& _errorReporter,
 	Json::Value const& _contractABI,
 	string const& _functionSignature
 )
 {
 	if (!_contractABI)
-		return boost::none;
+		return std::nullopt;
 
 	for (auto const& function: _contractABI)
 		if (_functionSignature == functionSignatureFromABI(function))
@@ -177,17 +177,17 @@ boost::optional<dev::solidity::test::ParameterList> ContractABIUtils::parameters
 						"Could not convert \"" + type +
 						"\" to internal ABI type representation. Falling back to default encoding."
 					);
-					return boost::none;
+					return std::nullopt;
 				}
 
 				finalParams += inplaceTypeParams;
 
 				inplaceTypeParams.clear();
 			}
-			return boost::optional<ParameterList>(finalParams + dynamicTypeParams);
+			return std::optional<ParameterList>(finalParams + dynamicTypeParams);
 		}
 
-	return boost::none;
+	return std::nullopt;
 }
 
 bool ContractABIUtils::appendTypesFromName(
