@@ -865,12 +865,12 @@ public:
 
 	bool recursive() const
 	{
-		if (m_recursive.is_initialized())
-			return m_recursive.get();
+		if (m_recursive.has_value())
+			return m_recursive.value();
 
 		interfaceType(false);
 
-		return m_recursive.get();
+		return m_recursive.value();
 	}
 
 	std::unique_ptr<ReferenceType> copyForLocation(DataLocation _location, bool _isPointer) const override;

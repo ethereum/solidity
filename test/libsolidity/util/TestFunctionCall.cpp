@@ -139,7 +139,7 @@ string TestFunctionCall::format(
 					);
 
 				string bytesOutput = abiParams ?
-					BytesUtils::formatRawBytes(output, abiParams.get(), _linePrefix) :
+					BytesUtils::formatRawBytes(output, abiParams.value(), _linePrefix) :
 					BytesUtils::formatRawBytes(
 						output,
 						ContractABIUtils::defaultParameters(ceil(output.size() / 32)),
@@ -219,14 +219,14 @@ string TestFunctionCall::formatBytesParameters(
 			std::optional<ParameterList> preferredParams = ContractABIUtils::preferredParameters(
 				_errorReporter,
 				_parameters,
-				abiParams.get(),
+				abiParams.value(),
 				_bytes
 			);
 
 			if (preferredParams)
 			{
-				ContractABIUtils::overwriteParameters(_errorReporter, preferredParams.get(), abiParams.get());
-				os << BytesUtils::formatBytesRange(_bytes, preferredParams.get(), _highlight);
+				ContractABIUtils::overwriteParameters(_errorReporter, preferredParams.value(), abiParams.value());
+				os << BytesUtils::formatBytesRange(_bytes, preferredParams.value(), _highlight);
 			}
 		}
 		else

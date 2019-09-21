@@ -76,7 +76,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 		},
 		[&](Switch& _switchStmt) -> OptionalStatements {
 			if (std::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
-				return replaceConstArgSwitch(_switchStmt, constExprVal.get());
+				return replaceConstArgSwitch(_switchStmt, constExprVal.value());
 			return {};
 		},
 		[&](ForLoop& _forLoop) -> OptionalStatements {

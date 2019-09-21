@@ -906,7 +906,7 @@ public:
 		std::optional<StateMutability> _stateMutability = {}
 	): TypeName(_location), m_type(_elem), m_stateMutability(_stateMutability)
 	{
-		solAssert(!_stateMutability.is_initialized() || _elem.token() == Token::Address, "");
+		solAssert(!_stateMutability.has_value() || _elem.token() == Token::Address, "");
 	}
 
 	void accept(ASTVisitor& _visitor) override;
