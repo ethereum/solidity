@@ -872,7 +872,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 		ASTNodeFactory nodeFactory(*this);
 		nodeFactory.markEndPosition();
 		m_scanner->next();
-		auto stateMutability = std::make_optional(elemTypeName.token() == Token::Address, StateMutability::NonPayable);
+		auto stateMutability = elemTypeName.token() == Token::Address ? std::make_optional(StateMutability::NonPayable) : std::nullopt;
 		if (TokenTraits::isStateMutabilitySpecifier(m_scanner->currentToken(), false))
 		{
 			if (elemTypeName.token() == Token::Address)
