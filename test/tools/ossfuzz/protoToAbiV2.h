@@ -1,10 +1,18 @@
 #pragma once
 
+#include <test/tools/ossfuzz/abiV2Proto.pb.h>
+
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/Keccak256.h>
+#include <libdevcore/StringUtils.h>
 #include <libdevcore/Whiskers.h>
-#include <test/tools/ossfuzz/abiV2Proto.pb.h>
+
+#include <liblangutil/Exceptions.h>
+
+#include <boost/variant/static_visitor.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/variant.hpp>
+
 #include <ostream>
 #include <sstream>
 
@@ -89,32 +97,29 @@
  */
 
 
-namespace dev
-{
-namespace test
-{
-namespace abiv2fuzzer
-{
+namespace dev {
+namespace test {
+namespace abiv2fuzzer {
+
+/// Converts a protobuf input into a Solidity program that tests
+/// abi coding.
 class ProtoConverter
 {
 public:
-	ProtoConverter():
+	ProtoConverter() :
 		m_isStateVar(true),
 		m_counter(0),
 		m_varCounter(0),
 		m_returnValue(1),
-		m_isLastDynParamRightPadded(false)
+		m_isLastDynParamRightPadded(false),
+		m_structCounter(0),
+		m_numStructsAdded(0)
 	{}
 
 	ProtoConverter(ProtoConverter const&) = delete;
-
 	ProtoConverter(ProtoConverter&&) = delete;
-
 	std::string contractToString(Contract const& _input);
-
 private:
-	using VecOfBoolUnsigned = std::vector<std::pair<bool, unsigned>>;
-
 	enum class Delimiter
 	{
 		ADD,
@@ -125,79 +130,40 @@ private:
 		PUBLIC,
 		EXTERNAL
 	};
-	enum class DataType
-	{
-		BYTES,
-		STRING,
-		VALUE,
-		ARRAY
-	};
-
-	void visit(BoolType const&);
-
-	void visit(IntegerType const&);
-
-	void visit(FixedByteType const&);
-
-	void visit(AddressType const&);
-
-	void visit(ArrayType const&);
-
-	void visit(DynamicByteArrayType const&);
-
-	void visit(StructType const&);
-
-	void visit(ValueType const&);
-
-	void visit(NonValueType const&);
-
-	void visit(Type const&);
-
-	void visit(VarDecl const&);
-
-	void visit(TestFunction const&);
-
+	std::pair<std::string, std::string> visit(VarDecl const&);
+	std::string visit(TestFunction const&, std::string const&);
 	void visit(Contract const&);
 
-	std::string getValueByBaseType(ArrayType const&);
+	template <typename T>
+	std::pair<std::string, std::string> processType(T const& _type, bool _isValueType);
 
-	DataType getDataTypeByBaseType(ArrayType const& _x);
-
-	void resizeInitArray(
-		ArrayType const& _x,
-		std::string const& _baseType,
-		std::string const& _varName,
-		std::string const& _paramName
-	);
-
-	unsigned resizeDimension(
-		bool _isStatic,
-		unsigned _arrayLen,
-		std::string const& _var,
-		std::string const& _param,
-		std::string const& _type
-	);
-
-	void resizeHelper(
-		ArrayType const& _x,
-		std::vector<std::string> _arrStrVec,
-		VecOfBoolUnsigned _arrInfoVec,
-		std::string const& _varName,
-		std::string const& _paramName
-	);
-
-	// Utility functions
-	void appendChecks(DataType _type, std::string const& _varName, std::string const& _rhs);
-
-	void addVarDef(std::string const& _varName, std::string const& _rhs);
-
-	void addCheckedVarDef(
-		DataType _type,
+	template <typename T>
+	std::pair<std::string, std::string> assignChecker(
 		std::string const& _varName,
 		std::string const& _paramName,
-		std::string const& _rhs
+		T _type
 	);
 
+	template <typename T>
+	std::pair<std::string, std::string> varDecl(
+		std::string const& _varName,
+		std::string const& _paramName,
+		T _type,
+		bool _isValueType,
+		std::string const& _location
+	);
+	std::pair<std::string, std::string> visit(Type const&);
+	std::pair<std::string, std::string> visit(ValueType const&);
+	std::pair<std::string, std::string> visit(NonValueType const&);
+	std::pair<std::string, std::string> visit(BoolType const&);
+	std::pair<std::string, std::string> visit(IntegerType const&);
+	std::pair<std::string, std::string> visit(FixedByteType const&);
+	std::pair<std::string, std::string> visit(AddressType const&);
+	std::pair<std::string, std::string> visit(DynamicByteArrayType const&);
+	std::pair<std::string, std::string> visit(ArrayType const&);
+	std::pair<std::string, std::string> visit(StructType const&);
+
+	// Utility functions
 	void appendTypedParams(
 		CalleeType _calleeType,
 		bool _isValueType,
@@ -220,38 +186,23 @@ private:
 		Delimiter _delimiter = Delimiter::ADD
 	);
 
-	void appendVarDeclToOutput(
+	std::string appendVarDeclToOutput(
 		std::string const& _type,
 		std::string const& _varName,
 		std::string const& _qualifier
-	);
-
-	void checkResizeOp(std::string const& _varName, unsigned _len);
-
-	void visitType(DataType _dataType, std::string const& _type, std::string const& _value);
-
-	void visitArrayType(std::string const&, ArrayType const&);
-
-	void createDeclAndParamList(
-		std::string const& _type,
-		DataType _dataType,
-		std::string& _varName,
-		std::string& _paramName
 	);
 
 	std::string equalityChecksAsString();
 
 	std::string typedParametersAsString(CalleeType _calleeType);
 
-	void writeHelperFunctions();
+	std::string helperFunctions();
+
+	std::string testCode(unsigned _invalidLength);
+
+	std::pair<std::string, unsigned> structDecl(StructType const& _type);
 
 	// Function definitions
-	// m_counter is used to derive values for typed variables
-	unsigned getNextCounter()
-	{
-		return m_counter++;
-	}
-
 	// m_varCounter is used to derive declared and parameterized variable names
 	unsigned getNextVarCounter()
 	{
@@ -261,7 +212,7 @@ private:
 	// Accepts an unsigned counter and returns a pair of strings
 	// First string is declared name (s_varNamePrefix<varcounter_value>)
 	// Second string is parameterized name (s_paramPrefix<varcounter_value>)
-	auto newVarNames(unsigned _varCounter)
+	static std::pair<std::string, std::string> newVarNames(unsigned _varCounter)
 	{
 		return std::make_pair(
 			s_varNamePrefix + std::to_string(_varCounter),
@@ -269,62 +220,79 @@ private:
 		);
 	}
 
-	std::string getQualifier(DataType _dataType)
-	{
-		return ((isValueType(_dataType) || m_isStateVar) ? "" : "memory");
-	}
-
 	bool isLastDynParamRightPadded()
 	{
 		return m_isLastDynParamRightPadded;
 	}
 
-	// Static declarations
-	static std::string structTypeAsString(StructType const& _x);
-	static std::string boolValueAsString(unsigned _counter);
-	static std::string intValueAsString(unsigned _width, unsigned _counter);
-	static std::string uintValueAsString(unsigned _width, unsigned _counter);
-	static std::string integerValueAsString(bool _sign, unsigned _width, unsigned _counter);
-	static std::string addressValueAsString(unsigned _counter);
-	static std::string fixedByteValueAsString(unsigned _width, unsigned _counter);
-
-	/// Returns a hex literal if _isHexLiteral is true, a string literal otherwise.
-	/// The size of the returned literal is _numBytes bytes.
-	/// @param _decorate If true, the returned string is enclosed within double quotes
-	/// if _isHexLiteral is false.
-	/// @param _isHexLiteral If true, the returned string is enclosed within
-	/// double quotes prefixed by the string "hex" if _decorate is true. If
-	/// _decorate is false, the returned string is returned as-is.
-	/// @return hex value as string
-	static std::string hexValueAsString(
-		unsigned _numBytes,
-		unsigned _counter,
-		bool _isHexLiteral,
-		bool _decorate = true
-	);
-
-	/// Concatenates the hash value obtained from monotonically increasing counter
-	/// until the desired number of bytes determined by _numBytes.
-	/// @param _width Desired number of bytes for hex value
-	/// @param _counter A counter value used for creating a keccak256 hash
-	/// @param _isHexLiteral Since this routine may be used to construct
-	/// string or hex literals, this flag is used to construct a valid output.
-	/// @return Valid hex or string literal of size _width bytes
-	static std::string variableLengthValueAsString(
-		unsigned _width,
-		unsigned _counter,
-		bool _isHexLiteral
-	);
-	static std::vector<std::pair<bool, unsigned>> arrayDimensionsAsPairVector(ArrayType const& _x);
-	static std::string arrayDimInfoAsString(ArrayDimensionInfo const& _x);
-	static void arrayDimensionsAsStringVector(
-		ArrayType const& _x,
-		std::vector<std::string>&
-	);
-	static std::string bytesArrayTypeAsString(DynamicByteArrayType const& _x);
-	static std::string arrayTypeAsString(std::string const&, ArrayType const&);
 	static std::string delimiterToString(Delimiter _delimiter);
-	static std::string croppedString(unsigned _numBytes, unsigned _counter, bool _isHexLiteral);
+
+	/// Contains the test program
+	std::ostringstream m_output;
+	/// Contains a subset of the test program. This subset contains
+	/// checks to be encoded in the test program
+	std::ostringstream m_checks;
+	/// Contains typed parameter list to be passed to callee functions
+	std::ostringstream m_typedParamsExternal;
+	std::ostringstream m_typedParamsPublic;
+	/// Predicate that is true if we are in contract scope
+	bool m_isStateVar;
+	unsigned m_counter;
+	unsigned m_varCounter;
+	/// Monotonically increasing return value for error reporting
+	unsigned m_returnValue;
+	/// Flag that indicates if last dynamically encoded parameter
+	/// passed to a function call is of a type that is going to be
+	/// right padded by the ABI encoder.
+	bool m_isLastDynParamRightPadded;
+	/// Struct counter
+	unsigned m_structCounter;
+	unsigned m_numStructsAdded;
+	/// Prefixes for declared and parameterized variable names
+	static auto constexpr s_varNamePrefix = "x_";
+	static auto constexpr s_paramNamePrefix = "c_";
+};
+
+/// Visitor interface for Solidity protobuf types.
+template <typename T>
+class AbiV2ProtoVisitor
+{
+public:
+	virtual ~AbiV2ProtoVisitor() = default;
+
+	virtual T visit(BoolType const& _node) = 0;
+	virtual T visit(IntegerType const& _node) = 0;
+	virtual T visit(FixedByteType const& _node) = 0;
+	virtual T visit(AddressType const& _node) = 0;
+	virtual T visit(DynamicByteArrayType const& _node) = 0;
+	virtual T visit(ArrayType const& _node) = 0;
+	virtual T visit(StructType const& _node) = 0;
+	virtual T visit(ValueType const& _node)
+	{
+		return visitValueType(_node);
+	}
+	virtual T visit(NonValueType const& _node)
+	{
+		return visitNonValueType(_node);
+	}
+	virtual T visit(Type const& _node)
+	{
+		return visitType(_node);
+	}
+
+	enum class DataType
+	{
+		BYTES,
+		STRING,
+		VALUE,
+		ARRAY
+	};
+
+	/// Prefixes for declared and parameterized variable names
+	static auto constexpr s_varNamePrefix = "x_";
+	static auto constexpr s_paramNamePrefix = "c_";
+	static auto constexpr s_structNamePrefix = "S";
+	static auto constexpr s_structFieldPrefix = "m";
 
 	// Static function definitions
 	static bool isValueType(DataType _dataType)
@@ -340,11 +308,6 @@ private:
 	static bool isIntSigned(IntegerType const& _x)
 	{
 		return _x.is_signed();
-	}
-
-	static std::string getBoolTypeAsString()
-	{
-		return "bool";
 	}
 
 	static std::string getIntTypeAsString(IntegerType const& _x)
@@ -364,7 +327,7 @@ private:
 
 	static std::string getAddressTypeAsString(AddressType const& _x)
 	{
-		return (_x.payable() ? "address payable": "address");
+		return (_x.payable() ? "address payable" : "address");
 	}
 
 	static DataType getDataTypeOfDynBytesType(DynamicByteArrayType const& _x)
@@ -375,12 +338,6 @@ private:
 			return DataType::BYTES;
 	}
 
-	/// Returns true if input is either a string or bytes, false otherwise.
-	static bool isDataTypeBytesOrString(DataType _type)
-	{
-		return _type == DataType::STRING || _type == DataType::BYTES;
-	}
-
 	// Convert _counter to string and return its keccak256 hash
 	static u256 hashUnsignedInt(unsigned _counter)
 	{
@@ -389,7 +346,7 @@ private:
 
 	static u256 maskUnsignedInt(unsigned _counter, unsigned _numMaskNibbles)
 	{
-	  return hashUnsignedInt(_counter) & u256("0x" + std::string(_numMaskNibbles, 'f'));
+		return hashUnsignedInt(_counter) & u256("0x" + std::string(_numMaskNibbles, 'f'));
 	}
 
 	// Requires caller to pass number of nibbles (twice the number of bytes) as second argument.
@@ -414,15 +371,6 @@ private:
 		return _fuzz % s_maxArrayLength + 1;
 	}
 
-	static std::pair<bool, unsigned> arrayDimInfoAsPair(ArrayDimensionInfo const& _x)
-	{
-		return (
-			_x.is_static() ?
-			std::make_pair(true, getStaticArrayLengthFromFuzz(_x.length())) :
-			std::make_pair(false, getDynArrayLengthFromFuzz(_x.length(), 0))
-		);
-	}
-
 	/// Returns a pseudo-random value for the size of a string/hex
 	/// literal. Used for creating variable length hex/string literals.
 	/// @param _counter Monotonically increasing counter value
@@ -435,47 +383,399 @@ private:
 		return (_counter + 879) * 32 % (s_maxDynArrayLength + 1);
 	}
 
+	static std::string bytesArrayTypeAsString(DynamicByteArrayType const& _x)
+	{
+		switch (_x.type()) {
+		case DynamicByteArrayType::BYTES:
+			return "bytes";
+		case DynamicByteArrayType::STRING:
+			return "string";
+		}
+	}
+protected:
+T visitValueType(ValueType const& _type)
+{
+	switch (_type.value_type_oneof_case())
+	{
+	case ValueType::kInty:
+		return visit(_type.inty());
+	case ValueType::kByty:
+		return visit(_type.byty());
+	case ValueType::kAdty:
+		return visit(_type.adty());
+	case ValueType::kBoolty:
+		return visit(_type.boolty());
+	case ValueType::VALUE_TYPE_ONEOF_NOT_SET:
+		return T();
+	}
+}
+
+T visitNonValueType(NonValueType const& _type)
+{
+	switch (_type.nonvalue_type_oneof_case())
+	{
+	case NonValueType::kDynbytearray:
+		return visit(_type.dynbytearray());
+	case NonValueType::kArrtype:
+		return visit(_type.arrtype());
+	case NonValueType::kStype:
+		return visit(_type.stype());
+	case NonValueType::NONVALUE_TYPE_ONEOF_NOT_SET:
+		return T();
+	}
+}
+
+T visitType(Type const& _type)
+{
+	switch (_type.type_oneof_case())
+	{
+	case Type::kVtype:
+		return visit(_type.vtype());
+	case Type::kNvtype:
+		return visit(_type.nvtype());
+	case Type::TYPE_ONEOF_NOT_SET:
+		return T();
+	}
+}
+private:
+	static unsigned constexpr s_maxArrayLength = 4;
+	static unsigned constexpr s_maxDynArrayLength = 256;
+};
+
+/// Converts a protobuf type into a Solidity type string.
+class TypeVisitor: public AbiV2ProtoVisitor<std::string>
+{
+public:
+	TypeVisitor(unsigned _structSuffix = 0):
+		m_indentation(1),
+		m_structCounter(_structSuffix),
+		m_structStartCounter(_structSuffix),
+		m_structFieldCounter(0),
+		m_isLastDynParamRightPadded(false)
+	{}
+
+	std::string visit(BoolType const&) override;
+	std::string visit(IntegerType const&) override;
+	std::string visit(FixedByteType const&) override;
+	std::string visit(AddressType const&) override;
+	std::string visit(ArrayType const&) override;
+	std::string visit(DynamicByteArrayType const&) override;
+	std::string visit(StructType const&) override;
+	using AbiV2ProtoVisitor<std::string>::visit;
+	std::string baseType()
+	{
+		return m_baseType;
+	}
+	bool isLastDynParamRightPadded()
+	{
+		return m_isLastDynParamRightPadded;
+	}
+	std::string structDef()
+	{
+		return m_structDef.str();
+	}
+	unsigned numStructs()
+	{
+		return m_structCounter - m_structStartCounter;
+	}
+	static bool arrayOfStruct(ArrayType const& _type)
+	{
+		Type const& baseType = _type.t();
+		if (baseType.has_nvtype() && baseType.nvtype().has_stype())
+			return true;
+		else if (baseType.has_nvtype() && baseType.nvtype().has_arrtype())
+			return arrayOfStruct(baseType.nvtype().arrtype());
+		else
+			return false;
+	}
+private:
+	void structDefinition(StructType const&);
+
+	std::string indentation()
+	{
+		return std::string(m_indentation * 1, '\t');
+	}
+	std::string lineString(std::string const& _line)
+	{
+		return indentation() + _line + "\n";
+	}
+
+	std::string m_baseType;
+	std::ostringstream m_structDef;
+	unsigned m_indentation;
+	unsigned m_structCounter;
+	unsigned m_structStartCounter;
+	unsigned m_structFieldCounter;
+	bool m_isLastDynParamRightPadded;
+
+	static auto constexpr s_structTypeName = "S";
+};
+
+/// Returns a pair of strings, first of which contains assignment statements
+/// to initialize a given type, and second of which contains checks to be
+/// placed inside the coder function to test abi en/decoding.
+class AssignCheckVisitor: public AbiV2ProtoVisitor<std::pair<std::string, std::string>>
+{
+public:
+	AssignCheckVisitor(
+		std::string _varName,
+		std::string _paramName,
+		unsigned _errorStart,
+		bool _stateVar,
+		unsigned _counter,
+		unsigned _structCounter
+	)
+	{
+		m_counter = m_counterStart = _counter;
+		m_varName = _varName;
+		m_paramName = _paramName;
+		m_errorCode = m_errorStart = _errorStart;
+		m_indentation = 2;
+		m_stateVar = _stateVar;
+		m_structCounter = m_structStart = _structCounter;
+		m_arrayOfStruct = false;
+	}
+	std::pair<std::string, std::string> visit(BoolType const&) override;
+	std::pair<std::string, std::string> visit(IntegerType const&) override;
+	std::pair<std::string, std::string> visit(FixedByteType const&) override;
+	std::pair<std::string, std::string> visit(AddressType const&) override;
+	std::pair<std::string, std::string> visit(ArrayType const&) override;
+	std::pair<std::string, std::string> visit(DynamicByteArrayType const&) override;
+	std::pair<std::string, std::string> visit(StructType const&) override;
+	using AbiV2ProtoVisitor<std::pair<std::string, std::string>>::visit;
+
+	unsigned errorStmts()
+	{
+		return m_errorCode - m_errorStart;
+	}
+
+	unsigned counted()
+	{
+		return m_counter - m_counterStart;
+	}
+
+	unsigned structs()
+	{
+		return m_structCounter - m_structStart;
+	}
+private:
+	std::string indentation()
+	{
+		return std::string(m_indentation * 1, '\t');
+	}
+	unsigned counter()
+	{
+		return m_counter++;
+	}
+
+	std::pair<std::string, std::string> assignAndCheckStringPair(
+		std::string const& _varRef,
+		std::string const& _checkRef,
+		std::string const& _assignValue,
+		std::string const& _checkValue,
+		DataType _type
+	);
+	std::string assignString(std::string const&, std::string const&);
+	std::string checkString(std::string const&, std::string const&, DataType);
+	unsigned m_counter;
+	unsigned m_counterStart;
+	std::string m_varName;
+	std::string m_paramName;
+	unsigned m_errorCode;
+	unsigned m_errorStart;
+	unsigned m_indentation;
+	bool m_stateVar;
+	unsigned m_structCounter;
+	unsigned m_structStart;
+	bool m_arrayOfStruct;
+};
+
+/// Returns a valid value (as a string) for a given type.
+class ValueGetterVisitor: AbiV2ProtoVisitor<std::string>
+{
+public:
+	ValueGetterVisitor(unsigned _counter = 0): m_counter(_counter) {}
+
+	std::string visit(BoolType const&) override;
+	std::string visit(IntegerType const&) override;
+	std::string visit(FixedByteType const&) override;
+	std::string visit(AddressType const&) override;
+	std::string visit(DynamicByteArrayType const&) override;
+	std::string visit(ArrayType const&) override
+	{
+		solAssert(false, "ABIv2 proto fuzzer: Cannot call valuegettervisitor on complex type");
+	}
+	std::string visit(StructType const&) override
+	{
+		solAssert(false, "ABIv2 proto fuzzer: Cannot call valuegettervisitor on complex type");
+	}
+	using AbiV2ProtoVisitor<std::string>::visit;
+private:
+	unsigned counter()
+	{
+		return m_counter++;
+	}
+
+	static std::string intValueAsString(unsigned _width, unsigned _counter);
+	static std::string uintValueAsString(unsigned _width, unsigned _counter);
+	static std::string integerValueAsString(bool _sign, unsigned _width, unsigned _counter);
+	static std::string addressValueAsString(unsigned _counter);
+	static std::string fixedByteValueAsString(unsigned _width, unsigned _counter);
+
+	/// Returns a hex literal if _isHexLiteral is true, a string literal otherwise.
+	/// The size of the returned literal is _numBytes bytes.
+	/// @param _decorate If true, the returned string is enclosed within double quotes
+	/// if _isHexLiteral is false.
+	/// @param _isHexLiteral If true, the returned string is enclosed within
+	/// double quotes prefixed by the string "hex" if _decorate is true. If
+	/// _decorate is false, the returned string is returned as-is.
+	/// @return hex value as string
+	static std::string hexValueAsString(
+		unsigned _numBytes,
+		unsigned _counter,
+		bool _isHexLiteral,
+		bool _decorate = true
+	);
+
 	/// Returns a hex/string literal of variable length whose value and
 	/// size are pseudo-randomly determined from the counter value.
 	/// @param _counter A monotonically increasing counter value
 	/// @param _isHexLiteral Flag that indicates whether hex (if true) or
 	/// string literal (false) is desired
 	/// @return A variable length hex/string value
-	static std::string bytesArrayValueAsString(unsigned _counter, bool _isHexLiteral)
+	static std::string bytesArrayValueAsString(unsigned _counter, bool _isHexLiteral);
+
+	/// Concatenates the hash value obtained from monotonically increasing counter
+	/// until the desired number of bytes determined by _numBytes.
+	/// @param _width Desired number of bytes for hex value
+	/// @param _counter A counter value used for creating a keccak256 hash
+	/// @param _isHexLiteral Since this routine may be used to construct
+	/// string or hex literals, this flag is used to construct a valid output.
+	/// @return Valid hex or string literal of size _width bytes
+	static std::string variableLengthValueAsString(
+		unsigned _width,
+		unsigned _counter,
+		bool _isHexLiteral
+	);
+
+	/// Returns a value that is @a _numBytes bytes long.
+	/// @param _numBytes: Number of bytes of desired value
+	/// @param _counter: A counter value
+	/// @param _isHexLiteral: True if desired value is a hex literal, false otherwise
+	static std::string croppedString(unsigned _numBytes, unsigned _counter, bool _isHexLiteral);
+
+	unsigned m_counter;
+};
+
+/// Returns true if protobuf array specification is well-formed, false otherwise
+class ValidityVisitor: AbiV2ProtoVisitor<bool>
+{
+public:
+	ValidityVisitor() = default;
+
+	bool visit(BoolType const&) override
 	{
-		return variableLengthValueAsString(
-			getVarLength(_counter),
-			_counter,
-			_isHexLiteral
-		);
+		return true;
 	}
 
-	/// Contains the test program
-	std::ostringstream m_output;
-	/// Temporary storage for state variable definitions
-	std::ostringstream m_statebuffer;
-	/// Contains a subset of the test program. This subset contains
-	/// checks to be encoded in the test program
-	std::ostringstream m_checks;
-	/// Contains typed parameter list to be passed to callee functions
-	std::ostringstream m_typedParamsExternal;
-	std::ostringstream m_typedParamsPublic;
-	/// Predicate that is true if we are in contract scope
-	bool m_isStateVar;
-	unsigned m_counter;
-	unsigned m_varCounter;
-	/// Monotonically increasing return value for error reporting
-	unsigned m_returnValue;
-	/// Flag that indicates if last dynamically encoded parameter
-	/// passed to a function call is of a type that is going to be
-	/// right padded by the ABI encoder.
-	bool m_isLastDynParamRightPadded;
-	static unsigned constexpr s_maxArrayLength = 4;
-	static unsigned constexpr s_maxArrayDimensions = 4;
-	static unsigned constexpr s_maxDynArrayLength = 256;
-	/// Prefixes for declared and parameterized variable names
-	static auto constexpr s_varNamePrefix = "x_";
-	static auto constexpr s_paramNamePrefix = "c_";
+	bool visit(IntegerType const&) override
+	{
+		return true;
+	}
+
+	bool visit(FixedByteType const&) override
+	{
+		return true;
+	}
+
+	bool visit(AddressType const&) override
+	{
+		return true;
+	}
+
+	bool visit(DynamicByteArrayType const&) override
+	{
+		return true;
+	}
+
+	bool visit(ArrayType const& _type) override
+	{
+		return visit(_type.t());
+	}
+
+	bool visit(StructType const& _type) override
+	{
+		for (auto const& t: _type.t())
+			if (visit(t))
+				return true;
+		return false;
+	}
+
+	using AbiV2ProtoVisitor<bool>::visit;
+};
+
+/// Returns true if visited type is dynamically encoded by the abi coder,
+/// false otherwise.
+class DynParamVisitor: AbiV2ProtoVisitor<bool>
+{
+public:
+	DynParamVisitor() = default;
+
+	bool visit(BoolType const&) override
+	{
+		return false;
+	}
+
+	bool visit(IntegerType const&) override
+	{
+		return false;
+	}
+
+	bool visit(FixedByteType const&) override
+	{
+		return false;
+	}
+
+	bool visit(AddressType const&) override
+	{
+		return false;
+	}
+
+	bool visit(DynamicByteArrayType const&) override
+	{
+		return true;
+	}
+
+	bool visit(ArrayType const& _type) override
+	{
+		// Return early if array spec is not well-formed
+		if (!ValidityVisitor().visit(_type))
+			return false;
+
+		// Array is dynamically encoded if it at least one of the following is true
+		//   - at least one dimension is dynamically sized
+		//   - base type is dynamically encoded
+		if (!_type.is_static())
+			return true;
+		else
+			return visit(_type.t());
+	}
+
+	bool visit(StructType const& _type) override
+	{
+		// Return early if empty struct
+		if (!ValidityVisitor().visit(_type))
+			return false;
+
+		// Struct is dynamically encoded if at least one of its fields
+		// is dynamically encoded.
+		for (auto const& t: _type.t())
+			if (visit(t))
+				return true;
+		return false;
+	}
+
+	using AbiV2ProtoVisitor<bool>::visit;
 };
 }
 }
