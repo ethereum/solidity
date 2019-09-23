@@ -45,6 +45,7 @@ private:
 	// Visits for constructing the control flow.
 	bool visit(BinaryOperation const& _operation) override;
 	bool visit(Conditional const& _conditional) override;
+	bool visit(TryStatement const& _tryStatement) override;
 	bool visit(IfStatement const& _ifStatement) override;
 	bool visit(ForStatement const& _forStatement) override;
 	bool visit(WhileStatement const& _whileStatement) override;
@@ -98,12 +99,27 @@ private:
 		return result;
 	}
 
+	/// Splits the control flow starting at the current node into @a _n paths.
+	/// m_currentNode is set to nullptr and has to be set manually or
+	/// using mergeFlow later.
+	std::vector<CFGNode*> splitFlow(size_t n)
+	{
+		std::vector<CFGNode*> result(n);
+		for (auto& node: result)
+		{
+			node = m_nodeContainer.newNode();
+			connect(m_currentNode, node);
+		}
+		m_currentNode = nullptr;
+		return result;
+	}
+
 	/// Merges the control flow of @a _nodes to @a _endNode.
 	/// If @a _endNode is nullptr, a new node is creates and used as end node.
 	/// Sets the merge destination as current node.
 	/// Note: @a _endNode may be one of the nodes in @a _nodes.
-	template<size_t n>
-	void mergeFlow(std::array<CFGNode*, n> const& _nodes, CFGNode* _endNode = nullptr)
+	template<typename C>
+	void mergeFlow(C const& _nodes, CFGNode* _endNode = nullptr)
 	{
 		CFGNode* mergeDestination = (_endNode == nullptr) ? m_nodeContainer.newNode() : _endNode;
 		for (auto& node: _nodes)

@@ -34,6 +34,8 @@
 
 #include <liblangutil/ErrorReporter.h>
 
+#include <libdevcore/Whiskers.h>
+
 #include <boost/range/adaptor/reversed.hpp>
 #include <algorithm>
 
@@ -758,6 +760,183 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		m_optimiserSettings.optimizeStackAllocation
 	);
 	m_context.setStackOffset(startStackHeight);
+	return false;
+}
+
+bool ContractCompiler::visit(TryStatement const& _tryStatement)
+{
+	StackHeightChecker checker(m_context);
+	CompilerContext::LocationSetter locationSetter(m_context, _tryStatement);
+
+	compileExpression(_tryStatement.externalCall());
+	unsigned returnSize = _tryStatement.externalCall().annotation().type->sizeOnStack();
+
+	// Stack: [ return values] <success flag>
+	eth::AssemblyItem successTag = m_context.appendConditionalJump();
+
+	// Catch case.
+	m_context.adjustStackOffset(-returnSize);
+
+	handleCatch(_tryStatement.clauses());
+
+	eth::AssemblyItem endTag = m_context.appendJumpToNew();
+
+	m_context << successTag;
+	m_context.adjustStackOffset(returnSize);
+	{
+		// Success case.
+		// Stack: return values
+		TryCatchClause const& successClause = *_tryStatement.clauses().front();
+		if (successClause.parameters())
+		{
+			vector<TypePointer> exprTypes{_tryStatement.externalCall().annotation().type};
+			if (auto tupleType = dynamic_cast<TupleType const*>(exprTypes.front()))
+				exprTypes = tupleType->components();
+			vector<ASTPointer<VariableDeclaration>> const& params = successClause.parameters()->parameters();
+			solAssert(exprTypes.size() == params.size(), "");
+			for (size_t i = 0; i < exprTypes.size(); ++i)
+				solAssert(params[i] && exprTypes[i] && *params[i]->annotation().type == *exprTypes[i], "");
+		}
+		else
+			CompilerUtils(m_context).popStackSlots(returnSize);
+
+		_tryStatement.clauses().front()->accept(*this);
+	}
+
+	m_context << endTag;
+	checker.check();
+	return false;
+}
+
+void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _catchClauses)
+{
+	// Stack is empty.
+	ASTPointer<TryCatchClause> structured{};
+	ASTPointer<TryCatchClause> fallback{};
+	for (size_t i = 1; i < _catchClauses.size(); ++i)
+		if (_catchClauses[i]->errorName() == "Error")
+			structured = _catchClauses[i];
+		else if (_catchClauses[i]->errorName().empty())
+			fallback = _catchClauses[i];
+		else
+			solAssert(false, "");
+
+	solAssert(_catchClauses.size() == size_t(1 + (structured ? 1 : 0) + (fallback ? 1 : 0)), "");
+
+	eth::AssemblyItem endTag = m_context.newTag();
+	eth::AssemblyItem fallbackTag = m_context.newTag();
+	if (structured)
+	{
+		solAssert(
+			structured->parameters() &&
+			structured->parameters()->parameters().size() == 1 &&
+			structured->parameters()->parameters().front() &&
+			*structured->parameters()->parameters().front()->annotation().type == *TypeProvider::stringMemory(),
+			""
+		);
+		solAssert(m_context.evmVersion().supportsReturndata(), "");
+
+		string errorHash = FixedHash<4>(dev::keccak256("Error(string)")).hex();
+
+		// Try to decode the error message.
+		// If this fails, leaves 0 on the stack, otherwise the pointer to the data string.
+		m_context << u256(0);
+		m_context.appendInlineAssembly(
+			Whiskers(R"({
+				data := mload(0x40)
+				mstore(data, 0)
+				for {} 1 {} {
+					if lt(returndatasize(), 0x44) { data := 0 break }
+					returndatacopy(0, 0, 4)
+					let sig := <getSig>
+					if iszero(eq(sig, 0x<ErrorSignature>)) { data := 0 break }
+					returndatacopy(data, 4, sub(returndatasize(), 4))
+					let offset := mload(data)
+					if or(
+						gt(offset, 0xffffffffffffffff),
+						gt(add(offset, 0x24), returndatasize())
+					) {
+						data := 0
+						break
+					}
+					let msg := add(data, offset)
+					let length := mload(msg)
+					if gt(length, 0xffffffffffffffff) { data := 0 break }
+					let end := add(add(msg, 0x20), length)
+					if gt(end, add(data, returndatasize())) { data := 0 break }
+					mstore(0x40, and(add(end, 0x1f), not(0x1f)))
+					data := msg
+					break
+				}
+			})")
+			("ErrorSignature", errorHash)
+			("getSig",
+				m_context.evmVersion().hasBitwiseShifting() ?
+				"shr(224, mload(0))" :
+				"div(mload(0), " + (u256(1) << 224).str() + ")"
+			).render(),
+			{"data"}
+		);
+		m_context << Instruction::DUP1;
+		AssemblyItem decodeSuccessTag = m_context.appendConditionalJump();
+		m_context << Instruction::POP;
+		m_context.appendJumpTo(fallbackTag);
+		m_context.adjustStackOffset(1);
+
+		m_context << decodeSuccessTag;
+		structured->accept(*this);
+		m_context.appendJumpTo(endTag);
+	}
+	m_context << fallbackTag;
+	if (fallback)
+	{
+		if (fallback->parameters())
+		{
+			solAssert(m_context.evmVersion().supportsReturndata(), "");
+			solAssert(
+				fallback->parameters()->parameters().size() == 1 &&
+				fallback->parameters()->parameters().front() &&
+				*fallback->parameters()->parameters().front()->annotation().type == *TypeProvider::bytesMemory(),
+				""
+			);
+			CompilerUtils(m_context).returnDataToArray();
+		}
+
+		fallback->accept(*this);
+	}
+	else
+	{
+		// re-throw
+		if (m_context.evmVersion().supportsReturndata())
+			m_context.appendInlineAssembly(R"({
+				returndatacopy(0, 0, returndatasize())
+				revert(0, returndatasize())
+			})");
+		else
+			m_context.appendRevert();
+	}
+	m_context << endTag;
+}
+
+bool ContractCompiler::visit(TryCatchClause const& _clause)
+{
+	CompilerContext::LocationSetter locationSetter(m_context, _clause);
+
+	unsigned varSize = 0;
+
+	if (_clause.parameters())
+		for (ASTPointer<VariableDeclaration> const& varDecl: _clause.parameters()->parameters() | boost::adaptors::reversed)
+		{
+			solAssert(varDecl, "");
+			varSize += varDecl->annotation().type->sizeOnStack();
+			m_context.addVariable(*varDecl, varSize);
+		}
+
+	_clause.block().accept(*this);
+
+	m_context.removeVariablesAboveStackHeight(m_context.stackHeight() - varSize);
+	CompilerUtils(m_context).popStackSlots(varSize);
+
 	return false;
 }
 

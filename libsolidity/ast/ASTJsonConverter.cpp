@@ -499,6 +499,25 @@ bool ASTJsonConverter::visit(IfStatement const& _node)
 	return false;
 }
 
+bool ASTJsonConverter::visit(TryCatchClause const& _node)
+{
+	setJsonNode(_node, "TryCatchClause", {
+		make_pair("errorName", _node.errorName()),
+		make_pair("parameters", toJsonOrNull(_node.parameters())),
+		make_pair("block", toJson(_node.block()))
+	});
+	return false;
+}
+
+bool ASTJsonConverter::visit(TryStatement const& _node)
+{
+	setJsonNode(_node, "TryStatement", {
+		make_pair("externalCall", toJson(_node.externalCall())),
+		make_pair("clauses", toJson(_node.clauses()))
+	});
+	return false;
+}
+
 bool ASTJsonConverter::visit(WhileStatement const& _node)
 {
 	setJsonNode(
@@ -647,7 +666,8 @@ bool ASTJsonConverter::visit(FunctionCall const& _node)
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("expression", toJson(_node.expression())),
 		make_pair("names", std::move(names)),
-		make_pair("arguments", toJson(_node.arguments()))
+		make_pair("arguments", toJson(_node.arguments())),
+		make_pair("tryCall", _node.annotation().tryCall)
 	};
 	if (m_legacy)
 	{

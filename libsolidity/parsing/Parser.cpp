@@ -1099,13 +1099,15 @@ ASTPointer<Statement> Parser::parseStatement()
 				}
 			statement = nodeFactory.createNode<Return>(docString, expression);
 				break;
-			}
+		}
 		case Token::Throw:
-			{
-				statement = ASTNodeFactory(*this).createNode<Throw>(docString);
-				m_scanner->next();
-				break;
-			}
+		{
+			statement = ASTNodeFactory(*this).createNode<Throw>(docString);
+			m_scanner->next();
+			break;
+		}
+		case Token::Try:
+			return parseTryStatement(docString);
 		case Token::Assembly:
 			return parseInlineAssembly(docString);
 		case Token::Emit:
@@ -1185,6 +1187,62 @@ ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _d
 	else
 		nodeFactory.setEndPositionFromNode(trueBody);
 	return nodeFactory.createNode<IfStatement>(_docString, condition, trueBody, falseBody);
+}
+
+ASTPointer<TryStatement> Parser::parseTryStatement(ASTPointer<ASTString> const& _docString)
+{
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::Try);
+	ASTPointer<Expression> externalCall = parseExpression();
+	vector<ASTPointer<TryCatchClause>> clauses;
+
+	ASTNodeFactory successClauseFactory(*this);
+	ASTPointer<ParameterList> returnsParameters;
+	if (m_scanner->currentToken() == Token::Returns)
+	{
+		m_scanner->next();
+		VarDeclParserOptions options;
+		options.allowEmptyName = true;
+		options.allowLocationSpecifier = true;
+		returnsParameters = parseParameterList(options, false);
+	}
+	ASTPointer<Block> successBlock = parseBlock();
+	successClauseFactory.setEndPositionFromNode(successBlock);
+	clauses.emplace_back(successClauseFactory.createNode<TryCatchClause>(
+		make_shared<ASTString>(), returnsParameters, successBlock
+	));
+
+	do
+	{
+		clauses.emplace_back(parseCatchClause());
+	}
+	while (m_scanner->currentToken() == Token::Catch);
+	nodeFactory.setEndPositionFromNode(clauses.back());
+	return nodeFactory.createNode<TryStatement>(
+		_docString, externalCall, clauses
+	);
+}
+
+ASTPointer<TryCatchClause> Parser::parseCatchClause()
+{
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::Catch);
+	ASTPointer<ASTString> errorName = make_shared<string>();
+	ASTPointer<ParameterList> errorParameters;
+	if (m_scanner->currentToken() != Token::LBrace)
+	{
+		if (m_scanner->currentToken() == Token::Identifier)
+			errorName = expectIdentifierToken();
+		VarDeclParserOptions options;
+		options.allowEmptyName = true;
+		options.allowLocationSpecifier = true;
+		errorParameters = parseParameterList(options, !errorName->empty());
+	}
+	ASTPointer<Block> block = parseBlock();
+	nodeFactory.setEndPositionFromNode(block);
+	return nodeFactory.createNode<TryCatchClause>(errorName, errorParameters, block);
 }
 
 ASTPointer<WhileStatement> Parser::parseWhileStatement(ASTPointer<ASTString> const& _docString)

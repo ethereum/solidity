@@ -624,6 +624,18 @@ void DeclarationRegistrationHelper::endVisit(FunctionDefinition&)
 	closeCurrentScope();
 }
 
+bool DeclarationRegistrationHelper::visit(TryCatchClause& _tryCatchClause)
+{
+	_tryCatchClause.setScope(m_currentScope);
+	enterNewSubScope(_tryCatchClause);
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(TryCatchClause&)
+{
+	closeCurrentScope();
+}
+
 bool DeclarationRegistrationHelper::visit(ModifierDefinition& _modifier)
 {
 	registerDeclaration(_modifier, true);

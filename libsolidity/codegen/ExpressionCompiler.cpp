@@ -586,13 +586,15 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context.adjustStackOffset(returnParametersSize - parameterSize - 1);
 			break;
 		}
-		case FunctionType::Kind::External:
-		case FunctionType::Kind::DelegateCall:
 		case FunctionType::Kind::BareCall:
 		case FunctionType::Kind::BareDelegateCall:
 		case FunctionType::Kind::BareStaticCall:
+			solAssert(!_functionCall.annotation().tryCall, "");
+			[[fallthrough]];
+		case FunctionType::Kind::External:
+		case FunctionType::Kind::DelegateCall:
 			_functionCall.expression().accept(*this);
-			appendExternalFunctionCall(function, arguments);
+			appendExternalFunctionCall(function, arguments, _functionCall.annotation().tryCall);
 			break;
 		case FunctionType::Kind::BareCallCode:
 			solAssert(false, "Callcode has been removed.");
@@ -620,12 +622,21 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			else
 				m_context << u256(0);
 			m_context << Instruction::CREATE;
-			// Check if zero (out of stack or not enough balance).
-			m_context << Instruction::DUP1 << Instruction::ISZERO;
-			// TODO: Can we bubble up here? There might be different reasons for failure, I think.
-			m_context.appendConditionalRevert(true);
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
+			// Check if zero (reverted)
+			m_context << Instruction::DUP1 << Instruction::ISZERO;
+			if (_functionCall.annotation().tryCall)
+			{
+				// If this is a try call, return "<address> 1" in the success case and
+				// "0" in the error case.
+				AssemblyItem errorCase = m_context.appendConditionalJump();
+				m_context << u256(1);
+				m_context << errorCase;
+			}
+			else
+				// TODO: Can we bubble up here? There might be different reasons for failure, I think.
+				m_context.appendConditionalRevert(true);
 			break;
 		}
 		case FunctionType::Kind::SetGas:
@@ -675,7 +686,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					true,
 					true
 				),
-				{}
+				{},
+				false
 			);
 			if (function.kind() == FunctionType::Kind::Transfer)
 			{
@@ -835,7 +847,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << contractAddresses.at(function.kind());
 			for (unsigned i = function.sizeOnStack(); i > 0; --i)
 				m_context << swapInstruction(i);
-			appendExternalFunctionCall(function, arguments);
+			solAssert(!_functionCall.annotation().tryCall, "");
+			appendExternalFunctionCall(function, arguments, false);
 			break;
 		}
 		case FunctionType::Kind::ByteArrayPush:
@@ -1964,7 +1977,8 @@ void ExpressionCompiler::appendShiftOperatorCode(Token _operator, Type const& _v
 
 void ExpressionCompiler::appendExternalFunctionCall(
 	FunctionType const& _functionType,
-	vector<ASTPointer<Expression const>> const& _arguments
+	vector<ASTPointer<Expression const>> const& _arguments,
+	bool _tryCall
 )
 {
 	solAssert(
@@ -1999,6 +2013,12 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	bool returnSuccessConditionAndReturndata = funKind == FunctionType::Kind::BareCall || funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::BareStaticCall;
 	bool isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
 	bool useStaticCall = funKind == FunctionType::Kind::BareStaticCall || (_functionType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall());
+
+	if (_tryCall)
+	{
+		solAssert(!returnSuccessConditionAndReturndata, "");
+		solAssert(!_functionType.isBareCall(), "");
+	}
 
 	bool haveReturndatacopy = m_context.evmVersion().supportsReturndata();
 	unsigned retSize = 0;
@@ -2171,16 +2191,26 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		(_functionType.gasSet() ? 1 : 0) +
 		(!_functionType.isBareCall() ? 1 : 0);
 
-	if (returnSuccessConditionAndReturndata)
-		m_context << swapInstruction(remainsSize);
-	else
+	eth::AssemblyItem endTag = m_context.newTag();
+
+	if (!returnSuccessConditionAndReturndata && !_tryCall)
 	{
-		//Propagate error condition (if CALL pushes 0 on stack).
+		// Propagate error condition (if CALL pushes 0 on stack).
 		m_context << Instruction::ISZERO;
 		m_context.appendConditionalRevert(true);
 	}
-
+	else
+		m_context << swapInstruction(remainsSize);
 	utils().popStackSlots(remainsSize);
+
+	// Only success flag is remaining on stack.
+
+	if (_tryCall)
+	{
+		m_context << Instruction::DUP1 << Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(endTag);
+		m_context << Instruction::POP;
+	}
 
 	if (returnSuccessConditionAndReturndata)
 	{
@@ -2189,24 +2219,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		// an internal helper function e.g. for ``send`` and ``transfer``. In that
 		// case we're only interested in the success condition, not the return data.
 		if (!_functionType.returnParameterTypes().empty())
-		{
-			if (haveReturndatacopy)
-			{
-				m_context << Instruction::RETURNDATASIZE;
-				m_context.appendInlineAssembly(R"({
-					switch v case 0 {
-						v := 0x60
-					} default {
-						v := mload(0x40)
-						mstore(0x40, add(v, and(add(returndatasize(), 0x3f), not(0x1f))))
-						mstore(v, returndatasize())
-						returndatacopy(add(v, 0x20), 0, returndatasize())
-					}
-				})", {"v"});
-			}
-			else
-				utils().pushZeroPointer();
-		}
+			utils().returnDataToArray();
 	}
 	else if (funKind == FunctionType::Kind::RIPEMD160)
 	{
@@ -2259,6 +2272,13 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			})", {"start", "size"});
 
 		utils().abiDecode(returnTypes, true);
+	}
+
+	if (_tryCall)
+	{
+		// Success branch will reach this, failure branch will directly jump to endTag.
+		m_context << u256(1);
+		m_context << endTag;
 	}
 }
 

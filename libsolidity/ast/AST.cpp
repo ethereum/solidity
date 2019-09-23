@@ -448,12 +448,13 @@ bool VariableDeclaration::isLocalVariable() const
 		dynamic_cast<FunctionTypeName const*>(s) ||
 		dynamic_cast<CallableDeclaration const*>(s) ||
 		dynamic_cast<Block const*>(s) ||
+		dynamic_cast<TryCatchClause const*>(s) ||
 		dynamic_cast<ForStatement const*>(s);
 }
 
-bool VariableDeclaration::isCallableParameter() const
+bool VariableDeclaration::isCallableOrCatchParameter() const
 {
-	if (isReturnParameter())
+	if (isReturnParameter() || isTryCatchParameter())
 		return true;
 
 	vector<ASTPointer<VariableDeclaration>> const* parameters = nullptr;
@@ -472,7 +473,7 @@ bool VariableDeclaration::isCallableParameter() const
 
 bool VariableDeclaration::isLocalOrReturn() const
 {
-	return isReturnParameter() || (isLocalVariable() && !isCallableParameter());
+	return isReturnParameter() || (isLocalVariable() && !isCallableOrCatchParameter());
 }
 
 bool VariableDeclaration::isReturnParameter() const
@@ -492,9 +493,14 @@ bool VariableDeclaration::isReturnParameter() const
 	return false;
 }
 
+bool VariableDeclaration::isTryCatchParameter() const
+{
+	return dynamic_cast<TryCatchClause const*>(scope());
+}
+
 bool VariableDeclaration::isExternalCallableParameter() const
 {
-	if (!isCallableParameter())
+	if (!isCallableOrCatchParameter())
 		return false;
 
 	if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
@@ -506,7 +512,7 @@ bool VariableDeclaration::isExternalCallableParameter() const
 
 bool VariableDeclaration::isInternalCallableParameter() const
 {
-	if (!isCallableParameter())
+	if (!isCallableOrCatchParameter())
 		return false;
 
 	if (auto const* funTypeName = dynamic_cast<FunctionTypeName const*>(scope()))
@@ -518,7 +524,7 @@ bool VariableDeclaration::isInternalCallableParameter() const
 
 bool VariableDeclaration::isLibraryFunctionParameter() const
 {
-	if (!isCallableParameter())
+	if (!isCallableOrCatchParameter())
 		return false;
 	if (auto const* funDef = dynamic_cast<FunctionDefinition const*>(scope()))
 		return dynamic_cast<ContractDefinition const&>(*funDef->scope()).isLibrary();
@@ -554,10 +560,10 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 			locations.insert(Location::Storage);
 		return locations;
 	}
-	else if (isCallableParameter())
+	else if (isCallableOrCatchParameter())
 	{
 		set<Location> locations{ Location::Memory };
-		if (isInternalCallableParameter() || isLibraryFunctionParameter())
+		if (isInternalCallableParameter() || isLibraryFunctionParameter() || isTryCatchParameter())
 			locations.insert(Location::Storage);
 		return locations;
 	}

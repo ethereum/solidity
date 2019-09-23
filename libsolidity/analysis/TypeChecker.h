@@ -120,6 +120,7 @@ private:
 	void endVisit(FunctionTypeName const& _funType) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(IfStatement const& _ifStatement) override;
+	void endVisit(TryStatement const& _tryStatement) override;
 	bool visit(WhileStatement const& _whileStatement) override;
 	bool visit(ForStatement const& _forStatement) override;
 	void endVisit(Return const& _return) override;

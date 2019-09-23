@@ -388,7 +388,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				", ",
 				" or "
 			);
-			if (_variable.isCallableParameter())
+			if (_variable.isCallableOrCatchParameter())
 				errorString +=
 					" for " +
 					string(_variable.isReturnParameter() ? "return " : "") +

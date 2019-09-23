@@ -553,7 +553,7 @@ public:
 };
 
 /**
- * Parameter list, used as function parameter list and return list.
+ * Parameter list, used as function parameter list, return list and for try and catch.
  * None of the parameters is allowed to contain mappings (not even recursively
  * inside structs).
  */
@@ -738,9 +738,12 @@ public:
 	/// (or function type name or event) or declared inside a function body.
 	bool isLocalVariable() const;
 	/// @returns true if this variable is a parameter or return parameter of a function.
-	bool isCallableParameter() const;
+	bool isCallableOrCatchParameter() const;
 	/// @returns true if this variable is a return parameter of a function.
 	bool isReturnParameter() const;
+	/// @returns true if this variable is a parameter of the success or failure clausse
+	/// of a try/catch statement.
+	bool isTryCatchParameter() const;
 	/// @returns true if this variable is a local variable or return parameter.
 	bool isLocalOrReturn() const;
 	/// @returns true if this variable is a parameter (not return parameter) of an external function.
@@ -1172,6 +1175,76 @@ private:
 	ASTPointer<Expression> m_condition;
 	ASTPointer<Statement> m_trueBody;
 	ASTPointer<Statement> m_falseBody; ///< "else" part, optional
+};
+
+/**
+ * Clause of a try-catch block. Includes both the successful case and the
+ * unsuccessful cases.
+ * Names are only allowed for the unsuccessful cases.
+ */
+class TryCatchClause: public ASTNode, public Scopable
+{
+public:
+	TryCatchClause(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _errorName,
+		ASTPointer<ParameterList> const& _parameters,
+		ASTPointer<Block> const& _block
+	):
+		ASTNode(_location),
+		m_errorName(_errorName),
+		m_parameters(_parameters),
+		m_block(_block)
+	{}
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	ASTString const& errorName() const { return *m_errorName; }
+	ParameterList const* parameters() const { return m_parameters.get(); }
+	Block const& block() const { return *m_block; }
+
+private:
+	ASTPointer<ASTString> m_errorName;
+	ASTPointer<ParameterList> m_parameters;
+	ASTPointer<Block> m_block;
+};
+
+/**
+ * Try-statement with a variable number of catch statements.
+ * Syntax:
+ * try <call> returns (uint x, uint y) {
+ *   // success code
+ * } catch Error(string memory cause) {
+ *   // error code, reason provided
+ * } catch (bytes memory lowLevelData) {
+ *   // error code, no reason provided or non-matching error signature.
+ * }
+ *
+ * The last statement given above can also be specified as
+ * } catch () {
+ */
+class TryStatement: public Statement
+{
+public:
+	TryStatement(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString,
+		ASTPointer<Expression> const& _externalCall,
+		std::vector<ASTPointer<TryCatchClause>> const& _clauses
+	):
+		Statement(_location, _docString),
+		m_externalCall(_externalCall),
+		m_clauses(_clauses)
+	{}
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	Expression const& externalCall() const { return *m_externalCall; }
+	std::vector<ASTPointer<TryCatchClause>> const& clauses() const { return m_clauses; }
+
+private:
+	ASTPointer<Expression> m_externalCall;
+	std::vector<ASTPointer<TryCatchClause>> m_clauses;
 };
 
 /**

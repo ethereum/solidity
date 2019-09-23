@@ -14784,6 +14784,59 @@ BOOST_AUTO_TEST_CASE(dirty_scratch_space_prior_to_constant_optimiser)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(try_catch_library_call)
+{
+	char const* sourceCode = R"(
+		library L {
+			struct S { uint x; }
+			function integer(uint t, bool b) public view returns (uint) {
+				if (b) {
+					return t;
+				} else {
+					revert("failure");
+				}
+			}
+			function stru(S storage t, bool b) public view returns (uint) {
+				if (b) {
+					return t.x;
+				} else {
+					revert("failure");
+				}
+			}
+		}
+		contract C {
+			using L for L.S;
+			L.S t;
+			function f(bool b) public returns (uint, string memory) {
+				uint x = 8;
+				try L.integer(x, b) returns (uint _x) {
+					return (_x, "");
+				} catch Error(string memory message) {
+					return (18, message);
+				}
+			}
+			function g(bool b) public returns (uint, string memory) {
+				t.x = 9;
+				try t.stru(b) returns (uint x) {
+					return (x, "");
+				} catch Error(string memory message) {
+					return (19, message);
+				}
+			}
+		}
+	)";
+	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	{
+		compileAndRun(sourceCode, 0, "L", bytes());
+		compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"L", m_contractAddress}});
+
+		ABI_CHECK(callContractFunction("f(bool)", true), encodeArgs(8, 0x40, 0));
+		ABI_CHECK(callContractFunction("f(bool)", false), encodeArgs(18, 0x40, 7, "failure"));
+		ABI_CHECK(callContractFunction("g(bool)", true), encodeArgs(9, 0x40, 0));
+		ABI_CHECK(callContractFunction("g(bool)", false), encodeArgs(19, 0x40, 7, "failure"));
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

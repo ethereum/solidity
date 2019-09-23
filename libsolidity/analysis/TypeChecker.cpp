@@ -433,7 +433,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	// * or inside of a struct definition.
 	if (
 		m_scope->isInterface()
-		&& !_variable.isCallableParameter()
+		&& !_variable.isCallableOrCatchParameter()
 		&& !m_insideStruct
 	)
 		m_errorReporter.typeError(_variable.location(), "Variables cannot be declared in interfaces.");
@@ -741,6 +741,133 @@ bool TypeChecker::visit(IfStatement const& _ifStatement)
 	if (_ifStatement.falseStatement())
 		_ifStatement.falseStatement()->accept(*this);
 	return false;
+}
+
+void TypeChecker::endVisit(TryStatement const& _tryStatement)
+{
+	FunctionCall const* externalCall = dynamic_cast<FunctionCall const*>(&_tryStatement.externalCall());
+	if (!externalCall || externalCall->annotation().kind != FunctionCallKind::FunctionCall)
+	{
+		m_errorReporter.typeError(
+			_tryStatement.externalCall().location(),
+			"Try can only be used with external function calls and contract creation calls."
+		);
+		return;
+	}
+
+	FunctionType const& functionType = dynamic_cast<FunctionType const&>(*externalCall->expression().annotation().type);
+	if (
+		functionType.kind() != FunctionType::Kind::External &&
+		functionType.kind() != FunctionType::Kind::Creation &&
+		functionType.kind() != FunctionType::Kind::DelegateCall
+	)
+	{
+		m_errorReporter.typeError(
+			_tryStatement.externalCall().location(),
+			"Try can only be used with external function calls and contract creation calls."
+		);
+		return;
+	}
+
+	externalCall->annotation().tryCall = true;
+
+	solAssert(_tryStatement.clauses().size() >= 2, "");
+	solAssert(_tryStatement.clauses().front(), "");
+
+	TryCatchClause const& successClause = *_tryStatement.clauses().front();
+	if (successClause.parameters())
+	{
+		TypePointers returnTypes =
+			m_evmVersion.supportsReturndata() ?
+			functionType.returnParameterTypes() :
+			functionType.returnParameterTypesWithoutDynamicTypes();
+		std::vector<ASTPointer<VariableDeclaration>> const& parameters =
+			successClause.parameters()->parameters();
+		if (returnTypes.size() != parameters.size())
+			m_errorReporter.typeError(
+				successClause.location(),
+				"Function returns " +
+				to_string(functionType.returnParameterTypes().size()) +
+				" values, but returns clause has " +
+				to_string(parameters.size()) +
+				" variables."
+			);
+		size_t len = min(returnTypes.size(), parameters.size());
+		for (size_t i = 0; i < len; ++i)
+		{
+			solAssert(returnTypes[i], "");
+			if (parameters[i] && *parameters[i]->annotation().type != *returnTypes[i])
+				m_errorReporter.typeError(
+					parameters[i]->location(),
+					"Invalid type, expected " +
+					returnTypes[i]->toString(false) +
+					" but got " +
+					parameters[i]->annotation().type->toString() +
+					"."
+				);
+		}
+	}
+
+	TryCatchClause const* errorClause = nullptr;
+	TryCatchClause const* lowLevelClause = nullptr;
+	for (size_t i = 1; i < _tryStatement.clauses().size(); ++i)
+	{
+		TryCatchClause const& clause = *_tryStatement.clauses()[i];
+		if (clause.errorName() == "")
+		{
+			if (lowLevelClause)
+				m_errorReporter.typeError(
+					clause.location(),
+					SecondarySourceLocation{}.append("The first clause is here:", lowLevelClause->location()),
+					"This try statement already has a low-level catch clause."
+				);
+			lowLevelClause = &clause;
+			if (clause.parameters() && !clause.parameters()->parameters().empty())
+			{
+				if (
+					clause.parameters()->parameters().size() != 1 ||
+					*clause.parameters()->parameters().front()->type() != *TypeProvider::bytesMemory()
+				)
+					m_errorReporter.typeError(clause.location(), "Expected `catch (bytes memory ...) { ... }` or `catch { ... }`.");
+				if (!m_evmVersion.supportsReturndata())
+					m_errorReporter.typeError(
+						clause.location(),
+						"This catch clause type cannot be used on the selected EVM version (" +
+						m_evmVersion.name() +
+						"). You need at least a Byzantium-compatible EVM or use `catch { ... }`."
+					);
+			}
+		}
+		else if (clause.errorName() == "Error")
+		{
+			if (!m_evmVersion.supportsReturndata())
+				m_errorReporter.typeError(
+					clause.location(),
+					"This catch clause type cannot be used on the selected EVM version (" +
+					m_evmVersion.name() +
+					"). You need at least a Byzantium-compatible EVM or use `catch { ... }`."
+				);
+
+			if (errorClause)
+				m_errorReporter.typeError(
+					clause.location(),
+					SecondarySourceLocation{}.append("The first clause is here:", errorClause->location()),
+					"This try statement already has an \"Error\" catch clause."
+				);
+			errorClause = &clause;
+			if (
+				!clause.parameters() ||
+				clause.parameters()->parameters().size() != 1 ||
+				*clause.parameters()->parameters().front()->type() != *TypeProvider::stringMemory()
+			)
+				m_errorReporter.typeError(clause.location(), "Expected `catch Error(string memory ...) { ... }`.");
+		}
+		else
+			m_errorReporter.typeError(
+				clause.location(),
+				"Invalid catch clause name. Expected either `catch (...)` or `catch Error(...)`."
+			);
+	}
 }
 
 bool TypeChecker::visit(WhileStatement const& _whileStatement)
