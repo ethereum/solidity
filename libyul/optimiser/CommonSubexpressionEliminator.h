@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 namespace yul
 {
@@ -38,8 +39,8 @@ struct SideEffects;
 class CommonSubexpressionEliminator: public DataFlowAnalyzer
 {
 public:
-	/// Runs the CSE pass. @a _ast needs to be the complete AST of the program!
-	static void run(Dialect const& _dialect, Block& _ast);
+	static constexpr char const* name{"CommonSubexpressionEliminator"};
+	static void run(OptimiserStepContext&, Block& _ast);
 
 private:
 	CommonSubexpressionEliminator(

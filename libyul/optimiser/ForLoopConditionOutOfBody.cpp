@@ -25,6 +25,11 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
+void ForLoopConditionOutOfBody::run(OptimiserStepContext& _context, Block& _ast)
+{
+	ForLoopConditionOutOfBody{_context.dialect}(_ast);
+}
+
 void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 {
 	ASTModifier::operator()(_forLoop);

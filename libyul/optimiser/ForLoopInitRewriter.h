@@ -17,6 +17,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 namespace yul
 {
@@ -29,8 +30,17 @@ namespace yul
 class ForLoopInitRewriter: public ASTModifier
 {
 public:
+	static constexpr char const* name{"ForLoopInitRewriter"};
+	static void run(OptimiserStepContext&, Block& _ast)
+	{
+		ForLoopInitRewriter{}(_ast);
+	}
+
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;
+
+private:
+	ForLoopInitRewriter() = default;
 };
 
 }

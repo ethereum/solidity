@@ -21,6 +21,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/YulString.h>
 
 #include <map>
@@ -47,19 +48,11 @@ struct SideEffects;
 class UnusedPruner: public ASTModifier
 {
 public:
-	UnusedPruner(
-		Dialect const& _dialect,
-		Block& _ast,
-		bool _allowMSizeOptimization,
-		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr,
-		std::set<YulString> const& _externallyUsedFunctions = {}
-	);
-	UnusedPruner(
-		Dialect const& _dialect,
-		FunctionDefinition& _function,
-		bool _allowMSizeOptimization,
-		std::set<YulString> const& _externallyUsedFunctions = {}
-	);
+	static constexpr char const* name{"UnusedPruner"};
+	static void run(OptimiserStepContext& _context, Block& _ast) {
+		UnusedPruner::runUntilStabilisedOnFullAST(_context.dialect, _ast, _context.reservedIdentifiers);
+	}
+
 
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;
@@ -75,6 +68,15 @@ public:
 		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr,
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
+
+	static void run(
+		Dialect const& _dialect,
+		Block& _ast,
+		std::set<YulString> const& _externallyUsedFunctions = {}
+	)
+	{
+		runUntilStabilisedOnFullAST(_dialect, _ast, _externallyUsedFunctions);
+	}
 
 	/// Run the pruner until the code does not change anymore.
 	/// The provided block has to be a full AST.
@@ -99,6 +101,20 @@ public:
 	);
 
 private:
+	UnusedPruner(
+		Dialect const& _dialect,
+		Block& _ast,
+		bool _allowMSizeOptimization,
+		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr,
+		std::set<YulString> const& _externallyUsedFunctions = {}
+	);
+	UnusedPruner(
+		Dialect const& _dialect,
+		FunctionDefinition& _function,
+		bool _allowMSizeOptimization,
+		std::set<YulString> const& _externallyUsedFunctions = {}
+	);
+
 	bool used(YulString _name) const;
 	void subtractReferences(std::map<YulString, size_t> const& _subtrahend);
 

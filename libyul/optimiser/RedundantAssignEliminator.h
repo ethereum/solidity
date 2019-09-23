@@ -23,6 +23,7 @@
 
 #include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 #include <map>
 #include <vector>
@@ -105,6 +106,9 @@ struct Dialect;
 class RedundantAssignEliminator: public ASTWalker
 {
 public:
+	static constexpr char const* name{"RedundantAssignEliminator"};
+	static void run(OptimiserStepContext&, Block& _ast);
+
 	explicit RedundantAssignEliminator(Dialect const& _dialect): m_dialect(&_dialect) {}
 	RedundantAssignEliminator() = delete;
 	RedundantAssignEliminator(RedundantAssignEliminator const&) = delete;
@@ -122,8 +126,6 @@ public:
 	void operator()(Break const&) override;
 	void operator()(Continue const&) override;
 	void operator()(Block const& _block) override;
-
-	static void run(Dialect const& _dialect, Block& _ast);
 
 private:
 	class State

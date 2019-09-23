@@ -29,6 +29,7 @@ namespace yul
 {
 
 class NameCollector;
+struct OptimiserStepContext;
 
 
 /**
@@ -70,7 +71,8 @@ class NameCollector;
 class ExpressionJoiner: public ASTModifier
 {
 public:
-	static void run(Block& _ast);
+	static constexpr char const* name{"ExpressionJoiner"};
+	static void run(OptimiserStepContext&, Block& _ast);
 
 private:
 	explicit ExpressionJoiner(Block& _ast);

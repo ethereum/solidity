@@ -21,6 +21,7 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/YulString.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 #include <map>
 #include <set>
@@ -43,11 +44,11 @@ struct Dialect;
 class VarNameCleaner: public ASTModifier
 {
 public:
-	VarNameCleaner(
-		Block const& _ast,
-		Dialect const& _dialect,
-		std::set<YulString> _blacklist = {}
-	);
+	static constexpr char const* name{"VarNameCleaner"};
+	static void run(OptimiserStepContext& _context, Block& _ast)
+	{
+		VarNameCleaner{_ast, _context.dialect, _context.reservedIdentifiers}(_ast);
+	}
 
 	using ASTModifier::operator();
 	void operator()(VariableDeclaration& _varDecl) override;
@@ -55,6 +56,12 @@ public:
 	void operator()(FunctionDefinition& _funDef) override;
 
 private:
+	VarNameCleaner(
+		Block const& _ast,
+		Dialect const& _dialect,
+		std::set<YulString> _blacklist = {}
+	);
+
 	/// Tries to rename a list of variables.
 	void renameVariables(std::vector<TypedName>& _variables);
 

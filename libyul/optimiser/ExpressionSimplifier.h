@@ -27,6 +27,7 @@
 namespace yul
 {
 struct Dialect;
+struct OptimiserStepContext;
 
 /**
  * Applies simplification rules to all expressions.
@@ -41,10 +42,12 @@ struct Dialect;
 class ExpressionSimplifier: public DataFlowAnalyzer
 {
 public:
+	static constexpr char const* name{"ExpressionSimplifier"};
+	static void run(OptimiserStepContext&, Block& _ast);
+
 	using ASTModifier::operator();
 	virtual void visit(Expression& _expression);
 
-	static void run(Dialect const& _dialect, Block& _ast);
 private:
 	explicit ExpressionSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
 };

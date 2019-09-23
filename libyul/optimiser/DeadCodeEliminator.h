@@ -29,6 +29,7 @@
 namespace yul
 {
 struct Dialect;
+struct OptimiserStepContext;
 
 /**
  * Optimisation stage that removes unreachable code
@@ -47,13 +48,16 @@ struct Dialect;
 class DeadCodeEliminator: public ASTModifier
 {
 public:
-	DeadCodeEliminator(Dialect const& _dialect): m_dialect(_dialect) {}
+	static constexpr char const* name{"DeadCodeEliminator"};
+	static void run(OptimiserStepContext&, Block& _ast);
 
 	using ASTModifier::operator();
 	void operator()(ForLoop& _for) override;
 	void operator()(Block& _block) override;
 
 private:
+	DeadCodeEliminator(Dialect const& _dialect): m_dialect(_dialect) {}
+
 	Dialect const& m_dialect;
 };
 

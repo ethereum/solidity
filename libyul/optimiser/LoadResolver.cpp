@@ -31,12 +31,12 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-void LoadResolver::run(Dialect const& _dialect, Block& _ast)
+void LoadResolver::run(OptimiserStepContext& _context, Block& _ast)
 {
-	bool containsMSize = MSizeFinder::containsMSize(_dialect, _ast);
+	bool containsMSize = MSizeFinder::containsMSize(_context.dialect, _ast);
 	LoadResolver{
-		_dialect,
-		SideEffectsPropagator::sideEffects(_dialect, CallGraphGenerator::callGraph(_ast)),
+		_context.dialect,
+		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast)),
 		!containsMSize
 	}(_ast);
 }

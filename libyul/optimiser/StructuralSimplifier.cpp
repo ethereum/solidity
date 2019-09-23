@@ -59,6 +59,11 @@ OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _const
 
 }
 
+void StructuralSimplifier::run(OptimiserStepContext&, Block& _ast)
+{
+	StructuralSimplifier{}(_ast);
+}
+
 void StructuralSimplifier::operator()(Block& _block)
 {
 	simplify(_block.statements);
