@@ -19,6 +19,7 @@
 
 #include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 namespace yul
 {
@@ -32,6 +33,9 @@ namespace yul
 class VarDeclInitializer: public ASTModifier
 {
 public:
+	static constexpr char const* name{"VarDeclInitializer"};
+	static void run(OptimiserStepContext&, Block& _ast) { VarDeclInitializer{}(_ast); }
+
 	void operator()(Block& _block) override;
 };
 

@@ -51,6 +51,7 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
+#include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
@@ -126,11 +127,12 @@ public:
 			cout << source << endl;
 			if (!parse(source))
 				return;
+			set<YulString> reservedIdentifiers;
 			if (!disambiguated)
 			{
 				*m_ast = boost::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_ast));
 				m_analysisInfo.reset();
-				m_nameDispenser = make_shared<NameDispenser>(m_dialect, *m_ast);
+				m_nameDispenser = make_shared<NameDispenser>(m_dialect, *m_ast, reservedIdentifiers);
 				disambiguated = true;
 			}
 			cout << "(q)quit/(f)flatten/(c)se/initialize var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
@@ -141,78 +143,83 @@ public:
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
+
+			OptimiserStepContext context{m_dialect, *m_nameDispenser, reservedIdentifiers};
 			switch (option)
 			{
 			case 'q':
 				return;
 			case 'f':
-				BlockFlattener{}(*m_ast);
+				BlockFlattener::run(context, *m_ast);
 				break;
 			case 'o':
-				ForLoopInitRewriter{}(*m_ast);
+				ForLoopInitRewriter::run(context, *m_ast);
 				break;
 			case 'O':
-				ForLoopConditionOutOfBody{m_dialect}(*m_ast);
+				ForLoopConditionOutOfBody::run(context, *m_ast);
 				break;
 			case 'I':
-				ForLoopConditionIntoBody{m_dialect}(*m_ast);
+				ForLoopConditionIntoBody::run(context, *m_ast);
 				break;
 			case 'c':
-				CommonSubexpressionEliminator::run(m_dialect, *m_ast);
+				CommonSubexpressionEliminator::run(context, *m_ast);
 				break;
 			case 'd':
-				(VarDeclInitializer{})(*m_ast);
+				VarDeclInitializer::run(context, *m_ast);
 				break;
 			case 'l':
-				VarNameCleaner{*m_ast, m_dialect}(*m_ast);
+				VarNameCleaner::run(context, *m_ast);
 				break;
 			case 'x':
-				ExpressionSplitter{m_dialect, *m_nameDispenser}(*m_ast);
+				ExpressionSplitter::run(context, *m_ast);
 				break;
 			case 'j':
-				ExpressionJoiner::run(*m_ast);
+				ExpressionJoiner::run(context, *m_ast);
 				break;
 			case 'g':
-				(FunctionGrouper{})(*m_ast);
+				FunctionGrouper::run(context, *m_ast);
 				break;
 			case 'h':
-				(FunctionHoister{})(*m_ast);
+				FunctionHoister::run(context, *m_ast);
 				break;
 			case 'e':
-				ExpressionInliner{m_dialect, *m_ast}.run();
+				ExpressionInliner::run(context, *m_ast);
 				break;
 			case 'i':
-				FullInliner(*m_ast, *m_nameDispenser).run();
+				FullInliner::run(context, *m_ast);
 				break;
 			case 's':
-				ExpressionSimplifier::run(m_dialect, *m_ast);
+				ExpressionSimplifier::run(context, *m_ast);
 				break;
 			case 't':
-				StructuralSimplifier{}(*m_ast);
+				StructuralSimplifier::run(context, *m_ast);
+				break;
+			case 'T':
+				LiteralRematerialiser::run(context, *m_ast);
 				break;
 			case 'n':
-				(ControlFlowSimplifier{m_dialect})(*m_ast);
+				ControlFlowSimplifier::run(context, *m_ast);
 				break;
 			case 'u':
-				UnusedPruner::runUntilStabilisedOnFullAST(m_dialect, *m_ast);
+				UnusedPruner::run(context, *m_ast);
 				break;
 			case 'D':
-				DeadCodeEliminator{m_dialect}(*m_ast);
+				DeadCodeEliminator::run(context, *m_ast);
 				break;
 			case 'a':
-				SSATransform::run(*m_ast, *m_nameDispenser);
+				SSATransform::run(context, *m_ast);
 				break;
 			case 'r':
-				RedundantAssignEliminator::run(m_dialect, *m_ast);
+				RedundantAssignEliminator::run(context, *m_ast);
 				break;
 			case 'm':
-				Rematerialiser::run(m_dialect, *m_ast);
+				Rematerialiser::run(context, *m_ast);
 				break;
 			case 'v':
-				EquivalentFunctionCombiner::run(*m_ast);
+				EquivalentFunctionCombiner::run(context, *m_ast);
 				break;
 			case 'V':
-				SSAReverser::run(*m_ast);
+				SSAReverser::run(context, *m_ast);
 				break;
 			case 'p':
 			{
@@ -222,7 +229,7 @@ public:
 				break;
 			}
 			case 'L':
-				LoadResolver::run(m_dialect, *m_ast);
+				LoadResolver::run(context, *m_ast);
 				break;
 			default:
 				cout << "Unknown option." << endl;

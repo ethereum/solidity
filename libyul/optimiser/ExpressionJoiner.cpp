@@ -34,6 +34,12 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
+void ExpressionJoiner::run(OptimiserStepContext&, Block& _ast)
+{
+	ExpressionJoiner{_ast}(_ast);
+}
+
+
 void ExpressionJoiner::operator()(FunctionalInstruction& _instruction)
 {
 	handleArguments(_instruction.arguments);
@@ -76,11 +82,6 @@ void ExpressionJoiner::visit(Expression& _e)
 	}
 	else
 		ASTModifier::visit(_e);
-}
-
-void ExpressionJoiner::run(Block& _ast)
-{
-	ExpressionJoiner{_ast}(_ast);
 }
 
 ExpressionJoiner::ExpressionJoiner(Block& _ast)

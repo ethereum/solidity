@@ -34,11 +34,11 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-void CommonSubexpressionEliminator::run(Dialect const& _dialect, Block& _ast)
+void CommonSubexpressionEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
 	CommonSubexpressionEliminator cse{
-		_dialect,
-		SideEffectsPropagator::sideEffects(_dialect, CallGraphGenerator::callGraph(_ast))
+		_context.dialect,
+		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast))
 	};
 	cse(_ast);
 }

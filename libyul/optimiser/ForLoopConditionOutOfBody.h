@@ -17,6 +17,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/Dialect.h>
 
 namespace yul
@@ -56,13 +57,17 @@ namespace yul
 class ForLoopConditionOutOfBody: public ASTModifier
 {
 public:
-	ForLoopConditionOutOfBody(Dialect const& _dialect):
-		m_dialect(_dialect)
-	{}
+	static constexpr char const* name{"ForLoopConditionOutOfBody"};
+	static void run(OptimiserStepContext&, Block& _ast);
+
 	using ASTModifier::operator();
 	void operator()(ForLoop& _forLoop) override;
 
 private:
+	ForLoopConditionOutOfBody(Dialect const& _dialect):
+		m_dialect(_dialect)
+	{}
+
 	Dialect const& m_dialect;
 };
 

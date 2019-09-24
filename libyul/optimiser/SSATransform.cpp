@@ -373,12 +373,12 @@ void PropagateValues::operator()(Block& _block)
 
 }
 
-void SSATransform::run(Block& _ast, NameDispenser& _nameDispenser)
+void SSATransform::run(OptimiserStepContext& _context, Block& _ast)
 {
 	Assignments assignments;
 	assignments(_ast);
-	IntroduceSSA{_nameDispenser, assignments.names()}(_ast);
-	IntroduceControlFlowSSA{_nameDispenser, assignments.names()}(_ast);
+	IntroduceSSA{_context.dispenser, assignments.names()}(_ast);
+	IntroduceControlFlowSSA{_context.dispenser, assignments.names()}(_ast);
 	PropagateValues{assignments.names()}(_ast);
 }
 

@@ -21,10 +21,13 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/EquivalentFunctionDetector.h>
+#include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/AsmDataForward.h>
 
 namespace yul
 {
+
+struct OptimiserStepContext;
 
 /**
  * Optimiser component that detects syntactically equivalent functions and replaces all calls to any of them by calls
@@ -35,7 +38,8 @@ namespace yul
 class EquivalentFunctionCombiner: public ASTModifier
 {
 public:
-	static void run(Block& _ast);
+	static constexpr char const* name{"EquivalentFunctionCombiner"};
+	static void run(OptimiserStepContext&, Block& _ast);
 
 	using ASTModifier::operator();
 	void operator()(FunctionCall& _funCall) override;

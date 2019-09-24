@@ -16,12 +16,18 @@
 */
 
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
+#include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/AsmData.h>
 #include <libdevcore/CommonData.h>
 
 using namespace std;
 using namespace dev;
 using namespace yul;
+
+void ForLoopConditionIntoBody::run(OptimiserStepContext& _context, Block& _ast)
+{
+	ForLoopConditionIntoBody{_context.dialect}(_ast);
+}
 
 void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 {

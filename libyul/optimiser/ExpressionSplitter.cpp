@@ -22,6 +22,7 @@
 #include <libyul/optimiser/ExpressionSplitter.h>
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
@@ -34,6 +35,11 @@ using namespace std;
 using namespace dev;
 using namespace langutil;
 using namespace yul;
+
+void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
+{
+	ExpressionSplitter{_context.dialect, _context.dispenser}(_ast);
+}
 
 void ExpressionSplitter::operator()(FunctionalInstruction& _instruction)
 {

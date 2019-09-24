@@ -23,7 +23,7 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-void SSAReverser::run(Block& _block)
+void SSAReverser::run(OptimiserStepContext&, Block& _block)
 {
 	AssignmentCounter assignmentCounter;
 	assignmentCounter(_block);
