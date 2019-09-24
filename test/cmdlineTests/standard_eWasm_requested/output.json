@@ -26,9 +26,9 @@
     (param $x4 i64)
     (result i64)
     (local $v i64)
-    (if (i64.ne (i64.const 0) (i64.or (i64.or (get_local $x1) (get_local $x2)) (get_local $x3))) (then
+    (if (i64.ne (get_local $v) (i64.or (i64.or (get_local $x1) (get_local $x2)) (get_local $x3))) (then
         (unreachable)))
-    (if (i64.ne (i64.const 0) (i64.shr_u (get_local $x4) (i64.const 32))) (then
+    (if (i64.ne (get_local $v) (i64.shr_u (get_local $x4) (i64.const 32))) (then
         (unreachable)))
     (set_local $v (get_local $x4))
     (get_local $v)
@@ -107,9 +107,9 @@
     (param $x4 i64)
     (result i64)
     (local $v i64)
-    (if (i64.ne (i64.const 0) (i64.or (i64.or (get_local $x1) (get_local $x2)) (get_local $x3))) (then
+    (if (i64.ne (get_local $v) (i64.or (i64.or (get_local $x1) (get_local $x2)) (get_local $x3))) (then
         (unreachable)))
-    (if (i64.ne (i64.const 0) (i64.shr_u (get_local $x4) (i64.const 32))) (then
+    (if (i64.ne (get_local $v) (i64.shr_u (get_local $x4) (i64.const 32))) (then
         (unreachable)))
     (set_local $v (get_local $x4))
     (get_local $v)

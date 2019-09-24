@@ -15,9 +15,14 @@
 //     for { mstore(0, a_1) }
 //     a
 //     {
-//         let a_2 := add(a, 3)
+//         let a_4 := a
+//         let a_2 := add(a_4, 3)
 //         a := a_2
 //     }
-//     { mstore(0, a) }
-//     mstore(0, a)
+//     {
+//         let a_3 := a
+//         mstore(0, a_3)
+//     }
+//     let a_5 := a
+//     mstore(0, a_5)
 // }

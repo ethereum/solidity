@@ -20,8 +20,10 @@
 //         a := a_2
 //     }
 //     default {
-//         let a_3 := add(a, 8)
+//         let a_4 := a
+//         let a_3 := add(a_4, 8)
 //         a := a_3
 //     }
-//     mstore(0, a)
+//     let a_5 := a
+//     mstore(0, a_5)
 // }

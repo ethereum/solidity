@@ -163,7 +163,8 @@ If an opcode takes arguments (always from the top of the stack), they are given 
 Note that the order of arguments can be seen to be reversed in non-functional style (explained below).
 Opcodes marked with ``-`` do not push an item onto the stack (do not return a result),
 those marked with ``*`` are special and all others push exactly one item onto the stack (their "return value").
-Opcodes marked with ``F``, ``H``, ``B`` or ``C`` are present since Frontier, Homestead, Byzantium or Constantinople, respectively.
+Opcodes marked with ``F``, ``H``, ``B``, ``C`` or ``I`` are present since Frontier, Homestead,
+Byzantium, Constantinople or Istanbul, respectively.
 
 In the following, ``mem[a...b)`` signifies the bytes of memory starting at position ``a`` up to
 but not including position ``b`` and ``storage[p]`` signifies the storage contents at position ``p``.
@@ -259,6 +260,8 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | balance(a)              |     | F | wei balance at address a                                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
+| selfbalance()           |     | I | equivalent to balance(address()), but cheaper                   |
++-------------------------+-----+---+-----------------------------------------------------------------+
 | caller                  |     | F | call sender (excluding ``delegatecall``)                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | callvalue               |     | F | wei sent together with the current call                         |
@@ -324,6 +327,8 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | log4(p, s, t1, t2, t3,  | `-` | F | log with topics t1, t2, t3, t4 and data mem[p...(p+s))          |
 | t4)                     |     |   |                                                                 |
++-------------------------+-----+---+-----------------------------------------------------------------+
+| chainid                 |     | I | ID of the executing chain (EIP 1344)                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | origin                  |     | F | transaction sender                                              |
 +-------------------------+-----+---+-----------------------------------------------------------------+

@@ -24,7 +24,7 @@
 //     for { } lt(mload(a), mload(b)) { a := mload(b) }
 //     {
 //         let b_4 := mload(a)
-//         let a_7 := mload(b_4)
-//         b := mload(a_7)
+//         a := mload(b_4)
+//         b := mload(a)
 //     }
 // }

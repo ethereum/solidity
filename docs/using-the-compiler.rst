@@ -122,7 +122,8 @@ at each version. Backward compatibility is not guaranteed between each version.
    - Shifting operators use shifting opcodes and thus need less gas.
 - ``petersburg`` (**default**)
    - The compiler behaves the same way as with constantinople.
-- ``istanbul`` (**experimental**)
+- ``istanbul``
+   - Opcodes ``chainid`` and ``selfbalance`` are available in assembly.
 - ``berlin`` (**experimental**)
 
 

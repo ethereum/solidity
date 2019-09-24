@@ -44,6 +44,7 @@ Compiler Features:
 
 Bugfixes:
  * Fix internal error when popping a dynamic storage array of mappings.
+ * Yul Optimizer: Fix reordering bug in connection with shifted one and mul/div-instructions in for loop conditions.
 
 
 ### 0.5.11 (2019-08-12)

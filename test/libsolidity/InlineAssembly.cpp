@@ -836,6 +836,20 @@ BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", TypeError, "The \"sar\" instruction is only available for Constantinople-compatible VMs");
 }
 
+BOOST_AUTO_TEST_CASE(chainid_instanbul_warning)
+{
+	if (dev::test::Options::get().evmVersion().hasChainID())
+		return;
+	CHECK_PARSE_WARNING("{ pop(chainid()) }", TypeError, "The \"chainid\" instruction is only available for Istanbul-compatible VMs");
+}
+
+BOOST_AUTO_TEST_CASE(selfbalance_instanbul_warning)
+{
+	if (dev::test::Options::get().evmVersion().hasSelfBalance())
+		return;
+	CHECK_PARSE_WARNING("{ pop(selfbalance()) }", TypeError, "The \"selfbalance\" instruction is only available for Istanbul-compatible VMs");
+}
+
 BOOST_AUTO_TEST_CASE(jump_warning)
 {
 	CHECK_PARSE_WARNING("{ 1 jump }", Warning, "Jump instructions");
