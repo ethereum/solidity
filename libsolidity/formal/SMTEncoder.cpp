@@ -621,8 +621,8 @@ void SMTEncoder::visitFunctionIdentifier(Identifier const& _identifier)
 	auto const& fType = dynamic_cast<FunctionType const&>(*_identifier.annotation().type);
 	if (fType.returnParameterTypes().size() == 1)
 	{
-		defineGlobalVariable(fType.richIdentifier(), _identifier);
-		m_context.createExpression(_identifier, m_context.globalSymbol(fType.richIdentifier()));
+		defineGlobalVariable(fType.identifier(), _identifier);
+		m_context.createExpression(_identifier, m_context.globalSymbol(fType.identifier()));
 	}
 }
 
