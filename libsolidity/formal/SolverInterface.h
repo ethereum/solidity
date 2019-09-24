@@ -338,13 +338,13 @@ public:
 	virtual void push() = 0;
 	virtual void pop() = 0;
 
-	virtual void declareVariable(std::string const& _name, Sort const& _sort) = 0;
-	Expression newVariable(std::string _name, SortPointer _sort)
+	virtual void declareVariable(std::string const& _name, SortPointer const& _sort) = 0;
+	Expression newVariable(std::string _name, SortPointer const& _sort)
 	{
 		// Subclasses should do something here
 		solAssert(_sort, "");
-		declareVariable(_name, *_sort);
-		return Expression(std::move(_name), {}, std::move(_sort));
+		declareVariable(_name, _sort);
+		return Expression(std::move(_name), {}, _sort);
 	}
 
 	virtual void addAssertion(Expression const& _expr) = 0;

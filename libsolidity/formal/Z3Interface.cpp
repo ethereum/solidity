@@ -50,14 +50,15 @@ void Z3Interface::pop()
 	m_solver.pop();
 }
 
-void Z3Interface::declareVariable(string const& _name, Sort const& _sort)
+void Z3Interface::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	if (_sort.kind == Kind::Function)
-		declareFunction(_name, _sort);
+	solAssert(_sort, "");
+	if (_sort->kind == Kind::Function)
+		declareFunction(_name, *_sort);
 	else if (m_constants.count(_name))
-		m_constants.at(_name) = m_context.constant(_name.c_str(), z3Sort(_sort));
+		m_constants.at(_name) = m_context.constant(_name.c_str(), z3Sort(*_sort));
 	else
-		m_constants.emplace(_name, m_context.constant(_name.c_str(), z3Sort(_sort)));
+		m_constants.emplace(_name, m_context.constant(_name.c_str(), z3Sort(*_sort)));
 }
 
 void Z3Interface::declareFunction(string const& _name, Sort const& _sort)

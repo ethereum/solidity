@@ -60,27 +60,29 @@ void SMTLib2Interface::pop()
 	m_accumulatedOutput.pop_back();
 }
 
-void SMTLib2Interface::declareVariable(string const& _name, Sort const& _sort)
+void SMTLib2Interface::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	if (_sort.kind == Kind::Function)
+	solAssert(_sort, "");
+	if (_sort->kind == Kind::Function)
 		declareFunction(_name, _sort);
 	else if (!m_variables.count(_name))
 	{
-		m_variables.insert(_name);
-		write("(declare-fun |" + _name + "| () " + toSmtLibSort(_sort) + ')');
+		m_variables.emplace(_name, _sort);
+		write("(declare-fun |" + _name + "| () " + toSmtLibSort(*_sort) + ')');
 	}
 }
 
-void SMTLib2Interface::declareFunction(string const& _name, Sort const& _sort)
+void SMTLib2Interface::declareFunction(string const& _name, SortPointer const& _sort)
 {
-	solAssert(_sort.kind == smt::Kind::Function, "");
+	solAssert(_sort, "");
+	solAssert(_sort->kind == smt::Kind::Function, "");
 	// TODO Use domain and codomain as key as well
 	if (!m_variables.count(_name))
 	{
-		FunctionSort fSort = dynamic_cast<FunctionSort const&>(_sort);
-		string domain = toSmtLibSort(fSort.domain);
-		string codomain = toSmtLibSort(*fSort.codomain);
-		m_variables.insert(_name);
+		auto const& fSort = dynamic_pointer_cast<FunctionSort>(_sort);
+		string domain = toSmtLibSort(fSort->domain);
+		string codomain = toSmtLibSort(*fSort->codomain);
+		m_variables.emplace(_name, _sort);
 		write(
 			"(declare-fun |" +
 			_name +
@@ -159,6 +161,7 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 	case Kind::Array:
 	{
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
+		solAssert(arraySort.domain && arraySort.range, "");
 		return "(Array " + toSmtLibSort(*arraySort.domain) + ' ' + toSmtLibSort(*arraySort.range) + ')';
 	}
 	default:

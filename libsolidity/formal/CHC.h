@@ -44,11 +44,20 @@ namespace solidity
 class CHC: public SMTEncoder
 {
 public:
-	CHC(smt::EncodingContext& _context, langutil::ErrorReporter& _errorReporter);
+	CHC(
+		smt::EncodingContext& _context,
+		langutil::ErrorReporter& _errorReporter,
+		std::map<h256, std::string> const& _smtlib2Responses
+	);
 
 	void analyze(SourceUnit const& _sources);
 
 	std::set<Expression const*> const& safeAssertions() const { return m_safeAssertions; }
+
+	/// This is used if the Horn solver is not directly linked into this binary.
+	/// @returns a list of inputs to the Horn solver that were not part of the argument to
+	/// the constructor.
+	std::vector<std::string> unhandledQueries() const;
 
 private:
 	/// Visitor functions.

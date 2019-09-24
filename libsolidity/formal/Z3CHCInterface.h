@@ -37,7 +37,7 @@ public:
 	Z3CHCInterface();
 
 	/// Forwards variable declaration to Z3Interface.
-	void declareVariable(std::string const& _name, Sort const& _sort) override;
+	void declareVariable(std::string const& _name, SortPointer const& _sort) override;
 
 	void registerRelation(Expression const& _expr) override;
 
