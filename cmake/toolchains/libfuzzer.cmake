@@ -1,7 +1,7 @@
 # Inherit default options
 include("${CMAKE_CURRENT_LIST_DIR}/default.cmake")
-# Disable Z3 and CVC4 since none of the existing fuzzers need them
-set(USE_Z3 OFF CACHE BOOL "Disable Z3" FORCE)
+# Enable Z3, disable CVC4
+set(USE_Z3 ON CACHE BOOL "Enable Z3" FORCE)
 set(USE_CVC4 OFF CACHE BOOL "Disable CVC4" FORCE)
 # Build fuzzing binaries
 set(OSSFUZZ ON CACHE BOOL "Enable fuzzer build" FORCE)
