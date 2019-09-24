@@ -6,7 +6,11 @@
 Abstract Contracts
 ******************
 
-Contracts are marked as abstract when at least one of their functions lacks an implementation as in the following example (note that the function declaration header is terminated by ``;``)::
+Contracts need to be marked as abstract when at least one of their functions was not implemented.
+You can also mark contracts as abstract even though all functions are implemented.
+This can be done by using the ``abstract`` keyword as shown in the following example. Note, that this contract need to be
+defined as abstract, because the function ``utterance()`` was defined, but no implementation was
+provided (no implementation body ``{ }`` was given).::
 
     pragma solidity >=0.4.0 <0.7.0;
 
@@ -14,7 +18,8 @@ Contracts are marked as abstract when at least one of their functions lacks an i
         function utterance() public returns (bytes32);
     }
 
-Such contracts cannot be compiled (even if they contain implemented functions alongside non-implemented functions), but they can be used as base contracts::
+Such abstract contracts can not be instantiated directly. This is also true, if an abstract contract itself does implement
+all defined functions. The usage of an abstract contract as a base class is shown in the following example::
 
     pragma solidity >=0.4.0 <0.7.0;
 
@@ -26,7 +31,7 @@ Such contracts cannot be compiled (even if they contain implemented functions al
         function utterance() public override returns (bytes32) { return "miaow"; }
     }
 
-If a contract inherits from an abstract contract and does not implement all non-implemented functions by overriding, it will itself be abstract.
+If a contract inherits from an abstract contract and does not implement all non-implemented functions by overriding, it needs to be marked as abstract as well.
 
 Note that a function without implementation is different from a :ref:`Function Type <function_types>` even though their syntax looks very similar.
 
