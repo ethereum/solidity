@@ -96,17 +96,17 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	compileAndRun(sourceCode);
 
 	if (Options::get().evmVersion() <= EVMVersion::byzantium())
-		CHECK_DEPLOY_GAS(134209, 130895);
+		CHECK_DEPLOY_GAS(134145, 130831);
 	// This is only correct on >=Constantinople.
 	else if (Options::get().useABIEncoderV2)
 	{
 		if (Options::get().optimizeYul)
-			CHECK_DEPLOY_GAS(127785, 127785);
+			CHECK_DEPLOY_GAS(127785, 127721);
 		else
 			CHECK_DEPLOY_GAS(151587, 135371);
 	}
 	else
-		CHECK_DEPLOY_GAS(126993, 119723);
+		CHECK_DEPLOY_GAS(126929, 119659);
 
 	if (Options::get().evmVersion() >= EVMVersion::byzantium())
 	{

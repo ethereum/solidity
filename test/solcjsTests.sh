@@ -39,8 +39,8 @@ VERSION="$2"
 
 DIR=$(mktemp -d)
 (
-    echo "Preparing solc-js (master)..."
-    git clone --depth 1 --branch master https://github.com/ethereum/solc-js "$DIR"
+    echo "Preparing solc-js (master_060)..."
+    git clone --depth 1 --branch master_060 https://github.com/ethereum/solc-js "$DIR"
     cd "$DIR"
     # disable "prepublish" script which downloads the latest version
     # (we will replace it anyway and it is often incorrectly cached
@@ -52,11 +52,6 @@ DIR=$(mktemp -d)
     echo "Replacing soljson.js"
     rm -f soljson.js
     cp "$SOLJSON" soljson.js
-
-    # ensure to use always 0.5.0 sources
-    # FIXME: should be removed once the version bump in this repo is done
-    rm -rf test/DAO040
-    cp -R test/DAO test/DAO040
 
     # Update version (needed for some tests)
     echo "Updating package.json to version $VERSION"
