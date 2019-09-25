@@ -32,6 +32,13 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	add_compile_options(-Wextra)
 	add_compile_options(-Werror)
 
+	# We sometimes run into the above issue of reporting *maybe* uninitialized variables
+	# that, however, aren't visible in user-code, so we've to disable this warning.
+	# Reference: https://gcc.gnu.org/bugzilla//show_bug.cgi?id=60165#c1
+	if (NOT EMSCRIPTEN AND NOT OSSFUZZ AND NOT APPLE)
+		add_compile_options(-Wno-maybe-uninitialized)
+	endif()
+
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g3 -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
