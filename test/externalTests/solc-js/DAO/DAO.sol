@@ -295,7 +295,7 @@ contract DAOInterface {
     /// @notice Send `_amount` tokens to `_to` from `msg.sender`. Prior to this
     /// getMyReward() is called.
     /// @param _to The address of the recipient
-    /// @param _amount The amount of tokens to be transfered
+    /// @param _amount The amount of tokens to be transferred
     /// @return Whether the transfer was successful or not
     function transferWithoutReward(address _to, uint256 _amount) public returns (bool success);
 
@@ -303,7 +303,7 @@ contract DAOInterface {
     /// is approved by `_from`. Prior to this getMyReward() is called.
     /// @param _from The address of the sender
     /// @param _to The address of the recipient
-    /// @param _amount The amount of tokens to be transfered
+    /// @param _amount The amount of tokens to be transferred
     /// @return Whether the transfer was successful or not
     function transferFromWithoutReward(
         address payable _from,
@@ -383,7 +383,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
             revert();
         lastTimeMinQuorumMet = now;
         minQuorumDivisor = 5; // sets the minimal quorum to 20%
-        proposals.length = 1; // avoids a proposal with ID 0 because it is used
+        proposals.push(); // avoids a proposal with ID 0 because it is used
 
         allowedRecipients[address(this)] = true;
         allowedRecipients[curator] = true;
@@ -447,8 +447,8 @@ contract DAO is DAOInterface, Token, TokenCreation {
         if (proposals.length == 1) // initial length is 1 (see constructor)
             lastTimeMinQuorumMet = now;
 
-        _proposalID = proposals.length++;
-        Proposal storage p = proposals[_proposalID];
+        Proposal storage p = proposals.push();
+         _proposalID = proposals.length - 1;
         p.recipient = _recipient;
         p.amount = _amount;
         p.description = _description;
@@ -458,7 +458,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
         //p.proposalPassed = False; // that's default
         p.newCurator = _newCurator;
         if (_newCurator)
-            p.splitData.length++;
+            p.splitData.push();
         p.creator = msg.sender;
         p.proposalDeposit = msg.value;
 

@@ -34,7 +34,7 @@ contract TokenInterface {
     mapping (address => uint256) balances;
     mapping (address => mapping (address => uint256)) allowed;
 
-    /// Public variables of the token, all used for display 
+    /// Public variables of the token, all used for display
     string public name;
     string public symbol;
     uint8 public decimals;
@@ -85,7 +85,7 @@ contract TokenInterface {
     );
 }
 
-contract tokenRecipient { 
+contract tokenRecipient {
     function receiveApproval(address _from, uint256 _value, address _token, bytes memory _extraData) public;
 }
 
@@ -134,8 +134,8 @@ contract Token is TokenInterface {
         emit Approval(msg.sender, _spender, _amount);
         return true;
     }
-    
-    /// Allow another contract to spend some tokens in your behalf 
+
+    /// Allow another contract to spend some tokens in your behalf
     function approveAndCall(address _spender, uint256 _value, bytes memory _extraData)
         public returns (bool success) {
         allowed[msg.sender][_spender] = _value;
