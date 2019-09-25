@@ -551,7 +551,7 @@ jobs:
           command: |
             node --version
             npm --version
-            test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
+            test/externalTests/solc-js/solc-js.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
 
   t_ems_external_gnosis:
     docker:
