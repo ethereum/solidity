@@ -137,4 +137,3 @@ contract PropagateThroughReturnValue {
 // Warning: (748-755): Assertion checker does not yet support this expression.
 // Warning: (748-751): Assertion checker does not yet implement type struct Reference.St storage pointer
 // Warning: (748-770): Assertion checker does not yet implement such assignments.
-// Warning: (849-905): Assertion checker does not yet support constructors.
