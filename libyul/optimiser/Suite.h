@@ -22,9 +22,13 @@
 
 #include <libyul/AsmDataForward.h>
 #include <libyul/YulString.h>
+#include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/NameDispenser.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <set>
+#include <string>
+#include <memory>
 
 namespace yul
 {
@@ -41,6 +45,11 @@ struct Object;
 class OptimiserSuite
 {
 public:
+	enum class Debug
+	{
+		None,
+		PrintStep
+	};
 	static void run(
 		Dialect const& _dialect,
 		GasMeter const* _meter,
@@ -48,6 +57,26 @@ public:
 		bool _optimizeStackAllocation,
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	);
+
+	void runSequence(std::vector<std::string> const& _steps, Block& _ast);
+
+	static std::map<std::string, std::unique_ptr<OptimiserStep>> const& allSteps();
+
+private:
+	OptimiserSuite(
+		Dialect const& _dialect,
+		std::set<YulString> const& _externallyUsedIdentifiers,
+		Debug _debug,
+		Block& _ast
+	):
+		m_dispenser{_dialect, _ast, _externallyUsedIdentifiers},
+		m_context{_dialect, m_dispenser, _externallyUsedIdentifiers},
+		m_debug(_debug)
+	{}
+
+	NameDispenser m_dispenser;
+	OptimiserStepContext m_context;
+	Debug m_debug;
 };
 
 }

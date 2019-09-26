@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (92-116): This variable is of storage pointer type and can be accessed without prior assignment.
+// TypeError: (92-116): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

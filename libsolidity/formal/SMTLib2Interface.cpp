@@ -46,7 +46,7 @@ void SMTLib2Interface::reset()
 	m_accumulatedOutput.emplace_back();
 	m_variables.clear();
 	write("(set-option :produce-models true)");
-	write("(set-logic QF_UFLIA)");
+	write("(set-logic ALL)");
 }
 
 void SMTLib2Interface::push()
@@ -126,9 +126,24 @@ string SMTLib2Interface::toSExpr(smt::Expression const& _expr)
 {
 	if (_expr.arguments.empty())
 		return _expr.name;
-	std::string sexpr = "(" + _expr.name;
-	for (auto const& arg: _expr.arguments)
-		sexpr += " " + toSExpr(arg);
+
+	std::string sexpr = "(";
+	if (_expr.name == "const_array")
+	{
+		solAssert(_expr.arguments.size() == 2, "");
+		auto sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments.at(0).sort);
+		solAssert(sortSort, "");
+		auto arraySort = dynamic_pointer_cast<ArraySort>(sortSort->inner);
+		solAssert(arraySort, "");
+		sexpr += "(as const " + toSmtLibSort(*arraySort) + ") ";
+		sexpr += toSExpr(_expr.arguments.at(1));
+	}
+	else
+	{
+		sexpr += _expr.name;
+		for (auto const& arg: _expr.arguments)
+			sexpr += " " + toSExpr(arg);
+	}
 	sexpr += ")";
 	return sexpr;
 }

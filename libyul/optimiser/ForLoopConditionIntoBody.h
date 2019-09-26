@@ -22,6 +22,8 @@
 namespace yul
 {
 
+struct OptimiserStepContext;
+
 /**
  * Rewrites ForLoop by moving iteration condition into the ForLoop body.
  * For example, `for {} lt(a, b) {} { mstore(1, 2) }` will become
@@ -40,11 +42,15 @@ namespace yul
 class ForLoopConditionIntoBody: public ASTModifier
 {
 public:
-	ForLoopConditionIntoBody(Dialect const& _dialect): m_dialect(_dialect) {}
+	static constexpr char const* name{"ForLoopConditionIntoBody"};
+	static void run(OptimiserStepContext&, Block& _ast);
+
 	using ASTModifier::operator();
 	void operator()(ForLoop& _forLoop) override;
 
 private:
+	ForLoopConditionIntoBody(Dialect const& _dialect): m_dialect(_dialect) {}
+
 	Dialect const& m_dialect;
 };
 

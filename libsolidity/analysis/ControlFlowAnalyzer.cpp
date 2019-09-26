@@ -142,7 +142,7 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 				ssl,
 				string("This variable is of storage pointer type and can be ") +
 				(variableOccurrence->kind() == VariableOccurrence::Kind::Return ? "returned" : "accessed") +
-				" without prior assignment."
+				" without prior assignment, which would lead to undefined behaviour."
 			);
 		}
 	}

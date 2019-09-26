@@ -25,6 +25,7 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Substitution.h>
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 #include <libyul/AsmData.h>
 
@@ -32,13 +33,12 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-void ExpressionInliner::run()
+void ExpressionInliner::run(OptimiserStepContext& _context, Block& _ast)
 {
 	InlinableExpressionFunctionFinder funFinder;
-	funFinder(m_block);
-	m_inlinableFunctions = funFinder.inlinableFunctions();
-
-	(*this)(m_block);
+	funFinder(_ast);
+	ExpressionInliner inliner{_context.dialect, funFinder.inlinableFunctions()};
+	inliner(_ast);
 }
 
 void ExpressionInliner::operator()(FunctionDefinition& _fun)

@@ -17,10 +17,12 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 namespace yul
 {
 struct Dialect;
+struct OptimiserStepContext;
 
 /**
  * Simplifies several control-flow structures:
@@ -46,7 +48,8 @@ struct Dialect;
 class ControlFlowSimplifier: public ASTModifier
 {
 public:
-	ControlFlowSimplifier(Dialect const& _dialect): m_dialect(_dialect) {}
+	static constexpr char const* name{"ControlFlowSimplifier"};
+	static void run(OptimiserStepContext&, Block& _ast);
 
 	using ASTModifier::operator();
 	void operator()(Break&) override { ++m_numBreakStatements; }
@@ -56,6 +59,8 @@ public:
 	void visit(Statement& _st) override;
 
 private:
+	ControlFlowSimplifier(Dialect const& _dialect): m_dialect(_dialect) {}
+
 	void simplify(std::vector<Statement>& _statements);
 
 	Dialect const& m_dialect;

@@ -5,4 +5,4 @@ contract C {
     function f() m1(b) m2(b = s) internal view returns (uint[] storage b) {}
 }
 // ----
-// TypeError: (129-130): This variable is of storage pointer type and can be accessed without prior assignment.
+// TypeError: (129-130): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

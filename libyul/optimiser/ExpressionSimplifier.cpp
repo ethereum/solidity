@@ -22,7 +22,7 @@
 
 #include <libyul/optimiser/SimplificationRules.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/optimiser/SSAValueTracker.h>
+#include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/AsmData.h>
 
 #include <libdevcore/CommonData.h>
@@ -30,6 +30,11 @@
 using namespace std;
 using namespace dev;
 using namespace yul;
+
+void ExpressionSimplifier::run(OptimiserStepContext& _context, Block& _ast)
+{
+	ExpressionSimplifier{_context.dialect}(_ast);
+}
 
 void ExpressionSimplifier::visit(Expression& _expression)
 {
@@ -47,9 +52,4 @@ void ExpressionSimplifier::visit(Expression& _expression)
 			return;
 		_expression = match->action().toExpression(locationOf(_expression));
 	}
-}
-
-void ExpressionSimplifier::run(Dialect const& _dialect, Block& _ast)
-{
-	ExpressionSimplifier{_dialect}(_ast);
 }

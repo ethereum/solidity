@@ -19,6 +19,14 @@
 
 #include <test/TestCase.h>
 
+#include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/NameDispenser.h>
+
+#include <libyul/YulString.h>
+
+#include <set>
+#include <memory>
+
 namespace langutil
 {
 class Scanner;
@@ -58,6 +66,7 @@ private:
 	void printIndented(std::ostream& _stream, std::string const& _output, std::string const& _linePrefix = "") const;
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
 	void disambiguate();
+	void updateContext();
 
 	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
 
@@ -67,6 +76,10 @@ private:
 	std::string m_expectation;
 
 	Dialect const* m_dialect = nullptr;
+	std::set<YulString> m_reservedIdentifiers;
+	std::unique_ptr<NameDispenser> m_nameDispenser;
+	std::unique_ptr<OptimiserStepContext> m_context;
+
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::string m_obtainedResult;

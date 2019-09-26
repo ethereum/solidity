@@ -32,6 +32,15 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
+void RedundantAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
+{
+	RedundantAssignEliminator rae{_context.dialect};
+	rae(_ast);
+
+	AssignmentRemover remover{rae.m_pendingRemovals};
+	remover(_ast);
+}
+
 void RedundantAssignEliminator::operator()(Identifier const& _identifier)
 {
 	changeUndecidedTo(_identifier.name, State::Used);
@@ -204,14 +213,6 @@ void RedundantAssignEliminator::operator()(Block const& _block)
 	swap(m_declaredVariables, outerDeclaredVariables);
 }
 
-void RedundantAssignEliminator::run(Dialect const& _dialect, Block& _ast)
-{
-	RedundantAssignEliminator rae{_dialect};
-	rae(_ast);
-
-	AssignmentRemover remover{rae.m_pendingRemovals};
-	remover(_ast);
-}
 
 template <class K, class V, class F>
 void joinMap(std::map<K, V>& _a, std::map<K, V>&& _b, F _conflictSolver)

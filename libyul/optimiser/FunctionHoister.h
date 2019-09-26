@@ -26,6 +26,7 @@
 
 namespace yul
 {
+struct OptimiserStepContext;
 
 /**
  * Moves all functions to the top-level scope.
@@ -37,10 +38,15 @@ namespace yul
 class FunctionHoister: public ASTModifier
 {
 public:
+	static constexpr char const* name{"FunctionHoister"};
+	static void run(OptimiserStepContext&, Block& _ast) { FunctionHoister{}(_ast); }
+
 	using ASTModifier::operator();
 	virtual void operator()(Block& _block);
 
 private:
+	FunctionHoister() = default;
+
 	bool m_isTopLevel = true;
 	std::vector<Statement> m_functions;
 };

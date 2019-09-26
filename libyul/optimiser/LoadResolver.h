@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
+#include <libyul/optimiser/OptimiserStep.h>
 #include <libevmasm/Instruction.h>
 
 namespace yul
@@ -41,8 +42,9 @@ struct BuiltinFunctionForEVM;
 class LoadResolver: public DataFlowAnalyzer
 {
 public:
+	static constexpr char const* name{"LoadResolver"};
 	/// Run the load resolver on the given complete AST.
-	static void run(Dialect const& _dialect, Block& _ast);
+	static void run(OptimiserStepContext&, Block& _ast);
 
 private:
 	LoadResolver(

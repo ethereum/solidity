@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (109-110): This variable is of storage pointer type and can be accessed without prior assignment.
+// TypeError: (109-110): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

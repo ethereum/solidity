@@ -22,6 +22,7 @@
 
 #include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 #include <liblangutil/SourceLocation.h>
 
@@ -89,7 +90,8 @@ class NameDispenser;
 class SSATransform: public ASTModifier
 {
 public:
-	static void run(Block& _ast, NameDispenser& _nameDispenser);
+	static constexpr char const* name{"SSATransform"};
+	static void run(OptimiserStepContext& _context, Block& _ast);
 };
 
 }

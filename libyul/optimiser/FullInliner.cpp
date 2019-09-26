@@ -38,6 +38,11 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
+void FullInliner::run(OptimiserStepContext& _context, Block& _ast)
+{
+	FullInliner{_ast, _context.dispenser}.run();
+}
+
 FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 	m_ast(_ast), m_nameDispenser(_dispenser)
 {
