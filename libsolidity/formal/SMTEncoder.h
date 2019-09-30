@@ -218,7 +218,7 @@ protected:
 	/// Resets the variable indices.
 	void resetVariableIndices(VariableIndices const& _indices);
 	/// Used when starting a new block.
-	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr);
+	virtual void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr);
 
 
 	/// @returns variables that are touched in _node's subtree.
@@ -230,6 +230,11 @@ protected:
 	/// Creates symbolic expressions for the returned values
 	/// and set them as the components of the symbolic tuple.
 	void createReturnedExpressions(FunctionCall const& _funCall);
+
+	/// @returns the symbolic arguments for a function call,
+	/// taking into account bound functions and
+	/// type conversion.
+	std::vector<smt::Expression> symbolicArguments(FunctionCall const& _funCall);
 
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
@@ -257,6 +262,9 @@ protected:
 	bool isRootFunction();
 	/// Returns true if _funDef was already visited.
 	bool visitedFunction(FunctionDefinition const* _funDef);
+
+	/// @returns all the override resolved functions for a _contract.
+	std::vector<FunctionDefinition const*> overrideResolvedFunctions(ContractDefinition const& _contract);
 
 	/// Depth of visit to modifiers.
 	/// When m_modifierDepth == #modifiers the function can be visited

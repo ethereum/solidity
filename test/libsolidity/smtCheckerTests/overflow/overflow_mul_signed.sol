@@ -12,5 +12,6 @@ contract C
 	}
 }
 // ----
+// Warning: (47-192): Error trying to invoke SMT solver.
 // Warning: (117-122): Overflow (resulting value larger than 127) happens here
 // Warning: (150-157): Overflow (resulting value larger than 127) happens here

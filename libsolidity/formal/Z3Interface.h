@@ -28,7 +28,7 @@ namespace solidity
 namespace smt
 {
 
-class Z3Interface: public SolverInterface, public boost::noncopyable
+class Z3Interface: public SolverInterface
 {
 public:
 	Z3Interface();

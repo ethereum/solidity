@@ -4,9 +4,10 @@ contract C {
     function f(uint x, uint y) public pure {
         x = 7;
         while ((x = y) > 0) {
+			--y;
         }
         assert(x == 7);
     }
 }
 // ----
-// Warning: (216-230): Assertion violation happens here
+// Warning: (224-238): Assertion violation happens here

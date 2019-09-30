@@ -46,7 +46,6 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 		)
 			node->accept(*this);
 
-	vector<FunctionDefinition const*> resolvedFunctions = _contract.definedFunctions();
 	for (auto const& base: _contract.annotation().linearizedBaseContracts)
 	{
 		// Look for all the constructor invocations bottom up.
@@ -60,26 +59,6 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 					m_baseConstructorCalls[baseContract] = invocation.get();
 				}
 			}
-
-		// Check for function overrides.
-		for (auto const& baseFunction: base->definedFunctions())
-		{
-			if (baseFunction->isConstructor())
-				continue;
-			bool overridden = false;
-			for (auto const& function: resolvedFunctions)
-				if (
-					function->name() == baseFunction->name() &&
-					FunctionType(*function).asCallableFunction(false)->
-						hasEqualParameterTypes(*FunctionType(*baseFunction).asCallableFunction(false))
-				)
-				{
-					overridden = true;
-					break;
-				}
-			if (!overridden)
-				resolvedFunctions.push_back(baseFunction);
-		}
 	}
 
 	// Functions are visited first since they might be used
@@ -87,7 +66,7 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 	// the constructor.
 	// Constructors are visited as part of the constructor
 	// hierarchy inlining.
-	for (auto const& function: resolvedFunctions)
+	for (auto const& function: overrideResolvedFunctions(_contract))
 		if (!function->isConstructor())
 			function->accept(*this);
 
@@ -664,7 +643,7 @@ void SMTEncoder::visitAssert(FunctionCall const& _funCall)
 	auto const& args = _funCall.arguments();
 	solAssert(args.size() == 1, "");
 	solAssert(args.front()->annotation().type->category() == Type::Category::Bool, "");
-	addPathImpliedExpression(expr(*args.front()));
+	//addPathImpliedExpression(expr(*args.front()));
 }
 
 void SMTEncoder::visitRequire(FunctionCall const& _funCall)
@@ -1670,4 +1649,60 @@ void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)
 	}
 	else if (returnParams.size() == 1)
 		defineExpr(_funCall, currentValue(*returnParams.front()));
+}
+
+
+vector<smt::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _funCall)
+{
+	auto const* function = functionCallToDefinition(_funCall);
+	solAssert(function, "");
+
+	vector<smt::Expression> args;
+	Expression const* calledExpr = &_funCall.expression();
+	auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
+	solAssert(funType, "");
+
+	auto const& functionParams = function->parameters();
+	auto const& arguments = _funCall.arguments();
+	unsigned firstParam = 0;
+	if (funType->bound())
+	{
+		auto const& boundFunction = dynamic_cast<MemberAccess const*>(calledExpr);
+		solAssert(boundFunction, "");
+		args.push_back(expr(boundFunction->expression(), functionParams.front()->type()));
+		firstParam = 1;
+	}
+
+	solAssert((arguments.size() + firstParam) == functionParams.size(), "");
+	for (unsigned i = 0; i < arguments.size(); ++i)
+		args.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
+
+	return args;
+}
+
+vector<FunctionDefinition const*> SMTEncoder::overrideResolvedFunctions(ContractDefinition const& _contract)
+{
+	vector<FunctionDefinition const*> resolvedFunctions = _contract.definedFunctions();
+	for (auto const& base: _contract.annotation().linearizedBaseContracts)
+	{
+		for (auto const& baseFunction: base->definedFunctions())
+		{
+			if (baseFunction->isConstructor())
+				continue;
+			bool overridden = false;
+			for (auto const& function: resolvedFunctions)
+				if (
+					function->name() == baseFunction->name() &&
+					FunctionType(*function).asCallableFunction(false)->
+						hasEqualParameterTypes(*FunctionType(*baseFunction).asCallableFunction(false))
+				)
+				{
+					overridden = true;
+					break;
+				}
+			if (!overridden)
+				resolvedFunctions.push_back(baseFunction);
+		}
+	}
+	return resolvedFunctions;
 }

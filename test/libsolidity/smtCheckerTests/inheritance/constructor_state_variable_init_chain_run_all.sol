@@ -22,6 +22,13 @@ contract A is B {
 }
 
 // ----
-// Warning: (162-167): Underflow (resulting value less than 0) happens here
-// Warning: (162-167): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (287-305): Assertion violation happens here
+// Warning: (184-320): Error trying to invoke SMT solver.
+// Warning: (171-176): Underflow (resulting value less than 0) happens here
+// Warning: (171-176): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (230-235): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (171-176): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (260-265): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (282-287): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (282-291): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (308-313): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (296-314): Assertion violation happens here

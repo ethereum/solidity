@@ -48,6 +48,8 @@ public:
 	Z3Interface* z3Interface() const { return m_z3Interface.get(); }
 
 private:
+	std::vector<std::string> parseCounterexample(z3::expr const& _cex) const;
+
 	// Used to handle variables.
 	std::unique_ptr<Z3Interface> m_z3Interface;
 

@@ -31,4 +31,7 @@ contract A is B2, B1 {
 // Warning: (165-170): Overflow (resulting value larger than 2**256 - 1) happens here
 // Warning: (230-235): Overflow (resulting value larger than 2**256 - 1) happens here
 // Warning: (253-258): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (230-235): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (253-258): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (165-170): Overflow (resulting value larger than 2**256 - 1) happens here
 // Warning: (353-369): Assertion violation happens here

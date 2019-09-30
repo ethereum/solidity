@@ -15,4 +15,5 @@ contract c {
 	}
 }
 // ----
+// Warning: (124-250): Error trying to invoke SMT solver.
 // Warning: (101-106): Overflow (resulting value larger than 2**256 - 1) happens here

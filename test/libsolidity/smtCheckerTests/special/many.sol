@@ -16,10 +16,4 @@ contract C
 }
 // ----
 // Warning: (79-115): Assertion violation happens here
-// Warning: (119-161): Assertion violation happens here
-// Warning: (165-204): Assertion violation happens here
-// Warning: (208-240): Assertion violation happens here
-// Warning: (244-275): Assertion violation happens here
-// Warning: (304-332): Assertion violation happens here
-// Warning: (336-352): Assertion violation happens here
-// Warning: (356-379): Assertion violation happens here
+// Warning: (311-316): Overflow (resulting value larger than 2**256 - 1) happens here
