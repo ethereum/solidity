@@ -49,7 +49,7 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = n
 			char* error_c = nullptr;
 			_readCallback(_path.c_str(), &contents_c, &error_c);
 			ReadCallback::Result result;
-			result.success = true;
+			//result.success = true;
 			if (!contents_c && !error_c)
 			{
 				result.success = false;
