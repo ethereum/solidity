@@ -121,6 +121,8 @@ private:
 	/// operation.
 	static bool cleanupNeededForOp(Type::Category _type, Token _op);
 
+	void acceptAndConvert(Expression const& _expression, Type const& _type, bool _cleanupNeeded = false);
+
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();
 

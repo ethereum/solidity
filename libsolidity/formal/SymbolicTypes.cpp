@@ -276,10 +276,30 @@ void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _c
 void setSymbolicZeroValue(Expression _expr, solidity::TypePointer const& _type, EncodingContext& _context)
 {
 	solAssert(_type, "");
-	if (isNumber(_type->category()))
-		_context.addAssertion(_expr == 0);
-	else if (isBool(_type->category()))
-		_context.addAssertion(_expr == Expression(false));
+	_context.addAssertion(_expr == zeroValue(_type));
+}
+
+Expression zeroValue(solidity::TypePointer const& _type)
+{
+	solAssert(_type, "");
+	if (isSupportedType(_type->category()))
+	{
+		if (isNumber(_type->category()))
+			return 0;
+		if (isBool(_type->category()))
+			return Expression(false);
+		if (isArray(_type->category()) || isMapping(_type->category()))
+		{
+			if (auto arrayType = dynamic_cast<ArrayType const*>(_type))
+				return Expression::const_array(Expression(arrayType), zeroValue(arrayType->baseType()));
+			auto mappingType = dynamic_cast<MappingType const*>(_type);
+			solAssert(mappingType, "");
+			return Expression::const_array(Expression(mappingType), zeroValue(mappingType->valueType()));
+		}
+		solAssert(false, "");
+	}
+	// Unsupported types are abstracted as Int.
+	return 0;
 }
 
 void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext& _context)

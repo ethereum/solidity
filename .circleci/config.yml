@@ -22,7 +22,7 @@ defaults:
       name: Build
       command: |
         set -ex
-        if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
+        if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" -o -n "$FORCE_RELEASE" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
         echo -n "$CIRCLE_SHA1" > commit_hash.txt
         mkdir -p build
         cd build
@@ -96,22 +96,46 @@ defaults:
       name: soltest
       command: ./.circleci/soltest.sh
 
+  - run_soltest_all: &run_soltest_all
+      name: soltest_all
+      command: ./.circleci/soltest_all.sh
+
   - run_cmdline_tests: &run_cmdline_tests
       name: command line tests
       command: ./test/cmdlineTests.sh
 
-  - test_steps: &test_steps
-      - checkout
-      - attach_workspace:
-          at: build
-      - run: *run_soltest
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
-
   - test_ubuntu1904: &test_ubuntu1904
       docker:
         - image: ethereum/solidity-buildpack-deps:ubuntu1904
-      steps: *test_steps
+      steps:
+        - checkout
+        - attach_workspace:
+            at: build
+        - run: *run_soltest
+        - store_test_results: *store_test_results
+        - store_artifacts: *artifacts_test_results
+
+  - test_ubuntu1904_clang: &test_ubuntu1904_clang
+      docker:
+        - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang
+      steps:
+        - checkout
+        - attach_workspace:
+            at: build
+        - run: *run_soltest
+        - store_test_results: *store_test_results
+        - store_artifacts: *artifacts_test_results
+
+  - test_ubuntu1904_all: &test_ubuntu1904
+      docker:
+        - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      steps:
+        - checkout
+        - attach_workspace:
+            at: build
+        - run: *run_soltest_all
+        - store_test_results: *store_test_results
+        - store_artifacts: *artifacts_test_results
 
   - test_asan: &test_asan
       <<: *test_ubuntu1904
@@ -138,6 +162,16 @@ defaults:
       requires:
         - b_ubu
 
+  - workflow_ubuntu1904_clang: &workflow_ubuntu1904_clang
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_ubu_clang
+
+  - workflow_ubuntu1904_release: &workflow_ubuntu1904_release
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_ubu_release
+
   - workflow_ubuntu1904_codecov: &workflow_ubuntu1904_codecov
       <<: *workflow_trigger_on_tags
       requires:
@@ -162,6 +196,28 @@ defaults:
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_ossfuzz
+
+  # --------------------------------------------------------------------------
+  # Notification Templates
+  - gitter_notify_failure: &gitter_notify_failure
+      name: Gitter notify failure
+      command: >-
+        curl -X POST -i
+        -i -H "Content-Type: application/json"
+        -H "Accept: application/json"
+        -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
+        -d '{"text":" ❌ Nightly job **'$CIRCLE_JOB'** failed on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
+      when: on_fail
+
+  - gitter_notify_success: &gitter_notify_success
+      name: Gitter notify success
+      command: >-
+        curl -X POST -i
+        -i -H "Content-Type: application/json"
+        -H "Accept: application/json"
+        -H "Authorization: Bearer $GITTER_API_TOKEN" "https://api.gitter.im/v1/rooms/$GITTER_NOTIFY_ROOM_ID/chatMessages"
+        -d '{"text":" ✅ Nightly job **'$CIRCLE_JOB'** succeeded on **'$CIRCLE_BRANCH'**. Please see '$CIRCLE_BUILD_URL' for details."}'
+      when: on_success
 
 # -----------------------------------------------------------------------------------------------
 jobs:
@@ -240,6 +296,18 @@ jobs:
             pip install --user z3-solver
       - run: *run_proofs
 
+  b_ubu_clang: &build_ubuntu1904_clang
+    docker:
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang
+    environment:
+      CC: clang
+      CXX: clang++
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
+
   b_ubu: &build_ubuntu1904
     docker:
       - image: ethereum/solidity-buildpack-deps:ubuntu1904
@@ -248,6 +316,11 @@ jobs:
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
+
+  b_ubu_release: &build_ubuntu1904_release
+    <<: *build_ubuntu1904
+    environment:
+      FORCE_RELEASE: ON
 
   b_ubu18: &build_ubuntu1804
     docker:
@@ -292,24 +365,24 @@ jobs:
           command: codecov --flags all --gcov-root build
       - store_artifacts: *artifacts_test_results
 
-  # Builds in C++17 mode and uses debug build in order to speed up.
+  # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
-  b_ubu_cxx17:
+  b_ubu_cxx20:
     <<: *build_ubuntu1904
     environment:
       CMAKE_BUILD_TYPE: Debug
-      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx17.cmake -DUSE_CVC4=OFF
+      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx20.cmake -DUSE_CVC4=OFF
     steps:
       - checkout
       - run: *run_build
 
   b_ubu_ossfuzz:
-    <<: *build_ubuntu1904
+    <<: *build_ubuntu1904_clang
     environment:
       TERM: xterm
-      CC: /usr/bin/clang-8
-      CXX: /usr/bin/clang++-8
-      CMAKE_OPTIONS: -DOSSFUZZ=1 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
+      CC: clang
+      CXX: clang++
+      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash
@@ -317,7 +390,7 @@ jobs:
       - persist_to_workspace: *artifacts_executables_ossfuzz
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
-    <<: *test_ubuntu1904
+    <<: *test_ubuntu1904_clang
     steps:
       - checkout
       - attach_workspace:
@@ -328,6 +401,8 @@ jobs:
             mkdir -p test_results
             export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
             scripts/regressions.py -o test_results
+      - run: *gitter_notify_failure
+      - run: *gitter_notify_success
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -445,6 +520,18 @@ jobs:
           path: docs/_build/html/
           destination: docs-html
 
+  t_ubu_soltest: &t_ubu_soltest
+    <<: *test_ubuntu1904
+
+  t_ubu_clang_soltest: &t_ubu_clang_soltest
+    <<: *test_ubuntu1904_clang
+    environment:
+      EVM: constantinople
+      OPTIMIZE: 0
+
+  t_ubu_release_soltest: &t_ubu_release_soltest
+    <<: *t_ubu_soltest
+
   t_ubu_cli: &t_ubu_cli
     docker:
       - image: ethereum/solidity-buildpack-deps:ubuntu1904
@@ -457,6 +544,9 @@ jobs:
       - run: *run_cmdline_tests
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
+
+  t_ubu_release_cli: &t_ubu_release_cli
+    <<: *t_ubu_cli
 
   t_ubu_asan_cli:
     <<: *t_ubu_cli
@@ -478,62 +568,8 @@ jobs:
     environment:
       EVM: constantinople
       OPTIMIZE: 0
+      flags: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
-
-  t_ubu_homestead:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: homestead
-      OPTIMIZE: 0
-
-  t_ubu_homestead_opt:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: homestead
-      OPTIMIZE: 1
-
-  t_ubu_byzantium:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: byzantium
-      OPTIMIZE: 0
-
-  t_ubu_byzantium_opt:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: byzantium
-      OPTIMIZE: 1
-
-  t_ubu_constantinople:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: constantinople
-      OPTIMIZE: 0
-
-  t_ubu_constantinople_opt:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: constantinople
-      OPTIMIZE: 1
-
-  t_ubu_constantinople_opt_abiv2:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: constantinople
-      OPTIMIZE: 1
-      ABI_ENCODER_V2: 1
-
-  t_ubu_petersburg:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: petersburg
-      OPTIMIZE: 0
-
-  t_ubu_petersburg_opt:
-    <<: *test_ubuntu1904
-    environment:
-      EVM: petersburg
-      OPTIMIZE: 1
 
   t_ems_solcjs:
     docker:
@@ -564,6 +600,8 @@ jobs:
           name: External GnosisSafe tests
           command: |
             test/externalTests/gnosis.sh /tmp/workspace/soljson.js || test/externalTests/gnosis.sh /tmp/workspace/soljson.js
+      - run: *gitter_notify_failure
+      - run: *gitter_notify_success
 
   t_ems_external_zeppelin:
     docker:
@@ -578,6 +616,8 @@ jobs:
           name: External Zeppelin tests
           command: |
             test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
+      - run: *gitter_notify_failure
+      - run: *gitter_notify_success
 
   t_ems_external_colony:
     docker:
@@ -596,6 +636,8 @@ jobs:
           name: External ColonyNetworks tests
           command: |
             test/externalTests/colony.sh /tmp/workspace/soljson.js || test/externalTests/colony.sh /tmp/workspace/soljson.js
+      - run: *gitter_notify_failure
+      - run: *gitter_notify_success
 
 workflows:
   version: 2
@@ -612,26 +654,25 @@ workflows:
       # build-only
       - b_docs: *workflow_trigger_on_tags
       - b_archlinux: *workflow_trigger_on_tags
-      - b_ubu_cxx17: *workflow_trigger_on_tags
+      - b_ubu_cxx20: *workflow_trigger_on_tags
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
 
       # OS/X build and tests
       - b_osx: *workflow_trigger_on_tags
       - t_osx_cli: *workflow_osx
 
-      # Ubuntu 18.10 build and tests
+      # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
       - b_ubu18: *workflow_trigger_on_tags
       - t_ubu_cli: *workflow_ubuntu1904
-      - t_ubu_homestead: *workflow_ubuntu1904
-      - t_ubu_homestead_opt: *workflow_ubuntu1904
-      - t_ubu_byzantium: *workflow_ubuntu1904
-      - t_ubu_byzantium_opt: *workflow_ubuntu1904
-      - t_ubu_constantinople: *workflow_ubuntu1904
-      - t_ubu_constantinople_opt: *workflow_ubuntu1904
-      - t_ubu_constantinople_opt_abiv2: *workflow_ubuntu1904
-      - t_ubu_petersburg: *workflow_ubuntu1904
-      - t_ubu_petersburg_opt: *workflow_ubuntu1904
+      - t_ubu_soltest: *workflow_ubuntu1904
+      - b_ubu_clang: *workflow_trigger_on_tags
+      - t_ubu_clang_soltest: *workflow_ubuntu1904_clang
+
+      # Ubuntu fake release build and tests
+      - b_ubu_release: *workflow_trigger_on_tags
+      - t_ubu_release_cli: *workflow_ubuntu1904_release
+      - t_ubu_release_soltest: *workflow_ubuntu1904_release
 
       # ASan build and tests
       - b_ubu_asan: *workflow_trigger_on_tags
@@ -651,6 +692,7 @@ workflows:
             branches:
               only:
                 - develop
+                - develop_060
 
     jobs:
       # Emscripten builds and external tests

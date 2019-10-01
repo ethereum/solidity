@@ -1,3 +1,25 @@
+### 0.5.12 (2019-10-01)
+
+Language Features:
+ * Type Checker: Allow assignment to external function arguments except for reference types.
+
+
+Compiler Features:
+ * ABI Output: Change sorting order of functions from selector to kind, name.
+ * Optimizer: Add rule that replaces the BYTE opcode by 0 if the first argument is larger than 31.
+ * SMTChecker: Add loop support to the CHC engine.
+ * Yul Optimizer: Take side-effect-freeness of user-defined functions into account.
+ * Yul Optimizer: Remove redundant mload/sload operations.
+
+
+Bugfixes:
+ * Code Generator: Fix internal error when popping a dynamic storage array of mappings.
+ * Name Resolver: Fix wrong source location when warning on shadowed aliases in import declarations.
+ * Scanner: Fix multi-line natspec comment parsing with triple slashes when file is encoded with CRLF instead of LF.
+ * Type System: Fix arrays of recursive structs.
+ * Yul Optimizer: Fix reordering bug in connection with shifted one and mul/div-instructions in for loop conditions.
+
+
 ### 0.5.11 (2019-08-12)
 
 
@@ -12,8 +34,10 @@ Compiler Features:
  * Standard JSON Interface: Provide secondary error locations (e.g. the source position of other conflicting declarations).
  * SMTChecker: Do not erase knowledge about storage pointers if another storage pointer is assigned.
  * SMTChecker: Support string literal type.
+ * SMTChecker: New Horn-based algorithm that proves assertions via multi-transaction contract invariants.
  * Standard JSON Interface: Provide AST even on errors if ``--error-recovery`` commandline switch or StandardCompiler `settings.parserErrorRecovery` is true.
  * Yul Optimizer: Do not inline function if it would result in expressions being duplicated that are not cheap.
+
 
 Bugfixes:
  * ABI decoder: Ensure that decoded arrays always point to distinct memory locations.

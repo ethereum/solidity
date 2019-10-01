@@ -61,7 +61,7 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm):
 {
 	if (!m_vm)
 	{
-		cerr << "Unable to find library libevmone.so" << endl;
+		cerr << "Unable to find evmone library" << endl;
 		assertThrow(false, Exception, "");
 	}
 
@@ -75,6 +75,10 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm):
 		m_evmVersion = EVMC_BYZANTIUM;
 	else if (_evmVersion == langutil::EVMVersion::constantinople())
 		m_evmVersion = EVMC_CONSTANTINOPLE;
+	else if (_evmVersion == langutil::EVMVersion::istanbul())
+		assertThrow(false, Exception, "Istanbul is not supported yet.");
+	else if (_evmVersion == langutil::EVMVersion::berlin())
+		assertThrow(false, Exception, "Berlin is not supported yet.");
 	else //if (_evmVersion == langutil::EVMVersion::petersburg())
 		m_evmVersion = EVMC_PETERSBURG;
 }

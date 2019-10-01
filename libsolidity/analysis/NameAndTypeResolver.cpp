@@ -91,13 +91,13 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 			if (!imp->symbolAliases().empty())
 				for (auto const& alias: imp->symbolAliases())
 				{
-					auto declarations = scope->second->resolveName(alias.first->name(), false);
+					auto declarations = scope->second->resolveName(alias.symbol->name(), false);
 					if (declarations.empty())
 					{
 						m_errorReporter.declarationError(
 							imp->location(),
 							"Declaration \"" +
-							alias.first->name() +
+							alias.symbol->name() +
 							"\" not found in \"" +
 							path +
 							"\" (referenced as \"" +
@@ -109,7 +109,7 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 					else
 						for (Declaration const* declaration: declarations)
 							if (!DeclarationRegistrationHelper::registerDeclaration(
-								target, *declaration, alias.second.get(), &imp->location(), true, false, m_errorReporter
+								target, *declaration, alias.alias.get(), &alias.location, true, false, m_errorReporter
 							))
 								error = true;
 				}
@@ -523,7 +523,7 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 	{
 		if (dynamic_cast<MagicVariableDeclaration const*>(shadowedDeclaration))
 			_errorReporter.warning(
-				_declaration.location(),
+				*_errorLocation,
 				"This declaration shadows a builtin symbol."
 			);
 		else

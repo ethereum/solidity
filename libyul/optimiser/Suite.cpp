@@ -23,6 +23,7 @@
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/BlockFlattener.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
@@ -32,17 +33,21 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
+#include <libyul/optimiser/ForLoopConditionIntoBody.h>
+#include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
+#include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/VarNameCleaner.h>
+#include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/AsmAnalysis.h>
@@ -78,23 +83,27 @@ void OptimiserSuite::run(
 	)(*_object.code));
 	Block& ast = *_object.code;
 
-	VarDeclInitializer{}(ast);
-	FunctionHoister{}(ast);
-	BlockFlattener{}(ast);
-	ForLoopInitRewriter{}(ast);
-	DeadCodeEliminator{_dialect}(ast);
-	FunctionGrouper{}(ast);
-	EquivalentFunctionCombiner::run(ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
-	BlockFlattener{}(ast);
-	ControlFlowSimplifier{_dialect}(ast);
-	StructuralSimplifier{_dialect}(ast);
-	ControlFlowSimplifier{_dialect}(ast);
-	BlockFlattener{}(ast);
+	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast);
+
+	suite.runSequence({
+		VarDeclInitializer::name,
+		FunctionHoister::name,
+		BlockFlattener::name,
+		ForLoopInitRewriter::name,
+		DeadCodeEliminator::name,
+		FunctionGrouper::name,
+		EquivalentFunctionCombiner::name,
+		UnusedPruner::name,
+		BlockFlattener::name,
+		ControlFlowSimplifier::name,
+		LiteralRematerialiser::name,
+		StructuralSimplifier::name,
+		ControlFlowSimplifier::name,
+		ForLoopConditionIntoBody::name,
+		BlockFlattener::name
+	}, ast);
 
 	// None of the above can make stack problems worse.
-
-	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
 
 	size_t codeSize = 0;
 	for (size_t rounds = 0; rounds < 12; ++rounds)
@@ -108,105 +117,138 @@ void OptimiserSuite::run(
 
 		{
 			// Turn into SSA and simplify
-			ExpressionSplitter{_dialect, dispenser}(ast);
-			SSATransform::run(ast, dispenser);
-			RedundantAssignEliminator::run(_dialect, ast);
-			RedundantAssignEliminator::run(_dialect, ast);
-
-			ExpressionSimplifier::run(_dialect, ast);
-			CommonSubexpressionEliminator{_dialect}(ast);
+			suite.runSequence({
+				ExpressionSplitter::name,
+				SSATransform::name,
+				RedundantAssignEliminator::name,
+				RedundantAssignEliminator::name,
+				ExpressionSimplifier::name,
+				CommonSubexpressionEliminator::name,
+				LoadResolver::name
+			}, ast);
 		}
 
 		{
 			// still in SSA, perform structural simplification
-			ControlFlowSimplifier{_dialect}(ast);
-			StructuralSimplifier{_dialect}(ast);
-			ControlFlowSimplifier{_dialect}(ast);
-			BlockFlattener{}(ast);
-			DeadCodeEliminator{_dialect}(ast);
-			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+			suite.runSequence({
+				LiteralRematerialiser::name,
+				ForLoopConditionOutOfBody::name,
+				ControlFlowSimplifier::name,
+				StructuralSimplifier::name,
+				ControlFlowSimplifier::name,
+				BlockFlattener::name,
+				DeadCodeEliminator::name,
+				ForLoopConditionIntoBody::name,
+				UnusedPruner::name
+			}, ast);
 		}
+
 		{
 			// simplify again
-			CommonSubexpressionEliminator{_dialect}(ast);
-			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+			suite.runSequence({
+				LoadResolver::name,
+				CommonSubexpressionEliminator::name,
+				UnusedPruner::name,
+			}, ast);
 		}
 
 		{
 			// reverse SSA
-			SSAReverser::run(ast);
-			CommonSubexpressionEliminator{_dialect}(ast);
-			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+			suite.runSequence({
+				SSAReverser::name,
+				CommonSubexpressionEliminator::name,
+				UnusedPruner::name,
 
-			ExpressionJoiner::run(ast);
-			ExpressionJoiner::run(ast);
+				ExpressionJoiner::name,
+				ExpressionJoiner::name,
+			}, ast);
 		}
 
 		// should have good "compilability" property here.
 
 		{
 			// run functional expression inliner
-			ExpressionInliner(_dialect, ast).run();
-			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+			suite.runSequence({
+				ExpressionInliner::name,
+				UnusedPruner::name,
+			}, ast);
 		}
 
 		{
 			// Turn into SSA again and simplify
-			ExpressionSplitter{_dialect, dispenser}(ast);
-			SSATransform::run(ast, dispenser);
-			RedundantAssignEliminator::run(_dialect, ast);
-			RedundantAssignEliminator::run(_dialect, ast);
-			CommonSubexpressionEliminator{_dialect}(ast);
+			suite.runSequence({
+				ExpressionSplitter::name,
+				SSATransform::name,
+				RedundantAssignEliminator::name,
+				RedundantAssignEliminator::name,
+				CommonSubexpressionEliminator::name,
+				LoadResolver::name,
+			}, ast);
 		}
 
 		{
 			// run full inliner
-			FunctionGrouper{}(ast);
-			EquivalentFunctionCombiner::run(ast);
-			FullInliner{ast, dispenser}.run();
-			BlockFlattener{}(ast);
+			suite.runSequence({
+				FunctionGrouper::name,
+				EquivalentFunctionCombiner::name,
+				FullInliner::name,
+				BlockFlattener::name
+			}, ast);
 		}
 
 		{
 			// SSA plus simplify
-			SSATransform::run(ast, dispenser);
-			RedundantAssignEliminator::run(_dialect, ast);
-			RedundantAssignEliminator::run(_dialect, ast);
-			ExpressionSimplifier::run(_dialect, ast);
-			StructuralSimplifier{_dialect}(ast);
-			BlockFlattener{}(ast);
-			DeadCodeEliminator{_dialect}(ast);
-			ControlFlowSimplifier{_dialect}(ast);
-			CommonSubexpressionEliminator{_dialect}(ast);
-			SSATransform::run(ast, dispenser);
-			RedundantAssignEliminator::run(_dialect, ast);
-			RedundantAssignEliminator::run(_dialect, ast);
-			UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
-			CommonSubexpressionEliminator{_dialect}(ast);
+			suite.runSequence({
+				SSATransform::name,
+				RedundantAssignEliminator::name,
+				RedundantAssignEliminator::name,
+				LoadResolver::name,
+				ExpressionSimplifier::name,
+				LiteralRematerialiser::name,
+				ForLoopConditionOutOfBody::name,
+				StructuralSimplifier::name,
+				BlockFlattener::name,
+				DeadCodeEliminator::name,
+				ControlFlowSimplifier::name,
+				CommonSubexpressionEliminator::name,
+				SSATransform::name,
+				RedundantAssignEliminator::name,
+				RedundantAssignEliminator::name,
+				ForLoopConditionIntoBody::name,
+				UnusedPruner::name,
+				CommonSubexpressionEliminator::name,
+			}, ast);
 		}
 	}
 
 	// Make source short and pretty.
 
-	ExpressionJoiner::run(ast);
-	Rematerialiser::run(_dialect, ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
-	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
-	ExpressionJoiner::run(ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+	suite.runSequence({
+		ExpressionJoiner::name,
+		Rematerialiser::name,
+		UnusedPruner::name,
+		ExpressionJoiner::name,
+		UnusedPruner::name,
+		ExpressionJoiner::name,
+		UnusedPruner::name,
 
-	SSAReverser::run(ast);
-	CommonSubexpressionEliminator{_dialect}(ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+		SSAReverser::name,
+		CommonSubexpressionEliminator::name,
+		LiteralRematerialiser::name,
+		ForLoopConditionOutOfBody::name,
+		CommonSubexpressionEliminator::name,
+		UnusedPruner::name,
 
-	ExpressionJoiner::run(ast);
-	Rematerialiser::run(_dialect, ast);
-	UnusedPruner::runUntilStabilised(_dialect, ast, reservedIdentifiers);
+		ExpressionJoiner::name,
+		Rematerialiser::name,
+		UnusedPruner::name,
+	}, ast);
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
 	size_t stackCompressorMaxIterations = 16;
-	FunctionGrouper{}(ast);
+	suite.runSequence({
+		FunctionGrouper::name
+	}, ast);
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
 	StackCompressor::run(
@@ -215,11 +257,16 @@ void OptimiserSuite::run(
 		_optimizeStackAllocation,
 		stackCompressorMaxIterations
 	);
-	BlockFlattener{}(ast);
-	DeadCodeEliminator{_dialect}(ast);
-	ControlFlowSimplifier{_dialect}(ast);
+	suite.runSequence({
+		BlockFlattener::name,
+		DeadCodeEliminator::name,
+		ControlFlowSimplifier::name,
+		LiteralRematerialiser::name,
+		ForLoopConditionOutOfBody::name,
+		CommonSubexpressionEliminator::name,
 
-	FunctionGrouper{}(ast);
+		FunctionGrouper::name,
+	}, ast);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{
@@ -233,7 +280,73 @@ void OptimiserSuite::run(
 		if (ast.statements.size() > 1 && boost::get<Block>(ast.statements.front()).statements.empty())
 			ast.statements.erase(ast.statements.begin());
 	}
-	VarNameCleaner{ast, _dialect, reservedIdentifiers}(ast);
+	suite.runSequence({
+		VarNameCleaner::name
+	}, ast);
 
 	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
+}
+
+namespace
+{
+
+
+template <class... Step>
+map<string, unique_ptr<OptimiserStep>> optimiserStepCollection()
+{
+	map<string, unique_ptr<OptimiserStep>> ret;
+	for (unique_ptr<OptimiserStep>& s: make_vector<unique_ptr<OptimiserStep>>(
+		(make_unique<OptimiserStepInstance<Step>>())...
+	))
+	{
+		yulAssert(!ret.count(s->name), "");
+		ret[s->name] = std::move(s);
+	}
+	return ret;
+}
+
+}
+
+map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
+{
+	static map<string, unique_ptr<OptimiserStep>> instance;
+	if (instance.empty())
+		instance = optimiserStepCollection<
+			BlockFlattener,
+			CommonSubexpressionEliminator,
+			ControlFlowSimplifier,
+			DeadCodeEliminator,
+			EquivalentFunctionCombiner,
+			ExpressionInliner,
+			ExpressionJoiner,
+			ExpressionSimplifier,
+			ExpressionSplitter,
+			ForLoopConditionIntoBody,
+			ForLoopConditionOutOfBody,
+			ForLoopInitRewriter,
+			FullInliner,
+			FunctionGrouper,
+			FunctionHoister,
+			LiteralRematerialiser,
+			LoadResolver,
+			RedundantAssignEliminator,
+			Rematerialiser,
+			SSAReverser,
+			SSATransform,
+			StructuralSimplifier,
+			UnusedPruner,
+			VarDeclInitializer,
+			VarNameCleaner
+		>();
+	return instance;
+}
+
+void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
+{
+	for (string const& step: _steps)
+	{
+		if (m_debug == Debug::PrintStep)
+			cout << "Running " << step << endl;
+		allSteps().at(step)->run(m_context, _ast);
+	}
 }

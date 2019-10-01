@@ -80,6 +80,8 @@ public:
 	virtual bool validateSettings(langutil::EVMVersion /*_evmVersion*/);
 
 protected:
+	std::pair<std::map<std::string, std::string>, std::size_t> parseSourcesAndSettingsWithLineNumbers(std::istream& _file);
+	std::map<std::string, std::string> parseSourcesAndSettings(std::istream& _file);
 	std::pair<std::string, std::size_t> parseSourceAndSettingsWithLineNumbers(std::istream& _file);
 	std::string parseSourceAndSettings(std::istream& _file);
 	static void expect(std::string::iterator& _it, std::string::iterator _end, std::string::value_type _c);

@@ -8,4 +8,3 @@ contract C {
     }
 }
 // ----
-// Warning: (199-213): Assertion violation happens here

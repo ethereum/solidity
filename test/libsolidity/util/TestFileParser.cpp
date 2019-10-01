@@ -75,7 +75,7 @@ vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls(siz
 
 				try
 				{
-					call.signature = parseFunctionSignature();
+					tie(call.signature, call.useCallWithoutSignature) = parseFunctionSignature();
 					if (accept(Token::Comma, true))
 						call.value = parseFunctionCallValue();
 					if (accept(Token::Colon, true))
@@ -148,10 +148,17 @@ bool TestFileParser::expect(soltest::Token _token, bool const _advance)
 	return true;
 }
 
-string TestFileParser::parseFunctionSignature()
+pair<string, bool> TestFileParser::parseFunctionSignature()
 {
-	string signature = m_scanner.currentLiteral();
-	expect(Token::Identifier);
+	string signature;
+	bool hasName = false;
+
+	if (accept(Token::Identifier, false))
+	{
+		hasName = true;
+		signature = m_scanner.currentLiteral();
+		expect(Token::Identifier);
+	}
 
 	signature += formatToken(Token::LParen);
 	expect(Token::LParen);
@@ -169,11 +176,15 @@ string TestFileParser::parseFunctionSignature()
 	if (accept(Token::Arrow, true))
 		throw Error(Error::Type::ParserError, "Invalid signature detected: " + signature);
 
-	signature += parameters;
+	if (!hasName && !parameters.empty())
+		throw Error(Error::Type::ParserError, "Signatures without a name cannot have parameters: " + signature);
+	else
+		signature += parameters;
 
 	expect(Token::RParen);
 	signature += formatToken(Token::RParen);
-	return signature;
+
+	return {signature, !hasName};
 }
 
 u256 TestFileParser::parseFunctionCallValue()

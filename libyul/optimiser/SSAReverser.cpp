@@ -23,7 +23,7 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-void SSAReverser::run(Block& _block)
+void SSAReverser::run(OptimiserStepContext&, Block& _block)
 {
 	AssignmentCounter assignmentCounter;
 	assignmentCounter(_block);
@@ -56,18 +56,24 @@ void SSAReverser::operator()(Block& _block)
 					identifier &&
 					identifier->name == varDecl->variables.front().name
 				)
-					return make_vector<Statement>(
-						Assignment{
-							std::move(assignment->location),
-							assignment->variableNames,
-							std::move(varDecl->value)
-						},
-						VariableDeclaration{
-							std::move(varDecl->location),
-							std::move(varDecl->variables),
-							std::make_unique<Expression>(std::move(assignment->variableNames.front()))
-						}
-					);
+				{
+					// in the special case a == a_1, just remove the assignment
+					if (assignment->variableNames.front().name == identifier->name)
+						return make_vector<Statement>(std::move(_stmt1));
+					else
+						return make_vector<Statement>(
+							Assignment{
+								std::move(assignment->location),
+								assignment->variableNames,
+								std::move(varDecl->value)
+							},
+							VariableDeclaration{
+								std::move(varDecl->location),
+								std::move(varDecl->variables),
+								std::make_unique<Expression>(std::move(assignment->variableNames.front()))
+							}
+						);
+				}
 			}
 			// Replaces
 			//   let a_1 := E

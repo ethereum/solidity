@@ -50,12 +50,8 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	f.name = YulString{_name};
 	f.parameters.resize(info.args);
 	f.returns.resize(info.ret);
-	f.movable = eth::SemanticInformation::movable(_instruction);
-	f.sideEffectFree = eth::SemanticInformation::sideEffectFree(_instruction);
-	f.sideEffectFreeIfNoMSize = eth::SemanticInformation::sideEffectFreeIfNoMSize(_instruction);
+	f.sideEffects = EVMDialect::sideEffectsOfInstruction(_instruction);
 	f.isMSize = _instruction == dev::eth::Instruction::MSIZE;
-	f.invalidatesStorage = eth::SemanticInformation::invalidatesStorage(_instruction);
-	f.invalidatesMemory = eth::SemanticInformation::invalidatesMemory(_instruction);
 	f.literalArguments = false;
 	f.instruction = _instruction;
 	f.generateCode = [_instruction](
@@ -75,11 +71,7 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	string _name,
 	size_t _params,
 	size_t _returns,
-	bool _movable,
-	bool _sideEffectFree,
-	bool _sideEffectFreeIfNoMSize,
-	bool _invalidatesStorage,
-	bool _invalidatesMemory,
+	SideEffects _sideEffects,
 	bool _literalArguments,
 	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void()>)> _generateCode
 )
@@ -89,13 +81,9 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	f.name = name;
 	f.parameters.resize(_params);
 	f.returns.resize(_returns);
-	f.movable = _movable;
+	f.sideEffects = std::move(_sideEffects);
 	f.literalArguments = _literalArguments;
-	f.sideEffectFree = _sideEffectFree;
-	f.sideEffectFreeIfNoMSize = _sideEffectFreeIfNoMSize;
 	f.isMSize = false;
-	f.invalidatesStorage = _invalidatesStorage;
-	f.invalidatesMemory = _invalidatesMemory;
 	f.instruction = {};
 	f.generateCode = std::move(_generateCode);
 	return {name, f};
@@ -116,7 +104,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 
 	if (_objectAccess)
 	{
-		builtins.emplace(createFunction("datasize", 1, 1, true, true, true, false, false, true, [](
+		builtins.emplace(createFunction("datasize", 1, 1, SideEffects{}, true, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
@@ -137,7 +125,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendDataSize(_context.subIDs.at(dataName));
 			}
 		}));
-		builtins.emplace(createFunction("dataoffset", 1, 1, true, true, true, false, false, true, [](
+		builtins.emplace(createFunction("dataoffset", 1, 1, SideEffects{}, true, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
@@ -158,15 +146,22 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendDataOffset(_context.subIDs.at(dataName));
 			}
 		}));
-		builtins.emplace(createFunction("datacopy", 3, 0, false, false, false, false, true, false, [](
-			FunctionCall const&,
-			AbstractAssembly& _assembly,
-			BuiltinContext&,
-			std::function<void()> _visitArguments
-		) {
-			_visitArguments();
-			_assembly.appendInstruction(dev::eth::Instruction::CODECOPY);
-		}));
+		builtins.emplace(createFunction(
+			"datacopy",
+			3,
+			0,
+			SideEffects{false, false, false, false, true},
+			false,
+			[](
+				FunctionCall const&,
+				AbstractAssembly& _assembly,
+				BuiltinContext&,
+				std::function<void()> _visitArguments
+			) {
+				_visitArguments();
+				_assembly.appendInstruction(dev::eth::Instruction::CODECOPY);
+			}
+		));
 	}
 	return builtins;
 }
@@ -224,4 +219,15 @@ EVMDialect const& EVMDialect::yulForEVM(langutil::EVMVersion _version)
 	if (!dialects[_version])
 		dialects[_version] = make_unique<EVMDialect>(AsmFlavour::Yul, false, _version);
 	return *dialects[_version];
+}
+
+SideEffects EVMDialect::sideEffectsOfInstruction(eth::Instruction _instruction)
+{
+	return SideEffects{
+		eth::SemanticInformation::movable(_instruction),
+		eth::SemanticInformation::sideEffectFree(_instruction),
+		eth::SemanticInformation::sideEffectFreeIfNoMSize(_instruction),
+		eth::SemanticInformation::invalidatesStorage(_instruction),
+		eth::SemanticInformation::invalidatesMemory(_instruction)
+	};
 }

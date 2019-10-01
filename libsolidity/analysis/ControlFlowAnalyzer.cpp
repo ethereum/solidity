@@ -142,7 +142,7 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 				ssl,
 				string("This variable is of storage pointer type and can be ") +
 				(variableOccurrence->kind() == VariableOccurrence::Kind::Return ? "returned" : "accessed") +
-				" without prior assignment."
+				" without prior assignment, which would lead to undefined behaviour."
 			);
 		}
 	}
@@ -151,22 +151,22 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const* _exit, CFGNode const* _revert) const
 {
 	// collect all nodes reachable from the entry point
-	std::set<CFGNode const*> reachable = BreadthFirstSearch<CFGNode>{{_entry}}.run(
-		[](CFGNode const& _node, auto&& _addChild) {
-			for (CFGNode const* exit: _node.exits)
-				_addChild(*exit);
+	std::set<CFGNode const*> reachable = BreadthFirstSearch<CFGNode const*>{{_entry}}.run(
+		[](CFGNode const* _node, auto&& _addChild) {
+			for (CFGNode const* exit: _node->exits)
+				_addChild(exit);
 		}
 	).visited;
 
 	// traverse all paths backwards from exit and revert
 	// and extract (valid) source locations of unreachable nodes into sorted set
 	std::set<SourceLocation> unreachable;
-	BreadthFirstSearch<CFGNode>{{_exit, _revert}}.run(
-		[&](CFGNode const& _node, auto&& _addChild) {
-			if (!reachable.count(&_node) && !_node.location.isEmpty())
-				unreachable.insert(_node.location);
-			for (CFGNode const* entry: _node.entries)
-				_addChild(*entry);
+	BreadthFirstSearch<CFGNode const*>{{_exit, _revert}}.run(
+		[&](CFGNode const* _node, auto&& _addChild) {
+			if (!reachable.count(_node) && !_node->location.isEmpty())
+				unreachable.insert(_node->location);
+			for (CFGNode const* entry: _node->entries)
+				_addChild(entry);
 		}
 	);
 

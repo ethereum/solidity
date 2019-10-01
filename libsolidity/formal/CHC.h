@@ -58,29 +58,44 @@ private:
 	bool visit(FunctionDefinition const& _node) override;
 	void endVisit(FunctionDefinition const& _node) override;
 	bool visit(IfStatement const& _node) override;
+	bool visit(WhileStatement const&) override;
+	bool visit(ForStatement const&) override;
 	void endVisit(FunctionCall const& _node) override;
+	void endVisit(Break const& _node) override;
+	void endVisit(Continue const& _node) override;
 
 	void visitAssert(FunctionCall const& _funCall);
+	void unknownFunctionCall(FunctionCall const& _funCall);
+	void visitLoop(
+		BreakableStatement const& _loop,
+		Expression const* _condition,
+		Statement const& _body,
+		ASTNode const* _postLoop
+	);
 	//@}
 
 	/// Helpers.
 	//@{
 	void reset();
+	void eraseKnowledge();
 	bool shouldVisit(ContractDefinition const& _contract) const;
 	bool shouldVisit(FunctionDefinition const& _function) const;
+	void pushBlock(ASTNode const* _node);
+	void popBlock();
 	//@}
 
 	/// Sort helpers.
 	//@{
 	smt::SortPointer constructorSort();
 	smt::SortPointer interfaceSort();
-	smt::SortPointer functionSort(FunctionDefinition const& _function);
+	smt::SortPointer sort(FunctionDefinition const& _function);
+	smt::SortPointer sort(ASTNode const* _block);
 	//@}
 
 	/// Predicate helpers.
 	//@{
 	/// @returns a new block of given _sort and _name.
-	std::unique_ptr<smt::SymbolicFunctionVariable> createBlock(smt::SortPointer _sort, std::string const& _name);
+	std::unique_ptr<smt::SymbolicFunctionVariable> createSymbolicBlock(smt::SortPointer _sort, std::string const& _name);
 
 	/// Constructor predicate over current variables.
 	smt::Expression constructor();
@@ -88,10 +103,39 @@ private:
 	smt::Expression interface();
 	/// Error predicate over current variables.
 	smt::Expression error();
+	smt::Expression error(unsigned _idx);
+
+	/// Creates a block for the given _node or increases its SSA index
+	/// if the block already exists which in practice creates a new function.
+	void createBlock(ASTNode const* _node, std::string const& _prefix = "");
+
+	/// Creates a new error block to be used by an assertion.
+	/// Also registers the predicate.
+	void createErrorBlock();
+
+	void connectBlocks(smt::Expression const& _from, smt::Expression const& _to, smt::Expression const& _constraints = smt::Expression(true));
+
+	/// @returns the current symbolic values of the current function's
+	/// input and output parameters.
+	std::vector<smt::Expression> currentFunctionVariables();
+	/// @returns the samve as currentFunctionVariables plus
+	/// local variables.
+	std::vector<smt::Expression> currentBlockVariables();
+
+	/// Sets the SSA indices of the variables in scope to 0.
+	/// Used when starting a new block.
+	void clearIndices();
+
+	/// @returns the predicate name for a given node.
+	std::string predicateName(ASTNode const* _node);
+	/// @returns a predicate application over the current scoped variables.
+	smt::Expression predicate(ASTNode const* _node);
 	//@}
 
 	/// Solver related.
 	//@{
+	/// Adds Horn rule to the solver.
+	void addRule(smt::Expression const& _rule, std::string const& _ruleName);
 	/// @returns true if query is unsatisfiable (safe).
 	bool query(smt::Expression const& _query, langutil::SourceLocation const& _location);
 	//@}
@@ -109,6 +153,9 @@ private:
 	/// Artificial Error predicate.
 	/// Single error block for all assertions.
 	std::unique_ptr<smt::SymbolicVariable> m_errorPredicate;
+
+	/// Maps AST nodes to their predicates.
+	std::unordered_map<ASTNode const*, std::shared_ptr<smt::SymbolicVariable>> m_predicates;
 	//@}
 
 	/// Variables.
@@ -119,6 +166,9 @@ private:
 	/// State variables.
 	/// Used to create all predicates.
 	std::vector<VariableDeclaration const*> m_stateVariables;
+
+	/// Input sorts for AST nodes.
+	std::map<ASTNode const*, smt::SortPointer> m_nodeSorts;
 	//@}
 
 	/// Verification targets.
@@ -132,6 +182,22 @@ private:
 	/// Control-flow.
 	//@{
 	FunctionDefinition const* m_currentFunction = nullptr;
+
+	/// Number of basic blocks created for the body of the current function.
+	unsigned m_functionBlocks = 0;
+	/// The current control flow path.
+	std::vector<smt::Expression> m_path;
+	/// Whether a function call was seen in the current scope.
+	bool m_unknownFunctionCallSeen = false;
+	/// Whether a break statement was seen in the current scope.
+	bool m_breakSeen = false;
+	/// Whether a continue statement was seen in the current scope.
+	bool m_continueSeen = false;
+
+	/// Block where a loop break should go to.
+	ASTNode const* m_breakDest;
+	/// Block where a loop continue should go to.
+	ASTNode const* m_continueDest;
 	//@}
 
 	/// CHC solver.

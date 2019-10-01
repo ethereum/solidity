@@ -28,6 +28,7 @@
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/NameDisplacer.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
@@ -637,11 +638,14 @@ Object EVMToEWasmTranslator::run(Object const& _object)
 		parsePolyfill();
 
 	Block ast = boost::get<Block>(Disambiguator(m_dialect, *_object.analysisInfo)(*_object.code));
-	NameDispenser nameDispenser{m_dialect, ast};
-	FunctionHoister{}(ast);
-	FunctionGrouper{}(ast);
+	set<YulString> reservedIdentifiers;
+	NameDispenser nameDispenser{m_dialect, ast, reservedIdentifiers};
+	OptimiserStepContext context{m_dialect, nameDispenser, reservedIdentifiers};
+
+	FunctionHoister::run(context, ast);
+	FunctionGrouper::run(context, ast);
 	MainFunction{}(ast);
-	ExpressionSplitter{m_dialect, nameDispenser}(ast);
+	ExpressionSplitter::run(context, ast);
 	WordSizeTransform::run(m_dialect, ast, nameDispenser);
 
 	NameDisplacer{nameDispenser, m_polyfillFunctions}(ast);

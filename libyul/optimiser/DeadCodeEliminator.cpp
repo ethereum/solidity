@@ -20,6 +20,7 @@
 
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/AsmData.h>
 
 #include <libevmasm/SemanticInformation.h>
@@ -31,6 +32,11 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
+
+void DeadCodeEliminator::run(OptimiserStepContext& _context, Block& _ast)
+{
+	DeadCodeEliminator{_context.dialect}(_ast);
+}
 
 void DeadCodeEliminator::operator()(ForLoop& _for)
 {

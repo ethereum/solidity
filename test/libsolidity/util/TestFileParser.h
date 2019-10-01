@@ -46,6 +46,8 @@ namespace test
  * // -> 2, 3
  * // h(uint256), 1 ether: 42
  * // -> FAILURE                # If REVERT or other EVM failure was detected #
+ * // ()                        # Call fallback function #
+ * // (), 1 ether               # Call ether function #
  * ...
  */
 class TestFileParser
@@ -128,8 +130,10 @@ private:
 	bool accept(soltest::Token _token, bool const _expect = false);
 	bool expect(soltest::Token _token, bool const _advance = true);
 
-	/// Parses a function call signature in the form of f(uint256, ...).
-	std::string parseFunctionSignature();
+	/// Parses a function call signature in the form of `f(uint256, ...)` and
+	/// returns the signature and a flag that indicates if the function name was
+	/// empty. If so, the signature is not allowed to define any parameters.
+	std::pair<std::string, bool> parseFunctionSignature();
 
 	/// Parses the optional ether value that can be passed alongside the
 	/// function call arguments. Throws an InvalidEtherValueEncoding exception

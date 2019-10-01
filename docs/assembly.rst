@@ -47,7 +47,7 @@ usual ``//`` and ``/* */`` comments. There is one exception: Identifiers in inli
 these curly braces, you can use the following (see the later sections for more details):
 
  - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
- - opcodes in functional style, e.g. ``add(1, mlod(0))``
+ - opcodes in functional style, e.g. ``add(1, mload(0))``
  - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of empty (0) is assigned)
  - identifiers (assembly-local variables and externals if used as inline assembly), e.g. ``add(3, x)``, ``sstore(x_slot, 2)``
  - assignments, e.g. ``x := add(y, 3)``
@@ -163,7 +163,8 @@ If an opcode takes arguments (always from the top of the stack), they are given 
 Note that the order of arguments can be seen to be reversed in non-functional style (explained below).
 Opcodes marked with ``-`` do not push an item onto the stack (do not return a result),
 those marked with ``*`` are special and all others push exactly one item onto the stack (their "return value").
-Opcodes marked with ``F``, ``H``, ``B`` or ``C`` are present since Frontier, Homestead, Byzantium or Constantinople, respectively.
+Opcodes marked with ``F``, ``H``, ``B``, ``C`` or ``I`` are present since Frontier, Homestead,
+Byzantium, Constantinople or Istanbul, respectively.
 
 In the following, ``mem[a...b)`` signifies the bytes of memory starting at position ``a`` up to
 but not including position ``b`` and ``storage[p]`` signifies the storage contents at position ``p``.
@@ -259,6 +260,8 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | balance(a)              |     | F | wei balance at address a                                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
+| selfbalance()           |     | I | equivalent to balance(address()), but cheaper                   |
++-------------------------+-----+---+-----------------------------------------------------------------+
 | caller                  |     | F | call sender (excluding ``delegatecall``)                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | callvalue               |     | F | wei sent together with the current call                         |
@@ -324,6 +327,8 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | log4(p, s, t1, t2, t3,  | `-` | F | log with topics t1, t2, t3, t4 and data mem[p...(p+s))          |
 | t4)                     |     |   |                                                                 |
++-------------------------+-----+---+-----------------------------------------------------------------+
+| chainid                 |     | I | ID of the executing chain (EIP 1344)                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | origin                  |     | F | transaction sender                                              |
 +-------------------------+-----+---+-----------------------------------------------------------------+

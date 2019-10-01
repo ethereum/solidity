@@ -64,13 +64,13 @@ struct InterpreterState
 {
 	dev::bytes calldata;
 	dev::bytes returndata;
-	/// TODO turn this into "vector with holes" for the randomized testing
-	dev::bytes memory;
+	std::map<dev::u256, uint8_t> memory;
 	/// This is different than memory.size() because we ignore gas.
 	dev::u256 msize;
 	std::map<dev::h256, dev::h256> storage;
 	dev::u160 address = 0x11111111;
 	dev::u256 balance = 0x22222222;
+	dev::u256 selfbalance = 0x22223333;
 	dev::u160 origin = 0x33333333;
 	dev::u160 caller = 0x44444444;
 	dev::u256 callvalue = 0x55555555;
@@ -82,13 +82,11 @@ struct InterpreterState
 	dev::u256 blockNumber = 1024;
 	dev::u256 difficulty = 0x9999999;
 	dev::u256 gaslimit = 4000000;
+	dev::u256 chainid = 0x01;
 	/// Log of changes / effects. Sholud be structured data in the future.
 	std::vector<std::string> trace;
 	/// This is actually an input parameter that more or less limits the runtime.
 	size_t maxTraceSize = 0;
-	/// Memory size limit. Anything beyond this will still work, but it has
-	/// deterministic yet not necessarily consistent behaviour.
-	size_t maxMemSize = 0x200;
 	size_t maxSteps = 0;
 	size_t numSteps = 0;
 	LoopState loopState = LoopState::Default;
@@ -106,12 +104,12 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		std::map<YulString, dev::u256> _variables = {},
-		std::map<YulString, FunctionDefinition const*> _functions = {}
+		std::vector<std::map<YulString, FunctionDefinition const*>> _scopes = {}
 	):
 		m_dialect(_dialect),
 		m_state(_state),
 		m_variables(std::move(_variables)),
-		m_functions(std::move(_functions))
+		m_scopes(std::move(_scopes))
 	{}
 
 	void operator()(ExpressionStatement const& _statement) override;
@@ -136,17 +134,17 @@ private:
 	std::vector<dev::u256> evaluateMulti(Expression const& _expression);
 
 	void openScope() { m_scopes.push_back({}); }
-	/// Unregisters variables.
+	/// Unregisters variables and functions.
 	void closeScope();
 
 	Dialect const& m_dialect;
 	InterpreterState& m_state;
 	/// Values of variables.
 	std::map<YulString, dev::u256> m_variables;
-	/// Meanings of functions.
-	std::map<YulString, FunctionDefinition const*> m_functions;
-	/// Scopes of variables and functions, used to clear them at end of blocks.
-	std::vector<std::set<YulString>> m_scopes;
+	/// Scopes of variables and functions. Used for lookup, clearing at end of blocks
+	/// and passing over the visible functions across function calls.
+	/// The pointer is nullptr if and only if the key is a variable.
+	std::vector<std::map<YulString, FunctionDefinition const*>> m_scopes;
 };
 
 /**
@@ -159,12 +157,12 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		std::map<YulString, dev::u256> const& _variables,
-		std::map<YulString, FunctionDefinition const*> const& _functions
+		std::vector<std::map<YulString, FunctionDefinition const*>> const& _scopes
 	):
 		m_state(_state),
 		m_dialect(_dialect),
 		m_variables(_variables),
-		m_functions(_functions)
+		m_scopes(_scopes)
 	{}
 
 	void operator()(Literal const&) override;
@@ -184,12 +182,19 @@ private:
 	/// stores it in m_value.
 	void evaluateArgs(std::vector<Expression> const& _expr);
 
+	/// Finds the function called @a _functionName in the current scope stack and returns
+	/// the function's scope stack (with variables removed) and definition.
+	std::pair<
+		std::vector<std::map<YulString, FunctionDefinition const*>>,
+		FunctionDefinition const*
+	> findFunctionAndScope(YulString _functionName) const;
+
 	InterpreterState& m_state;
 	Dialect const& m_dialect;
 	/// Values of variables.
 	std::map<YulString, dev::u256> const& m_variables;
-	/// Meanings of functions.
-	std::map<YulString, FunctionDefinition const*> const& m_functions;
+	/// Stack of scopes in the current context.
+	std::vector<std::map<YulString, FunctionDefinition const*>> const& m_scopes;
 	/// Current value of the expression
 	std::vector<dev::u256> m_values;
 };

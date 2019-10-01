@@ -19,15 +19,20 @@ if (USE_Z3)
         find_library(Z3_LIBRARY NAMES z3)
         find_program(Z3_EXECUTABLE z3 PATH_SUFFIXES bin)
 
-        if(Z3_INCLUDE_DIR AND Z3_LIBRARY AND Z3_EXECUTABLE)
-            execute_process (COMMAND ${Z3_EXECUTABLE} -version
-                OUTPUT_VARIABLE libz3_version_str
-                ERROR_QUIET
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
+        if(Z3_INCLUDE_DIR AND Z3_LIBRARY)
+            if(Z3_EXECUTABLE)
+                execute_process (COMMAND ${Z3_EXECUTABLE} -version
+                    OUTPUT_VARIABLE libz3_version_str
+                    ERROR_QUIET
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-            string(REGEX REPLACE "^Z3 version ([0-9.]+).*" "\\1"
-                   Z3_VERSION_STRING "${libz3_version_str}")
-            unset(libz3_version_str)
+                string(REGEX REPLACE "^Z3 version ([0-9.]+).*" "\\1"
+                       Z3_VERSION_STRING "${libz3_version_str}")
+                unset(libz3_version_str)
+            else()
+                message(WARNING "Could not determine the version of z3, since the z3 executable was not found.")
+                set(Z3_VERSION_STRING "0.0.0")
+            endif()
         endif()
         mark_as_advanced(Z3_VERSION_STRING z3_DIR)
 

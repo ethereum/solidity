@@ -1,5 +1,4 @@
 contract c {
-    function f(uint a) external { a++; }
+    function f(uint a) external pure { a++; }
 }
 // ----
-// TypeError: (47-48): Expression has to be an lvalue.

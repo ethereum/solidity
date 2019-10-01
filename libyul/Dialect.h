@@ -21,6 +21,7 @@
 #pragma once
 
 #include <libyul/YulString.h>
+#include <libyul/SideEffects.h>
 
 #include <boost/noncopyable.hpp>
 
@@ -45,24 +46,9 @@ struct BuiltinFunction
 	YulString name;
 	std::vector<Type> parameters;
 	std::vector<Type> returns;
-	/// If true, calls to this function can be freely moved and copied (as long as their
-	/// arguments are either variables or also movable) without altering the semantics.
-	/// This means the function cannot depend on storage or memory, cannot have any side-effects,
-	/// but it can depend on state that is constant across an EVM-call.
-	bool movable = false;
-	/// If true, a call to this function can be omitted without changing semantics.
-	bool sideEffectFree = false;
-	/// If true, a call to this function can be omitted without changing semantics if the
-	/// program does not contain the msize instruction.
-	bool sideEffectFreeIfNoMSize = false;
+	SideEffects sideEffects;
 	/// If true, this is the msize instruction.
 	bool isMSize = false;
-	/// If false, storage of the current contract before and after the function is the same
-	/// under every circumstance. If the function does not return, this can be false.
-	bool invalidatesStorage = true;
-	/// If false, memory before and after the function is the same under every circumstance.
-	/// If the function does not return, this can be false.
-	bool invalidatesMemory = true;
 	/// If true, can only accept literals as arguments and they cannot be moved to variables.
 	bool literalArguments = false;
 };
@@ -75,6 +61,7 @@ struct Dialect: boost::noncopyable
 
 	virtual BuiltinFunction const* discardFunction() const { return nullptr; }
 	virtual BuiltinFunction const* equalityFunction() const { return nullptr; }
+	virtual BuiltinFunction const* booleanNegationFunction() const { return nullptr; }
 
 	virtual std::set<YulString> fixedFunctionNames() const { return {}; }
 

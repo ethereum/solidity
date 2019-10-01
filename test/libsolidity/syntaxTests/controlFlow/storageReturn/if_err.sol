@@ -14,5 +14,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (96-107): This variable is of storage pointer type and can be returned without prior assignment.
-// TypeError: (186-197): This variable is of storage pointer type and can be returned without prior assignment.
+// TypeError: (96-107): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.
+// TypeError: (186-197): This variable is of storage pointer type and can be returned without prior assignment, which would lead to undefined behaviour.

@@ -16,6 +16,7 @@
 */
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/AsmData.h>
 #include <libyul/Utilities.h>
 #include <libyul/Dialect.h>
@@ -123,6 +124,11 @@ OptionalStatements reduceSingleCaseSwitch(Dialect const& _dialect, Switch& _swit
 	}
 }
 
+}
+
+void ControlFlowSimplifier::run(OptimiserStepContext& _context, Block& _ast)
+{
+	ControlFlowSimplifier{_context.dialect}(_ast);
 }
 
 void ControlFlowSimplifier::operator()(Block& _block)

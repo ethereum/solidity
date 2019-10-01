@@ -78,8 +78,7 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
 	solAssert(_varDecl.isConstant(), "");
-	_varDecl.value()->accept(*this);
-	utils().convertType(*_varDecl.value()->annotation().type, *_varDecl.annotation().type);
+	acceptAndConvert(*_varDecl.value(), *_varDecl.annotation().type);
 
 	// append return
 	m_context << dupInstruction(_varDecl.annotation().type->sizeOnStack() + 1);
@@ -225,14 +224,12 @@ bool ExpressionCompiler::visit(Conditional const& _condition)
 	CompilerContext::LocationSetter locationSetter(m_context, _condition);
 	_condition.condition().accept(*this);
 	eth::AssemblyItem trueTag = m_context.appendConditionalJump();
-	_condition.falseExpression().accept(*this);
-	utils().convertType(*_condition.falseExpression().annotation().type, *_condition.annotation().type);
+	acceptAndConvert(_condition.falseExpression(), *_condition.annotation().type);
 	eth::AssemblyItem endTag = m_context.appendJumpToNew();
 	m_context << trueTag;
 	int offset = _condition.annotation().type->sizeOnStack();
 	m_context.adjustStackOffset(-offset);
-	_condition.trueExpression().accept(*this);
-	utils().convertType(*_condition.trueExpression().annotation().type, *_condition.annotation().type);
+	acceptAndConvert(_condition.trueExpression(), *_condition.annotation().type);
 	m_context << endTag;
 	return false;
 }
@@ -322,8 +319,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 
 		for (auto const& component: _tuple.components())
 		{
-			component->accept(*this);
-			utils().convertType(*component->annotation().type, *arrayType.baseType(), true);
+			acceptAndConvert(*component, *arrayType.baseType(), true);
 			utils().storeInMemoryDynamic(*arrayType.baseType(), true);
 		}
 
@@ -451,17 +447,13 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		bool swap = m_optimiseOrderLiterals && TokenTraits::isCommutativeOp(c_op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
 		if (swap)
 		{
-			leftExpression.accept(*this);
-			utils().convertType(*leftExpression.annotation().type, *leftTargetType, cleanupNeeded);
-			rightExpression.accept(*this);
-			utils().convertType(*rightExpression.annotation().type, *rightTargetType, cleanupNeeded);
+			acceptAndConvert(leftExpression, *leftTargetType, cleanupNeeded);
+			acceptAndConvert(rightExpression, *rightTargetType, cleanupNeeded);
 		}
 		else
 		{
-			rightExpression.accept(*this);
-			utils().convertType(*rightExpression.annotation().type, *rightTargetType, cleanupNeeded);
-			leftExpression.accept(*this);
-			utils().convertType(*leftExpression.annotation().type, *leftTargetType, cleanupNeeded);
+			acceptAndConvert(rightExpression, *rightTargetType, cleanupNeeded);
+			acceptAndConvert(leftExpression, *leftTargetType, cleanupNeeded);
 		}
 		if (TokenTraits::isShiftOp(c_op))
 			// shift only cares about the signedness of both sides
@@ -483,9 +475,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	{
 		solAssert(_functionCall.arguments().size() == 1, "");
 		solAssert(_functionCall.names().empty(), "");
-		Expression const& firstArgument = *_functionCall.arguments().front();
-		firstArgument.accept(*this);
-		utils().convertType(*firstArgument.annotation().type, *_functionCall.annotation().type);
+		acceptAndConvert(*_functionCall.arguments().front(), *_functionCall.annotation().type);
 		return false;
 	}
 
@@ -531,8 +521,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 		for (unsigned i = 0; i < arguments.size(); ++i)
 		{
-			arguments[i]->accept(*this);
-			utils().convertType(*arguments[i]->annotation().type, *functionType->parameterTypes()[i]);
+			acceptAndConvert(*arguments[i], *functionType->parameterTypes()[i]);
 			utils().storeInMemoryDynamic(*functionType->parameterTypes()[i]);
 		}
 		m_context << Instruction::POP;
@@ -552,10 +541,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			eth::AssemblyItem returnLabel = m_context.pushNewTag();
 			for (unsigned i = 0; i < arguments.size(); ++i)
-			{
-				arguments[i]->accept(*this);
-				utils().convertType(*arguments[i]->annotation().type, *function.parameterTypes()[i]);
-			}
+				acceptAndConvert(*arguments[i], *function.parameterTypes()[i]);
 
 			{
 				bool shortcutTaken = false;
@@ -647,8 +633,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// stack layout: contract_address function_id [gas] [value]
 			_functionCall.expression().accept(*this);
 
-			arguments.front()->accept(*this);
-			utils().convertType(*arguments.front()->annotation().type, *TypeProvider::uint256(), true);
+			acceptAndConvert(*arguments.front(), *TypeProvider::uint256(), true);
 			// Note that function is not the original function, but the ".gas" function.
 			// Its values of gasSet and valueSet is equal to the original function's though.
 			unsigned stackDepth = (function.gasSet() ? 1 : 0) + (function.valueSet() ? 1 : 0);
@@ -673,11 +658,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
 			m_context << u256(eth::GasCosts::callStipend);
-			arguments.front()->accept(*this);
-			utils().convertType(
-				*arguments.front()->annotation().type,
-				*function.parameterTypes().front(), true
-			);
+			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), true);
 			// gas <- gas * !value
 			m_context << Instruction::SWAP1 << Instruction::DUP2;
 			m_context << Instruction::ISZERO << Instruction::MUL << Instruction::SWAP1;
@@ -705,8 +686,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			break;
 		case FunctionType::Kind::Selfdestruct:
-			arguments.front()->accept(*this);
-			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
+			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), true);
 			m_context << Instruction::SELFDESTRUCT;
 			break;
 		case FunctionType::Kind::Revert:
@@ -754,10 +734,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			unsigned logNumber = int(function.kind()) - int(FunctionType::Kind::Log0);
 			for (unsigned arg = logNumber; arg > 0; --arg)
-			{
-				arguments[arg]->accept(*this);
-				utils().convertType(*arguments[arg]->annotation().type, *function.parameterTypes()[arg], true);
-			}
+				acceptAndConvert(*arguments[arg], *function.parameterTypes()[arg], true);
 			arguments.front()->accept(*this);
 			utils().fetchFreeMemoryPointer();
 			solAssert(function.parameterTypes().front()->isValueType(), "");
@@ -827,23 +804,18 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		}
 		case FunctionType::Kind::BlockHash:
 		{
-			arguments[0]->accept(*this);
-			utils().convertType(*arguments[0]->annotation().type, *function.parameterTypes()[0], true);
+			acceptAndConvert(*arguments[0], *function.parameterTypes()[0], true);
 			m_context << Instruction::BLOCKHASH;
 			break;
 		}
 		case FunctionType::Kind::AddMod:
 		case FunctionType::Kind::MulMod:
 		{
-			arguments[2]->accept(*this);
-			utils().convertType(*arguments[2]->annotation().type, *TypeProvider::uint256());
+			acceptAndConvert(*arguments[2], *TypeProvider::uint256());
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
 			m_context.appendConditionalInvalid();
 			for (unsigned i = 1; i < 3; i ++)
-			{
-				arguments[2 - i]->accept(*this);
-				utils().convertType(*arguments[2 - i]->annotation().type, *TypeProvider::uint256());
-			}
+				acceptAndConvert(*arguments[2 - i], *TypeProvider::uint256());
 			if (function.kind() == FunctionType::Kind::AddMod)
 				m_context << Instruction::ADDMOD;
 			else
@@ -927,8 +899,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			solAssert(arguments.size() == 1, "");
 
 			// Fetch requested length.
-			arguments[0]->accept(*this);
-			utils().convertType(*arguments[0]->annotation().type, *TypeProvider::uint256());
+			acceptAndConvert(*arguments[0], *TypeProvider::uint256());
 
 			// Stack: requested_length
 			utils().fetchFreeMemoryPointer();
@@ -967,8 +938,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::Assert:
 		case FunctionType::Kind::Require:
 		{
-			arguments.front()->accept(*this);
-			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), false);
+			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), false);
 			if (arguments.size() > 1)
 			{
 				// Users probably expect the second argument to be evaluated
@@ -1149,12 +1119,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
 		if (funType->bound())
 		{
-			_memberAccess.expression().accept(*this);
-			utils().convertType(
-				*_memberAccess.expression().annotation().type,
-				*funType->selfType(),
-				true
-			);
+			acceptAndConvert(_memberAccess.expression(), *funType->selfType(), true);
 			if (funType->kind() == FunctionType::Kind::Internal)
 			{
 				FunctionDefinition const& funDef = dynamic_cast<decltype(funDef)>(funType->declaration());
@@ -1568,8 +1533,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
 		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
-		_indexAccess.indexExpression()->accept(*this);
-		utils().convertType(*_indexAccess.indexExpression()->annotation().type, *TypeProvider::uint256(), true);
+		acceptAndConvert(*_indexAccess.indexExpression(), *TypeProvider::uint256(), true);
 		// stack layout: <base_ref> [<length>] <index>
 		switch (arrayType.location())
 		{
@@ -1597,8 +1561,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		FixedBytesType const& fixedBytesType = dynamic_cast<FixedBytesType const&>(baseType);
 		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
-		_indexAccess.indexExpression()->accept(*this);
-		utils().convertType(*_indexAccess.indexExpression()->annotation().type, *TypeProvider::uint256(), true);
+		acceptAndConvert(*_indexAccess.indexExpression(), *TypeProvider::uint256(), true);
 		// stack layout: <value> <index>
 		// check out-of-bounds access
 		m_context << u256(fixedBytesType.numBytes());
@@ -2207,8 +2170,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression)
 {
 	solUnimplementedAssert(_expectedType.isValueType(), "Not implemented for non-value types.");
-	_expression.accept(*this);
-	utils().convertType(*_expression.annotation().type, _expectedType, true);
+	acceptAndConvert(_expression, _expectedType, true);
 	utils().storeInMemoryDynamic(_expectedType);
 }
 
@@ -2217,10 +2179,7 @@ void ExpressionCompiler::appendVariable(VariableDeclaration const& _variable, Ex
 	if (!_variable.isConstant())
 		setLValueFromDeclaration(_variable, _expression);
 	else
-	{
-		_variable.value()->accept(*this);
-		utils().convertType(*_variable.value()->annotation().type, *_variable.annotation().type);
-	}
+		acceptAndConvert(*_variable.value(), *_variable.annotation().type);
 }
 
 void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaration, Expression const& _expression)
@@ -2250,6 +2209,12 @@ bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token _op)
 		return true;
 	else
 		return false;
+}
+
+void ExpressionCompiler::acceptAndConvert(Expression const& _expression, Type const& _type, bool _cleanupNeeded)
+{
+	_expression.accept(*this);
+	utils().convertType(*_expression.annotation().type, _type, _cleanupNeeded);
 }
 
 CompilerUtils ExpressionCompiler::utils()

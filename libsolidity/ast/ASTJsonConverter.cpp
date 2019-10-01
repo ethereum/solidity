@@ -27,6 +27,9 @@
 #include <libdevcore/UTF8.h>
 #include <boost/algorithm/string/join.hpp>
 
+#include <vector>
+#include <algorithm>
+
 using namespace std;
 using namespace langutil;
 
@@ -240,9 +243,9 @@ bool ASTJsonConverter::visit(ImportDirective const& _node)
 	for (auto const& symbolAlias: _node.symbolAliases())
 	{
 		Json::Value tuple(Json::objectValue);
-		solAssert(symbolAlias.first, "");
-		tuple["foreign"] = nodeId(*symbolAlias.first);
-		tuple["local"] =  symbolAlias.second ? Json::Value(*symbolAlias.second) : Json::nullValue;
+		solAssert(symbolAlias.symbol, "");
+		tuple["foreign"] = nodeId(*symbolAlias.symbol);
+		tuple["local"] =  symbolAlias.alias ? Json::Value(*symbolAlias.alias) : Json::nullValue;
 		symbolAliases.append(tuple);
 	}
 	attributes.emplace_back("symbolAliases", std::move(symbolAliases));
@@ -259,7 +262,7 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 		make_pair("fullyImplemented", _node.annotation().unimplementedFunctions.empty()),
 		make_pair("linearizedBaseContracts", getContainerIds(_node.annotation().linearizedBaseContracts)),
 		make_pair("baseContracts", toJson(_node.baseContracts())),
-		make_pair("contractDependencies", getContainerIds(_node.annotation().contractDependencies)),
+		make_pair("contractDependencies", getContainerIds(_node.annotation().contractDependencies, true)),
 		make_pair("nodes", toJson(_node.subNodes())),
 		make_pair("scope", idOrNull(_node.scope()))
 	});

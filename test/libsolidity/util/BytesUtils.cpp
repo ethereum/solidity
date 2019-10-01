@@ -17,6 +17,7 @@
 
 #include <test/libsolidity/util/BytesUtils.h>
 
+#include <test/libsolidity/util/ContractABIUtils.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 
 #include <liblangutil/Common.h>
@@ -202,22 +203,29 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 	return os.str();
 }
 
-string BytesUtils::formatRawBytes(bytes const& _bytes)
+string BytesUtils::formatRawBytes(
+	bytes const& _bytes,
+	dev::solidity::test::ParameterList const& _parameters,
+	string _linePrefix)
 {
-	if (_bytes.empty())
-		return "[]";
-
 	stringstream os;
+	ParameterList parameters;
 	auto it = _bytes.begin();
-	for (size_t i = 0; i < _bytes.size(); i += 32)
+
+	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
+		parameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+	else
+		parameters = _parameters;
+
+	for (auto const& parameter: parameters)
 	{
-		bytes byteRange{it, it + 32};
+		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
 
-		os << "  " << byteRange;
-
-		it += 32;
-		if (it != _bytes.end())
+		os << _linePrefix << byteRange;
+		if (&parameter != &parameters.back())
 			os << endl;
+
+		it += static_cast<long>(parameter.abiType.size);
 	}
 
 	return os.str();
@@ -272,9 +280,16 @@ string BytesUtils::formatBytesRange(
 )
 {
 	stringstream os;
+	ParameterList parameters;
 	auto it = _bytes.begin();
 
-	for (auto const& parameter: _parameters)
+	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
+		parameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+	else
+		parameters = _parameters;
+
+
+	for (auto const& parameter: parameters)
 	{
 		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
 
@@ -287,11 +302,12 @@ string BytesUtils::formatBytesRange(
 		else
 			os << parameter.rawString;
 
+		if (&parameter != &parameters.back())
+			os << ", ";
 
 		it += static_cast<long>(parameter.abiType.size);
-		if (&parameter != &_parameters.back())
-			os << ", ";
 	}
+
 	return os.str();
 }
 

@@ -31,8 +31,5 @@
 //     mstore8(calldataload(_5), 4)
 //     sstore(_5, mload(_2))
 //     mstore(_2, _17)
-//     g()
-//     sstore(_5, mload(_2))
-//     function g()
-//     { }
+//     sstore(_5, _17)
 // }

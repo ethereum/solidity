@@ -22,11 +22,13 @@
 #pragma once
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 namespace yul
 {
 
 struct Dialect;
+struct SideEffects;
 
 /**
  * Optimisation stage that replaces expressions known to be the current value of a variable
@@ -37,7 +39,14 @@ struct Dialect;
 class CommonSubexpressionEliminator: public DataFlowAnalyzer
 {
 public:
-	CommonSubexpressionEliminator(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}
+	static constexpr char const* name{"CommonSubexpressionEliminator"};
+	static void run(OptimiserStepContext&, Block& _ast);
+
+private:
+	CommonSubexpressionEliminator(
+		Dialect const& _dialect,
+		std::map<YulString, SideEffects> _functionSideEffects
+	);
 
 protected:
 	using ASTModifier::visit;

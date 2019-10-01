@@ -17,8 +17,6 @@
 
 #include <libsolidity/formal/SMTLib2Interface.h>
 
-#include <libsolidity/interface/ReadFile.h>
-#include <liblangutil/Exceptions.h>
 #include <libdevcore/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
@@ -30,7 +28,6 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
-#include <string>
 
 using namespace std;
 using namespace dev;
@@ -49,7 +46,7 @@ void SMTLib2Interface::reset()
 	m_accumulatedOutput.emplace_back();
 	m_variables.clear();
 	write("(set-option :produce-models true)");
-	write("(set-logic QF_UFLIA)");
+	write("(set-logic ALL)");
 }
 
 void SMTLib2Interface::push()
@@ -96,12 +93,12 @@ void SMTLib2Interface::declareFunction(string const& _name, Sort const& _sort)
 	}
 }
 
-void SMTLib2Interface::addAssertion(Expression const& _expr)
+void SMTLib2Interface::addAssertion(smt::Expression const& _expr)
 {
 	write("(assert " + toSExpr(_expr) + ")");
 }
 
-pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> const& _expressionsToEvaluate)
+pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<smt::Expression> const& _expressionsToEvaluate)
 {
 	string response = querySolver(
 		boost::algorithm::join(m_accumulatedOutput, "\n") +
@@ -125,13 +122,28 @@ pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> con
 	return make_pair(result, values);
 }
 
-string SMTLib2Interface::toSExpr(Expression const& _expr)
+string SMTLib2Interface::toSExpr(smt::Expression const& _expr)
 {
 	if (_expr.arguments.empty())
 		return _expr.name;
-	std::string sexpr = "(" + _expr.name;
-	for (auto const& arg: _expr.arguments)
-		sexpr += " " + toSExpr(arg);
+
+	std::string sexpr = "(";
+	if (_expr.name == "const_array")
+	{
+		solAssert(_expr.arguments.size() == 2, "");
+		auto sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments.at(0).sort);
+		solAssert(sortSort, "");
+		auto arraySort = dynamic_pointer_cast<ArraySort>(sortSort->inner);
+		solAssert(arraySort, "");
+		sexpr += "(as const " + toSmtLibSort(*arraySort) + ") ";
+		sexpr += toSExpr(_expr.arguments.at(1));
+	}
+	else
+	{
+		sexpr += _expr.name;
+		for (auto const& arg: _expr.arguments)
+			sexpr += " " + toSExpr(arg);
+	}
 	sexpr += ")";
 	return sexpr;
 }
@@ -169,7 +181,7 @@ void SMTLib2Interface::write(string _data)
 	m_accumulatedOutput.back() += move(_data) + "\n";
 }
 
-string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _expressionsToEvaluate)
+string SMTLib2Interface::checkSatAndGetValuesCommand(vector<smt::Expression> const& _expressionsToEvaluate)
 {
 	string command;
 	if (_expressionsToEvaluate.empty())

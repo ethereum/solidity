@@ -110,7 +110,7 @@ Modulo
 
 The modulo operation ``a % n`` yields the remainder ``r`` after the division of the operand ``a``
 by the operand ``n``, where ``q = int(a / n)`` and ``r = a - (n * q)``. This means that modulo
-results in the same sign as its left operand (or zero) and ``a % n == -(abs(a) % n)`` holds for negative ``a``:
+results in the same sign as its left operand (or zero) and ``a % n == -(-a % n)`` holds for negative ``a``:
 
  * ``int256(5) % int256(2) == int256(1)``
  * ``int256(5) % int256(-2) == int256(1)``

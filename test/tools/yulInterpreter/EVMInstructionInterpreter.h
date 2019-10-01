@@ -75,9 +75,19 @@ public:
 	dev::u256 evalBuiltin(BuiltinFunctionForEVM const& _fun, std::vector<dev::u256> const& _arguments);
 
 private:
-	/// Resizes the memory to accommodate the memory access.
-	/// @returns false if memory would have to be expanded beyond m_state.maxMemSize.
+	/// Checks if the memory access is not too large for the interpreter and adjusts
+	/// msize accordingly.
+	/// @returns false if the amount of bytes read is lager than 0xffff
 	bool accessMemory(dev::u256 const& _offset, dev::u256 const& _size = 32);
+	/// @returns the memory contents at the provided address.
+	/// Does not adjust msize, use @a accessMemory for that
+	dev::bytes readMemory(dev::u256 const& _offset, dev::u256 const& _size = 32);
+	/// @returns the memory contents at the provided address.
+	/// Does not adjust msize, use @a accessMemory for that
+	dev::u256 readMemoryWord(dev::u256 const& _offset);
+	/// @returns writes a word to memory
+	/// Does not adjust msize, use @a accessMemory for that
+	void writeMemoryWord(dev::u256 const& _offset, dev::u256 const& _value);
 
 	void logTrace(dev::eth::Instruction _instruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
 	/// Appends a log to the trace representing an instruction or similar operation by string,

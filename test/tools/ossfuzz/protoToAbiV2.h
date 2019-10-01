@@ -102,7 +102,8 @@ public:
 		m_isStateVar(true),
 		m_counter(0),
 		m_varCounter(0),
-		m_returnValue(1)
+		m_returnValue(1),
+		m_isLastDynParamRightPadded(false)
 	{}
 
 	ProtoConverter(ProtoConverter const&) = delete;
@@ -268,16 +269,14 @@ private:
 		);
 	}
 
-	// String and bytes literals are derived by hashing a monotonically increasing
-	// counter and enclosing the said hash inside double quotes.
-	std::string bytesArrayValueAsString(unsigned _counter)
-	{
-		return "\"" + toHex(hashUnsignedInt(_counter), HexPrefix::DontAdd) + "\"";
-	}
-
 	std::string getQualifier(DataType _dataType)
 	{
 		return ((isValueType(_dataType) || m_isStateVar) ? "" : "memory");
+	}
+
+	bool isLastDynParamRightPadded()
+	{
+		return m_isLastDynParamRightPadded;
 	}
 
 	// Static declarations
@@ -288,6 +287,34 @@ private:
 	static std::string integerValueAsString(bool _sign, unsigned _width, unsigned _counter);
 	static std::string addressValueAsString(unsigned _counter);
 	static std::string fixedByteValueAsString(unsigned _width, unsigned _counter);
+
+	/// Returns a hex literal if _isHexLiteral is true, a string literal otherwise.
+	/// The size of the returned literal is _numBytes bytes.
+	/// @param _decorate If true, the returned string is enclosed within double quotes
+	/// if _isHexLiteral is false.
+	/// @param _isHexLiteral If true, the returned string is enclosed within
+	/// double quotes prefixed by the string "hex" if _decorate is true. If
+	/// _decorate is false, the returned string is returned as-is.
+	/// @return hex value as string
+	static std::string hexValueAsString(
+		unsigned _numBytes,
+		unsigned _counter,
+		bool _isHexLiteral,
+		bool _decorate = true
+	);
+
+	/// Concatenates the hash value obtained from monotonically increasing counter
+	/// until the desired number of bytes determined by _numBytes.
+	/// @param _width Desired number of bytes for hex value
+	/// @param _counter A counter value used for creating a keccak256 hash
+	/// @param _isHexLiteral Since this routine may be used to construct
+	/// string or hex literals, this flag is used to construct a valid output.
+	/// @return Valid hex or string literal of size _width bytes
+	static std::string variableLengthValueAsString(
+		unsigned _width,
+		unsigned _counter,
+		bool _isHexLiteral
+	);
 	static std::vector<std::pair<bool, unsigned>> arrayDimensionsAsPairVector(ArrayType const& _x);
 	static std::string arrayDimInfoAsString(ArrayDimensionInfo const& _x);
 	static void arrayDimensionsAsStringVector(
@@ -297,6 +324,7 @@ private:
 	static std::string bytesArrayTypeAsString(DynamicByteArrayType const& _x);
 	static std::string arrayTypeAsString(std::string const&, ArrayType const&);
 	static std::string delimiterToString(Delimiter _delimiter);
+	static std::string croppedString(unsigned _numBytes, unsigned _counter, bool _isHexLiteral);
 
 	// Static function definitions
 	static bool isValueType(DataType _dataType)
@@ -347,6 +375,12 @@ private:
 			return DataType::BYTES;
 	}
 
+	/// Returns true if input is either a string or bytes, false otherwise.
+	static bool isDataTypeBytesOrString(DataType _type)
+	{
+		return _type == DataType::STRING || _type == DataType::BYTES;
+	}
+
 	// Convert _counter to string and return its keccak256 hash
 	static u256 hashUnsignedInt(unsigned _counter)
 	{
@@ -389,6 +423,33 @@ private:
 		);
 	}
 
+	/// Returns a pseudo-random value for the size of a string/hex
+	/// literal. Used for creating variable length hex/string literals.
+	/// @param _counter Monotonically increasing counter value
+	static unsigned getVarLength(unsigned _counter)
+	{
+		// Since _counter values are usually small, we use
+		// this linear equation to make the number derived from
+		// _counter approach a uniform distribution over
+		// [0, s_maxDynArrayLength]
+		return (_counter + 879) * 32 % (s_maxDynArrayLength + 1);
+	}
+
+	/// Returns a hex/string literal of variable length whose value and
+	/// size are pseudo-randomly determined from the counter value.
+	/// @param _counter A monotonically increasing counter value
+	/// @param _isHexLiteral Flag that indicates whether hex (if true) or
+	/// string literal (false) is desired
+	/// @return A variable length hex/string value
+	static std::string bytesArrayValueAsString(unsigned _counter, bool _isHexLiteral)
+	{
+		return variableLengthValueAsString(
+			getVarLength(_counter),
+			_counter,
+			_isHexLiteral
+		);
+	}
+
 	/// Contains the test program
 	std::ostringstream m_output;
 	/// Temporary storage for state variable definitions
@@ -405,8 +466,13 @@ private:
 	unsigned m_varCounter;
 	/// Monotonically increasing return value for error reporting
 	unsigned m_returnValue;
+	/// Flag that indicates if last dynamically encoded parameter
+	/// passed to a function call is of a type that is going to be
+	/// right padded by the ABI encoder.
+	bool m_isLastDynParamRightPadded;
 	static unsigned constexpr s_maxArrayLength = 4;
 	static unsigned constexpr s_maxArrayDimensions = 4;
+	static unsigned constexpr s_maxDynArrayLength = 256;
 	/// Prefixes for declared and parameterized variable names
 	static auto constexpr s_varNamePrefix = "x_";
 	static auto constexpr s_paramNamePrefix = "c_";

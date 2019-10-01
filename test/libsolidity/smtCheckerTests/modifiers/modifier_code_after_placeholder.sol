@@ -15,6 +15,10 @@ contract C
 		assert(x > 0);
 		x = x + 1;
 	}
+
+	function g(uint _x) public {
+		x = _x;
+	}
 }
 // ----
 // Warning: (136-149): Assertion violation happens here

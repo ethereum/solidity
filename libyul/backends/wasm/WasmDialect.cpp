@@ -49,19 +49,19 @@ WasmDialect::WasmDialect():
 	addFunction("i64.eqz", 1, 1);
 
 	addFunction("i64.store", 2, 0, false);
-	m_functions["i64.store"_yulstring].invalidatesStorage = false;
+	m_functions["i64.store"_yulstring].sideEffects.invalidatesStorage = false;
 
 	addFunction("i64.load", 1, 1, false);
-	m_functions["i64.load"_yulstring].invalidatesStorage = false;
-	m_functions["i64.load"_yulstring].invalidatesMemory = false;
-	m_functions["i64.load"_yulstring].sideEffectFree = true;
-	m_functions["i64.load"_yulstring].sideEffectFreeIfNoMSize = true;
+	m_functions["i64.load"_yulstring].sideEffects.invalidatesStorage = false;
+	m_functions["i64.load"_yulstring].sideEffects.invalidatesMemory = false;
+	m_functions["i64.load"_yulstring].sideEffects.sideEffectFree = true;
+	m_functions["i64.load"_yulstring].sideEffects.sideEffectFreeIfNoMSize = true;
 
 	addFunction("drop", 1, 0);
 
 	addFunction("unreachable", 0, 0, false);
-	m_functions["unreachable"_yulstring].invalidatesStorage = false;
-	m_functions["unreachable"_yulstring].invalidatesMemory = false;
+	m_functions["unreachable"_yulstring].sideEffects.invalidatesStorage = false;
+	m_functions["unreachable"_yulstring].sideEffects.invalidatesMemory = false;
 
 	addFunction("datasize", 1, 4, true, true);
 	addFunction("dataoffset", 1, 4, true, true);
@@ -138,14 +138,10 @@ void WasmDialect::addEthereumExternals()
 			f.parameters.emplace_back(YulString(p));
 		for (string const& p: ext.returns)
 			f.returns.emplace_back(YulString(p));
-		f.movable = false;
 		// TODO some of them are side effect free.
-		f.sideEffectFree = false;
-		f.sideEffectFreeIfNoMSize = false;
+		f.sideEffects = SideEffects::worst();
 		f.isMSize = false;
-		f.invalidatesStorage = (ext.name == "storageStore");
-		// TODO some of them do not invalidate memory
-		f.invalidatesMemory = true;
+		f.sideEffects.invalidatesStorage = (ext.name == "storageStore");
 		f.literalArguments = false;
 	}
 }
@@ -163,11 +159,7 @@ void WasmDialect::addFunction(
 	f.name = name;
 	f.parameters.resize(_params);
 	f.returns.resize(_returns);
-	f.movable = _movable;
-	f.sideEffectFree = _movable;
-	f.sideEffectFreeIfNoMSize = _movable;
+	f.sideEffects = _movable ? SideEffects{} : SideEffects::worst();
 	f.isMSize = false;
-	f.invalidatesStorage = !_movable;
-	f.invalidatesMemory = !_movable;
 	f.literalArguments = _literalArguments;
 }

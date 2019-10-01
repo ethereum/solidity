@@ -65,6 +65,20 @@ public:
 		bytes const& _bytes
 	);
 
+	/// Returns a list of parameters corresponding to the encoding of
+	/// returned values in case of a failure. Creates an additional parameter
+	/// for the error message if _bytes is larger than 68 bytes
+	/// (function_selector + tail_ptr + message_length).
+	static ParameterList failureParameters(bytes const _bytes);
+
+	/// Returns _count parameters with their type set to ABIType::UnsignedDec
+	/// and their size set to 32 bytes.
+	static ParameterList defaultParameters(size_t count = 0);
+
+	/// Calculates the encoding size of given _parameters based
+	/// on the size of their types.
+	static size_t encodingSize(ParameterList const& _paremeters);
+
 private:
 	/// Parses and translates a single type and returns a list of
 	/// internal type representations of isoltest.

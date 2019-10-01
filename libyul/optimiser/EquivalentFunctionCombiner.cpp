@@ -26,7 +26,7 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-void EquivalentFunctionCombiner::run(Block& _ast)
+void EquivalentFunctionCombiner::run(OptimiserStepContext&, Block& _ast)
 {
 	EquivalentFunctionCombiner{EquivalentFunctionDetector::run(_ast)}(_ast);
 }

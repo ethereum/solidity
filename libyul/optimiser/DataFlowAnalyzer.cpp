@@ -43,7 +43,6 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 	if (auto vars = isSimpleStore(dev::eth::Instruction::SSTORE, _statement))
 	{
 		ASTModifier::operator()(_statement);
-		m_storage.set(vars->first, vars->second);
 		set<YulString> keysToErase;
 		for (auto const& item: m_storage.values)
 			if (!(
@@ -53,6 +52,7 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 				keysToErase.insert(item.first);
 		for (YulString const& key: keysToErase)
 			m_storage.eraseKey(key);
+		m_storage.set(vars->first, vars->second);
 	}
 	else if (auto vars = isSimpleStore(dev::eth::Instruction::MSTORE, _statement))
 	{
@@ -61,11 +61,9 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 		for (auto const& item: m_memory.values)
 			if (!m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, item.first))
 				keysToErase.insert(item.first);
-		// TODO is it fine to do that here?
-		// can we also move the storage above?
-		m_memory.set(vars->first, vars->second);
 		for (YulString const& key: keysToErase)
 			m_memory.eraseKey(key);
+		m_memory.set(vars->first, vars->second);
 	}
 	else
 	{
@@ -213,7 +211,7 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 {
 	clearValues(_variables);
 
-	MovableChecker movableChecker{m_dialect};
+	MovableChecker movableChecker{m_dialect, &m_functionSideEffects};
 	if (_value)
 		movableChecker.visit(*_value);
 	else
@@ -299,7 +297,7 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 {
-	SideEffectsCollector sideEffects(m_dialect, _block);
+	SideEffectsCollector sideEffects(m_dialect, _block, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
 		m_storage.clear();
 	if (sideEffects.invalidatesMemory())
@@ -308,7 +306,7 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 {
-	SideEffectsCollector sideEffects(m_dialect, _expr);
+	SideEffectsCollector sideEffects(m_dialect, _expr, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
 		m_storage.clear();
 	if (sideEffects.invalidatesMemory())

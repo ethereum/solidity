@@ -165,7 +165,7 @@ bool StackCompressor::run(
 		_object.code->statements.size() > 0 && _object.code->statements.at(0).type() == typeid(Block),
 		"Need to run the function grouper before the stack compressor."
 	);
-	bool allowMSizeOptimzation = !SideEffectsCollector(_dialect, *_object.code).containsMSize();
+	bool allowMSizeOptimzation = !MSizeFinder::containsMSize(_dialect, *_object.code);
 	for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 	{
 		map<YulString, int> stackSurplus = CompilabilityChecker::run(_dialect, _object, _optimizeStackAllocation);

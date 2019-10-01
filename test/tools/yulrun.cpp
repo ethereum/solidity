@@ -87,7 +87,6 @@ void interpret(string const& _source)
 
 	InterpreterState state;
 	state.maxTraceSize = 10000;
-	state.maxMemSize = 0x20000000;
 	Dialect const& dialect(EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
 	Interpreter interpreter(state, dialect);
 	try

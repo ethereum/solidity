@@ -23,8 +23,8 @@
 //     let b := mload(1)
 //     for { } lt(mload(a), mload(b)) { a := mload(b) }
 //     {
-//         let b_3 := mload(a)
-//         let a_6 := mload(b_3)
-//         b := mload(a_6)
+//         let b_4 := mload(a)
+//         a := mload(b_4)
+//         b := mload(a)
 //     }
 // }

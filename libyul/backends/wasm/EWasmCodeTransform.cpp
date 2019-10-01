@@ -55,7 +55,7 @@ string EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
 	std::vector<wasm::FunctionImport> imports;
 	for (auto& imp: transform.m_functionsToImport)
 		imports.emplace_back(std::move(imp.second));
-	return EWasmToText{}.run(
+	return EWasmToText().run(
 		transform.m_globalVariables,
 		imports,
 		functions

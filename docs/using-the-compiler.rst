@@ -122,6 +122,9 @@ at each version. Backward compatibility is not guaranteed between each version.
    - Shifting operators use shifting opcodes and thus need less gas.
 - ``petersburg`` (**default**)
    - The compiler behaves the same way as with constantinople.
+- ``istanbul``
+   - Opcodes ``chainid`` and ``selfbalance`` are available in assembly.
+- ``berlin`` (**experimental**)
 
 
 .. _compiler-api:
@@ -229,7 +232,7 @@ Input Description
         },
         // Version of the EVM to compile for.
         // Affects type checking and code generation. Can be homestead,
-        // tangerineWhistle, spuriousDragon, byzantium, constantinople or petersburg
+        // tangerineWhistle, spuriousDragon, byzantium, constantinople, petersburg, istanbul or berlin
         "evmVersion": "byzantium",
         // Metadata settings (optional)
         "metadata": {
@@ -363,7 +366,7 @@ Output Description
           // If the language used has no contract names, this field should equal to an empty string.
           "ContractName": {
             // The Ethereum Contract ABI. If empty, it is represented as an empty array.
-            // See https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
+            // See https://solidity.readthedocs.io/en/develop/abi-spec.html
             "abi": [],
             // See the Metadata Output documentation (serialised JSON string)
             "metadata": "{...}",

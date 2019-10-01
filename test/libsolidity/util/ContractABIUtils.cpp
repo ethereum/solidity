@@ -289,16 +289,51 @@ dev::solidity::test::ParameterList ContractABIUtils::preferredParameters(
 {
 	if (_targetParameters.size() != _sourceParameters.size())
 	{
-		auto sizeFold = [](size_t const _a, Parameter const& _b) { return _a + _b.abiType.size; };
-		size_t encodingSize = accumulate(_targetParameters.begin(), _targetParameters.end(), size_t{0}, sizeFold);
-
 		_errorReporter.warning(
 			"Encoding does not match byte range. The call returned " +
 			to_string(_bytes.size()) + " bytes, but " +
-			to_string(encodingSize) + " bytes were expected."
+			to_string(encodingSize(_targetParameters)) + " bytes were expected."
 		);
 		return _sourceParameters;
 	}
 	else
 		return _targetParameters;
+}
+
+dev::solidity::test::ParameterList ContractABIUtils::defaultParameters(size_t count)
+{
+	ParameterList parameters;
+
+	fill_n(
+		back_inserter(parameters),
+		count,
+		Parameter{bytes(), "", ABIType{ABIType::UnsignedDec}, FormatInfo{}}
+	);
+
+	return parameters;
+}
+
+dev::solidity::test::ParameterList ContractABIUtils::failureParameters(bytes const _bytes)
+{
+	ParameterList parameters;
+
+	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::HexString, ABIType::AlignNone, 4}, FormatInfo{}});
+	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}});
+	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::UnsignedDec}, FormatInfo{}});
+
+	/// If _bytes contains at least a 1 byte message (function selector + tail pointer + message length + message)
+	/// append an additional string parameter to represent that message.
+	if (_bytes.size() > 68)
+		parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::String}, FormatInfo{}});
+
+	return parameters;
+}
+
+size_t ContractABIUtils::encodingSize(
+	dev::solidity::test::ParameterList const& _parameters
+)
+{
+	auto sizeFold = [](size_t const _a, Parameter const& _b) { return _a + _b.abiType.size; };
+
+	return accumulate(_parameters.begin(), _parameters.end(), size_t{0}, sizeFold);
 }

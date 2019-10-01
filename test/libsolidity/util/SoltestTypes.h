@@ -262,6 +262,9 @@ struct FunctionCall
 	DisplayMode displayMode = DisplayMode::SingleLine;
 	/// Marks this function call as the constructor.
 	bool isConstructor = false;
+	/// If this function call's signature has no name and no arguments,
+	/// a low-level call with unstructured calldata will be issued.
+	bool useCallWithoutSignature = false;
 	/// Marks this function call as "short-handed", meaning
 	/// no `->` declared.
 	bool omitsArrow = true;

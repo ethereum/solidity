@@ -20,12 +20,14 @@
 
 #include <libyul/optimiser/UnusedPruner.h>
 
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
+#include <libyul/SideEffects.h>
 
 #include <boost/algorithm/cxx11/none_of.hpp>
 
@@ -37,10 +39,12 @@ UnusedPruner::UnusedPruner(
 	Dialect const& _dialect,
 	Block& _ast,
 	bool _allowMSizeOptimization,
+	map<YulString, SideEffects> const* _functionSideEffects,
 	set<YulString> const& _externallyUsedFunctions
 ):
 	m_dialect(_dialect),
-	m_allowMSizeOptimization(_allowMSizeOptimization)
+	m_allowMSizeOptimization(_allowMSizeOptimization),
+	m_functionSideEffects(_functionSideEffects)
 {
 	m_references = ReferencesCounter::countReferences(_ast);
 	for (auto const& f: _externallyUsedFunctions)
@@ -88,7 +92,10 @@ void UnusedPruner::operator()(Block& _block)
 			{
 				if (!varDecl.value)
 					statement = Block{std::move(varDecl.location), {}};
-				else if (SideEffectsCollector(m_dialect, *varDecl.value).sideEffectFree(m_allowMSizeOptimization))
+				else if (
+					SideEffectsCollector(m_dialect, *varDecl.value, m_functionSideEffects).
+					sideEffectFree(m_allowMSizeOptimization)
+				)
 				{
 					subtractReferences(ReferencesCounter::countReferences(*varDecl.value));
 					statement = Block{std::move(varDecl.location), {}};
@@ -104,7 +111,10 @@ void UnusedPruner::operator()(Block& _block)
 		else if (statement.type() == typeid(ExpressionStatement))
 		{
 			ExpressionStatement& exprStmt = boost::get<ExpressionStatement>(statement);
-			if (SideEffectsCollector(m_dialect, exprStmt.expression).sideEffectFree(m_allowMSizeOptimization))
+			if (
+				SideEffectsCollector(m_dialect, exprStmt.expression, m_functionSideEffects).
+				sideEffectFree(m_allowMSizeOptimization)
+			)
 			{
 				subtractReferences(ReferencesCounter::countReferences(exprStmt.expression));
 				statement = Block{std::move(exprStmt.location), {}};
@@ -120,26 +130,31 @@ void UnusedPruner::runUntilStabilised(
 	Dialect const& _dialect,
 	Block& _ast,
 	bool _allowMSizeOptimization,
+	map<YulString, SideEffects> const* _functionSideEffects,
 	set<YulString> const& _externallyUsedFunctions
 )
 {
 	while (true)
 	{
-		UnusedPruner pruner(_dialect, _ast, _allowMSizeOptimization, _externallyUsedFunctions);
+		UnusedPruner pruner(
+			_dialect, _ast, _allowMSizeOptimization, _functionSideEffects,
+							_externallyUsedFunctions);
 		pruner(_ast);
 		if (!pruner.shouldRunAgain())
 			return;
 	}
 }
 
-void UnusedPruner::runUntilStabilised(
+void UnusedPruner::runUntilStabilisedOnFullAST(
 	Dialect const& _dialect,
 	Block& _ast,
 	set<YulString> const& _externallyUsedFunctions
 )
 {
-	bool allowMSizeOptimization = !SideEffectsCollector(_dialect, _ast).containsMSize();
-	runUntilStabilised(_dialect, _ast, allowMSizeOptimization, _externallyUsedFunctions);
+	map<YulString, SideEffects> functionSideEffects =
+		SideEffectsPropagator::sideEffects(_dialect, CallGraphGenerator::callGraph(_ast));
+	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, _ast);
+	runUntilStabilised(_dialect, _ast, allowMSizeOptimization, &functionSideEffects, _externallyUsedFunctions);
 }
 
 void UnusedPruner::runUntilStabilised(

@@ -101,7 +101,7 @@ string TestFunctionCall::format(
 		{
 			bool const isFailure = m_call.expectations.failure;
 			result = isFailure ?
-				failure :
+				formatFailure(_errorReporter, m_call, m_rawBytes, _renderResult, highlight) :
 				formatRawParameters(m_call.expectations.result);
 			if (!result.empty())
 				AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << ws << result;
@@ -111,7 +111,7 @@ string TestFunctionCall::format(
 			bytes output = m_rawBytes;
 			bool const isFailure = m_failure;
 			result = isFailure ?
-				failure :
+				formatFailure(_errorReporter, m_call, output, _renderResult, highlight) :
 				matchesExpectation() ?
 					formatRawParameters(m_call.expectations.result) :
 					formatBytesParameters(
@@ -121,6 +121,36 @@ string TestFunctionCall::format(
 						m_call.expectations.result,
 						highlight
 					);
+
+			if (!matchesExpectation())
+			{
+				boost::optional<ParameterList> abiParams;
+
+				if (isFailure)
+				{
+					if (!output.empty())
+						abiParams = boost::make_optional(ContractABIUtils::failureParameters(output));
+				}
+				else
+					abiParams = ContractABIUtils::parametersFromJsonOutputs(
+						_errorReporter,
+						m_contractABI,
+						m_call.signature
+					);
+
+				string bytesOutput = abiParams ?
+					BytesUtils::formatRawBytes(output, abiParams.get(), _linePrefix) :
+					BytesUtils::formatRawBytes(
+						output,
+						ContractABIUtils::defaultParameters(ceil(output.size() / 32)),
+						_linePrefix
+					);
+
+				_errorReporter.warning(
+					"The call to \"" + m_call.signature + "\" returned \n" +
+					bytesOutput
+				);
+			}
 
 			if (isFailure)
 				AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << ws << result;
@@ -155,49 +185,90 @@ string TestFunctionCall::formatBytesParameters(
 	bytes const& _bytes,
 	string const& _signature,
 	dev::solidity::test::ParameterList const& _parameters,
-	bool _highlight
+	bool _highlight,
+	bool _failure
 ) const
 {
 	using ParameterList = dev::solidity::test::ParameterList;
 
 	stringstream os;
+
 	if (_bytes.empty())
 		return {};
 
-	_errorReporter.warning("The call to \"" + _signature + "\" returned \n" + BytesUtils::formatRawBytes(_bytes));
-
-	boost::optional<ParameterList> abiParams = ContractABIUtils::parametersFromJsonOutputs(
-		_errorReporter,
-		m_contractABI,
-		_signature
-	);
-
-	if (abiParams)
+	if (_failure)
 	{
-		boost::optional<ParameterList> preferredParams = ContractABIUtils::preferredParameters(
-			_errorReporter,
-			_parameters,
-			abiParams.get(),
-			_bytes
+		os << BytesUtils::formatBytesRange(
+			_bytes,
+			ContractABIUtils::failureParameters(_bytes),
+			_highlight
 		);
 
-		if (preferredParams)
-		{
-			ContractABIUtils::overwriteParameters(_errorReporter, preferredParams.get(), abiParams.get());
-			os << BytesUtils::formatBytesRange(_bytes, preferredParams.get(), _highlight);
-		}
+		return os.str();
 	}
 	else
 	{
-		ParameterList defaultParameters;
-		fill_n(
-			back_inserter(defaultParameters),
-			ceil(_bytes.size() / 32),
-			Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}}
+		boost::optional<ParameterList> abiParams = ContractABIUtils::parametersFromJsonOutputs(
+			_errorReporter,
+			m_contractABI,
+			_signature
 		);
-		ContractABIUtils::overwriteParameters(_errorReporter, defaultParameters, _parameters);
-		os << BytesUtils::formatBytesRange(_bytes, defaultParameters, _highlight);
+
+		if (abiParams)
+		{
+			boost::optional<ParameterList> preferredParams = ContractABIUtils::preferredParameters(
+				_errorReporter,
+				_parameters,
+				abiParams.get(),
+				_bytes
+			);
+
+			if (preferredParams)
+			{
+				ContractABIUtils::overwriteParameters(_errorReporter, preferredParams.get(), abiParams.get());
+				os << BytesUtils::formatBytesRange(_bytes, preferredParams.get(), _highlight);
+			}
+		}
+		else
+		{
+			ParameterList defaultParameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+
+			ContractABIUtils::overwriteParameters(_errorReporter, defaultParameters, _parameters);
+			os << BytesUtils::formatBytesRange(_bytes, defaultParameters, _highlight);
+		}
+		return os.str();
 	}
+}
+
+string TestFunctionCall::formatFailure(
+	ErrorReporter& _errorReporter,
+	dev::solidity::test::FunctionCall const& _call,
+	bytes const& _output,
+	bool _renderResult,
+	bool _highlight
+) const
+{
+	using Token = soltest::Token;
+
+	stringstream os;
+
+	os << formatToken(Token::Failure);
+
+	if (!_output.empty())
+		os << ", ";
+
+	if (_renderResult)
+		os << formatBytesParameters(
+			_errorReporter,
+			_output,
+			_call.signature,
+			_call.expectations.result,
+			_highlight,
+			true
+		);
+	else
+		os << formatRawParameters(_call.expectations.result);
+
 	return os.str();
 }
 

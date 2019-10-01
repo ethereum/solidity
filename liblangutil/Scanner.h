@@ -219,6 +219,12 @@ private:
 	Token skipSingleLineComment();
 	Token skipMultiLineComment();
 
+	/// Tests if current source position is CR, LF or CRLF.
+	bool atEndOfLine() const;
+
+	/// Tries to consume CR, LF or CRLF line terminators and returns success or failure.
+	bool tryScanEndOfLine();
+
 	void scanDecimalDigits();
 	Token scanNumber(char _charSeen = 0);
 	std::tuple<Token, unsigned, unsigned> scanIdentifierOrKeyword();

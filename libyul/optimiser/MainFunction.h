@@ -26,13 +26,21 @@
 namespace yul
 {
 
+struct OptimiserStepContext;
+
 /**
  * Prerequisites: Function Grouper
  */
 class MainFunction
 {
 public:
+	static constexpr char const* name{"MainFunction"};
+	static void run(OptimiserStepContext&, Block& _ast) { MainFunction{}(_ast); }
+
 	void operator()(Block& _block);
+
+private:
+	MainFunction() = default;
 };
 
 }

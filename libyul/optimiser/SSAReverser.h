@@ -17,6 +17,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/OptimiserStep.h>
 
 namespace yul
 {
@@ -40,6 +41,13 @@ class AssignmentCounter;
  * 		a := E
  * 		let a_1 := a
  *
+ * 	In the special case
+ * 		let a := E
+ * 		a := a
+ *
+ * 	the redundant assignment "a := a" is removed.
+ *
+ *
  * Secondly, the SSA transform will rewrite
  *
  * 		let a := E
@@ -62,12 +70,15 @@ class AssignmentCounter;
 class SSAReverser: public ASTModifier
 {
 public:
+	static constexpr char const* name{"SSAReverser"};
+	static void run(OptimiserStepContext& _context, Block& _ast);
+
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;
 
-	static void run(Block& _block);
 private:
-	SSAReverser(AssignmentCounter const& _assignmentCounter): m_assignmentCounter(_assignmentCounter) {}
+	explicit SSAReverser(AssignmentCounter const& _assignmentCounter): m_assignmentCounter(_assignmentCounter) {}
+
 	AssignmentCounter const& m_assignmentCounter;
 };
 

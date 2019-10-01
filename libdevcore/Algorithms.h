@@ -78,17 +78,18 @@ private:
 /**
  * Generic breadth first search.
  *
+ * Note that V needs to be a comparable value type. If it is not, use a pointer type,
+ * but note that this might lead to non-deterministic traversal.
+ *
  * Example: Gather all (recursive) children in a graph starting at (and including) ``root``:
  *
  * Node const* root = ...;
- * std::set<Node> allNodes = BreadthFirstSearch<Node>{{root}}.run([](Node const& _node, auto&& _addChild) {
+ * std::set<Node const*> allNodes = BreadthFirstSearch<Node const*>{{root}}.run([](Node const* _node, auto&& _addChild) {
  *   // Potentially process ``_node``.
- *   for (Node const& _child: _node.children())
+ *   for (Node const& _child: _node->children())
  *     // Potentially filter the children to be visited.
- *     _addChild(_child);
+ *     _addChild(&_child);
  * }).visited;
- *
- * Note that the order of the traversal is *non-deterministic* (the children are stored in a std::set of pointers).
  */
 template<typename V>
 struct BreadthFirstSearch
@@ -102,20 +103,20 @@ struct BreadthFirstSearch
 	{
 		while (!verticesToTraverse.empty())
 		{
-			V const* v = *verticesToTraverse.begin();
+			V v = *verticesToTraverse.begin();
 			verticesToTraverse.erase(verticesToTraverse.begin());
 			visited.insert(v);
 
-			_forEachChild(*v, [this](V const& _vertex) {
-				if (!visited.count(&_vertex))
-					verticesToTraverse.insert(&_vertex);
+			_forEachChild(v, [this](V _vertex) {
+				if (!visited.count(_vertex))
+					verticesToTraverse.emplace(std::move(_vertex));
 			});
 		}
 		return *this;
 	}
 
-	std::set<V const*> verticesToTraverse;
-	std::set<V const*> visited{};
+	std::set<V> verticesToTraverse;
+	std::set<V> visited{};
 };
 
 }

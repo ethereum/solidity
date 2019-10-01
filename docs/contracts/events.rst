@@ -132,7 +132,7 @@ Low-Level Interface to Logs
 
 It is also possible to access the low-level interface to the logging
 mechanism via the functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4``.
-``logi`` takes ``i + 1`` parameter of type ``bytes32``, where the first
+Each function ``logi`` takes ``i + 1`` parameter of type ``bytes32``, where the first
 argument will be used for the data part of the log and the others
 as topics. The event call above can be performed in the same way as
 
