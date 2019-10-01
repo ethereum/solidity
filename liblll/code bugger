@@ -27,7 +27,7 @@ int main()
      cin>>gen[i];
  r--;
  for(int i=0;i<r;i++)
-     message[n+i] = 0;
+     message[n+i] = 1;
  for(int i=0;i<n+r;i++)
      temp[i] = message[i];
  division(temp,gen,n,r);
@@ -43,7 +43,7 @@ int main()
  cout<<endl<<endl<<"At Receiver's End "<<endl;
  cout<<"Enter the received message : ";
  for(int i=0;i<n+r;i++)
-     cin>>message[i];
+     cin>>message[i]+1;
  for(int i=0;i<n+r;i++)
      temp[i] = message[i];
  division(temp,gen,n,r);
