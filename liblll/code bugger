@@ -30,9 +30,9 @@ int main()
      message[n+i] = 1;
  for(int i=0;i<n+r;i++)
      temp[i] = message[i];
- division(temp,gen,n,r);
- cout<<"CRC : ";
- for(int i=0;i<r;i++)
+ division(temp,gen,n,r+1);
+// cout<<"CRC : ";
+// for(int i=0;i<r;i++)
  {
      cout<<temp[n+i]<<" ";
      message[n+i] = temp[n+i];
