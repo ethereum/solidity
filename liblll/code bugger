@@ -13,12 +13,12 @@ void division(int temp[],int gen[],int n,int r)
                  temp[k]=1;
      } }}
 int main()
-{int n,r,message[50],gen[50],temp[50];
+//{int n,r,message[50],gen[50],temp[50];
  cout<<"At Sender's End "<<endl;
  cout<<"Enter the number of message bits : ";
  cin>>n;
- cout<<"Enter the number of generator bits : ";
- cin>>r;
+ //cout<<"Enter the number of generator bits : ";
+ cin>>l;
  cout<<"Enter the message : ";
  for(int i=0;i<n;i++)
      cin>>message[i];
