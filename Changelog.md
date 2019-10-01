@@ -1,4 +1,4 @@
-### 0.5.12 (unreleased)
+### 0.5.12 (2019-10-01)
 
 Language Features:
  * Type Checker: Allow assignment to external function arguments except for reference types.
@@ -13,10 +13,10 @@ Compiler Features:
 
 
 Bugfixes:
- * Fix internal error when popping a dynamic storage array of mappings.
- * Yul Optimizer: Fix reordering bug in connection with shifted one and mul/div-instructions in for loop conditions.
- * Scanner: Fix multi-line natspec comment parsing with triple slashes when file is encoded with CRLF instead of LF.
+ * Code Generator: Fix internal error when popping a dynamic storage array of mappings.
  * Name Resolver: Fix wrong source location when warning on shadowed aliases in import declarations.
+ * Scanner: Fix multi-line natspec comment parsing with triple slashes when file is encoded with CRLF instead of LF.
+ * Yul Optimizer: Fix reordering bug in connection with shifted one and mul/div-instructions in for loop conditions.
 
 
 ### 0.5.11 (2019-08-12)
