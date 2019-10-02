@@ -246,7 +246,45 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 			function->overrides() ?
 			resolveOverrideList(*function->overrides()) :
 			set<ContractDefinition const*>{};
+
+		// Check for duplicates in override list
+		if (function->overrides() && specifiedContracts.size() != function->overrides()->overrides().size())
+		{
+			vector<ASTPointer<UserDefinedTypeName>> list = function->overrides()->overrides();
+
+			// Sort by name to find duplicate for error reporting
+			sort(list.begin(), list.end(),
+				[] (ASTPointer<UserDefinedTypeName> _a, ASTPointer<UserDefinedTypeName> _b) {
+					if (!_a || !_b)
+						return _a < _b;
+
+					return boost::lexicographical_compare(
+						_a->namePath(), _b->namePath(),
+						[] (string const& _aString, string const& _bString) {
+							return _aString < _bString;
+						}
+					);
+				}
 			);
+
+
+			// Find duplicates and output error
+			for (size_t i = 1; i < list.size(); i++)
+				if (list[i]->namePath() == list[i-1]->namePath())
+				{
+					SecondarySourceLocation ssl;
+					ssl.append("First occurrence here: ", list[i-1]->location());
+					m_errorReporter.typeError(
+						list[i]->location(),
+						ssl,
+						"Duplicate contract " +
+							joinHumanReadable(list[i]->namePath(), ".") +
+							" found in override list of " +
+							function->name() +
+							"."
+					);
+				}
+		}
 
 		decltype(specifiedContracts) missingContracts;
 
