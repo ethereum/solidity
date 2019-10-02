@@ -3,242 +3,242 @@ JSON AST:
 
 ======= recovery_ast_constructor/input.sol =======
 {
-	"attributes" : 
-	{
-		"absolutePath" : "recovery_ast_constructor/input.sol",
-		"exportedSymbols" : 
-		{
-			"Error1" : 
-			[
-				18
-			]
-		}
-	},
-	"children" : 
-	[
-		{
-			"attributes" : 
-			{
-				"literals" : 
-				[
-					"solidity",
-					">=",
-					"0.0",
-					".0"
-				]
-			},
-			"id" : 1,
-			"name" : "PragmaDirective",
-			"src" : "0:24:0"
-		},
-		{
-			"attributes" : 
-			{
-				"baseContracts" : 
-				[
-					null
-				],
-				"contractDependencies" : 
-				[
-					null
-				],
-				"contractKind" : "contract",
-				"documentation" : null,
-				"fullyImplemented" : true,
-				"linearizedBaseContracts" : 
-				[
-					18
-				],
-				"name" : "Error1",
-				"scope" : 19
-			},
-			"children" : 
-			[
-				{
-					"attributes" : 
-					{
-						"documentation" : null,
-						"implemented" : true,
-						"isConstructor" : true,
-						"kind" : "constructor",
-						"modifiers" : 
-						[
-							null
-						],
-						"name" : "",
-						"overrides" : null,
-						"scope" : 18,
-						"stateMutability" : "nonpayable",
-						"superFunction" : null,
-						"visibility" : "public"
-					},
-					"children" : 
-					[
-						{
-							"attributes" : 
-							{
-								"parameters" : 
-								[
-									null
-								]
-							},
-							"children" : [],
-							"id" : 2,
-							"name" : "ParameterList",
-							"src" : "57:2:0"
-						},
-						{
-							"attributes" : 
-							{
-								"parameters" : 
-								[
-									null
-								]
-							},
-							"children" : [],
-							"id" : 3,
-							"name" : "ParameterList",
-							"src" : "67:0:0"
-						},
-						{
-							"attributes" : 
-							{
-								"statements" : 
-								[
-									null
-								]
-							},
-							"children" : [],
-							"id" : 8,
-							"name" : "Block",
-							"src" : "67:49:0"
-						}
-					],
-					"id" : 9,
-					"name" : "FunctionDefinition",
-					"src" : "46:70:0"
-				},
-				{
-					"attributes" : 
-					{
-						"documentation" : null,
-						"implemented" : true,
-						"isConstructor" : false,
-						"kind" : "function",
-						"modifiers" : 
-						[
-							null
-						],
-						"name" : "five",
-						"overrides" : null,
-						"scope" : 18,
-						"stateMutability" : "view",
-						"superFunction" : null,
-						"visibility" : "public"
-					},
-					"children" : 
-					[
-						{
-							"attributes" : 
-							{
-								"parameters" : 
-								[
-									null
-								]
-							},
-							"children" : [],
-							"id" : 10,
-							"name" : "ParameterList",
-							"src" : "382:2:0"
-						},
-						{
-							"children" : 
-							[
-								{
-									"attributes" : 
-									{
-										"constant" : false,
-										"name" : "",
-										"overrides" : null,
-										"scope" : 17,
-										"stateVariable" : false,
-										"storageLocation" : "default",
-										"type" : "uint256",
-										"value" : null,
-										"visibility" : "internal"
-									},
-									"children" : 
-									[
-										{
-											"attributes" : 
-											{
-												"name" : "uint",
-												"type" : "uint256"
-											},
-											"id" : 11,
-											"name" : "ElementaryTypeName",
-											"src" : "405:4:0"
-										}
-									],
-									"id" : 12,
-									"name" : "VariableDeclaration",
-									"src" : "405:4:0"
-								}
-							],
-							"id" : 13,
-							"name" : "ParameterList",
-							"src" : "404:6:0"
-						},
-						{
-							"children" : 
-							[
-								{
-									"attributes" : 
-									{
-										"functionReturnParameters" : 13
-									},
-									"children" : 
-									[
-										{
-											"attributes" : 
-											{
-												"argumentTypes" : null,
-												"hexvalue" : "35",
-												"isConstant" : false,
-												"isLValue" : false,
-												"isPure" : true,
-												"lValueRequested" : false,
-												"subdenomination" : null,
-												"token" : "number",
-												"type" : "int_const 5",
-												"value" : "5"
-											},
-											"id" : 14,
-											"name" : "Literal",
-											"src" : "424:1:0"
-										}
-									],
-									"id" : 15,
-									"name" : "Return",
-									"src" : "417:8:0"
-								}
-							],
-							"id" : 16,
-							"name" : "Block",
-							"src" : "411:19:0"
-						}
-					],
-					"id" : 17,
-					"name" : "FunctionDefinition",
-					"src" : "369:61:0"
-				}
-			],
-			"id" : 18,
-			"name" : "ContractDefinition",
-			"src" : "26:406:0"
-		}
-	],
-	"id" : 19,
-	"name" : "SourceUnit",
-	"src" : "0:433:0"
+  "attributes":
+  {
+    "absolutePath": "recovery_ast_constructor/input.sol",
+    "exportedSymbols":
+    {
+      "Error1":
+      [
+        18
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "literals":
+        [
+          "solidity",
+          ">=",
+          "0.0",
+          ".0"
+        ]
+      },
+      "id": 1,
+      "name": "PragmaDirective",
+      "src": "0:24:0"
+    },
+    {
+      "attributes":
+      {
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          18
+        ],
+        "name": "Error1",
+        "scope": 19
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "documentation": null,
+            "implemented": true,
+            "isConstructor": true,
+            "kind": "constructor",
+            "modifiers":
+            [
+              null
+            ],
+            "name": "",
+            "overrides": null,
+            "scope": 18,
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 2,
+              "name": "ParameterList",
+              "src": "57:2:0"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 3,
+              "name": "ParameterList",
+              "src": "67:0:0"
+            },
+            {
+              "attributes":
+              {
+                "statements":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 8,
+              "name": "Block",
+              "src": "67:49:0"
+            }
+          ],
+          "id": 9,
+          "name": "FunctionDefinition",
+          "src": "46:70:0"
+        },
+        {
+          "attributes":
+          {
+            "documentation": null,
+            "implemented": true,
+            "isConstructor": false,
+            "kind": "function",
+            "modifiers":
+            [
+              null
+            ],
+            "name": "five",
+            "overrides": null,
+            "scope": 18,
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 10,
+              "name": "ParameterList",
+              "src": "382:2:0"
+            },
+            {
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "constant": false,
+                    "name": "",
+                    "overrides": null,
+                    "scope": 17,
+                    "stateVariable": false,
+                    "storageLocation": "default",
+                    "type": "uint256",
+                    "value": null,
+                    "visibility": "internal"
+                  },
+                  "children":
+                  [
+                    {
+                      "attributes":
+                      {
+                        "name": "uint",
+                        "type": "uint256"
+                      },
+                      "id": 11,
+                      "name": "ElementaryTypeName",
+                      "src": "405:4:0"
+                    }
+                  ],
+                  "id": 12,
+                  "name": "VariableDeclaration",
+                  "src": "405:4:0"
+                }
+              ],
+              "id": 13,
+              "name": "ParameterList",
+              "src": "404:6:0"
+            },
+            {
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "functionReturnParameters": 13
+                  },
+                  "children":
+                  [
+                    {
+                      "attributes":
+                      {
+                        "argumentTypes": null,
+                        "hexvalue": "35",
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "lValueRequested": false,
+                        "subdenomination": null,
+                        "token": "number",
+                        "type": "int_const 5",
+                        "value": "5"
+                      },
+                      "id": 14,
+                      "name": "Literal",
+                      "src": "424:1:0"
+                    }
+                  ],
+                  "id": 15,
+                  "name": "Return",
+                  "src": "417:8:0"
+                }
+              ],
+              "id": 16,
+              "name": "Block",
+              "src": "411:19:0"
+            }
+          ],
+          "id": 17,
+          "name": "FunctionDefinition",
+          "src": "369:61:0"
+        }
+      ],
+      "id": 18,
+      "name": "ContractDefinition",
+      "src": "26:406:0"
+    }
+  ],
+  "id": 19,
+  "name": "SourceUnit",
+  "src": "0:433:0"
 }

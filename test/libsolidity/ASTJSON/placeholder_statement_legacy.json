@@ -1,87 +1,87 @@
 {
-	"attributes" : 
-	{
-		"absolutePath" : "a",
-		"exportedSymbols" : 
-		{
-			"C" : 
-			[
-				5
-			]
-		}
-	},
-	"children" : 
-	[
-		{
-			"attributes" : 
-			{
-				"baseContracts" : 
-				[
-					null
-				],
-				"contractDependencies" : 
-				[
-					null
-				],
-				"contractKind" : "contract",
-				"documentation" : null,
-				"fullyImplemented" : true,
-				"linearizedBaseContracts" : 
-				[
-					5
-				],
-				"name" : "C",
-				"scope" : 6
-			},
-			"children" : 
-			[
-				{
-					"attributes" : 
-					{
-						"documentation" : null,
-						"name" : "M",
-						"visibility" : "internal"
-					},
-					"children" : 
-					[
-						{
-							"attributes" : 
-							{
-								"parameters" : 
-								[
-									null
-								]
-							},
-							"children" : [],
-							"id" : 1,
-							"name" : "ParameterList",
-							"src" : "24:0:1"
-						},
-						{
-							"children" : 
-							[
-								{
-									"id" : 2,
-									"name" : "PlaceholderStatement",
-									"src" : "26:1:1"
-								}
-							],
-							"id" : 3,
-							"name" : "Block",
-							"src" : "24:6:1"
-						}
-					],
-					"id" : 4,
-					"name" : "ModifierDefinition",
-					"src" : "13:17:1"
-				}
-			],
-			"id" : 5,
-			"name" : "ContractDefinition",
-			"src" : "0:32:1"
-		}
-	],
-	"id" : 6,
-	"name" : "SourceUnit",
-	"src" : "0:33:1"
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        5
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          5
+        ],
+        "name": "C",
+        "scope": 6
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "documentation": null,
+            "name": "M",
+            "visibility": "internal"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 1,
+              "name": "ParameterList",
+              "src": "24:0:1"
+            },
+            {
+              "children":
+              [
+                {
+                  "id": 2,
+                  "name": "PlaceholderStatement",
+                  "src": "26:1:1"
+                }
+              ],
+              "id": 3,
+              "name": "Block",
+              "src": "24:6:1"
+            }
+          ],
+          "id": 4,
+          "name": "ModifierDefinition",
+          "src": "13:17:1"
+        }
+      ],
+      "id": 5,
+      "name": "ContractDefinition",
+      "src": "0:32:1"
+    }
+  ],
+  "id": 6,
+  "name": "SourceUnit",
+  "src": "0:33:1"
 }

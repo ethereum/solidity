@@ -1,64 +1,64 @@
 {
-	"absolutePath" : "a",
-	"exportedSymbols" : 
-	{
-		"C" : 
-		[
-			5
-		]
-	},
-	"id" : 6,
-	"nodeType" : "SourceUnit",
-	"nodes" : 
-	[
-		{
-			"baseContracts" : [],
-			"contractDependencies" : [],
-			"contractKind" : "contract",
-			"documentation" : null,
-			"fullyImplemented" : true,
-			"id" : 5,
-			"linearizedBaseContracts" : 
-			[
-				5
-			],
-			"name" : "C",
-			"nodeType" : "ContractDefinition",
-			"nodes" : 
-			[
-				{
-					"body" : 
-					{
-						"id" : 3,
-						"nodeType" : "Block",
-						"src" : "24:6:1",
-						"statements" : 
-						[
-							{
-								"id" : 2,
-								"nodeType" : "PlaceholderStatement",
-								"src" : "26:1:1"
-							}
-						]
-					},
-					"documentation" : null,
-					"id" : 4,
-					"name" : "M",
-					"nodeType" : "ModifierDefinition",
-					"parameters" : 
-					{
-						"id" : 1,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "24:0:1"
-					},
-					"src" : "13:17:1",
-					"visibility" : "internal"
-				}
-			],
-			"scope" : 6,
-			"src" : "0:32:1"
-		}
-	],
-	"src" : "0:33:1"
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      5
+    ]
+  },
+  "id": 6,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 5,
+      "linearizedBaseContracts":
+      [
+        5
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 3,
+            "nodeType": "Block",
+            "src": "24:6:1",
+            "statements":
+            [
+              {
+                "id": 2,
+                "nodeType": "PlaceholderStatement",
+                "src": "26:1:1"
+              }
+            ]
+          },
+          "documentation": null,
+          "id": 4,
+          "name": "M",
+          "nodeType": "ModifierDefinition",
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "24:0:1"
+          },
+          "src": "13:17:1",
+          "visibility": "internal"
+        }
+      ],
+      "scope": 6,
+      "src": "0:32:1"
+    }
+  ],
+  "src": "0:33:1"
 }

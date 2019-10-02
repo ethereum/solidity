@@ -1,337 +1,337 @@
 {
-	"absolutePath" : "a",
-	"exportedSymbols" : 
-	{
-		"A" : 
-		[
-			5
-		],
-		"B" : 
-		[
-			16
-		],
-		"C" : 
-		[
-			31
-		]
-	},
-	"id" : 32,
-	"nodeType" : "SourceUnit",
-	"nodes" : 
-	[
-		{
-			"baseContracts" : [],
-			"contractDependencies" : [],
-			"contractKind" : "contract",
-			"documentation" : null,
-			"fullyImplemented" : true,
-			"id" : 5,
-			"linearizedBaseContracts" : 
-			[
-				5
-			],
-			"name" : "A",
-			"nodeType" : "ContractDefinition",
-			"nodes" : 
-			[
-				{
-					"body" : 
-					{
-						"id" : 3,
-						"nodeType" : "Block",
-						"src" : "36:2:1",
-						"statements" : []
-					},
-					"documentation" : null,
-					"id" : 4,
-					"implemented" : true,
-					"kind" : "function",
-					"modifiers" : [],
-					"name" : "faa",
-					"nodeType" : "FunctionDefinition",
-					"overrides" : null,
-					"parameters" : 
-					{
-						"id" : 1,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "26:2:1"
-					},
-					"returnParameters" : 
-					{
-						"id" : 2,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "36:0:1"
-					},
-					"scope" : 5,
-					"src" : "14:24:1",
-					"stateMutability" : "nonpayable",
-					"superFunction" : null,
-					"visibility" : "public"
-				}
-			],
-			"scope" : 32,
-			"src" : "0:40:1"
-		},
-		{
-			"baseContracts" : 
-			[
-				{
-					"arguments" : null,
-					"baseName" : 
-					{
-						"contractScope" : null,
-						"id" : 6,
-						"name" : "A",
-						"nodeType" : "UserDefinedTypeName",
-						"referencedDeclaration" : 5,
-						"src" : "55:1:1",
-						"typeDescriptions" : 
-						{
-							"typeIdentifier" : "t_contract$_A_$5",
-							"typeString" : "contract A"
-						}
-					},
-					"id" : 7,
-					"nodeType" : "InheritanceSpecifier",
-					"src" : "55:1:1"
-				}
-			],
-			"contractDependencies" : 
-			[
-				5
-			],
-			"contractKind" : "contract",
-			"documentation" : null,
-			"fullyImplemented" : false,
-			"id" : 16,
-			"linearizedBaseContracts" : 
-			[
-				16,
-				5
-			],
-			"name" : "B",
-			"nodeType" : "ContractDefinition",
-			"nodes" : 
-			[
-				{
-					"body" : null,
-					"documentation" : null,
-					"id" : 10,
-					"implemented" : false,
-					"kind" : "function",
-					"modifiers" : [],
-					"name" : "foo",
-					"nodeType" : "FunctionDefinition",
-					"overrides" : null,
-					"parameters" : 
-					{
-						"id" : 8,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "72:2:1"
-					},
-					"returnParameters" : 
-					{
-						"id" : 9,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "81:0:1"
-					},
-					"scope" : 16,
-					"src" : "60:22:1",
-					"stateMutability" : "nonpayable",
-					"superFunction" : null,
-					"visibility" : "public"
-				},
-				{
-					"body" : 
-					{
-						"id" : 14,
-						"nodeType" : "Block",
-						"src" : "115:2:1",
-						"statements" : []
-					},
-					"documentation" : null,
-					"id" : 15,
-					"implemented" : true,
-					"kind" : "function",
-					"modifiers" : [],
-					"name" : "faa",
-					"nodeType" : "FunctionDefinition",
-					"overrides" : [],
-					"parameters" : 
-					{
-						"id" : 11,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "96:2:1"
-					},
-					"returnParameters" : 
-					{
-						"id" : 13,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "115:0:1"
-					},
-					"scope" : 16,
-					"src" : "84:33:1",
-					"stateMutability" : "nonpayable",
-					"superFunction" : 4,
-					"visibility" : "public"
-				}
-			],
-			"scope" : 32,
-			"src" : "41:78:1"
-		},
-		{
-			"baseContracts" : 
-			[
-				{
-					"arguments" : null,
-					"baseName" : 
-					{
-						"contractScope" : null,
-						"id" : 17,
-						"name" : "B",
-						"nodeType" : "UserDefinedTypeName",
-						"referencedDeclaration" : 16,
-						"src" : "134:1:1",
-						"typeDescriptions" : 
-						{
-							"typeIdentifier" : "t_contract$_B_$16",
-							"typeString" : "contract B"
-						}
-					},
-					"id" : 18,
-					"nodeType" : "InheritanceSpecifier",
-					"src" : "134:1:1"
-				}
-			],
-			"contractDependencies" : 
-			[
-				5,
-				16
-			],
-			"contractKind" : "contract",
-			"documentation" : null,
-			"fullyImplemented" : true,
-			"id" : 31,
-			"linearizedBaseContracts" : 
-			[
-				31,
-				16,
-				5
-			],
-			"name" : "C",
-			"nodeType" : "ContractDefinition",
-			"nodes" : 
-			[
-				{
-					"body" : 
-					{
-						"id" : 22,
-						"nodeType" : "Block",
-						"src" : "170:3:1",
-						"statements" : []
-					},
-					"documentation" : null,
-					"id" : 23,
-					"implemented" : true,
-					"kind" : "function",
-					"modifiers" : [],
-					"name" : "foo",
-					"nodeType" : "FunctionDefinition",
-					"overrides" : [],
-					"parameters" : 
-					{
-						"id" : 19,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "151:2:1"
-					},
-					"returnParameters" : 
-					{
-						"id" : 21,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "170:0:1"
-					},
-					"scope" : 31,
-					"src" : "139:34:1",
-					"stateMutability" : "nonpayable",
-					"superFunction" : 10,
-					"visibility" : "public"
-				},
-				{
-					"body" : 
-					{
-						"id" : 29,
-						"nodeType" : "Block",
-						"src" : "212:2:1",
-						"statements" : []
-					},
-					"documentation" : null,
-					"id" : 30,
-					"implemented" : true,
-					"kind" : "function",
-					"modifiers" : [],
-					"name" : "faa",
-					"nodeType" : "FunctionDefinition",
-					"overrides" : 
-					[
-						{
-							"contractScope" : null,
-							"id" : 25,
-							"name" : "A",
-							"nodeType" : "UserDefinedTypeName",
-							"referencedDeclaration" : 5,
-							"src" : "206:1:1",
-							"typeDescriptions" : 
-							{
-								"typeIdentifier" : "t_contract$_A_$5",
-								"typeString" : "contract A"
-							}
-						},
-						{
-							"contractScope" : null,
-							"id" : 26,
-							"name" : "B",
-							"nodeType" : "UserDefinedTypeName",
-							"referencedDeclaration" : 16,
-							"src" : "209:1:1",
-							"typeDescriptions" : 
-							{
-								"typeIdentifier" : "t_contract$_B_$16",
-								"typeString" : "contract B"
-							}
-						}
-					],
-					"parameters" : 
-					{
-						"id" : 24,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "187:2:1"
-					},
-					"returnParameters" : 
-					{
-						"id" : 28,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "212:0:1"
-					},
-					"scope" : 31,
-					"src" : "175:39:1",
-					"stateMutability" : "nonpayable",
-					"superFunction" : 15,
-					"visibility" : "public"
-				}
-			],
-			"scope" : 32,
-			"src" : "120:96:1"
-		}
-	],
-	"src" : "0:217:1"
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "A":
+    [
+      5
+    ],
+    "B":
+    [
+      16
+    ],
+    "C":
+    [
+      31
+    ]
+  },
+  "id": 32,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 5,
+      "linearizedBaseContracts":
+      [
+        5
+      ],
+      "name": "A",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 3,
+            "nodeType": "Block",
+            "src": "36:2:1",
+            "statements": []
+          },
+          "documentation": null,
+          "id": 4,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "faa",
+          "nodeType": "FunctionDefinition",
+          "overrides": null,
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "26:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "36:0:1"
+          },
+          "scope": 5,
+          "src": "14:24:1",
+          "stateMutability": "nonpayable",
+          "superFunction": null,
+          "visibility": "public"
+        }
+      ],
+      "scope": 32,
+      "src": "0:40:1"
+    },
+    {
+      "baseContracts":
+      [
+        {
+          "arguments": null,
+          "baseName":
+          {
+            "contractScope": null,
+            "id": 6,
+            "name": "A",
+            "nodeType": "UserDefinedTypeName",
+            "referencedDeclaration": 5,
+            "src": "55:1:1",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_contract$_A_$5",
+              "typeString": "contract A"
+            }
+          },
+          "id": 7,
+          "nodeType": "InheritanceSpecifier",
+          "src": "55:1:1"
+        }
+      ],
+      "contractDependencies":
+      [
+        5
+      ],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": false,
+      "id": 16,
+      "linearizedBaseContracts":
+      [
+        16,
+        5
+      ],
+      "name": "B",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body": null,
+          "documentation": null,
+          "id": 10,
+          "implemented": false,
+          "kind": "function",
+          "modifiers": [],
+          "name": "foo",
+          "nodeType": "FunctionDefinition",
+          "overrides": null,
+          "parameters":
+          {
+            "id": 8,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "72:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 9,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "81:0:1"
+          },
+          "scope": 16,
+          "src": "60:22:1",
+          "stateMutability": "nonpayable",
+          "superFunction": null,
+          "visibility": "public"
+        },
+        {
+          "body":
+          {
+            "id": 14,
+            "nodeType": "Block",
+            "src": "115:2:1",
+            "statements": []
+          },
+          "documentation": null,
+          "id": 15,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "faa",
+          "nodeType": "FunctionDefinition",
+          "overrides": [],
+          "parameters":
+          {
+            "id": 11,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "96:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 13,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "115:0:1"
+          },
+          "scope": 16,
+          "src": "84:33:1",
+          "stateMutability": "nonpayable",
+          "superFunction": 4,
+          "visibility": "public"
+        }
+      ],
+      "scope": 32,
+      "src": "41:78:1"
+    },
+    {
+      "baseContracts":
+      [
+        {
+          "arguments": null,
+          "baseName":
+          {
+            "contractScope": null,
+            "id": 17,
+            "name": "B",
+            "nodeType": "UserDefinedTypeName",
+            "referencedDeclaration": 16,
+            "src": "134:1:1",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_contract$_B_$16",
+              "typeString": "contract B"
+            }
+          },
+          "id": 18,
+          "nodeType": "InheritanceSpecifier",
+          "src": "134:1:1"
+        }
+      ],
+      "contractDependencies":
+      [
+        5,
+        16
+      ],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 31,
+      "linearizedBaseContracts":
+      [
+        31,
+        16,
+        5
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 22,
+            "nodeType": "Block",
+            "src": "170:3:1",
+            "statements": []
+          },
+          "documentation": null,
+          "id": 23,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "foo",
+          "nodeType": "FunctionDefinition",
+          "overrides": [],
+          "parameters":
+          {
+            "id": 19,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "151:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 21,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "170:0:1"
+          },
+          "scope": 31,
+          "src": "139:34:1",
+          "stateMutability": "nonpayable",
+          "superFunction": 10,
+          "visibility": "public"
+        },
+        {
+          "body":
+          {
+            "id": 29,
+            "nodeType": "Block",
+            "src": "212:2:1",
+            "statements": []
+          },
+          "documentation": null,
+          "id": 30,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "faa",
+          "nodeType": "FunctionDefinition",
+          "overrides":
+          [
+            {
+              "contractScope": null,
+              "id": 25,
+              "name": "A",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 5,
+              "src": "206:1:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_contract$_A_$5",
+                "typeString": "contract A"
+              }
+            },
+            {
+              "contractScope": null,
+              "id": 26,
+              "name": "B",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 16,
+              "src": "209:1:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_contract$_B_$16",
+                "typeString": "contract B"
+              }
+            }
+          ],
+          "parameters":
+          {
+            "id": 24,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "187:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 28,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "212:0:1"
+          },
+          "scope": 31,
+          "src": "175:39:1",
+          "stateMutability": "nonpayable",
+          "superFunction": 15,
+          "visibility": "public"
+        }
+      ],
+      "scope": 32,
+      "src": "120:96:1"
+    }
+  ],
+  "src": "0:217:1"
 }

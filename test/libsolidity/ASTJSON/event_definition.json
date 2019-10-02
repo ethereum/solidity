@@ -1,50 +1,50 @@
 {
-	"absolutePath" : "a",
-	"exportedSymbols" : 
-	{
-		"C" : 
-		[
-			3
-		]
-	},
-	"id" : 4,
-	"nodeType" : "SourceUnit",
-	"nodes" : 
-	[
-		{
-			"baseContracts" : [],
-			"contractDependencies" : [],
-			"contractKind" : "contract",
-			"documentation" : null,
-			"fullyImplemented" : true,
-			"id" : 3,
-			"linearizedBaseContracts" : 
-			[
-				3
-			],
-			"name" : "C",
-			"nodeType" : "ContractDefinition",
-			"nodes" : 
-			[
-				{
-					"anonymous" : false,
-					"documentation" : null,
-					"id" : 2,
-					"name" : "E",
-					"nodeType" : "EventDefinition",
-					"parameters" : 
-					{
-						"id" : 1,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "20:2:1"
-					},
-					"src" : "13:10:1"
-				}
-			],
-			"scope" : 4,
-			"src" : "0:25:1"
-		}
-	],
-	"src" : "0:26:1"
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      3
+    ]
+  },
+  "id": 4,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 3,
+      "linearizedBaseContracts":
+      [
+        3
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "anonymous": false,
+          "documentation": null,
+          "id": 2,
+          "name": "E",
+          "nodeType": "EventDefinition",
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "20:2:1"
+          },
+          "src": "13:10:1"
+        }
+      ],
+      "scope": 4,
+      "src": "0:25:1"
+    }
+  ],
+  "src": "0:26:1"
 }
