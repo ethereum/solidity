@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(multiline_comment_at_eos)
 
 BOOST_AUTO_TEST_CASE(regular_line_break_in_single_line_comment)
 {
-	for (auto const& nl: {"\r", "\n"})
+	for (auto const& nl: {"\r", "\n", "\r\n"})
 	{
 		Scanner scanner(CharStream("// abc " + string(nl) + " def ", ""));
 		BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "");
@@ -595,12 +595,28 @@ BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_single_line_comment)
 
 BOOST_AUTO_TEST_CASE(regular_line_breaks_in_single_line_doc_comment)
 {
-	for (auto const& nl: {"\r", "\n"})
+	for (auto const& nl: {"\r", "\n", "\r\n"})
 	{
 		Scanner scanner(CharStream("/// abc " + string(nl) + " def ", ""));
 		BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "abc ");
 		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
 		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
+		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(regular_line_breaks_in_multiline_doc_comment)
+{
+	// Test CR, LF, CRLF as line valid terminators for code comments.
+	// Any accepted non-LF is being canonicalized to LF.
+	for (auto const& nl : {"\r"s, "\n"s, "\r\n"s})
+	{
+		Scanner scanner{CharStream{"/// Hello" + nl + "/// World" + nl + "ident", ""}};
+		auto const& lit = scanner.currentCommentLiteral();
+		BOOST_CHECK_EQUAL(lit, "Hello\n World");
+		BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "Hello\n World");
+		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "ident");
 		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 	}
 }
@@ -622,9 +638,9 @@ BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_single_line_doc_comment)
 
 BOOST_AUTO_TEST_CASE(regular_line_breaks_in_strings)
 {
-	for (auto const& nl: {"\n", "\r"})
+	for (auto const& nl: {"\r"s, "\n"s, "\r\n"s})
 	{
-		Scanner scanner(CharStream("\"abc " + string(nl) + " def\"", ""));
+		Scanner scanner(CharStream("\"abc " + nl + " def\"", ""));
 		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 		BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");

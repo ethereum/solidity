@@ -5,4 +5,4 @@ library A {}
 ==== Source: c ====
 import {A} from "./a"; import {A} from "./b";
 // ----
-// DeclarationError: (c:23-45): Identifier already declared.
+// DeclarationError: (c:31-32): Identifier already declared.

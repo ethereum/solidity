@@ -2086,6 +2086,8 @@ unsigned StructType::calldataOffsetOfMember(std::string const& _member) const
 
 bool StructType::isDynamicallyEncoded() const
 {
+	if (recursive())
+		return true;
 	solAssert(interfaceType(false).get(), "");
 	for (auto t: memoryMemberTypes())
 	{
