@@ -22,9 +22,8 @@ a contract where the goal is to send the most money to the
 contract in order to become the "richest", inspired by
 `King of the Ether <https://www.kingoftheether.com/>`_.
 
-In the following contract, if you are usurped as the richest,
-you will receive the funds of the person who has gone on to
-become the new richest.
+In the following contract, if you are no longer the richest,
+you receive the funds of the person who is now the richest.
 
 ::
 
