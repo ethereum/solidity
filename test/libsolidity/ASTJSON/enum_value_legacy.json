@@ -1,78 +1,78 @@
 {
-	"attributes" : 
-	{
-		"absolutePath" : "a",
-		"exportedSymbols" : 
-		{
-			"C" : 
-			[
-				4
-			]
-		}
-	},
-	"children" : 
-	[
-		{
-			"attributes" : 
-			{
-				"baseContracts" : 
-				[
-					null
-				],
-				"contractDependencies" : 
-				[
-					null
-				],
-				"contractKind" : "contract",
-				"documentation" : null,
-				"fullyImplemented" : true,
-				"linearizedBaseContracts" : 
-				[
-					4
-				],
-				"name" : "C",
-				"scope" : 5
-			},
-			"children" : 
-			[
-				{
-					"attributes" : 
-					{
-						"canonicalName" : "C.E",
-						"name" : "E"
-					},
-					"children" : 
-					[
-						{
-							"attributes" : 
-							{
-								"name" : "A"
-							},
-							"id" : 1,
-							"name" : "EnumValue",
-							"src" : "22:1:1"
-						},
-						{
-							"attributes" : 
-							{
-								"name" : "B"
-							},
-							"id" : 2,
-							"name" : "EnumValue",
-							"src" : "25:1:1"
-						}
-					],
-					"id" : 3,
-					"name" : "EnumDefinition",
-					"src" : "13:15:1"
-				}
-			],
-			"id" : 4,
-			"name" : "ContractDefinition",
-			"src" : "0:30:1"
-		}
-	],
-	"id" : 5,
-	"name" : "SourceUnit",
-	"src" : "0:31:1"
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        4
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          4
+        ],
+        "name": "C",
+        "scope": 5
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "canonicalName": "C.E",
+            "name": "E"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "name": "A"
+              },
+              "id": 1,
+              "name": "EnumValue",
+              "src": "22:1:1"
+            },
+            {
+              "attributes":
+              {
+                "name": "B"
+              },
+              "id": 2,
+              "name": "EnumValue",
+              "src": "25:1:1"
+            }
+          ],
+          "id": 3,
+          "name": "EnumDefinition",
+          "src": "13:15:1"
+        }
+      ],
+      "id": 4,
+      "name": "ContractDefinition",
+      "src": "0:30:1"
+    }
+  ],
+  "id": 5,
+  "name": "SourceUnit",
+  "src": "0:31:1"
 }
