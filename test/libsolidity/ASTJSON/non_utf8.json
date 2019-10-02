@@ -1,124 +1,124 @@
 {
-	"absolutePath" : "a",
-	"exportedSymbols" : 
-	{
-		"C" : 
-		[
-			8
-		]
-	},
-	"id" : 9,
-	"nodeType" : "SourceUnit",
-	"nodes" : 
-	[
-		{
-			"baseContracts" : [],
-			"contractDependencies" : [],
-			"contractKind" : "contract",
-			"documentation" : null,
-			"fullyImplemented" : true,
-			"id" : 8,
-			"linearizedBaseContracts" : 
-			[
-				8
-			],
-			"name" : "C",
-			"nodeType" : "ContractDefinition",
-			"nodes" : 
-			[
-				{
-					"body" : 
-					{
-						"id" : 6,
-						"nodeType" : "Block",
-						"src" : "33:20:1",
-						"statements" : 
-						[
-							{
-								"assignments" : 
-								[
-									3
-								],
-								"declarations" : 
-								[
-									{
-										"constant" : false,
-										"id" : 3,
-										"name" : "x",
-										"nodeType" : "VariableDeclaration",
-										"overrides" : null,
-										"scope" : 6,
-										"src" : "35:5:1",
-										"stateVariable" : false,
-										"storageLocation" : "default",
-										"typeDescriptions" : 
-										{
-											"typeIdentifier" : "t_string_memory_ptr",
-											"typeString" : "string"
-										},
-										"typeName" : null,
-										"value" : null,
-										"visibility" : "internal"
-									}
-								],
-								"id" : 5,
-								"initialValue" : 
-								{
-									"argumentTypes" : null,
-									"hexValue" : "ff",
-									"id" : 4,
-									"isConstant" : false,
-									"isLValue" : false,
-									"isPure" : true,
-									"kind" : "string",
-									"lValueRequested" : false,
-									"nodeType" : "Literal",
-									"src" : "43:7:1",
-									"subdenomination" : null,
-									"typeDescriptions" : 
-									{
-										"typeIdentifier" : "t_stringliteral_8b1a944cf13a9a1c08facb2c9e98623ef3254d2ddb48113885c3e8e97fec8db9",
-										"typeString" : "literal_string (contains invalid UTF-8 sequence at position 0)"
-									},
-									"value" : null
-								},
-								"nodeType" : "VariableDeclarationStatement",
-								"src" : "35:15:1"
-							}
-						]
-					},
-					"documentation" : null,
-					"id" : 7,
-					"implemented" : true,
-					"kind" : "function",
-					"modifiers" : [],
-					"name" : "f",
-					"nodeType" : "FunctionDefinition",
-					"overrides" : null,
-					"parameters" : 
-					{
-						"id" : 1,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "23:2:1"
-					},
-					"returnParameters" : 
-					{
-						"id" : 2,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "33:0:1"
-					},
-					"scope" : 8,
-					"src" : "13:40:1",
-					"stateMutability" : "nonpayable",
-					"superFunction" : null,
-					"visibility" : "public"
-				}
-			],
-			"scope" : 9,
-			"src" : "0:55:1"
-		}
-	],
-	"src" : "0:56:1"
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      8
+    ]
+  },
+  "id": 9,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 8,
+      "linearizedBaseContracts":
+      [
+        8
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 6,
+            "nodeType": "Block",
+            "src": "33:20:1",
+            "statements":
+            [
+              {
+                "assignments":
+                [
+                  3
+                ],
+                "declarations":
+                [
+                  {
+                    "constant": false,
+                    "id": 3,
+                    "name": "x",
+                    "nodeType": "VariableDeclaration",
+                    "overrides": null,
+                    "scope": 6,
+                    "src": "35:5:1",
+                    "stateVariable": false,
+                    "storageLocation": "default",
+                    "typeDescriptions":
+                    {
+                      "typeIdentifier": "t_string_memory_ptr",
+                      "typeString": "string"
+                    },
+                    "typeName": null,
+                    "value": null,
+                    "visibility": "internal"
+                  }
+                ],
+                "id": 5,
+                "initialValue":
+                {
+                  "argumentTypes": null,
+                  "hexValue": "ff",
+                  "id": 4,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "43:7:1",
+                  "subdenomination": null,
+                  "typeDescriptions":
+                  {
+                    "typeIdentifier": "t_stringliteral_8b1a944cf13a9a1c08facb2c9e98623ef3254d2ddb48113885c3e8e97fec8db9",
+                    "typeString": "literal_string (contains invalid UTF-8 sequence at position 0)"
+                  },
+                  "value": null
+                },
+                "nodeType": "VariableDeclarationStatement",
+                "src": "35:15:1"
+              }
+            ]
+          },
+          "documentation": null,
+          "id": 7,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "f",
+          "nodeType": "FunctionDefinition",
+          "overrides": null,
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "23:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "33:0:1"
+          },
+          "scope": 8,
+          "src": "13:40:1",
+          "stateMutability": "nonpayable",
+          "superFunction": null,
+          "visibility": "public"
+        }
+      ],
+      "scope": 9,
+      "src": "0:55:1"
+    }
+  ],
+  "src": "0:56:1"
 }

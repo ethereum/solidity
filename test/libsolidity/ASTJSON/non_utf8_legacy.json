@@ -1,158 +1,158 @@
 {
-	"attributes" : 
-	{
-		"absolutePath" : "a",
-		"exportedSymbols" : 
-		{
-			"C" : 
-			[
-				8
-			]
-		}
-	},
-	"children" : 
-	[
-		{
-			"attributes" : 
-			{
-				"baseContracts" : 
-				[
-					null
-				],
-				"contractDependencies" : 
-				[
-					null
-				],
-				"contractKind" : "contract",
-				"documentation" : null,
-				"fullyImplemented" : true,
-				"linearizedBaseContracts" : 
-				[
-					8
-				],
-				"name" : "C",
-				"scope" : 9
-			},
-			"children" : 
-			[
-				{
-					"attributes" : 
-					{
-						"documentation" : null,
-						"implemented" : true,
-						"isConstructor" : false,
-						"kind" : "function",
-						"modifiers" : 
-						[
-							null
-						],
-						"name" : "f",
-						"overrides" : null,
-						"scope" : 8,
-						"stateMutability" : "nonpayable",
-						"superFunction" : null,
-						"visibility" : "public"
-					},
-					"children" : 
-					[
-						{
-							"attributes" : 
-							{
-								"parameters" : 
-								[
-									null
-								]
-							},
-							"children" : [],
-							"id" : 1,
-							"name" : "ParameterList",
-							"src" : "23:2:1"
-						},
-						{
-							"attributes" : 
-							{
-								"parameters" : 
-								[
-									null
-								]
-							},
-							"children" : [],
-							"id" : 2,
-							"name" : "ParameterList",
-							"src" : "33:0:1"
-						},
-						{
-							"children" : 
-							[
-								{
-									"attributes" : 
-									{
-										"assignments" : 
-										[
-											3
-										]
-									},
-									"children" : 
-									[
-										{
-											"attributes" : 
-											{
-												"constant" : false,
-												"name" : "x",
-												"overrides" : null,
-												"scope" : 6,
-												"stateVariable" : false,
-												"storageLocation" : "default",
-												"type" : "string",
-												"typeName" : null,
-												"value" : null,
-												"visibility" : "internal"
-											},
-											"children" : [],
-											"id" : 3,
-											"name" : "VariableDeclaration",
-											"src" : "35:5:1"
-										},
-										{
-											"attributes" : 
-											{
-												"argumentTypes" : null,
-												"hexvalue" : "ff",
-												"isConstant" : false,
-												"isLValue" : false,
-												"isPure" : true,
-												"lValueRequested" : false,
-												"subdenomination" : null,
-												"token" : "string",
-												"type" : "literal_string (contains invalid UTF-8 sequence at position 0)",
-												"value" : null
-											},
-											"id" : 4,
-											"name" : "Literal",
-											"src" : "43:7:1"
-										}
-									],
-									"id" : 5,
-									"name" : "VariableDeclarationStatement",
-									"src" : "35:15:1"
-								}
-							],
-							"id" : 6,
-							"name" : "Block",
-							"src" : "33:20:1"
-						}
-					],
-					"id" : 7,
-					"name" : "FunctionDefinition",
-					"src" : "13:40:1"
-				}
-			],
-			"id" : 8,
-			"name" : "ContractDefinition",
-			"src" : "0:55:1"
-		}
-	],
-	"id" : 9,
-	"name" : "SourceUnit",
-	"src" : "0:56:1"
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        8
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          8
+        ],
+        "name": "C",
+        "scope": 9
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "documentation": null,
+            "implemented": true,
+            "isConstructor": false,
+            "kind": "function",
+            "modifiers":
+            [
+              null
+            ],
+            "name": "f",
+            "overrides": null,
+            "scope": 8,
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 1,
+              "name": "ParameterList",
+              "src": "23:2:1"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 2,
+              "name": "ParameterList",
+              "src": "33:0:1"
+            },
+            {
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "assignments":
+                    [
+                      3
+                    ]
+                  },
+                  "children":
+                  [
+                    {
+                      "attributes":
+                      {
+                        "constant": false,
+                        "name": "x",
+                        "overrides": null,
+                        "scope": 6,
+                        "stateVariable": false,
+                        "storageLocation": "default",
+                        "type": "string",
+                        "typeName": null,
+                        "value": null,
+                        "visibility": "internal"
+                      },
+                      "children": [],
+                      "id": 3,
+                      "name": "VariableDeclaration",
+                      "src": "35:5:1"
+                    },
+                    {
+                      "attributes":
+                      {
+                        "argumentTypes": null,
+                        "hexvalue": "ff",
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "lValueRequested": false,
+                        "subdenomination": null,
+                        "token": "string",
+                        "type": "literal_string (contains invalid UTF-8 sequence at position 0)",
+                        "value": null
+                      },
+                      "id": 4,
+                      "name": "Literal",
+                      "src": "43:7:1"
+                    }
+                  ],
+                  "id": 5,
+                  "name": "VariableDeclarationStatement",
+                  "src": "35:15:1"
+                }
+              ],
+              "id": 6,
+              "name": "Block",
+              "src": "33:20:1"
+            }
+          ],
+          "id": 7,
+          "name": "FunctionDefinition",
+          "src": "13:40:1"
+        }
+      ],
+      "id": 8,
+      "name": "ContractDefinition",
+      "src": "0:55:1"
+    }
+  ],
+  "id": 9,
+  "name": "SourceUnit",
+  "src": "0:56:1"
 }

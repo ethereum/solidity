@@ -1,64 +1,64 @@
 {
-	"attributes" : 
-	{
-		"absolutePath" : "a",
-		"exportedSymbols" : 
-		{
-			"S" : 
-			[
-				3
-			]
-		}
-	},
-	"children" : 
-	[
-		{
-			"attributes" : 
-			{
-				"canonicalName" : "S",
-				"name" : "S",
-				"scope" : 4,
-				"visibility" : "public"
-			},
-			"children" : 
-			[
-				{
-					"attributes" : 
-					{
-						"constant" : false,
-						"name" : "a",
-						"overrides" : null,
-						"scope" : 3,
-						"stateVariable" : false,
-						"storageLocation" : "default",
-						"type" : "uint256",
-						"value" : null,
-						"visibility" : "internal"
-					},
-					"children" : 
-					[
-						{
-							"attributes" : 
-							{
-								"name" : "uint256",
-								"type" : "uint256"
-							},
-							"id" : 1,
-							"name" : "ElementaryTypeName",
-							"src" : "11:7:1"
-						}
-					],
-					"id" : 2,
-					"name" : "VariableDeclaration",
-					"src" : "11:9:1"
-				}
-			],
-			"id" : 3,
-			"name" : "StructDefinition",
-			"src" : "0:23:1"
-		}
-	],
-	"id" : 4,
-	"name" : "SourceUnit",
-	"src" : "0:24:1"
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "S":
+      [
+        3
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "canonicalName": "S",
+        "name": "S",
+        "scope": 4,
+        "visibility": "public"
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "constant": false,
+            "name": "a",
+            "overrides": null,
+            "scope": 3,
+            "stateVariable": false,
+            "storageLocation": "default",
+            "type": "uint256",
+            "value": null,
+            "visibility": "internal"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "name": "uint256",
+                "type": "uint256"
+              },
+              "id": 1,
+              "name": "ElementaryTypeName",
+              "src": "11:7:1"
+            }
+          ],
+          "id": 2,
+          "name": "VariableDeclaration",
+          "src": "11:9:1"
+        }
+      ],
+      "id": 3,
+      "name": "StructDefinition",
+      "src": "0:23:1"
+    }
+  ],
+  "id": 4,
+  "name": "SourceUnit",
+  "src": "0:24:1"
 }
