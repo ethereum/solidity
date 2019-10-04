@@ -24,6 +24,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libyul/AsmData.h>
 #include <libyul/AsmPrinter.h>
+#include <libdevcore/JSON.h>
 #include <libdevcore/UTF8.h>
 #include <boost/algorithm/string/join.hpp>
 
@@ -189,7 +190,7 @@ Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<yul::Identifie
 
 void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node)
 {
-	_stream << toJson(_node);
+	_stream << jsonPrettyPrint(toJson(_node));
 }
 
 Json::Value&& ASTJsonConverter::toJson(ASTNode const& _node)

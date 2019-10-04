@@ -1,70 +1,70 @@
 {
-	"absolutePath" : "a",
-	"exportedSymbols" : 
-	{
-		"C" : 
-		[
-			5
-		]
-	},
-	"id" : 6,
-	"nodeType" : "SourceUnit",
-	"nodes" : 
-	[
-		{
-			"baseContracts" : [],
-			"contractDependencies" : [],
-			"contractKind" : "contract",
-			"documentation" : null,
-			"fullyImplemented" : true,
-			"id" : 5,
-			"linearizedBaseContracts" : 
-			[
-				5
-			],
-			"name" : "C",
-			"nodeType" : "ContractDefinition",
-			"nodes" : 
-			[
-				{
-					"body" : 
-					{
-						"id" : 3,
-						"nodeType" : "Block",
-						"src" : "35:4:1",
-						"statements" : []
-					},
-					"documentation" : null,
-					"id" : 4,
-					"implemented" : true,
-					"kind" : "constructor",
-					"modifiers" : [],
-					"name" : "",
-					"nodeType" : "FunctionDefinition",
-					"parameters" : 
-					{
-						"id" : 1,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "25:2:1"
-					},
-					"returnParameters" : 
-					{
-						"id" : 2,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "35:0:1"
-					},
-					"scope" : 5,
-					"src" : "14:25:1",
-					"stateMutability" : "nonpayable",
-					"superFunction" : null,
-					"visibility" : "public"
-				}
-			],
-			"scope" : 6,
-			"src" : "0:41:1"
-		}
-	],
-	"src" : "0:42:1"
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      5
+    ]
+  },
+  "id": 6,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 5,
+      "linearizedBaseContracts":
+      [
+        5
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 3,
+            "nodeType": "Block",
+            "src": "35:4:1",
+            "statements": []
+          },
+          "documentation": null,
+          "id": 4,
+          "implemented": true,
+          "kind": "constructor",
+          "modifiers": [],
+          "name": "",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "25:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "35:0:1"
+          },
+          "scope": 5,
+          "src": "14:25:1",
+          "stateMutability": "nonpayable",
+          "superFunction": null,
+          "visibility": "public"
+        }
+      ],
+      "scope": 6,
+      "src": "0:41:1"
+    }
+  ],
+  "src": "0:42:1"
 }

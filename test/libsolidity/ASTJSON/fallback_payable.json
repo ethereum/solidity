@@ -1,70 +1,70 @@
 {
-	"absolutePath" : "a",
-	"exportedSymbols" : 
-	{
-		"C" : 
-		[
-			5
-		]
-	},
-	"id" : 6,
-	"nodeType" : "SourceUnit",
-	"nodes" : 
-	[
-		{
-			"baseContracts" : [],
-			"contractDependencies" : [],
-			"contractKind" : "contract",
-			"documentation" : null,
-			"fullyImplemented" : true,
-			"id" : 5,
-			"linearizedBaseContracts" : 
-			[
-				5
-			],
-			"name" : "C",
-			"nodeType" : "ContractDefinition",
-			"nodes" : 
-			[
-				{
-					"body" : 
-					{
-						"id" : 3,
-						"nodeType" : "Block",
-						"src" : "34:2:1",
-						"statements" : []
-					},
-					"documentation" : null,
-					"id" : 4,
-					"implemented" : true,
-					"kind" : "fallback",
-					"modifiers" : [],
-					"name" : "",
-					"nodeType" : "FunctionDefinition",
-					"parameters" : 
-					{
-						"id" : 1,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "22:2:1"
-					},
-					"returnParameters" : 
-					{
-						"id" : 2,
-						"nodeType" : "ParameterList",
-						"parameters" : [],
-						"src" : "34:0:1"
-					},
-					"scope" : 5,
-					"src" : "14:22:1",
-					"stateMutability" : "nonpayable",
-					"superFunction" : null,
-					"visibility" : "external"
-				}
-			],
-			"scope" : 6,
-			"src" : "0:38:1"
-		}
-	],
-	"src" : "0:39:1"
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      5
+    ]
+  },
+  "id": 6,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 5,
+      "linearizedBaseContracts":
+      [
+        5
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 3,
+            "nodeType": "Block",
+            "src": "34:2:1",
+            "statements": []
+          },
+          "documentation": null,
+          "id": 4,
+          "implemented": true,
+          "kind": "fallback",
+          "modifiers": [],
+          "name": "",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "22:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "34:0:1"
+          },
+          "scope": 5,
+          "src": "14:22:1",
+          "stateMutability": "nonpayable",
+          "superFunction": null,
+          "visibility": "external"
+        }
+      ],
+      "scope": 6,
+      "src": "0:38:1"
+    }
+  ],
+  "src": "0:39:1"
 }
