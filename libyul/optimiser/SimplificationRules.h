@@ -38,6 +38,7 @@ namespace solidity::yul
 struct Dialect;
 struct AssignedValue;
 class Pattern;
+class PatternEWasm;
 
 /**
  * Container for all simplification rules.
@@ -55,6 +56,11 @@ public:
 		Dialect const& _dialect,
 		std::map<YulString, AssignedValue> const& _ssaValues
 	);
+	static dev::eth::SimplificationRule<PatternEWasm> const* findFirstMatchEWasm(
+		Expression const& _expr,
+		Dialect const& _dialect,
+		std::map<YulString, Expression const*> const& _ssaValues
+	);
 
 	/// Checks whether the rulelist is non-empty. This is usually enforced
 	/// by the constructor, but we had some issues with static initialization.
@@ -66,11 +72,13 @@ public:
 private:
 	void addRules(std::vector<evmasm::SimplificationRule<Pattern>> const& _rules);
 	void addRule(evmasm::SimplificationRule<Pattern> const& _rule);
+	void addRule(evmasm::SimplificationRule<PatternEWasm> const& _rule);
 
 	void resetMatchGroups() { m_matchGroups.clear(); }
 
 	std::map<unsigned, Expression const*> m_matchGroups;
 	std::vector<evmasm::SimplificationRule<Pattern>> m_rules[256];
+	std::map<YulString, std::vector<evmasm::SimplificationRule<PatternEWasm>>> m_rulesEWasm;
 };
 
 enum class PatternKind
@@ -135,4 +143,57 @@ private:
 	std::map<unsigned, Expression const*>* m_matchGroups = nullptr;
 };
 
+struct EWasmBuiltins
+{
+	using InstrType = YulString;
+	static constexpr auto ADD = "i64.add";
+	static constexpr auto MUL = "i64.mul";
+};
+
+class PatternEWasm
+{
+public:
+	using Builtins = EWasmBuiltins;
+
+	/// Matches any expression.
+	PatternEWasm(PatternKind _kind = PatternKind::Any): m_kind(_kind) {}
+	// Matches a specific constant value.
+	PatternEWasm(uint64_t _value): m_kind(PatternKind::Constant), m_data(std::make_shared<uint64_t>(_value)) {}
+	PatternEWasm(char const* _builtin, std::vector<PatternEWasm> const& _arguments = {}):
+		PatternEWasm(YulString{_builtin}, _arguments)
+	{}
+	// @TODO lifetime of yulstring
+	PatternEWasm(YulString _builtin, std::vector<PatternEWasm> const& _arguments = {});
+	/// Sets this pattern to be part of the match group with the identifier @a _group.
+	/// Inside one rule, all patterns in the same match group have to match expressions from the
+	/// same expression equivalence class.
+	void setMatchGroup(unsigned _group, std::map<unsigned, Expression const*>& _matchGroups);
+	unsigned matchGroup() const { return m_matchGroup; }
+	bool matches(
+		Expression const& _expr,
+		Dialect const& _dialect,
+		std::map<YulString, Expression const*> const& _ssaValues
+	) const;
+
+	std::vector<PatternEWasm> arguments() const { return m_arguments; }
+
+	/// @returns the data of the matched expression if this pattern is part of a match group.
+	uint64_t d() const;
+
+	YulString builtin() const;
+
+	/// Turns this pattern into an actual expression. Should only be called
+	/// for patterns resulting from an action, i.e. with match groups assigned.
+	Expression toExpression(langutil::SourceLocation const& _location) const;
+
+private:
+	Expression const& matchGroupValue() const;
+
+	PatternKind m_kind = PatternKind::Any;
+	YulString m_instruction; ///< Only valid if m_kind is Operation
+	std::shared_ptr<uint64_t> m_data; ///< Only valid if m_kind is Constant
+	std::vector<PatternEWasm> m_arguments;
+	unsigned m_matchGroup = 0;
+	std::map<unsigned, Expression const*>* m_matchGroups = nullptr;
+};
 }

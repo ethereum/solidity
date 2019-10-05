@@ -52,6 +52,30 @@ template <class S> S shlWorkaround(S const& _x, unsigned _amount)
 	return u256((bigint(_x) << _amount) & u256(-1));
 }
 
+template <class Pattern>
+std::vector<SimplificationRule<Pattern>> simplificationRuleListUnified(
+	Pattern A,
+	Pattern B,
+	Pattern ,//C,
+	Pattern,
+	Pattern,
+	Pattern,
+	Pattern
+)
+{
+	return std::vector<SimplificationRule<Pattern>> {
+		// arithmetic on constants
+		{{Pattern::Builtins::ADD, {A, B}}, [=]{ return A.d() + B.d(); }, false},
+		{{Pattern::Builtins::MUL, {A, B}}, [=]{ return A.d() * B.d(); }, false},
+//		{{Pattern::Builtins::SUB, {A, B}}, [=]{ return A.d() - B.d(); }, false},
+//		{{Pattern::Builtins::NOT, {A}}, [=]{ return ~A.d(); }, false},
+//		{{Pattern::Builtins::LT, {A, B}}, [=]() -> u256 { return A.d() < B.d() ? 1 : 0; }, false},
+//		{{Pattern::Builtins::GT, {A, B}}, [=]() -> u256 { return A.d() > B.d() ? 1 : 0; }, false},
+//		{{Pattern::Builtins::EQ, {A, B}}, [=]() -> u256 { return A.d() == B.d() ? 1 : 0; }, false},
+//		{{Pattern::Builtins::ISZERO, {A}}, [=]() -> u256 { return A.d() == 0 ? 1 : 0; }, false},
+	};
+}
+
 // simplificationRuleList below was split up into parts to prevent
 // stack overflows in the JavaScript optimizer for emscripten builds
 // that affected certain browser versions.

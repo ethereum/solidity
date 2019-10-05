@@ -1135,9 +1135,22 @@ void CompilerStack::generateEwasm(ContractDefinition const& _contract)
 	stack.translate(yul::AssemblyStack::Language::Ewasm);
 	stack.optimize();
 
+	cout << "=============== ewasm ================" << endl;
+	cout << ewasmObject.toString(false) << endl;
+
+	// Re-inject into an assembly stack for the eWasm dialect
+	yul::AssemblyStack stack(m_evmVersion, yul::AssemblyStack::Language::EWasm, m_optimiserSettings);
+	// TODO this is a hack for now - provide as structured AST!
+	stack.parseAndAnalyze("", "{}");
+	*stack.parserResult() = move(ewasmObject);
+	stack.optimize();
+
+	cout << "=============== ewasm OPT ================" << endl;
+	cout << stack.parserResult()->toString(false) << endl;
+
 	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
 
-	// Turn into Ewasm text representation.
+	// Turn into eWasm text representation.
 	auto result = stack.assemble(yul::AssemblyStack::Machine::Ewasm);
 	compiledContract.ewasm = std::move(result.assembly);
 	compiledContract.ewasmObject = std::move(*result.bytecode);

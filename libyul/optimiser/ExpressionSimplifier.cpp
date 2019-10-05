@@ -23,6 +23,8 @@
 #include <libyul/optimiser/SimplificationRules.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/AsmData.h>
 
 #include <libsolutil/CommonData.h>
@@ -39,17 +41,25 @@ void ExpressionSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 void ExpressionSimplifier::visit(Expression& _expression)
 {
 	ASTModifier::visit(_expression);
-	while (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_value))
-	{
-		// Do not apply the rule if it removes non-constant parts of the expression.
-		// TODO: The check could actually be less strict than "movable".
-		// We only require "Does not cause side-effects".
-		// Note: References to variables that are only assigned once are always movable,
-		// so if the value of the variable is not movable, the expression that references
-		// the variable still is.
+	if (dynamic_cast<EVMDialect const*>(&m_dialect))
+		while (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_value))
+		{
+			// Do not apply the rule if it removes non-constant parts of the expression.
+			// TODO: The check could actually be less strict than "movable".
+			// We only require "Does not cause side-effects".
+			// Note: References to variables that are only assigned once are always movable,
+			// so if the value of the variable is not movable, the expression that references
+			// the variable still is.
 
-		if (match->removesNonConstants && !SideEffectsCollector(m_dialect, _expression).movable())
-			return;
-		_expression = match->action().toExpression(locationOf(_expression));
-	}
+			if (match->removesNonConstants && !SideEffectsCollector(m_dialect, _expression).movable())
+				return;
+			_expression = match->action().toExpression(locationOf(_expression));
+		}
+	else if (dynamic_cast<WasmDialect const*>(&m_dialect))
+		while (auto match = SimplificationRules::findFirstMatchEWasm(_expression, m_dialect, m_value))
+		{
+			if (match->removesNonConstants && !SideEffectsCollector(m_dialect, _expression).movable())
+				return;
+			_expression = match->action().toExpression(locationOf(_expression));
+		}
 }
