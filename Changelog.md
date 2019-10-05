@@ -2,6 +2,7 @@
 
 Language Features:
  * Allow to obtain the selector of public or external library functions via a member ``.selector``.
+ * Parser: Allow splitting string and hexadecimal string literals into multiple parts.
 
 
 Compiler Features:

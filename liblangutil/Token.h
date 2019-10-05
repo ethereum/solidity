@@ -221,6 +221,7 @@ namespace langutil
 	K(FalseLiteral, "false", 0)                                        \
 	T(Number, nullptr, 0)                                              \
 	T(StringLiteral, nullptr, 0)                                       \
+	T(HexStringLiteral, nullptr, 0)                                    \
 	T(CommentLiteral, nullptr, 0)                                      \
 	\
 	/* Identifiers (not keywords or future reserved words). */         \
