@@ -258,6 +258,7 @@ template <typename T>
 class AbiV2ProtoVisitor
 {
 public:
+	static unsigned constexpr s_maxArrayDimensions = 3;
 	virtual ~AbiV2ProtoVisitor() = default;
 
 	virtual T visit(BoolType const& _node) = 0;
@@ -533,7 +534,6 @@ public:
 		m_indentation = 2;
 		m_stateVar = _stateVar;
 		m_structCounter = m_structStart = _structCounter;
-		m_arrayOfStruct = false;
 	}
 	std::pair<std::string, std::string> visit(BoolType const&) override;
 	std::pair<std::string, std::string> visit(IntegerType const&) override;
@@ -587,7 +587,6 @@ private:
 	bool m_stateVar;
 	unsigned m_structCounter;
 	unsigned m_structStart;
-	bool m_arrayOfStruct;
 };
 
 /// Returns a valid value (as a string) for a given type.
@@ -671,7 +670,7 @@ private:
 class ValidityVisitor: AbiV2ProtoVisitor<bool>
 {
 public:
-	ValidityVisitor() = default;
+	ValidityVisitor(): m_arrayDimensions(0) {}
 
 	bool visit(BoolType const&) override
 	{
@@ -700,6 +699,9 @@ public:
 
 	bool visit(ArrayType const& _type) override
 	{
+		m_arrayDimensions++;
+		if (m_arrayDimensions > s_maxArrayDimensions)
+			return false;
 		return visit(_type.t());
 	}
 
@@ -711,6 +713,7 @@ public:
 		return false;
 	}
 
+	unsigned m_arrayDimensions;
 	using AbiV2ProtoVisitor<bool>::visit;
 };
 

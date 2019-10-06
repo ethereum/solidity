@@ -548,6 +548,7 @@ string TypeVisitor::visit(ArrayType const& _type)
 {
 	if (!ValidityVisitor().visit(_type))
 		return "";
+
 	string baseType = visit(_type.t());
 	solAssert(!baseType.empty(), "");
 	string arrayBraces = _type.is_static() ?
