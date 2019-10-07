@@ -12,16 +12,10 @@
 // {
 //     {
 //         let y := mload(0x20)
-//         for { }
-//         and(y, 8)
-//         {
-//             if y { revert(0, 0) }
-//             y := 0
-//         }
+//         for { } and(y, 8) { if y { revert(0, 0) } }
 //         {
 //             if y { continue }
-//             y := 0
-//             sstore(1, y)
+//             sstore(1, 0)
 //         }
 //         if y { revert(0, 0) }
 //     }
