@@ -819,11 +819,11 @@ ContractLevelChecker::FunctionSet const& ContractLevelChecker::getBaseFunctions(
 
 	for (auto const* base: resolveBaseContracts(*_contract))
 	{
-		FunctionSet tmpSet = convertContainer<FunctionSet>(base->definedFunctions());
+		std::set<FunctionDefinition const*, LessFunction> tmpSet =
+			convertContainer<decltype(tmpSet)>(base->definedFunctions());
 
 		for (auto const& func: getBaseFunctions(base))
-			if (tmpSet.cend() == tmpSet.find(func))
-				tmpSet.insert(func);
+			tmpSet.insert(func);
 
 		set += tmpSet;
 	}
@@ -842,11 +842,11 @@ ContractLevelChecker::ModifierSet const& ContractLevelChecker::getBaseModifiers(
 
 	for (auto const* base: resolveBaseContracts(*_contract))
 	{
-		ModifierSet tmpSet = convertContainer<ModifierSet>(base->functionModifiers());
+		std::set<ModifierDefinition const*, LessFunction> tmpSet =
+			convertContainer<decltype(tmpSet)>(base->functionModifiers());
 
 		for (auto const& mod: getBaseModifiers(base))
-			if (tmpSet.cend() == tmpSet.find(mod))
-				tmpSet.insert(mod);
+			tmpSet.insert(mod);
 
 		set += tmpSet;
 	}
