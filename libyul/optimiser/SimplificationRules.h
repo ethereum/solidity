@@ -98,6 +98,7 @@ class Pattern
 public:
 	using Builtins = evmasm::EVMBuiltins<Pattern>;
 	static constexpr size_t WordSize = 256;
+	static constexpr bool isEWasm = false;
 	using Word = u256;
 
 	/// Matches any expression.
@@ -145,15 +146,51 @@ private:
 
 struct EWasmBuiltins
 {
-	using InstrType = YulString;
+	using InstrType = char const*;
 	static constexpr auto ADD = "i64.add";
+	static constexpr auto SUB = "i64.sub";
 	static constexpr auto MUL = "i64.mul";
+	// TODO check if semantics are equivalent
+	static constexpr auto DIV = "i64.div_u";
+	// TODO check if semantics are equivalent
+	static constexpr auto MOD = "i64.rem_u";
+	static constexpr auto AND = "i64.and";
+	static constexpr auto OR = "i64.or";
+	static constexpr auto XOR = "i64.xor";
+	static constexpr auto SHL = "i64.shl";
+	// TODO check if semantics are equivalent
+	static constexpr auto SHR = "i64.shr_u";
+	static constexpr auto ISZERO = "i64.eqz";
+	static constexpr auto EQ = "i64.eq";
+	static constexpr auto LT = "i64.lt_u";
+	static constexpr auto GT = "i64.gt_u";
+
+	// TODO
+	static constexpr auto SDIV = "";
+	static constexpr auto SMOD = "";
+	static constexpr auto EXP = "";
+	static constexpr auto NOT = "";
+	static constexpr auto SLT = "";
+	static constexpr auto SGT = "";
+	static constexpr auto BYTE = "";
+	static constexpr auto ADDMOD = "";
+	static constexpr auto MULMOD = "";
+	static constexpr auto SIGNEXTEND = "";
+
+	// They cannot be used because they do not return values for eWasm.
+	static constexpr auto ADDRESS = "";
+	static constexpr auto CALLER = "";
+	static constexpr auto ORIGIN = "";
+	static constexpr auto COINBASE = "";
 };
 
 class PatternEWasm
 {
 public:
 	using Builtins = EWasmBuiltins;
+	static constexpr size_t WordSize = 64;
+	using Word = uint64_t;
+	static constexpr bool isEWasm = true;
 
 	/// Matches any expression.
 	PatternEWasm(PatternKind _kind = PatternKind::Any): m_kind(_kind) {}

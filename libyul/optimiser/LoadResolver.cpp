@@ -22,6 +22,7 @@
 #include <libyul/optimiser/LoadResolver.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/SideEffects.h>
@@ -45,15 +46,19 @@ void LoadResolver::visit(Expression& _e)
 {
 	DataFlowAnalyzer::visit(_e);
 
-	if (!dynamic_cast<EVMDialect const*>(&m_dialect))
-		return;
-
-	if (holds_alternative<FunctionCall>(_e))
+	if (_e.type() == typeid(FunctionCall))
 	{
-		FunctionCall const& funCall = std::get<FunctionCall>(_e);
-		if (auto const* builtin = dynamic_cast<EVMDialect const&>(m_dialect).builtin(funCall.functionName.name))
-			if (builtin->instruction)
-				tryResolve(_e, *builtin->instruction, funCall.arguments);
+		FunctionCall const& funCall = boost::get<FunctionCall>(_e);
+		if (dynamic_cast<EVMDialect const*>(&m_dialect))
+		{
+			if (auto const* builtin = dynamic_cast<EVMDialect const&>(m_dialect).builtin(funCall.functionName.name))
+				if (builtin->instruction)
+					tryResolve(_e, *builtin->instruction, funCall.arguments);
+		}
+		else if (dynamic_cast<WasmDialect const*>(&m_dialect))
+			if (m_dialect.builtin(funCall.functionName.name))
+				if (funCall.functionName.name == "i64.load"_yulstring)
+					tryResolve(_e, eth::Instruction::MLOAD, funCall.arguments);
 	}
 }
 

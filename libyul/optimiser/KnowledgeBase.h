@@ -44,7 +44,7 @@ public:
 	{}
 
 	bool knownToBeDifferent(YulString _a, YulString _b);
-	bool knownToBeDifferentByAtLeast32(YulString _a, YulString _b);
+	bool knownToBeDifferentByAtLeastConstant(YulString _a, YulString _b, unsigned _amount);
 	bool knownToBeEqual(YulString _a, YulString _b) const { return _a == _b; }
 
 private:

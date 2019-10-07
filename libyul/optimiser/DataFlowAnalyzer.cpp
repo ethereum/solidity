@@ -27,6 +27,7 @@
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/wasm/WasmDialect.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -42,7 +43,7 @@ using namespace solidity::yul;
 
 void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 {
-	if (auto vars = isSimpleStore(evmasm::Instruction::SSTORE, _statement))
+	if (auto vars = isSimpleStore(true, _statement))
 	{
 		ASTModifier::operator()(_statement);
 		set<YulString> keysToErase;
@@ -56,15 +57,21 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 			m_storage.eraseKey(key);
 		m_storage.set(vars->first, vars->second);
 	}
-	else if (auto vars = isSimpleStore(evmasm::Instruction::MSTORE, _statement))
+	else if (auto vars = isSimpleStore(false, _statement))
 	{
+		//cout << "is simple memory store" << endl;
+
 		ASTModifier::operator()(_statement);
 		set<YulString> keysToErase;
+		unsigned amount = 32;
+		if (dynamic_cast<WasmDialect const*>(&m_dialect))
+			amount = 8;
 		for (auto const& item: m_memory.values)
-			if (!m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, item.first))
+			if (!m_knowledgeBase.knownToBeDifferentByAtLeastConstant(vars->first, item.first, amount))
 				keysToErase.insert(item.first);
 		for (YulString const& key: keysToErase)
 			m_memory.eraseKey(key);
+		//cout << "memory[" << vars->first.str() << "] = " << vars->second.str() << endl;
 		m_memory.set(vars->first, vars->second);
 	}
 	else
@@ -319,7 +326,10 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 	if (sideEffects.invalidatesStorage())
 		m_storage.clear();
 	if (sideEffects.invalidatesMemory())
+	{
+		//cout << "clearing memory" << endl;
 		m_memory.clear();
+	}
 }
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
@@ -328,7 +338,10 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 	if (sideEffects.invalidatesStorage())
 		m_storage.clear();
 	if (sideEffects.invalidatesMemory())
+	{
+		//cout << "clearing memory" << endl;
 		m_memory.clear();
+	}
 }
 
 void DataFlowAnalyzer::joinKnowledge(
@@ -372,31 +385,42 @@ bool DataFlowAnalyzer::inScope(YulString _variableName) const
 	return false;
 }
 
-std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
-	evmasm::Instruction _store,
+boost::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
+	bool _toStorage,
 	ExpressionStatement const& _statement
 ) const
 {
-	yulAssert(
-		_store == evmasm::Instruction::MSTORE ||
-		_store == evmasm::Instruction::SSTORE,
-		""
-	);
-	if (holds_alternative<FunctionCall>(_statement.expression))
+	if (_statement.expression.type() == typeid(FunctionCall))
 	{
-		FunctionCall const& funCall = std::get<FunctionCall>(_statement.expression);
+		bool isStore = false;
+		FunctionCall const& funCall = boost::get<FunctionCall>(_statement.expression);
 		if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+		{
 			if (auto const* builtin = dialect->builtin(funCall.functionName.name))
-				if (builtin->instruction == _store)
-					if (
-						holds_alternative<Identifier>(funCall.arguments.at(0)) &&
-						holds_alternative<Identifier>(funCall.arguments.at(1))
-					)
-					{
-						YulString key = std::get<Identifier>(funCall.arguments.at(0)).name;
-						YulString value = std::get<Identifier>(funCall.arguments.at(1)).name;
-						return make_pair(key, value);
-					}
+				if (builtin->instruction == (_toStorage ? eth::Instruction::SSTORE : eth::Instruction::MSTORE))
+					isStore = true;
+		}
+		else if (dynamic_cast<WasmDialect const*>(&m_dialect))
+			if (m_dialect.builtin(funCall.functionName.name))
+			{
+				//cout << "wasm call to " << funCall.functionName.name.str() << endl;
+				if (funCall.functionName.name == "i64.store"_yulstring && !_toStorage)
+					isStore = true;
+			}
+		//cout << "is store? " << isStore << endl;
+
+		if (
+			isStore &&
+			funCall.arguments.at(0).type() == typeid(Identifier) &&
+			funCall.arguments.at(1).type() == typeid(Identifier)
+		)
+		{
+			YulString key = boost::get<Identifier>(funCall.arguments.at(0)).name;
+			YulString value = boost::get<Identifier>(funCall.arguments.at(1)).name;
+			//cout << "is store!" << endl;
+			return make_pair(key, value);
+		}
+		//cout << "Nope" << endl;
 	}
 	return {};
 }

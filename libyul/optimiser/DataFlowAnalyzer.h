@@ -143,7 +143,7 @@ protected:
 	bool inScope(YulString _variableName) const;
 
 	std::optional<std::pair<YulString, YulString>> isSimpleStore(
-		evmasm::Instruction _store,
+		bool _toStorage,
 		ExpressionStatement const& _statement
 	) const;
 

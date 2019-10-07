@@ -88,7 +88,7 @@ void OptimiserSuite::run(
 	)(*_object.code));
 	Block& ast = *_object.code;
 
-	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast);
+	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::PrintChanges, ast);
 
 	suite.runSequence({
 		VarDeclInitializer::name,
@@ -112,7 +112,7 @@ void OptimiserSuite::run(
 	// None of the above can make stack problems worse.
 
 	size_t codeSize = 0;
-	for (size_t rounds = 0; rounds < 12; ++rounds)
+	for (size_t rounds = 0; rounds < 30; ++rounds)
 	{
 		{
 			size_t newSize = CodeSize::codeSizeIncludingFunctions(ast);

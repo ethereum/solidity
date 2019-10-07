@@ -74,8 +74,10 @@ SimplificationRule<yul::PatternEWasm> const* SimplificationRules::findFirstMatch
 		if (_dialect.builtin(boost::get<FunctionCall>(_expr).functionName.name))
 		{
 			YulString funName = boost::get<FunctionCall>(_expr).functionName.name;
+			cout << "searching for rule for " << funName.str() << endl;
 			for (auto const& rule: rules.m_rulesEWasm[funName])
 			{
+				cout << "searching for rule for " << funName.str() << endl;
 				rules.resetMatchGroups();
 				if (rule.pattern.matches(_expr, _dialect, _ssaValues))
 					if (!rule.feasible || rule.feasible())
@@ -115,7 +117,8 @@ void SimplificationRules::addRule(SimplificationRule<Pattern> const& _rule)
 
 void SimplificationRules::addRule(SimplificationRule<PatternEWasm> const& _rule)
 {
-	m_rulesEWasm[_rule.pattern.builtin()].push_back(_rule);
+	if (!_rule.pattern.builtin().empty())
+		m_rulesEWasm[_rule.pattern.builtin()].push_back(_rule);
 }
 
 SimplificationRules::SimplificationRules()
@@ -161,14 +164,21 @@ SimplificationRules::SimplificationRules()
 		Y.setMatchGroup(6, m_matchGroups);
 		Z.setMatchGroup(7, m_matchGroups);
 
-		for (auto const& r: simplificationRuleListUnified(A, B, C, W, X, Y, Z))
-			addRule(r);
 		using R = dev::eth::SimplificationRule<PatternEWasm>;
-		addRule(R{{"i64.shr_u"_yulstring, {A, B}}, [=]{
-			if (A.d() > 64)
-				return uint64_t(0);
-			return B.d() >> uint64_t(A.d());
+		addRule(R{{"i64.ne"_yulstring, {X, X}}, [=]{ return 0; }, true});
+		addRule(R{{"i64.ne"_yulstring, {A, B}}, [=]{ return A.d() != B.d(); }, false});
+		addRule(R{{"i64.shl"_yulstring, {A, B}}, [=]() -> uint64_t {
+			if (B.d() >= 64)
+				return 0;
+			return A.d() << B.d();
 		}, false});
+		addRule(R{{"i64.shr_u"_yulstring, {A, B}}, [=]() -> uint64_t {
+			if (B.d() >= 64)
+				return 0;
+			return A.d() >> B.d();
+		}, false});
+		for (auto const& r: simplificationRuleList(A, B, C, W, X, Y, Z))
+			addRule(r);
 	}
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
@@ -285,15 +295,11 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 		vector<Expression> arguments;
 		for (auto const& arg: m_arguments)
 			arguments.emplace_back(arg.toExpression(_location));
-
+		// TODO convert to FunctionCall
 		string name = instructionInfo(m_instruction).name;
-		transform(begin(name), end(name), begin(name), [](auto _c) { return tolower(_c); });
+		transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
 
-		return FunctionCall{
-			_location,
-			Identifier{_location, YulString{name}},
-			std::move(arguments)
-		};
+		return FunctionCall{_location, {_location, YulString{name}}, std::move(arguments)};
 	}
 	assertThrow(false, OptimizerException, "Pattern of kind 'any', but no match group.");
 }

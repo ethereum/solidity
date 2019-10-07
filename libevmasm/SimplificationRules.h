@@ -89,6 +89,7 @@ public:
 
 	using Builtins = evmasm::EVMBuiltins<Pattern>;
 	static constexpr size_t WordSize = 256;
+	static constexpr bool isEWasm = false;
 	using Word = u256;
 
 	// Matches a specific constant value.

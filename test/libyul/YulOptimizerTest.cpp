@@ -60,6 +60,7 @@
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMMetrics.h>
+#include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/wasm/WordSizeTransform.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/AsmPrinter.h>
@@ -119,6 +120,12 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 	else
 		m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::Options::get().evmVersion());
 
+	if (m_settings.count("eWasm"))
+	{
+		m_eWasm = true;
+		m_validatedSettings["eWasm"] = "true";
+		m_settings.erase("eWasm");
+	}
 	if (m_settings.count("step"))
 	{
 		m_validatedSettings["step"] = m_settings["step"];
@@ -353,11 +360,13 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	}
 	else if (m_optimizerStep == "fullSuite")
 	{
-		GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
+		unique_ptr<GasMeter> meter;
+		if (auto const* dialect = dynamic_cast<EVMDialect const*>(m_dialect))
+			meter = make_unique<GasMeter>(*dialect, false, 200);
 		yul::Object obj;
 		obj.code = m_ast;
 		obj.analysisInfo = m_analysisInfo;
-		OptimiserSuite::run(*m_dialect, &meter, obj, true);
+		OptimiserSuite::run(*m_dialect, meter.get(), obj, true);
 	}
 	else
 	{
@@ -419,15 +428,20 @@ void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, st
 
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	ErrorList errors;
-	soltestAssert(m_dialect, "");
-	std::tie(m_ast, m_analysisInfo) = yul::test::parse(m_source, *m_dialect, errors);
-	if (!m_ast || !m_analysisInfo || !errors.empty())
+	AssemblyStack stack(
+		dev::test::Options::get().evmVersion(),
+		m_yul ? AssemblyStack::Language::Yul : m_eWasm ? AssemblyStack::Language::EWasm : AssemblyStack::Language::StrictAssembly,
+		dev::solidity::OptimiserSettings::none()
+	);
+	if (!stack.parseAndAnalyze("", m_source) || !stack.errors().empty())
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, errors);
 		return false;
 	}
+	m_dialect = m_yul ? &Dialect::yul() : m_eWasm ? (Dialect const*)&WasmDialect::instance() : &EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion());
+	m_ast = stack.parserResult()->code;
+	m_analysisInfo = stack.parserResult()->analysisInfo;
 	return true;
 }
 
