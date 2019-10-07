@@ -31,7 +31,7 @@
 //         let _4 := lt(or(1, add(pc(), _3)), 1)
 //         let _5 := pc()
 //         let _6 := pc()
-//         pop(or(keccak256(pc(), or(gt(not(pc()), 1), 1)), 1))
+//         pop(keccak256(pc(), or(gt(not(pc()), 1), 1)))
 //         mstore(lt(or(gt(1, or(or(gt(or(or(or(gt(or(gt(_3, _6), 1), _5), _4), _2), 1), 1), _1), 1)), 1), 1), 1)
 //         sstore(not(pc()), 1)
 //         sstore(0, 0)
