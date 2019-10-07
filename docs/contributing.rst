@@ -81,24 +81,36 @@ Thank you for your help!
 Running the compiler tests
 ==========================
 
-The ``./scripts/tests.sh`` script executes most Solidity tests automatically,
-but for quicker feedback, you might want to run specific tests.
+Prerequisites
+-------------
+
+Some tests require the `evmone <https://github.com/ethereum/evmone/releases>`_
+library, others require `libz3 <https://github.com/Z3Prover/z3>`_. The test script
+tries to discover the location of the ``evmone`` library, which can be located in
+the current directory, or the ``deps`` folder in the project top level. The required
+file is called ``libevmone.so`` on Linux systems, ``evmone.dll`` on Windows systems
+and ``libevmone.dylib`` on macOS.
+
+Running the tests
+-----------------
+
+.. TODO: Should?
+
+The ``./scripts/tests.sh`` script executes most Solidity tests automatically, including those found in the soltest suite, as well as commandline tests and compilation tests. For quicker feedback, you should run specific tests.
+
+
+.. TODO: Needs more on how to run individual tests first
+
+If the ``evmone`` library is not found, the relevant tests are skipped.
+
+If the ``libz3`` library is not installed on your system, you should disable the SMT tests:
+``./scripts/soltest.sh --no-smt``.
 
 Solidity includes different types of tests, most of them bundled into the
 `Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest``.
 Running ``build/test/soltest` or its wrapper ``scripts/soltest.sh`` is sufficient for most changes.
 
-Some tests require the ``evmone`` library, others require ``libz3``.
 
-The test system will automatically try to discover the location of the ``evmone`` library
-starting from the current directory. The required file is called ``libevmone.so`` on Linux systems,
-``evmone.dll`` on Windows systems and ``libevmone.dylib`` on MacOS. If it is not found, the relevant tests
-are skipped. To run all tests, download the library from
-`Github <https://github.com/ethereum/evmone/releases/tag/v0.1.0>`_
-and either place it in the project root path or inside the ``deps`` folder.
-
-If you do not have libz3 installed on your system, you should disable the SMT tests:
-``./scripts/soltest.sh --no-smt``.
 
 ``./build/test/soltest --help`` has extensive help on all of the options available.
 See especially:
@@ -133,8 +145,7 @@ For example, you could run the following command in your ``build`` folder:
 This will create symbols such that when you debug a test using the ``--debug`` flag, you will have access to functions and variables in which you can break or print with.
 
 
-The script ``./scripts/tests.sh`` also runs commandline tests and compilation tests
-in addition to those found in ``soltest``.
+
 
 The CI runs additional tests (including ``solc-js`` and testing third party Solidity frameworks) that require compiling the Emscripten target.
 
