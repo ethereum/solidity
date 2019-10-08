@@ -114,7 +114,14 @@ template <typename T>
 pair<string, string> ProtoConverter::processType(T const& _type, bool _isValueType)
 {
 	ostringstream local, global;
-	auto [varName, paramName] = newVarNames(getNextVarCounter());
+	auto [varName, paramName] = newVarNames(getNextVarCounter(), m_isStateVar);
+
+	// Add variable name to the argument list of coder function call
+	if (m_argsCoder.str().empty())
+		m_argsCoder << varName;
+	else
+		m_argsCoder << ", " << varName;
+
 	string location{};
 	if (!m_isStateVar && !_isValueType)
 		location = "memory";
@@ -175,6 +182,16 @@ pair<string, string> ProtoConverter::varDecl(
 		_isValueType,
 		typeStr,
 		_paramName,
+		((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD)
+	);
+	appendTypes(
+		_isValueType,
+		typeStr,
+		((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD)
+	);
+	appendTypedReturn(
+		_isValueType,
+		typeStr,
 		((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD)
 	);
 
@@ -259,6 +276,41 @@ void ProtoConverter::appendTypedParams(
 	}
 }
 
+void ProtoConverter::appendTypes(
+	bool _isValueType,
+	string const& _typeString,
+	Delimiter _delimiter
+)
+{
+	string qualifiedTypeString = (
+		_isValueType ?
+		_typeString :
+		_typeString + " memory"
+	);
+	m_types << Whiskers(R"(<delimiter><type>)")
+		("delimiter", delimiterToString(_delimiter))
+		("type", qualifiedTypeString)
+		.render();
+}
+
+void ProtoConverter::appendTypedReturn(
+	bool _isValueType,
+	string const& _typeString,
+	Delimiter _delimiter
+)
+{
+	string qualifiedTypeString = (
+		_isValueType ?
+		_typeString :
+		_typeString + " memory"
+	);
+	m_typedReturn << Whiskers(R"(<delimiter><type> <varName>)")
+		("delimiter", delimiterToString(_delimiter))
+		("type", qualifiedTypeString)
+		("varName", "lv_" + to_string(m_varCounter - 1))
+		.render();
+}
+
 // Adds the qualifier "calldata" to non-value parameter of an external function.
 void ProtoConverter::appendTypedParamsExternal(
 	bool _isValueType,
@@ -310,7 +362,6 @@ std::string ProtoConverter::typedParametersAsString(CalleeType _calleeType)
 	}
 }
 
-// Test function to be called externally.
 string ProtoConverter::visit(TestFunction const& _x, string const& _storageVarDefs)
 {
 	// TODO: Support more than one but less than N local variables
@@ -320,38 +371,76 @@ string ProtoConverter::visit(TestFunction const& _x, string const& _storageVarDe
 	string localVarDefs = localVarBuffers.second;
 
 	ostringstream testBuffer;
-	string functionDecl = "function test() public returns (uint)";
+
+	string testFunction = Whiskers(R"(
+	function test() public returns (uint) {
+		<?calldata>return test_calldata_coding();</calldata>
+		<?returndata>return test_returndata_coding();</returndata>
+	})")
+	("calldata", m_test == Contract_Test::Contract_Test_CALLDATA_CODER)
+	("returndata", m_test == Contract_Test::Contract_Test_RETURNDATA_CODER)
+	.render();
+
+	string functionDeclCalldata = "function test_calldata_coding() internal returns (uint)";
+	string functionDeclReturndata = "function test_returndata_coding() internal returns (uint)";
+
 	testBuffer << Whiskers(R"(<structTypeDecl>
-	<functionDecl> {
+<testFunction>
+<?calldata>
+	<functionDeclCalldata> {
 <storageVarDefs>
 <localVarDefs>
-<testCode>
-	})")
+<calldataTestCode>
+	}
+<calldataHelperFuncs>
+</calldata>
+<?returndata>
+	<functionDeclReturndata> {
+<returndataTestCode>
+	}
+
+<?varsPresent>
+	function coder_returndata_external() external returns (<return_types>) {
+<storageVarDefs>
+<localVarDefs>
+		return (<return_values>);
+	}
+</varsPresent>
+</returndata>)")
+		("testFunction", testFunction)
+		("calldata", m_test == Contract_Test::Contract_Test_CALLDATA_CODER)
+		("returndata", m_test == Contract_Test::Contract_Test_RETURNDATA_CODER)
+		("calldataHelperFuncs", calldataHelperFunctions())
+		("varsPresent", !m_types.str().empty())
 		("structTypeDecl", structTypeDecl)
-		("functionDecl", functionDecl)
+		("functionDeclCalldata", functionDeclCalldata)
+		("functionDeclReturndata", functionDeclReturndata)
 		("storageVarDefs", _storageVarDefs)
 		("localVarDefs", localVarDefs)
-		("testCode", testCode(_x.invalid_encoding_length()))
+		("calldataTestCode", testCallDataFunction(_x.invalid_encoding_length()))
+		("returndataTestCode", testReturnDataFunction())
+		("return_types", m_types.str())
+		("return_values", m_argsCoder.str())
 		.render();
 	return testBuffer.str();
 }
 
-string ProtoConverter::testCode(unsigned _invalidLength)
+string ProtoConverter::testCallDataFunction(unsigned _invalidLength)
 {
 	return Whiskers(R"(
-		uint returnVal = this.coder_public(<parameterNames>);
+		uint returnVal = this.coder_calldata_public(<argumentNames>);
 		if (returnVal != 0)
 			return returnVal;
 
-		returnVal = this.coder_external(<parameterNames>);
+		returnVal = this.coder_calldata_external(<argumentNames>);
 		if (returnVal != 0)
 			return uint(200000) + returnVal;
 
 		<?atLeastOneVar>
-		bytes memory argumentEncoding = abi.encode(<parameterNames>);
+		bytes memory argumentEncoding = abi.encode(<argumentNames>);
 
 		returnVal = checkEncodedCall(
-			this.coder_public.selector,
+			this.coder_calldata_public.selector,
 			argumentEncoding,
 			<invalidLengthFuzz>,
 			<isRightPadded>
@@ -360,7 +449,7 @@ string ProtoConverter::testCode(unsigned _invalidLength)
 			return returnVal;
 
 		returnVal = checkEncodedCall(
-			this.coder_external.selector,
+			this.coder_calldata_external.selector,
 			argumentEncoding,
 			<invalidLengthFuzz>,
 			<isRightPadded>
@@ -370,26 +459,32 @@ string ProtoConverter::testCode(unsigned _invalidLength)
 		</atLeastOneVar>
 		return 0;
 		)")
-		("parameterNames", dev::suffixedVariableNameList(s_varNamePrefix, 0, m_varCounter))
+		("argumentNames", m_argsCoder.str())
 		("invalidLengthFuzz", std::to_string(_invalidLength))
 		("isRightPadded", isLastDynParamRightPadded() ? "true" : "false")
 		("atLeastOneVar", m_varCounter > 0)
 		.render();
 }
 
-string ProtoConverter::helperFunctions()
+string ProtoConverter::testReturnDataFunction()
 {
-	stringstream helperFuncs;
-	helperFuncs << R"(
-	function bytesCompare(bytes memory a, bytes memory b) internal pure returns (bool) {
-		if(a.length != b.length)
-			return false;
-		for (uint i = 0; i < a.length; i++)
-			if (a[i] != b[i])
-				return false;
-		return true;
-	}
+	return Whiskers(R"(
+<?varsPresent>
+		(<varDecl>) = this.coder_returndata_external();
+<equality_checks>
+</varsPresent>
+		return 0;
+		)")
+		("varsPresent", !m_typedReturn.str().empty())
+		("varDecl", m_typedReturn.str())
+		("equality_checks", m_checks.str())
+		.render();
+}
 
+string ProtoConverter::calldataHelperFunctions()
+{
+	stringstream calldataHelperFuncs;
+	calldataHelperFuncs << R"(
 	/// Accepts function selector, correct argument encoding, and length of
 	/// invalid encoding and returns the correct and incorrect abi encoding
 	/// for calling the function specified by the function selector.
@@ -452,19 +547,18 @@ string ProtoConverter::helperFunctions()
 		if (success == true)
 			return 400001;
 		return 0;
-	}
-	)";
+	})";
 
 	// These are callee functions that encode from storage, decode to
 	// memory/calldata and check if decoded value matches storage value
 	// return true on successful match, false otherwise
-	helperFuncs << Whiskers(R"(
-	function coder_public(<parameters_memory>) public pure returns (uint) {
+	calldataHelperFuncs << Whiskers(R"(
+	function coder_calldata_public(<parameters_memory>) public pure returns (uint) {
 <equality_checks>
 		return 0;
 	}
 
-	function coder_external(<parameters_calldata>) external pure returns (uint) {
+	function coder_calldata_external(<parameters_calldata>) external pure returns (uint) {
 <equality_checks>
 		return 0;
 	}
@@ -473,6 +567,25 @@ string ProtoConverter::helperFunctions()
 	("equality_checks", equalityChecksAsString())
 	("parameters_calldata", typedParametersAsString(CalleeType::EXTERNAL))
 	.render();
+
+	return calldataHelperFuncs.str();
+}
+
+string ProtoConverter::commonHelperFunctions()
+{
+	stringstream helperFuncs;
+	helperFuncs << R"(
+	/// Compares bytes, returning true if they are equal and false otherwise.
+	function bytesCompare(bytes memory a, bytes memory b) internal pure returns (bool) {
+		if(a.length != b.length)
+			return false;
+		for (uint i = 0; i < a.length; i++)
+			if (a[i] != b[i])
+				return false;
+		return true;
+	}
+	)";
+
 	return helperFuncs.str();
 }
 
@@ -480,6 +593,9 @@ void ProtoConverter::visit(Contract const& _x)
 {
 	string pragmas = R"(pragma solidity >=0.0;
 pragma experimental ABIEncoderV2;)";
+
+	// Record test spec
+	m_test = _x.test();
 
 	// TODO: Support more than one but less than N state variables
 	auto storageBuffers = visit(_x.state_vars());
@@ -499,7 +615,7 @@ pragma experimental ABIEncoderV2;)";
 	ostringstream contractBody;
 	contractBody << storageVarDecls
 	             << testFunction
-	             << helperFunctions();
+	             << commonHelperFunctions();
 	m_output << Whiskers(R"(<pragmas>
 <contractStart>
 <contractBody>
