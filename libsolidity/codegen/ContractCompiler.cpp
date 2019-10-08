@@ -564,8 +564,10 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	m_currentFunction = &_function;
 	m_modifierDepth = -1;
 	m_scopeStackHeight.clear();
+	m_context.setModifierDepth(0);
 
 	appendModifierOrFunctionCode();
+	m_context.setModifierDepth(0);
 	solAssert(m_returnTags.empty(), "");
 
 	// Now we need to re-shuffle the stack. For this we keep a record of the stack layout
@@ -1240,6 +1242,7 @@ void ContractCompiler::appendModifierOrFunctionCode()
 	vector<VariableDeclaration const*> addedVariables;
 
 	m_modifierDepth++;
+	m_context.setModifierDepth(m_modifierDepth);
 
 	if (m_modifierDepth >= m_currentFunction->modifiers().size())
 	{
@@ -1293,6 +1296,7 @@ void ContractCompiler::appendModifierOrFunctionCode()
 			m_context.removeVariable(*var);
 	}
 	m_modifierDepth--;
+	m_context.setModifierDepth(m_modifierDepth);
 }
 
 void ContractCompiler::appendStackVariableInitialisation(VariableDeclaration const& _variable)
