@@ -72,7 +72,7 @@ Example
 -------
 
 The following example provides library code to access the code of another contract and
-load it into a ``bytes`` variable. This is not possible with "plain Solidity" and the
+loads it into a ``bytes`` variable. This is not possible with "plain Solidity" and the
 idea is that assembly libraries will be used to enhance the Solidity language.
 
 .. code::
