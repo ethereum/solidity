@@ -415,6 +415,37 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 	checkNatspec(sourceCode, "test", natspec, false);
 }
 
+BOOST_AUTO_TEST_CASE(dev_return_desc_multiple_unamed)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter starts here.
+			/// Since it's a really complicated parameter we need 2 lines
+			/// @param second Documentation for the second parameter
+			/// @return The result of the multiplication
+			/// @return And cookies with nutella
+			function mul(uint a, uint second) public returns (uint, uint) {
+        		uint mul = a * 7;
+				return (mul, second);
+			}
+		}
+	)";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul(uint256,uint256)\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        },\n"
+	"        \"return\": \"The result of the multiplicationAnd cookies with nutella\"\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, "test", natspec, false);
+}
 
 BOOST_AUTO_TEST_CASE(dev_return_desc_multiple)
 {

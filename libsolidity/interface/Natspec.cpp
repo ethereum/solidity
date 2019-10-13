@@ -119,7 +119,7 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 					{
 						string paramName = returnParams.at(n)->name();
 
-						if (!paramName.empty())
+						if (!paramName.empty() && returnParams.size() != 1)
 						{
 							ret[paramName] = Json::Value(i->second.content);
 							n++;
