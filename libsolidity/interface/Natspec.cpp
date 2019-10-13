@@ -99,15 +99,53 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		if (auto fun = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
 		{
 			Json::Value method(devDocumentation(fun->annotation().docTags));
+
+			// add the function, only if we have any documentation to add
 			if (!method.empty())
-				// add the function, only if we have any documentation to add
+			{
+				Json::Value ret(Json::objectValue);
+
+				// for constructors, the "return" node will never exist. invalid tags
+				// will already generate an error within dev::solidity::DocStringAnalyzer.
+				auto returnParams = fun->returnParameters();
+				auto returnDoc = fun->annotation().docTags.equal_range("return");
+
+				if (!returnParams.empty())
+				{
+					// if there is no name then append subsequent return notices like previous behavior
+					string value;
+					unsigned int n = 0;
+					for (auto i = returnDoc.first; i != returnDoc.second; i++)
+					{
+						string paramName = returnParams.at(n)->name();
+
+						if (!paramName.empty())
+						{
+							ret[paramName] = Json::Value(i->second.content);
+							n++;
+						}
+
+						else
+						{
+							value += i->second.content;
+							method["return"] = Json::Value(value);
+						}
+					}
+				}
+
+				if (!ret.empty())
+					method["return"] = ret;
+
 				methods[it.second->externalSignature()] = method;
-		}
+			}
+	  	}
 	}
+
 	doc["methods"] = methods;
 
 	return doc;
 }
+
 
 string Natspec::extractDoc(multimap<string, DocTag> const& _tags, string const& _name)
 {
@@ -128,12 +166,6 @@ Json::Value Natspec::devDocumentation(std::multimap<std::string, DocTag> const& 
 	auto author = extractDoc(_tags, "author");
 	if (!author.empty())
 		json["author"] = author;
-
-	// for constructors, the "return" node will never exist. invalid tags
-	// will already generate an error within dev::solidity::DocStringAnalyzer.
-	auto ret = extractDoc(_tags, "return");
-	if (!ret.empty())
-		json["return"] = ret;
 
 	Json::Value params(Json::objectValue);
 	auto paramRange = _tags.equal_range("param");
