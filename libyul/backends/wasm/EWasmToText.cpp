@@ -160,7 +160,7 @@ string EWasmToText::transform(wasm::FunctionDefinition const& _function)
 		ret += "    (result i64)\n";
 	for (auto const& local: _function.locals)
 		ret += "    (local $" + local.variableName + " i64)\n";
-	ret += indented(joinTransformed(_function.body));
+	ret += indented(joinTransformed(_function.body, '\n'));
 	if (ret.back() != '\n')
 		ret += '\n';
 	ret += ")\n";
