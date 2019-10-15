@@ -17,6 +17,7 @@ Breaking changes:
  * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
  * Natspec JSON Interface: Properly support multiple ``@return`` statements in ``@dev`` documentation and enforce named return parameters to be mentioned documentation.
  * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
+ * AST: Inline assembly is exported as structured JSON instead of plain string.
 
 
 
@@ -46,7 +47,6 @@ Compiler Features:
  * SMTChecker: Support assignments to multi-dimensional arrays and mappings.
  * SMTChecker: Support inheritance and function overriding.
  * EWasm: Experimental EWasm binary output.
-
 
 Bugfixes:
  * Type Checker: Disallow constructor of the same class to be used as modifier

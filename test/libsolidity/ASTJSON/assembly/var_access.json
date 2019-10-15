@@ -1,0 +1,160 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      9
+    ]
+  },
+  "id": 10,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 9,
+      "linearizedBaseContracts":
+      [
+        9
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 7,
+            "nodeType": "Block",
+            "src": "42:51:1",
+            "statements":
+            [
+              {
+                "assignments":
+                [
+                  4
+                ],
+                "declarations":
+                [
+                  {
+                    "constant": false,
+                    "id": 4,
+                    "name": "x",
+                    "nodeType": "VariableDeclaration",
+                    "overrides": null,
+                    "scope": 7,
+                    "src": "52:6:1",
+                    "stateVariable": false,
+                    "storageLocation": "default",
+                    "typeDescriptions":
+                    {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    },
+                    "typeName":
+                    {
+                      "id": 3,
+                      "name": "uint",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "52:4:1",
+                      "typeDescriptions":
+                      {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "value": null,
+                    "visibility": "internal"
+                  }
+                ],
+                "id": 5,
+                "initialValue": null,
+                "nodeType": "VariableDeclarationStatement",
+                "src": "52:6:1"
+              },
+              {
+                "AST":
+                {
+                  "nodeType": "YulBlock",
+                  "src": "77:10:1",
+                  "statements":
+                  [
+                    {
+                      "nodeType": "YulAssignment",
+                      "src": "79:6:1",
+                      "value":
+                      {
+                        "kind": "number",
+                        "nodeType": "YulLiteral",
+                        "src": "84:1:1",
+                        "type": "",
+                        "value": "7"
+                      },
+                      "variableNames":
+                      [
+                        {
+                          "name": "x",
+                          "nodeType": "YulIdentifier",
+                          "src": "79:1:1"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "externalReferences":
+                [
+                  {
+                    "declaration": 4,
+                    "isOffset": false,
+                    "isSlot": false,
+                    "src": "79:1:1",
+                    "valueSize": 1
+                  }
+                ],
+                "id": 6,
+                "nodeType": "InlineAssembly",
+                "src": "68:19:1"
+              }
+            ]
+          },
+          "documentation": null,
+          "id": 8,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "f",
+          "nodeType": "FunctionDefinition",
+          "overrides": null,
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "27:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "42:0:1"
+          },
+          "scope": 9,
+          "src": "17:76:1",
+          "stateMutability": "pure",
+          "superFunction": null,
+          "visibility": "public"
+        }
+      ],
+      "scope": 10,
+      "src": "0:95:1"
+    }
+  ],
+  "src": "0:96:1"
+}

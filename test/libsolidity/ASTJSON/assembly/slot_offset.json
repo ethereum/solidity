@@ -1,0 +1,236 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      11
+    ]
+  },
+  "id": 12,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 11,
+      "linearizedBaseContracts":
+      [
+        11
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "canonicalName": "C.S",
+          "id": 3,
+          "members":
+          [
+            {
+              "constant": false,
+              "id": 2,
+              "name": "x",
+              "nodeType": "VariableDeclaration",
+              "overrides": null,
+              "scope": 3,
+              "src": "28:6:1",
+              "stateVariable": false,
+              "storageLocation": "default",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_uint256",
+                "typeString": "uint256"
+              },
+              "typeName":
+              {
+                "id": 1,
+                "name": "uint",
+                "nodeType": "ElementaryTypeName",
+                "src": "28:4:1",
+                "typeDescriptions":
+                {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              },
+              "value": null,
+              "visibility": "internal"
+            }
+          ],
+          "name": "S",
+          "nodeType": "StructDefinition",
+          "scope": 11,
+          "src": "17:20:1",
+          "visibility": "public"
+        },
+        {
+          "constant": false,
+          "id": 5,
+          "name": "s",
+          "nodeType": "VariableDeclaration",
+          "overrides": null,
+          "scope": 11,
+          "src": "42:3:1",
+          "stateVariable": true,
+          "storageLocation": "default",
+          "typeDescriptions":
+          {
+            "typeIdentifier": "t_struct$_S_$3_storage",
+            "typeString": "struct C.S"
+          },
+          "typeName":
+          {
+            "contractScope": null,
+            "id": 4,
+            "name": "S",
+            "nodeType": "UserDefinedTypeName",
+            "referencedDeclaration": 3,
+            "src": "42:1:1",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_struct$_S_$3_storage_ptr",
+              "typeString": "struct C.S"
+            }
+          },
+          "value": null,
+          "visibility": "internal"
+        },
+        {
+          "body":
+          {
+            "id": 9,
+            "nodeType": "Block",
+            "src": "76:70:1",
+            "statements":
+            [
+              {
+                "AST":
+                {
+                  "nodeType": "YulBlock",
+                  "src": "95:45:1",
+                  "statements":
+                  [
+                    {
+                      "nodeType": "YulVariableDeclaration",
+                      "src": "97:17:1",
+                      "value":
+                      {
+                        "name": "s_offset",
+                        "nodeType": "YulIdentifier",
+                        "src": "106:8:1"
+                      },
+                      "variables":
+                      [
+                        {
+                          "name": "x",
+                          "nodeType": "YulTypedName",
+                          "src": "101:1:1",
+                          "type": ""
+                        }
+                      ]
+                    },
+                    {
+                      "nodeType": "YulVariableDeclaration",
+                      "src": "115:23:1",
+                      "value":
+                      {
+                        "arguments":
+                        [
+                          {
+                            "name": "s_slot",
+                            "nodeType": "YulIdentifier",
+                            "src": "128:6:1"
+                          },
+                          {
+                            "kind": "number",
+                            "nodeType": "YulLiteral",
+                            "src": "136:1:1",
+                            "type": "",
+                            "value": "2"
+                          }
+                        ],
+                        "functionName":
+                        {
+                          "name": "mul",
+                          "nodeType": "YulIdentifier",
+                          "src": "124:3:1"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "124:14:1"
+                      },
+                      "variables":
+                      [
+                        {
+                          "name": "y",
+                          "nodeType": "YulTypedName",
+                          "src": "119:1:1",
+                          "type": ""
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "externalReferences":
+                [
+                  {
+                    "declaration": 5,
+                    "isOffset": true,
+                    "isSlot": false,
+                    "src": "106:8:1",
+                    "valueSize": 1
+                  },
+                  {
+                    "declaration": 5,
+                    "isOffset": false,
+                    "isSlot": true,
+                    "src": "128:6:1",
+                    "valueSize": 1
+                  }
+                ],
+                "id": 8,
+                "nodeType": "InlineAssembly",
+                "src": "86:54:1"
+              }
+            ]
+          },
+          "documentation": null,
+          "id": 10,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "e",
+          "nodeType": "FunctionDefinition",
+          "overrides": null,
+          "parameters":
+          {
+            "id": 6,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "61:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 7,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "76:0:1"
+          },
+          "scope": 11,
+          "src": "51:95:1",
+          "stateMutability": "pure",
+          "superFunction": null,
+          "visibility": "public"
+        }
+      ],
+      "scope": 12,
+      "src": "0:148:1"
+    }
+  ],
+  "src": "0:149:1"
+}

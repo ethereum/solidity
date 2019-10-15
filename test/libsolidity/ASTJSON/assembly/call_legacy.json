@@ -1,0 +1,121 @@
+{
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        6
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "abstract": false,
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          6
+        ],
+        "name": "C",
+        "scope": 7
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "documentation": null,
+            "implemented": true,
+            "isConstructor": false,
+            "kind": "function",
+            "modifiers":
+            [
+              null
+            ],
+            "name": "j",
+            "overrides": null,
+            "scope": 6,
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 1,
+              "name": "ParameterList",
+              "src": "27:2:1"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 2,
+              "name": "ParameterList",
+              "src": "37:0:1"
+            },
+            {
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "externalReferences":
+                    [
+                      null
+                    ],
+                    "operations": "{\n    pop(call(0, 1, 2, 3, 4, 5, 6))\n}"
+                  },
+                  "children": [],
+                  "id": 3,
+                  "name": "InlineAssembly",
+                  "src": "47:43:1"
+                }
+              ],
+              "id": 4,
+              "name": "Block",
+              "src": "37:59:1"
+            }
+          ],
+          "id": 5,
+          "name": "FunctionDefinition",
+          "src": "17:79:1"
+        }
+      ],
+      "id": 6,
+      "name": "ContractDefinition",
+      "src": "0:98:1"
+    }
+  ],
+  "id": 7,
+  "name": "SourceUnit",
+  "src": "0:99:1"
+}
