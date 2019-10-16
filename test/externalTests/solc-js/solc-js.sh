@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
 
-#------------------------------------------------------------------------------
-# Bash script to execute the Solidity tests.
-#
-# The documentation for solidity is hosted at:
-#
-#     https://solidity.readthedocs.org
-#
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
 #
@@ -23,41 +16,43 @@
 # You should have received a copy of the GNU General Public License
 # along with solidity.  If not, see <http://www.gnu.org/licenses/>
 #
-# (c) 2017 solidity contributors.
+# (c) 2019 solidity contributors.
 #------------------------------------------------------------------------------
+source scripts/common.sh
+source test/externalTests/common.sh
 
-set -e
-
-if [ ! -f "$1" -o -z "$2" ]
-then
-  echo "Usage: $0 <path to soljson.js> <version>"
-  exit 1
-fi
-
+verify_version_input "$1" "$2"
 SOLJSON="$1"
 VERSION="$2"
 
-DIR=$(mktemp -d)
-(
-    echo "Preparing solc-js (master_060)..."
-    git clone --depth 1 --branch master_060 https://github.com/ethereum/solc-js "$DIR"
-    cd "$DIR"
-    # disable "prepublish" script which downloads the latest version
-    # (we will replace it anyway and it is often incorrectly cached
-    # on travis)
-    npm config set script.prepublish ''
-    npm install
+function install_fn { echo "Nothing to install."; }
+function compile_fn { echo "Nothing to compile."; }
+function test_fn { npm test; }
 
-    # Replace soljson with current build
-    echo "Replacing soljson.js"
-    rm -f soljson.js
-    cp "$SOLJSON" soljson.js
+function solcjs_test
+{
+    TEST_DIR=$(pwd)
+    SOLCJS_INPUT_DIR="$TEST_DIR"/test/externalTests/solc-js
+
+    # set up solc-js on the branch specified
+    setup master_060
+
+    printLog "Updating index.js file..."
+    echo "require('./determinism.js');" >> test/index.js
+
+    printLog "Copying determinism.js..."
+    cp -f $SOLCJS_INPUT_DIR/determinism.js test/
+
+    printLog "Copying contracts..."
+    cp -Rf $SOLCJS_INPUT_DIR/DAO test/
+
+    run_install install_fn
 
     # Update version (needed for some tests)
     echo "Updating package.json to version $VERSION"
     npm version --allow-same-version --no-git-tag-version $VERSION
 
-    echo "Running solc-js tests..."
-    npm run test
-)
-rm -rf "$DIR"
+    run_test compile_fn test_fn
+}
+
+external_test solc-js solcjs_test

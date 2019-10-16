@@ -32,7 +32,7 @@ function colony_test
 {
     OPTIMIZER_LEVEL=3
     FORCE_ABIv2=false
-    setup https://github.com/JoinColony/colonyNetwork.git develop master
+    truffle_setup https://github.com/JoinColony/colonyNetwork.git develop
     run_install install_fn
 
     CONFIG=$(find_truffle_config)
@@ -42,7 +42,7 @@ function colony_test
     git clone https://github.com/erak/dappsys-monolithic.git -b callvalue-payable-fix dappsys
     cd ..
 
-    run_test compile_fn test_fn
+    truffle_run_test compile_fn test_fn
 }
 
 external_test ColonyNetworks colony_test

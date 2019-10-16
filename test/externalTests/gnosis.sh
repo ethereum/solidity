@@ -31,13 +31,13 @@ function test_fn { npm test; }
 function gnosis_safe_test
 {
     OPTIMIZER_LEVEL=1
-    setup https://github.com/gnosis/safe-contracts.git development
+    truffle_setup https://github.com/gnosis/safe-contracts.git development
     run_install install_fn
 
     CONFIG=$(find_truffle_config)
     replace_libsolc_call
 
-    run_test compile_fn test_fn
+    truffle_run_test compile_fn test_fn
 }
 
 external_test Gnosis-Safe gnosis_safe_test
