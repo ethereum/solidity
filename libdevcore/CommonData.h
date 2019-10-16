@@ -393,23 +393,20 @@ std::vector<T> make_vector(Args&&... _args)
 	return result;
 }
 
-// Function that check if all characters in string are safe and return quoted parametr.
+// Function that check if all characters in string are safe and return quoted parameter.
 // If there is unsafe characters it use "0x" + h256(_value, h256::AlignLeft).hex();
-std::string formatAsStringOrNumber(std::string const &_value)
+std::string formatAsStringOrNumber(std::string const& _value)
 {
 	std::string resultString = "\"";
-	for (int i = 0; i < _value.length; i++)
+	for (auto i:value)
+	//for (int i = 0; i < _value.length; i++)
 	{
-		if (!isalpha(_value[i]))
+		if (!isalpha(i))
 		{
 			return "0x" + h256(_value, h256::AlignLeft).hex();
 		}
-		else
-		{
-			resultString += _value[i];
-		}
 	}
-	return resultString += "\"";
+	return "\"" + _value + "\"";
 }
 
 }

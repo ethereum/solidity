@@ -975,7 +975,7 @@ string ABIFunctions::abiEncodingFunctionStringLiteral(
 			for (size_t i = 0; i < words; ++i)
 			{
 				wordParams[i]["offset"] = to_string(i * 32);
-				wordParams[i]["wordValue"] = "0x" + dev::formatAsStringOrNumber(value.substr(32 * i, 32);
+				wordParams[i]["wordValue"] = dev::formatAsStringOrNumber(value.substr(32 * i, 32);
 			}
 			templ("word", wordParams);
 			return templ.render();
@@ -990,7 +990,7 @@ string ABIFunctions::abiEncodingFunctionStringLiteral(
 				}
 			)");
 			templ("functionName", functionName);
-			templ("wordValue", "0x" + dev::formatAsStringOrNumber(value);
+			templ("wordValue", dev::formatAsStringOrNumber(value);
 			return templ.render();
 		}
 	});

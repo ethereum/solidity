@@ -1756,7 +1756,7 @@ string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const
 			for (size_t i = 0; i < words; ++i)
 			{
 				wordParams[i]["offset"] = to_string(32 + i * 32);
-				wordParams[i]["wordValue"] = "0x" + formatAsStringOrNumber(data.substr(32 * i, 32));
+				wordParams[i]["wordValue"] = formatAsStringOrNumber(data.substr(32 * i, 32));
 			}
 			templ("word", wordParams);
 			return templ.render();
