@@ -86,7 +86,7 @@ EVM_VERSIONS="homestead byzantium"
 
 if [ -z "$CI" ]
 then
-    EVM_VERSIONS+=" constantinople petersburg"
+    EVM_VERSIONS+=" constantinople petersburg istanbul"
 fi
 
 # And then run the Solidity unit-tests in the matrix combination of optimizer / no optimizer

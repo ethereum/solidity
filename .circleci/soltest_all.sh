@@ -29,7 +29,7 @@ set -e
 REPODIR="$(realpath $(dirname $0)/..)"
 
 for OPTIMIZE in 0 1; do
-    for EVM in homestead byzantium constantinople petersburg; do
+    for EVM in homestead byzantium constantinople petersburg istanbul; do
         EVM=$EVM OPTIMIZE=$OPTIMIZE ${REPODIR}/.circleci/soltest.sh
     done
 done

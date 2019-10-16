@@ -34,7 +34,8 @@ static vector<string> s_evmVersions = {
 	"spuriousDragon",
 	"byzantium",
 	"constantinople",
-	"petersburg"
+	"petersburg",
+	"istanbul"
 };
 
 void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
