@@ -25,7 +25,7 @@
 
 #include <libdevcore/Assertions.h>
 
-#include <boost/regex.hpp>
+#include <regex>
 
 using namespace std;
 using namespace dev;
@@ -72,9 +72,9 @@ string Whiskers::render() const
 
 void Whiskers::checkParameterValid(string const& _parameter) const
 {
-	static boost::regex validParam("^" + paramRegex() + "$");
+	static regex validParam("^" + paramRegex() + "$");
 	assertThrow(
-		boost::regex_match(_parameter, validParam),
+		regex_match(_parameter, validParam),
 		WhiskersError,
 		"Parameter" + _parameter + " contains invalid characters."
 	);
@@ -99,6 +99,32 @@ void Whiskers::checkParameterUnknown(string const& _parameter) const
 	);
 }
 
+namespace
+{
+template<class ReplaceCallback>
+string regex_replace(
+	string const& _source,
+	regex const& _pattern,
+	ReplaceCallback _replace,
+	regex_constants::match_flag_type _flags = regex_constants::match_default
+)
+{
+	sregex_iterator curMatch(_source.begin(), _source.end(), _pattern, _flags);
+	sregex_iterator matchEnd;
+	string::const_iterator lastMatchedPos(_source.cbegin());
+	string result;
+	while (curMatch != matchEnd)
+	{
+		result.append(curMatch->prefix().first, curMatch->prefix().second);
+		result.append(_replace(*curMatch));
+		lastMatchedPos = (*curMatch)[0].second;
+		++curMatch;
+	}
+	result.append(lastMatchedPos, _source.cend());
+	return result;
+}
+}
+
 string Whiskers::replace(
 	string const& _template,
 	StringMap const& _parameters,
@@ -106,8 +132,7 @@ string Whiskers::replace(
 	map<string, vector<StringMap>> const& _listParameters
 )
 {
-	using namespace boost;
-	static regex listOrTag("<(" + paramRegex() + ")>|<#(" + paramRegex() + ")>(.*?)</\\2>|<\\?(" + paramRegex() + ")>(.*?)(<!\\4>(.*?))?</\\4>");
+	static regex listOrTag("<(" + paramRegex() + ")>|<#(" + paramRegex() + ")>((?:.|\\r|\\n)*?)</\\2>|<\\?(" + paramRegex() + ")>((?:.|\\r|\\n)*?)(<!\\4>((?:.|\\r|\\n)*?))?</\\4>");
 	return regex_replace(_template, listOrTag, [&](match_results<string::const_iterator> _match) -> string
 	{
 		string tagName(_match[1]);

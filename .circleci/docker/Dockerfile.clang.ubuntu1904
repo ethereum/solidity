@@ -57,7 +57,7 @@ RUN git clone --recursive -b boost-1.69.0 https://github.com/boostorg/boost.git 
     ./bootstrap.sh --with-toolset=clang --prefix=/usr; \
     ./b2 toolset=clang headers; \
     ./b2 toolset=clang variant=release \
-        system regex filesystem unit_test_framework program_options \
+        system filesystem unit_test_framework program_options \
         install -j $(($(nproc)/2)); \
     rm -rf /usr/src/boost
 
