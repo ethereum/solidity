@@ -42,7 +42,6 @@ public:
 	std::string operator()(wasm::StringLiteral const& _literal);
 	std::string operator()(wasm::LocalVariable const& _identifier);
 	std::string operator()(wasm::GlobalVariable const& _identifier);
-	std::string operator()(wasm::Label const& _label);
 	std::string operator()(wasm::BuiltinCall const& _builinCall);
 	std::string operator()(wasm::FunctionCall const& _functionCall);
 	std::string operator()(wasm::LocalAssignment const& _assignment);
@@ -50,6 +49,7 @@ public:
 	std::string operator()(wasm::If const& _if);
 	std::string operator()(wasm::Loop const& _loop);
 	std::string operator()(wasm::Break const& _break);
+	std::string operator()(wasm::BreakIf const& _break);
 	std::string operator()(wasm::Block const& _block);
 
 private:

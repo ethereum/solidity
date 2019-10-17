@@ -33,7 +33,6 @@ struct Literal;
 struct StringLiteral;
 struct LocalVariable;
 struct GlobalVariable;
-struct Label;
 struct FunctionCall;
 struct BuiltinCall;
 struct LocalAssignment;
@@ -42,10 +41,11 @@ struct Block;
 struct If;
 struct Loop;
 struct Break;
+struct BreakIf;
 using Expression = boost::variant<
-	Literal, StringLiteral, LocalVariable, GlobalVariable, Label,
+	Literal, StringLiteral, LocalVariable, GlobalVariable,
 	FunctionCall, BuiltinCall, LocalAssignment, GlobalAssignment,
-	Block, If, Loop, Break
+	Block, If, Loop, Break, BreakIf
 >;
 
 struct Literal { uint64_t value; };
@@ -65,6 +65,7 @@ struct If {
 };
 struct Loop { std::string labelName; std::vector<Expression> statements; };
 struct Break { Label label; };
+struct BreakIf { Label label; std::unique_ptr<Expression> condition; };
 
 struct VariableDeclaration { std::string variableName; };
 struct GlobalVariableDeclaration { std::string variableName; };
