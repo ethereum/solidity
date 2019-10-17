@@ -50,7 +50,6 @@ public:
 	std::string operator()(wasm::If const& _if);
 	std::string operator()(wasm::Loop const& _loop);
 	std::string operator()(wasm::Break const& _break);
-	std::string operator()(wasm::Continue const& _continue);
 	std::string operator()(wasm::Block const& _block);
 
 private:

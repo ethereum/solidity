@@ -42,11 +42,10 @@ struct Block;
 struct If;
 struct Loop;
 struct Break;
-struct Continue;
 using Expression = boost::variant<
 	Literal, StringLiteral, LocalVariable, GlobalVariable, Label,
 	FunctionCall, BuiltinCall, LocalAssignment, GlobalAssignment,
-	Block, If, Loop, Break, Continue
+	Block, If, Loop, Break
 >;
 
 struct Literal { uint64_t value; };
@@ -66,7 +65,6 @@ struct If {
 };
 struct Loop { std::string labelName; std::vector<Expression> statements; };
 struct Break { Label label; };
-struct Continue { Label label; };
 
 struct VariableDeclaration { std::string variableName; };
 struct GlobalVariableDeclaration { std::string variableName; };

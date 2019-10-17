@@ -128,11 +128,6 @@ string EWasmToText::operator()(wasm::Break const& _break)
 	return "(break $" + _break.label.name + ")\n";
 }
 
-string EWasmToText::operator()(wasm::Continue const& _continue)
-{
-	return "(continue $" + _continue.label.name + ")\n";
-}
-
 string EWasmToText::operator()(wasm::Block const& _block)
 {
 	string label = _block.labelName.empty() ? "" : " $" + _block.labelName;
