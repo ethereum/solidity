@@ -133,6 +133,8 @@ elseif (DEFINED MSVC)
 	add_compile_options(-D_WIN32_WINNT=0x0600)		# declare Windows Vista API requirement
 	add_compile_options(-DNOMINMAX)					# undefine windows.h MAX && MIN macros cause it cause conflicts with std::min && std::max functions
 	add_compile_options(/utf-8)					# enable utf-8 encoding (solves warning 4819)
+	add_compile_options(-DBOOST_REGEX_NO_LIB)		# disable automatic boost::regex library selection
+	add_compile_options(-D_REGEX_MAX_STACK_COUNT=200000L)	# increase std::regex recursion depth limit
 
 	# disable empty object file warning
 	set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} /ignore:4221")

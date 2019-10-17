@@ -67,7 +67,7 @@ echo -en 'travis_fold:start:compiling_boost\\r'
 test -e "$WORKSPACE"/boost_1_70_0_install/include/boost/version.hpp || (
 cd "$WORKSPACE"/boost_1_70_0
 ./b2 toolset=emscripten link=static variant=release threading=single runtime-link=static \
-       --with-system --with-regex --with-filesystem --with-test --with-program_options cxxflags="-Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
+       --with-system --with-filesystem --with-test --with-program_options cxxflags="-Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
        --prefix="$WORKSPACE"/boost_1_70_0_install install
 )
 ln -sf "$WORKSPACE"/boost_1_70_0_install/lib/* /emsdk_portable/sdk/system/lib
