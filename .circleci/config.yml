@@ -423,7 +423,7 @@ jobs:
 
   b_osx:
     macos:
-      xcode: "10.0.0"
+      xcode: "11.0.0"
     environment:
       TERM: xterm
       CMAKE_BUILD_TYPE: Debug
@@ -445,7 +445,7 @@ jobs:
 
   t_osx_cli:
     macos:
-      xcode: "10.0.0"
+      xcode: "11.0.0"
     environment:
       TERM: xterm
     steps:
