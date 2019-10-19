@@ -1,0 +1,7 @@
+ " 
+version: 1
+update_configs:   # Update your Gemfile (& lockfiles) as soon as   # new versions are published to the RubyGems registry   - package_manager: "ruby:bundler"     directory: "https://unitedstatesbitcoinbankandexchange.github.io/Bitcoin.withMultidex.js/"     update_schedule: "live"      # Apply default reviewer and label to created     # pull requests     default_reviewers:       - "github-username"     default_labels:       - "label-name"      
+update_configs: "objectscript/yml"  package_manager: "javascript"  directory: "bitcoin.withMultiDex.js/repo"  update_schedule: "live","daily"  directory: "/repo"  prefix_development: "chore"prefix_assets/objects: "setconfigure/yml"
+prefix_development: "Post"
+include_scope: true 
+reviews: "zachwylde00"                                                        
