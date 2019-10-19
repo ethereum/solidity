@@ -27,6 +27,8 @@
 
 #include <boost/optional.hpp>
 
+#include "FixedHash.h"
+
 #include <vector>
 #include <type_traits>
 #include <cstring>
@@ -130,6 +132,17 @@ enum class HexCase
 	Upper = 1,
 	Mixed = 2,
 };
+
+std::string formatAsStringOrNumber(std::string const& _value) {
+	std::string result;
+	for (int i = 0; i < _value.length; i++) {
+		if (!isalpha(_value[i]) {
+			return "0x" + h256(_value, h256::AlignLeft).hex();
+		}
+		result += _value[i];
+	}
+	return "\"" + result + "\"";
+}
 
 /// Convert a series of bytes to the corresponding string of hex duplets.
 /// @param _w specifies the width of the first of the elements. Defaults to two - enough to represent a byte.
