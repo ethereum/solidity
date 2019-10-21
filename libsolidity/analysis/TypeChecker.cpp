@@ -524,7 +524,12 @@ void TypeChecker::visitManually(
 		_modifier.arguments() ? *_modifier.arguments() : std::vector<ASTPointer<Expression>>();
 	for (ASTPointer<Expression> const& argument: arguments)
 		argument->accept(*this);
-	_modifier.name()->accept(*this);
+
+	{
+		m_insideModifierInvocation = true;
+		ScopeGuard resetFlag{[&] () { m_insideModifierInvocation = false; }};
+		_modifier.name()->accept(*this);
+	}
 
 	auto const* declaration = &dereference(*_modifier.name());
 	vector<ASTPointer<VariableDeclaration>> emptyParameterList;
@@ -2386,6 +2391,15 @@ bool TypeChecker::visit(Identifier const& _identifier)
 				"\"suicide\" has been deprecated in favour of \"selfdestruct\"."
 			);
 	}
+
+	if (!m_insideModifierInvocation)
+		if (ModifierType const* type = dynamic_cast<decltype(type)>(_identifier.annotation().type))
+		{
+			m_errorReporter.typeError(
+				_identifier.location(),
+				"Modifier can only be referenced in function headers."
+			);
+		}
 
 	return false;
 }
