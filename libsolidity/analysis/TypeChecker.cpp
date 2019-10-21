@@ -2378,12 +2378,12 @@ bool TypeChecker::visit(Identifier const& _identifier)
 		if (_identifier.name() == "sha3" && fType->kind() == FunctionType::Kind::KECCAK256)
 			m_errorReporter.typeError(
 				_identifier.location(),
-				"\"sha3\" has been deprecated in favour of \"keccak256\""
+				"\"sha3\" has been deprecated in favour of \"keccak256\"."
 			);
 		else if (_identifier.name() == "suicide" && fType->kind() == FunctionType::Kind::Selfdestruct)
 			m_errorReporter.typeError(
 				_identifier.location(),
-				"\"suicide\" has been deprecated in favour of \"selfdestruct\""
+				"\"suicide\" has been deprecated in favour of \"selfdestruct\"."
 			);
 	}
 
