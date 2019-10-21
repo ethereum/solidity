@@ -1849,7 +1849,7 @@ u256 ArrayType::memoryDataSize() const
 	solAssert(m_location == DataLocation::Memory, "");
 	solAssert(!isByteArray(), "");
 	bigint size = bigint(m_length) * m_baseType->memoryHeadSize();
-	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit u256.");
+	solAssert(size <= numeric_limits<u256>::max(), "Array size does not fit u256.");
 	return u256(size);
 }
 
