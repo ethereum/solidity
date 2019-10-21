@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(dev_return)
 			/// @param a Documentation for the first parameter starts here.
 			/// Since it's a really complicated parameter we need 2 lines
 			/// @param second Documentation for the second parameter
-			/// @return The result of the multiplication
+			/// @return d The result of the multiplication
 			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
@@ -378,12 +378,15 @@ BOOST_AUTO_TEST_CASE(dev_return)
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
 	"        },\n"
-	"        \"return\": \"The result of the multiplication\"\n"
+	"        \"return\": {\n"
+	"            \"d\": \"The result of the multiplication\"\n"
+	"        }\n"
 	"    }\n"
 	"}}";
 
 	checkNatspec(sourceCode, "test", natspec, false);
 }
+
 BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 {
 	char const* sourceCode = R"(
@@ -393,7 +396,7 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 			/// Since it's a really complicated parameter we need 2 lines
 			/// @param second Documentation for the second parameter
 			/// @return
-			/// The result of the multiplication
+			/// d The result of the multiplication
 			function mul(uint a, uint second) public returns (uint d) {
 				return a * 7 + second;
 			}
@@ -408,7 +411,9 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
 	"        },\n"
-	"        \"return\": \"The result of the multiplication\"\n"
+	"        \"return\": {\n"
+	"            \"d\": \"The result of the multiplication\"\n"
+	"        }\n"
 	"    }\n"
 	"}}";
 
@@ -426,7 +431,7 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_multiple_unamed)
 			/// @return The result of the multiplication
 			/// @return And cookies with nutella
 			function mul(uint a, uint second) public returns (uint, uint) {
-        		uint mul = a * 7;
+				uint mul = a * 7;
 				return (mul, second);
 			}
 		}
@@ -440,7 +445,10 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_multiple_unamed)
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
 	"        },\n"
-	"        \"return\": \"The result of the multiplicationAnd cookies with nutella\"\n"
+	"        \"return\": {\n"
+	"            \"_1\": \"The result of the multiplication\",\n"
+	"            \"_2\": \"And cookies with nutella\"\n"
+	"        }\n"
 	"    }\n"
 	"}}";
 
@@ -455,10 +463,10 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_multiple)
 			/// @param a Documentation for the first parameter starts here.
 			/// Since it's a really complicated parameter we need 2 lines
 			/// @param second Documentation for the second parameter
-			/// @return The result of the multiplication
-			/// @return And cookies with nutella
+			/// @return d The result of the multiplication
+			/// @return f And cookies with nutella
 			function mul(uint a, uint second) public returns (uint d, uint f) {
-        		uint mul = a * 7;
+        uint mul = a * 7;
 				return (mul, second);
 			}
 		}
@@ -490,7 +498,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 			/// @param a Documentation for the first parameter starts here.
 			/// Since it's a really complicated parameter we need 2 lines
 			/// @param second Documentation for the second parameter
-			/// @return The result of the multiplication
+			/// @return d The result of the multiplication
 			/// and cookies with nutella
 			function mul(uint a, uint second) public returns (uint d) {
 				return a * 7 + second;
@@ -506,7 +514,9 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
 	"        },\n"
-	"        \"return\": \"The result of the multiplication and cookies with nutella\"\n"
+	"        \"return\": {\n"
+	"            \"d\": \"The result of the multiplication and cookies with nutella\",\n"
+	"        }\n"
 	"    }\n"
 	"}}";
 
@@ -522,7 +532,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 			 * @param a Documentation for the first parameter starts here.
 			 * Since it's a really complicated parameter we need 2 lines
 			 * @param second Documentation for the second parameter
-			 * @return The result of the multiplication
+			 * @return d The result of the multiplication
 			 * and cookies with nutella
 			 */
 			function mul(uint a, uint second) public returns (uint d) {
@@ -539,7 +549,9 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
 	"        },\n"
-	"        \"return\": \"The result of the multiplication and cookies with nutella\"\n"
+	"        \"return\": {\n"
+	"            \"d\": \"The result of the multiplication and cookies with nutella\",\n"
+	"        }\n"
 	"    }\n"
 	"}}";
 
@@ -843,7 +855,7 @@ BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
 			/// @param a Documentation for the first parameter starts here.
 			/// Since it's a really complicated parameter we need 2 lines
 			/// @param second Documentation for the second parameter
-			/// @return The result of the multiplication
+			/// @return d The result of the multiplication
 			/// and cookies with nutella
 			function mul(uint a, uint second) public returns(uint d) {
 				return a * 7 + second;
@@ -859,7 +871,9 @@ BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
 				"a" : "Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines",
 				"second" : "Documentation for the second parameter"
 			},
-			"return" : "The result of the multiplication and cookies with nutella"
+			"return" : {
+				"d": "The result of the multiplication and cookies with nutella"
+			}
 		},
 		"constructor" : {
 			"author" : "Alex",

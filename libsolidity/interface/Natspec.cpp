@@ -99,37 +99,36 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		if (auto fun = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
 		{
 			Json::Value method(devDocumentation(fun->annotation().docTags));
-
-			// add the function, only if we have any documentation to add
 			if (!method.empty())
 			{
+				// add the function, only if we have any documentation to add
 				Json::Value ret(Json::objectValue);
 
-				// for constructors, the "return" node will never exist. invalid tags
-				// will already generate an error within dev::solidity::DocStringAnalyzer.
 				auto returnParams = fun->returnParameters();
 				auto returnDoc = fun->annotation().docTags.equal_range("return");
 
 				if (!returnParams.empty())
 				{
-					// if there is no name then append subsequent return notices like previous behavior
-					string value;
 					unsigned int n = 0;
 					for (auto i = returnDoc.first; i != returnDoc.second; i++)
 					{
 						string paramName = returnParams.at(n)->name();
+						string content = i->second.content;
 
-						if (!paramName.empty() && returnParams.size() != 1)
+						if (paramName.empty())
 						{
-							ret[paramName] = Json::Value(i->second.content);
-							n++;
+							paramName = "_" + std::to_string(n+1);
 						}
-
 						else
 						{
-							value += i->second.content;
-							method["return"] = Json::Value(value);
+							//check to make sure the first word of the doc str is the same as the return name
+							auto nameEndPos = content.find_first_of(" \t");
+							solAssert(content.substr(0, nameEndPos) == paramName, "No return param name given: " + paramName);
+							content = content.substr(nameEndPos+1);
 						}
+
+						ret[paramName] = Json::Value(content);
+						n++;
 					}
 				}
 
@@ -138,7 +137,7 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 
 				methods[it.second->externalSignature()] = method;
 			}
-	  	}
+		}
 	}
 
 	doc["methods"] = methods;

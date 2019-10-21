@@ -14,7 +14,7 @@ contract StandardMarketFactory is MarketFactory {
     /// @param eventContract Event contract
     /// @param marketMaker Market maker contract
     /// @param fee Market fee
-    /// @return Market contract
+    /// @return market Market contract
     function createMarket(Event eventContract, MarketMaker marketMaker, uint24 fee)
         public
         override

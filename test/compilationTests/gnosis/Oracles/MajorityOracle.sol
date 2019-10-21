@@ -28,8 +28,8 @@ contract MajorityOracle is Oracle {
     }
 
     /// @dev Allows to registers oracles for a majority vote
-    /// @return Is outcome set?
-    /// @return Outcome
+    /// @return outcomeSet Is outcome set?
+    /// @return outcome Outcome
     function getStatusAndOutcome()
         public
         view

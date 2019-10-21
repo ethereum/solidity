@@ -14,6 +14,7 @@ Breaking changes:
  * Syntax: Abstract contracts need to be marked explicitly as abstract by using the ``abstract`` keyword.
  * Inline Assembly: Only strict inline assembly is allowed.
  * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
+ * Natspec JSON Interface: Support multiple ``@return`` statements in dev documentation to behave like named parameters.
  * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
 
 

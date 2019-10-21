@@ -107,7 +107,7 @@ abstract contract Event {
     }
 
     /// @dev Returns the amount of outcome tokens held by owner
-    /// @return Outcome token distribution
+    /// @return outcomeTokenDistribution Outcome token distribution
     function getOutcomeTokenDistribution(address owner)
         public
         view

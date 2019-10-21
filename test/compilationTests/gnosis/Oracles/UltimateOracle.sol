@@ -126,7 +126,7 @@ contract UltimateOracle is Oracle {
     }
 
     /// @dev Withdraws winnings for user
-    /// @return Winnings
+    /// @return amount Winnings
     function withdraw()
         public
         returns (uint amount)

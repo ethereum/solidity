@@ -44,7 +44,7 @@ contract ScalarEvent is Event {
     }
 
     /// @dev Exchanges sender's winning outcome tokens for collateral tokens
-    /// @return Sender's winnings
+    /// @return winnings Sender's winnings
     function redeemWinnings()
         public
         override
