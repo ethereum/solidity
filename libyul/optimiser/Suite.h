@@ -48,7 +48,8 @@ public:
 	enum class Debug
 	{
 		None,
-		PrintStep
+		PrintStep,
+		PrintChanges
 	};
 	static void run(
 		Dialect const& _dialect,

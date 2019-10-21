@@ -34,7 +34,7 @@ RUN set -ex; \
 		build-essential \
 		software-properties-common \
 		cmake ninja-build clang++-8 libc++-8-dev libc++abi-8-dev \
-		libboost-regex-dev libboost-filesystem-dev libboost-test-dev libboost-system-dev \
+		libboost-filesystem-dev libboost-test-dev libboost-system-dev \
 		libboost-program-options-dev \
 		libjsoncpp-dev \
 		llvm-8-dev libcvc4-dev libz3-static-dev libleveldb1d \

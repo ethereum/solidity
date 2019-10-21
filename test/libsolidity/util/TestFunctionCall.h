@@ -50,7 +50,7 @@ public:
 	TestFunctionCall(FunctionCall _call): m_call(std::move(_call)) {}
 
 	/// Formats this function call test and applies the format that was detected during parsing.
-	/// If _renderResult is false, the expected result of the call will is used, if it's false
+	/// If _renderResult is false, the expected result of the call will be used, if it's true
 	/// the actual result is used.
 	/// If _highlight is false, it's formatted without colorized highlighting. If it's true, AnsiColorized is
 	/// used to apply a colorized highlighting.

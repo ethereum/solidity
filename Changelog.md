@@ -23,6 +23,7 @@ Language Features:
 
 
 Compiler Features:
+ * Code Generator: Use SELFBALANCE for ``address(this).balance`` if using Istanbul EVM
 
 
 Bugfixes:

@@ -617,6 +617,25 @@ BOOST_AUTO_TEST_CASE(gas_left)
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
+BOOST_AUTO_TEST_CASE(selfbalance)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns (uint) {
+				return address(this).balance;
+			}
+		}
+	)";
+
+	bytes code = compileFirstExpression(sourceCode, {}, {});
+
+	if (dev::test::Options::get().evmVersion() == EVMVersion::istanbul())
+	{
+		bytes expectation({uint8_t(Instruction::SELFBALANCE)});
+		BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

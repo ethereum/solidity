@@ -292,7 +292,7 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 | create2(v, p, n, s)     |     | C | create new contract with code mem[p...(p+n)) at address         |
 |                         |     |   | keccak256(0xff . this . s . keccak256(mem[p...(p+n)))           |
 |                         |     |   | and send v wei and return the new address, where ``0xff`` is a  |
-|                         |     |   | 8 byte value, ``this`` is the current contract's address        |
+|                         |     |   | 1 byte value, ``this`` is the current contract's address        |
 |                         |     |   | as a 20 byte value and ``s`` is a big-endian 256-bit value      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | call(g, a, v, in,       |     | F | call contract at address a with input mem[in...(in+insize))     |

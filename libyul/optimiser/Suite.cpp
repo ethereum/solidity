@@ -45,6 +45,7 @@
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
+#include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/LoadResolver.h>
@@ -343,10 +344,25 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 
 void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 {
+	unique_ptr<Block> copy;
+	if (m_debug == Debug::PrintChanges)
+		copy = make_unique<Block>(boost::get<Block>(ASTCopier{}(_ast)));
 	for (string const& step: _steps)
 	{
 		if (m_debug == Debug::PrintStep)
 			cout << "Running " << step << endl;
 		allSteps().at(step)->run(m_context, _ast);
+		if (m_debug == Debug::PrintChanges)
+		{
+			// TODO should add switch to also compare variable names!
+			if (SyntacticallyEqual{}.statementEqual(_ast, *copy))
+				cout << "== Running " << step << " did not cause changes." << endl;
+			else
+			{
+				cout << "== Running " << step << " changed the AST." << endl;
+				cout << AsmPrinter{}(_ast) << endl;
+				copy = make_unique<Block>(boost::get<Block>(ASTCopier{}(_ast)));
+			}
+		}
 	}
 }
