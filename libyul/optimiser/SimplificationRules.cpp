@@ -74,10 +74,8 @@ SimplificationRule<yul::PatternEWasm> const* SimplificationRules::findFirstMatch
 		if (_dialect.builtin(boost::get<FunctionCall>(_expr).functionName.name))
 		{
 			YulString funName = boost::get<FunctionCall>(_expr).functionName.name;
-			cout << "searching for rule for " << funName.str() << endl;
 			for (auto const& rule: rules.m_rulesEWasm[funName])
 			{
-				cout << "searching for rule for " << funName.str() << endl;
 				rules.resetMatchGroups();
 				if (rule.pattern.matches(_expr, _dialect, _ssaValues))
 					if (!rule.feasible || rule.feasible())
@@ -167,6 +165,9 @@ SimplificationRules::SimplificationRules()
 		using R = dev::eth::SimplificationRule<PatternEWasm>;
 		addRule(R{{"i64.ne"_yulstring, {X, X}}, [=]{ return 0; }, true});
 		addRule(R{{"i64.ne"_yulstring, {A, B}}, [=]{ return A.d() != B.d(); }, false});
+		addRule(R{{"i64.ne"_yulstring, {X, uint64_t(0)}}, [=]{ return X; }, false});
+		addRule(R{{"i64.ne"_yulstring, {uint64_t(0), X}}, [=]{ return X; }, false});
+		addRule(R{{"i64.ge_u"_yulstring, {A, B}}, [=]{ return A.d() >= B.d(); }, false});
 		addRule(R{{"i64.shl"_yulstring, {A, B}}, [=]() -> uint64_t {
 			if (B.d() >= 64)
 				return 0;
