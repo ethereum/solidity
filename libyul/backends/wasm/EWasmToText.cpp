@@ -82,11 +82,6 @@ string EWasmToText::operator()(wasm::GlobalVariable const& _identifier)
 	return "(get_global $" + _identifier.name + ")";
 }
 
-string EWasmToText::operator()(wasm::Label const& _label)
-{
-	return "$" + _label.name;
-}
-
 string EWasmToText::operator()(wasm::BuiltinCall const& _builtinCall)
 {
 	string args = joinTransformed(_builtinCall.arguments);
@@ -128,9 +123,9 @@ string EWasmToText::operator()(wasm::Break const& _break)
 	return "(break $" + _break.label.name + ")\n";
 }
 
-string EWasmToText::operator()(wasm::Continue const& _continue)
+string EWasmToText::operator()(wasm::BreakIf const& _break)
 {
-	return "(continue $" + _continue.label.name + ")\n";
+	return "(br_if $" + _break.label.name + " " + visit(*_break.condition) + ")\n";
 }
 
 string EWasmToText::operator()(wasm::Block const& _block)
