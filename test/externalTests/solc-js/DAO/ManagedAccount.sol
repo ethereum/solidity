@@ -21,7 +21,7 @@ Basic account, used by the DAO contract to separately manage both the rewards
 and the extraBalance accounts.
 */
 
-contract ManagedAccountInterface {
+abstract contract ManagedAccountInterface {
     // The only address with permission to withdraw from this account
     address public owner;
     // If true, only the owner of the account can receive ether from it

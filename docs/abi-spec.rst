@@ -529,7 +529,7 @@ As an example, the code
     pragma experimental ABIEncoderV2;
 
 
-    contract Test {
+    abstract contract Test {
         struct S { uint a; uint[] b; T[] c; }
         struct T { uint x; uint y; }
         function f(S memory s, T memory t, uint a) public;

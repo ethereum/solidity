@@ -52,12 +52,12 @@ Details are given in the following example.
     // interface known to the compiler. Note the function
     // without body. If a contract does not implement all
     // functions it can only be used as an interface.
-    contract Config {
+    abstract contract Config {
         function lookup(uint id) public returns (address adr);
     }
 
 
-    contract NameReg {
+    abstract contract NameReg {
         function register(bytes32 name) public;
         function unregister() public;
     }

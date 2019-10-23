@@ -4,3 +4,5 @@ contract C {
         this.transfer(10);
     }
 }
+// ----
+// TypeError: (0-109): Contract "C" should be marked as abstract.

@@ -33,6 +33,7 @@ contract Test
     }
 }
 // ----
+// TypeError: (0-2300): Contract "Test" should be marked as abstract.
 // TypeError: (1218-1311): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (uint256) pure returns (uint256).
 // TypeError: (1319-1425): Type function (uint256) pure returns (string storage pointer) is not implicitly convertible to expected type function (uint256) pure returns (string memory).
 // TypeError: (1433-1531): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (string memory) pure returns (uint256).

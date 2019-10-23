@@ -13,3 +13,7 @@ contract D is A, B, C {
 	function foo() internal override(A, B) returns (uint256);
 }
 // ----
+// TypeError: (0-132): Contract "A" should be marked as abstract.
+// TypeError: (133-191): Contract "B" should be marked as abstract.
+// TypeError: (193-212): Contract "C" should be marked as abstract.
+// TypeError: (213-297): Contract "D" should be marked as abstract.

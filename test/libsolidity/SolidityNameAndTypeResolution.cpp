@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		abstract contract base { function foo() public; }
-		contract derived is base { function foo() public {} }
+		contract derived is base { function foo() public override {} }
 	)";
 	sourceUnit = parseAndAnalyse(text);
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();

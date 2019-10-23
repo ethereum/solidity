@@ -24,7 +24,7 @@ to automate organizational governance and decision-making.
 import "./TokenCreation.sol";
 import "./ManagedAccount.sol";
 
-contract DAOInterface {
+abstract contract DAOInterface {
 
     // The amount of days for which people who try to participate in the
     // creation by calling the fallback function will still get their ether back

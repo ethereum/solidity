@@ -19,6 +19,7 @@
     {
       "attributes":
       {
+        "abstract": false,
         "baseContracts":
         [
           null
@@ -48,6 +49,7 @@
     {
       "attributes":
       {
+        "abstract": false,
         "baseContracts":
         [
           null

@@ -16,6 +16,7 @@
   "nodes":
   [
     {
+      "abstract": false,
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "library",
@@ -33,6 +34,7 @@
       "src": "0:12:1"
     },
     {
+      "abstract": false,
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",

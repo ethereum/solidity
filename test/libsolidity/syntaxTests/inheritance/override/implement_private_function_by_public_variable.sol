@@ -5,3 +5,5 @@ contract Y is X {
 contract T {
     constructor() public { new Y(); }
 }
+// ----
+// TypeError: (0-57): Contract "X" should be marked as abstract.

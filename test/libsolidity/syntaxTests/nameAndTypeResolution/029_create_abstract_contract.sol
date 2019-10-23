@@ -4,4 +4,5 @@ contract derived {
     function foo() public { b = new base(); }
 }
 // ----
-// TypeError: (104-112): Trying to create an instance of an abstract contract.
+// TypeError: (0-40): Contract "base" should be marked as abstract.
+// TypeError: (104-112): Cannot instantiate an abstract contract.

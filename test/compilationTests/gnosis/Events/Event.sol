@@ -6,7 +6,7 @@ import "../Oracles/Oracle.sol";
 
 /// @title Event contract - Provide basic functionality required by different event types
 /// @author Stefan George - <stefan@gnosis.pm>
-contract Event {
+abstract contract Event {
 
     /*
      *  Events

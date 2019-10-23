@@ -14,7 +14,7 @@ provided (no implementation body ``{ }`` was given).::
 
     pragma solidity >=0.4.0 <0.7.0;
 
-    contract Feline {
+    abstract contract Feline {
         function utterance() public returns (bytes32);
     }
 
@@ -23,7 +23,7 @@ all defined functions. The usage of an abstract contract as a base class is show
 
     pragma solidity >=0.4.0 <0.7.0;
 
-    contract Feline {
+    abstract contract Feline {
         function utterance() public returns (bytes32);
     }
 

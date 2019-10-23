@@ -20,5 +20,10 @@ contract X is A, B, C, D {
 	function foo() internal override(A, C) returns (uint256);
 }
 // ----
+// TypeError: (0-132): Contract "A" should be marked as abstract.
+// TypeError: (133-236): Contract "B" should be marked as abstract.
+// TypeError: (237-295): Contract "C" should be marked as abstract.
+// TypeError: (296-399): Contract "D" should be marked as abstract.
 // TypeError: (483-500): Invalid contract specified in override list: C.
 // TypeError: (545-559): Function needs to specify overridden contracts B and D.
+// TypeError: (400-580): Contract "X" should be marked as abstract.
