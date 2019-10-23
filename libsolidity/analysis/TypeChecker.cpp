@@ -390,11 +390,13 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	set<Declaration const*> modifiers;
 	for (ASTPointer<ModifierInvocation> const& modifier: _function.modifiers())
 	{
+		auto baseContracts = dynamic_cast<ContractDefinition const&>(*_function.scope()).annotation().linearizedBaseContracts;
+		// Delete first base which is just the main contract itself
+		baseContracts.erase(baseContracts.begin());
+
 		visitManually(
 			*modifier,
-			_function.isConstructor() ?
-			dynamic_cast<ContractDefinition const&>(*_function.scope()).annotation().linearizedBaseContracts :
-			vector<ContractDefinition const*>()
+			_function.isConstructor() ? baseContracts : vector<ContractDefinition const*>()
 		);
 		Declaration const* decl = &dereference(*modifier->name());
 		if (modifiers.count(decl))
