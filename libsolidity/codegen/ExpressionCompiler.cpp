@@ -1281,7 +1281,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		if (FunctionCall const* funCall = dynamic_cast<FunctionCall const*>(&_memberAccess.expression()))
 			if (auto const* addr = dynamic_cast<ElementaryTypeNameExpression const*>(&funCall->expression()))
 				if (
-					addr->typeName().token() == Token::Address &&
+					addr->type().typeName().token() == Token::Address &&
 					funCall->arguments().size() == 1
 				)
 					if (auto arg = dynamic_cast<Identifier const*>( funCall->arguments().front().get()))
