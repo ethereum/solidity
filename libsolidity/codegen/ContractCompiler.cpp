@@ -769,7 +769,7 @@ bool ContractCompiler::visit(TryStatement const& _tryStatement)
 	CompilerContext::LocationSetter locationSetter(m_context, _tryStatement);
 
 	compileExpression(_tryStatement.externalCall());
-	unsigned returnSize = _tryStatement.externalCall().annotation().type->sizeOnStack();
+	int const returnSize = static_cast<int>(_tryStatement.externalCall().annotation().type->sizeOnStack());
 
 	// Stack: [ return values] <success flag>
 	eth::AssemblyItem successTag = m_context.appendConditionalJump();
