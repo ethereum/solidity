@@ -99,6 +99,8 @@ private:
 	/// Resolves an override list of UserDefinedTypeNames to a list of contracts
 	std::set<ContractDefinition const*> resolveOverrideList(OverrideSpecifier const& _overrides) const;
 
+	void checkModifierOverrides(FunctionSet const& _funcSet, ModifierSet const& _modSet, std::vector<ModifierDefinition const*> _modifiers);
+	void checkOverrideList(FunctionSet const& _funcSet, FunctionDefinition const& _function);
 
 	FunctionSet const& getBaseFunctions(ContractDefinition const* _contract) const;
 	ModifierSet const& getBaseModifiers(ContractDefinition const* _contract) const;

@@ -37,6 +37,37 @@ using namespace dev::solidity;
 namespace
 {
 
+// Helper struct to do a search by name
+struct MatchByName
+{
+	string const& m_name;
+	bool operator()(CallableDeclaration const* _callable)
+	{
+		return _callable->name() == m_name;
+	}
+};
+
+vector<ASTPointer<UserDefinedTypeName>> sortByName(vector<ASTPointer<UserDefinedTypeName>> const & _list)
+{
+	auto sorted = _list;
+
+	sort(sorted.begin(), sorted.end(),
+		[] (ASTPointer<UserDefinedTypeName> _a, ASTPointer<UserDefinedTypeName> _b) {
+			if (!_a || !_b)
+				return _a < _b;
+
+			return boost::lexicographical_compare(
+				_a->namePath(), _b->namePath(),
+				[] (string const& _aString, string const& _bString) {
+					return _aString < _bString;
+				}
+			);
+		}
+	);
+
+	return sorted;
+}
+
 template <class T>
 bool hasEqualNameAndParameters(T const& _a, T const& _b)
 {
@@ -186,39 +217,7 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 	FunctionSet const& funcSet = getBaseFunctions(&_contract);
 	ModifierSet const& modSet = getBaseModifiers(&_contract);
 
-	struct MatchByName
-	{
-		string const& m_name;
-		bool operator()(CallableDeclaration const* _callable)
-		{
-			return _callable->name() == m_name;
-		}
-	};
-
-	for (ModifierDefinition const* modifier: _contract.functionModifiers())
-	{
-		if (contains_if(funcSet, MatchByName{modifier->name()}))
-			m_errorReporter.typeError(
-				modifier->location(),
-				"Override changes function to modifier."
-			);
-
-		auto [begin,end] = modSet.equal_range(modifier);
-
-		// Skip if no modifiers found in bases
-		if (begin == end)
-			continue;
-
-		if (!modifier->overrides())
-			overrideError(*modifier, **begin, "Overriding modifier is missing 'override' specifier.");
-
-		for (; begin != end; begin++)
-			if (ModifierType(**begin) != ModifierType(*modifier))
-				m_errorReporter.typeError(
-					modifier->location(),
-					"Override changes modifier signature."
-			);
-	}
+	checkModifierOverrides(funcSet, modSet, _contract.functionModifiers());
 
 	for (FunctionDefinition const* function: _contract.definedFunctions())
 	{
@@ -242,86 +241,7 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 				);
 		}
 
-		set<ContractDefinition const*> specifiedContracts =
-			function->overrides() ?
-			resolveOverrideList(*function->overrides()) :
-			set<ContractDefinition const*>{};
-
-		// Check for duplicates in override list
-		if (function->overrides() && specifiedContracts.size() != function->overrides()->overrides().size())
-		{
-			vector<ASTPointer<UserDefinedTypeName>> list = function->overrides()->overrides();
-
-			// Sort by name to find duplicate for error reporting
-			sort(list.begin(), list.end(),
-				[] (ASTPointer<UserDefinedTypeName> _a, ASTPointer<UserDefinedTypeName> _b) {
-					if (!_a || !_b)
-						return _a < _b;
-
-					return boost::lexicographical_compare(
-						_a->namePath(), _b->namePath(),
-						[] (string const& _aString, string const& _bString) {
-							return _aString < _bString;
-						}
-					);
-				}
-			);
-
-
-			// Find duplicates and output error
-			for (size_t i = 1; i < list.size(); i++)
-				if (list[i]->namePath() == list[i-1]->namePath())
-				{
-					SecondarySourceLocation ssl;
-					ssl.append("First occurrence here: ", list[i-1]->location());
-					m_errorReporter.typeError(
-						list[i]->location(),
-						ssl,
-						"Duplicate contract " +
-							joinHumanReadable(list[i]->namePath(), ".") +
-							" found in override list of " +
-							function->name() +
-							"."
-					);
-				}
-		}
-
-		decltype(specifiedContracts) missingContracts;
-
-		// Iterate over the overrides
-		for (auto [begin, end] = funcSet.equal_range(function); begin != end; begin++)
-		{
-			// Validate the override
-			if (!checkFunctionOverride(*function, **begin))
-				break;
-
-			auto const result = find(
-				specifiedContracts.cbegin(),
-				specifiedContracts.cend(),
-				(*begin)->annotation().contract
-			);
-
-			if (result == specifiedContracts.cend())
-				missingContracts.insert((*begin)->annotation().contract);
-			else
-				specifiedContracts.erase(result);
-		}
-
-		if (missingContracts.size() > 1)
-			overrideListError(
-				*function,
-				missingContracts,
-				"Function needs to specify overridden ",
-				""
-			);
-
-		if (!specifiedContracts.empty())
-			overrideListError(
-				*function,
-				specifiedContracts,
-				"Invalid ",
-				"specified in override list: "
-			);
+		checkOverrideList(funcSet, *function);
 	}
 }
 
@@ -806,6 +726,106 @@ set<ContractDefinition const*> ContractLevelChecker::resolveOverrideList(Overrid
 	}
 
 	return resolved;
+}
+
+
+void ContractLevelChecker::checkModifierOverrides(FunctionSet const& _funcSet, ModifierSet const& _modSet, std::vector<ModifierDefinition const*> _modifiers)
+{
+	for (ModifierDefinition const* modifier: _modifiers)
+	{
+		if (contains_if(_funcSet, MatchByName{modifier->name()}))
+			m_errorReporter.typeError(
+				modifier->location(),
+				"Override changes function to modifier."
+			);
+
+		auto [begin,end] = _modSet.equal_range(modifier);
+
+		// Skip if no modifiers found in bases
+		if (begin == end)
+			continue;
+
+		if (!modifier->overrides())
+			overrideError(*modifier, **begin, "Overriding modifier is missing 'override' specifier.");
+
+		for (; begin != end; begin++)
+			if (ModifierType(**begin) != ModifierType(*modifier))
+				m_errorReporter.typeError(
+					modifier->location(),
+					"Override changes modifier signature."
+			);
+	}
+
+}
+
+void ContractLevelChecker::checkOverrideList(FunctionSet const& _funcSet, FunctionDefinition const& _function)
+{
+	set<ContractDefinition const*> specifiedContracts =
+		_function.overrides() ?
+		resolveOverrideList(*_function.overrides()) :
+		set<ContractDefinition const*>{};
+
+	// Check for duplicates in override list
+	if (_function.overrides() && specifiedContracts.size() != _function.overrides()->overrides().size())
+	{
+		// Sort by name to find duplicate for error reporting
+		vector<ASTPointer<UserDefinedTypeName>> list =
+			sortByName(_function.overrides()->overrides());
+
+		// Find duplicates and output error
+		for (size_t i = 1; i < list.size(); i++)
+			if (list[i]->namePath() == list[i-1]->namePath())
+			{
+				SecondarySourceLocation ssl;
+				ssl.append("First occurrence here: ", list[i-1]->location());
+				m_errorReporter.typeError(
+					list[i]->location(),
+					ssl,
+					"Duplicate contract " +
+						joinHumanReadable(list[i]->namePath(), ".") +
+						" found in override list of " +
+						_function.name() +
+						"."
+				);
+			}
+	}
+
+	decltype(specifiedContracts) missingContracts;
+
+	// Iterate over the overrides
+	for (auto [begin, end] = _funcSet.equal_range(&_function); begin != end; begin++)
+	{
+		// Validate the override
+		if (!checkFunctionOverride(_function, **begin))
+			break;
+
+		auto const result = find(
+			specifiedContracts.cbegin(),
+			specifiedContracts.cend(),
+			(*begin)->annotation().contract
+		);
+
+		if (result == specifiedContracts.cend())
+			missingContracts.insert((*begin)->annotation().contract);
+		else
+			specifiedContracts.erase(result);
+	}
+
+	if (missingContracts.size() > 1)
+		overrideListError(
+			_function,
+			missingContracts,
+			"Function needs to specify overridden ",
+			""
+		);
+
+	if (!specifiedContracts.empty())
+		overrideListError(
+			_function,
+			specifiedContracts,
+			"Invalid ",
+			"specified in override list: "
+		);
 }
 
 ContractLevelChecker::FunctionSet const& ContractLevelChecker::getBaseFunctions(ContractDefinition const* _contract) const
