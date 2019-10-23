@@ -39,6 +39,7 @@ def extract_test_cases(path):
 # and abort a line not indented properly.
 def extract_docs_cases(path):
     inside = False
+    extractedLines = []
     tests = []
 
     # Collect all snippets of indented blocks
@@ -46,15 +47,23 @@ def extract_docs_cases(path):
         if l != '':
             if not inside and l.startswith(' '):
                 # start new test
-                tests += ['']
+                extractedLines += ['']
             inside = l.startswith(' ')
         if inside:
-            tests[-1] += l + '\n'
-    # Filter all tests that do not contain Solidity
-    return [
-        test for test in tests
-        if re.search(r'^    [ ]*(pragma solidity|contract |library |interface )', test, re.MULTILINE)
-    ]
+            extractedLines[-1] += l + '\n'
+
+    codeStart = "(pragma solidity|contract.*{|library.*{|interface.*{)"
+
+    # Filter all tests that do not contain Solidity or are intended incorrectly.
+    for lines in extractedLines:
+        if re.search(r'^\s{0,3}' + codeStart, lines, re.MULTILINE):
+            print("Intendation error in " + path + ":")
+            print(lines)
+            exit(1)
+        if re.search(r'^\s{4}' + codeStart, lines, re.MULTILINE):
+            tests.append(lines)
+
+    return tests
 
 def write_cases(f, tests):
     cleaned_filename = f.replace(".","_").replace("-","_").replace(" ","_").lower()
