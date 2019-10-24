@@ -19,10 +19,7 @@ object \"C_6\" {
 
 
         function fun_f_5()  {
-            for { let return_flag := 1 } return_flag {} {
 
-                break
-            }
         }
 
     }
@@ -70,10 +67,7 @@ object \"C_6\" {
             }
 
             function fun_f_5()  {
-                for { let return_flag := 1 } return_flag {} {
 
-                    break
-                }
             }
 
             function shift_right_224_unsigned(value) -> newValue {
