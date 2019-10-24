@@ -142,6 +142,15 @@ bool AssemblyItem::canBeFunctional() const
 	return false;
 }
 
+void AssemblyItem::setLocalVariables(std::map<solidity::Declaration const*, std::vector<unsigned>> localVariables) {
+	m_localVariables = std::map<solidity::Declaration const*, unsigned>();
+	for (auto mapping : localVariables) {
+		if (!mapping.second.empty()) {
+			m_localVariables[mapping.first] = mapping.second.back();
+		}
+	}
+}
+
 string AssemblyItem::getJumpTypeAsString() const
 {
 	switch (m_jumpType)

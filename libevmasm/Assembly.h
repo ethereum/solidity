@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <libsolidity/ast/ASTForward.h>
+
 #include <libevmasm/Instruction.h>
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/AssemblyItem.h>
@@ -181,6 +183,8 @@ protected:
 	int m_deposit = 0;
 
 	langutil::SourceLocation m_currentSourceLocation;
+	std::map<solidity::Declaration const*, unsigned> m_localVariables;
+
 public:
 	size_t m_currentModifierDepth = 0;
 };

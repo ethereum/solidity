@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <libsolidity/ast/ASTForward.h>
+
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
@@ -51,22 +53,30 @@ enum AssemblyItemType {
 
 class Assembly;
 
+using VariableMapping = std::map<solidity::Declaration const*, std::vector<unsigned>>;
+
 class AssemblyItem
 {
 public:
 	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
 
-	AssemblyItem(u256 _push, langutil::SourceLocation _location = langutil::SourceLocation()):
-		AssemblyItem(Push, std::move(_push), std::move(_location)) { }
-	AssemblyItem(Instruction _i, langutil::SourceLocation _location = langutil::SourceLocation()):
+	AssemblyItem(u256 _push, langutil::SourceLocation _location = langutil::SourceLocation(),
+				 VariableMapping _localVariables = VariableMapping()):
+		AssemblyItem(Push, std::move(_push), std::move(_location), _localVariables) { }
+	AssemblyItem(Instruction _i, langutil::SourceLocation _location = langutil::SourceLocation(),
+				 VariableMapping _localVariables = VariableMapping()):
 		m_type(Operation),
 		m_instruction(_i),
 		m_location(std::move(_location))
-	{}
-	AssemblyItem(AssemblyItemType _type, u256 _data = 0, langutil::SourceLocation _location = langutil::SourceLocation()):
+	{
+		setLocalVariables(_localVariables);
+	}
+	AssemblyItem(AssemblyItemType _type, u256 _data = 0, langutil::SourceLocation _location = langutil::SourceLocation(),
+				 VariableMapping _localVariables = VariableMapping()):
 		m_type(_type),
 		m_location(std::move(_location))
 	{
+		setLocalVariables(_localVariables);
 		if (m_type == Operation)
 			m_instruction = Instruction(uint8_t(_data));
 		else
@@ -137,6 +147,10 @@ public:
 	void setLocation(langutil::SourceLocation const& _location) { m_location = _location; }
 	langutil::SourceLocation const& location() const { return m_location; }
 
+	void setLocalVariables(std::map<solidity::Declaration const*, std::vector<unsigned>> localVariables);
+
+	std::map<solidity::Declaration const*, unsigned> localVariables() const { return m_localVariables; }
+
 	void setJumpType(JumpType _jumpType) { m_jumpType = _jumpType; }
 	JumpType getJumpType() const { return m_jumpType; }
 	std::string getJumpTypeAsString() const;
@@ -153,6 +167,7 @@ private:
 	Instruction m_instruction; ///< Only valid if m_type == Operation
 	std::shared_ptr<u256> m_data; ///< Only valid if m_type != Operation
 	langutil::SourceLocation m_location;
+	std::map<solidity::Declaration const*, unsigned> m_localVariables;
 	JumpType m_jumpType = JumpType::Ordinary;
 	/// Pushed value for operations with data to be determined during assembly stage,
 	/// e.g. PushSubSize, PushTag, PushSub, etc.
