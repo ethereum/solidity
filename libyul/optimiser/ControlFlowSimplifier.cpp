@@ -136,6 +136,13 @@ void ControlFlowSimplifier::operator()(Block& _block)
 	simplify(_block.statements);
 }
 
+void ControlFlowSimplifier::operator()(FunctionDefinition& _funDef)
+{
+	ASTModifier::operator()(_funDef);
+	if (!_funDef.body.statements.empty() && _funDef.body.statements.back().type() == typeid(Leave))
+		_funDef.body.statements.pop_back();
+}
+
 void ControlFlowSimplifier::visit(Statement& _st)
 {
 	if (_st.type() == typeid(ForLoop))

@@ -34,6 +34,7 @@ struct OptimiserStepContext;
  * - replace switch with only default case with pop(expression) and body
  * - replace switch with const expr with matching case body
  * - replace ``for`` with terminating control flow and without other break/continue by ``if``
+ * - remove ``leave`` at the end of a function.
  *
  * None of these operations depend on the data flow. The StructuralSimplifier
  * performs similar tasks that do depend on data flow.
@@ -55,6 +56,7 @@ public:
 	void operator()(Break&) override { ++m_numBreakStatements; }
 	void operator()(Continue&) override { ++m_numContinueStatements; }
 	void operator()(Block& _block) override;
+	void operator()(FunctionDefinition& _funDef) override;
 
 	void visit(Statement& _st) override;
 
