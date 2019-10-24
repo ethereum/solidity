@@ -52,7 +52,7 @@ void InterpreterState::dumpTraceAndState(ostream& _out) const
 		words[(offset / 0x20) * 0x20] |= u256(uint32_t(value)) << (256 - 8 - 8 * size_t(offset % 0x20));
 	for (auto const& [offset, value]: words)
 		if (value != 0)
-			_out << "  " << std::hex << std::setw(4) << offset << ": " << h256(value).hex() << endl;
+			_out << "  " << std::uppercase << std::hex << std::setw(4) << offset << ": " << h256(value).hex() << endl;
 	_out << "Storage dump:" << endl;
 	for (auto const& slot: storage)
 		if (slot.second != h256(0))

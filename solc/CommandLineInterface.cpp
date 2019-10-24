@@ -294,7 +294,7 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 	else
 	{
 		sout() << "Opcodes: " << endl;
-		sout() << dev::eth::disassemble(m_compiler->object(_contract).bytecode);
+		sout() << std::uppercase << dev::eth::disassemble(m_compiler->object(_contract).bytecode);
 		sout() << endl;
 	}
 }
