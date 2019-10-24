@@ -556,6 +556,33 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 	return c.runtimeSourceMapping.get();
 }
 
+string const* CompilerStack::localVariables(string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
+	Contract const& c = contract(_contractName);
+	if (!c.localVariables)
+	{
+		if (auto items = assemblyItems(_contractName))
+			c.localVariables.reset(new string(computeLocalVariables(*items)));
+	}
+	return c.localVariables.get();
+}
+
+string const* CompilerStack::localVariablesRuntime(string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
+	Contract const& c = contract(_contractName);
+	if (!c.localVariables)
+	{
+		if (auto items = runtimeAssemblyItems(_contractName))
+			c.localVariables.reset(new string(computeLocalVariables(*items)));
+	}
+	return c.localVariables.get();
+}
 std::string const CompilerStack::filesystemFriendlyName(string const& _contractName) const
 {
 	if (m_stackState < AnalysisPerformed)
@@ -1426,6 +1453,36 @@ string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) con
 		prevJump = jump;
 		prevModifierDepth = modifierDepth;
 	}
+	return ret;
+}
+
+string CompilerStack::computeLocalVariables(eth::AssemblyItems const& _items) const
+{
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
+	string ret;
+
+	for (auto const& item: _items)
+	{
+		if (!ret.empty())
+			ret += ";";
+
+		std::map<solidity::Declaration const*, unsigned> mappings = item.localVariables();
+		bool first = true;
+		for (auto mapping: mappings) {
+			if (!first) {
+				ret += ",";
+			} else {
+				first = false;
+			}
+
+			ret += mapping.first->name();
+			ret += ":";
+			ret += to_string(mapping.second);
+		}
+	}
+
 	return ret;
 }
 

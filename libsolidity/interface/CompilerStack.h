@@ -277,6 +277,10 @@ public:
 	/// if the contract does not (yet) have bytecode.
 	std::string const* runtimeSourceMapping(std::string const& _contractName) const;
 
+	std::string const* localVariables(std::string const& _contractName) const;
+
+	std::string const* localVariablesRuntime(std::string const& _contractName) const;
+
 	/// @return a verbose text representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
@@ -347,6 +351,7 @@ private:
 		mutable std::unique_ptr<Json::Value const> devDocumentation;
 		mutable std::unique_ptr<std::string const> sourceMapping;
 		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
+		mutable std::unique_ptr<std::string const> localVariables;
 	};
 
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
@@ -401,6 +406,8 @@ private:
 
 	/// @returns the computer source mapping string.
 	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
+
+	std::string computeLocalVariables(eth::AssemblyItems const& _items) const;
 
 	/// @returns the contract ABI as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.

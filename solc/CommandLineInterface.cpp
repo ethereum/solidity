@@ -159,6 +159,8 @@ static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
 static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
+static string const g_strLocalVariables = "local-mappings";
+static string const g_strLocalVariablesRuntime = "local-mappings-runtime";
 static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strSwarm = "swarm";
@@ -226,7 +228,9 @@ static set<string> const g_combinedJsonArgs
 	g_strOpcodes,
 	g_strSignatureHashes,
 	g_strSrcMap,
-	g_strSrcMapRuntime
+	g_strSrcMapRuntime,
+	g_strLocalVariables,
+	g_strLocalVariablesRuntime
 };
 
 /// Possible arguments to for --machine
@@ -1191,6 +1195,16 @@ void CommandLineInterface::handleCombinedJSON()
 		{
 			auto map = m_compiler->runtimeSourceMapping(contractName);
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
+		}
+		if (requests.count(g_strLocalVariables) && m_compiler->compilationSuccessful())
+		{
+			auto map = m_compiler->localVariables(contractName);
+			contractData[g_strLocalVariables] = map ? *map : "";
+		}
+		if (requests.count(g_strLocalVariablesRuntime) && m_compiler->compilationSuccessful())
+		{
+			auto map = m_compiler->localVariablesRuntime(contractName);
+			contractData[g_strLocalVariables] = map ? *map : "";
 		}
 		if (requests.count(g_strSignatureHashes))
 			contractData[g_strSignatureHashes] = m_compiler->methodIdentifiers(contractName);
