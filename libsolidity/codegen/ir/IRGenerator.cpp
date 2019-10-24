@@ -132,10 +132,7 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 	return m_context.functionCollector()->createFunction(functionName, [&]() {
 		Whiskers t(R"(
 			function <functionName>(<params>) <returns> {
-				for { let return_flag := 1 } return_flag {} {
-					<body>
-					break
-				}
+				<body>
 			}
 		)");
 		t("functionName", functionName);
