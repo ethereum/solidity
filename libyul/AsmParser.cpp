@@ -276,9 +276,7 @@ Expression Parser::parseExpression()
 	RecursionGuard recursionGuard(*this);
 
 	ElementaryOperation operation = parseElementaryOperation();
-	if (operation.type() == typeid(FunctionCall))
-		return parseCall(std::move(operation));
-	else if (currentToken() == Token::LParen)
+	if (operation.type() == typeid(FunctionCall) || currentToken() == Token::LParen)
 		return parseCall(std::move(operation));
 	else if (operation.type() == typeid(Identifier))
 		return boost::get<Identifier>(operation);
@@ -316,7 +314,6 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	case Token::Address:
 	{
 		YulString literal{currentLiteral()};
-		// first search the set of builtins, then the instructions.
 		if (m_dialect.builtin(literal))
 		{
 			Identifier identifier{location(), literal};

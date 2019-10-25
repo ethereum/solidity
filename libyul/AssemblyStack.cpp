@@ -54,7 +54,6 @@ Dialect const& languageToDialect(AssemblyStack::Language _language, EVMVersion _
 	switch (_language)
 	{
 	case AssemblyStack::Language::Assembly:
-		return EVMDialect::strictAssemblyForEVM(_version);
 	case AssemblyStack::Language::StrictAssembly:
 		return EVMDialect::strictAssemblyForEVMObjects(_version);
 	case AssemblyStack::Language::Yul:
@@ -132,15 +131,19 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _optimize) const
 {
 	EVMDialect const* dialect = nullptr;
-
-	if (m_language == Language::Assembly)
-		dialect = &EVMDialect::strictAssemblyForEVM(m_evmVersion);
-	else if (m_language == AssemblyStack::Language::StrictAssembly)
-		dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
-	else if (m_language == AssemblyStack::Language::Yul)
-		dialect = &EVMDialect::yulForEVM(m_evmVersion);
-	else
-		solAssert(false, "Invalid language.");
+	switch (m_language)
+	{
+		case Language::Assembly:
+		case Language::StrictAssembly:
+			dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
+			break;
+		case Language::Yul:
+			dialect = &EVMDialect::yulForEVM(m_evmVersion);
+			break;
+		default:
+			solAssert(false, "Invalid language.");
+			break;
+	}
 
 	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _evm15, _optimize);
 }
