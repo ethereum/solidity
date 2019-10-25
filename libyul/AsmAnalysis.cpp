@@ -654,28 +654,6 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 		);
 }
 
-// FIXME: copy'n'paste from AsmParser. make it more general (by putting it into dev::eth namespace)
-std::map<string, dev::eth::Instruction> const& instructions()
-{
-	// Allowed instructions, lowercase names.
-	static map<string, dev::eth::Instruction> s_instructions;
-	if (s_instructions.empty())
-	{
-		for (auto const& instruction: dev::eth::c_instructions)
-		{
-			if (
-				instruction.second == dev::eth::Instruction::JUMPDEST ||
-				dev::eth::isPushInstruction(instruction.second)
-			)
-				continue;
-			string name = instruction.first;
-			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
-			s_instructions[name] = instruction.second;
-		}
-	}
-	return s_instructions;
-}
-
 bool AsmAnalyzer::warnOnInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
 {
 	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
