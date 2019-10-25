@@ -702,6 +702,9 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		}
 		else if (_context == yul::IdentifierContext::LValue)
 		{
+			if (dynamic_cast<MagicVariableDeclaration const*>(declaration))
+				return size_t(-1);
+
 			m_errorReporter.typeError(_identifier.location, "Only local variables can be assigned to in inline assembly.");
 			return size_t(-1);
 		}
