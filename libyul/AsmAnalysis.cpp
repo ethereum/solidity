@@ -678,10 +678,9 @@ std::map<string, dev::eth::Instruction> const& instructions()
 
 bool AsmAnalyzer::warnOnInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
 {
-	auto const& instructionMap = instructions();
-	auto const identifier = boost::to_lower_copy(_instructionIdentifier);
-	if (auto const i = instructionMap.find(identifier); i != instructionMap.end())
-		return warnOnInstructions(i->second, _location);
+	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
+	if (builtin)
+		return warnOnInstructions(builtin->instruction.get(), _location);
 	else
 		return false;
 }
