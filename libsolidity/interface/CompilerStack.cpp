@@ -1463,10 +1463,14 @@ string CompilerStack::computeLocalVariables(eth::AssemblyItems const& _items) co
 
 	string ret;
 
+	bool first = true;
 	for (auto const& item: _items)
 	{
-		if (!ret.empty())
+		if (first) {
+			first = false;
+		} else {
 			ret += ";";
+		}
 
 		std::map<solidity::Declaration const*, unsigned> mappings = item.localVariables();
 		bool first = true;
