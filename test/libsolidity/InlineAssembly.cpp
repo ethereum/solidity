@@ -742,8 +742,8 @@ BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 
 BOOST_AUTO_TEST_CASE(jump_error)
 {
-	CHECK_PARSE_WARNING("{ jump(44) }", SyntaxError, "Jump instructions and labels are low-level EVM features");
-	CHECK_PARSE_WARNING("{ jumpi(44, 2) }", SyntaxError, "Jump instructions and labels are low-level EVM features");
+	CHECK_PARSE_WARNING("{ jump(44) }", DeclarationError, "Function not found.");
+	CHECK_PARSE_WARNING("{ jumpi(44, 2) }", DeclarationError, "Function not found.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
