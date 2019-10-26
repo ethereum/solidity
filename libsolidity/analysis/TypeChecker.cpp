@@ -2156,6 +2156,9 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (contract->abstract() || !contract->annotation().unimplementedFunctions.empty())
 			m_errorReporter.typeError(_newExpression.location(), "Cannot instantiate an abstract contract.");
 
+		if (contract->abstract())
+			m_errorReporter.typeError(_newExpression.location(), "Cannot instantiate an abstract contract.");
+
 		solAssert(!!m_scope, "");
 		m_scope->annotation().contractDependencies.insert(contract);
 		solAssert(
