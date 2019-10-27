@@ -44,13 +44,13 @@ abstract contract TokenInterface {
     uint256 public totalSupply;
 
     /// @param _owner The address from which the balance will be retrieved
-    /// @return The balance
+    /// @return balance The balance
     function balanceOf(address _owner) public view returns (uint256 balance);
 
     /// @notice Send `_amount` tokens to `_to` from `msg.sender`
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
-    /// @return Whether the transfer was successful or not
+    /// @return success Whether the transfer was successful or not
     function transfer(address _to, uint256 _amount) public returns (bool success);
 
     /// @notice Send `_amount` tokens to `_to` from `_from` on the condition it
@@ -58,19 +58,19 @@ abstract contract TokenInterface {
     /// @param _from The address of the origin of the transfer
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
-    /// @return Whether the transfer was successful or not
+    /// @return success Whether the transfer was successful or not
     function transferFrom(address _from, address _to, uint256 _amount) public returns (bool success);
 
     /// @notice `msg.sender` approves `_spender` to spend `_amount` tokens on
     /// its behalf
     /// @param _spender The address of the account able to transfer the tokens
     /// @param _amount The amount of tokens to be approved for transfer
-    /// @return Whether the approval was successful or not
+    /// @return success Whether the approval was successful or not
     function approve(address _spender, uint256 _amount) public returns (bool success);
 
     /// @param _owner The address of the account owning tokens
     /// @param _spender The address of the account able to transfer the tokens
-    /// @return Amount of remaining tokens of _owner that _spender is allowed
+    /// @return remaining Amount of remaining tokens of _owner that _spender is allowed
     /// to spend
     function allowance(
         address _owner,

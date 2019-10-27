@@ -14,7 +14,7 @@ Breaking changes:
  * Syntax: Abstract contracts need to be marked explicitly as abstract by using the ``abstract`` keyword.
  * Inline Assembly: Only strict inline assembly is allowed.
  * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
- * Natspec JSON Interface: Support multiple ``@return`` statements in dev documentation to behave like named parameters.
+ * Natspec JSON Interface: Support multiple ``@return`` statements in dev documentation to behave like parameters where the first word in the entry must contain the name.
  * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
 
 
@@ -46,7 +46,6 @@ Bugfixes:
  * Type Checker: Disallow constructor of the same class to be used as modifier
  * Code Generator: Fixed a faulty assert that would wrongly trigger for array sizes exceeding unsigned integer
  * Type Checker: Treat magic variables as unknown identifiers in inline assembly
-
 
 
 ### 0.5.12 (2019-10-01)

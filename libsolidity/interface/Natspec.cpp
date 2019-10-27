@@ -102,38 +102,10 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 			if (!method.empty())
 			{
 				// add the function, only if we have any documentation to add
-				Json::Value ret(Json::objectValue);
+				Json::Value jsonReturn = extractReturnParameterDocs(fun->annotation().docTags, *fun);
 
-				auto returnParams = fun->returnParameters();
-				auto returnDoc = fun->annotation().docTags.equal_range("return");
-
-				if (!returnParams.empty())
-				{
-					unsigned int n = 0;
-					for (auto i = returnDoc.first; i != returnDoc.second; i++)
-					{
-						string paramName = returnParams.at(n)->name();
-						string content = i->second.content;
-
-						if (paramName.empty())
-						{
-							paramName = "_" + std::to_string(n+1);
-						}
-						else
-						{
-							//check to make sure the first word of the doc str is the same as the return name
-							auto nameEndPos = content.find_first_of(" \t");
-							solAssert(content.substr(0, nameEndPos) == paramName, "No return param name given: " + paramName);
-							content = content.substr(nameEndPos+1);
-						}
-
-						ret[paramName] = Json::Value(content);
-						n++;
-					}
-				}
-
-				if (!ret.empty())
-					method["return"] = ret;
+				if (!jsonReturn.empty())
+					method["returns"] = jsonReturn;
 
 				methods[it.second->externalSignature()] = method;
 			}
@@ -145,6 +117,36 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 	return doc;
 }
 
+Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, FunctionDefinition const& _functionDef)
+{
+	Json::Value jsonReturn{Json::objectValue};
+	auto returnDocs = _tags.equal_range("return");
+
+	if (!_functionDef.returnParameters().empty())
+	{
+		size_t n = 0;
+		for (auto i = returnDocs.first; i != returnDocs.second; i++)
+		{
+			string paramName = _functionDef.returnParameters().at(n)->name();
+			string content = i->second.content;
+
+			if (paramName.empty())
+				paramName = "_" + std::to_string(n);
+			else
+			{
+				//check to make sure the first word of the doc str is the same as the return name
+				auto nameEndPos = content.find_first_of(" \t");
+				solAssert(content.substr(0, nameEndPos) == paramName, "No return param name given: " + paramName);
+				content = content.substr(nameEndPos+1);
+			}
+
+			jsonReturn[paramName] = Json::Value(content);
+			n++;
+		}
+	}
+
+	return jsonReturn;
+}
 
 string Natspec::extractDoc(multimap<string, DocTag> const& _tags, string const& _name)
 {

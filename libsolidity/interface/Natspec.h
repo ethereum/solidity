@@ -28,6 +28,7 @@
 #include <json/json.h>
 #include <memory>
 #include <string>
+#include <libsolidity/ast/AST.h>
 
 namespace dev
 {
@@ -60,6 +61,7 @@ private:
 	/// @return      A JSON representation
 	///              of the contract's developer documentation
 	static Json::Value devDocumentation(std::multimap<std::string, DocTag> const& _tags);
+	static Json::Value extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, FunctionDefinition const& _functionDef);
 };
 
 } //solidity NS
