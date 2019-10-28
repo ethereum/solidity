@@ -122,7 +122,7 @@ bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 	if (!_typeName.annotation().type)
 	{
 		_typeName.annotation().type = TypeProvider::fromElementaryTypeName(_typeName.typeName());
-		if (_typeName.stateMutability().is_initialized())
+		if (_typeName.stateMutability().has_value())
 		{
 			// for non-address types this was already caught by the parser
 			solAssert(_typeName.annotation().type->category() == Type::Category::Address, "");

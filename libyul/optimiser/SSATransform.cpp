@@ -58,7 +58,7 @@ void IntroduceSSA::operator()(Block& _block)
 {
 	iterateReplacing(
 		_block.statements,
-		[&](Statement& _s) -> boost::optional<vector<Statement>>
+		[&](Statement& _s) -> std::optional<vector<Statement>>
 		{
 			if (_s.type() == typeid(VariableDeclaration))
 			{
@@ -213,7 +213,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 
 	iterateReplacing(
 		_block.statements,
-		[&](Statement& _s) -> boost::optional<vector<Statement>>
+		[&](Statement& _s) -> std::optional<vector<Statement>>
 		{
 			vector<Statement> toPrepend;
 			for (YulString toReassign: m_variablesToReassign)
@@ -253,7 +253,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 			else
 			{
 				toPrepend.emplace_back(std::move(_s));
-				return toPrepend;
+				return {std::move(toPrepend)};
 			}
 		}
 	);

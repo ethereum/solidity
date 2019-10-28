@@ -929,7 +929,9 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 		ASTNodeFactory nodeFactory(*this);
 		nodeFactory.markEndPosition();
 		m_scanner->next();
-		auto stateMutability = boost::make_optional(elemTypeName.token() == Token::Address, StateMutability::NonPayable);
+		auto stateMutability = elemTypeName.token() == Token::Address
+			? optional<StateMutability>{StateMutability::NonPayable}
+			: nullopt;
 		if (TokenTraits::isStateMutabilitySpecifier(m_scanner->currentToken(), false))
 		{
 			if (elemTypeName.token() == Token::Address)
@@ -1651,7 +1653,7 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 		nodeFactory.markEndPosition();
 		auto expressionType = nodeFactory.createNode<ElementaryTypeName>(
 			ElementaryTypeNameToken(Token::Address, 160, 0),
-			boost::make_optional(StateMutability::Payable)
+			std::make_optional(StateMutability::Payable)
 		);
 		expression = nodeFactory.createNode<ElementaryTypeNameExpression>(expressionType);
 		expectToken(Token::LParen, false);

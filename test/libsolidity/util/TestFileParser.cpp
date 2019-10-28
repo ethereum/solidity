@@ -24,11 +24,11 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/optional.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 
 using namespace dev;

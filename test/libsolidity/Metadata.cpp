@@ -42,7 +42,7 @@ map<string, string> requireParsedCBORMetadata(bytes const& _bytecode)
 {
 	bytes cborMetadata = dev::test::onlyMetadata(_bytecode);
 	BOOST_REQUIRE(!cborMetadata.empty());
-	boost::optional<map<string, string>> tmp = dev::test::parseCBORMetadata(cborMetadata);
+	std::optional<map<string, string>> tmp = dev::test::parseCBORMetadata(cborMetadata);
 	BOOST_REQUIRE(tmp);
 	return *tmp;
 }

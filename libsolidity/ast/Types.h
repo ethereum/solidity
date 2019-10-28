@@ -31,11 +31,11 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Result.h>
 
-#include <boost/optional.hpp>
 #include <boost/rational.hpp>
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -769,8 +769,8 @@ private:
 	Type const* m_baseType;
 	bool m_hasDynamicLength = true;
 	u256 m_length;
-	mutable boost::optional<TypeResult> m_interfaceType;
-	mutable boost::optional<TypeResult> m_interfaceType_library;
+	mutable std::optional<TypeResult> m_interfaceType;
+	mutable std::optional<TypeResult> m_interfaceType_library;
 };
 
 class ArraySliceType: public ReferenceType
@@ -894,12 +894,12 @@ public:
 
 	bool recursive() const
 	{
-		if (m_recursive.is_initialized())
-			return m_recursive.get();
+		if (m_recursive.has_value())
+			return m_recursive.value();
 
 		interfaceType(false);
 
-		return m_recursive.get();
+		return m_recursive.value();
 	}
 
 	std::unique_ptr<ReferenceType> copyForLocation(DataLocation _location, bool _isPointer) const override;
@@ -927,9 +927,9 @@ public:
 private:
 	StructDefinition const& m_struct;
 	// Caches for interfaceType(bool)
-	mutable boost::optional<TypeResult> m_interfaceType;
-	mutable boost::optional<TypeResult> m_interfaceType_library;
-	mutable boost::optional<bool> m_recursive;
+	mutable std::optional<TypeResult> m_interfaceType;
+	mutable std::optional<TypeResult> m_interfaceType_library;
+	mutable std::optional<bool> m_recursive;
 };
 
 /**

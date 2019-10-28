@@ -31,11 +31,11 @@
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
 
 #include <functional>
 #include <list>
 #include <memory>
+#include <optional>
 
 namespace langutil
 {

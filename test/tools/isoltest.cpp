@@ -350,7 +350,7 @@ void setupTerminal()
 #endif
 }
 
-boost::optional<TestStats> runTestSuite(
+std::optional<TestStats> runTestSuite(
 	TestCreator _testCaseCreator,
 	TestOptions const& _options,
 	fs::path const& _basePath,
@@ -364,7 +364,7 @@ boost::optional<TestStats> runTestSuite(
 	if (!fs::exists(testPath) || !fs::is_directory(testPath))
 	{
 		cerr << _name << " tests not found. Use the --testpath argument." << endl;
-		return {};
+		return std::nullopt;
 	}
 
 	TestStats stats = TestTool::processPath(

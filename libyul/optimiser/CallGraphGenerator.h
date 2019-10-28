@@ -24,10 +24,9 @@
 
 #include <libdevcore/InvertibleMap.h>
 
-#include <boost/optional.hpp>
-
-#include <set>
 #include <map>
+#include <optional>
+#include <set>
 
 namespace yul
 {

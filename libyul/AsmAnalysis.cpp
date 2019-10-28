@@ -658,7 +658,7 @@ bool AsmAnalyzer::warnOnInstructions(std::string const& _instructionIdentifier, 
 {
 	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
 	if (builtin)
-		return warnOnInstructions(builtin->instruction.get(), _location);
+		return warnOnInstructions(builtin->instruction.value(), _location);
 	else
 		return false;
 }

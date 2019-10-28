@@ -202,7 +202,7 @@ inline T const* TypeProvider::createAndGet(Args&& ... _args)
 	return static_cast<T const*>(instance().m_generalTypes.back().get());
 }
 
-Type const* TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken const& _type, boost::optional<StateMutability> _stateMutability)
+Type const* TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken const& _type, std::optional<StateMutability> _stateMutability)
 {
 	solAssert(
 		TokenTraits::isElementaryTypeName(_type.token()),

@@ -24,7 +24,7 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 
-#include <boost/optional.hpp>
+#include <optional>
 #include <boost/variant.hpp>
 
 namespace dev

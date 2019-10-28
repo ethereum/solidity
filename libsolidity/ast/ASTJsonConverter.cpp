@@ -148,7 +148,7 @@ Json::Value ASTJsonConverter::typePointerToJson(TypePointer _tp, bool _short)
 	return typeDescriptions;
 
 }
-Json::Value ASTJsonConverter::typePointerToJson(boost::optional<FuncCallArguments> const& _tps)
+Json::Value ASTJsonConverter::typePointerToJson(std::optional<FuncCallArguments> const& _tps)
 {
 	if (_tps)
 	{

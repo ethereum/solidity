@@ -53,8 +53,9 @@
 #include <liblangutil/Common.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
-#include <boost/optional.hpp>
+
 #include <algorithm>
+#include <optional>
 #include <ostream>
 #include <tuple>
 
@@ -187,7 +188,7 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 	return true;
 }
 
-boost::optional<unsigned> Scanner::scanUnicode()
+std::optional<unsigned> Scanner::scanUnicode()
 {
 	unsigned x = 0;
 	for (int i = 0; i < 4; i++)
@@ -718,7 +719,7 @@ bool Scanner::scanEscape()
 		break;
 	case 'u':
 	{
-		if (boost::optional<unsigned> codepoint = scanUnicode())
+		if (auto const codepoint = scanUnicode(); codepoint.has_value())
 			addUnicodeAsUTF8(*codepoint);
 		else
 			return false;

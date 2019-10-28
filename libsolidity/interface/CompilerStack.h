@@ -127,7 +127,7 @@ public:
 	void reset(bool _keepSettings = false);
 
 	// Parses a remapping of the format "context:prefix=target".
-	static boost::optional<Remapping> parseRemapping(std::string const& _remapping);
+	static std::optional<Remapping> parseRemapping(std::string const& _remapping);
 
 	/// Sets path remappings.
 	/// Must be set before parsing.
