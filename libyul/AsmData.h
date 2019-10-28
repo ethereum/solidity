@@ -78,6 +78,8 @@ struct ForLoop { langutil::SourceLocation location; Block pre; std::unique_ptr<E
 struct Break { langutil::SourceLocation location; };
 /// Continue statement (valid within for loop)
 struct Continue { langutil::SourceLocation location; };
+/// Leave statement (valid within function)
+struct Leave { langutil::SourceLocation location; };
 
 struct LocationExtractor: boost::static_visitor<langutil::SourceLocation>
 {

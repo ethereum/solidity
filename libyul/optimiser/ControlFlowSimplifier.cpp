@@ -159,7 +159,10 @@ void ControlFlowSimplifier::visit(Statement& _st)
 				isTerminating = true;
 				--m_numBreakStatements;
 			}
-			else if (controlFlow == TerminationFinder::ControlFlow::Terminate)
+			else if (
+				controlFlow == TerminationFinder::ControlFlow::Terminate ||
+				controlFlow == TerminationFinder::ControlFlow::Leave
+			)
 				isTerminating = true;
 
 			if (isTerminating && m_numContinueStatements == 0 && m_numBreakStatements == 0)

@@ -169,6 +169,10 @@ void ASTModifier::operator()(Continue&)
 {
 }
 
+void ASTModifier::operator()(Leave&)
+{
+}
+
 void ASTModifier::operator()(Block& _block)
 {
 	walkVector(_block.statements);

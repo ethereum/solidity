@@ -70,7 +70,8 @@ void CodeSize::visit(Statement const& _statement)
 	else if (
 		_statement.type() == typeid(If) ||
 		_statement.type() == typeid(Break) ||
-		_statement.type() == typeid(Continue)
+		_statement.type() == typeid(Continue) ||
+		_statement.type() == typeid(Leave)
 	)
 		m_size += 2;
 	else if (_statement.type() == typeid(ForLoop))

@@ -173,6 +173,8 @@ TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement cons
 		return ControlFlow::Break;
 	else if (_statement.type() == typeid(Continue))
 		return ControlFlow::Continue;
+	else if (_statement.type() == typeid(Leave))
+		return ControlFlow::Leave;
 	else
 		return ControlFlow::FlowOut;
 }

@@ -128,6 +128,11 @@ string EWasmToText::operator()(wasm::BreakIf const& _break)
 	return "(br_if $" + _break.label.name + " " + visit(*_break.condition) + ")\n";
 }
 
+string EWasmToText::operator()(wasm::Return const&)
+{
+	return "(return)\n";
+}
+
 string EWasmToText::operator()(wasm::Block const& _block)
 {
 	string label = _block.labelName.empty() ? "" : " $" + _block.labelName;

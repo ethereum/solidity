@@ -60,6 +60,7 @@ public:
 	void operator()(ForLoop const&) override;
 	void operator()(Break const&) override;
 	void operator()(Continue const&) override;
+	void operator()(Leave const&) override;
 	void operator()(Block const& _block) override;
 
 	static std::map<Block const*, uint64_t> run(Block const& _block);

@@ -102,6 +102,8 @@ private:
 	/// we store pointers to functions.
 	Block& m_ast;
 	std::map<YulString, FunctionDefinition*> m_functions;
+	/// Functions not to be inlined (because they contain the ``leave`` statement).
+	std::set<YulString> m_noInlineFunctions;
 	/// Names of functions to always inline.
 	std::set<YulString> m_singleUse;
 	/// Variables that are constants (used for inlining heuristic)

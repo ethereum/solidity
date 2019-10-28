@@ -49,6 +49,7 @@ public:
 	std::string operator()(wasm::If const& _if);
 	std::string operator()(wasm::Loop const& _loop);
 	std::string operator()(wasm::Break const& _break);
+	std::string operator()(wasm::Return const& _return);
 	std::string operator()(wasm::BreakIf const& _break);
 	std::string operator()(wasm::Block const& _block);
 

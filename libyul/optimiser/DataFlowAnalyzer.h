@@ -64,6 +64,10 @@ struct SideEffects;
  * older version of the other and thus overlapping contents would have been deleted already
  * at the point of assignment.
  *
+ * The DataFlowAnalyzer currently does not deal with the ``leave`` statement. This is because
+ * it only matters at the end of a function body, which is a point in the code a derived class
+ * can not easily deal with.
+ *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
 class DataFlowAnalyzer: public ASTModifier

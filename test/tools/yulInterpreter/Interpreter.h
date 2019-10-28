@@ -53,11 +53,12 @@ class TraceLimitReached: public InterpreterTerminatedGeneric
 {
 };
 
-enum class LoopState
+enum class ControlFlowState
 {
 	Default,
 	Continue,
 	Break,
+	Leave
 };
 
 struct InterpreterState
@@ -89,7 +90,7 @@ struct InterpreterState
 	size_t maxTraceSize = 0;
 	size_t maxSteps = 0;
 	size_t numSteps = 0;
-	LoopState loopState = LoopState::Default;
+	ControlFlowState controlFlowState = ControlFlowState::Default;
 
 	void dumpTraceAndState(std::ostream& _out) const;
 };
@@ -121,6 +122,7 @@ public:
 	void operator()(ForLoop const&) override;
 	void operator()(Break const&) override;
 	void operator()(Continue const&) override;
+	void operator()(Leave const&) override;
 	void operator()(Block const& _block) override;
 
 	std::vector<std::string> const& trace() const { return m_state.trace; }

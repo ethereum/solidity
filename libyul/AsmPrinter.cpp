@@ -227,6 +227,11 @@ string AsmPrinter::operator()(Continue const&) const
 	return "continue";
 }
 
+string AsmPrinter::operator()(Leave const&) const
+{
+	return "leave";
+}
+
 string AsmPrinter::operator()(Block const& _block) const
 {
 	if (_block.statements.empty())

@@ -20,6 +20,7 @@ Language Features:
  * Introduce syntax for array slices and implement them for dynamic calldata arrays.
  * Introduce ``push()`` for dynamic storage arrays. It returns a reference to the newly allocated element, if applicable.
  * Modify ``push(element)`` for dynamic storage arrays such that it does not return the new length anymore.
+ * Yul: Introduce ``leave`` statement that exits the current function.
 
 
 Compiler Features:

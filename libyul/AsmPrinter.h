@@ -50,6 +50,7 @@ public:
 	std::string operator()(ForLoop const& _forLoop) const;
 	std::string operator()(Break const& _break) const;
 	std::string operator()(Continue const& _continue) const;
+	std::string operator()(Leave const& _continue) const;
 	std::string operator()(Block const& _block) const;
 
 private:

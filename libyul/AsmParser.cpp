@@ -144,6 +144,16 @@ Statement Parser::parseStatement()
 		m_scanner->next();
 		return stmt;
 	}
+	case Token::Identifier:
+		if (currentLiteral() == "leave")
+		{
+			Statement stmt{createWithLocation<Leave>()};
+			if (!m_insideFunction)
+				m_errorReporter.syntaxError(location(), "Keyword \"leave\" can only be used inside a function.");
+			m_scanner->next();
+			return stmt;
+		}
+		break;
 	default:
 		break;
 	}
@@ -439,7 +449,10 @@ FunctionDefinition Parser::parseFunctionDefinition()
 			expectToken(Token::Comma);
 		}
 	}
+	bool preInsideFunction = m_insideFunction;
+	m_insideFunction = true;
 	funDef.body = parseBlock();
+	m_insideFunction = preInsideFunction;
 	funDef.location.end = funDef.body.location.end;
 
 	m_currentForLoopComponent = outerForLoopComponent;
