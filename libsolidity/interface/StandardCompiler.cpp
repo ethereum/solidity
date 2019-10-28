@@ -31,8 +31,9 @@
 
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/optional.hpp>
+
 #include <algorithm>
+#include <optional>
 
 using namespace std;
 using namespace dev;
@@ -317,7 +318,7 @@ Json::Value collectEVMObject(eth::LinkerObject const& _object, string const* _so
 	return output;
 }
 
-boost::optional<Json::Value> checkKeys(Json::Value const& _input, set<string> const& _keys, string const& _name)
+std::optional<Json::Value> checkKeys(Json::Value const& _input, set<string> const& _keys, string const& _name)
 {
 	if (!!_input && !_input.isObject())
 		return formatFatalError("JSONError", "\"" + _name + "\" must be an object");
@@ -326,46 +327,46 @@ boost::optional<Json::Value> checkKeys(Json::Value const& _input, set<string> co
 		if (!_keys.count(member))
 			return formatFatalError("JSONError", "Unknown key \"" + member + "\"");
 
-	return boost::none;
+	return std::nullopt;
 }
 
-boost::optional<Json::Value> checkRootKeys(Json::Value const& _input)
+std::optional<Json::Value> checkRootKeys(Json::Value const& _input)
 {
 	static set<string> keys{"auxiliaryInput", "language", "settings", "sources"};
 	return checkKeys(_input, keys, "root");
 }
 
-boost::optional<Json::Value> checkSourceKeys(Json::Value const& _input, string const& _name)
+std::optional<Json::Value> checkSourceKeys(Json::Value const& _input, string const& _name)
 {
 	static set<string> keys{"content", "keccak256", "urls"};
 	return checkKeys(_input, keys, "sources." + _name);
 }
 
-boost::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
+std::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
 {
 	static set<string> keys{"smtlib2responses"};
 	return checkKeys(_input, keys, "auxiliaryInput");
 }
 
-boost::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
+std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
 	static set<string> keys{"parserErrorRecovery", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings"};
 	return checkKeys(_input, keys, "settings");
 }
 
-boost::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
+std::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
 {
 	static set<string> keys{"details", "enabled", "runs"};
 	return checkKeys(_input, keys, "settings.optimizer");
 }
 
-boost::optional<Json::Value> checkOptimizerDetailsKeys(Json::Value const& _input)
+std::optional<Json::Value> checkOptimizerDetailsKeys(Json::Value const& _input)
 {
 	static set<string> keys{"peephole", "jumpdestRemover", "orderLiterals", "deduplicate", "cse", "constantOptimizer", "yul", "yulDetails"};
 	return checkKeys(_input, keys, "settings.optimizer.details");
 }
 
-boost::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std::string const& _name, bool& _setting)
+std::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std::string const& _name, bool& _setting)
 {
 	if (_details.isMember(_name))
 	{
@@ -376,7 +377,7 @@ boost::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, s
 	return {};
 }
 
-boost::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
+std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 {
 	if (_input.isObject() && _input.isMember("useLiteralContent") && !_input["useLiteralContent"].isBool())
 		return formatFatalError("JSONError", "\"settings.metadata.useLiteralContent\" must be Boolean");
@@ -384,7 +385,7 @@ boost::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 	return checkKeys(_input, keys, "settings.metadata");
 }
 
-boost::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelection)
+std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelection)
 {
 	if (!!_outputSelection && !_outputSelection.isObject())
 		return formatFatalError("JSONError", "\"settings.outputSelection\" must be an object");
@@ -426,7 +427,7 @@ boost::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSele
 		}
 	}
 
-	return boost::none;
+	return std::nullopt;
 }
 /// Validates the optimizer settings and returns them in a parsed object.
 /// On error returns the json-formatted error message.
@@ -635,7 +636,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 	{
 		if (!settings["evmVersion"].isString())
 			return formatFatalError("JSONError", "evmVersion must be a string.");
-		boost::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(settings["evmVersion"].asString());
+		std::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(settings["evmVersion"].asString());
 		if (!version)
 			return formatFatalError("JSONError", "Invalid EVM version requested.");
 		ret.evmVersion = *version;

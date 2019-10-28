@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(IterateReplacing)
 BOOST_AUTO_TEST_CASE(no_replacement)
 {
 	vector<string> v{"abc", "def", "ghi"};
-	function<boost::optional<vector<string>>(string&)> f = [](string&) -> boost::optional<vector<string>> { return {}; };
+	function<std::optional<vector<string>>(string&)> f = [](string&) -> std::optional<vector<string>> { return {}; };
 	iterateReplacing(v, f);
 	vector<string> expectation{"abc", "def", "ghi"};
 	BOOST_CHECK(v == expectation);
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(no_replacement)
 BOOST_AUTO_TEST_CASE(empty_input)
 {
 	vector<string> v;
-	function<boost::optional<vector<string>>(string&)> f = [](string&) -> boost::optional<vector<string>> { return {}; };
+	function<std::optional<vector<string>>(string&)> f = [](string&) -> std::optional<vector<string>> { return {}; };
 	iterateReplacing(v, f);
 	vector<string> expectation;
 	BOOST_CHECK(v == expectation);
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(empty_input)
 BOOST_AUTO_TEST_CASE(delete_some)
 {
 	vector<string> v{"abc", "def", "ghi"};
-	function<boost::optional<vector<string>>(string&)> f = [](string& _s) -> boost::optional<vector<string>> {
+	function<std::optional<vector<string>>(string&)> f = [](string& _s) -> std::optional<vector<string>> {
 		if (_s == "def")
 			return vector<string>();
 		else
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(delete_some)
 BOOST_AUTO_TEST_CASE(inject_some_start)
 {
 	vector<string> v{"abc", "def", "ghi"};
-	function<boost::optional<vector<string>>(string&)> f = [](string& _s) -> boost::optional<vector<string>> {
+	function<std::optional<vector<string>>(string&)> f = [](string& _s) -> std::optional<vector<string>> {
 		if (_s == "abc")
 			return vector<string>{"x", "y"};
 		else
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(inject_some_start)
 BOOST_AUTO_TEST_CASE(inject_some_end)
 {
 	vector<string> v{"abc", "def", "ghi"};
-	function<boost::optional<vector<string>>(string&)> f = [](string& _s) -> boost::optional<vector<string>> {
+	function<std::optional<vector<string>>(string&)> f = [](string& _s) -> std::optional<vector<string>> {
 		if (_s == "ghi")
 			return vector<string>{"x", "y"};
 		else

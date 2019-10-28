@@ -411,7 +411,7 @@ void CompilerContext::appendInlineAssembly(
 		analyzerResult = yul::AsmAnalyzer(
 			analysisInfo,
 			errorReporter,
-			boost::none,
+			std::nullopt,
 			dialect,
 			identifierAccess.resolve
 		).analyze(*parserResult);

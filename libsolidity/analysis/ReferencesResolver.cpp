@@ -122,7 +122,7 @@ bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 	if (!_typeName.annotation().type)
 	{
 		_typeName.annotation().type = TypeProvider::fromElementaryTypeName(_typeName.typeName());
-		if (_typeName.stateMutability().is_initialized())
+		if (_typeName.stateMutability().has_value())
 		{
 			// for non-address types this was already caught by the parser
 			solAssert(_typeName.annotation().type->category() == Type::Category::Address, "");
@@ -323,7 +323,7 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	// Will be re-generated later with correct information
 	// We use the latest EVM version because we will re-run it anyway.
 	yul::AsmAnalysisInfo analysisInfo;
-	boost::optional<Error::Type> errorTypeForLoose = Error::Type::SyntaxError;
+	std::optional<Error::Type> errorTypeForLoose = Error::Type::SyntaxError;
 	yul::AsmAnalyzer(
 		analysisInfo,
 		errorsIgnored,

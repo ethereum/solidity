@@ -23,6 +23,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 
 namespace langutil
 {
@@ -67,7 +68,7 @@ private:
 	void reportMutability(
 		StateMutability _mutability,
 		langutil::SourceLocation const& _location,
-		boost::optional<langutil::SourceLocation> const& _nestedLocation = {}
+		std::optional<langutil::SourceLocation> const& _nestedLocation = {}
 	);
 
 	std::vector<std::shared_ptr<ASTNode>> const& m_ast;

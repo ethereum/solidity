@@ -82,7 +82,7 @@ void WordSizeTransform::operator()(Block& _block)
 {
 	iterateReplacing(
 		_block.statements,
-		[&](Statement& _s) -> boost::optional<vector<Statement>>
+		[&](Statement& _s) -> std::optional<vector<Statement>>
 		{
 			if (_s.type() == typeid(VariableDeclaration))
 			{
@@ -95,7 +95,7 @@ void WordSizeTransform::operator()(Block& _block)
 				{
 					if (varDecl.value) visit(*varDecl.value);
 					rewriteVarDeclList(varDecl.variables);
-					return boost::none;
+					return std::nullopt;
 				}
 				else if (
 					varDecl.value->type() == typeid(Identifier) ||
@@ -114,7 +114,7 @@ void WordSizeTransform::operator()(Block& _block)
 								std::move(newRhs[i])
 							}
 						);
-					return ret;
+					return {std::move(ret)};
 				}
 				else
 					yulAssert(false, "");
@@ -130,7 +130,7 @@ void WordSizeTransform::operator()(Block& _block)
 				{
 					if (assignment.value) visit(*assignment.value);
 					rewriteIdentifierList(assignment.variableNames);
-					return boost::none;
+					return std::nullopt;
 				}
 				else if (
 					assignment.value->type() == typeid(Identifier) ||
@@ -149,7 +149,7 @@ void WordSizeTransform::operator()(Block& _block)
 								std::move(newRhs[i])
 							}
 						);
-					return ret;
+					return {std::move(ret)};
 				}
 				else
 					yulAssert(false, "");
@@ -158,7 +158,7 @@ void WordSizeTransform::operator()(Block& _block)
 				return handleSwitch(boost::get<Switch>(_s));
 			else
 				visit(_s);
-			return boost::none;
+			return std::nullopt;
 		}
 	);
 }
@@ -174,7 +174,7 @@ void WordSizeTransform::rewriteVarDeclList(TypedNameList& _nameList)
 {
 	iterateReplacing(
 		_nameList,
-		[&](TypedName const& _n) -> boost::optional<TypedNameList>
+		[&](TypedName const& _n) -> std::optional<TypedNameList>
 		{
 			TypedNameList ret;
 			for (auto newName: generateU64IdentifierNames(_n.name))
@@ -188,7 +188,7 @@ void WordSizeTransform::rewriteIdentifierList(vector<Identifier>& _ids)
 {
 	iterateReplacing(
 		_ids,
-		[&](Identifier const& _id) -> boost::optional<vector<Identifier>>
+		[&](Identifier const& _id) -> std::optional<vector<Identifier>>
 		{
 			vector<Identifier> ret;
 			for (auto newId: m_variableMapping.at(_id.name))
@@ -202,7 +202,7 @@ void WordSizeTransform::rewriteFunctionCallArguments(vector<Expression>& _args)
 {
 	iterateReplacing(
 		_args,
-		[&](Expression& _e) -> boost::optional<vector<Expression>>
+		[&](Expression& _e) -> std::optional<vector<Expression>>
 		{
 			return expandValueToVector(_e);
 		}

@@ -30,7 +30,7 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-using OptionalStatements = boost::optional<vector<Statement>>;
+using OptionalStatements = std::optional<vector<Statement>>;
 
 namespace
 {
