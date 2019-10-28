@@ -359,6 +359,8 @@ message PopStmt {
   required Expression expr = 1;
 }
 
+message LeaveStmt {}
+
 message Statement {
   oneof stmt_oneof {
     VarDecl             decl            = 1;
@@ -378,6 +380,7 @@ message Statement {
     BoundedForStmt      boundedforstmt  = 15;
     FunctionDef         funcdef         = 16;
     PopStmt             pop             = 17;
+    LeaveStmt           leave           = 18;
   }
 }
 
