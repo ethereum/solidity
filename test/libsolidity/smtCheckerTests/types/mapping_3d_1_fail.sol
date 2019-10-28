@@ -10,5 +10,4 @@ contract C
 	}
 }
 // ----
-// Warning: (152-167): Assertion checker does not yet implement assignments to multi-dimensional mappings or arrays.
 // Warning: (176-204): Assertion violation happens here
