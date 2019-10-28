@@ -27,10 +27,10 @@
 #include <libdevcore/Visitor.h>
 
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace yul
 {

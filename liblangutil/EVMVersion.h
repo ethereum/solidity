@@ -22,9 +22,9 @@
 
 #include <libevmasm/Instruction.h>
 
+#include <optional>
 #include <string>
 
-#include <boost/optional.hpp>
 #include <boost/operators.hpp>
 
 
@@ -51,12 +51,12 @@ public:
 	static EVMVersion istanbul() { return {Version::Istanbul}; }
 	static EVMVersion berlin() { return {Version::Berlin}; }
 
-	static boost::optional<EVMVersion> fromString(std::string const& _version)
+	static std::optional<EVMVersion> fromString(std::string const& _version)
 	{
 		for (auto const& v: {homestead(), tangerineWhistle(), spuriousDragon(), byzantium(), constantinople(), petersburg(), istanbul(), berlin()})
 			if (_version == v.name())
 				return v;
-		return {};
+		return std::nullopt;
 	}
 
 	bool operator==(EVMVersion const& _other) const { return m_version == _other.m_version; }
