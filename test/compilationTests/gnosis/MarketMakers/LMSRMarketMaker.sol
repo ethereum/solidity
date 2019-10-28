@@ -131,9 +131,9 @@ contract LMSRMarketMaker is MarketMaker {
     /// @param netOutcomeTokensSold Net outcome tokens sold by market
     /// @param funding Initial funding for market
     /// @param outcomeIndex Index of exponential term to extract (for use by marginal price function)
-    /// @return sum of the outcomes
-    /// @return offset that is used for all
-    /// @return outcomeExpTerm the summand associated with the supplied index
+    /// @return sum The sum of the outcomes
+    /// @return offset The offset that is used for all
+    /// @return outcomeExpTerm The summand associated with the supplied index
     function sumExpOffset(int logN, int[] memory netOutcomeTokensSold, uint funding, uint8 outcomeIndex)
         private
         view

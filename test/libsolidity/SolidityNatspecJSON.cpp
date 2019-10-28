@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_multiple_unamed_mixed_2)
 			/// @return _milk And milk with nutella
 			function mul(uint a, uint second) public returns (uint _cookies, uint, uint _milk) {
 				uint mul = a * 7;
-        uint milk = 4;
+				uint milk = 4;
 				return (mul, second, milk);
 			}
 		}
