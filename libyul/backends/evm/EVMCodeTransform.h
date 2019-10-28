@@ -177,8 +177,6 @@ public:
 	void operator()(FunctionalInstruction const& _instr);
 	void operator()(FunctionCall const&);
 	void operator()(ExpressionStatement const& _statement);
-	void operator()(Label const& _label);
-	void operator()(StackAssignment const& _assignment);
 	void operator()(Assignment const& _assignment);
 	void operator()(VariableDeclaration const& _varDecl);
 	void operator()(If const& _if);

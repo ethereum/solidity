@@ -78,7 +78,6 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 	bool success = yul::AsmAnalyzer(
 		analysisInfo,
 		errors,
-		Error::Type::SyntaxError,
 		_dialect,
 		{},
 		_object.dataNames()
@@ -87,24 +86,9 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 	return analysisInfo;
 }
 
-bool AsmAnalyzer::operator()(Label const& _label)
-{
-	solAssert(!_label.name.empty(), "");
-	checkLooseFeature(
-		_label.location,
-		"The use of labels is disallowed. Please use \"if\", \"switch\", \"for\" or function calls instead."
-	);
-	m_info.stackHeightInfo[&_label] = m_stackHeight;
-	warnOnInstructions(dev::eth::Instruction::JUMPDEST, _label.location);
-	return true;
-}
-
 bool AsmAnalyzer::operator()(yul::Instruction const& _instruction)
 {
-	checkLooseFeature(
-		_instruction.location,
-		"The use of non-functional instructions is disallowed. Please use functional notation instead."
-	);
+	solAssert(false, "The use of non-functional instructions is disallowed. Please use functional notation instead.");
 	auto const& info = instructionInfo(_instruction.instruction);
 	m_stackHeight += info.ret - info.args;
 	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
@@ -215,31 +199,18 @@ bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	int initialStackHeight = m_stackHeight;
 	bool success = boost::apply_visitor(*this, _statement.expression);
-	if (m_stackHeight != initialStackHeight && (m_dialect.flavour != AsmFlavour::Loose || m_errorTypeForLoose))
+	if (success && m_stackHeight != initialStackHeight)
 	{
-		Error::Type errorType = m_dialect.flavour == AsmFlavour::Loose ? *m_errorTypeForLoose : Error::Type::TypeError;
 		string msg =
 			"Top-level expressions are not supposed to return values (this expression returns " +
 			to_string(m_stackHeight - initialStackHeight) +
 			" value" +
 			(m_stackHeight - initialStackHeight == 1 ? "" : "s") +
 			"). Use ``pop()`` or assign them.";
-		m_errorReporter.error(errorType, _statement.location, msg);
-		if (errorType != Error::Type::Warning)
-			success = false;
+		m_errorReporter.error(Error::Type::TypeError, _statement.location, msg);
+		success = false;
 	}
 	m_info.stackHeightInfo[&_statement] = m_stackHeight;
-	return success;
-}
-
-bool AsmAnalyzer::operator()(StackAssignment const& _assignment)
-{
-	checkLooseFeature(
-		_assignment.location,
-		"The use of stack assignment is disallowed. Please use assignment in functional notation instead."
-	);
-	bool success = checkAssignment(_assignment.variableName, size_t(-1));
-	m_info.stackHeightInfo[&_assignment] = m_stackHeight;
 	return success;
 }
 
@@ -366,7 +337,8 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		}
 	)))
 	{
-		m_errorReporter.declarationError(_funCall.functionName.location, "Function not found.");
+		if (!warnOnInstructions(_funCall.functionName.name.str(), _funCall.functionName.location))
+			m_errorReporter.declarationError(_funCall.functionName.location, "Function not found.");
 		success = false;
 	}
 	if (success)
@@ -562,7 +534,7 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	m_stackHeight -= scope(&_block).numberOfVariables();
 
 	int const stackDiff = m_stackHeight - initialStackHeight;
-	if (stackDiff != 0)
+	if (success && stackDiff != 0)
 	{
 		m_errorReporter.declarationError(
 			_block.location,
@@ -587,7 +559,7 @@ bool AsmAnalyzer::expectExpression(Expression const& _expr)
 	int const initialHeight = m_stackHeight;
 	if (!boost::apply_visitor(*this, _expr))
 		success = false;
-	if (!expectDeposit(1, initialHeight, locationOf(_expr)))
+	if (success && !expectDeposit(1, initialHeight, locationOf(_expr)))
 		success = false;
 	return success;
 }
@@ -682,7 +654,16 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 		);
 }
 
-void AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocation const& _location)
+bool AsmAnalyzer::warnOnInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
+{
+	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
+	if (builtin)
+		return warnOnInstructions(builtin->instruction.get(), _location);
+	else
+		return false;
+}
+
+bool AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocation const& _location)
 {
 	// We assume that returndatacopy, returndatasize and staticcall are either all available
 	// or all not available.
@@ -746,29 +727,16 @@ void AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocatio
 		_instr == dev::eth::Instruction::JUMPDEST
 	)
 	{
-		if (m_dialect.flavour == AsmFlavour::Loose)
-			m_errorReporter.error(
-				m_errorTypeForLoose ? *m_errorTypeForLoose : Error::Type::Warning,
-				_location,
-				"Jump instructions and labels are low-level EVM features that can lead to "
-				"incorrect stack access. Because of that they are discouraged. "
-				"Please consider using \"switch\", \"if\" or \"for\" statements instead."
-			);
-		else
-			m_errorReporter.error(
-				Error::Type::SyntaxError,
-				_location,
-				"Jump instructions and labels are low-level EVM features that can lead to "
-				"incorrect stack access. Because of that they are disallowed in strict assembly. "
-				"Use functions, \"switch\", \"if\" or \"for\" statements instead."
-			);
+		m_errorReporter.error(
+			Error::Type::SyntaxError,
+			_location,
+			"Jump instructions and labels are low-level EVM features that can lead to "
+			"incorrect stack access. Because of that they are disallowed in strict assembly. "
+			"Use functions, \"switch\", \"if\" or \"for\" statements instead."
+		);
 	}
-}
+	else
+		return false;
 
-void AsmAnalyzer::checkLooseFeature(SourceLocation const& _location, string const& _description)
-{
-	if (m_dialect.flavour != AsmFlavour::Loose)
-		solAssert(false, _description);
-	else if (m_errorTypeForLoose)
-		m_errorReporter.error(*m_errorTypeForLoose, _location, _description);
+	return true;
 }

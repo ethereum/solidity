@@ -50,8 +50,6 @@ public:
 	virtual ~StatementCopier() = default;
 	virtual Statement operator()(ExpressionStatement const& _statement) = 0;
 	virtual Statement operator()(Instruction const& _instruction) = 0;
-	virtual Statement operator()(Label const& _label) = 0;
-	virtual Statement operator()(StackAssignment const& _assignment) = 0;
 	virtual Statement operator()(Assignment const& _assignment) = 0;
 	virtual Statement operator()(VariableDeclaration const& _varDecl) = 0;
 	virtual Statement operator()(If const& _if) = 0;
@@ -77,8 +75,6 @@ public:
 	Expression operator()(FunctionalInstruction const& _instr) override;
 	Expression operator()(FunctionCall const&) override;
 	Statement operator()(ExpressionStatement const& _statement) override;
-	Statement operator()(Label const& _label) override;
-	Statement operator()(StackAssignment const& _assignment) override;
 	Statement operator()(Assignment const& _assignment) override;
 	Statement operator()(VariableDeclaration const& _varDecl) override;
 	Statement operator()(If const& _if) override;

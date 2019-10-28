@@ -10,8 +10,8 @@ Breaking changes:
  * General: New reserved keywords: ``virtual``.
  * Standard JSON Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
  * Syntax: ``push(element)`` for dynamic storage arrays do not return the new length anymore.
+ * Inline Assembly: Only strict inline assembly is allowed.
  * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
-
 
 Language Features:
  * Allow global enums and structs.

@@ -50,20 +50,6 @@ bool ScopeFiller::operator()(ExpressionStatement const& _expr)
 	return boost::apply_visitor(*this, _expr.expression);
 }
 
-bool ScopeFiller::operator()(Label const& _item)
-{
-	if (!m_currentScope->registerLabel(_item.name))
-	{
-		//@TODO secondary location
-		m_errorReporter.declarationError(
-			_item.location,
-			"Label name " + _item.name.str() + " already taken in this scope."
-		);
-		return false;
-	}
-	return true;
-}
-
 bool ScopeFiller::operator()(VariableDeclaration const& _varDecl)
 {
 	for (auto const& variable: _varDecl.variables)

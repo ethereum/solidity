@@ -41,7 +41,6 @@ public:
 		m_dialect(_dialect),
 		m_reportMutability(_reportMutability) {}
 
-	void operator()(yul::Label const&) { }
 	void operator()(yul::Instruction const& _instruction)
 	{
 		checkInstruction(_instruction.location, _instruction.instruction);
@@ -58,7 +57,6 @@ public:
 	{
 		boost::apply_visitor(*this, _expr.expression);
 	}
-	void operator()(yul::StackAssignment const&) {}
 	void operator()(yul::Assignment const& _assignment)
 	{
 		boost::apply_visitor(*this, *_assignment.value);

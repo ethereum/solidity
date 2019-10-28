@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(assembly_staticcall)
 	string text = R"(
 		contract C {
 			function i() view public {
-				assembly { pop(staticcall(gas, 1, 2, 3, 4, 5)) }
+				assembly { pop(staticcall(gas(), 1, 2, 3, 4, 5)) }
 			}
 		}
 	)";

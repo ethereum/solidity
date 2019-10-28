@@ -188,22 +188,22 @@ BOOST_AUTO_TEST_CASE(surplus_input)
 
 BOOST_AUTO_TEST_CASE(simple_instructions)
 {
-	BOOST_CHECK(successParse("{ dup1 dup1 mul dup1 sub pop }"));
+	BOOST_CHECK(successParse("{ let y := mul(0x10, mul(0x20, mload(0x40)))}"));
 }
 
 BOOST_AUTO_TEST_CASE(selfdestruct)
 {
-	BOOST_CHECK(successParse("{ 0x02 selfdestruct }"));
+	BOOST_CHECK(successParse("{ selfdestruct(0x02) }"));
 }
 
 BOOST_AUTO_TEST_CASE(keywords)
 {
-	BOOST_CHECK(successParse("{ 1 2 byte 2 return address pop }"));
+	BOOST_CHECK(successParse("{ return (byte(1, 2), 2) pop(address()) }"));
 }
 
 BOOST_AUTO_TEST_CASE(constants)
 {
-	BOOST_CHECK(successParse("{ 7 8 mul pop }"));
+	BOOST_CHECK(successParse("{ pop(mul(7, 8)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(vardecl)
@@ -237,29 +237,14 @@ BOOST_AUTO_TEST_CASE(vardecl_empty)
 	BOOST_CHECK(successParse("{ let x }"));
 }
 
-BOOST_AUTO_TEST_CASE(assignment)
-{
-	BOOST_CHECK(successParse("{ let x := 2 7 8 add =: x }"));
-}
-
-BOOST_AUTO_TEST_CASE(label)
-{
-	BOOST_CHECK(successParse("{ 7 abc: 8 eq abc jump pop }"));
-}
-
-BOOST_AUTO_TEST_CASE(label_complex)
-{
-	BOOST_CHECK(successParse("{ 7 abc: 8 eq jump(abc) jumpi(eq(7, 8), abc) pop }"));
-}
-
 BOOST_AUTO_TEST_CASE(functional)
 {
-	BOOST_CHECK(successParse("{ let x := 2 add(7, mul(6, x)) mul(7, 8) add =: x }"));
+	BOOST_CHECK(successParse("{ let x := 2 x := add(add(7, mul(6, x)), mul(7, 8)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(functional_partial)
 {
-	CHECK_PARSE_ERROR("{ let x := byte }", ParserError, "Expected '(' (instruction \"byte\" expects 2 arguments)");
+	CHECK_PARSE_ERROR("{ let x := byte }", ParserError, "Expected '(' but got '}'");
 }
 
 BOOST_AUTO_TEST_CASE(functional_partial_success)
@@ -274,12 +259,12 @@ BOOST_AUTO_TEST_CASE(functional_assignment)
 
 BOOST_AUTO_TEST_CASE(functional_assignment_complex)
 {
-	BOOST_CHECK(successParse("{ let x := 2 x := add(7, mul(6, x)) mul(7, 8) add }"));
+	BOOST_CHECK(successParse("{ let x := 2 x := add(add(7, mul(6, x)), mul(7, 8)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(vardecl_complex)
 {
-	BOOST_CHECK(successParse("{ let y := 2 let x := add(7, mul(6, y)) add mul(7, 8) }"));
+	BOOST_CHECK(successParse("{ let y := 2 let x := add(add(7, mul(6, y)), mul(7, 8)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(variable_use_before_decl)
@@ -303,7 +288,7 @@ BOOST_AUTO_TEST_CASE(if_statement_scope)
 
 BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
-	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
+	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected '(' but got '{'");
 	BOOST_CHECK("{ if calldatasize() {}");
 	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
 	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected '{' but got reserved keyword 'let'");
@@ -333,7 +318,7 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
-	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
+	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected '(' but got reserved keyword 'default'");
 	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
 }
 
@@ -369,7 +354,7 @@ BOOST_AUTO_TEST_CASE(for_invalid_expression)
 	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected '{' but got 'Number'");
-	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected '(' (instruction \"mload\" expects 1 arguments)");
+	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected '(' but got '{'");
 	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
 }
 
@@ -463,7 +448,7 @@ BOOST_AUTO_TEST_CASE(functions_in_parallel_scopes)
 
 BOOST_AUTO_TEST_CASE(variable_access_cross_functions)
 {
-	CHECK_PARSE_ERROR("{ let x := 2 function g() { x pop } }", DeclarationError, "Identifier not found.");
+	CHECK_PARSE_ERROR("{ let x := 2 function g() { pop(x) } }", DeclarationError, "Identifier not found.");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_tuple_assignment)
@@ -516,46 +501,6 @@ BOOST_AUTO_TEST_CASE(multiple_assignment)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(LooseStrictMode)
-
-BOOST_AUTO_TEST_CASE(no_opcodes_in_strict)
-{
-	BOOST_CHECK(successParse("{ pop(callvalue) }"));
-	BOOST_CHECK(successParse("{ callvalue pop }"));
-	CHECK_STRICT_ERROR("{ pop(callvalue) }", ParserError, "Expected '(' but got ')'");
-	CHECK_STRICT_ERROR("{ callvalue pop }", ParserError, "Call or assignment expected");
-	SUCCESS_STRICT("{ pop(callvalue()) }");
-	BOOST_CHECK(successParse("{ switch callvalue case 0 {} }"));
-	CHECK_STRICT_ERROR("{ switch callvalue case 0 {} }", ParserError, "Expected '(' but got reserved keyword 'case'");
-}
-
-BOOST_AUTO_TEST_CASE(no_labels_in_strict)
-{
-	BOOST_CHECK(successParse("{ a: }"));
-	CHECK_STRICT_ERROR("{ a: }", ParserError, "Labels are not supported");
-}
-
-BOOST_AUTO_TEST_CASE(no_stack_assign_in_strict)
-{
-	BOOST_CHECK(successParse("{ let x 4 =: x }"));
-	CHECK_STRICT_ERROR("{ let x 4 =: x }", ParserError, "Call or assignment expected.");
-}
-
-BOOST_AUTO_TEST_CASE(no_dup_swap_in_strict)
-{
-	BOOST_CHECK(successParse("{ swap1 }"));
-	CHECK_STRICT_ERROR("{ swap1 }", ParserError, "Call or assignment expected.");
-	BOOST_CHECK(successParse("{ dup1 pop }"));
-	CHECK_STRICT_ERROR("{ dup1 pop }", ParserError, "Call or assignment expected.");
-	BOOST_CHECK(successParse("{ swap2 }"));
-	CHECK_STRICT_ERROR("{ swap2 }", ParserError, "Call or assignment expected.");
-	BOOST_CHECK(successParse("{ dup2 pop }"));
-	CHECK_STRICT_ERROR("{ dup2 pop }", ParserError, "Call or assignment expected.");
-	CHECK_PARSE_ERROR("{ switch dup1 case 0 {} }", ParserError, "Instruction \"dup1\" not allowed in this context");
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-
 BOOST_AUTO_TEST_SUITE(Printing)
 
 BOOST_AUTO_TEST_CASE(print_smoke)
@@ -565,12 +510,12 @@ BOOST_AUTO_TEST_CASE(print_smoke)
 
 BOOST_AUTO_TEST_CASE(print_instructions)
 {
-	parsePrintCompare("{\n    7\n    8\n    mul\n    dup10\n    add\n    pop\n}");
+	parsePrintCompare("{ pop(7) }");
 }
 
 BOOST_AUTO_TEST_CASE(print_subblock)
 {
-	parsePrintCompare("{\n    {\n        dup4\n        add\n    }\n}");
+	parsePrintCompare("{ { pop(7) } }");
 }
 
 BOOST_AUTO_TEST_CASE(print_functional)
@@ -578,14 +523,9 @@ BOOST_AUTO_TEST_CASE(print_functional)
 	parsePrintCompare("{ let x := mul(sload(0x12), 7) }");
 }
 
-BOOST_AUTO_TEST_CASE(print_label)
-{
-	parsePrintCompare("{\n    loop:\n    jump(loop)\n}", true);
-}
-
 BOOST_AUTO_TEST_CASE(print_assignments)
 {
-	parsePrintCompare("{\n    let x := mul(2, 3)\n    7\n    =: x\n    x := add(1, 2)\n}");
+	parsePrintCompare("{\n    let x := mul(2, 3)\n    pop(7)\n    x := add(1, 2)\n}");
 }
 
 BOOST_AUTO_TEST_CASE(print_multi_assignments)
@@ -595,7 +535,7 @@ BOOST_AUTO_TEST_CASE(print_multi_assignments)
 
 BOOST_AUTO_TEST_CASE(print_string_literals)
 {
-	parsePrintCompare("{\n    \"\\n'\\xab\\x95\\\"\"\n    pop\n}");
+	parsePrintCompare("{ let x := \"\\n'\\xab\\x95\\\"\" }");
 }
 
 BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
@@ -661,54 +601,26 @@ BOOST_AUTO_TEST_CASE(oversize_string_literals)
 	CHECK_ASSEMBLE_ERROR("{ let x := \"123456789012345678901234567890123\" }", TypeError, "String literal too long");
 }
 
-BOOST_AUTO_TEST_CASE(assignment_after_tag)
-{
-	BOOST_CHECK(successParse("{ let x := 1 { 7 tag: =: x } }"));
-}
-
 BOOST_AUTO_TEST_CASE(magic_variables)
 {
-	CHECK_ASSEMBLE_ERROR("{ this pop }", DeclarationError, "Identifier not found");
-	CHECK_ASSEMBLE_ERROR("{ ecrecover pop }", DeclarationError, "Identifier not found");
-	BOOST_CHECK(successAssemble("{ let ecrecover := 1 ecrecover pop }"));
+	CHECK_ASSEMBLE_ERROR("{ pop(this) }", DeclarationError, "Identifier not found");
+	CHECK_ASSEMBLE_ERROR("{ pop(ecrecover) }", DeclarationError, "Identifier not found");
+	BOOST_CHECK(successAssemble("{ let ecrecover := 1 pop(ecrecover) }"));
 }
 
 BOOST_AUTO_TEST_CASE(stack_variables)
 {
-	BOOST_CHECK(successAssemble("{ let y := 3 { 2 { let x := y } pop} }"));
-}
-
-BOOST_AUTO_TEST_CASE(imbalanced_stack)
-{
-	BOOST_CHECK(successAssemble("{ 1 2 mul pop }", false));
-	CHECK_ASSEMBLE_ERROR("{ 1 }", DeclarationError, "Unbalanced stack at the end of a block: 1 surplus item(s).");
-	CHECK_ASSEMBLE_ERROR("{ pop }", DeclarationError, "Unbalanced stack at the end of a block: 1 missing item(s).");
-	BOOST_CHECK(successAssemble("{ let x := 4 7 add }", false));
-}
-
-BOOST_AUTO_TEST_CASE(error_tag)
-{
-	CHECK_ERROR("{ jump(invalidJumpLabel) }", true, DeclarationError, "Identifier not found", true);
+	BOOST_CHECK(successAssemble("{ let y := 3 { let z := 2 { let x := y } } }"));
 }
 
 BOOST_AUTO_TEST_CASE(designated_invalid_instruction)
 {
-	BOOST_CHECK(successAssemble("{ invalid }"));
+	BOOST_CHECK(successAssemble("{ invalid() }"));
 }
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_declaration)
 {
 	CHECK_ASSEMBLE_ERROR("{ let gas := 1 }", ParserError, "Cannot use builtin");
-}
-
-BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_assignment)
-{
-	CHECK_ASSEMBLE_ERROR("{ 2 =: gas }", ParserError, "Identifier expected, got builtin symbol");
-}
-
-BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_functional_assignment)
-{
-	CHECK_ASSEMBLE_ERROR("{ gas := 2 }", ParserError, "Variable name must precede \":=\"");
 }
 
 BOOST_AUTO_TEST_CASE(revert)
@@ -772,18 +684,10 @@ BOOST_AUTO_TEST_CASE(large_constant)
 
 BOOST_AUTO_TEST_CASE(keccak256)
 {
-	BOOST_CHECK(successAssemble("{ 0 0 keccak256 pop }"));
 	BOOST_CHECK(successAssemble("{ pop(keccak256(0, 0)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatasize)
-{
-	if (!dev::test::Options::get().evmVersion().supportsReturndata())
-		return;
-	BOOST_CHECK(successAssemble("{ let r := returndatasize }"));
-}
-
-BOOST_AUTO_TEST_CASE(returndatasize_functional)
 {
 	if (!dev::test::Options::get().evmVersion().supportsReturndata())
 		return;
@@ -794,7 +698,7 @@ BOOST_AUTO_TEST_CASE(returndatacopy)
 {
 	if (!dev::test::Options::get().evmVersion().supportsReturndata())
 		return;
-	BOOST_CHECK(successAssemble("{ 64 32 0 returndatacopy }"));
+	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy_functional)
@@ -836,27 +740,10 @@ BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", TypeError, "The \"sar\" instruction is only available for Constantinople-compatible VMs");
 }
 
-BOOST_AUTO_TEST_CASE(chainid_instanbul_warning)
+BOOST_AUTO_TEST_CASE(jump_error)
 {
-	if (dev::test::Options::get().evmVersion().hasChainID())
-		return;
-	CHECK_PARSE_WARNING("{ pop(chainid()) }", TypeError, "The \"chainid\" instruction is only available for Istanbul-compatible VMs");
-}
-
-BOOST_AUTO_TEST_CASE(selfbalance_instanbul_warning)
-{
-	if (dev::test::Options::get().evmVersion().hasSelfBalance())
-		return;
-	CHECK_PARSE_WARNING("{ pop(selfbalance()) }", TypeError, "The \"selfbalance\" instruction is only available for Istanbul-compatible VMs");
-}
-
-BOOST_AUTO_TEST_CASE(jump_warning)
-{
-	CHECK_PARSE_WARNING("{ 1 jump }", Warning, "Jump instructions");
-	CHECK_PARSE_WARNING("{ 1 2 jumpi }", Warning, "Jump instructions");
-	CHECK_PARSE_WARNING("{ jump(44) }", Warning, "Jump instructions");
-	CHECK_PARSE_WARNING("{ jumpi(44, 2) }", Warning, "Jump instructions");
-	CHECK_PARSE_WARNING("{ a: }", Warning, "Jump instructions");
+	CHECK_PARSE_WARNING("{ jump(44) }", DeclarationError, "Function not found.");
+	CHECK_PARSE_WARNING("{ jumpi(44, 2) }", DeclarationError, "Function not found.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

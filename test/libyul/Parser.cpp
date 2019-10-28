@@ -61,7 +61,6 @@ bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorR
 			return (yul::AsmAnalyzer(
 				analysisInfo,
 				errorReporter,
-				boost::none,
 				_dialect
 			)).analyze(*parserResult);
 		}
@@ -206,11 +205,6 @@ BOOST_AUTO_TEST_CASE(function_calls)
 BOOST_AUTO_TEST_CASE(tuple_assignment)
 {
 	BOOST_CHECK(successParse("{ function f() -> a:u256, b:u256, c:u256 {} let x:u256, y:u256, z:u256 := f() }"));
-}
-
-BOOST_AUTO_TEST_CASE(label)
-{
-	CHECK_ERROR("{ label: }", ParserError, "Labels are not supported.");
 }
 
 BOOST_AUTO_TEST_CASE(instructions)
@@ -549,11 +543,9 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 	SimpleDialect dialect;
 	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
-	CHECK_ERROR_DIALECT("{ builtin := 6 }", ParserError, "Variable name must precede \":=\" in assignment.", dialect);
 	CHECK_ERROR_DIALECT("{ function f(x) { f(builtin) } }", ParserError, "Expected '(' but got ')'", dialect);
 	CHECK_ERROR_DIALECT("{ function f(builtin) {}", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ function f() -> builtin {}", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
-	CHECK_ERROR_DIALECT("{ function g() -> a,b  {} builtin, builtin2 := g() }", ParserError, "Variable name must precede \",\" in multiple assignment.", dialect);
 }
 
 BOOST_AUTO_TEST_CASE(builtins_analysis)

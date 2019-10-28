@@ -735,7 +735,6 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	yul::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
-		Error::Type::SyntaxError,
 		_inlineAssembly.dialect(),
 		identifierAccess
 	);

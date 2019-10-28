@@ -250,30 +250,11 @@ void CodeTransform::operator()(Assignment const& _assignment)
 	checkStackHeight(&_assignment);
 }
 
-void CodeTransform::operator()(StackAssignment const& _assignment)
-{
-	solAssert(!m_allowStackOpt, "");
-	m_assembly.setSourceLocation(_assignment.location);
-	generateAssignment(_assignment.variableName);
-	checkStackHeight(&_assignment);
-}
-
 void CodeTransform::operator()(ExpressionStatement const& _statement)
 {
 	m_assembly.setSourceLocation(_statement.location);
 	boost::apply_visitor(*this, _statement.expression);
 	checkStackHeight(&_statement);
-}
-
-void CodeTransform::operator()(Label const& _label)
-{
-	solAssert(!m_allowStackOpt, "");
-	m_assembly.setSourceLocation(_label.location);
-	solAssert(m_scope, "");
-	solAssert(m_scope->identifiers.count(_label.name), "");
-	Scope::Label& label = boost::get<Scope::Label>(m_scope->identifiers.at(_label.name));
-	m_assembly.appendLabel(labelID(label));
-	checkStackHeight(&_label);
 }
 
 void CodeTransform::operator()(FunctionCall const& _call)

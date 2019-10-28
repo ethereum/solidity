@@ -10274,7 +10274,7 @@ BOOST_AUTO_TEST_CASE(correctly_initialize_memory_array_in_constructor)
 				// Make memory dirty.
 				assembly {
 					for { let i := 0 } lt(i, 64) { i := add(i, 1) } {
-						mstore(msize, not(0))
+						mstore(msize(), not(0))
 					}
 				}
 				uint16[3] memory c;
@@ -12920,7 +12920,7 @@ BOOST_AUTO_TEST_CASE(snark)
 			input[3] = p2.Y;
 			bool success;
 			assembly {
-				success := call(sub(gas, 2000), 6, 0, input, 0xc0, r, 0x60)
+				success := call(sub(gas(), 2000), 6, 0, input, 0xc0, r, 0x60)
 				// Use "invalid" to make gas estimation work
 				switch success case 0 { invalid() }
 			}
@@ -12936,7 +12936,7 @@ BOOST_AUTO_TEST_CASE(snark)
 			input[2] = s;
 			bool success;
 			assembly {
-				success := call(sub(gas, 2000), 7, 0, input, 0x80, r, 0x60)
+				success := call(sub(gas(), 2000), 7, 0, input, 0x80, r, 0x60)
 				// Use "invalid" to make gas estimation work
 				switch success case 0 { invalid() }
 			}
@@ -12964,7 +12964,7 @@ BOOST_AUTO_TEST_CASE(snark)
 			uint[1] memory out;
 			bool success;
 			assembly {
-				success := call(sub(gas, 2000), 8, 0, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
+				success := call(sub(gas(), 2000), 8, 0, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
 				// Use "invalid" to make gas estimation work
 				switch success case 0 { invalid() }
 			}

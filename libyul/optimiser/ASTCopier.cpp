@@ -59,18 +59,6 @@ Statement ASTCopier::operator()(Assignment const& _assignment)
 	};
 }
 
-Statement ASTCopier::operator()(StackAssignment const&)
-{
-	assertThrow(false, OptimizerException, "Invalid operation.");
-	return {};
-}
-
-Statement ASTCopier::operator()(Label const&)
-{
-	assertThrow(false, OptimizerException, "Invalid operation.");
-	return {};
-}
-
 Expression ASTCopier::operator()(FunctionCall const& _call)
 {
 	return FunctionCall{

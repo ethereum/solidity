@@ -113,20 +113,6 @@ string AsmPrinter::operator()(ExpressionStatement const& _statement) const
 	return boost::apply_visitor(*this, _statement.expression);
 }
 
-string AsmPrinter::operator()(Label const& _label) const
-{
-	solAssert(!m_yul, "");
-	solAssert(!_label.name.empty(), "Invalid label.");
-	return _label.name.str() + ":";
-}
-
-string AsmPrinter::operator()(StackAssignment const& _assignment) const
-{
-	solAssert(!m_yul, "");
-	solAssert(!_assignment.variableName.name.empty(), "Invalid variable name.");
-	return "=: " + (*this)(_assignment.variableName);
-}
-
 string AsmPrinter::operator()(Assignment const& _assignment) const
 {
 	solAssert(_assignment.variableNames.size() >= 1, "");
