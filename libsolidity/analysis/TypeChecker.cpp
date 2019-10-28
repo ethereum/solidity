@@ -388,11 +388,13 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	set<Declaration const*> modifiers;
 	for (ASTPointer<ModifierInvocation> const& modifier: _function.modifiers())
 	{
+		auto baseContracts = dynamic_cast<ContractDefinition const&>(*_function.scope()).annotation().linearizedBaseContracts;
+		// Delete first base which is just the main contract itself
+		baseContracts.erase(baseContracts.begin());
+
 		visitManually(
 			*modifier,
-			_function.isConstructor() ?
-			dynamic_cast<ContractDefinition const&>(*_function.scope()).annotation().linearizedBaseContracts :
-			vector<ContractDefinition const*>()
+			_function.isConstructor() ? baseContracts : vector<ContractDefinition const*>()
 		);
 		Declaration const* decl = &dereference(*modifier->name());
 		if (modifiers.count(decl))
@@ -520,7 +522,12 @@ void TypeChecker::visitManually(
 		_modifier.arguments() ? *_modifier.arguments() : std::vector<ASTPointer<Expression>>();
 	for (ASTPointer<Expression> const& argument: arguments)
 		argument->accept(*this);
-	_modifier.name()->accept(*this);
+
+	{
+		m_insideModifierInvocation = true;
+		ScopeGuard resetFlag{[&] () { m_insideModifierInvocation = false; }};
+		_modifier.name()->accept(*this);
+	}
 
 	auto const* declaration = &dereference(*_modifier.name());
 	vector<ASTPointer<VariableDeclaration>> emptyParameterList;
@@ -693,6 +700,9 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		}
 		else if (_context == yul::IdentifierContext::LValue)
 		{
+			if (dynamic_cast<MagicVariableDeclaration const*>(declaration))
+				return size_t(-1);
+
 			m_errorReporter.typeError(_identifier.location, "Only local variables can be assigned to in inline assembly.");
 			return size_t(-1);
 		}
@@ -2595,14 +2605,23 @@ bool TypeChecker::visit(Identifier const& _identifier)
 		if (_identifier.name() == "sha3" && fType->kind() == FunctionType::Kind::KECCAK256)
 			m_errorReporter.typeError(
 				_identifier.location(),
-				"\"sha3\" has been deprecated in favour of \"keccak256\""
+				"\"sha3\" has been deprecated in favour of \"keccak256\"."
 			);
 		else if (_identifier.name() == "suicide" && fType->kind() == FunctionType::Kind::Selfdestruct)
 			m_errorReporter.typeError(
 				_identifier.location(),
-				"\"suicide\" has been deprecated in favour of \"selfdestruct\""
+				"\"suicide\" has been deprecated in favour of \"selfdestruct\"."
 			);
 	}
+
+	if (!m_insideModifierInvocation)
+		if (ModifierType const* type = dynamic_cast<decltype(type)>(_identifier.annotation().type))
+		{
+			m_errorReporter.typeError(
+				_identifier.location(),
+				"Modifier can only be referenced in function headers."
+			);
+		}
 
 	return false;
 }

@@ -248,8 +248,7 @@ wasm::Expression EWasmCodeTransform::operator()(ForLoop const& _for)
 
 	wasm::Loop loop;
 	loop.statements = visit(_for.pre.statements);
-	loop.statements.emplace_back(wasm::BuiltinCall{"br_if", make_vector<wasm::Expression>(
-		wasm::Label{breakLabel},
+	loop.statements.emplace_back(wasm::BreakIf{wasm::Label{breakLabel}, make_unique<wasm::Expression>(
 		wasm::BuiltinCall{"i64.eqz", make_vector<wasm::Expression>(
 			visitReturnByValue(*_for.condition)
 		)}
@@ -267,7 +266,7 @@ wasm::Expression EWasmCodeTransform::operator()(Break const&)
 
 wasm::Expression EWasmCodeTransform::operator()(Continue const&)
 {
-	return wasm::Continue{wasm::Label{m_breakContinueLabelNames.top().second}};
+	return wasm::Break{wasm::Label{m_breakContinueLabelNames.top().second}};
 }
 
 wasm::Expression EWasmCodeTransform::operator()(Block const& _block)

@@ -499,26 +499,26 @@ not mean loss of proving power.
 
 ::
 
-   pragma solidity >=0.5.0;
-   pragma experimental SMTChecker;
+    pragma solidity >=0.5.0;
+    pragma experimental SMTChecker;
 
-   contract Recover
-   {
-           function f(
-                   bytes32 hash,
-                   uint8 _v1, uint8 _v2,
-                   bytes32 _r1, bytes32 _r2,
-                   bytes32 _s1, bytes32 _s2
-           ) public pure returns (address) {
-                   address a1 = ecrecover(hash, _v1, _r1, _s1);
-                   require(_v1 == _v2);
-                   require(_r1 == _r2);
-                   require(_s1 == _s2);
-                   address a2 = ecrecover(hash, _v2, _r2, _s2);
-                   assert(a1 == a2);
-                   return a1;
-           }
-   }
+    contract Recover
+    {
+        function f(
+            bytes32 hash,
+            uint8 _v1, uint8 _v2,
+            bytes32 _r1, bytes32 _r2,
+            bytes32 _s1, bytes32 _s2
+        ) public pure returns (address) {
+            address a1 = ecrecover(hash, _v1, _r1, _s1);
+            require(_v1 == _v2);
+            require(_r1 == _r2);
+            require(_s1 == _s2);
+            address a2 = ecrecover(hash, _v2, _r2, _s2);
+            assert(a1 == a2);
+            return a1;
+        }
+    }
 
 In the example above, the SMTChecker is not expressive enough to actually
 compute ``ecrecover``, but by modelling the function calls as uninterpreted
@@ -552,34 +552,34 @@ types.
 
 ::
 
-   pragma solidity >=0.5.0;
-   pragma experimental SMTChecker;
-   // This will not compile
-   contract Aliasing
-   {
-      uint[] array;
-      function f(
-         uint[] memory a,
-         uint[] memory b,
-         uint[][] memory c,
-         uint[] storage d
-      ) internal view {
-         require(array[0] == 42);
-         require(a[0] == 2);
-         require(c[0][0] == 2);
-         require(d[0] == 2);
-         b[0] = 1;
-         // Erasing knowledge about memory references should not
-         // erase knowledge about state variables.
-         assert(array[0] == 42);
-         // Fails because `a == b` is possible.
-         assert(a[0] == 2);
-         // Fails because `c[i] == b` is possible.
-         assert(c[0][0] == 2);
-         assert(d[0] == 2);
-         assert(b[0] == 1);
-      }
-   }
+    pragma solidity >=0.5.0;
+    pragma experimental SMTChecker;
+    // This will report a warning
+    contract Aliasing
+    {
+        uint[] array;
+        function f(
+            uint[] memory a,
+            uint[] memory b,
+            uint[][] memory c,
+            uint[] storage d
+        ) internal view {
+            require(array[0] == 42);
+            require(a[0] == 2);
+            require(c[0][0] == 2);
+            require(d[0] == 2);
+            b[0] = 1;
+            // Erasing knowledge about memory references should not
+            // erase knowledge about state variables.
+            assert(array[0] == 42);
+            // Fails because `a == b` is possible.
+            assert(a[0] == 2);
+            // Fails because `c[i] == b` is possible.
+            assert(c[0][0] == 2);
+            assert(d[0] == 2);
+            assert(b[0] == 1);
+        }
+    }
 
 After the assignment to ``b[0]``, we need to clear knowledge about ``a`` since
 it has the same type (``uint[]``) and data location (memory).  We also need to

@@ -90,15 +90,14 @@ function truffle_setup
 
     setup_solcjs "$DIR" "$SOLJSON" "v0.5.0" "solc"
     download_project "$repo" "$branch" "$DIR"
-
-    replace_version_pragmas
 }
 
 function replace_version_pragmas
 {
-    # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
+    # Replace fixed-version pragmas (part of Consensys best practice).
+    # Include all directories to also cover node dependencies.
     printLog "Replacing fixed-version pragmas..."
-    find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
+    find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
 }
 
 function replace_libsolc_call
@@ -210,6 +209,8 @@ function run_test
 {
     local compile_fn="$1"
     local test_fn="$2"
+
+    replace_version_pragmas
 
     printLog "Running compile function..."
     $compile_fn
