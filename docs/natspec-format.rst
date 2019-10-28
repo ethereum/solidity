@@ -49,7 +49,7 @@ The following example shows a contract and a function using all available tags.
 
 .. code:: solidity
 
-    pragma solidity ^0.5.6;
+    pragma solidity >=0.5.0 <0.7.0;
 
     /// @title A simulator for trees
     /// @author Larry A. Gardner
