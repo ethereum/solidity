@@ -105,8 +105,19 @@ bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _versio
 				didCompare = true;
 				cmp = _version.numbers[i] - version.numbers[i];
 			}
+
 		if (cmp == 0 && !_version.prerelease.empty() && didCompare)
+		{
 			cmp = -1;
+			for (unsigned i = levelsPresent; i < 3; i++)
+			{
+				if (_version.numbers[i] > 0)
+				{
+					cmp = 0;
+					break;
+				}
+			}
+		}
 
 		switch (prefix)
 		{
