@@ -38,7 +38,7 @@ using namespace solidity;
 namespace
 {
 
-ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = nullptr)
+ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback)
 {
 	ReadCallback::Callback readCallback;
 	if (_readCallback)
@@ -73,7 +73,7 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = n
 	return readCallback;
 }
 
-string compile(string _input, CStyleReadFileCallback _readCallback = nullptr)
+string compile(string _input, CStyleReadFileCallback _readCallback)
 {
 	StandardCompiler compiler(wrapReadCallback(_readCallback));
 	return compiler.compile(std::move(_input));
