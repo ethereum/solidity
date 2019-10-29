@@ -50,15 +50,15 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	{
 		interpreter(*_ast);
 	}
-	catch (StepLimitReached)
+	catch (StepLimitReached const&)
 	{
 		reason = TerminationReason::StepLimitReached;
 	}
-	catch (TraceLimitReached)
+	catch (TraceLimitReached const&)
 	{
 		reason = TerminationReason::TraceLimitReached;
 	}
-	catch (ExplicitlyTerminated)
+	catch (ExplicitlyTerminated const&)
 	{
 		reason = TerminationReason::ExplicitlyTerminated;
 	}
