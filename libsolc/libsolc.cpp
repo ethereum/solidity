@@ -38,7 +38,7 @@ using namespace solidity;
 namespace
 {
 
-ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback)
+ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback, void* _readContext)
 {
 	ReadCallback::Callback readCallback;
 	if (_readCallback)
@@ -47,7 +47,7 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback)
 		{
 			char* contents_c = nullptr;
 			char* error_c = nullptr;
-			_readCallback(_kind.c_str(), _data.c_str(), &contents_c, &error_c);
+			_readCallback(_readContext, _kind.c_str(), _data.c_str(), &contents_c, &error_c);
 			ReadCallback::Result result;
 			result.success = true;
 			if (!contents_c && !error_c)
@@ -73,9 +73,9 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback)
 	return readCallback;
 }
 
-string compile(string _input, CStyleReadFileCallback _readCallback)
+string compile(string _input, CStyleReadFileCallback _readCallback, void* _readContext)
 {
-	StandardCompiler compiler(wrapReadCallback(_readCallback));
+	StandardCompiler compiler(wrapReadCallback(_readCallback, _readContext));
 	return compiler.compile(std::move(_input));
 }
 
@@ -94,9 +94,9 @@ extern char const* solidity_version() noexcept
 {
 	return VersionString.c_str();
 }
-extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback) noexcept
+extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext) noexcept
 {
-	s_outputBuffer = compile(_input, _readCallback);
+	s_outputBuffer = compile(_input, _readCallback, _readContext);
 	return s_outputBuffer.c_str();
 }
 extern void solidity_free() noexcept
