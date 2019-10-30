@@ -25,13 +25,6 @@
 //         mstore(0x40, add(p, 0x20))
 //         mstore(0x40, add(p, 96))
 //         mstore(add(p, 128), 2)
-//         let _1 := 1
 //         mstore(0x40, 0x20)
-//         for { } _1 { }
-//         {
-//             if _1 { break }
-//             _1 := 0
-//             mstore(128, 0x40)
-//         }
 //     }
 // }
