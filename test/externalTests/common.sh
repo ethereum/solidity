@@ -224,6 +224,8 @@ function truffle_run_test
     local compile_fn="$1"
     local test_fn="$2"
 
+    replace_version_pragmas
+
     force_solc "$CONFIG" "$DIR" "$SOLJSON"
 
     printLog "Checking optimizer level..."
