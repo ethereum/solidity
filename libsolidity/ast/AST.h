@@ -604,13 +604,15 @@ public:
 		ASTPointer<ASTString> const& _name,
 		Declaration::Visibility _visibility,
 		ASTPointer<ParameterList> const& _parameters,
+		bool _isVirtual = false,
 		ASTPointer<OverrideSpecifier> const& _overrides = nullptr,
 		ASTPointer<ParameterList> const& _returnParameters = ASTPointer<ParameterList>()
 	):
 		Declaration(_location, _name, _visibility),
 		m_parameters(_parameters),
 		m_overrides(_overrides),
-		m_returnParameters(_returnParameters)
+		m_returnParameters(_returnParameters),
+		m_isVirtual(_isVirtual)
 	{
 	}
 
@@ -624,6 +626,7 @@ protected:
 	ASTPointer<ParameterList> m_parameters;
 	ASTPointer<OverrideSpecifier> m_overrides;
 	ASTPointer<ParameterList> m_returnParameters;
+	bool m_isVirtual;
 };
 
 /**
@@ -661,6 +664,7 @@ public:
 		Declaration::Visibility _visibility,
 		StateMutability _stateMutability,
 		Token _kind,
+		bool _isVirtual,
 		ASTPointer<OverrideSpecifier> const& _overrides,
 		ASTPointer<ASTString> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
@@ -668,7 +672,7 @@ public:
 		ASTPointer<ParameterList> const& _returnParameters,
 		ASTPointer<Block> const& _body
 	):
-		CallableDeclaration(_location, _name, _visibility, _parameters, _overrides, _returnParameters),
+		CallableDeclaration(_location, _name, _visibility, _parameters, _isVirtual, _overrides, _returnParameters),
 		Documented(_documentation),
 		ImplementationOptional(_body != nullptr),
 		m_stateMutability(_stateMutability),
@@ -738,6 +742,7 @@ public:
 		bool _isStateVar = false,
 		bool _isIndexed = false,
 		bool _isConstant = false,
+		bool _isVirtual = false,
 		ASTPointer<OverrideSpecifier> const& _overrides = nullptr,
 		Location _referenceLocation = Location::Unspecified
 	):
@@ -747,8 +752,10 @@ public:
 		m_isStateVariable(_isStateVar),
 		m_isIndexed(_isIndexed),
 		m_isConstant(_isConstant),
+		m_isVirtual(_isVirtual),
 		m_overrides(_overrides),
 		m_location(_referenceLocation) {}
+
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -791,6 +798,7 @@ public:
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_isConstant; }
 	ASTPointer<OverrideSpecifier> const& overrides() const { return m_overrides; }
+	bool isVirtual() const { return m_isVirtual; }
 	Location referenceLocation() const { return m_location; }
 	/// @returns a set of allowed storage locations for the variable.
 	std::set<Location> allowedDataLocations() const;
@@ -814,6 +822,7 @@ private:
 	bool m_isStateVariable; ///< Whether or not this is a contract state variable
 	bool m_isIndexed; ///< Whether this is an indexed variable (used by events).
 	bool m_isConstant; ///< Whether the variable is a compile-time constant.
+	bool m_isVirtual; ///< Whether the variable is virtual and can be overridden
 	ASTPointer<OverrideSpecifier> m_overrides; ///< Contains the override specifier node
 	Location m_location; ///< Location of the variable if it is of reference type.
 };
@@ -829,10 +838,11 @@ public:
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<ASTString> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
+		bool _isVirtual,
 		ASTPointer<OverrideSpecifier> const& _overrides,
 		ASTPointer<Block> const& _body
 	):
-		CallableDeclaration(_location, _name, Visibility::Internal, _parameters, _overrides),
+		CallableDeclaration(_location, _name, Visibility::Internal, _parameters, _isVirtual, _overrides),
 		Documented(_documentation),
 		m_body(_body)
 	{

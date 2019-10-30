@@ -118,6 +118,14 @@ while(0)
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
 
+BOOST_AUTO_TEST_CASE(reserved_keywords)
+{
+	BOOST_CHECK(!TokenTraits::isReservedKeyword(Token::Identifier));
+	BOOST_CHECK(TokenTraits::isReservedKeyword(Token::Abstract));
+	BOOST_CHECK(TokenTraits::isReservedKeyword(Token::Unchecked));
+	BOOST_CHECK(!TokenTraits::isReservedKeyword(Token::Illegal));
+}
+
 BOOST_AUTO_TEST_CASE(unsatisfied_version)
 {
 	char const* text = R"(

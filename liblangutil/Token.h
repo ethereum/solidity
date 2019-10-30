@@ -189,6 +189,7 @@ namespace langutil
 	K(Using, "using", 0)                                               \
 	K(Var, "var", 0)                                                   \
 	K(View, "view", 0)                                                 \
+	K(Virtual, "virtual", 0)                                           \
 	K(While, "while", 0)                                               \
 	\
 	/* Ether subdenominations */                                       \
@@ -264,7 +265,6 @@ namespace langutil
 	K(Typedef, "typedef", 0)                                           \
 	K(TypeOf, "typeof", 0)                                             \
 	K(Unchecked, "unchecked", 0)                                       \
-	K(Virtual, "virtual", 0)                                           \
 	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
@@ -313,7 +313,7 @@ namespace TokenTraits
 
 	constexpr bool isEtherSubdenomination(Token op) { return op == Token::SubWei || op == Token::SubSzabo || op == Token::SubFinney || op == Token::SubEther; }
 	constexpr bool isTimeSubdenomination(Token op) { return op == Token::SubSecond || op == Token::SubMinute || op == Token::SubHour || op == Token::SubDay || op == Token::SubWeek || op == Token::SubYear; }
-	constexpr bool isReservedKeyword(Token op) { return (Token::Abstract <= op && op <= Token::Virtual); }
+	constexpr bool isReservedKeyword(Token op) { return (Token::Abstract <= op && op <= Token::Unchecked); }
 
 	inline Token AssignmentToBinaryOp(Token op)
 	{
