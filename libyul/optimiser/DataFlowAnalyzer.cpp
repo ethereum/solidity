@@ -161,6 +161,10 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	}
 	ASTModifier::operator()(_fun);
 
+	// Note that the contents of return variables, storage and memory at this point
+	// might be incorrect due to the fact that the DataFlowAnalyzer ignores the ``leave``
+	// statement.
+
 	popScope();
 	m_value.swap(value);
 	swap(m_references, references);

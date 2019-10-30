@@ -63,6 +63,7 @@ public:
 	bool operator()(ForLoop const& _forLoop);
 	bool operator()(Break const&) { return true; }
 	bool operator()(Continue const&) { return true; }
+	bool operator()(Leave const&) { return true; }
 	bool operator()(Block const& _block);
 
 private:

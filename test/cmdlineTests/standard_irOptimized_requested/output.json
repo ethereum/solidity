@@ -11,10 +11,7 @@ object \"C_6\" {
         codecopy(0, dataoffset(\"C_6_deployed\"), datasize(\"C_6_deployed\"))
         return(0, datasize(\"C_6_deployed\"))
         function fun_f_5()
-        {
-            for { let return_flag := 1 } return_flag { }
-            { break }
-        }
+        { }
     }
     object \"C_6_deployed\" {
         code {
@@ -48,10 +45,7 @@ object \"C_6\" {
                 mstore(64, newFreePtr)
             }
             function fun_f_5()
-            {
-                for { let return_flag := 1 } return_flag { }
-                { break }
-            }
+            { }
             function shift_right_224_unsigned(value) -> newValue
             { newValue := shr(224, value) }
         }

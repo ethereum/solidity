@@ -73,6 +73,7 @@ struct CodeTransformContext
 	};
 
 	std::stack<ForLoopLabels> forLoopStack;
+	std::stack<JumpInfo> functionExitPoints;
 };
 
 /**
@@ -185,6 +186,7 @@ public:
 	void operator()(ForLoop const&);
 	void operator()(Break const&);
 	void operator()(Continue const&);
+	void operator()(Leave const&);
 	void operator()(Block const& _block);
 
 private:

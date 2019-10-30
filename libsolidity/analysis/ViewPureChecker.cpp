@@ -108,6 +108,9 @@ public:
 	void operator()(yul::Continue const&)
 	{
 	}
+	void operator()(yul::Leave const&)
+	{
+	}
 	void operator()(yul::Block const& _block)
 	{
 		for (auto const& s: _block.statements)

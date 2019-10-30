@@ -104,11 +104,16 @@ void RedundantAssignEliminator::operator()(Switch const& _switch)
 void RedundantAssignEliminator::operator()(FunctionDefinition const& _functionDefinition)
 {
 	std::set<YulString> outerDeclaredVariables;
+	std::set<YulString> outerReturnVariables;
 	TrackedAssignments outerAssignments;
 	ForLoopInfo forLoopInfo;
 	swap(m_declaredVariables, outerDeclaredVariables);
+	swap(m_returnVariables, outerReturnVariables);
 	swap(m_assignments, outerAssignments);
 	swap(m_forLoopInfo, forLoopInfo);
+
+	for (auto const& retParam: _functionDefinition.returnVariables)
+		m_returnVariables.insert(retParam.name);
 
 	(*this)(_functionDefinition.body);
 
@@ -118,6 +123,7 @@ void RedundantAssignEliminator::operator()(FunctionDefinition const& _functionDe
 		finalize(retParam.name, State::Used);
 
 	swap(m_declaredVariables, outerDeclaredVariables);
+	swap(m_returnVariables, outerReturnVariables);
 	swap(m_assignments, outerAssignments);
 	swap(m_forLoopInfo, forLoopInfo);
 }
@@ -198,6 +204,12 @@ void RedundantAssignEliminator::operator()(Continue const&)
 {
 	m_forLoopInfo.pendingContinueStmts.emplace_back(move(m_assignments));
 	m_assignments.clear();
+}
+
+void RedundantAssignEliminator::operator()(Leave const&)
+{
+	for (YulString name: m_returnVariables)
+		changeUndecidedTo(name, State::Used);
 }
 
 void RedundantAssignEliminator::operator()(Block const& _block)

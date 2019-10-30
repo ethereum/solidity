@@ -257,6 +257,11 @@ wasm::Expression EWasmCodeTransform::operator()(Continue const&)
 	return wasm::Break{wasm::Label{m_breakContinueLabelNames.top().second}};
 }
 
+wasm::Expression EWasmCodeTransform::operator()(Leave const&)
+{
+	return wasm::Return{};
+}
+
 wasm::Expression EWasmCodeTransform::operator()(Block const& _block)
 {
 	return wasm::Block{{}, visit(_block.statements)};

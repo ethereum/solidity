@@ -98,6 +98,7 @@ protected:
 private:
 	Dialect const& m_dialect;
 	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
+	bool m_insideFunction = false;
 };
 
 }

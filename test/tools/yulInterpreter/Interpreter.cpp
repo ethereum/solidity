@@ -124,30 +124,43 @@ void Interpreter::operator()(ForLoop const& _forLoop)
 	solAssert(_forLoop.condition, "");
 
 	openScope();
+	ScopeGuard g([this]{ closeScope(); });
+
 	for (auto const& statement: _forLoop.pre.statements)
+	{
 		visit(statement);
+		if (m_state.controlFlowState == ControlFlowState::Leave)
+			return;
+	}
 	while (evaluate(*_forLoop.condition) != 0)
 	{
-		m_state.loopState = LoopState::Default;
+		m_state.controlFlowState = ControlFlowState::Default;
 		(*this)(_forLoop.body);
-		if (m_state.loopState == LoopState::Break)
+		if (m_state.controlFlowState == ControlFlowState::Break || m_state.controlFlowState == ControlFlowState::Leave)
 			break;
 
-		m_state.loopState = LoopState::Default;
+		m_state.controlFlowState = ControlFlowState::Default;
 		(*this)(_forLoop.post);
+		if (m_state.controlFlowState == ControlFlowState::Leave)
+			break;
 	}
-	m_state.loopState = LoopState::Default;
-	closeScope();
+	if (m_state.controlFlowState != ControlFlowState::Leave)
+		m_state.controlFlowState = ControlFlowState::Default;
 }
 
 void Interpreter::operator()(Break const&)
 {
-	m_state.loopState = LoopState::Break;
+	m_state.controlFlowState = ControlFlowState::Break;
 }
 
 void Interpreter::operator()(Continue const&)
 {
-	m_state.loopState = LoopState::Continue;
+	m_state.controlFlowState = ControlFlowState::Continue;
+}
+
+void Interpreter::operator()(Leave const&)
+{
+	m_state.controlFlowState = ControlFlowState::Leave;
 }
 
 void Interpreter::operator()(Block const& _block)
@@ -171,7 +184,7 @@ void Interpreter::operator()(Block const& _block)
 	for (auto const& statement: _block.statements)
 	{
 		visit(statement);
-		if (m_state.loopState != LoopState::Default)
+		if (m_state.controlFlowState != ControlFlowState::Default)
 			break;
 	}
 
@@ -245,8 +258,10 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 	for (size_t i = 0; i < fun->returnVariables.size(); ++i)
 		variables[fun->returnVariables.at(i).name] = 0;
 
+	m_state.controlFlowState = ControlFlowState::Default;
 	Interpreter interpreter(m_state, m_dialect, variables, functionScopes);
 	interpreter(fun->body);
+	m_state.controlFlowState = ControlFlowState::Default;
 
 	m_values.clear();
 	for (auto const& retVar: fun->returnVariables)

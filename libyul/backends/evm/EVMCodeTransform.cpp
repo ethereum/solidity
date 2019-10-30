@@ -490,6 +490,9 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.appendConstant(u256(0));
 	}
 
+	m_context->functionExitPoints.push(
+		CodeTransformContext::JumpInfo{m_assembly.newLabelId(), m_assembly.stackHeight()}
+	);
 	try
 	{
 		CodeTransform(
@@ -517,6 +520,9 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 			error.functionName = _function.name;
 		stackError(std::move(error), height);
 	}
+
+	m_assembly.appendLabel(m_context->functionExitPoints.top().label);
+	m_context->functionExitPoints.pop();
 
 	{
 		// The stack layout here is:
@@ -641,6 +647,17 @@ void CodeTransform::operator()(Continue const& _continue)
 	m_assembly.appendJumpTo(jump.label, appendPopUntil(jump.targetStackHeight));
 
 	checkStackHeight(&_continue);
+}
+
+void CodeTransform::operator()(Leave const& _leave)
+{
+	yulAssert(!m_context->functionExitPoints.empty(), "Invalid leave-statement. Requires surrounding function in code generation.");
+	m_assembly.setSourceLocation(_leave.location);
+
+	Context::JumpInfo const& jump = m_context->functionExitPoints.top();
+	m_assembly.appendJumpTo(jump.label, appendPopUntil(jump.targetStackHeight));
+
+	checkStackHeight(&_leave);
 }
 
 void CodeTransform::operator()(Block const& _block)

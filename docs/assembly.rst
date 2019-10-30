@@ -530,6 +530,9 @@ the other two are blocks. If the initializing part
 declares any variables, the scope of these variables is extended into the
 body (including the condition and the post-iteration part).
 
+The ``break`` and ``continue`` statements can be used to exit the loop
+or skip to the post-part, respectively.
+
 The following example computes the sum of an area in memory.
 
 .. code::
@@ -570,6 +573,11 @@ statement.
 
 If you call a function that returns multiple values, you have to assign
 them to a tuple using ``a, b := f(x)`` or ``let a, b := f(x)``.
+
+The ``leave`` statement can be used to exit the current function. It
+works like the ``return`` statement in other languages just that it does
+not take a value to return, it just exits the functions and the function
+will return whatever values are currently assigned to the return variable(s).
 
 The following example implements the power function by square-and-multiply.
 
@@ -769,6 +777,7 @@ Grammar::
         AssemblyFor |
         'break' |
         'continue' |
+        'leave' |
         SubAssembly
     AssemblyExpression = AssemblyCall | Identifier | AssemblyLiteral
     AssemblyLiteral = NumberLiteral | StringLiteral | HexLiteral

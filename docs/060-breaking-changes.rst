@@ -54,6 +54,7 @@ New Features
 ============
 
  * The :ref:`try/catch statement <try-catch>` allows you to react on failed external calls.
+ * Yul and Inline Assembly have a new statement called ``leave`` that exits the current function.
 
 
 Deprecated Elements

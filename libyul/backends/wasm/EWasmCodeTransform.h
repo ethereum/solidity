@@ -52,6 +52,7 @@ public:
 	wasm::Expression operator()(yul::ForLoop const&);
 	wasm::Expression operator()(yul::Break const&);
 	wasm::Expression operator()(yul::Continue const&);
+	wasm::Expression operator()(yul::Leave const&);
 	wasm::Expression operator()(yul::Block const& _block);
 
 private:

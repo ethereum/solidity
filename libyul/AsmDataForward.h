@@ -42,12 +42,13 @@ struct Case;
 struct ForLoop;
 struct Break;
 struct Continue;
+struct Leave;
 struct ExpressionStatement;
 struct Block;
 
 struct TypedName;
 
 using Expression = boost::variant<FunctionalInstruction, FunctionCall, Identifier, Literal>;
-using Statement = boost::variant<ExpressionStatement, Instruction, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Block>;
+using Statement = boost::variant<ExpressionStatement, Instruction, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
 
 }

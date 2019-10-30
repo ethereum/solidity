@@ -26,6 +26,7 @@
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
+#include <libyul/optimiser/Semantics.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
 
@@ -62,6 +63,8 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 			continue;
 		FunctionDefinition& fun = boost::get<FunctionDefinition>(statement);
 		m_functions[fun.name] = &fun;
+		if (LeaveFinder::containsLeave(fun))
+			m_noInlineFunctions.insert(fun.name);
 		// Always inline functions that are only called once.
 		if (references[fun.name] == 1)
 			m_singleUse.emplace(fun.name);
@@ -94,7 +97,7 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	if (!calledFunction)
 		return false;
 
-	if (recursive(*calledFunction))
+	if (m_noInlineFunctions.count(_funCall.functionName.name) || recursive(*calledFunction))
 		return false;
 
 	// Inline really, really tiny functions

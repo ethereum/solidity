@@ -296,7 +296,7 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 			expressionAsType(*value, *types.front()) <<
 			"\n";
 	}
-	m_code << "return_flag := 0\n" << "break\n";
+	m_code << "leave\n";
 }
 
 void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
@@ -1349,7 +1349,7 @@ void IRGeneratorForStatements::generateLoop(
 	m_code << "for {\n";
 	if (_initExpression)
 		_initExpression->accept(*this);
-	m_code << "} return_flag {\n";
+	m_code << "} 1 {\n";
 	if (_loopExpression)
 		_loopExpression->accept(*this);
 	m_code << "}\n";
@@ -1373,8 +1373,6 @@ void IRGeneratorForStatements::generateLoop(
 	_body.accept(*this);
 
 	m_code << "}\n";
-	// Bubble up the return condition.
-	m_code << "if iszero(return_flag) { break }\n";
 }
 
 Type const& IRGeneratorForStatements::type(Expression const& _expression)

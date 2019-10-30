@@ -136,6 +136,11 @@ Statement ASTCopier::operator()(Continue const& _continue)
 	return Continue{ _continue };
 }
 
+Statement ASTCopier::operator()(Leave const& _leave)
+{
+	return Leave{_leave};
+}
+
 Statement ASTCopier::operator ()(Block const& _block)
 {
 	return translate(_block);
