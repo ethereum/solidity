@@ -113,6 +113,8 @@ set(sources
 	interface/ReadFile.h
 	interface/StandardCompiler.cpp
 	interface/StandardCompiler.h
+	interface/StorageLayout.cpp
+	interface/StorageLayout.h
 	interface/Version.cpp
 	interface/Version.h
 	parsing/DocStringParser.cpp
