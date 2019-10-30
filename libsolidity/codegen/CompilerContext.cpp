@@ -508,6 +508,20 @@ eth::Assembly::OptimiserSettings CompilerContext::translateOptimiserSettings(Opt
 	return asmSettings;
 }
 
+std::map<Declaration const*, unsigned> CompilerContext::localsCurrentOffsets() {
+	std::map<Declaration const*, unsigned> localOffsets = std::map<solidity::Declaration const*, unsigned>();
+	for (auto mapping : m_localVariables) {
+		if (!mapping.second.empty()) {
+			unsigned baseOffset = baseStackOffsetOfVariable(*mapping.first);
+			if (baseOffset < stackHeight()) {
+				signed currentOffset = baseToCurrentStackOffset(baseOffset);
+				localOffsets[mapping.first] = currentOffset;
+			}
+		}
+	}
+	return localOffsets;
+}
+
 eth::AssemblyItem CompilerContext::FunctionCompilationQueue::entryLabel(
 	Declaration const& _declaration,
 	CompilerContext& _context

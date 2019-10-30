@@ -53,7 +53,7 @@ enum AssemblyItemType {
 
 class Assembly;
 
-using VariableMapping = std::map<solidity::Declaration const*, std::vector<unsigned>>;
+using VariableMapping = std::map<solidity::Declaration const*, unsigned>;
 
 class AssemblyItem
 {
@@ -67,16 +67,15 @@ public:
 				 VariableMapping _localVariables = VariableMapping()):
 		m_type(Operation),
 		m_instruction(_i),
-		m_location(std::move(_location))
-	{
-		setLocalVariables(_localVariables);
-	}
+		m_location(std::move(_location)),
+		m_localVariables(_localVariables)
+	{}
 	AssemblyItem(AssemblyItemType _type, u256 _data = 0, langutil::SourceLocation _location = langutil::SourceLocation(),
 				 VariableMapping _localVariables = VariableMapping()):
 		m_type(_type),
-		m_location(std::move(_location))
+		m_location(std::move(_location)),
+		m_localVariables(_localVariables)
 	{
-		setLocalVariables(_localVariables);
 		if (m_type == Operation)
 			m_instruction = Instruction(uint8_t(_data));
 		else

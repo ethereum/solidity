@@ -203,8 +203,8 @@ public:
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
 	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm->append(_item); return *this; }
-	CompilerContext& operator<<(dev::eth::Instruction _instruction) { m_asm->append(eth::AssemblyItem(_instruction, langutil::SourceLocation(), m_localVariables)); return *this; }
-	CompilerContext& operator<<(u256 const& _value) { m_asm->append(eth::AssemblyItem(_value, langutil::SourceLocation(), m_localVariables)); return *this; }
+	CompilerContext& operator<<(dev::eth::Instruction _instruction) { m_asm->append(eth::AssemblyItem(_instruction, langutil::SourceLocation(), localsCurrentOffsets())); return *this; }
+	CompilerContext& operator<<(u256 const& _value) { m_asm->append(eth::AssemblyItem(_value, langutil::SourceLocation(), localsCurrentOffsets())); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm->append(_data); return *this; }
 
 	/// Appends inline assembly (strict mode).
@@ -277,6 +277,8 @@ private:
 	void updateSourceLocation();
 
 	eth::Assembly::OptimiserSettings translateOptimiserSettings(OptimiserSettings const& _settings);
+
+	std::map<Declaration const*, unsigned> localsCurrentOffsets();
 
 	/**
 	 * Helper class that manages function labels and ensures that referenced functions are
