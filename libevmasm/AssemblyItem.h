@@ -146,8 +146,6 @@ public:
 	void setLocation(langutil::SourceLocation const& _location) { m_location = _location; }
 	langutil::SourceLocation const& location() const { return m_location; }
 
-	void setLocalVariables(std::map<solidity::Declaration const*, std::vector<unsigned>> localVariables);
-
 	std::map<solidity::Declaration const*, unsigned> localVariables() const { return m_localVariables; }
 
 	void setJumpType(JumpType _jumpType) { m_jumpType = _jumpType; }
