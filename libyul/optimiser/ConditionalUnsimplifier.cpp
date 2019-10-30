@@ -61,11 +61,11 @@ void ConditionalUnsimplifier::operator()(Switch& _switch)
 
 void ConditionalUnsimplifier::operator()(Block& _block)
 {
+	walkVector(_block.statements);
 	iterateReplacingWindow<2>(
 		_block.statements,
 		[&](Statement& _stmt1, Statement& _stmt2) -> std::optional<vector<Statement>>
 		{
-			visit(_stmt1);
 			if (_stmt1.type() == typeid(If))
 			{
 				If& _if = boost::get<If>(_stmt1);
