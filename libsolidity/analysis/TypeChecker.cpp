@@ -352,8 +352,13 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		}
 		else
 		{
-			if (!type(var)->canLiveOutsideStorage() && _function.isPublic())
+			if (
+				!type(var)->canLiveOutsideStorage() &&
+				_function.isPublic() &&
+				!isLibraryFunction
+			)
 				m_errorReporter.typeError(3312_error, var.location(), "Type is required to live outside storage.");
+
 			if (_function.isPublic())
 			{
 				auto iType = type(var)->interfaceType(isLibraryFunction);

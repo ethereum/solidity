@@ -14,4 +14,5 @@ contract C {
         }
 }
 // ----
+// TypeError: (530-540): Type struct C.S memory is only valid in storage.
 // TypeError: (530-540): Type too large for memory.
