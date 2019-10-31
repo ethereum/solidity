@@ -63,8 +63,8 @@ WasmDialect::WasmDialect():
 	m_functions["unreachable"_yulstring].sideEffects.invalidatesStorage = false;
 	m_functions["unreachable"_yulstring].sideEffects.invalidatesMemory = false;
 
-	addFunction("datasize", 1, 4, true, true);
-	addFunction("dataoffset", 1, 4, true, true);
+	addFunction("datasize", 1, 1, true, true);
+	addFunction("dataoffset", 1, 1, true, true);
 
 	addEthereumExternals();
 }

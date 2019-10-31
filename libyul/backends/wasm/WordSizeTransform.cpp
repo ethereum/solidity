@@ -87,6 +87,30 @@ void WordSizeTransform::operator()(Block& _block)
 			if (_s.type() == typeid(VariableDeclaration))
 			{
 				VariableDeclaration& varDecl = boost::get<VariableDeclaration>(_s);
+
+				// Special handling for datasize and dataoffset - they will only need one variable.
+				if (varDecl.value && varDecl.value->type() == typeid(FunctionCall))
+					if (BuiltinFunction const* f = m_inputDialect.builtin(boost::get<FunctionCall>(*varDecl.value).functionName.name))
+						if (f->literalArguments)
+						{
+							yulAssert(f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring, "");
+							yulAssert(varDecl.variables.size() == 1, "");
+							auto newLhs = generateU64IdentifierNames(varDecl.variables[0].name);
+							vector<Statement> ret;
+							for (int i = 0; i < 3; i++)
+								ret.push_back(VariableDeclaration{
+									varDecl.location,
+									{TypedName{varDecl.location, newLhs[i], "u64"_yulstring}},
+									make_unique<Expression>(Literal{locationOf(*varDecl.value), LiteralKind::Number, "0"_yulstring, "u64"_yulstring})
+								});
+							ret.push_back(VariableDeclaration{
+								varDecl.location,
+								{TypedName{varDecl.location, newLhs[3], "u64"_yulstring}},
+								std::move(varDecl.value)
+							});
+							return {std::move(ret)};
+						}
+
 				if (
 					!varDecl.value ||
 					varDecl.value->type() == typeid(FunctionalInstruction) ||
@@ -123,6 +147,30 @@ void WordSizeTransform::operator()(Block& _block)
 			{
 				Assignment& assignment = boost::get<Assignment>(_s);
 				yulAssert(assignment.value, "");
+
+				// Special handling for datasize and dataoffset - they will only need one variable.
+				if (assignment.value->type() == typeid(FunctionCall))
+					if (BuiltinFunction const* f = m_inputDialect.builtin(boost::get<FunctionCall>(*assignment.value).functionName.name))
+						if (f->literalArguments)
+						{
+							yulAssert(f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring, "");
+							yulAssert(assignment.variableNames.size() == 1, "");
+							auto newLhs = generateU64IdentifierNames(assignment.variableNames[0].name);
+							vector<Statement> ret;
+							for (int i = 0; i < 3; i++)
+								ret.push_back(Assignment{
+									assignment.location,
+									{Identifier{assignment.location, newLhs[i]}},
+									make_unique<Expression>(Literal{locationOf(*assignment.value), LiteralKind::Number, "0"_yulstring, "u64"_yulstring})
+								});
+							ret.push_back(Assignment{
+								assignment.location,
+								{Identifier{assignment.location, newLhs[3]}},
+								std::move(assignment.value)
+							});
+							return {std::move(ret)};
+						}
+
 				if (
 					assignment.value->type() == typeid(FunctionalInstruction) ||
 					assignment.value->type() == typeid(FunctionCall)
