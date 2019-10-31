@@ -127,6 +127,9 @@ Solidity Tools
 * `Universal Mutator <https://github.com/agroce/universalmutator>`_
     A tool for mutation generation, with configurable rules and support for Solidity and Vyper.
 
+* `PIET <https://piet.slock.it/>`_
+    A tool to develop, audit and use solidity smart contracts through a simple graphical interface.
+
 .. note::
   Information like variable names, comments, and source code formatting is lost in the compilation process and it is not possible to completely recover the original source code. Decompiling smart contracts to view the original source code might not be possible, or the end result that useful.
 
