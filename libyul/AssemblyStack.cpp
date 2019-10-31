@@ -200,7 +200,10 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		Dialect const& dialect = languageToDialect(m_language, EVMVersion{});
 
 		MachineAssemblyObject object;
-		object.assembly = EWasmObjectCompiler::compile(*m_parserResult, dialect).first;
+		auto result = EWasmObjectCompiler::compile(*m_parserResult, dialect);
+		object.assembly = std::move(result.first);
+		object.bytecode = make_shared<dev::eth::LinkerObject>();
+		object.bytecode->bytecode = std::move(result.second);
 		return object;
 	}
 	}
