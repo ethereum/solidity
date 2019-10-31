@@ -48,7 +48,7 @@ namespace
 {
 static string const polyfill{R"({
 function or_bool(a, b, c, d) -> r {
-	r := i64.ne(0, i64.or(i64.or(a, b), i64.or(c, d)))
+	r := i64.or(i64.or(a, b), i64.or(c, d))
 }
 // returns a + y + c plus carry value on 64 bit values.
 // c should be at most 1
@@ -205,9 +205,7 @@ function cmp(a, b) -> r {
 	switch i64.lt_u(a, b)
 	case 1 { r := 0xffffffffffffffff }
 	default {
-		switch i64.gt_u(a, b)
-		case 1 { r := 1 }
-		default { r := 0 }
+		r := i64.ne(a, b)
 	}
 }
 
@@ -218,10 +216,7 @@ function lt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 		case 0 {
 			switch cmp(x3, y3)
 			case 0 {
-				switch cmp(x4, y4)
-				case 0 { z4 := 0 }
-				case 1 { z4 := 0 }
-				default { z4 := 1 }
+				z4 := i64.lt_u(x4, y4)
 			}
 			case 1 { z4 := 0 }
 			default { z4 := 1 }
@@ -245,13 +240,78 @@ function sgt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := slt(y1, y2, y3, y4, x1, x2, x3, x4)
 }
 
-function shl(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+function shl_single(a, amount) -> x, y {
+	// amount < 64
+	x := i64.shr_u(a, i64.sub(64, amount))
+	y := i64.shl(a, amount)
 }
+
+function shl(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	if i64.and(i64.eqz(x1), i64.eqz(x2)) {
+		if i64.eqz(x3) {
+			if i64.lt_u(x4, 256) {
+				if i64.ge_u(x4, 128) {
+					y1 := y3
+					y2 := y4
+					y3 := 0
+					y4 := 0
+					x4 := i64.sub(x4, 128)
+				}
+				if i64.ge_u(x4, 64) {
+					y1 := y2
+					y2 := y3
+					y3 := y4
+					y4 := 0
+					x4 := i64.sub(x4, 64)
+				}
+				let t, r
+				t, z4 := shl_single(y4, x4)
+				r, z3 := shl_single(y3, x4)
+				z3 := i64.or(z3, t)
+				t, z2 := shl_single(y2, x4)
+				z2 := i64.or(z2, r)
+				r, z1 := shl_single(y1, x4)
+				z1 := i64.or(z1, t)
+			}
+		}
+	}
+}
+
+function shr_single(a, amount) -> x, y {
+	// amount < 64
+	y := i64.shl(a, i64.sub(64, amount))
+	x := i64.shr_u(a, amount)
+}
+
 function shr(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	if i64.and(i64.eqz(x1), i64.eqz(x2)) {
+		if i64.eqz(x3) {
+			if i64.lt_u(x4, 256) {
+				if i64.ge_u(x4, 128) {
+					y4 := y2
+					y3 := y1
+					y2 := 0
+					y1 := 0
+					x4 := i64.sub(x4, 128)
+				}
+				if i64.ge_u(x4, 64) {
+					y4 := y3
+					y3 := y2
+					y2 := y1
+					y1 := 0
+					x4 := i64.sub(x4, 64)
+				}
+				let t
+				z4, t := shr_single(y4, x4)
+				z3, t := shr_single(y3, x4)
+				z4 := i64.or(z4, t)
+				z2, t := shr_single(y2, x4)
+				z3 := i64.or(z3, t)
+				z1, t := shr_single(y1, x4)
+				z2 := i64.or(z2, t)
+			}
+		}
+	}
 }
 function sar(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	// TODO implement
@@ -291,45 +351,36 @@ function keccak256(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 }
 
 function address() -> z1, z2, z3, z4 {
-	let t1, t2, t3, t4 := save_temp_mem_32()
 	eth.getAddress(0)
-	z1, z2, z3, z4 := mload(0, 0, 0, 0)
-	restore_temp_mem_32(t1, t2, t3, t4)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
 function origin() -> z1, z2, z3, z4 {
-	let t1, t2, t3, t4 := save_temp_mem_32()
 	eth.getTxOrigin(0)
-	z1, z2, z3, z4 := mload(0, 0, 0, 0)
-	restore_temp_mem_32(t1, t2, t3, t4)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function caller() -> z1, z2, z3, z4 {
-	let t1, t2, t3, t4 := save_temp_mem_32()
 	eth.getCaller(0)
-	z1, z2, z3, z4 := mload(0, 0, 0, 0)
-	restore_temp_mem_32(t1, t2, t3, t4)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function callvalue() -> z1, z2, z3, z4 {
-	let t1, t2, t3, t4 := save_temp_mem_32()
 	eth.getCallValue(0)
-	z1, z2, z3, z4 := mload(0, 0, 0, 0)
-	restore_temp_mem_32(t1, t2, t3, t4)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	let t1, t2, t3, t4 := save_temp_mem_32()
 	eth.callDataCopy(0, u256_to_i32(x1, x2, x3, x4), 32)
-	z1, z2, z3, z4 := mload(0, 0, 0, 0)
-	restore_temp_mem_32(t1, t2, t3, t4)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function calldatasize() -> z1, z2, z3, z4 {
 	z4 := eth.getCallDataSize()
 }
 function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 	eth.callDataCopy(
-		u256_to_i32ptr(x1, x2, x3, x4),
+		// scratch - TODO: overflow check
+		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
 		u256_to_i32(y1, y2, y3, y4),
 		u256_to_i32(z1, z2, z3, z4)
 	)
@@ -337,14 +388,13 @@ function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 
 // Needed?
 function codesize() -> z1, z2, z3, z4 {
-	let t1, t2, t3, t4 := save_temp_mem_32()
 	eth.getCodeSize(0)
-	z1, z2, z3, z4 := mload(0, 0, 0, 0)
-	restore_temp_mem_32(t1, t2, t3, t4)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function codecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 	eth.codeCopy(
-		u256_to_i32ptr(x1, x2, x3, x4),
+		// scratch - TODO: overflow check
+		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
 		u256_to_i32(y1, y2, y3, y4),
 		u256_to_i32(z1, z2, z3, z4)
 	)
@@ -355,10 +405,8 @@ function datacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 }
 
 function gasprice() -> z1, z2, z3, z4 {
-	let t1, t2, t3, t4 := save_temp_mem_32()
 	eth.getTxGasPrice(0)
-	z1, z2, z3, z4 := mload(0, 0, 0, 0)
-	restore_temp_mem_32(t1, t2, t3, t4)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function extcodesize(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	// TODO implement
@@ -378,7 +426,8 @@ function returndatasize() -> z1, z2, z3, z4 {
 }
 function returndatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 	eth.returnDataCopy(
-		u256_to_i32ptr(x1, x2, x3, x4),
+		// scratch - TODO: overflow check
+		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
 		u256_to_i32(y1, y2, y3, y4),
 		u256_to_i32(z1, z2, z3, z4)
 	)
@@ -399,10 +448,8 @@ function number() -> z1, z2, z3, z4 {
 	z4 := eth.getBlockNumber()
 }
 function difficulty() -> z1, z2, z3, z4 {
-	let t1, t2, t3, t4 := save_temp_mem_32()
 	eth.getBlockDifficulty(0)
-	z1, z2, z3, z4 := mload(0, 0, 0, 0)
-	restore_temp_mem_32(t1, t2, t3, t4)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function gaslimit() -> z1, z2, z3, z4 {
 	z4 := eth.getBlockGasLimit()
@@ -463,6 +510,12 @@ function restore_temp_mem_64(t1, t2, t3, t4, t5, t6, t7, t8) {
 }
 function mload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	let pos := u256_to_i32ptr(x1, x2, x3, x4)
+	// Make room for the scratch space
+	// TODO do we need to check for overflow?
+	pos := i64.add(pos, 64)
+	z1, z2, z3, z4 := mload_internal(pos)
+}
+function mload_internal(pos) -> z1, z2, z3, z4 {
 	z1 := endian_swap(i64.load(pos))
 	z2 := endian_swap(i64.load(i64.add(pos, 8)))
 	z3 := endian_swap(i64.load(i64.add(pos, 16)))
@@ -470,10 +523,16 @@ function mload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 }
 function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {
 	let pos := u256_to_i32ptr(x1, x2, x3, x4)
-	i64.store(pos, endian_swap(x1))
-	i64.store(i64.add(pos, 8), endian_swap(x2))
-	i64.store(i64.add(pos, 16), endian_swap(x3))
-	i64.store(i64.add(pos, 24), endian_swap(x4))
+	// Make room for the scratch space
+	// TODO do we need to check for overflow?
+	pos := i64.add(pos, 64)
+	mstore_internal(pos, y1, y2, y3, y4)
+}
+function mstore_internal(pos, y1, y2, y3, y4) {
+	i64.store(pos, endian_swap(y1))
+	i64.store(i64.add(pos, 8), endian_swap(y2))
+	i64.store(i64.add(pos, 16), endian_swap(y3))
+	i64.store(i64.add(pos, 24), endian_swap(y4))
 }
 function mstore8(x1, x2, x3, x4, y1, y2, y3, y4) {
 	// TODO implement
@@ -485,19 +544,15 @@ function msize() -> z1, z2, z3, z4 {
 	unreachable()
 }
 function sload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	let t1, t2, t3, t4, t5, t6, t7, t8 := save_temp_mem_64()
-	mstore(0, 0, 0, 0, x1, x2, x3, x4)
-	eth.storageLoad(0, 16)
-	z1, z2, z3, z4 := mload(0, 0, 0, 16)
-	restore_temp_mem_64(t1, t2, t3, t4, t5, t6, t7, t8)
+	mstore_internal(0, x1, x2, x3, x4)
+	eth.storageLoad(0, 32)
+	z1, z2, z3, z4 := mload_internal(32)
 }
 
 function sstore(x1, x2, x3, x4, y1, y2, y3, y4) {
-	let t1, t2, t3, t4, t5, t6, t7, t8 := save_temp_mem_64()
-	mstore(0, 0, 0, 0, x1, x2, x3, x4)
-	mstore(0, 0, 0, 32, y1, y2, y3, y4)
+	mstore_internal(0, x1, x2, x3, x4)
+	mstore_internal(32, y1, y2, y3, y4)
 	eth.storageStore(0, 32)
-	restore_temp_mem_64(t1, t2, t3, t4, t5, t6, t7, t8)
 }
 
 // Needed?
@@ -615,13 +670,15 @@ function selfdestruct(a1, a2, a3, a4) {
 
 function return(x1, x2, x3, x4, y1, y2, y3, y4) {
 	eth.finish(
-		u256_to_i32ptr(x1, x2, x3, x4),
+		// scratch - TODO: overflow check
+		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
 		u256_to_i32(y1, y2, y3, y4)
 	)
 }
 function revert(x1, x2, x3, x4, y1, y2, y3, y4) {
 	eth.revert(
-		u256_to_i32ptr(x1, x2, x3, x4),
+		// scratch - TODO: overflow check
+		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
 		u256_to_i32(y1, y2, y3, y4)
 	)
 }
@@ -653,6 +710,7 @@ Object EVMToEWasmTranslator::run(Object const& _object)
 		ast.statements.emplace_back(ASTCopier{}.translate(st));
 
 	Object ret;
+	ret.name = _object.name;
 	ret.code = make_shared<Block>(move(ast));
 	ret.analysisInfo = make_shared<AsmAnalysisInfo>();
 
