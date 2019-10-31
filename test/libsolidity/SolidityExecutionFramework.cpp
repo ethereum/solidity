@@ -50,7 +50,9 @@ bytes SolidityExecutionFramework::compileContract(
 	m_compiler.setRevertStringBehaviour(m_revertStrings);
 	m_compiler.setEVMVersion(m_evmVersion);
 	m_compiler.setOptimiserSettings(m_optimiserSettings);
+	m_compiler.setOptimiserSettings(OptimiserSettings::full());
 	m_compiler.enableIRGeneration(m_compileViaYul);
+	m_compiler.enableEWasmGeneration(true);
 	if (!m_compiler.compile())
 	{
 		langutil::SourceReferenceFormatter formatter(std::cerr);
@@ -60,7 +62,10 @@ bytes SolidityExecutionFramework::compileContract(
 		BOOST_ERROR("Compiling contract failed");
 	}
 	evmasm::LinkerObject obj;
-	if (m_compileViaYul)
+	bool viaEWasm = true;
+	if (viaEWasm)
+		obj = m_compiler.eWasmObject(_contractName.empty() ? m_compiler.lastContractName() : _contractName);
+	else if (m_compileViaYul)
 	{
 		yul::AssemblyStack asmStack(
 					m_evmVersion,
