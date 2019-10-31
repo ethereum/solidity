@@ -111,10 +111,10 @@ contract FixedFeeRegistrar is Registrar {
 		o_content = rec.content;
 		o_owner = rec.owner;
 	}
-	function addr(string memory _name) public view returns (address) { return m_record(_name).addr; }
-	function subRegistrar(string memory _name) public view returns (address) { return m_record(_name).subRegistrar; }
-	function content(string memory _name) public view returns (bytes32) { return m_record(_name).content; }
-	function owner(string memory _name) public view returns (address) { return m_record(_name).owner; }
+	function addr(string memory _name) public override view returns (address) { return m_record(_name).addr; }
+	function subRegistrar(string memory _name) public override view returns (address) { return m_record(_name).subRegistrar; }
+	function content(string memory _name) public override view returns (bytes32) { return m_record(_name).content; }
+	function owner(string memory _name) public override view returns (address) { return m_record(_name).owner; }
 
 	Record[2**253] m_recordData;
 	function m_record(string memory _name) view internal returns (Record storage o_record) {

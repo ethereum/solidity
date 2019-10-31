@@ -6,4 +6,4 @@ contract B {
 }
 contract C is A, B {}
 // ----
-// TypeError: (81-123): Overriding function visibility differs.
+// TypeError: (126-147): Derived contract must override function "f". Function with the same name and parameter types defined in two or more base classes.

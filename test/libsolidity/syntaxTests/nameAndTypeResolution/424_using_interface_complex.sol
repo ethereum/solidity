@@ -5,7 +5,7 @@ interface I {
     function() external;
 }
 contract C is I {
-    function f() public {
+    function f() public override {
     }
 }
 // ----

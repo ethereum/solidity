@@ -219,14 +219,14 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 		pragma solidity >=0.0;
 		import "./A";
 		contract B is A {
-			function g(function(uint) external returns (uint) x) public {}
+			function g(function(uint) external returns (uint) x) public override {}
 		}
 	)";
 	char const* sourceCodeC = R"(
 		pragma solidity >=0.0;
 		import "./B";
 		contract C is B {
-			function g(function(uint) external returns (uint) x) public {}
+			function g(function(uint) external returns (uint) x) public override {}
 		}
 	)";
 	compilerStack.setSources({

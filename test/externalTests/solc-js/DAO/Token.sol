@@ -94,11 +94,11 @@ contract Token is TokenInterface {
     // inadvertently also transferred ether
     modifier noEther() {if (msg.value > 0) revert(); _; }
 
-    function balanceOf(address _owner) public view returns (uint256 balance) {
+    function balanceOf(address _owner) public override view returns (uint256 balance) {
         return balances[_owner];
     }
 
-    function transfer(address _to, uint256 _amount) public returns (bool success) {
+    function transfer(address _to, uint256 _amount) public override returns (bool success) {
         if (balances[msg.sender] >= _amount && _amount > 0) {
             balances[msg.sender] -= _amount;
             balances[_to] += _amount;
@@ -113,7 +113,7 @@ contract Token is TokenInterface {
         address _from,
         address _to,
         uint256 _amount
-    ) public returns (bool success) {
+    ) public override returns (bool success) {
 
         if (balances[_from] >= _amount
             && allowed[_from][msg.sender] >= _amount
@@ -129,7 +129,7 @@ contract Token is TokenInterface {
         }
     }
 
-    function approve(address _spender, uint256 _amount) public returns (bool success) {
+    function approve(address _spender, uint256 _amount) public override returns (bool success) {
         allowed[msg.sender][_spender] = _amount;
         emit Approval(msg.sender, _spender, _amount);
         return true;
@@ -144,7 +144,7 @@ contract Token is TokenInterface {
         return true;
     }
 
-    function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
+    function allowance(address _owner, address _spender) public override view returns (uint256 remaining) {
         return allowed[_owner][_spender];
     }
 }

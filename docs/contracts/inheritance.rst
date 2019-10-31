@@ -10,6 +10,9 @@ All function calls are virtual, which means that the most derived function
 is called, except when the contract name is explicitly given or the
 ``super`` keyword is used.
 
+All functions overriding a base function must specify the ``override`` keyword.
+See :ref:`Function Overriding <function-overriding>` for more details.
+
 When a contract inherits from other contracts, only a single
 contract is created on the blockchain, and the code from all the base contracts
 is compiled into the created contract. This means that all internal calls
@@ -74,7 +77,7 @@ Details are given in the following example.
         // types of output parameters, that causes an error.
         // Both local and message-based function calls take these overrides
         // into account.
-        function kill() public {
+        function kill() public override {
             if (msg.sender == owner) {
                 Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
                 NameReg(config.lookup(1)).unregister();
@@ -94,6 +97,7 @@ Details are given in the following example.
             if (msg.sender == owner) info = newInfo;
         }
 
+        function kill() public override (Mortal, Named) { Named.kill(); }
         function get() public view returns(uint r) { return info; }
 
         uint info;
@@ -117,20 +121,20 @@ seen in the following example::
     }
 
     contract Base1 is mortal {
-        function kill() public { /* do cleanup 1 */ mortal.kill(); }
+        function kill() public override { /* do cleanup 1 */ mortal.kill(); }
     }
 
     contract Base2 is mortal {
-        function kill() public { /* do cleanup 2 */ mortal.kill(); }
+        function kill() public override { /* do cleanup 2 */ mortal.kill(); }
     }
 
     contract Final is Base1, Base2 {
+        function kill() public override(Base1, Base2) { Base2.kill(); }
     }
 
-A call to ``Final.kill()`` will call ``Base2.kill`` as the most
-derived override, but this function will bypass
-``Base1.kill``, basically because it does not even know about
-``Base1``.  The way around this is to use ``super``::
+A call to ``Final.kill()`` will call ``Base2.kill`` because we specify it
+explicitly in the final override, but this function will bypass
+``Base1.kill``. The way around this is to use ``super``::
 
     pragma solidity >=0.4.22 <0.7.0;
 
@@ -146,15 +150,16 @@ derived override, but this function will bypass
     }
 
     contract Base1 is mortal {
-        function kill() public { /* do cleanup 1 */ super.kill(); }
+        function kill() public override { /* do cleanup 1 */ super.kill(); }
     }
 
 
     contract Base2 is mortal {
-        function kill() public { /* do cleanup 2 */ super.kill(); }
+        function kill() public override { /* do cleanup 2 */ super.kill(); }
     }
 
     contract Final is Base1, Base2 {
+        function kill() public override(Base1, Base2) { super.kill(); }
     }
 
 If ``Base2`` calls a function of ``super``, it does not simply
@@ -167,6 +172,123 @@ The actual function that is called when using super is
 not known in the context of the class where it is used,
 although its type is known. This is similar for ordinary
 virtual method lookup.
+
+.. _function-overriding:
+
+.. index:: ! overriding;function
+
+Function Overriding
+===================
+
+Base functions can be overridden by inheriting contracts to change their
+behavior. The overriding function must then use the ``override`` keyword in the
+function header as shown in this example:
+
+::
+
+    pragma solidity >=0.5.0 <0.7.0;
+
+    contract Base
+    {
+        function foo() public {}
+    }
+
+    contract Middle is Base {}
+
+    contract Inherited is Middle
+    {
+        function foo() public override {}
+    }
+
+For multiple inheritance, the most derived base contracts that define the same
+function must be specified explicitly after the ``override`` keyword.
+In other words, you have to specify all base contracts that define the same function and have not yet been overridden by another base contract (on some path through the inheritance graph).
+Additionally, if a contract inherits the same function from multiple (unrelated)
+bases, it has to explicitly override it:
+
+::
+
+    pragma solidity >=0.5.0 <0.7.0;
+
+    contract Base1
+    {
+        function foo() public {}
+    }
+
+    contract Base2
+    {
+        function foo() public {}
+    }
+
+    contract Inherited is Base1, Base2
+    {
+        // Derives from multiple bases defining foo(), so we must explicitly
+        // override it
+        function foo() public override(Base1, Base2) {}
+    }
+
+A function defined in a common base contract does not have to be explicitly
+overridden when used with multiple inheritance:
+
+::
+
+    pragma solidity >=0.5.0 <0.7.0;
+
+    contract A { function f() public pure{} }
+    contract B is A {}
+    contract C is A {}
+    // No explicit override required
+    contract D is B, C {}
+
+.. _modifier-overriding:
+
+.. index:: ! overriding;modifier
+
+Modifier Overriding
+===================
+
+Function modifiers can override each other. This works in the same way as
+function overriding (except that there is no overloading for modifiers). The
+``override`` keyword must be used in the overriding contract:
+
+::
+
+    pragma solidity >=0.5.0 <0.7.0;
+
+    contract Base
+    {
+        modifier foo() {_;}
+    }
+
+    contract Inherited is Base
+    {
+        modifier foo() override {_;}
+    }
+
+
+In case of multiple inheritance, all direct base contracts must be specified
+explicitly:
+
+::
+
+    pragma solidity >=0.5.0 <0.7.0;
+
+    contract Base1
+    {
+        modifier foo() {_;}
+    }
+
+    contract Base2
+    {
+        modifier foo() {_;}
+    }
+
+    contract Inherited is Base1, Base2
+    {
+        modifier foo() override(Base1, Base2) {_;}
+    }
+
+
 
 .. index:: ! constructor
 

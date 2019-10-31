@@ -23,6 +23,7 @@ contract StandardToken is Token {
     /// @return Was transfer successful?
     function transfer(address to, uint value)
         public
+        override
         returns (bool)
     {
         if (   !balances[msg.sender].safeToSub(value)
@@ -41,6 +42,7 @@ contract StandardToken is Token {
     /// @return Was transfer successful?
     function transferFrom(address from, address to, uint value)
         public
+        override
         returns (bool)
     {
         if (   !balances[from].safeToSub(value)
@@ -60,6 +62,7 @@ contract StandardToken is Token {
     /// @return Was approval successful?
     function approve(address spender, uint value)
         public
+        override
         returns (bool)
     {
         allowances[msg.sender][spender] = value;
@@ -73,6 +76,7 @@ contract StandardToken is Token {
     /// @return Remaining allowance for spender
     function allowance(address owner, address spender)
         public
+        override
         view
         returns (uint)
     {
@@ -84,6 +88,7 @@ contract StandardToken is Token {
     /// @return Balance of owner
     function balanceOf(address owner)
         public
+        override
         view
         returns (uint)
     {
@@ -94,6 +99,7 @@ contract StandardToken is Token {
     /// @return Total supply
     function totalSupply()
         public
+        override
         view
         returns (uint)
     {

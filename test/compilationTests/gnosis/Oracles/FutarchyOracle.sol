@@ -151,6 +151,7 @@ contract FutarchyOracle is Oracle {
     /// @return Is outcome set?
     function isOutcomeSet()
         public
+        override
         view
         returns (bool)
     {
@@ -161,6 +162,7 @@ contract FutarchyOracle is Oracle {
     /// @return Outcome
     function getOutcome()
         public
+        override
         view
         returns (int)
     {
