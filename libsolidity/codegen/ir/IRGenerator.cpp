@@ -583,7 +583,9 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 	Whiskers t(R"X(
 		if iszero(lt(calldatasize(), 4))
 		{
-			let selector := <shr224>(calldataload(0))
+			mstore(0, 0)
+			calldatacopy(28, 0, 4)
+			let selector := mload(0)
 			switch selector
 			<#cases>
 			case <functionSelector>
