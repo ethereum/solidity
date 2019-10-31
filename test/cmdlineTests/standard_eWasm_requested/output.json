@@ -10,17 +10,17 @@
     (local $hi i64)
     (local $y i64)
     (local $hi_1 i64)
-    (set_local $_1 (i64.const 0))
-    (set_local $pos (call $u256_to_i32 (get_local $_1) (get_local $_1) (get_local $_1) (i64.const 64)))
-    (set_local $_2 (i64.const 65280))
-    (set_local $hi (i64.shl (i64.or (i64.shl (i64.or (i64.and (i64.shl (get_local $_1) (i64.const 8)) (get_local $_2)) (i64.and (i64.shr_u (get_local $_1) (i64.const 8)) (i64.const 255))) (i64.const 16)) (call $endian_swap_16 (i64.shr_u (get_local $_1) (i64.const 16)))) (i64.const 32)))
-    (set_local $y (i64.or (get_local $hi) (call $endian_swap_32 (i64.shr_u (get_local $_1) (i64.const 32)))))
-    (i64.store (get_local $pos) (get_local $y))
-    (i64.store (i64.add (get_local $pos) (i64.const 8)) (get_local $y))
-    (i64.store (i64.add (get_local $pos) (i64.const 16)) (get_local $y))
-    (set_local $hi_1 (i64.shl (i64.or (i64.shl (i64.or (i64.and (i64.shl (i64.const 64) (i64.const 8)) (get_local $_2)) (i64.and (i64.shr_u (i64.const 64) (i64.const 8)) (i64.const 255))) (i64.const 16)) (call $endian_swap_16 (i64.shr_u (i64.const 64) (i64.const 16)))) (i64.const 32)))
-    (i64.store (i64.add (get_local $pos) (i64.const 24)) (i64.or (get_local $hi_1) (call $endian_swap_32 (i64.shr_u (i64.const 64) (i64.const 32)))))
-    (call $eth.revert (call $u256_to_i32 (get_local $_1) (get_local $_1) (get_local $_1) (get_local $_1)) (call $u256_to_i32 (get_local $_1) (get_local $_1) (get_local $_1) (get_local $_1)))
+    (local.set $_1 (i64.const 0))
+    (local.set $pos (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 64)))
+    (local.set $_2 (i64.const 65280))
+    (local.set $hi (i64.shl (i64.or (i64.shl (i64.or (i64.and (i64.shl (local.get $_1) (i64.const 8)) (local.get $_2)) (i64.and (i64.shr_u (local.get $_1) (i64.const 8)) (i64.const 255))) (i64.const 16)) (call $endian_swap_16 (i64.shr_u (local.get $_1) (i64.const 16)))) (i64.const 32)))
+    (local.set $y (i64.or (local.get $hi) (call $endian_swap_32 (i64.shr_u (local.get $_1) (i64.const 32)))))
+    (i64.store (local.get $pos) (local.get $y))
+    (i64.store (i64.add (local.get $pos) (i64.const 8)) (local.get $y))
+    (i64.store (i64.add (local.get $pos) (i64.const 16)) (local.get $y))
+    (local.set $hi_1 (i64.shl (i64.or (i64.shl (i64.or (i64.and (i64.shl (i64.const 64) (i64.const 8)) (local.get $_2)) (i64.and (i64.shr_u (i64.const 64) (i64.const 8)) (i64.const 255))) (i64.const 16)) (call $endian_swap_16 (i64.shr_u (i64.const 64) (i64.const 16)))) (i64.const 32)))
+    (i64.store (i64.add (local.get $pos) (i64.const 24)) (i64.or (local.get $hi_1) (call $endian_swap_32 (i64.shr_u (i64.const 64) (i64.const 32)))))
+    (call $eth.revert (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)))
 )
 
 (func $u256_to_i32
@@ -30,20 +30,20 @@
     (param $x4 i64)
     (result i64)
     (local $v i64)
-    (if (i64.ne (get_local $v) (i64.or (i64.or (get_local $x1) (get_local $x2)) (get_local $x3))) (then
+    (if (i64.ne (local.get $v) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (then
         (unreachable)))
-    (if (i64.ne (get_local $v) (i64.shr_u (get_local $x4) (i64.const 32))) (then
+    (if (i64.ne (local.get $v) (i64.shr_u (local.get $x4) (i64.const 32))) (then
         (unreachable)))
-    (set_local $v (get_local $x4))
-    (get_local $v)
+    (local.set $v (local.get $x4))
+    (local.get $v)
 )
 
 (func $endian_swap_16
     (param $x i64)
     (result i64)
     (local $y i64)
-    (set_local $y (i64.or (i64.and (i64.shl (get_local $x) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (get_local $x) (i64.const 8)) (i64.const 255))))
-    (get_local $y)
+    (local.set $y (i64.or (i64.and (i64.shl (local.get $x) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (local.get $x) (i64.const 8)) (i64.const 255))))
+    (local.get $y)
 )
 
 (func $endian_swap_32
@@ -51,9 +51,9 @@
     (result i64)
     (local $y i64)
     (local $hi i64)
-    (set_local $hi (i64.shl (call $endian_swap_16 (get_local $x)) (i64.const 16)))
-    (set_local $y (i64.or (get_local $hi) (call $endian_swap_16 (i64.shr_u (get_local $x) (i64.const 16)))))
-    (get_local $y)
+    (local.set $hi (i64.shl (call $endian_swap_16 (local.get $x)) (i64.const 16)))
+    (local.set $y (i64.or (local.get $hi) (call $endian_swap_16 (i64.shr_u (local.get $x) (i64.const 16)))))
+    (local.get $y)
 )
 
 )
@@ -81,32 +81,32 @@
     (local $_7 i64)
     (local $_8 i64)
     (local $_9 i64)
-    (set_local $_1 (i64.const 0))
-    (set_local $pos (call $u256_to_i32 (get_local $_1) (get_local $_1) (get_local $_1) (i64.const 64)))
-    (set_local $hi (i64.shl (i64.or (i64.shl (i64.or (i64.and (i64.shl (get_local $_1) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (get_local $_1) (i64.const 8)) (i64.const 255))) (i64.const 16)) (call $endian_swap_16 (i64.shr_u (get_local $_1) (i64.const 16)))) (i64.const 32)))
-    (set_local $y (i64.or (get_local $hi) (call $endian_swap_32 (i64.shr_u (get_local $_1) (i64.const 32)))))
-    (i64.store (get_local $pos) (get_local $y))
-    (i64.store (i64.add (get_local $pos) (i64.const 8)) (get_local $y))
-    (i64.store (i64.add (get_local $pos) (i64.const 16)) (get_local $y))
-    (set_local $hi_1 (i64.shl (call $endian_swap_16 (i64.const 64)) (i64.const 16)))
-    (set_local $hi_2 (i64.shl (i64.or (get_local $hi_1) (call $endian_swap_16 (i64.shr_u (i64.const 64) (i64.const 16)))) (i64.const 32)))
-    (i64.store (i64.add (get_local $pos) (i64.const 24)) (i64.or (get_local $hi_2) (call $endian_swap_32 (i64.shr_u (i64.const 64) (i64.const 32)))))
+    (local.set $_1 (i64.const 0))
+    (local.set $pos (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 64)))
+    (local.set $hi (i64.shl (i64.or (i64.shl (i64.or (i64.and (i64.shl (local.get $_1) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (local.get $_1) (i64.const 8)) (i64.const 255))) (i64.const 16)) (call $endian_swap_16 (i64.shr_u (local.get $_1) (i64.const 16)))) (i64.const 32)))
+    (local.set $y (i64.or (local.get $hi) (call $endian_swap_32 (i64.shr_u (local.get $_1) (i64.const 32)))))
+    (i64.store (local.get $pos) (local.get $y))
+    (i64.store (i64.add (local.get $pos) (i64.const 8)) (local.get $y))
+    (i64.store (i64.add (local.get $pos) (i64.const 16)) (local.get $y))
+    (local.set $hi_1 (i64.shl (call $endian_swap_16 (i64.const 64)) (i64.const 16)))
+    (local.set $hi_2 (i64.shl (i64.or (local.get $hi_1) (call $endian_swap_16 (i64.shr_u (i64.const 64) (i64.const 16)))) (i64.const 32)))
+    (i64.store (i64.add (local.get $pos) (i64.const 24)) (i64.or (local.get $hi_2) (call $endian_swap_32 (i64.shr_u (i64.const 64) (i64.const 32)))))
     (block
-        (set_local $_2 (datasize \"C_2_deployed\"))
-        (set_local $_3 (get_global $global_))
-        (set_local $_4 (get_global $global__1))
-        (set_local $_5 (get_global $global__2))
+        (local.set $_2 (datasize \"C_2_deployed\"))
+        (local.set $_3 (global.get $global_))
+        (local.set $_4 (global.get $global__1))
+        (local.set $_5 (global.get $global__2))
 
     )
     (block
-        (set_local $_6 (dataoffset \"C_2_deployed\"))
-        (set_local $_7 (get_global $global_))
-        (set_local $_8 (get_global $global__1))
-        (set_local $_9 (get_global $global__2))
+        (local.set $_6 (dataoffset \"C_2_deployed\"))
+        (local.set $_7 (global.get $global_))
+        (local.set $_8 (global.get $global__1))
+        (local.set $_9 (global.get $global__2))
 
     )
-    (call $eth.codeCopy (call $u256_to_i32 (get_local $_1) (get_local $_1) (get_local $_1) (get_local $_1)) (call $u256_to_i32 (get_local $_6) (get_local $_7) (get_local $_8) (get_local $_9)) (call $u256_to_i32 (get_local $_2) (get_local $_3) (get_local $_4) (get_local $_5)))
-    (call $eth.finish (call $u256_to_i32 (get_local $_1) (get_local $_1) (get_local $_1) (get_local $_1)) (call $u256_to_i32 (get_local $_2) (get_local $_3) (get_local $_4) (get_local $_5)))
+    (call $eth.codeCopy (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (call $u256_to_i32 (local.get $_6) (local.get $_7) (local.get $_8) (local.get $_9)) (call $u256_to_i32 (local.get $_2) (local.get $_3) (local.get $_4) (local.get $_5)))
+    (call $eth.finish (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (call $u256_to_i32 (local.get $_2) (local.get $_3) (local.get $_4) (local.get $_5)))
 )
 
 (func $u256_to_i32
@@ -116,20 +116,20 @@
     (param $x4 i64)
     (result i64)
     (local $v i64)
-    (if (i64.ne (get_local $v) (i64.or (i64.or (get_local $x1) (get_local $x2)) (get_local $x3))) (then
+    (if (i64.ne (local.get $v) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (then
         (unreachable)))
-    (if (i64.ne (get_local $v) (i64.shr_u (get_local $x4) (i64.const 32))) (then
+    (if (i64.ne (local.get $v) (i64.shr_u (local.get $x4) (i64.const 32))) (then
         (unreachable)))
-    (set_local $v (get_local $x4))
-    (get_local $v)
+    (local.set $v (local.get $x4))
+    (local.get $v)
 )
 
 (func $endian_swap_16
     (param $x i64)
     (result i64)
     (local $y i64)
-    (set_local $y (i64.or (i64.and (i64.shl (get_local $x) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (get_local $x) (i64.const 8)) (i64.const 255))))
-    (get_local $y)
+    (local.set $y (i64.or (i64.and (i64.shl (local.get $x) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (local.get $x) (i64.const 8)) (i64.const 255))))
+    (local.get $y)
 )
 
 (func $endian_swap_32
@@ -137,9 +137,9 @@
     (result i64)
     (local $y i64)
     (local $hi i64)
-    (set_local $hi (i64.shl (call $endian_swap_16 (get_local $x)) (i64.const 16)))
-    (set_local $y (i64.or (get_local $hi) (call $endian_swap_16 (i64.shr_u (get_local $x) (i64.const 16)))))
-    (get_local $y)
+    (local.set $hi (i64.shl (call $endian_swap_16 (local.get $x)) (i64.const 16)))
+    (local.set $y (i64.or (local.get $hi) (call $endian_swap_16 (i64.shr_u (local.get $x) (i64.const 16)))))
+    (local.get $y)
 )
 
 )
