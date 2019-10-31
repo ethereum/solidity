@@ -30,14 +30,15 @@ using namespace std;
 using namespace yul;
 using namespace dev;
 
-string EWasmToText::run(
-	vector<wasm::GlobalVariableDeclaration> const& _globals,
-	vector<wasm::FunctionImport> const& _imports,
-	vector<wasm::FunctionDefinition> const& _functions
-)
+string EWasmToText::run(wasm::Module const& _module)
 {
 	string ret = "(module\n";
-	for (wasm::FunctionImport const& imp: _imports)
+	for (auto const& sub: _module.subModules)
+		ret +=
+			"    ;; sub-module \"" +
+			sub.first +
+			"\" will be encoded as custom section in binary here, but is skipped in text mode.\n";
+	for (wasm::FunctionImport const& imp: _module.imports)
 	{
 		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" + imp.internalName;
 		if (!imp.paramTypes.empty())
@@ -52,10 +53,10 @@ string EWasmToText::run(
 	// export the main function
 	ret += "    (export \"main\" (func $main))\n";
 
-	for (auto const& g: _globals)
+	for (auto const& g: _module.globals)
 		ret += "    (global $" + g.variableName + " (mut i64) (i64.const 0))\n";
 	ret += "\n";
-	for (auto const& f: _functions)
+	for (auto const& f: _module.functions)
 		ret += transform(f) + "\n";
 	return move(ret) + ")\n";
 }

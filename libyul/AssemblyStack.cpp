@@ -200,7 +200,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		Dialect const& dialect = languageToDialect(m_language, EVMVersion{});
 
 		MachineAssemblyObject object;
-		object.assembly = EWasmObjectCompiler::compile(*m_parserResult, dialect);
+		object.assembly = EWasmObjectCompiler::compile(*m_parserResult, dialect).first;
 		return object;
 	}
 	}
