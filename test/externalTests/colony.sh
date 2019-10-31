@@ -32,7 +32,7 @@ function colony_test
 {
     OPTIMIZER_LEVEL=3
     FORCE_ABIv2=false
-    truffle_setup https://github.com/JoinColony/colonyNetwork.git develop
+    truffle_setup https://github.com/erak/colonyNetwork.git develop_060
     run_install install_fn
 
     CONFIG=$(find_truffle_config)
