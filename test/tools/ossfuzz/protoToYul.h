@@ -90,6 +90,7 @@ private:
 	void visit(FunctionCall const&);
 	void visit(FunctionDef const&);
 	void visit(PopStmt const&);
+	void visit(LeaveStmt const&);
 	void visit(LowLevelCall const&);
 	void visit(Create const&);
 	void visit(UnaryOpData const&);

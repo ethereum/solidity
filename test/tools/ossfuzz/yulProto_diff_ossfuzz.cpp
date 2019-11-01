@@ -66,9 +66,6 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		of.write(yul_source.data(), yul_source.size());
 	}
 
-	if (yul_source.size() > 1200)
-		return;
-
 	YulStringRepository::reset();
 
 	// AssemblyStack entry point
@@ -95,35 +92,22 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	ostringstream os1;
 	ostringstream os2;
-	try
-	{
-		yulFuzzerUtil::interpret(
-			os1,
-			stack.parserResult()->code,
-			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion())
-		);
-	}
-	catch (yul::test::StepLimitReached const&)
-	{
+	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
+		os1,
+		stack.parserResult()->code,
+		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion())
+	);
+
+	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
 		return;
-	}
-	catch (yul::test::InterpreterTerminatedGeneric const&)
-	{
-	}
 
 	stack.optimize();
-	try
-	{
-		yulFuzzerUtil::interpret(
-			os2,
-			stack.parserResult()->code,
-			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
-			(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 1.5)
-		);
-	}
-	catch (yul::test::InterpreterTerminatedGeneric const&)
-	{
-	}
+	termReason = yulFuzzerUtil::interpret(
+		os2,
+		stack.parserResult()->code,
+		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
+		(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 4)
+	);
 
 	bool isTraceEq = (os1.str() == os2.str());
 	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");

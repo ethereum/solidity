@@ -20,7 +20,7 @@ using namespace std;
 using namespace yul;
 using namespace yul::test::yul_fuzzer;
 
-void yulFuzzerUtil::interpret(
+yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	ostream& _os,
 	shared_ptr<yul::Block> _ast,
 	Dialect const& _dialect,
@@ -44,6 +44,25 @@ void yulFuzzerUtil::interpret(
 		0x8e, 0xf3, 0x9b, 0xe4, 0x4f, 0x6c, 0x14, 0xde
 	};
 	Interpreter interpreter(state, _dialect);
-	interpreter(*_ast);
+
+	TerminationReason reason = TerminationReason::None;
+	try
+	{
+		interpreter(*_ast);
+	}
+	catch (StepLimitReached const&)
+	{
+		reason = TerminationReason::StepLimitReached;
+	}
+	catch (TraceLimitReached const&)
+	{
+		reason = TerminationReason::TraceLimitReached;
+	}
+	catch (ExplicitlyTerminated const&)
+	{
+		reason = TerminationReason::ExplicitlyTerminated;
+	}
+
 	state.dumpTraceAndState(_os);
+	return reason;
 }
