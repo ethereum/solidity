@@ -66,6 +66,10 @@ add_library(yul
 	optimiser/CallGraphGenerator.h
 	optimiser/CommonSubexpressionEliminator.cpp
 	optimiser/CommonSubexpressionEliminator.h
+	optimiser/ConditionalSimplifier.cpp
+	optimiser/ConditionalSimplifier.h
+	optimiser/ConditionalUnsimplifier.cpp
+	optimiser/ConditionalUnsimplifier.h
 	optimiser/ControlFlowSimplifier.cpp
 	optimiser/ControlFlowSimplifier.h
 	optimiser/DataFlowAnalyzer.cpp
