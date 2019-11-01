@@ -38,7 +38,6 @@ public:
 	static std::string run(Dialect const& _dialect, yul::Block const& _ast);
 
 public:
-	wasm::Expression operator()(yul::Instruction const& _instruction);
 	wasm::Expression operator()(yul::Literal const& _literal);
 	wasm::Expression operator()(yul::Identifier const& _identifier);
 	wasm::Expression operator()(yul::FunctionalInstruction const& _instr);

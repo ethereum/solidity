@@ -49,7 +49,6 @@ class StatementCopier: public boost::static_visitor<Statement>
 public:
 	virtual ~StatementCopier() = default;
 	virtual Statement operator()(ExpressionStatement const& _statement) = 0;
-	virtual Statement operator()(Instruction const& _instruction) = 0;
 	virtual Statement operator()(Assignment const& _assignment) = 0;
 	virtual Statement operator()(VariableDeclaration const& _varDecl) = 0;
 	virtual Statement operator()(If const& _if) = 0;
@@ -71,7 +70,6 @@ class ASTCopier: public ExpressionCopier, public StatementCopier
 public:
 	virtual ~ASTCopier() = default;
 	Expression operator()(Literal const& _literal) override;
-	Statement operator()(Instruction const& _instruction) override;
 	Expression operator()(Identifier const& _identifier) override;
 	Expression operator()(FunctionalInstruction const& _instr) override;
 	Expression operator()(FunctionCall const&) override;

@@ -49,7 +49,6 @@ class ScopeFiller: public boost::static_visitor<bool>
 public:
 	ScopeFiller(AsmAnalysisInfo& _info, langutil::ErrorReporter& _errorReporter);
 
-	bool operator()(Instruction const&) { return true; }
 	bool operator()(Literal const&) { return true; }
 	bool operator()(Identifier const&) { return true; }
 	bool operator()(FunctionalInstruction const&) { return true; }

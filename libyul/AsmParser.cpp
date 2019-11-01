@@ -232,8 +232,8 @@ Statement Parser::parseStatement()
 	}
 	else
 	{
-		solAssert(elementary.type() == typeid(Instruction), "Invalid elementary operation.");
-		return boost::get<Instruction>(elementary);
+		solAssert(false, "Invalid elementary operation.");
+		return {};
 	}
 }
 

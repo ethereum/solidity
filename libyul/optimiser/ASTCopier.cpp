@@ -30,12 +30,6 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-Statement ASTCopier::operator()(Instruction const&)
-{
-	assertThrow(false, OptimizerException, "Invalid operation.");
-	return {};
-}
-
 Statement ASTCopier::operator()(ExpressionStatement const& _statement)
 {
 	return ExpressionStatement{ _statement.location, translate(_statement.expression) };

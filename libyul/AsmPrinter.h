@@ -36,7 +36,6 @@ class AsmPrinter: public boost::static_visitor<std::string>
 public:
 	explicit AsmPrinter(bool _yul = false): m_yul(_yul) {}
 
-	std::string operator()(Instruction const& _instruction) const;
 	std::string operator()(Literal const& _literal) const;
 	std::string operator()(Identifier const& _identifier) const;
 	std::string operator()(FunctionalInstruction const& _functionalInstruction) const;
