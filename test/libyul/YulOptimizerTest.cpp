@@ -27,6 +27,7 @@
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/ConditionalUnsimplifier.h>
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/NameCollector.h>
@@ -157,6 +158,11 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		disambiguate();
 		CommonSubexpressionEliminator::run(*m_context, *m_ast);
+	}
+	else if (m_optimizerStep == "conditionalUnsimplifier")
+	{
+		disambiguate();
+		ConditionalUnsimplifier::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "conditionalSimplifier")
 	{
