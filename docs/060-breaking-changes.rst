@@ -21,6 +21,11 @@ This section lists purely syntactic changes that do not affect the behavior of e
 
 * Function ``push(value)`` for dynamic storage arrays do not return the new length anymore.
 
+* The new keyword ``abstract`` can be used to mark contracts as abstract. It has to be used
+  if a contract does not implement all its functions.
+
+* Libraries have to implement all their functions, not only the internal ones.
+
 * New reserved keywords: ``virtual``.
 
 Semantic Only Changes

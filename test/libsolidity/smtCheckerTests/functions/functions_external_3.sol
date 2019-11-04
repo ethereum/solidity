@@ -1,6 +1,6 @@
 pragma experimental SMTChecker;
 
-contract D
+abstract contract D
 {
 	function g(uint x) public;
 }
@@ -18,4 +18,4 @@ contract C
 	}
 }
 // ----
-// TypeError: (33-75): Contract "D" should be marked as abstract.
+// Warning: (347-371): Assertion violation happens here

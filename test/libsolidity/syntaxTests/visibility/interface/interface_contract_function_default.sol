@@ -3,11 +3,10 @@
 interface I {
     function f();
 }
-contract C {
+abstract contract C {
     function g();
 }
 // ----
 // SyntaxError: (158-171): No visibility specified. Did you intend to add "external"?
-// SyntaxError: (191-204): No visibility specified. Did you intend to add "public"?
-// TypeError: (174-206): Contract "C" should be marked as abstract.
+// SyntaxError: (200-213): No visibility specified. Did you intend to add "public"?
 // TypeError: (158-171): Functions in interfaces must be declared external.
