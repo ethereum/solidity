@@ -1,3 +1,4 @@
 library test {
-    function f(bytes calldata) external;
+    function f(bytes calldata) external {}
 }
+// ----

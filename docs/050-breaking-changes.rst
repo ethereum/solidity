@@ -345,7 +345,7 @@ commandline compiler for linking):
 
 ::
 
-    // This will not compile with 0.6.0 anymore.
+    // This will not compile after 0.6.0
     pragma solidity >=0.5.0 <0.5.99;
 
     library OldLibrary {

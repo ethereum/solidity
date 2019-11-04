@@ -134,8 +134,8 @@ bool ContractLevelChecker::check(ContractDefinition const& _contract)
 	checkDuplicateEvents(_contract);
 	checkIllegalOverrides(_contract);
 	checkAmbiguousOverrides(_contract);
-	checkAbstractFunctions(_contract);
 	checkBaseConstructorArguments(_contract);
+	checkAbstractFunctions(_contract);
 	checkExternalTypeClashes(_contract);
 	checkHashCollisions(_contract);
 	checkLibraryRequirements(_contract);
@@ -395,6 +395,8 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 	}
 
 	// Set to not fully implemented if at least one flag is false.
+	// Note that `_contract.annotation().unimplementedFunctions` has already been
+	// pre-filled by `checkBaseConstructorArguments`.
 	for (auto const& it: functions)
 		for (auto const& funAndFlag: it.second)
 			if (!funAndFlag.second)
@@ -405,13 +407,22 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 				break;
 			}
 
-	if (_contract.abstract() && _contract.contractKind() != ContractDefinition::ContractKind::Contract)
-		m_errorReporter.typeError(_contract.location(), "Only contracts can be abstract.");
+	if (_contract.abstract())
+	{
+		if (_contract.contractKind() == ContractDefinition::ContractKind::Interface)
+			m_errorReporter.typeError(_contract.location(), "Interfaces do not need the \"abstract\" keyword, they are abstract implicitly.");
+		else if (_contract.contractKind() == ContractDefinition::ContractKind::Library)
+			m_errorReporter.typeError(_contract.location(), "Libraries cannot be abstract.");
+		else
+			solAssert(_contract.contractKind() == ContractDefinition::ContractKind::Contract, "");
+	}
 
+	// For libraries, we emit errors on function-level, so this is fine as long as we do
+	// not have inheritance for libraries.
 	if (
 		_contract.contractKind() == ContractDefinition::ContractKind::Contract &&
-		!_contract.annotation().unimplementedFunctions.empty() &&
-		!_contract.abstract()
+		!_contract.abstract() &&
+		!_contract.annotation().unimplementedFunctions.empty()
 	)
 		m_errorReporter.typeError(
 			_contract.location(),

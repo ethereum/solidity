@@ -423,8 +423,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		_function.body().accept(*this);
 	else if (_function.isConstructor())
 		m_errorReporter.typeError(_function.location(), "Constructor must be implemented if declared.");
-	else if (isLibraryFunction && _function.visibility() <= FunctionDefinition::Visibility::Internal)
-		m_errorReporter.typeError(_function.location(), "Internal library function must be implemented if declared.");
+	else if (isLibraryFunction)
+		m_errorReporter.typeError(_function.location(), "Library functions must be implemented if declared.");
 
 
 	if (_function.isFallback())
@@ -2228,7 +2228,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Cannot instantiate an interface.");
 		if (!contract->constructorIsPublic())
 			m_errorReporter.typeError(_newExpression.location(), "Contract with internal constructor cannot be created directly.");
-		if (contract->abstract() || !contract->annotation().unimplementedFunctions.empty())
+		if (contract->abstract())
 			m_errorReporter.typeError(_newExpression.location(), "Cannot instantiate an abstract contract.");
 
 		solAssert(!!m_scope, "");
