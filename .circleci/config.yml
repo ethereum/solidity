@@ -568,7 +568,7 @@ jobs:
     environment:
       EVM: constantinople
       OPTIMIZE: 0
-      flags: --no-smt
+      SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
 
   t_ems_solcjs:
