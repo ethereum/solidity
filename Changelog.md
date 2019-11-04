@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * Code Generator: Use SELFBALANCE for ``address(this).balance`` if using Istanbul EVM
+ * SMTChecker: Support assignments to multi-dimensional arrays and mappings.
 
 
 Bugfixes:
