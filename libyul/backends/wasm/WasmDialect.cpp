@@ -46,12 +46,22 @@ WasmDialect::WasmDialect():
 	})
 		addFunction(name, 2, 1);
 
+	m_functions["i64.lt_u"_yulstring].returns.front() = "i32"_yulstring;
+	m_functions["i64.gt_u"_yulstring].returns.front() = "i32"_yulstring;
+	m_functions["i64.le_u"_yulstring].returns.front() = "i32"_yulstring;
+	m_functions["i64.ge_u"_yulstring].returns.front() = "i32"_yulstring;
+	m_functions["i64.eq"_yulstring].returns.front() = "i32"_yulstring;
+	m_functions["i64.ne"_yulstring].returns.front() = "i32"_yulstring;
+
 	addFunction("i64.eqz", 1, 1);
+	m_functions["i64.eqz"_yulstring].returns.front() = "i32"_yulstring;
 
 	addFunction("i64.store", 2, 0, false);
+	m_functions["i64.store"_yulstring].parameters.front() = "i32"_yulstring;
 	m_functions["i64.store"_yulstring].sideEffects.invalidatesStorage = false;
 
 	addFunction("i64.load", 1, 1, false);
+	m_functions["i64.load"_yulstring].parameters.front() = "i32"_yulstring;
 	m_functions["i64.load"_yulstring].sideEffects.invalidatesStorage = false;
 	m_functions["i64.load"_yulstring].sideEffects.invalidatesMemory = false;
 	m_functions["i64.load"_yulstring].sideEffects.sideEffectFree = true;
@@ -63,8 +73,8 @@ WasmDialect::WasmDialect():
 	m_functions["unreachable"_yulstring].sideEffects.invalidatesStorage = false;
 	m_functions["unreachable"_yulstring].sideEffects.invalidatesMemory = false;
 
-	addFunction("datasize", 1, 4, true, true);
-	addFunction("dataoffset", 1, 4, true, true);
+	addFunction("datasize", 1, 1, true, true);
+	addFunction("dataoffset", 1, 1, true, true);
 
 	addEthereumExternals();
 }

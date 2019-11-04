@@ -74,12 +74,12 @@ string EWasmToText::operator()(wasm::StringLiteral const& _literal)
 
 string EWasmToText::operator()(wasm::LocalVariable const& _identifier)
 {
-	return "(get_local $" + _identifier.name + ")";
+	return "(local.get $" + _identifier.name + ")";
 }
 
 string EWasmToText::operator()(wasm::GlobalVariable const& _identifier)
 {
-	return "(get_global $" + _identifier.name + ")";
+	return "(global.get $" + _identifier.name + ")";
 }
 
 string EWasmToText::operator()(wasm::BuiltinCall const& _builtinCall)
@@ -96,12 +96,12 @@ string EWasmToText::operator()(wasm::FunctionCall const& _functionCall)
 
 string EWasmToText::operator()(wasm::LocalAssignment const& _assignment)
 {
-	return "(set_local $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
+	return "(local.set $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
 }
 
 string EWasmToText::operator()(wasm::GlobalAssignment const& _assignment)
 {
-	return "(set_global $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
+	return "(global.set $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
 }
 
 string EWasmToText::operator()(wasm::If const& _if)

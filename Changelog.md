@@ -28,6 +28,7 @@ Language Features:
 
 Compiler Features:
  * Code Generator: Use SELFBALANCE for ``address(this).balance`` if using Istanbul EVM
+ * SMTChecker: Support assignments to multi-dimensional arrays and mappings.
 
 
 Bugfixes:
@@ -50,6 +51,7 @@ Compiler Features:
  * SMTChecker: Add loop support to the CHC engine.
  * Yul Optimizer: Take side-effect-freeness of user-defined functions into account.
  * Yul Optimizer: Remove redundant mload/sload operations.
+ * Yul Optimizer: Use the fact that branch conditions have certain value inside the branch.
 
 
 Bugfixes:
