@@ -30,6 +30,7 @@ object \"C_6\" {
                 }
                 default { }
             }
+            if iszero(calldatasize()) { }
             revert(0, 0)
             function abi_decode_tuple_(headStart, dataEnd)
             {

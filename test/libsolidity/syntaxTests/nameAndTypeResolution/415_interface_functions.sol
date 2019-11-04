@@ -1,5 +1,5 @@
 interface I {
-    function() external;
+    fallback() external;
     function f() external;
 }
 // ----

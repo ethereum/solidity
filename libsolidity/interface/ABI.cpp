@@ -89,15 +89,16 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		);
 		abi.emplace(std::move(method));
 	}
-	if (_contractDef.fallbackFunction())
-	{
-		FunctionType const* externalFunctionType = FunctionType(*_contractDef.fallbackFunction(), false).interfaceFunctionType();
-		solAssert(!!externalFunctionType, "");
-		Json::Value method;
-		method["type"] = "fallback";
-		method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
-		abi.emplace(std::move(method));
-	}
+	for (auto const* fallbackOrReceive: {_contractDef.fallbackFunction(), _contractDef.receiveFunction()})
+		if (fallbackOrReceive)
+		{
+			FunctionType const* externalFunctionType = FunctionType(*fallbackOrReceive, false).interfaceFunctionType();
+			solAssert(!!externalFunctionType, "");
+			Json::Value method;
+			method["type"] = TokenTraits::toString(fallbackOrReceive->kind());
+			method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
+			abi.emplace(std::move(method));
+		}
 	for (auto const& it: _contractDef.interfaceEvents())
 	{
 		Json::Value event;

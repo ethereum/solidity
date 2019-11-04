@@ -1,0 +1,176 @@
+{
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        9
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "abstract": false,
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          9
+        ],
+        "name": "C",
+        "scope": 10
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "documentation": null,
+            "implemented": true,
+            "isConstructor": false,
+            "kind": "receive",
+            "modifiers":
+            [
+              null
+            ],
+            "name": "",
+            "overrides": null,
+            "scope": 9,
+            "stateMutability": "payable",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 1,
+              "name": "ParameterList",
+              "src": "22:2:1"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 2,
+              "name": "ParameterList",
+              "src": "42:0:1"
+            },
+            {
+              "attributes":
+              {
+                "statements":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 3,
+              "name": "Block",
+              "src": "42:5:1"
+            }
+          ],
+          "id": 4,
+          "name": "FunctionDefinition",
+          "src": "15:32:1"
+        },
+        {
+          "attributes":
+          {
+            "documentation": null,
+            "implemented": true,
+            "isConstructor": false,
+            "kind": "fallback",
+            "modifiers":
+            [
+              null
+            ],
+            "name": "",
+            "overrides": null,
+            "scope": 9,
+            "stateMutability": "payable",
+            "superFunction": null,
+            "visibility": "external"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 5,
+              "name": "ParameterList",
+              "src": "58:2:1"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 6,
+              "name": "ParameterList",
+              "src": "78:0:1"
+            },
+            {
+              "attributes":
+              {
+                "statements":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 7,
+              "name": "Block",
+              "src": "78:5:1"
+            }
+          ],
+          "id": 8,
+          "name": "FunctionDefinition",
+          "src": "50:33:1"
+        }
+      ],
+      "id": 9,
+      "name": "ContractDefinition",
+      "src": "0:85:1"
+    }
+  ],
+  "id": 10,
+  "name": "SourceUnit",
+  "src": "0:86:1"
+}

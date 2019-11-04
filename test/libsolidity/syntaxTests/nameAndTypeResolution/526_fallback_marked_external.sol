@@ -1,3 +1,3 @@
 contract C {
-    function () external { }
+    fallback () external { }
 }

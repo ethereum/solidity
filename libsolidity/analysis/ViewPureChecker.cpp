@@ -174,6 +174,7 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 		!_funDef.body().statements().empty() &&
 		!_funDef.isConstructor() &&
 		!_funDef.isFallback() &&
+		!_funDef.isReceive() &&
 		!_funDef.annotation().superFunction
 	)
 		m_errorReporter.warning(

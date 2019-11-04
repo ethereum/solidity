@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(regular_functions_exclude_fallback)
 	char const* sourceCode = R"(
 		contract A {
 			uint public x;
-			function() external { x = 2; }
+			fallback() external { x = 2; }
 		}
 	)";
 	testCreationTimeGas(sourceCode);

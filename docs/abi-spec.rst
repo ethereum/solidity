@@ -444,8 +444,8 @@ JSON
 The JSON format for a contract's interface is given by an array of function and/or event descriptions.
 A function description is a JSON object with the fields:
 
-- ``type``: ``"function"``, ``"constructor"``, or ``"fallback"`` (the :ref:`unnamed "default" function <fallback-function>`).
-- ``name``: the name of the function.
+- ``type``: ``"function"``, ``"constructor"``, ``"receive"`` (the :ref:`"receive Ether" function <receive-ether-function>`) or ``"fallback"`` (the :ref:`"default" function <fallback-function>`);
+- ``name``: the name of the function;
 - ``inputs``: an array of objects, each of which contains:
 
   * ``name``: the name of the parameter.

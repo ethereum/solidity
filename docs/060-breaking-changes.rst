@@ -39,6 +39,15 @@ This section highlights changes that affect syntax and semantics.
   that can hold both the type of the base and the type of the exponent, as with symmentric
   operations. Additionally, signed types are allowed for the base of the exponetation.
 
+* The unnamed function commonly referred to as "fallback function" was split up into a new
+  fallback function that is defined using the ``fallback`` keyword and a receive ether function
+  defined using the ``receive`` keyword. If present, the receive ether function is called
+  whenever the call data is empty. The new fallback function is called when no
+  other function matches.  It can be payable in which case it may accept value
+  or non-payable in which case transactions not matching any other function
+  which send value will revert. If you only implement the receive and not the fallback function, calling a non-existing function on your contract in error is not possible anymore. Unless you are following an upgrade or proxy
+  pattern, you should not need to implement the fallback function.
+
 
 How to update your code
 =======================
@@ -46,6 +55,8 @@ How to update your code
 This section gives detailed instructions on how to update prior code for every breaking change.
 
 * Change ``address(f)`` to ``f.address`` for ``f`` being of external function type.
+
+* Replace ``function () external [payable] { ... }`` by either ``receive() external payable { ... }``, ``fallback() external [payable] { ... }`` or both. Prefer using a ``receive`` function only, whenever possible.
 
 * Change ``uint length = array.push(value)`` to ``array.push(value);``. The new length can be
   accessed via ``array.length``.

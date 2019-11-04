@@ -70,9 +70,7 @@ private:
 	/// This struct is shared for parsing a function header and a function type.
 	struct FunctionHeaderParserResult
 	{
-		bool isConstructor;
 		ASTPointer<OverrideSpecifier> overrides;
-		ASTPointer<ASTString> name;
 		ASTPointer<ParameterList> parameters;
 		ASTPointer<ParameterList> returnParameters;
 		Declaration::Visibility visibility = Declaration::Visibility::Default;
@@ -93,9 +91,8 @@ private:
 	Declaration::Visibility parseVisibilitySpecifier();
 	ASTPointer<OverrideSpecifier> parseOverrideSpecifier();
 	StateMutability parseStateMutability();
-	FunctionHeaderParserResult parseFunctionHeader(bool _onlyFuncType, bool _allowFuncDef);
-	ASTPointer<ASTNode> parseFunctionDefinitionOrFunctionTypeStateVariable();
-	ASTPointer<FunctionDefinition> parseFunctionDefinition(ASTString const* _contractName);
+	FunctionHeaderParserResult parseFunctionHeader(bool _isStateVariable);
+	ASTPointer<ASTNode> parseFunctionDefinition();
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
 	ASTPointer<EnumValue> parseEnumValue();

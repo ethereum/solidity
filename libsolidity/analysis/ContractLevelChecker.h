@@ -83,8 +83,6 @@ private:
 		FunctionDefinition const* _baseConstructor,
 		ASTNode const* _argumentNode
 	);
-	void checkConstructor(ContractDefinition const& _contract);
-	void checkFallbackFunction(ContractDefinition const& _contract);
 	/// Checks that different functions with external visibility end up having different
 	/// external argument types (i.e. different signature).
 	void checkExternalTypeClashes(ContractDefinition const& _contract);
@@ -107,6 +105,9 @@ private:
 	/// May contain the same function multiple times when used with shared bases.
 	FunctionMultiSet const& inheritedFunctions(ContractDefinition const* _contract) const;
 	ModifierMultiSet const& inheritedModifiers(ContractDefinition const* _contract) const;
+
+	/// Warns if the contract has a payable fallback, but no receive ether function.
+	void checkPayableFallbackWithoutReceive(ContractDefinition const& _contract);
 
 	langutil::ErrorReporter& m_errorReporter;
 

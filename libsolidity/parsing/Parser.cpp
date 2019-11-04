@@ -300,19 +300,23 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			Token currentTokenValue = m_scanner->currentToken();
 			if (currentTokenValue == Token::RBrace)
 				break;
-			else if (currentTokenValue == Token::Function || currentTokenValue == Token::Constructor)
-				// This can be a function or a state variable of function type (especially
-				// complicated to distinguish fallback function from function type state variable)
-				subNodes.push_back(parseFunctionDefinitionOrFunctionTypeStateVariable());
+			else if (
+				(currentTokenValue == Token::Function && m_scanner->peekNextToken() != Token::LParen) ||
+				currentTokenValue == Token::Constructor ||
+				currentTokenValue == Token::Receive ||
+				currentTokenValue == Token::Fallback
+			)
+				subNodes.push_back(parseFunctionDefinition());
 			else if (currentTokenValue == Token::Struct)
 				subNodes.push_back(parseStructDefinition());
 			else if (currentTokenValue == Token::Enum)
 				subNodes.push_back(parseEnumDefinition());
 			else if (
-					currentTokenValue == Token::Identifier ||
-					currentTokenValue == Token::Mapping ||
-					TokenTraits::isElementaryTypeName(currentTokenValue)
-					)
+				currentTokenValue == Token::Identifier ||
+				currentTokenValue == Token::Mapping ||
+				TokenTraits::isElementaryTypeName(currentTokenValue) ||
+				(currentTokenValue == Token::Function && m_scanner->peekNextToken() == Token::LParen)
+			)
 			{
 				VarDeclParserOptions options;
 				options.isStateVariable = true;
@@ -457,32 +461,12 @@ StateMutability Parser::parseStateMutability()
 	return stateMutability;
 }
 
-Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _onlyFuncType, bool _allowFuncDef)
+Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVariable)
 {
 	RecursionGuard recursionGuard(*this);
 	FunctionHeaderParserResult result;
 
-	result.isConstructor = false;
 	result.overrides = nullptr;
-
-	if (m_scanner->currentToken() == Token::Constructor)
-		result.isConstructor = true;
-	else if (m_scanner->currentToken() != Token::Function)
-		solAssert(false, "Function or constructor expected.");
-	m_scanner->next();
-
-	if (result.isConstructor)
-		result.name = make_shared<ASTString>();
-	else if (_onlyFuncType || m_scanner->currentToken() == Token::LParen)
-		result.name = make_shared<ASTString>();
-	else if (m_scanner->currentToken() == Token::Constructor)
-		fatalParserError(string(
-			"This function is named \"constructor\" but is not the constructor of the contract. "
-			"If you intend this to be a constructor, use \"constructor(...) { ... }\" without the \"function\" keyword to define it."
-		));
-	else
-		result.name = expectIdentifierToken();
-
 
 	VarDeclParserOptions options;
 	options.allowLocationSpecifier = true;
@@ -490,31 +474,15 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _onlyFuncTyp
 	while (true)
 	{
 		Token token = m_scanner->currentToken();
-		if (_allowFuncDef && token == Token::Identifier)
-		{
-			// If the name is empty (and this is not a constructor),
-			// then this can either be a modifier (fallback function declaration)
-			// or the name of the state variable (function type name plus variable).
-			if ((result.name->empty() && !result.isConstructor) && (
-				m_scanner->peekNextToken() == Token::Semicolon ||
-				m_scanner->peekNextToken() == Token::Assign
-			))
-				// Variable declaration, break here.
-				break;
-			else
-				result.modifiers.push_back(parseModifierInvocation());
-		}
+		if (!_isStateVariable && token == Token::Identifier)
+			result.modifiers.push_back(parseModifierInvocation());
 		else if (TokenTraits::isVisibilitySpecifier(token))
 		{
 			if (result.visibility != Declaration::Visibility::Default)
 			{
 				// There is the special case of a public state variable of function type.
 				// Detect this and return early.
-				if (
-					(result.visibility == Declaration::Visibility::External || result.visibility == Declaration::Visibility::Internal) &&
-					result.modifiers.empty() &&
-					(result.name->empty() && !result.isConstructor)
-				)
+				if (_isStateVariable && (result.visibility == Declaration::Visibility::External || result.visibility == Declaration::Visibility::Internal))
 					break;
 				parserError(string(
 					"Visibility already specified as \"" +
@@ -540,7 +508,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _onlyFuncTyp
 			else
 				result.stateMutability = parseStateMutability();
 		}
-		else if (_allowFuncDef && token == Token::Override)
+		else if (!_isStateVariable && token == Token::Override)
 		{
 			if (result.overrides)
 				parserError("Override already specified.");
@@ -561,7 +529,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _onlyFuncTyp
 	return result;
 }
 
-ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable()
+ASTPointer<ASTNode> Parser::parseFunctionDefinition()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
@@ -569,57 +537,67 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinitionOrFunctionTypeStateVariable()
 	if (m_scanner->currentCommentLiteral() != "")
 		docstring = make_shared<ASTString>(m_scanner->currentCommentLiteral());
 
-	FunctionHeaderParserResult header = parseFunctionHeader(false, true);
-
-	if (
-		header.isConstructor ||
-		!header.modifiers.empty() ||
-		!header.name->empty() ||
-		header.overrides ||
-		m_scanner->currentToken() == Token::Semicolon ||
-		m_scanner->currentToken() == Token::LBrace
-	)
+	Token kind = m_scanner->currentToken();
+	ASTPointer<ASTString> name;
+	if (kind == Token::Function)
 	{
-		// this has to be a function
-		ASTPointer<Block> block = ASTPointer<Block>();
-		nodeFactory.markEndPosition();
-		if (m_scanner->currentToken() != Token::Semicolon)
+		m_scanner->next();
+		if (
+			m_scanner->currentToken() == Token::Constructor ||
+			m_scanner->currentToken() == Token::Fallback ||
+			m_scanner->currentToken() == Token::Receive
+		)
 		{
-			block = parseBlock();
-			nodeFactory.setEndPositionFromNode(block);
+			std::string expected = std::map<Token, std::string>{
+				{Token::Constructor, "constructor"},
+				{Token::Fallback, "fallback function"},
+				{Token::Receive, "receive function"},
+			}.at(m_scanner->currentToken());
+			name = make_shared<ASTString>(TokenTraits::toString(m_scanner->currentToken()));
+			string message{
+				"This function is named \"" + *name + "\" but is not the " + expected + " of the contract. "
+				"If you intend this to be a " + expected + ", use \"" + *name + "(...) { ... }\" without "
+				"the \"function\" keyword to define it."
+			};
+			if (m_scanner->currentToken() == Token::Constructor)
+				parserError(message);
+			else
+				parserWarning(message);
+			m_scanner->next();
 		}
 		else
-			m_scanner->next(); // just consume the ';'
-		return nodeFactory.createNode<FunctionDefinition>(
-			header.name,
-			header.visibility,
-			header.stateMutability,
-			header.isConstructor,
-			header.overrides,
-			docstring,
-			header.parameters,
-			header.modifiers,
-			header.returnParameters,
-			block
-		);
+			name = expectIdentifierToken();
 	}
 	else
 	{
-		// this has to be a state variable
-		ASTPointer<TypeName> type = nodeFactory.createNode<FunctionTypeName>(
-			header.parameters,
-			header.returnParameters,
-			header.visibility,
-			header.stateMutability
-		);
-		type = parseTypeNameSuffix(type, nodeFactory);
-		VarDeclParserOptions options;
-		options.isStateVariable = true;
-		options.allowInitialValue = true;
-		auto node = parseVariableDeclaration(options, type);
-		expectToken(Token::Semicolon);
-		return node;
+		solAssert(kind == Token::Constructor || kind == Token::Fallback || kind == Token::Receive, "");
+		m_scanner->next();
+		name = make_shared<ASTString>();
 	}
+
+	FunctionHeaderParserResult header = parseFunctionHeader(false);
+
+	ASTPointer<Block> block;
+	nodeFactory.markEndPosition();
+	if (m_scanner->currentToken() != Token::Semicolon)
+	{
+		block = parseBlock();
+		nodeFactory.setEndPositionFromNode(block);
+	}
+	else
+		m_scanner->next(); // just consume the ';'
+	return nodeFactory.createNode<FunctionDefinition>(
+		name,
+		header.visibility,
+		header.stateMutability,
+		kind,
+		header.overrides,
+		docstring,
+		header.parameters,
+		header.modifiers,
+		header.returnParameters,
+		block
+	);
 }
 
 ASTPointer<StructDefinition> Parser::parseStructDefinition()
@@ -691,6 +669,14 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		if (type != nullptr)
 			nodeFactory.setEndPositionFromNode(type);
 	}
+
+	if (dynamic_cast<FunctionTypeName*>(type.get()) && _options.isStateVariable && m_scanner->currentToken() == Token::LBrace)
+		fatalParserError(
+			"Expected a state variable declaration. If you intended this as a fallback function "
+			"or a function to handle plain ether transactions, use the \"fallback\" keyword "
+			"or the \"ether\" keyword instead."
+		);
+
 	bool isIndexed = false;
 	bool isDeclaredConst = false;
 	ASTPointer<OverrideSpecifier> overrides = nullptr;
@@ -986,8 +972,8 @@ ASTPointer<FunctionTypeName> Parser::parseFunctionType()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
-	FunctionHeaderParserResult header = parseFunctionHeader(true, false);
-	solAssert(!header.isConstructor, "Tried to parse type as constructor.");
+	expectToken(Token::Function);
+	FunctionHeaderParserResult header = parseFunctionHeader(true);
 	return nodeFactory.createNode<FunctionTypeName>(
 		header.parameters,
 		header.returnParameters,

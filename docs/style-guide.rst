@@ -273,6 +273,7 @@ Ordering helps readers identify which functions they can call and to find the co
 Functions should be grouped according to their visibility and ordered:
 
 - constructor
+- receive function (if exists)
 - fallback function (if exists)
 - external
 - public
@@ -290,7 +291,11 @@ Yes::
             // ...
         }
 
-        function() external {
+        receive() external payable {
+            // ...
+        }
+
+        fallback() external {
             // ...
         }
 
@@ -322,7 +327,10 @@ No::
         // External functions
         // ...
 
-        function() external {
+        fallback() external {
+            // ...
+        }
+        receive() external payable {
             // ...
         }
 
@@ -384,19 +392,28 @@ No::
     y             = 2;
     long_variable = 3;
 
-Don't include a whitespace in the fallback function:
+Don't include a whitespace in the receive and fallback functions:
 
 Yes::
 
-    function() external {
+    receive() external payable {
+        ...
+    }
+
+    fallback() external {
         ...
     }
 
 No::
 
-    function () external {
+    receive () external payable {
         ...
     }
+
+    fallback () external {
+        ...
+    }
+
 
 Control Structures
 ==================

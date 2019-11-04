@@ -1,5 +1,5 @@
 contract TransferTest {
-	function() external payable {
+	fallback() external payable {
 		// This used to cause an ICE
 		address(this).transfer;
 	}
