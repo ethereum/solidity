@@ -258,7 +258,7 @@ Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string
 string Assembly::toStringInHex(u256 _value)
 {
 	std::stringstream hexStr;
-	hexStr << hex << _value;
+	hexStr << std::uppercase << hex << _value;
 	return hexStr.str();
 }
 
