@@ -159,11 +159,6 @@ bool SyntacticallyEqual::statementEqual(ForLoop const& _lhs, ForLoop const& _rhs
 		statementEqual(_lhs.post, _rhs.post);
 }
 
-bool SyntacticallyEqual::statementEqual(Instruction const&, Instruction const&)
-{
-	assertThrow(false, OptimizerException, "");
-}
-
 bool SyntacticallyEqual::statementEqual(Block const& _lhs, Block const& _rhs)
 {
 	return containerEqual(_lhs.statements, _rhs.statements, [this](Statement const& _lhsStmt, Statement const& _rhsStmt) -> bool {

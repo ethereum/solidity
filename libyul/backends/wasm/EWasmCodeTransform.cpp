@@ -171,12 +171,6 @@ wasm::Expression EWasmCodeTransform::operator()(Literal const& _literal)
 	return wasm::Literal{uint64_t(value)};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(yul::Instruction const&)
-{
-	yulAssert(false, "EVM instruction used for Wasm code generation.");
-	return {};
-}
-
 wasm::Expression EWasmCodeTransform::operator()(If const& _if)
 {
 	return wasm::If{visit(*_if.condition), visit(_if.body.statements), {}};

@@ -33,9 +33,10 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 {
 	if (m_dialect.booleanNegationFunction() && _forLoop.condition->type() != typeid(Literal))
 	{
-		langutil::SourceLocation loc = locationOf(*_forLoop.condition);
-		_forLoop.body.statements.insert(
-			_forLoop.body.statements.begin(),
+		langutil::SourceLocation const loc = locationOf(*_forLoop.condition);
+
+		_forLoop.body.statements.emplace(
+			begin(_forLoop.body.statements),
 			If {
 				loc,
 				make_unique<Expression>(
