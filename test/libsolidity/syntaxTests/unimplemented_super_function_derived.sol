@@ -9,4 +9,5 @@ contract c is a,b {
     function f() public override(a, b) { super.f(); }
 }
 // ----
+// TypeError: (0-39): Contract "a" should be marked as abstract.
 // TypeError: (93-100): Member "f" not found or not visible after argument-dependent lookup in contract super b.

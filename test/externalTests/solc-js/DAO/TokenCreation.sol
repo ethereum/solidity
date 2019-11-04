@@ -25,7 +25,7 @@ along with the DAO.  If not, see <http://www.gnu.org/licenses/>.
 import "./Token.sol";
 import "./ManagedAccount.sol";
 
-contract TokenCreationInterface {
+abstract contract TokenCreationInterface {
 
     // End of token creation, in Unix time
     uint public closingTime;

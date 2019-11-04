@@ -11,4 +11,7 @@ contract X is A, B {
 	function test() internal override returns (uint256);
 }
 // ----
+// TypeError: (0-79): Contract "A" should be marked as abstract.
+// TypeError: (80-183): Contract "B" should be marked as abstract.
 // TypeError: (184-290): Derived contract must override function "foo". Function with the same name and parameter types defined in two or more base classes.
+// TypeError: (184-290): Contract "X" should be marked as abstract.

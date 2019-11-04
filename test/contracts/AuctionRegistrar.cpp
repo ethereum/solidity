@@ -45,12 +45,12 @@ namespace
 static char const* registrarCode = R"DELIMITER(
 pragma solidity >=0.4.0 <0.7.0;
 
-contract NameRegister {
+abstract contract NameRegister {
 	function addr(string memory _name) public view returns (address o_owner);
 	function name(address _owner) public view returns (string memory o_name);
 }
 
-contract Registrar is NameRegister {
+abstract contract Registrar is NameRegister {
 	event Changed(string indexed name);
 	event PrimaryChanged(string indexed name, address indexed addr);
 
@@ -62,7 +62,7 @@ contract Registrar is NameRegister {
 	function name(address _owner) public override view returns (string memory o_name);
 }
 
-contract AuctionSystem {
+abstract contract AuctionSystem {
 	event AuctionEnded(string indexed _name, address _winner);
 	event NewBid(string indexed _name, address _bidder, uint _value);
 

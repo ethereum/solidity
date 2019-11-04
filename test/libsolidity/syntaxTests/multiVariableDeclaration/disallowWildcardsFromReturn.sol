@@ -19,6 +19,7 @@ contract C {
     function five() public pure returns (uint, uint, uint, uint, uint);
 }
 // ----
+// TypeError: (0-704): Contract "C" should be marked as abstract.
 // TypeError: (53-72): Different number of components on the left hand side (2) than on the right hand side (3).
 // TypeError: (82-101): Different number of components on the left hand side (2) than on the right hand side (3).
 // TypeError: (111-130): Different number of components on the left hand side (3) than on the right hand side (5).

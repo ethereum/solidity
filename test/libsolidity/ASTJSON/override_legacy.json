@@ -23,6 +23,7 @@
     {
       "attributes":
       {
+        "abstract": false,
         "baseContracts":
         [
           null
@@ -115,6 +116,7 @@
     {
       "attributes":
       {
+        "abstract": false,
         "contractDependencies":
         [
           5
@@ -283,6 +285,7 @@
     {
       "attributes":
       {
+        "abstract": false,
         "contractDependencies":
         [
           5,

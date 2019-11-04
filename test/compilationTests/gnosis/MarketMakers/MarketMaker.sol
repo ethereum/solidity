@@ -3,7 +3,7 @@ import "../Markets/Market.sol";
 
 
 /// @title Abstract market maker contract - Functions to be implemented by market maker contracts
-contract MarketMaker {
+abstract contract MarketMaker {
 
     /*
      *  Public functions

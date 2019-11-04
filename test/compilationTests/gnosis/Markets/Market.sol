@@ -4,7 +4,7 @@ import "../MarketMakers/MarketMaker.sol";
 
 
 /// @title Abstract market contract - Functions to be implemented by market contracts
-contract Market {
+abstract contract Market {
 
     /*
      *  Events

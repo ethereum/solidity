@@ -9,3 +9,5 @@ contract X is A {
 	function test2() internal override(A) returns (uint256);
 }
 // ----
+// TypeError: (0-126): Contract "A" should be marked as abstract.
+// TypeError: (127-288): Contract "X" should be marked as abstract.

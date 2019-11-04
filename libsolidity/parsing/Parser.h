@@ -85,7 +85,9 @@ private:
 	void parsePragmaVersion(langutil::SourceLocation const& _location, std::vector<Token> const& _tokens, std::vector<std::string> const& _literals);
 	ASTPointer<PragmaDirective> parsePragmaDirective();
 	ASTPointer<ImportDirective> parseImportDirective();
-	ContractDefinition::ContractKind parseContractKind();
+	/// @returns an std::pair<ContractDefinition::ContractKind, bool>, where
+	/// result.second is set to true, if an abstract contract was parsed, false otherwise.
+	std::pair<ContractDefinition::ContractKind, bool> parseContractKind();
 	ASTPointer<ContractDefinition> parseContractDefinition();
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	Declaration::Visibility parseVisibilitySpecifier();

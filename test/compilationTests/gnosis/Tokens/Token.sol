@@ -3,7 +3,7 @@ pragma solidity >=0.0;
 
 
 /// @title Abstract token contract - Functions to be implemented by token contracts
-contract Token {
+abstract contract Token {
 
     /*
      *  Events

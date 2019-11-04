@@ -7,3 +7,4 @@ contract T {
 }
 // ----
 // DeclarationError: (81-105): Identifier already declared.
+// TypeError: (0-58): Contract "X" should be marked as abstract.

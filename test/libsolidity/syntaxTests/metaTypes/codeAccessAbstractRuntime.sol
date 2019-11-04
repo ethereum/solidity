@@ -7,4 +7,5 @@ contract Other {
     function f(uint) public returns (uint);
 }
 // ----
+// TypeError: (124-186): Contract "Other" should be marked as abstract.
 // TypeError: (91-114): Member "runtimeCode" not found or not visible after argument-dependent lookup in type(contract Other).

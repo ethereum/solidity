@@ -91,6 +91,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 			case Token::Import:
 				nodes.push_back(parseImportDirective());
 				break;
+			case Token::Abstract:
 			case Token::Interface:
 			case Token::Contract:
 			case Token::Library:
@@ -244,9 +245,15 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 	return nodeFactory.createNode<ImportDirective>(path, unitAlias, move(symbolAliases));
 }
 
-ContractDefinition::ContractKind Parser::parseContractKind()
+std::pair<ContractDefinition::ContractKind, bool> Parser::parseContractKind()
 {
 	ContractDefinition::ContractKind kind;
+	bool abstract = false;
+	if (m_scanner->currentToken() == Token::Abstract)
+	{
+		abstract = true;
+		m_scanner->next();
+	}
 	switch(m_scanner->currentToken())
 	{
 	case Token::Interface:
@@ -262,7 +269,7 @@ ContractDefinition::ContractKind Parser::parseContractKind()
 		solAssert(false, "Invalid contract kind.");
 	}
 	m_scanner->next();
-	return kind;
+	return std::make_pair(kind, abstract);
 }
 
 ASTPointer<ContractDefinition> Parser::parseContractDefinition()
@@ -273,7 +280,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	ASTPointer<ASTString> docString;
 	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
 	vector<ASTPointer<ASTNode>> subNodes;
-	ContractDefinition::ContractKind contractKind = ContractDefinition::ContractKind::Contract;
+	std::pair<ContractDefinition::ContractKind, bool> contractKind{};
 	try
 	{
 		if (m_scanner->currentCommentLiteral() != "")
@@ -343,7 +350,8 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		docString,
 		baseContracts,
 		subNodes,
-		contractKind
+		contractKind.first,
+		contractKind.second
 	);
 }
 

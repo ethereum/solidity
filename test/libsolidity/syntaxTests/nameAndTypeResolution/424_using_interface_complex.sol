@@ -9,3 +9,4 @@ contract C is I {
     }
 }
 // ----
+// TypeError: (110-170): Contract "C" should be marked as abstract.

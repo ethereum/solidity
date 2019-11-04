@@ -17,4 +17,4 @@ contract C
 	}
 }
 // ----
-// Warning: (240-254): Assertion violation happens here
+// TypeError: (33-75): Contract "D" should be marked as abstract.

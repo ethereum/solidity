@@ -55,7 +55,7 @@ static char const* registrarCode = R"DELIMITER(
 
 pragma solidity >=0.4.0 <0.7.0;
 
-contract Registrar {
+abstract contract Registrar {
 	event Changed(string indexed name);
 
 	function owner(string memory _name) public view returns (address o_owner);

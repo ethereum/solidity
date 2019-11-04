@@ -30,7 +30,7 @@ https://github.com/ethereum/wiki/wiki/Standardized_Contract_APIs
 
 /// @title Standard Token Contract.
 
-contract TokenInterface {
+abstract contract TokenInterface {
     mapping (address => uint256) balances;
     mapping (address => mapping (address => uint256)) allowed;
 
@@ -85,7 +85,7 @@ contract TokenInterface {
     );
 }
 
-contract tokenRecipient {
+abstract contract tokenRecipient {
     function receiveApproval(address _from, uint256 _value, address _token, bytes memory _extraData) public;
 }
 

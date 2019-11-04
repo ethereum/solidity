@@ -11,3 +11,4 @@ contract C
 // ----
 // SyntaxError: (203-236): Functions without implementation cannot have modifiers.
 // SyntaxError: (241-274): Functions without implementation cannot have modifiers.
+// TypeError: (153-276): Contract "C" should be marked as abstract.
