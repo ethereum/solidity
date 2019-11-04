@@ -17,30 +17,6 @@
 
 syntax = "proto2";
 
-// Flattened specification of array dimension
-// If is_static is false, and this array dimension is contained
-// inside another dimension e.g., x[][2] ([2] being the outer dimension)
-// then `length` for this dimension is the length of the first dynamically
-// sized array. The other (n-1) lengths are unspecified
-message ArrayDimensionInfo {
-    required uint32 length = 1;
-    required bool is_static = 2;
-}
-
-// TODO: Add more base types
-// See https://github.com/ethereum/solidity/issues/6749
-message ArrayType {
-    oneof base_type_oneof {
-        IntegerType inty = 1;
-        FixedByteType byty = 2;
-        AddressType adty = 3;
-        StructType stty = 4;
-        BoolType boolty = 5;
-        DynamicByteArrayType dynbytesty = 6;
-    }
-    repeated ArrayDimensionInfo info = 7;
-}
-
 // bool
 message BoolType {}
 
@@ -78,6 +54,16 @@ message DynamicByteArrayType {
     required DType type = 1;
 }
 
+message ArrayType {
+    required Type t = 1;
+    required uint32 length = 2;
+    required bool is_static = 3;
+}
+
+message StructType {
+    repeated Type t = 1;
+}
+
 message NonValueType {
     oneof nonvalue_type_oneof {
         DynamicByteArrayType dynbytearray = 1;
@@ -86,15 +72,14 @@ message NonValueType {
     }
 }
 
+// TODO: Add more types
+// See https://github.com/ethereum/solidity/issues/6749
 message Type {
     oneof type_oneof {
         ValueType vtype = 1;
         NonValueType nvtype = 2;
     }
 }
-
-// TODO: This must not reference itself either directly or indirectly
-message StructType {}
 
 message VarDecl {
     required Type type = 1;
