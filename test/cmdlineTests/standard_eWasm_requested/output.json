@@ -20,7 +20,7 @@
     (i64.store (i64.add (local.get $_2) (i64.const 16)) (local.get $y))
     (local.set $hi_1 (i64.shl (i64.or (i64.shl (i64.or (i64.and (i64.shl (i64.const 128) (i64.const 8)) (local.get $_3)) (i64.and (i64.shr_u (i64.const 128) (i64.const 8)) (i64.const 255))) (i64.const 16)) (call $endian_swap_16 (i64.shr_u (i64.const 128) (i64.const 16)))) (i64.const 32)))
     (i64.store (i64.add (local.get $_2) (i64.const 24)) (i64.or (local.get $hi_1) (call $endian_swap_32 (i64.shr_u (i64.const 128) (i64.const 32)))))
-    (call $eth.revert (i64.add (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (i64.const 64)) (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)))
+    (call $eth.revert (i32.wrap_i64 (i64.add (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (i64.const 64))) (i32.wrap_i64 (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1))))
 )
 
 (func $u256_to_i32
@@ -30,9 +30,9 @@
     (param $x4 i64)
     (result i64)
     (local $v i64)
-    (if (i64.ne (local.get $v) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (then
+    (if (i64.ne (i64.ne (local.get $v) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (i64.const 0)) (then
         (unreachable)))
-    (if (i64.ne (local.get $v) (i64.shr_u (local.get $x4) (i64.const 32))) (then
+    (if (i64.ne (i64.ne (local.get $v) (i64.shr_u (local.get $x4) (i64.const 32))) (i64.const 0)) (then
         (unreachable)))
     (local.set $v (local.get $x4))
     (local.get $v)
@@ -80,8 +80,8 @@
     (local.set $hi_1 (i64.shl (call $endian_swap_32 (i64.const 128)) (i64.const 32)))
     (i64.store (i64.add (local.get $_2) (i64.const 24)) (i64.or (local.get $hi_1) (call $endian_swap_32 (i64.shr_u (i64.const 128) (i64.const 32)))))
     (local.set $_3 (datasize \"C_2_deployed\"))
-    (call $eth.codeCopy (i64.add (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (i64.const 64)) (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (dataoffset \"C_2_deployed\")) (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3)))
-    (call $eth.finish (i64.add (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (i64.const 64)) (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3)))
+    (call $eth.codeCopy (i32.wrap_i64 (i64.add (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (i64.const 64))) (i32.wrap_i64 (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (dataoffset \"C_2_deployed\"))) (i32.wrap_i64 (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3))))
+    (call $eth.finish (i32.wrap_i64 (i64.add (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (i64.const 64))) (i32.wrap_i64 (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3))))
 )
 
 (func $u256_to_i32
@@ -91,9 +91,9 @@
     (param $x4 i64)
     (result i64)
     (local $v i64)
-    (if (i64.ne (local.get $v) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (then
+    (if (i64.ne (i64.ne (local.get $v) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (i64.const 0)) (then
         (unreachable)))
-    (if (i64.ne (local.get $v) (i64.shr_u (local.get $x4) (i64.const 32))) (then
+    (if (i64.ne (i64.ne (local.get $v) (i64.shr_u (local.get $x4) (i64.const 32))) (i64.const 0)) (then
         (unreachable)))
     (local.set $v (local.get $x4))
     (local.get $v)
