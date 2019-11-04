@@ -101,8 +101,7 @@ Safe Remote Purchase
 
             // NOTE: This actually allows both the buyer and the seller to
             // block the refund - the withdraw pattern should be used.
-
-            buyer.transfer(value);
+            buyer.transfer(value * 2);
             seller.transfer(address(this).balance);
         }
     }
