@@ -12,6 +12,7 @@
 #     EVM=version_string      Specifies EVM version to compile for (such as homestead, etc)
 #     OPTIMIZE=1              Enables backend optimizer
 #     ABI_ENCODER_V2=1        Enables ABI encoder version 2
+#     SOLTEST_FLAGS=<flags>   Appends <flags> to default SOLTEST_ARGS
 #
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
@@ -54,7 +55,7 @@ get_logfile_basename() {
 }
 
 BOOST_TEST_ARGS="--color_output=no --show_progress=yes --logger=JUNIT,error,test_results/`get_logfile_basename`.xml"
-SOLTEST_ARGS="--evm-version=$EVM --evmonepath /usr/lib/libevmone.so $flags"
+SOLTEST_ARGS="--evm-version=$EVM --evmonepath /usr/lib/libevmone.so $SOLTEST_FLAGS"
 test "${OPTIMIZE}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --optimize"
 test "${ABI_ENCODER_V2}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --abiencoderv2 --optimize-yul"
 
