@@ -25,7 +25,7 @@ contract X is A, B, C, D {
 // TypeError: (237-295): Contract "C" should be marked as abstract.
 // TypeError: (296-399): Contract "D" should be marked as abstract.
 // TypeError: (498-499): Duplicate contract "D" found in override list of "test".
-// TypeError: (560-561): Duplicate contract "B" found in override list of "foo".
+// TypeError: (563-564): Duplicate contract "B" found in override list of "foo".
 // TypeError: (566-567): Duplicate contract "B" found in override list of "foo".
 // TypeError: (572-573): Duplicate contract "D" found in override list of "foo".
 // TypeError: (400-595): Contract "X" should be marked as abstract.
