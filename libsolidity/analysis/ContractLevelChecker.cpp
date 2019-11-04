@@ -51,7 +51,7 @@ vector<ASTPointer<UserDefinedTypeName>> sortByContract(vector<ASTPointer<UserDef
 {
 	auto sorted = _list;
 
-	sort(sorted.begin(), sorted.end(),
+	stable_sort(sorted.begin(), sorted.end(),
 		[] (ASTPointer<UserDefinedTypeName> _a, ASTPointer<UserDefinedTypeName> _b) {
 			if (!_a || !_b)
 				return _a < _b;
