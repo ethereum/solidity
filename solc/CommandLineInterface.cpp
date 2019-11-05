@@ -318,11 +318,18 @@ void CommandLineInterface::handleEWasm(string const& _contractName)
 	if (m_args.count(g_argEWasm))
 	{
 		if (m_args.count(g_argOutputDir))
+		{
 			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->eWasm(_contractName));
+			createFile(
+				m_compiler->filesystemFriendlyName(_contractName) + ".wasm",
+				asString(m_compiler->eWasmObject(_contractName).bytecode)
+			);
+		}
 		else
 		{
-			sout() << "eWasm: " << endl;
+			sout() << "EWasm text: " << endl;
 			sout() << m_compiler->eWasm(_contractName) << endl;
+			sout() << "EWasm binary (hex): " << m_compiler->eWasmObject(_contractName).toHex() << endl;
 		}
 	}
 }
