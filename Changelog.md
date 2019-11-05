@@ -20,6 +20,7 @@ Language Features:
  * Allow global enums and structs.
  * Allow underscores as delimiters in hex strings.
  * Allow explicit conversions from ``address`` to ``address payable`` via ``payable(...)``.
+ * Inline Assembly: allow accessing enum values inside inline assembly.
  * Introduce syntax for array slices and implement them for dynamic calldata arrays.
  * Introduce ``push()`` for dynamic storage arrays. It returns a reference to the newly allocated element, if applicable.
  * Modify ``push(element)`` for dynamic storage arrays such that it does not return the new length anymore.

@@ -640,7 +640,13 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		Declaration const* declaration = ref->second.declaration;
 		solAssert(!!declaration, "");
 		bool requiresStorage = ref->second.isSlot || ref->second.isOffset;
-		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
+		if (ref->second.enumValue)
+		{
+			solAssert(dynamic_cast<EnumDefinition const*>(ref->second.declaration) && !requiresStorage, "");
+			ref->second.valueSize = 1;
+			return size_t(1);
+		}
+		else if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
 			solAssert(var->type(), "Expected variable type!");
 			if (var->isConstant())

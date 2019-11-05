@@ -755,6 +755,15 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				solAssert(contract->isLibrary(), "");
 				_assembly.appendLinkerSymbol(contract->fullyQualifiedName());
 			}
+			else if (auto enumDefinition = dynamic_cast<EnumDefinition const*>(decl))
+			{
+				solAssert(ref->second.enumValue && !ref->second.isOffset && !ref->second.isSlot, "");
+				TypeType const* typeType = dynamic_cast<TypeType const*>(enumDefinition->type());
+				solAssert(typeType, "");
+				EnumType const* enumType = dynamic_cast<EnumType const*>(typeType->actualType());
+				solAssert(enumType, "");
+				m_context << u256(enumType->memberValue(*ref->second.enumValue));
+			}
 			else
 				solAssert(false, "Invalid declaration type.");
 			solAssert(_assembly.stackHeight() - depositBefore == int(ref->second.valueSize), "");

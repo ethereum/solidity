@@ -61,6 +61,23 @@ struct CopyTranslate: public yul::ASTCopier
 		if (m_references.count(&_identifier))
 		{
 			auto const& reference = m_references.at(&_identifier);
+			if (auto const* enumDecl = dynamic_cast<EnumDefinition const*>(reference.declaration))
+			{
+				solAssert(reference.enumValue && !reference.isSlot && !reference.isOffset, "");
+				solAssert(enumDecl, "");
+				TypeType const* typeType = dynamic_cast<TypeType const*>(enumDecl->type());
+				solAssert(typeType, "");
+				EnumType const* enumType = dynamic_cast<EnumType const*>(typeType->actualType());
+				solAssert(enumType, "");
+
+				return yul::Literal{
+					_identifier.location,
+					yul::LiteralKind::Number,
+					yul::YulString{to_string(enumType->memberValue(*reference.enumValue))},
+					yul::YulString{"uint256"}
+				};
+			}
+			solAssert(!reference.enumValue, "");
 			auto const varDecl = dynamic_cast<VariableDeclaration const*>(reference.declaration);
 			solUnimplementedAssert(varDecl, "");
 

@@ -185,6 +185,8 @@ Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<yul::Identifie
 	tuple["isSlot"] = Json::Value(_info.second.isSlot);
 	tuple["isOffset"] = Json::Value(_info.second.isOffset);
 	tuple["valueSize"] = Json::Value(Json::LargestUInt(_info.second.valueSize));
+	if (_info.second.enumValue)
+		tuple["enumValue"] = Json::Value(*_info.second.enumValue);
 	return tuple;
 }
 

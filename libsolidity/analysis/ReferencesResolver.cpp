@@ -280,6 +280,22 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	ErrorReporter errorsIgnored(errors);
 	yul::ExternalIdentifierAccess::Resolver resolver =
 	[&](yul::Identifier const& _identifier, yul::IdentifierContext, bool _crossesFunctionBoundary) {
+		vector<string> path;
+		boost::split(path, _identifier.name.str(), [](auto c) { return c == '.'; });
+		if (path.size() > 1)
+		{
+			string memberName = std::move(path.back());
+			path.pop_back();
+			if (auto const* enumDeclaration = dynamic_cast<EnumDefinition const*>(m_resolver.pathFromCurrentScope(path)))
+				if (auto members = enumDeclaration->type()->members(nullptr).membersByName(memberName); !members.empty())
+				{
+					solAssert(members.size() == 1, "");
+					solAssert(memberName == members.front().name, "");
+					_inlineAssembly.annotation().externalReferences[&_identifier].enumValue = memberName;
+					_inlineAssembly.annotation().externalReferences[&_identifier].declaration = enumDeclaration;
+					return size_t(1);
+				}
+		}
 		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
 		bool isSlot = boost::algorithm::ends_with(_identifier.name.str(), "_slot");
 		bool isOffset = boost::algorithm::ends_with(_identifier.name.str(), "_offset");
