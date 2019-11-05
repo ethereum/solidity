@@ -8,9 +8,9 @@ contract C
 			if (b) {
 				x = 15;
 				continue;
+				x = 200;
 			}
-			else
-				x = 20;
+			x = 20;
 
 		}
 		// Fails due to the if.
@@ -18,4 +18,5 @@ contract C
 	}
 }
 // ----
-// Warning: (223-238): Assertion violation happens here
+// Warning: (169-176): Unreachable code.
+// Warning: (227-242): Assertion violation happens here
