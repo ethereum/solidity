@@ -77,6 +77,8 @@ private:
 	void overrideListError(FunctionDefinition const& function, std::set<ContractDefinition const*, LessFunction> _secondary, std::string const& _message1, std::string const& _message2);
 	void overrideError(CallableDeclaration const& function, CallableDeclaration const& super, std::string message);
 	void checkAbstractFunctions(ContractDefinition const& _contract);
+	/// Checks that the base constructor arguments are properly provided.
+	/// Fills the list of unimplemented functions in _contract's annotations.
 	void checkBaseConstructorArguments(ContractDefinition const& _contract);
 	void annotateBaseConstructorArguments(
 		ContractDefinition const& _currentContract,

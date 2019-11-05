@@ -12,4 +12,4 @@ contract Parent {
 contract Child is Parent {
 }
 // ----
-// TypeError: (146-155): Cannot instantiate an abstract contract.
+// TypeError: (233-261): Contract "Child" should be marked as abstract.
