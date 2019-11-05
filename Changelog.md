@@ -26,8 +26,14 @@ Language Features:
  * Yul: Introduce ``leave`` statement that exits the current function.
 
 
+### 0.5.13 (unreleased)
+
+Language Features:
+
+
 Compiler Features:
  * Code Generator: Use SELFBALANCE for ``address(this).balance`` if using Istanbul EVM
+ * SMTChecker: Add break/continue support to the CHC engine.
  * SMTChecker: Support assignments to multi-dimensional arrays and mappings.
 
 
@@ -37,7 +43,6 @@ Bugfixes:
  * Type Checker: Treat magic variables as unknown identifiers in inline assembly
 
 
-### 0.5.13 (unreleased)
 
 ### 0.5.12 (2019-10-01)
 
