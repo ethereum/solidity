@@ -4,14 +4,12 @@ contract C
 {
 	function f(uint x, bool b) public pure {
 		require(x < 10);
-		while (x < 10) {
-			if (b)
-				++x;
-			else {
+		for (; x < 10; ++x) {
+			if (b) {
 				x = 20;
-				break;
+				continue;
 			}
 		}
-		assert(x >= 10);
+		assert(x > 0);
 	}
 }
