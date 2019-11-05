@@ -90,12 +90,33 @@ string ProtoConverter::visit(Literal const& _x)
 	}
 }
 
+void ProtoConverter::consolidateVarDeclsInFunctionDef()
+{
+	m_currentFuncVars.clear();
+	auto &scopes = m_funcVars.back();
+	for (auto &s: scopes)
+		m_currentFuncVars.insert(m_currentFuncVars.end(), s.begin(), s.end());
+}
+
+void ProtoConverter::consolidateGlobalVarDecls()
+{
+	m_globalVars.clear();
+	for (auto &scope: m_variables)
+		m_globalVars.insert(m_globalVars.end(), scope.begin(), scope.end());
+}
+
 bool ProtoConverter::varDeclAvailable()
 {
 	if (m_inFunctionDef)
-		return m_scopeVars.top().size() > 0;
+	{
+		consolidateVarDeclsInFunctionDef();
+		return m_currentFuncVars.size() > 0;
+	}
 	else
-		return m_variables.size() > 0;
+	{
+		consolidateGlobalVarDecls();
+		return m_globalVars.size() > 0;
+	}
 }
 
 bool ProtoConverter::functionCallNotPossible(FunctionCall_Returns _type)
@@ -109,14 +130,14 @@ void ProtoConverter::visit(VarRef const& _x)
 	if (m_inFunctionDef)
 	{
 		// Ensure that there is at least one variable declaration to reference in function scope.
-		yulAssert(m_scopeVars.top().size() > 0, "Proto fuzzer: No variables to reference.");
-		m_output << m_scopeVars.top()[_x.varnum() % m_scopeVars.top().size()];
+		yulAssert(m_currentFuncVars.size() > 0, "Proto fuzzer: No variables to reference.");
+		m_output << m_currentFuncVars[_x.varnum() % m_currentFuncVars.size()];
 	}
 	else
 	{
 		// Ensure that there is at least one variable declaration to reference in nested scopes.
-		yulAssert(m_variables.size() > 0, "Proto fuzzer: No variables to reference.");
-		m_output << m_variables[_x.varnum() % m_variables.size()];
+		yulAssert(m_globalVars.size() > 0, "Proto fuzzer: No global variables to reference.");
+		m_output << m_globalVars[_x.varnum() % m_globalVars.size()];
 	}
 }
 
@@ -258,8 +279,10 @@ void ProtoConverter::visit(VarDecl const& _x)
 	m_output << "let " << varName << " := ";
 	visit(_x.expr());
 	m_output << "\n";
-	m_scopeVars.top().push_back(varName);
-	m_variables.push_back(varName);
+	if (m_inFunctionDef)
+		m_funcVars.back().back().push_back(varName);
+	else
+		m_variables.back().push_back(varName);
 }
 
 void ProtoConverter::visit(TypedVarDecl const& _x)
@@ -324,8 +347,10 @@ void ProtoConverter::visit(TypedVarDecl const& _x)
 		m_output << " : u256\n";
 		break;
 	}
-	m_scopeVars.top().push_back(varName);
-	m_variables.push_back(varName);
+	if (m_inFunctionDef)
+		m_funcVars.back().back().push_back(varName);
+	else
+		m_variables.back().push_back(varName);
 }
 
 void ProtoConverter::visit(UnaryOp const& _x)
@@ -1096,12 +1121,19 @@ void ProtoConverter::visit(Statement const& _x)
 	}
 }
 
-void ProtoConverter::openScope(vector<string> const& _funcParams)
+void ProtoConverter::openBlockScope()
 {
-	m_scopeVars.push({});
-	m_scopeFuncs.push({});
-	if (!_funcParams.empty())
-		addVarsToScope(_funcParams);
+	m_scopeFuncs.push_back({});
+	// Create new block scope inside current function scope
+	if (m_inFunctionDef)
+		m_funcVars.back().push_back(vector<string>{});
+	else
+		m_variables.push_back(vector<string>{});
+}
+
+void ProtoConverter::openFunctionScope(vector<string> const& _funcParams)
+{
+	m_funcVars.push_back(vector<vector<string>>({_funcParams}));
 }
 
 void ProtoConverter::updateFunctionMaps(string const& _var)
@@ -1118,21 +1150,9 @@ void ProtoConverter::updateFunctionMaps(string const& _var)
 	yulAssert(erased == 2, "Proto fuzzer: Function maps not updated");
 }
 
-void ProtoConverter::closeScope()
+void ProtoConverter::closeBlockScope()
 {
-	for (auto const& var: m_scopeVars.top())
-	{
-		unsigned numVarsRemoved = m_variables.size();
-		m_variables.erase(remove(m_variables.begin(), m_variables.end(), var), m_variables.end());
-		numVarsRemoved -= m_variables.size();
-		yulAssert(
-			numVarsRemoved == 1,
-			"Proto fuzzer: Nothing or too much went out of scope"
-		);
-	}
-	m_scopeVars.pop();
-
-	for (auto const& f: m_scopeFuncs.top())
+	for (auto const& f: m_scopeFuncs.back())
 	{
 		unsigned numFuncsRemoved = m_functions.size();
 		m_functions.erase(remove(m_functions.begin(), m_functions.end(), f), m_functions.end());
@@ -1143,21 +1163,30 @@ void ProtoConverter::closeScope()
 		);
 		updateFunctionMaps(f);
 	}
-	m_scopeFuncs.pop();
+	if (!m_scopeFuncs.empty())
+		m_scopeFuncs.pop_back();
+	if (!m_inFunctionDef)
+		if (!m_variables.empty())
+			m_variables.pop_back();
+}
+
+void ProtoConverter::closeFunctionScope()
+{
+	if (!m_funcVars.empty())
+		m_funcVars.pop_back();
 }
 
 void ProtoConverter::addVarsToScope(vector<string> const& _vars)
 {
-	for (string const& i: _vars)
-	{
-		m_variables.push_back(i);
-		m_scopeVars.top().push_back(i);
-	}
+	if (m_inFunctionDef)
+		m_funcVars.back().back().insert(m_funcVars.back().back().end(), _vars.begin(), _vars.end());
+	else
+		m_variables.back().insert(m_variables.back().end(), _vars.begin(), _vars.end());
 }
 
-void ProtoConverter::visit(Block const& _x, vector<string> _funcParams)
+void ProtoConverter::visit(Block const& _x)
 {
-	openScope(_funcParams);
+	openBlockScope();
 
 	// Register function declarations in this scope unless this
 	// scope belongs to for-init (in which function declarations
@@ -1175,7 +1204,7 @@ void ProtoConverter::visit(Block const& _x, vector<string> _funcParams)
 	}
 	else
 		m_output << "{}\n";
-	closeScope();
+	closeBlockScope();
 }
 
 vector<string> ProtoConverter::createVars(unsigned _startIdx, unsigned _endIdx)
@@ -1218,7 +1247,7 @@ void ProtoConverter::registerFunction(FunctionDef const* _x)
 	auto ret = m_functionSigMap.emplace(make_pair(funcName, make_pair(numInParams, numOutParams)));
 	yulAssert(ret.second, "Proto fuzzer: Function already exists.");
 	m_functions.push_back(funcName);
-	m_scopeFuncs.top().push_back(funcName);
+	m_scopeFuncs.back().push_back(funcName);
 	m_functionDefMap.emplace(make_pair(_x, funcName));
 }
 
@@ -1357,8 +1386,12 @@ void ProtoConverter::createFunctionDefAndCall(
 	bool wasInFunctionDef = m_inFunctionDef;
 	m_inFunctionDef = true;
 
-	// Body
-	visit(_x.block(), varsVec);
+	// Create new function scope and add function input and return
+	// parameters to it.
+	openFunctionScope(varsVec);
+	// Visit function body
+	visit(_x.block());
+	closeFunctionScope();
 
 	m_inForBodyScope = wasInForBody;
 	m_inFunctionDef = wasInFunctionDef;

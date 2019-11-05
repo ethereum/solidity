@@ -42,6 +42,8 @@ class ProtoConverter
 public:
 	ProtoConverter()
 	{
+		m_funcVars = std::vector<std::vector<std::vector<std::string>>>{};
+		m_variables = std::vector<std::vector<std::string>>{};
 		m_inForBodyScope = false;
 		m_inForInitScope = false;
 		m_numNestedForLoops = 0;
@@ -62,7 +64,7 @@ private:
 	/// @param _block Reference to a basic block of yul statements.
 	/// @param _funcParams List of function parameter names, defaults to
 	/// an empty vector.
-	void visit(Block const& _block, std::vector<std::string> _funcParams = {});
+	void visit(Block const& _block);
 
 	std::string visit(Literal const&);
 	void visit(VarRef const&);
@@ -98,11 +100,15 @@ private:
 	void visit(Code const&);
 	void visit(Program const&);
 
-	/// Creates a new scope, and adds @a _funcParams to it if it
+	/// Creates a new block scope.
+	void openBlockScope();
+	/// Creates a new function scope, and adds @a _funcParams to it if it
 	/// is non-empty.
-	void openScope(std::vector<std::string> const& _funcParams);
-	/// Closes current scope
-	void closeScope();
+	void openFunctionScope(std::vector<std::string> const& _funcParams);
+	/// Closes current block scope
+	void closeBlockScope();
+	/// Closes current function scope
+	void closeFunctionScope();
 	/// Adds @a _vars to current scope
 	void addVarsToScope(std::vector<std::string> const& _vars);
 
@@ -137,6 +143,14 @@ private:
 	/// Single -> "s"
 	/// Multiple -> "m"
 	std::string functionTypeToString(NumFunctionReturns _type);
+
+	/// Builds a single vector containing variables declared in
+	/// function scope.
+	void consolidateVarDeclsInFunctionDef();
+
+	/// Builds a single vector containing variables declared in
+	/// global scope.
+	void consolidateGlobalVarDecls();
 
 	/// Return true if at least one variable declaration is in scope,
 	/// false otherwise.
@@ -295,12 +309,16 @@ private:
 	}
 
 	std::ostringstream m_output;
-	/// Variables in current scope
-	std::stack<std::vector<std::string>> m_scopeVars;
+	/// Variables in all function definitions
+	std::vector<std::vector<std::vector<std::string>>> m_funcVars;
+	/// Variables in current function definition
+	std::vector<std::string> m_currentFuncVars;
+	/// Variables in global scope
+	std::vector<std::string> m_globalVars;
 	/// Functions in current scope
-	std::stack<std::vector<std::string>> m_scopeFuncs;
+	std::vector<std::vector<std::string>> m_scopeFuncs;
 	/// Variables
-	std::vector<std::string> m_variables;
+	std::vector<std::vector<std::string>> m_variables;
 	/// Functions
 	std::vector<std::string> m_functions;
 	/// Maps FunctionDef object to its name
