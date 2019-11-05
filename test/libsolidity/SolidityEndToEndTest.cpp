@@ -8499,7 +8499,7 @@ BOOST_AUTO_TEST_CASE(using_library_mappings_external)
 		)";
 	char const* sourceCode = R"(
 			library Lib {
-				function set(mapping(uint => uint) storage m, uint key, uint value) external;
+				function set(mapping(uint => uint) storage m, uint key, uint value) external {}
 			}
 			contract Test {
 				mapping(uint => uint) m1;

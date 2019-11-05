@@ -1,4 +1,4 @@
-contract C {
+abstract contract C {
     function f() public {
         uint a = two();
         uint b = three();
@@ -19,12 +19,11 @@ contract C {
     function four() public pure returns (uint, uint, uint, uint);
 }
 // ----
-// TypeError: (0-649): Contract "C" should be marked as abstract.
-// TypeError: (47-61): Different number of components on the left hand side (1) than on the right hand side (2).
-// TypeError: (71-87): Different number of components on the left hand side (1) than on the right hand side (3).
-// TypeError: (97-112): Different number of components on the left hand side (1) than on the right hand side (4).
-// TypeError: (154-198): Different number of components on the left hand side (4) than on the right hand side (1).
-// TypeError: (208-243): Different number of components on the left hand side (3) than on the right hand side (1).
-// TypeError: (253-279): Different number of components on the left hand side (2) than on the right hand side (1).
-// TypeError: (321-367): Different number of components on the left hand side (4) than on the right hand side (3).
-// TypeError: (377-413): Different number of components on the left hand side (3) than on the right hand side (4).
+// TypeError: (56-70): Different number of components on the left hand side (1) than on the right hand side (2).
+// TypeError: (80-96): Different number of components on the left hand side (1) than on the right hand side (3).
+// TypeError: (106-121): Different number of components on the left hand side (1) than on the right hand side (4).
+// TypeError: (163-207): Different number of components on the left hand side (4) than on the right hand side (1).
+// TypeError: (217-252): Different number of components on the left hand side (3) than on the right hand side (1).
+// TypeError: (262-288): Different number of components on the left hand side (2) than on the right hand side (1).
+// TypeError: (330-376): Different number of components on the left hand side (4) than on the right hand side (3).
+// TypeError: (386-422): Different number of components on the left hand side (3) than on the right hand side (4).

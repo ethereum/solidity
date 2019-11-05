@@ -345,7 +345,8 @@ commandline compiler for linking):
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    // This will not compile with 0.6.0 anymore.
+    pragma solidity >=0.5.0 <0.5.99;
 
     library OldLibrary {
         function someFunction(uint8 a) public returns(bool);
