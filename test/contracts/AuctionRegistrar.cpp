@@ -46,20 +46,20 @@ static char const* registrarCode = R"DELIMITER(
 pragma solidity >=0.4.0 <0.7.0;
 
 abstract contract NameRegister {
-	function addr(string memory _name) public view returns (address o_owner);
-	function name(address _owner) public view returns (string memory o_name);
+	function addr(string memory _name) public virtual view returns (address o_owner);
+	function name(address _owner) public view virtual returns (string memory o_name);
 }
 
 abstract contract Registrar is NameRegister {
 	event Changed(string indexed name);
 	event PrimaryChanged(string indexed name, address indexed addr);
 
-	function owner(string memory _name) public view returns (address o_owner);
-	function addr(string memory _name) public override view returns (address o_address);
-	function subRegistrar(string memory _name) public view returns (address o_subRegistrar);
-	function content(string memory _name) public view returns (bytes32 o_content);
+	function owner(string memory _name) public view virtual returns (address o_owner);
+	function addr(string memory _name) public virtual override view returns (address o_address);
+	function subRegistrar(string memory _name) public virtual view returns (address o_subRegistrar);
+	function content(string memory _name) public virtual view returns (bytes32 o_content);
 
-	function name(address _owner) public override view returns (string memory o_name);
+	function name(address _owner) public virtual override view returns (string memory o_name);
 }
 
 abstract contract AuctionSystem {
@@ -67,7 +67,7 @@ abstract contract AuctionSystem {
 	event NewBid(string indexed _name, address _bidder, uint _value);
 
 	/// Function that is called once an auction ends.
-	function onAuctionEnd(string memory _name) internal;
+	function onAuctionEnd(string memory _name) internal virtual;
 
 	function bid(string memory _name, address payable _bidder, uint _value) internal {
 		Auction storage auction = m_auctions[_name];

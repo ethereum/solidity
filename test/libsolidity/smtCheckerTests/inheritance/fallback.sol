@@ -4,7 +4,7 @@ pragma experimental SMTChecker;
 contract A {
 	uint x;
 
-	fallback () external {
+	fallback () external virtual {
 		assert(x == 1);
 	}
 	function g() public view {
@@ -21,7 +21,7 @@ contract B is A {
 	}
 }
 // ----
-// Warning: (114-128): Assertion violation happens here
-// Warning: (163-177): Assertion violation happens here
-// Warning: (280-294): Assertion violation happens here
-// Warning: (163-177): Assertion violation happens here
+// Warning: (122-136): Assertion violation happens here
+// Warning: (171-185): Assertion violation happens here
+// Warning: (288-302): Assertion violation happens here
+// Warning: (171-185): Assertion violation happens here

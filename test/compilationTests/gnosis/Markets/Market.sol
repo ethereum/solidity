@@ -37,11 +37,11 @@ abstract contract Market {
     /*
      *  Public functions
      */
-    function fund(uint _funding) public;
-    function close() public;
-    function withdrawFees() public returns (uint);
-    function buy(uint8 outcomeTokenIndex, uint outcomeTokenCount, uint maxCost) public returns (uint);
-    function sell(uint8 outcomeTokenIndex, uint outcomeTokenCount, uint minProfit) public returns (uint);
-    function shortSell(uint8 outcomeTokenIndex, uint outcomeTokenCount, uint minProfit) public returns (uint);
-    function calcMarketFee(uint outcomeTokenCost) public view returns (uint);
+    function fund(uint _funding) virtual public;
+    function close() virtual public;
+    function withdrawFees() virtual public returns (uint);
+    function buy(uint8 outcomeTokenIndex, uint outcomeTokenCount, uint maxCost) virtual public returns (uint);
+    function sell(uint8 outcomeTokenIndex, uint outcomeTokenCount, uint minProfit) virtual public returns (uint);
+    function shortSell(uint8 outcomeTokenIndex, uint outcomeTokenCount, uint minProfit) virtual public returns (uint);
+    function calcMarketFee(uint outcomeTokenCost) virtual public view returns (uint);
 }

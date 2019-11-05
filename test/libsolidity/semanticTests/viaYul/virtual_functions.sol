@@ -2,7 +2,7 @@ contract X {
     function f() public returns (uint x) {
         x = g();
     }
-    function g() public returns (uint x) {
+    function g() public virtual returns (uint x) {
         x = 2;
     }
 }

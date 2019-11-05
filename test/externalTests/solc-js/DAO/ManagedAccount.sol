@@ -33,7 +33,7 @@ abstract contract ManagedAccountInterface {
     /// @param _amount The amount of wei to send to `_recipient`
     /// @param _recipient The address to receive `_amount` of wei
     /// @return True if the send completed
-    function payOut(address payable _recipient, uint _amount) public returns (bool);
+    function payOut(address payable _recipient, uint _amount) public virtual returns (bool);
 
     event PayOut(address indexed _recipient, uint _amount);
 }

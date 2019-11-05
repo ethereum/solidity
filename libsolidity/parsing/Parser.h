@@ -70,7 +70,7 @@ private:
 	/// This struct is shared for parsing a function header and a function type.
 	struct FunctionHeaderParserResult
 	{
-		bool isVirtual;
+		bool isVirtual = false;
 		ASTPointer<OverrideSpecifier> overrides;
 		ASTPointer<ParameterList> parameters;
 		ASTPointer<ParameterList> returnParameters;

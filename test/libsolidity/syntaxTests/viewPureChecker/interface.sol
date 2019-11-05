@@ -4,3 +4,4 @@ interface D {
 contract C is D {
     function f() override view external {}
 }
+// ----

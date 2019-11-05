@@ -2110,7 +2110,7 @@ BOOST_AUTO_TEST_CASE(virtual_function_calls)
 	char const* sourceCode = R"(
 		contract Base {
 			function f() public returns (uint i) { return g(); }
-			function g() public returns (uint i) { return 1; }
+			function g() public virtual returns (uint i) { return 1; }
 		}
 		contract Derived is Base {
 			function g() public override returns (uint i) { return 2; }
@@ -2174,8 +2174,8 @@ BOOST_AUTO_TEST_CASE(single_copy_with_multiple_inheritance)
 BOOST_AUTO_TEST_CASE(explicit_base_class)
 {
 	char const* sourceCode = R"(
-		contract BaseBase { function g() public returns (uint r) { return 1; } }
-		contract Base is BaseBase { function g() public override returns (uint r) { return 2; } }
+		contract BaseBase { function g() public virtual returns (uint r) { return 1; } }
+		contract Base is BaseBase { function g() public virtual override returns (uint r) { return 2; } }
 		contract Derived is Base {
 			function f() public returns (uint r) { return BaseBase.g(); }
 			function g() public override returns (uint r) { return 3; }
@@ -2236,7 +2236,7 @@ BOOST_AUTO_TEST_CASE(virtual_function_usage_in_constructor_arguments)
 			constructor(uint a) public {
 				m_a = a;
 			}
-			function overridden() public returns (uint r) { return 1; }
+			function overridden() public virtual returns (uint r) { return 1; }
 			function g() public returns (uint r) { return overridden(); }
 		}
 		contract Base is BaseBase(BaseBase.g()) {
@@ -2350,8 +2350,8 @@ BOOST_AUTO_TEST_CASE(function_modifier_calling_functions_in_creation_context)
 			constructor() mod1 public { f1(); }
 			function f1() mod2 public { data |= 0x1; }
 			function f2() public { data |= 0x20; }
-			function f3() public { }
-			modifier mod1 { f2(); _; }
+			function f3() public virtual { }
+			modifier mod1 virtual { f2(); _; }
 			modifier mod2 { f3(); if (false) _; }
 			function getData() public returns (uint r) { return data; }
 		}
@@ -2482,9 +2482,9 @@ BOOST_AUTO_TEST_CASE(crazy_elementary_typenames_on_stack)
 BOOST_AUTO_TEST_CASE(super)
 {
 	char const* sourceCode = R"(
-		contract A { function f() public returns (uint r) { return 1; } }
-		contract B is A { function f() public override returns (uint r) { return super.f() | 2; } }
-		contract C is A { function f() public override returns (uint r) { return super.f() | 4; } }
+		contract A { function f() public virtual returns (uint r) { return 1; } }
+		contract B is A { function f() public virtual override returns (uint r) { return super.f() | 2; } }
+		contract C is A { function f() public virtual override returns (uint r) { return super.f() | 4; } }
 		contract D is B, C { function f() public override(B, C) returns (uint r) { return super.f() | 8; } }
 	)";
 	compileAndRun(sourceCode, 0, "D");
@@ -2494,9 +2494,9 @@ BOOST_AUTO_TEST_CASE(super)
 BOOST_AUTO_TEST_CASE(super_in_constructor)
 {
 	char const* sourceCode = R"(
-		contract A { function f() public returns (uint r) { return 1; } }
-		contract B is A { function f() public override returns (uint r) { return super.f() | 2; } }
-		contract C is A { function f() public override returns (uint r) { return super.f() | 4; } }
+		contract A { function f() public virtual returns (uint r) { return 1; } }
+		contract B is A { function f() public virtual override returns (uint r) { return super.f() | 2; } }
+		contract C is A { function f() public virtual override returns (uint r) { return super.f() | 4; } }
 		contract D is B, C { uint data; constructor() public { data = super.f() | 8; } function f() public override (B, C) returns (uint r) { return data; } }
 	)";
 	compileAndRun(sourceCode, 0, "D");
@@ -5969,11 +5969,11 @@ BOOST_AUTO_TEST_CASE(proper_order_of_overwriting_of_attributes)
 	// bug #1798
 	char const* sourceCode = R"(
 		contract init {
-			function isOk() public returns (bool) { return false; }
+			function isOk() public virtual returns (bool) { return false; }
 			bool public ok = false;
 		}
 		contract fix {
-			function isOk() public returns (bool) { return true; }
+			function isOk() public virtual returns (bool) { return true; }
 			bool public ok = true;
 		}
 
@@ -7944,7 +7944,7 @@ BOOST_AUTO_TEST_CASE(state_variable_local_variable_mixture)
 
 BOOST_AUTO_TEST_CASE(inherited_function) {
 	char const* sourceCode = R"(
-		contract A { function f() internal returns (uint) { return 1; } }
+		contract A { function f() virtual internal returns (uint) { return 1; } }
 		contract B is A {
 			function f() internal override returns (uint) { return 2; }
 			function g() public returns (uint) {
@@ -7959,7 +7959,7 @@ BOOST_AUTO_TEST_CASE(inherited_function) {
 
 BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory) {
 	char const* sourceCode = R"(
-		contract A { function f(uint[] calldata a) external returns (uint) { return a[0]; } }
+		contract A { function f(uint[] calldata a) virtual external returns (uint) { return a[0]; } }
 		contract B is A {
 			function f(uint[] memory a) public override returns (uint) { return a[1]; }
 			function g() public returns (uint) {
@@ -14439,7 +14439,7 @@ BOOST_AUTO_TEST_CASE(external_public_override)
 {
 	char const* sourceCode = R"(
 		contract A {
-			function f() external returns (uint) { return 1; }
+			function f() external virtual returns (uint) { return 1; }
 		}
 		contract B is A {
 			function f() public override returns (uint) { return 2; }
@@ -14605,7 +14605,7 @@ BOOST_AUTO_TEST_CASE(contract_name)
 			string public nameAccessor = type(C).name;
 			string public constant constantNameAccessor = type(C).name;
 
-			function name() public pure returns (string memory) {
+			function name() public virtual pure returns (string memory) {
 				return type(C).name;
 			}
 		}

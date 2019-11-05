@@ -1,5 +1,5 @@
 contract C {
-	fallback() external {}
+	fallback() virtual external {}
 }
 contract D is C {
 }
@@ -7,4 +7,4 @@ contract E is D {
 	fallback() external {}
 }
 // ----
-// TypeError: (78-100): Overriding function is missing 'override' specifier.
+// TypeError: (86-108): Overriding function is missing 'override' specifier.

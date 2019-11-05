@@ -1,8 +1,8 @@
 contract I {
-  function f() external {}
+  function f() external virtual {}
 }
 contract A is I {
-  function f() external override {}
+  function f() external virtual override {}
 }
 contract B is I {}
 contract C is A, B {

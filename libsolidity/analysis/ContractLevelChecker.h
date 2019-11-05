@@ -75,7 +75,7 @@ private:
 	/// Also stores the direct super function in the AST annotations.
 	bool checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super);
 	void overrideListError(FunctionDefinition const& function, std::set<ContractDefinition const*, LessFunction> _secondary, std::string const& _message1, std::string const& _message2);
-	void overrideError(CallableDeclaration const& function, CallableDeclaration const& super, std::string message);
+	void overrideError(CallableDeclaration const& function, CallableDeclaration const& super, std::string message, std::string secondaryMsg = "Overridden function is here:");
 	void checkAbstractFunctions(ContractDefinition const& _contract);
 	/// Checks that the base constructor arguments are properly provided.
 	/// Fills the list of unimplemented functions in _contract's annotations.

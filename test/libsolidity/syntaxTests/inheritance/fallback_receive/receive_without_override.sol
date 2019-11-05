@@ -1,8 +1,8 @@
 contract C {
-	receive() external payable {}
+	receive() virtual external payable {}
 }
 contract D is C {
 	receive() external payable {}
 }
 // ----
-// TypeError: (65-94): Overriding function is missing 'override' specifier.
+// TypeError: (73-102): Overriding function is missing 'override' specifier.

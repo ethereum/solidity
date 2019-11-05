@@ -2,10 +2,10 @@ pragma experimental ABIEncoderV2;
 contract A {
     uint dummy;
     struct S { int a; }
-    function f(S calldata) external pure {}
-    function g(S calldata) external view { dummy; }
-    function h(S calldata) external { dummy = 42; }
-    function i(S calldata) external payable {}
+    function f(S calldata) external virtual pure {}
+    function g(S calldata) external virtual view { dummy; }
+    function h(S calldata) external virtual { dummy = 42; }
+    function i(S calldata) external virtual payable {}
 }
 contract B is A {
     function f(S memory) public override pure {}

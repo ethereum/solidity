@@ -128,7 +128,7 @@ contract multiowned {
 	}
 
 	// Replaces an owner `_from` with another `_to`.
-	function changeOwner(address _from, address _to) onlymanyowners(keccak256(msg.data)) public {
+	function changeOwner(address _from, address _to) onlymanyowners(keccak256(msg.data)) public virtual {
 		if (isOwner(_to)) return;
 		uint ownerIndex = m_ownerIndex[uint(_from)];
 		if (ownerIndex == 0) return;
@@ -248,7 +248,7 @@ contract multiowned {
 		}
 	}
 
-	function clearPending() internal {
+	function clearPending() internal virtual {
 		uint length = m_pendingIndex.length;
 		for (uint i = 0; i < length; ++i)
 			if (m_pendingIndex[i] != 0)
@@ -347,9 +347,9 @@ abstract contract multisig {
 	// FUNCTIONS
 
 	// TODO: document
-	function changeOwner(address _from, address _to) public;
-	function execute(address _to, uint _value, bytes calldata _data) external returns (bytes32);
-	function confirm(bytes32 _h) public returns (bool);
+	function changeOwner(address _from, address _to) public virtual;
+	function execute(address _to, uint _value, bytes calldata _data) external virtual returns (bytes32);
+	function confirm(bytes32 _h) public virtual returns (bool);
 }
 
 // usage:

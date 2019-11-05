@@ -621,12 +621,14 @@ public:
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	ParameterList const& parameterList() const { return *m_parameters; }
 	ASTPointer<ParameterList> const& returnParameterList() const { return m_returnParameters; }
+	bool markedVirtual() const { return m_isVirtual; }
+	virtual bool virtualSemantics() const { return markedVirtual(); }
 
 protected:
 	ASTPointer<ParameterList> m_parameters;
 	ASTPointer<OverrideSpecifier> m_overrides;
 	ASTPointer<ParameterList> m_returnParameters;
-	bool m_isVirtual;
+	bool m_isVirtual = false;
 };
 
 /**
@@ -692,7 +694,6 @@ public:
 	bool isFallback() const { return m_kind == Token::Fallback; }
 	bool isReceive() const { return m_kind == Token::Receive; }
 	Token kind() const { return m_kind; }
-	bool isOverridable() const { return !isConstructor(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
@@ -717,6 +718,12 @@ public:
 
 	FunctionDefinitionAnnotation& annotation() const override;
 
+	bool virtualSemantics() const override
+	{
+		return
+			CallableDeclaration::virtualSemantics() ||
+			annotation().contract->isInterface();
+	}
 private:
 	StateMutability m_stateMutability;
 	Token const m_kind;
@@ -742,7 +749,6 @@ public:
 		bool _isStateVar = false,
 		bool _isIndexed = false,
 		bool _isConstant = false,
-		bool _isVirtual = false,
 		ASTPointer<OverrideSpecifier> const& _overrides = nullptr,
 		Location _referenceLocation = Location::Unspecified
 	):
@@ -752,7 +758,6 @@ public:
 		m_isStateVariable(_isStateVar),
 		m_isIndexed(_isIndexed),
 		m_isConstant(_isConstant),
-		m_isVirtual(_isVirtual),
 		m_overrides(_overrides),
 		m_location(_referenceLocation) {}
 
@@ -798,7 +803,6 @@ public:
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_isConstant; }
 	ASTPointer<OverrideSpecifier> const& overrides() const { return m_overrides; }
-	bool isVirtual() const { return m_isVirtual; }
 	Location referenceLocation() const { return m_location; }
 	/// @returns a set of allowed storage locations for the variable.
 	std::set<Location> allowedDataLocations() const;
@@ -819,12 +823,11 @@ private:
 	/// Initially assigned value, can be missing. For local variables, this is stored inside
 	/// VariableDeclarationStatement and not here.
 	ASTPointer<Expression> m_value;
-	bool m_isStateVariable; ///< Whether or not this is a contract state variable
-	bool m_isIndexed; ///< Whether this is an indexed variable (used by events).
-	bool m_isConstant; ///< Whether the variable is a compile-time constant.
-	bool m_isVirtual; ///< Whether the variable is virtual and can be overridden
+	bool m_isStateVariable = false; ///< Whether or not this is a contract state variable
+	bool m_isIndexed = false; ///< Whether this is an indexed variable (used by events).
+	bool m_isConstant = false; ///< Whether the variable is a compile-time constant.
 	ASTPointer<OverrideSpecifier> m_overrides; ///< Contains the override specifier node
-	Location m_location; ///< Location of the variable if it is of reference type.
+	Location m_location = Location::Unspecified; ///< Location of the variable if it is of reference type.
 };
 
 /**

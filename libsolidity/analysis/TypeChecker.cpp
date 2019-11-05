@@ -327,6 +327,9 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	bool isLibraryFunction = _function.inContractKind() == ContractDefinition::ContractKind::Library;
 
+	if (_function.markedVirtual() && _function.annotation().contract->isInterface())
+		m_errorReporter.warning(_function.location(), "Interface functions are implicitly \"virtual\"");
+
 	if (_function.isPayable())
 	{
 		if (isLibraryFunction)

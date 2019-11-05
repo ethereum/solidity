@@ -42,7 +42,7 @@ Details are given in the following example.
     // internal functions and state variables. These cannot be
     // accessed externally via `this`, though.
     contract Mortal is Owned {
-        function kill() public {
+        function kill() virtual public {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
@@ -77,7 +77,7 @@ Details are given in the following example.
         // types of output parameters, that causes an error.
         // Both local and message-based function calls take these overrides
         // into account.
-        function kill() public override {
+        function kill() public virtual override {
             if (msg.sender == owner) {
                 Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
                 NameReg(config.lookup(1)).unregister();
@@ -115,17 +115,17 @@ seen in the following example::
     }
 
     contract mortal is owned {
-        function kill() public {
+        function kill() public virtual {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
 
     contract Base1 is mortal {
-        function kill() public override { /* do cleanup 1 */ mortal.kill(); }
+        function kill() public virtual override { /* do cleanup 1 */ mortal.kill(); }
     }
 
     contract Base2 is mortal {
-        function kill() public override { /* do cleanup 2 */ mortal.kill(); }
+        function kill() public virtual override { /* do cleanup 2 */ mortal.kill(); }
     }
 
     contract Final is Base1, Base2 {
@@ -144,18 +144,18 @@ explicitly in the final override, but this function will bypass
     }
 
     contract mortal is owned {
-        function kill() public {
+        function kill() virtual public {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
 
     contract Base1 is mortal {
-        function kill() public override { /* do cleanup 1 */ super.kill(); }
+        function kill() public virtual override { /* do cleanup 1 */ super.kill(); }
     }
 
 
     contract Base2 is mortal {
-        function kill() public override { /* do cleanup 2 */ super.kill(); }
+        function kill() public virtual override { /* do cleanup 2 */ super.kill(); }
     }
 
     contract Final is Base1, Base2 {
@@ -190,7 +190,7 @@ function header as shown in this example:
 
     contract Base
     {
-        function foo() public {}
+        function foo() virtual public {}
     }
 
     contract Middle is Base {}
@@ -212,12 +212,12 @@ bases, it has to explicitly override it:
 
     contract Base1
     {
-        function foo() public {}
+        function foo() virtual public {}
     }
 
     contract Base2
     {
-        function foo() public {}
+        function foo() virtual public {}
     }
 
     contract Inherited is Base1, Base2
