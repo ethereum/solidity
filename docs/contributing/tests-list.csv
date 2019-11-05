@@ -1,0 +1,27 @@
+﻿Test suite,Tests,Dependencies
+**Command line**,Passing unknown options to CLI,
+,Passing files that are not found,
+,Passing files that are not files,
+,Passing empty remappings,
+,General tests (`Full details <https://github.com/ethereum/solidity/tree/develop/test/cmdlineTests>`_),
+**Compilation**,"Compiling other contracts and libraries
+
+* MultiSigWallet
+* Corion
+* Gnosis
+* Milestone tracker
+* String Utils",
+,Documentation examples,
+,Library checksum,
+,Long library names,
+,Linking libraries,
+,Overwriting already compiled files,
+,"Assemble, yul, strict-assembly and optimize compiled outputs",
+,Standard input to compiler,
+,soljson via the fuzzer,
+**Unit tests (Soltest)***,Optimisation tests for Homestead EVM version,
+,Optimisation tests for Byzantium EVM version,
+,Optimisation tests for Constantinople EVM version,
+,Optimisation tests for Constantinople EVM version with ABI encoder v2 and YUL optimisation,
+,YUL optimisation tests for Constantinople EVM version with ABI encoder v2,
+,Optimisation tests for St Petersburg EVM version,

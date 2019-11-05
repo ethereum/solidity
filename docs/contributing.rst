@@ -94,23 +94,32 @@ and ``libevmone.dylib`` on macOS.
 Running the tests
 -----------------
 
-.. TODO: Should?
+The ``./scripts/tests.sh`` script executes most Solidity tests automatically, including many bundled into the
+`Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest`` (or its wrapper ``scripts/soltest.sh``), as well as command line tests and compilation tests.
 
-The ``./scripts/tests.sh`` script executes most Solidity tests automatically, including those found in the soltest suite, as well as commandline tests and compilation tests. For quicker feedback, you should run specific tests.
+If the ``evmone`` library is not found, tests that use it are skipped.
 
+If the ``libz3`` library is not installed on your system, you should disable the SMT tests using ``./scripts/soltest.sh --no-smt``.
 
-.. TODO: Needs more on how to run individual tests first
+.. TODO: Can you disable SMT checks from the tests.sh level?
 
-If the ``evmone`` library is not found, the relevant tests are skipped.
+.. csv-table:: The full test suite
+   :file: ./contributing/tests-list.csv
+   :widths: 30, 40, 30
+   :header-rows: 1
 
-If the ``libz3`` library is not installed on your system, you should disable the SMT tests:
-``./scripts/soltest.sh --no-smt``.
+.. note ::
 
-Solidity includes different types of tests, most of them bundled into the
-`Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest``.
-Running ``build/test/soltest` or its wrapper ``scripts/soltest.sh`` is sufficient for most changes.
+    To get a list of all unit tests run by Soltest, run ``./build/test/soltest --list_content=HRF``.
 
+For quicker results you can run a subset of, or specific tests.
 
+To run a subset of tests, you can use filters:
+``./scripts/soltest.sh -t TestSuite/TestName,
+where ``TestName`` can be a wildcard ``*``.
+
+Or, for example, to run all the tests for the disambiguator:
+``./scripts/soltest.sh -t "yulOptimizerTests/disambiguator/*" --no-smt``.
 
 ``./build/test/soltest --help`` has extensive help on all of the options available.
 See especially:
@@ -121,19 +130,8 @@ See especially:
 
 .. note ::
 
-    Those working in a Windows environment wanting to run the above basic sets without libz3 in Git Bash, you would have to do: ``./build/test/Release/soltest.exe -- --no-smt``.
+    Those working in a Windows environment wanting to run the above basic sets without libz3. Using Git Bash, you use: ``./build/test/Release/soltest.exe -- --no-smt``.
     If you are running this in plain Command Prompt, use ``.\build\test\Release\soltest.exe -- --no-smt``.
-
-To run a subset of tests, you can use filters:
-``./scripts/soltest.sh -t TestSuite/TestName,
-where ``TestName`` can be a wildcard ``*``.
-
-For example, here is an example test you might run;
-``./scripts/soltest.sh -t "yulOptimizerTests/disambiguator/*" --no-smt``.
-This will test all the tests for the disambiguator.
-
-To get a list of all tests, use
-``./build/test/soltest --list_content=HRF``.
 
 If you want to debug using GDB, make sure you build differently than the "usual".
 For example, you could run the following command in your ``build`` folder:
