@@ -52,6 +52,7 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 			for (auto const& function: resolvedFunctions)
 				if (
 					function->name() == baseFunction->name() &&
+					function->kind() == baseFunction->kind() &&
 					FunctionType(*function).asCallableFunction(false)->
 						hasEqualParameterTypes(*FunctionType(*baseFunction).asCallableFunction(false))
 				)
