@@ -35,7 +35,7 @@ struct AsmAnalysisInfo;
 class EWasmCodeTransform: public boost::static_visitor<wasm::Expression>
 {
 public:
-	static std::string run(Dialect const& _dialect, yul::Block const& _ast);
+	static wasm::Module run(Dialect const& _dialect, yul::Block const& _ast);
 
 public:
 	wasm::Expression operator()(yul::Literal const& _literal);

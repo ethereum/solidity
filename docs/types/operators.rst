@@ -17,7 +17,7 @@ equivalent to ``a = 0``, but it can also be used on arrays, where it assigns a d
 array of length zero or a static array of the same length with all elements set to their
 initial value. ``delete a[x]`` deletes the item at index ``x`` of the array and leaves
 all other elements and the length of the array untouched. This especially means that it leaves
-a gap in the array. If you plan to remove items, a mapping is probably a better choice.
+a gap in the array. If you plan to remove items, a :ref:`mapping <mapping-types>` is probably a better choice.
 
 For structs, it assigns a struct with all members reset. In other words, the value of ``a`` after ``delete a`` is the same as if ``a`` would be declared without assignment, with the following caveat:
 

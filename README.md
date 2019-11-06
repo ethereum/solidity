@@ -60,6 +60,8 @@ Please follow the
 [Developers Guide](https://solidity.readthedocs.io/en/latest/contributing.html)
 if you want to help.
 
+You can find our current feature and bug priorities for forthcoming releases [in the projects section](https://github.com/ethereum/solidity/projects).
+
 ## Maintainers
 * [@axic](https://github.com/axic)
 * [@chriseth](https://github.com/chriseth)

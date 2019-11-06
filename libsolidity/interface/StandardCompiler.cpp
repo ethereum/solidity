@@ -925,6 +925,8 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		// eWasm
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ewasm.wast", wildcardMatchesExperimental))
 			contractData["ewasm"]["wast"] = compilerStack.eWasm(contractName);
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ewasm.wasm", wildcardMatchesExperimental))
+			contractData["ewasm"]["wasm"] = compilerStack.eWasmObject(contractName).toHex();
 
 		// EVM
 		Json::Value evmData(Json::objectValue);

@@ -23,6 +23,8 @@
 #include <boost/variant.hpp>
 #include <string>
 #include <vector>
+#include <map>
+#include <memory>
 
 namespace yul
 {
@@ -88,6 +90,16 @@ struct FunctionDefinition
 	std::vector<Expression> body;
 };
 
+/**
+ * Abstract representation of a wasm module.
+ */
+struct Module
+{
+	std::vector<GlobalVariableDeclaration> globals;
+	std::vector<FunctionImport> imports;
+	std::vector<FunctionDefinition> functions;
+	std::map<std::string, Module> subModules;
+};
 
 }
 }

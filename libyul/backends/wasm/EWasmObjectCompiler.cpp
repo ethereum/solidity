@@ -21,32 +21,36 @@
 #include <libyul/backends/wasm/EWasmObjectCompiler.h>
 
 #include <libyul/backends/wasm/EWasmCodeTransform.h>
+#include <libyul/backends/wasm/BinaryTransform.h>
+#include <libyul/backends/wasm/EWasmToText.h>
 
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
 
+#include <libdevcore/CommonData.h>
+
 using namespace yul;
 using namespace std;
 
-string EWasmObjectCompiler::compile(Object& _object, Dialect const& _dialect)
+pair<string, dev::bytes> EWasmObjectCompiler::compile(Object& _object, Dialect const& _dialect)
 {
 	EWasmObjectCompiler compiler(_dialect);
-	return compiler.run(_object);
+	wasm::Module module = compiler.run(_object);
+	return {EWasmToText().run(module), wasm::BinaryTransform::run(module)};
 }
 
-string EWasmObjectCompiler::run(Object& _object)
+wasm::Module EWasmObjectCompiler::run(Object& _object)
 {
-	string ret;
+	yulAssert(_object.analysisInfo, "No analysis info.");
+	yulAssert(_object.code, "No code.");
+
+	wasm::Module module = EWasmCodeTransform::run(m_dialect, *_object.code);
 
 	for (auto& subNode: _object.subObjects)
 		if (Object* subObject = dynamic_cast<Object*>(subNode.get()))
-			ret += compile(*subObject, m_dialect);
+			module.subModules[subObject->name.str()] = run(*subObject);
 		else
 			yulAssert(false, "Data is not yet supported for EWasm.");
 
-	yulAssert(_object.analysisInfo, "No analysis info.");
-	yulAssert(_object.code, "No code.");
-	ret += EWasmCodeTransform::run(m_dialect, *_object.code);
-
-	return ret;
+	return module;
 }

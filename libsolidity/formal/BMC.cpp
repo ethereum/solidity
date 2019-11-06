@@ -108,14 +108,16 @@ bool BMC::shouldInlineFunctionCall(FunctionCall const& _funCall)
 
 bool BMC::visit(ContractDefinition const& _contract)
 {
-	SMTEncoder::visit(_contract);
+	initContract(_contract);
 
 	/// Check targets created by state variable initialization.
 	smt::Expression constraints = m_context.assertions();
 	checkVerificationTargets(constraints);
 	m_verificationTargets.clear();
 
-	return true;
+	SMTEncoder::visit(_contract);
+
+	return false;
 }
 
 void BMC::endVisit(ContractDefinition const& _contract)

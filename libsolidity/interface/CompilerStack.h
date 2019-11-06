@@ -243,8 +243,11 @@ public:
 	/// @returns the optimized IR representation of a contract.
 	std::string const& yulIROptimized(std::string const& _contractName) const;
 
-	/// @returns the eWasm (text) representation of a contract.
+	/// @returns the eWasm text representation of a contract.
 	std::string const& eWasm(std::string const& _contractName) const;
+
+	/// @returns the eWasm representation of a contract.
+	eth::LinkerObject const& eWasmObject(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName) const;
@@ -323,7 +326,8 @@ private:
 		eth::LinkerObject runtimeObject; ///< Runtime object.
 		std::string yulIR; ///< Experimental Yul IR code.
 		std::string yulIROptimized; ///< Optimized experimental Yul IR code.
-		std::string eWasm; ///< Experimental eWasm code (text representation).
+		std::string eWasm; ///< Experimental eWasm text representation
+		eth::LinkerObject eWasmObject; ///< Experimental eWasm code
 		mutable std::unique_ptr<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		mutable std::unique_ptr<Json::Value const> abi;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
@@ -357,7 +361,7 @@ private:
 	/// The IR is stored but otherwise unused.
 	void generateIR(ContractDefinition const& _contract);
 
-	/// Generate eWasm text representation for a single contract.
+	/// Generate eWasm representation for a single contract.
 	void generateEWasm(ContractDefinition const& _contract);
 
 	/// Links all the known library addresses in the available objects. Any unknown

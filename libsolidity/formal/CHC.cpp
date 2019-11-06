@@ -62,8 +62,7 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 	reset();
 
-	if (!SMTEncoder::visit(_contract))
-		return false;
+	initContract(_contract);
 
 	m_stateVariables = _contract.stateVariablesIncludingInherited();
 
@@ -89,7 +88,6 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 	// If the contract has a constructor it is handled as a function.
 	// Otherwise we zero-initialize all state vars.
-	// TODO take into account state vars init values.
 	if (!_contract.constructor())
 	{
 		string constructorName = "constructor_" + _contract.name() + "_" + to_string(_contract.id());
@@ -108,7 +106,8 @@ bool CHC::visit(ContractDefinition const& _contract)
 		connectBlocks(constructorPred, interface());
 	}
 
-	return true;
+	SMTEncoder::visit(_contract);
+	return false;
 }
 
 void CHC::endVisit(ContractDefinition const& _contract)

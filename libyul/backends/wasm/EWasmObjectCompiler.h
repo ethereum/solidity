@@ -21,22 +21,33 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <tuple>
 
+namespace dev
+{
+using bytes = std::vector<uint8_t>;
+}
 namespace yul
 {
 struct Object;
 struct Dialect;
+namespace wasm
+{
+struct Module;
+}
 
 class EWasmObjectCompiler
 {
 public:
-	static std::string compile(Object& _object, Dialect const& _dialect);
+	/// Compiles the given object and returns the WAST and the binary representation.
+	static std::pair<std::string, dev::bytes> compile(Object& _object, Dialect const& _dialect);
 private:
 	EWasmObjectCompiler(Dialect const& _dialect):
 		m_dialect(_dialect)
 	{}
 
-	std::string run(Object& _object);
+	wasm::Module run(Object& _object);
 
 	Dialect const& m_dialect;
 };

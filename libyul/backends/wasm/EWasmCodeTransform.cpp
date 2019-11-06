@@ -20,7 +20,6 @@
 
 #include <libyul/backends/wasm/EWasmCodeTransform.h>
 
-#include <libyul/backends/wasm/EWasmToText.h>
 #include <libyul/optimiser/NameCollector.h>
 
 #include <libyul/AsmData.h>
@@ -37,10 +36,11 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-string EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
+wasm::Module EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
 {
+	wasm::Module module;
+
 	EWasmCodeTransform transform(_dialect, _ast);
-	vector<wasm::FunctionDefinition> functions;
 
 	for (auto const& statement: _ast.statements)
 	{
@@ -49,17 +49,14 @@ string EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
 			"Expected only function definitions at the highest level."
 		);
 		if (statement.type() == typeid(yul::FunctionDefinition))
-			functions.emplace_back(transform.translateFunction(boost::get<yul::FunctionDefinition>(statement)));
+			module.functions.emplace_back(transform.translateFunction(boost::get<yul::FunctionDefinition>(statement)));
 	}
 
-	std::vector<wasm::FunctionImport> imports;
 	for (auto& imp: transform.m_functionsToImport)
-		imports.emplace_back(std::move(imp.second));
-	return EWasmToText().run(
-		transform.m_globalVariables,
-		imports,
-		functions
-	);
+		module.imports.emplace_back(std::move(imp.second));
+	module.globals = transform.m_globalVariables;
+
+	return module;
 }
 
 wasm::Expression EWasmCodeTransform::generateMultiAssignment(
