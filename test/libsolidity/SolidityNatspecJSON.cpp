@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(dev_return)
 			/// @param a Documentation for the first parameter starts here.
 			/// Since it's a really complicated parameter we need 2 lines
 			/// @param second Documentation for the second parameter
-			/// @return The result of the multiplication
+			/// @return d The result of the multiplication
 			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
 		}
 	)";
@@ -378,12 +378,15 @@ BOOST_AUTO_TEST_CASE(dev_return)
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
 	"        },\n"
-	"        \"return\": \"The result of the multiplication\"\n"
+	"        \"returns\": {\n"
+	"            \"d\": \"The result of the multiplication\"\n"
+	"        }\n"
 	"    }\n"
 	"}}";
 
 	checkNatspec(sourceCode, "test", natspec, false);
 }
+
 BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 {
 	char const* sourceCode = R"(
@@ -393,7 +396,7 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 			/// Since it's a really complicated parameter we need 2 lines
 			/// @param second Documentation for the second parameter
 			/// @return
-			/// The result of the multiplication
+			/// d The result of the multiplication
 			function mul(uint a, uint second) public returns (uint d) {
 				return a * 7 + second;
 			}
@@ -408,13 +411,157 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
 	"        },\n"
-	"        \"return\": \"The result of the multiplication\"\n"
+	"        \"returns\": {\n"
+	"            \"d\": \"The result of the multiplication\"\n"
+	"        }\n"
 	"    }\n"
 	"}}";
 
 	checkNatspec(sourceCode, "test", natspec, false);
 }
 
+BOOST_AUTO_TEST_CASE(dev_return_desc_multiple_unamed_mixed)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter starts here.
+			/// Since it's a really complicated parameter we need 2 lines
+			/// @param second Documentation for the second parameter
+			/// @return The result of the multiplication
+			/// @return _cookies And cookies with nutella
+			function mul(uint a, uint second) public returns (uint, uint _cookies) {
+				uint mul = a * 7;
+				return (mul, second);
+			}
+		}
+	)";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul(uint256,uint256)\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        },\n"
+	"        \"returns\": {\n"
+	"            \"_0\": \"The result of the multiplication\",\n"
+	"            \"_cookies\": \"And cookies with nutella\"\n"
+	"        }\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, "test", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_return_desc_multiple_unamed_mixed_2)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter starts here.
+			/// Since it's a really complicated parameter we need 2 lines
+			/// @param second Documentation for the second parameter
+			/// @return _cookies And cookies with nutella
+			/// @return The result of the multiplication
+			/// @return _milk And milk with nutella
+			function mul(uint a, uint second) public returns (uint _cookies, uint, uint _milk) {
+				uint mul = a * 7;
+				uint milk = 4;
+				return (mul, second, milk);
+			}
+		}
+	)";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul(uint256,uint256)\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        },\n"
+	"        \"returns\": {\n"
+	"            \"_cookies\": \"And cookies with nutella\",\n"
+	"            \"_1\": \"The result of the multiplication\",\n"
+	"            \"_milk\": \"And milk with nutella\"\n"
+	"        }\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, "test", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_return_desc_multiple_unamed)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter starts here.
+			/// Since it's a really complicated parameter we need 2 lines
+			/// @param second Documentation for the second parameter
+			/// @return The result of the multiplication
+			/// @return And cookies with nutella
+			function mul(uint a, uint second) public returns (uint, uint) {
+				uint mul = a * 7;
+				return (mul, second);
+			}
+		}
+	)";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul(uint256,uint256)\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        },\n"
+	"        \"returns\": {\n"
+	"            \"_0\": \"The result of the multiplication\",\n"
+	"            \"_1\": \"And cookies with nutella\"\n"
+	"        }\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, "test", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_return_desc_multiple)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter starts here.
+			/// Since it's a really complicated parameter we need 2 lines
+			/// @param second Documentation for the second parameter
+			/// @return d The result of the multiplication
+			/// @return f And cookies with nutella
+			function mul(uint a, uint second) public returns (uint d, uint f) {
+				uint mul = a * 7;
+				return (mul, second);
+			}
+		}
+	)";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul(uint256,uint256)\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        },\n"
+	"        \"returns\": {\n"
+	"            \"d\": \"The result of the multiplication\",\n"
+	"            \"f\": \"And cookies with nutella\"\n"
+	"        }\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, "test", natspec, false);
+}
 
 BOOST_AUTO_TEST_CASE(dev_multiline_return)
 {
@@ -424,7 +571,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 			/// @param a Documentation for the first parameter starts here.
 			/// Since it's a really complicated parameter we need 2 lines
 			/// @param second Documentation for the second parameter
-			/// @return The result of the multiplication
+			/// @return d The result of the multiplication
 			/// and cookies with nutella
 			function mul(uint a, uint second) public returns (uint d) {
 				return a * 7 + second;
@@ -440,7 +587,9 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
 	"        },\n"
-	"        \"return\": \"The result of the multiplication and cookies with nutella\"\n"
+	"        \"returns\": {\n"
+	"            \"d\": \"The result of the multiplication and cookies with nutella\",\n"
+	"        }\n"
 	"    }\n"
 	"}}";
 
@@ -456,7 +605,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 			 * @param a Documentation for the first parameter starts here.
 			 * Since it's a really complicated parameter we need 2 lines
 			 * @param second Documentation for the second parameter
-			 * @return The result of the multiplication
+			 * @return d The result of the multiplication
 			 * and cookies with nutella
 			 */
 			function mul(uint a, uint second) public returns (uint d) {
@@ -473,11 +622,28 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
 	"        },\n"
-	"        \"return\": \"The result of the multiplication and cookies with nutella\"\n"
+	"        \"returns\": {\n"
+	"            \"d\": \"The result of the multiplication and cookies with nutella\",\n"
+	"        }\n"
 	"    }\n"
 	"}}";
 
 	checkNatspec(sourceCode, "test", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_documenting_no_return_paramname)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Multiplies a number by 7 and adds second parameter
+			/// @param a Documentation for the first parameter
+			/// @param second Documentation for the second parameter
+			/// @return
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
+		}
+	)";
+
+	expectNatspecError(sourceCode);
 }
 
 BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
@@ -777,7 +943,7 @@ BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
 			/// @param a Documentation for the first parameter starts here.
 			/// Since it's a really complicated parameter we need 2 lines
 			/// @param second Documentation for the second parameter
-			/// @return The result of the multiplication
+			/// @return d The result of the multiplication
 			/// and cookies with nutella
 			function mul(uint a, uint second) public returns(uint d) {
 				return a * 7 + second;
@@ -793,7 +959,9 @@ BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
 				"a" : "Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines",
 				"second" : "Documentation for the second parameter"
 			},
-			"return" : "The result of the multiplication and cookies with nutella"
+			"returns" : {
+				"d": "The result of the multiplication and cookies with nutella"
+			}
 		},
 		"constructor" : {
 			"author" : "Alex",

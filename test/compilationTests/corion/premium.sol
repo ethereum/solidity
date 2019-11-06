@@ -84,7 +84,7 @@ contract premium is module, safeMath {
      * @param spender The address of the account able to transfer the tokens
      * @param amount The amount of tokens to be approved for transfer
      * @param nonce The transaction count of the authorised address
-     * @return True if the approval was successful
+     * @return success True if the approval was successful
      */
     function approve(address spender, uint256 amount, uint256 nonce) isReady external returns (bool success) {
         /*
@@ -106,7 +106,7 @@ contract premium is module, safeMath {
      * @param amount The amount of tokens to be approved for transfer
      * @param nonce The transaction count of the authorised address
      * @param extraData Data to give forward to the receiver
-     * @return True if the approval was successful
+     * @return success True if the approval was successful
      */
     function approveAndCall(address spender, uint256 amount, uint256 nonce, bytes calldata extraData) isReady external returns (bool success) {
         /*
@@ -159,7 +159,7 @@ contract premium is module, safeMath {
      * @notice Send `amount` Corion tokens to `to` from `msg.sender`
      * @param to The address of the recipient
      * @param amount The amount of tokens to be transferred
-     * @return Whether the transfer was successful or not
+     * @return success Whether the transfer was successful or not
      */
     function transfer(address to, uint256 amount) isReady external returns (bool success) {
         /*
@@ -187,7 +187,7 @@ contract premium is module, safeMath {
      * @param from The address holding the tokens being transferred
      * @param to The address of the recipient
      * @param amount The amount of tokens to be transferred
-     * @return True if the transfer was successful
+     * @return success True if the transfer was successful
      */
     function transferFrom(address from, address to, uint256 amount) isReady external returns (bool success) {
         /*
@@ -224,7 +224,7 @@ contract premium is module, safeMath {
      * @param to The contract address of the recipient
      * @param amount The amount of tokens to be transferred
      * @param extraData Data to give forward to the receiver
-     * @return Whether the transfer was successful or not
+     * @return success Whether the transfer was successful or not
      */
     function transfer(address to, uint256 amount, bytes calldata extraData) isReady external returns (bool success) {
         /*

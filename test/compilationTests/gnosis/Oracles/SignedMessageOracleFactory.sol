@@ -19,7 +19,7 @@ contract SignedMessageOracleFactory {
     /// @param v Signature parameter
     /// @param r Signature parameter
     /// @param s Signature parameter
-    /// @return Oracle contract
+    /// @return signedMessageOracle Oracle contract
     function createSignedMessageOracle(bytes32 descriptionHash, uint8 v, bytes32 r, bytes32 s)
         public
         returns (SignedMessageOracle signedMessageOracle)

@@ -21,7 +21,7 @@ contract LMSRMarketMaker is MarketMaker {
     /// @param market Market contract
     /// @param outcomeTokenIndex Index of outcome to buy
     /// @param outcomeTokenCount Number of outcome tokens to buy
-    /// @return Cost
+    /// @return cost Cost
     function calcCost(Market market, uint8 outcomeTokenIndex, uint outcomeTokenCount)
         public
         override
@@ -57,7 +57,7 @@ contract LMSRMarketMaker is MarketMaker {
     /// @param market Market contract
     /// @param outcomeTokenIndex Index of outcome to sell
     /// @param outcomeTokenCount Number of outcome tokens to sell
-    /// @return Profit
+    /// @return profit Profit
     function calcProfit(Market market, uint8 outcomeTokenIndex, uint outcomeTokenCount)
         public
         override
@@ -84,7 +84,7 @@ contract LMSRMarketMaker is MarketMaker {
     /// @dev Returns marginal price of an outcome
     /// @param market Market contract
     /// @param outcomeTokenIndex Index of outcome to determine marginal price of
-    /// @return Marginal price of an outcome as a fixed point number
+    /// @return price Marginal price of an outcome as a fixed point number
     function calcMarginalPrice(Market market, uint8 outcomeTokenIndex)
         public
         override
@@ -110,7 +110,7 @@ contract LMSRMarketMaker is MarketMaker {
     /// @param logN Logarithm of the number of outcomes
     /// @param netOutcomeTokensSold Net outcome tokens sold by market
     /// @param funding Initial funding for market
-    /// @return Cost level
+    /// @return costLevel Cost level
     function calcCostLevel(int logN, int[] memory netOutcomeTokensSold, uint funding)
         private
         view
@@ -131,7 +131,9 @@ contract LMSRMarketMaker is MarketMaker {
     /// @param netOutcomeTokensSold Net outcome tokens sold by market
     /// @param funding Initial funding for market
     /// @param outcomeIndex Index of exponential term to extract (for use by marginal price function)
-    /// @return A result structure composed of the sum, the offset used, and the summand associated with the supplied index
+    /// @return sum The sum of the outcomes
+    /// @return offset The offset that is used for all
+    /// @return outcomeExpTerm The summand associated with the supplied index
     function sumExpOffset(int logN, int[] memory netOutcomeTokensSold, uint funding, uint8 outcomeIndex)
         private
         view
@@ -170,7 +172,7 @@ contract LMSRMarketMaker is MarketMaker {
     ///      number of collateral tokens (which is the same as the number of outcome tokens the
     ///      market created) subtracted by the quantity of that token held by the market.
     /// @param market Market contract
-    /// @return Net outcome tokens sold by market
+    /// @return quantities Net outcome tokens sold by market
     function getNetOutcomeTokensSold(Market market)
         private
         view

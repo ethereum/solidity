@@ -66,10 +66,17 @@ This section gives detailed instructions on how to update prior code for every b
 * Change ``uint length = array.push(value)`` to ``array.push(value);``. The new length can be
   accessed via ``array.length``.
 
+* For every named return parameter in a function's ``@dev`` documentation define a ``@return``
+  entry which contains the parameter's name as the first word. E.g. if you have function ``f()`` defined
+  like ``function f() public returns (uint value)`` and a ``@dev`` annotating it, document its return
+  parameters like so: ``@return value The return value.``. You can mix named and un-named return parameters
+  documentation so long as the notices are in the order they appear in the tuple return type.
+
 New Features
 ============
 
  * The :ref:`try/catch statement <try-catch>` allows you to react on failed external calls.
+ * Natspec supports multiple return parameters in dev documentation, enforcing the same naming check as ``@param``.
  * Yul and Inline Assembly have a new statement called ``leave`` that exits the current function.
 
 

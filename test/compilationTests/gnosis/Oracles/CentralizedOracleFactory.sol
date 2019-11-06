@@ -16,7 +16,7 @@ contract CentralizedOracleFactory {
      */
     /// @dev Creates a new centralized oracle contract
     /// @param ipfsHash Hash identifying off chain event description
-    /// @return Oracle contract
+    /// @return centralizedOracle Oracle contract
     function createCentralizedOracle(bytes memory ipfsHash)
         public
         returns (CentralizedOracle centralizedOracle)
