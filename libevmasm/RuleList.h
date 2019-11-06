@@ -49,7 +49,7 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 
 // This works around a bug fixed with Boost 1.64.
 // https://www.boost.org/doc/libs/1_68_0/libs/multiprecision/doc/html/boost_multiprecision/map/hist.html#boost_multiprecision.map.hist.multiprecision_2_3_1_boost_1_64
-inline u256 shlWorkaround(u256 const& _x, unsigned _amount)
+template <class S> S shlWorkaround(S const& _x, unsigned _amount)
 {
 	return u256((bigint(_x) << _amount) & u256(-1));
 }
@@ -66,6 +66,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 	Pattern
 )
 {
+	using Word = typename Pattern::Word;
 	return std::vector<SimplificationRule<Pattern>> {
 		// arithmetic on constants
 		{{Pattern::Builtins::ADD, {A, B}}, [=]{ return A.d() + B.d(); }, false},
@@ -75,35 +76,40 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 		{{Pattern::Builtins::SDIV, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(divWorkaround(u2s(A.d()), u2s(B.d()))); }, false},
 		{{Pattern::Builtins::MOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : modWorkaround(A.d(), B.d()); }, false},
 		{{Pattern::Builtins::SMOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(modWorkaround(u2s(A.d()), u2s(B.d()))); }, false},
-		{{Pattern::Builtins::EXP, {A, B}}, [=]{ return u256(boost::multiprecision::powm(bigint(A.d()), bigint(B.d()), bigint(1) << 256)); }, false},
+		{{Pattern::Builtins::EXP, {A, B}}, [=]{ return Word(boost::multiprecision::powm(bigint(A.d()), bigint(B.d()), bigint(1) << Pattern::WordSize)); }, false},
 		{{Pattern::Builtins::NOT, {A}}, [=]{ return ~A.d(); }, false},
-		{{Pattern::Builtins::LT, {A, B}}, [=]() -> u256 { return A.d() < B.d() ? 1 : 0; }, false},
-		{{Pattern::Builtins::GT, {A, B}}, [=]() -> u256 { return A.d() > B.d() ? 1 : 0; }, false},
-		{{Pattern::Builtins::SLT, {A, B}}, [=]() -> u256 { return u2s(A.d()) < u2s(B.d()) ? 1 : 0; }, false},
-		{{Pattern::Builtins::SGT, {A, B}}, [=]() -> u256 { return u2s(A.d()) > u2s(B.d()) ? 1 : 0; }, false},
-		{{Pattern::Builtins::EQ, {A, B}}, [=]() -> u256 { return A.d() == B.d() ? 1 : 0; }, false},
-		{{Pattern::Builtins::ISZERO, {A}}, [=]() -> u256 { return A.d() == 0 ? 1 : 0; }, false},
+		{{Pattern::Builtins::LT, {A, B}}, [=]() -> Word { return A.d() < B.d() ? 1 : 0; }, false},
+		{{Pattern::Builtins::GT, {A, B}}, [=]() -> Word { return A.d() > B.d() ? 1 : 0; }, false},
+		{{Pattern::Builtins::SLT, {A, B}}, [=]() -> Word { return u2s(A.d()) < u2s(B.d()) ? 1 : 0; }, false},
+		{{Pattern::Builtins::SGT, {A, B}}, [=]() -> Word { return u2s(A.d()) > u2s(B.d()) ? 1 : 0; }, false},
+		{{Pattern::Builtins::EQ, {A, B}}, [=]() -> Word { return A.d() == B.d() ? 1 : 0; }, false},
+		{{Pattern::Builtins::ISZERO, {A}}, [=]() -> Word { return A.d() == 0 ? 1 : 0; }, false},
 		{{Pattern::Builtins::AND, {A, B}}, [=]{ return A.d() & B.d(); }, false},
 		{{Pattern::Builtins::OR, {A, B}}, [=]{ return A.d() | B.d(); }, false},
 		{{Pattern::Builtins::XOR, {A, B}}, [=]{ return A.d() ^ B.d(); }, false},
-		{{Pattern::Builtins::BYTE, {A, B}}, [=]{ return A.d() >= 32 ? 0 : (B.d() >> unsigned(8 * (31 - A.d()))) & 0xff; }, false},
-		{{Pattern::Builtins::ADDMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) + bigint(B.d())) % C.d()); }, false},
-		{{Pattern::Builtins::MULMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) * bigint(B.d())) % C.d()); }, false},
-		{{Pattern::Builtins::SIGNEXTEND, {A, B}}, [=]() -> u256 {
-			if (A.d() >= 31)
+		{{Pattern::Builtins::BYTE, {A, B}}, [=]{
+			return
+				A.d() >= Pattern::WordSize / 8 ?
+				0 :
+				(B.d() >> unsigned(8 * (Pattern::WordSize / 8 - 1 - A.d()))) & 0xff;
+		}, false},
+		{{Pattern::Builtins::ADDMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : Word((bigint(A.d()) + bigint(B.d())) % C.d()); }, false},
+		{{Pattern::Builtins::MULMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : Word((bigint(A.d()) * bigint(B.d())) % C.d()); }, false},
+		{{Pattern::Builtins::SIGNEXTEND, {A, B}}, [=]() -> Word {
+			if (A.d() >= Pattern::WordSize / 8 - 1)
 				return B.d();
 			unsigned testBit = unsigned(A.d()) * 8 + 7;
-			u256 mask = (u256(1) << testBit) - 1;
+			Word mask = (Word(1) << testBit) - 1;
 			return boost::multiprecision::bit_test(B.d(), testBit) ? B.d() | ~mask : B.d() & mask;
 		}, false},
 		{{Pattern::Builtins::SHL, {A, B}}, [=]{
-			if (A.d() > 255)
-				return u256(0);
+			if (A.d() >= Pattern::WordSize)
+				return Word(0);
 			return shlWorkaround(B.d(), unsigned(A.d()));
 		}, false},
 		{{Pattern::Builtins::SHR, {A, B}}, [=]{
-			if (A.d() > 255)
-				return u256(0);
+			if (A.d() >= Pattern::WordSize)
+				return Word(0);
 			return B.d() >> unsigned(A.d());
 		}, false}
 	};
@@ -118,50 +124,51 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 	Pattern Y
 )
 {
+	using Word = typename Pattern::Word;
 	return std::vector<SimplificationRule<Pattern>> {
 		// invariants involving known constants
 		{{Pattern::Builtins::ADD, {X, 0}}, [=]{ return X; }, false},
 		{{Pattern::Builtins::ADD, {0, X}}, [=]{ return X; }, false},
 		{{Pattern::Builtins::SUB, {X, 0}}, [=]{ return X; }, false},
-		{{Pattern::Builtins::SUB, {~u256(0), X}}, [=]() -> Pattern { return {Pattern::Builtins::NOT, {X}}; }, false},
-		{{Pattern::Builtins::MUL, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::MUL, {0, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::SUB, {~Word(0), X}}, [=]() -> Pattern { return {Pattern::Builtins::NOT, {X}}; }, false},
+		{{Pattern::Builtins::MUL, {X, 0}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::MUL, {0, X}}, [=]{ return Word(0); }, true},
 		{{Pattern::Builtins::MUL, {X, 1}}, [=]{ return X; }, false},
 		{{Pattern::Builtins::MUL, {1, X}}, [=]{ return X; }, false},
-		{{Pattern::Builtins::MUL, {X, u256(-1)}}, [=]() -> Pattern { return {Pattern::Builtins::SUB, {0, X}}; }, false},
-		{{Pattern::Builtins::MUL, {u256(-1), X}}, [=]() -> Pattern { return {Pattern::Builtins::SUB, {0, X}}; }, false},
-		{{Pattern::Builtins::DIV, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::DIV, {0, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::MUL, {X, Word(-1)}}, [=]() -> Pattern { return {Pattern::Builtins::SUB, {0, X}}; }, false},
+		{{Pattern::Builtins::MUL, {Word(-1), X}}, [=]() -> Pattern { return {Pattern::Builtins::SUB, {0, X}}; }, false},
+		{{Pattern::Builtins::DIV, {X, 0}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::DIV, {0, X}}, [=]{ return Word(0); }, true},
 		{{Pattern::Builtins::DIV, {X, 1}}, [=]{ return X; }, false},
-		{{Pattern::Builtins::SDIV, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::SDIV, {0, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::SDIV, {X, 0}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::SDIV, {0, X}}, [=]{ return Word(0); }, true},
 		{{Pattern::Builtins::SDIV, {X, 1}}, [=]{ return X; }, false},
-		{{Pattern::Builtins::AND, {X, ~u256(0)}}, [=]{ return X; }, false},
-		{{Pattern::Builtins::AND, {~u256(0), X}}, [=]{ return X; }, false},
-		{{Pattern::Builtins::AND, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::AND, {0, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::AND, {X, ~Word(0)}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::AND, {~Word(0), X}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::AND, {X, 0}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::AND, {0, X}}, [=]{ return Word(0); }, true},
 		{{Pattern::Builtins::OR, {X, 0}}, [=]{ return X; }, false},
 		{{Pattern::Builtins::OR, {0, X}}, [=]{ return X; }, false},
-		{{Pattern::Builtins::OR, {X, ~u256(0)}}, [=]{ return ~u256(0); }, true},
-		{{Pattern::Builtins::OR, {~u256(0), X}}, [=]{ return ~u256(0); }, true},
+		{{Pattern::Builtins::OR, {X, ~Word(0)}}, [=]{ return ~Word(0); }, true},
+		{{Pattern::Builtins::OR, {~Word(0), X}}, [=]{ return ~Word(0); }, true},
 		{{Pattern::Builtins::XOR, {X, 0}}, [=]{ return X; }, false},
 		{{Pattern::Builtins::XOR, {0, X}}, [=]{ return X; }, false},
-		{{Pattern::Builtins::MOD, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::MOD, {0, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::MOD, {X, 0}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::MOD, {0, X}}, [=]{ return Word(0); }, true},
 		{{Pattern::Builtins::EQ, {X, 0}}, [=]() -> Pattern { return {Pattern::Builtins::ISZERO, {X}}; }, false },
 		{{Pattern::Builtins::EQ, {0, X}}, [=]() -> Pattern { return {Pattern::Builtins::ISZERO, {X}}; }, false },
 		{{Pattern::Builtins::SHL, {0, X}}, [=]{ return X; }, false},
 		{{Pattern::Builtins::SHR, {0, X}}, [=]{ return X; }, false},
-		{{Pattern::Builtins::SHL, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::SHR, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::SHL, {X, 0}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::SHR, {X, 0}}, [=]{ return Word(0); }, true},
 		{{Pattern::Builtins::GT, {X, 0}}, [=]() -> Pattern { return {Pattern::Builtins::ISZERO, {{Pattern::Builtins::ISZERO, {X}}}}; }, false},
 		{{Pattern::Builtins::LT, {0, X}}, [=]() -> Pattern { return {Pattern::Builtins::ISZERO, {{Pattern::Builtins::ISZERO, {X}}}}; }, false},
-		{{Pattern::Builtins::GT, {X, ~u256(0)}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::LT, {~u256(0), X}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::GT, {0, X}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::LT, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::AND, {{Pattern::Builtins::BYTE, {X, Y}}, {u256(0xff)}}}, [=]() -> Pattern { return {Pattern::Builtins::BYTE, {X, Y}}; }, false},
-		{{Pattern::Builtins::BYTE, {31, X}}, [=]() -> Pattern { return {Pattern::Builtins::AND, {X, u256(0xff)}}; }, false}
+		{{Pattern::Builtins::GT, {X, ~Word(0)}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::LT, {~Word(0), X}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::GT, {0, X}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::LT, {X, 0}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::AND, {{Pattern::Builtins::BYTE, {X, Y}}, {Word(0xff)}}}, [=]() -> Pattern { return {Pattern::Builtins::BYTE, {X, Y}}; }, false},
+		{{Pattern::Builtins::BYTE, {Pattern::WordSize / 8 - 1, X}}, [=]() -> Pattern { return {Pattern::Builtins::AND, {X, Word(0xff)}}; }, false}
 	};
 }
 
@@ -174,18 +181,19 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart3(
 	Pattern
 )
 {
+	using Word = typename Pattern::Word;
 	return std::vector<SimplificationRule<Pattern>> {
 		// operations involving an expression and itself
 		{{Pattern::Builtins::AND, {X, X}}, [=]{ return X; }, true},
 		{{Pattern::Builtins::OR, {X, X}}, [=]{ return X; }, true},
-		{{Pattern::Builtins::XOR, {X, X}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::SUB, {X, X}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::EQ, {X, X}}, [=]{ return u256(1); }, true},
-		{{Pattern::Builtins::LT, {X, X}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::SLT, {X, X}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::GT, {X, X}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::SGT, {X, X}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::MOD, {X, X}}, [=]{ return u256(0); }, true}
+		{{Pattern::Builtins::XOR, {X, X}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::SUB, {X, X}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::EQ, {X, X}}, [=]{ return Word(1); }, true},
+		{{Pattern::Builtins::LT, {X, X}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::SLT, {X, X}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::GT, {X, X}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::SGT, {X, X}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::MOD, {X, X}}, [=]{ return Word(0); }, true}
 	};
 }
 
@@ -198,6 +206,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4(
 	Pattern Y
 )
 {
+	using Word = typename Pattern::Word;
 	return std::vector<SimplificationRule<Pattern>> {
 		// logical instruction combinations
 		{{Pattern::Builtins::NOT, {{Pattern::Builtins::NOT, {X}}}}, [=]{ return X; }, false},
@@ -213,10 +222,10 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4(
 		{{Pattern::Builtins::AND, {X, {Pattern::Builtins::OR, {Y, X}}}}, [=]{ return X; }, true},
 		{{Pattern::Builtins::AND, {{Pattern::Builtins::OR, {X, Y}}, X}}, [=]{ return X; }, true},
 		{{Pattern::Builtins::AND, {{Pattern::Builtins::OR, {Y, X}}, X}}, [=]{ return X; }, true},
-		{{Pattern::Builtins::AND, {X, {Pattern::Builtins::NOT, {X}}}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::AND, {{Pattern::Builtins::NOT, {X}}, X}}, [=]{ return u256(0); }, true},
-		{{Pattern::Builtins::OR, {X, {Pattern::Builtins::NOT, {X}}}}, [=]{ return ~u256(0); }, true},
-		{{Pattern::Builtins::OR, {{Pattern::Builtins::NOT, {X}}, X}}, [=]{ return ~u256(0); }, true},
+		{{Pattern::Builtins::AND, {X, {Pattern::Builtins::NOT, {X}}}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::AND, {{Pattern::Builtins::NOT, {X}}, X}}, [=]{ return Word(0); }, true},
+		{{Pattern::Builtins::OR, {X, {Pattern::Builtins::NOT, {X}}}}, [=]{ return ~Word(0); }, true},
+		{{Pattern::Builtins::OR, {{Pattern::Builtins::NOT, {X}}, X}}, [=]{ return ~Word(0); }, true},
 	};
 }
 
@@ -230,12 +239,14 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 	Pattern
 )
 {
+	using Word = typename Pattern::Word;
+
 	std::vector<SimplificationRule<Pattern>> rules;
 
 	// Replace MOD X, <power-of-two> with AND X, <power-of-two> - 1
-	for (size_t i = 0; i < 256; ++i)
+	for (size_t i = 0; i < Pattern::WordSize; ++i)
 	{
-		u256 value = u256(1) << i;
+		Word value = Word(1) << i;
 		rules.push_back({
 			{Pattern::Builtins::MOD, {X, value}},
 			[=]() -> Pattern { return {Pattern::Builtins::AND, {X, value - 1}}; },
@@ -246,25 +257,25 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 	// Replace SHL >=256, X with 0
 	rules.push_back({
 		{Pattern::Builtins::SHL, {A, X}},
-		[=]() -> Pattern { return u256(0); },
+		[=]() -> Pattern { return Word(0); },
 		true,
-		[=]() { return A.d() >= 256; }
+		[=]() { return A.d() >= Pattern::WordSize; }
 	});
 
 	// Replace SHR >=256, X with 0
 	rules.push_back({
 		{Pattern::Builtins::SHR, {A, X}},
-		[=]() -> Pattern { return u256(0); },
+		[=]() -> Pattern { return Word(0); },
 		true,
-		[=]() { return A.d() >= 256; }
+		[=]() { return A.d() >= Pattern::WordSize; }
 	});
 
 	// Replace BYTE(A, X), A >= 32 with 0
 	rules.push_back({
 		{Pattern::Builtins::BYTE, {A, X}},
-		[=]() -> Pattern { return u256(0); },
+		[=]() -> Pattern { return Word(0); },
 		true,
-		[=]() { return A.d() >= 32; }
+		[=]() { return A.d() >= Pattern::WordSize / 8; }
 	});
 
 	for (auto const& op: std::vector<Instruction>{
@@ -274,7 +285,8 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 		Pattern::Builtins::COINBASE
 	})
 	{
-		u256 const mask = (u256(1) << 160) - 1;
+		assertThrow(Pattern::WordSize > 160, OptimizerException, "");
+		Word const mask = (Word(1) << 160) - 1;
 		rules.push_back({
 			{Pattern::Builtins::AND, {{op, mask}}},
 			[=]() -> Pattern { return op; },
@@ -338,14 +350,15 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	Pattern Y
 )
 {
+	using Word = typename Pattern::Word;
 	std::vector<SimplificationRule<Pattern>> rules;
 	// Associative operations
-	for (auto const& opFun: std::vector<std::pair<Instruction,std::function<u256(u256 const&,u256 const&)>>>{
-		{Pattern::Builtins::ADD, std::plus<u256>()},
-		{Pattern::Builtins::MUL, std::multiplies<u256>()},
-		{Pattern::Builtins::AND, std::bit_and<u256>()},
-		{Pattern::Builtins::OR, std::bit_or<u256>()},
-		{Pattern::Builtins::XOR, std::bit_xor<u256>()}
+	for (auto const& opFun: std::vector<std::pair<Instruction,std::function<Word(Word const&,Word const&)>>>{
+		{Pattern::Builtins::ADD, std::plus<Word>()},
+		{Pattern::Builtins::MUL, std::multiplies<Word>()},
+		{Pattern::Builtins::AND, std::bit_and<Word>()},
+		{Pattern::Builtins::OR, std::bit_or<Word>()},
+		{Pattern::Builtins::XOR, std::bit_xor<Word>()}
 	})
 	{
 		auto op = opFun.first;
@@ -385,10 +398,10 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		{Pattern::Builtins::SHL, {{B}, {Pattern::Builtins::SHL, {{A}, {X}}}}},
 		[=]() -> Pattern {
 			bigint sum = bigint(A.d()) + B.d();
-			if (sum >= 256)
-				return {Pattern::Builtins::AND, {X, u256(0)}};
+			if (sum >= Pattern::WordSize)
+				return {Pattern::Builtins::AND, {X, Word(0)}};
 			else
-				return {Pattern::Builtins::SHL, {u256(sum), X}};
+				return {Pattern::Builtins::SHL, {Word(sum), X}};
 		},
 		false
 	});
@@ -399,10 +412,10 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		{Pattern::Builtins::SHR, {{B}, {Pattern::Builtins::SHR, {{A}, {X}}}}},
 		[=]() -> Pattern {
 			bigint sum = bigint(A.d()) + B.d();
-			if (sum >= 256)
-				return {Pattern::Builtins::AND, {X, u256(0)}};
+			if (sum >= Pattern::WordSize)
+				return {Pattern::Builtins::AND, {X, Word(0)}};
 			else
-				return {Pattern::Builtins::SHR, {u256(sum), X}};
+				return {Pattern::Builtins::SHR, {Word(sum), X}};
 		},
 		false
 	});
@@ -412,7 +425,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		// SHR(B, SHL(A, X)) -> AND(SH[L/R]([B - A / A - B], X), Mask)
 		{Pattern::Builtins::SHR, {{B}, {Pattern::Builtins::SHL, {{A}, {X}}}}},
 		[=]() -> Pattern {
-			u256 mask = shlWorkaround(u256(-1), unsigned(A.d())) >> unsigned(B.d());
+			Word mask = shlWorkaround(~Word(0), unsigned(A.d())) >> unsigned(B.d());
 
 			if (A.d() > B.d())
 				return {Pattern::Builtins::AND, {{Pattern::Builtins::SHL, {A.d() - B.d(), X}}, mask}};
@@ -422,7 +435,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 				return {Pattern::Builtins::AND, {X, mask}};
 		},
 		false,
-		[=] { return A.d() < 256 && B.d() < 256; }
+		[=] { return A.d() < Pattern::WordSize && B.d() < Pattern::WordSize; }
 	});
 
 	// Combine SHR-SHL by constant
@@ -430,7 +443,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		// SHL(B, SHR(A, X)) -> AND(SH[L/R]([B - A / A - B], X), Mask)
 		{Pattern::Builtins::SHL, {{B}, {Pattern::Builtins::SHR, {{A}, {X}}}}},
 		[=]() -> Pattern {
-			u256 mask = shlWorkaround(u256(-1) >> unsigned(A.d()), unsigned(B.d()));
+			Word mask = shlWorkaround((~Word(0)) >> unsigned(A.d()), unsigned(B.d()));
 
 			if (A.d() > B.d())
 				return {Pattern::Builtins::AND, {{Pattern::Builtins::SHR, {A.d() - B.d(), X}}, mask}};
@@ -440,14 +453,14 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 				return {Pattern::Builtins::AND, {X, mask}};
 		},
 		false,
-		[=] { return A.d() < 256 && B.d() < 256; }
+		[=] { return A.d() < Pattern::WordSize && B.d() < Pattern::WordSize; }
 	});
 
 	// Move AND with constant across SHL and SHR by constant
 	for (auto shiftOp: {Pattern::Builtins::SHL, Pattern::Builtins::SHR})
 	{
 		auto replacement = [=]() -> Pattern {
-			u256 mask =
+			Word mask =
 				shiftOp == Pattern::Builtins::SHL ?
 				shlWorkaround(A.d(), unsigned(B.d())) :
 				A.d() >> unsigned(B.d());
@@ -458,20 +471,20 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 			{shiftOp, {{B}, {Pattern::Builtins::AND, {{X}, {A}}}}},
 			replacement,
 			false,
-			[=] { return B.d() < 256; }
+			[=] { return B.d() < Pattern::WordSize; }
 		});
 		rules.push_back({
 			// SH[L/R](B, AND(A, X)) -> AND(SH[L/R](B, X), [ A << B / A >> B ])
 			{shiftOp, {{B}, {Pattern::Builtins::AND, {{A}, {X}}}}},
 			replacement,
 			false,
-			[=] { return B.d() < 256; }
+			[=] { return B.d() < Pattern::WordSize; }
 		});
 	}
 
 	rules.push_back({
 		// MUL(X, SHL(Y, 1)) -> SHL(Y, X)
-		{Pattern::Builtins::MUL, {X, {Pattern::Builtins::SHL, {Y, u256(1)}}}},
+		{Pattern::Builtins::MUL, {X, {Pattern::Builtins::SHL, {Y, Word(1)}}}},
 		[=]() -> Pattern {
 			return {Pattern::Builtins::SHL, {Y, X}};
 		},
@@ -480,7 +493,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	});
 	rules.push_back({
 		// MUL(SHL(X, 1), Y) -> SHL(X, Y)
-		{Pattern::Builtins::MUL, {{Pattern::Builtins::SHL, {X, u256(1)}}, Y}},
+		{Pattern::Builtins::MUL, {{Pattern::Builtins::SHL, {X, Word(1)}}, Y}},
 		[=]() -> Pattern {
 			return {Pattern::Builtins::SHL, {X, Y}};
 		},
@@ -489,7 +502,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 
 	rules.push_back({
 		// DIV(X, SHL(Y, 1)) -> SHR(Y, X)
-		{Pattern::Builtins::DIV, {X, {Pattern::Builtins::SHL, {Y, u256(1)}}}},
+		{Pattern::Builtins::DIV, {X, {Pattern::Builtins::SHL, {Y, Word(1)}}}},
 		[=]() -> Pattern {
 			return {Pattern::Builtins::SHR, {Y, X}};
 		},
@@ -498,10 +511,10 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	});
 
 	std::function<bool()> feasibilityFunction = [=]() {
-		if (B.d() > 256)
+		if (B.d() > Pattern::WordSize)
 			return false;
 		unsigned bAsUint = static_cast<unsigned>(B.d());
-		return (A.d() & (u256(-1) >> bAsUint)) == (u256(-1) >> bAsUint);
+		return (A.d() & ((~Word(0)) >> bAsUint)) == ((~Word(0)) >> bAsUint);
 	};
 
 	rules.push_back({
@@ -577,9 +590,11 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart9(
 	Pattern Z
 )
 {
+	using Word = typename Pattern::Word;
 	std::vector<SimplificationRule<Pattern>> rules;
 
-	u256 const mask = (u256(1) << 160) - 1;
+	assertThrow(Pattern::WordSize > 160, OptimizerException, "");
+	Word const mask = (Word(1) << 160) - 1;
 	// CREATE
 	rules.push_back({
 		{Pattern::Builtins::AND, {{Pattern::Builtins::CREATE, {W, X, Y}}, mask}},
@@ -621,6 +636,14 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 	Pattern Z
 )
 {
+	using Word = typename Pattern::Word;
+	// Some sanity checks
+	assertThrow(Pattern::WordSize % 8 == 0, OptimizerException, "");
+	assertThrow(Pattern::WordSize >= 8, OptimizerException, "");
+	assertThrow(Pattern::WordSize <= 256, OptimizerException, "");
+	assertThrow(Word(-1) == ~Word(0), OptimizerException, "");
+	assertThrow(Word(-1) + 1 == Word(0), OptimizerException, "");
+
 	std::vector<SimplificationRule<Pattern>> rules;
 	rules += simplificationRuleListPart1(A, B, C, W, X);
 	rules += simplificationRuleListPart2(A, B, C, W, X);
