@@ -642,6 +642,11 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		bool requiresStorage = ref->second.isSlot || ref->second.isOffset;
 		if (ref->second.enumValue)
 		{
+			if (_context == yul::IdentifierContext::LValue)
+			{
+				m_errorReporter.typeError(_identifier.location, "Enum values cannot be assigned to.");
+				return size_t(-1);
+			}
 			solAssert(dynamic_cast<EnumDefinition const*>(ref->second.declaration) && !requiresStorage, "");
 			ref->second.valueSize = 1;
 			return size_t(1);
