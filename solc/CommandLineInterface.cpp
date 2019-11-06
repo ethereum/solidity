@@ -329,7 +329,7 @@ void CommandLineInterface::handleEWasm(string const& _contractName)
 		{
 			sout() << "EWasm text: " << endl;
 			sout() << m_compiler->eWasm(_contractName) << endl;
-			sout() << "EWasm binary (hex): " << m_compiler->eWasmObject(_contractName).toHex() << endl;
+			sout() << "EWasm binary (hex): " << std::uppercase << m_compiler->eWasmObject(_contractName).toHex() << endl;
 		}
 	}
 }
