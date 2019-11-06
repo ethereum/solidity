@@ -91,7 +91,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		os2,
 		stack.parserResult()->code,
 		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
-		(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 1.5)
+		(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 4)
 	);
 
 	bool isTraceEq = (os1.str() == os2.str());
