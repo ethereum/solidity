@@ -111,7 +111,7 @@ public:
 	virtual SubID appendData(dev::bytes const& _data) = 0;
 };
 
-enum class IdentifierContext { LValue, RValue };
+enum class IdentifierContext { LValue, RValue, VariableDeclaration };
 
 /// Object that is used to resolve references and generate code for access to identifiers external
 /// to inline assembly (not used in standalone assembly mode).

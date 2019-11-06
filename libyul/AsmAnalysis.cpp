@@ -244,6 +244,14 @@ bool AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 {
 	bool success = true;
 	int const numVariables = _varDecl.variables.size();
+	if (m_resolver)
+		for (auto const& variable: _varDecl.variables)
+			// Call the resolver for variable declarations to allow it to raise errors on shadowing.
+			m_resolver(
+				yul::Identifier{variable.location, variable.name},
+				yul::IdentifierContext::VariableDeclaration,
+				m_currentScope->insideFunction()
+			);
 	if (_varDecl.value)
 	{
 		int const stackHeight = m_stackHeight;

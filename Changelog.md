@@ -13,6 +13,7 @@ Breaking changes:
  * Syntax: ``push(element)`` for dynamic storage arrays do not return the new length anymore.
  * Syntax: Abstract contracts need to be marked explicitly as abstract by using the ``abstract`` keyword.
  * Inline Assembly: Only strict inline assembly is allowed.
+ * Inline Assembly: Variable declarations cannot shadow declarations outside the assembly block.
  * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
  * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
 
