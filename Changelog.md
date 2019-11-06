@@ -14,6 +14,10 @@ Breaking changes:
  * Syntax: Abstract contracts need to be marked explicitly as abstract by using the ``abstract`` keyword.
  * Inline Assembly: Only strict inline assembly is allowed.
  * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
+ * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
+
+
+
  * Language Feature: When overriding a function or modifier, the new keyword ``override`` must be used. When overriding a function or modifier defined in multiple parallel bases, all bases must be listed in parentheses after the keyword like so: ``override(Base1, Base2)``
 
 Language Features:

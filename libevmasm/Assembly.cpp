@@ -86,6 +86,7 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 	m_items.emplace_back(_i);
 	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())
 		m_items.back().setLocation(m_currentSourceLocation);
+	m_items.back().m_modifierDepth = m_currentModifierDepth;
 	return back();
 }
 
