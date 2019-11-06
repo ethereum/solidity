@@ -519,9 +519,9 @@ bool AsmAnalyzer::operator()(Continue const& _continue)
 	return true;
 }
 
-bool AsmAnalyzer::operator()(Leave const& _leave)
+bool AsmAnalyzer::operator()(Leave const& _leaveStatement)
 {
-	m_info.stackHeightInfo[&_leave] = m_stackHeight;
+	m_info.stackHeightInfo[&_leaveStatement] = m_stackHeight;
 	return true;
 }
 

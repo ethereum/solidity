@@ -130,9 +130,9 @@ Statement ASTCopier::operator()(Continue const& _continue)
 	return Continue{ _continue };
 }
 
-Statement ASTCopier::operator()(Leave const& _leave)
+Statement ASTCopier::operator()(Leave const& _leaveStatement)
 {
-	return Leave{_leave};
+	return Leave{_leaveStatement};
 }
 
 Statement ASTCopier::operator ()(Block const& _block)

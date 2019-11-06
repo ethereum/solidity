@@ -649,15 +649,15 @@ void CodeTransform::operator()(Continue const& _continue)
 	checkStackHeight(&_continue);
 }
 
-void CodeTransform::operator()(Leave const& _leave)
+void CodeTransform::operator()(Leave const& _leaveStatement)
 {
 	yulAssert(!m_context->functionExitPoints.empty(), "Invalid leave-statement. Requires surrounding function in code generation.");
-	m_assembly.setSourceLocation(_leave.location);
+	m_assembly.setSourceLocation(_leaveStatement.location);
 
 	Context::JumpInfo const& jump = m_context->functionExitPoints.top();
 	m_assembly.appendJumpTo(jump.label, appendPopUntil(jump.targetStackHeight));
 
-	checkStackHeight(&_leave);
+	checkStackHeight(&_leaveStatement);
 }
 
 void CodeTransform::operator()(Block const& _block)
