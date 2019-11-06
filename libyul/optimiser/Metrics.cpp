@@ -120,13 +120,6 @@ void CodeCost::operator()(FunctionCall const& _funCall)
 	m_cost += 49;
 }
 
-void CodeCost::operator()(FunctionalInstruction const& _instr)
-{
-	yulAssert(m_cost >= 1, "Should assign cost one in visit(Expression).");
-	addInstructionCost(_instr.instruction);
-	ASTWalker::operator()(_instr);
-}
-
 void CodeCost::operator()(Literal const& _literal)
 {
 	yulAssert(m_cost >= 1, "Should assign cost one in visit(Expression).");

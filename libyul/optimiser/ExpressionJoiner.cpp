@@ -40,11 +40,6 @@ void ExpressionJoiner::run(OptimiserStepContext&, Block& _ast)
 }
 
 
-void ExpressionJoiner::operator()(FunctionalInstruction& _instruction)
-{
-	handleArguments(_instruction.arguments);
-}
-
 void ExpressionJoiner::operator()(FunctionCall& _funCall)
 {
 	handleArguments(_funCall.arguments);

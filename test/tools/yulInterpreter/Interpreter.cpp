@@ -227,15 +227,6 @@ void ExpressionEvaluator::operator()(Identifier const& _identifier)
 	setValue(m_variables.at(_identifier.name));
 }
 
-void ExpressionEvaluator::operator()(FunctionalInstruction const& _instr)
-{
-	evaluateArgs(_instr.arguments);
-	EVMInstructionInterpreter interpreter(m_state);
-	// The instruction might also return nothing, but it does not
-	// hurt to set the value in that case.
-	setValue(interpreter.eval(_instr.instruction, values()));
-}
-
 void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
 	evaluateArgs(_funCall.arguments);

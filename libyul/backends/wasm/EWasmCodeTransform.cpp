@@ -110,12 +110,6 @@ wasm::Expression EWasmCodeTransform::operator()(ExpressionStatement const& _stat
 	return visitReturnByValue(_statement.expression);
 }
 
-wasm::Expression EWasmCodeTransform::operator()(FunctionalInstruction const& _f)
-{
-	yulAssert(false, "EVM instruction in ewasm code: " + eth::instructionInfo(_f.instruction).name);
-	return {};
-}
-
 wasm::Expression EWasmCodeTransform::operator()(FunctionCall const& _call)
 {
 	bool typeConversionNeeded = false;

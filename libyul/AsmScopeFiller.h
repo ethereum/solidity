@@ -51,7 +51,6 @@ public:
 
 	bool operator()(Literal const&) { return true; }
 	bool operator()(Identifier const&) { return true; }
-	bool operator()(FunctionalInstruction const&) { return true; }
 	bool operator()(ExpressionStatement const& _expr);
 	bool operator()(Assignment const&) { return true; }
 	bool operator()(VariableDeclaration const& _variableDeclaration);

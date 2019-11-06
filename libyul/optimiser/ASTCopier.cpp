@@ -62,15 +62,6 @@ Expression ASTCopier::operator()(FunctionCall const& _call)
 	};
 }
 
-Expression ASTCopier::operator()(FunctionalInstruction const& _instruction)
-{
-	return FunctionalInstruction{
-		_instruction.location,
-		_instruction.instruction,
-		translateVector(_instruction.arguments)
-	};
-}
-
 Expression ASTCopier::operator()(Identifier const& _identifier)
 {
 	return translate(_identifier);

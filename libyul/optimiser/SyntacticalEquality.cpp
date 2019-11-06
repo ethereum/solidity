@@ -46,15 +46,6 @@ bool SyntacticallyEqual::operator()(Statement const& _lhs, Statement const& _rhs
 	}, _lhs, _rhs);
 }
 
-bool SyntacticallyEqual::expressionEqual(FunctionalInstruction const& _lhs, FunctionalInstruction const& _rhs)
-{
-	return
-		_lhs.instruction == _rhs.instruction &&
-		containerEqual(_lhs.arguments, _rhs.arguments, [this](Expression const& _lhsExpr, Expression const& _rhsExpr) -> bool {
-			return (*this)(_lhsExpr, _rhsExpr);
-		});
-}
-
 bool SyntacticallyEqual::expressionEqual(FunctionCall const& _lhs, FunctionCall const& _rhs)
 {
 	return

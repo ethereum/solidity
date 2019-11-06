@@ -69,10 +69,6 @@ struct MiniEVMInterpreter: boost::static_visitor<u256>
 		return 0;
 	}
 
-	u256 operator()(FunctionalInstruction const& _instr)
-	{
-		return eval(_instr.instruction, _instr.arguments);
-	}
 	u256 operator()(FunctionCall const& _funCall)
 	{
 		BuiltinFunctionForEVM const* fun = m_dialect.builtin(_funCall.functionName.name);

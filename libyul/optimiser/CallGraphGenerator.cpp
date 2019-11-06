@@ -36,14 +36,6 @@ map<YulString, set<YulString>> CallGraphGenerator::callGraph(Block const& _ast)
 	return std::move(gen.m_callGraph);
 }
 
-void CallGraphGenerator::operator()(FunctionalInstruction const& _functionalInstruction)
-{
-	string name = dev::eth::instructionInfo(_functionalInstruction.instruction).name;
-	std::transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
-	m_callGraph[m_currentFunction].insert(YulString{name});
-	ASTWalker::operator()(_functionalInstruction);
-}
-
 void CallGraphGenerator::operator()(FunctionCall const& _functionCall)
 {
 	m_callGraph[m_currentFunction].insert(_functionCall.functionName.name);

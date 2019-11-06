@@ -81,7 +81,6 @@ public:
 	{}
 
 	void operator()(FunctionCall const& _funCall) override;
-	void operator()(FunctionalInstruction const& _instr) override;
 	void operator()(Literal const& _literal) override;
 	void operator()(Identifier const& _identifier) override;
 

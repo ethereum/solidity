@@ -175,7 +175,6 @@ public:
 	void operator()(Instruction const& _instruction);
 	void operator()(Literal const& _literal);
 	void operator()(Identifier const& _identifier);
-	void operator()(FunctionalInstruction const& _instr);
 	void operator()(FunctionCall const&);
 	void operator()(ExpressionStatement const& _statement);
 	void operator()(Assignment const& _assignment);

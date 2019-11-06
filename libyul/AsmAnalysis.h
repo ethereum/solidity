@@ -82,7 +82,6 @@ public:
 	bool operator()(Instruction const&);
 	bool operator()(Literal const& _literal);
 	bool operator()(Identifier const&);
-	bool operator()(FunctionalInstruction const& _functionalInstruction);
 	bool operator()(ExpressionStatement const&);
 	bool operator()(Assignment const& _assignment);
 	bool operator()(VariableDeclaration const& _variableDeclaration);
