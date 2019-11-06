@@ -173,10 +173,10 @@ void BlockHasher::operator()(Continue const& _continue)
 	ASTWalker::operator()(_continue);
 }
 
-void BlockHasher::operator()(Leave const& _leave)
+void BlockHasher::operator()(Leave const& _leaveStatement)
 {
 	hash64(compileTimeLiteralHash("Leave"));
-	ASTWalker::operator()(_leave);
+	ASTWalker::operator()(_leaveStatement);
 }
 
 void BlockHasher::operator()(Block const& _block)
