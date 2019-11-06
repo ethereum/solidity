@@ -68,40 +68,40 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 {
 	return std::vector<SimplificationRule<Pattern>> {
 		// arithmetic on constants
-		{{Instruction::ADD, {A, B}}, [=]{ return A.d() + B.d(); }, false},
-		{{Instruction::MUL, {A, B}}, [=]{ return A.d() * B.d(); }, false},
-		{{Instruction::SUB, {A, B}}, [=]{ return A.d() - B.d(); }, false},
-		{{Instruction::DIV, {A, B}}, [=]{ return B.d() == 0 ? 0 : divWorkaround(A.d(), B.d()); }, false},
-		{{Instruction::SDIV, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(divWorkaround(u2s(A.d()), u2s(B.d()))); }, false},
-		{{Instruction::MOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : modWorkaround(A.d(), B.d()); }, false},
-		{{Instruction::SMOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(modWorkaround(u2s(A.d()), u2s(B.d()))); }, false},
-		{{Instruction::EXP, {A, B}}, [=]{ return u256(boost::multiprecision::powm(bigint(A.d()), bigint(B.d()), bigint(1) << 256)); }, false},
-		{{Instruction::NOT, {A}}, [=]{ return ~A.d(); }, false},
-		{{Instruction::LT, {A, B}}, [=]() -> u256 { return A.d() < B.d() ? 1 : 0; }, false},
-		{{Instruction::GT, {A, B}}, [=]() -> u256 { return A.d() > B.d() ? 1 : 0; }, false},
-		{{Instruction::SLT, {A, B}}, [=]() -> u256 { return u2s(A.d()) < u2s(B.d()) ? 1 : 0; }, false},
-		{{Instruction::SGT, {A, B}}, [=]() -> u256 { return u2s(A.d()) > u2s(B.d()) ? 1 : 0; }, false},
-		{{Instruction::EQ, {A, B}}, [=]() -> u256 { return A.d() == B.d() ? 1 : 0; }, false},
-		{{Instruction::ISZERO, {A}}, [=]() -> u256 { return A.d() == 0 ? 1 : 0; }, false},
-		{{Instruction::AND, {A, B}}, [=]{ return A.d() & B.d(); }, false},
-		{{Instruction::OR, {A, B}}, [=]{ return A.d() | B.d(); }, false},
-		{{Instruction::XOR, {A, B}}, [=]{ return A.d() ^ B.d(); }, false},
-		{{Instruction::BYTE, {A, B}}, [=]{ return A.d() >= 32 ? 0 : (B.d() >> unsigned(8 * (31 - A.d()))) & 0xff; }, false},
-		{{Instruction::ADDMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) + bigint(B.d())) % C.d()); }, false},
-		{{Instruction::MULMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) * bigint(B.d())) % C.d()); }, false},
-		{{Instruction::SIGNEXTEND, {A, B}}, [=]() -> u256 {
+		{{Pattern::Builtins::ADD, {A, B}}, [=]{ return A.d() + B.d(); }, false},
+		{{Pattern::Builtins::MUL, {A, B}}, [=]{ return A.d() * B.d(); }, false},
+		{{Pattern::Builtins::SUB, {A, B}}, [=]{ return A.d() - B.d(); }, false},
+		{{Pattern::Builtins::DIV, {A, B}}, [=]{ return B.d() == 0 ? 0 : divWorkaround(A.d(), B.d()); }, false},
+		{{Pattern::Builtins::SDIV, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(divWorkaround(u2s(A.d()), u2s(B.d()))); }, false},
+		{{Pattern::Builtins::MOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : modWorkaround(A.d(), B.d()); }, false},
+		{{Pattern::Builtins::SMOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(modWorkaround(u2s(A.d()), u2s(B.d()))); }, false},
+		{{Pattern::Builtins::EXP, {A, B}}, [=]{ return u256(boost::multiprecision::powm(bigint(A.d()), bigint(B.d()), bigint(1) << 256)); }, false},
+		{{Pattern::Builtins::NOT, {A}}, [=]{ return ~A.d(); }, false},
+		{{Pattern::Builtins::LT, {A, B}}, [=]() -> u256 { return A.d() < B.d() ? 1 : 0; }, false},
+		{{Pattern::Builtins::GT, {A, B}}, [=]() -> u256 { return A.d() > B.d() ? 1 : 0; }, false},
+		{{Pattern::Builtins::SLT, {A, B}}, [=]() -> u256 { return u2s(A.d()) < u2s(B.d()) ? 1 : 0; }, false},
+		{{Pattern::Builtins::SGT, {A, B}}, [=]() -> u256 { return u2s(A.d()) > u2s(B.d()) ? 1 : 0; }, false},
+		{{Pattern::Builtins::EQ, {A, B}}, [=]() -> u256 { return A.d() == B.d() ? 1 : 0; }, false},
+		{{Pattern::Builtins::ISZERO, {A}}, [=]() -> u256 { return A.d() == 0 ? 1 : 0; }, false},
+		{{Pattern::Builtins::AND, {A, B}}, [=]{ return A.d() & B.d(); }, false},
+		{{Pattern::Builtins::OR, {A, B}}, [=]{ return A.d() | B.d(); }, false},
+		{{Pattern::Builtins::XOR, {A, B}}, [=]{ return A.d() ^ B.d(); }, false},
+		{{Pattern::Builtins::BYTE, {A, B}}, [=]{ return A.d() >= 32 ? 0 : (B.d() >> unsigned(8 * (31 - A.d()))) & 0xff; }, false},
+		{{Pattern::Builtins::ADDMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) + bigint(B.d())) % C.d()); }, false},
+		{{Pattern::Builtins::MULMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) * bigint(B.d())) % C.d()); }, false},
+		{{Pattern::Builtins::SIGNEXTEND, {A, B}}, [=]() -> u256 {
 			if (A.d() >= 31)
 				return B.d();
 			unsigned testBit = unsigned(A.d()) * 8 + 7;
 			u256 mask = (u256(1) << testBit) - 1;
 			return boost::multiprecision::bit_test(B.d(), testBit) ? B.d() | ~mask : B.d() & mask;
 		}, false},
-		{{Instruction::SHL, {A, B}}, [=]{
+		{{Pattern::Builtins::SHL, {A, B}}, [=]{
 			if (A.d() > 255)
 				return u256(0);
 			return shlWorkaround(B.d(), unsigned(A.d()));
 		}, false},
-		{{Instruction::SHR, {A, B}}, [=]{
+		{{Pattern::Builtins::SHR, {A, B}}, [=]{
 			if (A.d() > 255)
 				return u256(0);
 			return B.d() >> unsigned(A.d());
@@ -120,48 +120,48 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 {
 	return std::vector<SimplificationRule<Pattern>> {
 		// invariants involving known constants
-		{{Instruction::ADD, {X, 0}}, [=]{ return X; }, false},
-		{{Instruction::ADD, {0, X}}, [=]{ return X; }, false},
-		{{Instruction::SUB, {X, 0}}, [=]{ return X; }, false},
-		{{Instruction::SUB, {~u256(0), X}}, [=]() -> Pattern { return {Instruction::NOT, {X}}; }, false},
-		{{Instruction::MUL, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Instruction::MUL, {0, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::MUL, {X, 1}}, [=]{ return X; }, false},
-		{{Instruction::MUL, {1, X}}, [=]{ return X; }, false},
-		{{Instruction::MUL, {X, u256(-1)}}, [=]() -> Pattern { return {Instruction::SUB, {0, X}}; }, false},
-		{{Instruction::MUL, {u256(-1), X}}, [=]() -> Pattern { return {Instruction::SUB, {0, X}}; }, false},
-		{{Instruction::DIV, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Instruction::DIV, {0, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::DIV, {X, 1}}, [=]{ return X; }, false},
-		{{Instruction::SDIV, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Instruction::SDIV, {0, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::SDIV, {X, 1}}, [=]{ return X; }, false},
-		{{Instruction::AND, {X, ~u256(0)}}, [=]{ return X; }, false},
-		{{Instruction::AND, {~u256(0), X}}, [=]{ return X; }, false},
-		{{Instruction::AND, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Instruction::AND, {0, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::OR, {X, 0}}, [=]{ return X; }, false},
-		{{Instruction::OR, {0, X}}, [=]{ return X; }, false},
-		{{Instruction::OR, {X, ~u256(0)}}, [=]{ return ~u256(0); }, true},
-		{{Instruction::OR, {~u256(0), X}}, [=]{ return ~u256(0); }, true},
-		{{Instruction::XOR, {X, 0}}, [=]{ return X; }, false},
-		{{Instruction::XOR, {0, X}}, [=]{ return X; }, false},
-		{{Instruction::MOD, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Instruction::MOD, {0, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::EQ, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; }, false },
-		{{Instruction::EQ, {0, X}}, [=]() -> Pattern { return {Instruction::ISZERO, {X}}; }, false },
-		{{Instruction::SHL, {0, X}}, [=]{ return X; }, false},
-		{{Instruction::SHR, {0, X}}, [=]{ return X; }, false},
-		{{Instruction::SHL, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Instruction::SHR, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Instruction::GT, {X, 0}}, [=]() -> Pattern { return {Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}; }, false},
-		{{Instruction::LT, {0, X}}, [=]() -> Pattern { return {Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}; }, false},
-		{{Instruction::GT, {X, ~u256(0)}}, [=]{ return u256(0); }, true},
-		{{Instruction::LT, {~u256(0), X}}, [=]{ return u256(0); }, true},
-		{{Instruction::GT, {0, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::LT, {X, 0}}, [=]{ return u256(0); }, true},
-		{{Instruction::AND, {{Instruction::BYTE, {X, Y}}, {u256(0xff)}}}, [=]() -> Pattern { return {Instruction::BYTE, {X, Y}}; }, false},
-		{{Instruction::BYTE, {31, X}}, [=]() -> Pattern { return {Instruction::AND, {X, u256(0xff)}}; }, false}
+		{{Pattern::Builtins::ADD, {X, 0}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::ADD, {0, X}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::SUB, {X, 0}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::SUB, {~u256(0), X}}, [=]() -> Pattern { return {Pattern::Builtins::NOT, {X}}; }, false},
+		{{Pattern::Builtins::MUL, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::MUL, {0, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::MUL, {X, 1}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::MUL, {1, X}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::MUL, {X, u256(-1)}}, [=]() -> Pattern { return {Pattern::Builtins::SUB, {0, X}}; }, false},
+		{{Pattern::Builtins::MUL, {u256(-1), X}}, [=]() -> Pattern { return {Pattern::Builtins::SUB, {0, X}}; }, false},
+		{{Pattern::Builtins::DIV, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::DIV, {0, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::DIV, {X, 1}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::SDIV, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::SDIV, {0, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::SDIV, {X, 1}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::AND, {X, ~u256(0)}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::AND, {~u256(0), X}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::AND, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::AND, {0, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::OR, {X, 0}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::OR, {0, X}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::OR, {X, ~u256(0)}}, [=]{ return ~u256(0); }, true},
+		{{Pattern::Builtins::OR, {~u256(0), X}}, [=]{ return ~u256(0); }, true},
+		{{Pattern::Builtins::XOR, {X, 0}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::XOR, {0, X}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::MOD, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::MOD, {0, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::EQ, {X, 0}}, [=]() -> Pattern { return {Pattern::Builtins::ISZERO, {X}}; }, false },
+		{{Pattern::Builtins::EQ, {0, X}}, [=]() -> Pattern { return {Pattern::Builtins::ISZERO, {X}}; }, false },
+		{{Pattern::Builtins::SHL, {0, X}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::SHR, {0, X}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::SHL, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::SHR, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::GT, {X, 0}}, [=]() -> Pattern { return {Pattern::Builtins::ISZERO, {{Pattern::Builtins::ISZERO, {X}}}}; }, false},
+		{{Pattern::Builtins::LT, {0, X}}, [=]() -> Pattern { return {Pattern::Builtins::ISZERO, {{Pattern::Builtins::ISZERO, {X}}}}; }, false},
+		{{Pattern::Builtins::GT, {X, ~u256(0)}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::LT, {~u256(0), X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::GT, {0, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::LT, {X, 0}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::AND, {{Pattern::Builtins::BYTE, {X, Y}}, {u256(0xff)}}}, [=]() -> Pattern { return {Pattern::Builtins::BYTE, {X, Y}}; }, false},
+		{{Pattern::Builtins::BYTE, {31, X}}, [=]() -> Pattern { return {Pattern::Builtins::AND, {X, u256(0xff)}}; }, false}
 	};
 }
 
@@ -176,16 +176,16 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart3(
 {
 	return std::vector<SimplificationRule<Pattern>> {
 		// operations involving an expression and itself
-		{{Instruction::AND, {X, X}}, [=]{ return X; }, true},
-		{{Instruction::OR, {X, X}}, [=]{ return X; }, true},
-		{{Instruction::XOR, {X, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::SUB, {X, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::EQ, {X, X}}, [=]{ return u256(1); }, true},
-		{{Instruction::LT, {X, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::SLT, {X, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::GT, {X, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::SGT, {X, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::MOD, {X, X}}, [=]{ return u256(0); }, true}
+		{{Pattern::Builtins::AND, {X, X}}, [=]{ return X; }, true},
+		{{Pattern::Builtins::OR, {X, X}}, [=]{ return X; }, true},
+		{{Pattern::Builtins::XOR, {X, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::SUB, {X, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::EQ, {X, X}}, [=]{ return u256(1); }, true},
+		{{Pattern::Builtins::LT, {X, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::SLT, {X, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::GT, {X, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::SGT, {X, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::MOD, {X, X}}, [=]{ return u256(0); }, true}
 	};
 }
 
@@ -200,23 +200,23 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4(
 {
 	return std::vector<SimplificationRule<Pattern>> {
 		// logical instruction combinations
-		{{Instruction::NOT, {{Instruction::NOT, {X}}}}, [=]{ return X; }, false},
-		{{Instruction::XOR, {X, {Instruction::XOR, {X, Y}}}}, [=]{ return Y; }, true},
-		{{Instruction::XOR, {X, {Instruction::XOR, {Y, X}}}}, [=]{ return Y; }, true},
-		{{Instruction::XOR, {{Instruction::XOR, {X, Y}}, X}}, [=]{ return Y; }, true},
-		{{Instruction::XOR, {{Instruction::XOR, {Y, X}}, X}}, [=]{ return Y; }, true},
-		{{Instruction::OR, {X, {Instruction::AND, {X, Y}}}}, [=]{ return X; }, true},
-		{{Instruction::OR, {X, {Instruction::AND, {Y, X}}}}, [=]{ return X; }, true},
-		{{Instruction::OR, {{Instruction::AND, {X, Y}}, X}}, [=]{ return X; }, true},
-		{{Instruction::OR, {{Instruction::AND, {Y, X}}, X}}, [=]{ return X; }, true},
-		{{Instruction::AND, {X, {Instruction::OR, {X, Y}}}}, [=]{ return X; }, true},
-		{{Instruction::AND, {X, {Instruction::OR, {Y, X}}}}, [=]{ return X; }, true},
-		{{Instruction::AND, {{Instruction::OR, {X, Y}}, X}}, [=]{ return X; }, true},
-		{{Instruction::AND, {{Instruction::OR, {Y, X}}, X}}, [=]{ return X; }, true},
-		{{Instruction::AND, {X, {Instruction::NOT, {X}}}}, [=]{ return u256(0); }, true},
-		{{Instruction::AND, {{Instruction::NOT, {X}}, X}}, [=]{ return u256(0); }, true},
-		{{Instruction::OR, {X, {Instruction::NOT, {X}}}}, [=]{ return ~u256(0); }, true},
-		{{Instruction::OR, {{Instruction::NOT, {X}}, X}}, [=]{ return ~u256(0); }, true},
+		{{Pattern::Builtins::NOT, {{Pattern::Builtins::NOT, {X}}}}, [=]{ return X; }, false},
+		{{Pattern::Builtins::XOR, {X, {Pattern::Builtins::XOR, {X, Y}}}}, [=]{ return Y; }, true},
+		{{Pattern::Builtins::XOR, {X, {Pattern::Builtins::XOR, {Y, X}}}}, [=]{ return Y; }, true},
+		{{Pattern::Builtins::XOR, {{Pattern::Builtins::XOR, {X, Y}}, X}}, [=]{ return Y; }, true},
+		{{Pattern::Builtins::XOR, {{Pattern::Builtins::XOR, {Y, X}}, X}}, [=]{ return Y; }, true},
+		{{Pattern::Builtins::OR, {X, {Pattern::Builtins::AND, {X, Y}}}}, [=]{ return X; }, true},
+		{{Pattern::Builtins::OR, {X, {Pattern::Builtins::AND, {Y, X}}}}, [=]{ return X; }, true},
+		{{Pattern::Builtins::OR, {{Pattern::Builtins::AND, {X, Y}}, X}}, [=]{ return X; }, true},
+		{{Pattern::Builtins::OR, {{Pattern::Builtins::AND, {Y, X}}, X}}, [=]{ return X; }, true},
+		{{Pattern::Builtins::AND, {X, {Pattern::Builtins::OR, {X, Y}}}}, [=]{ return X; }, true},
+		{{Pattern::Builtins::AND, {X, {Pattern::Builtins::OR, {Y, X}}}}, [=]{ return X; }, true},
+		{{Pattern::Builtins::AND, {{Pattern::Builtins::OR, {X, Y}}, X}}, [=]{ return X; }, true},
+		{{Pattern::Builtins::AND, {{Pattern::Builtins::OR, {Y, X}}, X}}, [=]{ return X; }, true},
+		{{Pattern::Builtins::AND, {X, {Pattern::Builtins::NOT, {X}}}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::AND, {{Pattern::Builtins::NOT, {X}}, X}}, [=]{ return u256(0); }, true},
+		{{Pattern::Builtins::OR, {X, {Pattern::Builtins::NOT, {X}}}}, [=]{ return ~u256(0); }, true},
+		{{Pattern::Builtins::OR, {{Pattern::Builtins::NOT, {X}}, X}}, [=]{ return ~u256(0); }, true},
 	};
 }
 
@@ -237,15 +237,15 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 	{
 		u256 value = u256(1) << i;
 		rules.push_back({
-			{Instruction::MOD, {X, value}},
-			[=]() -> Pattern { return {Instruction::AND, {X, value - 1}}; },
+			{Pattern::Builtins::MOD, {X, value}},
+			[=]() -> Pattern { return {Pattern::Builtins::AND, {X, value - 1}}; },
 			false
 		});
 	}
 
 	// Replace SHL >=256, X with 0
 	rules.push_back({
-		{Instruction::SHL, {A, X}},
+		{Pattern::Builtins::SHL, {A, X}},
 		[=]() -> Pattern { return u256(0); },
 		true,
 		[=]() { return A.d() >= 256; }
@@ -253,7 +253,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 
 	// Replace SHR >=256, X with 0
 	rules.push_back({
-		{Instruction::SHR, {A, X}},
+		{Pattern::Builtins::SHR, {A, X}},
 		[=]() -> Pattern { return u256(0); },
 		true,
 		[=]() { return A.d() >= 256; }
@@ -261,27 +261,27 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 
 	// Replace BYTE(A, X), A >= 32 with 0
 	rules.push_back({
-		{Instruction::BYTE, {A, X}},
+		{Pattern::Builtins::BYTE, {A, X}},
 		[=]() -> Pattern { return u256(0); },
 		true,
 		[=]() { return A.d() >= 32; }
 	});
 
 	for (auto const& op: std::vector<Instruction>{
-		Instruction::ADDRESS,
-		Instruction::CALLER,
-		Instruction::ORIGIN,
-		Instruction::COINBASE
+		Pattern::Builtins::ADDRESS,
+		Pattern::Builtins::CALLER,
+		Pattern::Builtins::ORIGIN,
+		Pattern::Builtins::COINBASE
 	})
 	{
 		u256 const mask = (u256(1) << 160) - 1;
 		rules.push_back({
-			{Instruction::AND, {{op, mask}}},
+			{Pattern::Builtins::AND, {{op, mask}}},
 			[=]() -> Pattern { return op; },
 			false
 		});
 		rules.push_back({
-			{Instruction::AND, {{mask, op}}},
+			{Pattern::Builtins::AND, {{mask, op}}},
 			[=]() -> Pattern { return op; },
 			false
 		});
@@ -302,27 +302,27 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart6(
 	std::vector<SimplificationRule<Pattern>> rules;
 	// Double negation of opcodes with boolean result
 	for (auto const& op: std::vector<Instruction>{
-		Instruction::EQ,
-		Instruction::LT,
-		Instruction::SLT,
-		Instruction::GT,
-		Instruction::SGT
+		Pattern::Builtins::EQ,
+		Pattern::Builtins::LT,
+		Pattern::Builtins::SLT,
+		Pattern::Builtins::GT,
+		Pattern::Builtins::SGT
 	})
 		rules.push_back({
-			{Instruction::ISZERO, {{Instruction::ISZERO, {{op, {X, Y}}}}}},
+			{Pattern::Builtins::ISZERO, {{Pattern::Builtins::ISZERO, {{op, {X, Y}}}}}},
 			[=]() -> Pattern { return {op, {X, Y}}; },
 			false
 		});
 
 	rules.push_back({
-		{Instruction::ISZERO, {{Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}}},
-		[=]() -> Pattern { return {Instruction::ISZERO, {X}}; },
+		{Pattern::Builtins::ISZERO, {{Pattern::Builtins::ISZERO, {{Pattern::Builtins::ISZERO, {X}}}}}},
+		[=]() -> Pattern { return {Pattern::Builtins::ISZERO, {X}}; },
 		false
 	});
 
 	rules.push_back({
-		{Instruction::ISZERO, {{Instruction::XOR, {X, Y}}}},
-		[=]() -> Pattern { return { Instruction::EQ, {X, Y} }; },
+		{Pattern::Builtins::ISZERO, {{Pattern::Builtins::XOR, {X, Y}}}},
+		[=]() -> Pattern { return { Pattern::Builtins::EQ, {X, Y} }; },
 		false
 	});
 
@@ -341,11 +341,11 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	std::vector<SimplificationRule<Pattern>> rules;
 	// Associative operations
 	for (auto const& opFun: std::vector<std::pair<Instruction,std::function<u256(u256 const&,u256 const&)>>>{
-		{Instruction::ADD, std::plus<u256>()},
-		{Instruction::MUL, std::multiplies<u256>()},
-		{Instruction::AND, std::bit_and<u256>()},
-		{Instruction::OR, std::bit_or<u256>()},
-		{Instruction::XOR, std::bit_xor<u256>()}
+		{Pattern::Builtins::ADD, std::plus<u256>()},
+		{Pattern::Builtins::MUL, std::multiplies<u256>()},
+		{Pattern::Builtins::AND, std::bit_and<u256>()},
+		{Pattern::Builtins::OR, std::bit_or<u256>()},
+		{Pattern::Builtins::XOR, std::bit_xor<u256>()}
 	})
 	{
 		auto op = opFun.first;
@@ -382,13 +382,13 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	// Combine two SHL by constant
 	rules.push_back({
 		// SHL(B, SHL(A, X)) -> SHL(min(A+B, 256), X)
-		{Instruction::SHL, {{B}, {Instruction::SHL, {{A}, {X}}}}},
+		{Pattern::Builtins::SHL, {{B}, {Pattern::Builtins::SHL, {{A}, {X}}}}},
 		[=]() -> Pattern {
 			bigint sum = bigint(A.d()) + B.d();
 			if (sum >= 256)
-				return {Instruction::AND, {X, u256(0)}};
+				return {Pattern::Builtins::AND, {X, u256(0)}};
 			else
-				return {Instruction::SHL, {u256(sum), X}};
+				return {Pattern::Builtins::SHL, {u256(sum), X}};
 		},
 		false
 	});
@@ -396,13 +396,13 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	// Combine two SHR by constant
 	rules.push_back({
 		// SHR(B, SHR(A, X)) -> SHR(min(A+B, 256), X)
-		{Instruction::SHR, {{B}, {Instruction::SHR, {{A}, {X}}}}},
+		{Pattern::Builtins::SHR, {{B}, {Pattern::Builtins::SHR, {{A}, {X}}}}},
 		[=]() -> Pattern {
 			bigint sum = bigint(A.d()) + B.d();
 			if (sum >= 256)
-				return {Instruction::AND, {X, u256(0)}};
+				return {Pattern::Builtins::AND, {X, u256(0)}};
 			else
-				return {Instruction::SHR, {u256(sum), X}};
+				return {Pattern::Builtins::SHR, {u256(sum), X}};
 		},
 		false
 	});
@@ -410,16 +410,16 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	// Combine SHL-SHR by constant
 	rules.push_back({
 		// SHR(B, SHL(A, X)) -> AND(SH[L/R]([B - A / A - B], X), Mask)
-		{Instruction::SHR, {{B}, {Instruction::SHL, {{A}, {X}}}}},
+		{Pattern::Builtins::SHR, {{B}, {Pattern::Builtins::SHL, {{A}, {X}}}}},
 		[=]() -> Pattern {
 			u256 mask = shlWorkaround(u256(-1), unsigned(A.d())) >> unsigned(B.d());
 
 			if (A.d() > B.d())
-				return {Instruction::AND, {{Instruction::SHL, {A.d() - B.d(), X}}, mask}};
+				return {Pattern::Builtins::AND, {{Pattern::Builtins::SHL, {A.d() - B.d(), X}}, mask}};
 			else if (B.d() > A.d())
-				return {Instruction::AND, {{Instruction::SHR, {B.d() - A.d(), X}}, mask}};
+				return {Pattern::Builtins::AND, {{Pattern::Builtins::SHR, {B.d() - A.d(), X}}, mask}};
 			else
-				return {Instruction::AND, {X, mask}};
+				return {Pattern::Builtins::AND, {X, mask}};
 		},
 		false,
 		[=] { return A.d() < 256 && B.d() < 256; }
@@ -428,41 +428,41 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	// Combine SHR-SHL by constant
 	rules.push_back({
 		// SHL(B, SHR(A, X)) -> AND(SH[L/R]([B - A / A - B], X), Mask)
-		{Instruction::SHL, {{B}, {Instruction::SHR, {{A}, {X}}}}},
+		{Pattern::Builtins::SHL, {{B}, {Pattern::Builtins::SHR, {{A}, {X}}}}},
 		[=]() -> Pattern {
 			u256 mask = shlWorkaround(u256(-1) >> unsigned(A.d()), unsigned(B.d()));
 
 			if (A.d() > B.d())
-				return {Instruction::AND, {{Instruction::SHR, {A.d() - B.d(), X}}, mask}};
+				return {Pattern::Builtins::AND, {{Pattern::Builtins::SHR, {A.d() - B.d(), X}}, mask}};
 			else if (B.d() > A.d())
-				return {Instruction::AND, {{Instruction::SHL, {B.d() - A.d(), X}}, mask}};
+				return {Pattern::Builtins::AND, {{Pattern::Builtins::SHL, {B.d() - A.d(), X}}, mask}};
 			else
-				return {Instruction::AND, {X, mask}};
+				return {Pattern::Builtins::AND, {X, mask}};
 		},
 		false,
 		[=] { return A.d() < 256 && B.d() < 256; }
 	});
 
 	// Move AND with constant across SHL and SHR by constant
-	for (auto shiftOp: {Instruction::SHL, Instruction::SHR})
+	for (auto shiftOp: {Pattern::Builtins::SHL, Pattern::Builtins::SHR})
 	{
 		auto replacement = [=]() -> Pattern {
 			u256 mask =
-				shiftOp == Instruction::SHL ?
+				shiftOp == Pattern::Builtins::SHL ?
 				shlWorkaround(A.d(), unsigned(B.d())) :
 				A.d() >> unsigned(B.d());
-			return {Instruction::AND, {{shiftOp, {B.d(), X}}, std::move(mask)}};
+			return {Pattern::Builtins::AND, {{shiftOp, {B.d(), X}}, std::move(mask)}};
 		};
 		rules.push_back({
 			// SH[L/R](B, AND(X, A)) -> AND(SH[L/R](B, X), [ A << B / A >> B ])
-			{shiftOp, {{B}, {Instruction::AND, {{X}, {A}}}}},
+			{shiftOp, {{B}, {Pattern::Builtins::AND, {{X}, {A}}}}},
 			replacement,
 			false,
 			[=] { return B.d() < 256; }
 		});
 		rules.push_back({
 			// SH[L/R](B, AND(A, X)) -> AND(SH[L/R](B, X), [ A << B / A >> B ])
-			{shiftOp, {{B}, {Instruction::AND, {{A}, {X}}}}},
+			{shiftOp, {{B}, {Pattern::Builtins::AND, {{A}, {X}}}}},
 			replacement,
 			false,
 			[=] { return B.d() < 256; }
@@ -471,27 +471,27 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 
 	rules.push_back({
 		// MUL(X, SHL(Y, 1)) -> SHL(Y, X)
-		{Instruction::MUL, {X, {Instruction::SHL, {Y, u256(1)}}}},
+		{Pattern::Builtins::MUL, {X, {Pattern::Builtins::SHL, {Y, u256(1)}}}},
 		[=]() -> Pattern {
-			return {Instruction::SHL, {Y, X}};
+			return {Pattern::Builtins::SHL, {Y, X}};
 		},
 		// Actually only changes the order, does not remove.
 		true
 	});
 	rules.push_back({
 		// MUL(SHL(X, 1), Y) -> SHL(X, Y)
-		{Instruction::MUL, {{Instruction::SHL, {X, u256(1)}}, Y}},
+		{Pattern::Builtins::MUL, {{Pattern::Builtins::SHL, {X, u256(1)}}, Y}},
 		[=]() -> Pattern {
-			return {Instruction::SHL, {X, Y}};
+			return {Pattern::Builtins::SHL, {X, Y}};
 		},
 		false
 	});
 
 	rules.push_back({
 		// DIV(X, SHL(Y, 1)) -> SHR(Y, X)
-		{Instruction::DIV, {X, {Instruction::SHL, {Y, u256(1)}}}},
+		{Pattern::Builtins::DIV, {X, {Pattern::Builtins::SHL, {Y, u256(1)}}}},
 		[=]() -> Pattern {
-			return {Instruction::SHR, {Y, X}};
+			return {Pattern::Builtins::SHR, {Y, X}};
 		},
 		// Actually only changes the order, does not remove.
 		true
@@ -506,16 +506,16 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 
 	rules.push_back({
 		// AND(A, SHR(B, X)) -> A & ((2^256-1) >> B) == ((2^256-1) >> B)
-		{Instruction::AND, {A, {Instruction::SHR, {B, X}}}},
-		[=]() -> Pattern { return {Instruction::SHR, {B, X}}; },
+		{Pattern::Builtins::AND, {A, {Pattern::Builtins::SHR, {B, X}}}},
+		[=]() -> Pattern { return {Pattern::Builtins::SHR, {B, X}}; },
 		false,
 		feasibilityFunction
 	});
 
 	rules.push_back({
 		// AND(SHR(B, X), A) -> ((2^256-1) >> B) & A == ((2^256-1) >> B)
-		{Instruction::AND, {{Instruction::SHR, {B, X}}, A}},
-		[=]() -> Pattern { return {Instruction::SHR, {B, X}}; },
+		{Pattern::Builtins::AND, {{Pattern::Builtins::SHR, {B, X}}, A}},
+		[=]() -> Pattern { return {Pattern::Builtins::SHR, {B, X}}; },
 		false,
 		feasibilityFunction
 	});
@@ -538,28 +538,28 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart8(
 	rules += std::vector<SimplificationRule<Pattern>>{
 		{
 			// X - A -> X + (-A)
-			{Instruction::SUB, {X, A}},
-			[=]() -> Pattern { return {Instruction::ADD, {X, 0 - A.d()}}; },
+			{Pattern::Builtins::SUB, {X, A}},
+			[=]() -> Pattern { return {Pattern::Builtins::ADD, {X, 0 - A.d()}}; },
 			false
 		}, {
 			// (X + A) - Y -> (X - Y) + A
-			{Instruction::SUB, {{Instruction::ADD, {X, A}}, Y}},
-			[=]() -> Pattern { return {Instruction::ADD, {{Instruction::SUB, {X, Y}}, A}}; },
+			{Pattern::Builtins::SUB, {{Pattern::Builtins::ADD, {X, A}}, Y}},
+			[=]() -> Pattern { return {Pattern::Builtins::ADD, {{Pattern::Builtins::SUB, {X, Y}}, A}}; },
 			false
 		}, {
 			// (A + X) - Y -> (X - Y) + A
-			{Instruction::SUB, {{Instruction::ADD, {A, X}}, Y}},
-			[=]() -> Pattern { return {Instruction::ADD, {{Instruction::SUB, {X, Y}}, A}}; },
+			{Pattern::Builtins::SUB, {{Pattern::Builtins::ADD, {A, X}}, Y}},
+			[=]() -> Pattern { return {Pattern::Builtins::ADD, {{Pattern::Builtins::SUB, {X, Y}}, A}}; },
 			false
 		}, {
 			// X - (Y + A) -> (X - Y) + (-A)
-			{Instruction::SUB, {X, {Instruction::ADD, {Y, A}}}},
-			[=]() -> Pattern { return {Instruction::ADD, {{Instruction::SUB, {X, Y}}, 0 - A.d()}}; },
+			{Pattern::Builtins::SUB, {X, {Pattern::Builtins::ADD, {Y, A}}}},
+			[=]() -> Pattern { return {Pattern::Builtins::ADD, {{Pattern::Builtins::SUB, {X, Y}}, 0 - A.d()}}; },
 			false
 		}, {
 			// X - (A + Y) -> (X - Y) + (-A)
-			{Instruction::SUB, {X, {Instruction::ADD, {A, Y}}}},
-			[=]() -> Pattern { return {Instruction::ADD, {{Instruction::SUB, {X, Y}}, 0 - A.d()}}; },
+			{Pattern::Builtins::SUB, {X, {Pattern::Builtins::ADD, {A, Y}}}},
+			[=]() -> Pattern { return {Pattern::Builtins::ADD, {{Pattern::Builtins::SUB, {X, Y}}, 0 - A.d()}}; },
 			false
 		}
 	};
@@ -582,24 +582,24 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart9(
 	u256 const mask = (u256(1) << 160) - 1;
 	// CREATE
 	rules.push_back({
-		{Instruction::AND, {{Instruction::CREATE, {W, X, Y}}, mask}},
-		[=]() -> Pattern { return {Instruction::CREATE, {W, X, Y}}; },
+		{Pattern::Builtins::AND, {{Pattern::Builtins::CREATE, {W, X, Y}}, mask}},
+		[=]() -> Pattern { return {Pattern::Builtins::CREATE, {W, X, Y}}; },
 		false
 	});
 	rules.push_back({
-		{Instruction::AND, {{mask, {Instruction::CREATE, {W, X, Y}}}}},
-		[=]() -> Pattern { return {Instruction::CREATE, {W, X, Y}}; },
+		{Pattern::Builtins::AND, {{mask, {Pattern::Builtins::CREATE, {W, X, Y}}}}},
+		[=]() -> Pattern { return {Pattern::Builtins::CREATE, {W, X, Y}}; },
 		false
 	});
 	// CREATE2
 	rules.push_back({
-		{Instruction::AND, {{Instruction::CREATE2, {W, X, Y, Z}}, mask}},
-		[=]() -> Pattern { return {Instruction::CREATE2, {W, X, Y, Z}}; },
+		{Pattern::Builtins::AND, {{Pattern::Builtins::CREATE2, {W, X, Y, Z}}, mask}},
+		[=]() -> Pattern { return {Pattern::Builtins::CREATE2, {W, X, Y, Z}}; },
 		false
 	});
 	rules.push_back({
-		{Instruction::AND, {{mask, {Instruction::CREATE2, {W, X, Y, Z}}}}},
-		[=]() -> Pattern { return {Instruction::CREATE2, {W, X, Y, Z}}; },
+		{Pattern::Builtins::AND, {{mask, {Pattern::Builtins::CREATE2, {W, X, Y, Z}}}}},
+		[=]() -> Pattern { return {Pattern::Builtins::CREATE2, {W, X, Y, Z}}; },
 		false
 	});
 
