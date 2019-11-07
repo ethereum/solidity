@@ -1166,8 +1166,18 @@ void ProtoConverter::closeBlockScope()
 	if (!m_scopeFuncs.empty())
 		m_scopeFuncs.pop_back();
 	if (!m_inFunctionDef)
+	{
 		if (!m_variables.empty())
 			m_variables.pop_back();
+	}
+	else
+	{
+		// Variables that have been declared in a
+		// function block, go out of scope
+		if (!m_funcVars.empty())
+			if (!m_funcVars.back().empty())
+				m_funcVars.back().pop_back();
+	}
 }
 
 void ProtoConverter::closeFunctionScope()

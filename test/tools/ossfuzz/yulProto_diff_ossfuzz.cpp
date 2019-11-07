@@ -55,8 +55,7 @@ void printErrors(ostream& _stream, ErrorList const& _errors)
 
 DEFINE_PROTO_FUZZER(Program const& _input)
 {
-	ProtoConverter converter;
-	string yul_source = converter.programToString(_input);
+	string yul_source = ProtoConverter().programToString(_input);
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
@@ -82,7 +81,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 			!stack.parserResult()->analysisInfo)
 		{
 			printErrors(std::cout, stack.errors());
-			return;
+			yulAssert(false, "Proto fuzzer generated malformed program");
 		}
 	}
 	catch (Exception const&)
