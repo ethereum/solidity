@@ -83,7 +83,7 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM* _vm):
 	else if (_evmVersion == langutil::EVMVersion::constantinople())
 		m_evmVersion = EVMC_CONSTANTINOPLE;
 	else if (_evmVersion == langutil::EVMVersion::istanbul())
-		assertThrow(false, Exception, "Istanbul is not supported yet.");
+		m_evmVersion = EVMC_ISTANBUL;
 	else if (_evmVersion == langutil::EVMVersion::berlin())
 		assertThrow(false, Exception, "Berlin is not supported yet.");
 	else //if (_evmVersion == langutil::EVMVersion::petersburg())
