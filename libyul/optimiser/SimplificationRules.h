@@ -85,6 +85,10 @@ enum class PatternKind
 class Pattern
 {
 public:
+	using Builtins = dev::eth::EVMBuiltins;
+	static constexpr size_t WordSize = 256;
+	using Word = dev::u256;
+
 	/// Matches any expression.
 	Pattern(PatternKind _kind = PatternKind::Any): m_kind(_kind) {}
 	// Matches a specific constant value.
