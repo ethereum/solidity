@@ -41,7 +41,7 @@ evmc::vm* EVMHost::getVM(string const& _path)
 	if (!theVM && !_path.empty())
 	{
 		evmc_loader_error_code errorCode = {};
-		evmc_instance* vm = evmc_load_and_create(_path.c_str(), &errorCode);
+		evmc_instance* vm = evmc_load_and_configure(_path.c_str(), &errorCode);
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 		{
 			if (evmc_vm_has_capability(vm, EVMC_CAPABILITY_EVM1))
