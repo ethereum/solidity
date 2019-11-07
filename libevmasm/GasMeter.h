@@ -102,7 +102,10 @@ namespace GasCosts
 	static unsigned const txGas = 21000;
 	static unsigned const txCreateGas = 53000;
 	static unsigned const txDataZeroGas = 4;
-	static unsigned const txDataNonZeroGas = 68;
+	inline unsigned txDataNonZeroGas(langutil::EVMVersion _evmVersion)
+	{
+		return _evmVersion >= langutil::EVMVersion::istanbul() ? 16 : 68;
+	}
 	static unsigned const copyGas = 3;
 }
 
@@ -149,7 +152,7 @@ public:
 	/// @returns the gas cost of the supplied data, depending whether it is in creation code, or not.
 	/// In case of @a _inCreation, the data is only sent as a transaction and is not stored, whereas
 	/// otherwise code will be stored and have to pay "createDataGas" cost.
-	static u256 dataGas(bytes const& _data, bool _inCreation);
+	static u256 dataGas(bytes const& _data, bool _inCreation, langutil::EVMVersion _evmVersion);
 
 private:
 	/// @returns _multiplier * (_value + 31) / 32, if _value is a known constant and infinite otherwise.
