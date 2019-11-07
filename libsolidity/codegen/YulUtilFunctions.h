@@ -121,6 +121,14 @@ public:
 	/// signature: (array, newLen)
 	std::string resizeDynamicArrayFunction(ArrayType const& _type);
 
+	/// @returns the name of a function that reduces the size of a storage array by one element
+	/// signature: (array)
+	std::string storageArrayPopFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that pushes an element to a storage array
+	/// signature: (array, value) -> newlength
+	std::string storageArrayPushFunction(ArrayType const& _type);
+
 	/// @returns the name of a function that will clear the storage area given
 	/// by the start and end (exclusive) parameters (slots).
 	/// signature: (start, end)

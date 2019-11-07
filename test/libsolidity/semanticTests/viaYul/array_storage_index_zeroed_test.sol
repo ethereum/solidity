@@ -2,14 +2,18 @@ contract C {
     uint[] storageArray;
     function test_zeroed_indicies(uint256 len) public
     {
-        storageArray = new uint[](len);
+        //storageArray = new uint[](len);
+        while(storageArray.length < len) storageArray.push();
+        while(storageArray.length > len) storageArray.pop();
 
         for (uint i = 0; i < len; i++)
             storageArray[i] = i + 1;
 
         if (len > 3)
         {
-            storageArray = new uint[](3);
+            //storageArray = new uint[](3);
+            while(storageArray.length > 0) storageArray.pop();
+            while(storageArray.length < 3) storageArray.push();
 
             for (uint i = 3; i < len; i++)
             {
@@ -25,8 +29,10 @@ contract C {
 
         }
 
-        storageArray = new uint[](0);
-        storageArray = new uint[](len);
+        //storageArray = new uint[](0);
+        while(storageArray.length > 0) storageArray.pop();
+        //storageArray = new uint[](len);
+        while(storageArray.length < len) storageArray.push();
 
         for (uint i = 0; i < len; i++)
         {
@@ -41,6 +47,8 @@ contract C {
         }
     }
 }
+// ====
+// compileViaYul: true
 // ----
 // test_zeroed_indicies(uint256): 1 ->
 // test_zeroed_indicies(uint256): 5 ->
