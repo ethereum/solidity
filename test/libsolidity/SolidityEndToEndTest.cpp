@@ -14800,6 +14800,55 @@ BOOST_AUTO_TEST_CASE(try_catch_library_call)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(strip_reason_strings)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(bool _x) public pure returns (uint) {
+				require(_x, "some reason");
+				return 7;
+			}
+			function g(bool _x) public pure returns (uint) {
+				string memory x = "some indirect reason";
+				require(_x, x);
+				return 8;
+			}
+			function f1(bool _x) public pure returns (uint) {
+				if (!_x) revert( /* */ "some reason" /* */ );
+				return 9;
+			}
+			function g1(bool _x) public pure returns (uint) {
+				string memory x = "some indirect reason";
+				if (!_x) revert(x);
+				return 10;
+			}
+		}
+	)";
+	m_revertStrings = RevertStrings::Default;
+	compileAndRun(sourceCode, 0, "C");
+
+	if (
+		m_optimiserSettings == OptimiserSettings::minimal() ||
+		m_optimiserSettings == OptimiserSettings::none()
+	)
+		// check that the reason string IS part of the binary.
+		BOOST_CHECK(toHex(m_output).find("736f6d6520726561736f6e") != std::string::npos);
+
+	m_revertStrings = RevertStrings::Strip;
+	compileAndRun(sourceCode, 0, "C");
+	// check that the reason string is NOT part of the binary.
+	BOOST_CHECK(toHex(m_output).find("736f6d6520726561736f6e") == std::string::npos);
+
+	ABI_CHECK(callContractFunction("f(bool)", true), encodeArgs(7));
+	ABI_CHECK(callContractFunction("f(bool)", false), encodeArgs());
+	ABI_CHECK(callContractFunction("g(bool)", true), encodeArgs(8));
+	ABI_CHECK(callContractFunction("g(bool)", false), encodeArgs());
+	ABI_CHECK(callContractFunction("f1(bool)", true), encodeArgs(9));
+	ABI_CHECK(callContractFunction("f1(bool)", false), encodeArgs());
+	ABI_CHECK(callContractFunction("g1(bool)", true), encodeArgs(10));
+	ABI_CHECK(callContractFunction("g1(bool)", false), encodeArgs());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

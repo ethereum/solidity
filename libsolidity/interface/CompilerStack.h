@@ -26,6 +26,7 @@
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/Version.h>
+#include <libsolidity/interface/DebugSettings.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
@@ -144,6 +145,9 @@ public:
 	/// Changes the optimiser settings.
 	/// Must be set before parsing.
 	void setOptimiserSettings(OptimiserSettings _settings);
+
+	/// Sets whether to strip revert strings, add additional strings or do nothing at all.
+	void setRevertStringBehaviour(RevertStrings _revertStrings);
 
 	/// Set whether or not parser error is desired.
 	/// When called without an argument it will revert to the default.
@@ -414,6 +418,7 @@ private:
 
 	ReadCallback::Callback m_readFile;
 	OptimiserSettings m_optimiserSettings;
+	RevertStrings m_revertStrings = RevertStrings::Default;
 	langutil::EVMVersion m_evmVersion;
 	std::map<std::string, std::set<std::string>> m_requestedContractNames;
 	bool m_generateIR;

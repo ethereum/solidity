@@ -703,16 +703,28 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case FunctionType::Kind::Revert:
 		{
-			if (!arguments.empty())
+			if (arguments.empty())
+				m_context.appendRevert();
+			else
 			{
 				// function-sel(Error(string)) + encoding
 				solAssert(arguments.size() == 1, "");
 				solAssert(function.parameterTypes().size() == 1, "");
-				arguments.front()->accept(*this);
-				utils().revertWithStringData(*arguments.front()->annotation().type);
+				if (m_revertStrings == RevertStrings::Strip)
+				{
+					if (!arguments.front()->annotation().isPure)
+					{
+						arguments.front()->accept(*this);
+						utils().popStackElement(*arguments.front()->annotation().type);
+					}
+					m_context.appendRevert();
+				}
+				else
+				{
+					arguments.front()->accept(*this);
+					utils().revertWithStringData(*arguments.front()->annotation().type);
+				}
 			}
-			else
-				m_context.appendRevert();
 			break;
 		}
 		case FunctionType::Kind::KECCAK256:
@@ -977,6 +989,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::Require:
 		{
 			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), false);
+
+			bool haveReasonString = arguments.size() > 1 && m_revertStrings != RevertStrings::Strip;
+
 			if (arguments.size() > 1)
 			{
 				// Users probably expect the second argument to be evaluated
@@ -984,8 +999,19 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// function call.
 				solAssert(arguments.size() == 2, "");
 				solAssert(function.kind() == FunctionType::Kind::Require, "");
-				arguments.at(1)->accept(*this);
-				utils().moveIntoStack(1, arguments.at(1)->annotation().type->sizeOnStack());
+				if (m_revertStrings == RevertStrings::Strip)
+				{
+					if (!arguments.at(1)->annotation().isPure)
+					{
+						arguments.at(1)->accept(*this);
+						utils().popStackElement(*arguments.at(1)->annotation().type);
+					}
+				}
+				else
+				{
+					arguments.at(1)->accept(*this);
+					utils().moveIntoStack(1, arguments.at(1)->annotation().type->sizeOnStack());
+				}
 			}
 			// Stack: <error string (unconverted)> <condition>
 			// jump if condition was met
@@ -994,7 +1020,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (function.kind() == FunctionType::Kind::Assert)
 				// condition was not met, flag an error
 				m_context.appendInvalid();
-			else if (arguments.size() > 1)
+			else if (haveReasonString)
 			{
 				utils().revertWithStringData(*arguments.at(1)->annotation().type);
 				// Here, the argument is consumed, but in the other branch, it is still there.
@@ -1004,7 +1030,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context.appendRevert();
 			// the success branch
 			m_context << success;
-			if (arguments.size() > 1)
+			if (haveReasonString)
 				utils().popStackElement(*arguments.at(1)->annotation().type);
 			break;
 		}

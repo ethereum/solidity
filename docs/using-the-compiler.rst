@@ -234,6 +234,16 @@ Input Description
         // Affects type checking and code generation. Can be homestead,
         // tangerineWhistle, spuriousDragon, byzantium, constantinople, petersburg, istanbul or berlin
         "evmVersion": "byzantium",
+        // Optional: Debugging settings
+        "debug": {
+          // How to treat revert (and require) reason strings. Settings are
+          // "default", "strip", "debug" and "verboseDebug".
+          // "default" does not inject compiler-generated revert strings and keeps user-supplied ones.
+          // "strip" removes all revert strings (if possible, i.e. if literals are used) keeping side-effects
+          // "debug" injects strings for compiler-generated internal reverts (not yet implemented)
+          // "verboseDebug" even appends further information to user-supplied revert strings (not yet implemented)
+          "revertStrings": "default"
+        }
         // Metadata settings (optional)
         "metadata": {
           // Use only literal content and not URLs (false by default)
