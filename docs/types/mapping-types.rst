@@ -137,7 +137,8 @@ the ``sum`` function iterates over to sum all the values.
             if (keyIndex > 0)
                 return true;
             else {
-                keyIndex = self.keys.length++;
+                self.keys.push();
+                keyIndex = self.keys.length;
                 self.data[key].keyIndex = keyIndex + 1;
                 self.keys[keyIndex].key = key;
                 self.size++;
