@@ -439,6 +439,12 @@ for the variable and automatically removed again when the end of the block
 is reached. You need to provide an initial value for the variable which can
 be just ``0``, but it can also be a complex functional-style expression.
 
+Since 0.6.0 the name of a declared variable may not end in ``_offset`` or ``_slot``
+and it may not shadow any declaration visible in the scope of the inline assembly block
+(including variable, contract and function declarations). Similarly, if the name of a declared
+variable contains a dot ``.``, the prefix up to the ``.`` may not conflict with any
+declaration visible in the scope of the inline assembly block.
+
 .. code::
 
     pragma solidity >=0.4.16 <0.7.0;

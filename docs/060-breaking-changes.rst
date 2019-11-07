@@ -28,6 +28,13 @@ This section lists purely syntactic changes that do not affect the behavior of e
 
 * New reserved keywords: ``virtual``.
 
+* The names of variables declared in inline assembly may no longer end in ``_slot`` or ``_offset``.
+
+* Variable declarations in inline assembly may no longer shadow any declaration outside the inline assembly block.
+  If the name contains a dot, its prefix up to the dot may not conflict with any declaration outside the inline
+  assembly block.
+
+
 Semantic Only Changes
 =====================
 
@@ -71,6 +78,8 @@ This section gives detailed instructions on how to update prior code for every b
   like ``function f() public returns (uint value)`` and a ``@dev`` annotating it, document its return
   parameters like so: ``@return value The return value.``. You can mix named and un-named return parameters
   documentation so long as the notices are in the order they appear in the tuple return type.
+
+* Choose unique identifiers for variable declarations in inline assembly that do not conflict with declartions outside the inline assembly block.
 
 New Features
 ============
