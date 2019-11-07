@@ -49,7 +49,7 @@ public:
 	void push() override;
 	void pop() override;
 
-	void declareVariable(std::string const&, Sort const&) override;
+	void declareVariable(std::string const&, SortPointer const&) override;
 
 	void addAssertion(smt::Expression const& _expr) override;
 

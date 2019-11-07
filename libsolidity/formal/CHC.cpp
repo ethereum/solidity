@@ -17,6 +17,8 @@
 
 #include <libsolidity/formal/CHC.h>
 
+#include <libsolidity/formal/CHCSmtLib2Interface.h>
+
 #ifdef HAVE_Z3
 #include <libsolidity/formal/Z3CHCInterface.h>
 #endif
@@ -30,13 +32,20 @@ using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
-CHC::CHC(smt::EncodingContext& _context, ErrorReporter& _errorReporter):
+CHC::CHC(
+	smt::EncodingContext& _context,
+	ErrorReporter& _errorReporter,
+	map<h256, string> const& _smtlib2Responses
+):
 	SMTEncoder(_context),
 #ifdef HAVE_Z3
 	m_interface(make_shared<smt::Z3CHCInterface>()),
+#else
+	m_interface(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses)),
 #endif
 	m_outerErrorReporter(_errorReporter)
 {
+	(void)_smtlib2Responses;
 }
 
 void CHC::analyze(SourceUnit const& _source)
@@ -47,12 +56,24 @@ void CHC::analyze(SourceUnit const& _source)
 	auto z3Interface = dynamic_pointer_cast<smt::Z3CHCInterface>(m_interface);
 	solAssert(z3Interface, "");
 	m_context.setSolver(z3Interface->z3Interface());
+#else
+	auto smtlib2Interface = dynamic_pointer_cast<smt::CHCSmtLib2Interface>(m_interface);
+	solAssert(smtlib2Interface, "");
+	m_context.setSolver(smtlib2Interface->smtlib2Interface());
+#endif
 	m_context.clear();
 	m_context.setAssertionAccumulation(false);
 	m_variableUsage.setFunctionInlining(false);
 
 	_source.accept(*this);
-#endif
+}
+
+vector<string> CHC::unhandledQueries() const
+{
+	if (auto smtlib2 = dynamic_pointer_cast<smt::CHCSmtLib2Interface>(m_interface))
+		return smtlib2->unhandledQueries();
+
+	return {};
 }
 
 bool CHC::visit(ContractDefinition const& _contract)
@@ -99,7 +120,7 @@ bool CHC::visit(ContractDefinition const& _contract)
 		{
 			auto const& symbVar = m_context.variable(*var);
 			symbVar->increaseIndex();
-			m_interface->declareVariable(symbVar->currentName(), *symbVar->sort());
+			m_interface->declareVariable(symbVar->currentName(), symbVar->sort());
 			m_context.setZeroValue(*symbVar);
 		}
 

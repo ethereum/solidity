@@ -59,8 +59,9 @@ void SMTPortfolio::pop()
 		s->pop();
 }
 
-void SMTPortfolio::declareVariable(string const& _name, Sort const& _sort)
+void SMTPortfolio::declareVariable(string const& _name, SortPointer const& _sort)
 {
+	solAssert(_sort, "");
 	for (auto const& s: m_solvers)
 		s->declareVariable(_name, _sort);
 }
