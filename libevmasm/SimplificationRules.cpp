@@ -99,7 +99,7 @@ Rules::Rules()
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 
-Pattern::Pattern(Instruction _instruction, std::vector<Pattern> const& _arguments):
+Pattern::Pattern(Instruction _instruction, std::initializer_list<Pattern> _arguments):
 	m_type(Operation),
 	m_instruction(_instruction),
 	m_arguments(_arguments)
