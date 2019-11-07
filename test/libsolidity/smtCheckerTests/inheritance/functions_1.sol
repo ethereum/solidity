@@ -14,12 +14,12 @@ contract A {
 
 // 2 warnings, B.f and A.g
 contract B is A {
-	function f() public view {
+	function f() public view override {
 		assert(x == 0);
 	}
 }
 // ----
 // Warning: (113-127): Assertion violation happens here
 // Warning: (162-176): Assertion violation happens here
-// Warning: (259-273): Assertion violation happens here
+// Warning: (268-282): Assertion violation happens here
 // Warning: (162-176): Assertion violation happens here

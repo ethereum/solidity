@@ -16,7 +16,7 @@ contract A {
 contract B is A {
 	uint y;
 
-	function f() public view {
+	function f() public view override {
 		assert(x == 0);
 	}
 	function h() public view {
@@ -28,7 +28,7 @@ contract B is A {
 contract C is B {
 	uint z;
 
-	function f() public view {
+	function f() public view override {
 		assert(x == 0);
 	}
 	function i() public view {
@@ -38,10 +38,10 @@ contract C is B {
 // ----
 // Warning: (113-127): Assertion violation happens here
 // Warning: (162-176): Assertion violation happens here
-// Warning: (271-285): Assertion violation happens here
-// Warning: (320-334): Assertion violation happens here
+// Warning: (280-294): Assertion violation happens here
+// Warning: (329-343): Assertion violation happens here
 // Warning: (162-176): Assertion violation happens here
-// Warning: (434-448): Assertion violation happens here
-// Warning: (483-497): Assertion violation happens here
-// Warning: (320-334): Assertion violation happens here
+// Warning: (452-466): Assertion violation happens here
+// Warning: (501-515): Assertion violation happens here
+// Warning: (329-343): Assertion violation happens here
 // Warning: (162-176): Assertion violation happens here
