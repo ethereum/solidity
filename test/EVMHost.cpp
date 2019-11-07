@@ -44,7 +44,15 @@ evmc::vm* EVMHost::getVM(string const& _path)
 		evmc_loader_error_code errorCode = {};
 		evmc_instance* vm = evmc_load_and_create(_path.c_str(), &errorCode);
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
-			theVM = make_unique<evmc::vm>(vm);
+		{
+			if (evmc_vm_has_capability(vm, EVMC_CAPABILITY_EVM1))
+				theVM = make_unique<evmc::vm>(vm);
+			else
+			{
+				evmc_destroy(vm);
+				cerr << "VM loaded does not support EVM1" << endl;
+			}
+		}
 		else
 		{
 			cerr << "Error loading VM from " << _path;
