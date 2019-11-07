@@ -42,20 +42,14 @@
 #define ATTR_FORMAT(...)
 #endif
 
-#if _WIN32
-#define strcpy_sx strcpy_s
-#else
 /*
  * Limited variant of strcpy_s().
- *
- * Provided for C standard libraries where strcpy_s() is not available.
- * The availability check might need to adjusted for other C standard library implementations.
  */
 #if !defined(EVMC_LOADER_MOCK)
 static
 #endif
     int
-    strcpy_sx(char* restrict dest, size_t destsz, const char* restrict src)
+    strcpy_sx(char* dest, size_t destsz, const char* src)
 {
     size_t len = strlen(src);
     if (len >= destsz)
@@ -70,7 +64,6 @@ static
     dest[len] = 0;
     return 0;
 }
-#endif
 
 #define PATH_MAX_LENGTH 4096
 
@@ -237,4 +230,94 @@ exit:
         *error_code = ec;
 
     return instance;
+}
+
+/// Gets the token delimited by @p delim character of the string pointed by the @p str_ptr.
+/// If the delimiter is not found, the whole string is returned.
+/// The @p str_ptr is also slided after the delimiter or to the string end
+/// if the delimiter is not found (in this case the @p str_ptr points to an empty string).
+static char* get_token(char** str_ptr, char delim)
+{
+    char* str = *str_ptr;
+    char* delim_pos = strchr(str, delim);
+    if (delim_pos)
+    {
+        // If the delimiter is found, null it to get null-terminated prefix
+        // and slide the str_ptr after the delimiter.
+        *delim_pos = '\0';
+        *str_ptr = delim_pos + 1;
+    }
+    else
+    {
+        // Otherwise, slide the str_ptr to the end and return the whole string as the prefix.
+        *str_ptr += strlen(str);
+    }
+    return str;
+}
+
+struct evmc_instance* evmc_load_and_configure(const char* config,
+                                              enum evmc_loader_error_code* error_code)
+{
+    enum evmc_loader_error_code ec = EVMC_LOADER_SUCCESS;
+    struct evmc_instance* instance = NULL;
+
+    char config_copy_buffer[PATH_MAX_LENGTH];
+    if (strcpy_sx(config_copy_buffer, sizeof(config_copy_buffer), config) != 0)
+    {
+        ec = set_error(EVMC_LOADER_INVALID_ARGUMENT,
+                       "invalid argument: configuration is too long (maximum allowed length is %d)",
+                       (int)sizeof(config_copy_buffer));
+        goto exit;
+    }
+
+    char* options = config_copy_buffer;
+    const char* path = get_token(&options, ',');
+
+    instance = evmc_load_and_create(path, error_code);
+    if (!instance)
+        return NULL;
+
+    if (instance->set_option == NULL && strlen(options) != 0)
+    {
+        ec = set_error(EVMC_LOADER_INVALID_OPTION_NAME, "%s (%s) does not support any options",
+                       instance->name, path);
+        goto exit;
+    }
+
+
+    while (strlen(options) != 0)
+    {
+        char* option = get_token(&options, ',');
+
+        // Slit option into name and value by taking the name token.
+        // The option variable will have the value, can be empty.
+        const char* name = get_token(&option, '=');
+
+        enum evmc_set_option_result r = instance->set_option(instance, name, option);
+        switch (r)
+        {
+        case EVMC_SET_OPTION_SUCCESS:
+            break;
+        case EVMC_SET_OPTION_INVALID_NAME:
+            ec = set_error(EVMC_LOADER_INVALID_OPTION_NAME, "%s (%s): unknown option '%s'",
+                           instance->name, path, name);
+            goto exit;
+        case EVMC_SET_OPTION_INVALID_VALUE:
+            ec = set_error(EVMC_LOADER_INVALID_OPTION_VALUE,
+                           "%s (%s): unsupported value '%s' for option '%s'", instance->name, path,
+                           option, name);
+            goto exit;
+        }
+    }
+
+exit:
+    if (error_code)
+        *error_code = ec;
+
+    if (ec == EVMC_LOADER_SUCCESS)
+        return instance;
+
+    if (instance)
+        evmc_destroy(instance);
+    return NULL;
 }

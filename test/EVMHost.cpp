@@ -21,7 +21,6 @@
 
 #include <test/EVMHost.h>
 
-#include <test/evmc/helpers.hpp>
 #include <test/evmc/loader.h>
 
 #include <libevmasm/GasMeter.h>
@@ -42,7 +41,7 @@ evmc::vm* EVMHost::getVM(string const& _path)
 	if (!theVM && !_path.empty())
 	{
 		evmc_loader_error_code errorCode = {};
-		evmc_instance* vm = evmc_load_and_create(_path.c_str(), &errorCode);
+		evmc_instance* vm = evmc_load_and_configure(_path.c_str(), &errorCode);
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 		{
 			if (evmc_vm_has_capability(vm, EVMC_CAPABILITY_EVM1))
@@ -91,27 +90,27 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm):
 		m_evmVersion = EVMC_PETERSBURG;
 }
 
-evmc_storage_status EVMHost::set_storage(const evmc_address& _addr, const evmc_bytes32& _key, const evmc_bytes32& _value) noexcept
+evmc_storage_status EVMHost::set_storage(const evmc::address& _addr, const evmc::bytes32& _key, const evmc::bytes32& _value) noexcept
 {
-	evmc_bytes32 previousValue = m_state.accounts[_addr].storage[_key];
+	evmc::bytes32 previousValue = m_state.accounts[_addr].storage[_key];
 	m_state.accounts[_addr].storage[_key] = _value;
 
 	// TODO EVMC_STORAGE_MODIFIED_AGAIN should be also used
 	if (previousValue == _value)
 		return EVMC_STORAGE_UNCHANGED;
-	else if (previousValue == evmc_bytes32{})
+	else if (previousValue == evmc::bytes32{})
 		return EVMC_STORAGE_ADDED;
-	else if (_value == evmc_bytes32{})
+	else if (_value == evmc::bytes32{})
 		return EVMC_STORAGE_DELETED;
 	else
 		return EVMC_STORAGE_MODIFIED;
 
 }
 
-void EVMHost::selfdestruct(const evmc_address& _addr, const evmc_address& _beneficiary) noexcept
+void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
 {
 	// TODO actual selfdestruct is even more complicated.
-	evmc_uint256be balance = m_state.accounts[_addr].balance;
+	evmc::uint256be balance = m_state.accounts[_addr].balance;
 	m_state.accounts.erase(_addr);
 	m_state.accounts[_beneficiary].balance = balance;
 }
@@ -190,7 +189,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		destination.balance = convertToEVMC(u256(convertFromEVMC(destination.balance)) + value);
 	}
 
-	evmc_address currentAddress = m_currentAddress;
+	evmc::address currentAddress = m_currentAddress;
 	m_currentAddress = message.destination;
 	evmc::result result = m_vm->execute(*this, m_evmVersion, message, code.data(), code.size());
 	m_currentAddress = currentAddress;
@@ -231,16 +230,16 @@ evmc_tx_context EVMHost::get_tx_context() noexcept
 	return ctx;
 }
 
-evmc_bytes32 EVMHost::get_block_hash(int64_t _number) noexcept
+evmc::bytes32 EVMHost::get_block_hash(int64_t _number) noexcept
 {
 	return convertToEVMC(u256("0x3737373737373737373737373737373737373737373737373737373737373737") + _number);
 }
 
 void EVMHost::emit_log(
-	evmc_address const& _addr,
+	evmc::address const& _addr,
 	uint8_t const* _data,
 	size_t _dataSize,
-	evmc_bytes32 const _topics[],
+	evmc::bytes32 const _topics[],
 	size_t _topicsCount
 ) noexcept
 {
@@ -253,27 +252,27 @@ void EVMHost::emit_log(
 }
 
 
-Address EVMHost::convertFromEVMC(evmc_address const& _addr)
+Address EVMHost::convertFromEVMC(evmc::address const& _addr)
 {
 	return Address(bytes(begin(_addr.bytes), end(_addr.bytes)));
 }
 
-evmc_address EVMHost::convertToEVMC(Address const& _addr)
+evmc::address EVMHost::convertToEVMC(Address const& _addr)
 {
-	evmc_address a;
+	evmc::address a;
 	for (size_t i = 0; i < 20; ++i)
 		a.bytes[i] = _addr[i];
 	return a;
 }
 
-h256 EVMHost::convertFromEVMC(evmc_bytes32 const& _data)
+h256 EVMHost::convertFromEVMC(evmc::bytes32 const& _data)
 {
 	return h256(bytes(begin(_data.bytes), end(_data.bytes)));
 }
 
-evmc_bytes32 EVMHost::convertToEVMC(h256 const& _data)
+evmc::bytes32 EVMHost::convertToEVMC(h256 const& _data)
 {
-	evmc_bytes32 d;
+	evmc::bytes32 d;
 	for (size_t i = 0; i < 32; ++i)
 		d.bytes[i] = _data[i];
 	return d;

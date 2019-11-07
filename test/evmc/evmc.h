@@ -303,7 +303,10 @@ enum evmc_status_code
      * For example, the Client tries running a code in the EVM 1.5. If the
      * code is not supported there, the execution falls back to the EVM 1.0.
      */
-    EVMC_REJECTED = -2
+    EVMC_REJECTED = -2,
+
+    /** The VM failed to allocate the amount of memory needed for execution. */
+    EVMC_OUT_OF_MEMORY = -3
 };
 
 /* Forward declaration. */
@@ -795,13 +798,15 @@ enum evmc_revision
  *
  * This function MAY be invoked multiple times for a single VM instance.
  *
- * @param instance   The VM instance.
- * @param context    The pointer to the Client execution context to be passed
- *                   to the callback functions. See ::evmc_context.
- * @param rev        Requested EVM specification revision.
- * @param msg        Call parameters. See ::evmc_message.
- * @param code       Reference to the code to be executed.
- * @param code_size  The length of the code.
+ * @param instance   The VM instance. This argument MUST NOT be NULL.
+ * @param context    The pointer to the Host execution context to be passed
+ *                   to the Host interface methods (::evmc_host_interface).
+ *                   This argument MUST NOT be NULL unless
+ *                   the @p instance has the ::EVMC_CAPABILITY_PRECOMPILES capability.
+ * @param rev        The requested EVM specification revision.
+ * @param msg        The call parameters. See ::evmc_message. This argument MUST NOT be NULL.
+ * @param code       The reference to the code to be executed. This argument MAY be NULL.
+ * @param code_size  The length of the code. If @p code is NULL this argument MUST be 0.
  * @return           The execution result.
  */
 typedef struct evmc_result (*evmc_execute_fn)(struct evmc_instance* instance,
@@ -857,7 +862,11 @@ typedef uint32_t evmc_capabilities_flagset;
  */
 typedef evmc_capabilities_flagset (*evmc_get_capabilities_fn)(struct evmc_instance* instance);
 
-/** The opaque type representing a Client-side tracer object. */
+/**
+ * The opaque type representing a Client-side tracer object.
+ *
+ * @deprecated Deprecated since EVMC 6.3, see evmc_instance::set_tracer().
+ */
 struct evmc_tracer_context;
 
 /**
@@ -868,6 +877,8 @@ struct evmc_tracer_context;
  * The message level information (like call depth, destination address, etc.) are not provided here.
  * This piece of information can be acquired by inspecting messages being sent to the EVM in
  * ::evmc_execute_fn and the results of the messages execution.
+ *
+ * @deprecated Deprecated since EVMC 6.3, see evmc_instance::set_tracer().
  *
  * @param context                The pointer to the Client-side tracing context. This allows to
  *                               implement the tracer in OOP manner.
@@ -915,6 +926,8 @@ typedef void (*evmc_trace_callback)(struct evmc_tracer_context* context,
  * @see ::evmc_trace_callback.
  *
  * This will overwrite the previous settings (the callback and the context).
+ *
+ * @deprecated Deprecated since EVMC 6.3, see evmc_instance::set_tracer().
  *
  * @param instance    The EVM instance.
  * @param callback    The tracer callback function. This argument MAY be NULL to disable previously
@@ -989,6 +1002,10 @@ struct evmc_instance
      * Optional pointer to function setting the EVM instruction tracer.
      *
      * If the EVM does not support this feature the pointer can be NULL.
+     *
+     * @deprecated
+     * Since EVMC 6.3, the tracing API has been deprecated as there have been some
+     * design flaws discovered. New API is expected to be introduced in future.
      */
     evmc_set_tracer_fn set_tracer;
 
