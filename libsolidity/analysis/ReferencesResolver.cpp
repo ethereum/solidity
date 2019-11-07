@@ -279,10 +279,34 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	ErrorList errors;
 	ErrorReporter errorsIgnored(errors);
 	yul::ExternalIdentifierAccess::Resolver resolver =
-	[&](yul::Identifier const& _identifier, yul::IdentifierContext, bool _crossesFunctionBoundary) {
-		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
+	[&](yul::Identifier const& _identifier, yul::IdentifierContext _context, bool _crossesFunctionBoundary) {
 		bool isSlot = boost::algorithm::ends_with(_identifier.name.str(), "_slot");
 		bool isOffset = boost::algorithm::ends_with(_identifier.name.str(), "_offset");
+		if (_context == yul::IdentifierContext::VariableDeclaration)
+		{
+			string namePrefix = _identifier.name.str().substr(0, _identifier.name.str().find('.'));
+			if (isSlot || isOffset)
+				declarationError(_identifier.location, "In variable declarations _slot and _offset can not be used as a suffix.");
+			else if (
+				auto declarations = m_resolver.nameFromCurrentScope(namePrefix);
+				!declarations.empty()
+			)
+			{
+				SecondarySourceLocation ssl;
+				for (auto const* decl: declarations)
+					ssl.append("The shadowed declaration is here:", decl->location());
+				if (!ssl.infos.empty())
+					declarationError(
+						_identifier.location,
+						ssl,
+						namePrefix.size() < _identifier.name.str().size() ?
+						"The prefix of this declaration conflicts with a declaration outside the inline assembly block." :
+						"This declaration shadows a declaration outside the inline assembly block."
+					);
+			}
+			return size_t(-1);
+		}
+		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
 		if (isSlot || isOffset)
 		{
 			// special mode to access storage variables
@@ -462,6 +486,12 @@ void ReferencesResolver::declarationError(SourceLocation const& _location, strin
 {
 	m_errorOccurred = true;
 	m_errorReporter.declarationError(_location, _description);
+}
+
+void ReferencesResolver::declarationError(SourceLocation const& _location, SecondarySourceLocation const& _ssl, string const& _description)
+{
+	m_errorOccurred = true;
+	m_errorReporter.declarationError(_location, _ssl, _description);
 }
 
 void ReferencesResolver::fatalDeclarationError(SourceLocation const& _location, string const& _description)
