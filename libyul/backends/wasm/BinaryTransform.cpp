@@ -391,6 +391,11 @@ bytes BinaryTransform::operator()(BreakIf const&)
 	return {};
 }
 
+bytes BinaryTransform::operator()(Return const&)
+{
+	return toBytes(Opcode::Return);
+}
+
 bytes BinaryTransform::operator()(Block const& _block)
 {
 	return
