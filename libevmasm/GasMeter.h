@@ -53,7 +53,12 @@ namespace GasCosts
 	}
 	inline unsigned balanceGas(langutil::EVMVersion _evmVersion)
 	{
-		return _evmVersion >= langutil::EVMVersion::tangerineWhistle() ? 400 : 20;
+		if (_evmVersion >= langutil::EVMVersion::istanbul())
+			return 700;
+		else if (_evmVersion >= langutil::EVMVersion::tangerineWhistle())
+			return 400;
+		else
+			return 20;
 	}
 	static unsigned const expGas = 10;
 	inline unsigned expByteGas(langutil::EVMVersion _evmVersion)
@@ -64,7 +69,12 @@ namespace GasCosts
 	static unsigned const keccak256WordGas = 6;
 	inline unsigned sloadGas(langutil::EVMVersion _evmVersion)
 	{
-		return _evmVersion >= langutil::EVMVersion::tangerineWhistle() ? 200 : 50;
+		if (_evmVersion >= langutil::EVMVersion::istanbul())
+			return 800;
+		else if (_evmVersion >= langutil::EVMVersion::tangerineWhistle())
+			return 200;
+		else
+			return 50;
 	}
 	static unsigned const sstoreSetGas = 20000;
 	static unsigned const sstoreResetGas = 5000;
