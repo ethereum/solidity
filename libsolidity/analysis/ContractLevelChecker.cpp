@@ -424,10 +424,14 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 		!_contract.abstract() &&
 		!_contract.annotation().unimplementedFunctions.empty()
 	)
-		m_errorReporter.typeError(
-			_contract.location(),
-			"Contract \"" + _contract.annotation().canonicalName + "\" should be marked as abstract."
-		);
+	{
+		SecondarySourceLocation ssl;
+		for (auto function: _contract.annotation().unimplementedFunctions)
+			ssl.append("Missing implementation:", function->location());
+		m_errorReporter.typeError(_contract.location(), ssl,
+			"Contract \"" + _contract.annotation().canonicalName
+			+ "\" should be marked as abstract.");
+	}
 }
 
 
