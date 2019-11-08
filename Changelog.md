@@ -15,6 +15,7 @@ Bugfixes:
  * Type Checker: Disallow constructor of the same class to be used as modifier
  * Code Generator: Fixed a faulty assert that would wrongly trigger for array sizes exceeding unsigned integer
  * Type Checker: Treat magic variables as unknown identifiers in inline assembly
+ * SMTChecker: Fix internal error when accessing indices of fixed bytes.
 
 
 
