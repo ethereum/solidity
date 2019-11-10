@@ -508,7 +508,13 @@ smt::SortPointer CHC::sort(FunctionDefinition const& _function)
 	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
 	vector<smt::SortPointer> varSorts;
 	for (auto const& var: _function.parameters() + _function.returnParameters())
-		varSorts.push_back(smt::smtSort(*var->type()));
+	{
+		// SMT solvers do not support function types as arguments.
+		if (var->type()->category() == Type::Category::Function)
+			varSorts.push_back(make_shared<smt::Sort>(smt::Kind::Int));
+		else
+			varSorts.push_back(smt::smtSort(*var->type()));
+	}
 	return make_shared<smt::FunctionSort>(
 		m_stateSorts + varSorts,
 		boolSort
@@ -526,7 +532,13 @@ smt::SortPointer CHC::sort(ASTNode const* _node)
 	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
 	vector<smt::SortPointer> varSorts;
 	for (auto const& var: m_currentFunction->localVariables())
-		varSorts.push_back(smt::smtSort(*var->type()));
+	{
+		// SMT solvers do not support function types as arguments.
+		if (var->type()->category() == Type::Category::Function)
+			varSorts.push_back(make_shared<smt::Sort>(smt::Kind::Int));
+		else
+			varSorts.push_back(smt::smtSort(*var->type()));
+	}
 	return make_shared<smt::FunctionSort>(
 		fSort->domain + varSorts,
 		boolSort
@@ -540,7 +552,7 @@ unique_ptr<smt::SymbolicFunctionVariable> CHC::createSymbolicBlock(smt::SortPoin
 		_name,
 		m_context
 	);
-	m_interface->registerRelation(block->currentValue());
+	m_interface->registerRelation(block->currentFunctionValue());
 	return block;
 }
 
@@ -572,7 +584,7 @@ smt::Expression CHC::error()
 
 smt::Expression CHC::error(unsigned _idx)
 {
-	return m_errorPredicate->valueAtIndex(_idx)({});
+	return m_errorPredicate->functionValueAtIndex(_idx)({});
 }
 
 unique_ptr<smt::SymbolicFunctionVariable> CHC::createBlock(ASTNode const* _node, string const& _prefix)
@@ -589,7 +601,7 @@ void CHC::createErrorBlock()
 {
 	solAssert(m_errorPredicate, "");
 	m_errorPredicate->increaseIndex();
-	m_interface->registerRelation(m_errorPredicate->currentValue());
+	m_interface->registerRelation(m_errorPredicate->currentFunctionValue());
 }
 
 void CHC::connectBlocks(smt::Expression const& _from, smt::Expression const& _to, smt::Expression const& _constraints)

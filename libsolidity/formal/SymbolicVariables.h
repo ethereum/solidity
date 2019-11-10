@@ -20,6 +20,7 @@
 #include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/formal/SSAVariable.h>
 #include <libsolidity/ast/Types.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <memory>
 
 namespace dev
@@ -138,7 +139,12 @@ public:
 };
 
 /**
- * Specialization of SymbolicVariable for FunctionType
+ * Specialization of SymbolicVariable for FunctionType.
+ * Besides containing a symbolic function declaration,
+ * it also has an integer used as abstraction.
+ * By default, the abstract representation is used when
+ * values are requested, and the function declaration is
+ * used when operator() is applied over arguments.
  */
 class SymbolicFunctionVariable: public SymbolicVariable
 {
@@ -154,8 +160,20 @@ public:
 		EncodingContext& _context
 	);
 
-	Expression increaseIndex();
-	Expression operator()(std::vector<Expression> _arguments) const;
+	Expression currentValue(solidity::TypePointer const& _targetType = TypePointer{}) const override;
+
+	// Explicit request the function declaration.
+	Expression currentFunctionValue() const;
+
+	Expression valueAtIndex(int _index) const override;
+
+	// Explicit request the function declaration.
+	Expression functionValueAtIndex(int _index) const;
+
+	Expression resetIndex() override;
+	Expression increaseIndex() override;
+
+	Expression operator()(std::vector<Expression> _arguments) const override;
 
 private:
 	/// Creates a new function declaration.
@@ -163,6 +181,14 @@ private:
 
 	/// Stores the current function declaration.
 	Expression m_declaration;
+
+	/// Abstract representation.
+	SymbolicIntVariable m_abstract{
+		TypeProvider::uint256(),
+		TypeProvider::uint256(),
+		m_uniqueName + "_abstract",
+		m_context
+	};
 };
 
 /**
