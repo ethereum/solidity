@@ -47,6 +47,7 @@ public:
 		m_inForBodyScope = false;
 		m_inForInitScope = false;
 		m_numNestedForLoops = 0;
+		m_numFunctionCalls = 0;
 		m_counter = 0;
 		m_inputSize = 0;
 		m_inFunctionDef = false;
@@ -329,9 +330,13 @@ private:
 	std::map<std::string, std::pair<unsigned, unsigned>> m_functionSigMap;
 	/// Tree of objects and their scopes
 	std::vector<std::vector<std::string>> m_objectScopeTree;
-	// mod input/output parameters impose an upper bound on the number of input/output parameters a function may have.
+	/// mod input/output parameters impose an upper bound on the number of input/output parameters a function may have.
 	static unsigned constexpr s_modInputParams = 5;
 	static unsigned constexpr s_modOutputParams = 5;
+	/// Maximum number of function calls permissible to keep a check on program size.
+	static unsigned constexpr s_maxFunctionCalls = 3;
+	/// Lower bound for function statement count to be considered non-trivial
+	static unsigned constexpr s_minStatements = 5;
 	/// Hard-coded identifier for a Yul object's data block
 	static auto constexpr s_dataIdentifier = "datablock";
 	/// Predicate to keep track of for body scope. If true, break/continue
@@ -339,6 +344,8 @@ private:
 	bool m_inForBodyScope;
 	// Index used for naming loop variable of bounded for loops
 	unsigned m_numNestedForLoops;
+	/// Counter to keep track of number of function calls
+	unsigned m_numFunctionCalls;
 	/// Predicate to keep track of for loop init scope. If true, variable
 	/// or function declarations can not be created.
 	bool m_inForInitScope;

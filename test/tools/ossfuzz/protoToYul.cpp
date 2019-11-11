@@ -1410,14 +1410,27 @@ void ProtoConverter::createFunctionDefAndCall(
 		!m_inForInitScope,
 		"Proto fuzzer: Trying to create function call inside for-init block"
 	);
-	createFunctionCall(funcName, _numInParams, _numOutParams);
+
+	// Create a function call pseudo randomly. The heuristic for this is
+	//  - We have not exceeded the maximum function call limit
+	//  - Function to be called qualifies as non trivial
+	//      - A function is non trivial if it contains at least "s_minStatements"
+	//      statements
+	if (m_numFunctionCalls < s_maxFunctionCalls)
+		if (static_cast<unsigned>(_x.block().statements_size()) >= s_minStatements)
+		{
+			createFunctionCall(funcName, _numInParams, _numOutParams);
+			m_numFunctionCalls++;
+		}
 }
 
 void ProtoConverter::visit(FunctionDef const& _x)
 {
-	unsigned numInParams = _x.num_input_params() % s_modInputParams;
-	unsigned numOutParams = _x.num_output_params() % s_modOutputParams;
-	createFunctionDefAndCall(_x, numInParams, numOutParams);
+	createFunctionDefAndCall(
+		_x,
+		_x.num_input_params() % s_modInputParams,
+		_x.num_output_params() % s_modOutputParams
+	);
 }
 
 void ProtoConverter::visit(PopStmt const& _x)
