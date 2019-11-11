@@ -92,8 +92,13 @@ message TestFunction {
 }
 
 message Contract {
+    enum Test {
+        CALLDATA_CODER = 1;
+        RETURNDATA_CODER = 2;
+    }
     required VarDecl state_vars = 1;
     required TestFunction testfunction = 2;
+    required Test test = 3;
 }
 
 package dev.test.abiv2fuzzer;

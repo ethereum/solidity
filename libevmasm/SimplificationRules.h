@@ -87,6 +87,10 @@ public:
 	using Expression = ExpressionClasses::Expression;
 	using Id = ExpressionClasses::Id;
 
+	using Builtins = dev::eth::EVMBuiltins;
+	static constexpr size_t WordSize = 256;
+	using Word = u256;
+
 	// Matches a specific constant value.
 	Pattern(unsigned _value): Pattern(u256(_value)) {}
 	// Matches a specific constant value.

@@ -55,7 +55,7 @@ get_logfile_basename() {
 }
 
 BOOST_TEST_ARGS="--color_output=no --show_progress=yes --logger=JUNIT,error,test_results/`get_logfile_basename`.xml"
-SOLTEST_ARGS="--evm-version=$EVM --evmonepath /usr/lib/libevmone.so $SOLTEST_FLAGS"
+SOLTEST_ARGS="--evm-version=$EVM $SOLTEST_FLAGS"
 test "${OPTIMIZE}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --optimize"
 test "${ABI_ENCODER_V2}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --abiencoderv2 --optimize-yul"
 

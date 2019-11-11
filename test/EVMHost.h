@@ -23,7 +23,6 @@
 
 #include <test/evmc/evmc.hpp>
 #include <test/evmc/evmc.h>
-#include <test/evmc/helpers.hpp>
 
 #include <liblangutil/EVMVersion.h>
 
@@ -47,11 +46,11 @@ public:
 
 	struct Account
 	{
-		evmc_uint256be balance = {};
+		evmc::uint256be balance = {};
 		size_t nonce = 0;
 		bytes code;
-		evmc_bytes32 codeHash = {};
-		std::map<evmc_bytes32, evmc_bytes32> storage;
+		evmc::bytes32 codeHash = {};
+		std::map<evmc::bytes32, evmc::bytes32> storage;
 	};
 
 	struct LogEntry
@@ -65,11 +64,11 @@ public:
 	{
 		size_t blockNumber;
 		uint64_t timestamp;
-		std::map<evmc_address, Account> accounts;
+		std::map<evmc::address, Account> accounts;
 		std::vector<LogEntry> logs;
 	};
 
-	Account* account(evmc_address const& _address)
+	Account* account(evmc::address const& _address)
 	{
 		// Make all precompiled contracts exist.
 		// Be future-proof and consider everything below 1024 as precompiled contract.
@@ -87,12 +86,12 @@ public:
 		m_state.logs.clear();
 	}
 
-	bool account_exists(evmc_address const& _addr) noexcept final
+	bool account_exists(evmc::address const& _addr) noexcept final
 	{
 		return account(_addr) != nullptr;
 	}
 
-	evmc_bytes32 get_storage(evmc_address const& _addr, evmc_bytes32 const& _key) noexcept final
+	evmc::bytes32 get_storage(evmc::address const& _addr, evmc::bytes32 const& _key) noexcept final
 	{
 		if (Account* acc = account(_addr))
 			return acc->storage[_key];
@@ -100,26 +99,26 @@ public:
 	}
 
 	evmc_storage_status set_storage(
-		evmc_address const& _addr,
-		evmc_bytes32 const& _key,
-		evmc_bytes32 const& _value
+		evmc::address const& _addr,
+		evmc::bytes32 const& _key,
+		evmc::bytes32 const& _value
 	) noexcept;
 
-	evmc_uint256be get_balance(evmc_address const& _addr) noexcept final
+	evmc::uint256be get_balance(evmc::address const& _addr) noexcept final
 	{
 		if (Account const* acc = account(_addr))
 			return acc->balance;
 		return {};
 	}
 
-	size_t get_code_size(evmc_address const& _addr) noexcept final
+	size_t get_code_size(evmc::address const& _addr) noexcept final
 	{
 		if (Account const* acc = account(_addr))
 			return acc->code.size();
 		return 0;
 	}
 
-	evmc_bytes32 get_code_hash(evmc_address const& _addr) noexcept final
+	evmc::bytes32 get_code_hash(evmc::address const& _addr) noexcept final
 	{
 		if (Account const* acc = account(_addr))
 			return acc->codeHash;
@@ -127,7 +126,7 @@ public:
 	}
 
 	size_t copy_code(
-		evmc_address const& _addr,
+		evmc::address const& _addr,
 		size_t _codeOffset,
 		uint8_t* _bufferData,
 		size_t _bufferSize
@@ -140,31 +139,31 @@ public:
 		return i;
 	}
 
-	void selfdestruct(evmc_address const& _addr, evmc_address const& _beneficiary) noexcept;
+	void selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept;
 
 	evmc::result call(evmc_message const& _message) noexcept;
 
 	evmc_tx_context get_tx_context() noexcept;
 
-	evmc_bytes32 get_block_hash(int64_t number) noexcept;
+	evmc::bytes32 get_block_hash(int64_t number) noexcept;
 
 	void emit_log(
-		evmc_address const& _addr,
+		evmc::address const& _addr,
 		uint8_t const* _data,
 		size_t _dataSize,
-		evmc_bytes32 const _topics[],
+		evmc::bytes32 const _topics[],
 		size_t _topicsCount
 	) noexcept;
 
-	static Address convertFromEVMC(evmc_address const& _addr);
-	static evmc_address convertToEVMC(Address const& _addr);
-	static h256 convertFromEVMC(evmc_bytes32 const& _data);
-	static evmc_bytes32 convertToEVMC(h256 const& _data);
+	static Address convertFromEVMC(evmc::address const& _addr);
+	static evmc::address convertToEVMC(Address const& _addr);
+	static h256 convertFromEVMC(evmc::bytes32 const& _data);
+	static evmc::bytes32 convertToEVMC(h256 const& _data);
 
 
 	State m_state;
-	evmc_address m_currentAddress = {};
-	evmc_address m_coinbase = convertToEVMC(Address("0x7878787878787878787878787878787878787878"));
+	evmc::address m_currentAddress = {};
+	evmc::address m_coinbase = convertToEVMC(Address("0x7878787878787878787878787878787878787878"));
 
 private:
 	evmc::result precompileECRecover(evmc_message const& _message) noexcept;

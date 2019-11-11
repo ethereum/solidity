@@ -35,7 +35,7 @@ class CHCSolverInterface
 public:
 	virtual ~CHCSolverInterface() = default;
 
-	virtual void declareVariable(std::string const& _name, Sort const& _sort) = 0;
+	virtual void declareVariable(std::string const& _name, SortPointer const& _sort) = 0;
 
 	/// Takes a function declaration as a relation.
 	virtual void registerRelation(Expression const& _expr) = 0;
