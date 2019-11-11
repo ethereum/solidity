@@ -62,7 +62,7 @@ RUN git clone --recursive -b boost-1.69.0 https://github.com/boostorg/boost.git 
     rm -rf /usr/src/boost
 
 # Z3
-RUN git clone --depth 1 -b Z3-4.8.5 https://github.com/Z3Prover/z3.git \
+RUN git clone --depth 1 -b z3-4.8.6 https://github.com/Z3Prover/z3.git \
     /usr/src/z3; \
     cd /usr/src/z3; \
     python scripts/mk_make.py --prefix=/usr ; \
