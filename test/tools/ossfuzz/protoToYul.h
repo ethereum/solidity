@@ -46,6 +46,7 @@ public:
 		m_variables = std::vector<std::vector<std::string>>{};
 		m_inForBodyScope = false;
 		m_inForInitScope = false;
+		m_inForPostScope = false;
 		m_numNestedForLoops = 0;
 		m_numFunctionCalls = 0;
 		m_counter = 0;
@@ -337,6 +338,8 @@ private:
 	static unsigned constexpr s_maxFunctionCalls = 3;
 	/// Lower bound for function statement count to be considered non-trivial
 	static unsigned constexpr s_minStatements = 5;
+	/// Upper bound for number of nested for loops
+	static unsigned constexpr s_maxNestedForLoops = 3;
 	/// Hard-coded identifier for a Yul object's data block
 	static auto constexpr s_dataIdentifier = "datablock";
 	/// Predicate to keep track of for body scope. If true, break/continue
@@ -349,6 +352,8 @@ private:
 	/// Predicate to keep track of for loop init scope. If true, variable
 	/// or function declarations can not be created.
 	bool m_inForInitScope;
+	/// Predicate to keep track of for loop post scope.
+	bool m_inForPostScope;
 	/// Monotonically increasing counter
 	unsigned m_counter;
 	/// Size of protobuf input

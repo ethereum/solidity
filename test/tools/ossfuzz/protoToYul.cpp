@@ -856,23 +856,40 @@ void ProtoConverter::visit(StoreFunc const& _x)
 
 void ProtoConverter::visit(ForStmt const& _x)
 {
+	if (m_numNestedForLoops + 1 > s_maxNestedForLoops)
+		return;
+
+	if (m_inForBodyScope || m_inForPostScope || m_numNestedForLoops == 0)
+		m_numNestedForLoops++;
+
 	bool wasInForBody = m_inForBodyScope;
 	bool wasInForInit = m_inForInitScope;
+	bool wasInForPost = m_inForPostScope;
 	m_inForBodyScope = false;
+	m_inForPostScope = false;
 	m_inForInitScope = true;
 	m_output << "for ";
 	visit(_x.for_init());
 	m_inForInitScope = false;
 	visit(_x.for_cond());
+	m_inForPostScope = true;
 	visit(_x.for_post());
+	m_inForPostScope = false;
 	m_inForBodyScope = true;
 	visit(_x.for_body());
 	m_inForBodyScope = wasInForBody;
 	m_inForInitScope = wasInForInit;
+	m_inForPostScope = wasInForPost;
 }
 
 void ProtoConverter::visit(BoundedForStmt const& _x)
 {
+	if (m_numNestedForLoops + 1 > s_maxNestedForLoops)
+		return;
+
+	if (m_inForBodyScope || m_inForPostScope || m_numNestedForLoops == 0)
+		m_numNestedForLoops++;
+
 	// Boilerplate for loop that limits the number of iterations to a maximum of 4.
 	std::string loopVarName("i_" + std::to_string(m_numNestedForLoops++));
 	m_output << "for { let " << loopVarName << " := 0 } "
@@ -881,12 +898,15 @@ void ProtoConverter::visit(BoundedForStmt const& _x)
 	// Store previous for body scope
 	bool wasInForBody = m_inForBodyScope;
 	bool wasInForInit = m_inForInitScope;
+	bool wasInForPost = m_inForPostScope;
 	m_inForBodyScope = true;
 	m_inForInitScope = false;
+	m_inForPostScope = false;
 	visit(_x.for_body());
 	// Restore previous for body scope and init
 	m_inForBodyScope = wasInForBody;
 	m_inForInitScope = wasInForInit;
+	m_inForPostScope = wasInForPost;
 }
 
 void ProtoConverter::visit(CaseStmt const& _x)
