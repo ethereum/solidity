@@ -104,17 +104,6 @@ defaults:
       name: command line tests
       command: ./test/cmdlineTests.sh
 
-  - test_ubuntu1904: &test_ubuntu1904
-      docker:
-        - image: ethereum/solidity-buildpack-deps:ubuntu1904
-      steps:
-        - checkout
-        - attach_workspace:
-            at: build
-        - run: *run_soltest
-        - store_test_results: *store_test_results
-        - store_artifacts: *artifacts_test_results
-
   - test_ubuntu1904_clang: &test_ubuntu1904_clang
       docker:
         - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang
@@ -126,7 +115,7 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
-  - test_ubuntu1904_all: &test_ubuntu1904
+  - test_ubuntu1904: &test_ubuntu1904
       docker:
         - image: ethereum/solidity-buildpack-deps:ubuntu1904
       steps:
