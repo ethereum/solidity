@@ -135,12 +135,12 @@ enum class Accuracy
 };
 struct MeanSigma
 {
-	float mean;
-	float standardDeviation;
+	float mean = 0.0f;
+	float standardDeviation = 1.0f;
 };
 double const d = 0;
-int i;
-int j;
+int i = 0;
+int j = 0;
 char* s;
 MeanAndSigma ms meanAndSigma(std::vector<float> const& _v, Accuracy _a);
 Derived* x = dynamic_cast<Derived*>(base);
