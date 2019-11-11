@@ -241,7 +241,7 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 ContractDefinition::ContractKind Parser::parseContractKind()
 {
 	ContractDefinition::ContractKind kind;
-	switch(m_scanner->currentToken())
+	switch (m_scanner->currentToken())
 	{
 	case Token::Interface:
 		kind = ContractDefinition::ContractKind::Interface;
@@ -388,7 +388,7 @@ StateMutability Parser::parseStateMutability()
 {
 	StateMutability stateMutability(StateMutability::NonPayable);
 	Token token = m_scanner->currentToken();
-	switch(token)
+	switch (token)
 	{
 		case Token::Payable:
 			stateMutability = StateMutability::Payable;

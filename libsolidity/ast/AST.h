@@ -187,7 +187,7 @@ public:
 
 	static std::string visibilityToString(Declaration::Visibility _visibility)
 	{
-		switch(_visibility)
+		switch (_visibility)
 		{
 		case Declaration::Visibility::Public:
 			return "public";
