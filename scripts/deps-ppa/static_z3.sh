@@ -25,9 +25,9 @@ set -ev
 keyid=70D110489D66E2F6
 email=builds@ethereum.org
 packagename=libz3-static-dev
-version=4.8.5
+version=4.8.6
 
-DISTRIBUTIONS="bionic disco"
+DISTRIBUTIONS="bionic disco eoan"
 
 for distribution in $DISTRIBUTIONS
 do
@@ -40,7 +40,7 @@ pparepo=cpp-build-deps
 ppafilesurl=https://launchpad.net/~ethereum/+archive/ubuntu/${pparepo}/+files
 
 # Fetch source
-git clone --depth 1 --branch Z3-${version} https://github.com/Z3Prover/z3.git
+git clone --depth 1 --branch z3-${version} https://github.com/Z3Prover/z3.git
 cd z3
 debversion="$version"
 
