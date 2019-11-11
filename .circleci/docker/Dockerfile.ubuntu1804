@@ -74,34 +74,10 @@ RUN set -ex; \
 	ar r /usr/lib/libFuzzingEngine.a *.o; \
 	rm -rf /var/lib/libfuzzer
 
-# ETHASH
-RUN set -ex; \
-	cd /usr/src; \
-	git clone --branch="v0.4.4" https://github.com/chfast/ethash.git; \
-	cd ethash; \
-	mkdir build; \
-	cd build; \
-	cmake .. -G Ninja -DBUILD_SHARED_LIBS=OFF -DETHASH_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX="/usr"; \
-	ninja; \
-	ninja install/strip; \
-	rm -rf /usr/src/ethash
-
-# INTX
-RUN set -ex; \
-	cd /usr/src; \
-	git clone --branch="v0.2.0" https://github.com/chfast/intx.git; \
-	cd intx; \
-	mkdir build; \
-	cd build; \
-	cmake .. -G Ninja -DBUILD_SHARED_LIBS=OFF -DINTX_TESTING=OFF -DINTX_BENCHMARKING=OFF -DCMAKE_INSTALL_PREFIX="/usr"; \
-	ninja; \
-	ninja install/strip; \
-	rm -rf /usr/src/intx;
-
 # EVMONE
-ARG EVMONE_HASH="f10d12c190f55a9d373e78b2dc0074d35d752c02cb536bb6fe754fb3719dd69e"
+ARG EVMONE_HASH="81488656a53ae1bbf186d33fc69a4f5c59d3d7419b1ba1b4832a0d409b1a33bf"
 ARG EVMONE_MAJOR="0"
-ARG EVMONE_MINOR="1"
+ARG EVMONE_MINOR="2"
 ARG EVMONE_MICRO="0"
 RUN set -ex; \
 	EVMONE_VERSION="$EVMONE_MAJOR.$EVMONE_MINOR.$EVMONE_MICRO"; \
