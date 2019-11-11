@@ -17,7 +17,7 @@ fi
 
 FORMATERROR=$(
 (
-	git grep -nIE "\<(if|for)\(" -- '*.h' '*.cpp' # no space after "if" or "for"
+	git grep -nIE "\<(if|for|while)\(" -- '*.h' '*.cpp' # no space after "if", "for" or "while"
 	git grep -nIE "\<for\>\s*\([^=]*\>\s:\s.*\)" -- '*.h' '*.cpp' # no space before range based for-loop
 	git grep -nIE "\<if\>\s*\(.*\)\s*\{\s*$" -- '*.h' '*.cpp' # "{\n" on same line as "if" / "for"
 	git grep -nIE "[,\(<]\s*const " -- '*.h' '*.cpp' # const on left side of type

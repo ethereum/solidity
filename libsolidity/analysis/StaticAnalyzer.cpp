@@ -227,7 +227,7 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 	if (m_constructor)
 	{
 		auto const* expr = &_memberAccess.expression();
-		while(expr)
+		while (expr)
 		{
 			if (auto id = dynamic_cast<Identifier const*>(expr))
 			{
