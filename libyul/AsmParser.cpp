@@ -462,84 +462,15 @@ FunctionDefinition Parser::parseFunctionDefinition()
 Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 {
 	RecursionGuard recursionGuard(*this);
-	if (_initialOp.type() == typeid(Instruction))
-	{
-		solAssert(m_dialect.flavour != AsmFlavour::Yul, "Instructions are invalid in Yul");
-		Instruction& instruction = boost::get<Instruction>(_initialOp);
-		FunctionalInstruction ret;
-		ret.instruction = instruction.instruction;
-		ret.location = std::move(instruction.location);
-		dev::eth::Instruction instr = ret.instruction;
-		dev::eth::InstructionInfo instrInfo = instructionInfo(instr);
-		if (dev::eth::isDupInstruction(instr))
-			fatalParserError("DUPi instructions not allowed for functional notation");
-		if (dev::eth::isSwapInstruction(instr))
-			fatalParserError("SWAPi instructions not allowed for functional notation");
-		expectToken(Token::LParen);
-		unsigned args = unsigned(instrInfo.args);
-		for (unsigned i = 0; i < args; ++i)
-		{
-			/// check for premature closing parentheses
-			if (currentToken() == Token::RParen)
-				fatalParserError(string(
-					"Expected expression (instruction \"" +
-					instructionNames().at(instr) +
-					"\" expects " +
-					to_string(args) +
-					" arguments)"
-				));
 
-			ret.arguments.emplace_back(parseExpression());
-			if (i != args - 1)
-			{
-				if (currentToken() != Token::Comma)
-					fatalParserError(string(
-						"Expected ',' (instruction \"" +
-						instructionNames().at(instr) +
-						"\" expects " +
-						to_string(args) +
-						" arguments)"
-					));
-				else
-					advance();
-			}
-		}
-		ret.location.end = endPosition();
-		if (currentToken() == Token::Comma)
-			fatalParserError(string(
-				"Expected ')' (instruction \"" +
-				instructionNames().at(instr) +
-				"\" expects " +
-				to_string(args) +
-				" arguments)"
-			));
-		expectToken(Token::RParen);
-		return ret;
-	}
-	else if (_initialOp.type() == typeid(Identifier) || _initialOp.type() == typeid(FunctionCall))
+	FunctionCall ret;
+	if (_initialOp.type() == typeid(Identifier))
 	{
-		FunctionCall ret;
-		if (_initialOp.type() == typeid(Identifier))
-		{
-			ret.functionName = std::move(boost::get<Identifier>(_initialOp));
-			ret.location = ret.functionName.location;
-		}
-		else
-			ret = std::move(boost::get<FunctionCall>(_initialOp));
-		expectToken(Token::LParen);
-		if (currentToken() != Token::RParen)
-		{
-			ret.arguments.emplace_back(parseExpression());
-			while (currentToken() != Token::RParen)
-			{
-				expectToken(Token::Comma);
-				ret.arguments.emplace_back(parseExpression());
-			}
-		}
-		ret.location.end = endPosition();
-		expectToken(Token::RParen);
-		return ret;
+		ret.functionName = std::move(boost::get<Identifier>(_initialOp));
+		ret.location = ret.functionName.location;
 	}
+	else if (_initialOp.type() == typeid(FunctionCall))
+		ret = std::move(boost::get<FunctionCall>(_initialOp));
 	else
 		fatalParserError(
 			m_dialect.flavour == AsmFlavour::Yul ?
@@ -547,7 +478,19 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 			"Assembly instruction or function name required in front of \"(\")"
 		);
 
-	return {};
+	expectToken(Token::LParen);
+	if (currentToken() != Token::RParen)
+	{
+		ret.arguments.emplace_back(parseExpression());
+		while (currentToken() != Token::RParen)
+		{
+			expectToken(Token::Comma);
+			ret.arguments.emplace_back(parseExpression());
+		}
+	}
+	ret.location.end = endPosition();
+	expectToken(Token::RParen);
+	return ret;
 }
 
 TypedName Parser::parseTypedName()

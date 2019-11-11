@@ -54,7 +54,6 @@ public:
 	);
 
 	using ASTWalker::operator();
-	void operator()(FunctionalInstruction const& _functionalInstruction) override;
 	void operator()(FunctionCall const& _functionCall) override;
 
 	bool movable() const { return m_sideEffects.movable; }
@@ -104,7 +103,6 @@ public:
 	static bool containsMSize(Dialect const& _dialect, Block const& _ast);
 
 	using ASTWalker::operator();
-	void operator()(FunctionalInstruction const& _instr);
 	void operator()(FunctionCall const& _funCall);
 
 private:

@@ -32,7 +32,6 @@ struct Label;
 struct Identifier;
 struct Assignment;
 struct VariableDeclaration;
-struct FunctionalInstruction;
 struct FunctionDefinition;
 struct FunctionCall;
 struct If;
@@ -47,7 +46,7 @@ struct Block;
 
 struct TypedName;
 
-using Expression = boost::variant<FunctionalInstruction, FunctionCall, Identifier, Literal>;
+using Expression = boost::variant<FunctionCall, Identifier, Literal>;
 using Statement = boost::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
 
 }

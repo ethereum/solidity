@@ -169,7 +169,6 @@ public:
 
 	void operator()(Literal const&) override;
 	void operator()(Identifier const&) override;
-	void operator()(FunctionalInstruction const& _instr) override;
 	void operator()(FunctionCall const& _funCall) override;
 
 	/// Asserts that the expression has exactly one value and returns it.

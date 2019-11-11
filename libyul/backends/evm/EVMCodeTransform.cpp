@@ -303,40 +303,6 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	}
 }
 
-void CodeTransform::operator()(FunctionalInstruction const& _instruction)
-{
-	if (m_evm15 && (
-		_instruction.instruction == dev::eth::Instruction::JUMP ||
-		_instruction.instruction == dev::eth::Instruction::JUMPI
-	))
-	{
-		bool const isJumpI = _instruction.instruction == dev::eth::Instruction::JUMPI;
-		if (isJumpI)
-		{
-			solAssert(_instruction.arguments.size() == 2, "");
-			visitExpression(_instruction.arguments.at(1));
-		}
-		else
-		{
-			solAssert(_instruction.arguments.size() == 1, "");
-		}
-		m_assembly.setSourceLocation(_instruction.location);
-		auto label = labelFromIdentifier(boost::get<Identifier>(_instruction.arguments.at(0)));
-		if (isJumpI)
-			m_assembly.appendJumpToIf(label);
-		else
-			m_assembly.appendJumpTo(label);
-	}
-	else
-	{
-		for (auto const& arg: _instruction.arguments | boost::adaptors::reversed)
-			visitExpression(arg);
-		m_assembly.setSourceLocation(_instruction.location);
-		m_assembly.appendInstruction(_instruction.instruction);
-	}
-	checkStackHeight(&_instruction);
-}
-
 void CodeTransform::operator()(Identifier const& _identifier)
 {
 	m_assembly.setSourceLocation(_identifier.location);

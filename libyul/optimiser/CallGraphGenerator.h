@@ -42,7 +42,6 @@ public:
 	static std::map<YulString, std::set<YulString>> callGraph(Block const& _ast);
 
 	using ASTWalker::operator();
-	void operator()(FunctionalInstruction const& _functionalInstruction) override;
 	void operator()(FunctionCall const& _functionCall) override;
 	void operator()(FunctionDefinition const& _functionDefinition) override;
 

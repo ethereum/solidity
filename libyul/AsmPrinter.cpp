@@ -88,19 +88,6 @@ string AsmPrinter::operator()(Identifier const& _identifier) const
 	return _identifier.name.str();
 }
 
-string AsmPrinter::operator()(FunctionalInstruction const& _functionalInstruction) const
-{
-	solAssert(!m_yul, "");
-	solAssert(isValidInstruction(_functionalInstruction.instruction), "Invalid instruction");
-	return
-		boost::to_lower_copy(instructionInfo(_functionalInstruction.instruction).name) +
-		"(" +
-		boost::algorithm::join(
-			_functionalInstruction.arguments | boost::adaptors::transformed(boost::apply_visitor(*this)),
-			", ") +
-		")";
-}
-
 string AsmPrinter::operator()(ExpressionStatement const& _statement) const
 {
 	return boost::apply_visitor(*this, _statement.expression);

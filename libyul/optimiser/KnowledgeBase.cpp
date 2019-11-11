@@ -77,9 +77,6 @@ Expression KnowledgeBase::simplify(Expression _expression)
 	if (_expression.type() == typeid(FunctionCall))
 		for (Expression& arg: boost::get<FunctionCall>(_expression).arguments)
 			arg = simplify(arg);
-	else if (_expression.type() == typeid(FunctionalInstruction))
-		for (Expression& arg: boost::get<FunctionalInstruction>(_expression).arguments)
-			arg = simplify(arg);
 
 	if (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_variableValues))
 		return simplify(match->action().toExpression(locationOf(_expression)));
