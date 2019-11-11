@@ -31,7 +31,7 @@ function test_fn { npm run test; }
 function zeppelin_test
 {
     OPTIMIZER_LEVEL=1
-    truffle_setup https://github.com/OpenZeppelin/openzeppelin-solidity.git master
+    truffle_setup https://github.com/erak/openzeppelin-solidity.git master_060
     run_install install_fn
 
     CONFIG="truffle-config.js"
