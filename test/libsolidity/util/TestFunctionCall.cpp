@@ -55,6 +55,12 @@ string TestFunctionCall::format(
 		string newline = formatToken(Token::Newline);
 		string failure = formatToken(Token::Failure);
 
+		if (m_call.isLibrary)
+		{
+			stream << _linePrefix << newline << ws << "library:" << ws << m_call.signature;
+			return;
+		}
+
 		/// Formats the function signature. This is the same independent from the display-mode.
 		stream << _linePrefix << newline << ws << m_call.signature;
 		if (m_call.value > u256(0))

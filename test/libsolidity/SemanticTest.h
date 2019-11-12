@@ -60,7 +60,7 @@ public:
 
 	/// Compiles and deploys currently held source.
 	/// Returns true if deployment was successful, false otherwise.
-	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments);
+	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, dev::test::Address> const& _libraries = {});
 
 private:
 	std::string m_source;
