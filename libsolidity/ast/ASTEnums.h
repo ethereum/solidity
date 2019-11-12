@@ -36,7 +36,7 @@ enum class StateMutability { Pure, View, NonPayable, Payable };
 
 inline std::string stateMutabilityToString(StateMutability const& _stateMutability)
 {
-	switch(_stateMutability)
+	switch (_stateMutability)
 	{
 	case StateMutability::Pure:
 		return "pure";

@@ -57,7 +57,7 @@ packagename=solc
 
 static_build_distribution=disco
 
-DISTRIBUTIONS="bionic disco"
+DISTRIBUTIONS="bionic disco eoan"
 
 if is_release
 then

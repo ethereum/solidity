@@ -663,7 +663,7 @@ BoolResult FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) con
 
 TypeResult FixedPointType::unaryOperatorResult(Token _operator) const
 {
-	switch(_operator)
+	switch (_operator)
 	{
 	case Token::Delete:
 		// "delete" is ok for all fixed types
@@ -2881,7 +2881,7 @@ unsigned FunctionType::sizeOnStack() const
 
 	unsigned size = 0;
 
-	switch(kind)
+	switch (kind)
 	{
 	case Kind::External:
 	case Kind::DelegateCall:
