@@ -75,43 +75,55 @@ vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls(siz
 
 				try
 				{
-					tie(call.signature, call.useCallWithoutSignature) = parseFunctionSignature();
-					if (accept(Token::Comma, true))
-						call.value = parseFunctionCallValue();
-					if (accept(Token::Colon, true))
-						call.arguments = parseFunctionCallArguments();
-
-					if (accept(Token::Newline, true))
+					if (accept(Token::Library, true))
 					{
-						call.displayMode = FunctionCall::DisplayMode::MultiLine;
-						m_lineNumber++;
-					}
-
-					call.arguments.comment = parseComment();
-
-					if (accept(Token::Newline, true))
-					{
-						call.displayMode = FunctionCall::DisplayMode::MultiLine;
-						m_lineNumber++;
-					}
-
-					if (accept(Token::Arrow, true))
-					{
-						call.omitsArrow = false;
-						call.expectations = parseFunctionCallExpectations();
-						if (accept(Token::Newline, true))
-							m_lineNumber++;
+						expect(Token::Colon);
+						call.signature = m_scanner.currentLiteral();
+						expect(Token::Identifier);
+						call.isLibrary = true;
+						call.expectations.failure = false;
 					}
 					else
 					{
-						call.expectations.failure = false;
-						call.displayMode = FunctionCall::DisplayMode::SingleLine;
+						tie(call.signature, call.useCallWithoutSignature) = parseFunctionSignature();
+						if (accept(Token::Comma, true))
+							call.value = parseFunctionCallValue();
+						if (accept(Token::Colon, true))
+							call.arguments = parseFunctionCallArguments();
+
+						if (accept(Token::Newline, true))
+						{
+							call.displayMode = FunctionCall::DisplayMode::MultiLine;
+							m_lineNumber++;
+						}
+
+						call.arguments.comment = parseComment();
+
+						if (accept(Token::Newline, true))
+						{
+							call.displayMode = FunctionCall::DisplayMode::MultiLine;
+							m_lineNumber++;
+						}
+
+						if (accept(Token::Arrow, true))
+						{
+							call.omitsArrow = false;
+							call.expectations = parseFunctionCallExpectations();
+							if (accept(Token::Newline, true))
+								m_lineNumber++;
+						}
+						else
+						{
+							call.expectations.failure = false;
+							call.displayMode = FunctionCall::DisplayMode::SingleLine;
+						}
+
+						call.expectations.comment = parseComment();
+
+						if (call.signature == "constructor()")
+							call.isConstructor = true;
+
 					}
-
-					call.expectations.comment = parseComment();
-
-					if (call.signature == "constructor()")
-						call.isConstructor = true;
 
 					calls.emplace_back(std::move(call));
 				}
@@ -456,6 +468,7 @@ void TestFileParser::Scanner::scanNextToken()
 		if (_literal == "false") return TokenDesc{Token::Boolean, _literal};
 		if (_literal == "ether") return TokenDesc{Token::Ether, _literal};
 		if (_literal == "left") return TokenDesc{Token::Left, _literal};
+		if (_literal == "library") return TokenDesc{Token::Library, _literal};
 		if (_literal == "right") return TokenDesc{Token::Right, _literal};
 		if (_literal == "hex") return TokenDesc{Token::Hex, _literal};
 		if (_literal == "FAILURE") return TokenDesc{Token::Failure, _literal};
