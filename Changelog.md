@@ -1,6 +1,7 @@
 ### 0.5.13 (unreleased)
 
 Language Features:
+ * Allow to obtain the address of a linked library with ``address(LibraryName)``.
 
 
 Compiler Features:

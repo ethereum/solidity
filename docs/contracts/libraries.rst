@@ -178,6 +178,9 @@ custom types without the overhead of external function calls:
         }
     }
 
+It is possible to obtain the address of a library by converting
+the library type to the ``address`` type, i.e. using ``address(LibraryName)``.
+
 As the compiler cannot know where the library will be
 deployed at, these addresses have to be filled into the
 final bytecode by a linker

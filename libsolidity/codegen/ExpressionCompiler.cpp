@@ -475,7 +475,22 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	{
 		solAssert(_functionCall.arguments().size() == 1, "");
 		solAssert(_functionCall.names().empty(), "");
-		acceptAndConvert(*_functionCall.arguments().front(), *_functionCall.annotation().type);
+		auto const& expression = *_functionCall.arguments().front();
+		auto const& targetType = *_functionCall.annotation().type;
+		if (auto const* typeType = dynamic_cast<TypeType const*>(expression.annotation().type))
+			if (auto const* addressType = dynamic_cast<AddressType const*>(&targetType))
+			{
+				auto const* contractType = dynamic_cast<ContractType const*>(typeType->actualType());
+				solAssert(
+					contractType &&
+					contractType->contractDefinition().isLibrary() &&
+					addressType->stateMutability() == StateMutability::NonPayable,
+					""
+				);
+				m_context.appendLibraryAddress(contractType->contractDefinition().fullyQualifiedName());
+				return false;
+			}
+		acceptAndConvert(expression, targetType);
 		return false;
 	}
 
