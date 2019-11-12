@@ -21,11 +21,13 @@
 #include <test/tools/yulInterpreter/Interpreter.h>
 
 #include <test/tools/yulInterpreter/EVMInstructionInterpreter.h>
+#include <test/tools/yulInterpreter/EWasmBuiltinInterpreter.h>
 
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/wasm/WasmDialect.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -229,10 +231,19 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 	evaluateArgs(_funCall.arguments);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+	{
 		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 		{
 			EVMInstructionInterpreter interpreter(m_state);
 			setValue(interpreter.evalBuiltin(*fun, values()));
+			return;
+		}
+	}
+	else if (WasmDialect const* dialect = dynamic_cast<WasmDialect const*>(&m_dialect))
+		if (dialect->builtin(_funCall.functionName.name))
+		{
+			EWasmBuiltinInterpreter interpreter(m_state);
+			setValue(interpreter.evalBuiltin(_funCall.functionName.name, values()));
 			return;
 		}
 
