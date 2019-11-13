@@ -135,9 +135,13 @@ void SMTEncoder::visitFunctionOrModifier()
 			*modifierInvocation->name()->annotation().referencedDeclaration
 		);
 		vector<smt::Expression> modifierArgsExpr;
-		if (modifierInvocation->arguments())
-			for (auto arg: *modifierInvocation->arguments())
-				modifierArgsExpr.push_back(expr(*arg));
+		if (auto const* arguments = modifierInvocation->arguments())
+		{
+			auto const& modifierParams = modifierDef.parameters();
+			solAssert(modifierParams.size() == arguments->size(), "");
+			for (unsigned i = 0; i < arguments->size(); ++i)
+				modifierArgsExpr.push_back(expr(*arguments->at(i), modifierParams.at(i)->type()));
+		}
 		initializeFunctionCallParameters(modifierDef, modifierArgsExpr);
 		pushCallStack({&modifierDef, modifierInvocation.get()});
 		modifierDef.body().accept(*this);
@@ -698,7 +702,7 @@ void SMTEncoder::endVisit(Return const& _return)
 			}
 		}
 		else if (returnParams.size() == 1)
-			m_context.addAssertion(expr(*_return.expression()) == m_context.newValue(*returnParams.front()));
+			m_context.addAssertion(expr(*_return.expression(), returnParams.front()->type()) == m_context.newValue(*returnParams.front()));
 	}
 }
 
