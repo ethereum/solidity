@@ -5,20 +5,20 @@ Language Features:
 
 
 Compiler Features:
- * Code Generator: Use SELFBALANCE for ``address(this).balance`` if using Istanbul EVM
+ * Code Generator: Use SELFBALANCE opcode for ``address(this).balance`` if using Istanbul EVM.
+ * EWasm: Experimental EWasm binary output via ``--ewasm`` and as documented in standard-json.
  * SMTChecker: Add break/continue support to the CHC engine.
  * SMTChecker: Support assignments to multi-dimensional arrays and mappings.
  * SMTChecker: Support inheritance and function overriding.
- * TypeChecker: List possible candidates when overload resolution fails
- * EWasm: Experimental EWasm binary output.
+ * TypeChecker: List possible candidates when overload resolution fails.
 
 
 Bugfixes:
- * Type Checker: Disallow constructor of the same class to be used as modifier
- * Code Generator: Fixed a faulty assert that would wrongly trigger for array sizes exceeding unsigned integer
- * Type Checker: Treat magic variables as unknown identifiers in inline assembly
+ * Code Generator: Fixed a faulty assert that would wrongly trigger for array sizes exceeding unsigned integer.
  * SMTChecker: Fix internal error when accessing indices of fixed bytes.
  * SMTChecker: Fix internal error when using function pointers as arguments.
+ * Type Checker: Disallow constructor of the same class to be used as modifier.
+ * Type Checker: Treat magic variables as unknown identifiers in inline assembly.
 
 
 
