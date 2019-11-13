@@ -22,11 +22,15 @@
 #include <libsolidity/ast/ASTJsonConverter.h>
 
 #include <libsolidity/ast/AST.h>
+
+#include <libyul/AsmJsonConverter.h>
 #include <libyul/AsmData.h>
 #include <libyul/AsmPrinter.h>
 #include <libdevcore/JSON.h>
 #include <libdevcore/UTF8.h>
+
 #include <boost/algorithm/string/join.hpp>
+#include <boost/range/algorithm/sort.hpp>
 
 #include <vector>
 #include <algorithm>
@@ -124,11 +128,17 @@ void ASTJsonConverter::setJsonNode(
 	}
 }
 
+size_t ASTJsonConverter::sourceIndexFromLocation(SourceLocation const& _location) const
+{
+	if (_location.source && m_sourceIndices.count(_location.source->name()))
+		return m_sourceIndices.at(_location.source->name());
+	else
+		return size_t(-1);
+}
+
 string ASTJsonConverter::sourceLocationToString(SourceLocation const& _location) const
 {
-	int sourceIndex{-1};
-	if (_location.source && m_sourceIndices.count(_location.source->name()))
-		sourceIndex = m_sourceIndices.at(_location.source->name());
+	size_t sourceIndex = sourceIndexFromLocation(_location);
 	int length = -1;
 	if (_location.start >= 0 && _location.end >= 0)
 		length = _location.end - _location.start;
@@ -462,17 +472,22 @@ bool ASTJsonConverter::visit(ArrayTypeName const& _node)
 
 bool ASTJsonConverter::visit(InlineAssembly const& _node)
 {
-	Json::Value externalReferences(Json::arrayValue);
+	vector<pair<string, Json::Value>> externalReferences;
 	for (auto const& it: _node.annotation().externalReferences)
 		if (it.first)
-		{
-			Json::Value tuple(Json::objectValue);
-			tuple[it.first->name.str()] = inlineAssemblyIdentifierToJson(it);
-			externalReferences.append(tuple);
-		}
+			externalReferences.emplace_back(make_pair(
+				it.first->name.str(),
+				inlineAssemblyIdentifierToJson(it)
+			));
+	Json::Value externalReferencesJson = Json::arrayValue;
+	for (auto&& it: boost::range::sort(externalReferences))
+		externalReferencesJson.append(std::move(it.second));
+
 	setJsonNode(_node, "InlineAssembly", {
-		make_pair("operations", Json::Value(yul::AsmPrinter()(_node.operations()))),
-		make_pair("externalReferences", std::move(externalReferences))
+			m_legacy ?
+			make_pair("operations", Json::Value(yul::AsmPrinter()(_node.operations()))) :
+			make_pair("AST", Json::Value(yul::AsmJsonConverter(sourceIndexFromLocation(_node.location()))(_node.operations()))),
+		make_pair("externalReferences", std::move(externalReferencesJson))
 	});
 	return false;
 }

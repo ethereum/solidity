@@ -1,0 +1,109 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      6
+    ]
+  },
+  "id": 7,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 6,
+      "linearizedBaseContracts":
+      [
+        6
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 4,
+            "nodeType": "Block",
+            "src": "37:43:1",
+            "statements":
+            [
+              {
+                "AST":
+                {
+                  "nodeType": "YulBlock",
+                  "src": "56:18:1",
+                  "statements":
+                  [
+                    {
+                      "nodeType": "YulVariableDeclaration",
+                      "src": "58:14:1",
+                      "value":
+                      {
+                        "kind": "string",
+                        "nodeType": "YulLiteral",
+                        "src": "67:5:1",
+                        "type": "",
+                        "value": "abc"
+                      },
+                      "variables":
+                      [
+                        {
+                          "name": "x",
+                          "nodeType": "YulTypedName",
+                          "src": "62:1:1",
+                          "type": ""
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "externalReferences": [],
+                "id": 3,
+                "nodeType": "InlineAssembly",
+                "src": "47:27:1"
+              }
+            ]
+          },
+          "documentation": null,
+          "id": 5,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "m",
+          "nodeType": "FunctionDefinition",
+          "overrides": null,
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "27:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "37:0:1"
+          },
+          "scope": 6,
+          "src": "17:63:1",
+          "stateMutability": "nonpayable",
+          "superFunction": null,
+          "visibility": "public"
+        }
+      ],
+      "scope": 7,
+      "src": "0:82:1"
+    }
+  ],
+  "src": "0:83:1"
+}

@@ -1,0 +1,201 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      6
+    ]
+  },
+  "id": 7,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 6,
+      "linearizedBaseContracts":
+      [
+        6
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 4,
+            "nodeType": "Block",
+            "src": "42:154:1",
+            "statements":
+            [
+              {
+                "AST":
+                {
+                  "nodeType": "YulBlock",
+                  "src": "61:129:1",
+                  "statements":
+                  [
+                    {
+                      "nodeType": "YulVariableDeclaration",
+                      "src": "75:10:1",
+                      "value":
+                      {
+                        "kind": "number",
+                        "nodeType": "YulLiteral",
+                        "src": "84:1:1",
+                        "type": "",
+                        "value": "0"
+                      },
+                      "variables":
+                      [
+                        {
+                          "name": "f",
+                          "nodeType": "YulTypedName",
+                          "src": "79:1:1",
+                          "type": ""
+                        }
+                      ]
+                    },
+                    {
+                      "cases":
+                      [
+                        {
+                          "body":
+                          {
+                            "nodeType": "YulBlock",
+                            "src": "139:10:1",
+                            "statements":
+                            [
+                              {
+                                "nodeType": "YulAssignment",
+                                "src": "141:6:1",
+                                "value":
+                                {
+                                  "kind": "number",
+                                  "nodeType": "YulLiteral",
+                                  "src": "146:1:1",
+                                  "type": "",
+                                  "value": "1"
+                                },
+                                "variableNames":
+                                [
+                                  {
+                                    "name": "f",
+                                    "nodeType": "YulIdentifier",
+                                    "src": "141:1:1"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "nodeType": "YulCase",
+                          "src": "132:17:1",
+                          "value":
+                          {
+                            "kind": "number",
+                            "nodeType": "YulLiteral",
+                            "src": "137:1:1",
+                            "type": "",
+                            "value": "0"
+                          }
+                        },
+                        {
+                          "body":
+                          {
+                            "nodeType": "YulBlock",
+                            "src": "170:10:1",
+                            "statements":
+                            [
+                              {
+                                "nodeType": "YulAssignment",
+                                "src": "172:6:1",
+                                "value":
+                                {
+                                  "kind": "number",
+                                  "nodeType": "YulLiteral",
+                                  "src": "177:1:1",
+                                  "type": "",
+                                  "value": "2"
+                                },
+                                "variableNames":
+                                [
+                                  {
+                                    "name": "f",
+                                    "nodeType": "YulIdentifier",
+                                    "src": "172:1:1"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "nodeType": "YulCase",
+                          "src": "162:18:1",
+                          "value": "default"
+                        }
+                      ],
+                      "expression":
+                      {
+                        "arguments": [],
+                        "functionName":
+                        {
+                          "name": "calldatasize",
+                          "nodeType": "YulIdentifier",
+                          "src": "105:12:1"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "105:14:1"
+                      },
+                      "nodeType": "YulSwitch",
+                      "src": "98:82:1"
+                    }
+                  ]
+                },
+                "externalReferences": [],
+                "id": 3,
+                "nodeType": "InlineAssembly",
+                "src": "52:138:1"
+              }
+            ]
+          },
+          "documentation": null,
+          "id": 5,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "f",
+          "nodeType": "FunctionDefinition",
+          "overrides": null,
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "27:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "42:0:1"
+          },
+          "scope": 6,
+          "src": "17:179:1",
+          "stateMutability": "pure",
+          "superFunction": null,
+          "visibility": "public"
+        }
+      ],
+      "scope": 7,
+      "src": "0:198:1"
+    }
+  ],
+  "src": "0:199:1"
+}

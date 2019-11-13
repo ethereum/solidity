@@ -1,0 +1,121 @@
+{
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        6
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "abstract": false,
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          6
+        ],
+        "name": "C",
+        "scope": 7
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "documentation": null,
+            "implemented": true,
+            "isConstructor": false,
+            "kind": "function",
+            "modifiers":
+            [
+              null
+            ],
+            "name": "h",
+            "overrides": null,
+            "scope": 6,
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 1,
+              "name": "ParameterList",
+              "src": "27:2:1"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 2,
+              "name": "ParameterList",
+              "src": "42:0:1"
+            },
+            {
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "externalReferences":
+                    [
+                      null
+                    ],
+                    "operations": "{\n    function g()\n    { pop(blockhash(20)) }\n    g()\n}"
+                  },
+                  "children": [],
+                  "id": 3,
+                  "name": "InlineAssembly",
+                  "src": "52:52:1"
+                }
+              ],
+              "id": 4,
+              "name": "Block",
+              "src": "42:68:1"
+            }
+          ],
+          "id": 5,
+          "name": "FunctionDefinition",
+          "src": "17:93:1"
+        }
+      ],
+      "id": 6,
+      "name": "ContractDefinition",
+      "src": "0:112:1"
+    }
+  ],
+  "id": 7,
+  "name": "SourceUnit",
+  "src": "0:113:1"
+}

@@ -1,0 +1,211 @@
+{
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        11
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "abstract": false,
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          11
+        ],
+        "name": "C",
+        "scope": 12
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "canonicalName": "C.S",
+            "name": "S",
+            "scope": 11,
+            "visibility": "public"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "constant": false,
+                "name": "x",
+                "overrides": null,
+                "scope": 3,
+                "stateVariable": false,
+                "storageLocation": "default",
+                "type": "uint256",
+                "value": null,
+                "visibility": "internal"
+              },
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "name": "uint",
+                    "type": "uint256"
+                  },
+                  "id": 1,
+                  "name": "ElementaryTypeName",
+                  "src": "28:4:1"
+                }
+              ],
+              "id": 2,
+              "name": "VariableDeclaration",
+              "src": "28:6:1"
+            }
+          ],
+          "id": 3,
+          "name": "StructDefinition",
+          "src": "17:20:1"
+        },
+        {
+          "attributes":
+          {
+            "constant": false,
+            "name": "s",
+            "overrides": null,
+            "scope": 11,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "type": "struct C.S",
+            "value": null,
+            "visibility": "internal"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "contractScope": null,
+                "name": "S",
+                "referencedDeclaration": 3,
+                "type": "struct C.S"
+              },
+              "id": 4,
+              "name": "UserDefinedTypeName",
+              "src": "42:1:1"
+            }
+          ],
+          "id": 5,
+          "name": "VariableDeclaration",
+          "src": "42:3:1"
+        },
+        {
+          "attributes":
+          {
+            "documentation": null,
+            "implemented": true,
+            "isConstructor": false,
+            "kind": "function",
+            "modifiers":
+            [
+              null
+            ],
+            "name": "e",
+            "overrides": null,
+            "scope": 11,
+            "stateMutability": "pure",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 6,
+              "name": "ParameterList",
+              "src": "61:2:1"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 7,
+              "name": "ParameterList",
+              "src": "76:0:1"
+            },
+            {
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "externalReferences":
+                    [
+                      {
+                        "declaration": 5,
+                        "isOffset": true,
+                        "isSlot": false,
+                        "src": "106:8:1",
+                        "valueSize": 1
+                      },
+                      {
+                        "declaration": 5,
+                        "isOffset": false,
+                        "isSlot": true,
+                        "src": "128:6:1",
+                        "valueSize": 1
+                      }
+                    ],
+                    "operations": "{\n    let x := s_offset\n    let y := mul(s_slot, 2)\n}"
+                  },
+                  "children": [],
+                  "id": 8,
+                  "name": "InlineAssembly",
+                  "src": "86:54:1"
+                }
+              ],
+              "id": 9,
+              "name": "Block",
+              "src": "76:70:1"
+            }
+          ],
+          "id": 10,
+          "name": "FunctionDefinition",
+          "src": "51:95:1"
+        }
+      ],
+      "id": 11,
+      "name": "ContractDefinition",
+      "src": "0:148:1"
+    }
+  ],
+  "id": 12,
+  "name": "SourceUnit",
+  "src": "0:149:1"
+}

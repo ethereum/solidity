@@ -1,0 +1,155 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      6
+    ]
+  },
+  "id": 7,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 6,
+      "linearizedBaseContracts":
+      [
+        6
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 4,
+            "nodeType": "Block",
+            "src": "42:68:1",
+            "statements":
+            [
+              {
+                "AST":
+                {
+                  "nodeType": "YulBlock",
+                  "src": "61:43:1",
+                  "statements":
+                  [
+                    {
+                      "body":
+                      {
+                        "nodeType": "YulBlock",
+                        "src": "76:22:1",
+                        "statements":
+                        [
+                          {
+                            "expression":
+                            {
+                              "arguments":
+                              [
+                                {
+                                  "arguments":
+                                  [
+                                    {
+                                      "kind": "number",
+                                      "nodeType": "YulLiteral",
+                                      "src": "92:2:1",
+                                      "type": "",
+                                      "value": "20"
+                                    }
+                                  ],
+                                  "functionName":
+                                  {
+                                    "name": "blockhash",
+                                    "nodeType": "YulIdentifier",
+                                    "src": "82:9:1"
+                                  },
+                                  "nodeType": "YulFunctionCall",
+                                  "src": "82:13:1"
+                                }
+                              ],
+                              "functionName":
+                              {
+                                "name": "pop",
+                                "nodeType": "YulIdentifier",
+                                "src": "78:3:1"
+                              },
+                              "nodeType": "YulFunctionCall",
+                              "src": "78:18:1"
+                            },
+                            "nodeType": "YulExpressionStatement",
+                            "src": "78:18:1"
+                          }
+                        ]
+                      },
+                      "name": "g",
+                      "nodeType": "YulFunctionDefinition",
+                      "src": "63:35:1"
+                    },
+                    {
+                      "expression":
+                      {
+                        "arguments": [],
+                        "functionName":
+                        {
+                          "name": "g",
+                          "nodeType": "YulIdentifier",
+                          "src": "99:1:1"
+                        },
+                        "nodeType": "YulFunctionCall",
+                        "src": "99:3:1"
+                      },
+                      "nodeType": "YulExpressionStatement",
+                      "src": "99:3:1"
+                    }
+                  ]
+                },
+                "externalReferences": [],
+                "id": 3,
+                "nodeType": "InlineAssembly",
+                "src": "52:52:1"
+              }
+            ]
+          },
+          "documentation": null,
+          "id": 5,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "h",
+          "nodeType": "FunctionDefinition",
+          "overrides": null,
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "27:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "42:0:1"
+          },
+          "scope": 6,
+          "src": "17:93:1",
+          "stateMutability": "view",
+          "superFunction": null,
+          "visibility": "public"
+        }
+      ],
+      "scope": 7,
+      "src": "0:112:1"
+    }
+  ],
+  "src": "0:113:1"
+}
