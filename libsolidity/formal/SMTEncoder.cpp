@@ -594,10 +594,10 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 	{
 		// Will be translated as part of the node that requested the lvalue.
 	}
-	else if (_identifier.annotation().type->category() == Type::Category::Function)
-		visitFunctionIdentifier(_identifier);
 	else if (auto decl = identifierToVariable(_identifier))
 		defineExpr(_identifier, currentValue(*decl));
+	else if (_identifier.annotation().type->category() == Type::Category::Function)
+		visitFunctionIdentifier(_identifier);
 	else if (_identifier.name() == "now")
 		defineGlobalVariable(_identifier.name(), _identifier);
 	else if (_identifier.name() == "this")
@@ -1343,7 +1343,7 @@ void SMTEncoder::createExpr(Expression const& _e)
 void SMTEncoder::defineExpr(Expression const& _e, smt::Expression _value)
 {
 	createExpr(_e);
-	solAssert(smt::smtKind(_e.annotation().type->category()) != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
+	solAssert(_value.sort->kind != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
 	m_context.addAssertion(expr(_e) == _value);
 }
 

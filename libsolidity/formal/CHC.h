@@ -154,15 +154,15 @@ private:
 	//@{
 	/// Constructor predicate.
 	/// Default constructor sets state vars to 0.
-	std::unique_ptr<smt::SymbolicVariable> m_constructorPredicate;
+	std::unique_ptr<smt::SymbolicFunctionVariable> m_constructorPredicate;
 
 	/// Artificial Interface predicate.
 	/// Single entry block for all functions.
-	std::unique_ptr<smt::SymbolicVariable> m_interfacePredicate;
+	std::unique_ptr<smt::SymbolicFunctionVariable> m_interfacePredicate;
 
 	/// Artificial Error predicate.
 	/// Single error block for all assertions.
-	std::unique_ptr<smt::SymbolicVariable> m_errorPredicate;
+	std::unique_ptr<smt::SymbolicFunctionVariable> m_errorPredicate;
 	//@}
 
 	/// Variables.

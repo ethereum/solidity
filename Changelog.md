@@ -17,6 +17,7 @@ Bugfixes:
  * Code Generator: Fixed a faulty assert that would wrongly trigger for array sizes exceeding unsigned integer
  * Type Checker: Treat magic variables as unknown identifiers in inline assembly
  * SMTChecker: Fix internal error when accessing indices of fixed bytes.
+ * SMTChecker: Fix internal error when using function pointers as arguments.
 
 
 
