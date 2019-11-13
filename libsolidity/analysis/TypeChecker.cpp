@@ -2352,12 +2352,19 @@ bool TypeChecker::visit(Identifier const& _identifier)
 				if (functionType->canTakeArguments(*annotation.arguments))
 					candidates.push_back(declaration);
 			}
-			if (candidates.empty())
-				m_errorReporter.fatalTypeError(_identifier.location(), "No matching declaration found after argument-dependent lookup.");
-			else if (candidates.size() == 1)
+			if (candidates.size() == 1)
 				annotation.referencedDeclaration = candidates.front();
 			else
-				m_errorReporter.fatalTypeError(_identifier.location(), "No unique declaration found after argument-dependent lookup.");
+			{
+				SecondarySourceLocation ssl;
+
+				for (Declaration const* declaration: annotation.overloadedDeclarations)
+					ssl.append("Candidate:", declaration->location());
+				if (candidates.empty())
+					m_errorReporter.fatalTypeError(_identifier.location(), ssl, "No matching declaration found after argument-dependent lookup.");
+				else
+					m_errorReporter.fatalTypeError(_identifier.location(), ssl, "No unique declaration found after argument-dependent lookup.");
+			}
 		}
 	}
 	solAssert(

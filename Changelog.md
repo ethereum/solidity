@@ -9,6 +9,7 @@ Compiler Features:
  * SMTChecker: Add break/continue support to the CHC engine.
  * SMTChecker: Support assignments to multi-dimensional arrays and mappings.
  * SMTChecker: Support inheritance and function overriding.
+ * TypeChecker: List possible candidates when overload resolution fails
  * EWasm: Experimental EWasm binary output.
 
 
