@@ -71,7 +71,8 @@ if (OSSFUZZ)
             /usr/include/libprotobuf-mutator
     )
     target_link_libraries(abiv2_proto_ossfuzz PRIVATE solidity
-            evmc evmone-standalone.a
+            evmc
+            evmone-standalone
             protobuf-mutator-libfuzzer.a
             protobuf-mutator.a
             protobuf.a
