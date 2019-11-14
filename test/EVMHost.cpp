@@ -227,6 +227,8 @@ evmc_tx_context EVMHost::get_tx_context() noexcept
 	ctx.block_gas_limit = 20000000;
 	ctx.tx_gas_price = convertToEVMC(u256("3000000000"));
 	ctx.tx_origin = convertToEVMC(Address("0x9292929292929292929292929292929292929292"));
+	// Mainnet according to EIP-155
+	ctx.chain_id = convertToEVMC(u256(1));
 	return ctx;
 }
 
