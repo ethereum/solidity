@@ -328,7 +328,7 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 		analysisInfo,
 		errorsIgnored,
 		errorTypeForLoose,
-		yul::EVMDialect::looseAssemblyForEVM(EVMVersion{}),
+		yul::EVMDialect::looseAssemblyForEVM(m_evmVersion),
 		resolver
 	).analyze(_inlineAssembly.operations());
 	return false;
