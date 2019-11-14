@@ -19,7 +19,6 @@
 
 #include <libsolidity/formal/SymbolicTypes.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/TypeProvider.h>
 
 using namespace std;
 using namespace dev;
@@ -153,21 +152,48 @@ SymbolicFunctionVariable::SymbolicFunctionVariable(
 	solAssert(m_sort->kind == Kind::Function, "");
 }
 
-void SymbolicFunctionVariable::resetDeclaration()
+Expression SymbolicFunctionVariable::currentValue(solidity::TypePointer const& _targetType) const
 {
-	m_declaration = m_context.newVariable(currentName(), m_sort);
+	return m_abstract.currentValue(_targetType);
+}
+
+Expression SymbolicFunctionVariable::currentFunctionValue() const
+{
+	return m_declaration;
+}
+
+Expression SymbolicFunctionVariable::valueAtIndex(int _index) const
+{
+	return m_abstract.valueAtIndex(_index);
+}
+
+Expression SymbolicFunctionVariable::functionValueAtIndex(int _index) const
+{
+	return SymbolicVariable::valueAtIndex(_index);
+}
+
+Expression SymbolicFunctionVariable::resetIndex()
+{
+	SymbolicVariable::resetIndex();
+	return m_abstract.resetIndex();
 }
 
 Expression SymbolicFunctionVariable::increaseIndex()
 {
 	++(*m_ssa);
 	resetDeclaration();
-	return currentValue();
+	m_abstract.increaseIndex();
+	return m_abstract.currentValue();
 }
 
 Expression SymbolicFunctionVariable::operator()(vector<Expression> _arguments) const
 {
 	return m_declaration(_arguments);
+}
+
+void SymbolicFunctionVariable::resetDeclaration()
+{
+	m_declaration = m_context.newVariable(currentName(), m_sort);
 }
 
 SymbolicMappingVariable::SymbolicMappingVariable(

@@ -1,0 +1,4 @@
+{"contracts":{"fileA":{"A":{"storageLayout":{"storage":[],"types":null}}}},"errors":[{"component":"general","formattedMessage":"fileA:1:1: Warning: Source file does not specify required compiler version!
+contract A { }
+^------------^
+","message":"Source file does not specify required compiler version!","severity":"warning","sourceLocation":{"end":14,"file":"fileA","start":0},"type":"Warning"}],"sources":{"fileA":{"id":0},"fileB":{"id":1}}}

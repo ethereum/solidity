@@ -1317,6 +1317,7 @@ public:
 	std::string toString(bool _short) const override { return "type(" + m_actualType->toString(_short) + ")"; }
 	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 
+	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 private:
 	TypePointer m_actualType;
 };

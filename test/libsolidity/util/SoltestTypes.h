@@ -58,6 +58,7 @@ namespace test
 	K(Boolean, "boolean", 0)       \
 	/* special keywords */         \
 	K(Left, "left", 0)             \
+	K(Library, "library", 0)       \
 	K(Right, "right", 0)           \
 	K(Failure, "FAILURE", 0)       \
 
@@ -268,6 +269,8 @@ struct FunctionCall
 	/// Marks this function call as "short-handed", meaning
 	/// no `->` declared.
 	bool omitsArrow = true;
+	/// Marks a library deployment call.
+	bool isLibrary = false;
 };
 
 }

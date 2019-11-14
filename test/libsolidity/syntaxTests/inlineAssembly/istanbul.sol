@@ -1,12 +1,12 @@
 contract C {
-    function f() pure external {
+    function f() pure external returns (uint id) {
         assembly {
-            pop(chainid())
+            id := chainid()
         }
     }
-    function g() view external {
+    function g() view external returns (uint sb) {
         assembly {
-            pop(selfbalance())
+            sb := selfbalance()
         }
     }
 }

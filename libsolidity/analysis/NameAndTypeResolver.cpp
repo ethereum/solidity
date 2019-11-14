@@ -38,10 +38,12 @@ namespace solidity
 
 NameAndTypeResolver::NameAndTypeResolver(
 	GlobalContext& _globalContext,
+	langutil::EVMVersion _evmVersion,
 	map<ASTNode const*, shared_ptr<DeclarationContainer>>& _scopes,
 	ErrorReporter& _errorReporter
-) :
+):
 	m_scopes(_scopes),
+	m_evmVersion(_evmVersion),
 	m_errorReporter(_errorReporter),
 	m_globalContext(_globalContext)
 {
@@ -324,7 +326,7 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 	{
 		if (m_scopes.count(&_node))
 			setScope(&_node);
-		return ReferencesResolver(m_errorReporter, *this, _resolveInsideCode).resolve(_node);
+		return ReferencesResolver(m_errorReporter, *this, m_evmVersion, _resolveInsideCode).resolve(_node);
 	}
 }
 

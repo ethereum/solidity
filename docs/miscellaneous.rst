@@ -8,6 +8,8 @@ Miscellaneous
 Layout of State Variables in Storage
 ************************************
 
+.. _storage-inplace-encoding:
+
 Statically-sized variables (everything except mapping and dynamically-sized array types) are laid out contiguously in storage starting from position ``0``. Multiple, contiguous items that need less than 32 bytes are packed into a single storage slot if possible, according to the following rules:
 
 - The first item in a storage slot is stored lower-order aligned.
@@ -49,6 +51,8 @@ The elements of structs and arrays are stored after each other, just as if they 
 Mappings and Dynamic Arrays
 ===========================
 
+.. _storage-hashed-encoding:
+
 Due to their unpredictable size, mapping and dynamically-sized array types use a Keccak-256 hash
 computation to find the starting position of the value or the array data. These starting positions are always full stack slots.
 
@@ -87,6 +91,267 @@ by checking if the lowest bit is set: short (not set) and long (set).
 
 .. note::
   Handling invalidly encoded slots is currently not supported but may be added in the future.
+
+JSON Output
+===========
+
+.. _storage-layout-top-level:
+
+The storage layout of a contract can be requested via the :ref:`standard JSON interface <compiler-api>`.  The output is a JSON object containing two keys,
+``storage`` and ``types``.  The ``storage`` object is an array where each
+element has the following form:
+
+
+.. code::
+
+
+    {
+        "astId": 2,
+        "contract": "fileA:A",
+        "label": "x",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_uint256"
+    }
+
+where the example above is the storage layout of ``contract A { uint x; }`` from source unit ``fileA``
+and
+
+- ``astId`` is the id of the AST node of the state variable's declaration
+- ``contract`` is the name of the contract including its path as prefix
+- ``label`` is the name of the state variable
+- ``offset`` is the offset in bytes within the storage slot according to the encoding
+- ``slot`` is the storage slot where the state variable resides or starts. This
+  number may be very large and therefore its JSON value is represented as a
+  string.
+- ``type`` is an identifier used as key to the variable's type information (described in the following)
+
+The given ``type``, in this case ``t_uint256`` represents an element in
+``types``, which has the form:
+
+
+.. code::
+
+    {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32",
+    }
+
+where
+
+- ``encoding`` how the data is encoded in storage, where the possible values are:
+
+  - ``inplace``: data is laid out contiguously in storage (see :ref:`above <storage-inplace-encoding>`).
+  - ``mapping``: Keccak-256 hash-based method (see :ref:`above <storage-hashed-encoding>`).
+  - ``dynamic_array``: Keccak-256 hash-based method (see :ref:`above <storage-hashed-encoding>`).
+  - ``bytes``: single slot or Keccak-256 hash-based depending on the data size (see :ref:`above <bytes-and-string>`).
+
+- ``label`` is the canonical type name.
+- ``numberOfBytes`` is the number of used bytes (as a decimal string). Note that if ``numberOfBytes > 32`` this means that more than one slot is used.
+
+Some types have extra information besides the four above. Mappings contain
+its ``key`` and ``value`` types (again referencing an entry in this mapping
+of types), arrays have its ``base`` type, and structs list their ``members`` in
+the same format as the top-level ``storage`` (see :ref:`above
+<storage-layout-top-level>`).
+
+.. note ::
+  The JSON output format of a contract's storage layout is still considered experimental
+  and is subject to change in non-breaking releases of Solidity.
+
+The following example shows a contract and its storage layout, containing
+value and reference types, types that are encoded packed, and nested types.
+
+
+.. code::
+
+    pragma solidity >=0.4.0 <0.7.0;
+    contract A {
+        struct S {
+            uint128 a;
+            uint128 b;
+            uint[2] staticArray;
+            uint[] dynArray;
+        }
+
+        uint x;
+        uint y;
+        S s;
+        address addr;
+        mapping (uint => mapping (address => bool)) map;
+        uint[] array;
+        string s1;
+        bytes b1;
+    }
+
+.. code::
+
+    "storageLayout": {
+      "storage": [
+        {
+          "astId": 14,
+          "contract": "fileA:A",
+          "label": "x",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 16,
+          "contract": "fileA:A",
+          "label": "y",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 18,
+          "contract": "fileA:A",
+          "label": "s",
+          "offset": 0,
+          "slot": "2",
+          "type": "t_struct(S)12_storage"
+        },
+        {
+          "astId": 20,
+          "contract": "fileA:A",
+          "label": "addr",
+          "offset": 0,
+          "slot": "6",
+          "type": "t_address"
+        },
+        {
+          "astId": 26,
+          "contract": "fileA:A",
+          "label": "map",
+          "offset": 0,
+          "slot": "7",
+          "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
+        },
+        {
+          "astId": 29,
+          "contract": "fileA:A",
+          "label": "array",
+          "offset": 0,
+          "slot": "8",
+          "type": "t_array(t_uint256)dyn_storage"
+        },
+        {
+          "astId": 31,
+          "contract": "fileA:A",
+          "label": "s1",
+          "offset": 0,
+          "slot": "9",
+          "type": "t_string_storage"
+        },
+        {
+          "astId": 33,
+          "contract": "fileA:A",
+          "label": "b1",
+          "offset": 0,
+          "slot": "10",
+          "type": "t_bytes_storage"
+        }
+      ],
+      "types": {
+        "t_address": {
+          "encoding": "inplace",
+          "label": "address",
+          "numberOfBytes": "20"
+        },
+        "t_array(t_uint256)2_storage": {
+          "base": "t_uint256",
+          "encoding": "inplace",
+          "label": "uint256[2]",
+          "numberOfBytes": "64"
+        },
+        "t_array(t_uint256)dyn_storage": {
+          "base": "t_uint256",
+          "encoding": "dynamic_array",
+          "label": "uint256[]",
+          "numberOfBytes": "32"
+        },
+        "t_bool": {
+          "encoding": "inplace",
+          "label": "bool",
+          "numberOfBytes": "1"
+        },
+        "t_bytes_storage": {
+          "encoding": "bytes",
+          "label": "bytes",
+          "numberOfBytes": "32"
+        },
+        "t_mapping(t_address,t_bool)": {
+          "encoding": "mapping",
+          "key": "t_address",
+          "label": "mapping(address => bool)",
+          "numberOfBytes": "32",
+          "value": "t_bool"
+        },
+        "t_mapping(t_uint256,t_mapping(t_address,t_bool))": {
+          "encoding": "mapping",
+          "key": "t_uint256",
+          "label": "mapping(uint256 => mapping(address => bool))",
+          "numberOfBytes": "32",
+          "value": "t_mapping(t_address,t_bool)"
+        },
+        "t_string_storage": {
+          "encoding": "bytes",
+          "label": "string",
+          "numberOfBytes": "32"
+        },
+        "t_struct(S)12_storage": {
+          "encoding": "inplace",
+          "label": "struct A.S",
+          "members": [
+            {
+              "astId": 2,
+              "contract": "fileA:A",
+              "label": "a",
+              "offset": 0,
+              "slot": "0",
+              "type": "t_uint128"
+            },
+            {
+              "astId": 4,
+              "contract": "fileA:A",
+              "label": "b",
+              "offset": 16,
+              "slot": "0",
+              "type": "t_uint128"
+            },
+            {
+              "astId": 8,
+              "contract": "fileA:A",
+              "label": "staticArray",
+              "offset": 0,
+              "slot": "1",
+              "type": "t_array(t_uint256)2_storage"
+            },
+            {
+              "astId": 11,
+              "contract": "fileA:A",
+              "label": "dynArray",
+              "offset": 0,
+              "slot": "3",
+              "type": "t_array(t_uint256)dyn_storage"
+            }
+          ],
+          "numberOfBytes": "128"
+        },
+        "t_uint128": {
+          "encoding": "inplace",
+          "label": "uint128",
+          "numberOfBytes": "16"
+        },
+        "t_uint256": {
+          "encoding": "inplace",
+          "label": "uint256",
+          "numberOfBytes": "32"
+        }
+      }
+    }
 
 .. index: memory layout
 

@@ -754,6 +754,10 @@
         "bugs": [],
         "released": "2019-10-01"
     },
+    "0.5.13": {
+        "bugs": [],
+        "released": "2019-11-14"
+    },
     "0.5.2": {
         "bugs": [
             "SignedArrayStorageCopy",

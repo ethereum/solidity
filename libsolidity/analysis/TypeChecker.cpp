@@ -457,6 +457,9 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	TypePointer varType = _variable.annotation().type;
 	solAssert(!!varType, "Variable type not provided.");
 
+	if (auto contractType = dynamic_cast<ContractType const*>(varType))
+		if (contractType->contractDefinition().isLibrary())
+			m_errorReporter.typeError(_variable.location(), "The type of a variable cannot be a library.");
 	if (_variable.value())
 		expectType(*_variable.value(), *varType);
 	if (_variable.isConstant())
@@ -2633,12 +2636,30 @@ bool TypeChecker::visit(Identifier const& _identifier)
 				if (functionType->canTakeArguments(*annotation.arguments))
 					candidates.push_back(declaration);
 			}
-			if (candidates.empty())
-				m_errorReporter.fatalTypeError(_identifier.location(), "No matching declaration found after argument-dependent lookup.");
-			else if (candidates.size() == 1)
+			if (candidates.size() == 1)
 				annotation.referencedDeclaration = candidates.front();
 			else
-				m_errorReporter.fatalTypeError(_identifier.location(), "No unique declaration found after argument-dependent lookup.");
+			{
+				SecondarySourceLocation ssl;
+
+				for (Declaration const* declaration: annotation.overloadedDeclarations)
+					if (declaration->location().isEmpty())
+					{
+						// Try to re-construct function definition
+						string description;
+						for (auto const& param: declaration->functionType(true)->parameterTypes())
+							description += (description.empty() ? "" : ", ") + param->toString(false);
+						description = "function " + _identifier.name() + "(" + description + ")";
+
+						ssl.append("Candidate: " + description, declaration->location());
+					}
+					else
+						ssl.append("Candidate:", declaration->location());
+				if (candidates.empty())
+					m_errorReporter.fatalTypeError(_identifier.location(), ssl, "No matching declaration found after argument-dependent lookup.");
+				else
+					m_errorReporter.fatalTypeError(_identifier.location(), ssl, "No unique declaration found after argument-dependent lookup.");
+			}
 		}
 	}
 	solAssert(

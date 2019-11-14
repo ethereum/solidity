@@ -3411,6 +3411,15 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 	return members;
 }
 
+BoolResult TypeType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	if (auto const* address = dynamic_cast<AddressType const*>(&_convertTo))
+		if (address->stateMutability() == StateMutability::NonPayable)
+			if (auto const* contractType = dynamic_cast<ContractType const*>(m_actualType))
+				return contractType->contractDefinition().isLibrary();
+	return isImplicitlyConvertibleTo(_convertTo);
+}
+
 ModifierType::ModifierType(ModifierDefinition const& _modifier)
 {
 	TypePointers params;

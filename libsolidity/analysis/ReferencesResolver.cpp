@@ -350,7 +350,7 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 	yul::AsmAnalyzer(
 		analysisInfo,
 		errorsIgnored,
-		yul::EVMDialect::strictAssemblyForEVM(EVMVersion{}),
+		yul::EVMDialect::strictAssemblyForEVM(m_evmVersion),
 		resolver
 	).analyze(_inlineAssembly.operations());
 	return false;

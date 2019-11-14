@@ -64,7 +64,7 @@ eth::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 
 	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
 	GlobalContext globalContext;
-	NameAndTypeResolver resolver(globalContext, scopes, errorReporter);
+	NameAndTypeResolver resolver(globalContext, dev::test::Options::get().evmVersion(), scopes, errorReporter);
 	solAssert(Error::containsOnlyWarnings(errorReporter.errors()), "");
 	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())

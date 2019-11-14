@@ -136,9 +136,13 @@ void SMTEncoder::visitFunctionOrModifier()
 			*modifierInvocation->name()->annotation().referencedDeclaration
 		);
 		vector<smt::Expression> modifierArgsExpr;
-		if (modifierInvocation->arguments())
-			for (auto arg: *modifierInvocation->arguments())
-				modifierArgsExpr.push_back(expr(*arg));
+		if (auto const* arguments = modifierInvocation->arguments())
+		{
+			auto const& modifierParams = modifierDef.parameters();
+			solAssert(modifierParams.size() == arguments->size(), "");
+			for (unsigned i = 0; i < arguments->size(); ++i)
+				modifierArgsExpr.push_back(expr(*arguments->at(i), modifierParams.at(i)->type()));
+		}
 		initializeFunctionCallParameters(modifierDef, modifierArgsExpr);
 		pushCallStack({&modifierDef, modifierInvocation.get()});
 		modifierDef.body().accept(*this);
@@ -595,10 +599,10 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 	{
 		// Will be translated as part of the node that requested the lvalue.
 	}
-	else if (_identifier.annotation().type->category() == Type::Category::Function)
-		visitFunctionIdentifier(_identifier);
 	else if (auto decl = identifierToVariable(_identifier))
 		defineExpr(_identifier, currentValue(*decl));
+	else if (_identifier.annotation().type->category() == Type::Category::Function)
+		visitFunctionIdentifier(_identifier);
 	else if (_identifier.name() == "now")
 		defineGlobalVariable(_identifier.name(), _identifier);
 	else if (_identifier.name() == "this")
@@ -699,7 +703,7 @@ void SMTEncoder::endVisit(Return const& _return)
 			}
 		}
 		else if (returnParams.size() == 1)
-			m_context.addAssertion(expr(*_return.expression()) == m_context.newValue(*returnParams.front()));
+			m_context.addAssertion(expr(*_return.expression(), returnParams.front()->type()) == m_context.newValue(*returnParams.front()));
 	}
 }
 
@@ -1353,7 +1357,7 @@ void SMTEncoder::createExpr(Expression const& _e)
 void SMTEncoder::defineExpr(Expression const& _e, smt::Expression _value)
 {
 	createExpr(_e);
-	solAssert(smt::smtKind(_e.annotation().type->category()) != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
+	solAssert(_value.sort->kind != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
 	m_context.addAssertion(expr(_e) == _value);
 }
 

@@ -927,10 +927,12 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		string file = contractName.substr(0, colon);
 		string name = contractName.substr(colon + 1);
 
-		// ABI, documentation and metadata
+		// ABI, storage layout, documentation and metadata
 		Json::Value contractData(Json::objectValue);
 		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "abi", wildcardMatchesExperimental))
 			contractData["abi"] = compilerStack.contractABI(contractName);
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "storageLayout", false))
+			contractData["storageLayout"] = compilerStack.storageLayout(contractName);
 		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "metadata", wildcardMatchesExperimental))
 			contractData["metadata"] = compilerStack.metadata(contractName);
 		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "userdoc", wildcardMatchesExperimental))
