@@ -1,4 +1,4 @@
-### 0.5.13 (unreleased)
+### 0.5.13 (2019-11-14)
 
 Language Features:
  * Allow to obtain the address of a linked library with ``address(LibraryName)``.
