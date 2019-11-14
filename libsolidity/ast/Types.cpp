@@ -2962,6 +2962,20 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 			);
 		return members;
 	}
+	case Kind::DelegateCall:
+	{
+		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
+		solAssert(functionDefinition, "");
+		solAssert(functionDefinition->visibility() != Declaration::Visibility::Private, "");
+		if (functionDefinition->visibility() != Declaration::Visibility::Internal)
+		{
+			auto const* contract = dynamic_cast<ContractDefinition const*>(m_declaration->scope());
+			solAssert(contract, "");
+			solAssert(contract->isLibrary(), "");
+			return {{"selector", TypeProvider::fixedBytes(4)}};
+		}
+		return {};
+	}
 	default:
 		return MemberList::MemberMap();
 	}
