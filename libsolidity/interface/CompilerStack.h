@@ -272,6 +272,10 @@ public:
 	/// Prerequisite: Successful call to parse or compile.
 	Json::Value const& contractABI(std::string const& _contractName) const;
 
+	/// @returns a JSON representing the storage layout of the contract.
+	/// Prerequisite: Successful call to parse or compile.
+	Json::Value const& storageLayout(std::string const& _contractName) const;
+
 	/// @returns a JSON representing the contract's user documentation.
 	/// Prerequisite: Successful call to parse or compile.
 	Json::Value const& natspecUser(std::string const& _contractName) const;
@@ -319,6 +323,7 @@ private:
 		eth::LinkerObject eWasmObject; ///< Experimental eWasm code
 		mutable std::unique_ptr<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		mutable std::unique_ptr<Json::Value const> abi;
+		mutable std::unique_ptr<Json::Value const> storageLayout;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
 		mutable std::unique_ptr<Json::Value const> devDocumentation;
 		mutable std::unique_ptr<std::string const> sourceMapping;
@@ -381,6 +386,10 @@ private:
 	/// @returns the contract ABI as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
 	Json::Value const& contractABI(Contract const&) const;
+
+	/// @returns the storage layout of the contract as a JSON object.
+	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
+	Json::Value const& storageLayout(Contract const&) const;
 
 	/// @returns the Natspec User documentation as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.

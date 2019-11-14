@@ -1,0 +1,19 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"fileA": {
+			"content": "contract A { }"
+		},
+		"fileB": {
+			"content": "contract A { uint x; uint y; }"
+		}
+	},
+	"settings": {
+		"outputSelection": {
+			"fileA": {
+				"A": [ "storageLayout" ],
+				"": [ "storageLayout" ]
+			}
+		}
+	}
+}

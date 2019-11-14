@@ -276,6 +276,7 @@ Input Description
         //   metadata - Metadata
         //   ir - Yul intermediate representation of the code before optimization
         //   irOptimized - Intermediate representation after optimization
+        //   storageLayout - Slots, offsets and types of the contract's state variables.
         //   evm.assembly - New assembly format
         //   evm.legacyAssembly - Old-style assembly format in JSON
         //   evm.bytecode.object - Bytecode object
@@ -376,6 +377,8 @@ Output Description
             "devdoc": {},
             // Intermediate representation (string)
             "ir": "",
+            // See the Storage Layout documentation.
+            "storageLayout": {"storage": [...], "types": {...} },
             // EVM-related outputs
             "evm": {
               // Assembly (string)
