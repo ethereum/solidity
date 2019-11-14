@@ -450,6 +450,9 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	TypePointer varType = _variable.annotation().type;
 	solAssert(!!varType, "Variable type not provided.");
 
+	if (auto contractType = dynamic_cast<ContractType const*>(varType))
+		if (contractType->contractDefinition().isLibrary())
+			m_errorReporter.typeError(_variable.location(), "The type of a variable cannot be a library.");
 	if (_variable.value())
 		expectType(*_variable.value(), *varType);
 	if (_variable.isConstant())

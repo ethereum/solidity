@@ -12,6 +12,7 @@ Compiler Features:
  * SMTChecker: Support inheritance and function overriding.
  * Standard JSON Interface: Output the storage layout of a contract when artifact ``storageLayout`` is requested.
  * TypeChecker: List possible candidates when overload resolution fails.
+ * TypeChecker: Disallow variables of library types.
 
 
 Bugfixes:
