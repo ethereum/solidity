@@ -24,6 +24,7 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/ASTAnnotations.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <boost/noncopyable.hpp>
 #include <list>
@@ -52,10 +53,12 @@ public:
 	ReferencesResolver(
 		langutil::ErrorReporter& _errorReporter,
 		NameAndTypeResolver& _resolver,
+		langutil::EVMVersion _evmVersion,
 		bool _resolveInsideCode = false
 	):
 		m_errorReporter(_errorReporter),
 		m_resolver(_resolver),
+		m_evmVersion(_evmVersion),
 		m_resolveInsideCode(_resolveInsideCode)
 	{}
 
@@ -96,6 +99,7 @@ private:
 
 	langutil::ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
+	langutil::EVMVersion m_evmVersion;
 	/// Stack of return parameters.
 	std::vector<ParameterList const*> m_returnParameters;
 	bool const m_resolveInsideCode;

@@ -118,7 +118,7 @@ bytes compileFirstExpression(
 	ErrorReporter errorReporter(errors);
 	GlobalContext globalContext;
 	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
-	NameAndTypeResolver resolver(globalContext, scopes, errorReporter);
+	NameAndTypeResolver resolver(globalContext, dev::test::Options::get().evmVersion(), scopes, errorReporter);
 	resolver.registerDeclarations(*sourceUnit);
 
 	vector<ContractDefinition const*> inheritanceHierarchy;
