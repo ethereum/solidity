@@ -241,7 +241,7 @@ void ViewPureChecker::endVisit(InlineAssembly const& _inlineAssembly)
 void ViewPureChecker::reportMutability(
 	StateMutability _mutability,
 	SourceLocation const& _location,
-	boost::optional<SourceLocation> const& _nestedLocation
+	std::optional<SourceLocation> const& _nestedLocation
 )
 {
 	if (_mutability > m_bestMutabilityAndLocation.mutability)

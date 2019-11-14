@@ -22,6 +22,7 @@
 #include <array>
 #include <map>
 #include <memory>
+#include <optional>
 #include <utility>
 
 namespace dev

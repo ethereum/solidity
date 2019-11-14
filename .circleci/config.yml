@@ -104,17 +104,6 @@ defaults:
       name: command line tests
       command: ./test/cmdlineTests.sh
 
-  - test_ubuntu1904: &test_ubuntu1904
-      docker:
-        - image: ethereum/solidity-buildpack-deps:ubuntu1904
-      steps:
-        - checkout
-        - attach_workspace:
-            at: build
-        - run: *run_soltest
-        - store_test_results: *store_test_results
-        - store_artifacts: *artifacts_test_results
-
   - test_ubuntu1904_clang: &test_ubuntu1904_clang
       docker:
         - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang
@@ -126,7 +115,7 @@ defaults:
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
 
-  - test_ubuntu1904_all: &test_ubuntu1904
+  - test_ubuntu1904: &test_ubuntu1904
       docker:
         - image: ethereum/solidity-buildpack-deps:ubuntu1904
       steps:
@@ -423,40 +412,61 @@ jobs:
 
   b_osx:
     macos:
-      xcode: "10.0.0"
+      xcode: "11.0.0"
     environment:
       TERM: xterm
       CMAKE_BUILD_TYPE: Debug
-      CMAKE_OPTIONS: -DLLL=ON
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - run:
           name: Install build dependencies
-          command: |
-            brew unlink python
-            brew install z3
-            brew install boost
-            brew install cmake
-            brew install wget
-            ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+          command: ./.circleci/osx_install_dependencies.sh
+      - save_cache:
+          key: dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          paths:
+            - /usr/local/bin
+            - /usr/local/sbin
+            - /usr/local/lib
+            - /usr/local/include
+            - /usr/local/Cellar
+            - /usr/local/Homebrew
       - run: *run_build
       - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
+      - persist_to_workspace: *artifacts_build_dir
+
+  t_osx_soltest:
+    macos:
+      xcode: "11.0.0"
+    environment:
+      EVM: constantinople
+      OPTIMIZE: 0
+      TERM: xterm
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+      - attach_workspace:
+          at: build
+      - run: *run_soltest
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
 
   t_osx_cli:
     macos:
-      xcode: "10.0.0"
+      xcode: "11.0.0"
     environment:
       TERM: xterm
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
           at: build
-      - run:
-          name: Install dependencies
-          command: |
-            brew unlink python
-            brew install z3
       - run: *run_cmdline_tests
       - store_artifacts: *artifacts_test_results
 
@@ -568,7 +578,7 @@ jobs:
     environment:
       EVM: constantinople
       OPTIMIZE: 0
-      flags: --no-smt
+      SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
 
   t_ems_solcjs:
@@ -660,6 +670,7 @@ workflows:
       # OS/X build and tests
       - b_osx: *workflow_trigger_on_tags
       - t_osx_cli: *workflow_osx
+      - t_osx_soltest: *workflow_osx
 
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags

@@ -294,7 +294,7 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 	else
 	{
 		sout() << "Opcodes: " << endl;
-		sout() << dev::eth::disassemble(m_compiler->object(_contract).bytecode);
+		sout() << std::uppercase << dev::eth::disassemble(m_compiler->object(_contract).bytecode);
 		sout() << endl;
 	}
 }
@@ -318,11 +318,18 @@ void CommandLineInterface::handleEWasm(string const& _contractName)
 	if (m_args.count(g_argEWasm))
 	{
 		if (m_args.count(g_argOutputDir))
+		{
 			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->eWasm(_contractName));
+			createFile(
+				m_compiler->filesystemFriendlyName(_contractName) + ".wasm",
+				asString(m_compiler->eWasmObject(_contractName).bytecode)
+			);
+		}
 		else
 		{
-			sout() << "eWasm: " << endl;
+			sout() << "EWasm text: " << endl;
 			sout() << m_compiler->eWasm(_contractName) << endl;
+			sout() << "EWasm binary (hex): " << m_compiler->eWasmObject(_contractName).toHex() << endl;
 		}
 	}
 }
@@ -869,7 +876,7 @@ bool CommandLineInterface::processInput()
 	if (m_args.count(g_strEVMVersion))
 	{
 		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
-		boost::optional<langutil::EVMVersion> versionOption = langutil::EVMVersion::fromString(versionOptionStr);
+		std::optional<langutil::EVMVersion> versionOption = langutil::EVMVersion::fromString(versionOptionStr);
 		if (!versionOption)
 		{
 			serr() << "Invalid option for --evm-version: " << versionOptionStr << endl;

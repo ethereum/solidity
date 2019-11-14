@@ -5,4 +5,4 @@ contract C
 	}
 }
 // ----
-// TypeError: (60-67): "suicide" has been deprecated in favour of "selfdestruct"
+// TypeError: (60-67): "suicide" has been deprecated in favour of "selfdestruct".

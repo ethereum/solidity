@@ -26,7 +26,6 @@
 
 #include <test/evmc/evmc.hpp>
 #include <test/evmc/loader.h>
-#include <test/evmc/helpers.hpp>
 
 #include <libdevcore/CommonIO.h>
 
@@ -235,7 +234,7 @@ bool ExecutionFramework::storageEmpty(Address const& _addr)
 	if (EVMHost::Account const* acc = m_evmHost->account(EVMHost::convertToEVMC(_addr)))
 	{
 		for (auto const& entry: acc->storage)
-			if (!(entry.second == evmc_bytes32{}))
+			if (!(entry.second == evmc::bytes32{}))
 				return false;
 	}
 	return true;

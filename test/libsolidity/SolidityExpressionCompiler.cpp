@@ -118,7 +118,7 @@ bytes compileFirstExpression(
 	ErrorReporter errorReporter(errors);
 	GlobalContext globalContext;
 	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
-	NameAndTypeResolver resolver(globalContext, scopes, errorReporter);
+	NameAndTypeResolver resolver(globalContext, dev::test::Options::get().evmVersion(), scopes, errorReporter);
 	resolver.registerDeclarations(*sourceUnit);
 
 	vector<ContractDefinition const*> inheritanceHierarchy;
@@ -615,6 +615,25 @@ BOOST_AUTO_TEST_CASE(gas_left)
 
 	bytes expectation = bytes({uint8_t(Instruction::GAS)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+}
+
+BOOST_AUTO_TEST_CASE(selfbalance)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns (uint) {
+				return address(this).balance;
+			}
+		}
+	)";
+
+	bytes code = compileFirstExpression(sourceCode, {}, {});
+
+	if (dev::test::Options::get().evmVersion() == EVMVersion::istanbul())
+	{
+		bytes expectation({uint8_t(Instruction::SELFBALANCE)});
+		BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

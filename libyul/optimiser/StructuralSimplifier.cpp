@@ -28,7 +28,7 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-using OptionalStatements = boost::optional<vector<Statement>>;
+using OptionalStatements = std::optional<vector<Statement>>;
 
 namespace {
 
@@ -54,7 +54,7 @@ OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _const
 	if (matchingCaseBlock)
 		return make_vector<Statement>(std::move(*matchingCaseBlock));
 	else
-		return {{}};
+		return optional<vector<Statement>>{vector<Statement>{}};
 }
 
 }
@@ -80,8 +80,8 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 			return {};
 		},
 		[&](Switch& _switchStmt) -> OptionalStatements {
-			if (boost::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
-				return replaceConstArgSwitch(_switchStmt, constExprVal.get());
+			if (std::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
+				return replaceConstArgSwitch(_switchStmt, constExprVal.value());
 			return {};
 		},
 		[&](ForLoop& _forLoop) -> OptionalStatements {
@@ -107,7 +107,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 
 bool StructuralSimplifier::expressionAlwaysTrue(Expression const& _expression)
 {
-	if (boost::optional<u256> value = hasLiteralValue(_expression))
+	if (std::optional<u256> value = hasLiteralValue(_expression))
 		return *value != 0;
 	else
 		return false;
@@ -115,16 +115,16 @@ bool StructuralSimplifier::expressionAlwaysTrue(Expression const& _expression)
 
 bool StructuralSimplifier::expressionAlwaysFalse(Expression const& _expression)
 {
-	if (boost::optional<u256> value = hasLiteralValue(_expression))
+	if (std::optional<u256> value = hasLiteralValue(_expression))
 		return *value == 0;
 	else
 		return false;
 }
 
-boost::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
+std::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
 {
 	if (_expression.type() == typeid(Literal))
 		return valueOfLiteral(boost::get<Literal>(_expression));
 	else
-		return boost::optional<u256>();
+		return std::optional<u256>();
 }

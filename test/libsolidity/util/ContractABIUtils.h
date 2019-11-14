@@ -42,7 +42,7 @@ public:
 	/// a list of internal type representations of isoltest.
 	/// Creates parameters from Contract ABI and is used to generate values for
 	/// auto-correction during interactive update routine.
-	static boost::optional<ParameterList> parametersFromJsonOutputs(
+	static std::optional<ParameterList> parametersFromJsonOutputs(
 		ErrorReporter& _errorReporter,
 		Json::Value const& _contractABI,
 		std::string const& _functionSignature

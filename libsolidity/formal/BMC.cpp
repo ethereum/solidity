@@ -108,14 +108,16 @@ bool BMC::shouldInlineFunctionCall(FunctionCall const& _funCall)
 
 bool BMC::visit(ContractDefinition const& _contract)
 {
-	SMTEncoder::visit(_contract);
+	initContract(_contract);
 
 	/// Check targets created by state variable initialization.
 	smt::Expression constraints = m_context.assertions();
 	checkVerificationTargets(constraints);
 	m_verificationTargets.clear();
 
-	return true;
+	SMTEncoder::visit(_contract);
+
+	return false;
 }
 
 void BMC::endVisit(ContractDefinition const& _contract)
@@ -426,15 +428,20 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 		auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
 		solAssert(funType, "");
 
+		auto const& functionParams = funDef->parameters();
+		auto const& arguments = _funCall.arguments();
+		unsigned firstParam = 0;
 		if (funType->bound())
 		{
 			auto const& boundFunction = dynamic_cast<MemberAccess const*>(calledExpr);
 			solAssert(boundFunction, "");
-			funArgs.push_back(expr(boundFunction->expression()));
+			funArgs.push_back(expr(boundFunction->expression(), functionParams.front()->type()));
+			firstParam = 1;
 		}
 
-		for (auto arg: _funCall.arguments())
-			funArgs.push_back(expr(*arg));
+		solAssert((arguments.size() + firstParam) == functionParams.size(), "");
+		for (unsigned i = 0; i < arguments.size(); ++i)
+			funArgs.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
 		initializeFunctionCallParameters(*funDef, funArgs);
 
 		// The reason why we need to pushCallStack here instead of visit(FunctionDefinition)

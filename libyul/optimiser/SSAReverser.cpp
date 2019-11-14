@@ -35,7 +35,7 @@ void SSAReverser::operator()(Block& _block)
 	walkVector(_block.statements);
 	iterateReplacingWindow<2>(
 		_block.statements,
-		[&](Statement& _stmt1, Statement& _stmt2) -> boost::optional<vector<Statement>>
+		[&](Statement& _stmt1, Statement& _stmt2) -> std::optional<vector<Statement>>
 		{
 			auto* varDecl = boost::get<VariableDeclaration>(&_stmt1);
 

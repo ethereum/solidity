@@ -122,6 +122,10 @@ public:
 		ParameterList const& _parameters,
 		bool _highlight
 	);
+
+	/// Count the number of zeros between the last non-zero byte and the end of
+	/// \param _bytes.
+	static size_t countRightPaddedZeros(bytes const& _bytes);
 };
 
 }

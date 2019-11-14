@@ -1,74 +1,74 @@
 {
-	"attributes" : 
-	{
-		"absolutePath" : "a",
-		"exportedSymbols" : 
-		{
-			"C" : 
-			[
-				3
-			]
-		}
-	},
-	"children" : 
-	[
-		{
-			"attributes" : 
-			{
-				"baseContracts" : 
-				[
-					null
-				],
-				"contractDependencies" : 
-				[
-					null
-				],
-				"contractKind" : "contract",
-				"documentation" : null,
-				"fullyImplemented" : true,
-				"linearizedBaseContracts" : 
-				[
-					3
-				],
-				"name" : "C",
-				"scope" : 4
-			},
-			"children" : 
-			[
-				{
-					"attributes" : 
-					{
-						"anonymous" : false,
-						"documentation" : null,
-						"name" : "E"
-					},
-					"children" : 
-					[
-						{
-							"attributes" : 
-							{
-								"parameters" : 
-								[
-									null
-								]
-							},
-							"children" : [],
-							"id" : 1,
-							"name" : "ParameterList",
-							"src" : "20:2:1"
-						}
-					],
-					"id" : 2,
-					"name" : "EventDefinition",
-					"src" : "13:10:1"
-				}
-			],
-			"id" : 3,
-			"name" : "ContractDefinition",
-			"src" : "0:25:1"
-		}
-	],
-	"id" : 4,
-	"name" : "SourceUnit",
-	"src" : "0:26:1"
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        3
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          3
+        ],
+        "name": "C",
+        "scope": 4
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "anonymous": false,
+            "documentation": null,
+            "name": "E"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 1,
+              "name": "ParameterList",
+              "src": "20:2:1"
+            }
+          ],
+          "id": 2,
+          "name": "EventDefinition",
+          "src": "13:10:1"
+        }
+      ],
+      "id": 3,
+      "name": "ContractDefinition",
+      "src": "0:25:1"
+    }
+  ],
+  "id": 4,
+  "name": "SourceUnit",
+  "src": "0:26:1"
 }

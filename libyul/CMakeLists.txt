@@ -50,6 +50,8 @@ add_library(yul
 	backends/wasm/EWasmObjectCompiler.h
 	backends/wasm/EWasmToText.cpp
 	backends/wasm/EWasmToText.h
+	backends/wasm/BinaryTransform.cpp
+	backends/wasm/BinaryTransform.h
 	backends/wasm/WasmDialect.cpp
 	backends/wasm/WasmDialect.h
 	backends/wasm/WordSizeTransform.cpp
@@ -66,6 +68,10 @@ add_library(yul
 	optimiser/CallGraphGenerator.h
 	optimiser/CommonSubexpressionEliminator.cpp
 	optimiser/CommonSubexpressionEliminator.h
+	optimiser/ConditionalSimplifier.cpp
+	optimiser/ConditionalSimplifier.h
+	optimiser/ConditionalUnsimplifier.cpp
+	optimiser/ConditionalUnsimplifier.h
 	optimiser/ControlFlowSimplifier.cpp
 	optimiser/ControlFlowSimplifier.h
 	optimiser/DataFlowAnalyzer.cpp

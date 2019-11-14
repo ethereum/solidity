@@ -40,7 +40,13 @@ enum evmc_loader_error_code
     EVMC_LOADER_INSTANCE_CREATION_FAILURE = 4,
 
     /** The ABI version of the VM instance has mismatched. */
-    EVMC_LOADER_ABI_VERSION_MISMATCH = 5
+    EVMC_LOADER_ABI_VERSION_MISMATCH = 5,
+
+    /** The VM option is invalid. */
+    EVMC_LOADER_INVALID_OPTION_NAME = 6,
+
+    /** The VM option value is invalid. */
+    EVMC_LOADER_INVALID_OPTION_VALUE = 7
 };
 
 /**
@@ -110,6 +116,43 @@ evmc_create_fn evmc_load(const char* filename, enum evmc_loader_error_code* erro
  */
 struct evmc_instance* evmc_load_and_create(const char* filename,
                                            enum evmc_loader_error_code* error_code);
+
+/**
+ * Dynamically loads the EVMC module, then creates and configures the VM instance.
+ *
+ * This function performs the following actions atomically:
+ * - loads the EVMC module (as evmc_load()),
+ * - creates the VM instance,
+ * - configures the VM instance with options provided in the @p config parameter.
+ *
+ * The configuration string (@p config) has the following syntax:
+ *
+ *     <path> ("," <option-name> ["=" <option-value>])*
+ *
+ * In this syntax, an option without a value can be specified (`,option,`)
+ * as a shortcut for using empty value (`,option=,`).
+ *
+ * Options are passed to a VM in the order they are specified in the configuration string.
+ * It is up to the VM implementation how to handle duplicated options and other conflicts.
+ *
+ * Example configuration string:
+ *
+ *     ./modules/vm.so,engine=compiler,trace,verbosity=2
+ *
+ * The function signals the same errors as evmc_load_and_create() and additionally:
+ * - ::EVMC_LOADER_INVALID_OPTION_NAME
+ *   when the provided options list contains an option unknown for the VM,
+ * - ::EVMC_LOADER_INVALID_OPTION_VALUE
+ *   when there exists unsupported value for a given VM option.
+
+ *
+ * @param config      The path to the EVMC module with additional configuration options.
+ * @param error_code  The pointer to the error code. If not NULL the value is set to
+ *                    ::EVMC_LOADER_SUCCESS on success or any other error code as described above.
+ * @return            The pointer to the created VM or NULL in case of error.
+ */
+struct evmc_instance* evmc_load_and_configure(const char* config,
+                                              enum evmc_loader_error_code* error_code);
 
 /**
  * Returns the human-readable message describing the most recent error

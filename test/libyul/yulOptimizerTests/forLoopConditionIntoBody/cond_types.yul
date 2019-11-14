@@ -17,8 +17,8 @@
 //     { }
 //     for { } 0 { }
 //     { }
-//     for { } 1 { }
-//     { if iszero(a) { break } }
+//     for { } a { }
+//     { }
 //     for { } 1 { }
 //     {
 //         if iszero(add(a, a)) { break }

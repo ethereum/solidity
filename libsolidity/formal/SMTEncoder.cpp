@@ -36,12 +36,37 @@ SMTEncoder::SMTEncoder(smt::EncodingContext& _context):
 
 bool SMTEncoder::visit(ContractDefinition const& _contract)
 {
-	solAssert(m_currentContract == nullptr, "");
-	m_currentContract = &_contract;
+	solAssert(m_currentContract, "");
 
-	initializeStateVariables(_contract);
+	for (auto const& node: _contract.subNodes())
+		if (!dynamic_pointer_cast<FunctionDefinition>(node))
+			node->accept(*this);
 
-	return true;
+	vector<FunctionDefinition const*> resolvedFunctions = _contract.definedFunctions();
+	for (auto const& base: _contract.annotation().linearizedBaseContracts)
+		for (auto const& baseFunction: base->definedFunctions())
+		{
+			if (baseFunction->isConstructor())
+				continue;
+			bool overridden = false;
+			for (auto const& function: resolvedFunctions)
+				if (
+					function->name() == baseFunction->name() &&
+					FunctionType(*function).asCallableFunction(false)->
+						hasEqualParameterTypes(*FunctionType(*baseFunction).asCallableFunction(false))
+				)
+				{
+					overridden = true;
+					break;
+				}
+			if (!overridden)
+				resolvedFunctions.push_back(baseFunction);
+		}
+
+	for (auto const& function: resolvedFunctions)
+		function->accept(*this);
+
+	return false;
 }
 
 void SMTEncoder::endVisit(ContractDefinition const& _contract)
@@ -110,9 +135,13 @@ void SMTEncoder::visitFunctionOrModifier()
 			*modifierInvocation->name()->annotation().referencedDeclaration
 		);
 		vector<smt::Expression> modifierArgsExpr;
-		if (modifierInvocation->arguments())
-			for (auto arg: *modifierInvocation->arguments())
-				modifierArgsExpr.push_back(expr(*arg));
+		if (auto const* arguments = modifierInvocation->arguments())
+		{
+			auto const& modifierParams = modifierDef.parameters();
+			solAssert(modifierParams.size() == arguments->size(), "");
+			for (unsigned i = 0; i < arguments->size(); ++i)
+				modifierArgsExpr.push_back(expr(*arguments->at(i), modifierParams.at(i)->type()));
+		}
 		initializeFunctionCallParameters(modifierDef, modifierArgsExpr);
 		pushCallStack({&modifierDef, modifierInvocation.get()});
 		modifierDef.body().accept(*this);
@@ -512,6 +541,14 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	}
 }
 
+void SMTEncoder::initContract(ContractDefinition const& _contract)
+{
+	solAssert(m_currentContract == nullptr, "");
+	m_currentContract = &_contract;
+
+	initializeStateVariables(_contract);
+}
+
 void SMTEncoder::initFunction(FunctionDefinition const& _function)
 {
 	solAssert(m_callStack.empty(), "");
@@ -561,10 +598,10 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 	{
 		// Will be translated as part of the node that requested the lvalue.
 	}
-	else if (_identifier.annotation().type->category() == Type::Category::Function)
-		visitFunctionIdentifier(_identifier);
 	else if (auto decl = identifierToVariable(_identifier))
 		defineExpr(_identifier, currentValue(*decl));
+	else if (_identifier.annotation().type->category() == Type::Category::Function)
+		visitFunctionIdentifier(_identifier);
 	else if (_identifier.name() == "now")
 		defineGlobalVariable(_identifier.name(), _identifier);
 	else if (_identifier.name() == "this")
@@ -665,7 +702,7 @@ void SMTEncoder::endVisit(Return const& _return)
 			}
 		}
 		else if (returnParams.size() == 1)
-			m_context.addAssertion(expr(*_return.expression()) == m_context.newValue(*returnParams.front()));
+			m_context.addAssertion(expr(*_return.expression(), returnParams.front()->type()) == m_context.newValue(*returnParams.front()));
 	}
 }
 
@@ -733,6 +770,15 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 		auto varDecl = identifierToVariable(*id);
 		solAssert(varDecl, "");
 		array = m_context.variable(*varDecl);
+
+		if (varDecl->type()->category() == Type::Category::FixedBytes)
+		{
+			m_errorReporter.warning(
+				_indexAccess.location(),
+				"Assertion checker does not yet support index accessing fixed bytes."
+			);
+			return;
+		}
 	}
 	else if (auto const& innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
 	{
@@ -774,78 +820,79 @@ void SMTEncoder::arrayAssignment()
 
 void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression const& _rightHandSide)
 {
-	auto const& indexAccess = dynamic_cast<IndexAccess const&>(_expr);
-	if (auto const& id = dynamic_cast<Identifier const*>(&indexAccess.baseExpression()))
+	auto toStore = _rightHandSide;
+	auto indexAccess = dynamic_cast<IndexAccess const*>(&_expr);
+	solAssert(indexAccess, "");
+	while (true)
 	{
-		auto varDecl = identifierToVariable(*id);
-		solAssert(varDecl, "");
-
-		if (varDecl->hasReferenceOrMappingType())
-			m_context.resetVariables([&](VariableDeclaration const& _var) {
-				if (_var == *varDecl)
-					return false;
-
-				// If both are state variables no need to clear knowledge.
-				if (_var.isStateVariable() && varDecl->isStateVariable())
-					return false;
-
-				TypePointer prefix = _var.type();
-				TypePointer originalType = typeWithoutPointer(varDecl->type());
-				while (
-					prefix->category() == Type::Category::Mapping ||
-					prefix->category() == Type::Category::Array
-				)
-				{
-					if (*originalType == *typeWithoutPointer(prefix))
-						return true;
-					if (prefix->category() == Type::Category::Mapping)
-					{
-						auto mapPrefix = dynamic_cast<MappingType const*>(prefix);
-						solAssert(mapPrefix, "");
-						prefix = mapPrefix->valueType();
-					}
-					else
-					{
-						auto arrayPrefix = dynamic_cast<ArrayType const*>(prefix);
-						solAssert(arrayPrefix, "");
-						prefix = arrayPrefix->baseType();
-					}
-				}
-				return false;
-			});
-
-		smt::Expression store = smt::Expression::store(
-			m_context.variable(*varDecl)->currentValue(),
-			expr(*indexAccess.indexExpression()),
-			_rightHandSide
-		);
-		m_context.addAssertion(m_context.newValue(*varDecl) == store);
-		// Update the SMT select value after the assignment,
-		// necessary for sound models.
-		defineExpr(indexAccess, smt::Expression::select(
-			m_context.variable(*varDecl)->currentValue(),
-			expr(*indexAccess.indexExpression())
-		));
-	}
-	else if (dynamic_cast<IndexAccess const*>(&indexAccess.baseExpression()))
-	{
-		auto identifier = dynamic_cast<Identifier const*>(leftmostBase(indexAccess));
-		if (identifier)
+		if (auto const& id = dynamic_cast<Identifier const*>(&indexAccess->baseExpression()))
 		{
-			auto varDecl = identifierToVariable(*identifier);
-			m_context.newValue(*varDecl);
-		}
+			auto varDecl = identifierToVariable(*id);
+			solAssert(varDecl, "");
 
-		m_errorReporter.warning(
-			indexAccess.location(),
-			"Assertion checker does not yet implement assignments to multi-dimensional mappings or arrays."
-		);
+			if (varDecl->hasReferenceOrMappingType())
+				m_context.resetVariables([&](VariableDeclaration const& _var) {
+					if (_var == *varDecl)
+						return false;
+
+					// If both are state variables no need to clear knowledge.
+					if (_var.isStateVariable() && varDecl->isStateVariable())
+						return false;
+
+					TypePointer prefix = _var.type();
+					TypePointer originalType = typeWithoutPointer(varDecl->type());
+					while (
+						prefix->category() == Type::Category::Mapping ||
+						prefix->category() == Type::Category::Array
+					)
+					{
+						if (*originalType == *typeWithoutPointer(prefix))
+							return true;
+						if (prefix->category() == Type::Category::Mapping)
+						{
+							auto mapPrefix = dynamic_cast<MappingType const*>(prefix);
+							solAssert(mapPrefix, "");
+							prefix = mapPrefix->valueType();
+						}
+						else
+						{
+							auto arrayPrefix = dynamic_cast<ArrayType const*>(prefix);
+							solAssert(arrayPrefix, "");
+							prefix = arrayPrefix->baseType();
+						}
+					}
+					return false;
+				});
+
+			smt::Expression store = smt::Expression::store(
+				m_context.variable(*varDecl)->currentValue(),
+				expr(*indexAccess->indexExpression()),
+				toStore
+			);
+			m_context.addAssertion(m_context.newValue(*varDecl) == store);
+			// Update the SMT select value after the assignment,
+			// necessary for sound models.
+			defineExpr(*indexAccess, smt::Expression::select(
+				m_context.variable(*varDecl)->currentValue(),
+				expr(*indexAccess->indexExpression())
+			));
+
+			break;
+		}
+		else if (auto base = dynamic_cast<IndexAccess const*>(&indexAccess->baseExpression()))
+		{
+			toStore = smt::Expression::store(expr(*base), expr(*indexAccess->indexExpression()), toStore);
+			indexAccess = base;
+		}
+		else
+		{
+			m_errorReporter.warning(
+				_expr.location(),
+				"Assertion checker does not yet implement this expression."
+			);
+			break;
+		}
 	}
-	else
-		m_errorReporter.warning(
-			_expr.location(),
-			"Assertion checker does not yet implement this expression."
-		);
 }
 
 void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _expr, bool _increaseIndex)
@@ -1300,7 +1347,7 @@ void SMTEncoder::createExpr(Expression const& _e)
 void SMTEncoder::defineExpr(Expression const& _e, smt::Expression _value)
 {
 	createExpr(_e);
-	solAssert(smt::smtKind(_e.annotation().type->category()) != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
+	solAssert(_value.sort->kind != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
 	m_context.addAssertion(expr(_e) == _value);
 }
 

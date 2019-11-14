@@ -82,11 +82,35 @@ void WordSizeTransform::operator()(Block& _block)
 {
 	iterateReplacing(
 		_block.statements,
-		[&](Statement& _s) -> boost::optional<vector<Statement>>
+		[&](Statement& _s) -> std::optional<vector<Statement>>
 		{
 			if (_s.type() == typeid(VariableDeclaration))
 			{
 				VariableDeclaration& varDecl = boost::get<VariableDeclaration>(_s);
+
+				// Special handling for datasize and dataoffset - they will only need one variable.
+				if (varDecl.value && varDecl.value->type() == typeid(FunctionCall))
+					if (BuiltinFunction const* f = m_inputDialect.builtin(boost::get<FunctionCall>(*varDecl.value).functionName.name))
+						if (f->literalArguments)
+						{
+							yulAssert(f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring, "");
+							yulAssert(varDecl.variables.size() == 1, "");
+							auto newLhs = generateU64IdentifierNames(varDecl.variables[0].name);
+							vector<Statement> ret;
+							for (int i = 0; i < 3; i++)
+								ret.push_back(VariableDeclaration{
+									varDecl.location,
+									{TypedName{varDecl.location, newLhs[i], "u64"_yulstring}},
+									make_unique<Expression>(Literal{locationOf(*varDecl.value), LiteralKind::Number, "0"_yulstring, "u64"_yulstring})
+								});
+							ret.push_back(VariableDeclaration{
+								varDecl.location,
+								{TypedName{varDecl.location, newLhs[3], "u64"_yulstring}},
+								std::move(varDecl.value)
+							});
+							return {std::move(ret)};
+						}
+
 				if (
 					!varDecl.value ||
 					varDecl.value->type() == typeid(FunctionalInstruction) ||
@@ -95,7 +119,7 @@ void WordSizeTransform::operator()(Block& _block)
 				{
 					if (varDecl.value) visit(*varDecl.value);
 					rewriteVarDeclList(varDecl.variables);
-					return boost::none;
+					return std::nullopt;
 				}
 				else if (
 					varDecl.value->type() == typeid(Identifier) ||
@@ -114,7 +138,7 @@ void WordSizeTransform::operator()(Block& _block)
 								std::move(newRhs[i])
 							}
 						);
-					return ret;
+					return {std::move(ret)};
 				}
 				else
 					yulAssert(false, "");
@@ -123,6 +147,30 @@ void WordSizeTransform::operator()(Block& _block)
 			{
 				Assignment& assignment = boost::get<Assignment>(_s);
 				yulAssert(assignment.value, "");
+
+				// Special handling for datasize and dataoffset - they will only need one variable.
+				if (assignment.value->type() == typeid(FunctionCall))
+					if (BuiltinFunction const* f = m_inputDialect.builtin(boost::get<FunctionCall>(*assignment.value).functionName.name))
+						if (f->literalArguments)
+						{
+							yulAssert(f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring, "");
+							yulAssert(assignment.variableNames.size() == 1, "");
+							auto newLhs = generateU64IdentifierNames(assignment.variableNames[0].name);
+							vector<Statement> ret;
+							for (int i = 0; i < 3; i++)
+								ret.push_back(Assignment{
+									assignment.location,
+									{Identifier{assignment.location, newLhs[i]}},
+									make_unique<Expression>(Literal{locationOf(*assignment.value), LiteralKind::Number, "0"_yulstring, "u64"_yulstring})
+								});
+							ret.push_back(Assignment{
+								assignment.location,
+								{Identifier{assignment.location, newLhs[3]}},
+								std::move(assignment.value)
+							});
+							return {std::move(ret)};
+						}
+
 				if (
 					assignment.value->type() == typeid(FunctionalInstruction) ||
 					assignment.value->type() == typeid(FunctionCall)
@@ -130,7 +178,7 @@ void WordSizeTransform::operator()(Block& _block)
 				{
 					if (assignment.value) visit(*assignment.value);
 					rewriteIdentifierList(assignment.variableNames);
-					return boost::none;
+					return std::nullopt;
 				}
 				else if (
 					assignment.value->type() == typeid(Identifier) ||
@@ -149,7 +197,7 @@ void WordSizeTransform::operator()(Block& _block)
 								std::move(newRhs[i])
 							}
 						);
-					return ret;
+					return {std::move(ret)};
 				}
 				else
 					yulAssert(false, "");
@@ -158,7 +206,7 @@ void WordSizeTransform::operator()(Block& _block)
 				return handleSwitch(boost::get<Switch>(_s));
 			else
 				visit(_s);
-			return boost::none;
+			return std::nullopt;
 		}
 	);
 }
@@ -174,7 +222,7 @@ void WordSizeTransform::rewriteVarDeclList(TypedNameList& _nameList)
 {
 	iterateReplacing(
 		_nameList,
-		[&](TypedName const& _n) -> boost::optional<TypedNameList>
+		[&](TypedName const& _n) -> std::optional<TypedNameList>
 		{
 			TypedNameList ret;
 			for (auto newName: generateU64IdentifierNames(_n.name))
@@ -188,7 +236,7 @@ void WordSizeTransform::rewriteIdentifierList(vector<Identifier>& _ids)
 {
 	iterateReplacing(
 		_ids,
-		[&](Identifier const& _id) -> boost::optional<vector<Identifier>>
+		[&](Identifier const& _id) -> std::optional<vector<Identifier>>
 		{
 			vector<Identifier> ret;
 			for (auto newId: m_variableMapping.at(_id.name))
@@ -202,7 +250,7 @@ void WordSizeTransform::rewriteFunctionCallArguments(vector<Expression>& _args)
 {
 	iterateReplacing(
 		_args,
-		[&](Expression& _e) -> boost::optional<vector<Expression>>
+		[&](Expression& _e) -> std::optional<vector<Expression>>
 		{
 			return expandValueToVector(_e);
 		}

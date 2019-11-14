@@ -23,6 +23,9 @@ endif()
 
 eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
 
+# Prevent the path of the source directory from ending up in the binary via __FILE__ macros.
+eth_add_cxx_compiler_flag_if_supported("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=/solidity")
+
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	# Enables all the warnings about constructions that some users consider questionable,
 	# and that are easy to avoid.  Also enable some extra warning flags that are not
@@ -130,6 +133,8 @@ elseif (DEFINED MSVC)
 	add_compile_options(-D_WIN32_WINNT=0x0600)		# declare Windows Vista API requirement
 	add_compile_options(-DNOMINMAX)					# undefine windows.h MAX && MIN macros cause it cause conflicts with std::min && std::max functions
 	add_compile_options(/utf-8)					# enable utf-8 encoding (solves warning 4819)
+	add_compile_options(-DBOOST_REGEX_NO_LIB)		# disable automatic boost::regex library selection
+	add_compile_options(-D_REGEX_MAX_STACK_COUNT=200000L)	# increase std::regex recursion depth limit
 
 	# disable empty object file warning
 	set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} /ignore:4221")

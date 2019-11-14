@@ -1,3 +1,30 @@
+### 0.5.13 (2019-11-14)
+
+Language Features:
+ * Allow to obtain the address of a linked library with ``address(LibraryName)``.
+
+
+Compiler Features:
+ * Code Generator: Use SELFBALANCE opcode for ``address(this).balance`` if using Istanbul EVM.
+ * EWasm: Experimental EWasm binary output via ``--ewasm`` and as documented in standard-json.
+ * SMTChecker: Add break/continue support to the CHC engine.
+ * SMTChecker: Support assignments to multi-dimensional arrays and mappings.
+ * SMTChecker: Support inheritance and function overriding.
+ * Standard JSON Interface: Output the storage layout of a contract when artifact ``storageLayout`` is requested.
+ * TypeChecker: List possible candidates when overload resolution fails.
+ * TypeChecker: Disallow variables of library types.
+
+
+Bugfixes:
+ * Code Generator: Fixed a faulty assert that would wrongly trigger for array sizes exceeding unsigned integer.
+ * SMTChecker: Fix internal error when accessing indices of fixed bytes.
+ * SMTChecker: Fix internal error when using function pointers as arguments.
+ * SMTChecker: Fix internal error when implicitly converting string literals to fixed bytes.
+ * Type Checker: Disallow constructor of the same class to be used as modifier.
+ * Type Checker: Treat magic variables as unknown identifiers in inline assembly.
+
+
+
 ### 0.5.12 (2019-10-01)
 
 Language Features:
@@ -10,6 +37,7 @@ Compiler Features:
  * SMTChecker: Add loop support to the CHC engine.
  * Yul Optimizer: Take side-effect-freeness of user-defined functions into account.
  * Yul Optimizer: Remove redundant mload/sload operations.
+ * Yul Optimizer: Use the fact that branch conditions have certain value inside the branch.
 
 
 Bugfixes:

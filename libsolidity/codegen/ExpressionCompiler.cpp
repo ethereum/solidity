@@ -475,7 +475,22 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	{
 		solAssert(_functionCall.arguments().size() == 1, "");
 		solAssert(_functionCall.names().empty(), "");
-		acceptAndConvert(*_functionCall.arguments().front(), *_functionCall.annotation().type);
+		auto const& expression = *_functionCall.arguments().front();
+		auto const& targetType = *_functionCall.annotation().type;
+		if (auto const* typeType = dynamic_cast<TypeType const*>(expression.annotation().type))
+			if (auto const* addressType = dynamic_cast<AddressType const*>(&targetType))
+			{
+				auto const* contractType = dynamic_cast<ContractType const*>(typeType->actualType());
+				solAssert(
+					contractType &&
+					contractType->contractDefinition().isLibrary() &&
+					addressType->stateMutability() == StateMutability::NonPayable,
+					""
+				);
+				m_context.appendLibraryAddress(contractType->contractDefinition().fullyQualifiedName());
+				return false;
+			}
+		acceptAndConvert(expression, targetType);
 		return false;
 	}
 
@@ -1229,6 +1244,28 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 						utils().leftShiftNumberOnStack(224);
 						return false;
 					}
+	// Another special case for `address(this).balance`. Post-Istanbul, we can use the selfbalance
+	// opcode.
+	if (
+		m_context.evmVersion().hasSelfBalance() &&
+		member == "balance" &&
+		_memberAccess.expression().annotation().type->category() == Type::Category::Address
+	)
+		if (FunctionCall const* funCall = dynamic_cast<FunctionCall const*>(&_memberAccess.expression()))
+			if (auto const* addr = dynamic_cast<ElementaryTypeNameExpression const*>(&funCall->expression()))
+				if (
+					addr->typeName().token() == Token::Address &&
+					funCall->arguments().size() == 1
+				)
+					if (auto arg = dynamic_cast<Identifier const*>( funCall->arguments().front().get()))
+						if (
+							arg->name() == "this" &&
+							dynamic_cast<MagicVariableDeclaration const*>(arg->annotation().referencedDeclaration)
+						)
+						{
+							m_context << Instruction::SELFBALANCE;
+							return false;
+						}
 
 	_memberAccess.expression().accept(*this);
 	switch (_memberAccess.expression().annotation().type->category())

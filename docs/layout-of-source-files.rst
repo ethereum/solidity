@@ -37,7 +37,7 @@ breaking changes. These releases always have versions of the form
 
 The version pragma is used as follows::
 
-  pragma solidity ^0.5.2;
+    pragma solidity ^0.5.2;
 
 A source file with the line above does not compile with a compiler earlier than version 0.5.2,
 and it also does not work on a compiler starting from version 0.6.0 (this

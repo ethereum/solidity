@@ -57,7 +57,9 @@ void testFunctionCall(
 		u256 _value = 0,
 		string _argumentComment = "",
 		string _expectationComment = "",
-		vector<string> _rawArguments = vector<string>{}
+		vector<string> _rawArguments = vector<string>{},
+		bool _isConstructor = false,
+		bool _isLibrary = false
 )
 {
 	BOOST_REQUIRE_EQUAL(_call.expectations.failure, _failure);
@@ -79,6 +81,9 @@ void testFunctionCall(
 			++index;
 		}
 	}
+
+	BOOST_REQUIRE_EQUAL(_call.isConstructor, _isConstructor);
+	BOOST_REQUIRE_EQUAL(_call.isLibrary, _isLibrary);
 }
 
 BOOST_AUTO_TEST_SUITE(TestFileParserTest)
@@ -881,6 +886,51 @@ BOOST_AUTO_TEST_CASE(call_unexpected_character)
 		// f() -> ??
 	)";
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(constructor)
+{
+	char const* source = R"(
+		// constructor()
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"constructor()",
+		false,
+		{},
+		{},
+		0,
+		"",
+		"",
+		{},
+		true
+	);
+}
+
+BOOST_AUTO_TEST_CASE(library)
+{
+	char const* source = R"(
+		// library: L
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"L",
+		false,
+		{},
+		{},
+		0,
+		"",
+		"",
+		{},
+		false,
+		true
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

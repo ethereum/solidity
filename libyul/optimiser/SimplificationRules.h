@@ -26,9 +26,9 @@
 #include <libyul/AsmData.h>
 
 #include <boost/noncopyable.hpp>
-#include <boost/optional.hpp>
 
 #include <functional>
+#include <optional>
 #include <vector>
 
 namespace yul
@@ -57,7 +57,7 @@ public:
 	/// by the constructor, but we had some issues with static initialization.
 	bool isInitialized() const;
 
-	static boost::optional<std::pair<dev::eth::Instruction, std::vector<Expression> const*>>
+	static std::optional<std::pair<dev::eth::Instruction, std::vector<Expression> const*>>
 	instructionAndArguments(Dialect const& _dialect, Expression const& _expr);
 
 private:
@@ -85,6 +85,10 @@ enum class PatternKind
 class Pattern
 {
 public:
+	using Builtins = dev::eth::EVMBuiltins;
+	static constexpr size_t WordSize = 256;
+	using Word = dev::u256;
+
 	/// Matches any expression.
 	Pattern(PatternKind _kind = PatternKind::Any): m_kind(_kind) {}
 	// Matches a specific constant value.

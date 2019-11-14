@@ -29,7 +29,7 @@ using namespace langutil;
 Error::Error(Type _type, SourceLocation const& _location, string const& _description):
 	m_type(_type)
 {
-	switch(m_type)
+	switch (m_type)
 	{
 	case Type::DeclarationError:
 		m_typeName = "DeclarationError";

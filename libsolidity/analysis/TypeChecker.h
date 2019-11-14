@@ -166,6 +166,9 @@ private:
 	/// Flag indicating whether we are currently inside a StructDefinition.
 	bool m_insideStruct = false;
 
+	/// Flag indicating whether we are currently inside the invocation of a modifier
+	bool m_insideModifierInvocation = false;
+
 	langutil::ErrorReporter& m_errorReporter;
 };
 

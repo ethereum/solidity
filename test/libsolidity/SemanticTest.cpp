@@ -78,15 +78,34 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 		for (auto& test: m_tests)
 			test.reset();
 
+		map<string, dev::test::Address> libraries;
+
+		bool constructed = false;
+
 		for (auto& test: m_tests)
 		{
-			if (&test == &m_tests.front())
-				if (test.call().isConstructor)
-					deploy("", test.call().value, test.call().arguments.rawBytes());
-				else
-					soltestAssert(deploy("", 0, bytes()), "Failed to deploy contract.");
+			if (constructed)
+			{
+				soltestAssert(!test.call().isLibrary, "Libraries have to be deployed before any other call.");
+				soltestAssert(!test.call().isConstructor, "Constructor has to be the first function call expect for library deployments.");
+			}
+			else if (test.call().isLibrary)
+			{
+				soltestAssert(
+					deploy(test.call().signature, 0, {}, libraries) && m_transactionSuccessful,
+					"Failed to deploy library " + test.call().signature
+				);
+				libraries[test.call().signature] = m_contractAddress;
+				continue;
+			}
 			else
-				soltestAssert(!test.call().isConstructor, "Constructor has to be the first function call.");
+			{
+				if (test.call().isConstructor)
+					deploy("", test.call().value, test.call().arguments.rawBytes(), libraries);
+				else
+					soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
+				constructed = true;
+			}
 
 			if (test.call().isConstructor)
 			{
@@ -171,8 +190,8 @@ void SemanticTest::parseExpectations(istream& _stream)
 	std::move(functionCalls.begin(), functionCalls.end(), back_inserter(m_tests));
 }
 
-bool SemanticTest::deploy(string const& _contractName, u256 const& _value, bytes const& _arguments)
+bool SemanticTest::deploy(string const& _contractName, u256 const& _value, bytes const& _arguments, map<string, dev::test::Address> const& _libraries)
 {
-	auto output = compileAndRunWithoutCheck(m_source, _value, _contractName, _arguments);
+	auto output = compileAndRunWithoutCheck(m_source, _value, _contractName, _arguments, _libraries);
 	return !output.empty() && m_transactionSuccessful;
 }

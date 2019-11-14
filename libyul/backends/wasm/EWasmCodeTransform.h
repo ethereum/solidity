@@ -35,7 +35,7 @@ struct AsmAnalysisInfo;
 class EWasmCodeTransform: public boost::static_visitor<wasm::Expression>
 {
 public:
-	static std::string run(Dialect const& _dialect, yul::Block const& _ast);
+	static wasm::Module run(Dialect const& _dialect, yul::Block const& _ast);
 
 public:
 	wasm::Expression operator()(yul::Instruction const& _instruction);
@@ -81,6 +81,12 @@ private:
 	);
 
 	wasm::FunctionDefinition translateFunction(yul::FunctionDefinition const& _funDef);
+
+	wasm::Expression injectTypeConversionIfNeeded(wasm::FunctionCall _call) const;
+	std::vector<wasm::Expression> injectTypeConversionIfNeeded(
+		std::vector<wasm::Expression> _arguments,
+		std::vector<yul::Type> const& _parameterTypes
+	) const;
 
 	std::string newLabel();
 	/// Makes sure that there are at least @a _amount global variables.

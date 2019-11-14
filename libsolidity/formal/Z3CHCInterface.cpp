@@ -47,8 +47,9 @@ Z3CHCInterface::Z3CHCInterface():
 	m_solver.set(p);
 }
 
-void Z3CHCInterface::declareVariable(string const& _name, Sort const& _sort)
+void Z3CHCInterface::declareVariable(string const& _name, SortPointer const& _sort)
 {
+	solAssert(_sort, "");
 	m_z3Interface->declareVariable(_name, _sort);
 }
 

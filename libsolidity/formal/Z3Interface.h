@@ -38,7 +38,7 @@ public:
 	void push() override;
 	void pop() override;
 
-	void declareVariable(std::string const& _name, Sort const& _sort) override;
+	void declareVariable(std::string const& _name, SortPointer const& _sort) override;
 
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;

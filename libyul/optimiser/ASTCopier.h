@@ -25,11 +25,11 @@
 #include <libyul/YulString.h>
 
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
 
-#include <vector>
-#include <set>
 #include <memory>
+#include <optional>
+#include <set>
+#include <vector>
 
 namespace yul
 {

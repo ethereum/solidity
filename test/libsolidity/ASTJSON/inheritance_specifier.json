@@ -1,80 +1,80 @@
 {
-	"absolutePath" : "a",
-	"exportedSymbols" : 
-	{
-		"C1" : 
-		[
-			1
-		],
-		"C2" : 
-		[
-			4
-		]
-	},
-	"id" : 5,
-	"nodeType" : "SourceUnit",
-	"nodes" : 
-	[
-		{
-			"baseContracts" : [],
-			"contractDependencies" : [],
-			"contractKind" : "contract",
-			"documentation" : null,
-			"fullyImplemented" : true,
-			"id" : 1,
-			"linearizedBaseContracts" : 
-			[
-				1
-			],
-			"name" : "C1",
-			"nodeType" : "ContractDefinition",
-			"nodes" : [],
-			"scope" : 5,
-			"src" : "0:14:1"
-		},
-		{
-			"baseContracts" : 
-			[
-				{
-					"arguments" : null,
-					"baseName" : 
-					{
-						"contractScope" : null,
-						"id" : 2,
-						"name" : "C1",
-						"nodeType" : "UserDefinedTypeName",
-						"referencedDeclaration" : 1,
-						"src" : "30:2:1",
-						"typeDescriptions" : 
-						{
-							"typeIdentifier" : "t_contract$_C1_$1",
-							"typeString" : "contract C1"
-						}
-					},
-					"id" : 3,
-					"nodeType" : "InheritanceSpecifier",
-					"src" : "30:2:1"
-				}
-			],
-			"contractDependencies" : 
-			[
-				1
-			],
-			"contractKind" : "contract",
-			"documentation" : null,
-			"fullyImplemented" : true,
-			"id" : 4,
-			"linearizedBaseContracts" : 
-			[
-				4,
-				1
-			],
-			"name" : "C2",
-			"nodeType" : "ContractDefinition",
-			"nodes" : [],
-			"scope" : 5,
-			"src" : "15:20:1"
-		}
-	],
-	"src" : "0:36:1"
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C1":
+    [
+      1
+    ],
+    "C2":
+    [
+      4
+    ]
+  },
+  "id": 5,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 1,
+      "linearizedBaseContracts":
+      [
+        1
+      ],
+      "name": "C1",
+      "nodeType": "ContractDefinition",
+      "nodes": [],
+      "scope": 5,
+      "src": "0:14:1"
+    },
+    {
+      "baseContracts":
+      [
+        {
+          "arguments": null,
+          "baseName":
+          {
+            "contractScope": null,
+            "id": 2,
+            "name": "C1",
+            "nodeType": "UserDefinedTypeName",
+            "referencedDeclaration": 1,
+            "src": "30:2:1",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_contract$_C1_$1",
+              "typeString": "contract C1"
+            }
+          },
+          "id": 3,
+          "nodeType": "InheritanceSpecifier",
+          "src": "30:2:1"
+        }
+      ],
+      "contractDependencies":
+      [
+        1
+      ],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 4,
+      "linearizedBaseContracts":
+      [
+        4,
+        1
+      ],
+      "name": "C2",
+      "nodeType": "ContractDefinition",
+      "nodes": [],
+      "scope": 5,
+      "src": "15:20:1"
+    }
+  ],
+  "src": "0:36:1"
 }

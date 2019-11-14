@@ -30,8 +30,8 @@
 #include <liblangutil/SourceLocation.h>
 
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
 
+#include <optional>
 #include <set>
 
 namespace yul
@@ -126,7 +126,7 @@ public:
 	void operator()(Block& _block) override;
 
 private:
-	boost::optional<std::vector<Statement>> tryInlineStatement(Statement& _statement);
+	std::optional<std::vector<Statement>> tryInlineStatement(Statement& _statement);
 	std::vector<Statement> performInline(Statement& _statement, FunctionCall& _funCall);
 
 	YulString m_currentFunction;

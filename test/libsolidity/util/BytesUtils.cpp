@@ -263,7 +263,7 @@ string BytesUtils::formatBytes(
 		os << formatHexString(_bytes);
 		break;
 	case ABIType::String:
-		os << formatString(_bytes);
+		os << formatString(_bytes, _bytes.size() - countRightPaddedZeros(_bytes));
 		break;
 	case ABIType::Failure:
 		break;
@@ -309,5 +309,14 @@ string BytesUtils::formatBytesRange(
 	}
 
 	return os.str();
+}
+
+size_t BytesUtils::countRightPaddedZeros(bytes const& _bytes)
+{
+	return find_if(
+		_bytes.rbegin(),
+		_bytes.rend(),
+		[](uint8_t b) { return b != '\0'; }
+	) - _bytes.rbegin();
 }
 

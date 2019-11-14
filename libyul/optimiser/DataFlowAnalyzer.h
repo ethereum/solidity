@@ -128,7 +128,7 @@ protected:
 	/// Returns true iff the variable is in scope.
 	bool inScope(YulString _variableName) const;
 
-	boost::optional<std::pair<YulString, YulString>> isSimpleStore(
+	std::optional<std::pair<YulString, YulString>> isSimpleStore(
 		dev::eth::Instruction _store,
 		ExpressionStatement const& _statement
 	) const;

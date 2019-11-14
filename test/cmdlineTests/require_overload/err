@@ -1,0 +1,5 @@
+require_overload/input.sol:4:9: Error: No matching declaration found after argument-dependent lookup.
+        require(this);
+        ^-----^
+Candidate: function require(bool)
+Candidate: function require(bool, string memory)

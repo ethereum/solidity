@@ -30,14 +30,15 @@ using namespace std;
 using namespace yul;
 using namespace dev;
 
-string EWasmToText::run(
-	vector<wasm::GlobalVariableDeclaration> const& _globals,
-	vector<wasm::FunctionImport> const& _imports,
-	vector<wasm::FunctionDefinition> const& _functions
-)
+string EWasmToText::run(wasm::Module const& _module)
 {
 	string ret = "(module\n";
-	for (wasm::FunctionImport const& imp: _imports)
+	for (auto const& sub: _module.subModules)
+		ret +=
+			"    ;; sub-module \"" +
+			sub.first +
+			"\" will be encoded as custom section in binary here, but is skipped in text mode.\n";
+	for (wasm::FunctionImport const& imp: _module.imports)
 	{
 		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" + imp.internalName;
 		if (!imp.paramTypes.empty())
@@ -52,10 +53,10 @@ string EWasmToText::run(
 	// export the main function
 	ret += "    (export \"main\" (func $main))\n";
 
-	for (auto const& g: _globals)
+	for (auto const& g: _module.globals)
 		ret += "    (global $" + g.variableName + " (mut i64) (i64.const 0))\n";
 	ret += "\n";
-	for (auto const& f: _functions)
+	for (auto const& f: _module.functions)
 		ret += transform(f) + "\n";
 	return move(ret) + ")\n";
 }
@@ -74,17 +75,12 @@ string EWasmToText::operator()(wasm::StringLiteral const& _literal)
 
 string EWasmToText::operator()(wasm::LocalVariable const& _identifier)
 {
-	return "(get_local $" + _identifier.name + ")";
+	return "(local.get $" + _identifier.name + ")";
 }
 
 string EWasmToText::operator()(wasm::GlobalVariable const& _identifier)
 {
-	return "(get_global $" + _identifier.name + ")";
-}
-
-string EWasmToText::operator()(wasm::Label const& _label)
-{
-	return "$" + _label.name;
+	return "(global.get $" + _identifier.name + ")";
 }
 
 string EWasmToText::operator()(wasm::BuiltinCall const& _builtinCall)
@@ -101,12 +97,12 @@ string EWasmToText::operator()(wasm::FunctionCall const& _functionCall)
 
 string EWasmToText::operator()(wasm::LocalAssignment const& _assignment)
 {
-	return "(set_local $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
+	return "(local.set $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
 }
 
 string EWasmToText::operator()(wasm::GlobalAssignment const& _assignment)
 {
-	return "(set_global $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
+	return "(global.set $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
 }
 
 string EWasmToText::operator()(wasm::If const& _if)
@@ -128,9 +124,9 @@ string EWasmToText::operator()(wasm::Break const& _break)
 	return "(break $" + _break.label.name + ")\n";
 }
 
-string EWasmToText::operator()(wasm::Continue const& _continue)
+string EWasmToText::operator()(wasm::BreakIf const& _break)
 {
-	return "(continue $" + _continue.label.name + ")\n";
+	return "(br_if $" + _break.label.name + " " + visit(*_break.condition) + ")\n";
 }
 
 string EWasmToText::operator()(wasm::Block const& _block)
@@ -165,7 +161,7 @@ string EWasmToText::transform(wasm::FunctionDefinition const& _function)
 		ret += "    (result i64)\n";
 	for (auto const& local: _function.locals)
 		ret += "    (local $" + local.variableName + " i64)\n";
-	ret += indented(joinTransformed(_function.body));
+	ret += indented(joinTransformed(_function.body, '\n'));
 	if (ret.back() != '\n')
 		ret += '\n';
 	ret += ")\n";

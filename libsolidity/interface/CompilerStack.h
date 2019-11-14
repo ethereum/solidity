@@ -121,7 +121,7 @@ public:
 	void reset(bool _keepSettings = false);
 
 	// Parses a remapping of the format "context:prefix=target".
-	static boost::optional<Remapping> parseRemapping(std::string const& _remapping);
+	static std::optional<Remapping> parseRemapping(std::string const& _remapping);
 
 	/// Sets path remappings.
 	/// Must be set before parsing.
@@ -232,8 +232,11 @@ public:
 	/// @returns the optimized IR representation of a contract.
 	std::string const& yulIROptimized(std::string const& _contractName) const;
 
-	/// @returns the eWasm (text) representation of a contract.
+	/// @returns the eWasm text representation of a contract.
 	std::string const& eWasm(std::string const& _contractName) const;
+
+	/// @returns the eWasm representation of a contract.
+	eth::LinkerObject const& eWasmObject(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName) const;
@@ -268,6 +271,10 @@ public:
 	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.
 	Json::Value const& contractABI(std::string const& _contractName) const;
+
+	/// @returns a JSON representing the storage layout of the contract.
+	/// Prerequisite: Successful call to parse or compile.
+	Json::Value const& storageLayout(std::string const& _contractName) const;
 
 	/// @returns a JSON representing the contract's user documentation.
 	/// Prerequisite: Successful call to parse or compile.
@@ -312,9 +319,11 @@ private:
 		eth::LinkerObject runtimeObject; ///< Runtime object.
 		std::string yulIR; ///< Experimental Yul IR code.
 		std::string yulIROptimized; ///< Optimized experimental Yul IR code.
-		std::string eWasm; ///< Experimental eWasm code (text representation).
+		std::string eWasm; ///< Experimental eWasm text representation
+		eth::LinkerObject eWasmObject; ///< Experimental eWasm code
 		mutable std::unique_ptr<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		mutable std::unique_ptr<Json::Value const> abi;
+		mutable std::unique_ptr<Json::Value const> storageLayout;
 		mutable std::unique_ptr<Json::Value const> userDocumentation;
 		mutable std::unique_ptr<Json::Value const> devDocumentation;
 		mutable std::unique_ptr<std::string const> sourceMapping;
@@ -346,7 +355,7 @@ private:
 	/// The IR is stored but otherwise unused.
 	void generateIR(ContractDefinition const& _contract);
 
-	/// Generate eWasm text representation for a single contract.
+	/// Generate eWasm representation for a single contract.
 	void generateEWasm(ContractDefinition const& _contract);
 
 	/// Links all the known library addresses in the available objects. Any unknown
@@ -377,6 +386,10 @@ private:
 	/// @returns the contract ABI as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
 	Json::Value const& contractABI(Contract const&) const;
+
+	/// @returns the storage layout of the contract as a JSON object.
+	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
+	Json::Value const& storageLayout(Contract const&) const;
 
 	/// @returns the Natspec User documentation as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.

@@ -723,9 +723,7 @@ void CodeTransform::visitExpression(Expression const& _expression)
 
 void CodeTransform::visitStatements(vector<Statement> const& _statements)
 {
-	// Workaround boost bug:
-	// https://www.boost.org/doc/libs/1_63_0/libs/optional/doc/html/boost_optional/tutorial/gotchas/false_positive_with__wmaybe_uninitialized.html
-	boost::optional<AbstractAssembly::LabelID> jumpTarget = boost::make_optional(false, AbstractAssembly::LabelID());
+	std::optional<AbstractAssembly::LabelID> jumpTarget = std::nullopt;
 
 	for (auto const& statement: _statements)
 	{
@@ -740,7 +738,7 @@ void CodeTransform::visitStatements(vector<Statement> const& _statements)
 		else if (!functionDefinition && jumpTarget)
 		{
 			m_assembly.appendLabel(*jumpTarget);
-			jumpTarget = boost::none;
+			jumpTarget = std::nullopt;
 		}
 
 		boost::apply_visitor(*this, statement);

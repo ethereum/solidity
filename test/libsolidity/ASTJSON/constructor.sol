@@ -2,3 +2,5 @@ contract C {
 	constructor() public {
 	}
 }
+
+// ----

@@ -57,12 +57,12 @@ RUN git clone --recursive -b boost-1.69.0 https://github.com/boostorg/boost.git 
     ./bootstrap.sh --with-toolset=clang --prefix=/usr; \
     ./b2 toolset=clang headers; \
     ./b2 toolset=clang variant=release \
-        system regex filesystem unit_test_framework program_options \
+        system filesystem unit_test_framework program_options \
         install -j $(($(nproc)/2)); \
     rm -rf /usr/src/boost
 
 # Z3
-RUN git clone --depth 1 -b Z3-4.8.5 https://github.com/Z3Prover/z3.git \
+RUN git clone --depth 1 -b z3-4.8.6 https://github.com/Z3Prover/z3.git \
     /usr/src/z3; \
     cd /usr/src/z3; \
     python scripts/mk_make.py --prefix=/usr ; \

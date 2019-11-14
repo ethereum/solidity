@@ -48,10 +48,10 @@ void CVC4Interface::pop()
 	m_solver.pop();
 }
 
-void CVC4Interface::declareVariable(string const& _name, Sort const& _sort)
+void CVC4Interface::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	if (!m_variables.count(_name))
-		m_variables.insert({_name, m_context.mkVar(_name.c_str(), cvc4Sort(_sort))});
+	solAssert(_sort, "");
+	m_variables[_name] = m_context.mkVar(_name.c_str(), cvc4Sort(*_sort));
 }
 
 void CVC4Interface::addAssertion(Expression const& _expr)

@@ -962,11 +962,11 @@ string YulUtilFunctions::readFromCalldata(Type const& _type)
 	return readFromMemoryOrCalldata(_type, true);
 }
 
-string YulUtilFunctions::updateStorageValueFunction(Type const& _type, boost::optional<unsigned> const& _offset)
+string YulUtilFunctions::updateStorageValueFunction(Type const& _type, std::optional<unsigned> const& _offset)
 {
 	string const functionName =
 		"update_storage_value_" +
-		(_offset.is_initialized() ? ("offset_" + to_string(*_offset)) : "") +
+		(_offset.has_value() ? ("offset_" + to_string(*_offset)) : "") +
 		_type.identifier();
 
 	return m_functionCollector->createFunction(functionName, [&] {
@@ -983,11 +983,11 @@ string YulUtilFunctions::updateStorageValueFunction(Type const& _type, boost::op
 			)")
 			("functionName", functionName)
 			("update",
-				_offset.is_initialized() ?
+				_offset.has_value() ?
 					updateByteSliceFunction(_type.storageBytes(), *_offset) :
 					updateByteSliceFunctionDynamic(_type.storageBytes())
 			)
-			("offset", _offset.is_initialized() ? "" : "offset, ")
+			("offset", _offset.has_value() ? "" : "offset, ")
 			("prepare", prepareStoreFunction(_type))
 			.render();
 		}

@@ -79,6 +79,8 @@ set(sources
 	formal/BMC.h
 	formal/CHC.cpp
 	formal/CHC.h
+	formal/CHCSmtLib2Interface.cpp
+	formal/CHCSmtLib2Interface.h
 	formal/CHCSolverInterface.h
 	formal/EncodingContext.cpp
 	formal/EncodingContext.h
@@ -111,6 +113,8 @@ set(sources
 	interface/ReadFile.h
 	interface/StandardCompiler.cpp
 	interface/StandardCompiler.h
+	interface/StorageLayout.cpp
+	interface/StorageLayout.h
 	interface/Version.cpp
 	interface/Version.h
 	parsing/DocStringParser.cpp
