@@ -10,5 +10,6 @@ contract C
 	}
 }
 // ----
+// Warning: (132-133): Assertion checker does not yet implement type type(enum C.D)
 // Warning: (132-136): Type conversion is not yet fully supported and might yield false positives.
 // Warning: (140-160): Assertion violation happens here
