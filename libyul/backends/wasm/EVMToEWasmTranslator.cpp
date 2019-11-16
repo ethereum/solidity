@@ -147,8 +147,14 @@ function smod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	r4 := i64.rem_u(x4, y4)
 }
 function exp(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
-	// TODO implement properly
-	unreachable()
+	r4 := 1
+	for {} i64.xor(iszero(y1, y2, y3, y4), 0xffffffff) {} {
+		if i64.and(y4, 1) {
+			r1, r2, r3, r4 := mul(r1, r2, r3, r4, x1, x2, x3, x4)
+		}
+		x1, x2, x3, x4 := mul(x1, x2, x3, x4, x1, x2, x3, x4)
+		y1, y2, y3, y4 := shr(y1, y2, y3, y4, 0, 0, 0, 1)
+	}
 }
 
 function byte(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
@@ -186,8 +192,8 @@ function not(x1, x2, x3, x4) -> r1, r2, r3, r4 {
 	let mask := 0xffffffffffffffff
 	r1, r2, r3, r4 := xor(x1, x2, x3, x4, mask, mask, mask, mask)
 }
-function iszero(x1, x2, x3, x4) -> r1, r2, r3, r4 {
-	r4 := i64.eqz(i64.or(i64.or(x1, x2), i64.or(x3, x4)))
+function iszero(x1, x2, x3, x4) -> r {
+	r := i64.eqz(i64.or(i64.or(x1, x2), i64.or(x3, x4)))
 }
 function eq(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	if i64.eq(x1, y1) {
@@ -315,8 +321,24 @@ function shr(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	}
 }
 function sar(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let lz := i64.and(i64.shl(y1, 63), 1)
+	if i64.eqz(i64.and(lz, 0xffffffffffffffff)) {
+		z1, z2, z3, z4 := shr(x1, x2, x3, x4, y1, y2, y3, y4)
+	}
+	if i64.and(lz, 0xffffffffffffffff) {
+		if i64.ge_u(x4, 256) {
+			z1 := 0xffffffffffffffff
+			z2 := 0xffffffffffffffff
+			z3 := 0xffffffffffffffff
+			z4 := 0xffffffffffffffff
+		}
+		if i64.lt_u(x4, 256) {
+			let sr1, sr2, sr3, sr4 := shr(x1, x2, x3, x4, y1, y2, y3, y4)
+			let mo1, mo2, mo3, mo4 := sub(0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, x1, x2, x3, x4)
+			let sl1, sl2, sl3, sl4 := shl(mo1, mo2, mo3, mo4, y1, y2, y3, y4)
+			z1, z2, z3, z4 := or(sr1, sr2, sr3, sr4,sl1, sl2, sl3, sl4)
+		}
+	}
 }
 function addmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	// TODO implement
@@ -327,8 +349,26 @@ function mulmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	unreachable()
 }
 function signextend(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	if i64.lt_u(y4, 31) {
+		let signBit := i64.add(i64.mul(i64.shr_u(i64.shl(y4, 32), 32), 8), 7)
+		let sm1, sm2, sm3, sm4 := shl(0, 0, 0, 1, 0, 0, 0, signBit)
+		let vm1, vm2, vm3, vm4 := sub(sm1, sm2, sm3, sm4, 0, 0, 0, 1)
+		let ys1, ys2, ys3, ys4 := and(y1, y2, y3, y4, sm1, sm2, sm3, sm4)
+		let isZero := iszero(ys1, ys2, ys3, ys4)
+
+		if isZero {
+			z1, z2, z3, z4 := and(y1, y2, y3, y4, vm1, vm2, vm3, vm4)
+		}
+		if i64.eqz(isZero) {
+			let nvm1, nvm2, nvm3, nvm4 := not(vm1, vm2, vm3, vm4)
+			z1, z2, z3, z4 := and(y1, y2, y3, y4, nvm1, nvm2, nvm3, nvm4)
+		}
+	}
+}
+function u256_to_i128(x1, x2, x3, x4) -> v1, v2 {
+	if i64.ne(0, i64.or(x1, x2)) { invalid() }
+	v2 := x4
+	v1 := x3
 }
 
 function u256_to_i64(x1, x2, x3, x4) -> v {
@@ -339,6 +379,12 @@ function u256_to_i64(x1, x2, x3, x4) -> v {
 function u256_to_i32(x1, x2, x3, x4) -> v {
 	if i64.ne(0, i64.or(i64.or(x1, x2), x3)) { invalid() }
 	if i64.ne(0, i64.shr_u(x4, 32)) { invalid() }
+	v := x4
+}
+
+function u256_to_byte(x1, x2, x3, x4) -> v {
+	if i64.ne(0, i64.or(i64.or(x1, x2), x3)) { invalid() }
+	if i64.ne(0, i64.shr_u(x4, 56)) { invalid() }
 	v := x4
 }
 
@@ -356,8 +402,9 @@ function address() -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := mload_internal(0)
 }
 function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	mstore_internal(0, x1, x2, x3, x4)
+	eth.getExternalBalance(0, 32)
+	z3, z4 := mload_internal_128(32)
 }
 function selfbalance() -> z1, z2, z3, z4 {
 	// TODO: not part of current Ewasm spec
@@ -415,19 +462,23 @@ function datacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 
 function gasprice() -> z1, z2, z3, z4 {
 	eth.getTxGasPrice(0)
-	z1, z2, z3, z4 := mload_internal(0)
+	z3, z4 := mload_internal_128(0)
 }
 function extcodesize(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	mstore_internal(0, x1, x2, x3, x4)
+	z4 := eth.getExternalCodeSize(0)
 }
 function extcodehash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	// TODO: not part of current Ewasm spec
 	unreachable()
 }
-function extcodecopy(v1, v2, v3, v4, x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
-	// TODO implement
-	unreachable()
+function extcodecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
+	let ecs1, ecs2, ecs3, ecs4 := extcodesize(x1, x2, x3, x4)
+	let codeSize := u256_to_i32(ecs1, ecs2, ecs3, ecs4)
+	mstore_internal(0, x1, x2, x3, x4)  // TODO: Is it already there after extcodesize call?
+	let codeOffset := u256_to_i32(y1, y2, y3, y4)
+	let codeLength := u256_to_i32(z1, z2, z3, z4)
+	eth.externalCodeCopy(i64.add(codeOffset, codeLength), 0, codeOffset, codeLength)
 }
 
 function returndatasize() -> z1, z2, z3, z4 {
@@ -443,12 +494,14 @@ function returndatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 }
 
 function blockhash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let r := eth.getBlockHash(u256_to_i64(x1, x2, x3, x4), 0)
+	if i64.eqz(r) {
+		z1, z2, z3, z4 := mload_internal(0)
+	}
 }
 function coinbase() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	eth.getBlockCoinbase(0)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function timestamp() -> z1, z2, z3, z4 {
 	z4 := eth.getBlockTimestamp()
@@ -530,6 +583,10 @@ function mload_internal(pos) -> z1, z2, z3, z4 {
 	z3 := endian_swap(i64.load(i64.add(pos, 16)))
 	z4 := endian_swap(i64.load(i64.add(pos, 24)))
 }
+function mload_internal_128(pos) -> z1, z2 {
+	z1 := endian_swap(i64.load(pos))
+	z2 := endian_swap(i64.load(i64.add(pos, 8)))
+}
 function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {
 	let pos := u256_to_i32ptr(x1, x2, x3, x4)
 	// Make room for the scratch space
@@ -543,9 +600,14 @@ function mstore_internal(pos, y1, y2, y3, y4) {
 	i64.store(i64.add(pos, 16), endian_swap(y3))
 	i64.store(i64.add(pos, 24), endian_swap(y4))
 }
+function mstore_internal_128(pos, y1, y2) {
+	i64.store(pos, endian_swap(y1))
+	i64.store(i64.add(pos, 8), endian_swap(y2))
+}
 function mstore8(x1, x2, x3, x4, y1, y2, y3, y4) {
-	// TODO implement
-	unreachable()
+	let pos := u256_to_i32ptr(x1, x2, x3, x4)
+	let v := u256_to_byte(y1, y2, y3, y4)
+	i64.store(pos, endian_swap(v))
 }
 // Needed?
 function msize() -> z1, z2, z3, z4 {
@@ -612,9 +674,26 @@ function log4(
 	unreachable()
 }
 
-function create(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) -> a1, a2, a3, a4 {
-	// TODO implement
-	unreachable()
+function create(
+	x1, x2, x3, x4,
+	y1, y2, y3, y4,
+	z1, z2, z3, z4
+) -> a1, a2, a3, a4 {
+	let v1, v2 := u256_to_i128(x1, x2, x3, x4)
+	let dataOffset := u256_to_i32ptr(y1, y2, y3, y4)
+	let dataLength := u256_to_i32(z1, z2, z3, z4)
+	let valueOffset := i64.add(dataOffset, dataLength)
+	let resultOffset := i64.add(valueOffset, 32)
+	mstore_internal(valueOffset, 0, 0, v1, v2)
+	mstore_internal(resultOffset ,y1, y2, y3, y4)
+
+	let r := eth.create(valueOffset, dataOffset, dataLength, resultOffset)
+	if i64.eqz(r) {
+		a1, a2, a3, a4 := mload_internal(resultOffset)
+	}
+	if i64.or(i64.eq(r, 1), i64.eq(r, 2)) {
+		a4 := r
+	}
 }
 function call(
 	a1, a2, a3, a4,
@@ -659,8 +738,12 @@ function staticcall(
 	e1, e2, e3, e4,
 	f1, f2, f3, f4
 ) -> x1, x2, x3, x4 {
-	// TODO implement
-	unreachable()
+	let gLimit := u256_to_i64(a1, a2, a3, a4)
+	let dataOffset := u256_to_i32(c1, c2, c3, c4)
+	let dataLength := u256_to_i32(d1, d2, d3, d4)
+	let addressOffset := i64.add(dataOffset, dataLength)
+	mstore_internal(addressOffset, b1, b2, b3, b4)
+	x4 := eth.callStatic(gLimit, addressOffset, dataOffset, dataLength)
 }
 function create2(
 	a1, a2, a3, a4,
