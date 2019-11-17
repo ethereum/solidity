@@ -127,7 +127,7 @@ function mul(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	// TODO it would actually suffice to have mul_128x128_128 for the first two.
 	let b1, b2, b3, b4 := mul_128x128_256(x3, x4, y1, y2)
 	let c1, c2, c3, c4 := mul_128x128_256(x1, x2, y3, y4)
-	let         d1, d2, d3, d4 := mul_128x128_256(x3, x4, y3, y4)
+	let d1, d2, d3, d4 := mul_128x128_256(x3, x4, y3, y4)
 	r4 := d4
 	r3 := d3
 	let t1, t2
@@ -135,8 +135,28 @@ function mul(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	t1, t2, r1, r2 := add(0, 0, r1, r2, 0, 0, d1, d2)
 }
 function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
-	// TODO implement properly
-	r4 := i64.div_u(x4, y4)
+	if iszero(y1, y2, y3, y4) {
+		invalid()
+	}
+	let m1 := 0
+	let m2 := 0
+	let m3 := 0
+	let m4 := 1
+
+	for {} i64.and(i64.eqz(i64.clz(y1)), lt_internal(x1, x2, x3, x4, y1, y2, y3, y4)) {} {
+		y1, y2, y3, y4 := shl(y1, y2, y3, y4, 0, 0, 0, 1)
+		m1, m2, m3, m4 := shl(m1, m2, m3, m4, 0, 0, 0, 1)
+	}
+
+	for {} i64.xor(iszero(m1, m2, m3, m4), 1) {} {
+		if lt_internal(y1, y2, y3, y4, x1, x2, x3, x4) {
+			x1, x2, x3, x4 := sub(x1, x2, x3, x4, y1, y2, y3, y4)
+			r1, r2, r3, r4 := add(r1, r2, r3, r4, m1, m2, m3, m4)
+		}
+
+		y1, y2, y3, y4 := shr(y1, y2, y3, y4, 0, 0, 0, 1)
+		m1, m2, m3, m4 := shr(m1, m2, m3, m4, 0, 0, 0, 1)
+	}
 }
 function mod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	// TODO implement properly
@@ -215,24 +235,26 @@ function cmp(a, b) -> r {
 		r := i64.ne(a, b)
 	}
 }
-
-function lt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+function lt_internal(x1, x2, x3, x4, y1, y2, y3, y4) -> z {
 	switch cmp(x1, y1)
 	case 0 {
 		switch cmp(x2, y2)
 		case 0 {
 			switch cmp(x3, y3)
 			case 0 {
-				z4 := i64.lt_u(x4, y4)
+				z := i64.lt_u(x4, y4)
 			}
-			case 1 { z4 := 0 }
-			default { z4 := 1 }
+			case 1 { z := 0 }
+			default { z := 1 }
 		}
-		case 1 { z4 := 0 }
-		default { z4 := 1 }
+		case 1 { z := 0 }
+		default { z := 1 }
 	}
-	case 1 { z4 := 0 }
-	default { z4 := 1 }
+	case 1 { z := 0 }
+	default { z := 1 }
+}
+function lt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	z4 := lt_internal(x1, x2, x3, x4, y1, y2, y3, y4)
 }
 function gt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := lt(y1, y2, y3, y4, x1, x2, x3, x4)

@@ -56,6 +56,9 @@ WasmDialect::WasmDialect():
 	addFunction("i64.eqz", 1, 1);
 	m_functions["i64.eqz"_yulstring].returns.front() = "i32"_yulstring;
 
+	addFunction("i64.clz", 1, 1);
+	m_functions["i64.clz"_yulstring].returns.front() = "i64"_yulstring;
+
 	addFunction("i64.store", 2, 0, false);
 	m_functions["i64.store"_yulstring].parameters.front() = "i32"_yulstring;
 	m_functions["i64.store"_yulstring].sideEffects.invalidatesStorage = false;
