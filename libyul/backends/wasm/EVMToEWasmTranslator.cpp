@@ -636,23 +636,32 @@ function gas() -> z1, z2, z3, z4 {
 }
 
 function log0(p1, p2, p3, p4, s1, s2, s3, s4) {
-	// TODO implement
-	unreachable()
+	let dataOffset := u256_to_i32ptr(p1, p2, p3, p4)
+	let dataLength := u256_to_i32ptr(s1, s2, s3, s4)
+	eth.log(dataOffset, dataLength, 0, 0, 0, 0, 0)
 }
 function log1(
 	p1, p2, p3, p4, s1, s2, s3, s4,
 	t11, t12, t13, t14
 ) {
-	// TODO implement
-	unreachable()
+	let dataOffset := u256_to_i32ptr(p1, p2, p3, p4)
+	let dataLength := u256_to_i32ptr(s1, s2, s3, s4)
+	let topic1Offset := i64.add(dataOffset, dataLength)
+	mstore_internal(topic1Offset, t11, t12, t13, t14)
+	eth.log(dataOffset, dataLength, 1, topic1Offset, 0, 0, 0)
 }
 function log2(
 	p1, p2, p3, p4, s1, s2, s3, s4,
 	t11, t12, t13, t14,
 	t21, t22, t23, t24
 ) {
-	// TODO implement
-	unreachable()
+	let dataOffset := u256_to_i32ptr(p1, p2, p3, p4)
+	let dataLength := u256_to_i32ptr(s1, s2, s3, s4)
+	let topic1Offset := i64.add(dataOffset, dataLength)
+	mstore_internal(topic1Offset, t11, t12, t13, t14)
+	let topic2Offset := i64.add(topic1Offset, 32)
+	mstore_internal(topic2Offset, t21, t22, t23, t24)
+	eth.log(dataOffset, dataLength, 2, topic1Offset, topic2Offset, 0, 0)
 }
 function log3(
 	p1, p2, p3, p4, s1, s2, s3, s4,
@@ -660,8 +669,15 @@ function log3(
 	t21, t22, t23, t24,
 	t31, t32, t33, t34
 ) {
-	// TODO implement
-	unreachable()
+	let dataOffset := u256_to_i32ptr(p1, p2, p3, p4)
+	let dataLength := u256_to_i32ptr(s1, s2, s3, s4)
+	let topic1Offset := i64.add(dataOffset, dataLength)
+	mstore_internal(topic1Offset, t11, t12, t13, t14)
+	let topic2Offset := i64.add(topic1Offset, 32)
+	mstore_internal(topic2Offset, t21, t22, t23, t24)
+	let topic3Offset := i64.add(topic2Offset, 32)
+	mstore_internal(topic2Offset, t31, t32, t33, t34)
+	eth.log(dataOffset, dataLength, 3, topic1Offset, topic2Offset, topic3Offset, 0)
 }
 function log4(
 	p1, p2, p3, p4, s1, s2, s3, s4,
@@ -670,8 +686,17 @@ function log4(
 	t31, t32, t33, t34,
 	t41, t42, t43, t44,
 ) {
-	// TODO implement
-	unreachable()
+	let dataOffset := u256_to_i32ptr(p1, p2, p3, p4)
+	let dataLength := u256_to_i32ptr(s1, s2, s3, s4)
+	let topic1Offset := i64.add(dataOffset, dataLength)
+	mstore_internal(topic1Offset, t11, t12, t13, t14)
+	let topic2Offset := i64.add(topic1Offset, 32)
+	mstore_internal(topic2Offset, t21, t22, t23, t24)
+	let topic3Offset := i64.add(topic2Offset, 32)
+	mstore_internal(topic2Offset, t31, t32, t33, t34)
+	let topic4Offset := i64.add(topic3Offset, 32)
+	mstore_internal(topic4Offset, t41, t42, t43, t44)
+	eth.log(dataOffset, dataLength, 4, topic1Offset, topic2Offset, topic3Offset, topic4Offset)
 }
 
 function create(
@@ -704,8 +729,15 @@ function call(
 	f1, f2, f3, f4,
 	g1, g2, g3, g4
 ) -> x1, x2, x3, x4 {
-	// TODO implement
-	unreachable()
+	let dataOffest := u256_to_i32ptr(d1, d2, d3, d4)
+	let dataLength := u256_to_i32(e1, e2, e3, e4)
+	let g := u256_to_i64(a1, a2, a3, a4)
+	let addressOffset := i64.add(dataOffest, dataLength)
+	let valueOffset := i64.add(addressOffset, 32)
+	mstore_internal(addressOffset, b1, b2, b3, b4)
+	let v1, v2 := u256_to_i128(c1, c2, c3, c4)
+	mstore_internal_128(valueOffset, v1, v2)
+	x4 := eth.call(g, addressOffset, valueOffset, dataOffest, dataLength)
 }
 function callcode(
 	a1, a2, a3, a4,
@@ -716,8 +748,15 @@ function callcode(
 	f1, f2, f3, f4,
 	g1, g2, g3, g4
 ) -> x1, x2, x3, x4 {
-	// TODO implement
-	unreachable()
+	let dataOffest := u256_to_i32ptr(d1, d2, d3, d4)
+	let dataLength := u256_to_i32(e1, e2, e3, e4)
+	let g := u256_to_i64(a1, a2, a3, a4)
+	let addressOffset := i64.add(dataOffest, dataLength)
+	let valueOffset := i64.add(addressOffset, 32)
+	mstore_internal(addressOffset, b1, b2, b3, b4)
+	let v1, v2 := u256_to_i128(c1, c2, c3, c4)
+	mstore_internal_128(valueOffset, v1, v2)
+	x4 := eth.callCode(g, addressOffset, valueOffset, dataOffest, dataLength)
 }
 function delegatecall(
 	a1, a2, a3, a4,
@@ -727,8 +766,12 @@ function delegatecall(
 	e1, e2, e3, e4,
 	f1, f2, f3, f4
 ) -> x1, x2, x3, x4 {
-	// TODO implement
-	unreachable()
+	let dataOffest := u256_to_i32ptr(c1, c2, c3, c4)
+	let dataLength := u256_to_i32(d1, d2, d3, d4)
+	let g := u256_to_i64(a1, a2, a3, a4)
+	let addressOffset := i64.add(dataOffest, dataLength)
+	mstore_internal(addressOffset, b1, b2, b3, b4)
+	x4 := eth.callDelegate(g, addressOffset, dataOffest, dataLength)
 }
 function staticcall(
 	a1, a2, a3, a4,
