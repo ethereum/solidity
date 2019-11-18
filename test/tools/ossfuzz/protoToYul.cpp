@@ -437,6 +437,12 @@ void ProtoConverter::visit(NullaryOp const& _x)
 	case NullaryOp::GASLIMIT:
 		m_output << "gaslimit()";
 		break;
+	case NullaryOp::SELFBALANCE:
+		m_output << "selfbalance()";
+		break;
+	case NullaryOp::CHAINID:
+		m_output << "chainid()";
+		break;
 	}
 }
 
