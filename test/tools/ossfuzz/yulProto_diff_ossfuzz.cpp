@@ -69,24 +69,17 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	// AssemblyStack entry point
 	AssemblyStack stack(
-		langutil::EVMVersion(langutil::EVMVersion::istanbul()),
+		langutil::EVMVersion::istanbul(),
 		AssemblyStack::Language::StrictAssembly,
 		dev::solidity::OptimiserSettings::full()
 	);
 
-	try
+	// Parse protobuf mutated YUL code
+	if (!stack.parseAndAnalyze("source", yul_source) || !stack.parserResult()->code ||
+		!stack.parserResult()->analysisInfo)
 	{
-		// Parse protobuf mutated YUL code
-		if (!stack.parseAndAnalyze("source", yul_source) || !stack.parserResult()->code ||
-			!stack.parserResult()->analysisInfo)
-		{
-			printErrors(std::cout, stack.errors());
-			yulAssert(false, "Proto fuzzer generated malformed program");
-		}
-	}
-	catch (Exception const&)
-	{
-		return;
+		printErrors(std::cout, stack.errors());
+		yulAssert(false, "Proto fuzzer generated malformed program");
 	}
 
 	ostringstream os1;
@@ -94,7 +87,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
 		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion(langutil::EVMVersion::istanbul()))
+		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion::istanbul())
 	);
 
 	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
@@ -104,7 +97,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	termReason = yulFuzzerUtil::interpret(
 		os2,
 		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion(langutil::EVMVersion::istanbul())),
+		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion::istanbul()),
 		(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 4)
 	);
 

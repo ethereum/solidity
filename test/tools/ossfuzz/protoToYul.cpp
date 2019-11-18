@@ -93,16 +93,18 @@ string ProtoConverter::visit(Literal const& _x)
 void ProtoConverter::consolidateVarDeclsInFunctionDef()
 {
 	m_currentFuncVars.clear();
-	auto &scopes = m_funcVars.back();
-	for (auto &s: scopes)
-		m_currentFuncVars.insert(m_currentFuncVars.end(), s.begin(), s.end());
+	auto const& scopes = m_funcVars.back();
+	for (auto const& s: scopes)
+		for (auto const& var: s)
+			m_currentFuncVars.push_back(&var);
 }
 
 void ProtoConverter::consolidateGlobalVarDecls()
 {
-	m_globalVars.clear();
-	for (auto &scope: m_variables)
-		m_globalVars.insert(m_globalVars.end(), scope.begin(), scope.end());
+	m_currentGlobalVars.clear();
+	for (auto const& scope: m_globalVars)
+		for (auto const& var: scope)
+			m_currentGlobalVars.push_back(&var);
 }
 
 bool ProtoConverter::varDeclAvailable()
@@ -115,7 +117,7 @@ bool ProtoConverter::varDeclAvailable()
 	else
 	{
 		consolidateGlobalVarDecls();
-		return m_globalVars.size() > 0;
+		return m_currentGlobalVars.size() > 0;
 	}
 }
 
@@ -131,13 +133,13 @@ void ProtoConverter::visit(VarRef const& _x)
 	{
 		// Ensure that there is at least one variable declaration to reference in function scope.
 		yulAssert(m_currentFuncVars.size() > 0, "Proto fuzzer: No variables to reference.");
-		m_output << m_currentFuncVars[_x.varnum() % m_currentFuncVars.size()];
+		m_output << *m_currentFuncVars[_x.varnum() % m_currentFuncVars.size()];
 	}
 	else
 	{
 		// Ensure that there is at least one variable declaration to reference in nested scopes.
-		yulAssert(m_globalVars.size() > 0, "Proto fuzzer: No global variables to reference.");
-		m_output << m_globalVars[_x.varnum() % m_globalVars.size()];
+		yulAssert(m_currentGlobalVars.size() > 0, "Proto fuzzer: No global variables to reference.");
+		m_output << *m_currentGlobalVars[_x.varnum() % m_currentGlobalVars.size()];
 	}
 }
 
@@ -282,7 +284,7 @@ void ProtoConverter::visit(VarDecl const& _x)
 	if (m_inFunctionDef)
 		m_funcVars.back().back().push_back(varName);
 	else
-		m_variables.back().push_back(varName);
+		m_globalVars.back().push_back(varName);
 }
 
 void ProtoConverter::visit(TypedVarDecl const& _x)
@@ -350,7 +352,7 @@ void ProtoConverter::visit(TypedVarDecl const& _x)
 	if (m_inFunctionDef)
 		m_funcVars.back().back().push_back(varName);
 	else
-		m_variables.back().push_back(varName);
+		m_globalVars.back().push_back(varName);
 }
 
 void ProtoConverter::visit(UnaryOp const& _x)
@@ -1134,7 +1136,7 @@ void ProtoConverter::openBlockScope()
 	if (m_inFunctionDef)
 		m_funcVars.back().push_back(vector<string>{});
 	else
-		m_variables.push_back(vector<string>{});
+		m_globalVars.push_back(vector<string>{});
 }
 
 void ProtoConverter::openFunctionScope(vector<string> const& _funcParams)
@@ -1173,8 +1175,8 @@ void ProtoConverter::closeBlockScope()
 		m_scopeFuncs.pop_back();
 	if (!m_inFunctionDef)
 	{
-		if (!m_variables.empty())
-			m_variables.pop_back();
+		if (!m_globalVars.empty())
+			m_globalVars.pop_back();
 	}
 	else
 	{
@@ -1197,7 +1199,7 @@ void ProtoConverter::addVarsToScope(vector<string> const& _vars)
 	if (m_inFunctionDef)
 		m_funcVars.back().back().insert(m_funcVars.back().back().end(), _vars.begin(), _vars.end());
 	else
-		m_variables.back().insert(m_variables.back().end(), _vars.begin(), _vars.end());
+		m_globalVars.back().insert(m_globalVars.back().end(), _vars.begin(), _vars.end());
 }
 
 void ProtoConverter::visit(Block const& _x)

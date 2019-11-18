@@ -43,7 +43,7 @@ public:
 	ProtoConverter()
 	{
 		m_funcVars = std::vector<std::vector<std::vector<std::string>>>{};
-		m_variables = std::vector<std::vector<std::string>>{};
+		m_globalVars = std::vector<std::vector<std::string>>{};
 		m_inForBodyScope = false;
 		m_inForInitScope = false;
 		m_numNestedForLoops = 0;
@@ -312,13 +312,13 @@ private:
 	/// Variables in all function definitions
 	std::vector<std::vector<std::vector<std::string>>> m_funcVars;
 	/// Variables in current function definition
-	std::vector<std::string> m_currentFuncVars;
+	std::vector<std::string const*> m_currentFuncVars;
 	/// Variables in global scope
-	std::vector<std::string> m_globalVars;
+	std::vector<std::string const*> m_currentGlobalVars;
 	/// Functions in current scope
 	std::vector<std::vector<std::string>> m_scopeFuncs;
 	/// Variables
-	std::vector<std::vector<std::string>> m_variables;
+	std::vector<std::vector<std::string>> m_globalVars;
 	/// Functions
 	std::vector<std::string> m_functions;
 	/// Maps FunctionDef object to its name
