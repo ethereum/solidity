@@ -40,7 +40,8 @@ public:
 	{
 		m_funcVars = std::vector<std::vector<std::vector<std::string>>>{};
 		m_globalVars = std::vector<std::vector<std::string>>{};
-		m_inForBodyScope = false;
+		m_inGenericForBodyScope = false;
+		m_inBoundedForBodyScope = false;
 		m_inForInitScope = false;
 		m_numNestedForLoops = 0;
 		m_counter = 0;
@@ -48,6 +49,7 @@ public:
 		m_inFunctionDef = false;
 		m_objectId = 0;
 		m_isObject = false;
+		m_forInitScopeExtEnabled = true;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -314,9 +316,13 @@ private:
 	std::vector<std::string const*> m_currentGlobalVars;
 	/// Functions in current scope
 	std::vector<std::vector<std::string>> m_scopeFuncs;
-	/// Variables
+	/// Global variables
 	std::vector<std::vector<std::string>> m_globalVars;
-	/// Functions
+	/// Variables declared in for loop init block that is in global scope
+	std::vector<std::vector<std::string>> m_globalForLoopInitVars;
+	/// Variables declared in for loop init block that is in function scope
+	std::vector<std::vector<std::vector<std::string>>> m_funcForLoopInitVars;
+	/// Vector of function names
 	std::vector<std::string> m_functions;
 	/// Maps FunctionDef object to its name
 	std::map<FunctionDef const*, std::string> m_functionDefMap;
@@ -331,9 +337,10 @@ private:
 	static unsigned constexpr s_modOutputParams = 5;
 	/// Hard-coded identifier for a Yul object's data block
 	static auto constexpr s_dataIdentifier = "datablock";
-	/// Predicate to keep track of for body scope. If true, break/continue
-	/// statements can not be created.
-	bool m_inForBodyScope;
+	/// Predicate to keep track of of the body of a generic for stmt.
+	bool m_inGenericForBodyScope;
+	/// Predicate to keep track of scope of the body of a bounded for stmt.
+	bool m_inBoundedForBodyScope;
 	// Index used for naming loop variable of bounded for loops
 	unsigned m_numNestedForLoops;
 	/// Predicate to keep track of for loop init scope. If true, variable
@@ -350,5 +357,8 @@ private:
 	/// Flag to track whether program is an object (true) or a statement block
 	/// (false: default value)
 	bool m_isObject;
+	/// Flag to track whether scope extension of variables defined in for-init
+	/// block is enabled.
+	bool m_forInitScopeExtEnabled;
 };
 }
