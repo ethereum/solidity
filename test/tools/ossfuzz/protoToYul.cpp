@@ -1740,7 +1740,8 @@ void ProtoConverter::createFunctionDefAndCall(
 		!m_inForInitScope,
 		"Proto fuzzer: Trying to create function call inside for-init block"
 	);
-	createFunctionCall(funcName, _numInParams, _numOutParams);
+	if (_x.force_call())
+		createFunctionCall(funcName, _numInParams, _numOutParams);
 }
 
 void ProtoConverter::visit(FunctionDef const& _x)

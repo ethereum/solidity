@@ -355,6 +355,7 @@ message FunctionDef {
   required uint32 num_input_params = 1;
   required uint32 num_output_params = 2;
   required Block block = 3;
+  required bool force_call = 4;
 }
 
 message PopStmt {
