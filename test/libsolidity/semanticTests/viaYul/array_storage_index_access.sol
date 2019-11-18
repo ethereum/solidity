@@ -2,9 +2,10 @@ contract C {
     uint[] storageArray;
     function test_indices(uint256 len) public
     {
-        // storageArray = new uint[](len);
-        while (storageArray.length < len) storageArray.push();
-        while (storageArray.length > len) storageArray.pop();
+        while (storageArray.length < len)
+            storageArray.push();
+        while (storageArray.length > len)
+            storageArray.pop();
         for (uint i = 0; i < len; i++)
             storageArray[i] = i + 1;
 
