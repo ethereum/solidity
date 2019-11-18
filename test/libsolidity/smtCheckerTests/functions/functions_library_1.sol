@@ -16,3 +16,5 @@ contract C
 		assert(y < 10000);
 	}
 }
+// ----
+// Warning: (228-229): Assertion checker does not yet implement type type(library L)
