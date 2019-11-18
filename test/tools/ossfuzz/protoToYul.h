@@ -42,7 +42,9 @@ public:
 		m_globalVars = std::vector<std::vector<std::string>>{};
 		m_inForBodyScope = false;
 		m_inForInitScope = false;
+		m_inForCond = false;
 		m_numNestedForLoops = 0;
+		m_numForLoops = 0;
 		m_counter = 0;
 		m_inputSize = 0;
 		m_inFunctionDef = false;
@@ -339,11 +341,18 @@ private:
 	/// Predicate to keep track of for body scope. If false, break/continue
 	/// statements can not be created.
 	bool m_inForBodyScope;
+	/// Maximum number of for loops that a test case may contain
+	static auto constexpr s_maxForLoops = 2;
 	// Index used for naming loop variable of bounded for loops
 	unsigned m_numNestedForLoops;
+	/// Counter for number of for loops
+	unsigned m_numForLoops;
 	/// Predicate to keep track of for loop init scope. If true, variable
 	/// or function declarations can not be created.
 	bool m_inForInitScope;
+	/// Flag that is true while converting for loop condition,
+	/// false otherwise.
+	bool m_inForCond;
 	/// Monotonically increasing counter
 	unsigned m_counter;
 	/// Size of protobuf input

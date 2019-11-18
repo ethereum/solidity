@@ -35,9 +35,18 @@ using namespace solidity;
 
 string ProtoConverter::dictionaryToken(HexPrefix _p)
 {
-	unsigned indexVar = m_inputSize * m_inputSize + counter();
-	std::string token = hexDictionary[indexVar % hexDictionary.size()];
-	yulAssert(token.size() <= 64, "Proto Fuzzer: Dictionary token too large");
+	std::string token;
+	// If dictionary constant is requested while converting
+	// for loop condition, then return zero so that we don't
+	// generate infinite for loops.
+	if (m_inForCond)
+		token = "0";
+	else
+	{
+		unsigned indexVar = m_inputSize * m_inputSize + counter();
+		token = hexDictionary[indexVar % hexDictionary.size()];
+		yulAssert(token.size() <= 64, "Proto Fuzzer: Dictionary token too large");
+	}
 
 	return _p == HexPrefix::Add ? "0x" + token : token;
 }
@@ -173,7 +182,13 @@ void ProtoConverter::visit(Expression const& _x)
 			visit(_x.varref());
 		break;
 	case Expression::kCons:
-		m_output << visit(_x.cons());
+		// If literal expression describes for-loop condition
+		// then force it to zero, so we don't generate infinite
+		// for loops
+		if (m_inForCond)
+			m_output << "0";
+		else
+			m_output << visit(_x.cons());
 		break;
 	case Expression::kBinop:
 		visit(_x.binop());
@@ -964,17 +979,22 @@ void ProtoConverter::visit(StoreFunc const& _x)
 
 void ProtoConverter::visit(ForStmt const& _x)
 {
+	if (++m_numForLoops > s_maxForLoops)
+		return;
 	bool wasInForBody = m_inForBodyScope;
 	bool wasInForInit = m_inForInitScope;
 	bool wasForInitScopeExtEnabled = m_forInitScopeExtEnabled;
 	m_inForBodyScope = false;
 	m_inForInitScope = true;
 	m_forInitScopeExtEnabled = true;
+	m_inForCond = false;
 	m_output << "for ";
 	visit(_x.for_init());
 	m_inForInitScope = false;
 	m_forInitScopeExtEnabled = wasForInitScopeExtEnabled;
+	m_inForCond = true;
 	visit(_x.for_cond());
+	m_inForCond = false;
 	visit(_x.for_post());
 	m_inForBodyScope = true;
 	visit(_x.for_body());
@@ -997,6 +1017,9 @@ void ProtoConverter::visit(ForStmt const& _x)
 
 void ProtoConverter::visit(BoundedForStmt const& _x)
 {
+	if (++m_numForLoops > s_maxForLoops)
+		return;
+
 	// Boilerplate for loop that limits the number of iterations to a maximum of 4.
 	std::string loopVarName("i_" + std::to_string(m_numNestedForLoops++));
 	m_output << "for { let " << loopVarName << " := 0 } "
