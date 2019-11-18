@@ -48,6 +48,7 @@ public:
 		m_inFunctionDef = false;
 		m_objectId = 0;
 		m_isObject = false;
+		m_forInitScopeExtEnabled = true;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -314,9 +315,13 @@ private:
 	std::vector<std::string const*> m_currentGlobalVars;
 	/// Functions in current scope
 	std::vector<std::vector<std::string>> m_scopeFuncs;
-	/// Variables
+	/// Global variables
 	std::vector<std::vector<std::string>> m_globalVars;
-	/// Functions
+	/// Variables declared in for loop init block that is in global scope
+	std::vector<std::vector<std::string>> m_globalForLoopInitVars;
+	/// Variables declared in for loop init block that is in function scope
+	std::vector<std::vector<std::vector<std::string>>> m_funcForLoopInitVars;
+	/// Vector of function names
 	std::vector<std::string> m_functions;
 	/// Maps FunctionDef object to its name
 	std::map<FunctionDef const*, std::string> m_functionDefMap;
@@ -331,7 +336,7 @@ private:
 	static unsigned constexpr s_modOutputParams = 5;
 	/// Hard-coded identifier for a Yul object's data block
 	static auto constexpr s_dataIdentifier = "datablock";
-	/// Predicate to keep track of for body scope. If true, break/continue
+	/// Predicate to keep track of for body scope. If false, break/continue
 	/// statements can not be created.
 	bool m_inForBodyScope;
 	// Index used for naming loop variable of bounded for loops
@@ -350,5 +355,8 @@ private:
 	/// Flag to track whether program is an object (true) or a statement block
 	/// (false: default value)
 	bool m_isObject;
+	/// Flag to track whether scope extension of variables defined in for-init
+	/// block is enabled.
+	bool m_forInitScopeExtEnabled;
 };
 }
