@@ -89,38 +89,19 @@ RUN set -ex; \
 	ninja install/strip; \
 	rm -rf /usr/src/libprotobuf-mutator
 
-# ETHASH
-RUN set -ex; \
-	cd /usr/src; \
-	git clone --branch="v0.4.4" https://github.com/chfast/ethash.git; \
-	cd ethash; \
-	mkdir build; \
-	cd build; \
-	cmake .. -G Ninja -DBUILD_SHARED_LIBS=ON -DETHASH_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX="/usr"; \
-	ninja; \
-	ninja install/strip; \
-	rm -rf /usr/src/ethash
-
-# INTX
-RUN set -ex; \
-	cd /usr/src; \
-	git clone --branch="v0.2.0" https://github.com/chfast/intx.git; \
-	cd intx; \
-	mkdir build; \
-	cd build; \
-	cmake .. -G Ninja -DBUILD_SHARED_LIBS=ON -DINTX_TESTING=OFF -DINTX_BENCHMARKING=OFF -DCMAKE_INSTALL_PREFIX="/usr"; \
-	ninja; \
-	ninja install/strip; \
-	rm -rf /usr/src/intx;
-
 # EVMONE
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.1.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
+	git clone --branch="v0.2.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
 	cd evmone; \
 	mkdir build; \
 	cd build; \
+	# isoltest links against the evmone shared library
 	cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="/usr" ..; \
+	ninja; \
+	ninja install/strip; \
+	# abiv2_proto_ossfuzz links against the evmone standalone static library
+	cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="/usr" ..; \
 	ninja; \
 	ninja install/strip; \
 	rm -rf /usr/src/evmone
