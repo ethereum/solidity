@@ -27,7 +27,7 @@ namespace dev
 {
 
 /// Generic visitor used as follows:
-/// boost::apply_visitor(GenericVisitor<Class1, Class2>(
+/// std::visit(GenericVisitor<Class1, Class2>(
 ///     [](Class1& _c) { _c.f(); },
 ///     [](Class2& _c) { _c.g(); }
 /// ), variant);
@@ -59,7 +59,7 @@ struct GenericVisitor<>: public boost::static_visitor<> {
 };
 
 /// Generic visitor with fallback:
-/// boost::apply_visitor(GenericFallbackVisitor<Class1, Class2>(
+/// std::visit(GenericFallbackVisitor<Class1, Class2>(
 ///     [](Class1& _c) { _c.f(); },
 ///     [](Class2& _c) { _c.g(); }
 /// ), variant);
@@ -92,7 +92,7 @@ struct GenericFallbackVisitor<>: public boost::static_visitor<> {
 };
 
 /// Generic visitor with fallback that can return a value:
-/// boost::apply_visitor(GenericFallbackReturnsVisitor<ReturnType, Class1, Class2>(
+/// std::visit(GenericFallbackReturnsVisitor<ReturnType, Class1, Class2>(
 ///     [](Class1& _c) { return _c.f(); },
 ///     [](Class2& _c) { return _c.g(); }
 /// ), variant);
