@@ -27,6 +27,7 @@
 #include <libsolidity/formal/SymbolicVariables.h>
 #include <libsolidity/formal/VariableUsage.h>
 
+#include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/ErrorReporter.h>
@@ -82,6 +83,7 @@ protected:
 	void endVisit(BinaryOperation const& _node) override;
 	void endVisit(FunctionCall const& _node) override;
 	void endVisit(Identifier const& _node) override;
+	void endVisit(ElementaryTypeNameExpression const& _node) override;
 	void endVisit(Literal const& _node) override;
 	void endVisit(Return const& _node) override;
 	bool visit(MemberAccess const& _node) override;

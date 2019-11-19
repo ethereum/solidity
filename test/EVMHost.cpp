@@ -35,17 +35,17 @@ using namespace dev;
 using namespace dev::test;
 
 
-evmc::vm* EVMHost::getVM(string const& _path)
+evmc::VM* EVMHost::getVM(string const& _path)
 {
-	static unique_ptr<evmc::vm> theVM;
+	static unique_ptr<evmc::VM> theVM;
 	if (!theVM && !_path.empty())
 	{
 		evmc_loader_error_code errorCode = {};
-		evmc_instance* vm = evmc_load_and_configure(_path.c_str(), &errorCode);
+		evmc_vm* vm = evmc_load_and_configure(_path.c_str(), &errorCode);
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 		{
 			if (evmc_vm_has_capability(vm, EVMC_CAPABILITY_EVM1))
-				theVM = make_unique<evmc::vm>(vm);
+				theVM = make_unique<evmc::VM>(vm);
 			else
 			{
 				evmc_destroy(vm);
@@ -63,7 +63,7 @@ evmc::vm* EVMHost::getVM(string const& _path)
 	return theVM.get();
 }
 
-EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm):
+EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM* _vm):
 	m_vm(_vm)
 {
 	if (!m_vm)
@@ -83,7 +83,7 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm):
 	else if (_evmVersion == langutil::EVMVersion::constantinople())
 		m_evmVersion = EVMC_CONSTANTINOPLE;
 	else if (_evmVersion == langutil::EVMVersion::istanbul())
-		assertThrow(false, Exception, "Istanbul is not supported yet.");
+		m_evmVersion = EVMC_ISTANBUL;
 	else if (_evmVersion == langutil::EVMVersion::berlin())
 		assertThrow(false, Exception, "Berlin is not supported yet.");
 	else //if (_evmVersion == langutil::EVMVersion::petersburg())
@@ -227,6 +227,8 @@ evmc_tx_context EVMHost::get_tx_context() noexcept
 	ctx.block_gas_limit = 20000000;
 	ctx.tx_gas_price = convertToEVMC(u256("3000000000"));
 	ctx.tx_origin = convertToEVMC(Address("0x9292929292929292929292929292929292929292"));
+	// Mainnet according to EIP-155
+	ctx.chain_id = convertToEVMC(u256(1));
 	return ctx;
 }
 

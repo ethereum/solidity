@@ -40,9 +40,9 @@ public:
 	/// Tries to dynamically load libevmone. @returns nullptr on failure.
 	/// The path has to be provided for the first successful run and will be ignored
 	/// afterwards.
-	static evmc::vm* getVM(std::string const& _path = {});
+	static evmc::VM* getVM(std::string const& _path = {});
 
-	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm = getVM());
+	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM* _vm = getVM());
 
 	struct Account
 	{
@@ -179,7 +179,7 @@ private:
 	/// @note The return value is only valid as long as @a _data is alive!
 	static evmc::result resultWithGas(evmc_message const& _message, bytes const& _data) noexcept;
 
-	evmc::vm* m_vm = nullptr;
+	evmc::VM* m_vm = nullptr;
 	evmc_revision m_evmVersion;
 };
 

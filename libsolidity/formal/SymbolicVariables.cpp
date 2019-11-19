@@ -248,12 +248,16 @@ SymbolicTupleVariable::SymbolicTupleVariable(
 	SymbolicVariable(_type, _type, move(_uniqueName), _context)
 {
 	solAssert(isTuple(m_type->category()), "");
-}
-
-void SymbolicTupleVariable::setComponents(vector<shared_ptr<SymbolicVariable>> _components)
-{
-	solAssert(m_components.empty(), "");
-	auto const& tupleType = dynamic_cast<solidity::TupleType const*>(m_type);
-	solAssert(_components.size() == tupleType->components().size(), "");
-	m_components = move(_components);
+	auto const& tupleType = dynamic_cast<TupleType const&>(*m_type);
+	auto const& componentsTypes = tupleType.components();
+	for (unsigned i = 0; i < componentsTypes.size(); ++i)
+		if (componentsTypes.at(i))
+		{
+			string componentName = m_uniqueName + "_component_" + to_string(i);
+			auto result = smt::newSymbolicVariable(*componentsTypes.at(i), componentName, m_context);
+			solAssert(result.second, "");
+			m_components.emplace_back(move(result.second));
+		}
+		else
+			m_components.emplace_back(nullptr);
 }

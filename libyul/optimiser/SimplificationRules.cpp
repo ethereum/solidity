@@ -111,7 +111,7 @@ SimplificationRules::SimplificationRules()
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 
-yul::Pattern::Pattern(dev::eth::Instruction _instruction, vector<Pattern> const& _arguments):
+yul::Pattern::Pattern(dev::eth::Instruction _instruction, initializer_list<Pattern> _arguments):
 	m_kind(PatternKind::Operation),
 	m_instruction(_instruction),
 	m_arguments(_arguments)

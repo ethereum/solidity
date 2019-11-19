@@ -106,7 +106,7 @@ defaults:
 
   - test_ubuntu1904_clang: &test_ubuntu1904_clang
       docker:
-        - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang
+        - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang-2
       steps:
         - checkout
         - attach_workspace:
@@ -117,7 +117,7 @@ defaults:
 
   - test_ubuntu1904: &test_ubuntu1904
       docker:
-        - image: ethereum/solidity-buildpack-deps:ubuntu1904
+        - image: ethereum/solidity-buildpack-deps:ubuntu1904-2
       steps:
         - checkout
         - attach_workspace:
@@ -287,7 +287,7 @@ jobs:
 
   b_ubu_clang: &build_ubuntu1904_clang
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang-2
     environment:
       CC: clang
       CXX: clang++
@@ -299,7 +299,7 @@ jobs:
 
   b_ubu: &build_ubuntu1904
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-2
     steps:
       - checkout
       - run: *run_build
@@ -313,7 +313,7 @@ jobs:
 
   b_ubu18: &build_ubuntu1804
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1804
+      - image: ethereum/solidity-buildpack-deps:ubuntu1804-2
     environment:
       CMAKE_OPTIONS: -DCMAKE_CXX_FLAGS=-O2
       CMAKE_BUILD_TYPE: RelWithDebugInfo
@@ -519,7 +519,7 @@ jobs:
 
   b_docs:
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-2
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash
@@ -544,7 +544,7 @@ jobs:
 
   t_ubu_cli: &t_ubu_cli
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-2
     environment:
       TERM: xterm
     steps:

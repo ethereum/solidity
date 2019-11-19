@@ -22,36 +22,35 @@
 #include <string.h>
 
 /**
- * Returns true if the VM instance has a compatible ABI version.
+ * Returns true if the VM has a compatible ABI version.
  */
-static inline int evmc_is_abi_compatible(struct evmc_instance* instance)
+static inline bool evmc_is_abi_compatible(struct evmc_vm* vm)
 {
-    return instance->abi_version == EVMC_ABI_VERSION;
+    return vm->abi_version == EVMC_ABI_VERSION;
 }
 
 /**
- * Returns the name of the VM instance.
+ * Returns the name of the VM.
  */
-static inline const char* evmc_vm_name(struct evmc_instance* instance)
+static inline const char* evmc_vm_name(struct evmc_vm* vm)
 {
-    return instance->name;
+    return vm->name;
 }
 
 /**
- * Returns the version of the VM instance.
+ * Returns the version of the VM.
  */
-static inline const char* evmc_vm_version(struct evmc_instance* instance)
+static inline const char* evmc_vm_version(struct evmc_vm* vm)
 {
-    return instance->version;
+    return vm->version;
 }
 
 /**
- * Checks if the VM instance has the given capability.
+ * Checks if the VM has the given capability.
  *
  * @see evmc_get_capabilities_fn
  */
-static inline bool evmc_vm_has_capability(struct evmc_instance* vm,
-                                          enum evmc_capabilities capability)
+static inline bool evmc_vm_has_capability(struct evmc_vm* vm, enum evmc_capabilities capability)
 {
     return (vm->get_capabilities(vm) & (evmc_capabilities_flagset)capability) != 0;
 }
@@ -61,37 +60,23 @@ static inline bool evmc_vm_has_capability(struct evmc_instance* vm,
  *
  * @see evmc_destroy_fn
  */
-static inline void evmc_destroy(struct evmc_instance* instance)
+static inline void evmc_destroy(struct evmc_vm* vm)
 {
-    instance->destroy(instance);
+    vm->destroy(vm);
 }
 
 /**
- * Sets the option for the VM instance, if the feature is supported by the VM.
+ * Sets the option for the VM, if the feature is supported by the VM.
  *
  * @see evmc_set_option_fn
  */
-static inline enum evmc_set_option_result evmc_set_option(struct evmc_instance* instance,
+static inline enum evmc_set_option_result evmc_set_option(struct evmc_vm* vm,
                                                           char const* name,
                                                           char const* value)
 {
-    if (instance->set_option)
-        return instance->set_option(instance, name, value);
+    if (vm->set_option)
+        return vm->set_option(vm, name, value);
     return EVMC_SET_OPTION_INVALID_NAME;
-}
-
-/**
- * Sets the tracer callback for the VM instance, if the feature is supported by the VM.
- *
- * @see evmc_set_tracer_fn
- */
-EVMC_DEPRECATED
-static inline void evmc_set_tracer(struct evmc_instance* instance,
-                                   evmc_trace_callback callback,
-                                   struct evmc_tracer_context* context)
-{
-    if (instance->set_tracer)
-        instance->set_tracer(instance, callback, context);
 }
 
 /**
@@ -99,14 +84,15 @@ static inline void evmc_set_tracer(struct evmc_instance* instance,
  *
  * @see evmc_execute_fn.
  */
-static inline struct evmc_result evmc_execute(struct evmc_instance* instance,
-                                              struct evmc_context* context,
+static inline struct evmc_result evmc_execute(struct evmc_vm* vm,
+                                              const struct evmc_host_interface* host,
+                                              struct evmc_host_context* context,
                                               enum evmc_revision rev,
                                               const struct evmc_message* msg,
                                               uint8_t const* code,
                                               size_t code_size)
 {
-    return instance->execute(instance, context, rev, msg, code, code_size);
+    return vm->execute(vm, host, context, rev, msg, code, code_size);
 }
 
 /// The evmc_result release function using free() for releasing the memory.
