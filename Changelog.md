@@ -20,6 +20,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when using function pointers as arguments.
  * Type Checker: Disallow constructor of the same class to be used as modifier.
  * Type Checker: Treat magic variables as unknown identifiers in inline assembly.
+ * Code Generator: Fix internal error when trying to convert ``super`` to a different type
 
 
 

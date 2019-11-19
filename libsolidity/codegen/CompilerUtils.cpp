@@ -711,6 +711,9 @@ void CompilerUtils::convertType(
 	Type::Category stackTypeCategory = _typeOnStack.category();
 	Type::Category targetTypeCategory = _targetType.category();
 
+	if (auto contrType = dynamic_cast<ContractType const*>(&_typeOnStack))
+		solAssert(!contrType->isSuper(), "Cannot convert magic variable \"super\"");
+
 	bool enumOverflowCheckPending = (targetTypeCategory == Type::Category::Enum || stackTypeCategory == Type::Category::Enum);
 	bool chopSignBitsPending = _chopSignBits && targetTypeCategory == Type::Category::Integer;
 	if (chopSignBitsPending)
