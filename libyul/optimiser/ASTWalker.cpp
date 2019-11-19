@@ -94,12 +94,12 @@ void ASTWalker::operator()(Block const& _block)
 
 void ASTWalker::visit(Statement const& _st)
 {
-	boost::apply_visitor(*this, _st);
+	std::visit(*this, _st);
 }
 
 void ASTWalker::visit(Expression const& _e)
 {
-	boost::apply_visitor(*this, _e);
+	std::visit(*this, _e);
 }
 
 void ASTModifier::operator()(FunctionalInstruction& _instr)
@@ -176,10 +176,10 @@ void ASTModifier::operator()(Block& _block)
 
 void ASTModifier::visit(Statement& _st)
 {
-	boost::apply_visitor(*this, _st);
+	std::visit(*this, _st);
 }
 
 void ASTModifier::visit(Expression& _e)
 {
-	boost::apply_visitor(*this, _e);
+	std::visit(*this, _e);
 }

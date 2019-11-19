@@ -165,13 +165,13 @@ pair<TerminationFinder::ControlFlow, size_t> TerminationFinder::firstUncondition
 TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement const& _statement)
 {
 	if (
-		_statement.type() == typeid(ExpressionStatement) &&
-		isTerminatingBuiltin(boost::get<ExpressionStatement>(_statement))
+		holds_alternative<ExpressionStatement>(_statement) &&
+		isTerminatingBuiltin(std::get<ExpressionStatement>(_statement))
 	)
 		return ControlFlow::Terminate;
-	else if (_statement.type() == typeid(Break))
+	else if (holds_alternative<Break>(_statement))
 		return ControlFlow::Break;
-	else if (_statement.type() == typeid(Continue))
+	else if (holds_alternative<Continue>(_statement))
 		return ControlFlow::Continue;
 	else
 		return ControlFlow::FlowOut;
@@ -179,13 +179,13 @@ TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement cons
 
 bool TerminationFinder::isTerminatingBuiltin(ExpressionStatement const& _exprStmnt)
 {
-	if (_exprStmnt.expression.type() == typeid(FunctionalInstruction))
+	if (holds_alternative<FunctionalInstruction>(_exprStmnt.expression))
 		return eth::SemanticInformation::terminatesControlFlow(
-			boost::get<FunctionalInstruction>(_exprStmnt.expression).instruction
+			std::get<FunctionalInstruction>(_exprStmnt.expression).instruction
 		);
-	else if (_exprStmnt.expression.type() == typeid(FunctionCall))
+	else if (holds_alternative<FunctionCall>(_exprStmnt.expression))
 		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-			if (auto const* builtin = dialect->builtin(boost::get<FunctionCall>(_exprStmnt.expression).functionName.name))
+			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_exprStmnt.expression).functionName.name))
 				if (builtin->instruction)
 					return eth::SemanticInformation::terminatesControlFlow(*builtin->instruction);
 	return false;

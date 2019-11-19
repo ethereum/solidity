@@ -28,9 +28,9 @@ using namespace yul;
 
 Expression Substitution::translate(Expression const& _expression)
 {
-	if (_expression.type() == typeid(Identifier))
+	if (holds_alternative<Identifier>(_expression))
 	{
-		YulString name = boost::get<Identifier>(_expression).name;
+		YulString name = std::get<Identifier>(_expression).name;
 		if (m_substitutions.count(name))
 			// No recursive substitution
 			return ASTCopier().translate(*m_substitutions.at(name));

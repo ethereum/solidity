@@ -56,7 +56,7 @@ void DeadCodeEliminator::operator()(Block& _block)
 			remove_if(
 				_block.statements.begin() + index + 1,
 				_block.statements.end(),
-				[] (Statement const& _s) { return _s.type() != typeid(yul::FunctionDefinition); }
+				[] (Statement const& _s) { return !holds_alternative<yul::FunctionDefinition>(_s); }
 			),
 			_block.statements.end()
 		);

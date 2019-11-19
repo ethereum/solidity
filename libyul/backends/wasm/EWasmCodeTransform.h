@@ -32,7 +32,7 @@ namespace yul
 {
 struct AsmAnalysisInfo;
 
-class EWasmCodeTransform: public boost::static_visitor<wasm::Expression>
+class EWasmCodeTransform
 {
 public:
 	static wasm::Module run(Dialect const& _dialect, yul::Block const& _ast);

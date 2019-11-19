@@ -49,9 +49,9 @@ void ExpressionInliner::operator()(FunctionDefinition& _fun)
 void ExpressionInliner::visit(Expression& _expression)
 {
 	ASTModifier::visit(_expression);
-	if (_expression.type() == typeid(FunctionCall))
+	if (holds_alternative<FunctionCall>(_expression))
 	{
-		FunctionCall& funCall = boost::get<FunctionCall>(_expression);
+		FunctionCall& funCall = std::get<FunctionCall>(_expression);
 		if (!m_inlinableFunctions.count(funCall.functionName.name))
 			return;
 		FunctionDefinition const& fun = *m_inlinableFunctions.at(funCall.functionName.name);
@@ -74,6 +74,6 @@ void ExpressionInliner::visit(Expression& _expression)
 			substitutions[paraName] = &arg;
 		}
 
-		_expression = Substitution(substitutions).translate(*boost::get<Assignment>(fun.body.statements.front()).value);
+		_expression = Substitution(substitutions).translate(*std::get<Assignment>(fun.body.statements.front()).value);
 	}
 }

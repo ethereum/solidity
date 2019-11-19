@@ -29,8 +29,6 @@
 
 #include <liblangutil/SourceLocation.h>
 
-#include <boost/variant.hpp>
-
 #include <optional>
 #include <set>
 

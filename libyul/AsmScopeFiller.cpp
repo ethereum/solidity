@@ -47,7 +47,7 @@ ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter):
 
 bool ScopeFiller::operator()(ExpressionStatement const& _expr)
 {
-	return boost::apply_visitor(*this, _expr.expression);
+	return std::visit(*this, _expr.expression);
 }
 
 bool ScopeFiller::operator()(Label const& _item)
@@ -116,7 +116,7 @@ bool ScopeFiller::operator()(ForLoop const& _forLoop)
 	if (!(*this)(_forLoop.pre))
 		success = false;
 	m_currentScope = &scope(&_forLoop.pre);
-	if (!boost::apply_visitor(*this, *_forLoop.condition))
+	if (!std::visit(*this, *_forLoop.condition))
 		success = false;
 	if (!(*this)(_forLoop.body))
 		success = false;
@@ -137,11 +137,11 @@ bool ScopeFiller::operator()(Block const& _block)
 	// First visit all functions to make them create
 	// an entry in the scope according to their visibility.
 	for (auto const& s: _block.statements)
-		if (s.type() == typeid(FunctionDefinition))
-			if (!registerFunction(boost::get<FunctionDefinition>(s)))
+		if (holds_alternative<FunctionDefinition>(s))
+			if (!registerFunction(std::get<FunctionDefinition>(s)))
 				success = false;
 	for (auto const& s: _block.statements)
-		if (!boost::apply_visitor(*this, s))
+		if (!std::visit(*this, s))
 			success = false;
 
 	m_currentScope = m_currentScope->superScope;

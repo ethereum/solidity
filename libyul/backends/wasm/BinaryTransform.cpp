@@ -298,12 +298,12 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 	// they are references to object names that should not end up in the code.
 	if (_call.functionName == "dataoffset")
 	{
-		string name = boost::get<StringLiteral>(_call.arguments.at(0)).value;
+		string name = std::get<StringLiteral>(_call.arguments.at(0)).value;
 		return toBytes(Opcode::I64Const) + lebEncodeSigned(m_subModulePosAndSize.at(name).first);
 	}
 	else if (_call.functionName == "datasize")
 	{
-		string name = boost::get<StringLiteral>(_call.arguments.at(0)).value;
+		string name = std::get<StringLiteral>(_call.arguments.at(0)).value;
 		return toBytes(Opcode::I64Const) + lebEncodeSigned(m_subModulePosAndSize.at(name).second);
 	}
 
@@ -333,7 +333,7 @@ bytes BinaryTransform::operator()(FunctionCall const& _call)
 bytes BinaryTransform::operator()(LocalAssignment const& _assignment)
 {
 	return
-		boost::apply_visitor(*this, *_assignment.value) +
+		std::visit(*this, *_assignment.value) +
 		toBytes(Opcode::LocalSet) +
 		lebEncode(m_locals.at(_assignment.variableName));
 }
@@ -341,7 +341,7 @@ bytes BinaryTransform::operator()(LocalAssignment const& _assignment)
 bytes BinaryTransform::operator()(GlobalAssignment const& _assignment)
 {
 	return
-		boost::apply_visitor(*this, *_assignment.value) +
+		std::visit(*this, *_assignment.value) +
 		toBytes(Opcode::GlobalSet) +
 		lebEncode(m_globals.at(_assignment.variableName));
 }
@@ -349,7 +349,7 @@ bytes BinaryTransform::operator()(GlobalAssignment const& _assignment)
 bytes BinaryTransform::operator()(If const& _if)
 {
 	bytes result =
-		boost::apply_visitor(*this, *_if.condition) +
+		std::visit(*this, *_if.condition) +
 		toBytes(Opcode::If) +
 		toBytes(ValueType::Void);
 
@@ -559,7 +559,7 @@ bytes BinaryTransform::visit(vector<Expression> const& _expressions)
 {
 	bytes result;
 	for (auto const& expr: _expressions)
-		result += boost::apply_visitor(*this, expr);
+		result += std::visit(*this, expr);
 	return result;
 }
 
@@ -567,7 +567,7 @@ bytes BinaryTransform::visitReversed(vector<Expression> const& _expressions)
 {
 	bytes result;
 	for (auto const& expr: _expressions | boost::adaptors::reversed)
-		result += boost::apply_visitor(*this, expr);
+		result += std::visit(*this, expr);
 	return result;
 }
 

@@ -72,6 +72,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <variant>
 
 using namespace std;
 using namespace dev;
@@ -131,7 +132,7 @@ public:
 			set<YulString> reservedIdentifiers;
 			if (!disambiguated)
 			{
-				*m_ast = boost::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_ast));
+				*m_ast = std::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_ast));
 				m_analysisInfo.reset();
 				m_nameDispenser = make_shared<NameDispenser>(m_dialect, *m_ast, reservedIdentifiers);
 				disambiguated = true;

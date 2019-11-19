@@ -60,9 +60,9 @@ void IntroduceSSA::operator()(Block& _block)
 		_block.statements,
 		[&](Statement& _s) -> std::optional<vector<Statement>>
 		{
-			if (_s.type() == typeid(VariableDeclaration))
+			if (holds_alternative<VariableDeclaration>(_s))
 			{
-				VariableDeclaration& varDecl = boost::get<VariableDeclaration>(_s);
+				VariableDeclaration& varDecl = std::get<VariableDeclaration>(_s);
 				if (varDecl.value)
 					visit(*varDecl.value);
 
@@ -90,12 +90,12 @@ void IntroduceSSA::operator()(Block& _block)
 						make_unique<Expression>(Identifier{loc, newName})
 					});
 				}
-				boost::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
+				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
 				return { std::move(statements) };
 			}
-			else if (_s.type() == typeid(Assignment))
+			else if (holds_alternative<Assignment>(_s))
 			{
-				Assignment& assignment = boost::get<Assignment>(_s);
+				Assignment& assignment = std::get<Assignment>(_s);
 				visit(*assignment.value);
 				for (auto const& var: assignment.variableNames)
 					assertThrow(m_variablesToReplace.count(var.name), OptimizerException, "");
@@ -117,7 +117,7 @@ void IntroduceSSA::operator()(Block& _block)
 						make_unique<Expression>(Identifier{loc, newName})
 					});
 				}
-				boost::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
+				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
 				return { std::move(statements) };
 			}
 			else
@@ -228,9 +228,9 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 			}
 			m_variablesToReassign.clear();
 
-			if (_s.type() == typeid(VariableDeclaration))
+			if (holds_alternative<VariableDeclaration>(_s))
 			{
-				VariableDeclaration& varDecl = boost::get<VariableDeclaration>(_s);
+				VariableDeclaration& varDecl = std::get<VariableDeclaration>(_s);
 				for (auto const& var: varDecl.variables)
 					if (m_variablesToReplace.count(var.name))
 					{
@@ -238,9 +238,9 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 						m_variablesInScope.insert(var.name);
 					}
 			}
-			else if (_s.type() == typeid(Assignment))
+			else if (holds_alternative<Assignment>(_s))
 			{
-				Assignment& assignment = boost::get<Assignment>(_s);
+				Assignment& assignment = std::get<Assignment>(_s);
 				for (auto const& var: assignment.variableNames)
 					if (m_variablesToReplace.count(var.name))
 						assignedVariables.insert(var.name);
@@ -304,14 +304,14 @@ void PropagateValues::operator()(VariableDeclaration& _varDecl)
 	if (m_variablesToReplace.count(variable))
 	{
 		// `let a := a_1` - regular declaration of non-SSA variable
-		yulAssert(_varDecl.value->type() == typeid(Identifier), "");
-		m_currentVariableValues[variable] = boost::get<Identifier>(*_varDecl.value).name;
+		yulAssert(holds_alternative<Identifier>(*_varDecl.value), "");
+		m_currentVariableValues[variable] = std::get<Identifier>(*_varDecl.value).name;
 		m_clearAtEndOfBlock.insert(variable);
 	}
-	else if (_varDecl.value && _varDecl.value->type() == typeid(Identifier))
+	else if (_varDecl.value && holds_alternative<Identifier>(*_varDecl.value))
 	{
 		// `let a_1 := a` - assignment to SSA variable after a branch.
-		YulString value = boost::get<Identifier>(*_varDecl.value).name;
+		YulString value = std::get<Identifier>(*_varDecl.value).name;
 		if (m_variablesToReplace.count(value))
 		{
 			// This is safe because `a_1` is not a "variable to replace" and thus
@@ -333,8 +333,8 @@ void PropagateValues::operator()(Assignment& _assignment)
 	if (!m_variablesToReplace.count(name))
 		return;
 
-	yulAssert(_assignment.value && _assignment.value->type() == typeid(Identifier), "");
-	m_currentVariableValues[name] = boost::get<Identifier>(*_assignment.value).name;
+	yulAssert(_assignment.value && holds_alternative<Identifier>(*_assignment.value), "");
+	m_currentVariableValues[name] = std::get<Identifier>(*_assignment.value).name;
 	m_clearAtEndOfBlock.insert(name);
 }
 

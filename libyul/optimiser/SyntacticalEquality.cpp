@@ -32,7 +32,7 @@ using namespace yul;
 
 bool SyntacticallyEqual::operator()(Expression const& _lhs, Expression const& _rhs)
 {
-	return boost::apply_visitor([this](auto&& _lhsExpr, auto&& _rhsExpr) -> bool {
+	return std::visit([this](auto&& _lhsExpr, auto&& _rhsExpr) -> bool {
 		// ``this->`` is redundant, but required to work around a bug present in gcc 6.x.
 		return this->expressionEqual(_lhsExpr, _rhsExpr);
 	}, _lhs, _rhs);
@@ -40,7 +40,7 @@ bool SyntacticallyEqual::operator()(Expression const& _lhs, Expression const& _r
 
 bool SyntacticallyEqual::operator()(Statement const& _lhs, Statement const& _rhs)
 {
-	return boost::apply_visitor([this](auto&& _lhsStmt, auto&& _rhsStmt) -> bool {
+	return std::visit([this](auto&& _lhsStmt, auto&& _rhsStmt) -> bool {
 		// ``this->`` is redundant, but required to work around a bug present in gcc 6.x.
 		return this->statementEqual(_lhsStmt, _rhsStmt);
 	}, _lhs, _rhs);
