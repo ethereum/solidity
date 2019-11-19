@@ -105,17 +105,18 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	{
 		if (Options::get().optimizeYul)
 		{
+			// Costs with 0 are cases which cannot be triggered in tests.
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(151455, 127653, evmVersion);
+				CHECK_DEPLOY_GAS(0, 127653, evmVersion);
 			else
-				CHECK_DEPLOY_GAS(123, 113821, evmVersion);
+				CHECK_DEPLOY_GAS(0, 113821, evmVersion);
 		}
 		else
 		{
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(151455, 135371, evmVersion);
+				CHECK_DEPLOY_GAS(0, 135371, evmVersion);
 			else
-				CHECK_DEPLOY_GAS(134711, 120083, evmVersion);
+				CHECK_DEPLOY_GAS(0, 120083, evmVersion);
 		}
 	}
 	else if (evmVersion < EVMVersion::istanbul())
@@ -134,16 +135,16 @@ BOOST_AUTO_TEST_CASE(string_storage)
 			if (Options::get().optimizeYul)
 			{
 				if (evmVersion < EVMVersion::istanbul())
-					CHECK_GAS(21713, 21567, 20);
+					CHECK_GAS(0, 21567, 20);
 				else
-					CHECK_GAS(21713, 21351, 20);
+					CHECK_GAS(0, 21351, 20);
 			}
 			else
 			{
 				if (evmVersion < EVMVersion::istanbul())
-					CHECK_GAS(21713, 21635, 20);
+					CHECK_GAS(0, 21635, 20);
 				else
-					CHECK_GAS(21499, 21431, 20);
+					CHECK_GAS(0, 21431, 20);
 			}
 		}
 		else if (evmVersion < EVMVersion::istanbul())
