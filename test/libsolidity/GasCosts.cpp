@@ -108,8 +108,10 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		else
 			CHECK_DEPLOY_GAS(151455, 135371, evmVersion);
 	}
-	else
+	else if (evmVersion < EVMVersion::istanbul())
 		CHECK_DEPLOY_GAS(126861, 119591, evmVersion);
+	else
+		CHECK_DEPLOY_GAS(114173, 107163, evmVersion);
 
 	if (evmVersion >= EVMVersion::byzantium())
 	{
@@ -124,8 +126,10 @@ BOOST_AUTO_TEST_CASE(string_storage)
 			else
 				CHECK_GAS(21713, 21635, 20);
 		}
-		else
+		else if (evmVersion < EVMVersion::istanbul())
 			CHECK_GAS(21546, 21526, 20);
+		else
+			CHECK_GAS(21332, 21322, 20);
 	}
 }
 
