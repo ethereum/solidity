@@ -19,6 +19,8 @@
 #include <libyul/AsmData.h>
 #include <libdevcore/CommonData.h>
 
+#include <variant>
+
 using namespace std;
 using namespace dev;
 using namespace yul;
@@ -37,7 +39,7 @@ void SSAReverser::operator()(Block& _block)
 		_block.statements,
 		[&](Statement& _stmt1, Statement& _stmt2) -> std::optional<vector<Statement>>
 		{
-			auto* varDecl = boost::get<VariableDeclaration>(&_stmt1);
+			auto* varDecl = std::get_if<VariableDeclaration>(&_stmt1);
 
 			if (!varDecl || varDecl->variables.size() != 1 || !varDecl->value)
 				return {};
@@ -48,9 +50,9 @@ void SSAReverser::operator()(Block& _block)
 			// with
 			//   a := E
 			//   let a_1 := a
-			if (auto* assignment = boost::get<Assignment>(&_stmt2))
+			if (auto* assignment = std::get_if<Assignment>(&_stmt2))
 			{
-				auto* identifier = boost::get<Identifier>(assignment->value.get());
+				auto* identifier = std::get_if<Identifier>(assignment->value.get());
 				if (
 					assignment->variableNames.size() == 1 &&
 					identifier &&
@@ -81,9 +83,9 @@ void SSAReverser::operator()(Block& _block)
 			// with
 			//   let a := E
 			//   let a_1 := a
-			else if (auto* varDecl2 = boost::get<VariableDeclaration>(&_stmt2))
+			else if (auto* varDecl2 = std::get_if<VariableDeclaration>(&_stmt2))
 			{
-				auto* identifier = boost::get<Identifier>(varDecl2->value.get());
+				auto* identifier = std::get_if<Identifier>(varDecl2->value.get());
 				if (
 					varDecl2->variables.size() == 1 &&
 					identifier &&

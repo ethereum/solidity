@@ -35,6 +35,7 @@
 #include <boost/algorithm/cxx11/all_of.hpp>
 
 #include <ostream>
+#include <variant>
 
 using namespace std;
 using namespace dev;
@@ -161,9 +162,9 @@ void Interpreter::operator()(Block const& _block)
 	openScope();
 	// Register functions.
 	for (auto const& statement: _block.statements)
-		if (statement.type() == typeid(FunctionDefinition))
+		if (holds_alternative<FunctionDefinition>(statement))
 		{
-			FunctionDefinition const& funDef = boost::get<FunctionDefinition>(statement);
+			FunctionDefinition const& funDef = std::get<FunctionDefinition>(statement);
 			solAssert(!m_scopes.back().count(funDef.name), "");
 			m_scopes.back().emplace(funDef.name, &funDef);
 		}

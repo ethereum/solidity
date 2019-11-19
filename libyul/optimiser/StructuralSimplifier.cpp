@@ -95,7 +95,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 		_statements,
 		[&](Statement& _stmt) -> OptionalStatements
 		{
-			OptionalStatements result = boost::apply_visitor(visitor, _stmt);
+			OptionalStatements result = std::visit(visitor, _stmt);
 			if (result)
 				simplify(*result);
 			else
@@ -123,8 +123,8 @@ bool StructuralSimplifier::expressionAlwaysFalse(Expression const& _expression)
 
 std::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
 {
-	if (_expression.type() == typeid(Literal))
-		return valueOfLiteral(boost::get<Literal>(_expression));
+	if (holds_alternative<Literal>(_expression))
+		return valueOfLiteral(std::get<Literal>(_expression));
 	else
 		return std::optional<u256>();
 }

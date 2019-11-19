@@ -29,12 +29,12 @@ using namespace yul;
 void ConditionalSimplifier::operator()(Switch& _switch)
 {
 	visit(*_switch.expression);
-	if (_switch.expression->type() != typeid(Identifier))
+	if (!holds_alternative<Identifier>(*_switch.expression))
 	{
 		ASTModifier::operator()(_switch);
 		return;
 	}
-	YulString expr = boost::get<Identifier>(*_switch.expression).name;
+	YulString expr = std::get<Identifier>(*_switch.expression).name;
 	for (auto& _case: _switch.cases)
 	{
 		if (_case.value)
@@ -59,17 +59,17 @@ void ConditionalSimplifier::operator()(Block& _block)
 		[&](Statement& _s) -> std::optional<vector<Statement>>
 		{
 			visit(_s);
-			if (_s.type() == typeid(If))
+			if (holds_alternative<If>(_s))
 			{
-				If& _if = boost::get<If>(_s);
+				If& _if = std::get<If>(_s);
 				if (
-					_if.condition->type() == typeid(Identifier) &&
+					holds_alternative<Identifier>(*_if.condition) &&
 					!_if.body.statements.empty() &&
 					TerminationFinder(m_dialect).controlFlowKind(_if.body.statements.back()) !=
 						TerminationFinder::ControlFlow::FlowOut
 				)
 				{
-					YulString condition = boost::get<Identifier>(*_if.condition).name;
+					YulString condition = std::get<Identifier>(*_if.condition).name;
 					langutil::SourceLocation location = _if.location;
 					return make_vector<Statement>(
 						std::move(_s),

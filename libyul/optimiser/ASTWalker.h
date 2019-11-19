@@ -25,8 +25,6 @@
 #include <libyul/Exceptions.h>
 #include <libyul/YulString.h>
 
-#include <boost/variant.hpp>
-
 #include <map>
 #include <optional>
 #include <set>
@@ -38,7 +36,7 @@ namespace yul
 /**
  * Generic AST walker.
  */
-class ASTWalker: public boost::static_visitor<>
+class ASTWalker
 {
 public:
 	virtual ~ASTWalker() = default;
@@ -75,7 +73,7 @@ protected:
 /**
  * Generic AST modifier (i.e. non-const version of ASTWalker).
  */
-class ASTModifier: public boost::static_visitor<>
+class ASTModifier
 {
 public:
 	virtual ~ASTModifier() = default;

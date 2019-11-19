@@ -25,8 +25,6 @@
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameDispenser.h>
 
-#include <boost/variant.hpp>
-
 #include <optional>
 #include <set>
 

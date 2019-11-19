@@ -35,13 +35,13 @@ using namespace yul;
 void MainFunction::operator()(Block& _block)
 {
 	assertThrow(_block.statements.size() >= 1, OptimizerException, "");
-	assertThrow(_block.statements[0].type() == typeid(Block), OptimizerException, "");
+	assertThrow(holds_alternative<Block>(_block.statements[0]), OptimizerException, "");
 	for (size_t i = 1; i < _block.statements.size(); ++i)
-		assertThrow(_block.statements.at(i).type() == typeid(FunctionDefinition), OptimizerException, "");
+		assertThrow(holds_alternative<FunctionDefinition>(_block.statements.at(i)), OptimizerException, "");
 	/// @todo this should handle scopes properly and instead of an assertion it should rename the conflicting function
 	assertThrow(NameCollector(_block).names().count("main"_yulstring) == 0, OptimizerException, "");
 
-	Block& block = boost::get<Block>(_block.statements[0]);
+	Block& block = std::get<Block>(_block.statements[0]);
 	FunctionDefinition main{
 		block.location,
 		"main"_yulstring,

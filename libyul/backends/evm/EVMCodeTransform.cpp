@@ -29,6 +29,8 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 
+#include <variant>
+
 using namespace std;
 using namespace dev;
 using namespace yul;
@@ -146,9 +148,9 @@ void CodeTransform::freeUnusedVariables()
 		return;
 
 	for (auto const& identifier: m_scope->identifiers)
-		if (identifier.second.type() == typeid(Scope::Variable))
+		if (holds_alternative<Scope::Variable>(identifier.second))
 		{
-			Scope::Variable const& var = boost::get<Scope::Variable>(identifier.second);
+			Scope::Variable const& var = std::get<Scope::Variable>(identifier.second);
 			if (m_variablesScheduledForDeletion.count(&var))
 				deleteVariable(var);
 		}
@@ -179,7 +181,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	int height = m_assembly.stackHeight();
 	if (_varDecl.value)
 	{
-		boost::apply_visitor(*this, *_varDecl.value);
+		std::visit(*this, *_varDecl.value);
 		expectDeposit(numVariables, height);
 	}
 	else
@@ -193,7 +195,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	for (int varIndex = numVariables - 1; varIndex >= 0; --varIndex)
 	{
 		YulString varName = _varDecl.variables[varIndex].name;
-		auto& var = boost::get<Scope::Variable>(m_scope->identifiers.at(varName));
+		auto& var = std::get<Scope::Variable>(m_scope->identifiers.at(varName));
 		m_context->variableStackHeights[&var] = height + varIndex;
 		if (!m_allowStackOpt)
 			continue;
@@ -242,7 +244,7 @@ void CodeTransform::stackError(StackTooDeepError _error, int _targetStackHeight)
 void CodeTransform::operator()(Assignment const& _assignment)
 {
 	int height = m_assembly.stackHeight();
-	boost::apply_visitor(*this, *_assignment.value);
+	std::visit(*this, *_assignment.value);
 	expectDeposit(_assignment.variableNames.size(), height);
 
 	m_assembly.setSourceLocation(_assignment.location);
@@ -261,7 +263,7 @@ void CodeTransform::operator()(StackAssignment const& _assignment)
 void CodeTransform::operator()(ExpressionStatement const& _statement)
 {
 	m_assembly.setSourceLocation(_statement.location);
-	boost::apply_visitor(*this, _statement.expression);
+	std::visit(*this, _statement.expression);
 	checkStackHeight(&_statement);
 }
 
@@ -271,7 +273,7 @@ void CodeTransform::operator()(Label const& _label)
 	m_assembly.setSourceLocation(_label.location);
 	solAssert(m_scope, "");
 	solAssert(m_scope->identifiers.count(_label.name), "");
-	Scope::Label& label = boost::get<Scope::Label>(m_scope->identifiers.at(_label.name));
+	Scope::Label& label = std::get<Scope::Label>(m_scope->identifiers.at(_label.name));
 	m_assembly.appendLabel(labelID(label));
 	checkStackHeight(&_label);
 }
@@ -340,7 +342,7 @@ void CodeTransform::operator()(FunctionalInstruction const& _instruction)
 			solAssert(_instruction.arguments.size() == 1, "");
 		}
 		m_assembly.setSourceLocation(_instruction.location);
-		auto label = labelFromIdentifier(boost::get<Identifier>(_instruction.arguments.at(0)));
+		auto label = labelFromIdentifier(std::get<Identifier>(_instruction.arguments.at(0)));
 		if (isJumpI)
 			m_assembly.appendJumpToIf(label);
 		else
@@ -476,7 +478,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 {
 	solAssert(m_scope, "");
 	solAssert(m_scope->identifiers.count(_function.name), "");
-	Scope::Function& function = boost::get<Scope::Function>(m_scope->identifiers.at(_function.name));
+	Scope::Function& function = std::get<Scope::Function>(m_scope->identifiers.at(_function.name));
 
 	int const localStackAdjustment = m_evm15 ? 0 : 1;
 	int height = localStackAdjustment;
@@ -485,7 +487,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	solAssert(varScope, "");
 	for (auto const& v: _function.parameters | boost::adaptors::reversed)
 	{
-		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
+		auto& var = std::get<Scope::Variable>(varScope->identifiers.at(v.name));
 		m_context->variableStackHeights[&var] = height++;
 	}
 
@@ -503,7 +505,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 
 	for (auto const& v: _function.returnVariables)
 	{
-		auto& var = boost::get<Scope::Variable>(varScope->identifiers.at(v.name));
+		auto& var = std::get<Scope::Variable>(varScope->identifiers.at(v.name));
 		m_context->variableStackHeights[&var] = height++;
 		// Preset stack slots for return variables to zero.
 		m_assembly.appendConstant(u256(0));
@@ -717,7 +719,7 @@ AbstractAssembly::LabelID CodeTransform::functionEntryID(YulString _name, Scope:
 void CodeTransform::visitExpression(Expression const& _expression)
 {
 	int height = m_assembly.stackHeight();
-	boost::apply_visitor(*this, _expression);
+	std::visit(*this, _expression);
 	expectDeposit(1, height);
 }
 
@@ -728,7 +730,7 @@ void CodeTransform::visitStatements(vector<Statement> const& _statements)
 	for (auto const& statement: _statements)
 	{
 		freeUnusedVariables();
-		auto const* functionDefinition = boost::get<FunctionDefinition>(&statement);
+		auto const* functionDefinition = std::get_if<FunctionDefinition>(&statement);
 		if (functionDefinition && !jumpTarget)
 		{
 			m_assembly.setSourceLocation(locationOf(statement));
@@ -741,7 +743,7 @@ void CodeTransform::visitStatements(vector<Statement> const& _statements)
 			jumpTarget = std::nullopt;
 		}
 
-		boost::apply_visitor(*this, statement);
+		std::visit(*this, statement);
 	}
 	// we may have a leftover jumpTarget
 	if (jumpTarget)
@@ -759,9 +761,9 @@ void CodeTransform::finalizeBlock(Block const& _block, int blockStartStackHeight
 	// pop variables
 	solAssert(m_info.scopes.at(&_block).get() == m_scope, "");
 	for (auto const& id: m_scope->identifiers)
-		if (id.second.type() == typeid(Scope::Variable))
+		if (holds_alternative<Scope::Variable>(id.second))
 		{
-			Scope::Variable const& var = boost::get<Scope::Variable>(id.second);
+			Scope::Variable const& var = std::get<Scope::Variable>(id.second);
 			if (m_allowStackOpt)
 			{
 				solAssert(!m_context->variableStackHeights.count(&var), "");
@@ -789,7 +791,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	solAssert(m_scope, "");
 	if (auto var = m_scope->lookup(_variableName.name))
 	{
-		Scope::Variable const& _var = boost::get<Scope::Variable>(*var);
+		Scope::Variable const& _var = std::get<Scope::Variable>(*var);
 		if (int heightDiff = variableHeightDiff(_var, _variableName.name, true))
 			m_assembly.appendInstruction(dev::eth::swapInstruction(heightDiff - 1));
 		m_assembly.appendInstruction(dev::eth::Instruction::POP);

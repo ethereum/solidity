@@ -138,9 +138,9 @@ void ControlFlowSimplifier::operator()(Block& _block)
 
 void ControlFlowSimplifier::visit(Statement& _st)
 {
-	if (_st.type() == typeid(ForLoop))
+	if (holds_alternative<ForLoop>(_st))
 	{
-		ForLoop& forLoop = boost::get<ForLoop>(_st);
+		ForLoop& forLoop = std::get<ForLoop>(_st);
 		yulAssert(forLoop.pre.statements.empty(), "");
 
 		size_t outerBreak = m_numBreakStatements;
@@ -211,7 +211,7 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 		_statements,
 		[&](Statement& _stmt) -> OptionalStatements
 		{
-			OptionalStatements result = boost::apply_visitor(visitor, _stmt);
+			OptionalStatements result = std::visit(visitor, _stmt);
 			if (result)
 				simplify(*result);
 			else

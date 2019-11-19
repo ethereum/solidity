@@ -66,12 +66,12 @@ void ExpressionJoiner::operator()(Block& _block)
 
 void ExpressionJoiner::visit(Expression& _e)
 {
-	if (_e.type() == typeid(Identifier))
+	if (holds_alternative<Identifier>(_e))
 	{
-		Identifier const& identifier = boost::get<Identifier>(_e);
+		Identifier const& identifier = std::get<Identifier>(_e);
 		if (isLatestStatementVarDeclJoinable(identifier))
 		{
-			VariableDeclaration& varDecl = boost::get<VariableDeclaration>(*latestStatement());
+			VariableDeclaration& varDecl = std::get<VariableDeclaration>(*latestStatement());
 			_e = std::move(*varDecl.value);
 
 			// Delete the variable declaration (also get the moved-from structure back into a sane state)
@@ -101,7 +101,7 @@ void ExpressionJoiner::handleArguments(vector<Expression>& _arguments)
 	for (Expression const& arg: _arguments | boost::adaptors::reversed)
 	{
 		--i;
-		if (arg.type() != typeid(Identifier) && arg.type() != typeid(Literal))
+		if (!holds_alternative<Identifier>(arg) && !holds_alternative<Literal>(arg))
 			break;
 	}
 	// i points to the last element that is neither an identifier nor a literal,
@@ -138,9 +138,9 @@ Statement* ExpressionJoiner::latestStatement()
 bool ExpressionJoiner::isLatestStatementVarDeclJoinable(Identifier const& _identifier)
 {
 	Statement const* statement = latestStatement();
-	if (!statement || statement->type() != typeid(VariableDeclaration))
+	if (!statement || !holds_alternative<VariableDeclaration>(*statement))
 		return false;
-	VariableDeclaration const& varDecl = boost::get<VariableDeclaration>(*statement);
+	VariableDeclaration const& varDecl = std::get<VariableDeclaration>(*statement);
 	if (varDecl.variables.size() != 1 || !varDecl.value)
 		return false;
 	assertThrow(varDecl.variables.size() == 1, OptimizerException, "");
