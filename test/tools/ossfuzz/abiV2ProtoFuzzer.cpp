@@ -24,7 +24,7 @@
 
 #include <fstream>
 
-static evmc::vm evmone = evmc::vm{evmc_create_evmone()};
+static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 
 using namespace dev::test::abiv2fuzzer;
 using namespace dev::test;

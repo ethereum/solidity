@@ -77,7 +77,7 @@ RUN set -ex; \
 # EVMONE
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.2.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
+	git clone --branch="v0.3.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
 	cd evmone; \
 	mkdir build; \
 	cd build; \

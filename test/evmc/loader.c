@@ -152,8 +152,8 @@ evmc_create_fn evmc_load(const char* filename, enum evmc_loader_error_code* erro
     char* base_name = prefixed_name + prefix_length;
     strcpy_sx(base_name, PATH_MAX_LENGTH, name_pos);
 
-    // Trim the file extension.
-    char* ext_pos = strrchr(prefixed_name, '.');
+    // Trim all file extensions.
+    char* ext_pos = strchr(prefixed_name, '.');
     if (ext_pos)
         *ext_pos = 0;
 
@@ -163,15 +163,7 @@ evmc_create_fn evmc_load(const char* filename, enum evmc_loader_error_code* erro
         *dash_pos++ = '_';
 
     // Search for the built function name.
-    while ((create_fn = DLL_GET_CREATE_FN(handle, prefixed_name)) == NULL)
-    {
-        // Shorten the base name by skipping the `word_` segment.
-        const char* shorter_name_pos = strchr(base_name, '_');
-        if (!shorter_name_pos)
-            break;
-
-        memmove(base_name, shorter_name_pos + 1, strlen(shorter_name_pos) + 1);
-    }
+    create_fn = DLL_GET_CREATE_FN(handle, prefixed_name);
 
     if (!create_fn)
         create_fn = DLL_GET_CREATE_FN(handle, "evmc_create");
@@ -196,8 +188,7 @@ const char* evmc_last_error_msg()
     return m;
 }
 
-struct evmc_instance* evmc_load_and_create(const char* filename,
-                                           enum evmc_loader_error_code* error_code)
+struct evmc_vm* evmc_load_and_create(const char* filename, enum evmc_loader_error_code* error_code)
 {
     // First load the DLL. This also resets the last_error_msg;
     evmc_create_fn create_fn = evmc_load(filename, error_code);
@@ -207,21 +198,21 @@ struct evmc_instance* evmc_load_and_create(const char* filename,
 
     enum evmc_loader_error_code ec = EVMC_LOADER_SUCCESS;
 
-    struct evmc_instance* instance = create_fn();
-    if (!instance)
+    struct evmc_vm* vm = create_fn();
+    if (!vm)
     {
-        ec = set_error(EVMC_LOADER_INSTANCE_CREATION_FAILURE,
-                       "creating EVMC instance of %s has failed", filename);
+        ec = set_error(EVMC_LOADER_VM_CREATION_FAILURE, "creating EVMC VM of %s has failed",
+                       filename);
         goto exit;
     }
 
-    if (!evmc_is_abi_compatible(instance))
+    if (!evmc_is_abi_compatible(vm))
     {
         ec = set_error(EVMC_LOADER_ABI_VERSION_MISMATCH,
                        "EVMC ABI version %d of %s mismatches the expected version %d",
-                       instance->abi_version, filename, EVMC_ABI_VERSION);
-        evmc_destroy(instance);
-        instance = NULL;
+                       vm->abi_version, filename, EVMC_ABI_VERSION);
+        evmc_destroy(vm);
+        vm = NULL;
         goto exit;
     }
 
@@ -229,7 +220,7 @@ exit:
     if (error_code)
         *error_code = ec;
 
-    return instance;
+    return vm;
 }
 
 /// Gets the token delimited by @p delim character of the string pointed by the @p str_ptr.
@@ -255,11 +246,10 @@ static char* get_token(char** str_ptr, char delim)
     return str;
 }
 
-struct evmc_instance* evmc_load_and_configure(const char* config,
-                                              enum evmc_loader_error_code* error_code)
+struct evmc_vm* evmc_load_and_configure(const char* config, enum evmc_loader_error_code* error_code)
 {
     enum evmc_loader_error_code ec = EVMC_LOADER_SUCCESS;
-    struct evmc_instance* instance = NULL;
+    struct evmc_vm* vm = NULL;
 
     char config_copy_buffer[PATH_MAX_LENGTH];
     if (strcpy_sx(config_copy_buffer, sizeof(config_copy_buffer), config) != 0)
@@ -273,14 +263,14 @@ struct evmc_instance* evmc_load_and_configure(const char* config,
     char* options = config_copy_buffer;
     const char* path = get_token(&options, ',');
 
-    instance = evmc_load_and_create(path, error_code);
-    if (!instance)
+    vm = evmc_load_and_create(path, error_code);
+    if (!vm)
         return NULL;
 
-    if (instance->set_option == NULL && strlen(options) != 0)
+    if (vm->set_option == NULL && strlen(options) != 0)
     {
         ec = set_error(EVMC_LOADER_INVALID_OPTION_NAME, "%s (%s) does not support any options",
-                       instance->name, path);
+                       vm->name, path);
         goto exit;
     }
 
@@ -293,18 +283,18 @@ struct evmc_instance* evmc_load_and_configure(const char* config,
         // The option variable will have the value, can be empty.
         const char* name = get_token(&option, '=');
 
-        enum evmc_set_option_result r = instance->set_option(instance, name, option);
+        enum evmc_set_option_result r = vm->set_option(vm, name, option);
         switch (r)
         {
         case EVMC_SET_OPTION_SUCCESS:
             break;
         case EVMC_SET_OPTION_INVALID_NAME:
             ec = set_error(EVMC_LOADER_INVALID_OPTION_NAME, "%s (%s): unknown option '%s'",
-                           instance->name, path, name);
+                           vm->name, path, name);
             goto exit;
         case EVMC_SET_OPTION_INVALID_VALUE:
             ec = set_error(EVMC_LOADER_INVALID_OPTION_VALUE,
-                           "%s (%s): unsupported value '%s' for option '%s'", instance->name, path,
+                           "%s (%s): unsupported value '%s' for option '%s'", vm->name, path,
                            option, name);
             goto exit;
         }
@@ -315,9 +305,9 @@ exit:
         *error_code = ec;
 
     if (ec == EVMC_LOADER_SUCCESS)
-        return instance;
+        return vm;
 
-    if (instance)
-        evmc_destroy(instance);
+    if (vm)
+        evmc_destroy(vm);
     return NULL;
 }

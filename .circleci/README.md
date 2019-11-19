@@ -11,7 +11,7 @@ docker build -t ethereum/solidity-buildpack-deps:ubuntu1904-<revision> -f Docker
 docker push ethereum/solidity-buildpack-deps:ubuntu1904-<revision>
 ```
 
-The current revision is `1`.
+The current revision is `2`.
 
 Once the docker image has been built and pushed to Dockerhub, you can find it at:
 
