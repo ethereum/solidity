@@ -79,6 +79,27 @@ function sub(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	r2, carry := add_carry(x2, bit_negate(y2), carry)
 	r1, carry := add_carry(x1, bit_negate(y1), carry)
 }
+function sub320(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> r1, r2, r3, r4, r5 {
+	// x - y = x + (~y + 1)
+	let carry
+	r5, carry := add_carry(x4, bit_negate(y5), 1)
+	r4, carry := add_carry(x4, bit_negate(y4), carry)
+	r3, carry := add_carry(x3, bit_negate(y3), carry)
+	r2, carry := add_carry(x2, bit_negate(y2), carry)
+	r1, carry := add_carry(x1, bit_negate(y1), carry)
+}
+function sub512(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> r1, r2, r3, r4, r5, r6, r7, r8 {
+	// x - y = x + (~y + 1)
+	let carry
+	r8, carry := add_carry(x4, bit_negate(y8), 1)
+	r7, carry := add_carry(x3, bit_negate(y7), carry)
+	r6, carry := add_carry(x3, bit_negate(y6), carry)
+	r5, carry := add_carry(x3, bit_negate(y5), carry)
+	r4, carry := add_carry(x3, bit_negate(y4), carry)
+	r3, carry := add_carry(x3, bit_negate(y3), carry)
+	r2, carry := add_carry(x2, bit_negate(y2), carry)
+	r1, carry := add_carry(x1, bit_negate(y1), carry)
+}
 function split(x) -> hi, lo {
 	hi := i64.shr_u(x, 32)
 	lo := i64.and(x, 0xffffffff)
@@ -123,6 +144,35 @@ function mul_128x128_256(x1, x2, y1, y2) -> r1, r2, r3, r4 {
 
 	r1 := i64.add(i64.add(ah, carry1), carry2)
 }
+// Multiplies two 256 bit values resulting in a 512 bit
+// value split into eight 64 bit values.
+function mul_256x256_512(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4, r5, r6, r7, r8 {
+	let a1, a2, a3, a4 := mul_128x128_256(x1, x2, y1, y2)
+	let         b1, b2, b3, b4 := mul_128x128_256(x1, x2, y3, y4)
+	let         c1, c2, c3, c4 := mul_128x128_256(x3, x4, y1, y2)
+	let                 d1, d2, d3, d4 := mul_128x128_256(x3, x4, y3, y4)
+
+	r8 := d4
+	r7 := d3
+
+	let carry1, carry2
+	let t1, t2
+
+	r6, carry1 := add_carry(b4, c4, 0)
+	r6, carry2 := add_carry(r6, d2, 0)
+
+	r5, carry1 := add_carry(b3, c3, carry1)
+	r5, carry2 := add_carry(r5, d1, carry2)
+
+	r4, carry1 := add_carry(a4, b2, carry1)
+	r4, carry2 := add_carry(r4, c2, carry2)
+
+	r3, carry1 := add_carry(a3, b1, carry1)
+	r3, carry2 := add_carry(r3, c1, carry2)
+
+	r2, carry1 := add_carry(a2, carry1, carry1)
+	r1 := i64.add(a1, carry1)
+}
 function mul(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	// TODO it would actually suffice to have mul_128x128_128 for the first two.
 	let b1, b2, b3, b4 := mul_128x128_256(x3, x4, y1, y2)
@@ -135,6 +185,7 @@ function mul(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	t1, t2, r1, r2 := add(0, 0, r1, r2, 0, 0, d1, d2)
 }
 function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+	// Implementation was taken from https://github.com/ewasm/evm2wasm/blob/master/wasm/DIV.wast
 	if iszero(y1, y2, y3, y4) {
 		invalid()
 	}
@@ -143,13 +194,13 @@ function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	let m3 := 0
 	let m4 := 1
 
-	for {} i64.and(i64.eqz(i64.clz(y1)), lt_internal(x1, x2, x3, x4, y1, y2, y3, y4)) {} {
+	for {} i64.and(i64.eqz(i64.clz(y1)), lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4)) {} {
 		y1, y2, y3, y4 := shl(y1, y2, y3, y4, 0, 0, 0, 1)
 		m1, m2, m3, m4 := shl(m1, m2, m3, m4, 0, 0, 0, 1)
 	}
 
 	for {} i64.xor(iszero(m1, m2, m3, m4), 1) {} {
-		if lt_internal(y1, y2, y3, y4, x1, x2, x3, x4) {
+		if lt_256x256_64(y1, y2, y3, y4, x1, x2, x3, x4) {
 			x1, x2, x3, x4 := sub(x1, x2, x3, x4, y1, y2, y3, y4)
 			r1, r2, r3, r4 := add(r1, r2, r3, r4, m1, m2, m3, m4)
 		}
@@ -159,16 +210,204 @@ function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	}
 }
 function mod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
-	// TODO implement properly
-	r4 := i64.rem_u(x4, y4)
+	if iszero(y1, y2, y3, y4) {
+		invalid()
+	}
+
+	let m1 := 0
+	let m2 := 0
+	let m3 := 0
+	let m4 := 1
+
+	for {} 1 {} {
+		if i64.or(i64.eqz(i64.clz(y1)), gte_256x256_64(y1, y2, y3, y4, x1, x2, x3, x4)) {
+			break
+		}
+
+		y1 := i64.add(i64.shl(y1, 1), i64.shr_u(y2, 63))
+		y2 := i64.add(i64.shl(y2, 1), i64.shr_u(y3, 63))
+		y3 := i64.add(i64.shl(y3, 1), i64.shr_u(y4, 63))
+		y4 := i64.shl(y4, 1)
+
+		m1 := i64.add(i64.shl(m1, 1), i64.shr_u(m2, 63))
+		m2 := i64.add(i64.shl(m2, 1), i64.shr_u(m3, 63))
+		m3 := i64.add(i64.shl(m3, 1), i64.shr_u(m4, 63))
+		m4 := i64.shl(m4, 1)
+	}
+
+	for {} i64.xor(iszero(m1, m2, m3, m4), 1) {} {
+		if gte_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4) {
+			x1, x2, x3, x4 := sub(x1, x2, x3, x4, y1, y2, y3, y4)
+		}
+
+		// y = y >> 1
+		y1 := i64.add(i64.shr_u(y1, 1), i64.shl(y2, 63))
+		y2 := i64.add(i64.shr_u(y2, 1), i64.shl(y3, 63))
+		y3 := i64.add(i64.shr_u(y3, 1), i64.shl(y4, 63))
+		y4 := i64.shr_u(y4, 1)
+
+		// m = m >> 1
+		m1 := i64.add(i64.shr_u(m1, 1), i64.shl(m2, 63))
+		m2 := i64.add(i64.shr_u(m2, 1), i64.shl(m3, 63))
+		m3 := i64.add(i64.shr_u(m3, 1), i64.shl(m4, 63))
+		m4 := i64.shr_u(m4, 1)
+	}
+}
+function mod320(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> r1, r2, r3, r4, r5 {
+	if iszero320(y1, y2, y3, y4, y5) {
+		invalid()
+	}
+
+	let m1 := 0
+	let m2 := 0
+	let m3 := 0
+	let m4 := 0
+	let m5 := 1
+
+	for {} 1 {} {
+		if i64.or(i64.eqz(i64.clz(y1)), gte_320x320_64(y1, y2, y3, y4, y5, x1, x2, x3, x4, x5)) {
+			break
+		}
+		// y = y << 1
+		y1 := i64.add(i64.shl(y1, 1), i64.shr_u(y2, 63))
+		y2 := i64.add(i64.shl(y2, 1), i64.shr_u(y3, 63))
+		y3 := i64.add(i64.shl(y3, 1), i64.shr_u(y4, 63))
+		y4 := i64.add(i64.shl(y4, 1), i64.shr_u(y5, 63))
+		y5 := i64.shl(y5, 1)
+
+		// m = m << 1
+		m1 := i64.add(i64.shl(m1, 1), i64.shr_u(m2, 63))
+		m2 := i64.add(i64.shl(m2, 1), i64.shr_u(m3, 63))
+		m3 := i64.add(i64.shl(m3, 1), i64.shr_u(m4, 63))
+		m4 := i64.add(i64.shl(m4, 1), i64.shr_u(m5, 63))
+		m5 := i64.shl(m5, 1)
+	}
+
+	for {} i64.xor(iszero320(m1, m2, m3, m4, y5), 1) {} {
+		if gte_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) {
+			x1, x2, x3, x4, x5 := sub320(x1, x2, x3, x4, x5, y1, y2, y3, y4, y4)
+		}
+
+		// y = y >> 1
+		y1 := i64.add(i64.shr_u(y1, 1), i64.shl(y2, 63))
+		y2 := i64.add(i64.shr_u(y2, 1), i64.shl(y3, 63))
+		y3 := i64.add(i64.shr_u(y3, 1), i64.shl(y4, 63))
+		y4 := i64.add(i64.shr_u(y4, 1), i64.shl(y5, 63))
+		y5 := i64.shr_u(y5, 1)
+
+		// m = m >> 1
+		m1 := i64.add(i64.shr_u(m1, 1), i64.shl(m2, 63))
+		m2 := i64.add(i64.shr_u(m2, 1), i64.shl(m3, 63))
+		m3 := i64.add(i64.shr_u(m3, 1), i64.shl(m4, 63))
+		m4 := i64.add(i64.shr_u(m4, 1), i64.shl(m5, 63))
+		m5 := i64.shr_u(m5, 1)
+	}
+}
+function mod512(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> r1, r2, r3, r4, r5, r6, r7, r8 {
+	// TODO: implement
+	if iszero512(y1, y2, y3, y4, y5, y6, y7, y8) {
+		invalid()
+	}
+
+	let m1 := 0
+	let m2 := 0
+	let m3 := 0
+	let m4 := 0
+	let m5 := 0
+	let m6 := 0
+	let m7 := 0
+	let m8 := 1
+
+	for {} 1 {} {
+		if i64.or(i64.eqz(i64.clz(y1)), gte_512x512_64(y1, y2, y3, y4, y5, y6, y7, y8, x1, x2, x3, x4, x5, x6, x7, x8)) {
+			break
+		}
+		// y = y << 1
+		y1 := i64.add(i64.shl(y1, 1), i64.shr_u(y2, 63))
+		y2 := i64.add(i64.shl(y2, 1), i64.shr_u(y3, 63))
+		y3 := i64.add(i64.shl(y3, 1), i64.shr_u(y4, 63))
+		y4 := i64.add(i64.shl(y4, 1), i64.shr_u(y5, 63))
+		y5 := i64.add(i64.shl(y5, 1), i64.shr_u(y6, 63))
+		y6 := i64.add(i64.shl(y6, 1), i64.shr_u(y7, 63))
+		y7 := i64.add(i64.shl(y7, 1), i64.shr_u(y8, 63))
+		y8 := i64.shl(y8, 1)
+
+		// m = m << 1
+		m1 := i64.add(i64.shl(m1, 1), i64.shr_u(m2, 63))
+		m2 := i64.add(i64.shl(m2, 1), i64.shr_u(m3, 63))
+		m3 := i64.add(i64.shl(m3, 1), i64.shr_u(m4, 63))
+		m4 := i64.add(i64.shl(m4, 1), i64.shr_u(m5, 63))
+		m2 := i64.add(i64.shl(m5, 1), i64.shr_u(m6, 63))
+		m3 := i64.add(i64.shl(m6, 1), i64.shr_u(m7, 63))
+		m4 := i64.add(i64.shl(m7, 1), i64.shr_u(m8, 63))
+		m8 := i64.shl(m8, 1)
+	}
+
+	for {} i64.xor(iszero512(m1, m2, m3, m4, m5, m6, m7, m8), 1) {} {
+		if gte_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) {
+			x1, x2, x3, x4, x5, x6, x7, x8 := sub512(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8)
+		}
+
+		// y = y >> 1
+		y1 := i64.add(i64.shr_u(y1, 1), i64.shl(y2, 63))
+		y2 := i64.add(i64.shr_u(y2, 1), i64.shl(y3, 63))
+		y3 := i64.add(i64.shr_u(y3, 1), i64.shl(y4, 63))
+		y4 := i64.add(i64.shr_u(y4, 1), i64.shl(y5, 63))
+		y2 := i64.add(i64.shr_u(y2, 1), i64.shl(y3, 63))
+		y3 := i64.add(i64.shr_u(y3, 1), i64.shl(y4, 63))
+		y4 := i64.add(i64.shr_u(y4, 1), i64.shl(y5, 63))
+		y1 := i64.shr_u(y5, 1)
+
+		// m = m >> 1
+		m1 := i64.add(i64.shr_u(m1, 1), i64.shl(m2, 63))
+		m2 := i64.add(i64.shr_u(m2, 1), i64.shl(m3, 63))
+		m3 := i64.add(i64.shr_u(m3, 1), i64.shl(m4, 63))
+		m4 := i64.add(i64.shr_u(m4, 1), i64.shl(m5, 63))
+		m5 := i64.add(i64.shr_u(m5, 1), i64.shl(m6, 63))
+		m6 := i64.add(i64.shr_u(m6, 1), i64.shl(m7, 63))
+		m7 := i64.add(i64.shr_u(m7, 1), i64.shl(m8, 63))
+		m8 := i64.shr_u(m8, 1)
+	}
 }
 function smod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
-	// TODO implement properly
-	r4 := i64.rem_u(x4, y4)
+	let m1 := 0
+	let m2 := 0
+	let m3 := 0
+	let m4 := 1
+
+	let sign := i64.shr_u(x4, 63)
+
+	if i64.eqz(i64.clz(x1)) {
+		x1, x2, x3, x4 := xor(x1, x2, x3, x4, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff)
+		x1, x2, x3, x4 := add(x1, x2, x3, x4, 0, 0, 0, 1)
+	}
+
+	if i64.eqz(i64.clz(y1)) {
+		y1, y2, y3, y4 := xor(y1, y2, y3, y4, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff)
+		y1, y2, y3, y4 := add(y1, y2, y3, y4, 0, 0, 0, 1)
+	}
+
+	if iszero(y1, y2, y3, y4) {
+		invalid()
+	}
+	if i64.xor(iszero(y1, y2, y3, y4), 1) {
+		for {} i64.and(i64.xor(i64.eqz(i64.clz(y1)), 1), gte_256x256_64(y1, y2, y3, y4, x1, x2, x3, x4)) {} {
+			y1, y2, y3, y4 := shl(y1, y2, y3, y4, 0, 0, 0, 1)
+			m1, m2, m3, m4 := shl(m1, m2, m3, m4, 0, 0, 0, 1)
+		}
+
+		for {} i64.xor(iszero(m1, m2, m3, m4), 1) {} {
+			if gte_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4) {
+				x1, x2, x3, x4 := sub(x1, x2, x3, x4, y1, y2, y3, y4)
+			}
+			y1, y2, y3, y4 := shl(y1, y2, y3, y4, 0, 0, 0, 1)
+			m1, m2, m3, m4 := shl(m1, m2, m3, m4, 0, 0, 0, 1)
+		}
+	}
 }
 function exp(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	r4 := 1
-	for {} i64.xor(iszero(y1, y2, y3, y4), 0xffffffff) {} {
+	for {} i64.xor(iszero(y1, y2, y3, y4), 1) {} {
 		if i64.and(y4, 1) {
 			r1, r2, r3, r4 := mul(r1, r2, r3, r4, x1, x2, x3, x4)
 		}
@@ -215,6 +454,12 @@ function not(x1, x2, x3, x4) -> r1, r2, r3, r4 {
 function iszero(x1, x2, x3, x4) -> r {
 	r := i64.eqz(i64.or(i64.or(x1, x2), i64.or(x3, x4)))
 }
+function iszero320(x1, x2, x3, x4, x5) -> r {
+	r := i64.eqz(i64.or(i64.or(i64.or(x1, x2), i64.or(x3, x4)), x5))
+}
+function iszero512(x1, x2, x3, x4, x5, x6, x7, x8) -> r {
+	r := i64.eqz(i64.or(i64.or(i64.or(i64.or(i64.or(i64.or(x1, x2), i64.or(x3, x4)), x5), x6), x7), x8))
+}
 function eq(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	if i64.eq(x1, y1) {
 		if i64.eq(x2, y2) {
@@ -235,7 +480,68 @@ function cmp(a, b) -> r {
 		r := i64.ne(a, b)
 	}
 }
-function lt_internal(x1, x2, x3, x4, y1, y2, y3, y4) -> z {
+function lt_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> z {
+	switch cmp(x1, y1)
+	case 0 {
+		switch cmp(x2, y2)
+		case 0 {
+			switch cmp(x3, y3)
+			case 0 {
+				switch cmp(x4, y4)
+				case 0 {
+					z := i64.lt_u(x5, y5)
+				}
+				case 1 { z := 0 }
+				default { z := 1 }
+			}
+			case 1 { z := 0 }
+			default { z := 1 }
+		}
+		case 1 { z := 0 }
+		default { z := 1 }
+	}
+	case 1 { z := 0 }
+	default { z := 1 }
+}
+function lt_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> z {
+	switch cmp(x1, y1)
+	case 0 {
+		switch cmp(x2, y2)
+		case 0 {
+			switch cmp(x3, y3)
+			case 0 {
+				switch cmp(x4, y4)
+				case 0 {
+					switch cmp(x5, y5)
+					case 0 {
+						switch cmp(x6, y6)
+						case 0 {
+							switch cmp(x7, y7)
+							case 0 {
+								z := i64.lt_u(x8, y8)
+							}
+							case 1 { z := 0 }
+							default { z := 1 }
+						}
+						case 1 { z := 0 }
+						default { z := 1 }
+					}
+					case 1 { z := 0 }
+					default { z := 1 }
+				}
+				case 1 { z := 0 }
+				default { z := 1 }
+			}
+			case 1 { z := 0 }
+			default { z := 1 }
+		}
+		case 1 { z := 0 }
+		default { z := 1 }
+	}
+	case 1 { z := 0 }
+	default { z := 1 }
+}
+function lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4) -> z {
 	switch cmp(x1, y1)
 	case 0 {
 		switch cmp(x2, y2)
@@ -254,10 +560,16 @@ function lt_internal(x1, x2, x3, x4, y1, y2, y3, y4) -> z {
 	default { z := 1 }
 }
 function lt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	z4 := lt_internal(x1, x2, x3, x4, y1, y2, y3, y4)
+	z4 := lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4)
 }
-function gt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	z1, z2, z3, z4 := lt(y1, y2, y3, y4, x1, x2, x3, x4)
+function gte_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4) -> z {
+	z := i64.xor(lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4), 1)
+}
+function gte_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> z {
+	z := i64.xor(lt_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5), 1)
+}
+function gte_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> z {
+	z := i64.xor(lt_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8), 1)
 }
 function slt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	// TODO correct?
@@ -363,12 +675,26 @@ function sar(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	}
 }
 function addmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let carry
+	let r1
+	let r2
+	let r3
+	let r4
+	r4, carry := add_carry(x4, y4, 0)
+	r3, carry := add_carry(x3, y3, carry)
+	r2, carry := add_carry(x2, y2, carry)
+	r1, carry := add_carry(x1, y1, carry)
+
+	let z5
+	z1, z2, z3, z4, z5 := mod320(carry, r1, r2, r3, r4, 0, y1, y2, y3, y4)
 }
 function mulmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let r1, r2, r3, r4, r5, r6, r7, r8 := mul_256x256_512(x1, x2, x3, x4, y1, y2, y3, y4)
+	let t1
+	let t2
+	let t3
+	let t4
+	t1, t2, t3, t4, z1, z2, z3, z4 := mod512(r1, r2, r3, r4, r5, r6, r7, r8, 0, 0, 0, 0, y1, y2, y3, y4)
 }
 function signextend(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	if i64.lt_u(y4, 31) {
@@ -426,7 +752,7 @@ function address() -> z1, z2, z3, z4 {
 function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	mstore_internal(0, x1, x2, x3, x4)
 	eth.getExternalBalance(0, 32)
-	z3, z4 := mload_internal_128(32)
+	z1, z2, z3, z4 := mload_internal(32)
 }
 function selfbalance() -> z1, z2, z3, z4 {
 	// TODO: not part of current Ewasm spec
@@ -449,8 +775,8 @@ function callvalue() -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := mload_internal(0)
 }
 function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	eth.callDataCopy(0, u256_to_i32(x1, x2, x3, x4), 32)
-	z1, z2, z3, z4 := mload_internal(0)
+	z1, z2, z3, z4 := calldatasize()
+	eth.callDataCopy(i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64), 0, u256_to_i32(z1, z2, z3, z4))
 }
 function calldatasize() -> z1, z2, z3, z4 {
 	z4 := eth.getCallDataSize()
@@ -484,7 +810,7 @@ function datacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 
 function gasprice() -> z1, z2, z3, z4 {
 	eth.getTxGasPrice(0)
-	z3, z4 := mload_internal_128(0)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function extcodesize(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	mstore_internal(0, x1, x2, x3, x4)
@@ -494,13 +820,13 @@ function extcodehash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	// TODO: not part of current Ewasm spec
 	unreachable()
 }
-function extcodecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
-	let ecs1, ecs2, ecs3, ecs4 := extcodesize(x1, x2, x3, x4)
+function extcodecopy(a1, a2, a3, a4, p1, p2, p3, p4, o1, o2, o3, o4, l1, l2, l3, l4) {
+	let ecs1, ecs2, ecs3, ecs4 := extcodesize(a1, a2, a3, a4)
 	let codeSize := u256_to_i32(ecs1, ecs2, ecs3, ecs4)
-	mstore_internal(0, x1, x2, x3, x4)  // TODO: Is it already there after extcodesize call?
-	let codeOffset := u256_to_i32(y1, y2, y3, y4)
-	let codeLength := u256_to_i32(z1, z2, z3, z4)
-	eth.externalCodeCopy(i64.add(codeOffset, codeLength), 0, codeOffset, codeLength)
+	mstore_internal(0, a1, a2, a3, a4)  // TODO: Is it already there after extcodesize call?
+	let codeOffset := u256_to_i32(o1, o2, o3, o4)
+	let codeLength := u256_to_i32(l1, l2, l3, l4)
+	eth.externalCodeCopy(0, i64.add(u256_to_i32ptr(p1, p2, p3, p4), 64), codeOffset, codeLength)
 }
 
 function returndatasize() -> z1, z2, z3, z4 {
@@ -605,10 +931,6 @@ function mload_internal(pos) -> z1, z2, z3, z4 {
 	z3 := endian_swap(i64.load(i64.add(pos, 16)))
 	z4 := endian_swap(i64.load(i64.add(pos, 24)))
 }
-function mload_internal_128(pos) -> z1, z2 {
-	z1 := endian_swap(i64.load(pos))
-	z2 := endian_swap(i64.load(i64.add(pos, 8)))
-}
 function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {
 	let pos := u256_to_i32ptr(x1, x2, x3, x4)
 	// Make room for the scratch space
@@ -622,12 +944,11 @@ function mstore_internal(pos, y1, y2, y3, y4) {
 	i64.store(i64.add(pos, 16), endian_swap(y3))
 	i64.store(i64.add(pos, 24), endian_swap(y4))
 }
-function mstore_internal_128(pos, y1, y2) {
-	i64.store(pos, endian_swap(y1))
-	i64.store(i64.add(pos, 8), endian_swap(y2))
-}
 function mstore8(x1, x2, x3, x4, y1, y2, y3, y4) {
 	let pos := u256_to_i32ptr(x1, x2, x3, x4)
+	// Make room for the scratch space
+	// TODO do we need to check for overflow?
+	pos := i64.add(pos, 64)
 	let v := u256_to_byte(y1, y2, y3, y4)
 	i64.store(pos, endian_swap(v))
 }
@@ -660,7 +981,7 @@ function gas() -> z1, z2, z3, z4 {
 function log0(p1, p2, p3, p4, s1, s2, s3, s4) {
 	let dataOffset := u256_to_i32ptr(p1, p2, p3, p4)
 	let dataLength := u256_to_i32ptr(s1, s2, s3, s4)
-	eth.log(dataOffset, dataLength, 0, 0, 0, 0, 0)
+	eth.log(i64.add(dataOffset, 64), dataLength, 0, 0, 0, 0, 0)
 }
 function log1(
 	p1, p2, p3, p4, s1, s2, s3, s4,
@@ -668,9 +989,8 @@ function log1(
 ) {
 	let dataOffset := u256_to_i32ptr(p1, p2, p3, p4)
 	let dataLength := u256_to_i32ptr(s1, s2, s3, s4)
-	let topic1Offset := i64.add(dataOffset, dataLength)
-	mstore_internal(topic1Offset, t11, t12, t13, t14)
-	eth.log(dataOffset, dataLength, 1, topic1Offset, 0, 0, 0)
+	let topic1Offset := u256_to_i32ptr(t11, t12, t13, t14)
+	eth.log(i64.add(dataOffset, 64), dataLength, 1, i64.add(topic1Offset, 64), 0, 0, 0)
 }
 function log2(
 	p1, p2, p3, p4, s1, s2, s3, s4,
@@ -679,11 +999,9 @@ function log2(
 ) {
 	let dataOffset := u256_to_i32ptr(p1, p2, p3, p4)
 	let dataLength := u256_to_i32ptr(s1, s2, s3, s4)
-	let topic1Offset := i64.add(dataOffset, dataLength)
-	mstore_internal(topic1Offset, t11, t12, t13, t14)
-	let topic2Offset := i64.add(topic1Offset, 32)
-	mstore_internal(topic2Offset, t21, t22, t23, t24)
-	eth.log(dataOffset, dataLength, 2, topic1Offset, topic2Offset, 0, 0)
+	let topic1Offset := u256_to_i32ptr(t11, t12, t13, t14)
+	let topic2Offset := u256_to_i32ptr(t21, t22, t23, t24)
+	eth.log(i64.add(dataOffset, 64), dataLength, 2, i64.add(topic1Offset, 64), i64.add(topic2Offset, 64), 0, 0)
 }
 function log3(
 	p1, p2, p3, p4, s1, s2, s3, s4,
@@ -693,13 +1011,10 @@ function log3(
 ) {
 	let dataOffset := u256_to_i32ptr(p1, p2, p3, p4)
 	let dataLength := u256_to_i32ptr(s1, s2, s3, s4)
-	let topic1Offset := i64.add(dataOffset, dataLength)
-	mstore_internal(topic1Offset, t11, t12, t13, t14)
-	let topic2Offset := i64.add(topic1Offset, 32)
-	mstore_internal(topic2Offset, t21, t22, t23, t24)
-	let topic3Offset := i64.add(topic2Offset, 32)
-	mstore_internal(topic2Offset, t31, t32, t33, t34)
-	eth.log(dataOffset, dataLength, 3, topic1Offset, topic2Offset, topic3Offset, 0)
+	let topic1Offset := u256_to_i32ptr(t11, t12, t13, t14)
+	let topic2Offset := u256_to_i32ptr(t21, t22, t23, t24)
+	let topic3Offset := u256_to_i32ptr(t31, t32, t33, t34)
+	eth.log(i64.add(dataOffset, 64), dataLength, 3, i64.add(topic1Offset, 64), i64.add(topic2Offset, 64), i64.add(topic3Offset, 64), 0)
 }
 function log4(
 	p1, p2, p3, p4, s1, s2, s3, s4,
@@ -710,15 +1025,11 @@ function log4(
 ) {
 	let dataOffset := u256_to_i32ptr(p1, p2, p3, p4)
 	let dataLength := u256_to_i32ptr(s1, s2, s3, s4)
-	let topic1Offset := i64.add(dataOffset, dataLength)
-	mstore_internal(topic1Offset, t11, t12, t13, t14)
-	let topic2Offset := i64.add(topic1Offset, 32)
-	mstore_internal(topic2Offset, t21, t22, t23, t24)
-	let topic3Offset := i64.add(topic2Offset, 32)
-	mstore_internal(topic2Offset, t31, t32, t33, t34)
-	let topic4Offset := i64.add(topic3Offset, 32)
-	mstore_internal(topic4Offset, t41, t42, t43, t44)
-	eth.log(dataOffset, dataLength, 4, topic1Offset, topic2Offset, topic3Offset, topic4Offset)
+	let topic1Offset := u256_to_i32ptr(t11, t12, t13, t14)
+	let topic2Offset := u256_to_i32ptr(t21, t22, t23, t24)
+	let topic3Offset := u256_to_i32ptr(t31, t32, t33, t34)
+	let topic4Offset := u256_to_i32ptr(t41, t42, t43, t44)
+	eth.log(i64.add(dataOffset, 64), dataLength, 4, i64.add(topic1Offset, 64), i64.add(topic2Offset, 64), i64.add(topic3Offset, 64), i64.add(topic4Offset, 64))
 }
 
 function create(
@@ -727,16 +1038,14 @@ function create(
 	z1, z2, z3, z4
 ) -> a1, a2, a3, a4 {
 	let v1, v2 := u256_to_i128(x1, x2, x3, x4)
-	let dataOffset := u256_to_i32ptr(y1, y2, y3, y4)
+	let dataOffset := i64.add(u256_to_i32ptr(y1, y2, y3, y4), 64)
 	let dataLength := u256_to_i32(z1, z2, z3, z4)
-	let valueOffset := i64.add(dataOffset, dataLength)
-	let resultOffset := i64.add(valueOffset, 32)
-	mstore_internal(valueOffset, 0, 0, v1, v2)
-	mstore_internal(resultOffset ,y1, y2, y3, y4)
+	mstore_internal(0, 0, 0, v1, v2)
+	mstore_internal(32, y1, y2, y3, y4)
 
-	let r := eth.create(valueOffset, dataOffset, dataLength, resultOffset)
+	let r := eth.create(0, dataOffset, dataLength, 32)
 	if i64.eqz(r) {
-		a1, a2, a3, a4 := mload_internal(resultOffset)
+		a1, a2, a3, a4 := mload_internal(32)
 	}
 	if i64.or(i64.eq(r, 1), i64.eq(r, 2)) {
 		a4 := r
@@ -751,15 +1060,15 @@ function call(
 	f1, f2, f3, f4,
 	g1, g2, g3, g4
 ) -> x1, x2, x3, x4 {
-	let dataOffest := u256_to_i32ptr(d1, d2, d3, d4)
+	let dataOffest := i64.add(u256_to_i32ptr(d1, d2, d3, d4), 64)
 	let dataLength := u256_to_i32(e1, e2, e3, e4)
 	let g := u256_to_i64(a1, a2, a3, a4)
 	let addressOffset := i64.add(dataOffest, dataLength)
 	let valueOffset := i64.add(addressOffset, 32)
-	mstore_internal(addressOffset, b1, b2, b3, b4)
+	mstore_internal(0, b1, b2, b3, b4)
 	let v1, v2 := u256_to_i128(c1, c2, c3, c4)
-	mstore_internal_128(valueOffset, v1, v2)
-	x4 := eth.call(g, addressOffset, valueOffset, dataOffest, dataLength)
+	mstore_internal(32, 0, 0, v1, v2)
+	x4 := eth.call(g, 0, 32, dataOffest, dataLength)
 }
 function callcode(
 	a1, a2, a3, a4,
@@ -773,12 +1082,10 @@ function callcode(
 	let dataOffest := u256_to_i32ptr(d1, d2, d3, d4)
 	let dataLength := u256_to_i32(e1, e2, e3, e4)
 	let g := u256_to_i64(a1, a2, a3, a4)
-	let addressOffset := i64.add(dataOffest, dataLength)
-	let valueOffset := i64.add(addressOffset, 32)
-	mstore_internal(addressOffset, b1, b2, b3, b4)
+	mstore_internal(0, b1, b2, b3, b4)
 	let v1, v2 := u256_to_i128(c1, c2, c3, c4)
-	mstore_internal_128(valueOffset, v1, v2)
-	x4 := eth.callCode(g, addressOffset, valueOffset, dataOffest, dataLength)
+	mstore_internal(32, 0, 0, v1, v2)
+	x4 := eth.callCode(g, 0, 32, dataOffest, dataLength)
 }
 function delegatecall(
 	a1, a2, a3, a4,
@@ -791,9 +1098,8 @@ function delegatecall(
 	let dataOffest := u256_to_i32ptr(c1, c2, c3, c4)
 	let dataLength := u256_to_i32(d1, d2, d3, d4)
 	let g := u256_to_i64(a1, a2, a3, a4)
-	let addressOffset := i64.add(dataOffest, dataLength)
-	mstore_internal(addressOffset, b1, b2, b3, b4)
-	x4 := eth.callDelegate(g, addressOffset, dataOffest, dataLength)
+	mstore_internal(0, b1, b2, b3, b4)
+	x4 := eth.callDelegate(g, 0, dataOffest, dataLength)
 }
 function staticcall(
 	a1, a2, a3, a4,
@@ -806,9 +1112,8 @@ function staticcall(
 	let gLimit := u256_to_i64(a1, a2, a3, a4)
 	let dataOffset := u256_to_i32(c1, c2, c3, c4)
 	let dataLength := u256_to_i32(d1, d2, d3, d4)
-	let addressOffset := i64.add(dataOffset, dataLength)
-	mstore_internal(addressOffset, b1, b2, b3, b4)
-	x4 := eth.callStatic(gLimit, addressOffset, dataOffset, dataLength)
+	mstore_internal(0, b1, b2, b3, b4)
+	x4 := eth.callStatic(gLimit, 0, dataOffset, dataLength)
 }
 function create2(
 	a1, a2, a3, a4,
