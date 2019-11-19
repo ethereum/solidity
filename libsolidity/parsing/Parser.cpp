@@ -466,8 +466,6 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 	RecursionGuard recursionGuard(*this);
 	FunctionHeaderParserResult result;
 
-	result.overrides = nullptr;
-
 	VarDeclParserOptions options;
 	options.allowLocationSpecifier = true;
 	result.parameters = parseParameterList(options);
@@ -514,6 +512,14 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 				parserError("Override already specified.");
 
 			result.overrides = parseOverrideSpecifier();
+		}
+		else if (!_isStateVariable && token == Token::Virtual)
+		{
+			if (result.isVirtual)
+				parserError("Virtual already specified.");
+
+			result.isVirtual = true;
+			m_scanner->next();
 		}
 		else
 			break;
@@ -591,6 +597,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition()
 		header.visibility,
 		header.stateMutability,
 		kind,
+		header.isVirtual,
 		header.overrides,
 		docstring,
 		header.parameters,
@@ -804,13 +811,32 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 		parameters = createEmptyParameterList();
 
 	ASTPointer<OverrideSpecifier> overrides;
+	bool isVirtual = false;
 
-	if (m_scanner->currentToken() == Token::Override)
-		overrides = parseOverrideSpecifier();
+	while (true)
+	{
+		if (m_scanner->currentToken() == Token::Override)
+		{
+			if (overrides)
+				parserError("Override already specified.");
+			overrides = parseOverrideSpecifier();
+		}
+		else if (m_scanner->currentToken() == Token::Virtual)
+		{
+			if (isVirtual)
+				parserError("Virtual already specified.");
+
+			isVirtual = true;
+			m_scanner->next();
+		}
+		else
+			break;
+	}
+
 
 	ASTPointer<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
-	return nodeFactory.createNode<ModifierDefinition>(name, docstring, parameters, overrides, block);
+	return nodeFactory.createNode<ModifierDefinition>(name, docstring, parameters, isVirtual, overrides, block);
 }
 
 ASTPointer<EventDefinition> Parser::parseEventDefinition()

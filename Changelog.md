@@ -19,16 +19,13 @@ Breaking changes:
  * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
  * AST: Inline assembly is exported as structured JSON instead of plain string.
 
-
-
- * Language Feature: When overriding a function or modifier, the new keyword ``override`` must be used. When overriding a function or modifier defined in multiple parallel bases, all bases must be listed in parentheses after the keyword like so: ``override(Base1, Base2)``
-
 Language Features:
  * Allow global enums and structs.
  * Allow underscores as delimiters in hex strings.
  * Allow explicit conversions from ``address`` to ``address payable`` via ``payable(...)``.
  * Introduce syntax for array slices and implement them for dynamic calldata arrays.
  * Introduce ``push()`` for dynamic storage arrays. It returns a reference to the newly allocated element, if applicable.
+ * Introduce ``virtual`` and ``override`` keywords
  * Modify ``push(element)`` for dynamic storage arrays such that it does not return the new length anymore.
  * Yul: Introduce ``leave`` statement that exits the current function.
 

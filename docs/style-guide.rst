@@ -92,8 +92,8 @@ Yes::
     pragma solidity >=0.4.0 <0.7.0;
 
     abstract contract A {
-        function spam() public pure;
-        function ham() public pure;
+        function spam() public virtual pure;
+        function ham() public virtual pure;
     }
 
 

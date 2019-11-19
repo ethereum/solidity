@@ -1,9 +1,9 @@
 contract A {
     uint dummy;
-    function f(uint[] calldata) external pure {}
-    function g(uint[] calldata) external view { dummy; }
-    function h(uint[] calldata) external { dummy = 42; }
-    function i(uint[] calldata) external payable {}
+    function f(uint[] calldata) external virtual pure {}
+    function g(uint[] calldata) external virtual view { dummy; }
+    function h(uint[] calldata) external virtual { dummy = 42; }
+    function i(uint[] calldata) external virtual payable {}
 }
 contract B is A {
     function f(uint[] calldata) external override pure {}
@@ -16,7 +16,7 @@ contract B is A {
     function i(uint[] memory) public override payable {}
 }
 // ----
-// DeclarationError: (268-321): Function with same name and arguments defined twice.
-// DeclarationError: (326-387): Function with same name and arguments defined twice.
-// DeclarationError: (392-453): Function with same name and arguments defined twice.
-// DeclarationError: (458-514): Function with same name and arguments defined twice.
+// DeclarationError: (300-353): Function with same name and arguments defined twice.
+// DeclarationError: (358-419): Function with same name and arguments defined twice.
+// DeclarationError: (424-485): Function with same name and arguments defined twice.
+// DeclarationError: (490-546): Function with same name and arguments defined twice.

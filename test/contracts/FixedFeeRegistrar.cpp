@@ -58,10 +58,10 @@ pragma solidity >=0.4.0 <0.7.0;
 abstract contract Registrar {
 	event Changed(string indexed name);
 
-	function owner(string memory _name) public view returns (address o_owner);
-	function addr(string memory _name) public view returns (address o_address);
-	function subRegistrar(string memory _name) public view returns (address o_subRegistrar);
-	function content(string memory _name) public view returns (bytes32 o_content);
+	function owner(string memory _name) public virtual view returns (address o_owner);
+	function addr(string memory _name) public virtual view returns (address o_address);
+	function subRegistrar(string memory _name) virtual public view returns (address o_subRegistrar);
+	function content(string memory _name) public virtual view returns (bytes32 o_content);
 }
 
 contract FixedFeeRegistrar is Registrar {

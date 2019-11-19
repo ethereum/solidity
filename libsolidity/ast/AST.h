@@ -604,13 +604,15 @@ public:
 		ASTPointer<ASTString> const& _name,
 		Declaration::Visibility _visibility,
 		ASTPointer<ParameterList> const& _parameters,
+		bool _isVirtual = false,
 		ASTPointer<OverrideSpecifier> const& _overrides = nullptr,
 		ASTPointer<ParameterList> const& _returnParameters = ASTPointer<ParameterList>()
 	):
 		Declaration(_location, _name, _visibility),
 		m_parameters(_parameters),
 		m_overrides(_overrides),
-		m_returnParameters(_returnParameters)
+		m_returnParameters(_returnParameters),
+		m_isVirtual(_isVirtual)
 	{
 	}
 
@@ -619,11 +621,14 @@ public:
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	ParameterList const& parameterList() const { return *m_parameters; }
 	ASTPointer<ParameterList> const& returnParameterList() const { return m_returnParameters; }
+	bool markedVirtual() const { return m_isVirtual; }
+	virtual bool virtualSemantics() const { return markedVirtual(); }
 
 protected:
 	ASTPointer<ParameterList> m_parameters;
 	ASTPointer<OverrideSpecifier> m_overrides;
 	ASTPointer<ParameterList> m_returnParameters;
+	bool m_isVirtual = false;
 };
 
 /**
@@ -661,6 +666,7 @@ public:
 		Declaration::Visibility _visibility,
 		StateMutability _stateMutability,
 		Token _kind,
+		bool _isVirtual,
 		ASTPointer<OverrideSpecifier> const& _overrides,
 		ASTPointer<ASTString> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
@@ -668,7 +674,7 @@ public:
 		ASTPointer<ParameterList> const& _returnParameters,
 		ASTPointer<Block> const& _body
 	):
-		CallableDeclaration(_location, _name, _visibility, _parameters, _overrides, _returnParameters),
+		CallableDeclaration(_location, _name, _visibility, _parameters, _isVirtual, _overrides, _returnParameters),
 		Documented(_documentation),
 		ImplementationOptional(_body != nullptr),
 		m_stateMutability(_stateMutability),
@@ -688,7 +694,6 @@ public:
 	bool isFallback() const { return m_kind == Token::Fallback; }
 	bool isReceive() const { return m_kind == Token::Receive; }
 	Token kind() const { return m_kind; }
-	bool isOverridable() const { return !isConstructor(); }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
@@ -713,6 +718,12 @@ public:
 
 	FunctionDefinitionAnnotation& annotation() const override;
 
+	bool virtualSemantics() const override
+	{
+		return
+			CallableDeclaration::virtualSemantics() ||
+			annotation().contract->isInterface();
+	}
 private:
 	StateMutability m_stateMutability;
 	Token const m_kind;
@@ -749,6 +760,7 @@ public:
 		m_isConstant(_isConstant),
 		m_overrides(_overrides),
 		m_location(_referenceLocation) {}
+
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -811,11 +823,11 @@ private:
 	/// Initially assigned value, can be missing. For local variables, this is stored inside
 	/// VariableDeclarationStatement and not here.
 	ASTPointer<Expression> m_value;
-	bool m_isStateVariable; ///< Whether or not this is a contract state variable
-	bool m_isIndexed; ///< Whether this is an indexed variable (used by events).
-	bool m_isConstant; ///< Whether the variable is a compile-time constant.
+	bool m_isStateVariable = false; ///< Whether or not this is a contract state variable
+	bool m_isIndexed = false; ///< Whether this is an indexed variable (used by events).
+	bool m_isConstant = false; ///< Whether the variable is a compile-time constant.
 	ASTPointer<OverrideSpecifier> m_overrides; ///< Contains the override specifier node
-	Location m_location; ///< Location of the variable if it is of reference type.
+	Location m_location = Location::Unspecified; ///< Location of the variable if it is of reference type.
 };
 
 /**
@@ -829,10 +841,11 @@ public:
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<ASTString> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
+		bool _isVirtual,
 		ASTPointer<OverrideSpecifier> const& _overrides,
 		ASTPointer<Block> const& _body
 	):
-		CallableDeclaration(_location, _name, Visibility::Internal, _parameters, _overrides),
+		CallableDeclaration(_location, _name, Visibility::Internal, _parameters, _isVirtual, _overrides),
 		Documented(_documentation),
 		m_body(_body)
 	{

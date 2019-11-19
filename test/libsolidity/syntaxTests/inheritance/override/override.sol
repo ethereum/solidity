@@ -1,7 +1,7 @@
 abstract contract A {
 	int public testvar;
-	function test() internal returns (uint256);
-	function test2() internal returns (uint256);
+	function test() internal virtual returns (uint256);
+	function test2() internal virtual returns (uint256);
 }
 abstract contract X is A {
 	int public override testvar;

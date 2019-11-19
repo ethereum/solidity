@@ -177,6 +177,7 @@ library Math {
     /// @param nums Numbers to look through
     /// @return max Maximum number
     function max(int[] memory nums)
+        virtual
         public
         pure
         returns (int max)

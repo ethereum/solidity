@@ -174,14 +174,14 @@ abstract contract DAOInterface {
     //  );
 
     /// @notice Create Token with `msg.sender` as the beneficiary
-    receive() external payable;
+    receive() virtual external payable;
 
 
     /// @dev This function is used to send ether back
     /// to the DAO, it can also be used to receive payments that should not be
     /// counted as rewards (donations, grants, etc.)
     /// @return Whether the DAO received the ether successfully
-    function receiveEther() public returns (bool);
+    function receiveEther() public virtual returns (bool);
 
     /// @notice `msg.sender` creates a proposal to send `_amount` Wei to
     /// `_recipient` with the transaction data `_transactionData`. If
@@ -203,7 +203,7 @@ abstract contract DAOInterface {
         bytes memory _transactionData,
         uint _debatingPeriod,
         bool _newCurator
-    ) public payable returns (uint _proposalID);
+    ) public virtual payable returns (uint _proposalID);
 
     /// @notice Check that the proposal with the ID `_proposalID` matches the
     /// transaction which sends `_amount` with data `_transactionData`
@@ -218,7 +218,7 @@ abstract contract DAOInterface {
         address payable _recipient,
         uint _amount,
         bytes memory _transactionData
-    ) public view returns (bool _codeChecksOut);
+    ) public virtual view returns (bool _codeChecksOut);
 
     /// @notice Vote on proposal `_proposalID` with `_supportsProposal`
     /// @param _proposalID The proposal ID
@@ -227,7 +227,7 @@ abstract contract DAOInterface {
     function vote(
         uint _proposalID,
         bool _supportsProposal
-    ) public returns (uint _voteID);
+    ) public virtual returns (uint _voteID);
 
     /// @notice Checks whether proposal `_proposalID` with transaction data
     /// `_transactionData` has been voted for or rejected, and executes the
@@ -238,7 +238,7 @@ abstract contract DAOInterface {
     function executeProposal(
         uint _proposalID,
         bytes memory _transactionData
-    ) public returns (bool _success);
+    ) public virtual returns (bool _success);
 
     /// @notice ATTENTION! I confirm to move my remaining ether to a new DAO
     /// with `_newCurator` as the new Curator, as has been
@@ -254,13 +254,13 @@ abstract contract DAOInterface {
     function splitDAO(
         uint _proposalID,
         address payable _newCurator
-    ) public returns (bool _success);
+    ) public virtual returns (bool _success);
 
     /// @dev can only be called by the DAO itself through a proposal
     /// updates the contract of the DAO by sending all ether and rewardTokens
     /// to the new DAO. The new DAO needs to be approved by the Curator
     /// @param _newContract the address of the new contract
-    function newContract(address payable _newContract) public;
+    function newContract(address payable _newContract) virtual public;
 
 
     /// @notice Add a new possible recipient `_recipient` to the whitelist so
@@ -268,36 +268,36 @@ abstract contract DAOInterface {
     /// @param _recipient New recipient address
     /// @dev Can only be called by the current Curator
     /// @return Whether successful or not
-    function changeAllowedRecipients(address _recipient, bool _allowed) external returns (bool _success);
+    function changeAllowedRecipients(address _recipient, bool _allowed) virtual external returns (bool _success);
 
 
     /// @notice Change the minimum deposit required to submit a proposal
     /// @param _proposalDeposit The new proposal deposit
     /// @dev Can only be called by this DAO (through proposals with the
     /// recipient being this DAO itself)
-    function changeProposalDeposit(uint _proposalDeposit) external;
+    function changeProposalDeposit(uint _proposalDeposit) virtual external;
 
     /// @notice Move rewards from the DAORewards managed account
     /// @param _toMembers If true rewards are moved to the actual reward account
     ///                   for the DAO. If not then it's moved to the DAO itself
     /// @return Whether the call was successful
-    function retrieveDAOReward(bool _toMembers) external returns (bool _success);
+    function retrieveDAOReward(bool _toMembers) virtual external returns (bool _success);
 
     /// @notice Get my portion of the reward that was sent to `rewardAccount`
     /// @return Whether the call was successful
-    function getMyReward() public returns (bool _success);
+    function getMyReward() public virtual returns (bool _success);
 
     /// @notice Withdraw `_account`'s portion of the reward from `rewardAccount`
     /// to `_account`'s balance
     /// @return Whether the call was successful
-    function withdrawRewardFor(address payable _account) internal returns (bool _success);
+    function withdrawRewardFor(address payable _account) internal virtual returns (bool _success);
 
     /// @notice Send `_amount` tokens to `_to` from `msg.sender`. Prior to this
     /// getMyReward() is called.
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
     /// @return Whether the transfer was successful or not
-    function transferWithoutReward(address _to, uint256 _amount) public returns (bool success);
+    function transferWithoutReward(address _to, uint256 _amount) public virtual returns (bool success);
 
     /// @notice Send `_amount` tokens to `_to` from `_from` on the condition it
     /// is approved by `_from`. Prior to this getMyReward() is called.
@@ -309,28 +309,28 @@ abstract contract DAOInterface {
         address payable _from,
         address _to,
         uint256 _amount
-    ) public returns (bool success);
+    ) public virtual returns (bool success);
 
     /// @notice Doubles the 'minQuorumDivisor' in the case quorum has not been
     /// achieved in 52 weeks
     /// @return Whether the change was successful or not
-    function halveMinQuorum() public returns (bool _success);
+    function halveMinQuorum() public virtual returns (bool _success);
 
     /// @return total number of proposals ever created
-    function numberOfProposals() public view returns (uint _numberOfProposals);
+    function numberOfProposals() public virtual view returns (uint _numberOfProposals);
 
     /// @param _proposalID Id of the new curator proposal
     /// @return Address of the new DAO
-    function getNewDAOAddress(uint _proposalID) public view returns (address _newDAO);
+    function getNewDAOAddress(uint _proposalID) public virtual view returns (address _newDAO);
 
     /// @param _account The address of the account which is checked.
     /// @return Whether the account is blocked (not allowed to transfer tokens) or not.
-    function isBlocked(address _account) internal returns (bool);
+    function isBlocked(address _account) internal virtual returns (bool);
 
     /// @notice If the caller is blocked by a proposal whose voting deadline
     /// has exprired then unblock him.
     /// @return Whether the account is blocked (not allowed to transfer tokens) or not.
-    function unblockMe() public returns (bool);
+    function unblockMe() public virtual returns (bool);
 
     event ProposalAdded(
         uint indexed proposalID,

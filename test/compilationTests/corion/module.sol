@@ -51,7 +51,7 @@ contract module {
         moduleHandlerAddress = newModuleHandlerAddress;
     }
 
-    function connectModule() external onlyForModuleHandler returns (bool success) {
+    function connectModule() virtual external onlyForModuleHandler returns (bool success) {
         _connectModule();
         return true;
     }
@@ -77,7 +77,7 @@ contract module {
         moduleStatus = status.Disconnected;
     }
 
-    function replaceModule(address payable newModuleAddress) external onlyForModuleHandler returns (bool success) {
+    function replaceModule(address payable newModuleAddress) virtual external onlyForModuleHandler returns (bool success) {
         _replaceModule(newModuleAddress);
         return true;
     }
@@ -101,10 +101,11 @@ contract module {
         moduleStatus = status.Disconnected;
     }
 
-    function transferEvent(address payable from, address payable to, uint256 value) external onlyForModuleHandler returns (bool success) {
+    function transferEvent(address payable from, address payable to, uint256
+value) virtual external onlyForModuleHandler returns (bool success) {
         return true;
     }
-    function newSchellingRoundEvent(uint256 roundID, uint256 reward) external onlyForModuleHandler returns (bool success) {
+    function newSchellingRoundEvent(uint256 roundID, uint256 reward) virtual external onlyForModuleHandler returns (bool success) {
         return true;
     }
 

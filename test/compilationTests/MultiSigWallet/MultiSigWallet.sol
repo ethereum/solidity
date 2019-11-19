@@ -221,6 +221,7 @@ contract MultiSigWallet {
     /// @dev Allows anyone to execute a confirmed transaction.
     /// @param transactionId Transaction ID.
     function executeTransaction(uint transactionId)
+        virtual
         public
         notExecuted(transactionId)
     {

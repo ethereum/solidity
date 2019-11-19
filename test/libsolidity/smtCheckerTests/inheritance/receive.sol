@@ -4,7 +4,7 @@ pragma experimental SMTChecker;
 contract A {
 	uint x;
 
-	receive () external payable {
+	receive () external virtual payable {
 		assert(x == 1);
 	}
 	function g() public view {
@@ -21,7 +21,7 @@ contract B is A {
 	}
 }
 // ----
-// Warning: (120-134): Assertion violation happens here
-// Warning: (169-183): Assertion violation happens here
-// Warning: (292-306): Assertion violation happens here
-// Warning: (169-183): Assertion violation happens here
+// Warning: (128-142): Assertion violation happens here
+// Warning: (177-191): Assertion violation happens here
+// Warning: (300-314): Assertion violation happens here
+// Warning: (177-191): Assertion violation happens here

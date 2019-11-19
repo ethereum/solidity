@@ -118,6 +118,14 @@ while(0)
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
 
+BOOST_AUTO_TEST_CASE(reserved_keywords)
+{
+	BOOST_CHECK(!TokenTraits::isReservedKeyword(Token::Identifier));
+	BOOST_CHECK(TokenTraits::isReservedKeyword(Token::After));
+	BOOST_CHECK(TokenTraits::isReservedKeyword(Token::Unchecked));
+	BOOST_CHECK(!TokenTraits::isReservedKeyword(Token::Illegal));
+}
+
 BOOST_AUTO_TEST_CASE(unsatisfied_version)
 {
 	char const* text = R"(
@@ -524,7 +532,6 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 {
 	auto keywords = {
-		"abstract",
 		"after",
 		"alias",
 		"apply",
@@ -559,6 +566,8 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 		"typeof",
 		"unchecked"
 	};
+
+	BOOST_CHECK_EQUAL(std::size(keywords), static_cast<int>(Token::Unchecked) - static_cast<int>(Token::After) + 1);
 
 	for (auto const& keyword: keywords)
 	{

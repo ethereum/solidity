@@ -15,5 +15,6 @@ abstract contract MarketFactory {
     /*
      *  Public functions
      */
-    function createMarket(Event eventContract, MarketMaker marketMaker, uint24 fee) public returns (Market);
+    function createMarket(Event eventContract, MarketMaker marketMaker, uint24
+fee) virtual public returns (Market);
 }
