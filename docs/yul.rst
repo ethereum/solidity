@@ -182,11 +182,17 @@ introduce new identifiers into these scopes.
 
 Identifiers are visible in
 the block they are defined in (including all sub-nodes and sub-blocks).
-As an exception, identifiers defined in the "init" part of the for-loop
+
+As an exception, identifiers defined directly in the "init" part of the for-loop
 (the first block) are visible in all other parts of the for-loop
 (but not outside of the loop).
 Identifiers declared in the other parts of the for loop respect the regular
 syntactical scoping rules.
+
+This means a for-loop of the form ``for { I... } C { P... } { B... }`` is equivalent
+to ``{ I... for {} C { P... } { B... } }``.
+
+
 The parameters and return parameters of functions are visible in the
 function body and their names cannot overlap.
 
