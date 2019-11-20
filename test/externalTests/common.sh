@@ -216,8 +216,13 @@ function run_test
         printLog "Running compile function..."
         $compile_fn
         verify_compiler_version "$SOLCVERSION"
-        printLog "Running test function..."
-        $test_fn
+
+        if [[ "$COMPILE_ONLY" == 1 ]]; then
+            printLog "Skipping test function..."
+        else
+            printLog "Running test function..."
+            $test_fn
+        fi
     done
 }
 
