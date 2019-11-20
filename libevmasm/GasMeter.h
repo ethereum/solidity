@@ -53,7 +53,12 @@ namespace GasCosts
 	}
 	inline unsigned balanceGas(langutil::EVMVersion _evmVersion)
 	{
-		return _evmVersion >= langutil::EVMVersion::tangerineWhistle() ? 400 : 20;
+		if (_evmVersion >= langutil::EVMVersion::istanbul())
+			return 700;
+		else if (_evmVersion >= langutil::EVMVersion::tangerineWhistle())
+			return 400;
+		else
+			return 20;
 	}
 	static unsigned const expGas = 10;
 	inline unsigned expByteGas(langutil::EVMVersion _evmVersion)
@@ -64,7 +69,12 @@ namespace GasCosts
 	static unsigned const keccak256WordGas = 6;
 	inline unsigned sloadGas(langutil::EVMVersion _evmVersion)
 	{
-		return _evmVersion >= langutil::EVMVersion::tangerineWhistle() ? 200 : 50;
+		if (_evmVersion >= langutil::EVMVersion::istanbul())
+			return 800;
+		else if (_evmVersion >= langutil::EVMVersion::tangerineWhistle())
+			return 200;
+		else
+			return 50;
 	}
 	static unsigned const sstoreSetGas = 20000;
 	static unsigned const sstoreResetGas = 5000;
@@ -92,7 +102,10 @@ namespace GasCosts
 	static unsigned const txGas = 21000;
 	static unsigned const txCreateGas = 53000;
 	static unsigned const txDataZeroGas = 4;
-	static unsigned const txDataNonZeroGas = 68;
+	inline unsigned txDataNonZeroGas(langutil::EVMVersion _evmVersion)
+	{
+		return _evmVersion >= langutil::EVMVersion::istanbul() ? 16 : 68;
+	}
 	static unsigned const copyGas = 3;
 }
 
@@ -139,7 +152,7 @@ public:
 	/// @returns the gas cost of the supplied data, depending whether it is in creation code, or not.
 	/// In case of @a _inCreation, the data is only sent as a transaction and is not stored, whereas
 	/// otherwise code will be stored and have to pay "createDataGas" cost.
-	static u256 dataGas(bytes const& _data, bool _inCreation);
+	static u256 dataGas(bytes const& _data, bool _inCreation, langutil::EVMVersion _evmVersion);
 
 private:
 	/// @returns _multiplier * (_value + 31) / 32, if _value is a known constant and infinite otherwise.
