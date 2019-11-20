@@ -185,7 +185,7 @@ function mul(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	t1, t2, r1, r2 := add(0, 0, r1, r2, 0, 0, d1, d2)
 }
 function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
-	// Implementation was taken from https://github.com/ewasm/evm2wasm/blob/master/wasm/DIV.wast
+	// Based on https://github.com/ewasm/evm2wasm/blob/master/wasm/DIV.wast
 	if iszero(y1, y2, y3, y4) {
 		invalid()
 	}
@@ -198,8 +198,15 @@ function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 		if i64.or(i64.eqz(i64.clz(y1)), gte_256x256_64(y1, y2, y3, y4, x1, x2, x3, x4)) {
 			break
 		}
-		y1, y2, y3, y4 := shl(y1, y2, y3, y4, 0, 0, 0, 1)
-		m1, m2, m3, m4 := shl(m1, m2, m3, m4, 0, 0, 0, 1)
+		y1 := i64.add(i64.shl(y1, 1), i64.shr_u(y2, 63))
+		y2 := i64.add(i64.shl(y2, 1), i64.shr_u(y3, 63))
+		y3 := i64.add(i64.shl(y3, 1), i64.shr_u(y4, 63))
+		y4 := i64.shl(y4, 1)
+
+		m1 := i64.add(i64.shl(m1, 1), i64.shr_u(m2, 63))
+		m2 := i64.add(i64.shl(m2, 1), i64.shr_u(m3, 63))
+		m3 := i64.add(i64.shl(m3, 1), i64.shr_u(m4, 63))
+		m4 := i64.shl(m4, 1)
 	}
 
 	for {} i64.xor(iszero(m1, m2, m3, m4), 1) {} {
@@ -208,11 +215,21 @@ function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 			r1, r2, r3, r4 := add(r1, r2, r3, r4, m1, m2, m3, m4)
 		}
 
-		y1, y2, y3, y4 := shr(y1, y2, y3, y4, 0, 0, 0, 1)
-		m1, m2, m3, m4 := shr(m1, m2, m3, m4, 0, 0, 0, 1)
+		// y = y >> 1
+		y1 := i64.add(i64.shr_u(y1, 1), i64.shl(y2, 63))
+		y2 := i64.add(i64.shr_u(y2, 1), i64.shl(y3, 63))
+		y3 := i64.add(i64.shr_u(y3, 1), i64.shl(y4, 63))
+		y4 := i64.shr_u(y4, 1)
+
+		// m = m >> 1
+		m1 := i64.add(i64.shr_u(m1, 1), i64.shl(m2, 63))
+		m2 := i64.add(i64.shr_u(m2, 1), i64.shl(m3, 63))
+		m3 := i64.add(i64.shr_u(m3, 1), i64.shl(m4, 63))
+		m4 := i64.shr_u(m4, 1)
 	}
 }
 function mod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+ 	// Based on https://github.com/ewasm/evm2wasm/blob/master/wasm/MOD.wast
 	if iszero(y1, y2, y3, y4) {
 		invalid()
 	}
@@ -257,6 +274,7 @@ function mod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	}
 }
 function mod320(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> r1, r2, r3, r4, r5 {
+	// Based on https://github.com/ewasm/evm2wasm/blob/master/wasm/mod_320.wast
 	if iszero320(y1, y2, y3, y4, y5) {
 		invalid()
 	}
@@ -307,6 +325,7 @@ function mod320(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> r1, r2, r3, r4, r5 {
 	}
 }
 function mod512(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> r1, r2, r3, r4, r5, r6, r7, r8 {
+	// Based on https://github.com/ewasm/evm2wasm/blob/master/wasm/mod_512.wast
 	if iszero512(y1, y2, y3, y4, y5, y6, y7, y8) {
 		invalid()
 	}
@@ -372,6 +391,7 @@ function mod512(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) 
 	}
 }
 function smod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+	// Based on https://github.com/ewasm/evm2wasm/blob/master/wasm/SMOD.wast
 	let m1 := 0
 	let m2 := 0
 	let m3 := 0
@@ -392,19 +412,35 @@ function smod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	if iszero(y1, y2, y3, y4) {
 		invalid()
 	}
-	if i64.xor(iszero(y1, y2, y3, y4), 1) {
-		for {} i64.and(i64.xor(i64.eqz(i64.clz(y1)), 1), gte_256x256_64(y1, y2, y3, y4, x1, x2, x3, x4)) {} {
-			y1, y2, y3, y4 := shl(y1, y2, y3, y4, 0, 0, 0, 1)
-			m1, m2, m3, m4 := shl(m1, m2, m3, m4, 0, 0, 0, 1)
+	for {} 1 {} {
+		if i64.or(i64.eqz(i64.clz(y1)), gte_256x256_64(y1, y2, y3, y4, x1, x2, x3, x4)) {
+			break
+		}
+		y1 := i64.add(i64.shr_u(y1, 1), i64.shl(y2, 63))
+		y2 := i64.add(i64.shr_u(y2, 1), i64.shl(y3, 63))
+		y3 := i64.add(i64.shr_u(y3, 1), i64.shl(y4, 63))
+		y4 := i64.shr_u(y4, 1)
+
+		m1 := i64.add(i64.shr_u(m1, 1), i64.shl(m2, 63))
+		m2 := i64.add(i64.shr_u(m2, 1), i64.shl(m3, 63))
+		m3 := i64.add(i64.shr_u(m3, 1), i64.shl(m4, 63))
+		m4 := i64.shr_u(m4, 1)
+	}
+
+	for {} i64.xor(iszero(m1, m2, m3, m4), 1) {} {
+		if gte_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4) {
+			x1, x2, x3, x4 := sub(x1, x2, x3, x4, y1, y2, y3, y4)
 		}
 
-		for {} i64.xor(iszero(m1, m2, m3, m4), 1) {} {
-			if gte_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4) {
-				x1, x2, x3, x4 := sub(x1, x2, x3, x4, y1, y2, y3, y4)
-			}
-			y1, y2, y3, y4 := shl(y1, y2, y3, y4, 0, 0, 0, 1)
-			m1, m2, m3, m4 := shl(m1, m2, m3, m4, 0, 0, 0, 1)
-		}
+		y1 := i64.add(i64.shl(y1, 1), i64.shr_u(y2, 63))
+		y2 := i64.add(i64.shl(y2, 1), i64.shr_u(y3, 63))
+		y3 := i64.add(i64.shl(y3, 1), i64.shr_u(y4, 63))
+		y4 := i64.shl(y4, 1)
+
+		m1 := i64.add(i64.shl(m1, 1), i64.shr_u(m2, 63))
+		m2 := i64.add(i64.shl(m2, 1), i64.shr_u(m3, 63))
+		m3 := i64.add(i64.shl(m3, 1), i64.shr_u(m4, 63))
+		m4 := i64.shr_u(m4, 1)
 	}
 }
 function exp(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
@@ -414,7 +450,11 @@ function exp(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 			r1, r2, r3, r4 := mul(r1, r2, r3, r4, x1, x2, x3, x4)
 		}
 		x1, x2, x3, x4 := mul(x1, x2, x3, x4, x1, x2, x3, x4)
-		y1, y2, y3, y4 := shr(y1, y2, y3, y4, 0, 0, 0, 1)
+		// y = y >> 1
+		y1 := i64.add(i64.shr_u(y1, 1), i64.shl(y2, 63))
+		y2 := i64.add(i64.shr_u(y2, 1), i64.shl(y3, 63))
+		y3 := i64.add(i64.shr_u(y3, 1), i64.shl(y4, 63))
+		y4 := i64.shr_u(y4, 1)
 	}
 }
 
