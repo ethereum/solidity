@@ -168,7 +168,7 @@ The ``continue`` and ``break`` statements can only be used inside loop bodies
 and have to be in the same function as the loop (or both have to be at the
 top level).
 The condition part of the for-loop has to evaluate to exactly one value.
-Functions cannot be defined inside for loop init blocks.
+Functions cannot be defined anywhere inside for loop init blocks.
 
 Literals cannot be larger than the their type. The largest type defined is 256-bit wide.
 
