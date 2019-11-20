@@ -28,7 +28,7 @@ namespace yul
 {
 struct AsmAnalysisInfo;
 
-class EWasmToText: public boost::static_visitor<std::string>
+class EWasmToText
 {
 public:
 	std::string run(wasm::Module const& _module);

@@ -67,11 +67,11 @@ bool SimplificationRules::isInitialized() const
 std::optional<std::pair<dev::eth::Instruction, vector<Expression> const*>>
 	SimplificationRules::instructionAndArguments(Dialect const& _dialect, Expression const& _expr)
 {
-	if (_expr.type() == typeid(FunctionCall))
+	if (holds_alternative<FunctionCall>(_expr))
 		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
-			if (auto const* builtin = dialect->builtin(boost::get<FunctionCall>(_expr).functionName.name))
+			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_expr).functionName.name))
 				if (builtin->instruction)
-					return make_pair(*builtin->instruction, &boost::get<FunctionCall>(_expr).arguments);
+					return make_pair(*builtin->instruction, &std::get<FunctionCall>(_expr).arguments);
 
 	return {};
 }
@@ -134,9 +134,9 @@ bool Pattern::matches(
 
 	// Resolve the variable if possible.
 	// Do not do it for "Any" because we can check identity better for variables.
-	if (m_kind != PatternKind::Any && _expr.type() == typeid(Identifier))
+	if (m_kind != PatternKind::Any && holds_alternative<Identifier>(_expr))
 	{
-		YulString varName = boost::get<Identifier>(_expr).name;
+		YulString varName = std::get<Identifier>(_expr).name;
 		if (_ssaValues.count(varName))
 			if (Expression const* new_expr = _ssaValues.at(varName))
 				expr = new_expr;
@@ -145,9 +145,9 @@ bool Pattern::matches(
 
 	if (m_kind == PatternKind::Constant)
 	{
-		if (expr->type() != typeid(Literal))
+		if (!holds_alternative<Literal>(*expr))
 			return false;
-		Literal const& literal = boost::get<Literal>(*expr);
+		Literal const& literal = std::get<Literal>(*expr);
 		if (literal.kind != LiteralKind::Number)
 			return false;
 		if (m_data && *m_data != u256(literal.value.str()))
@@ -238,7 +238,7 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 
 u256 Pattern::d() const
 {
-	return valueOfNumberLiteral(boost::get<Literal>(matchGroupValue()));
+	return valueOfNumberLiteral(std::get<Literal>(matchGroupValue()));
 }
 
 Expression const& Pattern::matchGroupValue() const

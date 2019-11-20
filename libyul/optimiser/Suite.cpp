@@ -80,7 +80,7 @@ void OptimiserSuite::run(
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
-	*_object.code = boost::get<Block>(Disambiguator(
+	*_object.code = std::get<Block>(Disambiguator(
 		_dialect,
 		*_object.analysisInfo,
 		reservedIdentifiers
@@ -291,7 +291,7 @@ void OptimiserSuite::run(
 	{
 		// If the first statement is an empty block, remove it.
 		// We should only have function definitions after that.
-		if (ast.statements.size() > 1 && boost::get<Block>(ast.statements.front()).statements.empty())
+		if (ast.statements.size() > 1 && std::get<Block>(ast.statements.front()).statements.empty())
 			ast.statements.erase(ast.statements.begin());
 	}
 	suite.runSequence({
@@ -361,7 +361,7 @@ void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 {
 	unique_ptr<Block> copy;
 	if (m_debug == Debug::PrintChanges)
-		copy = make_unique<Block>(boost::get<Block>(ASTCopier{}(_ast)));
+		copy = make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
 	for (string const& step: _steps)
 	{
 		if (m_debug == Debug::PrintStep)
@@ -376,7 +376,7 @@ void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 			{
 				cout << "== Running " << step << " changed the AST." << endl;
 				cout << AsmPrinter{}(_ast) << endl;
-				copy = make_unique<Block>(boost::get<Block>(ASTCopier{}(_ast)));
+				copy = make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
 			}
 		}
 	}

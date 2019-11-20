@@ -96,7 +96,7 @@ bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items)
 bigint ConstantOptimisationMethod::dataGas(bytes const& _data) const
 {
 	assertThrow(_data.size() > 0, OptimizerException, "Empty bytecode generated.");
-	return bigint(GasMeter::dataGas(_data, m_params.isCreation));
+	return bigint(GasMeter::dataGas(_data, m_params.isCreation, m_params.evmVersion));
 }
 
 size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items)
@@ -131,7 +131,7 @@ bigint LiteralMethod::gasNeeded() const
 	return combineGas(
 		simpleRunGas({Instruction::PUSH1}),
 		// PUSHX plus data
-		(m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas) + dataGas(toCompactBigEndian(m_value, 1)),
+		(m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas) + dataGas(toCompactBigEndian(m_value, 1)),
 		0
 	);
 }
@@ -142,7 +142,7 @@ bigint CodeCopyMethod::gasNeeded() const
 		// Run gas: we ignore memory increase costs
 		simpleRunGas(copyRoutine()) + GasCosts::copyGas,
 		// Data gas for copy routines: Some bytes are zero, but we ignore them.
-		bytesRequired(copyRoutine()) * (m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas),
+		bytesRequired(copyRoutine()) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
 		// Data gas for data itself
 		dataGas(toBigEndian(m_value))
 	);
@@ -322,7 +322,7 @@ bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine) const
 	return combineGas(
 		simpleRunGas(_routine) + numExps * (GasCosts::expGas + GasCosts::expByteGas(m_params.evmVersion)),
 		// Data gas for routine: Some bytes are zero, but we ignore them.
-		bytesRequired(_routine) * (m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas),
+		bytesRequired(_routine) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
 		0
 	);
 }

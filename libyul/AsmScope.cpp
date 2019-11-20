@@ -58,7 +58,7 @@ Scope::Identifier* Scope::lookup(YulString _name)
 		auto id = s->identifiers.find(_name);
 		if (id != s->identifiers.end())
 		{
-			if (crossedFunctionBoundary && id->second.type() == typeid(Scope::Variable))
+			if (crossedFunctionBoundary && holds_alternative<Scope::Variable>(id->second))
 				return nullptr;
 			else
 				return &id->second;
@@ -84,7 +84,7 @@ size_t Scope::numberOfVariables() const
 {
 	size_t count = 0;
 	for (auto const& identifier: identifiers)
-		if (identifier.second.type() == typeid(Scope::Variable))
+		if (holds_alternative<Scope::Variable>(identifier.second))
 			count++;
 	return count;
 }

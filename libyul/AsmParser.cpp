@@ -177,7 +177,7 @@ Statement Parser::parseStatement()
 
 		while (true)
 		{
-			if (elementary.type() != typeid(Identifier))
+			if (!holds_alternative<Identifier>(elementary))
 			{
 				auto const token = currentToken() == Token::Comma ? "," : ":=";
 
@@ -189,7 +189,7 @@ Statement Parser::parseStatement()
 				);
 			}
 
-			auto const& identifier = boost::get<Identifier>(elementary);
+			auto const& identifier = std::get<Identifier>(elementary);
 
 			if (m_dialect.builtin(identifier.name))
 				fatalParserError("Cannot assign to builtin function \"" + identifier.name.str() + "\".");
@@ -205,7 +205,7 @@ Statement Parser::parseStatement()
 		}
 
 		Assignment assignment =
-			createWithLocation<Assignment>(boost::get<Identifier>(elementary).location);
+			createWithLocation<Assignment>(std::get<Identifier>(elementary).location);
 		assignment.variableNames = std::move(variableNames);
 
 		expectToken(Token::AssemblyAssign);
@@ -220,14 +220,14 @@ Statement Parser::parseStatement()
 		break;
 	}
 
-	if (elementary.type() == typeid(Identifier))
+	if (holds_alternative<Identifier>(elementary))
 	{
-		Identifier& identifier = boost::get<Identifier>(elementary);
+		Identifier& identifier = std::get<Identifier>(elementary);
 		return ExpressionStatement{identifier.location, { move(identifier) }};
 	}
-	else if (elementary.type() == typeid(Literal))
+	else if (holds_alternative<Literal>(elementary))
 	{
-		Expression expr = boost::get<Literal>(elementary);
+		Expression expr = std::get<Literal>(elementary);
 		return ExpressionStatement{locationOf(expr), expr};
 	}
 	else
@@ -247,9 +247,9 @@ Case Parser::parseCase()
 	{
 		advance();
 		ElementaryOperation literal = parseElementaryOperation();
-		if (literal.type() != typeid(Literal))
+		if (!holds_alternative<Literal>(literal))
 			fatalParserError("Literal expected.");
-		_case.value = make_unique<Literal>(boost::get<Literal>(std::move(literal)));
+		_case.value = make_unique<Literal>(std::get<Literal>(std::move(literal)));
 	}
 	else
 		solAssert(false, "Case or default case expected.");
@@ -286,14 +286,14 @@ Expression Parser::parseExpression()
 	RecursionGuard recursionGuard(*this);
 
 	ElementaryOperation operation = parseElementaryOperation();
-	if (operation.type() == typeid(FunctionCall) || currentToken() == Token::LParen)
+	if (holds_alternative<FunctionCall>(operation) || currentToken() == Token::LParen)
 		return parseCall(std::move(operation));
-	else if (operation.type() == typeid(Identifier))
-		return boost::get<Identifier>(operation);
+	else if (holds_alternative<Identifier>(operation))
+		return std::get<Identifier>(operation);
 	else
 	{
-		solAssert(operation.type() == typeid(Literal), "");
-		return boost::get<Literal>(operation);
+		solAssert(holds_alternative<Literal>(operation), "");
+		return std::get<Literal>(operation);
 	}
 }
 
@@ -464,13 +464,13 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 	RecursionGuard recursionGuard(*this);
 
 	FunctionCall ret;
-	if (_initialOp.type() == typeid(Identifier))
+	if (holds_alternative<Identifier>(_initialOp))
 	{
-		ret.functionName = std::move(boost::get<Identifier>(_initialOp));
+		ret.functionName = std::move(std::get<Identifier>(_initialOp));
 		ret.location = ret.functionName.location;
 	}
-	else if (_initialOp.type() == typeid(FunctionCall))
-		ret = std::move(boost::get<FunctionCall>(_initialOp));
+	else if (holds_alternative<FunctionCall>(_initialOp))
+		ret = std::move(std::get<FunctionCall>(_initialOp));
 	else
 		fatalParserError(
 			m_dialect.flavour == AsmFlavour::Yul ?

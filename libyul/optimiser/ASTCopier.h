@@ -24,8 +24,6 @@
 
 #include <libyul/YulString.h>
 
-#include <boost/variant.hpp>
-
 #include <memory>
 #include <optional>
 #include <set>
@@ -34,7 +32,7 @@
 namespace yul
 {
 
-class ExpressionCopier: public boost::static_visitor<Expression>
+class ExpressionCopier
 {
 public:
 	virtual ~ExpressionCopier() = default;
@@ -43,7 +41,7 @@ public:
 	virtual Expression operator()(FunctionCall const&) = 0;
 };
 
-class StatementCopier: public boost::static_visitor<Statement>
+class StatementCopier
 {
 public:
 	virtual ~StatementCopier() = default;

@@ -182,7 +182,7 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	int initialStackHeight = m_stackHeight;
-	bool success = boost::apply_visitor(*this, _statement.expression);
+	bool success = std::visit(*this, _statement.expression);
 	if (success && m_stackHeight != initialStackHeight)
 	{
 		string msg =
@@ -204,7 +204,7 @@ bool AsmAnalyzer::operator()(Assignment const& _assignment)
 	int const expectedItems = _assignment.variableNames.size();
 	solAssert(expectedItems >= 1, "");
 	int const stackHeight = m_stackHeight;
-	bool success = boost::apply_visitor(*this, *_assignment.value);
+	bool success = std::visit(*this, *_assignment.value);
 	if ((m_stackHeight - stackHeight) != expectedItems)
 	{
 		m_errorReporter.declarationError(
@@ -239,7 +239,7 @@ bool AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 	if (_varDecl.value)
 	{
 		int const stackHeight = m_stackHeight;
-		success = boost::apply_visitor(*this, *_varDecl.value);
+		success = std::visit(*this, *_varDecl.value);
 		int numValues = m_stackHeight - stackHeight;
 		if (numValues != numVariables)
 		{
@@ -261,7 +261,7 @@ bool AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 	for (auto const& variable: _varDecl.variables)
 	{
 		expectValidType(variable.type.str(), variable.location);
-		m_activeVariables.insert(&boost::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)));
+		m_activeVariables.insert(&std::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)));
 	}
 	m_info.stackHeightInfo[&_varDecl] = m_stackHeight;
 	return success;
@@ -276,7 +276,7 @@ bool AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 	{
 		expectValidType(var.type.str(), var.location);
-		m_activeVariables.insert(&boost::get<Scope::Variable>(varScope.identifiers.at(var.name)));
+		m_activeVariables.insert(&std::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
 
 	int const stackHeight = m_stackHeight;
@@ -352,15 +352,15 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			success = false;
 		else if (needsLiteralArguments)
 		{
-			if (arg.type() != typeid(Literal))
+			if (!holds_alternative<Literal>(arg))
 				m_errorReporter.typeError(
 					_funCall.functionName.location,
 					"Function expects direct literals as arguments."
 				);
-			else if (!m_dataNames.count(boost::get<Literal>(arg).value))
+			else if (!m_dataNames.count(std::get<Literal>(arg).value))
 				m_errorReporter.typeError(
 					_funCall.functionName.location,
-					"Unknown data object \"" + boost::get<Literal>(arg).value.str() + "\"."
+					"Unknown data object \"" + std::get<Literal>(arg).value.str() + "\"."
 				);
 		}
 	}
@@ -526,7 +526,7 @@ bool AsmAnalyzer::operator()(Block const& _block)
 	int const initialStackHeight = m_stackHeight;
 
 	for (auto const& s: _block.statements)
-		if (!boost::apply_visitor(*this, s))
+		if (!std::visit(*this, s))
 			success = false;
 
 	m_stackHeight -= scope(&_block).numberOfVariables();
@@ -555,7 +555,7 @@ bool AsmAnalyzer::expectExpression(Expression const& _expr)
 {
 	bool success = true;
 	int const initialHeight = m_stackHeight;
-	if (!boost::apply_visitor(*this, _expr))
+	if (!std::visit(*this, _expr))
 		success = false;
 	if (success && !expectDeposit(1, initialHeight, locationOf(_expr)))
 		success = false;
@@ -586,12 +586,12 @@ bool AsmAnalyzer::checkAssignment(Identifier const& _variable, size_t _valueSize
 	if (Scope::Identifier const* var = m_currentScope->lookup(_variable.name))
 	{
 		// Check that it is a variable
-		if (var->type() != typeid(Scope::Variable))
+		if (!holds_alternative<Scope::Variable>(*var))
 		{
 			m_errorReporter.typeError(_variable.location, "Assignment requires variable.");
 			success = false;
 		}
-		else if (!m_activeVariables.count(&boost::get<Scope::Variable>(*var)))
+		else if (!m_activeVariables.count(&std::get<Scope::Variable>(*var)))
 		{
 			m_errorReporter.declarationError(
 				_variable.location,

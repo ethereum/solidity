@@ -1438,6 +1438,9 @@ Type const* ContractType::encodingType() const
 
 BoolResult ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
+	if (m_super)
+		return false;
+
 	if (*this == _convertTo)
 		return true;
 	if (_convertTo.category() == Category::Contract)
@@ -1455,8 +1458,12 @@ BoolResult ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 BoolResult ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
+	if (m_super)
+		return false;
+
 	if (auto const* addressType = dynamic_cast<AddressType const*>(&_convertTo))
 		return isPayable() || (addressType->stateMutability() < StateMutability::Payable);
+
 	return isImplicitlyConvertibleTo(_convertTo);
 }
 

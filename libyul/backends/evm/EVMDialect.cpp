@@ -113,7 +113,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
-			YulString dataName = boost::get<Literal>(arg).value;
+			YulString dataName = std::get<Literal>(arg).value;
 			if (_context.currentObject->name == dataName)
 				_assembly.appendAssemblySize();
 			else
@@ -134,7 +134,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
-			YulString dataName = boost::get<Literal>(arg).value;
+			YulString dataName = std::get<Literal>(arg).value;
 			if (_context.currentObject->name == dataName)
 				_assembly.appendConstant(0);
 			else

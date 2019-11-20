@@ -56,8 +56,8 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	bool descend = true;
 	// If this is a function call to a function that requires literal arguments,
 	// do not try to simplify there.
-	if (_e.type() == typeid(FunctionCall))
-		if (BuiltinFunction const* builtin = m_dialect.builtin(boost::get<FunctionCall>(_e).functionName.name))
+	if (holds_alternative<FunctionCall>(_e))
+		if (BuiltinFunction const* builtin = m_dialect.builtin(std::get<FunctionCall>(_e).functionName.name))
 			if (builtin->literalArguments)
 				// We should not modify function arguments that have to be literals
 				// Note that replacing the function call entirely is fine,
@@ -72,16 +72,16 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	if (descend)
 		DataFlowAnalyzer::visit(_e);
 
-	if (_e.type() == typeid(Identifier))
+	if (holds_alternative<Identifier>(_e))
 	{
-		Identifier& identifier = boost::get<Identifier>(_e);
+		Identifier& identifier = std::get<Identifier>(_e);
 		YulString name = identifier.name;
 		if (m_value.count(name))
 		{
 			assertThrow(m_value.at(name), OptimizerException, "");
-			if (m_value.at(name)->type() == typeid(Identifier))
+			if (holds_alternative<Identifier>(*m_value.at(name)))
 			{
-				YulString value = boost::get<Identifier>(*m_value.at(name)).name;
+				YulString value = std::get<Identifier>(*m_value.at(name)).name;
 				assertThrow(inScope(value), OptimizerException, "");
 				_e = Identifier{locationOf(_e), value};
 			}

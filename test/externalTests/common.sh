@@ -246,7 +246,7 @@ function truffle_run_test
     for optimize in "${optimizer_settings[@]}"
     do
         clean
-        force_solc_settings "$CONFIG" "$optimize" "petersburg"
+        force_solc_settings "$CONFIG" "$optimize" "istanbul"
         # Force ABIEncoderV2 in the last step. Has to be the last because code is modified.
         if [ "$FORCE_ABIv2" = true ]; then
             [[ "$optimize" =~ yul ]] && force_abi_v2

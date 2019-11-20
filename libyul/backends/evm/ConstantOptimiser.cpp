@@ -27,6 +27,8 @@
 
 #include <libdevcore/CommonData.h>
 
+#include <variant>
+
 using namespace std;
 using namespace dev;
 using namespace yul;
@@ -35,13 +37,13 @@ using Representation = ConstantOptimiser::Representation;
 
 namespace
 {
-struct MiniEVMInterpreter: boost::static_visitor<u256>
+struct MiniEVMInterpreter
 {
 	explicit MiniEVMInterpreter(EVMDialect const& _dialect): m_dialect(_dialect) {}
 
 	u256 eval(Expression const& _expr)
 	{
-		return boost::apply_visitor(*this, _expr);
+		return std::visit(*this, _expr);
 	}
 
 	u256 eval(dev::eth::Instruction _instr, vector<Expression> const& _arguments)
@@ -88,9 +90,9 @@ struct MiniEVMInterpreter: boost::static_visitor<u256>
 
 void ConstantOptimiser::visit(Expression& _e)
 {
-	if (_e.type() == typeid(Literal))
+	if (holds_alternative<Literal>(_e))
 	{
-		Literal const& literal = boost::get<Literal>(_e);
+		Literal const& literal = std::get<Literal>(_e);
 		if (literal.kind != LiteralKind::Number)
 			return;
 
@@ -111,7 +113,7 @@ Expression const* RepresentationFinder::tryFindRepresentation(dev::u256 const& _
 		return nullptr;
 
 	Representation const& repr = findRepresentation(_value);
-	if (repr.expression->type() == typeid(Literal))
+	if (holds_alternative<Literal>(*repr.expression))
 		return nullptr;
 	else
 		return repr.expression.get();

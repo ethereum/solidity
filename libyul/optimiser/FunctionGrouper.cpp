@@ -40,10 +40,10 @@ void FunctionGrouper::operator()(Block& _block)
 
 	for (auto&& statement: _block.statements)
 	{
-		if (statement.type() == typeid(FunctionDefinition))
+		if (holds_alternative<FunctionDefinition>(statement))
 			reordered.emplace_back(std::move(statement));
 		else
-			boost::get<Block>(reordered.front()).statements.emplace_back(std::move(statement));
+			std::get<Block>(reordered.front()).statements.emplace_back(std::move(statement));
 	}
 	_block.statements = std::move(reordered);
 }
@@ -52,10 +52,10 @@ bool FunctionGrouper::alreadyGrouped(Block const& _block)
 {
 	if (_block.statements.empty())
 		return false;
-	if (_block.statements.front().type() != typeid(Block))
+	if (!holds_alternative<Block>(_block.statements.front()))
 		return false;
 	for (size_t i = 1; i < _block.statements.size(); ++i)
-		if (_block.statements.at(i).type() != typeid(FunctionDefinition))
+		if (!holds_alternative<FunctionDefinition>(_block.statements.at(i)))
 			return false;
 	return true;
 }
