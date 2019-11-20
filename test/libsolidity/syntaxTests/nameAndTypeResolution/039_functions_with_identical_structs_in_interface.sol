@@ -7,5 +7,4 @@ contract C {
     function f(S2 memory) public pure {}
 }
 // ----
-// Warning: (0-33): Experimental features are turned on. Do not use experimental features on live deployments.
 // TypeError: (143-179): Function overload clash during conversion to external types for arguments.

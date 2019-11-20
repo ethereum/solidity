@@ -34,6 +34,7 @@ Language Features:
 
 Compiler Features:
  * Allow revert strings to be stripped from the binary using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting.
+ * ABIEncoderV2: Do not warn about enabled ABIEncoderV2 anymore (the pragma is still needed, though).
 
 
 ### 0.5.14 (unreleased)

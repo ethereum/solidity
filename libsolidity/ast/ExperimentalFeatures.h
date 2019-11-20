@@ -21,6 +21,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 
 namespace dev
 {
@@ -35,10 +36,11 @@ enum class ExperimentalFeature
 	TestOnlyAnalysis
 };
 
-static std::map<ExperimentalFeature, bool> const ExperimentalFeatureOnlyAnalysis =
+static std::set<ExperimentalFeature> const ExperimentalFeatureWithoutWarning =
 {
-	{ ExperimentalFeature::SMTChecker, true },
-	{ ExperimentalFeature::TestOnlyAnalysis, true },
+	ExperimentalFeature::ABIEncoderV2,
+	ExperimentalFeature::SMTChecker,
+	ExperimentalFeature::TestOnlyAnalysis,
 };
 
 static std::map<std::string, ExperimentalFeature> const ExperimentalFeatureNames =

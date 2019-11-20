@@ -10,7 +10,6 @@ contract C {
   }
 }
 // ----
-// Warning: (32-67): Experimental features are turned on. Do not use experimental features on live deployments.
 // Warning: (125-132): Unused local variable.
 // Warning: (183-190): Unused local variable.
 // Warning: (136-139): Assertion checker does not yet implement type abi

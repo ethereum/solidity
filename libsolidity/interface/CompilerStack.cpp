@@ -982,7 +982,7 @@ namespace
 bool onlySafeExperimentalFeaturesActivated(set<ExperimentalFeature> const& features)
 {
 	for (auto const feature: features)
-		if (!ExperimentalFeatureOnlyAnalysis.count(feature))
+		if (!ExperimentalFeatureWithoutWarning.count(feature))
 			return false;
 	return true;
 }

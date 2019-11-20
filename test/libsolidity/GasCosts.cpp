@@ -107,16 +107,16 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		{
 			// Costs with 0 are cases which cannot be triggered in tests.
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(0, 127721, evmVersion);
+				CHECK_DEPLOY_GAS(0, 123969, evmVersion);
 			else
 				CHECK_DEPLOY_GAS(0, 113993, evmVersion);
 		}
 		else
 		{
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(151523, 135371, evmVersion);
+				CHECK_DEPLOY_GAS(147771, 131687, evmVersion);
 			else
-				CHECK_DEPLOY_GAS(134883, 120083, evmVersion);
+				CHECK_DEPLOY_GAS(131859, 117231, evmVersion);
 		}
 	}
 	else if (evmVersion < EVMVersion::istanbul())
