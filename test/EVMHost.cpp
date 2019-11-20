@@ -64,7 +64,8 @@ evmc::VM* EVMHost::getVM(string const& _path)
 }
 
 EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM* _vm):
-	m_vm(_vm)
+	m_vm(_vm),
+	m_evmVersion(_evmVersion)
 {
 	if (!m_vm)
 	{
@@ -73,21 +74,21 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM* _vm):
 	}
 
 	if (_evmVersion == langutil::EVMVersion::homestead())
-		m_evmVersion = EVMC_HOMESTEAD;
+		m_evmRevision = EVMC_HOMESTEAD;
 	else if (_evmVersion == langutil::EVMVersion::tangerineWhistle())
-		m_evmVersion = EVMC_TANGERINE_WHISTLE;
+		m_evmRevision = EVMC_TANGERINE_WHISTLE;
 	else if (_evmVersion == langutil::EVMVersion::spuriousDragon())
-		m_evmVersion = EVMC_SPURIOUS_DRAGON;
+		m_evmRevision = EVMC_SPURIOUS_DRAGON;
 	else if (_evmVersion == langutil::EVMVersion::byzantium())
-		m_evmVersion = EVMC_BYZANTIUM;
+		m_evmRevision = EVMC_BYZANTIUM;
 	else if (_evmVersion == langutil::EVMVersion::constantinople())
-		m_evmVersion = EVMC_CONSTANTINOPLE;
+		m_evmRevision = EVMC_CONSTANTINOPLE;
 	else if (_evmVersion == langutil::EVMVersion::istanbul())
-		m_evmVersion = EVMC_ISTANBUL;
+		m_evmRevision = EVMC_ISTANBUL;
 	else if (_evmVersion == langutil::EVMVersion::berlin())
 		assertThrow(false, Exception, "Berlin is not supported yet.");
 	else //if (_evmVersion == langutil::EVMVersion::petersburg())
-		m_evmVersion = EVMC_PETERSBURG;
+		m_evmRevision = EVMC_PETERSBURG;
 }
 
 evmc_storage_status EVMHost::set_storage(const evmc::address& _addr, const evmc::bytes32& _key, const evmc::bytes32& _value) noexcept
@@ -146,7 +147,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	{
 		message.gas -= message.kind == EVMC_CREATE ? eth::GasCosts::txCreateGas : eth::GasCosts::txGas;
 		for (size_t i = 0; i < message.input_size; ++i)
-			message.gas -= message.input_data[i] == 0 ? eth::GasCosts::txDataZeroGas : eth::GasCosts::txDataNonZeroGas;
+			message.gas -= message.input_data[i] == 0 ? eth::GasCosts::txDataZeroGas : eth::GasCosts::txDataNonZeroGas(m_evmVersion);
 		if (message.gas < 0)
 		{
 			evmc::result result({});
@@ -191,7 +192,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 	evmc::address currentAddress = m_currentAddress;
 	m_currentAddress = message.destination;
-	evmc::result result = m_vm->execute(*this, m_evmVersion, message, code.data(), code.size());
+	evmc::result result = m_vm->execute(*this, m_evmRevision, message, code.data(), code.size());
 	m_currentAddress = currentAddress;
 
 	if (message.kind == EVMC_CREATE)

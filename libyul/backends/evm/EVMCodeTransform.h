@@ -27,8 +27,6 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/AsmScope.h>
 
-#include <boost/variant.hpp>
-
 #include <optional>
 #include <stack>
 
@@ -108,7 +106,7 @@ private:
 	Scope* m_scope = nullptr;
 };
 
-class CodeTransform: public boost::static_visitor<>
+class CodeTransform
 {
 public:
 	/// Create the code transformer.

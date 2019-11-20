@@ -25,6 +25,7 @@
 
 #include <array>
 #include <map>
+#include <variant>
 
 using namespace std;
 using namespace dev;
@@ -79,13 +80,13 @@ void WordSizeTransform::operator()(Block& _block)
 		_block.statements,
 		[&](Statement& _s) -> std::optional<vector<Statement>>
 		{
-			if (_s.type() == typeid(VariableDeclaration))
+			if (holds_alternative<VariableDeclaration>(_s))
 			{
-				VariableDeclaration& varDecl = boost::get<VariableDeclaration>(_s);
+				VariableDeclaration& varDecl = std::get<VariableDeclaration>(_s);
 
 				// Special handling for datasize and dataoffset - they will only need one variable.
-				if (varDecl.value && varDecl.value->type() == typeid(FunctionCall))
-					if (BuiltinFunction const* f = m_inputDialect.builtin(boost::get<FunctionCall>(*varDecl.value).functionName.name))
+				if (varDecl.value && holds_alternative<FunctionCall>(*varDecl.value))
+					if (BuiltinFunction const* f = m_inputDialect.builtin(std::get<FunctionCall>(*varDecl.value).functionName.name))
 						if (f->literalArguments)
 						{
 							yulAssert(f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring, "");
@@ -106,7 +107,9 @@ void WordSizeTransform::operator()(Block& _block)
 							return {std::move(ret)};
 						}
 
-				if (!varDecl.value || varDecl.value->type() == typeid(FunctionCall)
+				if (
+					!varDecl.value ||
+					holds_alternative<FunctionCall>(*varDecl.value)
 				)
 				{
 					if (varDecl.value) visit(*varDecl.value);
@@ -114,8 +117,8 @@ void WordSizeTransform::operator()(Block& _block)
 					return std::nullopt;
 				}
 				else if (
-					varDecl.value->type() == typeid(Identifier) ||
-					varDecl.value->type() == typeid(Literal)
+					holds_alternative<Identifier>(*varDecl.value) ||
+					holds_alternative<Literal>(*varDecl.value)
 				)
 				{
 					yulAssert(varDecl.variables.size() == 1, "");
@@ -135,14 +138,14 @@ void WordSizeTransform::operator()(Block& _block)
 				else
 					yulAssert(false, "");
 			}
-			else if (_s.type() == typeid(Assignment))
+			else if (holds_alternative<Assignment>(_s))
 			{
-				Assignment& assignment = boost::get<Assignment>(_s);
+				Assignment& assignment = std::get<Assignment>(_s);
 				yulAssert(assignment.value, "");
 
 				// Special handling for datasize and dataoffset - they will only need one variable.
-				if (assignment.value->type() == typeid(FunctionCall))
-					if (BuiltinFunction const* f = m_inputDialect.builtin(boost::get<FunctionCall>(*assignment.value).functionName.name))
+				if (holds_alternative<FunctionCall>(*assignment.value))
+					if (BuiltinFunction const* f = m_inputDialect.builtin(std::get<FunctionCall>(*assignment.value).functionName.name))
 						if (f->literalArguments)
 						{
 							yulAssert(f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring, "");
@@ -163,15 +166,15 @@ void WordSizeTransform::operator()(Block& _block)
 							return {std::move(ret)};
 						}
 
-				if (assignment.value->type() == typeid(FunctionCall))
+				if (holds_alternative<FunctionCall>(*assignment.value))
 				{
 					if (assignment.value) visit(*assignment.value);
 					rewriteIdentifierList(assignment.variableNames);
 					return std::nullopt;
 				}
 				else if (
-					assignment.value->type() == typeid(Identifier) ||
-					assignment.value->type() == typeid(Literal)
+					holds_alternative<Identifier>(*assignment.value) ||
+					holds_alternative<Literal>(*assignment.value)
 				)
 				{
 					yulAssert(assignment.variableNames.size() == 1, "");
@@ -191,8 +194,8 @@ void WordSizeTransform::operator()(Block& _block)
 				else
 					yulAssert(false, "");
 			}
-			else if (_s.type() == typeid(Switch))
-				return handleSwitch(boost::get<Switch>(_s));
+			else if (holds_alternative<Switch>(_s))
+				return handleSwitch(std::get<Switch>(_s));
 			else
 				visit(_s);
 			return std::nullopt;
@@ -331,7 +334,7 @@ std::vector<Statement> WordSizeTransform::handleSwitch(Switch& _switch)
 	}
 	vector<YulString> splitExpressions;
 	for (auto const& expr: expandValue(*_switch.expression))
-		splitExpressions.emplace_back(boost::get<Identifier>(*expr).name);
+		splitExpressions.emplace_back(std::get<Identifier>(*expr).name);
 
 	ret += handleSwitchInternal(
 		_switch.location,
@@ -361,15 +364,15 @@ array<YulString, 4> WordSizeTransform::generateU64IdentifierNames(YulString cons
 array<unique_ptr<Expression>, 4> WordSizeTransform::expandValue(Expression const& _e)
 {
 	array<unique_ptr<Expression>, 4> ret;
-	if (_e.type() == typeid(Identifier))
+	if (holds_alternative<Identifier>(_e))
 	{
-		Identifier const& id = boost::get<Identifier>(_e);
+		Identifier const& id = std::get<Identifier>(_e);
 		for (int i = 0; i < 4; i++)
 			ret[i] = make_unique<Expression>(Identifier{id.location, m_variableMapping.at(id.name)[i]});
 	}
-	else if (_e.type() == typeid(Literal))
+	else if (holds_alternative<Literal>(_e))
 	{
-		Literal const& lit = boost::get<Literal>(_e);
+		Literal const& lit = std::get<Literal>(_e);
 		u256 val = valueOfLiteral(lit);
 		for (int i = 3; i >= 0; i--)
 		{

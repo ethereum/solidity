@@ -95,7 +95,7 @@ void ExpressionSplitter::operator()(Block& _block)
 
 void ExpressionSplitter::outlineExpression(Expression& _expr)
 {
-	if (_expr.type() == typeid(Identifier))
+	if (holds_alternative<Identifier>(_expr))
 		return;
 
 	visit(_expr);

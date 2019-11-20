@@ -48,9 +48,9 @@ void LoadResolver::visit(Expression& _e)
 	if (!dynamic_cast<EVMDialect const*>(&m_dialect))
 		return;
 
-	if (_e.type() == typeid(FunctionCall))
+	if (holds_alternative<FunctionCall>(_e))
 	{
-		FunctionCall const& funCall = boost::get<FunctionCall>(_e);
+		FunctionCall const& funCall = std::get<FunctionCall>(_e);
 		if (auto const* builtin = dynamic_cast<EVMDialect const&>(m_dialect).builtin(funCall.functionName.name))
 			if (builtin->instruction)
 				tryResolve(_e, *builtin->instruction, funCall.arguments);
@@ -63,10 +63,10 @@ void LoadResolver::tryResolve(
 	vector<Expression> const& _arguments
 )
 {
-	if (_arguments.empty() || _arguments.at(0).type() != typeid(Identifier))
+	if (_arguments.empty() || !holds_alternative<Identifier>(_arguments.at(0)))
 		return;
 
-	YulString key = boost::get<Identifier>(_arguments.at(0)).name;
+	YulString key = std::get<Identifier>(_arguments.at(0)).name;
 	if (
 		_instruction == dev::eth::Instruction::SLOAD &&
 		m_storage.values.count(key)

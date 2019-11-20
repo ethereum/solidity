@@ -35,7 +35,7 @@ namespace wasm
 /**
  * Web assembly to binary transform.
  */
-class BinaryTransform: public boost::static_visitor<dev::bytes>
+class BinaryTransform
 {
 public:
 	static dev::bytes run(Module const& _module);

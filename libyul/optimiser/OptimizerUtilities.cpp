@@ -33,7 +33,7 @@ using namespace yul;
 void yul::removeEmptyBlocks(Block& _block)
 {
 	auto isEmptyBlock = [](Statement const& _st) -> bool {
-		return _st.type() == typeid(Block) && boost::get<Block>(_st).statements.empty();
+		return holds_alternative<Block>(_st) && std::get<Block>(_st).statements.empty();
 	};
 	boost::range::remove_erase_if(_block.statements, isEmptyBlock);
 }

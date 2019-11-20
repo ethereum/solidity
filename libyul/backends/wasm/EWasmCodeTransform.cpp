@@ -45,11 +45,11 @@ wasm::Module EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& 
 	for (auto const& statement: _ast.statements)
 	{
 		yulAssert(
-			statement.type() == typeid(yul::FunctionDefinition),
+			holds_alternative<yul::FunctionDefinition>(statement),
 			"Expected only function definitions at the highest level."
 		);
-		if (statement.type() == typeid(yul::FunctionDefinition))
-			module.functions.emplace_back(transform.translateFunction(boost::get<yul::FunctionDefinition>(statement)));
+		if (holds_alternative<yul::FunctionDefinition>(statement))
+			module.functions.emplace_back(transform.translateFunction(std::get<yul::FunctionDefinition>(statement)));
 	}
 
 	for (auto& imp: transform.m_functionsToImport)
@@ -139,7 +139,7 @@ wasm::Expression EWasmCodeTransform::operator()(FunctionCall const& _call)
 		{
 			vector<wasm::Expression> literals;
 			for (auto const& arg: _call.arguments)
-				literals.emplace_back(wasm::StringLiteral{boost::get<Literal>(arg).value.str()});
+				literals.emplace_back(wasm::StringLiteral{std::get<Literal>(arg).value.str()});
 			return wasm::BuiltinCall{_call.functionName.name.str(), std::move(literals)};
 		}
 		else
@@ -284,12 +284,12 @@ wasm::Expression EWasmCodeTransform::operator()(Block const& _block)
 
 unique_ptr<wasm::Expression> EWasmCodeTransform::visit(yul::Expression const& _expression)
 {
-	return make_unique<wasm::Expression>(boost::apply_visitor(*this, _expression));
+	return make_unique<wasm::Expression>(std::visit(*this, _expression));
 }
 
 wasm::Expression EWasmCodeTransform::visitReturnByValue(yul::Expression const& _expression)
 {
-	return boost::apply_visitor(*this, _expression);
+	return std::visit(*this, _expression);
 }
 
 vector<wasm::Expression> EWasmCodeTransform::visit(vector<yul::Expression> const& _expressions)
@@ -302,7 +302,7 @@ vector<wasm::Expression> EWasmCodeTransform::visit(vector<yul::Expression> const
 
 wasm::Expression EWasmCodeTransform::visit(yul::Statement const& _statement)
 {
-	return boost::apply_visitor(*this, _statement);
+	return std::visit(*this, _statement);
 }
 
 vector<wasm::Expression> EWasmCodeTransform::visit(vector<yul::Statement> const& _statements)

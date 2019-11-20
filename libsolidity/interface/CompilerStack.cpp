@@ -1457,7 +1457,7 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 	if (eth::AssemblyItems const* items = assemblyItems(_contractName))
 	{
 		Gas executionGas = gasEstimator.functionalEstimation(*items);
-		Gas codeDepositGas{eth::GasMeter::dataGas(runtimeObject(_contractName).bytecode, false)};
+		Gas codeDepositGas{eth::GasMeter::dataGas(runtimeObject(_contractName).bytecode, false, m_evmVersion)};
 
 		Json::Value creation(Json::objectValue);
 		creation["codeDepositCost"] = gasToJson(codeDepositGas);

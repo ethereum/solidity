@@ -51,5 +51,5 @@ void VarDeclInitializer::operator()(Block& _block)
 			}
 		}
 	};
-	iterateReplacing(_block.statements, boost::apply_visitor(visitor));
+	iterateReplacing(_block.statements, [&](auto&& _statement) { return std::visit(visitor, _statement); });
 }

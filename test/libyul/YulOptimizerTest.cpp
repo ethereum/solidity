@@ -74,6 +74,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>
+#include <variant>
 
 using namespace dev;
 using namespace langutil;
@@ -415,7 +416,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 
 void YulOptimizerTest::disambiguate()
 {
-	*m_ast = boost::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo)(*m_ast));
+	*m_ast = std::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo)(*m_ast));
 	m_analysisInfo.reset();
 	updateContext();
 }

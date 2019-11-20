@@ -68,18 +68,18 @@ UnusedPruner::UnusedPruner(
 void UnusedPruner::operator()(Block& _block)
 {
 	for (auto&& statement: _block.statements)
-		if (statement.type() == typeid(FunctionDefinition))
+		if (holds_alternative<FunctionDefinition>(statement))
 		{
-			FunctionDefinition& funDef = boost::get<FunctionDefinition>(statement);
+			FunctionDefinition& funDef = std::get<FunctionDefinition>(statement);
 			if (!used(funDef.name))
 			{
 				subtractReferences(ReferencesCounter::countReferences(funDef.body));
 				statement = Block{std::move(funDef.location), {}};
 			}
 		}
-		else if (statement.type() == typeid(VariableDeclaration))
+		else if (holds_alternative<VariableDeclaration>(statement))
 		{
-			VariableDeclaration& varDecl = boost::get<VariableDeclaration>(statement);
+			VariableDeclaration& varDecl = std::get<VariableDeclaration>(statement);
 			// Multi-variable declarations are special. We can only remove it
 			// if all variables are unused and the right-hand-side is either
 			// movable or it returns a single value. In the latter case, we
@@ -108,9 +108,9 @@ void UnusedPruner::operator()(Block& _block)
 					}};
 			}
 		}
-		else if (statement.type() == typeid(ExpressionStatement))
+		else if (holds_alternative<ExpressionStatement>(statement))
 		{
-			ExpressionStatement& exprStmt = boost::get<ExpressionStatement>(statement);
+			ExpressionStatement& exprStmt = std::get<ExpressionStatement>(statement);
 			if (
 				SideEffectsCollector(m_dialect, exprStmt.expression, m_functionSideEffects).
 				sideEffectFree(m_allowMSizeOptimization)

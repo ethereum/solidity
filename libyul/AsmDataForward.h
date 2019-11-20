@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <boost/variant.hpp>
+#include <variant>
 
 namespace yul
 {
@@ -46,7 +46,7 @@ struct Block;
 
 struct TypedName;
 
-using Expression = boost::variant<FunctionCall, Identifier, Literal>;
-using Statement = boost::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
+using Expression = std::variant<FunctionCall, Identifier, Literal>;
+using Statement = std::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
 
 }

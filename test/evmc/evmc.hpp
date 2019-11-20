@@ -334,118 +334,6 @@ public:
     }
 };
 
-class Host;
-
-/// @copybrief evmc_vm
-///
-/// This is a RAII wrapper for evmc_vm and objects of this type
-/// automatically destroys the VM instance.
-class VM
-{
-public:
-    VM() noexcept = default;
-
-    /// Converting constructor from evmc_vm.
-    explicit VM(evmc_vm* vm) noexcept : m_instance{vm} {}
-
-    /// Destructor responsible for automatically destroying the VM instance.
-    ~VM() noexcept
-    {
-        if (m_instance)
-            m_instance->destroy(m_instance);
-    }
-
-    VM(const VM&) = delete;
-    VM& operator=(const VM&) = delete;
-
-    /// Move constructor.
-    VM(VM&& other) noexcept : m_instance{other.m_instance} { other.m_instance = nullptr; }
-
-    /// Move assignment operator.
-    VM& operator=(VM&& other) noexcept
-    {
-        this->~VM();
-        m_instance = other.m_instance;
-        other.m_instance = nullptr;
-        return *this;
-    }
-
-    /// The constructor that captures a VM instance and configures the instance
-    /// with the provided list of options.
-    inline VM(evmc_vm* vm,
-              std::initializer_list<std::pair<const char*, const char*>> options) noexcept;
-
-    /// Checks if contains a valid pointer to the VM instance.
-    explicit operator bool() const noexcept { return m_instance != nullptr; }
-
-    /// Checks whenever the VM instance is ABI compatible with the current EVMC API.
-    bool is_abi_compatible() const noexcept { return m_instance->abi_version == EVMC_ABI_VERSION; }
-
-    /// @copydoc evmc_vm::name
-    char const* name() const noexcept { return m_instance->name; }
-
-    /// @copydoc evmc_vm::version
-    char const* version() const noexcept { return m_instance->version; }
-
-    /// @copydoc evmc::vm::get_capabilities
-    evmc_capabilities_flagset get_capabilities() const noexcept
-    {
-        return m_instance->get_capabilities(m_instance);
-    }
-
-    /// @copydoc evmc_set_option()
-    evmc_set_option_result set_option(const char name[], const char value[]) noexcept
-    {
-        return evmc_set_option(m_instance, name, value);
-    }
-
-    /// @copydoc evmc_execute()
-    result execute(const evmc_host_interface& host,
-                   evmc_host_context* ctx,
-                   evmc_revision rev,
-                   const evmc_message& msg,
-                   const uint8_t* code,
-                   size_t code_size) noexcept
-    {
-        return result{m_instance->execute(m_instance, &host, ctx, rev, &msg, code, code_size)};
-    }
-
-    /// Convenient variant of the VM::execute() that takes reference to evmc::Host class.
-    inline result execute(Host& host,
-                          evmc_revision rev,
-                          const evmc_message& msg,
-                          const uint8_t* code,
-                          size_t code_size) noexcept;
-
-    /// Executes code without the Host context.
-    ///
-    /// The same as
-    /// execute(const evmc_host_interface&, evmc_host_context*, evmc_revision,
-    ///         const evmc_message&, const uint8_t*, size_t),
-    /// but without providing the Host context and interface.
-    /// This method is for experimental precompiles support where execution is
-    /// guaranteed not to require any Host access.
-    result execute(evmc_revision rev,
-                   const evmc_message& msg,
-                   const uint8_t* code,
-                   size_t code_size) noexcept
-    {
-        return result{
-            m_instance->execute(m_instance, nullptr, nullptr, rev, &msg, code, code_size)};
-    }
-
-private:
-    evmc_vm* m_instance = nullptr;
-};
-
-inline VM::VM(evmc_vm* vm,
-              std::initializer_list<std::pair<const char*, const char*>> options) noexcept
-  : m_instance{vm}
-{
-    for (const auto& option : options)
-        set_option(option.first, option.second);
-}
-
 
 /// The EVMC Host interface
 class HostInterface
@@ -514,8 +402,10 @@ public:
     HostContext() = default;
 
     /// Constructor from the EVMC Host primitives.
-    HostContext(const evmc_host_interface* interface, evmc_host_context* ctx) noexcept
-      : host{interface}, context{ctx}
+    /// @param interface  The reference to the Host interface.
+    /// @param ctx        The pointer to the Host context object. This parameter MAY be null.
+    HostContext(const evmc_host_interface& interface, evmc_host_context* ctx) noexcept
+      : host{&interface}, context{ctx}
     {}
 
     bool account_exists(const address& address) noexcept final
@@ -596,6 +486,7 @@ public:
     }
 };
 
+
 /// Abstract class to be used by Host implementations.
 ///
 /// When implementing EVMC Host, you can directly inherit from the evmc::Host class.
@@ -628,13 +519,118 @@ public:
 };
 
 
-inline result VM::execute(Host& host,
-                          evmc_revision rev,
-                          const evmc_message& msg,
-                          const uint8_t* code,
-                          size_t code_size) noexcept
+/// @copybrief evmc_vm
+///
+/// This is a RAII wrapper for evmc_vm, and object of this type
+/// automatically destroys the VM instance.
+class VM
 {
-    return execute(Host::get_interface(), host.to_context(), rev, msg, code, code_size);
+public:
+    VM() noexcept = default;
+
+    /// Converting constructor from evmc_vm.
+    explicit VM(evmc_vm* vm) noexcept : m_instance{vm} {}
+
+    /// Destructor responsible for automatically destroying the VM instance.
+    ~VM() noexcept
+    {
+        if (m_instance)
+            m_instance->destroy(m_instance);
+    }
+
+    VM(const VM&) = delete;
+    VM& operator=(const VM&) = delete;
+
+    /// Move constructor.
+    VM(VM&& other) noexcept : m_instance{other.m_instance} { other.m_instance = nullptr; }
+
+    /// Move assignment operator.
+    VM& operator=(VM&& other) noexcept
+    {
+        this->~VM();
+        m_instance = other.m_instance;
+        other.m_instance = nullptr;
+        return *this;
+    }
+
+    /// The constructor that captures a VM instance and configures the instance
+    /// with the provided list of options.
+    inline VM(evmc_vm* vm,
+              std::initializer_list<std::pair<const char*, const char*>> options) noexcept;
+
+    /// Checks if contains a valid pointer to the VM instance.
+    explicit operator bool() const noexcept { return m_instance != nullptr; }
+
+    /// Checks whenever the VM instance is ABI compatible with the current EVMC API.
+    bool is_abi_compatible() const noexcept { return m_instance->abi_version == EVMC_ABI_VERSION; }
+
+    /// @copydoc evmc_vm::name
+    char const* name() const noexcept { return m_instance->name; }
+
+    /// @copydoc evmc_vm::version
+    char const* version() const noexcept { return m_instance->version; }
+
+    /// @copydoc evmc::vm::get_capabilities
+    evmc_capabilities_flagset get_capabilities() const noexcept
+    {
+        return m_instance->get_capabilities(m_instance);
+    }
+
+    /// @copydoc evmc_set_option()
+    evmc_set_option_result set_option(const char name[], const char value[]) noexcept
+    {
+        return evmc_set_option(m_instance, name, value);
+    }
+
+    /// @copydoc evmc_execute()
+    result execute(const evmc_host_interface& host,
+                   evmc_host_context* ctx,
+                   evmc_revision rev,
+                   const evmc_message& msg,
+                   const uint8_t* code,
+                   size_t code_size) noexcept
+    {
+        return result{m_instance->execute(m_instance, &host, ctx, rev, &msg, code, code_size)};
+    }
+
+    /// Convenient variant of the VM::execute() that takes reference to evmc::Host class.
+    result execute(Host& host,
+                   evmc_revision rev,
+                   const evmc_message& msg,
+                   const uint8_t* code,
+                   size_t code_size) noexcept
+    {
+        return execute(Host::get_interface(), host.to_context(), rev, msg, code, code_size);
+    }
+
+    /// Executes code without the Host context.
+    ///
+    /// The same as
+    /// execute(const evmc_host_interface&, evmc_host_context*, evmc_revision,
+    ///         const evmc_message&, const uint8_t*, size_t),
+    /// but without providing the Host context and interface.
+    /// This method is for experimental precompiles support where execution is
+    /// guaranteed not to require any Host access.
+    result execute(evmc_revision rev,
+                   const evmc_message& msg,
+                   const uint8_t* code,
+                   size_t code_size) noexcept
+    {
+        return result{
+            m_instance->execute(m_instance, nullptr, nullptr, rev, &msg, code, code_size)};
+    }
+
+private:
+    evmc_vm* m_instance = nullptr;
+};
+
+inline VM::VM(evmc_vm* vm,
+              std::initializer_list<std::pair<const char*, const char*>> options) noexcept
+  : m_instance{vm}
+{
+    // This constructor is implemented outside of the class definition to workaround a doxygen bug.
+    for (const auto& option : options)
+        set_option(option.first, option.second);
 }
 
 
