@@ -139,7 +139,7 @@ void ControlFlowSimplifier::operator()(Block& _block)
 void ControlFlowSimplifier::operator()(FunctionDefinition& _funDef)
 {
 	ASTModifier::operator()(_funDef);
-	if (!_funDef.body.statements.empty() && _funDef.body.statements.back().type() == typeid(Leave))
+	if (!_funDef.body.statements.empty() && holds_alternative<Leave>(_funDef.body.statements.back()))
 		_funDef.body.statements.pop_back();
 }
 

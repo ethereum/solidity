@@ -158,7 +158,7 @@ TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement cons
 		return ControlFlow::Break;
 	else if (holds_alternative<Continue>(_statement))
 		return ControlFlow::Continue;
-	else if (_statement.type() == typeid(Leave))
+	else if (holds_alternative<Leave>(_statement))
 		return ControlFlow::Leave;
 	else
 		return ControlFlow::FlowOut;

@@ -466,11 +466,11 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 	FunctionCall ret;
 	if (holds_alternative<Identifier>(_initialOp))
 	{
-		ret.functionName = std::move(boost::get<Identifier>(_initialOp));
+		ret.functionName = std::move(std::get<Identifier>(_initialOp));
 		ret.location = ret.functionName.location;
 	}
 	else if (holds_alternative<FunctionCall>(_initialOp))
-		ret = std::move(boost::get<FunctionCall>(_initialOp));
+		ret = std::move(std::get<FunctionCall>(_initialOp));
 	else
 		fatalParserError(
 			m_dialect.flavour == AsmFlavour::Yul ?
