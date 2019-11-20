@@ -86,7 +86,7 @@ int dev::fromHex(char _i, WhenError _throw)
 	if (_i >= 'A' && _i <= 'F')
 		return _i - 'A' + 10;
 	if (_throw == WhenError::Throw)
-		BOOST_THROW_EXCEPTION(BadHexCharacter() << errinfo_invalidSymbol(_i));
+		assertThrow(false, BadHexCharacter, to_string(_i));
 	else
 		return -1;
 }
@@ -103,7 +103,7 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 		if (h != -1)
 			ret.push_back(h);
 		else if (_throw == WhenError::Throw)
-			BOOST_THROW_EXCEPTION(BadHexCharacter());
+			assertThrow(false, BadHexCharacter, "");
 		else
 			return bytes();
 	}
@@ -114,7 +114,7 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 		if (h != -1 && l != -1)
 			ret.push_back((uint8_t)(h * 16 + l));
 		else if (_throw == WhenError::Throw)
-			BOOST_THROW_EXCEPTION(BadHexCharacter());
+			assertThrow(false, BadHexCharacter, "");
 		else
 			return bytes();
 	}
