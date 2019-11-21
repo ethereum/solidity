@@ -14,7 +14,7 @@ tape('Deterministic Compilation', function (t) {
       input[file] = { content: fs.readFileSync(testdir + file, 'utf8') };
     }
     for (i = 0; i < 10; i++) {
-      var output = JSON.parse(solc.compileStandardWrapper(JSON.stringify({
+      var output = JSON.parse(solc.compile(JSON.stringify({
         language: 'Solidity',
         settings: {
           optimizer: {
