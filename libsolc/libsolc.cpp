@@ -53,7 +53,7 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = n
 			if (!contents_c && !error_c)
 			{
 				result.success = false;
-				result.responseOrErrorMessage = "File not found.";
+				result.responseOrErrorMessage = "Callback not supported.";
 			}
 			if (contents_c)
 			{
