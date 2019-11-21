@@ -68,6 +68,7 @@
           "scope": 5,
           "src": "17:30:1",
           "stateMutability": "nonpayable",
+          "virtual": true,
           "visibility": "public"
         }
       ],
@@ -123,6 +124,7 @@
           "scope": 10,
           "src": "67:30:1",
           "stateMutability": "nonpayable",
+          "virtual": true,
           "visibility": "public"
         }
       ],
@@ -214,34 +216,40 @@
           "name": "f",
           "nodeType": "FunctionDefinition",
           "overrides":
-          [
-            {
-              "contractScope": null,
-              "id": 16,
-              "name": "A",
-              "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 5,
-              "src": "154:1:1",
-              "typeDescriptions":
+          {
+            "id": 18,
+            "nodeType": "OverrideSpecifier",
+            "overrides":
+            [
               {
-                "typeIdentifier": "t_contract$_A_$5",
-                "typeString": "contract A"
-              }
-            },
-            {
-              "contractScope": null,
-              "id": 17,
-              "name": "B",
-              "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 10,
-              "src": "157:1:1",
-              "typeDescriptions":
+                "contractScope": null,
+                "id": 16,
+                "name": "A",
+                "nodeType": "UserDefinedTypeName",
+                "referencedDeclaration": 5,
+                "src": "154:1:1",
+                "typeDescriptions":
+                {
+                  "typeIdentifier": "t_contract$_A_$5",
+                  "typeString": "contract A"
+                }
+              },
               {
-                "typeIdentifier": "t_contract$_B_$10",
-                "typeString": "contract B"
+                "contractScope": null,
+                "id": 17,
+                "name": "B",
+                "nodeType": "UserDefinedTypeName",
+                "referencedDeclaration": 10,
+                "src": "157:1:1",
+                "typeDescriptions":
+                {
+                  "typeIdentifier": "t_contract$_B_$10",
+                  "typeString": "contract B"
+                }
               }
-            }
-          ],
+            ],
+            "src": "145:14:1"
+          },
           "parameters":
           {
             "id": 15,
@@ -259,6 +267,7 @@
           "scope": 22,
           "src": "125:37:1",
           "stateMutability": "nonpayable",
+          "virtual": false,
           "visibility": "public"
         }
       ],

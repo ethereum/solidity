@@ -148,6 +148,7 @@
           "scope": 9,
           "src": "17:76:1",
           "stateMutability": "pure",
+          "virtual": false,
           "visibility": "public"
         }
       ],

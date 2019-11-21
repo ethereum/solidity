@@ -104,6 +104,7 @@
             "overrides": null,
             "scope": 39,
             "stateMutability": "nonpayable",
+            "virtual": false,
             "visibility": "public"
           },
           "children":
@@ -416,9 +417,21 @@
                             "isLValue": false,
                             "isPure": true,
                             "lValueRequested": false,
-                            "type": "type(address)",
-                            "value": "address"
+                            "type": "type(address)"
                           },
+                          "children":
+                          [
+                            {
+                              "attributes":
+                              {
+                                "name": "address",
+                                "type": null
+                              },
+                              "id": 23,
+                              "name": "ElementaryTypeName",
+                              "src": "209:7:1"
+                            }
+                          ],
                           "id": 24,
                           "name": "ElementaryTypeNameExpression",
                           "src": "209:7:1"
@@ -547,9 +560,21 @@
                                 "isLValue": false,
                                 "isPure": true,
                                 "lValueRequested": false,
-                                "type": "type(address)",
-                                "value": "address"
+                                "type": "type(address)"
                               },
+                              "children":
+                              [
+                                {
+                                  "attributes":
+                                  {
+                                    "name": "address",
+                                    "type": null
+                                  },
+                                  "id": 31,
+                                  "name": "ElementaryTypeName",
+                                  "src": "239:7:1"
+                                }
+                              ],
                               "id": 32,
                               "name": "ElementaryTypeNameExpression",
                               "src": "239:7:1"

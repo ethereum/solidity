@@ -59,6 +59,7 @@
             "overrides": null,
             "scope": 5,
             "stateMutability": "nonpayable",
+            "virtual": true,
             "visibility": "public"
           },
           "children":
@@ -151,6 +152,7 @@
             "overrides": null,
             "scope": 10,
             "stateMutability": "nonpayable",
+            "virtual": true,
             "visibility": "public"
           },
           "children":
@@ -294,33 +296,42 @@
             "name": "f",
             "scope": 22,
             "stateMutability": "nonpayable",
+            "virtual": false,
             "visibility": "public"
           },
           "children":
           [
             {
-              "attributes":
-              {
-                "contractScope": null,
-                "name": "A",
-                "referencedDeclaration": 5,
-                "type": "contract A"
-              },
-              "id": 16,
-              "name": "UserDefinedTypeName",
-              "src": "154:1:1"
-            },
-            {
-              "attributes":
-              {
-                "contractScope": null,
-                "name": "B",
-                "referencedDeclaration": 10,
-                "type": "contract B"
-              },
-              "id": 17,
-              "name": "UserDefinedTypeName",
-              "src": "157:1:1"
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "contractScope": null,
+                    "name": "A",
+                    "referencedDeclaration": 5,
+                    "type": "contract A"
+                  },
+                  "id": 16,
+                  "name": "UserDefinedTypeName",
+                  "src": "154:1:1"
+                },
+                {
+                  "attributes":
+                  {
+                    "contractScope": null,
+                    "name": "B",
+                    "referencedDeclaration": 10,
+                    "type": "contract B"
+                  },
+                  "id": 17,
+                  "name": "UserDefinedTypeName",
+                  "src": "157:1:1"
+                }
+              ],
+              "id": 18,
+              "name": "OverrideSpecifier",
+              "src": "145:14:1"
             },
             {
               "attributes":

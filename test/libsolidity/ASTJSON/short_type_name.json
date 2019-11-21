@@ -117,6 +117,7 @@
           "scope": 11,
           "src": "13:40:1",
           "stateMutability": "nonpayable",
+          "virtual": false,
           "visibility": "public"
         }
       ],

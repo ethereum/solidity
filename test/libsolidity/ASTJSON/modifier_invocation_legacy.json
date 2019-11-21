@@ -41,6 +41,8 @@
           {
             "documentation": null,
             "name": "M",
+            "overrides": null,
+            "virtual": false,
             "visibility": "internal"
           },
           "children":
@@ -112,6 +114,7 @@
             "overrides": null,
             "scope": 14,
             "stateMutability": "nonpayable",
+            "virtual": false,
             "visibility": "public"
           },
           "children":

@@ -51,6 +51,7 @@
             "overrides": null,
             "scope": 9,
             "stateMutability": "payable",
+            "virtual": false,
             "visibility": "external"
           },
           "children":
@@ -114,6 +115,7 @@
             "overrides": null,
             "scope": 9,
             "stateMutability": "payable",
+            "virtual": false,
             "visibility": "external"
           },
           "children":

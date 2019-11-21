@@ -51,6 +51,7 @@
             "overrides": null,
             "scope": 12,
             "stateMutability": "nonpayable",
+            "virtual": false,
             "visibility": "public"
           },
           "children":

@@ -59,6 +59,7 @@
             "overrides": null,
             "scope": 5,
             "stateMutability": "nonpayable",
+            "virtual": false,
             "visibility": "public"
           },
           "children":
@@ -173,6 +174,7 @@
             "overrides": null,
             "scope": 16,
             "stateMutability": "nonpayable",
+            "virtual": false,
             "visibility": "public"
           },
           "children":
@@ -224,16 +226,25 @@
               null
             ],
             "name": "faa",
-            "overrides":
-            [
-              null
-            ],
             "scope": 16,
             "stateMutability": "nonpayable",
+            "virtual": false,
             "visibility": "public"
           },
           "children":
           [
+            {
+              "attributes":
+              {
+                "overrides":
+                [
+                  null
+                ]
+              },
+              "id": 12,
+              "name": "OverrideSpecifier",
+              "src": "106:8:1"
+            },
             {
               "attributes":
               {
@@ -346,16 +357,25 @@
               null
             ],
             "name": "foo",
-            "overrides":
-            [
-              null
-            ],
             "scope": 31,
             "stateMutability": "nonpayable",
+            "virtual": false,
             "visibility": "public"
           },
           "children":
           [
+            {
+              "attributes":
+              {
+                "overrides":
+                [
+                  null
+                ]
+              },
+              "id": 20,
+              "name": "OverrideSpecifier",
+              "src": "161:8:1"
+            },
             {
               "attributes":
               {
@@ -418,33 +438,42 @@
             "name": "faa",
             "scope": 31,
             "stateMutability": "nonpayable",
+            "virtual": false,
             "visibility": "public"
           },
           "children":
           [
             {
-              "attributes":
-              {
-                "contractScope": null,
-                "name": "A",
-                "referencedDeclaration": 5,
-                "type": "contract A"
-              },
-              "id": 25,
-              "name": "UserDefinedTypeName",
-              "src": "206:1:1"
-            },
-            {
-              "attributes":
-              {
-                "contractScope": null,
-                "name": "B",
-                "referencedDeclaration": 16,
-                "type": "contract B"
-              },
-              "id": 26,
-              "name": "UserDefinedTypeName",
-              "src": "209:1:1"
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "contractScope": null,
+                    "name": "A",
+                    "referencedDeclaration": 5,
+                    "type": "contract A"
+                  },
+                  "id": 25,
+                  "name": "UserDefinedTypeName",
+                  "src": "206:1:1"
+                },
+                {
+                  "attributes":
+                  {
+                    "contractScope": null,
+                    "name": "B",
+                    "referencedDeclaration": 16,
+                    "type": "contract B"
+                  },
+                  "id": 26,
+                  "name": "UserDefinedTypeName",
+                  "src": "209:1:1"
+                }
+              ],
+              "id": 27,
+              "name": "OverrideSpecifier",
+              "src": "197:14:1"
             },
             {
               "attributes":
