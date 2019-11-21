@@ -36,7 +36,11 @@ extern "C" {
 
 /// Callback used to retrieve additional source files.
 ///
-/// "Returns" two pointers that should be heap-allocated and are free'd by the caller.
+/// @param _path The path for loading.
+/// @param o_contents A pointer to the contents of the file, if found.
+/// @param o_error A pointer to an error message, if there is one.
+///
+/// The two pointers (o_contents and o_error) should be heap-allocated and are free'd by the caller.
 typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
 
 /// Returns the complete license document.
@@ -52,7 +56,10 @@ char const* solidity_version() SOLC_NOEXCEPT;
 /// Takes a "Standard Input JSON" and an optional callback (can be set to null). Returns
 /// a "Standard Output JSON". Both are to be UTF-8 encoded.
 ///
-/// The pointer returned must not be freed by the caller.
+/// @param _input
+/// @param _readCallback
+///
+/// @returns A pointer to the result. The pointer returned must not be freed by the caller.
 char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback) SOLC_NOEXCEPT;
 
 /// Frees up any allocated memory.
