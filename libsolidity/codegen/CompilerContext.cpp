@@ -438,7 +438,7 @@ void CompilerContext::appendInlineAssembly(
 		parserResult = std::move(obj.code);
 
 #ifdef SOL_OUTPUT_ASM
-		cout << "After optimizer: " << endl;
+		cout << "After optimizer:" << endl;
 		cout << yul::AsmPrinter()(*parserResult) << endl;
 #endif
 	}
