@@ -271,7 +271,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin", objectWithLinkRefsHex(m_compiler->object(_contract)));
 		else
 		{
-			sout() << "Binary: " << endl;
+			sout() << "Binary:" << endl;
 			sout() << objectWithLinkRefsHex(m_compiler->object(_contract)) << endl;
 		}
 	}
@@ -281,7 +281,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime", objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)));
 		else
 		{
-			sout() << "Binary of the runtime part: " << endl;
+			sout() << "Binary of the runtime part:" << endl;
 			sout() << objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)) << endl;
 		}
 	}
@@ -293,7 +293,7 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", dev::eth::disassemble(m_compiler->object(_contract).bytecode));
 	else
 	{
-		sout() << "Opcodes: " << endl;
+		sout() << "Opcodes:" << endl;
 		sout() << std::uppercase << dev::eth::disassemble(m_compiler->object(_contract).bytecode);
 		sout() << endl;
 	}
@@ -307,7 +307,7 @@ void CommandLineInterface::handleIR(string const& _contractName)
 			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".yul", m_compiler->yulIR(_contractName));
 		else
 		{
-			sout() << "IR: " << endl;
+			sout() << "IR:" << endl;
 			sout() << m_compiler->yulIR(_contractName) << endl;
 		}
 	}
@@ -327,7 +327,7 @@ void CommandLineInterface::handleEWasm(string const& _contractName)
 		}
 		else
 		{
-			sout() << "EWasm text: " << endl;
+			sout() << "EWasm text:" << endl;
 			sout() << m_compiler->eWasm(_contractName) << endl;
 			sout() << "EWasm binary (hex): " << m_compiler->eWasmObject(_contractName).toHex() << endl;
 		}
@@ -355,7 +355,7 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 	if (m_args.count(g_argOutputDir))
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".signatures", out);
 	else
-		sout() << "Function signatures: " << endl << out;
+		sout() << "Function signatures:" << endl << out;
 }
 
 void CommandLineInterface::handleMetadata(string const& _contract)
@@ -367,7 +367,7 @@ void CommandLineInterface::handleMetadata(string const& _contract)
 	if (m_args.count(g_argOutputDir))
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_meta.json", data);
 	else
-		sout() << "Metadata: " << endl << data << endl;
+		sout() << "Metadata:" << endl << data << endl;
 }
 
 void CommandLineInterface::handleABI(string const& _contract)
@@ -379,7 +379,7 @@ void CommandLineInterface::handleABI(string const& _contract)
 	if (m_args.count(g_argOutputDir))
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".abi", data);
 	else
-		sout() << "Contract JSON ABI " << endl << data << endl;
+		sout() << "Contract JSON ABI" << endl << data << endl;
 }
 
 void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contract)
@@ -563,7 +563,7 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 				addrString = addrString.substr(2);
 			if (addrString.empty())
 			{
-				serr() << "Empty address provided for library \"" << libName << "\": " << endl;
+				serr() << "Empty address provided for library \"" << libName << "\":" << endl;
 				serr() << "Note that there should not be any whitespace after the colon." << endl;
 				return false;
 			}
