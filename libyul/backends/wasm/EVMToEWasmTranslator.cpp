@@ -194,7 +194,10 @@ function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	let m3 := 0
 	let m4 := 1
 
-	for {} i64.and(i64.eqz(i64.clz(y1)), lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4)) {} {
+	for {} 1 {} {
+		if i64.or(i64.eqz(i64.clz(y1)), gte_256x256_64(y1, y2, y3, y4, x1, x2, x3, x4)) {
+			break
+		}
 		y1, y2, y3, y4 := shl(y1, y2, y3, y4, 0, 0, 0, 1)
 		m1, m2, m3, m4 := shl(m1, m2, m3, m4, 0, 0, 0, 1)
 	}
@@ -304,7 +307,6 @@ function mod320(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> r1, r2, r3, r4, r5 {
 	}
 }
 function mod512(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> r1, r2, r3, r4, r5, r6, r7, r8 {
-	// TODO: implement
 	if iszero512(y1, y2, y3, y4, y5, y6, y7, y8) {
 		invalid()
 	}
