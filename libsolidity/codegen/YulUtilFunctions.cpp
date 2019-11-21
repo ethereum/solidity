@@ -23,6 +23,8 @@
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerUtils.h>
+
+#include <libdevcore/CommonData.h>
 #include <libdevcore/Whiskers.h>
 #include <libdevcore/StringUtils.h>
 
@@ -1756,7 +1758,7 @@ string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const
 			for (size_t i = 0; i < words; ++i)
 			{
 				wordParams[i]["offset"] = to_string(32 + i * 32);
-				wordParams[i]["wordValue"] = "0x" + h256(data.substr(32 * i, 32), h256::AlignLeft).hex();
+				wordParams[i]["wordValue"] = formatAsStringOrNumber(data.substr(32 * i, 32));
 			}
 			templ("word", wordParams);
 			return templ.render();
