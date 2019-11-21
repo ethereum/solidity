@@ -40,6 +40,8 @@ extern "C" {
 /// @param o_contents A pointer to the contents of the file, if found.
 /// @param o_error A pointer to an error message, if there is one.
 ///
+/// If the callback is not supported, o_contents and o_error should be set to NULL.
+///
 /// The two pointers (o_contents and o_error) should be heap-allocated and are free'd by the caller.
 typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
 

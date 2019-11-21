@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(with_callback)
 	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: Missing file."));
 
 	// This should be placed due to the missing "notfound.sol" which sets both pointers to null.
-	BOOST_CHECK(containsError(result, "ParserError", "Source \"notfound.sol\" not found: File not found."));
+	BOOST_CHECK(containsError(result, "ParserError", "Source \"notfound.sol\" not found: Callback not supported."));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
