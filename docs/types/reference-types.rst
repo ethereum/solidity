@@ -59,7 +59,7 @@ Data locations are not only relevant for persistency of data, but also for the s
             x = memoryArray; // works, copies the whole array to storage
             uint[] storage y = x; // works, assigns a pointer, data location of y is storage
             y[7]; // fine, returns the 8th element
-            y.length = 2; // fine, modifies x through y
+            y.pop(); // fine, modifies x through y
             delete x; // fine, clears the array, also modifies y
             // The following does not work; it would need to create a new temporary /
             // unnamed array in storage, but storage is "statically" allocated:
@@ -215,12 +215,6 @@ Array Members
 **length**:
     Arrays have a ``length`` member that contains their number of elements.
     The length of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created.
-    For dynamically-sized arrays (only available for storage), this member can be assigned to resize the array.
-    Accessing elements outside the current length does not automatically resize the array and instead causes a failing assertion.
-    Increasing the length adds new zero-initialised elements to the array.
-    Reducing the length performs an implicit :ref:`delete<delete>` on each of the
-    removed elements. If you try to resize a non-dynamic array that isn't in
-    storage, you receive a ``Value must be an lvalue`` error.
 **push**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that you can use to append an element at the end of the array.
      If no argument is given, the element will be zero-initialised and a reference to the new element is returned.
@@ -228,14 +222,11 @@ Array Members
 **pop**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``pop`` that you can use to remove an element from the end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element.
 
-.. warning::
-    If you use ``.length--`` on an empty array, it causes an underflow and
-    thus sets the length to ``2**256-1``.
-
 .. note::
-    Increasing the length of a storage array has constant gas costs because
-    storage is assumed to be zero-initialised, while decreasing
-    the length has at least linear cost (but in most cases worse than linear),
+    Increasing the length of a storage array by calling ``push()``
+    has constant gas costs because storage is zero-initialised,
+    while decreasing the length by calling ``pop()`` has at least
+    linear cost (but in most cases worse than linear),
     because it includes explicitly clearing the removed
     elements similar to calling :ref:`delete<delete>` on them.
 
@@ -295,7 +286,13 @@ Array Members
 
         function changeFlagArraySize(uint newSize) public {
             // if the new size is smaller, removed array elements will be cleared
-            m_pairsOfFlags.length = newSize;
+            if (newSize < m_pairsOfFlags.length) {
+                while (m_pairsOfFlags.length > newSize)
+                    m_pairsOfFlags.pop();
+            } else if (newSize > m_pairsOfFlags.length) {
+                while (m_pairsOfFlags.length < newSize)
+                    m_pairsOfFlags.push();
+            }
         }
 
         function clear() public {
@@ -303,7 +300,7 @@ Array Members
             delete m_pairsOfFlags;
             delete m_aLotOfIntegers;
             // identical effect here
-            m_pairsOfFlags.length = 0;
+            m_pairsOfFlags = new bool[2][](0);
         }
 
         bytes m_byteData;
@@ -312,7 +309,8 @@ Array Members
             // byte arrays ("bytes") are different as they are stored without padding,
             // but can be treated identical to "uint8[]"
             m_byteData = data;
-            m_byteData.length += 7;
+            for (uint i = 0; i < 7; i++)
+                m_byteData.push();
             m_byteData[3] = 0x08;
             delete m_byteData[2];
         }

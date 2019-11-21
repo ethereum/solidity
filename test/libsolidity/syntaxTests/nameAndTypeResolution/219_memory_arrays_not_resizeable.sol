@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (72-80): Memory arrays cannot be resized.
+// TypeError: (72-80): Member "length" is read-only and cannot be used to resize arrays.

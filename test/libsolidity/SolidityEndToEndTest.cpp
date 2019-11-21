@@ -1030,26 +1030,6 @@ BOOST_AUTO_TEST_CASE(multi_level_mapping)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(deleteLength)
-{
-	char const* sourceCode = R"(
-		contract test {
-			uint[] x;
-			function f() public returns (uint){
-				x.length = 1;
-				x[0] = 1;
-				delete x.length;
-				return x.length;
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
-		BOOST_CHECK(storageEmpty(m_contractAddress));
-	)
-}
-
 BOOST_AUTO_TEST_CASE(constructor)
 {
 	char const* sourceCode = R"(
@@ -2849,10 +2829,9 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data_from_storage)
 			bytes x;
 			event Deposit(uint fixeda, bytes dynx, uint fixedb);
 			function deposit() public {
-				x.length = 3;
-				x[0] = "A";
-				x[1] = "B";
-				x[2] = "C";
+				x.push("A");
+				x.push("B");
+				x.push("C");
 				emit Deposit(10, x, 15);
 			}
 		}
@@ -2873,7 +2852,7 @@ BOOST_AUTO_TEST_CASE(event_really_really_lots_of_data_from_storage)
 			bytes x;
 			event Deposit(uint fixeda, bytes dynx, uint fixedb);
 			function deposit() public {
-				x.length = 31;
+				x = new bytes(31);
 				x[0] = "A";
 				x[1] = "B";
 				x[2] = "C";
@@ -3021,7 +3000,8 @@ BOOST_AUTO_TEST_CASE(event_dynamic_array_storage)
 			event E(uint[]);
 			uint[] arr;
 			function createEvent(uint x) public {
-				arr.length = 3;
+				while (arr.length < 3)
+					arr.push();
 				arr[0] = x;
 				arr[1] = x + 1;
 				arr[2] = x + 2;
@@ -3049,7 +3029,8 @@ BOOST_AUTO_TEST_CASE(event_dynamic_array_storage_v2)
 			event E(uint[]);
 			uint[] arr;
 			function createEvent(uint x) public {
-				arr.length = 3;
+				while (arr.length < 3)
+					arr.push();
 				arr[0] = x;
 				arr[1] = x + 1;
 				arr[2] = x + 2;
@@ -3077,9 +3058,8 @@ BOOST_AUTO_TEST_CASE(event_dynamic_nested_array_storage_v2)
 			event E(uint[][]);
 			uint[][] arr;
 			function createEvent(uint x) public {
-				arr.length = 2;
-				arr[0].length = 2;
-				arr[1].length = 2;
+				arr.push(new uint[](2));
+				arr.push(new uint[](2));
 				arr[0][0] = x;
 				arr[0][1] = x + 1;
 				arr[1][0] = x + 2;
@@ -3088,16 +3068,16 @@ BOOST_AUTO_TEST_CASE(event_dynamic_nested_array_storage_v2)
 			}
 		}
 	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		u256 x(42);
-		callContractFunction("createEvent(uint256)", x);
-		BOOST_REQUIRE_EQUAL(numLogs(), 1);
-		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
-		BOOST_CHECK(logData(0) == encodeArgs(0x20, 2, 0x40, 0xa0, 2, x, x + 1, 2, x + 2, x + 3));
-		BOOST_REQUIRE_EQUAL(numLogTopics(0), 1);
-		BOOST_CHECK_EQUAL(logTopic(0, 0), dev::keccak256(string("E(uint256[][])")));
-	);
+	/// TODO enable again after push(..) via yul was implemented.
+	/// ALSO_VIA_YUL()
+	compileAndRun(sourceCode);
+	u256 x(42);
+	callContractFunction("createEvent(uint256)", x);
+	BOOST_REQUIRE_EQUAL(numLogs(), 1);
+	BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
+	BOOST_CHECK(logData(0) == encodeArgs(0x20, 2, 0x40, 0xa0, 2, x, x + 1, 2, x + 2, x + 3));
+	BOOST_REQUIRE_EQUAL(numLogTopics(0), 1);
+	BOOST_CHECK_EQUAL(logTopic(0, 0), dev::keccak256(string("E(uint256[][])")));
 }
 
 BOOST_AUTO_TEST_CASE(event_indexed_string)
@@ -3108,7 +3088,8 @@ BOOST_AUTO_TEST_CASE(event_indexed_string)
 			uint[4] y;
 			event E(string indexed r, uint[4] indexed t);
 			function deposit() public {
-				bytes(x).length = 90;
+				for (uint i = 0; i < 90; i++)
+					bytes(x).push(0);
 				for (uint8 i = 0; i < 90; i++)
 					bytes(x)[i] = byte(i);
 				y[0] = 4;
@@ -3286,10 +3267,9 @@ BOOST_AUTO_TEST_CASE(keccak256_with_bytes)
 			bytes data;
 			function foo() public returns (bool)
 			{
-				data.length = 3;
-				data[0] = "f";
-				data[1] = "o";
-				data[2] = "o";
+				data.push("f");
+				data.push("o");
+				data.push("o");
 				return keccak256(data) == keccak256("foo");
 			}
 		}
@@ -3305,10 +3285,9 @@ BOOST_AUTO_TEST_CASE(iterated_keccak256_with_bytes)
 			bytes data;
 			function foo() public returns (bytes32)
 			{
-				data.length = 3;
-				data[0] = "x";
-				data[1] = "y";
-				data[2] = "z";
+				data.push("x");
+				data.push("y");
+				data.push("z");
 				return keccak256(abi.encodePacked("b", keccak256(data), "a"));
 			}
 		}
@@ -4257,7 +4236,12 @@ BOOST_AUTO_TEST_CASE(dynamic_arrays_in_storage)
 			function getID(uint index) public returns (uint) { return ids[index]; }
 			function getData(uint index) public returns (uint x, uint y) { x = data[index].x; y = data[index].y; }
 			function getLengths() public returns (uint l1, uint l2) { l1 = data.length; l2 = ids.length; }
-			function setLengths(uint l1, uint l2) public { data.length = l1; ids.length = l2; }
+			function setLengths(uint l1, uint l2) public {
+				while (data.length < l1)
+					data.push();
+				while (ids.length < l2)
+					ids.push();
+			}
 		}
 	)";
 	compileAndRun(sourceCode);
@@ -4302,24 +4286,28 @@ BOOST_AUTO_TEST_CASE(dynamic_out_of_bounds_array_access)
 	char const* sourceCode = R"(
 		contract c {
 			uint[] data;
-			function enlarge(uint amount) public returns (uint) { return data.length += amount; }
+			function enlarge(uint amount) public returns (uint) {
+				while (data.length - amount > 0)
+					data.push();
+				return data.length;
+			}
 			function set(uint index, uint value) public returns (bool) { data[index] = value; return true; }
 			function get(uint index) public returns (uint) { return data[index]; }
 			function length() public returns (uint) { return data.length; }
 		}
 	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("length()"), encodeArgs(0));
-		ABI_CHECK(callContractFunction("get(uint256)", 3), bytes());
-		ABI_CHECK(callContractFunction("enlarge(uint256)", 4), encodeArgs(4));
-		ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
-		ABI_CHECK(callContractFunction("set(uint256,uint256)", 3, 4), encodeArgs(true));
-		ABI_CHECK(callContractFunction("get(uint256)", 3), encodeArgs(4));
-		ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
-		ABI_CHECK(callContractFunction("set(uint256,uint256)", 4, 8), bytes());
-		ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
-	)
+	/// TODO enable again after push(..) via yul was implemented.
+	/// ALSO_VIA_YUL()
+	compileAndRun(sourceCode);
+	ABI_CHECK(callContractFunction("length()"), encodeArgs(0));
+	ABI_CHECK(callContractFunction("get(uint256)", 3), bytes());
+	ABI_CHECK(callContractFunction("enlarge(uint256)", 4), encodeArgs(4));
+	ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
+	ABI_CHECK(callContractFunction("set(uint256,uint256)", 3, 4), encodeArgs(true));
+	ABI_CHECK(callContractFunction("get(uint256)", 3), encodeArgs(4));
+	ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
+	ABI_CHECK(callContractFunction("set(uint256,uint256)", 4, 8), bytes());
+	ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_array_cleanup)
@@ -4375,23 +4363,26 @@ BOOST_AUTO_TEST_CASE(dynamic_array_cleanup)
 			uint[20] spacer;
 			uint[] dynamic;
 			function fill() public {
-				dynamic.length = 21;
-				for (uint i = 0; i < dynamic.length; ++i) dynamic[i] = i+1;
+				for (uint i = 0; i < 21; ++i)
+					dynamic.push(i + 1);
 			}
-			function halfClear() public { dynamic.length = 5; }
+			function halfClear() public {
+				while (dynamic.length > 5)
+					dynamic.pop();
+			}
 			function fullClear() public { delete dynamic; }
 		}
 	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		BOOST_CHECK(storageEmpty(m_contractAddress));
-		ABI_CHECK(callContractFunction("fill()"), bytes());
-		BOOST_CHECK(!storageEmpty(m_contractAddress));
-		ABI_CHECK(callContractFunction("halfClear()"), bytes());
-		BOOST_CHECK(!storageEmpty(m_contractAddress));
-		ABI_CHECK(callContractFunction("fullClear()"), bytes());
-		BOOST_CHECK(storageEmpty(m_contractAddress));
-	);
+	/// TODO enable again after push(..) via yul was implemented.
+	/// ALSO_VIA_YUL()
+	compileAndRun(sourceCode);
+	BOOST_CHECK(storageEmpty(m_contractAddress));
+	ABI_CHECK(callContractFunction("fill()"), bytes());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
+	ABI_CHECK(callContractFunction("halfClear()"), bytes());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
+	ABI_CHECK(callContractFunction("fullClear()"), bytes());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(dynamic_multi_array_cleanup)
@@ -4401,9 +4392,12 @@ BOOST_AUTO_TEST_CASE(dynamic_multi_array_cleanup)
 			struct s { uint[][] d; }
 			s[] data;
 			function fill() public returns (uint) {
-				data.length = 3;
-				data[2].d.length = 4;
-				data[2].d[3].length = 5;
+				while (data.length < 3)
+					data.push();
+				while (data[2].d.length < 4)
+					data[2].d.push();
+				while (data[2].d[3].length < 5)
+					data[2].d[3].push();
 				data[2].d[3][4] = 8;
 				return data[2].d[3][4];
 			}
@@ -4425,7 +4419,9 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_storage_dyn_dyn)
 			uint[] data1;
 			uint[] data2;
 			function setData1(uint length, uint index, uint value) public {
-				data1.length = length; if (index < length) data1[index] = value;
+				data1 = new uint[](length);
+				if (index < length)
+					data1[index] = value;
 			}
 			function copyStorageStorage() public { data2 = data1; }
 			function getData2(uint index) public returns (uint len, uint val) {
@@ -4489,7 +4485,7 @@ BOOST_AUTO_TEST_CASE(array_copy_different_packing)
 			bytes8[] data1; // 4 per slot
 			bytes10[] data2; // 3 per slot
 			function test() public returns (bytes10 a, bytes10 b, bytes10 c, bytes10 d, bytes10 e) {
-				data1.length = 9;
+				data1 = new bytes8[](9);
 				for (uint i = 0; i < data1.length; ++i)
 					data1[i] = bytes8(uint64(i));
 				data2 = data1;
@@ -4608,13 +4604,15 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_storage_struct)
 			Data[] data1;
 			Data[] data2;
 			function test() public returns (uint x, uint y) {
-				data1.length = 9;
+				while (data1.length < 9)
+					data1.push();
 				data1[8].x = 4;
 				data1[8].y = 5;
 				data2 = data1;
 				x = data2[8].x;
 				y = data2[8].y;
-				data1.length = 0;
+				while (data1.length > 0)
+					data1.pop();
 				data2 = data1;
 			}
 		}
@@ -4651,7 +4649,7 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_abi)
 				return z;
 			}
 			function test4() public returns (uint24[][] memory) {
-				w.length = 5;
+				w = new uint24[][](5);
 				for (uint i = 0; i < 5; ++i)
 					for (uint j = 0; j < 101; ++j)
 						w[i].push(uint24(j));
@@ -4763,7 +4761,7 @@ BOOST_AUTO_TEST_CASE(array_push_packed_array)
 				x.push(3);
 				x.push(4);
 				x.push(5);
-				x.length = 4;
+				x.pop();
 				return (x[0], x[1], x[2], x[3]);
 			}
 		}
@@ -5177,7 +5175,7 @@ BOOST_AUTO_TEST_CASE(bytes_index_access)
 				return uint(uint8(data[index]));
 			}
 			function storageWrite() external returns (uint) {
-				data.length = 35;
+				data = new bytes(35);
 				data[31] = 0x77;
 				data[32] = 0x14;
 
@@ -5206,7 +5204,7 @@ BOOST_AUTO_TEST_CASE(bytes_delete_element)
 		contract c {
 			bytes data;
 			function test1() external returns (bool) {
-				data.length = 100;
+				data = new bytes(100);
 				for (uint i = 0; i < data.length; i++)
 					data[i] = byte(uint8(i));
 				delete data[94];
@@ -5290,7 +5288,10 @@ BOOST_AUTO_TEST_CASE(array_copy_including_mapping)
 			mapping(uint=>uint)[90][] large;
 			mapping(uint=>uint)[3][] small;
 			function test() public returns (uint r) {
-				large.length = small.length = 7;
+				for (uint i = 0; i < 7; i++) {
+					large.push();
+					small.push();
+				}
 				large[3][2][0] = 2;
 				large[1] = large[3];
 				small[3][2][0] = 2;
@@ -5302,13 +5303,20 @@ BOOST_AUTO_TEST_CASE(array_copy_including_mapping)
 					large[1][2][0];
 				delete small;
 				delete large;
+
 			}
-			function clear() public returns (uint r) {
-				large.length = small.length = 7;
+			function clear() public returns (uint, uint) {
+				for (uint i = 0; i < 7; i++) {
+					large.push();
+					small.push();
+				}
 				small[3][2][0] = 0;
 				large[3][2][0] = 0;
-				small.length = large.length = 0;
-				return 7;
+				while (small.length > 0)
+					small.pop();
+				while (large.length > 0)
+					large.pop();
+				return (small.length, large.length);
 			}
 		}
 	)";
@@ -5316,7 +5324,7 @@ BOOST_AUTO_TEST_CASE(array_copy_including_mapping)
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(0x02000200));
 	// storage is not empty because we cannot delete the mappings
 	BOOST_CHECK(!storageEmpty(m_contractAddress));
-	ABI_CHECK(callContractFunction("clear()"), encodeArgs(7));
+	ABI_CHECK(callContractFunction("clear()"), encodeArgs(0, 0));
 	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
@@ -6312,7 +6320,8 @@ BOOST_AUTO_TEST_CASE(accessor_involving_strings)
 			struct stringData { string a; uint b; string c; }
 			mapping(uint => stringData[]) public data;
 			function set(uint x, uint y, string calldata a, uint b, string calldata c) external returns (bool) {
-				data[x].length = y + 1;
+				while (data[x].length < y + 1)
+					data[x].push();
 				data[x][y].a = a;
 				data[x][y].b = b;
 				data[x][y].c = c;
@@ -6682,7 +6691,7 @@ BOOST_AUTO_TEST_CASE(storage_array_ref)
 		contract Store is BinarySearch {
 			uint[] data;
 			function add(uint v) public {
-				data.length++;
+				data.push(0);
 				data[data.length - 1] = v;
 			}
 			function find(uint v) public returns (uint) {
@@ -6690,25 +6699,25 @@ BOOST_AUTO_TEST_CASE(storage_array_ref)
 			}
 		}
 	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode, 0, "Store");
-		BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(-1)));
-		BOOST_REQUIRE(callContractFunction("add(uint256)", u256(7)) == encodeArgs());
-		BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(0)));
-		ABI_CHECK(callContractFunction("add(uint256)", u256(11)), encodeArgs());
-		ABI_CHECK(callContractFunction("add(uint256)", u256(17)), encodeArgs());
-		ABI_CHECK(callContractFunction("add(uint256)", u256(27)), encodeArgs());
-		ABI_CHECK(callContractFunction("add(uint256)", u256(31)), encodeArgs());
-		ABI_CHECK(callContractFunction("add(uint256)", u256(32)), encodeArgs());
-		ABI_CHECK(callContractFunction("add(uint256)", u256(66)), encodeArgs());
-		ABI_CHECK(callContractFunction("add(uint256)", u256(177)), encodeArgs());
-		ABI_CHECK(callContractFunction("find(uint256)", u256(7)), encodeArgs(u256(0)));
-		ABI_CHECK(callContractFunction("find(uint256)", u256(27)), encodeArgs(u256(3)));
-		ABI_CHECK(callContractFunction("find(uint256)", u256(32)), encodeArgs(u256(5)));
-		ABI_CHECK(callContractFunction("find(uint256)", u256(176)), encodeArgs(u256(-1)));
-		ABI_CHECK(callContractFunction("find(uint256)", u256(0)), encodeArgs(u256(-1)));
-		ABI_CHECK(callContractFunction("find(uint256)", u256(400)), encodeArgs(u256(-1)));
-	);
+	/// TODO enable again after push(..) via yul was implemented.
+	/// ALSO_VIA_YUL()
+	compileAndRun(sourceCode, 0, "Store");
+	BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(-1)));
+	BOOST_REQUIRE(callContractFunction("add(uint256)", u256(7)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("add(uint256)", u256(11)), encodeArgs());
+	ABI_CHECK(callContractFunction("add(uint256)", u256(17)), encodeArgs());
+	ABI_CHECK(callContractFunction("add(uint256)", u256(27)), encodeArgs());
+	ABI_CHECK(callContractFunction("add(uint256)", u256(31)), encodeArgs());
+	ABI_CHECK(callContractFunction("add(uint256)", u256(32)), encodeArgs());
+	ABI_CHECK(callContractFunction("add(uint256)", u256(66)), encodeArgs());
+	ABI_CHECK(callContractFunction("add(uint256)", u256(177)), encodeArgs());
+	ABI_CHECK(callContractFunction("find(uint256)", u256(7)), encodeArgs(u256(0)));
+	ABI_CHECK(callContractFunction("find(uint256)", u256(27)), encodeArgs(u256(3)));
+	ABI_CHECK(callContractFunction("find(uint256)", u256(32)), encodeArgs(u256(5)));
+	ABI_CHECK(callContractFunction("find(uint256)", u256(176)), encodeArgs(u256(-1)));
+	ABI_CHECK(callContractFunction("find(uint256)", u256(0)), encodeArgs(u256(-1)));
+	ABI_CHECK(callContractFunction("find(uint256)", u256(400)), encodeArgs(u256(-1)));
 }
 
 BOOST_AUTO_TEST_CASE(memory_types_initialisation)
@@ -6796,7 +6805,8 @@ BOOST_AUTO_TEST_CASE(memory_arrays_dynamic_index_access_write)
 				return x;
 			}
 			function f() public returns (uint24[3][] memory) {
-				data[1].length = 4;
+				while (data[1].length < 4)
+					data[1].push();
 				return set(data)[1];
 			}
 		}
@@ -8291,7 +8301,8 @@ BOOST_AUTO_TEST_CASE(internal_types_in_library)
 			mapping(string => uint16[]) data;
 			function f() public returns (uint a, uint b)
 			{
-				data["abc"].length = 20;
+				while (data["abc"].length < 20)
+					data["abc"].push();
 				data["abc"][4] = 9;
 				data["abc"][17] = 3;
 				a = Lib.find(data["abc"], 9);
@@ -8556,7 +8567,8 @@ BOOST_AUTO_TEST_CASE(using_library_structs)
 			function set(Data storage _s) public
 			{
 				_s.a = 7;
-				_s.b.length = 20;
+				while (_s.b.length < 20)
+					_s.b.push();
 				_s.b[19] = 8;
 			}
 		}
@@ -8635,15 +8647,18 @@ BOOST_AUTO_TEST_CASE(short_strings)
 				if (data2.length != 51) return 4;
 				if (data2[data2.length - 1] != "a") return 5;
 				// change length: short -> short
-				data1.length = 5;
+				while (data1.length < 5)
+					data1.push();
 				if (data1.length != 5) return 6;
 				data1[4] = "4";
 				if (data1[0] != "1") return 7;
 				if (data1[4] != "4") return 8;
 				// change length: short -> long
-				data1.length = 80;
+				while (data1.length < 80)
+					data1.push();
 				if (data1.length != 80) return 9;
-				data1.length = 70;
+				while (data1.length > 70)
+					data1.pop();
 				if (data1.length != 70) return 9;
 				if (data1[0] != "1") return 10;
 				if (data1[4] != "4") return 11;
@@ -8652,20 +8667,25 @@ BOOST_AUTO_TEST_CASE(short_strings)
 				if (uint8(data1[4]) != 4 * 3) return 12;
 				if (uint8(data1[67]) != 67 * 3) return 13;
 				// change length: long -> short
-				data1.length = 22;
+				while (data1.length > 22)
+					data1.pop();
 				if (data1.length != 22) return 14;
 				if (uint8(data1[21]) != 21 * 3) return 15;
 				if (uint8(data1[2]) != 2 * 3) return 16;
 				// change length: short -> shorter
-				data1.length = 19;
+				while (data1.length > 19)
+					data1.pop();
 				if (data1.length != 19) return 17;
 				if (uint8(data1[7]) != 7 * 3) return 18;
 				// and now again to original size
-				data1.length = 22;
+				while (data1.length < 22)
+					data1.push();
 				if (data1.length != 22) return 19;
 				if (data1[21] != 0) return 20;
-				data1.length = 0;
-				data2.length = 0;
+				while (data1.length > 0)
+					data1.pop();
+				while (data2.length > 0)
+					data2.pop();
 			}
 			function copy() public returns (uint) {
 				bytes memory x = "123";
@@ -8864,8 +8884,7 @@ BOOST_AUTO_TEST_CASE(tuples)
 				return (5, 6);
 			}
 			function f() public returns (uint) {
-				data.length = 1;
-				data[0] = 3;
+				data.push(3);
 				uint a; uint b;
 				(a, b) = this.h();
 				if (a != 5 || b != 6) return 1;
@@ -8941,7 +8960,7 @@ BOOST_AUTO_TEST_CASE(destructuring_assignment)
 			uint[] y;
 			uint[] arrayData;
 			function returnsArray() public returns (uint[] memory) {
-				arrayData.length = 9;
+				arrayData = new uint[](9);
 				arrayData[2] = 5;
 				arrayData[7] = 4;
 				return arrayData;
@@ -9915,9 +9934,10 @@ BOOST_AUTO_TEST_CASE(delete_on_array_of_structs)
 			struct S { uint x; uint[] y; }
 			S[] data;
 			function f() public returns (bool) {
-				data.length = 2;
-				data[0].x = 2**200;
-				data[1].x = 2**200;
+				S storage s1 = data.push();
+				s1.x = 2**200;
+				S storage s2 = data.push();
+				s2.x = 2**200;
 				delete data;
 				return true;
 			}
@@ -11099,7 +11119,7 @@ BOOST_AUTO_TEST_CASE(copy_function_storage_array)
 			function() internal returns (uint)[] x;
 			function() internal returns (uint)[] y;
 			function test() public returns (uint) {
-				x.length = 10;
+				x = new function() internal returns (uint)[](10);
 				x[9] = a;
 				y = x;
 				return y[9]();
@@ -12009,7 +12029,8 @@ BOOST_AUTO_TEST_CASE(recursive_structs)
 				S memory s;
 				s.x = new S[](10);
 				delete s;
-				sstorage.x.length++;
+				// TODO Uncomment after implemented.
+				// sstorage.x.push();
 				delete sstorage;
 				return 1;
 			}
@@ -13292,11 +13313,15 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked_from_storage)
 				return abi.encodePacked(uint8(0x01), small_fixed, uint8(0x02));
 			}
 			function sd() public returns (bytes memory) {
-				small_dyn.length = 9;
-				small_dyn[0] = 0xfffff1;
-				small_dyn[2] = 0xfffff2;
-				small_dyn[5] = 0xfffff3;
-				small_dyn[8] = 0xfffff4;
+				small_dyn.push(0xfffff1);
+				small_dyn.push(0x00);
+				small_dyn.push(0xfffff2);
+				small_dyn.push(0x00);
+				small_dyn.push(0x00);
+				small_dyn.push(0xfffff3);
+				small_dyn.push(0x00);
+				small_dyn.push(0x00);
+				small_dyn.push(0xfffff4);
 				return abi.encodePacked(uint8(0x01), small_dyn, uint8(0x02));
 			}
 			function sfs() public returns (bytes memory) {
@@ -13314,11 +13339,11 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked_from_storage)
 				return abi.encodePacked(uint8(0x01), large_fixed, uint8(0x02));
 			}
 			function ld() public returns (bytes memory) {
-				large_dyn.length = 5;
-				large_dyn[0] = 2**248-1;
-				large_dyn[1] = 0xfffff2;
-				large_dyn[2] = 2**248-2;
-				large_dyn[4] = 0xfffff4;
+				large_dyn.push(2**248-1);
+				large_dyn.push(0xfffff2);
+				large_dyn.push(2**248-2);
+				large_dyn.push(0);
+				large_dyn.push(0xfffff4);
 				return abi.encodePacked(uint8(0x01), large_dyn, uint8(0x02));
 			}
 			function bytes_short() public returns (bytes memory) {
@@ -13476,9 +13501,8 @@ BOOST_AUTO_TEST_CASE(abi_encodePackedV2_structs)
 				s.b = -7;
 				s.c[0] = 2;
 				s.c[1] = 3;
-				s.d.length = 2;
-				s.d[0] = -7;
-				s.d[1] = -8;
+				s.d.push(-7);
+				s.d.push(-8);
 			}
 			function testStorage() public {
 				emit E(s);
@@ -13538,9 +13562,8 @@ BOOST_AUTO_TEST_CASE(abi_encodePackedV2_arrayOfStrings)
 			string[] x;
 			event E(string[] indexed);
 			constructor() public {
-				x.length = 2;
-				x[0] = "abc";
-				x[1] = "0123456789012345678901234567890123456789";
+				x.push("abc");
+				x.push("0123456789012345678901234567890123456789");
 			}
 			function testStorage() public {
 				emit E(x);

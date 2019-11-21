@@ -637,7 +637,7 @@ BOOST_AUTO_TEST_CASE(storage_ptr)
 			L.S s;
 			uint[] r;
 			function f() public returns (uint, uint, uint, uint, uint, uint) {
-				r.length = 6;
+				r = new uint[](6);
 				r[0] = 1;
 				r[1] = 2;
 				r[2] = 3;

@@ -7,13 +7,18 @@ contract test {
 
     constructor() public {
         data[0] = 8;
-        dynamicData.length = 3;
-        dynamicData[2] = 8;
-        smallTypeData.length = 128;
+
+        dynamicData.push();
+        dynamicData.push();
+        dynamicData.push(8);
+
+        smallTypeData = new uint24[](128);
         smallTypeData[1] = 22;
         smallTypeData[127] = 2;
+
         multiple_map[2][1][2].a = 3;
-        multiple_map[2][1][2].finalArray.length = 4;
+        for (uint i = 0; i < 4; i++)
+            multiple_map[2][1][2].finalArray.push();
         multiple_map[2][1][2].finalArray[3] = 5;
     }
 }

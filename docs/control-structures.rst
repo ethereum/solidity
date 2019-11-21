@@ -231,7 +231,7 @@ groupings of expressions.
     pragma solidity >0.4.23 <0.7.0;
 
     contract C {
-        uint[] data;
+        uint index;
 
         function f() public pure returns (uint, bool, uint) {
             return (7, true, 2);
@@ -244,7 +244,7 @@ groupings of expressions.
             // Common trick to swap values -- does not work for non-value storage types.
             (x, y) = (y, x);
             // Components can be left out (also for variable declarations).
-            (data.length, , ) = f(); // Sets the length to 7
+            (index, , ) = f(); // Sets the index to 7
         }
     }
 

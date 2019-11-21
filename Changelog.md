@@ -14,6 +14,7 @@ Breaking changes:
  * Syntax: Abstract contracts need to be marked explicitly as abstract by using the ``abstract`` keyword.
  * Inline Assembly: Only strict inline assembly is allowed.
  * Inline Assembly: Variable declarations cannot shadow declarations outside the assembly block.
+ * Syntax: ``length`` member of arrays is now always read-only, even for storage arrays.
  * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
  * Natspec JSON Interface: Properly support multiple ``@return`` statements in ``@dev`` documentation and enforce named return parameters to be mentioned documentation.
  * Source mappings: Add "modifier depth" as a fifth field in the source mappings.

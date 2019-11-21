@@ -478,36 +478,6 @@ void StorageByteArrayElement::setToZero(SourceLocation const&, bool _removeRefer
 	m_context << Instruction::SWAP1 << Instruction::SSTORE;
 }
 
-StorageArrayLength::StorageArrayLength(CompilerContext& _compilerContext, ArrayType const& _arrayType):
-	LValue(_compilerContext, _arrayType.memberType("length")),
-	m_arrayType(_arrayType)
-{
-	solAssert(m_arrayType.isDynamicallySized(), "");
-}
-
-void StorageArrayLength::retrieveValue(SourceLocation const&, bool _remove) const
-{
-	ArrayUtils(m_context).retrieveLength(m_arrayType);
-	if (_remove)
-		m_context << Instruction::SWAP1 << Instruction::POP;
-}
-
-void StorageArrayLength::storeValue(Type const&, SourceLocation const&, bool _move) const
-{
-	if (_move)
-		m_context << Instruction::SWAP1;
-	else
-		m_context << Instruction::DUP2;
-	ArrayUtils(m_context).resizeDynamicArray(m_arrayType);
-}
-
-void StorageArrayLength::setToZero(SourceLocation const&, bool _removeReference) const
-{
-	solAssert(_removeReference, "");
-	ArrayUtils(m_context).clearDynamicArray(m_arrayType);
-}
-
-
 TupleObject::TupleObject(
 	CompilerContext& _compilerContext,
 	std::vector<std::unique_ptr<LValue>>&& _lvalues

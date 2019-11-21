@@ -640,6 +640,34 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			array <<
 			"))\n";
 
+			break;
+	}
+	case FunctionType::Kind::ArrayPop:
+	{
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(
+			*dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression().annotation().type
+		);
+		defineExpression(_functionCall) <<
+			m_utils.storageArrayPopFunction(arrayType) <<
+			"(" <<
+			m_context.variable(_functionCall.expression()) <<
+			")\n";
+		break;
+	}
+	case FunctionType::Kind::ArrayPush:
+	{
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(
+			*dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression().annotation().type
+		);
+		defineExpression(_functionCall) <<
+			m_utils.storageArrayPushFunction(arrayType) <<
+			"(" <<
+			m_context.variable(_functionCall.expression()) <<
+			", " << (
+				arguments.empty() ?
+				m_utils.zeroValueFunction(*arrayType.baseType()) + "()" :
+				expressionAsType(*arguments.front(), *arrayType.baseType())
+			) << ")\n";
 		break;
 	}
 	default:
@@ -788,33 +816,45 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	{
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
 
-		solAssert(member == "length", "");
-
-		if (!type.isDynamicallySized())
-			defineExpression(_memberAccess) << type.length() << "\n";
+		if (member == "length")
+		{
+			if (!type.isDynamicallySized())
+				defineExpression(_memberAccess) << type.length() << "\n";
+			else
+				switch (type.location())
+				{
+					case DataLocation::CallData:
+						solUnimplementedAssert(false, "");
+						//m_context << Instruction::SWAP1 << Instruction::POP;
+						break;
+					case DataLocation::Storage:
+					{
+						string slot = m_context.variable(_memberAccess.expression());
+						defineExpression(_memberAccess) <<
+							m_utils.arrayLengthFunction(type) + "(" + slot + ")\n";
+						break;
+					}
+					case DataLocation::Memory:
+						defineExpression(_memberAccess) <<
+							"mload(" <<
+							m_context.variable(_memberAccess.expression()) <<
+							")\n";
+						break;
+				}
+		}
+		else if (member == "pop")
+		{
+			solAssert(type.location() == DataLocation::Storage, "");
+			defineExpression(_memberAccess) << m_context.variable(_memberAccess.expression()) << "\n";
+		}
+		else if (member == "push")
+		{
+			solAssert(type.location() == DataLocation::Storage, "");
+			defineExpression(_memberAccess) << m_context.variable(_memberAccess.expression()) << "\n";
+		}
 		else
-			switch (type.location())
-			{
-			case DataLocation::CallData:
-				solUnimplementedAssert(false, "");
-				//m_context << Instruction::SWAP1 << Instruction::POP;
-				break;
-			case DataLocation::Storage:
-				setLValue(_memberAccess, make_unique<IRStorageArrayLength>(
-					m_context.utils(),
-					m_context.variable(_memberAccess.expression()),
-					*_memberAccess.annotation().type,
-					type
-				));
+			solAssert(false, "Invalid array member access.");
 
-				break;
-			case DataLocation::Memory:
-				defineExpression(_memberAccess) <<
-					"mload(" <<
-					m_context.variable(_memberAccess.expression()) <<
-					")\n";
-				break;
-			}
 		break;
 	}
 	case Type::Category::FixedBytes:
