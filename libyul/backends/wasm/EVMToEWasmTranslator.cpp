@@ -29,6 +29,7 @@
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/ForLoopConditionIntoBody.h>
 
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
@@ -702,6 +703,7 @@ Object EVMToEWasmTranslator::run(Object const& _object)
 	FunctionHoister::run(context, ast);
 	FunctionGrouper::run(context, ast);
 	MainFunction{}(ast);
+	ForLoopConditionIntoBody::run(context, ast);
 	ExpressionSplitter::run(context, ast);
 	WordSizeTransform::run(m_dialect, ast, nameDispenser);
 

@@ -37,6 +37,7 @@ Compiler Features:
 ### 0.5.14 (unreleased)
 
 Language Features:
+ * Allow to obtain the selector of public or external library functions via a member ``.selector``.
 
 
 Compiler Features:

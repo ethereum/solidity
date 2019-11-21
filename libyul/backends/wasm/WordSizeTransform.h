@@ -55,7 +55,7 @@ namespace yul
  * takes four u64 parameters and is supposed to return the logical disjunction
  * of them as a u64 value. If this name is already used somewhere, it is renamed.
  *
- * Prerequisite: Disambiguator, ExpressionSplitter
+ * Prerequisite: Disambiguator, ForLoopConditionIntoBody, ExpressionSplitter
  */
 class WordSizeTransform: public ASTModifier
 {
