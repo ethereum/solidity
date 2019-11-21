@@ -57,7 +57,7 @@ Either add ``--libraries "file.sol:Math:0x12345678901234567890123456789012345678
 
 If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__$53aea86b7d70b31448b230b20ae141a537$__``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
 
-If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output. This is the recommended interface for more complex and especially automated uses.
+If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output. This is the recommended interface for more complex and especially automated uses. The process will always terminate in a "success" state and report any errors via the JSON output.
 
 .. note::
     The library placeholder used to be the fully qualified name of the library itself
@@ -140,6 +140,8 @@ The fields are generally subject to change,
 some are optional (as noted), but we try to only make backwards compatible changes.
 
 The compiler API expects a JSON formatted input and outputs the compilation result in a JSON formatted output.
+The standard error output is not used and the process will always terminate in a "success" state, even
+if there were errors. Errors are always reported as part of the JSON output.
 
 The following subsections describe the format through an example.
 Comments are of course not permitted and used here only for explanatory purposes.
