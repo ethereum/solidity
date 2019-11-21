@@ -530,7 +530,7 @@ typedef size_t (*evmc_get_code_size_fn)(struct evmc_host_context* context,
                                         const evmc_address* address);
 
 /**
- * Get code size callback function.
+ * Get code hash callback function.
  *
  * This callback function is used by a VM to get the keccak256 hash of the code stored
  * in the account at the given address. For existing accounts not having a code, this
