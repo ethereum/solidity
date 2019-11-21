@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <test/evmc/mocked_host.hpp>
 #include <test/evmc/evmc.hpp>
 #include <test/evmc/evmc.h>
 
@@ -34,7 +35,7 @@ namespace test
 {
 using Address = h160;
 
-class EVMHost: public evmc::Host
+class EVMHost: public evmc::MockedHost
 {
 public:
 	/// Tries to dynamically load libevmone. @returns nullptr on failure.
