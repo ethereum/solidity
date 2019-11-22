@@ -17,6 +17,7 @@
 
 #include <libdevcore/IpfsHash.h>
 
+#include <libdevcore/Assertions.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/picosha2.h>
 #include <libdevcore/CommonData.h>
@@ -55,11 +56,7 @@ string base58Encode(bytes const& _data)
 
 bytes dev::ipfsHash(string _data)
 {
-	if (_data.length() >= 1024 * 256)
-		BOOST_THROW_EXCEPTION(
-			DataTooLong() <<
-			errinfo_comment("Ipfs hash for large (chunked) files not yet implemented.")
-		);
+	assertThrow(_data.length() < 1024 * 256, DataTooLong, "IPFS hash for large (chunked) files not yet implemented.");
 
 	bytes lengthAsVarint = varintEncoding(_data.size());
 
