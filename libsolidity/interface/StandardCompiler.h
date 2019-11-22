@@ -41,7 +41,7 @@ class StandardCompiler: boost::noncopyable
 {
 public:
 	/// Creates a new StandardCompiler.
-	/// @param _readFile callback to used to read files for import statements. Must return
+	/// @param _readFile callback used to read files for import statements. Must return
 	/// and must not emit exceptions.
 	explicit StandardCompiler(ReadCallback::Callback const& _readFile = ReadCallback::Callback()):
 		m_readFile(_readFile)

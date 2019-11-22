@@ -848,10 +848,15 @@ Allowed options)",
 
 bool CommandLineInterface::processInput()
 {
-	ReadCallback::Callback fileReader = [this](string const& _path)
+	ReadCallback::Callback fileReader = [this](string const& _kind, string const& _path)
 	{
 		try
 		{
+			if (_kind != ReadCallback::kindString(ReadCallback::Kind::ReadFile))
+				BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
+					"ReadFile callback used as callback kind " +
+					_kind
+				));
 			auto path = boost::filesystem::path(_path);
 			auto canonicalPath = boost::filesystem::weakly_canonical(path);
 			bool isAllowed = false;

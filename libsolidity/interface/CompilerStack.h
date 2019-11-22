@@ -107,7 +107,7 @@ public:
 	};
 
 	/// Creates a new compiler stack.
-	/// @param _readFile callback to used to read files for import statements. Must return
+	/// @param _readFile callback used to read files for import statements. Must return
 	/// and must not emit exceptions.
 	explicit CompilerStack(ReadCallback::Callback const& _readFile = ReadCallback::Callback());
 

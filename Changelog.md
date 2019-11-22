@@ -3,6 +3,7 @@
 Breaking changes:
  * ABI: remove the deprecated ``constant`` and ``payable`` fields.
  * ABI: the ``type`` field is now required and no longer specified to default to ``function``.
+ * C API (``libsolc``): the provided callback now takes two parameters, kind and data. The callback can then be used for multiple purposes, such has file imports and SMT queries.
  * Commandline interface: remove the text-based ast printer (``--ast``).
  * Command line interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
  * Command line interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.

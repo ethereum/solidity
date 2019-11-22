@@ -43,7 +43,11 @@ namespace solidity
 class ModelChecker
 {
 public:
-	ModelChecker(langutil::ErrorReporter& _errorReporter, std::map<h256, std::string> const& _smtlib2Responses);
+	ModelChecker(
+		langutil::ErrorReporter& _errorReporter,
+		std::map<h256, std::string> const& _smtlib2Responses,
+		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback()
+	);
 
 	void analyze(SourceUnit const& _sources);
 

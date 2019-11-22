@@ -389,7 +389,7 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses);
+			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses, m_readFile);
 			for (Source const* source: m_sourceOrder)
 				modelChecker.analyze(*source->ast);
 			m_unhandledSMTLib2Queries += modelChecker.unhandledQueries();
@@ -886,7 +886,7 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 
 			ReadCallback::Result result{false, string("File not supplied initially.")};
 			if (m_readFile)
-				result = m_readFile(importPath);
+				result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), importPath);
 
 			if (result.success)
 				newSources[importPath] = result.responseOrErrorMessage;
