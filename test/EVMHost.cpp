@@ -33,7 +33,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::test;
-
+using namespace evmc::literals;
 
 evmc::VM* EVMHost::getVM(string const& _path)
 {
@@ -118,21 +118,21 @@ void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _ben
 
 evmc::result EVMHost::call(evmc_message const& _message) noexcept
 {
-	if (_message.destination == convertToEVMC(Address(1)))
+	if (_message.destination == 0x0000000000000000000000000000000000000001_address)
 		return precompileECRecover(_message);
-	else if (_message.destination == convertToEVMC(Address(2)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000002_address)
 		return precompileSha256(_message);
-	else if (_message.destination == convertToEVMC(Address(3)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000003_address)
 		return precompileRipeMD160(_message);
-	else if (_message.destination == convertToEVMC(Address(4)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000004_address)
 		return precompileIdentity(_message);
-	else if (_message.destination == convertToEVMC(Address(5)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000005_address)
 		return precompileModExp(_message);
-	else if (_message.destination == convertToEVMC(Address(6)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000006_address)
 		return precompileALTBN128G1Add(_message);
-	else if (_message.destination == convertToEVMC(Address(7)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000007_address)
 		return precompileALTBN128G1Mul(_message);
-	else if (_message.destination == convertToEVMC(Address(8)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000008_address)
 		return precompileALTBN128PairingProduct(_message);
 
 	State stateBackup = m_state;
@@ -224,10 +224,11 @@ evmc_tx_context EVMHost::get_tx_context() noexcept
 	ctx.block_timestamp = m_state.timestamp;
 	ctx.block_number = m_state.blockNumber;
 	ctx.block_coinbase = m_coinbase;
+	// TODO: support short literals in EVMC and use them here
 	ctx.block_difficulty = convertToEVMC(u256("200000000"));
 	ctx.block_gas_limit = 20000000;
 	ctx.tx_gas_price = convertToEVMC(u256("3000000000"));
-	ctx.tx_origin = convertToEVMC(Address("0x9292929292929292929292929292929292929292"));
+	ctx.tx_origin = 0x9292929292929292929292929292929292929292_address;
 	// Mainnet according to EIP-155
 	ctx.chain_id = convertToEVMC(u256(1));
 	return ctx;
