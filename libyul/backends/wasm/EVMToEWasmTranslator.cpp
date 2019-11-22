@@ -782,9 +782,27 @@ function u256_to_i32ptr(x1, x2, x3, x4) -> v {
 	v := u256_to_i32(x1, x2, x3, x4)
 }
 
+function u256_to_address(x1, x2, x3, x4) -> r1, r2, r3 {
+	if i64.ne(0, x1) { invalid() }
+	if i64.ne(0, i64.shr_u(x2, 4)) { invalid() }
+	r1 := x2
+	r2 := x3
+	r3 := x4
+}
+
 function keccak256(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	mstore_internal(12, 0, 0, 0, 0x09)
+	z4 := eth.callStatic(
+		eth.getGasLeft(),
+		12,
+		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
+		u256_to_i32(y1, y2, y3, y4)
+	)
+
+	if i64.eqz(z4) {
+		eth.returnDataCopy(0, 0, 32)
+		z1, z2, z3, z4 := mload_internal(0)
+	}
 }
 
 function address() -> z1, z2, z3, z4 {
@@ -792,9 +810,12 @@ function address() -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := mload_internal(0)
 }
 function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	mstore_internal(0, x1, x2, x3, x4)
+	let a1, a2, a3 := u256_to_address(x1, x2, x3, x4)
+	mstore_internal(0, 0, a1, a2, a3)
 	eth.getExternalBalance(12, 48)
 	z1, z2, z3, z4 := mload_internal(32)
+	z1 := 0
+	z2 := 0
 }
 function selfbalance() -> z1, z2, z3, z4 {
 	// TODO: not part of current Ewasm spec
@@ -817,8 +838,8 @@ function callvalue() -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := mload_internal(0)
 }
 function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	z1, z2, z3, z4 := calldatasize()
-	eth.callDataCopy(i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64), 0, u256_to_i32(z1, z2, z3, z4))
+	eth.callDataCopy(0, u256_to_i32(x1, x2, x3, x4), 32)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function calldatasize() -> z1, z2, z3, z4 {
 	z4 := eth.getCallDataSize()
@@ -854,17 +875,19 @@ function gasprice() -> z1, z2, z3, z4 {
 	eth.getTxGasPrice(0)
 	z1, z2, z3, z4 := mload_internal(0)
 }
-function extcodesize(x1, x2, x3, x4) -> z1, z2, z3, z4 {
+function extcodesize_internal(x1, x2, x3, x4) -> r {
 	mstore_internal(0, x1, x2, x3, x4)
-	z4 := eth.getExternalCodeSize(0)
+	r := eth.getExternalCodeSize(0)
+}
+function extcodesize(x1, x2, x3, x4) -> z1, z2, z3, z4 {
+	z4 := extcodesize_internal(x1, x2, x3, x4)
 }
 function extcodehash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	// TODO: not part of current Ewasm spec
 	unreachable()
 }
 function extcodecopy(a1, a2, a3, a4, p1, p2, p3, p4, o1, o2, o3, o4, l1, l2, l3, l4) {
-	let ecs1, ecs2, ecs3, ecs4 := extcodesize(a1, a2, a3, a4)
-	let codeSize := u256_to_i32(ecs1, ecs2, ecs3, ecs4)
+	let codeSize := extcodesize_internal(a1, a2, a3, a4)
 	mstore_internal(0, a1, a2, a3, a4)  // TODO: Is it already there after extcodesize call?
 	let codeOffset := u256_to_i32(o1, o2, o3, o4)
 	let codeLength := u256_to_i32(l1, l2, l3, l4)
