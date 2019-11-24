@@ -180,7 +180,8 @@ void ControlFlowSimplifier::visit(Statement& _st)
 
 void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
-	GenericFallbackReturnsVisitor<OptionalStatements, If, Switch> const visitor(
+	GenericVisitor visitor{
+		VisitorFallback<OptionalStatements>{},
 		[&](If& _ifStmt) -> OptionalStatements {
 			if (_ifStmt.body.statements.empty() && m_dialect.discardFunction())
 			{
@@ -205,8 +206,7 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 
 			return {};
 		}
-	);
-
+	};
 	iterateReplacing(
 		_statements,
 		[&](Statement& _stmt) -> OptionalStatements

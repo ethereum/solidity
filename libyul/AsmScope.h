@@ -48,8 +48,6 @@ struct Scope
 	};
 
 	using Identifier = std::variant<Variable, Label, Function>;
-	using Visitor = dev::GenericVisitor<Variable const, Label const, Function const>;
-	using NonconstVisitor = dev::GenericVisitor<Variable, Label, Function>;
 
 	bool registerVariable(YulString _name, YulType const& _type);
 	bool registerLabel(YulString _name);

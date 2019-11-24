@@ -146,7 +146,7 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 	solAssert(!_identifier.name.empty(), "");
 	size_t numErrorsBefore = m_errorReporter.errors().size();
 	bool success = true;
-	if (m_currentScope->lookup(_identifier.name, Scope::Visitor(
+	if (m_currentScope->lookup(_identifier.name, GenericVisitor{
 		[&](Scope::Variable const& _var)
 		{
 			if (!m_activeVariables.count(&_var))
@@ -171,7 +171,7 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 			);
 			success = false;
 		}
-	)))
+	}))
 	{
 	}
 	else
@@ -341,7 +341,7 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		if (f->literalArguments)
 			needsLiteralArguments = true;
 	}
-	else if (!m_currentScope->lookup(_funCall.functionName.name, Scope::Visitor(
+	else if (!m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
 		[&](Scope::Variable const&)
 		{
 			m_errorReporter.typeError(
@@ -364,7 +364,7 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			parameters = _fun.arguments.size();
 			returns = _fun.returns.size();
 		}
-	)))
+	}))
 	{
 		m_errorReporter.declarationError(_funCall.functionName.location, "Function not found.");
 		success = false;
