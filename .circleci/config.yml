@@ -758,12 +758,6 @@ workflows:
                 - develop_060
 
     jobs:
-      # Emscripten builds and external tests
-      - b_ems: *workflow_trigger_on_tags
-      - t_ems_test_ext_zeppelin: *workflow_emscripten
-      - t_ems_test_ext_gnosis: *workflow_emscripten
-      - t_ems_test_ext_colony: *workflow_emscripten
-
       # OSSFUZZ builds and (regression) tests
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
       - t_ubu_ossfuzz: *workflow_ubuntu1904_ossfuzz
