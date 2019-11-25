@@ -11,7 +11,7 @@ docker build -t ethereum/solidity-buildpack-deps:ubuntu1904-<revision> -f Docker
 docker push ethereum/solidity-buildpack-deps:ubuntu1904-<revision>
 ```
 
-The current revision is `2`.
+The current revision is stored in a [circle ci pipeline parameter](https://github.com/CircleCI-Public/api-preview-docs/blob/master/docs/pipeline-parameters.md#pipeline-parameters) called `docker-image-rev`. Please update the value assigned to this parameter at the time of a docker image update. Please verify that the value assigned to the parameter matches the revision part of the docker image tag (`<revision>` in the docker build/push snippet shown above). Otherwise, the docker image used by circle ci and the one actually pushed to docker hub will differ.
 
 Once the docker image has been built and pushed to Dockerhub, you can find it at:
 
