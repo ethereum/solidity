@@ -601,7 +601,22 @@ jobs:
             npm --version
             test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
 
-  t_ems_external_gnosis:
+  t_ems_compile_ext_gnosis:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: External GnosisSafe compilation
+          command: |
+            export COMPILE_ONLY=1
+            test/externalTests/gnosis.sh /tmp/workspace/soljson.js || test/externalTests/gnosis.sh /tmp/workspace/soljson.js
+
+  t_ems_test_ext_gnosis:
     docker:
       - image: circleci/node:10
     environment:
@@ -617,7 +632,22 @@ jobs:
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
 
-  t_ems_external_zeppelin:
+  t_ems_compile_ext_zeppelin:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: External Zeppelin compilation
+          command: |
+            export COMPILE_ONLY=1
+            test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
+
+  t_ems_test_ext_zeppelin:
     docker:
       - image: circleci/node:10
     environment:
@@ -633,7 +663,26 @@ jobs:
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
 
-  t_ems_external_colony:
+  t_ems_compile_ext_colony:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install test dependencies
+          command: |
+            sudo apt-get -qy install lsof
+      - run:
+          name: External ColonyNetworks compilation
+          command: |
+            export COMPILE_ONLY=1
+            test/externalTests/colony.sh /tmp/workspace/soljson.js || test/externalTests/colony.sh /tmp/workspace/soljson.js
+
+  t_ems_test_ext_colony:
     docker:
       - image: circleci/node:10
     environment:
@@ -697,6 +746,9 @@ workflows:
       # Emscripten build and selected tests
       - b_ems: *workflow_trigger_on_tags
       - t_ems_solcjs: *workflow_emscripten
+      - t_ems_compile_ext_colony: *workflow_emscripten
+      - t_ems_compile_ext_gnosis: *workflow_emscripten
+      - t_ems_compile_ext_zeppelin: *workflow_emscripten
 
   nightly:
 
@@ -710,12 +762,6 @@ workflows:
                 - develop_060
 
     jobs:
-      # Emscripten builds and external tests
-      - b_ems: *workflow_trigger_on_tags
-      - t_ems_external_zeppelin: *workflow_emscripten
-      - t_ems_external_gnosis: *workflow_emscripten
-      - t_ems_external_colony: *workflow_emscripten
-
       # OSSFUZZ builds and (regression) tests
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
       - t_ubu_ossfuzz: *workflow_ubuntu1904_ossfuzz
