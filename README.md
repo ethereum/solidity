@@ -44,10 +44,10 @@ contract HelloWorld {
 To get started with Solidity, you can use [Remix](https://remix.ethereum.org/), which is an
 browser-based IDE. Here are some example contracts:
 
-1. [Voting](https://solidity.readthedocs.io/en/v0.4.24/solidity-by-example.html#voting)
-2. [Blind Auction](https://solidity.readthedocs.io/en/v0.4.24/solidity-by-example.html#blind-auction)
-3. [Safe remote purchase](https://solidity.readthedocs.io/en/v0.4.24/solidity-by-example.html#safe-remote-purchase)
-4. [Micropayment Channel](https://solidity.readthedocs.io/en/v0.4.24/solidity-by-example.html#micropayment-channel)
+1. [Voting](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#voting)
+2. [Blind Auction](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#blind-auction)
+3. [Safe remote purchase](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#safe-remote-purchase)
+4. [Micropayment Channel](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#micropayment-channel)
 
 ## Documentation
 
