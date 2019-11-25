@@ -519,8 +519,11 @@ map<u256, u256> Assembly::optimiseInternal(
 
 LinkerObject const& Assembly::assemble() const
 {
+	// Return the already assembled object, if present.
 	if (!m_assembledObject.bytecode.empty())
 		return m_assembledObject;
+	// Otherwise ensure the object is actually clear.
+	assertThrow(m_assembledObject.linkReferences.empty(), AssemblyException, "Unexpected link references.");
 
 	size_t subTagSize = 1;
 	for (auto const& sub: m_subs)
