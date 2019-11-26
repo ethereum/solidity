@@ -158,11 +158,10 @@ AssemblyItems CSECodeGenerator::generateCode(
 		for (auto id: {p.first, p.second})
 			if (unsigned seqNr = m_expressionClasses.representative(id).sequenceNumber)
 			{
-				if (seqNr < _initialSequenceNumber)
-					// Invalid sequenced operation.
-					// @todo quick fix for now. Proper fix needs to choose representative with higher
-					// sequence number during dependency analysis.
-					BOOST_THROW_EXCEPTION(StackTooDeepException());
+				// Invalid sequenced operation.
+				// @todo quick fix for now. Proper fix needs to choose representative with higher
+				// sequence number during dependency analysis.
+				assertThrow(seqNr >= _initialSequenceNumber, StackTooDeepException, "");
 				sequencedExpressions.insert(make_pair(seqNr, id));
 			}
 
@@ -222,12 +221,9 @@ void CSECodeGenerator::addDependencies(Id _c)
 		return; // we already computed the dependencies for _c
 	ExpressionClasses::Expression expr = m_expressionClasses.representative(_c);
 	assertThrow(expr.item, OptimizerException, "");
-	if (expr.item->type() == UndefinedItem)
-		BOOST_THROW_EXCEPTION(
-			// If this exception happens, we need to find a different way to generate the
-			// compound expression.
-			ItemNotAvailableException() << errinfo_comment("Undefined item requested but not available.")
-		);
+	// If this exception happens, we need to find a different way to generate the
+	// compound expression.
+	assertThrow(expr.item->type() != UndefinedItem, ItemNotAvailableException, "Undefined item requested but not available.");
 	for (Id argument: expr.arguments)
 	{
 		addDependencies(argument);

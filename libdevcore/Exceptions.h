@@ -51,7 +51,6 @@ DEV_SIMPLE_EXCEPTION(FileError);
 DEV_SIMPLE_EXCEPTION(DataTooLong);
 
 // error information to be added to exceptions
-using errinfo_invalidSymbol = boost::error_info<struct tag_invalidSymbol, char>;
 using errinfo_comment = boost::error_info<struct tag_comment, std::string>;
 
 }

@@ -31,9 +31,6 @@ namespace dev
 namespace eth
 {
 
-DEV_SIMPLE_EXCEPTION(InvalidDeposit);
-DEV_SIMPLE_EXCEPTION(InvalidOpcode);
-
 /// Virtual machine bytecode instruction.
 enum class Instruction: uint8_t
 {

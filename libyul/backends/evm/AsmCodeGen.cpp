@@ -207,11 +207,11 @@ void CodeGenerator::assemble(
 	}
 	catch (StackTooDeepError const& _e)
 	{
-		BOOST_THROW_EXCEPTION(
-			InternalCompilerError() << errinfo_comment(
-				"Stack too deep when compiling inline assembly" +
-				(_e.comment() ? ": " + *_e.comment() : ".")
-			));
+		solAssert(
+			false,
+			"Stack too deep when compiling inline assembly" +
+			(_e.comment() ? ": " + *_e.comment() : ".")
+		);
 	}
 	solAssert(transform.stackErrors().empty(), "Stack errors present but not thrown.");
 }
