@@ -106,7 +106,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 			{
 				auto feature = ExperimentalFeatureNames.at(literal);
 				m_sourceUnit->annotation().experimentalFeatures.insert(feature);
-				if (!ExperimentalFeatureOnlyAnalysis.count(feature))
+				if (!ExperimentalFeatureWithoutWarning.count(feature))
 					m_errorReporter.warning(_pragma.location(), "Experimental features are turned on. Do not use experimental features on live deployments.");
 			}
 		}
