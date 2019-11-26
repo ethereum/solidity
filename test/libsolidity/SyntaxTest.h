@@ -90,7 +90,7 @@ protected:
 	std::map<std::string, std::string> m_sources;
 	std::vector<SyntaxTestError> m_expectations;
 	std::vector<SyntaxTestError> m_errorList;
-	bool m_optimiseYul = false;
+	bool m_optimiseYul = true;
 	langutil::EVMVersion const m_evmVersion;
 	bool m_parserErrorRecovery = false;
 };

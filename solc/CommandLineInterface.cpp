@@ -135,6 +135,7 @@ static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
 static string const g_strNone = "none";
+static string const g_strNoOptimizeYul = "no-optimize-yul";
 static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
@@ -680,7 +681,8 @@ Allowed options)",
 			"Set for how many contract runs to optimize."
 			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
 		)
-		(g_strOptimizeYul.c_str(), "Enable Yul optimizer in Solidity, mostly for ABIEncoderV2. Still considered experimental.")
+		(g_strOptimizeYul.c_str(), "Enable Yul optimizer in Solidity. Legacy option: the yul optimizer is enabled as part of the general --optimize option.")
+		(g_strNoOptimizeYul.c_str(), "Disable Yul optimizer in Solidity.")
 		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
 			g_argLibraries.c_str(),
@@ -947,7 +949,17 @@ bool CommandLineInterface::processInput()
 		using Machine = yul::AssemblyStack::Machine;
 		Input inputLanguage = m_args.count(g_argYul) ? Input::Yul : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
-		bool optimize = m_args.count(g_argOptimize) || m_args.count(g_strOptimizeYul);
+		bool optimize = m_args.count(g_argOptimize);
+		if (m_args.count(g_strOptimizeYul))
+		{
+			serr() << "--optimize-yul is invalid in assembly mode. Use --optimize instead." << endl;
+			return false;
+		}
+		if (m_args.count(g_strNoOptimizeYul))
+		{
+			serr() << "--no-optimize-yul is invalid in assembly mode. Optimization is disabled by default and can be enabled with --optimize." << endl;
+			return false;
+		}
 		if (m_args.count(g_argMachine))
 		{
 			string machine = m_args[g_argMachine].as<string>();
@@ -975,7 +987,7 @@ bool CommandLineInterface::processInput()
 			return false;
 		}
 		serr() <<
-			"Warning: Yul and its optimizer are still experimental. Please use the output with care." <<
+			"Warning: Yul is still experimental. Please use the output with care." <<
 			endl;
 
 		return assemble(inputLanguage, targetMachine, optimize);
@@ -1032,7 +1044,7 @@ bool CommandLineInterface::processInput()
 
 		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
-		settings.runYulOptimiser = m_args.count(g_strOptimizeYul);
+		settings.runYulOptimiser = !m_args.count(g_strNoOptimizeYul);
 		settings.optimizeStackAllocation = settings.runYulOptimiser;
 		m_compiler->setOptimiserSettings(settings);
 
