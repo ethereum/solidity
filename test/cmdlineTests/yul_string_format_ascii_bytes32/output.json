@@ -23,13 +23,9 @@ object \"C_10\" {
         }
 
         function fun_f_9()  -> vloc__4 {
-            for { let return_flag := 1 } return_flag {} {
-                vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
-                return_flag := 0
-                break
+            vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
+            leave
 
-                break
-            }
         }
 
     }
@@ -55,6 +51,7 @@ object \"C_10\" {
 
                 default {}
             }
+            if iszero(calldatasize()) {  }
             revert(0, 0)
 
 
@@ -91,13 +88,9 @@ object \"C_10\" {
             }
 
             function fun_f_9()  -> vloc__4 {
-                for { let return_flag := 1 } return_flag {} {
-                    vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
-                    return_flag := 0
-                    break
+                vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
+                leave
 
-                    break
-                }
             }
 
             function shift_right_224_unsigned(value) -> newValue {
