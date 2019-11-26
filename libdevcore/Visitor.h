@@ -32,14 +32,14 @@ namespace dev
  * This one does not have a fallback and will fail at
  * compile-time if you do not specify all variants.
  *
- * Fallback with no return:
+ * Fallback with no return (it will not fail if you do not specify all variants):
  * std::visit(GenericVisitor{
  *     VisitorFallback<>{},
  *     [](Class1& _c) { _c.f(); },
  *     [](Class2& _c) { _c.g(); }
  * }, variant);
  *
- * Fallback with return type R:
+ * Fallback with return type R (the fallback returns `R{}`:
  * std::visit(GenericVisitor{
  *     VisitorFallback<R>{},
  *     [](Class1& _c) { _c.f(); },
