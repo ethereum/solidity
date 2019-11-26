@@ -41,9 +41,11 @@ Compiler Features:
 
 Language Features:
  * Allow to obtain the selector of public or external library functions via a member ``.selector``.
+ * Parser: Allow splitting string and hexadecimal string literals into multiple parts.
 
 
 Compiler Features:
+ * Yul: When compiling via Yul, string literals from the Solidity code are kept as string literals if every character is safely printable.
 
 
 Bugfixes:

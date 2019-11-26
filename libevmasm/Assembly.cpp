@@ -324,7 +324,7 @@ Json::Value Assembly::assemblyJSON(StringMap const& _sourceCodes) const
 			collection.append(createJsonValue("PUSH data", i.location().start, i.location().end, toStringInHex(i.data())));
 			break;
 		default:
-			BOOST_THROW_EXCEPTION(InvalidOpcode());
+			assertThrow(false, InvalidOpcode, "");
 		}
 	}
 
@@ -642,7 +642,7 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.push_back((uint8_t)Instruction::JUMPDEST);
 			break;
 		default:
-			BOOST_THROW_EXCEPTION(InvalidOpcode());
+			assertThrow(false, InvalidOpcode, "Unexpected opcode while assembling.");
 		}
 	}
 

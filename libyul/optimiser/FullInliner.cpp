@@ -160,17 +160,19 @@ void InlineModifier::operator()(Block& _block)
 std::optional<vector<Statement>> InlineModifier::tryInlineStatement(Statement& _statement)
 {
 	// Only inline for expression statements, assignments and variable declarations.
-	Expression* e = std::visit(GenericFallbackReturnsVisitor<Expression*, ExpressionStatement, Assignment, VariableDeclaration>(
+	Expression* e = std::visit(GenericVisitor{
+		VisitorFallback<Expression*>{},
 		[](ExpressionStatement& _s) { return &_s.expression; },
 		[](Assignment& _s) { return _s.value.get(); },
 		[](VariableDeclaration& _s) { return _s.value.get(); }
-	), _statement);
+	}, _statement);
 	if (e)
 	{
 		// Only inline direct function calls.
-		FunctionCall* funCall = std::visit(GenericFallbackReturnsVisitor<FunctionCall*, FunctionCall&>(
+		FunctionCall* funCall = std::visit(GenericVisitor{
+			VisitorFallback<FunctionCall*>{},
 			[](FunctionCall& _e) { return &_e; }
-		), *e);
+		}, *e);
 		if (funCall && m_driver.shallInline(*funCall, m_currentFunction))
 			return performInline(_statement, *funCall);
 	}
@@ -208,7 +210,8 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	Statement newBody = BodyCopier(m_nameDispenser, variableReplacements)(function->body);
 	newStatements += std::move(std::get<Block>(newBody).statements);
 
-	std::visit(GenericFallbackVisitor<Assignment, VariableDeclaration>{
+	std::visit(GenericVisitor{
+		VisitorFallback<>{},
 		[&](Assignment& _assignment)
 		{
 			for (size_t i = 0; i < _assignment.variableNames.size(); ++i)

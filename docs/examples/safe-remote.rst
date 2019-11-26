@@ -4,6 +4,25 @@
 Safe Remote Purchase
 ********************
 
+Purchasing goods remotely currently requires multiple parties that need to trust each other.
+The simplest configuration involves a seller and a buyer. The buyer would like to receive
+an item from the seller and the seller would like to get money (or an equivalent)
+in return. The problematic part is the shipment here: There is no way to determine for
+sure that the item arrived at the buyer.
+
+There are multiple ways to solve this problem, but all fall short in one or the other way.
+In the following example, both parties have to put twice the value of the item into the
+contract as escrow. As soon as this happened, the money will stay locked inside
+the contract until the buyer confirms that they received the item. After that,
+the buyer is returned the value (half of their deposit) and the seller gets three
+times the value (their deposit plus the value). The idea behind
+this is that both parties have an incentive to resolve the situation or otherwise
+their money is locked forever.
+
+This contract of course does not solve the problem, but gives an overview of how
+you can use state machine-like constructs inside a contract.
+
+
 ::
 
     pragma solidity >=0.4.22 <0.7.0;
@@ -12,7 +31,7 @@ Safe Remote Purchase
         uint public value;
         address payable public seller;
         address payable public buyer;
-        enum State { Created, Locked, Inactive }
+        enum State { Created, Locked, Release, Inactive }
         // The state variable has a default value of the first member, `State.created`
         State public state;
 
@@ -57,6 +76,7 @@ Safe Remote Purchase
         event Aborted();
         event PurchaseConfirmed();
         event ItemReceived();
+        event SellerRefunded();
 
         /// Abort the purchase and reclaim the ether.
         /// Can only be called by the seller before
@@ -68,6 +88,10 @@ Safe Remote Purchase
         {
             emit Aborted();
             state = State.Inactive;
+            // We use transfer here directly. It is
+            // reentrancy-safe, because it is the
+            // last call in this function and we
+            // already changed the state.
             seller.transfer(address(this).balance);
         }
 
@@ -97,12 +121,24 @@ Safe Remote Purchase
             // It is important to change the state first because
             // otherwise, the contracts called using `send` below
             // can call in again here.
-            state = State.Inactive;
-
-            // NOTE: This actually allows both the buyer and the seller to
-            // block the refund - the withdraw pattern should be used.
+            state = State.Release;
 
             buyer.transfer(value);
-            seller.transfer(address(this).balance);
+        }
+
+        /// This function refunds the seller, i.e.
+        /// pays back the locked funds of the seller.
+        function refundSeller()
+            public
+            onlySeller
+            inState(State.Release)
+        {
+            emit SellerRefunded();
+            // It is important to change the state first because
+            // otherwise, the contracts called using `send` below
+            // can call in again here.
+            state = State.Inactive;
+
+            seller.transfer(3 * value);
         }
     }

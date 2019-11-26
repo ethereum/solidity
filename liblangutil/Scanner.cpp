@@ -810,7 +810,7 @@ Token Scanner::scanHexString()
 
 	literal.complete();
 	advance();  // consume quote
-	return Token::StringLiteral;
+	return Token::HexStringLiteral;
 }
 
 // Parse for regex [:digit:]+(_[:digit:]+)*
