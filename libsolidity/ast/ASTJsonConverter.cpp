@@ -801,6 +801,7 @@ string ASTJsonConverter::literalTokenKind(Token _token)
 	case dev::solidity::Token::Number:
 		return "number";
 	case dev::solidity::Token::StringLiteral:
+	case dev::solidity::Token::HexStringLiteral:
 		return "string";
 	case dev::solidity::Token::TrueLiteral:
 	case dev::solidity::Token::FalseLiteral:

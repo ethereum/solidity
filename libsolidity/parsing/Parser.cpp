@@ -1614,9 +1614,22 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		}
 		break;
 	case Token::StringLiteral:
+	case Token::HexStringLiteral:
+	{
+		string literal = m_scanner->currentLiteral();
+		Token firstToken = m_scanner->currentToken();
+		while (m_scanner->peekNextToken() == firstToken)
+		{
+			m_scanner->next();
+			literal += m_scanner->currentLiteral();
+		}
 		nodeFactory.markEndPosition();
-		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
+		m_scanner->next();
+		if (m_scanner->currentToken() == Token::Illegal)
+			fatalParserError(to_string(m_scanner->currentError()));
+		expression = nodeFactory.createNode<Literal>(token, make_shared<ASTString>(literal));
 		break;
+	}
 	case Token::Identifier:
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
