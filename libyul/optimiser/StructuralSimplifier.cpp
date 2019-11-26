@@ -71,7 +71,8 @@ void StructuralSimplifier::operator()(Block& _block)
 
 void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
-	GenericFallbackReturnsVisitor<OptionalStatements, If, Switch, ForLoop> const visitor(
+	GenericVisitor visitor{
+		VisitorFallback<OptionalStatements>{},
 		[&](If& _ifStmt) -> OptionalStatements {
 			if (expressionAlwaysTrue(*_ifStmt.condition))
 				return {std::move(_ifStmt.body.statements)};
@@ -89,7 +90,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 				return {std::move(_forLoop.pre.statements)};
 			return {};
 		}
-	);
+	};
 
 	iterateReplacing(
 		_statements,

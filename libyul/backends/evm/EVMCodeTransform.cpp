@@ -82,14 +82,14 @@ void VariableReferenceCounter::operator()(Block const& _block)
 
 void VariableReferenceCounter::increaseRefIfFound(YulString _variableName)
 {
-	m_scope->lookup(_variableName, Scope::Visitor(
+	m_scope->lookup(_variableName, GenericVisitor{
 		[=](Scope::Variable const& _var)
 		{
 			++m_context.variableReferences[&_var];
 		},
 		[=](Scope::Label const&) { },
 		[=](Scope::Function const&) { }
-	));
+	});
 }
 
 CodeTransform::CodeTransform(
@@ -302,11 +302,11 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		}
 
 		Scope::Function* function = nullptr;
-		solAssert(m_scope->lookup(_call.functionName.name, Scope::NonconstVisitor(
+		solAssert(m_scope->lookup(_call.functionName.name, GenericVisitor{
 			[=](Scope::Variable&) { solAssert(false, "Expected function name."); },
 			[=](Scope::Label&) { solAssert(false, "Expected function name."); },
 			[&](Scope::Function& _function) { function = &_function; }
-		)), "Function name not found.");
+		}), "Function name not found.");
 		solAssert(function, "");
 		solAssert(function->arguments.size() == _call.arguments.size(), "");
 		for (auto const& arg: _call.arguments | boost::adaptors::reversed)
@@ -363,7 +363,7 @@ void CodeTransform::operator()(Identifier const& _identifier)
 	m_assembly.setSourceLocation(_identifier.location);
 	// First search internals, then externals.
 	solAssert(m_scope, "");
-	if (m_scope->lookup(_identifier.name, Scope::NonconstVisitor(
+	if (m_scope->lookup(_identifier.name, GenericVisitor{
 		[=](Scope::Variable& _var)
 		{
 			// TODO: opportunity for optimization: Do not DUP if this is the last reference
@@ -383,7 +383,7 @@ void CodeTransform::operator()(Identifier const& _identifier)
 		{
 			solAssert(false, "Function not removed during desugaring.");
 		}
-	)))
+	}))
 	{
 		return;
 	}
@@ -682,14 +682,14 @@ void CodeTransform::operator()(Block const& _block)
 AbstractAssembly::LabelID CodeTransform::labelFromIdentifier(Identifier const& _identifier)
 {
 	AbstractAssembly::LabelID label = AbstractAssembly::LabelID(-1);
-	if (!m_scope->lookup(_identifier.name, Scope::NonconstVisitor(
+	if (!m_scope->lookup(_identifier.name, GenericVisitor{
 		[=](Scope::Variable&) { solAssert(false, "Expected label"); },
 		[&](Scope::Label& _label)
 		{
 			label = labelID(_label);
 		},
 		[=](Scope::Function&) { solAssert(false, "Expected label"); }
-	)))
+	}))
 	{
 		solAssert(false, "Identifier not found.");
 	}
