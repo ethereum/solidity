@@ -39,13 +39,9 @@ object \"C_10\" {
         }
 
         function fun_f_9()  -> vloc__4 {
-            for { let return_flag := 1 } return_flag {} {
-                vloc__4 := convert_t_stringliteral_d6604f85ac07e2b33103a620b3d3d75b0473c7214912beded67b9b624d41c571_to_t_string_memory_ptr()
-                return_flag := 0
-                break
+            vloc__4 := convert_t_stringliteral_d6604f85ac07e2b33103a620b3d3d75b0473c7214912beded67b9b624d41c571_to_t_string_memory_ptr()
+            leave
 
-                break
-            }
         }
 
     }
@@ -71,6 +67,7 @@ object \"C_10\" {
 
                 default {}
             }
+            if iszero(calldatasize()) {  }
             revert(0, 0)
 
 
@@ -142,13 +139,9 @@ object \"C_10\" {
             }
 
             function fun_f_9()  -> vloc__4 {
-                for { let return_flag := 1 } return_flag {} {
-                    vloc__4 := convert_t_stringliteral_d6604f85ac07e2b33103a620b3d3d75b0473c7214912beded67b9b624d41c571_to_t_string_memory_ptr()
-                    return_flag := 0
-                    break
+                vloc__4 := convert_t_stringliteral_d6604f85ac07e2b33103a620b3d3d75b0473c7214912beded67b9b624d41c571_to_t_string_memory_ptr()
+                leave
 
-                    break
-                }
             }
 
             function round_up_to_mul_of_32(value) -> result {
