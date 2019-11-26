@@ -23,6 +23,7 @@
 #include <libsolidity/codegen/ABIFunctions.h>
 
 #include <libsolidity/codegen/CompilerUtils.h>
+#include <libdevcore/CommonData.h>
 #include <libdevcore/Whiskers.h>
 #include <libdevcore/StringUtils.h>
 
@@ -975,7 +976,7 @@ string ABIFunctions::abiEncodingFunctionStringLiteral(
 			for (size_t i = 0; i < words; ++i)
 			{
 				wordParams[i]["offset"] = to_string(i * 32);
-				wordParams[i]["wordValue"] = "0x" + h256(value.substr(32 * i, 32), h256::AlignLeft).hex();
+				wordParams[i]["wordValue"] = formatAsStringOrNumber(value.substr(32 * i, 32));
 			}
 			templ("word", wordParams);
 			return templ.render();
@@ -990,7 +991,7 @@ string ABIFunctions::abiEncodingFunctionStringLiteral(
 				}
 			)");
 			templ("functionName", functionName);
-			templ("wordValue", "0x" + h256(value, h256::AlignLeft).hex());
+			templ("wordValue", formatAsStringOrNumber(value));
 			return templ.render();
 		}
 	});

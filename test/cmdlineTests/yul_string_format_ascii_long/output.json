@@ -1,0 +1,169 @@
+{"contracts":{"A":{"C":{"ir":"/*******************************************************
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *******************************************************/
+
+
+object \"C_10\" {
+    code {
+        mstore(64, 128)
+
+        // Begin state variable initialization for contract \"C\" (0 variables)
+        // End state variable initialization for contract \"C\".
+
+
+        codecopy(0, dataoffset(\"C_10_deployed\"), datasize(\"C_10_deployed\"))
+        return(0, datasize(\"C_10_deployed\"))
+
+
+        function allocateMemory(size) -> memPtr {
+            memPtr := mload(64)
+            let newFreePtr := add(memPtr, size)
+            // protect against overflow
+            if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+            mstore(64, newFreePtr)
+        }
+
+        function convert_t_stringliteral_d6604f85ac07e2b33103a620b3d3d75b0473c7214912beded67b9b624d41c571_to_t_string_memory_ptr() -> converted {
+            converted := allocateMemory(128)
+            mstore(converted, 85)
+
+            mstore(add(converted, 32), \"abcdabcdcafecafeabcdabcdcafecafe\")
+
+            mstore(add(converted, 64), \"ffffzzzzoooo0123456789,.<,>.?:;'\")
+
+            mstore(add(converted, 96), \"[{]}|`~!@#$%^&*()-_=+\")
+
+        }
+
+        function fun_f_9()  -> vloc__4 {
+            for { let return_flag := 1 } return_flag {} {
+                vloc__4 := convert_t_stringliteral_d6604f85ac07e2b33103a620b3d3d75b0473c7214912beded67b9b624d41c571_to_t_string_memory_ptr()
+                return_flag := 0
+                break
+
+                break
+            }
+        }
+
+    }
+    object \"C_10_deployed\" {
+        code {
+            mstore(64, 128)
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0x26121ff0
+                {
+                    // f()
+                    if callvalue() { revert(0, 0) }
+                    abi_decode_tuple_(4, calldatasize())
+                    let ret_0 :=  fun_f_9()
+                    let memPos := allocateMemory(0)
+                    let memEnd := abi_encode_tuple_t_string_memory_ptr__to_t_string_memory_ptr__fromStack(memPos ,  ret_0)
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                default {}
+            }
+            revert(0, 0)
+
+
+            function abi_decode_tuple_(headStart, dataEnd)   {
+                if slt(sub(dataEnd, headStart), 0) { revert(0, 0) }
+
+            }
+
+            function abi_encode_t_string_memory_ptr_to_t_string_memory_ptr_fromStack(value, pos) -> end {
+                let length := array_length_t_string_memory_ptr(value)
+                pos := array_storeLengthForEncoding_t_string_memory_ptr_fromStack(pos, length)
+                copy_memory_to_memory(add(value, 0x20), pos, length)
+                end := add(pos, round_up_to_mul_of_32(length))
+            }
+
+            function abi_encode_tuple_t_string_memory_ptr__to_t_string_memory_ptr__fromStack(headStart , value0) -> tail {
+                tail := add(headStart, 32)
+
+                mstore(add(headStart, 0), sub(tail, headStart))
+                tail := abi_encode_t_string_memory_ptr_to_t_string_memory_ptr_fromStack(value0,  tail)
+
+            }
+
+            function allocateMemory(size) -> memPtr {
+                memPtr := mload(64)
+                let newFreePtr := add(memPtr, size)
+                // protect against overflow
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+                mstore(64, newFreePtr)
+            }
+
+            function array_length_t_string_memory_ptr(value) -> length {
+
+
+                length := mload(value)
+
+
+
+            }
+
+            function array_storeLengthForEncoding_t_string_memory_ptr_fromStack(pos, length) -> updated_pos {
+                mstore(pos, length)
+                updated_pos := add(pos, 0x20)
+            }
+
+            function convert_t_stringliteral_d6604f85ac07e2b33103a620b3d3d75b0473c7214912beded67b9b624d41c571_to_t_string_memory_ptr() -> converted {
+                converted := allocateMemory(128)
+                mstore(converted, 85)
+
+                mstore(add(converted, 32), \"abcdabcdcafecafeabcdabcdcafecafe\")
+
+                mstore(add(converted, 64), \"ffffzzzzoooo0123456789,.<,>.?:;'\")
+
+                mstore(add(converted, 96), \"[{]}|`~!@#$%^&*()-_=+\")
+
+            }
+
+            function copy_memory_to_memory(src, dst, length) {
+                let i := 0
+                for { } lt(i, length) { i := add(i, 32) }
+                {
+                    mstore(add(dst, i), mload(add(src, i)))
+                }
+                if gt(i, length)
+                {
+                    // clear end
+                    mstore(add(dst, length), 0)
+                }
+            }
+
+            function fun_f_9()  -> vloc__4 {
+                for { let return_flag := 1 } return_flag {} {
+                    vloc__4 := convert_t_stringliteral_d6604f85ac07e2b33103a620b3d3d75b0473c7214912beded67b9b624d41c571_to_t_string_memory_ptr()
+                    return_flag := 0
+                    break
+
+                    break
+                }
+            }
+
+            function round_up_to_mul_of_32(value) -> result {
+                result := and(add(value, 31), not(31))
+            }
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+        }
+    }
+}
+
+"}}},"sources":{"A":{"id":0}}}

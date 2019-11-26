@@ -23,6 +23,7 @@
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/Keccak256.h>
+#include <libdevcore/FixedHash.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -180,4 +181,16 @@ bool dev::isValidDecimal(string const& _string)
 	if (_string.find_first_not_of("0123456789") != string::npos)
 		return false;
 	return true;
+}
+
+// Returns a quoted string if all characters are printable ASCII chars,
+// or its hex representation otherwise.
+std::string dev::formatAsStringOrNumber(std::string const& _value)
+{
+	if (_value.length() <= 32)
+		for (auto const& c: _value)
+			if (c <= 0x1f || c >= 0x7f || c == '"')
+				return "0x" + h256(_value, h256::AlignLeft).hex();
+
+	return "\"" + _value + "\"";
 }

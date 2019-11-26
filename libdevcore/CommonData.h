@@ -290,7 +290,6 @@ void iterateReplacing(std::vector<T>& _vector, F const& _f)
 		_vector = std::move(modifiedVector);
 }
 
-
 namespace detail
 {
 template <typename T, typename F, std::size_t... I>
@@ -354,6 +353,10 @@ std::string getChecksummedAddress(std::string const& _addr);
 
 bool isValidHex(std::string const& _string);
 bool isValidDecimal(std::string const& _string);
+
+/// @returns a quoted string if all characters are printable ASCII chars,
+/// or its hex representation otherwise.
+std::string formatAsStringOrNumber(std::string const& _value);
 
 template<typename Container, typename Compare>
 bool containerEqual(Container const& _lhs, Container const& _rhs, Compare&& _compare)
