@@ -59,7 +59,7 @@ bool containsError(Json::Value const& _compilerResult, string const& _type, stri
 
 Json::Value compile(string const& _input, CStyleReadFileCallback _callback = nullptr)
 {
-	string output(solidity_compile(_input.c_str(), _callback));
+	string output(solidity_compile(_input.c_str(), _callback, nullptr));
 	Json::Value ret;
 	BOOST_REQUIRE(jsonParseStrict(output, ret));
 	solidity_free();
@@ -138,8 +138,10 @@ BOOST_AUTO_TEST_CASE(with_callback)
 	)";
 
 	CStyleReadFileCallback callback{
-		[](char const* _kind, char const* _path, char** o_contents, char** o_error)
+		[](void* _context, char const* _kind, char const* _path, char** o_contents, char** o_error)
 		{
+			// Passed in a nullptr in the compile() helper above.
+			BOOST_CHECK(_context == nullptr);
 			// Caller frees the pointers.
 			BOOST_CHECK(string(_kind) == ReadCallback::kindString(ReadCallback::Kind::ReadFile));
 			if (string(_path) == "found.sol")
