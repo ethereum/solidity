@@ -18,7 +18,7 @@
  * Unit tests for the StringUtils routines.
  */
 
-
+#include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/FixedHash.h>
 #include <libsolidity/ast/Types.h> // for IntegerType
@@ -28,6 +28,9 @@
 using namespace std;
 using namespace dev::solidity;
 
+// TODO: Fix Boost...
+BOOST_TEST_DONT_PRINT_LOG_VALUE(dev::bytes);
+
 namespace dev
 {
 namespace test
@@ -35,9 +38,62 @@ namespace test
 
 BOOST_AUTO_TEST_SUITE(CommonData)
 
-BOOST_AUTO_TEST_CASE(test_to_hex)
+BOOST_AUTO_TEST_CASE(fromhex_char)
 {
-	BOOST_CHECK_EQUAL(toHex(fromHex("FF"), HexPrefix::DontAdd,  HexCase::Lower), "ff");
+	BOOST_CHECK_EQUAL(fromHex('0', WhenError::DontThrow), 0x0);
+	BOOST_CHECK_EQUAL(fromHex('a', WhenError::DontThrow), 0xa);
+	BOOST_CHECK_EQUAL(fromHex('x', WhenError::DontThrow), -1);
+	BOOST_CHECK_EQUAL(fromHex('x', static_cast<WhenError>(42)), -1);
+
+	BOOST_CHECK_EQUAL(fromHex('0', WhenError::Throw), 0x0);
+	BOOST_CHECK_EQUAL(fromHex('a', WhenError::Throw), 0xa);
+	BOOST_CHECK_THROW(fromHex('x', WhenError::Throw), BadHexCharacter);
+}
+
+BOOST_AUTO_TEST_CASE(fromhex_string)
+{
+	bytes expectation_even = {{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}};
+	bytes expectation_odd = {{0x00, 0x01, 0x12, 0x23, 0x34, 0x45, 0x56, 0x67, 0x78, 0x89, 0x9a, 0xab, 0xbc, 0xcd, 0xde, 0xef, 0xf0}};
+
+	// Defaults to WhenError::DontThrow
+	BOOST_CHECK_EQUAL(fromHex(""), bytes());
+	BOOST_CHECK_EQUAL(fromHex("00112233445566778899aabbccddeeff"), expectation_even);
+	BOOST_CHECK_EQUAL(fromHex("0x00112233445566778899aabbccddeeff"), expectation_even);
+	BOOST_CHECK_EQUAL(fromHex("0x00112233445566778899aabbccddeeff0"), expectation_odd);
+	BOOST_CHECK_EQUAL(fromHex("gg"), bytes());
+	BOOST_CHECK_EQUAL(fromHex("0xgg"), bytes());
+
+	BOOST_CHECK_EQUAL(fromHex("", WhenError::Throw), bytes());
+	BOOST_CHECK_EQUAL(fromHex("00112233445566778899aabbccddeeff", WhenError::Throw), expectation_even);
+	BOOST_CHECK_EQUAL(fromHex("0x00112233445566778899aabbccddeeff", WhenError::Throw), expectation_even);
+	BOOST_CHECK_EQUAL(fromHex("0x00112233445566778899aabbccddeeff0", WhenError::Throw), expectation_odd);
+	BOOST_CHECK_THROW(fromHex("gg", WhenError::Throw), BadHexCharacter);
+	BOOST_CHECK_THROW(fromHex("0xgg", WhenError::Throw), BadHexCharacter);
+}
+
+BOOST_AUTO_TEST_CASE(tohex_uint8)
+{
+	BOOST_CHECK_EQUAL(toHex(0xaa), "aa");
+	BOOST_CHECK_EQUAL(toHex(0xaa, HexCase::Lower), "aa");
+	BOOST_CHECK_EQUAL(toHex(0xaa, HexCase::Upper), "AA");
+	BOOST_CHECK_THROW(toHex(0xaa, HexCase::Mixed), BadHexCase);
+	// Defaults to lower case on invalid setting.
+	BOOST_CHECK_EQUAL(toHex(0xaa, static_cast<HexCase>(42)), "aa");
+}
+
+BOOST_AUTO_TEST_CASE(tohex_bytes)
+{
+	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::DontAdd, HexCase::Lower), "00112233445566778899aabbccddeeff");
+	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::DontAdd, HexCase::Upper), "00112233445566778899AABBCCDDEEFF");
+	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::DontAdd, HexCase::Mixed), "00112233445566778899aabbCCDDeeff");
+	// Defaults to lower case on invalid setting.
+	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::DontAdd, static_cast<HexCase>(42)), "00112233445566778899aabbccddeeff");
+
+	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::Add, HexCase::Lower), "0x00112233445566778899aabbccddeeff");
+	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::Add, HexCase::Upper), "0x00112233445566778899AABBCCDDEEFF");
+	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899AaBbCcDdEeFf"), HexPrefix::Add, HexCase::Mixed), "0x00112233445566778899aabbCCDDeeff");
+	// Defaults to lower case on invalid setting.
+	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::Add, static_cast<HexCase>(42)), "0x00112233445566778899aabbccddeeff");
 }
 
 BOOST_AUTO_TEST_CASE(test_format_number)
