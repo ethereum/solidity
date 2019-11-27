@@ -345,7 +345,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 			if (_tuple.components().size() == 1)
 				m_currentLValue = move(lvalues[0]);
 			else
-				m_currentLValue.reset(new TupleObject(m_context, move(lvalues)));
+				m_currentLValue = make_unique<TupleObject>(m_context, move(lvalues));
 		}
 	}
 	return false;

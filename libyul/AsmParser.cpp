@@ -217,7 +217,7 @@ Statement Parser::parseStatement()
 
 		expectToken(Token::AssemblyAssign);
 
-		assignment.value.reset(new Expression(parseExpression()));
+		assignment.value = make_unique<Expression>(parseExpression());
 		assignment.location.end = locationOf(*assignment.value).end;
 
 		return Statement{std::move(assignment)};

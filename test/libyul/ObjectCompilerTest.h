@@ -42,7 +42,7 @@ class ObjectCompilerTest: public dev::solidity::test::TestCase
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
-		return std::unique_ptr<TestCase>(new ObjectCompilerTest(_config.filename));
+		return std::make_unique<ObjectCompilerTest>(_config.filename);
 	}
 
 	explicit ObjectCompilerTest(std::string const& _filename);

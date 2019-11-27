@@ -424,7 +424,11 @@ void YulOptimizerTest::disambiguate()
 void YulOptimizerTest::updateContext()
 {
 	m_nameDispenser = make_unique<NameDispenser>(*m_dialect, *m_ast, m_reservedIdentifiers);
-	m_context = unique_ptr<OptimiserStepContext>(new OptimiserStepContext{*m_dialect, *m_nameDispenser, m_reservedIdentifiers});
+	m_context = make_unique<OptimiserStepContext>(OptimiserStepContext{
+		*m_dialect,
+		*m_nameDispenser,
+		m_reservedIdentifiers
+	});
 }
 
 void YulOptimizerTest::printErrors(ostream& _stream, ErrorList const& _errors)

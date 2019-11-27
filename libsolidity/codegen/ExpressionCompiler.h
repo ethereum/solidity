@@ -136,7 +136,7 @@ template <class _LValueType, class... _Arguments>
 void ExpressionCompiler::setLValue(Expression const& _expression, _Arguments const&... _arguments)
 {
 	solAssert(!m_currentLValue, "Current LValue not reset before trying to set new one.");
-	std::unique_ptr<_LValueType> lvalue(new _LValueType(m_context, _arguments...));
+	std::unique_ptr<_LValueType> lvalue = std::make_unique<_LValueType>(m_context, _arguments...);
 	if (_expression.annotation().lValueRequested)
 		m_currentLValue = move(lvalue);
 	else
