@@ -1364,14 +1364,14 @@ bool CommandLineInterface::assemble(
 	for (auto const& sourceAndStack: assemblyStacks)
 	{
 		auto const& stack = sourceAndStack.second;
-		unique_ptr<SourceReferenceFormatter> formatter;
-		if (m_args.count(g_argNewReporter))
-			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
-		else
-			formatter = make_unique<SourceReferenceFormatter>(serr(false));
-
 		for (auto const& error: stack.errors())
 		{
+			unique_ptr<SourceReferenceFormatter> formatter;
+			if (m_args.count(g_argNewReporter))
+				formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
+			else
+				formatter = make_unique<SourceReferenceFormatter>(serr(false));
+
 			g_hasOutput = true;
 			formatter->printErrorInformation(*error);
 		}
@@ -1384,18 +1384,26 @@ bool CommandLineInterface::assemble(
 
 	for (auto const& src: m_sourceCodes)
 	{
-		// TODO translate from EVM to eWasm if
-		// _language is EVM and _targetMachine is EWasm
-
 		string machine =
 			_targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
 			_targetMachine == yul::AssemblyStack::Machine::EVM15 ? "EVM 1.5" :
 			"eWasm";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
+
 		yul::AssemblyStack& stack = assemblyStacks[src.first];
 
 		sout() << endl << "Pretty printed source:" << endl;
 		sout() << stack.print() << endl;
+
+		if (_language != yul::AssemblyStack::Language::EWasm && _targetMachine == yul::AssemblyStack::Machine::eWasm)
+		{
+			stack.translate(yul::AssemblyStack::Language::EWasm);
+			stack.optimize();
+
+			sout() << endl << "==========================" << endl;
+			sout() << endl << "Translated source:" << endl;
+			sout() << stack.print() << endl;
+		}
 
 		yul::MachineAssemblyObject object;
 		try
