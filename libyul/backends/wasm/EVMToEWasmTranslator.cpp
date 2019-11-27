@@ -445,7 +445,7 @@ function smod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 }
 function exp(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	r4 := 1
-	for {} i64.xor(iszero(y1, y2, y3, y4), 1) {} {
+	for {} or_bool(y1, y2, y3, y4) {} {
 		if i64.and(y4, 1) {
 			r1, r2, r3, r4 := mul(r1, r2, r3, r4, x1, x2, x3, x4)
 		}
@@ -793,7 +793,7 @@ function u256_to_address(x1, x2, x3, x4) -> r1, r2, r3 {
 function keccak256(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	mstore_internal(12, 0, 0, 0, 0x09)
 	z4 := eth.callStatic(
-		eth.getGasLeft(),
+		0x7fffffffffffffff,
 		12,
 		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
 		u256_to_i32(y1, y2, y3, y4)
