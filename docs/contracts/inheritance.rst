@@ -181,8 +181,8 @@ Function Overriding
 ===================
 
 Base functions can be overridden by inheriting contracts to change their
-behavior. The overriding function must then use the ``override`` keyword in the
-function header as shown in this example:
+behavior if they are marked as ``virtual``. The overriding function must then
+use the ``override`` keyword in the function header as shown in this example:
 
 ::
 
@@ -239,6 +239,11 @@ overridden when used with multiple inheritance:
     contract C is A {}
     // No explicit override required
     contract D is B, C {}
+
+.. note::
+
+  Functions with the ``private`` visibility cannot be ``virtual``.
+
 
 .. _modifier-overriding:
 

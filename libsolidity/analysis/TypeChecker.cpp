@@ -327,8 +327,13 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	bool isLibraryFunction = _function.inContractKind() == ContractDefinition::ContractKind::Library;
 
-	if (_function.markedVirtual() && _function.annotation().contract->isInterface())
-		m_errorReporter.warning(_function.location(), "Interface functions are implicitly \"virtual\"");
+	if (_function.markedVirtual())
+	{
+		if (_function.annotation().contract->isInterface())
+			m_errorReporter.warning(_function.location(), "Interface functions are implicitly \"virtual\"");
+		if (_function.visibility() == Declaration::Visibility::Private)
+			m_errorReporter.typeError(_function.location(), "\"virtual\" and \"private\" cannot be used together.");
+	}
 
 	if (_function.isPayable())
 	{
