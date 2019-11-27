@@ -21,6 +21,7 @@ Breaking changes:
  * Natspec JSON Interface: Properly support multiple ``@return`` statements in ``@dev`` documentation and enforce named return parameters to be mentioned documentation.
  * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
  * AST: Inline assembly is exported as structured JSON instead of plain string.
+ * General: ``private`` cannot be used together with ``virtual``.
 
 Language Features:
  * Allow global enums and structs.
@@ -28,7 +29,7 @@ Language Features:
  * Allow explicit conversions from ``address`` to ``address payable`` via ``payable(...)``.
  * Introduce syntax for array slices and implement them for dynamic calldata arrays.
  * Introduce ``push()`` for dynamic storage arrays. It returns a reference to the newly allocated element, if applicable.
- * Introduce ``virtual`` and ``override`` keywords
+ * Introduce ``virtual`` and ``override`` keywords.
  * Modify ``push(element)`` for dynamic storage arrays such that it does not return the new length anymore.
  * Yul: Introduce ``leave`` statement that exits the current function.
 
