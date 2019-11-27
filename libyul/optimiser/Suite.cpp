@@ -185,6 +185,18 @@ void OptimiserSuite::run(
 		}
 
 		{
+			// Prune a bit more in SSA
+			suite.runSequence({
+				ExpressionSplitter::name,
+				SSATransform::name,
+				RedundantAssignEliminator::name,
+				UnusedPruner::name,
+				RedundantAssignEliminator::name,
+				UnusedPruner::name,
+			}, ast);
+		}
+
+		{
 			// Turn into SSA again and simplify
 			suite.runSequence({
 				ExpressionSplitter::name,
