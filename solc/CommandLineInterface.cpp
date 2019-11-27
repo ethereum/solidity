@@ -944,7 +944,7 @@ bool CommandLineInterface::processInput()
 				return false;
 			}
 		}
-		if (optimize && inputLanguage != Input::StrictAssembly)
+		if (optimize && (inputLanguage != Input::StrictAssembly && inputLanguage != Input::EWasm))
 		{
 			serr() <<
 				"Optimizer can only be used for strict assembly. Use --" <<
