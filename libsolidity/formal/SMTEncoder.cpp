@@ -537,6 +537,15 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	}
 }
 
+bool SMTEncoder::visit(ModifierInvocation const& _node)
+{
+	if (auto const* args = _node.arguments())
+		for (auto const& arg: *args)
+			if (arg)
+				arg->accept(*this);
+	return false;
+}
+
 void SMTEncoder::initContract(ContractDefinition const& _contract)
 {
 	solAssert(m_currentContract == nullptr, "");
@@ -605,9 +614,7 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 		defineExpr(_identifier, m_context.thisAddress());
 		m_uninterpretedTerms.insert(&_identifier);
 	}
-	else if (
-		_identifier.annotation().type->category() != Type::Category::Modifier
-	)
+	else
 		createExpr(_identifier);
 }
 
