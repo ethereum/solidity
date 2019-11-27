@@ -933,7 +933,7 @@ bool CommandLineInterface::processInput()
 		return link();
 	}
 
-	m_compiler.reset(new CompilerStack(fileReader));
+	m_compiler = make_unique<CompilerStack>(fileReader);
 
 	unique_ptr<SourceReferenceFormatter> formatter;
 	if (m_args.count(g_argNewReporter))

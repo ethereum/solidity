@@ -48,7 +48,7 @@ NameAndTypeResolver::NameAndTypeResolver(
 	m_globalContext(_globalContext)
 {
 	if (!m_scopes[nullptr])
-		m_scopes[nullptr].reset(new DeclarationContainer());
+		m_scopes[nullptr] = make_shared<DeclarationContainer>();
 	for (Declaration const* declaration: _globalContext.declarations())
 	{
 		solAssert(m_scopes[nullptr]->registerDeclaration(*declaration), "Unable to register global declaration.");
@@ -545,7 +545,7 @@ bool DeclarationRegistrationHelper::visit(SourceUnit& _sourceUnit)
 {
 	if (!m_scopes[&_sourceUnit])
 		// By importing, it is possible that the container already exists.
-		m_scopes[&_sourceUnit].reset(new DeclarationContainer(m_currentScope, m_scopes[m_currentScope].get()));
+		m_scopes[&_sourceUnit] = make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get());
 	m_currentScope = &_sourceUnit;
 	return true;
 }
@@ -561,7 +561,7 @@ bool DeclarationRegistrationHelper::visit(ImportDirective& _import)
 	SourceUnit const* importee = _import.annotation().sourceUnit;
 	solAssert(!!importee, "");
 	if (!m_scopes[importee])
-		m_scopes[importee].reset(new DeclarationContainer(nullptr, m_scopes[nullptr].get()));
+		m_scopes[importee] = make_shared<DeclarationContainer>(nullptr, m_scopes[nullptr].get());
 	m_scopes[&_import] = m_scopes[importee];
 	registerDeclaration(_import, false);
 	return true;
@@ -705,7 +705,7 @@ void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _subScope)
 {
 	map<ASTNode const*, shared_ptr<DeclarationContainer>>::iterator iter;
 	bool newlyAdded;
-	shared_ptr<DeclarationContainer> container(new DeclarationContainer(m_currentScope, m_scopes[m_currentScope].get()));
+	shared_ptr<DeclarationContainer> container{make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get())};
 	tie(iter, newlyAdded) = m_scopes.emplace(&_subScope, move(container));
 	solAssert(newlyAdded, "Unable to add new scope.");
 	m_currentScope = &_subScope;

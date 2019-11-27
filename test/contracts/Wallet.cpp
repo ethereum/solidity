@@ -448,7 +448,7 @@ protected:
 	)
 	{
 		if (!s_compiledWallet)
-			s_compiledWallet.reset(new bytes(compileContract(walletCode, "Wallet")));
+			s_compiledWallet = make_unique<bytes>(compileContract(walletCode, "Wallet"));
 
 		bytes args = encodeArgs(u256(0x60), _required, _dailyLimit, u256(_owners.size()), _owners);
 		sendMessage(*s_compiledWallet + args, true, _value);

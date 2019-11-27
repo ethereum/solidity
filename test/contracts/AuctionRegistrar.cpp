@@ -223,7 +223,7 @@ protected:
 	void deployRegistrar()
 	{
 		if (!s_compiledRegistrar)
-			s_compiledRegistrar.reset(new bytes(compileContract(registrarCode, "GlobalRegistrar")));
+			s_compiledRegistrar = make_unique<bytes>(compileContract(registrarCode, "GlobalRegistrar"));
 
 		sendMessage(*s_compiledRegistrar, true);
 		BOOST_REQUIRE(m_transactionSuccessful);
