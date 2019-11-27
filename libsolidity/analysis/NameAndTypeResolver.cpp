@@ -346,10 +346,6 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 					solAssert(conflictingDeclaration, "");
 
 					// Usual shadowing is not an error
-					if (dynamic_cast<VariableDeclaration const*>(declaration) && dynamic_cast<VariableDeclaration const*>(conflictingDeclaration))
-						continue;
-
-					// Usual shadowing is not an error
 					if (dynamic_cast<ModifierDefinition const*>(declaration) && dynamic_cast<ModifierDefinition const*>(conflictingDeclaration))
 						continue;
 

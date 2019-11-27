@@ -5971,38 +5971,6 @@ BOOST_AUTO_TEST_CASE(invalid_enum_as_external_arg)
 	ABI_CHECK(callContractFunction("test()"), encodeArgs());
 }
 
-
-BOOST_AUTO_TEST_CASE(proper_order_of_overwriting_of_attributes)
-{
-	// bug #1798
-	char const* sourceCode = R"(
-		contract init {
-			function isOk() public virtual returns (bool) { return false; }
-			bool public ok = false;
-		}
-		contract fix {
-			function isOk() public virtual returns (bool) { return true; }
-			bool public ok = true;
-		}
-
-		contract init_fix is init, fix {
-			function checkOk() public returns (bool) { return ok; }
-			function isOk() public override (init, fix) returns (bool) { return super.isOk(); }
-		}
-		contract fix_init is fix, init {
-			function checkOk() public returns (bool) { return ok; }
-			function isOk() public override (init, fix) returns (bool) { return super.isOk(); }
-		}
-	)";
-	compileAndRun(sourceCode, 0, "init_fix");
-	ABI_CHECK(callContractFunction("isOk()"), encodeArgs(true));
-	ABI_CHECK(callContractFunction("ok()"), encodeArgs(true));
-
-	compileAndRun(sourceCode, 0, "fix_init");
-	ABI_CHECK(callContractFunction("isOk()"), encodeArgs(false));
-	ABI_CHECK(callContractFunction("ok()"), encodeArgs(false));
-}
-
 BOOST_AUTO_TEST_CASE(struct_assign_reference_to_struct)
 {
 	char const* sourceCode = R"(
@@ -8049,42 +8017,6 @@ BOOST_AUTO_TEST_CASE(inherited_constant_state_var)
 
 	compileAndRun(sourceCode, 0, "B");
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(7)));
-}
-
-BOOST_AUTO_TEST_CASE(multiple_inherited_state_vars)
-{
-	char const* sourceCode = R"(
-		contract A {
-			uint x = 7;
-		}
-		contract B {
-			uint x = 9;
-		}
-		contract C is A, B {
-			function a() public returns (uint) {
-				return A.x;
-			}
-			function b() public returns (uint) {
-				return B.x;
-			}
-			function a_set(uint _x) public returns (uint) {
-				A.x = _x;
-				return 1;
-			}
-			function b_set(uint _x) public returns (uint) {
-				B.x = _x;
-				return 1;
-			}
-		}
-	)";
-
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("a()"), encodeArgs(u256(7)));
-	ABI_CHECK(callContractFunction("b()"), encodeArgs(u256(9)));
-	ABI_CHECK(callContractFunction("a_set(uint256)", u256(1)), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("b_set(uint256)", u256(3)), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("a()"), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("b()"), encodeArgs(u256(3)));
 }
 
 BOOST_AUTO_TEST_CASE(constant_string_literal)

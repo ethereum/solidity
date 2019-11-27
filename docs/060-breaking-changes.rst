@@ -38,6 +38,10 @@ This section lists purely syntactic changes that do not affect the behavior of e
   If the name contains a dot, its prefix up to the dot may not conflict with any declaration outside the inline
   assembly block.
 
+* State variable shadowing is now disallowed.  A derived contract can only
+  declare a state variable ``x``, if there is no visible state variable with
+  the same name in any of its bases.
+
 
 Semantic Only Changes
 =====================

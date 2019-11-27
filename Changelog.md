@@ -22,6 +22,7 @@ Breaking changes:
  * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
  * AST: Inline assembly is exported as structured JSON instead of plain string.
  * General: ``private`` cannot be used together with ``virtual``.
+ * Inheritance: State variable shadowing is now disallowed.
 
 Language Features:
  * Allow global enums and structs.
