@@ -39,7 +39,7 @@ function colony_test
 
     cd lib
     rm -Rf dappsys
-    git clone https://github.com/erak/dappsys-monolithic.git -b callvalue-payable-fix dappsys
+    git clone https://github.com/erak/dappsys-monolithic.git -b master_060 dappsys
     cd ..
 
     truffle_run_test compile_fn test_fn
