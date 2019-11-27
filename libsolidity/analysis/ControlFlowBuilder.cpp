@@ -35,7 +35,7 @@ unique_ptr<FunctionFlow> ControlFlowBuilder::createFunctionFlow(
 	FunctionDefinition const& _function
 )
 {
-	auto functionFlow = unique_ptr<FunctionFlow>(new FunctionFlow());
+	auto functionFlow = make_unique<FunctionFlow>();
 	functionFlow->entry = _nodeContainer.newNode();
 	functionFlow->exit = _nodeContainer.newNode();
 	functionFlow->revert = _nodeContainer.newNode();

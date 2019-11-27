@@ -37,7 +37,7 @@ class EWasmTranslationTest: public dev::solidity::test::EVMVersionRestrictedTest
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
-		return std::unique_ptr<TestCase>(new EWasmTranslationTest(_config.filename));
+		return std::make_unique<EWasmTranslationTest>(_config.filename);
 	}
 
 	explicit EWasmTranslationTest(std::string const& _filename);

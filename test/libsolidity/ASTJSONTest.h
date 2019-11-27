@@ -36,7 +36,7 @@ class ASTJSONTest: public TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
-	{ return std::unique_ptr<TestCase>(new ASTJSONTest(_config.filename)); }
+	{ return std::make_unique<ASTJSONTest>(_config.filename); }
 	ASTJSONTest(std::string const& _filename);
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;

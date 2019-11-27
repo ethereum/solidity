@@ -329,7 +329,7 @@ MemberList const& Type::members(ContractDefinition const* _currentScope) const
 		MemberList::MemberMap members = nativeMembers(_currentScope);
 		if (_currentScope)
 			members += boundFunctions(*this, *_currentScope);
-		m_members[_currentScope] = unique_ptr<MemberList>(new MemberList(move(members)));
+		m_members[_currentScope] = make_unique<MemberList>(move(members));
 	}
 	return *m_members[_currentScope];
 }

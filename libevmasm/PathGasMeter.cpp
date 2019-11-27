@@ -40,7 +40,7 @@ GasMeter::GasConsumption PathGasMeter::estimateMax(
 	shared_ptr<KnownState> const& _state
 )
 {
-	auto path = unique_ptr<GasPath>(new GasPath());
+	auto path = make_unique<GasPath>();
 	path->index = _startIndex;
 	path->state = _state->copy();
 	queue(move(path));
@@ -120,7 +120,7 @@ GasMeter::GasConsumption PathGasMeter::handleQueueItem()
 
 		for (u256 const& tag: jumpTags)
 		{
-			auto newPath = unique_ptr<GasPath>(new GasPath());
+			auto newPath = make_unique<GasPath>();
 			newPath->index = m_items.size();
 			if (m_tagPositions.count(tag))
 				newPath->index = m_tagPositions.at(tag);

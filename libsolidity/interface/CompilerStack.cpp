@@ -529,7 +529,7 @@ string const* CompilerStack::sourceMapping(string const& _contractName) const
 	if (!c.sourceMapping)
 	{
 		if (auto items = assemblyItems(_contractName))
-			c.sourceMapping.reset(new string(computeSourceMapping(*items)));
+			c.sourceMapping = make_unique<string>(computeSourceMapping(*items));
 	}
 	return c.sourceMapping.get();
 }
@@ -543,7 +543,7 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 	if (!c.runtimeSourceMapping)
 	{
 		if (auto items = runtimeAssemblyItems(_contractName))
-			c.runtimeSourceMapping.reset(new string(computeSourceMapping(*items)));
+			c.runtimeSourceMapping = make_unique<string>(computeSourceMapping(*items));
 	}
 	return c.runtimeSourceMapping.get();
 }
@@ -680,7 +680,7 @@ Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 
 	// caches the result
 	if (!_contract.abi)
-		_contract.abi.reset(new Json::Value(ABI::generate(*_contract.contract)));
+		_contract.abi = make_unique<Json::Value>(ABI::generate(*_contract.contract));
 
 	return *_contract.abi;
 }
@@ -702,7 +702,7 @@ Json::Value const& CompilerStack::storageLayout(Contract const& _contract) const
 
 	// caches the result
 	if (!_contract.storageLayout)
-		_contract.storageLayout.reset(new Json::Value(StorageLayout().generate(*_contract.contract)));
+		_contract.storageLayout = make_unique<Json::Value>(StorageLayout().generate(*_contract.contract));
 
 	return *_contract.storageLayout;
 }
@@ -724,7 +724,7 @@ Json::Value const& CompilerStack::natspecUser(Contract const& _contract) const
 
 	// caches the result
 	if (!_contract.userDocumentation)
-		_contract.userDocumentation.reset(new Json::Value(Natspec::userDocumentation(*_contract.contract)));
+		_contract.userDocumentation = make_unique<Json::Value>(Natspec::userDocumentation(*_contract.contract));
 
 	return *_contract.userDocumentation;
 }
@@ -746,7 +746,7 @@ Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
 
 	// caches the result
 	if (!_contract.devDocumentation)
-		_contract.devDocumentation.reset(new Json::Value(Natspec::devDocumentation(*_contract.contract)));
+		_contract.devDocumentation = make_unique<Json::Value>(Natspec::devDocumentation(*_contract.contract));
 
 	return *_contract.devDocumentation;
 }
@@ -779,7 +779,7 @@ string const& CompilerStack::metadata(Contract const& _contract) const
 
 	// cache the result
 	if (!_contract.metadata)
-		_contract.metadata.reset(new string(createMetadata(_contract)));
+		_contract.metadata = make_unique<string>(createMetadata(_contract));
 
 	return *_contract.metadata;
 }
