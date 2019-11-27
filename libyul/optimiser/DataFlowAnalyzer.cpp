@@ -145,10 +145,14 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	// Save all information. We might rather reinstantiate this class,
 	// but this could be difficult if it is subclassed.
 	map<YulString, Expression const*> value;
+	map<YulString, size_t> variableLoopDepth;
+	size_t loopDepth{0};
 	InvertibleRelation<YulString> references;
 	InvertibleMap<YulString, YulString> storage;
 	InvertibleMap<YulString, YulString> memory;
-	m_value.swap(value);
+	swap(m_value, value);
+	swap(m_variableLoopDepth, variableLoopDepth);
+	swap(m_loopDepth, loopDepth);
 	swap(m_references, references);
 	swap(m_storage, storage);
 	swap(m_memory, memory);
@@ -168,7 +172,9 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	// statement.
 
 	popScope();
-	m_value.swap(value);
+	swap(m_value, value);
+	swap(m_variableLoopDepth, variableLoopDepth);
+	swap(m_loopDepth, loopDepth);
 	swap(m_references, references);
 	swap(m_storage, storage);
 	swap(m_memory, memory);
@@ -179,6 +185,8 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	// If the pre block was not empty,
 	// we would have to deal with more complicated scoping rules.
 	assertThrow(_for.pre.statements.empty(), OptimizerException, "");
+
+	++m_loopDepth;
 
 	AssignmentsSinceContinue assignmentsSinceCont;
 	assignmentsSinceCont(_for.body);
@@ -202,6 +210,8 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	clearKnowledgeIfInvalidated(*_for.condition);
 	clearKnowledgeIfInvalidated(_for.post);
 	clearKnowledgeIfInvalidated(_for.body);
+
+	--m_loopDepth;
 }
 
 void DataFlowAnalyzer::operator()(Block& _block)
@@ -222,7 +232,7 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 		movableChecker.visit(*_value);
 	else
 		for (auto const& var: _variables)
-			m_value[var] = &m_zero;
+			assignValue(var, &m_zero);
 
 	if (_value && _variables.size() == 1)
 	{
@@ -230,7 +240,7 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 		// Expression has to be movable and cannot contain a reference
 		// to the variable that will be assigned to.
 		if (movableChecker.movable() && !movableChecker.referencedVariables().count(name))
-			m_value[name] = _value;
+			assignValue(name, _value);
 	}
 
 	auto const& referencedVariables = movableChecker.referencedVariables();
@@ -296,9 +306,18 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 
 	// Clear the value and update the reference relation.
 	for (auto const& name: _variables)
+	{
 		m_value.erase(name);
+		m_variableLoopDepth.erase(name);
+	}
 	for (auto const& name: _variables)
 		m_references.eraseKey(name);
+}
+
+void DataFlowAnalyzer::assignValue(YulString _variable, Expression const* _value)
+{
+	m_value[_variable] = _value;
+	m_variableLoopDepth[_variable] = m_loopDepth;
 }
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
