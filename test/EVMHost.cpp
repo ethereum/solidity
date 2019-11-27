@@ -35,22 +35,19 @@ using namespace dev;
 using namespace dev::test;
 
 
-evmc::VM* EVMHost::getVM(string const& _path)
+evmc::VM& EVMHost::getVM(string const& _path)
 {
-	static unique_ptr<evmc::VM> theVM;
+	static evmc::VM theVM;
 	if (!theVM && !_path.empty())
 	{
 		evmc_loader_error_code errorCode = {};
-		evmc_vm* vm = evmc_load_and_configure(_path.c_str(), &errorCode);
+		auto vm = evmc::VM{evmc_load_and_configure(_path.c_str(), &errorCode)};
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 		{
-			if (evmc_vm_has_capability(vm, EVMC_CAPABILITY_EVM1))
-				theVM = make_unique<evmc::VM>(vm);
+			if (vm.get_capabilities() & EVMC_CAPABILITY_EVM1)
+				theVM = std::move(vm);
 			else
-			{
-				evmc_destroy(vm);
 				cerr << "VM loaded does not support EVM1" << endl;
-			}
 		}
 		else
 		{
@@ -60,10 +57,10 @@ evmc::VM* EVMHost::getVM(string const& _path)
 			cerr << endl;
 		}
 	}
-	return theVM.get();
+	return theVM;
 }
 
-EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM* _vm):
+EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	m_vm(_vm),
 	m_evmVersion(_evmVersion)
 {
@@ -192,7 +189,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 	evmc::address currentAddress = m_currentAddress;
 	m_currentAddress = message.destination;
-	evmc::result result = m_vm->execute(*this, m_evmRevision, message, code.data(), code.size());
+	evmc::result result = m_vm.execute(*this, m_evmRevision, message, code.data(), code.size());
 	m_currentAddress = currentAddress;
 
 	if (message.kind == EVMC_CREATE)
