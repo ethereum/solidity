@@ -656,6 +656,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	}
 	case FunctionType::Kind::ArrayPush:
 	{
+		solUnimplementedAssert(
+			_functionCall.arguments().size() == 0,
+			"Storage array \"push\" with argument not yet implemented"
+		);
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(
 			*dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression().annotation().type
 		);
