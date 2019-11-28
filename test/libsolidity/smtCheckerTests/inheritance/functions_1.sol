@@ -15,7 +15,7 @@ contract A {
 // 2 warnings, B.f and A.g
 contract B is A {
 	function f() public view {
-		assert(x == 0);
+		assert(x == 1);
 	}
 }
 // ----

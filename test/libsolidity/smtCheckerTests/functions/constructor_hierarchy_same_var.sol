@@ -8,9 +8,9 @@ contract C {
 
 contract A is C {
 	constructor() C(2) public {
-		assert(a == 2);
-		assert(a == 3);
+		assert(a == 0);
+		assert(C.a == 0);
 	}
 }
 // ----
-// Warning: (166-180): Assertion violation happens here
+// Warning: (148-162): Assertion violation happens here

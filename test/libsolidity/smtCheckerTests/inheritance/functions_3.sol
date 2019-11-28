@@ -17,10 +17,10 @@ contract B is A {
 	uint y;
 
 	function f() public view {
-		assert(x == 0);
+		assert(x == 1);
 	}
 	function h() public view {
-		assert(x == 2);
+		assert(x == 1);
 	}
 }
 
@@ -29,10 +29,10 @@ contract C is B {
 	uint z;
 
 	function f() public view {
-		assert(x == 0);
+		assert(x == 1);
 	}
 	function i() public view {
-		assert(x == 0);
+		assert(x == 1);
 	}
 }
 // ----
