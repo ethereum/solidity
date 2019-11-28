@@ -85,7 +85,7 @@ public:
 		evmc::address const& _addr,
 		evmc::bytes32 const& _key,
 		evmc::bytes32 const& _value
-	) noexcept;
+	) noexcept final;
 
 	evmc::uint256be get_balance(evmc::address const& _addr) const noexcept final
 	{
@@ -122,11 +122,11 @@ public:
 		return i;
 	}
 
-	void selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept;
+	void selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept final;
 
-	evmc::result call(evmc_message const& _message) noexcept;
+	evmc::result call(evmc_message const& _message) noexcept final;
 
-	evmc::bytes32 get_block_hash(int64_t number) const noexcept;
+	evmc::bytes32 get_block_hash(int64_t number) const noexcept final;
 
 	static Address convertFromEVMC(evmc::address const& _addr);
 	static evmc::address convertToEVMC(Address const& _addr);
