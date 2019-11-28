@@ -133,10 +133,9 @@ public:
 	static h256 convertFromEVMC(evmc::bytes32 const& _data);
 	static evmc::bytes32 convertToEVMC(h256 const& _data);
 
-
+private:
 	evmc::address m_currentAddress = {};
 
-private:
 	static evmc::result precompileECRecover(evmc_message const& _message) noexcept;
 	static evmc::result precompileSha256(evmc_message const& _message) noexcept;
 	static evmc::result precompileRipeMD160(evmc_message const& _message) noexcept;
