@@ -1,4 +1,4 @@
-# This is a copy of emscripten.jam from https://github.com/tee3/boost-build-emscripten
+# Modified version of emscripten.jam from https://github.com/tee3/boost-build-emscripten
 # which is released under the following license:
 #
 # Boost Software License - Version 1.0 - August 17th, 2003
@@ -55,12 +55,8 @@ rule init ( version ? : command * : options * )
 {
   command = [ common.get-invocation-command emscripten : em++ : $(command) ] ;
 
-  root = ;
   if $(command)
   {
-    root = [ common.get-absolute-tool-path $(command[-1]) ] ;
-    root = $(root:P) ;
-
     version ?= [ MATCH "^([0-9.]+)" : [ SHELL \""$(command)\" --version" ] ] ;
     if $(version)
     {
@@ -83,15 +79,10 @@ rule init ( version ? : command * : options * )
   # @todo this seems to be the right way, but this is a list somehow
   toolset.add-requirements <toolset>emscripten:<testing.launcher>node ;
 
-  if $(.debug-configuration)
-  {
-    ECHO "emscripten: using compiler" $(version) "at" $(root) ;
-  }
-
-  toolset.flags emscripten.compile STDHDRS $(condition) : $(root)/libexec/system/include ;
-  toolset.flags emscripten.link STDLIBPATH $(condition) : $(root)/libexec/system/lib ;
-  toolset.flags emscripten AR $(condition) : $(root)/bin/emar ;
-  toolset.flags emscripten RANLIB $(condition) : $(root)/bin/emranlib ;
+  toolset.flags emscripten.compile STDHDRS $(condition) : /emsdk_portable/emscripten/sdk/system/include ;
+  toolset.flags emscripten.link STDLIBPATH $(condition) : /emsdk_portable/emscripten/sdk/system/lib ;
+  toolset.flags emscripten AR $(condition) : /emsdk_portable/emscripten/sdk/emar ;
+  toolset.flags emscripten RANLIB $(condition) : /emsdk_portable/emscripten/sdk/emranlib ;
 }
 
 type.set-generated-target-suffix EXE : <toolset>emscripten : js ;
