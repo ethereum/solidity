@@ -179,14 +179,13 @@ bool dev::isValidDecimal(string const& _string)
 	return true;
 }
 
-// Returns a quoted string if all characters are printable ASCII chars,
-// or its hex representation otherwise.
-std::string dev::formatAsStringOrNumber(std::string const& _value)
+string dev::formatAsStringOrNumber(string const& _value)
 {
-	if (_value.length() <= 32)
-		for (auto const& c: _value)
-			if (c <= 0x1f || c >= 0x7f || c == '"')
-				return "0x" + h256(_value, h256::AlignLeft).hex();
+	assertThrow(_value.length() <= 32, StringTooLong, "String to be formatted longer than 32 bytes.");
+
+	for (auto const& c: _value)
+		if (c <= 0x1f || c >= 0x7f || c == '"')
+			return "0x" + h256(_value, h256::AlignLeft).hex();
 
 	return "\"" + _value + "\"";
 }
