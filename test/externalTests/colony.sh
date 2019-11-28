@@ -32,10 +32,10 @@ function colony_test
 {
     OPTIMIZER_LEVEL=3
     FORCE_ABIv2=false
+    CONFIG="truffle.js"
+
     truffle_setup https://github.com/erak/colonyNetwork.git develop_060
     run_install install_fn
-
-    CONFIG=$(find_truffle_config)
 
     cd lib
     rm -Rf dappsys
