@@ -166,15 +166,15 @@ public:
 	evmc::address m_coinbase = convertToEVMC(Address("0x7878787878787878787878787878787878787878"));
 
 private:
-	evmc::result precompileECRecover(evmc_message const& _message) noexcept;
-	evmc::result precompileSha256(evmc_message const& _message) noexcept;
-	evmc::result precompileRipeMD160(evmc_message const& _message) noexcept;
-	evmc::result precompileIdentity(evmc_message const& _message) noexcept;
-	evmc::result precompileModExp(evmc_message const& _message) noexcept;
-	evmc::result precompileALTBN128G1Add(evmc_message const& _message) noexcept;
-	evmc::result precompileALTBN128G1Mul(evmc_message const& _message) noexcept;
-	evmc::result precompileALTBN128PairingProduct(evmc_message const& _message) noexcept;
-	evmc::result precompileGeneric(evmc_message const& _message, std::map<bytes, bytes> const& _inOut) noexcept;
+	static evmc::result precompileECRecover(evmc_message const& _message) noexcept;
+	static evmc::result precompileSha256(evmc_message const& _message) noexcept;
+	static evmc::result precompileRipeMD160(evmc_message const& _message) noexcept;
+	static evmc::result precompileIdentity(evmc_message const& _message) noexcept;
+	static evmc::result precompileModExp(evmc_message const& _message) noexcept;
+	static evmc::result precompileALTBN128G1Add(evmc_message const& _message) noexcept;
+	static evmc::result precompileALTBN128G1Mul(evmc_message const& _message) noexcept;
+	static evmc::result precompileALTBN128PairingProduct(evmc_message const& _message) noexcept;
+	static evmc::result precompileGeneric(evmc_message const& _message, std::map<bytes, bytes> const& _inOut) noexcept;
 	/// @returns a result object with no gas usage and result data taken from @a _data.
 	/// @note The return value is only valid as long as @a _data is alive!
 	static evmc::result resultWithGas(evmc_message const& _message, bytes const& _data) noexcept;
