@@ -126,8 +126,12 @@ public:
 	std::string storageArrayPopFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that pushes an element to a storage array
-	/// signature: (array, value) -> newlength
+	/// signature: (array, value)
 	std::string storageArrayPushFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that pushes the base type's zero element to a storage array and returns storage slot and offset of the added element.
+	/// signature: (array) -> slot, offset
+	std::string storageArrayPushZeroFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that will clear the storage area given
 	/// by the start and end (exclusive) parameters (slots).

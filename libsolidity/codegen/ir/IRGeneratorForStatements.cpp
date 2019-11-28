@@ -659,15 +659,28 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(
 			*dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression().annotation().type
 		);
-		defineExpression(_functionCall) <<
-			m_utils.storageArrayPushFunction(arrayType) <<
-			"(" <<
-			m_context.variable(_functionCall.expression()) <<
-			", " << (
-				arguments.empty() ?
-				m_utils.zeroValueFunction(*arrayType.baseType()) + "()" :
-				expressionAsType(*arguments.front(), *arrayType.baseType())
-			) << ")\n";
+		if (arguments.empty())
+		{
+			auto slotName = m_context.newYulVariable();
+			auto offsetName = m_context.newYulVariable();
+			m_code << "let " << slotName << ", " << offsetName << " := " <<
+				m_utils.storageArrayPushZeroFunction(arrayType) <<
+				"(" << m_context.variable(_functionCall.expression()) << ")\n";
+			setLValue(_functionCall, make_unique<IRStorageItem>(
+				m_context.utils(),
+				slotName,
+				offsetName,
+				*arrayType.baseType()
+			));
+		}
+		else
+			m_code <<
+				m_utils.storageArrayPushFunction(arrayType) <<
+				"(" <<
+				m_context.variable(_functionCall.expression()) <<
+				", " <<
+				expressionAsType(*arguments.front(), *arrayType.baseType()) <<
+				")\n";
 		break;
 	}
 	default:
