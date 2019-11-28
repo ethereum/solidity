@@ -62,6 +62,7 @@
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/LoadResolver.h>
+#include <libyul/optimiser/LoopInvariantCodeMotion.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -142,7 +143,7 @@ public:
 			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-init-rewriter/for-loop-condition-(I)nto-body/" << endl;
 			cout << "  for-loop-condition-(O)ut-of-body/s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/" << endl;
 			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/(L)oad resolver/" << endl;
-			cout << "  (C)onditional simplifier?" << endl;
+			cout << "  (C)onditional simplifier/loop-invariant code (M)otion?" << endl;
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -236,6 +237,9 @@ public:
 			}
 			case 'L':
 				LoadResolver::run(context, *m_ast);
+				break;
+			case 'M':
+				LoopInvariantCodeMotion::run(context, *m_ast);
 				break;
 			default:
 				cout << "Unknown option." << endl;

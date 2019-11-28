@@ -483,7 +483,7 @@
 //         let _5 := 0xffffffffffffffff
 //         if gt(offset, _5) { revert(_1, _1) }
 //         let value2 := abi_decode_t_array$_t_uint256_$dyn_memory_ptr(add(_4, offset), _3)
-//         let offset_1 := calldataload(add(_4, 96))
+//         let offset_1 := calldataload(add(_4, 0x60))
 //         if gt(offset_1, _5) { revert(_1, _1) }
 //         let value3 := abi_decode_t_array$_t_array$_t_uint256_$2_memory_$dyn_memory_ptr(add(_4, offset_1), _3)
 //         sstore(calldataload(_4), calldataload(add(_4, 0x20)))
