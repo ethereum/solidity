@@ -41,6 +41,14 @@ namespace solidity::yul
 struct Dialect;
 struct SideEffects;
 
+/// Value assigned to a variable.
+struct AssignedValue
+{
+	Expression const* value{nullptr};
+	/// Loop nesting depth of the definition of the variable.
+	size_t loopDepth{0};
+};
+
 /**
  * Base class to perform data flow analysis during AST walks.
  * Tracks assignments and is used as base class for both Rematerialiser and
@@ -145,9 +153,7 @@ protected:
 	std::map<YulString, SideEffects> m_functionSideEffects;
 
 	/// Current values of variables, always movable.
-	std::map<YulString, Expression const*> m_value;
-	/// The loop nesting depth of the definition of variables (those used in m_value).
-	std::map<YulString, size_t> m_variableLoopDepth;
+	std::map<YulString, AssignedValue> m_value;
 	/// m_references.forward[a].contains(b) <=> the current expression assigned to a references b
 	/// m_references.backward[b].contains(a) <=> the current expression assigned to a references b
 	InvertibleRelation<YulString> m_references;
