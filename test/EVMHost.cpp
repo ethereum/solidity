@@ -100,6 +100,15 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		// 1wei
 		m_state.accounts[address].balance.bytes[31] = 1;
 	}
+
+	// TODO: support short literals in EVMC and use them here
+	tx_context.block_difficulty = convertToEVMC(u256("200000000"));
+	tx_context.block_gas_limit = 20000000;
+	tx_context.block_coinbase = 0x7878787878787878787878787878787878787878_address;
+	tx_context.tx_gas_price = convertToEVMC(u256("3000000000"));
+	tx_context.tx_origin = 0x9292929292929292929292929292929292929292_address;
+	// Mainnet according to EIP-155
+	tx_context.chain_id = convertToEVMC(u256(1));
 }
 
 evmc_storage_status EVMHost::set_storage(const evmc::address& _addr, const evmc::bytes32& _key, const evmc::bytes32& _value) noexcept
@@ -227,22 +236,6 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		m_state = stateBackup;
 
 	return result;
-}
-
-evmc_tx_context EVMHost::get_tx_context() const noexcept
-{
-	evmc_tx_context ctx = {};
-	ctx.block_timestamp = m_state.timestamp;
-	ctx.block_number = m_state.blockNumber;
-	ctx.block_coinbase = m_coinbase;
-	// TODO: support short literals in EVMC and use them here
-	ctx.block_difficulty = convertToEVMC(u256("200000000"));
-	ctx.block_gas_limit = 20000000;
-	ctx.tx_gas_price = convertToEVMC(u256("3000000000"));
-	ctx.tx_origin = 0x9292929292929292929292929292929292929292_address;
-	// Mainnet according to EIP-155
-	ctx.chain_id = convertToEVMC(u256(1));
-	return ctx;
 }
 
 evmc::bytes32 EVMHost::get_block_hash(int64_t _number) const noexcept

@@ -56,8 +56,6 @@ public:
 
 	struct State
 	{
-		size_t blockNumber;
-		uint64_t timestamp;
 		std::map<evmc::address, Account> accounts;
 	};
 
@@ -76,8 +74,8 @@ public:
 	void reset() { m_state = State{}; m_currentAddress = {}; }
 	void newBlock()
 	{
-		m_state.blockNumber++;
-		m_state.timestamp += 15;
+		tx_context.block_number++;
+		tx_context.block_timestamp += 15;
 		recorded_logs.clear();
 	}
 
@@ -142,8 +140,6 @@ public:
 
 	evmc::result call(evmc_message const& _message) noexcept;
 
-	evmc_tx_context get_tx_context() const noexcept;
-
 	evmc::bytes32 get_block_hash(int64_t number) const noexcept;
 
 	static Address convertFromEVMC(evmc::address const& _addr);
@@ -154,7 +150,6 @@ public:
 
 	State m_state;
 	evmc::address m_currentAddress = {};
-	evmc::address m_coinbase = convertToEVMC(Address("0x7878787878787878787878787878787878787878"));
 
 private:
 	static evmc::result precompileECRecover(evmc_message const& _message) noexcept;

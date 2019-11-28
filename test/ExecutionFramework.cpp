@@ -89,12 +89,12 @@ std::pair<bool, string> ExecutionFramework::compareAndCreateMessage(
 
 u256 ExecutionFramework::gasLimit() const
 {
-	return {m_evmHost->get_tx_context().block_gas_limit};
+	return {m_evmHost->tx_context.block_gas_limit};
 }
 
 u256 ExecutionFramework::gasPrice() const
 {
-	return {EVMHost::convertFromEVMC(m_evmHost->get_tx_context().tx_gas_price)};
+	return {EVMHost::convertFromEVMC(m_evmHost->tx_context.tx_gas_price)};
 }
 
 u256 ExecutionFramework::blockHash(u256 const& _number) const
@@ -104,7 +104,7 @@ u256 ExecutionFramework::blockHash(u256 const& _number) const
 
 u256 ExecutionFramework::blockNumber() const
 {
-	return m_evmHost->m_state.blockNumber;
+	return m_evmHost->tx_context.block_number;
 }
 
 void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 const& _value)
@@ -178,7 +178,7 @@ void ExecutionFramework::sendEther(Address const& _addr, u256 const& _amount)
 
 size_t ExecutionFramework::currentTimestamp()
 {
-	return m_evmHost->get_tx_context().block_timestamp;
+	return m_evmHost->tx_context.block_timestamp;
 }
 
 size_t ExecutionFramework::blockTimestamp(u256 _block)
