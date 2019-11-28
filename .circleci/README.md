@@ -4,7 +4,7 @@
 
 The docker images are build locally on the developer machine:
 
-```!sh
+```sh
 cd .circleci/docker/
 
 docker build -t ethereum/solidity-buildpack-deps:ubuntu1904-<revision> -f Dockerfile.ubuntu1904 .
@@ -21,7 +21,7 @@ where the image tag reflects the target OS and revision to build Solidity and ru
 
 ### Testing docker images locally
 
-```!sh
+```sh
 cd solidity
 # Mounts your local solidity directory in docker container for testing
 docker run -v `pwd`:/src/solidity -ti ethereum/solidity-buildpack-deps:ubuntu1904-<revision> /bin/bash

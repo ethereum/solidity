@@ -41,6 +41,7 @@
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/LoadResolver.h>
+#include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/Rematerialiser.h>
@@ -278,6 +279,12 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		UnusedPruner::run(*m_context, *m_ast);
 		ExpressionJoiner::run(*m_context, *m_ast);
 		ExpressionJoiner::run(*m_context, *m_ast);
+	}
+	else if (m_optimizerStep == "loopInvariantCodeMotion")
+	{
+		disambiguate();
+		ForLoopInitRewriter::run(*m_context, *m_ast);
+		LoopInvariantCodeMotion::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "controlFlowSimplifier")
 	{
