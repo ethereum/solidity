@@ -12831,7 +12831,7 @@ BOOST_AUTO_TEST_CASE(snark)
 			return G1Point(p.X, q - (p.Y % q));
 		}
 
-		/// @return the sum of two points of G1
+		/// @return r the sum of two points of G1
 		function add(G1Point memory p1, G1Point memory p2) internal returns (G1Point memory r) {
 			uint[4] memory input;
 			input[0] = p1.X;
@@ -12847,7 +12847,7 @@ BOOST_AUTO_TEST_CASE(snark)
 			require(success);
 		}
 
-		/// @return the product of a point on G1 and a scalar, i.e.
+		/// @return r the product of a point on G1 and a scalar, i.e.
 		/// p == p.mul(1) and p.add(p) == p.mul(2) for all points p.
 		function mul(G1Point memory p, uint s) internal returns (G1Point memory r) {
 			uint[3] memory input;

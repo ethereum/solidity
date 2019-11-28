@@ -129,9 +129,36 @@ void DocStringAnalyser::parseDocStrings(
 			m_errorOccured = true;
 		_annotation.docTags = parser.tags();
 	}
+
+	size_t returnTagsVisited = 0;
 	for (auto const& docTag: _annotation.docTags)
+	{
 		if (!_validTags.count(docTag.first))
 			appendError("Doc tag @" + docTag.first + " not valid for " + _nodeName + ".");
+		else
+			if (docTag.first == "return")
+			{
+				returnTagsVisited++;
+				if (auto* function = dynamic_cast<FunctionDefinition const*>(&_node))
+				{
+					string content = docTag.second.content;
+					string firstWord = content.substr(0, content.find_first_of(" \t"));
+
+					if (returnTagsVisited > function->returnParameters().size())
+						appendError("Doc tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
+							" exceedes the number of return parameters."
+						);
+					else
+					{
+						auto parameter = function->returnParameters().at(returnTagsVisited - 1);
+						if (!parameter->name().empty() && parameter->name() != firstWord)
+							appendError("Doc tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
+								" does not contain the name of its return parameter."
+							);
+					}
+				}
+			}
+	}
 }
 
 void DocStringAnalyser::appendError(string const& _description)
