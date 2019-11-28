@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(exp_zero)
 	testContractAgainstCppOnRange("f(uint256)", [](u256 const&) -> u256 { return u256(1); }, 0, 16);
 }
 
-/* let's add this back when I figure out the correct type conversion.
+/* TODO let's add this back when I figure out the correct type conversion.
 BOOST_AUTO_TEST_CASE(conditional_expression_string_literal)
 {
 	char const* sourceCode = R"(
@@ -3068,7 +3068,7 @@ BOOST_AUTO_TEST_CASE(event_dynamic_nested_array_storage_v2)
 			}
 		}
 	)";
-	/// TODO enable again after push(..) via yul was implemented.
+	/// TODO enable again after push(..) via yul is implemented for nested arrays.
 	/// ALSO_VIA_YUL()
 	compileAndRun(sourceCode);
 	u256 x(42);
@@ -4287,7 +4287,7 @@ BOOST_AUTO_TEST_CASE(dynamic_out_of_bounds_array_access)
 		contract c {
 			uint[] data;
 			function enlarge(uint amount) public returns (uint) {
-				while (data.length - amount > 0)
+				while (data.length < amount)
 					data.push();
 				return data.length;
 			}
@@ -4296,18 +4296,18 @@ BOOST_AUTO_TEST_CASE(dynamic_out_of_bounds_array_access)
 			function length() public returns (uint) { return data.length; }
 		}
 	)";
-	/// TODO enable again after push(..) via yul was implemented.
-	/// ALSO_VIA_YUL()
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("length()"), encodeArgs(0));
-	ABI_CHECK(callContractFunction("get(uint256)", 3), bytes());
-	ABI_CHECK(callContractFunction("enlarge(uint256)", 4), encodeArgs(4));
-	ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
-	ABI_CHECK(callContractFunction("set(uint256,uint256)", 3, 4), encodeArgs(true));
-	ABI_CHECK(callContractFunction("get(uint256)", 3), encodeArgs(4));
-	ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
-	ABI_CHECK(callContractFunction("set(uint256,uint256)", 4, 8), bytes());
-	ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		ABI_CHECK(callContractFunction("length()"), encodeArgs(0));
+		ABI_CHECK(callContractFunction("get(uint256)", 3), bytes());
+		ABI_CHECK(callContractFunction("enlarge(uint256)", 4), encodeArgs(4));
+		ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
+		ABI_CHECK(callContractFunction("set(uint256,uint256)", 3, 4), encodeArgs(true));
+		ABI_CHECK(callContractFunction("get(uint256)", 3), encodeArgs(4));
+		ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
+		ABI_CHECK(callContractFunction("set(uint256,uint256)", 4, 8), bytes());
+		ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
+	);
 }
 
 BOOST_AUTO_TEST_CASE(fixed_array_cleanup)
@@ -4373,16 +4373,16 @@ BOOST_AUTO_TEST_CASE(dynamic_array_cleanup)
 			function fullClear() public { delete dynamic; }
 		}
 	)";
-	/// TODO enable again after push(..) via yul was implemented.
-	/// ALSO_VIA_YUL()
-	compileAndRun(sourceCode);
-	BOOST_CHECK(storageEmpty(m_contractAddress));
-	ABI_CHECK(callContractFunction("fill()"), bytes());
-	BOOST_CHECK(!storageEmpty(m_contractAddress));
-	ABI_CHECK(callContractFunction("halfClear()"), bytes());
-	BOOST_CHECK(!storageEmpty(m_contractAddress));
-	ABI_CHECK(callContractFunction("fullClear()"), bytes());
-	BOOST_CHECK(storageEmpty(m_contractAddress));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode);
+		BOOST_CHECK(storageEmpty(m_contractAddress));
+		ABI_CHECK(callContractFunction("fill()"), bytes());
+		BOOST_CHECK(!storageEmpty(m_contractAddress));
+		ABI_CHECK(callContractFunction("halfClear()"), bytes());
+		BOOST_CHECK(!storageEmpty(m_contractAddress));
+		ABI_CHECK(callContractFunction("fullClear()"), bytes());
+		BOOST_CHECK(storageEmpty(m_contractAddress));
+	);
 }
 
 BOOST_AUTO_TEST_CASE(dynamic_multi_array_cleanup)
@@ -6699,25 +6699,25 @@ BOOST_AUTO_TEST_CASE(storage_array_ref)
 			}
 		}
 	)";
-	/// TODO enable again after push(..) via yul was implemented.
-	/// ALSO_VIA_YUL()
-	compileAndRun(sourceCode, 0, "Store");
-	BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(-1)));
-	BOOST_REQUIRE(callContractFunction("add(uint256)", u256(7)) == encodeArgs());
-	BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(0)));
-	ABI_CHECK(callContractFunction("add(uint256)", u256(11)), encodeArgs());
-	ABI_CHECK(callContractFunction("add(uint256)", u256(17)), encodeArgs());
-	ABI_CHECK(callContractFunction("add(uint256)", u256(27)), encodeArgs());
-	ABI_CHECK(callContractFunction("add(uint256)", u256(31)), encodeArgs());
-	ABI_CHECK(callContractFunction("add(uint256)", u256(32)), encodeArgs());
-	ABI_CHECK(callContractFunction("add(uint256)", u256(66)), encodeArgs());
-	ABI_CHECK(callContractFunction("add(uint256)", u256(177)), encodeArgs());
-	ABI_CHECK(callContractFunction("find(uint256)", u256(7)), encodeArgs(u256(0)));
-	ABI_CHECK(callContractFunction("find(uint256)", u256(27)), encodeArgs(u256(3)));
-	ABI_CHECK(callContractFunction("find(uint256)", u256(32)), encodeArgs(u256(5)));
-	ABI_CHECK(callContractFunction("find(uint256)", u256(176)), encodeArgs(u256(-1)));
-	ABI_CHECK(callContractFunction("find(uint256)", u256(0)), encodeArgs(u256(-1)));
-	ABI_CHECK(callContractFunction("find(uint256)", u256(400)), encodeArgs(u256(-1)));
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode, 0, "Store");
+		BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(-1)));
+		BOOST_REQUIRE(callContractFunction("add(uint256)", u256(7)) == encodeArgs());
+		BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(0)));
+		ABI_CHECK(callContractFunction("add(uint256)", u256(11)), encodeArgs());
+		ABI_CHECK(callContractFunction("add(uint256)", u256(17)), encodeArgs());
+		ABI_CHECK(callContractFunction("add(uint256)", u256(27)), encodeArgs());
+		ABI_CHECK(callContractFunction("add(uint256)", u256(31)), encodeArgs());
+		ABI_CHECK(callContractFunction("add(uint256)", u256(32)), encodeArgs());
+		ABI_CHECK(callContractFunction("add(uint256)", u256(66)), encodeArgs());
+		ABI_CHECK(callContractFunction("add(uint256)", u256(177)), encodeArgs());
+		ABI_CHECK(callContractFunction("find(uint256)", u256(7)), encodeArgs(u256(0)));
+		ABI_CHECK(callContractFunction("find(uint256)", u256(27)), encodeArgs(u256(3)));
+		ABI_CHECK(callContractFunction("find(uint256)", u256(32)), encodeArgs(u256(5)));
+		ABI_CHECK(callContractFunction("find(uint256)", u256(176)), encodeArgs(u256(-1)));
+		ABI_CHECK(callContractFunction("find(uint256)", u256(0)), encodeArgs(u256(-1)));
+		ABI_CHECK(callContractFunction("find(uint256)", u256(400)), encodeArgs(u256(-1)));
+	);
 }
 
 BOOST_AUTO_TEST_CASE(memory_types_initialisation)
