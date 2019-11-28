@@ -201,27 +201,30 @@ bool ExecutionFramework::addressHasCode(Address const& _addr)
 
 size_t ExecutionFramework::numLogs() const
 {
-	return m_evmHost->m_state.logs.size();
+	return m_evmHost->recorded_logs.size();
 }
 
 size_t ExecutionFramework::numLogTopics(size_t _logIdx) const
 {
-	return m_evmHost->m_state.logs.at(_logIdx).topics.size();
+	return m_evmHost->recorded_logs.at(_logIdx).topics.size();
 }
 
 h256 ExecutionFramework::logTopic(size_t _logIdx, size_t _topicIdx) const
 {
-	return m_evmHost->m_state.logs.at(_logIdx).topics.at(_topicIdx);
+	return EVMHost::convertFromEVMC(m_evmHost->recorded_logs.at(_logIdx).topics.at(_topicIdx));
 }
 
 Address ExecutionFramework::logAddress(size_t _logIdx) const
 {
-	return m_evmHost->m_state.logs.at(_logIdx).address;
+	return EVMHost::convertFromEVMC(m_evmHost->recorded_logs.at(_logIdx).creator);
 }
 
-bytes const& ExecutionFramework::logData(size_t _logIdx) const
+bytes ExecutionFramework::logData(size_t _logIdx) const
 {
-	return m_evmHost->m_state.logs.at(_logIdx).data;
+	const auto& data = m_evmHost->recorded_logs.at(_logIdx).data;
+	// TODO: Return a copy of log data, because this is expected from REQUIRE_LOG_DATA(),
+	//       but reference type like string_view would be preferable.
+	return {data.begin(), data.end()};
 }
 
 u256 ExecutionFramework::balanceAt(Address const& _addr)

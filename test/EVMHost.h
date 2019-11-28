@@ -54,19 +54,11 @@ public:
 		std::map<evmc::bytes32, evmc::bytes32> storage;
 	};
 
-	struct LogEntry
-	{
-		Address address;
-		std::vector<h256> topics;
-		bytes data;
-	};
-
 	struct State
 	{
 		size_t blockNumber;
 		uint64_t timestamp;
 		std::map<evmc::address, Account> accounts;
-		std::vector<LogEntry> logs;
 	};
 
 	Account const* account(evmc::address const& _address) const
@@ -86,7 +78,7 @@ public:
 	{
 		m_state.blockNumber++;
 		m_state.timestamp += 15;
-		m_state.logs.clear();
+		recorded_logs.clear();
 	}
 
 	bool account_exists(evmc::address const& _addr) const noexcept final
@@ -153,14 +145,6 @@ public:
 	evmc_tx_context get_tx_context() const noexcept;
 
 	evmc::bytes32 get_block_hash(int64_t number) const noexcept;
-
-	void emit_log(
-		evmc::address const& _addr,
-		uint8_t const* _data,
-		size_t _dataSize,
-		evmc::bytes32 const _topics[],
-		size_t _topicsCount
-	) noexcept;
 
 	static Address convertFromEVMC(evmc::address const& _addr);
 	static evmc::address convertToEVMC(Address const& _addr);

@@ -250,23 +250,6 @@ evmc::bytes32 EVMHost::get_block_hash(int64_t _number) const noexcept
 	return convertToEVMC(u256("0x3737373737373737373737373737373737373737373737373737373737373737") + _number);
 }
 
-void EVMHost::emit_log(
-	evmc::address const& _addr,
-	uint8_t const* _data,
-	size_t _dataSize,
-	evmc::bytes32 const _topics[],
-	size_t _topicsCount
-) noexcept
-{
-	LogEntry entry;
-	entry.address = convertFromEVMC(_addr);
-	for (size_t i = 0; i < _topicsCount; ++i)
-		entry.topics.emplace_back(convertFromEVMC(_topics[i]));
-	entry.data = bytes(_data, _data + _dataSize);
-	m_state.logs.emplace_back(std::move(entry));
-}
-
-
 Address EVMHost::convertFromEVMC(evmc::address const& _addr)
 {
 	return Address(bytes(begin(_addr.bytes), end(_addr.bytes)));
