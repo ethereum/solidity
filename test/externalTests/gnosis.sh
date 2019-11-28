@@ -31,10 +31,11 @@ function test_fn { npm test; }
 function gnosis_safe_test
 {
     OPTIMIZER_LEVEL=1
+    CONFIG="truffle.js"
+
     truffle_setup https://github.com/erak/safe-contracts.git development_060
     run_install install_fn
 
-    CONFIG=$(find_truffle_config)
     replace_libsolc_call
 
     truffle_run_test compile_fn test_fn
