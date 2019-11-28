@@ -234,10 +234,10 @@ u256 ExecutionFramework::balanceAt(Address const& _addr)
 
 bool ExecutionFramework::storageEmpty(Address const& _addr)
 {
-	if (EVMHost::Account const* acc = m_evmHost->account(EVMHost::convertToEVMC(_addr)))
+	if (auto const* acc = m_evmHost->account(EVMHost::convertToEVMC(_addr)))
 	{
 		for (auto const& entry: acc->storage)
-			if (!(entry.second == evmc::bytes32{}))
+			if (!(entry.second.value == evmc::bytes32{}))
 				return false;
 	}
 	return true;

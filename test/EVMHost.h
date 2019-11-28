@@ -45,27 +45,18 @@ public:
 
 	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm = getVM());
 
-	struct Account
-	{
-		evmc::uint256be balance = {};
-		size_t nonce = 0;
-		bytes code;
-		evmc::bytes32 codeHash = {};
-		std::map<evmc::bytes32, evmc::bytes32> storage;
-	};
-
 	struct State
 	{
-		std::map<evmc::address, Account> accounts;
+		std::map<evmc::address, evmc::MockedAccount> accounts;
 	};
 
-	Account const* account(evmc::address const& _address) const
+	evmc::MockedAccount const* account(evmc::address const& _address) const
 	{
 		auto it = m_state.accounts.find(_address);
 		return it == m_state.accounts.end() ? nullptr : &it->second;
 	}
 
-	Account* account(evmc::address const& _address)
+	evmc::MockedAccount* account(evmc::address const& _address)
 	{
 		auto it = m_state.accounts.find(_address);
 		return it == m_state.accounts.end() ? nullptr : &it->second;
@@ -90,7 +81,7 @@ public:
 		{
 			auto it = acc->storage.find(_key);
 			if (it != acc->storage.end())
-				return it->second;
+				return it->second.value;
 		}
 		return {};
 	}
@@ -103,22 +94,22 @@ public:
 
 	evmc::uint256be get_balance(evmc::address const& _addr) const noexcept final
 	{
-		if (Account const* acc = account(_addr))
+		if (auto const* acc = account(_addr))
 			return acc->balance;
 		return {};
 	}
 
 	size_t get_code_size(evmc::address const& _addr) const noexcept final
 	{
-		if (Account const* acc = account(_addr))
+		if (auto const* acc = account(_addr))
 			return acc->code.size();
 		return 0;
 	}
 
 	evmc::bytes32 get_code_hash(evmc::address const& _addr) const noexcept final
 	{
-		if (Account const* acc = account(_addr))
-			return acc->codeHash;
+		if (auto const* acc = account(_addr))
+			return acc->codehash;
 		return {};
 	}
 
@@ -130,7 +121,7 @@ public:
 	) const noexcept final
 	{
 		size_t i = 0;
-		if (Account const* acc = account(_addr))
+		if (auto const* acc = account(_addr))
 			for (; i < _bufferSize && _codeOffset + i < acc->code.size(); i++)
 				_bufferData[i] = acc->code[_codeOffset + i];
 		return i;

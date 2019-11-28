@@ -98,7 +98,7 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		evmc::address address{};
 		address.bytes[19] = precompiledAddress;
 		// 1wei
-		m_state.accounts[address].balance.bytes[31] = 1;
+		accounts[address].balance.bytes[31] = 1;
 	}
 
 	// TODO: support short literals in EVMC and use them here
@@ -113,8 +113,8 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 
 evmc_storage_status EVMHost::set_storage(const evmc::address& _addr, const evmc::bytes32& _key, const evmc::bytes32& _value) noexcept
 {
-	evmc::bytes32 previousValue = m_state.accounts[_addr].storage[_key];
-	m_state.accounts[_addr].storage[_key] = _value;
+	evmc::bytes32 previousValue = m_state.accounts[_addr].storage[_key].value;
+	m_state.accounts[_addr].storage[_key].value = _value;
 
 	// TODO EVMC_STORAGE_MODIFIED_AGAIN should be also used
 	if (previousValue == _value)
@@ -158,9 +158,9 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	State stateBackup = m_state;
 
 	u256 value{convertFromEVMC(_message.value)};
-	Account& sender = m_state.accounts[_message.sender];
+	auto& sender = m_state.accounts[_message.sender];
 
-	bytes code;
+	evmc::bytes code;
 
 	evmc_message message = _message;
 	if (message.depth == 0)
@@ -186,7 +186,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 			asBytes(to_string(sender.nonce++))
 		));
 		message.destination = convertToEVMC(createAddress);
-		code = bytes(message.input_data, message.input_data + message.input_size);
+		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
 	}
 	else if (message.kind == EVMC_DELEGATECALL)
 	{
@@ -202,7 +202,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		code = m_state.accounts[message.destination].code;
 	//TODO CREATE2
 
-	Account& destination = m_state.accounts[message.destination];
+	auto& destination = m_state.accounts[message.destination];
 
 	if (value != 0 && message.kind != EVMC_DELEGATECALL && message.kind != EVMC_CALLCODE)
 	{
@@ -227,8 +227,8 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		else
 		{
 			result.create_address = message.destination;
-			destination.code = bytes(result.output_data, result.output_data + result.output_size);
-			destination.codeHash = convertToEVMC(keccak256(destination.code));
+			destination.code = evmc::bytes(result.output_data, result.output_data + result.output_size);
+			destination.codehash = convertToEVMC(keccak256({result.output_data, result.output_size}));
 		}
 	}
 
