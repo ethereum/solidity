@@ -134,7 +134,7 @@ void DocStringAnalyser::parseDocStrings(
 	for (auto const& docTag: _annotation.docTags)
 	{
 		if (!_validTags.count(docTag.first))
-			appendError("Doc tag @" + docTag.first + " not valid for " + _nodeName + ".");
+			appendError("Documentation tag @" + docTag.first + " not valid for " + _nodeName + ".");
 		else
 			if (docTag.first == "return")
 			{
@@ -145,14 +145,14 @@ void DocStringAnalyser::parseDocStrings(
 					string firstWord = content.substr(0, content.find_first_of(" \t"));
 
 					if (returnTagsVisited > function->returnParameters().size())
-						appendError("Doc tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
+						appendError("Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
 							" exceedes the number of return parameters."
 						);
 					else
 					{
 						auto parameter = function->returnParameters().at(returnTagsVisited - 1);
 						if (!parameter->name().empty() && parameter->name() != firstWord)
-							appendError("Doc tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
+							appendError("Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
 								" does not contain the name of its return parameter."
 							);
 					}

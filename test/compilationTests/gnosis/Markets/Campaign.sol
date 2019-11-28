@@ -146,7 +146,6 @@ contract Campaign {
     }
 
     /// @dev Allows to withdraw fees from market contract to campaign contract
-    /// @return Fee amount
     function closeMarket()
         public
         atStage(Stages.MarketCreated)
