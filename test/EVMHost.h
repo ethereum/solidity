@@ -45,24 +45,19 @@ public:
 
 	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm = getVM());
 
-	struct State
-	{
-		std::map<evmc::address, evmc::MockedAccount> accounts;
-	};
-
 	evmc::MockedAccount const* account(evmc::address const& _address) const
 	{
-		auto it = m_state.accounts.find(_address);
-		return it == m_state.accounts.end() ? nullptr : &it->second;
+		auto it = accounts.find(_address);
+		return it == accounts.end() ? nullptr : &it->second;
 	}
 
 	evmc::MockedAccount* account(evmc::address const& _address)
 	{
-		auto it = m_state.accounts.find(_address);
-		return it == m_state.accounts.end() ? nullptr : &it->second;
+		auto it = accounts.find(_address);
+		return it == accounts.end() ? nullptr : &it->second;
 	}
 
-	void reset() { m_state = State{}; m_currentAddress = {}; }
+	void reset() { accounts.clear(); m_currentAddress = {}; }
 	void newBlock()
 	{
 		tx_context.block_number++;
@@ -139,7 +134,6 @@ public:
 	static evmc::bytes32 convertToEVMC(h256 const& _data);
 
 
-	State m_state;
 	evmc::address m_currentAddress = {};
 
 private:

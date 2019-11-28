@@ -25,7 +25,6 @@
 #include <test/EVMHost.h>
 
 #include <test/evmc/evmc.hpp>
-#include <test/evmc/loader.h>
 
 #include <libdevcore/CommonIO.h>
 
@@ -56,7 +55,7 @@ ExecutionFramework::ExecutionFramework(langutil::EVMVersion _evmVersion):
 	m_evmHost->reset();
 
 	for (size_t i = 0; i < 10; i++)
-		m_evmHost->m_state.accounts[EVMHost::convertToEVMC(account(i))].balance =
+		m_evmHost->accounts[EVMHost::convertToEVMC(account(i))].balance =
 			EVMHost::convertToEVMC(u256(1) << 100);
 
 }

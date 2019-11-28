@@ -113,8 +113,8 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 
 evmc_storage_status EVMHost::set_storage(const evmc::address& _addr, const evmc::bytes32& _key, const evmc::bytes32& _value) noexcept
 {
-	evmc::bytes32 previousValue = m_state.accounts[_addr].storage[_key].value;
-	m_state.accounts[_addr].storage[_key].value = _value;
+	evmc::bytes32 previousValue = accounts[_addr].storage[_key].value;
+	accounts[_addr].storage[_key].value = _value;
 
 	// TODO EVMC_STORAGE_MODIFIED_AGAIN should be also used
 	if (previousValue == _value)
@@ -131,9 +131,9 @@ evmc_storage_status EVMHost::set_storage(const evmc::address& _addr, const evmc:
 void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
 {
 	// TODO actual selfdestruct is even more complicated.
-	evmc::uint256be balance = m_state.accounts[_addr].balance;
-	m_state.accounts.erase(_addr);
-	m_state.accounts[_beneficiary].balance = balance;
+	evmc::uint256be balance = accounts[_addr].balance;
+	accounts.erase(_addr);
+	accounts[_beneficiary].balance = balance;
 }
 
 evmc::result EVMHost::call(evmc_message const& _message) noexcept
@@ -155,10 +155,10 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	else if (_message.destination == 0x0000000000000000000000000000000000000008_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileALTBN128PairingProduct(_message);
 
-	State stateBackup = m_state;
+	auto const stateBackup = accounts;
 
 	u256 value{convertFromEVMC(_message.value)};
-	auto& sender = m_state.accounts[_message.sender];
+	auto& sender = accounts[_message.sender];
 
 	evmc::bytes code;
 
@@ -172,7 +172,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		{
 			evmc::result result({});
 			result.status_code = EVMC_OUT_OF_GAS;
-			m_state = stateBackup;
+			accounts = stateBackup;
 			return result;
 		}
 	}
@@ -190,19 +190,19 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	}
 	else if (message.kind == EVMC_DELEGATECALL)
 	{
-		code = m_state.accounts[message.destination].code;
+		code = accounts[message.destination].code;
 		message.destination = m_currentAddress;
 	}
 	else if (message.kind == EVMC_CALLCODE)
 	{
-		code = m_state.accounts[message.destination].code;
+		code = accounts[message.destination].code;
 		message.destination = m_currentAddress;
 	}
 	else
-		code = m_state.accounts[message.destination].code;
+		code = accounts[message.destination].code;
 	//TODO CREATE2
 
-	auto& destination = m_state.accounts[message.destination];
+	auto& destination = accounts[message.destination];
 
 	if (value != 0 && message.kind != EVMC_DELEGATECALL && message.kind != EVMC_CALLCODE)
 	{
@@ -233,7 +233,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	}
 
 	if (result.status_code != EVMC_SUCCESS)
-		m_state = stateBackup;
+		accounts = stateBackup;
 
 	return result;
 }
