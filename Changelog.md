@@ -11,6 +11,10 @@ Compiler Features:
  * Yul Optimizer: Perform loop-invariant code motion.
 
 
+Build System:
+ * Update to emscripten version 1.39.3.
+
+
 Bugfixes:
  * SMTChecker: Fix internal error when using ``abi.decode``.
 
