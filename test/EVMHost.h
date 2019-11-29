@@ -38,24 +38,15 @@ using Address = h160;
 class EVMHost: public evmc::MockedHost
 {
 public:
+	using MockedHost::get_code_size;
+	using MockedHost::get_balance;
+
 	/// Tries to dynamically load libevmone. @returns nullptr on failure.
 	/// The path has to be provided for the first successful run and will be ignored
 	/// afterwards.
 	static evmc::VM& getVM(std::string const& _path = {});
 
 	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm = getVM());
-
-	evmc::MockedAccount const* account(evmc::address const& _address) const
-	{
-		auto it = accounts.find(_address);
-		return it == accounts.end() ? nullptr : &it->second;
-	}
-
-	evmc::MockedAccount* account(evmc::address const& _address)
-	{
-		auto it = accounts.find(_address);
-		return it == accounts.end() ? nullptr : &it->second;
-	}
 
 	void reset() { accounts.clear(); m_currentAddress = {}; }
 	void newBlock()
@@ -67,59 +58,7 @@ public:
 
 	bool account_exists(evmc::address const& _addr) const noexcept final
 	{
-		return account(_addr) != nullptr;
-	}
-
-	evmc::bytes32 get_storage(evmc::address const& _addr, evmc::bytes32 const& _key) const noexcept final
-	{
-		if (auto* acc = account(_addr))
-		{
-			auto it = acc->storage.find(_key);
-			if (it != acc->storage.end())
-				return it->second.value;
-		}
-		return {};
-	}
-
-	evmc_storage_status set_storage(
-		evmc::address const& _addr,
-		evmc::bytes32 const& _key,
-		evmc::bytes32 const& _value
-	) noexcept final;
-
-	evmc::uint256be get_balance(evmc::address const& _addr) const noexcept final
-	{
-		if (auto const* acc = account(_addr))
-			return acc->balance;
-		return {};
-	}
-
-	size_t get_code_size(evmc::address const& _addr) const noexcept final
-	{
-		if (auto const* acc = account(_addr))
-			return acc->code.size();
-		return 0;
-	}
-
-	evmc::bytes32 get_code_hash(evmc::address const& _addr) const noexcept final
-	{
-		if (auto const* acc = account(_addr))
-			return acc->codehash;
-		return {};
-	}
-
-	size_t copy_code(
-		evmc::address const& _addr,
-		size_t _codeOffset,
-		uint8_t* _bufferData,
-		size_t _bufferSize
-	) const noexcept final
-	{
-		size_t i = 0;
-		if (auto const* acc = account(_addr))
-			for (; i < _bufferSize && _codeOffset + i < acc->code.size(); i++)
-				_bufferData[i] = acc->code[_codeOffset + i];
-		return i;
+		return evmc::MockedHost::account_exists(_addr);
 	}
 
 	void selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept final;

@@ -233,9 +233,10 @@ u256 ExecutionFramework::balanceAt(Address const& _addr)
 
 bool ExecutionFramework::storageEmpty(Address const& _addr)
 {
-	if (auto const* acc = m_evmHost->account(EVMHost::convertToEVMC(_addr)))
+	const auto it = m_evmHost->accounts.find(EVMHost::convertToEVMC(_addr));
+	if (it != m_evmHost->accounts.end())
 	{
-		for (auto const& entry: acc->storage)
+		for (auto const& entry: it->second.storage)
 			if (!(entry.second.value == evmc::bytes32{}))
 				return false;
 	}

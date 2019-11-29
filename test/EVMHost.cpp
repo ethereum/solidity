@@ -111,23 +111,6 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	tx_context.chain_id = convertToEVMC(u256(1));
 }
 
-evmc_storage_status EVMHost::set_storage(const evmc::address& _addr, const evmc::bytes32& _key, const evmc::bytes32& _value) noexcept
-{
-	evmc::bytes32 previousValue = accounts[_addr].storage[_key].value;
-	accounts[_addr].storage[_key].value = _value;
-
-	// TODO EVMC_STORAGE_MODIFIED_AGAIN should be also used
-	if (previousValue == _value)
-		return EVMC_STORAGE_UNCHANGED;
-	else if (previousValue == evmc::bytes32{})
-		return EVMC_STORAGE_ADDED;
-	else if (_value == evmc::bytes32{})
-		return EVMC_STORAGE_DELETED;
-	else
-		return EVMC_STORAGE_MODIFIED;
-
-}
-
 void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
 {
 	// TODO actual selfdestruct is even more complicated.
