@@ -12,6 +12,6 @@
 // ----
 // {
 //     let x := 0xff
-//     for { } lt(0xff, 0x100) { }
-//     { let y := add(0xff, 1) }
+//     for { } lt(x, 0x100) { }
+//     { let y := add(x, 1) }
 // }

@@ -81,7 +81,7 @@ void Rematerialiser::visit(Expression& _e)
 			if (
 				(refs <= 1 && m_variableLoopDepth.at(name) == m_loopDepth) ||
 				cost == 0 ||
-				(refs <= 5 && cost <= 1) ||
+				(refs <= 5 && cost <= 1 && m_loopDepth == 0) ||
 				m_varsToAlwaysRematerialize.count(name)
 			)
 			{

@@ -33,7 +33,7 @@ namespace solidity::yul
  *  - the variable is referenced exactly once (and definition-to-reference does not cross a loop boundary)
  *  - the value is extremely cheap ("cost" of zero like ``caller()``)
  *  - the variable is referenced at most 5 times and the value is rather cheap
- *    ("cost" of at most 1 like a constant up to 0xff)
+ *    ("cost" of at most 1 like a constant up to 0xff) and we are not in a loop
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */

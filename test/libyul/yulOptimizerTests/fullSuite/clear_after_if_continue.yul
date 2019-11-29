@@ -13,7 +13,15 @@
 //     {
 //         let y := mload(0x20)
 //         let _1 := iszero(and(y, 8))
-//         for { } iszero(_1) { if y { revert(0, 0) } }
+//         for { }
+//         iszero(_1)
+//         {
+//             if y
+//             {
+//                 let _2 := 0
+//                 revert(_2, _2)
+//             }
+//         }
 //         {
 //             if y { continue }
 //             sstore(1, 0)
