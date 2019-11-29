@@ -83,6 +83,13 @@ function download_project
     echo "Current commit hash: `git rev-parse HEAD`"
 }
 
+function force_truffle_version
+{
+    local repo="$1"
+
+    sed -i 's/"truffle":\s*".*"/"truffle": "^5.0.42"/g' package.json
+}
+
 function truffle_setup
 {
     local repo="$1"

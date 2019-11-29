@@ -34,6 +34,8 @@ function gnosis_safe_test
     CONFIG="truffle.js"
 
     truffle_setup https://github.com/erak/safe-contracts.git development_060
+    force_truffle_version
+
     run_install install_fn
 
     replace_libsolc_call
