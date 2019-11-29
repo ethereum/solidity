@@ -215,9 +215,11 @@ void CHC::endVisit(FunctionDefinition const& _function)
 		// This is done in endVisit(ContractDefinition).
 		if (_function.isConstructor())
 		{
-			auto constructorExit = createBlock(&_function, "exit_");
-			connectBlocks(m_currentBlock, predicate(*constructorExit));
-			setCurrentBlock(*constructorExit);
+			auto constructorExit = createSymbolicBlock(interfaceSort(), "constructor_exit_" + to_string(_function.id()));
+			connectBlocks(m_currentBlock, predicate(*constructorExit, currentStateVariables()));
+			clearIndices(m_currentContract, m_currentFunction);
+			auto stateExprs = currentStateVariables();
+			setCurrentBlock(*constructorExit, &stateExprs);
 		}
 		else
 		{
