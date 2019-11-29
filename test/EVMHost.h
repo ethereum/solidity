@@ -68,6 +68,12 @@ public:
 		std::vector<LogEntry> logs;
 	};
 
+	Account const* account(evmc::address const& _address) const
+	{
+		auto it = m_state.accounts.find(_address);
+		return it == m_state.accounts.end() ? nullptr : &it->second;
+	}
+
 	Account* account(evmc::address const& _address)
 	{
 		auto it = m_state.accounts.find(_address);
@@ -82,15 +88,19 @@ public:
 		m_state.logs.clear();
 	}
 
-	bool account_exists(evmc::address const& _addr) noexcept final
+	bool account_exists(evmc::address const& _addr) const noexcept final
 	{
 		return account(_addr) != nullptr;
 	}
 
-	evmc::bytes32 get_storage(evmc::address const& _addr, evmc::bytes32 const& _key) noexcept final
+	evmc::bytes32 get_storage(evmc::address const& _addr, evmc::bytes32 const& _key) const noexcept final
 	{
-		if (Account* acc = account(_addr))
-			return acc->storage[_key];
+		if (auto* acc = account(_addr))
+		{
+			auto it = acc->storage.find(_key);
+			if (it != acc->storage.end())
+				return it->second;
+		}
 		return {};
 	}
 
@@ -100,21 +110,21 @@ public:
 		evmc::bytes32 const& _value
 	) noexcept;
 
-	evmc::uint256be get_balance(evmc::address const& _addr) noexcept final
+	evmc::uint256be get_balance(evmc::address const& _addr) const noexcept final
 	{
 		if (Account const* acc = account(_addr))
 			return acc->balance;
 		return {};
 	}
 
-	size_t get_code_size(evmc::address const& _addr) noexcept final
+	size_t get_code_size(evmc::address const& _addr) const noexcept final
 	{
 		if (Account const* acc = account(_addr))
 			return acc->code.size();
 		return 0;
 	}
 
-	evmc::bytes32 get_code_hash(evmc::address const& _addr) noexcept final
+	evmc::bytes32 get_code_hash(evmc::address const& _addr) const noexcept final
 	{
 		if (Account const* acc = account(_addr))
 			return acc->codeHash;
@@ -126,7 +136,7 @@ public:
 		size_t _codeOffset,
 		uint8_t* _bufferData,
 		size_t _bufferSize
-	) noexcept final
+	) const noexcept final
 	{
 		size_t i = 0;
 		if (Account const* acc = account(_addr))
@@ -139,9 +149,9 @@ public:
 
 	evmc::result call(evmc_message const& _message) noexcept;
 
-	evmc_tx_context get_tx_context() noexcept;
+	evmc_tx_context get_tx_context() const noexcept;
 
-	evmc::bytes32 get_block_hash(int64_t number) noexcept;
+	evmc::bytes32 get_block_hash(int64_t number) const noexcept;
 
 	void emit_log(
 		evmc::address const& _addr,
