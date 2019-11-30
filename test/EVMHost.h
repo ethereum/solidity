@@ -70,10 +70,6 @@ public:
 
 	Account* account(evmc::address const& _address)
 	{
-		// Make all precompiled contracts exist.
-		// Be future-proof and consider everything below 1024 as precompiled contract.
-		if (u160(convertFromEVMC(_address)) < 1024)
-			m_state.accounts[_address];
 		auto it = m_state.accounts.find(_address);
 		return it == m_state.accounts.end() ? nullptr : &it->second;
 	}
