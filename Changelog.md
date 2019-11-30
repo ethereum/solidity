@@ -17,6 +17,7 @@ Build System:
 
 Bugfixes:
  * SMTChecker: Fix internal error when using ``abi.decode``.
+ * SMTChecker: Fix internal error when using arrays or mappings of functions.
 
 
 

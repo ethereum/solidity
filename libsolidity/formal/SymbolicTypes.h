@@ -32,6 +32,9 @@ namespace smt
 /// Returns the SMT sort that models the Solidity type _type.
 SortPointer smtSort(solidity::Type const& _type);
 std::vector<SortPointer> smtSort(std::vector<solidity::TypePointer> const& _types);
+/// If _type has type Function, abstract it to Integer.
+/// Otherwise return smtSort(_type).
+SortPointer smtSortAbstractFunction(solidity::Type const& _type);
 /// Returns the SMT kind that models the Solidity type type category _category.
 Kind smtKind(solidity::Type::Category _category);
 
