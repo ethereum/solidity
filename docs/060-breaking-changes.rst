@@ -59,10 +59,10 @@ This section highlights changes that affect syntax and semantics.
   fallback function that is defined using the ``fallback`` keyword and a receive ether function
   defined using the ``receive`` keyword. If present, the receive ether function is called
   whenever the call data is empty. The new fallback function is called when no
-  other function matches.  It can be payable in which case it may accept value
+  other function matches. It can be payable in which case it may accept value
   or non-payable in which case transactions not matching any other function
-  which send value will revert. If you only implement the receive and not the fallback function, calling a non-existing function on your contract in error is not possible anymore. Unless you are following an upgrade or proxy
-  pattern, you should not need to implement the fallback function.
+  which send value will revert. If you only implement the receive and not the fallback function, calling a non-existing function on your contract will now revert. You should only need to implement the fallback function
+  if you are following an upgrade or proxy pattern.
 
 * Functions can now only be overridden when they are either marked with the ``virtual`` keyword or defined in an interface. When overriding a function or modifier, the new keyword ``override`` must be used. When overriding a function or modifier defined in multiple parallel bases, all bases must be listed in parentheses after the keyword like so: ``override(Base1, Base2)``.
 
