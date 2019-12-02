@@ -83,6 +83,13 @@ function download_project
     echo "Current commit hash: `git rev-parse HEAD`"
 }
 
+function force_truffle_version
+{
+    local repo="$1"
+
+    sed -i 's/"truffle":\s*".*"/"truffle": "^5.0.42"/g' package.json
+}
+
 function truffle_setup
 {
     local repo="$1"
@@ -202,6 +209,10 @@ function run_install
 {
     local init_fn="$1"
     printLog "Running install function..."
+
+    replace_version_pragmas
+    force_solc "$CONFIG" "$DIR" "$SOLJSON"
+
     $init_fn
 }
 
@@ -225,7 +236,6 @@ function truffle_run_test
     local test_fn="$2"
 
     replace_version_pragmas
-
     force_solc "$CONFIG" "$DIR" "$SOLJSON"
 
     printLog "Checking optimizer level..."
