@@ -187,6 +187,15 @@ void EVMHost::recordCalls(evmc_message const& _message) noexcept
 evmc::result EVMHost::call(evmc_message const& _message) noexcept
 {
 	recordCalls(_message);
+
+	// Force failure for Byzantium precompiles on pre-Byzantium chains.
+	if (
+		_message.destination >= 0x0000000000000000000000000000000000000005_address &&
+		_message.destination <= 0x0000000000000000000000000000000000000008_address &&
+		m_evmVersion < langutil::EVMVersion::byzantium()
+	)
+		return evmc::result(EVMC_FAILURE, 0, nullptr, 0);
+
 	if (_message.destination == 0x0000000000000000000000000000000000000001_address)
 		return precompileECRecover(_message);
 	else if (_message.destination == 0x0000000000000000000000000000000000000002_address)
@@ -195,13 +204,13 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		return precompileRipeMD160(_message);
 	else if (_message.destination == 0x0000000000000000000000000000000000000004_address)
 		return precompileIdentity(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000005_address && m_evmVersion >= langutil::EVMVersion::byzantium())
+	else if (_message.destination == 0x0000000000000000000000000000000000000005_address)
 		return precompileModExp(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000006_address && m_evmVersion >= langutil::EVMVersion::byzantium())
+	else if (_message.destination == 0x0000000000000000000000000000000000000006_address)
 		return precompileALTBN128G1Add(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000007_address && m_evmVersion >= langutil::EVMVersion::byzantium())
+	else if (_message.destination == 0x0000000000000000000000000000000000000007_address)
 		return precompileALTBN128G1Mul(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000008_address && m_evmVersion >= langutil::EVMVersion::byzantium())
+	else if (_message.destination == 0x0000000000000000000000000000000000000008_address)
 		return precompileALTBN128PairingProduct(_message);
 
 	auto const stateBackup = accounts;
