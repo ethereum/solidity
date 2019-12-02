@@ -294,7 +294,7 @@ public:
     /// Destructor responsible for automatically releasing attached resources.
     ~result() noexcept
     {
-        if (release)
+        if (release != nullptr)
             release(this);
     }
 
@@ -342,10 +342,10 @@ public:
     virtual ~HostInterface() noexcept = default;
 
     /// @copydoc evmc_host_interface::account_exists
-    virtual bool account_exists(const address& addr) noexcept = 0;
+    virtual bool account_exists(const address& addr) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_storage
-    virtual bytes32 get_storage(const address& addr, const bytes32& key) noexcept = 0;
+    virtual bytes32 get_storage(const address& addr, const bytes32& key) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::set_storage
     virtual evmc_storage_status set_storage(const address& addr,
@@ -353,19 +353,19 @@ public:
                                             const bytes32& value) noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_balance
-    virtual uint256be get_balance(const address& addr) noexcept = 0;
+    virtual uint256be get_balance(const address& addr) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_code_size
-    virtual size_t get_code_size(const address& addr) noexcept = 0;
+    virtual size_t get_code_size(const address& addr) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_code_hash
-    virtual bytes32 get_code_hash(const address& addr) noexcept = 0;
+    virtual bytes32 get_code_hash(const address& addr) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::copy_code
     virtual size_t copy_code(const address& addr,
                              size_t code_offset,
                              uint8_t* buffer_data,
-                             size_t buffer_size) noexcept = 0;
+                             size_t buffer_size) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::selfdestruct
     virtual void selfdestruct(const address& addr, const address& beneficiary) noexcept = 0;
@@ -374,10 +374,10 @@ public:
     virtual result call(const evmc_message& msg) noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_tx_context
-    virtual evmc_tx_context get_tx_context() noexcept = 0;
+    virtual evmc_tx_context get_tx_context() const noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_block_hash
-    virtual bytes32 get_block_hash(int64_t block_number) noexcept = 0;
+    virtual bytes32 get_block_hash(int64_t block_number) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::emit_log
     virtual void emit_log(const address& addr,
@@ -395,7 +395,7 @@ class HostContext : public HostInterface
 {
     const evmc_host_interface* host = nullptr;
     evmc_host_context* context = nullptr;
-    evmc_tx_context tx_context = {};
+    mutable evmc_tx_context tx_context = {};
 
 public:
     /// Default constructor for null Host context.
@@ -408,12 +408,12 @@ public:
       : host{&interface}, context{ctx}
     {}
 
-    bool account_exists(const address& address) noexcept final
+    bool account_exists(const address& address) const noexcept final
     {
         return host->account_exists(context, &address);
     }
 
-    bytes32 get_storage(const address& address, const bytes32& key) noexcept final
+    bytes32 get_storage(const address& address, const bytes32& key) const noexcept final
     {
         return host->get_storage(context, &address, &key);
     }
@@ -425,17 +425,17 @@ public:
         return host->set_storage(context, &address, &key, &value);
     }
 
-    uint256be get_balance(const address& address) noexcept final
+    uint256be get_balance(const address& address) const noexcept final
     {
         return host->get_balance(context, &address);
     }
 
-    size_t get_code_size(const address& address) noexcept final
+    size_t get_code_size(const address& address) const noexcept final
     {
         return host->get_code_size(context, &address);
     }
 
-    bytes32 get_code_hash(const address& address) noexcept final
+    bytes32 get_code_hash(const address& address) const noexcept final
     {
         return host->get_code_hash(context, &address);
     }
@@ -443,7 +443,7 @@ public:
     size_t copy_code(const address& address,
                      size_t code_offset,
                      uint8_t* buffer_data,
-                     size_t buffer_size) noexcept final
+                     size_t buffer_size) const noexcept final
     {
         return host->copy_code(context, &address, code_offset, buffer_data, buffer_size);
     }
@@ -464,14 +464,14 @@ public:
     /// by assuming that the block timestamp should never be zero.
     ///
     /// @return The cached transaction context.
-    evmc_tx_context get_tx_context() noexcept final
+    evmc_tx_context get_tx_context() const noexcept final
     {
         if (tx_context.block_timestamp == 0)
             tx_context = host->get_tx_context(context);
         return tx_context;
     }
 
-    bytes32 get_block_hash(int64_t number) noexcept final
+    bytes32 get_block_hash(int64_t number) const noexcept final
     {
         return host->get_block_hash(context, number);
     }
@@ -534,7 +534,7 @@ public:
     /// Destructor responsible for automatically destroying the VM instance.
     ~VM() noexcept
     {
-        if (m_instance)
+        if (m_instance != nullptr)
             m_instance->destroy(m_instance);
     }
 
@@ -569,6 +569,12 @@ public:
 
     /// @copydoc evmc_vm::version
     char const* version() const noexcept { return m_instance->version; }
+
+    /// Checks if the VM has the given capability.
+    bool has_capability(evmc_capabilities capability) const noexcept
+    {
+        return (get_capabilities() & static_cast<evmc_capabilities_flagset>(capability)) != 0;
+    }
 
     /// @copydoc evmc::vm::get_capabilities
     evmc_capabilities_flagset get_capabilities() const noexcept

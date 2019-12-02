@@ -229,7 +229,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	return result;
 }
 
-evmc_tx_context EVMHost::get_tx_context() noexcept
+evmc_tx_context EVMHost::get_tx_context() const noexcept
 {
 	evmc_tx_context ctx = {};
 	ctx.block_timestamp = m_state.timestamp;
@@ -245,7 +245,7 @@ evmc_tx_context EVMHost::get_tx_context() noexcept
 	return ctx;
 }
 
-evmc::bytes32 EVMHost::get_block_hash(int64_t _number) noexcept
+evmc::bytes32 EVMHost::get_block_hash(int64_t _number) const noexcept
 {
 	return convertToEVMC(u256("0x3737373737373737373737373737373737373737373737373737373737373737") + _number);
 }
