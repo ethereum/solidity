@@ -430,6 +430,34 @@ function smod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 		}
 	}
 }
+function sdiv(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+	// Based on https://github.com/ewasm/evm2wasm/blob/master/wasm/SDIV.wast
+
+	let sign := i64.shr_u(i64.xor(x1, y1), 63)
+
+	if i64.eqz(i64.clz(x1)) {
+		x1, x2, x3, x4 := xor(
+			x1, x2, x3, x4,
+			0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff
+		)
+		x1, x2, x3, x4 := add(x1, x2, x3, x4, 0, 0, 0, 1)
+	}
+
+	if i64.eqz(i64.clz(y1)) {
+		y1, y2, y3, y4 := xor(
+			y1, y2, y3, y4,
+			0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff
+		)
+		y1, y2, y3, y4 := add(y1, y2, y3, y4, 0, 0, 0, 1)
+	}
+
+	r1, r2, r3, r4 := div(x1, x2, x3, x4, y1, y2, y3, y4)
+
+	if sign {
+		r1, r2, r3, r4 := xor(r1, r2, r3, r4, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff)
+		r1, r2, r3, r4 := add(r1, r2, r3, r4, 0, 0, 0, 1)
+	}
+}
 function exp(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	r4 := 1
 	for {} or_bool(y1, y2, y3, y4) {} {
@@ -595,6 +623,9 @@ function gte_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> z {
 }
 function gte_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> z {
 	z := i64.eqz(lt_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8))
+}
+function gt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+	z1, z2, z3, z4 := lt(y1, y2, y3, y4, x1, x2, x3, x4)
 }
 function slt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	// TODO correct?
