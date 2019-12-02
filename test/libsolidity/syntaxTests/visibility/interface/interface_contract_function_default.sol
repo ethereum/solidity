@@ -4,9 +4,9 @@ interface I {
     function f();
 }
 abstract contract C {
-    function g();
+    function g() {}
 }
 // ----
 // SyntaxError: (158-171): No visibility specified. Did you intend to add "external"?
-// SyntaxError: (200-213): No visibility specified. Did you intend to add "public"?
+// SyntaxError: (200-215): No visibility specified. Did you intend to add "public"?
 // TypeError: (158-171): Functions in interfaces must be declared external.

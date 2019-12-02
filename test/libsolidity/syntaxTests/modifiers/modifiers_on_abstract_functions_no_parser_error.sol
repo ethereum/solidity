@@ -5,9 +5,9 @@
 abstract contract C
 {
     modifier only_owner() { _; }
-    function foo() only_owner public;
-    function bar() public only_owner;
+    function foo() only_owner public virtual;
+    function bar() public only_owner virtual;
 }
 // ----
-// SyntaxError: (212-245): Functions without implementation cannot have modifiers.
-// SyntaxError: (250-283): Functions without implementation cannot have modifiers.
+// SyntaxError: (212-253): Functions without implementation cannot have modifiers.
+// SyntaxError: (258-299): Functions without implementation cannot have modifiers.

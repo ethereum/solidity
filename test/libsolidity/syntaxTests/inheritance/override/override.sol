@@ -3,9 +3,9 @@ abstract contract A {
 	function test() internal virtual returns (uint256);
 	function test2() internal virtual returns (uint256);
 }
-abstract contract X is A {
+contract X is A {
 	int public override testvar;
-	function test() internal override returns (uint256);
-	function test2() internal override(A) returns (uint256);
+	function test() internal override returns (uint256) {}
+	function test2() internal override(A) returns (uint256) {}
 }
 // ----

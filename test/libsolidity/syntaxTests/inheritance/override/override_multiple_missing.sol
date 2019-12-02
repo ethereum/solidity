@@ -16,9 +16,9 @@ abstract contract D {
 }
 abstract contract X is A, B, C, D {
 	int public override testvar;
-	function test() internal override(B, D, C) returns (uint256);
-	function foo() internal override(A, C) returns (uint256);
+	function test() internal override(B, D, C) virtual returns (uint256);
+	function foo() internal override(A, C) virtual returns (uint256);
 }
 // ----
 // TypeError: (584-601): Invalid contract specified in override list: C.
-// TypeError: (646-660): Function needs to specify overridden contracts B and D.
+// TypeError: (654-668): Function needs to specify overridden contracts B and D.

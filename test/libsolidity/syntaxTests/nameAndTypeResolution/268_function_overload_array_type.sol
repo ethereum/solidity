@@ -1,5 +1,5 @@
 abstract contract M {
-    function f(uint[] memory) public;
-    function f(int[] memory) public;
+    function f(uint[] memory) public virtual;
+    function f(int[] memory) public virtual;
 }
 // ----

@@ -10464,7 +10464,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 BOOST_AUTO_TEST_CASE(calling_nonexisting_contract_throws)
 {
 	char const* sourceCode = R"YY(
-		abstract contract D { function g() public; }
+		abstract contract D { function g() public virtual; }
 		contract C {
 			D d = D(0x1212);
 			function f() public returns (uint) {

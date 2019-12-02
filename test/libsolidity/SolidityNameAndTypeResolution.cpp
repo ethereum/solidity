@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(function_no_implementation)
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		abstract contract test {
-			function functionName(bytes32 input) public returns (bytes32 out);
+			function functionName(bytes32 input) public virtual returns (bytes32 out);
 		}
 	)";
 	sourceUnit = parseAndAnalyse(text);
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
 {
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
-		abstract contract base { function foo(bool) public; }
+		abstract contract base { function foo(bool) public virtual; }
 		abstract contract derived is base { function foo(uint) public {} }
 	)";
 	sourceUnit = parseAndAnalyse(text);
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
 {
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
-		abstract contract base { function foo() public; }
+		abstract contract base { function foo() public virtual; }
 		abstract contract foo is base { constructor() public {} }
 	)";
 	sourceUnit = parseAndAnalyse(text);
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 {
 	char const* sourceCode = R"(
 		abstract contract C {
-			function f(uint) public returns (string memory);
+			function f(uint) public virtual returns (string memory);
 			function g() public {
 				string memory x = this.f(2);
 				// we can assign to x but it is not usable.
