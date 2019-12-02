@@ -123,13 +123,13 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		return precompileRipeMD160(_message);
 	else if (_message.destination == 0x0000000000000000000000000000000000000004_address)
 		return precompileIdentity(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000005_address)
+	else if (_message.destination == 0x0000000000000000000000000000000000000005_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileModExp(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000006_address)
+	else if (_message.destination == 0x0000000000000000000000000000000000000006_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileALTBN128G1Add(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000007_address)
+	else if (_message.destination == 0x0000000000000000000000000000000000000007_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileALTBN128G1Mul(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000008_address)
+	else if (_message.destination == 0x0000000000000000000000000000000000000008_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileALTBN128PairingProduct(_message);
 
 	State stateBackup = m_state;
