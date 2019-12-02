@@ -26,9 +26,10 @@ Documentation Example
 =====================
 
 Documentation is inserted above each ``class``, ``interface`` and
-``function`` using the doxygen notation format. Note: a ``public``
-state variable is equivalent to a ``function`` for the purposes of
-NatSpec.
+``function`` using the doxygen notation format.
+
+Note: a ``public`` state variable is equivalent to a ``function``
+for the purposes of NatSpec.
 
 -  For Solidity you may choose ``///`` for single or multi-line
    comments, or ``/**`` and ending with ``*/``.
