@@ -33,7 +33,7 @@ function zeppelin_test
     OPTIMIZER_LEVEL=1
     CONFIG="truffle-config.js"
 
-    truffle_setup https://github.com/erak/openzeppelin-contracts.git master_060
+    truffle_setup https://github.com/erak/openzeppelin-contracts.git fixGSNSignatureMockInheritance
     run_install install_fn
 
 
