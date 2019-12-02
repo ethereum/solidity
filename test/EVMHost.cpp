@@ -86,6 +86,20 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		assertThrow(false, Exception, "Berlin is not supported yet.");
 	else //if (_evmVersion == langutil::EVMVersion::petersburg())
 		m_evmRevision = EVMC_PETERSBURG;
+
+	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
+	// NOTE: keep this in sync with `EVMHost::call` below.
+	//
+	// A lot of precompile addresses had a balance before they became valid addresses for precompiles.
+	// For example all the precompile addresses allocated in Byzantium had a 1 wei balance sent to them
+	// roughly 22 days before the update went live.
+	for (unsigned precompiledAddress = 1; precompiledAddress <= 8; precompiledAddress++)
+	{
+		evmc::address address{};
+		address.bytes[19] = precompiledAddress;
+		// 1wei
+		m_state.accounts[address].balance.bytes[31] = 1;
+	}
 }
 
 evmc_storage_status EVMHost::set_storage(const evmc::address& _addr, const evmc::bytes32& _key, const evmc::bytes32& _value) noexcept
