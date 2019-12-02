@@ -63,6 +63,10 @@ WasmDialect::WasmDialect():
 	m_functions["i64.store"_yulstring].parameters.front() = "i32"_yulstring;
 	m_functions["i64.store"_yulstring].sideEffects.invalidatesStorage = false;
 
+	addFunction("i64.store8", 2, 0, false);
+	m_functions["i64.store8"_yulstring].parameters.front() = "i32"_yulstring;
+	m_functions["i64.store8"_yulstring].sideEffects.invalidatesStorage = false;
+
 	addFunction("i64.load", 1, 1, false);
 	m_functions["i64.load"_yulstring].parameters.front() = "i32"_yulstring;
 	m_functions["i64.load"_yulstring].sideEffects.invalidatesStorage = false;
