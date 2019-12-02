@@ -81,6 +81,9 @@ public:
 	/// If the settings (see constructor) disabled the optimizer, nothing is done here.
 	void optimize();
 
+	/// Translate the source to a different language / dialect.
+	void translate(Language _targetLanguage);
+
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	MachineAssemblyObject assemble(Machine _machine) const;
 
