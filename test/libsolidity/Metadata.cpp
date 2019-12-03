@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
 		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 		string metadata_str = compilerStack.metadata("test");
 		Json::Value metadata;
-		jsonParse(metadata_str, metadata);
+		jsonParseStrict(metadata_str, metadata);
 		BOOST_CHECK(dev::test::isValidMetadata(metadata_str));
 		BOOST_CHECK(metadata.isMember("settings"));
 		if (_literal)
