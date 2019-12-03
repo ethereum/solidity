@@ -24,6 +24,7 @@
 
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libyul/AssemblyStack.h>
+#include <libyul/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <libevmasm/Instruction.h>
 #include <libdevcore/JSON.h>
@@ -815,6 +816,16 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			"UnimplementedFeatureError",
 			"general",
 			"Unimplemented feature (" + _exception.lineInfo() + ")"
+		));
+	}
+	catch (yul::YulException const& _exception)
+	{
+		errors.append(formatErrorWithException(
+			_exception,
+			false,
+			"YulException",
+			"general",
+			"Yul exception"
 		));
 	}
 	catch (Exception const& _exception)
