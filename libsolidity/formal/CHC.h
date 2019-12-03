@@ -208,6 +208,9 @@ private:
 
 	/// ErrorReporter that comes from CompilerStack.
 	langutil::ErrorReporter& m_outerErrorReporter;
+
+	/// SMT solvers that are chosen at runtime.
+	smt::SMTSolverChoice m_enabledSolvers;
 };
 
 }

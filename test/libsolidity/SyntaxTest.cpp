@@ -176,23 +176,22 @@ void SyntaxTest::setupCompiler()
 
 void SyntaxTest::parseAndAnalyze()
 {
-	if (compiler().parse())
-		if (compiler().analyze())
-			try
-			{
-				if (!compiler().compile())
-					BOOST_THROW_EXCEPTION(runtime_error("Compilation failed even though analysis was successful."));
-			}
-			catch (UnimplementedFeatureError const& _e)
-			{
-				m_errorList.emplace_back(SyntaxTestError{
-					"UnimplementedFeatureError",
-					errorMessage(_e),
-					"",
-					-1,
-					-1
-				});
-			}
+	if (compiler().parse() && compiler().analyze())
+		try
+		{
+			if (!compiler().compile())
+				BOOST_THROW_EXCEPTION(runtime_error("Compilation failed even though analysis was successful."));
+		}
+		catch (UnimplementedFeatureError const& _e)
+		{
+			m_errorList.emplace_back(SyntaxTestError{
+				"UnimplementedFeatureError",
+				errorMessage(_e),
+				"",
+				-1,
+				-1
+			});
+		}
 }
 
 void SyntaxTest::filterObtainedErrors()

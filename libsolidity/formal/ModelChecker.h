@@ -59,6 +59,9 @@ public:
 	/// the constructor.
 	std::vector<std::string> unhandledQueries();
 
+	/// @returns SMT solvers that are available via the C++ API.
+	static smt::SMTSolverChoice availableSolvers();
+
 private:
 	/// Bounded Model Checker engine.
 	BMC m_bmc;

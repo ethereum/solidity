@@ -23,6 +23,7 @@
 #include <test/libsolidity/GasTest.h>
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/SemanticTest.h>
+#include <test/libsolidity/SMTCheckerTest.h>
 #include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/libyul/EWasmTranslationTest.h>
 #include <test/libyul/YulOptimizerTest.h>
@@ -65,8 +66,8 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"Semantic",            "libsolidity", "semanticTests",       false, true,  &SemanticTest::create},
 	{"JSON AST",            "libsolidity", "ASTJSON",             false, false, &ASTJSONTest::create},
 	{"JSON ABI",            "libsolidity", "ABIJson",             false, false, &ABIJsonTest::create},
-	{"SMT Checker",         "libsolidity", "smtCheckerTests",     true,  false, &SyntaxTest::create},
-	{"SMT Checker JSON",    "libsolidity", "smtCheckerTestsJSON", true,  false, &SMTCheckerTest::create},
+	{"SMT Checker",         "libsolidity", "smtCheckerTests",     true,  false, &SMTCheckerTest::create},
+	{"SMT Checker JSON",    "libsolidity", "smtCheckerTestsJSON", true,  false, &SMTCheckerJSONTest::create},
 	{"Gas Estimates",       "libsolidity", "gasTests",            false, false, &GasTest::create}
 };
 
