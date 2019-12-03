@@ -23,9 +23,9 @@
 #include <libyul/AsmData.h>
 #include <libyul/AsmScope.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/Exceptions.h>
 
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/Exceptions.h>
 
 #include <libdevcore/CommonData.h>
 
@@ -74,7 +74,7 @@ bool ScopeFiller::operator()(FunctionDefinition const& _funDef)
 	if (!(*this)(_funDef.body))
 		success = false;
 
-	solAssert(m_currentScope == &varScope, "");
+	yulAssert(m_currentScope == &varScope, "");
 	m_currentScope = m_currentScope->superScope;
 
 	return success;

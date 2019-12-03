@@ -21,6 +21,7 @@
  */
 
 #include <libyul/AsmParser.h>
+#include <libyul/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libdevcore/Common.h>
@@ -52,7 +53,7 @@ shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	}
 	catch (FatalError const&)
 	{
-		solAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
+		yulAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
 	}
 
 	return nullptr;
@@ -232,7 +233,7 @@ Statement Parser::parseStatement()
 	}
 	else
 	{
-		solAssert(false, "Invalid elementary operation.");
+		yulAssert(false, "Invalid elementary operation.");
 		return {};
 	}
 }
@@ -252,7 +253,7 @@ Case Parser::parseCase()
 		_case.value = make_unique<Literal>(std::get<Literal>(std::move(literal)));
 	}
 	else
-		solAssert(false, "Case or default case expected.");
+		yulAssert(false, "Case or default case expected.");
 	_case.body = parseBlock();
 	_case.location.end = _case.body.location.end;
 	return _case;
@@ -292,7 +293,7 @@ Expression Parser::parseExpression()
 		return std::get<Identifier>(operation);
 	else
 	{
-		solAssert(holds_alternative<Literal>(operation), "");
+		yulAssert(holds_alternative<Literal>(operation), "");
 		return std::get<Literal>(operation);
 	}
 }

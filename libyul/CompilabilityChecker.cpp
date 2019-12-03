@@ -41,7 +41,7 @@ map<YulString, int> CompilabilityChecker::run(
 	if (_dialect.flavour == AsmFlavour::Yul)
 		return {};
 
-	solAssert(_dialect.flavour == AsmFlavour::Strict, "");
+	yulAssert(_dialect.flavour == AsmFlavour::Strict, "");
 
 	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{
@@ -69,7 +69,7 @@ map<YulString, int> CompilabilityChecker::run(
 		}
 		catch (StackTooDeepError const&)
 		{
-			solAssert(!transform.stackErrors().empty(), "Got stack too deep exception that was not stored.");
+			yulAssert(!transform.stackErrors().empty(), "Got stack too deep exception that was not stored.");
 		}
 
 		std::map<YulString, int> functions;
