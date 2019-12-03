@@ -869,8 +869,11 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 {
 	createExpr(_indexAccess);
 
+	if (_indexAccess.annotation().type->category() == Type::Category::TypeType)
+		return;
+
 	shared_ptr<smt::SymbolicVariable> array;
-	if (auto const& id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
+	if (auto const* id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
 	{
 		auto varDecl = identifierToVariable(*id);
 		solAssert(varDecl, "");
@@ -885,7 +888,7 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 			return;
 		}
 	}
-	else if (auto const& innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
+	else if (auto const* innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
 	{
 		solAssert(m_context.knownExpression(*innerAccess), "");
 		array = m_context.expression(*innerAccess);
@@ -898,9 +901,6 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 		);
 		return;
 	}
-
-	if (_indexAccess.annotation().type->category() == Type::Category::TypeType)
-		return;
 
 	solAssert(array, "");
 	defineExpr(_indexAccess, smt::Expression::select(
