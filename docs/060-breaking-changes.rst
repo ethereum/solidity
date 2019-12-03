@@ -64,7 +64,13 @@ This section highlights changes that affect syntax and semantics.
   which send value will revert. If you only implement the receive and not the fallback function, calling a non-existing function on your contract will now revert. You should only need to implement the fallback function
   if you are following an upgrade or proxy pattern.
 
-* Functions can now only be overridden when they are either marked with the ``virtual`` keyword or defined in an interface. When overriding a function or modifier, the new keyword ``override`` must be used. When overriding a function or modifier defined in multiple parallel bases, all bases must be listed in parentheses after the keyword like so: ``override(Base1, Base2)``.
+* Functions can now only be overridden when they are either marked with the
+  ``virtual`` keyword or defined in an interface. Functions without
+  implementation outside an interface have to be marked ``virtual``.
+  When overriding a function or modifier, the new keyword ``override``
+  must be used. When overriding a function or modifier defined in multiple
+  parallel bases, all bases must be listed in parentheses after the keyword
+  like so: ``override(Base1, Base2)``.
 
 
 How to update your code
@@ -90,7 +96,7 @@ This section gives detailed instructions on how to update prior code for every b
 
 * Choose unique identifiers for variable declarations in inline assembly that do not conflict with declartions outside the inline assembly block.
 
-* Add ``virtual`` to every non-interface function you intend to override.  For single inheritance, add ``override`` to every overriding function. For multiple inheritance, add ``override(A, B, ..)``, where you list all contracts that define the overridden function in the brackets. When multiple bases define the same function, the inheriting contract must override all conflicting functions.
+* Add ``virtual`` to every non-interface function you intend to override. Add ``virtual`` to all functions without implementation outside interfaces. For single inheritance, add ``override`` to every overriding function. For multiple inheritance, add ``override(A, B, ..)``, where you list all contracts that define the overridden function in the brackets. When multiple bases define the same function, the inheriting contract must override all conflicting functions.
 
 
 New Features

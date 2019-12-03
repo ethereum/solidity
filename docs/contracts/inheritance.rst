@@ -6,12 +6,18 @@ Inheritance
 
 Solidity supports multiple inheritance including polymorphism.
 
-All function calls are virtual, which means that the most derived function
-is called, except when the contract name is explicitly given or the
-``super`` keyword is used.
-
-All functions overriding a base function must specify the ``override`` keyword.
+Polymorphism means that a function call (internal and external)
+always executes the function of the same name (and parameter types)
+in the most derived contract in the inheritance hierarchy.
+This has to be explicitly enabled on each function in the
+hierarchy using the ``virtual`` and ``override`` keywords.
 See :ref:`Function Overriding <function-overriding>` for more details.
+
+It is possible to call functions further up in the inheritance
+hierarchy internally by explicitly specifying the contract
+using ``ContractName.functionName()`` or using ``super.functionName()``
+if you want to call the function one level higher up in
+the flattened inheritance hierarchy (see below).
 
 When a contract inherits from other contracts, only a single
 contract is created on the blockchain, and the code from all the base contracts
@@ -244,6 +250,10 @@ overridden when used with multiple inheritance:
 
   Functions with the ``private`` visibility cannot be ``virtual``.
 
+.. note::
+
+  Functions without implementation have to be marked ``virtual``
+  outside of interfaces.
 
 .. _modifier-overriding:
 
