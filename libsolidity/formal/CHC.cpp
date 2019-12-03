@@ -67,6 +67,15 @@ void CHC::analyze(SourceUnit const& _source)
 	m_context.setAssertionAccumulation(false);
 	m_variableUsage.setFunctionInlining(false);
 
+	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
+	auto genesisSort = make_shared<smt::FunctionSort>(
+		vector<smt::SortPointer>(),
+		boolSort
+	);
+	m_genesisPredicate = createSymbolicBlock(genesisSort, "genesis");
+	auto genesis = (*m_genesisPredicate)({});
+	addRule(genesis, genesis.name);
+
 	_source.accept(*this);
 }
 
@@ -96,10 +105,10 @@ bool CHC::visit(ContractDefinition const& _contract)
 		else
 			m_stateSorts.push_back(smt::smtSort(*var->type()));
 
-	clearIndices();
+	clearIndices(&_contract);
 
-	string interfaceName = "interface_" + _contract.name() + "_" + to_string(_contract.id());
-	m_interfacePredicate = createSymbolicBlock(interfaceSort(), interfaceName);
+	string suffix = _contract.name() + "_" + to_string(_contract.id());
+	m_interfacePredicate = createSymbolicBlock(interfaceSort(), "interface_" + suffix);
 
 	// TODO create static instances for Bool/Int sorts in SolverInterface.
 	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
@@ -107,27 +116,11 @@ bool CHC::visit(ContractDefinition const& _contract)
 		vector<smt::SortPointer>(),
 		boolSort
 	);
-	m_errorPredicate = createSymbolicBlock(errorFunctionSort, "error");
 
-	// If the contract has a constructor it is handled as a function.
-	// Otherwise we zero-initialize all state vars.
-	if (!_contract.constructor())
-	{
-		string constructorName = "constructor_" + _contract.name() + "_" + to_string(_contract.id());
-		m_constructorPredicate = createSymbolicBlock(constructorSort(), constructorName);
-		smt::Expression constructorPred = (*m_constructorPredicate)({});
-		addRule(constructorPred, constructorName);
-
-		for (auto const& var: m_stateVariables)
-		{
-			auto const& symbVar = m_context.variable(*var);
-			symbVar->increaseIndex();
-			m_interface->declareVariable(symbVar->currentName(), symbVar->sort());
-			m_context.setZeroValue(*symbVar);
-		}
-
-		connectBlocks(constructorPred, interface());
-	}
+	m_errorPredicate = createSymbolicBlock(errorFunctionSort, "error_" + suffix);
+	m_constructorPredicate = createSymbolicBlock(constructorSort(), "implicit_constructor_" + to_string(_contract.id()));
+	auto stateExprs = currentStateVariables();
+	setCurrentBlock(*m_interfacePredicate, &stateExprs);
 
 	SMTEncoder::visit(_contract);
 	return false;
@@ -137,6 +130,23 @@ void CHC::endVisit(ContractDefinition const& _contract)
 {
 	if (!shouldVisit(_contract))
 		return;
+
+	for (auto const& var: m_stateVariables)
+	{
+		solAssert(m_context.knownVariable(*var), "");
+		m_context.setZeroValue(*var);
+	}
+	auto genesisPred = (*m_genesisPredicate)({});
+	auto implicitConstructor = (*m_constructorPredicate)(currentStateVariables());
+	connectBlocks(genesisPred, implicitConstructor);
+	m_currentBlock = implicitConstructor;
+
+	if (auto constructor = _contract.constructor())
+		constructor->accept(*this);
+	else
+		inlineConstructorHierarchy(_contract);
+
+	connectBlocks(m_currentBlock, interface());
 
 	for (unsigned i = 0; i < m_verificationTargets.size(); ++i)
 	{
@@ -154,6 +164,16 @@ bool CHC::visit(FunctionDefinition const& _function)
 	if (!shouldVisit(_function))
 		return false;
 
+	// This is the case for base constructor inlining.
+	if (m_currentFunction)
+	{
+		solAssert(m_currentFunction->isConstructor(), "");
+		solAssert(_function.isConstructor(), "");
+		solAssert(_function.scope() != m_currentContract, "");
+		SMTEncoder::visit(_function);
+		return false;
+	}
+
 	solAssert(!m_currentFunction, "Inlining internal function calls not yet implemented");
 	m_currentFunction = &_function;
 
@@ -165,19 +185,10 @@ bool CHC::visit(FunctionDefinition const& _function)
 	auto functionPred = predicate(*functionEntryBlock, currentFunctionVariables());
 	auto bodyPred = predicate(*bodyBlock);
 
-	// Store the constraints related to variable initialization.
-	smt::Expression const& initAssertions = m_context.assertions();
-	m_context.pushSolver();
-
-	connectBlocks(interface(), functionPred);
+	connectBlocks(m_currentBlock, functionPred);
 	connectBlocks(functionPred, bodyPred);
 
-	m_context.popSolver();
-
 	setCurrentBlock(*bodyBlock);
-
-	// We need to re-add the constraints that were created for initialization of variables.
-	m_context.addAssertion(initAssertions);
 
 	SMTEncoder::visit(*m_currentFunction);
 
@@ -189,10 +200,39 @@ void CHC::endVisit(FunctionDefinition const& _function)
 	if (!shouldVisit(_function))
 		return;
 
-	connectBlocks(m_currentBlock, interface());
+	// This is the case for base constructor inlining.
+	if (m_currentFunction != &_function)
+	{
+		solAssert(m_currentFunction && m_currentFunction->isConstructor(), "");
+		solAssert(_function.isConstructor(), "");
+		solAssert(_function.scope() != m_currentContract, "");
+	}
+	else
+	{
+		// We create an extra exit block for constructors that simply
+		// connects to the interface in case an explicit constructor
+		// exists in the hierarchy.
+		// It is not connected directly here, as normal functions are,
+		// because of the case where there are only implicit constructors.
+		// This is done in endVisit(ContractDefinition).
+		if (_function.isConstructor())
+		{
+			auto constructorExit = createSymbolicBlock(interfaceSort(), "constructor_exit_" + to_string(_function.id()));
+			connectBlocks(m_currentBlock, predicate(*constructorExit, currentStateVariables()));
+			clearIndices(m_currentContract, m_currentFunction);
+			auto stateExprs = currentStateVariables();
+			setCurrentBlock(*constructorExit, &stateExprs);
+		}
+		else
+		{
+			connectBlocks(m_currentBlock, interface());
+			clearIndices(m_currentContract, m_currentFunction);
+			auto stateExprs = currentStateVariables();
+			setCurrentBlock(*m_interfacePredicate, &stateExprs);
+		}
+		m_currentFunction = nullptr;
+	}
 
-	solAssert(&_function == m_currentFunction, "");
-	m_currentFunction = nullptr;
 	SMTEncoder::endVisit(_function);
 }
 
@@ -447,7 +487,6 @@ void CHC::reset()
 	m_verificationTargets.clear();
 	m_safeAssertions.clear();
 	m_unknownFunctionCallSeen = false;
-	m_blockCounter = 0;
 	m_breakDest = nullptr;
 	m_continueDest = nullptr;
 }
@@ -472,28 +511,31 @@ bool CHC::shouldVisit(FunctionDefinition const& _function) const
 {
 	if (
 		_function.isPublic() &&
-		_function.isImplemented() &&
-		!_function.isConstructor()
+		_function.isImplemented()
 	)
 		return true;
 	return false;
 }
 
-void CHC::setCurrentBlock(smt::SymbolicFunctionVariable const& _block)
+void CHC::setCurrentBlock(
+	smt::SymbolicFunctionVariable const& _block,
+	vector<smt::Expression> const* _arguments
+)
 {
 	m_context.popSolver();
-	clearIndices();
+	solAssert(m_currentContract, "");
+	clearIndices(m_currentContract, m_currentFunction);
 	m_context.pushSolver();
-	m_currentBlock = predicate(_block);
+	if (_arguments)
+		m_currentBlock = predicate(_block, *_arguments);
+	else
+		m_currentBlock = predicate(_block);
 }
 
 smt::SortPointer CHC::constructorSort()
 {
-	solAssert(m_currentContract, "");
-	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
-	if (!m_currentContract->constructor())
-		return make_shared<smt::FunctionSort>(vector<smt::SortPointer>{}, boolSort);
-	return sort(*m_currentContract->constructor());
+	// TODO this will change once we support function calls.
+	return interfaceSort();
 }
 
 smt::SortPointer CHC::interfaceSort()
@@ -558,19 +600,6 @@ unique_ptr<smt::SymbolicFunctionVariable> CHC::createSymbolicBlock(smt::SortPoin
 	return block;
 }
 
-smt::Expression CHC::constructor()
-{
-	solAssert(m_currentContract, "");
-
-	if (!m_currentContract->constructor())
-		return (*m_constructorPredicate)({});
-
-	vector<smt::Expression> paramExprs;
-	for (auto const& var: m_currentContract->constructor()->parameters())
-		paramExprs.push_back(m_context.variable(*var)->currentValue());
-	return (*m_constructorPredicate)(paramExprs);
-}
-
 smt::Expression CHC::interface()
 {
 	vector<smt::Expression> paramExprs;
@@ -615,37 +644,31 @@ void CHC::connectBlocks(smt::Expression const& _from, smt::Expression const& _to
 	addRule(edge, _from.name + "_to_" + _to.name);
 }
 
+vector<smt::Expression> CHC::currentStateVariables()
+{
+	solAssert(m_currentContract, "");
+	vector<smt::Expression> exprs;
+	for (auto const& var: m_stateVariables)
+		exprs.push_back(m_context.variable(*var)->currentValue());
+	return exprs;
+}
+
 vector<smt::Expression> CHC::currentFunctionVariables()
 {
-	solAssert(m_currentFunction, "");
 	vector<smt::Expression> paramExprs;
-	for (auto const& var: m_stateVariables)
-		paramExprs.push_back(m_context.variable(*var)->currentValue());
-	for (auto const& var: m_currentFunction->parameters() + m_currentFunction->returnParameters())
-		paramExprs.push_back(m_context.variable(*var)->currentValue());
-	return paramExprs;
+	if (m_currentFunction)
+		for (auto const& var: m_currentFunction->parameters() + m_currentFunction->returnParameters())
+			paramExprs.push_back(m_context.variable(*var)->currentValue());
+	return currentStateVariables() + paramExprs;
 }
 
 vector<smt::Expression> CHC::currentBlockVariables()
 {
-	solAssert(m_currentFunction, "");
 	vector<smt::Expression> paramExprs;
-	for (auto const& var: m_currentFunction->localVariables())
-		paramExprs.push_back(m_context.variable(*var)->currentValue());
-	return currentFunctionVariables() + paramExprs;
-}
-
-void CHC::clearIndices()
-{
-	for (auto const& var: m_stateVariables)
-		m_context.variable(*var)->resetIndex();
 	if (m_currentFunction)
-	{
-		for (auto const& var: m_currentFunction->parameters() + m_currentFunction->returnParameters())
-			m_context.variable(*var)->resetIndex();
 		for (auto const& var: m_currentFunction->localVariables())
-			m_context.variable(*var)->resetIndex();
-	}
+			paramExprs.push_back(m_context.variable(*var)->currentValue());
+	return currentFunctionVariables() + paramExprs;
 }
 
 string CHC::predicateName(ASTNode const* _node)
@@ -672,7 +695,6 @@ smt::Expression CHC::predicate(
 {
 	return _block(_arguments);
 }
-
 
 void CHC::addRule(smt::Expression const& _rule, string const& _ruleName)
 {

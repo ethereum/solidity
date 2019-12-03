@@ -476,7 +476,7 @@ jobs:
 
   b_ems:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.38.22-64bit
+      - image: trzeci/emscripten:sdk-tag-1.39.3-64bit
     environment:
       TERM: xterm
     steps:

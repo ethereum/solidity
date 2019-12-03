@@ -401,6 +401,7 @@ bool isValidDecimal(std::string const& _string);
 
 /// @returns a quoted string if all characters are printable ASCII chars,
 /// or its hex representation otherwise.
+/// _value cannot be longer than 32 bytes.
 std::string formatAsStringOrNumber(std::string const& _value);
 
 template<typename Container, typename Compare>

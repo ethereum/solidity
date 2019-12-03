@@ -36,7 +36,6 @@ function zeppelin_test
     truffle_setup https://github.com/erak/openzeppelin-contracts.git master_060
     run_install install_fn
 
-
     truffle_run_test compile_fn test_fn
 }
 

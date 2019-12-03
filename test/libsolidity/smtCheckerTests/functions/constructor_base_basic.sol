@@ -13,5 +13,3 @@ contract B is A {
 	}
 }
 // ----
-// Warning: (56-90): Assertion checker does not yet support constructors.
-// Warning: (113-151): Assertion checker does not yet support constructors.

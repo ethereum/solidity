@@ -46,12 +46,18 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Add support to constructors including constructor inheritance.
  * Yul: When compiling via Yul, string literals from the Solidity code are kept as string literals if every character is safely printable.
  * Yul Optimizer: Perform loop-invariant code motion.
 
 
+Build System:
+ * Update to emscripten version 1.39.3.
+
+
 Bugfixes:
  * SMTChecker: Fix internal error when using ``abi.decode``.
+ * SMTChecker: Fix internal error when using arrays or mappings of functions.
 
 
 

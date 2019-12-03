@@ -63,7 +63,7 @@ SortPointer smtSort(solidity::Type const& _type)
 		{
 			auto mapType = dynamic_cast<solidity::MappingType const*>(&_type);
 			solAssert(mapType, "");
-			return make_shared<ArraySort>(smtSort(*mapType->keyType()), smtSort(*mapType->valueType()));
+			return make_shared<ArraySort>(smtSortAbstractFunction(*mapType->keyType()), smtSortAbstractFunction(*mapType->valueType()));
 		}
 		else if (isStringLiteral(_type.category()))
 		{
@@ -77,7 +77,7 @@ SortPointer smtSort(solidity::Type const& _type)
 			solAssert(isArray(_type.category()), "");
 			auto arrayType = dynamic_cast<solidity::ArrayType const*>(&_type);
 			solAssert(arrayType, "");
-			return make_shared<ArraySort>(make_shared<Sort>(Kind::Int), smtSort(*arrayType->baseType()));
+			return make_shared<ArraySort>(make_shared<Sort>(Kind::Int), smtSortAbstractFunction(*arrayType->baseType()));
 		}
 	}
 	default:
@@ -92,6 +92,13 @@ vector<SortPointer> smtSort(vector<solidity::TypePointer> const& _types)
 	for (auto const& type: _types)
 		sorts.push_back(smtSort(*type));
 	return sorts;
+}
+
+SortPointer smtSortAbstractFunction(solidity::Type const& _type)
+{
+	if (isFunction(_type.category()))
+		return make_shared<Sort>(Kind::Int);
+	return smtSort(_type);
 }
 
 Kind smtKind(solidity::Type::Category _category)

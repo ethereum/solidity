@@ -17,7 +17,7 @@ contract B is A {
 	uint y;
 
 	function f() public view override {
-		assert(x == 0);
+		assert(x == 1);
 	}
 }
 // ----
