@@ -15,7 +15,7 @@ provided (no implementation body ``{ }`` was given).::
     pragma solidity >=0.4.0 <0.7.0;
 
     abstract contract Feline {
-        function utterance() public returns (bytes32);
+        function utterance() public virtual returns (bytes32);
     }
 
 Such abstract contracts can not be instantiated directly. This is also true, if an abstract contract itself does implement

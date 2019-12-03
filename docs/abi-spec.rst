@@ -529,11 +529,11 @@ As an example, the code
     pragma experimental ABIEncoderV2;
 
 
-    abstract contract Test {
+    contract Test {
         struct S { uint a; uint[] b; T[] c; }
         struct T { uint x; uint y; }
-        function f(S memory s, T memory t, uint a) public;
-        function g() public returns (S memory s, T memory t, uint a);
+        function f(S memory s, T memory t, uint a) public {}
+        function g() public returns (S memory s, T memory t, uint a) {}
     }
 
 would result in the JSON:
