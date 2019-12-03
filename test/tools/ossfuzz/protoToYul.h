@@ -45,6 +45,7 @@ public:
 		m_inForInitScope = false;
 		m_inForCond = false;
 		m_numNestedForLoops = 0;
+		m_numForLoops = 0;
 		m_counter = 0;
 		m_inputSize = 0;
 		m_inFunctionDef = false;
@@ -338,12 +339,16 @@ private:
 	static unsigned constexpr s_modOutputParams = 5;
 	/// Hard-coded identifier for a Yul object's data block
 	static auto constexpr s_dataIdentifier = "datablock";
+	/// Maximum number of for loops that a test case may contain
+	static auto constexpr s_maxForLoops = 2;
 	/// Predicate to keep track of of the body of a generic for stmt.
 	bool m_inGenericForBodyScope;
 	/// Predicate to keep track of scope of the body of a bounded for stmt.
 	bool m_inBoundedForBodyScope;
 	// Index used for naming loop variable of bounded for loops
 	unsigned m_numNestedForLoops;
+	/// Counter for number of for loops
+	unsigned m_numForLoops;
 	/// Predicate to keep track of for loop init scope. If true, variable
 	/// or function declarations can not be created.
 	bool m_inForInitScope;

@@ -979,6 +979,8 @@ void ProtoConverter::visit(StoreFunc const& _x)
 
 void ProtoConverter::visit(ForStmt const& _x)
 {
+	if (++m_numForLoops > s_maxForLoops)
+		return;
 	bool wasInGenericForBodyScope = m_inGenericForBodyScope;
 	bool wasInForInit = m_inForInitScope;
 	bool wasInBoundedForBodyScope = m_inBoundedForBodyScope;
@@ -1020,6 +1022,9 @@ void ProtoConverter::visit(ForStmt const& _x)
 
 void ProtoConverter::visit(BoundedForStmt const& _x)
 {
+	if (++m_numForLoops > s_maxForLoops)
+		return;
+
 	// Boilerplate for loop that limits the number of iterations to a maximum of 4.
 	std::string loopVarName("i_" + std::to_string(m_numNestedForLoops++));
 	m_output << "for { let " << loopVarName << " := 0 } "
