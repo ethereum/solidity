@@ -25,7 +25,6 @@
 #include <test/EVMHost.h>
 
 #include <test/evmc/evmc.hpp>
-#include <test/evmc/loader.h>
 
 #include <libdevcore/CommonIO.h>
 
@@ -56,7 +55,7 @@ ExecutionFramework::ExecutionFramework(langutil::EVMVersion _evmVersion):
 	m_evmHost->reset();
 
 	for (size_t i = 0; i < 10; i++)
-		m_evmHost->m_state.accounts[EVMHost::convertToEVMC(account(i))].balance =
+		m_evmHost->accounts[EVMHost::convertToEVMC(account(i))].balance =
 			EVMHost::convertToEVMC(u256(1) << 100);
 
 }
@@ -89,12 +88,12 @@ std::pair<bool, string> ExecutionFramework::compareAndCreateMessage(
 
 u256 ExecutionFramework::gasLimit() const
 {
-	return {m_evmHost->get_tx_context().block_gas_limit};
+	return {m_evmHost->tx_context.block_gas_limit};
 }
 
 u256 ExecutionFramework::gasPrice() const
 {
-	return {EVMHost::convertFromEVMC(m_evmHost->get_tx_context().tx_gas_price)};
+	return {EVMHost::convertFromEVMC(m_evmHost->tx_context.tx_gas_price)};
 }
 
 u256 ExecutionFramework::blockHash(u256 const& _number) const
@@ -104,7 +103,7 @@ u256 ExecutionFramework::blockHash(u256 const& _number) const
 
 u256 ExecutionFramework::blockNumber() const
 {
-	return m_evmHost->m_state.blockNumber;
+	return m_evmHost->tx_context.block_number;
 }
 
 void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 const& _value)
@@ -178,7 +177,7 @@ void ExecutionFramework::sendEther(Address const& _addr, u256 const& _amount)
 
 size_t ExecutionFramework::currentTimestamp()
 {
-	return m_evmHost->get_tx_context().block_timestamp;
+	return m_evmHost->tx_context.block_timestamp;
 }
 
 size_t ExecutionFramework::blockTimestamp(u256 _block)
@@ -201,27 +200,30 @@ bool ExecutionFramework::addressHasCode(Address const& _addr)
 
 size_t ExecutionFramework::numLogs() const
 {
-	return m_evmHost->m_state.logs.size();
+	return m_evmHost->recorded_logs.size();
 }
 
 size_t ExecutionFramework::numLogTopics(size_t _logIdx) const
 {
-	return m_evmHost->m_state.logs.at(_logIdx).topics.size();
+	return m_evmHost->recorded_logs.at(_logIdx).topics.size();
 }
 
 h256 ExecutionFramework::logTopic(size_t _logIdx, size_t _topicIdx) const
 {
-	return m_evmHost->m_state.logs.at(_logIdx).topics.at(_topicIdx);
+	return EVMHost::convertFromEVMC(m_evmHost->recorded_logs.at(_logIdx).topics.at(_topicIdx));
 }
 
 Address ExecutionFramework::logAddress(size_t _logIdx) const
 {
-	return m_evmHost->m_state.logs.at(_logIdx).address;
+	return EVMHost::convertFromEVMC(m_evmHost->recorded_logs.at(_logIdx).creator);
 }
 
-bytes const& ExecutionFramework::logData(size_t _logIdx) const
+bytes ExecutionFramework::logData(size_t _logIdx) const
 {
-	return m_evmHost->m_state.logs.at(_logIdx).data;
+	const auto& data = m_evmHost->recorded_logs.at(_logIdx).data;
+	// TODO: Return a copy of log data, because this is expected from REQUIRE_LOG_DATA(),
+	//       but reference type like string_view would be preferable.
+	return {data.begin(), data.end()};
 }
 
 u256 ExecutionFramework::balanceAt(Address const& _addr)
@@ -231,10 +233,11 @@ u256 ExecutionFramework::balanceAt(Address const& _addr)
 
 bool ExecutionFramework::storageEmpty(Address const& _addr)
 {
-	if (EVMHost::Account const* acc = m_evmHost->account(EVMHost::convertToEVMC(_addr)))
+	const auto it = m_evmHost->accounts.find(EVMHost::convertToEVMC(_addr));
+	if (it != m_evmHost->accounts.end())
 	{
-		for (auto const& entry: acc->storage)
-			if (!(entry.second == evmc::bytes32{}))
+		for (auto const& entry: it->second.storage)
+			if (!(entry.second.value == evmc::bytes32{}))
 				return false;
 	}
 	return true;

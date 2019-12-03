@@ -98,33 +98,25 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		evmc::address address{};
 		address.bytes[19] = precompiledAddress;
 		// 1wei
-		m_state.accounts[address].balance.bytes[31] = 1;
+		accounts[address].balance.bytes[31] = 1;
 	}
-}
 
-evmc_storage_status EVMHost::set_storage(const evmc::address& _addr, const evmc::bytes32& _key, const evmc::bytes32& _value) noexcept
-{
-	evmc::bytes32 previousValue = m_state.accounts[_addr].storage[_key];
-	m_state.accounts[_addr].storage[_key] = _value;
-
-	// TODO EVMC_STORAGE_MODIFIED_AGAIN should be also used
-	if (previousValue == _value)
-		return EVMC_STORAGE_UNCHANGED;
-	else if (previousValue == evmc::bytes32{})
-		return EVMC_STORAGE_ADDED;
-	else if (_value == evmc::bytes32{})
-		return EVMC_STORAGE_DELETED;
-	else
-		return EVMC_STORAGE_MODIFIED;
-
+	// TODO: support short literals in EVMC and use them here
+	tx_context.block_difficulty = convertToEVMC(u256("200000000"));
+	tx_context.block_gas_limit = 20000000;
+	tx_context.block_coinbase = 0x7878787878787878787878787878787878787878_address;
+	tx_context.tx_gas_price = convertToEVMC(u256("3000000000"));
+	tx_context.tx_origin = 0x9292929292929292929292929292929292929292_address;
+	// Mainnet according to EIP-155
+	tx_context.chain_id = convertToEVMC(u256(1));
 }
 
 void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
 {
 	// TODO actual selfdestruct is even more complicated.
-	evmc::uint256be balance = m_state.accounts[_addr].balance;
-	m_state.accounts.erase(_addr);
-	m_state.accounts[_beneficiary].balance = balance;
+	evmc::uint256be balance = accounts[_addr].balance;
+	accounts.erase(_addr);
+	accounts[_beneficiary].balance = balance;
 }
 
 evmc::result EVMHost::call(evmc_message const& _message) noexcept
@@ -146,12 +138,12 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	else if (_message.destination == 0x0000000000000000000000000000000000000008_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileALTBN128PairingProduct(_message);
 
-	State stateBackup = m_state;
+	auto const stateBackup = accounts;
 
 	u256 value{convertFromEVMC(_message.value)};
-	Account& sender = m_state.accounts[_message.sender];
+	auto& sender = accounts[_message.sender];
 
-	bytes code;
+	evmc::bytes code;
 
 	evmc_message message = _message;
 	if (message.depth == 0)
@@ -163,7 +155,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		{
 			evmc::result result({});
 			result.status_code = EVMC_OUT_OF_GAS;
-			m_state = stateBackup;
+			accounts = stateBackup;
 			return result;
 		}
 	}
@@ -177,23 +169,23 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 			asBytes(to_string(sender.nonce++))
 		));
 		message.destination = convertToEVMC(createAddress);
-		code = bytes(message.input_data, message.input_data + message.input_size);
+		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
 	}
 	else if (message.kind == EVMC_DELEGATECALL)
 	{
-		code = m_state.accounts[message.destination].code;
+		code = accounts[message.destination].code;
 		message.destination = m_currentAddress;
 	}
 	else if (message.kind == EVMC_CALLCODE)
 	{
-		code = m_state.accounts[message.destination].code;
+		code = accounts[message.destination].code;
 		message.destination = m_currentAddress;
 	}
 	else
-		code = m_state.accounts[message.destination].code;
+		code = accounts[message.destination].code;
 	//TODO CREATE2
 
-	Account& destination = m_state.accounts[message.destination];
+	auto& destination = accounts[message.destination];
 
 	if (value != 0 && message.kind != EVMC_DELEGATECALL && message.kind != EVMC_CALLCODE)
 	{
@@ -218,54 +210,21 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		else
 		{
 			result.create_address = message.destination;
-			destination.code = bytes(result.output_data, result.output_data + result.output_size);
-			destination.codeHash = convertToEVMC(keccak256(destination.code));
+			destination.code = evmc::bytes(result.output_data, result.output_data + result.output_size);
+			destination.codehash = convertToEVMC(keccak256({result.output_data, result.output_size}));
 		}
 	}
 
 	if (result.status_code != EVMC_SUCCESS)
-		m_state = stateBackup;
+		accounts = stateBackup;
 
 	return result;
-}
-
-evmc_tx_context EVMHost::get_tx_context() const noexcept
-{
-	evmc_tx_context ctx = {};
-	ctx.block_timestamp = m_state.timestamp;
-	ctx.block_number = m_state.blockNumber;
-	ctx.block_coinbase = m_coinbase;
-	// TODO: support short literals in EVMC and use them here
-	ctx.block_difficulty = convertToEVMC(u256("200000000"));
-	ctx.block_gas_limit = 20000000;
-	ctx.tx_gas_price = convertToEVMC(u256("3000000000"));
-	ctx.tx_origin = 0x9292929292929292929292929292929292929292_address;
-	// Mainnet according to EIP-155
-	ctx.chain_id = convertToEVMC(u256(1));
-	return ctx;
 }
 
 evmc::bytes32 EVMHost::get_block_hash(int64_t _number) const noexcept
 {
 	return convertToEVMC(u256("0x3737373737373737373737373737373737373737373737373737373737373737") + _number);
 }
-
-void EVMHost::emit_log(
-	evmc::address const& _addr,
-	uint8_t const* _data,
-	size_t _dataSize,
-	evmc::bytes32 const _topics[],
-	size_t _topicsCount
-) noexcept
-{
-	LogEntry entry;
-	entry.address = convertFromEVMC(_addr);
-	for (size_t i = 0; i < _topicsCount; ++i)
-		entry.topics.emplace_back(convertFromEVMC(_topics[i]));
-	entry.data = bytes(_data, _data + _dataSize);
-	m_state.logs.emplace_back(std::move(entry));
-}
-
 
 Address EVMHost::convertFromEVMC(evmc::address const& _addr)
 {
