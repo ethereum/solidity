@@ -112,22 +112,30 @@ inline std::set<T> operator+(std::set<T>&& _a, U&& _b)
 	return ret;
 }
 
-/// Remove one set from another one.
-template <class... T>
-inline std::set<T...>& operator-=(std::set<T...>& _a, std::set<T...> const& _b)
+/// Remove the elements of a container from a set.
+template <class C, class... T>
+inline std::set<T...>& operator-=(std::set<T...>& _a, C const& _b)
 {
 	for (auto const& x: _b)
 		_a.erase(x);
 	return _a;
 }
 
-template <class... T>
-inline std::set<T...> operator-(std::set<T...> const& _a, std::set<T...> const& _b)
+template <class C, class... T>
+inline std::set<T...> operator-(std::set<T...> const& _a, C const& _b)
 {
 	auto result = _a;
 	result -= _b;
-
 	return result;
+}
+
+/// Remove the elements of a container from a multiset.
+template <class C, class... T>
+inline std::multiset<T...>& operator-=(std::multiset<T...>& _a, C const& _b)
+{
+	for (auto const& x: _b)
+		_a.erase(x);
+	return _a;
 }
 
 namespace dev

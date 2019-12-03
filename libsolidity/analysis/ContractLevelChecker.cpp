@@ -238,8 +238,8 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 
 void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 {
-	FunctionMultiSet const& funcSet = inheritedFunctions(&_contract);
-	ModifierMultiSet const& modSet = inheritedModifiers(&_contract);
+	FunctionMultiSet const& funcSet = inheritedFunctions(_contract);
+	ModifierMultiSet const& modSet = inheritedModifiers(_contract);
 
 	checkModifierOverrides(funcSet, modSet, _contract.functionModifiers());
 
@@ -666,56 +666,132 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 
 void ContractLevelChecker::checkAmbiguousOverrides(ContractDefinition const& _contract) const
 {
-	vector<FunctionDefinition const*> contractFuncs = _contract.definedFunctions();
+	// Fetch inherited functions and sort them by signature.
+	// We get at least one function per signature and direct base contract, which is
+	// enough because we re-construct the inheritance graph later.
+	FunctionMultiSet nonOverriddenFunctions = inheritedFunctions(_contract);
+	// Remove all functions that match the signature of a function in the current contract.
+	nonOverriddenFunctions -= _contract.definedFunctions();
 
-	auto const resolvedBases = resolveDirectBaseContracts(_contract);
-
-	FunctionMultiSet inheritedFuncs = inheritedFunctions(&_contract);;
-
-	// Check the sets of the most-inherited functions
-	for (auto it = inheritedFuncs.cbegin(); it != inheritedFuncs.cend(); it = inheritedFuncs.upper_bound(*it))
+	// Walk through the set of functions signature by signature.
+	for (auto it = nonOverriddenFunctions.cbegin(); it != nonOverriddenFunctions.cend();)
 	{
-		auto [begin,end] = inheritedFuncs.equal_range(*it);
+		static constexpr auto compareById = [](auto const* a, auto const* b) { return a->id() < b->id(); };
+		std::set<FunctionDefinition const*, decltype(compareById)> baseFunctions(compareById);
+		for (auto nextSignature = nonOverriddenFunctions.upper_bound(*it); it != nextSignature; ++it)
+			baseFunctions.insert(*it);
 
-		// Only one function
-		if (next(begin) == end)
+		if (baseFunctions.size() <= 1)
 			continue;
 
-		// Not an overridable function
-		if ((*it)->isConstructor())
+		// Construct the override graph for this signature.
+		// Reserve node 0 for the current contract and node
+		// 1 for an artificial top node to which all override paths
+		// connect at the end.
+		struct OverrideGraph
 		{
-			for (begin++; begin != end; begin++)
-				solAssert((*begin)->isConstructor(), "All functions in range expected to be constructors!");
-			continue;
-		}
-
-		// Function has been explicitly overridden
-		if (contains_if(
-			contractFuncs,
-			[&] (FunctionDefinition const* _f) {
-				return hasEqualNameAndParameters(*_f, **it);
+			OverrideGraph(decltype(baseFunctions) const& _baseFunctions)
+			{
+				for (auto const* baseFunction: _baseFunctions)
+					addEdge(0, visit(baseFunction));
 			}
-		))
-			continue;
+			std::map<FunctionDefinition const*, int> nodes;
+			std::map<int, FunctionDefinition const*> nodeInv;
+			std::map<int, std::set<int>> edges;
+			int numNodes = 2;
+			void addEdge(int _a, int _b)
+			{
+				edges[_a].insert(_b);
+				edges[_b].insert(_a);
+			}
+		private:
+			/// Completes the graph starting from @a _function and
+			/// @returns the node ID.
+			int visit(FunctionDefinition const* _function)
+			{
+				auto it = nodes.find(_function);
+				if (it != nodes.end())
+					return it->second;
+				int currentNode = numNodes++;
+				nodes[_function] = currentNode;
+				nodeInv[currentNode] = _function;
+				if (_function->overrides())
+					for (auto const* baseFunction: _function->annotation().baseFunctions)
+						addEdge(currentNode, visit(baseFunction));
+				else
+					addEdge(currentNode, 1);
 
-		set<FunctionDefinition const*> ambiguousFunctions;
-		SecondarySourceLocation ssl;
+				return currentNode;
+			}
+		} overrideGraph(baseFunctions);
 
-		for (;begin != end; begin++)
+		// Detect cut vertices following https://en.wikipedia.org/wiki/Biconnected_component#Pseudocode
+		// Can ignore the root node, since it is never a cut vertex in our case.
+		struct CutVertexFinder
 		{
-			ambiguousFunctions.insert(*begin);
-			ssl.append("Definition here: ", (*begin)->location());
+			CutVertexFinder(OverrideGraph const& _graph): m_graph(_graph)
+			{
+				run();
+			}
+			std::set<FunctionDefinition const*> const& cutVertices() const { return m_cutVertices; }
+
+		private:
+			OverrideGraph const& m_graph;
+
+			std::vector<bool> m_visited = std::vector<bool>(m_graph.numNodes, false);
+			std::vector<int> m_depths = std::vector<int>(m_graph.numNodes, -1);
+			std::vector<int> m_low = std::vector<int>(m_graph.numNodes, -1);
+			std::vector<int> m_parent = std::vector<int>(m_graph.numNodes, -1);
+			std::set<FunctionDefinition const*> m_cutVertices{};
+
+			void run(int _u = 0, int _depth = 0)
+			{
+				m_visited.at(_u) = true;
+				m_depths.at(_u) = m_low.at(_u) = _depth;
+				for (int v: m_graph.edges.at(_u))
+					if (!m_visited.at(v))
+					{
+						m_parent[v] = _u;
+						run(v, _depth + 1);
+						if (m_low[v] >= m_depths[_u] && m_parent[_u] != -1)
+							m_cutVertices.insert(m_graph.nodeInv.at(_u));
+						m_low[_u] = min(m_low[_u], m_low[v]);
+					}
+					else if (v != m_parent[_u])
+						m_low[_u] = min(m_low[_u], m_depths[v]);
+			}
+		} cutVertexFinder{overrideGraph};
+
+		// Remove all base functions overridden by cut vertices (they don't need to be overridden).
+		for (auto const* function: cutVertexFinder.cutVertices())
+		{
+			std::set<FunctionDefinition const*> toTraverse = function->annotation().baseFunctions;
+			while (!toTraverse.empty())
+			{
+				auto const* base = *toTraverse.begin();
+				toTraverse.erase(toTraverse.begin());
+				baseFunctions.erase(base);
+				for (auto const* f: base->annotation().baseFunctions)
+					toTraverse.insert(f);
+			}
+			// Remove unimplemented base functions at the cut vertices themselves as well.
+			if (!function->isImplemented())
+				baseFunctions.erase(function);
 		}
 
-		// Make sure the functions are not from the same base contract
-		if (ambiguousFunctions.size() == 1)
+		// If more than one function is left, they have to be overridden.
+		if (baseFunctions.size() <= 1)
 			continue;
+
+		SecondarySourceLocation ssl;
+		for (auto const* baseFunction: baseFunctions)
+			ssl.append("Definition here: ", baseFunction->location());
 
 		m_errorReporter.typeError(
 			_contract.location(),
 			ssl,
 			"Derived contract must override function \"" +
-			(*it)->name() +
+			(*baseFunctions.begin())->name() +
 			"\". Function with the same name and parameter types defined in two or more base classes."
 		);
 	}
@@ -845,50 +921,52 @@ void ContractLevelChecker::checkOverrideList(FunctionMultiSet const& _funcSet, F
 		);
 }
 
-ContractLevelChecker::FunctionMultiSet const& ContractLevelChecker::inheritedFunctions(ContractDefinition const* _contract) const
+ContractLevelChecker::FunctionMultiSet const& ContractLevelChecker::inheritedFunctions(ContractDefinition const& _contract) const
 {
-	if (!m_inheritedFunctions.count(_contract))
+	if (!m_inheritedFunctions.count(&_contract))
 	{
 		FunctionMultiSet set;
 
-		for (auto const* base: resolveDirectBaseContracts(*_contract))
+		for (auto const* base: resolveDirectBaseContracts(_contract))
 		{
-			std::set<FunctionDefinition const*, LessFunction> tmpSet =
-				convertContainer<decltype(tmpSet)>(base->definedFunctions());
+			std::set<FunctionDefinition const*, LessFunction> functionsInBase;
+			for (FunctionDefinition const* fun: base->definedFunctions())
+				if (!fun->isConstructor())
+					functionsInBase.emplace(fun);
 
-			for (auto const& func: inheritedFunctions(base))
-				tmpSet.insert(func);
+			for (auto const& func: inheritedFunctions(*base))
+				functionsInBase.insert(func);
 
-			set += tmpSet;
+			set += functionsInBase;
 		}
 
-		m_inheritedFunctions[_contract] = set;
+		m_inheritedFunctions[&_contract] = set;
 	}
 
-	return m_inheritedFunctions[_contract];
+	return m_inheritedFunctions[&_contract];
 }
 
-ContractLevelChecker::ModifierMultiSet const& ContractLevelChecker::inheritedModifiers(ContractDefinition const* _contract) const
+ContractLevelChecker::ModifierMultiSet const& ContractLevelChecker::inheritedModifiers(ContractDefinition const& _contract) const
 {
-	auto const& result = m_contractBaseModifiers.find(_contract);
+	auto const& result = m_contractBaseModifiers.find(&_contract);
 
 	if (result != m_contractBaseModifiers.cend())
 		return result->second;
 
 	ModifierMultiSet set;
 
-	for (auto const* base: resolveDirectBaseContracts(*_contract))
+	for (auto const* base: resolveDirectBaseContracts(_contract))
 	{
 		std::set<ModifierDefinition const*, LessFunction> tmpSet =
 			convertContainer<decltype(tmpSet)>(base->functionModifiers());
 
-		for (auto const& mod: inheritedModifiers(base))
+		for (auto const& mod: inheritedModifiers(*base))
 			tmpSet.insert(mod);
 
 		set += tmpSet;
 	}
 
-	return m_contractBaseModifiers[_contract] = set;
+	return m_contractBaseModifiers[&_contract] = set;
 }
 
 void ContractLevelChecker::checkPayableFallbackWithoutReceive(ContractDefinition const& _contract)
