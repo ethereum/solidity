@@ -17,7 +17,7 @@ contract B is A {
 	uint y;
 
 	receive () external payable override {
-		assert(x == 0);
+		assert(x == 1);
 	}
 }
 // ----

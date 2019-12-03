@@ -6,13 +6,13 @@ contract F {
 	}
 }
 
-contract E is F {}
-contract D is E {
+abstract contract E is F {}
+abstract contract D is E {
 	constructor() public {
 		a = 3;
 	}
 }
-contract C is D {}
+abstract contract C is D {}
 contract B is C {
 	constructor() F(1) public {
 		assert(a == 3);
@@ -23,5 +23,5 @@ contract B is C {
 contract A is B {
 }
 // ----
-// Warning: (260-274): Assertion violation happens here
-// Warning: (260-274): Assertion violation happens here
+// Warning: (287-301): Assertion violation happens here
+// Warning: (287-301): Assertion violation happens here
