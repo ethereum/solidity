@@ -267,7 +267,7 @@ protected:
 	size_t numLogTopics(size_t _logIdx) const;
 	h256 logTopic(size_t _logIdx, size_t _topicIdx) const;
 	Address logAddress(size_t _logIdx) const;
-	bytes const& logData(size_t _logIdx) const;
+	bytes logData(size_t _logIdx) const;
 
 	langutil::EVMVersion m_evmVersion;
 	solidity::RevertStrings m_revertStrings = solidity::RevertStrings::Default;
