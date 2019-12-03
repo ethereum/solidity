@@ -3,4 +3,4 @@
 }
 // ----
 // : movable, sideEffectFree, sideEffectFreeIfNoMSize
-// a: 
+// a:

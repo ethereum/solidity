@@ -4,5 +4,5 @@
 }
 // ----
 // : movable, sideEffectFree, sideEffectFreeIfNoMSize
-// a: 
-// b: 
+// a:
+// b:
