@@ -35,17 +35,23 @@ using namespace dev::solidity;
 CHC::CHC(
 	smt::EncodingContext& _context,
 	ErrorReporter& _errorReporter,
-	map<h256, string> const& _smtlib2Responses
+	map<h256, string> const& _smtlib2Responses,
+	smt::SMTSolverChoice _enabledSolvers
 ):
 	SMTEncoder(_context),
 #ifdef HAVE_Z3
-	m_interface(make_shared<smt::Z3CHCInterface>()),
+	m_interface(
+		_enabledSolvers.z3 ?
+		dynamic_pointer_cast<smt::CHCSolverInterface>(make_shared<smt::Z3CHCInterface>()) :
+		dynamic_pointer_cast<smt::CHCSolverInterface>(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses))
+	),
 #else
 	m_interface(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses)),
 #endif
 	m_outerErrorReporter(_errorReporter)
 {
 	(void)_smtlib2Responses;
+	(void)_enabledSolvers;
 }
 
 void CHC::analyze(SourceUnit const& _source)

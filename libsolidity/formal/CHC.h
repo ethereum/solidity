@@ -47,7 +47,8 @@ public:
 	CHC(
 		smt::EncodingContext& _context,
 		langutil::ErrorReporter& _errorReporter,
-		std::map<h256, std::string> const& _smtlib2Responses
+		std::map<h256, std::string> const& _smtlib2Responses,
+		smt::SMTSolverChoice _enabledSolvers
 	);
 
 	void analyze(SourceUnit const& _sources);
