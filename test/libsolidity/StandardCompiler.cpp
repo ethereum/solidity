@@ -1199,7 +1199,9 @@ BOOST_AUTO_TEST_CASE(use_stack_optimization)
 	result = compiler.compile(parsedInput);
 	BOOST_REQUIRE(result["errors"].isArray());
 	BOOST_CHECK(result["errors"][0]["severity"] == "error");
-	BOOST_CHECK(result["errors"][0]["type"] == "InternalCompilerError");
+	BOOST_REQUIRE(result["errors"][0]["message"].isString());
+	BOOST_CHECK(result["errors"][0]["message"].asString().find("Stack too deep when compiling inline assembly") != std::string::npos);
+	BOOST_CHECK(result["errors"][0]["type"] == "YulException");
 }
 
 BOOST_AUTO_TEST_CASE(standard_output_selection_wildcard)

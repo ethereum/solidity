@@ -44,9 +44,9 @@ void VariableReferenceCounter::operator()(FunctionDefinition const& _function)
 {
 	Scope* originalScope = m_scope;
 
-	solAssert(m_info.virtualBlocks.at(&_function), "");
+	yulAssert(m_info.virtualBlocks.at(&_function), "");
 	m_scope = m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()).get();
-	solAssert(m_scope, "Variable scope does not exist.");
+	yulAssert(m_scope, "Variable scope does not exist.");
 
 	for (auto const& v: _function.returnVariables)
 		increaseRefIfFound(v.name);
@@ -131,7 +131,7 @@ void CodeTransform::decreaseReference(YulString, Scope::Variable const& _var)
 		return;
 
 	unsigned& ref = m_context->variableReferences.at(&_var);
-	solAssert(ref >= 1, "");
+	yulAssert(ref >= 1, "");
 	--ref;
 	if (ref == 0)
 		m_variablesScheduledForDeletion.insert(&_var);
@@ -157,7 +157,7 @@ void CodeTransform::freeUnusedVariables()
 
 	while (m_unusedStackSlots.count(m_assembly.stackHeight() - 1))
 	{
-		solAssert(m_unusedStackSlots.erase(m_assembly.stackHeight() - 1), "");
+		yulAssert(m_unusedStackSlots.erase(m_assembly.stackHeight() - 1), "");
 		m_assembly.appendInstruction(dev::eth::Instruction::POP);
 		--m_stackAdjustment;
 	}
@@ -165,8 +165,8 @@ void CodeTransform::freeUnusedVariables()
 
 void CodeTransform::deleteVariable(Scope::Variable const& _var)
 {
-	solAssert(m_allowStackOpt, "");
-	solAssert(m_context->variableStackHeights.count(&_var) > 0, "");
+	yulAssert(m_allowStackOpt, "");
+	yulAssert(m_context->variableStackHeights.count(&_var) > 0, "");
 	m_unusedStackSlots.insert(m_context->variableStackHeights[&_var]);
 	m_context->variableStackHeights.erase(&_var);
 	m_context->variableReferences.erase(&_var);
@@ -175,7 +175,7 @@ void CodeTransform::deleteVariable(Scope::Variable const& _var)
 
 void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 {
-	solAssert(m_scope, "");
+	yulAssert(m_scope, "");
 
 	int const numVariables = _varDecl.variables.size();
 	int height = m_assembly.stackHeight();
@@ -254,7 +254,7 @@ void CodeTransform::operator()(Assignment const& _assignment)
 
 void CodeTransform::operator()(StackAssignment const& _assignment)
 {
-	solAssert(!m_allowStackOpt, "");
+	yulAssert(!m_allowStackOpt, "");
 	m_assembly.setSourceLocation(_assignment.location);
 	generateAssignment(_assignment.variableName);
 	checkStackHeight(&_assignment);
@@ -269,10 +269,10 @@ void CodeTransform::operator()(ExpressionStatement const& _statement)
 
 void CodeTransform::operator()(Label const& _label)
 {
-	solAssert(!m_allowStackOpt, "");
+	yulAssert(!m_allowStackOpt, "");
 	m_assembly.setSourceLocation(_label.location);
-	solAssert(m_scope, "");
-	solAssert(m_scope->identifiers.count(_label.name), "");
+	yulAssert(m_scope, "");
+	yulAssert(m_scope->identifiers.count(_label.name), "");
 	Scope::Label& label = std::get<Scope::Label>(m_scope->identifiers.at(_label.name));
 	m_assembly.appendLabel(labelID(label));
 	checkStackHeight(&_label);
@@ -280,7 +280,7 @@ void CodeTransform::operator()(Label const& _label)
 
 void CodeTransform::operator()(FunctionCall const& _call)
 {
-	solAssert(m_scope, "");
+	yulAssert(m_scope, "");
 
 	if (BuiltinFunctionForEVM const* builtin = m_dialect.builtin(_call.functionName.name))
 	{
@@ -302,13 +302,13 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		}
 
 		Scope::Function* function = nullptr;
-		solAssert(m_scope->lookup(_call.functionName.name, GenericVisitor{
-			[=](Scope::Variable&) { solAssert(false, "Expected function name."); },
-			[=](Scope::Label&) { solAssert(false, "Expected function name."); },
+		yulAssert(m_scope->lookup(_call.functionName.name, GenericVisitor{
+			[=](Scope::Variable&) { yulAssert(false, "Expected function name."); },
+			[=](Scope::Label&) { yulAssert(false, "Expected function name."); },
 			[&](Scope::Function& _function) { function = &_function; }
 		}), "Function name not found.");
-		solAssert(function, "");
-		solAssert(function->arguments.size() == _call.arguments.size(), "");
+		yulAssert(function, "");
+		yulAssert(function->arguments.size() == _call.arguments.size(), "");
 		for (auto const& arg: _call.arguments | boost::adaptors::reversed)
 			visitExpression(arg);
 		m_assembly.setSourceLocation(_call.location);
@@ -334,12 +334,12 @@ void CodeTransform::operator()(FunctionalInstruction const& _instruction)
 		bool const isJumpI = _instruction.instruction == dev::eth::Instruction::JUMPI;
 		if (isJumpI)
 		{
-			solAssert(_instruction.arguments.size() == 2, "");
+			yulAssert(_instruction.arguments.size() == 2, "");
 			visitExpression(_instruction.arguments.at(1));
 		}
 		else
 		{
-			solAssert(_instruction.arguments.size() == 1, "");
+			yulAssert(_instruction.arguments.size() == 1, "");
 		}
 		m_assembly.setSourceLocation(_instruction.location);
 		auto label = labelFromIdentifier(std::get<Identifier>(_instruction.arguments.at(0)));
@@ -362,7 +362,7 @@ void CodeTransform::operator()(Identifier const& _identifier)
 {
 	m_assembly.setSourceLocation(_identifier.location);
 	// First search internals, then externals.
-	solAssert(m_scope, "");
+	yulAssert(m_scope, "");
 	if (m_scope->lookup(_identifier.name, GenericVisitor{
 		[=](Scope::Variable& _var)
 		{
@@ -381,13 +381,13 @@ void CodeTransform::operator()(Identifier const& _identifier)
 		},
 		[=](Scope::Function&)
 		{
-			solAssert(false, "Function not removed during desugaring.");
+			yulAssert(false, "Function not removed during desugaring.");
 		}
 	}))
 	{
 		return;
 	}
-	solAssert(
+	yulAssert(
 		m_identifierAccess.generateCode,
 		"Identifier not found and no external access available."
 	);
@@ -405,9 +405,9 @@ void CodeTransform::operator()(Literal const& _literal)
 
 void CodeTransform::operator()(yul::Instruction const& _instruction)
 {
-	solAssert(!m_allowStackOpt, "");
-	solAssert(!m_evm15 || _instruction.instruction != dev::eth::Instruction::JUMP, "Bare JUMP instruction used for EVM1.5");
-	solAssert(!m_evm15 || _instruction.instruction != dev::eth::Instruction::JUMPI, "Bare JUMPI instruction used for EVM1.5");
+	yulAssert(!m_allowStackOpt, "");
+	yulAssert(!m_evm15 || _instruction.instruction != dev::eth::Instruction::JUMP, "Bare JUMP instruction used for EVM1.5");
+	yulAssert(!m_evm15 || _instruction.instruction != dev::eth::Instruction::JUMPI, "Bare JUMPI instruction used for EVM1.5");
 	m_assembly.setSourceLocation(_instruction.location);
 	m_assembly.appendInstruction(_instruction.instruction);
 	checkStackHeight(&_instruction);
@@ -442,7 +442,7 @@ void CodeTransform::operator()(Switch const& _switch)
 			m_assembly.setSourceLocation(c.location);
 			AbstractAssembly::LabelID bodyLabel = m_assembly.newLabelId();
 			caseBodies[&c] = bodyLabel;
-			solAssert(m_assembly.stackHeight() == expressionHeight + 1, "");
+			yulAssert(m_assembly.stackHeight() == expressionHeight + 1, "");
 			m_assembly.appendInstruction(dev::eth::dupInstruction(2));
 			m_assembly.appendInstruction(dev::eth::Instruction::EQ);
 			m_assembly.appendJumpToIf(bodyLabel);
@@ -476,15 +476,15 @@ void CodeTransform::operator()(Switch const& _switch)
 
 void CodeTransform::operator()(FunctionDefinition const& _function)
 {
-	solAssert(m_scope, "");
-	solAssert(m_scope->identifiers.count(_function.name), "");
+	yulAssert(m_scope, "");
+	yulAssert(m_scope->identifiers.count(_function.name), "");
 	Scope::Function& function = std::get<Scope::Function>(m_scope->identifiers.at(_function.name));
 
 	int const localStackAdjustment = m_evm15 ? 0 : 1;
 	int height = localStackAdjustment;
-	solAssert(m_info.scopes.at(&_function.body), "");
+	yulAssert(m_info.scopes.at(&_function.body), "");
 	Scope* varScope = m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()).get();
-	solAssert(varScope, "");
+	yulAssert(varScope, "");
 	for (auto const& v: _function.parameters | boost::adaptors::reversed)
 	{
 		auto& var = std::get<Scope::Variable>(varScope->identifiers.at(v.name));
@@ -582,7 +582,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 					swap(stackLayout[stackLayout.back()], stackLayout.back());
 				}
 			for (int i = 0; size_t(i) < stackLayout.size(); ++i)
-				solAssert(i == stackLayout[i], "Error reshuffling stack.");
+				yulAssert(i == stackLayout[i], "Error reshuffling stack.");
 		}
 	}
 	if (m_evm15)
@@ -683,15 +683,15 @@ AbstractAssembly::LabelID CodeTransform::labelFromIdentifier(Identifier const& _
 {
 	AbstractAssembly::LabelID label = AbstractAssembly::LabelID(-1);
 	if (!m_scope->lookup(_identifier.name, GenericVisitor{
-		[=](Scope::Variable&) { solAssert(false, "Expected label"); },
+		[=](Scope::Variable&) { yulAssert(false, "Expected label"); },
 		[&](Scope::Label& _label)
 		{
 			label = labelID(_label);
 		},
-		[=](Scope::Function&) { solAssert(false, "Expected label"); }
+		[=](Scope::Function&) { yulAssert(false, "Expected label"); }
 	}))
 	{
-		solAssert(false, "Identifier not found.");
+		yulAssert(false, "Identifier not found.");
 	}
 	return label;
 }
@@ -759,15 +759,15 @@ void CodeTransform::finalizeBlock(Block const& _block, int blockStartStackHeight
 	freeUnusedVariables();
 
 	// pop variables
-	solAssert(m_info.scopes.at(&_block).get() == m_scope, "");
+	yulAssert(m_info.scopes.at(&_block).get() == m_scope, "");
 	for (auto const& id: m_scope->identifiers)
 		if (holds_alternative<Scope::Variable>(id.second))
 		{
 			Scope::Variable const& var = std::get<Scope::Variable>(id.second);
 			if (m_allowStackOpt)
 			{
-				solAssert(!m_context->variableStackHeights.count(&var), "");
-				solAssert(!m_context->variableReferences.count(&var), "");
+				yulAssert(!m_context->variableStackHeights.count(&var), "");
+				yulAssert(!m_context->variableReferences.count(&var), "");
 				m_stackAdjustment++;
 			}
 			else
@@ -775,20 +775,20 @@ void CodeTransform::finalizeBlock(Block const& _block, int blockStartStackHeight
 		}
 
 	int deposit = m_assembly.stackHeight() - blockStartStackHeight;
-	solAssert(deposit == 0, "Invalid stack height at end of block: " + to_string(deposit));
+	yulAssert(deposit == 0, "Invalid stack height at end of block: " + to_string(deposit));
 	checkStackHeight(&_block);
 }
 
 void CodeTransform::generateMultiAssignment(vector<Identifier> const& _variableNames)
 {
-	solAssert(m_scope, "");
+	yulAssert(m_scope, "");
 	for (auto const& variableName: _variableNames | boost::adaptors::reversed)
 		generateAssignment(variableName);
 }
 
 void CodeTransform::generateAssignment(Identifier const& _variableName)
 {
-	solAssert(m_scope, "");
+	yulAssert(m_scope, "");
 	if (auto var = m_scope->lookup(_variableName.name))
 	{
 		Scope::Variable const& _var = std::get<Scope::Variable>(*var);
@@ -799,7 +799,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	}
 	else
 	{
-		solAssert(
+		yulAssert(
 			m_identifierAccess.generateCode,
 			"Identifier not found and no external access available."
 		);
@@ -809,9 +809,9 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 
 int CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _varName, bool _forSwap)
 {
-	solAssert(m_context->variableStackHeights.count(&_var), "");
+	yulAssert(m_context->variableStackHeights.count(&_var), "");
 	int heightDiff = m_assembly.stackHeight() - m_context->variableStackHeights[&_var];
-	solAssert(heightDiff > (_forSwap ? 1 : 0), "Negative stack difference for variable.");
+	yulAssert(heightDiff > (_forSwap ? 1 : 0), "Negative stack difference for variable.");
 	int limit = _forSwap ? 17 : 16;
 	if (heightDiff > limit)
 	{
@@ -830,15 +830,15 @@ int CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _va
 
 void CodeTransform::expectDeposit(int _deposit, int _oldHeight) const
 {
-	solAssert(m_assembly.stackHeight() == _oldHeight + _deposit, "Invalid stack deposit.");
+	yulAssert(m_assembly.stackHeight() == _oldHeight + _deposit, "Invalid stack deposit.");
 }
 
 void CodeTransform::checkStackHeight(void const* _astElement) const
 {
-	solAssert(m_info.stackHeightInfo.count(_astElement), "Stack height for AST element not found.");
+	yulAssert(m_info.stackHeightInfo.count(_astElement), "Stack height for AST element not found.");
 	int stackHeightInAnalysis = m_info.stackHeightInfo.at(_astElement);
 	int stackHeightInCodegen = m_assembly.stackHeight() - m_stackAdjustment;
-	solAssert(
+	yulAssert(
 		stackHeightInAnalysis == stackHeightInCodegen,
 		"Stack height mismatch between analysis and code generation phase: Analysis: " +
 		to_string(stackHeightInAnalysis) +

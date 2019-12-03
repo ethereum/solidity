@@ -21,6 +21,7 @@
  */
 
 #include <libyul/AsmParser.h>
+#include <libyul/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libdevcore/Common.h>
@@ -52,7 +53,7 @@ shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	}
 	catch (FatalError const&)
 	{
-		solAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
+		yulAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
 	}
 
 	return nullptr;
@@ -257,7 +258,7 @@ Statement Parser::parseStatement()
 	}
 	else
 	{
-		solAssert(holds_alternative<Instruction>(elementary), "Invalid elementary operation.");
+		yulAssert(holds_alternative<Instruction>(elementary), "Invalid elementary operation.");
 		return std::get<Instruction>(elementary);
 	}
 }
@@ -277,7 +278,7 @@ Case Parser::parseCase()
 		_case.value = make_unique<Literal>(std::get<Literal>(std::move(literal)));
 	}
 	else
-		solAssert(false, "Case or default case expected.");
+		yulAssert(false, "Case or default case expected.");
 	_case.body = parseBlock();
 	_case.location.end = _case.body.location.end;
 	return _case;
@@ -315,7 +316,7 @@ Expression Parser::parseExpression()
 		return parseCall(std::move(operation));
 	else if (holds_alternative<Instruction>(operation))
 	{
-		solAssert(m_dialect.flavour == AsmFlavour::Loose, "");
+		yulAssert(m_dialect.flavour == AsmFlavour::Loose, "");
 		Instruction const& instr = std::get<Instruction>(operation);
 		// Disallow instructions returning multiple values (and DUP/SWAP) as expression.
 		if (
@@ -348,7 +349,7 @@ Expression Parser::parseExpression()
 	else if (holds_alternative<Instruction>(operation))
 	{
 		// Instructions not taking arguments are allowed as expressions.
-		solAssert(m_dialect.flavour == AsmFlavour::Loose, "");
+		yulAssert(m_dialect.flavour == AsmFlavour::Loose, "");
 		Instruction& instr = std::get<Instruction>(operation);
 		return FunctionalInstruction{std::move(instr.location), instr.instruction, {}};
 	}
@@ -356,7 +357,7 @@ Expression Parser::parseExpression()
 		return std::get<Identifier>(operation);
 	else
 	{
-		solAssert(holds_alternative<Literal>(operation), "");
+		yulAssert(holds_alternative<Literal>(operation), "");
 		return std::get<Literal>(operation);
 	}
 }
@@ -539,7 +540,7 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 	RecursionGuard recursionGuard(*this);
 	if (holds_alternative<Instruction>(_initialOp))
 	{
-		solAssert(m_dialect.flavour != AsmFlavour::Yul, "Instructions are invalid in Yul");
+		yulAssert(m_dialect.flavour != AsmFlavour::Yul, "Instructions are invalid in Yul");
 		Instruction& instruction = std::get<Instruction>(_initialOp);
 		FunctionalInstruction ret;
 		ret.instruction = instruction.instruction;

@@ -112,7 +112,7 @@ shared_ptr<Block> ObjectParser::parseBlock()
 
 void ObjectParser::parseData(Object& _containingObject)
 {
-	solAssert(
+	yulAssert(
 		currentToken() == Token::Identifier && currentLiteral() == "data",
 		"parseData called on wrong input."
 	);
