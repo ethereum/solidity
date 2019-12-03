@@ -9,3 +9,4 @@ contract X is A {
 	function test2() internal override(A) returns (uint256) {}
 }
 // ----
+// DeclarationError: (171-198): Identifier already declared.

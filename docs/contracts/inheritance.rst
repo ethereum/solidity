@@ -19,6 +19,10 @@ is compiled into the created contract. This means that all internal calls
 to functions of base contracts also just use internal function calls
 (``super.f(..)`` will use JUMP and not a message call).
 
+State variable shadowing is considered as an error.  A derived contract can
+only declare a state variable ``x``, if there is no visible state variable
+with the same name in any of its bases.
+
 The general inheritance system is very similar to
 `Python's <https://docs.python.org/3/tutorial/classes.html#inheritance>`_,
 especially concerning multiple inheritance, but there are also

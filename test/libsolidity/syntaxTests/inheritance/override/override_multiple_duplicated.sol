@@ -20,6 +20,7 @@ abstract contract X is A, B, C, D {
 	function foo() internal override(A, C, B, B, B, D ,D) virtual returns (uint256);
 }
 // ----
+// DeclarationError: (529-556): Identifier already declared.
 // TypeError: (599-600): Duplicate contract "D" found in override list of "test".
 // TypeError: (672-673): Duplicate contract "B" found in override list of "foo".
 // TypeError: (675-676): Duplicate contract "B" found in override list of "foo".

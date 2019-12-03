@@ -1,5 +1,4 @@
 abstract contract A {
-	int public testvar;
 	function foo() internal virtual returns (uint256);
 	function test(uint8 _a) internal virtual returns (uint256);
 }
@@ -22,5 +21,5 @@ abstract contract X is A, B, C, D {
 	function foo() internal override(MyStruct, ENUM, A, B, C, D) virtual returns (uint256);
 }
 // ----
-// TypeError: (653-661): Expected contract but got struct X.MyStruct.
-// TypeError: (663-667): Expected contract but got enum X.ENUM.
+// TypeError: (632-640): Expected contract but got struct X.MyStruct.
+// TypeError: (642-646): Expected contract but got enum X.ENUM.
