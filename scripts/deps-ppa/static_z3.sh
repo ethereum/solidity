@@ -49,7 +49,7 @@ git cherry-pick e212159f4e
 
 debversion="${version}${version_patchsuffix}"
 
-CMAKE_OPTIONS="-DBUILD_LIBZ3_SHARED=OFF -DCMAKE_BUILD_TYPE=Release"
+CMAKE_OPTIONS="-DZ3_BUILD_LIBZ3_SHARED=OFF -DCMAKE_BUILD_TYPE=Release"
 
 # gzip will create different tars all the time and we are not allowed
 # to upload the same file twice with different contents, so we only
@@ -181,7 +181,7 @@ This program is free software: you can redistribute it and/or modify
  Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 EOF
 cat <<EOF > debian/changelog
-libz3-static-dev (0.0.1-1ubuntu0) saucy; urgency=low
+libz3-static-dev (0.0.1-2ubuntu0) saucy; urgency=low
 
   * Initial release.
 
@@ -191,7 +191,7 @@ mkdir debian/source
 echo "3.0 (quilt)" > debian/source/format
 chmod +x debian/rules
 
-versionsuffix=1ubuntu0~${distribution}
+versionsuffix=2ubuntu0~${distribution}
 EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "build of ${version}"
 
 # build source package
