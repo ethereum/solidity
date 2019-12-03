@@ -22,6 +22,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/SideEffects.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/AsmData.h>
 
 #include <set>
@@ -86,7 +87,7 @@ class SideEffectsPropagator
 public:
 	static std::map<YulString, SideEffects> sideEffects(
 		Dialect const& _dialect,
-		std::map<YulString, std::set<YulString>> const& _directCallGraph
+		CallGraph const& _directCallGraph
 	);
 };
 

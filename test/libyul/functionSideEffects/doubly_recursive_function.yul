@@ -4,5 +4,5 @@
 }
 // ----
 // : movable, sideEffectFree, sideEffectFreeIfNoMSize
-// a: movable, sideEffectFree, sideEffectFreeIfNoMSize
-// b: movable, sideEffectFree, sideEffectFreeIfNoMSize
+// a:
+// b:

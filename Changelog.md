@@ -20,6 +20,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when using ``abi.decode``.
  * SMTChecker: Fix internal error when using arrays or mappings of functions.
  * SMTChecker: Fix internal error in array of structs type.
+ * Yul: Consider infinite loops and recursion to be not removable.
 
 
 
