@@ -52,7 +52,7 @@ struct SyntaxTestError
 };
 
 
-class SyntaxTest: AnalysisFramework, public EVMVersionRestrictedTestCase
+class SyntaxTest: public AnalysisFramework, public EVMVersionRestrictedTestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
@@ -76,6 +76,10 @@ public:
 
 	static std::string errorMessage(Exception const& _e);
 protected:
+	void setupCompiler();
+	void parseAndAnalyze();
+	void filterObtainedErrors();
+
 	static void printErrorList(
 		std::ostream& _stream,
 		std::vector<SyntaxTestError> const& _errors,

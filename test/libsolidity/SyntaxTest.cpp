@@ -73,59 +73,9 @@ SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion
 
 TestCase::TestResult SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
-	string const versionPragma = "pragma solidity >=0.0;\n";
-	compiler().reset();
-	auto sourcesWithPragma = m_sources;
-	for (auto& source: sourcesWithPragma)
-		source.second = versionPragma + source.second;
-	compiler().setSources(sourcesWithPragma);
-	compiler().setEVMVersion(m_evmVersion);
-	compiler().setParserErrorRecovery(m_parserErrorRecovery);
-	compiler().setOptimiserSettings(
-		m_optimiseYul ?
-		OptimiserSettings::full() :
-		OptimiserSettings::minimal()
-	);
-	if (compiler().parse())
-		if (compiler().analyze())
-			try
-			{
-				if (!compiler().compile())
-					BOOST_THROW_EXCEPTION(runtime_error("Compilation failed even though analysis was successful."));
-			}
-			catch (UnimplementedFeatureError const& _e)
-			{
-				m_errorList.emplace_back(SyntaxTestError{
-					"UnimplementedFeatureError",
-					errorMessage(_e),
-					"",
-					-1,
-					-1
-				});
-			}
-
-	for (auto const& currentError: filterErrors(compiler().errors(), true))
-	{
-		int locationStart = -1, locationEnd = -1;
-		string sourceName;
-		if (auto location = boost::get_error_info<errinfo_sourceLocation>(*currentError))
-		{
-			// ignore the version pragma inserted by the testing tool when calculating locations.
-			if (location->start >= static_cast<int>(versionPragma.size()))
-				locationStart = location->start - versionPragma.size();
-			if (location->end >= static_cast<int>(versionPragma.size()))
-				locationEnd = location->end - versionPragma.size();
-			if (location->source)
-				sourceName = location->source->name();
-		}
-		m_errorList.emplace_back(SyntaxTestError{
-			currentError->typeName(),
-			errorMessage(*currentError),
-			sourceName,
-			locationStart,
-			locationEnd
-		});
-	}
+	setupCompiler();
+	parseAndAnalyze();
+	filterObtainedErrors();
 
 	return printExpectationAndError(_stream, _linePrefix, _formatted) ? TestResult::Success : TestResult::Failure;
 }
@@ -205,6 +155,71 @@ void SyntaxTest::printSource(ostream& _stream, string const& _linePrefix, bool _
 			while (getline(stream, line))
 				_stream << _linePrefix << line << endl;
 		}
+}
+
+void SyntaxTest::setupCompiler()
+{
+	string const versionPragma = "pragma solidity >=0.0;\n";
+	compiler().reset();
+	auto sourcesWithPragma = m_sources;
+	for (auto& source: sourcesWithPragma)
+		source.second = versionPragma + source.second;
+	compiler().setSources(sourcesWithPragma);
+	compiler().setEVMVersion(m_evmVersion);
+	compiler().setParserErrorRecovery(m_parserErrorRecovery);
+	compiler().setOptimiserSettings(
+		m_optimiseYul ?
+		OptimiserSettings::full() :
+		OptimiserSettings::minimal()
+	);
+}
+
+void SyntaxTest::parseAndAnalyze()
+{
+	if (compiler().parse())
+		if (compiler().analyze())
+			try
+			{
+				if (!compiler().compile())
+					BOOST_THROW_EXCEPTION(runtime_error("Compilation failed even though analysis was successful."));
+			}
+			catch (UnimplementedFeatureError const& _e)
+			{
+				m_errorList.emplace_back(SyntaxTestError{
+					"UnimplementedFeatureError",
+					errorMessage(_e),
+					"",
+					-1,
+					-1
+				});
+			}
+}
+
+void SyntaxTest::filterObtainedErrors()
+{
+	string const versionPragma = "pragma solidity >=0.0;\n";
+	for (auto const& currentError: filterErrors(compiler().errors(), true))
+	{
+		int locationStart = -1, locationEnd = -1;
+		string sourceName;
+		if (auto location = boost::get_error_info<errinfo_sourceLocation>(*currentError))
+		{
+			// ignore the version pragma inserted by the testing tool when calculating locations.
+			if (location->start >= static_cast<int>(versionPragma.size()))
+				locationStart = location->start - versionPragma.size();
+			if (location->end >= static_cast<int>(versionPragma.size()))
+				locationEnd = location->end - versionPragma.size();
+			if (location->source)
+				sourceName = location->source->name();
+		}
+		m_errorList.emplace_back(SyntaxTestError{
+			currentError->typeName(),
+			errorMessage(*currentError),
+			sourceName,
+			locationStart,
+			locationEnd
+		});
+	}
 }
 
 void SyntaxTest::printErrorList(
