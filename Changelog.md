@@ -9,6 +9,7 @@ Breaking changes:
  * Command line interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
  * Command line interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
  * General: Disallow explicit conversions from external function types to ``address`` and add a member called ``address`` to them as replacement.
+ * General: Enable Yul optimizer as part of standard optimization.
  * General: New reserved keywords: ``virtual``.
  * General: Split unnamed fallback functions into two cases defined using ``fallback()`` and ``receive()``.
  * Standard JSON Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.

@@ -1,4 +1,4 @@
-Warning: Yul and its optimizer are still experimental. Please use the output with care.
+Warning: Yul is still experimental. Please use the output with care.
 Error: Function not found.
  --> strict_asm_jump/input.sol:1:3:
   |
