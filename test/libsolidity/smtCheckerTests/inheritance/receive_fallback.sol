@@ -17,7 +17,7 @@ contract B is A {
 	uint y;
 
 	fallback () external {
-		assert(x == 0);
+		assert(x == 1);
 	}
 }
 // ----
