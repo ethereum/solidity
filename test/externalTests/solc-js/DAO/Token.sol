@@ -87,7 +87,7 @@ virtual returns (bool success);
 }
 
 abstract contract tokenRecipient {
-    function receiveApproval(address _from, uint256 _value, address _token, bytes memory _extraData) public;
+    function receiveApproval(address _from, uint256 _value, address _token, bytes memory _extraData) public virtual;
 }
 
 contract Token is TokenInterface {
