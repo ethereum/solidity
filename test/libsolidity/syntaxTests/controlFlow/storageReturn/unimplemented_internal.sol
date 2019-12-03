@@ -1,5 +1,5 @@
 abstract contract C {
-    function f() internal returns(uint[] storage);
-    function g() internal returns(uint[] storage s);
+    function f() internal virtual returns(uint[] storage);
+    function g() internal virtual returns(uint[] storage s);
 }
 // ----

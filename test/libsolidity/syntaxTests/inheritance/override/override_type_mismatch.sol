@@ -18,9 +18,9 @@ abstract contract X is A, B, C, D {
 	enum ENUM { F,G,H }
 
 	int public override testvar;
-	function test() internal override returns (uint256);
-	function foo() internal override(MyStruct, ENUM, A, B, C, D) returns (uint256);
+	function test() internal override virtual returns (uint256);
+	function foo() internal override(MyStruct, ENUM, A, B, C, D) virtual returns (uint256);
 }
 // ----
-// TypeError: (645-653): Expected contract but got struct X.MyStruct.
-// TypeError: (655-659): Expected contract but got enum X.ENUM.
+// TypeError: (653-661): Expected contract but got struct X.MyStruct.
+// TypeError: (663-667): Expected contract but got enum X.ENUM.

@@ -2,7 +2,7 @@ abstract contract Test
 {
     function uint256_to_uint256(uint256 x) internal pure returns (uint256) { return x; }
     function uint256_to_string(uint256 x) internal pure returns (string memory) { return x == 0 ? "a" : "b"; }
-    function uint256_to_string_storage(uint256) internal pure returns (string storage);
+    function uint256_to_string_storage(uint256) internal pure returns (string storage) {}
     function string_to_uint256(string memory x) internal pure returns (uint256) { return bytes(x).length; }
     function string_to_string(string memory x) internal pure returns (string memory) { return x; }
 
@@ -33,10 +33,10 @@ abstract contract Test
     }
 }
 // ----
-// TypeError: (1227-1320): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (uint256) pure returns (uint256).
-// TypeError: (1328-1434): Type function (uint256) pure returns (string storage pointer) is not implicitly convertible to expected type function (uint256) pure returns (string memory).
-// TypeError: (1442-1540): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (string memory) pure returns (uint256).
-// TypeError: (1548-1655): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (string memory) pure returns (string memory).
-// TypeError: (1664-1775): Type function (uint256) pure returns (uint256) is not implicitly convertible to expected type function (uint256,uint256) pure returns (uint256).
-// TypeError: (1783-1902): Type function (string memory) pure returns (string memory) is not implicitly convertible to expected type function (string memory,uint256) pure returns (string memory).
-// TypeError: (1910-2034): Type function (string memory) pure returns (string memory) is not implicitly convertible to expected type function (string memory,string memory) pure returns (string memory).
+// TypeError: (1229-1322): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (uint256) pure returns (uint256).
+// TypeError: (1330-1436): Type function (uint256) pure returns (string storage pointer) is not implicitly convertible to expected type function (uint256) pure returns (string memory).
+// TypeError: (1444-1542): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (string memory) pure returns (uint256).
+// TypeError: (1550-1657): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (string memory) pure returns (string memory).
+// TypeError: (1666-1777): Type function (uint256) pure returns (uint256) is not implicitly convertible to expected type function (uint256,uint256) pure returns (uint256).
+// TypeError: (1785-1904): Type function (string memory) pure returns (string memory) is not implicitly convertible to expected type function (string memory,uint256) pure returns (string memory).
+// TypeError: (1912-2036): Type function (string memory) pure returns (string memory) is not implicitly convertible to expected type function (string memory,string memory) pure returns (string memory).

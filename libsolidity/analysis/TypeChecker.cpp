@@ -433,6 +433,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		m_errorReporter.typeError(_function.location(), "Constructor must be implemented if declared.");
 	else if (isLibraryFunction)
 		m_errorReporter.typeError(_function.location(), "Library functions must be implemented if declared.");
+	else if (!_function.virtualSemantics())
+		m_errorReporter.typeError(_function.location(), "Functions without implementation must be marked virtual.");
 
 
 	if (_function.isFallback())

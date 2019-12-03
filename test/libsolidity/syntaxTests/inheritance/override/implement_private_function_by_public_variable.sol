@@ -1,4 +1,4 @@
-abstract contract X { function test() private returns (uint256); }
+abstract contract X { function test() private returns (uint256) {} }
 contract Y is X {
     uint256 public test = 42;
 }

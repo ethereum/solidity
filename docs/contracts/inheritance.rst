@@ -53,13 +53,13 @@ Details are given in the following example.
     // without body. If a contract does not implement all
     // functions it can only be used as an interface.
     abstract contract Config {
-        function lookup(uint id) public returns (address adr);
+        function lookup(uint id) public virtual returns (address adr);
     }
 
 
     abstract contract NameReg {
-        function register(bytes32 name) public;
-        function unregister() public;
+        function register(bytes32 name) public virtual;
+        function unregister() public virtual;
     }
 
 

@@ -1,4 +1,4 @@
-abstract contract test {
-    function f(bytes storage) internal;
+contract test {
+    function f(bytes storage) internal {}
 }
 // ----

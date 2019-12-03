@@ -14,7 +14,7 @@ abstract contract D is C {
 	function foo() internal override virtual returns (uint256);
 }
 
-abstract contract X is D {
-	function foo() internal override returns (uint256);
+contract X is D {
+	function foo() internal override returns (uint256) {}
 }
 // ----

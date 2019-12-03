@@ -1,5 +1,5 @@
 contract A {
-    function a() public;
+    function a() public virtual;
 }
 // ----
-// TypeError: (0-39): Contract "A" should be marked as abstract.
+// TypeError: (0-47): Contract "A" should be marked as abstract.

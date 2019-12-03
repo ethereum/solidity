@@ -12,11 +12,11 @@ abstract contract C {
         (,uint m, uint n,) = five();
         a;b;c;d;e;f;g;h;i;j;k;l;m;n;
     }
-    function one() public pure returns (uint);
-    function two() public pure returns (uint, uint);
-    function three() public pure returns (uint, uint, uint);
-    function four() public pure returns (uint, uint, uint, uint);
-    function five() public pure returns (uint, uint, uint, uint, uint);
+    function one() public pure returns (uint) {}
+    function two() public pure returns (uint, uint) {}
+    function three() public pure returns (uint, uint, uint) {}
+    function four() public pure returns (uint, uint, uint, uint) {}
+    function five() public pure returns (uint, uint, uint, uint, uint) {}
 }
 // ----
 // TypeError: (62-81): Different number of components on the left hand side (2) than on the right hand side (3).
