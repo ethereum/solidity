@@ -86,6 +86,20 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		assertThrow(false, Exception, "Berlin is not supported yet.");
 	else //if (_evmVersion == langutil::EVMVersion::petersburg())
 		m_evmRevision = EVMC_PETERSBURG;
+
+	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
+	// NOTE: keep this in sync with `EVMHost::call` below.
+	//
+	// A lot of precompile addresses had a balance before they became valid addresses for precompiles.
+	// For example all the precompile addresses allocated in Byzantium had a 1 wei balance sent to them
+	// roughly 22 days before the update went live.
+	for (unsigned precompiledAddress = 1; precompiledAddress <= 8; precompiledAddress++)
+	{
+		evmc::address address{};
+		address.bytes[19] = precompiledAddress;
+		// 1wei
+		m_state.accounts[address].balance.bytes[31] = 1;
+	}
 }
 
 evmc_storage_status EVMHost::set_storage(const evmc::address& _addr, const evmc::bytes32& _key, const evmc::bytes32& _value) noexcept
@@ -123,13 +137,13 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		return precompileRipeMD160(_message);
 	else if (_message.destination == 0x0000000000000000000000000000000000000004_address)
 		return precompileIdentity(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000005_address)
+	else if (_message.destination == 0x0000000000000000000000000000000000000005_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileModExp(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000006_address)
+	else if (_message.destination == 0x0000000000000000000000000000000000000006_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileALTBN128G1Add(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000007_address)
+	else if (_message.destination == 0x0000000000000000000000000000000000000007_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileALTBN128G1Mul(_message);
-	else if (_message.destination == 0x0000000000000000000000000000000000000008_address)
+	else if (_message.destination == 0x0000000000000000000000000000000000000008_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileALTBN128PairingProduct(_message);
 
 	State stateBackup = m_state;
@@ -215,7 +229,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	return result;
 }
 
-evmc_tx_context EVMHost::get_tx_context() noexcept
+evmc_tx_context EVMHost::get_tx_context() const noexcept
 {
 	evmc_tx_context ctx = {};
 	ctx.block_timestamp = m_state.timestamp;
@@ -231,7 +245,7 @@ evmc_tx_context EVMHost::get_tx_context() noexcept
 	return ctx;
 }
 
-evmc::bytes32 EVMHost::get_block_hash(int64_t _number) noexcept
+evmc::bytes32 EVMHost::get_block_hash(int64_t _number) const noexcept
 {
 	return convertToEVMC(u256("0x3737373737373737373737373737373737373737373737373737373737373737") + _number);
 }

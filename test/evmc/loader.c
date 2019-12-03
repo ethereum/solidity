@@ -297,6 +297,12 @@ struct evmc_vm* evmc_load_and_configure(const char* config, enum evmc_loader_err
                            "%s (%s): unsupported value '%s' for option '%s'", vm->name, path,
                            option, name);
             goto exit;
+
+        default:
+            ec = set_error(EVMC_LOADER_INVALID_OPTION_VALUE,
+                           "%s (%s): unknown error when setting value '%s' for option '%s'",
+                           vm->name, path, option, name);
+            goto exit;
         }
     }
 

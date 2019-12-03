@@ -68,12 +68,14 @@ public:
 		std::vector<LogEntry> logs;
 	};
 
+	Account const* account(evmc::address const& _address) const
+	{
+		auto it = m_state.accounts.find(_address);
+		return it == m_state.accounts.end() ? nullptr : &it->second;
+	}
+
 	Account* account(evmc::address const& _address)
 	{
-		// Make all precompiled contracts exist.
-		// Be future-proof and consider everything below 1024 as precompiled contract.
-		if (u160(convertFromEVMC(_address)) < 1024)
-			m_state.accounts[_address];
 		auto it = m_state.accounts.find(_address);
 		return it == m_state.accounts.end() ? nullptr : &it->second;
 	}
@@ -86,15 +88,19 @@ public:
 		m_state.logs.clear();
 	}
 
-	bool account_exists(evmc::address const& _addr) noexcept final
+	bool account_exists(evmc::address const& _addr) const noexcept final
 	{
 		return account(_addr) != nullptr;
 	}
 
-	evmc::bytes32 get_storage(evmc::address const& _addr, evmc::bytes32 const& _key) noexcept final
+	evmc::bytes32 get_storage(evmc::address const& _addr, evmc::bytes32 const& _key) const noexcept final
 	{
-		if (Account* acc = account(_addr))
-			return acc->storage[_key];
+		if (auto* acc = account(_addr))
+		{
+			auto it = acc->storage.find(_key);
+			if (it != acc->storage.end())
+				return it->second;
+		}
 		return {};
 	}
 
@@ -104,21 +110,21 @@ public:
 		evmc::bytes32 const& _value
 	) noexcept;
 
-	evmc::uint256be get_balance(evmc::address const& _addr) noexcept final
+	evmc::uint256be get_balance(evmc::address const& _addr) const noexcept final
 	{
 		if (Account const* acc = account(_addr))
 			return acc->balance;
 		return {};
 	}
 
-	size_t get_code_size(evmc::address const& _addr) noexcept final
+	size_t get_code_size(evmc::address const& _addr) const noexcept final
 	{
 		if (Account const* acc = account(_addr))
 			return acc->code.size();
 		return 0;
 	}
 
-	evmc::bytes32 get_code_hash(evmc::address const& _addr) noexcept final
+	evmc::bytes32 get_code_hash(evmc::address const& _addr) const noexcept final
 	{
 		if (Account const* acc = account(_addr))
 			return acc->codeHash;
@@ -130,7 +136,7 @@ public:
 		size_t _codeOffset,
 		uint8_t* _bufferData,
 		size_t _bufferSize
-	) noexcept final
+	) const noexcept final
 	{
 		size_t i = 0;
 		if (Account const* acc = account(_addr))
@@ -143,9 +149,9 @@ public:
 
 	evmc::result call(evmc_message const& _message) noexcept;
 
-	evmc_tx_context get_tx_context() noexcept;
+	evmc_tx_context get_tx_context() const noexcept;
 
-	evmc::bytes32 get_block_hash(int64_t number) noexcept;
+	evmc::bytes32 get_block_hash(int64_t number) const noexcept;
 
 	void emit_log(
 		evmc::address const& _addr,
@@ -166,15 +172,15 @@ public:
 	evmc::address m_coinbase = convertToEVMC(Address("0x7878787878787878787878787878787878787878"));
 
 private:
-	evmc::result precompileECRecover(evmc_message const& _message) noexcept;
-	evmc::result precompileSha256(evmc_message const& _message) noexcept;
-	evmc::result precompileRipeMD160(evmc_message const& _message) noexcept;
-	evmc::result precompileIdentity(evmc_message const& _message) noexcept;
-	evmc::result precompileModExp(evmc_message const& _message) noexcept;
-	evmc::result precompileALTBN128G1Add(evmc_message const& _message) noexcept;
-	evmc::result precompileALTBN128G1Mul(evmc_message const& _message) noexcept;
-	evmc::result precompileALTBN128PairingProduct(evmc_message const& _message) noexcept;
-	evmc::result precompileGeneric(evmc_message const& _message, std::map<bytes, bytes> const& _inOut) noexcept;
+	static evmc::result precompileECRecover(evmc_message const& _message) noexcept;
+	static evmc::result precompileSha256(evmc_message const& _message) noexcept;
+	static evmc::result precompileRipeMD160(evmc_message const& _message) noexcept;
+	static evmc::result precompileIdentity(evmc_message const& _message) noexcept;
+	static evmc::result precompileModExp(evmc_message const& _message) noexcept;
+	static evmc::result precompileALTBN128G1Add(evmc_message const& _message) noexcept;
+	static evmc::result precompileALTBN128G1Mul(evmc_message const& _message) noexcept;
+	static evmc::result precompileALTBN128PairingProduct(evmc_message const& _message) noexcept;
+	static evmc::result precompileGeneric(evmc_message const& _message, std::map<bytes, bytes> const& _inOut) noexcept;
 	/// @returns a result object with no gas usage and result data taken from @a _data.
 	/// @note The return value is only valid as long as @a _data is alive!
 	static evmc::result resultWithGas(evmc_message const& _message, bytes const& _data) noexcept;

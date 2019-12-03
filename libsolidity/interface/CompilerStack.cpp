@@ -1077,25 +1077,17 @@ void CompilerStack::generateEWasm(ContractDefinition const& _contract)
 		return;
 
 	// Re-parse the Yul IR in EVM dialect
-	yul::AssemblyStack evmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
-	evmStack.parseAndAnalyze("", compiledContract.yulIROptimized);
+	yul::AssemblyStack stack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
+	stack.parseAndAnalyze("", compiledContract.yulIROptimized);
 
-	// Turn into eWasm dialect
-	yul::Object ewasmObject = yul::EVMToEWasmTranslator(
-		yul::EVMDialect::strictAssemblyForEVMObjects(m_evmVersion)
-	).run(*evmStack.parserResult());
+	stack.optimize();
+	stack.translate(yul::AssemblyStack::Language::EWasm);
+	stack.optimize();
 
-	// Re-inject into an assembly stack for the eWasm dialect
-	yul::AssemblyStack ewasmStack(m_evmVersion, yul::AssemblyStack::Language::EWasm, m_optimiserSettings);
-	// TODO this is a hack for now - provide as structured AST!
-	ewasmStack.parseAndAnalyze("", "{}");
-	*ewasmStack.parserResult() = move(ewasmObject);
-	ewasmStack.optimize();
-
-	//cout << yul::AsmPrinter{}(*ewasmStack.parserResult()->code) << endl;
+	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
 
 	// Turn into eWasm text representation.
-	auto result = ewasmStack.assemble(yul::AssemblyStack::Machine::eWasm);
+	auto result = stack.assemble(yul::AssemblyStack::Machine::eWasm);
 	compiledContract.eWasm = std::move(result.assembly);
 	compiledContract.eWasmObject = std::move(*result.bytecode);
 }

@@ -43,6 +43,7 @@
 using namespace std;
 using namespace std::placeholders;
 using namespace dev::test;
+using namespace langutil;
 
 #define ALSO_VIA_YUL(CODE) \
 { \
@@ -12859,6 +12860,9 @@ BOOST_AUTO_TEST_CASE(address_overload_resolution)
 
 BOOST_AUTO_TEST_CASE(snark)
 {
+	if (dev::test::Options::get().evmVersion() <= EVMVersion::byzantium())
+		return;
+
 	char const* sourceCode = R"(
 	library Pairing {
 		struct G1Point {

@@ -122,6 +122,7 @@ static string const g_strHelp = "help";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
 static string const g_strYul = "yul";
+static string const g_strYulDialect = "yul-dialect";
 static string const g_strIR = "ir";
 static string const g_strIPFS = "ipfs";
 static string const g_strEWasm = "ewasm";
@@ -232,6 +233,13 @@ static set<string> const g_machineArgs
 {
 	g_strEVM,
 	g_strEVM15,
+	g_streWasm
+};
+
+/// Possible arguments to for --yul-dialect
+static set<string> const g_yulDialectArgs
+{
+	g_strEVM,
 	g_streWasm
 };
 
@@ -713,15 +721,20 @@ Allowed options)",
 		)
 		(
 			g_argAssemble.c_str(),
-			"Switch to assembly mode, ignoring all options except --machine and --optimize and assumes input is assembly."
+			"Switch to assembly mode, ignoring all options except --machine, --yul-dialect and --optimize and assumes input is assembly."
 		)
 		(
 			g_argYul.c_str(),
-			"Switch to Yul mode, ignoring all options except --machine and --optimize and assumes input is Yul."
+			"Switch to Yul mode, ignoring all options except --machine, --yul-dialect and --optimize and assumes input is Yul."
 		)
 		(
 			g_argStrictAssembly.c_str(),
-			"Switch to strict assembly mode, ignoring all options except --machine and --optimize and assumes input is strict assembly."
+			"Switch to strict assembly mode, ignoring all options except --machine, --yul-dialect and --optimize and assumes input is strict assembly."
+		)
+		(
+			g_strYulDialect.c_str(),
+			po::value<string>()->value_name(boost::join(g_yulDialectArgs, ",")),
+			"Input dialect to use in assembly or yul mode."
 		)
 		(
 			g_argMachine.c_str(),
@@ -965,7 +978,27 @@ bool CommandLineInterface::processInput()
 		}
 		if (targetMachine == Machine::eWasm && inputLanguage == Input::StrictAssembly)
 			inputLanguage = Input::EWasm;
-		if (optimize && inputLanguage != Input::StrictAssembly)
+		if (m_args.count(g_strYulDialect))
+		{
+			string dialect = m_args[g_strYulDialect].as<string>();
+			if (dialect == g_strEVM)
+				inputLanguage = Input::StrictAssembly;
+			else if (dialect == g_streWasm)
+			{
+				inputLanguage = Input::EWasm;
+				if (targetMachine != Machine::eWasm)
+				{
+					serr() << "If you select eWasm as --yul-dialect, --machine has to be eWasm as well." << endl;
+					return false;
+				}
+			}
+			else
+			{
+				serr() << "Invalid option for --yul-dialect: " << dialect << endl;
+				return false;
+			}
+		}
+		if (optimize && (inputLanguage != Input::StrictAssembly && inputLanguage != Input::EWasm))
 		{
 			serr() <<
 				"Optimizer can only be used for strict assembly. Use --" <<
@@ -1409,10 +1442,21 @@ bool CommandLineInterface::assemble(
 			_targetMachine == yul::AssemblyStack::Machine::EVM15 ? "EVM 1.5" :
 			"eWasm";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
+
 		yul::AssemblyStack& stack = assemblyStacks[src.first];
 
 		sout() << endl << "Pretty printed source:" << endl;
 		sout() << stack.print() << endl;
+
+		if (_language != yul::AssemblyStack::Language::EWasm && _targetMachine == yul::AssemblyStack::Machine::eWasm)
+		{
+			stack.translate(yul::AssemblyStack::Language::EWasm);
+			stack.optimize();
+
+			sout() << endl << "==========================" << endl;
+			sout() << endl << "Translated source:" << endl;
+			sout() << stack.print() << endl;
+		}
 
 		yul::MachineAssemblyObject object;
 		try

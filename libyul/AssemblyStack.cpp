@@ -34,6 +34,7 @@
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/wasm/EWasmObjectCompiler.h>
+#include <libyul/backends/wasm/EVMToEWasmTranslator.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
@@ -99,6 +100,23 @@ void AssemblyStack::optimize()
 	solAssert(m_parserResult, "");
 	optimize(*m_parserResult, true);
 	solAssert(analyzeParsed(), "Invalid source code after optimization.");
+}
+
+void AssemblyStack::translate(AssemblyStack::Language _targetLanguage)
+{
+	if (m_language == _targetLanguage)
+		return;
+
+	solAssert(
+		m_language == Language::StrictAssembly && _targetLanguage == Language::EWasm,
+		"Invalid language combination"
+	);
+
+	*m_parserResult = EVMToEWasmTranslator(
+		languageToDialect(m_language, m_evmVersion)
+	).run(*parserResult());
+
+	m_language = _targetLanguage;
 }
 
 bool AssemblyStack::analyzeParsed()
