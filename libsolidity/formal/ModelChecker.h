@@ -44,6 +44,8 @@ namespace solidity
 class ModelChecker
 {
 public:
+	/// @param _enabledSolvers represents a runtime choice of which SMT solvers
+	/// should be used, even if all are available. The default choice is to use all.
 	ModelChecker(
 		langutil::ErrorReporter& _errorReporter,
 		std::map<h256, std::string> const& _smtlib2Responses,
