@@ -6,6 +6,7 @@ Language Features:
 
 
 Compiler Features:
+ * Set the default EVM version to "Istanbul".
  * Commandline Interface: Allow translation from yul / strict assembly to EWasm using ``solc --yul --yul-dialect evm --machine eWasm``
  * SMTChecker: Add support to constructors including constructor inheritance.
  * Yul: When compiling via Yul, string literals from the Solidity code are kept as string literals if every character is safely printable.

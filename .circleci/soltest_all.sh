@@ -34,4 +34,4 @@ for OPTIMIZE in 0 1; do
     done
 done
 
-EVM=constantinople OPTIMIZE=1 ABI_ENCODER_V2=1 ${REPODIR}/.circleci/soltest.sh
+EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V2=1 ${REPODIR}/.circleci/soltest.sh
