@@ -180,12 +180,12 @@ Input Description
             // `--allow-paths <path>`.
           ]
         },
-        "mortal":
+        "retrievable":
         {
           // Optional: keccak256 hash of the source file
           "keccak256": "0x234...",
           // Required (unless "urls" is used): literal contents of the source file
-          "content": "contract mortal is owned { function kill() { if (msg.sender == owner) selfdestruct(owner); } }"
+          "content": "contract retrievable is owned { function shutdown() { if (msg.sender == owner) selfdestruct(owner); } }"
         }
       },
       // Optional

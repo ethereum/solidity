@@ -378,7 +378,7 @@ contract Wallet is multisig, multiowned, daylimit {
 		multiowned.changeOwner(_from, _to);
 	}
 	// destroys the contract sending everything to `_to`.
-	function kill(address payable _to) onlymanyowners(keccak256(msg.data)) external {
+	function shutdown(address payable _to) onlymanyowners(keccak256(msg.data)) external {
 		selfdestruct(_to);
 	}
 

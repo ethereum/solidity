@@ -584,7 +584,7 @@ Yes::
         return balanceOf[from];
     }
 
-    function kill() public onlyowner {
+    function shutdown() public onlyowner {
         selfdestruct(owner);
     }
 
@@ -594,7 +594,7 @@ No::
         return balanceOf[from];
     }
 
-    function kill() onlyowner public {
+    function shutdown() onlyowner public {
         selfdestruct(owner);
     }
 
