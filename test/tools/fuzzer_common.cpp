@@ -47,7 +47,7 @@ void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 		cout << "Output JSON: " << outputString << endl;
 
 	// This should be safe given the above copies the output.
-	solidity_free();
+	solidity_reset();
 
 	Json::Value output;
 	if (!jsonParseStrict(outputString, output))

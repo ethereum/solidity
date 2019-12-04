@@ -6,6 +6,8 @@ Breaking changes:
  * AST: Inline assembly is exported as structured JSON instead of plain string.
  * C API (``libsolc``): Introduce context parameter to both ``solidity_compile`` and the callback.
  * C API (``libsolc``): The provided callback now takes two parameters, kind and data. The callback can then be used for multiple purposes, such has file imports and SMT queries.
+ * C API (``libsolc``): ``solidity_free`` was renamed to ``solidity_reset``. Functions ``solidity_alloc`` and ``solidity_free`` were added.
+ * C API (``libsolc``): ``solidity_compile`` now returns a string that must be explicitly freed via ``solidity_free()``
  * Commandline Interface: Remove the text-based AST printer (``--ast``).
  * Commandline Interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
  * Commandline Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
