@@ -67,6 +67,14 @@ Json::Value compile(string const& _input, CStyleReadFileCallback _callback = nul
 	return ret;
 }
 
+char* stringToSolidity(string const& _input)
+{
+	char* ptr = solidity_alloc(_input.length());
+	BOOST_REQUIRE(ptr != nullptr);
+	std::memcpy(ptr, _input.c_str(), _input.length());
+	return ptr;
+}
+
 } // end anonymous namespace
 
 BOOST_AUTO_TEST_SUITE(LibSolc)
@@ -146,13 +154,13 @@ BOOST_AUTO_TEST_CASE(with_callback)
 			if (string(_path) == "found.sol")
 			{
 				static string content{"import \"missing.sol\"; contract B {}"};
-				*o_contents = strdup(content.c_str());
+				*o_contents = stringToSolidity(content);
 				*o_error = nullptr;
 			}
 			else if (string(_path) == "missing.sol")
 			{
 				static string errorMsg{"Missing file."};
-				*o_error = strdup(errorMsg.c_str());
+				*o_error = stringToSolidity(errorMsg);
 				*o_contents = nullptr;
 			}
 			else
