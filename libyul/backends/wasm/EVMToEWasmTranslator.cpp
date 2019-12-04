@@ -82,7 +82,7 @@ function sub(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 function sub320(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> r1, r2, r3, r4, r5 {
 	// x - y = x + (~y + 1)
 	let carry
-	r5, carry := add_carry(x4, bit_negate(y5), 1)
+	r5, carry := add_carry(x5, bit_negate(y5), 1)
 	r4, carry := add_carry(x4, bit_negate(y4), carry)
 	r3, carry := add_carry(x3, bit_negate(y3), carry)
 	r2, carry := add_carry(x2, bit_negate(y2), carry)
@@ -91,7 +91,7 @@ function sub320(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> r1, r2, r3, r4, r5 {
 function sub512(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> r1, r2, r3, r4, r5, r6, r7, r8 {
 	// x - y = x + (~y + 1)
 	let carry
-	r8, carry := add_carry(x4, bit_negate(y8), 1)
+	r8, carry := add_carry(x8, bit_negate(y8), 1)
 	r7, carry := add_carry(x3, bit_negate(y7), carry)
 	r6, carry := add_carry(x3, bit_negate(y6), carry)
 	r5, carry := add_carry(x3, bit_negate(y5), carry)
@@ -500,7 +500,7 @@ function iszero320(x1, x2, x3, x4, x5) -> r {
 	r := i64.eqz(i64.or(i64.or(i64.or(x1, x2), i64.or(x3, x4)), x5))
 }
 function iszero512(x1, x2, x3, x4, x5, x6, x7, x8) -> r {
-	r := i64.eqz(i64.or(i64.or(i64.or(i64.or(i64.or(i64.or(x1, x2), i64.or(x3, x4)), x5), x6), x7), x8))
+	r := i64.and(iszero(x1, x2, x3, x4), iszero(x5, x6, x7, x8))
 }
 function eq(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	if i64.eq(x1, y1) {
@@ -774,7 +774,7 @@ function u256_to_i32(x1, x2, x3, x4) -> v {
 
 function u256_to_byte(x1, x2, x3, x4) -> v {
 	if i64.ne(0, i64.or(i64.or(x1, x2), x3)) { invalid() }
-	if i64.ne(0, i64.shr_u(x4, 56)) { invalid() }
+	if i64.gt_u(x4, 255) { invalid() }
 	v := x4
 }
 
@@ -793,7 +793,7 @@ function address() -> z1, z2, z3, z4 {
 }
 function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	mstore_internal(0, x1, x2, x3, x4)
-	eth.getExternalBalance(0, 32)
+	eth.getExternalBalance(12, 48)
 	z1, z2, z3, z4 := mload_internal(32)
 }
 function selfbalance() -> z1, z2, z3, z4 {
@@ -1259,4 +1259,3 @@ void EVMToEWasmTranslator::parsePolyfill()
 	for (auto const& statement: m_polyfill->statements)
 		m_polyfillFunctions.insert(std::get<FunctionDefinition>(statement).name);
 }
-
