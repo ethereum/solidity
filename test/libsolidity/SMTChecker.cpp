@@ -59,48 +59,6 @@ protected:
 
 BOOST_FIXTURE_TEST_SUITE(SMTChecker, SMTCheckerFramework)
 
-BOOST_AUTO_TEST_CASE(compound_assignment_division)
-{
-	string text = R"(
-		contract C {
-			function f(uint x) public pure {
-				require(x == 2);
-				uint y = 10;
-				y /= y / x;
-				assert(y == x);
-				assert(y == 0);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "Assertion violation");
-	text = R"(
-		contract C {
-			uint[] array;
-			function f(uint x, uint p) public {
-				require(x == 2);
-				array[p] = 10;
-				array[p] /= array[p] / x;
-				assert(array[p] == x);
-				assert(array[p] == 0);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "Assertion violation");
-	text = R"(
-		contract C {
-			mapping (uint => uint) map;
-			function f(uint x, uint p) public {
-				require(x == 2);
-				map[p] = 10;
-				map[p] /= map[p] / x;
-				assert(map[p] == x);
-				assert(map[p] == 0);
-			}
-		}
-	)";
-	CHECK_WARNING(text, "Assertion violation");
-}
-
 BOOST_AUTO_TEST_CASE(mod)
 {
 	string text = R"(
