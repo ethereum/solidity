@@ -30,3 +30,5 @@ contract C {
 		assert(x < 9);
 	}
 }
+// ====
+// SMTSolvers: z3

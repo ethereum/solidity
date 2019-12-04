@@ -14,6 +14,8 @@ contract C {
 		assert(a == 2);
 	}
 }
+// ====
+// SMTSolvers: z3
 // ----
 // Warning: (128-133): Unreachable code.
 // Warning: (147-151): Unreachable code.

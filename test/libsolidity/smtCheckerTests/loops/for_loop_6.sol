@@ -9,4 +9,5 @@ contract C {
         assert(y < 4);
     }
 }
-// ----
+// ====
+// SMTSolvers: z3
