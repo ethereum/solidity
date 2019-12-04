@@ -29,10 +29,9 @@ Z3CHCInterface::Z3CHCInterface():
 	m_context(m_z3Interface->context()),
 	m_solver(*m_context)
 {
-	// This needs to be set globally.
+	// These need to be set globally.
 	z3::set_param("rewriter.pull_cheap_ite", true);
-	// This needs to be set in the context.
-	m_context->set("timeout", queryTimeout);
+	z3::set_param("rlimit", Z3Interface::resourceLimit);
 
 	// Spacer options.
 	// These needs to be set in the solver.

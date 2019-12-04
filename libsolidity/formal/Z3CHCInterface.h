@@ -54,9 +54,6 @@ private:
 	z3::context* m_context;
 	// Horn solver.
 	z3::fixedpoint m_solver;
-
-	// SMT query timeout in milliseconds.
-	static int const queryTimeout = 10000;
 };
 
 }

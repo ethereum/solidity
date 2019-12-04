@@ -359,10 +359,6 @@ public:
 
 	/// @returns how many SMT solvers this interface has.
 	virtual unsigned solvers() { return 1; }
-
-protected:
-	// SMT query timeout in milliseconds.
-	static int const queryTimeout = 10000;
 };
 
 }
