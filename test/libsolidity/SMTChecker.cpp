@@ -59,60 +59,6 @@ protected:
 
 BOOST_FIXTURE_TEST_SUITE(SMTChecker, SMTCheckerFramework)
 
-BOOST_AUTO_TEST_CASE(division_truncates_correctly)
-{
-	string text = R"(
-		contract C {
-			function f(uint x, uint y) public pure {
-				x = 7;
-				y = 2;
-				assert(x / y == 3);
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f(int x, int y) public pure {
-				x = 7;
-				y = 2;
-				assert(x / y == 3);
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f(int x, int y) public pure {
-				x = -7;
-				y = 2;
-				assert(x / y == -3);
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f(int x, int y) public pure {
-				x = 7;
-				y = -2;
-				assert(x / y == -3);
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-	text = R"(
-		contract C {
-			function f(int x, int y) public pure {
-				x = -7;
-				y = -2;
-				assert(x / y == 3);
-			}
-		}
-	)";
-	CHECK_SUCCESS_NO_WARNINGS(text);
-}
-
 BOOST_AUTO_TEST_CASE(compound_assignment_division)
 {
 	string text = R"(
