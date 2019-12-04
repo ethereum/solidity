@@ -22,9 +22,13 @@ using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
-ModelChecker::ModelChecker(ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
-	m_bmc(m_context, _errorReporter, _smtlib2Responses),
-	m_chc(m_context, _errorReporter, _smtlib2Responses),
+ModelChecker::ModelChecker(
+	ErrorReporter& _errorReporter,
+	map<h256, string> const& _smtlib2Responses,
+	smt::SMTSolverChoice _enabledSolvers
+):
+	m_bmc(m_context, _errorReporter, _smtlib2Responses, _enabledSolvers),
+	m_chc(m_context, _errorReporter, _smtlib2Responses, _enabledSolvers),
 	m_context()
 {
 }

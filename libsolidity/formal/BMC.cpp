@@ -27,19 +27,25 @@ using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
-BMC::BMC(smt::EncodingContext& _context, ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
+BMC::BMC(
+	smt::EncodingContext& _context,
+	ErrorReporter& _errorReporter,
+	map<h256, string> const& _smtlib2Responses,
+	smt::SMTSolverChoice _enabledSolvers
+):
 	SMTEncoder(_context),
 	m_outerErrorReporter(_errorReporter),
-	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses))
+	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses, _enabledSolvers))
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
-	if (!_smtlib2Responses.empty())
-		m_errorReporter.warning(
-			"SMT-LIB2 query responses were given in the auxiliary input, "
-			"but this Solidity binary uses an SMT solver (Z3/CVC4) directly."
-			"These responses will be ignored."
-			"Consider disabling Z3/CVC4 at compilation time in order to use SMT-LIB2 responses."
-		);
+	if (_enabledSolvers.some())
+		if (!_smtlib2Responses.empty())
+			m_errorReporter.warning(
+				"SMT-LIB2 query responses were given in the auxiliary input, "
+				"but this Solidity binary uses an SMT solver (Z3/CVC4) directly."
+				"These responses will be ignored."
+				"Consider disabling Z3/CVC4 at compilation time in order to use SMT-LIB2 responses."
+			);
 #endif
 }
 
