@@ -93,11 +93,44 @@ void MSizeFinder::operator()(FunctionCall const& _functionCall)
 
 map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 	Dialect const& _dialect,
-	map<YulString, std::set<YulString>> const& _directCallGraph
+	CallGraph const& _directCallGraph
 )
 {
+	// Any loop currently makes a function non-movable, because
+	// it could be a non-terminating loop.
+	// The same is true for any function part of a call cycle.
+	// In the future, we should refine that, because the property
+	// is actually a bit different from "not movable".
+
 	map<YulString, SideEffects> ret;
-	for (auto const& call: _directCallGraph)
+	for (auto const& function: _directCallGraph.functionsWithLoops)
+	{
+		ret[function].movable = false;
+		ret[function].sideEffectFree = false;
+		ret[function].sideEffectFreeIfNoMSize = false;
+	}
+
+	// Detect recursive functions.
+	for (auto const& call: _directCallGraph.functionCalls)
+	{
+		// TODO we could shortcut the search as soon as we find a
+		// function that has as bad side-effects as we can
+		// ever achieve via recursion.
+		auto search = [&](YulString const& _functionName, CycleDetector<YulString>& _cycleDetector, size_t) {
+			for (auto const& callee: _directCallGraph.functionCalls.at(_functionName))
+				if (!_dialect.builtin(callee))
+					if (_cycleDetector.run(callee))
+						return;
+		};
+		if (CycleDetector<YulString>(search).run(call.first))
+		{
+			ret[call.first].movable = false;
+			ret[call.first].sideEffectFree = false;
+			ret[call.first].sideEffectFreeIfNoMSize = false;
+		}
+	}
+
+	for (auto const& call: _directCallGraph.functionCalls)
 	{
 		YulString funName = call.first;
 		SideEffects sideEffects;
@@ -108,11 +141,15 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 				if (BuiltinFunction const* f = _dialect.builtin(_function))
 					sideEffects += f->sideEffects;
 				else
-					for (YulString callee: _directCallGraph.at(_function))
+				{
+					if (ret.count(_function))
+						sideEffects += ret[_function];
+					for (YulString callee: _directCallGraph.functionCalls.at(_function))
 						_addChild(callee);
+				}
 			}
 		);
-		ret[funName] = sideEffects;
+		ret[funName] += sideEffects;
 	}
 	return ret;
 }

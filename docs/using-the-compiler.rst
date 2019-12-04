@@ -120,9 +120,9 @@ at each version. Backward compatibility is not guaranteed between each version.
 - ``constantinople``
    - Opcodes ``create2`, ``extcodehash``, ``shl``, ``shr`` and ``sar`` are available in assembly.
    - Shifting operators use shifting opcodes and thus need less gas.
-- ``petersburg`` (**default**)
+- ``petersburg``
    - The compiler behaves the same way as with constantinople.
-- ``istanbul``
+- ``istanbul`` (**default**)
    - Opcodes ``chainid`` and ``selfbalance`` are available in assembly.
 - ``berlin`` (**experimental**)
 

@@ -63,6 +63,12 @@ private:
 	CVC4::ExprManager m_context;
 	CVC4::SmtEngine m_solver;
 	std::map<std::string, CVC4::Expr> m_variables;
+
+	// CVC4 "basic resources" limit.
+	// This is used to make the runs more deterministic and platform/machine independent.
+	// The tests start failing for CVC4 with less than 6000,
+	// so using double that.
+	static int const resourceLimit = 12000;
 };
 
 }

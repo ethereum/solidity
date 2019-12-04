@@ -900,9 +900,11 @@ BOOST_AUTO_TEST_CASE(evm_version)
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"constantinople\"") != string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"petersburg\","));
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"petersburg\"") != string::npos);
+	result = compile(inputForVersion("\"evmVersion\": \"istanbul\","));
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"istanbul\"") != string::npos);
 	// test default
 	result = compile(inputForVersion(""));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"petersburg\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"istanbul\"") != string::npos);
 	// test invalid
 	result = compile(inputForVersion("\"evmVersion\": \"invalid\","));
 	BOOST_CHECK(result["errors"][0]["message"].asString() == "Invalid EVM version requested.");

@@ -48,6 +48,7 @@ Language Features:
 
 
 Compiler Features:
+ * Set the default EVM version to "Istanbul".
  * Commandline Interface: Allow translation from yul / strict assembly to EWasm using ``solc --yul --yul-dialect evm --machine eWasm``
  * SMTChecker: Add support to constructors including constructor inheritance.
  * Yul: When compiling via Yul, string literals from the Solidity code are kept as string literals if every character is safely printable.
@@ -62,6 +63,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when using ``abi.decode``.
  * SMTChecker: Fix internal error when using arrays or mappings of functions.
  * SMTChecker: Fix internal error in array of structs type.
+ * Yul: Consider infinite loops and recursion to be not removable.
 
 
 
