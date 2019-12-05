@@ -70,7 +70,6 @@ JSON AST:
             "overrides": null,
             "scope": 18,
             "stateMutability": "nonpayable",
-            "superFunction": null,
             "visibility": "public"
           },
           "children":
@@ -134,7 +133,6 @@ JSON AST:
             "overrides": null,
             "scope": 18,
             "stateMutability": "view",
-            "superFunction": null,
             "visibility": "public"
           },
           "children":
