@@ -262,51 +262,33 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 	}
 }
 
-bool ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super)
+void ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super)
 {
 	FunctionTypePointer functionType = FunctionType(_function).asCallableFunction(false);
 	FunctionTypePointer superType = FunctionType(_super).asCallableFunction(false);
 
-	bool success = true;
-
-	if (!functionType->hasEqualParameterTypes(*superType))
-		return true;
+	solAssert(functionType->hasEqualParameterTypes(*superType), "");
 
 	if (!_function.overrides())
-	{
 		overrideError(_function, _super, "Overriding function is missing 'override' specifier.");
-		success = false;
-	}
 
 	if (!_super.virtualSemantics())
-	{
 		overrideError( _super, _function, "Trying to override non-virtual function. Did you forget to add \"virtual\"?", "Overriding function is here:");
-		success = false;
-	}
 
 	if (!functionType->hasEqualReturnTypes(*superType))
-	{
 		overrideError(_function, _super, "Overriding function return types differ.");
-		success = false;
-	}
 
 	_function.annotation().baseFunctions.emplace(&_super);
 
 	if (_function.visibility() != _super.visibility())
-	{
 		// Visibility change from external to public is fine.
 		// Any other change is disallowed.
 		if (!(
 			_super.visibility() == FunctionDefinition::Visibility::External &&
 			_function.visibility() == FunctionDefinition::Visibility::Public
 		))
-		{
 			overrideError(_function, _super, "Overriding function visibility differs.");
-			success = false;
-		}
-	}
 	if (_function.stateMutability() != _super.stateMutability())
-	{
 		overrideError(
 			_function,
 			_super,
@@ -316,10 +298,13 @@ bool ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _func
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
-		success = false;
-	}
 
-	return success;
+	if (!_function.isImplemented() && _super.isImplemented())
+		overrideError(
+			_function,
+			_super,
+			"Overriding an implemented function with an unimplemented function is not allowed."
+		);
 }
 
 void ContractLevelChecker::overrideListError(FunctionDefinition const& function, set<ContractDefinition const*, LessFunction> _secondary, string const& _message1, string const& _message2)
@@ -372,11 +357,6 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 		});
 		if (it == overloads.end())
 			overloads.emplace_back(_type, _implemented);
-		else if (it->second)
-		{
-			if (!_implemented)
-				m_errorReporter.typeError(_declaration.location(), "Redeclaring an already implemented function as abstract");
-		}
 		else if (_implemented)
 			it->second = true;
 	};
