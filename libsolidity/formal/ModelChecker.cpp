@@ -25,10 +25,11 @@ using namespace dev::solidity;
 ModelChecker::ModelChecker(
 	ErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
-	ReadCallback::Callback const& _smtCallback
+	ReadCallback::Callback const& _smtCallback,
+	smt::SMTSolverChoice _enabledSolvers
 ):
-	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback),
-	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback),
+	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers),
+	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers),
 	m_context()
 {
 }

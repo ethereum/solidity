@@ -36,6 +36,21 @@ namespace solidity
 namespace smt
 {
 
+struct SMTSolverChoice
+{
+	bool cvc4 = false;
+	bool z3 = false;
+
+	static constexpr SMTSolverChoice All() { return {true, true}; }
+	static constexpr SMTSolverChoice CVC4() { return {true, false}; }
+	static constexpr SMTSolverChoice Z3() { return {false, true}; }
+	static constexpr SMTSolverChoice None() { return {false, false}; }
+
+	bool none() { return !some(); }
+	bool some() { return cvc4 || z3; }
+	bool all() { return cvc4 && z3; }
+};
+
 enum class CheckResult
 {
 	SATISFIABLE, UNSATISFIABLE, UNKNOWN, CONFLICTING, ERROR

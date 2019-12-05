@@ -47,6 +47,7 @@ Compiler Features:
 Language Features:
  * Allow to obtain the selector of public or external library functions via a member ``.selector``.
  * Parser: Allow splitting string and hexadecimal string literals into multiple parts.
+ * Inline Assembly: Support referencing other constants.
 
 
 Compiler Features:
@@ -66,7 +67,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when using arrays or mappings of functions.
  * SMTChecker: Fix internal error in array of structs type.
  * Yul: Consider infinite loops and recursion to be not removable.
-
+ * Version Checker: 0.5.x-prerelease will match `pragma solidity ^0.5`.
 
 
 ### 0.5.13 (2019-11-14)
