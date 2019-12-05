@@ -60,7 +60,6 @@
           "scope": 9,
           "src": "15:32:1",
           "stateMutability": "payable",
-          "superFunction": null,
           "visibility": "external"
         },
         {
@@ -96,7 +95,6 @@
           "scope": 9,
           "src": "50:33:1",
           "stateMutability": "payable",
-          "superFunction": null,
           "visibility": "external"
         }
       ],

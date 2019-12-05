@@ -22,6 +22,7 @@ Breaking changes:
  * Natspec JSON Interface: Properly support multiple ``@return`` statements in ``@dev`` documentation and enforce named return parameters to be mentioned documentation.
  * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
  * AST: Inline assembly is exported as structured JSON instead of plain string.
+ * JSON AST: Replace ``superFunction`` attribute by ``baseFunctions``.
  * General: ``private`` cannot be used together with ``virtual``.
  * Inheritance: State variable shadowing is now disallowed.
 

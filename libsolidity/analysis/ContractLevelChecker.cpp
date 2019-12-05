@@ -290,8 +290,7 @@ bool ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _func
 		success = false;
 	}
 
-	if (!_function.annotation().superFunction)
-		_function.annotation().superFunction = &_super;
+	_function.annotation().baseFunctions.emplace(&_super);
 
 	if (_function.visibility() != _super.visibility())
 	{

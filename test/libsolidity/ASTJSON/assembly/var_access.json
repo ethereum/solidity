@@ -148,7 +148,6 @@
           "scope": 9,
           "src": "17:76:1",
           "stateMutability": "pure",
-          "superFunction": null,
           "visibility": "public"
         }
       ],

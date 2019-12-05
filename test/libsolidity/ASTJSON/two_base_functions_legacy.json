@@ -10,11 +10,11 @@
       ],
       "B":
       [
-        16
+        10
       ],
       "C":
       [
-        31
+        22
       ]
     }
   },
@@ -40,7 +40,7 @@
           5
         ],
         "name": "A",
-        "scope": 32
+        "scope": 23
       },
       "children":
       [
@@ -55,7 +55,7 @@
             [
               null
             ],
-            "name": "faa",
+            "name": "f",
             "overrides": null,
             "scope": 5,
             "stateMutability": "nonpayable",
@@ -74,7 +74,7 @@
               "children": [],
               "id": 1,
               "name": "ParameterList",
-              "src": "26:2:1"
+              "src": "27:2:1"
             },
             {
               "attributes":
@@ -87,7 +87,7 @@
               "children": [],
               "id": 2,
               "name": "ParameterList",
-              "src": "36:0:1"
+              "src": "45:0:1"
             },
             {
               "attributes":
@@ -100,17 +100,109 @@
               "children": [],
               "id": 3,
               "name": "Block",
-              "src": "36:2:1"
+              "src": "45:2:1"
             }
           ],
           "id": 4,
           "name": "FunctionDefinition",
-          "src": "14:24:1"
+          "src": "17:30:1"
         }
       ],
       "id": 5,
       "name": "ContractDefinition",
-      "src": "0:40:1"
+      "src": "0:49:1"
+    },
+    {
+      "attributes":
+      {
+        "abstract": false,
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          10
+        ],
+        "name": "B",
+        "scope": 23
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "documentation": null,
+            "implemented": true,
+            "isConstructor": false,
+            "kind": "function",
+            "modifiers":
+            [
+              null
+            ],
+            "name": "f",
+            "overrides": null,
+            "scope": 10,
+            "stateMutability": "nonpayable",
+            "visibility": "public"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 6,
+              "name": "ParameterList",
+              "src": "77:2:1"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 7,
+              "name": "ParameterList",
+              "src": "95:0:1"
+            },
+            {
+              "attributes":
+              {
+                "statements":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 8,
+              "name": "Block",
+              "src": "95:2:1"
+            }
+          ],
+          "id": 9,
+          "name": "FunctionDefinition",
+          "src": "67:30:1"
+        }
+      ],
+      "id": 10,
+      "name": "ContractDefinition",
+      "src": "50:49:1"
     },
     {
       "attributes":
@@ -118,18 +210,20 @@
         "abstract": false,
         "contractDependencies":
         [
-          5
+          5,
+          10
         ],
         "contractKind": "contract",
         "documentation": null,
-        "fullyImplemented": false,
+        "fullyImplemented": true,
         "linearizedBaseContracts":
         [
-          16,
+          22,
+          10,
           5
         ],
-        "name": "B",
-        "scope": 32
+        "name": "C",
+        "scope": 23
       },
       "children":
       [
@@ -148,164 +242,15 @@
                 "referencedDeclaration": 5,
                 "type": "contract A"
               },
-              "id": 6,
-              "name": "UserDefinedTypeName",
-              "src": "55:1:1"
-            }
-          ],
-          "id": 7,
-          "name": "InheritanceSpecifier",
-          "src": "55:1:1"
-        },
-        {
-          "attributes":
-          {
-            "body": null,
-            "documentation": null,
-            "implemented": false,
-            "isConstructor": false,
-            "kind": "function",
-            "modifiers":
-            [
-              null
-            ],
-            "name": "foo",
-            "overrides": null,
-            "scope": 16,
-            "stateMutability": "nonpayable",
-            "visibility": "public"
-          },
-          "children":
-          [
-            {
-              "attributes":
-              {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 8,
-              "name": "ParameterList",
-              "src": "72:2:1"
-            },
-            {
-              "attributes":
-              {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 9,
-              "name": "ParameterList",
-              "src": "81:0:1"
-            }
-          ],
-          "id": 10,
-          "name": "FunctionDefinition",
-          "src": "60:22:1"
-        },
-        {
-          "attributes":
-          {
-            "baseFunctions":
-            [
-              4
-            ],
-            "documentation": null,
-            "implemented": true,
-            "isConstructor": false,
-            "kind": "function",
-            "modifiers":
-            [
-              null
-            ],
-            "name": "faa",
-            "overrides":
-            [
-              null
-            ],
-            "scope": 16,
-            "stateMutability": "nonpayable",
-            "visibility": "public"
-          },
-          "children":
-          [
-            {
-              "attributes":
-              {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
               "id": 11,
-              "name": "ParameterList",
-              "src": "96:2:1"
-            },
-            {
-              "attributes":
-              {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 13,
-              "name": "ParameterList",
-              "src": "115:0:1"
-            },
-            {
-              "attributes":
-              {
-                "statements":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 14,
-              "name": "Block",
-              "src": "115:2:1"
+              "name": "UserDefinedTypeName",
+              "src": "114:1:1"
             }
           ],
-          "id": 15,
-          "name": "FunctionDefinition",
-          "src": "84:33:1"
-        }
-      ],
-      "id": 16,
-      "name": "ContractDefinition",
-      "src": "41:78:1"
-    },
-    {
-      "attributes":
-      {
-        "abstract": false,
-        "contractDependencies":
-        [
-          5,
-          16
-        ],
-        "contractKind": "contract",
-        "documentation": null,
-        "fullyImplemented": true,
-        "linearizedBaseContracts":
-        [
-          31,
-          16,
-          5
-        ],
-        "name": "C",
-        "scope": 32
-      },
-      "children":
-      [
+          "id": 12,
+          "name": "InheritanceSpecifier",
+          "src": "114:1:1"
+        },
         {
           "attributes":
           {
@@ -318,24 +263,25 @@
               {
                 "contractScope": null,
                 "name": "B",
-                "referencedDeclaration": 16,
+                "referencedDeclaration": 10,
                 "type": "contract B"
               },
-              "id": 17,
+              "id": 13,
               "name": "UserDefinedTypeName",
-              "src": "134:1:1"
+              "src": "117:1:1"
             }
           ],
-          "id": 18,
+          "id": 14,
           "name": "InheritanceSpecifier",
-          "src": "134:1:1"
+          "src": "117:1:1"
         },
         {
           "attributes":
           {
             "baseFunctions":
             [
-              10
+              4,
+              9
             ],
             "documentation": null,
             "implemented": true,
@@ -345,17 +291,50 @@
             [
               null
             ],
-            "name": "foo",
-            "overrides":
-            [
-              null
-            ],
-            "scope": 31,
+            "name": "f",
+            "scope": 22,
             "stateMutability": "nonpayable",
             "visibility": "public"
           },
           "children":
           [
+            {
+              "attributes":
+              {
+                "contractScope": null,
+                "name": "A",
+                "referencedDeclaration": 5,
+                "type": "contract A"
+              },
+              "id": 16,
+              "name": "UserDefinedTypeName",
+              "src": "154:1:1"
+            },
+            {
+              "attributes":
+              {
+                "contractScope": null,
+                "name": "B",
+                "referencedDeclaration": 10,
+                "type": "contract B"
+              },
+              "id": 17,
+              "name": "UserDefinedTypeName",
+              "src": "157:1:1"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 15,
+              "name": "ParameterList",
+              "src": "135:2:1"
+            },
             {
               "attributes":
               {
@@ -367,20 +346,7 @@
               "children": [],
               "id": 19,
               "name": "ParameterList",
-              "src": "151:2:1"
-            },
-            {
-              "attributes":
-              {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 21,
-              "name": "ParameterList",
-              "src": "170:0:1"
+              "src": "160:0:1"
             },
             {
               "attributes":
@@ -391,112 +357,22 @@
                 ]
               },
               "children": [],
-              "id": 22,
+              "id": 20,
               "name": "Block",
-              "src": "170:3:1"
+              "src": "160:2:1"
             }
           ],
-          "id": 23,
+          "id": 21,
           "name": "FunctionDefinition",
-          "src": "139:34:1"
-        },
-        {
-          "attributes":
-          {
-            "baseFunctions":
-            [
-              15
-            ],
-            "documentation": null,
-            "implemented": true,
-            "isConstructor": false,
-            "kind": "function",
-            "modifiers":
-            [
-              null
-            ],
-            "name": "faa",
-            "scope": 31,
-            "stateMutability": "nonpayable",
-            "visibility": "public"
-          },
-          "children":
-          [
-            {
-              "attributes":
-              {
-                "contractScope": null,
-                "name": "A",
-                "referencedDeclaration": 5,
-                "type": "contract A"
-              },
-              "id": 25,
-              "name": "UserDefinedTypeName",
-              "src": "206:1:1"
-            },
-            {
-              "attributes":
-              {
-                "contractScope": null,
-                "name": "B",
-                "referencedDeclaration": 16,
-                "type": "contract B"
-              },
-              "id": 26,
-              "name": "UserDefinedTypeName",
-              "src": "209:1:1"
-            },
-            {
-              "attributes":
-              {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 24,
-              "name": "ParameterList",
-              "src": "187:2:1"
-            },
-            {
-              "attributes":
-              {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 28,
-              "name": "ParameterList",
-              "src": "212:0:1"
-            },
-            {
-              "attributes":
-              {
-                "statements":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 29,
-              "name": "Block",
-              "src": "212:2:1"
-            }
-          ],
-          "id": 30,
-          "name": "FunctionDefinition",
-          "src": "175:39:1"
+          "src": "125:37:1"
         }
       ],
-      "id": 31,
+      "id": 22,
       "name": "ContractDefinition",
-      "src": "120:96:1"
+      "src": "100:64:1"
     }
   ],
-  "id": 32,
+  "id": 23,
   "name": "SourceUnit",
-  "src": "0:217:1"
+  "src": "0:165:1"
 }
