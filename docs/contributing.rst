@@ -86,7 +86,7 @@ but for quicker feedback, you might want to run specific tests.
 
 Solidity includes different types of tests, most of them bundled into the
 `Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest``.
-Running ``build/test/soltest` or its wrapper ``scripts/soltest.sh`` is sufficient for most changes.
+Running ``build/test/soltest`` or its wrapper ``scripts/soltest.sh`` is sufficient for most changes.
 
 Some tests require the ``evmone`` library, others require ``libz3``.
 
@@ -113,7 +113,7 @@ See especially:
     If you are running this in plain Command Prompt, use ``.\build\test\Release\soltest.exe -- --no-smt``.
 
 To run a subset of tests, you can use filters:
-``./scripts/soltest.sh -t TestSuite/TestName,
+``./scripts/soltest.sh -t TestSuite/TestName``,
 where ``TestName`` can be a wildcard ``*``.
 
 For example, here is an example test you might run;
