@@ -346,8 +346,20 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 					solAssert(conflictingDeclaration, "");
 
 					// Usual shadowing is not an error
-					if (dynamic_cast<ModifierDefinition const*>(declaration) && dynamic_cast<ModifierDefinition const*>(conflictingDeclaration))
+					if (
+						dynamic_cast<ModifierDefinition const*>(declaration) &&
+						dynamic_cast<ModifierDefinition const*>(conflictingDeclaration)
+					)
 						continue;
+
+					// Public state variable can override functions
+					if (auto varDecl = dynamic_cast<VariableDeclaration const*>(conflictingDeclaration))
+						if (
+							dynamic_cast<FunctionDefinition const*>(declaration) &&
+							varDecl->isStateVariable() &&
+							varDecl->isPublic()
+						)
+							continue;
 
 					if (declaration->location().start < conflictingDeclaration->location().start)
 					{

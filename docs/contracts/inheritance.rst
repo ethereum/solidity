@@ -259,6 +259,29 @@ overridden when used with multiple inheritance:
   Functions without implementation have to be marked ``virtual``
   outside of interfaces.
 
+Public state variables can override external functions if the
+parameter and return types of the function matches the getter function
+of the variable:
+
+::
+
+    pragma solidity >=0.5.0 <0.7.0;
+
+    contract A
+    {
+        function f() external virtual pure returns(uint) { return 5; }
+    }
+
+    contract B is A
+    {
+        uint public override f;
+    }
+
+.. note::
+
+  While public state variables can override external functions, they themselves cannot
+  be overridden.
+
 .. _modifier-overriding:
 
 .. index:: ! overriding;modifier

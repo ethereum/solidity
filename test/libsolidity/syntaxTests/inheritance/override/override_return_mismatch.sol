@@ -6,8 +6,7 @@ abstract contract B {
 	function test() internal virtual returns (uint256);
 }
 abstract contract X is A, B {
-	int public override testvar;
 	function test() internal override virtual returns (uint256);
 }
 // ----
-// TypeError: (203-326): Derived contract must override function "foo". Function with the same name and parameter types defined in two or more base classes.
+// TypeError: (203-296): Derived contract must override function "foo". Function with the same name and parameter types defined in two or more base classes.

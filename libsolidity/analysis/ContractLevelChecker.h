@@ -73,9 +73,10 @@ private:
 	/// Performs various checks related to @a _function overriding @a _super like
 	/// different return type, invalid visibility change, etc.
 	/// Also stores @a _super as a base function of @a _function in its AST annotations.
-	void checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super);
+	template<class T>
+	void checkFunctionOverride(T const& _overriding, FunctionDefinition const& _super);
 	void overrideListError(FunctionDefinition const& function, std::set<ContractDefinition const*, LessFunction> _secondary, std::string const& _message1, std::string const& _message2);
-	void overrideError(CallableDeclaration const& function, CallableDeclaration const& super, std::string message, std::string secondaryMsg = "Overridden function is here:");
+	void overrideError(Declaration const& _overriding, Declaration const& _super, std::string _message, std::string _secondaryMsg = "Overridden function is here:");
 	void checkAbstractFunctions(ContractDefinition const& _contract);
 	/// Checks that the base constructor arguments are properly provided.
 	/// Fills the list of unimplemented functions in _contract's annotations.
