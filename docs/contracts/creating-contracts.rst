@@ -8,16 +8,17 @@ Contracts can be created "from outside" via Ethereum transactions or from within
 
 IDEs, such as `Remix <https://remix.ethereum.org/>`_, make the creation process seamless using UI elements.
 
-Creating contracts programmatically on Ethereum is best done via using the JavaScript API `web3.js <https://github.com/ethereum/web3.js>`_.
+One way to create contracts programmatically on Ethereum is via the JavaScript API `web3.js <https://github.com/ethereum/web3.js>`_.
 It has a function called `web3.eth.Contract <https://web3js.readthedocs.io/en/1.0/web3-eth-contract.html#new-contract>`_
 to facilitate contract creation.
 
-When a contract is created, its :ref:`constructor <constructor>`  (a function declared with the ``constructor`` keyword) is executed once.
+When a contract is created, its :ref:`constructor <constructor>` (a function declared with
+the ``constructor`` keyword) is executed once.
 
 A constructor is optional. Only one constructor is allowed, which means
 overloading is not supported.
 
-After the constructor has executed, the final code of the contract is deployed to the
+After the constructor has executed, the final code of the contract is stored on the
 blockchain. This code includes all public and external functions and all functions
 that are reachable from there through function calls. The deployed code does not
 include the constructor code or internal functions only called from the constructor.
@@ -57,18 +58,20 @@ This means that cyclic creation dependencies are impossible.
             // See the next section for details.
             owner = msg.sender;
 
-            // We do an explicit type conversion from `address`
+            // We perform an explicit type conversion from `address`
             // to `TokenCreator` and assume that the type of
             // the calling contract is `TokenCreator`, there is
-            // no real way to check that.
+            // no real way to verify that.
+            // This does not create a new contract.
             creator = TokenCreator(msg.sender);
             name = _name;
         }
 
         function changeName(bytes32 newName) public {
-            // Only the creator can alter the name --
-            // the comparison is possible since contracts
-            // are explicitly convertible to addresses.
+            // Only the creator can alter the name.
+            // We compare the contract based on its
+            // address which can be retrieved by
+            // explicit conversion to address.
             if (msg.sender == address(creator))
                 name = newName;
         }
@@ -94,9 +97,9 @@ This means that cyclic creation dependencies are impossible.
             returns (OwnedToken tokenAddress)
         {
             // Create a new `Token` contract and return its address.
-            // From the JavaScript side, the return type is
-            // `address`, as this is the closest type available in
-            // the ABI.
+            // From the JavaScript side, the return type
+            // of this function is `address`, as this is
+            // the closest type available in the ABI.
             return new OwnedToken(name);
         }
 
