@@ -51,7 +51,6 @@
             "overrides": null,
             "scope": 11,
             "stateMutability": "nonpayable",
-            "superFunction": null,
             "visibility": "public"
           },
           "children":

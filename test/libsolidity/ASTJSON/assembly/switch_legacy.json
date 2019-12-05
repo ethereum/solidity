@@ -51,7 +51,6 @@
             "overrides": null,
             "scope": 6,
             "stateMutability": "pure",
-            "superFunction": null,
             "visibility": "public"
           },
           "children":

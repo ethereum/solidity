@@ -59,7 +59,6 @@
             "overrides": null,
             "scope": 5,
             "stateMutability": "nonpayable",
-            "superFunction": null,
             "visibility": "public"
           },
           "children":
@@ -174,7 +173,6 @@
             "overrides": null,
             "scope": 16,
             "stateMutability": "nonpayable",
-            "superFunction": null,
             "visibility": "public"
           },
           "children":
@@ -213,6 +211,10 @@
         {
           "attributes":
           {
+            "baseFunctions":
+            [
+              4
+            ],
             "documentation": null,
             "implemented": true,
             "isConstructor": false,
@@ -228,7 +230,6 @@
             ],
             "scope": 16,
             "stateMutability": "nonpayable",
-            "superFunction": 4,
             "visibility": "public"
           },
           "children":
@@ -332,6 +333,10 @@
         {
           "attributes":
           {
+            "baseFunctions":
+            [
+              10
+            ],
             "documentation": null,
             "implemented": true,
             "isConstructor": false,
@@ -347,7 +352,6 @@
             ],
             "scope": 31,
             "stateMutability": "nonpayable",
-            "superFunction": 10,
             "visibility": "public"
           },
           "children":
@@ -399,6 +403,10 @@
         {
           "attributes":
           {
+            "baseFunctions":
+            [
+              15
+            ],
             "documentation": null,
             "implemented": true,
             "isConstructor": false,
@@ -410,7 +418,6 @@
             "name": "faa",
             "scope": 31,
             "stateMutability": "nonpayable",
-            "superFunction": 15,
             "visibility": "public"
           },
           "children":

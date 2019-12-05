@@ -68,7 +68,6 @@
           "scope": 5,
           "src": "14:24:1",
           "stateMutability": "nonpayable",
-          "superFunction": null,
           "visibility": "public"
         }
       ],
@@ -144,10 +143,13 @@
           "scope": 16,
           "src": "60:22:1",
           "stateMutability": "nonpayable",
-          "superFunction": null,
           "visibility": "public"
         },
         {
+          "baseFunctions":
+          [
+            4
+          ],
           "body":
           {
             "id": 14,
@@ -180,7 +182,6 @@
           "scope": 16,
           "src": "84:33:1",
           "stateMutability": "nonpayable",
-          "superFunction": 4,
           "visibility": "public"
         }
       ],
@@ -232,6 +233,10 @@
       "nodes":
       [
         {
+          "baseFunctions":
+          [
+            10
+          ],
           "body":
           {
             "id": 22,
@@ -264,10 +269,13 @@
           "scope": 31,
           "src": "139:34:1",
           "stateMutability": "nonpayable",
-          "superFunction": 10,
           "visibility": "public"
         },
         {
+          "baseFunctions":
+          [
+            15
+          ],
           "body":
           {
             "id": 29,
@@ -328,7 +336,6 @@
           "scope": 31,
           "src": "175:39:1",
           "stateMutability": "nonpayable",
-          "superFunction": 15,
           "visibility": "public"
         }
       ],

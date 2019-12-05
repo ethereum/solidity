@@ -51,7 +51,6 @@
             "overrides": null,
             "scope": 9,
             "stateMutability": "payable",
-            "superFunction": null,
             "visibility": "external"
           },
           "children":
@@ -115,7 +114,6 @@
             "overrides": null,
             "scope": 9,
             "stateMutability": "payable",
-            "superFunction": null,
             "visibility": "external"
           },
           "children":
