@@ -336,6 +336,53 @@ Array Members
         }
     }
 
+.. index:: ! array;slice
+
+.. _array-slices:
+
+Array Slices
+------------
+
+
+Array slices are a view on a contigous portion of an array.
+They are written as ``x[start:end]``, where ``start`` and
+``end`` are expressions resulting in a uint256 type (or
+implicitly convertible to it). The first element of the
+slice is ``x[start]`` and the last element is ``x[end - 1]``.
+
+If ``start`` is greater than ``end`` or if ``end`` is greater
+than the length of the array, an exception is thrown.
+
+Both ``start`` and ``end`` are optional, and they default to
+``0`` and the length of the array, respectively.
+
+Array slices do not have any members. They are implicitly
+convertible to arrays of their underlying type
+and support index access. Index access is of course
+not absolute in the underlying array, but relative to
+the start of the slice.
+
+Array slices do not have a type name which means
+no variable can have an array slices as type,
+they only exist in intermediate expressions.
+
+.. note::
+    As of now, array slices are only implemented for calldata arrays.
+
+Array slices are useful to ABI-decode secondary data passed in function parameters:
+
+::
+
+    pragma solidity >=0.4.99 <0.7.0;
+
+    contract C {
+        function verifyBet(address recipient, bytes calldata _data) {
+            bytes4 sig = _data[:4];
+            // TODO continue with example
+        }
+    }
+
+
 
 .. index:: ! struct, ! type;struct
 
