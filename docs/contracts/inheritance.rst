@@ -237,8 +237,10 @@ bases, it has to explicitly override it:
         function foo() public override(Base1, Base2) {}
     }
 
-A function defined in a common base contract does not have to be explicitly
-overridden when used with multiple inheritance:
+An explicit override specifier is not required if
+the function is defined in a common base contract
+or if there is a unique function in a common base contract
+that already overrides all other functions.
 
 ::
 
@@ -249,6 +251,19 @@ overridden when used with multiple inheritance:
     contract C is A {}
     // No explicit override required
     contract D is B, C {}
+
+More formally, it is not required to override a function (directly or
+indirectly) inherited from multiple bases if there is a base contract
+that is part of all override paths for the signature, and (1) that
+base implements the function and no paths from the current contract
+to the base mentions a function with that signature or (2) that base
+does not implement the function and there is at most one mention of
+the function in all paths from the current contract to that base.
+
+In this sense, an override path for a signature is a path through
+the inheritance graph that starts at the contract under consideration
+and ends at a contract mentioning a function with that signature
+that does not override.
 
 .. note::
 
