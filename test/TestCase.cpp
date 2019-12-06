@@ -186,7 +186,7 @@ bool EVMVersionRestrictedTestCase::validateSettings(langutil::EVMVersion _evmVer
 	versionString = versionString.substr(versionBegin);
 	std::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(versionString);
 	if (!version)
-		throw runtime_error("Invalid EVM version: \"" + versionString + "\"");
+		BOOST_THROW_EXCEPTION(runtime_error{"Invalid EVM version: \"" + versionString + "\""});
 
 	if (comparator == ">")
 		return _evmVersion > version;
@@ -201,6 +201,5 @@ bool EVMVersionRestrictedTestCase::validateSettings(langutil::EVMVersion _evmVer
 	else if (comparator == "!")
 		return !(_evmVersion == version);
 	else
-		throw runtime_error("Invalid EVM comparator: \"" + comparator + "\"");
-	return false; // not reached
+		BOOST_THROW_EXCEPTION(runtime_error{"Invalid EVM comparator: \"" + comparator + "\""});
 }
