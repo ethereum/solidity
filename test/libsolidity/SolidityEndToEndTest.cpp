@@ -2313,7 +2313,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_overriding)
 	char const* sourceCode = R"(
 		contract A {
 			function f() mod public returns (bool r) { return true; }
-			modifier mod { _; }
+			modifier mod virtual { _; }
 		}
 		contract C is A {
 			modifier mod override { if (false) _; }
@@ -2352,7 +2352,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_for_constructor)
 		contract A {
 			uint data;
 			constructor() mod1 public { data |= 2; }
-			modifier mod1 { data |= 1; _; }
+			modifier mod1 virtual { data |= 1; _; }
 			function getData() public returns (uint r) { return data; }
 		}
 		contract C is A {

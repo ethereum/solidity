@@ -238,10 +238,8 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 
 void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 {
-	FunctionMultiSet const& funcSet = inheritedFunctions(_contract);
-	ModifierMultiSet const& modSet = inheritedModifiers(_contract);
-
-	checkModifierOverrides(funcSet, modSet, _contract.functionModifiers());
+	FunctionMultiSet const& inheritedFuncs = inheritedFunctions(_contract);
+	ModifierMultiSet const& inheritedMods = inheritedModifiers(_contract);
 
 	for (auto const* stateVar: _contract.stateVariables())
 	{
@@ -250,9 +248,9 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 
 		bool found = false;
 		for (
-			auto it = find_if(funcSet.begin(), funcSet.end(), MatchByName{stateVar->name()});
-			it != funcSet.end();
-			it = find_if(++it, funcSet.end(), MatchByName{stateVar->name()})
+			auto it = find_if(inheritedFuncs.begin(), inheritedFuncs.end(), MatchByName{stateVar->name()});
+			it != inheritedFuncs.end();
+			it = find_if(++it, inheritedFuncs.end(), MatchByName{stateVar->name()})
 		)
 		{
 			if (!hasEqualNameAndParameters(*stateVar, **it))
@@ -261,7 +259,7 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 			if ((*it)->visibility() != Declaration::Visibility::External)
 				overrideError(*stateVar, **it, "Public state variables can only override functions with external visibility.");
 			else
-				checkFunctionOverride(*stateVar, **it);
+				checkOverride(*stateVar, **it);
 
 			found = true;
 		}
@@ -273,51 +271,96 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 			);
 	}
 
+	for (ModifierDefinition const* modifier: _contract.functionModifiers())
+	{
+		if (contains_if(inheritedFuncs, MatchByName{modifier->name()}))
+			m_errorReporter.typeError(
+				modifier->location(),
+				"Override changes function to modifier."
+			);
+
+		auto [begin, end] = inheritedMods.equal_range(modifier);
+
+		if (begin == end && modifier->overrides())
+			m_errorReporter.typeError(
+				modifier->overrides()->location(),
+				"Modifier has override specified but does not override anything."
+			);
+
+		for (; begin != end; begin++)
+			if (ModifierType(**begin) != ModifierType(*modifier))
+				m_errorReporter.typeError(
+					modifier->location(),
+					"Override changes modifier signature."
+				);
+
+		checkOverrideList(inheritedMods, *modifier);
+	}
+
 	for (FunctionDefinition const* function: _contract.definedFunctions())
 	{
 		if (function->isConstructor())
 			continue;
 
-		if (contains_if(modSet, MatchByName{function->name()}))
+		if (contains_if(inheritedMods, MatchByName{function->name()}))
 			m_errorReporter.typeError(function->location(), "Override changes modifier to function.");
 
 		// No inheriting functions found
-		if (!funcSet.count(function) && function->overrides())
+		if (!inheritedFuncs.count(function) && function->overrides())
 			m_errorReporter.typeError(
 				function->overrides()->location(),
 				"Function has override specified but does not override anything."
 			);
 
-		checkOverrideList(funcSet, *function);
+		checkOverrideList(inheritedFuncs, *function);
 	}
 }
 
-template<class T>
-void ContractLevelChecker::checkFunctionOverride(T const& _overriding, FunctionDefinition const& _super)
+template<class T, class U>
+void ContractLevelChecker::checkOverride(T const& _overriding, U const& _super)
 {
-	string overridingName;
+	static_assert(
+		std::is_same<VariableDeclaration, T>::value ||
+		std::is_same<FunctionDefinition, T>::value ||
+		std::is_same<ModifierDefinition, T>::value,
+		"Invalid call to checkOverride."
+	);
 
+	static_assert(
+		std::is_same<FunctionDefinition, U>::value ||
+		std::is_same<ModifierDefinition, U>::value,
+		"Invalid call to checkOverride."
+	);
+	static_assert(
+		!std::is_same<ModifierDefinition, U>::value ||
+		std::is_same<ModifierDefinition, T>::value,
+		"Invalid call to checkOverride."
+	);
+
+	string overridingName;
 	if constexpr(std::is_same<FunctionDefinition, T>::value)
 		overridingName = "function";
+	else if constexpr(std::is_same<ModifierDefinition, T>::value)
+		overridingName = "modifier";
 	else
 		overridingName = "public state variable";
 
-	FunctionTypePointer functionType = FunctionType(_overriding).asCallableFunction(false);
-	FunctionTypePointer superType = FunctionType(_super).asCallableFunction(false);
-
-	solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
+	string superName;
+	if constexpr(std::is_same<FunctionDefinition, U>::value)
+		superName = "function";
+	else
+		superName = "modifier";
 
 	if (!_overriding.overrides())
 		overrideError(_overriding, _super, "Overriding " + overridingName + " is missing 'override' specifier.");
 
 	if (!_super.virtualSemantics())
-		overrideError( _super, _overriding, "Trying to override non-virtual function. Did you forget to add \"virtual\"?", "Overriding " + overridingName + " is here:");
-
-	if (!functionType->hasEqualReturnTypes(*superType))
-		overrideError(_overriding, _super, "Overriding " + overridingName + " return types differ.");
-
-	if constexpr(std::is_same<T, FunctionDefinition>::value)
-		_overriding.annotation().baseFunctions.emplace(&_super);
+		overrideError(
+			_super,
+			_overriding,
+			"Trying to override non-virtual " + superName + ". Did you forget to add \"virtual\"?",
+			"Overriding " + overridingName + " is here:"
+		);
 
 	if (_overriding.visibility() != _super.visibility())
 	{
@@ -330,29 +373,50 @@ void ContractLevelChecker::checkFunctionOverride(T const& _overriding, FunctionD
 			overrideError(_overriding, _super, "Overriding " + overridingName + " visibility differs.");
 	}
 
-	if constexpr(std::is_same<T, FunctionDefinition>::value)
+	// This is only relevant for overriding functions by functions or state variables,
+	// it is skipped for modifiers.
+	if constexpr(std::is_same<FunctionDefinition, U>::value)
 	{
-		if (_overriding.stateMutability() != _super.stateMutability())
-			overrideError(
-				_overriding,
-				_super,
-				"Overriding function changes state mutability from \"" +
-				stateMutabilityToString(_super.stateMutability()) +
-				"\" to \"" +
-				stateMutabilityToString(_overriding.stateMutability()) +
-				"\"."
-			);
+		FunctionTypePointer functionType = FunctionType(_overriding).asCallableFunction(false);
+		FunctionTypePointer superType = FunctionType(_super).asCallableFunction(false);
 
-		if (!_overriding.isImplemented() && _super.isImplemented())
-			overrideError(
-				_overriding,
-				_super,
-				"Overriding an implemented function with an unimplemented function is not allowed."
-			);
+		solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
+
+		if (!functionType->hasEqualReturnTypes(*superType))
+			overrideError(_overriding, _super, "Overriding " + overridingName + " return types differ.");
+
+		// This is only relevant for a function overriding a function.
+		if constexpr(std::is_same<T, FunctionDefinition>::value)
+		{
+			_overriding.annotation().baseFunctions.emplace(&_super);
+
+			if (_overriding.stateMutability() != _super.stateMutability())
+				overrideError(
+					_overriding,
+					_super,
+					"Overriding function changes state mutability from \"" +
+					stateMutabilityToString(_super.stateMutability()) +
+					"\" to \"" +
+					stateMutabilityToString(_overriding.stateMutability()) +
+					"\"."
+				);
+
+			if (!_overriding.isImplemented() && _super.isImplemented())
+				overrideError(
+					_overriding,
+					_super,
+					"Overriding an implemented function with an unimplemented function is not allowed."
+				);
+		}
 	}
 }
 
-void ContractLevelChecker::overrideListError(FunctionDefinition const& function, set<ContractDefinition const*, LessFunction> _secondary, string const& _message1, string const& _message2)
+void ContractLevelChecker::overrideListError(
+	CallableDeclaration const& _callable,
+	set<ContractDefinition const*, LessFunction> _secondary,
+	string const& _message1,
+	string const& _message2
+)
 {
 	// Using a set rather than a vector so the order is always the same
 	set<string> names;
@@ -367,7 +431,7 @@ void ContractLevelChecker::overrideListError(FunctionDefinition const& function,
 		contractSingularPlural = "contracts ";
 
 	m_errorReporter.typeError(
-		function.overrides() ? function.overrides()->location() : function.location(),
+		_callable.overrides() ? _callable.overrides()->location() : _callable.location(),
 		ssl,
 		_message1 +
 		contractSingularPlural +
@@ -666,6 +730,10 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 
 void ContractLevelChecker::checkAmbiguousOverrides(ContractDefinition const& _contract) const
 {
+	// TODO same for modifiers.
+
+
+
 	// Fetch inherited functions and sort them by signature.
 	// We get at least one function per signature and direct base contract, which is
 	// enough because we re-construct the inheritance graph later.
@@ -815,49 +883,23 @@ set<ContractDefinition const*, ContractLevelChecker::LessFunction> ContractLevel
 	return resolved;
 }
 
-
-void ContractLevelChecker::checkModifierOverrides(FunctionMultiSet const& _funcSet, ModifierMultiSet const& _modSet, std::vector<ModifierDefinition const*> _modifiers)
-{
-	for (ModifierDefinition const* modifier: _modifiers)
-	{
-		if (contains_if(_funcSet, MatchByName{modifier->name()}))
-			m_errorReporter.typeError(
-				modifier->location(),
-				"Override changes function to modifier."
-			);
-
-		auto [begin,end] = _modSet.equal_range(modifier);
-
-		// Skip if no modifiers found in bases
-		if (begin == end)
-			continue;
-
-		if (!modifier->overrides())
-			overrideError(*modifier, **begin, "Overriding modifier is missing 'override' specifier.");
-
-		for (; begin != end; begin++)
-			if (ModifierType(**begin) != ModifierType(*modifier))
-				m_errorReporter.typeError(
-					modifier->location(),
-					"Override changes modifier signature."
-				);
-	}
-
-}
-
-void ContractLevelChecker::checkOverrideList(FunctionMultiSet const& _funcSet, FunctionDefinition const& _function)
+template <class T>
+void ContractLevelChecker::checkOverrideList(
+	std::multiset<T const*, LessFunction> const& _inheritedCallables,
+	T const& _callable
+)
 {
 	set<ContractDefinition const*, LessFunction> specifiedContracts =
-		_function.overrides() ?
-		resolveOverrideList(*_function.overrides()) :
+		_callable.overrides() ?
+		resolveOverrideList(*_callable.overrides()) :
 		decltype(specifiedContracts){};
 
 	// Check for duplicates in override list
-	if (_function.overrides() && specifiedContracts.size() != _function.overrides()->overrides().size())
+	if (_callable.overrides() && specifiedContracts.size() != _callable.overrides()->overrides().size())
 	{
 		// Sort by contract id to find duplicate for error reporting
 		vector<ASTPointer<UserDefinedTypeName>> list =
-			sortByContract(_function.overrides()->overrides());
+			sortByContract(_callable.overrides()->overrides());
 
 		// Find duplicates and output error
 		for (size_t i = 1; i < list.size(); i++)
@@ -877,7 +919,7 @@ void ContractLevelChecker::checkOverrideList(FunctionMultiSet const& _funcSet, F
 						"Duplicate contract \"" +
 						joinHumanReadable(list[i]->namePath(), ".") +
 						"\" found in override list of \"" +
-						_function.name() +
+						_callable.name() +
 						"\"."
 				);
 			}
@@ -887,12 +929,12 @@ void ContractLevelChecker::checkOverrideList(FunctionMultiSet const& _funcSet, F
 	decltype(specifiedContracts) expectedContracts;
 
 	// Build list of expected contracts
-	for (auto [begin, end] = _funcSet.equal_range(&_function); begin != end; begin++)
+	for (auto [begin, end] = _inheritedCallables.equal_range(&_callable); begin != end; begin++)
 	{
 		// Validate the override
-		checkFunctionOverride(_function, **begin);
+		checkOverride(_callable, **begin);
 
-		expectedContracts.insert((*begin)->annotation().contract);
+		expectedContracts.insert(&dynamic_cast<ContractDefinition const&>(*(*begin)->scope()));
 	}
 
 	decltype(specifiedContracts) missingContracts;
@@ -906,7 +948,7 @@ void ContractLevelChecker::checkOverrideList(FunctionMultiSet const& _funcSet, F
 
 	if (!missingContracts.empty())
 		overrideListError(
-			_function,
+			_callable,
 			missingContracts,
 			"Function needs to specify overridden ",
 			""
@@ -914,7 +956,7 @@ void ContractLevelChecker::checkOverrideList(FunctionMultiSet const& _funcSet, F
 
 	if (!surplusContracts.empty())
 		overrideListError(
-			_function,
+			_callable,
 			surplusContracts,
 			"Invalid ",
 			"specified in override list: "
