@@ -40,7 +40,7 @@ VERSION="$2"
 DIR=$(mktemp -d)
 (
     echo "Preparing solc-js (master)..."
-    git clone --depth 1 --branch master https://github.com/ethereum/solc-js "$DIR"
+    git clone --depth 1 --branch v0.5.0 https://github.com/ethereum/solc-js "$DIR"
     cd "$DIR"
     # disable "prepublish" script which downloads the latest version
     # (we will replace it anyway and it is often incorrectly cached

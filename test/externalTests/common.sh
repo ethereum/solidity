@@ -37,7 +37,7 @@ function setup_solcjs
 
     cd "$dir"
     printLog "Setting up solc-js..."
-    git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
+    git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
 
     cd solc
     npm install
@@ -107,7 +107,7 @@ function force_solc_truffle_modules
         if [ -d "$d" ]; then
             cd $d
             rm -rf solc
-            git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
+            git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
             cp "$1" solc/soljson.js
         fi
     )
