@@ -206,7 +206,7 @@ void CompilerStack::setSources(StringMap _sources)
 bool CompilerStack::parse()
 {
 	if (m_stackState != SourcesSet)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call parse only after the SourcesSet state."));
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call parse only after the \"SourcesSet\" state."));
 	m_errorReporter.clear();
 	ASTNode::resetID();
 
@@ -215,7 +215,7 @@ bool CompilerStack::parse()
 
 	if (m_optimiserSettings.runYulOptimiser)
 		m_errorReporter.warning(
-			"The Yul optimiser is still experimental. "
+			"The \"Yul\" optimiser is still experimental. "
 			"Do not use it in production unless correctness of generated code is verified with extensive tests."
 		);
 
@@ -229,7 +229,7 @@ bool CompilerStack::parse()
 		source.scanner->reset();
 		source.ast = Parser(m_errorReporter, m_evmVersion, m_parserErrorRecovery).parse(source.scanner);
 		if (!source.ast)
-			solAssert(!Error::containsOnlyWarnings(m_errorReporter.errors()), "Parser returned null but did not report error.");
+			solAssert(!Error::containsOnlyWarnings(m_errorReporter.errors()), "Parser returned \"null\" but did not report error.");
 		else
 		{
 			source.ast->annotation().path = path;

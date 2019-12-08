@@ -3,4 +3,4 @@ contract test {
 }
 // ----
 // Warning: (42-57): Unused local variable.
-// Warning: (20-98): Function state mutability can be restricted to pure
+// Warning: (20-98): Function state mutability can be restricted to "pure"

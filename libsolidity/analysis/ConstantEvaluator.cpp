@@ -47,12 +47,13 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 		if (!commonType)
 			m_errorReporter.fatalTypeError(
 				_operation.location(),
-				"Operator " +
+				"Operator \"" +
 				string(TokenTraits::toString(_operation.getOperator())) +
-				" not compatible with types " +
+				"\" not compatible with types \"" +
 				left->toString() +
-				" and " +
-				right->toString()
+				"\" and \"" +
+				right->toString() +
+				"\""
 			);
 		setType(
 			_operation,

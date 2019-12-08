@@ -743,7 +743,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				BOOST_THROW_EXCEPTION(
 					CompilerError() <<
 					errinfo_sourceLocation(_inlineAssembly.location()) <<
-					errinfo_comment("Stack too deep(" + to_string(stackDiff) + "), try removing local variables.")
+					errinfo_comment("Stack too deep(\"" + to_string(stackDiff) + "\"), try removing local variables.")
 				);
 			_assembly.appendInstruction(swapInstruction(stackDiff));
 			_assembly.appendInstruction(Instruction::POP);

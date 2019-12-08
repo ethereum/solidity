@@ -52,8 +52,8 @@ void PostTypeChecker::endVisit(ContractDefinition const&)
 		if (auto identifier = findCycle(*declaration))
 			m_errorReporter.typeError(
 				declaration->location(),
-				"The value of the constant " + declaration->name() +
-				" has a cyclic dependency via " + identifier->name() + "."
+				"The value of the constant \"" + declaration->name() +
+				"\" has a cyclic dependency via \"" + identifier->name() + "\"."
 			);
 
 	m_constVariables.clear();

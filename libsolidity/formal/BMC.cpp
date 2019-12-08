@@ -434,7 +434,7 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 		m_errorReporter.warning(
 			_funCall.location(),
 			"Assertion checker does not support recursive function calls.",
-			SecondarySourceLocation().append("Starting from function:", funDef->location())
+			SecondarySourceLocation().append("Starting from function: ", funDef->location())
 		);
 	}
 	else

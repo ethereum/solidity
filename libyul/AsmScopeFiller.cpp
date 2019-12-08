@@ -57,7 +57,7 @@ bool ScopeFiller::operator()(Label const& _item)
 		//@TODO secondary location
 		m_errorReporter.declarationError(
 			_item.location,
-			"Label name " + _item.name.str() + " already taken in this scope."
+			"Label name \"" + _item.name.str() + "\" already taken in this scope."
 		);
 		return false;
 	}
@@ -155,7 +155,7 @@ bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const&
 		//@TODO secondary location
 		m_errorReporter.declarationError(
 			_location,
-			"Variable name " + _name.name.str() + " already taken in this scope."
+			"Variable name \"" + _name.name.str() + "\" already taken in this scope."
 		);
 		return false;
 	}
@@ -175,7 +175,7 @@ bool ScopeFiller::registerFunction(FunctionDefinition const& _funDef)
 		//@TODO secondary location
 		m_errorReporter.declarationError(
 			_funDef.location,
-			"Function name " + _funDef.name.str() + " already taken in this scope."
+			"Function name \"" + _funDef.name.str() + "\" already taken in this scope."
 		);
 		return false;
 	}

@@ -617,7 +617,7 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	ofstream outFile(pathName);
 	outFile << _data;
 	if (!outFile)
-		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + pathName));
+		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: \"" + pathName + "\"."));
 }
 
 void CommandLineInterface::createJson(string const& _fileName, string const& _json)

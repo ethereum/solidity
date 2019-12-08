@@ -445,7 +445,7 @@ void ContractLevelChecker::checkHashCollisions(ContractDefinition const& _contra
 		if (hashes.count(hash))
 			m_errorReporter.typeError(
 				_contract.location(),
-				string("Function signature hash collision for ") + it.second->externalSignature()
+				string("Function signature hash collision for \"") + it.second->externalSignature() + "\""
 			);
 		hashes.insert(hash);
 	}

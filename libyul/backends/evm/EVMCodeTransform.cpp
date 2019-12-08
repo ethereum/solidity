@@ -560,9 +560,9 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		{
 			StackTooDeepError error(_function.name, YulString{}, stackLayout.size() - 17);
 			error << errinfo_comment(
-				"The function " +
+				"The function \"" +
 				_function.name.str() +
-				" has " +
+				"\" has " +
 				to_string(stackLayout.size() - 17) +
 				" parameters or return variables too many to fit the stack size."
 			);
@@ -817,9 +817,9 @@ int CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _va
 	{
 		m_stackErrors.emplace_back(_varName, heightDiff - limit);
 		m_stackErrors.back() << errinfo_comment(
-			"Variable " +
+			"Variable \"" +
 			_varName.str() +
-			" is " +
+			"\" is " +
 			to_string(heightDiff - limit) +
 			" slot(s) too deep inside the stack."
 		);

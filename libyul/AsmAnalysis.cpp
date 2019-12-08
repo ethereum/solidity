@@ -120,7 +120,7 @@ bool AsmAnalyzer::operator()(Literal const& _literal)
 	{
 		m_errorReporter.typeError(
 			_literal.location,
-			"String literal too long (" + to_string(_literal.value.str().size()) + " > 32)"
+			"String literal too long (\"" + to_string(_literal.value.str().size()) + "\" > 32)"
 		);
 		return false;
 	}
@@ -153,7 +153,7 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 			{
 				m_errorReporter.declarationError(
 					_identifier.location,
-					"Variable " + _identifier.name.str() + " used before it was declared."
+					"Variable \"" + _identifier.name.str() + "\" used before it was declared."
 				);
 				success = false;
 			}
@@ -167,7 +167,7 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 		{
 			m_errorReporter.typeError(
 				_identifier.location,
-				"Function " + _identifier.name.str() + " used without being called."
+				"Function \"" + _identifier.name.str() + "\" used without being called."
 			);
 			success = false;
 		}
@@ -223,7 +223,7 @@ bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 			to_string(m_stackHeight - initialStackHeight) +
 			" value" +
 			(m_stackHeight - initialStackHeight == 1 ? "" : "s") +
-			"). Use ``pop()`` or assign them.";
+			"). Use \"pop()\" or assign them.";
 		m_errorReporter.error(errorType, _statement.location, msg);
 		if (errorType != Error::Type::Warning)
 			success = false;
@@ -254,11 +254,11 @@ bool AsmAnalyzer::operator()(Assignment const& _assignment)
 	{
 		m_errorReporter.declarationError(
 			_assignment.location,
-			"Variable count does not match number of values (" +
+			"Variable count does not match number of values (\"" +
 			to_string(expectedItems) +
-			" vs. " +
+			"\" vs. \"" +
 			to_string(m_stackHeight - stackHeight) +
-			")"
+			"\")."
 		);
 		return false;
 	}
@@ -625,7 +625,7 @@ bool AsmAnalyzer::checkAssignment(Identifier const& _variable, size_t _valueSize
 		{
 			m_errorReporter.declarationError(
 				_variable.location,
-				"Variable " + _variable.name.str() + " used before it was declared."
+				"Variable \"" + _variable.name.str() + "\" used before it was declared."
 			);
 			success = false;
 		}

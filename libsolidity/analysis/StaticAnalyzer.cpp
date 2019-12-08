@@ -211,7 +211,7 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 				m_errorReporter.warning(
 					_memberAccess.location(),
 					"The constructor of the contract (or its base) uses inline assembly. "
-					"Because of that, it might be that the deployed bytecode is different from type(...).runtimeCode."
+					"Because of that, it might be that the deployed bytecode is different from \"type(...).runtimeCode\"."
 				);
 		}
 	}

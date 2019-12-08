@@ -144,9 +144,9 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 			m_errorReporter.typeErrorConcatenateDescriptions(
 				arguments.front()->location(),
 				"Invalid type for argument in function call. "
-				"Invalid implicit conversion from " +
+				"Invalid implicit conversion from \"" +
 				type(*arguments.front())->toString() +
-				" to bytes memory requested.",
+				"\" to bytes memory requested.",
 				result.message()
 			);
 	}
@@ -189,7 +189,7 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 			if (!actualType->fullEncodingType(false, _abiEncoderV2, false))
 				m_errorReporter.typeError(
 					typeArgument->location(),
-					"Decoding type " + actualType->toString(false) + " not supported."
+					"Decoding type \"" + actualType->toString(false) + "\" not supported."
 				);
 			components.push_back(actualType);
 		}
@@ -224,9 +224,9 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 		m_errorReporter.typeError(
 			arguments.front()->location(),
 			"Invalid type for argument in function call. "
-			"Contract type required, but " +
+			"Contract type required, but \"" +
 			type(*arguments.front())->toString(true) +
-			" provided."
+			"\" provided."
 		);
 		return {};
 	}
@@ -271,11 +271,11 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 				m_errorReporter.typeErrorConcatenateDescriptions(
 					(*arguments)[i]->location(),
 					"Invalid type for argument in constructor call. "
-					"Invalid implicit conversion from " +
+					"Invalid implicit conversion from \"" +
 					type(*(*arguments)[i])->toString() +
-					" to " +
+					"\" to \"" +
 					parameterTypes[i]->toString() +
-					" requested.",
+					"\" requested.",
 					result.message()
 				);
 		}
@@ -479,7 +479,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	{
 		if (varType->dataStoredIn(DataLocation::Memory) || varType->dataStoredIn(DataLocation::CallData))
 			if (!varType->canLiveOutsideStorage())
-				m_errorReporter.typeError(_variable.location(), "Type " + varType->toString() + " is only valid in storage.");
+				m_errorReporter.typeError(_variable.location(), "Type \"" + varType->toString() + "\" is only valid in storage.");
 	}
 	else if (_variable.visibility() >= VariableDeclaration::Visibility::Public)
 	{
@@ -492,9 +492,9 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 					unsupportedTypes.emplace_back(param->toString());
 			if (!unsupportedTypes.empty())
 				m_errorReporter.typeError(_variable.location(),
-					"The following types are only supported for getters in the new experimental ABI encoder: " +
+					"The following types are only supported for getters in the new experimental ABI encoder: \"" +
 					joinHumanReadable(unsupportedTypes) +
-					". Either remove \"public\" or use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+					"\". Either remove \"public\" or use \"pragma experimental ABIEncoderV2;\" to enable the feature."
 				);
 		}
 		if (!getter.interfaceFunctionType())
@@ -575,11 +575,11 @@ void TypeChecker::visitManually(
 			m_errorReporter.typeErrorConcatenateDescriptions(
 				arguments[i]->location(),
 				"Invalid type for argument in modifier invocation. "
-				"Invalid implicit conversion from " +
+				"Invalid implicit conversion from \"" +
 				type(*arguments[i])->toString() +
-				" to " +
+				"\" to \"" +
 				type(*(*parameters)[i])->toString() +
-				" requested.",
+				"\" requested.",
 				result.message()
 			);
 	}
@@ -664,7 +664,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				}
 				else if (requiresStorage)
 				{
-					m_errorReporter.typeError(_identifier.location, "The suffixes _offset and _slot can only be used on non-constant storage variables.");
+					m_errorReporter.typeError(_identifier.location, "The \"suffixes _offset\" and \"_slot\" can only be used on non-constant storage variables.");
 					return size_t(-1);
 				}
 			}
@@ -673,7 +673,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			{
 				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
 				{
-					m_errorReporter.typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
+					m_errorReporter.typeError(_identifier.location, "The \"suffixes _offset\" and \"_slot\" can only be used on storage variables.");
 					return size_t(-1);
 				}
 				else if (_context != yul::IdentifierContext::RValue)
@@ -684,12 +684,12 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else if (!var->isConstant() && var->isStateVariable())
 			{
-				m_errorReporter.typeError(_identifier.location, "Only local variables are supported. To access storage variables, use the _slot and _offset suffixes.");
+				m_errorReporter.typeError(_identifier.location, "Only local variables are supported. To access storage variables, use the \"_slot\" and \"_offset\" suffixes.");
 				return size_t(-1);
 			}
 			else if (var->type()->dataStoredIn(DataLocation::Storage))
 			{
-				m_errorReporter.typeError(_identifier.location, "You have to use the _slot or _offset suffix to access storage reference variables.");
+				m_errorReporter.typeError(_identifier.location, "You have to use the \"_slot\" or \"_offset\" suffix to access storage reference variables.");
 				return size_t(-1);
 			}
 			else if (var->type()->sizeOnStack() != 1)
@@ -703,7 +703,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		}
 		else if (requiresStorage)
 		{
-			m_errorReporter.typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
+			m_errorReporter.typeError(_identifier.location, "The suffixes \"_offset\" and \"_slot\" can only be used on storage variables.");
 			return size_t(-1);
 		}
 		else if (_context == yul::IdentifierContext::LValue)
@@ -807,10 +807,10 @@ void TypeChecker::endVisit(Return const& _return)
 			if (!result)
 				m_errorReporter.typeErrorConcatenateDescriptions(
 					_return.expression()->location(),
-					"Return argument type " +
+					"Return argument type \"" +
 					type(*_return.expression())->toString() +
-					" is not implicitly convertible to expected type " +
-					TupleType(returnTypes).toString(false) + ".",
+					"\" is not implicitly convertible to expected type \"" +
+					TupleType(returnTypes).toString(false) + "\".",
 					result.message()
 				);
 		}
@@ -824,10 +824,10 @@ void TypeChecker::endVisit(Return const& _return)
 		if (!result)
 			m_errorReporter.typeErrorConcatenateDescriptions(
 				_return.expression()->location(),
-				"Return argument type " +
+				"Return argument type \"" +
 				type(*_return.expression())->toString() +
-				" is not implicitly convertible to expected type (type of first return variable) " +
-				expected->toString() + ".",
+				"\" is not implicitly convertible to expected type (type of first return variable) \"" +
+				expected->toString() + "\".",
 				result.message()
 			);
 	}
@@ -981,9 +981,9 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				if (valueComponentType->category() == Type::Category::RationalNumber)
 					m_errorReporter.fatalTypeError(
 						_statement.initialValue()->location(),
-						"Invalid rational " +
+						"Invalid rational \"" +
 						valueComponentType->toString() +
-						" (absolute value too large or division by zero)."
+						"\" (absolute value too large or division by zero)."
 					);
 				else
 					solAssert(false, "");
@@ -1042,9 +1042,9 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 						m_errorReporter.typeError(
 							_statement.location(),
 							errorMsg +
-							". Try converting to type " +
+							". Try converting to type \"" +
 							valueComponentType->mobileType()->toString() +
-							" or use an explicit conversion."
+							"\" or use an explicit conversion."
 						);
 				}
 				else
@@ -1077,7 +1077,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			m_errorReporter.syntaxError(
 				_statement.location(),
 				"Use of the \"var\" keyword is disallowed. "
-				"Use explicit declaration `" + createTupleDecl(variables) + " = ...´ instead."
+				"Use explicit declaration \"" + createTupleDecl(variables) + " = ...\" instead."
 			);
 	}
 
@@ -1103,7 +1103,7 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 			)
 				m_errorReporter.warning(_statement.location(), "Return value of low-level calls not used.");
 			else if (kind == FunctionType::Kind::Send)
-				m_errorReporter.warning(_statement.location(), "Failure condition of 'send' ignored. Consider using 'transfer' instead.");
+				m_errorReporter.warning(_statement.location(), "Failure condition of \"send\" ignored. Consider using \"transfer\" instead.");
 		}
 	}
 }
@@ -1121,12 +1121,12 @@ bool TypeChecker::visit(Conditional const& _conditional)
 	TypePointer commonType = nullptr;
 
 	if (!trueType)
-		m_errorReporter.typeError(_conditional.trueExpression().location(), "Invalid mobile type in true expression.");
+		m_errorReporter.typeError(_conditional.trueExpression().location(), "Invalid mobile type in \"true\" expression.");
 	else
 		commonType = trueType;
 
 	if (!falseType)
-		m_errorReporter.typeError(_conditional.falseExpression().location(), "Invalid mobile type in false expression.");
+		m_errorReporter.typeError(_conditional.falseExpression().location(), "Invalid mobile type in \"false\" expression.");
 	else
 		commonType = falseType;
 
@@ -1140,11 +1140,11 @@ bool TypeChecker::visit(Conditional const& _conditional)
 		{
 			m_errorReporter.typeError(
 					_conditional.location(),
-					"True expression's type " +
+					"True expression's type \"" +
 					trueType->toString() +
-					" doesn't match false expression's type " +
+					"\" doesn't match false expression's type \"" +
 					falseType->toString() +
-					"."
+					"\"."
 					);
 			// even we can't find a common type, we have to set a type here,
 			// otherwise the upper statement will not be able to check the type.
@@ -1235,12 +1235,13 @@ bool TypeChecker::visit(Assignment const& _assignment)
 		if (!resultType || *resultType != *t)
 			m_errorReporter.typeError(
 				_assignment.location(),
-				"Operator " +
+				"Operator \"" +
 				string(TokenTraits::toString(_assignment.assignmentOperator())) +
-				" not compatible with types " +
+				"\" not compatible with types \"" +
 				t->toString() +
-				" and " +
-				type(_assignment.rightHandSide())->toString()
+				"\" and \"" +
+				type(_assignment.rightHandSide())->toString() +
+				"\"."
 			);
 	}
 	return false;
@@ -1321,7 +1322,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			if (!inlineArrayType)
 				m_errorReporter.fatalTypeError(_tuple.location(), "Unable to deduce common type for array elements.");
 			else if (!inlineArrayType->canLiveOutsideStorage())
-				m_errorReporter.fatalTypeError(_tuple.location(), "Type " + inlineArrayType->toString() + " is only valid in storage.");
+				m_errorReporter.fatalTypeError(_tuple.location(), "Type \"" + inlineArrayType->toString() + "\" is only valid in storage.");
 
 			_tuple.annotation().type = TypeProvider::array(DataLocation::Memory, inlineArrayType, types.size());
 		}
@@ -1352,10 +1353,11 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	{
 		m_errorReporter.typeError(
 			_operation.location(),
-			"Unary operator " +
+			"Unary operator \"" +
 			string(TokenTraits::toString(op)) +
-			" cannot be applied to type " +
-			subExprType->toString()
+			"\" cannot be applied to type \"" +
+			subExprType->toString() +
+			"\"."
 		);
 		t = subExprType;
 	}
@@ -1374,13 +1376,13 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	{
 		m_errorReporter.typeError(
 			_operation.location(),
-			"Operator " +
+			"Operator \"" +
 			string(TokenTraits::toString(_operation.getOperator())) +
-			" not compatible with types " +
+			"\" not compatible with types \"" +
 			leftType->toString() +
-			" and " +
+			"\" and \"" +
 			rightType->toString() +
-			(!result.message().empty() ? ". " + result.message() : "")
+			(!result.message().empty() ? "\". " + result.message() : "\".")
 		);
 		commonType = leftType;
 	}
@@ -1409,7 +1411,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			))
 				m_errorReporter.warning(
 					_operation.location(),
-					"Result of " + operation + " has type " + commonType->toString() + " and thus "
+					"Result of \"" + operation + "\" has type \"" + commonType->toString() + "\" and thus "
 					"might overflow. Silence this warning by converting the literal to the "
 					"expected type."
 				);
@@ -1722,7 +1724,7 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				msg +=
 					" This function requires a single bytes argument."
 					" If all your arguments are value types, you can use"
-					" abi.encode(...) to properly generate it.";
+					" \"abi.encode(...)\" to properly generate it.";
 		}
 		else if (
 			_functionType->kind() == FunctionType::Kind::KECCAK256 ||
@@ -1731,8 +1733,8 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 		)
 			msg +=
 				" This function requires a single bytes argument."
-				" Use abi.encodePacked(...) to obtain the pre-0.5.0"
-				" behaviour or abi.encode(...) to use ABI encoding.";
+				" Use \"abi.encodePacked(...)\" to obtain the pre-0.5.0"
+				" behaviour or \"abi.encode(...)\" to use ABI encoding.";
 		m_errorReporter.typeError(_functionCall.location(), msg);
 		return;
 	}
@@ -1823,7 +1825,7 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				msg +=
 					" This function requires a single bytes argument."
 					" If all your arguments are value types, you can"
-					" use abi.encode(...) to properly generate it.";
+					" use \"abi.encode(...)\" to properly generate it.";
 			else if (
 				_functionType->kind() == FunctionType::Kind::KECCAK256 ||
 				_functionType->kind() == FunctionType::Kind::SHA256 ||
@@ -1831,8 +1833,8 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 			)
 				msg +=
 					" This function requires a single bytes argument."
-					" Use abi.encodePacked(...) to obtain the pre-0.5.0"
-					" behaviour or abi.encode(...) to use ABI encoding.";
+					" Use \"abi.encodePacked(...)\" to obtain the pre-0.5.0"
+					" behaviour or \"abi.encode(...)\" to use ABI encoding.";
 			m_errorReporter.typeError(paramArgMap[i]->location(), msg);
 		}
 	}
@@ -2087,13 +2089,13 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			if (!storageType->members(m_scope).membersByName(memberName).empty())
 				m_errorReporter.fatalTypeError(
 					_memberAccess.location(),
-					"Member \"" + memberName + "\" is not available in " +
+					"Member \"" + memberName + "\" is not available in \"" +
 					exprType->toString() +
-					" outside of storage."
+					"\" outside of storage."
 				);
 		}
 		string errorMsg = "Member \"" + memberName + "\" not found or not visible "
-				"after argument-dependent lookup in " + exprType->toString() + ".";
+				"after argument-dependent lookup in \"" + exprType->toString() + "\".";
 
 		if (auto const& funType = dynamic_cast<FunctionType const*>(exprType))
 		{
@@ -2102,7 +2104,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			if (memberName == "value")
 			{
 				if (funType->kind() == FunctionType::Kind::Creation)
-					errorMsg = "Constructor for " + t.front()->toString() + " must be payable for member \"value\" to be available.";
+					errorMsg = "Constructor for \"" + t.front()->toString() + "\" must be payable for member \"value\" to be available.";
 				else if (
 					funType->kind() == FunctionType::Kind::DelegateCall ||
 					funType->kind() == FunctionType::Kind::BareDelegateCall
@@ -2309,7 +2311,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	default:
 		m_errorReporter.fatalTypeError(
 			_access.baseExpression().location(),
-			"Indexed expression has to be a type, mapping or array (is " + baseType->toString() + ")"
+			"Indexed expression has to be a type, mapping or array (is \"" + baseType->toString() + "\")"
 		);
 	}
 	_access.annotation().type = resultType;
@@ -2462,7 +2464,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 			m_errorReporter.syntaxError(
 				_literal.location(),
 				msg +
-				" If this is not used as an address, please prepend '00'. " +
+				" If this is not used as an address, please prepend \"00\". " +
 				"For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals"
 			);
 	}
@@ -2541,9 +2543,9 @@ bool TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 				m_errorReporter.typeError(
 					_expression.location(),
 					errorMsg +
-					". Try converting to type " +
+					". Try converting to type \"" +
 					type(_expression)->mobileType()->toString() +
-					" or use an explicit conversion."
+					"\" or use an explicit conversion."
 				);
 		}
 		else

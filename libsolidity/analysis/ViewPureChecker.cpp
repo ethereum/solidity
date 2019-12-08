@@ -179,7 +179,7 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 	)
 		m_errorReporter.warning(
 			_funDef.location(),
-			"Function state mutability can be restricted to " + stateMutabilityToString(m_bestMutabilityAndLocation.mutability)
+			"Function state mutability can be restricted to \"" + stateMutabilityToString(m_bestMutabilityAndLocation.mutability) + "\"."
 		);
 	m_currentFunction = nullptr;
 }
@@ -269,10 +269,10 @@ void ViewPureChecker::reportMutability(
 	{
 		m_errorReporter.typeError(
 			_location,
-			"Function declared as " +
+			"Function declared as \"" +
 			stateMutabilityToString(m_currentFunction->stateMutability()) +
-			", but this expression (potentially) modifies the state and thus "
-			"requires non-payable (the default) or payable."
+			"\", but this expression (potentially) modifies the state and thus "
+			"requires \"non-payable\" (the default) or \"payable\"."
 		);
 		m_errors = true;
 	}

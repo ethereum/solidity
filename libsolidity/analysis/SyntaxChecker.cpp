@@ -121,8 +121,8 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 		if (!matchExpression.matches(currentVersion))
 			m_errorReporter.syntaxError(
 				_pragma.location(),
-				"Source file requires different compiler version (current compiler is " +
-				string(VersionString) + " - note that nightly builds are considered to be "
+				"Source file requires different compiler version (current compiler is \"" +
+				string(VersionString) + "\" - note that nightly builds are considered to be "
 				"strictly less than the released version"
 			);
 		m_versionPragmaFound = true;
@@ -141,7 +141,7 @@ bool SyntaxChecker::visit(ModifierDefinition const&)
 void SyntaxChecker::endVisit(ModifierDefinition const& _modifier)
 {
 	if (!m_placeholderFound)
-		m_errorReporter.syntaxError(_modifier.body().location(), "Modifier body does not contain '_'.");
+		m_errorReporter.syntaxError(_modifier.body().location(), "Modifier body does not contain \"_\".");
 	m_placeholderFound = false;
 }
 
@@ -252,7 +252,7 @@ bool SyntaxChecker::visit(Literal const& _literal)
 bool SyntaxChecker::visit(UnaryOperation const& _operation)
 {
 	if (_operation.getOperator() == Token::Add)
-		m_errorReporter.syntaxError(_operation.location(), "Use of unary + is disallowed.");
+		m_errorReporter.syntaxError(_operation.location(), "Use of unary \"+\" is disallowed.");
 
 	return true;
 }
@@ -265,8 +265,8 @@ bool SyntaxChecker::visit(InlineAssembly const& _inlineAssembly)
 	if (yul::MSizeFinder::containsMSize(_inlineAssembly.dialect(), _inlineAssembly.operations()))
 		m_errorReporter.syntaxError(
 			_inlineAssembly.location(),
-			"The msize instruction cannot be used when the Yul optimizer is activated because "
-			"it can change its semantics. Either disable the Yul optimizer or do not use the instruction."
+			"The \"msize\" instruction cannot be used when the \"Yul\" optimizer is activated because "
+			"it can change its semantics. Either disable the \"Yul\" optimizer or do not use the instruction."
 		);
 	return false;
 }

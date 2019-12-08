@@ -144,7 +144,7 @@ void dev::lll::parseTreeLLL(string const& _s, sp::utree& o_out)
 	{
 		std::string fragment(e.first, e.last);
 		std::string loc = to_string(std::distance(s.cbegin(), e.first) - 1);
-		std::string reason("Lexer failure at " + loc + ": '" + fragment + "'");
+		std::string reason("Lexer failure at " + loc + ": \"" + fragment + "\"");
 		BOOST_THROW_EXCEPTION(ParserException() << errinfo_comment(reason));
 	}
 	for (auto i = ret; i != s.cend(); ++i)
