@@ -55,8 +55,7 @@ void printErrors(ostream& _stream, ErrorList const& _errors)
 
 DEFINE_PROTO_FUZZER(Program const& _input)
 {
-	ProtoConverter converter;
-	string yul_source = converter.programToString(_input);
+	string yul_source = ProtoConverter().programToString(_input);
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
@@ -66,64 +65,41 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		of.write(yul_source.data(), yul_source.size());
 	}
 
-	if (yul_source.size() > 1200)
-		return;
-
 	YulStringRepository::reset();
 
 	// AssemblyStack entry point
 	AssemblyStack stack(
-		langutil::EVMVersion(),
+		langutil::EVMVersion::istanbul(),
 		AssemblyStack::Language::StrictAssembly,
 		dev::solidity::OptimiserSettings::full()
 	);
 
-	try
+	// Parse protobuf mutated YUL code
+	if (!stack.parseAndAnalyze("source", yul_source) || !stack.parserResult()->code ||
+		!stack.parserResult()->analysisInfo)
 	{
-		// Parse protobuf mutated YUL code
-		if (!stack.parseAndAnalyze("source", yul_source) || !stack.parserResult()->code ||
-			!stack.parserResult()->analysisInfo)
-		{
-			printErrors(std::cout, stack.errors());
-			return;
-		}
-	}
-	catch (Exception const&)
-	{
-		return;
+		printErrors(std::cout, stack.errors());
+		yulAssert(false, "Proto fuzzer generated malformed program");
 	}
 
 	ostringstream os1;
 	ostringstream os2;
-	try
-	{
-		yulFuzzerUtil::interpret(
-			os1,
-			stack.parserResult()->code,
-			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion())
-		);
-	}
-	catch (yul::test::StepLimitReached const&)
-	{
+	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
+		os1,
+		stack.parserResult()->code,
+		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion::istanbul())
+	);
+
+	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
 		return;
-	}
-	catch (yul::test::InterpreterTerminatedGeneric const&)
-	{
-	}
 
 	stack.optimize();
-	try
-	{
-		yulFuzzerUtil::interpret(
-			os2,
-			stack.parserResult()->code,
-			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
-			(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 1.5)
-		);
-	}
-	catch (yul::test::InterpreterTerminatedGeneric const&)
-	{
-	}
+	termReason = yulFuzzerUtil::interpret(
+		os2,
+		stack.parserResult()->code,
+		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion::istanbul()),
+		(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 4)
+	);
 
 	bool isTraceEq = (os1.str() == os2.str());
 	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");

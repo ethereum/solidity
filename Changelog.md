@@ -1,12 +1,56 @@
-### 0.5.13 (unreleased)
+### 0.5.14 (unreleased)
 
 Language Features:
+ * Allow to obtain the selector of public or external library functions via a member ``.selector``.
+ * Parser: Allow splitting string and hexadecimal string literals into multiple parts.
+ * Inline Assembly: Support referencing other constants.
 
 
 Compiler Features:
+ * Set the default EVM version to "Istanbul".
+ * Commandline Interface: Allow translation from yul / strict assembly to EWasm using ``solc --yul --yul-dialect evm --machine eWasm``
+ * SMTChecker: Add support to constructors including constructor inheritance.
+ * Yul: When compiling via Yul, string literals from the Solidity code are kept as string literals if every character is safely printable.
+ * Yul Optimizer: Perform loop-invariant code motion.
+
+
+Build System:
+ * Update to emscripten version 1.39.3.
 
 
 Bugfixes:
+ * SMTChecker: Fix internal error when using ``abi.decode``.
+ * SMTChecker: Fix internal error when using arrays or mappings of functions.
+ * SMTChecker: Fix internal error in array of structs type.
+ * Yul: Consider infinite loops and recursion to be not removable.
+ * Version Checker: 0.5.x-prerelease will match `pragma solidity ^0.5`.
+
+
+### 0.5.13 (2019-11-14)
+
+Language Features:
+ * Allow to obtain the address of a linked library with ``address(LibraryName)``.
+
+
+Compiler Features:
+ * Code Generator: Use SELFBALANCE opcode for ``address(this).balance`` if using Istanbul EVM.
+ * EWasm: Experimental EWasm binary output via ``--ewasm`` and as documented in standard-json.
+ * SMTChecker: Add break/continue support to the CHC engine.
+ * SMTChecker: Support assignments to multi-dimensional arrays and mappings.
+ * SMTChecker: Support inheritance and function overriding.
+ * Standard JSON Interface: Output the storage layout of a contract when artifact ``storageLayout`` is requested.
+ * TypeChecker: List possible candidates when overload resolution fails.
+ * TypeChecker: Disallow variables of library types.
+
+
+Bugfixes:
+ * Code Generator: Fixed a faulty assert that would wrongly trigger for array sizes exceeding unsigned integer.
+ * SMTChecker: Fix internal error when accessing indices of fixed bytes.
+ * SMTChecker: Fix internal error when using function pointers as arguments.
+ * SMTChecker: Fix internal error when implicitly converting string literals to fixed bytes.
+ * Type Checker: Disallow constructor of the same class to be used as modifier.
+ * Type Checker: Treat magic variables as unknown identifiers in inline assembly.
+ * Code Generator: Fix internal error when trying to convert ``super`` to a different type
 
 
 
@@ -22,6 +66,7 @@ Compiler Features:
  * SMTChecker: Add loop support to the CHC engine.
  * Yul Optimizer: Take side-effect-freeness of user-defined functions into account.
  * Yul Optimizer: Remove redundant mload/sload operations.
+ * Yul Optimizer: Use the fact that branch conditions have certain value inside the branch.
 
 
 Bugfixes:

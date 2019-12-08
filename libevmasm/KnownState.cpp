@@ -54,17 +54,17 @@ ostream& KnownState::stream(ostream& _out) const
 
 	_out << "=== State ===" << endl;
 	_out << "Stack height: " << dec << m_stackHeight << endl;
-	_out << "Equivalence classes: " << endl;
+	_out << "Equivalence classes:" << endl;
 	for (Id eqClass = 0; eqClass < m_expressionClasses->size(); ++eqClass)
 		streamExpressionClass(_out, eqClass);
 
-	_out << "Stack: " << endl;
+	_out << "Stack:" << endl;
 	for (auto const& it: m_stackElements)
 	{
 		_out << "  " << dec << it.first << ": ";
 		streamExpressionClass(_out, it.second);
 	}
-	_out << "Storage: " << endl;
+	_out << "Storage:" << endl;
 	for (auto const& it: m_storageContent)
 	{
 		_out << "  ";
@@ -72,7 +72,7 @@ ostream& KnownState::stream(ostream& _out) const
 		_out << ": ";
 		streamExpressionClass(_out, it.second);
 	}
-	_out << "Memory: " << endl;
+	_out << "Memory:" << endl;
 	for (auto const& it: m_memoryContent)
 	{
 		_out << "  ";

@@ -132,7 +132,7 @@ protected:
 	void deployRegistrar()
 	{
 		if (!s_compiledRegistrar)
-			s_compiledRegistrar.reset(new bytes(compileContract(registrarCode, "FixedFeeRegistrar")));
+			s_compiledRegistrar = make_unique<bytes>(compileContract(registrarCode, "FixedFeeRegistrar"));
 
 		sendMessage(*s_compiledRegistrar, true);
 		BOOST_REQUIRE(m_transactionSuccessful);

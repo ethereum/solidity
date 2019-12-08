@@ -22,6 +22,7 @@
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <boost/range/adaptors.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
 using namespace dev;
@@ -36,17 +37,70 @@ SMTEncoder::SMTEncoder(smt::EncodingContext& _context):
 
 bool SMTEncoder::visit(ContractDefinition const& _contract)
 {
-	solAssert(m_currentContract == nullptr, "");
-	m_currentContract = &_contract;
+	solAssert(m_currentContract, "");
 
-	initializeStateVariables(_contract);
+	for (auto const& node: _contract.subNodes())
+		if (
+			!dynamic_pointer_cast<FunctionDefinition>(node) &&
+			!dynamic_pointer_cast<VariableDeclaration>(node)
+		)
+			node->accept(*this);
 
-	return true;
+	vector<FunctionDefinition const*> resolvedFunctions = _contract.definedFunctions();
+	for (auto const& base: _contract.annotation().linearizedBaseContracts)
+	{
+		// Look for all the constructor invocations bottom up.
+		if (auto const& constructor =  base->constructor())
+			for (auto const& invocation: constructor->modifiers())
+			{
+				auto refDecl = invocation->name()->annotation().referencedDeclaration;
+				if (auto const& baseContract = dynamic_cast<ContractDefinition const*>(refDecl))
+				{
+					solAssert(!m_baseConstructorCalls.count(baseContract), "");
+					m_baseConstructorCalls[baseContract] = invocation.get();
+				}
+			}
+
+		// Check for function overrides.
+		for (auto const& baseFunction: base->definedFunctions())
+		{
+			if (baseFunction->isConstructor())
+				continue;
+			bool overridden = false;
+			for (auto const& function: resolvedFunctions)
+				if (
+					function->name() == baseFunction->name() &&
+					FunctionType(*function).asCallableFunction(false)->
+						hasEqualParameterTypes(*FunctionType(*baseFunction).asCallableFunction(false))
+				)
+				{
+					overridden = true;
+					break;
+				}
+			if (!overridden)
+				resolvedFunctions.push_back(baseFunction);
+		}
+	}
+
+	// Functions are visited first since they might be used
+	// for state variable initialization which is part of
+	// the constructor.
+	// Constructors are visited as part of the constructor
+	// hierarchy inlining.
+	for (auto const& function: resolvedFunctions)
+		if (!function->isConstructor())
+			function->accept(*this);
+
+	// Constructors need to be handled by the engines separately.
+
+	return false;
 }
 
 void SMTEncoder::endVisit(ContractDefinition const& _contract)
 {
 	m_context.resetAllVariables();
+
+	m_baseConstructorCalls.clear();
 
 	solAssert(m_currentContract == &_contract, "");
 	m_currentContract = nullptr;
@@ -54,7 +108,8 @@ void SMTEncoder::endVisit(ContractDefinition const& _contract)
 
 void SMTEncoder::endVisit(VariableDeclaration const& _varDecl)
 {
-	if (_varDecl.isLocalVariable() && _varDecl.type()->isValueType() &&_varDecl.value())
+	// State variables are handled by the constructor.
+	if (_varDecl.isLocalVariable() &&_varDecl.value())
 		assignment(_varDecl, *_varDecl.value());
 }
 
@@ -65,25 +120,22 @@ bool SMTEncoder::visit(ModifierDefinition const&)
 
 bool SMTEncoder::visit(FunctionDefinition const& _function)
 {
-	// Not visited by a function call
-	if (m_callStack.empty())
-		initFunction(_function);
-
 	m_modifierDepthStack.push_back(-1);
+
 	if (_function.isConstructor())
-	{
-		m_errorReporter.warning(
-			_function.location(),
-			"Assertion checker does not yet support constructors."
-		);
-	}
-	else
-	{
-		_function.parameterList().accept(*this);
-		if (_function.returnParameterList())
-			_function.returnParameterList()->accept(*this);
-		visitFunctionOrModifier();
-	}
+		inlineConstructorHierarchy(dynamic_cast<ContractDefinition const&>(*_function.scope()));
+
+	// Base constructors' parameters should be set by explicit calls,
+	// but the most derived one needs to be initialized.
+	if (_function.scope() == m_currentContract)
+		initializeLocalVariables(_function);
+
+	_function.parameterList().accept(*this);
+	if (_function.returnParameterList())
+		_function.returnParameterList()->accept(*this);
+
+	visitFunctionOrModifier();
+
 	return false;
 }
 
@@ -105,21 +157,85 @@ void SMTEncoder::visitFunctionOrModifier()
 		solAssert(m_modifierDepthStack.back() < int(function.modifiers().size()), "");
 		ASTPointer<ModifierInvocation> const& modifierInvocation = function.modifiers()[m_modifierDepthStack.back()];
 		solAssert(modifierInvocation, "");
-		modifierInvocation->accept(*this);
-		auto const& modifierDef = dynamic_cast<ModifierDefinition const&>(
-			*modifierInvocation->name()->annotation().referencedDeclaration
-		);
-		vector<smt::Expression> modifierArgsExpr;
-		if (modifierInvocation->arguments())
-			for (auto arg: *modifierInvocation->arguments())
-				modifierArgsExpr.push_back(expr(*arg));
-		initializeFunctionCallParameters(modifierDef, modifierArgsExpr);
-		pushCallStack({&modifierDef, modifierInvocation.get()});
-		modifierDef.body().accept(*this);
-		popCallStack();
+		auto refDecl = modifierInvocation->name()->annotation().referencedDeclaration;
+		if (dynamic_cast<ContractDefinition const*>(refDecl))
+			visitFunctionOrModifier();
+		else if (auto modifierDef = dynamic_cast<ModifierDefinition const*>(refDecl))
+			inlineModifierInvocation(modifierInvocation.get(), modifierDef);
+		else
+			solAssert(false, "");
 	}
 
 	--m_modifierDepthStack.back();
+}
+
+void SMTEncoder::inlineModifierInvocation(ModifierInvocation const* _invocation, CallableDeclaration const* _definition)
+{
+	solAssert(_invocation, "");
+	_invocation->accept(*this);
+
+	vector<smt::Expression> args;
+	if (auto const* arguments = _invocation->arguments())
+	{
+		auto const& modifierParams = _definition->parameters();
+		solAssert(modifierParams.size() == arguments->size(), "");
+		for (unsigned i = 0; i < arguments->size(); ++i)
+			args.push_back(expr(*arguments->at(i), modifierParams.at(i)->type()));
+	}
+
+	initializeFunctionCallParameters(*_definition, args);
+
+	pushCallStack({_definition, _invocation});
+	if (auto modifier = dynamic_cast<ModifierDefinition const*>(_definition))
+	{
+		modifier->body().accept(*this);
+		popCallStack();
+	}
+	else if (auto function = dynamic_cast<FunctionDefinition const*>(_definition))
+	{
+		if (function->isImplemented())
+			function->accept(*this);
+		// Functions are popped from the callstack in endVisit(FunctionDefinition)
+	}
+}
+
+void SMTEncoder::inlineConstructorHierarchy(ContractDefinition const& _contract)
+{
+	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;
+	auto it = find(begin(hierarchy), end(hierarchy), &_contract);
+	solAssert(it != end(hierarchy), "");
+
+	auto nextBase = it + 1;
+	// Initialize the base contracts here as long as their constructors are implicit,
+	// stop when the first explicit constructor is found.
+	while (nextBase != end(hierarchy))
+	{
+		if (auto baseConstructor = (*nextBase)->constructor())
+		{
+			createLocalVariables(*baseConstructor);
+			// If any subcontract explicitly called baseConstructor, use those arguments.
+			if (m_baseConstructorCalls.count(*nextBase))
+				inlineModifierInvocation(m_baseConstructorCalls.at(*nextBase), baseConstructor);
+			else if (baseConstructor->isImplemented())
+			{
+				// The first constructor found is handled like a function
+				// and its pushed into the callstack there.
+				// This if avoids duplication in the callstack.
+				if (!m_callStack.empty())
+					pushCallStack({baseConstructor, nullptr});
+				baseConstructor->accept(*this);
+				// popped by endVisit(FunctionDefinition)
+			}
+			break;
+		}
+		else
+		{
+			initializeStateVariables(**nextBase);
+			++nextBase;
+		}
+	}
+
+	initializeStateVariables(_contract);
 }
 
 bool SMTEncoder::visit(PlaceholderStatement const&)
@@ -179,17 +295,14 @@ void SMTEncoder::endVisit(VariableDeclarationStatement const& _varDecl)
 			solAssert(symbTuple, "");
 			auto const& components = symbTuple->components();
 			auto const& declarations = _varDecl.declarations();
-			if (!components.empty())
-			{
-				solAssert(components.size() == declarations.size(), "");
-				for (unsigned i = 0; i < declarations.size(); ++i)
-					if (
-						components.at(i) &&
-						declarations.at(i) &&
-						m_context.knownVariable(*declarations.at(i))
-					)
-						assignment(*declarations.at(i), components.at(i)->currentValue(declarations.at(i)->type()));
-			}
+			solAssert(components.size() == declarations.size(), "");
+			for (unsigned i = 0; i < declarations.size(); ++i)
+				if (
+					components.at(i) &&
+					declarations.at(i) &&
+					m_context.knownVariable(*declarations.at(i))
+				)
+					assignment(*declarations.at(i), components.at(i)->currentValue(declarations.at(i)->type()));
 		}
 	}
 	else if (m_context.knownVariable(*_varDecl.declarations().front()))
@@ -291,24 +404,23 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 	{
 		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_tuple));
 		solAssert(symbTuple, "");
-		if (symbTuple->components().empty())
+		auto const& symbComponents = symbTuple->components();
+		auto const& tupleComponents = _tuple.components();
+		solAssert(symbComponents.size() == _tuple.components().size(), "");
+		for (unsigned i = 0; i < symbComponents.size(); ++i)
 		{
-			vector<shared_ptr<smt::SymbolicVariable>> components;
-			for (auto const& component: _tuple.components())
-				if (component)
-				{
-					if (auto varDecl = identifierToVariable(*component))
-						components.push_back(m_context.variable(*varDecl));
-					else
-					{
-						solAssert(m_context.knownExpression(*component), "");
-						components.push_back(m_context.expression(*component));
-					}
-				}
+			auto sComponent = symbComponents.at(i);
+			auto tComponent = tupleComponents.at(i);
+			if (sComponent && tComponent)
+			{
+				if (auto varDecl = identifierToVariable(*tComponent))
+					m_context.addAssertion(sComponent->currentValue() == currentValue(*varDecl));
 				else
-					components.push_back(nullptr);
-			solAssert(components.size() == _tuple.components().size(), "");
-			symbTuple->setComponents(move(components));
+				{
+					solAssert(m_context.knownExpression(*tComponent), "");
+					m_context.addAssertion(sComponent->currentValue() == expr(*tComponent));
+				}
+			}
 		}
 	}
 	else
@@ -512,17 +624,39 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	}
 }
 
+bool SMTEncoder::visit(ModifierInvocation const& _node)
+{
+	if (auto const* args = _node.arguments())
+		for (auto const& arg: *args)
+			if (arg)
+				arg->accept(*this);
+	return false;
+}
+
+void SMTEncoder::initContract(ContractDefinition const& _contract)
+{
+	solAssert(m_currentContract == nullptr, "");
+	m_currentContract = &_contract;
+
+	m_context.reset();
+	m_context.pushSolver();
+	createStateVariables(_contract);
+	clearIndices(m_currentContract, nullptr);
+}
+
 void SMTEncoder::initFunction(FunctionDefinition const& _function)
 {
 	solAssert(m_callStack.empty(), "");
+	solAssert(m_currentContract, "");
 	m_context.reset();
 	m_context.pushSolver();
 	m_pathConditions.clear();
 	pushCallStack({&_function, nullptr});
 	m_uninterpretedTerms.clear();
-	resetStateVariables();
-	initializeLocalVariables(_function);
+	createStateVariables(*m_currentContract);
+	createLocalVariables(_function);
 	m_arrayAssignmentHappened = false;
+	clearIndices(m_currentContract, &_function);
 }
 
 void SMTEncoder::visitAssert(FunctionCall const& _funCall)
@@ -561,10 +695,10 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 	{
 		// Will be translated as part of the node that requested the lvalue.
 	}
-	else if (_identifier.annotation().type->category() == Type::Category::Function)
-		visitFunctionIdentifier(_identifier);
 	else if (auto decl = identifierToVariable(_identifier))
 		defineExpr(_identifier, currentValue(*decl));
+	else if (_identifier.annotation().type->category() == Type::Category::Function)
+		visitFunctionIdentifier(_identifier);
 	else if (_identifier.name() == "now")
 		defineGlobalVariable(_identifier.name(), _identifier);
 	else if (_identifier.name() == "this")
@@ -572,12 +706,20 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 		defineExpr(_identifier, m_context.thisAddress());
 		m_uninterpretedTerms.insert(&_identifier);
 	}
-	else if (smt::isSupportedType(_identifier.annotation().type->category()))
-		// TODO: handle MagicVariableDeclaration here
-		m_errorReporter.warning(
-			_identifier.location(),
-			"Assertion checker does not yet support the type of this variable."
-		);
+	else
+		createExpr(_identifier);
+}
+
+void SMTEncoder::endVisit(ElementaryTypeNameExpression const& _typeName)
+{
+	auto const& typeType = dynamic_cast<TypeType const&>(*_typeName.annotation().type);
+	auto result = smt::newSymbolicVariable(
+		*TypeProvider::uint256(),
+		typeType.actualType()->toString(false),
+		m_context
+	);
+	solAssert(!result.first && result.second, "");
+	m_context.createExpression(_typeName, result.second);
 }
 
 void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
@@ -665,7 +807,7 @@ void SMTEncoder::endVisit(Return const& _return)
 			}
 		}
 		else if (returnParams.size() == 1)
-			m_context.addAssertion(expr(*_return.expression()) == m_context.newValue(*returnParams.front()));
+			m_context.addAssertion(expr(*_return.expression(), returnParams.front()->type()) == m_context.newValue(*returnParams.front()));
 	}
 }
 
@@ -727,14 +869,26 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 {
 	createExpr(_indexAccess);
 
+	if (_indexAccess.annotation().type->category() == Type::Category::TypeType)
+		return;
+
 	shared_ptr<smt::SymbolicVariable> array;
-	if (auto const& id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
+	if (auto const* id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
 	{
 		auto varDecl = identifierToVariable(*id);
 		solAssert(varDecl, "");
 		array = m_context.variable(*varDecl);
+
+		if (varDecl->type()->category() == Type::Category::FixedBytes)
+		{
+			m_errorReporter.warning(
+				_indexAccess.location(),
+				"Assertion checker does not yet support index accessing fixed bytes."
+			);
+			return;
+		}
 	}
-	else if (auto const& innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
+	else if (auto const* innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
 	{
 		solAssert(m_context.knownExpression(*innerAccess), "");
 		array = m_context.expression(*innerAccess);
@@ -745,12 +899,6 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 			_indexAccess.location(),
 			"Assertion checker does not yet implement this expression."
 		);
-		return;
-	}
-
-	if (!_indexAccess.indexExpression())
-	{
-		solAssert(_indexAccess.annotation().type->category() == Type::Category::TypeType, "");
 		return;
 	}
 
@@ -774,78 +922,79 @@ void SMTEncoder::arrayAssignment()
 
 void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression const& _rightHandSide)
 {
-	auto const& indexAccess = dynamic_cast<IndexAccess const&>(_expr);
-	if (auto const& id = dynamic_cast<Identifier const*>(&indexAccess.baseExpression()))
+	auto toStore = _rightHandSide;
+	auto indexAccess = dynamic_cast<IndexAccess const*>(&_expr);
+	solAssert(indexAccess, "");
+	while (true)
 	{
-		auto varDecl = identifierToVariable(*id);
-		solAssert(varDecl, "");
-
-		if (varDecl->hasReferenceOrMappingType())
-			m_context.resetVariables([&](VariableDeclaration const& _var) {
-				if (_var == *varDecl)
-					return false;
-
-				// If both are state variables no need to clear knowledge.
-				if (_var.isStateVariable() && varDecl->isStateVariable())
-					return false;
-
-				TypePointer prefix = _var.type();
-				TypePointer originalType = typeWithoutPointer(varDecl->type());
-				while (
-					prefix->category() == Type::Category::Mapping ||
-					prefix->category() == Type::Category::Array
-				)
-				{
-					if (*originalType == *typeWithoutPointer(prefix))
-						return true;
-					if (prefix->category() == Type::Category::Mapping)
-					{
-						auto mapPrefix = dynamic_cast<MappingType const*>(prefix);
-						solAssert(mapPrefix, "");
-						prefix = mapPrefix->valueType();
-					}
-					else
-					{
-						auto arrayPrefix = dynamic_cast<ArrayType const*>(prefix);
-						solAssert(arrayPrefix, "");
-						prefix = arrayPrefix->baseType();
-					}
-				}
-				return false;
-			});
-
-		smt::Expression store = smt::Expression::store(
-			m_context.variable(*varDecl)->currentValue(),
-			expr(*indexAccess.indexExpression()),
-			_rightHandSide
-		);
-		m_context.addAssertion(m_context.newValue(*varDecl) == store);
-		// Update the SMT select value after the assignment,
-		// necessary for sound models.
-		defineExpr(indexAccess, smt::Expression::select(
-			m_context.variable(*varDecl)->currentValue(),
-			expr(*indexAccess.indexExpression())
-		));
-	}
-	else if (dynamic_cast<IndexAccess const*>(&indexAccess.baseExpression()))
-	{
-		auto identifier = dynamic_cast<Identifier const*>(leftmostBase(indexAccess));
-		if (identifier)
+		if (auto const& id = dynamic_cast<Identifier const*>(&indexAccess->baseExpression()))
 		{
-			auto varDecl = identifierToVariable(*identifier);
-			m_context.newValue(*varDecl);
-		}
+			auto varDecl = identifierToVariable(*id);
+			solAssert(varDecl, "");
 
-		m_errorReporter.warning(
-			indexAccess.location(),
-			"Assertion checker does not yet implement assignments to multi-dimensional mappings or arrays."
-		);
+			if (varDecl->hasReferenceOrMappingType())
+				m_context.resetVariables([&](VariableDeclaration const& _var) {
+					if (_var == *varDecl)
+						return false;
+
+					// If both are state variables no need to clear knowledge.
+					if (_var.isStateVariable() && varDecl->isStateVariable())
+						return false;
+
+					TypePointer prefix = _var.type();
+					TypePointer originalType = typeWithoutPointer(varDecl->type());
+					while (
+						prefix->category() == Type::Category::Mapping ||
+						prefix->category() == Type::Category::Array
+					)
+					{
+						if (*originalType == *typeWithoutPointer(prefix))
+							return true;
+						if (prefix->category() == Type::Category::Mapping)
+						{
+							auto mapPrefix = dynamic_cast<MappingType const*>(prefix);
+							solAssert(mapPrefix, "");
+							prefix = mapPrefix->valueType();
+						}
+						else
+						{
+							auto arrayPrefix = dynamic_cast<ArrayType const*>(prefix);
+							solAssert(arrayPrefix, "");
+							prefix = arrayPrefix->baseType();
+						}
+					}
+					return false;
+				});
+
+			smt::Expression store = smt::Expression::store(
+				m_context.variable(*varDecl)->currentValue(),
+				expr(*indexAccess->indexExpression()),
+				toStore
+			);
+			m_context.addAssertion(m_context.newValue(*varDecl) == store);
+			// Update the SMT select value after the assignment,
+			// necessary for sound models.
+			defineExpr(*indexAccess, smt::Expression::select(
+				m_context.variable(*varDecl)->currentValue(),
+				expr(*indexAccess->indexExpression())
+			));
+
+			break;
+		}
+		else if (auto base = dynamic_cast<IndexAccess const*>(&indexAccess->baseExpression()))
+		{
+			toStore = smt::Expression::store(expr(*base), expr(*indexAccess->indexExpression()), toStore);
+			indexAccess = base;
+		}
+		else
+		{
+			m_errorReporter.warning(
+				_expr.location(),
+				"Assertion checker does not yet implement this expression."
+			);
+			break;
+		}
 	}
-	else
-		m_errorReporter.warning(
-			_expr.location(),
-			"Assertion checker does not yet implement this expression."
-		);
 }
 
 void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _expr, bool _increaseIndex)
@@ -1179,26 +1328,61 @@ void SMTEncoder::initializeFunctionCallParameters(CallableDeclaration const& _fu
 			}
 }
 
-void SMTEncoder::initializeStateVariables(ContractDefinition const& _contract)
+void SMTEncoder::createStateVariables(ContractDefinition const& _contract)
 {
 	for (auto var: _contract.stateVariablesIncludingInherited())
 		createVariable(*var);
 }
 
-void SMTEncoder::initializeLocalVariables(FunctionDefinition const& _function)
+void SMTEncoder::initializeStateVariables(ContractDefinition const& _contract)
+{
+	for (auto var: _contract.stateVariables())
+	{
+		solAssert(m_context.knownVariable(*var), "");
+		m_context.setZeroValue(*var);
+	}
+
+	for (auto var: _contract.stateVariables())
+		if (var->value())
+		{
+			var->value()->accept(*this);
+			assignment(*var, *var->value());
+		}
+}
+
+void SMTEncoder::createLocalVariables(FunctionDefinition const& _function)
 {
 	for (auto const& variable: _function.localVariables())
-		if (createVariable(*variable))
-			m_context.setZeroValue(*variable);
+		createVariable(*variable);
 
 	for (auto const& param: _function.parameters())
-		if (createVariable(*param))
-			m_context.setUnknownValue(*param);
+		createVariable(*param);
 
 	if (_function.returnParameterList())
 		for (auto const& retParam: _function.returnParameters())
-			if (createVariable(*retParam))
-				m_context.setZeroValue(*retParam);
+			createVariable(*retParam);
+}
+
+void SMTEncoder::initializeLocalVariables(FunctionDefinition const& _function)
+{
+	for (auto const& variable: _function.localVariables())
+	{
+		solAssert(m_context.knownVariable(*variable), "");
+		m_context.setZeroValue(*variable);
+	}
+
+	for (auto const& param: _function.parameters())
+	{
+		solAssert(m_context.knownVariable(*param), "");
+		m_context.setUnknownValue(*param);
+	}
+
+	if (_function.returnParameterList())
+		for (auto const& retParam: _function.returnParameters())
+		{
+			solAssert(m_context.knownVariable(*retParam), "");
+			m_context.setZeroValue(*retParam);
+		}
 }
 
 void SMTEncoder::resetStateVariables()
@@ -1300,7 +1484,7 @@ void SMTEncoder::createExpr(Expression const& _e)
 void SMTEncoder::defineExpr(Expression const& _e, smt::Expression _value)
 {
 	createExpr(_e);
-	solAssert(smt::smtKind(_e.annotation().type->category()) != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
+	solAssert(_value.sort->kind != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
 	m_context.addAssertion(expr(_e) == _value);
 }
 
@@ -1376,6 +1560,20 @@ void SMTEncoder::resetVariableIndices(VariableIndices const& _indices)
 {
 	for (auto const& var: _indices)
 		m_context.variable(*var.first)->index() = var.second;
+}
+
+void SMTEncoder::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)
+{
+	solAssert(_contract, "");
+	for (auto var: _contract->stateVariablesIncludingInherited())
+		m_context.variable(*var)->resetIndex();
+	if (_function)
+	{
+		for (auto const& var: _function->parameters() + _function->returnParameters())
+			m_context.variable(*var)->resetIndex();
+		for (auto const& var: _function->localVariables())
+			m_context.variable(*var)->resetIndex();
+	}
 }
 
 Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)
@@ -1456,15 +1654,18 @@ void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)
 	{
 		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_funCall));
 		solAssert(symbTuple, "");
-		if (symbTuple->components().empty())
+		auto const& symbComponents = symbTuple->components();
+		solAssert(symbComponents.size() == returnParams.size(), "");
+		for (unsigned i = 0; i < symbComponents.size(); ++i)
 		{
-			vector<shared_ptr<smt::SymbolicVariable>> components;
-			for (auto param: returnParams)
+			auto sComponent = symbComponents.at(i);
+			auto param = returnParams.at(i);
+			solAssert(param, "");
+			if (sComponent)
 			{
 				solAssert(m_context.knownVariable(*param), "");
-				components.push_back(m_context.variable(*param));
+				m_context.addAssertion(sComponent->currentValue() == currentValue(*param));
 			}
-			symbTuple->setComponents(move(components));
 		}
 	}
 	else if (returnParams.size() == 1)

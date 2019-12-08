@@ -31,7 +31,7 @@ Instructions about how to build and install the Solidity compiler can be found i
 
 A "Hello World" program in Solidity is of even less use than in other languages, but still:
 
-```
+```solidity
 pragma solidity ^0.5.0;
 
 contract HelloWorld {
@@ -44,10 +44,10 @@ contract HelloWorld {
 To get started with Solidity, you can use [Remix](https://remix.ethereum.org/), which is an
 browser-based IDE. Here are some example contracts:
 
-1. [Voting](https://solidity.readthedocs.io/en/v0.4.24/solidity-by-example.html#voting)
-2. [Blind Auction](https://solidity.readthedocs.io/en/v0.4.24/solidity-by-example.html#blind-auction)
-3. [Safe remote purchase](https://solidity.readthedocs.io/en/v0.4.24/solidity-by-example.html#safe-remote-purchase)
-4. [Micropayment Channel](https://solidity.readthedocs.io/en/v0.4.24/solidity-by-example.html#micropayment-channel)
+1. [Voting](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#voting)
+2. [Blind Auction](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#blind-auction)
+3. [Safe remote purchase](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#safe-remote-purchase)
+4. [Micropayment Channel](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#micropayment-channel)
 
 ## Documentation
 
@@ -59,6 +59,8 @@ Solidity is still under development. Contributions are always welcome!
 Please follow the
 [Developers Guide](https://solidity.readthedocs.io/en/latest/contributing.html)
 if you want to help.
+
+You can find our current feature and bug priorities for forthcoming releases [in the projects section](https://github.com/ethereum/solidity/projects).
 
 ## Maintainers
 * [@axic](https://github.com/axic)

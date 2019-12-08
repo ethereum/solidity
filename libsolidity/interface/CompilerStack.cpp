@@ -43,6 +43,7 @@
 #include <libsolidity/interface/ABI.h>
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/interface/StorageLayout.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
 
@@ -95,7 +96,7 @@ CompilerStack::~CompilerStack()
 	TypeProvider::reset();
 }
 
-boost::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string const& _remapping)
+std::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string const& _remapping)
 {
 	auto eq = find(_remapping.begin(), _remapping.end(), '=');
 	if (eq == _remapping.end())
@@ -269,7 +270,7 @@ bool CompilerStack::analyze()
 				noErrors = false;
 
 		m_globalContext = make_shared<GlobalContext>();
-		NameAndTypeResolver resolver(*m_globalContext, m_scopes, m_errorReporter);
+		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_scopes, m_errorReporter);
 		for (Source const* source: m_sourceOrder)
 			if (!resolver.registerDeclarations(*source->ast))
 				return false;
@@ -511,7 +512,7 @@ string const* CompilerStack::sourceMapping(string const& _contractName) const
 	if (!c.sourceMapping)
 	{
 		if (auto items = assemblyItems(_contractName))
-			c.sourceMapping.reset(new string(computeSourceMapping(*items)));
+			c.sourceMapping = make_unique<string>(computeSourceMapping(*items));
 	}
 	return c.sourceMapping.get();
 }
@@ -525,7 +526,7 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 	if (!c.runtimeSourceMapping)
 	{
 		if (auto items = runtimeAssemblyItems(_contractName))
-			c.runtimeSourceMapping.reset(new string(computeSourceMapping(*items)));
+			c.runtimeSourceMapping = make_unique<string>(computeSourceMapping(*items));
 	}
 	return c.runtimeSourceMapping.get();
 }
@@ -576,6 +577,14 @@ string const& CompilerStack::eWasm(string const& _contractName) const
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
 	return contract(_contractName).eWasm;
+}
+
+eth::LinkerObject const& CompilerStack::eWasmObject(string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
+	return contract(_contractName).eWasmObject;
 }
 
 eth::LinkerObject const& CompilerStack::object(string const& _contractName) const
@@ -654,9 +663,31 @@ Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 
 	// caches the result
 	if (!_contract.abi)
-		_contract.abi.reset(new Json::Value(ABI::generate(*_contract.contract)));
+		_contract.abi = make_unique<Json::Value>(ABI::generate(*_contract.contract));
 
 	return *_contract.abi;
+}
+
+Json::Value const& CompilerStack::storageLayout(string const& _contractName) const
+{
+	if (m_stackState < AnalysisPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
+
+	return storageLayout(contract(_contractName));
+}
+
+Json::Value const& CompilerStack::storageLayout(Contract const& _contract) const
+{
+	if (m_stackState < AnalysisPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
+
+	solAssert(_contract.contract, "");
+
+	// caches the result
+	if (!_contract.storageLayout)
+		_contract.storageLayout = make_unique<Json::Value>(StorageLayout().generate(*_contract.contract));
+
+	return *_contract.storageLayout;
 }
 
 Json::Value const& CompilerStack::natspecUser(string const& _contractName) const
@@ -676,7 +707,7 @@ Json::Value const& CompilerStack::natspecUser(Contract const& _contract) const
 
 	// caches the result
 	if (!_contract.userDocumentation)
-		_contract.userDocumentation.reset(new Json::Value(Natspec::userDocumentation(*_contract.contract)));
+		_contract.userDocumentation = make_unique<Json::Value>(Natspec::userDocumentation(*_contract.contract));
 
 	return *_contract.userDocumentation;
 }
@@ -698,7 +729,7 @@ Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
 
 	// caches the result
 	if (!_contract.devDocumentation)
-		_contract.devDocumentation.reset(new Json::Value(Natspec::devDocumentation(*_contract.contract)));
+		_contract.devDocumentation = make_unique<Json::Value>(Natspec::devDocumentation(*_contract.contract));
 
 	return *_contract.devDocumentation;
 }
@@ -731,7 +762,7 @@ string const& CompilerStack::metadata(Contract const& _contract) const
 
 	// cache the result
 	if (!_contract.metadata)
-		_contract.metadata.reset(new string(createMetadata(_contract)));
+		_contract.metadata = make_unique<string>(createMetadata(_contract));
 
 	return *_contract.metadata;
 }
@@ -1029,25 +1060,19 @@ void CompilerStack::generateEWasm(ContractDefinition const& _contract)
 		return;
 
 	// Re-parse the Yul IR in EVM dialect
-	yul::AssemblyStack evmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
-	evmStack.parseAndAnalyze("", compiledContract.yulIROptimized);
+	yul::AssemblyStack stack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
+	stack.parseAndAnalyze("", compiledContract.yulIROptimized);
 
-	// Turn into eWasm dialect
-	yul::Object ewasmObject = yul::EVMToEWasmTranslator(
-		yul::EVMDialect::strictAssemblyForEVMObjects(m_evmVersion)
-	).run(*evmStack.parserResult());
+	stack.optimize();
+	stack.translate(yul::AssemblyStack::Language::EWasm);
+	stack.optimize();
 
-	// Re-inject into an assembly stack for the eWasm dialect
-	yul::AssemblyStack ewasmStack(m_evmVersion, yul::AssemblyStack::Language::EWasm, m_optimiserSettings);
-	// TODO this is a hack for now - provide as structured AST!
-	ewasmStack.parseAndAnalyze("", "{}");
-	*ewasmStack.parserResult() = move(ewasmObject);
-	ewasmStack.optimize();
-
-	//cout << yul::AsmPrinter{}(*ewasmStack.parserResult()->code) << endl;
+	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
 
 	// Turn into eWasm text representation.
-	compiledContract.eWasm = ewasmStack.assemble(yul::AssemblyStack::Machine::eWasm).assembly;
+	auto result = stack.assemble(yul::AssemblyStack::Machine::eWasm);
+	compiledContract.eWasm = std::move(result.assembly);
+	compiledContract.eWasmObject = std::move(*result.bytecode);
 }
 
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const
@@ -1377,7 +1402,7 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 	if (eth::AssemblyItems const* items = assemblyItems(_contractName))
 	{
 		Gas executionGas = gasEstimator.functionalEstimation(*items);
-		Gas codeDepositGas{eth::GasMeter::dataGas(runtimeObject(_contractName).bytecode, false)};
+		Gas codeDepositGas{eth::GasMeter::dataGas(runtimeObject(_contractName).bytecode, false, m_evmVersion)};
 
 		Json::Value creation(Json::objectValue);
 		creation["codeDepositCost"] = gasToJson(codeDepositGas);

@@ -65,23 +65,23 @@ size_t CodeSize::codeSizeIncludingFunctions(Block const& _block)
 
 void CodeSize::visit(Statement const& _statement)
 {
-	if (_statement.type() == typeid(FunctionDefinition) && m_ignoreFunctions)
+	if (holds_alternative<FunctionDefinition>(_statement) && m_ignoreFunctions)
 		return;
 	else if (
-		_statement.type() == typeid(If) ||
-		_statement.type() == typeid(Break) ||
-		_statement.type() == typeid(Continue)
+		holds_alternative<If>(_statement) ||
+		holds_alternative<Break>(_statement) ||
+		holds_alternative<Continue>(_statement)
 	)
 		m_size += 2;
-	else if (_statement.type() == typeid(ForLoop))
+	else if (holds_alternative<ForLoop>(_statement))
 		m_size += 3;
-	else if (_statement.type() == typeid(Switch))
-		m_size += 1 + 2 * boost::get<Switch>(_statement).cases.size();
+	else if (holds_alternative<Switch>(_statement))
+		m_size += 1 + 2 * std::get<Switch>(_statement).cases.size();
 	else if (!(
-		_statement.type() == typeid(Block) ||
-		_statement.type() == typeid(ExpressionStatement) ||
-		_statement.type() == typeid(Assignment) ||
-		_statement.type() == typeid(VariableDeclaration)
+		holds_alternative<Block>(_statement) ||
+		holds_alternative<ExpressionStatement>(_statement) ||
+		holds_alternative<Assignment>(_statement) ||
+		holds_alternative<VariableDeclaration>(_statement)
 	))
 		++m_size;
 
@@ -90,7 +90,7 @@ void CodeSize::visit(Statement const& _statement)
 
 void CodeSize::visit(Expression const& _expression)
 {
-	if (_expression.type() != typeid(Identifier))
+	if (!holds_alternative<Identifier>(_expression))
 		++m_size;
 	ASTWalker::visit(_expression);
 }

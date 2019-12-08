@@ -25,11 +25,10 @@
 
 #include <libdevcore/Common.h>
 
-#include <boost/optional.hpp>
-
 #include <vector>
 #include <type_traits>
 #include <cstring>
+#include <optional>
 #include <string>
 #include <set>
 #include <functional>
@@ -131,9 +130,12 @@ enum class HexCase
 	Mixed = 2,
 };
 
-/// Convert a series of bytes to the corresponding string of hex duplets.
-/// @param _w specifies the width of the first of the elements. Defaults to two - enough to represent a byte.
-/// @example toHex("A\x69") == "4169"
+/// Convert a single byte to a string of hex characters (of length two),
+/// optionally with uppercase hex letters.
+std::string toHex(uint8_t _data, HexCase _case = HexCase::Lower);
+
+/// Convert a series of bytes to the corresponding string of hex duplets,
+/// optionally with "0x" prefix and with uppercase hex letters.
 std::string toHex(bytes const& _data, HexPrefix _prefix = HexPrefix::DontAdd, HexCase _case = HexCase::Lower);
 
 /// Converts a (printable) ASCII hex character into the corresponding integer value.
@@ -208,10 +210,6 @@ inline bytes toCompactBigEndian(T _val, unsigned _min = 0)
 	toBigEndian(_val, ret);
 	return ret;
 }
-inline bytes toCompactBigEndian(uint8_t _val, unsigned _min = 0)
-{
-	return (_min || _val) ? bytes{ _val } : bytes{};
-}
 
 /// Convenience function for conversion of a u256 to hex
 inline std::string toHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd)
@@ -220,13 +218,18 @@ inline std::string toHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd)
 	return (prefix == HexPrefix::Add) ? "0x" + str : str;
 }
 
+inline std::string toCompactHexWithPrefix(u256 const& _value)
+{
+	return toHex(toCompactBigEndian(_value, 1), HexPrefix::Add);
+}
+
 /// Returns decimal representation for small numbers and hex for large numbers.
 inline std::string formatNumber(bigint const& _value)
 {
 	if (_value < 0)
 		return "-" + formatNumber(-_value);
 	if (_value > 0x1000000)
-		return toHex(toCompactBigEndian(_value), HexPrefix::Add);
+		return toHex(toCompactBigEndian(_value, 1), HexPrefix::Add);
 	else
 		return _value.str();
 }
@@ -234,17 +237,11 @@ inline std::string formatNumber(bigint const& _value)
 inline std::string formatNumber(u256 const& _value)
 {
 	if (_value > 0x1000000)
-		return toHex(toCompactBigEndian(_value), HexPrefix::Add);
+		return toCompactHexWithPrefix(_value);
 	else
 		return _value.str();
 }
 
-inline std::string toCompactHexWithPrefix(u256 val)
-{
-	std::ostringstream ret;
-	ret << std::hex << val;
-	return "0x" + ret.str();
-}
 
 // Algorithms for string and string-like collections.
 
@@ -277,7 +274,7 @@ void iterateReplacing(std::vector<T>& _vector, F const& _f)
 	std::vector<T> modifiedVector;
 	for (size_t i = 0; i < _vector.size(); ++i)
 	{
-		if (boost::optional<std::vector<T>> r = _f(_vector[i]))
+		if (std::optional<std::vector<T>> r = _f(_vector[i]))
 		{
 			if (!useModified)
 			{
@@ -293,7 +290,6 @@ void iterateReplacing(std::vector<T>& _vector, F const& _f)
 		_vector = std::move(modifiedVector);
 }
 
-
 namespace detail
 {
 template <typename T, typename F, std::size_t... I>
@@ -305,7 +301,7 @@ void iterateReplacingWindow(std::vector<T>& _vector, F const& _f, std::index_seq
 	size_t i = 0;
 	for (; i + sizeof...(I) <= _vector.size(); ++i)
 	{
-		if (boost::optional<std::vector<T>> r = _f(_vector[i + I]...))
+		if (std::optional<std::vector<T>> r = _f(_vector[i + I]...))
 		{
 			if (!useModified)
 			{
@@ -357,6 +353,11 @@ std::string getChecksummedAddress(std::string const& _addr);
 
 bool isValidHex(std::string const& _string);
 bool isValidDecimal(std::string const& _string);
+
+/// @returns a quoted string if all characters are printable ASCII chars,
+/// or its hex representation otherwise.
+/// _value cannot be longer than 32 bytes.
+std::string formatAsStringOrNumber(std::string const& _value);
 
 template<typename Container, typename Compare>
 bool containerEqual(Container const& _lhs, Container const& _rhs, Compare&& _compare)

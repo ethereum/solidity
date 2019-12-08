@@ -24,7 +24,7 @@
 
 #include <fstream>
 
-static evmc::vm evmone = evmc::vm{evmc_create_evmone()};
+static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 
 using namespace dev::test::abiv2fuzzer;
 using namespace dev::test;
@@ -142,7 +142,7 @@ DEFINE_PROTO_FUZZER(Contract const& _input)
 
 	// We target the default EVM which is the latest
 	langutil::EVMVersion version = {};
-	EVMHost hostContext(version, &evmone);
+	EVMHost hostContext(version, evmone);
 
 	// Deploy contract and signal failure if deploy failed
 	evmc::result createResult = deployContract(hostContext, byteCode);

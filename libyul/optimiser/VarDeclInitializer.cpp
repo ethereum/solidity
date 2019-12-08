@@ -29,8 +29,9 @@ void VarDeclInitializer::operator()(Block& _block)
 {
 	ASTModifier::operator()(_block);
 
-	using OptionalStatements = boost::optional<vector<Statement>>;
-	GenericFallbackReturnsVisitor<OptionalStatements, VariableDeclaration> visitor{
+	using OptionalStatements = std::optional<vector<Statement>>;
+	GenericVisitor visitor{
+		VisitorFallback<OptionalStatements>{},
 		[](VariableDeclaration& _varDecl) -> OptionalStatements
 		{
 			if (_varDecl.value)
@@ -51,5 +52,6 @@ void VarDeclInitializer::operator()(Block& _block)
 			}
 		}
 	};
-	iterateReplacing(_block.statements, boost::apply_visitor(visitor));
+
+	iterateReplacing(_block.statements, [&](auto&& _statement) { return std::visit(visitor, _statement); });
 }

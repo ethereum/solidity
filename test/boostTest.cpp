@@ -96,7 +96,7 @@ int registerTests(
 	{
 		static vector<unique_ptr<string>> filenames;
 
-		filenames.emplace_back(new string(_path.string()));
+		filenames.emplace_back(make_unique<string>(_path.string()));
 		_suite.add(make_test_case(
 			[config, _testCaseCreator]
 			{

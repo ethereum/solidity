@@ -112,7 +112,7 @@ shared_ptr<Block> ObjectParser::parseBlock()
 
 void ObjectParser::parseData(Object& _containingObject)
 {
-	solAssert(
+	yulAssert(
 		currentToken() == Token::Identifier && currentLiteral() == "data",
 		"parseData called on wrong input."
 	);
@@ -120,7 +120,10 @@ void ObjectParser::parseData(Object& _containingObject)
 
 	YulString name = parseUniqueName(&_containingObject);
 
-	expectToken(Token::StringLiteral, false);
+	if (currentToken() == Token::HexStringLiteral)
+		expectToken(Token::HexStringLiteral, false);
+	else
+		expectToken(Token::StringLiteral, false);
 	addNamedSubObject(_containingObject, name, make_shared<Data>(name, asBytes(currentLiteral())));
 	advance();
 }

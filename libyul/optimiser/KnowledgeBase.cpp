@@ -27,6 +27,9 @@
 
 #include <libdevcore/CommonData.h>
 
+#include <variant>
+
+using namespace std;
 using namespace yul;
 using namespace dev;
 
@@ -37,12 +40,12 @@ bool KnowledgeBase::knownToBeDifferent(YulString _a, YulString _b)
 	// If that fails, try `eq(_a, _b)`.
 
 	Expression expr1 = simplify(FunctionCall{{}, {{}, "sub"_yulstring}, make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
-	if (expr1.type() == typeid(Literal))
-		return valueOfLiteral(boost::get<Literal>(expr1)) != 0;
+	if (holds_alternative<Literal>(expr1))
+		return valueOfLiteral(std::get<Literal>(expr1)) != 0;
 
 	Expression expr2 = simplify(FunctionCall{{}, {{}, "eq"_yulstring}, make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
-	if (expr2.type() == typeid(Literal))
-		return valueOfLiteral(boost::get<Literal>(expr2)) == 0;
+	if (holds_alternative<Literal>(expr2))
+		return valueOfLiteral(std::get<Literal>(expr2)) == 0;
 
 	return false;
 }
@@ -53,9 +56,9 @@ bool KnowledgeBase::knownToBeDifferentByAtLeast32(YulString _a, YulString _b)
 	// current values to turn `sub(_a, _b)` into a constant whose absolute value is at least 32.
 
 	Expression expr1 = simplify(FunctionCall{{}, {{}, "sub"_yulstring}, make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
-	if (expr1.type() == typeid(Literal))
+	if (holds_alternative<Literal>(expr1))
 	{
-		u256 val = valueOfLiteral(boost::get<Literal>(expr1));
+		u256 val = valueOfLiteral(std::get<Literal>(expr1));
 		return val >= 32 && val <= u256(0) - 32;
 	}
 
@@ -74,11 +77,11 @@ Expression KnowledgeBase::simplify(Expression _expression)
 	else
 		--m_recursionCounter;
 
-	if (_expression.type() == typeid(FunctionCall))
-		for (Expression& arg: boost::get<FunctionCall>(_expression).arguments)
+	if (holds_alternative<FunctionCall>(_expression))
+		for (Expression& arg: std::get<FunctionCall>(_expression).arguments)
 			arg = simplify(arg);
-	else if (_expression.type() == typeid(FunctionalInstruction))
-		for (Expression& arg: boost::get<FunctionalInstruction>(_expression).arguments)
+	else if (holds_alternative<FunctionalInstruction>(_expression))
+		for (Expression& arg: std::get<FunctionalInstruction>(_expression).arguments)
 			arg = simplify(arg);
 
 	if (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_variableValues))

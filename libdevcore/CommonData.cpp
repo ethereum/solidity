@@ -23,32 +23,59 @@
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/Keccak256.h>
+#include <libdevcore/FixedHash.h>
 
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace dev;
 
+namespace
+{
+
+static char const* upperHexChars = "0123456789ABCDEF";
+static char const* lowerHexChars = "0123456789abcdef";
+
+}
+
+string dev::toHex(uint8_t _data, HexCase _case)
+{
+	assertThrow(_case != HexCase::Mixed, BadHexCase, "Mixed case can only be used for byte arrays.");
+
+	char const* chars = _case == HexCase::Upper ? upperHexChars : lowerHexChars;
+
+	return std::string{
+		chars[(unsigned(_data) / 16) & 0xf],
+		chars[unsigned(_data) & 0xf]
+	};
+}
+
 string dev::toHex(bytes const& _data, HexPrefix _prefix, HexCase _case)
 {
-	std::ostringstream ret;
-	if (_prefix == HexPrefix::Add)
-		ret << "0x";
+	std::string ret(_data.size() * 2 + (_prefix == HexPrefix::Add ? 2 : 0), 0);
 
+	size_t i = 0;
+	if (_prefix == HexPrefix::Add)
+	{
+		ret[i++] = '0';
+		ret[i++] = 'x';
+	}
+
+	// Mixed case will be handled inside the loop.
+	char const* chars = _case == HexCase::Upper ? upperHexChars : lowerHexChars;
 	int rix = _data.size() - 1;
 	for (uint8_t c: _data)
 	{
 		// switch hex case every four hexchars
-		auto hexcase = std::nouppercase;
-		if (_case == HexCase::Upper)
-			hexcase = std::uppercase;
-		else if (_case == HexCase::Mixed)
-			hexcase = (rix-- & 2) == 0 ? std::nouppercase : std::uppercase;
+		if (_case == HexCase::Mixed)
+			chars = (rix-- & 2) == 0 ? lowerHexChars : upperHexChars;
 
-		ret << std::hex << hexcase << std::setfill('0') << std::setw(2) << size_t(c);
+		ret[i++] = chars[(unsigned(c) / 16) & 0xf];
+		ret[i++] = chars[unsigned(c) & 0xf];
 	}
+	assertThrow(i == ret.size(), Exception, "");
 
-	return ret.str();
+	return ret;
 }
 
 int dev::fromHex(char _i, WhenError _throw)
@@ -60,7 +87,7 @@ int dev::fromHex(char _i, WhenError _throw)
 	if (_i >= 'A' && _i <= 'F')
 		return _i - 'A' + 10;
 	if (_throw == WhenError::Throw)
-		BOOST_THROW_EXCEPTION(BadHexCharacter() << errinfo_invalidSymbol(_i));
+		assertThrow(false, BadHexCharacter, to_string(_i));
 	else
 		return -1;
 }
@@ -73,22 +100,18 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 
 	if (_s.size() % 2)
 	{
-		int h = fromHex(_s[s++], WhenError::DontThrow);
+		int h = fromHex(_s[s++], _throw);
 		if (h != -1)
 			ret.push_back(h);
-		else if (_throw == WhenError::Throw)
-			BOOST_THROW_EXCEPTION(BadHexCharacter());
 		else
 			return bytes();
 	}
 	for (unsigned i = s; i < _s.size(); i += 2)
 	{
-		int h = fromHex(_s[i], WhenError::DontThrow);
-		int l = fromHex(_s[i + 1], WhenError::DontThrow);
+		int h = fromHex(_s[i], _throw);
+		int l = fromHex(_s[i + 1], _throw);
 		if (h != -1 && l != -1)
 			ret.push_back((uint8_t)(h * 16 + l));
-		else if (_throw == WhenError::Throw)
-			BOOST_THROW_EXCEPTION(BadHexCharacter());
 		else
 			return bytes();
 	}
@@ -154,4 +177,15 @@ bool dev::isValidDecimal(string const& _string)
 	if (_string.find_first_not_of("0123456789") != string::npos)
 		return false;
 	return true;
+}
+
+string dev::formatAsStringOrNumber(string const& _value)
+{
+	assertThrow(_value.length() <= 32, StringTooLong, "String to be formatted longer than 32 bytes.");
+
+	for (auto const& c: _value)
+		if (c <= 0x1f || c >= 0x7f || c == '"')
+			return "0x" + h256(_value, h256::AlignLeft).hex();
+
+	return "\"" + _value + "\"";
 }

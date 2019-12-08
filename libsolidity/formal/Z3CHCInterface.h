@@ -37,7 +37,7 @@ public:
 	Z3CHCInterface();
 
 	/// Forwards variable declaration to Z3Interface.
-	void declareVariable(std::string const& _name, Sort const& _sort) override;
+	void declareVariable(std::string const& _name, SortPointer const& _sort) override;
 
 	void registerRelation(Expression const& _expr) override;
 
@@ -54,9 +54,6 @@ private:
 	z3::context* m_context;
 	// Horn solver.
 	z3::fixedpoint m_solver;
-
-	// SMT query timeout in milliseconds.
-	static int const queryTimeout = 10000;
 };
 
 }

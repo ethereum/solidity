@@ -19,6 +19,7 @@
  */
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
+#include <liblangutil/EVMVersion.h>
 #include <libdevcore/SwarmHash.h>
 #include <libevmasm/GasMeter.h>
 
@@ -37,10 +38,10 @@ namespace solidity
 namespace test
 {
 
-#define CHECK_DEPLOY_GAS(_gasNoOpt, _gasOpt) \
+#define CHECK_DEPLOY_GAS(_gasNoOpt, _gasOpt, _evmVersion) \
 	do \
 	{ \
-		u256 bzzr1Cost = GasMeter::dataGas(dev::bzzr1Hash(m_compiler.metadata(m_compiler.lastContractName())).asBytes(), true); \
+		u256 bzzr1Cost = GasMeter::dataGas(dev::bzzr1Hash(m_compiler.metadata(m_compiler.lastContractName())).asBytes(), true, _evmVersion); \
 		u256 gasOpt{_gasOpt}; \
 		u256 gasNoOpt{_gasNoOpt}; \
 		u256 gas = m_optimiserSettings == OptimiserSettings::minimal() ? gasNoOpt : gasOpt; \
@@ -95,33 +96,61 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	m_compiler.overwriteReleaseFlag(true);
 	compileAndRun(sourceCode);
 
-	if (Options::get().evmVersion() <= EVMVersion::byzantium())
-		CHECK_DEPLOY_GAS(134071, 130763);
+	auto evmVersion = dev::test::Options::get().evmVersion();
+
+	if (evmVersion <= EVMVersion::byzantium())
+		CHECK_DEPLOY_GAS(134071, 130763, evmVersion);
 	// This is only correct on >=Constantinople.
 	else if (Options::get().useABIEncoderV2)
 	{
 		if (Options::get().optimizeYul)
-			CHECK_DEPLOY_GAS(151455, 127653);
+		{
+			// Costs with 0 are cases which cannot be triggered in tests.
+			if (evmVersion < EVMVersion::istanbul())
+				CHECK_DEPLOY_GAS(0, 127653, evmVersion);
+			else
+				CHECK_DEPLOY_GAS(0, 113821, evmVersion);
+		}
 		else
-			CHECK_DEPLOY_GAS(151455, 135371);
+		{
+			if (evmVersion < EVMVersion::istanbul())
+				CHECK_DEPLOY_GAS(0, 135371, evmVersion);
+			else
+				CHECK_DEPLOY_GAS(0, 120083, evmVersion);
+		}
 	}
+	else if (evmVersion < EVMVersion::istanbul())
+		CHECK_DEPLOY_GAS(126861, 119591, evmVersion);
 	else
-		CHECK_DEPLOY_GAS(126861, 119591);
-	if (Options::get().evmVersion() >= EVMVersion::byzantium())
+		CHECK_DEPLOY_GAS(114173, 107163, evmVersion);
+
+	if (evmVersion >= EVMVersion::byzantium())
 	{
 		callContractFunction("f()");
-		if (Options::get().evmVersion() == EVMVersion::byzantium())
+		if (evmVersion == EVMVersion::byzantium())
 			CHECK_GAS(21551, 21526, 20);
 		// This is only correct on >=Constantinople.
 		else if (Options::get().useABIEncoderV2)
 		{
 			if (Options::get().optimizeYul)
-				CHECK_GAS(21713, 21567, 20);
+			{
+				if (evmVersion < EVMVersion::istanbul())
+					CHECK_GAS(0, 21567, 20);
+				else
+					CHECK_GAS(0, 21351, 20);
+			}
 			else
-				CHECK_GAS(21713, 21635, 20);
+			{
+				if (evmVersion < EVMVersion::istanbul())
+					CHECK_GAS(0, 21635, 20);
+				else
+					CHECK_GAS(0, 21431, 20);
+			}
 		}
-		else
+		else if (evmVersion < EVMVersion::istanbul())
 			CHECK_GAS(21546, 21526, 20);
+		else
+			CHECK_GAS(21332, 21322, 20);
 	}
 }
 

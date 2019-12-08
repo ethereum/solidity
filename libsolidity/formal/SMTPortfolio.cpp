@@ -30,15 +30,21 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
-SMTPortfolio::SMTPortfolio(map<h256, string> const& _smtlib2Responses)
+SMTPortfolio::SMTPortfolio(
+	map<h256, string> const& _smtlib2Responses,
+	SMTSolverChoice _enabledSolvers
+)
 {
 	m_solvers.emplace_back(make_unique<smt::SMTLib2Interface>(_smtlib2Responses));
 #ifdef HAVE_Z3
-	m_solvers.emplace_back(make_unique<smt::Z3Interface>());
+	if (_enabledSolvers.z3)
+		m_solvers.emplace_back(make_unique<smt::Z3Interface>());
 #endif
 #ifdef HAVE_CVC4
-	m_solvers.emplace_back(make_unique<smt::CVC4Interface>());
+	if (_enabledSolvers.cvc4)
+		m_solvers.emplace_back(make_unique<smt::CVC4Interface>());
 #endif
+	(void)_enabledSolvers;
 }
 
 void SMTPortfolio::reset()
@@ -59,8 +65,9 @@ void SMTPortfolio::pop()
 		s->pop();
 }
 
-void SMTPortfolio::declareVariable(string const& _name, Sort const& _sort)
+void SMTPortfolio::declareVariable(string const& _name, SortPointer const& _sort)
 {
+	solAssert(_sort, "");
 	for (auto const& s: m_solvers)
 		s->declareVariable(_name, _sort);
 }

@@ -1,48 +1,48 @@
 {
-	"attributes" : 
-	{
-		"absolutePath" : "a",
-		"exportedSymbols" : 
-		{
-			"C" : 
-			[
-				1
-			]
-		}
-	},
-	"children" : 
-	[
-		{
-			"attributes" : 
-			{
-				"baseContracts" : 
-				[
-					null
-				],
-				"contractDependencies" : 
-				[
-					null
-				],
-				"contractKind" : "contract",
-				"documentation" : null,
-				"fullyImplemented" : true,
-				"linearizedBaseContracts" : 
-				[
-					1
-				],
-				"name" : "C",
-				"nodes" : 
-				[
-					null
-				],
-				"scope" : 2
-			},
-			"id" : 1,
-			"name" : "ContractDefinition",
-			"src" : "0:13:1"
-		}
-	],
-	"id" : 2,
-	"name" : "SourceUnit",
-	"src" : "0:14:1"
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        1
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          1
+        ],
+        "name": "C",
+        "nodes":
+        [
+          null
+        ],
+        "scope": 2
+      },
+      "id": 1,
+      "name": "ContractDefinition",
+      "src": "0:13:1"
+    }
+  ],
+  "id": 2,
+  "name": "SourceUnit",
+  "src": "0:14:1"
 }

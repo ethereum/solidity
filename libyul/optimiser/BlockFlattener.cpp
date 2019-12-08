@@ -30,10 +30,10 @@ void BlockFlattener::operator()(Block& _block)
 
 	iterateReplacing(
 		_block.statements,
-		[](Statement& _s) -> boost::optional<vector<Statement>>
+		[](Statement& _s) -> std::optional<vector<Statement>>
 		{
-			if (_s.type() == typeid(Block))
-				return std::move(boost::get<Block>(_s).statements);
+			if (holds_alternative<Block>(_s))
+				return std::move(std::get<Block>(_s).statements);
 			else
 				return {};
 		}

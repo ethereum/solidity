@@ -28,7 +28,7 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-using OptionalStatements = boost::optional<vector<Statement>>;
+using OptionalStatements = std::optional<vector<Statement>>;
 
 namespace {
 
@@ -54,7 +54,7 @@ OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _const
 	if (matchingCaseBlock)
 		return make_vector<Statement>(std::move(*matchingCaseBlock));
 	else
-		return {{}};
+		return optional<vector<Statement>>{vector<Statement>{}};
 }
 
 }
@@ -71,7 +71,8 @@ void StructuralSimplifier::operator()(Block& _block)
 
 void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
-	GenericFallbackReturnsVisitor<OptionalStatements, If, Switch, ForLoop> const visitor(
+	GenericVisitor visitor{
+		VisitorFallback<OptionalStatements>{},
 		[&](If& _ifStmt) -> OptionalStatements {
 			if (expressionAlwaysTrue(*_ifStmt.condition))
 				return {std::move(_ifStmt.body.statements)};
@@ -80,8 +81,8 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 			return {};
 		},
 		[&](Switch& _switchStmt) -> OptionalStatements {
-			if (boost::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
-				return replaceConstArgSwitch(_switchStmt, constExprVal.get());
+			if (std::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
+				return replaceConstArgSwitch(_switchStmt, constExprVal.value());
 			return {};
 		},
 		[&](ForLoop& _forLoop) -> OptionalStatements {
@@ -89,13 +90,13 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 				return {std::move(_forLoop.pre.statements)};
 			return {};
 		}
-	);
+	};
 
 	iterateReplacing(
 		_statements,
 		[&](Statement& _stmt) -> OptionalStatements
 		{
-			OptionalStatements result = boost::apply_visitor(visitor, _stmt);
+			OptionalStatements result = std::visit(visitor, _stmt);
 			if (result)
 				simplify(*result);
 			else
@@ -107,7 +108,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 
 bool StructuralSimplifier::expressionAlwaysTrue(Expression const& _expression)
 {
-	if (boost::optional<u256> value = hasLiteralValue(_expression))
+	if (std::optional<u256> value = hasLiteralValue(_expression))
 		return *value != 0;
 	else
 		return false;
@@ -115,16 +116,16 @@ bool StructuralSimplifier::expressionAlwaysTrue(Expression const& _expression)
 
 bool StructuralSimplifier::expressionAlwaysFalse(Expression const& _expression)
 {
-	if (boost::optional<u256> value = hasLiteralValue(_expression))
+	if (std::optional<u256> value = hasLiteralValue(_expression))
 		return *value == 0;
 	else
 		return false;
 }
 
-boost::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
+std::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
 {
-	if (_expression.type() == typeid(Literal))
-		return valueOfLiteral(boost::get<Literal>(_expression));
+	if (holds_alternative<Literal>(_expression))
+		return valueOfLiteral(std::get<Literal>(_expression));
 	else
-		return boost::optional<u256>();
+		return std::optional<u256>();
 }

@@ -21,11 +21,13 @@
 #include <test/tools/yulInterpreter/Interpreter.h>
 
 #include <test/tools/yulInterpreter/EVMInstructionInterpreter.h>
+#include <test/tools/yulInterpreter/EWasmBuiltinInterpreter.h>
 
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/wasm/WasmDialect.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -35,6 +37,7 @@
 #include <boost/algorithm/cxx11/all_of.hpp>
 
 #include <ostream>
+#include <variant>
 
 using namespace std;
 using namespace dev;
@@ -52,7 +55,7 @@ void InterpreterState::dumpTraceAndState(ostream& _out) const
 		words[(offset / 0x20) * 0x20] |= u256(uint32_t(value)) << (256 - 8 - 8 * size_t(offset % 0x20));
 	for (auto const& [offset, value]: words)
 		if (value != 0)
-			_out << "  " << std::hex << std::setw(4) << offset << ": " << h256(value).hex() << endl;
+			_out << "  " << std::uppercase << std::hex << std::setw(4) << offset << ": " << h256(value).hex() << endl;
 	_out << "Storage dump:" << endl;
 	for (auto const& slot: storage)
 		if (slot.second != h256(0))
@@ -161,9 +164,9 @@ void Interpreter::operator()(Block const& _block)
 	openScope();
 	// Register functions.
 	for (auto const& statement: _block.statements)
-		if (statement.type() == typeid(FunctionDefinition))
+		if (holds_alternative<FunctionDefinition>(statement))
 		{
-			FunctionDefinition const& funDef = boost::get<FunctionDefinition>(statement);
+			FunctionDefinition const& funDef = std::get<FunctionDefinition>(statement);
 			solAssert(!m_scopes.back().count(funDef.name), "");
 			m_scopes.back().emplace(funDef.name, &funDef);
 		}
@@ -228,10 +231,19 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 	evaluateArgs(_funCall.arguments);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+	{
 		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 		{
 			EVMInstructionInterpreter interpreter(m_state);
 			setValue(interpreter.evalBuiltin(*fun, values()));
+			return;
+		}
+	}
+	else if (WasmDialect const* dialect = dynamic_cast<WasmDialect const*>(&m_dialect))
+		if (dialect->builtin(_funCall.functionName.name))
+		{
+			EWasmBuiltinInterpreter interpreter(m_state);
+			setValue(interpreter.evalBuiltin(_funCall.functionName.name, values()));
 			return;
 		}
 

@@ -122,6 +122,7 @@ static string const g_strHelp = "help";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
 static string const g_strYul = "yul";
+static string const g_strYulDialect = "yul-dialect";
 static string const g_strIR = "ir";
 static string const g_strEWasm = "ewasm";
 static string const g_strLicense = "license";
@@ -220,6 +221,13 @@ static set<string> const g_machineArgs
 	g_streWasm
 };
 
+/// Possible arguments to for --yul-dialect
+static set<string> const g_yulDialectArgs
+{
+	g_strEVM,
+	g_streWasm
+};
+
 static void version()
 {
 	sout() <<
@@ -271,7 +279,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin", objectWithLinkRefsHex(m_compiler->object(_contract)));
 		else
 		{
-			sout() << "Binary: " << endl;
+			sout() << "Binary:" << endl;
 			sout() << objectWithLinkRefsHex(m_compiler->object(_contract)) << endl;
 		}
 	}
@@ -281,7 +289,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime", objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)));
 		else
 		{
-			sout() << "Binary of the runtime part: " << endl;
+			sout() << "Binary of the runtime part:" << endl;
 			sout() << objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)) << endl;
 		}
 	}
@@ -293,8 +301,8 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", dev::eth::disassemble(m_compiler->object(_contract).bytecode));
 	else
 	{
-		sout() << "Opcodes: " << endl;
-		sout() << dev::eth::disassemble(m_compiler->object(_contract).bytecode);
+		sout() << "Opcodes:" << endl;
+		sout() << std::uppercase << dev::eth::disassemble(m_compiler->object(_contract).bytecode);
 		sout() << endl;
 	}
 }
@@ -307,7 +315,7 @@ void CommandLineInterface::handleIR(string const& _contractName)
 			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".yul", m_compiler->yulIR(_contractName));
 		else
 		{
-			sout() << "IR: " << endl;
+			sout() << "IR:" << endl;
 			sout() << m_compiler->yulIR(_contractName) << endl;
 		}
 	}
@@ -318,11 +326,18 @@ void CommandLineInterface::handleEWasm(string const& _contractName)
 	if (m_args.count(g_argEWasm))
 	{
 		if (m_args.count(g_argOutputDir))
+		{
 			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->eWasm(_contractName));
+			createFile(
+				m_compiler->filesystemFriendlyName(_contractName) + ".wasm",
+				asString(m_compiler->eWasmObject(_contractName).bytecode)
+			);
+		}
 		else
 		{
-			sout() << "eWasm: " << endl;
+			sout() << "EWasm text:" << endl;
 			sout() << m_compiler->eWasm(_contractName) << endl;
+			sout() << "EWasm binary (hex): " << m_compiler->eWasmObject(_contractName).toHex() << endl;
 		}
 	}
 }
@@ -348,7 +363,7 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 	if (m_args.count(g_argOutputDir))
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".signatures", out);
 	else
-		sout() << "Function signatures: " << endl << out;
+		sout() << "Function signatures:" << endl << out;
 }
 
 void CommandLineInterface::handleMetadata(string const& _contract)
@@ -360,7 +375,7 @@ void CommandLineInterface::handleMetadata(string const& _contract)
 	if (m_args.count(g_argOutputDir))
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_meta.json", data);
 	else
-		sout() << "Metadata: " << endl << data << endl;
+		sout() << "Metadata:" << endl << data << endl;
 }
 
 void CommandLineInterface::handleABI(string const& _contract)
@@ -372,7 +387,7 @@ void CommandLineInterface::handleABI(string const& _contract)
 	if (m_args.count(g_argOutputDir))
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".abi", data);
 	else
-		sout() << "Contract JSON ABI " << endl << data << endl;
+		sout() << "Contract JSON ABI" << endl << data << endl;
 }
 
 void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contract)
@@ -556,7 +571,7 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 				addrString = addrString.substr(2);
 			if (addrString.empty())
 			{
-				serr() << "Empty address provided for library \"" << libName << "\": " << endl;
+				serr() << "Empty address provided for library \"" << libName << "\":" << endl;
 				serr() << "Note that there should not be any whitespace after the colon." << endl;
 				return false;
 			}
@@ -641,7 +656,8 @@ Allowed options)",
 		(
 			g_strEVMVersion.c_str(),
 			po::value<string>()->value_name("version"),
-			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, byzantium, constantinople, petersburg (default), istanbul or berlin."
+			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
+			"byzantium, constantinople, petersburg, istanbul (default) or berlin."
 		)
 		(g_argOptimize.c_str(), "Enable bytecode optimizer.")
 		(
@@ -678,15 +694,20 @@ Allowed options)",
 		)
 		(
 			g_argAssemble.c_str(),
-			"Switch to assembly mode, ignoring all options except --machine and --optimize and assumes input is assembly."
+			"Switch to assembly mode, ignoring all options except --machine, --yul-dialect and --optimize and assumes input is assembly."
 		)
 		(
 			g_argYul.c_str(),
-			"Switch to Yul mode, ignoring all options except --machine and --optimize and assumes input is Yul."
+			"Switch to Yul mode, ignoring all options except --machine, --yul-dialect and --optimize and assumes input is Yul."
 		)
 		(
 			g_argStrictAssembly.c_str(),
-			"Switch to strict assembly mode, ignoring all options except --machine and --optimize and assumes input is strict assembly."
+			"Switch to strict assembly mode, ignoring all options except --machine, --yul-dialect and --optimize and assumes input is strict assembly."
+		)
+		(
+			g_strYulDialect.c_str(),
+			po::value<string>()->value_name(boost::join(g_yulDialectArgs, ",")),
+			"Input dialect to use in assembly or yul mode."
 		)
 		(
 			g_argMachine.c_str(),
@@ -869,7 +890,7 @@ bool CommandLineInterface::processInput()
 	if (m_args.count(g_strEVMVersion))
 	{
 		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
-		boost::optional<langutil::EVMVersion> versionOption = langutil::EVMVersion::fromString(versionOptionStr);
+		std::optional<langutil::EVMVersion> versionOption = langutil::EVMVersion::fromString(versionOptionStr);
 		if (!versionOption)
 		{
 			serr() << "Invalid option for --evm-version: " << versionOptionStr << endl;
@@ -904,7 +925,27 @@ bool CommandLineInterface::processInput()
 		}
 		if (targetMachine == Machine::eWasm && inputLanguage == Input::StrictAssembly)
 			inputLanguage = Input::EWasm;
-		if (optimize && inputLanguage != Input::StrictAssembly)
+		if (m_args.count(g_strYulDialect))
+		{
+			string dialect = m_args[g_strYulDialect].as<string>();
+			if (dialect == g_strEVM)
+				inputLanguage = Input::StrictAssembly;
+			else if (dialect == g_streWasm)
+			{
+				inputLanguage = Input::EWasm;
+				if (targetMachine != Machine::eWasm)
+				{
+					serr() << "If you select eWasm as --yul-dialect, --machine has to be eWasm as well." << endl;
+					return false;
+				}
+			}
+			else
+			{
+				serr() << "Invalid option for --yul-dialect: " << dialect << endl;
+				return false;
+			}
+		}
+		if (optimize && (inputLanguage != Input::StrictAssembly && inputLanguage != Input::EWasm))
 		{
 			serr() <<
 				"Optimizer can only be used for strict assembly. Use --" <<
@@ -926,7 +967,7 @@ bool CommandLineInterface::processInput()
 		return link();
 	}
 
-	m_compiler.reset(new CompilerStack(fileReader));
+	m_compiler = make_unique<CompilerStack>(fileReader);
 
 	unique_ptr<SourceReferenceFormatter> formatter;
 	if (m_args.count(g_argNewReporter))
@@ -1324,14 +1365,14 @@ bool CommandLineInterface::assemble(
 	for (auto const& sourceAndStack: assemblyStacks)
 	{
 		auto const& stack = sourceAndStack.second;
-		unique_ptr<SourceReferenceFormatter> formatter;
-		if (m_args.count(g_argNewReporter))
-			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
-		else
-			formatter = make_unique<SourceReferenceFormatter>(serr(false));
-
 		for (auto const& error: stack.errors())
 		{
+			unique_ptr<SourceReferenceFormatter> formatter;
+			if (m_args.count(g_argNewReporter))
+				formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
+			else
+				formatter = make_unique<SourceReferenceFormatter>(serr(false));
+
 			g_hasOutput = true;
 			formatter->printErrorInformation(*error);
 		}
@@ -1349,10 +1390,21 @@ bool CommandLineInterface::assemble(
 			_targetMachine == yul::AssemblyStack::Machine::EVM15 ? "EVM 1.5" :
 			"eWasm";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
+
 		yul::AssemblyStack& stack = assemblyStacks[src.first];
 
 		sout() << endl << "Pretty printed source:" << endl;
 		sout() << stack.print() << endl;
+
+		if (_language != yul::AssemblyStack::Language::EWasm && _targetMachine == yul::AssemblyStack::Machine::eWasm)
+		{
+			stack.translate(yul::AssemblyStack::Language::EWasm);
+			stack.optimize();
+
+			sout() << endl << "==========================" << endl;
+			sout() << endl << "Translated source:" << endl;
+			sout() << stack.print() << endl;
+		}
 
 		yul::MachineAssemblyObject object;
 		try

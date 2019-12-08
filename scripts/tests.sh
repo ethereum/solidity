@@ -36,11 +36,6 @@ source "${REPO_ROOT}/scripts/common.sh"
 WORKDIR=`mktemp -d`
 CMDLINE_PID=
 
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-    SMT_FLAGS="--no-smt"
-fi
-
 cleanup() {
     # ensure failing commands don't cause termination during cleanup (especially within safe_kill)
     set +e
@@ -86,7 +81,7 @@ EVM_VERSIONS="homestead byzantium"
 
 if [ -z "$CI" ]
 then
-    EVM_VERSIONS+=" constantinople petersburg"
+    EVM_VERSIONS+=" constantinople petersburg istanbul"
 fi
 
 # And then run the Solidity unit-tests in the matrix combination of optimizer / no optimizer
@@ -96,9 +91,9 @@ do
   for vm in $EVM_VERSIONS
   do
     FORCE_ABIV2_RUNS="no"
-    if [[ "$vm" == "constantinople" ]]
+    if [[ "$vm" == "istanbul" ]]
     then
-      FORCE_ABIV2_RUNS="no yes" # run both in constantinople
+      FORCE_ABIV2_RUNS="no yes" # run both in istanbul
     fi
     for abiv2 in $FORCE_ABIV2_RUNS
     do

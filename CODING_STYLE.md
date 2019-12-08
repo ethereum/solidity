@@ -119,7 +119,7 @@ Use `solAssert` and `solUnimplementedAssert` generously to check assumptions tha
 4. Favour declarations close to use; don't habitually declare at top of scope ala C.
 5. Pass non-trivial parameters as const reference, unless the data is to be copied into the function, then either pass by const reference or by value and use std::move.
 6. If a function returns multiple values, use std::tuple (std::pair acceptable) or better introduce a struct type. Do not use */& arguments.
-7. Use parameters of pointer type only if ``nullptr`` is a valid argument, use references otherwise. Often, ``boost::optional`` is better suited than a raw pointer.
+7. Use parameters of pointer type only if ``nullptr`` is a valid argument, use references otherwise. Often, ``std::optional`` is better suited than a raw pointer.
 8. Never use a macro where adequate non-preprocessor C++ can be written.
 9. Only use ``auto`` if the type is very long and rather irrelevant.
 10. Do not pass bools: prefer enumerations instead.
@@ -135,12 +135,12 @@ enum class Accuracy
 };
 struct MeanSigma
 {
-	float mean;
-	float standardDeviation;
+	float mean = 0.0f;
+	float standardDeviation = 1.0f;
 };
 double const d = 0;
-int i;
-int j;
+int i = 0;
+int j = 0;
 char* s;
 MeanAndSigma ms meanAndSigma(std::vector<float> const& _v, Accuracy _a);
 Derived* x = dynamic_cast<Derived*>(base);

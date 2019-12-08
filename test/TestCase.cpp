@@ -184,7 +184,7 @@ bool EVMVersionRestrictedTestCase::validateSettings(langutil::EVMVersion _evmVer
 			break;
 
 	versionString = versionString.substr(versionBegin);
-	boost::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(versionString);
+	std::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(versionString);
 	if (!version)
 		throw runtime_error("Invalid EVM version: \"" + versionString + "\"");
 

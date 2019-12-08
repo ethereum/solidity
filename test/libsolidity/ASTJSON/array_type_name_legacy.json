@@ -1,89 +1,89 @@
 {
-	"attributes" : 
-	{
-		"absolutePath" : "a",
-		"exportedSymbols" : 
-		{
-			"C" : 
-			[
-				4
-			]
-		}
-	},
-	"children" : 
-	[
-		{
-			"attributes" : 
-			{
-				"baseContracts" : 
-				[
-					null
-				],
-				"contractDependencies" : 
-				[
-					null
-				],
-				"contractKind" : "contract",
-				"documentation" : null,
-				"fullyImplemented" : true,
-				"linearizedBaseContracts" : 
-				[
-					4
-				],
-				"name" : "C",
-				"scope" : 5
-			},
-			"children" : 
-			[
-				{
-					"attributes" : 
-					{
-						"constant" : false,
-						"name" : "i",
-						"scope" : 4,
-						"stateVariable" : true,
-						"storageLocation" : "default",
-						"type" : "uint256[]",
-						"value" : null,
-						"visibility" : "internal"
-					},
-					"children" : 
-					[
-						{
-							"attributes" : 
-							{
-								"length" : null,
-								"type" : "uint256[]"
-							},
-							"children" : 
-							[
-								{
-									"attributes" : 
-									{
-										"name" : "uint",
-										"type" : "uint256"
-									},
-									"id" : 1,
-									"name" : "ElementaryTypeName",
-									"src" : "13:4:1"
-								}
-							],
-							"id" : 2,
-							"name" : "ArrayTypeName",
-							"src" : "13:6:1"
-						}
-					],
-					"id" : 3,
-					"name" : "VariableDeclaration",
-					"src" : "13:8:1"
-				}
-			],
-			"id" : 4,
-			"name" : "ContractDefinition",
-			"src" : "0:24:1"
-		}
-	],
-	"id" : 5,
-	"name" : "SourceUnit",
-	"src" : "0:25:1"
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        4
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          4
+        ],
+        "name": "C",
+        "scope": 5
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "constant": false,
+            "name": "i",
+            "scope": 4,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "type": "uint256[]",
+            "value": null,
+            "visibility": "internal"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "length": null,
+                "type": "uint256[]"
+              },
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "name": "uint",
+                    "type": "uint256"
+                  },
+                  "id": 1,
+                  "name": "ElementaryTypeName",
+                  "src": "13:4:1"
+                }
+              ],
+              "id": 2,
+              "name": "ArrayTypeName",
+              "src": "13:6:1"
+            }
+          ],
+          "id": 3,
+          "name": "VariableDeclaration",
+          "src": "13:8:1"
+        }
+      ],
+      "id": 4,
+      "name": "ContractDefinition",
+      "src": "0:24:1"
+    }
+  ],
+  "id": 5,
+  "name": "SourceUnit",
+  "src": "0:25:1"
 }

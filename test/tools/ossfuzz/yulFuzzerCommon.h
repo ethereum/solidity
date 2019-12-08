@@ -25,7 +25,15 @@ namespace yul_fuzzer
 {
 struct yulFuzzerUtil
 {
-	static void interpret(
+	enum class TerminationReason
+	{
+		ExplicitlyTerminated,
+		StepLimitReached,
+		TraceLimitReached,
+		None
+	};
+
+	static TerminationReason interpret(
 		std::ostream& _os,
 		std::shared_ptr<yul::Block> _ast,
 		Dialect const& _dialect,

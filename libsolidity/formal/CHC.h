@@ -44,11 +44,21 @@ namespace solidity
 class CHC: public SMTEncoder
 {
 public:
-	CHC(smt::EncodingContext& _context, langutil::ErrorReporter& _errorReporter);
+	CHC(
+		smt::EncodingContext& _context,
+		langutil::ErrorReporter& _errorReporter,
+		std::map<h256, std::string> const& _smtlib2Responses,
+		smt::SMTSolverChoice _enabledSolvers
+	);
 
 	void analyze(SourceUnit const& _sources);
 
 	std::set<Expression const*> const& safeAssertions() const { return m_safeAssertions; }
+
+	/// This is used if the Horn solver is not directly linked into this binary.
+	/// @returns a list of inputs to the Horn solver that were not part of the argument to
+	/// the constructor.
+	std::vector<std::string> unhandledQueries() const;
 
 private:
 	/// Visitor functions.
@@ -66,12 +76,6 @@ private:
 
 	void visitAssert(FunctionCall const& _funCall);
 	void unknownFunctionCall(FunctionCall const& _funCall);
-	void visitLoop(
-		BreakableStatement const& _loop,
-		Expression const* _condition,
-		Statement const& _body,
-		ASTNode const* _postLoop
-	);
 	//@}
 
 	/// Helpers.
@@ -80,8 +84,7 @@ private:
 	void eraseKnowledge();
 	bool shouldVisit(ContractDefinition const& _contract) const;
 	bool shouldVisit(FunctionDefinition const& _function) const;
-	void pushBlock(ASTNode const* _node);
-	void popBlock();
+	void setCurrentBlock(smt::SymbolicFunctionVariable const& _block, std::vector<smt::Expression> const* _arguments = nullptr);
 	//@}
 
 	/// Sort helpers.
@@ -97,17 +100,14 @@ private:
 	/// @returns a new block of given _sort and _name.
 	std::unique_ptr<smt::SymbolicFunctionVariable> createSymbolicBlock(smt::SortPointer _sort, std::string const& _name);
 
-	/// Constructor predicate over current variables.
-	smt::Expression constructor();
 	/// Interface predicate over current variables.
 	smt::Expression interface();
 	/// Error predicate over current variables.
 	smt::Expression error();
 	smt::Expression error(unsigned _idx);
 
-	/// Creates a block for the given _node or increases its SSA index
-	/// if the block already exists which in practice creates a new function.
-	void createBlock(ASTNode const* _node, std::string const& _prefix = "");
+	/// Creates a block for the given _node.
+	std::unique_ptr<smt::SymbolicFunctionVariable> createBlock(ASTNode const* _node, std::string const& _prefix = "");
 
 	/// Creates a new error block to be used by an assertion.
 	/// Also registers the predicate.
@@ -115,21 +115,22 @@ private:
 
 	void connectBlocks(smt::Expression const& _from, smt::Expression const& _to, smt::Expression const& _constraints = smt::Expression(true));
 
+	/// @returns the current symbolic values of the current state variables.
+	std::vector<smt::Expression> currentStateVariables();
+
 	/// @returns the current symbolic values of the current function's
 	/// input and output parameters.
 	std::vector<smt::Expression> currentFunctionVariables();
-	/// @returns the samve as currentFunctionVariables plus
+	/// @returns the same as currentFunctionVariables plus
 	/// local variables.
 	std::vector<smt::Expression> currentBlockVariables();
-
-	/// Sets the SSA indices of the variables in scope to 0.
-	/// Used when starting a new block.
-	void clearIndices();
 
 	/// @returns the predicate name for a given node.
 	std::string predicateName(ASTNode const* _node);
 	/// @returns a predicate application over the current scoped variables.
-	smt::Expression predicate(ASTNode const* _node);
+	smt::Expression predicate(smt::SymbolicFunctionVariable const& _block);
+	/// @returns a predicate application over @param _arguments.
+	smt::Expression predicate(smt::SymbolicFunctionVariable const& _block, std::vector<smt::Expression> const& _arguments);
 	//@}
 
 	/// Solver related.
@@ -140,22 +141,29 @@ private:
 	bool query(smt::Expression const& _query, langutil::SourceLocation const& _location);
 	//@}
 
+	/// Misc.
+	//@{
+	/// Returns a prefix to be used in a new unique block name
+	/// and increases the block counter.
+	std::string uniquePrefix();
+	//@}
+
 	/// Predicates.
 	//@{
-	/// Constructor predicate.
-	/// Default constructor sets state vars to 0.
-	std::unique_ptr<smt::SymbolicVariable> m_constructorPredicate;
+	/// Genesis predicate.
+	std::unique_ptr<smt::SymbolicFunctionVariable> m_genesisPredicate;
+
+	/// Implicit constructor predicate.
+	/// Explicit constructors are handled as functions.
+	std::unique_ptr<smt::SymbolicFunctionVariable> m_constructorPredicate;
 
 	/// Artificial Interface predicate.
 	/// Single entry block for all functions.
-	std::unique_ptr<smt::SymbolicVariable> m_interfacePredicate;
+	std::unique_ptr<smt::SymbolicFunctionVariable> m_interfacePredicate;
 
 	/// Artificial Error predicate.
 	/// Single error block for all assertions.
-	std::unique_ptr<smt::SymbolicVariable> m_errorPredicate;
-
-	/// Maps AST nodes to their predicates.
-	std::unordered_map<ASTNode const*, std::shared_ptr<smt::SymbolicVariable>> m_predicates;
+	std::unique_ptr<smt::SymbolicFunctionVariable> m_errorPredicate;
 	//@}
 
 	/// Variables.
@@ -166,9 +174,6 @@ private:
 	/// State variables.
 	/// Used to create all predicates.
 	std::vector<VariableDeclaration const*> m_stateVariables;
-
-	/// Input sorts for AST nodes.
-	std::map<ASTNode const*, smt::SortPointer> m_nodeSorts;
 	//@}
 
 	/// Verification targets.
@@ -183,21 +188,19 @@ private:
 	//@{
 	FunctionDefinition const* m_currentFunction = nullptr;
 
-	/// Number of basic blocks created for the body of the current function.
-	unsigned m_functionBlocks = 0;
-	/// The current control flow path.
-	std::vector<smt::Expression> m_path;
+	/// The current block.
+	smt::Expression m_currentBlock = smt::Expression(true);
+
+	/// Counter to generate unique block names.
+	unsigned m_blockCounter = 0;
+
 	/// Whether a function call was seen in the current scope.
 	bool m_unknownFunctionCallSeen = false;
-	/// Whether a break statement was seen in the current scope.
-	bool m_breakSeen = false;
-	/// Whether a continue statement was seen in the current scope.
-	bool m_continueSeen = false;
 
 	/// Block where a loop break should go to.
-	ASTNode const* m_breakDest;
+	smt::SymbolicFunctionVariable const* m_breakDest = nullptr;
 	/// Block where a loop continue should go to.
-	ASTNode const* m_continueDest;
+	smt::SymbolicFunctionVariable const* m_continueDest = nullptr;
 	//@}
 
 	/// CHC solver.

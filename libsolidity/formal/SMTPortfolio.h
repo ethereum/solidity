@@ -42,14 +42,17 @@ namespace smt
 class SMTPortfolio: public SolverInterface, public boost::noncopyable
 {
 public:
-	SMTPortfolio(std::map<h256, std::string> const& _smtlib2Responses);
+	SMTPortfolio(
+		std::map<h256, std::string> const& _smtlib2Responses,
+		SMTSolverChoice _enabledSolvers
+	);
 
 	void reset() override;
 
 	void push() override;
 	void pop() override;
 
-	void declareVariable(std::string const&, Sort const&) override;
+	void declareVariable(std::string const&, SortPointer const&) override;
 
 	void addAssertion(smt::Expression const& _expr) override;
 

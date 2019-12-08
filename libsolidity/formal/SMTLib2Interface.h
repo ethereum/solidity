@@ -48,19 +48,22 @@ public:
 	void push() override;
 	void pop() override;
 
-	void declareVariable(std::string const&, Sort const&) override;
+	void declareVariable(std::string const&, SortPointer const&) override;
 
 	void addAssertion(smt::Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<smt::Expression> const& _expressionsToEvaluate) override;
 
 	std::vector<std::string> unhandledQueries() override { return m_unhandledQueries; }
 
-private:
-	void declareFunction(std::string const&, Sort const&);
-
+	// Used by CHCSmtLib2Interface
 	std::string toSExpr(smt::Expression const& _expr);
 	std::string toSmtLibSort(Sort const& _sort);
 	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
+
+	std::map<std::string, SortPointer> variables() { return m_variables; }
+
+private:
+	void declareFunction(std::string const& _name, SortPointer const& _sort);
 
 	void write(std::string _data);
 
@@ -71,7 +74,7 @@ private:
 	std::string querySolver(std::string const& _input);
 
 	std::vector<std::string> m_accumulatedOutput;
-	std::set<std::string> m_variables;
+	std::map<std::string, SortPointer> m_variables;
 
 	std::map<h256, std::string> const& m_queryResponses;
 	std::vector<std::string> m_unhandledQueries;

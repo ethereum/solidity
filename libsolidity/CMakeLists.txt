@@ -41,6 +41,8 @@ set(sources
 	ast/ASTJsonConverter.h
 	ast/ASTPrinter.cpp
 	ast/ASTPrinter.h
+	ast/ASTUtils.cpp
+	ast/ASTUtils.h
 	ast/ASTVisitor.h
 	ast/ExperimentalFeatures.h
 	ast/Types.cpp
@@ -79,6 +81,8 @@ set(sources
 	formal/BMC.h
 	formal/CHC.cpp
 	formal/CHC.h
+	formal/CHCSmtLib2Interface.cpp
+	formal/CHCSmtLib2Interface.h
 	formal/CHCSolverInterface.h
 	formal/EncodingContext.cpp
 	formal/EncodingContext.h
@@ -111,6 +115,8 @@ set(sources
 	interface/ReadFile.h
 	interface/StandardCompiler.cpp
 	interface/StandardCompiler.h
+	interface/StorageLayout.cpp
+	interface/StorageLayout.h
 	interface/Version.cpp
 	interface/Version.h
 	parsing/DocStringParser.cpp

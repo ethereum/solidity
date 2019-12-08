@@ -3,20 +3,14 @@ pragma experimental SMTChecker;
 contract C
 {
 	function f(uint x, bool b) public pure {
-		require(x < 100);
+		require(x < 10);
 		while (x < 10) {
 			if (b) {
-				x = 15;
+				x = 20;
 				continue;
 			}
-			else
-				x = 20;
-
+			++x;
 		}
-		// Should be safe, but fails due to continue being unsupported
-		// and erasing all knowledge.
-		assert(x >= 15);
+		assert(x >= 10);
 	}
 }
-// ----
-// Warning: (294-309): Assertion violation happens here

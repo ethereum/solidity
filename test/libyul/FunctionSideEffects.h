@@ -34,7 +34,7 @@ class FunctionSideEffects: public dev::solidity::test::TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
-	{ return std::unique_ptr<TestCase>(new FunctionSideEffects(_config.filename)); }
+	{ return std::make_unique<FunctionSideEffects>(_config.filename); }
 	explicit FunctionSideEffects(std::string const& _filename);
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;

@@ -411,7 +411,7 @@ void CompilerContext::appendInlineAssembly(
 		analyzerResult = yul::AsmAnalyzer(
 			analysisInfo,
 			errorReporter,
-			boost::none,
+			std::nullopt,
 			dialect,
 			identifierAccess.resolve
 		).analyze(*parserResult);
@@ -438,7 +438,7 @@ void CompilerContext::appendInlineAssembly(
 		parserResult = std::move(obj.code);
 
 #ifdef SOL_OUTPUT_ASM
-		cout << "After optimizer: " << endl;
+		cout << "After optimizer:" << endl;
 		cout << yul::AsmPrinter()(*parserResult) << endl;
 #endif
 	}

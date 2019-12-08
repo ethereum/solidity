@@ -833,9 +833,9 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 
 	yul::Statement modified = bodyCopier(_inlineAsm.operations());
 
-	solAssert(modified.type() == typeid(yul::Block), "");
+	solAssert(holds_alternative<yul::Block>(modified), "");
 
-	m_code << yul::AsmPrinter()(boost::get<yul::Block>(std::move(modified))) << "\n";
+	m_code << yul::AsmPrinter()(std::get<yul::Block>(std::move(modified))) << "\n";
 	return false;
 }
 

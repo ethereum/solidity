@@ -23,6 +23,8 @@
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerUtils.h>
+
+#include <libdevcore/CommonData.h>
 #include <libdevcore/Whiskers.h>
 #include <libdevcore/StringUtils.h>
 
@@ -962,11 +964,11 @@ string YulUtilFunctions::readFromCalldata(Type const& _type)
 	return readFromMemoryOrCalldata(_type, true);
 }
 
-string YulUtilFunctions::updateStorageValueFunction(Type const& _type, boost::optional<unsigned> const& _offset)
+string YulUtilFunctions::updateStorageValueFunction(Type const& _type, std::optional<unsigned> const& _offset)
 {
 	string const functionName =
 		"update_storage_value_" +
-		(_offset.is_initialized() ? ("offset_" + to_string(*_offset)) : "") +
+		(_offset.has_value() ? ("offset_" + to_string(*_offset)) : "") +
 		_type.identifier();
 
 	return m_functionCollector->createFunction(functionName, [&] {
@@ -983,11 +985,11 @@ string YulUtilFunctions::updateStorageValueFunction(Type const& _type, boost::op
 			)")
 			("functionName", functionName)
 			("update",
-				_offset.is_initialized() ?
+				_offset.has_value() ?
 					updateByteSliceFunction(_type.storageBytes(), *_offset) :
 					updateByteSliceFunctionDynamic(_type.storageBytes())
 			)
-			("offset", _offset.is_initialized() ? "" : "offset, ")
+			("offset", _offset.has_value() ? "" : "offset, ")
 			("prepare", prepareStoreFunction(_type))
 			.render();
 		}
@@ -1756,7 +1758,7 @@ string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const
 			for (size_t i = 0; i < words; ++i)
 			{
 				wordParams[i]["offset"] = to_string(32 + i * 32);
-				wordParams[i]["wordValue"] = "0x" + h256(data.substr(32 * i, 32), h256::AlignLeft).hex();
+				wordParams[i]["wordValue"] = formatAsStringOrNumber(data.substr(32 * i, 32));
 			}
 			templ("word", wordParams);
 			return templ.render();

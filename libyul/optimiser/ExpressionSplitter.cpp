@@ -85,8 +85,8 @@ void ExpressionSplitter::operator()(Block& _block)
 	vector<Statement> saved;
 	swap(saved, m_statementsToPrefix);
 
-	function<boost::optional<vector<Statement>>(Statement&)> f =
-			[&](Statement& _statement) -> boost::optional<vector<Statement>> {
+	function<std::optional<vector<Statement>>(Statement&)> f =
+			[&](Statement& _statement) -> std::optional<vector<Statement>> {
 		m_statementsToPrefix.clear();
 		visit(_statement);
 		if (m_statementsToPrefix.empty())
@@ -101,7 +101,7 @@ void ExpressionSplitter::operator()(Block& _block)
 
 void ExpressionSplitter::outlineExpression(Expression& _expr)
 {
-	if (_expr.type() == typeid(Identifier))
+	if (holds_alternative<Identifier>(_expr))
 		return;
 
 	visit(_expr);

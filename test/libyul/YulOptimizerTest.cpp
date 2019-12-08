@@ -27,6 +27,8 @@
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/ConditionalUnsimplifier.h>
+#include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/EquivalentFunctionCombiner.h>
@@ -39,6 +41,7 @@
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/LoadResolver.h>
+#include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/Rematerialiser.h>
@@ -72,6 +75,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>
+#include <variant>
 
 using namespace dev;
 using namespace langutil;
@@ -156,6 +160,16 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		disambiguate();
 		CommonSubexpressionEliminator::run(*m_context, *m_ast);
+	}
+	else if (m_optimizerStep == "conditionalUnsimplifier")
+	{
+		disambiguate();
+		ConditionalUnsimplifier::run(*m_context, *m_ast);
+	}
+	else if (m_optimizerStep == "conditionalSimplifier")
+	{
+		disambiguate();
+		ConditionalSimplifier::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "expressionSplitter")
 		ExpressionSplitter::run(*m_context, *m_ast);
@@ -265,6 +279,12 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		UnusedPruner::run(*m_context, *m_ast);
 		ExpressionJoiner::run(*m_context, *m_ast);
 		ExpressionJoiner::run(*m_context, *m_ast);
+	}
+	else if (m_optimizerStep == "loopInvariantCodeMotion")
+	{
+		disambiguate();
+		ForLoopInitRewriter::run(*m_context, *m_ast);
+		LoopInvariantCodeMotion::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "controlFlowSimplifier")
 	{
@@ -403,7 +423,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 
 void YulOptimizerTest::disambiguate()
 {
-	*m_ast = boost::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo)(*m_ast));
+	*m_ast = std::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo)(*m_ast));
 	m_analysisInfo.reset();
 	updateContext();
 }
@@ -411,7 +431,11 @@ void YulOptimizerTest::disambiguate()
 void YulOptimizerTest::updateContext()
 {
 	m_nameDispenser = make_unique<NameDispenser>(*m_dialect, *m_ast, m_reservedIdentifiers);
-	m_context = unique_ptr<OptimiserStepContext>(new OptimiserStepContext{*m_dialect, *m_nameDispenser, m_reservedIdentifiers});
+	m_context = make_unique<OptimiserStepContext>(OptimiserStepContext{
+		*m_dialect,
+		*m_nameDispenser,
+		m_reservedIdentifiers
+	});
 }
 
 void YulOptimizerTest::printErrors(ostream& _stream, ErrorList const& _errors)

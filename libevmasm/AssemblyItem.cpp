@@ -81,7 +81,7 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	default:
 		break;
 	}
-	BOOST_THROW_EXCEPTION(InvalidOpcode());
+	assertThrow(false, InvalidOpcode, "");
 }
 
 int AssemblyItem::arguments() const
@@ -212,7 +212,7 @@ string AssemblyItem::toAssemblyText() const
 		assertThrow(false, AssemblyException, "Invalid assembly item.");
 		break;
 	default:
-		BOOST_THROW_EXCEPTION(InvalidOpcode());
+		assertThrow(false, InvalidOpcode, "");
 	}
 	if (m_jumpType == JumpType::IntoFunction || m_jumpType == JumpType::OutOfFunction)
 	{
@@ -277,7 +277,7 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 		_out << " ???";
 		break;
 	default:
-		BOOST_THROW_EXCEPTION(InvalidOpcode());
+		assertThrow(false, InvalidOpcode, "");
 	}
 	return _out;
 }

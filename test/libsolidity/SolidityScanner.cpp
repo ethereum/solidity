@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(valid_hex_literal)
 {
 	Scanner scanner(CharStream("{ hex\"00112233FF\"", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::HexStringLiteral);
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), std::string("\x00\x11\x22\x33\xFF", 5));
 }
 

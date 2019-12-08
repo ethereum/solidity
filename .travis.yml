@@ -110,7 +110,7 @@ matrix:
           before_install:
               - nvm install 8
               - nvm use 8
-              - docker pull trzeci/emscripten:sdk-tag-1.38.22-64bit
+              - docker pull trzeci/emscripten:sdk-tag-1.39.3-64bit
           env:
               - SOLC_EMSCRIPTEN=On
               - SOLC_INSTALL_DEPS_TRAVIS=Off
@@ -127,7 +127,7 @@ matrix:
               #
               # This key here has no significant on anything, apart from caching. Please keep
               # it in sync with the version above.
-              - EMSCRIPTEN_VERSION_KEY="1.38.22"
+              - EMSCRIPTEN_VERSION_KEY="1.39.3"
 
         # OS X Mavericks (10.9)
         # https://en.wikipedia.org/wiki/OS_X_Mavericks

@@ -19,7 +19,6 @@
 
 #include <libsolidity/formal/SymbolicTypes.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/TypeProvider.h>
 
 using namespace std;
 using namespace dev;
@@ -153,21 +152,48 @@ SymbolicFunctionVariable::SymbolicFunctionVariable(
 	solAssert(m_sort->kind == Kind::Function, "");
 }
 
-void SymbolicFunctionVariable::resetDeclaration()
+Expression SymbolicFunctionVariable::currentValue(solidity::TypePointer const& _targetType) const
 {
-	m_declaration = m_context.newVariable(currentName(), m_sort);
+	return m_abstract.currentValue(_targetType);
+}
+
+Expression SymbolicFunctionVariable::currentFunctionValue() const
+{
+	return m_declaration;
+}
+
+Expression SymbolicFunctionVariable::valueAtIndex(int _index) const
+{
+	return m_abstract.valueAtIndex(_index);
+}
+
+Expression SymbolicFunctionVariable::functionValueAtIndex(int _index) const
+{
+	return SymbolicVariable::valueAtIndex(_index);
+}
+
+Expression SymbolicFunctionVariable::resetIndex()
+{
+	SymbolicVariable::resetIndex();
+	return m_abstract.resetIndex();
 }
 
 Expression SymbolicFunctionVariable::increaseIndex()
 {
 	++(*m_ssa);
 	resetDeclaration();
-	return currentValue();
+	m_abstract.increaseIndex();
+	return m_abstract.currentValue();
 }
 
 Expression SymbolicFunctionVariable::operator()(vector<Expression> _arguments) const
 {
 	return m_declaration(_arguments);
+}
+
+void SymbolicFunctionVariable::resetDeclaration()
+{
+	m_declaration = m_context.newVariable(currentName(), m_sort);
 }
 
 SymbolicMappingVariable::SymbolicMappingVariable(
@@ -222,12 +248,16 @@ SymbolicTupleVariable::SymbolicTupleVariable(
 	SymbolicVariable(_type, _type, move(_uniqueName), _context)
 {
 	solAssert(isTuple(m_type->category()), "");
-}
-
-void SymbolicTupleVariable::setComponents(vector<shared_ptr<SymbolicVariable>> _components)
-{
-	solAssert(m_components.empty(), "");
-	auto const& tupleType = dynamic_cast<solidity::TupleType const*>(m_type);
-	solAssert(_components.size() == tupleType->components().size(), "");
-	m_components = move(_components);
+	auto const& tupleType = dynamic_cast<TupleType const&>(*m_type);
+	auto const& componentsTypes = tupleType.components();
+	for (unsigned i = 0; i < componentsTypes.size(); ++i)
+		if (componentsTypes.at(i))
+		{
+			string componentName = m_uniqueName + "_component_" + to_string(i);
+			auto result = smt::newSymbolicVariable(*componentsTypes.at(i), componentName, m_context);
+			solAssert(result.second, "");
+			m_components.emplace_back(move(result.second));
+		}
+		else
+			m_components.emplace_back(nullptr);
 }

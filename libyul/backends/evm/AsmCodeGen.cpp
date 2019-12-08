@@ -118,19 +118,19 @@ void EthAssemblyAdapter::appendJumpToIf(LabelID _labelId)
 void EthAssemblyAdapter::appendBeginsub(LabelID, int)
 {
 	// TODO we could emulate that, though
-	solAssert(false, "BEGINSUB not implemented for EVM 1.0");
+	yulAssert(false, "BEGINSUB not implemented for EVM 1.0");
 }
 
 void EthAssemblyAdapter::appendJumpsub(LabelID, int, int)
 {
 	// TODO we could emulate that, though
-	solAssert(false, "JUMPSUB not implemented for EVM 1.0");
+	yulAssert(false, "JUMPSUB not implemented for EVM 1.0");
 }
 
 void EthAssemblyAdapter::appendReturnsub(int, int)
 {
 	// TODO we could emulate that, though
-	solAssert(false, "RETURNSUB not implemented for EVM 1.0");
+	yulAssert(false, "RETURNSUB not implemented for EVM 1.0");
 }
 
 void EthAssemblyAdapter::appendAssemblySize()
@@ -174,7 +174,7 @@ AbstractAssembly::SubID EthAssemblyAdapter::appendData(bytes const& _data)
 EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(eth::AssemblyItem const& _tag)
 {
 	u256 id = _tag.data();
-	solAssert(id <= std::numeric_limits<LabelID>::max(), "Tag id too large.");
+	yulAssert(id <= std::numeric_limits<LabelID>::max(), "Tag id too large.");
 	return LabelID(id);
 }
 
@@ -207,11 +207,11 @@ void CodeGenerator::assemble(
 	}
 	catch (StackTooDeepError const& _e)
 	{
-		BOOST_THROW_EXCEPTION(
-			InternalCompilerError() << errinfo_comment(
-				"Stack too deep when compiling inline assembly" +
-				(_e.comment() ? ": " + *_e.comment() : ".")
-			));
+		yulAssert(
+			false,
+			"Stack too deep when compiling inline assembly" +
+			(_e.comment() ? ": " + *_e.comment() : ".")
+		);
 	}
-	solAssert(transform.stackErrors().empty(), "Stack errors present but not thrown.");
+	yulAssert(transform.stackErrors().empty(), "Stack errors present but not thrown.");
 }

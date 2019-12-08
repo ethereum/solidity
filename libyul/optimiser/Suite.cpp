@@ -25,6 +25,8 @@
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
+#include <libyul/optimiser/ConditionalSimplifier.h>
+#include <libyul/optimiser/ConditionalUnsimplifier.h>
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
@@ -36,6 +38,7 @@
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
+#include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
@@ -45,9 +48,11 @@
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
+#include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/LoadResolver.h>
+#include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/AsmAnalysis.h>
@@ -76,7 +81,7 @@ void OptimiserSuite::run(
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
-	*_object.code = boost::get<Block>(Disambiguator(
+	*_object.code = std::get<Block>(Disambiguator(
 		_dialect,
 		*_object.analysisInfo,
 		reservedIdentifiers
@@ -97,6 +102,7 @@ void OptimiserSuite::run(
 		BlockFlattener::name,
 		ControlFlowSimplifier::name,
 		LiteralRematerialiser::name,
+		ConditionalUnsimplifier::name,
 		StructuralSimplifier::name,
 		ControlFlowSimplifier::name,
 		ForLoopConditionIntoBody::name,
@@ -124,13 +130,19 @@ void OptimiserSuite::run(
 				RedundantAssignEliminator::name,
 				ExpressionSimplifier::name,
 				CommonSubexpressionEliminator::name,
-				LoadResolver::name
+				LoadResolver::name,
+				LoopInvariantCodeMotion::name
 			}, ast);
 		}
 
 		{
-			// still in SSA, perform structural simplification
+			// perform structural simplification
 			suite.runSequence({
+				CommonSubexpressionEliminator::name,
+				ConditionalSimplifier::name,
+				LiteralRematerialiser::name,
+				ConditionalUnsimplifier::name,
+				StructuralSimplifier::name,
 				LiteralRematerialiser::name,
 				ForLoopConditionOutOfBody::name,
 				ControlFlowSimplifier::name,
@@ -175,6 +187,18 @@ void OptimiserSuite::run(
 		}
 
 		{
+			// Prune a bit more in SSA
+			suite.runSequence({
+				ExpressionSplitter::name,
+				SSATransform::name,
+				RedundantAssignEliminator::name,
+				UnusedPruner::name,
+				RedundantAssignEliminator::name,
+				UnusedPruner::name,
+			}, ast);
+		}
+
+		{
 			// Turn into SSA again and simplify
 			suite.runSequence({
 				ExpressionSplitter::name,
@@ -199,6 +223,10 @@ void OptimiserSuite::run(
 		{
 			// SSA plus simplify
 			suite.runSequence({
+				ConditionalSimplifier::name,
+				LiteralRematerialiser::name,
+				ConditionalUnsimplifier::name,
+				CommonSubexpressionEliminator::name,
 				SSATransform::name,
 				RedundantAssignEliminator::name,
 				RedundantAssignEliminator::name,
@@ -277,7 +305,7 @@ void OptimiserSuite::run(
 	{
 		// If the first statement is an empty block, remove it.
 		// We should only have function definitions after that.
-		if (ast.statements.size() > 1 && boost::get<Block>(ast.statements.front()).statements.empty())
+		if (ast.statements.size() > 1 && std::get<Block>(ast.statements.front()).statements.empty())
 			ast.statements.erase(ast.statements.begin());
 	}
 	suite.runSequence({
@@ -314,6 +342,8 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 		instance = optimiserStepCollection<
 			BlockFlattener,
 			CommonSubexpressionEliminator,
+			ConditionalSimplifier,
+			ConditionalUnsimplifier,
 			ControlFlowSimplifier,
 			DeadCodeEliminator,
 			EquivalentFunctionCombiner,
@@ -329,6 +359,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			FunctionHoister,
 			LiteralRematerialiser,
 			LoadResolver,
+			LoopInvariantCodeMotion,
 			RedundantAssignEliminator,
 			Rematerialiser,
 			SSAReverser,
@@ -343,10 +374,25 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 
 void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 {
+	unique_ptr<Block> copy;
+	if (m_debug == Debug::PrintChanges)
+		copy = make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
 	for (string const& step: _steps)
 	{
 		if (m_debug == Debug::PrintStep)
 			cout << "Running " << step << endl;
 		allSteps().at(step)->run(m_context, _ast);
+		if (m_debug == Debug::PrintChanges)
+		{
+			// TODO should add switch to also compare variable names!
+			if (SyntacticallyEqual{}.statementEqual(_ast, *copy))
+				cout << "== Running " << step << " did not cause changes." << endl;
+			else
+			{
+				cout << "== Running " << step << " changed the AST." << endl;
+				cout << AsmPrinter{}(_ast) << endl;
+				copy = make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
+			}
+		}
 	}
 }

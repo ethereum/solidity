@@ -34,11 +34,11 @@
 
 #include <libevmasm/Assembly.h>
 
-#include <boost/optional.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
 
 using namespace std;
 using namespace langutil;
@@ -54,7 +54,7 @@ namespace test
 namespace
 {
 
-boost::optional<Error> parseAndReturnFirstError(
+std::optional<Error> parseAndReturnFirstError(
 	string const& _source,
 	bool _assemble = false,
 	bool _allowWarnings = true,

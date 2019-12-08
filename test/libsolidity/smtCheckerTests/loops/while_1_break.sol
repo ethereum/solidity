@@ -12,10 +12,6 @@ contract C
 				break;
 			}
 		}
-		// Assertion is safe but break is unsupported for now
-		// so knowledge is erased.
 		assert(x >= 10);
 	}
 }
-// ----
-// Warning: (274-289): Assertion violation happens here

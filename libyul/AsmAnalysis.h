@@ -30,12 +30,10 @@
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
-#include <boost/variant.hpp>
-#include <boost/optional.hpp>
-
 #include <functional>
 #include <list>
 #include <memory>
+#include <optional>
 
 namespace langutil
 {
@@ -53,13 +51,13 @@ struct AsmAnalysisInfo;
  * references and performs other checks.
  * If all these checks pass, code generation should not throw errors.
  */
-class AsmAnalyzer: public boost::static_visitor<bool>
+class AsmAnalyzer
 {
 public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
-		boost::optional<langutil::Error::Type> _errorTypeForLoose,
+		std::optional<langutil::Error::Type> _errorTypeForLoose,
 		Dialect const& _dialect,
 		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver(),
 		std::set<YulString> const& _dataNames = {}
@@ -127,7 +125,7 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 	langutil::EVMVersion m_evmVersion;
 	Dialect const& m_dialect;
-	boost::optional<langutil::Error::Type> m_errorTypeForLoose;
+	std::optional<langutil::Error::Type> m_errorTypeForLoose;
 	/// Names of data objects to be referenced by builtin functions with literal arguments.
 	std::set<YulString> m_dataNames;
 	ForLoop const* m_currentForLoop = nullptr;

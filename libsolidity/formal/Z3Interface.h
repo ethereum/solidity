@@ -38,7 +38,7 @@ public:
 	void push() override;
 	void pop() override;
 
-	void declareVariable(std::string const& _name, Sort const& _sort) override;
+	void declareVariable(std::string const& _name, SortPointer const& _sort) override;
 
 	void addAssertion(Expression const& _expr) override;
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
@@ -49,6 +49,12 @@ public:
 	std::map<std::string, z3::func_decl> functions() const { return m_functions; }
 
 	z3::context* context() { return &m_context; }
+
+	// Z3 "basic resources" limit.
+	// This is used to make the runs more deterministic and platform/machine independent.
+	// The tests start failing for Z3 with less than 20000000,
+	// so using double that.
+	static int const resourceLimit = 40000000;
 
 private:
 	void declareFunction(std::string const& _name, Sort const& _sort);

@@ -37,7 +37,7 @@ function setup_solcjs
 
     cd "$dir"
     printLog "Setting up solc-js..."
-    git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
+    git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
 
     cd solc
     npm install
@@ -66,15 +66,14 @@ function setup
 
     setup_solcjs "$DIR" "$SOLJSON"
     download_project "$repo" "$branch" "$DIR"
-
-    replace_version_pragmas
 }
 
 function replace_version_pragmas
 {
-    # Replace fixed-version pragmas in Gnosis (part of Consensys best practice)
+    # Replace fixed-version pragmas (part of Consensys best practice).
+    # Include all directories to also cover node dependencies.
     printLog "Replacing fixed-version pragmas..."
-    find contracts test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
+    find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
 }
 
 function replace_libsolc_call
@@ -108,7 +107,7 @@ function force_solc_truffle_modules
         if [ -d "$d" ]; then
             cd $d
             rm -rf solc
-            git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
+            git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
             cp "$1" solc/soljson.js
         fi
     )
@@ -187,6 +186,7 @@ function run_test
     local compile_fn="$1"
     local test_fn="$2"
 
+    replace_version_pragmas
     force_solc "$CONFIG" "$DIR" "$SOLJSON"
 
     printLog "Checking optimizer level..."
@@ -207,7 +207,7 @@ function run_test
     for optimize in "${optimizer_settings[@]}"
     do
         clean
-        force_solc_settings "$CONFIG" "$optimize" "petersburg"
+        force_solc_settings "$CONFIG" "$optimize" "istanbul"
         # Force ABIEncoderV2 in the last step. Has to be the last because code is modified.
         if [ "$FORCE_ABIv2" = true ]; then
             [[ "$optimize" =~ yul ]] && force_abi_v2
@@ -216,8 +216,13 @@ function run_test
         printLog "Running compile function..."
         $compile_fn
         verify_compiler_version "$SOLCVERSION"
-        printLog "Running test function..."
-        $test_fn
+
+        if [[ "$COMPILE_ONLY" == 1 ]]; then
+            printLog "Skipping test function..."
+        else
+            printLog "Running test function..."
+            $test_fn
+        fi
     done
 }
 

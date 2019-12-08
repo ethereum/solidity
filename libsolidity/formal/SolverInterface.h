@@ -36,6 +36,21 @@ namespace solidity
 namespace smt
 {
 
+struct SMTSolverChoice
+{
+	bool cvc4 = false;
+	bool z3 = false;
+
+	static constexpr SMTSolverChoice All() { return {true, true}; }
+	static constexpr SMTSolverChoice CVC4() { return {true, false}; }
+	static constexpr SMTSolverChoice Z3() { return {false, true}; }
+	static constexpr SMTSolverChoice None() { return {false, false}; }
+
+	bool none() { return !some(); }
+	bool some() { return cvc4 || z3; }
+	bool all() { return cvc4 && z3; }
+};
+
 enum class CheckResult
 {
 	SATISFIABLE, UNSATISFIABLE, UNKNOWN, CONFLICTING, ERROR
@@ -338,13 +353,13 @@ public:
 	virtual void push() = 0;
 	virtual void pop() = 0;
 
-	virtual void declareVariable(std::string const& _name, Sort const& _sort) = 0;
-	Expression newVariable(std::string _name, SortPointer _sort)
+	virtual void declareVariable(std::string const& _name, SortPointer const& _sort) = 0;
+	Expression newVariable(std::string _name, SortPointer const& _sort)
 	{
 		// Subclasses should do something here
 		solAssert(_sort, "");
-		declareVariable(_name, *_sort);
-		return Expression(std::move(_name), {}, std::move(_sort));
+		declareVariable(_name, _sort);
+		return Expression(std::move(_name), {}, _sort);
 	}
 
 	virtual void addAssertion(Expression const& _expr) = 0;
@@ -359,10 +374,6 @@ public:
 
 	/// @returns how many SMT solvers this interface has.
 	virtual unsigned solvers() { return 1; }
-
-protected:
-	// SMT query timeout in milliseconds.
-	static int const queryTimeout = 10000;
 };
 
 }

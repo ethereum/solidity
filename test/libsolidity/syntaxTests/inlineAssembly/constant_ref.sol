@@ -8,4 +8,3 @@ contract C {
     }
 }
 // ----
-// TypeError: (134-135): Only direct number constants are supported by inline assembly.

@@ -20,8 +20,8 @@
 #include <libdevcore/AnsiColorized.h>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/optional/optional.hpp>
 
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -54,6 +54,12 @@ string TestFunctionCall::format(
 		string ether = formatToken(Token::Ether);
 		string newline = formatToken(Token::Newline);
 		string failure = formatToken(Token::Failure);
+
+		if (m_call.isLibrary)
+		{
+			stream << _linePrefix << newline << ws << "library:" << ws << m_call.signature;
+			return;
+		}
 
 		/// Formats the function signature. This is the same independent from the display-mode.
 		stream << _linePrefix << newline << ws << m_call.signature;
@@ -124,12 +130,12 @@ string TestFunctionCall::format(
 
 			if (!matchesExpectation())
 			{
-				boost::optional<ParameterList> abiParams;
+				std::optional<ParameterList> abiParams;
 
 				if (isFailure)
 				{
 					if (!output.empty())
-						abiParams = boost::make_optional(ContractABIUtils::failureParameters(output));
+						abiParams = ContractABIUtils::failureParameters(output);
 				}
 				else
 					abiParams = ContractABIUtils::parametersFromJsonOutputs(
@@ -139,7 +145,7 @@ string TestFunctionCall::format(
 					);
 
 				string bytesOutput = abiParams ?
-					BytesUtils::formatRawBytes(output, abiParams.get(), _linePrefix) :
+					BytesUtils::formatRawBytes(output, abiParams.value(), _linePrefix) :
 					BytesUtils::formatRawBytes(
 						output,
 						ContractABIUtils::defaultParameters(ceil(output.size() / 32)),
@@ -208,7 +214,7 @@ string TestFunctionCall::formatBytesParameters(
 	}
 	else
 	{
-		boost::optional<ParameterList> abiParams = ContractABIUtils::parametersFromJsonOutputs(
+		std::optional<ParameterList> abiParams = ContractABIUtils::parametersFromJsonOutputs(
 			_errorReporter,
 			m_contractABI,
 			_signature
@@ -216,17 +222,17 @@ string TestFunctionCall::formatBytesParameters(
 
 		if (abiParams)
 		{
-			boost::optional<ParameterList> preferredParams = ContractABIUtils::preferredParameters(
+			std::optional<ParameterList> preferredParams = ContractABIUtils::preferredParameters(
 				_errorReporter,
 				_parameters,
-				abiParams.get(),
+				abiParams.value(),
 				_bytes
 			);
 
 			if (preferredParams)
 			{
-				ContractABIUtils::overwriteParameters(_errorReporter, preferredParams.get(), abiParams.get());
-				os << BytesUtils::formatBytesRange(_bytes, preferredParams.get(), _highlight);
+				ContractABIUtils::overwriteParameters(_errorReporter, preferredParams.value(), abiParams.value());
+				os << BytesUtils::formatBytesRange(_bytes, preferredParams.value(), _highlight);
 			}
 		}
 		else

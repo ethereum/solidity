@@ -1,6 +1,16 @@
 pragma experimental SMTChecker;
-contract C { constructor(uint) public {} }
-contract A is C { constructor() C(2) public {} }
+contract C {
+	uint a;
+	constructor(uint x) public {
+		a = x;
+	}
+}
+
+contract A is C {
+	constructor() C(2) public {
+		assert(a == 2);
+		assert(a == 3);
+	}
+}
 // ----
-// Warning: (45-72): Assertion checker does not yet support constructors.
-// Warning: (93-121): Assertion checker does not yet support constructors.
+// Warning: (166-180): Assertion violation happens here

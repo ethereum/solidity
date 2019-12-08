@@ -1,0 +1,114 @@
+{"contracts":{"A":{"C":{"ir":"/*******************************************************
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *******************************************************/
+
+
+object \"C_10\" {
+    code {
+        mstore(64, 128)
+
+        // Begin state variable initialization for contract \"C\" (0 variables)
+        // End state variable initialization for contract \"C\".
+
+
+        codecopy(0, dataoffset(\"C_10_deployed\"), datasize(\"C_10_deployed\"))
+        return(0, datasize(\"C_10_deployed\"))
+
+
+        function convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32() -> converted {
+            converted := 0x6162636162630000000000000000000000000000000000000000000000000000
+        }
+
+        function fun_f_9()  -> vloc__4 {
+            for { let return_flag := 1 } return_flag {} {
+                vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
+                return_flag := 0
+                break
+
+                break
+            }
+        }
+
+    }
+    object \"C_10_deployed\" {
+        code {
+            mstore(64, 128)
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0x26121ff0
+                {
+                    // f()
+                    if callvalue() { revert(0, 0) }
+                    abi_decode_tuple_(4, calldatasize())
+                    let ret_0 :=  fun_f_9()
+                    let memPos := allocateMemory(0)
+                    let memEnd := abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack(memPos ,  ret_0)
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                default {}
+            }
+            revert(0, 0)
+
+
+            function abi_decode_tuple_(headStart, dataEnd)   {
+                if slt(sub(dataEnd, headStart), 0) { revert(0, 0) }
+
+            }
+
+            function abi_encode_t_bytes32_to_t_bytes32_fromStack(value, pos) {
+                mstore(pos, cleanup_t_bytes32(value))
+            }
+
+            function abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack(headStart , value0) -> tail {
+                tail := add(headStart, 32)
+
+                abi_encode_t_bytes32_to_t_bytes32_fromStack(value0,  add(headStart, 0))
+
+            }
+
+            function allocateMemory(size) -> memPtr {
+                memPtr := mload(64)
+                let newFreePtr := add(memPtr, size)
+                // protect against overflow
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+                mstore(64, newFreePtr)
+            }
+
+            function cleanup_t_bytes32(value) -> cleaned {
+                cleaned := value
+            }
+
+            function convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32() -> converted {
+                converted := 0x6162636162630000000000000000000000000000000000000000000000000000
+            }
+
+            function fun_f_9()  -> vloc__4 {
+                for { let return_flag := 1 } return_flag {} {
+                    vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
+                    return_flag := 0
+                    break
+
+                    break
+                }
+            }
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+        }
+    }
+}
+
+"}}},"sources":{"A":{"id":0}}}

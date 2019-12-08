@@ -900,9 +900,11 @@ BOOST_AUTO_TEST_CASE(evm_version)
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"constantinople\"") != string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"petersburg\","));
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"petersburg\"") != string::npos);
+	result = compile(inputForVersion("\"evmVersion\": \"istanbul\","));
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"istanbul\"") != string::npos);
 	// test default
 	result = compile(inputForVersion(""));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"petersburg\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"istanbul\"") != string::npos);
 	// test invalid
 	result = compile(inputForVersion("\"evmVersion\": \"invalid\","));
 	BOOST_CHECK(result["errors"][0]["message"].asString() == "Invalid EVM version requested.");
@@ -1199,7 +1201,9 @@ BOOST_AUTO_TEST_CASE(use_stack_optimization)
 	result = compiler.compile(parsedInput);
 	BOOST_REQUIRE(result["errors"].isArray());
 	BOOST_CHECK(result["errors"][0]["severity"] == "error");
-	BOOST_CHECK(result["errors"][0]["type"] == "InternalCompilerError");
+	BOOST_REQUIRE(result["errors"][0]["message"].isString());
+	BOOST_CHECK(result["errors"][0]["message"].asString().find("Stack too deep when compiling inline assembly") != std::string::npos);
+	BOOST_CHECK(result["errors"][0]["type"] == "YulException");
 }
 
 BOOST_AUTO_TEST_CASE(standard_output_selection_wildcard)

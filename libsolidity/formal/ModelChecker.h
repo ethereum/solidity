@@ -25,6 +25,7 @@
 #include <libsolidity/formal/BMC.h>
 #include <libsolidity/formal/CHC.h>
 #include <libsolidity/formal/EncodingContext.h>
+#include <libsolidity/formal/SolverInterface.h>
 
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/ErrorReporter.h>
@@ -43,7 +44,13 @@ namespace solidity
 class ModelChecker
 {
 public:
-	ModelChecker(langutil::ErrorReporter& _errorReporter, std::map<h256, std::string> const& _smtlib2Responses);
+	/// @param _enabledSolvers represents a runtime choice of which SMT solvers
+	/// should be used, even if all are available. The default choice is to use all.
+	ModelChecker(
+		langutil::ErrorReporter& _errorReporter,
+		std::map<h256, std::string> const& _smtlib2Responses,
+		smt::SMTSolverChoice _enabledSolvers = smt::SMTSolverChoice::All()
+	);
 
 	void analyze(SourceUnit const& _sources);
 

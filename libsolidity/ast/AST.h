@@ -36,6 +36,7 @@
 #include <json/json.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -66,7 +67,7 @@ public:
 	using SourceLocation = langutil::SourceLocation;
 
 	explicit ASTNode(SourceLocation const& _location);
-	virtual ~ASTNode();
+	virtual ~ASTNode() {}
 
 	/// @returns an identifier of this AST node that is unique for a single compilation run.
 	size_t id() const { return m_id; }
@@ -110,7 +111,7 @@ public:
 protected:
 	size_t const m_id = 0;
 	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
-	mutable ASTAnnotation* m_annotation = nullptr;
+	mutable std::unique_ptr<ASTAnnotation> m_annotation;
 
 private:
 	SourceLocation m_location;
@@ -186,7 +187,7 @@ public:
 
 	static std::string visibilityToString(Declaration::Visibility _visibility)
 	{
-		switch(_visibility)
+		switch (_visibility)
 		{
 		case Declaration::Visibility::Public:
 			return "public";
@@ -912,10 +913,10 @@ public:
 	ElementaryTypeName(
 		SourceLocation const& _location,
 		ElementaryTypeNameToken const& _elem,
-		boost::optional<StateMutability> _stateMutability = {}
+		std::optional<StateMutability> _stateMutability = {}
 	): TypeName(_location), m_type(_elem), m_stateMutability(_stateMutability)
 	{
-		solAssert(!_stateMutability.is_initialized() || _elem.token() == Token::Address, "");
+		solAssert(!_stateMutability.has_value() || _elem.token() == Token::Address, "");
 	}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -923,11 +924,11 @@ public:
 
 	ElementaryTypeNameToken const& typeName() const { return m_type; }
 
-	boost::optional<StateMutability> const& stateMutability() const { return m_stateMutability; }
+	std::optional<StateMutability> const& stateMutability() const { return m_stateMutability; }
 
 private:
 	ElementaryTypeNameToken m_type;
-	boost::optional<StateMutability> m_stateMutability; ///< state mutability for address type
+	std::optional<StateMutability> m_stateMutability; ///< state mutability for address type
 };
 
 /**

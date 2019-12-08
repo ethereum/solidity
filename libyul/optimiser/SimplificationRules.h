@@ -25,10 +25,12 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/AsmData.h>
 
+#include <libdevcore/CommonData.h>
+
 #include <boost/noncopyable.hpp>
-#include <boost/optional.hpp>
 
 #include <functional>
+#include <optional>
 #include <vector>
 
 namespace yul
@@ -57,7 +59,7 @@ public:
 	/// by the constructor, but we had some issues with static initialization.
 	bool isInitialized() const;
 
-	static boost::optional<std::pair<dev::eth::Instruction, std::vector<Expression> const*>>
+	static std::optional<std::pair<dev::eth::Instruction, std::vector<Expression> const*>>
 	instructionAndArguments(Dialect const& _dialect, Expression const& _expr);
 
 private:
@@ -85,14 +87,20 @@ enum class PatternKind
 class Pattern
 {
 public:
+	using Builtins = dev::eth::EVMBuiltins<Pattern>;
+	static constexpr size_t WordSize = 256;
+	using Word = dev::u256;
+
 	/// Matches any expression.
 	Pattern(PatternKind _kind = PatternKind::Any): m_kind(_kind) {}
 	// Matches a specific constant value.
 	Pattern(unsigned _value): Pattern(dev::u256(_value)) {}
+	Pattern(int _value): Pattern(dev::u256(_value)) {}
+	Pattern(long unsigned _value): Pattern(dev::u256(_value)) {}
 	// Matches a specific constant value.
 	Pattern(dev::u256 const& _value): m_kind(PatternKind::Constant), m_data(std::make_shared<dev::u256>(_value)) {}
 	// Matches a given instruction with given arguments
-	Pattern(dev::eth::Instruction _instruction, std::vector<Pattern> const& _arguments = {});
+	Pattern(dev::eth::Instruction _instruction, std::initializer_list<Pattern> _arguments = {});
 	/// Sets this pattern to be part of the match group with the identifier @a _group.
 	/// Inside one rule, all patterns in the same match group have to match expressions from the
 	/// same expression equivalence class.

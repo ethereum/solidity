@@ -57,6 +57,8 @@
 #include <liblangutil/SourceLocation.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
+
+#include <optional>
 #include <iosfwd>
 
 namespace langutil
@@ -207,7 +209,7 @@ private:
 	inline Token selectToken(char _next, Token _then, Token _else);
 
 	bool scanHexByte(char& o_scannedByte);
-	boost::optional<unsigned> scanUnicode();
+	std::optional<unsigned> scanUnicode();
 
 	/// Scans a single Solidity token.
 	void scanToken();

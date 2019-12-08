@@ -113,7 +113,7 @@ u256 yul::valueOfBoolLiteral(Literal const& _literal)
 
 u256 yul::valueOfLiteral(Literal const& _literal)
 {
-	switch(_literal.kind)
+	switch (_literal.kind)
 	{
 		case LiteralKind::Number:
 			return valueOfNumberLiteral(_literal);

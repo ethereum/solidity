@@ -19,6 +19,7 @@
 
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
+#include <libdevcore/CommonData.h>
 #include <memory>
 
 using namespace std;
@@ -62,7 +63,7 @@ SortPointer smtSort(solidity::Type const& _type)
 		{
 			auto mapType = dynamic_cast<solidity::MappingType const*>(&_type);
 			solAssert(mapType, "");
-			return make_shared<ArraySort>(smtSort(*mapType->keyType()), smtSort(*mapType->valueType()));
+			return make_shared<ArraySort>(smtSortAbstractFunction(*mapType->keyType()), smtSortAbstractFunction(*mapType->valueType()));
 		}
 		else if (isStringLiteral(_type.category()))
 		{
@@ -76,7 +77,7 @@ SortPointer smtSort(solidity::Type const& _type)
 			solAssert(isArray(_type.category()), "");
 			auto arrayType = dynamic_cast<solidity::ArrayType const*>(&_type);
 			solAssert(arrayType, "");
-			return make_shared<ArraySort>(make_shared<Sort>(Kind::Int), smtSort(*arrayType->baseType()));
+			return make_shared<ArraySort>(make_shared<Sort>(Kind::Int), smtSortAbstractFunction(*arrayType->baseType()));
 		}
 	}
 	default:
@@ -91,6 +92,13 @@ vector<SortPointer> smtSort(vector<solidity::TypePointer> const& _types)
 	for (auto const& type: _types)
 		sorts.push_back(smtSort(*type));
 	return sorts;
+}
+
+SortPointer smtSortAbstractFunction(solidity::Type const& _type)
+{
+	if (isFunction(_type.category()))
+		return make_shared<Sort>(Kind::Int);
+	return smtSort(_type);
 }
 
 Kind smtKind(solidity::Type::Category _category)
@@ -139,7 +147,28 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 	else if (isBool(_type.category()))
 		var = make_shared<SymbolicBoolVariable>(type, _uniqueName, _context);
 	else if (isFunction(_type.category()))
-		var = make_shared<SymbolicFunctionVariable>(type, _uniqueName, _context);
+	{
+		auto const& fType = dynamic_cast<FunctionType const*>(type);
+		auto const& paramsIn = fType->parameterTypes();
+		auto const& paramsOut = fType->returnParameterTypes();
+		auto findFunctionParam = [&](auto&& params) {
+			return find_if(
+				begin(params),
+				end(params),
+				[&](TypePointer _paramType) { return _paramType->category() == solidity::Type::Category::Function; }
+			);
+		};
+		if (
+			findFunctionParam(paramsIn) != end(paramsIn) ||
+			findFunctionParam(paramsOut) != end(paramsOut)
+		)
+		{
+			abstract = true;
+			var = make_shared<SymbolicIntVariable>(TypeProvider::uint256(), type, _uniqueName, _context);
+		}
+		else
+			var = make_shared<SymbolicFunctionVariable>(type, _uniqueName, _context);
+	}
 	else if (isInteger(_type.category()))
 		var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
 	else if (isFixedBytes(_type.category()))

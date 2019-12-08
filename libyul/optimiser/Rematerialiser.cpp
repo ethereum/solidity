@@ -68,9 +68,9 @@ Rematerialiser::Rematerialiser(
 
 void Rematerialiser::visit(Expression& _e)
 {
-	if (_e.type() == typeid(Identifier))
+	if (holds_alternative<Identifier>(_e))
 	{
-		Identifier& identifier = boost::get<Identifier>(_e);
+		Identifier& identifier = std::get<Identifier>(_e);
 		YulString name = identifier.name;
 		if (m_value.count(name))
 		{
@@ -96,15 +96,15 @@ void Rematerialiser::visit(Expression& _e)
 
 void LiteralRematerialiser::visit(Expression& _e)
 {
-	if (_e.type() == typeid(Identifier))
+	if (holds_alternative<Identifier>(_e))
 	{
-		Identifier& identifier = boost::get<Identifier>(_e);
+		Identifier& identifier = std::get<Identifier>(_e);
 		YulString name = identifier.name;
 		if (m_value.count(name))
 		{
 			Expression const* value = m_value.at(name);
 			assertThrow(value, OptimizerException, "");
-			if (value->type() == typeid(Literal))
+			if (holds_alternative<Literal>(*value))
 				_e = *value;
 		}
 	}

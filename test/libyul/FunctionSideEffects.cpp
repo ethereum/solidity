@@ -87,7 +87,7 @@ TestCase::TestResult FunctionSideEffects::run(ostream& _stream, string const& _l
 
 	m_obtainedResult.clear();
 	for (auto const& fun: functionSideEffectsStr)
-		m_obtainedResult += fun.first + ": " + fun.second + "\n";
+		m_obtainedResult += fun.first + ":" + (fun.second.empty() ? "" : " ") + fun.second + "\n";
 
 	if (m_expectation != m_obtainedResult)
 	{

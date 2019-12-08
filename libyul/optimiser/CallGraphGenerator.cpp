@@ -29,7 +29,7 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-map<YulString, set<YulString>> CallGraphGenerator::callGraph(Block const& _ast)
+CallGraph CallGraphGenerator::callGraph(Block const& _ast)
 {
 	CallGraphGenerator gen;
 	gen(_ast);
@@ -40,28 +40,33 @@ void CallGraphGenerator::operator()(FunctionalInstruction const& _functionalInst
 {
 	string name = dev::eth::instructionInfo(_functionalInstruction.instruction).name;
 	std::transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
-	m_callGraph[m_currentFunction].insert(YulString{name});
+	m_callGraph.functionCalls[m_currentFunction].insert(YulString{name});
 	ASTWalker::operator()(_functionalInstruction);
 }
 
 void CallGraphGenerator::operator()(FunctionCall const& _functionCall)
 {
-	m_callGraph[m_currentFunction].insert(_functionCall.functionName.name);
+	m_callGraph.functionCalls[m_currentFunction].insert(_functionCall.functionName.name);
 	ASTWalker::operator()(_functionCall);
+}
+
+void CallGraphGenerator::operator()(ForLoop const&)
+{
+	m_callGraph.functionsWithLoops.insert(m_currentFunction);
 }
 
 void CallGraphGenerator::operator()(FunctionDefinition const& _functionDefinition)
 {
 	YulString previousFunction = m_currentFunction;
 	m_currentFunction = _functionDefinition.name;
-	yulAssert(m_callGraph.count(m_currentFunction) == 0, "");
-	m_callGraph[m_currentFunction] = {};
+	yulAssert(m_callGraph.functionCalls.count(m_currentFunction) == 0, "");
+	m_callGraph.functionCalls[m_currentFunction] = {};
 	ASTWalker::operator()(_functionDefinition);
 	m_currentFunction = previousFunction;
 }
 
 CallGraphGenerator::CallGraphGenerator()
 {
-	m_callGraph[YulString{}] = {};
+	m_callGraph.functionCalls[YulString{}] = {};
 }
 
