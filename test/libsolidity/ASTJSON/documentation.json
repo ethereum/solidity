@@ -129,6 +129,7 @@
           "id": 10,
           "name": "mod",
           "nodeType": "ModifierDefinition",
+          "overrides": null,
           "parameters":
           {
             "id": 7,
@@ -137,6 +138,7 @@
             "src": "96:2:3"
           },
           "src": "84:21:3",
+          "virtual": false,
           "visibility": "internal"
         },
         {
@@ -172,6 +174,7 @@
           "scope": 15,
           "src": "134:23:3",
           "stateMutability": "nonpayable",
+          "virtual": false,
           "visibility": "public"
         }
       ],

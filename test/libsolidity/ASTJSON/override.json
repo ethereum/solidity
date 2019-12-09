@@ -68,6 +68,7 @@
           "scope": 5,
           "src": "14:24:1",
           "stateMutability": "nonpayable",
+          "virtual": false,
           "visibility": "public"
         }
       ],
@@ -143,6 +144,7 @@
           "scope": 16,
           "src": "60:22:1",
           "stateMutability": "nonpayable",
+          "virtual": false,
           "visibility": "public"
         },
         {
@@ -164,7 +166,13 @@
           "modifiers": [],
           "name": "faa",
           "nodeType": "FunctionDefinition",
-          "overrides": [],
+          "overrides":
+          {
+            "id": 12,
+            "nodeType": "OverrideSpecifier",
+            "overrides": [],
+            "src": "106:8:1"
+          },
           "parameters":
           {
             "id": 11,
@@ -182,6 +190,7 @@
           "scope": 16,
           "src": "84:33:1",
           "stateMutability": "nonpayable",
+          "virtual": false,
           "visibility": "public"
         }
       ],
@@ -251,7 +260,13 @@
           "modifiers": [],
           "name": "foo",
           "nodeType": "FunctionDefinition",
-          "overrides": [],
+          "overrides":
+          {
+            "id": 20,
+            "nodeType": "OverrideSpecifier",
+            "overrides": [],
+            "src": "161:8:1"
+          },
           "parameters":
           {
             "id": 19,
@@ -269,6 +284,7 @@
           "scope": 31,
           "src": "139:34:1",
           "stateMutability": "nonpayable",
+          "virtual": false,
           "visibility": "public"
         },
         {
@@ -291,34 +307,40 @@
           "name": "faa",
           "nodeType": "FunctionDefinition",
           "overrides":
-          [
-            {
-              "contractScope": null,
-              "id": 25,
-              "name": "A",
-              "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 5,
-              "src": "206:1:1",
-              "typeDescriptions":
+          {
+            "id": 27,
+            "nodeType": "OverrideSpecifier",
+            "overrides":
+            [
               {
-                "typeIdentifier": "t_contract$_A_$5",
-                "typeString": "contract A"
-              }
-            },
-            {
-              "contractScope": null,
-              "id": 26,
-              "name": "B",
-              "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 16,
-              "src": "209:1:1",
-              "typeDescriptions":
+                "contractScope": null,
+                "id": 25,
+                "name": "A",
+                "nodeType": "UserDefinedTypeName",
+                "referencedDeclaration": 5,
+                "src": "206:1:1",
+                "typeDescriptions":
+                {
+                  "typeIdentifier": "t_contract$_A_$5",
+                  "typeString": "contract A"
+                }
+              },
               {
-                "typeIdentifier": "t_contract$_B_$16",
-                "typeString": "contract B"
+                "contractScope": null,
+                "id": 26,
+                "name": "B",
+                "nodeType": "UserDefinedTypeName",
+                "referencedDeclaration": 16,
+                "src": "209:1:1",
+                "typeDescriptions":
+                {
+                  "typeIdentifier": "t_contract$_B_$16",
+                  "typeString": "contract B"
+                }
               }
-            }
-          ],
+            ],
+            "src": "197:14:1"
+          },
           "parameters":
           {
             "id": 24,
@@ -336,6 +358,7 @@
           "scope": 31,
           "src": "175:39:1",
           "stateMutability": "nonpayable",
+          "virtual": false,
           "visibility": "public"
         }
       ],

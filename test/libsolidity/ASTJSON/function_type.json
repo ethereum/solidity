@@ -218,6 +218,7 @@
           "scope": 17,
           "src": "13:109:1",
           "stateMutability": "nonpayable",
+          "virtual": false,
           "visibility": "public"
         }
       ],

@@ -224,6 +224,7 @@
           "scope": 11,
           "src": "51:95:1",
           "stateMutability": "pure",
+          "virtual": false,
           "visibility": "public"
         }
       ],

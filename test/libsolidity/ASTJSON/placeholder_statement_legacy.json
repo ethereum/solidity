@@ -41,6 +41,8 @@
           {
             "documentation": null,
             "name": "M",
+            "overrides": null,
+            "virtual": false,
             "visibility": "internal"
           },
           "children":

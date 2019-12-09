@@ -311,7 +311,18 @@
                       "typeIdentifier": "t_type$_t_address_$",
                       "typeString": "type(address)"
                     },
-                    "typeName": "address"
+                    "typeName":
+                    {
+                      "id": 23,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "209:7:1",
+                      "typeDescriptions":
+                      {
+                        "typeIdentifier": null,
+                        "typeString": null
+                      }
+                    }
                   },
                   "id": 26,
                   "isConstant": false,
@@ -435,7 +446,18 @@
                         "typeIdentifier": "t_type$_t_address_$",
                         "typeString": "type(address)"
                       },
-                      "typeName": "address"
+                      "typeName":
+                      {
+                        "id": 31,
+                        "name": "address",
+                        "nodeType": "ElementaryTypeName",
+                        "src": "239:7:1",
+                        "typeDescriptions":
+                        {
+                          "typeIdentifier": null,
+                          "typeString": null
+                        }
+                      }
                     },
                     "id": 34,
                     "isConstant": false,
@@ -557,6 +579,7 @@
           "scope": 39,
           "src": "67:189:1",
           "stateMutability": "nonpayable",
+          "virtual": false,
           "visibility": "public"
         }
       ],
