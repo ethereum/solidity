@@ -1678,7 +1678,7 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 		expectToken(Token::Payable);
 		nodeFactory.markEndPosition();
 		auto expressionType = nodeFactory.createNode<ElementaryTypeName>(
-			ElementaryTypeNameToken(Token::Address, 160, 0),
+			ElementaryTypeNameToken(Token::Address, 0, 0),
 			std::make_optional(StateMutability::Payable)
 		);
 		expression = nodeFactory.createNode<ElementaryTypeNameExpression>(expressionType);
