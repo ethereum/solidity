@@ -17,6 +17,8 @@ contract C
 		assert(x >= 17);
 	}
 }
+// ====
+// SMTSolvers: z3
 // ----
 // Warning: (169-176): Unreachable code.
 // Warning: (227-242): Assertion violation happens here

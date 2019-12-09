@@ -42,32 +42,32 @@ Compiler Features:
  * ABIEncoderV2: Do not warn about enabled ABIEncoderV2 anymore (the pragma is still needed, though).
 
 
-### 0.5.14 (unreleased)
+### 0.5.14 (2019-12-09)
 
 Language Features:
  * Allow to obtain the selector of public or external library functions via a member ``.selector``.
- * Parser: Allow splitting string and hexadecimal string literals into multiple parts.
- * Inline Assembly: Support referencing other constants.
+ * Inline Assembly: Support constants that reference other constants.
+ * Parser: Allow splitting hexadecimal and regular string literals into multiple parts.
 
 
 Compiler Features:
- * Set the default EVM version to "Istanbul".
  * Commandline Interface: Allow translation from yul / strict assembly to EWasm using ``solc --yul --yul-dialect evm --machine eWasm``
+ * Set the default EVM version to "Istanbul".
  * SMTChecker: Add support to constructors including constructor inheritance.
  * Yul: When compiling via Yul, string literals from the Solidity code are kept as string literals if every character is safely printable.
  * Yul Optimizer: Perform loop-invariant code motion.
-
-
-Build System:
- * Update to emscripten version 1.39.3.
 
 
 Bugfixes:
  * SMTChecker: Fix internal error when using ``abi.decode``.
  * SMTChecker: Fix internal error when using arrays or mappings of functions.
  * SMTChecker: Fix internal error in array of structs type.
+ * Version Checker: ``^0`` should match ``0.5.0``, but no prerelease.
  * Yul: Consider infinite loops and recursion to be not removable.
- * Version Checker: 0.5.x-prerelease will match `pragma solidity ^0.5`.
+
+
+Build System:
+ * Update to emscripten version 1.39.3.
 
 
 ### 0.5.13 (2019-11-14)

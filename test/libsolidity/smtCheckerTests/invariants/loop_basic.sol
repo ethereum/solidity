@@ -9,3 +9,5 @@ contract Simple {
 		assert(y == x);
 	}
 }
+// ====
+// SMTSolvers: z3

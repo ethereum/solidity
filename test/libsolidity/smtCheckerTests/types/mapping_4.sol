@@ -8,4 +8,5 @@ contract C
 		assert(x != map[x]);
 	}
 }
-// ----
+// ====
+// SMTSolvers: z3

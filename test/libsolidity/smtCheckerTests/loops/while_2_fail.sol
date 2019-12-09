@@ -11,4 +11,6 @@ contract C {
 		assert(x == 2);
 	}
 }
+// ====
+// SMTSolvers: z3
 // ----

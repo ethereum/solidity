@@ -47,3 +47,15 @@ vector<string> ModelChecker::unhandledQueries()
 {
 	return m_bmc.unhandledQueries() + m_chc.unhandledQueries();
 }
+
+smt::SMTSolverChoice ModelChecker::availableSolvers()
+{
+	smt::SMTSolverChoice available = smt::SMTSolverChoice::None();
+#ifdef HAVE_Z3
+	available.z3 = true;
+#endif
+#ifdef HAVE_CVC4
+	available.cvc4 = true;
+#endif
+	return available;
+}

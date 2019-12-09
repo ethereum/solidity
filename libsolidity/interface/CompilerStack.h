@@ -27,6 +27,7 @@
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/interface/DebugSettings.h>
+#include <libsolidity/formal/SolverInterface.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
@@ -161,6 +162,9 @@ public:
 	/// When called without an argument it will revert to the default version.
 	/// Must be set before parsing.
 	void setEVMVersion(langutil::EVMVersion _version = langutil::EVMVersion{});
+
+	/// Set which SMT solvers should be enabled.
+	void setSMTSolverChoice(smt::SMTSolverChoice _enabledSolvers);
 
 	/// Sets the requested contract names by source.
 	/// If empty, no filtering is performed and every contract
@@ -429,6 +433,7 @@ private:
 	OptimiserSettings m_optimiserSettings;
 	RevertStrings m_revertStrings = RevertStrings::Default;
 	langutil::EVMVersion m_evmVersion;
+	smt::SMTSolverChoice m_enabledSMTSolvers;
 	std::map<std::string, std::set<std::string>> m_requestedContractNames;
 	bool m_generateIR;
 	bool m_generateEWasm;

@@ -36,7 +36,7 @@ using namespace dev;
 using namespace std;
 using namespace boost::unit_test;
 
-SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion _evmVersion)
+SMTCheckerJSONTest::SMTCheckerJSONTest(string const& _filename, langutil::EVMVersion _evmVersion)
 : SyntaxTest(_filename, _evmVersion)
 {
 	if (!boost::algorithm::ends_with(_filename, ".sol"))
@@ -50,7 +50,7 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion _ev
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid JSON file."));
 }
 
-TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	StandardCompiler compiler;
 
@@ -129,7 +129,7 @@ TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePr
 	return printExpectationAndError(_stream, _linePrefix, _formatted) ? TestResult::Success : TestResult::Failure;
 }
 
-vector<string> SMTCheckerTest::hashesFromJson(Json::Value const& _jsonObj, string const& _auxInput, string const& _smtlib)
+vector<string> SMTCheckerJSONTest::hashesFromJson(Json::Value const& _jsonObj, string const& _auxInput, string const& _smtlib)
 {
 	vector<string> hashes;
 	Json::Value const& auxInputs = _jsonObj[_auxInput];
@@ -143,7 +143,7 @@ vector<string> SMTCheckerTest::hashesFromJson(Json::Value const& _jsonObj, strin
 	return hashes;
 }
 
-Json::Value SMTCheckerTest::buildJson(string const& _extra)
+Json::Value SMTCheckerJSONTest::buildJson(string const& _extra)
 {
 	string language = "\"language\": \"Solidity\"";
 	string sources = " \"sources\": { ";

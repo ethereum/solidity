@@ -11,6 +11,8 @@ contract C
 		assert(x < 14);
 	}
 }
+// ====
+// SMTSolvers: z3
 // ----
 // Warning: (176-181): Overflow (resulting value larger than 2**256 - 1) happens here
 // Warning: (189-203): Assertion violation happens here
