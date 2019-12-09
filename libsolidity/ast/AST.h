@@ -797,7 +797,7 @@ public:
 	{
 		return
 			CallableDeclaration::virtualSemantics() ||
-			annotation().contract->isInterface();
+			(annotation().contract && annotation().contract->isInterface());
 	}
 private:
 	StateMutability m_stateMutability;
