@@ -16,7 +16,7 @@
 */
 /**
  * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
- * eWasm as output.
+ * Ewasm as output.
  */
 
 #pragma once
@@ -52,13 +52,13 @@ struct MachineAssemblyObject
 
 /*
  * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
- * eWasm as output.
+ * Ewasm as output.
  */
 class AssemblyStack
 {
 public:
-	enum class Language { Yul, Assembly, StrictAssembly, EWasm };
-	enum class Machine { EVM, EVM15, eWasm };
+	enum class Language { Yul, Assembly, StrictAssembly, Ewasm };
+	enum class Machine { EVM, EVM15, Ewasm };
 
 	AssemblyStack():
 		AssemblyStack(langutil::EVMVersion{}, Language::Assembly, dev::solidity::OptimiserSettings::none())

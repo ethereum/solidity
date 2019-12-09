@@ -247,9 +247,9 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 	return false;
 }
 
-/// @returns true if any eWasm code was requested. Note that as an exception, '*' does not
+/// @returns true if any Ewasm code was requested. Note that as an exception, '*' does not
 /// yet match "ewasm.wast" or "ewasm"
-bool isEWasmRequested(Json::Value const& _outputSelection)
+bool isEwasmRequested(Json::Value const& _outputSelection)
 {
 	if (!_outputSelection.isObject())
 		return false;
@@ -267,7 +267,7 @@ bool isEWasmRequested(Json::Value const& _outputSelection)
 /// yet match "ir" or "irOptimized"
 bool isIRRequested(Json::Value const& _outputSelection)
 {
-	if (isEWasmRequested(_outputSelection))
+	if (isEwasmRequested(_outputSelection))
 		return true;
 
 	if (!_outputSelection.isObject())
@@ -780,7 +780,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 	compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));
 
-	compilerStack.enableEWasmGeneration(isEWasmRequested(_inputsAndSettings.outputSelection));
+	compilerStack.enableEwasmGeneration(isEwasmRequested(_inputsAndSettings.outputSelection));
 
 	Json::Value errors = std::move(_inputsAndSettings.errors);
 
@@ -956,11 +956,11 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimized", wildcardMatchesExperimental))
 			contractData["irOptimized"] = compilerStack.yulIROptimized(contractName);
 
-		// eWasm
+		// Ewasm
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ewasm.wast", wildcardMatchesExperimental))
-			contractData["ewasm"]["wast"] = compilerStack.eWasm(contractName);
+			contractData["ewasm"]["wast"] = compilerStack.ewasm(contractName);
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ewasm.wasm", wildcardMatchesExperimental))
-			contractData["ewasm"]["wasm"] = compilerStack.eWasmObject(contractName).toHex();
+			contractData["ewasm"]["wasm"] = compilerStack.ewasmObject(contractName).toHex();
 
 		// EVM
 		Json::Value evmData(Json::objectValue);

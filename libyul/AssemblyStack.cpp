@@ -16,7 +16,7 @@
 */
 /**
  * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
- * eWasm as output.
+ * Ewasm as output.
  */
 
 
@@ -59,7 +59,7 @@ Dialect const& languageToDialect(AssemblyStack::Language _language, EVMVersion _
 		return EVMDialect::strictAssemblyForEVMObjects(_version);
 	case AssemblyStack::Language::Yul:
 		return Dialect::yul();
-	case AssemblyStack::Language::EWasm:
+	case AssemblyStack::Language::Ewasm:
 		return WasmDialect::instance();
 	}
 	yulAssert(false, "");
@@ -108,7 +108,7 @@ void AssemblyStack::translate(AssemblyStack::Language _targetLanguage)
 		return;
 
 	solAssert(
-		m_language == Language::StrictAssembly && _targetLanguage == Language::EWasm,
+		m_language == Language::StrictAssembly && _targetLanguage == Language::Ewasm,
 		"Invalid language combination"
 	);
 
@@ -214,9 +214,9 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		/// TODO: fill out text representation
 		return object;
 	}
-	case Machine::eWasm:
+	case Machine::Ewasm:
 	{
-		yulAssert(m_language == Language::EWasm, "");
+		yulAssert(m_language == Language::Ewasm, "");
 		Dialect const& dialect = languageToDialect(m_language, EVMVersion{});
 
 		MachineAssemblyObject object;

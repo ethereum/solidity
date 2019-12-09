@@ -116,7 +116,7 @@ static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
 static string const g_strEVM15 = "evm15";
 static string const g_strEVMVersion = "evm-version";
-static string const g_streWasm = "ewasm";
+static string const g_strEwasm = "ewasm";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
 static string const g_strInputFile = "input-file";
@@ -125,7 +125,6 @@ static string const g_strYul = "yul";
 static string const g_strYulDialect = "yul-dialect";
 static string const g_strIR = "ir";
 static string const g_strIPFS = "ipfs";
-static string const g_strEWasm = "ewasm";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
@@ -187,7 +186,7 @@ static string const g_argHelp = g_strHelp;
 static string const g_argInputFile = g_strInputFile;
 static string const g_argYul = g_strYul;
 static string const g_argIR = g_strIR;
-static string const g_argEWasm = g_strEWasm;
+static string const g_argEwasm = g_strEwasm;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
@@ -234,14 +233,14 @@ static set<string> const g_machineArgs
 {
 	g_strEVM,
 	g_strEVM15,
-	g_streWasm
+	g_strEwasm
 };
 
 /// Possible arguments to for --yul-dialect
 static set<string> const g_yulDialectArgs
 {
 	g_strEVM,
-	g_streWasm
+	g_strEwasm
 };
 
 /// Possible arguments to for --metadata-hash
@@ -345,23 +344,23 @@ void CommandLineInterface::handleIR(string const& _contractName)
 	}
 }
 
-void CommandLineInterface::handleEWasm(string const& _contractName)
+void CommandLineInterface::handleEwasm(string const& _contractName)
 {
-	if (m_args.count(g_argEWasm))
+	if (m_args.count(g_argEwasm))
 	{
 		if (m_args.count(g_argOutputDir))
 		{
-			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->eWasm(_contractName));
+			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->ewasm(_contractName));
 			createFile(
 				m_compiler->filesystemFriendlyName(_contractName) + ".wasm",
-				asString(m_compiler->eWasmObject(_contractName).bytecode)
+				asString(m_compiler->ewasmObject(_contractName).bytecode)
 			);
 		}
 		else
 		{
-			sout() << "EWasm text:" << endl;
-			sout() << m_compiler->eWasm(_contractName) << endl;
-			sout() << "EWasm binary (hex): " << m_compiler->eWasmObject(_contractName).toHex() << endl;
+			sout() << "Ewasm text:" << endl;
+			sout() << m_compiler->ewasm(_contractName) << endl;
+			sout() << "Ewasm binary (hex): " << m_compiler->ewasmObject(_contractName).toHex() << endl;
 		}
 	}
 }
@@ -776,7 +775,7 @@ Allowed options)",
 		(g_argBinaryRuntime.c_str(), "Binary of the runtime part of the contracts in hex.")
 		(g_argAbi.c_str(), "ABI specification of the contracts.")
 		(g_argIR.c_str(), "Intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
-		(g_argEWasm.c_str(), "EWasm text representation of all contracts (EXPERIMENTAL).")
+		(g_argEwasm.c_str(), "Ewasm text representation of all contracts (EXPERIMENTAL).")
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
@@ -981,27 +980,27 @@ bool CommandLineInterface::processInput()
 				targetMachine = Machine::EVM;
 			else if (machine == g_strEVM15)
 				targetMachine = Machine::EVM15;
-			else if (machine == g_streWasm)
-				targetMachine = Machine::eWasm;
+			else if (machine == g_strEwasm)
+				targetMachine = Machine::Ewasm;
 			else
 			{
 				serr() << "Invalid option for --machine: " << machine << endl;
 				return false;
 			}
 		}
-		if (targetMachine == Machine::eWasm && inputLanguage == Input::StrictAssembly)
-			inputLanguage = Input::EWasm;
+		if (targetMachine == Machine::Ewasm && inputLanguage == Input::StrictAssembly)
+			inputLanguage = Input::Ewasm;
 		if (m_args.count(g_strYulDialect))
 		{
 			string dialect = m_args[g_strYulDialect].as<string>();
 			if (dialect == g_strEVM)
 				inputLanguage = Input::StrictAssembly;
-			else if (dialect == g_streWasm)
+			else if (dialect == g_strEwasm)
 			{
-				inputLanguage = Input::EWasm;
-				if (targetMachine != Machine::eWasm)
+				inputLanguage = Input::Ewasm;
+				if (targetMachine != Machine::Ewasm)
 				{
-					serr() << "If you select eWasm as --yul-dialect, --machine has to be eWasm as well." << endl;
+					serr() << "If you select Ewasm as --yul-dialect, --machine has to be Ewasm as well." << endl;
 					return false;
 				}
 			}
@@ -1011,7 +1010,7 @@ bool CommandLineInterface::processInput()
 				return false;
 			}
 		}
-		if (optimize && (inputLanguage != Input::StrictAssembly && inputLanguage != Input::EWasm))
+		if (optimize && (inputLanguage != Input::StrictAssembly && inputLanguage != Input::Ewasm))
 		{
 			serr() <<
 				"Optimizer can only be used for strict assembly. Use --" <<
@@ -1074,7 +1073,7 @@ bool CommandLineInterface::processInput()
 		// TODO: Perhaps we should not compile unless requested
 
 		m_compiler->enableIRGeneration(m_args.count(g_argIR));
-		m_compiler->enableEWasmGeneration(m_args.count(g_argEWasm));
+		m_compiler->enableEwasmGeneration(m_args.count(g_argEwasm));
 
 		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
@@ -1453,7 +1452,7 @@ bool CommandLineInterface::assemble(
 		string machine =
 			_targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
 			_targetMachine == yul::AssemblyStack::Machine::EVM15 ? "EVM 1.5" :
-			"eWasm";
+			"Ewasm";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
 
 		yul::AssemblyStack& stack = assemblyStacks[src.first];
@@ -1461,9 +1460,9 @@ bool CommandLineInterface::assemble(
 		sout() << endl << "Pretty printed source:" << endl;
 		sout() << stack.print() << endl;
 
-		if (_language != yul::AssemblyStack::Language::EWasm && _targetMachine == yul::AssemblyStack::Machine::eWasm)
+		if (_language != yul::AssemblyStack::Language::Ewasm && _targetMachine == yul::AssemblyStack::Machine::Ewasm)
 		{
-			stack.translate(yul::AssemblyStack::Language::EWasm);
+			stack.translate(yul::AssemblyStack::Language::Ewasm);
 			stack.optimize();
 
 			sout() << endl << "==========================" << endl;
@@ -1554,7 +1553,7 @@ void CommandLineInterface::outputCompilationResults()
 
 		handleBytecode(contract);
 		handleIR(contract);
-		handleEWasm(contract);
+		handleEwasm(contract);
 		handleSignatureHashes(contract);
 		handleMetadata(contract);
 		handleABI(contract);
