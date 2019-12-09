@@ -18,6 +18,8 @@ set(sources
 	analysis/GlobalContext.h
 	analysis/NameAndTypeResolver.cpp
 	analysis/NameAndTypeResolver.h
+	analysis/OverrideChecker.cpp
+	analysis/OverrideChecker.h
 	analysis/PostTypeChecker.cpp
 	analysis/PostTypeChecker.h
 	analysis/ReferencesResolver.cpp
