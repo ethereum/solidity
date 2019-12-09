@@ -15,9 +15,11 @@ contract C {
 }
 // ----
 // Warning: (112-120): Assertion checker does not yet support the type of this variable.
+// Warning: (137-138): Assertion checker does not yet implement type type(struct C.S storage pointer)
 // Warning: (137-141): Assertion checker does not yet implement type struct C.S memory
 // Warning: (137-141): Assertion checker does not yet implement this expression.
 // Warning: (193-203): Assertion checker does not yet support the type of this variable.
+// Warning: (137-138): Assertion checker does not yet implement type type(struct C.S storage pointer)
 // Warning: (137-141): Assertion checker does not yet implement type struct C.S memory
 // Warning: (137-141): Assertion checker does not yet implement this expression.
 // Warning: (227-228): Assertion checker does not yet implement type struct C.S memory

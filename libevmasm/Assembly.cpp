@@ -323,7 +323,7 @@ Json::Value Assembly::assemblyJSON(StringMap const& _sourceCodes) const
 			collection.append(createJsonValue("PUSH data", i.location().start, i.location().end, toStringInHex(i.data())));
 			break;
 		default:
-			BOOST_THROW_EXCEPTION(InvalidOpcode());
+			assertThrow(false, InvalidOpcode, "");
 		}
 	}
 
@@ -519,8 +519,11 @@ map<u256, u256> Assembly::optimiseInternal(
 
 LinkerObject const& Assembly::assemble() const
 {
+	// Return the already assembled object, if present.
 	if (!m_assembledObject.bytecode.empty())
 		return m_assembledObject;
+	// Otherwise ensure the object is actually clear.
+	assertThrow(m_assembledObject.linkReferences.empty(), AssemblyException, "Unexpected link references.");
 
 	size_t subTagSize = 1;
 	for (auto const& sub: m_subs)
@@ -638,7 +641,7 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.push_back((uint8_t)Instruction::JUMPDEST);
 			break;
 		default:
-			BOOST_THROW_EXCEPTION(InvalidOpcode());
+			assertThrow(false, InvalidOpcode, "Unexpected opcode while assembling.");
 		}
 	}
 

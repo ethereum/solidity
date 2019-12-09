@@ -29,6 +29,8 @@
 
 set -ev
 
+SCRIPT_DIR="$(realpath $(dirname $0))"
+
 echo -en 'travis_fold:start:installing_dependencies\\r'
 test -e boost_1_70_0_install/include/boost/version.hpp || (
 rm -rf boost_1_70_0
@@ -40,8 +42,7 @@ tar -xzf boost.tar.gz
 rm boost.tar.gz
 cd boost_1_70_0
 ./bootstrap.sh
-wget -q 'https://raw.githubusercontent.com/tee3/boost-build-emscripten/master/emscripten.jam'
-test "$(shasum emscripten.jam)" = "a7e13fc2c1e53b0e079ef440622f879aa6da3049  emscripten.jam"
+cp "${SCRIPT_DIR}/emscripten.jam" .
 echo "using emscripten : : em++ ;" >> project-config.jam
 )
 cd ..

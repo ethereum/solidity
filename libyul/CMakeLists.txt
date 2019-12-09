@@ -110,6 +110,8 @@ add_library(yul
 	optimiser/KnowledgeBase.h
 	optimiser/LoadResolver.cpp
 	optimiser/LoadResolver.h
+	optimiser/LoopInvariantCodeMotion.cpp
+	optimiser/LoopInvariantCodeMotion.h
 	optimiser/MainFunction.cpp
 	optimiser/MainFunction.h
 	optimiser/Metrics.cpp

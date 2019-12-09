@@ -47,7 +47,8 @@ public:
 	CHC(
 		smt::EncodingContext& _context,
 		langutil::ErrorReporter& _errorReporter,
-		std::map<h256, std::string> const& _smtlib2Responses
+		std::map<h256, std::string> const& _smtlib2Responses,
+		smt::SMTSolverChoice _enabledSolvers
 	);
 
 	void analyze(SourceUnit const& _sources);
@@ -83,7 +84,7 @@ private:
 	void eraseKnowledge();
 	bool shouldVisit(ContractDefinition const& _contract) const;
 	bool shouldVisit(FunctionDefinition const& _function) const;
-	void setCurrentBlock(smt::SymbolicFunctionVariable const& _block);
+	void setCurrentBlock(smt::SymbolicFunctionVariable const& _block, std::vector<smt::Expression> const* _arguments = nullptr);
 	//@}
 
 	/// Sort helpers.
@@ -99,8 +100,6 @@ private:
 	/// @returns a new block of given _sort and _name.
 	std::unique_ptr<smt::SymbolicFunctionVariable> createSymbolicBlock(smt::SortPointer _sort, std::string const& _name);
 
-	/// Constructor predicate over current variables.
-	smt::Expression constructor();
 	/// Interface predicate over current variables.
 	smt::Expression interface();
 	/// Error predicate over current variables.
@@ -116,16 +115,15 @@ private:
 
 	void connectBlocks(smt::Expression const& _from, smt::Expression const& _to, smt::Expression const& _constraints = smt::Expression(true));
 
+	/// @returns the current symbolic values of the current state variables.
+	std::vector<smt::Expression> currentStateVariables();
+
 	/// @returns the current symbolic values of the current function's
 	/// input and output parameters.
 	std::vector<smt::Expression> currentFunctionVariables();
-	/// @returns the samve as currentFunctionVariables plus
+	/// @returns the same as currentFunctionVariables plus
 	/// local variables.
 	std::vector<smt::Expression> currentBlockVariables();
-
-	/// Sets the SSA indices of the variables in scope to 0.
-	/// Used when starting a new block.
-	void clearIndices();
 
 	/// @returns the predicate name for a given node.
 	std::string predicateName(ASTNode const* _node);
@@ -152,8 +150,11 @@ private:
 
 	/// Predicates.
 	//@{
-	/// Constructor predicate.
-	/// Default constructor sets state vars to 0.
+	/// Genesis predicate.
+	std::unique_ptr<smt::SymbolicFunctionVariable> m_genesisPredicate;
+
+	/// Implicit constructor predicate.
+	/// Explicit constructors are handled as functions.
 	std::unique_ptr<smt::SymbolicFunctionVariable> m_constructorPredicate;
 
 	/// Artificial Interface predicate.

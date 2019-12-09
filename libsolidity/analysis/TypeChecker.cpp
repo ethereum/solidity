@@ -22,6 +22,7 @@
 
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
 
 #include <libyul/AsmAnalysis.h>
@@ -641,6 +642,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			solAssert(var->type(), "Expected variable type!");
 			if (var->isConstant())
 			{
+				var = rootVariableDeclaration(*var);
+
 				if (!var->value())
 				{
 					m_errorReporter.typeError(_identifier.location, "Constant has no value.");
@@ -651,7 +654,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					type(*var->value())->category() != Type::Category::RationalNumber
 				))
 				{
-					m_errorReporter.typeError(_identifier.location, "Only direct number constants are supported by inline assembly.");
+					m_errorReporter.typeError(_identifier.location, "Only direct number constants and references to such constants are supported by inline assembly.");
 					return size_t(-1);
 				}
 				else if (_context == yul::IdentifierContext::LValue)

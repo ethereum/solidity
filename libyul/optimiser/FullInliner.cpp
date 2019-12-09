@@ -50,7 +50,7 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 	SSAValueTracker tracker;
 	tracker(m_ast);
 	for (auto const& ssaValue: tracker.values())
-		if (ssaValue.second && ssaValue.second->type() == typeid(Literal))
+		if (ssaValue.second && holds_alternative<Literal>(*ssaValue.second))
 			m_constants.emplace(ssaValue.first);
 
 	// Store size of global statements.
@@ -58,9 +58,9 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 	map<YulString, size_t> references = ReferencesCounter::countReferences(m_ast);
 	for (auto& statement: m_ast.statements)
 	{
-		if (statement.type() != typeid(FunctionDefinition))
+		if (!holds_alternative<FunctionDefinition>(statement))
 			continue;
-		FunctionDefinition& fun = boost::get<FunctionDefinition>(statement);
+		FunctionDefinition& fun = std::get<FunctionDefinition>(statement);
 		m_functions[fun.name] = &fun;
 		// Always inline functions that are only called once.
 		if (references[fun.name] == 1)
@@ -72,8 +72,8 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser):
 void FullInliner::run()
 {
 	for (auto& statement: m_ast.statements)
-		if (statement.type() == typeid(Block))
-			handleBlock({}, boost::get<Block>(statement));
+		if (holds_alternative<Block>(statement))
+			handleBlock({}, std::get<Block>(statement));
 
 	// TODO it might be good to determine a visiting order:
 	// first handle functions that are called from many places.
@@ -112,9 +112,9 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	// Constant arguments might provide a means for further optimization, so they cause a bonus.
 	bool constantArg = false;
 	for (auto const& argument: _funCall.arguments)
-		if (argument.type() == typeid(Literal) || (
-			argument.type() == typeid(Identifier) &&
-			m_constants.count(boost::get<Identifier>(argument).name)
+		if (holds_alternative<Literal>(argument) || (
+			holds_alternative<Identifier>(argument) &&
+			m_constants.count(std::get<Identifier>(argument).name)
 		))
 		{
 			constantArg = true;
@@ -157,17 +157,19 @@ void InlineModifier::operator()(Block& _block)
 std::optional<vector<Statement>> InlineModifier::tryInlineStatement(Statement& _statement)
 {
 	// Only inline for expression statements, assignments and variable declarations.
-	Expression* e = boost::apply_visitor(GenericFallbackReturnsVisitor<Expression*, ExpressionStatement, Assignment, VariableDeclaration>(
+	Expression* e = std::visit(GenericVisitor{
+		VisitorFallback<Expression*>{},
 		[](ExpressionStatement& _s) { return &_s.expression; },
 		[](Assignment& _s) { return _s.value.get(); },
 		[](VariableDeclaration& _s) { return _s.value.get(); }
-	), _statement);
+	}, _statement);
 	if (e)
 	{
 		// Only inline direct function calls.
-		FunctionCall* funCall = boost::apply_visitor(GenericFallbackReturnsVisitor<FunctionCall*, FunctionCall&>(
+		FunctionCall* funCall = std::visit(GenericVisitor{
+			VisitorFallback<FunctionCall*>{},
 			[](FunctionCall& _e) { return &_e; }
-		), *e);
+		}, *e);
 		if (funCall && m_driver.shallInline(*funCall, m_currentFunction))
 			return performInline(_statement, *funCall);
 	}
@@ -203,9 +205,10 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 		newVariable(var, nullptr);
 
 	Statement newBody = BodyCopier(m_nameDispenser, variableReplacements)(function->body);
-	newStatements += std::move(boost::get<Block>(newBody).statements);
+	newStatements += std::move(std::get<Block>(newBody).statements);
 
-	boost::apply_visitor(GenericFallbackVisitor<Assignment, VariableDeclaration>{
+	std::visit(GenericVisitor{
+		VisitorFallback<>{},
 		[&](Assignment& _assignment)
 		{
 			for (size_t i = 0; i < _assignment.variableNames.size(); ++i)

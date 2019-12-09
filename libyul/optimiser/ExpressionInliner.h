@@ -22,9 +22,7 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/AsmDataForward.h>
 
-#include <boost/variant.hpp>
 #include <optional>
-
 #include <set>
 
 namespace yul

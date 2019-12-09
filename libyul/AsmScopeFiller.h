@@ -22,8 +22,6 @@
 
 #include <libyul/AsmDataForward.h>
 
-#include <boost/variant.hpp>
-
 #include <functional>
 #include <memory>
 
@@ -44,7 +42,7 @@ struct AsmAnalysisInfo;
  * Fills scopes with identifiers and checks for name clashes.
  * Does not resolve references.
  */
-class ScopeFiller: public boost::static_visitor<bool>
+class ScopeFiller
 {
 public:
 	ScopeFiller(AsmAnalysisInfo& _info, langutil::ErrorReporter& _errorReporter);

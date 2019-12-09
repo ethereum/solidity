@@ -43,6 +43,7 @@
 using namespace std;
 using namespace std::placeholders;
 using namespace dev::test;
+using namespace langutil;
 
 #define ALSO_VIA_YUL(CODE) \
 { \
@@ -1134,7 +1135,7 @@ BOOST_AUTO_TEST_CASE(blockchain)
 			}
 		}
 	)";
-	m_evmHost->m_coinbase = EVMHost::convertToEVMC(Address("0x1212121212121212121212121212121212121212"));
+	m_evmHost->tx_context.block_coinbase = EVMHost::convertToEVMC(Address("0x1212121212121212121212121212121212121212"));
 	m_evmHost->newBlock();
 	m_evmHost->newBlock();
 	m_evmHost->newBlock();
@@ -12888,6 +12889,9 @@ BOOST_AUTO_TEST_CASE(address_overload_resolution)
 
 BOOST_AUTO_TEST_CASE(snark)
 {
+	if (dev::test::Options::get().evmVersion() <= EVMVersion::byzantium())
+		return;
+
 	char const* sourceCode = R"(
 	library Pairing {
 		struct G1Point {

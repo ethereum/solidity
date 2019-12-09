@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <test/evmc/mocked_host.hpp>
 #include <test/evmc/evmc.hpp>
 #include <test/evmc/evmc.h>
 
@@ -34,153 +35,64 @@ namespace test
 {
 using Address = h160;
 
-class EVMHost: public evmc::Host
+class EVMHost: public evmc::MockedHost
 {
 public:
+	using MockedHost::get_code_size;
+	using MockedHost::get_balance;
+
 	/// Tries to dynamically load libevmone. @returns nullptr on failure.
 	/// The path has to be provided for the first successful run and will be ignored
 	/// afterwards.
-	static evmc::vm* getVM(std::string const& _path = {});
+	static evmc::VM& getVM(std::string const& _path = {});
 
-	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm = getVM());
+	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm = getVM());
 
-	struct Account
-	{
-		evmc::uint256be balance = {};
-		size_t nonce = 0;
-		bytes code;
-		evmc::bytes32 codeHash = {};
-		std::map<evmc::bytes32, evmc::bytes32> storage;
-	};
-
-	struct LogEntry
-	{
-		Address address;
-		std::vector<h256> topics;
-		bytes data;
-	};
-
-	struct State
-	{
-		size_t blockNumber;
-		uint64_t timestamp;
-		std::map<evmc::address, Account> accounts;
-		std::vector<LogEntry> logs;
-	};
-
-	Account* account(evmc::address const& _address)
-	{
-		// Make all precompiled contracts exist.
-		// Be future-proof and consider everything below 1024 as precompiled contract.
-		if (u160(convertFromEVMC(_address)) < 1024)
-			m_state.accounts[_address];
-		auto it = m_state.accounts.find(_address);
-		return it == m_state.accounts.end() ? nullptr : &it->second;
-	}
-
-	void reset() { m_state = State{}; m_currentAddress = {}; }
+	void reset() { accounts.clear(); m_currentAddress = {}; }
 	void newBlock()
 	{
-		m_state.blockNumber++;
-		m_state.timestamp += 15;
-		m_state.logs.clear();
+		tx_context.block_number++;
+		tx_context.block_timestamp += 15;
+		recorded_logs.clear();
 	}
 
-	bool account_exists(evmc::address const& _addr) noexcept final
+	bool account_exists(evmc::address const& _addr) const noexcept final
 	{
-		return account(_addr) != nullptr;
+		return evmc::MockedHost::account_exists(_addr);
 	}
 
-	evmc::bytes32 get_storage(evmc::address const& _addr, evmc::bytes32 const& _key) noexcept final
-	{
-		if (Account* acc = account(_addr))
-			return acc->storage[_key];
-		return {};
-	}
+	void selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept final;
 
-	evmc_storage_status set_storage(
-		evmc::address const& _addr,
-		evmc::bytes32 const& _key,
-		evmc::bytes32 const& _value
-	) noexcept;
+	evmc::result call(evmc_message const& _message) noexcept final;
 
-	evmc::uint256be get_balance(evmc::address const& _addr) noexcept final
-	{
-		if (Account const* acc = account(_addr))
-			return acc->balance;
-		return {};
-	}
-
-	size_t get_code_size(evmc::address const& _addr) noexcept final
-	{
-		if (Account const* acc = account(_addr))
-			return acc->code.size();
-		return 0;
-	}
-
-	evmc::bytes32 get_code_hash(evmc::address const& _addr) noexcept final
-	{
-		if (Account const* acc = account(_addr))
-			return acc->codeHash;
-		return {};
-	}
-
-	size_t copy_code(
-		evmc::address const& _addr,
-		size_t _codeOffset,
-		uint8_t* _bufferData,
-		size_t _bufferSize
-	) noexcept final
-	{
-		size_t i = 0;
-		if (Account const* acc = account(_addr))
-			for (; i < _bufferSize && _codeOffset + i < acc->code.size(); i++)
-				_bufferData[i] = acc->code[_codeOffset + i];
-		return i;
-	}
-
-	void selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept;
-
-	evmc::result call(evmc_message const& _message) noexcept;
-
-	evmc_tx_context get_tx_context() noexcept;
-
-	evmc::bytes32 get_block_hash(int64_t number) noexcept;
-
-	void emit_log(
-		evmc::address const& _addr,
-		uint8_t const* _data,
-		size_t _dataSize,
-		evmc::bytes32 const _topics[],
-		size_t _topicsCount
-	) noexcept;
+	evmc::bytes32 get_block_hash(int64_t number) const noexcept final;
 
 	static Address convertFromEVMC(evmc::address const& _addr);
 	static evmc::address convertToEVMC(Address const& _addr);
 	static h256 convertFromEVMC(evmc::bytes32 const& _data);
 	static evmc::bytes32 convertToEVMC(h256 const& _data);
 
-
-	State m_state;
-	evmc::address m_currentAddress = {};
-	evmc::address m_coinbase = convertToEVMC(Address("0x7878787878787878787878787878787878787878"));
-
 private:
-	evmc::result precompileECRecover(evmc_message const& _message) noexcept;
-	evmc::result precompileSha256(evmc_message const& _message) noexcept;
-	evmc::result precompileRipeMD160(evmc_message const& _message) noexcept;
-	evmc::result precompileIdentity(evmc_message const& _message) noexcept;
-	evmc::result precompileModExp(evmc_message const& _message) noexcept;
-	evmc::result precompileALTBN128G1Add(evmc_message const& _message) noexcept;
-	evmc::result precompileALTBN128G1Mul(evmc_message const& _message) noexcept;
-	evmc::result precompileALTBN128PairingProduct(evmc_message const& _message) noexcept;
-	evmc::result precompileGeneric(evmc_message const& _message, std::map<bytes, bytes> const& _inOut) noexcept;
+	evmc::address m_currentAddress = {};
+
+	static evmc::result precompileECRecover(evmc_message const& _message) noexcept;
+	static evmc::result precompileSha256(evmc_message const& _message) noexcept;
+	static evmc::result precompileRipeMD160(evmc_message const& _message) noexcept;
+	static evmc::result precompileIdentity(evmc_message const& _message) noexcept;
+	static evmc::result precompileModExp(evmc_message const& _message) noexcept;
+	static evmc::result precompileALTBN128G1Add(evmc_message const& _message) noexcept;
+	static evmc::result precompileALTBN128G1Mul(evmc_message const& _message) noexcept;
+	static evmc::result precompileALTBN128PairingProduct(evmc_message const& _message) noexcept;
+	static evmc::result precompileGeneric(evmc_message const& _message, std::map<bytes, bytes> const& _inOut) noexcept;
 	/// @returns a result object with no gas usage and result data taken from @a _data.
 	/// @note The return value is only valid as long as @a _data is alive!
 	static evmc::result resultWithGas(evmc_message const& _message, bytes const& _data) noexcept;
 
-	evmc::vm* m_vm = nullptr;
-	evmc_revision m_evmVersion;
+	evmc::VM& m_vm;
+	// EVM version requested by the testing tool
+	langutil::EVMVersion m_evmVersion;
+	// EVM version requested from EVMC (matches the above)
+	evmc_revision m_evmRevision;
 };
 
 

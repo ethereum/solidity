@@ -36,17 +36,17 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 
 	if (
 		!m_dialect.booleanNegationFunction() ||
-		_forLoop.condition->type() != typeid(Literal) ||
-		valueOfLiteral(boost::get<Literal>(*_forLoop.condition)) == u256(0) ||
+		!holds_alternative<Literal>(*_forLoop.condition) ||
+		valueOfLiteral(std::get<Literal>(*_forLoop.condition)) == u256(0) ||
 		_forLoop.body.statements.empty() ||
-		_forLoop.body.statements.front().type() != typeid(If)
+		!holds_alternative<If>(_forLoop.body.statements.front())
 	)
 		return;
 
-	If& firstStatement = boost::get<If>(_forLoop.body.statements.front());
+	If& firstStatement = std::get<If>(_forLoop.body.statements.front());
 	if (
 		firstStatement.body.statements.empty() ||
-		firstStatement.body.statements.front().type() != typeid(Break)
+		!holds_alternative<Break>(firstStatement.body.statements.front())
 	)
 		return;
 	if (!SideEffectsCollector(m_dialect, *firstStatement.condition).movable())
@@ -56,10 +56,10 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 	langutil::SourceLocation location = locationOf(*firstStatement.condition);
 
 	if (
-		firstStatement.condition->type() == typeid(FunctionCall) &&
-		boost::get<FunctionCall>(*firstStatement.condition).functionName.name == iszero
+		holds_alternative<FunctionCall>(*firstStatement.condition) &&
+		std::get<FunctionCall>(*firstStatement.condition).functionName.name == iszero
 	)
-		_forLoop.condition = make_unique<Expression>(std::move(boost::get<FunctionCall>(*firstStatement.condition).arguments.front()));
+		_forLoop.condition = make_unique<Expression>(std::move(std::get<FunctionCall>(*firstStatement.condition).arguments.front()));
 	else
 		_forLoop.condition = make_unique<Expression>(FunctionCall{
 			location,

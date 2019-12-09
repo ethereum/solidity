@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/ContractCompiler.h>
@@ -631,6 +632,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			{
 				if (variable->isConstant())
 				{
+					variable = rootVariableDeclaration(*variable);
 					u256 value;
 					if (variable->value()->annotation().type->category() == Type::Category::RationalNumber)
 					{

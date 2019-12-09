@@ -67,7 +67,7 @@ public:
 	using SourceLocation = langutil::SourceLocation;
 
 	explicit ASTNode(SourceLocation const& _location);
-	virtual ~ASTNode();
+	virtual ~ASTNode() {}
 
 	/// @returns an identifier of this AST node that is unique for a single compilation run.
 	size_t id() const { return m_id; }
@@ -111,7 +111,7 @@ public:
 protected:
 	size_t const m_id = 0;
 	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
-	mutable ASTAnnotation* m_annotation = nullptr;
+	mutable std::unique_ptr<ASTAnnotation> m_annotation;
 
 private:
 	SourceLocation m_location;

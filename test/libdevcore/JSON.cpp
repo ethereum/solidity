@@ -69,47 +69,6 @@ BOOST_AUTO_TEST_CASE(json_compact_print)
 	BOOST_CHECK("{\"1\":1,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":2}}" == jsonCompactPrint(json));
 }
 
-BOOST_AUTO_TEST_CASE(parse_json_not_strict)
-{
-	Json::Value json;
-	std::string errors;
-
-	// just parse a valid json input
-	BOOST_CHECK(jsonParse("{\"1\":1,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":2}}", json, &errors));
-	BOOST_CHECK(json["1"] == 1);
-	BOOST_CHECK(json["2"] == "2");
-	BOOST_CHECK(json["3"]["3.1"] == "3.1");
-	BOOST_CHECK(json["3"]["3.2"] == 2);
-
-	// trailing garbage is allowed here
-	BOOST_CHECK(jsonParse("{\"1\":2,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":3}}}}}}}}}}", json, &errors));
-	BOOST_CHECK(json["1"] == 2);
-	BOOST_CHECK(json["2"] == "2");
-	BOOST_CHECK(json["3"]["3.1"] == "3.1");
-	BOOST_CHECK(json["3"]["3.2"] == 3);
-
-	// comments are allowed
-	BOOST_CHECK(jsonParse(
-		"{\"1\":3, // awesome comment\n\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":4}}", json, &errors
-	));
-	BOOST_CHECK(json["1"] == 3);
-	BOOST_CHECK(json["2"] == "2");
-	BOOST_CHECK(json["3"]["3.1"] == "3.1");
-	BOOST_CHECK(json["3"]["3.2"] == 4);
-
-	// root element other than object or array is allowed
-	BOOST_CHECK(jsonParse("[]", json, &errors));
-	BOOST_CHECK(jsonParse("{}", json, &errors));
-	BOOST_CHECK(jsonParse("1", json, &errors));
-	BOOST_CHECK(json == 1);
-	BOOST_CHECK(jsonParse("\"hello\"", json, &errors));
-	BOOST_CHECK(json == "hello");
-
-	// non-UTF-8 escapes allowed
-	BOOST_CHECK(jsonParse("[ \"\x80\xec\x80\" ]", json, &errors));
-	BOOST_CHECK(json[0] == "\x80\xec\x80");
-}
-
 BOOST_AUTO_TEST_CASE(parse_json_strict)
 {
 	Json::Value json;

@@ -55,11 +55,11 @@ fi
 WORKSPACE=/root/project
 
 # Increase nodejs stack size
-if ! [ -e /emsdk_portable/node/bin/node_orig ]
+if ! [ -e /emsdk_portable/node/current/bin/node_orig ]
 then
-  mv /emsdk_portable/node/bin/node /emsdk_portable/node/bin/node_orig
-  echo -e '#!/bin/sh\nexec /emsdk_portable/node/bin/node_orig --stack-size=8192 $@' > /emsdk_portable/node/bin/node
-  chmod 755 /emsdk_portable/node/bin/node
+  mv /emsdk_portable/node/current/bin/node /emsdk_portable/node/current/bin/node_orig
+  echo -e '#!/bin/sh\nexec /emsdk_portable/node/current/bin/node_orig --stack-size=8192 $@' > /emsdk_portable/node/current/bin/node
+  chmod 755 /emsdk_portable/node/current/bin/node
 fi
 
 # Boost
@@ -70,8 +70,8 @@ cd "$WORKSPACE"/boost_1_70_0
        --with-system --with-filesystem --with-test --with-program_options cxxflags="-Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
        --prefix="$WORKSPACE"/boost_1_70_0_install install
 )
-ln -sf "$WORKSPACE"/boost_1_70_0_install/lib/* /emsdk_portable/sdk/system/lib
-ln -sf "$WORKSPACE"/boost_1_70_0_install/include/* /emsdk_portable/sdk/system/include
+ln -sf "$WORKSPACE"/boost_1_70_0_install/lib/* /emsdk_portable/emscripten/sdk/system/lib
+ln -sf "$WORKSPACE"/boost_1_70_0_install/include/* /emsdk_portable/emscripten/sdk/system/include
 echo -en 'travis_fold:end:compiling_boost\\r'
 
 echo -en 'travis_fold:start:install_cmake.sh\\r'
@@ -95,7 +95,8 @@ make -j 4
 cd ..
 mkdir -p upload
 # Patch soljson.js to provide backwards-compatibility with older emscripten versions
-echo ";/* backwards compatibility */ Module['Runtime'] = Module;" >> $BUILD_DIR/libsolc/soljson.js
+# TODO: remove in 0.6.0!
+echo -n ";/* backwards compatibility */ Module['Runtime'] = Module; Module['Pointer_stringify'] = Module['UTF8ToString'];" >> $BUILD_DIR/libsolc/soljson.js
 cp $BUILD_DIR/libsolc/soljson.js upload/
 cp $BUILD_DIR/libsolc/soljson.js ./
 

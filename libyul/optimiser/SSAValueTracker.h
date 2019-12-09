@@ -49,6 +49,8 @@ public:
 	std::map<YulString, Expression const*> const& values() const { return m_values; }
 	Expression const* value(YulString _name) const { return m_values.at(_name); }
 
+	static std::set<YulString> ssaVariables(Block const& _ast);
+
 private:
 	void setValue(YulString _name, Expression const* _value);
 

@@ -88,7 +88,7 @@ bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _versio
 		if (!comp.matches(_version))
 			return false;
 
-		if (comp.version.numbers[0] == 0)
+		if (comp.version.numbers[0] == 0 && comp.levelsPresent != 1)
 			comp.levelsPresent = 2;
 		else
 			comp.levelsPresent = 1;
@@ -105,6 +105,7 @@ bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _versio
 				didCompare = true;
 				cmp = _version.numbers[i] - version.numbers[i];
 			}
+
 		if (cmp == 0 && !_version.prerelease.empty() && didCompare)
 			cmp = -1;
 

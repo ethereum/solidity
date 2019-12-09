@@ -27,6 +27,7 @@
 #include <libsolidity/formal/SymbolicVariables.h>
 #include <libsolidity/formal/VariableUsage.h>
 
+#include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/ErrorReporter.h>
@@ -81,7 +82,9 @@ protected:
 	bool visit(BinaryOperation const& _node) override;
 	void endVisit(BinaryOperation const& _node) override;
 	void endVisit(FunctionCall const& _node) override;
+	bool visit(ModifierInvocation const& _node) override;
 	void endVisit(Identifier const& _node) override;
+	void endVisit(ElementaryTypeNameExpression const& _node) override;
 	void endVisit(Literal const& _node) override;
 	void endVisit(Return const& _node) override;
 	bool visit(MemberAccess const& _node) override;
@@ -118,6 +121,12 @@ protected:
 	/// Encodes a modifier or function body according to the modifier
 	/// visit depth.
 	void visitFunctionOrModifier();
+
+	/// Inlines a modifier or base constructor call.
+	void inlineModifierInvocation(ModifierInvocation const* _invocation, CallableDeclaration const* _definition);
+
+	/// Inlines the constructor hierarchy into a single constructor.
+	void inlineConstructorHierarchy(ContractDefinition const& _contract);
 
 	/// Defines a new global variable or function.
 	void defineGlobalVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
@@ -158,7 +167,9 @@ protected:
 
 	using CallStackEntry = std::pair<CallableDeclaration const*, ASTNode const*>;
 
+	void createStateVariables(ContractDefinition const& _contract);
 	void initializeStateVariables(ContractDefinition const& _contract);
+	void createLocalVariables(FunctionDefinition const& _function);
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smt::Expression> const& _callArgs);
 	void resetStateVariables();
@@ -206,6 +217,9 @@ protected:
 	VariableIndices copyVariableIndices();
 	/// Resets the variable indices.
 	void resetVariableIndices(VariableIndices const& _indices);
+	/// Used when starting a new block.
+	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr);
+
 
 	/// @returns variables that are touched in _node's subtree.
 	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node);
@@ -249,6 +263,8 @@ protected:
 	/// when placeholder is visited.
 	/// Needs to be a stack because of function calls.
 	std::vector<int> m_modifierDepthStack;
+
+	std::map<ContractDefinition const*, ModifierInvocation const*> m_baseConstructorCalls;
 
 	ContractDefinition const* m_currentContract = nullptr;
 

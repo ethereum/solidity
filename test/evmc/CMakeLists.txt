@@ -16,7 +16,6 @@ target_sources(evmc INTERFACE
     ${PROJECT_SOURCE_DIR}/test/evmc/evmc.h
     ${PROJECT_SOURCE_DIR}/test/evmc/evmc.hpp
     ${PROJECT_SOURCE_DIR}/test/evmc/helpers.h
-    ${PROJECT_SOURCE_DIR}/test/evmc/helpers.hpp
     ${PROJECT_SOURCE_DIR}/test/evmc/utils.h
 )
 target_include_directories(evmc INTERFACE ${PROJECT_SOURCE_DIR}/test/)

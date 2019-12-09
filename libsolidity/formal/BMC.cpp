@@ -27,19 +27,25 @@ using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
-BMC::BMC(smt::EncodingContext& _context, ErrorReporter& _errorReporter, map<h256, string> const& _smtlib2Responses):
+BMC::BMC(
+	smt::EncodingContext& _context,
+	ErrorReporter& _errorReporter,
+	map<h256, string> const& _smtlib2Responses,
+	smt::SMTSolverChoice _enabledSolvers
+):
 	SMTEncoder(_context),
 	m_outerErrorReporter(_errorReporter),
-	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses))
+	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses, _enabledSolvers))
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
-	if (!_smtlib2Responses.empty())
-		m_errorReporter.warning(
-			"SMT-LIB2 query responses were given in the auxiliary input, "
-			"but this Solidity binary uses an SMT solver (Z3/CVC4) directly."
-			"These responses will be ignored."
-			"Consider disabling Z3/CVC4 at compilation time in order to use SMT-LIB2 responses."
-		);
+	if (_enabledSolvers.some())
+		if (!_smtlib2Responses.empty())
+			m_errorReporter.warning(
+				"SMT-LIB2 query responses were given in the auxiliary input, "
+				"but this Solidity binary uses an SMT solver (Z3/CVC4) directly."
+				"These responses will be ignored."
+				"Consider disabling Z3/CVC4 at compilation time in order to use SMT-LIB2 responses."
+			);
 #endif
 }
 
@@ -110,11 +116,6 @@ bool BMC::visit(ContractDefinition const& _contract)
 {
 	initContract(_contract);
 
-	/// Check targets created by state variable initialization.
-	smt::Expression constraints = m_context.assertions();
-	checkVerificationTargets(constraints);
-	m_verificationTargets.clear();
-
 	SMTEncoder::visit(_contract);
 
 	return false;
@@ -122,6 +123,17 @@ bool BMC::visit(ContractDefinition const& _contract)
 
 void BMC::endVisit(ContractDefinition const& _contract)
 {
+	if (auto constructor = _contract.constructor())
+		constructor->accept(*this);
+	else
+	{
+		inlineConstructorHierarchy(_contract);
+		/// Check targets created by state variable initialization.
+		smt::Expression constraints = m_context.assertions();
+		checkVerificationTargets(constraints);
+		m_verificationTargets.clear();
+	}
+
 	SMTEncoder::endVisit(_contract);
 }
 
@@ -132,10 +144,14 @@ bool BMC::visit(FunctionDefinition const& _function)
 	solAssert(m_currentContract, "");
 	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;
 	if (find(hierarchy.begin(), hierarchy.end(), contract) == hierarchy.end())
-		initializeStateVariables(*contract);
+		createStateVariables(*contract);
 
 	if (m_callStack.empty())
+	{
 		reset();
+		initFunction(_function);
+		resetStateVariables();
+	}
 
 	/// Already visits the children.
 	SMTEncoder::visit(_function);
@@ -447,10 +463,6 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 		// The reason why we need to pushCallStack here instead of visit(FunctionDefinition)
 		// is that there we don't have `_funCall`.
 		pushCallStack({funDef, &_funCall});
-		// If an internal function is called to initialize
-		// a state variable.
-		if (m_callStack.empty())
-			initFunction(*funDef);
 		funDef->accept(*this);
 	}
 

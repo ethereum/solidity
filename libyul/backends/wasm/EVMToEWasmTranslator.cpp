@@ -29,6 +29,7 @@
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/ForLoopConditionIntoBody.h>
 
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
@@ -694,7 +695,7 @@ Object EVMToEWasmTranslator::run(Object const& _object)
 	if (!m_polyfill)
 		parsePolyfill();
 
-	Block ast = boost::get<Block>(Disambiguator(m_dialect, *_object.analysisInfo)(*_object.code));
+	Block ast = std::get<Block>(Disambiguator(m_dialect, *_object.analysisInfo)(*_object.code));
 	set<YulString> reservedIdentifiers;
 	NameDispenser nameDispenser{m_dialect, ast, reservedIdentifiers};
 	OptimiserStepContext context{m_dialect, nameDispenser, reservedIdentifiers};
@@ -702,6 +703,7 @@ Object EVMToEWasmTranslator::run(Object const& _object)
 	FunctionHoister::run(context, ast);
 	FunctionGrouper::run(context, ast);
 	MainFunction{}(ast);
+	ForLoopConditionIntoBody::run(context, ast);
 	ExpressionSplitter::run(context, ast);
 	WordSizeTransform::run(m_dialect, ast, nameDispenser);
 
@@ -752,6 +754,6 @@ void EVMToEWasmTranslator::parsePolyfill()
 
 	m_polyfillFunctions.clear();
 	for (auto const& statement: m_polyfill->statements)
-		m_polyfillFunctions.insert(boost::get<FunctionDefinition>(statement).name);
+		m_polyfillFunctions.insert(std::get<FunctionDefinition>(statement).name);
 }
 

@@ -262,7 +262,15 @@ Contract Related
     the current contract, explicitly convertible to :ref:`address`
 
 ``selfdestruct(address payable recipient)``:
-    destroy the current contract, sending its funds to the given :ref:`address`
+    Destroy the current contract, sending its funds to the given :ref:`address`
+    and end execution.
+    Note that ``selfdestruct`` has some peculiarities inherited from the EVM:
+
+    - the receiving contract's receive function is not executed.
+    - the contract is only really destroyed at the end of the transaction and ``revert`` s might "undo" the destruction.
+
+
+
 
 Furthermore, all functions of the current contract are callable directly including the current function.
 

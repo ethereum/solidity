@@ -250,8 +250,6 @@ public:
 		return m_components;
 	}
 
-	void setComponents(std::vector<std::shared_ptr<SymbolicVariable>> _components);
-
 private:
 	std::vector<std::shared_ptr<SymbolicVariable>> m_components;
 };

@@ -20,109 +20,41 @@
 
 #pragma once
 
-#include <functional>
-#include <boost/variant/static_visitor.hpp>
-
 namespace dev
 {
 
-/// Generic visitor used as follows:
-/// boost::apply_visitor(GenericVisitor<Class1, Class2>(
-///     [](Class1& _c) { _c.f(); },
-///     [](Class2& _c) { _c.g(); }
-/// ), variant);
-/// This one does not have a fallback and will fail at
-/// compile-time if you do not specify all variants.
+/**
+ * Generic visitor used as follows:
+ * std::visit(GenericVisitor{
+ *     [](Class1& _c) { _c.f(); },
+ *     [](Class2& _c) { _c.g(); }
+ * }, variant);
+ * This one does not have a fallback and will fail at
+ * compile-time if you do not specify all variants.
+ *
+ * Fallback with no return (it will not fail if you do not specify all variants):
+ * std::visit(GenericVisitor{
+ *     VisitorFallback<>{},
+ *     [](Class1& _c) { _c.f(); },
+ *     [](Class2& _c) { _c.g(); }
+ * }, variant);
+ *
+ * Fallback with return type R (the fallback returns `R{}`:
+ * std::visit(GenericVisitor{
+ *     VisitorFallback<R>{},
+ *     [](Class1& _c) { _c.f(); },
+ *     [](Class2& _c) { _c.g(); }
+ * }, variant);
+ */
 
-template <class...>
-struct GenericVisitor{};
+template <typename...> struct VisitorFallback;
 
-template <class Visitable, class... Others>
-struct GenericVisitor<Visitable, Others...>: public GenericVisitor<Others...>
-{
-	using GenericVisitor<Others...>::operator ();
-	explicit GenericVisitor(
-		std::function<void(Visitable&)> _visitor,
-		std::function<void(Others&)>... _otherVisitors
-	):
-		GenericVisitor<Others...>(std::move(_otherVisitors)...),
-		m_visitor(std::move(_visitor))
-	{}
+template <typename R>
+struct VisitorFallback<R> { template<typename T> R operator()(T&&) const { return {}; } };
 
-	void operator()(Visitable& _v) const { m_visitor(_v); }
+template<>
+struct VisitorFallback<> { template<typename T> void operator()(T&&) const {} };
 
-	std::function<void(Visitable&)> m_visitor;
-};
-template <>
-struct GenericVisitor<>: public boost::static_visitor<> {
-	void operator()() const {}
-};
-
-/// Generic visitor with fallback:
-/// boost::apply_visitor(GenericFallbackVisitor<Class1, Class2>(
-///     [](Class1& _c) { _c.f(); },
-///     [](Class2& _c) { _c.g(); }
-/// ), variant);
-/// This one DOES have a fallback and will NOT fail at
-/// compile-time if you do not specify all variants.
-
-template <class...>
-struct GenericFallbackVisitor{};
-
-template <class Visitable, class... Others>
-struct GenericFallbackVisitor<Visitable, Others...>: public GenericFallbackVisitor<Others...>
-{
-	explicit GenericFallbackVisitor(
-		std::function<void(Visitable&)> _visitor,
-		std::function<void(Others&)>... _otherVisitors
-	):
-		GenericFallbackVisitor<Others...>(std::move(_otherVisitors)...),
-		m_visitor(std::move(_visitor))
-	{}
-
-	using GenericFallbackVisitor<Others...>::operator ();
-	void operator()(Visitable& _v) const { m_visitor(_v); }
-
-	std::function<void(Visitable&)> m_visitor;
-};
-template <>
-struct GenericFallbackVisitor<>: public boost::static_visitor<> {
-	template <class T>
-	void operator()(T&) const { }
-};
-
-/// Generic visitor with fallback that can return a value:
-/// boost::apply_visitor(GenericFallbackReturnsVisitor<ReturnType, Class1, Class2>(
-///     [](Class1& _c) { return _c.f(); },
-///     [](Class2& _c) { return _c.g(); }
-/// ), variant);
-/// This one DOES have a fallback and will NOT fail at
-/// compile-time if you do not specify all variants.
-/// The fallback {}-constructs the return value.
-
-template <class R, class...>
-struct GenericFallbackReturnsVisitor{};
-
-template <class R, class Visitable, class... Others>
-struct GenericFallbackReturnsVisitor<R, Visitable, Others...>: public GenericFallbackReturnsVisitor<R, Others...>
-{
-	explicit GenericFallbackReturnsVisitor(
-		std::function<R(Visitable&)> _visitor,
-		std::function<R(Others&)>... _otherVisitors
-	):
-		GenericFallbackReturnsVisitor<R, Others...>(std::move(_otherVisitors)...),
-		m_visitor(std::move(_visitor))
-	{}
-
-	using GenericFallbackReturnsVisitor<R, Others...>::operator ();
-	R operator()(Visitable& _v) const { return m_visitor(_v); }
-
-	std::function<R(Visitable&)> m_visitor;
-};
-template <class R>
-struct GenericFallbackReturnsVisitor<R>: public boost::static_visitor<R> {
-	template <class T>
-	R operator()(T&) const { return {}; }
-};
-
+template <typename... Visitors> struct GenericVisitor: Visitors... { using Visitors::operator()...; };
+template <typename... Visitors> GenericVisitor(Visitors...) -> GenericVisitor<Visitors...>;
 }

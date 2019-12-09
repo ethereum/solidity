@@ -21,8 +21,8 @@ contract C {
 //   executionCost: 645
 //   totalCost: 609045
 // external:
-//   a(): 429
-//   b(uint256): 884
+//   a(): 1029
+//   b(uint256): 2084
 //   f1(uint256): 351
 //   f2(uint256[],string[],uint16,address): infinite
 //   f3(uint16[],string[],uint16,address): infinite

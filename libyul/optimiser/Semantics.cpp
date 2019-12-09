@@ -108,11 +108,44 @@ void MSizeFinder::operator()(FunctionCall const& _functionCall)
 
 map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 	Dialect const& _dialect,
-	map<YulString, std::set<YulString>> const& _directCallGraph
+	CallGraph const& _directCallGraph
 )
 {
+	// Any loop currently makes a function non-movable, because
+	// it could be a non-terminating loop.
+	// The same is true for any function part of a call cycle.
+	// In the future, we should refine that, because the property
+	// is actually a bit different from "not movable".
+
 	map<YulString, SideEffects> ret;
-	for (auto const& call: _directCallGraph)
+	for (auto const& function: _directCallGraph.functionsWithLoops)
+	{
+		ret[function].movable = false;
+		ret[function].sideEffectFree = false;
+		ret[function].sideEffectFreeIfNoMSize = false;
+	}
+
+	// Detect recursive functions.
+	for (auto const& call: _directCallGraph.functionCalls)
+	{
+		// TODO we could shortcut the search as soon as we find a
+		// function that has as bad side-effects as we can
+		// ever achieve via recursion.
+		auto search = [&](YulString const& _functionName, CycleDetector<YulString>& _cycleDetector, size_t) {
+			for (auto const& callee: _directCallGraph.functionCalls.at(_functionName))
+				if (!_dialect.builtin(callee))
+					if (_cycleDetector.run(callee))
+						return;
+		};
+		if (CycleDetector<YulString>(search).run(call.first))
+		{
+			ret[call.first].movable = false;
+			ret[call.first].sideEffectFree = false;
+			ret[call.first].sideEffectFreeIfNoMSize = false;
+		}
+	}
+
+	for (auto const& call: _directCallGraph.functionCalls)
 	{
 		YulString funName = call.first;
 		SideEffects sideEffects;
@@ -123,11 +156,15 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 				if (BuiltinFunction const* f = _dialect.builtin(_function))
 					sideEffects += f->sideEffects;
 				else
-					for (YulString callee: _directCallGraph.at(_function))
+				{
+					if (ret.count(_function))
+						sideEffects += ret[_function];
+					for (YulString callee: _directCallGraph.functionCalls.at(_function))
 						_addChild(callee);
+				}
 			}
 		);
-		ret[funName] = sideEffects;
+		ret[funName] += sideEffects;
 	}
 	return ret;
 }
@@ -165,13 +202,13 @@ pair<TerminationFinder::ControlFlow, size_t> TerminationFinder::firstUncondition
 TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement const& _statement)
 {
 	if (
-		_statement.type() == typeid(ExpressionStatement) &&
-		isTerminatingBuiltin(boost::get<ExpressionStatement>(_statement))
+		holds_alternative<ExpressionStatement>(_statement) &&
+		isTerminatingBuiltin(std::get<ExpressionStatement>(_statement))
 	)
 		return ControlFlow::Terminate;
-	else if (_statement.type() == typeid(Break))
+	else if (holds_alternative<Break>(_statement))
 		return ControlFlow::Break;
-	else if (_statement.type() == typeid(Continue))
+	else if (holds_alternative<Continue>(_statement))
 		return ControlFlow::Continue;
 	else
 		return ControlFlow::FlowOut;
@@ -179,13 +216,13 @@ TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement cons
 
 bool TerminationFinder::isTerminatingBuiltin(ExpressionStatement const& _exprStmnt)
 {
-	if (_exprStmnt.expression.type() == typeid(FunctionalInstruction))
+	if (holds_alternative<FunctionalInstruction>(_exprStmnt.expression))
 		return eth::SemanticInformation::terminatesControlFlow(
-			boost::get<FunctionalInstruction>(_exprStmnt.expression).instruction
+			std::get<FunctionalInstruction>(_exprStmnt.expression).instruction
 		);
-	else if (_exprStmnt.expression.type() == typeid(FunctionCall))
+	else if (holds_alternative<FunctionCall>(_exprStmnt.expression))
 		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-			if (auto const* builtin = dialect->builtin(boost::get<FunctionCall>(_exprStmnt.expression).functionName.name))
+			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_exprStmnt.expression).functionName.name))
 				if (builtin->instruction)
 					return eth::SemanticInformation::terminatesControlFlow(*builtin->instruction);
 	return false;

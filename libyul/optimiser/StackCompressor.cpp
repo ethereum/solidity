@@ -85,9 +85,9 @@ public:
 	// get called on left-hand-sides of assignments.
 	void visit(Expression& _e) override
 	{
-		if (_e.type() == typeid(Identifier))
+		if (holds_alternative<Identifier>(_e))
 		{
-			YulString name = boost::get<Identifier>(_e).name;
+			YulString name = std::get<Identifier>(_e).name;
 			if (m_expressionCodeCost.count(name))
 			{
 				if (!m_value.count(name))
@@ -162,7 +162,7 @@ bool StackCompressor::run(
 {
 	yulAssert(
 		_object.code &&
-		_object.code->statements.size() > 0 && _object.code->statements.at(0).type() == typeid(Block),
+		_object.code->statements.size() > 0 && holds_alternative<Block>(_object.code->statements.at(0)),
 		"Need to run the function grouper before the stack compressor."
 	);
 	bool allowMSizeOptimzation = !MSizeFinder::containsMSize(_dialect, *_object.code);
@@ -177,7 +177,7 @@ bool StackCompressor::run(
 			yulAssert(stackSurplus.at({}) > 0, "Invalid surplus value.");
 			eliminateVariables(
 				_dialect,
-				boost::get<Block>(_object.code->statements.at(0)),
+				std::get<Block>(_object.code->statements.at(0)),
 				stackSurplus.at({}),
 				allowMSizeOptimzation
 			);
@@ -185,7 +185,7 @@ bool StackCompressor::run(
 
 		for (size_t i = 1; i < _object.code->statements.size(); ++i)
 		{
-			FunctionDefinition& fun = boost::get<FunctionDefinition>(_object.code->statements[i]);
+			FunctionDefinition& fun = std::get<FunctionDefinition>(_object.code->statements[i]);
 			if (!stackSurplus.count(fun.name))
 				continue;
 

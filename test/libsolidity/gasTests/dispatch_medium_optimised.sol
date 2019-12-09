@@ -18,12 +18,12 @@ contract Medium {
 //   executionCost: 183
 //   totalCost: 140983
 // external:
-//   a(): 398
-//   b(uint256): 863
-//   f1(uint256): 40654
-//   f2(uint256): 20698
-//   f3(uint256): 20742
+//   a(): 998
+//   b(uint256): 2063
+//   f1(uint256): 41254
+//   f2(uint256): 21298
+//   f3(uint256): 21342
 //   g0(uint256): 332
-//   g7(uint256): 20608
-//   g8(uint256): 20586
-//   g9(uint256): 20542
+//   g7(uint256): 21208
+//   g8(uint256): 21186
+//   g9(uint256): 21142

@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <boost/variant.hpp>
+#include <variant>
 #include <string>
 #include <vector>
 #include <map>
@@ -44,7 +44,7 @@ struct If;
 struct Loop;
 struct Break;
 struct BreakIf;
-using Expression = boost::variant<
+using Expression = std::variant<
 	Literal, StringLiteral, LocalVariable, GlobalVariable,
 	FunctionCall, BuiltinCall, LocalAssignment, GlobalAssignment,
 	Block, If, Loop, Break, BreakIf

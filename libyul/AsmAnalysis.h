@@ -30,8 +30,6 @@
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
-#include <boost/variant.hpp>
-
 #include <functional>
 #include <list>
 #include <memory>
@@ -53,7 +51,7 @@ struct AsmAnalysisInfo;
  * references and performs other checks.
  * If all these checks pass, code generation should not throw errors.
  */
-class AsmAnalyzer: public boost::static_visitor<bool>
+class AsmAnalyzer
 {
 public:
 	explicit AsmAnalyzer(

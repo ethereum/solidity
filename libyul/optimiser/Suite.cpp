@@ -52,6 +52,7 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/LoadResolver.h>
+#include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/AsmAnalysis.h>
@@ -80,7 +81,7 @@ void OptimiserSuite::run(
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
-	*_object.code = boost::get<Block>(Disambiguator(
+	*_object.code = std::get<Block>(Disambiguator(
 		_dialect,
 		*_object.analysisInfo,
 		reservedIdentifiers
@@ -129,7 +130,8 @@ void OptimiserSuite::run(
 				RedundantAssignEliminator::name,
 				ExpressionSimplifier::name,
 				CommonSubexpressionEliminator::name,
-				LoadResolver::name
+				LoadResolver::name,
+				LoopInvariantCodeMotion::name
 			}, ast);
 		}
 
@@ -180,6 +182,18 @@ void OptimiserSuite::run(
 			// run functional expression inliner
 			suite.runSequence({
 				ExpressionInliner::name,
+				UnusedPruner::name,
+			}, ast);
+		}
+
+		{
+			// Prune a bit more in SSA
+			suite.runSequence({
+				ExpressionSplitter::name,
+				SSATransform::name,
+				RedundantAssignEliminator::name,
+				UnusedPruner::name,
+				RedundantAssignEliminator::name,
 				UnusedPruner::name,
 			}, ast);
 		}
@@ -291,7 +305,7 @@ void OptimiserSuite::run(
 	{
 		// If the first statement is an empty block, remove it.
 		// We should only have function definitions after that.
-		if (ast.statements.size() > 1 && boost::get<Block>(ast.statements.front()).statements.empty())
+		if (ast.statements.size() > 1 && std::get<Block>(ast.statements.front()).statements.empty())
 			ast.statements.erase(ast.statements.begin());
 	}
 	suite.runSequence({
@@ -345,6 +359,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			FunctionHoister,
 			LiteralRematerialiser,
 			LoadResolver,
+			LoopInvariantCodeMotion,
 			RedundantAssignEliminator,
 			Rematerialiser,
 			SSAReverser,
@@ -361,7 +376,7 @@ void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 {
 	unique_ptr<Block> copy;
 	if (m_debug == Debug::PrintChanges)
-		copy = make_unique<Block>(boost::get<Block>(ASTCopier{}(_ast)));
+		copy = make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
 	for (string const& step: _steps)
 	{
 		if (m_debug == Debug::PrintStep)
@@ -376,7 +391,7 @@ void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 			{
 				cout << "== Running " << step << " changed the AST." << endl;
 				cout << AsmPrinter{}(_ast) << endl;
-				copy = make_unique<Block>(boost::get<Block>(ASTCopier{}(_ast)));
+				copy = make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
 			}
 		}
 	}

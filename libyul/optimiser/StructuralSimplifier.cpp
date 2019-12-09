@@ -71,7 +71,8 @@ void StructuralSimplifier::operator()(Block& _block)
 
 void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
-	GenericFallbackReturnsVisitor<OptionalStatements, If, Switch, ForLoop> const visitor(
+	GenericVisitor visitor{
+		VisitorFallback<OptionalStatements>{},
 		[&](If& _ifStmt) -> OptionalStatements {
 			if (expressionAlwaysTrue(*_ifStmt.condition))
 				return {std::move(_ifStmt.body.statements)};
@@ -89,13 +90,13 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 				return {std::move(_forLoop.pre.statements)};
 			return {};
 		}
-	);
+	};
 
 	iterateReplacing(
 		_statements,
 		[&](Statement& _stmt) -> OptionalStatements
 		{
-			OptionalStatements result = boost::apply_visitor(visitor, _stmt);
+			OptionalStatements result = std::visit(visitor, _stmt);
 			if (result)
 				simplify(*result);
 			else
@@ -123,8 +124,8 @@ bool StructuralSimplifier::expressionAlwaysFalse(Expression const& _expression)
 
 std::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
 {
-	if (_expression.type() == typeid(Literal))
-		return valueOfLiteral(boost::get<Literal>(_expression));
+	if (holds_alternative<Literal>(_expression))
+		return valueOfLiteral(std::get<Literal>(_expression));
 	else
 		return std::optional<u256>();
 }

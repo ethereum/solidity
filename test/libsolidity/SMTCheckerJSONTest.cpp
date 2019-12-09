@@ -18,6 +18,7 @@
 #include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/Options.h>
 #include <libsolidity/interface/StandardCompiler.h>
+#include <libdevcore/CommonIO.h>
 #include <libdevcore/JSON.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -43,7 +44,7 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion _ev
 
 	string jsonFilename = _filename.substr(0, _filename.size() - 4) + ".json";
 	if (
-		!jsonParseFile(jsonFilename, m_smtResponses) ||
+		!jsonParseStrict(readFileAsString(jsonFilename), m_smtResponses) ||
 		!m_smtResponses.isObject()
 	)
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid JSON file."));
@@ -158,7 +159,7 @@ Json::Value SMTCheckerTest::buildJson(string const& _extra)
 	sources += "}";
 	string input = "{" + language + ", " + sources + "}";
 	Json::Value source;
-	if (!jsonParse(input, source))
+	if (!jsonParseStrict(input, source))
 		BOOST_THROW_EXCEPTION(runtime_error("Could not build JSON from string: " + input));
 	return source;
 }

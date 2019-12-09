@@ -62,6 +62,7 @@
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/LoadResolver.h>
+#include <libyul/optimiser/LoopInvariantCodeMotion.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -72,6 +73,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <variant>
 
 using namespace std;
 using namespace dev;
@@ -131,7 +133,7 @@ public:
 			set<YulString> reservedIdentifiers;
 			if (!disambiguated)
 			{
-				*m_ast = boost::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_ast));
+				*m_ast = std::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_ast));
 				m_analysisInfo.reset();
 				m_nameDispenser = make_shared<NameDispenser>(m_dialect, *m_ast, reservedIdentifiers);
 				disambiguated = true;
@@ -140,8 +142,8 @@ public:
 			cout << "  (e)xpr inline/(i)nline/(s)implify/varname c(l)eaner/(u)nusedprune/ss(a) transform/" << endl;
 			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-init-rewriter/for-loop-condition-(I)nto-body/" << endl;
 			cout << "  for-loop-condition-(O)ut-of-body/s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/" << endl;
-			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/(L)oad resolver/ " << endl;
-			cout << "  (C)onditional simplifier?" << endl;
+			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/(L)oad resolver/" << endl;
+			cout << "  (C)onditional simplifier/loop-invariant code (M)otion?" << endl;
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
@@ -235,6 +237,9 @@ public:
 			}
 			case 'L':
 				LoadResolver::run(context, *m_ast);
+				break;
+			case 'M':
+				LoopInvariantCodeMotion::run(context, *m_ast);
 				break;
 			default:
 				cout << "Unknown option." << endl;

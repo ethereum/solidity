@@ -168,7 +168,7 @@ The ``continue`` and ``break`` statements can only be used inside loop bodies
 and have to be in the same function as the loop (or both have to be at the
 top level).
 The condition part of the for-loop has to evaluate to exactly one value.
-Functions cannot be defined inside for loop init blocks.
+Functions cannot be defined anywhere inside for loop init blocks.
 
 Literals cannot be larger than the their type. The largest type defined is 256-bit wide.
 
@@ -182,11 +182,17 @@ introduce new identifiers into these scopes.
 
 Identifiers are visible in
 the block they are defined in (including all sub-nodes and sub-blocks).
-As an exception, identifiers defined in the "init" part of the for-loop
+
+As an exception, identifiers defined directly in the "init" part of the for-loop
 (the first block) are visible in all other parts of the for-loop
 (but not outside of the loop).
 Identifiers declared in the other parts of the for loop respect the regular
 syntactical scoping rules.
+
+This means a for-loop of the form ``for { I... } C { P... } { B... }`` is equivalent
+to ``{ I... for {} C { P... } { B... } }``.
+
+
 The parameters and return parameters of functions are visible in the
 function body and their names cannot overlap.
 

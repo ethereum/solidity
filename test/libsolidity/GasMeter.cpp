@@ -114,9 +114,10 @@ public:
 
 	static GasMeter::GasConsumption gasForTransaction(bytes const& _data, bool _isCreation)
 	{
+		auto evmVersion = dev::test::Options::get().evmVersion();
 		GasMeter::GasConsumption gas = _isCreation ? GasCosts::txCreateGas : GasCosts::txGas;
 		for (auto i: _data)
-			gas += i != 0 ? GasCosts::txDataNonZeroGas : GasCosts::txDataZeroGas;
+			gas += i != 0 ? GasCosts::txDataNonZeroGas(evmVersion) : GasCosts::txDataZeroGas;
 		return gas;
 	}
 

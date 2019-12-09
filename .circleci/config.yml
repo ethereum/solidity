@@ -5,7 +5,11 @@
 #     - t: test
 #     - ubu: ubuntu
 #     - ems: Emscripten
-version: 2
+version: 2.1
+parameters:
+  docker-image-rev:
+    type: string
+    default: "3"
 
 defaults:
 
@@ -106,7 +110,7 @@ defaults:
 
   - test_ubuntu1904_clang: &test_ubuntu1904_clang
       docker:
-        - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang
+        - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang-<< pipeline.parameters.docker-image-rev >>
       steps:
         - checkout
         - attach_workspace:
@@ -117,7 +121,7 @@ defaults:
 
   - test_ubuntu1904: &test_ubuntu1904
       docker:
-        - image: ethereum/solidity-buildpack-deps:ubuntu1904
+        - image: ethereum/solidity-buildpack-deps:ubuntu1904-<< pipeline.parameters.docker-image-rev >>
       steps:
         - checkout
         - attach_workspace:
@@ -287,10 +291,11 @@ jobs:
 
   b_ubu_clang: &build_ubuntu1904_clang
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang-<< pipeline.parameters.docker-image-rev >>
     environment:
       CC: clang
       CXX: clang++
+      CMAKE_OPTIONS: -DLLL=ON
     steps:
       - checkout
       - run: *run_build
@@ -299,7 +304,9 @@ jobs:
 
   b_ubu: &build_ubuntu1904
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-<< pipeline.parameters.docker-image-rev >>
+    environment:
+      CMAKE_OPTIONS: -DLLL=ON
     steps:
       - checkout
       - run: *run_build
@@ -310,12 +317,13 @@ jobs:
     <<: *build_ubuntu1904
     environment:
       FORCE_RELEASE: ON
+      CMAKE_OPTIONS: -DLLL=ON
 
   b_ubu18: &build_ubuntu1804
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1804
+      - image: ethereum/solidity-buildpack-deps:ubuntu1804-<< pipeline.parameters.docker-image-rev >>
     environment:
-      CMAKE_OPTIONS: -DCMAKE_CXX_FLAGS=-O2
+      CMAKE_OPTIONS: -DCMAKE_CXX_FLAGS=-O2 -DLLL=ON
       CMAKE_BUILD_TYPE: RelWithDebugInfo
     steps:
       - checkout
@@ -360,7 +368,7 @@ jobs:
     <<: *build_ubuntu1904
     environment:
       CMAKE_BUILD_TYPE: Debug
-      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx20.cmake -DUSE_CVC4=OFF
+      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx20.cmake -DUSE_CVC4=OFF -DLLL=ON
     steps:
       - checkout
       - run: *run_build
@@ -400,6 +408,7 @@ jobs:
       - image: archlinux/base
     environment:
       TERM: xterm
+      CMAKE_OPTIONS: -DLLL=ON
     steps:
       - run:
           name: Install build dependencies
@@ -416,6 +425,7 @@ jobs:
     environment:
       TERM: xterm
       CMAKE_BUILD_TYPE: Debug
+      CMAKE_OPTIONS: -DLLL=ON
     steps:
       - checkout
       - restore_cache:
@@ -472,7 +482,7 @@ jobs:
 
   b_ems:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.38.22-64bit
+      - image: trzeci/emscripten:sdk-tag-1.39.3-64bit
     environment:
       TERM: xterm
     steps:
@@ -519,7 +529,7 @@ jobs:
 
   b_docs:
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-<< pipeline.parameters.docker-image-rev >>
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash
@@ -544,7 +554,7 @@ jobs:
 
   t_ubu_cli: &t_ubu_cli
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-<< pipeline.parameters.docker-image-rev >>
     environment:
       TERM: xterm
     steps:
@@ -597,7 +607,22 @@ jobs:
             npm --version
             test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
 
-  t_ems_external_gnosis:
+  t_ems_compile_ext_gnosis:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: External GnosisSafe compilation
+          command: |
+            export COMPILE_ONLY=1
+            test/externalTests/gnosis.sh /tmp/workspace/soljson.js || test/externalTests/gnosis.sh /tmp/workspace/soljson.js
+
+  t_ems_test_ext_gnosis:
     docker:
       - image: circleci/node:10
     environment:
@@ -613,7 +638,22 @@ jobs:
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
 
-  t_ems_external_zeppelin:
+  t_ems_compile_ext_zeppelin:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: External Zeppelin compilation
+          command: |
+            export COMPILE_ONLY=1
+            test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
+
+  t_ems_test_ext_zeppelin:
     docker:
       - image: circleci/node:10
     environment:
@@ -629,7 +669,26 @@ jobs:
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
 
-  t_ems_external_colony:
+  t_ems_compile_ext_colony:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install test dependencies
+          command: |
+            sudo apt-get -qy install lsof
+      - run:
+          name: External ColonyNetworks compilation
+          command: |
+            export COMPILE_ONLY=1
+            test/externalTests/colony.sh /tmp/workspace/soljson.js || test/externalTests/colony.sh /tmp/workspace/soljson.js
+
+  t_ems_test_ext_colony:
     docker:
       - image: circleci/node:10
     environment:
@@ -693,6 +752,9 @@ workflows:
       # Emscripten build and selected tests
       - b_ems: *workflow_trigger_on_tags
       - t_ems_solcjs: *workflow_emscripten
+      - t_ems_compile_ext_colony: *workflow_emscripten
+      - t_ems_compile_ext_gnosis: *workflow_emscripten
+      - t_ems_compile_ext_zeppelin: *workflow_emscripten
 
   nightly:
 
@@ -706,12 +768,6 @@ workflows:
                 - develop_060
 
     jobs:
-      # Emscripten builds and external tests
-      - b_ems: *workflow_trigger_on_tags
-      - t_ems_external_zeppelin: *workflow_emscripten
-      - t_ems_external_gnosis: *workflow_emscripten
-      - t_ems_external_colony: *workflow_emscripten
-
       # OSSFUZZ builds and (regression) tests
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
       - t_ubu_ossfuzz: *workflow_ubuntu1904_ossfuzz

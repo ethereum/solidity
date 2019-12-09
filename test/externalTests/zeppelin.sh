@@ -35,8 +35,6 @@ function zeppelin_test
     run_install install_fn
 
     CONFIG="truffle-config.js"
-    replace_libsolc_call
-
     run_test compile_fn test_fn
 }
 

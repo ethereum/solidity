@@ -329,7 +329,7 @@ MemberList const& Type::members(ContractDefinition const* _currentScope) const
 		MemberList::MemberMap members = nativeMembers(_currentScope);
 		if (_currentScope)
 			members += boundFunctions(*this, *_currentScope);
-		m_members[_currentScope] = unique_ptr<MemberList>(new MemberList(move(members)));
+		m_members[_currentScope] = make_unique<MemberList>(move(members));
 	}
 	return *m_members[_currentScope];
 }
@@ -1433,6 +1433,9 @@ Type const* ContractType::encodingType() const
 
 BoolResult ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
+	if (m_super)
+		return false;
+
 	if (*this == _convertTo)
 		return true;
 	if (_convertTo.category() == Category::Contract)
@@ -1450,8 +1453,12 @@ BoolResult ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 BoolResult ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
+	if (m_super)
+		return false;
+
 	if (auto const* addressType = dynamic_cast<AddressType const*>(&_convertTo))
 		return isPayable() || (addressType->stateMutability() < StateMutability::Payable);
+
 	return isImplicitlyConvertibleTo(_convertTo);
 }
 
@@ -2961,6 +2968,20 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 				)
 			);
 		return members;
+	}
+	case Kind::DelegateCall:
+	{
+		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
+		solAssert(functionDefinition, "");
+		solAssert(functionDefinition->visibility() != Declaration::Visibility::Private, "");
+		if (functionDefinition->visibility() != Declaration::Visibility::Internal)
+		{
+			auto const* contract = dynamic_cast<ContractDefinition const*>(m_declaration->scope());
+			solAssert(contract, "");
+			solAssert(contract->isLibrary(), "");
+			return {{"selector", TypeProvider::fixedBytes(4)}};
+		}
+		return {};
 	}
 	default:
 		return MemberList::MemberMap();

@@ -237,6 +237,8 @@ message NullaryOp {
     NUMBER = 14;
     DIFFICULTY = 15;
     GASLIMIT = 16;
+    SELFBALANCE = 17;
+    CHAINID = 18;
   }
   required NOp op = 1;
 }

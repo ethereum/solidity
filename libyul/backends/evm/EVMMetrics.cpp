@@ -96,7 +96,7 @@ void GasMeterVisitor::operator()(Literal const& _lit)
 	m_runGas += dev::eth::GasMeter::runGas(dev::eth::Instruction::PUSH1);
 	m_dataGas +=
 		singleByteDataGas() +
-		size_t(dev::eth::GasMeter::dataGas(dev::toCompactBigEndian(valueOfLiteral(_lit), 1), m_isCreation));
+		size_t(dev::eth::GasMeter::dataGas(dev::toCompactBigEndian(valueOfLiteral(_lit), 1), m_isCreation, m_dialect.evmVersion()));
 }
 
 void GasMeterVisitor::operator()(Identifier const&)
@@ -108,7 +108,7 @@ void GasMeterVisitor::operator()(Identifier const&)
 size_t GasMeterVisitor::singleByteDataGas() const
 {
 	if (m_isCreation)
-		return dev::eth::GasCosts::txDataNonZeroGas;
+		return dev::eth::GasCosts::txDataNonZeroGas(m_dialect.evmVersion());
 	else
 		return dev::eth::GasCosts::createDataGas;
 }

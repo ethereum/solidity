@@ -1,3 +1,31 @@
+### 0.5.14 (2019-12-09)
+
+Language Features:
+ * Allow to obtain the selector of public or external library functions via a member ``.selector``.
+ * Inline Assembly: Support constants that reference other constants.
+ * Parser: Allow splitting hexadecimal and regular string literals into multiple parts.
+
+
+Compiler Features:
+ * Commandline Interface: Allow translation from yul / strict assembly to EWasm using ``solc --yul --yul-dialect evm --machine eWasm``
+ * Set the default EVM version to "Istanbul".
+ * SMTChecker: Add support to constructors including constructor inheritance.
+ * Yul: When compiling via Yul, string literals from the Solidity code are kept as string literals if every character is safely printable.
+ * Yul Optimizer: Perform loop-invariant code motion.
+
+
+Bugfixes:
+ * SMTChecker: Fix internal error when using ``abi.decode``.
+ * SMTChecker: Fix internal error when using arrays or mappings of functions.
+ * SMTChecker: Fix internal error in array of structs type.
+ * Version Checker: ``^0`` should match ``0.5.0``, but no prerelease.
+ * Yul: Consider infinite loops and recursion to be not removable.
+
+
+Build System:
+ * Update to emscripten version 1.39.3.
+
+
 ### 0.5.13 (2019-11-14)
 
 Language Features:
@@ -22,6 +50,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when implicitly converting string literals to fixed bytes.
  * Type Checker: Disallow constructor of the same class to be used as modifier.
  * Type Checker: Treat magic variables as unknown identifiers in inline assembly.
+ * Code Generator: Fix internal error when trying to convert ``super`` to a different type
 
 
 

@@ -33,24 +33,21 @@
 using namespace std;
 using namespace dev;
 using namespace dev::test;
+using namespace evmc::literals;
 
-
-evmc::vm* EVMHost::getVM(string const& _path)
+evmc::VM& EVMHost::getVM(string const& _path)
 {
-	static unique_ptr<evmc::vm> theVM;
+	static evmc::VM theVM;
 	if (!theVM && !_path.empty())
 	{
 		evmc_loader_error_code errorCode = {};
-		evmc_instance* vm = evmc_load_and_configure(_path.c_str(), &errorCode);
+		auto vm = evmc::VM{evmc_load_and_configure(_path.c_str(), &errorCode)};
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 		{
-			if (evmc_vm_has_capability(vm, EVMC_CAPABILITY_EVM1))
-				theVM = make_unique<evmc::vm>(vm);
+			if (vm.get_capabilities() & EVMC_CAPABILITY_EVM1)
+				theVM = std::move(vm);
 			else
-			{
-				evmc_destroy(vm);
 				cerr << "VM loaded does not support EVM1" << endl;
-			}
 		}
 		else
 		{
@@ -60,11 +57,12 @@ evmc::vm* EVMHost::getVM(string const& _path)
 			cerr << endl;
 		}
 	}
-	return theVM.get();
+	return theVM;
 }
 
-EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm):
-	m_vm(_vm)
+EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
+	m_vm(_vm),
+	m_evmVersion(_evmVersion)
 {
 	if (!m_vm)
 	{
@@ -73,85 +71,91 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::vm* _vm):
 	}
 
 	if (_evmVersion == langutil::EVMVersion::homestead())
-		m_evmVersion = EVMC_HOMESTEAD;
+		m_evmRevision = EVMC_HOMESTEAD;
 	else if (_evmVersion == langutil::EVMVersion::tangerineWhistle())
-		m_evmVersion = EVMC_TANGERINE_WHISTLE;
+		m_evmRevision = EVMC_TANGERINE_WHISTLE;
 	else if (_evmVersion == langutil::EVMVersion::spuriousDragon())
-		m_evmVersion = EVMC_SPURIOUS_DRAGON;
+		m_evmRevision = EVMC_SPURIOUS_DRAGON;
 	else if (_evmVersion == langutil::EVMVersion::byzantium())
-		m_evmVersion = EVMC_BYZANTIUM;
+		m_evmRevision = EVMC_BYZANTIUM;
 	else if (_evmVersion == langutil::EVMVersion::constantinople())
-		m_evmVersion = EVMC_CONSTANTINOPLE;
+		m_evmRevision = EVMC_CONSTANTINOPLE;
 	else if (_evmVersion == langutil::EVMVersion::istanbul())
-		assertThrow(false, Exception, "Istanbul is not supported yet.");
+		m_evmRevision = EVMC_ISTANBUL;
 	else if (_evmVersion == langutil::EVMVersion::berlin())
 		assertThrow(false, Exception, "Berlin is not supported yet.");
 	else //if (_evmVersion == langutil::EVMVersion::petersburg())
-		m_evmVersion = EVMC_PETERSBURG;
-}
+		m_evmRevision = EVMC_PETERSBURG;
 
-evmc_storage_status EVMHost::set_storage(const evmc::address& _addr, const evmc::bytes32& _key, const evmc::bytes32& _value) noexcept
-{
-	evmc::bytes32 previousValue = m_state.accounts[_addr].storage[_key];
-	m_state.accounts[_addr].storage[_key] = _value;
+	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
+	// NOTE: keep this in sync with `EVMHost::call` below.
+	//
+	// A lot of precompile addresses had a balance before they became valid addresses for precompiles.
+	// For example all the precompile addresses allocated in Byzantium had a 1 wei balance sent to them
+	// roughly 22 days before the update went live.
+	for (unsigned precompiledAddress = 1; precompiledAddress <= 8; precompiledAddress++)
+	{
+		evmc::address address{};
+		address.bytes[19] = precompiledAddress;
+		// 1wei
+		accounts[address].balance.bytes[31] = 1;
+	}
 
-	// TODO EVMC_STORAGE_MODIFIED_AGAIN should be also used
-	if (previousValue == _value)
-		return EVMC_STORAGE_UNCHANGED;
-	else if (previousValue == evmc::bytes32{})
-		return EVMC_STORAGE_ADDED;
-	else if (_value == evmc::bytes32{})
-		return EVMC_STORAGE_DELETED;
-	else
-		return EVMC_STORAGE_MODIFIED;
-
+	// TODO: support short literals in EVMC and use them here
+	tx_context.block_difficulty = convertToEVMC(u256("200000000"));
+	tx_context.block_gas_limit = 20000000;
+	tx_context.block_coinbase = 0x7878787878787878787878787878787878787878_address;
+	tx_context.tx_gas_price = convertToEVMC(u256("3000000000"));
+	tx_context.tx_origin = 0x9292929292929292929292929292929292929292_address;
+	// Mainnet according to EIP-155
+	tx_context.chain_id = convertToEVMC(u256(1));
 }
 
 void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
 {
 	// TODO actual selfdestruct is even more complicated.
-	evmc::uint256be balance = m_state.accounts[_addr].balance;
-	m_state.accounts.erase(_addr);
-	m_state.accounts[_beneficiary].balance = balance;
+	evmc::uint256be balance = accounts[_addr].balance;
+	accounts.erase(_addr);
+	accounts[_beneficiary].balance = balance;
 }
 
 evmc::result EVMHost::call(evmc_message const& _message) noexcept
 {
-	if (_message.destination == convertToEVMC(Address(1)))
+	if (_message.destination == 0x0000000000000000000000000000000000000001_address)
 		return precompileECRecover(_message);
-	else if (_message.destination == convertToEVMC(Address(2)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000002_address)
 		return precompileSha256(_message);
-	else if (_message.destination == convertToEVMC(Address(3)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000003_address)
 		return precompileRipeMD160(_message);
-	else if (_message.destination == convertToEVMC(Address(4)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000004_address)
 		return precompileIdentity(_message);
-	else if (_message.destination == convertToEVMC(Address(5)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000005_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileModExp(_message);
-	else if (_message.destination == convertToEVMC(Address(6)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000006_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileALTBN128G1Add(_message);
-	else if (_message.destination == convertToEVMC(Address(7)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000007_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileALTBN128G1Mul(_message);
-	else if (_message.destination == convertToEVMC(Address(8)))
+	else if (_message.destination == 0x0000000000000000000000000000000000000008_address && m_evmVersion >= langutil::EVMVersion::byzantium())
 		return precompileALTBN128PairingProduct(_message);
 
-	State stateBackup = m_state;
+	auto const stateBackup = accounts;
 
 	u256 value{convertFromEVMC(_message.value)};
-	Account& sender = m_state.accounts[_message.sender];
+	auto& sender = accounts[_message.sender];
 
-	bytes code;
+	evmc::bytes code;
 
 	evmc_message message = _message;
 	if (message.depth == 0)
 	{
 		message.gas -= message.kind == EVMC_CREATE ? eth::GasCosts::txCreateGas : eth::GasCosts::txGas;
 		for (size_t i = 0; i < message.input_size; ++i)
-			message.gas -= message.input_data[i] == 0 ? eth::GasCosts::txDataZeroGas : eth::GasCosts::txDataNonZeroGas;
+			message.gas -= message.input_data[i] == 0 ? eth::GasCosts::txDataZeroGas : eth::GasCosts::txDataNonZeroGas(m_evmVersion);
 		if (message.gas < 0)
 		{
 			evmc::result result({});
 			result.status_code = EVMC_OUT_OF_GAS;
-			m_state = stateBackup;
+			accounts = stateBackup;
 			return result;
 		}
 	}
@@ -165,23 +169,23 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 			asBytes(to_string(sender.nonce++))
 		));
 		message.destination = convertToEVMC(createAddress);
-		code = bytes(message.input_data, message.input_data + message.input_size);
+		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
 	}
 	else if (message.kind == EVMC_DELEGATECALL)
 	{
-		code = m_state.accounts[message.destination].code;
+		code = accounts[message.destination].code;
 		message.destination = m_currentAddress;
 	}
 	else if (message.kind == EVMC_CALLCODE)
 	{
-		code = m_state.accounts[message.destination].code;
+		code = accounts[message.destination].code;
 		message.destination = m_currentAddress;
 	}
 	else
-		code = m_state.accounts[message.destination].code;
+		code = accounts[message.destination].code;
 	//TODO CREATE2
 
-	Account& destination = m_state.accounts[message.destination];
+	auto& destination = accounts[message.destination];
 
 	if (value != 0 && message.kind != EVMC_DELEGATECALL && message.kind != EVMC_CALLCODE)
 	{
@@ -191,7 +195,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 	evmc::address currentAddress = m_currentAddress;
 	m_currentAddress = message.destination;
-	evmc::result result = m_vm->execute(*this, m_evmVersion, message, code.data(), code.size());
+	evmc::result result = m_vm.execute(*this, m_evmRevision, message, code.data(), code.size());
 	m_currentAddress = currentAddress;
 
 	if (message.kind == EVMC_CREATE)
@@ -206,51 +210,21 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		else
 		{
 			result.create_address = message.destination;
-			destination.code = bytes(result.output_data, result.output_data + result.output_size);
-			destination.codeHash = convertToEVMC(keccak256(destination.code));
+			destination.code = evmc::bytes(result.output_data, result.output_data + result.output_size);
+			destination.codehash = convertToEVMC(keccak256({result.output_data, result.output_size}));
 		}
 	}
 
 	if (result.status_code != EVMC_SUCCESS)
-		m_state = stateBackup;
+		accounts = stateBackup;
 
 	return result;
 }
 
-evmc_tx_context EVMHost::get_tx_context() noexcept
-{
-	evmc_tx_context ctx = {};
-	ctx.block_timestamp = m_state.timestamp;
-	ctx.block_number = m_state.blockNumber;
-	ctx.block_coinbase = m_coinbase;
-	ctx.block_difficulty = convertToEVMC(u256("200000000"));
-	ctx.block_gas_limit = 20000000;
-	ctx.tx_gas_price = convertToEVMC(u256("3000000000"));
-	ctx.tx_origin = convertToEVMC(Address("0x9292929292929292929292929292929292929292"));
-	return ctx;
-}
-
-evmc::bytes32 EVMHost::get_block_hash(int64_t _number) noexcept
+evmc::bytes32 EVMHost::get_block_hash(int64_t _number) const noexcept
 {
 	return convertToEVMC(u256("0x3737373737373737373737373737373737373737373737373737373737373737") + _number);
 }
-
-void EVMHost::emit_log(
-	evmc::address const& _addr,
-	uint8_t const* _data,
-	size_t _dataSize,
-	evmc::bytes32 const _topics[],
-	size_t _topicsCount
-) noexcept
-{
-	LogEntry entry;
-	entry.address = convertFromEVMC(_addr);
-	for (size_t i = 0; i < _topicsCount; ++i)
-		entry.topics.emplace_back(convertFromEVMC(_topics[i]));
-	entry.data = bytes(_data, _data + _dataSize);
-	m_state.logs.emplace_back(std::move(entry));
-}
-
 
 Address EVMHost::convertFromEVMC(evmc::address const& _addr)
 {

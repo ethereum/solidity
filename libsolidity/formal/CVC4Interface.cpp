@@ -35,7 +35,7 @@ void CVC4Interface::reset()
 	m_variables.clear();
 	m_solver.reset();
 	m_solver.setOption("produce-models", true);
-	m_solver.setTimeLimit(queryTimeout);
+	m_solver.setResourceLimit(resourceLimit);
 }
 
 void CVC4Interface::push()

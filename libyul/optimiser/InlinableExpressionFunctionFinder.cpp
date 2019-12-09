@@ -45,9 +45,9 @@ void InlinableExpressionFunctionFinder::operator()(FunctionDefinition const& _fu
 	{
 		YulString retVariable = _function.returnVariables.front().name;
 		Statement const& bodyStatement = _function.body.statements.front();
-		if (bodyStatement.type() == typeid(Assignment))
+		if (holds_alternative<Assignment>(bodyStatement))
 		{
-			Assignment const& assignment = boost::get<Assignment>(bodyStatement);
+			Assignment const& assignment = std::get<Assignment>(bodyStatement);
 			if (assignment.variableNames.size() == 1 && assignment.variableNames.front().name == retVariable)
 			{
 				// TODO: use code size metric here
@@ -57,7 +57,7 @@ void InlinableExpressionFunctionFinder::operator()(FunctionDefinition const& _fu
 				// function body.
 				assertThrow(m_disallowedIdentifiers.empty() && !m_foundDisallowedIdentifier, OptimizerException, "");
 				m_disallowedIdentifiers = set<YulString>{retVariable, _function.name};
-				boost::apply_visitor(*this, *assignment.value);
+				std::visit(*this, *assignment.value);
 				if (!m_foundDisallowedIdentifier)
 					m_inlinableFunctions[_function.name] = &_function;
 				m_disallowedIdentifiers.clear();

@@ -33,8 +33,8 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 {
 	if (
 		m_dialect.booleanNegationFunction() &&
-		_forLoop.condition->type() != typeid(Literal) &&
-		_forLoop.condition->type() != typeid(Identifier)
+		!holds_alternative<Literal>(*_forLoop.condition) &&
+		!holds_alternative<Identifier>(*_forLoop.condition)
 	)
 	{
 		langutil::SourceLocation loc = locationOf(*_forLoop.condition);
