@@ -1190,6 +1190,8 @@ public:
 	std::string externalSignature() const;
 	/// @returns the external identifier of this function (the hash of the signature).
 	u256 externalIdentifier() const;
+	/// @returns the external identifier of this function (the hash of the signature) as a hex string.
+	std::string externalIdentifierHex() const;
 	Declaration const& declaration() const
 	{
 		solAssert(m_declaration, "Requested declaration from a FunctionType that has none");

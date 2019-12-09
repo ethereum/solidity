@@ -3191,6 +3191,11 @@ u256 FunctionType::externalIdentifier() const
 	return FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(externalSignature())));
 }
 
+string FunctionType::externalIdentifierHex() const
+{
+	return FixedHash<4>(dev::keccak256(externalSignature())).hex();
+}
+
 bool FunctionType::isPure() const
 {
 	// TODO: replace this with m_stateMutability == StateMutability::Pure once

@@ -362,6 +362,8 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 		make_pair("implemented", _node.isImplemented()),
 		make_pair("scope", idOrNull(_node.scope()))
 	};
+	if (_node.isPartOfExternalInterface())
+		attributes.emplace_back("functionSelector", _node.externalIdentifierHex());
 	if (!_node.annotation().baseFunctions.empty())
 		attributes.emplace_back(make_pair("baseFunctions", getContainerIds(_node.annotation().baseFunctions, true)));
 	if (m_legacy)
@@ -384,6 +386,8 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 		make_pair("scope", idOrNull(_node.scope())),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type, true))
 	};
+	if (_node.isStateVariable() && _node.isPublic())
+		attributes.emplace_back("functionSelector", _node.externalIdentifierHex());
 	if (m_inEvent)
 		attributes.emplace_back("indexed", _node.isIndexed());
 	if (!_node.annotation().baseFunctions.empty())

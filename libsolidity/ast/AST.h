@@ -708,6 +708,9 @@ public:
 	/// arguments separated by commas all enclosed in parentheses without any spaces.
 	std::string externalSignature() const;
 
+	/// @returns the external identifier of this function (the hash of the signature) as a hex string.
+	std::string externalIdentifierHex() const;
+
 	ContractDefinition::ContractKind inContractKind() const;
 
 	TypePointer type() const override;
@@ -806,6 +809,9 @@ public:
 	Location referenceLocation() const { return m_location; }
 	/// @returns a set of allowed storage locations for the variable.
 	std::set<Location> allowedDataLocations() const;
+
+	/// @returns the external identifier of this variable (the hash of the signature) as a hex string (works only for public state variables).
+	std::string externalIdentifierHex() const;
 
 	TypePointer type() const override;
 
