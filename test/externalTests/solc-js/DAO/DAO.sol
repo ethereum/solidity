@@ -195,7 +195,7 @@ abstract contract DAOInterface {
     /// weeks for a regular proposal, 10 days for new Curator proposal
     /// @param _newCurator Bool defining whether this proposal is about
     /// a new Curator or not
-    /// @return The proposal ID. Needed for voting on the proposal
+    /// @return _proposalID The proposal ID. Needed for voting on the proposal
     function newProposal(
         address payable _recipient,
         uint _amount,
@@ -212,7 +212,7 @@ abstract contract DAOInterface {
     /// @param _recipient The recipient of the proposed transaction
     /// @param _amount The amount of wei to be sent in the proposed transaction
     /// @param _transactionData The data of the proposed transaction
-    /// @return Whether the proposal ID matches the transaction data or not
+    /// @return _codeChecksOut Whether the proposal ID matches the transaction data or not
     function checkProposalCode(
         uint _proposalID,
         address payable _recipient,
@@ -223,7 +223,7 @@ abstract contract DAOInterface {
     /// @notice Vote on proposal `_proposalID` with `_supportsProposal`
     /// @param _proposalID The proposal ID
     /// @param _supportsProposal Yes/No - support of the proposal
-    /// @return The vote ID.
+    /// @return _voteID The vote ID.
     function vote(
         uint _proposalID,
         bool _supportsProposal
@@ -234,7 +234,7 @@ abstract contract DAOInterface {
     /// transaction in the case it has been voted for.
     /// @param _proposalID The proposal ID
     /// @param _transactionData The data of the proposed transaction
-    /// @return Whether the proposed transaction has been executed or not
+    /// @return _success Whether the proposed transaction has been executed or not
     function executeProposal(
         uint _proposalID,
         bytes memory _transactionData
@@ -267,7 +267,7 @@ abstract contract DAOInterface {
     /// that the DAO can send transactions to them (using proposals)
     /// @param _recipient New recipient address
     /// @dev Can only be called by the current Curator
-    /// @return Whether successful or not
+    /// @return _success Whether successful or not
     function changeAllowedRecipients(address _recipient, bool _allowed) virtual external returns (bool _success);
 
 
@@ -280,23 +280,23 @@ abstract contract DAOInterface {
     /// @notice Move rewards from the DAORewards managed account
     /// @param _toMembers If true rewards are moved to the actual reward account
     ///                   for the DAO. If not then it's moved to the DAO itself
-    /// @return Whether the call was successful
+    /// @return _success Whether the call was successful
     function retrieveDAOReward(bool _toMembers) virtual external returns (bool _success);
 
     /// @notice Get my portion of the reward that was sent to `rewardAccount`
-    /// @return Whether the call was successful
+    /// @return _success Whether the call was successful
     function getMyReward() public virtual returns (bool _success);
 
     /// @notice Withdraw `_account`'s portion of the reward from `rewardAccount`
     /// to `_account`'s balance
-    /// @return Whether the call was successful
+    /// @return _success Whether the call was successful
     function withdrawRewardFor(address payable _account) internal virtual returns (bool _success);
 
     /// @notice Send `_amount` tokens to `_to` from `msg.sender`. Prior to this
     /// getMyReward() is called.
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
-    /// @return Whether the transfer was successful or not
+    /// @return success Whether the transfer was successful or not
     function transferWithoutReward(address _to, uint256 _amount) public virtual returns (bool success);
 
     /// @notice Send `_amount` tokens to `_to` from `_from` on the condition it
@@ -304,7 +304,7 @@ abstract contract DAOInterface {
     /// @param _from The address of the sender
     /// @param _to The address of the recipient
     /// @param _amount The amount of tokens to be transferred
-    /// @return Whether the transfer was successful or not
+    /// @return success Whether the transfer was successful or not
     function transferFromWithoutReward(
         address payable _from,
         address _to,
@@ -313,14 +313,14 @@ abstract contract DAOInterface {
 
     /// @notice Doubles the 'minQuorumDivisor' in the case quorum has not been
     /// achieved in 52 weeks
-    /// @return Whether the change was successful or not
+    /// @return _success Whether the change was successful or not
     function halveMinQuorum() public virtual returns (bool _success);
 
-    /// @return total number of proposals ever created
+    /// @return _numberOfProposals total number of proposals ever created
     function numberOfProposals() public virtual view returns (uint _numberOfProposals);
 
     /// @param _proposalID Id of the new curator proposal
-    /// @return Address of the new DAO
+    /// @return _newDAO Address of the new DAO
     function getNewDAOAddress(uint _proposalID) public virtual view returns (address _newDAO);
 
     /// @param _account The address of the account which is checked.
