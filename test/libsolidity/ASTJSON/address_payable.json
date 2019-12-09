@@ -29,6 +29,7 @@
       [
         {
           "constant": false,
+          "functionSelector": "97682884",
           "id": 4,
           "name": "m",
           "nodeType": "VariableDeclaration",
@@ -489,6 +490,7 @@
             ]
           },
           "documentation": null,
+          "functionSelector": "fc68521a",
           "id": 38,
           "implemented": true,
           "kind": "function",

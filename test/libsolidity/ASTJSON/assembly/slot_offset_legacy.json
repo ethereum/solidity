@@ -117,6 +117,7 @@
           "attributes":
           {
             "documentation": null,
+            "functionSelector": "ffae15ba",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",

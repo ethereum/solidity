@@ -40,6 +40,7 @@
           "attributes":
           {
             "constant": false,
+            "functionSelector": "97682884",
             "name": "m",
             "overrides": null,
             "scope": 39,
@@ -93,6 +94,7 @@
           "attributes":
           {
             "documentation": null,
+            "functionSelector": "fc68521a",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",

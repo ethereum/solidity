@@ -48,6 +48,7 @@
           "attributes":
           {
             "documentation": null,
+            "functionSelector": "a399b6a2",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",
@@ -163,6 +164,7 @@
           {
             "body": null,
             "documentation": null,
+            "functionSelector": "c2985578",
             "implemented": false,
             "isConstructor": false,
             "kind": "function",
@@ -218,6 +220,7 @@
               4
             ],
             "documentation": null,
+            "functionSelector": "a399b6a2",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",
@@ -349,6 +352,7 @@
               10
             ],
             "documentation": null,
+            "functionSelector": "c2985578",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",
@@ -428,6 +432,7 @@
               15
             ],
             "documentation": null,
+            "functionSelector": "a399b6a2",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",

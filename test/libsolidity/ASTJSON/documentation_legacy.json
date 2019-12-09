@@ -109,6 +109,7 @@
           "attributes":
           {
             "documentation": "Some comment on fn.",
+            "functionSelector": "a4a2c40b",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",

@@ -123,6 +123,7 @@ JSON AST:
           "attributes":
           {
             "documentation": null,
+            "functionSelector": "af11c34c",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",

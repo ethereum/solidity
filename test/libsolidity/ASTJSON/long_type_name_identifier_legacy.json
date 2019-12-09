@@ -83,6 +83,7 @@
           "attributes":
           {
             "documentation": null,
+            "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",
