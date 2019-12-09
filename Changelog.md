@@ -18,7 +18,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when using ``abi.decode``.
  * SMTChecker: Fix internal error when using arrays or mappings of functions.
  * SMTChecker: Fix internal error in array of structs type.
- * Version Checker: 0.5.x-prerelease will match `pragma solidity ^0.5`.
+ * Version Checker: ``^0`` should match ``0.5.0``, but no prerelease.
  * Yul: Consider infinite loops and recursion to be not removable.
 
 
