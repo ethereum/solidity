@@ -417,7 +417,7 @@ function extcodehash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
-function extcodecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
+function extcodecopy(v1, v2, v3, v4, x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 	// TODO implement
 	unreachable()
 }
