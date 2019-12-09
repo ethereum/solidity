@@ -11,8 +11,8 @@ Functions
 Function Parameters and Return Variables
 ========================================
 
-As in JavaScript, functions may take parameters as input. Unlike in JavaScript
-and C, functions may also return an arbitrary number of values as output.
+Functions take typed parameters as input and may, unlike in many other
+languages, also return an arbitrary number of values as output.
 
 Function Parameters
 -------------------
@@ -21,7 +21,7 @@ Function parameters are declared the same way as variables, and the name of
 unused parameters can be omitted.
 
 For example, if you want your contract to accept one kind of external call
-with two integers, you would use something like::
+with two integers, you would use something like the following::
 
     pragma solidity >=0.4.16 <0.7.0;
 
@@ -39,7 +39,7 @@ Function parameters can be used as any other local variable and they can also be
   An :ref:`external function<external-function-calls>` cannot accept a
   multi-dimensional array as an input
   parameter. This functionality is possible if you enable the new
-  experimental ``ABIEncoderV2`` feature by adding ``pragma experimental ABIEncoderV2;`` to your source file.
+  ``ABIEncoderV2`` feature by adding ``pragma experimental ABIEncoderV2;`` to your source file.
 
   An :ref:`internal function<external-function-calls>` can accept a
   multi-dimensional array without enabling the feature.
@@ -70,7 +70,8 @@ two integers passed as function parameters, then you use something like::
 
 The names of return variables can be omitted.
 Return variables can be used as any other local variable and they
-are initialized with their :ref:`default value <default-value>` and have that value unless explicitly set.
+are initialized with their :ref:`default value <default-value>` and have that
+value until they are (re-)assigned.
 
 You can either explicitly assign to return variables and
 then leave the function using ``return;``,
@@ -96,7 +97,7 @@ return variables and then using ``return;`` to leave the function.
 .. note::
     You cannot return some types from non-internal functions, notably
     multi-dimensional dynamic arrays and structs. If you enable the
-    new experimental ``ABIEncoderV2`` feature by adding ``pragma experimental
+    new ``ABIEncoderV2`` feature by adding ``pragma experimental
     ABIEncoderV2;`` to your source file then more types are available, but
     ``mapping`` types are still limited to inside a single contract and you
     cannot transfer them.
@@ -107,7 +108,8 @@ Returning Multiple Values
 -------------------------
 
 When a function has multiple return types, the statement ``return (v0, v1, ..., vn)`` can be used to return multiple values.
-The number of components must be the same as the number of return types.
+The number of components must be the same as the number of return variables
+and their types have to match, potentially after an :ref:`implicit conversion <types-conversion-elementary-types>`.
 
 .. index:: ! view function, function;view
 
@@ -120,7 +122,7 @@ Functions can be declared ``view`` in which case they promise not to modify the 
 
 .. note::
   If the compiler's EVM target is Byzantium or newer (default) the opcode
-  ``STATICCALL`` is used for ``view`` functions which enforces the state
+  ``STATICCALL`` is used when ``view`` functions are called, which enforces the state
   to stay unmodified as part of the EVM execution. For library ``view`` functions
   ``DELEGATECALL`` is used, because there is no combined ``DELEGATECALL`` and ``STATICCALL``.
   This means library ``view`` functions do not have run-time checks that prevent state
@@ -229,7 +231,9 @@ This behaviour is also in line with the ``STATICCALL`` opcode.
 Receive Ether Function
 ======================
 
-A contract can have at most one ``receive`` function, declared using ``receive() external payable``.
+A contract can have at most one ``receive`` function, declared using
+``receive() external payable { ... }``
+(without the ``function`` keyword).
 This function cannot have arguments, cannot return anything and must have
 ``external`` visibility and ``payable`` state mutability.  It is executed on a
 call to the contract with empty calldata. This is the function that is executed
@@ -260,12 +264,17 @@ will consume more gas than the 2300 gas stipend:
 
 
 .. warning::
-    A contract without a receive Ether function can receive Ether as a recipient of a `coinbase transaction` (aka `miner block reward`)
+    A contract without a receive Ether function can receive Ether as a
+    recipient of a `coinbase transaction` (aka `miner block reward`)
     or as a destination of a ``selfdestruct``.
 
-    A contract cannot react to such Ether transfers and thus also cannot reject them. This is a design choice of the EVM and Solidity cannot work around it.
+    A contract cannot react to such Ether transfers and thus also
+    cannot reject them. This is a design choice of the EVM and
+    Solidity cannot work around it.
 
-    It also means that ``address(this).balance`` can be higher than the sum of some manual accounting implemented in a contract (i.e. having a counter updated in the receive Ether function).
+    It also means that ``address(this).balance`` can be higher
+    than the sum of some manual accounting implemented in a
+    contract (i.e. having a counter updated in the receive Ether function).
 
 Below you can see an example of a Sink contract that uses function ``receive``.
 
@@ -276,7 +285,10 @@ Below you can see an example of a Sink contract that uses function ``receive``.
     // This contract keeps all Ether sent to it with no way
     // to get it back.
     contract Sink {
-        receive() external payable { }
+        event Received(address, uint);
+        receive() external payable {
+            emit Received(msg.sender, msg.value);
+        }
     }
 
 .. index:: ! fallback function, function;fallback
