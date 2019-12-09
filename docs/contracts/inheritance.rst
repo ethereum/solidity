@@ -305,8 +305,9 @@ Modifier Overriding
 ===================
 
 Function modifiers can override each other. This works in the same way as
-function overriding (except that there is no overloading for modifiers). The
-``override`` keyword must be used in the overriding contract:
+`function overriding <function-overriding>`_ (except that there is no overloading for modifiers). The
+``virtual`` keyword must be used on the overridden modifier
+and the ``override`` keyword must be used in the overriding modifier:
 
 ::
 
@@ -314,7 +315,7 @@ function overriding (except that there is no overloading for modifiers). The
 
     contract Base
     {
-        modifier foo() {_;}
+        modifier foo() virtual {_;}
     }
 
     contract Inherited is Base
@@ -332,12 +333,12 @@ explicitly:
 
     contract Base1
     {
-        modifier foo() {_;}
+        modifier foo() virtual {_;}
     }
 
     contract Base2
     {
-        modifier foo() {_;}
+        modifier foo() virtual {_;}
     }
 
     contract Inherited is Base1, Base2

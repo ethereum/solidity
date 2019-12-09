@@ -104,19 +104,23 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnota
 	std::map<FunctionDefinition const*, ASTNode const*> baseConstructorArguments;
 };
 
-struct FunctionDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
+struct CallableDeclarationAnnotation: ASTAnnotation
 {
-	/// The set of functions this function overrides.
-	std::set<FunctionDefinition const*> baseFunctions;
+	/// The set of functions/modifiers/events this callable overrides.
+	std::set<CallableDeclaration const*> baseFunctions;
+};
+
+struct FunctionDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAnnotation
+{
 	/// Pointer to the contract this function is defined in
 	ContractDefinition const* contract = nullptr;
 };
 
-struct EventDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
+struct EventDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAnnotation
 {
 };
 
-struct ModifierDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
+struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAnnotation
 {
 };
 

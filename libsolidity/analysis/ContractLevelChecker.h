@@ -22,7 +22,9 @@
 #pragma once
 
 #include <libsolidity/ast/ASTForward.h>
+#include <liblangutil/SourceLocation.h>
 #include <map>
+#include <functional>
 #include <set>
 
 namespace langutil
@@ -53,6 +55,12 @@ public:
 	bool check(ContractDefinition const& _contract);
 
 private:
+	/**
+	 * Comparator that compares
+	 *  - functions such that equality means that the functions override each other
+	 *  - modifiers by name
+	 *  - contracts by AST id.
+	 */
 	struct LessFunction
 	{
 		bool operator()(ModifierDefinition const* _a, ModifierDefinition const* _b) const;
@@ -70,13 +78,24 @@ private:
 	template <class T>
 	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions, std::string _message);
 	void checkIllegalOverrides(ContractDefinition const& _contract);
-	/// Performs various checks related to @a _function overriding @a _super like
+	/// Performs various checks related to @a _overriding overriding @a _super like
 	/// different return type, invalid visibility change, etc.
+	/// Works on functions, modifiers and public state variables.
 	/// Also stores @a _super as a base function of @a _function in its AST annotations.
-	template<class T>
-	void checkFunctionOverride(T const& _overriding, FunctionDefinition const& _super);
-	void overrideListError(FunctionDefinition const& function, std::set<ContractDefinition const*, LessFunction> _secondary, std::string const& _message1, std::string const& _message2);
-	void overrideError(Declaration const& _overriding, Declaration const& _super, std::string _message, std::string _secondaryMsg = "Overridden function is here:");
+	template<class T, class U>
+	void checkOverride(T const& _overriding, U const& _super);
+	void overrideListError(
+		CallableDeclaration const& _callable,
+		std::set<ContractDefinition const*, LessFunction> _secondary,
+		std::string const& _message1,
+		std::string const& _message2
+	);
+	void overrideError(
+		Declaration const& _overriding,
+		Declaration const& _super,
+		std::string _message,
+		std::string _secondaryMsg = "Overridden function is here:"
+	);
 	void checkAbstractFunctions(ContractDefinition const& _contract);
 	/// Checks that the base constructor arguments are properly provided.
 	/// Fills the list of unimplemented functions in _contract's annotations.
@@ -98,11 +117,18 @@ private:
 	/// Checks for functions in different base contracts which conflict with each
 	/// other and thus need to be overridden explicitly.
 	void checkAmbiguousOverrides(ContractDefinition const& _contract) const;
+	void checkAmbiguousOverridesInternal(std::set<
+		CallableDeclaration const*,
+		std::function<bool(CallableDeclaration const*, CallableDeclaration const*)>
+	> _baseCallables, langutil::SourceLocation const& _location) const;
 	/// Resolves an override list of UserDefinedTypeNames to a list of contracts.
 	std::set<ContractDefinition const*, LessFunction> resolveOverrideList(OverrideSpecifier const& _overrides) const;
 
-	void checkModifierOverrides(FunctionMultiSet const& _funcSet, ModifierMultiSet const& _modSet, std::vector<ModifierDefinition const*> _modifiers);
-	void checkOverrideList(FunctionMultiSet const& _funcSet, FunctionDefinition const& _function);
+	template <class T>
+	void checkOverrideList(
+		std::multiset<T const*, LessFunction> const& _funcSet,
+		T const& _function
+	);
 
 	/// Returns all functions of bases that have not yet been overwritten.
 	/// May contain the same function multiple times when used with shared bases.

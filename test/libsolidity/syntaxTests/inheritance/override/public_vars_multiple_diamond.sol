@@ -11,4 +11,4 @@ contract X is B, C {
 	uint public override foo;
 }
 // ----
-// TypeError: (271-320): Derived contract must override function "foo". Function with the same name and parameter types defined in two or more base classes.
+// TypeError: (271-320): Derived contract must override function "foo". Two or more base classes define function with same name and parameter types.

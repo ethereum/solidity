@@ -238,10 +238,8 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 
 void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 {
-	FunctionMultiSet const& funcSet = inheritedFunctions(_contract);
-	ModifierMultiSet const& modSet = inheritedModifiers(_contract);
-
-	checkModifierOverrides(funcSet, modSet, _contract.functionModifiers());
+	FunctionMultiSet const& inheritedFuncs = inheritedFunctions(_contract);
+	ModifierMultiSet const& inheritedMods = inheritedModifiers(_contract);
 
 	for (auto const* stateVar: _contract.stateVariables())
 	{
@@ -250,9 +248,9 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 
 		bool found = false;
 		for (
-			auto it = find_if(funcSet.begin(), funcSet.end(), MatchByName{stateVar->name()});
-			it != funcSet.end();
-			it = find_if(++it, funcSet.end(), MatchByName{stateVar->name()})
+			auto it = find_if(inheritedFuncs.begin(), inheritedFuncs.end(), MatchByName{stateVar->name()});
+			it != inheritedFuncs.end();
+			it = find_if(++it, inheritedFuncs.end(), MatchByName{stateVar->name()})
 		)
 		{
 			if (!hasEqualNameAndParameters(*stateVar, **it))
@@ -261,7 +259,7 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 			if ((*it)->visibility() != Declaration::Visibility::External)
 				overrideError(*stateVar, **it, "Public state variables can only override functions with external visibility.");
 			else
-				checkFunctionOverride(*stateVar, **it);
+				checkOverride(*stateVar, **it);
 
 			found = true;
 		}
@@ -273,51 +271,96 @@ void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _cont
 			);
 	}
 
+	for (ModifierDefinition const* modifier: _contract.functionModifiers())
+	{
+		if (contains_if(inheritedFuncs, MatchByName{modifier->name()}))
+			m_errorReporter.typeError(
+				modifier->location(),
+				"Override changes function to modifier."
+			);
+
+		auto [begin, end] = inheritedMods.equal_range(modifier);
+
+		if (begin == end && modifier->overrides())
+			m_errorReporter.typeError(
+				modifier->overrides()->location(),
+				"Modifier has override specified but does not override anything."
+			);
+
+		for (; begin != end; begin++)
+			if (ModifierType(**begin) != ModifierType(*modifier))
+				m_errorReporter.typeError(
+					modifier->location(),
+					"Override changes modifier signature."
+				);
+
+		checkOverrideList(inheritedMods, *modifier);
+	}
+
 	for (FunctionDefinition const* function: _contract.definedFunctions())
 	{
 		if (function->isConstructor())
 			continue;
 
-		if (contains_if(modSet, MatchByName{function->name()}))
+		if (contains_if(inheritedMods, MatchByName{function->name()}))
 			m_errorReporter.typeError(function->location(), "Override changes modifier to function.");
 
 		// No inheriting functions found
-		if (!funcSet.count(function) && function->overrides())
+		if (!inheritedFuncs.count(function) && function->overrides())
 			m_errorReporter.typeError(
 				function->overrides()->location(),
 				"Function has override specified but does not override anything."
 			);
 
-		checkOverrideList(funcSet, *function);
+		checkOverrideList(inheritedFuncs, *function);
 	}
 }
 
-template<class T>
-void ContractLevelChecker::checkFunctionOverride(T const& _overriding, FunctionDefinition const& _super)
+template<class T, class U>
+void ContractLevelChecker::checkOverride(T const& _overriding, U const& _super)
 {
-	string overridingName;
+	static_assert(
+		std::is_same<VariableDeclaration, T>::value ||
+		std::is_same<FunctionDefinition, T>::value ||
+		std::is_same<ModifierDefinition, T>::value,
+		"Invalid call to checkOverride."
+	);
 
+	static_assert(
+		std::is_same<FunctionDefinition, U>::value ||
+		std::is_same<ModifierDefinition, U>::value,
+		"Invalid call to checkOverride."
+	);
+	static_assert(
+		!std::is_same<ModifierDefinition, U>::value ||
+		std::is_same<ModifierDefinition, T>::value,
+		"Invalid call to checkOverride."
+	);
+
+	string overridingName;
 	if constexpr(std::is_same<FunctionDefinition, T>::value)
 		overridingName = "function";
+	else if constexpr(std::is_same<ModifierDefinition, T>::value)
+		overridingName = "modifier";
 	else
 		overridingName = "public state variable";
 
-	FunctionTypePointer functionType = FunctionType(_overriding).asCallableFunction(false);
-	FunctionTypePointer superType = FunctionType(_super).asCallableFunction(false);
-
-	solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
+	string superName;
+	if constexpr(std::is_same<FunctionDefinition, U>::value)
+		superName = "function";
+	else
+		superName = "modifier";
 
 	if (!_overriding.overrides())
 		overrideError(_overriding, _super, "Overriding " + overridingName + " is missing 'override' specifier.");
 
 	if (!_super.virtualSemantics())
-		overrideError( _super, _overriding, "Trying to override non-virtual function. Did you forget to add \"virtual\"?", "Overriding " + overridingName + " is here:");
-
-	if (!functionType->hasEqualReturnTypes(*superType))
-		overrideError(_overriding, _super, "Overriding " + overridingName + " return types differ.");
-
-	if constexpr(std::is_same<T, FunctionDefinition>::value)
-		_overriding.annotation().baseFunctions.emplace(&_super);
+		overrideError(
+			_super,
+			_overriding,
+			"Trying to override non-virtual " + superName + ". Did you forget to add \"virtual\"?",
+			"Overriding " + overridingName + " is here:"
+		);
 
 	if (_overriding.visibility() != _super.visibility())
 	{
@@ -330,29 +373,50 @@ void ContractLevelChecker::checkFunctionOverride(T const& _overriding, FunctionD
 			overrideError(_overriding, _super, "Overriding " + overridingName + " visibility differs.");
 	}
 
-	if constexpr(std::is_same<T, FunctionDefinition>::value)
+	// This is only relevant for overriding functions by functions or state variables,
+	// it is skipped for modifiers.
+	if constexpr(std::is_same<FunctionDefinition, U>::value)
 	{
-		if (_overriding.stateMutability() != _super.stateMutability())
-			overrideError(
-				_overriding,
-				_super,
-				"Overriding function changes state mutability from \"" +
-				stateMutabilityToString(_super.stateMutability()) +
-				"\" to \"" +
-				stateMutabilityToString(_overriding.stateMutability()) +
-				"\"."
-			);
+		FunctionTypePointer functionType = FunctionType(_overriding).asCallableFunction(false);
+		FunctionTypePointer superType = FunctionType(_super).asCallableFunction(false);
 
-		if (!_overriding.isImplemented() && _super.isImplemented())
-			overrideError(
-				_overriding,
-				_super,
-				"Overriding an implemented function with an unimplemented function is not allowed."
-			);
+		solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
+
+		if (!functionType->hasEqualReturnTypes(*superType))
+			overrideError(_overriding, _super, "Overriding " + overridingName + " return types differ.");
+
+		// This is only relevant for a function overriding a function.
+		if constexpr(std::is_same<T, FunctionDefinition>::value)
+		{
+			_overriding.annotation().baseFunctions.emplace(&_super);
+
+			if (_overriding.stateMutability() != _super.stateMutability())
+				overrideError(
+					_overriding,
+					_super,
+					"Overriding function changes state mutability from \"" +
+					stateMutabilityToString(_super.stateMutability()) +
+					"\" to \"" +
+					stateMutabilityToString(_overriding.stateMutability()) +
+					"\"."
+				);
+
+			if (!_overriding.isImplemented() && _super.isImplemented())
+				overrideError(
+					_overriding,
+					_super,
+					"Overriding an implemented function with an unimplemented function is not allowed."
+				);
+		}
 	}
 }
 
-void ContractLevelChecker::overrideListError(FunctionDefinition const& function, set<ContractDefinition const*, LessFunction> _secondary, string const& _message1, string const& _message2)
+void ContractLevelChecker::overrideListError(
+	CallableDeclaration const& _callable,
+	set<ContractDefinition const*, LessFunction> _secondary,
+	string const& _message1,
+	string const& _message2
+)
 {
 	// Using a set rather than a vector so the order is always the same
 	set<string> names;
@@ -367,7 +431,7 @@ void ContractLevelChecker::overrideListError(FunctionDefinition const& function,
 		contractSingularPlural = "contracts ";
 
 	m_errorReporter.typeError(
-		function.overrides() ? function.overrides()->location() : function.location(),
+		_callable.overrides() ? _callable.overrides()->location() : _callable.location(),
 		ssl,
 		_message1 +
 		contractSingularPlural +
@@ -666,135 +730,180 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 
 void ContractLevelChecker::checkAmbiguousOverrides(ContractDefinition const& _contract) const
 {
-	// Fetch inherited functions and sort them by signature.
-	// We get at least one function per signature and direct base contract, which is
-	// enough because we re-construct the inheritance graph later.
-	FunctionMultiSet nonOverriddenFunctions = inheritedFunctions(_contract);
-	// Remove all functions that match the signature of a function in the current contract.
-	nonOverriddenFunctions -= _contract.definedFunctions();
+	std::function<bool(CallableDeclaration const*, CallableDeclaration const*)> compareById =
+		[](auto const* _a, auto const* _b) { return _a->id() < _b->id(); };
 
-	// Walk through the set of functions signature by signature.
-	for (auto it = nonOverriddenFunctions.cbegin(); it != nonOverriddenFunctions.cend();)
 	{
-		static constexpr auto compareById = [](auto const* a, auto const* b) { return a->id() < b->id(); };
-		std::set<FunctionDefinition const*, decltype(compareById)> baseFunctions(compareById);
-		for (auto nextSignature = nonOverriddenFunctions.upper_bound(*it); it != nextSignature; ++it)
-			baseFunctions.insert(*it);
+		// Fetch inherited functions and sort them by signature.
+		// We get at least one function per signature and direct base contract, which is
+		// enough because we re-construct the inheritance graph later.
+		FunctionMultiSet nonOverriddenFunctions = inheritedFunctions(_contract);
+		// Remove all functions that match the signature of a function in the current contract.
+		nonOverriddenFunctions -= _contract.definedFunctions();
 
-		if (baseFunctions.size() <= 1)
-			continue;
-
-		// Construct the override graph for this signature.
-		// Reserve node 0 for the current contract and node
-		// 1 for an artificial top node to which all override paths
-		// connect at the end.
-		struct OverrideGraph
+		// Walk through the set of functions signature by signature.
+		for (auto it = nonOverriddenFunctions.cbegin(); it != nonOverriddenFunctions.cend();)
 		{
-			OverrideGraph(decltype(baseFunctions) const& _baseFunctions)
-			{
-				for (auto const* baseFunction: _baseFunctions)
-					addEdge(0, visit(baseFunction));
-			}
-			std::map<FunctionDefinition const*, int> nodes;
-			std::map<int, FunctionDefinition const*> nodeInv;
-			std::map<int, std::set<int>> edges;
-			int numNodes = 2;
-			void addEdge(int _a, int _b)
-			{
-				edges[_a].insert(_b);
-				edges[_b].insert(_a);
-			}
-		private:
-			/// Completes the graph starting from @a _function and
-			/// @returns the node ID.
-			int visit(FunctionDefinition const* _function)
-			{
-				auto it = nodes.find(_function);
-				if (it != nodes.end())
-					return it->second;
-				int currentNode = numNodes++;
-				nodes[_function] = currentNode;
-				nodeInv[currentNode] = _function;
-				if (_function->overrides())
-					for (auto const* baseFunction: _function->annotation().baseFunctions)
-						addEdge(currentNode, visit(baseFunction));
-				else
-					addEdge(currentNode, 1);
+			std::set<CallableDeclaration const*, decltype(compareById)> baseFunctions(compareById);
+			for (auto nextSignature = nonOverriddenFunctions.upper_bound(*it); it != nextSignature; ++it)
+				baseFunctions.insert(*it);
 
-				return currentNode;
-			}
-		} overrideGraph(baseFunctions);
+			checkAmbiguousOverridesInternal(std::move(baseFunctions), _contract.location());
+		}
+	}
 
-		// Detect cut vertices following https://en.wikipedia.org/wiki/Biconnected_component#Pseudocode
-		// Can ignore the root node, since it is never a cut vertex in our case.
-		struct CutVertexFinder
+	{
+		ModifierMultiSet modifiers = inheritedModifiers(_contract);
+		modifiers -= _contract.functionModifiers();
+		for (auto it = modifiers.cbegin(); it != modifiers.cend();)
 		{
-			CutVertexFinder(OverrideGraph const& _graph): m_graph(_graph)
-			{
-				run();
-			}
-			std::set<FunctionDefinition const*> const& cutVertices() const { return m_cutVertices; }
+			std::set<CallableDeclaration const*, decltype(compareById)> baseModifiers(compareById);
+			for (auto next = modifiers.upper_bound(*it); it != next; ++it)
+				baseModifiers.insert(*it);
 
-		private:
-			OverrideGraph const& m_graph;
-
-			std::vector<bool> m_visited = std::vector<bool>(m_graph.numNodes, false);
-			std::vector<int> m_depths = std::vector<int>(m_graph.numNodes, -1);
-			std::vector<int> m_low = std::vector<int>(m_graph.numNodes, -1);
-			std::vector<int> m_parent = std::vector<int>(m_graph.numNodes, -1);
-			std::set<FunctionDefinition const*> m_cutVertices{};
-
-			void run(int _u = 0, int _depth = 0)
-			{
-				m_visited.at(_u) = true;
-				m_depths.at(_u) = m_low.at(_u) = _depth;
-				for (int v: m_graph.edges.at(_u))
-					if (!m_visited.at(v))
-					{
-						m_parent[v] = _u;
-						run(v, _depth + 1);
-						if (m_low[v] >= m_depths[_u] && m_parent[_u] != -1)
-							m_cutVertices.insert(m_graph.nodeInv.at(_u));
-						m_low[_u] = min(m_low[_u], m_low[v]);
-					}
-					else if (v != m_parent[_u])
-						m_low[_u] = min(m_low[_u], m_depths[v]);
-			}
-		} cutVertexFinder{overrideGraph};
-
-		// Remove all base functions overridden by cut vertices (they don't need to be overridden).
-		for (auto const* function: cutVertexFinder.cutVertices())
-		{
-			std::set<FunctionDefinition const*> toTraverse = function->annotation().baseFunctions;
-			while (!toTraverse.empty())
-			{
-				auto const* base = *toTraverse.begin();
-				toTraverse.erase(toTraverse.begin());
-				baseFunctions.erase(base);
-				for (auto const* f: base->annotation().baseFunctions)
-					toTraverse.insert(f);
-			}
-			// Remove unimplemented base functions at the cut vertices themselves as well.
-			if (!function->isImplemented())
-				baseFunctions.erase(function);
+			checkAmbiguousOverridesInternal(std::move(baseModifiers), _contract.location());
 		}
 
-		// If more than one function is left, they have to be overridden.
-		if (baseFunctions.size() <= 1)
-			continue;
-
-		SecondarySourceLocation ssl;
-		for (auto const* baseFunction: baseFunctions)
-			ssl.append("Definition here: ", baseFunction->location());
-
-		m_errorReporter.typeError(
-			_contract.location(),
-			ssl,
-			"Derived contract must override function \"" +
-			(*baseFunctions.begin())->name() +
-			"\". Function with the same name and parameter types defined in two or more base classes."
-		);
 	}
+}
+
+void ContractLevelChecker::checkAmbiguousOverridesInternal(set<
+	CallableDeclaration const*,
+	std::function<bool(CallableDeclaration const*, CallableDeclaration const*)>
+> _baseCallables, SourceLocation const& _location) const
+{
+	if (_baseCallables.size() <= 1)
+		return;
+
+	// Construct the override graph for this signature.
+	// Reserve node 0 for the current contract and node
+	// 1 for an artificial top node to which all override paths
+	// connect at the end.
+	struct OverrideGraph
+	{
+		OverrideGraph(decltype(_baseCallables) const& __baseCallables)
+		{
+			for (auto const* baseFunction: __baseCallables)
+				addEdge(0, visit(baseFunction));
+		}
+		std::map<CallableDeclaration const*, int> nodes;
+		std::map<int, CallableDeclaration const*> nodeInv;
+		std::map<int, std::set<int>> edges;
+		int numNodes = 2;
+		void addEdge(int _a, int _b)
+		{
+			edges[_a].insert(_b);
+			edges[_b].insert(_a);
+		}
+	private:
+		/// Completes the graph starting from @a _function and
+		/// @returns the node ID.
+		int visit(CallableDeclaration const* _function)
+		{
+			auto it = nodes.find(_function);
+			if (it != nodes.end())
+				return it->second;
+			int currentNode = numNodes++;
+			nodes[_function] = currentNode;
+			nodeInv[currentNode] = _function;
+			if (_function->overrides())
+				for (auto const* baseFunction: _function->annotation().baseFunctions)
+					addEdge(currentNode, visit(baseFunction));
+			else
+				addEdge(currentNode, 1);
+
+			return currentNode;
+		}
+	} overrideGraph(_baseCallables);
+
+	// Detect cut vertices following https://en.wikipedia.org/wiki/Biconnected_component#Pseudocode
+	// Can ignore the root node, since it is never a cut vertex in our case.
+	struct CutVertexFinder
+	{
+		CutVertexFinder(OverrideGraph const& _graph): m_graph(_graph)
+		{
+			run();
+		}
+		std::set<CallableDeclaration const*> const& cutVertices() const { return m_cutVertices; }
+
+	private:
+		OverrideGraph const& m_graph;
+
+		std::vector<bool> m_visited = std::vector<bool>(m_graph.numNodes, false);
+		std::vector<int> m_depths = std::vector<int>(m_graph.numNodes, -1);
+		std::vector<int> m_low = std::vector<int>(m_graph.numNodes, -1);
+		std::vector<int> m_parent = std::vector<int>(m_graph.numNodes, -1);
+		std::set<CallableDeclaration const*> m_cutVertices{};
+
+		void run(int _u = 0, int _depth = 0)
+		{
+			m_visited.at(_u) = true;
+			m_depths.at(_u) = m_low.at(_u) = _depth;
+			for (int v: m_graph.edges.at(_u))
+				if (!m_visited.at(v))
+				{
+					m_parent[v] = _u;
+					run(v, _depth + 1);
+					if (m_low[v] >= m_depths[_u] && m_parent[_u] != -1)
+						m_cutVertices.insert(m_graph.nodeInv.at(_u));
+					m_low[_u] = min(m_low[_u], m_low[v]);
+				}
+				else if (v != m_parent[_u])
+					m_low[_u] = min(m_low[_u], m_depths[v]);
+		}
+	} cutVertexFinder{overrideGraph};
+
+	// Remove all base functions overridden by cut vertices (they don't need to be overridden).
+	for (auto const* function: cutVertexFinder.cutVertices())
+	{
+		std::set<CallableDeclaration const*> toTraverse = function->annotation().baseFunctions;
+		while (!toTraverse.empty())
+		{
+			auto const *base = *toTraverse.begin();
+			toTraverse.erase(toTraverse.begin());
+			_baseCallables.erase(base);
+			for (CallableDeclaration const* f: base->annotation().baseFunctions)
+				toTraverse.insert(f);
+		}
+		// Remove unimplemented base functions at the cut vertices itself as well.
+		if (auto opt = dynamic_cast<ImplementationOptional const*>(function))
+			if (!opt->isImplemented())
+				_baseCallables.erase(function);
+	}
+
+	// If more than one function is left, they have to be overridden.
+	if (_baseCallables.size() <= 1)
+		return;
+
+	SecondarySourceLocation ssl;
+	for (auto const* baseFunction: _baseCallables)
+	{
+		string contractName = dynamic_cast<ContractDefinition const&>(*baseFunction->scope()).name();
+		ssl.append("Definition in \"" + contractName + "\": ", baseFunction->location());
+	}
+
+	string callableName;
+	string distinguishigProperty;
+	if (dynamic_cast<FunctionDefinition const*>(*_baseCallables.begin()))
+	{
+		callableName = "function";
+		distinguishigProperty = "name and parameter types";
+	}
+	else if (dynamic_cast<ModifierDefinition const*>(*_baseCallables.begin()))
+	{
+		callableName = "modifier";
+		distinguishigProperty = "name";
+	}
+	else
+		solAssert(false, "Invalid type for ambiguous override.");
+
+	m_errorReporter.typeError(
+		_location,
+		ssl,
+		"Derived contract must override " + callableName + " \"" +
+		(*_baseCallables.begin())->name() +
+		"\". Two or more base classes define " + callableName + " with same " + distinguishigProperty + "."
+	);
 }
 
 set<ContractDefinition const*, ContractLevelChecker::LessFunction> ContractLevelChecker::resolveOverrideList(OverrideSpecifier const& _overrides) const
@@ -815,49 +924,23 @@ set<ContractDefinition const*, ContractLevelChecker::LessFunction> ContractLevel
 	return resolved;
 }
 
-
-void ContractLevelChecker::checkModifierOverrides(FunctionMultiSet const& _funcSet, ModifierMultiSet const& _modSet, std::vector<ModifierDefinition const*> _modifiers)
-{
-	for (ModifierDefinition const* modifier: _modifiers)
-	{
-		if (contains_if(_funcSet, MatchByName{modifier->name()}))
-			m_errorReporter.typeError(
-				modifier->location(),
-				"Override changes function to modifier."
-			);
-
-		auto [begin,end] = _modSet.equal_range(modifier);
-
-		// Skip if no modifiers found in bases
-		if (begin == end)
-			continue;
-
-		if (!modifier->overrides())
-			overrideError(*modifier, **begin, "Overriding modifier is missing 'override' specifier.");
-
-		for (; begin != end; begin++)
-			if (ModifierType(**begin) != ModifierType(*modifier))
-				m_errorReporter.typeError(
-					modifier->location(),
-					"Override changes modifier signature."
-				);
-	}
-
-}
-
-void ContractLevelChecker::checkOverrideList(FunctionMultiSet const& _funcSet, FunctionDefinition const& _function)
+template <class T>
+void ContractLevelChecker::checkOverrideList(
+	std::multiset<T const*, LessFunction> const& _inheritedCallables,
+	T const& _callable
+)
 {
 	set<ContractDefinition const*, LessFunction> specifiedContracts =
-		_function.overrides() ?
-		resolveOverrideList(*_function.overrides()) :
+		_callable.overrides() ?
+		resolveOverrideList(*_callable.overrides()) :
 		decltype(specifiedContracts){};
 
 	// Check for duplicates in override list
-	if (_function.overrides() && specifiedContracts.size() != _function.overrides()->overrides().size())
+	if (_callable.overrides() && specifiedContracts.size() != _callable.overrides()->overrides().size())
 	{
 		// Sort by contract id to find duplicate for error reporting
 		vector<ASTPointer<UserDefinedTypeName>> list =
-			sortByContract(_function.overrides()->overrides());
+			sortByContract(_callable.overrides()->overrides());
 
 		// Find duplicates and output error
 		for (size_t i = 1; i < list.size(); i++)
@@ -877,7 +960,7 @@ void ContractLevelChecker::checkOverrideList(FunctionMultiSet const& _funcSet, F
 						"Duplicate contract \"" +
 						joinHumanReadable(list[i]->namePath(), ".") +
 						"\" found in override list of \"" +
-						_function.name() +
+						_callable.name() +
 						"\"."
 				);
 			}
@@ -887,12 +970,12 @@ void ContractLevelChecker::checkOverrideList(FunctionMultiSet const& _funcSet, F
 	decltype(specifiedContracts) expectedContracts;
 
 	// Build list of expected contracts
-	for (auto [begin, end] = _funcSet.equal_range(&_function); begin != end; begin++)
+	for (auto [begin, end] = _inheritedCallables.equal_range(&_callable); begin != end; begin++)
 	{
 		// Validate the override
-		checkFunctionOverride(_function, **begin);
+		checkOverride(_callable, **begin);
 
-		expectedContracts.insert((*begin)->annotation().contract);
+		expectedContracts.insert(&dynamic_cast<ContractDefinition const&>(*(*begin)->scope()));
 	}
 
 	decltype(specifiedContracts) missingContracts;
@@ -906,7 +989,7 @@ void ContractLevelChecker::checkOverrideList(FunctionMultiSet const& _funcSet, F
 
 	if (!missingContracts.empty())
 		overrideListError(
-			_function,
+			_callable,
 			missingContracts,
 			"Function needs to specify overridden ",
 			""
@@ -914,7 +997,7 @@ void ContractLevelChecker::checkOverrideList(FunctionMultiSet const& _funcSet, F
 
 	if (!surplusContracts.empty())
 		overrideListError(
-			_function,
+			_callable,
 			surplusContracts,
 			"Invalid ",
 			"specified in override list: "

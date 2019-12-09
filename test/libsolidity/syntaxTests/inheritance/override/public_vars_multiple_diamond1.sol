@@ -12,4 +12,4 @@ contract X is B, C {
 }
 // ----
 // DeclarationError: (245-269): Identifier already declared.
-// TypeError: (223-272): Derived contract must override function "foo". Function with the same name and parameter types defined in two or more base classes.
+// TypeError: (223-272): Derived contract must override function "foo". Two or more base classes define function with same name and parameter types.
