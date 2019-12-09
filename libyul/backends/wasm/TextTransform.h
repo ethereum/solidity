@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Component that transforms interval EWasm representation to text.
+ * Component that transforms interval Wasm representation to text.
  */
 
 #pragma once
@@ -28,7 +28,10 @@ namespace yul
 {
 struct AsmAnalysisInfo;
 
-class EWasmToText
+namespace wasm
+{
+
+class TextTransform
 {
 public:
 	std::string run(wasm::Module const& _module);
@@ -61,4 +64,5 @@ private:
 	);
 };
 
+}
 }
