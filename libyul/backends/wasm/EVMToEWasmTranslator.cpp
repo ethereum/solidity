@@ -359,6 +359,14 @@ function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
+function selfbalance() -> z1, z2, z3, z4 {
+	// TODO: not part of current Ewasm spec
+	unreachable()
+}
+function chainid() -> z1, z2, z3, z4 {
+	// TODO: not part of current Ewasm spec
+	unreachable()
+}
 function origin() -> z1, z2, z3, z4 {
 	eth.getTxOrigin(0)
 	z1, z2, z3, z4 := mload_internal(0)
@@ -414,7 +422,7 @@ function extcodesize(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	unreachable()
 }
 function extcodehash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	// TODO implement
+	// TODO: not part of current Ewasm spec
 	unreachable()
 }
 function extcodecopy(v1, v2, v3, v4, x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
@@ -660,7 +668,7 @@ function create2(
 	c1, c2, c3, c4,
 	d1, d2, d3, d4
 ) -> x1, x2, x3, x4 {
-	// TODO implement
+	// TODO: not part of current Ewasm spec
 	unreachable()
 }
 function selfdestruct(a1, a2, a3, a4) {
