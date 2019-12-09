@@ -1,8 +1,8 @@
 contract I {
-	modifier f() { _; }
+	modifier f() virtual { _; }
 }
 contract J {
-	modifier f() { _; }
+	modifier f() virtual { _; }
 }
 contract IJ is I, J {
 	modifier f() virtual override (I, J) { _; }
@@ -16,5 +16,4 @@ contract B is IJ
 }
 contract C is A, B {}
 // ----
-// TypeError: (14-33): Trying to override non-virtual modifier. Did you forget to add "virtual"?
-// TypeError: (50-69): Trying to override non-virtual modifier. Did you forget to add "virtual"?
+// TypeError: (229-250): Derived contract must override modifier "f". Two or more base classes define modifier with same name.

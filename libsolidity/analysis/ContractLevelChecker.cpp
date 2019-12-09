@@ -730,26 +730,40 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 
 void ContractLevelChecker::checkAmbiguousOverrides(ContractDefinition const& _contract) const
 {
-	// TODO same for modifiers.
+	std::function<bool(CallableDeclaration const*, CallableDeclaration const*)> compareById =
+		[](auto const* _a, auto const* _b) { return _a->id() < _b->id(); };
 
-
-
-	// Fetch inherited functions and sort them by signature.
-	// We get at least one function per signature and direct base contract, which is
-	// enough because we re-construct the inheritance graph later.
-	FunctionMultiSet nonOverriddenFunctions = inheritedFunctions(_contract);
-	// Remove all functions that match the signature of a function in the current contract.
-	nonOverriddenFunctions -= _contract.definedFunctions();
-
-	// Walk through the set of functions signature by signature.
-	for (auto it = nonOverriddenFunctions.cbegin(); it != nonOverriddenFunctions.cend();)
 	{
-		std::function<bool(CallableDeclaration const*, CallableDeclaration const*)> compareById = [](auto const* a, auto const* b) { return a->id() < b->id(); };
-		std::set<CallableDeclaration const*, std::function<bool(CallableDeclaration const*, CallableDeclaration const*)>> baseFunctions(compareById);
-		for (auto nextSignature = nonOverriddenFunctions.upper_bound(*it); it != nextSignature; ++it)
-			baseFunctions.insert(*it);
+		// Fetch inherited functions and sort them by signature.
+		// We get at least one function per signature and direct base contract, which is
+		// enough because we re-construct the inheritance graph later.
+		FunctionMultiSet nonOverriddenFunctions = inheritedFunctions(_contract);
+		// Remove all functions that match the signature of a function in the current contract.
+		nonOverriddenFunctions -= _contract.definedFunctions();
 
-		checkAmbiguousOverridesInternal(std::move(baseFunctions), _contract.location());
+		// Walk through the set of functions signature by signature.
+		for (auto it = nonOverriddenFunctions.cbegin(); it != nonOverriddenFunctions.cend();)
+		{
+			std::set<CallableDeclaration const*, decltype(compareById)> baseFunctions(compareById);
+			for (auto nextSignature = nonOverriddenFunctions.upper_bound(*it); it != nextSignature; ++it)
+				baseFunctions.insert(*it);
+
+			checkAmbiguousOverridesInternal(std::move(baseFunctions), _contract.location());
+		}
+	}
+
+	{
+		ModifierMultiSet modifiers = inheritedModifiers(_contract);
+		modifiers -= _contract.functionModifiers();
+		for (auto it = modifiers.cbegin(); it != modifiers.cend();)
+		{
+			std::set<CallableDeclaration const*, decltype(compareById)> baseModifiers(compareById);
+			for (auto next = modifiers.upper_bound(*it); it != next; ++it)
+				baseModifiers.insert(*it);
+
+			checkAmbiguousOverridesInternal(std::move(baseModifiers), _contract.location());
+		}
+
 	}
 }
 
@@ -869,10 +883,17 @@ void ContractLevelChecker::checkAmbiguousOverridesInternal(set<
 	}
 
 	string callableName;
+	string distinguishigProperty;
 	if (dynamic_cast<FunctionDefinition const*>(*_baseCallables.begin()))
+	{
 		callableName = "function";
+		distinguishigProperty = "name and parameter types";
+	}
 	else if (dynamic_cast<ModifierDefinition const*>(*_baseCallables.begin()))
+	{
 		callableName = "modifier";
+		distinguishigProperty = "name";
+	}
 	else
 		solAssert(false, "Invalid type for ambiguous override.");
 
@@ -881,7 +902,7 @@ void ContractLevelChecker::checkAmbiguousOverridesInternal(set<
 		ssl,
 		"Derived contract must override " + callableName + " \"" +
 		(*_baseCallables.begin())->name() +
-		"\". Two or more base classes define " + callableName + " with same name and parameter types."
+		"\". Two or more base classes define " + callableName + " with same " + distinguishigProperty + "."
 	);
 }
 
