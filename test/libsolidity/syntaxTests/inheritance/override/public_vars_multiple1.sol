@@ -9,3 +9,5 @@ contract X is A, B {
 }
 // ----
 // DeclarationError: (136-160): Identifier already declared.
+// TypeError: (14-29): Cannot override public state variable.
+// TypeError: (148-156): Public state variable needs to specify overridden contracts "A" and "B".

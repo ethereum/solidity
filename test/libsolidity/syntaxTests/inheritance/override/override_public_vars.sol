@@ -6,4 +6,4 @@ abstract contract X is A {
 }
 // ----
 // DeclarationError: (73-100): Identifier already declared.
-// TypeError: (84-92): Public state variable has override specified but does not override anything.
+// TypeError: (23-41): Cannot override public state variable.

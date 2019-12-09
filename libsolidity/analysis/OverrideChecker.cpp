@@ -26,6 +26,7 @@
 #include <libsolidity/analysis/TypeChecker.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libdevcore/Visitor.h>
+
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -490,7 +491,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 		);
 
 	if (!_overriding.overrides())
-		overrideError(_overriding, _super, "Overriding " + _overriding.astNodeName() + " is missing 'override' specifier.");
+		overrideError(_overriding, _super, "Overriding " + _overriding.astNodeName() + " is missing \"override\" specifier.");
 
 	if (_super.isVariable())
 		overrideError(
@@ -571,7 +572,7 @@ void OverrideChecker::overrideListError(
 	for (Declaration const* c: _secondary)
 	{
 		ssl.append("This contract: ", c->location());
-		names.insert(c->name());
+		names.insert("\"" + c->name() + "\"");
 	}
 	string contractSingularPlural = "contract ";
 	if (_secondary.size() > 1)
