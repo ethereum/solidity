@@ -8,5 +8,7 @@ contract C {
         assert(y == 3);
     }
 }
+// ====
+// SMTSolvers: z3
 // ----
 // Warning: (167-181): Assertion violation happens here

@@ -6,5 +6,7 @@ contract C {
         assert(x == 2);
     }
 }
+// ====
+// SMTSolvers: z3
 // ----
 // Warning: (122-128): Condition is always true.

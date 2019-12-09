@@ -12,5 +12,7 @@ contract C
 		assert(x == 1);
 	}
 }
+// ====
+// SMTSolvers: z3
 // ----
 // Warning: (128-131): Unreachable code.

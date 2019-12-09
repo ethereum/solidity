@@ -48,7 +48,8 @@ CHC::CHC(
 #else
 	m_interface(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses)),
 #endif
-	m_outerErrorReporter(_errorReporter)
+	m_outerErrorReporter(_errorReporter),
+	m_enabledSolvers(_enabledSolvers)
 {
 	(void)_smtlib2Responses;
 	(void)_enabledSolvers;
@@ -58,15 +59,22 @@ void CHC::analyze(SourceUnit const& _source)
 {
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
 
+	bool usesZ3 = false;
 #ifdef HAVE_Z3
-	auto z3Interface = dynamic_pointer_cast<smt::Z3CHCInterface>(m_interface);
-	solAssert(z3Interface, "");
-	m_context.setSolver(z3Interface->z3Interface());
-#else
-	auto smtlib2Interface = dynamic_pointer_cast<smt::CHCSmtLib2Interface>(m_interface);
-	solAssert(smtlib2Interface, "");
-	m_context.setSolver(smtlib2Interface->smtlib2Interface());
+	usesZ3 = m_enabledSolvers.z3;
+	if (usesZ3)
+	{
+		auto z3Interface = dynamic_pointer_cast<smt::Z3CHCInterface>(m_interface);
+		solAssert(z3Interface, "");
+		m_context.setSolver(z3Interface->z3Interface());
+	}
 #endif
+	if (!usesZ3)
+	{
+		auto smtlib2Interface = dynamic_pointer_cast<smt::CHCSmtLib2Interface>(m_interface);
+		solAssert(smtlib2Interface, "");
+		m_context.setSolver(smtlib2Interface->smtlib2Interface());
+	}
 	m_context.clear();
 	m_context.setAssertionAccumulation(false);
 	m_variableUsage.setFunctionInlining(false);

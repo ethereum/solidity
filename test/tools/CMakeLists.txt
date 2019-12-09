@@ -29,6 +29,7 @@ add_executable(isoltest
 	../ExecutionFramework.cpp
 	../libsolidity/ABIJsonTest.cpp
 	../libsolidity/ASTJSONTest.cpp
+	../libsolidity/SMTCheckerTest.cpp
 	../libsolidity/SMTCheckerJSONTest.cpp
 	../libyul/Common.cpp
 	../libyul/EWasmTranslationTest.cpp

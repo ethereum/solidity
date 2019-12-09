@@ -10,5 +10,7 @@ contract C {
 		assert(x == 0);
 	}
 }
+// ====
+// SMTSolvers: z3
 // ----
 // Warning: (107-112): Unreachable code.

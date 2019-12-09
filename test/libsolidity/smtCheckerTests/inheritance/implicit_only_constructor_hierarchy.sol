@@ -18,3 +18,5 @@ contract C is B {
 		assert(x == 0);
 	}
 }
+// ====
+// SMTSolvers: z3

@@ -28,3 +28,5 @@ contract C
 		assert(x >= 15);
 	}
 }
+// ====
+// SMTSolvers: z3

@@ -79,6 +79,7 @@ static int g_compilerStackCounts = 0;
 
 CompilerStack::CompilerStack(ReadCallback::Callback const& _readFile):
 	m_readFile{_readFile},
+	m_enabledSMTSolvers{smt::SMTSolverChoice::All()},
 	m_generateIR{false},
 	m_generateEWasm{false},
 	m_errorList{},
@@ -132,6 +133,13 @@ void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 	m_evmVersion = _version;
 }
 
+void CompilerStack::setSMTSolverChoice(smt::SMTSolverChoice _enabledSMTSolvers)
+{
+	if (m_stackState >= ParsingPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set enabled SMT solvers before parsing."));
+	m_enabledSMTSolvers = _enabledSMTSolvers;
+}
+
 void CompilerStack::setLibraries(std::map<std::string, h160> const& _libraries)
 {
 	if (m_stackState >= ParsingPerformed)
@@ -179,6 +187,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_remappings.clear();
 		m_libraries.clear();
 		m_evmVersion = langutil::EVMVersion();
+		m_enabledSMTSolvers = smt::SMTSolverChoice::All();
 		m_generateIR = false;
 		m_generateEWasm = false;
 		m_optimiserSettings = OptimiserSettings::minimal();
@@ -372,7 +381,7 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses);
+			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses, m_enabledSMTSolvers);
 			for (Source const* source: m_sourceOrder)
 				modelChecker.analyze(*source->ast);
 			m_unhandledSMTLib2Queries += modelChecker.unhandledQueries();
