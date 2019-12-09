@@ -344,7 +344,7 @@ Array Slices
 ------------
 
 
-Array slices are a view on a contigous portion of an array.
+Array slices are a view on a contiguous portion of an array.
 They are written as ``x[start:end]``, where ``start`` and
 ``end`` are expressions resulting in a uint256 type (or
 implicitly convertible to it). The first element of the
@@ -353,14 +353,14 @@ slice is ``x[start]`` and the last element is ``x[end - 1]``.
 If ``start`` is greater than ``end`` or if ``end`` is greater
 than the length of the array, an exception is thrown.
 
-Both ``start`` and ``end`` are optional, and they default to
-``0`` and the length of the array, respectively.
+Both ``start`` and ``end`` are optional: ``start`` defaults
+ to ``0`` and ``end`` defaults to the length of the array.
 
 Array slices do not have any members. They are implicitly
 convertible to arrays of their underlying type
-and support index access. Index access is of course
-not absolute in the underlying array, but relative to
-the start of the slice.
+and support index access. Index access is not absolute
+in the underlying array, but relative to the start of
+the slice.
 
 Array slices do not have a type name which means
 no variable can have an array slices as type,
@@ -375,10 +375,24 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
 
     pragma solidity >=0.4.99 <0.7.0;
 
-    contract C {
-        function verifyBet(address recipient, bytes calldata _data) {
-            bytes4 sig = _data[:4];
-            // TODO continue with example
+    contract Proxy {
+        /// Address of the client contract managed by proxy i.e., this contract
+        address client;
+
+        constructor(address _client) public {
+            client = _client;
+        }
+
+        /// Forward call to "setOwner(address)" that is implemented by client
+        /// after doing basic validation on the address argument.
+        function forward(bytes calldata _payload) external {
+            bytes4 sig = abi.decode(_payload[:4], (bytes4));
+            if (sig == bytes4(keccak256("setOwner(address)"))) {
+                address owner = abi.decode(_payload[4:], (address));
+                require(owner != address(0), "Address of owner cannot be zero.");
+            }
+            (bool status,) = client.delegatecall(_payload);
+            require(status, "Forwarded call failed.");
         }
     }
 
