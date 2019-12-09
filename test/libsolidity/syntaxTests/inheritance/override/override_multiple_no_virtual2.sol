@@ -10,4 +10,4 @@ contract C is A, B
 {
 }
 // ----
-// TypeError: (94-116): Derived contract must override function "foo". Function with the same name and parameter types defined in two or more base classes.
+// TypeError: (94-116): Derived contract must override function "foo". Two or more base classes define function with same name and parameter types.

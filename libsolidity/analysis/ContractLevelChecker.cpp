@@ -744,125 +744,145 @@ void ContractLevelChecker::checkAmbiguousOverrides(ContractDefinition const& _co
 	// Walk through the set of functions signature by signature.
 	for (auto it = nonOverriddenFunctions.cbegin(); it != nonOverriddenFunctions.cend();)
 	{
-		static constexpr auto compareById = [](auto const* a, auto const* b) { return a->id() < b->id(); };
-		std::set<FunctionDefinition const*, decltype(compareById)> baseFunctions(compareById);
+		std::function<bool(CallableDeclaration const*, CallableDeclaration const*)> compareById = [](auto const* a, auto const* b) { return a->id() < b->id(); };
+		std::set<CallableDeclaration const*, std::function<bool(CallableDeclaration const*, CallableDeclaration const*)>> baseFunctions(compareById);
 		for (auto nextSignature = nonOverriddenFunctions.upper_bound(*it); it != nextSignature; ++it)
 			baseFunctions.insert(*it);
 
-		if (baseFunctions.size() <= 1)
-			continue;
-
-		// Construct the override graph for this signature.
-		// Reserve node 0 for the current contract and node
-		// 1 for an artificial top node to which all override paths
-		// connect at the end.
-		struct OverrideGraph
-		{
-			OverrideGraph(decltype(baseFunctions) const& _baseFunctions)
-			{
-				for (auto const* baseFunction: _baseFunctions)
-					addEdge(0, visit(baseFunction));
-			}
-			std::map<FunctionDefinition const*, int> nodes;
-			std::map<int, FunctionDefinition const*> nodeInv;
-			std::map<int, std::set<int>> edges;
-			int numNodes = 2;
-			void addEdge(int _a, int _b)
-			{
-				edges[_a].insert(_b);
-				edges[_b].insert(_a);
-			}
-		private:
-			/// Completes the graph starting from @a _function and
-			/// @returns the node ID.
-			int visit(FunctionDefinition const* _function)
-			{
-				auto it = nodes.find(_function);
-				if (it != nodes.end())
-					return it->second;
-				int currentNode = numNodes++;
-				nodes[_function] = currentNode;
-				nodeInv[currentNode] = _function;
-				if (_function->overrides())
-					for (auto const* baseFunction: _function->annotation().baseFunctions)
-						addEdge(currentNode, visit(baseFunction));
-				else
-					addEdge(currentNode, 1);
-
-				return currentNode;
-			}
-		} overrideGraph(baseFunctions);
-
-		// Detect cut vertices following https://en.wikipedia.org/wiki/Biconnected_component#Pseudocode
-		// Can ignore the root node, since it is never a cut vertex in our case.
-		struct CutVertexFinder
-		{
-			CutVertexFinder(OverrideGraph const& _graph): m_graph(_graph)
-			{
-				run();
-			}
-			std::set<FunctionDefinition const*> const& cutVertices() const { return m_cutVertices; }
-
-		private:
-			OverrideGraph const& m_graph;
-
-			std::vector<bool> m_visited = std::vector<bool>(m_graph.numNodes, false);
-			std::vector<int> m_depths = std::vector<int>(m_graph.numNodes, -1);
-			std::vector<int> m_low = std::vector<int>(m_graph.numNodes, -1);
-			std::vector<int> m_parent = std::vector<int>(m_graph.numNodes, -1);
-			std::set<FunctionDefinition const*> m_cutVertices{};
-
-			void run(int _u = 0, int _depth = 0)
-			{
-				m_visited.at(_u) = true;
-				m_depths.at(_u) = m_low.at(_u) = _depth;
-				for (int v: m_graph.edges.at(_u))
-					if (!m_visited.at(v))
-					{
-						m_parent[v] = _u;
-						run(v, _depth + 1);
-						if (m_low[v] >= m_depths[_u] && m_parent[_u] != -1)
-							m_cutVertices.insert(m_graph.nodeInv.at(_u));
-						m_low[_u] = min(m_low[_u], m_low[v]);
-					}
-					else if (v != m_parent[_u])
-						m_low[_u] = min(m_low[_u], m_depths[v]);
-			}
-		} cutVertexFinder{overrideGraph};
-
-		// Remove all base functions overridden by cut vertices (they don't need to be overridden).
-		for (auto const* function: cutVertexFinder.cutVertices())
-		{
-			std::set<FunctionDefinition const*> toTraverse = function->annotation().baseFunctions;
-			while (!toTraverse.empty())
-			{
-				auto const* base = *toTraverse.begin();
-				toTraverse.erase(toTraverse.begin());
-				baseFunctions.erase(base);
-				for (auto const* f: base->annotation().baseFunctions)
-					toTraverse.insert(f);
-			}
-			// Remove unimplemented base functions at the cut vertices themselves as well.
-			if (!function->isImplemented())
-				baseFunctions.erase(function);
-		}
-
-		// If more than one function is left, they have to be overridden.
-		if (baseFunctions.size() <= 1)
-			continue;
-
-		SecondarySourceLocation ssl;
-		for (auto const* baseFunction: baseFunctions)
-			ssl.append("Definition here: ", baseFunction->location());
-
-		m_errorReporter.typeError(
-			_contract.location(),
-			ssl,
-			"Derived contract must override function \"" +
-			(*baseFunctions.begin())->name() +
-			"\". Function with the same name and parameter types defined in two or more base classes."
-		);
+		checkAmbiguousOverridesInternal(std::move(baseFunctions), _contract.location());
 	}
+}
+
+void ContractLevelChecker::checkAmbiguousOverridesInternal(set<
+	CallableDeclaration const*,
+	std::function<bool(CallableDeclaration const*, CallableDeclaration const*)>
+> _baseCallables, SourceLocation const& _location) const
+{
+	if (_baseCallables.size() <= 1)
+		return;
+
+	// Construct the override graph for this signature.
+	// Reserve node 0 for the current contract and node
+	// 1 for an artificial top node to which all override paths
+	// connect at the end.
+	struct OverrideGraph
+	{
+		OverrideGraph(decltype(_baseCallables) const& __baseCallables)
+		{
+			for (auto const* baseFunction: __baseCallables)
+				addEdge(0, visit(baseFunction));
+		}
+		std::map<CallableDeclaration const*, int> nodes;
+		std::map<int, CallableDeclaration const*> nodeInv;
+		std::map<int, std::set<int>> edges;
+		int numNodes = 2;
+		void addEdge(int _a, int _b)
+		{
+			edges[_a].insert(_b);
+			edges[_b].insert(_a);
+		}
+	private:
+		/// Completes the graph starting from @a _function and
+		/// @returns the node ID.
+		int visit(CallableDeclaration const* _function)
+		{
+			auto it = nodes.find(_function);
+			if (it != nodes.end())
+				return it->second;
+			int currentNode = numNodes++;
+			nodes[_function] = currentNode;
+			nodeInv[currentNode] = _function;
+			if (_function->overrides())
+				for (auto const* baseFunction: _function->annotation().baseFunctions)
+					addEdge(currentNode, visit(baseFunction));
+			else
+				addEdge(currentNode, 1);
+
+			return currentNode;
+		}
+	} overrideGraph(_baseCallables);
+
+	// Detect cut vertices following https://en.wikipedia.org/wiki/Biconnected_component#Pseudocode
+	// Can ignore the root node, since it is never a cut vertex in our case.
+	struct CutVertexFinder
+	{
+		CutVertexFinder(OverrideGraph const& _graph): m_graph(_graph)
+		{
+			run();
+		}
+		std::set<CallableDeclaration const*> const& cutVertices() const { return m_cutVertices; }
+
+	private:
+		OverrideGraph const& m_graph;
+
+		std::vector<bool> m_visited = std::vector<bool>(m_graph.numNodes, false);
+		std::vector<int> m_depths = std::vector<int>(m_graph.numNodes, -1);
+		std::vector<int> m_low = std::vector<int>(m_graph.numNodes, -1);
+		std::vector<int> m_parent = std::vector<int>(m_graph.numNodes, -1);
+		std::set<CallableDeclaration const*> m_cutVertices{};
+
+		void run(int _u = 0, int _depth = 0)
+		{
+			m_visited.at(_u) = true;
+			m_depths.at(_u) = m_low.at(_u) = _depth;
+			for (int v: m_graph.edges.at(_u))
+				if (!m_visited.at(v))
+				{
+					m_parent[v] = _u;
+					run(v, _depth + 1);
+					if (m_low[v] >= m_depths[_u] && m_parent[_u] != -1)
+						m_cutVertices.insert(m_graph.nodeInv.at(_u));
+					m_low[_u] = min(m_low[_u], m_low[v]);
+				}
+				else if (v != m_parent[_u])
+					m_low[_u] = min(m_low[_u], m_depths[v]);
+		}
+	} cutVertexFinder{overrideGraph};
+
+	// Remove all base functions overridden by cut vertices (they don't need to be overridden).
+	for (auto const* function: cutVertexFinder.cutVertices())
+	{
+		std::set<CallableDeclaration const*> toTraverse = function->annotation().baseFunctions;
+		while (!toTraverse.empty())
+		{
+			auto const *base = *toTraverse.begin();
+			toTraverse.erase(toTraverse.begin());
+			_baseCallables.erase(base);
+			for (CallableDeclaration const* f: base->annotation().baseFunctions)
+				toTraverse.insert(f);
+		}
+		// Remove unimplemented base functions at the cut vertices itself as well.
+		if (auto opt = dynamic_cast<ImplementationOptional const*>(function))
+			if (!opt->isImplemented())
+				_baseCallables.erase(function);
+	}
+
+	// If more than one function is left, they have to be overridden.
+	if (_baseCallables.size() <= 1)
+		return;
+
+	SecondarySourceLocation ssl;
+	for (auto const* baseFunction: _baseCallables)
+	{
+		string contractName = dynamic_cast<ContractDefinition const&>(*baseFunction->scope()).name();
+		ssl.append("Definition in \"" + contractName + "\": ", baseFunction->location());
+	}
+
+	string callableName;
+	if (dynamic_cast<FunctionDefinition const*>(*_baseCallables.begin()))
+		callableName = "function";
+	else if (dynamic_cast<ModifierDefinition const*>(*_baseCallables.begin()))
+		callableName = "modifier";
+	else
+		solAssert(false, "Invalid type for ambiguous override.");
+
+	m_errorReporter.typeError(
+		_location,
+		ssl,
+		"Derived contract must override " + callableName + " \"" +
+		(*_baseCallables.begin())->name() +
+		"\". Two or more base classes define " + callableName + " with same name and parameter types."
+	);
 }
 
 set<ContractDefinition const*, ContractLevelChecker::LessFunction> ContractLevelChecker::resolveOverrideList(OverrideSpecifier const& _overrides) const

@@ -15,3 +15,6 @@ contract B is IJ
 {
 }
 contract C is A, B {}
+// ----
+// TypeError: (14-33): Trying to override non-virtual modifier. Did you forget to add "virtual"?
+// TypeError: (50-69): Trying to override non-virtual modifier. Did you forget to add "virtual"?

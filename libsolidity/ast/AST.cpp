@@ -312,6 +312,16 @@ ContractDefinition::ContractKind FunctionDefinition::inContractKind() const
 	return contractDef->contractKind();
 }
 
+CallableDeclarationAnnotation& CallableDeclaration::annotation() const
+{
+	solAssert(
+		m_annotation,
+		"CallableDeclarationAnnotation is an abstract base, need to call annotation on the concrete class first."
+	);
+	return dynamic_cast<CallableDeclarationAnnotation&>(*m_annotation);
+}
+
+
 FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 {
 	if (_internal)

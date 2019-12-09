@@ -392,7 +392,7 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 
 bool ASTJsonConverter::visit(ModifierDefinition const& _node)
 {
-	setJsonNode(_node, "ModifierDefinition", {
+	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("name", _node.name()),
 		make_pair("documentation", _node.documentation() ? Json::Value(*_node.documentation()) : Json::nullValue),
 		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
@@ -400,7 +400,10 @@ bool ASTJsonConverter::visit(ModifierDefinition const& _node)
 		make_pair("virtual", _node.markedVirtual()),
 		make_pair("overrides", _node.overrides() ? toJson(*_node.overrides()) : Json::nullValue),
 		make_pair("body", toJson(_node.body()))
-	});
+	};
+	if (!_node.annotation().baseFunctions.empty())
+		attributes.emplace_back(make_pair("baseModifiers", getContainerIds(_node.annotation().baseFunctions, true)));
+	setJsonNode(_node, "ModifierDefinition", std::move(attributes));
 	return false;
 }
 

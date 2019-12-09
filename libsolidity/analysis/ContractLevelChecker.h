@@ -22,7 +22,9 @@
 #pragma once
 
 #include <libsolidity/ast/ASTForward.h>
+#include <liblangutil/SourceLocation.h>
 #include <map>
+#include <functional>
 #include <set>
 
 namespace langutil
@@ -115,6 +117,10 @@ private:
 	/// Checks for functions in different base contracts which conflict with each
 	/// other and thus need to be overridden explicitly.
 	void checkAmbiguousOverrides(ContractDefinition const& _contract) const;
+	void checkAmbiguousOverridesInternal(std::set<
+		CallableDeclaration const*,
+		std::function<bool(CallableDeclaration const*, CallableDeclaration const*)>
+	> _baseCallables, langutil::SourceLocation const& _location) const;
 	/// Resolves an override list of UserDefinedTypeNames to a list of contracts.
 	std::set<ContractDefinition const*, LessFunction> resolveOverrideList(OverrideSpecifier const& _overrides) const;
 

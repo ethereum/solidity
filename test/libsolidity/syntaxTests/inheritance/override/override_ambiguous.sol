@@ -9,4 +9,4 @@ abstract contract X is A, B {
 	function test() internal override returns (uint256) {}
 }
 // ----
-// TypeError: (205-292): Derived contract must override function "foo". Function with the same name and parameter types defined in two or more base classes.
+// TypeError: (205-292): Derived contract must override function "foo". Two or more base classes define function with same name and parameter types.
