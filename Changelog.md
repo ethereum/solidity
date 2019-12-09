@@ -1,9 +1,9 @@
-### 0.5.14 (unreleased)
+### 0.5.14 (2019-12-09)
 
 Language Features:
  * Allow to obtain the selector of public or external library functions via a member ``.selector``.
- * Parser: Allow splitting string and hexadecimal string literals into multiple parts.
- * Inline Assembly: Support referencing other constants.
+ * Parser: Allow splitting hexadecimal and regular string literals into multiple parts.
+ * Inline Assembly: Support constants that reference other constants.
 
 
 Compiler Features:
