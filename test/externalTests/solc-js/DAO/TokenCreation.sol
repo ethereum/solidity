@@ -64,14 +64,14 @@ abstract contract TokenCreationInterface {
 
     /// @notice Create Token with `_tokenHolder` as the initial owner of the Token
     /// @param _tokenHolder The address of the Tokens's recipient
-    /// @return Whether the token creation was successful
+    /// @return success Whether the token creation was successful
     function createTokenProxy(address payable _tokenHolder) payable virtual public returns (bool success);
 
     /// @notice Refund `msg.sender` in the case the Token Creation did
     /// not reach its minimum fueling goal
     function refund() virtual public;
 
-    /// @return The divisor used to calculate the token creation rate during
+    /// @return divisor The divisor used to calculate the token creation rate during
     /// the creation phase
     function divisor() public virtual view returns (uint divisor);
 
