@@ -239,6 +239,8 @@ void VariableDeclaration::accept(ASTVisitor& _visitor)
 	{
 		if (m_typeName)
 			m_typeName->accept(_visitor);
+		if (m_overrides)
+			m_overrides->accept(_visitor);
 		if (m_value)
 			m_value->accept(_visitor);
 	}
@@ -251,6 +253,8 @@ void VariableDeclaration::accept(ASTConstVisitor& _visitor) const
 	{
 		if (m_typeName)
 			m_typeName->accept(_visitor);
+		if (m_overrides)
+			m_overrides->accept(_visitor);
 		if (m_value)
 			m_value->accept(_visitor);
 	}
