@@ -1,16 +1,16 @@
 ### 0.6.0 (unreleased)
 
 Breaking changes:
- * ABI: remove the deprecated ``constant`` and ``payable`` fields.
- * ABI: the ``type`` field is now required and no longer specified to default to ``function``.
- * C API (``libsolc``): the provided callback now takes two parameters, kind and data. The callback can then be used for multiple purposes, such has file imports and SMT queries.
- * C API (``libsolc``): Introduce context parameter.
- * Commandline interface: remove the text-based ast printer (``--ast``).
- * Command line interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
- * Command line interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
+ * ABI: Remove the deprecated ``constant`` and ``payable`` fields.
+ * ABI: The ``type`` field is now required and no longer specified to default to ``function``.
+ * C API (``libsolc``): Introduce context parameter to both ``solidity_compile`` and the callback.
+ * C API (``libsolc``): The provided callback now takes two parameters, kind and data. The callback can then be used for multiple purposes, such has file imports and SMT queries.
+ * Commandline Interface: Remove the text-based AST printer (``--ast``).
+ * Commandline Interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
+ * Commandline Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
  * General: Disallow explicit conversions from external function types to ``address`` and add a member called ``address`` to them as replacement.
  * General: Enable Yul optimizer as part of standard optimization.
- * General: New reserved keywords: ``virtual``.
+ * General: New reserved keyword: ``virtual``.
  * General: Split unnamed fallback functions into two cases defined using ``fallback()`` and ``receive()``.
  * Standard JSON Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
  * Syntax: ``push(element)`` for dynamic storage arrays do not return the new length anymore.
@@ -18,7 +18,7 @@ Breaking changes:
  * Inline Assembly: Only strict inline assembly is allowed.
  * Inline Assembly: Variable declarations cannot shadow declarations outside the assembly block.
  * Syntax: ``length`` member of arrays is now always read-only, even for storage arrays.
- * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
+ * Type Checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
  * Natspec JSON Interface: Properly support multiple ``@return`` statements in ``@dev`` documentation and enforce named return parameters to be mentioned documentation.
  * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
  * AST: Inline assembly is exported as structured JSON instead of plain string.
@@ -51,7 +51,7 @@ Language Features:
 
 
 Compiler Features:
- * Commandline Interface: Allow translation from yul / strict assembly to EWasm using ``solc --yul --yul-dialect evm --machine eWasm``
+ * Commandline Interface: Allow translation from yul / strict assembly to EWasm using ``solc --yul --yul-dialect evm --machine ewasm``
  * Set the default EVM version to "Istanbul".
  * SMTChecker: Add support to constructors including constructor inheritance.
  * Yul: When compiling via Yul, string literals from the Solidity code are kept as string literals if every character is safely printable.
