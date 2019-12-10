@@ -191,18 +191,16 @@ private:
 
 	void checkOverrideList(OverrideProxy _item, OverrideProxyBySignatureMultiSet const& _inherited);
 
-	/// Returns all functions of bases that have not yet been overwritten.
+	/// Returns all functions of bases (including public state variables) that have not yet been overwritten.
 	/// May contain the same function multiple times when used with shared bases.
 	OverrideProxyBySignatureMultiSet const& inheritedFunctions(ContractDefinition const& _contract) const;
 	OverrideProxyBySignatureMultiSet const& inheritedModifiers(ContractDefinition const& _contract) const;
-	OverrideProxyBySignatureMultiSet const& inheritedPublicStateVariables(ContractDefinition const& _contract) const;
 
 	langutil::ErrorReporter& m_errorReporter;
 
 	/// Cache for inheritedFunctions().
 	std::map<ContractDefinition const*, OverrideProxyBySignatureMultiSet> mutable m_inheritedFunctions;
 	std::map<ContractDefinition const*, OverrideProxyBySignatureMultiSet> mutable m_inheritedModifiers;
-	std::map<ContractDefinition const*, OverrideProxyBySignatureMultiSet> mutable m_inheritedPublicStateVariables;
 };
 
 }

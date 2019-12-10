@@ -383,20 +383,12 @@ void OverrideChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 	OverrideProxyBySignatureMultiSet const& inheritedFuncs = inheritedFunctions(_contract);
 	OverrideProxyBySignatureMultiSet const& inheritedMods = inheritedModifiers(_contract);
 
-	for (auto const* stateVar: _contract.stateVariables())
-	{
-		if (!stateVar->isPublic())
-			continue;
-
-		checkOverrideList(OverrideProxy{stateVar}, inheritedFuncs);
-	}
-
 	for (ModifierDefinition const* modifier: _contract.functionModifiers())
 	{
 		if (contains_if(inheritedFuncs, MatchByName{modifier->name()}))
 			m_errorReporter.typeError(
 				modifier->location(),
-				"Override changes function to modifier."
+				"Override changes function or public state variable to modifier."
 			);
 
 		checkOverrideList(OverrideProxy{modifier}, inheritedMods);
@@ -412,14 +404,25 @@ void OverrideChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 
 		checkOverrideList(OverrideProxy{function}, inheritedFuncs);
 	}
+	for (auto const* stateVar: _contract.stateVariables())
+	{
+		if (!stateVar->isPublic())
+			continue;
+
+		if (contains_if(inheritedMods, MatchByName{stateVar->name()}))
+			m_errorReporter.typeError(stateVar->location(), "Override changes modifier to public state variable.");
+
+		checkOverrideList(OverrideProxy{stateVar}, inheritedFuncs);
+	}
+
 }
 
 void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverrideProxy const& _super)
 {
-	solAssert(_super.isFunction() || _super.isModifier(), "");
 	solAssert(_super.isModifier() == _overriding.isModifier(), "");
 
-	_overriding.storeBaseFunction(_super);
+	if (_super.isFunction() || _super.isModifier())
+		_overriding.storeBaseFunction(_super);
 
 	if (_overriding.isModifier() && *_overriding.modifierType() != *_super.modifierType())
 		m_errorReporter.typeError(
@@ -430,7 +433,14 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 	if (!_overriding.overrides())
 		overrideError(_overriding, _super, "Overriding " + _overriding.astNodeName() + " is missing 'override' specifier.");
 
-	if (!_super.virtualSemantics())
+	if (_super.isVariable())
+		overrideError(
+			_super,
+			_overriding,
+			"Cannot override public state variable.",
+			"Overriding " + _overriding.astNodeName() + " is here:"
+		);
+	else if (!_super.virtualSemantics())
 		overrideError(
 			_super,
 			_overriding,
@@ -546,12 +556,12 @@ void OverrideChecker::checkAmbiguousOverrides(ContractDefinition const& _contrac
 		// enough because we re-construct the inheritance graph later.
 		OverrideProxyBySignatureMultiSet nonOverriddenFunctions = inheritedFunctions(_contract);
 
-		for (OverrideProxy stateVar: inheritedPublicStateVariables(_contract))
-			nonOverriddenFunctions.insert(stateVar);
-
 		// Remove all functions that match the signature of a function in the current contract.
 		for (FunctionDefinition const* f: _contract.definedFunctions())
 			nonOverriddenFunctions.erase(OverrideProxy{f});
+		for (VariableDeclaration const* v: _contract.stateVariables())
+			if (v->isPublic())
+				nonOverriddenFunctions.erase(OverrideProxy{v});
 
 		// Walk through the set of functions signature by signature.
 		for (auto it = nonOverriddenFunctions.cbegin(); it != nonOverriddenFunctions.cend();)
@@ -689,7 +699,9 @@ void OverrideChecker::checkAmbiguousOverridesInternal(set<OverrideProxy> _baseCa
 	for (OverrideProxy const& baseFunction: _baseCallables)
 		ssl.append("Definition in \"" + baseFunction.contractName() + "\": ", baseFunction.location());
 
-	string callableName = _baseCallables.begin()->isModifier() ? _baseCallables.begin()->astNodeName() : "function";
+	string callableName = _baseCallables.begin()->astNodeName();
+	if (_baseCallables.begin()->isVariable())
+		callableName = "function";
 	string distinguishigProperty = _baseCallables.begin()->distinguishingProperty();
 
 	bool foundVariable = false;
@@ -819,6 +831,9 @@ OverrideChecker::OverrideProxyBySignatureMultiSet const& OverrideChecker::inheri
 			for (FunctionDefinition const* fun: base->definedFunctions())
 				if (!fun->isConstructor())
 					functionsInBase.emplace(OverrideProxy{fun});
+			for (VariableDeclaration const* var: base->stateVariables())
+				if (var->isPublic())
+					functionsInBase.emplace(OverrideProxy{var});
 
 			for (OverrideProxy const& func: inheritedFunctions(*base))
 				functionsInBase.insert(func);
@@ -854,29 +869,4 @@ OverrideChecker::OverrideProxyBySignatureMultiSet const& OverrideChecker::inheri
 	}
 
 	return m_inheritedModifiers[&_contract];
-}
-
-OverrideChecker::OverrideProxyBySignatureMultiSet const& OverrideChecker::inheritedPublicStateVariables(ContractDefinition const& _contract) const
-{
-	if (!m_inheritedPublicStateVariables.count(&_contract))
-	{
-		OverrideProxyBySignatureMultiSet result;
-
-		for (auto const* base: resolveDirectBaseContracts(_contract))
-		{
-			set<OverrideProxy, OverrideProxy::CompareBySignature> stateVarsInBase;
-			for (VariableDeclaration const* var: base->stateVariables())
-				if (var->isPublic())
-					stateVarsInBase.emplace(OverrideProxy{var});
-
-			for (OverrideProxy const& mod: inheritedPublicStateVariables(*base))
-				stateVarsInBase.insert(mod);
-
-			result += stateVarsInBase;
-		}
-
-		m_inheritedPublicStateVariables[&_contract] = result;
-	}
-
-	return m_inheritedPublicStateVariables[&_contract];
 }
