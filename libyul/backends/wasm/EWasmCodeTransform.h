@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <libyul/backends/wasm/EWasmAST.h>
+#include <libyul/backends/wasm/WasmAST.h>
 #include <libyul/AsmDataForward.h>
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/NameDispenser.h>
