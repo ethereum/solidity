@@ -243,6 +243,7 @@ namespace langutil
 	K(Default, "default", 0)                                           \
 	K(Define, "define", 0)                                             \
 	K(Final, "final", 0)                                               \
+	K(From, "from", 0)                                                 \
 	K(Immutable, "immutable", 0)                                       \
 	K(Implements, "implements", 0)                                     \
 	K(In, "in", 0)                                                     \
@@ -266,6 +267,7 @@ namespace langutil
 	K(Typedef, "typedef", 0)                                           \
 	K(TypeOf, "typeof", 0)                                             \
 	K(Unchecked, "unchecked", 0)                                       \
+	K(Unsafe, "unsafe", 0)                                             \
 	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
