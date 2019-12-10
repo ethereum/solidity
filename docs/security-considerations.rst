@@ -428,17 +428,11 @@ The SMTChecker traverses the Solidity AST creating and collecting program constr
 When it encounters a verification target, an SMT solver is invoked to determine the outcome.
 If a check fails, the SMTChecker provides specific input values that lead to the failure.
 
-For more details on how the SMT encoding works internally, see the paper
-`SMT-based Verification of Solidity Smart Contracts <https://github.com/leonardoalt/text/blob/master/solidity_isola_2018/main.pdf>`_.
+While the SMTChecker encodes Solidity code into SMT constraints, it contains two
+reasoning engines that use that encoding in different ways.
 
-Abstraction and False Positives
-===============================
-
-The SMTChecker implements abstractions in an incomplete and sound way: If a bug
-is reported, it might be a false positive introduced by abstractions (due to
-erasing knowledge or using a non-precise type). If it determines that a
-verification target is safe, it is indeed safe, that is, there are no false
-negatives (unless there is a bug in the SMTChecker).
+SMT Encoding
+============
 
 The SMT encoding tries to be as precise as possible, mapping Solidity types
 and expressions to their closest `SMT-LIB <http://smtlib.cs.uiowa.edu/>`_
@@ -452,13 +446,60 @@ representation, as shown in the table below.
 |intN, uintN, address,  |Integer       |LIA, NIA                     |
 |bytesN, enum           |              |                             |
 +-----------------------+--------------+-----------------------------+
-|array, mapping         |Array         |Arrays                       |
+|array, mapping, bytes, |Array         |Arrays                       |
+|string                 |              |                             |
 +-----------------------+--------------+-----------------------------+
 |other types            |Integer       |LIA                          |
 +-----------------------+--------------+-----------------------------+
 
-Types that are not yet supported are abstracted by a single 256-bit unsigned integer,
-where their unsupported operations are ignored.
+Types that are not yet supported are abstracted by a single 256-bit unsigned
+integer, where their unsupported operations are ignored.
+
+For more details on how the SMT encoding works internally, see the paper
+`SMT-based Verification of Solidity Smart Contracts <https://github.com/leonardoalt/text/blob/master/solidity_isola_2018/main.pdf>`_.
+
+Model Checking Engines
+======================
+
+The SMTChecker module implements two different reasoning engines that use the
+SMT encoding above, a Bounded Model Checker (BMC) and a system of Constrained
+Horn Clauses (CHC).  Both engines are currently under development, and have
+different characteristics.
+
+Bounded Model Checker (BMC)
+---------------------------
+
+The BMC engine analyzes functions in isolation, that is, it does not take the
+overall behavior of the contract throughout many transactions into account when
+analyzing each function.  Loops are also ignored in this engine at the moment.
+Internal function calls are inlined as long as they are not recursive, direct
+or indirectly. External function calls are inlined if possible, and knowledge
+that is potentially affected by reentrancy is erased.
+
+The characteristics above make BMC easily prone to reporting false positives,
+but it is also lightweight and should be able to quickly find small local bugs.
+
+Constrained Horn Clauses (CHC)
+------------------------------
+
+The Solidity contract's Control Flow Graph (CFG) is modelled as a system of
+Horn clauses, where the lifecycle of the contract is represented by a loop
+that can visit every public/external function non-deterministically. This way,
+the behavior of the entire contract over an unbounded number of transactions
+is taken into account when analyzing any function. Loops are fully supported
+by this engine. Function calls are currently unsupported.
+
+The CHC engine is much more powerful than BMC in terms of what it can prove,
+and might require more computing resources.
+
+Abstraction and False Positives
+===============================
+
+The SMTChecker implements abstractions in an incomplete and sound way: If a bug
+is reported, it might be a false positive introduced by abstractions (due to
+erasing knowledge or using a non-precise type). If it determines that a
+verification target is safe, it is indeed safe, that is, there are no false
+negatives (unless there is a bug in the SMTChecker).
 
 Function calls to the same contract (or base contracts) are inlined when
 possible, that is, when their implementation is available.
