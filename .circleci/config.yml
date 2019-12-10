@@ -9,7 +9,7 @@ version: 2.1
 parameters:
   docker-image-rev:
     type: string
-    default: "3"
+    default: "4"
 
 defaults:
 
