@@ -1,41 +1,41 @@
 ### 0.6.0 (unreleased)
 
 Breaking changes:
- * ABI: remove the deprecated ``constant`` and ``payable`` fields.
- * ABI: the ``type`` field is now required and no longer specified to default to ``function``.
- * C API (``libsolc``): the provided callback now takes two parameters, kind and data. The callback can then be used for multiple purposes, such has file imports and SMT queries.
- * C API (``libsolc``): Introduce context parameter.
- * Commandline interface: remove the text-based ast printer (``--ast``).
- * Command line interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
- * Command line interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
+ * ABI: Remove the deprecated ``constant`` and ``payable`` fields.
+ * ABI: The ``type`` field is now required and no longer specified to default to ``function``.
+ * AST: Inline assembly is exported as structured JSON instead of plain string.
+ * C API (``libsolc``): Introduce context parameter to both ``solidity_compile`` and the callback.
+ * C API (``libsolc``): The provided callback now takes two parameters, kind and data. The callback can then be used for multiple purposes, such has file imports and SMT queries.
+ * Commandline Interface: Remove the text-based AST printer (``--ast``).
+ * Commandline Interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
+ * Commandline Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
  * General: Disallow explicit conversions from external function types to ``address`` and add a member called ``address`` to them as replacement.
  * General: Enable Yul optimizer as part of standard optimization.
- * General: New reserved keywords: ``virtual``.
+ * General: New reserved keywords: ``override``, ``receive``, and ``virtual``.
+ * General: ``private`` cannot be used together with ``virtual``.
  * General: Split unnamed fallback functions into two cases defined using ``fallback()`` and ``receive()``.
+ * Inheritance: State variable shadowing is now disallowed.
+ * Inline Assembly: Only strict inline assembly is allowed.
+ * Inline Assembly: Variable declarations cannot shadow declarations outside the assembly block.
+ * JSON AST: Replace ``superFunction`` attribute by ``baseFunctions``.
+ * Natspec JSON Interface: Properly support multiple ``@return`` statements in ``@dev`` documentation and enforce named return parameters to be mentioned documentation.
+ * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
  * Standard JSON Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
  * Syntax: ``push(element)`` for dynamic storage arrays do not return the new length anymore.
  * Syntax: Abstract contracts need to be marked explicitly as abstract by using the ``abstract`` keyword.
- * Inline Assembly: Only strict inline assembly is allowed.
- * Inline Assembly: Variable declarations cannot shadow declarations outside the assembly block.
  * Syntax: ``length`` member of arrays is now always read-only, even for storage arrays.
- * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
- * Natspec JSON Interface: Properly support multiple ``@return`` statements in ``@dev`` documentation and enforce named return parameters to be mentioned documentation.
- * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
- * AST: Inline assembly is exported as structured JSON instead of plain string.
- * JSON AST: Replace ``superFunction`` attribute by ``baseFunctions``.
- * General: ``private`` cannot be used together with ``virtual``.
- * Inheritance: State variable shadowing is now disallowed.
+ * Type Checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
 
 Language Features:
- * Allow global enums and structs.
- * Allow underscores as delimiters in hex strings.
  * Allow explicit conversions from ``address`` to ``address payable`` via ``payable(...)``.
+ * Allow global enums and structs.
+ * Allow public variables to override external functions.
+ * Allow underscores as delimiters in hex strings.
  * Introduce syntax for array slices and implement them for dynamic calldata arrays.
  * Introduce ``push()`` for dynamic storage arrays. It returns a reference to the newly allocated element, if applicable.
  * Introduce ``virtual`` and ``override`` keywords.
  * Modify ``push(element)`` for dynamic storage arrays such that it does not return the new length anymore.
  * Yul: Introduce ``leave`` statement that exits the current function.
- * Allow public variables to override external functions.
 
 Compiler Features:
  * Allow revert strings to be stripped from the binary using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting.
@@ -51,7 +51,7 @@ Language Features:
 
 
 Compiler Features:
- * Commandline Interface: Allow translation from yul / strict assembly to EWasm using ``solc --yul --yul-dialect evm --machine eWasm``
+ * Commandline Interface: Allow translation from yul / strict assembly to EWasm using ``solc --yul --yul-dialect evm --machine ewasm``
  * Set the default EVM version to "Istanbul".
  * SMTChecker: Add support to constructors including constructor inheritance.
  * Yul: When compiling via Yul, string literals from the Solidity code are kept as string literals if every character is safely printable.

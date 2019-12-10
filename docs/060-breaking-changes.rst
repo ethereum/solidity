@@ -30,7 +30,7 @@ This section lists purely syntactic changes that do not affect the behavior of e
   longer possible to resize storage arrays assigning a new value to their length. Use ``push()``,
   ``push(value)`` or ``pop()`` instead, or assign a full array, which will of course overwrite existing content.
 
-* New reserved keywords: ``virtual``.
+* New reserved keywords: ``override``, ``receive``, and ``virtual``.
 
 * The names of variables declared in inline assembly may no longer end in ``_slot`` or ``_offset``.
 
