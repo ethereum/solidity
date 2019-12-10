@@ -62,6 +62,14 @@ string takeOverAllocation(char const* _data)
 	abort();
 }
 
+/// Resizes a std::string to the proper length based on the occurrence of a zero terminator.
+void truncateCString(string& _data)
+{
+	size_t pos = _data.find('\0');
+	if (pos != string::npos)
+		_data.resize(pos);
+}
+
 ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback, void* _readContext)
 {
 	ReadCallback::Callback readCallback;
@@ -89,6 +97,7 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback, vo
 				result.success = false;
 				result.responseOrErrorMessage = takeOverAllocation(error_c);
 			}
+			truncateCString(result.responseOrErrorMessage);
 			return result;
 		};
 	}
