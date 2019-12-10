@@ -328,13 +328,13 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 	{
 		switch (visibility())
 		{
-		case Declaration::Visibility::Default:
+		case Visibility::Default:
 			solAssert(false, "visibility() should not return Default");
-		case Declaration::Visibility::Private:
-		case Declaration::Visibility::Internal:
-		case Declaration::Visibility::Public:
+		case Visibility::Private:
+		case Visibility::Internal:
+		case Visibility::Public:
 			return TypeProvider::function(*this, _internal);
-		case Declaration::Visibility::External:
+		case Visibility::External:
 			return {};
 		}
 	}
@@ -342,13 +342,13 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 	{
 		switch (visibility())
 		{
-		case Declaration::Visibility::Default:
+		case Visibility::Default:
 			solAssert(false, "visibility() should not return Default");
-		case Declaration::Visibility::Private:
-		case Declaration::Visibility::Internal:
+		case Visibility::Private:
+		case Visibility::Internal:
 			return {};
-		case Declaration::Visibility::Public:
-		case Declaration::Visibility::External:
+		case Visibility::Public:
+		case Visibility::External:
 			return TypeProvider::function(*this, _internal);
 		}
 	}
@@ -359,7 +359,7 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 
 TypePointer FunctionDefinition::type() const
 {
-	solAssert(visibility() != Declaration::Visibility::External, "");
+	solAssert(visibility() != Visibility::External, "");
 	return TypeProvider::function(*this);
 }
 
@@ -518,7 +518,7 @@ bool VariableDeclaration::isExternalCallableParameter() const
 		return false;
 
 	if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
-		if (callable->visibility() == Declaration::Visibility::External)
+		if (callable->visibility() == Visibility::External)
 			return !isReturnParameter();
 
 	return false;
@@ -530,9 +530,9 @@ bool VariableDeclaration::isInternalCallableParameter() const
 		return false;
 
 	if (auto const* funTypeName = dynamic_cast<FunctionTypeName const*>(scope()))
-		return funTypeName->visibility() == Declaration::Visibility::Internal;
+		return funTypeName->visibility() == Visibility::Internal;
 	else if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
-		return callable->visibility() <= Declaration::Visibility::Internal;
+		return callable->visibility() <= Visibility::Internal;
 	return false;
 }
 
@@ -607,13 +607,13 @@ FunctionTypePointer VariableDeclaration::functionType(bool _internal) const
 		return nullptr;
 	switch (visibility())
 	{
-	case Declaration::Visibility::Default:
+	case Visibility::Default:
 		solAssert(false, "visibility() should not return Default");
-	case Declaration::Visibility::Private:
-	case Declaration::Visibility::Internal:
+	case Visibility::Private:
+	case Visibility::Internal:
 		return nullptr;
-	case Declaration::Visibility::Public:
-	case Declaration::Visibility::External:
+	case Visibility::Public:
+	case Visibility::External:
 		return TypeProvider::function(*this);
 	}
 

@@ -2601,7 +2601,7 @@ FunctionType::FunctionType(EventDefinition const& _event):
 FunctionType::FunctionType(FunctionTypeName const& _typeName):
 	m_parameterNames(_typeName.parameterTypes().size(), ""),
 	m_returnParameterNames(_typeName.returnParameterTypes().size(), ""),
-	m_kind(_typeName.visibility() == VariableDeclaration::Visibility::External ? Kind::External : Kind::Internal),
+	m_kind(_typeName.visibility() == Visibility::External ? Kind::External : Kind::Internal),
 	m_stateMutability(_typeName.stateMutability())
 {
 	if (_typeName.isPayable())
@@ -3011,8 +3011,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	{
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
 		solAssert(functionDefinition, "");
-		solAssert(functionDefinition->visibility() != Declaration::Visibility::Private, "");
-		if (functionDefinition->visibility() != Declaration::Visibility::Internal)
+		solAssert(functionDefinition->visibility() != Visibility::Private, "");
+		if (functionDefinition->visibility() != Visibility::Internal)
 		{
 			auto const* contract = dynamic_cast<ContractDefinition const*>(m_declaration->scope());
 			solAssert(contract, "");

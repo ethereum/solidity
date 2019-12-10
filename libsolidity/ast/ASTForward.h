@@ -26,7 +26,12 @@
 #include <string>
 #include <vector>
 
-// Forward-declare all AST node types
+// Forward-declare all AST node types and related enums.
+
+namespace langutil
+{
+enum class Token : unsigned int;
+}
 
 namespace dev
 {

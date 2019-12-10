@@ -377,23 +377,23 @@ ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 	return nodeFactory.createNode<InheritanceSpecifier>(name, std::move(arguments));
 }
 
-Declaration::Visibility Parser::parseVisibilitySpecifier()
+Visibility Parser::parseVisibilitySpecifier()
 {
-	Declaration::Visibility visibility(Declaration::Visibility::Default);
+	Visibility visibility(Visibility::Default);
 	Token token = m_scanner->currentToken();
 	switch (token)
 	{
 		case Token::Public:
-			visibility = Declaration::Visibility::Public;
+			visibility = Visibility::Public;
 			break;
 		case Token::Internal:
-			visibility = Declaration::Visibility::Internal;
+			visibility = Visibility::Internal;
 			break;
 		case Token::Private:
-			visibility = Declaration::Visibility::Private;
+			visibility = Visibility::Private;
 			break;
 		case Token::External:
-			visibility = Declaration::Visibility::External;
+			visibility = Visibility::External;
 			break;
 		default:
 			solAssert(false, "Invalid visibility specifier.");
@@ -476,11 +476,11 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 			result.modifiers.push_back(parseModifierInvocation());
 		else if (TokenTraits::isVisibilitySpecifier(token))
 		{
-			if (result.visibility != Declaration::Visibility::Default)
+			if (result.visibility != Visibility::Default)
 			{
 				// There is the special case of a public state variable of function type.
 				// Detect this and return early.
-				if (_isStateVariable && (result.visibility == Declaration::Visibility::External || result.visibility == Declaration::Visibility::Internal))
+				if (_isStateVariable && (result.visibility == Visibility::External || result.visibility == Visibility::Internal))
 					break;
 				parserError(string(
 					"Visibility already specified as \"" +
@@ -687,7 +687,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	bool isIndexed = false;
 	bool isDeclaredConst = false;
 	ASTPointer<OverrideSpecifier> overrides = nullptr;
-	Declaration::Visibility visibility(Declaration::Visibility::Default);
+	Visibility visibility(Visibility::Default);
 	VariableDeclaration::Location location = VariableDeclaration::Location::Unspecified;
 	ASTPointer<ASTString> identifier;
 
@@ -697,7 +697,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		if (_options.isStateVariable && TokenTraits::isVariableVisibilitySpecifier(token))
 		{
 			nodeFactory.markEndPosition();
-			if (visibility != Declaration::Visibility::Default)
+			if (visibility != Visibility::Default)
 			{
 				parserError(string(
 					"Visibility already specified as \"" +
@@ -1534,7 +1534,7 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 						ASTPointer<TypeName>(),
 						name,
 						ASTPointer<Expression>(),
-						VariableDeclaration::Visibility::Default
+						Visibility::Default
 					);
 				}
 				variables.push_back(var);
