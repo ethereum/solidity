@@ -11,7 +11,7 @@ Breaking changes:
  * Commandline Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
  * General: Disallow explicit conversions from external function types to ``address`` and add a member called ``address`` to them as replacement.
  * General: Enable Yul optimizer as part of standard optimization.
- * General: New reserved keyword: ``virtual``.
+ * General: New reserved keywords: ``override``, ``receive``, and ``virtual``.
  * General: ``private`` cannot be used together with ``virtual``.
  * General: Split unnamed fallback functions into two cases defined using ``fallback()`` and ``receive()``.
  * Inheritance: State variable shadowing is now disallowed.
