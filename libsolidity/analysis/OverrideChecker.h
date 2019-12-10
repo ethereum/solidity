@@ -25,6 +25,7 @@
 #include <map>
 #include <functional>
 #include <set>
+#include <variant>
 
 namespace langutil
 {
@@ -35,6 +36,24 @@ namespace dev
 {
 namespace solidity
 {
+
+/**
+ * Class that represents a function, public state variable or modifier
+ * and helps with overload checking.
+ * Comparison results in two elements being equal when they can override each
+ * other.
+ */
+class OverrideProxy
+{
+public:
+	bool operator<(OverrideProxy const& _other) const;
+	std::variant<
+		FunctionDefinition const*,
+		ModifierDefinition const*,
+		VariableDeclaration const*
+	> item;
+};
+
 
 /**
  * Component that verifies override properties.
@@ -107,11 +126,17 @@ private:
 	FunctionMultiSet const& inheritedFunctions(ContractDefinition const& _contract) const;
 	ModifierMultiSet const& inheritedModifiers(ContractDefinition const& _contract) const;
 
+	std::multiset<OverrideProxy> const& inheritedFunctionsByProxy(ContractDefinition const& _contract) const;
+	std::multiset<OverrideProxy> const& inheritedModifiersByProxy(ContractDefinition const& _contract) const;
+
 	langutil::ErrorReporter& m_errorReporter;
 
 	/// Cache for inheritedFunctions().
 	std::map<ContractDefinition const*, FunctionMultiSet> mutable m_inheritedFunctions;
 	std::map<ContractDefinition const*, ModifierMultiSet> mutable m_contractBaseModifiers;
+
+	std::map<ContractDefinition const*, std::multiset<OverrideProxy>> mutable m_inheritedFunctionsByProxy;
+	std::map<ContractDefinition const*, std::multiset<OverrideProxy>> mutable m_inheritedModifiersByProxy;
 };
 
 }

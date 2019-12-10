@@ -25,6 +25,7 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <liblangutil/ErrorReporter.h>
+#include <libdevcore/Visitor.h>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -47,27 +48,6 @@ struct MatchByName
 	}
 };
 
-vector<ASTPointer<UserDefinedTypeName>> sortByContract(vector<ASTPointer<UserDefinedTypeName>> const& _list)
-{
-	auto sorted = _list;
-
-	stable_sort(sorted.begin(), sorted.end(),
-		[] (ASTPointer<UserDefinedTypeName> _a, ASTPointer<UserDefinedTypeName> _b) {
-			if (!_a || !_b)
-				return _a < _b;
-
-			Declaration const* aDecl = _a->annotation().referencedDeclaration;
-			Declaration const* bDecl = _b->annotation().referencedDeclaration;
-
-			if (!aDecl || !bDecl)
-				return aDecl < bDecl;
-
-			return aDecl->id() < bDecl->id();
-		}
-	);
-
-	return sorted;
-}
 
 template <class T, class B>
 bool hasEqualNameAndParameters(T const& _a, B const& _b)
@@ -95,7 +75,93 @@ vector<ContractDefinition const*> resolveDirectBaseContracts(ContractDefinition 
 	return resolvedContracts;
 }
 
+vector<ASTPointer<UserDefinedTypeName>> sortByContract(vector<ASTPointer<UserDefinedTypeName>> const& _list)
+{
+	auto sorted = _list;
+
+	stable_sort(sorted.begin(), sorted.end(),
+		[] (ASTPointer<UserDefinedTypeName> _a, ASTPointer<UserDefinedTypeName> _b) {
+			if (!_a || !_b)
+				return _a < _b;
+
+			Declaration const* aDecl = _a->annotation().referencedDeclaration;
+			Declaration const* bDecl = _b->annotation().referencedDeclaration;
+
+			if (!aDecl || !bDecl)
+				return aDecl < bDecl;
+
+			return aDecl->id() < bDecl->id();
+		}
+	);
+
+	return sorted;
 }
+
+
+}
+
+bool OverrideProxy::operator<(OverrideProxy const& _other) const
+{
+	return std::visit(GenericVisitor{
+		[&](FunctionDefinition const* _function)
+		{
+			return std::visit(GenericVisitor{
+				[&](FunctionDefinition const* _other)
+				{
+					if (_function->name() != _other->name())
+						return _function->name() < _other->name();
+
+					if (_function->kind() != _other->kind())
+						return _function->kind() < _other->kind();
+
+					return boost::lexicographical_compare(
+						FunctionType(*_function).asCallableFunction(false)->parameterTypes(),
+						FunctionType(*_other).asCallableFunction(false)->parameterTypes(),
+						[](auto const& _paramTypeA, auto const& _paramTypeB)
+						{
+							return _paramTypeA->richIdentifier() < _paramTypeB->richIdentifier();
+						}
+					);
+				},
+				[&](VariableDeclaration const* _other)
+				{
+					if (_function->name() != _other->name())
+						return _function->name() < _other->name();
+
+					if (_function->kind() != Token::Function)
+						return _function->kind() < Token::Function;
+
+					return boost::lexicographical_compare(
+						FunctionType(*_function).asCallableFunction(false)->parameterTypes(),
+						FunctionType(*_other).asCallableFunction(false)->parameterTypes(),
+						[](auto const& _paramTypeA, auto const& _paramTypeB)
+						{
+							return _paramTypeA->richIdentifier() < _paramTypeB->richIdentifier();
+						}
+					);
+				},
+				[&](ModifierDefinition const*)
+				{
+					solAssert(false, "Compared function to something else than function or state variable.");
+					return false;
+				}
+			}, _other.item);
+		},
+		[&](ModifierDefinition const*)
+		{
+			solAssert(false, "todo");
+			return false;
+		},
+		[&](VariableDeclaration const*)
+		{
+			solAssert(false, "todo");
+			return false;
+		}
+	}, item);
+
+	return false;
+}
+
 
 bool OverrideChecker::LessFunction::operator()(ModifierDefinition const* _a, ModifierDefinition const* _b) const
 {
@@ -151,6 +217,7 @@ void OverrideChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 			it = find_if(++it, inheritedFuncs.end(), MatchByName{stateVar->name()})
 		)
 		{
+			// -> compare equal
 			if (!hasEqualNameAndParameters(*stateVar, **it))
 				continue;
 
@@ -672,3 +739,52 @@ OverrideChecker::ModifierMultiSet const& OverrideChecker::inheritedModifiers(Con
 	return m_contractBaseModifiers[&_contract] = set;
 }
 
+
+multiset<OverrideProxy> const& OverrideChecker::inheritedFunctionsByProxy(ContractDefinition const& _contract) const
+{
+	if (!m_inheritedFunctionsByProxy.count(&_contract))
+	{
+		multiset<OverrideProxy> result;
+
+		for (auto const* base: resolveDirectBaseContracts(_contract))
+		{
+			std::set<OverrideProxy> functionsInBase;
+			for (FunctionDefinition const* fun: base->definedFunctions())
+				if (!fun->isConstructor())
+					functionsInBase.emplace(OverrideProxy{fun});
+
+			for (OverrideProxy const& func: inheritedFunctionsByProxy(*base))
+				functionsInBase.insert(func);
+
+			result += functionsInBase;
+		}
+
+		m_inheritedFunctionsByProxy[&_contract] = result;
+	}
+
+	return m_inheritedFunctionsByProxy[&_contract];
+}
+
+multiset<OverrideProxy> const& OverrideChecker::inheritedModifiersByProxy(ContractDefinition const& _contract) const
+{
+	if (!m_inheritedModifiersByProxy.count(&_contract))
+	{
+		multiset<OverrideProxy> result;
+
+		for (auto const* base: resolveDirectBaseContracts(_contract))
+		{
+			std::set<OverrideProxy> modifiersInBase;
+			for (ModifierDefinition const* mod: base->functionModifiers())
+				modifiersInBase.emplace(OverrideProxy{mod});
+
+			for (OverrideProxy const& mod: inheritedModifiersByProxy(*base))
+				modifiersInBase.insert(mod);
+
+			result += modifiersInBase;
+		}
+
+		m_inheritedModifiersByProxy[&_contract] = result;
+	}
+
+	return m_inheritedModifiersByProxy[&_contract];
+}
