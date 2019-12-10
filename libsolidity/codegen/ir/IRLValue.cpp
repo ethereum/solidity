@@ -148,39 +148,6 @@ string IRStorageItem::setToZero() const
 		")\n";
 }
 
-IRStorageArrayLength::IRStorageArrayLength(
-	YulUtilFunctions _utils,
-	string _slot,
-	Type const& _type,
-	ArrayType const& _arrayType
-):
-	IRLValue(std::move(_utils), &_type), m_arrayType(_arrayType), m_slot(move(_slot))
-{
-	solAssert(*m_type == *TypeProvider::uint256(), "Must be uint256!");
-}
-
-string IRStorageArrayLength::retrieveValue() const
-{
-	return m_utils.arrayLengthFunction(m_arrayType) + "(" + m_slot + ")";
-}
-
-string IRStorageArrayLength::storeValue(std::string const& _value, Type const& _type) const
-{
-	solAssert(_type == *m_type, "Different type, but might not be an error.");
-
-	return m_utils.resizeDynamicArrayFunction(m_arrayType) +
-		"(" +
-		m_slot +
-		", " +
-		_value +
-		")\n";
-}
-
-string IRStorageArrayLength::setToZero() const
-{
-	return storeValue("0", *TypeProvider::uint256());
-}
-
 IRMemoryItem::IRMemoryItem(
 	YulUtilFunctions _utils,
 	std::string _address,

@@ -5,4 +5,6 @@ contract C {
         }
     }
 }
+// ====
+// optimize-yul: false
 // ----

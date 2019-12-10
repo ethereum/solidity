@@ -146,7 +146,7 @@ bool ContractDefinition::constructorIsPublic() const
 
 bool ContractDefinition::canBeDeployed() const
 {
-	return constructorIsPublic() && annotation().unimplementedFunctions.empty();
+	return constructorIsPublic() && !abstract() && !isInterface();
 }
 
 FunctionDefinition const* ContractDefinition::fallbackFunction() const
@@ -154,6 +154,15 @@ FunctionDefinition const* ContractDefinition::fallbackFunction() const
 	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		for (FunctionDefinition const* f: contract->definedFunctions())
 			if (f->isFallback())
+				return f;
+	return nullptr;
+}
+
+FunctionDefinition const* ContractDefinition::receiveFunction() const
+{
+	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
+		for (FunctionDefinition const* f: contract->definedFunctions())
+			if (f->isReceive())
 				return f;
 	return nullptr;
 }
@@ -303,6 +312,16 @@ ContractDefinition::ContractKind FunctionDefinition::inContractKind() const
 	return contractDef->contractKind();
 }
 
+CallableDeclarationAnnotation& CallableDeclaration::annotation() const
+{
+	solAssert(
+		m_annotation,
+		"CallableDeclarationAnnotation is an abstract base, need to call annotation on the concrete class first."
+	);
+	return dynamic_cast<CallableDeclarationAnnotation&>(*m_annotation);
+}
+
+
 FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 {
 	if (_internal)
@@ -443,12 +462,13 @@ bool VariableDeclaration::isLocalVariable() const
 		dynamic_cast<FunctionTypeName const*>(s) ||
 		dynamic_cast<CallableDeclaration const*>(s) ||
 		dynamic_cast<Block const*>(s) ||
+		dynamic_cast<TryCatchClause const*>(s) ||
 		dynamic_cast<ForStatement const*>(s);
 }
 
-bool VariableDeclaration::isCallableParameter() const
+bool VariableDeclaration::isCallableOrCatchParameter() const
 {
-	if (isReturnParameter())
+	if (isReturnParameter() || isTryCatchParameter())
 		return true;
 
 	vector<ASTPointer<VariableDeclaration>> const* parameters = nullptr;
@@ -467,7 +487,7 @@ bool VariableDeclaration::isCallableParameter() const
 
 bool VariableDeclaration::isLocalOrReturn() const
 {
-	return isReturnParameter() || (isLocalVariable() && !isCallableParameter());
+	return isReturnParameter() || (isLocalVariable() && !isCallableOrCatchParameter());
 }
 
 bool VariableDeclaration::isReturnParameter() const
@@ -487,9 +507,14 @@ bool VariableDeclaration::isReturnParameter() const
 	return false;
 }
 
+bool VariableDeclaration::isTryCatchParameter() const
+{
+	return dynamic_cast<TryCatchClause const*>(scope());
+}
+
 bool VariableDeclaration::isExternalCallableParameter() const
 {
-	if (!isCallableParameter())
+	if (!isCallableOrCatchParameter())
 		return false;
 
 	if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
@@ -501,7 +526,7 @@ bool VariableDeclaration::isExternalCallableParameter() const
 
 bool VariableDeclaration::isInternalCallableParameter() const
 {
-	if (!isCallableParameter())
+	if (!isCallableOrCatchParameter())
 		return false;
 
 	if (auto const* funTypeName = dynamic_cast<FunctionTypeName const*>(scope()))
@@ -513,7 +538,7 @@ bool VariableDeclaration::isInternalCallableParameter() const
 
 bool VariableDeclaration::isLibraryFunctionParameter() const
 {
-	if (!isCallableParameter())
+	if (!isCallableOrCatchParameter())
 		return false;
 	if (auto const* funDef = dynamic_cast<FunctionDefinition const*>(scope()))
 		return dynamic_cast<ContractDefinition const&>(*funDef->scope()).isLibrary();
@@ -549,10 +574,10 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 			locations.insert(Location::Storage);
 		return locations;
 	}
-	else if (isCallableParameter())
+	else if (isCallableOrCatchParameter())
 	{
 		set<Location> locations{ Location::Memory };
-		if (isInternalCallableParameter() || isLibraryFunctionParameter())
+		if (isInternalCallableParameter() || isLibraryFunctionParameter() || isTryCatchParameter())
 			locations.insert(Location::Storage);
 		return locations;
 	}

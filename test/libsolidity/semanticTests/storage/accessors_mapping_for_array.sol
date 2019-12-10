@@ -3,7 +3,8 @@ contract test {
     mapping(uint => uint[]) public dynamicData;
     constructor() public {
         data[2][2] = 8;
-        dynamicData[2].length = 3;
+        for (uint i = 0; i < 3; i++)
+            dynamicData[2].push();
         dynamicData[2][2] = 8;
     }
 }

@@ -224,7 +224,7 @@ Now someone tricks you into sending ether to the address of this attack wallet:
             owner = msg.sender;
         }
 
-        function() external {
+        fallback() external {
             TxUserWallet(msg.sender).transferTo(owner, msg.sender.balance);
         }
     }
@@ -278,7 +278,8 @@ a ``mapping``.
         mapping (uint => uint)[] array;
 
         function allocate(uint _newMaps) public {
-            array.length += _newMaps;
+            for (uint i = 0; i < _newMaps; i++)
+                array.push();
         }
 
         function writeMap(uint _map, uint _key, uint _value) public {

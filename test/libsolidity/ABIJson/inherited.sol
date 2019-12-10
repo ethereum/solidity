@@ -24,7 +24,6 @@ contract Derived is Base {
 //     "type": "event"
 //   },
 //   {
-//     "constant": false,
 //     "inputs":
 //     [
 //       {
@@ -42,7 +41,6 @@ contract Derived is Base {
 //         "type": "uint256"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
 //   }
@@ -80,7 +78,6 @@ contract Derived is Base {
 //     "type": "event"
 //   },
 //   {
-//     "constant": false,
 //     "inputs":
 //     [
 //       {
@@ -98,12 +95,10 @@ contract Derived is Base {
 //         "type": "uint256"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
 //   },
 //   {
-//     "constant": false,
 //     "inputs":
 //     [
 //       {
@@ -121,7 +116,6 @@ contract Derived is Base {
 //         "type": "bytes32"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
 //   }

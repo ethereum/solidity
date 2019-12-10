@@ -74,7 +74,7 @@ function compileFull()
     set +e
     "$SOLC" $FULLARGS $files >/dev/null 2>"$stderr_path"
     local exit_code=$?
-    local errors=$(grep -v -E 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|\^-------------------------------\^' < "$stderr_path")
+    local errors=$(grep -v -E 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|^ +--> |^ +\||^[0-9]+ +\|' < "$stderr_path")
     set -e
     rm "$stderr_path"
 
@@ -143,9 +143,9 @@ function test_solc_behaviour()
 
     if [[ "$solc_args" == *"--standard-json"* ]]
     then
-        sed -i -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
+        sed -i.bak -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
         sed -i.bak -E -e 's/ Consider adding \\"pragma solidity \^[0-9.]*;\\"//g' "$stdout_path"
-        sed -i -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
+        sed -i.bak -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
         # Remove explicit bytecode and references to bytecode offsets
         sed -i.bak -E -e 's/\"object\":\"[a-f0-9]+\"/\"object\":\"bytecode removed\"/g' "$stdout_path"
         sed -i.bak -E -e 's/\"opcodes\":\"[^"]+\"/\"opcodes\":\"opcodes removed\"/g' "$stdout_path"
@@ -154,13 +154,18 @@ function test_solc_behaviour()
         sed -i.bak -E -e 's/\\n/\'$'\n/g' "$stdout_path"
         rm "$stdout_path.bak"
     else
-        sed -i -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
-        sed -i -e 's/ Consider adding "pragma .*$//' "$stderr_path"
+        sed -i.bak -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
+        sed -i.bak -e 's/ Consider adding "pragma .*$//' "$stderr_path"
+        # Remove trailing empty lines. Needs a line break to make OSX sed happy.
+        sed -i.bak -e '1{/^$/d
+}' "$stderr_path"
+       rm "$stderr_path.bak"
     fi
     # Remove path to cpp file
-    sed -i -e 's/^\(Exception while assembling:\).*/\1/' "$stderr_path"
+    sed -i.bak -e 's/^\(Exception while assembling:\).*/\1/' "$stderr_path"
     # Remove exception class name.
-    sed -i -e 's/^\(Dynamic exception type:\).*/\1/' "$stderr_path"
+    sed -i.bak -e 's/^\(Dynamic exception type:\).*/\1/' "$stderr_path"
+    rm "$stderr_path.bak"
 
     if [[ $exitCode -ne "$exit_code_expected" ]]
     then

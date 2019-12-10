@@ -10,5 +10,4 @@ library Test {
     }
 }
 // ----
-// Warning: (0-33): Experimental features are turned on. Do not use experimental features on live deployments.
 // TypeError: (146-168): Recursive structs can only be passed as storage pointers to libraries, not as memory objects to contract functions.

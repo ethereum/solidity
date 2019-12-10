@@ -1,6 +1,6 @@
 contract C
 {
-    function () external {
+    fallback() external {
         uint x;
         assembly {
             x := callvalue()

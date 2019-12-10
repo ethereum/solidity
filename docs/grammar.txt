@@ -7,7 +7,7 @@ ImportDirective = 'import' StringLiteral ('as' Identifier)? ';'
         | 'import' ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral ';'
         | 'import' '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral ';'
 
-ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
+ContractDefinition = 'abstract'? ( 'contract' | 'library' | 'interface' ) Identifier
                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
                      '{' ContractPart* '}'
 
@@ -62,12 +62,14 @@ StorageLocation = 'memory' | 'storage' | 'calldata'
 StateMutability = 'pure' | 'view' | 'payable'
 
 Block = '{' Statement* '}'
-Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
+Statement = IfStatement | TryStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
             ( DoWhileStatement | PlaceholderStatement | Continue | Break | Return |
               Throw | EmitStatement | SimpleStatement ) ';'
 
 ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
+TryStatement = 'try' Expression ( 'returns' ParameterList )? Block CatchClause+
+CatchClause = 'catch' Identifier? ParameterList Block
 WhileStatement = 'while' '(' Expression ')' Statement
 PlaceholderStatement = '_'
 SimpleStatement = VariableDefinition | ExpressionStatement
@@ -86,6 +88,7 @@ Expression
   = Expression ('++' | '--')
   | NewExpression
   | IndexAccess
+  | IndexRangeAccess
   | MemberAccess
   | FunctionCall
   | '(' Expression ')'
@@ -123,6 +126,7 @@ FunctionCallArguments = '{' NameValueList? '}'
 NewExpression = 'new' TypeName
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
+IndexRangeAccess = Expression '[' Expression? ':' Expression? ']'
 
 BooleanLiteral = 'true' | 'false'
 NumberLiteral = ( HexNumber | DecimalNumber ) (' ' NumberUnit)?

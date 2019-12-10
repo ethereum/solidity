@@ -41,7 +41,7 @@ class StandardCompiler: boost::noncopyable
 {
 public:
 	/// Creates a new StandardCompiler.
-	/// @param _readFile callback to used to read files for import statements. Must return
+	/// @param _readFile callback used to read files for import statements. Must return
 	/// and must not emit exceptions.
 	explicit StandardCompiler(ReadCallback::Callback const& _readFile = ReadCallback::Callback()):
 		m_readFile(_readFile)
@@ -65,9 +65,11 @@ private:
 		std::map<h256, std::string> smtLib2Responses;
 		langutil::EVMVersion evmVersion;
 		std::vector<CompilerStack::Remapping> remappings;
+		RevertStrings revertStrings = RevertStrings::Default;
 		OptimiserSettings optimiserSettings = OptimiserSettings::minimal();
 		std::map<std::string, h160> libraries;
 		bool metadataLiteralSources = false;
+		CompilerStack::MetadataHash metadataHash = CompilerStack::MetadataHash::IPFS;
 		Json::Value outputSelection;
 	};
 

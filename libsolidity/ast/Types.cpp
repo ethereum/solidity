@@ -412,7 +412,9 @@ BoolResult AddressType::isImplicitlyConvertibleTo(Type const& _other) const
 
 BoolResult AddressType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (auto const* contractType = dynamic_cast<ContractType const*>(&_convertTo))
+	if (_convertTo.category() == category())
+		return true;
+	else if (auto const* contractType = dynamic_cast<ContractType const*>(&_convertTo))
 		return (m_stateMutability >= StateMutability::Payable) || !contractType->isPayable();
 	return isImplicitlyConvertibleTo(_convertTo) ||
 		_convertTo.category() == Category::Integer ||
@@ -600,6 +602,17 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, Type const* _other
 		else
 			return nullptr;
 	}
+	else if (Token::Exp == _operator)
+	{
+		if (auto otherIntType = dynamic_cast<IntegerType const*>(_other))
+		{
+			if (otherIntType->isSigned())
+				return TypeResult::err("Exponentiation power is not allowed to be a signed integer type.");
+		}
+		else if (dynamic_cast<FixedPointType const*>(_other))
+			return nullptr;
+		return this;
+	}
 
 	auto commonType = Type::commonType(this, _other); //might be an integer or fixed point
 	if (!commonType)
@@ -610,14 +623,6 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, Type const* _other
 		return commonType;
 	if (TokenTraits::isBooleanOp(_operator))
 		return nullptr;
-	if (auto intType = dynamic_cast<IntegerType const*>(commonType))
-	{
-		if (Token::Exp == _operator && intType->isSigned())
-			return TypeResult::err("Exponentiation is not allowed for signed integer types.");
-	}
-	else if (dynamic_cast<FixedPointType const*>(commonType))
-		if (Token::Exp == _operator)
-			return nullptr;
 	return commonType;
 }
 
@@ -1464,8 +1469,9 @@ BoolResult ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool ContractType::isPayable() const
 {
+	auto receiveFunction = m_contract.receiveFunction();
 	auto fallbackFunction = m_contract.fallbackFunction();
-	return fallbackFunction && fallbackFunction->isPayable();
+	return receiveFunction || (fallbackFunction && fallbackFunction->isPayable());
 }
 
 TypeResult ContractType::unaryOperatorResult(Token _operator) const
@@ -1783,10 +1789,17 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 		if (isDynamicallySized() && location() == DataLocation::Storage)
 		{
 			members.emplace_back("push", TypeProvider::function(
+				TypePointers{},
 				TypePointers{baseType()},
-				TypePointers{TypeProvider::uint256()},
+				strings{},
 				strings{string()},
+				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
+			));
+			members.emplace_back("push", TypeProvider::function(
+				TypePointers{baseType()},
+				TypePointers{},
 				strings{string()},
+				strings{},
 				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
 			));
 			members.emplace_back("pop", TypeProvider::function(
@@ -1869,6 +1882,30 @@ std::unique_ptr<ReferenceType> ArrayType::copyForLocation(DataLocation _location
 	copy->m_hasDynamicLength = m_hasDynamicLength;
 	copy->m_length = m_length;
 	return copy;
+}
+
+BoolResult ArraySliceType::isImplicitlyConvertibleTo(Type const& _other) const
+{
+	if (m_arrayType.location() == DataLocation::CallData && m_arrayType.isDynamicallySized() && m_arrayType == _other)
+		return true;
+	return (*this) == _other;
+}
+
+string ArraySliceType::richIdentifier() const
+{
+	return m_arrayType.richIdentifier() + "_slice";
+}
+
+bool ArraySliceType::operator==(Type const& _other) const
+{
+	if (auto const* other = dynamic_cast<ArraySliceType const*>(&_other))
+		return m_arrayType == other->m_arrayType;
+	return false;
+}
+
+string ArraySliceType::toString(bool _short) const
+{
+	return m_arrayType.toString(_short) + " slice";
 }
 
 string ContractType::richIdentifier() const
@@ -2735,8 +2772,6 @@ bool FunctionType::operator==(Type const& _other) const
 
 BoolResult FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (m_kind == Kind::External && _convertTo == *TypeProvider::address())
-		return true;
 	return _convertTo.category() == category();
 }
 
@@ -2931,7 +2966,10 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	{
 		MemberList::MemberMap members;
 		if (m_kind == Kind::External)
+		{
 			members.emplace_back("selector", TypeProvider::fixedBytes(4));
+			members.emplace_back("address", TypeProvider::address());
+		}
 		if (m_kind != Kind::BareDelegateCall)
 		{
 			if (isPayable())

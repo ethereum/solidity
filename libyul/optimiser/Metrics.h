@@ -81,7 +81,6 @@ private:
 	CodeCost(Dialect const& _dialect): m_dialect(_dialect) {}
 
 	void operator()(FunctionCall const& _funCall) override;
-	void operator()(FunctionalInstruction const& _instr) override;
 	void operator()(Literal const& _literal) override;
 	void visit(Statement const& _statement) override;
 	void visit(Expression const& _expression) override;

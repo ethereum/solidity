@@ -2,7 +2,7 @@ contract test {
   struct s {uint a;}
   s x;
   s y;
-  function() external {
+  fallback() external {
     x == y;
   }
 }

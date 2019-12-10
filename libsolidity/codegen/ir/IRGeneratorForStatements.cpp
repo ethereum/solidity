@@ -296,7 +296,7 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 			expressionAsType(*value, *types.front()) <<
 			"\n";
 	}
-	m_code << "return_flag := 0\n" << "break\n";
+	m_code << "leave\n";
 }
 
 void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
@@ -640,6 +640,47 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			array <<
 			"))\n";
 
+			break;
+	}
+	case FunctionType::Kind::ArrayPop:
+	{
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(
+			*dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression().annotation().type
+		);
+		defineExpression(_functionCall) <<
+			m_utils.storageArrayPopFunction(arrayType) <<
+			"(" <<
+			m_context.variable(_functionCall.expression()) <<
+			")\n";
+		break;
+	}
+	case FunctionType::Kind::ArrayPush:
+	{
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(
+			*dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression().annotation().type
+		);
+		if (arguments.empty())
+		{
+			auto slotName = m_context.newYulVariable();
+			auto offsetName = m_context.newYulVariable();
+			m_code << "let " << slotName << ", " << offsetName << " := " <<
+				m_utils.storageArrayPushZeroFunction(arrayType) <<
+				"(" << m_context.variable(_functionCall.expression()) << ")\n";
+			setLValue(_functionCall, make_unique<IRStorageItem>(
+				m_context.utils(),
+				slotName,
+				offsetName,
+				*arrayType.baseType()
+			));
+		}
+		else
+			m_code <<
+				m_utils.storageArrayPushFunction(arrayType) <<
+				"(" <<
+				m_context.variable(_functionCall.expression()) <<
+				", " <<
+				expressionAsType(*arguments.front(), *arrayType.baseType()) <<
+				")\n";
 		break;
 	}
 	default:
@@ -718,6 +759,10 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		{
 			solUnimplementedAssert(false, "");
 		}
+		else if (member == "address")
+		{
+			solUnimplementedAssert(false, "");
+		}
 		else
 			solAssert(
 				!!_memberAccess.expression().annotation().type->memberType(member),
@@ -784,33 +829,45 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	{
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
 
-		solAssert(member == "length", "");
-
-		if (!type.isDynamicallySized())
-			defineExpression(_memberAccess) << type.length() << "\n";
+		if (member == "length")
+		{
+			if (!type.isDynamicallySized())
+				defineExpression(_memberAccess) << type.length() << "\n";
+			else
+				switch (type.location())
+				{
+					case DataLocation::CallData:
+						solUnimplementedAssert(false, "");
+						//m_context << Instruction::SWAP1 << Instruction::POP;
+						break;
+					case DataLocation::Storage:
+					{
+						string slot = m_context.variable(_memberAccess.expression());
+						defineExpression(_memberAccess) <<
+							m_utils.arrayLengthFunction(type) + "(" + slot + ")\n";
+						break;
+					}
+					case DataLocation::Memory:
+						defineExpression(_memberAccess) <<
+							"mload(" <<
+							m_context.variable(_memberAccess.expression()) <<
+							")\n";
+						break;
+				}
+		}
+		else if (member == "pop")
+		{
+			solAssert(type.location() == DataLocation::Storage, "");
+			defineExpression(_memberAccess) << m_context.variable(_memberAccess.expression()) << "\n";
+		}
+		else if (member == "push")
+		{
+			solAssert(type.location() == DataLocation::Storage, "");
+			defineExpression(_memberAccess) << m_context.variable(_memberAccess.expression()) << "\n";
+		}
 		else
-			switch (type.location())
-			{
-			case DataLocation::CallData:
-				solUnimplementedAssert(false, "");
-				//m_context << Instruction::SWAP1 << Instruction::POP;
-				break;
-			case DataLocation::Storage:
-				setLValue(_memberAccess, make_unique<IRStorageArrayLength>(
-					m_context.utils(),
-					m_context.variable(_memberAccess.expression()),
-					*_memberAccess.annotation().type,
-					type
-				));
+			solAssert(false, "Invalid array member access.");
 
-				break;
-			case DataLocation::Memory:
-				defineExpression(_memberAccess) <<
-					"mload(" <<
-					m_context.variable(_memberAccess.expression()) <<
-					")\n";
-				break;
-			}
 		break;
 	}
 	case Type::Category::FixedBytes:
@@ -935,6 +992,11 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 	}
 	else
 		solAssert(false, "Index access only allowed for mappings or arrays.");
+}
+
+void IRGeneratorForStatements::endVisit(IndexRangeAccess const&)
+{
+	solUnimplementedAssert(false, "Index range accesses not yet implemented.");
 }
 
 void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
@@ -1340,7 +1402,7 @@ void IRGeneratorForStatements::generateLoop(
 	m_code << "for {\n";
 	if (_initExpression)
 		_initExpression->accept(*this);
-	m_code << "} return_flag {\n";
+	m_code << "} 1 {\n";
 	if (_loopExpression)
 		_loopExpression->accept(*this);
 	m_code << "}\n";
@@ -1364,8 +1426,6 @@ void IRGeneratorForStatements::generateLoop(
 	_body.accept(*this);
 
 	m_code << "}\n";
-	// Bubble up the return condition.
-	m_code << "if iszero(return_flag) { break }\n";
 }
 
 Type const& IRGeneratorForStatements::type(Expression const& _expression)

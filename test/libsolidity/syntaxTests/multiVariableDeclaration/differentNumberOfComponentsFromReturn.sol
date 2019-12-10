@@ -13,10 +13,10 @@ contract C {
         (uint a1, uint b1, uint c1, uint d1) = three();
         (uint a2, uint b2, uint c2) = four();
     }
-    function one() public pure returns (uint);
-    function two() public pure returns (uint, uint);
-    function three() public pure returns (uint, uint, uint);
-    function four() public pure returns (uint, uint, uint, uint);
+    function one() public pure returns (uint) {}
+    function two() public pure returns (uint, uint) {}
+    function three() public pure returns (uint, uint, uint) {}
+    function four() public pure returns (uint, uint, uint, uint) {}
 }
 // ----
 // TypeError: (47-61): Different number of components on the left hand side (1) than on the right hand side (2).

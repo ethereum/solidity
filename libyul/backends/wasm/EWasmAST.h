@@ -44,10 +44,11 @@ struct If;
 struct Loop;
 struct Break;
 struct BreakIf;
+struct Return;
 using Expression = std::variant<
 	Literal, StringLiteral, LocalVariable, GlobalVariable,
 	FunctionCall, BuiltinCall, LocalAssignment, GlobalAssignment,
-	Block, If, Loop, Break, BreakIf
+	Block, If, Loop, Break, BreakIf, Return
 >;
 
 struct Literal { uint64_t value; };
@@ -67,6 +68,7 @@ struct If {
 };
 struct Loop { std::string labelName; std::vector<Expression> statements; };
 struct Break { Label label; };
+struct Return {};
 struct BreakIf { Label label; std::unique_ptr<Expression> condition; };
 
 struct VariableDeclaration { std::string variableName; };

@@ -22,6 +22,7 @@
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/JSON.h>
+#include <libsolidity/interface/ReadFile.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolc/libsolc.h>
 
@@ -58,7 +59,7 @@ bool containsError(Json::Value const& _compilerResult, string const& _type, stri
 
 Json::Value compile(string const& _input, CStyleReadFileCallback _callback = nullptr)
 {
-	string output(solidity_compile(_input.c_str(), _callback));
+	string output(solidity_compile(_input.c_str(), _callback, nullptr));
 	Json::Value ret;
 	BOOST_REQUIRE(jsonParseStrict(output, ret));
 	solidity_free();
@@ -137,9 +138,12 @@ BOOST_AUTO_TEST_CASE(with_callback)
 	)";
 
 	CStyleReadFileCallback callback{
-		[](char const* _path, char** o_contents, char** o_error)
+		[](void* _context, char const* _kind, char const* _path, char** o_contents, char** o_error)
 		{
+			// Passed in a nullptr in the compile() helper above.
+			BOOST_CHECK(_context == nullptr);
 			// Caller frees the pointers.
+			BOOST_CHECK(string(_kind) == ReadCallback::kindString(ReadCallback::Kind::ReadFile));
 			if (string(_path) == "found.sol")
 			{
 				static string content{"import \"missing.sol\"; contract B {}"};
@@ -167,7 +171,7 @@ BOOST_AUTO_TEST_CASE(with_callback)
 	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: Missing file."));
 
 	// This should be placed due to the missing "notfound.sol" which sets both pointers to null.
-	BOOST_CHECK(containsError(result, "ParserError", "Source \"notfound.sol\" not found: File not found."));
+	BOOST_CHECK(containsError(result, "ParserError", "Source \"notfound.sol\" not found: Callback not supported."));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

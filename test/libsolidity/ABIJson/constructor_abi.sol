@@ -23,7 +23,6 @@ contract test {
 //         "type": "bool"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "constructor"
 //   }

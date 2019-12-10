@@ -30,7 +30,7 @@ contract UltimateOracleFactory {
     /// @param challengePeriod Time to challenge oracle outcome
     /// @param challengeAmount Amount to challenge the outcome
     /// @param frontRunnerPeriod Time to overbid the front-runner
-    /// @return Oracle contract
+    /// @return ultimateOracle Oracle contract
     function createUltimateOracle(
         Oracle oracle,
         Token collateralToken,

@@ -439,6 +439,12 @@ for the variable and automatically removed again when the end of the block
 is reached. You need to provide an initial value for the variable which can
 be just ``0``, but it can also be a complex functional-style expression.
 
+Since 0.6.0 the name of a declared variable may not end in ``_offset`` or ``_slot``
+and it may not shadow any declaration visible in the scope of the inline assembly block
+(including variable, contract and function declarations). Similarly, if the name of a declared
+variable contains a dot ``.``, the prefix up to the ``.`` may not conflict with any
+declaration visible in the scope of the inline assembly block.
+
 .. code::
 
     pragma solidity >=0.4.16 <0.7.0;
@@ -530,6 +536,9 @@ the other two are blocks. If the initializing part
 declares any variables, the scope of these variables is extended into the
 body (including the condition and the post-iteration part).
 
+The ``break`` and ``continue`` statements can be used to exit the loop
+or skip to the post-part, respectively.
+
 The following example computes the sum of an area in memory.
 
 .. code::
@@ -570,6 +579,11 @@ statement.
 
 If you call a function that returns multiple values, you have to assign
 them to a tuple using ``a, b := f(x)`` or ``let a, b := f(x)``.
+
+The ``leave`` statement can be used to exit the current function. It
+works like the ``return`` statement in other languages just that it does
+not take a value to return, it just exits the functions and the function
+will return whatever values are currently assigned to the return variable(s).
 
 The following example implements the power function by square-and-multiply.
 
@@ -763,14 +777,13 @@ Grammar::
         AssemblyExpression |
         AssemblyLocalDefinition |
         AssemblyAssignment |
-        AssemblyStackAssignment |
-        LabelDefinition |
         AssemblyIf |
         AssemblySwitch |
         AssemblyFunctionDefinition |
         AssemblyFor |
         'break' |
         'continue' |
+        'leave' |
         SubAssembly
     AssemblyExpression = AssemblyCall | Identifier | AssemblyLiteral
     AssemblyLiteral = NumberLiteral | StringLiteral | HexLiteral
@@ -780,8 +793,6 @@ Grammar::
     AssemblyAssignment = IdentifierOrList ':=' AssemblyExpression
     IdentifierOrList = Identifier | '(' IdentifierList ')'
     IdentifierList = Identifier ( ',' Identifier)*
-    AssemblyStackAssignment = '=:' Identifier
-    LabelDefinition = Identifier ':'
     AssemblyIf = 'if' AssemblyExpression AssemblyBlock
     AssemblySwitch = 'switch' AssemblyExpression AssemblyCase*
         ( 'default' AssemblyBlock )?

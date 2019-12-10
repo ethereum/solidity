@@ -96,6 +96,10 @@ private:
 		FunctionTypePointer _functionType
 	);
 
+	void typeCheckFallbackFunction(FunctionDefinition const& _function);
+	void typeCheckReceiveFunction(FunctionDefinition const& _function);
+	void typeCheckConstructor(FunctionDefinition const& _function);
+
 	/// Performs general number and type checks of arguments against function call and struct ctor FunctionCall node parameters.
 	void typeCheckFunctionGeneralChecks(
 		FunctionCall const& _functionCall,
@@ -120,6 +124,7 @@ private:
 	void endVisit(FunctionTypeName const& _funType) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(IfStatement const& _ifStatement) override;
+	void endVisit(TryStatement const& _tryStatement) override;
 	bool visit(WhileStatement const& _whileStatement) override;
 	bool visit(ForStatement const& _forStatement) override;
 	void endVisit(Return const& _return) override;
@@ -136,6 +141,7 @@ private:
 	void endVisit(NewExpression const& _newExpression) override;
 	bool visit(MemberAccess const& _memberAccess) override;
 	bool visit(IndexAccess const& _indexAccess) override;
+	bool visit(IndexRangeAccess const& _indexRangeAccess) override;
 	bool visit(Identifier const& _identifier) override;
 	void endVisit(ElementaryTypeNameExpression const& _expr) override;
 	void endVisit(Literal const& _literal) override;

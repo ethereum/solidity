@@ -87,6 +87,7 @@ eth::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 		{
 			Compiler compiler(
 				dev::test::Options::get().evmVersion(),
+				RevertStrings::Default,
 				dev::test::Options::get().optimize ? OptimiserSettings::standard() : OptimiserSettings::minimal()
 			);
 			compiler.compileContract(*contract, map<ContractDefinition const*, shared_ptr<Compiler const>>{}, bytes());

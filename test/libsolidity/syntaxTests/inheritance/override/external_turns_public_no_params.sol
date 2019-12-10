@@ -1,7 +1,7 @@
 contract A {
-    function f() external pure {}
+    function f() external virtual pure {}
 }
 contract B is A {
-    function f() public pure {
+    function f() public override pure {
     }
 }

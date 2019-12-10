@@ -25,6 +25,7 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/LValue.h>
+#include <libsolidity/interface/DebugSettings.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
 #include <libdevcore/Common.h>
@@ -55,8 +56,15 @@ class ArrayType;
 class ExpressionCompiler: private ASTConstVisitor
 {
 public:
-	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimiseOrderLiterals):
-		m_optimiseOrderLiterals(_optimiseOrderLiterals), m_context(_compilerContext) {}
+	ExpressionCompiler(
+		CompilerContext& _compilerContext,
+		RevertStrings _revertStrings,
+		bool _optimiseOrderLiterals
+	):
+		m_revertStrings(_revertStrings),
+		m_optimiseOrderLiterals(_optimiseOrderLiterals),
+		m_context(_compilerContext)
+	{}
 
 	/// Compile the given @a _expression and leave its value on the stack.
 	void compile(Expression const& _expression);
@@ -80,6 +88,7 @@ private:
 	bool visit(NewExpression const& _newExpression) override;
 	bool visit(MemberAccess const& _memberAccess) override;
 	bool visit(IndexAccess const& _indexAccess) override;
+	bool visit(IndexRangeAccess const& _indexAccess) override;
 	void endVisit(Identifier const& _identifier) override;
 	void endVisit(Literal const& _literal) override;
 
@@ -95,9 +104,12 @@ private:
 	/// @}
 
 	/// Appends code to call a function of the given type with the given arguments.
+	/// @param _tryCall if true, this is the external call of a try statement. In that case,
+	///                 returns success flag on top of stack and does not revert on failure.
 	void appendExternalFunctionCall(
 		FunctionType const& _functionType,
-		std::vector<ASTPointer<Expression const>> const& _arguments
+		std::vector<ASTPointer<Expression const>> const& _arguments,
+		bool _tryCall
 	);
 	/// Appends code that evaluates a single expression and moves the result to memory. The memory offset is
 	/// expected to be on the stack and is updated by this call.
@@ -126,6 +138,7 @@ private:
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();
 
+	RevertStrings m_revertStrings;
 	bool m_optimiseOrderLiterals;
 	CompilerContext& m_context;
 	std::unique_ptr<LValue> m_currentLValue;

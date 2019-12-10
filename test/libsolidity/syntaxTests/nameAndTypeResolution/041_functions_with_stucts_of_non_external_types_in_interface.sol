@@ -5,5 +5,4 @@ contract C {
     function f(S memory) public {}
 }
 // ----
-// Warning: (0-33): Experimental features are turned on. Do not use experimental features on live deployments.
 // TypeError: (103-111): Internal type is not allowed for public or external functions.

@@ -206,7 +206,8 @@ BOOST_AUTO_TEST_CASE(array_copy)
 			bytes2[] data1;
 			bytes5[] data2;
 			function f(uint x) public returns (uint l, uint y) {
-				data1.length = msg.data.length;
+				for (uint i = 0; i < msg.data.length; i++)
+					data1.push();
 				for (uint i = 0; i < msg.data.length; ++i)
 					data1[i] = msg.data[i];
 				data2 = data1;
@@ -533,16 +534,15 @@ BOOST_AUTO_TEST_CASE(inconsistency)
 			}
 
 			function trigger() public returns (uint) {
-				containers.length++;
-				Container storage container = containers[0];
+				Container storage container = containers.push();
 
 				container.values.push(Value({
 					badnum: 9000,
 					number: 0
 				}));
 
-				container.valueIndices.length++;
-				valueIndices.length++;
+				container.valueIndices.push();
+				valueIndices.push();
 
 				levelII();
 				return debug;

@@ -28,11 +28,6 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-void ASTWalker::operator()(FunctionalInstruction const& _instr)
-{
-	walkVector(_instr.arguments | boost::adaptors::reversed);
-}
-
 void ASTWalker::operator()(FunctionCall const& _funCall)
 {
 	// Does not visit _funCall.functionName on purpose
@@ -102,11 +97,6 @@ void ASTWalker::visit(Expression const& _e)
 	std::visit(*this, _e);
 }
 
-void ASTModifier::operator()(FunctionalInstruction& _instr)
-{
-	walkVector(_instr.arguments | boost::adaptors::reversed);
-}
-
 void ASTModifier::operator()(FunctionCall& _funCall)
 {
 	// Does not visit _funCall.functionName on purpose
@@ -166,6 +156,10 @@ void ASTModifier::operator()(Break&)
 }
 
 void ASTModifier::operator()(Continue&)
+{
+}
+
+void ASTModifier::operator()(Leave&)
 {
 }
 

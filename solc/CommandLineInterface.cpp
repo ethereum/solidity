@@ -27,12 +27,12 @@
 
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
-#include <libsolidity/ast/ASTPrinter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/interface/DebugSettings.h>
 
 #include <libyul/AssemblyStack.h>
 
@@ -124,21 +124,36 @@ static string const g_strInterface = "interface";
 static string const g_strYul = "yul";
 static string const g_strYulDialect = "yul-dialect";
 static string const g_strIR = "ir";
+static string const g_strIPFS = "ipfs";
 static string const g_strEWasm = "ewasm";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
 static string const g_strMachine = "machine";
 static string const g_strMetadata = "metadata";
+static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
+static string const g_strNone = "none";
+static string const g_strNoOptimizeYul = "no-optimize-yul";
 static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
 static string const g_strOptimizeYul = "optimize-yul";
 static string const g_strOutputDir = "output-dir";
 static string const g_strOverwrite = "overwrite";
+static string const g_strRevertStrings = "revert-strings";
+
+/// Possible arguments to for --revert-strings
+static set<string> const g_revertStringsArgs
+{
+	revertStringsToString(RevertStrings::Default),
+	revertStringsToString(RevertStrings::Strip),
+	revertStringsToString(RevertStrings::Debug),
+	revertStringsToString(RevertStrings::VerboseDebug)
+};
+
 static string const g_strSignatureHashes = "hashes";
 static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
@@ -146,12 +161,13 @@ static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
 static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
+static string const g_strSwarm = "swarm";
 static string const g_strPrettyJson = "pretty-json";
 static string const g_strVersion = "version";
 static string const g_strIgnoreMissingFiles = "ignore-missing";
 static string const g_strColor = "color";
 static string const g_strNoColor = "no-color";
-static string const g_strNewReporter = "new-reporter";
+static string const g_strOldReporter = "old-reporter";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argPrettyJson = g_strPrettyJson;
@@ -159,7 +175,6 @@ static string const g_argAllowPaths = g_strAllowPaths;
 static string const g_argAsm = g_strAsm;
 static string const g_argAsmJson = g_strAsmJson;
 static string const g_argAssemble = g_strAssemble;
-static string const g_argAst = g_strAst;
 static string const g_argAstCompactJson = g_strAstCompactJson;
 static string const g_argAstJson = g_strAstJson;
 static string const g_argBinary = g_strBinary;
@@ -177,6 +192,7 @@ static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
 static string const g_argMetadata = g_strMetadata;
+static string const g_argMetadataHash = g_strMetadataHash;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
@@ -192,7 +208,7 @@ static string const g_stdinFileName = g_stdinFileNameStr;
 static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
 static string const g_argColor = g_strColor;
 static string const g_argNoColor = g_strNoColor;
-static string const g_argNewReporter = g_strNewReporter;
+static string const g_argOldReporter = g_strOldReporter;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs
@@ -226,6 +242,14 @@ static set<string> const g_yulDialectArgs
 {
 	g_strEVM,
 	g_streWasm
+};
+
+/// Possible arguments to for --metadata-hash
+static set<string> const g_metadataHashArgs
+{
+	g_strIPFS,
+	g_strSwarm,
+	g_strNone
 };
 
 static void version()
@@ -666,7 +690,8 @@ Allowed options)",
 			"Set for how many contract runs to optimize."
 			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
 		)
-		(g_strOptimizeYul.c_str(), "Enable Yul optimizer in Solidity, mostly for ABIEncoderV2. Still considered experimental.")
+		(g_strOptimizeYul.c_str(), "Enable Yul optimizer in Solidity. Legacy option: the yul optimizer is enabled as part of the general --optimize option.")
+		(g_strNoOptimizeYul.c_str(), "Disable Yul optimizer in Solidity.")
 		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
 			g_argLibraries.c_str(),
@@ -674,6 +699,11 @@ Allowed options)",
 			"Direct string or file containing library addresses. Syntax: "
 			"<libraryName>:<address> [, or whitespace] ...\n"
 			"Address is interpreted as a hex string optionally prefixed by 0x."
+		)
+		(
+			g_strRevertStrings.c_str(),
+			po::value<string>()->value_name(boost::join(g_revertStringsArgs, ",")),
+			"Strip revert (and require) reason strings or add additional debugging information."
 		)
 		(
 			(g_argOutputDir + ",o").c_str(),
@@ -719,7 +749,12 @@ Allowed options)",
 			"Switch to linker mode, ignoring all options apart from --libraries "
 			"and modify binaries in place."
 		)
-		(g_argMetadataLiteral.c_str(), "Store referenced sources are literal data in the metadata output.")
+		(
+			g_argMetadataHash.c_str(),
+			po::value<string>()->value_name(boost::join(g_metadataHashArgs, ",")),
+			"Choose hash method for the bytecode metadata or disable it."
+		)
+		(g_argMetadataLiteral.c_str(), "Store referenced sources as literal data in the metadata output.")
 		(
 			g_argAllowPaths.c_str(),
 			po::value<string>()->value_name("path(s)"),
@@ -727,12 +762,11 @@ Allowed options)",
 		)
 		(g_argColor.c_str(), "Force colored output.")
 		(g_argNoColor.c_str(), "Explicitly disable colored output, disabling terminal auto-detection.")
-		(g_argNewReporter.c_str(), "Enables new diagnostics reporter.")
+		(g_argOldReporter.c_str(), "Enables old diagnostics reporter.")
 		(g_argErrorRecovery.c_str(), "Enables additional parser error recovery.")
 		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
-		(g_argAst.c_str(), "AST of all source files.")
 		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
 		(g_argAstCompactJson.c_str(), "AST of all source files in a compact JSON format.")
 		(g_argAsm.c_str(), "EVM assembly of the contracts.")
@@ -796,6 +830,23 @@ Allowed options)",
 		return false;
 	}
 
+	if (m_args.count(g_strRevertStrings))
+	{
+		string revertStringsString = m_args[g_strRevertStrings].as<string>();
+		std::optional<RevertStrings> revertStrings = revertStringsFromString(revertStringsString);
+		if (!revertStrings)
+		{
+			serr() << "Invalid option for --" << g_strRevertStrings << ": " << revertStringsString << endl;
+			return false;
+		}
+		if (*revertStrings != RevertStrings::Default && *revertStrings != RevertStrings::Strip)
+		{
+			serr() << "Only \"default\" and \"strip\" are implemented for --" << g_strRevertStrings << " for now." << endl;
+			return false;
+		}
+		m_revertStrings = *revertStrings;
+	}
+
 	if (m_args.count(g_argCombinedJson))
 	{
 		vector<string> requests;
@@ -813,10 +864,15 @@ Allowed options)",
 
 bool CommandLineInterface::processInput()
 {
-	ReadCallback::Callback fileReader = [this](string const& _path)
+	ReadCallback::Callback fileReader = [this](string const& _kind, string const& _path)
 	{
 		try
 		{
+			if (_kind != ReadCallback::kindString(ReadCallback::Kind::ReadFile))
+				BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
+					"ReadFile callback used as callback kind " +
+					_kind
+				));
 			auto path = boost::filesystem::path(_path);
 			auto canonicalPath = boost::filesystem::weakly_canonical(path);
 			bool isAllowed = false;
@@ -907,7 +963,17 @@ bool CommandLineInterface::processInput()
 		using Machine = yul::AssemblyStack::Machine;
 		Input inputLanguage = m_args.count(g_argYul) ? Input::Yul : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
-		bool optimize = m_args.count(g_argOptimize) || m_args.count(g_strOptimizeYul);
+		bool optimize = m_args.count(g_argOptimize);
+		if (m_args.count(g_strOptimizeYul))
+		{
+			serr() << "--optimize-yul is invalid in assembly mode. Use --optimize instead." << endl;
+			return false;
+		}
+		if (m_args.count(g_strNoOptimizeYul))
+		{
+			serr() << "--no-optimize-yul is invalid in assembly mode. Optimization is disabled by default and can be enabled with --optimize." << endl;
+			return false;
+		}
 		if (m_args.count(g_argMachine))
 		{
 			string machine = m_args[g_argMachine].as<string>();
@@ -955,7 +1021,7 @@ bool CommandLineInterface::processInput()
 			return false;
 		}
 		serr() <<
-			"Warning: Yul and its optimizer are still experimental. Please use the output with care." <<
+			"Warning: Yul is still experimental. Please use the output with care." <<
 			endl;
 
 		return assemble(inputLanguage, targetMachine, optimize);
@@ -967,18 +1033,36 @@ bool CommandLineInterface::processInput()
 		return link();
 	}
 
+	if (m_args.count(g_argMetadataHash))
+	{
+		string hashStr = m_args[g_argMetadataHash].as<string>();
+		if (hashStr == g_strIPFS)
+			m_metadataHash = CompilerStack::MetadataHash::IPFS;
+		else if (hashStr == g_strSwarm)
+			m_metadataHash = CompilerStack::MetadataHash::Bzzr1;
+		else if (hashStr == g_strNone)
+			m_metadataHash = CompilerStack::MetadataHash::None;
+		else
+		{
+			serr() << "Invalid option for --metadata-hash: " << hashStr << endl;
+			return false;
+		}
+	}
+
 	m_compiler = make_unique<CompilerStack>(fileReader);
 
 	unique_ptr<SourceReferenceFormatter> formatter;
-	if (m_args.count(g_argNewReporter))
-		formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
-	else
+	if (m_args.count(g_argOldReporter))
 		formatter = make_unique<SourceReferenceFormatter>(serr(false));
+	else
+		formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
 
 	try
 	{
 		if (m_args.count(g_argMetadataLiteral) > 0)
 			m_compiler->useMetadataLiteralSources(true);
+		if (m_args.count(g_argMetadataHash))
+			m_compiler->setMetadataHash(m_metadataHash);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_remappings);
 		m_compiler->setSources(m_sourceCodes);
@@ -986,6 +1070,7 @@ bool CommandLineInterface::processInput()
 			m_compiler->setLibraries(m_libraries);
 		m_compiler->setParserErrorRecovery(m_args.count(g_argErrorRecovery));
 		m_compiler->setEVMVersion(m_evmVersion);
+		m_compiler->setRevertStringBehaviour(m_revertStrings);
 		// TODO: Perhaps we should not compile unless requested
 
 		m_compiler->enableIRGeneration(m_args.count(g_argIR));
@@ -993,7 +1078,7 @@ bool CommandLineInterface::processInput()
 
 		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
-		settings.runYulOptimiser = m_args.count(g_strOptimizeYul);
+		settings.runYulOptimiser = !m_args.count(g_strNoOptimizeYul);
 		settings.optimizeStackAllocation = settings.runYulOptimiser;
 		m_compiler->setOptimiserSettings(settings);
 
@@ -1149,9 +1234,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 {
 	string title;
 
-	if (_argStr == g_argAst)
-		title = "Syntax trees:";
-	else if (_argStr == g_argAstJson)
+	if (_argStr == g_argAstJson)
 		title = "JSON AST:";
 	else if (_argStr == g_argAstCompactJson)
 		title = "JSON AST (compact format):";
@@ -1184,16 +1267,8 @@ void CommandLineInterface::handleAst(string const& _argStr)
 			{
 				stringstream data;
 				string postfix = "";
-				if (_argStr == g_argAst)
-				{
-					ASTPrinter printer(m_compiler->ast(sourceCode.first), sourceCode.second);
-					printer.print(data);
-				}
-				else
-				{
-					ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
-					postfix += "_json";
-				}
+				ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
+				postfix += "_json";
 				boost::filesystem::path path(sourceCode.first);
 				createFile(path.filename().string() + postfix + ".ast", data.str());
 			}
@@ -1204,17 +1279,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 			for (auto const& sourceCode: m_sourceCodes)
 			{
 				sout() << endl << "======= " << sourceCode.first << " =======" << endl;
-				if (_argStr == g_argAst)
-				{
-					ASTPrinter printer(
-						m_compiler->ast(sourceCode.first),
-						sourceCode.second,
-						gasCosts
-					);
-					printer.print(sout());
-				}
-				else
-					ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
+				ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
 			}
 		}
 	}
@@ -1365,14 +1430,14 @@ bool CommandLineInterface::assemble(
 	for (auto const& sourceAndStack: assemblyStacks)
 	{
 		auto const& stack = sourceAndStack.second;
+		unique_ptr<SourceReferenceFormatter> formatter;
+		if (m_args.count(g_argOldReporter))
+			formatter = make_unique<SourceReferenceFormatter>(serr(false));
+		else
+			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
+
 		for (auto const& error: stack.errors())
 		{
-			unique_ptr<SourceReferenceFormatter> formatter;
-			if (m_args.count(g_argNewReporter))
-				formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
-			else
-				formatter = make_unique<SourceReferenceFormatter>(serr(false));
-
 			g_hasOutput = true;
 			formatter->printErrorInformation(*error);
 		}
@@ -1450,7 +1515,6 @@ void CommandLineInterface::outputCompilationResults()
 	handleCombinedJSON();
 
 	// do we need AST output?
-	handleAst(g_argAst);
 	handleAst(g_argAstJson);
 	handleAst(g_argAstCompactJson);
 

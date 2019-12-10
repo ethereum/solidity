@@ -1,3 +1,47 @@
+### 0.6.0 (unreleased)
+
+Breaking changes:
+ * ABI: remove the deprecated ``constant`` and ``payable`` fields.
+ * ABI: the ``type`` field is now required and no longer specified to default to ``function``.
+ * C API (``libsolc``): the provided callback now takes two parameters, kind and data. The callback can then be used for multiple purposes, such has file imports and SMT queries.
+ * C API (``libsolc``): Introduce context parameter.
+ * Commandline interface: remove the text-based ast printer (``--ast``).
+ * Command line interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
+ * Command line interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
+ * General: Disallow explicit conversions from external function types to ``address`` and add a member called ``address`` to them as replacement.
+ * General: Enable Yul optimizer as part of standard optimization.
+ * General: New reserved keywords: ``virtual``.
+ * General: Split unnamed fallback functions into two cases defined using ``fallback()`` and ``receive()``.
+ * Standard JSON Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
+ * Syntax: ``push(element)`` for dynamic storage arrays do not return the new length anymore.
+ * Syntax: Abstract contracts need to be marked explicitly as abstract by using the ``abstract`` keyword.
+ * Inline Assembly: Only strict inline assembly is allowed.
+ * Inline Assembly: Variable declarations cannot shadow declarations outside the assembly block.
+ * Syntax: ``length`` member of arrays is now always read-only, even for storage arrays.
+ * Type checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
+ * Natspec JSON Interface: Properly support multiple ``@return`` statements in ``@dev`` documentation and enforce named return parameters to be mentioned documentation.
+ * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
+ * AST: Inline assembly is exported as structured JSON instead of plain string.
+ * JSON AST: Replace ``superFunction`` attribute by ``baseFunctions``.
+ * General: ``private`` cannot be used together with ``virtual``.
+ * Inheritance: State variable shadowing is now disallowed.
+
+Language Features:
+ * Allow global enums and structs.
+ * Allow underscores as delimiters in hex strings.
+ * Allow explicit conversions from ``address`` to ``address payable`` via ``payable(...)``.
+ * Introduce syntax for array slices and implement them for dynamic calldata arrays.
+ * Introduce ``push()`` for dynamic storage arrays. It returns a reference to the newly allocated element, if applicable.
+ * Introduce ``virtual`` and ``override`` keywords.
+ * Modify ``push(element)`` for dynamic storage arrays such that it does not return the new length anymore.
+ * Yul: Introduce ``leave`` statement that exits the current function.
+ * Allow public variables to override external functions.
+
+Compiler Features:
+ * Allow revert strings to be stripped from the binary using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting.
+ * ABIEncoderV2: Do not warn about enabled ABIEncoderV2 anymore (the pragma is still needed, though).
+
+
 ### 0.5.14 (2019-12-09)
 
 Language Features:
@@ -42,7 +86,6 @@ Compiler Features:
  * TypeChecker: List possible candidates when overload resolution fails.
  * TypeChecker: Disallow variables of library types.
 
-
 Bugfixes:
  * Code Generator: Fixed a faulty assert that would wrongly trigger for array sizes exceeding unsigned integer.
  * SMTChecker: Fix internal error when accessing indices of fixed bytes.
@@ -51,7 +94,6 @@ Bugfixes:
  * Type Checker: Disallow constructor of the same class to be used as modifier.
  * Type Checker: Treat magic variables as unknown identifiers in inline assembly.
  * Code Generator: Fix internal error when trying to convert ``super`` to a different type
-
 
 
 ### 0.5.12 (2019-10-01)

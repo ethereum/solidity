@@ -41,12 +41,6 @@ void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 	ExpressionSplitter{_context.dialect, _context.dispenser}(_ast);
 }
 
-void ExpressionSplitter::operator()(FunctionalInstruction& _instruction)
-{
-	for (auto& arg: _instruction.arguments | boost::adaptors::reversed)
-		outlineExpression(arg);
-}
-
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
 {
 	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))

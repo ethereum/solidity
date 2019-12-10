@@ -3,7 +3,7 @@ contract Test {
         return type(Other).creationCode;
     }
 }
-contract Other {
+abstract contract Other {
     function f(uint) public returns (uint);
 }
 // ----

@@ -1,1 +1,1 @@
---error-recovery --ast  --hashes
+--error-recovery --ast-json  --hashes

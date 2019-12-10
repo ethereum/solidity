@@ -70,7 +70,8 @@ void CodeSize::visit(Statement const& _statement)
 	else if (
 		holds_alternative<If>(_statement) ||
 		holds_alternative<Break>(_statement) ||
-		holds_alternative<Continue>(_statement)
+		holds_alternative<Continue>(_statement) ||
+		holds_alternative<Leave>(_statement)
 	)
 		m_size += 2;
 	else if (holds_alternative<ForLoop>(_statement))
@@ -117,13 +118,6 @@ void CodeCost::operator()(FunctionCall const& _funCall)
 			}
 
 	m_cost += 49;
-}
-
-void CodeCost::operator()(FunctionalInstruction const& _instr)
-{
-	yulAssert(m_cost >= 1, "Should assign cost one in visit(Expression).");
-	addInstructionCost(_instr.instruction);
-	ASTWalker::operator()(_instr);
 }
 
 void CodeCost::operator()(Literal const& _literal)

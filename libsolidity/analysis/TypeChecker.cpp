@@ -89,7 +89,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	for (auto const& n: _contract.subNodes())
 		n->accept(*this);
 
-
 	return false;
 }
 
@@ -137,19 +136,17 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 		);
 
 	if (arguments.size() >= 1)
-	{
-		BoolResult result = type(*arguments.front())->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory());
-
-		if (!result)
-			m_errorReporter.typeErrorConcatenateDescriptions(
+		if (
+			!type(*arguments.front())->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory()) &&
+			!type(*arguments.front())->isImplicitlyConvertibleTo(*TypeProvider::bytesCalldata())
+		)
+			m_errorReporter.typeError(
 				arguments.front()->location(),
-				"Invalid type for argument in function call. "
-				"Invalid implicit conversion from " +
+				"The first argument to \"abi.decode\" must be implicitly convertible to "
+				"bytes memory or bytes calldata, but is of type " +
 				type(*arguments.front())->toString() +
-				" to bytes memory requested.",
-				result.message()
+				"."
 			);
-	}
 
 	if (arguments.size() < 2)
 		return {};
@@ -330,11 +327,20 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	bool isLibraryFunction = _function.inContractKind() == ContractDefinition::ContractKind::Library;
+
+	if (_function.markedVirtual())
+	{
+		if (_function.annotation().contract->isInterface())
+			m_errorReporter.warning(_function.location(), "Interface functions are implicitly \"virtual\"");
+		if (_function.visibility() == Declaration::Visibility::Private)
+			m_errorReporter.typeError(_function.location(), "\"virtual\" and \"private\" cannot be used together.");
+	}
+
 	if (_function.isPayable())
 	{
 		if (isLibraryFunction)
 			m_errorReporter.typeError(_function.location(), "Library functions cannot be payable.");
-		if (!_function.isConstructor() && !_function.isFallback() && !_function.isPartOfExternalInterface())
+		if (_function.isOrdinary() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(_function.location(), "Internal functions cannot be payable.");
 	}
 	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& var) {
@@ -426,8 +432,19 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		_function.body().accept(*this);
 	else if (_function.isConstructor())
 		m_errorReporter.typeError(_function.location(), "Constructor must be implemented if declared.");
-	else if (isLibraryFunction && _function.visibility() <= FunctionDefinition::Visibility::Internal)
-		m_errorReporter.typeError(_function.location(), "Internal library function must be implemented if declared.");
+	else if (isLibraryFunction)
+		m_errorReporter.typeError(_function.location(), "Library functions must be implemented if declared.");
+	else if (!_function.virtualSemantics())
+		m_errorReporter.typeError(_function.location(), "Functions without implementation must be marked virtual.");
+
+
+	if (_function.isFallback())
+		typeCheckFallbackFunction(_function);
+	else if (_function.isReceive())
+		typeCheckReceiveFunction(_function);
+	else if (_function.isConstructor())
+		typeCheckConstructor(_function);
+
 	return false;
 }
 
@@ -438,7 +455,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	// * or inside of a struct definition.
 	if (
 		m_scope->isInterface()
-		&& !_variable.isCallableParameter()
+		&& !_variable.isCallableOrCatchParameter()
 		&& !m_insideStruct
 	)
 		m_errorReporter.typeError(_variable.location(), "Variables cannot be declared in interfaces.");
@@ -743,7 +760,6 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	yul::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
-		Error::Type::SyntaxError,
 		_inlineAssembly.dialect(),
 		identifierAccess
 	);
@@ -759,6 +775,133 @@ bool TypeChecker::visit(IfStatement const& _ifStatement)
 	if (_ifStatement.falseStatement())
 		_ifStatement.falseStatement()->accept(*this);
 	return false;
+}
+
+void TypeChecker::endVisit(TryStatement const& _tryStatement)
+{
+	FunctionCall const* externalCall = dynamic_cast<FunctionCall const*>(&_tryStatement.externalCall());
+	if (!externalCall || externalCall->annotation().kind != FunctionCallKind::FunctionCall)
+	{
+		m_errorReporter.typeError(
+			_tryStatement.externalCall().location(),
+			"Try can only be used with external function calls and contract creation calls."
+		);
+		return;
+	}
+
+	FunctionType const& functionType = dynamic_cast<FunctionType const&>(*externalCall->expression().annotation().type);
+	if (
+		functionType.kind() != FunctionType::Kind::External &&
+		functionType.kind() != FunctionType::Kind::Creation &&
+		functionType.kind() != FunctionType::Kind::DelegateCall
+	)
+	{
+		m_errorReporter.typeError(
+			_tryStatement.externalCall().location(),
+			"Try can only be used with external function calls and contract creation calls."
+		);
+		return;
+	}
+
+	externalCall->annotation().tryCall = true;
+
+	solAssert(_tryStatement.clauses().size() >= 2, "");
+	solAssert(_tryStatement.clauses().front(), "");
+
+	TryCatchClause const& successClause = *_tryStatement.clauses().front();
+	if (successClause.parameters())
+	{
+		TypePointers returnTypes =
+			m_evmVersion.supportsReturndata() ?
+			functionType.returnParameterTypes() :
+			functionType.returnParameterTypesWithoutDynamicTypes();
+		std::vector<ASTPointer<VariableDeclaration>> const& parameters =
+			successClause.parameters()->parameters();
+		if (returnTypes.size() != parameters.size())
+			m_errorReporter.typeError(
+				successClause.location(),
+				"Function returns " +
+				to_string(functionType.returnParameterTypes().size()) +
+				" values, but returns clause has " +
+				to_string(parameters.size()) +
+				" variables."
+			);
+		size_t len = min(returnTypes.size(), parameters.size());
+		for (size_t i = 0; i < len; ++i)
+		{
+			solAssert(returnTypes[i], "");
+			if (parameters[i] && *parameters[i]->annotation().type != *returnTypes[i])
+				m_errorReporter.typeError(
+					parameters[i]->location(),
+					"Invalid type, expected " +
+					returnTypes[i]->toString(false) +
+					" but got " +
+					parameters[i]->annotation().type->toString() +
+					"."
+				);
+		}
+	}
+
+	TryCatchClause const* errorClause = nullptr;
+	TryCatchClause const* lowLevelClause = nullptr;
+	for (size_t i = 1; i < _tryStatement.clauses().size(); ++i)
+	{
+		TryCatchClause const& clause = *_tryStatement.clauses()[i];
+		if (clause.errorName() == "")
+		{
+			if (lowLevelClause)
+				m_errorReporter.typeError(
+					clause.location(),
+					SecondarySourceLocation{}.append("The first clause is here:", lowLevelClause->location()),
+					"This try statement already has a low-level catch clause."
+				);
+			lowLevelClause = &clause;
+			if (clause.parameters() && !clause.parameters()->parameters().empty())
+			{
+				if (
+					clause.parameters()->parameters().size() != 1 ||
+					*clause.parameters()->parameters().front()->type() != *TypeProvider::bytesMemory()
+				)
+					m_errorReporter.typeError(clause.location(), "Expected `catch (bytes memory ...) { ... }` or `catch { ... }`.");
+				if (!m_evmVersion.supportsReturndata())
+					m_errorReporter.typeError(
+						clause.location(),
+						"This catch clause type cannot be used on the selected EVM version (" +
+						m_evmVersion.name() +
+						"). You need at least a Byzantium-compatible EVM or use `catch { ... }`."
+					);
+			}
+		}
+		else if (clause.errorName() == "Error")
+		{
+			if (!m_evmVersion.supportsReturndata())
+				m_errorReporter.typeError(
+					clause.location(),
+					"This catch clause type cannot be used on the selected EVM version (" +
+					m_evmVersion.name() +
+					"). You need at least a Byzantium-compatible EVM or use `catch { ... }`."
+				);
+
+			if (errorClause)
+				m_errorReporter.typeError(
+					clause.location(),
+					SecondarySourceLocation{}.append("The first clause is here:", errorClause->location()),
+					"This try statement already has an \"Error\" catch clause."
+				);
+			errorClause = &clause;
+			if (
+				!clause.parameters() ||
+				clause.parameters()->parameters().size() != 1 ||
+				*clause.parameters()->parameters().front()->type() != *TypeProvider::stringMemory()
+			)
+				m_errorReporter.typeError(clause.location(), "Expected `catch Error(string memory ...) { ... }`.");
+		}
+		else
+			m_errorReporter.typeError(
+				clause.location(),
+				"Invalid catch clause name. Expected either `catch (...)` or `catch Error(...)`."
+			);
+	}
 }
 
 bool TypeChecker::visit(WhileStatement const& _whileStatement)
@@ -1413,6 +1556,23 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 					"might overflow. Silence this warning by converting the literal to the "
 					"expected type."
 				);
+		if (
+			commonType->category() == Type::Category::Integer &&
+			rightType->category() == Type::Category::Integer &&
+			dynamic_cast<IntegerType const&>(*commonType).numBits() <
+			dynamic_cast<IntegerType const&>(*rightType).numBits()
+		)
+			m_errorReporter.warning(
+				_operation.location(),
+				"The result type of the " +
+				operation +
+				" operation is equal to the type of the first operand (" +
+				commonType->toString() +
+				") ignoring the (larger) type of the second operand (" +
+				rightType->toString() +
+				") which might be unexpected. Silence this warning by either converting "
+				"the first or the second operand to the type of the other."
+			);
 	}
 }
 
@@ -1494,12 +1654,28 @@ TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 							variableDeclaration->location()
 						);
 				m_errorReporter.typeError(
-					_functionCall.location(), ssl,
+					_functionCall.location(),
+					ssl,
 					"Explicit type conversion not allowed from non-payable \"address\" to \"" +
 					resultType->toString() +
 					"\", which has a payable fallback function."
 				);
 			}
+			else if (
+				auto const* functionType = dynamic_cast<FunctionType const*>(argType);
+				functionType &&
+				functionType->kind() == FunctionType::Kind::External &&
+				resultType->category() == Type::Category::Address
+			)
+				m_errorReporter.typeError(
+					_functionCall.location(),
+					"Explicit type conversion not allowed from \"" +
+					argType->toString() +
+					"\" to \"" +
+					resultType->toString() +
+					"\". To obtain the address of the contract of the function, " +
+					"you can use the .address member of the function."
+				);
 			else
 				m_errorReporter.typeError(
 					_functionCall.location(),
@@ -1510,11 +1686,14 @@ TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 					"\"."
 				);
 		}
-		if (resultType->category() == Type::Category::Address)
-		{
-			bool const payable = argType->isExplicitlyConvertibleTo(*TypeProvider::payableAddress());
-			resultType = payable ? TypeProvider::payableAddress() : TypeProvider::address();
-		}
+		if (auto addressType = dynamic_cast<AddressType const*>(resultType))
+			if (addressType->stateMutability() != StateMutability::Payable)
+			{
+				bool payable = false;
+				if (argType->category() != Type::Category::Address)
+					payable = argType->isExplicitlyConvertibleTo(*TypeProvider::payableAddress());
+				resultType = payable ? TypeProvider::payableAddress() : TypeProvider::address();
+			}
 	}
 	return resultType;
 }
@@ -1548,6 +1727,71 @@ void TypeChecker::typeCheckFunctionCall(
 
 	// Perform standard function call type checking
 	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
+}
+
+void TypeChecker::typeCheckFallbackFunction(FunctionDefinition const& _function)
+{
+	solAssert(_function.isFallback(), "");
+
+	if (_function.inContractKind() == ContractDefinition::ContractKind::Library)
+		m_errorReporter.typeError(_function.location(), "Libraries cannot have fallback functions.");
+	if (_function.stateMutability() != StateMutability::NonPayable && _function.stateMutability() != StateMutability::Payable)
+		m_errorReporter.typeError(
+			_function.location(),
+			"Fallback function must be payable or non-payable, but is \"" +
+			stateMutabilityToString(_function.stateMutability()) +
+			"\"."
+		);
+	if (_function.visibility() != FunctionDefinition::Visibility::External)
+		m_errorReporter.typeError(_function.location(), "Fallback function must be defined as \"external\".");
+	if (!_function.returnParameters().empty())
+	{
+		if (_function.returnParameters().size() > 1 || *type(*_function.returnParameters().front()) != *TypeProvider::bytesMemory())
+			m_errorReporter.typeError(_function.returnParameterList()->location(), "Fallback function can only have a single \"bytes memory\" return value.");
+		else
+			m_errorReporter.typeError(_function.returnParameterList()->location(), "Return values for fallback functions are not yet implemented.");
+	}
+	if (!_function.parameters().empty())
+		m_errorReporter.typeError(_function.parameterList().location(), "Fallback function cannot take parameters.");
+}
+
+void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
+{
+	solAssert(_function.isReceive(), "");
+
+	if (_function.inContractKind() == ContractDefinition::ContractKind::Library)
+		m_errorReporter.typeError(_function.location(), "Libraries cannot have receive ether functions.");
+
+	if (_function.stateMutability() != StateMutability::Payable)
+		m_errorReporter.typeError(
+			_function.location(),
+			"Receive ether function must be payable, but is \"" +
+			stateMutabilityToString(_function.stateMutability()) +
+			"\"."
+		);
+	if (_function.visibility() != FunctionDefinition::Visibility::External)
+		m_errorReporter.typeError(_function.location(), "Receive ether function must be defined as \"external\".");
+	if (!_function.returnParameters().empty())
+		m_errorReporter.typeError(_function.returnParameterList()->location(), "Receive ether function cannot return values.");
+	if (!_function.parameters().empty())
+		m_errorReporter.typeError(_function.parameterList().location(), "Receive ether function cannot take parameters.");
+}
+
+
+void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
+{
+	solAssert(_function.isConstructor(), "");
+	if (!_function.returnParameters().empty())
+		m_errorReporter.typeError(_function.returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
+	if (_function.stateMutability() != StateMutability::NonPayable && _function.stateMutability() != StateMutability::Payable)
+		m_errorReporter.typeError(
+			_function.location(),
+			"Constructor must be payable or non-payable, but is \"" +
+			stateMutabilityToString(_function.stateMutability()) +
+			"\"."
+		);
+	if (_function.visibility() != FunctionDefinition::Visibility::Public && _function.visibility() != FunctionDefinition::Visibility::Internal)
+		m_errorReporter.typeError(_function.location(), "Constructor must be public or internal.");
 }
 
 void TypeChecker::typeCheckABIEncodeFunctions(
@@ -1871,7 +2115,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	FunctionCallAnnotation& funcCallAnno = _functionCall.annotation();
 	FunctionTypePointer functionType = nullptr;
 
-	// Determine and assign function call kind, purity and function type for this FunctionCall node
+	// Determine and assign function call kind, lvalue, purity and function type for this FunctionCall node
 	switch (expressionType->category())
 	{
 	case Type::Category::Function:
@@ -1884,6 +2128,12 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			_functionCall.expression().annotation().isPure &&
 			functionType &&
 			functionType->isPure();
+
+		if (
+			functionType->kind() == FunctionType::Kind::ArrayPush ||
+			functionType->kind() == FunctionType::Kind::ByteArrayPush
+		)
+			funcCallAnno.isLValue = functionType->parameterTypes().empty();
 
 		break;
 
@@ -1992,21 +2242,10 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
 		if (contract->isInterface())
 			m_errorReporter.fatalTypeError(_newExpression.location(), "Cannot instantiate an interface.");
-		if (!contract->annotation().unimplementedFunctions.empty())
-		{
-			SecondarySourceLocation ssl;
-			for (auto function: contract->annotation().unimplementedFunctions)
-				ssl.append("Missing implementation:", function->location());
-			string msg = "Trying to create an instance of an abstract contract.";
-			ssl.limitSize(msg);
-			m_errorReporter.typeError(
-				_newExpression.location(),
-				ssl,
-				msg
-			);
-		}
 		if (!contract->constructorIsPublic())
 			m_errorReporter.typeError(_newExpression.location(), "Contract with internal constructor cannot be created directly.");
+		if (contract->abstract())
+			m_errorReporter.typeError(_newExpression.location(), "Cannot instantiate an abstract contract.");
 
 		solAssert(!!m_scope, "");
 		m_scope->annotation().contractDependencies.insert(contract);
@@ -2169,14 +2408,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	if (auto const* structType = dynamic_cast<StructType const*>(exprType))
 		annotation.isLValue = !structType->dataStoredIn(DataLocation::CallData);
 	else if (exprType->category() == Type::Category::Array)
-	{
-		auto const& arrayType(dynamic_cast<ArrayType const&>(*exprType));
-		annotation.isLValue = (
-			memberName == "length" &&
-			arrayType.location() == DataLocation::Storage &&
-			arrayType.isDynamicallySized()
-		);
-	}
+		annotation.isLValue = false;
 	else if (exprType->category() == Type::Category::FixedBytes)
 		annotation.isLValue = false;
 	else if (TypeType const* typeType = dynamic_cast<decltype(typeType)>(exprType))
@@ -2225,6 +2457,14 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	Expression const* index = _access.indexExpression();
 	switch (baseType->category())
 	{
+	case Type::Category::ArraySlice:
+	{
+		auto const& arrayType = dynamic_cast<ArraySliceType const&>(*baseType).arrayType();
+		if (arrayType.location() != DataLocation::CallData || !arrayType.isDynamicallySized())
+			m_errorReporter.typeError(_access.location(), "Index access is only implemented for slices of dynamic calldata arrays.");
+		baseType = &arrayType;
+		[[fallthrough]];
+	}
 	case Type::Category::Array:
 	{
 		ArrayType const& actualType = dynamic_cast<ArrayType const&>(*baseType);
@@ -2316,6 +2556,50 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	_access.annotation().isLValue = isLValue;
 	if (index && !index->annotation().isPure)
 		isPure = false;
+	_access.annotation().isPure = isPure;
+
+	return false;
+}
+
+bool TypeChecker::visit(IndexRangeAccess const& _access)
+{
+	_access.baseExpression().accept(*this);
+
+	bool isLValue = false; // TODO: set this correctly when implementing slices for memory and storage arrays
+	bool isPure = _access.baseExpression().annotation().isPure;
+
+	if (Expression const* start = _access.startExpression())
+	{
+		expectType(*start, *TypeProvider::uint256());
+		if (!start->annotation().isPure)
+			isPure = false;
+	}
+	if (Expression const* end = _access.endExpression())
+	{
+		expectType(*end, *TypeProvider::uint256());
+		if (!end->annotation().isPure)
+			isPure = false;
+	}
+
+	TypePointer exprType = type(_access.baseExpression());
+	if (exprType->category() == Type::Category::TypeType)
+	{
+		m_errorReporter.typeError(_access.location(), "Types cannot be sliced.");
+		_access.annotation().type = exprType;
+		return false;
+	}
+
+	ArrayType const* arrayType = nullptr;
+	if (auto const* arraySlice = dynamic_cast<ArraySliceType const*>(exprType))
+		arrayType = &arraySlice->arrayType();
+	else if (!(arrayType = dynamic_cast<ArrayType const*>(exprType)))
+		m_errorReporter.fatalTypeError(_access.location(), "Index range access is only possible for arrays and array slices.");
+
+
+	if (arrayType->location() != DataLocation::CallData || !arrayType->isDynamicallySized())
+		m_errorReporter.typeError(_access.location(), "Index range access is only supported for dynamic calldata arrays.");
+	_access.annotation().type = TypeProvider::arraySlice(*arrayType);
+	_access.annotation().isLValue = isLValue;
 	_access.annotation().isPure = isPure;
 
 	return false;
@@ -2433,7 +2717,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 {
-	_expr.annotation().type = TypeProvider::typeType(TypeProvider::fromElementaryTypeName(_expr.typeName()));
+	_expr.annotation().type = TypeProvider::typeType(TypeProvider::fromElementaryTypeName(_expr.type().typeName(), _expr.type().stateMutability()));
 	_expr.annotation().isPure = true;
 }
 
@@ -2581,17 +2865,9 @@ void TypeChecker::requireLValue(Expression const& _expression)
 				if (structType->dataStoredIn(DataLocation::CallData))
 					return "Calldata structs are read-only.";
 			}
-			else if (auto arrayType = dynamic_cast<ArrayType const*>(type(memberAccess->expression())))
+			else if (dynamic_cast<ArrayType const*>(type(memberAccess->expression())))
 				if (memberAccess->memberName() == "length")
-					switch (arrayType->location())
-					{
-						case DataLocation::Memory:
-							return "Memory arrays cannot be resized.";
-						case DataLocation::CallData:
-							return "Calldata arrays cannot be resized.";
-						case DataLocation::Storage:
-							break;
-					}
+					return "Member \"length\" is read-only and cannot be used to resize arrays.";
 		}
 
 		if (auto identifier = dynamic_cast<Identifier const*>(&_expression))

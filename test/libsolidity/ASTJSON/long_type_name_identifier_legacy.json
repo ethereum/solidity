@@ -6,7 +6,7 @@
     {
       "c":
       [
-        14
+        15
       ]
     }
   },
@@ -15,6 +15,7 @@
     {
       "attributes":
       {
+        "abstract": false,
         "baseContracts":
         [
           null
@@ -28,10 +29,10 @@
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
-          14
+          15
         ],
         "name": "c",
-        "scope": 15
+        "scope": 16
       },
       "children":
       [
@@ -40,7 +41,8 @@
           {
             "constant": false,
             "name": "a",
-            "scope": 14,
+            "overrides": null,
+            "scope": 15,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "uint256[]",
@@ -89,9 +91,10 @@
               null
             ],
             "name": "f",
-            "scope": 14,
+            "overrides": null,
+            "scope": 15,
             "stateMutability": "nonpayable",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "public"
           },
           "children":
@@ -130,7 +133,7 @@
                   {
                     "assignments":
                     [
-                      9
+                      10
                     ]
                   },
                   "children":
@@ -140,7 +143,8 @@
                       {
                         "constant": false,
                         "name": "b",
-                        "scope": 12,
+                        "overrides": null,
+                        "scope": 13,
                         "stateVariable": false,
                         "storageLocation": "storage",
                         "type": "uint256[]",
@@ -163,17 +167,17 @@
                                 "name": "uint",
                                 "type": "uint256"
                               },
-                              "id": 7,
+                              "id": 8,
                               "name": "ElementaryTypeName",
                               "src": "45:4:1"
                             }
                           ],
-                          "id": 8,
+                          "id": 9,
                           "name": "ArrayTypeName",
                           "src": "45:6:1"
                         }
                       ],
-                      "id": 9,
+                      "id": 10,
                       "name": "VariableDeclaration",
                       "src": "45:16:1"
                     },
@@ -189,32 +193,32 @@
                         "type": "uint256[] storage ref",
                         "value": "a"
                       },
-                      "id": 10,
+                      "id": 11,
                       "name": "Identifier",
                       "src": "64:1:1"
                     }
                   ],
-                  "id": 11,
+                  "id": 12,
                   "name": "VariableDeclarationStatement",
                   "src": "45:20:1"
                 }
               ],
-              "id": 12,
+              "id": 13,
               "name": "Block",
               "src": "43:25:1"
             }
           ],
-          "id": 13,
+          "id": 14,
           "name": "FunctionDefinition",
           "src": "23:45:1"
         }
       ],
-      "id": 14,
+      "id": 15,
       "name": "ContractDefinition",
       "src": "0:70:1"
     }
   ],
-  "id": 15,
+  "id": 16,
   "name": "SourceUnit",
   "src": "0:71:1"
 }

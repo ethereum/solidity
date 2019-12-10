@@ -52,6 +52,7 @@ public:
 	dev::bytes operator()(wasm::Loop const& _loop);
 	dev::bytes operator()(wasm::Break const& _break);
 	dev::bytes operator()(wasm::BreakIf const& _break);
+	dev::bytes operator()(wasm::Return const& _return);
 	dev::bytes operator()(wasm::Block const& _block);
 	dev::bytes operator()(wasm::FunctionDefinition const& _function);
 

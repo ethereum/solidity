@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(exp_zero)
 	testContractAgainstCppOnRange("f(uint256)", [](u256 const&) -> u256 { return u256(1); }, 0, 16);
 }
 
-/* let's add this back when I figure out the correct type conversion.
+/* TODO let's add this back when I figure out the correct type conversion.
 BOOST_AUTO_TEST_CASE(conditional_expression_string_literal)
 {
 	char const* sourceCode = R"(
@@ -1031,26 +1031,6 @@ BOOST_AUTO_TEST_CASE(multi_level_mapping)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(deleteLength)
-{
-	char const* sourceCode = R"(
-		contract test {
-			uint[] x;
-			function f() public returns (uint){
-				x.length = 1;
-				x[0] = 1;
-				delete x.length;
-				return x.length;
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
-		BOOST_CHECK(storageEmpty(m_contractAddress));
-	)
-}
-
 BOOST_AUTO_TEST_CASE(constructor)
 {
 	char const* sourceCode = R"(
@@ -1237,7 +1217,7 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 		}
 
 		contract C {
-			function () external payable {
+			receive () external payable {
 				revert();
 			}
 		}
@@ -1901,7 +1881,7 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 {
 	char const* sourceCode = R"(
 		contract helper {
-			function() external payable { } // can receive ether
+			receive() external payable { } // can receive ether
 		}
 		contract test {
 			helper h;
@@ -2111,10 +2091,10 @@ BOOST_AUTO_TEST_CASE(virtual_function_calls)
 	char const* sourceCode = R"(
 		contract Base {
 			function f() public returns (uint i) { return g(); }
-			function g() public returns (uint i) { return 1; }
+			function g() public virtual returns (uint i) { return 1; }
 		}
 		contract Derived is Base {
-			function g() public returns (uint i) { return 2; }
+			function g() public override returns (uint i) { return 2; }
 		}
 	)";
 	ALSO_VIA_YUL(
@@ -2175,11 +2155,11 @@ BOOST_AUTO_TEST_CASE(single_copy_with_multiple_inheritance)
 BOOST_AUTO_TEST_CASE(explicit_base_class)
 {
 	char const* sourceCode = R"(
-		contract BaseBase { function g() public returns (uint r) { return 1; } }
-		contract Base is BaseBase { function g() public returns (uint r) { return 2; } }
+		contract BaseBase { function g() public virtual returns (uint r) { return 1; } }
+		contract Base is BaseBase { function g() public virtual override returns (uint r) { return 2; } }
 		contract Derived is Base {
 			function f() public returns (uint r) { return BaseBase.g(); }
-			function g() public returns (uint r) { return 3; }
+			function g() public override returns (uint r) { return 3; }
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Derived");
@@ -2237,14 +2217,14 @@ BOOST_AUTO_TEST_CASE(virtual_function_usage_in_constructor_arguments)
 			constructor(uint a) public {
 				m_a = a;
 			}
-			function overridden() public returns (uint r) { return 1; }
+			function overridden() public virtual returns (uint r) { return 1; }
 			function g() public returns (uint r) { return overridden(); }
 		}
 		contract Base is BaseBase(BaseBase.g()) {
 		}
 		contract Derived is Base() {
 			function getA() public returns (uint r) { return m_a; }
-			function overridden() public returns (uint r) { return 2; }
+			function overridden() public override returns (uint r) { return 2; }
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Derived");
@@ -2333,10 +2313,10 @@ BOOST_AUTO_TEST_CASE(function_modifier_overriding)
 	char const* sourceCode = R"(
 		contract A {
 			function f() mod public returns (bool r) { return true; }
-			modifier mod { _; }
+			modifier mod virtual { _; }
 		}
 		contract C is A {
-			modifier mod { if (false) _; }
+			modifier mod override { if (false) _; }
 		}
 	)";
 	compileAndRun(sourceCode);
@@ -2351,14 +2331,14 @@ BOOST_AUTO_TEST_CASE(function_modifier_calling_functions_in_creation_context)
 			constructor() mod1 public { f1(); }
 			function f1() mod2 public { data |= 0x1; }
 			function f2() public { data |= 0x20; }
-			function f3() public { }
-			modifier mod1 { f2(); _; }
+			function f3() public virtual { }
+			modifier mod1 virtual { f2(); _; }
 			modifier mod2 { f3(); if (false) _; }
 			function getData() public returns (uint r) { return data; }
 		}
 		contract C is A {
-			modifier mod1 { f4(); _; }
-			function f3() public { data |= 0x300; }
+			modifier mod1 override { f4(); _; }
+			function f3() public override { data |= 0x300; }
 			function f4() public { data |= 0x4000; }
 		}
 	)";
@@ -2372,11 +2352,11 @@ BOOST_AUTO_TEST_CASE(function_modifier_for_constructor)
 		contract A {
 			uint data;
 			constructor() mod1 public { data |= 2; }
-			modifier mod1 { data |= 1; _; }
+			modifier mod1 virtual { data |= 1; _; }
 			function getData() public returns (uint r) { return data; }
 		}
 		contract C is A {
-			modifier mod1 { data |= 4; _; }
+			modifier mod1 override { data |= 4; _; }
 		}
 	)";
 	compileAndRun(sourceCode);
@@ -2483,10 +2463,10 @@ BOOST_AUTO_TEST_CASE(crazy_elementary_typenames_on_stack)
 BOOST_AUTO_TEST_CASE(super)
 {
 	char const* sourceCode = R"(
-		contract A { function f() public returns (uint r) { return 1; } }
-		contract B is A { function f() public returns (uint r) { return super.f() | 2; } }
-		contract C is A { function f() public returns (uint r) { return super.f() | 4; } }
-		contract D is B, C { function f() public returns (uint r) { return super.f() | 8; } }
+		contract A { function f() public virtual returns (uint r) { return 1; } }
+		contract B is A { function f() public virtual override returns (uint r) { return super.f() | 2; } }
+		contract C is A { function f() public virtual override returns (uint r) { return super.f() | 4; } }
+		contract D is B, C { function f() public override(B, C) returns (uint r) { return super.f() | 8; } }
 	)";
 	compileAndRun(sourceCode, 0, "D");
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(1 | 2 | 4 | 8));
@@ -2495,10 +2475,10 @@ BOOST_AUTO_TEST_CASE(super)
 BOOST_AUTO_TEST_CASE(super_in_constructor)
 {
 	char const* sourceCode = R"(
-		contract A { function f() public returns (uint r) { return 1; } }
-		contract B is A { function f() public returns (uint r) { return super.f() | 2; } }
-		contract C is A { function f() public returns (uint r) { return super.f() | 4; } }
-		contract D is B, C { uint data; constructor() public { data = super.f() | 8; } function f() public returns (uint r) { return data; } }
+		contract A { function f() public virtual returns (uint r) { return 1; } }
+		contract B is A { function f() public virtual override returns (uint r) { return super.f() | 2; } }
+		contract C is A { function f() public virtual override returns (uint r) { return super.f() | 4; } }
+		contract D is B, C { uint data; constructor() public { data = super.f() | 8; } function f() public override (B, C) returns (uint r) { return data; } }
 	)";
 	compileAndRun(sourceCode, 0, "D");
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(1 | 2 | 4 | 8));
@@ -2512,24 +2492,6 @@ BOOST_AUTO_TEST_CASE(super_alone)
 	ALSO_VIA_YUL(
 		compileAndRun(sourceCode, 0, "A");
 		ABI_CHECK(callContractFunction("f()"), encodeArgs());
-	)
-}
-
-BOOST_AUTO_TEST_CASE(inherited_fallback_function)
-{
-	char const* sourceCode = R"(
-		contract A {
-			uint data;
-			function() external { data = 1; }
-			function getData() public returns (uint r) { return data; }
-		}
-		contract B is A {}
-	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode, 0, "B");
-		ABI_CHECK(callContractFunction("getData()"), encodeArgs(0));
-		ABI_CHECK(callContractFunction(""), encodeArgs());
-		ABI_CHECK(callContractFunction("getData()"), encodeArgs(1));
 	)
 }
 
@@ -2560,27 +2522,6 @@ BOOST_AUTO_TEST_CASE(default_fallback_throws)
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
 	}
-}
-
-BOOST_AUTO_TEST_CASE(short_data_calls_fallback)
-{
-	char const* sourceCode = R"(
-		contract A {
-			uint public x;
-			// Signature is d88e0b00
-			function fow() public { x = 3; }
-			function () external { x = 2; }
-		}
-	)";
-	compileAndRun(sourceCode);
-	// should call fallback
-	sendMessage(asBytes("\xd8\x8e\x0b"), false, 0);
-	BOOST_CHECK(m_transactionSuccessful);
-	ABI_CHECK(callContractFunction("x()"), encodeArgs(2));
-	// should call function
-	sendMessage(asBytes(string("\xd8\x8e\x0b") + string(1, 0)), false, 0);
-	BOOST_CHECK(m_transactionSuccessful);
-	ABI_CHECK(callContractFunction("x()"), encodeArgs(3));
 }
 
 BOOST_AUTO_TEST_CASE(event)
@@ -2889,10 +2830,9 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data_from_storage)
 			bytes x;
 			event Deposit(uint fixeda, bytes dynx, uint fixedb);
 			function deposit() public {
-				x.length = 3;
-				x[0] = "A";
-				x[1] = "B";
-				x[2] = "C";
+				x.push("A");
+				x.push("B");
+				x.push("C");
 				emit Deposit(10, x, 15);
 			}
 		}
@@ -2913,7 +2853,7 @@ BOOST_AUTO_TEST_CASE(event_really_really_lots_of_data_from_storage)
 			bytes x;
 			event Deposit(uint fixeda, bytes dynx, uint fixedb);
 			function deposit() public {
-				x.length = 31;
+				x = new bytes(31);
 				x[0] = "A";
 				x[1] = "B";
 				x[2] = "C";
@@ -3061,7 +3001,8 @@ BOOST_AUTO_TEST_CASE(event_dynamic_array_storage)
 			event E(uint[]);
 			uint[] arr;
 			function createEvent(uint x) public {
-				arr.length = 3;
+				while (arr.length < 3)
+					arr.push();
 				arr[0] = x;
 				arr[1] = x + 1;
 				arr[2] = x + 2;
@@ -3089,7 +3030,8 @@ BOOST_AUTO_TEST_CASE(event_dynamic_array_storage_v2)
 			event E(uint[]);
 			uint[] arr;
 			function createEvent(uint x) public {
-				arr.length = 3;
+				while (arr.length < 3)
+					arr.push();
 				arr[0] = x;
 				arr[1] = x + 1;
 				arr[2] = x + 2;
@@ -3117,9 +3059,8 @@ BOOST_AUTO_TEST_CASE(event_dynamic_nested_array_storage_v2)
 			event E(uint[][]);
 			uint[][] arr;
 			function createEvent(uint x) public {
-				arr.length = 2;
-				arr[0].length = 2;
-				arr[1].length = 2;
+				arr.push(new uint[](2));
+				arr.push(new uint[](2));
 				arr[0][0] = x;
 				arr[0][1] = x + 1;
 				arr[1][0] = x + 2;
@@ -3128,16 +3069,16 @@ BOOST_AUTO_TEST_CASE(event_dynamic_nested_array_storage_v2)
 			}
 		}
 	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		u256 x(42);
-		callContractFunction("createEvent(uint256)", x);
-		BOOST_REQUIRE_EQUAL(numLogs(), 1);
-		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
-		BOOST_CHECK(logData(0) == encodeArgs(0x20, 2, 0x40, 0xa0, 2, x, x + 1, 2, x + 2, x + 3));
-		BOOST_REQUIRE_EQUAL(numLogTopics(0), 1);
-		BOOST_CHECK_EQUAL(logTopic(0, 0), dev::keccak256(string("E(uint256[][])")));
-	);
+	/// TODO enable again after push(..) via yul is implemented for nested arrays.
+	/// ALSO_VIA_YUL()
+	compileAndRun(sourceCode);
+	u256 x(42);
+	callContractFunction("createEvent(uint256)", x);
+	BOOST_REQUIRE_EQUAL(numLogs(), 1);
+	BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
+	BOOST_CHECK(logData(0) == encodeArgs(0x20, 2, 0x40, 0xa0, 2, x, x + 1, 2, x + 2, x + 3));
+	BOOST_REQUIRE_EQUAL(numLogTopics(0), 1);
+	BOOST_CHECK_EQUAL(logTopic(0, 0), dev::keccak256(string("E(uint256[][])")));
 }
 
 BOOST_AUTO_TEST_CASE(event_indexed_string)
@@ -3148,7 +3089,8 @@ BOOST_AUTO_TEST_CASE(event_indexed_string)
 			uint[4] y;
 			event E(string indexed r, uint[4] indexed t);
 			function deposit() public {
-				bytes(x).length = 90;
+				for (uint i = 0; i < 90; i++)
+					bytes(x).push(0);
 				for (uint8 i = 0; i < 90; i++)
 					bytes(x)[i] = byte(i);
 				y[0] = 4;
@@ -3326,10 +3268,9 @@ BOOST_AUTO_TEST_CASE(keccak256_with_bytes)
 			bytes data;
 			function foo() public returns (bool)
 			{
-				data.length = 3;
-				data[0] = "f";
-				data[1] = "o";
-				data[2] = "o";
+				data.push("f");
+				data.push("o");
+				data.push("o");
 				return keccak256(data) == keccak256("foo");
 			}
 		}
@@ -3345,10 +3286,9 @@ BOOST_AUTO_TEST_CASE(iterated_keccak256_with_bytes)
 			bytes data;
 			function foo() public returns (bytes32)
 			{
-				data.length = 3;
-				data[0] = "x";
-				data[1] = "y";
-				data[2] = "z";
+				data.push("x");
+				data.push("y");
+				data.push("z");
 				return keccak256(abi.encodePacked("b", keccak256(data), "a"));
 			}
 		}
@@ -3364,13 +3304,13 @@ BOOST_AUTO_TEST_CASE(generic_call)
 	char const* sourceCode = R"**(
 			contract receiver {
 				uint public received;
-				function receive(uint256 x) public payable { received = x; }
+				function recv(uint256 x) public payable { received = x; }
 			}
 			contract sender {
 				constructor() public payable {}
 				function doSend(address rec) public returns (uint d)
 				{
-					bytes4 signature = bytes4(bytes32(keccak256("receive(uint256)")));
+					bytes4 signature = bytes4(bytes32(keccak256("recv(uint256)")));
 					rec.call.value(2)(abi.encodeWithSelector(signature, 23));
 					return receiver(rec).received();
 				}
@@ -3391,7 +3331,7 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 				address public sender;
 				uint public value;
 				constructor() public payable {}
-				function receive(uint256 x) public payable { received = x; sender = msg.sender; value = msg.value; }
+				function recv(uint256 x) public payable { received = x; sender = msg.sender; value = msg.value; }
 			}
 			contract Sender {
 				uint public received;
@@ -3400,7 +3340,7 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 				constructor() public payable {}
 				function doSend(address rec) public payable
 				{
-					bytes4 signature = bytes4(bytes32(keccak256("receive(uint256)")));
+					bytes4 signature = bytes4(bytes32(keccak256("recv(uint256)")));
 					(bool success,) = rec.delegatecall(abi.encodeWithSelector(signature, 23));
 					success;
 				}
@@ -3589,12 +3529,12 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes)
 	char const* sourceCode = R"(
 		contract receiver {
 			uint public received;
-			function receive(uint x) public { received += x + 1; }
-			function() external { received = 0x80; }
+			function recv(uint x) public { received += x + 1; }
+			fallback() external { received = 0x80; }
 		}
 		contract sender {
 			constructor() public { rec = new receiver(); }
-			function() external { savedData = msg.data; }
+			fallback() external { savedData = msg.data; }
 			function forward() public returns (bool) { address(rec).call(savedData); return true; }
 			function clear() public returns (bool) { delete savedData; return true; }
 			function val() public returns (uint) { return rec.received(); }
@@ -3603,7 +3543,7 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "sender");
-	ABI_CHECK(callContractFunction("receive(uint256)", 7), bytes());
+	ABI_CHECK(callContractFunction("recv(uint256)", 7), bytes());
 	ABI_CHECK(callContractFunction("val()"), encodeArgs(0));
 	ABI_CHECK(callContractFunction("forward()"), encodeArgs(true));
 	ABI_CHECK(callContractFunction("val()"), encodeArgs(8));
@@ -3618,7 +3558,7 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes_length)
 	char const* sourceCode = R"(
 		contract receiver {
 			uint public calledLength;
-			function() external { calledLength = msg.data.length; }
+			fallback() external { calledLength = msg.data.length; }
 		}
 		contract sender {
 			receiver rec;
@@ -3662,12 +3602,12 @@ BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
 	char const* sourceCode = R"(
 		contract receiver {
 			uint public received;
-			function receive(uint x) public { received += x + 1; }
-			function() external { received = 0x80; }
+			function recv(uint x) public { received += x + 1; }
+			fallback() external { received = 0x80; }
 		}
 		contract sender {
 			constructor() public { rec = new receiver(); }
-			function() external { savedData1 = savedData2 = msg.data; }
+			fallback() external { savedData1 = savedData2 = msg.data; }
 			function forward(bool selector) public returns (bool) {
 				if (selector) { address(rec).call(savedData1); delete savedData1; }
 				else { address(rec).call(savedData2); delete savedData2; }
@@ -3680,7 +3620,7 @@ BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "sender");
-	ABI_CHECK(callContractFunction("receive(uint256)", 7), bytes());
+	ABI_CHECK(callContractFunction("recv(uint256)", 7), bytes());
 	ABI_CHECK(callContractFunction("val()"), encodeArgs(0));
 	ABI_CHECK(callContractFunction("forward(bool)", true), encodeArgs(true));
 	ABI_CHECK(callContractFunction("val()"), encodeArgs(8));
@@ -3694,7 +3634,7 @@ BOOST_AUTO_TEST_CASE(delete_removes_bytes_data)
 {
 	char const* sourceCode = R"(
 		contract c {
-			function() external { data = msg.data; }
+			fallback() external { data = msg.data; }
 			function del() public returns (bool) { delete data; return true; }
 			bytes data;
 		}
@@ -3711,7 +3651,7 @@ BOOST_AUTO_TEST_CASE(copy_from_calldata_removes_bytes_data)
 	char const* sourceCode = R"(
 		contract c {
 			function set() public returns (bool) { data = msg.data; return true; }
-			function() external { data = msg.data; }
+			fallback() external { data = msg.data; }
 			bytes data;
 		}
 	)";
@@ -4297,7 +4237,12 @@ BOOST_AUTO_TEST_CASE(dynamic_arrays_in_storage)
 			function getID(uint index) public returns (uint) { return ids[index]; }
 			function getData(uint index) public returns (uint x, uint y) { x = data[index].x; y = data[index].y; }
 			function getLengths() public returns (uint l1, uint l2) { l1 = data.length; l2 = ids.length; }
-			function setLengths(uint l1, uint l2) public { data.length = l1; ids.length = l2; }
+			function setLengths(uint l1, uint l2) public {
+				while (data.length < l1)
+					data.push();
+				while (ids.length < l2)
+					ids.push();
+			}
 		}
 	)";
 	compileAndRun(sourceCode);
@@ -4342,7 +4287,11 @@ BOOST_AUTO_TEST_CASE(dynamic_out_of_bounds_array_access)
 	char const* sourceCode = R"(
 		contract c {
 			uint[] data;
-			function enlarge(uint amount) public returns (uint) { return data.length += amount; }
+			function enlarge(uint amount) public returns (uint) {
+				while (data.length < amount)
+					data.push();
+				return data.length;
+			}
 			function set(uint index, uint value) public returns (bool) { data[index] = value; return true; }
 			function get(uint index) public returns (uint) { return data[index]; }
 			function length() public returns (uint) { return data.length; }
@@ -4359,7 +4308,7 @@ BOOST_AUTO_TEST_CASE(dynamic_out_of_bounds_array_access)
 		ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
 		ABI_CHECK(callContractFunction("set(uint256,uint256)", 4, 8), bytes());
 		ABI_CHECK(callContractFunction("length()"), encodeArgs(4));
-	)
+	);
 }
 
 BOOST_AUTO_TEST_CASE(fixed_array_cleanup)
@@ -4415,10 +4364,13 @@ BOOST_AUTO_TEST_CASE(dynamic_array_cleanup)
 			uint[20] spacer;
 			uint[] dynamic;
 			function fill() public {
-				dynamic.length = 21;
-				for (uint i = 0; i < dynamic.length; ++i) dynamic[i] = i+1;
+				for (uint i = 0; i < 21; ++i)
+					dynamic.push(i + 1);
 			}
-			function halfClear() public { dynamic.length = 5; }
+			function halfClear() public {
+				while (dynamic.length > 5)
+					dynamic.pop();
+			}
 			function fullClear() public { delete dynamic; }
 		}
 	)";
@@ -4441,9 +4393,12 @@ BOOST_AUTO_TEST_CASE(dynamic_multi_array_cleanup)
 			struct s { uint[][] d; }
 			s[] data;
 			function fill() public returns (uint) {
-				data.length = 3;
-				data[2].d.length = 4;
-				data[2].d[3].length = 5;
+				while (data.length < 3)
+					data.push();
+				while (data[2].d.length < 4)
+					data[2].d.push();
+				while (data[2].d[3].length < 5)
+					data[2].d[3].push();
 				data[2].d[3][4] = 8;
 				return data[2].d[3][4];
 			}
@@ -4465,7 +4420,9 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_storage_dyn_dyn)
 			uint[] data1;
 			uint[] data2;
 			function setData1(uint length, uint index, uint value) public {
-				data1.length = length; if (index < length) data1[index] = value;
+				data1 = new uint[](length);
+				if (index < length)
+					data1[index] = value;
 			}
 			function copyStorageStorage() public { data2 = data1; }
 			function getData2(uint index) public returns (uint len, uint val) {
@@ -4529,7 +4486,7 @@ BOOST_AUTO_TEST_CASE(array_copy_different_packing)
 			bytes8[] data1; // 4 per slot
 			bytes10[] data2; // 3 per slot
 			function test() public returns (bytes10 a, bytes10 b, bytes10 c, bytes10 d, bytes10 e) {
-				data1.length = 9;
+				data1 = new bytes8[](9);
 				for (uint i = 0; i < data1.length; ++i)
 					data1[i] = bytes8(uint64(i));
 				data2 = data1;
@@ -4648,13 +4605,15 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_storage_struct)
 			Data[] data1;
 			Data[] data2;
 			function test() public returns (uint x, uint y) {
-				data1.length = 9;
+				while (data1.length < 9)
+					data1.push();
 				data1[8].x = 4;
 				data1[8].y = 5;
 				data2 = data1;
 				x = data2[8].x;
 				y = data2[8].y;
-				data1.length = 0;
+				while (data1.length > 0)
+					data1.pop();
 				data2 = data1;
 			}
 		}
@@ -4691,7 +4650,7 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_abi)
 				return z;
 			}
 			function test4() public returns (uint24[][] memory) {
-				w.length = 5;
+				w = new uint24[][](5);
 				for (uint i = 0; i < 5; ++i)
 					for (uint j = 0; j < 101; ++j)
 						w[i].push(uint24(j));
@@ -4760,7 +4719,8 @@ BOOST_AUTO_TEST_CASE(array_push)
 				x = data[0];
 				data.push(4);
 				y = data[1];
-				l = data.push(3);
+				data.push(3);
+				l = data.length;
 				z = data[2];
 			}
 		}
@@ -4802,7 +4762,7 @@ BOOST_AUTO_TEST_CASE(array_push_packed_array)
 				x.push(3);
 				x.push(4);
 				x.push(5);
-				x.length = 4;
+				x.pop();
 				return (x[0], x[1], x[2], x[3]);
 			}
 		}
@@ -4817,11 +4777,13 @@ BOOST_AUTO_TEST_CASE(byte_array_push)
 		contract c {
 			bytes data;
 			function test() public returns (bool x) {
-				if (data.push(0x05) != 1)  return true;
+				data.push(0x05);
+				if (data.length != 1)  return true;
 				if (data[0] != 0x05) return true;
 				data.push(0x04);
 				if (data[1] != 0x04) return true;
-				uint l = data.push(0x03);
+				data.push(0x03);
+				uint l = data.length;
 				if (data[2] != 0x03) return true;
 				if (l != 0x03) return true;
 			}
@@ -4861,7 +4823,8 @@ BOOST_AUTO_TEST_CASE(array_pop)
 			uint[] data;
 			function test() public returns (uint x, uint l) {
 				data.push(7);
-				x = data.push(3);
+				data.push(3);
+				x = data.length;
 				data.pop();
 				x = data.length;
 				data.pop();
@@ -4997,10 +4960,12 @@ BOOST_AUTO_TEST_CASE(byte_array_pop)
 			bytes data;
 			function test() public returns (uint x, uint y, uint l) {
 				data.push(0x07);
-				x = data.push(0x03);
+				data.push(0x03);
+				x = data.length;
 				data.pop();
 				data.pop();
-				y = data.push(0x02);
+				data.push(0x02);
+				y = data.length;
 				l = data.length;
 			}
 		}
@@ -5211,7 +5176,7 @@ BOOST_AUTO_TEST_CASE(bytes_index_access)
 				return uint(uint8(data[index]));
 			}
 			function storageWrite() external returns (uint) {
-				data.length = 35;
+				data = new bytes(35);
 				data[31] = 0x77;
 				data[32] = 0x14;
 
@@ -5240,7 +5205,7 @@ BOOST_AUTO_TEST_CASE(bytes_delete_element)
 		contract c {
 			bytes data;
 			function test1() external returns (bool) {
-				data.length = 100;
+				data = new bytes(100);
 				for (uint i = 0; i < data.length; i++)
 					data[i] = byte(uint8(i));
 				delete data[94];
@@ -5324,7 +5289,10 @@ BOOST_AUTO_TEST_CASE(array_copy_including_mapping)
 			mapping(uint=>uint)[90][] large;
 			mapping(uint=>uint)[3][] small;
 			function test() public returns (uint r) {
-				large.length = small.length = 7;
+				for (uint i = 0; i < 7; i++) {
+					large.push();
+					small.push();
+				}
 				large[3][2][0] = 2;
 				large[1] = large[3];
 				small[3][2][0] = 2;
@@ -5336,13 +5304,20 @@ BOOST_AUTO_TEST_CASE(array_copy_including_mapping)
 					large[1][2][0];
 				delete small;
 				delete large;
+
 			}
-			function clear() public returns (uint r) {
-				large.length = small.length = 7;
+			function clear() public returns (uint, uint) {
+				for (uint i = 0; i < 7; i++) {
+					large.push();
+					small.push();
+				}
 				small[3][2][0] = 0;
 				large[3][2][0] = 0;
-				small.length = large.length = 0;
-				return 7;
+				while (small.length > 0)
+					small.pop();
+				while (large.length > 0)
+					large.pop();
+				return (small.length, large.length);
 			}
 		}
 	)";
@@ -5350,7 +5325,7 @@ BOOST_AUTO_TEST_CASE(array_copy_including_mapping)
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(0x02000200));
 	// storage is not empty because we cannot delete the mappings
 	BOOST_CHECK(!storageEmpty(m_contractAddress));
-	ABI_CHECK(callContractFunction("clear()"), encodeArgs(7));
+	ABI_CHECK(callContractFunction("clear()"), encodeArgs(0, 0));
 	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
@@ -5441,7 +5416,7 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base_with_gap)
 			}
 			uint public m_i;
 		}
-		contract Base1 is Base {
+		abstract contract Base1 is Base {
 			constructor(uint k) public {}
 		}
 		contract Derived is Base, Base1 {
@@ -5997,36 +5972,6 @@ BOOST_AUTO_TEST_CASE(invalid_enum_as_external_arg)
 	ABI_CHECK(callContractFunction("test()"), encodeArgs());
 }
 
-
-BOOST_AUTO_TEST_CASE(proper_order_of_overwriting_of_attributes)
-{
-	// bug #1798
-	char const* sourceCode = R"(
-		contract init {
-			function isOk() public returns (bool) { return false; }
-			bool public ok = false;
-		}
-		contract fix {
-			function isOk() public returns (bool) { return true; }
-			bool public ok = true;
-		}
-
-		contract init_fix is init, fix {
-			function checkOk() public returns (bool) { return ok; }
-		}
-		contract fix_init is fix, init {
-			function checkOk() public returns (bool) { return ok; }
-		}
-	)";
-	compileAndRun(sourceCode, 0, "init_fix");
-	ABI_CHECK(callContractFunction("isOk()"), encodeArgs(true));
-	ABI_CHECK(callContractFunction("ok()"), encodeArgs(true));
-
-	compileAndRun(sourceCode, 0, "fix_init");
-	ABI_CHECK(callContractFunction("isOk()"), encodeArgs(false));
-	ABI_CHECK(callContractFunction("ok()"), encodeArgs(false));
-}
-
 BOOST_AUTO_TEST_CASE(struct_assign_reference_to_struct)
 {
 	char const* sourceCode = R"(
@@ -6198,7 +6143,7 @@ BOOST_AUTO_TEST_CASE(failing_send)
 	char const* sourceCode = R"(
 		contract Helper {
 			uint[] data;
-			function () external {
+			fallback () external {
 				data[9]; // trigger exception
 			}
 		}
@@ -6218,11 +6163,11 @@ BOOST_AUTO_TEST_CASE(failing_send)
 
 BOOST_AUTO_TEST_CASE(send_zero_ether)
 {
-	// Sending zero ether to a contract should still invoke the fallback function
+	// Sending zero ether to a contract should still invoke the receive ether function
 	// (it previously did not because the gas stipend was not provided by the EVM)
 	char const* sourceCode = R"(
 		contract Receiver {
-			function () external payable {
+			receive () external payable {
 			}
 		}
 		contract Main {
@@ -6344,7 +6289,8 @@ BOOST_AUTO_TEST_CASE(accessor_involving_strings)
 			struct stringData { string a; uint b; string c; }
 			mapping(uint => stringData[]) public data;
 			function set(uint x, uint y, string calldata a, uint b, string calldata c) external returns (bool) {
-				data[x].length = y + 1;
+				while (data[x].length < y + 1)
+					data[x].push();
 				data[x][y].a = a;
 				data[x][y].b = b;
 				data[x][y].c = c;
@@ -6714,7 +6660,7 @@ BOOST_AUTO_TEST_CASE(storage_array_ref)
 		contract Store is BinarySearch {
 			uint[] data;
 			function add(uint v) public {
-				data.length++;
+				data.push(0);
 				data[data.length - 1] = v;
 			}
 			function find(uint v) public returns (uint) {
@@ -6828,7 +6774,8 @@ BOOST_AUTO_TEST_CASE(memory_arrays_dynamic_index_access_write)
 				return x;
 			}
 			function f() public returns (uint24[3][] memory) {
-				data[1].length = 4;
+				while (data[1].length < 4)
+					data[1].push();
 				return set(data)[1];
 			}
 		}
@@ -7976,9 +7923,9 @@ BOOST_AUTO_TEST_CASE(state_variable_local_variable_mixture)
 
 BOOST_AUTO_TEST_CASE(inherited_function) {
 	char const* sourceCode = R"(
-		contract A { function f() internal returns (uint) { return 1; } }
+		contract A { function f() virtual internal returns (uint) { return 1; } }
 		contract B is A {
-			function f() internal returns (uint) { return 2; }
+			function f() internal override returns (uint) { return 2; }
 			function g() public returns (uint) {
 				return A.f();
 			}
@@ -7991,9 +7938,9 @@ BOOST_AUTO_TEST_CASE(inherited_function) {
 
 BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory) {
 	char const* sourceCode = R"(
-		contract A { function f(uint[] calldata a) external returns (uint) { return a[0]; } }
+		contract A { function f(uint[] calldata a) virtual external returns (uint) { return a[0]; } }
 		contract B is A {
-			function f(uint[] memory a) public returns (uint) { return a[1]; }
+			function f(uint[] memory a) public override returns (uint) { return a[1]; }
 			function g() public returns (uint) {
 				uint[] memory m = new uint[](2);
 				m[0] = 42;
@@ -8010,7 +7957,7 @@ BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory) {
 BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory_interface) {
 	char const* sourceCode = R"(
 		interface I { function f(uint[] calldata a) external returns (uint); }
-		contract A is I { function f(uint[] memory a) public returns (uint) { return 42; } }
+		contract A is I { function f(uint[] memory a) public override returns (uint) { return 42; } }
 		contract B {
 			function f(uint[] memory a) public returns (uint) { return a[1]; }
 			function g() public returns (uint) {
@@ -8027,7 +7974,7 @@ BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory_interface) {
 BOOST_AUTO_TEST_CASE(inherited_function_calldata_calldata_interface) {
 	char const* sourceCode = R"(
 		interface I { function f(uint[] calldata a) external returns (uint); }
-		contract A is I { function f(uint[] calldata a) external returns (uint) { return 42; } }
+		contract A is I { function f(uint[] calldata a) external override returns (uint) { return 42; } }
 		contract B {
 			function f(uint[] memory a) public returns (uint) { return a[1]; }
 			function g() public returns (uint) {
@@ -8071,42 +8018,6 @@ BOOST_AUTO_TEST_CASE(inherited_constant_state_var)
 
 	compileAndRun(sourceCode, 0, "B");
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(7)));
-}
-
-BOOST_AUTO_TEST_CASE(multiple_inherited_state_vars)
-{
-	char const* sourceCode = R"(
-		contract A {
-			uint x = 7;
-		}
-		contract B {
-			uint x = 9;
-		}
-		contract C is A, B {
-			function a() public returns (uint) {
-				return A.x;
-			}
-			function b() public returns (uint) {
-				return B.x;
-			}
-			function a_set(uint _x) public returns (uint) {
-				A.x = _x;
-				return 1;
-			}
-			function b_set(uint _x) public returns (uint) {
-				B.x = _x;
-				return 1;
-			}
-		}
-	)";
-
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("a()"), encodeArgs(u256(7)));
-	ABI_CHECK(callContractFunction("b()"), encodeArgs(u256(9)));
-	ABI_CHECK(callContractFunction("a_set(uint256)", u256(1)), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("b_set(uint256)", u256(3)), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("a()"), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("b()"), encodeArgs(u256(3)));
 }
 
 BOOST_AUTO_TEST_CASE(constant_string_literal)
@@ -8323,7 +8234,8 @@ BOOST_AUTO_TEST_CASE(internal_types_in_library)
 			mapping(string => uint16[]) data;
 			function f() public returns (uint a, uint b)
 			{
-				data["abc"].length = 20;
+				while (data["abc"].length < 20)
+					data["abc"].push();
 				data["abc"][4] = 9;
 				data["abc"][17] = 3;
 				a = Lib.find(data["abc"], 9);
@@ -8531,7 +8443,7 @@ BOOST_AUTO_TEST_CASE(using_library_mappings_external)
 		)";
 	char const* sourceCode = R"(
 			library Lib {
-				function set(mapping(uint => uint) storage m, uint key, uint value) external;
+				function set(mapping(uint => uint) storage m, uint key, uint value) external {}
 			}
 			contract Test {
 				mapping(uint => uint) m1;
@@ -8588,7 +8500,8 @@ BOOST_AUTO_TEST_CASE(using_library_structs)
 			function set(Data storage _s) public
 			{
 				_s.a = 7;
-				_s.b.length = 20;
+				while (_s.b.length < 20)
+					_s.b.push();
 				_s.b[19] = 8;
 			}
 		}
@@ -8667,15 +8580,18 @@ BOOST_AUTO_TEST_CASE(short_strings)
 				if (data2.length != 51) return 4;
 				if (data2[data2.length - 1] != "a") return 5;
 				// change length: short -> short
-				data1.length = 5;
+				while (data1.length < 5)
+					data1.push();
 				if (data1.length != 5) return 6;
 				data1[4] = "4";
 				if (data1[0] != "1") return 7;
 				if (data1[4] != "4") return 8;
 				// change length: short -> long
-				data1.length = 80;
+				while (data1.length < 80)
+					data1.push();
 				if (data1.length != 80) return 9;
-				data1.length = 70;
+				while (data1.length > 70)
+					data1.pop();
 				if (data1.length != 70) return 9;
 				if (data1[0] != "1") return 10;
 				if (data1[4] != "4") return 11;
@@ -8684,20 +8600,25 @@ BOOST_AUTO_TEST_CASE(short_strings)
 				if (uint8(data1[4]) != 4 * 3) return 12;
 				if (uint8(data1[67]) != 67 * 3) return 13;
 				// change length: long -> short
-				data1.length = 22;
+				while (data1.length > 22)
+					data1.pop();
 				if (data1.length != 22) return 14;
 				if (uint8(data1[21]) != 21 * 3) return 15;
 				if (uint8(data1[2]) != 2 * 3) return 16;
 				// change length: short -> shorter
-				data1.length = 19;
+				while (data1.length > 19)
+					data1.pop();
 				if (data1.length != 19) return 17;
 				if (uint8(data1[7]) != 7 * 3) return 18;
 				// and now again to original size
-				data1.length = 22;
+				while (data1.length < 22)
+					data1.push();
 				if (data1.length != 22) return 19;
 				if (data1[21] != 0) return 20;
-				data1.length = 0;
-				data2.length = 0;
+				while (data1.length > 0)
+					data1.pop();
+				while (data2.length > 0)
+					data2.pop();
 			}
 			function copy() public returns (uint) {
 				bytes memory x = "123";
@@ -8797,7 +8718,7 @@ BOOST_AUTO_TEST_CASE(reject_ether_sent_to_library)
 			function f(address payable x) public returns (bool) {
 				return x.send(1);
 			}
-			function () external payable {}
+			receive () external payable {}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "lib");
@@ -8896,8 +8817,7 @@ BOOST_AUTO_TEST_CASE(tuples)
 				return (5, 6);
 			}
 			function f() public returns (uint) {
-				data.length = 1;
-				data[0] = 3;
+				data.push(3);
 				uint a; uint b;
 				(a, b) = this.h();
 				if (a != 5 || b != 6) return 1;
@@ -8973,7 +8893,7 @@ BOOST_AUTO_TEST_CASE(destructuring_assignment)
 			uint[] y;
 			uint[] arrayData;
 			function returnsArray() public returns (uint[] memory) {
-				arrayData.length = 9;
+				arrayData = new uint[](9);
 				arrayData[2] = 5;
 				arrayData[7] = 4;
 				return arrayData;
@@ -9947,9 +9867,10 @@ BOOST_AUTO_TEST_CASE(delete_on_array_of_structs)
 			struct S { uint x; uint[] y; }
 			S[] data;
 			function f() public returns (bool) {
-				data.length = 2;
-				data[0].x = 2**200;
-				data[1].x = 2**200;
+				S storage s1 = data.push();
+				s1.x = 2**200;
+				S storage s2 = data.push();
+				s2.x = 2**200;
 				delete data;
 				return true;
 			}
@@ -10269,7 +10190,7 @@ BOOST_AUTO_TEST_CASE(correctly_initialize_memory_array_in_constructor)
 				// Make memory dirty.
 				assembly {
 					for { let i := 0 } lt(i, 64) { i := add(i, 1) } {
-						mstore(msize, not(0))
+						mstore(msize(), not(0))
 					}
 				}
 				uint16[3] memory c;
@@ -10454,7 +10375,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 				else
 					return fund.withdrawUnprotected(10);
 			}
-			function() external payable {
+			fallback() external payable {
 				callDepth++;
 				if (callDepth < 4)
 					attackInternal();
@@ -10476,7 +10397,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 BOOST_AUTO_TEST_CASE(calling_nonexisting_contract_throws)
 {
 	char const* sourceCode = R"YY(
-		contract D { function g() public; }
+		abstract contract D { function g() public virtual; }
 		contract C {
 			D d = D(0x1212);
 			function f() public returns (uint) {
@@ -10519,7 +10440,7 @@ BOOST_AUTO_TEST_CASE(payable_function)
 			function f() payable public returns (uint) {
 				return msg.value;
 			}
-			function() external payable {
+			fallback() external payable {
 				a = msg.value + 1;
 			}
 		}
@@ -10561,7 +10482,7 @@ BOOST_AUTO_TEST_CASE(non_payable_throw)
 			function msgvalue() internal returns (uint) {
 				return msg.value;
 			}
-			function() external {
+			fallback() external {
 				update();
 			}
 			function update() internal {
@@ -11131,7 +11052,7 @@ BOOST_AUTO_TEST_CASE(copy_function_storage_array)
 			function() internal returns (uint)[] x;
 			function() internal returns (uint)[] y;
 			function test() public returns (uint) {
-				x.length = 10;
+				x = new function() internal returns (uint)[](10);
 				x[9] = a;
 				y = x;
 				return y[9]();
@@ -11184,25 +11105,6 @@ BOOST_AUTO_TEST_CASE(function_array_cross_calls)
 	compileAndRun(sourceCode, 0, "C");
 	ABI_CHECK(callContractFunction("test()"), encodeArgs(u256(5), u256(6), u256(7)));
 }
-
-BOOST_AUTO_TEST_CASE(external_function_to_address)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f() public returns (bool) {
-				return address(this.f) == address(this);
-			}
-			function g(function() external cb) public returns (address) {
-				return address(cb);
-			}
-		}
-	)";
-
-	compileAndRun(sourceCode, 0, "C");
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(true));
-	ABI_CHECK(callContractFunction("g(function)", fromHex("00000000000000000000000000000000000004226121ff00000000000000000")), encodeArgs(u160(0x42)));
-}
-
 
 BOOST_AUTO_TEST_CASE(copy_internal_function_array_to_storage)
 {
@@ -12060,7 +11962,8 @@ BOOST_AUTO_TEST_CASE(recursive_structs)
 				S memory s;
 				s.x = new S[](10);
 				delete s;
-				sstorage.x.length++;
+				// TODO Uncomment after implemented.
+				// sstorage.x.push();
 				delete sstorage;
 				return 1;
 			}
@@ -12324,7 +12227,7 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
 {
 	char const* sourceCode = R"(
 		contract D {
-			function() external payable {
+			receive() external payable {
 				revert("message");
 			}
 			function f() public {
@@ -12481,11 +12384,11 @@ BOOST_AUTO_TEST_CASE(interface_contract)
 		interface I {
 			event A();
 			function f() external returns (bool);
-			function() external payable;
+			fallback() external payable;
 		}
 
 		contract A is I {
-			function f() public returns (bool) {
+			function f() public override returns (bool) {
 				return g();
 			}
 
@@ -12493,7 +12396,7 @@ BOOST_AUTO_TEST_CASE(interface_contract)
 				return true;
 			}
 
-			function() external payable {
+			fallback() override external payable {
 			}
 		}
 
@@ -13042,11 +12945,15 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked_from_storage)
 				return abi.encodePacked(uint8(0x01), small_fixed, uint8(0x02));
 			}
 			function sd() public returns (bytes memory) {
-				small_dyn.length = 9;
-				small_dyn[0] = 0xfffff1;
-				small_dyn[2] = 0xfffff2;
-				small_dyn[5] = 0xfffff3;
-				small_dyn[8] = 0xfffff4;
+				small_dyn.push(0xfffff1);
+				small_dyn.push(0x00);
+				small_dyn.push(0xfffff2);
+				small_dyn.push(0x00);
+				small_dyn.push(0x00);
+				small_dyn.push(0xfffff3);
+				small_dyn.push(0x00);
+				small_dyn.push(0x00);
+				small_dyn.push(0xfffff4);
 				return abi.encodePacked(uint8(0x01), small_dyn, uint8(0x02));
 			}
 			function sfs() public returns (bytes memory) {
@@ -13064,11 +12971,11 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked_from_storage)
 				return abi.encodePacked(uint8(0x01), large_fixed, uint8(0x02));
 			}
 			function ld() public returns (bytes memory) {
-				large_dyn.length = 5;
-				large_dyn[0] = 2**248-1;
-				large_dyn[1] = 0xfffff2;
-				large_dyn[2] = 2**248-2;
-				large_dyn[4] = 0xfffff4;
+				large_dyn.push(2**248-1);
+				large_dyn.push(0xfffff2);
+				large_dyn.push(2**248-2);
+				large_dyn.push(0);
+				large_dyn.push(0xfffff4);
 				return abi.encodePacked(uint8(0x01), large_dyn, uint8(0x02));
 			}
 			function bytes_short() public returns (bytes memory) {
@@ -13226,9 +13133,8 @@ BOOST_AUTO_TEST_CASE(abi_encodePackedV2_structs)
 				s.b = -7;
 				s.c[0] = 2;
 				s.c[1] = 3;
-				s.d.length = 2;
-				s.d[0] = -7;
-				s.d[1] = -8;
+				s.d.push(-7);
+				s.d.push(-8);
 			}
 			function testStorage() public {
 				emit E(s);
@@ -13288,9 +13194,8 @@ BOOST_AUTO_TEST_CASE(abi_encodePackedV2_arrayOfStrings)
 			string[] x;
 			event E(string[] indexed);
 			constructor() public {
-				x.length = 2;
-				x[0] = "abc";
-				x[1] = "0123456789012345678901234567890123456789";
+				x.push("abc");
+				x.push("0123456789012345678901234567890123456789");
 			}
 			function testStorage() public {
 				emit E(x);
@@ -14189,10 +14094,10 @@ BOOST_AUTO_TEST_CASE(external_public_override)
 {
 	char const* sourceCode = R"(
 		contract A {
-			function f() external returns (uint) { return 1; }
+			function f() external virtual returns (uint) { return 1; }
 		}
 		contract B is A {
-			function f() public returns (uint) { return 2; }
+			function f() public override returns (uint) { return 2; }
 			function g() public returns (uint) { return f(); }
 		}
 	)";
@@ -14355,12 +14260,12 @@ BOOST_AUTO_TEST_CASE(contract_name)
 			string public nameAccessor = type(C).name;
 			string public constant constantNameAccessor = type(C).name;
 
-			function name() public pure returns (string memory) {
+			function name() public virtual pure returns (string memory) {
 				return type(C).name;
 			}
 		}
 		contract D is C {
-			function name() public pure returns (string memory) {
+			function name() public override pure returns (string memory) {
 				return type(D).name;
 			}
 			function name2() public pure returns (string memory) {
@@ -14495,6 +14400,108 @@ BOOST_AUTO_TEST_CASE(dirty_scratch_space_prior_to_constant_optimiser)
 		logData(1),
 		encodeArgs(u256("0x0000000000001234123412431234123412412342112341234124312341234124"))
 	);
+}
+
+BOOST_AUTO_TEST_CASE(try_catch_library_call)
+{
+	char const* sourceCode = R"(
+		library L {
+			struct S { uint x; }
+			function integer(uint t, bool b) public view returns (uint) {
+				if (b) {
+					return t;
+				} else {
+					revert("failure");
+				}
+			}
+			function stru(S storage t, bool b) public view returns (uint) {
+				if (b) {
+					return t.x;
+				} else {
+					revert("failure");
+				}
+			}
+		}
+		contract C {
+			using L for L.S;
+			L.S t;
+			function f(bool b) public returns (uint, string memory) {
+				uint x = 8;
+				try L.integer(x, b) returns (uint _x) {
+					return (_x, "");
+				} catch Error(string memory message) {
+					return (18, message);
+				}
+			}
+			function g(bool b) public returns (uint, string memory) {
+				t.x = 9;
+				try t.stru(b) returns (uint x) {
+					return (x, "");
+				} catch Error(string memory message) {
+					return (19, message);
+				}
+			}
+		}
+	)";
+	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	{
+		compileAndRun(sourceCode, 0, "L", bytes());
+		compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"L", m_contractAddress}});
+
+		ABI_CHECK(callContractFunction("f(bool)", true), encodeArgs(8, 0x40, 0));
+		ABI_CHECK(callContractFunction("f(bool)", false), encodeArgs(18, 0x40, 7, "failure"));
+		ABI_CHECK(callContractFunction("g(bool)", true), encodeArgs(9, 0x40, 0));
+		ABI_CHECK(callContractFunction("g(bool)", false), encodeArgs(19, 0x40, 7, "failure"));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(strip_reason_strings)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(bool _x) public pure returns (uint) {
+				require(_x, "some reason");
+				return 7;
+			}
+			function g(bool _x) public pure returns (uint) {
+				string memory x = "some indirect reason";
+				require(_x, x);
+				return 8;
+			}
+			function f1(bool _x) public pure returns (uint) {
+				if (!_x) revert( /* */ "some reason" /* */ );
+				return 9;
+			}
+			function g1(bool _x) public pure returns (uint) {
+				string memory x = "some indirect reason";
+				if (!_x) revert(x);
+				return 10;
+			}
+		}
+	)";
+	m_revertStrings = RevertStrings::Default;
+	compileAndRun(sourceCode, 0, "C");
+
+	if (
+		m_optimiserSettings == OptimiserSettings::minimal() ||
+		m_optimiserSettings == OptimiserSettings::none()
+	)
+		// check that the reason string IS part of the binary.
+		BOOST_CHECK(toHex(m_output).find("736f6d6520726561736f6e") != std::string::npos);
+
+	m_revertStrings = RevertStrings::Strip;
+	compileAndRun(sourceCode, 0, "C");
+	// check that the reason string is NOT part of the binary.
+	BOOST_CHECK(toHex(m_output).find("736f6d6520726561736f6e") == std::string::npos);
+
+	ABI_CHECK(callContractFunction("f(bool)", true), encodeArgs(7));
+	ABI_CHECK(callContractFunction("f(bool)", false), encodeArgs());
+	ABI_CHECK(callContractFunction("g(bool)", true), encodeArgs(8));
+	ABI_CHECK(callContractFunction("g(bool)", false), encodeArgs());
+	ABI_CHECK(callContractFunction("f1(bool)", true), encodeArgs(9));
+	ABI_CHECK(callContractFunction("f1(bool)", false), encodeArgs());
+	ABI_CHECK(callContractFunction("g1(bool)", true), encodeArgs(10));
+	ABI_CHECK(callContractFunction("g1(bool)", false), encodeArgs());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

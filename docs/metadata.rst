@@ -10,16 +10,18 @@ this file to query the compiler version, the sources used, the ABI and NatSpec
 documentation to more safely interact with the contract and verify its source
 code.
 
-The compiler appends a Swarm hash of the metadata file to the end of the
-bytecode (for details, see below) of each contract, so that you can retrieve
-the file in an authenticated way without having to resort to a centralized
-data provider.
+The compiler appends by default the IPFS hash of the metadata file to the end
+of the bytecode (for details, see below) of each contract, so that you can
+retrieve the file in an authenticated way without having to resort to a
+centralized data provider. The other available options are the Swarm hash and
+not appending the metadata hash to the bytecode.  These can be configured via
+the :ref:`Standard JSON Interface<compiler-api>`.
 
-You have to publish the metadata file to Swarm (or another service) so that
-others can access it. You create the file by using the ``solc --metadata``
+You have to publish the metadata file to IPFS, Swarm, or another service so
+that others can access it. You create the file by using the ``solc --metadata``
 command that generates a file called ``ContractName_meta.json``. It contains
-Swarm references to the source code, so you have to upload all source files and
-the metadata file.
+IPFS and Swarm references to the source code, so you have to upload all source
+files and the metadata file.
 
 The metadata file has the following format. The example below is presented in a
 human-readable way. Properly formatted metadata should use quotes correctly,
@@ -86,7 +88,9 @@ explanatory purposes.
         },
         metadata: {
           // Reflects the setting used in the input json, defaults to false
-          useLiteralContent: true
+          useLiteralContent: true,
+          // Reflects the setting used in the input json, defaults to "ipfs"
+          bytecodeHash: "ipfs"
         }
         // Required for Solidity: File and name of the contract or library this
         // metadata is created for.
@@ -111,8 +115,8 @@ explanatory purposes.
     }
 
 .. warning::
-  Since the bytecode of the resulting contract contains the metadata hash, any
-  change to the metadata results in a change of the bytecode. This includes
+  Since the bytecode of the resulting contract contains the metadata hash by default, any
+  change to the metadata might result in a change of the bytecode. This includes
   changes to a filename or path, and since the metadata includes a hash of all the
   sources used, a single whitespace change results in different metadata, and
   different bytecode.
@@ -124,7 +128,7 @@ Encoding of the Metadata Hash in the Bytecode
 =============================================
 
 Because we might support other ways to retrieve the metadata file in the future,
-the mapping ``{"bzzr1": <Swarm hash>, "solc": <compiler version>}`` is stored
+the mapping ``{"ipfs": <IPFS hash>, "solc": <compiler version>}`` is stored
 `CBOR <https://tools.ietf.org/html/rfc7049>`_-encoded. Since the mapping might
 contain more keys (see below) and the beginning of that
 encoding is not easy to find, its length is added in a two-byte big-endian
@@ -132,12 +136,12 @@ encoding. The current version of the Solidity compiler usually adds the followin
 to the end of the deployed bytecode::
 
     0xa2
-    0x65 'b' 'z' 'z' 'r' '1' 0x58 0x20 <32 bytes swarm hash>
+    0x64 'i' 'p' 'f' 's' 0x58 0x22 <34 bytes IPFS hash>
     0x64 's' 'o' 'l' 'c' 0x43 <3 byte version encoding>
     0x00 0x32
 
 So in order to retrieve the data, the end of the deployed bytecode can be checked
-to match that pattern and use the Swarm hash to retrieve the file.
+to match that pattern and use the IPFS hash to retrieve the file.
 
 Whereas release builds of solc use a 3 byte encoding of the version as shown
 above (one byte each for major, minor and patch version number), prerelease builds
@@ -145,25 +149,25 @@ will instead use a complete version string including commit hash and build date.
 
 .. note::
   The CBOR mapping can also contain other keys, so it is better to fully
-  decode the data instead of relying on it starting with ``0xa265``.
+  decode the data instead of relying on it starting with ``0xa264``.
   For example, if any experimental features that affect code generation
   are used, the mapping will also contain ``"experimental": true``.
 
 .. note::
-  The compiler currently uses the "swarm version 1" hash of the metadata,
-  but this might change in the future, so do not rely on this sequence
-  to start with ``0xa2 0x65 'b' 'z' 'z' 'r' '1'``. We might also
-  add additional data to this CBOR structure, so the
-  best option is to use a proper CBOR parser.
+  The compiler currently uses the IPFS hash of the metadata by default, but
+  it may also use the bzzr1 hash or some other hash in the future, so do
+  not rely on this sequence to start with ``0xa2 0x64 'i' 'p' 'f' 's'``.  We
+  might also add additional data to this CBOR structure, so the best option
+  is to use a proper CBOR parser.
 
 
 Usage for Automatic Interface Generation and NatSpec
 ====================================================
 
 The metadata is used in the following way: A component that wants to interact
-with a contract (e.g. Mist or any wallet) retrieves the code of the contract, from that
-the Swarm hash of a file which is then retrieved.
-That file is JSON-decoded into a structure like above.
+with a contract (e.g. Mist or any wallet) retrieves the code of the contract,
+from that the IPFS/Swarm hash of a file which is then retrieved.  That file
+is JSON-decoded into a structure like above.
 
 The component can then use the ABI to automatically generate a rudimentary
 user interface for the contract.
@@ -177,7 +181,7 @@ For additional information, read :doc:`Ethereum Natural Language Specification (
 Usage for Source Code Verification
 ==================================
 
-In order to verify the compilation, sources can be retrieved from Swarm
+In order to verify the compilation, sources can be retrieved from IPFS/Swarm
 via the link in the metadata file.
 The compiler of the correct version (which is checked to be part of the "official" compilers)
 is invoked on that input with the specified settings. The resulting

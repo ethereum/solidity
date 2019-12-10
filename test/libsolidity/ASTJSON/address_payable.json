@@ -4,23 +4,24 @@
   {
     "C":
     [
-      37
+      39
     ]
   },
-  "id": 38,
+  "id": 40,
   "nodeType": "SourceUnit",
   "nodes":
   [
     {
+      "abstract": false,
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
       "documentation": null,
       "fullyImplemented": true,
-      "id": 37,
+      "id": 39,
       "linearizedBaseContracts":
       [
-        37
+        39
       ],
       "name": "C",
       "nodeType": "ContractDefinition",
@@ -31,7 +32,8 @@
           "id": 4,
           "name": "m",
           "nodeType": "VariableDeclaration",
-          "scope": 37,
+          "overrides": null,
+          "scope": 39,
           "src": "17:44:1",
           "stateVariable": true,
           "storageLocation": "default",
@@ -82,7 +84,7 @@
         {
           "body":
           {
-            "id": 35,
+            "id": 37,
             "nodeType": "Block",
             "src": "134:122:1",
             "statements":
@@ -99,7 +101,8 @@
                     "id": 12,
                     "name": "a",
                     "nodeType": "VariableDeclaration",
-                    "scope": 35,
+                    "overrides": null,
+                    "scope": 37,
                     "src": "144:17:1",
                     "stateVariable": false,
                     "storageLocation": "default",
@@ -239,7 +242,8 @@
                     "id": 22,
                     "name": "c",
                     "nodeType": "VariableDeclaration",
-                    "scope": 35,
+                    "overrides": null,
+                    "scope": 37,
                     "src": "197:9:1",
                     "stateVariable": false,
                     "storageLocation": "default",
@@ -265,7 +269,7 @@
                     "visibility": "internal"
                   }
                 ],
-                "id": 26,
+                "id": 27,
                 "initialValue":
                 {
                   "argumentTypes": null,
@@ -273,15 +277,15 @@
                   [
                     {
                       "argumentTypes": null,
-                      "id": 24,
+                      "id": 25,
                       "name": "this",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 66,
+                      "referencedDeclaration": 68,
                       "src": "217:4:1",
                       "typeDescriptions":
                       {
-                        "typeIdentifier": "t_contract$_C_$37",
+                        "typeIdentifier": "t_contract$_C_$39",
                         "typeString": "contract C"
                       }
                     }
@@ -291,11 +295,11 @@
                     "argumentTypes":
                     [
                       {
-                        "typeIdentifier": "t_contract$_C_$37",
+                        "typeIdentifier": "t_contract$_C_$39",
                         "typeString": "contract C"
                       }
                     ],
-                    "id": 23,
+                    "id": 24,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
@@ -307,9 +311,20 @@
                       "typeIdentifier": "t_type$_t_address_$",
                       "typeString": "type(address)"
                     },
-                    "typeName": "address"
+                    "typeName":
+                    {
+                      "id": 23,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "209:7:1",
+                      "typeDescriptions":
+                      {
+                        "typeIdentifier": null,
+                        "typeString": null
+                      }
+                    }
                   },
-                  "id": 25,
+                  "id": 26,
                   "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
@@ -318,6 +333,7 @@
                   "names": [],
                   "nodeType": "FunctionCall",
                   "src": "209:13:1",
+                  "tryCall": false,
                   "typeDescriptions":
                   {
                     "typeIdentifier": "t_address",
@@ -331,7 +347,7 @@
                 "expression":
                 {
                   "argumentTypes": null,
-                  "id": 33,
+                  "id": 35,
                   "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
@@ -342,7 +358,7 @@
                     "baseExpression":
                     {
                       "argumentTypes": null,
-                      "id": 27,
+                      "id": 28,
                       "name": "m",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
@@ -354,11 +370,11 @@
                         "typeString": "mapping(address => address payable)"
                       }
                     },
-                    "id": 29,
+                    "id": 30,
                     "indexExpression":
                     {
                       "argumentTypes": null,
-                      "id": 28,
+                      "id": 29,
                       "name": "c",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
@@ -392,7 +408,7 @@
                       {
                         "argumentTypes": null,
                         "hexValue": "30",
-                        "id": 31,
+                        "id": 33,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -418,7 +434,7 @@
                           "typeString": "int_const 0"
                         }
                       ],
-                      "id": 30,
+                      "id": 32,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -430,9 +446,20 @@
                         "typeIdentifier": "t_type$_t_address_$",
                         "typeString": "type(address)"
                       },
-                      "typeName": "address"
+                      "typeName":
+                      {
+                        "id": 31,
+                        "name": "address",
+                        "nodeType": "ElementaryTypeName",
+                        "src": "239:7:1",
+                        "typeDescriptions":
+                        {
+                          "typeIdentifier": null,
+                          "typeString": null
+                        }
+                      }
                     },
-                    "id": 32,
+                    "id": 34,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
@@ -441,6 +468,7 @@
                     "names": [],
                     "nodeType": "FunctionCall",
                     "src": "239:10:1",
+                    "tryCall": false,
                     "typeDescriptions":
                     {
                       "typeIdentifier": "t_address_payable",
@@ -454,19 +482,20 @@
                     "typeString": "address payable"
                   }
                 },
-                "id": 34,
+                "id": 36,
                 "nodeType": "ExpressionStatement",
                 "src": "232:17:1"
               }
             ]
           },
           "documentation": null,
-          "id": 36,
+          "id": 38,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
           "name": "f",
           "nodeType": "FunctionDefinition",
+          "overrides": null,
           "parameters":
           {
             "id": 7,
@@ -478,7 +507,8 @@
                 "id": 6,
                 "name": "arg",
                 "nodeType": "VariableDeclaration",
-                "scope": 36,
+                "overrides": null,
+                "scope": 38,
                 "src": "78:19:1",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -517,7 +547,8 @@
                 "id": 9,
                 "name": "r",
                 "nodeType": "VariableDeclaration",
-                "scope": 36,
+                "overrides": null,
+                "scope": 38,
                 "src": "115:17:1",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -545,14 +576,14 @@
             ],
             "src": "114:19:1"
           },
-          "scope": 37,
+          "scope": 39,
           "src": "67:189:1",
           "stateMutability": "nonpayable",
-          "superFunction": null,
+          "virtual": false,
           "visibility": "public"
         }
       ],
-      "scope": 38,
+      "scope": 40,
       "src": "0:258:1"
     }
   ],

@@ -49,7 +49,6 @@ public:
 
 	void operator()(Literal const&) override;
 	void operator()(Identifier const&) override;
-	void operator()(FunctionalInstruction const& _instr) override;
 	void operator()(FunctionCall const& _funCall) override;
 	void operator()(ExpressionStatement const& _statement) override;
 	void operator()(Assignment const& _assignment) override;
@@ -60,6 +59,7 @@ public:
 	void operator()(ForLoop const&) override;
 	void operator()(Break const&) override;
 	void operator()(Continue const&) override;
+	void operator()(Leave const&) override;
 	void operator()(Block const& _block) override;
 
 	static std::map<Block const*, uint64_t> run(Block const& _block);

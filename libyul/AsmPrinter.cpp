@@ -39,13 +39,6 @@ using namespace yul;
 
 //@TODO source locations
 
-string AsmPrinter::operator()(yul::Instruction const& _instruction) const
-{
-	yulAssert(!m_yul, "");
-	yulAssert(isValidInstruction(_instruction.instruction), "Invalid instruction");
-	return boost::to_lower_copy(instructionInfo(_instruction.instruction).name);
-}
-
 string AsmPrinter::operator()(Literal const& _literal) const
 {
 	switch (_literal.kind)
@@ -95,37 +88,9 @@ string AsmPrinter::operator()(Identifier const& _identifier) const
 	return _identifier.name.str();
 }
 
-string AsmPrinter::operator()(FunctionalInstruction const& _functionalInstruction) const
-{
-	yulAssert(!m_yul, "");
-	yulAssert(isValidInstruction(_functionalInstruction.instruction), "Invalid instruction");
-	return
-		boost::to_lower_copy(instructionInfo(_functionalInstruction.instruction).name) +
-		"(" +
-		boost::algorithm::join(
-			_functionalInstruction.arguments | boost::adaptors::transformed([&](auto&& _node) { return std::visit(*this, _node); }),
-			", "
-		) +
-		")";
-}
-
 string AsmPrinter::operator()(ExpressionStatement const& _statement) const
 {
 	return std::visit(*this, _statement.expression);
-}
-
-string AsmPrinter::operator()(Label const& _label) const
-{
-	yulAssert(!m_yul, "");
-	yulAssert(!_label.name.empty(), "Invalid label.");
-	return _label.name.str() + ":";
-}
-
-string AsmPrinter::operator()(StackAssignment const& _assignment) const
-{
-	yulAssert(!m_yul, "");
-	yulAssert(!_assignment.variableName.name.empty(), "Invalid variable name.");
-	return "=: " + (*this)(_assignment.variableName);
 }
 
 string AsmPrinter::operator()(Assignment const& _assignment) const
@@ -240,6 +205,11 @@ string AsmPrinter::operator()(Break const&) const
 string AsmPrinter::operator()(Continue const&) const
 {
 	return "continue";
+}
+
+string AsmPrinter::operator()(Leave const&) const
+{
+	return "leave";
 }
 
 string AsmPrinter::operator()(Block const& _block) const

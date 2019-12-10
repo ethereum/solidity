@@ -252,30 +252,11 @@ void CodeTransform::operator()(Assignment const& _assignment)
 	checkStackHeight(&_assignment);
 }
 
-void CodeTransform::operator()(StackAssignment const& _assignment)
-{
-	yulAssert(!m_allowStackOpt, "");
-	m_assembly.setSourceLocation(_assignment.location);
-	generateAssignment(_assignment.variableName);
-	checkStackHeight(&_assignment);
-}
-
 void CodeTransform::operator()(ExpressionStatement const& _statement)
 {
 	m_assembly.setSourceLocation(_statement.location);
 	std::visit(*this, _statement.expression);
 	checkStackHeight(&_statement);
-}
-
-void CodeTransform::operator()(Label const& _label)
-{
-	yulAssert(!m_allowStackOpt, "");
-	m_assembly.setSourceLocation(_label.location);
-	yulAssert(m_scope, "");
-	yulAssert(m_scope->identifiers.count(_label.name), "");
-	Scope::Label& label = std::get<Scope::Label>(m_scope->identifiers.at(_label.name));
-	m_assembly.appendLabel(labelID(label));
-	checkStackHeight(&_label);
 }
 
 void CodeTransform::operator()(FunctionCall const& _call)
@@ -322,40 +303,6 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		}
 		checkStackHeight(&_call);
 	}
-}
-
-void CodeTransform::operator()(FunctionalInstruction const& _instruction)
-{
-	if (m_evm15 && (
-		_instruction.instruction == dev::eth::Instruction::JUMP ||
-		_instruction.instruction == dev::eth::Instruction::JUMPI
-	))
-	{
-		bool const isJumpI = _instruction.instruction == dev::eth::Instruction::JUMPI;
-		if (isJumpI)
-		{
-			yulAssert(_instruction.arguments.size() == 2, "");
-			visitExpression(_instruction.arguments.at(1));
-		}
-		else
-		{
-			yulAssert(_instruction.arguments.size() == 1, "");
-		}
-		m_assembly.setSourceLocation(_instruction.location);
-		auto label = labelFromIdentifier(std::get<Identifier>(_instruction.arguments.at(0)));
-		if (isJumpI)
-			m_assembly.appendJumpToIf(label);
-		else
-			m_assembly.appendJumpTo(label);
-	}
-	else
-	{
-		for (auto const& arg: _instruction.arguments | boost::adaptors::reversed)
-			visitExpression(arg);
-		m_assembly.setSourceLocation(_instruction.location);
-		m_assembly.appendInstruction(_instruction.instruction);
-	}
-	checkStackHeight(&_instruction);
 }
 
 void CodeTransform::operator()(Identifier const& _identifier)
@@ -511,6 +458,9 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.appendConstant(u256(0));
 	}
 
+	m_context->functionExitPoints.push(
+		CodeTransformContext::JumpInfo{m_assembly.newLabelId(), m_assembly.stackHeight()}
+	);
 	try
 	{
 		CodeTransform(
@@ -538,6 +488,9 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 			error.functionName = _function.name;
 		stackError(std::move(error), height);
 	}
+
+	m_assembly.appendLabel(m_context->functionExitPoints.top().label);
+	m_context->functionExitPoints.pop();
 
 	{
 		// The stack layout here is:
@@ -662,6 +615,17 @@ void CodeTransform::operator()(Continue const& _continue)
 	m_assembly.appendJumpTo(jump.label, appendPopUntil(jump.targetStackHeight));
 
 	checkStackHeight(&_continue);
+}
+
+void CodeTransform::operator()(Leave const& _leaveStatement)
+{
+	yulAssert(!m_context->functionExitPoints.empty(), "Invalid leave-statement. Requires surrounding function in code generation.");
+	m_assembly.setSourceLocation(_leaveStatement.location);
+
+	Context::JumpInfo const& jump = m_context->functionExitPoints.top();
+	m_assembly.appendJumpTo(jump.label, appendPopUntil(jump.targetStackHeight));
+
+	checkStackHeight(&_leaveStatement);
 }
 
 void CodeTransform::operator()(Block const& _block)

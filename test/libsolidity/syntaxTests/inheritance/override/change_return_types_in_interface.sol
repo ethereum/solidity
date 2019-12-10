@@ -7,4 +7,5 @@ contract B is I {
   function f() public pure returns (uint, uint) {}
 }
 // ----
+// TypeError: (182-230): Overriding function is missing 'override' specifier.
 // TypeError: (182-230): Overriding function return types differ.

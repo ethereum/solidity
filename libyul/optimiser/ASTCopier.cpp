@@ -30,12 +30,6 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-Statement ASTCopier::operator()(Instruction const&)
-{
-	assertThrow(false, OptimizerException, "Invalid operation.");
-	return {};
-}
-
 Statement ASTCopier::operator()(ExpressionStatement const& _statement)
 {
 	return ExpressionStatement{ _statement.location, translate(_statement.expression) };
@@ -59,33 +53,12 @@ Statement ASTCopier::operator()(Assignment const& _assignment)
 	};
 }
 
-Statement ASTCopier::operator()(StackAssignment const&)
-{
-	assertThrow(false, OptimizerException, "Invalid operation.");
-	return {};
-}
-
-Statement ASTCopier::operator()(Label const&)
-{
-	assertThrow(false, OptimizerException, "Invalid operation.");
-	return {};
-}
-
 Expression ASTCopier::operator()(FunctionCall const& _call)
 {
 	return FunctionCall{
 		_call.location,
 		translate(_call.functionName),
 		translateVector(_call.arguments)
-	};
-}
-
-Expression ASTCopier::operator()(FunctionalInstruction const& _instruction)
-{
-	return FunctionalInstruction{
-		_instruction.location,
-		_instruction.instruction,
-		translateVector(_instruction.arguments)
 	};
 }
 
@@ -146,6 +119,11 @@ Statement ASTCopier::operator()(Break const& _break)
 Statement ASTCopier::operator()(Continue const& _continue)
 {
 	return Continue{ _continue };
+}
+
+Statement ASTCopier::operator()(Leave const& _leaveStatement)
+{
+	return Leave{_leaveStatement};
 }
 
 Statement ASTCopier::operator ()(Block const& _block)

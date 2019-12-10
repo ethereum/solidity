@@ -39,6 +39,4 @@ SOLJSON="$REPO_ROOT/$BUILD_DIR/libsolc/soljson.js"
 VERSION=$("$REPO_ROOT"/scripts/get_version.sh)
 
 echo "Running solcjs tests...."
-"$REPO_ROOT/test/solcjsTests.sh" "$SOLJSON" "$VERSION"
-echo "Running external tests...."
-"$REPO_ROOT/test/externalTests.sh" "$SOLJSON"
+"$REPO_ROOT/test/externalTests/solc-js/solc-js.sh" "$SOLJSON" "$VERSION"

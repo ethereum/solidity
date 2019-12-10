@@ -12,6 +12,7 @@
   "nodes":
   [
     {
+      "abstract": false,
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
@@ -45,6 +46,7 @@
   "nodes":
   [
     {
+      "abstract": false,
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
@@ -78,6 +80,7 @@
   "nodes":
   [
     {
+      "abstract": false,
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
@@ -126,6 +129,7 @@
           "id": 10,
           "name": "mod",
           "nodeType": "ModifierDefinition",
+          "overrides": null,
           "parameters":
           {
             "id": 7,
@@ -134,6 +138,7 @@
             "src": "96:2:3"
           },
           "src": "84:21:3",
+          "virtual": false,
           "visibility": "internal"
         },
         {
@@ -151,6 +156,7 @@
           "modifiers": [],
           "name": "fn",
           "nodeType": "FunctionDefinition",
+          "overrides": null,
           "parameters":
           {
             "id": 11,
@@ -168,7 +174,7 @@
           "scope": 15,
           "src": "134:23:3",
           "stateMutability": "nonpayable",
-          "superFunction": null,
+          "virtual": false,
           "visibility": "public"
         }
       ],

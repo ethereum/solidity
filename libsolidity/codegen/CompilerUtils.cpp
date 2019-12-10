@@ -95,6 +95,26 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 	m_context << Instruction::REVERT;
 }
 
+void CompilerUtils::returnDataToArray()
+{
+	if (m_context.evmVersion().supportsReturndata())
+	{
+		m_context << Instruction::RETURNDATASIZE;
+		m_context.appendInlineAssembly(R"({
+			switch v case 0 {
+				v := 0x60
+			} default {
+				v := mload(0x40)
+				mstore(0x40, add(v, and(add(returndatasize(), 0x3f), not(0x1f))))
+				mstore(v, returndatasize())
+				returndatacopy(add(v, 0x20), 0, returndatasize())
+			}
+		})", {"v"});
+	}
+	else
+		pushZeroPointer();
+}
+
 void CompilerUtils::accessCalldataTail(Type const& _type)
 {
 	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
@@ -984,6 +1004,17 @@ void CompilerUtils::convertType(
 		}
 		break;
 	}
+	case Type::Category::ArraySlice:
+	{
+		auto& typeOnStack = dynamic_cast<ArraySliceType const&>(_typeOnStack);
+		solAssert(_targetType == typeOnStack.arrayType(), "");
+		solUnimplementedAssert(
+			typeOnStack.arrayType().location() == DataLocation::CallData &&
+			typeOnStack.arrayType().isDynamicallySized(),
+			""
+		);
+		break;
+	}
 	case Type::Category::Struct:
 	{
 		solAssert(targetTypeCategory == stackTypeCategory, "");
@@ -1115,37 +1146,28 @@ void CompilerUtils::convertType(
 			m_context << Instruction::ISZERO << Instruction::ISZERO;
 		break;
 	default:
-		if (stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Address)
+		// we used to allow conversions from function to address
+		solAssert(!(stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Address), "");
+		if (stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Function)
 		{
 			FunctionType const& typeOnStack = dynamic_cast<FunctionType const&>(_typeOnStack);
-			solAssert(typeOnStack.kind() == FunctionType::Kind::External, "Only external function type can be converted.");
-
-			// stack: <address> <function_id>
-			m_context << Instruction::POP;
+			FunctionType const& targetType = dynamic_cast<FunctionType const&>(_targetType);
+			solAssert(
+				typeOnStack.isImplicitlyConvertibleTo(targetType) &&
+				typeOnStack.sizeOnStack() == targetType.sizeOnStack() &&
+				(typeOnStack.kind() == FunctionType::Kind::Internal || typeOnStack.kind() == FunctionType::Kind::External) &&
+				typeOnStack.kind() == targetType.kind(),
+				"Invalid function type conversion requested."
+			);
 		}
 		else
-		{
-			if (stackTypeCategory == Type::Category::Function && targetTypeCategory == Type::Category::Function)
-			{
-				FunctionType const& typeOnStack = dynamic_cast<FunctionType const&>(_typeOnStack);
-				FunctionType const& targetType = dynamic_cast<FunctionType const&>(_targetType);
-				solAssert(
-					typeOnStack.isImplicitlyConvertibleTo(targetType) &&
-					typeOnStack.sizeOnStack() == targetType.sizeOnStack() &&
-					(typeOnStack.kind() == FunctionType::Kind::Internal || typeOnStack.kind() == FunctionType::Kind::External) &&
-					typeOnStack.kind() == targetType.kind(),
-					"Invalid function type conversion requested."
-				);
-			}
-			else
-				// All other types should not be convertible to non-equal types.
-				solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
+			// All other types should not be convertible to non-equal types.
+			solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
 
-			if (_cleanupNeeded && _targetType.canBeStored() && _targetType.storageBytes() < 32)
-				m_context
-					<< ((u256(1) << (8 * _targetType.storageBytes())) - 1)
-					<< Instruction::AND;
-		}
+		if (_cleanupNeeded && _targetType.canBeStored() && _targetType.storageBytes() < 32)
+			m_context
+				<< ((u256(1) << (8 * _targetType.storageBytes())) - 1)
+				<< Instruction::AND;
 		break;
 	}
 

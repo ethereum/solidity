@@ -46,7 +46,8 @@ contract schellingDB is safeMath, schellingVars {
         Constructor
     */
     constructor() public {
-        rounds.length = 2;
+        rounds.push();
+        rounds.push();
         rounds[0].blockHeight = block.number;
         currentSchellingRound = 1;
     }
@@ -70,7 +71,8 @@ contract schellingDB is safeMath, schellingVars {
         else { return (true, rounds[_id].totalAboveWeight, rounds[_id].totalBelowWeight, rounds[_id].reward, rounds[_id].blockHeight, rounds[_id].voted); }
     }
     function pushRound(uint256 _totalAboveWeight, uint256 _totalBelowWeight, uint256 _reward, uint256 _blockHeight, bool _voted) isOwner external returns(bool, uint256) {
-        return (true, rounds.push(_rounds(_totalAboveWeight, _totalBelowWeight, _reward, _blockHeight, _voted)));
+        rounds.push(_rounds(_totalAboveWeight, _totalBelowWeight, _reward, _blockHeight, _voted));
+        return (true, rounds.length);
     }
     function setRound(uint256 _id, uint256 _totalAboveWeight, uint256 _totalBelowWeight, uint256 _reward, uint256 _blockHeight, bool _voted) isOwner external returns(bool) {
         rounds[_id] = _rounds(_totalAboveWeight, _totalBelowWeight, _reward, _blockHeight, _voted);
@@ -133,13 +135,13 @@ contract schelling is module, announcementTypes, schellingVars {
     /*
         module callbacks
     */
-    function replaceModule(address payable addr) external returns (bool) {
+    function replaceModule(address payable addr) external override returns (bool) {
         require( super.isModuleHandler(msg.sender) );
         require( db.replaceOwner(addr) );
         super._replaceModule(addr);
         return true;
     }
-    function transferEvent(address payable from, address payable to, uint256 value) external returns (bool) {
+    function transferEvent(address payable from, address payable to, uint256 value) external override returns (bool) {
         /*
             Transaction completed. This function can be called only by the ModuleHandler.
             If this contract is the receiver, the amount will be added to the prize pool of the current round.

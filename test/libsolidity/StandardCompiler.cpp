@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK_EQUAL(
 		dev::test::bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()),
 		string("6080604052348015600f57600080fd5b5060") +
-		(VersionIsRelease ? "3e" : toHex(bytes{uint8_t(60 + VersionStringStrict.size())})) +
+		(VersionIsRelease ? "3f" : toHex(bytes{uint8_t(61 + VersionStringStrict.size())})) +
 		"80601d6000396000f3fe6080604052600080fdfe"
 	);
 	BOOST_CHECK(contract["evm"]["assembly"].isString());
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"tag_1:\n    /* \"fileA\":0:14  contract A { } */\n  pop\n  dataSize(sub_0)\n  dup1\n  "
 		"dataOffset(sub_0)\n  0x00\n  codecopy\n  0x00\n  return\nstop\n\nsub_0: assembly {\n        "
 		"/* \"fileA\":0:14  contract A { } */\n      mstore(0x40, 0x80)\n      0x00\n      "
-		"dup1\n      revert\n\n    auxdata: 0xa265627a7a72315820"
+		"dup1\n      revert\n\n    auxdata: 0xa26469706673582212"
 	) == 0);
 	BOOST_CHECK(contract["evm"]["gasEstimates"].isObject());
 	BOOST_CHECK_EQUAL(contract["evm"]["gasEstimates"].size(), 1);
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK_EQUAL(
 		dev::jsonCompactPrint(result["sources"]["fileA"]["legacyAST"]),
 		"{\"attributes\":{\"absolutePath\":\"fileA\",\"exportedSymbols\":{\"A\":[1]}},\"children\":"
-		"[{\"attributes\":{\"baseContracts\":[null],\"contractDependencies\":[null],\"contractKind\":\"contract\","
+		"[{\"attributes\":{\"abstract\":false,\"baseContracts\":[null],\"contractDependencies\":[null],\"contractKind\":\"contract\","
 		"\"documentation\":null,\"fullyImplemented\":true,\"linearizedBaseContracts\":[1],\"name\":\"A\",\"nodes\":[null],\"scope\":2},"
 		"\"id\":1,\"name\":\"ContractDefinition\",\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}"
 	);
@@ -615,7 +615,7 @@ BOOST_AUTO_TEST_CASE(output_selection_dependent_contract)
 	Json::Value contract = getContractResult(result, "fileA", "A");
 	BOOST_CHECK(contract.isObject());
 	BOOST_CHECK(contract["abi"].isArray());
-	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[{\"constant\":false,\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]");
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[{\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]");
 }
 
 BOOST_AUTO_TEST_CASE(output_selection_dependent_contract_with_import)
@@ -647,7 +647,7 @@ BOOST_AUTO_TEST_CASE(output_selection_dependent_contract_with_import)
 	Json::Value contract = getContractResult(result, "fileA", "A");
 	BOOST_CHECK(contract.isObject());
 	BOOST_CHECK(contract["abi"].isArray());
-	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[{\"constant\":false,\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]");
+	BOOST_CHECK_EQUAL(dev::jsonCompactPrint(contract["abi"]), "[{\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]");
 }
 
 BOOST_AUTO_TEST_CASE(filename_with_colon)
@@ -1044,12 +1044,6 @@ BOOST_AUTO_TEST_CASE(optimizer_settings_details_different)
 	)";
 	Json::Value result = compile(input);
 	BOOST_CHECK(containsAtMostWarnings(result));
-	BOOST_CHECK(containsError(
-		result,
-		"Warning",
-		"The Yul optimiser is still experimental. "
-		"Do not use it in production unless correctness of generated code is verified with extensive tests."
-	));
 	Json::Value contract = getContractResult(result, "fileA", "A");
 	BOOST_CHECK(contract.isObject());
 	BOOST_CHECK(contract["metadata"].isString());

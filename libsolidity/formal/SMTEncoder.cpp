@@ -70,6 +70,7 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 			for (auto const& function: resolvedFunctions)
 				if (
 					function->name() == baseFunction->name() &&
+					function->kind() == baseFunction->kind() &&
 					FunctionType(*function).asCallableFunction(false)->
 						hasEqualParameterTypes(*FunctionType(*baseFunction).asCallableFunction(false))
 				)
@@ -913,6 +914,15 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 		m_context
 	);
 	m_uninterpretedTerms.insert(&_indexAccess);
+}
+
+void SMTEncoder::endVisit(IndexRangeAccess const& _indexRangeAccess)
+{
+	createExpr(_indexRangeAccess);
+	m_errorReporter.warning(
+		_indexRangeAccess.location(),
+		"Assertion checker does not yet implement this expression."
+	);
 }
 
 void SMTEncoder::arrayAssignment()

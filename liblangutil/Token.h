@@ -143,6 +143,7 @@ namespace langutil
 	/* Inline Assembly Operators */                                    \
 	T(AssemblyAssign, ":=", 2)                                         \
 	/* Keywords */                                                     \
+	K(Abstract, "abstract", 0)                                         \
 	K(Anonymous, "anonymous", 0)                                       \
 	K(As, "as", 0)                                                     \
 	K(Assembly, "assembly", 0)                                         \
@@ -157,6 +158,7 @@ namespace langutil
 	K(Emit, "emit", 0)                                                 \
 	K(Event, "event", 0)                                               \
 	K(External, "external", 0)                                         \
+	K(Fallback, "fallback", 0)                                         \
 	K(For, "for", 0)                                                   \
 	K(Function, "function", 0)                                         \
 	K(Hex, "hex", 0)                                                   \
@@ -171,11 +173,13 @@ namespace langutil
 	K(Memory, "memory", 0)                                             \
 	K(Modifier, "modifier", 0)                                         \
 	K(New, "new", 0)                                                   \
+	K(Override, "override", 0)                                         \
 	K(Payable, "payable", 0)                                           \
 	K(Public, "public", 0)                                             \
 	K(Pragma, "pragma", 0)                                             \
 	K(Private, "private", 0)                                           \
 	K(Pure, "pure", 0)                                                 \
+	K(Receive, "receive", 0)                                           \
 	K(Return, "return", 0)                                             \
 	K(Returns, "returns", 0)                                           \
 	K(Storage, "storage", 0)                                           \
@@ -186,6 +190,7 @@ namespace langutil
 	K(Using, "using", 0)                                               \
 	K(Var, "var", 0)                                                   \
 	K(View, "view", 0)                                                 \
+	K(Virtual, "virtual", 0)                                           \
 	K(While, "while", 0)                                               \
 	\
 	/* Ether subdenominations */                                       \
@@ -228,7 +233,6 @@ namespace langutil
 	T(Identifier, nullptr, 0)                                          \
 	\
 	/* Keywords reserved for future use. */                            \
-	K(Abstract, "abstract", 0)                                         \
 	K(After, "after", 0)                                               \
 	K(Alias, "alias", 0)                                               \
 	K(Apply, "apply", 0)                                               \
@@ -249,7 +253,6 @@ namespace langutil
 	K(Mutable, "mutable", 0)                                           \
 	K(NullLiteral, "null", 0)                                          \
 	K(Of, "of", 0)                                                     \
-	K(Override, "override", 0)                                         \
 	K(Partial, "partial", 0)                                           \
 	K(Promise, "promise", 0)                                           \
 	K(Reference, "reference", 0)                                       \
@@ -311,7 +314,7 @@ namespace TokenTraits
 
 	constexpr bool isEtherSubdenomination(Token op) { return op == Token::SubWei || op == Token::SubSzabo || op == Token::SubFinney || op == Token::SubEther; }
 	constexpr bool isTimeSubdenomination(Token op) { return op == Token::SubSecond || op == Token::SubMinute || op == Token::SubHour || op == Token::SubDay || op == Token::SubWeek || op == Token::SubYear; }
-	constexpr bool isReservedKeyword(Token op) { return (Token::Abstract <= op && op <= Token::Unchecked); }
+	constexpr bool isReservedKeyword(Token op) { return (Token::After <= op && op <= Token::Unchecked); }
 
 	inline Token AssignmentToBinaryOp(Token op)
 	{

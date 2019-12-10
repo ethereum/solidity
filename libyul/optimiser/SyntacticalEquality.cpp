@@ -46,15 +46,6 @@ bool SyntacticallyEqual::operator()(Statement const& _lhs, Statement const& _rhs
 	}, _lhs, _rhs);
 }
 
-bool SyntacticallyEqual::expressionEqual(FunctionalInstruction const& _lhs, FunctionalInstruction const& _rhs)
-{
-	return
-		_lhs.instruction == _rhs.instruction &&
-		containerEqual(_lhs.arguments, _rhs.arguments, [this](Expression const& _lhsExpr, Expression const& _rhsExpr) -> bool {
-			return (*this)(_lhsExpr, _rhsExpr);
-		});
-}
-
 bool SyntacticallyEqual::expressionEqual(FunctionCall const& _lhs, FunctionCall const& _rhs)
 {
 	return
@@ -157,21 +148,6 @@ bool SyntacticallyEqual::statementEqual(ForLoop const& _lhs, ForLoop const& _rhs
 		compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.condition, _rhs.condition) &&
 		statementEqual(_lhs.body, _rhs.body) &&
 		statementEqual(_lhs.post, _rhs.post);
-}
-
-bool SyntacticallyEqual::statementEqual(Instruction const&, Instruction const&)
-{
-	assertThrow(false, OptimizerException, "");
-}
-
-bool SyntacticallyEqual::statementEqual(Label const&, Label const&)
-{
-	assertThrow(false, OptimizerException, "");
-}
-
-bool SyntacticallyEqual::statementEqual(StackAssignment const&, StackAssignment const&)
-{
-	assertThrow(false, OptimizerException, "");
 }
 
 bool SyntacticallyEqual::statementEqual(Block const& _lhs, Block const& _rhs)

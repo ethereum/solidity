@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// ParserError: (108-112): Expected even number of hex-nibbles within double-quotes.
+// ParserError: (108-112): Expected even number of hex-nibbles.

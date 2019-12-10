@@ -53,15 +53,15 @@ static char const* registrarCode = R"DELIMITER(
 // @authors:
 //   Gav Wood <g@ethdev.com>
 
-pragma solidity >=0.4.0 <0.6.0;
+pragma solidity >=0.4.0 <0.7.0;
 
-contract Registrar {
+abstract contract Registrar {
 	event Changed(string indexed name);
 
-	function owner(string memory _name) public view returns (address o_owner);
-	function addr(string memory _name) public view returns (address o_address);
-	function subRegistrar(string memory _name) public view returns (address o_subRegistrar);
-	function content(string memory _name) public view returns (bytes32 o_content);
+	function owner(string memory _name) public virtual view returns (address o_owner);
+	function addr(string memory _name) public virtual view returns (address o_address);
+	function subRegistrar(string memory _name) virtual public view returns (address o_subRegistrar);
+	function content(string memory _name) public virtual view returns (bytes32 o_content);
 }
 
 contract FixedFeeRegistrar is Registrar {
@@ -111,10 +111,10 @@ contract FixedFeeRegistrar is Registrar {
 		o_content = rec.content;
 		o_owner = rec.owner;
 	}
-	function addr(string memory _name) public view returns (address) { return m_record(_name).addr; }
-	function subRegistrar(string memory _name) public view returns (address) { return m_record(_name).subRegistrar; }
-	function content(string memory _name) public view returns (bytes32) { return m_record(_name).content; }
-	function owner(string memory _name) public view returns (address) { return m_record(_name).owner; }
+	function addr(string memory _name) public override view returns (address) { return m_record(_name).addr; }
+	function subRegistrar(string memory _name) public override view returns (address) { return m_record(_name).subRegistrar; }
+	function content(string memory _name) public override view returns (bytes32) { return m_record(_name).content; }
+	function owner(string memory _name) public override view returns (address) { return m_record(_name).owner; }
 
 	Record[2**253] m_recordData;
 	function m_record(string memory _name) view internal returns (Record storage o_record) {

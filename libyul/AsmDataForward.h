@@ -27,14 +27,11 @@
 namespace yul
 {
 
-struct Instruction;
 struct Literal;
 struct Label;
-struct StackAssignment;
 struct Identifier;
 struct Assignment;
 struct VariableDeclaration;
-struct FunctionalInstruction;
 struct FunctionDefinition;
 struct FunctionCall;
 struct If;
@@ -43,12 +40,13 @@ struct Case;
 struct ForLoop;
 struct Break;
 struct Continue;
+struct Leave;
 struct ExpressionStatement;
 struct Block;
 
 struct TypedName;
 
-using Expression = std::variant<FunctionalInstruction, FunctionCall, Identifier, Literal>;
-using Statement = std::variant<ExpressionStatement, Instruction, Label, StackAssignment, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Block>;
+using Expression = std::variant<FunctionCall, Identifier, Literal>;
+using Statement = std::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
 
 }

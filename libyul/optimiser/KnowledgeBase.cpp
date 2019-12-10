@@ -80,9 +80,6 @@ Expression KnowledgeBase::simplify(Expression _expression)
 	if (holds_alternative<FunctionCall>(_expression))
 		for (Expression& arg: std::get<FunctionCall>(_expression).arguments)
 			arg = simplify(arg);
-	else if (holds_alternative<FunctionalInstruction>(_expression))
-		for (Expression& arg: std::get<FunctionalInstruction>(_expression).arguments)
-			arg = simplify(arg);
 
 	if (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_variableValues))
 		return simplify(match->action().toExpression(locationOf(_expression)));

@@ -35,7 +35,10 @@ namespace smt
 class CHCSmtLib2Interface: public CHCSolverInterface
 {
 public:
-	explicit CHCSmtLib2Interface(std::map<h256, std::string> const& _queryResponses);
+	explicit CHCSmtLib2Interface(
+		std::map<h256, std::string> const& _queryResponses,
+		ReadCallback::Callback const& _smtCallback
+	);
 
 	void reset();
 
@@ -68,6 +71,8 @@ private:
 
 	std::map<h256, std::string> const& m_queryResponses;
 	std::vector<std::string> m_unhandledQueries;
+
+	ReadCallback::Callback m_smtCallback;
 };
 
 }

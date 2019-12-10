@@ -39,8 +39,6 @@ set(sources
 	ast/ASTForward.h
 	ast/ASTJsonConverter.cpp
 	ast/ASTJsonConverter.h
-	ast/ASTPrinter.cpp
-	ast/ASTPrinter.h
 	ast/ASTUtils.cpp
 	ast/ASTUtils.h
 	ast/ASTVisitor.h
@@ -107,6 +105,7 @@ set(sources
 	interface/ABI.h
 	interface/CompilerStack.cpp
 	interface/CompilerStack.h
+	interface/DebugSettings.h
 	interface/GasEstimator.cpp
 	interface/GasEstimator.h
 	interface/Natspec.cpp

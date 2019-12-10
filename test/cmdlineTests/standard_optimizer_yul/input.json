@@ -10,8 +10,7 @@
 	"settings":
 	{
 		"optimizer": {
-			"enabled": true,
-			"details": { "yul": true }
+			"enabled": true
 		}
 	}
 }

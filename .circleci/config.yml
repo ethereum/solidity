@@ -593,7 +593,7 @@ jobs:
 
   t_ems_solcjs:
     docker:
-      - image: circleci/node:10
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904
     environment:
       TERM: xterm
     steps:
@@ -601,11 +601,16 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run:
+          name: Install test dependencies
+          command: |
+            apt-get update
+            apt-get install -qqy --no-install-recommends nodejs npm cvc4
+      - run:
           name: Test solcjs
           command: |
             node --version
             npm --version
-            test/solcjsTests.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
+            test/externalTests/solc-js/solc-js.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
 
   t_ems_compile_ext_gnosis:
     docker:
@@ -716,7 +721,7 @@ workflows:
       # basic checks
       - chk_spelling: *workflow_trigger_on_tags
       - chk_coding_style: *workflow_trigger_on_tags
-      - chk_docs_examples: *workflow_trigger_on_tags
+      # DISABLED FOR 0.6.0 - chk_docs_examples: *workflow_trigger_on_tags
       - chk_buglist: *workflow_trigger_on_tags
       - chk_proofs: *workflow_trigger_on_tags
 

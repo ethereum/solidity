@@ -118,10 +118,12 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 		for (auto const& var: m_localVarUseCount)
 			if (var.second == 0)
 			{
-				if (var.first.second->isCallableParameter())
+				if (var.first.second->isCallableOrCatchParameter())
 					m_errorReporter.warning(
 						var.first.second->location(),
-						"Unused function parameter. Remove or comment out the variable name to silence this warning."
+						"Unused " +
+						string(var.first.second->isTryCatchParameter() ? "try/catch" : "function") +
+						" parameter. Remove or comment out the variable name to silence this warning."
 					);
 				else
 					m_errorReporter.warning(var.first.second->location(), "Unused local variable.");

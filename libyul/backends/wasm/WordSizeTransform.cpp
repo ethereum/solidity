@@ -38,11 +38,6 @@ void WordSizeTransform::operator()(FunctionDefinition& _fd)
 	(*this)(_fd.body);
 }
 
-void WordSizeTransform::operator()(FunctionalInstruction& _ins)
-{
-	rewriteFunctionCallArguments(_ins.arguments);
-}
-
 void WordSizeTransform::operator()(FunctionCall& _fc)
 {
 	if (BuiltinFunction const* fun = m_inputDialect.builtin(_fc.functionName.name))
@@ -114,7 +109,6 @@ void WordSizeTransform::operator()(Block& _block)
 
 				if (
 					!varDecl.value ||
-					holds_alternative<FunctionalInstruction>(*varDecl.value) ||
 					holds_alternative<FunctionCall>(*varDecl.value)
 				)
 				{
@@ -172,10 +166,7 @@ void WordSizeTransform::operator()(Block& _block)
 							return {std::move(ret)};
 						}
 
-				if (
-					holds_alternative<FunctionalInstruction>(*assignment.value) ||
-					holds_alternative<FunctionCall>(*assignment.value)
-				)
+				if (holds_alternative<FunctionCall>(*assignment.value))
 				{
 					if (assignment.value) visit(*assignment.value);
 					rewriteIdentifierList(assignment.variableNames);

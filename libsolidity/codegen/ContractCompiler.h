@@ -24,6 +24,7 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/CompilerContext.h>
+#include <libsolidity/interface/DebugSettings.h>
 #include <libevmasm/Assembly.h>
 #include <functional>
 #include <ostream>
@@ -43,9 +44,11 @@ public:
 	explicit ContractCompiler(
 		ContractCompiler* _runtimeCompiler,
 		CompilerContext& _context,
-		OptimiserSettings _optimiserSettings
+		OptimiserSettings _optimiserSettings,
+		RevertStrings _revertStrings
 	):
 		m_optimiserSettings(std::move(_optimiserSettings)),
+		m_revertStrings(_revertStrings),
 		m_runtimeCompiler(_runtimeCompiler),
 		m_context(_context)
 	{
@@ -104,6 +107,9 @@ private:
 	bool visit(VariableDeclaration const& _variableDeclaration) override;
 	bool visit(FunctionDefinition const& _function) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(TryStatement const& _tryStatement) override;
+	void handleCatch(std::vector<ASTPointer<TryCatchClause>> const& _catchClauses);
+	bool visit(TryCatchClause const& _clause) override;
 	bool visit(IfStatement const& _ifStatement) override;
 	bool visit(WhileStatement const& _whileStatement) override;
 	bool visit(ForStatement const& _forStatement) override;
@@ -135,6 +141,7 @@ private:
 	void storeStackHeight(ASTNode const* _node);
 
 	OptimiserSettings const m_optimiserSettings;
+	RevertStrings const m_revertStrings;
 	/// Pointer to the runtime compiler in case this is a creation compiler.
 	ContractCompiler* m_runtimeCompiler = nullptr;
 	CompilerContext& m_context;

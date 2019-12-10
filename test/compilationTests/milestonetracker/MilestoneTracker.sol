@@ -227,7 +227,7 @@ contract MilestoneTracker {
 
             RLP.RLPItem memory itmProposal = itrProposals.next();
 
-            Milestone storage milestone = milestones[milestones.length ++];
+            Milestone storage milestone = milestones.push();
 
             if (!itmProposal.isList()) revert();
 

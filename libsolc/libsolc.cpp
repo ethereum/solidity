@@ -38,22 +38,22 @@ using namespace solidity;
 namespace
 {
 
-ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = nullptr)
+ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback, void* _readContext)
 {
 	ReadCallback::Callback readCallback;
 	if (_readCallback)
 	{
-		readCallback = [=](string const& _path)
+		readCallback = [=](string const& _kind, string const& _data)
 		{
 			char* contents_c = nullptr;
 			char* error_c = nullptr;
-			_readCallback(_path.c_str(), &contents_c, &error_c);
+			_readCallback(_readContext, _kind.c_str(), _data.c_str(), &contents_c, &error_c);
 			ReadCallback::Result result;
 			result.success = true;
 			if (!contents_c && !error_c)
 			{
 				result.success = false;
-				result.responseOrErrorMessage = "File not found.";
+				result.responseOrErrorMessage = "Callback not supported.";
 			}
 			if (contents_c)
 			{
@@ -73,9 +73,9 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback = n
 	return readCallback;
 }
 
-string compile(string _input, CStyleReadFileCallback _readCallback = nullptr)
+string compile(string _input, CStyleReadFileCallback _readCallback, void* _readContext)
 {
-	StandardCompiler compiler(wrapReadCallback(_readCallback));
+	StandardCompiler compiler(wrapReadCallback(_readCallback, _readContext));
 	return compiler.compile(std::move(_input));
 }
 
@@ -94,9 +94,9 @@ extern char const* solidity_version() noexcept
 {
 	return VersionString.c_str();
 }
-extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback) noexcept
+extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext) noexcept
 {
-	s_outputBuffer = compile(_input, _readCallback);
+	s_outputBuffer = compile(_input, _readCallback, _readContext);
 	return s_outputBuffer.c_str();
 }
 extern void solidity_free() noexcept

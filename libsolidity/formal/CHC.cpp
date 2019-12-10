@@ -36,6 +36,7 @@ CHC::CHC(
 	smt::EncodingContext& _context,
 	ErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
+	ReadCallback::Callback const& _smtCallback,
 	smt::SMTSolverChoice _enabledSolvers
 ):
 	SMTEncoder(_context),
@@ -43,16 +44,17 @@ CHC::CHC(
 	m_interface(
 		_enabledSolvers.z3 ?
 		dynamic_pointer_cast<smt::CHCSolverInterface>(make_shared<smt::Z3CHCInterface>()) :
-		dynamic_pointer_cast<smt::CHCSolverInterface>(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses))
+		dynamic_pointer_cast<smt::CHCSolverInterface>(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback))
 	),
 #else
-	m_interface(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses)),
+	m_interface(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback)),
 #endif
 	m_outerErrorReporter(_errorReporter),
 	m_enabledSolvers(_enabledSolvers)
 {
 	(void)_smtlib2Responses;
 	(void)_enabledSolvers;
+	(void)_smtCallback;
 }
 
 void CHC::analyze(SourceUnit const& _source)
@@ -688,12 +690,9 @@ string CHC::predicateName(ASTNode const* _node)
 	string prefix;
 	if (auto funDef = dynamic_cast<FunctionDefinition const*>(_node))
 	{
-		prefix = funDef->isConstructor() ?
-			"constructor" :
-			funDef->isFallback() ?
-				"fallback" :
-				"function_" + funDef->name();
-		prefix += "_";
+		prefix += TokenTraits::toString(funDef->kind());
+		if (!funDef->name().empty())
+			prefix += "_" + funDef->name() + "_";
 	}
 	return prefix + to_string(_node->id());
 }

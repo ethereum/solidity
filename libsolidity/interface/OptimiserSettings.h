@@ -54,19 +54,15 @@ struct OptimiserSettings
 		s.runDeduplicate = true;
 		s.runCSE = true;
 		s.runConstantOptimiser = true;
-		// The only disabled ones
-		s.optimizeStackAllocation = false;
-		s.runYulOptimiser = false;
+		s.runYulOptimiser = true;
+		s.optimizeStackAllocation = true;
 		s.expectedExecutionsPerDeployment = 200;
 		return s;
 	}
-	/// Standard optimisations plus yul and stack optimiser.
+	/// Full optimisations. Currently an alias for standard optimisations.
 	static OptimiserSettings full()
 	{
-		OptimiserSettings s = standard();
-		s.optimizeStackAllocation = true;
-		s.runYulOptimiser = true;
-		return s;
+		return standard();
 	}
 
 	bool operator==(OptimiserSettings const& _other) const

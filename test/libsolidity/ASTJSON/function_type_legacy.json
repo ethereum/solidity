@@ -15,6 +15,7 @@
     {
       "attributes":
       {
+        "abstract": false,
         "baseContracts":
         [
           null
@@ -47,9 +48,10 @@
               null
             ],
             "name": "f",
+            "overrides": null,
             "scope": 17,
             "stateMutability": "nonpayable",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "public"
           },
           "children":
@@ -62,6 +64,7 @@
                   {
                     "constant": false,
                     "name": "x",
+                    "overrides": null,
                     "scope": 16,
                     "stateVariable": false,
                     "storageLocation": "default",
@@ -101,6 +104,7 @@
                               {
                                 "constant": false,
                                 "name": "",
+                                "overrides": null,
                                 "scope": 5,
                                 "stateVariable": false,
                                 "storageLocation": "default",
@@ -153,6 +157,7 @@
                   {
                     "constant": false,
                     "name": "",
+                    "overrides": null,
                     "scope": 16,
                     "stateVariable": false,
                     "storageLocation": "default",
@@ -192,6 +197,7 @@
                               {
                                 "constant": false,
                                 "name": "",
+                                "overrides": null,
                                 "scope": 12,
                                 "stateVariable": false,
                                 "storageLocation": "default",

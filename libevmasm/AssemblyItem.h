@@ -146,6 +146,8 @@ public:
 
 	std::string toAssemblyText() const;
 
+	size_t m_modifierDepth = 0;
+
 private:
 	AssemblyItemType m_type;
 	Instruction m_instruction; ///< Only valid if m_type == Operation

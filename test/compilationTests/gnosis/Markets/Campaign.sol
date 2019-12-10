@@ -115,7 +115,7 @@ contract Campaign {
     }
 
     /// @dev Withdraws refund amount
-    /// @return Refund amount
+    /// @return refundAmount Refund amount
     function refund()
         public
         timedTransitions
@@ -146,7 +146,6 @@ contract Campaign {
     }
 
     /// @dev Allows to withdraw fees from market contract to campaign contract
-    /// @return Fee amount
     function closeMarket()
         public
         atStage(Stages.MarketCreated)
@@ -162,7 +161,7 @@ contract Campaign {
     }
 
     /// @dev Allows to withdraw fees from campaign contract to contributor
-    /// @return Fee amount
+    /// @return fees Fee amount
     function withdrawFees()
         public
         atStage(Stages.MarketClosed)

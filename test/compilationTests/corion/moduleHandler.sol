@@ -77,7 +77,7 @@ contract moduleHandler is multiOwner, announcementTypes {
         require( success );
         if ( ! found ) {
             id = modules.length;
-            modules.length++;
+            modules.push();
         }
         modules[id] = input;
     }

@@ -14,7 +14,7 @@ Using the Commandline Compiler
 
 One of the build targets of the Solidity repository is ``solc``, the solidity commandline compiler.
 Using ``solc --help`` provides you with an explanation of all options. The compiler can produce various outputs, ranging from simple binaries and assembly over an abstract syntax tree (parse tree) to estimations of gas usage.
-If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast --asm sourceFile.sol``.
+If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast-json --asm sourceFile.sol``.
 
 Before you deploy your contract, activate the optimizer when compiling using ``solc --optimize --bin sourceFile.sol``.
 By default, the optimizer will optimize the contract assuming it is called 200 times across its lifetime
@@ -236,10 +236,25 @@ Input Description
         // Affects type checking and code generation. Can be homestead,
         // tangerineWhistle, spuriousDragon, byzantium, constantinople, petersburg, istanbul or berlin
         "evmVersion": "byzantium",
+        // Optional: Debugging settings
+        "debug": {
+          // How to treat revert (and require) reason strings. Settings are
+          // "default", "strip", "debug" and "verboseDebug".
+          // "default" does not inject compiler-generated revert strings and keeps user-supplied ones.
+          // "strip" removes all revert strings (if possible, i.e. if literals are used) keeping side-effects
+          // "debug" injects strings for compiler-generated internal reverts (not yet implemented)
+          // "verboseDebug" even appends further information to user-supplied revert strings (not yet implemented)
+          "revertStrings": "default"
+        }
         // Metadata settings (optional)
         "metadata": {
           // Use only literal content and not URLs (false by default)
-          "useLiteralContent": true
+          "useLiteralContent": true,
+          // Use the given hash method for the metadata hash that is appended to the bytecode.
+          // The metadata hash can be removed from the bytecode via option "none".
+          // The other options are "ipfs" and "bzzr1".
+          // If the option is omitted, "ipfs" is used by default.
+          "bytecodeHash": "ipfs"
         },
         // Addresses of the libraries. If not all libraries are given here,
         // it can result in unlinked objects whose output data is different.

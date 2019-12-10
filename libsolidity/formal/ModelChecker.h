@@ -49,6 +49,7 @@ public:
 	ModelChecker(
 		langutil::ErrorReporter& _errorReporter,
 		std::map<h256, std::string> const& _smtlib2Responses,
+		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback(),
 		smt::SMTSolverChoice _enabledSolvers = smt::SMTSolverChoice::All()
 	);
 

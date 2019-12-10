@@ -444,8 +444,8 @@ JSON
 The JSON format for a contract's interface is given by an array of function and/or event descriptions.
 A function description is a JSON object with the fields:
 
-- ``type``: ``"function"``, ``"constructor"``, or ``"fallback"`` (the :ref:`unnamed "default" function <fallback-function>`).
-- ``name``: the name of the function.
+- ``type``: ``"function"``, ``"constructor"``, ``"receive"`` (the :ref:`"receive Ether" function <receive-ether-function>`) or ``"fallback"`` (the :ref:`"default" function <fallback-function>`);
+- ``name``: the name of the function;
 - ``inputs``: an array of objects, each of which contains:
 
   * ``name``: the name of the parameter.
@@ -454,15 +454,8 @@ A function description is a JSON object with the fields:
 
 - ``outputs``: an array of objects similar to ``inputs``.
 - ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain state <view-functions>`), ``nonpayable`` (function does not accept Ether) and ``payable`` (function accepts Ether).
-- ``payable``: ``true`` if function accepts Ether, ``false`` otherwise.
-- ``constant``: ``true`` if function is either ``pure`` or ``view``, ``false`` otherwise.
-
-``type`` can be omitted, defaulting to ``"function"``, likewise ``payable`` and ``constant`` can be omitted, both defaulting to ``false``.
 
 Constructor and fallback function never have ``name`` or ``outputs``. Fallback function doesn't have ``inputs`` either.
-
-.. warning::
-    The fields ``constant`` and ``payable`` are deprecated and will be removed in the future. Instead, the ``stateMutability`` field can be used to determine the same properties.
 
 .. note::
     Sending non-zero Ether to non-payable function will revert the transaction.
@@ -539,8 +532,8 @@ As an example, the code
     contract Test {
         struct S { uint a; uint[] b; T[] c; }
         struct T { uint x; uint y; }
-        function f(S memory s, T memory t, uint a) public;
-        function g() public returns (S memory s, T memory t, uint a);
+        function f(S memory s, T memory t, uint a) public {}
+        function g() public returns (S memory s, T memory t, uint a) {}
     }
 
 would result in the JSON:

@@ -351,7 +351,7 @@ std::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"parserErrorRecovery", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings"};
+	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings"};
 	return checkKeys(_input, keys, "settings");
 }
 
@@ -380,9 +380,16 @@ std::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std
 
 std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 {
-	if (_input.isObject() && _input.isMember("useLiteralContent") && !_input["useLiteralContent"].isBool())
-		return formatFatalError("JSONError", "\"settings.metadata.useLiteralContent\" must be Boolean");
-	static set<string> keys{"useLiteralContent"};
+	if (_input.isObject())
+	{
+		if (_input.isMember("useLiteralContent") && !_input["useLiteralContent"].isBool())
+			return formatFatalError("JSONError", "\"settings.metadata.useLiteralContent\" must be Boolean");
+
+		static set<string> hashes{"ipfs", "bzzr1", "none"};
+		if (_input.isMember("bytecodeHash") && !hashes.count(_input["bytecodeHash"].asString()))
+			return formatFatalError("JSONError", "\"settings.metadata.bytecodeHash\" must be \"ipfs\", \"bzzr1\" or \"none\"");
+	}
+	static set<string> keys{"useLiteralContent", "bytecodeHash"};
 	return checkKeys(_input, keys, "settings.metadata");
 }
 
@@ -474,8 +481,7 @@ boost::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Valu
 			return *error;
 		if (auto error = checkOptimizerDetail(details, "yul", settings.runYulOptimiser))
 			return *error;
-		if (settings.runYulOptimiser)
-			settings.optimizeStackAllocation = true;
+		settings.optimizeStackAllocation = settings.runYulOptimiser;
 		if (details.isMember("yulDetails"))
 		{
 			if (!settings.runYulOptimiser)
@@ -549,7 +555,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 			{
 				if (!url.isString())
 					return formatFatalError("JSONError", "URL must be a string.");
-				ReadCallback::Result result = m_readFile(url.asString());
+				ReadCallback::Result result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), url.asString());
 				if (result.success)
 				{
 					if (!hash.empty() && !hashMatchesContent(hash, result.responseOrErrorMessage))
@@ -643,6 +649,27 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 		ret.evmVersion = *version;
 	}
 
+	if (settings.isMember("debug"))
+	{
+		if (auto result = checkKeys(settings["debug"], {"revertStrings"}, "settings.debug"))
+			return *result;
+
+		if (settings["debug"].isMember("revertStrings"))
+		{
+			if (!settings["debug"]["revertStrings"].isString())
+				return formatFatalError("JSONError", "settings.debug.revertStrings must be a string.");
+			std::optional<RevertStrings> revertStrings = revertStringsFromString(settings["debug"]["revertStrings"].asString());
+			if (!revertStrings)
+				return formatFatalError("JSONError", "Invalid value for settings.debug.revertStrings.");
+			if (*revertStrings != RevertStrings::Default && *revertStrings != RevertStrings::Strip)
+				return formatFatalError(
+					"UnimplementedFeatureError",
+					"Only \"default\" and \"strip\" are implemented for settings.debug.revertStrings for now."
+				);
+			ret.revertStrings = *revertStrings;
+		}
+	}
+
 	if (settings.isMember("remappings") && !settings["remappings"].isArray())
 		return formatFatalError("JSONError", "\"settings.remappings\" must be an array of strings.");
 
@@ -712,6 +739,16 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 		return *result;
 
 	ret.metadataLiteralSources = metadataSettings.get("useLiteralContent", Json::Value(false)).asBool();
+	if (metadataSettings.isMember("bytecodeHash"))
+	{
+		auto metadataHash = metadataSettings["bytecodeHash"].asString();
+		ret.metadataHash =
+			metadataHash == "ipfs" ?
+			CompilerStack::MetadataHash::IPFS :
+				metadataHash == "bzzr1" ?
+				CompilerStack::MetadataHash::Bzzr1 :
+				CompilerStack::MetadataHash::None;
+	}
 
 	Json::Value outputSelection = settings.get("outputSelection", Json::Value());
 
@@ -735,8 +772,10 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.setParserErrorRecovery(_inputsAndSettings.parserErrorRecovery);
 	compilerStack.setRemappings(_inputsAndSettings.remappings);
 	compilerStack.setOptimiserSettings(std::move(_inputsAndSettings.optimiserSettings));
+	compilerStack.setRevertStringBehaviour(_inputsAndSettings.revertStrings);
 	compilerStack.setLibraries(_inputsAndSettings.libraries);
 	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
+	compilerStack.setMetadataHash(_inputsAndSettings.metadataHash);
 	compilerStack.setRequestedContractNames(requestedContractNames(_inputsAndSettings.outputSelection));
 
 	compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));
@@ -985,6 +1024,8 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 		return formatFatalError("JSONError", "Field \"settings.remappings\" cannot be used for Yul.");
 	if (!_inputsAndSettings.libraries.empty())
 		return formatFatalError("JSONError", "Field \"settings.libraries\" cannot be used for Yul.");
+	if (_inputsAndSettings.revertStrings != RevertStrings::Default)
+		return formatFatalError("JSONError", "Field \"settings.debug.revertStrings\" cannot be used for Yul.");
 
 	Json::Value output = Json::objectValue;
 

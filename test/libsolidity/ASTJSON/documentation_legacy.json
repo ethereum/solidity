@@ -15,6 +15,7 @@
     {
       "attributes":
       {
+        "abstract": false,
         "baseContracts":
         [
           null
@@ -67,6 +68,8 @@
           {
             "documentation": "Some comment on mod.",
             "name": "mod",
+            "overrides": null,
+            "virtual": false,
             "visibility": "internal"
           },
           "children":
@@ -114,9 +117,10 @@
               null
             ],
             "name": "fn",
+            "overrides": null,
             "scope": 15,
             "stateMutability": "nonpayable",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "public"
           },
           "children":

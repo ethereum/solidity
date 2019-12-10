@@ -20,7 +20,7 @@
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
 #include <liblangutil/EVMVersion.h>
-#include <libdevcore/SwarmHash.h>
+#include <libdevcore/IpfsHash.h>
 #include <libevmasm/GasMeter.h>
 
 #include <cmath>
@@ -41,18 +41,18 @@ namespace test
 #define CHECK_DEPLOY_GAS(_gasNoOpt, _gasOpt, _evmVersion) \
 	do \
 	{ \
-		u256 bzzr1Cost = GasMeter::dataGas(dev::bzzr1Hash(m_compiler.metadata(m_compiler.lastContractName())).asBytes(), true, _evmVersion); \
+		u256 ipfsCost = GasMeter::dataGas(dev::ipfsHash(m_compiler.metadata(m_compiler.lastContractName())), true, _evmVersion); \
 		u256 gasOpt{_gasOpt}; \
 		u256 gasNoOpt{_gasNoOpt}; \
 		u256 gas = m_optimiserSettings == OptimiserSettings::minimal() ? gasNoOpt : gasOpt; \
 		BOOST_CHECK_MESSAGE( \
-			m_gasUsed >= bzzr1Cost, \
+			m_gasUsed >= ipfsCost, \
 			"Gas used: " + \
 			m_gasUsed.str() + \
-			" is less than the data cost for the bzzr1 hash: " + \
-			u256(bzzr1Cost).str() \
+			" is less than the data cost for the IPFS hash: " + \
+			u256(ipfsCost).str() \
 		); \
-		u256 gasUsed = m_gasUsed - bzzr1Cost; \
+		u256 gasUsed = m_gasUsed - ipfsCost; \
 		BOOST_CHECK_MESSAGE( \
 			gas == gasUsed, \
 			"Gas used: " + \
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	auto evmVersion = dev::test::Options::get().evmVersion();
 
 	if (evmVersion <= EVMVersion::byzantium())
-		CHECK_DEPLOY_GAS(134071, 130763, evmVersion);
+		CHECK_DEPLOY_GAS(134145, 130831, evmVersion);
 	// This is only correct on >=Constantinople.
 	else if (Options::get().useABIEncoderV2)
 	{
@@ -107,28 +107,28 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		{
 			// Costs with 0 are cases which cannot be triggered in tests.
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(0, 127653, evmVersion);
+				CHECK_DEPLOY_GAS(0, 123969, evmVersion);
 			else
-				CHECK_DEPLOY_GAS(0, 113821, evmVersion);
+				CHECK_DEPLOY_GAS(0, 110969, evmVersion);
 		}
 		else
 		{
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(0, 135371, evmVersion);
+				CHECK_DEPLOY_GAS(147771, 131687, evmVersion);
 			else
-				CHECK_DEPLOY_GAS(0, 120083, evmVersion);
+				CHECK_DEPLOY_GAS(131859, 117231, evmVersion);
 		}
 	}
 	else if (evmVersion < EVMVersion::istanbul())
-		CHECK_DEPLOY_GAS(126861, 119591, evmVersion);
+		CHECK_DEPLOY_GAS(126929, 119659, evmVersion);
 	else
-		CHECK_DEPLOY_GAS(114173, 107163, evmVersion);
+		CHECK_DEPLOY_GAS(114345, 107335, evmVersion);
 
 	if (evmVersion >= EVMVersion::byzantium())
 	{
 		callContractFunction("f()");
 		if (evmVersion == EVMVersion::byzantium())
-			CHECK_GAS(21551, 21526, 20);
+			CHECK_GAS(21545, 21526, 20);
 		// This is only correct on >=Constantinople.
 		else if (Options::get().useABIEncoderV2)
 		{
@@ -142,9 +142,9 @@ BOOST_AUTO_TEST_CASE(string_storage)
 			else
 			{
 				if (evmVersion < EVMVersion::istanbul())
-					CHECK_GAS(0, 21635, 20);
+					CHECK_GAS(21707, 21635, 20);
 				else
-					CHECK_GAS(0, 21431, 20);
+					CHECK_GAS(21499, 21431, 20);
 			}
 		}
 		else if (evmVersion < EVMVersion::istanbul())

@@ -6,7 +6,6 @@ contract test {
 //     :test
 // [
 //   {
-//     "constant": true,
 //     "inputs":
 //     [
 //       {
@@ -24,12 +23,10 @@ contract test {
 //         "type": "uint256"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "pure",
 //     "type": "function"
 //   },
 //   {
-//     "constant": false,
 //     "inputs":
 //     [
 //       {
@@ -52,7 +49,6 @@ contract test {
 //         "type": "uint256"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
 //   }

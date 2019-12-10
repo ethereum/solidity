@@ -132,10 +132,7 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 	return m_context.functionCollector()->createFunction(functionName, [&]() {
 		Whiskers t(R"(
 			function <functionName>(<params>) <returns> {
-				for { let return_flag := 1 } return_flag {} {
-					<body>
-					break
-				}
+				<body>
 			}
 		)");
 		t("functionName", functionName);
@@ -267,6 +264,7 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 			</cases>
 			default {}
 		}
+		if iszero(calldatasize()) { <receiveEther> }
 		<fallback>
 	)X");
 	t("shr224", m_utils.shiftRightFunction(224));
@@ -313,6 +311,10 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 	}
 	else
 		t("fallback", "revert(0, 0)");
+	if (FunctionDefinition const* etherReceiver = _contract.receiveFunction())
+		t("receiveEther", generateFunction(*etherReceiver) + "() stop()");
+	else
+		t("receiveEther", "");
 	return t.render();
 }
 
