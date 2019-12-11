@@ -332,7 +332,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	{
 		if (_function.annotation().contract->isInterface())
 			m_errorReporter.warning(_function.location(), "Interface functions are implicitly \"virtual\"");
-		if (_function.visibility() == Declaration::Visibility::Private)
+		if (_function.visibility() == Visibility::Private)
 			m_errorReporter.typeError(_function.location(), "\"virtual\" and \"private\" cannot be used together.");
 	}
 
@@ -419,7 +419,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.isImplemented())
 			m_errorReporter.typeError(_function.location(), "Functions in interfaces cannot have an implementation.");
 
-		if (_function.visibility() != FunctionDefinition::Visibility::External)
+		if (_function.visibility() != Visibility::External)
 			m_errorReporter.typeError(_function.location(), "Functions in interfaces must be declared external.");
 
 		if (_function.isConstructor())
@@ -498,7 +498,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			if (!varType->canLiveOutsideStorage())
 				m_errorReporter.typeError(_variable.location(), "Type " + varType->toString() + " is only valid in storage.");
 	}
-	else if (_variable.visibility() >= VariableDeclaration::Visibility::Public)
+	else if (_variable.visibility() >= Visibility::Public)
 	{
 		FunctionType getter(_variable);
 		if (!_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
@@ -604,7 +604,7 @@ void TypeChecker::visitManually(
 
 bool TypeChecker::visit(EventDefinition const& _eventDef)
 {
-	solAssert(_eventDef.visibility() > Declaration::Visibility::Internal, "");
+	solAssert(_eventDef.visibility() > Visibility::Internal, "");
 	unsigned numIndexed = 0;
 	for (ASTPointer<VariableDeclaration> const& var: _eventDef.parameters())
 	{
@@ -1742,7 +1742,7 @@ void TypeChecker::typeCheckFallbackFunction(FunctionDefinition const& _function)
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
-	if (_function.visibility() != FunctionDefinition::Visibility::External)
+	if (_function.visibility() != Visibility::External)
 		m_errorReporter.typeError(_function.location(), "Fallback function must be defined as \"external\".");
 	if (!_function.returnParameters().empty())
 	{
@@ -1769,7 +1769,7 @@ void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
-	if (_function.visibility() != FunctionDefinition::Visibility::External)
+	if (_function.visibility() != Visibility::External)
 		m_errorReporter.typeError(_function.location(), "Receive ether function must be defined as \"external\".");
 	if (!_function.returnParameters().empty())
 		m_errorReporter.typeError(_function.returnParameterList()->location(), "Receive ether function cannot return values.");
@@ -1790,7 +1790,7 @@ void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
-	if (_function.visibility() != FunctionDefinition::Visibility::Public && _function.visibility() != FunctionDefinition::Visibility::Internal)
+	if (_function.visibility() != Visibility::Public && _function.visibility() != Visibility::Internal)
 		m_errorReporter.typeError(_function.location(), "Constructor must be public or internal.");
 }
 

@@ -198,21 +198,21 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 {
 	switch (_typeName.visibility())
 	{
-	case VariableDeclaration::Visibility::Internal:
-	case VariableDeclaration::Visibility::External:
+	case Visibility::Internal:
+	case Visibility::External:
 		break;
 	default:
 		fatalTypeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
 		return;
 	}
 
-	if (_typeName.isPayable() && _typeName.visibility() != VariableDeclaration::Visibility::External)
+	if (_typeName.isPayable() && _typeName.visibility() != Visibility::External)
 	{
 		fatalTypeError(_typeName.location(), "Only external function types can be payable.");
 		return;
 	}
 
-	if (_typeName.visibility() == VariableDeclaration::Visibility::External)
+	if (_typeName.visibility() == Visibility::External)
 		for (auto const& t: _typeName.parameterTypes() + _typeName.returnParameterTypes())
 		{
 			solAssert(t->annotation().type, "Type not set for parameter.");

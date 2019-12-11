@@ -74,7 +74,7 @@ private:
 		ASTPointer<OverrideSpecifier> overrides;
 		ASTPointer<ParameterList> parameters;
 		ASTPointer<ParameterList> returnParameters;
-		Declaration::Visibility visibility = Declaration::Visibility::Default;
+		Visibility visibility = Visibility::Default;
 		StateMutability stateMutability = StateMutability::NonPayable;
 		std::vector<ASTPointer<ModifierInvocation>> modifiers;
 	};
@@ -89,7 +89,7 @@ private:
 	std::pair<ContractDefinition::ContractKind, bool> parseContractKind();
 	ASTPointer<ContractDefinition> parseContractDefinition();
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
-	Declaration::Visibility parseVisibilitySpecifier();
+	Visibility parseVisibilitySpecifier();
 	ASTPointer<OverrideSpecifier> parseOverrideSpecifier();
 	StateMutability parseStateMutability();
 	FunctionHeaderParserResult parseFunctionHeader(bool _isStateVariable);

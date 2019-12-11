@@ -182,20 +182,18 @@ protected:
 class Declaration: public ASTNode, public Scopable
 {
 public:
-	/// Visibility ordered from restricted to unrestricted.
-	enum class Visibility { Default, Private, Internal, Public, External };
 
-	static std::string visibilityToString(Declaration::Visibility _visibility)
+	static std::string visibilityToString(Visibility _visibility)
 	{
 		switch (_visibility)
 		{
-		case Declaration::Visibility::Public:
+		case Visibility::Public:
 			return "public";
-		case Declaration::Visibility::Internal:
+		case Visibility::Internal:
 			return "internal";
-		case Declaration::Visibility::Private:
+		case Visibility::Private:
 			return "private";
-		case Declaration::Visibility::External:
+		case Visibility::External:
 			return "external";
 		default:
 			solAssert(false, "Invalid visibility specifier.");
@@ -602,7 +600,7 @@ public:
 	CallableDeclaration(
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
-		Declaration::Visibility _visibility,
+		Visibility _visibility,
 		ASTPointer<ParameterList> const& _parameters,
 		bool _isVirtual = false,
 		ASTPointer<OverrideSpecifier> const& _overrides = nullptr,
@@ -665,7 +663,7 @@ public:
 	FunctionDefinition(
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
-		Declaration::Visibility _visibility,
+		Visibility _visibility,
 		StateMutability _stateMutability,
 		Token _kind,
 		bool _isVirtual,
@@ -1028,7 +1026,7 @@ public:
 		SourceLocation const& _location,
 		ASTPointer<ParameterList> const& _parameterTypes,
 		ASTPointer<ParameterList> const& _returnTypes,
-		Declaration::Visibility _visibility,
+		Visibility _visibility,
 		StateMutability _stateMutability
 	):
 		TypeName(_location), m_parameterTypes(_parameterTypes), m_returnTypes(_returnTypes),
@@ -1042,9 +1040,9 @@ public:
 	ASTPointer<ParameterList> const& parameterTypeList() const { return m_parameterTypes; }
 	ASTPointer<ParameterList> const& returnParameterTypeList() const { return m_returnTypes; }
 
-	Declaration::Visibility visibility() const
+	Visibility visibility() const
 	{
-		return m_visibility == Declaration::Visibility::Default ? Declaration::Visibility::Internal : m_visibility;
+		return m_visibility == Visibility::Default ? Visibility::Internal : m_visibility;
 	}
 	StateMutability stateMutability() const { return m_stateMutability; }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
@@ -1052,7 +1050,7 @@ public:
 private:
 	ASTPointer<ParameterList> m_parameterTypes;
 	ASTPointer<ParameterList> m_returnTypes;
-	Declaration::Visibility m_visibility;
+	Visibility m_visibility;
 	StateMutability m_stateMutability;
 };
 

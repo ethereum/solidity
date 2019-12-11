@@ -154,7 +154,7 @@ void OverrideChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 			if (!hasEqualNameAndParameters(*stateVar, **it))
 				continue;
 
-			if ((*it)->visibility() != Declaration::Visibility::External)
+			if ((*it)->visibility() != Visibility::External)
 				overrideError(*stateVar, **it, "Public state variables can only override functions with external visibility.");
 			else
 				checkOverride(*stateVar, **it);
@@ -265,8 +265,8 @@ void OverrideChecker::checkOverride(T const& _overriding, U const& _super)
 		// Visibility change from external to public is fine.
 		// Any other change is disallowed.
 		if (!(
-			_super.visibility() == FunctionDefinition::Visibility::External &&
-			_overriding.visibility() == FunctionDefinition::Visibility::Public
+			_super.visibility() == Visibility::External &&
+			_overriding.visibility() == Visibility::Public
 		))
 			overrideError(_overriding, _super, "Overriding " + overridingName + " visibility differs.");
 	}
