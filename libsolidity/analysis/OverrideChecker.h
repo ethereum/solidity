@@ -21,20 +21,109 @@
 #pragma once
 
 #include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/ast/ASTEnums.h>
 #include <liblangutil/SourceLocation.h>
 #include <map>
 #include <functional>
 #include <set>
+#include <variant>
+#include <optional>
 
 namespace langutil
 {
 class ErrorReporter;
+struct SourceLocation;
 }
 
 namespace dev
 {
 namespace solidity
 {
+class FunctionType;
+class ModifierType;
+
+/**
+ * Class that represents a function, public state variable or modifier
+ * and helps with overload checking.
+ * Regular comparison is performed based on AST node, while CompareBySignature
+ * results in two elements being equal when they can override each
+ * other.
+ */
+class OverrideProxy
+{
+public:
+	OverrideProxy() {}
+	explicit OverrideProxy(FunctionDefinition const* _fun): m_item{_fun} {}
+	explicit OverrideProxy(ModifierDefinition const* _mod): m_item{_mod} {}
+	explicit OverrideProxy(VariableDeclaration const* _var): m_item{_var} {}
+
+	bool operator<(OverrideProxy const& _other) const;
+
+	struct CompareBySignature
+	{
+		bool operator()(OverrideProxy const& _a, OverrideProxy const& _b) const;
+	};
+
+	bool isVariable() const;
+	bool isFunction() const;
+	bool isModifier() const;
+
+	size_t id() const;
+	std::shared_ptr<OverrideSpecifier> overrides() const;
+	std::set<OverrideProxy> baseFunctions() const;
+	/// This stores the item in the list of base items.
+	void storeBaseFunction(OverrideProxy const& _base) const;
+
+	std::string const& name() const;
+	ContractDefinition const& contract() const;
+	std::string const& contractName() const;
+	Visibility visibility() const;
+	StateMutability stateMutability() const;
+	bool virtualSemantics() const;
+
+	/// @returns receive / fallback / function (only the latter for modifiers and variables);
+	langutil::Token functionKind() const;
+
+	FunctionType const* functionType() const;
+	ModifierType const* modifierType() const;
+
+	langutil::SourceLocation const& location() const;
+
+	std::string astNodeName() const;
+	std::string astNodeNameCapitalized() const;
+	std::string distinguishingProperty() const;
+
+	/// @returns true if this AST elements supports the feature of being unimplemented
+	/// and is actually not implemented.
+	bool unimplemented() const;
+
+	/**
+	 * Struct to help comparing override items about whether they override each other.
+	 * Does not produce a total order.
+	 */
+	struct OverrideComparator
+	{
+		std::string name;
+		std::optional<langutil::Token> functionKind;
+		std::optional<std::vector<std::string>> parameterTypes;
+
+		bool operator<(OverrideComparator const& _other) const;
+	};
+
+	/// @returns a structure used to compare override items with regards to whether
+	/// they override each other.
+	OverrideComparator const& overrideComparator() const;
+
+private:
+	std::variant<
+		FunctionDefinition const*,
+		ModifierDefinition const*,
+		VariableDeclaration const*
+	> m_item;
+
+	std::shared_ptr<OverrideComparator> mutable m_comparator;
+};
+
 
 /**
  * Component that verifies override properties.
@@ -51,67 +140,56 @@ public:
 	void check(ContractDefinition const& _contract);
 
 private:
-	/**
-	 * Comparator that compares
-	 *  - functions such that equality means that the functions override each other
-	 *  - modifiers by name
-	 *  - contracts by AST id.
-	 */
-	struct LessFunction
+	struct CompareByID
 	{
-		bool operator()(ModifierDefinition const* _a, ModifierDefinition const* _b) const;
-		bool operator()(FunctionDefinition const* _a, FunctionDefinition const* _b) const;
 		bool operator()(ContractDefinition const* _a, ContractDefinition const* _b) const;
 	};
-
-	using FunctionMultiSet = std::multiset<FunctionDefinition const*, LessFunction>;
-	using ModifierMultiSet = std::multiset<ModifierDefinition const*, LessFunction>;
 
 	void checkIllegalOverrides(ContractDefinition const& _contract);
 	/// Performs various checks related to @a _overriding overriding @a _super like
 	/// different return type, invalid visibility change, etc.
 	/// Works on functions, modifiers and public state variables.
 	/// Also stores @a _super as a base function of @a _function in its AST annotations.
-	template<class T, class U>
-	void checkOverride(T const& _overriding, U const& _super);
+	void checkOverride(OverrideProxy const& _overriding, OverrideProxy const& _super);
 	void overrideListError(
-		CallableDeclaration const& _callable,
-		std::set<ContractDefinition const*, LessFunction> _secondary,
+		OverrideProxy const& _item,
+		std::set<ContractDefinition const*, CompareByID> _secondary,
 		std::string const& _message1,
 		std::string const& _message2
 	);
 	void overrideError(
 		Declaration const& _overriding,
 		Declaration const& _super,
-		std::string _message,
-		std::string _secondaryMsg = "Overridden function is here:"
+		std::string const& _message,
+		std::string const& _secondaryMsg = "Overridden function is here:"
+	);
+	void overrideError(
+		OverrideProxy const& _overriding,
+		OverrideProxy const& _super,
+		std::string const& _message,
+		std::string const& _secondaryMsg = "Overridden function is here:"
 	);
 	/// Checks for functions in different base contracts which conflict with each
 	/// other and thus need to be overridden explicitly.
 	void checkAmbiguousOverrides(ContractDefinition const& _contract) const;
-	void checkAmbiguousOverridesInternal(std::set<
-		CallableDeclaration const*,
-		std::function<bool(CallableDeclaration const*, CallableDeclaration const*)>
-	> _baseCallables, langutil::SourceLocation const& _location) const;
+	void checkAmbiguousOverridesInternal(std::set<OverrideProxy> _baseCallables, langutil::SourceLocation const& _location) const;
 	/// Resolves an override list of UserDefinedTypeNames to a list of contracts.
-	std::set<ContractDefinition const*, LessFunction> resolveOverrideList(OverrideSpecifier const& _overrides) const;
+	std::set<ContractDefinition const*, CompareByID> resolveOverrideList(OverrideSpecifier const& _overrides) const;
 
-	template <class T>
-	void checkOverrideList(
-		std::multiset<T const*, LessFunction> const& _funcSet,
-		T const& _function
-	);
+	using OverrideProxyBySignatureMultiSet = std::multiset<OverrideProxy, OverrideProxy::CompareBySignature>;
 
-	/// Returns all functions of bases that have not yet been overwritten.
+	void checkOverrideList(OverrideProxy _item, OverrideProxyBySignatureMultiSet const& _inherited);
+
+	/// Returns all functions of bases (including public state variables) that have not yet been overwritten.
 	/// May contain the same function multiple times when used with shared bases.
-	FunctionMultiSet const& inheritedFunctions(ContractDefinition const& _contract) const;
-	ModifierMultiSet const& inheritedModifiers(ContractDefinition const& _contract) const;
+	OverrideProxyBySignatureMultiSet const& inheritedFunctions(ContractDefinition const& _contract) const;
+	OverrideProxyBySignatureMultiSet const& inheritedModifiers(ContractDefinition const& _contract) const;
 
 	langutil::ErrorReporter& m_errorReporter;
 
 	/// Cache for inheritedFunctions().
-	std::map<ContractDefinition const*, FunctionMultiSet> mutable m_inheritedFunctions;
-	std::map<ContractDefinition const*, ModifierMultiSet> mutable m_contractBaseModifiers;
+	std::map<ContractDefinition const*, OverrideProxyBySignatureMultiSet> mutable m_inheritedFunctions;
+	std::map<ContractDefinition const*, OverrideProxyBySignatureMultiSet> mutable m_inheritedModifiers;
 };
 
 }

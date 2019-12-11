@@ -386,6 +386,8 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 	};
 	if (m_inEvent)
 		attributes.emplace_back("indexed", _node.isIndexed());
+	if (!_node.annotation().baseFunctions.empty())
+		attributes.emplace_back(make_pair("baseFunctions", getContainerIds(_node.annotation().baseFunctions, true)));
 	setJsonNode(_node, "VariableDeclaration", std::move(attributes));
 	return false;
 }

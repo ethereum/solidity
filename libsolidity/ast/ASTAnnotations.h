@@ -128,6 +128,8 @@ struct VariableDeclarationAnnotation: ASTAnnotation
 {
 	/// Type of variable (type of identifier referencing this variable).
 	TypePointer type = nullptr;
+	/// The set of functions this (public state) variable overrides.
+	std::set<CallableDeclaration const*> baseFunctions;
 };
 
 struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
