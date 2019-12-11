@@ -27,6 +27,8 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/JSON.h>
 
+#include <cstdlib>
+#include <list>
 #include <string>
 
 #include "license.h"
@@ -38,6 +40,36 @@ using namespace solidity;
 namespace
 {
 
+// The strings in this list must not be resized after they have been added here (via solidity_alloc()), because
+// this may potentially change the pointer that was passed to the caller from solidity_alloc().
+static list<string> solidityAllocations;
+
+/// Find the equivalent to @p _data in the list of allocations of solidity_alloc(),
+/// removes it from the list and returns its value.
+///
+/// If any invalid argument is being passed, it is considered a programming error
+/// on the caller-side and hence, will call abort() then.
+string takeOverAllocation(char const* _data)
+{
+	for (auto iter = begin(solidityAllocations); iter != end(solidityAllocations); ++iter)
+		if (iter->data() == _data)
+		{
+			string chunk = move(*iter);
+			solidityAllocations.erase(iter);
+			return chunk;
+		}
+
+	abort();
+}
+
+/// Resizes a std::string to the proper length based on the occurrence of a zero terminator.
+void truncateCString(string& _data)
+{
+	size_t pos = _data.find('\0');
+	if (pos != string::npos)
+		_data.resize(pos);
+}
+
 ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback, void* _readContext)
 {
 	ReadCallback::Callback readCallback;
@@ -47,7 +79,7 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback, vo
 		{
 			char* contents_c = nullptr;
 			char* error_c = nullptr;
-			_readCallback(_readContext, _kind.c_str(), _data.c_str(), &contents_c, &error_c);
+			_readCallback(_readContext, _kind.data(), _data.data(), &contents_c, &error_c);
 			ReadCallback::Result result;
 			result.success = true;
 			if (!contents_c && !error_c)
@@ -58,15 +90,14 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback, vo
 			if (contents_c)
 			{
 				result.success = true;
-				result.responseOrErrorMessage = string(contents_c);
-				free(contents_c);
+				result.responseOrErrorMessage = takeOverAllocation(contents_c);
 			}
 			if (error_c)
 			{
 				result.success = false;
-				result.responseOrErrorMessage = string(error_c);
-				free(error_c);
+				result.responseOrErrorMessage = takeOverAllocation(error_c);
 			}
+			truncateCString(result.responseOrErrorMessage);
 			return result;
 		};
 	}
@@ -76,12 +107,10 @@ ReadCallback::Callback wrapReadCallback(CStyleReadFileCallback _readCallback, vo
 string compile(string _input, CStyleReadFileCallback _readCallback, void* _readContext)
 {
 	StandardCompiler compiler(wrapReadCallback(_readCallback, _readContext));
-	return compiler.compile(std::move(_input));
+	return compiler.compile(move(_input));
 }
 
 }
-
-static string s_outputBuffer;
 
 extern "C"
 {
@@ -90,20 +119,40 @@ extern char const* solidity_license() noexcept
 	static string fullLicenseText = otherLicenses + licenseText;
 	return fullLicenseText.c_str();
 }
+
 extern char const* solidity_version() noexcept
 {
 	return VersionString.c_str();
 }
+
 extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext) noexcept
 {
-	s_outputBuffer = compile(_input, _readCallback, _readContext);
-	return s_outputBuffer.c_str();
+	return solidityAllocations.emplace_back(compile(_input, _readCallback, _readContext)).data();
 }
-extern void solidity_free() noexcept
+
+extern char* solidity_alloc(size_t _size) noexcept
+{
+	try
+	{
+		return solidityAllocations.emplace_back(_size, '\0').data();
+	}
+	catch (...)
+	{
+		// most likely a std::bad_alloc(), if at all.
+		return nullptr;
+	}
+}
+
+extern void solidity_free(char* _data) noexcept
+{
+	takeOverAllocation(_data);
+}
+
+extern void solidity_reset() noexcept
 {
 	// This is called right before each compilation, but not at the end, so additional memory
 	// can be freed here.
 	yul::YulStringRepository::reset();
-	s_outputBuffer.clear();
+	solidityAllocations.clear();
 }
 }

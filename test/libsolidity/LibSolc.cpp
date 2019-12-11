@@ -60,10 +60,19 @@ bool containsError(Json::Value const& _compilerResult, string const& _type, stri
 Json::Value compile(string const& _input, CStyleReadFileCallback _callback = nullptr)
 {
 	string output(solidity_compile(_input.c_str(), _callback, nullptr));
+	// This should be safe given the above copies the output.
+	solidity_reset();
 	Json::Value ret;
 	BOOST_REQUIRE(jsonParseStrict(output, ret));
-	solidity_free();
 	return ret;
+}
+
+char* stringToSolidity(string const& _input)
+{
+	char* ptr = solidity_alloc(_input.length());
+	BOOST_REQUIRE(ptr != nullptr);
+	std::memcpy(ptr, _input.c_str(), _input.length());
+	return ptr;
 }
 
 } // end anonymous namespace
@@ -74,14 +83,12 @@ BOOST_AUTO_TEST_CASE(read_version)
 {
 	string output(solidity_version());
 	BOOST_CHECK(output.find(VersionString) == 0);
-	solidity_free();
 }
 
 BOOST_AUTO_TEST_CASE(read_license)
 {
 	string output(solidity_license());
 	BOOST_CHECK(output.find("GNU GENERAL PUBLIC LICENSE") != string::npos);
-	solidity_free();
 }
 
 BOOST_AUTO_TEST_CASE(standard_compilation)
@@ -97,7 +104,7 @@ BOOST_AUTO_TEST_CASE(standard_compilation)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(result.isObject());
+	BOOST_REQUIRE(result.isObject());
 
 	// Only tests some assumptions. The StandardCompiler is tested properly in another suite.
 	BOOST_CHECK(result.isMember("sources"));
@@ -119,7 +126,7 @@ BOOST_AUTO_TEST_CASE(missing_callback)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(result.isObject());
+	BOOST_REQUIRE(result.isObject());
 
 	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: File not supplied initially."));
 }
@@ -141,19 +148,19 @@ BOOST_AUTO_TEST_CASE(with_callback)
 		[](void* _context, char const* _kind, char const* _path, char** o_contents, char** o_error)
 		{
 			// Passed in a nullptr in the compile() helper above.
-			BOOST_CHECK(_context == nullptr);
+			BOOST_REQUIRE(_context == nullptr);
 			// Caller frees the pointers.
-			BOOST_CHECK(string(_kind) == ReadCallback::kindString(ReadCallback::Kind::ReadFile));
+			BOOST_REQUIRE(string(_kind) == ReadCallback::kindString(ReadCallback::Kind::ReadFile));
 			if (string(_path) == "found.sol")
 			{
 				static string content{"import \"missing.sol\"; contract B {}"};
-				*o_contents = strdup(content.c_str());
+				*o_contents = stringToSolidity(content);
 				*o_error = nullptr;
 			}
 			else if (string(_path) == "missing.sol")
 			{
 				static string errorMsg{"Missing file."};
-				*o_error = strdup(errorMsg.c_str());
+				*o_error = stringToSolidity(errorMsg);
 				*o_contents = nullptr;
 			}
 			else
@@ -165,7 +172,7 @@ BOOST_AUTO_TEST_CASE(with_callback)
 	};
 
 	Json::Value result = compile(input, callback);
-	BOOST_CHECK(result.isObject());
+	BOOST_REQUIRE(result.isObject());
 
 	// This ensures that "found.sol" was properly loaded which triggered the second import statement.
 	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: Missing file."));
