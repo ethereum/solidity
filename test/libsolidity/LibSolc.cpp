@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(standard_compilation)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(result.isObject());
+	BOOST_REQUIRE(result.isObject());
 
 	// Only tests some assumptions. The StandardCompiler is tested properly in another suite.
 	BOOST_CHECK(result.isMember("sources"));
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(missing_callback)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(result.isObject());
+	BOOST_REQUIRE(result.isObject());
 
 	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: File not supplied initially."));
 }
@@ -148,9 +148,9 @@ BOOST_AUTO_TEST_CASE(with_callback)
 		[](void* _context, char const* _kind, char const* _path, char** o_contents, char** o_error)
 		{
 			// Passed in a nullptr in the compile() helper above.
-			BOOST_CHECK(_context == nullptr);
+			BOOST_REQUIRE(_context == nullptr);
 			// Caller frees the pointers.
-			BOOST_CHECK(string(_kind) == ReadCallback::kindString(ReadCallback::Kind::ReadFile));
+			BOOST_REQUIRE(string(_kind) == ReadCallback::kindString(ReadCallback::Kind::ReadFile));
 			if (string(_path) == "found.sol")
 			{
 				static string content{"import \"missing.sol\"; contract B {}"};
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(with_callback)
 	};
 
 	Json::Value result = compile(input, callback);
-	BOOST_CHECK(result.isObject());
+	BOOST_REQUIRE(result.isObject());
 
 	// This ensures that "found.sol" was properly loaded which triggered the second import statement.
 	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: Missing file."));
