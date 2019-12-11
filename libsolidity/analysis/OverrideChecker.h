@@ -140,21 +140,10 @@ public:
 	void check(ContractDefinition const& _contract);
 
 private:
-	/**
-	 * Comparator that compares
-	 *  - functions such that equality means that the functions override each other
-	 *  - modifiers by name
-	 *  - contracts by AST id.
-	 */
-	struct LessFunction
+	struct CompareByID
 	{
-		bool operator()(ModifierDefinition const* _a, ModifierDefinition const* _b) const;
-		bool operator()(FunctionDefinition const* _a, FunctionDefinition const* _b) const;
 		bool operator()(ContractDefinition const* _a, ContractDefinition const* _b) const;
 	};
-
-	using FunctionMultiSet = std::multiset<FunctionDefinition const*, LessFunction>;
-	using ModifierMultiSet = std::multiset<ModifierDefinition const*, LessFunction>;
 
 	void checkIllegalOverrides(ContractDefinition const& _contract);
 	/// Performs various checks related to @a _overriding overriding @a _super like
@@ -164,7 +153,7 @@ private:
 	void checkOverride(OverrideProxy const& _overriding, OverrideProxy const& _super);
 	void overrideListError(
 		OverrideProxy const& _item,
-		std::set<ContractDefinition const*, LessFunction> _secondary,
+		std::set<ContractDefinition const*, CompareByID> _secondary,
 		std::string const& _message1,
 		std::string const& _message2
 	);
@@ -185,7 +174,7 @@ private:
 	void checkAmbiguousOverrides(ContractDefinition const& _contract) const;
 	void checkAmbiguousOverridesInternal(std::set<OverrideProxy> _baseCallables, langutil::SourceLocation const& _location) const;
 	/// Resolves an override list of UserDefinedTypeNames to a list of contracts.
-	std::set<ContractDefinition const*, LessFunction> resolveOverrideList(OverrideSpecifier const& _overrides) const;
+	std::set<ContractDefinition const*, CompareByID> resolveOverrideList(OverrideSpecifier const& _overrides) const;
 
 	using OverrideProxyBySignatureMultiSet = std::multiset<OverrideProxy, OverrideProxy::CompareBySignature>;
 

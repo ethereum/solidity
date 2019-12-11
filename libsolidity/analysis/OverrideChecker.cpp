@@ -48,6 +48,88 @@ struct MatchByName
 	}
 };
 
+/**
+ * Construct the override graph for this signature.
+ * Reserve node 0 for the current contract and node
+ * 1 for an artificial top node to which all override paths
+ * connect at the end.
+ */
+struct OverrideGraph
+{
+	OverrideGraph(set<OverrideProxy> const& _baseCallables)
+	{
+		for (auto const& baseFunction: _baseCallables)
+			addEdge(0, visit(baseFunction));
+	}
+	std::map<OverrideProxy, int> nodes;
+	std::map<int, OverrideProxy> nodeInv;
+	std::map<int, std::set<int>> edges;
+	int numNodes = 2;
+	void addEdge(int _a, int _b)
+	{
+		edges[_a].insert(_b);
+		edges[_b].insert(_a);
+	}
+private:
+	/// Completes the graph starting from @a _function and
+	/// @returns the node ID.
+	int visit(OverrideProxy const& _function)
+	{
+		auto it = nodes.find(_function);
+		if (it != nodes.end())
+			return it->second;
+		int currentNode = numNodes++;
+		nodes[_function] = currentNode;
+		nodeInv[currentNode] = _function;
+		if (_function.overrides())
+			for (auto const& baseFunction: _function.baseFunctions())
+				addEdge(currentNode, visit(baseFunction));
+		else
+			addEdge(currentNode, 1);
+
+		return currentNode;
+	}
+};
+
+/**
+ * Detect cut vertices following https://en.wikipedia.org/wiki/Biconnected_component#Pseudocode
+ * Can ignore the root node, since it is never a cut vertex in our case.
+ */
+struct CutVertexFinder
+{
+	CutVertexFinder(OverrideGraph const& _graph): m_graph(_graph)
+	{
+		run();
+	}
+	std::set<OverrideProxy> const& cutVertices() const { return m_cutVertices; }
+
+private:
+	OverrideGraph const& m_graph;
+
+	std::vector<bool> m_visited = std::vector<bool>(m_graph.numNodes, false);
+	std::vector<int> m_depths = std::vector<int>(m_graph.numNodes, -1);
+	std::vector<int> m_low = std::vector<int>(m_graph.numNodes, -1);
+	std::vector<int> m_parent = std::vector<int>(m_graph.numNodes, -1);
+	std::set<OverrideProxy> m_cutVertices{};
+
+	void run(int _u = 0, int _depth = 0)
+	{
+		m_visited.at(_u) = true;
+		m_depths.at(_u) = m_low.at(_u) = _depth;
+		for (int v: m_graph.edges.at(_u))
+			if (!m_visited.at(v))
+			{
+				m_parent[v] = _u;
+				run(v, _depth + 1);
+				if (m_low[v] >= m_depths[_u] && m_parent[_u] != -1)
+					m_cutVertices.insert(m_graph.nodeInv.at(_u));
+				m_low[_u] = min(m_low[_u], m_low[v]);
+			}
+			else if (v != m_parent[_u])
+				m_low[_u] = min(m_low[_u], m_depths[v]);
+	}
+};
+
 vector<ContractDefinition const*> resolveDirectBaseContracts(ContractDefinition const& _contract)
 {
 	vector<ContractDefinition const*> resolvedContracts;
@@ -341,30 +423,7 @@ OverrideProxy::OverrideComparator const& OverrideProxy::overrideComparator() con
 	return *m_comparator;
 }
 
-bool OverrideChecker::LessFunction::operator()(ModifierDefinition const* _a, ModifierDefinition const* _b) const
-{
-	return _a->name() < _b->name();
-}
-
-bool OverrideChecker::LessFunction::operator()(FunctionDefinition const* _a, FunctionDefinition const* _b) const
-{
-	if (_a->name() != _b->name())
-		return _a->name() < _b->name();
-
-	if (_a->kind() != _b->kind())
-		return _a->kind() < _b->kind();
-
-	return boost::lexicographical_compare(
-		TypeProvider::function(*_a)->asCallableFunction(false)->parameterTypes(),
-		TypeProvider::function(*_b)->asCallableFunction(false)->parameterTypes(),
-		[](auto const& _paramTypeA, auto const& _paramTypeB)
-		{
-			return _paramTypeA->richIdentifier() < _paramTypeB->richIdentifier();
-		}
-	);
-}
-
-bool OverrideChecker::LessFunction::operator()(ContractDefinition const* _a, ContractDefinition const* _b) const
+bool OverrideChecker::CompareByID::operator()(ContractDefinition const* _a, ContractDefinition const* _b) const
 {
 	if (!_a || !_b)
 		return _a < _b;
@@ -501,7 +560,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 
 void OverrideChecker::overrideListError(
 	OverrideProxy const& _item,
-	set<ContractDefinition const*, LessFunction> _secondary,
+	set<ContractDefinition const*, CompareByID> _secondary,
 	string const& _message1,
 	string const& _message2
 )
@@ -596,83 +655,8 @@ void OverrideChecker::checkAmbiguousOverridesInternal(set<OverrideProxy> _baseCa
 	if (_baseCallables.size() <= 1)
 		return;
 
-	// Construct the override graph for this signature.
-	// Reserve node 0 for the current contract and node
-	// 1 for an artificial top node to which all override paths
-	// connect at the end.
-	struct OverrideGraph
-	{
-		OverrideGraph(decltype(_baseCallables) const& _baseCallables)
-		{
-			for (auto const& baseFunction: _baseCallables)
-				addEdge(0, visit(baseFunction));
-		}
-		std::map<OverrideProxy, int> nodes;
-		std::map<int, OverrideProxy> nodeInv;
-		std::map<int, std::set<int>> edges;
-		int numNodes = 2;
-		void addEdge(int _a, int _b)
-		{
-			edges[_a].insert(_b);
-			edges[_b].insert(_a);
-		}
-	private:
-		/// Completes the graph starting from @a _function and
-		/// @returns the node ID.
-		int visit(OverrideProxy const& _function)
-		{
-			auto it = nodes.find(_function);
-			if (it != nodes.end())
-				return it->second;
-			int currentNode = numNodes++;
-			nodes[_function] = currentNode;
-			nodeInv[currentNode] = _function;
-			if (_function.overrides())
-				for (auto const& baseFunction: _function.baseFunctions())
-					addEdge(currentNode, visit(baseFunction));
-			else
-				addEdge(currentNode, 1);
-
-			return currentNode;
-		}
-	} overrideGraph(_baseCallables);
-
-	// Detect cut vertices following https://en.wikipedia.org/wiki/Biconnected_component#Pseudocode
-	// Can ignore the root node, since it is never a cut vertex in our case.
-	struct CutVertexFinder
-	{
-		CutVertexFinder(OverrideGraph const& _graph): m_graph(_graph)
-		{
-			run();
-		}
-		std::set<OverrideProxy> const& cutVertices() const { return m_cutVertices; }
-
-	private:
-		OverrideGraph const& m_graph;
-
-		std::vector<bool> m_visited = std::vector<bool>(m_graph.numNodes, false);
-		std::vector<int> m_depths = std::vector<int>(m_graph.numNodes, -1);
-		std::vector<int> m_low = std::vector<int>(m_graph.numNodes, -1);
-		std::vector<int> m_parent = std::vector<int>(m_graph.numNodes, -1);
-		std::set<OverrideProxy> m_cutVertices{};
-
-		void run(int _u = 0, int _depth = 0)
-		{
-			m_visited.at(_u) = true;
-			m_depths.at(_u) = m_low.at(_u) = _depth;
-			for (int v: m_graph.edges.at(_u))
-				if (!m_visited.at(v))
-				{
-					m_parent[v] = _u;
-					run(v, _depth + 1);
-					if (m_low[v] >= m_depths[_u] && m_parent[_u] != -1)
-						m_cutVertices.insert(m_graph.nodeInv.at(_u));
-					m_low[_u] = min(m_low[_u], m_low[v]);
-				}
-				else if (v != m_parent[_u])
-					m_low[_u] = min(m_low[_u], m_depths[v]);
-		}
-	} cutVertexFinder{overrideGraph};
+	OverrideGraph overrideGraph(_baseCallables);
+	CutVertexFinder cutVertexFinder{overrideGraph};
 
 	// Remove all base functions overridden by cut vertices (they don't need to be overridden).
 	for (OverrideProxy const& function: cutVertexFinder.cutVertices())
@@ -722,9 +706,9 @@ void OverrideChecker::checkAmbiguousOverridesInternal(set<OverrideProxy> _baseCa
 	m_errorReporter.typeError(_location, ssl, message);
 }
 
-set<ContractDefinition const*, OverrideChecker::LessFunction> OverrideChecker::resolveOverrideList(OverrideSpecifier const& _overrides) const
+set<ContractDefinition const*, OverrideChecker::CompareByID> OverrideChecker::resolveOverrideList(OverrideSpecifier const& _overrides) const
 {
-	set<ContractDefinition const*, LessFunction> resolved;
+	set<ContractDefinition const*, CompareByID> resolved;
 
 	for (ASTPointer<UserDefinedTypeName> const& override: _overrides.overrides())
 	{
@@ -742,7 +726,7 @@ set<ContractDefinition const*, OverrideChecker::LessFunction> OverrideChecker::r
 
 void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySignatureMultiSet const& _inherited)
 {
-	set<ContractDefinition const*, LessFunction> specifiedContracts =
+	set<ContractDefinition const*, CompareByID> specifiedContracts =
 		_item.overrides() ?
 		resolveOverrideList(*_item.overrides()) :
 		decltype(specifiedContracts){};
@@ -779,7 +763,7 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 		}
 	}
 
-	set<ContractDefinition const*, LessFunction> expectedContracts;
+	set<ContractDefinition const*, CompareByID> expectedContracts;
 
 	// Build list of expected contracts
 	for (auto [begin, end] = _inherited.equal_range(_item); begin != end; begin++)
@@ -796,7 +780,7 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 			_item.astNodeNameCapitalized() + " has override specified but does not override anything."
 		);
 
-	decltype(specifiedContracts) missingContracts;
+	set<ContractDefinition const*, CompareByID> missingContracts;
 	// If we expect only one contract, no contract needs to be specified
 	if (expectedContracts.size() > 1)
 		missingContracts = expectedContracts - specifiedContracts;
