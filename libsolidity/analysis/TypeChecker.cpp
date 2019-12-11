@@ -380,7 +380,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		)
 			m_errorReporter.typeError(
 				var.location(),
-				"This type is only supported in the new experimental ABI encoder. "
+				"This type is only supported in ABIEncoderV2. "
 				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
 			);
 	};
@@ -509,7 +509,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 					unsupportedTypes.emplace_back(param->toString());
 			if (!unsupportedTypes.empty())
 				m_errorReporter.typeError(_variable.location(),
-					"The following types are only supported for getters in the new experimental ABI encoder: " +
+					"The following types are only supported for getters in ABIEncoderV2: " +
 					joinHumanReadable(unsupportedTypes) +
 					". Either remove \"public\" or use \"pragma experimental ABIEncoderV2;\" to enable the feature."
 				);
@@ -620,7 +620,7 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 		)
 			m_errorReporter.typeError(
 				var->location(),
-				"This type is only supported in the new experimental ABI encoder. "
+				"This type is only supported in ABIEncoderV2. "
 				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
 			);
 	}

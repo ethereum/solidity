@@ -222,7 +222,6 @@ Input Description
             "constantOptimizer": false,
             // The new Yul optimizer. Mostly operates on the code of ABIEncoderV2.
             // It can only be activated through the details here.
-            // This feature is still considered experimental.
             "yul": false,
             // Tuning options for the Yul optimizer.
             "yulDetails": {
