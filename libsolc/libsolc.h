@@ -87,7 +87,7 @@ void solidity_free(char* _data) SOLC_NOEXCEPT;
 /// @param _readContext An optional context pointer passed to _readCallback. Can be NULL.
 ///
 /// @returns A pointer to the result. The pointer returned must be freed by the caller using solidity_free() or solidity_reset().
-char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext) SOLC_NOEXCEPT;
+char* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext) SOLC_NOEXCEPT;
 
 /// Frees up any allocated memory.
 ///

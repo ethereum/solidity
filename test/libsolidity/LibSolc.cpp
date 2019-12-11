@@ -59,7 +59,7 @@ bool containsError(Json::Value const& _compilerResult, string const& _type, stri
 
 Json::Value compile(string const& _input, CStyleReadFileCallback _callback = nullptr)
 {
-	const char* output_ptr = solidity_compile(_input.c_str(), _callback, nullptr);
+	char* output_ptr = solidity_compile(_input.c_str(), _callback, nullptr);
 	string output(output_ptr);
 	solidity_free(output_ptr);
 	solidity_reset();
