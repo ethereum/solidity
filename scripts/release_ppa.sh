@@ -140,7 +140,7 @@ Priority: extra
 Maintainer: Christian (Buildserver key) <builds@ethereum.org>
 Build-Depends: ${SMTDEPENDENCY}debhelper (>= 9.0.0),
                cmake,
-               g++,
+               g++ (>= 5.0),
                git,
                libgmp-dev,
                libboost-all-dev,
