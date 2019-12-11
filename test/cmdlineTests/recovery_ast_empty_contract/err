@@ -1,0 +1,8 @@
+Error: Expected pragma, import directive or contract/interface/library/struct/enum definition.
+ --> recovery_ast_empty_contract/input.sol:2:1:
+  |
+2 | c
+  | ^
+
+
+Compilation halted after AST generation due to errors.
