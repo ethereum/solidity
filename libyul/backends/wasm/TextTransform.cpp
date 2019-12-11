@@ -15,10 +15,10 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Component that transforms interval EWasm representation to text.
+ * Component that transforms interval Wasm representation to text.
  */
 
-#include <libyul/backends/wasm/EWasmToText.h>
+#include <libyul/backends/wasm/TextTransform.h>
 
 #include <libdevcore/StringUtils.h>
 
@@ -29,8 +29,9 @@
 using namespace std;
 using namespace yul;
 using namespace dev;
+using namespace yul::wasm;
 
-string EWasmToText::run(wasm::Module const& _module)
+string TextTransform::run(wasm::Module const& _module)
 {
 	string ret = "(module\n";
 	for (auto const& sub: _module.subModules)
@@ -61,51 +62,51 @@ string EWasmToText::run(wasm::Module const& _module)
 	return move(ret) + ")\n";
 }
 
-string EWasmToText::operator()(wasm::Literal const& _literal)
+string TextTransform::operator()(wasm::Literal const& _literal)
 {
 	return "(i64.const " + to_string(_literal.value) + ")";
 }
 
-string EWasmToText::operator()(wasm::StringLiteral const& _literal)
+string TextTransform::operator()(wasm::StringLiteral const& _literal)
 {
 	string quoted = boost::replace_all_copy(_literal.value, "\\", "\\\\");
 	boost::replace_all(quoted, "\"", "\\\"");
 	return "\"" + quoted + "\"";
 }
 
-string EWasmToText::operator()(wasm::LocalVariable const& _identifier)
+string TextTransform::operator()(wasm::LocalVariable const& _identifier)
 {
 	return "(local.get $" + _identifier.name + ")";
 }
 
-string EWasmToText::operator()(wasm::GlobalVariable const& _identifier)
+string TextTransform::operator()(wasm::GlobalVariable const& _identifier)
 {
 	return "(global.get $" + _identifier.name + ")";
 }
 
-string EWasmToText::operator()(wasm::BuiltinCall const& _builtinCall)
+string TextTransform::operator()(wasm::BuiltinCall const& _builtinCall)
 {
 	string args = joinTransformed(_builtinCall.arguments);
 	return "(" + _builtinCall.functionName + (args.empty() ? "" : " " + args) + ")";
 }
 
-string EWasmToText::operator()(wasm::FunctionCall const& _functionCall)
+string TextTransform::operator()(wasm::FunctionCall const& _functionCall)
 {
 	string args = joinTransformed(_functionCall.arguments);
 	return "(call $" + _functionCall.functionName + (args.empty() ? "" : " " + args) + ")";
 }
 
-string EWasmToText::operator()(wasm::LocalAssignment const& _assignment)
+string TextTransform::operator()(wasm::LocalAssignment const& _assignment)
 {
 	return "(local.set $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
 }
 
-string EWasmToText::operator()(wasm::GlobalAssignment const& _assignment)
+string TextTransform::operator()(wasm::GlobalAssignment const& _assignment)
 {
 	return "(global.set $" + _assignment.variableName + " " + visit(*_assignment.value) + ")\n";
 }
 
-string EWasmToText::operator()(wasm::If const& _if)
+string TextTransform::operator()(wasm::If const& _if)
 {
 	string text = "(if " + visit(*_if.condition) + " (then\n" + indented(joinTransformed(_if.statements, '\n')) + ")";
 	if (_if.elseStatements)
@@ -113,34 +114,34 @@ string EWasmToText::operator()(wasm::If const& _if)
 	return std::move(text) + ")\n";
 }
 
-string EWasmToText::operator()(wasm::Loop const& _loop)
+string TextTransform::operator()(wasm::Loop const& _loop)
 {
 	string label = _loop.labelName.empty() ? "" : " $" + _loop.labelName;
 	return "(loop" + move(label) + "\n" + indented(joinTransformed(_loop.statements, '\n')) + ")\n";
 }
 
-string EWasmToText::operator()(wasm::Break const& _break)
+string TextTransform::operator()(wasm::Break const& _break)
 {
 	return "(break $" + _break.label.name + ")\n";
 }
 
-string EWasmToText::operator()(wasm::BreakIf const& _break)
+string TextTransform::operator()(wasm::BreakIf const& _break)
 {
 	return "(br_if $" + _break.label.name + " " + visit(*_break.condition) + ")\n";
 }
 
-string EWasmToText::operator()(wasm::Return const&)
+string TextTransform::operator()(wasm::Return const&)
 {
 	return "(return)\n";
 }
 
-string EWasmToText::operator()(wasm::Block const& _block)
+string TextTransform::operator()(wasm::Block const& _block)
 {
 	string label = _block.labelName.empty() ? "" : " $" + _block.labelName;
 	return "(block" + move(label) + "\n" + indented(joinTransformed(_block.statements, '\n')) + "\n)\n";
 }
 
-string EWasmToText::indented(string const& _in)
+string TextTransform::indented(string const& _in)
 {
 	string replacement;
 
@@ -157,7 +158,7 @@ string EWasmToText::indented(string const& _in)
 	return replacement;
 }
 
-string EWasmToText::transform(wasm::FunctionDefinition const& _function)
+string TextTransform::transform(wasm::FunctionDefinition const& _function)
 {
 	string ret = "(func $" + _function.name + "\n";
 	for (auto const& param: _function.parameterNames)
@@ -174,12 +175,12 @@ string EWasmToText::transform(wasm::FunctionDefinition const& _function)
 }
 
 
-string EWasmToText::visit(wasm::Expression const& _expression)
+string TextTransform::visit(wasm::Expression const& _expression)
 {
 	return std::visit(*this, _expression);
 }
 
-string EWasmToText::joinTransformed(vector<wasm::Expression> const& _expressions, char _separator)
+string TextTransform::joinTransformed(vector<wasm::Expression> const& _expressions, char _separator)
 {
 	string ret;
 	for (auto const& e: _expressions)

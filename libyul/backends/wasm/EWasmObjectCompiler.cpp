@@ -15,14 +15,14 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Compiler that transforms Yul Objects to EWasm text representation.
+ * Compiler that transforms Yul Objects to Wasm text and binary representation (Ewasm flavoured).
  */
 
 #include <libyul/backends/wasm/EWasmObjectCompiler.h>
 
 #include <libyul/backends/wasm/EWasmCodeTransform.h>
 #include <libyul/backends/wasm/BinaryTransform.h>
-#include <libyul/backends/wasm/EWasmToText.h>
+#include <libyul/backends/wasm/TextTransform.h>
 
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
@@ -36,7 +36,7 @@ pair<string, dev::bytes> EWasmObjectCompiler::compile(Object& _object, Dialect c
 {
 	EWasmObjectCompiler compiler(_dialect);
 	wasm::Module module = compiler.run(_object);
-	return {EWasmToText().run(module), wasm::BinaryTransform::run(module)};
+	return {wasm::TextTransform().run(module), wasm::BinaryTransform::run(module)};
 }
 
 wasm::Module EWasmObjectCompiler::run(Object& _object)

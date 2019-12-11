@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <libyul/backends/wasm/EWasmAST.h>
+#include <libyul/backends/wasm/WasmAST.h>
 
 #include <libdevcore/Common.h>
 
