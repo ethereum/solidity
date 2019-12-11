@@ -20,7 +20,7 @@
 
 #include <libyul/backends/wasm/EWasmObjectCompiler.h>
 
-#include <libyul/backends/wasm/EWasmCodeTransform.h>
+#include <libyul/backends/wasm/WasmCodeTransform.h>
 #include <libyul/backends/wasm/BinaryTransform.h>
 #include <libyul/backends/wasm/TextTransform.h>
 
@@ -44,7 +44,7 @@ wasm::Module EWasmObjectCompiler::run(Object& _object)
 	yulAssert(_object.analysisInfo, "No analysis info.");
 	yulAssert(_object.code, "No code.");
 
-	wasm::Module module = EWasmCodeTransform::run(m_dialect, *_object.code);
+	wasm::Module module = WasmCodeTransform::run(m_dialect, *_object.code);
 
 	for (auto& subNode: _object.subObjects)
 		if (Object* subObject = dynamic_cast<Object*>(subNode.get()))

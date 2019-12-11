@@ -15,10 +15,10 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-* Common code generator for translating Yul / inline assembly to EWasm.
+* Common code generator for translating Yul / inline assembly to Wasm.
 */
 
-#include <libyul/backends/wasm/EWasmCodeTransform.h>
+#include <libyul/backends/wasm/WasmCodeTransform.h>
 
 #include <libyul/optimiser/NameCollector.h>
 
@@ -36,11 +36,11 @@ using namespace std;
 using namespace dev;
 using namespace yul;
 
-wasm::Module EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
+wasm::Module WasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
 {
 	wasm::Module module;
 
-	EWasmCodeTransform transform(_dialect, _ast);
+	WasmCodeTransform transform(_dialect, _ast);
 
 	for (auto const& statement: _ast.statements)
 	{
@@ -59,7 +59,7 @@ wasm::Module EWasmCodeTransform::run(Dialect const& _dialect, yul::Block const& 
 	return module;
 }
 
-wasm::Expression EWasmCodeTransform::generateMultiAssignment(
+wasm::Expression WasmCodeTransform::generateMultiAssignment(
 	vector<string> _variableNames,
 	unique_ptr<wasm::Expression> _firstValue
 )
@@ -82,7 +82,7 @@ wasm::Expression EWasmCodeTransform::generateMultiAssignment(
 	return { std::move(block) };
 }
 
-wasm::Expression EWasmCodeTransform::operator()(VariableDeclaration const& _varDecl)
+wasm::Expression WasmCodeTransform::operator()(VariableDeclaration const& _varDecl)
 {
 	vector<string> variableNames;
 	for (auto const& var: _varDecl.variables)
@@ -97,7 +97,7 @@ wasm::Expression EWasmCodeTransform::operator()(VariableDeclaration const& _varD
 		return wasm::BuiltinCall{"nop", {}};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(Assignment const& _assignment)
+wasm::Expression WasmCodeTransform::operator()(Assignment const& _assignment)
 {
 	vector<string> variableNames;
 	for (auto const& var: _assignment.variableNames)
@@ -105,12 +105,12 @@ wasm::Expression EWasmCodeTransform::operator()(Assignment const& _assignment)
 	return generateMultiAssignment(move(variableNames), visit(*_assignment.value));
 }
 
-wasm::Expression EWasmCodeTransform::operator()(ExpressionStatement const& _statement)
+wasm::Expression WasmCodeTransform::operator()(ExpressionStatement const& _statement)
 {
 	return visitReturnByValue(_statement.expression);
 }
 
-wasm::Expression EWasmCodeTransform::operator()(FunctionCall const& _call)
+wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 {
 	bool typeConversionNeeded = false;
 
@@ -171,19 +171,19 @@ wasm::Expression EWasmCodeTransform::operator()(FunctionCall const& _call)
 		return {std::move(funCall)};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(Identifier const& _identifier)
+wasm::Expression WasmCodeTransform::operator()(Identifier const& _identifier)
 {
 	return wasm::LocalVariable{_identifier.name.str()};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(Literal const& _literal)
+wasm::Expression WasmCodeTransform::operator()(Literal const& _literal)
 {
 	u256 value = valueOfLiteral(_literal);
 	yulAssert(value <= numeric_limits<uint64_t>::max(), "Literal too large: " + value.str());
 	return wasm::Literal{uint64_t(value)};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(If const& _if)
+wasm::Expression WasmCodeTransform::operator()(If const& _if)
 {
 	// TODO converting i64 to i32 might not always be needed.
 
@@ -197,7 +197,7 @@ wasm::Expression EWasmCodeTransform::operator()(If const& _if)
 	};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(Switch const& _switch)
+wasm::Expression WasmCodeTransform::operator()(Switch const& _switch)
 {
 	wasm::Block block;
 	string condition = m_nameDispenser.newName("condition"_yulstring).str();
@@ -237,13 +237,13 @@ wasm::Expression EWasmCodeTransform::operator()(Switch const& _switch)
 	return { std::move(block) };
 }
 
-wasm::Expression EWasmCodeTransform::operator()(FunctionDefinition const&)
+wasm::Expression WasmCodeTransform::operator()(FunctionDefinition const&)
 {
 	yulAssert(false, "Should not have visited here.");
 	return {};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(ForLoop const& _for)
+wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 {
 	string breakLabel = newLabel();
 	string continueLabel = newLabel();
@@ -262,37 +262,37 @@ wasm::Expression EWasmCodeTransform::operator()(ForLoop const& _for)
 	return { wasm::Block{breakLabel, make_vector<wasm::Expression>(move(loop))} };
 }
 
-wasm::Expression EWasmCodeTransform::operator()(Break const&)
+wasm::Expression WasmCodeTransform::operator()(Break const&)
 {
 	return wasm::Break{wasm::Label{m_breakContinueLabelNames.top().first}};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(Continue const&)
+wasm::Expression WasmCodeTransform::operator()(Continue const&)
 {
 	return wasm::Break{wasm::Label{m_breakContinueLabelNames.top().second}};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(Leave const&)
+wasm::Expression WasmCodeTransform::operator()(Leave const&)
 {
 	return wasm::Return{};
 }
 
-wasm::Expression EWasmCodeTransform::operator()(Block const& _block)
+wasm::Expression WasmCodeTransform::operator()(Block const& _block)
 {
 	return wasm::Block{{}, visit(_block.statements)};
 }
 
-unique_ptr<wasm::Expression> EWasmCodeTransform::visit(yul::Expression const& _expression)
+unique_ptr<wasm::Expression> WasmCodeTransform::visit(yul::Expression const& _expression)
 {
 	return make_unique<wasm::Expression>(std::visit(*this, _expression));
 }
 
-wasm::Expression EWasmCodeTransform::visitReturnByValue(yul::Expression const& _expression)
+wasm::Expression WasmCodeTransform::visitReturnByValue(yul::Expression const& _expression)
 {
 	return std::visit(*this, _expression);
 }
 
-vector<wasm::Expression> EWasmCodeTransform::visit(vector<yul::Expression> const& _expressions)
+vector<wasm::Expression> WasmCodeTransform::visit(vector<yul::Expression> const& _expressions)
 {
 	vector<wasm::Expression> ret;
 	for (auto const& e: _expressions)
@@ -300,12 +300,12 @@ vector<wasm::Expression> EWasmCodeTransform::visit(vector<yul::Expression> const
 	return ret;
 }
 
-wasm::Expression EWasmCodeTransform::visit(yul::Statement const& _statement)
+wasm::Expression WasmCodeTransform::visit(yul::Statement const& _statement)
 {
 	return std::visit(*this, _statement);
 }
 
-vector<wasm::Expression> EWasmCodeTransform::visit(vector<yul::Statement> const& _statements)
+vector<wasm::Expression> WasmCodeTransform::visit(vector<yul::Statement> const& _statements)
 {
 	vector<wasm::Expression> ret;
 	for (auto const& s: _statements)
@@ -313,7 +313,7 @@ vector<wasm::Expression> EWasmCodeTransform::visit(vector<yul::Statement> const&
 	return ret;
 }
 
-wasm::FunctionDefinition EWasmCodeTransform::translateFunction(yul::FunctionDefinition const& _fun)
+wasm::FunctionDefinition WasmCodeTransform::translateFunction(yul::FunctionDefinition const& _fun)
 {
 	wasm::FunctionDefinition fun;
 	fun.name = _fun.name.str();
@@ -344,7 +344,7 @@ wasm::FunctionDefinition EWasmCodeTransform::translateFunction(yul::FunctionDefi
 	return fun;
 }
 
-wasm::Expression EWasmCodeTransform::injectTypeConversionIfNeeded(wasm::FunctionCall _call) const
+wasm::Expression WasmCodeTransform::injectTypeConversionIfNeeded(wasm::FunctionCall _call) const
 {
 	wasm::FunctionImport const& import = m_functionsToImport.at(YulString{_call.functionName});
 	for (size_t i = 0; i < _call.arguments.size(); ++i)
@@ -361,7 +361,7 @@ wasm::Expression EWasmCodeTransform::injectTypeConversionIfNeeded(wasm::Function
 	return {std::move(_call)};
 }
 
-vector<wasm::Expression> EWasmCodeTransform::injectTypeConversionIfNeeded(
+vector<wasm::Expression> WasmCodeTransform::injectTypeConversionIfNeeded(
 	vector<wasm::Expression> _arguments,
 	vector<Type> const& _parameterTypes
 ) const
@@ -378,12 +378,12 @@ vector<wasm::Expression> EWasmCodeTransform::injectTypeConversionIfNeeded(
 	return _arguments;
 }
 
-string EWasmCodeTransform::newLabel()
+string WasmCodeTransform::newLabel()
 {
 	return m_nameDispenser.newName("label_"_yulstring).str();
 }
 
-void EWasmCodeTransform::allocateGlobals(size_t _amount)
+void WasmCodeTransform::allocateGlobals(size_t _amount)
 {
 	while (m_globalVariables.size() < _amount)
 		m_globalVariables.emplace_back(wasm::GlobalVariableDeclaration{
