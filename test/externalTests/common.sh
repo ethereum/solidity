@@ -95,7 +95,7 @@ function truffle_setup
     local repo="$1"
     local branch="$2"
 
-    setup_solcjs "$DIR" "$SOLJSON" "master_060" "solc"
+    setup_solcjs "$DIR" "$SOLJSON" "master" "solc"
     download_project "$repo" "$branch" "$DIR"
 }
 
@@ -138,7 +138,7 @@ function force_solc_truffle_modules
         if [ -d "$d" ]; then
             cd $d
             rm -rf solc
-            git clone --depth 1 -b master_060 https://github.com/ethereum/solc-js.git solc
+            git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
             cp "$1" solc/soljson.js
         fi
     )
