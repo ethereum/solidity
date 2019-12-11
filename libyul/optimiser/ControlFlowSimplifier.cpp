@@ -27,8 +27,9 @@
 #include <boost/algorithm/cxx11/any_of.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::yul;
 
 using OptionalStatements = std::optional<vector<Statement>>;
 

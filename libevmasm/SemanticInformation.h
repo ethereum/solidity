@@ -25,9 +25,7 @@
 
 #include <libevmasm/Instruction.h>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class AssemblyItem;
@@ -74,5 +72,4 @@ struct SemanticInformation
 	static bool invalidInViewFunctions(Instruction _instruction);
 };
 
-}
 }

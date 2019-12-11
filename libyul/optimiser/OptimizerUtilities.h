@@ -23,7 +23,7 @@
 #include <libdevcore/Common.h>
 #include <libyul/AsmDataForward.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 /// Removes statements that are just empty blocks (non-recursive).

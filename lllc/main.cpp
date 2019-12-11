@@ -129,7 +129,7 @@ int main(int argc, char** argv)
 	}
 	else if (mode == Disassemble)
 	{
-		cout << dev::eth::disassemble(fromHex(src)) << endl;
+		cout << evmasm::disassemble(fromHex(src)) << endl;
 	}
 	else if (mode == Binary || mode == Hex)
 	{

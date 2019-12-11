@@ -25,9 +25,7 @@
 #include <optional>
 #include <utility>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -225,5 +223,4 @@ private:
 	std::vector<std::unique_ptr<Type>> m_generalTypes{};
 };
 
-} // namespace solidity
-} // namespace dev
+}

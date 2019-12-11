@@ -27,9 +27,7 @@
 #include <memory>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class Declaration;
@@ -196,5 +194,4 @@ private:
 	std::vector<std::unique_ptr<LValue>> m_lvalues;
 };
 
-}
 }

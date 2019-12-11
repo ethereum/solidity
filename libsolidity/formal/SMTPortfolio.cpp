@@ -26,9 +26,10 @@
 #include <libsolidity/formal/SMTLib2Interface.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
-using namespace dev::solidity::smt;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
+using namespace solidity::frontend::smt;
 
 SMTPortfolio::SMTPortfolio(
 	map<h256, string> const& _smtlib2Responses,

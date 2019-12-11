@@ -29,7 +29,7 @@
 #include <map>
 #include <vector>
 
-namespace dev
+namespace solidity::util
 {
 
 DEV_SIMPLE_EXCEPTION(WhiskersError);

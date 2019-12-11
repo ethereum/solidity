@@ -24,9 +24,7 @@
 #include <libdevcore/CommonData.h>
 #include <functional>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 /**
@@ -157,5 +155,4 @@ struct EVMBuiltins
 	static auto constexpr SELFDESTRUCT = PatternGenerator<Instruction::SELFDESTRUCT>{};
 };
 
-}
 }

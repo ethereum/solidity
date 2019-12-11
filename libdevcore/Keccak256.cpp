@@ -27,9 +27,8 @@
 #include <cstring>
 
 using namespace std;
-using namespace dev;
 
-namespace dev
+namespace solidity::util
 {
 
 namespace

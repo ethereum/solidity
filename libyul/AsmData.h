@@ -29,7 +29,7 @@
 
 #include <memory>
 
-namespace yul
+namespace solidity::yul
 {
 
 using Type = YulString;

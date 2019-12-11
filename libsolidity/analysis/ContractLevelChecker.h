@@ -28,14 +28,12 @@
 #include <functional>
 #include <set>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -89,5 +87,4 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 };
 
-}
 }

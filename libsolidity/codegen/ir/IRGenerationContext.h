@@ -32,9 +32,7 @@
 #include <memory>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class ContractDefinition;
@@ -106,5 +104,4 @@ private:
 	size_t m_varCounter = 0;
 };
 
-}
 }

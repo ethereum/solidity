@@ -30,9 +30,9 @@
 
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 namespace
 {
@@ -361,10 +361,10 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 
 void ContractLevelChecker::checkHashCollisions(ContractDefinition const& _contract)
 {
-	set<FixedHash<4>> hashes;
+	set<util::FixedHash<4>> hashes;
 	for (auto const& it: _contract.interfaceFunctionList())
 	{
-		FixedHash<4> const& hash = it.first;
+		util::FixedHash<4> const& hash = it.first;
 		if (hashes.count(hash))
 			m_errorReporter.typeError(
 				_contract.location(),

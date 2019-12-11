@@ -47,7 +47,7 @@ public:
 	static CodeFragment compile(std::string _src, CompilerState& _s, ReadCallback const& _readFile);
 
 	/// Consolidates data and compiles code.
-	eth::Assembly& assembly(CompilerState const& _cs) { finalise(_cs); return m_asm; }
+	evmasm::Assembly& assembly(CompilerState const& _cs) { finalise(_cs); return m_asm; }
 
 private:
 	void finalise(CompilerState const& _cs);
@@ -61,7 +61,7 @@ private:
 	void constructOperation(sp::utree const& _t, CompilerState& _s);
 
 	bool m_finalised = false;
-	eth::Assembly m_asm;
+	evmasm::Assembly m_asm;
 	ReadCallback m_readFile;
 };
 

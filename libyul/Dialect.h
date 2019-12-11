@@ -28,7 +28,7 @@
 #include <vector>
 #include <set>
 
-namespace yul
+namespace solidity::yul
 {
 
 class YulString;

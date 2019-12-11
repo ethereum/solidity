@@ -32,9 +32,7 @@
 #include <set>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class Type;
@@ -257,5 +255,4 @@ private:
 	YulUtilFunctions m_utils;
 };
 
-}
 }

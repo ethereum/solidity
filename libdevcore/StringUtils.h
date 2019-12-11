@@ -28,7 +28,7 @@
 
 #include <libdevcore/CommonData.h>
 
-namespace dev
+namespace solidity::util
 {
 
 // Calculates the Damerau–Levenshtein distance between _str1 and _str2 and returns true if that distance is not greater than _maxDistance

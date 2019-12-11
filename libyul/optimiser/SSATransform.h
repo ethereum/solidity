@@ -28,7 +28,7 @@
 
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 
 class NameDispenser;

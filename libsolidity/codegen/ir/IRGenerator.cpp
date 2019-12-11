@@ -44,8 +44,9 @@
 #include <sstream>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
 
 pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 {

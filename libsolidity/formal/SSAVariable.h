@@ -19,11 +19,7 @@
 
 #include <memory>
 
-namespace dev
-{
-namespace solidity
-{
-namespace smt
+namespace solidity::frontend::smt
 {
 
 /**
@@ -49,6 +45,4 @@ private:
 	std::unique_ptr<unsigned> m_nextFreeIndex;
 };
 
-}
-}
 }

@@ -21,7 +21,7 @@
 #include <libyul/backends/wasm/WasmDialect.h>
 
 using namespace std;
-using namespace yul;
+using namespace solidity::yul;
 
 WasmDialect::WasmDialect():
 	Dialect{AsmFlavour::Strict}

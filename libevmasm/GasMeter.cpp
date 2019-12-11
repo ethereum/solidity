@@ -22,8 +22,9 @@
 #include <libdevcore/FixedHash.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::evmasm;
 
 GasMeter::GasConsumption& GasMeter::GasConsumption::operator+=(GasConsumption const& _other)
 {

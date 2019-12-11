@@ -51,13 +51,13 @@
 #include <functional>
 #include <string>
 
-namespace dev
+namespace solidity
 {
 
 // Binary data types.
 using bytes = std::vector<uint8_t>;
-using bytesRef = vector_ref<uint8_t>;
-using bytesConstRef = vector_ref<uint8_t const>;
+using bytesRef = util::vector_ref<uint8_t>;
+using bytesConstRef = util::vector_ref<uint8_t const>;
 
 // Numeric types.
 using bigint = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<>>;

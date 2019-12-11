@@ -27,9 +27,9 @@
 #include <vector>
 
 using namespace std;
-using namespace dev;
+using namespace solidity::util;
 
-bool dev::stringWithinDistance(string const& _str1, string const& _str2, size_t _maxDistance, size_t _lenThreshold)
+bool solidity::util::stringWithinDistance(string const& _str1, string const& _str2, size_t _maxDistance, size_t _lenThreshold)
 {
 	if (_str1 == _str2)
 		return true;
@@ -46,7 +46,7 @@ bool dev::stringWithinDistance(string const& _str1, string const& _str2, size_t 
 	return distance <= _maxDistance && distance < n1 && distance < n2;
 }
 
-size_t dev::stringDistance(string const& _str1, string const& _str2)
+size_t solidity::util::stringDistance(string const& _str1, string const& _str2)
 {
 	size_t n1 = _str1.size();
 	size_t n2 = _str2.size();
@@ -86,7 +86,7 @@ size_t dev::stringDistance(string const& _str1, string const& _str2)
 	return dp[(n1 % 3) + n2 * 3];
 }
 
-string dev::quotedAlternativesList(vector<string> const& suggestions)
+string solidity::util::quotedAlternativesList(vector<string> const& suggestions)
 {
 	vector<string> quotedSuggestions;
 
@@ -96,7 +96,7 @@ string dev::quotedAlternativesList(vector<string> const& suggestions)
 	return joinHumanReadable(quotedSuggestions, ", ", " or ");
 }
 
-string dev::suffixedVariableNameList(string const& _baseName, size_t _startSuffix, size_t _endSuffix)
+string solidity::util::suffixedVariableNameList(string const& _baseName, size_t _startSuffix, size_t _endSuffix)
 {
 	string result;
 	if (_startSuffix < _endSuffix)

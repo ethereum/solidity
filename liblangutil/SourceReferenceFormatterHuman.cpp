@@ -25,9 +25,10 @@
 #include <iomanip>
 
 using namespace std;
-using namespace dev;
-using namespace dev::formatting;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::util;
+using namespace solidity::util::formatting;
 
 AnsiColorized SourceReferenceFormatterHuman::normalColored() const
 {

@@ -20,9 +20,7 @@
 #include <libsolidity/analysis/ControlFlowGraph.h>
 #include <set>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class ControlFlowAnalyzer: private ASTConstVisitor
@@ -46,5 +44,4 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 };
 
-}
 }

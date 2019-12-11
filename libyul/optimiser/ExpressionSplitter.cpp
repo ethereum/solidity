@@ -32,9 +32,10 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
+using namespace solidity::langutil;
 
 void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 {

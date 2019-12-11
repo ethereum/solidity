@@ -28,7 +28,7 @@
 #include <sstream>
 #include <string>
 
-namespace dev
+namespace solidity::util
 {
 
 /// Retrieve and returns the contents of the given file as a std::string.

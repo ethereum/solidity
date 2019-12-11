@@ -20,7 +20,7 @@
 #include <functional>
 #include <set>
 
-namespace dev
+namespace solidity::util
 {
 
 /**

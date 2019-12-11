@@ -25,8 +25,8 @@
 #include <boost/algorithm/cxx11/any_of.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 using OptionalStatements = std::optional<vector<Statement>>;
 
@@ -52,7 +52,7 @@ OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _const
 		matchingCaseBlock = &defaultCase->body;
 
 	if (matchingCaseBlock)
-		return make_vector<Statement>(std::move(*matchingCaseBlock));
+		return util::make_vector<Statement>(std::move(*matchingCaseBlock));
 	else
 		return optional<vector<Statement>>{vector<Statement>{}};
 }
@@ -71,8 +71,8 @@ void StructuralSimplifier::operator()(Block& _block)
 
 void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
-	GenericVisitor visitor{
-		VisitorFallback<OptionalStatements>{},
+	util::GenericVisitor visitor{
+		util::VisitorFallback<OptionalStatements>{},
 		[&](If& _ifStmt) -> OptionalStatements {
 			if (expressionAlwaysTrue(*_ifStmt.condition))
 				return {std::move(_ifStmt.body.statements)};
@@ -92,7 +92,7 @@ void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 		}
 	};
 
-	iterateReplacing(
+	util::iterateReplacing(
 		_statements,
 		[&](Statement& _stmt) -> OptionalStatements
 		{
@@ -122,7 +122,7 @@ bool StructuralSimplifier::expressionAlwaysFalse(Expression const& _expression)
 		return false;
 }
 
-std::optional<dev::u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
+std::optional<u256> StructuralSimplifier::hasLiteralValue(Expression const& _expression) const
 {
 	if (holds_alternative<Literal>(_expression))
 		return valueOfLiteral(std::get<Literal>(_expression));

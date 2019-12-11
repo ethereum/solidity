@@ -29,8 +29,8 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void RedundantAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {

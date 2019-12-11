@@ -20,7 +20,7 @@
 
 #pragma once
 
-namespace dev
+namespace solidity::util
 {
 
 /**

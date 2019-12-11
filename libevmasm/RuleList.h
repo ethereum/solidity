@@ -32,9 +32,7 @@
 #include <vector>
 #include <functional>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 template <class S> S divWorkaround(S const& _a, S const& _b)
@@ -673,5 +671,4 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 	return rules;
 }
 
-}
 }

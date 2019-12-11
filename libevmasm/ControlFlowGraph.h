@@ -29,9 +29,7 @@
 #include <libdevcore/Assertions.h>
 #include <libevmasm/ExpressionClasses.h>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class KnownState;
@@ -126,5 +124,4 @@ private:
 };
 
 
-}
 }

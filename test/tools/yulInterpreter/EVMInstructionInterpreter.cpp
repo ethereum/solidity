@@ -77,12 +77,12 @@ void copyZeroExtended(
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
 u256 EVMInstructionInterpreter::eval(
-	dev::eth::Instruction _instruction,
+	evmasm::Instruction _instruction,
 	vector<u256> const& _arguments
 )
 {
 	using namespace dev::eth;
-	using dev::eth::Instruction;
+	using evmasm::Instruction;
 
 	auto info = instructionInfo(_instruction);
 	yulAssert(size_t(info.args) == _arguments.size(), "");
@@ -484,9 +484,9 @@ void EVMInstructionInterpreter::writeMemoryWord(u256 const& _offset, u256 const&
 }
 
 
-void EVMInstructionInterpreter::logTrace(dev::eth::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EVMInstructionInterpreter::logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
 {
-	logTrace(dev::eth::instructionInfo(_instruction).name, _arguments, _data);
+	logTrace(evmasm::instructionInfo(_instruction).name, _arguments, _data);
 }
 
 void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments, bytes const& _data)

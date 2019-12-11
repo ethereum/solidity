@@ -28,7 +28,8 @@
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
-using namespace dev;
+using namespace solidity;
+using namespace solidity::util;
 
 namespace
 {
@@ -38,7 +39,7 @@ static char const* lowerHexChars = "0123456789abcdef";
 
 }
 
-string dev::toHex(uint8_t _data, HexCase _case)
+string solidity::util::toHex(uint8_t _data, HexCase _case)
 {
 	assertThrow(_case != HexCase::Mixed, BadHexCase, "Mixed case can only be used for byte arrays.");
 
@@ -50,7 +51,7 @@ string dev::toHex(uint8_t _data, HexCase _case)
 	};
 }
 
-string dev::toHex(bytes const& _data, HexPrefix _prefix, HexCase _case)
+string solidity::util::toHex(bytes const& _data, HexPrefix _prefix, HexCase _case)
 {
 	std::string ret(_data.size() * 2 + (_prefix == HexPrefix::Add ? 2 : 0), 0);
 
@@ -78,7 +79,7 @@ string dev::toHex(bytes const& _data, HexPrefix _prefix, HexCase _case)
 	return ret;
 }
 
-int dev::fromHex(char _i, WhenError _throw)
+int solidity::util::fromHex(char _i, WhenError _throw)
 {
 	if (_i >= '0' && _i <= '9')
 		return _i - '0';
@@ -92,7 +93,7 @@ int dev::fromHex(char _i, WhenError _throw)
 		return -1;
 }
 
-bytes dev::fromHex(std::string const& _s, WhenError _throw)
+bytes solidity::util::fromHex(std::string const& _s, WhenError _throw)
 {
 	unsigned s = (_s.size() >= 2 && _s[0] == '0' && _s[1] == 'x') ? 2 : 0;
 	std::vector<uint8_t> ret;
@@ -119,7 +120,7 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 }
 
 
-bool dev::passesAddressChecksum(string const& _str, bool _strict)
+bool solidity::util::passesAddressChecksum(string const& _str, bool _strict)
 {
 	string s = _str.substr(0, 2) == "0x" ? _str : "0x" + _str;
 
@@ -132,10 +133,10 @@ bool dev::passesAddressChecksum(string const& _str, bool _strict)
 	))
 		return true;
 
-	return s == dev::getChecksummedAddress(s);
+	return s == solidity::util::getChecksummedAddress(s);
 }
 
-string dev::getChecksummedAddress(string const& _addr)
+string solidity::util::getChecksummedAddress(string const& _addr)
 {
 	string s = _addr.substr(0, 2) == "0x" ? _addr.substr(2) : _addr;
 	assertThrow(s.length() == 40, InvalidAddress, "");
@@ -156,7 +157,7 @@ string dev::getChecksummedAddress(string const& _addr)
 	return ret;
 }
 
-bool dev::isValidHex(string const& _string)
+bool solidity::util::isValidHex(string const& _string)
 {
 	if (_string.substr(0, 2) != "0x")
 		return false;
@@ -165,7 +166,7 @@ bool dev::isValidHex(string const& _string)
 	return true;
 }
 
-bool dev::isValidDecimal(string const& _string)
+bool solidity::util::isValidDecimal(string const& _string)
 {
 	if (_string.empty())
 		return false;
@@ -179,7 +180,7 @@ bool dev::isValidDecimal(string const& _string)
 	return true;
 }
 
-string dev::formatAsStringOrNumber(string const& _value)
+string solidity::util::formatAsStringOrNumber(string const& _value)
 {
 	assertThrow(_value.length() <= 32, StringTooLong, "String to be formatted longer than 32 bytes.");
 

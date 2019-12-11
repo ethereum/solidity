@@ -109,7 +109,7 @@ public:
 		bytes realCode = bytecodeSansMetadata(_bytecode);
 		BOOST_REQUIRE_MESSAGE(!realCode.empty(), "Invalid or missing metadata in bytecode.");
 		size_t instructions = 0;
-		dev::eth::eachInstruction(realCode, [&](Instruction _instr, u256 const&) {
+		evmasm::eachInstruction(realCode, [&](Instruction _instr, u256 const&) {
 			if (!_which || *_which == _instr)
 				instructions++;
 		});

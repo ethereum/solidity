@@ -26,10 +26,10 @@
 #include <string>
 #include <vector>
 
-namespace langutil
+namespace solidity::langutil
 {
 
-class SemVerError: dev::Exception
+class SemVerError: util::Exception
 {
 };
 

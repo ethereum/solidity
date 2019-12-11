@@ -21,8 +21,8 @@
 #include <libdevcore/CommonIO.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity::smt;
+using namespace solidity;
+using namespace solidity::frontend::smt;
 
 Z3CHCInterface::Z3CHCInterface():
 	m_z3Interface(make_unique<Z3Interface>()),

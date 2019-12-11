@@ -25,14 +25,12 @@
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <string>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class DocStringParser
@@ -70,5 +68,4 @@ private:
 	bool m_errorsOccurred = false;
 };
 
-} //solidity NS
-} // dev NS
+}

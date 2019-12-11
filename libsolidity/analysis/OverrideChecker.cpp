@@ -32,9 +32,13 @@
 
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::frontend;
+using namespace solidity::langutil;
+
+using solidity::util::GenericVisitor;
+using solidity::util::contains_if;
+using solidity::util::joinHumanReadable;
 
 namespace
 {

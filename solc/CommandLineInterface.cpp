@@ -72,12 +72,13 @@
 #endif
 
 using namespace std;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+
 namespace po = boost::program_options;
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 bool g_hasOutput = false;
@@ -257,7 +258,7 @@ static void version()
 		"solc, the solidity compiler commandline interface" <<
 		endl <<
 		"Version: " <<
-		dev::solidity::VersionString <<
+		solidity::frontend::VersionString <<
 		endl;
 	exit(0);
 }
@@ -321,11 +322,11 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count(g_argOutputDir))
-		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", dev::eth::disassemble(m_compiler->object(_contract).bytecode));
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", evmasm::disassemble(m_compiler->object(_contract).bytecode));
 	else
 	{
 		sout() << "Opcodes:" << endl;
-		sout() << std::uppercase << dev::eth::disassemble(m_compiler->object(_contract).bytecode);
+		sout() << std::uppercase << evmasm::disassemble(m_compiler->object(_contract).bytecode);
 		sout() << endl;
 	}
 }
@@ -406,7 +407,7 @@ void CommandLineInterface::handleABI(string const& _contract)
 	if (!m_args.count(g_argAbi))
 		return;
 
-	string data = dev::jsonCompactPrint(m_compiler->contractABI(_contract));
+	string data = jsonCompactPrint(m_compiler->contractABI(_contract));
 	if (m_args.count(g_argOutputDir))
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".abi", data);
 	else
@@ -434,7 +435,7 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 
 	if (m_args.count(argName))
 	{
-		std::string output = dev::jsonPrettyPrint(
+		std::string output = jsonPrettyPrint(
 			_natspecDev ?
 			m_compiler->natspecDev(_contract) :
 			m_compiler->natspecUser(_contract)
@@ -543,13 +544,13 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 					continue;
 				}
 
-				m_sourceCodes[infile.generic_string()] = dev::readFileAsString(infile.string());
+				m_sourceCodes[infile.generic_string()] = readFileAsString(infile.string());
 				path = boost::filesystem::canonical(infile).string();
 			}
 			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
 		}
 	if (addStdin)
-		m_sourceCodes[g_stdinFileName] = dev::readStandardInput();
+		m_sourceCodes[g_stdinFileName] = readStandardInput();
 	if (m_sourceCodes.size() == 0)
 	{
 		serr() << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
@@ -606,7 +607,7 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 			if (!passesAddressChecksum(addrString, false))
 			{
 				serr() << "Invalid checksum on address for library \"" << libName << "\": " << addrString << endl;
-				serr() << "The correct checksum is " << dev::getChecksummedAddress(addrString) << endl;
+				serr() << "The correct checksum is " << getChecksummedAddress(addrString) << endl;
 				return false;
 			}
 			bytes binAddr = fromHex(addrString);
@@ -896,7 +897,7 @@ bool CommandLineInterface::processInput()
 			if (!boost::filesystem::is_regular_file(canonicalPath))
 				return ReadCallback::Result{false, "Not a valid file."};
 
-			auto contents = dev::readFileAsString(canonicalPath.string());
+			auto contents = readFileAsString(canonicalPath.string());
 			m_sourceCodes[path.generic_string()] = contents;
 			return ReadCallback::Result{true, contents};
 		}
@@ -928,7 +929,7 @@ bool CommandLineInterface::processInput()
 
 	if (m_args.count(g_argStandardJSON))
 	{
-		string input = dev::readStandardInput();
+		string input = readStandardInput();
 		StandardCompiler compiler(fileReader);
 		sout() << compiler.compile(std::move(input)) << endl;
 		return true;
@@ -1159,7 +1160,7 @@ void CommandLineInterface::handleCombinedJSON()
 
 	Json::Value output(Json::objectValue);
 
-	output[g_strVersion] = ::dev::solidity::VersionString;
+	output[g_strVersion] = frontend::VersionString;
 	set<string> requests;
 	boost::split(requests, m_args[g_argCombinedJson].as<string>(), boost::is_any_of(","));
 	vector<string> contracts = m_compiler->contractNames();
@@ -1170,7 +1171,7 @@ void CommandLineInterface::handleCombinedJSON()
 	{
 		Json::Value& contractData = output[g_strContracts][contractName] = Json::objectValue;
 		if (requests.count(g_strAbi))
-			contractData[g_strAbi] = dev::jsonCompactPrint(m_compiler->contractABI(contractName));
+			contractData[g_strAbi] = jsonCompactPrint(m_compiler->contractABI(contractName));
 		if (requests.count("metadata"))
 			contractData["metadata"] = m_compiler->metadata(contractName);
 		if (requests.count(g_strBinary) && m_compiler->compilationSuccessful())
@@ -1178,7 +1179,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strBinaryRuntime) && m_compiler->compilationSuccessful())
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
 		if (requests.count(g_strOpcodes) && m_compiler->compilationSuccessful())
-			contractData[g_strOpcodes] = dev::eth::disassemble(m_compiler->object(contractName).bytecode);
+			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count(g_strAsm) && m_compiler->compilationSuccessful())
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName, m_sourceCodes);
 		if (requests.count(g_strSrcMap) && m_compiler->compilationSuccessful())
@@ -1194,9 +1195,9 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strSignatureHashes))
 			contractData[g_strSignatureHashes] = m_compiler->methodIdentifiers(contractName);
 		if (requests.count(g_strNatspecDev))
-			contractData[g_strNatspecDev] = dev::jsonCompactPrint(m_compiler->natspecDev(contractName));
+			contractData[g_strNatspecDev] = jsonCompactPrint(m_compiler->natspecDev(contractName));
 		if (requests.count(g_strNatspecUser))
-			contractData[g_strNatspecUser] = dev::jsonCompactPrint(m_compiler->natspecUser(contractName));
+			contractData[g_strNatspecUser] = jsonCompactPrint(m_compiler->natspecUser(contractName));
 	}
 
 	bool needsSourceList = requests.count(g_strAst) || requests.count(g_strSrcMap) || requests.count(g_strSrcMapRuntime);
@@ -1221,7 +1222,7 @@ void CommandLineInterface::handleCombinedJSON()
 		}
 	}
 
-	string json = m_args.count(g_argPrettyJson) ? dev::jsonPrettyPrint(output) : dev::jsonCompactPrint(output);
+	string json = m_args.count(g_argPrettyJson) ? jsonPrettyPrint(output) : jsonCompactPrint(output);
 
 	if (m_args.count(g_argOutputDir))
 		createJson("combined", json);
@@ -1246,7 +1247,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		vector<ASTNode const*> asts;
 		for (auto const& sourceCode: m_sourceCodes)
 			asts.push_back(&m_compiler->ast(sourceCode.first));
-		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
+		map<ASTNode const*, evmasm::GasMeter::GasConsumption> gasCosts;
 		for (auto const& contract: m_compiler->contractNames())
 			if (m_compiler->compilationSuccessful())
 				if (auto const* assemblyItems = m_compiler->runtimeAssemblyItems(contract))
@@ -1309,7 +1310,7 @@ bool CommandLineInterface::link()
 		// be just the cropped or '_'-padded library name, but this changed to
 		// the cropped hex representation of the hash of the library name.
 		// We support both ways of linking here.
-		librariesReplacements["__" + eth::LinkerObject::libraryPlaceholder(name) + "__"] = library.second;
+		librariesReplacements["__" + evmasm::LinkerObject::libraryPlaceholder(name) + "__"] = library.second;
 
 		string replacement = "__";
 		for (size_t i = 0; i < placeholderSize - 4; ++i)
@@ -1369,10 +1370,10 @@ void CommandLineInterface::writeLinkedFiles()
 
 string CommandLineInterface::libraryPlaceholderHint(string const& _libraryName)
 {
-	return "// " + eth::LinkerObject::libraryPlaceholder(_libraryName) + " -> " + _libraryName;
+	return "// " + evmasm::LinkerObject::libraryPlaceholder(_libraryName) + " -> " + _libraryName;
 }
 
-string CommandLineInterface::objectWithLinkRefsHex(eth::LinkerObject const& _obj)
+string CommandLineInterface::objectWithLinkRefsHex(evmasm::LinkerObject const& _obj)
 {
 	string out = _obj.toHex();
 	if (!_obj.linkReferences.empty())
@@ -1534,7 +1535,7 @@ void CommandLineInterface::outputCompilationResults()
 		{
 			string ret;
 			if (m_args.count(g_argAsmJson))
-				ret = dev::jsonPrettyPrint(m_compiler->assemblyJSON(contract, m_sourceCodes));
+				ret = jsonPrettyPrint(m_compiler->assemblyJSON(contract, m_sourceCodes));
 			else
 				ret = m_compiler->assemblyString(contract, m_sourceCodes);
 
@@ -1570,5 +1571,4 @@ void CommandLineInterface::outputCompilationResults()
 	}
 }
 
-}
 }

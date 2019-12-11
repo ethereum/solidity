@@ -22,7 +22,8 @@
 #include <libdevcore/Keccak256.h>
 
 using namespace std;
-using namespace dev;
+using namespace solidity;
+using namespace solidity::util;
 
 namespace
 {
@@ -102,13 +103,13 @@ h256 chunkHash(bytesConstRef const _data, bool _forceHigherLevel = false)
 
 }
 
-h256 dev::bzzr0Hash(string const& _input)
+h256 solidity::util::bzzr0Hash(string const& _input)
 {
 	return swarmHashIntermediate(_input, 0, _input.size());
 }
 
 
-h256 dev::bzzr1Hash(bytes const& _input)
+h256 solidity::util::bzzr1Hash(bytes const& _input)
 {
 	if (_input.empty())
 		return h256{};

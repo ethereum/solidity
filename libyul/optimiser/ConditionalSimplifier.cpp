@@ -23,8 +23,9 @@
 #include <libdevcore/Visitor.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 void ConditionalSimplifier::operator()(Switch& _switch)
 {

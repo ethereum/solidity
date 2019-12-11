@@ -21,8 +21,9 @@
 #include <libdevcore/CommonIO.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity::smt;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend::smt;
 
 CVC4Interface::CVC4Interface():
 	m_solver(&m_context)

@@ -24,9 +24,9 @@
 #include <libevmasm/AssemblyItem.h>
 
 using namespace std;
-using namespace dev::eth;
-using namespace dev;
-
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::evmasm;
 
 bool JumpdestRemover::optimise(set<size_t> const& _tagsReferencedFromOutside)
 {

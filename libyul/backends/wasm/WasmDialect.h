@@ -24,7 +24,7 @@
 
 #include <map>
 
-namespace yul
+namespace solidity::yul
 {
 
 class YulString;

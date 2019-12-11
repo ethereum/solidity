@@ -61,7 +61,7 @@
 #include <optional>
 #include <iosfwd>
 
-namespace langutil
+namespace solidity::langutil
 {
 
 class AstRawString;

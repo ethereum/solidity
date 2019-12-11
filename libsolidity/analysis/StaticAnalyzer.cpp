@@ -28,14 +28,14 @@
 #include <memory>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 /**
  * Helper class that determines whether a contract's constructor uses inline assembly.
  */
-class dev::solidity::ConstructorUsesAssembly
+class solidity::frontend::ConstructorUsesAssembly
 {
 public:
 	/// @returns true if and only if the contract's or any of its bases' constructors

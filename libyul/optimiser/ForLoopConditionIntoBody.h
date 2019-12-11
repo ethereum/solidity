@@ -19,7 +19,7 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/Dialect.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct OptimiserStepContext;

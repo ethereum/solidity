@@ -18,9 +18,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 VariableDeclaration const* rootVariableDeclaration(VariableDeclaration const& _varDecl)
@@ -38,5 +36,4 @@ VariableDeclaration const* rootVariableDeclaration(VariableDeclaration const& _v
 	return rootDecl;
 }
 
-}
 }

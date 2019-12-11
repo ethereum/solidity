@@ -26,7 +26,7 @@
 
 #include <string>
 
-namespace dev {
+namespace solidity::util {
 
 /// Serialise the JSON object (@a _input) with indentation
 std::string jsonPrettyPrint(Json::Value const& _input);

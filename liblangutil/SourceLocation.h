@@ -31,9 +31,9 @@
 #include <ostream>
 #include <tuple>
 
-namespace langutil
+namespace solidity::langutil
 {
-struct SourceLocationError: virtual dev::Exception {};
+struct SourceLocationError: virtual util::Exception {};
 
 /**
  * Representation of an interval of source positions.

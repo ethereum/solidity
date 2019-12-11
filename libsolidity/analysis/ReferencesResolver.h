@@ -30,15 +30,13 @@
 #include <list>
 #include <map>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class NameAndTypeResolver;
@@ -109,5 +107,4 @@ private:
 	bool m_errorOccurred = false;
 };
 
-}
 }

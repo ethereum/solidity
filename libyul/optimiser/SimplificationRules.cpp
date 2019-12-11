@@ -30,11 +30,10 @@
 #include <libevmasm/RuleList.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace langutil;
-using namespace yul;
-
+using namespace solidity;
+using namespace solidity::evmasm;
+using namespace solidity::langutil;
+using namespace solidity::yul;
 
 SimplificationRule<yul::Pattern> const* SimplificationRules::findFirstMatch(
 	Expression const& _expr,
@@ -61,10 +60,10 @@ SimplificationRule<yul::Pattern> const* SimplificationRules::findFirstMatch(
 
 bool SimplificationRules::isInitialized() const
 {
-	return !m_rules[uint8_t(dev::eth::Instruction::ADD)].empty();
+	return !m_rules[uint8_t(evmasm::Instruction::ADD)].empty();
 }
 
-std::optional<std::pair<dev::eth::Instruction, vector<Expression> const*>>
+std::optional<std::pair<evmasm::Instruction, vector<Expression> const*>>
 	SimplificationRules::instructionAndArguments(Dialect const& _dialect, Expression const& _expr)
 {
 	if (holds_alternative<FunctionCall>(_expr))
@@ -111,7 +110,7 @@ SimplificationRules::SimplificationRules()
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 
-yul::Pattern::Pattern(dev::eth::Instruction _instruction, initializer_list<Pattern> _arguments):
+yul::Pattern::Pattern(evmasm::Instruction _instruction, initializer_list<Pattern> _arguments):
 	m_kind(PatternKind::Operation),
 	m_instruction(_instruction),
 	m_arguments(_arguments)
@@ -203,7 +202,7 @@ bool Pattern::matches(
 	return true;
 }
 
-dev::eth::Instruction Pattern::instruction() const
+evmasm::Instruction Pattern::instruction() const
 {
 	assertThrow(m_kind == PatternKind::Operation, OptimizerException, "");
 	return m_instruction;
@@ -216,7 +215,7 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_location, LiteralKind::Number, YulString{formatNumber(*m_data)}, {}};
+		return Literal{_location, LiteralKind::Number, YulString{util::formatNumber(*m_data)}, {}};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{

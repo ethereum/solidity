@@ -45,8 +45,9 @@
 #include <liblangutil/Scanner.h>
 
 using namespace std;
-using namespace langutil;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::langutil;
 
 namespace
 {
@@ -198,10 +199,10 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	case Machine::EVM:
 	{
 		MachineAssemblyObject object;
-		dev::eth::Assembly assembly;
+		evmasm::Assembly assembly;
 		EthAssemblyAdapter adapter(assembly);
 		compileEVM(adapter, false, m_optimiserSettings.optimizeStackAllocation);
-		object.bytecode = make_shared<dev::eth::LinkerObject>(assembly.assemble());
+		object.bytecode = make_shared<evmasm::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();
 		return object;
 	}
@@ -210,7 +211,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		MachineAssemblyObject object;
 		EVMAssembly assembly(true);
 		compileEVM(assembly, true, m_optimiserSettings.optimizeStackAllocation);
-		object.bytecode = make_shared<dev::eth::LinkerObject>(assembly.finalize());
+		object.bytecode = make_shared<evmasm::LinkerObject>(assembly.finalize());
 		/// TODO: fill out text representation
 		return object;
 	}
@@ -222,7 +223,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		MachineAssemblyObject object;
 		auto result = WasmObjectCompiler::compile(*m_parserResult, dialect);
 		object.assembly = std::move(result.first);
-		object.bytecode = make_shared<dev::eth::LinkerObject>();
+		object.bytecode = make_shared<evmasm::LinkerObject>();
 		object.bytecode->bytecode = std::move(result.second);
 		return object;
 	}

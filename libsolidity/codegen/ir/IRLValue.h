@@ -28,9 +28,7 @@
 #include <ostream>
 #include <boost/variant.hpp>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class VariableDeclaration;
@@ -128,5 +126,4 @@ private:
 	bool m_byteArrayElement;
 };
 
-}
 }

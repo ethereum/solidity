@@ -26,9 +26,7 @@
 #include <libdevcore/Assertions.h>
 #include <functional>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 /// Virtual machine bytecode instruction.
@@ -317,5 +315,4 @@ void eachInstruction(bytes const& _mem, std::function<void(Instruction,u256 cons
 /// Convert from EVM code to simple EVM assembly language.
 std::string disassemble(bytes const& _mem);
 
-}
 }

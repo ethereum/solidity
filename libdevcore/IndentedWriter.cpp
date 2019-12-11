@@ -23,7 +23,7 @@
 #include <libdevcore/Assertions.h>
 
 using namespace std;
-using namespace dev;
+using namespace solidity::util;
 
 string IndentedWriter::format() const
 {

@@ -35,23 +35,24 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 namespace
 {
 pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	string const& _name,
-	dev::eth::Instruction _instruction
+	evmasm::Instruction _instruction
 )
 {
-	eth::InstructionInfo info = dev::eth::instructionInfo(_instruction);
+	evmasm::InstructionInfo info = evmasm::instructionInfo(_instruction);
 	BuiltinFunctionForEVM f;
 	f.name = YulString{_name};
 	f.parameters.resize(info.args);
 	f.returns.resize(info.ret);
 	f.sideEffects = EVMDialect::sideEffectsOfInstruction(_instruction);
-	f.isMSize = _instruction == dev::eth::Instruction::MSIZE;
+	f.isMSize = _instruction == evmasm::Instruction::MSIZE;
 	f.literalArguments = false;
 	f.instruction = _instruction;
 	f.generateCode = [_instruction](
@@ -94,10 +95,10 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 	map<YulString, BuiltinFunctionForEVM> builtins;
 	for (auto const& instr: Parser::instructions())
 		if (
-			!dev::eth::isDupInstruction(instr.second) &&
-			!dev::eth::isSwapInstruction(instr.second) &&
-			instr.second != eth::Instruction::JUMP &&
-			instr.second != eth::Instruction::JUMPI &&
+			!evmasm::isDupInstruction(instr.second) &&
+			!evmasm::isSwapInstruction(instr.second) &&
+			instr.second != evmasm::Instruction::JUMP &&
+			instr.second != evmasm::Instruction::JUMPI &&
 			_evmVersion.hasOpcode(instr.second)
 		)
 			builtins.emplace(createEVMFunction(instr.first, instr.second));
@@ -159,7 +160,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				std::function<void()> _visitArguments
 			) {
 				_visitArguments();
-				_assembly.appendInstruction(dev::eth::Instruction::CODECOPY);
+				_assembly.appendInstruction(evmasm::Instruction::CODECOPY);
 			}
 		));
 	}
@@ -212,13 +213,13 @@ EVMDialect const& EVMDialect::yulForEVM(langutil::EVMVersion _version)
 	return *dialects[_version];
 }
 
-SideEffects EVMDialect::sideEffectsOfInstruction(eth::Instruction _instruction)
+SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instruction)
 {
 	return SideEffects{
-		eth::SemanticInformation::movable(_instruction),
-		eth::SemanticInformation::sideEffectFree(_instruction),
-		eth::SemanticInformation::sideEffectFreeIfNoMSize(_instruction),
-		eth::SemanticInformation::invalidatesStorage(_instruction),
-		eth::SemanticInformation::invalidatesMemory(_instruction)
+		evmasm::SemanticInformation::movable(_instruction),
+		evmasm::SemanticInformation::sideEffectFree(_instruction),
+		evmasm::SemanticInformation::sideEffectFreeIfNoMSize(_instruction),
+		evmasm::SemanticInformation::invalidatesStorage(_instruction),
+		evmasm::SemanticInformation::invalidatesMemory(_instruction)
 	};
 }

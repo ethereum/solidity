@@ -26,14 +26,12 @@
 #include <liblangutil/ParserBase.h>
 #include <liblangutil/EVMVersion.h>
 
-namespace langutil
+namespace solidity::langutil
 {
 class Scanner;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class Parser: public langutil::ParserBase
@@ -202,5 +200,4 @@ private:
 	langutil::EVMVersion m_evmVersion;
 };
 
-}
 }

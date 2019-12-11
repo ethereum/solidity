@@ -36,7 +36,7 @@ static_assert(
 	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.9.2."
 );
 
-namespace dev
+namespace solidity::util
 {
 
 namespace
@@ -111,4 +111,4 @@ bool jsonParseStrict(string const& _input, Json::Value& _json, string* _errs /* 
 	return parse(readerBuilder, _input, _json, _errs);
 }
 
-} // namespace dev
+} // namespace solidity::util

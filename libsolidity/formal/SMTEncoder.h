@@ -36,15 +36,13 @@
 #include <unordered_map>
 #include <vector>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class SMTEncoder: public ASTConstVisitor
@@ -273,5 +271,4 @@ protected:
 	smt::EncodingContext& m_context;
 };
 
-}
 }

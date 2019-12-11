@@ -148,9 +148,9 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	evmc_message message = _message;
 	if (message.depth == 0)
 	{
-		message.gas -= message.kind == EVMC_CREATE ? eth::GasCosts::txCreateGas : eth::GasCosts::txGas;
+		message.gas -= message.kind == EVMC_CREATE ? evmasm::GasCosts::txCreateGas : evmasm::GasCosts::txGas;
 		for (size_t i = 0; i < message.input_size; ++i)
-			message.gas -= message.input_data[i] == 0 ? eth::GasCosts::txDataZeroGas : eth::GasCosts::txDataNonZeroGas(m_evmVersion);
+			message.gas -= message.input_data[i] == 0 ? evmasm::GasCosts::txDataZeroGas : evmasm::GasCosts::txDataNonZeroGas(m_evmVersion);
 		if (message.gas < 0)
 		{
 			evmc::result result({});
@@ -200,7 +200,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 	if (message.kind == EVMC_CREATE)
 	{
-		result.gas_left -= eth::GasCosts::createDataGas * result.output_size;
+		result.gas_left -= evmasm::GasCosts::createDataGas * result.output_size;
 		if (result.gas_left < 0)
 		{
 			result.gas_left = 0;

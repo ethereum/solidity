@@ -26,7 +26,7 @@
 
 #include <libdevcore/Exceptions.h>
 
-namespace dev
+namespace solidity::util
 {
 
 DEV_SIMPLE_EXCEPTION(IndentedWriterError);

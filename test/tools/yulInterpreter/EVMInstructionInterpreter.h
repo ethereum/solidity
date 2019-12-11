@@ -26,12 +26,9 @@
 
 #include <vector>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 enum class Instruction: uint8_t;
-}
 }
 
 namespace yul
@@ -70,7 +67,7 @@ public:
 		m_state(_state)
 	{}
 	/// Evaluate instruction
-	dev::u256 eval(dev::eth::Instruction _instruction, std::vector<dev::u256> const& _arguments);
+	dev::u256 eval(evmasm::Instruction _instruction, std::vector<dev::u256> const& _arguments);
 	/// Evaluate builtin function
 	dev::u256 evalBuiltin(BuiltinFunctionForEVM const& _fun, std::vector<dev::u256> const& _arguments);
 
@@ -89,7 +86,7 @@ private:
 	/// Does not adjust msize, use @a accessMemory for that
 	void writeMemoryWord(dev::u256 const& _offset, dev::u256 const& _value);
 
-	void logTrace(dev::eth::Instruction _instruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
+	void logTrace(evmasm::Instruction _instruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
 	/// Appends a log to the trace representing an instruction or similar operation by string,
 	/// with arguments and auxiliary data (if nonempty).
 	void logTrace(std::string const& _pseudoInstruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});

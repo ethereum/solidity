@@ -23,7 +23,8 @@
 #include <libdevcore/CommonData.h>
 
 using namespace std;
-using namespace dev;
+using namespace solidity;
+using namespace solidity::util;
 
 namespace
 {
@@ -54,7 +55,7 @@ string base58Encode(bytes const& _data)
 }
 }
 
-bytes dev::ipfsHash(string _data)
+bytes solidity::util::ipfsHash(string _data)
 {
 	assertThrow(_data.length() < 1024 * 256, DataTooLong, "IPFS hash for large (chunked) files not yet implemented.");
 
@@ -84,7 +85,7 @@ bytes dev::ipfsHash(string _data)
 	return hash;
 }
 
-string dev::ipfsHashBase58(string _data)
+string solidity::util::ipfsHashBase58(string _data)
 {
 	return base58Encode(ipfsHash(std::move(_data)));
 }

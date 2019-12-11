@@ -27,8 +27,8 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::util;
 
 void yul::removeEmptyBlocks(Block& _block)
 {

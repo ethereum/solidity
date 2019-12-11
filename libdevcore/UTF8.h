@@ -25,7 +25,7 @@
 
 #include <string>
 
-namespace dev
+namespace solidity::util
 {
 
 /// Validate an input for UTF8 encoding

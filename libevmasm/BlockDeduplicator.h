@@ -30,9 +30,7 @@
 #include <functional>
 #include <map>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class AssemblyItem;
@@ -89,5 +87,4 @@ private:
 	AssemblyItems& m_items;
 };
 
-}
 }

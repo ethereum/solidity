@@ -20,7 +20,7 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/Dialect.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

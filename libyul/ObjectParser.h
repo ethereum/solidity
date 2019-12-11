@@ -31,12 +31,12 @@
 
 #include <memory>
 
-namespace langutil
+namespace solidity::langutil
 {
 class Scanner;
 }
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

@@ -31,9 +31,7 @@
 
 #include <memory>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 //forward declaration
@@ -56,7 +54,7 @@ private:
 	/// @returns the ``// <identifier> -> name`` hint for library placeholders.
 	static std::string libraryPlaceholderHint(std::string const& _libraryName);
 	/// @returns the full object with library placeholder hints in hex.
-	static std::string objectWithLinkRefsHex(eth::LinkerObject const& _obj);
+	static std::string objectWithLinkRefsHex(evmasm::LinkerObject const& _obj);
 
 	bool assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine, bool _optimize);
 
@@ -103,13 +101,13 @@ private:
 	/// map of input files to source code strings
 	std::map<std::string, std::string> m_sourceCodes;
 	/// list of remappings
-	std::vector<dev::solidity::CompilerStack::Remapping> m_remappings;
+	std::vector<frontend::CompilerStack::Remapping> m_remappings;
 	/// list of allowed directories to read files from
 	std::vector<boost::filesystem::path> m_allowedDirectories;
 	/// map of library names to addresses
-	std::map<std::string, h160> m_libraries;
+	std::map<std::string, util::h160> m_libraries;
 	/// Solidity compiler stack
-	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
+	std::unique_ptr<frontend::CompilerStack> m_compiler;
 	/// EVM version to use
 	langutil::EVMVersion m_evmVersion;
 	/// How to handle revert strings
@@ -120,5 +118,4 @@ private:
 	bool m_coloredOutput = true;
 };
 
-}
 }

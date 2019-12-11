@@ -99,7 +99,7 @@ private:
 	dev::u256 readU128(uint64_t _offset) { return readU256(_offset, 16); }
 	dev::u256 readAddress(uint64_t _offset) { return readU256(_offset, 20); }
 
-	void logTrace(dev::eth::Instruction _instruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
+	void logTrace(evmasm::Instruction _instruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
 	/// Appends a log to the trace representing an instruction or similar operation by string,
 	/// with arguments and auxiliary data (if nonempty).
 	void logTrace(std::string const& _pseudoInstruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});

@@ -25,28 +25,25 @@
 #include <liblangutil/SourceLocation.h>
 #include <functional>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 class Assembly;
 class AssemblyItem;
 }
-}
 
-namespace yul
+namespace solidity::yul
 {
 struct Block;
 
 class EthAssemblyAdapter: public AbstractAssembly
 {
 public:
-	explicit EthAssemblyAdapter(dev::eth::Assembly& _assembly);
+	explicit EthAssemblyAdapter(evmasm::Assembly& _assembly);
 	void setSourceLocation(langutil::SourceLocation const& _location) override;
 	int stackHeight() const override;
 	void setStackHeight(int height) override;
-	void appendInstruction(dev::eth::Instruction _instruction) override;
-	void appendConstant(dev::u256 const& _constant) override;
+	void appendInstruction(evmasm::Instruction _instruction) override;
+	void appendConstant(u256 const& _constant) override;
 	void appendLabel(LabelID _labelId) override;
 	void appendLabelReference(LabelID _labelId) override;
 	size_t newLabelId() override;
@@ -62,13 +59,13 @@ public:
 	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() override;
 	void appendDataOffset(SubID _sub) override;
 	void appendDataSize(SubID _sub) override;
-	SubID appendData(dev::bytes const& _data) override;
+	SubID appendData(bytes const& _data) override;
 
 private:
-	static LabelID assemblyTagToIdentifier(dev::eth::AssemblyItem const& _tag);
+	static LabelID assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag);
 
-	dev::eth::Assembly& m_assembly;
-	std::map<SubID, dev::u256> m_dataHashBySubId;
+	evmasm::Assembly& m_assembly;
+	std::map<SubID, u256> m_dataHashBySubId;
 	size_t m_nextDataCounter = std::numeric_limits<size_t>::max() / 2;
 };
 
@@ -79,7 +76,7 @@ public:
 	static void assemble(
 		Block const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,
-		dev::eth::Assembly& _assembly,
+		evmasm::Assembly& _assembly,
 		langutil::EVMVersion _evmVersion,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false,

@@ -25,9 +25,7 @@
 #include <libdevcore/Common.h>
 #include <string>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 extern char const* VersionNumber;
@@ -36,5 +34,4 @@ extern std::string const VersionStringStrict;
 extern bytes const VersionCompactBytes;
 extern bool const VersionIsRelease;
 
-}
 }

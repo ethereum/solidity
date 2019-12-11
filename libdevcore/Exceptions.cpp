@@ -18,7 +18,7 @@
 #include <libdevcore/Exceptions.h>
 
 using namespace std;
-using namespace dev;
+using namespace solidity::util;
 
 char const* Exception::what() const noexcept
 {

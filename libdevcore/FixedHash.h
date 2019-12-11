@@ -32,7 +32,7 @@
 #include <cstdint>
 #include <algorithm>
 
-namespace dev
+namespace solidity::util
 {
 
 /// Fixed-size raw-byte array container type, with an API optimised for storing hashes.
@@ -73,7 +73,7 @@ public:
 	explicit FixedHash(bytesConstRef _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
 
 	/// Explicitly construct, copying from a  string.
-	explicit FixedHash(std::string const& _s, ConstructFromStringType _t = FromHex, ConstructFromHashType _ht = FailIfDifferent): FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : dev::asBytes(_s), _ht) {}
+	explicit FixedHash(std::string const& _s, ConstructFromStringType _t = FromHex, ConstructFromHashType _ht = FailIfDifferent): FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : solidity::util::asBytes(_s), _ht) {}
 
 	/// Convert to arithmetic type.
 	operator Arith() const { return fromBigEndian<Arith>(m_data); }

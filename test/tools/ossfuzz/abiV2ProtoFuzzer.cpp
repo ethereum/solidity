@@ -124,7 +124,7 @@ DEFINE_PROTO_FUZZER(Contract const& _input)
 		hexEncodedInput = methodIdentifiers["test()"].asString();
 	}
 	// Ignore stack too deep errors during compilation
-	catch (eth::StackTooDeepException const&)
+	catch (evmasm::StackTooDeepException const&)
 	{
 		return;
 	}

@@ -20,7 +20,7 @@
 #include <ostream>
 #include <vector>
 
-namespace dev
+namespace solidity::util
 {
 
 namespace formatting

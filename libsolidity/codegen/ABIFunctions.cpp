@@ -31,8 +31,9 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
 
 string ABIFunctions::tupleEncoder(
 	TypePointers const& _givenTypes,

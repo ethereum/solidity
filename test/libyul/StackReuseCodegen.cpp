@@ -39,7 +39,7 @@ string assemble(string const& _input)
 	settings.optimizeStackAllocation = true;
 	AssemblyStack asmStack(langutil::EVMVersion{}, AssemblyStack::Language::StrictAssembly, settings);
 	BOOST_REQUIRE_MESSAGE(asmStack.parseAndAnalyze("", _input), "Source did not parse: " + _input);
-	return dev::eth::disassemble(asmStack.assemble(AssemblyStack::Machine::EVM).bytecode->bytecode);
+	return evmasm::disassemble(asmStack.assemble(AssemblyStack::Machine::EVM).bytecode->bytecode);
 }
 }
 

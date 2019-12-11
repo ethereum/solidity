@@ -22,14 +22,14 @@
 #include <iomanip>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::langutil;
 
-SourceReferenceExtractor::Message SourceReferenceExtractor::extract(Exception const& _exception, string _category)
+SourceReferenceExtractor::Message SourceReferenceExtractor::extract(util::Exception const& _exception, string _category)
 {
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
 
-	string const* message = boost::get_error_info<errinfo_comment>(_exception);
+	string const* message = boost::get_error_info<util::errinfo_comment>(_exception);
 	SourceReference primary = extract(location, message ? *message : "");
 
 	std::vector<SourceReference> secondary;

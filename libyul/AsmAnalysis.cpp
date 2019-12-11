@@ -38,10 +38,10 @@
 #include <utility>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace yul;
-using namespace dev;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
+using namespace solidity::langutil;
 
 namespace
 {
@@ -651,7 +651,7 @@ bool AsmAnalyzer::warnOnInstructions(std::string const& _instructionIdentifier, 
 		return false;
 }
 
-bool AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocation const& _location)
+bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation const& _location)
 {
 	// We assume that returndatacopy, returndatasize and staticcall are either all available
 	// or all not available.
@@ -675,44 +675,44 @@ bool AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocatio
 	};
 
 	if ((
-		_instr == dev::eth::Instruction::RETURNDATACOPY ||
-		_instr == dev::eth::Instruction::RETURNDATASIZE
+		_instr == evmasm::Instruction::RETURNDATACOPY ||
+		_instr == evmasm::Instruction::RETURNDATASIZE
 	) && !m_evmVersion.supportsReturndata())
 	{
 		errorForVM("only available for Byzantium-compatible");
 	}
-	else if (_instr == dev::eth::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
+	else if (_instr == evmasm::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
 	{
 		errorForVM("only available for Byzantium-compatible");
 	}
 	else if ((
-		_instr == dev::eth::Instruction::SHL ||
-		_instr == dev::eth::Instruction::SHR ||
-		_instr == dev::eth::Instruction::SAR
+		_instr == evmasm::Instruction::SHL ||
+		_instr == evmasm::Instruction::SHR ||
+		_instr == evmasm::Instruction::SAR
 	) && !m_evmVersion.hasBitwiseShifting())
 	{
 		errorForVM("only available for Constantinople-compatible");
 	}
-	else if (_instr == dev::eth::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
+	else if (_instr == evmasm::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
 	{
 		errorForVM("only available for Constantinople-compatible");
 	}
-	else if (_instr == dev::eth::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
+	else if (_instr == evmasm::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
 	{
 		errorForVM("only available for Constantinople-compatible");
 	}
-	else if (_instr == dev::eth::Instruction::CHAINID && !m_evmVersion.hasChainID())
+	else if (_instr == evmasm::Instruction::CHAINID && !m_evmVersion.hasChainID())
 	{
 		errorForVM("only available for Istanbul-compatible");
 	}
-	else if (_instr == dev::eth::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
+	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
 	{
 		errorForVM("only available for Istanbul-compatible");
 	}
 	else if (
-		_instr == dev::eth::Instruction::JUMP ||
-		_instr == dev::eth::Instruction::JUMPI ||
-		_instr == dev::eth::Instruction::JUMPDEST
+		_instr == evmasm::Instruction::JUMP ||
+		_instr == evmasm::Instruction::JUMPI ||
+		_instr == evmasm::Instruction::JUMPDEST
 	)
 	{
 		m_errorReporter.error(

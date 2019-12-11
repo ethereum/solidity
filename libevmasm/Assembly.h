@@ -35,9 +35,7 @@
 #include <sstream>
 #include <memory>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 using AssemblyPointer = std::shared_ptr<Assembly>;
@@ -49,8 +47,8 @@ public:
 	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
 	/// Returns a tag identified by the given name. Creates it if it does not yet exist.
 	AssemblyItem namedTag(std::string const& _name);
-	AssemblyItem newData(bytes const& _data) { h256 h(dev::keccak256(asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
-	bytes const& data(h256 const& _i) const { return m_data.at(_i); }
+	AssemblyItem newData(bytes const& _data) { util::h256 h(util::keccak256(util::asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
+	bytes const& data(util::h256 const& _i) const { return m_data.at(_i); }
 	AssemblyItem newSub(AssemblyPointer const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
 	Assembly const& sub(size_t _sub) const { return *m_subs.at(_sub); }
 	Assembly& sub(size_t _sub) { return *m_subs.at(_sub); }
@@ -141,7 +139,7 @@ public:
 
 public:
 	// These features are only used by LLL
-	AssemblyItem newPushString(std::string const& _data) { h256 h(dev::keccak256(_data)); m_strings[h] = _data; return AssemblyItem(PushString, h); }
+	AssemblyItem newPushString(std::string const& _data) { util::h256 h(util::keccak256(_data)); m_strings[h] = _data; return AssemblyItem(PushString, h); }
 
 	void append(Assembly const& _a);
 	void append(Assembly const& _a, int _deposit);
@@ -149,7 +147,7 @@ public:
 	void injectStart(AssemblyItem const& _i);
 
 	AssemblyItem const& back() const { return m_items.back(); }
-	std::string backString() const { return m_items.size() && m_items.back().type() == PushString ? m_strings.at((h256)m_items.back().data()) : std::string(); }
+	std::string backString() const { return m_items.size() && m_items.back().type() == PushString ? m_strings.at((util::h256)m_items.back().data()) : std::string(); }
 
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
@@ -168,12 +166,12 @@ protected:
 	unsigned m_usedTags = 1;
 	std::map<std::string, size_t> m_namedTags;
 	AssemblyItems m_items;
-	std::map<h256, bytes> m_data;
+	std::map<util::h256, bytes> m_data;
 	/// Data that is appended to the very end of the contract.
 	bytes m_auxiliaryData;
 	std::vector<std::shared_ptr<Assembly>> m_subs;
-	std::map<h256, std::string> m_strings;
-	std::map<h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
+	std::map<util::h256, std::string> m_strings;
+	std::map<util::h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
 
 	mutable LinkerObject m_assembledObject;
 	mutable std::vector<size_t> m_tagPositionsInBytecode;
@@ -191,5 +189,4 @@ inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)
 	return _out;
 }
 
-}
 }

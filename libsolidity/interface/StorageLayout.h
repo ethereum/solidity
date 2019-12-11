@@ -25,9 +25,7 @@
 
 #include <json/json.h>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class StorageLayout
@@ -54,5 +52,4 @@ private:
 	ContractDefinition const* m_contract = nullptr;
 };
 
-}
 }

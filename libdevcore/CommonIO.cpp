@@ -35,7 +35,7 @@
 #endif
 
 using namespace std;
-using namespace dev;
+using namespace solidity::util;
 
 namespace
 {
@@ -63,12 +63,12 @@ inline _T readFile(std::string const& _file)
 
 }
 
-string dev::readFileAsString(string const& _file)
+string solidity::util::readFileAsString(string const& _file)
 {
 	return readFile<string>(_file);
 }
 
-string dev::readStandardInput()
+string solidity::util::readStandardInput()
 {
 	string ret;
 	while (!cin.eof())
@@ -124,13 +124,13 @@ private:
 };
 #endif
 
-int dev::readStandardInputChar()
+int solidity::util::readStandardInputChar()
 {
 	DisableConsoleBuffering disableConsoleBuffering;
 	return cin.get();
 }
 
-string dev::absolutePath(string const& _path, string const& _reference)
+string solidity::util::absolutePath(string const& _path, string const& _reference)
 {
 	boost::filesystem::path p(_path);
 	// Anything that does not start with `.` is an absolute path.
@@ -146,6 +146,6 @@ string dev::absolutePath(string const& _path, string const& _reference)
 	return result.generic_string();
 }
 
-string dev::sanitizePath(string const& _path) {
+string solidity::util::sanitizePath(string const& _path) {
 	return boost::filesystem::path(_path).generic_string();
 }

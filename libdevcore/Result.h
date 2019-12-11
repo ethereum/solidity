@@ -18,7 +18,7 @@
 
 #include <string>
 
-namespace dev
+namespace solidity::util
 {
 
 /// Simple generic result that holds a value and an optional error message.

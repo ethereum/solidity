@@ -32,8 +32,9 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
 
 string YulUtilFunctions::combineExternalFunctionIdFunction()
 {
@@ -130,7 +131,7 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 		int const byteSize = 8;
 		u256 const errorHash =
 			u256(FixedHash<hashHeaderSize>::Arith(
-				FixedHash<hashHeaderSize>(dev::keccak256("Error(string)"))
+				FixedHash<hashHeaderSize>(keccak256("Error(string)"))
 			)) << (256 - hashHeaderSize * byteSize);
 
 		string const encodeFunc = ABIFunctions(m_evmVersion, m_functionCollector)

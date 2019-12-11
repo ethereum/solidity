@@ -24,8 +24,7 @@
 #include <array>
 #include <memory>
 
-namespace dev {
-namespace solidity {
+namespace solidity::frontend {
 
 /** Helper class that builds the control flow of a function or modifier.
  * Modifiers are not yet applied to the functions. This is done in a second
@@ -160,5 +159,4 @@ private:
 	};
 };
 
-}
 }

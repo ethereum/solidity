@@ -34,12 +34,12 @@
 #include <functional>
 #include <memory>
 
-namespace dev {
-namespace eth
+namespace solidity::evmasm
 {
 class AssemblyItem; // forward
 }
-namespace solidity {
+
+namespace solidity::frontend {
 
 // forward declarations
 class CompilerContext;
@@ -156,5 +156,4 @@ void ExpressionCompiler::setLValue(Expression const& _expression, _Arguments con
 		lvalue->retrieveValue(_expression.location(), true);
 }
 
-}
 }

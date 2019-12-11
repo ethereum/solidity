@@ -21,7 +21,7 @@
 #include <libyul/Dialect.h>
 #include <libdevcore/Common.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

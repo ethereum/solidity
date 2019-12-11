@@ -26,8 +26,9 @@
 #include <stack>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 CallGraph CallGraphGenerator::callGraph(Block const& _ast)
 {

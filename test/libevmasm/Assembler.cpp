@@ -42,7 +42,7 @@ namespace test
 
 namespace
 {
-	void checkCompilation(::dev::eth::Assembly const& _assembly)
+	void checkCompilation(::evmasm::Assembly const& _assembly)
 	{
 		LinkerObject output = _assembly.assemble();
 		BOOST_CHECK(output.bytecode.size() > 0);

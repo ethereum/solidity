@@ -27,7 +27,7 @@
 
 #include <string>
 
-namespace dev
+namespace solidity::util
 {
 
 /// Calculate Keccak-256 hash of the given input, returning as a 256-bit hash.

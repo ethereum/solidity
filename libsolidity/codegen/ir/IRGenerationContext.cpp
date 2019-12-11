@@ -26,9 +26,10 @@
 #include <libdevcore/Whiskers.h>
 #include <libdevcore/StringUtils.h>
 
-using namespace dev;
-using namespace dev::solidity;
 using namespace std;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
 
 string IRGenerationContext::addLocalVariable(VariableDeclaration const& _varDecl)
 {

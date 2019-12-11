@@ -59,7 +59,7 @@ bytes SolidityExecutionFramework::compileContract(
 			formatter.printErrorInformation(*error);
 		BOOST_ERROR("Compiling contract failed");
 	}
-	eth::LinkerObject obj;
+	evmasm::LinkerObject obj;
 	if (m_compileViaYul)
 	{
 		yul::AssemblyStack asmStack(

@@ -21,8 +21,8 @@
 #include <libdevcore/CommonData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void ForLoopConditionIntoBody::run(OptimiserStepContext& _context, Block& _ast)
 {
@@ -47,10 +47,10 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 					FunctionCall {
 						loc,
 						{loc, m_dialect.booleanNegationFunction()->name},
-						make_vector<Expression>(std::move(*_forLoop.condition))
+						util::make_vector<Expression>(std::move(*_forLoop.condition))
 					}
 				),
-				Block {loc, make_vector<Statement>(Break{{}})}
+				Block {loc, util::make_vector<Statement>(Break{{}})}
 			}
 		);
 		_forLoop.condition = make_unique<Expression>(

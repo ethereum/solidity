@@ -29,8 +29,9 @@
 #include <liblangutil/EVMVersion.h>
 
 using namespace std;
-using namespace yul;
-using namespace dev;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 map<YulString, int> CompilabilityChecker::run(
 	Dialect const& _dialect,

@@ -27,8 +27,8 @@
 #include <libdevcore/CommonData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void FunctionHoister::operator()(Block& _block)
 {

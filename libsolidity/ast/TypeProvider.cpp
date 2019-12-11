@@ -21,8 +21,9 @@
 #include <boost/algorithm/string/split.hpp>
 
 using namespace std;
-using namespace dev;
 using namespace solidity;
+using namespace solidity::frontend;
+using namespace solidity::util;
 
 BoolType const TypeProvider::m_boolean{};
 InaccessibleDynamicType const TypeProvider::m_inaccessibleDynamic{};

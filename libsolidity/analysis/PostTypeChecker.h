@@ -23,15 +23,13 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -92,5 +90,4 @@ private:
 	std::vector<std::shared_ptr<Checker>> m_checkers;
 };
 
-}
 }

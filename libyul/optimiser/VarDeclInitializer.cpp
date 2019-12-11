@@ -22,16 +22,16 @@
 #include <libdevcore/Visitor.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void VarDeclInitializer::operator()(Block& _block)
 {
 	ASTModifier::operator()(_block);
 
 	using OptionalStatements = std::optional<vector<Statement>>;
-	GenericVisitor visitor{
-		VisitorFallback<OptionalStatements>{},
+	util::GenericVisitor visitor{
+		util::VisitorFallback<OptionalStatements>{},
 		[](VariableDeclaration& _varDecl) -> OptionalStatements
 		{
 			if (_varDecl.value)
@@ -53,5 +53,5 @@ void VarDeclInitializer::operator()(Block& _block)
 		}
 	};
 
-	iterateReplacing(_block.statements, [&](auto&& _statement) { return std::visit(visitor, _statement); });
+	util::iterateReplacing(_block.statements, [&](auto&& _statement) { return std::visit(visitor, _statement); });
 }

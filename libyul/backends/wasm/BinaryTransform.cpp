@@ -26,9 +26,10 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
-using namespace yul;
-using namespace dev;
-using namespace yul::wasm;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::yul::wasm;
+using namespace solidity::util;
 
 namespace
 {

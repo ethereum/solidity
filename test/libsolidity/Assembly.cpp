@@ -53,7 +53,7 @@ namespace test
 namespace
 {
 
-eth::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
+evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);

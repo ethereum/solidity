@@ -32,9 +32,10 @@
 #include <algorithm>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::yul;
 
 shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
 {
@@ -59,17 +60,17 @@ shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	return nullptr;
 }
 
-std::map<string, dev::eth::Instruction> const& Parser::instructions()
+std::map<string, evmasm::Instruction> const& Parser::instructions()
 {
 	// Allowed instructions, lowercase names.
-	static map<string, dev::eth::Instruction> s_instructions;
+	static map<string, evmasm::Instruction> s_instructions;
 	if (s_instructions.empty())
 	{
-		for (auto const& instruction: dev::eth::c_instructions)
+		for (auto const& instruction: evmasm::c_instructions)
 		{
 			if (
-				instruction.second == dev::eth::Instruction::JUMPDEST ||
-				dev::eth::isPushInstruction(instruction.second)
+				instruction.second == evmasm::Instruction::JUMPDEST ||
+				evmasm::isPushInstruction(instruction.second)
 			)
 				continue;
 			string name = instruction.first;
@@ -298,16 +299,16 @@ Expression Parser::parseExpression()
 	}
 }
 
-std::map<dev::eth::Instruction, string> const& Parser::instructionNames()
+std::map<evmasm::Instruction, string> const& Parser::instructionNames()
 {
-	static map<dev::eth::Instruction, string> s_instructionNames;
+	static map<evmasm::Instruction, string> s_instructionNames;
 	if (s_instructionNames.empty())
 	{
 		for (auto const& instr: instructions())
 			s_instructionNames[instr.second] = instr.first;
 		// set the ambiguous instructions to a clear default
-		s_instructionNames[dev::eth::Instruction::SELFDESTRUCT] = "selfdestruct";
-		s_instructionNames[dev::eth::Instruction::KECCAK256] = "keccak256";
+		s_instructionNames[evmasm::Instruction::SELFDESTRUCT] = "selfdestruct";
+		s_instructionNames[evmasm::Instruction::KECCAK256] = "keccak256";
 	}
 	return s_instructionNames;
 }

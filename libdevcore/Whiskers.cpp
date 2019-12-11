@@ -28,7 +28,7 @@
 #include <regex>
 
 using namespace std;
-using namespace dev;
+using namespace solidity::util;
 
 Whiskers::Whiskers(string _template):
 	m_template(move(_template))

@@ -35,13 +35,14 @@
 #include <variant>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::yul;
 
 
 void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 {
-	if (auto vars = isSimpleStore(dev::eth::Instruction::SSTORE, _statement))
+	if (auto vars = isSimpleStore(evmasm::Instruction::SSTORE, _statement))
 	{
 		ASTModifier::operator()(_statement);
 		set<YulString> keysToErase;
@@ -55,7 +56,7 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 			m_storage.eraseKey(key);
 		m_storage.set(vars->first, vars->second);
 	}
-	else if (auto vars = isSimpleStore(dev::eth::Instruction::MSTORE, _statement))
+	else if (auto vars = isSimpleStore(evmasm::Instruction::MSTORE, _statement))
 	{
 		ASTModifier::operator()(_statement);
 		set<YulString> keysToErase;
@@ -360,13 +361,13 @@ bool DataFlowAnalyzer::inScope(YulString _variableName) const
 }
 
 std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
-	dev::eth::Instruction _store,
+	evmasm::Instruction _store,
 	ExpressionStatement const& _statement
 ) const
 {
 	yulAssert(
-		_store == dev::eth::Instruction::MSTORE ||
-		_store == dev::eth::Instruction::SSTORE,
+		_store == evmasm::Instruction::MSTORE ||
+		_store == evmasm::Instruction::SSTORE,
 		""
 	);
 	if (holds_alternative<FunctionCall>(_statement.expression))

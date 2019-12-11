@@ -41,10 +41,14 @@
 #include <algorithm>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::eth;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::evmasm;
+using namespace solidity::frontend;
+using namespace solidity::langutil;
+
+using solidity::util::FixedHash;
+using solidity::util::h256;
+using solidity::util::errinfo_comment;
 
 namespace
 {
@@ -158,7 +162,7 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 
 	// We jump to the deploy routine because we first have to append all missing functions,
 	// which can cause further functions to be added to the runtime context.
-	eth::AssemblyItem deployRoutine = m_context.appendJumpToNew();
+	evmasm::AssemblyItem deployRoutine = m_context.appendJumpToNew();
 
 	// We have to include copies of functions in the construction time and runtime context
 	// because of absolute jumps.
@@ -268,9 +272,9 @@ void ContractCompiler::appendDelegatecallCheck()
 }
 
 void ContractCompiler::appendInternalSelector(
-	map<FixedHash<4>, eth::AssemblyItem const> const& _entryPoints,
+	map<FixedHash<4>, evmasm::AssemblyItem const> const& _entryPoints,
 	vector<FixedHash<4>> const& _ids,
-	eth::AssemblyItem const& _notFoundTag,
+	evmasm::AssemblyItem const& _notFoundTag,
 	size_t _runs
 )
 {
@@ -301,17 +305,17 @@ void ContractCompiler::appendInternalSelector(
 	bool split = false;
 	if (_ids.size() <= 4)
 		split = false;
-	else if (_runs > (17 * eth::GasCosts::createDataGas) / 6)
+	else if (_runs > (17 * evmasm::GasCosts::createDataGas) / 6)
 		split = true;
 	else
-		split = (_runs * 6 * (_ids.size() - 4) > 17 * eth::GasCosts::createDataGas);
+		split = (_runs * 6 * (_ids.size() - 4) > 17 * evmasm::GasCosts::createDataGas);
 
 	if (split)
 	{
 		size_t pivotIndex = _ids.size() / 2;
 		FixedHash<4> pivot{_ids.at(pivotIndex)};
 		m_context << dupInstruction(1) << u256(FixedHash<4>::Arith(pivot)) << Instruction::GT;
-		eth::AssemblyItem lessTag{m_context.appendConditionalJump()};
+		evmasm::AssemblyItem lessTag{m_context.appendConditionalJump()};
 		// Here, we have funid >= pivot
 		vector<FixedHash<4>> larger{_ids.begin() + pivotIndex, _ids.end()};
 		appendInternalSelector(_entryPoints, larger, _notFoundTag, _runs);
@@ -356,7 +360,7 @@ bool hasPayableFunctions(ContractDefinition const& _contract)
 void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contract)
 {
 	map<FixedHash<4>, FunctionTypePointer> interfaceFunctions = _contract.interfaceFunctions();
-	map<FixedHash<4>, eth::AssemblyItem const> callDataUnpackerEntryPoints;
+	map<FixedHash<4>, evmasm::AssemblyItem const> callDataUnpackerEntryPoints;
 
 	if (_contract.isLibrary())
 	{
@@ -376,10 +380,10 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		needToAddCallvalueCheck = false;
 	}
 
-	eth::AssemblyItem notFoundOrReceiveEther = m_context.newTag();
+	evmasm::AssemblyItem notFoundOrReceiveEther = m_context.newTag();
 	// If there is neither a fallback nor a receive ether function, we only need one label to jump to, which
 	// always reverts.
-	eth::AssemblyItem notFound = (!fallback && !etherReceiver) ? notFoundOrReceiveEther : m_context.newTag();
+	evmasm::AssemblyItem notFound = (!fallback && !etherReceiver) ? notFoundOrReceiveEther : m_context.newTag();
 
 	// directly jump to fallback or ether receiver if the data is too short to contain a function selector
 	// also guards against short data
@@ -462,7 +466,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 			appendCallValueCheck();
 
 		// Return tag is used to jump out of the function.
-		eth::AssemblyItem returnTag = m_context.pushNewTag();
+		evmasm::AssemblyItem returnTag = m_context.pushNewTag();
 		if (!functionType->parameterTypes().empty())
 		{
 			// Parameter for calldataUnpacker
@@ -472,7 +476,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		}
 		m_context.appendJumpTo(
 			m_context.functionEntryLabel(functionType->declaration()),
-			eth::AssemblyItem::JumpType::IntoFunction
+			evmasm::AssemblyItem::JumpType::IntoFunction
 		);
 		m_context << returnTag;
 		// Return tag and input parameters get consumed.
@@ -619,7 +623,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	{
 		solAssert(m_context.numberOfLocalVariables() == 0, "");
 		if (!_function.isFallback() && !_function.isReceive())
-			m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
+			m_context.appendJump(evmasm::AssemblyItem::JumpType::OutOfFunction);
 	}
 
 	return false;
@@ -809,14 +813,14 @@ bool ContractCompiler::visit(TryStatement const& _tryStatement)
 	int const returnSize = static_cast<int>(_tryStatement.externalCall().annotation().type->sizeOnStack());
 
 	// Stack: [ return values] <success flag>
-	eth::AssemblyItem successTag = m_context.appendConditionalJump();
+	evmasm::AssemblyItem successTag = m_context.appendConditionalJump();
 
 	// Catch case.
 	m_context.adjustStackOffset(-returnSize);
 
 	handleCatch(_tryStatement.clauses());
 
-	eth::AssemblyItem endTag = m_context.appendJumpToNew();
+	evmasm::AssemblyItem endTag = m_context.appendJumpToNew();
 
 	m_context << successTag;
 	m_context.adjustStackOffset(returnSize);
@@ -860,8 +864,8 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 
 	solAssert(_catchClauses.size() == size_t(1 + (structured ? 1 : 0) + (fallback ? 1 : 0)), "");
 
-	eth::AssemblyItem endTag = m_context.newTag();
-	eth::AssemblyItem fallbackTag = m_context.newTag();
+	evmasm::AssemblyItem endTag = m_context.newTag();
+	evmasm::AssemblyItem fallbackTag = m_context.newTag();
 	if (structured)
 	{
 		solAssert(
@@ -873,13 +877,13 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 		);
 		solAssert(m_context.evmVersion().supportsReturndata(), "");
 
-		string errorHash = FixedHash<4>(dev::keccak256("Error(string)")).hex();
+		string errorHash = FixedHash<4>(util::keccak256("Error(string)")).hex();
 
 		// Try to decode the error message.
 		// If this fails, leaves 0 on the stack, otherwise the pointer to the data string.
 		m_context << u256(0);
 		m_context.appendInlineAssembly(
-			Whiskers(R"({
+			util::Whiskers(R"({
 				data := mload(0x40)
 				mstore(data, 0)
 				for {} 1 {} {
@@ -983,8 +987,8 @@ bool ContractCompiler::visit(IfStatement const& _ifStatement)
 	CompilerContext::LocationSetter locationSetter(m_context, _ifStatement);
 	compileExpression(_ifStatement.condition());
 	m_context << Instruction::ISZERO;
-	eth::AssemblyItem falseTag = m_context.appendConditionalJump();
-	eth::AssemblyItem endTag = falseTag;
+	evmasm::AssemblyItem falseTag = m_context.appendConditionalJump();
+	evmasm::AssemblyItem endTag = falseTag;
 	_ifStatement.trueStatement().accept(*this);
 	if (_ifStatement.falseStatement())
 	{
@@ -1003,15 +1007,15 @@ bool ContractCompiler::visit(WhileStatement const& _whileStatement)
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _whileStatement);
 
-	eth::AssemblyItem loopStart = m_context.newTag();
-	eth::AssemblyItem loopEnd = m_context.newTag();
+	evmasm::AssemblyItem loopStart = m_context.newTag();
+	evmasm::AssemblyItem loopEnd = m_context.newTag();
 	m_breakTags.emplace_back(loopEnd, m_context.stackHeight());
 
 	m_context << loopStart;
 
 	if (_whileStatement.isDoWhile())
 	{
-		eth::AssemblyItem condition = m_context.newTag();
+		evmasm::AssemblyItem condition = m_context.newTag();
 		m_continueTags.emplace_back(condition, m_context.stackHeight());
 
 		_whileStatement.body().accept(*this);
@@ -1045,9 +1049,9 @@ bool ContractCompiler::visit(ForStatement const& _forStatement)
 {
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _forStatement);
-	eth::AssemblyItem loopStart = m_context.newTag();
-	eth::AssemblyItem loopEnd = m_context.newTag();
-	eth::AssemblyItem loopNext = m_context.newTag();
+	evmasm::AssemblyItem loopStart = m_context.newTag();
+	evmasm::AssemblyItem loopEnd = m_context.newTag();
+	evmasm::AssemblyItem loopNext = m_context.newTag();
 
 	storeStackHeight(&_forStatement);
 

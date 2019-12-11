@@ -20,7 +20,7 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

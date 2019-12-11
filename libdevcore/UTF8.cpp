@@ -23,7 +23,7 @@
 
 #include <libdevcore/UTF8.h>
 
-namespace dev
+namespace solidity::util
 {
 namespace
 {

@@ -31,7 +31,7 @@
 #include <optional>
 #include <variant>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct Scope

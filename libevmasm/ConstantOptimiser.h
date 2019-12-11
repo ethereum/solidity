@@ -31,9 +31,7 @@
 
 #include <vector>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class AssemblyItem;
@@ -163,5 +161,4 @@ protected:
 	AssemblyItems m_routine;
 };
 
-}
 }

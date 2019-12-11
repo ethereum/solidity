@@ -34,11 +34,9 @@
 #include <vector>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /// AST node factory that also tracks the begin and end position of an AST node
@@ -2087,5 +2085,4 @@ ASTPointer<ASTString> Parser::getLiteralAndAdvance()
 	return identifier;
 }
 
-}
 }

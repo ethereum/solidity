@@ -24,8 +24,8 @@
 #include <libevmasm/SemanticInformation.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
+using namespace solidity;
+using namespace solidity::evmasm;
 
 PathGasMeter::PathGasMeter(AssemblyItems const& _items, langutil::EVMVersion _evmVersion):
 	m_items(_items), m_evmVersion(_evmVersion)

@@ -26,9 +26,9 @@
 #include <variant>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 namespace
 {
@@ -110,11 +110,11 @@ public:
 	}
 
 private:
-	void checkInstruction(SourceLocation _location, dev::eth::Instruction _instruction)
+	void checkInstruction(SourceLocation _location, evmasm::Instruction _instruction)
 	{
-		if (eth::SemanticInformation::invalidInViewFunctions(_instruction))
+		if (evmasm::SemanticInformation::invalidInViewFunctions(_instruction))
 			m_reportMutability(StateMutability::NonPayable, _location);
-		else if (eth::SemanticInformation::invalidInPureFunctions(_instruction))
+		else if (evmasm::SemanticInformation::invalidInPureFunctions(_instruction))
 			m_reportMutability(StateMutability::View, _location);
 	}
 

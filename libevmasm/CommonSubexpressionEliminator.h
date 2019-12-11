@@ -39,9 +39,7 @@ namespace langutil
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class AssemblyItem;
@@ -186,5 +184,4 @@ _AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
 	return _iterator;
 }
 
-}
 }

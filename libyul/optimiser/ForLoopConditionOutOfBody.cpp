@@ -22,8 +22,8 @@
 #include <libdevcore/CommonData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void ForLoopConditionOutOfBody::run(OptimiserStepContext& _context, Block& _ast)
 {
@@ -64,7 +64,7 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 		_forLoop.condition = make_unique<Expression>(FunctionCall{
 			location,
 			Identifier{location, iszero},
-			make_vector<Expression>(
+			util::make_vector<Expression>(
 				std::move(*firstStatement.condition)
 			)
 		});

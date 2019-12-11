@@ -45,9 +45,9 @@
 #include <limits>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 namespace
 {
@@ -131,7 +131,7 @@ bool fitsIntoBits(bigint const& _value, unsigned _bits, bool _signed)
 	));
 }
 
-Result<TypePointers> transformParametersToExternal(TypePointers const& _parameters, bool _inLibrary)
+util::Result<TypePointers> transformParametersToExternal(TypePointers const& _parameters, bool _inLibrary)
 {
 	TypePointers transformed;
 
@@ -140,7 +140,7 @@ Result<TypePointers> transformParametersToExternal(TypePointers const& _paramete
 		if (TypePointer ext = type->interfaceType(_inLibrary).get())
 			transformed.push_back(ext);
 		else
-			return Result<TypePointers>::err("Parameter should have external type.");
+			return util::Result<TypePointers>::err("Parameter should have external type.");
 	}
 
 	return transformed;
@@ -170,7 +170,7 @@ void StorageOffsets::computeOffsets(TypePointers const& _types)
 			byteOffset = 0;
 		}
 		if (slotOffset >= bigint(1) << 256)
-			BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << errinfo_comment("Object too large for storage."));
+			BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << util::errinfo_comment("Object too large for storage."));
 		offsets[i] = make_pair(u256(slotOffset), byteOffset);
 		solAssert(type->storageSize() >= 1, "Invalid storage size.");
 		if (type->storageSize() == 1 && byteOffset + type->storageBytes() <= 32)
@@ -184,7 +184,7 @@ void StorageOffsets::computeOffsets(TypePointers const& _types)
 	if (byteOffset > 0)
 		++slotOffset;
 	if (slotOffset >= bigint(1) << 256)
-		BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << errinfo_comment("Object too large for storage."));
+		BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << util::errinfo_comment("Object too large for storage."));
 	m_storageSize = u256(slotOffset);
 	swap(m_offsets, offsets);
 }
@@ -486,7 +486,7 @@ IntegerType::IntegerType(unsigned _bits, IntegerType::Modifier _modifier):
 {
 	solAssert(
 		m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0,
-		"Invalid bit number for integer type: " + dev::toString(m_bits)
+		"Invalid bit number for integer type: " + util::toString(m_bits)
 	);
 }
 
@@ -550,7 +550,7 @@ bool IntegerType::operator==(Type const& _other) const
 string IntegerType::toString(bool) const
 {
 	string prefix = isSigned() ? "int" : "uint";
-	return prefix + dev::toString(m_bits);
+	return prefix + util::toString(m_bits);
 }
 
 bigint IntegerType::minValue() const
@@ -615,7 +615,7 @@ FixedPointType::FixedPointType(unsigned _totalBits, unsigned _fractionalDigits, 
 	solAssert(
 		8 <= m_totalBits && m_totalBits <= 256 && m_totalBits % 8 == 0 && m_fractionalDigits <= 80,
 		"Invalid bit number(s) for fixed type: " +
-		dev::toString(_totalBits) + "x" + dev::toString(_fractionalDigits)
+		util::toString(_totalBits) + "x" + util::toString(_fractionalDigits)
 	);
 }
 
@@ -673,7 +673,7 @@ bool FixedPointType::operator==(Type const& _other) const
 string FixedPointType::toString(bool) const
 {
 	string prefix = isSigned() ? "fixed" : "ufixed";
-	return prefix + dev::toString(m_totalBits) + "x" + dev::toString(m_fractionalDigits);
+	return prefix + util::toString(m_totalBits) + "x" + util::toString(m_fractionalDigits);
 }
 
 bigint FixedPointType::maxIntegerValue() const
@@ -1134,7 +1134,7 @@ bool RationalNumberType::operator==(Type const& _other) const
 	return m_value == other.m_value;
 }
 
-string RationalNumberType::bigintToReadableString(dev::bigint const& _num)
+string RationalNumberType::bigintToReadableString(bigint const& _num)
 {
 	string str = _num.str();
 	if (str.size() > 32)
@@ -1203,7 +1203,7 @@ IntegerType const* RationalNumberType::integerType() const
 		return nullptr;
 	else
 		return TypeProvider::integer(
-			max(bytesRequired(value), 1u) * 8,
+			max(util::bytesRequired(value), 1u) * 8,
 			negative ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned
 		);
 }
@@ -1237,7 +1237,7 @@ FixedPointType const* RationalNumberType::fixedPointType() const
 	if (v > u256(-1))
 		return nullptr;
 
-	unsigned totalBits = max(bytesRequired(v), 1u) * 8;
+	unsigned totalBits = max(util::bytesRequired(v), 1u) * 8;
 	solAssert(totalBits <= 256, "");
 
 	return TypeProvider::fixedPoint(
@@ -1273,7 +1273,7 @@ string StringLiteralType::richIdentifier() const
 {
 	// Since we have to return a valid identifier and the string itself may contain
 	// anything, we hash it.
-	return "t_stringliteral_" + toHex(keccak256(m_value).asBytes());
+	return "t_stringliteral_" + util::toHex(util::keccak256(m_value).asBytes());
 }
 
 bool StringLiteralType::operator==(Type const& _other) const
@@ -1287,8 +1287,8 @@ std::string StringLiteralType::toString(bool) const
 {
 	size_t invalidSequence;
 
-	if (!dev::validateUTF8(m_value, invalidSequence))
-		return "literal_string (contains invalid UTF-8 sequence at position " + dev::toString(invalidSequence) + ")";
+	if (!util::validateUTF8(m_value, invalidSequence))
+		return "literal_string (contains invalid UTF-8 sequence at position " + util::toString(invalidSequence) + ")";
 
 	return "literal_string \"" + m_value + "\"";
 }
@@ -1300,14 +1300,14 @@ TypePointer StringLiteralType::mobileType() const
 
 bool StringLiteralType::isValidUTF8() const
 {
-	return dev::validateUTF8(m_value);
+	return util::validateUTF8(m_value);
 }
 
 FixedBytesType::FixedBytesType(unsigned _bytes): m_bytes(_bytes)
 {
 	solAssert(
 		m_bytes > 0 && m_bytes <= 32,
-		"Invalid byte number for fixed bytes type: " + dev::toString(m_bytes)
+		"Invalid byte number for fixed bytes type: " + util::toString(m_bytes)
 	);
 }
 
@@ -1697,7 +1697,7 @@ u256 ArrayType::storageSize() const
 	else
 		size = bigint(length()) * baseType()->storageSize();
 	if (size >= bigint(1) << 256)
-		BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << errinfo_comment("Array too large for storage."));
+		BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << util::errinfo_comment("Array too large for storage."));
 	return max<u256>(1, u256(size));
 }
 
@@ -2145,7 +2145,7 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 
 	auto visitor = [&](
 		StructDefinition const& _struct,
-		CycleDetector<StructDefinition>& _cycleDetector,
+		util::CycleDetector<StructDefinition>& _cycleDetector,
 		size_t /*_depth*/
 	)
 	{
@@ -2193,7 +2193,7 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 		}
 	};
 
-	m_recursive = m_recursive.value() || (CycleDetector<StructDefinition>(visitor).run(structDefinition()) != nullptr);
+	m_recursive = m_recursive.value() || (util::CycleDetector<StructDefinition>(visitor).run(structDefinition()) != nullptr);
 
 	std::string const recursiveErrMsg = "Recursive type not allowed for public or external contract functions.";
 
@@ -2338,7 +2338,7 @@ unsigned EnumType::storageBytes() const
 	if (elements <= 1)
 		return 1;
 	else
-		return dev::bytesRequired(elements - 1);
+		return util::bytesRequired(elements - 1);
 }
 
 string EnumType::toString(bool) const
@@ -2908,13 +2908,13 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 	solAssert(m_declaration, "Declaration needed to determine interface function type.");
 	bool isLibraryFunction = kind() != Kind::Event && dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
 
-	Result<TypePointers> paramTypes =
+	util::Result<TypePointers> paramTypes =
 		transformParametersToExternal(m_parameterTypes, isLibraryFunction);
 
 	if (!paramTypes.message().empty())
 		return FunctionTypePointer();
 
-	Result<TypePointers> retParamTypes =
+	util::Result<TypePointers> retParamTypes =
 		transformParametersToExternal(m_returnParameterTypes, isLibraryFunction);
 
 	if (!retParamTypes.message().empty())
@@ -3171,12 +3171,12 @@ string FunctionType::externalSignature() const
 
 u256 FunctionType::externalIdentifier() const
 {
-	return FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(externalSignature())));
+	return util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256(externalSignature())));
 }
 
 string FunctionType::externalIdentifierHex() const
 {
-	return FixedHash<4>(dev::keccak256(externalSignature())).hex();
+	return util::FixedHash<4>(util::keccak256(externalSignature())).hex();
 }
 
 bool FunctionType::isPure() const

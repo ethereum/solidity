@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace dev
+namespace solidity::util
 {
 
 /// Compute the "ipfs hash" of a file with the content @a _data.

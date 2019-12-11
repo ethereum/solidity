@@ -27,10 +27,7 @@
 #include <optional>
 #include <boost/variant.hpp>
 
-namespace dev
-{
-
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -62,12 +59,12 @@ private:
 		Json::Value errors;
 		bool parserErrorRecovery = false;
 		std::map<std::string, std::string> sources;
-		std::map<h256, std::string> smtLib2Responses;
+		std::map<util::h256, std::string> smtLib2Responses;
 		langutil::EVMVersion evmVersion;
 		std::vector<CompilerStack::Remapping> remappings;
 		RevertStrings revertStrings = RevertStrings::Default;
 		OptimiserSettings optimiserSettings = OptimiserSettings::minimal();
-		std::map<std::string, h160> libraries;
+		std::map<std::string, util::h160> libraries;
 		bool metadataLiteralSources = false;
 		CompilerStack::MetadataHash metadataHash = CompilerStack::MetadataHash::IPFS;
 		Json::Value outputSelection;
@@ -83,5 +80,4 @@ private:
 	ReadCallback::Callback m_readFile;
 };
 
-}
 }

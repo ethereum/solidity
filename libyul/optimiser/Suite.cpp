@@ -67,8 +67,8 @@
 #include <libdevcore/CommonData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void OptimiserSuite::run(
 	Dialect const& _dialect,
@@ -323,7 +323,7 @@ template <class... Step>
 map<string, unique_ptr<OptimiserStep>> optimiserStepCollection()
 {
 	map<string, unique_ptr<OptimiserStep>> ret;
-	for (unique_ptr<OptimiserStep>& s: make_vector<unique_ptr<OptimiserStep>>(
+	for (unique_ptr<OptimiserStep>& s: util::make_vector<unique_ptr<OptimiserStep>>(
 		(make_unique<OptimiserStepInstance<Step>>())...
 	))
 	{

@@ -39,9 +39,7 @@
 #include <set>
 #include <string>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class TypeProvider;
@@ -50,9 +48,9 @@ class FunctionType; // forward
 using TypePointer = Type const*;
 using FunctionTypePointer = FunctionType const*;
 using TypePointers = std::vector<TypePointer>;
-using rational = boost::rational<dev::bigint>;
-using TypeResult = Result<TypePointer>;
-using BoolResult = Result<bool>;
+using rational = boost::rational<bigint>;
+using TypeResult = util::Result<TypePointer>;
+using BoolResult = util::Result<bool>;
 
 inline rational makeRational(bigint const& _numerator, bigint const& _denominator)
 {
@@ -539,7 +537,7 @@ private:
 
 	/// @returns a truncated readable representation of the bigint keeping only
 	/// up to 4 leading and 4 trailing digits.
-	static std::string bigintToReadableString(dev::bigint const& num);
+	static std::string bigintToReadableString(bigint const& num);
 };
 
 /**
@@ -599,7 +597,7 @@ public:
 	bool leftAligned() const override { return true; }
 	bool isValueType() const override { return true; }
 
-	std::string toString(bool) const override { return "bytes" + dev::toString(m_bytes); }
+	std::string toString(bool) const override { return "bytes" + util::toString(m_bytes); }
 	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 	TypePointer encodingType() const override { return this; }
 	TypeResult interfaceType(bool) const override { return this; }
@@ -1444,5 +1442,4 @@ public:
 	TypePointer decodingType() const override;
 };
 
-}
 }
