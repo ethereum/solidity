@@ -51,10 +51,6 @@
 
 #include <libyul/YulString.h>
 #include <libyul/AsmPrinter.h>
-#include <libyul/backends/wasm/EVMToEWasmTranslator.h>
-#include <libyul/backends/wasm/EWasmObjectCompiler.h>
-#include <libyul/backends/wasm/WasmDialect.h>
-#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AssemblyStack.h>
 
 #include <liblangutil/Scanner.h>

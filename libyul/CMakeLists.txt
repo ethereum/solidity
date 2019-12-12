@@ -46,8 +46,6 @@ add_library(yul
 	backends/evm/NoOutputAssembly.cpp
 	backends/wasm/EVMToEWasmTranslator.cpp
 	backends/wasm/EVMToEWasmTranslator.h
-	backends/wasm/EWasmObjectCompiler.cpp
-	backends/wasm/EWasmObjectCompiler.h
 	backends/wasm/BinaryTransform.cpp
 	backends/wasm/BinaryTransform.h
 	backends/wasm/TextTransform.cpp
@@ -56,6 +54,8 @@ add_library(yul
 	backends/wasm/WasmCodeTransform.h
 	backends/wasm/WasmDialect.cpp
 	backends/wasm/WasmDialect.h
+	backends/wasm/WasmObjectCompiler.cpp
+	backends/wasm/WasmObjectCompiler.h
 	backends/wasm/WordSizeTransform.cpp
 	backends/wasm/WordSizeTransform.h
 	optimiser/ASTCopier.cpp
