@@ -3,8 +3,9 @@ Layout of a Solidity Source File
 ********************************
 
 Source files can contain an arbitrary number of
-:ref:`contract definitions<contract_structure>`, import_ directives
-and :ref:`pragma directives<pragma>`.
+:ref:`contract definitions<contract_structure>`, import_ directives,
+:ref:`pragma directives<pragma>` and
+:ref:`struct<structs>` and :ref:`enum<enums>` definitions.
 
 .. index:: ! pragma
 
@@ -16,8 +17,8 @@ Pragmas
 The ``pragma`` keyword is used to enable certain compiler features
 or checks. A pragma directive is always local to a source file, so
 you have to add the pragma to all your files if you want enable it
-in all of your project. If you :ref:`import<import>` another file, the pragma
-from that file does not automatically apply to the importing file.
+in your whole project. If you :ref:`import<import>` another file, the pragma
+from that file does *not* automatically apply to the importing file.
 
 .. index:: ! pragma, version
 
@@ -39,8 +40,8 @@ The version pragma is used as follows: ``pragma solidity ^0.5.2;``
 
 A source file with the line above does not compile with a compiler earlier than version 0.5.2,
 and it also does not work on a compiler starting from version 0.6.0 (this
-second condition is added by using ``^``). This is because
-there will be no breaking changes until version ``0.6.0``, so you can always
+second condition is added by using ``^``). Because
+there will be no breaking changes until version ``0.6.0``, you can
 be sure that your code compiles the way you intended. The exact version of the
 compiler is not fixed, so that bugfix releases are still possible.
 
@@ -106,8 +107,10 @@ Importing other Source Files
 Syntax and Semantics
 --------------------
 
-Solidity supports import statements to help modularise your code that are similar to those available in JavaScript
-(from ES6 on). However, Solidity does not support the concept of a `default export <https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export#Description>`_.
+Solidity supports import statements to help modularise your code that
+are similar to those available in JavaScript
+(from ES6 on). However, Solidity does not support the concept of
+a `default export <https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export#Description>`_.
 
 At a global level, you can use import statements of the following form:
 
@@ -283,12 +286,11 @@ for the two function parameters and two return variables.
 
     /** @title Shape calculator. */
     contract ShapeCalculator {
-        /** @dev Calculates a rectangle's surface and perimeter.
-          * @param w Width of the rectangle.
-          * @param h Height of the rectangle.
-          * @return s The calculated surface.
-          * @return p The calculated perimeter.
-          */
+        /// @dev Calculates a rectangle's surface and perimeter.
+        /// @param w Width of the rectangle.
+        /// @param h Height of the rectangle.
+        /// @return s The calculated surface.
+        /// @return p The calculated perimeter.
         function rectangle(uint w, uint h) public pure returns (uint s, uint p) {
             s = w * h;
             p = 2 * (w + h);
