@@ -16,17 +16,20 @@ ContractPart = StateVariableDeclaration | UsingForDeclaration
 
 InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
 
-StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' )* Identifier ('=' Expression)? ';'
+StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' | OverrideSpecifier )* Identifier ('=' Expression)? ';'
 UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration ';' (VariableDeclaration ';')* ) '}'
 
-ModifierDefinition = 'modifier' Identifier ParameterList? Block
+ModifierDefinition = 'modifier' Identifier ParameterList?  ( 'virtual' | OverrideSpecifier )* Block
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
 FunctionDefinition = 'function' Identifier? ParameterList
-                     ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' )*
+                     ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' | 'virtual' | OverrideSpecifier )*
                      ( 'returns' ParameterList )? ( ';' | Block )
+
+OverrideSpecifier = 'override' ( '(' UserDefinedTypeName (',' UserDefinedTypeName)* ')' )?
+
 EventDefinition = 'event' Identifier EventParameterList 'anonymous'? ';'
 
 EnumValue = Identifier
@@ -168,6 +171,7 @@ AssemblyStatement = AssemblyBlock
                   | AssemblySwitch
                   | AssemblyForLoop
                   | AssemblyBreakContinue
+                  | AssemblyLeave
 AssemblyFunctionDefinition =
     'function' Identifier '(' AssemblyIdentifierList? ')'
     ( '->' AssemblyIdentifierList )? AssemblyBlock
@@ -180,6 +184,7 @@ AssemblyCase = 'case' Literal AssemblyBlock
 AssemblyDefault = 'default' AssemblyBlock
 AssemblyForLoop = 'for' AssemblyBlock AssemblyExpression AssemblyBlock AssemblyBlock
 AssemblyBreakContinue = 'break' | 'continue'
+AssemblyLeave = 'leave'
 AssemblyFunctionCall = Identifier '(' ( AssemblyExpression ( ',' AssemblyExpression )* )? ')'
 
 AssemblyIdentifierList = Identifier ( ',' Identifier )*
