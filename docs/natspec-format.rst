@@ -84,7 +84,7 @@ Tag                                                                             
 ``@notice`` Explain to an end user what this does                                           contract, interface, function
 ``@dev``    Explain to a developer any extra details                                        contract, interface, function
 ``@param``  Documents a parameter just like in doxygen (must be followed by parameter name) function
-``@return`` Documents the return type of a contract's function                              function
+``@return`` Documents the return variables of a contract's function                         function
 =========== =============================================================================== =============================
 
 If your function returns multiple values, like ``(int quotient, int remainder)``
