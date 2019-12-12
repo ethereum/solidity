@@ -51,10 +51,10 @@ this nonsensical example::
 These function calls are translated into simple jumps inside the EVM. This has
 the effect that the current memory is not cleared, i.e. passing memory references
 to internally-called functions is very efficient. Only functions of the same
-contract can be called internally.
+contract instance can be called internally.
 
 You should still avoid excessive recursion, as every internal function call
-uses up at least one stack slot and there are at most 1024 slots available.
+uses up at least one stack slot and there are only 1024 slots available.
 
 .. _external-function-calls:
 
@@ -74,7 +74,10 @@ all function arguments have to be copied to memory.
     A function call from one contract to another does not create its own transaction,
     it is a message call as part of the overall transaction.
 
-When calling functions of other contracts, you can specify the amount of Wei or gas sent with the call with the special options ``.value()`` and ``.gas()``, respectively. Any Wei you send to the contract is added to the total balance of the contract:
+When calling functions of other contracts, you can specify the amount of Wei or
+gas sent with the call with the special options ``.value()`` and ``.gas()``,
+respectively. Any Wei you send to the contract is added to the total balance
+of the contract:
 
 ::
 
@@ -94,7 +97,10 @@ You need to use the modifier ``payable`` with the ``info`` function because
 otherwise, the ``.value()`` option would not be available.
 
 .. warning::
-  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the ``value`` and amount of ``gas`` sent with the function call, and the parentheses at the end perform the actual call. So in this case, the function is not called and the ``value`` and ``gas`` settings are lost.
+  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the
+  ``value`` and amount of ``gas`` sent with the function call, and the
+  parentheses at the end perform the actual call. So in this case, the
+  function is not called and the ``value`` and ``gas`` settings are lost.
 
 Function calls cause exceptions if the called contract does not exist (in the
 sense that the account does not contain code) or if the called contract itself
@@ -220,8 +226,11 @@ Assignment
 Destructuring Assignments and Returning Multiple Values
 -------------------------------------------------------
 
-Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose number is a constant at compile-time. Those tuples can be used to return multiple values at the same time.
-These can then either be assigned to newly declared variables or to pre-existing variables (or LValues in general).
+Solidity internally allows tuple types, i.e. a list of objects
+of potentially different types whose number is a constant at
+compile-time. Those tuples can be used to return multiple values at the same time.
+These can then either be assigned to newly declared variables
+or to pre-existing variables (or LValues in general).
 
 Tuples are not proper types in Solidity, they can only be used to form syntactic
 groupings of expressions.
@@ -264,8 +273,18 @@ i.e. the following is not valid: ``(x, uint y) = (1, 2);``
 Complications for Arrays and Structs
 ------------------------------------
 
-The semantics of assignments are a bit more complicated for non-value types like arrays and structs.
-Assigning *to* a state variable always creates an independent copy. On the other hand, assigning to a local variable creates an independent copy only for elementary types, i.e. static types that fit into 32 bytes. If structs or arrays (including ``bytes`` and ``string``) are assigned from a state variable to a local variable, the local variable holds a reference to the original state variable. A second assignment to the local variable does not modify the state but only changes the reference. Assignments to members (or elements) of the local variable *do* change the state.
+The semantics of assignments are a bit more complicated for
+non-value types like arrays and structs.
+Assigning *to* a state variable always creates an independent
+copy. On the other hand, assigning to a local variable creates
+an independent copy only for elementary types, i.e. static
+types that fit into 32 bytes. If structs or arrays (including
+``bytes`` and ``string``) are assigned from a state variable
+to a local variable, the local variable holds a reference to
+the original state variable. A second assignment to the local
+variable does not modify the state but only changes the
+reference. Assignments to members (or elements) of the local
+variable *do* change the state.
 
 In the example below the call to ``g(x)`` has no effect on ``x`` because it creates
 an independent copy of the storage value in memory. However, ``h(x)`` successfully modifies ``x``
@@ -299,16 +318,28 @@ because only a reference and not a copy is passed.
 Scoping and Declarations
 ========================
 
-A variable which is declared will have an initial default value whose byte-representation is all zeros.
-The "default values" of variables are the typical "zero-state" of whatever the type is. For example, the default value for a ``bool``
-is ``false``. The default value for the ``uint`` or ``int`` types is ``0``. For statically-sized arrays and ``bytes1`` to ``bytes32``, each individual
-element will be initialized to the default value corresponding to its type. For dynamically-sized arrays, ``bytes``
-and ``string``, the default value is an empty array or string. For the ``enum`` type, the default value is its first member.
+A variable which is declared will have an initial default
+value whose byte-representation is all zeros.
+The "default values" of variables are the typical "zero-state"
+of whatever the type is. For example, the default value for a ``bool``
+is ``false``. The default value for the ``uint`` or ``int``
+types is ``0``. For statically-sized arrays and ``bytes1`` to
+``bytes32``, each individual
+element will be initialized to the default value corresponding
+to its type. For dynamically-sized arrays, ``bytes``
+and ``string``, the default value is an empty array or string.
+For the ``enum`` type, the default value is its first member.
 
 Scoping in Solidity follows the widespread scoping rules of C99
 (and many other languages): Variables are visible from the point right after their declaration
-until the end of the smallest ``{ }``-block that contains the declaration. As an exception to this rule, variables declared in the
+until the end of the smallest ``{ }``-block that contains the declaration.
+As an exception to this rule, variables declared in the
 initialization part of a for-loop are only visible until the end of the for-loop.
+
+Variables that are parameter-like (function parameters, modifier parameters,
+catch parameters, ...) are visible inside the code block that follows -
+the body of the function/modifier for a function and modifier parameter and the catch block
+for a catch parameter.
 
 Variables and other items declared outside of a code block, for example functions, contracts,
 user-defined types, etc., are visible even before they were declared. This means you can
@@ -354,7 +385,8 @@ In any case, you will get a warning about the outer variable being shadowed.
     }
 
 .. warning::
-    Before version 0.5.0 Solidity followed the same scoping rules as JavaScript, that is, a variable declared anywhere within a function would be in scope
+    Before version 0.5.0 Solidity followed the same scoping rules as
+    JavaScript, that is, a variable declared anywhere within a function would be in scope
     for the entire function, regardless where it was declared. The following example shows a code snippet that used
     to compile but leads to an error starting from version 0.5.0.
 
