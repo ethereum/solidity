@@ -115,7 +115,7 @@ Details are given in the following example.
         // Here, we only specify `override` and not `virtual`.
         // This means that contracts deriving from `PriceFeed`
         // cannot change the behaviour of `kill` anymore.
-        function kill() public override (Mortal, Named) { Named.kill(); }
+        function kill() public override(Mortal, Named) { Named.kill(); }
         function get() public view returns(uint r) { return info; }
 
         uint info;
@@ -297,7 +297,7 @@ of the variable:
 
     contract A
     {
-        function f() external virtual pure returns(uint) { return 5; }
+        function f() external pure virtual returns(uint) { return 5; }
     }
 
     contract B is A
