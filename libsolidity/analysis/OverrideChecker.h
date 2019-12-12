@@ -44,7 +44,7 @@ class ModifierType;
 
 /**
  * Class that represents a function, public state variable or modifier
- * and helps with overload checking.
+ * and helps with override checking.
  * Regular comparison is performed based on AST node, while CompareBySignature
  * results in two elements being equal when they can override each
  * other.
