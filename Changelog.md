@@ -45,6 +45,10 @@ Compiler Features:
  * ABIEncoderV2: Do not warn about enabled ABIEncoderV2 anymore (the pragma is still needed, though).
 
 
+Bugfixes:
+ * Fix compiler error when calling the base function from the derived function when base is missing an implementation.
+
+
 ### 0.5.14 (2019-12-09)
 
 Language Features:

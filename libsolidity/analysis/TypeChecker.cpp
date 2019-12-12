@@ -326,6 +326,19 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
+	struct SetScopeFunc
+	{
+		SetScopeFunc(TypeChecker& _checker, FunctionDefinition const* _func)
+			:m_checker(_checker)
+		{
+			solAssert(m_checker.m_scopeFunction == nullptr, "Function Definition inside Function Definition!");
+			m_checker.m_scopeFunction = _func;
+		}
+		~SetScopeFunc() { m_checker.m_scopeFunction = nullptr; }
+		TypeChecker& m_checker;
+	} setScopeFunc(*this, &_function);
+
+
 	bool isLibraryFunction = _function.inContractKind() == ContractDefinition::ContractKind::Library;
 
 	if (_function.markedVirtual())
@@ -2420,8 +2433,26 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	// TODO some members might be pure, but for example `address(0x123).balance` is not pure
 	// although every subexpression is, so leaving this limited for now.
 	if (auto tt = dynamic_cast<TypeType const*>(exprType))
+	{
 		if (tt->actualType()->category() == Type::Category::Enum)
 			annotation.isPure = true;
+		else if (tt->actualType()->category() == Type::Category::Contract)
+			if (auto const* ident = dynamic_cast<Identifier const*>(&_memberAccess.expression()))
+				if (ident->name() != "super")
+					if (auto const* funcType = dynamic_cast<FunctionType const*>(annotation.type))
+						if (funcType->hasDeclaration())
+							if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(&funcType->declaration()))
+								if (
+									!funcDef->isImplemented() &&
+									contains(m_scope->annotation().linearizedBaseContracts, funcDef->annotation().contract) &&
+									m_scopeFunction->name() == funcDef->name() &&
+									m_scopeFunction->parameters()  == funcDef->parameters()
+								)
+									m_errorReporter.typeError(
+										_memberAccess.location(),
+										"Referencing unimplemented function \"" + tt->actualType()->canonicalName() + "." + funcDef->name() + "\"."
+									);
+	}
 	if (auto magicType = dynamic_cast<MagicType const*>(exprType))
 	{
 		if (magicType->kind() == MagicType::Kind::ABI)

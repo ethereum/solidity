@@ -164,6 +164,9 @@ private:
 
 	ContractDefinition const* m_scope = nullptr;
 
+	/// Pointer to the function we're currently in
+	FunctionDefinition const* m_scopeFunction = nullptr;
+
 	langutil::EVMVersion m_evmVersion;
 
 	/// Flag indicating whether we are currently inside an EmitStatement.
