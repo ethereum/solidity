@@ -29,7 +29,7 @@ using namespace std;
 using namespace solidity::frontend;
 
 // TODO: Fix Boost...
-BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::bytes);
+BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::bytes)
 
 namespace solidity::util::test
 {
