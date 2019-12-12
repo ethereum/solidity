@@ -236,9 +236,10 @@ Ether and honours a valid signed message. The smart contract also enforces a
 timeout, so Alice is guaranteed to eventually recover their funds even if the
 recipient refuses to close the channel. It is up to the participants in a payment
 channel to decide how long to keep it open. For a short-lived transaction,
-such as paying an internet café for each minute of network access, or for a
-longer relationship, such as paying an employee an hourly wage, a payment
-could last for months or years.
+such as paying an internet café for each minute of network access, the payment
+channel may be kept open for a limited duration. On the other hand, for a
+recurring payment, such as paying an employee an hourly wage, the payment channel
+may be kept open for several months or years.
 
 Opening the Payment Channel
 ---------------------------
