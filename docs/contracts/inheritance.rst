@@ -52,6 +52,8 @@ Details are given in the following example.
     // internal functions and state variables. These cannot be
     // accessed externally via `this`, though.
     contract Mortal is Owned {
+        // The keyword `virtual` means that the function can change
+        // its behaviour in derived classes ("overriding").
         function kill() virtual public {
             if (msg.sender == owner) selfdestruct(owner);
         }
@@ -87,6 +89,9 @@ Details are given in the following example.
         // types of output parameters, that causes an error.
         // Both local and message-based function calls take these overrides
         // into account.
+        // If you want the function to override, you need to use the
+        // `override` keyword. You need to specify the `virtual` keyword again
+        // if you want this function to be overridden again.
         function kill() public virtual override {
             if (msg.sender == owner) {
                 Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
@@ -107,6 +112,9 @@ Details are given in the following example.
             if (msg.sender == owner) info = newInfo;
         }
 
+        // Here, we only specify `override` and not `virtual`.
+        // This means that contracts deriving from `PriceFeed`
+        // cannot change the behaviour of `kill` anymore.
         function kill() public override (Mortal, Named) { Named.kill(); }
         function get() public view returns(uint r) { return info; }
 
@@ -212,7 +220,8 @@ use the ``override`` keyword in the function header as shown in this example:
 
 For multiple inheritance, the most derived base contracts that define the same
 function must be specified explicitly after the ``override`` keyword.
-In other words, you have to specify all base contracts that define the same function and have not yet been overridden by another base contract (on some path through the inheritance graph).
+In other words, you have to specify all base contracts that define the same function
+and have not yet been overridden by another base contract (on some path through the inheritance graph).
 Additionally, if a contract inherits the same function from multiple (unrelated)
 bases, it has to explicitly override it:
 
@@ -265,6 +274,9 @@ the inheritance graph that starts at the contract under consideration
 and ends at a contract mentioning a function with that signature
 that does not override.
 
+If you do not mark a function that overrides as ``virtual``, derived
+contracts can no longer change the behaviour of that function.
+
 .. note::
 
   Functions with the ``private`` visibility cannot be ``virtual``.
@@ -272,7 +284,8 @@ that does not override.
 .. note::
 
   Functions without implementation have to be marked ``virtual``
-  outside of interfaces.
+  outside of interfaces. In interfaces, all functions are
+  automatically considered ``virtual``.
 
 Public state variables can override external functions if the
 parameter and return types of the function matches the getter function
@@ -477,6 +490,10 @@ The reason for this is that ``C`` requests ``X`` to override ``A``
 requests to override ``X``, which is a contradiction that
 cannot be resolved.
 
+Due to the fact that you have to explicitly override a function
+that is inherited from multiple bases without a unique override,
+C3 linearization is not too important in practice.
+
 One area where inheritance linearization is especially important and perhaps not as clear is when there are multiple constructors in the inheritance hierarchy. The constructors will always be executed in the linearized order, regardless of the order in which their arguments are provided in the inheriting contract's constructor.  For example:
 
 ::
@@ -519,6 +536,9 @@ One area where inheritance linearization is especially important and perhaps not
 Inheriting Different Kinds of Members of the Same Name
 ======================================================
 
-When the inheritance results in a contract with a function and a modifier of the same name, it is considered as an error.
-This error is produced also by an event and a modifier of the same name, and a function and an event of the same name.
-As an exception, a state variable getter can override a public function.
+It is an error when any of the following pairs in a contract have the same name due to inheritance:
+  - a function and a modifier
+  - a function and an event
+  - an event and a modifier
+
+As an exception, a state variable getter can override an external function.
