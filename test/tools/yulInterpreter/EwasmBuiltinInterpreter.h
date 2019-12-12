@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Yul interpreter module that evaluates EWasm builtins.
+ * Yul interpreter module that evaluates Ewasm builtins.
  */
 
 #pragma once
@@ -45,7 +45,7 @@ namespace test
 struct InterpreterState;
 
 /**
- * Interprets EWasm builtins based on the current state and logs instructions with
+ * Interprets Ewasm builtins based on the current state and logs instructions with
  * side-effects.
  *
  * Since this is mainly meant to be used for differential fuzz testing, it is focused
@@ -63,10 +63,10 @@ struct InterpreterState;
  * The main focus is that the generated execution trace is the same for equivalent executions
  * and likely to be different for non-equivalent executions.
  */
-class EWasmBuiltinInterpreter
+class EwasmBuiltinInterpreter
 {
 public:
-	explicit EWasmBuiltinInterpreter(InterpreterState& _state):
+	explicit EwasmBuiltinInterpreter(InterpreterState& _state):
 		m_state(_state)
 	{}
 	/// Evaluate builtin function

@@ -15,10 +15,10 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Yul interpreter module that evaluates EWasm builtins.
+ * Yul interpreter module that evaluates Ewasm builtins.
  */
 
-#include <test/tools/yulInterpreter/EWasmBuiltinInterpreter.h>
+#include <test/tools/yulInterpreter/EwasmBuiltinInterpreter.h>
 
 #include <test/tools/yulInterpreter/Interpreter.h>
 
@@ -68,7 +68,7 @@ uint64_t clz(uint64_t _v)
 
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
-u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _arguments)
+u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _arguments)
 {
 	vector<uint64_t> arg;
 	for (u256 const& a: _arguments)
@@ -355,7 +355,7 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	return 0;
 }
 
-bool EWasmBuiltinInterpreter::accessMemory(u256 const& _offset, u256 const& _size)
+bool EwasmBuiltinInterpreter::accessMemory(u256 const& _offset, u256 const& _size)
 {
 	if (((_offset + _size) >= _offset) && ((_offset + _size + 0x1f) >= (_offset + _size)))
 	{
@@ -369,7 +369,7 @@ bool EWasmBuiltinInterpreter::accessMemory(u256 const& _offset, u256 const& _siz
 	return false;
 }
 
-bytes EWasmBuiltinInterpreter::readMemory(uint64_t _offset, uint64_t _size)
+bytes EwasmBuiltinInterpreter::readMemory(uint64_t _offset, uint64_t _size)
 {
 	yulAssert(_size <= 0xffff, "Too large read.");
 	bytes data(size_t(_size), uint8_t(0));
@@ -378,7 +378,7 @@ bytes EWasmBuiltinInterpreter::readMemory(uint64_t _offset, uint64_t _size)
 	return data;
 }
 
-uint64_t EWasmBuiltinInterpreter::readMemoryWord(uint64_t _offset)
+uint64_t EwasmBuiltinInterpreter::readMemoryWord(uint64_t _offset)
 {
 	uint64_t r = 0;
 	for (size_t i = 0; i < 8; i++)
@@ -386,18 +386,18 @@ uint64_t EWasmBuiltinInterpreter::readMemoryWord(uint64_t _offset)
 	return r;
 }
 
-void EWasmBuiltinInterpreter::writeMemoryWord(uint64_t _offset, uint64_t _value)
+void EwasmBuiltinInterpreter::writeMemoryWord(uint64_t _offset, uint64_t _value)
 {
 	for (size_t i = 0; i < 8; i++)
 		m_state.memory[_offset + i] = uint8_t((_value >> (i * 8)) & 0xff);
 }
 
-void EWasmBuiltinInterpreter::writeMemoryByte(uint64_t _offset, uint8_t _value)
+void EwasmBuiltinInterpreter::writeMemoryByte(uint64_t _offset, uint8_t _value)
 {
 	m_state.memory[_offset] = _value;
 }
 
-void EWasmBuiltinInterpreter::writeU256(uint64_t _offset, u256 _value, size_t _croppedTo)
+void EwasmBuiltinInterpreter::writeU256(uint64_t _offset, u256 _value, size_t _croppedTo)
 {
 	accessMemory(_offset, _croppedTo);
 	for (size_t i = 0; i < _croppedTo; i++)
@@ -407,7 +407,7 @@ void EWasmBuiltinInterpreter::writeU256(uint64_t _offset, u256 _value, size_t _c
 	}
 }
 
-u256 EWasmBuiltinInterpreter::readU256(uint64_t _offset, size_t _croppedTo)
+u256 EwasmBuiltinInterpreter::readU256(uint64_t _offset, size_t _croppedTo)
 {
 	accessMemory(_offset, _croppedTo);
 	u256 value;
@@ -417,12 +417,12 @@ u256 EWasmBuiltinInterpreter::readU256(uint64_t _offset, size_t _croppedTo)
 	return value;
 }
 
-void EWasmBuiltinInterpreter::logTrace(dev::eth::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EwasmBuiltinInterpreter::logTrace(dev::eth::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
 {
 	logTrace(dev::eth::instructionInfo(_instruction).name, _arguments, _data);
 }
 
-void EWasmBuiltinInterpreter::logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EwasmBuiltinInterpreter::logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments, bytes const& _data)
 {
 	string message = _pseudoInstruction + "(";
 	for (size_t i = 0; i < _arguments.size(); ++i)
