@@ -24,7 +24,7 @@ Explicitness Requirements
 =========================
 
 This section lists changes where the code now needs to be more explicit,
-but the semantics to do not change.
+but the semantics do not change.
 For most of the topics the compiler will provide suggestions.
 
 * Functions can now only be overridden when they are either marked with the
