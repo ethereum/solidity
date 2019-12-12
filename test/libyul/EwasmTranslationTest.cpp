@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <test/libyul/EWasmTranslationTest.h>
+#include <test/libyul/EwasmTranslationTest.h>
 
 #include <test/tools/yulInterpreter/Interpreter.h>
 
@@ -23,7 +23,7 @@
 
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/wasm/WasmDialect.h>
-#include <libyul/backends/wasm/EVMToEWasmTranslator.h>
+#include <libyul/backends/wasm/EVMToEwasmTranslator.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AssemblyStack.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -47,7 +47,7 @@ using namespace dev::solidity::test;
 using namespace std;
 
 
-EWasmTranslationTest::EWasmTranslationTest(string const& _filename)
+EwasmTranslationTest::EwasmTranslationTest(string const& _filename)
 {
 	boost::filesystem::path path(_filename);
 
@@ -60,12 +60,12 @@ EWasmTranslationTest::EWasmTranslationTest(string const& _filename)
 	m_expectation = parseSimpleExpectations(file);
 }
 
-TestCase::TestResult EWasmTranslationTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult EwasmTranslationTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	if (!parse(_stream, _linePrefix, _formatted))
 		return TestResult::FatalError;
 
-	*m_object = EVMToEWasmTranslator(
+	*m_object = EVMToEwasmTranslator(
 		EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion())
 	).run(*m_object);
 
@@ -89,17 +89,17 @@ TestCase::TestResult EWasmTranslationTest::run(ostream& _stream, string const& _
 	return TestResult::Success;
 }
 
-void EWasmTranslationTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
+void EwasmTranslationTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
 {
 	printIndented(_stream, m_source, _linePrefix);
 }
 
-void EWasmTranslationTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
+void EwasmTranslationTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
 {
 	printIndented(_stream, m_obtainedResult, _linePrefix);
 }
 
-void EWasmTranslationTest::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
+void EwasmTranslationTest::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
 {
 	stringstream output(_output);
 	string line;
@@ -107,7 +107,7 @@ void EWasmTranslationTest::printIndented(ostream& _stream, string const& _output
 		_stream << _linePrefix << line << endl;
 }
 
-bool EWasmTranslationTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
+bool EwasmTranslationTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	AssemblyStack stack(
 		dev::test::Options::get().evmVersion(),
@@ -127,7 +127,7 @@ bool EWasmTranslationTest::parse(ostream& _stream, string const& _linePrefix, bo
 	}
 }
 
-string EWasmTranslationTest::interpret()
+string EwasmTranslationTest::interpret()
 {
 	InterpreterState state;
 	state.maxTraceSize = 10000;
@@ -147,7 +147,7 @@ string EWasmTranslationTest::interpret()
 	return result.str();
 }
 
-void EWasmTranslationTest::printErrors(ostream& _stream, ErrorList const& _errors)
+void EwasmTranslationTest::printErrors(ostream& _stream, ErrorList const& _errors)
 {
 	SourceReferenceFormatter formatter(_stream);
 

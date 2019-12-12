@@ -34,7 +34,7 @@
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/wasm/WasmObjectCompiler.h>
-#include <libyul/backends/wasm/EVMToEWasmTranslator.h>
+#include <libyul/backends/wasm/EVMToEwasmTranslator.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
@@ -112,7 +112,7 @@ void AssemblyStack::translate(AssemblyStack::Language _targetLanguage)
 		"Invalid language combination"
 	);
 
-	*m_parserResult = EVMToEWasmTranslator(
+	*m_parserResult = EVMToEwasmTranslator(
 		languageToDialect(m_language, m_evmVersion)
 	).run(*parserResult());
 

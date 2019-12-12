@@ -32,7 +32,7 @@ add_executable(isoltest
 	../libsolidity/SMTCheckerTest.cpp
 	../libsolidity/SMTCheckerJSONTest.cpp
 	../libyul/Common.cpp
-	../libyul/EWasmTranslationTest.cpp
+	../libyul/EwasmTranslationTest.cpp
 	../libyul/FunctionSideEffects.cpp
 	../libyul/ObjectCompilerTest.cpp
 	../libyul/YulOptimizerTest.cpp

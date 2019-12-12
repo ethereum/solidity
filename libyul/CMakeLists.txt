@@ -44,8 +44,8 @@ add_library(yul
 	backends/evm/EVMMetrics.h
 	backends/evm/NoOutputAssembly.h
 	backends/evm/NoOutputAssembly.cpp
-	backends/wasm/EVMToEWasmTranslator.cpp
-	backends/wasm/EVMToEWasmTranslator.h
+	backends/wasm/EVMToEwasmTranslator.cpp
+	backends/wasm/EVMToEwasmTranslator.h
 	backends/wasm/BinaryTransform.cpp
 	backends/wasm/BinaryTransform.h
 	backends/wasm/TextTransform.cpp
