@@ -86,7 +86,7 @@ New Features
 ============
 
 This section lists things that were not possible prior to Solidity 0.6.0
-or at least more difficult.
+or at least were more difficult to achieve prior to Solidity 0.6.0.
 
  * The :ref:`try/catch statement <try-catch>` allows you to react on failed external calls.
  * ``struct`` and ``enum`` types can be declared at file level.
