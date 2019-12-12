@@ -222,7 +222,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 			m_unusedStackSlots.erase(m_unusedStackSlots.begin());
 			m_context->variableStackHeights[&var] = slot;
 			if (size_t heightDiff = variableHeightDiff(var, varName, true))
-				m_assembly.appendInstruction(evmasm::swapInstruction(heightDiff - 1));
+				m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(heightDiff - 1)));
 			m_assembly.appendInstruction(evmasm::Instruction::POP);
 		}
 	}
@@ -314,7 +314,7 @@ void CodeTransform::operator()(Identifier const& _identifier)
 			// TODO: opportunity for optimization: Do not DUP if this is the last reference
 			// to the top most element of the stack
 			if (size_t heightDiff = variableHeightDiff(_var, _identifier.name, false))
-				m_assembly.appendInstruction(evmasm::dupInstruction(heightDiff));
+				m_assembly.appendInstruction(evmasm::dupInstruction(static_cast<unsigned>(heightDiff)));
 			else
 				// Store something to balance the stack
 				m_assembly.appendConstant(u256(0));
@@ -694,7 +694,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	{
 		Scope::Variable const& _var = std::get<Scope::Variable>(*var);
 		if (size_t heightDiff = variableHeightDiff(_var, _variableName.name, true))
-			m_assembly.appendInstruction(evmasm::swapInstruction(heightDiff - 1));
+			m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(heightDiff - 1)));
 		m_assembly.appendInstruction(evmasm::Instruction::POP);
 		decreaseReference(_variableName.name, _var);
 	}

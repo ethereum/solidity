@@ -1282,7 +1282,7 @@ BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
 
-	for (size_t i = 1; i < 256; i++)
+	for (unsigned i = 1; i < 256; i++)
 	{
 		checkCSE({
 			u256(boost::multiprecision::pow(u256(2), i) - 1),
@@ -1310,7 +1310,7 @@ BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 	}
 
 	// Check that opt. does NOT trigger
-	for (size_t i = 1; i < 255; i++)
+	for (unsigned i = 1; i < 255; i++)
 	{
 		checkCSE({
 			u256(boost::multiprecision::pow(u256(2), i) - 1),

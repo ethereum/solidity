@@ -56,14 +56,14 @@ unsigned Assembly::bytesRequired(unsigned subTagSize) const
 {
 	for (unsigned tagSize = subTagSize; true; ++tagSize)
 	{
-		unsigned ret = 1;
+		size_t ret = 1;
 		for (auto const& i: m_data)
 			ret += i.second.size();
 
 		for (AssemblyItem const& i: m_items)
 			ret += i.bytesRequired(tagSize);
 		if (util::bytesRequired(ret) <= tagSize)
-			return ret;
+			return static_cast<unsigned>(ret);
 	}
 }
 
@@ -257,7 +257,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 			break;
 		case PushString:
 			collection.append(
-				createJsonValue("PUSH tag", sourceIndex, i.location().start, i.location().end, m_strings.at((h256)i.data())));
+				createJsonValue("PUSH tag", sourceIndex, i.location().start, i.location().end, m_strings.at(h256(i.data()))));
 			break;
 		case PushTag:
 			if (i.data() == 0)
@@ -573,21 +573,21 @@ LinkerObject const& Assembly::assemble() const
 			"Cannot push and assign immutables in the same assembly subroutine."
 		);
 
-	size_t bytesRequiredForCode = bytesRequired(subTagSize);
+	unsigned bytesRequiredForCode = bytesRequired(static_cast<unsigned>(subTagSize));
 	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, numeric_limits<size_t>::max());
 	map<size_t, pair<size_t, size_t>> tagRef;
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
 	unsigned bytesPerTag = util::bytesRequired(bytesRequiredForCode);
-	uint8_t tagPush = (uint8_t)pushInstruction(bytesPerTag);
+	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
-	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + m_auxiliaryData.size();
+	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + static_cast<unsigned>(m_auxiliaryData.size());
 	for (auto const& sub: m_subs)
-		bytesRequiredIncludingData += sub->assemble().bytecode.size();
+		bytesRequiredIncludingData += static_cast<unsigned>(sub->assemble().bytecode.size());
 
 	unsigned bytesPerDataRef = util::bytesRequired(bytesRequiredIncludingData);
-	uint8_t dataRefPush = (uint8_t)pushInstruction(bytesPerDataRef);
+	uint8_t dataRefPush = static_cast<uint8_t>(pushInstruction(bytesPerDataRef));
 	ret.bytecode.reserve(bytesRequiredIncludingData);
 
 	for (AssemblyItem const& i: m_items)
@@ -599,25 +599,25 @@ LinkerObject const& Assembly::assemble() const
 		switch (i.type())
 		{
 		case Operation:
-			ret.bytecode.push_back((uint8_t)i.instruction());
+			ret.bytecode.push_back(static_cast<uint8_t>(i.instruction()));
 			break;
 		case PushString:
 		{
-			ret.bytecode.push_back((uint8_t)Instruction::PUSH32);
+			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH32));
 			unsigned ii = 0;
-			for (auto j: m_strings.at((h256)i.data()))
+			for (auto j: m_strings.at(h256(i.data())))
 				if (++ii > 32)
 					break;
 				else
-					ret.bytecode.push_back((uint8_t)j);
+					ret.bytecode.push_back(uint8_t(j));
 			while (ii++ < 32)
 				ret.bytecode.push_back(0);
 			break;
 		}
 		case Push:
 		{
-			uint8_t b = max<unsigned>(1, util::bytesRequired(i.data()));
-			ret.bytecode.push_back((uint8_t)pushInstruction(b));
+			unsigned b = max<unsigned>(1, util::bytesRequired(i.data()));
+			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
 			toBigEndian(i.data(), byr);
@@ -632,7 +632,7 @@ LinkerObject const& Assembly::assemble() const
 		}
 		case PushData:
 			ret.bytecode.push_back(dataRefPush);
-			dataRef.insert(make_pair((h256)i.data(), ret.bytecode.size()));
+			dataRef.insert(make_pair(h256(i.data()), ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		case PushSub:
@@ -646,8 +646,8 @@ LinkerObject const& Assembly::assemble() const
 			assertThrow(i.data() <= numeric_limits<size_t>::max(), AssemblyException, "");
 			auto s = subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
-			uint8_t b = max<unsigned>(1, util::bytesRequired(s));
-			ret.bytecode.push_back((uint8_t)pushInstruction(b));
+			unsigned b = max<unsigned>(1, util::bytesRequired(s));
+			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
 			toBigEndian(s, byr);
@@ -656,17 +656,17 @@ LinkerObject const& Assembly::assemble() const
 		case PushProgramSize:
 		{
 			ret.bytecode.push_back(dataRefPush);
-			sizeRef.push_back(ret.bytecode.size());
+			sizeRef.push_back(static_cast<unsigned>(ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		}
 		case PushLibraryAddress:
-			ret.bytecode.push_back(uint8_t(Instruction::PUSH20));
+			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH20));
 			ret.linkReferences[ret.bytecode.size()] = m_libraries.at(i.data());
 			ret.bytecode.resize(ret.bytecode.size() + 20);
 			break;
 		case PushImmutable:
-			ret.bytecode.push_back(uint8_t(Instruction::PUSH32));
+			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH32));
 			ret.immutableReferences[i.data()].first = m_immutables.at(i.data());
 			ret.immutableReferences[i.data()].second.emplace_back(ret.bytecode.size());
 			ret.bytecode.resize(ret.bytecode.size() + 32);
@@ -674,18 +674,18 @@ LinkerObject const& Assembly::assemble() const
 		case AssignImmutable:
 			for (auto const& offset: immutableReferencesBySub[i.data()].second)
 			{
-				ret.bytecode.push_back(uint8_t(Instruction::DUP1));
+				ret.bytecode.push_back(static_cast<uint8_t>(Instruction::DUP1));
 				// TODO: should we make use of the constant optimizer methods for pushing the offsets?
 				bytes offsetBytes = toCompactBigEndian(u256(offset));
-				ret.bytecode.push_back(uint8_t(pushInstruction(offsetBytes.size())));
+				ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(static_cast<unsigned>(offsetBytes.size()))));
 				ret.bytecode += offsetBytes;
-				ret.bytecode.push_back(uint8_t(Instruction::MSTORE));
+				ret.bytecode.push_back(static_cast<uint8_t>(Instruction::MSTORE));
 			}
 			immutableReferencesBySub.erase(i.data());
-			ret.bytecode.push_back(uint8_t(Instruction::POP));
+			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::POP));
 			break;
 		case PushDeployTimeAddress:
-			ret.bytecode.push_back(uint8_t(Instruction::PUSH20));
+			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH20));
 			ret.bytecode.resize(ret.bytecode.size() + 20);
 			break;
 		case Tag:
@@ -694,7 +694,7 @@ LinkerObject const& Assembly::assemble() const
 			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
 			assertThrow(m_tagPositionsInBytecode[static_cast<size_t>(i.data())] == numeric_limits<size_t>::max(), AssemblyException, "Duplicate tag position.");
 			m_tagPositionsInBytecode[static_cast<size_t>(i.data())] = ret.bytecode.size();
-			ret.bytecode.push_back((uint8_t)Instruction::JUMPDEST);
+			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::JUMPDEST));
 			break;
 		default:
 			assertThrow(false, InvalidOpcode, "Unexpected opcode while assembling.");
@@ -708,7 +708,7 @@ LinkerObject const& Assembly::assemble() const
 
 	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
 		// Append an INVALID here to help tests find miscompilation.
-		ret.bytecode.push_back(uint8_t(Instruction::INVALID));
+		ret.bytecode.push_back(static_cast<uint8_t>(Instruction::INVALID));
 
 	for (auto const& [subIdPath, bytecodeOffset]: subRef)
 	{

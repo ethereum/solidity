@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(geneRandomisation_should_iterate_over_genes_and_replace_the
 	SimulationRNG::reset(1);
 	for (size_t randomisationChancePercent = 20; randomisationChancePercent <= 100; randomisationChancePercent += 20)
 	{
-		double const randomisationChance = (randomisationChancePercent / 100.0);
+		double const randomisationChance = double(randomisationChancePercent) / 100.0;
 
 		Chromosome output = geneRandomisation(randomisationChance)(input);
 		string outputGenes = output.genes();
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(geneRandomisation_should_iterate_over_genes_and_replace_the
 
 		double const expectedValue = randomisationChance;
 		double const variance = randomisationChance * (1 - randomisationChance);
-		double const randomisedGeneCount = input.length() - static_cast<size_t>(count(outputGenes.begin(), outputGenes.end(), '.'));
+		double const randomisedGeneCount = double(input.length() - static_cast<size_t>(count(outputGenes.begin(), outputGenes.end(), '.')));
 		double const squaredError =
 			(inputLength - randomisedGeneCount) * expectedValue * expectedValue +
 			randomisedGeneCount * (1 - expectedValue) * (1 - expectedValue);
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(geneDeletion_should_iterate_over_genes_and_delete_them_with
 	SimulationRNG::reset(1);
 	for (size_t deletionChancePercent = 20; deletionChancePercent < 100; deletionChancePercent += 20)
 	{
-		double const deletionChance = (deletionChancePercent / 100.0);
+		double const deletionChance = double(deletionChancePercent) / 100.0;
 
 		Chromosome output = geneDeletion(deletionChance)(input);
 		string outputGenes = output.genes();
@@ -99,14 +99,14 @@ BOOST_AUTO_TEST_CASE(geneDeletion_should_iterate_over_genes_and_delete_them_with
 		BOOST_REQUIRE(static_cast<size_t>(count(outputGenes.begin(), outputGenes.end(), '.')) == output.length());
 
 		double const expectedValue = deletionChance;
-		double const variance = deletionChance * (1 - deletionChance);
-		double const deletedGeneCount = input.length() - output.length();
+		double const variance = deletionChance * (1.0 - deletionChance);
+		double const deletedGeneCount = double(input.length() - output.length());
 		double const squaredError =
-			(inputLength - deletedGeneCount) * expectedValue * expectedValue +
-			deletedGeneCount * (1 - expectedValue) * (1 - expectedValue);
+			(double(inputLength) - deletedGeneCount) * expectedValue * expectedValue +
+			deletedGeneCount * (1.0 - expectedValue) * (1.0 - expectedValue);
 
-		BOOST_TEST(abs(deletedGeneCount / inputLength - expectedValue) < tolerance);
-		BOOST_TEST(abs(squaredError / inputLength - variance) < tolerance);
+		BOOST_TEST(abs(deletedGeneCount / double(inputLength) - expectedValue) < tolerance);
+		BOOST_TEST(abs(squaredError / double(inputLength) - variance) < tolerance);
 	}
 }
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(geneAddition_should_iterate_over_gene_positions_and_insert_
 	SimulationRNG::reset(1);
 	for (size_t additionChancePercent = 20; additionChancePercent < 100; additionChancePercent += 20)
 	{
-		double const additionChance = (additionChancePercent / 100.0);
+		double const additionChance = double(additionChancePercent) / 100.0;
 
 		Chromosome output = geneAddition(additionChance)(input);
 		BOOST_REQUIRE(output.length() >= input.length());
@@ -150,14 +150,14 @@ BOOST_AUTO_TEST_CASE(geneAddition_should_iterate_over_gene_positions_and_insert_
 		BOOST_REQUIRE(preservedGeneCount == input.length());
 
 		double const expectedValue = additionChance;
-		double const variance = additionChance * (1 - additionChance);
-		double const addedGeneCount = (output.length() - preservedGeneCount);
+		double const variance = additionChance * (1.0 - additionChance);
+		double const addedGeneCount = double(output.length() - preservedGeneCount);
 		double const squaredError =
-			(maxAdditions - addedGeneCount) * expectedValue * expectedValue +
-			addedGeneCount * (1 - expectedValue) * (1 - expectedValue);
+			(double(maxAdditions) - addedGeneCount) * expectedValue * expectedValue +
+			addedGeneCount * (1.0 - expectedValue) * (1.0 - expectedValue);
 
-		BOOST_TEST(abs(addedGeneCount / maxAdditions - expectedValue) < tolerance);
-		BOOST_TEST(abs(squaredError / maxAdditions - variance) < tolerance);
+		BOOST_TEST(abs(addedGeneCount / double(maxAdditions) - expectedValue) < tolerance);
+		BOOST_TEST(abs(squaredError / double(maxAdditions) - variance) < tolerance);
 	}
 }
 

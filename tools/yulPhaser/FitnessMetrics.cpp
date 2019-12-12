@@ -62,16 +62,16 @@ size_t ProgramSize::evaluate(Chromosome const& _chromosome)
 
 size_t RelativeProgramSize::evaluate(Chromosome const& _chromosome)
 {
-	size_t const scalingFactor = pow(10, m_fixedPointPrecision);
+	double const scalingFactor = pow(10, m_fixedPointPrecision);
 
 	size_t unoptimisedSize = optimisedProgram(Chromosome("")).codeSize(codeWeights());
 	if (unoptimisedSize == 0)
-		return scalingFactor;
+		return static_cast<size_t>(scalingFactor);
 
 	size_t optimisedSize = optimisedProgram(_chromosome).codeSize(codeWeights());
 
 	return static_cast<size_t>(round(
-		static_cast<double>(optimisedSize) / unoptimisedSize * scalingFactor
+		double(optimisedSize) / double(unoptimisedSize) * scalingFactor
 	));
 }
 

@@ -156,14 +156,14 @@ private:
 	static std::string literalTokenKind(Token _token);
 	static std::string type(Expression const& _expression);
 	static std::string type(VariableDeclaration const& _varDecl);
-	static int nodeId(ASTNode const& _node)
+	static int64_t nodeId(ASTNode const& _node)
 	{
 		return _node.id();
 	}
 	template<class Container>
 	static Json::Value getContainerIds(Container const& _container, bool _order = false)
 	{
-		std::vector<int> tmp;
+		std::vector<int64_t> tmp;
 
 		for (auto const& element: _container)
 		{
@@ -174,7 +174,7 @@ private:
 			std::sort(tmp.begin(), tmp.end());
 		Json::Value json(Json::arrayValue);
 
-		for (int val: tmp)
+		for (int64_t val: tmp)
 			json.append(val);
 
 		return json;

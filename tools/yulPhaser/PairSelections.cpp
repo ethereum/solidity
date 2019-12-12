@@ -31,7 +31,7 @@ vector<tuple<size_t, size_t>> RandomPairSelection::materialise(size_t _poolSize)
 	if (_poolSize < 2)
 		return {};
 
-	auto count = static_cast<size_t>(round(_poolSize * m_selectionSize));
+	auto count = static_cast<size_t>(round(double(_poolSize) * m_selectionSize));
 
 	vector<tuple<size_t, size_t>> selection;
 	for (size_t i = 0; i < count; ++i)
@@ -94,7 +94,7 @@ vector<tuple<size_t, size_t>> PairMosaicSelection::materialise(size_t _poolSize)
 	if (_poolSize < 2)
 		return {};
 
-	size_t count = static_cast<size_t>(round(_poolSize * m_selectionSize));
+	size_t count = static_cast<size_t>(round(double(_poolSize) * m_selectionSize));
 
 	vector<tuple<size_t, size_t>> selection;
 	for (size_t i = 0; i < count; ++i)

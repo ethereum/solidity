@@ -418,7 +418,7 @@ string ProtoConverter::visit(TestFunction const& _x, string const& _storageVarDe
 		("functionDeclReturndata", functionDeclReturndata)
 		("storageVarDefs", _storageVarDefs)
 		("localVarDefs", localVarDefs)
-		("calldataTestCode", testCallDataFunction(_x.invalid_encoding_length()))
+		("calldataTestCode", testCallDataFunction(static_cast<unsigned>(_x.invalid_encoding_length())))
 		("returndataTestCode", testReturnDataFunction())
 		("return_types", m_types.str())
 		("return_values", m_argsCoder.str())

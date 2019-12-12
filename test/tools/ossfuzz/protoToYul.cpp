@@ -182,9 +182,9 @@ bool ProtoConverter::functionCallNotPossible(FunctionCall_Returns _type)
 unsigned ProtoConverter::numVarsInScope()
 {
 	if (m_inFunctionDef)
-		return m_currentFuncVars.size();
+		return static_cast<unsigned>(m_currentFuncVars.size());
 	else
-		return m_currentGlobalVars.size();
+		return static_cast<unsigned>(m_currentGlobalVars.size());
 }
 
 void ProtoConverter::visit(VarRef const& _x)
@@ -1344,12 +1344,12 @@ void ProtoConverter::visit(UnaryOpData const& _x)
 	{
 	case UnaryOpData::SIZE:
 		m_output << Whiskers(R"(datasize("<id>"))")
-			("id", getObjectIdentifier(_x.identifier()))
+			("id", getObjectIdentifier(static_cast<unsigned>(_x.identifier())))
 			.render();
 		break;
 	case UnaryOpData::OFFSET:
 		m_output << Whiskers(R"(dataoffset("<id>"))")
-			("id", getObjectIdentifier(_x.identifier()))
+			("id", getObjectIdentifier(static_cast<unsigned>(_x.identifier())))
 			.render();
 		break;
 	}
@@ -1473,7 +1473,7 @@ void ProtoConverter::openFunctionScope(vector<string> const& _funcParams)
 
 void ProtoConverter::updateFunctionMaps(string const& _var)
 {
-	unsigned erased = m_functionSigMap.erase(_var);
+	size_t erased = m_functionSigMap.erase(_var);
 
 	for (auto const& i: m_functionDefMap)
 		if (i.second == _var)
@@ -1491,7 +1491,7 @@ void ProtoConverter::closeBlockScope()
 	// out of scope from the global function map.
 	for (auto const& f: m_scopeFuncs.back())
 	{
-		unsigned numFuncsRemoved = m_functions.size();
+		size_t numFuncsRemoved = m_functions.size();
 		m_functions.erase(remove(m_functions.begin(), m_functions.end(), f), m_functions.end());
 		numFuncsRemoved -= m_functions.size();
 		yulAssert(
@@ -1908,7 +1908,7 @@ void ProtoConverter::buildObjectScopeTree(Object const& _x)
 void ProtoConverter::visit(Program const& _x)
 {
 	// Initialize input size
-	m_inputSize = _x.ByteSizeLong();
+	m_inputSize = static_cast<unsigned>(_x.ByteSizeLong());
 
 	// Record EVM Version
 	m_evmVersion = evmVersionMapping(_x.ver());

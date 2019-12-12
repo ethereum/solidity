@@ -71,8 +71,7 @@ public:
 		using KindCompareType = std::underlying_type<VariableOccurrence::Kind>::type;
 		return
 			std::make_pair(m_declaration.id(), static_cast<KindCompareType>(m_occurrenceKind)) <
-			std::make_pair(_rhs.m_declaration.id(), static_cast<KindCompareType>(_rhs.m_occurrenceKind))
-		;
+			std::make_pair(_rhs.m_declaration.id(), static_cast<KindCompareType>(_rhs.m_occurrenceKind));
 	}
 
 	VariableDeclaration const& declaration() const { return m_declaration; }

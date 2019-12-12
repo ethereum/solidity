@@ -192,7 +192,7 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	auto const& immutables = contractType.immutableVariables();
 	// Push all immutable values on the stack.
 	for (auto const& immutable: immutables)
-		CompilerUtils(m_context).loadFromMemory(m_context.immutableMemoryOffset(*immutable), *immutable->annotation().type);
+		CompilerUtils(m_context).loadFromMemory(static_cast<unsigned>(m_context.immutableMemoryOffset(*immutable)), *immutable->annotation().type);
 	m_context.pushSubroutineSize(m_context.runtimeSub());
 	if (immutables.empty())
 		m_context << Instruction::DUP1;
@@ -662,7 +662,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		}
 		else
 		{
-			m_context << swapInstruction(stackLayout.size() - static_cast<unsigned>(stackLayout.back()) - 1u);
+			m_context << swapInstruction(static_cast<unsigned>(stackLayout.size()) - static_cast<unsigned>(stackLayout.back()) - 1u);
 			swap(stackLayout[static_cast<size_t>(stackLayout.back())], stackLayout.back());
 		}
 	for (size_t i = 0; i < stackLayout.size(); ++i)

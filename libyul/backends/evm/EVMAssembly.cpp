@@ -53,7 +53,7 @@ void EVMAssembly::appendInstruction(evmasm::Instruction _instr)
 void EVMAssembly::appendConstant(u256 const& _constant)
 {
 	bytes data = toCompactBigEndian(_constant, 1);
-	appendInstruction(evmasm::pushInstruction(data.size()));
+	appendInstruction(evmasm::pushInstruction(static_cast<unsigned>(data.size())));
 	m_bytecode += data;
 }
 
