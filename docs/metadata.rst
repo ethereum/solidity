@@ -5,7 +5,7 @@ Contract Metadata
 .. index:: metadata, contract verification
 
 The Solidity compiler automatically generates a JSON file, the contract
-metadata, that contains information about the current contract. You can use
+metadata, that contains information about the compiled contract. You can use
 this file to query the compiler version, the sources used, the ABI and NatSpec
 documentation to more safely interact with the contract and verify its source
 code.
@@ -122,7 +122,9 @@ explanatory purposes.
   different bytecode.
 
 .. note::
-    Note the ABI definition above has no fixed order. It can change with compiler versions.
+    The ABI definition above has no fixed order. It can change with compiler versions.
+    Starting from Solidity version 0.5.12, though, the array maintains a certain
+    order.
 
 Encoding of the Metadata Hash in the Bytecode
 =============================================
