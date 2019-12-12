@@ -89,7 +89,10 @@ activate themselves.
             );
 
             // If the bid is not higher, send the
-            // money back.
+            // money back (the failing require
+            // will revert all changes in this
+            // function execution including
+            // it having received the money).
             require(
                 msg.value > highestBid,
                 "There already is a higher bid."

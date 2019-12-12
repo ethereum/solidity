@@ -33,8 +33,11 @@ The contract will work as follows:
 Creating the signature
 ----------------------
 
-Alice does not need to interact with the Ethereum network to sign the transaction, the process is completely offline.
-In this tutorial, we will sign messages in the browser using `web3.js <https://github.com/ethereum/web3.js>`_ and `MetaMask <https://metamask.io>`_, using the method described in `EIP-762 <https://github.com/ethereum/EIPs/pull/712>`_,
+Alice does not need to interact with the Ethereum network
+to sign the transaction, the process is completely offline.
+In this tutorial, we will sign messages in the browser
+using `web3.js <https://github.com/ethereum/web3.js>`_ and
+`MetaMask <https://metamask.io>`_, using the method described in `EIP-762 <https://github.com/ethereum/EIPs/pull/712>`_,
 as it provides a number of other security benefits.
 
 ::
@@ -44,7 +47,10 @@ as it provides a number of other security benefits.
     web3.eth.personal.sign(hash, web3.eth.defaultAccount, function () { console.log("Signed"); });
 
 .. note::
-  The ``web3.eth.personal.sign`` prepends the length of the message to the signed data. Since we hash first, the message will always be exactly 32 bytes long, and thus this length prefix is always the same.
+  The ``web3.eth.personal.sign`` prepends the length of the
+  message to the signed data. Since we hash first, the message
+  will always be exactly 32 bytes long, and thus this length
+  prefix is always the same.
 
 What to Sign
 ------------
@@ -62,9 +68,18 @@ themselves, a so-called nonce, which is the number of transactions sent by an
 account.
 The smart contract checks if a nonce is used multiple times.
 
-Another type of replay attack can occur when the owner deploys a ``ReceiverPays`` smart contract, makes some payments, and then destroys the contract. Later, they decide to deploy the ``RecipientPays`` smart contract again, but the new contract does not know the nonces used in the previous deployment, so the attacker can use the old messages again.
+Another type of replay attack can occur when the owner
+deploys a ``ReceiverPays`` smart contract, makes some
+payments, and then destroys the contract. Later, they decide
+to deploy the ``RecipientPays`` smart contract again, but the
+new contract does not know the nonces used in the previous
+deployment, so the attacker can use the old messages again.
 
-Alice can protect against this attack by including the contract's address in the message, and only messages containing the contract's address itself will be accepted. You can find an example of this in the first two lines of the ``claimPayment()`` function of the full contract at the end of this section.
+Alice can protect against this attack by including the
+contract's address in the message, and only messages containing
+the contract's address itself will be accepted. You can find
+an example of this in the first two lines of the ``claimPayment()``
+function of the full contract at the end of this section.
 
 Packing arguments
 -----------------
@@ -94,12 +109,26 @@ Here is a JavaScript function that creates the proper signature for the ``Receiv
 Recovering the Message Signer in Solidity
 -----------------------------------------
 
-In general, ECDSA signatures consist of two parameters, ``r`` and ``s``. Signatures in Ethereum include a third parameter called ``v``, that you can use to verify which account's private key was used to sign the message, and the transaction's sender. Solidity provides a built-in function `ecrecover <mathematical-and-cryptographic-functions>`_ that accepts a message along with the ``r``, ``s`` and ``v`` parameters and returns the address that was used to sign the message.
+In general, ECDSA signatures consist of two parameters,
+``r`` and ``s``. Signatures in Ethereum include a third
+parameter called ``v``, that you can use to verify which
+account's private key was used to sign the message, and
+the transaction's sender. Solidity provides a built-in
+function `ecrecover <mathematical-and-cryptographic-functions>`_ that
+accepts a message along with the ``r``, ``s`` and ``v`` parameters
+and returns the address that was used to sign the message.
 
 Extracting the Signature Parameters
 -----------------------------------
 
-Signatures produced by web3.js are the concatenation of ``r``, ``s`` and ``v``, so the first step is to split these parameters apart. You can do this on the client-side, but doing it inside the smart contract means you only need to send one signature parameter rather than three. Splitting apart a byte array into component parts is a mess, so we use `inline assembly <assembly>`_ to do the job in the ``splitSignature`` function (the third function in the full contract at the end of this section).
+Signatures produced by web3.js are the concatenation of ``r``,
+``s`` and ``v``, so the first step is to split these parameters
+apart. You can do this on the client-side, but doing it inside
+the smart contract means you only need to send one signature
+parameter rather than three. Splitting apart a byte array into
+its constituent parts is a mess, so we use
+`inline assembly <assembly>`_ to do the job in the ``splitSignature``
+function (the third function in the full contract at the end of this section).
 
 Computing the Message Hash
 --------------------------
@@ -180,26 +209,44 @@ The full contract
 Writing a Simple Payment Channel
 ================================
 
-Alice now builds a simple but complete implementation of a payment channel. Payment channels use cryptographic signatures to make repeated transfers of Ether securely, instantaneously, and without transaction fees.
+Alice now builds a simple but complete implementation of a payment
+channel. Payment channels use cryptographic signatures to make
+repeated transfers of Ether securely, instantaneously, and without transaction fees.
 
 What is a Payment Channel?
 --------------------------
 
-Payment channels allow participants to make repeated transfers of Ether without using transactions. This means that you can avoid the delays and fees associated with transactions. We are going to explore a simple unidirectional payment channel between two parties (Alice and Bob). It involves three steps:
+Payment channels allow participants to make repeated transfers of Ether
+without using transactions. This means that you can avoid the delays and
+fees associated with transactions. We are going to explore a simple
+unidirectional payment channel between two parties (Alice and Bob). It involves three steps:
 
     1. Alice funds a smart contract with Ether. This "opens" the payment channel.
     2. Alice signs messages that specify how much of that Ether is owed to the recipient. This step is repeated for each payment.
     3. Bob "closes" the payment channel, withdrawing their portion of the Ether and sending the remainder back to the sender.
 
 .. note::
-  Only steps 1 and 3 require Ethereum transactions, step 2 means that the sender transmits a cryptographically signed message to the recipient via off chain methods (e.g. email). This means only two transactions are required to support any number of transfers.
+  Only steps 1 and 3 require Ethereum transactions, step 2 means that the sender
+  transmits a cryptographically signed message to the recipient via off chain
+  methods (e.g. email). This means only two transactions are required to support
+  any number of transfers.
 
-Bob is guaranteed to receive their funds because the smart contract escrows the Ether and honours a valid signed message. The smart contract also enforces a timeout, so Alice is guaranteed to eventually recover their funds even if the recipient refuses to close the channel. It is up to the participants in a payment channel to decide how long to keep it open. For a short-lived transaction, such as paying an internet café for each minute of network access, or for a longer relationship, such as paying an employee an hourly wage, a payment could last for months or years.
+Bob is guaranteed to receive their funds because the smart contract escrows the
+Ether and honours a valid signed message. The smart contract also enforces a
+timeout, so Alice is guaranteed to eventually recover their funds even if the
+recipient refuses to close the channel. It is up to the participants in a payment
+channel to decide how long to keep it open. For a short-lived transaction,
+such as paying an internet café for each minute of network access, or for a
+longer relationship, such as paying an employee an hourly wage, a payment
+could last for months or years.
 
 Opening the Payment Channel
 ---------------------------
 
-To open the payment channel, Alice deploys the smart contract, attaching the Ether to be escrowed and specifying the intended recipient and a maximum duration for the channel to exist. This is the function ``SimplePaymentChannel`` in the contract, at the end of this section.
+To open the payment channel, Alice deploys the smart contract, attaching
+the Ether to be escrowed and specifying the intended recipient and a
+maximum duration for the channel to exist. This is the function
+``SimplePaymentChannel`` in the contract, at the end of this section.
 
 Making Payments
 ---------------
@@ -218,7 +265,8 @@ Because of this, only one of the messages sent is redeemed. This is why
 each message specifies a cumulative total amount of Ether owed, rather than the
 amount of the individual micropayment. The recipient will naturally choose to
 redeem the most recent message because that is the one with the highest total.
-The nonce per-message is not needed anymore, because the smart contract only honors a single message. The address of the smart contract is still used
+The nonce per-message is not needed anymore, because the smart contract only
+honours a single message. The address of the smart contract is still used
 to prevent a message intended for one payment channel from being used for a different channel.
 
 Here is the modified JavaScript code to cryptographically sign a message from the previous section:
@@ -254,7 +302,9 @@ Closing the Payment Channel
 
 When Bob is ready to receive their funds, it is time to
 close the payment channel by calling a ``close`` function on the smart contract.
-Closing the channel pays the recipient the Ether they are owed and destroys the contract, sending any remaining Ether back to Alice. To close the channel, Bob needs to provide a message signed by Alice.
+Closing the channel pays the recipient the Ether they are owed and
+destroys the contract, sending any remaining Ether back to Alice. To
+close the channel, Bob needs to provide a message signed by Alice.
 
 The smart contract must verify that the message contains a valid signature from the sender.
 The process for doing this verification is the same as the process the recipient uses.
