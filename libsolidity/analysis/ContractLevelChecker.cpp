@@ -416,7 +416,7 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 		for (TypePointer const& paramType: func.second->parameterTypes() + func.second->parameterTypes())
 			if (!TypeChecker::typeSupportedByOldABIEncoder(*paramType, false))
 			{
-				errors.append("Type only supported by the new experimental ABI encoder", currentLoc);
+				errors.append("Type only supported by ABIEncoderV2", currentLoc);
 				break;
 			}
 	}
@@ -427,7 +427,7 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 			errors,
 			std::string("Contract \"") +
 			_contract.name() +
-			"\" does not use the new experimental ABI encoder but wants to inherit from a contract " +
+			"\" does not use ABIEncoderV2 but wants to inherit from a contract " +
 			"which uses types that require it. " +
 			"Use \"pragma experimental ABIEncoderV2;\" for the inheriting contract as well to enable the feature."
 		);

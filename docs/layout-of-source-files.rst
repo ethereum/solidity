@@ -70,10 +70,12 @@ ABIEncoderV2
 ~~~~~~~~~~~~
 
 The new ABI encoder is able to encode and decode arbitrarily nested
-arrays and structs. It produces less optimal code (the optimizer
-for this part of the code is still under development) and has not
-received as much testing as the old encoder. You can activate it
-using ``pragma experimental ABIEncoderV2;``.
+arrays and structs. It might produce less optimal code and has not
+received as much testing as the old encoder, but is considered
+non-experimental as of Solidity 0.6.0. You still have to explicitly
+activate it using ``pragma experimental ABIEncoderV2;`` - we kept
+the same pragma, even though it is not considered experimental
+anymore.
 
 .. _smt_checker:
 
