@@ -92,7 +92,7 @@ or at least were more difficult to achieve prior to Solidity 0.6.0.
  * ``struct`` and ``enum`` types can be declared at file level.
  * Array slices can be used for calldata arrays, for example ``abi.decode(msg.data[4:], (uint, uint))``
    is a low-level way to decode the function call payload.
- * Natspec supports multiple return parameters in dev documentation, enforcing the same naming check as ``@param``.
+ * Natspec supports multiple return parameters in developer documentation, enforcing the same naming check as ``@param``.
  * Yul and Inline Assembly have a new statement called ``leave`` that exits the current function.
  * Conversions from ``address`` to ``address payable`` are now possible via ``payable(x)``, where
    ``x`` must be of type ``address``.
