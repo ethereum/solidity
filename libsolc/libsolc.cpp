@@ -125,7 +125,7 @@ extern char const* solidity_version() noexcept
 	return VersionString.c_str();
 }
 
-extern char const* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext) noexcept
+extern char* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext) noexcept
 {
 	return solidityAllocations.emplace_back(compile(_input, _readCallback, _readContext)).data();
 }
