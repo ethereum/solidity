@@ -42,7 +42,8 @@ data (its *state*) that resides at a specific address on the Ethereum
 blockchain. The line ``uint storedData;`` declares a state variable called ``storedData`` of
 type ``uint`` (*u*\nsigned *int*\eger of *256* bits). You can think of it as a single slot
 in a database that you can query and alter by calling functions of the
-code that manages the database. In this example, the contract defines the functions ``set`` and ``get`` that can be used to modify
+code that manages the database. In this example, the contract defines the
+functions ``set`` and ``get`` that can be used to modify
 or retrieve the value of the variable.
 
 To access a state variable, you do not need the prefix ``this.`` as is common in
@@ -116,7 +117,8 @@ This contract introduces some new concepts, let us go through them one by one.
 
 The line ``address public minter;`` declares a state variable of type :ref:`address<address>`.
 The ``address`` type is a 160-bit value that does not allow any arithmetic operations.
-It is suitable for storing addresses of contracts, or a hash of the public half of a keypair belonging to :ref:`external accounts<accounts>`.
+It is suitable for storing addresses of contracts, or a hash of the public half
+of a keypair belonging to :ref:`external accounts<accounts>`.
 
 The keyword ``public`` automatically generates a function that allows you to access the current value of the state
 variable from outside of the contract. Without this keyword, other contracts have no way to access the variable.
@@ -190,7 +192,7 @@ The functions that make up the contract, and that users and contracts can call a
 The ``mint`` function sends an amount of newly created coins to another address.
 The :ref:`require <assert-and-require>` function call defines conditions that reverts all changes if not met.
 In this example, ``require(msg.sender == minter);`` ensures that only the creator of the contract can call ``mint``,
-and ``require(amount < 1e60);`` ensures a maximum amount of tokens, without which could cause overflow errors in the future.
+and ``require(amount < 1e60);`` ensures a maximum amount of tokens. This ensures that there are no overflow errors in the future.
 
 The ``send`` function can be used by anyone (who already
 has some of these coins) to send coins to anyone else. If the sender does not have
@@ -214,7 +216,9 @@ Blockchain Basics
 *****************
 
 Blockchains as a concept are not too hard to understand for programmers. The reason is that
-most of the complications (mining, `hashing <https://en.wikipedia.org/wiki/Cryptographic_hash_function>`_, `elliptic-curve cryptography <https://en.wikipedia.org/wiki/Elliptic_curve_cryptography>`_, `peer-to-peer networks <https://en.wikipedia.org/wiki/Peer-to-peer>`_, etc.)
+most of the complications (mining, `hashing <https://en.wikipedia.org/wiki/Cryptographic_hash_function>`_,
+`elliptic-curve cryptography <https://en.wikipedia.org/wiki/Elliptic_curve_cryptography>`_,
+`peer-to-peer networks <https://en.wikipedia.org/wiki/Peer-to-peer>`_, etc.)
 are just there to provide a certain set of features and promises for the platform. Once you accept these
 features as given, you do not have to worry about the underlying technology - or do you have
 to know how Amazon's AWS works internally in order to use it?
@@ -508,12 +512,22 @@ receives the address of the new contract on the stack.
 Deactivate and Self-destruct
 ============================
 
-The only way to remove code from the blockchain is when a contract at that address performs the ``selfdestruct`` operation. The remaining Ether stored at that address is sent to a designated target and then the storage and code is removed from the state. Removing the contract in theory sounds like a good idea, but it is potentially dangerous, as if someone sends Ether to removed contracts, the Ether is forever lost.
+The only way to remove code from the blockchain is when a contract at that
+address performs the ``selfdestruct`` operation. The remaining Ether stored
+at that address is sent to a designated target and then the storage and code
+is removed from the state. Removing the contract in theory sounds like a good
+idea, but it is potentially dangerous, as if someone sends Ether to removed
+contracts, the Ether is forever lost.
 
 .. warning::
-    Even if a contract is removed by "selfdestruct", it is still part of the history of the blockchain and probably retained by most Ethereum nodes. So using "selfdestruct" is not the same as deleting data from a hard disk.
+    Even if a contract is removed by "selfdestruct", it is still part of the
+    history of the blockchain and probably retained by most Ethereum nodes.
+    So using "selfdestruct" is not the same as deleting data from a hard disk.
 
 .. note::
-    Even if a contract's code does not contain a call to ``selfdestruct``, it can still perform that operation using ``delegatecall`` or ``callcode``.
+    Even if a contract's code does not contain a call to ``selfdestruct``,
+    it can still perform that operation using ``delegatecall`` or ``callcode``.
 
-If you want to deactivate your contracts, you should instead **disable** them by changing some internal state which causes all functions to revert. This makes it impossible to use the contract, as it returns Ether immediately.
+If you want to deactivate your contracts, you should instead **disable** them
+by changing some internal state which causes all functions to revert. This
+makes it impossible to use the contract, as it returns Ether immediately.
