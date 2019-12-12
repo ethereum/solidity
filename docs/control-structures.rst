@@ -409,15 +409,22 @@ In any case, you will get a warning about the outer variable being shadowed.
 Error handling: Assert, Require, Revert and Exceptions
 ======================================================
 
-Solidity uses state-reverting exceptions to handle errors. Such an exception undoes all changes made to the
-state in the current call (and all its sub-calls) and flags an error to the caller.
+Solidity uses state-reverting exceptions to handle errors.
+Such an exception undoes all changes made to the
+state in the current call (and all its sub-calls) and
+flags an error to the caller.
 
-When exceptions happen in a sub-call, they "bubble up" (i.e., exceptions are rethrown) automatically. Exceptions to this rule are ``send``
-and the low-level functions ``call``, ``delegatecall`` and ``staticcall``, they return ``false`` as their first return value in case
+When exceptions happen in a sub-call, they "bubble up" (i.e.,
+exceptions are rethrown) automatically. Exceptions to this rule are ``send``
+and the low-level functions ``call``, ``delegatecall`` and
+``staticcall``: they return ``false`` as their first return value in case
 of an exception instead of "bubbling up".
 
 .. warning::
-    The low-level functions ``call``, ``delegatecall`` and ``staticcall`` return ``true`` as their first return value if the account called is non-existent, as part of the design of EVM. Existence must be checked prior to calling if needed.
+    The low-level functions ``call``, ``delegatecall`` and
+    ``staticcall`` return ``true`` as their first return value
+    if the account called is non-existent, as part of the design
+    of the EVM. Account existence must be checked prior to calling if needed.
 
 Exceptions can be caught with the ``try``/``catch`` statement.
 
@@ -427,11 +434,16 @@ Exceptions can be caught with the ``try``/``catch`` statement.
 The convenience functions ``assert`` and ``require`` can be used to check for conditions and throw an exception
 if the condition is not met.
 
-The ``assert`` function should only be used to test for internal errors, and to check invariants. Properly functioning code should never reach a failing ``assert`` statement; if this happens there is a bug in your contract which you should fix. Language analysis tools can evaluate your contract to identify the conditions and function calls which will reach a failing ``assert``.
+The ``assert`` function should only be used to test for internal
+errors, and to check invariants. Properly functioning code should
+never reach a failing ``assert`` statement; if this happens there
+is a bug in your contract which you should fix. Language analysis
+tools can evaluate your contract to identify the conditions and
+function calls which will reach a failing ``assert``.
 
 An ``assert``-style exception is generated in the following situations:
 
-#. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
+#. If you access an array or an array slice at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
 #. If you access a fixed-length ``bytesN`` at a too large or negative index.
 #. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
 #. If you shift by a negative amount.
@@ -439,16 +451,25 @@ An ``assert``-style exception is generated in the following situations:
 #. If you call a zero-initialized variable of internal function type.
 #. If you call ``assert`` with an argument that evaluates to false.
 
-The ``require`` function should be used to ensure valid conditions that cannot be detected until execution time.
-These conditions include inputs, or contract state variables are met, or to validate return values from calls to external contracts.
+The ``require`` function should be used to ensure valid conditions
+that cannot be detected until execution time.
+This includes conditions on inputs
+or return values from calls to external contracts.
 
 A ``require``-style exception is generated in the following situations:
 
 #. Calling ``require`` with an argument that evaluates to ``false``.
-#. If you call a function via a message call but it does not finish properly (i.e., it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall``, ``callcode`` or ``staticcall`` is used. The low level operations never throw exceptions but indicate failures by returning ``false``.
-#. If you create a contract using the ``new`` keyword but the contract creation :ref:`does not finish properly<creating-contracts>`.
+#. If you call a function via a message call but it does not finish
+   properly (i.e., it runs out of gas, has no matching function, or
+   throws an exception itself), except when a low level operation
+   ``call``, ``send``, ``delegatecall``, ``callcode`` or ``staticcall``
+   is used. The low level operations never throw exceptions but
+   indicate failures by returning ``false``.
+#. If you create a contract using the ``new`` keyword but the contract
+   creation :ref:`does not finish properly<creating-contracts>`.
 #. If you perform an external function call targeting a contract that contains no code.
-#. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
+#. If your contract receives Ether via a public function without
+   ``payable`` modifier (including the constructor and the fallback function).
 #. If your contract receives Ether via a public getter function.
 #. If a ``.transfer()`` fails.
 
@@ -474,21 +495,30 @@ and ``assert`` for internal error checking.
         }
     }
 
-Internally, Solidity performs a revert operation (instruction ``0xfd``) for a ``require``-style exception and executes an invalid operation
+Internally, Solidity performs a revert operation (instruction
+``0xfd``) for a ``require``-style exception and executes an invalid operation
 (instruction ``0xfe``) to throw an ``assert``-style exception. In both cases, this causes
-the EVM to revert all changes made to the state. The reason for reverting is that there is no safe way to continue execution, because an expected effect
-did not occur. Because we want to keep the atomicity of transactions, the safest action is to revert all changes and make the whole transaction
+the EVM to revert all changes made to the state. The reason for reverting
+is that there is no safe way to continue execution, because an expected effect
+did not occur. Because we want to keep the atomicity of transactions, the
+safest action is to revert all changes and make the whole transaction
 (or at least call) without effect.
+
+In both cases, the caller can react on such failures using ``try``/``catch``
+(in the failing ``assert``-style exception only if enough gas is left), but
+the changes in the caller will always be reverted.
 
 .. note::
 
-    ``assert``-style exceptions consume all gas available to the call, while ``require``-style exceptions do not consume any gas starting from the Metropolis release.
+    ``assert``-style exceptions consume all gas available to the call,
+    while ``require``-style exceptions do not consume any gas starting from the Metropolis release.
 
 ``revert``
 ----------
 
 The ``revert`` function is another way to trigger exceptions from within other code blocks to flag an error and
-revert the current call. The function takes an optional string message containing details about the error that is passed back to the caller.
+revert the current call. The function takes an optional string
+message containing details about the error that is passed back to the caller.
 
 The following example shows how to use an error string together with ``revert`` and the equivalent ``require``:
 
@@ -520,6 +550,8 @@ In the above example, ``revert("Not enough Ether provided.");`` returns the foll
     0x0000000000000000000000000000000000000000000000000000000000000020 // Data offset
     0x000000000000000000000000000000000000000000000000000000000000001a // String length
     0x4e6f7420656e6f7567682045746865722070726f76696465642e000000000000 // String data
+
+The provided message can be retrieved by the caller using ``try``/``catch`` as shown below.
 
 .. note::
     There used to be a keyword called ``throw`` with the same semantics as ``revert()`` which
