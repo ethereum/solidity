@@ -48,6 +48,7 @@ public:
 
 	/// The size of the container.
 	enum { size = N };
+	static_assert(N != 0);
 
 	/// Method to convert from a string.
 	enum ConstructFromStringType { FromHex, FromBinary };
