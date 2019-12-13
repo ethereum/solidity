@@ -354,17 +354,6 @@ The full contract
             expiration = now + duration;
         }
 
-        function isValidSignature(uint256 amount, bytes memory signature)
-            internal
-            view
-            returns (bool)
-        {
-            bytes32 message = prefixed(keccak256(abi.encodePacked(this, amount)));
-
-            // check that the signature is from the payment sender
-            return recoverSigner(message, signature) == sender;
-        }
-
         /// the recipient can close the channel at any time by presenting a
         /// signed amount from the sender. the recipient will be sent that amount,
         /// and the remainder will go back to the sender
@@ -389,6 +378,17 @@ The full contract
         function claimTimeout() public {
             require(now >= expiration);
             selfdestruct(sender);
+        }
+
+        function isValidSignature(uint256 amount, bytes memory signature)
+            internal
+            view
+            returns (bool)
+        {
+            bytes32 message = prefixed(keccak256(abi.encodePacked(this, amount)));
+
+            // check that the signature is from the payment sender
+            return recoverSigner(message, signature) == sender;
         }
 
         /// All functions below this are just taken from the chapter

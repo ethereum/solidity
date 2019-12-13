@@ -38,9 +38,6 @@ and the sum of all balances is an invariant across the lifetime of the contract.
         event Transfer(address from, address to, uint amount);
         event Approval(address owner, address spender, uint amount);
 
-        function balanceOf(address tokenOwner) public view returns (uint balance) {
-            return balances[tokenOwner];
-        }
         function transfer(address to, uint amount) public returns (bool success) {
             balances.move(msg.sender, to, amount);
             emit Transfer(msg.sender, to, amount);
@@ -61,5 +58,9 @@ and the sum of all balances is an invariant across the lifetime of the contract.
             allowed[msg.sender][spender] = tokens;
             emit Approval(msg.sender, spender, tokens);
             return true;
+        }
+
+        function balanceOf(address tokenOwner) public view returns (uint balance) {
+            return balances[tokenOwner];
         }
     }
