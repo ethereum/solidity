@@ -52,23 +52,6 @@ using namespace dev::solidity;
 namespace
 {
 
-unsigned int mostSignificantBit(bigint const& _number)
-{
-#if BOOST_VERSION < 105500
-	solAssert(_number > 0, "");
-	bigint number = _number;
-	unsigned int result = 0;
-	while (number != 0)
-	{
-		number >>= 1;
-		++result;
-	}
-	return --result;
-#else
-	return boost::multiprecision::msb(_number);
-#endif
-}
-
 /// Check whether (_base ** _exp) fits into 4096 bits.
 bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
 {
@@ -79,7 +62,7 @@ bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
 
 	size_t const bitsMax = 4096;
 
-	unsigned mostSignificantBaseBit = mostSignificantBit(_base);
+	unsigned mostSignificantBaseBit = boost::multiprecision::msb(_base);
 	if (mostSignificantBaseBit == 0) // _base == 1
 		return true;
 	if (mostSignificantBaseBit > bitsMax) // _base >= 2 ^ 4096
@@ -105,7 +88,7 @@ bool fitsPrecisionBaseX(
 
 	size_t const bitsMax = 4096;
 
-	unsigned mostSignificantMantissaBit = mostSignificantBit(_mantissa);
+	unsigned mostSignificantMantissaBit = boost::multiprecision::msb(_mantissa);
 	if (mostSignificantMantissaBit > bitsMax) // _mantissa >= 2 ^ 4096
 		return false;
 
@@ -1100,7 +1083,7 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 			else
 			{
 				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
-				if (exponent > mostSignificantBit(boost::multiprecision::abs(m_value.numerator())))
+				if (exponent > boost::multiprecision::msb(boost::multiprecision::abs(m_value.numerator())))
 					value = m_value.numerator() < 0 ? -1 : 0;
 				else
 				{
@@ -1124,7 +1107,7 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 		}
 
 		// verify that numerator and denominator fit into 4096 bit after every operation
-		if (value.numerator() != 0 && max(mostSignificantBit(abs(value.numerator())), mostSignificantBit(abs(value.denominator()))) > 4096)
+		if (value.numerator() != 0 && max(boost::multiprecision::msb(abs(value.numerator())), boost::multiprecision::msb(abs(value.denominator()))) > 4096)
 			return TypeResult::err("Precision of rational constants is limited to 4096 bits.");
 
 		return TypeResult{TypeProvider::rationalNumber(value)};
