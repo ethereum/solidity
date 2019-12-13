@@ -75,9 +75,6 @@ public:
 	/// Convert to arithmetic type.
 	operator Arith() const { return fromBigEndian<Arith>(m_data); }
 
-	/// @returns true iff this is the empty hash.
-	explicit operator bool() const { return std::any_of(m_data.begin(), m_data.end(), [](uint8_t _b) { return _b != 0; }); }
-
 	// The obvious comparison operators.
 	bool operator==(FixedHash const& _c) const { return m_data == _c.m_data; }
 	bool operator!=(FixedHash const& _c) const { return m_data != _c.m_data; }
@@ -107,12 +104,6 @@ public:
 	/// @returns a copy of the object's data as a byte vector.
 	bytes asBytes() const { return bytes(data(), data() + N); }
 
-	/// @returns a mutable reference to the object's data as an STL array.
-	std::array<uint8_t, N>& asArray() { return m_data; }
-
-	/// @returns a constant reference to the object's data as an STL array.
-	std::array<uint8_t, N> const& asArray() const { return m_data; }
-
 	/// Returns the index of the first bit set to one, or size() * 8 if no bits are set.
 	inline unsigned firstBitSet() const
 	{
@@ -128,8 +119,6 @@ public:
 				ret += 8;
 		return ret;
 	}
-
-	void clear() { m_data.fill(0); }
 
 private:
 	std::array<uint8_t, N> m_data;		///< The binary data.
