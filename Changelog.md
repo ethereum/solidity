@@ -4,7 +4,7 @@ Language Features:
 
 
 Compiler Features:
-
+ * General: Raise warning if runtime bytecode exceeds 24576 bytes (a limit introduced in Spurious Dragon).
 
 Bugfixes:
 
