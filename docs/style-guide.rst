@@ -98,11 +98,11 @@ Yes::
 
 
     contract B is A {
-        function spam() public override pure {
+        function spam() public pure override {
             // ...
         }
 
-        function ham() public override pure {
+        function ham() public pure override {
             // ...
         }
     }
@@ -111,11 +111,17 @@ No::
 
     pragma solidity >=0.4.0 <0.7.0;
 
-    contract A {
-        function spam() public pure {
+    abstract contract A {
+        function spam() virtual pure public;
+        function ham() public virtual pure;
+    }
+
+
+    contract B is A {
+        function spam() public pure override {
             // ...
         }
-        function ham() public pure {
+        function ham() public pure override {
             // ...
         }
     }
@@ -564,30 +570,29 @@ No::
     function increment(uint x) public pure returns (uint) {
         return x + 1;}
 
-You should explicitly label the visibility of all functions, including constructors.
+The modifier order for a function should be:
+
+1. Visibility
+2. Mutability
+3. Virtual
+4. Override
+5. Custom modifiers
 
 Yes::
 
-    function explicitlyPublic(uint val) public {
-        doSomething();
+    function balance(uint from) public view override returns (uint)  {
+        return balanceOf[from];
     }
-
-No::
-
-    function implicitlyPublic(uint val) {
-        doSomething();
-    }
-
-The visibility modifier for a function should come before any custom
-modifiers.
-
-Yes::
 
     function kill() public onlyowner {
         selfdestruct(owner);
     }
 
 No::
+
+    function balance(uint from) public override view returns (uint)  {
+        return balanceOf[from];
+    }
 
     function kill() onlyowner public {
         selfdestruct(owner);
