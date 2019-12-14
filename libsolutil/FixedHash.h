@@ -84,8 +84,6 @@ public:
 	/// Required to sort objects of this type or use them as map keys.
 	bool operator<(FixedHash const& _c) const { for (unsigned i = 0; i < N; ++i) if (m_data[i] < _c.m_data[i]) return true; else if (m_data[i] > _c.m_data[i]) return false; return false; }
 
-	FixedHash operator~() const { FixedHash ret; for (unsigned i = 0; i < N; ++i) ret[i] = ~m_data[i]; return ret; }
-
 	/// @returns a particular byte from the hash.
 	uint8_t& operator[](unsigned _i) { return m_data[_i]; }
 	/// @returns a particular byte from the hash.
