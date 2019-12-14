@@ -131,6 +131,12 @@ with the most recent changes, please use the following:
 
     sudo snap install solc --edge
 
+.. note::
+
+    The ``solc`` snap uses strict confinement. This is the most secure mode for snap packages
+    but it comes with limitations, like accessing only the files in your ``/home`` and ``/media`` directories.
+    For more information, go to `Demystifying Snap Confinement <https://snapcraft.io/blog/demystifying-snap-confinement>`_.
+
 Arch Linux also has packages, albeit limited to the latest development version:
 
 .. code-block:: bash
