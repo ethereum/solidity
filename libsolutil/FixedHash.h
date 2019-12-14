@@ -63,9 +63,6 @@ public:
 	/// Convert from the corresponding arithmetic type.
 	FixedHash(Arith const& _arith) { toBigEndian(_arith, m_data); }
 
-	/// Convert from unsigned
-	explicit FixedHash(unsigned _u) { toBigEndian(_u, m_data); }
-
 	/// Explicitly construct, copying from a byte array.
 	explicit FixedHash(bytes const& _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
 
