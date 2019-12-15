@@ -116,6 +116,8 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return arg[0] != arg[1] ? 1 : 0;
 	else if (_fun == "i64.eqz"_yulstring)
 		return arg[0] == 0 ? 1 : 0;
+	else if (_fun == "i64.clz"_yulstring)
+		return __builtin_clz(arg[0]);
 	else if (_fun == "i64.lt_u"_yulstring)
 		return arg[0] < arg[1] ? 1 : 0;
 	else if (_fun == "i64.gt_u"_yulstring)
@@ -130,6 +132,12 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		writeMemoryWord(arg[0], arg[1]);
 		return 0;
 	}
+	else if (_fun == "i64.store8"_yulstring)
+	{
+		accessMemory(arg[0], 1);
+		writeMemoryByte(arg[0], uint8_t(arg[1] >> 56));
+		return 0;
+	}
 	else if (_fun == "i64.load"_yulstring)
 	{
 		accessMemory(arg[0], 8);
@@ -141,7 +149,7 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		// TODO this does not read the address, but is consistent with
 		// EVM interpreter implementation.
 		// If we take the address into account, this needs to use readAddress.
-		return writeU128(arg[0], m_state.balance);
+		return writeU128(arg[1], m_state.balance);
 	else if (_fun == "eth.getBlockHash"_yulstring)
 	{
 		if (arg[0] >= m_state.blockNumber || arg[0] + 256 < m_state.blockNumber)
@@ -330,6 +338,11 @@ void EWasmBuiltinInterpreter::writeMemoryWord(uint64_t _offset, uint64_t _value)
 {
 	for (size_t i = 0; i < 8; i++)
 		m_state.memory[_offset + i] = uint8_t((_value >> (i * 8)) & 0xff);
+}
+
+void EWasmBuiltinInterpreter::writeMemoryByte(uint64_t _offset, uint8_t _value)
+{
+	m_state.memory[_offset] = _value;
 }
 
 u256 EWasmBuiltinInterpreter::writeU256(uint64_t _offset, u256 _value, size_t _croppedTo)
