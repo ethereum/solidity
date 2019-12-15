@@ -3,5 +3,6 @@
 }
 // ----
 // Trace:
+//   LOG0()
 // Memory dump:
 // Storage dump:

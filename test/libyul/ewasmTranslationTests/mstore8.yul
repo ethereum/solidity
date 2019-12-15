@@ -9,6 +9,6 @@
 // ----
 // Trace:
 // Memory dump:
-//     60: 00000000000000000000000000000000ffffffffffffffffffffffffffffffff
+//     60: aa000000000000000000000000000000ffffffffffffffffffffffffffffffff
 //     80: ffffffffffffffffffffffffffffffff00000000000000000000000000000000
 // Storage dump:
