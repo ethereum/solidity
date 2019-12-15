@@ -79,7 +79,10 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	else if (_fun == "drop"_yulstring)
 		return {};
 	else if (_fun == "unreachable"_yulstring)
+	{
+		logTrace(eth::Instruction::INVALID, {});
 		throw ExplicitlyTerminated();
+	}
 	else if (_fun == "i64.add"_yulstring)
 		return arg[0] + arg[1];
 	else if (_fun == "i64.sub"_yulstring)

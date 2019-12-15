@@ -7,5 +7,6 @@
 }
 // ----
 // Trace:
+//   INVALID()
 // Memory dump:
 // Storage dump:

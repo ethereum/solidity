@@ -8,6 +8,7 @@
 }
 // ----
 // Trace:
+//   INVALID()
 // Memory dump:
 //     60: 00000000000000000000000000000000ffffffffffffffffffffffffffffffff
 //     80: ffffffffffffffffffffffffffffffff00000000000000000000000000000000

@@ -5,5 +5,6 @@
 // EVMVersion: >=istanbul
 // ----
 // Trace:
+//   INVALID()
 // Memory dump:
 // Storage dump:
