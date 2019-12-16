@@ -211,7 +211,7 @@ Now someone tricks you into sending ether to the address of this attack wallet:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity ^0.6.0;
 
     interface TxUserWallet {
         function transferTo(address payable dest, uint amount) external;

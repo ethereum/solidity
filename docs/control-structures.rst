@@ -567,7 +567,7 @@ A failure in an external call can be caught using a try/catch statement, as foll
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity ^0.6.0;
 
     interface DataFeed { function getData(address token) external returns (uint value); }
 
