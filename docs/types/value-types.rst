@@ -154,7 +154,7 @@ Operators:
     defined in the latter. Generally, in floating point almost the entire space is used to represent the number, while only a small number of bits define
     where the decimal point is.
 
-.. index:: address, balance, send, call, callcode, delegatecall, staticcall, transfer
+.. index:: address, balance, send, call, delegatecall, staticcall, transfer
 
 .. _address:
 
@@ -179,8 +179,10 @@ must be explicit via ``payable(<address>)``.
 Explicit conversions to and from ``address`` are allowed for integers, integer literals, ``bytes20`` and contract types with the following
 caveat:
 The result of a conversion of the form ``address(x)``
-has the type ``address payable``, if ``x`` is of integer or fixed bytes type, a literal or a contract with a payable fallback function.
-If ``x`` is a contract without payable fallback function, then ``address(x)`` will be of type ``address``.
+has the type ``address payable``, if ``x`` is of integer or fixed bytes type,
+a literal or a contract with a receive or payable fallback function.
+If ``x`` is a contract without a receive or payable fallback function,
+then ``address(x)`` will be of type ``address``.
 In external function signatures ``address`` is used for both the ``address`` and the ``address payable`` type.
 
 Only expressions of type ``address`` can be converted to type ``address payable`` via ``payable(<address>)``.
@@ -207,7 +209,7 @@ Operators:
 .. note::
     The distinction between ``address`` and ``address payable`` was introduced with version 0.5.0.
     Also starting from that version, contracts do not derive from the address type, but can still be explicitly converted to
-    ``address`` or to ``address payable``, if they have a payable fallback function.
+    ``address`` or to ``address payable``, if they have a receive or payable fallback function.
 
 .. _members-of-addresses:
 
@@ -313,8 +315,8 @@ You can implicitly convert contracts to contracts they inherit from.
 Contracts can be explicitly converted to and from the ``address`` type.
 
 Explicit conversion to and from the ``address payable`` type is only possible
-if the contract type has a payable fallback function.  The conversion is still
-performed using ``address(x)``. If the contract type does not have a payable
+if the contract type has a receive or payable fallback function.  The conversion is still
+performed using ``address(x)``. If the contract type does not have a receive or payable
 fallback function, the conversion to ``address payable`` can be done using
 ``payable(address(x))``.
 You can find more information in the section about
@@ -410,7 +412,7 @@ Octal literals do not exist in Solidity and leading zeros are invalid.
 Decimal fraction literals are formed by a ``.`` with at least one number on
 one side.  Examples include ``1.``, ``.1`` and ``1.3``.
 
-Scientific notation is also supported, where the base can have fractions, while the exponent cannot.
+Scientific notation is also supported, where the base can have fractions and the exponent cannot.
 Examples include ``2e10``, ``-2e10``, ``2e-10``, ``2.5e1``.
 
 Underscores can be used to separate the digits of a numeric literal to aid readability.
@@ -556,6 +558,10 @@ subsequent unsigned integer values starting from ``0``.
             return uint(defaultChoice);
         }
     }
+
+.. note::
+    Enums can also be declared on the file level, outside of contract or library definitions.
+
 
 .. index:: ! function type, ! type; function
 
