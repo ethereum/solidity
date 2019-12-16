@@ -44,6 +44,7 @@
             "statements": []
           },
           "documentation": null,
+          "functionSelector": "a399b6a2",
           "id": 4,
           "implemented": true,
           "kind": "function",
@@ -120,6 +121,7 @@
         {
           "body": null,
           "documentation": null,
+          "functionSelector": "c2985578",
           "id": 10,
           "implemented": false,
           "kind": "function",
@@ -160,6 +162,7 @@
             "statements": []
           },
           "documentation": null,
+          "functionSelector": "a399b6a2",
           "id": 15,
           "implemented": true,
           "kind": "function",
@@ -254,6 +257,7 @@
             "statements": []
           },
           "documentation": null,
+          "functionSelector": "c2985578",
           "id": 23,
           "implemented": true,
           "kind": "function",
@@ -300,6 +304,7 @@
             "statements": []
           },
           "documentation": null,
+          "functionSelector": "a399b6a2",
           "id": 30,
           "implemented": true,
           "kind": "function",

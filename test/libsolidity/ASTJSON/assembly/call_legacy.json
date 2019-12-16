@@ -40,6 +40,7 @@
           "attributes":
           {
             "documentation": null,
+            "functionSelector": "b582ec5f",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",

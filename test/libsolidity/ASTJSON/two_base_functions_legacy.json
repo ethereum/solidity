@@ -48,6 +48,7 @@
           "attributes":
           {
             "documentation": null,
+            "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",
@@ -141,6 +142,7 @@
           "attributes":
           {
             "documentation": null,
+            "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",
@@ -286,6 +288,7 @@
               9
             ],
             "documentation": null,
+            "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",

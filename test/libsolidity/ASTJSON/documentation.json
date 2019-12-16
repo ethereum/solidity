@@ -150,6 +150,7 @@
             "statements": []
           },
           "documentation": "Some comment on fn.",
+          "functionSelector": "a4a2c40b",
           "id": 14,
           "implemented": true,
           "kind": "function",

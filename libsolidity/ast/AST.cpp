@@ -368,6 +368,11 @@ string FunctionDefinition::externalSignature() const
 	return TypeProvider::function(*this)->externalSignature();
 }
 
+string FunctionDefinition::externalIdentifierHex() const
+{
+	return TypeProvider::function(*this)->externalIdentifierHex();
+}
+
 FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
 {
 	if (!m_annotation)
@@ -594,6 +599,12 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 	else
 		// Struct members etc.
 		return set<Location>{ Location::Unspecified };
+}
+
+string VariableDeclaration::externalIdentifierHex() const
+{
+	solAssert(isStateVariable() && isPublic(), "Can only be called for public state variables");
+	return TypeProvider::function(*this)->externalIdentifierHex();
 }
 
 TypePointer VariableDeclaration::type() const
