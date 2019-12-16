@@ -287,6 +287,10 @@ private:
 	/// enum of type Program_Version
 	langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
 
+	/// Returns an EVMVersion object corresponding to the protobuf
+	/// enum of type Program_Version
+	langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
+
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
 	{
