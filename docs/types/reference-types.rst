@@ -11,7 +11,8 @@ a variable of value type is used. Because of that, reference types have to be ha
 more carefully than value types. Currently, reference types comprise structs,
 arrays and mappings. If you use a reference type, you always have to explicitly
 provide the data area where the type is stored: ``memory`` (whose lifetime is limited
-to a function call), ``storage`` (the location where the state variables are stored)
+to an external function call), ``storage`` (the location where the state variables
+are stored, where the lifetime is limited to the lifetime of a contract)
 or ``calldata`` (special data location that contains the function arguments,
 only available for external function call parameters).
 
@@ -23,7 +24,7 @@ while assignments inside the same data location only copy in some cases for stor
 Data location
 -------------
 
-Every reference type, i.e. *arrays* and *structs*, has an additional
+Every reference type has an additional
 annotation, the "data location", about where it is stored. There are three data locations:
 ``memory``, ``storage`` and ``calldata``. Calldata is only valid for parameters of external contract
 functions and is required for this type of parameter. Calldata is a non-modifiable,
@@ -42,19 +43,29 @@ Data location and assignment behaviour
 
 Data locations are not only relevant for persistency of data, but also for the semantics of assignments:
 
-* Assignments between ``storage`` and ``memory`` (or from ``calldata``) always create an independent copy.
-* Assignments from ``memory`` to ``memory`` only create references. This means that changes to one memory variable are also visible in all other memory variables that refer to the same data.
-* Assignments from ``storage`` to a local storage variable also only assign a reference.
-* All other assignments to ``storage`` always copy. Examples for this case are assignments to state variables or to members of local variables of storage struct type, even if the local variable itself is just a reference.
+* Assignments between ``storage`` and ``memory`` (or from ``calldata``)
+  always create an independent copy.
+* Assignments from ``memory`` to ``memory`` only create references. This means
+  that changes to one memory variable are also visible in all other memory
+  variables that refer to the same data.
+* Assignments from ``storage`` to a **local** storage variable also only
+  assign a reference.
+* All other assignments to ``storage`` always copy. Examples for this
+  case are assignments to state variables or to members of local
+  variables of storage struct type, even if the local variable
+  itself is just a reference.
 
 ::
 
     pragma solidity >=0.4.0 <0.7.0;
 
     contract C {
-        uint[] x; // the data location of x is storage
+        // The data location of x is storage.
+        // This is the only place where the
+        // data location can be omitted.
+        uint[] x;
 
-        // the data location of memoryArray is memory
+        // The data location of memoryArray is memory.
         function f(uint[] memory memoryArray) public {
             x = memoryArray; // works, copies the whole array to storage
             uint[] storage y = x; // works, assigns a pointer, data location of y is storage
@@ -96,7 +107,7 @@ as C.
 Indices are zero-based, and access is in the opposite direction of the
 declaration.
 
-For example, if you have a variable ``uint[][5] x memory``, you access the
+For example, if you have a variable ``uint[][5] memory x``, you access the
 second ``uint`` in the third dynamic array using ``x[2][1]``, and to access the
 third dynamic array, use ``x[2]``. Again,
 if you have an array ``T[5] a`` for a type ``T`` that can also be an array,
@@ -122,9 +133,11 @@ length or index access.
 
 Solidity does not have string manipulation functions, but there are
 third-party string libraries. You can also compare two strings by their keccak256-hash using
-``keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))`` and concatenate two strings using ``abi.encodePacked(s1, s2)``.
+``keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))`` and
+concatenate two strings using ``abi.encodePacked(s1, s2)``.
 
-You should use ``bytes`` over ``byte[]`` because it is cheaper, since ``byte[]`` adds 31 padding bytes between the elements. As a general rule,
+You should use ``bytes`` over ``byte[]`` because it is cheaper,
+since ``byte[]`` adds 31 padding bytes between the elements. As a general rule,
 use ``bytes`` for arbitrary-length raw byte data and ``string`` for arbitrary-length
 string (UTF-8) data. If you can limit the length to a certain number of bytes,
 always use one of the value types ``bytes1`` to ``bytes32`` because they are much cheaper.
@@ -140,9 +153,10 @@ always use one of the value types ``bytes1`` to ``bytes32`` because they are muc
 Allocating Memory Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-You must use the ``new`` keyword to create arrays with a runtime-dependent length in memory.
-As opposed to storage arrays, it is **not** possible to resize memory arrays (e.g. by assigning to
-the ``.length`` member). You either have to calculate the required size in advance
+Memory arrays with dynamic length can be created using the ``new`` operator.
+As opposed to storage arrays, it is **not** possible to resize memory arrays (e.g.
+the ``.push`` member functions are not available).
+You either have to calculate the required size in advance
 or create a new memory array and copy every element.
 
 ::
@@ -172,7 +186,9 @@ type of the array.
 Array literals are always statically-sized memory arrays.
 
 In the example below, the type of ``[1, 2, 3]`` is
-``uint8[3] memory``. Because the type of each of these constants is ``uint8``, if you want the result to be a ``uint[3] memory`` type, you need to convert the first element to ``uint``.
+``uint8[3] memory``. Because the type of each of these constants is ``uint8``, if
+you want the result to be a ``uint[3] memory`` type, you need to convert
+the first element to ``uint``.
 
 ::
 
@@ -187,7 +203,8 @@ In the example below, the type of ``[1, 2, 3]`` is
         }
     }
 
-Fixed size memory arrays cannot be assigned to dynamically-sized memory arrays, i.e. the following is not possible:
+Fixed size memory arrays cannot be assigned to dynamically-sized
+memory arrays, i.e. the following is not possible:
 
 ::
 
