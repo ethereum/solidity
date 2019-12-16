@@ -35,6 +35,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 {
 	ProtoConverter converter;
 	string yul_source = converter.programToString(_input);
+	EVMVersion version = converter.version();
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
@@ -51,7 +52,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	// AssemblyStack entry point
 	AssemblyStack stack(
-		langutil::EVMVersion(),
+		version,
 		AssemblyStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::full()
 	);

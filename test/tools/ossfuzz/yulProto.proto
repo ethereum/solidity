@@ -405,10 +405,21 @@ message Data {
 }
 
 message Program {
+  enum Version {
+    HOMESTEAD = 0;
+    TANGERINE = 1;
+    SPURIOUS = 2;
+    BYZANTIUM = 3;
+    CONSTANTINOPLE = 4;
+    PETERSBURG = 5;
+    ISTANBUL = 6;
+    BERLIN = 7;
+  }
   oneof program_oneof {
     Block block = 1;
     Object obj = 2;
   }
+  required Version ver = 3;
 }
 
 package solidity.yul.test.yul_fuzzer;

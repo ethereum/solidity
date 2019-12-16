@@ -31,6 +31,8 @@
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/Whiskers.h>
 
+#include <liblangutil/EVMVersion.h>
+
 namespace solidity::yul::test::yul_fuzzer
 {
 class ProtoConverter
@@ -56,6 +58,12 @@ public:
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
 	std::string programToString(Program const& _input);
+
+	/// Returns evm version
+	langutil::EVMVersion version()
+	{
+		return m_evmVersion;
+	}
 
 private:
 	void visit(BinaryOp const&);
@@ -271,6 +279,10 @@ private:
 	/// dictionarySize is the total number of entries in the dictionary.
 	std::string dictionaryToken(util::HexPrefix _p = util::HexPrefix::Add);
 
+	/// Returns an EVMVersion object corresponding to the protobuf
+	/// enum of type Program_Version
+	langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
+
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
 	{
@@ -369,5 +381,7 @@ private:
 	/// Flag to track whether scope extension of variables defined in for-init
 	/// block is enabled.
 	bool m_forInitScopeExtEnabled;
+	/// Object that holds the targeted evm version specified by protobuf input
+	langutil::EVMVersion m_evmVersion;
 };
 }
