@@ -126,6 +126,8 @@ explanatory purposes.
     Starting from Solidity version 0.5.12, though, the array maintains a certain
     order.
 
+.. _encoding-of-the-metadata-hash-in-the-bytecode:
+
 Encoding of the Metadata Hash in the Bytecode
 =============================================
 
