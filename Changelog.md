@@ -1,4 +1,4 @@
-### 0.6.0 (unreleased)
+### 0.6.0 (2019-12-17)
 
 Breaking changes:
  * ABI: Remove the deprecated ``constant`` and ``payable`` fields.
