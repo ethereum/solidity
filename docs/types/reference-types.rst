@@ -214,25 +214,34 @@ Array Members
 
 **length**:
     Arrays have a ``length`` member that contains their number of elements.
-    The length of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created.
-**push**:
-     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that you can use to append an element at the end of the array.
-     If no argument is given, the element will be zero-initialised and a reference to the new element is returned.
-     If a value is given as argument, ``push`` returns nothing.
+    The length of memory arrays is fixed (but dynamic, i.e. it can depend on
+    runtime parameters) once they are created.
+**push()**:
+     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function
+     called ``push()`` that you can use to append a zero-initialised element at the end of the array.
+     It returns a reference to the element, so that it can be used like
+     ``x.push().t = 2`` or ``x.push() = b``.
+**push(x)**:
+     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function
+     called ``push(x)`` that you can use to append a given element at the end of the array.
+     The function returns nothing.
 **pop**:
-     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``pop`` that you can use to remove an element from the end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element.
+     Dynamic storage arrays and ``bytes`` (not ``string``) have a member
+     function called ``pop`` that you can use to remove an element from the
+     end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element.
 
 .. note::
     Increasing the length of a storage array by calling ``push()``
     has constant gas costs because storage is zero-initialised,
-    while decreasing the length by calling ``pop()`` has at least
-    linear cost (but in most cases worse than linear),
-    because it includes explicitly clearing the removed
+    while decreasing the length by calling ``pop()`` has a
+    cost that depends on the "size" of the element being removed.
+    If that element is an array, it can be very costly, because
+    it includes explicitly clearing the removed
     elements similar to calling :ref:`delete<delete>` on them.
 
 .. note::
-    It is not yet possible to use arrays of arrays in external functions
-    (but they are supported in public functions).
+    To use arrays of arrays in external (instead of public) functions, you need to
+    activate ABIEncoderV2.
 
 .. note::
     In EVM versions before Byzantium, it was not possible to access
@@ -285,7 +294,8 @@ Array Members
         }
 
         function changeFlagArraySize(uint newSize) public {
-            // if the new size is smaller, removed array elements will be cleared
+            // using push and pop is the only way to change the
+            // length of an array
             if (newSize < m_pairsOfFlags.length) {
                 while (m_pairsOfFlags.length > newSize)
                     m_pairsOfFlags.pop();
@@ -412,13 +422,18 @@ shown in the following example:
 
     pragma solidity >=0.4.11 <0.7.0;
 
-    contract CrowdFunding {
-        // Defines a new type with two fields.
-        struct Funder {
-            address addr;
-            uint amount;
-        }
+    // Defines a new type with two fields.
+    // Declaring a struct outside of a contract allows
+    // it to be shared by multiple contracts.
+    // Here, this is not really needed.
+    struct Funder {
+        address addr;
+        uint amount;
+    }
 
+    contract CrowdFunding {
+        // Structs can also be defined inside contracts, which makes them
+        // visible only there and in derived contracts.
         struct Campaign {
             address payable beneficiary;
             uint fundingGoal;
