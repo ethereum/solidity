@@ -50,9 +50,10 @@ void CallGraphGenerator::operator()(FunctionCall const& _functionCall)
 	ASTWalker::operator()(_functionCall);
 }
 
-void CallGraphGenerator::operator()(ForLoop const&)
+void CallGraphGenerator::operator()(ForLoop const& _forLoop)
 {
 	m_callGraph.functionsWithLoops.insert(m_currentFunction);
+	ASTWalker::operator()(_forLoop);
 }
 
 void CallGraphGenerator::operator()(FunctionDefinition const& _functionDefinition)
