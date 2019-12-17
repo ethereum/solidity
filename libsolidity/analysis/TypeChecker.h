@@ -163,9 +163,6 @@ private:
 
 	langutil::EVMVersion m_evmVersion;
 
-	/// Flag indicating whether we are currently inside a StructDefinition.
-	bool m_insideStruct = false;
-
 	langutil::ErrorReporter& m_errorReporter;
 };
 

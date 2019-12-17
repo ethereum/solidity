@@ -317,10 +317,7 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 	if (CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
 		m_errorReporter.fatalTypeError(_struct.location(), "Recursive struct definition.");
 
-	bool insideStruct = true;
-	swap(insideStruct, m_insideStruct);
 	ASTNode::listAccept(_struct.members(), *this);
-	m_insideStruct = insideStruct;
 
 	return false;
 }
@@ -451,16 +448,6 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 bool TypeChecker::visit(VariableDeclaration const& _variable)
 {
-	// Forbid any variable declarations inside interfaces unless they are part of
-	// * a function's input/output parameters,
-	// * or inside of a struct definition.
-	if (
-		m_scope->isInterface()
-		&& !_variable.isCallableOrCatchParameter()
-		&& !m_insideStruct
-	)
-		m_errorReporter.typeError(_variable.location(), "Variables cannot be declared in interfaces.");
-
 	if (_variable.typeName())
 		_variable.typeName()->accept(*this);
 

@@ -82,6 +82,16 @@ bool PostTypeChecker::visit(Identifier const& _identifier)
 	return callVisit(_identifier);
 }
 
+bool PostTypeChecker::visit(StructDefinition const& _struct)
+{
+	return callVisit(_struct);
+}
+
+void PostTypeChecker::endVisit(StructDefinition const& _struct)
+{
+	callEndVisit(_struct);
+}
+
 bool PostTypeChecker::visit(ModifierInvocation const& _modifierInvocation)
 {
 	return callVisit(_modifierInvocation);
@@ -282,6 +292,55 @@ private:
 	bool m_insideEmitStatement = false;
 };
 
+struct NoVariablesInInterfaceChecker: public PostTypeChecker::Checker
+{
+	NoVariablesInInterfaceChecker(ErrorReporter& _errorReporter):
+		Checker(_errorReporter)
+	{}
+
+	bool visit(VariableDeclaration const& _variable) override
+	{
+		// Forbid any variable declarations inside interfaces unless they are part of
+		// * a function's input/output parameters,
+		// * or inside of a struct definition.
+		if (
+			m_scope && m_scope->isInterface()
+			&& !_variable.isCallableOrCatchParameter()
+			&& !m_insideStruct
+		)
+			m_errorReporter.typeError(_variable.location(), "Variables cannot be declared in interfaces.");
+
+		return true;
+	}
+
+	bool visit(ContractDefinition const& _contract) override
+	{
+		m_scope = &_contract;
+		return true;
+	}
+
+	void endVisit(ContractDefinition const&) override
+	{
+		m_scope = nullptr;
+	}
+
+	bool visit(StructDefinition const&) override
+	{
+		solAssert(m_insideStruct >= 0, "");
+		m_insideStruct++;
+		return true;
+	}
+
+	void endVisit(StructDefinition const&) override
+	{
+		m_insideStruct--;
+		solAssert(m_insideStruct >= 0, "");
+	}
+private:
+	ContractDefinition const* m_scope = nullptr;
+	/// Flag indicating whether we are currently inside a StructDefinition.
+	int m_insideStruct = 0;
+};
 }
 
 PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter)
@@ -290,4 +349,5 @@ PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_err
 	m_checkers.push_back(make_shared<OverrideSpecifierChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<ModifierContextChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<EventOutsideEmitChecker>(_errorReporter));
+	m_checkers.push_back(make_shared<NoVariablesInInterfaceChecker>(_errorReporter));
 }

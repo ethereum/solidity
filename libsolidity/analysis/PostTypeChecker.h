@@ -38,6 +38,7 @@ namespace solidity::frontend
  *  - whether override specifiers are actually contracts
  *  - whether a modifier is in a function header
  *  - whether an event is used outside of an emit statement
+ *  - whether a variable is declared in a interface
  *
  *  When adding a new checker, make sure a visitor that forwards calls that your
  *  checker uses exists in PostTypeChecker. Add missing ones.
@@ -75,6 +76,9 @@ private:
 	bool visit(FunctionCall const& _functionCall) override;
 
 	bool visit(Identifier const& _identifier) override;
+
+	bool visit(StructDefinition const& _struct) override;
+	void endVisit(StructDefinition const& _struct) override;
 
 	bool visit(ModifierInvocation const& _modifierInvocation) override;
 	void endVisit(ModifierInvocation const& _modifierInvocation) override;
