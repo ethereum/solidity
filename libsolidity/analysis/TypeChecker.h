@@ -126,7 +126,6 @@ private:
 	bool visit(WhileStatement const& _whileStatement) override;
 	bool visit(ForStatement const& _forStatement) override;
 	void endVisit(Return const& _return) override;
-	bool visit(EmitStatement const&) override { m_insideEmitStatement = true; return true; }
 	void endVisit(EmitStatement const& _emit) override;
 	bool visit(VariableDeclarationStatement const& _variable) override;
 	void endVisit(ExpressionStatement const& _statement) override;
@@ -163,9 +162,6 @@ private:
 	ContractDefinition const* m_scope = nullptr;
 
 	langutil::EVMVersion m_evmVersion;
-
-	/// Flag indicating whether we are currently inside an EmitStatement.
-	bool m_insideEmitStatement = false;
 
 	/// Flag indicating whether we are currently inside a StructDefinition.
 	bool m_insideStruct = false;

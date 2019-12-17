@@ -981,7 +981,6 @@ void TypeChecker::endVisit(EmitStatement const& _emit)
 		dynamic_cast<FunctionType const&>(*type(_emit.eventCall().expression())).kind() != FunctionType::Kind::Event
 	)
 		m_errorReporter.typeError(_emit.eventCall().expression().location(), "Expression has to be an event invocation.");
-	m_insideEmitStatement = false;
 }
 
 namespace
@@ -1713,13 +1712,6 @@ void TypeChecker::typeCheckFunctionCall(
 		m_errorReporter.typeError(
 			_functionCall.location(),
 			"\"staticcall\" is not supported by the VM version."
-		);
-
-	// Check for event outside of emit statement
-	if (!m_insideEmitStatement && _functionType->kind() == FunctionType::Kind::Event)
-		m_errorReporter.typeError(
-			_functionCall.location(),
-			"Event invocations have to be prefixed by \"emit\"."
 		);
 
 	// Perform standard function call type checking

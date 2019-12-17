@@ -62,6 +62,21 @@ void PostTypeChecker::endVisit(VariableDeclaration const& _variable)
 	callEndVisit(_variable);
 }
 
+bool PostTypeChecker::visit(EmitStatement const& _emit)
+{
+	return callVisit(_emit);
+}
+
+void PostTypeChecker::endVisit(EmitStatement const& _emit)
+{
+	callEndVisit(_emit);
+}
+
+bool PostTypeChecker::visit(FunctionCall const& _functionCall)
+{
+	return callVisit(_functionCall);
+}
+
 bool PostTypeChecker::visit(Identifier const& _identifier)
 {
 	return callVisit(_identifier);
@@ -229,6 +244,44 @@ private:
 	/// Flag indicating whether we are currently inside the invocation of a modifier
 	bool m_insideModifierInvocation = false;
 };
+
+struct EventOutsideEmitChecker: public PostTypeChecker::Checker
+{
+	EventOutsideEmitChecker(ErrorReporter& _errorReporter):
+		Checker(_errorReporter) {}
+
+	bool visit(EmitStatement const&) override
+	{
+		m_insideEmitStatement = true;
+		return true;
+	}
+
+	void endVisit(EmitStatement const&) override
+	{
+		m_insideEmitStatement = true;
+	}
+
+	bool visit(FunctionCall const& _functionCall) override
+	{
+		if (_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
+			return true;
+
+		if (FunctionTypePointer const functionType = dynamic_cast<FunctionTypePointer const>(_functionCall.expression().annotation().type))
+			// Check for event outside of emit statement
+			if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
+				m_errorReporter.typeError(
+					_functionCall.location(),
+					"Event invocations have to be prefixed by \"emit\"."
+				);
+
+		return true;
+	}
+
+private:
+	/// Flag indicating whether we are currently inside an EmitStatement.
+	bool m_insideEmitStatement = false;
+};
+
 }
 
 PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter)
@@ -236,4 +289,5 @@ PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_err
 	m_checkers.push_back(make_shared<ConstStateVarCircularReferenceChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<OverrideSpecifierChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<ModifierContextChecker>(_errorReporter));
+	m_checkers.push_back(make_shared<EventOutsideEmitChecker>(_errorReporter));
 }
