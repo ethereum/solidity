@@ -67,6 +67,15 @@ bool PostTypeChecker::visit(Identifier const& _identifier)
 	return callVisit(_identifier);
 }
 
+bool PostTypeChecker::visit(ModifierInvocation const& _modifierInvocation)
+{
+	return callVisit(_modifierInvocation);
+}
+
+void PostTypeChecker::endVisit(ModifierInvocation const& _modifierInvocation)
+{
+	callEndVisit(_modifierInvocation);
+}
 
 namespace
 {
@@ -183,11 +192,48 @@ struct OverrideSpecifierChecker: public PostTypeChecker::Checker
 		}
 	}
 };
-}
 
+struct ModifierContextChecker: public PostTypeChecker::Checker
+{
+	ModifierContextChecker(ErrorReporter& _errorReporter):
+		Checker(_errorReporter) {}
+
+	bool visit(ModifierInvocation const&) override
+	{
+		m_insideModifierInvocation = true;
+
+		return true;
+	}
+
+	void endVisit(ModifierInvocation const&) override
+	{
+		m_insideModifierInvocation = false;
+	}
+
+	bool visit(Identifier const& _identifier) override
+	{
+		if (m_insideModifierInvocation)
+			return true;
+
+		if (ModifierType const* type = dynamic_cast<decltype(type)>(_identifier.annotation().type))
+		{
+			m_errorReporter.typeError(
+				_identifier.location(),
+				"Modifier can only be referenced in function headers."
+			);
+		}
+
+		return false;
+	}
+private:
+	/// Flag indicating whether we are currently inside the invocation of a modifier
+	bool m_insideModifierInvocation = false;
+};
+}
 
 PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter)
 {
 	m_checkers.push_back(make_shared<ConstStateVarCircularReferenceChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<OverrideSpecifierChecker>(_errorReporter));
+	m_checkers.push_back(make_shared<ModifierContextChecker>(_errorReporter));
 }
