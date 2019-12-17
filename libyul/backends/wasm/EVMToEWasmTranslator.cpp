@@ -138,6 +138,10 @@ function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	// TODO implement properly
 	r4 := i64.div_u(x4, y4)
 }
+function sdiv(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+	// TODO implement properly
+	unreachable()
+}
 function mod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	// TODO implement properly
 	r4 := i64.rem_u(x4, y4)
@@ -318,11 +322,11 @@ function sar(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
-function addmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+function addmod(x1, x2, x3, x4, y1, y2, y3, y4, m1, m2, m3, m4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
-function mulmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+function mulmod(x1, x2, x3, x4, y1, y2, y3, y4, m1, m2, m3, m4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
