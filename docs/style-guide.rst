@@ -89,7 +89,7 @@ Blank lines may be omitted between groups of related one-liners (such as stub fu
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity ^0.6.0;
 
     abstract contract A {
         function spam() public virtual pure;
@@ -290,7 +290,7 @@ Within a grouping, place the ``view`` and ``pure`` functions last.
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity ^0.6.0;
 
     contract A {
         constructor() public {

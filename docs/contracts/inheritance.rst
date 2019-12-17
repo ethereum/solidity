@@ -38,7 +38,7 @@ Details are given in the following example.
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity ^0.6.0;
 
 
     contract Owned {
@@ -125,7 +125,7 @@ Note that above, we call ``mortal.kill()`` to "forward" the
 destruction request. The way this is done is problematic, as
 seen in the following example::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity ^0.6.0;
 
     contract owned {
         constructor() public { owner = msg.sender; }
