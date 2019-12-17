@@ -477,15 +477,16 @@
 //             pos := add(pos, 0x60)
 //         }
 //         let _3 := mload(64)
-//         if slt(sub(_3, length), 128) { revert(_1, _1) }
-//         let offset := calldataload(add(length, 64))
-//         let _4 := 0xffffffffffffffff
-//         if gt(offset, _4) { revert(_1, _1) }
-//         let value2 := abi_decode_t_array$_t_uint256_$dyn_memory_ptr(add(length, offset), _3)
-//         let offset_1 := calldataload(add(length, 0x60))
-//         if gt(offset_1, _4) { revert(_1, _1) }
-//         let value3 := abi_decode_t_array$_t_array$_t_uint256_$2_memory_$dyn_memory_ptr(add(length, offset_1), _3)
-//         sstore(calldataload(length), calldataload(add(length, 0x20)))
+//         let _4 := mload(0x20)
+//         if slt(sub(_3, _4), 128) { revert(_1, _1) }
+//         let offset := calldataload(add(_4, 64))
+//         let _5 := 0xffffffffffffffff
+//         if gt(offset, _5) { revert(_1, _1) }
+//         let value2 := abi_decode_t_array$_t_uint256_$dyn_memory_ptr(add(_4, offset), _3)
+//         let offset_1 := calldataload(add(_4, 0x60))
+//         if gt(offset_1, _5) { revert(_1, _1) }
+//         let value3 := abi_decode_t_array$_t_array$_t_uint256_$2_memory_$dyn_memory_ptr(add(_4, offset_1), _3)
+//         sstore(calldataload(_4), calldataload(add(_4, 0x20)))
 //         sstore(value2, value3)
 //         sstore(_1, pos)
 //     }

@@ -1,5 +1,18 @@
 [
     {
+        "name": "ABIEncoderV2LoopYulOptimizer",
+        "summary": "If both the experimental ABIEncoderV2 and the experimental Yul optimizer are activated, one component of the Yul optimizer may reuse data in memory that has been changed in the meantime.",
+        "description": "The Yul optimizer incorrectly replaces ``mload`` and ``sload`` calls with values that have been previously written to the load location (and potentially changed in the meantime) if all of the following conditions are met: (1) there is a matching ``mstore`` or ``sstore`` call before; (2) the contents of memory or storage is only changed in a function that is called (directly or indirectly) in between the first store and the load call; (3) called function contains a for loop where the same memory location is changed in the condition or the post or body block. When used in Solidity mode, this can only happen if the experimental ABIEncoderV2 is activated and the experimental Yul optimizer has been activated manually in addition to the regular optimizer in the compiler settings.",
+        "introduced": "0.5.14",
+        "fixed": "0.5.15",
+        "severity": "low",
+        "conditions": {
+            "ABIEncoderV2": true,
+            "optimizer": true,
+            "yulOptimizer": true
+        }
+    },
+    {
         "name": "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
         "summary": "Reading from calldata structs that contain dynamically encoded, but statically-sized members can result in incorrect values.",
         "description": "When a calldata struct contains a dynamically encoded, but statically-sized member, the offsets for all subsequent struct members are calculated incorrectly. All reads from such members will result in invalid values. Only calldata structs are affected, i.e. this occurs in external functions with such structs as argument. Using affected structs in storage or memory or as arguments to public functions on the other hand works correctly.",

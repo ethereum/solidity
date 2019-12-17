@@ -45,6 +45,11 @@ Compiler Features:
  * ABIEncoderV2: Do not warn about enabled ABIEncoderV2 anymore (the pragma is still needed, though).
 
 
+### 0.5.15 (2019-12-17)
+
+Bugfixes:
+ * Yul Optimizer: Fix incorrect redundant load optimization crossing user-defined functions that contain for-loops with memory / storage writes.
+
 ### 0.5.14 (2019-12-09)
 
 Language Features:
