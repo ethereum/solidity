@@ -28,6 +28,7 @@
   "nodes":
   [
     {
+      "abstract": false,
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
@@ -45,6 +46,7 @@
       "src": "0:14:1"
     },
     {
+      "abstract": false,
       "baseContracts":
       [
         {
@@ -88,6 +90,7 @@
       "src": "15:19:1"
     },
     {
+      "abstract": false,
       "baseContracts":
       [
         {
@@ -133,6 +136,7 @@
       "src": "35:19:1"
     },
     {
+      "abstract": false,
       "baseContracts":
       [
         {
@@ -180,6 +184,7 @@
       "src": "55:19:1"
     },
     {
+      "abstract": false,
       "baseContracts":
       [
         {

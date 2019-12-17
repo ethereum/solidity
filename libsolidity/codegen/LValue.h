@@ -172,31 +172,6 @@ public:
 };
 
 /**
- * Reference to the "length" member of a dynamically-sized array. This is an LValue with special
- * semantics since assignments to it might reduce its length and thus arrays members have to be
- * deleted.
- */
-class StorageArrayLength: public LValue
-{
-public:
-	/// Constructs the LValue, assumes that the reference to the array head is already on the stack.
-	StorageArrayLength(CompilerContext& _compilerContext, ArrayType const& _arrayType);
-	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
-	virtual void storeValue(
-		Type const& _sourceType,
-		langutil::SourceLocation const& _location = {},
-		bool _move = false
-	) const override;
-	virtual void setToZero(
-		langutil::SourceLocation const& _location = {},
-		bool _removeReference = true
-	) const override;
-
-private:
-	ArrayType const& m_arrayType;
-};
-
-/**
  * Tuple object that can itself hold several LValues.
  */
 class TupleObject: public LValue

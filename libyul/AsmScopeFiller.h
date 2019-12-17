@@ -47,13 +47,9 @@ class ScopeFiller
 public:
 	ScopeFiller(AsmAnalysisInfo& _info, langutil::ErrorReporter& _errorReporter);
 
-	bool operator()(Instruction const&) { return true; }
 	bool operator()(Literal const&) { return true; }
 	bool operator()(Identifier const&) { return true; }
-	bool operator()(FunctionalInstruction const&) { return true; }
 	bool operator()(ExpressionStatement const& _expr);
-	bool operator()(Label const& _label);
-	bool operator()(StackAssignment const&) { return true; }
 	bool operator()(Assignment const&) { return true; }
 	bool operator()(VariableDeclaration const& _variableDeclaration);
 	bool operator()(FunctionDefinition const& _functionDefinition);
@@ -63,6 +59,7 @@ public:
 	bool operator()(ForLoop const& _forLoop);
 	bool operator()(Break const&) { return true; }
 	bool operator()(Continue const&) { return true; }
+	bool operator()(Leave const&) { return true; }
 	bool operator()(Block const& _block);
 
 private:

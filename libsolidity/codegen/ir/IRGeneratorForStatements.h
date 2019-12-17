@@ -63,6 +63,7 @@ public:
 	void endVisit(MemberAccess const& _memberAccess) override;
 	bool visit(InlineAssembly const& _inlineAsm) override;
 	void endVisit(IndexAccess const& _indexAccess) override;
+	void endVisit(IndexRangeAccess const& _indexRangeAccess) override;
 	void endVisit(Identifier const& _identifier) override;
 	bool visit(Literal const& _literal) override;
 

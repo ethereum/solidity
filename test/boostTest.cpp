@@ -49,18 +49,6 @@ using namespace dev::solidity::test;
 namespace fs = boost::filesystem;
 using namespace std;
 
-#if BOOST_VERSION < 105900
-test_case *make_test_case(
-	function<void()> const& _fn,
-	string const& _name,
-	string const& /* _filename */,
-	size_t /* _line */
-)
-{
-	return make_test_case(_fn, _name);
-}
-#endif
-
 namespace
 {
 void removeTestSuite(std::string const& _name)

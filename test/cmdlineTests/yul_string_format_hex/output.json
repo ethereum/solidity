@@ -27,14 +27,10 @@ object \"C_10\" {
         }
 
         function fun_f_9()  -> vloc__4 {
-            for { let return_flag := 1 } return_flag {} {
-                let expr_6 := 0xaabbccdd
-                vloc__4 := convert_t_rational_2864434397_by_1_to_t_bytes4(expr_6)
-                return_flag := 0
-                break
+            let expr_6 := 0xaabbccdd
+            vloc__4 := convert_t_rational_2864434397_by_1_to_t_bytes4(expr_6)
+            leave
 
-                break
-            }
         }
 
         function shift_left_224(value) -> newValue {
@@ -67,6 +63,7 @@ object \"C_10\" {
 
                 default {}
             }
+            if iszero(calldatasize()) {  }
             revert(0, 0)
 
 
@@ -107,14 +104,10 @@ object \"C_10\" {
             }
 
             function fun_f_9()  -> vloc__4 {
-                for { let return_flag := 1 } return_flag {} {
-                    let expr_6 := 0xaabbccdd
-                    vloc__4 := convert_t_rational_2864434397_by_1_to_t_bytes4(expr_6)
-                    return_flag := 0
-                    break
+                let expr_6 := 0xaabbccdd
+                vloc__4 := convert_t_rational_2864434397_by_1_to_t_bytes4(expr_6)
+                leave
 
-                    break
-                }
             }
 
             function shift_left_224(value) -> newValue {

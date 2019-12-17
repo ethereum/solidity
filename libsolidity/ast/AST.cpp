@@ -146,7 +146,7 @@ bool ContractDefinition::constructorIsPublic() const
 
 bool ContractDefinition::canBeDeployed() const
 {
-	return constructorIsPublic() && annotation().unimplementedFunctions.empty();
+	return constructorIsPublic() && !abstract() && !isInterface();
 }
 
 FunctionDefinition const* ContractDefinition::fallbackFunction() const
@@ -154,6 +154,15 @@ FunctionDefinition const* ContractDefinition::fallbackFunction() const
 	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		for (FunctionDefinition const* f: contract->definedFunctions())
 			if (f->isFallback())
+				return f;
+	return nullptr;
+}
+
+FunctionDefinition const* ContractDefinition::receiveFunction() const
+{
+	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
+		for (FunctionDefinition const* f: contract->definedFunctions())
+			if (f->isReceive())
 				return f;
 	return nullptr;
 }
@@ -303,19 +312,29 @@ ContractDefinition::ContractKind FunctionDefinition::inContractKind() const
 	return contractDef->contractKind();
 }
 
+CallableDeclarationAnnotation& CallableDeclaration::annotation() const
+{
+	solAssert(
+		m_annotation,
+		"CallableDeclarationAnnotation is an abstract base, need to call annotation on the concrete class first."
+	);
+	return dynamic_cast<CallableDeclarationAnnotation&>(*m_annotation);
+}
+
+
 FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 {
 	if (_internal)
 	{
 		switch (visibility())
 		{
-		case Declaration::Visibility::Default:
+		case Visibility::Default:
 			solAssert(false, "visibility() should not return Default");
-		case Declaration::Visibility::Private:
-		case Declaration::Visibility::Internal:
-		case Declaration::Visibility::Public:
+		case Visibility::Private:
+		case Visibility::Internal:
+		case Visibility::Public:
 			return TypeProvider::function(*this, _internal);
-		case Declaration::Visibility::External:
+		case Visibility::External:
 			return {};
 		}
 	}
@@ -323,13 +342,13 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 	{
 		switch (visibility())
 		{
-		case Declaration::Visibility::Default:
+		case Visibility::Default:
 			solAssert(false, "visibility() should not return Default");
-		case Declaration::Visibility::Private:
-		case Declaration::Visibility::Internal:
+		case Visibility::Private:
+		case Visibility::Internal:
 			return {};
-		case Declaration::Visibility::Public:
-		case Declaration::Visibility::External:
+		case Visibility::Public:
+		case Visibility::External:
 			return TypeProvider::function(*this, _internal);
 		}
 	}
@@ -340,13 +359,18 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 
 TypePointer FunctionDefinition::type() const
 {
-	solAssert(visibility() != Declaration::Visibility::External, "");
+	solAssert(visibility() != Visibility::External, "");
 	return TypeProvider::function(*this);
 }
 
 string FunctionDefinition::externalSignature() const
 {
 	return TypeProvider::function(*this)->externalSignature();
+}
+
+string FunctionDefinition::externalIdentifierHex() const
+{
+	return TypeProvider::function(*this)->externalIdentifierHex();
 }
 
 FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
@@ -443,12 +467,13 @@ bool VariableDeclaration::isLocalVariable() const
 		dynamic_cast<FunctionTypeName const*>(s) ||
 		dynamic_cast<CallableDeclaration const*>(s) ||
 		dynamic_cast<Block const*>(s) ||
+		dynamic_cast<TryCatchClause const*>(s) ||
 		dynamic_cast<ForStatement const*>(s);
 }
 
-bool VariableDeclaration::isCallableParameter() const
+bool VariableDeclaration::isCallableOrCatchParameter() const
 {
-	if (isReturnParameter())
+	if (isReturnParameter() || isTryCatchParameter())
 		return true;
 
 	vector<ASTPointer<VariableDeclaration>> const* parameters = nullptr;
@@ -467,7 +492,7 @@ bool VariableDeclaration::isCallableParameter() const
 
 bool VariableDeclaration::isLocalOrReturn() const
 {
-	return isReturnParameter() || (isLocalVariable() && !isCallableParameter());
+	return isReturnParameter() || (isLocalVariable() && !isCallableOrCatchParameter());
 }
 
 bool VariableDeclaration::isReturnParameter() const
@@ -487,13 +512,18 @@ bool VariableDeclaration::isReturnParameter() const
 	return false;
 }
 
+bool VariableDeclaration::isTryCatchParameter() const
+{
+	return dynamic_cast<TryCatchClause const*>(scope());
+}
+
 bool VariableDeclaration::isExternalCallableParameter() const
 {
-	if (!isCallableParameter())
+	if (!isCallableOrCatchParameter())
 		return false;
 
 	if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
-		if (callable->visibility() == Declaration::Visibility::External)
+		if (callable->visibility() == Visibility::External)
 			return !isReturnParameter();
 
 	return false;
@@ -501,19 +531,19 @@ bool VariableDeclaration::isExternalCallableParameter() const
 
 bool VariableDeclaration::isInternalCallableParameter() const
 {
-	if (!isCallableParameter())
+	if (!isCallableOrCatchParameter())
 		return false;
 
 	if (auto const* funTypeName = dynamic_cast<FunctionTypeName const*>(scope()))
-		return funTypeName->visibility() == Declaration::Visibility::Internal;
+		return funTypeName->visibility() == Visibility::Internal;
 	else if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
-		return callable->visibility() <= Declaration::Visibility::Internal;
+		return callable->visibility() <= Visibility::Internal;
 	return false;
 }
 
 bool VariableDeclaration::isLibraryFunctionParameter() const
 {
-	if (!isCallableParameter())
+	if (!isCallableOrCatchParameter())
 		return false;
 	if (auto const* funDef = dynamic_cast<FunctionDefinition const*>(scope()))
 		return dynamic_cast<ContractDefinition const&>(*funDef->scope()).isLibrary();
@@ -549,10 +579,10 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 			locations.insert(Location::Storage);
 		return locations;
 	}
-	else if (isCallableParameter())
+	else if (isCallableOrCatchParameter())
 	{
 		set<Location> locations{ Location::Memory };
-		if (isInternalCallableParameter() || isLibraryFunctionParameter())
+		if (isInternalCallableParameter() || isLibraryFunctionParameter() || isTryCatchParameter())
 			locations.insert(Location::Storage);
 		return locations;
 	}
@@ -571,6 +601,12 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 		return set<Location>{ Location::Unspecified };
 }
 
+string VariableDeclaration::externalIdentifierHex() const
+{
+	solAssert(isStateVariable() && isPublic(), "Can only be called for public state variables");
+	return TypeProvider::function(*this)->externalIdentifierHex();
+}
+
 TypePointer VariableDeclaration::type() const
 {
 	return annotation().type;
@@ -582,13 +618,13 @@ FunctionTypePointer VariableDeclaration::functionType(bool _internal) const
 		return nullptr;
 	switch (visibility())
 	{
-	case Declaration::Visibility::Default:
+	case Visibility::Default:
 		solAssert(false, "visibility() should not return Default");
-	case Declaration::Visibility::Private:
-	case Declaration::Visibility::Internal:
+	case Visibility::Private:
+	case Visibility::Internal:
 		return nullptr;
-	case Declaration::Visibility::Public:
-	case Declaration::Visibility::External:
+	case Visibility::Public:
+	case Visibility::External:
 		return TypeProvider::function(*this);
 	}
 

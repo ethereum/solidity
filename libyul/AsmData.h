@@ -48,10 +48,6 @@ enum class LiteralKind { Number, Boolean, String };
 struct Literal { langutil::SourceLocation location; LiteralKind kind; YulString value; Type type; };
 /// External / internal identifier or label reference
 struct Identifier { langutil::SourceLocation location; YulString name; };
-/// Jump label ("name:")
-struct Label { langutil::SourceLocation location; YulString name; };
-/// Assignment from stack (":= x", moves stack top into x, potentially multiple slots)
-struct StackAssignment { langutil::SourceLocation location; Identifier variableName; };
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
 ///
@@ -59,8 +55,6 @@ struct StackAssignment { langutil::SourceLocation location; Identifier variableN
 /// a single stack slot and expects a single expression on the right hand returning
 /// the same amount of items as the number of variables.
 struct Assignment { langutil::SourceLocation location; std::vector<Identifier> variableNames; std::unique_ptr<Expression> value; };
-/// Functional instruction, e.g. "mul(mload(20:u256), add(2:u256, x))"
-struct FunctionalInstruction { langutil::SourceLocation location; dev::eth::Instruction instruction; std::vector<Expression> arguments; };
 struct FunctionCall { langutil::SourceLocation location; Identifier functionName; std::vector<Expression> arguments; };
 /// Statement that contains only a single expression
 struct ExpressionStatement { langutil::SourceLocation location; Expression expression; };
@@ -81,6 +75,8 @@ struct ForLoop { langutil::SourceLocation location; Block pre; std::unique_ptr<E
 struct Break { langutil::SourceLocation location; };
 /// Continue statement (valid within for loop)
 struct Continue { langutil::SourceLocation location; };
+/// Leave statement (valid within function)
+struct Leave { langutil::SourceLocation location; };
 
 struct LocationExtractor
 {

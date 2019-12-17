@@ -52,23 +52,6 @@ using namespace dev::solidity;
 namespace
 {
 
-unsigned int mostSignificantBit(bigint const& _number)
-{
-#if BOOST_VERSION < 105500
-	solAssert(_number > 0, "");
-	bigint number = _number;
-	unsigned int result = 0;
-	while (number != 0)
-	{
-		number >>= 1;
-		++result;
-	}
-	return --result;
-#else
-	return boost::multiprecision::msb(_number);
-#endif
-}
-
 /// Check whether (_base ** _exp) fits into 4096 bits.
 bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
 {
@@ -79,7 +62,7 @@ bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
 
 	size_t const bitsMax = 4096;
 
-	unsigned mostSignificantBaseBit = mostSignificantBit(_base);
+	unsigned mostSignificantBaseBit = boost::multiprecision::msb(_base);
 	if (mostSignificantBaseBit == 0) // _base == 1
 		return true;
 	if (mostSignificantBaseBit > bitsMax) // _base >= 2 ^ 4096
@@ -105,7 +88,7 @@ bool fitsPrecisionBaseX(
 
 	size_t const bitsMax = 4096;
 
-	unsigned mostSignificantMantissaBit = mostSignificantBit(_mantissa);
+	unsigned mostSignificantMantissaBit = boost::multiprecision::msb(_mantissa);
 	if (mostSignificantMantissaBit > bitsMax) // _mantissa >= 2 ^ 4096
 		return false;
 
@@ -412,7 +395,9 @@ BoolResult AddressType::isImplicitlyConvertibleTo(Type const& _other) const
 
 BoolResult AddressType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (auto const* contractType = dynamic_cast<ContractType const*>(&_convertTo))
+	if (_convertTo.category() == category())
+		return true;
+	else if (auto const* contractType = dynamic_cast<ContractType const*>(&_convertTo))
 		return (m_stateMutability >= StateMutability::Payable) || !contractType->isPayable();
 	return isImplicitlyConvertibleTo(_convertTo) ||
 		_convertTo.category() == Category::Integer ||
@@ -600,6 +585,17 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, Type const* _other
 		else
 			return nullptr;
 	}
+	else if (Token::Exp == _operator)
+	{
+		if (auto otherIntType = dynamic_cast<IntegerType const*>(_other))
+		{
+			if (otherIntType->isSigned())
+				return TypeResult::err("Exponentiation power is not allowed to be a signed integer type.");
+		}
+		else if (dynamic_cast<FixedPointType const*>(_other))
+			return nullptr;
+		return this;
+	}
 
 	auto commonType = Type::commonType(this, _other); //might be an integer or fixed point
 	if (!commonType)
@@ -610,14 +606,6 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, Type const* _other
 		return commonType;
 	if (TokenTraits::isBooleanOp(_operator))
 		return nullptr;
-	if (auto intType = dynamic_cast<IntegerType const*>(commonType))
-	{
-		if (Token::Exp == _operator && intType->isSigned())
-			return TypeResult::err("Exponentiation is not allowed for signed integer types.");
-	}
-	else if (dynamic_cast<FixedPointType const*>(commonType))
-		if (Token::Exp == _operator)
-			return nullptr;
 	return commonType;
 }
 
@@ -1095,7 +1083,7 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 			else
 			{
 				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
-				if (exponent > mostSignificantBit(boost::multiprecision::abs(m_value.numerator())))
+				if (exponent > boost::multiprecision::msb(boost::multiprecision::abs(m_value.numerator())))
 					value = m_value.numerator() < 0 ? -1 : 0;
 				else
 				{
@@ -1119,7 +1107,7 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 		}
 
 		// verify that numerator and denominator fit into 4096 bit after every operation
-		if (value.numerator() != 0 && max(mostSignificantBit(abs(value.numerator())), mostSignificantBit(abs(value.denominator()))) > 4096)
+		if (value.numerator() != 0 && max(boost::multiprecision::msb(abs(value.numerator())), boost::multiprecision::msb(abs(value.denominator()))) > 4096)
 			return TypeResult::err("Precision of rational constants is limited to 4096 bits.");
 
 		return TypeResult{TypeProvider::rationalNumber(value)};
@@ -1464,8 +1452,9 @@ BoolResult ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool ContractType::isPayable() const
 {
+	auto receiveFunction = m_contract.receiveFunction();
 	auto fallbackFunction = m_contract.fallbackFunction();
-	return fallbackFunction && fallbackFunction->isPayable();
+	return receiveFunction || (fallbackFunction && fallbackFunction->isPayable());
 }
 
 TypeResult ContractType::unaryOperatorResult(Token _operator) const
@@ -1783,10 +1772,17 @@ MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 		if (isDynamicallySized() && location() == DataLocation::Storage)
 		{
 			members.emplace_back("push", TypeProvider::function(
+				TypePointers{},
 				TypePointers{baseType()},
-				TypePointers{TypeProvider::uint256()},
+				strings{},
 				strings{string()},
+				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
+			));
+			members.emplace_back("push", TypeProvider::function(
+				TypePointers{baseType()},
+				TypePointers{},
 				strings{string()},
+				strings{},
 				isByteArray() ? FunctionType::Kind::ByteArrayPush : FunctionType::Kind::ArrayPush
 			));
 			members.emplace_back("pop", TypeProvider::function(
@@ -1869,6 +1865,30 @@ std::unique_ptr<ReferenceType> ArrayType::copyForLocation(DataLocation _location
 	copy->m_hasDynamicLength = m_hasDynamicLength;
 	copy->m_length = m_length;
 	return copy;
+}
+
+BoolResult ArraySliceType::isImplicitlyConvertibleTo(Type const& _other) const
+{
+	if (m_arrayType.location() == DataLocation::CallData && m_arrayType.isDynamicallySized() && m_arrayType == _other)
+		return true;
+	return (*this) == _other;
+}
+
+string ArraySliceType::richIdentifier() const
+{
+	return m_arrayType.richIdentifier() + "_slice";
+}
+
+bool ArraySliceType::operator==(Type const& _other) const
+{
+	if (auto const* other = dynamic_cast<ArraySliceType const*>(&_other))
+		return m_arrayType == other->m_arrayType;
+	return false;
+}
+
+string ArraySliceType::toString(bool _short) const
+{
+	return m_arrayType.toString(_short) + " slice";
 }
 
 string ContractType::richIdentifier() const
@@ -2564,7 +2584,7 @@ FunctionType::FunctionType(EventDefinition const& _event):
 FunctionType::FunctionType(FunctionTypeName const& _typeName):
 	m_parameterNames(_typeName.parameterTypes().size(), ""),
 	m_returnParameterNames(_typeName.returnParameterTypes().size(), ""),
-	m_kind(_typeName.visibility() == VariableDeclaration::Visibility::External ? Kind::External : Kind::Internal),
+	m_kind(_typeName.visibility() == Visibility::External ? Kind::External : Kind::Internal),
 	m_stateMutability(_typeName.stateMutability())
 {
 	if (_typeName.isPayable())
@@ -2735,8 +2755,6 @@ bool FunctionType::operator==(Type const& _other) const
 
 BoolResult FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (m_kind == Kind::External && _convertTo == *TypeProvider::address())
-		return true;
 	return _convertTo.category() == category();
 }
 
@@ -2931,7 +2949,10 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	{
 		MemberList::MemberMap members;
 		if (m_kind == Kind::External)
+		{
 			members.emplace_back("selector", TypeProvider::fixedBytes(4));
+			members.emplace_back("address", TypeProvider::address());
+		}
 		if (m_kind != Kind::BareDelegateCall)
 		{
 			if (isPayable())
@@ -2973,8 +2994,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	{
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
 		solAssert(functionDefinition, "");
-		solAssert(functionDefinition->visibility() != Declaration::Visibility::Private, "");
-		if (functionDefinition->visibility() != Declaration::Visibility::Internal)
+		solAssert(functionDefinition->visibility() != Visibility::Private, "");
+		if (functionDefinition->visibility() != Visibility::Internal)
 		{
 			auto const* contract = dynamic_cast<ContractDefinition const*>(m_declaration->scope());
 			solAssert(contract, "");
@@ -3151,6 +3172,11 @@ string FunctionType::externalSignature() const
 u256 FunctionType::externalIdentifier() const
 {
 	return FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(externalSignature())));
+}
+
+string FunctionType::externalIdentifierHex() const
+{
+	return FixedHash<4>(dev::keccak256(externalSignature())).hex();
 }
 
 bool FunctionType::isPure() const

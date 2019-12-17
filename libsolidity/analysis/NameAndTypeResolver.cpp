@@ -346,12 +346,20 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 					solAssert(conflictingDeclaration, "");
 
 					// Usual shadowing is not an error
-					if (dynamic_cast<VariableDeclaration const*>(declaration) && dynamic_cast<VariableDeclaration const*>(conflictingDeclaration))
+					if (
+						dynamic_cast<ModifierDefinition const*>(declaration) &&
+						dynamic_cast<ModifierDefinition const*>(conflictingDeclaration)
+					)
 						continue;
 
-					// Usual shadowing is not an error
-					if (dynamic_cast<ModifierDefinition const*>(declaration) && dynamic_cast<ModifierDefinition const*>(conflictingDeclaration))
-						continue;
+					// Public state variable can override functions
+					if (auto varDecl = dynamic_cast<VariableDeclaration const*>(conflictingDeclaration))
+						if (
+							dynamic_cast<FunctionDefinition const*>(declaration) &&
+							varDecl->isStateVariable() &&
+							varDecl->isPublic()
+						)
+							continue;
 
 					if (declaration->location().start < conflictingDeclaration->location().start)
 					{
@@ -572,6 +580,7 @@ bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
 	m_globalContext.setCurrentContract(_contract);
 	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentThis(), nullptr, false, true);
 	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentSuper(), nullptr, false, true);
+	m_currentContract = &_contract;
 
 	registerDeclaration(_contract, true);
 	_contract.annotation().canonicalName = currentCanonicalName();
@@ -580,6 +589,7 @@ bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
 
 void DeclarationRegistrationHelper::endVisit(ContractDefinition&)
 {
+	m_currentContract = nullptr;
 	closeCurrentScope();
 }
 
@@ -617,12 +627,25 @@ bool DeclarationRegistrationHelper::visit(FunctionDefinition& _function)
 {
 	registerDeclaration(_function, true);
 	m_currentFunction = &_function;
+	_function.annotation().contract = m_currentContract;
 	return true;
 }
 
 void DeclarationRegistrationHelper::endVisit(FunctionDefinition&)
 {
 	m_currentFunction = nullptr;
+	closeCurrentScope();
+}
+
+bool DeclarationRegistrationHelper::visit(TryCatchClause& _tryCatchClause)
+{
+	_tryCatchClause.setScope(m_currentScope);
+	enterNewSubScope(_tryCatchClause);
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(TryCatchClause&)
+{
 	closeCurrentScope();
 }
 

@@ -105,27 +105,9 @@ wasm::Expression EWasmCodeTransform::operator()(Assignment const& _assignment)
 	return generateMultiAssignment(move(variableNames), visit(*_assignment.value));
 }
 
-wasm::Expression EWasmCodeTransform::operator()(StackAssignment const&)
-{
-	yulAssert(false, "");
-	return {};
-}
-
 wasm::Expression EWasmCodeTransform::operator()(ExpressionStatement const& _statement)
 {
 	return visitReturnByValue(_statement.expression);
-}
-
-wasm::Expression EWasmCodeTransform::operator()(Label const&)
-{
-	yulAssert(false, "");
-	return {};
-}
-
-wasm::Expression EWasmCodeTransform::operator()(FunctionalInstruction const& _f)
-{
-	yulAssert(false, "EVM instruction in ewasm code: " + eth::instructionInfo(_f.instruction).name);
-	return {};
 }
 
 wasm::Expression EWasmCodeTransform::operator()(FunctionCall const& _call)
@@ -199,12 +181,6 @@ wasm::Expression EWasmCodeTransform::operator()(Literal const& _literal)
 	u256 value = valueOfLiteral(_literal);
 	yulAssert(value <= numeric_limits<uint64_t>::max(), "Literal too large: " + value.str());
 	return wasm::Literal{uint64_t(value)};
-}
-
-wasm::Expression EWasmCodeTransform::operator()(yul::Instruction const&)
-{
-	yulAssert(false, "EVM instruction used for Wasm code generation.");
-	return {};
 }
 
 wasm::Expression EWasmCodeTransform::operator()(If const& _if)
@@ -294,6 +270,11 @@ wasm::Expression EWasmCodeTransform::operator()(Break const&)
 wasm::Expression EWasmCodeTransform::operator()(Continue const&)
 {
 	return wasm::Break{wasm::Label{m_breakContinueLabelNames.top().second}};
+}
+
+wasm::Expression EWasmCodeTransform::operator()(Leave const&)
+{
+	return wasm::Return{};
 }
 
 wasm::Expression EWasmCodeTransform::operator()(Block const& _block)

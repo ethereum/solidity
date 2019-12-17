@@ -154,7 +154,7 @@ library Math {
 
     /// @dev Returns base 2 logarithm value of given x
     /// @param x x
-    /// @return logarithmic value
+    /// @return lo logarithmic value
     function floorLog2(uint x)
         public
         pure
@@ -175,8 +175,9 @@ library Math {
 
     /// @dev Returns maximum of an array
     /// @param nums Numbers to look through
-    /// @return Maximum number
+    /// @return max Maximum number
     function max(int[] memory nums)
+        virtual
         public
         pure
         returns (int max)

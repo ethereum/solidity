@@ -7,7 +7,7 @@ ImportDirective = 'import' StringLiteral ('as' Identifier)? ';'
         | 'import' ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral ';'
         | 'import' '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral ';'
 
-ContractDefinition = ( 'contract' | 'library' | 'interface' ) Identifier
+ContractDefinition = 'abstract'? ( 'contract' | 'library' | 'interface' ) Identifier
                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
                      '{' ContractPart* '}'
 
@@ -16,17 +16,20 @@ ContractPart = StateVariableDeclaration | UsingForDeclaration
 
 InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
 
-StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' )* Identifier ('=' Expression)? ';'
+StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' | 'constant' | OverrideSpecifier )* Identifier ('=' Expression)? ';'
 UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration ';' (VariableDeclaration ';')* ) '}'
 
-ModifierDefinition = 'modifier' Identifier ParameterList? Block
+ModifierDefinition = 'modifier' Identifier ParameterList?  ( 'virtual' | OverrideSpecifier )* Block
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
 FunctionDefinition = 'function' Identifier? ParameterList
-                     ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' )*
+                     ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' | 'virtual' | OverrideSpecifier )*
                      ( 'returns' ParameterList )? ( ';' | Block )
+
+OverrideSpecifier = 'override' ( '(' UserDefinedTypeName (',' UserDefinedTypeName)* ')' )?
+
 EventDefinition = 'event' Identifier EventParameterList 'anonymous'? ';'
 
 EnumValue = Identifier
@@ -62,12 +65,14 @@ StorageLocation = 'memory' | 'storage' | 'calldata'
 StateMutability = 'pure' | 'view' | 'payable'
 
 Block = '{' Statement* '}'
-Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
+Statement = IfStatement | TryStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
             ( DoWhileStatement | PlaceholderStatement | Continue | Break | Return |
               Throw | EmitStatement | SimpleStatement ) ';'
 
 ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
+TryStatement = 'try' Expression ( 'returns' ParameterList )? Block CatchClause+
+CatchClause = 'catch' Identifier? ParameterList Block
 WhileStatement = 'while' '(' Expression ')' Statement
 PlaceholderStatement = '_'
 SimpleStatement = VariableDefinition | ExpressionStatement
@@ -86,6 +91,7 @@ Expression
   = Expression ('++' | '--')
   | NewExpression
   | IndexAccess
+  | IndexRangeAccess
   | MemberAccess
   | FunctionCall
   | '(' Expression ')'
@@ -123,6 +129,7 @@ FunctionCallArguments = '{' NameValueList? '}'
 NewExpression = 'new' TypeName
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
+IndexRangeAccess = Expression '[' Expression? ':' Expression? ']'
 
 BooleanLiteral = 'true' | 'false'
 NumberLiteral = ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
@@ -164,6 +171,7 @@ AssemblyStatement = AssemblyBlock
                   | AssemblySwitch
                   | AssemblyForLoop
                   | AssemblyBreakContinue
+                  | AssemblyLeave
 AssemblyFunctionDefinition =
     'function' Identifier '(' AssemblyIdentifierList? ')'
     ( '->' AssemblyIdentifierList )? AssemblyBlock
@@ -176,6 +184,7 @@ AssemblyCase = 'case' Literal AssemblyBlock
 AssemblyDefault = 'default' AssemblyBlock
 AssemblyForLoop = 'for' AssemblyBlock AssemblyExpression AssemblyBlock AssemblyBlock
 AssemblyBreakContinue = 'break' | 'continue'
+AssemblyLeave = 'leave'
 AssemblyFunctionCall = Identifier '(' ( AssemblyExpression ( ',' AssemblyExpression )* )? ')'
 
 AssemblyIdentifierList = Identifier ( ',' Identifier )*

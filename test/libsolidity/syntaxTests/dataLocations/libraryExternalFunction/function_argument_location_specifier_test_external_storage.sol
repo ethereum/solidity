@@ -1,3 +1,3 @@
 library test {
-    function f(bytes storage) external;
+    function f(bytes storage) external {}
 }

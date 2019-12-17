@@ -78,7 +78,6 @@ private:
 	explicit ExpressionJoiner(Block& _ast);
 
 	void operator()(Block& _block) override;
-	void operator()(FunctionalInstruction&) override;
 	void operator()(FunctionCall&) override;
 
 	using ASTModifier::visit;

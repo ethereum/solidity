@@ -70,11 +70,11 @@ private:
 	/// This struct is shared for parsing a function header and a function type.
 	struct FunctionHeaderParserResult
 	{
-		bool isConstructor;
-		ASTPointer<ASTString> name;
+		bool isVirtual = false;
+		ASTPointer<OverrideSpecifier> overrides;
 		ASTPointer<ParameterList> parameters;
 		ASTPointer<ParameterList> returnParameters;
-		Declaration::Visibility visibility = Declaration::Visibility::Default;
+		Visibility visibility = Visibility::Default;
 		StateMutability stateMutability = StateMutability::NonPayable;
 		std::vector<ASTPointer<ModifierInvocation>> modifiers;
 	};
@@ -84,14 +84,16 @@ private:
 	void parsePragmaVersion(langutil::SourceLocation const& _location, std::vector<Token> const& _tokens, std::vector<std::string> const& _literals);
 	ASTPointer<PragmaDirective> parsePragmaDirective();
 	ASTPointer<ImportDirective> parseImportDirective();
-	ContractDefinition::ContractKind parseContractKind();
+	/// @returns an std::pair<ContractDefinition::ContractKind, bool>, where
+	/// result.second is set to true, if an abstract contract was parsed, false otherwise.
+	std::pair<ContractDefinition::ContractKind, bool> parseContractKind();
 	ASTPointer<ContractDefinition> parseContractDefinition();
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
-	Declaration::Visibility parseVisibilitySpecifier();
+	Visibility parseVisibilitySpecifier();
+	ASTPointer<OverrideSpecifier> parseOverrideSpecifier();
 	StateMutability parseStateMutability();
-	FunctionHeaderParserResult parseFunctionHeader(bool _forceEmptyName, bool _allowModifiers);
-	ASTPointer<ASTNode> parseFunctionDefinitionOrFunctionTypeStateVariable();
-	ASTPointer<FunctionDefinition> parseFunctionDefinition(ASTString const* _contractName);
+	FunctionHeaderParserResult parseFunctionHeader(bool _isStateVariable);
+	ASTPointer<ASTNode> parseFunctionDefinition();
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
 	ASTPointer<EnumValue> parseEnumValue();
@@ -117,6 +119,8 @@ private:
 	ASTPointer<Statement> parseStatement();
 	ASTPointer<InlineAssembly> parseInlineAssembly(ASTPointer<ASTString> const& _docString = {});
 	ASTPointer<IfStatement> parseIfStatement(ASTPointer<ASTString> const& _docString);
+	ASTPointer<TryStatement> parseTryStatement(ASTPointer<ASTString> const& _docString);
+	ASTPointer<TryCatchClause> parseCatchClause();
 	ASTPointer<WhileStatement> parseWhileStatement(ASTPointer<ASTString> const& _docString);
 	ASTPointer<WhileStatement> parseDoWhileStatement(ASTPointer<ASTString> const& _docString);
 	ASTPointer<ForStatement> parseForStatement(ASTPointer<ASTString> const& _docString);
@@ -160,8 +164,14 @@ private:
 	/// or to a type name. For this to be valid, path cannot be empty, but indices can be empty.
 	struct IndexAccessedPath
 	{
+		struct Index
+		{
+			ASTPointer<Expression> start;
+			std::optional<ASTPointer<Expression>> end;
+			langutil::SourceLocation location;
+		};
 		std::vector<ASTPointer<PrimaryExpression>> path;
-		std::vector<std::pair<ASTPointer<Expression>, langutil::SourceLocation>> indices;
+		std::vector<Index> indices;
 		bool empty() const;
 	};
 

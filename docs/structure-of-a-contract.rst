@@ -67,6 +67,11 @@ Function Modifiers
 Function modifiers can be used to amend the semantics of functions in a declarative way
 (see :ref:`modifiers` in the contracts section).
 
+Overloading, that is, having the same modifier name with different parameters,
+is not possible.
+
+Like functions, modifiers can be :ref:`overridden <modifier-overriding>`.
+
 ::
 
     pragma solidity >=0.4.22 <0.7.0;

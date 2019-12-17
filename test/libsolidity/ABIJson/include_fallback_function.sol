@@ -1,11 +1,10 @@
 contract test {
-    function() external {}
+    fallback() external {}
 }
 // ----
 //     :test
 // [
 //   {
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "fallback"
 //   }

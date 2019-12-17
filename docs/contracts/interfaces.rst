@@ -32,6 +32,11 @@ Interfaces are denoted by their own keyword:
 
 Contracts can inherit interfaces as they would inherit other contracts.
 
+All functions declared in interfaces are implicitly ``virtual``, which means that
+they can be overridden. This does not automatically mean that an overriding function
+can be overridden again - this is only possible if the overriding
+function is marked ``virtual``.
+
 Types defined inside interfaces and other contract-like structures
 can be accessed from other contracts: ``Token.TokenType`` or ``Token.Coin``.
 

@@ -26,7 +26,12 @@
 #include <string>
 #include <vector>
 
-// Forward-declare all AST node types
+// Forward-declare all AST node types and related enums.
+
+namespace langutil
+{
+enum class Token : unsigned int;
+}
 
 namespace dev
 {
@@ -39,6 +44,7 @@ class PragmaDirective;
 class ImportDirective;
 class Declaration;
 class CallableDeclaration;
+class OverrideSpecifier;
 class ContractDefinition;
 class InheritanceSpecifier;
 class UsingForDirective;
@@ -63,6 +69,8 @@ class Statement;
 class Block;
 class PlaceholderStatement;
 class IfStatement;
+class TryCatchClause;
+class TryStatement;
 class BreakableStatement;
 class WhileStatement;
 class ForStatement;

@@ -1,3 +1,4 @@
+// This used to work in pre-0.6.0.
 library Lib {
     function min(uint, uint) public returns (uint);
 }
@@ -7,4 +8,4 @@ contract Test {
     }
 }
 // ----
-// Warning: (118-124): Unused local variable.
+// TypeError: (53-100): Library functions must be implemented if declared.

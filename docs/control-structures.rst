@@ -15,6 +15,10 @@ Most of the control structures known from curly-braces languages are available i
 There is: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, with
 the usual semantics known from C or JavaScript.
 
+Solidity also supports exception handling in the form of ``try``/``catch``-statements,
+but only for :ref:`external function calls <external-function-calls>` and
+contract creation calls.
+
 Parentheses can *not* be omitted for conditionals, but curly brances can be omitted
 around single-statement bodies.
 
@@ -47,10 +51,10 @@ this nonsensical example::
 These function calls are translated into simple jumps inside the EVM. This has
 the effect that the current memory is not cleared, i.e. passing memory references
 to internally-called functions is very efficient. Only functions of the same
-contract can be called internally.
+contract instance can be called internally.
 
 You should still avoid excessive recursion, as every internal function call
-uses up at least one stack slot and there are at most 1024 slots available.
+uses up at least one stack slot and there are only 1024 slots available.
 
 .. _external-function-calls:
 
@@ -70,7 +74,10 @@ all function arguments have to be copied to memory.
     A function call from one contract to another does not create its own transaction,
     it is a message call as part of the overall transaction.
 
-When calling functions of other contracts, you can specify the amount of Wei or gas sent with the call with the special options ``.value()`` and ``.gas()``, respectively. Any Wei you send to the contract is added to the total balance of the contract:
+When calling functions of other contracts, you can specify the amount of Wei or
+gas sent with the call with the special options ``.value()`` and ``.gas()``,
+respectively. Any Wei you send to the contract is added to the total balance
+of the contract:
 
 ::
 
@@ -90,7 +97,10 @@ You need to use the modifier ``payable`` with the ``info`` function because
 otherwise, the ``.value()`` option would not be available.
 
 .. warning::
-  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the ``value`` and amount of ``gas`` sent with the function call, and the parentheses at the end perform the actual call. So in this case, the function is not called and the ``value`` and ``gas`` settings are lost.
+  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the
+  ``value`` and amount of ``gas`` sent with the function call, and the
+  parentheses at the end perform the actual call. So in this case, the
+  function is not called and the ``value`` and ``gas`` settings are lost.
 
 Function calls cause exceptions if the called contract does not exist (in the
 sense that the account does not contain code) or if the called contract itself
@@ -216,8 +226,11 @@ Assignment
 Destructuring Assignments and Returning Multiple Values
 -------------------------------------------------------
 
-Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose number is a constant at compile-time. Those tuples can be used to return multiple values at the same time.
-These can then either be assigned to newly declared variables or to pre-existing variables (or LValues in general).
+Solidity internally allows tuple types, i.e. a list of objects
+of potentially different types whose number is a constant at
+compile-time. Those tuples can be used to return multiple values at the same time.
+These can then either be assigned to newly declared variables
+or to pre-existing variables (or LValues in general).
 
 Tuples are not proper types in Solidity, they can only be used to form syntactic
 groupings of expressions.
@@ -227,7 +240,7 @@ groupings of expressions.
     pragma solidity >0.4.23 <0.7.0;
 
     contract C {
-        uint[] data;
+        uint index;
 
         function f() public pure returns (uint, bool, uint) {
             return (7, true, 2);
@@ -240,7 +253,7 @@ groupings of expressions.
             // Common trick to swap values -- does not work for non-value storage types.
             (x, y) = (y, x);
             // Components can be left out (also for variable declarations).
-            (data.length, , ) = f(); // Sets the length to 7
+            (index, , ) = f(); // Sets the index to 7
         }
     }
 
@@ -260,8 +273,18 @@ i.e. the following is not valid: ``(x, uint y) = (1, 2);``
 Complications for Arrays and Structs
 ------------------------------------
 
-The semantics of assignments are a bit more complicated for non-value types like arrays and structs.
-Assigning *to* a state variable always creates an independent copy. On the other hand, assigning to a local variable creates an independent copy only for elementary types, i.e. static types that fit into 32 bytes. If structs or arrays (including ``bytes`` and ``string``) are assigned from a state variable to a local variable, the local variable holds a reference to the original state variable. A second assignment to the local variable does not modify the state but only changes the reference. Assignments to members (or elements) of the local variable *do* change the state.
+The semantics of assignments are a bit more complicated for
+non-value types like arrays and structs.
+Assigning *to* a state variable always creates an independent
+copy. On the other hand, assigning to a local variable creates
+an independent copy only for elementary types, i.e. static
+types that fit into 32 bytes. If structs or arrays (including
+``bytes`` and ``string``) are assigned from a state variable
+to a local variable, the local variable holds a reference to
+the original state variable. A second assignment to the local
+variable does not modify the state but only changes the
+reference. Assignments to members (or elements) of the local
+variable *do* change the state.
 
 In the example below the call to ``g(x)`` has no effect on ``x`` because it creates
 an independent copy of the storage value in memory. However, ``h(x)`` successfully modifies ``x``
@@ -295,16 +318,28 @@ because only a reference and not a copy is passed.
 Scoping and Declarations
 ========================
 
-A variable which is declared will have an initial default value whose byte-representation is all zeros.
-The "default values" of variables are the typical "zero-state" of whatever the type is. For example, the default value for a ``bool``
-is ``false``. The default value for the ``uint`` or ``int`` types is ``0``. For statically-sized arrays and ``bytes1`` to ``bytes32``, each individual
-element will be initialized to the default value corresponding to its type. For dynamically-sized arrays, ``bytes``
-and ``string``, the default value is an empty array or string. For the ``enum`` type, the default value is its first member.
+A variable which is declared will have an initial default
+value whose byte-representation is all zeros.
+The "default values" of variables are the typical "zero-state"
+of whatever the type is. For example, the default value for a ``bool``
+is ``false``. The default value for the ``uint`` or ``int``
+types is ``0``. For statically-sized arrays and ``bytes1`` to
+``bytes32``, each individual
+element will be initialized to the default value corresponding
+to its type. For dynamically-sized arrays, ``bytes``
+and ``string``, the default value is an empty array or string.
+For the ``enum`` type, the default value is its first member.
 
 Scoping in Solidity follows the widespread scoping rules of C99
 (and many other languages): Variables are visible from the point right after their declaration
-until the end of the smallest ``{ }``-block that contains the declaration. As an exception to this rule, variables declared in the
+until the end of the smallest ``{ }``-block that contains the declaration.
+As an exception to this rule, variables declared in the
 initialization part of a for-loop are only visible until the end of the for-loop.
+
+Variables that are parameter-like (function parameters, modifier parameters,
+catch parameters, ...) are visible inside the code block that follows -
+the body of the function/modifier for a function and modifier parameter and the catch block
+for a catch parameter.
 
 Variables and other items declared outside of a code block, for example functions, contracts,
 user-defined types, etc., are visible even before they were declared. This means you can
@@ -350,7 +385,8 @@ In any case, you will get a warning about the outer variable being shadowed.
     }
 
 .. warning::
-    Before version 0.5.0 Solidity followed the same scoping rules as JavaScript, that is, a variable declared anywhere within a function would be in scope
+    Before version 0.5.0 Solidity followed the same scoping rules as
+    JavaScript, that is, a variable declared anywhere within a function would be in scope
     for the entire function, regardless where it was declared. The following example shows a code snippet that used
     to compile but leads to an error starting from version 0.5.0.
 
@@ -373,17 +409,24 @@ In any case, you will get a warning about the outer variable being shadowed.
 Error handling: Assert, Require, Revert and Exceptions
 ======================================================
 
-Solidity uses state-reverting exceptions to handle errors. Such an exception undoes all changes made to the
-state in the current call (and all its sub-calls) and flags an error to the caller.
+Solidity uses state-reverting exceptions to handle errors.
+Such an exception undoes all changes made to the
+state in the current call (and all its sub-calls) and
+flags an error to the caller.
 
-When exceptions happen in a sub-call, they "bubble up" (i.e., exceptions are rethrown) automatically. Exceptions to this rule are ``send``
-and the low-level functions ``call``, ``delegatecall`` and ``staticcall``, they return ``false`` as their first return value in case
+When exceptions happen in a sub-call, they "bubble up" (i.e.,
+exceptions are rethrown) automatically. Exceptions to this rule are ``send``
+and the low-level functions ``call``, ``delegatecall`` and
+``staticcall``: they return ``false`` as their first return value in case
 of an exception instead of "bubbling up".
 
 .. warning::
-    The low-level functions ``call``, ``delegatecall`` and ``staticcall`` return ``true`` as their first return value if the account called is non-existent, as part of the design of EVM. Existence must be checked prior to calling if needed.
+    The low-level functions ``call``, ``delegatecall`` and
+    ``staticcall`` return ``true`` as their first return value
+    if the account called is non-existent, as part of the design
+    of the EVM. Account existence must be checked prior to calling if needed.
 
-It is not yet possible to catch exceptions with Solidity.
+Exceptions can be caught with the ``try``/``catch`` statement.
 
 ``assert`` and ``require``
 --------------------------
@@ -391,11 +434,16 @@ It is not yet possible to catch exceptions with Solidity.
 The convenience functions ``assert`` and ``require`` can be used to check for conditions and throw an exception
 if the condition is not met.
 
-The ``assert`` function should only be used to test for internal errors, and to check invariants. Properly functioning code should never reach a failing ``assert`` statement; if this happens there is a bug in your contract which you should fix. Language analysis tools can evaluate your contract to identify the conditions and function calls which will reach a failing ``assert``.
+The ``assert`` function should only be used to test for internal
+errors, and to check invariants. Properly functioning code should
+never reach a failing ``assert`` statement; if this happens there
+is a bug in your contract which you should fix. Language analysis
+tools can evaluate your contract to identify the conditions and
+function calls which will reach a failing ``assert``.
 
 An ``assert``-style exception is generated in the following situations:
 
-#. If you access an array at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
+#. If you access an array or an array slice at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
 #. If you access a fixed-length ``bytesN`` at a too large or negative index.
 #. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
 #. If you shift by a negative amount.
@@ -403,16 +451,25 @@ An ``assert``-style exception is generated in the following situations:
 #. If you call a zero-initialized variable of internal function type.
 #. If you call ``assert`` with an argument that evaluates to false.
 
-The ``require`` function should be used to ensure valid conditions that cannot be detected until execution time.
-These conditions include inputs, or contract state variables are met, or to validate return values from calls to external contracts.
+The ``require`` function should be used to ensure valid conditions
+that cannot be detected until execution time.
+This includes conditions on inputs
+or return values from calls to external contracts.
 
 A ``require``-style exception is generated in the following situations:
 
 #. Calling ``require`` with an argument that evaluates to ``false``.
-#. If you call a function via a message call but it does not finish properly (i.e., it runs out of gas, has no matching function, or throws an exception itself), except when a low level operation ``call``, ``send``, ``delegatecall``, ``callcode`` or ``staticcall`` is used. The low level operations never throw exceptions but indicate failures by returning ``false``.
-#. If you create a contract using the ``new`` keyword but the contract creation :ref:`does not finish properly<creating-contracts>`.
+#. If you call a function via a message call but it does not finish
+   properly (i.e., it runs out of gas, has no matching function, or
+   throws an exception itself), except when a low level operation
+   ``call``, ``send``, ``delegatecall``, ``callcode`` or ``staticcall``
+   is used. The low level operations never throw exceptions but
+   indicate failures by returning ``false``.
+#. If you create a contract using the ``new`` keyword but the contract
+   creation :ref:`does not finish properly<creating-contracts>`.
 #. If you perform an external function call targeting a contract that contains no code.
-#. If your contract receives Ether via a public function without ``payable`` modifier (including the constructor and the fallback function).
+#. If your contract receives Ether via a public function without
+   ``payable`` modifier (including the constructor and the fallback function).
 #. If your contract receives Ether via a public getter function.
 #. If a ``.transfer()`` fails.
 
@@ -438,21 +495,30 @@ and ``assert`` for internal error checking.
         }
     }
 
-Internally, Solidity performs a revert operation (instruction ``0xfd``) for a ``require``-style exception and executes an invalid operation
+Internally, Solidity performs a revert operation (instruction
+``0xfd``) for a ``require``-style exception and executes an invalid operation
 (instruction ``0xfe``) to throw an ``assert``-style exception. In both cases, this causes
-the EVM to revert all changes made to the state. The reason for reverting is that there is no safe way to continue execution, because an expected effect
-did not occur. Because we want to keep the atomicity of transactions, the safest action is to revert all changes and make the whole transaction
+the EVM to revert all changes made to the state. The reason for reverting
+is that there is no safe way to continue execution, because an expected effect
+did not occur. Because we want to keep the atomicity of transactions, the
+safest action is to revert all changes and make the whole transaction
 (or at least call) without effect.
+
+In both cases, the caller can react on such failures using ``try``/``catch``
+(in the failing ``assert``-style exception only if enough gas is left), but
+the changes in the caller will always be reverted.
 
 .. note::
 
-    ``assert``-style exceptions consume all gas available to the call, while ``require``-style exceptions do not consume any gas starting from the Metropolis release.
+    ``assert``-style exceptions consume all gas available to the call,
+    while ``require``-style exceptions do not consume any gas starting from the Metropolis release.
 
 ``revert``
 ----------
 
 The ``revert`` function is another way to trigger exceptions from within other code blocks to flag an error and
-revert the current call. The function takes an optional string message containing details about the error that is passed back to the caller.
+revert the current call. The function takes an optional string
+message containing details about the error that is passed back to the caller.
 
 The following example shows how to use an error string together with ``revert`` and the equivalent ``require``:
 
@@ -485,6 +551,99 @@ In the above example, ``revert("Not enough Ether provided.");`` returns the foll
     0x000000000000000000000000000000000000000000000000000000000000001a // String length
     0x4e6f7420656e6f7567682045746865722070726f76696465642e000000000000 // String data
 
+The provided message can be retrieved by the caller using ``try``/``catch`` as shown below.
+
 .. note::
     There used to be a keyword called ``throw`` with the same semantics as ``revert()`` which
     was deprecated in version 0.4.13 and removed in version 0.5.0.
+
+
+.. _try-catch:
+
+``try``/``catch``
+-----------------
+
+A failure in an external call can be caught using a try/catch statement, as follows:
+
+::
+
+    pragma solidity ^0.6.0;
+
+    interface DataFeed { function getData(address token) external returns (uint value); }
+
+    contract FeedConsumer {
+        DataFeed feed;
+        uint errorCount;
+        function rate(address token) public returns (uint value, bool success) {
+            // Permanently disable the mechanism if there are
+            // more than 10 errors.
+            require(errorCount < 10);
+            try feed.getData(token) returns (uint v) {
+                return (v, true);
+            } catch Error(string memory /*reason*/) {
+                // This is executed in case
+                // revert was called inside getData
+                // and a reason string was provided.
+                errorCount++;
+                return (0, false);
+            } catch (bytes memory /*lowLevelData*/) {
+                // This is executed in case revert() was used
+                // or there was a failing assertion, division
+                // by zero, etc. inside getData.
+                errorCount++;
+                return (0, false);
+            }
+        }
+    }
+
+The ``try`` keyword has to be followed by an expression representing an external function call
+or a contract creation (``new ContractName()``).
+Errors inside the expression are not caught (for example if it is a complex expression
+that also involves internal function calls), only a revert happening inside the external
+call itself. The ``returns`` part (which is optional) that follows declares return variables
+matching the types returned by the external call. In case there was no error,
+these variables are assigned and the contract's execution continues inside the
+first success block. If the end of the success block is reached, execution continues after the ``catch`` blocks.
+
+Currently, Solidity supports different kinds of catch blocks depending on the
+type of error. If the error was caused by ``revert("reasonString")`` or
+``require(false, "reasonString")`` (or an internal error that causes such an
+exception), then the catch clause
+of the type ``catch Error(string memory reason)`` will be executed.
+
+It is planned to support other types of error data in the future.
+The string ``Error`` is currently parsed as is and is not treated as an identifier.
+
+The clause ``catch (bytes memory lowLevelData)`` is executed if the error signature
+does not match any other clause, there was an error during decoding of the error
+message, if there was a failing assertion in the external
+call (for example due to a division by zero or a failing ``assert()``) or
+if no error data was provided with the exception.
+The declared variable provides access to the low-level error data in that case.
+
+If you are not interested in the error data, you can just use
+``catch { ... }`` (even as the only catch clause).
+
+In order to catch all error cases, you have to have at least the clause
+``catch { ...}`` or the clause ``catch (bytes memory lowLevelData) { ... }``.
+
+The variables declared in the ``returns`` and the ``catch`` clause are only
+in scope in the block that follows.
+
+.. note::
+
+    If an error happens during the decoding of the return data
+    inside a try/catch-statement, this causes an exception in the currently
+    executing contract and because of that, it is not caught in the catch clause.
+    If there is an error during decoding of ``catch Error(string memory reason)``
+    and there is a low-level catch clause, this error is caught there.
+
+.. note::
+
+    If execution reaches a catch-block, then the state-changing effects of
+    the external call have been reverted. If execution reaches
+    the success block, the effects were not reverted.
+    If the effects have been reverted, then execution either continues
+    in a catch block or the execution of the try/catch statement itself
+    reverts (for example due to decoding failures as noted above or
+    due to not providing a low-level catch clause).

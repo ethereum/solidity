@@ -21,7 +21,7 @@ contract CampaignFactory {
     /// @param fee Market fee
     /// @param funding Initial funding for market
     /// @param deadline Campaign deadline
-    /// @return Market contract
+    /// @return campaign Market contract
     function createCampaigns(
         Event eventContract,
         MarketFactory marketFactory,

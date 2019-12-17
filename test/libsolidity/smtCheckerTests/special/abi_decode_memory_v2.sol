@@ -8,7 +8,6 @@ contract C {
   }
 }
 // ----
-// Warning: (32-67): Experimental features are turned on. Do not use experimental features on live deployments.
 // Warning: (151-159): Assertion checker does not yet support the type of this variable.
 // Warning: (206-209): Assertion checker does not yet implement type abi
 // Warning: (225-226): Assertion checker does not yet implement type type(struct C.S storage pointer)

@@ -8,9 +8,8 @@ Conversions between Elementary Types
 Implicit Conversions
 --------------------
 
-If an operator is applied to different types, the compiler tries to implicitly
-convert one of the operands to the type of the other (the same is true for assignments).
-This means that operations are always performed in the type of one of the operands.
+An implicit type conversion is automatically applied by the compiler in some cases
+during assignments, when passing arguments to functions and when applying operators.
 In general, an implicit conversion between value-types is possible if it makes
 sense semantically and no information is lost.
 
@@ -18,7 +17,27 @@ For example, ``uint8`` is convertible to
 ``uint16`` and ``int128`` to ``int256``, but ``int8`` is not convertible to ``uint256``,
 because ``uint256`` cannot hold values such as ``-1``.
 
-For more details, please consult the sections about the types themselves.
+If an operator is applied to different types, the compiler tries to implicitly
+convert one of the operands to the type of the other (the same is true for assignments).
+This means that operations are always performed in the type of one of the operands.
+
+For more details about which implicit conversions are possible,
+please consult the sections about the types themselves.
+
+In the example below, ``y`` and ``z``, the operands of the addition,
+do not have the same type, but ``uint8`` can
+be implicitly converted to ``uint16`` and not vice-versa. Because of that,
+``y`` is converted to the type of ``z`` before the addition is performed
+in the ``uint16`` type. The resulting type of the expression ``y + z`` is ``uint16`.
+Because it is assigned to a variable of type ``uint32`` another implicit conversion
+is performed after the addition.
+
+::
+
+    uint8 y;
+    uint16 z;
+    uint32 x = y + z;
+
 
 Explicit Conversions
 --------------------
@@ -128,3 +147,5 @@ As described in :ref:`address_literals`, hex literals of the correct size that p
 test are of ``address`` type. No other literals can be implicitly converted to the ``address`` type.
 
 Explicit conversions from ``bytes20`` or any integer type to ``address`` result in ``address payable``.
+
+An ``address a`` can be converted to ``address payable`` via ``payable(a)``.

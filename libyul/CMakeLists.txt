@@ -4,6 +4,8 @@ add_library(yul
 	AsmAnalysisInfo.h
 	AsmData.h
 	AsmDataForward.h
+	AsmJsonConverter.h
+	AsmJsonConverter.cpp
 	AsmParser.cpp
 	AsmParser.h
 	AsmPrinter.cpp
@@ -48,10 +50,10 @@ add_library(yul
 	backends/wasm/EWasmCodeTransform.h
 	backends/wasm/EWasmObjectCompiler.cpp
 	backends/wasm/EWasmObjectCompiler.h
-	backends/wasm/EWasmToText.cpp
-	backends/wasm/EWasmToText.h
 	backends/wasm/BinaryTransform.cpp
 	backends/wasm/BinaryTransform.h
+	backends/wasm/TextTransform.cpp
+	backends/wasm/TextTransform.h
 	backends/wasm/WasmDialect.cpp
 	backends/wasm/WasmDialect.h
 	backends/wasm/WordSizeTransform.cpp

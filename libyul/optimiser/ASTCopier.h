@@ -38,7 +38,6 @@ public:
 	virtual ~ExpressionCopier() = default;
 	virtual Expression operator()(Literal const& _literal) = 0;
 	virtual Expression operator()(Identifier const& _identifier) = 0;
-	virtual Expression operator()(FunctionalInstruction const& _instr) = 0;
 	virtual Expression operator()(FunctionCall const&) = 0;
 };
 
@@ -47,9 +46,6 @@ class StatementCopier
 public:
 	virtual ~StatementCopier() = default;
 	virtual Statement operator()(ExpressionStatement const& _statement) = 0;
-	virtual Statement operator()(Instruction const& _instruction) = 0;
-	virtual Statement operator()(Label const& _label) = 0;
-	virtual Statement operator()(StackAssignment const& _assignment) = 0;
 	virtual Statement operator()(Assignment const& _assignment) = 0;
 	virtual Statement operator()(VariableDeclaration const& _varDecl) = 0;
 	virtual Statement operator()(If const& _if) = 0;
@@ -58,6 +54,7 @@ public:
 	virtual Statement operator()(ForLoop const&) = 0;
 	virtual Statement operator()(Break const&) = 0;
 	virtual Statement operator()(Continue const&) = 0;
+	virtual Statement operator()(Leave const&) = 0;
 	virtual Statement operator()(Block const& _block) = 0;
 };
 
@@ -70,13 +67,9 @@ class ASTCopier: public ExpressionCopier, public StatementCopier
 public:
 	virtual ~ASTCopier() = default;
 	Expression operator()(Literal const& _literal) override;
-	Statement operator()(Instruction const& _instruction) override;
 	Expression operator()(Identifier const& _identifier) override;
-	Expression operator()(FunctionalInstruction const& _instr) override;
 	Expression operator()(FunctionCall const&) override;
 	Statement operator()(ExpressionStatement const& _statement) override;
-	Statement operator()(Label const& _label) override;
-	Statement operator()(StackAssignment const& _assignment) override;
 	Statement operator()(Assignment const& _assignment) override;
 	Statement operator()(VariableDeclaration const& _varDecl) override;
 	Statement operator()(If const& _if) override;
@@ -85,6 +78,7 @@ public:
 	Statement operator()(ForLoop const&) override;
 	Statement operator()(Break const&) override;
 	Statement operator()(Continue const&) override;
+	Statement operator()(Leave const&) override;
 	Statement operator()(Block const& _block) override;
 
 	virtual Expression translate(Expression const& _expression);

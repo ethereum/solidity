@@ -42,7 +42,6 @@ public:
 	bool operator()(Expression const& _lhs, Expression const& _rhs);
 	bool operator()(Statement const& _lhs, Statement const& _rhs);
 
-	bool expressionEqual(FunctionalInstruction const& _lhs, FunctionalInstruction const& _rhs);
 	bool expressionEqual(FunctionCall const& _lhs, FunctionCall const& _rhs);
 	bool expressionEqual(Identifier const& _lhs, Identifier const& _rhs);
 	bool expressionEqual(Literal const& _lhs, Literal const& _rhs);
@@ -57,12 +56,9 @@ public:
 	bool statementEqual(ForLoop const& _lhs, ForLoop const& _rhs);
 	bool statementEqual(Break const&, Break const&) { return true; }
 	bool statementEqual(Continue const&, Continue const&) { return true; }
+	bool statementEqual(Leave const&, Leave const&) { return true; }
 	bool statementEqual(Block const& _lhs, Block const& _rhs);
 private:
-	bool statementEqual(Instruction const& _lhs, Instruction const& _rhs);
-	bool statementEqual(Label const& _lhs, Label const& _rhs);
-	bool statementEqual(StackAssignment const& _lhs, StackAssignment const& _rhs);
-
 	bool visitDeclaration(TypedName const& _lhs, TypedName const& _rhs);
 
 	template<typename U, typename V>

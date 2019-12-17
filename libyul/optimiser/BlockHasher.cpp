@@ -76,14 +76,6 @@ void BlockHasher::operator()(Identifier const& _identifier)
 	hash64(it->second.id);
 }
 
-void BlockHasher::operator()(FunctionalInstruction const& _instr)
-{
-	hash64(compileTimeLiteralHash("FunctionalInstruction"));
-	hash8(static_cast<std::underlying_type_t<eth::Instruction>>(_instr.instruction));
-	hash64(_instr.arguments.size());
-	ASTWalker::operator()(_instr);
-}
-
 void BlockHasher::operator()(FunctionCall const& _funCall)
 {
 	hash64(compileTimeLiteralHash("FunctionCall"));
@@ -173,6 +165,11 @@ void BlockHasher::operator()(Continue const& _continue)
 	ASTWalker::operator()(_continue);
 }
 
+void BlockHasher::operator()(Leave const& _leaveStatement)
+{
+	hash64(compileTimeLiteralHash("Leave"));
+	ASTWalker::operator()(_leaveStatement);
+}
 
 void BlockHasher::operator()(Block const& _block)
 {

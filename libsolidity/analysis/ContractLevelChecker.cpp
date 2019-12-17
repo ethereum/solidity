@@ -26,6 +26,7 @@
 #include <libsolidity/analysis/TypeChecker.h>
 #include <liblangutil/ErrorReporter.h>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 
 using namespace std;
@@ -33,20 +34,33 @@ using namespace dev;
 using namespace langutil;
 using namespace dev::solidity;
 
+namespace
+{
+
+template <class T, class B>
+bool hasEqualNameAndParameters(T const& _a, B const& _b)
+{
+	return
+		_a.name() == _b.name() &&
+		FunctionType(_a).asCallableFunction(false)->hasEqualParameterTypes(
+			*FunctionType(_b).asCallableFunction(false)
+		);
+}
+
+}
 
 bool ContractLevelChecker::check(ContractDefinition const& _contract)
 {
 	checkDuplicateFunctions(_contract);
 	checkDuplicateEvents(_contract);
-	checkIllegalOverrides(_contract);
-	checkAbstractFunctions(_contract);
+	m_overrideChecker.check(_contract);
 	checkBaseConstructorArguments(_contract);
-	checkConstructor(_contract);
-	checkFallbackFunction(_contract);
+	checkAbstractFunctions(_contract);
 	checkExternalTypeClashes(_contract);
 	checkHashCollisions(_contract);
 	checkLibraryRequirements(_contract);
 	checkBaseABICompatibility(_contract);
+	checkPayableFallbackWithoutReceive(_contract);
 
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
@@ -58,6 +72,7 @@ void ContractLevelChecker::checkDuplicateFunctions(ContractDefinition const& _co
 	map<string, vector<FunctionDefinition const*>> functions;
 	FunctionDefinition const* constructor = nullptr;
 	FunctionDefinition const* fallback = nullptr;
+	FunctionDefinition const* receive = nullptr;
 	for (FunctionDefinition const* function: _contract.definedFunctions())
 		if (function->isConstructor())
 		{
@@ -78,6 +93,16 @@ void ContractLevelChecker::checkDuplicateFunctions(ContractDefinition const& _co
 					"Only one fallback function is allowed."
 				);
 			fallback = function;
+		}
+		else if (function->isReceive())
+		{
+			if (receive)
+				m_errorReporter.declarationError(
+					function->location(),
+					SecondarySourceLocation().append("Another declaration is here:", receive->location()),
+					"Only one receive function is allowed."
+				);
+			receive = function;
 		}
 		else
 		{
@@ -111,9 +136,7 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 			SecondarySourceLocation ssl;
 
 			for (size_t j = i + 1; j < overloads.size(); ++j)
-				if (FunctionType(*overloads[i]).asCallableFunction(false)->hasEqualParameterTypes(
-					*FunctionType(*overloads[j]).asCallableFunction(false))
-				)
+				if (hasEqualNameAndParameters(*overloads[i], *overloads[j]))
 				{
 					ssl.append("Other declaration is here:", overloads[j]->location());
 					reported.insert(j);
@@ -133,87 +156,6 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 	}
 }
 
-void ContractLevelChecker::checkIllegalOverrides(ContractDefinition const& _contract)
-{
-	// TODO unify this at a later point. for this we need to put the constness and the access specifier
-	// into the types
-	map<string, vector<FunctionDefinition const*>> functions;
-	map<string, ModifierDefinition const*> modifiers;
-
-	// We search from derived to base, so the stored item causes the error.
-	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
-	{
-		for (FunctionDefinition const* function: contract->definedFunctions())
-		{
-			if (function->isConstructor())
-				continue; // constructors can neither be overridden nor override anything
-			string const& name = function->name();
-			if (modifiers.count(name))
-				m_errorReporter.typeError(modifiers[name]->location(), "Override changes function to modifier.");
-
-			for (FunctionDefinition const* overriding: functions[name])
-				checkFunctionOverride(*overriding, *function);
-
-			functions[name].push_back(function);
-		}
-		for (ModifierDefinition const* modifier: contract->functionModifiers())
-		{
-			string const& name = modifier->name();
-			ModifierDefinition const*& override = modifiers[name];
-			if (!override)
-				override = modifier;
-			else if (ModifierType(*override) != ModifierType(*modifier))
-				m_errorReporter.typeError(override->location(), "Override changes modifier signature.");
-			if (!functions[name].empty())
-				m_errorReporter.typeError(override->location(), "Override changes modifier to function.");
-		}
-	}
-}
-
-void ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _function, FunctionDefinition const& _super)
-{
-	FunctionTypePointer functionType = FunctionType(_function).asCallableFunction(false);
-	FunctionTypePointer superType = FunctionType(_super).asCallableFunction(false);
-
-	if (!functionType->hasEqualParameterTypes(*superType))
-		return;
-	if (!functionType->hasEqualReturnTypes(*superType))
-		overrideError(_function, _super, "Overriding function return types differ.");
-
-	if (!_function.annotation().superFunction)
-		_function.annotation().superFunction = &_super;
-
-	if (_function.visibility() != _super.visibility())
-	{
-		// Visibility change from external to public is fine.
-		// Any other change is disallowed.
-		if (!(
-			_super.visibility() == FunctionDefinition::Visibility::External &&
-			_function.visibility() == FunctionDefinition::Visibility::Public
-		))
-			overrideError(_function, _super, "Overriding function visibility differs.");
-	}
-	if (_function.stateMutability() != _super.stateMutability())
-		overrideError(
-			_function,
-			_super,
-			"Overriding function changes state mutability from \"" +
-			stateMutabilityToString(_super.stateMutability()) +
-			"\" to \"" +
-			stateMutabilityToString(_function.stateMutability()) +
-			"\"."
-		);
-}
-
-void ContractLevelChecker::overrideError(FunctionDefinition const& function, FunctionDefinition const& super, string message)
-{
-	m_errorReporter.typeError(
-		function.location(),
-		SecondarySourceLocation().append("Overridden function is here:", super.location()),
-		message
-	);
-}
-
 void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _contract)
 {
 	// Mapping from name to function definition (exactly one per argument type equality class) and
@@ -230,11 +172,6 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 		});
 		if (it == overloads.end())
 			overloads.emplace_back(_type, _implemented);
-		else if (it->second)
-		{
-			if (!_implemented)
-				m_errorReporter.typeError(_declaration.location(), "Redeclaring an already implemented function as abstract");
-		}
 		else if (_implemented)
 			it->second = true;
 	};
@@ -257,6 +194,8 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 	}
 
 	// Set to not fully implemented if at least one flag is false.
+	// Note that `_contract.annotation().unimplementedFunctions` has already been
+	// pre-filled by `checkBaseConstructorArguments`.
 	for (auto const& it: functions)
 		for (auto const& funAndFlag: it.second)
 			if (!funAndFlag.second)
@@ -266,6 +205,32 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 				_contract.annotation().unimplementedFunctions.push_back(function);
 				break;
 			}
+
+	if (_contract.abstract())
+	{
+		if (_contract.contractKind() == ContractDefinition::ContractKind::Interface)
+			m_errorReporter.typeError(_contract.location(), "Interfaces do not need the \"abstract\" keyword, they are abstract implicitly.");
+		else if (_contract.contractKind() == ContractDefinition::ContractKind::Library)
+			m_errorReporter.typeError(_contract.location(), "Libraries cannot be abstract.");
+		else
+			solAssert(_contract.contractKind() == ContractDefinition::ContractKind::Contract, "");
+	}
+
+	// For libraries, we emit errors on function-level, so this is fine as long as we do
+	// not have inheritance for libraries.
+	if (
+		_contract.contractKind() == ContractDefinition::ContractKind::Contract &&
+		!_contract.abstract() &&
+		!_contract.annotation().unimplementedFunctions.empty()
+	)
+	{
+		SecondarySourceLocation ssl;
+		for (auto function: _contract.annotation().unimplementedFunctions)
+			ssl.append("Missing implementation:", function->location());
+		m_errorReporter.typeError(_contract.location(), ssl,
+			"Contract \"" + _contract.annotation().canonicalName
+			+ "\" should be marked as abstract.");
+	}
 }
 
 
@@ -356,48 +321,6 @@ void ContractLevelChecker::annotateBaseConstructorArguments(
 		);
 	}
 
-}
-
-void ContractLevelChecker::checkConstructor(ContractDefinition const& _contract)
-{
-	FunctionDefinition const* constructor = _contract.constructor();
-	if (!constructor)
-		return;
-
-	if (!constructor->returnParameters().empty())
-		m_errorReporter.typeError(constructor->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
-	if (constructor->stateMutability() != StateMutability::NonPayable && constructor->stateMutability() != StateMutability::Payable)
-		m_errorReporter.typeError(
-			constructor->location(),
-			"Constructor must be payable or non-payable, but is \"" +
-			stateMutabilityToString(constructor->stateMutability()) +
-			"\"."
-		);
-	if (constructor->visibility() != FunctionDefinition::Visibility::Public && constructor->visibility() != FunctionDefinition::Visibility::Internal)
-		m_errorReporter.typeError(constructor->location(), "Constructor must be public or internal.");
-}
-
-void ContractLevelChecker::checkFallbackFunction(ContractDefinition const& _contract)
-{
-	FunctionDefinition const* fallback = _contract.fallbackFunction();
-	if (!fallback)
-		return;
-
-	if (_contract.isLibrary())
-		m_errorReporter.typeError(fallback->location(), "Libraries cannot have fallback functions.");
-	if (fallback->stateMutability() != StateMutability::NonPayable && fallback->stateMutability() != StateMutability::Payable)
-		m_errorReporter.typeError(
-			fallback->location(),
-			"Fallback function must be payable or non-payable, but is \"" +
-			stateMutabilityToString(fallback->stateMutability()) +
-			"\"."
-	);
-	if (!fallback->parameters().empty())
-		m_errorReporter.typeError(fallback->parameterList().location(), "Fallback function cannot take parameters.");
-	if (!fallback->returnParameters().empty())
-		m_errorReporter.typeError(fallback->returnParameterList()->location(), "Fallback function cannot return values.");
-	if (fallback->visibility() != FunctionDefinition::Visibility::External)
-		m_errorReporter.typeError(fallback->location(), "Fallback function must be defined as \"external\".");
 }
 
 void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _contract)
@@ -493,7 +416,7 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 		for (TypePointer const& paramType: func.second->parameterTypes() + func.second->parameterTypes())
 			if (!TypeChecker::typeSupportedByOldABIEncoder(*paramType, false))
 			{
-				errors.append("Type only supported by the new experimental ABI encoder", currentLoc);
+				errors.append("Type only supported by ABIEncoderV2", currentLoc);
 				break;
 			}
 	}
@@ -504,9 +427,20 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 			errors,
 			std::string("Contract \"") +
 			_contract.name() +
-			"\" does not use the new experimental ABI encoder but wants to inherit from a contract " +
+			"\" does not use ABIEncoderV2 but wants to inherit from a contract " +
 			"which uses types that require it. " +
 			"Use \"pragma experimental ABIEncoderV2;\" for the inheriting contract as well to enable the feature."
 		);
 
+}
+
+void ContractLevelChecker::checkPayableFallbackWithoutReceive(ContractDefinition const& _contract)
+{
+	if (auto const* fallback = _contract.fallbackFunction())
+		if (fallback->isPayable() && !_contract.interfaceFunctionList().empty() && !_contract.receiveFunction())
+			m_errorReporter.warning(
+				_contract.location(),
+				"This contract has a payable fallback function, but no receive ether function. Consider adding a receive ether function.",
+				SecondarySourceLocation{}.append("The payable fallback function is defined here.", fallback->location())
+			);
 }

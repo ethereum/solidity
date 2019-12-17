@@ -126,7 +126,7 @@ contract UltimateOracle is Oracle {
     }
 
     /// @dev Withdraws winnings for user
-    /// @return Winnings
+    /// @return amount Winnings
     function withdraw()
         public
         returns (uint amount)
@@ -174,6 +174,7 @@ contract UltimateOracle is Oracle {
     /// @return Is outcome set?
     function isOutcomeSet()
         public
+        override
         view
         returns (bool)
     {
@@ -185,6 +186,7 @@ contract UltimateOracle is Oracle {
     /// @return Outcome
     function getOutcome()
         public
+        override
         view
         returns (int)
     {

@@ -10,7 +10,9 @@ include(CheckCXXCompilerFlag)
 #
 function(eth_add_cxx_compiler_flag_if_supported FLAG)
   # Remove leading - or / from the flag name.
-  string(REGEX REPLACE "^-|/" "" name ${FLAG})
+  string(REGEX REPLACE "^[-/]" "" name ${FLAG})
+  # Deletes any ':' because it's invalid variable names.
+  string(REGEX REPLACE ":" "" name ${name})
   check_cxx_compiler_flag(${FLAG} ${name})
   if(${name})
     add_compile_options(${FLAG})

@@ -79,6 +79,7 @@ static int g_compilerStackCounts = 0;
 
 CompilerStack::CompilerStack(ReadCallback::Callback const& _readFile):
 	m_readFile{_readFile},
+	m_enabledSMTSolvers{smt::SMTSolverChoice::All()},
 	m_generateIR{false},
 	m_generateEWasm{false},
 	m_errorList{},
@@ -132,6 +133,13 @@ void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 	m_evmVersion = _version;
 }
 
+void CompilerStack::setSMTSolverChoice(smt::SMTSolverChoice _enabledSMTSolvers)
+{
+	if (m_stackState >= ParsingPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set enabled SMT solvers before parsing."));
+	m_enabledSMTSolvers = _enabledSMTSolvers;
+}
+
 void CompilerStack::setLibraries(std::map<std::string, h160> const& _libraries)
 {
 	if (m_stackState >= ParsingPerformed)
@@ -153,11 +161,26 @@ void CompilerStack::setOptimiserSettings(OptimiserSettings _settings)
 	m_optimiserSettings = std::move(_settings);
 }
 
+void CompilerStack::setRevertStringBehaviour(RevertStrings _revertStrings)
+{
+	if (m_stackState >= ParsingPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set revert string settings before parsing."));
+	solUnimplementedAssert(_revertStrings == RevertStrings::Default || _revertStrings == RevertStrings::Strip, "");
+	m_revertStrings = _revertStrings;
+}
+
 void CompilerStack::useMetadataLiteralSources(bool _metadataLiteralSources)
 {
 	if (m_stackState >= ParsingPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set use literal sources before parsing."));
 	m_metadataLiteralSources = _metadataLiteralSources;
+}
+
+void CompilerStack::setMetadataHash(MetadataHash _metadataHash)
+{
+	if (m_stackState >= ParsingPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set metadata hash before parsing."));
+	m_metadataHash = _metadataHash;
 }
 
 void CompilerStack::addSMTLib2Response(h256 const& _hash, string const& _response)
@@ -179,10 +202,13 @@ void CompilerStack::reset(bool _keepSettings)
 		m_remappings.clear();
 		m_libraries.clear();
 		m_evmVersion = langutil::EVMVersion();
+		m_enabledSMTSolvers = smt::SMTSolverChoice::All();
 		m_generateIR = false;
 		m_generateEWasm = false;
+		m_revertStrings = RevertStrings::Default;
 		m_optimiserSettings = OptimiserSettings::minimal();
 		m_metadataLiteralSources = false;
+		m_metadataHash = MetadataHash::IPFS;
 	}
 	m_globalContext.reset();
 	m_scopes.clear();
@@ -212,12 +238,6 @@ bool CompilerStack::parse()
 
 	if (SemVerVersion{string(VersionString)}.isPrerelease())
 		m_errorReporter.warning("This is a pre-release compiler version, please do not use it in production.");
-
-	if (m_optimiserSettings.runYulOptimiser)
-		m_errorReporter.warning(
-			"The Yul optimiser is still experimental. "
-			"Do not use it in production unless correctness of generated code is verified with extensive tests."
-		);
 
 	vector<string> sourcesToParse;
 	for (auto const& s: m_sources)
@@ -261,41 +281,42 @@ bool CompilerStack::analyze()
 	{
 		SyntaxChecker syntaxChecker(m_errorReporter, m_optimiserSettings.runYulOptimiser);
 		for (Source const* source: m_sourceOrder)
-			if (!syntaxChecker.checkSyntax(*source->ast))
+			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;
 
 		DocStringAnalyser docStringAnalyser(m_errorReporter);
 		for (Source const* source: m_sourceOrder)
-			if (!docStringAnalyser.analyseDocStrings(*source->ast))
+			if (source->ast && !docStringAnalyser.analyseDocStrings(*source->ast))
 				noErrors = false;
 
 		m_globalContext = make_shared<GlobalContext>();
 		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_scopes, m_errorReporter);
 		for (Source const* source: m_sourceOrder)
-			if (!resolver.registerDeclarations(*source->ast))
+			if (source->ast && !resolver.registerDeclarations(*source->ast))
 				return false;
 
 		map<string, SourceUnit const*> sourceUnitsByName;
 		for (auto& source: m_sources)
 			sourceUnitsByName[source.first] = source.second.ast.get();
 		for (Source const* source: m_sourceOrder)
-			if (!resolver.performImports(*source->ast, sourceUnitsByName))
+			if (source->ast && !resolver.performImports(*source->ast, sourceUnitsByName))
 				return false;
 
 		// This is the main name and type resolution loop. Needs to be run for every contract, because
 		// the special variables "this" and "super" must be set appropriately.
 		for (Source const* source: m_sourceOrder)
-			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			if (source->ast)
+				for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 				{
-
-					if (!resolver.resolveNamesAndTypes(*contract)) return false;
-					// Note that we now reference contracts by their fully qualified names, and
-					// thus contracts can only conflict if declared in the same source file.  This
-					// already causes a double-declaration error elsewhere, so we do not report
-					// an error here and instead silently drop any additional contracts we find.
-					if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
-						m_contracts[contract->fullyQualifiedName()].contract = contract;
+					if (!resolver.resolveNamesAndTypes(*node))
+						return false;
+					if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+						// Note that we now reference contracts by their fully qualified names, and
+						// thus contracts can only conflict if declared in the same source file.  This
+						// already causes a double-declaration error elsewhere, so we do not report
+						// an error here and instead silently drop any additional contracts we find.
+						if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
+							m_contracts[contract->fullyQualifiedName()].contract = contract;
 				}
 
 		// Next, we check inheritance, overrides, function collisions and other things at
@@ -304,10 +325,11 @@ bool CompilerStack::analyze()
 		// type checker.
 		ContractLevelChecker contractLevelChecker(m_errorReporter);
 		for (Source const* source: m_sourceOrder)
-			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-					if (!contractLevelChecker.check(*contract))
-						noErrors = false;
+			if (source->ast)
+				for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+					if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+						if (!contractLevelChecker.check(*contract))
+							noErrors = false;
 
 		// New we run full type checks that go down to the expression level. This
 		// cannot be done earlier, because we need cross-contract types and information
@@ -318,17 +340,18 @@ bool CompilerStack::analyze()
 		// which is only done one step later.
 		TypeChecker typeChecker(m_evmVersion, m_errorReporter);
 		for (Source const* source: m_sourceOrder)
-			for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-					if (!typeChecker.checkTypeRequirements(*contract))
-						noErrors = false;
+			if (source->ast)
+				for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+					if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+						if (!typeChecker.checkTypeRequirements(*contract))
+							noErrors = false;
 
 		if (noErrors)
 		{
 			// Checks that can only be done when all types of all AST nodes are known.
 			PostTypeChecker postTypeChecker(m_errorReporter);
 			for (Source const* source: m_sourceOrder)
-				if (!postTypeChecker.check(*source->ast))
+				if (source->ast && !postTypeChecker.check(*source->ast))
 					noErrors = false;
 		}
 
@@ -338,14 +361,14 @@ bool CompilerStack::analyze()
 			// variable is used before it is assigned to.
 			CFG cfg(m_errorReporter);
 			for (Source const* source: m_sourceOrder)
-				if (!cfg.constructFlow(*source->ast))
+				if (source->ast && !cfg.constructFlow(*source->ast))
 					noErrors = false;
 
 			if (noErrors)
 			{
 				ControlFlowAnalyzer controlFlowAnalyzer(cfg, m_errorReporter);
 				for (Source const* source: m_sourceOrder)
-					if (!controlFlowAnalyzer.analyze(*source->ast))
+					if (source->ast && !controlFlowAnalyzer.analyze(*source->ast))
 						noErrors = false;
 			}
 		}
@@ -355,7 +378,7 @@ bool CompilerStack::analyze()
 			// Checks for common mistakes. Only generates warnings.
 			StaticAnalyzer staticAnalyzer(m_errorReporter);
 			for (Source const* source: m_sourceOrder)
-				if (!staticAnalyzer.analyze(*source->ast))
+				if (source->ast && !staticAnalyzer.analyze(*source->ast))
 					noErrors = false;
 		}
 
@@ -364,7 +387,8 @@ bool CompilerStack::analyze()
 			// Check for state mutability in every function.
 			vector<ASTPointer<ASTNode>> ast;
 			for (Source const* source: m_sourceOrder)
-				ast.push_back(source->ast);
+				if (source->ast)
+					ast.push_back(source->ast);
 
 			if (!ViewPureChecker(ast, m_errorReporter).check())
 				noErrors = false;
@@ -372,9 +396,10 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses);
+			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses, m_readFile, m_enabledSMTSolvers);
 			for (Source const* source: m_sourceOrder)
-				modelChecker.analyze(*source->ast);
+				if (source->ast)
+					modelChecker.analyze(*source->ast);
 			m_unhandledSMTLib2Queries += modelChecker.unhandledQueries();
 		}
 	}
@@ -869,7 +894,7 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 
 			ReadCallback::Result result{false, string("File not supplied initially.")};
 			if (m_readFile)
-				result = m_readFile(importPath);
+				result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), importPath);
 
 			if (result.success)
 				newSources[importPath] = result.responseOrErrorMessage;
@@ -965,7 +990,7 @@ namespace
 bool onlySafeExperimentalFeaturesActivated(set<ExperimentalFeature> const& features)
 {
 	for (auto const feature: features)
-		if (!ExperimentalFeatureOnlyAnalysis.count(feature))
+		if (!ExperimentalFeatureWithoutWarning.count(feature))
 			return false;
 	return true;
 }
@@ -987,7 +1012,7 @@ void CompilerStack::compileContract(
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 
-	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_optimiserSettings);
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_revertStrings, m_optimiserSettings);
 	compiledContract.compiler = compiler;
 
 	bytes cborEncodedMetadata = createCBORMetadata(
@@ -1178,8 +1203,15 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		meta["settings"]["optimizer"]["details"] = std::move(details);
 	}
 
+	if (m_revertStrings != RevertStrings::Default)
+		meta["settings"]["debug"]["revertStrings"] = revertStringsToString(m_revertStrings);
+
 	if (m_metadataLiteralSources)
 		meta["settings"]["metadata"]["useLiteralContent"] = true;
+
+	static vector<string> hashes{"ipfs", "bzzr1", "none"};
+	meta["settings"]["metadata"]["bytecodeHash"] = hashes.at(unsigned(m_metadataHash));
+
 	meta["settings"]["evmVersion"] = m_evmVersion.name();
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;
@@ -1288,7 +1320,17 @@ private:
 bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimentalMode)
 {
 	MetadataCBOREncoder encoder;
-	encoder.pushBytes("bzzr1", dev::bzzr1Hash(_metadata).asBytes());
+
+	if (m_metadataHash == MetadataHash::IPFS)
+	{
+		solAssert(_metadata.length() < 1024 * 256, "Metadata too large.");
+		encoder.pushBytes("ipfs", dev::ipfsHash(_metadata));
+	}
+	else if (m_metadataHash == MetadataHash::Bzzr1)
+		encoder.pushBytes("bzzr1", dev::bzzr1Hash(_metadata).asBytes());
+	else
+		solAssert(m_metadataHash == MetadataHash::None, "Invalid metadata hash");
+
 	if (_experimentalMode)
 		encoder.pushBool("experimental", true);
 	if (m_release)
@@ -1308,6 +1350,7 @@ string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) con
 	int prevStart = -1;
 	int prevLength = -1;
 	int prevSourceIndex = -1;
+	size_t prevModifierDepth = -1;
 	char prevJump = 0;
 	for (auto const& item: _items)
 	{
@@ -1325,19 +1368,24 @@ string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) con
 			jump = 'i';
 		else if (item.getJumpType() == eth::AssemblyItem::JumpType::OutOfFunction)
 			jump = 'o';
+		size_t modifierDepth = item.m_modifierDepth;
 
-		unsigned components = 4;
-		if (jump == prevJump)
+		unsigned components = 5;
+		if (modifierDepth == prevModifierDepth)
 		{
 			components--;
-			if (sourceIndex == prevSourceIndex)
+			if (jump == prevJump)
 			{
 				components--;
-				if (length == prevLength)
+				if (sourceIndex == prevSourceIndex)
 				{
 					components--;
-					if (location.start == prevStart)
+					if (length == prevLength)
+					{
 						components--;
+						if (location.start == prevStart)
+							components--;
+					}
 				}
 			}
 		}
@@ -1361,6 +1409,12 @@ string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) con
 						ret += ':';
 						if (jump != prevJump)
 							ret += jump;
+						if (components-- > 0)
+						{
+							ret += ':';
+							if (modifierDepth != prevModifierDepth)
+								ret += to_string(modifierDepth);
+						}
 					}
 				}
 			}
@@ -1370,6 +1424,7 @@ string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) con
 		prevLength = length;
 		prevSourceIndex = sourceIndex;
 		prevJump = jump;
+		prevModifierDepth = modifierDepth;
 	}
 	return ret;
 }
@@ -1437,8 +1492,8 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 		Json::Value internalFunctions(Json::objectValue);
 		for (auto const& it: contract.definedFunctions())
 		{
-			/// Exclude externally visible functions, constructor and the fallback function
-			if (it->isPartOfExternalInterface() || it->isConstructor() || it->isFallback())
+			/// Exclude externally visible functions, constructor, fallback and receive ether function
+			if (it->isPartOfExternalInterface() || !it->isOrdinary())
 				continue;
 
 			size_t entry = functionEntryPoint(_contractName, *it);

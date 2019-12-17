@@ -161,7 +161,7 @@ public:
 
 	enum class Category
 	{
-		Address, Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array,
+		Address, Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array, ArraySlice,
 		FixedBytes, Contract, Struct, Function, Enum, Tuple,
 		Mapping, TypeType, Modifier, Magic, Module,
 		InaccessibleDynamic
@@ -773,6 +773,35 @@ private:
 	mutable std::optional<TypeResult> m_interfaceType_library;
 };
 
+class ArraySliceType: public ReferenceType
+{
+public:
+	explicit ArraySliceType(ArrayType const& _arrayType): ReferenceType(_arrayType.location()), m_arrayType(_arrayType) {}
+	Category category() const override { return Category::ArraySlice; }
+
+	BoolResult isImplicitlyConvertibleTo(Type const& _other) const override;
+	std::string richIdentifier() const override;
+	bool operator==(Type const& _other) const override;
+	unsigned calldataEncodedSize(bool) const override { solAssert(false, ""); }
+	unsigned calldataEncodedTailSize() const override { return 32; }
+	bool isDynamicallySized() const override { return true; }
+	bool isDynamicallyEncoded() const override { return true; }
+	bool canLiveOutsideStorage() const override { return m_arrayType.canLiveOutsideStorage(); }
+	unsigned sizeOnStack() const override { return 2; }
+	std::string toString(bool _short) const override;
+
+	/// @returns true if this is valid to be stored in calldata
+	bool validForCalldata() const { return m_arrayType.validForCalldata(); }
+
+	ArrayType const& arrayType() const { return m_arrayType; }
+	u256 memoryDataSize() const override { solAssert(false, ""); }
+
+	std::unique_ptr<ReferenceType> copyForLocation(DataLocation, bool) const override { solAssert(false, ""); }
+
+private:
+	ArrayType const& m_arrayType;
+};
+
 /**
  * The type of a contract instance or library, there is one distinct type for each contract definition.
  */
@@ -817,7 +846,8 @@ public:
 	/// See documentation of m_super
 	bool isSuper() const { return m_super; }
 
-	// @returns true if and only if the contract has a payable fallback function
+	// @returns true if and only if the contract has a receive ether function or a payable fallback function, i.e.
+	// if it has code that will be executed on plain ether transfers
 	bool isPayable() const;
 
 	ContractDefinition const& contractDefinition() const { return m_contract; }
@@ -1160,6 +1190,8 @@ public:
 	std::string externalSignature() const;
 	/// @returns the external identifier of this function (the hash of the signature).
 	u256 externalIdentifier() const;
+	/// @returns the external identifier of this function (the hash of the signature) as a hex string.
+	std::string externalIdentifierHex() const;
 	Declaration const& declaration() const
 	{
 		solAssert(m_declaration, "Requested declaration from a FunctionType that has none");

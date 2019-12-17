@@ -1124,6 +1124,10 @@ void ProtoConverter::visit(Statement const& _x)
 	case Statement::kPop:
 		visit(_x.pop());
 		break;
+	case Statement::kLeave:
+		if (m_inFunctionDef)
+			visit(_x.leave());
+		break;
 	case Statement::STMT_ONEOF_NOT_SET:
 		break;
 	}
@@ -1433,6 +1437,11 @@ void ProtoConverter::visit(PopStmt const& _x)
 	m_output << "pop(";
 	visit(_x.expr());
 	m_output << ")\n";
+}
+
+void ProtoConverter::visit(LeaveStmt const&)
+{
+	m_output << "leave\n";
 }
 
 string ProtoConverter::getObjectIdentifier(ObjectId const& _x)

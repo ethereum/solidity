@@ -100,13 +100,52 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		{
 			Json::Value method(devDocumentation(fun->annotation().docTags));
 			if (!method.empty())
+			{
 				// add the function, only if we have any documentation to add
+				Json::Value jsonReturn = extractReturnParameterDocs(fun->annotation().docTags, *fun);
+
+				if (!jsonReturn.empty())
+					method["returns"] = jsonReturn;
+
 				methods[it.second->externalSignature()] = method;
+			}
 		}
 	}
+
 	doc["methods"] = methods;
 
 	return doc;
+}
+
+Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, FunctionDefinition const& _functionDef)
+{
+	Json::Value jsonReturn{Json::objectValue};
+	auto returnDocs = _tags.equal_range("return");
+
+	if (!_functionDef.returnParameters().empty())
+	{
+		size_t n = 0;
+		for (auto i = returnDocs.first; i != returnDocs.second; i++)
+		{
+			string paramName = _functionDef.returnParameters().at(n)->name();
+			string content = i->second.content;
+
+			if (paramName.empty())
+				paramName = "_" + std::to_string(n);
+			else
+			{
+				//check to make sure the first word of the doc str is the same as the return name
+				auto nameEndPos = content.find_first_of(" \t");
+				solAssert(content.substr(0, nameEndPos) == paramName, "No return param name given: " + paramName);
+				content = content.substr(nameEndPos+1);
+			}
+
+			jsonReturn[paramName] = Json::Value(content);
+			n++;
+		}
+	}
+
+	return jsonReturn;
 }
 
 string Natspec::extractDoc(multimap<string, DocTag> const& _tags, string const& _name)
@@ -128,12 +167,6 @@ Json::Value Natspec::devDocumentation(std::multimap<std::string, DocTag> const& 
 	auto author = extractDoc(_tags, "author");
 	if (!author.empty())
 		json["author"] = author;
-
-	// for constructors, the "return" node will never exist. invalid tags
-	// will already generate an error within dev::solidity::DocStringAnalyzer.
-	auto ret = extractDoc(_tags, "return");
-	if (!ret.empty())
-		json["return"] = ret;
 
 	Json::Value params(Json::objectValue);
 	auto paramRange = _tags.equal_range("param");

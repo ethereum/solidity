@@ -41,9 +41,9 @@ bytes onlyMetadata(bytes const& _bytecode)
 	size_t metadataSize = (_bytecode[size - 2] << 8) + _bytecode[size - 1];
 	if (size < (metadataSize + 2))
 		return bytes{};
-	// Sanity check: assume the first byte is a fixed-size CBOR array with either 2 or 3 entries
+	// Sanity check: assume the first byte is a fixed-size CBOR array with 1, 2 or 3 entries
 	unsigned char firstByte = _bytecode[size - metadataSize - 2];
-	if (firstByte != 0xa2 && firstByte != 0xa3)
+	if (firstByte != 0xa1 && firstByte != 0xa2 && firstByte != 0xa3)
 		return bytes{};
 	return bytes(_bytecode.end() - metadataSize - 2, _bytecode.end() - 2);
 }
@@ -185,7 +185,9 @@ bool isValidMetadata(string const& _metadata)
 		!metadata.isMember("settings") ||
 		!metadata.isMember("sources") ||
 		!metadata.isMember("output") ||
-		!metadata["settings"].isMember("evmVersion")
+		!metadata["settings"].isMember("evmVersion") ||
+		!metadata["settings"].isMember("metadata") ||
+		!metadata["settings"]["metadata"].isMember("bytecodeHash")
 	)
 		return false;
 

@@ -6,3 +6,5 @@ contract C {
         }
     }
 }
+// ====
+// SMTSolvers: z3

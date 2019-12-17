@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Compiler that transforms Yul Objects to EWasm text representation.
+ * Compiler that transforms Yul Objects to Wasm text and binary representation (Ewasm flavoured).
  */
 
 #pragma once

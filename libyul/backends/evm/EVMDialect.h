@@ -72,7 +72,6 @@ struct EVMDialect: public Dialect
 	BuiltinFunctionForEVM const* equalityFunction() const override { return builtin("eq"_yulstring); }
 	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("iszero"_yulstring); }
 
-	static EVMDialect const& looseAssemblyForEVM(langutil::EVMVersion _version);
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
 	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);
 	static EVMDialect const& yulForEVM(langutil::EVMVersion _version);

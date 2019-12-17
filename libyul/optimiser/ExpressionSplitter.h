@@ -61,7 +61,6 @@ public:
 	static constexpr char const* name{"ExpressionSplitter"};
 	static void run(OptimiserStepContext&, Block& _ast);
 
-	void operator()(FunctionalInstruction&) override;
 	void operator()(FunctionCall&) override;
 	void operator()(If&) override;
 	void operator()(Switch&) override;

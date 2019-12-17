@@ -116,7 +116,9 @@ The nightly version can be installed using these commands:
     sudo apt-get update
     sudo apt-get install solc
 
-We are also releasing a `snap package <https://snapcraft.io/>`_, which is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To install the latest stable version of solc:
+We are also releasing a `snap package <https://snapcraft.io/>`_, which is
+installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To
+install the latest stable version of solc:
 
 .. code-block:: bash
 
@@ -128,6 +130,12 @@ with the most recent changes, please use the following:
 .. code-block:: bash
 
     sudo snap install solc --edge
+
+.. note::
+
+    The ``solc`` snap uses strict confinement. This is the most secure mode for snap packages
+    but it comes with limitations, like accessing only the files in your ``/home`` and ``/media`` directories.
+    For more information, go to `Demystifying Snap Confinement <https://snapcraft.io/blog/demystifying-snap-confinement>`_.
 
 Arch Linux also has packages, albeit limited to the latest development version:
 
@@ -146,7 +154,8 @@ currently not supported.
     brew tap ethereum/ethereum
     brew install solidity
 
-To install the most recent 0.4.x version of Solidity you can also use ``brew install solidity@4``.
+To install the most recent 0.4.x / 0.5.x version of Solidity you can also use ``brew install solidity@4``
+and ``brew install solidity@5``, respectively.
 
 If you need a specific version of Solidity you can install a
 Homebrew formula directly from Github.

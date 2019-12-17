@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <iterator>
 #include <libdevcore/Common.h>
 
 #include <vector>
@@ -49,14 +50,27 @@ template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U&& _
 	std::move(_b.begin(), _b.end(), std::back_inserter(_a));
 	return _a;
 }
+/// Concatenate the contents of a container onto a multiset
+template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U const& _b)
+{
+	_a.insert(_b.begin(), _b.end());
+	return _a;
+}
+/// Concatenate the contents of a container onto a multiset, move variant.
+template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U&& _b)
+{
+	for (auto&& x: _b)
+		_a.insert(std::move(x));
+	return _a;
+}
 /// Concatenate the contents of a container onto a set
-template <class T, class U> std::set<T>& operator+=(std::set<T>& _a, U const& _b)
+template <class U, class... T> std::set<T...>& operator+=(std::set<T...>& _a, U const& _b)
 {
 	_a.insert(_b.begin(), _b.end());
 	return _a;
 }
 /// Concatenate the contents of a container onto a set, move variant.
-template <class T, class U> std::set<T>& operator+=(std::set<T>& _a, U&& _b)
+template <class U, class... T> std::set<T...>& operator+=(std::set<T...>& _a, U&& _b)
 {
 	for (auto&& x: _b)
 		_a.insert(std::move(x));
@@ -97,9 +111,27 @@ inline std::set<T> operator+(std::set<T>&& _a, U&& _b)
 	ret += std::forward<U>(_b);
 	return ret;
 }
-/// Remove one set from another one.
-template <class T>
-inline std::set<T>& operator-=(std::set<T>& _a, std::set<T> const& _b)
+
+/// Remove the elements of a container from a set.
+template <class C, class... T>
+inline std::set<T...>& operator-=(std::set<T...>& _a, C const& _b)
+{
+	for (auto const& x: _b)
+		_a.erase(x);
+	return _a;
+}
+
+template <class C, class... T>
+inline std::set<T...> operator-(std::set<T...> const& _a, C const& _b)
+{
+	auto result = _a;
+	result -= _b;
+	return result;
+}
+
+/// Remove the elements of a container from a multiset.
+template <class C, class... T>
+inline std::multiset<T...>& operator-=(std::multiset<T...>& _a, C const& _b)
 {
 	for (auto const& x: _b)
 		_a.erase(x);
@@ -108,6 +140,21 @@ inline std::set<T>& operator-=(std::set<T>& _a, std::set<T> const& _b)
 
 namespace dev
 {
+
+template <class T, class U>
+T convertContainer(U const& _from)
+{
+	return T{_from.cbegin(), _from.cend()};
+}
+
+template <class T, class U>
+T convertContainer(U&& _from)
+{
+	return T{
+		std::make_move_iterator(_from.begin()),
+		std::make_move_iterator(_from.end())
+	};
+}
 
 // String conversion functions, mainly to/from hex/nibble/byte representations.
 
@@ -258,6 +305,12 @@ template <class T, class V>
 bool contains(T const& _t, V const& _v)
 {
 	return std::end(_t) != std::find(std::begin(_t), std::end(_t), _v);
+}
+
+template <class T, class Predicate>
+bool contains_if(T const& _t, Predicate const& _p)
+{
+	return std::end(_t) != std::find_if(std::begin(_t), std::end(_t), _p);
 }
 
 /// Function that iterates over a vector, calling a function on each of its

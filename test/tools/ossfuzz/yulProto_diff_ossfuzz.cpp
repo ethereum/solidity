@@ -69,7 +69,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	// AssemblyStack entry point
 	AssemblyStack stack(
-		langutil::EVMVersion::istanbul(),
+		langutil::EVMVersion::berlin(),
 		AssemblyStack::Language::StrictAssembly,
 		dev::solidity::OptimiserSettings::full()
 	);
@@ -87,7 +87,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
 		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion::istanbul())
+		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion::berlin())
 	);
 
 	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
@@ -97,7 +97,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	termReason = yulFuzzerUtil::interpret(
 		os2,
 		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion::istanbul()),
+		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion::berlin()),
 		(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 4)
 	);
 

@@ -34,9 +34,13 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
-CHCSmtLib2Interface::CHCSmtLib2Interface(map<h256, string> const& _queryResponses):
-	m_smtlib2(make_shared<SMTLib2Interface>(_queryResponses)),
-	m_queryResponses(_queryResponses)
+CHCSmtLib2Interface::CHCSmtLib2Interface(
+	map<h256, string> const& _queryResponses,
+	ReadCallback::Callback const& _smtCallback
+):
+	m_smtlib2(make_shared<SMTLib2Interface>(_queryResponses, _smtCallback)),
+	m_queryResponses(_queryResponses),
+	m_smtCallback(_smtCallback)
 {
 	reset();
 }
@@ -152,9 +156,12 @@ string CHCSmtLib2Interface::querySolver(string const& _input)
 	h256 inputHash = dev::keccak256(_input);
 	if (m_queryResponses.count(inputHash))
 		return m_queryResponses.at(inputHash);
-	else
+	if (m_smtCallback)
 	{
-		m_unhandledQueries.push_back(_input);
-		return "unknown\n";
+		auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery), _input);
+		if (result.success)
+			return result.responseOrErrorMessage;
 	}
+	m_unhandledQueries.push_back(_input);
+	return "unknown\n";
 }

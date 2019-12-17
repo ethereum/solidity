@@ -35,6 +35,8 @@
 
 #include <liblangutil/ErrorReporter.h>
 
+#include <libdevcore/Whiskers.h>
+
 #include <boost/range/adaptor/reversed.hpp>
 #include <algorithm>
 
@@ -335,6 +337,9 @@ namespace
 // Helper function to check if any function is payable
 bool hasPayableFunctions(ContractDefinition const& _contract)
 {
+	if (_contract.receiveFunction())
+		return true;
+
 	FunctionDefinition const* fallback = _contract.fallbackFunction();
 	if (fallback && fallback->isPayable())
 		return true;
@@ -361,6 +366,9 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	FunctionDefinition const* fallback = _contract.fallbackFunction();
 	solAssert(!_contract.isLibrary() || !fallback, "Libraries can't have fallback functions");
 
+	FunctionDefinition const* etherReceiver = _contract.receiveFunction();
+	solAssert(!_contract.isLibrary() || !fallback, "Libraries can't have ether receiver functions");
+
 	bool needToAddCallvalueCheck = true;
 	if (!hasPayableFunctions(_contract) && !interfaceFunctions.empty() && !_contract.isLibrary())
 	{
@@ -368,11 +376,15 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		needToAddCallvalueCheck = false;
 	}
 
-	eth::AssemblyItem notFound = m_context.newTag();
-	// directly jump to fallback if the data is too short to contain a function selector
+	eth::AssemblyItem notFoundOrReceiveEther = m_context.newTag();
+	// If there is neither a fallback nor a receive ether function, we only need one label to jump to, which
+	// always reverts.
+	eth::AssemblyItem notFound = (!fallback && !etherReceiver) ? notFoundOrReceiveEther : m_context.newTag();
+
+	// directly jump to fallback or ether receiver if the data is too short to contain a function selector
 	// also guards against short data
 	m_context << u256(4) << Instruction::CALLDATASIZE << Instruction::LT;
-	m_context.appendConditionalJumpTo(notFound);
+	m_context.appendConditionalJumpTo(notFoundOrReceiveEther);
 
 	// retrieve the function signature hash from the calldata
 	if (!interfaceFunctions.empty())
@@ -390,23 +402,44 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		appendInternalSelector(callDataUnpackerEntryPoints, sortedIDs, notFound, m_optimiserSettings.expectedExecutionsPerDeployment);
 	}
 
-	m_context << notFound;
+	m_context << notFoundOrReceiveEther;
 
-	if (fallback)
-	{
-		solAssert(!_contract.isLibrary(), "");
-		if (!fallback->isPayable() && needToAddCallvalueCheck)
-			appendCallValueCheck();
-
-		solAssert(fallback->isFallback(), "");
-		solAssert(FunctionType(*fallback).parameterTypes().empty(), "");
-		solAssert(FunctionType(*fallback).returnParameterTypes().empty(), "");
-		fallback->accept(*this);
-		m_context << Instruction::STOP;
-	}
-	else
-		// TODO: error message here?
+	if (!fallback && !etherReceiver)
 		m_context.appendRevert();
+	else
+	{
+		if (etherReceiver)
+		{
+			// directly jump to fallback, if there is calldata
+			m_context << Instruction::CALLDATASIZE;
+			m_context.appendConditionalJumpTo(notFound);
+
+			solAssert(!_contract.isLibrary(), "");
+			solAssert(etherReceiver->isReceive(), "");
+			solAssert(FunctionType(*etherReceiver).parameterTypes().empty(), "");
+			solAssert(FunctionType(*etherReceiver).returnParameterTypes().empty(), "");
+			etherReceiver->accept(*this);
+			m_context << Instruction::STOP;
+		}
+
+		m_context << notFound;
+		if (fallback)
+		{
+			solAssert(!_contract.isLibrary(), "");
+			if (!fallback->isPayable() && needToAddCallvalueCheck)
+				appendCallValueCheck();
+
+			solAssert(fallback->isFallback(), "");
+			solAssert(FunctionType(*fallback).parameterTypes().empty(), "");
+			solAssert(FunctionType(*fallback).returnParameterTypes().empty(), "");
+			fallback->accept(*this);
+			m_context << Instruction::STOP;
+		}
+		else
+			// TODO: error message here?
+			m_context.appendRevert();
+	}
+
 
 	for (auto const& it: interfaceFunctions)
 	{
@@ -480,7 +513,7 @@ void ContractCompiler::initializeStateVariables(ContractDefinition const& _contr
 	solAssert(!_contract.isLibrary(), "Tried to initialize state variables of library.");
 	for (VariableDeclaration const* variable: _contract.stateVariables())
 		if (variable->value() && !variable->isConstant())
-			ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals).appendStateVariableInitialization(*variable);
+			ExpressionCompiler(m_context, m_revertStrings, m_optimiserSettings.runOrderLiterals).appendStateVariableInitialization(*variable);
 }
 
 bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
@@ -493,9 +526,11 @@ bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
 	m_continueTags.clear();
 
 	if (_variableDeclaration.isConstant())
-		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals).appendConstStateVariableAccessor(_variableDeclaration);
+		ExpressionCompiler(m_context, m_revertStrings, m_optimiserSettings.runOrderLiterals)
+			.appendConstStateVariableAccessor(_variableDeclaration);
 	else
-		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals).appendStateVariableAccessor(_variableDeclaration);
+		ExpressionCompiler(m_context, m_revertStrings, m_optimiserSettings.runOrderLiterals)
+			.appendStateVariableAccessor(_variableDeclaration);
 
 	return false;
 }
@@ -532,8 +567,10 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	m_currentFunction = &_function;
 	m_modifierDepth = -1;
 	m_scopeStackHeight.clear();
+	m_context.setModifierDepth(0);
 
 	appendModifierOrFunctionCode();
+	m_context.setModifierDepth(0);
 	solAssert(m_returnTags.empty(), "");
 
 	// Now we need to re-shuffle the stack. For this we keep a record of the stack layout
@@ -581,7 +618,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	if (!_function.isConstructor())
 	{
 		solAssert(m_context.numberOfLocalVariables() == 0, "");
-		if (!_function.isFallback())
+		if (!_function.isFallback() && !_function.isReceive())
 			m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
 	}
 
@@ -760,6 +797,183 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		m_optimiserSettings.optimizeStackAllocation
 	);
 	m_context.setStackOffset(startStackHeight);
+	return false;
+}
+
+bool ContractCompiler::visit(TryStatement const& _tryStatement)
+{
+	StackHeightChecker checker(m_context);
+	CompilerContext::LocationSetter locationSetter(m_context, _tryStatement);
+
+	compileExpression(_tryStatement.externalCall());
+	int const returnSize = static_cast<int>(_tryStatement.externalCall().annotation().type->sizeOnStack());
+
+	// Stack: [ return values] <success flag>
+	eth::AssemblyItem successTag = m_context.appendConditionalJump();
+
+	// Catch case.
+	m_context.adjustStackOffset(-returnSize);
+
+	handleCatch(_tryStatement.clauses());
+
+	eth::AssemblyItem endTag = m_context.appendJumpToNew();
+
+	m_context << successTag;
+	m_context.adjustStackOffset(returnSize);
+	{
+		// Success case.
+		// Stack: return values
+		TryCatchClause const& successClause = *_tryStatement.clauses().front();
+		if (successClause.parameters())
+		{
+			vector<TypePointer> exprTypes{_tryStatement.externalCall().annotation().type};
+			if (auto tupleType = dynamic_cast<TupleType const*>(exprTypes.front()))
+				exprTypes = tupleType->components();
+			vector<ASTPointer<VariableDeclaration>> const& params = successClause.parameters()->parameters();
+			solAssert(exprTypes.size() == params.size(), "");
+			for (size_t i = 0; i < exprTypes.size(); ++i)
+				solAssert(params[i] && exprTypes[i] && *params[i]->annotation().type == *exprTypes[i], "");
+		}
+		else
+			CompilerUtils(m_context).popStackSlots(returnSize);
+
+		_tryStatement.clauses().front()->accept(*this);
+	}
+
+	m_context << endTag;
+	checker.check();
+	return false;
+}
+
+void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _catchClauses)
+{
+	// Stack is empty.
+	ASTPointer<TryCatchClause> structured{};
+	ASTPointer<TryCatchClause> fallback{};
+	for (size_t i = 1; i < _catchClauses.size(); ++i)
+		if (_catchClauses[i]->errorName() == "Error")
+			structured = _catchClauses[i];
+		else if (_catchClauses[i]->errorName().empty())
+			fallback = _catchClauses[i];
+		else
+			solAssert(false, "");
+
+	solAssert(_catchClauses.size() == size_t(1 + (structured ? 1 : 0) + (fallback ? 1 : 0)), "");
+
+	eth::AssemblyItem endTag = m_context.newTag();
+	eth::AssemblyItem fallbackTag = m_context.newTag();
+	if (structured)
+	{
+		solAssert(
+			structured->parameters() &&
+			structured->parameters()->parameters().size() == 1 &&
+			structured->parameters()->parameters().front() &&
+			*structured->parameters()->parameters().front()->annotation().type == *TypeProvider::stringMemory(),
+			""
+		);
+		solAssert(m_context.evmVersion().supportsReturndata(), "");
+
+		string errorHash = FixedHash<4>(dev::keccak256("Error(string)")).hex();
+
+		// Try to decode the error message.
+		// If this fails, leaves 0 on the stack, otherwise the pointer to the data string.
+		m_context << u256(0);
+		m_context.appendInlineAssembly(
+			Whiskers(R"({
+				data := mload(0x40)
+				mstore(data, 0)
+				for {} 1 {} {
+					if lt(returndatasize(), 0x44) { data := 0 break }
+					returndatacopy(0, 0, 4)
+					let sig := <getSig>
+					if iszero(eq(sig, 0x<ErrorSignature>)) { data := 0 break }
+					returndatacopy(data, 4, sub(returndatasize(), 4))
+					let offset := mload(data)
+					if or(
+						gt(offset, 0xffffffffffffffff),
+						gt(add(offset, 0x24), returndatasize())
+					) {
+						data := 0
+						break
+					}
+					let msg := add(data, offset)
+					let length := mload(msg)
+					if gt(length, 0xffffffffffffffff) { data := 0 break }
+					let end := add(add(msg, 0x20), length)
+					if gt(end, add(data, returndatasize())) { data := 0 break }
+					mstore(0x40, and(add(end, 0x1f), not(0x1f)))
+					data := msg
+					break
+				}
+			})")
+			("ErrorSignature", errorHash)
+			("getSig",
+				m_context.evmVersion().hasBitwiseShifting() ?
+				"shr(224, mload(0))" :
+				"div(mload(0), " + (u256(1) << 224).str() + ")"
+			).render(),
+			{"data"}
+		);
+		m_context << Instruction::DUP1;
+		AssemblyItem decodeSuccessTag = m_context.appendConditionalJump();
+		m_context << Instruction::POP;
+		m_context.appendJumpTo(fallbackTag);
+		m_context.adjustStackOffset(1);
+
+		m_context << decodeSuccessTag;
+		structured->accept(*this);
+		m_context.appendJumpTo(endTag);
+	}
+	m_context << fallbackTag;
+	if (fallback)
+	{
+		if (fallback->parameters())
+		{
+			solAssert(m_context.evmVersion().supportsReturndata(), "");
+			solAssert(
+				fallback->parameters()->parameters().size() == 1 &&
+				fallback->parameters()->parameters().front() &&
+				*fallback->parameters()->parameters().front()->annotation().type == *TypeProvider::bytesMemory(),
+				""
+			);
+			CompilerUtils(m_context).returnDataToArray();
+		}
+
+		fallback->accept(*this);
+	}
+	else
+	{
+		// re-throw
+		if (m_context.evmVersion().supportsReturndata())
+			m_context.appendInlineAssembly(R"({
+				returndatacopy(0, 0, returndatasize())
+				revert(0, returndatasize())
+			})");
+		else
+			m_context.appendRevert();
+	}
+	m_context << endTag;
+}
+
+bool ContractCompiler::visit(TryCatchClause const& _clause)
+{
+	CompilerContext::LocationSetter locationSetter(m_context, _clause);
+
+	unsigned varSize = 0;
+
+	if (_clause.parameters())
+		for (ASTPointer<VariableDeclaration> const& varDecl: _clause.parameters()->parameters() | boost::adaptors::reversed)
+		{
+			solAssert(varDecl, "");
+			varSize += varDecl->annotation().type->sizeOnStack();
+			m_context.addVariable(*varDecl, varSize);
+		}
+
+	_clause.block().accept(*this);
+
+	m_context.removeVariablesAboveStackHeight(m_context.stackHeight() - varSize);
+	CompilerUtils(m_context).popStackSlots(varSize);
+
 	return false;
 }
 
@@ -1032,6 +1246,7 @@ void ContractCompiler::appendModifierOrFunctionCode()
 	vector<VariableDeclaration const*> addedVariables;
 
 	m_modifierDepth++;
+	m_context.setModifierDepth(m_modifierDepth);
 
 	if (m_modifierDepth >= m_currentFunction->modifiers().size())
 	{
@@ -1085,6 +1300,7 @@ void ContractCompiler::appendModifierOrFunctionCode()
 			m_context.removeVariable(*var);
 	}
 	m_modifierDepth--;
+	m_context.setModifierDepth(m_modifierDepth);
 }
 
 void ContractCompiler::appendStackVariableInitialisation(VariableDeclaration const& _variable)
@@ -1096,7 +1312,7 @@ void ContractCompiler::appendStackVariableInitialisation(VariableDeclaration con
 
 void ContractCompiler::compileExpression(Expression const& _expression, TypePointer const& _targetType)
 {
-	ExpressionCompiler expressionCompiler(m_context, m_optimiserSettings.runOrderLiterals);
+	ExpressionCompiler expressionCompiler(m_context, m_revertStrings, m_optimiserSettings.runOrderLiterals);
 	expressionCompiler.compile(_expression);
 	if (_targetType)
 		CompilerUtils(m_context).convertType(*_expression.annotation().type, *_targetType);

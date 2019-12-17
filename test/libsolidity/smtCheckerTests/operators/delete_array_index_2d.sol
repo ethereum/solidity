@@ -13,3 +13,5 @@ contract C
 		assert(a[1][1] == 0);
 	}
 }
+// ====
+// SMTSolvers: z3

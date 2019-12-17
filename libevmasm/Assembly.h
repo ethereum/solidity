@@ -181,6 +181,8 @@ protected:
 	int m_deposit = 0;
 
 	langutil::SourceLocation m_currentSourceLocation;
+public:
+	size_t m_currentModifierDepth = 0;
 };
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)

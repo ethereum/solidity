@@ -91,6 +91,8 @@ struct Dialect;
  * For switch statements that have a "default"-case, there is no control-flow
  * part that skips the switch.
  *
+ * At ``leave`` statements, all return variables are set to "used".
+ *
  * When a variable goes out of scope, all statements still in the "undecided"
  * state are changed to "unused", unless the variable is the return
  * parameter of a function - there, the state changes to "used".
@@ -125,6 +127,7 @@ public:
 	void operator()(ForLoop const&) override;
 	void operator()(Break const&) override;
 	void operator()(Continue const&) override;
+	void operator()(Leave const&) override;
 	void operator()(Block const& _block) override;
 
 private:
@@ -163,6 +166,7 @@ private:
 
 	Dialect const* m_dialect;
 	std::set<YulString> m_declaredVariables;
+	std::set<YulString> m_returnVariables;
 	std::set<Assignment const*> m_pendingRemovals;
 	TrackedAssignments m_assignments;
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.7;
+pragma solidity >=0.5.7 <0.7.0;
 
 contract InvalidTest {
 

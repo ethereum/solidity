@@ -9,7 +9,6 @@ contract C {
 //     :C
 // [
 //   {
-//     "constant": false,
 //     "inputs": [],
 //     "name": "f",
 //     "outputs":
@@ -46,7 +45,6 @@ contract C {
 //         "type": "tuple"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
 //   }

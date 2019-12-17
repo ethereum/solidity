@@ -82,7 +82,7 @@ This is as opposed to the more intuitive sending pattern:
 
 Notice that, in this example, an attacker could trap the
 contract into an unusable state by causing ``richest`` to be
-the address of a contract that has a fallback function
+the address of a contract that has a receive or fallback function
 which fails (e.g. by using ``revert()`` or by just
 consuming more than the 2300 gas stipend transferred to them). That way,
 whenever ``transfer`` is called to deliver funds to the

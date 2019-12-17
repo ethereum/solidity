@@ -7,4 +7,3 @@ contract C {
     }
 }
 // ----
-// Warning: (52-85): Experimental features are turned on. Do not use experimental features on live deployments.

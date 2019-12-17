@@ -11,7 +11,8 @@ a variable of value type is used. Because of that, reference types have to be ha
 more carefully than value types. Currently, reference types comprise structs,
 arrays and mappings. If you use a reference type, you always have to explicitly
 provide the data area where the type is stored: ``memory`` (whose lifetime is limited
-to a function call), ``storage`` (the location where the state variables are stored)
+to an external function call), ``storage`` (the location where the state variables
+are stored, where the lifetime is limited to the lifetime of a contract)
 or ``calldata`` (special data location that contains the function arguments,
 only available for external function call parameters).
 
@@ -23,7 +24,7 @@ while assignments inside the same data location only copy in some cases for stor
 Data location
 -------------
 
-Every reference type, i.e. *arrays* and *structs*, has an additional
+Every reference type has an additional
 annotation, the "data location", about where it is stored. There are three data locations:
 ``memory``, ``storage`` and ``calldata``. Calldata is only valid for parameters of external contract
 functions and is required for this type of parameter. Calldata is a non-modifiable,
@@ -42,24 +43,34 @@ Data location and assignment behaviour
 
 Data locations are not only relevant for persistency of data, but also for the semantics of assignments:
 
-* Assignments between ``storage`` and ``memory`` (or from ``calldata``) always create an independent copy.
-* Assignments from ``memory`` to ``memory`` only create references. This means that changes to one memory variable are also visible in all other memory variables that refer to the same data.
-* Assignments from ``storage`` to a local storage variable also only assign a reference.
-* All other assignments to ``storage`` always copy. Examples for this case are assignments to state variables or to members of local variables of storage struct type, even if the local variable itself is just a reference.
+* Assignments between ``storage`` and ``memory`` (or from ``calldata``)
+  always create an independent copy.
+* Assignments from ``memory`` to ``memory`` only create references. This means
+  that changes to one memory variable are also visible in all other memory
+  variables that refer to the same data.
+* Assignments from ``storage`` to a **local** storage variable also only
+  assign a reference.
+* All other assignments to ``storage`` always copy. Examples for this
+  case are assignments to state variables or to members of local
+  variables of storage struct type, even if the local variable
+  itself is just a reference.
 
 ::
 
     pragma solidity >=0.4.0 <0.7.0;
 
     contract C {
-        uint[] x; // the data location of x is storage
+        // The data location of x is storage.
+        // This is the only place where the
+        // data location can be omitted.
+        uint[] x;
 
-        // the data location of memoryArray is memory
+        // The data location of memoryArray is memory.
         function f(uint[] memory memoryArray) public {
             x = memoryArray; // works, copies the whole array to storage
             uint[] storage y = x; // works, assigns a pointer, data location of y is storage
             y[7]; // fine, returns the 8th element
-            y.length = 2; // fine, modifies x through y
+            y.pop(); // fine, modifies x through y
             delete x; // fine, clears the array, also modifies y
             // The following does not work; it would need to create a new temporary /
             // unnamed array in storage, but storage is "statically" allocated:
@@ -96,7 +107,7 @@ as C.
 Indices are zero-based, and access is in the opposite direction of the
 declaration.
 
-For example, if you have a variable ``uint[][5] x memory``, you access the
+For example, if you have a variable ``uint[][5] memory x``, you access the
 second ``uint`` in the third dynamic array using ``x[2][1]``, and to access the
 third dynamic array, use ``x[2]``. Again,
 if you have an array ``T[5] a`` for a type ``T`` that can also be an array,
@@ -109,8 +120,9 @@ restrictions for types apply, in that mappings can only be stored in the
 It is possible to mark state variable arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
 The numeric index becomes a required parameter for the getter.
 
-Accessing an array past its end causes a failing assertion. You can use the ``.push()`` method to append a new element at the end or assign to the ``.length`` :ref:`member <array-members>` to change the size (see below for caveats).
-method or increase the ``.length`` :ref:`member <array-members>` to add elements.
+Accessing an array past its end causes a failing assertion. Methods ``.push()`` and ``.push(value)`` can be used
+to append a new element at the end of the array, where ``.push()`` appends a zero-initialized element and returns
+a reference to it.
 
 ``bytes`` and ``strings`` as Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -121,9 +133,11 @@ length or index access.
 
 Solidity does not have string manipulation functions, but there are
 third-party string libraries. You can also compare two strings by their keccak256-hash using
-``keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))`` and concatenate two strings using ``abi.encodePacked(s1, s2)``.
+``keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))`` and
+concatenate two strings using ``abi.encodePacked(s1, s2)``.
 
-You should use ``bytes`` over ``byte[]`` because it is cheaper, since ``byte[]`` adds 31 padding bytes between the elements. As a general rule,
+You should use ``bytes`` over ``byte[]`` because it is cheaper,
+since ``byte[]`` adds 31 padding bytes between the elements. As a general rule,
 use ``bytes`` for arbitrary-length raw byte data and ``string`` for arbitrary-length
 string (UTF-8) data. If you can limit the length to a certain number of bytes,
 always use one of the value types ``bytes1`` to ``bytes32`` because they are much cheaper.
@@ -139,9 +153,10 @@ always use one of the value types ``bytes1`` to ``bytes32`` because they are muc
 Allocating Memory Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-You must use the ``new`` keyword to create arrays with a runtime-dependent length in memory.
-As opposed to storage arrays, it is **not** possible to resize memory arrays (e.g. by assigning to
-the ``.length`` member). You either have to calculate the required size in advance
+Memory arrays with dynamic length can be created using the ``new`` operator.
+As opposed to storage arrays, it is **not** possible to resize memory arrays (e.g.
+the ``.push`` member functions are not available).
+You either have to calculate the required size in advance
 or create a new memory array and copy every element.
 
 ::
@@ -171,7 +186,9 @@ type of the array.
 Array literals are always statically-sized memory arrays.
 
 In the example below, the type of ``[1, 2, 3]`` is
-``uint8[3] memory``. Because the type of each of these constants is ``uint8``, if you want the result to be a ``uint[3] memory`` type, you need to convert the first element to ``uint``.
+``uint8[3] memory``. Because the type of each of these constants is ``uint8``, if
+you want the result to be a ``uint[3] memory`` type, you need to convert
+the first element to ``uint``.
 
 ::
 
@@ -186,7 +203,8 @@ In the example below, the type of ``[1, 2, 3]`` is
         }
     }
 
-Fixed size memory arrays cannot be assigned to dynamically-sized memory arrays, i.e. the following is not possible:
+Fixed size memory arrays cannot be assigned to dynamically-sized
+memory arrays, i.e. the following is not possible:
 
 ::
 
@@ -213,32 +231,34 @@ Array Members
 
 **length**:
     Arrays have a ``length`` member that contains their number of elements.
-    The length of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created.
-    For dynamically-sized arrays (only available for storage), this member can be assigned to resize the array.
-    Accessing elements outside the current length does not automatically resize the array and instead causes a failing assertion.
-    Increasing the length adds new zero-initialised elements to the array.
-    Reducing the length performs an implicit :ref:`delete<delete>` on each of the
-    removed elements. If you try to resize a non-dynamic array that isn't in
-    storage, you receive a ``Value must be an lvalue`` error.
-**push**:
-     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that you can use to append an element at the end of the array. The element will be zero-initialised. The function returns the new length.
+    The length of memory arrays is fixed (but dynamic, i.e. it can depend on
+    runtime parameters) once they are created.
+**push()**:
+     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function
+     called ``push()`` that you can use to append a zero-initialised element at the end of the array.
+     It returns a reference to the element, so that it can be used like
+     ``x.push().t = 2`` or ``x.push() = b``.
+**push(x)**:
+     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function
+     called ``push(x)`` that you can use to append a given element at the end of the array.
+     The function returns nothing.
 **pop**:
-     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``pop`` that you can use to remove an element from the end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element.
-
-.. warning::
-    If you use ``.length--`` on an empty array, it causes an underflow and
-    thus sets the length to ``2**256-1``.
+     Dynamic storage arrays and ``bytes`` (not ``string``) have a member
+     function called ``pop`` that you can use to remove an element from the
+     end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element.
 
 .. note::
-    Increasing the length of a storage array has constant gas costs because
-    storage is assumed to be zero-initialised, while decreasing
-    the length has at least linear cost (but in most cases worse than linear),
-    because it includes explicitly clearing the removed
+    Increasing the length of a storage array by calling ``push()``
+    has constant gas costs because storage is zero-initialised,
+    while decreasing the length by calling ``pop()`` has a
+    cost that depends on the "size" of the element being removed.
+    If that element is an array, it can be very costly, because
+    it includes explicitly clearing the removed
     elements similar to calling :ref:`delete<delete>` on them.
 
 .. note::
-    It is not yet possible to use arrays of arrays in external functions
-    (but they are supported in public functions).
+    To use arrays of arrays in external (instead of public) functions, you need to
+    activate ABIEncoderV2.
 
 .. note::
     In EVM versions before Byzantium, it was not possible to access
@@ -291,8 +311,15 @@ Array Members
         }
 
         function changeFlagArraySize(uint newSize) public {
-            // if the new size is smaller, removed array elements will be cleared
-            m_pairsOfFlags.length = newSize;
+            // using push and pop is the only way to change the
+            // length of an array
+            if (newSize < m_pairsOfFlags.length) {
+                while (m_pairsOfFlags.length > newSize)
+                    m_pairsOfFlags.pop();
+            } else if (newSize > m_pairsOfFlags.length) {
+                while (m_pairsOfFlags.length < newSize)
+                    m_pairsOfFlags.push();
+            }
         }
 
         function clear() public {
@@ -300,7 +327,7 @@ Array Members
             delete m_pairsOfFlags;
             delete m_aLotOfIntegers;
             // identical effect here
-            m_pairsOfFlags.length = 0;
+            m_pairsOfFlags = new bool[2][](0);
         }
 
         bytes m_byteData;
@@ -309,13 +336,15 @@ Array Members
             // byte arrays ("bytes") are different as they are stored without padding,
             // but can be treated identical to "uint8[]"
             m_byteData = data;
-            m_byteData.length += 7;
+            for (uint i = 0; i < 7; i++)
+                m_byteData.push();
             m_byteData[3] = 0x08;
             delete m_byteData[2];
         }
 
         function addFlag(bool[2] memory flag) public returns (uint) {
-            return m_pairsOfFlags.push(flag);
+            m_pairsOfFlags.push(flag);
+            return m_pairsOfFlags.length;
         }
 
         function createMemoryArray(uint size) public pure returns (bytes memory) {
@@ -334,6 +363,67 @@ Array Members
         }
     }
 
+.. index:: ! array;slice
+
+.. _array-slices:
+
+Array Slices
+------------
+
+
+Array slices are a view on a contiguous portion of an array.
+They are written as ``x[start:end]``, where ``start`` and
+``end`` are expressions resulting in a uint256 type (or
+implicitly convertible to it). The first element of the
+slice is ``x[start]`` and the last element is ``x[end - 1]``.
+
+If ``start`` is greater than ``end`` or if ``end`` is greater
+than the length of the array, an exception is thrown.
+
+Both ``start`` and ``end`` are optional: ``start`` defaults
+ to ``0`` and ``end`` defaults to the length of the array.
+
+Array slices do not have any members. They are implicitly
+convertible to arrays of their underlying type
+and support index access. Index access is not absolute
+in the underlying array, but relative to the start of
+the slice.
+
+Array slices do not have a type name which means
+no variable can have an array slices as type,
+they only exist in intermediate expressions.
+
+.. note::
+    As of now, array slices are only implemented for calldata arrays.
+
+Array slices are useful to ABI-decode secondary data passed in function parameters:
+
+::
+
+    pragma solidity >=0.4.99 <0.7.0;
+
+    contract Proxy {
+        /// Address of the client contract managed by proxy i.e., this contract
+        address client;
+
+        constructor(address _client) public {
+            client = _client;
+        }
+
+        /// Forward call to "setOwner(address)" that is implemented by client
+        /// after doing basic validation on the address argument.
+        function forward(bytes calldata _payload) external {
+            bytes4 sig = abi.decode(_payload[:4], (bytes4));
+            if (sig == bytes4(keccak256("setOwner(address)"))) {
+                address owner = abi.decode(_payload[4:], (address));
+                require(owner != address(0), "Address of owner cannot be zero.");
+            }
+            (bool status,) = client.delegatecall(_payload);
+            require(status, "Forwarded call failed.");
+        }
+    }
+
+
 
 .. index:: ! struct, ! type;struct
 
@@ -349,13 +439,18 @@ shown in the following example:
 
     pragma solidity >=0.4.11 <0.7.0;
 
-    contract CrowdFunding {
-        // Defines a new type with two fields.
-        struct Funder {
-            address addr;
-            uint amount;
-        }
+    // Defines a new type with two fields.
+    // Declaring a struct outside of a contract allows
+    // it to be shared by multiple contracts.
+    // Here, this is not really needed.
+    struct Funder {
+        address addr;
+        uint amount;
+    }
 
+    contract CrowdFunding {
+        // Structs can also be defined inside contracts, which makes them
+        // visible only there and in derived contracts.
         struct Campaign {
             address payable beneficiary;
             uint fundingGoal;

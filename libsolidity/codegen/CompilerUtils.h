@@ -67,6 +67,10 @@ public:
 	/// Stack post:
 	void revertWithStringData(Type const& _argumentType);
 
+	/// Allocates a new array and copies the return data to it.
+	/// If the EVM does not support return data, creates an empty array.
+	void returnDataToArray();
+
 	/// Computes the absolute calldata offset of a tail given a base reference and the (absolute)
 	/// offset of the tail pointer. Performs bounds checks. If @a _type is a dynamically sized array it also
 	/// returns the array length on the stack.

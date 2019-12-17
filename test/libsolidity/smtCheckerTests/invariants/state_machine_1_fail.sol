@@ -28,5 +28,7 @@ contract C {
 		assert(x < 2);
 	}
 }
+// ====
+// SMTSolvers: z3
 // ----
 // Warning: (311-324): Assertion violation happens here

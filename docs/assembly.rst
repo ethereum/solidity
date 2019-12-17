@@ -6,7 +6,8 @@ Solidity Assembly
 
 Solidity defines an assembly language that you can use without Solidity and also
 as "inline assembly" inside Solidity source code. This guide starts with describing
-how to use inline assembly, how it differs from standalone assembly, and
+how to use inline assembly, how it differs from standalone assembly
+(sometimes also referred to by its proper name "Yul"), and
 specifies assembly itself.
 
 .. _inline-assembly:
@@ -21,6 +22,10 @@ especially when you are enhancing the language by writing libraries.
 As the EVM is a stack machine, it is often hard to address the correct stack slot
 and provide arguments to opcodes at the correct point on the stack. Solidity's inline
 assembly helps you do this, and with other issues that arise when writing manual assembly.
+
+For inline assembly, the stack is actually not visible at all, but if you look
+closer, there is always a very direct translation from inline assembly to
+the stack based EVM opcode stream.
 
 Inline assembly has the following features:
 
@@ -48,32 +53,22 @@ these curly braces, you can use the following (see the later sections for more d
 
  - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
  - opcodes in functional style, e.g. ``add(1, mload(0))``
- - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of empty (0) is assigned)
+ - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of 0 is assigned)
  - identifiers (assembly-local variables and externals if used as inline assembly), e.g. ``add(3, x)``, ``sstore(x_slot, 2)``
  - assignments, e.g. ``x := add(y, 3)``
  - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
 
-The following features are only available for standalone assembly:
-
- - direct stack control via ``dup1``, ``swap1``, ...
- - direct stack assignments (in "instruction style"), e.g. ``3 =: x``
- - labels, e.g. ``name:``
- - jump opcodes
-
-.. note::
-  Standalone assembly is supported for backwards compatibility but is not documented
-  here anymore.
-
-At the end of the ``assembly { ... }`` block, the stack must be balanced,
-unless you require it otherwise. If it is not balanced, the compiler generates
-a warning.
+Inline assembly manages local variables and control-flow. Because of that,
+opcodes that interfere with these features are not available. This includes
+the ``dup`` and ``swap`` instructions as well as ``jump`` instructions and labels.
 
 Example
 -------
 
 The following example provides library code to access the code of another contract and
 load it into a ``bytes`` variable. This is not possible with "plain Solidity" and the
-idea is that assembly libraries will be used to enhance the Solidity language.
+idea is that reusable assembly libraries can enhance the Solidity language
+without a compiler change.
 
 .. code::
 
@@ -157,26 +152,23 @@ Opcodes
 -------
 
 This document does not want to be a full description of the Ethereum virtual machine, but the
-following list can be used as a reference of its opcodes.
+following list can be used as a quick reference of its opcodes.
 
-If an opcode takes arguments (always from the top of the stack), they are given in parentheses.
-Note that the order of arguments can be seen to be reversed in non-functional style (explained below).
-Opcodes marked with ``-`` do not push an item onto the stack (do not return a result),
-those marked with ``*`` are special and all others push exactly one item onto the stack (their "return value").
+If an opcode takes arguments, they are given in parentheses.
+Opcodes marked with ``-`` do not return a result,
+those marked with ``*`` are special in a certain way and all others return exactly one value.
 Opcodes marked with ``F``, ``H``, ``B``, ``C`` or ``I`` are present since Frontier, Homestead,
 Byzantium, Constantinople or Istanbul, respectively.
 
 In the following, ``mem[a...b)`` signifies the bytes of memory starting at position ``a`` up to
-but not including position ``b`` and ``storage[p]`` signifies the storage contents at position ``p``.
+but not including position ``b`` and ``storage[p]`` signifies the storage contents at slot ``p``.
 
-The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
-
-In the grammar, opcodes are represented as pre-defined identifiers.
+In the grammar, opcodes are represented as pre-defined identifiers ("built-in functions").
 
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | Instruction             |     |   | Explanation                                                     |
 +=========================+=====+===+=================================================================+
-| stop                    + `-` | F | stop execution, identical to return(0,0)                        |
+| stop()                  + `-` | F | stop execution, identical to return(0, 0)                       |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | add(x, y)               |     | F | x + y                                                           |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -208,11 +200,11 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | iszero(x)               |     | F | 1 if x == 0, 0 otherwise                                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| and(x, y)               |     | F | bitwise and of x and y                                          |
+| and(x, y)               |     | F | bitwise "and" of x and y                                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| or(x, y)                |     | F | bitwise or of x and y                                           |
+| or(x, y)                |     | F | bitwise "or" of x and y                                         |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| xor(x, y)               |     | F | bitwise xor of x and y                                          |
+| xor(x, y)               |     | F | bitwise "xor" of x and y                                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | byte(n, x)              |     | F | nth byte of x, where the most significant byte is the 0th byte  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -220,7 +212,7 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | shr(x, y)               |     | C | logical shift right y by x bits                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| sar(x, y)               |     | C | arithmetic shift right y by x bits                              |
+| sar(x, y)               |     | C | signed arithmetic shift right y by x bits                       |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | addmod(x, y, m)         |     | F | (x + y) % m with arbitrary precision arithmetic                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -230,17 +222,9 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | keccak256(p, n)         |     | F | keccak(mem[p...(p+n)))                                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| jump(label)             | `-` | F | jump to label / code position                                   |
+| pc()                    |     | F | current position in code                                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| jumpi(label, cond)      | `-` | F | jump to label if cond is nonzero                                |
-+-------------------------+-----+---+-----------------------------------------------------------------+
-| pc                      |     | F | current position in code                                        |
-+-------------------------+-----+---+-----------------------------------------------------------------+
-| pop(x)                  | `-` | F | remove the element pushed by x                                  |
-+-------------------------+-----+---+-----------------------------------------------------------------+
-| dup1 ... dup16          |     | F | copy nth stack slot to the top (counting from top)              |
-+-------------------------+-----+---+-----------------------------------------------------------------+
-| swap1 ... swap16        | `*` | F | swap topmost and nth stack slot below it                        |
+| pop(x)                  | `-` | F | discard value x                                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | mload(p)                |     | F | mem[p...(p+32))                                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -252,27 +236,27 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | sstore(p, v)            | `-` | F | storage[p] := v                                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| msize                   |     | F | size of memory, i.e. largest accessed memory index              |
+| msize()                 |     | F | size of memory, i.e. largest accessed memory index              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| gas                     |     | F | gas still available to execution                                |
+| gas()                   |     | F | gas still available to execution                                |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| address                 |     | F | address of the current contract / execution context             |
+| address()               |     | F | address of the current contract / execution context             |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | balance(a)              |     | F | wei balance at address a                                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | selfbalance()           |     | I | equivalent to balance(address()), but cheaper                   |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| caller                  |     | F | call sender (excluding ``delegatecall``)                        |
+| caller()                |     | F | call sender (excluding ``delegatecall``)                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| callvalue               |     | F | wei sent together with the current call                         |
+| callvalue()             |     | F | wei sent together with the current call                         |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | calldataload(p)         |     | F | call data starting from position p (32 bytes)                   |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| calldatasize            |     | F | size of call data in bytes                                      |
+| calldatasize()          |     | F | size of call data in bytes                                      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | calldatacopy(t, f, s)   | `-` | F | copy s bytes from calldata at position f to mem at position t   |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| codesize                |     | F | size of the code of the current contract / execution context    |
+| codesize()              |     | F | size of the code of the current contract / execution context    |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | codecopy(t, f, s)       | `-` | F | copy s bytes from code at position f to mem at position t       |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -280,7 +264,7 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | extcodecopy(a, t, f, s) | `-` | F | like codecopy(t, f, s) but take code at address a               |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| returndatasize          |     | B | size of the last returndata                                     |
+| returndatasize()        |     | B | size of the last returndata                                     |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | returndatacopy(t, f, s) | `-` | B | copy s bytes from returndata at position f to mem at position t |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -315,7 +299,7 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | selfdestruct(a)         | `-` | F | end execution, destroy current contract and send funds to a     |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| invalid                 | `-` | F | end execution with invalid instruction                          |
+| invalid()               | `-` | F | end execution with invalid instruction                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | log0(p, s)              | `-` | F | log without topics and data mem[p...(p+s))                      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -328,23 +312,23 @@ In the grammar, opcodes are represented as pre-defined identifiers.
 | log4(p, s, t1, t2, t3,  | `-` | F | log with topics t1, t2, t3, t4 and data mem[p...(p+s))          |
 | t4)                     |     |   |                                                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| chainid                 |     | I | ID of the executing chain (EIP 1344)                            |
+| chainid()               |     | I | ID of the executing chain (EIP 1344)                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| origin                  |     | F | transaction sender                                              |
+| origin()                |     | F | transaction sender                                              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| gasprice                |     | F | gas price of the transaction                                    |
+| gasprice()              |     | F | gas price of the transaction                                    |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | blockhash(b)            |     | F | hash of block nr b - only for last 256 blocks excluding current |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| coinbase                |     | F | current mining beneficiary                                      |
+| coinbase()              |     | F | current mining beneficiary                                      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| timestamp               |     | F | timestamp of the current block in seconds since the epoch       |
+| timestamp()             |     | F | timestamp of the current block in seconds since the epoch       |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| number                  |     | F | current block number                                            |
+| number()                |     | F | current block number                                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| difficulty              |     | F | difficulty of the current block                                 |
+| difficulty()            |     | F | difficulty of the current block                                 |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| gaslimit                |     | F | block gas limit of the current block                            |
+| gaslimit()              |     | F | block gas limit of the current block                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 
 Literals
@@ -423,12 +407,6 @@ Local Solidity variables are available for assignments, for example:
     To clean signed types, you can use the ``signextend`` opcode:
     ``assembly { signextend(<num_bytes_of_x_minus_one>, x) }``
 
-Labels
-------
-
-Support for labels has been removed in version 0.5.0 of Solidity.
-Please use functions, loops, if or switch statements instead.
-
 Declaring Assembly-Local Variables
 ----------------------------------
 
@@ -438,6 +416,12 @@ is that the ``let`` instruction will create a new stack slot that is reserved
 for the variable and automatically removed again when the end of the block
 is reached. You need to provide an initial value for the variable which can
 be just ``0``, but it can also be a complex functional-style expression.
+
+Since 0.6.0 the name of a declared variable may not end in ``_offset`` or ``_slot``
+and it may not shadow any declaration visible in the scope of the inline assembly block
+(including variable, contract and function declarations). Similarly, if the name of a declared
+variable contains a dot ``.``, the prefix up to the ``.`` may not conflict with any
+declaration visible in the scope of the inline assembly block.
 
 .. code::
 
@@ -530,6 +514,9 @@ the other two are blocks. If the initializing part
 declares any variables, the scope of these variables is extended into the
 body (including the condition and the post-iteration part).
 
+The ``break`` and ``continue`` statements can be used to exit the loop
+or skip to the post-part, respectively.
+
 The following example computes the sum of an area in memory.
 
 .. code::
@@ -565,11 +552,15 @@ opcode.
 
 Functions can be defined anywhere and are visible in the block they are
 declared in. Inside a function, you cannot access local variables
-defined outside of that function. There is no explicit ``return``
-statement.
+defined outside of that function.
 
 If you call a function that returns multiple values, you have to assign
 them to a tuple using ``a, b := f(x)`` or ``let a, b := f(x)``.
+
+The ``leave`` statement can be used to exit the current function. It
+works like the ``return`` statement in other languages just that it does
+not take a value to return, it just exits the functions and the function
+will return whatever values are currently assigned to the return variable(s).
 
 The following example implements the power function by square-and-multiply.
 
@@ -763,14 +754,13 @@ Grammar::
         AssemblyExpression |
         AssemblyLocalDefinition |
         AssemblyAssignment |
-        AssemblyStackAssignment |
-        LabelDefinition |
         AssemblyIf |
         AssemblySwitch |
         AssemblyFunctionDefinition |
         AssemblyFor |
         'break' |
         'continue' |
+        'leave' |
         SubAssembly
     AssemblyExpression = AssemblyCall | Identifier | AssemblyLiteral
     AssemblyLiteral = NumberLiteral | StringLiteral | HexLiteral
@@ -780,8 +770,6 @@ Grammar::
     AssemblyAssignment = IdentifierOrList ':=' AssemblyExpression
     IdentifierOrList = Identifier | '(' IdentifierList ')'
     IdentifierList = Identifier ( ',' Identifier)*
-    AssemblyStackAssignment = '=:' Identifier
-    LabelDefinition = Identifier ':'
     AssemblyIf = 'if' AssemblyExpression AssemblyBlock
     AssemblySwitch = 'switch' AssemblyExpression AssemblyCase*
         ( 'default' AssemblyBlock )?

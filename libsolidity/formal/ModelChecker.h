@@ -49,6 +49,7 @@ public:
 	ModelChecker(
 		langutil::ErrorReporter& _errorReporter,
 		std::map<h256, std::string> const& _smtlib2Responses,
+		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback(),
 		smt::SMTSolverChoice _enabledSolvers = smt::SMTSolverChoice::All()
 	);
 
@@ -58,6 +59,9 @@ public:
 	/// @returns a list of inputs to the SMT solver that were not part of the argument to
 	/// the constructor.
 	std::vector<std::string> unhandledQueries();
+
+	/// @returns SMT solvers that are available via the C++ API.
+	static smt::SMTSolverChoice availableSolvers();
 
 private:
 	/// Bounded Model Checker engine.

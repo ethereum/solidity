@@ -6,9 +6,14 @@
 Function Modifiers
 ******************
 
-Modifiers can be used to easily change the behaviour of functions.  For example,
-they can automatically check a condition prior to executing the function. Modifiers are
-inheritable properties of contracts and may be overridden by derived contracts.
+Modifiers can be used to change the behaviour of functions in a declarative way.
+For example,
+you can use a modifier to automatically check a condition prior to executing the function.
+
+Modifiers are
+inheritable properties of contracts and may be overridden by derived contracts, but only
+if they are marked ``virtual``. For details, please see
+:ref:`Modifier Overriding <modifier-overriding>`.
 
 ::
 

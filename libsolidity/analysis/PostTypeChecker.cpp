@@ -60,6 +60,27 @@ void PostTypeChecker::endVisit(ContractDefinition const&)
 	m_constVariableDependencies.clear();
 }
 
+void PostTypeChecker::endVisit(OverrideSpecifier const& _overrideSpecifier)
+{
+	for (ASTPointer<UserDefinedTypeName> const& override: _overrideSpecifier.overrides())
+	{
+		Declaration const* decl  = override->annotation().referencedDeclaration;
+		solAssert(decl, "Expected declaration to be resolved.");
+
+		if (dynamic_cast<ContractDefinition const*>(decl))
+			continue;
+
+		TypeType const* actualTypeType = dynamic_cast<TypeType const*>(decl->type());
+
+		m_errorReporter.typeError(
+			override->location(),
+			"Expected contract but got " +
+			actualTypeType->actualType()->toString(true) +
+			"."
+		);
+	}
+}
+
 bool PostTypeChecker::visit(VariableDeclaration const& _variable)
 {
 	solAssert(!m_currentConstVariable, "");

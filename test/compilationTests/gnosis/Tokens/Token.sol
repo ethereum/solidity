@@ -3,7 +3,7 @@ pragma solidity >=0.0;
 
 
 /// @title Abstract token contract - Functions to be implemented by token contracts
-contract Token {
+abstract contract Token {
 
     /*
      *  Events
@@ -14,10 +14,10 @@ contract Token {
     /*
      *  Public functions
      */
-    function transfer(address to, uint value) public returns (bool);
-    function transferFrom(address from, address to, uint value) public returns (bool);
-    function approve(address spender, uint value) public returns (bool);
-    function balanceOf(address owner) public view returns (uint);
-    function allowance(address owner, address spender) public view returns (uint);
-    function totalSupply() public view returns (uint);
+    function transfer(address to, uint value) virtual public returns (bool);
+    function transferFrom(address from, address to, uint value) virtual public returns (bool);
+    function approve(address spender, uint value) virtual public returns (bool);
+    function balanceOf(address owner) virtual public view returns (uint);
+    function allowance(address owner, address spender) virtual public view returns (uint);
+    function totalSupply() virtual public view returns (uint);
 }

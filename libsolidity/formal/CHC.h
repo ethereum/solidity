@@ -34,6 +34,8 @@
 
 #include <libsolidity/formal/CHCSolverInterface.h>
 
+#include <libsolidity/interface/ReadFile.h>
+
 #include <set>
 
 namespace dev
@@ -48,6 +50,7 @@ public:
 		smt::EncodingContext& _context,
 		langutil::ErrorReporter& _errorReporter,
 		std::map<h256, std::string> const& _smtlib2Responses,
+		ReadCallback::Callback const& _smtCallback,
 		smt::SMTSolverChoice _enabledSolvers
 	);
 
@@ -208,6 +211,9 @@ private:
 
 	/// ErrorReporter that comes from CompilerStack.
 	langutil::ErrorReporter& m_outerErrorReporter;
+
+	/// SMT solvers that are chosen at runtime.
+	smt::SMTSolverChoice m_enabledSolvers;
 };
 
 }

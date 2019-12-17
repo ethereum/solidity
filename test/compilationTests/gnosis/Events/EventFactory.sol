@@ -26,7 +26,7 @@ contract EventFactory {
     /// @param collateralToken Tokens used as collateral in exchange for outcome tokens
     /// @param oracle Oracle contract used to resolve the event
     /// @param outcomeCount Number of event outcomes
-    /// @return Event contract
+    /// @return eventContract Event contract
     function createCategoricalEvent(
         Token collateralToken,
         Oracle oracle,
@@ -53,7 +53,7 @@ contract EventFactory {
     /// @param oracle Oracle contract used to resolve the event
     /// @param lowerBound Lower bound for event outcome
     /// @param upperBound Lower bound for event outcome
-    /// @return Event contract
+    /// @return eventContract Event contract
     function createScalarEvent(
         Token collateralToken,
         Oracle oracle,

@@ -43,24 +43,16 @@ public:
 		m_dialect(_dialect),
 		m_reportMutability(_reportMutability) {}
 
-	void operator()(yul::Label const&) { }
 	void operator()(yul::Instruction const& _instruction)
 	{
 		checkInstruction(_instruction.location, _instruction.instruction);
 	}
 	void operator()(yul::Literal const&) {}
 	void operator()(yul::Identifier const&) {}
-	void operator()(yul::FunctionalInstruction const& _instr)
-	{
-		checkInstruction(_instr.location, _instr.instruction);
-		for (auto const& arg: _instr.arguments)
-			std::visit(*this, arg);
-	}
 	void operator()(yul::ExpressionStatement const& _expr)
 	{
 		std::visit(*this, _expr.expression);
 	}
-	void operator()(yul::StackAssignment const&) {}
 	void operator()(yul::Assignment const& _assignment)
 	{
 		std::visit(*this, *_assignment.value);
@@ -110,6 +102,9 @@ public:
 	{
 	}
 	void operator()(yul::Continue const&)
+	{
+	}
+	void operator()(yul::Leave const&)
 	{
 	}
 	void operator()(yul::Block const& _block)
@@ -175,7 +170,8 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 		!_funDef.body().statements().empty() &&
 		!_funDef.isConstructor() &&
 		!_funDef.isFallback() &&
-		!_funDef.annotation().superFunction
+		!_funDef.isReceive() &&
+		!_funDef.overrides()
 	)
 		m_errorReporter.warning(
 			_funDef.location(),
@@ -387,7 +383,7 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 	{
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
 		if (member == "length" && type.isDynamicallySized() && type.dataStoredIn(DataLocation::Storage))
-			mutability = writes ? StateMutability::NonPayable : StateMutability::View;
+			mutability = StateMutability::View;
 		break;
 	}
 	default:
@@ -413,6 +409,13 @@ void ViewPureChecker::endVisit(IndexAccess const& _indexAccess)
 		if (_indexAccess.baseExpression().annotation().type->dataStoredIn(DataLocation::Storage))
 			reportMutability(writes ? StateMutability::NonPayable : StateMutability::View, _indexAccess.location());
 	}
+}
+
+void ViewPureChecker::endVisit(IndexRangeAccess const& _indexRangeAccess)
+{
+	bool writes = _indexRangeAccess.annotation().lValueRequested;
+	if (_indexRangeAccess.baseExpression().annotation().type->dataStoredIn(DataLocation::Storage))
+		reportMutability(writes ? StateMutability::NonPayable : StateMutability::View, _indexRangeAccess.location());
 }
 
 void ViewPureChecker::endVisit(ModifierInvocation const& _modifier)

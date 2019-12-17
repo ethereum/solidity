@@ -30,16 +30,40 @@ function verify_input
     fi
 }
 
+function verify_version_input
+{
+    if [ -z "$1" ] || [ ! -f "$1" ] || [ -z "$2" ]; then
+        printError "Usage: $0 <path to soljson.js> <version>"
+        exit 1
+    fi
+}
+
+function setup
+{
+    local branch="$1"
+
+    setup_solcjs "$DIR" "$SOLJSON" "$branch" "solc"
+    cd solc
+}
+
 function setup_solcjs
 {
     local dir="$1"
     local soljson="$2"
+    local branch="$3"
+    local path="$4"
 
     cd "$dir"
     printLog "Setting up solc-js..."
-    git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
+    git clone --depth 1 -b "$branch" https://github.com/ethereum/solc-js.git "$path"
 
-    cd solc
+    cd "$path"
+
+    # disable "prepublish" script which downloads the latest version
+    # (we will replace it anyway and it is often incorrectly cached
+    # on travis)
+    npm config set script.prepublish ''
+
     npm install
     cp "$soljson" soljson.js
     SOLCVERSION=$(./solcjs --version)
@@ -59,12 +83,19 @@ function download_project
     echo "Current commit hash: `git rev-parse HEAD`"
 }
 
-function setup
+function force_truffle_version
+{
+    local repo="$1"
+
+    sed -i 's/"truffle":\s*".*"/"truffle": "^5.0.42"/g' package.json
+}
+
+function truffle_setup
 {
     local repo="$1"
     local branch="$2"
 
-    setup_solcjs "$DIR" "$SOLJSON"
+    setup_solcjs "$DIR" "$SOLJSON" "master" "solc"
     download_project "$repo" "$branch" "$DIR"
 }
 
@@ -107,7 +138,7 @@ function force_solc_truffle_modules
         if [ -d "$d" ]; then
             cd $d
             rm -rf solc
-            git clone --depth 1 -b v0.5.0 https://github.com/ethereum/solc-js.git solc
+            git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
             cp "$1" solc/soljson.js
         fi
     )
@@ -178,10 +209,28 @@ function run_install
 {
     local init_fn="$1"
     printLog "Running install function..."
+
+    replace_version_pragmas
+    force_solc "$CONFIG" "$DIR" "$SOLJSON"
+
     $init_fn
 }
 
 function run_test
+{
+    local compile_fn="$1"
+    local test_fn="$2"
+
+    replace_version_pragmas
+
+    printLog "Running compile function..."
+    $compile_fn
+
+    printLog "Running test function..."
+    $test_fn
+}
+
+function truffle_run_test
 {
     local compile_fn="$1"
     local test_fn="$2"

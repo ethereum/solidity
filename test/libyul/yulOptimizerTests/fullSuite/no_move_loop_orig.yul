@@ -15,7 +15,7 @@
 //         for { }
 //         1
 //         {
-//             for { } iszero(iszero(caller())) { }
+//             for { } caller() { }
 //             { }
 //             mstore(192, 0)
 //         }

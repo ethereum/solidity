@@ -85,12 +85,6 @@ void GasMeterVisitor::operator()(FunctionCall const& _funCall)
 	yulAssert(false, "Functions not implemented.");
 }
 
-void GasMeterVisitor::operator()(FunctionalInstruction const& _fun)
-{
-	ASTWalker::operator()(_fun);
-	instructionCostsInternal(_fun.instruction);
-}
-
 void GasMeterVisitor::operator()(Literal const& _lit)
 {
 	m_runGas += dev::eth::GasMeter::runGas(dev::eth::Instruction::PUSH1);

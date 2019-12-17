@@ -47,6 +47,7 @@ bytes SolidityExecutionFramework::compileContract(
 	m_compiler.reset();
 	m_compiler.setSources({{"", sourceCode}});
 	m_compiler.setLibraries(_libraryAddresses);
+	m_compiler.setRevertStringBehaviour(m_revertStrings);
 	m_compiler.setEVMVersion(m_evmVersion);
 	m_compiler.setOptimiserSettings(m_optimiserSettings);
 	m_compiler.enableIRGeneration(m_compileViaYul);

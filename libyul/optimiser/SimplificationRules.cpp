@@ -67,9 +67,7 @@ bool SimplificationRules::isInitialized() const
 std::optional<std::pair<dev::eth::Instruction, vector<Expression> const*>>
 	SimplificationRules::instructionAndArguments(Dialect const& _dialect, Expression const& _expr)
 {
-	if (holds_alternative<FunctionalInstruction>(_expr))
-		return make_pair(std::get<FunctionalInstruction>(_expr).instruction, &std::get<FunctionalInstruction>(_expr).arguments);
-	else if (holds_alternative<FunctionCall>(_expr))
+	if (holds_alternative<FunctionCall>(_expr))
 		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
 			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_expr).functionName.name))
 				if (builtin->instruction)
@@ -225,8 +223,15 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 		vector<Expression> arguments;
 		for (auto const& arg: m_arguments)
 			arguments.emplace_back(arg.toExpression(_location));
-		// TODO convert to FunctionCall
-		return FunctionalInstruction{_location, m_instruction, std::move(arguments)};
+
+		string name = instructionInfo(m_instruction).name;
+		transform(begin(name), end(name), begin(name), [](auto _c) { return tolower(_c); });
+
+		return FunctionCall{
+			_location,
+			Identifier{_location, YulString{name}},
+			std::move(arguments)
+		};
 	}
 	assertThrow(false, OptimizerException, "Pattern of kind 'any', but no match group.");
 }

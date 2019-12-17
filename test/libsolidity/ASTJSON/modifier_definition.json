@@ -12,6 +12,7 @@
   "nodes":
   [
     {
+      "abstract": false,
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
@@ -45,6 +46,7 @@
           "id": 6,
           "name": "M",
           "nodeType": "ModifierDefinition",
+          "overrides": null,
           "parameters":
           {
             "id": 3,
@@ -56,6 +58,7 @@
                 "id": 2,
                 "name": "i",
                 "nodeType": "VariableDeclaration",
+                "overrides": null,
                 "scope": 6,
                 "src": "24:6:1",
                 "stateVariable": false,
@@ -84,6 +87,7 @@
             "src": "23:8:1"
           },
           "src": "13:25:1",
+          "virtual": false,
           "visibility": "internal"
         },
         {
@@ -95,6 +99,7 @@
             "statements": []
           },
           "documentation": null,
+          "functionSelector": "28811f59",
           "id": 13,
           "implemented": true,
           "kind": "function",
@@ -145,6 +150,7 @@
           ],
           "name": "F",
           "nodeType": "FunctionDefinition",
+          "overrides": null,
           "parameters":
           {
             "id": 7,
@@ -162,7 +168,7 @@
           "scope": 14,
           "src": "39:27:1",
           "stateMutability": "nonpayable",
-          "superFunction": null,
+          "virtual": false,
           "visibility": "public"
         }
       ],

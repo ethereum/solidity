@@ -55,11 +55,6 @@ void LoadResolver::visit(Expression& _e)
 			if (builtin->instruction)
 				tryResolve(_e, *builtin->instruction, funCall.arguments);
 	}
-	else if (holds_alternative<FunctionalInstruction>(_e))
-	{
-		FunctionalInstruction const& instruction = std::get<FunctionalInstruction>(_e);
-		tryResolve(_e, instruction.instruction, instruction.arguments);
-	}
 }
 
 void LoadResolver::tryResolve(

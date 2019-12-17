@@ -36,6 +36,7 @@ CHC::CHC(
 	smt::EncodingContext& _context,
 	ErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
+	ReadCallback::Callback const& _smtCallback,
 	smt::SMTSolverChoice _enabledSolvers
 ):
 	SMTEncoder(_context),
@@ -43,30 +44,39 @@ CHC::CHC(
 	m_interface(
 		_enabledSolvers.z3 ?
 		dynamic_pointer_cast<smt::CHCSolverInterface>(make_shared<smt::Z3CHCInterface>()) :
-		dynamic_pointer_cast<smt::CHCSolverInterface>(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses))
+		dynamic_pointer_cast<smt::CHCSolverInterface>(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback))
 	),
 #else
-	m_interface(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses)),
+	m_interface(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback)),
 #endif
-	m_outerErrorReporter(_errorReporter)
+	m_outerErrorReporter(_errorReporter),
+	m_enabledSolvers(_enabledSolvers)
 {
 	(void)_smtlib2Responses;
 	(void)_enabledSolvers;
+	(void)_smtCallback;
 }
 
 void CHC::analyze(SourceUnit const& _source)
 {
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
 
+	bool usesZ3 = false;
 #ifdef HAVE_Z3
-	auto z3Interface = dynamic_pointer_cast<smt::Z3CHCInterface>(m_interface);
-	solAssert(z3Interface, "");
-	m_context.setSolver(z3Interface->z3Interface());
-#else
-	auto smtlib2Interface = dynamic_pointer_cast<smt::CHCSmtLib2Interface>(m_interface);
-	solAssert(smtlib2Interface, "");
-	m_context.setSolver(smtlib2Interface->smtlib2Interface());
+	usesZ3 = m_enabledSolvers.z3;
+	if (usesZ3)
+	{
+		auto z3Interface = dynamic_pointer_cast<smt::Z3CHCInterface>(m_interface);
+		solAssert(z3Interface, "");
+		m_context.setSolver(z3Interface->z3Interface());
+	}
 #endif
+	if (!usesZ3)
+	{
+		auto smtlib2Interface = dynamic_pointer_cast<smt::CHCSmtLib2Interface>(m_interface);
+		solAssert(smtlib2Interface, "");
+		m_context.setSolver(smtlib2Interface->smtlib2Interface());
+	}
 	m_context.clear();
 	m_context.setAssertionAccumulation(false);
 	m_variableUsage.setFunctionInlining(false);
@@ -680,12 +690,9 @@ string CHC::predicateName(ASTNode const* _node)
 	string prefix;
 	if (auto funDef = dynamic_cast<FunctionDefinition const*>(_node))
 	{
-		prefix = funDef->isConstructor() ?
-			"constructor" :
-			funDef->isFallback() ?
-				"fallback" :
-				"function_" + funDef->name();
-		prefix += "_";
+		prefix += TokenTraits::toString(funDef->kind());
+		if (!funDef->name().empty())
+			prefix += "_" + funDef->name() + "_";
 	}
 	return prefix + to_string(_node->id());
 }

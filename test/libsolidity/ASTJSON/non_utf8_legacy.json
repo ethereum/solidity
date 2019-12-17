@@ -15,6 +15,7 @@
     {
       "attributes":
       {
+        "abstract": false,
         "baseContracts":
         [
           null
@@ -39,6 +40,7 @@
           "attributes":
           {
             "documentation": null,
+            "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
             "kind": "function",
@@ -47,9 +49,10 @@
               null
             ],
             "name": "f",
+            "overrides": null,
             "scope": 8,
             "stateMutability": "nonpayable",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "public"
           },
           "children":
@@ -98,6 +101,7 @@
                       {
                         "constant": false,
                         "name": "x",
+                        "overrides": null,
                         "scope": 6,
                         "stateVariable": false,
                         "storageLocation": "default",

@@ -102,7 +102,7 @@ mv solidity solc
 
 # Fetch jsoncpp dependency
 mkdir -p ./solc/deps/downloads/ 2>/dev/null || true
-wget -O ./solc/deps/downloads/jsoncpp-1.8.4.tar.gz https://github.com/open-source-parsers/jsoncpp/archive/1.8.4.tar.gz
+wget -O ./solc/deps/downloads/jsoncpp-1.9.2.tar.gz https://github.com/open-source-parsers/jsoncpp/archive/1.9.2.tar.gz
 
 # Determine version
 cd solc
@@ -140,7 +140,7 @@ Priority: extra
 Maintainer: Christian (Buildserver key) <builds@ethereum.org>
 Build-Depends: ${SMTDEPENDENCY}debhelper (>= 9.0.0),
                cmake,
-               g++,
+               g++ (>= 5.0),
                git,
                libgmp-dev,
                libboost-all-dev,

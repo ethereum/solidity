@@ -55,7 +55,6 @@ public:
 	);
 
 	using ASTWalker::operator();
-	void operator()(FunctionalInstruction const& _functionalInstruction) override;
 	void operator()(FunctionCall const& _functionCall) override;
 
 	bool movable() const { return m_sideEffects.movable; }
@@ -105,13 +104,37 @@ public:
 	static bool containsMSize(Dialect const& _dialect, Block const& _ast);
 
 	using ASTWalker::operator();
-	void operator()(FunctionalInstruction const& _instr);
 	void operator()(FunctionCall const& _funCall);
 
 private:
 	MSizeFinder(Dialect const& _dialect): m_dialect(_dialect) {}
 	Dialect const& m_dialect;
 	bool m_msizeFound = false;
+};
+
+/**
+ * Class that can be used to find out if the given function contains the ``leave`` statement.
+ *
+ * Returns true even in the case where the function definition contains another function definition
+ * that contains the leave statement.
+ */
+class LeaveFinder: public ASTWalker
+{
+public:
+	static bool containsLeave(FunctionDefinition const& _fun)
+	{
+		LeaveFinder f;
+		f(_fun);
+		return f.m_leaveFound;
+	}
+
+	using ASTWalker::operator();
+	void operator()(Leave const&) { m_leaveFound = true; }
+
+private:
+	LeaveFinder() = default;
+
+	bool m_leaveFound = false;
 };
 
 /**
@@ -149,12 +172,13 @@ private:
 class TerminationFinder
 {
 public:
-	enum class ControlFlow { FlowOut, Break, Continue, Terminate };
+	// TODO check all uses of TerminationFinder!
+	enum class ControlFlow { FlowOut, Break, Continue, Terminate, Leave };
 
 	TerminationFinder(Dialect const& _dialect): m_dialect(_dialect) {}
 
 	/// @returns the index of the first statement in the provided sequence
-	/// that is an unconditional ``break``, ``continue`` or a
+	/// that is an unconditional ``break``, ``continue``, ``leave`` or a
 	/// call to a terminating builtin function.
 	/// If control flow can continue at the end of the list,
 	/// returns `FlowOut` and ``size_t(-1)``.

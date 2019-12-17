@@ -25,10 +25,11 @@ using namespace dev::solidity;
 ModelChecker::ModelChecker(
 	ErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
+	ReadCallback::Callback const& _smtCallback,
 	smt::SMTSolverChoice _enabledSolvers
 ):
-	m_bmc(m_context, _errorReporter, _smtlib2Responses, _enabledSolvers),
-	m_chc(m_context, _errorReporter, _smtlib2Responses, _enabledSolvers),
+	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers),
+	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers),
 	m_context()
 {
 }
@@ -45,4 +46,16 @@ void ModelChecker::analyze(SourceUnit const& _source)
 vector<string> ModelChecker::unhandledQueries()
 {
 	return m_bmc.unhandledQueries() + m_chc.unhandledQueries();
+}
+
+smt::SMTSolverChoice ModelChecker::availableSolvers()
+{
+	smt::SMTSolverChoice available = smt::SMTSolverChoice::None();
+#ifdef HAVE_Z3
+	available.z3 = true;
+#endif
+#ifdef HAVE_CVC4
+	available.cvc4 = true;
+#endif
+	return available;
 }

@@ -58,9 +58,6 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		Json::Value method;
 		method["type"] = "function";
 		method["name"] = it.second->declaration().name();
-		// TODO: deprecate constant in a future release
-		method["constant"] = externalFunctionType->stateMutability() == StateMutability::Pure || it.second->stateMutability() == StateMutability::View;
-		method["payable"] = externalFunctionType->isPayable();
 		method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
 		method["inputs"] = formatTypeList(
 			externalFunctionType->parameterNames(),
@@ -83,7 +80,6 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		solAssert(!!externalFunctionType, "");
 		Json::Value method;
 		method["type"] = "constructor";
-		method["payable"] = externalFunctionType->isPayable();
 		method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
 		method["inputs"] = formatTypeList(
 			externalFunctionType->parameterNames(),
@@ -93,16 +89,16 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		);
 		abi.emplace(std::move(method));
 	}
-	if (_contractDef.fallbackFunction())
-	{
-		FunctionType const* externalFunctionType = FunctionType(*_contractDef.fallbackFunction(), false).interfaceFunctionType();
-		solAssert(!!externalFunctionType, "");
-		Json::Value method;
-		method["type"] = "fallback";
-		method["payable"] = externalFunctionType->isPayable();
-		method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
-		abi.emplace(std::move(method));
-	}
+	for (auto const* fallbackOrReceive: {_contractDef.fallbackFunction(), _contractDef.receiveFunction()})
+		if (fallbackOrReceive)
+		{
+			FunctionType const* externalFunctionType = FunctionType(*fallbackOrReceive, false).interfaceFunctionType();
+			solAssert(!!externalFunctionType, "");
+			Json::Value method;
+			method["type"] = TokenTraits::toString(fallbackOrReceive->kind());
+			method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
+			abi.emplace(std::move(method));
+		}
 	for (auto const& it: _contractDef.interfaceEvents())
 	{
 		Json::Value event;

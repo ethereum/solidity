@@ -854,5 +854,9 @@
             "ABIEncoderV2StorageArrayWithMultiSlotElement"
         ],
         "released": "2019-05-28"
+    },
+    "0.6.0": {
+        "bugs": [],
+        "released": "2019-12-17"
     }
 }

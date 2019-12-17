@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <libyul/backends/wasm/EWasmAST.h>
+#include <libyul/backends/wasm/WasmAST.h>
 #include <libyul/AsmDataForward.h>
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/NameDispenser.h>
@@ -38,14 +38,10 @@ public:
 	static wasm::Module run(Dialect const& _dialect, yul::Block const& _ast);
 
 public:
-	wasm::Expression operator()(yul::Instruction const& _instruction);
 	wasm::Expression operator()(yul::Literal const& _literal);
 	wasm::Expression operator()(yul::Identifier const& _identifier);
-	wasm::Expression operator()(yul::FunctionalInstruction const& _instr);
 	wasm::Expression operator()(yul::FunctionCall const&);
 	wasm::Expression operator()(yul::ExpressionStatement const& _statement);
-	wasm::Expression operator()(yul::Label const& _label);
-	wasm::Expression operator()(yul::StackAssignment const& _assignment);
 	wasm::Expression operator()(yul::Assignment const& _assignment);
 	wasm::Expression operator()(yul::VariableDeclaration const& _varDecl);
 	wasm::Expression operator()(yul::If const& _if);
@@ -54,6 +50,7 @@ public:
 	wasm::Expression operator()(yul::ForLoop const&);
 	wasm::Expression operator()(yul::Break const&);
 	wasm::Expression operator()(yul::Continue const&);
+	wasm::Expression operator()(yul::Leave const&);
 	wasm::Expression operator()(yul::Block const& _block);
 
 private:

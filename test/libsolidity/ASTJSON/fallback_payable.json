@@ -12,6 +12,7 @@
   "nodes":
   [
     {
+      "abstract": false,
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
@@ -41,6 +42,7 @@
           "modifiers": [],
           "name": "",
           "nodeType": "FunctionDefinition",
+          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -58,7 +60,7 @@
           "scope": 5,
           "src": "14:22:1",
           "stateMutability": "nonpayable",
-          "superFunction": null,
+          "virtual": false,
           "visibility": "external"
         }
       ],

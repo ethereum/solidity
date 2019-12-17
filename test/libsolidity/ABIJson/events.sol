@@ -55,7 +55,6 @@ contract test {
 //     "type": "event"
 //   },
 //   {
-//     "constant": false,
 //     "inputs":
 //     [
 //       {
@@ -73,7 +72,6 @@ contract test {
 //         "type": "uint256"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
 //   }

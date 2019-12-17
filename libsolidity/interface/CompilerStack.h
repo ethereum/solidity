@@ -26,6 +26,8 @@
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/Version.h>
+#include <libsolidity/interface/DebugSettings.h>
+#include <libsolidity/formal/SolverInterface.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
@@ -92,6 +94,12 @@ public:
 		CompilationSuccessful
 	};
 
+	enum class MetadataHash {
+		IPFS,
+		Bzzr1,
+		None
+	};
+
 	struct Remapping
 	{
 		std::string context;
@@ -100,7 +108,7 @@ public:
 	};
 
 	/// Creates a new compiler stack.
-	/// @param _readFile callback to used to read files for import statements. Must return
+	/// @param _readFile callback used to read files for import statements. Must return
 	/// and must not emit exceptions.
 	explicit CompilerStack(ReadCallback::Callback const& _readFile = ReadCallback::Callback());
 
@@ -139,6 +147,9 @@ public:
 	/// Must be set before parsing.
 	void setOptimiserSettings(OptimiserSettings _settings);
 
+	/// Sets whether to strip revert strings, add additional strings or do nothing at all.
+	void setRevertStringBehaviour(RevertStrings _revertStrings);
+
 	/// Set whether or not parser error is desired.
 	/// When called without an argument it will revert to the default.
 	/// Must be set before parsing.
@@ -151,6 +162,9 @@ public:
 	/// When called without an argument it will revert to the default version.
 	/// Must be set before parsing.
 	void setEVMVersion(langutil::EVMVersion _version = langutil::EVMVersion{});
+
+	/// Set which SMT solvers should be enabled.
+	void setSMTSolverChoice(smt::SMTSolverChoice _enabledSolvers);
 
 	/// Sets the requested contract names by source.
 	/// If empty, no filtering is performed and every contract
@@ -170,6 +184,11 @@ public:
 	/// @arg _metadataLiteralSources When true, store sources as literals in the contract metadata.
 	/// Must be set before parsing.
 	void useMetadataLiteralSources(bool _metadataLiteralSources);
+
+	/// Sets whether and which hash should be used
+	/// to store the metadata in the bytecode.
+	/// @param _metadataHash can be IPFS, Bzzr1, None
+	void setMetadataHash(MetadataHash _metadataHash);
 
 	/// Sets the sources. Must be set before parsing.
 	void setSources(StringMap _sources);
@@ -412,7 +431,9 @@ private:
 
 	ReadCallback::Callback m_readFile;
 	OptimiserSettings m_optimiserSettings;
+	RevertStrings m_revertStrings = RevertStrings::Default;
 	langutil::EVMVersion m_evmVersion;
+	smt::SMTSolverChoice m_enabledSMTSolvers;
 	std::map<std::string, std::set<std::string>> m_requestedContractNames;
 	bool m_generateIR;
 	bool m_generateEWasm;
@@ -431,6 +452,7 @@ private:
 	langutil::ErrorList m_errorList;
 	langutil::ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;
+	MetadataHash m_metadataHash = MetadataHash::IPFS;
 	bool m_parserErrorRecovery = false;
 	State m_stackState = Empty;
 	/// Whether or not there has been an error during processing.

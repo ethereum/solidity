@@ -1,7 +1,7 @@
-contract base { function foo() public; }
+contract base { function foo() public virtual; }
 contract derived {
     base b;
     function foo() public { b = new base(); }
 }
 // ----
-// TypeError: (104-112): Trying to create an instance of an abstract contract.
+// TypeError: (0-48): Contract "base" should be marked as abstract.

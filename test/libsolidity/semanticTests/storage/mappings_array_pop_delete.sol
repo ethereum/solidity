@@ -2,12 +2,12 @@ contract C {
 	mapping (uint => uint)[] a;
 
 	function n1(uint key, uint value) public {
-		a.length++;
+		a.push();
 		a[a.length - 1][key] = value;
 	}
 
 	function n2() public {
-		a.length++;
+		a.push();
 	}
 
 	function map(uint key) public view returns (uint) {

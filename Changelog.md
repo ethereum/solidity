@@ -1,8 +1,54 @@
+### 0.6.0 (2019-12-17)
+
+Breaking changes:
+ * ABI: Remove the deprecated ``constant`` and ``payable`` fields.
+ * ABI: The ``type`` field is now required and no longer specified to default to ``function``.
+ * AST: Inline assembly is exported as structured JSON instead of plain string.
+ * C API (``libsolc``): Introduce context parameter to both ``solidity_compile`` and the callback.
+ * C API (``libsolc``): The provided callback now takes two parameters, kind and data. The callback can then be used for multiple purposes, such has file imports and SMT queries.
+ * C API (``libsolc``): ``solidity_free`` was renamed to ``solidity_reset``. Functions ``solidity_alloc`` and ``solidity_free`` were added.
+ * C API (``libsolc``): ``solidity_compile`` now returns a string that must be explicitly freed via ``solidity_free()``
+ * Commandline Interface: Remove the text-based AST printer (``--ast``).
+ * Commandline Interface: Switch to the new error reporter by default. ``--old-reporter`` falls back to the deprecated old error reporter.
+ * Commandline Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
+ * General: Disallow explicit conversions from external function types to ``address`` and add a member called ``address`` to them as replacement.
+ * General: Enable Yul optimizer as part of standard optimization.
+ * General: New reserved keywords: ``override``, ``receive``, and ``virtual``.
+ * General: ``private`` cannot be used together with ``virtual``.
+ * General: Split unnamed fallback functions into two cases defined using ``fallback()`` and ``receive()``.
+ * Inheritance: State variable shadowing is now disallowed.
+ * Inline Assembly: Only strict inline assembly is allowed.
+ * Inline Assembly: Variable declarations cannot shadow declarations outside the assembly block.
+ * JSON AST: Replace ``superFunction`` attribute by ``baseFunctions``.
+ * Natspec JSON Interface: Properly support multiple ``@return`` statements in ``@dev`` documentation and enforce named return parameters to be mentioned documentation.
+ * Source mappings: Add "modifier depth" as a fifth field in the source mappings.
+ * Standard JSON Interface: Add option to disable or choose hash method between IPFS and Swarm for the bytecode metadata.
+ * Syntax: ``push(element)`` for dynamic storage arrays do not return the new length anymore.
+ * Syntax: Abstract contracts need to be marked explicitly as abstract by using the ``abstract`` keyword.
+ * Syntax: ``length`` member of arrays is now always read-only, even for storage arrays.
+ * Type Checker: Resulting type of exponentiation is equal to the type of the base. Also allow signed types for the base.
+
+Language Features:
+ * Allow explicit conversions from ``address`` to ``address payable`` via ``payable(...)``.
+ * Allow global enums and structs.
+ * Allow public variables to override external functions.
+ * Allow underscores as delimiters in hex strings.
+ * Introduce syntax for array slices and implement them for dynamic calldata arrays.
+ * Introduce ``push()`` for dynamic storage arrays. It returns a reference to the newly allocated element, if applicable.
+ * Introduce ``virtual`` and ``override`` keywords.
+ * Modify ``push(element)`` for dynamic storage arrays such that it does not return the new length anymore.
+ * Yul: Introduce ``leave`` statement that exits the current function.
+ * JSON AST: Add the function selector of each externally-visible FunctonDefinition to the AST JSON export.
+
+Compiler Features:
+ * Allow revert strings to be stripped from the binary using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting.
+ * ABIEncoderV2: Do not warn about enabled ABIEncoderV2 anymore (the pragma is still needed, though).
+
+
 ### 0.5.15 (2019-12-17)
 
 Bugfixes:
  * Yul Optimizer: Fix incorrect redundant load optimization crossing user-defined functions that contain for-loops with memory / storage writes.
-
 
 ### 0.5.14 (2019-12-09)
 
@@ -13,7 +59,7 @@ Language Features:
 
 
 Compiler Features:
- * Commandline Interface: Allow translation from yul / strict assembly to EWasm using ``solc --yul --yul-dialect evm --machine eWasm``
+ * Commandline Interface: Allow translation from yul / strict assembly to EWasm using ``solc --yul --yul-dialect evm --machine ewasm``
  * Set the default EVM version to "Istanbul".
  * SMTChecker: Add support to constructors including constructor inheritance.
  * Yul: When compiling via Yul, string literals from the Solidity code are kept as string literals if every character is safely printable.
@@ -48,7 +94,6 @@ Compiler Features:
  * TypeChecker: List possible candidates when overload resolution fails.
  * TypeChecker: Disallow variables of library types.
 
-
 Bugfixes:
  * Code Generator: Fixed a faulty assert that would wrongly trigger for array sizes exceeding unsigned integer.
  * SMTChecker: Fix internal error when accessing indices of fixed bytes.
@@ -57,7 +102,6 @@ Bugfixes:
  * Type Checker: Disallow constructor of the same class to be used as modifier.
  * Type Checker: Treat magic variables as unknown identifiers in inline assembly.
  * Code Generator: Fix internal error when trying to convert ``super`` to a different type
-
 
 
 ### 0.5.12 (2019-10-01)

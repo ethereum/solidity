@@ -19,12 +19,10 @@ contract test {
 //         "type": "uint8"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "constructor"
 //   },
 //   {
-//     "constant": false,
 //     "inputs": [],
 //     "name": "ret",
 //     "outputs":
@@ -35,7 +33,6 @@ contract test {
 //         "type": "uint8"
 //       }
 //     ],
-//     "payable": false,
 //     "stateMutability": "nonpayable",
 //     "type": "function"
 //   }

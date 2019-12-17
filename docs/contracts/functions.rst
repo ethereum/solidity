@@ -11,8 +11,8 @@ Functions
 Function Parameters and Return Variables
 ========================================
 
-As in JavaScript, functions may take parameters as input. Unlike in JavaScript
-and C, functions may also return an arbitrary number of values as output.
+Functions take typed parameters as input and may, unlike in many other
+languages, also return an arbitrary number of values as output.
 
 Function Parameters
 -------------------
@@ -21,7 +21,7 @@ Function parameters are declared the same way as variables, and the name of
 unused parameters can be omitted.
 
 For example, if you want your contract to accept one kind of external call
-with two integers, you would use something like::
+with two integers, you would use something like the following::
 
     pragma solidity >=0.4.16 <0.7.0;
 
@@ -39,7 +39,7 @@ Function parameters can be used as any other local variable and they can also be
   An :ref:`external function<external-function-calls>` cannot accept a
   multi-dimensional array as an input
   parameter. This functionality is possible if you enable the new
-  experimental ``ABIEncoderV2`` feature by adding ``pragma experimental ABIEncoderV2;`` to your source file.
+  ``ABIEncoderV2`` feature by adding ``pragma experimental ABIEncoderV2;`` to your source file.
 
   An :ref:`internal function<external-function-calls>` can accept a
   multi-dimensional array without enabling the feature.
@@ -70,7 +70,8 @@ two integers passed as function parameters, then you use something like::
 
 The names of return variables can be omitted.
 Return variables can be used as any other local variable and they
-are initialized with their :ref:`default value <default-value>` and have that value unless explicitly set.
+are initialized with their :ref:`default value <default-value>` and have that
+value until they are (re-)assigned.
 
 You can either explicitly assign to return variables and
 then leave the function using ``return;``,
@@ -96,7 +97,7 @@ return variables and then using ``return;`` to leave the function.
 .. note::
     You cannot return some types from non-internal functions, notably
     multi-dimensional dynamic arrays and structs. If you enable the
-    new experimental ``ABIEncoderV2`` feature by adding ``pragma experimental
+    new ``ABIEncoderV2`` feature by adding ``pragma experimental
     ABIEncoderV2;`` to your source file then more types are available, but
     ``mapping`` types are still limited to inside a single contract and you
     cannot transfer them.
@@ -107,7 +108,8 @@ Returning Multiple Values
 -------------------------
 
 When a function has multiple return types, the statement ``return (v0, v1, ..., vn)`` can be used to return multiple values.
-The number of components must be the same as the number of return types.
+The number of components must be the same as the number of return variables
+and their types have to match, potentially after an :ref:`implicit conversion <types-conversion-elementary-types>`.
 
 .. index:: ! view function, function;view
 
@@ -120,7 +122,7 @@ Functions can be declared ``view`` in which case they promise not to modify the 
 
 .. note::
   If the compiler's EVM target is Byzantium or newer (default) the opcode
-  ``STATICCALL`` is used for ``view`` functions which enforces the state
+  ``STATICCALL`` is used when ``view`` functions are called, which enforces the state
   to stay unmodified as part of the EVM execution. For library ``view`` functions
   ``DELEGATECALL`` is used, because there is no combined ``DELEGATECALL`` and ``STATICCALL``.
   This means library ``view`` functions do not have run-time checks that prevent state
@@ -222,23 +224,25 @@ This behaviour is also in line with the ``STATICCALL`` opcode.
   not do state-changing operations, but it cannot check that the contract that will be called
   at runtime is actually of that type.
 
-.. index:: ! fallback function, function;fallback
+.. index:: ! receive ether function, function;receive ! receive
 
-.. _fallback-function:
+.. _receive-ether-function:
 
-Fallback Function
-=================
+Receive Ether Function
+======================
 
-A contract can have exactly one unnamed function. This function cannot have
-arguments, cannot return anything and has to have ``external`` visibility.
-It is executed on a call to the contract if none of the other
-functions match the given function identifier (or if no data was supplied at
-all).
-
-Furthermore, this function is executed whenever the contract receives plain
-Ether (without data). To receive Ether and add it to the total balance of the contract, the fallback function
-must be marked ``payable``. If no such function exists, the contract cannot receive
-Ether through regular transactions and throws an exception.
+A contract can have at most one ``receive`` function, declared using
+``receive() external payable { ... }``
+(without the ``function`` keyword).
+This function cannot have arguments, cannot return anything and must have
+``external`` visibility and ``payable`` state mutability.  It is executed on a
+call to the contract with empty calldata. This is the function that is executed
+on plain Ether transfers (e.g. via `.send()` or `.transfer()`).  If no such
+function exists, but a payable :ref:`fallback function <fallback-function>`
+exists, the fallback function will be called on a plain Ether transfer. If
+neither a receive Ether nor a payable fallback function is present, the
+contract cannot receive Ether through regular transactions and throws an
+exception.
 
 In the worst case, the fallback function can only rely on 2300 gas being
 available (for example when `send` or `transfer` is used), leaving little
@@ -250,36 +254,88 @@ will consume more gas than the 2300 gas stipend:
 - Calling an external function which consumes a large amount of gas
 - Sending Ether
 
-Like any function, the fallback function can execute complex operations as long as there is enough gas passed on to it.
-
-.. warning::
-    The fallback function is also executed if the caller meant to call
-    a function that is not available. If you want to implement the fallback
-    function only to receive ether, you should add a check
-    like ``require(msg.data.length == 0)`` to prevent invalid calls.
-
 .. warning::
     Contracts that receive Ether directly (without a function call, i.e. using ``send`` or ``transfer``)
-    but do not define a fallback function
+    but do not define a receive Ether function or a payable fallback function
     throw an exception, sending back the Ether (this was different
     before Solidity v0.4.0). So if you want your contract to receive Ether,
-    you have to implement a payable fallback function.
+    you have to implement a receive Ether function (using payable fallback functions for receiving Ether is
+    not recommended, since it would not fail on interface confusions).
+
 
 .. warning::
-    A contract without a payable fallback function can receive Ether as a recipient of a `coinbase transaction` (aka `miner block reward`)
+    A contract without a receive Ether function can receive Ether as a
+    recipient of a `coinbase transaction` (aka `miner block reward`)
     or as a destination of a ``selfdestruct``.
+
+    A contract cannot react to such Ether transfers and thus also
+    cannot reject them. This is a design choice of the EVM and
+    Solidity cannot work around it.
+
+    It also means that ``address(this).balance`` can be higher
+    than the sum of some manual accounting implemented in a
+    contract (i.e. having a counter updated in the receive Ether function).
+
+Below you can see an example of a Sink contract that uses function ``receive``.
+
+::
+
+    pragma solidity ^0.6.0;
+
+    // This contract keeps all Ether sent to it with no way
+    // to get it back.
+    contract Sink {
+        event Received(address, uint);
+        receive() external payable {
+            emit Received(msg.sender, msg.value);
+        }
+    }
+
+.. index:: ! fallback function, function;fallback
+
+.. _fallback-function:
+
+Fallback Function
+=================
+
+A contract can have at most one ``fallback`` function, declared using ``fallback () external [payable]``
+(without the ``function`` keyword).
+This function cannot have arguments, cannot return anything and must have ``external`` visibility.
+It is executed on a call to the contract if none of the other
+functions match the given function signature, or if no data was supplied at
+all and there is no :ref:`receive Ether function <receive-ether-function>`.
+The fallback function always receives data, but in order to also receive Ether
+it must be marked ``payable``.
+
+In the worst case, if a payable fallback function is also used in
+place of a receive function, it can only rely on 2300 gas being
+available (see :ref:`receive Ether function <receive-ether-function>`
+for a brief description of the implications of this).
+
+Like any function, the fallback function can execute complex
+operations as long as there is enough gas passed on to it.
+
+.. warning::
+    A ``payable`` fallback function is also executed for
+    plain Ether transfers, if no :ref:`receive Ether function <receive-ether-function>`
+    is present. It is recommended to always define a receive Ether
+    function as well, if you define a payable fallback function
+    to distinguish Ether transfers from interface confusions.
 
 .. note::
     Even though the fallback function cannot have arguments, one can still use ``msg.data`` to retrieve
     any payload supplied with the call.
+    After having checked the first four bytes of ``msg.data``,
+    you can use ``abi.decode`` together with the array slice syntax to
+    decode ABI-encoded data:
+    ``(c, d) = abi.decode(msg.data[4:], (uint256, uint256));``
+    Note that this should only be used as a last resort and
+    proper functions should be used instead.
 
-    A contract cannot react to such Ether transfers and thus also cannot reject them. This is a design choice of the EVM and Solidity cannot work around it.
-
-    It also means that ``address(this).balance`` can be higher than the sum of some manual accounting implemented in a contract (i.e. having a counter updated in the fallback function).
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity ^0.6.0;
 
     contract Test {
         // This function is called for all messages sent to
@@ -287,15 +343,23 @@ Like any function, the fallback function can execute complex operations as long 
         // Sending Ether to this contract will cause an exception,
         // because the fallback function does not have the `payable`
         // modifier.
-        function() external { x = 1; }
+        fallback() external { x = 1; }
         uint x;
     }
 
+    contract TestPayable {
+        // This function is called for all messages sent to
+        // this contract, except plain Ether transfers
+        // (there is no other function except the receive function).
+        // Any call with non-empty calldata to this contract will execute
+        // the fallback function (even if Ether is sent along with the call).
+        fallback() external payable { x = 1; y = msg.value; }
 
-    // This contract keeps all Ether sent to it with no way
-    // to get it back.
-    contract Sink {
-        function() external payable { }
+        // This function is called for plain Ether transfers, i.e.
+        // for every call with empty calldata.
+        receive() external payable { x = 2; y = msg.value; }
+        uint x;
+        uint y;
     }
 
     contract Caller {
@@ -305,13 +369,26 @@ Like any function, the fallback function can execute complex operations as long 
             // results in test.x becoming == 1.
 
             // address(test) will not allow to call ``send`` directly, since ``test`` has no payable
-            // fallback function. It has to be converted to the ``address payable`` type via an
-            // intermediate conversion to ``uint160`` to even allow calling ``send`` on it.
-            address payable testPayable = address(uint160(address(test)));
+            // fallback function.
+            // It has to be converted to the ``address payable`` type to even allow calling ``send`` on it.
+            address payable testPayable = payable(address(test));
 
-            // If someone sends ether to that contract,
+            // If someone sends Ether to that contract,
             // the transfer will fail, i.e. this returns false here.
             return testPayable.send(2 ether);
+        }
+
+        function callTestPayable(TestPayable test) public returns (bool) {
+            (bool success,) = address(test).call(abi.encodeWithSignature("nonExistingFunction()"));
+            require(success);
+            // results in test.x becoming == 1 and test.y becoming 0.
+            (success,) = address(test).call.value(1)(abi.encodeWithSignature("nonExistingFunction()"));
+            require(success);
+            // results in test.x becoming == 1 and test.y becoming 1.
+
+            // If someone sends Ether to that contract, the receive function in TestPayable will be called.
+            require(address(test).send(2 ether));
+            // results in test.x becoming == 2 and test.y becoming 2 ether.
         }
     }
 

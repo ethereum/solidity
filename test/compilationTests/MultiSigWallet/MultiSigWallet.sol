@@ -88,8 +88,8 @@ contract MultiSigWallet {
         _;
     }
 
-    /// @dev Fallback function allows to deposit ether.
-    function()
+    /// @dev Receive function allows to deposit ether.
+    receive()
         external
         payable
     {
@@ -143,7 +143,7 @@ contract MultiSigWallet {
                 owners[i] = owners[owners.length - 1];
                 break;
             }
-        owners.length -= 1;
+        owners.pop();
         if (required > owners.length)
             changeRequirement(owners.length);
         emit OwnerRemoval(owner);
@@ -184,7 +184,7 @@ contract MultiSigWallet {
     /// @param destination Transaction target address.
     /// @param value Transaction ether value.
     /// @param data Transaction data payload.
-    /// @return Returns transaction ID.
+    /// @return transactionId Returns transaction ID.
     function submitTransaction(address destination, uint value, bytes memory data)
         public
         returns (uint transactionId)
@@ -221,6 +221,7 @@ contract MultiSigWallet {
     /// @dev Allows anyone to execute a confirmed transaction.
     /// @param transactionId Transaction ID.
     function executeTransaction(uint transactionId)
+        virtual
         public
         notExecuted(transactionId)
     {
@@ -258,7 +259,7 @@ contract MultiSigWallet {
     /// @param destination Transaction target address.
     /// @param value Transaction ether value.
     /// @param data Transaction data payload.
-    /// @return Returns transaction ID.
+    /// @return transactionId Returns transaction ID.
     function addTransaction(address destination, uint value, bytes memory data)
         internal
         notNull(destination)
@@ -280,7 +281,7 @@ contract MultiSigWallet {
      */
     /// @dev Returns number of confirmations of a transaction.
     /// @param transactionId Transaction ID.
-    /// @return Number of confirmations.
+    /// @return count Number of confirmations.
     function getConfirmationCount(uint transactionId)
         public
         view
@@ -294,7 +295,7 @@ contract MultiSigWallet {
     /// @dev Returns total number of transactions after filers are applied.
     /// @param pending Include pending transactions.
     /// @param executed Include executed transactions.
-    /// @return Total number of transactions after filters are applied.
+    /// @return count Total number of transactions after filters are applied.
     function getTransactionCount(bool pending, bool executed)
         public
         view
@@ -318,7 +319,7 @@ contract MultiSigWallet {
 
     /// @dev Returns array with owner addresses, which confirmed transaction.
     /// @param transactionId Transaction ID.
-    /// @return Returns array of owner addresses.
+    /// @return _confirmations Returns array of owner addresses.
     function getConfirmations(uint transactionId)
         public
         view
@@ -342,7 +343,7 @@ contract MultiSigWallet {
     /// @param to Index end position of transaction array.
     /// @param pending Include pending transactions.
     /// @param executed Include executed transactions.
-    /// @return Returns array of transaction IDs.
+    /// @return _transactionIds Returns array of transaction IDs.
     function getTransactionIds(uint from, uint to, bool pending, bool executed)
         public
         view

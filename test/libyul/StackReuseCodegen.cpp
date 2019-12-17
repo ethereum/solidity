@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(function_trivial)
 		function f() { }
 	})";
 	BOOST_CHECK_EQUAL(assemble(in),
-		"PUSH1 0x5 JUMP JUMPDEST JUMP JUMPDEST "
+		"PUSH1 0x6 JUMP JUMPDEST JUMPDEST JUMP JUMPDEST "
 	);
 }
 
@@ -181,8 +181,8 @@ BOOST_AUTO_TEST_CASE(function_retparam)
 		function f() -> x, y { }
 	})";
 	BOOST_CHECK_EQUAL(assemble(in),
-		"PUSH1 0xB JUMP "
-		"JUMPDEST PUSH1 0x0 PUSH1 0x0 SWAP1 SWAP2 JUMP "
+		"PUSH1 0xC JUMP "
+		"JUMPDEST PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP1 SWAP2 JUMP "
 		"JUMPDEST "
 	);
 }
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(function_params)
 	string in = R"({
 		function f(a, b) { }
 	})";
-	BOOST_CHECK_EQUAL(assemble(in), "PUSH1 0x7 JUMP JUMPDEST POP POP JUMP JUMPDEST ");
+	BOOST_CHECK_EQUAL(assemble(in), "PUSH1 0x8 JUMP JUMPDEST JUMPDEST POP POP JUMP JUMPDEST ");
 }
 
 BOOST_AUTO_TEST_CASE(function_params_and_retparams)
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(function_params_and_retparams)
 	// layout for a function is still fixed, even though parameters
 	// can be re-used.
 	BOOST_CHECK_EQUAL(assemble(in),
-		"PUSH1 0x10 JUMP JUMPDEST PUSH1 0x0 PUSH1 0x0 SWAP5 POP SWAP5 SWAP3 POP POP POP JUMP JUMPDEST "
+		"PUSH1 0x11 JUMP JUMPDEST PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP5 POP SWAP5 SWAP3 POP POP POP JUMP JUMPDEST "
 	);
 }
 
@@ -215,12 +215,12 @@ BOOST_AUTO_TEST_CASE(function_params_and_retparams_partly_unused)
 		function f(a, b, c, d) -> x, y { b := 3 let s := 9 y := 2 mstore(s, y) }
 	})";
 	BOOST_CHECK_EQUAL(assemble(in),
-		"PUSH1 0x1E JUMP "
+		"PUSH1 0x1F JUMP "
 		"JUMPDEST PUSH1 0x0 PUSH1 0x0 "
 		"PUSH1 0x3 SWAP4 POP "
 		"PUSH1 0x9 PUSH1 0x2 SWAP2 POP "
 		"DUP2 DUP2 MSTORE "
-		"POP SWAP5 POP SWAP5 SWAP3 POP POP POP JUMP "
+		"POP JUMPDEST SWAP5 POP SWAP5 SWAP3 POP POP POP JUMP "
 		"JUMPDEST "
 	);
 }
@@ -237,12 +237,12 @@ BOOST_AUTO_TEST_CASE(function_with_body_embedded)
 	})";
 	BOOST_CHECK_EQUAL(assemble(in),
 		"PUSH1 0x3 PUSH1 "
-		"0x16 JUMP "
+		"0x17 JUMP "
 		"JUMPDEST PUSH1 0x0 " // start of f, initialize t
 		"DUP2 POP " // let x := a
 		"PUSH1 0x3 SWAP2 POP "
 		"DUP2 SWAP1 POP "
-		"SWAP3 SWAP2 POP POP JUMP "
+		"JUMPDEST SWAP3 SWAP2 POP POP JUMP "
 		"JUMPDEST PUSH1 0x7 SWAP1 "
 		"POP POP "
 	);
@@ -257,9 +257,9 @@ BOOST_AUTO_TEST_CASE(function_call)
 	})";
 	BOOST_CHECK_EQUAL(assemble(in),
 		"PUSH1 0x9 PUSH1 0x2 PUSH1 0x1 PUSH1 0xD JUMP "
-		"JUMPDEST PUSH1 0x15 JUMP " // jump over f
-		"JUMPDEST PUSH1 0x0 SWAP3 SWAP2 POP POP JUMP " // f
-		"JUMPDEST PUSH1 0x1F PUSH1 0x4 PUSH1 0x3 PUSH1 0xD JUMP "
+		"JUMPDEST PUSH1 0x16 JUMP " // jump over f
+		"JUMPDEST PUSH1 0x0 JUMPDEST SWAP3 SWAP2 POP POP JUMP " // f
+		"JUMPDEST PUSH1 0x20 PUSH1 0x4 PUSH1 0x3 PUSH1 0xD JUMP "
 		"JUMPDEST SWAP1 POP POP "
 	);
 }
@@ -277,15 +277,15 @@ BOOST_AUTO_TEST_CASE(functions_multi_return)
 		let unused := 7
 	})";
 	BOOST_CHECK_EQUAL(assemble(in),
-		"PUSH1 0x13 JUMP "
-		"JUMPDEST PUSH1 0x0 SWAP3 SWAP2 POP POP JUMP " // f
-		"JUMPDEST PUSH1 0x0 PUSH1 0x0 SWAP1 SWAP2 JUMP " // g
-		"JUMPDEST PUSH1 0x1D PUSH1 0x2 PUSH1 0x1 PUSH1 0x3 JUMP " // f(1, 2)
-		"JUMPDEST PUSH1 0x27 PUSH1 0x4 PUSH1 0x3 PUSH1 0x3 JUMP " // f(3, 4)
+		"PUSH1 0x15 JUMP "
+		"JUMPDEST PUSH1 0x0 JUMPDEST SWAP3 SWAP2 POP POP JUMP " // f
+		"JUMPDEST PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP1 SWAP2 JUMP " // g
+		"JUMPDEST PUSH1 0x1F PUSH1 0x2 PUSH1 0x1 PUSH1 0x3 JUMP " // f(1, 2)
+		"JUMPDEST PUSH1 0x29 PUSH1 0x4 PUSH1 0x3 PUSH1 0x3 JUMP " // f(3, 4)
 		"JUMPDEST SWAP1 POP " // assignment to x
 		"POP " // remove x
-		"PUSH1 0x30 PUSH1 0xB JUMP " // g()
-		"JUMPDEST PUSH1 0x36 PUSH1 0xB JUMP " // g()
+		"PUSH1 0x32 PUSH1 0xC JUMP " // g()
+		"JUMPDEST PUSH1 0x38 PUSH1 0xC JUMP " // g()
 		"JUMPDEST SWAP2 POP SWAP2 POP " // assignments
 		"POP POP " // removal of y and z
 		"PUSH1 0x7 POP "
@@ -299,9 +299,9 @@ BOOST_AUTO_TEST_CASE(reuse_slots_function)
 		let a, b, c, d := f() let x1 := 2 let y1 := 3 mstore(x1, a) mstore(y1, c)
 	})";
 	BOOST_CHECK_EQUAL(assemble(in),
-		"PUSH1 0x11 JUMP "
-		"JUMPDEST PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 SWAP1 SWAP2 SWAP3 SWAP4 JUMP "
-		"JUMPDEST PUSH1 0x17 PUSH1 0x3 JUMP "
+		"PUSH1 0x12 JUMP "
+		"JUMPDEST PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP1 SWAP2 SWAP3 SWAP4 JUMP "
+		"JUMPDEST PUSH1 0x18 PUSH1 0x3 JUMP "
 		// Stack: a b c d
 		"JUMPDEST POP " // d is unused
 		// Stack: a b c
@@ -327,9 +327,9 @@ BOOST_AUTO_TEST_CASE(reuse_slots_function_with_gaps)
 	BOOST_CHECK_EQUAL(assemble(in),
 		"PUSH1 0x5 PUSH1 0x6 PUSH1 0x7 "
 		"DUP2 DUP4 MSTORE "
-		"PUSH1 0x1A JUMP " // jump across function
-		"JUMPDEST PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 SWAP1 SWAP2 SWAP3 SWAP4 JUMP "
-		"JUMPDEST PUSH1 0x20 PUSH1 0xC JUMP "
+		"PUSH1 0x1B JUMP " // jump across function
+		"JUMPDEST PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP1 SWAP2 SWAP3 SWAP4 JUMP "
+		"JUMPDEST PUSH1 0x21 PUSH1 0xC JUMP "
 		// stack: x1 x2 x3 a b c d
 		"JUMPDEST SWAP6 POP " // move d into x1
 		// stack: d x2 x3 a b c

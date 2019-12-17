@@ -94,9 +94,6 @@ make -j 4
 
 cd ..
 mkdir -p upload
-# Patch soljson.js to provide backwards-compatibility with older emscripten versions
-# TODO: remove in 0.6.0!
-echo -n ";/* backwards compatibility */ Module['Runtime'] = Module; Module['Pointer_stringify'] = Module['UTF8ToString'];" >> $BUILD_DIR/libsolc/soljson.js
 cp $BUILD_DIR/libsolc/soljson.js upload/
 cp $BUILD_DIR/libsolc/soljson.js ./
 

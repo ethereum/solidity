@@ -56,7 +56,7 @@ static char const* walletCode = R"DELIMITER(
 // some number (specified in constructor) of the set of owners (specified in the constructor, modifiable) before the
 // interior is executed.
 
-pragma solidity >=0.4.0 <0.6.0;
+pragma solidity >=0.4.0 <0.7.0;
 
 contract multiowned {
 
@@ -128,7 +128,7 @@ contract multiowned {
 	}
 
 	// Replaces an owner `_from` with another `_to`.
-	function changeOwner(address _from, address _to) onlymanyowners(keccak256(msg.data)) external {
+	function changeOwner(address _from, address _to) onlymanyowners(keccak256(msg.data)) public virtual {
 		if (isOwner(_to)) return;
 		uint ownerIndex = m_ownerIndex[uint(_from)];
 		if (ownerIndex == 0) return;
@@ -208,8 +208,8 @@ contract multiowned {
 			pending.yetNeeded = m_required;
 			// reset which owners have confirmed (none) - set our bitmap to 0.
 			pending.ownersDone = 0;
-			pending.index = m_pendingIndex.length++;
-			m_pendingIndex[pending.index] = _operation;
+			m_pendingIndex.push(_operation);
+			pending.index = m_pendingIndex.length - 1;
 		}
 		// determine the bit to set for this owner.
 		uint ownerIndexBit = 2**ownerIndex;
@@ -248,7 +248,7 @@ contract multiowned {
 		}
 	}
 
-	function clearPending() internal {
+	function clearPending() internal virtual {
 		uint length = m_pendingIndex.length;
 		for (uint i = 0; i < length; ++i)
 			if (m_pendingIndex[i] != 0)
@@ -276,7 +276,7 @@ contract multiowned {
 // inheritable "property" contract that enables methods to be protected by placing a linear limit (specifiable)
 // on a particular resource per calendar day. is multiowned to allow the limit to be altered. resource that method
 // uses is specified in the modifier.
-contract daylimit is multiowned {
+abstract contract daylimit is multiowned {
 
 	// MODIFIERS
 
@@ -330,7 +330,7 @@ contract daylimit is multiowned {
 }
 
 // interface contract for multisig proxy contracts; see below for docs.
-contract multisig {
+abstract contract multisig {
 
 	// EVENTS
 
@@ -347,9 +347,9 @@ contract multisig {
 	// FUNCTIONS
 
 	// TODO: document
-	function changeOwner(address _from, address _to) external;
-	function execute(address _to, uint _value, bytes calldata _data) external returns (bytes32);
-	function confirm(bytes32 _h) public returns (bool);
+	function changeOwner(address _from, address _to) public virtual;
+	function execute(address _to, uint _value, bytes calldata _data) external virtual returns (bytes32);
+	function confirm(bytes32 _h) public virtual returns (bool);
 }
 
 // usage:
@@ -374,14 +374,17 @@ contract Wallet is multisig, multiowned, daylimit {
 			multiowned(_owners, _required) daylimit(_daylimit) {
 	}
 
+	function changeOwner(address _from, address _to) public override(multiowned, multisig) {
+		multiowned.changeOwner(_from, _to);
+	}
 	// destroys the contract sending everything to `_to`.
 	function kill(address payable _to) onlymanyowners(keccak256(msg.data)) external {
 		selfdestruct(_to);
 	}
 
-	// gets called when no other function matches
-	function() external payable {
-		// just being sent some cash?
+	// gets called for plain ether transfers
+	receive() external payable {
+		// did we actually receive value?
 		if (msg.value > 0)
 			emit Deposit(msg.sender, msg.value);
 	}
@@ -390,7 +393,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	// If not, goes into multisig process. We provide a hash on return to allow the sender to provide
 	// shortcuts for the other confirmations (allowing them to avoid replicating the _to, _value
 	// and _data arguments). They still get the option of using them if they want, anyways.
-	function execute(address _to, uint _value, bytes calldata _data) external onlyowner returns (bytes32 _r) {
+	function execute(address _to, uint _value, bytes calldata _data) external override onlyowner returns (bytes32 _r) {
 		// first, take the opportunity to check that we're under the daily limit.
 		if (underLimit(_value)) {
 			emit SingleTransact(msg.sender, _value, _to, _data);
@@ -410,7 +413,7 @@ contract Wallet is multisig, multiowned, daylimit {
 
 	// confirm a transaction through just the hash. we use the previous transactions map, m_txs, in order
 	// to determine the body of the transaction from the hash provided.
-	function confirm(bytes32 _h) onlymanyowners(_h) public returns (bool) {
+	function confirm(bytes32 _h) onlymanyowners(_h) public override returns (bool) {
 		if (m_txs[_h].to != 0x0000000000000000000000000000000000000000) {
 			m_txs[_h].to.call.value(m_txs[_h].value)(m_txs[_h].data);
 			emit MultiTransact(msg.sender, _h, m_txs[_h].value, m_txs[_h].to, m_txs[_h].data);
@@ -421,7 +424,7 @@ contract Wallet is multisig, multiowned, daylimit {
 
 	// INTERNAL METHODS
 
-	function clearPending() internal {
+	function clearPending() internal override {
 		uint length = m_pendingIndex.length;
 		for (uint i = 0; i < length; ++i)
 			delete m_txs[m_pendingIndex[i]];

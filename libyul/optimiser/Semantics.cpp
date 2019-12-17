@@ -61,13 +61,6 @@ SideEffectsCollector::SideEffectsCollector(
 	operator()(_ast);
 }
 
-void SideEffectsCollector::operator()(FunctionalInstruction const& _instr)
-{
-	ASTWalker::operator()(_instr);
-
-	m_sideEffects += EVMDialect::sideEffectsOfInstruction(_instr.instruction);
-}
-
 void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
@@ -86,14 +79,6 @@ bool MSizeFinder::containsMSize(Dialect const& _dialect, Block const& _ast)
 	MSizeFinder finder(_dialect);
 	finder(_ast);
 	return finder.m_msizeFound;
-}
-
-void MSizeFinder::operator()(FunctionalInstruction const& _instr)
-{
-	ASTWalker::operator()(_instr);
-
-	if (_instr.instruction == eth::Instruction::MSIZE)
-		m_msizeFound = true;
 }
 
 void MSizeFinder::operator()(FunctionCall const& _functionCall)
@@ -210,17 +195,15 @@ TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement cons
 		return ControlFlow::Break;
 	else if (holds_alternative<Continue>(_statement))
 		return ControlFlow::Continue;
+	else if (holds_alternative<Leave>(_statement))
+		return ControlFlow::Leave;
 	else
 		return ControlFlow::FlowOut;
 }
 
 bool TerminationFinder::isTerminatingBuiltin(ExpressionStatement const& _exprStmnt)
 {
-	if (holds_alternative<FunctionalInstruction>(_exprStmnt.expression))
-		return eth::SemanticInformation::terminatesControlFlow(
-			std::get<FunctionalInstruction>(_exprStmnt.expression).instruction
-		);
-	else if (holds_alternative<FunctionCall>(_exprStmnt.expression))
+	if (holds_alternative<FunctionCall>(_exprStmnt.expression))
 		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_exprStmnt.expression).functionName.name))
 				if (builtin->instruction)

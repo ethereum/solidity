@@ -40,6 +40,7 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
     /// @param transactionId Transaction ID.
     function executeTransaction(uint transactionId)
         public
+        override
         notExecuted(transactionId)
     {
         Transaction storage tx = transactions[transactionId];

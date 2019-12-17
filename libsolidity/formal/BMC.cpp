@@ -31,11 +31,12 @@ BMC::BMC(
 	smt::EncodingContext& _context,
 	ErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
+	ReadCallback::Callback const& _smtCallback,
 	smt::SMTSolverChoice _enabledSolvers
 ):
 	SMTEncoder(_context),
 	m_outerErrorReporter(_errorReporter),
-	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses, _enabledSolvers))
+	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses, _smtCallback, _enabledSolvers))
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (_enabledSolvers.some())

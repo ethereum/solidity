@@ -15,6 +15,7 @@
     {
       "attributes":
       {
+        "abstract": false,
         "baseContracts":
         [
           null
@@ -47,9 +48,10 @@
               null
             ],
             "name": "",
+            "overrides": null,
             "scope": 5,
             "stateMutability": "payable",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "external"
           },
           "children":

@@ -123,8 +123,9 @@ results in the same sign as its left operand (or zero) and ``a % n == -(-a % n)`
 Exponentiation
 ^^^^^^^^^^^^^^
 
-Exponentiation is only available for unsigned types. Please take care that the types
-you are using are large enough to hold the result and prepare for potential wrapping behaviour.
+Exponentiation is only available for unsigned types in the exponent. The resulting type
+of an exponentiation is always equal to the type of the base. Please take care that it is
+large enough to hold the result and prepare for potential wrapping behaviour.
 
 .. note::
   Note that ``0**0`` is defined by the EVM as ``1``.
@@ -153,7 +154,7 @@ Operators:
     defined in the latter. Generally, in floating point almost the entire space is used to represent the number, while only a small number of bits define
     where the decimal point is.
 
-.. index:: address, balance, send, call, callcode, delegatecall, staticcall, transfer
+.. index:: address, balance, send, call, delegatecall, staticcall, transfer
 
 .. _address:
 
@@ -170,17 +171,21 @@ while a plain ``address`` cannot be sent Ether.
 
 Type conversions:
 
-Implicit conversions from ``address payable`` to ``address`` are allowed, whereas conversions from ``address`` to ``address payable`` are
-not possible (the only way to perform such a conversion is by using an intermediate conversion to ``uint160``).
+Implicit conversions from ``address payable`` to ``address`` are allowed, whereas conversions from ``address`` to ``address payable``
+must be explicit via ``payable(<address>)``.
 
 :ref:`Address literals<address_literals>` can be implicitly converted to ``address payable``.
 
 Explicit conversions to and from ``address`` are allowed for integers, integer literals, ``bytes20`` and contract types with the following
 caveat:
-Conversions of the form ``address payable(x)`` are not allowed. Instead the result of a conversion of the form ``address(x)``
-has the type ``address payable``, if ``x`` is of integer or fixed bytes type, a literal or a contract with a payable fallback function.
-If ``x`` is a contract without payable fallback function, then ``address(x)`` will be of type ``address``.
+The result of a conversion of the form ``address(x)``
+has the type ``address payable``, if ``x`` is of integer or fixed bytes type,
+a literal or a contract with a receive or payable fallback function.
+If ``x`` is a contract without a receive or payable fallback function,
+then ``address(x)`` will be of type ``address``.
 In external function signatures ``address`` is used for both the ``address`` and the ``address payable`` type.
+
+Only expressions of type ``address`` can be converted to type ``address payable`` via ``payable(<address>)``.
 
 .. note::
     It might very well be that you do not need to care about the distinction between ``address``
@@ -204,7 +209,7 @@ Operators:
 .. note::
     The distinction between ``address`` and ``address payable`` was introduced with version 0.5.0.
     Also starting from that version, contracts do not derive from the address type, but can still be explicitly converted to
-    ``address`` or to ``address payable``, if they have a payable fallback function.
+    ``address`` or to ``address payable``, if they have a receive or payable fallback function.
 
 .. _members-of-addresses:
 
@@ -229,7 +234,7 @@ or if the Ether transfer is rejected by the receiving account. The ``transfer`` 
 reverts on failure.
 
 .. note::
-    If ``x`` is a contract address, its code (more specifically: its :ref:`fallback-function`, if present) will be executed together with the ``transfer`` call (this is a feature of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted and the current contract will stop with an exception.
+    If ``x`` is a contract address, its code (more specifically: its :ref:`receive-ether-function`, if present, or otherwise its :ref:`fallback-function`, if present) will be executed together with the ``transfer`` call (this is a feature of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted and the current contract will stop with an exception.
 
 * ``send``
 
@@ -309,10 +314,12 @@ Every :ref:`contract<contracts>` defines its own type.
 You can implicitly convert contracts to contracts they inherit from.
 Contracts can be explicitly converted to and from the ``address`` type.
 
-Explicit conversion to and from the ``address payable`` type
-is only possible if the contract type has a payable fallback function.
-The conversion is still performed using ``address(x)`` and not
-using ``address payable(x)``. You can find more information in the section about
+Explicit conversion to and from the ``address payable`` type is only possible
+if the contract type has a receive or payable fallback function.  The conversion is still
+performed using ``address(x)``. If the contract type does not have a receive or payable
+fallback function, the conversion to ``address payable`` can be done using
+``payable(address(x))``.
+You can find more information in the section about
 the :ref:`address type<address>`.
 
 .. note::
@@ -405,7 +412,7 @@ Octal literals do not exist in Solidity and leading zeros are invalid.
 Decimal fraction literals are formed by a ``.`` with at least one number on
 one side.  Examples include ``1.``, ``.1`` and ``1.3``.
 
-Scientific notation is also supported, where the base can have fractions, while the exponent cannot.
+Scientific notation is also supported, where the base can have fractions and the exponent cannot.
 Examples include ``2e10``, ``-2e10``, ``2e-10``, ``2.5e1``.
 
 Underscores can be used to separate the digits of a numeric literal to aid readability.
@@ -498,7 +505,14 @@ terminate the string literal. Newline only terminates the string literal if it i
 Hexadecimal Literals
 --------------------
 
-Hexadecimal literals are prefixed with the keyword ``hex`` and are enclosed in double or single-quotes (``hex"001122FF"``), and they can also be split into multiple consecutive parts (``hex"00112233" hex"44556677"`` is equivalent to ``hex"0011223344556677"``). Their content must be a hexadecimal string and their value will be the binary representation of those values.
+Hexadecimal literals are prefixed with the keyword ``hex`` and are enclosed in double
+or single-quotes (``hex"001122FF"``, ``hex'0011_22_FF'``). Their content must be
+hexadecimal digits which can optionally use a single underscore as separator between
+byte boundaries. The value of the literal will be the binary representation
+of the hexadecimal sequence.
+
+Multiple hexadecimal literals separated by whitespace are concatenated into a single literal:
+``hex"00112233" hex"44556677"`` is equivalent to ``hex"0011223344556677"``
 
 Hexadecimal literals behave like :ref:`string literals <string_literals>` and have the same convertibility restrictions.
 
@@ -545,6 +559,10 @@ subsequent unsigned integer values starting from ``0``.
         }
     }
 
+.. note::
+    Enums can also be declared on the file level, outside of contract or library definitions.
+
+
 .. index:: ! function type, ! type; function
 
 .. _function_types:
@@ -582,9 +600,6 @@ do not have a default.
 
 Conversions:
 
-A value of external function type can be explicitly converted to ``address``
-resulting in the address of the contract of the function.
-
 A function type ``A`` is implicitly convertible to a function type ``B`` if and only if
 their parameter types are identical, their return types are identical,
 their internal/external property is identical and the state mutability of ``A``
@@ -616,8 +631,9 @@ just use ``f``, if you want to use its external form, use ``this.f``.
 
 Members:
 
-Public (or external) functions have the following members:
+External (or public) functions have the following members:
 
+* ``.address`` returns the address of the contract of the function.
 * ``.selector`` returns the :ref:`ABI function selector <abi_function_selector>`
 * ``.gas(uint)`` returns a callable function object which, when called, will send the specified amount of gas to the target function. See :ref:`External Function Calls <external-function-calls>` for more information.
 * ``.value(uint)`` returns a callable function object which, when called, will send the specified amount of wei to the target function. See :ref:`External Function Calls <external-function-calls>` for more information.
@@ -629,6 +645,7 @@ Example that shows how to use the members::
 
     contract Example {
         function f() public payable returns (bytes4) {
+            assert(this.f.address == address(this));
             return this.f.selector;
         }
 

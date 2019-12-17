@@ -15,6 +15,7 @@
     {
       "attributes":
       {
+        "abstract": false,
         "baseContracts":
         [
           null
@@ -40,6 +41,8 @@
           {
             "documentation": null,
             "name": "M",
+            "overrides": null,
+            "virtual": false,
             "visibility": "internal"
           },
           "children":

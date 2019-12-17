@@ -104,18 +104,23 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnota
 	std::map<FunctionDefinition const*, ASTNode const*> baseConstructorArguments;
 };
 
-struct FunctionDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
+struct CallableDeclarationAnnotation: ASTAnnotation
 {
-	/// The function this function overrides, if any. This is always the closest
-	/// in the linearized inheritance hierarchy.
-	FunctionDefinition const* superFunction = nullptr;
+	/// The set of functions/modifiers/events this callable overrides.
+	std::set<CallableDeclaration const*> baseFunctions;
 };
 
-struct EventDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
+struct FunctionDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAnnotation
+{
+	/// Pointer to the contract this function is defined in
+	ContractDefinition const* contract = nullptr;
+};
+
+struct EventDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAnnotation
 {
 };
 
-struct ModifierDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
+struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAnnotation
 {
 };
 
@@ -123,6 +128,8 @@ struct VariableDeclarationAnnotation: ASTAnnotation
 {
 	/// Type of variable (type of identifier referencing this variable).
 	TypePointer type = nullptr;
+	/// The set of functions this (public state) variable overrides.
+	std::set<CallableDeclaration const*> baseFunctions;
 };
 
 struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
@@ -217,6 +224,8 @@ enum class FunctionCallKind
 struct FunctionCallAnnotation: ExpressionAnnotation
 {
 	FunctionCallKind kind = FunctionCallKind::Unset;
+	/// If true, this is the external call of a try statement.
+	bool tryCall = false;
 };
 
 }

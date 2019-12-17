@@ -55,7 +55,7 @@ public:
 
 	/// @name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
-	static Type const* fromElementaryTypeName(ElementaryTypeNameToken const& _type);
+	static Type const* fromElementaryTypeName(ElementaryTypeNameToken const& _type, std::optional<StateMutability> _stateMutability = {});
 
 	/// Converts a given elementary type name with optional data location
 	/// suffix " storage", " calldata" or " memory" to a type pointer. If suffix not given, defaults to " storage".
@@ -69,6 +69,7 @@ public:
 
 	static ArrayType const* bytesStorage();
 	static ArrayType const* bytesMemory();
+	static ArrayType const* bytesCalldata();
 	static ArrayType const* stringStorage();
 	static ArrayType const* stringMemory();
 
@@ -80,6 +81,8 @@ public:
 
 	/// Constructor for a fixed-size array type ("type[20]")
 	static ArrayType const* array(DataLocation _location, Type const* _baseType, u256 const& _length);
+
+	static ArraySliceType const* arraySlice(ArrayType const& _arrayType);
 
 	static AddressType const* payableAddress() noexcept { return &m_payableAddress; }
 	static AddressType const* address() noexcept { return &m_address; }
@@ -204,6 +207,7 @@ private:
 	/// These are lazy-initialized because they depend on `byte` being available.
 	static std::unique_ptr<ArrayType> m_bytesStorage;
 	static std::unique_ptr<ArrayType> m_bytesMemory;
+	static std::unique_ptr<ArrayType> m_bytesCalldata;
 	static std::unique_ptr<ArrayType> m_stringStorage;
 	static std::unique_ptr<ArrayType> m_stringMemory;
 
