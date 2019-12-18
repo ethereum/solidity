@@ -131,7 +131,7 @@ string EWasmTranslationTest::interpret()
 {
 	InterpreterState state;
 	state.maxTraceSize = 10000;
-	state.maxSteps = 10000;
+	state.maxSteps = 100000;
 	WasmDialect dialect;
 	Interpreter interpreter(state, dialect);
 	try
