@@ -248,7 +248,10 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return writeU128(arg[0], m_state.gasprice);
 	else if (_fun == "eth.log"_yulstring)
 	{
-		logTrace(eth::Instruction::LOG0, {});
+		uint64_t numberOfTopics = arg[2];
+		if (numberOfTopics > 4)
+			throw ExplicitlyTerminated();
+		logTrace(eth::logInstruction(numberOfTopics), {});
 		return 0;
 	}
 	else if (_fun == "eth.getBlockNumber"_yulstring)
