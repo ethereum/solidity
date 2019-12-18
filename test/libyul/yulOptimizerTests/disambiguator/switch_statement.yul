@@ -9,7 +9,7 @@
 }
 // ====
 // step: disambiguator
-// yul: true
+// dialect: yul
 // ----
 // {
 //     { let a:u256, b:u256, c:u256 }

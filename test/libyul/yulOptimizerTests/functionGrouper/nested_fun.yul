@@ -10,7 +10,7 @@
 }
 // ====
 // step: functionGrouper
-// yul: true
+// dialect: yul
 // ----
 // {
 //     { let a:u256 }

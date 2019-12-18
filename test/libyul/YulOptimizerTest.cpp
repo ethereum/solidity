@@ -60,6 +60,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/wasm/WordSizeTransform.h>
+#include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
@@ -98,12 +99,24 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 	file.exceptions(ios::badbit);
 
 	m_source = parseSourceAndSettings(file);
-	if (m_settings.count("yul"))
+	if (m_settings.count("dialect"))
 	{
-		m_yul = true;
-		m_validatedSettings["yul"] = "true";
-		m_settings.erase("yul");
+		auto dialectName = m_settings["dialect"];
+		if (dialectName == "yul")
+			m_dialect = &Dialect::yul();
+		else if (dialectName == "ewasm")
+			m_dialect = &WasmDialect::instance();
+		else if (dialectName == "evm")
+			m_dialect = &EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion());
+		else
+			BOOST_THROW_EXCEPTION(runtime_error("Invalid dialect " + dialectName));
+
+		m_validatedSettings["dialect"] = dialectName;
+		m_settings.erase("dialect");
 	}
+	else
+		m_dialect = &EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion());
+
 	if (m_settings.count("step"))
 	{
 		m_validatedSettings["step"] = m_settings["step"];
@@ -350,7 +363,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		return TestResult::FatalError;
 	}
 
-	m_obtainedResult = AsmPrinter{m_yul}(*m_ast) + "\n";
+	m_obtainedResult = AsmPrinter{m_dialect->flavour == AsmFlavour::Yul}(*m_ast) + "\n";
 
 	if (m_optimizerStep != m_validatedSettings["step"])
 	{
@@ -406,7 +419,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 {
 	AssemblyStack stack(
 		dev::test::Options::get().evmVersion(),
-		m_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
+		m_dialect->flavour == AsmFlavour::Yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
 		dev::solidity::OptimiserSettings::none()
 	);
 	if (!stack.parseAndAnalyze("", m_source) || !stack.errors().empty())
@@ -415,7 +428,6 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 		printErrors(_stream, stack.errors());
 		return false;
 	}
-	m_dialect = m_yul ? &Dialect::yul() : &EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion());
 	m_ast = stack.parserResult()->code;
 	m_analysisInfo = stack.parserResult()->analysisInfo;
 	return true;
