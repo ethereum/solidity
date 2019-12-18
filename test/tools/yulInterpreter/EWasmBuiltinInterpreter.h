@@ -86,6 +86,9 @@ private:
 	/// Writes a word to memory (little-endian)
 	/// Does not adjust msize, use @a accessMemory for that
 	void writeMemoryWord(uint64_t _offset, uint64_t _value);
+	/// Writes a byte to memory
+	/// Does not adjust msize, use @a accessMemory for that
+	void writeMemoryByte(uint64_t _offset, uint8_t _value);
 
 	/// Helper for eth.* builtins. Writes to memory (big-endian) and always returns zero.
 	void writeU256(uint64_t _offset, dev::u256 _value, size_t _croppedTo = 32);
