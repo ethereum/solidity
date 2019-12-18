@@ -88,9 +88,9 @@ private:
 	void writeMemoryWord(uint64_t _offset, uint64_t _value);
 
 	/// Helper for eth.* builtins. Writes to memory (big-endian) and always returns zero.
-	dev::u256 writeU256(uint64_t _offset, dev::u256 _value, size_t _croppedTo = 32);
-	dev::u256 writeU128(uint64_t _offset, dev::u256 _value) { return writeU256(_offset, std::move(_value), 16); }
-	dev::u256 writeAddress(uint64_t _offset, dev::u256 _value) { return writeU256(_offset, std::move(_value), 20); }
+	void writeU256(uint64_t _offset, dev::u256 _value, size_t _croppedTo = 32);
+	void writeU128(uint64_t _offset, dev::u256 _value) { writeU256(_offset, std::move(_value), 16); }
+	void writeAddress(uint64_t _offset, dev::u256 _value) { writeU256(_offset, std::move(_value), 20); }
 	/// Helper for eth.* builtins. Reads from memory (big-endian) and returns the value;
 	dev::u256 readU256(uint64_t _offset, size_t _croppedTo = 32);
 	dev::u256 readU128(uint64_t _offset) { return readU256(_offset, 16); }

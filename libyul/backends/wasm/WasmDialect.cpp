@@ -120,7 +120,7 @@ void WasmDialect::addEthereumExternals()
 		{"getCaller", {i32ptr}, {}},
 		{"getCallValue", {i32ptr}, {}},
 		{"codeCopy", {i32ptr, i32, i32}, {}},
-		{"getCodeSize", {i32ptr}, {}},
+		{"getCodeSize", {}, {i32}},
 		{"getBlockCoinbase", {i32ptr}, {}},
 		{"create", {i32ptr, i32ptr, i32, i32ptr}, {i32}},
 		{"getBlockDifficulty", {i32ptr}, {}},

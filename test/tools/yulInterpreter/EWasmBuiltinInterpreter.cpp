@@ -139,18 +139,27 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return readMemoryWord(arg[0]);
 	}
 	else if (_fun == "eth.getAddress"_yulstring)
-		return writeAddress(arg[0], m_state.address);
+	{
+		writeAddress(arg[0], m_state.address);
+		return 0;
+	}
 	else if (_fun == "eth.getExternalBalance"_yulstring)
+	{
 		// TODO this does not read the address, but is consistent with
 		// EVM interpreter implementation.
 		// If we take the address into account, this needs to use readAddress.
-		return writeU128(arg[0], m_state.balance);
+		writeU128(arg[0], m_state.balance);
+		return 0;
+	}
 	else if (_fun == "eth.getBlockHash"_yulstring)
 	{
 		if (arg[0] >= m_state.blockNumber || arg[0] + 256 < m_state.blockNumber)
 			return 1;
 		else
-			return writeU256(arg[1], 0xaaaaaaaa + u256(arg[0] - m_state.blockNumber - 256));
+		{
+			writeU256(arg[1], 0xaaaaaaaa + u256(arg[0] - m_state.blockNumber - 256));
+			return 0;
+		}
 	}
 	else if (_fun == "eth.call"_yulstring)
 	{
@@ -199,12 +208,21 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return 0;
 	}
 	else if (_fun == "eth.storageLoad"_yulstring)
-		return writeU256(arg[1], m_state.storage[h256(readU256(arg[0]))]);
+	{
+		writeU256(arg[1], m_state.storage[h256(readU256(arg[0]))]);
+		return 0;
+	}
 	else if (_fun == "eth.getCaller"_yulstring)
+	{
 		// TODO should this only write 20 bytes?
-		return writeAddress(arg[0], m_state.caller);
+		writeAddress(arg[0], m_state.caller);
+		return 0;
+	}
 	else if (_fun == "eth.getCallValue"_yulstring)
-		return writeU128(arg[0], m_state.callvalue);
+	{
+		writeU128(arg[0], m_state.callvalue);
+		return 0;
+	}
 	else if (_fun == "eth.codeCopy"_yulstring)
 	{
 		if (accessMemory(arg[0], arg[2]))
@@ -215,9 +233,12 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return 0;
 	}
 	else if (_fun == "eth.getCodeSize"_yulstring)
-		return writeU256(arg[0], m_state.code.size());
+		return m_state.code.size();
 	else if (_fun == "eth.getBlockCoinbase"_yulstring)
-		return writeAddress(arg[0], m_state.coinbase);
+	{
+		writeAddress(arg[0], m_state.coinbase);
+		return 0;
+	}
 	else if (_fun == "eth.create"_yulstring)
 	{
 		// TODO access memory
@@ -226,7 +247,10 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return 0xcccccc + arg[1];
 	}
 	else if (_fun == "eth.getBlockDifficulty"_yulstring)
-		return writeU256(arg[0], m_state.difficulty);
+	{
+		writeU256(arg[0], m_state.difficulty);
+		return 0;
+	}
 	else if (_fun == "eth.externalCodeCopy"_yulstring)
 	{
 		// TODO use readAddress to read address.
@@ -245,7 +269,10 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	else if (_fun == "eth.getBlockGasLimit"_yulstring)
 		return uint64_t(m_state.gaslimit);
 	else if (_fun == "eth.getTxGasPrice"_yulstring)
-		return writeU128(arg[0], m_state.gasprice);
+	{
+		writeU128(arg[0], m_state.gasprice);
+		return 0;
+	}
 	else if (_fun == "eth.log"_yulstring)
 	{
 		uint64_t numberOfTopics = arg[2];
@@ -257,7 +284,10 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	else if (_fun == "eth.getBlockNumber"_yulstring)
 		return m_state.blockNumber;
 	else if (_fun == "eth.getTxOrigin"_yulstring)
-		return writeAddress(arg[0], m_state.origin);
+	{
+		writeAddress(arg[0], m_state.origin);
+		return 0;
+	}
 	else if (_fun == "eth.finish"_yulstring)
 	{
 		bytes data;
@@ -338,7 +368,7 @@ void EWasmBuiltinInterpreter::writeMemoryWord(uint64_t _offset, uint64_t _value)
 		m_state.memory[_offset + i] = uint8_t((_value >> (i * 8)) & 0xff);
 }
 
-u256 EWasmBuiltinInterpreter::writeU256(uint64_t _offset, u256 _value, size_t _croppedTo)
+void EWasmBuiltinInterpreter::writeU256(uint64_t _offset, u256 _value, size_t _croppedTo)
 {
 	accessMemory(_offset, _croppedTo);
 	for (size_t i = 0; i < _croppedTo; i++)
@@ -346,8 +376,6 @@ u256 EWasmBuiltinInterpreter::writeU256(uint64_t _offset, u256 _value, size_t _c
 		m_state.memory[_offset + _croppedTo - 1 - i] = uint8_t(_value & 0xff);
 		_value >>= 8;
 	}
-
-	return {};
 }
 
 u256 EWasmBuiltinInterpreter::readU256(uint64_t _offset, size_t _croppedTo)
