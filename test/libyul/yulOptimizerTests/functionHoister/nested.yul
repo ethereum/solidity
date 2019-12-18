@@ -8,7 +8,7 @@
 }
 // ====
 // step: functionHoister
-// yul: true
+// dialect: yul
 // ----
 // {
 //     let a:u256

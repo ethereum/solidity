@@ -4,7 +4,7 @@
 }
 // ====
 // step: expressionInliner
-// yul: true
+// dialect: yul
 // ----
 // {
 //     function f(a:u256) -> x:u256
