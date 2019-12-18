@@ -49,6 +49,21 @@ void copyZeroExtended(
 		_target[_targetOffset + i] = _sourceOffset + i < _source.size() ? _source[_sourceOffset + i] : 0;
 }
 
+/// Count leading zeros for uint64
+uint64_t clz(uint64_t _v)
+{
+	if (_v == 0)
+		return 64;
+
+	uint64_t r = 0;
+	while (!(_v & 0x8000000000000000))
+	{
+		r += 1;
+		_v = _v << 1;
+	}
+	return r;
+}
+
 }
 
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
@@ -119,6 +134,8 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return arg[0] != arg[1] ? 1 : 0;
 	else if (_fun == "i64.eqz"_yulstring)
 		return arg[0] == 0 ? 1 : 0;
+	else if (_fun == "i64.clz"_yulstring)
+		return clz(arg[0]);
 	else if (_fun == "i64.lt_u"_yulstring)
 		return arg[0] < arg[1] ? 1 : 0;
 	else if (_fun == "i64.gt_u"_yulstring)
@@ -131,6 +148,12 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	{
 		accessMemory(arg[0], 8);
 		writeMemoryWord(arg[0], arg[1]);
+		return 0;
+	}
+	else if (_fun == "i64.store8"_yulstring)
+	{
+		accessMemory(arg[0], 1);
+		writeMemoryByte(arg[0], static_cast<uint8_t>(arg[1] & 0xff));
 		return 0;
 	}
 	else if (_fun == "i64.load"_yulstring)
@@ -148,7 +171,7 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		// TODO this does not read the address, but is consistent with
 		// EVM interpreter implementation.
 		// If we take the address into account, this needs to use readAddress.
-		writeU128(arg[0], m_state.balance);
+		writeU128(arg[1], m_state.balance);
 		return 0;
 	}
 	else if (_fun == "eth.getBlockHash"_yulstring)
@@ -366,6 +389,11 @@ void EWasmBuiltinInterpreter::writeMemoryWord(uint64_t _offset, uint64_t _value)
 {
 	for (size_t i = 0; i < 8; i++)
 		m_state.memory[_offset + i] = uint8_t((_value >> (i * 8)) & 0xff);
+}
+
+void EWasmBuiltinInterpreter::writeMemoryByte(uint64_t _offset, uint8_t _value)
+{
+	m_state.memory[_offset] = _value;
 }
 
 void EWasmBuiltinInterpreter::writeU256(uint64_t _offset, u256 _value, size_t _croppedTo)
