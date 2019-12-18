@@ -286,7 +286,8 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return 0;
 	}
 	else if (_fun == "eth.getExternalCodeSize"_yulstring)
-		return u256(keccak256(h256(readAddress(arg[0])))) & 0xffffff;
+		// Generate "random" code length. Make sure it fits the page size.
+		return u256(keccak256(h256(readAddress(arg[0])))) & 0xfff;
 	else if (_fun == "eth.getGasLeft"_yulstring)
 		return 0x99;
 	else if (_fun == "eth.getBlockGasLimit"_yulstring)
