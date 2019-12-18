@@ -215,7 +215,7 @@ u256 EWasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return 0;
 	}
 	else if (_fun == "eth.getCodeSize"_yulstring)
-		return writeU256(arg[0], m_state.code.size());
+		return m_state.code.size();
 	else if (_fun == "eth.getBlockCoinbase"_yulstring)
 		return writeAddress(arg[0], m_state.coinbase);
 	else if (_fun == "eth.create"_yulstring)
