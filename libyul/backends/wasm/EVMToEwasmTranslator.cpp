@@ -15,10 +15,10 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Translates Yul code from EVM dialect to eWasm dialect.
+ * Translates Yul code from EVM dialect to Ewasm dialect.
  */
 
-#include <libyul/backends/wasm/EVMToEWasmTranslator.h>
+#include <libyul/backends/wasm/EVMToEwasmTranslator.h>
 
 #include <libyul/backends/wasm/WordSizeTransform.h>
 #include <libyul/backends/wasm/WasmDialect.h>
@@ -701,7 +701,7 @@ function invalid() {
 
 }
 
-Object EVMToEWasmTranslator::run(Object const& _object)
+Object EVMToEwasmTranslator::run(Object const& _object)
 {
 	if (!m_polyfill)
 		parsePolyfill();
@@ -749,7 +749,7 @@ Object EVMToEWasmTranslator::run(Object const& _object)
 	return ret;
 }
 
-void EVMToEWasmTranslator::parsePolyfill()
+void EVMToEwasmTranslator::parsePolyfill()
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);

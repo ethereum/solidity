@@ -33,8 +33,8 @@
 #include <libyul/backends/evm/EVMObjectCompiler.h>
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/wasm/WasmDialect.h>
-#include <libyul/backends/wasm/EWasmObjectCompiler.h>
-#include <libyul/backends/wasm/EVMToEWasmTranslator.h>
+#include <libyul/backends/wasm/WasmObjectCompiler.h>
+#include <libyul/backends/wasm/EVMToEwasmTranslator.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
@@ -112,7 +112,7 @@ void AssemblyStack::translate(AssemblyStack::Language _targetLanguage)
 		"Invalid language combination"
 	);
 
-	*m_parserResult = EVMToEWasmTranslator(
+	*m_parserResult = EVMToEwasmTranslator(
 		languageToDialect(m_language, m_evmVersion)
 	).run(*parserResult());
 
@@ -220,7 +220,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		Dialect const& dialect = languageToDialect(m_language, EVMVersion{});
 
 		MachineAssemblyObject object;
-		auto result = EWasmObjectCompiler::compile(*m_parserResult, dialect);
+		auto result = WasmObjectCompiler::compile(*m_parserResult, dialect);
 		object.assembly = std::move(result.first);
 		object.bytecode = make_shared<dev::eth::LinkerObject>();
 		object.bytecode->bytecode = std::move(result.second);

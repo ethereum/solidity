@@ -32,15 +32,15 @@ namespace yul
 namespace test
 {
 
-class EWasmTranslationTest: public dev::solidity::test::EVMVersionRestrictedTestCase
+class EwasmTranslationTest: public dev::solidity::test::EVMVersionRestrictedTestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
-		return std::make_unique<EWasmTranslationTest>(_config.filename);
+		return std::make_unique<EwasmTranslationTest>(_config.filename);
 	}
 
-	explicit EWasmTranslationTest(std::string const& _filename);
+	explicit EwasmTranslationTest(std::string const& _filename);
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 

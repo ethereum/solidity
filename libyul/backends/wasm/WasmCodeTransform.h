@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Common code generator for translating Yul / inline assembly to EWasm.
+ * Common code generator for translating Yul / inline assembly to Wasm.
  */
 
 #pragma once
@@ -32,7 +32,7 @@ namespace yul
 {
 struct AsmAnalysisInfo;
 
-class EWasmCodeTransform
+class WasmCodeTransform
 {
 public:
 	static wasm::Module run(Dialect const& _dialect, yul::Block const& _ast);
@@ -54,7 +54,7 @@ public:
 	wasm::Expression operator()(yul::Block const& _block);
 
 private:
-	EWasmCodeTransform(
+	WasmCodeTransform(
 		Dialect const& _dialect,
 		Block const& _ast
 	):

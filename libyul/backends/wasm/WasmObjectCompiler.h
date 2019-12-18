@@ -28,6 +28,7 @@ namespace dev
 {
 using bytes = std::vector<uint8_t>;
 }
+
 namespace yul
 {
 struct Object;
@@ -37,13 +38,13 @@ namespace wasm
 struct Module;
 }
 
-class EWasmObjectCompiler
+class WasmObjectCompiler
 {
 public:
-	/// Compiles the given object and returns the WAST and the binary representation.
+	/// Compiles the given object and returns the Wasm text and binary representation.
 	static std::pair<std::string, dev::bytes> compile(Object& _object, Dialect const& _dialect);
 private:
-	EWasmObjectCompiler(Dialect const& _dialect):
+	WasmObjectCompiler(Dialect const& _dialect):
 		m_dialect(_dialect)
 	{}
 
