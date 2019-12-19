@@ -86,7 +86,7 @@ struct DeclarationAnnotation: ASTAnnotation, ScopableAnnotation
 {
 };
 
-struct ImportAnnotation: ASTAnnotation
+struct ImportAnnotation: DeclarationAnnotation
 {
 	/// The absolute path of the source unit to import.
 	std::string absolutePath;
@@ -94,7 +94,7 @@ struct ImportAnnotation: ASTAnnotation
 	SourceUnit const* sourceUnit = nullptr;
 };
 
-struct TypeDeclarationAnnotation: ASTAnnotation
+struct TypeDeclarationAnnotation: DeclarationAnnotation
 {
 	/// The name of this type, prefixed by proper namespaces if globally accessible.
 	std::string canonicalName;
@@ -115,7 +115,7 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnota
 	std::map<FunctionDefinition const*, ASTNode const*> baseConstructorArguments;
 };
 
-struct CallableDeclarationAnnotation: ASTAnnotation
+struct CallableDeclarationAnnotation: DeclarationAnnotation
 {
 	/// The set of functions/modifiers/events this callable overrides.
 	std::set<CallableDeclaration const*> baseFunctions;
@@ -135,7 +135,7 @@ struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAn
 {
 };
 
-struct VariableDeclarationAnnotation: ASTAnnotation
+struct VariableDeclarationAnnotation: DeclarationAnnotation
 {
 	/// Type of variable (type of identifier referencing this variable).
 	TypePointer type = nullptr;
