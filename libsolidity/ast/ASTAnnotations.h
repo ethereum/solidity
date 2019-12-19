@@ -75,6 +75,13 @@ struct SourceUnitAnnotation: ASTAnnotation
 	std::set<ExperimentalFeature> experimentalFeatures;
 };
 
+struct ScopableAnnotation
+{
+	/// The scope this declaration resides in. Can be nullptr if it is the global scope.
+	/// Available only after name and type resolution step.
+	ASTNode const* scope = nullptr;
+};
+
 struct ImportAnnotation: ASTAnnotation
 {
 	/// The absolute path of the source unit to import.
