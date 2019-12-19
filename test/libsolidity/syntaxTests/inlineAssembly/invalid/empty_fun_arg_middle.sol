@@ -7,4 +7,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (96-97): Literal, identifier or instruction expected.
+// ParserError: (96-97): Literal or identifier expected.

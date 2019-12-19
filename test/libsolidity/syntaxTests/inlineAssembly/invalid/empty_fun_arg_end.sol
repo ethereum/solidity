@@ -8,4 +8,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (103-104): Literal, identifier or instruction expected.
+// ParserError: (103-104): Literal or identifier expected.

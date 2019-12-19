@@ -18,6 +18,7 @@
 #include <test/libyul/YulOptimizerTest.h>
 
 #include <test/libsolidity/util/SoltestErrors.h>
+#include <test/libyul/Common.h>
 #include <test/Options.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
@@ -364,7 +365,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		return TestResult::FatalError;
 	}
 
-	m_obtainedResult = AsmPrinter{m_dialect->flavour == AsmFlavour::Yul}(*m_ast) + "\n";
+	m_obtainedResult = AsmPrinter{}(*m_ast) + "\n";
 
 	if (m_optimizerStep != m_validatedSettings["step"])
 	{
@@ -418,19 +419,15 @@ void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, st
 
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	AssemblyStack stack(
-		solidity::test::Options::get().evmVersion(),
-		m_dialect->flavour == AsmFlavour::Yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::none()
-	);
-	if (!stack.parseAndAnalyze("", m_source) || !stack.errors().empty())
+	ErrorList errors;
+	soltestAssert(m_dialect, "");
+	std::tie(m_ast, m_analysisInfo) = yul::test::parse(m_source, *m_dialect, errors);
+	if (!m_ast || !m_analysisInfo || !errors.empty())
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
-		printErrors(_stream, stack.errors());
+		printErrors(_stream, errors);
 		return false;
 	}
-	m_ast = stack.parserResult()->code;
-	m_analysisInfo = stack.parserResult()->analysisInfo;
 	return true;
 }
 

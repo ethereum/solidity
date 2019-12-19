@@ -18,6 +18,7 @@ add_library(yul
 	AssemblyStack.cpp
 	CompilabilityChecker.cpp
 	CompilabilityChecker.h
+	Dialect.cpp
 	Dialect.h
 	Exceptions.h
 	Object.cpp

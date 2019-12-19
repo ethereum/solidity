@@ -238,7 +238,7 @@ string AsmPrinter::formatTypedName(TypedName _variable) const
 
 string AsmPrinter::appendTypeName(YulString _type) const
 {
-	if (m_yul && !_type.empty())
+	if (!_type.empty())
 		return ":" + _type.str();
 	return "";
 }

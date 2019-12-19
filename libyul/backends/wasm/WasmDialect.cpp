@@ -23,9 +23,12 @@
 using namespace std;
 using namespace solidity::yul;
 
-WasmDialect::WasmDialect():
-	Dialect{AsmFlavour::Strict}
+WasmDialect::WasmDialect()
 {
+	defaultType = "i64"_yulstring;
+	boolType = "i64"_yulstring;
+	types = {"i64"_yulstring, "i32"_yulstring};
+
 	for (auto const& name: {
 		"i64.add",
 		"i64.sub",

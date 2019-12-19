@@ -63,7 +63,7 @@ struct BuiltinFunctionForEVM: BuiltinFunction
 struct EVMDialect: public Dialect
 {
 	/// Constructor, should only be used internally. Use the factory functions below.
-	EVMDialect(AsmFlavour _flavour, bool _objectAccess, langutil::EVMVersion _evmVersion);
+	EVMDialect(langutil::EVMVersion _evmVersion, bool _objectAccess);
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
