@@ -6,7 +6,7 @@
     {
       "C":
       [
-        6
+        8
       ]
     }
   },
@@ -29,10 +29,10 @@
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
-          6
+          8
         ],
         "name": "C",
-        "scope": 7
+        "scope": 9
       },
       "children":
       [
@@ -50,7 +50,7 @@
             ],
             "name": "f",
             "overrides": null,
-            "scope": 6,
+            "scope": 8,
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "public"
@@ -68,20 +68,45 @@
               "children": [],
               "id": 1,
               "name": "ParameterList",
-              "src": "27:2:1"
+              "src": "25:2:1"
             },
             {
-              "attributes":
-              {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 2,
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "constant": false,
+                    "name": "x",
+                    "overrides": null,
+                    "scope": 7,
+                    "stateVariable": false,
+                    "storageLocation": "default",
+                    "type": "uint256",
+                    "value": null,
+                    "visibility": "internal"
+                  },
+                  "children":
+                  [
+                    {
+                      "attributes":
+                      {
+                        "name": "uint",
+                        "type": "uint256"
+                      },
+                      "id": 2,
+                      "name": "ElementaryTypeName",
+                      "src": "49:4:1"
+                    }
+                  ],
+                  "id": 3,
+                  "name": "VariableDeclaration",
+                  "src": "49:6:1"
+                }
+              ],
+              "id": 4,
               "name": "ParameterList",
-              "src": "42:0:1"
+              "src": "48:8:1"
             },
             {
               "children":
@@ -92,45 +117,32 @@
                     "evmVersion": %EVMVERSION%,
                     "externalReferences":
                     [
-                      {
-                        "declaration": 5,
-                        "isOffset": false,
-                        "isSlot": false,
-                        "src": "141:1:1",
-                        "valueSize": 18446744073709551615
-                      },
-                      {
-                        "declaration": 5,
-                        "isOffset": false,
-                        "isSlot": false,
-                        "src": "172:1:1",
-                        "valueSize": 18446744073709551615
-                      }
+                      null
                     ],
-                    "operations": "{\n    let f := 0\n    switch calldatasize()\n    case 0 { f := 1 }\n    default { f := 2 }\n}"
+                    "operations": "{\n    function f1()\n    {\n        function f2()\n        { }\n        x := 2\n    }\n}"
                   },
                   "children": [],
-                  "id": 3,
+                  "id": 5,
                   "name": "InlineAssembly",
-                  "src": "52:138:1"
+                  "src": "63:87:1"
                 }
               ],
-              "id": 4,
+              "id": 6,
               "name": "Block",
-              "src": "42:154:1"
+              "src": "57:97:1"
             }
           ],
-          "id": 5,
+          "id": 7,
           "name": "FunctionDefinition",
-          "src": "17:179:1"
+          "src": "15:139:1"
         }
       ],
-      "id": 6,
+      "id": 8,
       "name": "ContractDefinition",
-      "src": "0:198:1"
+      "src": "0:156:1"
     }
   ],
-  "id": 7,
+  "id": 9,
   "name": "SourceUnit",
-  "src": "0:199:1"
+  "src": "0:157:1"
 }
