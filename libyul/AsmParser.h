@@ -29,6 +29,8 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ParserBase.h>
 
+#include <libevmasm/Instruction.h>
+
 #include <memory>
 #include <variant>
 #include <vector>
@@ -56,7 +58,7 @@ public:
 	static std::map<std::string, dev::eth::Instruction> const& instructions();
 
 protected:
-	using ElementaryOperation = std::variant<Instruction, Literal, Identifier, FunctionCall>;
+	using ElementaryOperation = std::variant<Literal, Identifier, FunctionCall>;
 
 	/// Creates an inline assembly node with the given source location.
 	template <class T> T createWithLocation(langutil::SourceLocation const& _loc = {}) const
