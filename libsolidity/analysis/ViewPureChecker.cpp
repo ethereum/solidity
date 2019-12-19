@@ -43,10 +43,6 @@ public:
 		m_dialect(_dialect),
 		m_reportMutability(_reportMutability) {}
 
-	void operator()(yul::Instruction const& _instruction)
-	{
-		checkInstruction(_instruction.location, _instruction.instruction);
-	}
 	void operator()(yul::Literal const&) {}
 	void operator()(yul::Identifier const&) {}
 	void operator()(yul::ExpressionStatement const& _expr)

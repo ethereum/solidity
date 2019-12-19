@@ -77,7 +77,6 @@ public:
 	/// Asserts on failure.
 	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object);
 
-	bool operator()(Instruction const&);
 	bool operator()(Literal const& _literal);
 	bool operator()(Identifier const&);
 	bool operator()(ExpressionStatement const&);

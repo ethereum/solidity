@@ -86,16 +86,6 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 	return analysisInfo;
 }
 
-bool AsmAnalyzer::operator()(yul::Instruction const& _instruction)
-{
-	yulAssert(false, "The use of non-functional instructions is disallowed. Please use functional notation instead.");
-	auto const& info = instructionInfo(_instruction.instruction);
-	m_stackHeight += info.ret - info.args;
-	m_info.stackHeightInfo[&_instruction] = m_stackHeight;
-	warnOnInstructions(_instruction.instruction, _instruction.location);
-	return true;
-}
-
 bool AsmAnalyzer::operator()(Literal const& _literal)
 {
 	expectValidType(_literal.type.str(), _literal.location);
