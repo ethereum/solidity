@@ -157,7 +157,7 @@ void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _o
 			dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
 			break;
 		case Language::Yul:
-			dialect = &EVMDialect::yulForEVM(m_evmVersion);
+			dialect = &EVMDialectTyped::instance(m_evmVersion);
 			break;
 		default:
 			solAssert(false, "Invalid language.");

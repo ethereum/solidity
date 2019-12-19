@@ -74,7 +74,6 @@ struct EVMDialect: public Dialect
 
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
 	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);
-	static EVMDialect const& yulForEVM(langutil::EVMVersion _version);
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
 
@@ -86,6 +85,25 @@ protected:
 	bool const m_objectAccess;
 	langutil::EVMVersion const m_evmVersion;
 	std::map<YulString, BuiltinFunctionForEVM> m_functions;
+};
+
+/**
+ * EVM dialect with types u256 (default) and bool.
+ * Difference to EVMDialect:
+ *  - All comparison functions return type bool
+ *  - bitwise operations are called bitor, bitand, bitxor and bitnot
+ *  - and, or, xor take bool and return bool
+ *  - iszero returns bool
+ *  - isfalse takes bool and returns bool
+ *  - there are conversion functions bool_to_u256 and u256_to_bool.
+ *  - there is popbool
+ */
+struct EVMDialectTyped: public EVMDialect
+{
+	/// Constructor, should only be used internally. Use the factory function below.
+	EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess);
+
+	static EVMDialectTyped const& instance(langutil::EVMVersion _version);
 };
 
 }
