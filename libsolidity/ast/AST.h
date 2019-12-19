@@ -231,6 +231,8 @@ public:
 	/// @returns null when it is not accessible as a function.
 	virtual FunctionTypePointer functionType(bool /*_internal*/) const { return {}; }
 
+	DeclarationAnnotation& annotation() const override;
+
 protected:
 	virtual Visibility defaultVisibility() const { return Visibility::Public; }
 

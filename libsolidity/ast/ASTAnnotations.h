@@ -82,6 +82,10 @@ struct ScopableAnnotation
 	ASTNode const* scope = nullptr;
 };
 
+struct DeclarationAnnotation: ASTAnnotation, ScopableAnnotation
+{
+};
+
 struct ImportAnnotation: ASTAnnotation
 {
 	/// The absolute path of the source unit to import.

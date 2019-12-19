@@ -449,6 +449,13 @@ string Scopable::sourceUnitName() const
 	return sourceUnit().annotation().path;
 }
 
+DeclarationAnnotation& Declaration::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = make_unique<DeclarationAnnotation>();
+	return dynamic_cast<DeclarationAnnotation&>(*m_annotation);
+}
+
 bool VariableDeclaration::isLValue() const
 {
 	// Constant declared variables are Read-Only
