@@ -45,6 +45,7 @@ Language Features:
  * Allow global enums and structs.
  * Allow public variables to override external functions.
  * Allow underscores as delimiters in hex strings.
+ * Allow to react on failing external calls using ``try`` and ``catch``.
  * Introduce syntax for array slices and implement them for dynamic calldata arrays.
  * Introduce ``push()`` for dynamic storage arrays. It returns a reference to the newly allocated element, if applicable.
  * Introduce ``virtual`` and ``override`` keywords.
