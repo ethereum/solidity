@@ -449,6 +449,13 @@ string Scopable::sourceUnitName() const
 	return sourceUnit().annotation().path;
 }
 
+DeclarationAnnotation& Declaration::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = make_unique<DeclarationAnnotation>();
+	return dynamic_cast<DeclarationAnnotation&>(*m_annotation);
+}
+
 bool VariableDeclaration::isLValue() const
 {
 	// Constant declared variables are Read-Only
@@ -651,6 +658,27 @@ InlineAssemblyAnnotation& InlineAssembly::annotation() const
 	if (!m_annotation)
 		m_annotation = make_unique<InlineAssemblyAnnotation>();
 	return dynamic_cast<InlineAssemblyAnnotation&>(*m_annotation);
+}
+
+BlockAnnotation& Block::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = make_unique<BlockAnnotation>();
+	return dynamic_cast<BlockAnnotation&>(*m_annotation);
+}
+
+TryCatchClauseAnnotation& TryCatchClause::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = make_unique<TryCatchClauseAnnotation>();
+	return dynamic_cast<TryCatchClauseAnnotation&>(*m_annotation);
+}
+
+ForStatementAnnotation& ForStatement::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = make_unique<ForStatementAnnotation>();
+	return dynamic_cast<ForStatementAnnotation&>(*m_annotation);
 }
 
 ReturnAnnotation& Return::annotation() const
