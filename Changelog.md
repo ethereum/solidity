@@ -2,6 +2,7 @@
 
 Language Features:
  * Allow accessing external functions via contract and interface names to obtain their selector.
+ * Inline Assembly: Support literals ``true`` and ``false``.
 
 
 Compiler Features:
