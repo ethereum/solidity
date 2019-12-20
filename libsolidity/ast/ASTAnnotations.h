@@ -163,6 +163,18 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
 };
 
+struct BlockAnnotation: StatementAnnotation, ScopableAnnotation
+{
+};
+
+struct TryCatchClauseAnnotation: ASTAnnotation, ScopableAnnotation
+{
+};
+
+struct ForStatementAnnotation: StatementAnnotation, ScopableAnnotation
+{
+};
+
 struct ReturnAnnotation: StatementAnnotation
 {
 	/// Reference to the return parameters of the function.

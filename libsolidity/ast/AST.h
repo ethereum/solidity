@@ -1171,6 +1171,8 @@ public:
 
 	std::vector<ASTPointer<Statement>> const& statements() const { return m_statements; }
 
+	BlockAnnotation& annotation() const override;
+
 private:
 	std::vector<ASTPointer<Statement>> m_statements;
 };
@@ -1249,6 +1251,8 @@ public:
 	ASTString const& errorName() const { return *m_errorName; }
 	ParameterList const* parameters() const { return m_parameters.get(); }
 	Block const& block() const { return *m_block; }
+
+	TryCatchClauseAnnotation& annotation() const override;
 
 private:
 	ASTPointer<ASTString> m_errorName;
@@ -1358,6 +1362,8 @@ public:
 	Expression const* condition() const { return m_condExpression.get(); }
 	ExpressionStatement const* loopExpression() const { return m_loopExpression.get(); }
 	Statement const& body() const { return *m_body; }
+
+	ForStatementAnnotation& annotation() const override;
 
 private:
 	/// For statement's initialization expression. for (XXX; ; ). Can be empty
