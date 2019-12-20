@@ -159,8 +159,7 @@ public:
 	virtual ~Scopable() = default;
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
-	ASTNode const* scope() const { return m_scope; }
-	void setScope(ASTNode const* _scope) { m_scope = _scope; }
+	ASTNode const* scope() const { return annotation().scope; }
 
 	/// @returns the source unit this scopable is present in.
 	SourceUnit const& sourceUnit() const;
@@ -172,8 +171,7 @@ public:
 	/// Can be combined with annotation().canonicalName (if present) to form a globally unique name.
 	std::string sourceUnitName() const;
 
-protected:
-	ASTNode const* m_scope = nullptr;
+	virtual ScopableAnnotation& annotation() const = 0;
 };
 
 /**
