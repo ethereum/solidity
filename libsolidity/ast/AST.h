@@ -108,10 +108,29 @@ public:
 
 protected:
 	size_t const m_id = 0;
-	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
-	mutable std::unique_ptr<ASTAnnotation> m_annotation;
+
+	template <class T>
+	T& initAnnotation() const
+	{
+		if (!m_annotation)
+			m_annotation = std::make_unique<T>();
+		return dynamic_cast<T&>(*m_annotation);
+	}
+
+	template <class T>
+	T& abstractAnnotation(std::string _className) const
+	{
+		solAssert(
+			m_annotation,
+			_className + " is an abstract base, need to call annotation on the concrete class first."
+		);
+
+		return dynamic_cast<T&>(*m_annotation);
+	}
 
 private:
+	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
+	mutable std::unique_ptr<ASTAnnotation> m_annotation;
 	SourceLocation m_location;
 };
 

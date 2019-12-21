@@ -69,9 +69,7 @@ ASTAnnotation& ASTNode::annotation() const
 
 SourceUnitAnnotation& SourceUnit::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<SourceUnitAnnotation>();
-	return dynamic_cast<SourceUnitAnnotation&>(*m_annotation);
+	return initAnnotation<SourceUnitAnnotation>();
 }
 
 set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<SourceUnit const*> _skipList) const
@@ -93,9 +91,7 @@ set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<Sour
 
 ImportAnnotation& ImportDirective::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<ImportAnnotation>();
-	return dynamic_cast<ImportAnnotation&>(*m_annotation);
+	return initAnnotation<ImportAnnotation>();
 }
 
 TypePointer ImportDirective::type() const
@@ -262,16 +258,12 @@ TypePointer ContractDefinition::type() const
 
 ContractDefinitionAnnotation& ContractDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<ContractDefinitionAnnotation>();
-	return dynamic_cast<ContractDefinitionAnnotation&>(*m_annotation);
+	return initAnnotation<ContractDefinitionAnnotation>();
 }
 
 TypeNameAnnotation& TypeName::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<TypeNameAnnotation>();
-	return dynamic_cast<TypeNameAnnotation&>(*m_annotation);
+	return initAnnotation<TypeNameAnnotation>();
 }
 
 TypePointer StructDefinition::type() const
@@ -281,9 +273,7 @@ TypePointer StructDefinition::type() const
 
 TypeDeclarationAnnotation& StructDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<TypeDeclarationAnnotation>();
-	return dynamic_cast<TypeDeclarationAnnotation&>(*m_annotation);
+	return initAnnotation<TypeDeclarationAnnotation>();
 }
 
 TypePointer EnumValue::type() const
@@ -300,9 +290,7 @@ TypePointer EnumDefinition::type() const
 
 TypeDeclarationAnnotation& EnumDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<TypeDeclarationAnnotation>();
-	return dynamic_cast<TypeDeclarationAnnotation&>(*m_annotation);
+	return initAnnotation<TypeDeclarationAnnotation>();
 }
 
 ContractKind FunctionDefinition::inContractKind() const
@@ -314,11 +302,7 @@ ContractKind FunctionDefinition::inContractKind() const
 
 CallableDeclarationAnnotation& CallableDeclaration::annotation() const
 {
-	solAssert(
-		m_annotation,
-		"CallableDeclarationAnnotation is an abstract base, need to call annotation on the concrete class first."
-	);
-	return dynamic_cast<CallableDeclarationAnnotation&>(*m_annotation);
+	return abstractAnnotation<CallableDeclarationAnnotation>("CallableDeclarationAnnotation");
 }
 
 
@@ -375,9 +359,7 @@ string FunctionDefinition::externalIdentifierHex() const
 
 FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<FunctionDefinitionAnnotation>();
-	return dynamic_cast<FunctionDefinitionAnnotation&>(*m_annotation);
+	return initAnnotation<FunctionDefinitionAnnotation>();
 }
 
 TypePointer ModifierDefinition::type() const
@@ -387,9 +369,7 @@ TypePointer ModifierDefinition::type() const
 
 ModifierDefinitionAnnotation& ModifierDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<ModifierDefinitionAnnotation>();
-	return dynamic_cast<ModifierDefinitionAnnotation&>(*m_annotation);
+	return initAnnotation<ModifierDefinitionAnnotation>();
 }
 
 TypePointer EventDefinition::type() const
@@ -407,16 +387,12 @@ FunctionTypePointer EventDefinition::functionType(bool _internal) const
 
 EventDefinitionAnnotation& EventDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<EventDefinitionAnnotation>();
-	return dynamic_cast<EventDefinitionAnnotation&>(*m_annotation);
+	return initAnnotation<EventDefinitionAnnotation>();
 }
 
 UserDefinedTypeNameAnnotation& UserDefinedTypeName::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<UserDefinedTypeNameAnnotation>();
-	return dynamic_cast<UserDefinedTypeNameAnnotation&>(*m_annotation);
+	return initAnnotation<UserDefinedTypeNameAnnotation>();
 }
 
 SourceUnit const& Scopable::sourceUnit() const
@@ -451,9 +427,7 @@ string Scopable::sourceUnitName() const
 
 DeclarationAnnotation& Declaration::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<DeclarationAnnotation>();
-	return dynamic_cast<DeclarationAnnotation&>(*m_annotation);
+	return initAnnotation<DeclarationAnnotation>();
 }
 
 bool VariableDeclaration::isLValue() const
@@ -641,86 +615,62 @@ FunctionTypePointer VariableDeclaration::functionType(bool _internal) const
 
 VariableDeclarationAnnotation& VariableDeclaration::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<VariableDeclarationAnnotation>();
-	return dynamic_cast<VariableDeclarationAnnotation&>(*m_annotation);
+	return initAnnotation<VariableDeclarationAnnotation>();
 }
 
 StatementAnnotation& Statement::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<StatementAnnotation>();
-	return dynamic_cast<StatementAnnotation&>(*m_annotation);
+	return initAnnotation<StatementAnnotation>();
 }
 
 InlineAssemblyAnnotation& InlineAssembly::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<InlineAssemblyAnnotation>();
-	return dynamic_cast<InlineAssemblyAnnotation&>(*m_annotation);
+	return initAnnotation<InlineAssemblyAnnotation>();
 }
 
 BlockAnnotation& Block::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<BlockAnnotation>();
-	return dynamic_cast<BlockAnnotation&>(*m_annotation);
+	return initAnnotation<BlockAnnotation>();
 }
 
 TryCatchClauseAnnotation& TryCatchClause::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<TryCatchClauseAnnotation>();
-	return dynamic_cast<TryCatchClauseAnnotation&>(*m_annotation);
+	return initAnnotation<TryCatchClauseAnnotation>();
 }
 
 ForStatementAnnotation& ForStatement::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<ForStatementAnnotation>();
-	return dynamic_cast<ForStatementAnnotation&>(*m_annotation);
+	return initAnnotation<ForStatementAnnotation>();
 }
 
 ReturnAnnotation& Return::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<ReturnAnnotation>();
-	return dynamic_cast<ReturnAnnotation&>(*m_annotation);
+	return initAnnotation<ReturnAnnotation>();
 }
 
 ExpressionAnnotation& Expression::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<ExpressionAnnotation>();
-	return dynamic_cast<ExpressionAnnotation&>(*m_annotation);
+	return initAnnotation<ExpressionAnnotation>();
 }
 
 MemberAccessAnnotation& MemberAccess::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<MemberAccessAnnotation>();
-	return dynamic_cast<MemberAccessAnnotation&>(*m_annotation);
+	return initAnnotation<MemberAccessAnnotation>();
 }
 
 BinaryOperationAnnotation& BinaryOperation::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<BinaryOperationAnnotation>();
-	return dynamic_cast<BinaryOperationAnnotation&>(*m_annotation);
+	return initAnnotation<BinaryOperationAnnotation>();
 }
 
 FunctionCallAnnotation& FunctionCall::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<FunctionCallAnnotation>();
-	return dynamic_cast<FunctionCallAnnotation&>(*m_annotation);
+	return initAnnotation<FunctionCallAnnotation>();
 }
 
 IdentifierAnnotation& Identifier::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<IdentifierAnnotation>();
-	return dynamic_cast<IdentifierAnnotation&>(*m_annotation);
+	return initAnnotation<IdentifierAnnotation>();
 }
 
 ASTString Literal::valueWithoutUnderscores() const
