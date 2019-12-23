@@ -216,6 +216,8 @@ void RedundantAssignEliminator::operator()(Block const& _block)
 {
 	set<YulString> outerDeclaredVariables;
 	swap(m_declaredVariables, outerDeclaredVariables);
+	TrackedAssignments const preState{m_assignments};
+	m_assignments = {};
 
 	ASTWalker::operator()(_block);
 
@@ -223,6 +225,7 @@ void RedundantAssignEliminator::operator()(Block const& _block)
 		finalize(var, State::Unused);
 
 	swap(m_declaredVariables, outerDeclaredVariables);
+	m_assignments = preState;
 }
 
 
