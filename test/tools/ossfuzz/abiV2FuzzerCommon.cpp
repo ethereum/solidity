@@ -1,13 +1,13 @@
 #include <test/tools/ossfuzz/abiV2FuzzerCommon.h>
 
-using namespace dev::test::abiv2fuzzer;
+using namespace solidity::test::abiv2fuzzer;
 
 SolidityCompilationFramework::SolidityCompilationFramework(langutil::EVMVersion _evmVersion)
 {
 	m_evmVersion = _evmVersion;
 }
 
-dev::bytes SolidityCompilationFramework::compileContract(
+solidity::bytes SolidityCompilationFramework::compileContract(
 	std::string const& _sourceCode,
 	std::string const& _contractName
 )

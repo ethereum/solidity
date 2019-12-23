@@ -32,12 +32,13 @@
 #include <boost/algorithm/string.hpp>
 
 
-using namespace dev;
-using namespace langutil;
-using namespace yul;
-using namespace yul::test;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 using namespace std;
 
 namespace

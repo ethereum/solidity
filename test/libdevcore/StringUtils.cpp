@@ -28,9 +28,7 @@
 
 using namespace std;
 
-namespace dev
-{
-namespace test
+namespace solidity::util::test
 {
 
 BOOST_AUTO_TEST_SUITE(StringUtils)
@@ -153,12 +151,11 @@ BOOST_AUTO_TEST_CASE(test_format_number_readable)
 
 	// for formal/SMTChecker
 	BOOST_CHECK_EQUAL(
-			formatNumberReadable(solidity::IntegerType(256).minValue()), "0");
+			formatNumberReadable(frontend::IntegerType(256).minValue()), "0");
 	BOOST_CHECK_EQUAL(
-			formatNumberReadable(solidity::IntegerType(256).maxValue()), "2**256 - 1");
+			formatNumberReadable(frontend::IntegerType(256).maxValue()), "2**256 - 1");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }

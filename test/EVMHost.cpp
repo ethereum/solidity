@@ -31,8 +31,9 @@
 #include <libdevcore/picosha2.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::test;
 using namespace evmc::literals;
 
 evmc::VM& EVMHost::getVM(string const& _path)

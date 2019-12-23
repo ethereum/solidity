@@ -34,7 +34,7 @@
 
 using namespace std;
 using namespace dev::lll;
-using namespace dev::test;
+using namespace solidity::test;
 
 namespace dev
 {
@@ -397,7 +397,7 @@ protected:
 		if (!s_compiledErc20)
 		{
 			vector<string> errors;
-			s_compiledErc20.reset(new bytes(compileLLL(erc20Code, dev::test::Options::get().evmVersion(), dev::test::Options::get().optimize, &errors)));
+			s_compiledErc20.reset(new bytes(compileLLL(erc20Code, solidity::test::Options::get().evmVersion(), solidity::test::Options::get().optimize, &errors)));
 			BOOST_REQUIRE(errors.empty());
 		}
 		sendMessage(*s_compiledErc20, true);

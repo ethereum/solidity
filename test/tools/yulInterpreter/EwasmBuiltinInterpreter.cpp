@@ -30,9 +30,11 @@
 #include <libdevcore/Keccak256.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
-using namespace yul::test;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+
+using solidity::util::h256;
 
 namespace
 {
@@ -426,10 +428,10 @@ void EwasmBuiltinInterpreter::logTrace(std::string const& _pseudoInstruction, st
 {
 	string message = _pseudoInstruction + "(";
 	for (size_t i = 0; i < _arguments.size(); ++i)
-		message += (i > 0 ? ", " : "") + formatNumber(_arguments[i]);
+		message += (i > 0 ? ", " : "") + util::formatNumber(_arguments[i]);
 	message += ")";
 	if (!_data.empty())
-		message += " [" + toHex(_data) + "]";
+		message += " [" + util::toHex(_data) + "]";
 	m_state.trace.emplace_back(std::move(message));
 	if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
 	{

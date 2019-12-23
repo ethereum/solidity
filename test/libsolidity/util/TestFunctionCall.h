@@ -30,11 +30,7 @@
 #include <string>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 /**
@@ -135,6 +131,4 @@ private:
 	Json::Value m_contractABI;
 };
 
-}
-}
 }

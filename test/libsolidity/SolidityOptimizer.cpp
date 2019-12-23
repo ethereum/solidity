@@ -33,14 +33,11 @@
 #include <memory>
 
 using namespace std;
-using namespace dev::eth;
-using namespace dev::test;
+using namespace solidity::util;
+using namespace solidity::evmasm;
+using namespace solidity::test;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 class OptimizerTestFramework: public SolidityExecutionFramework
@@ -714,6 +711,4 @@ BOOST_AUTO_TEST_CASE(shift_optimizer_bug)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

@@ -42,10 +42,11 @@
 #include <iostream>
 
 using namespace std;
-using namespace langutil;
-using namespace yul;
-using namespace dev;
-using namespace yul::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
 
 namespace po = boost::program_options;
 
@@ -63,7 +64,7 @@ pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source
 	AssemblyStack stack(
 		langutil::EVMVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		solidity::OptimiserSettings::none()
+		solidity::frontend::OptimiserSettings::none()
 	);
 	if (stack.parseAndAnalyze("--INPUT--", _source))
 	{

@@ -411,4 +411,4 @@ message Program {
   }
 }
 
-package yul.test.yul_fuzzer;
+package solidity.yul.test.yul_fuzzer;

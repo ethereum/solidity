@@ -25,9 +25,7 @@
 #include <optional>
 #include <string>
 
-namespace dev
-{
-namespace test
+namespace solidity::test
 {
 
 /// Returns only the CBOR metadata.
@@ -53,5 +51,4 @@ std::optional<std::map<std::string, std::string>> parseCBORMetadata(bytes const&
 /// content is valid metadata.
 bool isValidMetadata(std::string const& _metadata);
 
-}
 } // end namespaces

@@ -28,8 +28,10 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
-using namespace yul::test::yul_fuzzer;
-using namespace dev;
+using namespace solidity::yul::test::yul_fuzzer;
+using namespace solidity::yul::test;
+using namespace solidity::util;
+using namespace solidity;
 
 string ProtoConverter::dictionaryToken(HexPrefix _p)
 {
@@ -1232,7 +1234,7 @@ void ProtoConverter::visit(Block const& _x)
 vector<string> ProtoConverter::createVars(unsigned _startIdx, unsigned _endIdx)
 {
 	yulAssert(_endIdx > _startIdx, "Proto fuzzer: Variable indices not in range");
-	string varsStr = dev::suffixedVariableNameList("x_", _startIdx, _endIdx);
+	string varsStr = suffixedVariableNameList("x_", _startIdx, _endIdx);
 	m_output << varsStr;
 	vector<string> varsVec;
 	boost::split(

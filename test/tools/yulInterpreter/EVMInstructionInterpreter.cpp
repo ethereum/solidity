@@ -30,9 +30,12 @@
 #include <libdevcore/Keccak256.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
-using namespace yul::test;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+
+using solidity::util::h256;
+using solidity::util::keccak256;
 
 namespace
 {
@@ -81,7 +84,7 @@ u256 EVMInstructionInterpreter::eval(
 	vector<u256> const& _arguments
 )
 {
-	using namespace dev::eth;
+	using namespace solidity::evmasm;
 	using evmasm::Instruction;
 
 	auto info = instructionInfo(_instruction);
@@ -493,10 +496,10 @@ void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, 
 {
 	string message = _pseudoInstruction + "(";
 	for (size_t i = 0; i < _arguments.size(); ++i)
-		message += (i > 0 ? ", " : "") + formatNumber(_arguments[i]);
+		message += (i > 0 ? ", " : "") + util::formatNumber(_arguments[i]);
 	message += ")";
 	if (!_data.empty())
-		message += " [" + toHex(_data) + "]";
+		message += " [" + util::toHex(_data) + "]";
 	m_state.trace.emplace_back(std::move(message));
 	if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
 	{

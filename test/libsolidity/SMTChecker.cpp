@@ -26,13 +26,9 @@
 #include <string>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 class SMTCheckerFramework: public AnalysisFramework
@@ -87,7 +83,7 @@ BOOST_AUTO_TEST_CASE(import_base)
 		}
 	)"}
 	});
-	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	c.setEVMVersion(solidity::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
 
 	unsigned asserts = 0;
@@ -126,7 +122,7 @@ BOOST_AUTO_TEST_CASE(import_library)
 		}
 	)"}
 	});
-	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	c.setEVMVersion(solidity::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
 
 	unsigned asserts = 0;
@@ -144,6 +140,4 @@ BOOST_AUTO_TEST_CASE(import_library)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 }

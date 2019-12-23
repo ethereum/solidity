@@ -18,11 +18,7 @@
 
 #include <libdevcore/CommonData.h>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 /**
@@ -128,6 +124,4 @@ public:
 	static size_t countRightPaddedZeros(bytes const& _bytes);
 };
 
-}
-}
 }

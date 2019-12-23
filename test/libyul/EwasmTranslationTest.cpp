@@ -38,12 +38,13 @@
 
 #include <fstream>
 
-using namespace dev;
-using namespace langutil;
-using namespace yul;
-using namespace yul::test;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 using namespace std;
 
 
@@ -66,7 +67,7 @@ TestCase::TestResult EwasmTranslationTest::run(ostream& _stream, string const& _
 		return TestResult::FatalError;
 
 	*m_object = EVMToEwasmTranslator(
-		EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion())
+		EVMDialect::strictAssemblyForEVMObjects(solidity::test::Options::get().evmVersion())
 	).run(*m_object);
 
 	// Add call to "main()".
@@ -110,9 +111,9 @@ void EwasmTranslationTest::printIndented(ostream& _stream, string const& _output
 bool EwasmTranslationTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	AssemblyStack stack(
-		dev::test::Options::get().evmVersion(),
+		solidity::test::Options::get().evmVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		dev::solidity::OptimiserSettings::none()
+		solidity::frontend::OptimiserSettings::none()
 	);
 	if (stack.parseAndAnalyze("", m_source))
 	{

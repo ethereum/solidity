@@ -30,14 +30,15 @@
 
 #include <map>
 
-namespace yul
+namespace solidity::yul
 {
 struct Dialect;
+}
 
-namespace test
+namespace solidity::yul::test
 {
 
-class InterpreterTerminatedGeneric: public dev::Exception
+class InterpreterTerminatedGeneric: public util::Exception
 {
 };
 
@@ -63,27 +64,27 @@ enum class ControlFlowState
 
 struct InterpreterState
 {
-	dev::bytes calldata;
-	dev::bytes returndata;
-	std::map<dev::u256, uint8_t> memory;
+	bytes calldata;
+	bytes returndata;
+	std::map<u256, uint8_t> memory;
 	/// This is different than memory.size() because we ignore gas.
-	dev::u256 msize;
-	std::map<dev::h256, dev::h256> storage;
-	dev::u160 address = 0x11111111;
-	dev::u256 balance = 0x22222222;
-	dev::u256 selfbalance = 0x22223333;
-	dev::u160 origin = 0x33333333;
-	dev::u160 caller = 0x44444444;
-	dev::u256 callvalue = 0x55555555;
+	u256 msize;
+	std::map<util::h256, util::h256> storage;
+	u160 address = 0x11111111;
+	u256 balance = 0x22222222;
+	u256 selfbalance = 0x22223333;
+	u160 origin = 0x33333333;
+	u160 caller = 0x44444444;
+	u256 callvalue = 0x55555555;
 	/// Deployed code
-	dev::bytes code = dev::asBytes("codecodecodecodecode");
-	dev::u256 gasprice = 0x66666666;
-	dev::u160 coinbase = 0x77777777;
-	dev::u256 timestamp = 0x88888888;
-	dev::u256 blockNumber = 1024;
-	dev::u256 difficulty = 0x9999999;
-	dev::u256 gaslimit = 4000000;
-	dev::u256 chainid = 0x01;
+	bytes code = util::asBytes("codecodecodecodecode");
+	u256 gasprice = 0x66666666;
+	u160 coinbase = 0x77777777;
+	u256 timestamp = 0x88888888;
+	u256 blockNumber = 1024;
+	u256 difficulty = 0x9999999;
+	u256 gaslimit = 4000000;
+	u256 chainid = 0x01;
 	/// Log of changes / effects. Sholud be structured data in the future.
 	std::vector<std::string> trace;
 	/// This is actually an input parameter that more or less limits the runtime.
@@ -104,7 +105,7 @@ public:
 	Interpreter(
 		InterpreterState& _state,
 		Dialect const& _dialect,
-		std::map<YulString, dev::u256> _variables = {},
+		std::map<YulString, u256> _variables = {},
 		std::vector<std::map<YulString, FunctionDefinition const*>> _scopes = {}
 	):
 		m_dialect(_dialect),
@@ -127,13 +128,13 @@ public:
 
 	std::vector<std::string> const& trace() const { return m_state.trace; }
 
-	dev::u256 valueOfVariable(YulString _name) const { return m_variables.at(_name); }
+	u256 valueOfVariable(YulString _name) const { return m_variables.at(_name); }
 
 private:
 	/// Asserts that the expression evaluates to exactly one value and returns it.
-	dev::u256 evaluate(Expression const& _expression);
+	u256 evaluate(Expression const& _expression);
 	/// Evaluates the expression and returns its value.
-	std::vector<dev::u256> evaluateMulti(Expression const& _expression);
+	std::vector<u256> evaluateMulti(Expression const& _expression);
 
 	void openScope() { m_scopes.push_back({}); }
 	/// Unregisters variables and functions.
@@ -142,7 +143,7 @@ private:
 	Dialect const& m_dialect;
 	InterpreterState& m_state;
 	/// Values of variables.
-	std::map<YulString, dev::u256> m_variables;
+	std::map<YulString, u256> m_variables;
 	/// Scopes of variables and functions. Used for lookup, clearing at end of blocks
 	/// and passing over the visible functions across function calls.
 	/// The pointer is nullptr if and only if the key is a variable.
@@ -158,7 +159,7 @@ public:
 	ExpressionEvaluator(
 		InterpreterState& _state,
 		Dialect const& _dialect,
-		std::map<YulString, dev::u256> const& _variables,
+		std::map<YulString, u256> const& _variables,
 		std::vector<std::map<YulString, FunctionDefinition const*>> const& _scopes
 	):
 		m_state(_state),
@@ -172,12 +173,12 @@ public:
 	void operator()(FunctionCall const& _funCall) override;
 
 	/// Asserts that the expression has exactly one value and returns it.
-	dev::u256 value() const;
+	u256 value() const;
 	/// Returns the list of values of the expression.
-	std::vector<dev::u256> values() const { return m_values; }
+	std::vector<u256> values() const { return m_values; }
 
 private:
-	void setValue(dev::u256 _value);
+	void setValue(u256 _value);
 
 	/// Evaluates the given expression from right to left and
 	/// stores it in m_value.
@@ -193,13 +194,12 @@ private:
 	InterpreterState& m_state;
 	Dialect const& m_dialect;
 	/// Values of variables.
-	std::map<YulString, dev::u256> const& m_variables;
+	std::map<YulString, u256> const& m_variables;
 	/// Stack of scopes in the current context.
 	std::vector<std::map<YulString, FunctionDefinition const*>> const& m_scopes;
 	/// Current value of the expression
-	std::vector<dev::u256> m_values;
+	std::vector<u256> m_values;
 };
 
-}
 }
 

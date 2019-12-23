@@ -24,9 +24,7 @@
 
 using namespace std;
 
-namespace dev
-{
-namespace test
+namespace solidity::util::test
 {
 
 BOOST_AUTO_TEST_SUITE(IterateReplacing)
@@ -93,5 +91,4 @@ BOOST_AUTO_TEST_CASE(inject_some_end)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }

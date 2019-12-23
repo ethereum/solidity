@@ -25,8 +25,9 @@
 #include <sstream>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::evmasm;
 
 static vector<string> s_evmVersions = {
 	"homestead",

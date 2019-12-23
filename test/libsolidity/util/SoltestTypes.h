@@ -18,11 +18,7 @@
 #include <libdevcore/CommonData.h>
 #include <libsolidity/ast/Types.h>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 /**
@@ -273,6 +269,4 @@ struct FunctionCall
 	bool isLibrary = false;
 };
 
-}
-}
 }

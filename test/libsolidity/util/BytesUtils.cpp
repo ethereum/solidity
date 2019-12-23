@@ -32,10 +32,11 @@
 #include <regex>
 #include <stdexcept>
 
-using namespace dev;
-using namespace langutil;
 using namespace solidity;
-using namespace dev::solidity::test;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 using namespace std;
 using namespace soltest;
 
@@ -205,7 +206,7 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 
 string BytesUtils::formatRawBytes(
 	bytes const& _bytes,
-	dev::solidity::test::ParameterList const& _parameters,
+	solidity::frontend::test::ParameterList const& _parameters,
 	string _linePrefix)
 {
 	stringstream os;
@@ -275,7 +276,7 @@ string BytesUtils::formatBytes(
 
 string BytesUtils::formatBytesRange(
 	bytes _bytes,
-	dev::solidity::test::ParameterList const& _parameters,
+	solidity::frontend::test::ParameterList const& _parameters,
 	bool _highlight
 )
 {
@@ -297,7 +298,7 @@ string BytesUtils::formatBytesRange(
 			AnsiColorized(
 				os,
 				_highlight,
-				{dev::formatting::RED_BACKGROUND}
+				{util::formatting::RED_BACKGROUND}
 			) << formatBytes(byteRange, parameter.abiType);
 		else
 			os << parameter.rawString;

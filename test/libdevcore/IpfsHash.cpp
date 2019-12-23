@@ -24,9 +24,7 @@
 
 using namespace std;
 
-namespace dev
-{
-namespace test
+namespace solidity::util::test
 {
 
 BOOST_AUTO_TEST_SUITE(IpfsHash)
@@ -72,5 +70,4 @@ BOOST_AUTO_TEST_CASE(test_largest_unchunked)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }

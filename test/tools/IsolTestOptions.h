@@ -23,9 +23,7 @@
 
 #include <test/Common.h>
 
-namespace dev
-{
-namespace test
+namespace solidity::test
 {
 
 struct IsolTestOptions: CommonOptions
@@ -38,5 +36,5 @@ struct IsolTestOptions: CommonOptions
 	bool parse(int _argc, char const* const* _argv) override;
 	void validate() const override;
 };
-}
+
 }

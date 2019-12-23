@@ -25,16 +25,14 @@
 
 using namespace std;
 
-namespace yul
-{
-namespace test
+namespace solidity::yul::test
 {
 
 namespace
 {
 string assemble(string const& _input)
 {
-	dev::solidity::OptimiserSettings settings = dev::solidity::OptimiserSettings::full();
+	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::full();
 	settings.runYulOptimiser = false;
 	settings.optimizeStackAllocation = true;
 	AssemblyStack asmStack(langutil::EVMVersion{}, AssemblyStack::Language::StrictAssembly, settings);
@@ -348,5 +346,4 @@ BOOST_AUTO_TEST_CASE(reuse_slots_function_with_gaps)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }

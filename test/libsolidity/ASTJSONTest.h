@@ -25,11 +25,7 @@
 #include <vector>
 #include <utility>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 class ASTJSONTest: public TestCase
@@ -53,6 +49,4 @@ private:
 	std::string m_resultLegacy;
 };
 
-}
-}
 }

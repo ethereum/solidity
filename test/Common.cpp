@@ -24,9 +24,7 @@
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
-namespace dev
-{
-namespace test
+namespace solidity::test
 {
 
 /// If non-empty returns the value of the env. variable ETH_TEST_PATH, otherwise
@@ -91,7 +89,7 @@ CommonOptions::CommonOptions(std::string _caption):
 {
 	options.add_options()
 		("evm-version", po::value(&evmVersionString), "which evm version to use")
-		("testpath", po::value<fs::path>(&this->testPath)->default_value(dev::test::testPath()), "path to test files")
+		("testpath", po::value<fs::path>(&this->testPath)->default_value(solidity::test::testPath()), "path to test files")
 		("evmonepath", po::value<fs::path>(&evmonePath)->default_value(EVMOneEnvOrDefaultPath()), "path to evmone library")
 		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker");
 }
@@ -135,8 +133,6 @@ langutil::EVMVersion CommonOptions::evmVersion() const
 	}
 	else
 		return langutil::EVMVersion();
-}
-
 }
 
 }

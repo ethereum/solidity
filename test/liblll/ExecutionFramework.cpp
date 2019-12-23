@@ -24,7 +24,7 @@
 #include <boost/test/framework.hpp>
 #include <test/liblll/ExecutionFramework.h>
 
-using namespace dev::test;
+using namespace solidity::test;
 using namespace dev::lll::test;
 
 LLLExecutionFramework::LLLExecutionFramework() :

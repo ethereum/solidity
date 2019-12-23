@@ -26,20 +26,18 @@
 
 #include <vector>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 enum class Instruction: uint8_t;
 }
-}
 
-namespace yul
+namespace solidity::yul
 {
 class YulString;
 struct BuiltinFunctionForEVM;
+}
 
-namespace test
+namespace solidity::yul::test
 {
 
 struct InterpreterState;
@@ -70,16 +68,16 @@ public:
 		m_state(_state)
 	{}
 	/// Evaluate builtin function
-	dev::u256 evalBuiltin(YulString _fun, std::vector<dev::u256> const& _arguments);
+	u256 evalBuiltin(YulString _fun, std::vector<u256> const& _arguments);
 
 private:
 	/// Checks if the memory access is not too large for the interpreter and adjusts
 	/// msize accordingly.
 	/// @returns false if the amount of bytes read is lager than 0xffff
-	bool accessMemory(dev::u256 const& _offset, dev::u256 const& _size = 32);
+	bool accessMemory(u256 const& _offset, u256 const& _size = 32);
 	/// @returns the memory contents at the provided address.
 	/// Does not adjust msize, use @a accessMemory for that
-	dev::bytes readMemory(uint64_t _offset, uint64_t _size = 32);
+	bytes readMemory(uint64_t _offset, uint64_t _size = 32);
 	/// @returns the memory contents at the provided address (little-endian).
 	/// Does not adjust msize, use @a accessMemory for that
 	uint64_t readMemoryWord(uint64_t _offset);
@@ -91,21 +89,20 @@ private:
 	void writeMemoryByte(uint64_t _offset, uint8_t _value);
 
 	/// Helper for eth.* builtins. Writes to memory (big-endian) and always returns zero.
-	void writeU256(uint64_t _offset, dev::u256 _value, size_t _croppedTo = 32);
-	void writeU128(uint64_t _offset, dev::u256 _value) { writeU256(_offset, std::move(_value), 16); }
-	void writeAddress(uint64_t _offset, dev::u256 _value) { writeU256(_offset, std::move(_value), 20); }
+	void writeU256(uint64_t _offset, u256 _value, size_t _croppedTo = 32);
+	void writeU128(uint64_t _offset, u256 _value) { writeU256(_offset, std::move(_value), 16); }
+	void writeAddress(uint64_t _offset, u256 _value) { writeU256(_offset, std::move(_value), 20); }
 	/// Helper for eth.* builtins. Reads from memory (big-endian) and returns the value;
-	dev::u256 readU256(uint64_t _offset, size_t _croppedTo = 32);
-	dev::u256 readU128(uint64_t _offset) { return readU256(_offset, 16); }
-	dev::u256 readAddress(uint64_t _offset) { return readU256(_offset, 20); }
+	u256 readU256(uint64_t _offset, size_t _croppedTo = 32);
+	u256 readU128(uint64_t _offset) { return readU256(_offset, 16); }
+	u256 readAddress(uint64_t _offset) { return readU256(_offset, 20); }
 
-	void logTrace(evmasm::Instruction _instruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
+	void logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
 	/// Appends a log to the trace representing an instruction or similar operation by string,
 	/// with arguments and auxiliary data (if nonempty).
-	void logTrace(std::string const& _pseudoInstruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
+	void logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
 
 	InterpreterState& m_state;
 };
 
-}
 }

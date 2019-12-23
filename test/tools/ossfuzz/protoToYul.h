@@ -31,11 +31,7 @@
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/Whiskers.h>
 
-namespace yul
-{
-namespace test
-{
-namespace yul_fuzzer
+namespace solidity::yul::test::yul_fuzzer
 {
 class ProtoConverter
 {
@@ -269,7 +265,7 @@ private:
 	///		index = (m_inputSize * m_inputSize + counter) % dictionarySize
 	/// where m_inputSize is the size of the protobuf input and
 	/// dictionarySize is the total number of entries in the dictionary.
-	std::string dictionaryToken(dev::HexPrefix _p = dev::HexPrefix::Add);
+	std::string dictionaryToken(util::HexPrefix _p = util::HexPrefix::Add);
 
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
@@ -296,7 +292,7 @@ private:
 	/// enclosed within double quotes.
 	std::string newObjectId(bool _decorate = true)
 	{
-		return dev::Whiskers(R"(<?decorate>"</decorate>object<id><?decorate>"</decorate>)")
+		return util::Whiskers(R"(<?decorate>"</decorate>object<id><?decorate>"</decorate>)")
 			("decorate", _decorate)
 			("id", std::to_string(m_objectId++))
 			.render();
@@ -325,7 +321,7 @@ private:
 	/// Maps FunctionDef object to its name
 	std::map<FunctionDef const*, std::string> m_functionDefMap;
 	// Set that is used for deduplicating switch case literals
-	std::stack<std::set<dev::u256>> m_switchLiteralSetPerScope;
+	std::stack<std::set<u256>> m_switchLiteralSetPerScope;
 	// Look-up table per function type that holds the number of input (output) function parameters
 	std::map<std::string, std::pair<unsigned, unsigned>> m_functionSigMap;
 	/// Tree of objects and their scopes
@@ -355,6 +351,4 @@ private:
 	/// (false: default value)
 	bool m_isObject;
 };
-}
-}
 }

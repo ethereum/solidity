@@ -26,9 +26,7 @@
 
 using namespace std;
 
-namespace dev
-{
-namespace test
+namespace solidity::util::test
 {
 
 BOOST_AUTO_TEST_SUITE(SwarmHash)
@@ -99,5 +97,4 @@ BOOST_AUTO_TEST_CASE(bzz_hash_nonzero)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }

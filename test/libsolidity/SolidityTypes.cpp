@@ -27,13 +27,9 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 BOOST_AUTO_TEST_SUITE(SolidityTypes)
@@ -274,7 +270,7 @@ BOOST_AUTO_TEST_CASE(helper_bool_result)
 
 BOOST_AUTO_TEST_CASE(helper_string_result)
 {
-	using StringResult = Result<string>;
+	using StringResult = util::Result<string>;
 
 	StringResult r1{string{"Success"}};
 	StringResult r2 = StringResult::err("Failure");
@@ -290,6 +286,4 @@ BOOST_AUTO_TEST_CASE(helper_string_result)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 }

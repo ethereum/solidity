@@ -26,14 +26,12 @@
 #include <test/Options.h>
 
 using namespace std;
-using namespace dev::solidity;
+using namespace solidity::frontend;
 
 // TODO: Fix Boost...
-BOOST_TEST_DONT_PRINT_LOG_VALUE(dev::bytes);
+BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::bytes);
 
-namespace dev
-{
-namespace test
+namespace solidity::util::test
 {
 
 BOOST_AUTO_TEST_SUITE(CommonData)
@@ -139,5 +137,4 @@ BOOST_AUTO_TEST_CASE(test_format_number)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }

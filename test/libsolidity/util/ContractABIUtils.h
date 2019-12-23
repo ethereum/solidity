@@ -22,11 +22,7 @@
 
 #include <json/json.h>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 using ABITypes = std::vector<ABIType>;
@@ -97,6 +93,4 @@ private:
 	);
 };
 
-}
-}
 }

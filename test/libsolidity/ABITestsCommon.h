@@ -17,11 +17,7 @@
 
 #include <string>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 static std::string const NewEncoderPragma = "pragma experimental ABIEncoderV2;\n";
@@ -38,6 +34,4 @@ static std::string const NewEncoderPragma = "pragma experimental ABIEncoderV2;\n
 	NEW_ENCODER(CODE) \
 }
 
-}
-}
 } // end namespaces

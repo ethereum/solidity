@@ -23,11 +23,7 @@
 
 #include <string>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 class SMTCheckerJSONTest: public SyntaxTest
@@ -48,6 +44,4 @@ private:
 	Json::Value m_smtResponses;
 };
 
-}
-}
 }

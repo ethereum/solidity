@@ -24,11 +24,7 @@
 
 #include <string>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 
@@ -52,6 +48,4 @@ private:
 	std::string m_obtainedResult;
 };
 
-}
-}
 }

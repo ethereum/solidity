@@ -28,17 +28,15 @@
 #include <string>
 #include <memory>
 
-namespace dev
+namespace solidity::frontend
 {
-namespace solidity
-{
-
 class Type;
 class FunctionType;
 using TypePointer = Type const*;
 using FunctionTypePointer = FunctionType const*;
+}
 
-namespace test
+namespace solidity::frontend::test
 {
 
 class AnalysisFramework
@@ -74,23 +72,23 @@ protected:
 	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
 
 	/// @returns reference to lazy-instanciated CompilerStack.
-	dev::solidity::CompilerStack& compiler()
+	solidity::frontend::CompilerStack& compiler()
 	{
 		if (!m_compiler)
-			m_compiler = std::make_unique<dev::solidity::CompilerStack>();
+			m_compiler = std::make_unique<solidity::frontend::CompilerStack>();
 		return *m_compiler;
 	}
 
 	/// @returns reference to lazy-instanciated CompilerStack.
-	dev::solidity::CompilerStack const& compiler() const
+	solidity::frontend::CompilerStack const& compiler() const
 	{
 		if (!m_compiler)
-			m_compiler = std::make_unique<dev::solidity::CompilerStack>();
+			m_compiler = std::make_unique<solidity::frontend::CompilerStack>();
 		return *m_compiler;
 	}
 
 private:
-	mutable std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
+	mutable std::unique_ptr<solidity::frontend::CompilerStack> m_compiler;
 };
 
 // Asserts that the compilation down to typechecking
@@ -153,6 +151,4 @@ do \
 } \
 while(0)
 
-}
-}
 }

@@ -32,17 +32,17 @@
 #include <regex>
 #include <stdexcept>
 
-using namespace dev;
-using namespace langutil;
 using namespace solidity;
-using namespace dev::solidity::test;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::frontend::test;
 using namespace std;
 using namespace soltest;
 
 namespace
 {
 
-using ParameterList = dev::solidity::test::ParameterList;
+using ParameterList = solidity::frontend::test::ParameterList;
 
 size_t arraySize(string const& _arrayType)
 {
@@ -141,7 +141,7 @@ string functionSignatureFromABI(Json::Value const& _functionABI)
 
 }
 
-std::optional<dev::solidity::test::ParameterList> ContractABIUtils::parametersFromJsonOutputs(
+std::optional<solidity::frontend::test::ParameterList> ContractABIUtils::parametersFromJsonOutputs(
 	ErrorReporter& _errorReporter,
 	Json::Value const& _contractABI,
 	string const& _functionSignature
@@ -255,8 +255,8 @@ bool ContractABIUtils::appendTypesFromName(
 
 void ContractABIUtils::overwriteParameters(
 	ErrorReporter& _errorReporter,
-	dev::solidity::test::ParameterList& _targetParameters,
-	dev::solidity::test::ParameterList const& _sourceParameters
+	solidity::frontend::test::ParameterList& _targetParameters,
+	solidity::frontend::test::ParameterList const& _sourceParameters
 )
 {
 	boost::for_each(
@@ -280,10 +280,10 @@ void ContractABIUtils::overwriteParameters(
 	);
 }
 
-dev::solidity::test::ParameterList ContractABIUtils::preferredParameters(
+solidity::frontend::test::ParameterList ContractABIUtils::preferredParameters(
 	ErrorReporter& _errorReporter,
-	dev::solidity::test::ParameterList const& _targetParameters,
-	dev::solidity::test::ParameterList const& _sourceParameters,
+	solidity::frontend::test::ParameterList const& _targetParameters,
+	solidity::frontend::test::ParameterList const& _sourceParameters,
 	bytes const& _bytes
 )
 {
@@ -300,7 +300,7 @@ dev::solidity::test::ParameterList ContractABIUtils::preferredParameters(
 		return _targetParameters;
 }
 
-dev::solidity::test::ParameterList ContractABIUtils::defaultParameters(size_t count)
+solidity::frontend::test::ParameterList ContractABIUtils::defaultParameters(size_t count)
 {
 	ParameterList parameters;
 
@@ -313,7 +313,7 @@ dev::solidity::test::ParameterList ContractABIUtils::defaultParameters(size_t co
 	return parameters;
 }
 
-dev::solidity::test::ParameterList ContractABIUtils::failureParameters(bytes const _bytes)
+solidity::frontend::test::ParameterList ContractABIUtils::failureParameters(bytes const _bytes)
 {
 	ParameterList parameters;
 
@@ -330,7 +330,7 @@ dev::solidity::test::ParameterList ContractABIUtils::failureParameters(bytes con
 }
 
 size_t ContractABIUtils::encodingSize(
-	dev::solidity::test::ParameterList const& _parameters
+	solidity::frontend::test::ParameterList const& _parameters
 )
 {
 	auto sizeFold = [](size_t const _a, Parameter const& _b) { return _a + _b.abiType.size; };

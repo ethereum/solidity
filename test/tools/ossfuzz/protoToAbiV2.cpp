@@ -1,8 +1,9 @@
 #include <test/tools/ossfuzz/protoToAbiV2.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::test::abiv2fuzzer;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::test::abiv2fuzzer;
 
 string ProtoConverter::getVarDecl(
 	string const& _type,

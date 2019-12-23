@@ -31,10 +31,10 @@
 #include <optional>
 #include <stdexcept>
 
-using namespace dev;
-using namespace langutil;
 using namespace solidity;
-using namespace dev::solidity::test;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 using namespace std;
 using namespace soltest;
 
@@ -48,7 +48,7 @@ char TestFileParser::Scanner::peek() const noexcept
 	return *next;
 }
 
-vector<dev::solidity::test::FunctionCall> TestFileParser::parseFunctionCalls(size_t _lineOffset)
+vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCalls(size_t _lineOffset)
 {
 	vector<FunctionCall> calls;
 	if (!accept(Token::EOS))

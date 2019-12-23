@@ -28,11 +28,7 @@
 #include <vector>
 #include <map>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 /**
@@ -114,6 +110,5 @@ public:
 	/// Returns true, if the test case is supported for EVM version @arg _evmVersion, false otherwise.
 	bool validateSettings(langutil::EVMVersion _evmVersion) override;
 };
-}
-}
+
 }

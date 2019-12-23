@@ -24,9 +24,7 @@
 
 using namespace std;
 
-namespace dev
-{
-namespace test
+namespace solidity::util::test
 {
 
 BOOST_AUTO_TEST_SUITE(WhiskersTest)
@@ -196,5 +194,4 @@ BOOST_AUTO_TEST_CASE(invalid_param_rendered)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }

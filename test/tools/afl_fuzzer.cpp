@@ -28,7 +28,8 @@
 #include <iostream>
 
 using namespace std;
-using namespace dev;
+using namespace solidity;
+using namespace solidity::util;
 
 namespace po = boost::program_options;
 

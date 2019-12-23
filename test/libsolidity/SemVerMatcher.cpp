@@ -28,13 +28,9 @@
 #include <test/Options.h>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 BOOST_AUTO_TEST_SUITE(SemVerMatcher)
@@ -238,6 +234,4 @@ BOOST_AUTO_TEST_CASE(negative_range)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces
