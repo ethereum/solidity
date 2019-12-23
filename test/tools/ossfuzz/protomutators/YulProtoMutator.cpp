@@ -213,9 +213,37 @@ static YulProtoMutator identityFunction(
 	}
 );
 
+/// Add leave statement to an existing function.
+static YulProtoMutator addLeave(
+	FunctionDef::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_lowIP == 0) {
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Leave in function" << std::endl;
+#endif
+			FunctionDef *funcDef = static_cast<FunctionDef*>(_message);
+			Statement *newStmt = funcDef->mutable_block()->add_statements();
+			LeaveStmt *leaveStmt = new LeaveStmt();
+			newStmt->set_allocated_leave(leaveStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+		}
+	}
+);
+
 Literal* YulProtoMutator::intLiteral(unsigned _value)
 {
 	Literal *lit = new Literal();
 	lit->set_intval(_value);
 	return lit;
+}
+
+VarRef* YulProtoMutator::varRef(unsigned _index)
+{
+	VarRef *varref = new VarRef();
+	varref->set_varnum(_index);
+	return varref;
 }

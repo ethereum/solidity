@@ -27,7 +27,7 @@ struct YulProtoMutator
 	/// Return a variable reference
 	/// @param _index: Index of a variable in scope, 0 being the first
 	/// variable in scope.
-	static VarRef* varref(unsigned _index);
+	static VarRef* varRef(unsigned _index);
 
 	static constexpr unsigned s_lowIP = 41;
 	static constexpr unsigned s_mediumIP = 29;
