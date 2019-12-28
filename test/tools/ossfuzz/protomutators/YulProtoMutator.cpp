@@ -229,6 +229,38 @@ static YulProtoMutator invertForCondition(
 	}
 );
 
+/// Remove inverted condition of a for statement
+static YulProtoMutator removeInvertedForCondition(
+	ForStmt::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		ForStmt* forStmt = static_cast<ForStmt*>(_message);
+		if (_seed % YulProtoMutator::s_mediumIP == 1)
+		{
+			if (forStmt->has_for_cond() &&
+				forStmt->for_cond().has_unop() &&
+				forStmt->for_cond().unop().has_op() &&
+				forStmt->for_cond().unop().op() == UnaryOp::NOT
+			)
+			{
+#ifdef DEBUG
+				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+				std::cout << "YULMUTATOR: Remove For condition inverted" << std::endl;
+#endif
+				Expression *oldCondition = forStmt->release_for_cond();
+				UnaryOp *unop = oldCondition->release_unop();
+				Expression *newCondition = unop->release_operand();
+				forStmt->set_allocated_for_cond(newCondition);
+				delete oldCondition;
+				delete unop;
+#ifdef DEBUG
+//				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+			}
+		}
+	}
+);
+
 /// Make for loop condition a function call that returns a single value
 static YulProtoMutator funcCallForCondition(
 	ForStmt::descriptor(),
