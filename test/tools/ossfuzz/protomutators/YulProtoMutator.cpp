@@ -35,6 +35,38 @@ static YulProtoMutator invertIfCondition(
 	}
 );
 
+/// Remove inverted condition in if statement
+static YulProtoMutator removeInvertedIfCondition(
+	IfStmt::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		IfStmt* ifStmt = static_cast<IfStmt*>(_message);
+		if (_seed % YulProtoMutator::s_mediumIP == 1)
+		{
+			if (ifStmt->has_cond() &&
+				ifStmt->cond().has_unop() &&
+				ifStmt->cond().unop().has_op() &&
+				ifStmt->cond().unop().op() == UnaryOp::NOT
+			)
+			{
+#ifdef DEBUG
+				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+				std::cout << "YULMUTATOR: Remove If condition inverted" << std::endl;
+#endif
+				Expression *oldCondition = ifStmt->release_cond();
+				UnaryOp *unop = oldCondition->release_unop();
+				Expression *conditionWithoutNot = unop->release_operand();
+				ifStmt->set_allocated_cond(conditionWithoutNot);
+				delete(oldCondition);
+				delete(unop);
+#ifdef DEBUG
+				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+			}
+		}
+	}
+);
+
 /// Add break statement in body of a for-loop statement
 static YulProtoMutator addBreak(
 	ForStmt::descriptor(),
@@ -60,7 +92,32 @@ static YulProtoMutator addBreak(
 	}
 );
 
-/// Add break statement in body of a for-loop statement
+/// Remove break statement in body of a for-loop statement
+static YulProtoMutator removeBreak(
+	ForStmt::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		ForStmt* forStmt = static_cast<ForStmt*>(_message);
+		if (_seed % YulProtoMutator::s_mediumIP == 1)
+		{
+			if (forStmt->has_for_body())
+			{
+#ifdef DEBUG
+				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+				std::cout << "YULMUTATOR: Remove Break" << std::endl;
+#endif
+				for (auto &stmt: *forStmt->mutable_for_body()->mutable_statements())
+					if (stmt.has_breakstmt())
+						stmt.clear_breakstmt();
+#ifdef DEBUG
+				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+			}
+		}
+	}
+);
+
+/// Add continue statement in body of a for-loop statement
 static YulProtoMutator addContinue(
 	ForStmt::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
@@ -79,6 +136,31 @@ static YulProtoMutator addContinue(
 				statement->set_allocated_contstmt(contStmt);
 #ifdef DEBUG
 //				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+			}
+		}
+	}
+);
+
+/// Remove continue statement in body of a for-loop statement
+static YulProtoMutator removeContinue(
+	ForStmt::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		ForStmt* forStmt = static_cast<ForStmt*>(_message);
+		if (_seed % YulProtoMutator::s_mediumIP == 1)
+		{
+			if (forStmt->has_for_body())
+			{
+#ifdef DEBUG
+				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+				std::cout << "YULMUTATOR: Remove Continue" << std::endl;
+#endif
+				for (auto &stmt: *forStmt->mutable_for_body()->mutable_statements())
+					if (stmt.has_contstmt())
+						stmt.clear_contstmt();
+#ifdef DEBUG
+				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 #endif
 			}
 		}
@@ -227,6 +309,27 @@ static YulProtoMutator addLeave(
 			Statement *newStmt = funcDef->mutable_block()->add_statements();
 			LeaveStmt *leaveStmt = new LeaveStmt();
 			newStmt->set_allocated_leave(leaveStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+		}
+	}
+);
+
+/// Remove leave statement from an existing function.
+static YulProtoMutator removeLeave(
+	FunctionDef::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_lowIP == 1) {
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Remove Leave in function" << std::endl;
+#endif
+			FunctionDef *funcDef = static_cast<FunctionDef*>(_message);
+			for (auto &stmt: *funcDef->mutable_block()->mutable_statements())
+				if (stmt.has_leave())
+					stmt.clear_leave();
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 #endif
