@@ -29,9 +29,9 @@ struct YulProtoMutator
 	/// variable in scope.
 	static VarRef* varRef(unsigned _index);
 
-	static constexpr unsigned s_lowIP = 41;
-	static constexpr unsigned s_mediumIP = 29;
-	static constexpr unsigned s_highIP = 17;
+	static constexpr unsigned s_lowIP = 827;
+	static constexpr unsigned s_mediumIP = 569;
+	static constexpr unsigned s_highIP = 251;
 };
 
 

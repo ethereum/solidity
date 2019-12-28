@@ -369,6 +369,56 @@ static YulProtoMutator removeLeave(
 	}
 );
 
+/// Add assignment to block
+static YulProtoMutator addAssignment(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add assignment" << std::endl;
+#endif
+			Block *block = static_cast<Block*>(_message);
+			AssignmentStatement *assignmentStatement = new AssignmentStatement();
+			VarRef *varRef = new VarRef();
+			varRef->set_varnum(0);
+			assignmentStatement->set_allocated_ref_id(varRef);
+			VarRef *rhs = new VarRef();
+			rhs->set_varnum(1);
+			Expression *rhsExpr = new Expression();
+			rhsExpr->set_allocated_varref(rhs);
+			assignmentStatement->set_allocated_expr(rhsExpr);
+			Statement *newStmt = block->add_statements();
+			newStmt->set_allocated_assignment(assignmentStatement);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+		}
+	}
+);
+
+/// Remove assignment from block
+static YulProtoMutator removeAssignment(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Remove assignment" << std::endl;
+#endif
+			Block *block = static_cast<Block*>(_message);
+			for (auto &stmt: *block->mutable_statements())
+				if (stmt.has_assignment())
+					stmt.clear_assignment();
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+		}
+	}
+);
+
 Literal* YulProtoMutator::intLiteral(unsigned _value)
 {
 	Literal *lit = new Literal();
