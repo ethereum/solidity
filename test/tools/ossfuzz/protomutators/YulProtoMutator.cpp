@@ -108,7 +108,10 @@ static YulProtoMutator removeBreak(
 #endif
 				for (auto &stmt: *forStmt->mutable_for_body()->mutable_statements())
 					if (stmt.has_breakstmt())
+					{
 						stmt.clear_breakstmt();
+						break;
+					}
 #ifdef DEBUG
 				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 #endif
@@ -158,7 +161,10 @@ static YulProtoMutator removeContinue(
 #endif
 				for (auto &stmt: *forStmt->mutable_for_body()->mutable_statements())
 					if (stmt.has_contstmt())
+					{
 						stmt.clear_contstmt();
+						break;
+					}
 #ifdef DEBUG
 				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 #endif
@@ -361,7 +367,10 @@ static YulProtoMutator removeLeave(
 			FunctionDef *funcDef = static_cast<FunctionDef*>(_message);
 			for (auto &stmt: *funcDef->mutable_block()->mutable_statements())
 				if (stmt.has_leave())
+				{
 					stmt.clear_leave();
+					break;
+				}
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 #endif
@@ -411,7 +420,55 @@ static YulProtoMutator removeAssignment(
 			Block *block = static_cast<Block*>(_message);
 			for (auto &stmt: *block->mutable_statements())
 				if (stmt.has_assignment())
+				{
 					stmt.clear_assignment();
+					break;
+				}
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+		}
+	}
+);
+
+/// Add if statement
+static YulProtoMutator addIf(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add if" << std::endl;
+#endif
+			Block *block = static_cast<Block*>(_message);
+			Statement *stmt = block->add_statements();
+			IfStmt *ifStmt = new IfStmt();
+			stmt->set_allocated_ifstmt(ifStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+		}
+	}
+);
+
+/// Remove if statement
+static YulProtoMutator removeIf(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Remove if" << std::endl;
+#endif
+			Block *block = static_cast<Block*>(_message);
+			for (auto &stmt: *block->mutable_statements())
+				if (stmt.has_ifstmt())
+				{
+					stmt.clear_ifstmt();
+					break;
+				}
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 #endif
