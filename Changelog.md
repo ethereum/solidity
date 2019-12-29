@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Yul Optimizer: Fix bug in redundant assignment remover in combination with break and continue statements.
 
 
 
