@@ -476,6 +476,51 @@ static YulProtoMutator removeIf(
 	}
 );
 
+/// Add switch statement
+static YulProtoMutator addSwitch(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add switch" << std::endl;
+#endif
+			Block *block = static_cast<Block*>(_message);
+			Statement *stmt = block->add_statements();
+			SwitchStmt *switchStmt = new SwitchStmt();
+			stmt->set_allocated_switchstmt(switchStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+		}
+	}
+);
+
+/// Remove switch statement
+static YulProtoMutator removeSwitch(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Remove switch" << std::endl;
+#endif
+			Block *block = static_cast<Block*>(_message);
+			for (auto &stmt: *block->mutable_statements())
+				if (stmt.has_switchstmt())
+				{
+					stmt.clear_switchstmt();
+					break;
+				}
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+#endif
+		}
+	}
+);
+
 Literal* YulProtoMutator::intLiteral(unsigned _value)
 {
 	Literal *lit = new Literal();
