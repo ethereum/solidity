@@ -469,8 +469,9 @@ static YulProtoMutator addIf(
 			std::cout << "YULMUTATOR: Add if" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
-			auto stmt = block->add_statements();
 			auto ifStmt = new IfStmt();
+			ifStmt->mutable_if_body()->Swap(block);
+			auto stmt = block->add_statements();
 			stmt->set_allocated_ifstmt(ifStmt);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -518,8 +519,10 @@ static YulProtoMutator addSwitch(
 			std::cout << "YULMUTATOR: Add switch" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
-			auto stmt = block->add_statements();
 			auto switchStmt = new SwitchStmt();
+			auto caseStmt = switchStmt->add_case_stmt();
+			caseStmt->mutable_case_block()->Swap(block);
+			auto stmt = block->add_statements();
 			stmt->set_allocated_switchstmt(switchStmt);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
