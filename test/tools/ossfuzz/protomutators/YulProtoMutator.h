@@ -25,9 +25,18 @@ struct YulProtoMutator
 	static Literal* intLiteral(unsigned _value);
 
 	/// Return a variable reference
-	/// @param _index: Index of a variable in scope, 0 being the first
-	/// variable in scope.
-	static VarRef* varRef(unsigned _index);
+	/// @param _seed: Pseudo-random unsigned integer used to reference
+	/// an existing variable.
+	static VarRef* varRef(unsigned _seed);
+
+	/// Return a valid function call type from a pseudo-random seed.
+	/// @param _seed: Pseudo-random unsigned integer
+	static FunctionCall_Returns callType(unsigned _seed);
+
+	/// Configure function call from a pseudo-random seed.
+	/// @param _call: Pre-allocated FunctionCall protobuf message
+	/// @param _seed: Pseudo-random unsigned integer
+	static void configureCall(FunctionCall *_call, unsigned _seed);
 
 	static constexpr unsigned s_lowIP = 827;
 	static constexpr unsigned s_mediumIP = 569;
