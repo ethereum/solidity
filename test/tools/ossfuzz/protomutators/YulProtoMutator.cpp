@@ -654,6 +654,55 @@ static YulProtoMutator removeVarDecl(
 	}
 );
 
+/// Add function definition
+static YulProtoMutator addFuncDef(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add function def" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			auto stmt = block->add_statements();
+			auto funcDef = new FunctionDef();
+			stmt->set_allocated_funcdef(funcDef);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Remove function definition
+static YulProtoMutator removeFuncDef(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Remove function def" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			for (auto &stmt: *block->mutable_statements())
+				if (stmt.has_funcdef())
+				{
+					stmt.clear_funcdef();
+					break;
+				}
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
 Literal* YulProtoMutator::intLiteral(unsigned _value)
 {
 	Literal *lit = new Literal();
