@@ -666,8 +666,13 @@ static YulProtoMutator addFuncDef(
 			std::cout << "YULMUTATOR: Add function def" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
-			auto stmt = block->add_statements();
 			auto funcDef = new FunctionDef();
+			funcDef->set_num_input_params(_seed);
+			funcDef->set_num_output_params(_seed + block->ByteSizeLong());
+			funcDef->mutable_block()->Swap(block);
+			// block should be empty now since it has been swapped
+			// with a default instance of function definition block.
+			auto stmt = block->add_statements();
 			stmt->set_allocated_funcdef(funcDef);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
