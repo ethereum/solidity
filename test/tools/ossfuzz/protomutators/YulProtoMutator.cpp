@@ -469,9 +469,8 @@ static YulProtoMutator addIf(
 			std::cout << "YULMUTATOR: Add if" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
-			auto ifStmt = new IfStmt();
-			ifStmt->mutable_if_body()->Swap(block);
 			auto stmt = block->add_statements();
+			auto ifStmt = new IfStmt();
 			stmt->set_allocated_ifstmt(ifStmt);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -519,10 +518,12 @@ static YulProtoMutator addSwitch(
 			std::cout << "YULMUTATOR: Add switch" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
-			auto switchStmt = new SwitchStmt();
-			auto caseStmt = switchStmt->add_case_stmt();
-			caseStmt->mutable_case_block()->Swap(block);
 			auto stmt = block->add_statements();
+			auto switchStmt = new SwitchStmt();
+			switchStmt->add_case_stmt();
+			Expression *switchExpr = new Expression();
+			switchExpr->set_allocated_varref(YulProtoMutator::varRef(_seed));
+			switchStmt->set_allocated_switch_expr(switchExpr);
 			stmt->set_allocated_switchstmt(switchStmt);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -669,13 +670,10 @@ static YulProtoMutator addFuncDef(
 			std::cout << "YULMUTATOR: Add function def" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
+			auto stmt = block->add_statements();
 			auto funcDef = new FunctionDef();
 			funcDef->set_num_input_params(_seed);
 			funcDef->set_num_output_params(_seed + block->ByteSizeLong());
-			funcDef->mutable_block()->Swap(block);
-			// block should be empty now since it has been swapped
-			// with a default instance of function definition block.
-			auto stmt = block->add_statements();
 			stmt->set_allocated_funcdef(funcDef);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -701,6 +699,104 @@ static YulProtoMutator removeFuncDef(
 				if (stmt.has_funcdef())
 				{
 					stmt.clear_funcdef();
+					break;
+				}
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Add bounded for stmt
+static YulProtoMutator addBoundedFor(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add bounded for stmt" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			auto stmt = block->add_statements();
+			auto forStmt = new BoundedForStmt();
+			stmt->set_allocated_boundedforstmt(forStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Remove bounded for stmt
+static YulProtoMutator removeBoundedFor(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Remove bounded for stmt" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			for (auto &stmt: *block->mutable_statements())
+				if (stmt.has_boundedforstmt())
+				{
+					stmt.clear_boundedforstmt();
+					break;
+				}
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Add generic for stmt
+static YulProtoMutator addGenericFor(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add generic for stmt" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			auto stmt = block->add_statements();
+			auto forStmt = new ForStmt();
+			stmt->set_allocated_forstmt(forStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Remove generic for stmt
+static YulProtoMutator removeGenericFor(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Remove generic for stmt" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			for (auto &stmt: *block->mutable_statements())
+				if (stmt.has_forstmt())
+				{
+					stmt.clear_forstmt();
 					break;
 				}
 #ifdef DEBUG
