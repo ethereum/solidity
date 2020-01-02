@@ -2,7 +2,7 @@
     {
         "name": "YulOptimizerRedundantAssignmentBreakContinue0.5",
         "summary": "The Yul optimizer can remove essential assignments to variables declared inside for loops when Yul's continue or break statement is used. You are unlikely to be affected if you do not use inline assembly with for loops and continue and break statements.",
-        "description": "The Yul optimizer has a stage that remove assignments to variables that are overwritten again or are not used in all following control-flow branches. This logic incorrectly removes such assignments to varibales declared inside a for loop if they can be removed in a control-flow branch that ends with ``break`` or ``continue`` even though they cannot be removed in other control-flow branches. Variables declared outside of the respective for loop are not affected.",
+        "description": "The Yul optimizer has a stage that removes assignments to variables that are overwritten again or are not used in all following control-flow branches. This logic incorrectly removes such assignments to variables declared inside a for loop if they can be removed in a control-flow branch that ends with ``break`` or ``continue`` even though they cannot be removed in other control-flow branches. Variables declared outside of the respective for loop are not affected.",
         "introduced": "0.5.8",
         "fixed": "0.5.16",
         "severity": "low",
