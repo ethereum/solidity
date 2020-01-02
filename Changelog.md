@@ -1,14 +1,7 @@
-### 0.6.1 (unreleased)
-
-Language Features:
-
-
-Compiler Features:
-
+### 0.6.1 (2020-01-02)
 
 Bugfixes:
  * Yul Optimizer: Fix bug in redundant assignment remover in combination with break and continue statements.
-
 
 
 ### 0.6.0 (2019-12-17)
