@@ -1,8 +1,13 @@
+### 0.5.16 (2020-01-02)
+
+Bugfixes:
+ * Yul Optimizer: Fix bug in redundant assignment remover in combination with break and continue statements.
+
+
 ### 0.5.15 (2019-12-17)
 
 Bugfixes:
  * Yul Optimizer: Fix incorrect redundant load optimization crossing user-defined functions that contain for-loops with memory / storage writes.
-
 
 ### 0.5.14 (2019-12-09)
 
