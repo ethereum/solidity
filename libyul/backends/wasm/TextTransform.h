@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Component that transforms interval Wasm representation to text.
+ * Component that transforms internal Wasm representation to text.
  */
 
 #pragma once

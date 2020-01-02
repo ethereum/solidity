@@ -178,8 +178,8 @@ public:
 	/// Enable experimental generation of Yul IR code.
 	void enableIRGeneration(bool _enable = true) { m_generateIR = _enable; }
 
-	/// Enable experimental generation of eWasm code. If enabled, IR is also generated.
-	void enableEWasmGeneration(bool _enable = true) { m_generateEWasm = _enable; }
+	/// Enable experimental generation of Ewasm code. If enabled, IR is also generated.
+	void enableEwasmGeneration(bool _enable = true) { m_generateEwasm = _enable; }
 
 	/// @arg _metadataLiteralSources When true, store sources as literals in the contract metadata.
 	/// Must be set before parsing.
@@ -251,11 +251,11 @@ public:
 	/// @returns the optimized IR representation of a contract.
 	std::string const& yulIROptimized(std::string const& _contractName) const;
 
-	/// @returns the eWasm text representation of a contract.
-	std::string const& eWasm(std::string const& _contractName) const;
+	/// @returns the Ewasm text representation of a contract.
+	std::string const& ewasm(std::string const& _contractName) const;
 
-	/// @returns the eWasm representation of a contract.
-	eth::LinkerObject const& eWasmObject(std::string const& _contractName) const;
+	/// @returns the Ewasm representation of a contract.
+	eth::LinkerObject const& ewasmObject(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName) const;
@@ -338,8 +338,8 @@ private:
 		eth::LinkerObject runtimeObject; ///< Runtime object.
 		std::string yulIR; ///< Experimental Yul IR code.
 		std::string yulIROptimized; ///< Optimized experimental Yul IR code.
-		std::string eWasm; ///< Experimental eWasm text representation
-		eth::LinkerObject eWasmObject; ///< Experimental eWasm code
+		std::string ewasm; ///< Experimental Ewasm text representation
+		eth::LinkerObject ewasmObject; ///< Experimental Ewasm code
 		mutable std::unique_ptr<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		mutable std::unique_ptr<Json::Value const> abi;
 		mutable std::unique_ptr<Json::Value const> storageLayout;
@@ -374,8 +374,8 @@ private:
 	/// The IR is stored but otherwise unused.
 	void generateIR(ContractDefinition const& _contract);
 
-	/// Generate eWasm representation for a single contract.
-	void generateEWasm(ContractDefinition const& _contract);
+	/// Generate Ewasm representation for a single contract.
+	void generateEwasm(ContractDefinition const& _contract);
 
 	/// Links all the known library addresses in the available objects. Any unknown
 	/// library will still be kept as an unlinked placeholder in the objects.
@@ -436,7 +436,7 @@ private:
 	smt::SMTSolverChoice m_enabledSMTSolvers;
 	std::map<std::string, std::set<std::string>> m_requestedContractNames;
 	bool m_generateIR;
-	bool m_generateEWasm;
+	bool m_generateEwasm;
 	std::map<std::string, h160> m_libraries;
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"

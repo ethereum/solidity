@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	auto evmVersion = dev::test::Options::get().evmVersion();
 
 	if (evmVersion <= EVMVersion::byzantium())
-		CHECK_DEPLOY_GAS(134145, 130831, evmVersion);
+		CHECK_DEPLOY_GAS(134209, 130895, evmVersion);
 	// This is only correct on >=Constantinople.
 	else if (Options::get().useABIEncoderV2)
 	{
@@ -107,22 +107,22 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		{
 			// Costs with 0 are cases which cannot be triggered in tests.
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(0, 123969, evmVersion);
+				CHECK_DEPLOY_GAS(0, 124033, evmVersion);
 			else
-				CHECK_DEPLOY_GAS(0, 110969, evmVersion);
+				CHECK_DEPLOY_GAS(0, 110981, evmVersion);
 		}
 		else
 		{
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(147771, 131687, evmVersion);
+				CHECK_DEPLOY_GAS(147835, 131687, evmVersion);
 			else
-				CHECK_DEPLOY_GAS(131859, 117231, evmVersion);
+				CHECK_DEPLOY_GAS(131871, 117231, evmVersion);
 		}
 	}
 	else if (evmVersion < EVMVersion::istanbul())
-		CHECK_DEPLOY_GAS(126929, 119659, evmVersion);
+		CHECK_DEPLOY_GAS(126993, 119723, evmVersion);
 	else
-		CHECK_DEPLOY_GAS(114345, 107335, evmVersion);
+		CHECK_DEPLOY_GAS(114357, 107347, evmVersion);
 
 	if (evmVersion >= EVMVersion::byzantium())
 	{

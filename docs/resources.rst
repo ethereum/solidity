@@ -33,7 +33,7 @@ Solidity Integrations
     * `Solidity IDE <https://github.com/System-Glitch/Solidity-IDE>`_
         Browser-based IDE with integrated compiler, Ganache and local file system support.
 
-    * `Solium <https://github.com/duaraghav8/Solium/>`_
+    * `Ethlint <https://github.com/duaraghav8/Ethlint>`_
         Linter to identify and fix style and security issues in Solidity.
 
     * `Superblocks Lab <https://lab.superblocks.com/>`_
@@ -48,7 +48,7 @@ Solidity Integrations
         Plugin for the Atom editor that provides Solidity linting.
 
     * `Atom Solium Linter <https://atom.io/packages/linter-solium>`_
-        Configurable Solidty linter for Atom using Solium as a base.
+        Configurable Solidity linter for Atom using Solium (now Ethlint) as a base.
 
 * Eclipse:
 

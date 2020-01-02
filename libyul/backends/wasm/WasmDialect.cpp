@@ -56,9 +56,15 @@ WasmDialect::WasmDialect():
 	addFunction("i64.eqz", 1, 1);
 	m_functions["i64.eqz"_yulstring].returns.front() = "i32"_yulstring;
 
+	addFunction("i64.clz", 1, 1);
+
 	addFunction("i64.store", 2, 0, false);
 	m_functions["i64.store"_yulstring].parameters.front() = "i32"_yulstring;
 	m_functions["i64.store"_yulstring].sideEffects.invalidatesStorage = false;
+
+	addFunction("i64.store8", 2, 0, false);
+	m_functions["i64.store8"_yulstring].parameters.front() = "i32"_yulstring;
+	m_functions["i64.store8"_yulstring].sideEffects.invalidatesStorage = false;
 
 	addFunction("i64.load", 1, 1, false);
 	m_functions["i64.load"_yulstring].parameters.front() = "i32"_yulstring;
@@ -120,7 +126,7 @@ void WasmDialect::addEthereumExternals()
 		{"getCaller", {i32ptr}, {}},
 		{"getCallValue", {i32ptr}, {}},
 		{"codeCopy", {i32ptr, i32, i32}, {}},
-		{"getCodeSize", {i32ptr}, {}},
+		{"getCodeSize", {}, {i32}},
 		{"getBlockCoinbase", {i32ptr}, {}},
 		{"create", {i32ptr, i32ptr, i32, i32ptr}, {i32}},
 		{"getBlockDifficulty", {i32ptr}, {}},

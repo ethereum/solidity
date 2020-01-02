@@ -9,7 +9,7 @@
 }
 // ====
 // step: mainFunction
-// yul: true
+// dialect: yul
 // ----
 // {
 //     function main()

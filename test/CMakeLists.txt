@@ -131,8 +131,8 @@ set(libyul_sources
     libyul/Common.cpp
     libyul/Common.h
     libyul/CompilabilityChecker.cpp
-    libyul/EWasmTranslationTest.cpp
-    libyul/EWasmTranslationTest.h
+    libyul/EwasmTranslationTest.cpp
+    libyul/EwasmTranslationTest.h
     libyul/FunctionSideEffects.cpp
     libyul/FunctionSideEffects.h
     libyul/Inliner.cpp

@@ -15,10 +15,10 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Translates Yul code from EVM dialect to eWasm dialect.
+ * Translates Yul code from EVM dialect to Ewasm dialect.
  */
 
-#include <libyul/backends/wasm/EVMToEWasmTranslator.h>
+#include <libyul/backends/wasm/EVMToEwasmTranslator.h>
 
 #include <libyul/backends/wasm/WordSizeTransform.h>
 #include <libyul/backends/wasm/WasmDialect.h>
@@ -137,6 +137,10 @@ function mul(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	// TODO implement properly
 	r4 := i64.div_u(x4, y4)
+}
+function sdiv(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+	// TODO implement properly
+	unreachable()
 }
 function mod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	// TODO implement properly
@@ -318,11 +322,11 @@ function sar(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
-function addmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+function addmod(x1, x2, x3, x4, y1, y2, y3, y4, m1, m2, m3, m4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
-function mulmod(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
+function mulmod(x1, x2, x3, x4, y1, y2, y3, y4, m1, m2, m3, m4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
@@ -397,8 +401,7 @@ function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 
 // Needed?
 function codesize() -> z1, z2, z3, z4 {
-	eth.getCodeSize(0)
-	z1, z2, z3, z4 := mload_internal(0)
+	z4 := eth.getCodeSize()
 }
 function codecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 	eth.codeCopy(
@@ -698,7 +701,7 @@ function invalid() {
 
 }
 
-Object EVMToEWasmTranslator::run(Object const& _object)
+Object EVMToEwasmTranslator::run(Object const& _object)
 {
 	if (!m_polyfill)
 		parsePolyfill();
@@ -746,7 +749,7 @@ Object EVMToEWasmTranslator::run(Object const& _object)
 	return ret;
 }
 
-void EVMToEWasmTranslator::parsePolyfill()
+void EVMToEwasmTranslator::parsePolyfill()
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);

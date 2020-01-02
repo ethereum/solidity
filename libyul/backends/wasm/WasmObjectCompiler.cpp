@@ -18,9 +18,9 @@
  * Compiler that transforms Yul Objects to Wasm text and binary representation (Ewasm flavoured).
  */
 
-#include <libyul/backends/wasm/EWasmObjectCompiler.h>
+#include <libyul/backends/wasm/WasmObjectCompiler.h>
 
-#include <libyul/backends/wasm/EWasmCodeTransform.h>
+#include <libyul/backends/wasm/WasmCodeTransform.h>
 #include <libyul/backends/wasm/BinaryTransform.h>
 #include <libyul/backends/wasm/TextTransform.h>
 
@@ -32,25 +32,25 @@
 using namespace yul;
 using namespace std;
 
-pair<string, dev::bytes> EWasmObjectCompiler::compile(Object& _object, Dialect const& _dialect)
+pair<string, dev::bytes> WasmObjectCompiler::compile(Object& _object, Dialect const& _dialect)
 {
-	EWasmObjectCompiler compiler(_dialect);
+	WasmObjectCompiler compiler(_dialect);
 	wasm::Module module = compiler.run(_object);
 	return {wasm::TextTransform().run(module), wasm::BinaryTransform::run(module)};
 }
 
-wasm::Module EWasmObjectCompiler::run(Object& _object)
+wasm::Module WasmObjectCompiler::run(Object& _object)
 {
 	yulAssert(_object.analysisInfo, "No analysis info.");
 	yulAssert(_object.code, "No code.");
 
-	wasm::Module module = EWasmCodeTransform::run(m_dialect, *_object.code);
+	wasm::Module module = WasmCodeTransform::run(m_dialect, *_object.code);
 
 	for (auto& subNode: _object.subObjects)
 		if (Object* subObject = dynamic_cast<Object*>(subNode.get()))
 			module.subModules[subObject->name.str()] = run(*subObject);
 		else
-			yulAssert(false, "Data is not yet supported for EWasm.");
+			yulAssert(false, "Data is not yet supported for Wasm.");
 
 	return module;
 }

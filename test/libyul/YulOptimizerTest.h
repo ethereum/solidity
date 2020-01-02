@@ -71,7 +71,6 @@ private:
 	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
 
 	std::string m_source;
-	bool m_yul = false;
 	std::string m_optimizerStep;
 	std::string m_expectation;
 

@@ -51,10 +51,6 @@
 
 #include <libyul/YulString.h>
 #include <libyul/AsmPrinter.h>
-#include <libyul/backends/wasm/EVMToEWasmTranslator.h>
-#include <libyul/backends/wasm/EWasmObjectCompiler.h>
-#include <libyul/backends/wasm/WasmDialect.h>
-#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AssemblyStack.h>
 
 #include <liblangutil/Scanner.h>
@@ -81,7 +77,7 @@ CompilerStack::CompilerStack(ReadCallback::Callback const& _readFile):
 	m_readFile{_readFile},
 	m_enabledSMTSolvers{smt::SMTSolverChoice::All()},
 	m_generateIR{false},
-	m_generateEWasm{false},
+	m_generateEwasm{false},
 	m_errorList{},
 	m_errorReporter{m_errorList}
 {
@@ -204,7 +200,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_evmVersion = langutil::EVMVersion();
 		m_enabledSMTSolvers = smt::SMTSolverChoice::All();
 		m_generateIR = false;
-		m_generateEWasm = false;
+		m_generateEwasm = false;
 		m_revertStrings = RevertStrings::Default;
 		m_optimiserSettings = OptimiserSettings::minimal();
 		m_metadataLiteralSources = false;
@@ -467,10 +463,10 @@ bool CompilerStack::compile()
 				if (isRequestedContract(*contract))
 				{
 					compileContract(*contract, otherCompilers);
-					if (m_generateIR || m_generateEWasm)
+					if (m_generateIR || m_generateEwasm)
 						generateIR(*contract);
-					if (m_generateEWasm)
-						generateEWasm(*contract);
+					if (m_generateEwasm)
+						generateEwasm(*contract);
 				}
 	m_stackState = CompilationSuccessful;
 	this->link();
@@ -596,20 +592,20 @@ string const& CompilerStack::yulIROptimized(string const& _contractName) const
 	return contract(_contractName).yulIROptimized;
 }
 
-string const& CompilerStack::eWasm(string const& _contractName) const
+string const& CompilerStack::ewasm(string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
-	return contract(_contractName).eWasm;
+	return contract(_contractName).ewasm;
 }
 
-eth::LinkerObject const& CompilerStack::eWasmObject(string const& _contractName) const
+eth::LinkerObject const& CompilerStack::ewasmObject(string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
-	return contract(_contractName).eWasmObject;
+	return contract(_contractName).ewasmObject;
 }
 
 eth::LinkerObject const& CompilerStack::object(string const& _contractName) const
@@ -1073,15 +1069,15 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract);
 }
 
-void CompilerStack::generateEWasm(ContractDefinition const& _contract)
+void CompilerStack::generateEwasm(ContractDefinition const& _contract)
 {
 	solAssert(m_stackState >= AnalysisPerformed, "");
 	if (m_hasError)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called generateEWasm with errors."));
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called generateEwasm with errors."));
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	solAssert(!compiledContract.yulIROptimized.empty(), "");
-	if (!compiledContract.eWasm.empty())
+	if (!compiledContract.ewasm.empty())
 		return;
 
 	// Re-parse the Yul IR in EVM dialect
@@ -1089,15 +1085,15 @@ void CompilerStack::generateEWasm(ContractDefinition const& _contract)
 	stack.parseAndAnalyze("", compiledContract.yulIROptimized);
 
 	stack.optimize();
-	stack.translate(yul::AssemblyStack::Language::EWasm);
+	stack.translate(yul::AssemblyStack::Language::Ewasm);
 	stack.optimize();
 
 	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
 
-	// Turn into eWasm text representation.
-	auto result = stack.assemble(yul::AssemblyStack::Machine::eWasm);
-	compiledContract.eWasm = std::move(result.assembly);
-	compiledContract.eWasmObject = std::move(*result.bytecode);
+	// Turn into Ewasm text representation.
+	auto result = stack.assemble(yul::AssemblyStack::Machine::Ewasm);
+	compiledContract.ewasm = std::move(result.assembly);
+	compiledContract.ewasmObject = std::move(*result.bytecode);
 }
 
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const

@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * EWasm to binary encoder.
+ * Component that transforms internal Wasm representation to binary.
  */
 
 #include <libyul/backends/wasm/BinaryTransform.h>

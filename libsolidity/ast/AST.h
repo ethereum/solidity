@@ -159,8 +159,7 @@ public:
 	virtual ~Scopable() = default;
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
-	ASTNode const* scope() const { return m_scope; }
-	void setScope(ASTNode const* _scope) { m_scope = _scope; }
+	ASTNode const* scope() const { return annotation().scope; }
 
 	/// @returns the source unit this scopable is present in.
 	SourceUnit const& sourceUnit() const;
@@ -172,8 +171,7 @@ public:
 	/// Can be combined with annotation().canonicalName (if present) to form a globally unique name.
 	std::string sourceUnitName() const;
 
-protected:
-	ASTNode const* m_scope = nullptr;
+	virtual ScopableAnnotation& annotation() const = 0;
 };
 
 /**
@@ -230,6 +228,8 @@ public:
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
 	virtual FunctionTypePointer functionType(bool /*_internal*/) const { return {}; }
+
+	DeclarationAnnotation& annotation() const override;
 
 protected:
 	virtual Visibility defaultVisibility() const { return Visibility::Public; }
@@ -1169,6 +1169,8 @@ public:
 
 	std::vector<ASTPointer<Statement>> const& statements() const { return m_statements; }
 
+	BlockAnnotation& annotation() const override;
+
 private:
 	std::vector<ASTPointer<Statement>> m_statements;
 };
@@ -1247,6 +1249,8 @@ public:
 	ASTString const& errorName() const { return *m_errorName; }
 	ParameterList const* parameters() const { return m_parameters.get(); }
 	Block const& block() const { return *m_block; }
+
+	TryCatchClauseAnnotation& annotation() const override;
 
 private:
 	ASTPointer<ASTString> m_errorName;
@@ -1356,6 +1360,8 @@ public:
 	Expression const* condition() const { return m_condExpression.get(); }
 	ExpressionStatement const* loopExpression() const { return m_loopExpression.get(); }
 	Statement const& body() const { return *m_body; }
+
+	ForStatementAnnotation& annotation() const override;
 
 private:
 	/// For statement's initialization expression. for (XXX; ; ). Can be empty

@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Yul interpreter module that evaluates EWasm builtins.
+ * Yul interpreter module that evaluates Ewasm builtins.
  */
 
 #pragma once
@@ -45,7 +45,7 @@ namespace test
 struct InterpreterState;
 
 /**
- * Interprets EWasm builtins based on the current state and logs instructions with
+ * Interprets Ewasm builtins based on the current state and logs instructions with
  * side-effects.
  *
  * Since this is mainly meant to be used for differential fuzz testing, it is focused
@@ -63,10 +63,10 @@ struct InterpreterState;
  * The main focus is that the generated execution trace is the same for equivalent executions
  * and likely to be different for non-equivalent executions.
  */
-class EWasmBuiltinInterpreter
+class EwasmBuiltinInterpreter
 {
 public:
-	explicit EWasmBuiltinInterpreter(InterpreterState& _state):
+	explicit EwasmBuiltinInterpreter(InterpreterState& _state):
 		m_state(_state)
 	{}
 	/// Evaluate builtin function
@@ -86,11 +86,14 @@ private:
 	/// Writes a word to memory (little-endian)
 	/// Does not adjust msize, use @a accessMemory for that
 	void writeMemoryWord(uint64_t _offset, uint64_t _value);
+	/// Writes a byte to memory
+	/// Does not adjust msize, use @a accessMemory for that
+	void writeMemoryByte(uint64_t _offset, uint8_t _value);
 
 	/// Helper for eth.* builtins. Writes to memory (big-endian) and always returns zero.
-	dev::u256 writeU256(uint64_t _offset, dev::u256 _value, size_t _croppedTo = 32);
-	dev::u256 writeU128(uint64_t _offset, dev::u256 _value) { return writeU256(_offset, std::move(_value), 16); }
-	dev::u256 writeAddress(uint64_t _offset, dev::u256 _value) { return writeU256(_offset, std::move(_value), 20); }
+	void writeU256(uint64_t _offset, dev::u256 _value, size_t _croppedTo = 32);
+	void writeU128(uint64_t _offset, dev::u256 _value) { writeU256(_offset, std::move(_value), 16); }
+	void writeAddress(uint64_t _offset, dev::u256 _value) { writeU256(_offset, std::move(_value), 20); }
 	/// Helper for eth.* builtins. Reads from memory (big-endian) and returns the value;
 	dev::u256 readU256(uint64_t _offset, size_t _croppedTo = 32);
 	dev::u256 readU128(uint64_t _offset) { return readU256(_offset, 16); }

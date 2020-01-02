@@ -6,7 +6,7 @@
 }
 // ====
 // step: functionGrouper
-// yul: true
+// dialect: yul
 // ----
 // {
 //     {

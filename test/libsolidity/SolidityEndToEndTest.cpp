@@ -14319,8 +14319,6 @@ BOOST_AUTO_TEST_CASE(event_wrong_abi_name)
 	)";
 	compileAndRun(sourceCode, 0, "ClientReceipt", bytes());
 	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"ClientReceipt", m_contractAddress}});
-	u256 value(18);
-	u256 id(0x1234);
 
 	callContractFunction("f()");
 	BOOST_REQUIRE_EQUAL(numLogs(), 1);

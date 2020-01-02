@@ -1,3 +1,9 @@
+### 0.6.1 (2020-01-02)
+
+Bugfixes:
+ * Yul Optimizer: Fix bug in redundant assignment remover in combination with break and continue statements.
+
+
 ### 0.6.0 (2019-12-17)
 
 Breaking changes:
@@ -33,6 +39,7 @@ Language Features:
  * Allow global enums and structs.
  * Allow public variables to override external functions.
  * Allow underscores as delimiters in hex strings.
+ * Allow to react on failing external calls using ``try`` and ``catch``.
  * Introduce syntax for array slices and implement them for dynamic calldata arrays.
  * Introduce ``push()`` for dynamic storage arrays. It returns a reference to the newly allocated element, if applicable.
  * Introduce ``virtual`` and ``override`` keywords.
@@ -43,6 +50,12 @@ Language Features:
 Compiler Features:
  * Allow revert strings to be stripped from the binary using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting.
  * ABIEncoderV2: Do not warn about enabled ABIEncoderV2 anymore (the pragma is still needed, though).
+
+
+### 0.5.16 (2020-01-02)
+
+Backported Bugfixes:
+ * Yul Optimizer: Fix bug in redundant assignment remover in combination with break and continue statements.
 
 
 ### 0.5.15 (2019-12-17)
