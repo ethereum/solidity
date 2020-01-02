@@ -742,31 +742,45 @@
     },
     "0.5.10": {
         "bugs": [
+            "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers"
         ],
         "released": "2019-06-25"
     },
     "0.5.11": {
-        "bugs": [],
+        "bugs": [
+            "YulOptimizerRedundantAssignmentBreakContinue0.5"
+        ],
         "released": "2019-08-12"
     },
     "0.5.12": {
-        "bugs": [],
+        "bugs": [
+            "YulOptimizerRedundantAssignmentBreakContinue0.5"
+        ],
         "released": "2019-10-01"
     },
     "0.5.13": {
-        "bugs": [],
+        "bugs": [
+            "YulOptimizerRedundantAssignmentBreakContinue0.5"
+        ],
         "released": "2019-11-14"
     },
     "0.5.14": {
         "bugs": [
+            "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2LoopYulOptimizer"
         ],
         "released": "2019-12-09"
     },
     "0.5.15": {
-        "bugs": [],
+        "bugs": [
+            "YulOptimizerRedundantAssignmentBreakContinue0.5"
+        ],
         "released": "2019-12-17"
+    },
+    "0.5.16": {
+        "bugs": [],
+        "released": "2020-01-02"
     },
     "0.5.2": {
         "bugs": [
@@ -840,6 +854,7 @@
     },
     "0.5.8": {
         "bugs": [
+            "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -849,6 +864,7 @@
     },
     "0.5.9": {
         "bugs": [
+            "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement"

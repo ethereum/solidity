@@ -59,6 +59,12 @@ Compiler Features:
  * ABIEncoderV2: Do not warn about enabled ABIEncoderV2 anymore (the pragma is still needed, though).
 
 
+### 0.5.16 (2020-01-02)
+
+Backported Bugfixes:
+ * Yul Optimizer: Fix bug in redundant assignment remover in combination with break and continue statements.
+
+
 ### 0.5.15 (2019-12-17)
 
 Bugfixes:
