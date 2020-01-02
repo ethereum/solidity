@@ -856,7 +856,9 @@
         "released": "2019-05-28"
     },
     "0.6.0": {
-        "bugs": [],
+        "bugs": [
+            "YulOptimizerRedundantAssignmentBreakContinue"
+        ],
         "released": "2019-12-17"
     }
 }
