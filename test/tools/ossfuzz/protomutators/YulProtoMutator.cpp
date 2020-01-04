@@ -220,6 +220,86 @@ static YulProtoMutator addMloadZero(
 	}
 );
 
+/// Remove unary operation mload(0)
+static YulProtoMutator removeMloadZero(
+	UnaryOp::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		auto unaryOp = static_cast<UnaryOp*>(_message);
+		if (_seed % YulProtoMutator::s_mediumIP == 1)
+		{
+			if (unaryOp->has_op() == UnaryOp::MLOAD)
+			{
+#ifdef DEBUG
+				std::cout << "----------------------------------" << std::endl;
+				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+				std::cout << "YULMUTATOR: Remove mload" << std::endl;
+#endif
+				unaryOp->clear_op();
+				unaryOp->clear_operand();
+#ifdef DEBUG
+				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+				std::cout << "----------------------------------" << std::endl;
+#endif
+			}
+		}
+	}
+);
+
+/// Add m/sstore(0, variable)
+static YulProtoMutator addStoreToZero(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		auto block = static_cast<Block*>(_message);
+		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: store added" << std::endl;
+#endif
+			auto storeStmt = new StoreFunc();
+			storeStmt->set_st(YulProtoMutator::EnumTypeConverter<StoreFunc_Storage>{}.enumFromSeed(_seed));
+			storeStmt->set_allocated_loc(YulProtoMutator::litExpression(0));
+			storeStmt->set_allocated_loc(YulProtoMutator::refExpression(_seed));
+			auto stmt = block->add_statements();
+			stmt->set_allocated_storage_func(storeStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Remove m/sstore(0, ref)
+static YulProtoMutator removeStore(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		auto block = static_cast<Block*>(_message);
+		if (_seed % YulProtoMutator::s_mediumIP == 1)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Remove store" << std::endl;
+#endif
+			for (auto &stmt: *block->mutable_statements())
+				if (stmt.has_storage_func())
+				{
+					stmt.clear_storage_func();
+					break;
+				}
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
 /// Invert condition of a for statement
 static YulProtoMutator invertForCondition(
 	ForStmt::descriptor(),
@@ -674,6 +754,10 @@ static YulProtoMutator addFuncDef(
 			auto funcDef = new FunctionDef();
 			funcDef->set_num_input_params(_seed);
 			funcDef->set_num_output_params(_seed + block->ByteSizeLong());
+			// Copy block into function body
+			auto funcBlock = new Block();
+			funcBlock->CopyFrom(*block);
+			funcDef->set_allocated_block(funcBlock);
 			stmt->set_allocated_funcdef(funcDef);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -809,28 +893,37 @@ static YulProtoMutator removeGenericFor(
 
 Literal* YulProtoMutator::intLiteral(unsigned _value)
 {
-	Literal *lit = new Literal();
+	auto lit = new Literal();
 	lit->set_intval(_value);
 	return lit;
 }
 
+Expression* YulProtoMutator::litExpression(unsigned _value)
+{
+	auto lit = intLiteral(_value);
+	auto expr = new Expression();
+	expr->set_allocated_cons(lit);
+	return expr;
+}
+
 VarRef* YulProtoMutator::varRef(unsigned _seed)
 {
-	VarRef *varref = new VarRef();
+	auto varref = new VarRef();
 	varref->set_varnum(_seed);
 	return varref;
 }
 
-FunctionCall_Returns YulProtoMutator::callType(unsigned _seed)
+Expression* YulProtoMutator::refExpression(unsigned _seed)
 {
-	return static_cast<FunctionCall_Returns>(
-		_seed % FunctionCall_Returns_Returns_ARRAYSIZE + FunctionCall_Returns_Returns_MIN
-	);
+	auto ref = varRef(_seed);
+	auto refExpr = new Expression();
+	refExpr->set_allocated_varref(ref);
+	return refExpr;
 }
 
 void YulProtoMutator::configureCall(FunctionCall *_call, unsigned int _seed)
 {
-	auto type = callType(_seed);
+	auto type = EnumTypeConverter<FunctionCall_Returns>{}.enumFromSeed(_seed);
 	_call->set_ret(type);
 	_call->set_func_index(_seed);
 	// Configuration rules:
