@@ -891,6 +891,63 @@ static YulProtoMutator removeGenericFor(
 	}
 );
 
+/// Add revert stmt
+static YulProtoMutator addTerminatingStmt(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add terminating stmt" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			auto stmt = block->add_statements();
+			auto termStmt = new TerminatingStmt();
+			auto revertStmt = new RetRevStmt();
+			revertStmt->set_stmt(RetRevStmt::REVERT);
+			revertStmt->set_allocated_pos(YulProtoMutator::litExpression(0));
+			revertStmt->set_allocated_size(YulProtoMutator::litExpression(0));
+			termStmt->set_allocated_ret_rev(revertStmt);
+			stmt->set_allocated_terminatestmt(termStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Remove revert statement
+static YulProtoMutator removeRevertStmt(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Remove revert stmt" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			for (auto &stmt: *block->mutable_statements())
+				if (stmt.has_terminatestmt() &&
+					stmt.terminatestmt().has_ret_rev() &&
+					stmt.terminatestmt().ret_rev().stmt() == RetRevStmt::REVERT
+				)
+				{
+					stmt.clear_terminatestmt();
+					break;
+				}
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
 Literal* YulProtoMutator::intLiteral(unsigned _value)
 {
 	auto lit = new Literal();
@@ -982,7 +1039,7 @@ void YulProtoMutator::configureCall(FunctionCall *_call, unsigned int _seed)
 template <typename T>
 T YulProtoMutator::EnumTypeConverter<T>::validEnum(unsigned _seed)
 {
-	auto ret = static_cast<T>(_seed % (enumMax() + 1) + enumMin());
+	auto ret = static_cast<T>(_seed % (enumMax() - enumMin() + 1) + enumMin());
 	if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
 		yulAssert(FunctionCall_Returns_IsValid(ret), "Yul proto mutator: Invalid enum");
 	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
