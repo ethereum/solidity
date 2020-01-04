@@ -66,10 +66,14 @@ struct YulProtoMutator
 		static int enumMin();
 	};
 
+	/// Modulo for mutations that should occur rarely
 	static constexpr unsigned s_lowIP = 827;
+	/// Modulo for mutations that should occur not too often
 	static constexpr unsigned s_mediumIP = 569;
+	/// Modulo for mutations that should occur often
 	static constexpr unsigned s_highIP = 251;
-	static constexpr unsigned s_veryHighIP = 7;
+	/// Normalized modulo for block level mutations adjusted
+	static constexpr unsigned s_normalizedBlockIP = 7;
 };
 }
 }

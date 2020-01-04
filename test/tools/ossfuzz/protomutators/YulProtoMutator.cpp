@@ -252,7 +252,7 @@ static YulProtoMutator addStoreToZero(
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
 		auto block = static_cast<Block*>(_message);
-		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -279,7 +279,7 @@ static YulProtoMutator removeStore(
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
 		auto block = static_cast<Block*>(_message);
-		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -401,7 +401,7 @@ static YulProtoMutator identityFunction(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -487,7 +487,7 @@ static YulProtoMutator addAssignment(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -517,7 +517,7 @@ static YulProtoMutator removeAssignment(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -544,7 +544,7 @@ static YulProtoMutator addIf(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -568,7 +568,7 @@ static YulProtoMutator removeIf(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -595,7 +595,7 @@ static YulProtoMutator addSwitch(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -623,7 +623,7 @@ static YulProtoMutator removeSwitch(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -650,7 +650,7 @@ static YulProtoMutator addCall(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -675,7 +675,7 @@ static YulProtoMutator removeCall(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -702,7 +702,7 @@ static YulProtoMutator addVarDecl(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -726,7 +726,7 @@ static YulProtoMutator removeVarDecl(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -753,7 +753,7 @@ static YulProtoMutator addFuncDef(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -783,7 +783,7 @@ static YulProtoMutator removeFuncDef(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -810,7 +810,7 @@ static YulProtoMutator addBoundedFor(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -834,7 +834,7 @@ static YulProtoMutator removeBoundedFor(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -861,7 +861,7 @@ static YulProtoMutator addGenericFor(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -885,7 +885,7 @@ static YulProtoMutator removeGenericFor(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -912,7 +912,7 @@ static YulProtoMutator addTerminatingStmt(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -941,7 +941,7 @@ static YulProtoMutator removeRevertStmt(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
