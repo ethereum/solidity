@@ -49,7 +49,7 @@ public:
 
 	std::vector<std::string> unhandledQueries() const { return m_unhandledQueries; }
 
-	std::shared_ptr<SMTLib2Interface> smtlib2Interface() { return m_smtlib2; }
+	SMTLib2Interface* smtlib2Interface() const { return m_smtlib2.get(); }
 
 private:
 	void declareFunction(std::string const& _name, SortPointer const& _sort);
@@ -60,8 +60,7 @@ private:
 	std::string querySolver(std::string const& _input);
 
 	/// Used to access toSmtLibSort, SExpr, and handle variables.
-	/// Needs to be a shared_ptr since it's also passed to EncodingContext.
-	std::shared_ptr<SMTLib2Interface> m_smtlib2;
+	std::unique_ptr<SMTLib2Interface> m_smtlib2;
 
 	std::string m_accumulatedOutput;
 	std::set<std::string> m_variables;

@@ -34,8 +34,8 @@ BMC::BMC(
 	smt::SMTSolverChoice _enabledSolvers
 ):
 	SMTEncoder(_context),
-	m_outerErrorReporter(_errorReporter),
-	m_interface(make_shared<smt::SMTPortfolio>(_smtlib2Responses, _enabledSolvers))
+	m_interface(make_unique<smt::SMTPortfolio>(_smtlib2Responses, _enabledSolvers)),
+	m_outerErrorReporter(_errorReporter)
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (_enabledSolvers.some())
@@ -54,7 +54,7 @@ void BMC::analyze(SourceUnit const& _source, set<Expression const*> _safeAsserti
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
 
 	m_safeAssertions += move(_safeAssertions);
-	m_context.setSolver(m_interface);
+	m_context.setSolver(m_interface.get());
 	m_context.clear();
 	m_context.setAssertionAccumulation(true);
 	m_variableUsage.setFunctionInlining(true);

@@ -25,7 +25,7 @@ using namespace dev;
 using namespace dev::solidity::smt;
 
 Z3CHCInterface::Z3CHCInterface():
-	m_z3Interface(make_shared<Z3Interface>()),
+	m_z3Interface(make_unique<Z3Interface>()),
 	m_context(m_z3Interface->context()),
 	m_solver(*m_context)
 {

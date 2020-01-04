@@ -35,7 +35,7 @@ using namespace dev::solidity;
 using namespace dev::solidity::smt;
 
 CHCSmtLib2Interface::CHCSmtLib2Interface(map<h256, string> const& _queryResponses):
-	m_smtlib2(make_shared<SMTLib2Interface>(_queryResponses)),
+	m_smtlib2(make_unique<SMTLib2Interface>(_queryResponses)),
 	m_queryResponses(_queryResponses)
 {
 	reset();
