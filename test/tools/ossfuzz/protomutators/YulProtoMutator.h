@@ -69,6 +69,7 @@ struct YulProtoMutator
 	static constexpr unsigned s_lowIP = 827;
 	static constexpr unsigned s_mediumIP = 569;
 	static constexpr unsigned s_highIP = 251;
+	static constexpr unsigned s_veryHighIP = 7;
 };
 }
 }

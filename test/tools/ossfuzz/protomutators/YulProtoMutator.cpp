@@ -252,7 +252,7 @@ static YulProtoMutator addStoreToZero(
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
 		auto block = static_cast<Block*>(_message);
-		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		if (_seed % YulProtoMutator::s_veryHighIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -279,7 +279,7 @@ static YulProtoMutator removeStore(
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
 		auto block = static_cast<Block*>(_message);
-		if (_seed % YulProtoMutator::s_mediumIP == 1)
+		if (_seed % YulProtoMutator::s_veryHighIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -401,7 +401,7 @@ static YulProtoMutator identityFunction(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		if (_seed % YulProtoMutator::s_veryHighIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -487,7 +487,8 @@ static YulProtoMutator addAssignment(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -516,7 +517,8 @@ static YulProtoMutator removeAssignment(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -542,7 +544,8 @@ static YulProtoMutator addIf(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -565,7 +568,8 @@ static YulProtoMutator removeIf(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -591,7 +595,8 @@ static YulProtoMutator addSwitch(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -618,7 +623,8 @@ static YulProtoMutator removeSwitch(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -644,7 +650,8 @@ static YulProtoMutator addCall(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -668,7 +675,8 @@ static YulProtoMutator removeCall(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -694,7 +702,8 @@ static YulProtoMutator addVarDecl(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -717,7 +726,8 @@ static YulProtoMutator removeVarDecl(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -743,7 +753,8 @@ static YulProtoMutator addFuncDef(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -772,7 +783,8 @@ static YulProtoMutator removeFuncDef(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -798,7 +810,8 @@ static YulProtoMutator addBoundedFor(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -821,7 +834,8 @@ static YulProtoMutator removeBoundedFor(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -847,7 +861,8 @@ static YulProtoMutator addGenericFor(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -870,7 +885,8 @@ static YulProtoMutator removeGenericFor(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -896,7 +912,8 @@ static YulProtoMutator addTerminatingStmt(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 0) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 0)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -924,7 +941,8 @@ static YulProtoMutator removeRevertStmt(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_mediumIP == 1) {
+		if (_seed % YulProtoMutator::s_veryHighIP == 1)
+		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -947,6 +965,82 @@ static YulProtoMutator removeRevertStmt(
 		}
 	}
 );
+
+/// Mutate nullary op
+static YulProtoMutator mutateNullaryOp(
+	NullaryOp::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Mutate Nullary op" << std::endl;
+#endif
+			auto nullOpExpr = static_cast<NullaryOp*>(_message);
+			nullOpExpr->clear_op();
+			nullOpExpr->set_op(
+				YulProtoMutator::EnumTypeConverter<NullaryOp_NOp>{}.enumFromSeed(_seed)
+			);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Mutate binary op
+static YulProtoMutator mutateBinaryOp(
+	BinaryOp::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Mutate Binary op" << std::endl;
+#endif
+			auto binOpExpr = static_cast<BinaryOp*>(_message);
+			binOpExpr->clear_op();
+			binOpExpr->set_op(
+				YulProtoMutator::EnumTypeConverter<BinaryOp_BOp>{}.enumFromSeed(_seed)
+			);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Mutate unary op
+static YulProtoMutator mutateUnaryOp(
+	UnaryOp::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Mutate Unary op" << std::endl;
+#endif
+			auto unaryOpExpr = static_cast<UnaryOp*>(_message);
+			unaryOpExpr->clear_op();
+			unaryOpExpr->set_op(
+				YulProtoMutator::EnumTypeConverter<UnaryOp_UOp>{}.enumFromSeed(_seed)
+			);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
 
 Literal* YulProtoMutator::intLiteral(unsigned _value)
 {
@@ -1044,6 +1138,12 @@ T YulProtoMutator::EnumTypeConverter<T>::validEnum(unsigned _seed)
 		yulAssert(FunctionCall_Returns_IsValid(ret), "Yul proto mutator: Invalid enum");
 	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
 		yulAssert(StoreFunc_Storage_IsValid(ret), "Yul proto mutator: Invalid enum");
+	else if constexpr (std::is_same_v<std::decay_t<T>, NullaryOp_NOp>)
+		yulAssert(NullaryOp_NOp_IsValid(ret), "Yul proto mutator: Invalid enum");
+	else if constexpr (std::is_same_v<std::decay_t<T>, BinaryOp_BOp>)
+		yulAssert(BinaryOp_BOp_IsValid(ret), "Yul proto mutator: Invalid enum");
+	else if constexpr (std::is_same_v<std::decay_t<T>, UnaryOp_UOp>)
+		yulAssert(UnaryOp_UOp_IsValid(ret), "Yul proto mutator: Invalid enum");
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
 	return ret;
@@ -1056,6 +1156,12 @@ int YulProtoMutator::EnumTypeConverter<T>::enumMax()
 		return FunctionCall_Returns_Returns_MAX;
 	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
 		return StoreFunc_Storage_Storage_MAX;
+	else if constexpr (std::is_same_v<std::decay_t<T>, NullaryOp_NOp>)
+		return NullaryOp_NOp_NOp_MAX;
+	else if constexpr (std::is_same_v<std::decay_t<T>, BinaryOp_BOp>)
+		return BinaryOp_BOp_BOp_MAX;
+	else if constexpr (std::is_same_v<std::decay_t<T>, UnaryOp_UOp>)
+		return UnaryOp_UOp_UOp_MAX;
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
 }
@@ -1067,6 +1173,12 @@ int YulProtoMutator::EnumTypeConverter<T>::enumMin()
 		return FunctionCall_Returns_Returns_MIN;
 	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
 		return StoreFunc_Storage_Storage_MIN;
+	else if constexpr (std::is_same_v<std::decay_t<T>, NullaryOp_NOp>)
+		return NullaryOp_NOp_NOp_MIN;
+	else if constexpr (std::is_same_v<std::decay_t<T>, BinaryOp_BOp>)
+		return BinaryOp_BOp_BOp_MIN;
+	else if constexpr (std::is_same_v<std::decay_t<T>, UnaryOp_UOp>)
+		return UnaryOp_UOp_UOp_MIN;
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
 }
