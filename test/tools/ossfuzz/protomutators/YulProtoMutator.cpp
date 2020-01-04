@@ -823,19 +823,9 @@ VarRef* YulProtoMutator::varRef(unsigned _seed)
 
 FunctionCall_Returns YulProtoMutator::callType(unsigned _seed)
 {
-	switch (_seed % 4)
-	{
-	case 0:
-		return FunctionCall_Returns_ZERO;
-	case 1:
-		return FunctionCall_Returns_SINGLE;
-	case 2:
-		return FunctionCall_Returns_MULTIASSIGN;
-	case 3:
-		return FunctionCall_Returns_MULTIDECL;
-	default:
-		yulAssert(false, "");
-	}
+	return static_cast<FunctionCall_Returns>(
+		_seed % FunctionCall_Returns_Returns_ARRAYSIZE + FunctionCall_Returns_Returns_MIN
+	);
 }
 
 void YulProtoMutator::configureCall(FunctionCall *_call, unsigned int _seed)
