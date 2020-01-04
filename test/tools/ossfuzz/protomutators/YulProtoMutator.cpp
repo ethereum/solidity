@@ -978,3 +978,38 @@ void YulProtoMutator::configureCall(FunctionCall *_call, unsigned int _seed)
 		break;
 	}
 }
+
+template <typename T>
+T YulProtoMutator::EnumTypeConverter<T>::validEnum(unsigned _seed)
+{
+	auto ret = static_cast<T>(_seed % (enumMax() + 1) + enumMin());
+	if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
+		yulAssert(FunctionCall_Returns_IsValid(ret), "Yul proto mutator: Invalid enum");
+	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
+		yulAssert(StoreFunc_Storage_IsValid(ret), "Yul proto mutator: Invalid enum");
+	else
+		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
+	return ret;
+}
+
+template <typename T>
+int YulProtoMutator::EnumTypeConverter<T>::enumMax()
+{
+	if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
+		return FunctionCall_Returns_Returns_MAX;
+	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
+		return StoreFunc_Storage_Storage_MAX;
+	else
+		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
+}
+
+template <typename T>
+int YulProtoMutator::EnumTypeConverter<T>::enumMin()
+{
+	if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
+		return FunctionCall_Returns_Returns_MIN;
+	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
+		return StoreFunc_Storage_Storage_MIN;
+	else
+		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
+}

@@ -55,29 +55,15 @@ struct YulProtoMutator
 	{
 		T enumFromSeed(unsigned _seed)
 		{
-			// TODO: Assert validity of return enum.
-			return static_cast<T>(_seed % (enumMax() + 1) + enumMin());
+			return validEnum(_seed);
 		}
 
-		static int enumMax()
-		{
-			if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
-				return FunctionCall_Returns_Returns_MAX;
-			else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
-				return StoreFunc_Storage_Storage_MAX;
-			else
-				static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
-		}
-
-		static int enumMin()
-		{
-			if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
-				return FunctionCall_Returns_Returns_MIN;
-			else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
-				return StoreFunc_Storage_Storage_MIN;
-			else
-				static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
-		}
+		/// Return a valid enum of type T from _seed
+		T validEnum(unsigned _seed);
+		/// Return maximum enum value for enum of type T
+		static int enumMax();
+		/// Return minimum enum value for enum of type T
+		static int enumMin();
 	};
 
 	static constexpr unsigned s_lowIP = 827;
