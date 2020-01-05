@@ -186,49 +186,76 @@ static YulProtoMutator removeContinue(
 	}
 );
 
-/// Add declaration statement referencing mload(0)
-static YulProtoMutator addMloadZero(
-	VarDecl::descriptor(),
+/// Mutate expression into an s/m/calldataload
+static YulProtoMutator addLoadZero(
+	Expression::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		auto varDeclStmt = static_cast<VarDecl*>(_message);
+		auto expr = static_cast<Expression*>(_message);
 		if (_seed % YulProtoMutator::s_mediumIP == 0)
 		{
-			if (varDeclStmt->has_expr())
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: expression mutated to load op" << std::endl;
+#endif
+			switch (expr->expr_oneof_case())
 			{
-#ifdef DEBUG
-				std::cout << "----------------------------------" << std::endl;
-				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
-				std::cout << "YULMUTATOR: mload added" << std::endl;
-#endif
-				varDeclStmt->clear_expr();
-				auto zeroLit = YulProtoMutator::intLiteral(0);
-				auto consExpr = new Expression();
-				consExpr->set_allocated_cons(zeroLit);
-				auto mloadOp = new UnaryOp();
-				mloadOp->set_op(UnaryOp::MLOAD);
-				mloadOp->set_allocated_operand(consExpr);
-				auto mloadExpr = new Expression();
-				mloadExpr->set_allocated_unop(mloadOp);
-				varDeclStmt->set_allocated_expr(mloadExpr);
-#ifdef DEBUG
-				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
-				std::cout << "----------------------------------" << std::endl;
-#endif
+			case Expression::kVarref:
+				expr->clear_varref();
+				break;
+			case Expression::kCons:
+				expr->clear_cons();
+				break;
+			case Expression::kBinop:
+				expr->clear_binop();
+				break;
+			case Expression::kUnop:
+				expr->clear_unop();
+				break;
+			case Expression::kTop:
+				expr->clear_top();
+				break;
+			case Expression::kNop:
+				expr->clear_nop();
+				break;
+			case Expression::kFuncExpr:
+				expr->clear_func_expr();
+				break;
+			case Expression::kLowcall:
+				expr->clear_lowcall();
+				break;
+			case Expression::kCreate:
+				expr->clear_create();
+				break;
+			case Expression::kUnopdata:
+				expr->clear_unopdata();
+				break;
+			case Expression::EXPR_ONEOF_NOT_SET:
+				break;
 			}
+			expr->set_allocated_unop(YulProtoMutator::loadExpression(_seed));
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
 		}
 	}
 );
 
-/// Remove unary operation mload(0)
-static YulProtoMutator removeMloadZero(
+/// Remove unary operation containing a load from memory/storage/calldata
+static YulProtoMutator removeLoad(
 	UnaryOp::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
 		auto unaryOp = static_cast<UnaryOp*>(_message);
+		auto operation = unaryOp->op();
 		if (_seed % YulProtoMutator::s_mediumIP == 1)
 		{
-			if (unaryOp->has_op() == UnaryOp::MLOAD)
+			if (operation == UnaryOp::MLOAD ||
+				operation == UnaryOp::SLOAD ||
+				operation == UnaryOp::CALLDATALOAD
+			)
 			{
 #ifdef DEBUG
 				std::cout << "----------------------------------" << std::endl;
@@ -261,8 +288,13 @@ static YulProtoMutator addStoreToZero(
 #endif
 			auto storeStmt = new StoreFunc();
 			storeStmt->set_st(YulProtoMutator::EnumTypeConverter<StoreFunc_Storage>{}.enumFromSeed(_seed));
-			storeStmt->set_allocated_loc(YulProtoMutator::litExpression(0));
-			storeStmt->set_allocated_loc(YulProtoMutator::refExpression(_seed));
+			// One in two times, we force a store(0, varref). In the other instance,
+			// we leave loc and val unset.
+			if (_seed % 2)
+			{
+				storeStmt->set_allocated_loc(YulProtoMutator::litExpression(0));
+				storeStmt->set_allocated_val(YulProtoMutator::refExpression(_seed));
+			}
 			auto stmt = block->add_statements();
 			stmt->set_allocated_storage_func(storeStmt);
 #ifdef DEBUG
@@ -1181,4 +1213,23 @@ int YulProtoMutator::EnumTypeConverter<T>::enumMin()
 		return UnaryOp_UOp_UOp_MIN;
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
+}
+
+UnaryOp* YulProtoMutator::loadExpression(unsigned _seed)
+{
+	auto unop = new UnaryOp();
+	unop->set_allocated_operand(litExpression(0));
+	switch (_seed % 3)
+	{
+	case 0:
+		unop->set_op(UnaryOp::MLOAD);
+		break;
+	case 1:
+		unop->set_op(UnaryOp::SLOAD);
+		break;
+	case 2:
+		unop->set_op(UnaryOp::CALLDATALOAD);
+		break;
+	}
+	return unop;
 }

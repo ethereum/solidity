@@ -38,6 +38,11 @@ struct YulProtoMutator
 	/// of variable to be referenced
 	static Expression* refExpression(unsigned _seed);
 
+	/// Return a load expression from location zero
+	/// @param _seed: Pseudo-random unsigned integer used to create
+	/// type of load i.e., memory, storage, or calldata.
+	static UnaryOp* loadExpression(unsigned _seed);
+
 	/// Configure function call from a pseudo-random seed.
 	/// @param _call: Pre-allocated FunctionCall protobuf message
 	/// @param _seed: Pseudo-random unsigned integer
@@ -47,9 +52,9 @@ struct YulProtoMutator
 	template<class T> struct AlwaysFalse: std::false_type {};
 
 	/// Template struct for obtaining a valid enum value of
-	/// template type from pseudo-random unsigned integer.
+	/// template type from a pseudo-random unsigned integer.
 	/// @param _seed: Pseudo-random integer
-	/// @returns Valid enum of template enum type
+	/// @returns Valid enum of enum type T
 	template <typename T>
 	struct EnumTypeConverter
 	{
