@@ -8,4 +8,4 @@ contract Error3 {
 }
 // ----
 // ParserError: (95-96): Expected primary expression.
-// Warning: (95-96): Recovered in Statement at ';'.
+// Warning: (95-96): Recovered in Statement at ";".

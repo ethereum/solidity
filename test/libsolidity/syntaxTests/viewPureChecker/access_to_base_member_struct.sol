@@ -15,7 +15,7 @@ contract B is A {
     }
 }
 // ----
-// TypeError: (107-110): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError: (166-171): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError: (244-247): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
-// TypeError: (244-249): Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError: (107-110): Function declared as "view", but this expression (potentially) modifies the state and thus requires non-payable (the default) or "payable".
+// TypeError: (166-171): Function declared as "view", but this expression (potentially) modifies the state and thus requires non-payable (the default) or "payable".
+// TypeError: (244-247): Function declared as "pure", but this expression (potentially) reads from the environment or state and thus requires "view".
+// TypeError: (244-249): Function declared as "pure", but this expression (potentially) reads from the environment or state and thus requires "view".

@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (97-98): Expected reserved keyword 'catch' but got '}'
+// ParserError: (97-98): Expected reserved keyword "catch" but got "}"

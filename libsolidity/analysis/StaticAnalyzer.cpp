@@ -197,12 +197,12 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 		if (type->kind() == MagicType::Kind::Message && _memberAccess.memberName() == "gas")
 			m_errorReporter.typeError(
 				_memberAccess.location(),
-				"\"msg.gas\" has been deprecated in favor of \"gasleft()\""
+				quote("msg.gas") + " has been deprecated in favor of " + quote("gasleft()") + "."
 			);
 		else if (type->kind() == MagicType::Kind::Block && _memberAccess.memberName() == "blockhash")
 			m_errorReporter.typeError(
 				_memberAccess.location(),
-				"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
+				quote("block.blockhash()") + " has been deprecated in favor of " + quote("blockhash()") + "."
 			);
 		else if (type->kind() == MagicType::Kind::MetaType && _memberAccess.memberName() == "runtimeCode")
 		{
@@ -223,7 +223,7 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 			if (type->kind() == FunctionType::Kind::BareCallCode)
 				m_errorReporter.typeError(
 					_memberAccess.location(),
-					"\"callcode\" has been deprecated in favour of \"delegatecall\"."
+					quote("callcode") + " has been deprecated in favour of" + quote("delegatecall") + "."
 				);
 
 	if (m_constructor)
@@ -236,7 +236,7 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 				if (id->name() == "this")
 					m_errorReporter.warning(
 						id->location(),
-						"\"this\" used in constructor. "
+						quote("this") + " used in constructor. "
 						"Note that external functions of a contract "
 						"cannot be called while it is being constructed.");
 				break;

@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 
 BOOST_AUTO_TEST_CASE(surplus_input)
 {
-	CHECK_PARSE_ERROR("{ } { }", ParserError, "Expected end of source but got '{'");
+	CHECK_PARSE_ERROR("{ } { }", ParserError, "Expected end of source but got " + quote("{"));
 }
 
 BOOST_AUTO_TEST_CASE(simple_instructions)
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(vardecl)
 
 BOOST_AUTO_TEST_CASE(vardecl_name_clashes)
 {
-	CHECK_PARSE_ERROR("{ let x := 1 let x := 2 }", DeclarationError, "Variable name x already taken in this scope.");
+	CHECK_PARSE_ERROR("{ let x := 1 let x := 2 }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope.");
 }
 
 BOOST_AUTO_TEST_CASE(vardecl_multi)
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(vardecl_multi)
 
 BOOST_AUTO_TEST_CASE(vardecl_multi_conflict)
 {
-	CHECK_PARSE_ERROR("{ function f() -> x, y {} let x, x := f() }", DeclarationError, "Variable name x already taken in this scope.");
+	CHECK_PARSE_ERROR("{ function f() -> x, y {} let x, x := f() }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope.");
 }
 
 BOOST_AUTO_TEST_CASE(vardecl_bool)
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(functional)
 
 BOOST_AUTO_TEST_CASE(functional_partial)
 {
-	CHECK_PARSE_ERROR("{ let x := byte }", ParserError, "Expected '(' but got '}'");
+	CHECK_PARSE_ERROR("{ let x := byte }", ParserError, "Expected" + quoteSpace("(") + "but got " + quote("}"));
 }
 
 BOOST_AUTO_TEST_CASE(functional_partial_success)
@@ -265,8 +265,8 @@ BOOST_AUTO_TEST_CASE(vardecl_complex)
 
 BOOST_AUTO_TEST_CASE(variable_use_before_decl)
 {
-	CHECK_PARSE_ERROR("{ x := 2 let x := 3 }", DeclarationError, "Variable x used before it was declared.");
-	CHECK_PARSE_ERROR("{ let x := mul(2, x) }", DeclarationError, "Variable x used before it was declared.");
+	CHECK_PARSE_ERROR("{ x := 2 let x := 3 }", DeclarationError, "Variable" + quoteSpace("x") + "used before it was declared.");
+	CHECK_PARSE_ERROR("{ let x := mul(2, x) }", DeclarationError, "Variable" + quoteSpace("x") + "used before it was declared.");
 }
 
 BOOST_AUTO_TEST_CASE(if_statement)
@@ -284,10 +284,10 @@ BOOST_AUTO_TEST_CASE(if_statement_scope)
 
 BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
-	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected '(' but got '{'");
+	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected" + quoteSpace("(") + "but got " + quote("{"));
 	BOOST_CHECK("{ if calldatasize() {}");
-	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
-	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected '{' but got reserved keyword 'let'");
+	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", TypeError, "Expected expression to return one item to the stack, but it returned 0 items.");
+	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected" + quoteSpace("{") + "but got reserved keyword " + quote("let"));
 }
 
 BOOST_AUTO_TEST_CASE(switch_statement)
@@ -314,8 +314,8 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
-	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected '(' but got reserved keyword 'default'");
-	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
+	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected" + quoteSpace("(") + "but got reserved keyword " + quote("default"));
+	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to return one item to the stack, but it returned 0 items.");
 }
 
 BOOST_AUTO_TEST_CASE(switch_default_before_case)
@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE(switch_invalid_case)
 
 BOOST_AUTO_TEST_CASE(switch_invalid_body)
 {
-	CHECK_PARSE_ERROR("{ switch 42 case 1 mul case 2 {} default {} }", ParserError, "Expected '{' but got identifier");
+	CHECK_PARSE_ERROR("{ switch 42 case 1 mul case 2 {} default {} }", ParserError, "Expected" + quoteSpace("{") + "but got identifier");
 }
 
 BOOST_AUTO_TEST_CASE(for_statement)
@@ -347,11 +347,11 @@ BOOST_AUTO_TEST_CASE(for_statement)
 BOOST_AUTO_TEST_CASE(for_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ for {} {} {} {} }", ParserError, "Literal, identifier or instruction expected.");
-	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected '{' but got 'Number'");
-	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected '{' but got 'Number'");
-	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected '{' but got 'Number'");
-	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected '(' but got '{'");
-	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
+	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected" + quoteSpace("{") + "but got " + quote("Number"));
+	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected" + quoteSpace("{") + "but got " + quote("Number"));
+	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected" + quoteSpace("{") + "but got " + quote("Number"));
+	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected" + quoteSpace("(") + "but got " + quote("{"));
+	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", TypeError, "Expected expression to return one item to the stack, but it returned 0 items.");
 }
 
 BOOST_AUTO_TEST_CASE(for_visibility)
@@ -364,11 +364,11 @@ BOOST_AUTO_TEST_CASE(for_visibility)
 	CHECK_PARSE_ERROR("{ for { pop(i) } 1 { } { let i := 1 } }", DeclarationError, "Identifier not found");
 	CHECK_PARSE_ERROR("{ for {} i {} { let i := 1 } }", DeclarationError, "Identifier not found");
 	CHECK_PARSE_ERROR("{ for {} 1 { pop(i) } { let i := 1 } }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 { let x := 1 } {} }", DeclarationError, "Variable name x already taken in this scope");
-	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 {} { let x := 1 } }", DeclarationError, "Variable name x already taken in this scope");
-	CHECK_PARSE_ERROR("{ let x := 1 for { let x := 1 } 1 {} {} }", DeclarationError, "Variable name x already taken in this scope");
-	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 { let x := 1 } {} }", DeclarationError, "Variable name x already taken in this scope");
-	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 {} { let x := 1 } }", DeclarationError, "Variable name x already taken in this scope");
+	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 { let x := 1 } {} }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope");
+	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 {} { let x := 1 } }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope");
+	CHECK_PARSE_ERROR("{ let x := 1 for { let x := 1 } 1 {} {} }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope");
+	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 { let x := 1 } {} }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope");
+	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 {} { let x := 1 } }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope");
 	// Check that body and post are not sub-scopes of each other.
 	BOOST_CHECK(successParse("{ for {} 1 { let x := 1 } { let x := 1 } }"));
 }
@@ -415,27 +415,27 @@ BOOST_AUTO_TEST_CASE(opcode_for_function_args)
 
 BOOST_AUTO_TEST_CASE(name_clashes)
 {
-	CHECK_PARSE_ERROR("{ let g := 2 function g() { } }", DeclarationError, "Variable name g already taken in this scope");
+	CHECK_PARSE_ERROR("{ let g := 2 function g() { } }", DeclarationError, "Variable name" + quoteSpace("g") + "already taken in this scope");
 }
 
 BOOST_AUTO_TEST_CASE(name_clashes_function_subscope)
 {
-	CHECK_PARSE_ERROR("{ function g() { function g() {} } }", DeclarationError, "Function name g already taken in this scope");
+	CHECK_PARSE_ERROR("{ function g() { function g() {} } }", DeclarationError, "Function name" + quoteSpace("g") + "already taken in this scope");
 }
 
 BOOST_AUTO_TEST_CASE(name_clashes_function_subscope_reverse)
 {
-	CHECK_PARSE_ERROR("{ { function g() {} } function g() { } }", DeclarationError, "Function name g already taken in this scope");
+	CHECK_PARSE_ERROR("{ { function g() {} } function g() { } }", DeclarationError, "Function name" + quoteSpace("g") + "already taken in this scope");
 }
 
 BOOST_AUTO_TEST_CASE(name_clashes_function_variable_subscope)
 {
-	CHECK_PARSE_ERROR("{ function g() { let g := 0 } }", DeclarationError, "Variable name g already taken in this scope");
+	CHECK_PARSE_ERROR("{ function g() { let g := 0 } }", DeclarationError, "Variable name" + quoteSpace("g") + "already taken in this scope");
 }
 
 BOOST_AUTO_TEST_CASE(name_clashes_function_variable_subscope_reverse)
 {
-	CHECK_PARSE_ERROR("{ { let g := 0 } function g() { } }", DeclarationError, "Variable name g already taken in this scope");
+	CHECK_PARSE_ERROR("{ { let g := 0 } function g() { } }", DeclarationError, "Variable name" + quoteSpace("g") + "already taken in this scope");
 }
 BOOST_AUTO_TEST_CASE(functions_in_parallel_scopes)
 {
@@ -477,8 +477,8 @@ BOOST_AUTO_TEST_CASE(recursion_depth)
 
 BOOST_AUTO_TEST_CASE(multiple_assignment)
 {
-	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} 123, x := f() }", ParserError, "Variable name must precede \",\" in multiple assignment.");
-	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} x, 123 := f() }", ParserError, "Variable name must precede \":=\" in assignment.");
+	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} 123, x := f() }", ParserError, "Variable name must precede" + quoteSpace(",") + "in multiple assignment.");
+	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} x, 123 := f() }", ParserError, "Variable name must precede" + quoteSpace(":=") + "in assignment.");
 
 	/// NOTE: Travis hiccups if not having a variable
 	char const* text = R"(
@@ -731,9 +731,9 @@ BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 {
 	if (solidity::test::Options::get().evmVersion().hasBitwiseShifting())
 		return;
-	CHECK_PARSE_WARNING("{ pop(shl(10, 32)) }", TypeError, "The \"shl\" instruction is only available for Constantinople-compatible VMs");
-	CHECK_PARSE_WARNING("{ pop(shr(10, 32)) }", TypeError, "The \"shr\" instruction is only available for Constantinople-compatible VMs");
-	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", TypeError, "The \"sar\" instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ pop(shl(10, 32)) }", TypeError, "The" + quoteSpace("shl") + "instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ pop(shr(10, 32)) }", TypeError, "The" + quoteSpace("shr") + "instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", TypeError, "The" + quoteSpace("sar") + "instruction is only available for Constantinople-compatible VMs");
 }
 
 BOOST_AUTO_TEST_CASE(jump_error)

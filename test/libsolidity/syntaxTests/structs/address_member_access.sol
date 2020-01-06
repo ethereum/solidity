@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (129-138): Member "address" not found or not visible after argument-dependent lookup in struct C.S memory.
+// TypeError: (129-138): Member "address" not found or not visible after argument-dependent lookup in "struct C.S memory".

@@ -209,7 +209,7 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 	if (_contract.abstract())
 	{
 		if (_contract.contractKind() == ContractDefinition::ContractKind::Interface)
-			m_errorReporter.typeError(_contract.location(), "Interfaces do not need the \"abstract\" keyword, they are abstract implicitly.");
+			m_errorReporter.typeError(_contract.location(), "Interfaces do not need the" + quoteSpace("abstract") + "keyword, they are abstract implicitly.");
 		else if (_contract.contractKind() == ContractDefinition::ContractKind::Library)
 			m_errorReporter.typeError(_contract.location(), "Libraries cannot be abstract.");
 		else
@@ -228,8 +228,8 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 		for (auto function: _contract.annotation().unimplementedFunctions)
 			ssl.append("Missing implementation:", function->location());
 		m_errorReporter.typeError(_contract.location(), ssl,
-			"Contract \"" + _contract.annotation().canonicalName
-			+ "\" should be marked as abstract.");
+			"Contract" + quoteSpace(_contract.annotation().canonicalName)
+			+ "should be marked as abstract.");
 	}
 }
 
@@ -368,7 +368,7 @@ void ContractLevelChecker::checkHashCollisions(ContractDefinition const& _contra
 		if (hashes.count(hash))
 			m_errorReporter.typeError(
 				_contract.location(),
-				string("Function signature hash collision for ") + it.second->externalSignature()
+				string("Function signature hash collision for ") + quote(it.second->externalSignature()) + "."
 			);
 		hashes.insert(hash);
 	}
@@ -425,11 +425,11 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 		m_errorReporter.fatalTypeError(
 			_contract.location(),
 			errors,
-			std::string("Contract \"") +
-			_contract.name() +
-			"\" does not use ABIEncoderV2 but wants to inherit from a contract " +
+			std::string("Contract") +
+			quoteSpace(_contract.name()) +
+			"does not use ABIEncoderV2 but wants to inherit from a contract " +
 			"which uses types that require it. " +
-			"Use \"pragma experimental ABIEncoderV2;\" for the inheriting contract as well to enable the feature."
+			"Use" + quoteSpace("pragma experimental ABIEncoderV2;") + "for the inheriting contract as well to enable the feature."
 		);
 
 }

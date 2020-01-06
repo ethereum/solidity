@@ -28,6 +28,20 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 
+namespace solidity::langutil {
+
+std::string quote(std::string const& _name)
+{
+	return "\"" + _name + "\"";
+}
+
+std::string quoteSpace(std::string const& _name)
+{
+	return " " +quote(_name) + " ";
+}
+
+}
+
 ErrorReporter& ErrorReporter::operator=(ErrorReporter const& _errorReporter)
 {
 	if (&_errorReporter == this)

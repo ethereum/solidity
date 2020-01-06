@@ -8,4 +8,4 @@ contract C {
 // ----
 // TypeError: (153-157): Type is not callable
 // TypeError: (153-157): Expression has to be an lvalue.
-// TypeError: (160-161): Type int_const 2 is not implicitly convertible to expected type tuple().
+// TypeError: (160-161): Type "int_const 2" is not implicitly convertible to expected type "tuple()".

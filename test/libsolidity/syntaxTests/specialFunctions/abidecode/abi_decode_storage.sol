@@ -5,4 +5,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (109-116): Expected ',' but got 'storage'
+// ParserError: (109-116): Expected "," but got "storage"

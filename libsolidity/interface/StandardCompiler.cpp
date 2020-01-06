@@ -322,11 +322,11 @@ Json::Value collectEVMObject(evmasm::LinkerObject const& _object, string const* 
 std::optional<Json::Value> checkKeys(Json::Value const& _input, set<string> const& _keys, string const& _name)
 {
 	if (!!_input && !_input.isObject())
-		return formatFatalError("JSONError", "\"" + _name + "\" must be an object");
+		return formatFatalError("JSONError", quote(_name) + " must be an object");
 
 	for (auto const& member: _input.getMemberNames())
 		if (!_keys.count(member))
-			return formatFatalError("JSONError", "Unknown key \"" + member + "\"");
+			return formatFatalError("JSONError", "Unknown key " + quote(member));
 
 	return std::nullopt;
 }
@@ -372,7 +372,7 @@ std::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std
 	if (_details.isMember(_name))
 	{
 		if (!_details[_name].isBool())
-			return formatFatalError("JSONError", "\"settings.optimizer.details." + _name + "\" must be Boolean");
+			return formatFatalError("JSONError", quote("settings.optimizer.details." + _name) + " must be Boolean");
 		_setting = _details[_name].asBool();
 	}
 	return {};
@@ -383,11 +383,11 @@ std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 	if (_input.isObject())
 	{
 		if (_input.isMember("useLiteralContent") && !_input["useLiteralContent"].isBool())
-			return formatFatalError("JSONError", "\"settings.metadata.useLiteralContent\" must be Boolean");
+			return formatFatalError("JSONError", quote("settings.metadata.useLiteralContent") + " must be Boolean");
 
 		static set<string> hashes{"ipfs", "bzzr1", "none"};
 		if (_input.isMember("bytecodeHash") && !hashes.count(_input["bytecodeHash"].asString()))
-			return formatFatalError("JSONError", "\"settings.metadata.bytecodeHash\" must be \"ipfs\", \"bzzr1\" or \"none\"");
+			return formatFatalError("JSONError", quote("settings.metadata.bytecodeHash") + " must be " + quoteSpace("ipfs") + "," + quoteSpace("bzzr1") + "or " + quote("none"));
 	}
 	static set<string> keys{"useLiteralContent", "bytecodeHash"};
 	return checkKeys(_input, keys, "settings.metadata");
@@ -396,7 +396,7 @@ std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelection)
 {
 	if (!!_outputSelection && !_outputSelection.isObject())
-		return formatFatalError("JSONError", "\"settings.outputSelection\" must be an object");
+		return formatFatalError("JSONError", quote("settings.outputSelection") + " must be an object");
 
 	for (auto const& sourceName: _outputSelection.getMemberNames())
 	{
@@ -405,7 +405,7 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 		if (!sourceVal.isObject())
 			return formatFatalError(
 				"JSONError",
-				"\"settings.outputSelection." + sourceName + "\" must be an object"
+				quote("settings.outputSelection." + sourceName) + " must be an object"
 			);
 
 		for (auto const& contractName: sourceVal.getMemberNames())
@@ -415,22 +415,26 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 			if (!contractVal.isArray())
 				return formatFatalError(
 					"JSONError",
-					"\"settings.outputSelection." +
-					sourceName +
-					"." +
-					contractName +
-					"\" must be a string array"
+					quote(
+						"settings.outputSelection." +
+						sourceName +
+						"." +
+						contractName
+					) +
+					" must be a string array"
 				);
 
 			for (auto const& output: contractVal)
 				if (!output.isString())
 					return formatFatalError(
 						"JSONError",
-						"\"settings.outputSelection." +
-						sourceName +
-						"." +
-						contractName +
-						"\" must be a string array"
+						quote(
+							"settings.outputSelection." +
+							sourceName +
+							"." +
+							contractName
+						) +
+						" must be a string array"
 					);
 		}
 	}
@@ -449,7 +453,7 @@ boost::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Valu
 	if (_jsonInput.isMember("enabled"))
 	{
 		if (!_jsonInput["enabled"].isBool())
-			return formatFatalError("JSONError", "The \"enabled\" setting must be a Boolean.");
+			return formatFatalError("JSONError", "The" + quoteSpace("enabled") + "setting must be a Boolean.");
 
 		settings = _jsonInput["enabled"].asBool() ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 	}
@@ -457,7 +461,7 @@ boost::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Valu
 	if (_jsonInput.isMember("runs"))
 	{
 		if (!_jsonInput["runs"].isUInt())
-			return formatFatalError("JSONError", "The \"runs\" setting must be an unsigned number.");
+			return formatFatalError("JSONError", "The" + quoteSpace("runs") + "setting must be an unsigned number.");
 		settings.expectedExecutionsPerDeployment = _jsonInput["runs"].asUInt();
 	}
 
@@ -485,7 +489,7 @@ boost::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Valu
 		if (details.isMember("yulDetails"))
 		{
 			if (!settings.runYulOptimiser)
-				return formatFatalError("JSONError", "\"Providing yulDetails requires Yul optimizer to be enabled.");
+				return formatFatalError("JSONError", "Providing" + quoteSpace("yulDetails") + "requires Yul optimizer to be enabled.");
 
 			if (auto result = checkKeys(details["yulDetails"], {"stackAllocation"}, "settings.optimizer.details.yulDetails"))
 				return *result;
@@ -513,7 +517,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 	Json::Value const& sources = _input["sources"];
 
 	if (!sources.isObject() && !sources.isNull())
-		return formatFatalError("JSONError", "\"sources\" is not a JSON object.");
+		return formatFatalError("JSONError", quote("sources") + " is not a JSON object.");
 
 	if (sources.empty())
 		return formatFatalError("JSONError", "No input sources specified.");
@@ -538,7 +542,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 					false,
 					"IOError",
 					"general",
-					"Mismatch between content and supplied hash for \"" + sourceName + "\""
+					"Mismatch between content and supplied hash for " + quote(sourceName)
 				));
 			else
 				ret.sources[sourceName] = content;
@@ -563,7 +567,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 							false,
 							"IOError",
 							"general",
-							"Mismatch between content and supplied hash for \"" + sourceName + "\" at \"" + url.asString() + "\""
+							"Mismatch between content and supplied hash for" + quoteSpace(sourceName) + "at " + quote(url.asString())
 						));
 					else
 					{
@@ -573,7 +577,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 					}
 				}
 				else
-					failures.push_back("Cannot import url (\"" + url.asString() + "\"): " + result.responseOrErrorMessage);
+					failures.push_back("Cannot import url (" + quote(url.asString()) + "): " + result.responseOrErrorMessage + ".");
 			}
 
 			for (auto const& failure: failures)
@@ -602,7 +606,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 		if (!!smtlib2Responses)
 		{
 			if (!smtlib2Responses.isObject())
-				return formatFatalError("JSONError", "\"auxiliaryInput.smtlib2responses\" must be an object.");
+				return formatFatalError("JSONError", quote("auxiliaryInput.smtlib2responses") + " must be an object.");
 
 			for (auto const& hashString: smtlib2Responses.getMemberNames())
 			{
@@ -619,7 +623,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 				if (!smtlib2Responses[hashString].isString())
 					return formatFatalError(
 						"JSONError",
-						"\"smtlib2Responses." + hashString + "\" must be a string."
+						quote("smtlib2Responses." + hashString) + " must be a string."
 					);
 
 				ret.smtLib2Responses[hash] = smtlib2Responses[hashString].asString();
@@ -635,14 +639,14 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 	if (settings.isMember("parserErrorRecovery"))
 	{
 		if (!settings["parserErrorRecovery"].isBool())
-			return formatFatalError("JSONError", "\"settings.parserErrorRecovery\" must be a Boolean.");
+			return formatFatalError("JSONError", quote("settings.parserErrorRecovery") + " must be a Boolean.");
 		ret.parserErrorRecovery = settings["parserErrorRecovery"].asBool();
 	}
 
 	if (settings.isMember("evmVersion"))
 	{
 		if (!settings["evmVersion"].isString())
-			return formatFatalError("JSONError", "evmVersion must be a string.");
+			return formatFatalError("JSONError", quote("evmVersion") + " must be a string.");
 		std::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(settings["evmVersion"].asString());
 		if (!version)
 			return formatFatalError("JSONError", "Invalid EVM version requested.");
@@ -657,30 +661,30 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 		if (settings["debug"].isMember("revertStrings"))
 		{
 			if (!settings["debug"]["revertStrings"].isString())
-				return formatFatalError("JSONError", "settings.debug.revertStrings must be a string.");
+				return formatFatalError("JSONError", quote("settings.debug.revertStrings") + " must be a string.");
 			std::optional<RevertStrings> revertStrings = revertStringsFromString(settings["debug"]["revertStrings"].asString());
 			if (!revertStrings)
-				return formatFatalError("JSONError", "Invalid value for settings.debug.revertStrings.");
+				return formatFatalError("JSONError", "Invalid value for " + quote("settings.debug.revertStrings") + ".");
 			if (*revertStrings != RevertStrings::Default && *revertStrings != RevertStrings::Strip)
 				return formatFatalError(
 					"UnimplementedFeatureError",
-					"Only \"default\" and \"strip\" are implemented for settings.debug.revertStrings for now."
+					"Only" + quoteSpace("default") + "and" + quoteSpace("strip") + "are implemented for" + quoteSpace("settings.debug.revertStrings") +  "for now."
 				);
 			ret.revertStrings = *revertStrings;
 		}
 	}
 
 	if (settings.isMember("remappings") && !settings["remappings"].isArray())
-		return formatFatalError("JSONError", "\"settings.remappings\" must be an array of strings.");
+		return formatFatalError("JSONError", quote("settings.remappings") + " must be an array of strings.");
 
 	for (auto const& remapping: settings.get("remappings", Json::Value()))
 	{
 		if (!remapping.isString())
-			return formatFatalError("JSONError", "\"settings.remappings\" must be an array of strings");
+			return formatFatalError("JSONError", quote("settings.remappings") + " must be an array of strings");
 		if (auto r = CompilerStack::parseRemapping(remapping.asString()))
 			ret.remappings.emplace_back(std::move(*r));
 		else
-			return formatFatalError("JSONError", "Invalid remapping: \"" + remapping.asString() + "\"");
+			return formatFatalError("JSONError", "Invalid remapping: " + quote(remapping.asString()));
 	}
 
 	if (settings.isMember("optimizer"))
@@ -694,7 +698,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 
 	Json::Value jsonLibraries = settings.get("libraries", Json::Value(Json::objectValue));
 	if (!jsonLibraries.isObject())
-		return formatFatalError("JSONError", "\"libraries\" is not a JSON object.");
+		return formatFatalError("JSONError", quote("libraries") + " is not a JSON object.");
 	for (auto const& sourceName: jsonLibraries.getMemberNames())
 	{
 		auto const& jsonSourceName = jsonLibraries[sourceName];
@@ -709,7 +713,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 			if (!boost::starts_with(address, "0x"))
 				return formatFatalError(
 					"JSONError",
-					"Library address is not prefixed with \"0x\"."
+					"Library address is not prefixed with " + quote("0x") + "."
 				);
 
 			if (address.length() != 42)
@@ -727,7 +731,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 			{
 				return formatFatalError(
 					"JSONError",
-					"Invalid library address (\"" + address + "\") supplied."
+					"Invalid library address (" + quote(address) + ") supplied."
 				);
 			}
 		}
@@ -1021,11 +1025,11 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 	if (!_inputsAndSettings.smtLib2Responses.empty())
 		return formatFatalError("JSONError", "Yul mode does not support smtlib2responses.");
 	if (!_inputsAndSettings.remappings.empty())
-		return formatFatalError("JSONError", "Field \"settings.remappings\" cannot be used for Yul.");
+		return formatFatalError("JSONError", "Field" + quoteSpace("settings.remappings") + "cannot be used for Yul.");
 	if (!_inputsAndSettings.libraries.empty())
-		return formatFatalError("JSONError", "Field \"settings.libraries\" cannot be used for Yul.");
+		return formatFatalError("JSONError", "Field" + quoteSpace("settings.libraries") + "cannot be used for Yul.");
 	if (_inputsAndSettings.revertStrings != RevertStrings::Default)
-		return formatFatalError("JSONError", "Field \"settings.debug.revertStrings\" cannot be used for Yul.");
+		return formatFatalError("JSONError", "Field" + quoteSpace("settings.debug.revertStrings") + "cannot be used for Yul.");
 
 	Json::Value output = Json::objectValue;
 
@@ -1107,7 +1111,7 @@ Json::Value StandardCompiler::compile(Json::Value const& _input) noexcept
 		else if (settings.language == "Yul")
 			return compileYul(std::move(settings));
 		else
-			return formatFatalError("JSONError", "Only \"Solidity\" or \"Yul\" is supported as a language.");
+			return formatFatalError("JSONError", "Only" + quoteSpace("Solidity") + "or" + quoteSpace("Yul") + "is supported as a language.");
 	}
 	catch (Json::LogicError const& _exception)
 	{

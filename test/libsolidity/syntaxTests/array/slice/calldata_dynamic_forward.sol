@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (79-85): Invalid type for argument in function call. Invalid implicit conversion from bytes calldata slice to bytes memory requested.
+// TypeError: (79-85): Invalid type for argument in function call. Invalid implicit conversion from "bytes calldata slice" to "bytes memory" requested.

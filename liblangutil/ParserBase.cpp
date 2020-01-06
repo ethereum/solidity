@@ -65,14 +65,14 @@ string ParserBase::tokenName(Token _token)
 	else if (_token == Token::EOS)
 		return "end of source";
 	else if (TokenTraits::isReservedKeyword(_token))
-		return "reserved keyword '" + TokenTraits::friendlyName(_token) + "'";
+		return "reserved keyword " + quote(TokenTraits::friendlyName(_token));
 	else if (TokenTraits::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
 	{
 		ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
-		return "'" + elemTypeName.toString() + "'";
+		return quote(elemTypeName.toString());
 	}
 	else
-		return "'" + TokenTraits::friendlyName(_token) + "'";
+		return quote(TokenTraits::friendlyName(_token));
 }
 
 void ParserBase::expectToken(Token _value, bool _advance)

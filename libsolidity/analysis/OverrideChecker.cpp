@@ -495,7 +495,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 		);
 
 	if (!_overriding.overrides())
-		overrideError(_overriding, _super, "Overriding " + _overriding.astNodeName() + " is missing \"override\" specifier.");
+		overrideError(_overriding, _super, "Overriding " + _overriding.astNodeName() + " is missing" + quoteSpace("override") + "specifier.");
 
 	if (_super.isVariable())
 		overrideError(
@@ -508,7 +508,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 		overrideError(
 			_super,
 			_overriding,
-			"Trying to override non-virtual " + _super.astNodeName() + ". Did you forget to add \"virtual\"?",
+			"Trying to override non-virtual " + _super.astNodeName() + ". Did you forget to add " + quote("virtual") + "?",
 			"Overriding " + _overriding.astNodeName() + " is here:"
 		);
 
@@ -546,11 +546,11 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 				overrideError(
 					_overriding,
 					_super,
-					"Overriding function changes state mutability from \"" +
-					stateMutabilityToString(_super.stateMutability()) +
-					"\" to \"" +
-					stateMutabilityToString(_overriding.stateMutability()) +
-					"\"."
+					"Overriding function changes state mutability from" +
+					quoteSpace(stateMutabilityToString(_super.stateMutability())) +
+					"to " +
+					quote(stateMutabilityToString(_overriding.stateMutability())) +
+					"."
 				);
 
 			if (_overriding.unimplemented() && !_super.unimplemented())
@@ -576,7 +576,7 @@ void OverrideChecker::overrideListError(
 	for (Declaration const* c: _secondary)
 	{
 		ssl.append("This contract: ", c->location());
-		names.insert("\"" + c->name() + "\"");
+		names.insert(quote(c->name()));
 	}
 	string contractSingularPlural = "contract ";
 	if (_secondary.size() > 1)
@@ -699,9 +699,9 @@ void OverrideChecker::checkAmbiguousOverridesInternal(set<OverrideProxy> _baseCa
 			foundVariable = true;
 
 	string message =
-		"Derived contract must override " + callableName + " \"" +
-		_baseCallables.begin()->name() +
-		"\". Two or more base classes define " + callableName + " with same " + distinguishigProperty + ".";
+		"Derived contract must override " + callableName + " " +
+		quote(_baseCallables.begin()->name()) +
+		". Two or more base classes define " + callableName + " with same " + distinguishigProperty + ".";
 
 	if (foundVariable)
 		message +=
@@ -758,11 +758,11 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 				m_errorReporter.typeError(
 					list[i]->location(),
 					ssl,
-						"Duplicate contract \"" +
-						joinHumanReadable(list[i]->namePath(), ".") +
-						"\" found in override list of \"" +
-						_item.name() +
-						"\"."
+						"Duplicate contract" +
+						quoteSpace(joinHumanReadable(list[i]->namePath(), ".")) +
+						"found in override list of " +
+						quote(_item.name()) +
+						"."
 				);
 			}
 		}

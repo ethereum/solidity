@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(unsatisfied_version_with_recovery)
 		}
 	)";
 	Error err = getError(text, true);
-	BOOST_CHECK(searchErrorMessage(err, "Expected identifier but got ';'"));
+	BOOST_CHECK(searchErrorMessage(err, "Expected identifier but got " + quote(";")));
 }
 
 BOOST_AUTO_TEST_CASE(function_natspec_documentation)
@@ -516,13 +516,13 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 			uint private internal a;
 		}
 	)";
-	CHECK_PARSE_ERROR(text, "Visibility already specified as \"private\".");
+	CHECK_PARSE_ERROR(text, "Visibility already specified as " + quote("private"));
 	text = R"(
 		contract c {
 			function f() private external {}
 		}
 	)";
-	CHECK_PARSE_ERROR(text, "Visibility already specified as \"private\".");
+	CHECK_PARSE_ERROR(text, "Visibility already specified as " + quote("private"));
 }
 
 BOOST_AUTO_TEST_CASE(keyword_is_reserved)
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 	for (auto const& keyword: keywords)
 	{
 		auto text = std::string("contract ") + keyword + " {}";
-		CHECK_PARSE_ERROR(text.c_str(), string("Expected identifier but got reserved keyword '") + keyword + "'");
+		CHECK_PARSE_ERROR(text.c_str(), string("Expected identifier but got reserved keyword ") + quote(keyword));
 	}
 }
 

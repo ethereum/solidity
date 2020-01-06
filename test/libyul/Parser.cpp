@@ -156,14 +156,14 @@ BOOST_AUTO_TEST_CASE(period_in_identifier)
 
 BOOST_AUTO_TEST_CASE(period_not_as_identifier_start)
 {
-	CHECK_ERROR("{ let .y:u256 }", ParserError, "Expected identifier but got '.'");
+	CHECK_ERROR("{ let .y:u256 }", ParserError, "Expected identifier but got " + quote("."));
 }
 
 BOOST_AUTO_TEST_CASE(period_in_identifier_spaced)
 {
-	CHECK_ERROR("{ let x. y:u256 }", ParserError, "Expected ':' but got identifier");
-	CHECK_ERROR("{ let x .y:u256 }", ParserError, "Expected ':' but got '.'");
-	CHECK_ERROR("{ let x . y:u256 }", ParserError, "Expected ':' but got '.'");
+	CHECK_ERROR("{ let x. y:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got identifier");
+	CHECK_ERROR("{ let x .y:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote("."));
+	CHECK_ERROR("{ let x . y:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote("."));
 }
 
 BOOST_AUTO_TEST_CASE(period_in_identifier_start)
@@ -236,20 +236,20 @@ BOOST_AUTO_TEST_CASE(tokens_as_identifers)
 
 BOOST_AUTO_TEST_CASE(lacking_types)
 {
-	CHECK_ERROR("{ let x := 1:u256 }", ParserError, "Expected ':' but got ':='");
-	CHECK_ERROR("{ let x:u256 := 1 }", ParserError, "Expected ':' but got '}'");
-	CHECK_ERROR("{ function f(a) {} }", ParserError, "Expected ':' but got ')'");
-	CHECK_ERROR("{ function f(a:u256) -> b {} }", ParserError, "Expected ':' but got '{'");
+	CHECK_ERROR("{ let x := 1:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote(":="));
+	CHECK_ERROR("{ let x:u256 := 1 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote("}"));
+	CHECK_ERROR("{ function f(a) {} }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote(")"));
+	CHECK_ERROR("{ function f(a:u256) -> b {} }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote("{"));
 }
 
 BOOST_AUTO_TEST_CASE(invalid_types)
 {
 	/// testing invalid literal
 	/// NOTE: these will need to change when types are compared
-	CHECK_ERROR("{ let x:bool := 1:invalid }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
+	CHECK_ERROR("{ let x:bool := 1:invalid }", TypeError, quote("invalid") + " is not a valid type (user defined types are not yet supported).");
 	/// testing invalid variable declaration
-	CHECK_ERROR("{ let x:invalid := 1:bool }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
-	CHECK_ERROR("{ function f(a:invalid) {} }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
+	CHECK_ERROR("{ let x:invalid := 1:bool }", TypeError, quote("invalid") + " is not a valid type (user defined types are not yet supported).");
+	CHECK_ERROR("{ function f(a:invalid) {} }", TypeError, quote("invalid") + " is not a valid type (user defined types are not yet supported).");
 }
 
 BOOST_AUTO_TEST_CASE(number_literals)
@@ -290,8 +290,8 @@ BOOST_AUTO_TEST_CASE(recursion_depth)
 
 BOOST_AUTO_TEST_CASE(multiple_assignment)
 {
-	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} 123:u256, x := f() }", ParserError, "Variable name must precede \",\" in multiple assignment.");
-	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} x, 123:u256 := f() }", ParserError, "Variable name must precede \":=\" in assignment.");
+	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} 123:u256, x := f() }", ParserError, "Variable name must precede" + quoteSpace(",") + "in multiple assignment.");
+	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} x, 123:u256 := f() }", ParserError, "Variable name must precede" + quoteSpace(":=") + "in assignment.");
 
 	/// NOTE: Travis hiccups if not having a variable
 	char const* text = R"(
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(break_outside_of_for_loop)
 	CHECK_ERROR_DIALECT(
 		"{ let x if x { break } }",
 		SyntaxError,
-		"Keyword \"break\" needs to be inside a for-loop body.",
+		"Keyword" + quoteSpace("break") + "needs to be inside a for-loop body.",
 		EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople())
 	);
 }
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(continue_outside_of_for_loop)
 	CHECK_ERROR_DIALECT(
 		"{ let x if x { continue } }",
 		SyntaxError,
-		"Keyword \"continue\" needs to be inside a for-loop body.",
+		"Keyword" + quoteSpace("continue") + "needs to be inside a for-loop body.",
 		EVMDialect::strictAssemblyForEVMObjects(EVMVersion::constantinople())
 	);
 }
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(for_statement_break_init)
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0 break} iszero(eq(i, 10)) {i := add(i, 1)} {} }",
 		SyntaxError,
-		"Keyword \"break\" in for-loop init block is not allowed.",
+		"Keyword" + quoteSpace("break") + "in for-loop init block is not allowed.",
 		dialect
 	);
 }
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(for_statement_break_post)
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0} iszero(eq(i, 10)) {i := add(i, 1) break} {} }",
 		SyntaxError,
-		"Keyword \"break\" in for-loop post block is not allowed.",
+		"Keyword" + quoteSpace("break") + "in for-loop post block is not allowed.",
 		dialect
 	);
 }
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(for_statement_nested_break)
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0} iszero(eq(i, 10)) {} { function f() { break } } }",
 		SyntaxError,
-		"Keyword \"break\" needs to be inside a for-loop body.",
+		"Keyword" + quoteSpace("break") + "needs to be inside a for-loop body.",
 		dialect
 	);
 }
@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(for_statement_continue_fail_init)
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0 continue} iszero(eq(i, 10)) {i := add(i, 1)} {} }",
 		SyntaxError,
-		"Keyword \"continue\" in for-loop init block is not allowed.",
+		"Keyword" + quoteSpace("continue") + "in for-loop init block is not allowed.",
 		dialect
 	);
 }
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(for_statement_continue_fail_post)
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0} iszero(eq(i, 10)) {i := add(i, 1) continue} {} }",
 		SyntaxError,
-		"Keyword \"continue\" in for-loop post block is not allowed.",
+		"Keyword" + quoteSpace("continue") + "in for-loop post block is not allowed.",
 		dialect
 	);
 }
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(for_statement_nested_continue)
 	CHECK_ERROR_DIALECT(
 		"{ for {let i := 0} iszero(eq(i, 10)) {} { function f() { continue } } }",
 		SyntaxError,
-		"Keyword \"continue\" needs to be inside a for-loop body.",
+		"Keyword" + quoteSpace("continue") + "needs to be inside a for-loop body.",
 		dialect
 	);
 }
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(for_statement_continue_nested_init_in_body)
 	CHECK_ERROR_DIALECT(
 		"{ for {} 1 {} {let x for { continue } x {} {}} }",
 		SyntaxError,
-		"Keyword \"continue\" in for-loop init block is not allowed.",
+		"Keyword" + quoteSpace("continue") + "in for-loop init block is not allowed.",
 		dialect
 	);
 }
@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(function_defined_in_init_nested)
 BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
 	CHECK_ERROR("{ if let x:u256 {} }", ParserError, "Literal or identifier expected.");
-	CHECK_ERROR("{ if true:bool let x:u256 := 3:u256 }", ParserError, "Expected '{' but got reserved keyword 'let'");
+	CHECK_ERROR("{ if true:bool let x:u256 := 3:u256 }", ParserError, "Expected" + quoteSpace("{") + "but got reserved keyword " + quote("let"));
 	// TODO change this to an error once we check types.
 	BOOST_CHECK(successParse("{ if 42:u256 { } }"));
 }
@@ -540,11 +540,11 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 	};
 
 	SimpleDialect dialect;
-	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
-	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
-	CHECK_ERROR_DIALECT("{ function f(x) { f(builtin) } }", ParserError, "Expected '(' but got ')'", dialect);
-	CHECK_ERROR_DIALECT("{ function f(builtin) {}", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
-	CHECK_ERROR_DIALECT("{ function f() -> builtin {}", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
+	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name" + quoteSpace("builtin") + "as identifier name.", dialect);
+	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name" + quoteSpace("builtin") + "as identifier name.", dialect);
+	CHECK_ERROR_DIALECT("{ function f(x) { f(builtin) } }", ParserError, "Expected" + quote("(") + "but got " + quote(")"), dialect);
+	CHECK_ERROR_DIALECT("{ function f(builtin) {}", ParserError, "Cannot use builtin function name" + quoteSpace("builtin") + "as identifier name.", dialect);
+	CHECK_ERROR_DIALECT("{ function f() -> builtin {}", ParserError, "Cannot use builtin function name" + quoteSpace("builtin") + "as identifier name.", dialect);
 }
 
 BOOST_AUTO_TEST_CASE(builtins_analysis)

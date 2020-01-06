@@ -1,3 +1,15 @@
+### 0.6.2 (unreleased)
+
+Language Features:
+
+
+CompilerFeatures:
+
+
+Bugfixes:
+ * Made usage of quotes in error and warning messages consistent
+
+
 ### 0.6.1 (2020-01-02)
 
 Bugfixes:

@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 		}
 	)";
 	if (solidity::test::Options::get().evmVersion() == EVMVersion::homestead())
-		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type string memory.");
+		CHECK_ERROR(sourceCode, TypeError, "Type" + quoteSpace("inaccessible dynamic type") + "is not implicitly convertible to expected type " + quote("string memory") + ".");
 	else
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 }
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
 	});
 	if (!solidity::test::Options::get().evmVersion().supportsReturndata())
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"returndatasize\" instruction is only available for Byzantium-compatible VMs")));
+		expectations.emplace_back(make_pair(Error::Type::TypeError, quote("returndatasize") + " instruction is only available for Byzantium-compatible VMs"));
 	CHECK_ALLOW_MULTI(text, expectations);
 }
 
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(create2_as_variable)
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
 	});
 	if (!solidity::test::Options::get().evmVersion().hasCreate2())
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"create2\" instruction is only available for Constantinople-compatible VMs")));
+		expectations.emplace_back(make_pair(Error::Type::TypeError, quote("create2") + " instruction is only available for Constantinople-compatible VMs"));
 	CHECK_ALLOW_MULTI(text, expectations);
 }
 
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(extcodehash_as_variable)
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
 	});
 	if (!solidity::test::Options::get().evmVersion().hasExtCodeHash())
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"extcodehash\" instruction is only available for Constantinople-compatible VMs")));
+		expectations.emplace_back(make_pair(Error::Type::TypeError, quote("extcodehash") + " instruction is only available for Constantinople-compatible VMs"));
 	CHECK_ALLOW_MULTI(text, expectations);
 }
 
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(address_staticcall)
 	if (solidity::test::Options::get().evmVersion().hasStaticCall())
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 	else
-		CHECK_ERROR(sourceCode, TypeError, "\"staticcall\" is not supported by the VM version.");
+		CHECK_ERROR(sourceCode, TypeError, quote("staticcall") + " is not supported by the VM version.");
 }
 
 BOOST_AUTO_TEST_CASE(address_staticcall_value)
@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE(address_staticcall_value)
 				}
 			}
 		)";
-		CHECK_ERROR(sourceCode, TypeError, "Member \"value\" is only available for payable functions.");
+		CHECK_ERROR(sourceCode, TypeError, "Member" + quoteSpace("value") + "is only available for payable functions.");
 	}
 }
 
@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(address_call_full_return_type)
 	if (solidity::test::Options::get().evmVersion().supportsReturndata())
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 	else
-		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type bytes memory.");
+		CHECK_ERROR(sourceCode, TypeError, "Type" + quoteSpace("inaccessible dynamic type") +  "is not implicitly convertible to expected type " + quote("bytes memory") + ".");
 }
 
 BOOST_AUTO_TEST_CASE(address_delegatecall_full_return_type)
@@ -504,7 +504,7 @@ BOOST_AUTO_TEST_CASE(address_delegatecall_full_return_type)
 	if (solidity::test::Options::get().evmVersion().supportsReturndata())
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 	else
-		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type bytes memory.");
+		CHECK_ERROR(sourceCode, TypeError, "Type" + quoteSpace("inaccessible dynamic type") +  "is not implicitly convertible to expected type " + quote("bytes memory") + ".");
 }
 
 

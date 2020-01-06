@@ -127,7 +127,7 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 			{
 				m_errorReporter.declarationError(
 					_identifier.location,
-					"Variable " + _identifier.name.str() + " used before it was declared."
+					"Variable" + quoteSpace(_identifier.name.str()) + "used before it was declared."
 				);
 				success = false;
 			}
@@ -141,7 +141,7 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 		{
 			m_errorReporter.typeError(
 				_identifier.location,
-				"Function " + _identifier.name.str() + " used without being called."
+				"Function" + quoteSpace(_identifier.name.str()) + "used without being called."
 			);
 			success = false;
 		}
@@ -180,7 +180,7 @@ bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 			to_string(m_stackHeight - initialStackHeight) +
 			" value" +
 			(m_stackHeight - initialStackHeight == 1 ? "" : "s") +
-			"). Use ``pop()`` or assign them.";
+			"). Use" + quoteSpace("pop()") + "or assign them.";
 		m_errorReporter.error(Error::Type::TypeError, _statement.location, msg);
 		success = false;
 	}
@@ -350,7 +350,7 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			else if (!m_dataNames.count(std::get<Literal>(arg).value))
 				m_errorReporter.typeError(
 					_funCall.functionName.location,
-					"Unknown data object \"" + std::get<Literal>(arg).value.str() + "\"."
+					"Unknown data object " + quote(std::get<Literal>(arg).value.str()) + "."
 				);
 		}
 	}
@@ -558,7 +558,7 @@ bool AsmAnalyzer::expectDeposit(int _deposit, int _oldHeight, SourceLocation con
 	{
 		m_errorReporter.typeError(
 			_location,
-			"Expected expression to return one item to the stack, but did return " +
+			"Expected expression to return one item to the stack, but it returned " +
 			to_string(m_stackHeight - _oldHeight) +
 			" items."
 		);
@@ -585,7 +585,7 @@ bool AsmAnalyzer::checkAssignment(Identifier const& _variable, size_t _valueSize
 		{
 			m_errorReporter.declarationError(
 				_variable.location,
-				"Variable " + _variable.name.str() + " used before it was declared."
+				"Variable" + quoteSpace(_variable.name.str()) + "used before it was declared."
 			);
 			success = false;
 		}
@@ -638,7 +638,7 @@ void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _loc
 	if (!builtinTypes.count(type))
 		m_errorReporter.typeError(
 			_location,
-			"\"" + type + "\" is not a valid type (user defined types are not yet supported)."
+			quote(type) + " is not a valid type (user defined types are not yet supported)."
 		);
 }
 
@@ -663,14 +663,14 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 	auto errorForVM = [=](string const& vmKindMessage) {
 		m_errorReporter.typeError(
 			_location,
-			"The \"" +
-			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is " +
+			"The" +
+			quoteSpace(boost::to_lower_copy(instructionInfo(_instr).name))
+			+ "instruction is " +
 			vmKindMessage +
 			" VMs " +
-			" (you are currently compiling for \"" +
-			m_evmVersion.name() +
-			"\")."
+			" (you are currently compiling for " +
+			quote(m_evmVersion.name()) +
+			")."
 		);
 	};
 
@@ -720,7 +720,7 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 			_location,
 			"Jump instructions and labels are low-level EVM features that can lead to "
 			"incorrect stack access. Because of that they are disallowed in strict assembly. "
-			"Use functions, \"switch\", \"if\" or \"for\" statements instead."
+			"Use functions, " + quote("switch") + "," + quoteSpace("if") + "or" + quoteSpace("for") + "statements instead."
 		);
 	}
 	else

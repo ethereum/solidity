@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (47-62): True expression's type bool doesn't match false expression's type uint8.
+// TypeError: (47-62): True expression's type "bool" doesn't match false expression's type "uint8".

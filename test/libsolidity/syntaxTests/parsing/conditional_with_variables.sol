@@ -9,4 +9,4 @@ contract A {
 // ----
 // Warning: (87-93): Unused local variable.
 // Warning: (121-127): Unused local variable.
-// Warning: (17-150): Function state mutability can be restricted to pure
+// Warning: (17-150): Function state mutability can be restricted to "pure".

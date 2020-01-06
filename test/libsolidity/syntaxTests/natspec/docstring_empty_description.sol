@@ -3,4 +3,4 @@ contract C {
     function vote(uint id) public {}
 }
 // ----
-// DocstringParsingError: No description given for param id
+// DocstringParsingError: No description given for param "id".

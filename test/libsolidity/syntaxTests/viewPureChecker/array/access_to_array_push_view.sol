@@ -5,4 +5,4 @@ contract A {
     }
 }
 // ----
-// TypeError: (88-96): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError: (88-96): Function declared as "view", but this expression (potentially) modifies the state and thus requires non-payable (the default) or "payable".

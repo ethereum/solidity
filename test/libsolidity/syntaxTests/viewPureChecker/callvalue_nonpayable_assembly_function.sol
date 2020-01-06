@@ -7,4 +7,4 @@ contract C
     }
 }
 // ----
-// Warning: (17-108): Function state mutability can be restricted to view
+// Warning: (17-108): Function state mutability can be restricted to "view".
