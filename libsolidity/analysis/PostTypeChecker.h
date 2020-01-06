@@ -38,20 +38,30 @@ namespace solidity
  * This module performs analyses on the AST that are done after type checking and assignments of types:
  *  - whether there are circular references in constant state variables
  *  - whether override specifiers are actually contracts
- * @TODO factor out each use-case into an individual class (but do the traversal only once)
+ *
+ *  When adding a new checker, make sure a visitor that forwards calls that your
+ *  checker uses exists in PostTypeChecker. Add missing ones.
+ *
+ *  The return value for the visit function of a checker is ignored, all nodes
+ *  will always be visited.
  */
 class PostTypeChecker: private ASTConstVisitor
 {
 public:
+	struct Checker: public ASTConstVisitor
+	{
+		Checker(langutil::ErrorReporter& _errorReporter):
+			m_errorReporter(_errorReporter) {}
+	protected:
+		langutil::ErrorReporter& m_errorReporter;
+	};
+
 	/// @param _errorReporter provides the error logging functionality.
-	PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	PostTypeChecker(langutil::ErrorReporter& _errorReporter);
 
 	bool check(ASTNode const& _astRoot);
 
 private:
-	/// Adds a new error to the list of errors.
-	void typeError(langutil::SourceLocation const& _location, std::string const& _description);
-
 	bool visit(ContractDefinition const& _contract) override;
 	void endVisit(ContractDefinition const& _contract) override;
 	void endVisit(OverrideSpecifier const& _overrideSpecifier) override;
@@ -61,13 +71,25 @@ private:
 
 	bool visit(Identifier const& _identifier) override;
 
-	VariableDeclaration const* findCycle(VariableDeclaration const& _startingFrom);
+	template <class T>
+	bool callVisit(T const& _node)
+	{
+		for (auto& checker: m_checkers)
+			checker->visit(_node);
+
+		return true;
+	}
+
+	template <class T>
+	void callEndVisit(T const& _node)
+	{
+		for (auto& checker: m_checkers)
+			checker->endVisit(_node);
+	}
 
 	langutil::ErrorReporter& m_errorReporter;
 
-	VariableDeclaration const* m_currentConstVariable = nullptr;
-	std::vector<VariableDeclaration const*> m_constVariables; ///< Required for determinism.
-	std::map<VariableDeclaration const*, std::set<VariableDeclaration const*>> m_constVariableDependencies;
+	std::vector<std::shared_ptr<Checker>> m_checkers;
 };
 
 }
