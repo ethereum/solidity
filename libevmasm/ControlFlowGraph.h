@@ -25,8 +25,8 @@
 
 #include <vector>
 #include <memory>
-#include <libdevcore/Common.h>
-#include <libdevcore/Assertions.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/Assertions.h>
 #include <libevmasm/ExpressionClasses.h>
 
 namespace solidity::evmasm

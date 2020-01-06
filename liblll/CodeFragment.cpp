@@ -23,7 +23,7 @@
 #include <liblll/CompilerState.h>
 #include <liblll/Parser.h>
 #include <libevmasm/Instruction.h>
-#include <libdevcore/CommonIO.h>
+#include <libsolutil/CommonIO.h>
 
 #include <boost/algorithm/string.hpp>
 

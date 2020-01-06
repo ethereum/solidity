@@ -42,7 +42,7 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/UndefMacros.h>
 

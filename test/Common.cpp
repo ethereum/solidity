@@ -17,7 +17,7 @@
 
 #include <test/Common.h>
 
-#include <libdevcore/Assertions.h>
+#include <libsolutil/Assertions.h>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 

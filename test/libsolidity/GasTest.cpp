@@ -17,8 +17,8 @@
 
 #include <test/libsolidity/GasTest.h>
 #include <test/Options.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/JSON.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/JSON.h>
 #include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Exceptions.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <boost/filesystem/path.hpp>

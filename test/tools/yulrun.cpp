@@ -32,8 +32,8 @@
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/program_options.hpp>
 

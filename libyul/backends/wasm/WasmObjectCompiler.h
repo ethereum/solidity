@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
-#include <libdevcore/Common.h>     // solidity::bytes
+#include <libsolutil/Common.h>     // solidity::bytes
 
 namespace solidity::yul
 {

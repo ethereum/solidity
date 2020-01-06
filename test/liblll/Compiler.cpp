@@ -22,7 +22,7 @@
 
 #include <test/Options.h>
 
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/FixedHash.h>
 
 #include <liblll/Compiler.h>
 

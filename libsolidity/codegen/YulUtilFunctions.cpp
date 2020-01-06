@@ -24,9 +24,9 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Whiskers.h>
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Whiskers.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>

@@ -20,7 +20,7 @@
  */
 
 #include <test/libsolidity/ErrorCheck.h>
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Exceptions.h>
 
 #include <string>
 #include <set>

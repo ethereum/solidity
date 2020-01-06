@@ -27,8 +27,8 @@
 #include <libyul/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <libevmasm/Instruction.h>
-#include <libdevcore/JSON.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/JSON.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/algorithm/string.hpp>

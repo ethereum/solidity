@@ -31,8 +31,8 @@
 
 #include <liblangutil/ErrorReporter.h>
 
-#include <libdevcore/Algorithms.h>
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/Algorithms.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string/join.hpp>

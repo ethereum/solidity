@@ -19,7 +19,7 @@
  * Metadata processing helpers.
  */
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <map>
 #include <optional>

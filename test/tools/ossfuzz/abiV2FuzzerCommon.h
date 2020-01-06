@@ -7,7 +7,7 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 namespace solidity::test::abiv2fuzzer
 {

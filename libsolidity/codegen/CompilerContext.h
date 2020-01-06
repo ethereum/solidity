@@ -32,7 +32,7 @@
 #include <libevmasm/Assembly.h>
 #include <libevmasm/Instruction.h>
 #include <liblangutil/EVMVersion.h>
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <functional>
 #include <ostream>

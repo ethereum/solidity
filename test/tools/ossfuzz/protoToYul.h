@@ -27,9 +27,9 @@
 
 #include <test/tools/ossfuzz/yulProto.pb.h>
 
-#include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
-#include <libdevcore/Whiskers.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/FixedHash.h>
+#include <libsolutil/Whiskers.h>
 
 namespace solidity::yul::test::yul_fuzzer
 {

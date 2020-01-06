@@ -70,7 +70,7 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
 
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>

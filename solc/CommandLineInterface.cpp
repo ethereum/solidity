@@ -44,10 +44,10 @@
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <liblangutil/SourceReferenceFormatterHuman.h>
 
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/JSON.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/JSON.h>
 
 #include <memory>
 

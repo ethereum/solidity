@@ -26,7 +26,7 @@
 
 #include <libsolidity/ast/AST.h>
 
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/test/unit_test.hpp>
 

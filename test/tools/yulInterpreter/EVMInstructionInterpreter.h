@@ -22,7 +22,7 @@
 
 #include <libyul/AsmDataForward.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <vector>
 

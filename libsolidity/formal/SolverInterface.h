@@ -20,8 +20,8 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/Exceptions.h>
 
 #include <boost/noncopyable.hpp>
 #include <cstdio>

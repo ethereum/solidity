@@ -19,7 +19,7 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 namespace solidity::yul
 {

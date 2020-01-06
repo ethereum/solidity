@@ -22,7 +22,7 @@
 
 #include <liblangutil/Common.h>
 
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 

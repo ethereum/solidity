@@ -24,8 +24,8 @@
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/Assertions.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/Assertions.h>
 #include <iostream>
 #include <sstream>
 

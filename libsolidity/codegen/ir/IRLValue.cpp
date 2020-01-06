@@ -25,7 +25,7 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/AST.h>
 
-#include <libdevcore/Whiskers.h>
+#include <libsolutil/Whiskers.h>
 
 using namespace std;
 using namespace solidity;

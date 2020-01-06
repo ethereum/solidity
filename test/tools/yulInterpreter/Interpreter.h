@@ -23,10 +23,10 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 
-#include <libdevcore/FixedHash.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/FixedHash.h>
+#include <libsolutil/CommonData.h>
 
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Exceptions.h>
 
 #include <map>
 

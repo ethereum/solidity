@@ -31,7 +31,7 @@
 
 #include <libevmasm/Assembly.h>
 
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/test/unit_test.hpp>

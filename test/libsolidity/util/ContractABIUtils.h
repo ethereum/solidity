@@ -18,7 +18,7 @@
 
 #include <test/libsolidity/util/SoltestErrors.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <json/json.h>
 

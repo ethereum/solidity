@@ -28,8 +28,8 @@
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
 
-#include <libdevcore/Visitor.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Visitor.h>
+#include <libsolutil/CommonData.h>
 
 using namespace std;
 using namespace solidity;

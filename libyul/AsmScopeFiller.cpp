@@ -27,7 +27,7 @@
 
 #include <liblangutil/ErrorReporter.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 

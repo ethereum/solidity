@@ -16,7 +16,7 @@
 
 #include <test/libsolidity/util/SoltestTypes.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 namespace solidity::frontend::test
 {

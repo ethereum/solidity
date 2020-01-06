@@ -23,9 +23,9 @@
 #include <test/Options.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Version.h>
-#include <libdevcore/SwarmHash.h>
-#include <libdevcore/IpfsHash.h>
-#include <libdevcore/JSON.h>
+#include <libsolutil/SwarmHash.h>
+#include <libsolutil/IpfsHash.h>
+#include <libsolutil/JSON.h>
 
 using namespace std;
 

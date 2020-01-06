@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 #include <string>
 
 namespace solidity::frontend

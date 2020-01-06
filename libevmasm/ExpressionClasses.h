@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 #include <libevmasm/AssemblyItem.h>
 
 #include <vector>

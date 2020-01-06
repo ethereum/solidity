@@ -24,8 +24,8 @@
 #include <iostream>
 #include <clocale>
 #include <liblll/Compiler.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/CommonData.h>
 #include <libevmasm/Instruction.h>
 #include <solidity/BuildInfo.h>
 

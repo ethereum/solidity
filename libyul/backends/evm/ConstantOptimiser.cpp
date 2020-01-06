@@ -25,7 +25,7 @@
 #include <libyul/AsmData.h>
 #include <libyul/Utilities.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <variant>
 

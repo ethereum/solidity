@@ -17,7 +17,7 @@
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/AsmData.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <variant>
 

@@ -21,8 +21,8 @@
 
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/FixedHash.h>
 
 #include <boost/noncopyable.hpp>
 #include <cstdio>

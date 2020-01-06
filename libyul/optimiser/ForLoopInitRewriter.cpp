@@ -16,7 +16,7 @@
 */
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/AsmData.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 #include <functional>
 
 using namespace std;

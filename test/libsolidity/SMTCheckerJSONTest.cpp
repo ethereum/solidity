@@ -18,8 +18,8 @@
 #include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/Options.h>
 #include <libsolidity/interface/StandardCompiler.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/JSON.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/JSON.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>

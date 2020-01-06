@@ -32,9 +32,9 @@
 #include <libyul/AssemblyStack.h>
 #include <libyul/Utilities.h>
 
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Whiskers.h>
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Whiskers.h>
+#include <libsolutil/StringUtils.h>
 
 #include <liblangutil/SourceReferenceFormatter.h>
 

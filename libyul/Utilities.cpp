@@ -23,8 +23,8 @@
 #include <libyul/AsmData.h>
 #include <libyul/Exceptions.h>
 
-#include <libdevcore/CommonData.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/FixedHash.h>
 
 #include <boost/algorithm/string.hpp>
 

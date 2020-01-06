@@ -20,7 +20,7 @@
 
 #include <libyul/backends/wasm/TextTransform.h>
 
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>

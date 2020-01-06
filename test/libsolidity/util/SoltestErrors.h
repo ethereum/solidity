@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include <libdevcore/AnsiColorized.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/AnsiColorized.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Exceptions.h>
 
 namespace solidity::frontend::test
 {

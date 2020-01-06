@@ -31,7 +31,7 @@
 // TODO avoid
 #include <libevmasm/Instruction.h>
 
-#include <libdevcore/InvertibleMap.h>
+#include <libsolutil/InvertibleMap.h>
 
 #include <map>
 #include <set>

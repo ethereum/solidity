@@ -23,7 +23,7 @@
 
 #include <libevmasm/KnownState.h>
 #include <libevmasm/AssemblyItem.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 #include <functional>
 

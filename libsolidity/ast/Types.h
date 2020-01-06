@@ -27,9 +27,9 @@
 #include <libsolidity/parsing/Token.h>
 #include <liblangutil/Exceptions.h>
 
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/Result.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/Result.h>
 
 #include <boost/rational.hpp>
 

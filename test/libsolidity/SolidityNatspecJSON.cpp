@@ -22,10 +22,10 @@
 
 #include <test/Options.h>
 #include <string>
-#include <libdevcore/JSON.h>
+#include <libsolutil/JSON.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Exceptions.h>
 
 using namespace solidity::langutil;
 

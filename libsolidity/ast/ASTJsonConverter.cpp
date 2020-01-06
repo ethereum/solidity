@@ -26,8 +26,8 @@
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AsmData.h>
 #include <libyul/AsmPrinter.h>
-#include <libdevcore/JSON.h>
-#include <libdevcore/UTF8.h>
+#include <libsolutil/JSON.h>
+#include <libsolutil/UTF8.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/algorithm/sort.hpp>

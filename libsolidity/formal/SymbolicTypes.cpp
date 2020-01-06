@@ -19,7 +19,7 @@
 
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 #include <memory>
 
 using namespace std;

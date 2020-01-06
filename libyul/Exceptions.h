@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <libdevcore/Exceptions.h>
-#include <libdevcore/Assertions.h>
+#include <libsolutil/Exceptions.h>
+#include <libsolutil/Assertions.h>
 
 namespace solidity::yul
 {

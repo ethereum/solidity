@@ -27,8 +27,8 @@
 
 #include <libevmasm/SemanticInformation.h>
 
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Algorithms.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Algorithms.h>
 
 using namespace std;
 using namespace solidity;

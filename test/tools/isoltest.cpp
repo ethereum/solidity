@@ -15,8 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <test/Common.h>
 #include <test/tools/IsolTestOptions.h>

@@ -21,7 +21,7 @@
 #include <libyul/backends/wasm/BinaryTransform.h>
 
 #include <libyul/Exceptions.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 

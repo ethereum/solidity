@@ -17,7 +17,7 @@
 
 #include <test/libyul/ObjectCompilerTest.h>
 
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <libyul/AssemblyStack.h>
 

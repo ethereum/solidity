@@ -26,7 +26,7 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <string>
 #include <memory>

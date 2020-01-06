@@ -20,7 +20,7 @@
 
 #include <test/tools/IsolTestOptions.h>
 
-#include <libdevcore/Assertions.h>
+#include <libsolutil/Assertions.h>
 
 #include <boost/filesystem.hpp>
 

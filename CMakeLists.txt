@@ -52,7 +52,7 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" include/licens
 include(EthOptions)
 configure_project(TESTS)
 
-add_subdirectory(libdevcore)
+add_subdirectory(libsolutil)
 add_subdirectory(liblangutil)
 add_subdirectory(libevmasm)
 add_subdirectory(libyul)

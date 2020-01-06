@@ -24,7 +24,7 @@
 
 #include <libyul/YulString.h>
 
-#include <libdevcore/Visitor.h>
+#include <libsolutil/Visitor.h>
 
 #include <functional>
 #include <memory>

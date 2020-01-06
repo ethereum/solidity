@@ -25,7 +25,7 @@
 #include <libyul/optimiser/SimplificationRules.h>
 #include <libyul/optimiser/Semantics.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <variant>
 

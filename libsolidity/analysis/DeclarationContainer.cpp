@@ -24,7 +24,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/StringUtils.h>
 
 using namespace std;
 using namespace solidity;

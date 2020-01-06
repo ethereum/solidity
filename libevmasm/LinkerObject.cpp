@@ -20,8 +20,8 @@
  */
 
 #include <libevmasm/LinkerObject.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Keccak256.h>
 
 using namespace std;
 using namespace solidity;

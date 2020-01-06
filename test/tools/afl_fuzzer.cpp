@@ -20,7 +20,7 @@
 
 #include <test/tools/fuzzer_common.h>
 
-#include <libdevcore/CommonIO.h>
+#include <libsolutil/CommonIO.h>
 
 #include <boost/program_options.hpp>
 

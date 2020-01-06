@@ -21,8 +21,8 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/FixedHash.h>
 
 namespace solidity::evmasm
 {

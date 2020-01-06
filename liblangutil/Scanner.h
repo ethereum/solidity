@@ -55,8 +55,8 @@
 #include <liblangutil/Token.h>
 #include <liblangutil/CharStream.h>
 #include <liblangutil/SourceLocation.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/CommonData.h>
 
 #include <optional>
 #include <iosfwd>

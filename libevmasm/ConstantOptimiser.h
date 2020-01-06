@@ -25,9 +25,9 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <libdevcore/Assertions.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/CommonIO.h>
+#include <libsolutil/Assertions.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/CommonIO.h>
 
 #include <vector>
 

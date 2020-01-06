@@ -27,7 +27,7 @@
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 

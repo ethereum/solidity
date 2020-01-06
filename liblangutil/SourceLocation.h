@@ -22,9 +22,9 @@
 
 #pragma once
 
-#include <libdevcore/Assertions.h>
-#include <libdevcore/Common.h> // defines noexcept macro for MSVC
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Assertions.h>
+#include <libsolutil/Common.h> // defines noexcept macro for MSVC
+#include <libsolutil/Exceptions.h>
 #include <liblangutil/CharStream.h>
 #include <memory>
 #include <string>

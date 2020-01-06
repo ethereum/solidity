@@ -28,7 +28,7 @@
 
 #include <liblangutil/SourceLocation.h>
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <tuple>
 #include <map>

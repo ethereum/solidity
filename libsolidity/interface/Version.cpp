@@ -23,8 +23,8 @@
 #include <libsolidity/interface/Version.h>
 
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Common.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Common.h>
 #include <solidity/BuildInfo.h>
 #include <string>
 

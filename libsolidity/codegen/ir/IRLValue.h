@@ -22,7 +22,7 @@
 
 #include <libsolidity/codegen/YulUtilFunctions.h>
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <string>
 #include <ostream>

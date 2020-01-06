@@ -21,7 +21,7 @@
 #pragma once
 
 #include <libevmasm/Instruction.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 #include <functional>
 
 namespace solidity::evmasm

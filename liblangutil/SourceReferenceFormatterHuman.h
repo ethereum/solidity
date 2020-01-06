@@ -23,7 +23,7 @@
 #include <liblangutil/SourceReferenceExtractor.h>
 #include <liblangutil/SourceReferenceFormatter.h> // SourceReferenceFormatterBase
 
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <ostream>
 #include <sstream>

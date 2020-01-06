@@ -23,7 +23,7 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/YulString.h>
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <memory>
 #include <set>

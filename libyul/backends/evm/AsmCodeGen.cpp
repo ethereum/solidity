@@ -32,7 +32,7 @@
 
 #include <liblangutil/SourceLocation.h>
 
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/FixedHash.h>
 
 #include <memory>
 #include <functional>

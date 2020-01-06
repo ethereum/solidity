@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
-#include <libdevcore/JSON.h>
+#include <libsolutil/JSON.h>
 #include <test/Metadata.h>
 
 using namespace std;

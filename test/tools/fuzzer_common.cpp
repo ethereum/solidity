@@ -17,7 +17,7 @@
 
 #include <test/tools/fuzzer_common.h>
 
-#include <libdevcore/JSON.h>
+#include <libsolutil/JSON.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/ConstantOptimiser.h>
 #include <libsolc/libsolc.h>

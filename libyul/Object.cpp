@@ -23,8 +23,8 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/Exceptions.h>
 
-#include <libdevcore/Visitor.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Visitor.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/algorithm/string/replace.hpp>
 

@@ -20,7 +20,7 @@
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
 #include <liblangutil/EVMVersion.h>
-#include <libdevcore/IpfsHash.h>
+#include <libsolutil/IpfsHash.h>
 #include <libevmasm/GasMeter.h>
 
 #include <cmath>

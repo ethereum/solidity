@@ -27,7 +27,7 @@
 #include <libevmasm/Assembly.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/RuleList.h>
-#include <libdevcore/Assertions.h>
+#include <libsolutil/Assertions.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/noncopyable.hpp>

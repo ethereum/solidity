@@ -35,7 +35,7 @@
 
 #include <liblangutil/ErrorReporter.h>
 
-#include <libdevcore/Whiskers.h>
+#include <libsolutil/Whiskers.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <algorithm>

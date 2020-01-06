@@ -21,8 +21,8 @@
 
 #include <libevmasm/Instruction.h>
 
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonIO.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/CommonIO.h>
 #include <algorithm>
 #include <functional>
 

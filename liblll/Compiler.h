@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <liblangutil/EVMVersion.h>
 

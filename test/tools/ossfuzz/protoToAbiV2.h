@@ -2,10 +2,10 @@
 
 #include <test/tools/ossfuzz/abiV2Proto.pb.h>
 
-#include <libdevcore/FixedHash.h>
-#include <libdevcore/Keccak256.h>
-#include <libdevcore/StringUtils.h>
-#include <libdevcore/Whiskers.h>
+#include <libsolutil/FixedHash.h>
+#include <libsolutil/Keccak256.h>
+#include <libsolutil/StringUtils.h>
+#include <libsolutil/Whiskers.h>
 
 #include <liblangutil/Exceptions.h>
 

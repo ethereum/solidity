@@ -17,8 +17,8 @@
 
 #include <libevmasm/AssemblyItem.h>
 
-#include <libdevcore/CommonData.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/FixedHash.h>
 
 #include <fstream>
 

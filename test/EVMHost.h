@@ -27,7 +27,7 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/FixedHash.h>
 
 namespace solidity::test
 {

@@ -21,9 +21,9 @@
 
 #include <string>
 #include <iostream>
-#include <libdevcore/Assertions.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/JSON.h>
+#include <libsolutil/Assertions.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/JSON.h>
 #include <test/Metadata.h>
 
 using namespace std;

@@ -25,10 +25,10 @@
 
 #include <libevmasm/GasMeter.h>
 
-#include <libdevcore/Exceptions.h>
-#include <libdevcore/Assertions.h>
-#include <libdevcore/Keccak256.h>
-#include <libdevcore/picosha2.h>
+#include <libsolutil/Exceptions.h>
+#include <libsolutil/Assertions.h>
+#include <libsolutil/Keccak256.h>
+#include <libsolutil/picosha2.h>
 
 using namespace std;
 using namespace solidity;

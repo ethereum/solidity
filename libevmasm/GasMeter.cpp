@@ -19,7 +19,7 @@
 
 #include <libevmasm/KnownState.h>
 
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/FixedHash.h>
 
 using namespace std;
 using namespace solidity;

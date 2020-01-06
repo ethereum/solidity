@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Exceptions.h>
 
 namespace solidity::evmasm
 {

@@ -23,8 +23,8 @@
 #include <test/Options.h>
 
 #include <libsolidity/interface/CompilerStack.h>
-#include <libdevcore/JSON.h>
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/JSON.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <boost/algorithm/string.hpp>
 

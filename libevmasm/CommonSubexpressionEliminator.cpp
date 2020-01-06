@@ -23,7 +23,7 @@
 
 #include <functional>
 #include <boost/range/adaptor/reversed.hpp>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/AssemblyItem.h>
 

@@ -16,8 +16,8 @@
 */
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/AsmData.h>
-#include <libdevcore/Visitor.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Visitor.h>
+#include <libsolutil/CommonData.h>
 #include <functional>
 
 using namespace std;

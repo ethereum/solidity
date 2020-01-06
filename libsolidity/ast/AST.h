@@ -30,7 +30,7 @@
 
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/Instruction.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/FixedHash.h>
 
 #include <boost/noncopyable.hpp>
 #include <json/json.h>

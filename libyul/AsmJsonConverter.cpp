@@ -22,7 +22,7 @@
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AsmData.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 using namespace std;
 

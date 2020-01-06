@@ -20,7 +20,7 @@
  * Tests for the assembler.
  */
 
-#include <libdevcore/JSON.h>
+#include <libsolutil/JSON.h>
 #include <libevmasm/Assembly.h>
 
 #include <boost/test/unit_test.hpp>

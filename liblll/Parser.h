@@ -22,7 +22,7 @@
 #pragma once
 
 #include <liblll/Exceptions.h>
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 #include <string>
 #include <vector>
 

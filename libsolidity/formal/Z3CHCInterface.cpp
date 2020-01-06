@@ -18,7 +18,7 @@
 #include <libsolidity/formal/Z3CHCInterface.h>
 
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/CommonIO.h>
+#include <libsolutil/CommonIO.h>
 
 using namespace std;
 using namespace solidity;

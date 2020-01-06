@@ -28,7 +28,7 @@
 #include <libyul/AsmData.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>

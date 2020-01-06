@@ -19,7 +19,7 @@
 
 #include <test/libsolidity/SyntaxTest.h>
 
-#include <libdevcore/JSON.h>
+#include <libsolutil/JSON.h>
 
 #include <string>
 

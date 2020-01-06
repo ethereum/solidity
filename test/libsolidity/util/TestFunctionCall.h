@@ -19,8 +19,8 @@
 
 #include <libsolidity/ast/Types.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/AnsiColorized.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/AnsiColorized.h>
+#include <libsolutil/CommonData.h>
 
 #include <json/json.h>
 

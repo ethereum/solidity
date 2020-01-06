@@ -22,7 +22,7 @@
 
 #include <libyul/backends/wasm/WasmAST.h>
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <vector>
 #include <stack>

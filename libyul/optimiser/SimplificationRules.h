@@ -25,7 +25,7 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/AsmData.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/noncopyable.hpp>
 

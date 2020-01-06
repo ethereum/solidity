@@ -26,7 +26,7 @@
 
 #include <test/evmc/evmc.hpp>
 
-#include <libdevcore/CommonIO.h>
+#include <libsolutil/CommonIO.h>
 
 #include <boost/test/framework.hpp>
 #include <boost/algorithm/string/replace.hpp>

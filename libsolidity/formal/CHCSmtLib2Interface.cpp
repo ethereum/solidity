@@ -17,7 +17,7 @@
 
 #include <libsolidity/formal/CHCSmtLib2Interface.h>
 
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>

@@ -27,7 +27,7 @@
 
 #include <libevmasm/Instruction.h>
 
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 using namespace std;
 using namespace solidity;

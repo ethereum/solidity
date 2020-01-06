@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 #include <libsolidity/ast/Types.h>
 #include <liblangutil/Exceptions.h>
 #include <test/libsolidity/util/SoltestTypes.h>

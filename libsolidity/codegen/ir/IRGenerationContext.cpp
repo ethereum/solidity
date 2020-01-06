@@ -23,8 +23,8 @@
 #include <libsolidity/codegen/YulUtilFunctions.h>
 #include <libsolidity/ast/AST.h>
 
-#include <libdevcore/Whiskers.h>
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/Whiskers.h>
+#include <libsolutil/StringUtils.h>
 
 using namespace std;
 using namespace solidity;

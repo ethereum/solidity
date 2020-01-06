@@ -21,7 +21,7 @@
 #include <libsolidity/interface/Version.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SemVerHandler.h>
-#include <libdevcore/Algorithms.h>
+#include <libsolutil/Algorithms.h>
 
 #include <boost/range/adaptor/map.hpp>
 #include <memory>

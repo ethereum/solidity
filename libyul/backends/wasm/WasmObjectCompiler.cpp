@@ -27,7 +27,7 @@
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 using namespace solidity;
 using namespace solidity::yul;

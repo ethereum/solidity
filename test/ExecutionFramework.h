@@ -29,8 +29,8 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <libdevcore/FixedHash.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/FixedHash.h>
+#include <libsolutil/Keccak256.h>
 
 #include <functional>
 

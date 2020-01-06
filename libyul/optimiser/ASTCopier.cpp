@@ -24,7 +24,7 @@
 
 #include <libyul/AsmData.h>
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 using namespace std;
 using namespace solidity;

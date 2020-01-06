@@ -26,9 +26,9 @@
 #include <utility>
 #include <vector>
 #include <memory>
-#include <libdevcore/Exceptions.h>
-#include <libdevcore/Assertions.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Exceptions.h>
+#include <libsolutil/Assertions.h>
+#include <libsolutil/CommonData.h>
 #include <liblangutil/SourceLocation.h>
 
 namespace solidity::langutil

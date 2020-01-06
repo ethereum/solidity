@@ -25,9 +25,9 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <libdevcore/Common.h>
-#include <libdevcore/Assertions.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/Assertions.h>
+#include <libsolutil/Keccak256.h>
 
 #include <json/json.h>
 
