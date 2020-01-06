@@ -901,7 +901,7 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 			{
 				m_errorReporter.parserError(
 					import->location(),
-					string("Source \"" + importPath + "\" not found: " + result.responseOrErrorMessage)
+					string("Source" + quoteSpace(importPath) + "not found: " + result.responseOrErrorMessage)
 				);
 				continue;
 			}

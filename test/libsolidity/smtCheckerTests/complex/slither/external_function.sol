@@ -77,13 +77,13 @@ contract InternalCall {
 // Warning: (117-126): Unused local variable.
 // Warning: (260-269): Unused local variable.
 // Warning: (667-676): Unused local variable.
-// Warning: (75-137): Function state mutability can be restricted to pure
-// Warning: (218-280): Function state mutability can be restricted to pure
-// Warning: (470-539): Function state mutability can be restricted to pure
-// Warning: (1144-1206): Function state mutability can be restricted to pure
-// Warning: (1212-1274): Function state mutability can be restricted to pure
-// Warning: (1280-1342): Function state mutability can be restricted to pure
-// Warning: (771-774): Assertion checker does not yet implement type abi
+// Warning: (75-137): Function state mutability can be restricted to "pure".
+// Warning: (218-280): Function state mutability can be restricted to "pure".
+// Warning: (470-539): Function state mutability can be restricted to "pure".
+// Warning: (1144-1206): Function state mutability can be restricted to "pure".
+// Warning: (1212-1274): Function state mutability can be restricted to "pure".
+// Warning: (1280-1342): Function state mutability can be restricted to "pure".
+// Warning: (771-774): Assertion checker does not yet implement type "abi".
 // Warning: (782-813): Type conversion is not yet fully supported and might yield false positives.
 // Warning: (771-814): Assertion checker does not yet implement this type of function call.
 // Warning: (1403-1408): Assertion checker does not yet implement this type of function call.

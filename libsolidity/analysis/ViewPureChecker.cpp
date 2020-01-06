@@ -171,7 +171,8 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 	)
 		m_errorReporter.warning(
 			_funDef.location(),
-			"Function state mutability can be restricted to " + stateMutabilityToString(m_bestMutabilityAndLocation.mutability)
+			"Function state mutability can be restricted to " + quote(stateMutabilityToString(m_bestMutabilityAndLocation.mutability)) +
+			"."
 		);
 	m_currentFunction = nullptr;
 }
@@ -252,8 +253,8 @@ void ViewPureChecker::reportMutability(
 	{
 		m_errorReporter.typeError(
 			_location,
-			"Function declared as pure, but this expression (potentially) reads from the "
-			"environment or state and thus requires \"view\"."
+			"Function declared as " + quote("pure") + ", but this expression (potentially) reads from the "
+			"environment or state and thus requires " + quote("view") + "."
 		);
 		m_errors = true;
 	}
@@ -262,9 +263,9 @@ void ViewPureChecker::reportMutability(
 		m_errorReporter.typeError(
 			_location,
 			"Function declared as " +
-			stateMutabilityToString(m_currentFunction->stateMutability()) +
+			quote(stateMutabilityToString(m_currentFunction->stateMutability())) +
 			", but this expression (potentially) modifies the state and thus "
-			"requires non-payable (the default) or payable."
+			"requires non-payable (the default) or " + quote("payable") + "."
 		);
 		m_errors = true;
 	}
@@ -277,14 +278,14 @@ void ViewPureChecker::reportMutability(
 			if (_nestedLocation)
 				m_errorReporter.typeError(
 					_location,
-					SecondarySourceLocation().append("\"msg.value\" or \"callvalue()\" appear here inside the modifier.", *_nestedLocation),
-					"This modifier uses \"msg.value\" or \"callvalue()\" and thus the function has to be payable or internal."
+					SecondarySourceLocation().append(quote("msg.value") + " or" + quoteSpace("callvalue()") + "appear here inside the modifier.", *_nestedLocation),
+					"This modifier uses" + quoteSpace("msg.value") + "or" + quoteSpace("callvalue()") + "and thus the function has to be" + quoteSpace("payable") + "or " + quote("internal") + "."
 				);
 			else
 				m_errorReporter.typeError(
 					_location,
-					"\"msg.value\" and \"callvalue()\" can only be used in payable public functions. Make the function "
-					"\"payable\" or use an internal function to avoid this error."
+					quote("msg.value") + " and" + quoteSpace("callvalue()") + "can only be used in payable public functions. Make the function" +
+					quoteSpace("payable") + "or use an internal function to avoid this error."
 				);
 			m_errors = true;
 		}

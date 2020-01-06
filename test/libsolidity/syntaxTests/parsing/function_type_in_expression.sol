@@ -6,4 +6,4 @@ contract test {
 }
 // ----
 // Warning: (108-156): Unused local variable.
-// Warning: (78-167): Function state mutability can be restricted to pure
+// Warning: (78-167): Function state mutability can be restricted to "pure".

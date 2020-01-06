@@ -200,7 +200,7 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 	case Visibility::External:
 		break;
 	default:
-		fatalTypeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
+		fatalTypeError(_typeName.location(), "Invalid visibility, can only be" + quoteSpace("external") + "or " + quote("internal") + ".");
 		return;
 	}
 
@@ -284,7 +284,7 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 		{
 			string namePrefix = _identifier.name.str().substr(0, _identifier.name.str().find('.'));
 			if (isSlot || isOffset)
-				declarationError(_identifier.location, "In variable declarations _slot and _offset can not be used as a suffix.");
+				declarationError(_identifier.location, "In variable declarations" + quoteSpace("_slot") + "and" + quoteSpace("_offset") + "can not be used as a suffix.");
 			else if (
 				auto declarations = m_resolver.nameFromCurrentScope(namePrefix);
 				!declarations.empty()
@@ -318,7 +318,7 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 			));
 			if (realName.empty())
 			{
-				declarationError(_identifier.location, "In variable names _slot and _offset can only be used as a suffix.");
+				declarationError(_identifier.location, "In variable names" + quoteSpace("_slot") + "and" + quoteSpace("_offset") + "can only be used as a suffix.");
 				return size_t(-1);
 			}
 			declarations = m_resolver.nameFromCurrentScope(realName);
@@ -367,7 +367,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 		return;
 
 	if (_variable.isConstant() && !_variable.isStateVariable())
-		m_errorReporter.declarationError(_variable.location(), "The \"constant\" keyword can only be used for state variables.");
+		m_errorReporter.declarationError(_variable.location(), "The" + quoteSpace("constant") + "keyword can only be used for state variables.");
 
 	if (!_variable.typeName())
 	{

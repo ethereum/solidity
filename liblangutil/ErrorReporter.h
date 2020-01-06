@@ -33,6 +33,9 @@
 namespace solidity::langutil
 {
 
+std::string quote(std::string const& _name);
+std::string quoteSpace(std::string const& _name);
+
 class ErrorReporter
 {
 public:

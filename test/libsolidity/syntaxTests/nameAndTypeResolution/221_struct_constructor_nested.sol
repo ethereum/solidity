@@ -8,4 +8,4 @@ contract C {
 }
 // ----
 // Warning: (153-163): Unused local variable.
-// Warning: (96-190): Function state mutability can be restricted to pure
+// Warning: (96-190): Function state mutability can be restricted to "pure".

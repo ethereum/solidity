@@ -31,6 +31,8 @@
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/UTF8.h>
 
+#include <liblangutil/ErrorReporter.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -116,7 +118,7 @@ BoolResult fitsIntegerType(bigint const& _value, IntegerType const& _type)
 		return BoolResult::err("Cannot implicitly convert signed literal to unsigned type.");
 
 	if (_type.minValue() > _value || _value > _type.maxValue())
-		return BoolResult::err("Literal is too large to fit in " + _type.toString(false) + ".");
+		return BoolResult::err("Literal is too large to fit in " + langutil::quote(_type.toString(false)) + ".");
 
 	return true;
 }

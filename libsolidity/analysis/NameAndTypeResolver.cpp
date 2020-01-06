@@ -81,7 +81,7 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 			{
 				m_errorReporter.declarationError(
 					imp->location(),
-					"Import \"" + path + "\" (referenced as \"" + imp->path() + "\") not found."
+					"Import" + quoteSpace(path) + "(referenced as " + quote(imp->path()) + ") not found."
 				);
 				error = true;
 				continue;
@@ -96,13 +96,13 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 					{
 						m_errorReporter.declarationError(
 							imp->location(),
-							"Declaration \"" +
-							alias.symbol->name() +
-							"\" not found in \"" +
-							path +
-							"\" (referenced as \"" +
-							imp->path() +
-							"\")."
+							"Declaration" +
+							quoteSpace(alias.symbol->name()) +
+							"not found in" +
+							quoteSpace(path) +
+							"(referenced as " +
+							quote(imp->path()) +
+							")."
 						);
 						error = true;
 					}

@@ -14,11 +14,11 @@ contract C {
 // Warning: (100-104): Unused local variable.
 // Warning: (161-171): Unused local variable.
 // Warning: (173-177): Unused local variable.
-// Warning: (108-111): Assertion checker does not yet implement type abi
-// Warning: (142-143): Assertion checker does not yet implement type type(contract C)
+// Warning: (108-111): Assertion checker does not yet implement type "abi".
+// Warning: (142-143): Assertion checker does not yet implement type "type(contract C)".
 // Warning: (108-145): Assertion checker does not yet implement this type of function call.
-// Warning: (181-184): Assertion checker does not yet implement type abi
-// Warning: (215-216): Assertion checker does not yet implement type type(contract C)
+// Warning: (181-184): Assertion checker does not yet implement type "abi".
+// Warning: (215-216): Assertion checker does not yet implement type "type(contract C)".
 // Warning: (181-218): Assertion checker does not yet implement this type of function call.
 // Warning: (296-312): Assertion violation happens here
 // Warning: (315-331): Assertion violation happens here

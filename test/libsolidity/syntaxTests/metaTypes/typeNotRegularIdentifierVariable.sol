@@ -4,4 +4,4 @@ contract Test {
     }
 }
 // ----
-// ParserError: (60-64): Expected ';' but got 'type'
+// ParserError: (60-64): Expected ";" but got "type"

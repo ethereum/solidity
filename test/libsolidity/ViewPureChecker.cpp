@@ -70,28 +70,28 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		CHECK_ERROR(
 			"contract C { function f() pure public { " + x + "; } }",
 			TypeError,
-			"Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires \"view\""
+			"Function declared as " + quote("pure") + ", but this expression (potentially) reads from the environment or state and thus requires " + quote("view") + "."
 		);
 	}
 	for (string const& x: pure)
 	{
 		CHECK_WARNING(
 			"contract C { function f() view public { " + x + "; } }",
-			"Function state mutability can be restricted to pure"
+			"Function state mutability can be restricted to " + quote("pure") + "."
 		);
 	}
 
 	CHECK_WARNING_ALLOW_MULTI(
 		"contract C { function f() view public { blockhash; } }",
 		(std::vector<std::string>{
-			"Function state mutability can be restricted to pure",
+			"Function state mutability can be restricted to " + quote("pure") + ".",
 			"Statement has no effect."
 	}));
 
 	CHECK_ERROR(
 		"contract C { function f() view public { block.blockhash; } }",
 		TypeError,
-		"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
+		quote("block.blockhash()") + " has been deprecated in favor of " + quote("blockhash()") + "."
 	);
 }
 
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(address_staticcall)
 		}
 	)";
 	if (!solidity::test::Options::get().evmVersion().hasStaticCall())
-		CHECK_ERROR(text, TypeError, "\"staticcall\" is not supported by the VM version.");
+		CHECK_ERROR(text, TypeError, quote("staticcall") + " is not supported by the VM version.");
 	else
 		CHECK_SUCCESS_NO_WARNINGS(text);
 }
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(assembly_staticcall)
 		}
 	)";
 	if (!solidity::test::Options::get().evmVersion().hasStaticCall())
-		CHECK_ERROR(text, TypeError, "\"staticcall\" instruction is only available for Byzantium-compatible");
+		CHECK_ERROR(text, TypeError, quote("staticcall") + " instruction is only available for Byzantium-compatible");
 	else
 		CHECK_SUCCESS_NO_WARNINGS(text);
 }

@@ -7,4 +7,4 @@ contract Test {
 	}
 }
 // ----
-// TypeError: (118-121): Member "b" is not available in struct Test.S memory outside of storage.
+// TypeError: (118-121): Member "b" is not available in "struct Test.S memory" outside of storage.

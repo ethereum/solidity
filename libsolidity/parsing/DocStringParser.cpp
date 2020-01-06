@@ -97,7 +97,7 @@ bool DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 			auto tagNameEndPos = firstWhitespaceOrNewline(tagPos, end);
 			if (tagNameEndPos == end)
 			{
-				appendError("End of tag " + string(tagPos, tagNameEndPos) + " not found");
+				appendError("End of tag" + quoteSpace(string(tagPos, tagNameEndPos)) + "not found.");
 				break;
 			}
 
@@ -151,7 +151,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 
 	if (descStartPos == nlPos)
 	{
-		appendError("No description given for param " + paramName);
+		appendError("No description given for param " + quote(paramName) + ".");
 		return _end;
 	}
 

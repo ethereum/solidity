@@ -504,7 +504,7 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 			else
 				m_errorReporter.warning(
 					_op.location(),
-					"Assertion checker does not yet implement \"delete\" for this expression."
+					"Assertion checker does not yet implement" + quoteSpace("delete") + "for this expression."
 				);
 		}
 		break;
@@ -785,7 +785,7 @@ void SMTEncoder::endVisit(Literal const& _literal)
 		m_errorReporter.warning(
 			_literal.location(),
 			"Assertion checker does not yet support the type of this literal (" +
-			_literal.annotation().type->toString() +
+			quote(_literal.annotation().type->toString()) +
 			")."
 		);
 	}
@@ -1076,7 +1076,7 @@ void SMTEncoder::arithmeticOperation(BinaryOperation const& _op)
 	else
 		m_errorReporter.warning(
 			_op.location(),
-			"Assertion checker does not yet implement this operator for type " + type->richIdentifier() + "."
+			"Assertion checker does not yet implement this operator for type " + quote(type->richIdentifier()) + "."
 		);
 }
 
@@ -1167,7 +1167,7 @@ void SMTEncoder::compareOperation(BinaryOperation const& _op)
 	else
 		m_errorReporter.warning(
 			_op.location(),
-			"Assertion checker does not yet implement the type " + _op.annotation().commonType->toString() + " for comparisons"
+			"Assertion checker does not yet implement the type" + quoteSpace(_op.annotation().commonType->toString()) + "for comparisons."
 		);
 }
 
@@ -1195,7 +1195,7 @@ void SMTEncoder::booleanOperation(BinaryOperation const& _op)
 	else
 		m_errorReporter.warning(
 			_op.location(),
-			"Assertion checker does not yet implement the type " + _op.annotation().commonType->toString() + " for boolean operations"
+			"Assertion checker does not yet implement the type" + quoteSpace(_op.annotation().commonType->toString()) + "for boolean operations."
 		);
 }
 
@@ -1227,7 +1227,7 @@ void SMTEncoder::assignment(
 
 		m_errorReporter.warning(
 			_location,
-			"Assertion checker does not yet implement type " + _type->toString()
+			"Assertion checker does not yet implement type " + quote(_type->toString()) + "."
 		);
 	}
 	else if (auto varDecl = identifierToVariable(_left))
@@ -1488,7 +1488,7 @@ void SMTEncoder::createExpr(Expression const& _e)
 	if (abstract)
 		m_errorReporter.warning(
 			_e.location(),
-			"Assertion checker does not yet implement type " + _e.annotation().type->toString()
+			"Assertion checker does not yet implement type " + quote(_e.annotation().type->toString()) + "."
 		);
 }
 

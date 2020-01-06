@@ -226,11 +226,11 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 			unitAlias = expectIdentifierToken();
 		}
 		else
-			fatalParserError("Expected string literal (path), \"*\" or alias list.");
+			fatalParserError("Expected string literal (path)," + quoteSpace("*") +  "or alias list.");
 		// "from" is not a keyword but parsed as an identifier because of backwards
 		// compatibility and because it is a really common word.
 		if (m_scanner->currentToken() != Token::Identifier || m_scanner->currentLiteral() != "from")
-			fatalParserError("Expected \"from\".");
+			fatalParserError("Expected " + quote("from") + ".");
 		m_scanner->next();
 		if (m_scanner->currentToken() != Token::StringLiteral)
 			fatalParserError("Expected import path.");
@@ -448,8 +448,8 @@ StateMutability Parser::parseStateMutability()
 		case Token::Constant:
 			stateMutability = StateMutability::View;
 			parserError(
-				"The state mutability modifier \"constant\" was removed in version 0.5.0. "
-				"Use \"view\" or \"pure\" instead."
+				"The state mutability modifier" + quoteSpace("constant") + "was removed in version 0.5.0. "
+				"Use" + quoteSpace("view") + "or" + quoteSpace("pure") + "instead."
 			);
 			break;
 		default:
@@ -481,9 +481,9 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 				if (_isStateVariable && (result.visibility == Visibility::External || result.visibility == Visibility::Internal))
 					break;
 				parserError(string(
-					"Visibility already specified as \"" +
-					Declaration::visibilityToString(result.visibility) +
-					"\"."
+					"Visibility already specified as " +
+					quote(Declaration::visibilityToString(result.visibility)) +
+					"."
 				));
 				m_scanner->next();
 			}
@@ -495,9 +495,9 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 			if (result.stateMutability != StateMutability::NonPayable)
 			{
 				parserError(string(
-					"State mutability already specified as \"" +
-					stateMutabilityToString(result.stateMutability) +
-					"\"."
+					"State mutability already specified as " +
+					quote(stateMutabilityToString(result.stateMutability)) +
+					"."
 				));
 				m_scanner->next();
 			}
@@ -559,9 +559,9 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition()
 			}.at(m_scanner->currentToken());
 			name = make_shared<ASTString>(TokenTraits::toString(m_scanner->currentToken()));
 			string message{
-				"This function is named \"" + *name + "\" but is not the " + expected + " of the contract. "
-				"If you intend this to be a " + expected + ", use \"" + *name + "(...) { ... }\" without "
-				"the \"function\" keyword to define it."
+				"This function is named" + quoteSpace(*name) + "but is not the " + expected + " of the contract. "
+				"If you intend this to be a " + expected + ", use" + quoteSpace(*name + "(...) { ... }") + "without " +
+				"the" + quoteSpace("function") + "keyword to define it."
 			};
 			if (m_scanner->currentToken() == Token::Constructor)
 				parserError(message);
@@ -647,10 +647,10 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 			break;
 		expectToken(Token::Comma);
 		if (m_scanner->currentToken() != Token::Identifier)
-			fatalParserError(string("Expected identifier after ','"));
+			fatalParserError(string("Expected identifier after " + quote(",") + "."));
 	}
 	if (members.empty())
-		parserError({"enum with no members is not allowed."});
+		parserError({quote("enum") + " with no members is not allowed."});
 
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
@@ -678,8 +678,8 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	if (dynamic_cast<FunctionTypeName*>(type.get()) && _options.isStateVariable && m_scanner->currentToken() == Token::LBrace)
 		fatalParserError(
 			"Expected a state variable declaration. If you intended this as a fallback function "
-			"or a function to handle plain ether transactions, use the \"fallback\" keyword "
-			"or the \"ether\" keyword instead."
+			"or a function to handle plain ether transactions, use the" + quoteSpace("fallback") + "keyword "
+			"or the" + quoteSpace("ether") + "keyword instead."
 		);
 
 	bool isIndexed = false;
@@ -698,9 +698,9 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			if (visibility != Visibility::Default)
 			{
 				parserError(string(
-					"Visibility already specified as \"" +
-					Declaration::visibilityToString(visibility) +
-					"\"."
+					"Visibility already specified as " +
+					quote(Declaration::visibilityToString(visibility)) +
+					"."
 				));
 				m_scanner->next();
 			}
@@ -1182,7 +1182,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 	if (m_scanner->currentToken() == Token::StringLiteral)
 	{
 		if (m_scanner->currentLiteral() != "evmasm")
-			fatalParserError("Only \"evmasm\" supported.");
+			fatalParserError("Only" + quoteSpace("evmasm") + "supported.");
 		// This can be used in the future to set the dialect.
 		m_scanner->next();
 	}

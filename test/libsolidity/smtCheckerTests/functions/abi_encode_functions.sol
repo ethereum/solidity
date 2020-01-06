@@ -5,7 +5,7 @@ contract C {
     }
 }
 // ----
-// Warning: (162-165): Assertion checker does not yet implement type abi
+// Warning: (162-165): Assertion checker does not yet implement type "abi".
 // Warning: (162-176): Assertion checker does not yet implement this type of function call.
-// Warning: (178-181): Assertion checker does not yet implement type abi
+// Warning: (178-181): Assertion checker does not yet implement type "abi".
 // Warning: (178-203): Assertion checker does not yet implement this type of function call.

@@ -12,8 +12,8 @@ contract C {
 // ----
 // Warning: (125-132): Unused local variable.
 // Warning: (183-190): Unused local variable.
-// Warning: (136-139): Assertion checker does not yet implement type abi
+// Warning: (136-139): Assertion checker does not yet implement type "abi".
 // Warning: (136-167): Assertion checker does not yet implement this type of function call.
-// Warning: (194-197): Assertion checker does not yet implement type abi
+// Warning: (194-197): Assertion checker does not yet implement type "abi".
 // Warning: (194-225): Assertion checker does not yet implement this type of function call.
 // Warning: (303-319): Assertion violation happens here

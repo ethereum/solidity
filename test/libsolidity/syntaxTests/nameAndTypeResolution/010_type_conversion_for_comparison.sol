@@ -3,4 +3,4 @@ contract test {
 }
 // ----
 // Warning: (42-63): Statement has no effect.
-// Warning: (20-66): Function state mutability can be restricted to pure
+// Warning: (20-66): Function state mutability can be restricted to "pure".

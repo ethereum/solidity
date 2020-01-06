@@ -8,6 +8,7 @@ Compiler Features:
  * Yul Optimizer: Apply penalty when trying to rematerialize into loops.
 
 Bugfixes:
+ * Made usage of quotes in error and warning messages consistent
 
 
 

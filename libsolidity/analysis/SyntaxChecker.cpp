@@ -60,13 +60,16 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 		SemVerVersion recommendedVersion{string(VersionString)};
 		if (!recommendedVersion.isPrerelease())
 			errorString +=
-				" Consider adding \"pragma solidity ^" +
-				to_string(recommendedVersion.major()) +
-				string(".") +
-				to_string(recommendedVersion.minor()) +
-				string(".") +
-				to_string(recommendedVersion.patch()) +
-				string(";\"");
+				" Consider adding " +
+				quoteSpace("pragma solidity ^" +
+					to_string(recommendedVersion.major()) +
+					string(".") +
+					to_string(recommendedVersion.minor()) +
+					string(".") +
+					to_string(recommendedVersion.patch()) +
+					string(";")
+				) +
+				".";
 
 		m_errorReporter.warning(_sourceUnit.location(), errorString);
 	}
@@ -78,7 +81,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	solAssert(!_pragma.tokens().empty(), "");
 	solAssert(_pragma.tokens().size() == _pragma.literals().size(), "");
 	if (_pragma.tokens()[0] != Token::Identifier)
-		m_errorReporter.syntaxError(_pragma.location(), "Invalid pragma \"" + _pragma.literals()[0] + "\"");
+		m_errorReporter.syntaxError(_pragma.location(), "Invalid pragma " + quote(_pragma.literals()[0]) + ".");
 	else if (_pragma.literals()[0] == "experimental")
 	{
 		solAssert(m_sourceUnit, "");
@@ -128,7 +131,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 		m_versionPragmaFound = true;
 	}
 	else
-		m_errorReporter.syntaxError(_pragma.location(), "Unknown pragma \"" + _pragma.literals()[0] + "\"");
+		m_errorReporter.syntaxError(_pragma.location(), "Unknown pragma " + quoteSpace(_pragma.literals()[0]) + ".");
 	return true;
 }
 
@@ -141,7 +144,7 @@ bool SyntaxChecker::visit(ModifierDefinition const&)
 void SyntaxChecker::endVisit(ModifierDefinition const& _modifier)
 {
 	if (!m_placeholderFound)
-		m_errorReporter.syntaxError(_modifier.body().location(), "Modifier body does not contain '_'.");
+		m_errorReporter.syntaxError(_modifier.body().location(), "Modifier body does not contain " + quote("_") + ".");
 	m_placeholderFound = false;
 }
 
@@ -188,7 +191,7 @@ bool SyntaxChecker::visit(Continue const& _continueStatement)
 {
 	if (m_inLoopDepth <= 0)
 		// we're not in a for/while loop, report syntax error
-		m_errorReporter.syntaxError(_continueStatement.location(), "\"continue\" has to be in a \"for\" or \"while\" loop.");
+		m_errorReporter.syntaxError(_continueStatement.location(), quote("continue") + " has to be in a" + quoteSpace("for") + "or" + quoteSpace("while") + "loop.");
 	return true;
 }
 
@@ -196,7 +199,7 @@ bool SyntaxChecker::visit(Break const& _breakStatement)
 {
 	if (m_inLoopDepth <= 0)
 		// we're not in a for/while loop, report syntax error
-		m_errorReporter.syntaxError(_breakStatement.location(), "\"break\" has to be in a \"for\" or \"while\" loop.");
+		m_errorReporter.syntaxError(_breakStatement.location(), quote("break") + " has to be in a" + quoteSpace("for") + "or" + quoteSpace("while") + "loop.");
 	return true;
 }
 
@@ -204,7 +207,7 @@ bool SyntaxChecker::visit(Throw const& _throwStatement)
 {
 	m_errorReporter.syntaxError(
 		_throwStatement.location(),
-		"\"throw\" is deprecated in favour of \"revert()\", \"require()\" and \"assert()\"."
+		quote("throw") + " is deprecated in favour of " + quote("revert()") + "," + quoteSpace("require()") + "and " + quote("assert()") + "."
 	);
 
 	return true;
@@ -218,32 +221,31 @@ bool SyntaxChecker::visit(Literal const& _literal)
 	ASTString const& value = _literal.value();
 	solAssert(!value.empty(), "");
 
+	static string const errMsgBegin = "Invalid use of underscores in number literal. ";
+
 	// Generic checks no matter what base this number literal is of:
 	if (value.back() == '_')
 	{
-		m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No trailing underscores allowed.");
+		m_errorReporter.syntaxError(_literal.location(), errMsgBegin + "No trailing underscores allowed.");
 		return true;
 	}
 
 	if (value.find("__") != ASTString::npos)
 	{
-		m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. Only one consecutive underscores between digits allowed.");
+		m_errorReporter.syntaxError(_literal.location(), errMsgBegin + "Only one consecutive underscores between digits allowed.");
 		return true;
 	}
 
 	if (!_literal.isHexNumber()) // decimal literal
 	{
-		if (value.find("._") != ASTString::npos)
-			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.");
-
-		if (value.find("_.") != ASTString::npos)
-			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.");
+		if (value.find("._") != ASTString::npos || value.find("_.") != ASTString::npos)
+			m_errorReporter.syntaxError(_literal.location(), errMsgBegin + "No underscores in front of the fraction part allowed.");
 
 		if (value.find("_e") != ASTString::npos)
-			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscore at the end of the mantissa allowed.");
+			m_errorReporter.syntaxError(_literal.location(), errMsgBegin + "No underscore at the end of the mantissa allowed.");
 
 		if (value.find("e_") != ASTString::npos)
-			m_errorReporter.syntaxError(_literal.location(), "Invalid use of underscores in number literal. No underscore in front of exponent allowed.");
+			m_errorReporter.syntaxError(_literal.location(), errMsgBegin + "No underscore in front of exponent allowed.");
 	}
 
 	return true;
@@ -252,7 +254,7 @@ bool SyntaxChecker::visit(Literal const& _literal)
 bool SyntaxChecker::visit(UnaryOperation const& _operation)
 {
 	if (_operation.getOperator() == Token::Add)
-		m_errorReporter.syntaxError(_operation.location(), "Use of unary + is disallowed.");
+		m_errorReporter.syntaxError(_operation.location(), "Use of unary" + quoteSpace("+") + "is disallowed.");
 
 	return true;
 }
@@ -286,7 +288,7 @@ bool SyntaxChecker::visit(ContractDefinition const& _contract)
 		if (function->name() == contractName)
 			m_errorReporter.syntaxError(function->location(),
 				"Functions are not allowed to have the same name as the contract. "
-				"If you intend this to be a constructor, use \"constructor(...) { ... }\" to define it."
+				"If you intend this to be a constructor, use" + quoteSpace("constructor(...) { ... }") + "to define it."
 			);
 	return true;
 }
@@ -298,7 +300,7 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 		string suggestedVisibility = _function.isFallback() || _function.isReceive() || m_isInterface ? "external" : "public";
 		m_errorReporter.syntaxError(
 			_function.location(),
-			"No visibility specified. Did you intend to add \"" + suggestedVisibility + "\"?"
+			"No visibility specified. Did you intend to add " + quote(suggestedVisibility) + "?"
 		);
 	}
 
@@ -327,7 +329,7 @@ bool SyntaxChecker::visit(VariableDeclarationStatement const& _statement)
 	if (boost::algorithm::all_of_equal(_statement.declarations(), nullptr))
 		m_errorReporter.syntaxError(
 			_statement.location(),
-			"The use of the \"var\" keyword is disallowed. The declaration part of the statement can be removed, since it is empty."
+			"The use of the" + quoteSpace("var") + "keyword is disallowed. The declaration part of the statement can be removed, since it is empty."
 		);
 
 	return true;

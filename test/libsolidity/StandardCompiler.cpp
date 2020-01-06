@@ -24,10 +24,12 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolutil/JSON.h>
+#include <liblangutil/ErrorReporter.h>
 #include <test/Metadata.h>
 
 using namespace std;
 using namespace solidity::evmasm;
+using namespace solidity::langutil;
 
 namespace solidity::frontend::test
 {
@@ -126,7 +128,7 @@ BOOST_AUTO_TEST_CASE(invalid_language)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "Only \"Solidity\" or \"Yul\" is supported as a language."));
+	BOOST_CHECK(containsError(result, "JSONError", "Only" + quoteSpace("Solidity") + "or" + quoteSpace("Yul") + "is supported as a language."));
 }
 
 BOOST_AUTO_TEST_CASE(valid_language)
@@ -137,7 +139,7 @@ BOOST_AUTO_TEST_CASE(valid_language)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(!containsError(result, "JSONError", "Only \"Solidity\" or \"Yul\" is supported as a language."));
+	BOOST_CHECK(!containsError(result, "JSONError", "Only" + quoteSpace("Solidity") + "or" + quoteSpace("Yul") + "is supported as a language."));
 }
 
 BOOST_AUTO_TEST_CASE(no_sources)
@@ -172,7 +174,7 @@ BOOST_AUTO_TEST_CASE(no_sources_empty_array)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "\"sources\" is not a JSON object."));
+	BOOST_CHECK(containsError(result, "JSONError", quote("sources") + " is not a JSON object."));
 }
 
 BOOST_AUTO_TEST_CASE(sources_is_array)
@@ -184,7 +186,7 @@ BOOST_AUTO_TEST_CASE(sources_is_array)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "\"sources\" is not a JSON object."));
+	BOOST_CHECK(containsError(result, "JSONError", quote("sources") + " is not a JSON object."));
 }
 
 BOOST_AUTO_TEST_CASE(unexpected_trailing_test)
@@ -238,7 +240,7 @@ BOOST_AUTO_TEST_CASE(error_recovery_field)
 	)";
 
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "\"settings.parserErrorRecovery\" must be a Boolean."));
+	BOOST_CHECK(containsError(result, "JSONError", quote("settings.parserErrorRecovery") + " must be a Boolean."));
 
 	input = R"(
 	{
@@ -276,7 +278,7 @@ BOOST_AUTO_TEST_CASE(optimizer_enabled_not_boolean)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "The \"enabled\" setting must be a Boolean."));
+	BOOST_CHECK(containsError(result, "JSONError", "The" + quoteSpace("enabled") + "setting must be a Boolean."));
 }
 
 BOOST_AUTO_TEST_CASE(optimizer_runs_not_a_number)
@@ -298,7 +300,7 @@ BOOST_AUTO_TEST_CASE(optimizer_runs_not_a_number)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "The \"runs\" setting must be an unsigned number."));
+	BOOST_CHECK(containsError(result, "JSONError", "The" + quoteSpace("runs") + "setting must be an unsigned number."));
 }
 
 BOOST_AUTO_TEST_CASE(optimizer_runs_not_an_unsigned_number)
@@ -320,7 +322,7 @@ BOOST_AUTO_TEST_CASE(optimizer_runs_not_an_unsigned_number)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "The \"runs\" setting must be an unsigned number."));
+	BOOST_CHECK(containsError(result, "JSONError", "The" + quoteSpace("runs") + "setting must be an unsigned number."));
 }
 
 BOOST_AUTO_TEST_CASE(basic_compilation)
@@ -461,8 +463,8 @@ BOOST_AUTO_TEST_CASE(compilation_error)
 		{
 			BOOST_CHECK_EQUAL(
 				util::jsonCompactPrint(error),
-				"{\"component\":\"general\",\"formattedMessage\":\"fileA:1:23: ParserError: Expected identifier but got '}'\\n"
-				"contract A { function }\\n                      ^\\n\",\"message\":\"Expected identifier but got '}'\","
+				"{\"component\":\"general\",\"formattedMessage\":\"fileA:1:23: ParserError: Expected identifier but got \\\"}\\\"\\n"
+				"contract A { function }\\n                      ^\\n\",\"message\":\"Expected identifier but got \\\"}\\\"\","
 				"\"severity\":\"error\",\"sourceLocation\":{\"end\":23,\"file\":\"fileA\",\"start\":22},\"type\":\"ParserError\"}"
 			);
 		}
@@ -726,7 +728,7 @@ BOOST_AUTO_TEST_CASE(libraries_invalid_top_level)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "\"libraries\" is not a JSON object."));
+	BOOST_CHECK(containsError(result, "JSONError", quote("libraries") + " is not a JSON object."));
 }
 
 BOOST_AUTO_TEST_CASE(libraries_invalid_entry)
@@ -770,7 +772,7 @@ BOOST_AUTO_TEST_CASE(libraries_invalid_hex)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "Invalid library address (\"0x4200000000000000000000000000000000000xx1\") supplied."));
+	BOOST_CHECK(containsError(result, "JSONError", "Invalid library address (" + quote("0x4200000000000000000000000000000000000xx1") + ") supplied."));
 }
 
 BOOST_AUTO_TEST_CASE(libraries_invalid_length)
@@ -817,7 +819,7 @@ BOOST_AUTO_TEST_CASE(libraries_missing_hex_prefix)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "Library address is not prefixed with \"0x\"."));
+	BOOST_CHECK(containsError(result, "JSONError", "Library address is not prefixed with " + quote("0x") + "."));
 }
 
 BOOST_AUTO_TEST_CASE(library_linking)

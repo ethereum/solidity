@@ -11,6 +11,6 @@ contract C {
 	}
 }
 // ----
-// TypeError: (90-108): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError: (190-208): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError: (279-295): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError: (90-108): Function declared as "view", but this expression (potentially) modifies the state and thus requires non-payable (the default) or "payable".
+// TypeError: (190-208): Function declared as "view", but this expression (potentially) modifies the state and thus requires non-payable (the default) or "payable".
+// TypeError: (279-295): Function declared as "view", but this expression (potentially) modifies the state and thus requires non-payable (the default) or "payable".
