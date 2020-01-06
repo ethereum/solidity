@@ -140,7 +140,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 	auto nameStartPos = skipWhitespace(_pos, _end);
 	if (nameStartPos == _end)
 	{
-		appendError("No param name given");
+		appendError("No param name given.");
 		return _end;
 	}
 	auto nameEndPos = firstNonIdentifier(nameStartPos, _end);

@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// Warning: (159-173): Assertion violation happens here
+// Warning: (159-173): Assertion violation happens here.

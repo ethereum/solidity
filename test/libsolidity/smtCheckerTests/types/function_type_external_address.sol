@@ -7,4 +7,4 @@ contract C {
 }
 // ----
 // Warning: (128-137): Assertion checker does not yet support this expression.
-// Warning: (141-155): Assertion violation happens here
+// Warning: (141-155): Assertion violation happens here.

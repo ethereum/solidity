@@ -8,4 +8,4 @@ contract C {
 	}
 }
 // ----
-// Warning: (104-118): Assertion violation happens here
+// Warning: (104-118): Assertion violation happens here.

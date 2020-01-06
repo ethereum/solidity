@@ -8,7 +8,5 @@ contract C {
         assert(x == 7);
     }
 }
-// ====
-// SMTSolvers: z3
 // ----
-// Warning: (216-230): Assertion violation happens here
+// Warning: (216-230): Assertion violation happens here.

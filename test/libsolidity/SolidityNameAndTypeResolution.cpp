@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
 		contract C { function f() public pure { uint returndatasize; returndatasize; assembly { pop(returndatasize()) }}}
 	)";
 	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
+		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name."}
 	});
 	if (!solidity::test::Options::get().evmVersion().supportsReturndata())
 		expectations.emplace_back(make_pair(Error::Type::TypeError, quote("returndatasize") + " instruction is only available for Byzantium-compatible VMs"));
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(extcodehash_as_variable)
 	// This needs special treatment, because the message mentions the EVM version,
 	// so cannot be run via isoltest.
 	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
+		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name."}
 	});
 	if (!solidity::test::Options::get().evmVersion().hasExtCodeHash())
 		expectations.emplace_back(make_pair(Error::Type::TypeError, quote("extcodehash") + " instruction is only available for Constantinople-compatible VMs"));

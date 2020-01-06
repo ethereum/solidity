@@ -14,9 +14,7 @@ contract C {
 		assert(a == 2);
 	}
 }
-// ====
-// SMTSolvers: z3
 // ----
 // Warning: (128-133): Unreachable code.
 // Warning: (147-151): Unreachable code.
-// Warning: (180-194): Assertion violation happens here
+// Warning: (180-194): Assertion violation happens here.

@@ -17,5 +17,5 @@ contract c {
 }
 // ----
 // Warning: (166-178): Internal error: Expression undefined for SMT solver.
-// Warning: (288-324): Assertion violation happens here
-// Warning: (336-372): Assertion violation happens here
+// Warning: (288-324): Assertion violation happens here.
+// Warning: (336-372): Assertion violation happens here.

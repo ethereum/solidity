@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected" + quoteSpace("(") + "but got " + quote("{"));
 	BOOST_CHECK("{ if calldatasize() {}");
 	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", TypeError, "Expected expression to return one item to the stack, but it returned 0 items.");
-	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected" + quoteSpace("{") + "but got reserved keyword " + quote("let"));
+	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected" + quoteSpace("{") + "but got reserved keyword " + quote("let") + ".");
 }
 
 BOOST_AUTO_TEST_CASE(switch_statement)
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
-	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected" + quoteSpace("(") + "but got reserved keyword " + quote("default"));
+	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected" + quoteSpace("(") + "but got reserved keyword " + quote("default") + ".");
 	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to return one item to the stack, but it returned 0 items.");
 }
 
@@ -347,9 +347,9 @@ BOOST_AUTO_TEST_CASE(for_statement)
 BOOST_AUTO_TEST_CASE(for_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ for {} {} {} {} }", ParserError, "Literal, identifier or instruction expected.");
-	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected" + quoteSpace("{") + "but got " + quote("Number"));
-	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected" + quoteSpace("{") + "but got " + quote("Number"));
-	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected" + quoteSpace("{") + "but got " + quote("Number"));
+	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected" + quoteSpace("{") + "but got " + quote("Number") + ".");
+	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected" + quoteSpace("{") + "but got " + quote("Number") + ".");
+	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected" + quoteSpace("{") + "but got " + quote("Number") + ".");
 	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected" + quoteSpace("(") + "but got " + quote("{"));
 	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", TypeError, "Expected expression to return one item to the stack, but it returned 0 items.");
 }
@@ -357,18 +357,18 @@ BOOST_AUTO_TEST_CASE(for_invalid_expression)
 BOOST_AUTO_TEST_CASE(for_visibility)
 {
 	BOOST_CHECK(successParse("{ for { let i := 1 } i { pop(i) } { pop(i) } }"));
-	CHECK_PARSE_ERROR("{ for {} i { let i := 1 } {} }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for {} 1 { let i := 1 } { pop(i) } }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for {} 1 { pop(i) } { let i := 1 } }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for { pop(i) } 1 { let i := 1 } {} }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for { pop(i) } 1 { } { let i := 1 } }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for {} i {} { let i := 1 } }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for {} 1 { pop(i) } { let i := 1 } }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 { let x := 1 } {} }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope");
-	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 {} { let x := 1 } }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope");
-	CHECK_PARSE_ERROR("{ let x := 1 for { let x := 1 } 1 {} {} }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope");
-	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 { let x := 1 } {} }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope");
-	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 {} { let x := 1 } }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope");
+	CHECK_PARSE_ERROR("{ for {} i { let i := 1 } {} }", DeclarationError, "Identifier not found.");
+	CHECK_PARSE_ERROR("{ for {} 1 { let i := 1 } { pop(i) } }", DeclarationError, "Identifier not found.");
+	CHECK_PARSE_ERROR("{ for {} 1 { pop(i) } { let i := 1 } }", DeclarationError, "Identifier not found.");
+	CHECK_PARSE_ERROR("{ for { pop(i) } 1 { let i := 1 } {} }", DeclarationError, "Identifier not found.");
+	CHECK_PARSE_ERROR("{ for { pop(i) } 1 { } { let i := 1 } }", DeclarationError, "Identifier not found.");
+	CHECK_PARSE_ERROR("{ for {} i {} { let i := 1 } }", DeclarationError, "Identifier not found.");
+	CHECK_PARSE_ERROR("{ for {} 1 { pop(i) } { let i := 1 } }", DeclarationError, "Identifier not found.");
+	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 { let x := 1 } {} }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope.");
+	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 {} { let x := 1 } }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope.");
+	CHECK_PARSE_ERROR("{ let x := 1 for { let x := 1 } 1 {} {} }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope.");
+	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 { let x := 1 } {} }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope.");
+	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 {} { let x := 1 } }", DeclarationError, "Variable name" + quoteSpace("x") + "already taken in this scope.");
 	// Check that body and post are not sub-scopes of each other.
 	BOOST_CHECK(successParse("{ for {} 1 { let x := 1 } { let x := 1 } }"));
 }
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(number_literals)
 	CHECK_PARSE_ERROR("{ let x := .1 }", ParserError, "Invalid number literal.");
 	CHECK_PARSE_ERROR("{ let x := 1e5 }", ParserError, "Invalid number literal.");
 	CHECK_PARSE_ERROR("{ let x := 67.235 }", ParserError, "Invalid number literal.");
-	CHECK_STRICT_ERROR("{ let x := 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff }", TypeError, "Number literal too large (> 256 bits)");
+	CHECK_STRICT_ERROR("{ let x := 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff }", TypeError, "Number literal too large (> 256 bits).");
 }
 
 BOOST_AUTO_TEST_CASE(function_definitions)
@@ -415,27 +415,27 @@ BOOST_AUTO_TEST_CASE(opcode_for_function_args)
 
 BOOST_AUTO_TEST_CASE(name_clashes)
 {
-	CHECK_PARSE_ERROR("{ let g := 2 function g() { } }", DeclarationError, "Variable name" + quoteSpace("g") + "already taken in this scope");
+	CHECK_PARSE_ERROR("{ let g := 2 function g() { } }", DeclarationError, "Variable name" + quoteSpace("g") + "already taken in this scope.");
 }
 
 BOOST_AUTO_TEST_CASE(name_clashes_function_subscope)
 {
-	CHECK_PARSE_ERROR("{ function g() { function g() {} } }", DeclarationError, "Function name" + quoteSpace("g") + "already taken in this scope");
+	CHECK_PARSE_ERROR("{ function g() { function g() {} } }", DeclarationError, "Function name" + quoteSpace("g") + "already taken in this scope.");
 }
 
 BOOST_AUTO_TEST_CASE(name_clashes_function_subscope_reverse)
 {
-	CHECK_PARSE_ERROR("{ { function g() {} } function g() { } }", DeclarationError, "Function name" + quoteSpace("g") + "already taken in this scope");
+	CHECK_PARSE_ERROR("{ { function g() {} } function g() { } }", DeclarationError, "Function name" + quoteSpace("g") + "already taken in this scope.");
 }
 
 BOOST_AUTO_TEST_CASE(name_clashes_function_variable_subscope)
 {
-	CHECK_PARSE_ERROR("{ function g() { let g := 0 } }", DeclarationError, "Variable name" + quoteSpace("g") + "already taken in this scope");
+	CHECK_PARSE_ERROR("{ function g() { let g := 0 } }", DeclarationError, "Variable name" + quoteSpace("g") + "already taken in this scope.");
 }
 
 BOOST_AUTO_TEST_CASE(name_clashes_function_variable_subscope_reverse)
 {
-	CHECK_PARSE_ERROR("{ { let g := 0 } function g() { } }", DeclarationError, "Variable name" + quoteSpace("g") + "already taken in this scope");
+	CHECK_PARSE_ERROR("{ { let g := 0 } function g() { } }", DeclarationError, "Variable name" + quoteSpace("g") + "already taken in this scope.");
 }
 BOOST_AUTO_TEST_CASE(functions_in_parallel_scopes)
 {
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(variable_access_cross_functions)
 
 BOOST_AUTO_TEST_CASE(invalid_tuple_assignment)
 {
-	CHECK_PARSE_ERROR("{ let x, y := 1 }", DeclarationError, "Variable count mismatch: 2 variables and 1 values");
+	CHECK_PARSE_ERROR("{ let x, y := 1 }", DeclarationError, "Variable count mismatch: 2 variables and 1 values.");
 }
 
 BOOST_AUTO_TEST_CASE(instruction_too_few_arguments)
@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(instruction_too_few_arguments)
 
 BOOST_AUTO_TEST_CASE(instruction_too_many_arguments)
 {
-	CHECK_PARSE_ERROR("{ pop(mul(1, 2, 3)) }", TypeError, "Function expects 2 arguments but got 3");
+	CHECK_PARSE_ERROR("{ pop(mul(1, 2, 3)) }", TypeError, "Function expects 2 arguments but got 3.");
 }
 
 BOOST_AUTO_TEST_CASE(recursion_depth)
@@ -599,8 +599,8 @@ BOOST_AUTO_TEST_CASE(oversize_string_literals)
 
 BOOST_AUTO_TEST_CASE(magic_variables)
 {
-	CHECK_ASSEMBLE_ERROR("{ pop(this) }", DeclarationError, "Identifier not found");
-	CHECK_ASSEMBLE_ERROR("{ pop(ecrecover) }", DeclarationError, "Identifier not found");
+	CHECK_ASSEMBLE_ERROR("{ pop(this) }", DeclarationError, "Identifier not found.");
+	CHECK_ASSEMBLE_ERROR("{ pop(ecrecover) }", DeclarationError, "Identifier not found.");
 	BOOST_CHECK(successAssemble("{ let ecrecover := 1 pop(ecrecover) }"));
 }
 

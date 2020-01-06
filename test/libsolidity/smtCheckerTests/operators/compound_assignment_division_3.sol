@@ -10,4 +10,4 @@ contract C {
 	}
 }
 // ----
-// Warning: (194-213): Assertion violation happens here
+// Warning: (194-213): Assertion violation happens here.

@@ -31,4 +31,4 @@ contract C
 // Warning: (193-196): Assertion checker does not yet support this expression.
 // Warning: (193-194): Assertion checker does not yet implement type "struct C.S memory".
 // Warning: (193-199): Assertion checker does not yet implement this expression.
-// Warning: (186-207): Assertion violation happens here
+// Warning: (186-207): Assertion violation happens here.

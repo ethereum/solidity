@@ -18,4 +18,4 @@ contract C
 }
 // ----
 // Warning: (228-229): Assertion checker does not yet implement type "type(library L)".
-// Warning: (245-261): Assertion violation happens here
+// Warning: (245-261): Assertion violation happens here.

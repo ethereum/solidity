@@ -254,7 +254,7 @@ void NameAndTypeResolver::warnVariablesNamedLikeInstructions()
 				continue;
 			m_errorReporter.warning(
 				declaration->location(),
-				"Variable is shadowed in inline assembly by an instruction of the same name"
+				"Variable is shadowed in inline assembly by an instruction of the same name."
 			);
 		}
 	}
@@ -394,13 +394,13 @@ void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract)
 		input.back().push_front(base);
 		vector<ContractDefinition const*> const& basesBases = base->annotation().linearizedBaseContracts;
 		if (basesBases.empty())
-			m_errorReporter.fatalTypeError(baseName.location(), "Definition of base has to precede definition of derived contract");
+			m_errorReporter.fatalTypeError(baseName.location(), "Definition of base has to precede definition of derived contract.");
 		input.push_front(list<ContractDefinition const*>(basesBases.begin(), basesBases.end()));
 	}
 	input.back().push_front(&_contract);
 	vector<ContractDefinition const*> result = cThreeMerge(input);
 	if (result.empty())
-		m_errorReporter.fatalTypeError(_contract.location(), "Linearization of inheritance graph impossible");
+		m_errorReporter.fatalTypeError(_contract.location(), "Linearization of inheritance graph impossible.");
 	_contract.annotation().linearizedBaseContracts = result;
 	_contract.annotation().contractDependencies.insert(result.begin() + 1, result.end());
 }

@@ -19,4 +19,4 @@ contract A is B {
 	}
 }
 // ----
-// Warning: (253-271): Assertion violation happens here
+// Warning: (253-271): Assertion violation happens here.

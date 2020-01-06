@@ -14,7 +14,5 @@ contract C
 		assert(x >= 10);
 	}
 }
-// ====
-// SMTSolvers: z3
 // ----
-// Warning: (201-216): Assertion violation happens here
+// Warning: (201-216): Assertion violation happens here.

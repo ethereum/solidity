@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (69-70): Expected type name
+// ParserError: (69-70): Expected type name.

@@ -19,7 +19,7 @@ contract C
 // EVMVersion: >spuriousDragon
 // ----
 // Warning: (224-240): Unused local variable.
-// Warning: (268-283): Assertion violation happens here
-// Warning: (287-301): Assertion violation happens here
-// Warning: (305-324): Assertion violation happens here
-// Warning: (328-352): Assertion violation happens here
+// Warning: (268-283): Assertion violation happens here.
+// Warning: (287-301): Assertion violation happens here.
+// Warning: (305-324): Assertion violation happens here.
+// Warning: (328-352): Assertion violation happens here.

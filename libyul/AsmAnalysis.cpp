@@ -94,7 +94,7 @@ bool AsmAnalyzer::operator()(Literal const& _literal)
 	{
 		m_errorReporter.typeError(
 			_literal.location,
-			"String literal too long (" + to_string(_literal.value.str().size()) + " > 32)"
+			"String literal too long (" + to_string(_literal.value.str().size()) + " > 32)."
 		);
 		return false;
 	}
@@ -102,7 +102,7 @@ bool AsmAnalyzer::operator()(Literal const& _literal)
 	{
 		m_errorReporter.typeError(
 			_literal.location,
-			"Number literal too large (> 256 bits)"
+			"Number literal too large (> 256 bits)."
 		);
 		return false;
 	}
@@ -203,7 +203,7 @@ bool AsmAnalyzer::operator()(Assignment const& _assignment)
 			to_string(expectedItems) +
 			" vs. " +
 			to_string(m_stackHeight - stackHeight) +
-			")"
+			")."
 		);
 		return false;
 	}

@@ -15,11 +15,11 @@ contract C
 	}
 }
 // ----
-// Warning: (79-115): Assertion violation happens here
-// Warning: (119-161): Assertion violation happens here
-// Warning: (165-204): Assertion violation happens here
-// Warning: (208-240): Assertion violation happens here
-// Warning: (244-275): Assertion violation happens here
-// Warning: (304-332): Assertion violation happens here
-// Warning: (336-352): Assertion violation happens here
-// Warning: (356-379): Assertion violation happens here
+// Warning: (79-115): Assertion violation happens here.
+// Warning: (119-161): Assertion violation happens here.
+// Warning: (165-204): Assertion violation happens here.
+// Warning: (208-240): Assertion violation happens here.
+// Warning: (244-275): Assertion violation happens here.
+// Warning: (304-332): Assertion violation happens here.
+// Warning: (336-352): Assertion violation happens here.
+// Warning: (356-379): Assertion violation happens here.

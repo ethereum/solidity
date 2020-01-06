@@ -19,4 +19,4 @@ contract C
 	}
 }
 // ----
-// Warning: (497-514): Assertion violation happens here
+// Warning: (497-514): Assertion violation happens here.

@@ -82,9 +82,9 @@ void ParserBase::expectToken(Token _value, bool _advance)
 	{
 		string const expectedToken = ParserBase::tokenName(_value);
 		if (m_parserErrorRecovery)
-			parserError("Expected " + expectedToken + " but got " + tokenName(tok));
+			parserError("Expected " + expectedToken + " but got " + tokenName(tok) + ".");
 		else
-			fatalParserError("Expected " + expectedToken + " but got " + tokenName(tok));
+			fatalParserError("Expected " + expectedToken + " but got " + tokenName(tok) + ".");
 		// Do not advance so that recovery can sync or make use of the current token.
 		// This is especially useful if the expected token
 		// is the only one that is missing and is at the end of a construct.

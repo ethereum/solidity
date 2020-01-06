@@ -765,7 +765,8 @@ void BMC::checkCondition(
 	case smt::CheckResult::SATISFIABLE:
 	{
 		std::ostringstream message;
-		message << _description << " happens here";
+		message << _description << " happens here.";
+
 		if (callStack.size())
 		{
 			std::ostringstream modelMessage;
@@ -787,10 +788,8 @@ void BMC::checkCondition(
 			);
 		}
 		else
-		{
-			message << ".";
 			m_errorReporter.warning(_location, message.str(), secondaryLocation);
-		}
+
 		break;
 	}
 	case smt::CheckResult::UNSATISFIABLE:

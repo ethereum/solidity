@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (97-115): Type is not callable
+// TypeError: (97-115): Type is not callable.

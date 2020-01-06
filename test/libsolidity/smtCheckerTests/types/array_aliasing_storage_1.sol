@@ -38,8 +38,8 @@ contract C
 	}
 }
 // ----
-// Warning: (489-506): Assertion violation happens here
-// Warning: (553-575): Assertion violation happens here
-// Warning: (627-654): Assertion violation happens here
-// Warning: (795-817): Assertion violation happens here
-// Warning: (957-983): Assertion violation happens here
+// Warning: (489-506): Assertion violation happens here.
+// Warning: (553-575): Assertion violation happens here.
+// Warning: (627-654): Assertion violation happens here.
+// Warning: (795-817): Assertion violation happens here.
+// Warning: (957-983): Assertion violation happens here.

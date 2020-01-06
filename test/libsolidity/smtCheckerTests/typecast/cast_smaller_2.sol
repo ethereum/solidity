@@ -11,4 +11,4 @@ contract C
 }
 // ----
 // Warning: (112-121): Type conversion is not yet fully supported and might yield false positives.
-// Warning: (208-227): Assertion violation happens here
+// Warning: (208-227): Assertion violation happens here.

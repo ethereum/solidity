@@ -42,6 +42,23 @@ std::string quoteSpace(std::string const& _name)
 
 }
 
+void checkMessage(string const _message)
+{
+	if (
+		_message.size() == 0 ||
+		_message[_message.size()-1] == '.' ||
+		_message[_message.size()-1] == '?' ||
+		_message[_message.size()-1] == '!'
+	)
+		return;
+
+	solAssert(
+		false,
+		"Error/Warning not terminating with \".\", \"!\" or \"?\": " +
+		_message
+	);
+}
+
 ErrorReporter& ErrorReporter::operator=(ErrorReporter const& _errorReporter)
 {
 	if (&_errorReporter == this)
@@ -83,6 +100,8 @@ void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, st
 		errinfo_sourceLocation(_location) <<
 		util::errinfo_comment(_description);
 
+	checkMessage(_description);
+
 	m_errorList.push_back(err);
 }
 
@@ -96,6 +115,8 @@ void ErrorReporter::error(Error::Type _type, SourceLocation const& _location, Se
 		errinfo_sourceLocation(_location) <<
 		errinfo_secondarySourceLocation(_secondaryLocation) <<
 		util::errinfo_comment(_description);
+
+	checkMessage(_description);
 
 	m_errorList.push_back(err);
 }

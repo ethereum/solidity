@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// ParserError: (116-120): Expected ";" but got "StringLiteral"
+// ParserError: (116-120): Expected ";" but got "StringLiteral".

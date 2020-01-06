@@ -27,4 +27,4 @@ contract C
 // Warning: (158-168): Assertion checker does not yet implement "delete" for this expression.
 // Warning: (179-182): Assertion checker does not yet support this expression.
 // Warning: (179-180): Assertion checker does not yet implement type "struct C.S memory".
-// Warning: (172-188): Assertion violation happens here
+// Warning: (172-188): Assertion violation happens here.

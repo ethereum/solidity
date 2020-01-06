@@ -23,4 +23,4 @@ contract C
 	}
 }
 // ----
-// Warning: (811-831): Assertion violation happens here
+// Warning: (811-831): Assertion violation happens here.

@@ -9,7 +9,5 @@ contract C {
         assert(x == 2);
     }
 }
-// ====
-// SMTSolvers: z3
 // ----
-// Warning: (194-208): Assertion violation happens here
+// Warning: (194-208): Assertion violation happens here.

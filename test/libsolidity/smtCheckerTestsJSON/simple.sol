@@ -8,4 +8,4 @@ contract C
 	}
 }
 // ----
-// Warning: (82-95): Assertion violation happens here
+// Warning: (82-95): Assertion violation happens here.

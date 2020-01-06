@@ -2162,7 +2162,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 
 	default:
-		m_errorReporter.typeError(_functionCall.location(), "Type is not callable");
+		m_errorReporter.typeError(_functionCall.location(), "Type is not callable.");
 		funcCallAnno.kind = FunctionCallKind::Unset;
 		funcCallAnno.isPure = argumentsArePure;
 		break;
@@ -2750,7 +2750,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 				_literal.location(),
 				msg +
 				" If this is not used as an address, please prepend " + quote("00") + ". " +
-				"For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals"
+				"Please see https://solidity.readthedocs.io/en/develop/types.html#address-literals for more information."
 			);
 	}
 

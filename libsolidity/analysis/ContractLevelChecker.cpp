@@ -384,7 +384,7 @@ void ContractLevelChecker::checkLibraryRequirements(ContractDefinition const& _c
 
 	for (auto const& var: _contract.stateVariables())
 		if (!var->isConstant())
-			m_errorReporter.typeError(var->location(), "Library cannot have non-constant state variables");
+			m_errorReporter.typeError(var->location(), "Library cannot have non-constant state variables.");
 }
 
 void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _contract)

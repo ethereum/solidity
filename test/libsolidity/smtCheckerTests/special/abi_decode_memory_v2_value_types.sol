@@ -16,4 +16,4 @@ contract C {
 // Warning: (136-167): Assertion checker does not yet implement this type of function call.
 // Warning: (194-197): Assertion checker does not yet implement type "abi".
 // Warning: (194-225): Assertion checker does not yet implement this type of function call.
-// Warning: (303-319): Assertion violation happens here
+// Warning: (303-319): Assertion violation happens here.

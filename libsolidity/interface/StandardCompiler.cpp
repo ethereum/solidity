@@ -70,6 +70,14 @@ Json::Value formatError(
 
 Json::Value formatFatalError(string const& _type, string const& _message)
 {
+	solAssert(_message.size() == 0 ||
+		_message[_message.size() -1] == '.' ||
+		_message[_message.size() -1] == '!' ||
+		_message[_message.size() -1] == '?' ||
+		_message[_message.size() -1] == '\n', // for libjsoncpp generated error messages
+		"Expected message to end with \".\", \"?\" or \"!\""
+	);
+
 	Json::Value output = Json::objectValue;
 	output["errors"] = Json::arrayValue;
 	output["errors"].append(formatError(false, _type, "general", _message));
@@ -322,11 +330,11 @@ Json::Value collectEVMObject(evmasm::LinkerObject const& _object, string const* 
 std::optional<Json::Value> checkKeys(Json::Value const& _input, set<string> const& _keys, string const& _name)
 {
 	if (!!_input && !_input.isObject())
-		return formatFatalError("JSONError", quote(_name) + " must be an object");
+		return formatFatalError("JSONError", quote(_name) + " must be an object.");
 
 	for (auto const& member: _input.getMemberNames())
 		if (!_keys.count(member))
-			return formatFatalError("JSONError", "Unknown key " + quote(member));
+			return formatFatalError("JSONError", "Unknown key " + quote(member) + ".");
 
 	return std::nullopt;
 }
@@ -372,7 +380,7 @@ std::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std
 	if (_details.isMember(_name))
 	{
 		if (!_details[_name].isBool())
-			return formatFatalError("JSONError", quote("settings.optimizer.details." + _name) + " must be Boolean");
+			return formatFatalError("JSONError", quote("settings.optimizer.details." + _name) + " must be Boolean.");
 		_setting = _details[_name].asBool();
 	}
 	return {};
@@ -383,11 +391,11 @@ std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 	if (_input.isObject())
 	{
 		if (_input.isMember("useLiteralContent") && !_input["useLiteralContent"].isBool())
-			return formatFatalError("JSONError", quote("settings.metadata.useLiteralContent") + " must be Boolean");
+			return formatFatalError("JSONError", quote("settings.metadata.useLiteralContent") + " must be Boolean.");
 
 		static set<string> hashes{"ipfs", "bzzr1", "none"};
 		if (_input.isMember("bytecodeHash") && !hashes.count(_input["bytecodeHash"].asString()))
-			return formatFatalError("JSONError", quote("settings.metadata.bytecodeHash") + " must be " + quoteSpace("ipfs") + "," + quoteSpace("bzzr1") + "or " + quote("none"));
+			return formatFatalError("JSONError", quote("settings.metadata.bytecodeHash") + " must be " + quoteSpace("ipfs") + "," + quoteSpace("bzzr1") + "or " + quote("none") + ".");
 	}
 	static set<string> keys{"useLiteralContent", "bytecodeHash"};
 	return checkKeys(_input, keys, "settings.metadata");
@@ -396,7 +404,7 @@ std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelection)
 {
 	if (!!_outputSelection && !_outputSelection.isObject())
-		return formatFatalError("JSONError", quote("settings.outputSelection") + " must be an object");
+		return formatFatalError("JSONError", quote("settings.outputSelection") + " must be an object.");
 
 	for (auto const& sourceName: _outputSelection.getMemberNames())
 	{
@@ -405,7 +413,7 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 		if (!sourceVal.isObject())
 			return formatFatalError(
 				"JSONError",
-				quote("settings.outputSelection." + sourceName) + " must be an object"
+				quote("settings.outputSelection." + sourceName) + " must be an object."
 			);
 
 		for (auto const& contractName: sourceVal.getMemberNames())
@@ -421,7 +429,7 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 						"." +
 						contractName
 					) +
-					" must be a string array"
+					" must be a string array."
 				);
 
 			for (auto const& output: contractVal)
@@ -434,7 +442,7 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 							"." +
 							contractName
 						) +
-						" must be a string array"
+						" must be a string array."
 					);
 		}
 	}
@@ -680,11 +688,11 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 	for (auto const& remapping: settings.get("remappings", Json::Value()))
 	{
 		if (!remapping.isString())
-			return formatFatalError("JSONError", quote("settings.remappings") + " must be an array of strings");
+			return formatFatalError("JSONError", quote("settings.remappings") + " must be an array of strings.");
 		if (auto r = CompilerStack::parseRemapping(remapping.asString()))
 			ret.remappings.emplace_back(std::move(*r));
 		else
-			return formatFatalError("JSONError", "Invalid remapping: " + quote(remapping.asString()));
+			return formatFatalError("JSONError", "Invalid remapping: " + quote(remapping.asString()) + ".");
 	}
 
 	if (settings.isMember("optimizer"))
@@ -1115,19 +1123,19 @@ Json::Value StandardCompiler::compile(Json::Value const& _input) noexcept
 	}
 	catch (Json::LogicError const& _exception)
 	{
-		return formatFatalError("InternalCompilerError", string("JSON logic exception: ") + _exception.what());
+		return formatFatalError("InternalCompilerError", string("JSON logic exception: ") + _exception.what() + ".");
 	}
 	catch (Json::RuntimeError const& _exception)
 	{
-		return formatFatalError("InternalCompilerError", string("JSON runtime exception: ") + _exception.what());
+		return formatFatalError("InternalCompilerError", string("JSON runtime exception: ") + _exception.what() + ".");
 	}
 	catch (util::Exception const& _exception)
 	{
-		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compile: " + boost::diagnostic_information(_exception));
+		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compile: " + boost::diagnostic_information(_exception) + ".");
 	}
 	catch (...)
 	{
-		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compile");
+		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compile.");
 	}
 }
 

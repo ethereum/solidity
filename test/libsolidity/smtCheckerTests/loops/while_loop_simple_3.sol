@@ -7,7 +7,5 @@ contract C {
         assert(x == 2);
     }
 }
-// ====
-// SMTSolvers: z3
 // ----
-// Warning: (187-201): Assertion violation happens here
+// Warning: (187-201): Assertion violation happens here.

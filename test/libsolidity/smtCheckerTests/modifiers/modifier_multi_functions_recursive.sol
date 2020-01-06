@@ -19,4 +19,4 @@ contract C
 // ----
 // Warning: (86-93): Assertion checker does not support recursive function calls.
 // Warning: (86-93): Assertion checker does not support recursive function calls.
-// Warning: (253-266): Assertion violation happens here
+// Warning: (253-266): Assertion violation happens here.

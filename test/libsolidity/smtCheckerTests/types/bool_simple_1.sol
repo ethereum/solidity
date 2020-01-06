@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning: (90-99): Assertion violation happens here
+// Warning: (90-99): Assertion violation happens here.

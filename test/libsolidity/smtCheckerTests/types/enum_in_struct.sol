@@ -16,4 +16,4 @@ contract C
 // Warning: (139-151): Assertion checker does not yet implement such assignments.
 // Warning: (162-165): Assertion checker does not yet support this expression.
 // Warning: (162-163): Assertion checker does not yet implement type "struct C.S memory".
-// Warning: (155-176): Assertion violation happens here
+// Warning: (155-176): Assertion violation happens here.

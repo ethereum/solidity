@@ -130,7 +130,7 @@ void Parser::parsePragmaVersion(SourceLocation const& _location, vector<Token> c
 				_location,
 				"Source file requires different compiler version (current compiler is " +
 				string(VersionString) + " - note that nightly builds are considered to be "
-				"strictly less than the released version"
+				"strictly less than the released version."
 			);
 }
 
@@ -984,7 +984,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else if (token == Token::Identifier)
 		type = parseUserDefinedTypeName();
 	else
-		fatalParserError(string("Expected type name"));
+		fatalParserError(string("Expected type name."));
 
 	if (type)
 		// Parse "[...]" postfixes for arrays.
@@ -1015,7 +1015,7 @@ ASTPointer<Mapping> Parser::parseMapping()
 	ASTPointer<ElementaryTypeName> keyType;
 	Token token = m_scanner->currentToken();
 	if (!TokenTraits::isElementaryTypeName(token))
-		fatalParserError(string("Expected elementary type name for mapping key type"));
+		fatalParserError(string("Expected elementary type name for mapping key type."));
 	unsigned firstSize;
 	unsigned secondSize;
 	tie(firstSize, secondSize) = m_scanner->currentTokenInfo();

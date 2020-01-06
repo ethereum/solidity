@@ -156,14 +156,14 @@ BOOST_AUTO_TEST_CASE(period_in_identifier)
 
 BOOST_AUTO_TEST_CASE(period_not_as_identifier_start)
 {
-	CHECK_ERROR("{ let .y:u256 }", ParserError, "Expected identifier but got " + quote("."));
+	CHECK_ERROR("{ let .y:u256 }", ParserError, "Expected identifier but got " + quote(".") + ".");
 }
 
 BOOST_AUTO_TEST_CASE(period_in_identifier_spaced)
 {
-	CHECK_ERROR("{ let x. y:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got identifier");
-	CHECK_ERROR("{ let x .y:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote("."));
-	CHECK_ERROR("{ let x . y:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote("."));
+	CHECK_ERROR("{ let x. y:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got identifier.");
+	CHECK_ERROR("{ let x .y:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote(".") + ".");
+	CHECK_ERROR("{ let x . y:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote(".") + ".");
 }
 
 BOOST_AUTO_TEST_CASE(period_in_identifier_start)
@@ -236,10 +236,10 @@ BOOST_AUTO_TEST_CASE(tokens_as_identifers)
 
 BOOST_AUTO_TEST_CASE(lacking_types)
 {
-	CHECK_ERROR("{ let x := 1:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote(":="));
-	CHECK_ERROR("{ let x:u256 := 1 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote("}"));
-	CHECK_ERROR("{ function f(a) {} }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote(")"));
-	CHECK_ERROR("{ function f(a:u256) -> b {} }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote("{"));
+	CHECK_ERROR("{ let x := 1:u256 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote(":=") + ".");
+	CHECK_ERROR("{ let x:u256 := 1 }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote("}") + ".");
+	CHECK_ERROR("{ function f(a) {} }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote(")") + ".");
+	CHECK_ERROR("{ function f(a:u256) -> b {} }", ParserError, "Expected" + quoteSpace(":") + "but got " + quote("{") + ".");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_types)
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(number_literals)
 	CHECK_ERROR("{ let x:u256 := .1:u256 }", ParserError, "Invalid number literal.");
 	CHECK_ERROR("{ let x:u256 := 1e5:u256 }", ParserError, "Invalid number literal.");
 	CHECK_ERROR("{ let x:u256 := 67.235:u256 }", ParserError, "Invalid number literal.");
-	CHECK_ERROR("{ let x:u256 := 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff:u256 }", TypeError, "Number literal too large (> 256 bits)");
+	CHECK_ERROR("{ let x:u256 := 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff:u256 }", TypeError, "Number literal too large (> 256 bits).");
 }
 
 BOOST_AUTO_TEST_CASE(builtin_types)
@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(function_defined_in_init_nested)
 BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
 	CHECK_ERROR("{ if let x:u256 {} }", ParserError, "Literal or identifier expected.");
-	CHECK_ERROR("{ if true:bool let x:u256 := 3:u256 }", ParserError, "Expected" + quoteSpace("{") + "but got reserved keyword " + quote("let"));
+	CHECK_ERROR("{ if true:bool let x:u256 := 3:u256 }", ParserError, "Expected" + quoteSpace("{") + "but got reserved keyword " + quote("let") + ".");
 	// TODO change this to an error once we check types.
 	BOOST_CHECK(successParse("{ if 42:u256 { } }"));
 }
@@ -518,12 +518,12 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case_different_literal)
 BOOST_AUTO_TEST_CASE(switch_case_string_literal_too_long)
 {
 	BOOST_CHECK(successParse("{let x:u256 switch x case \"01234567890123456789012345678901\":u256 {}}"));
-	CHECK_ERROR("{let x:u256 switch x case \"012345678901234567890123456789012\":u256 {}}", TypeError, "String literal too long (33 > 32)");
+	CHECK_ERROR("{let x:u256 switch x case \"012345678901234567890123456789012\":u256 {}}", TypeError, "String literal too long (33 > 32).");
 }
 
 BOOST_AUTO_TEST_CASE(function_shadowing_outside_vars)
 {
-	CHECK_ERROR("{ let x:u256 function f() -> x:u256 {} }", DeclarationError, "already taken in this scope");
+	CHECK_ERROR("{ let x:u256 function f() -> x:u256 {} }", DeclarationError, "already taken in this scope.");
 	BOOST_CHECK(successParse("{ { let x:u256 } function f() -> x:u256 {} }"));
 }
 
@@ -542,7 +542,7 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 	SimpleDialect dialect;
 	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name" + quoteSpace("builtin") + "as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name" + quoteSpace("builtin") + "as identifier name.", dialect);
-	CHECK_ERROR_DIALECT("{ function f(x) { f(builtin) } }", ParserError, "Expected" + quote("(") + "but got " + quote(")"), dialect);
+	CHECK_ERROR_DIALECT("{ function f(x) { f(builtin) } }", ParserError, "Expected" + quote("(") + "but got " + quote(")") + ".", dialect);
 	CHECK_ERROR_DIALECT("{ function f(builtin) {}", ParserError, "Cannot use builtin function name" + quoteSpace("builtin") + "as identifier name.", dialect);
 	CHECK_ERROR_DIALECT("{ function f() -> builtin {}", ParserError, "Cannot use builtin function name" + quoteSpace("builtin") + "as identifier name.", dialect);
 }
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 
 	SimpleDialect dialect;
 	BOOST_CHECK(successParse("{ let a, b, c := builtin(1, 2) }", dialect));
-	CHECK_ERROR_DIALECT("{ let a, b, c := builtin(1) }", TypeError, "Function expects 2 arguments but got 1", dialect);
+	CHECK_ERROR_DIALECT("{ let a, b, c := builtin(1) }", TypeError, "Function expects 2 arguments but got 1.", dialect);
 	CHECK_ERROR_DIALECT("{ let a, b := builtin(1, 2) }", DeclarationError, "Variable count mismatch: 2 variables and 3 values.", dialect);
 }
 

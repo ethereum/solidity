@@ -20,5 +20,5 @@ contract C {
 // Warning: (181-184): Assertion checker does not yet implement type "abi".
 // Warning: (215-216): Assertion checker does not yet implement type "type(contract C)".
 // Warning: (181-218): Assertion checker does not yet implement this type of function call.
-// Warning: (296-312): Assertion violation happens here
-// Warning: (315-331): Assertion violation happens here
+// Warning: (296-312): Assertion violation happens here.
+// Warning: (315-331): Assertion violation happens here.

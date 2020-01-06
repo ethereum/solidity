@@ -11,4 +11,4 @@ contract C
 }
 // ----
 // Warning: (47-148): Function state mutability can be restricted to "pure".
-// Warning: (128-144): Assertion violation happens here
+// Warning: (128-144): Assertion violation happens here.

@@ -13,7 +13,5 @@ contract C
 		assert(x > 0);
 	}
 }
-// ====
-// SMTSolvers: z3
 // ----
-// Warning: (150-155): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (150-155): Overflow (resulting value larger than 2**256 - 1) happens here.

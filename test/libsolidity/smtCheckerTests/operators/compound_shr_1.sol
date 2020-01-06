@@ -10,4 +10,4 @@ contract C {
 }
 // ----
 // Warning: (106-113): Assertion checker does not yet implement this assignment operator.
-// Warning: (117-130): Assertion violation happens here
+// Warning: (117-130): Assertion violation happens here.

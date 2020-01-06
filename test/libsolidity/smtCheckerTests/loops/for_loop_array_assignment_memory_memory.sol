@@ -14,9 +14,7 @@ contract LoopFor2 {
 		assert(b[0] == 900);
 	}
 }
-// ====
-// SMTSolvers: z3
 // ----
-// Warning: (281-301): Assertion violation happens here
-// Warning: (305-324): Assertion violation happens here
-// Warning: (328-347): Assertion violation happens here
+// Warning: (281-301): Assertion violation happens here.
+// Warning: (305-324): Assertion violation happens here.
+// Warning: (328-347): Assertion violation happens here.
