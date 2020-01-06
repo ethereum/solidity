@@ -38,7 +38,7 @@ CHCSmtLib2Interface::CHCSmtLib2Interface(
 	map<h256, string> const& _queryResponses,
 	ReadCallback::Callback const& _smtCallback
 ):
-	m_smtlib2(make_shared<SMTLib2Interface>(_queryResponses, _smtCallback)),
+	m_smtlib2(make_unique<SMTLib2Interface>(_queryResponses, _smtCallback)),
 	m_queryResponses(_queryResponses),
 	m_smtCallback(_smtCallback)
 {

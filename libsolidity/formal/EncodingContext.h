@@ -48,7 +48,7 @@ public:
 
 	/// Sets the current solver used by the current engine for
 	/// SMT variable declaration.
-	void setSolver(std::shared_ptr<SolverInterface> _solver)
+	void setSolver(SolverInterface* _solver)
 	{
 		solAssert(_solver, "");
 		m_solver = _solver;
@@ -144,7 +144,7 @@ public:
 	void pushSolver();
 	void popSolver();
 	void addAssertion(Expression const& _e);
-	std::shared_ptr<SolverInterface> solver()
+	SolverInterface* solver()
 	{
 		solAssert(m_solver, "");
 		return m_solver;
@@ -177,7 +177,7 @@ private:
 	/// Solver related.
 	//@{
 	/// Solver can be SMT solver or Horn solver in the future.
-	std::shared_ptr<SolverInterface> m_solver;
+	SolverInterface* m_solver = nullptr;
 
 	/// Assertion stack.
 	std::vector<Expression> m_assertions;

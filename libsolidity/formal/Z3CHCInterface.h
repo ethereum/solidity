@@ -45,11 +45,11 @@ public:
 
 	std::pair<CheckResult, std::vector<std::string>> query(Expression const& _expr) override;
 
-	std::shared_ptr<Z3Interface> z3Interface() { return m_z3Interface; }
+	Z3Interface* z3Interface() const { return m_z3Interface.get(); }
 
 private:
 	// Used to handle variables.
-	std::shared_ptr<Z3Interface> m_z3Interface;
+	std::unique_ptr<Z3Interface> m_z3Interface;
 
 	z3::context* m_context;
 	// Horn solver.

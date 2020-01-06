@@ -207,7 +207,7 @@ private:
 	//@}
 
 	/// CHC solver.
-	std::shared_ptr<smt::CHCSolverInterface> m_interface;
+	std::unique_ptr<smt::CHCSolverInterface> m_interface;
 
 	/// ErrorReporter that comes from CompilerStack.
 	langutil::ErrorReporter& m_outerErrorReporter;
