@@ -29,14 +29,11 @@
 namespace boost { namespace spirit { class utree; } }
 namespace sp = boost::spirit;
 
-namespace dev
-{
-namespace lll
+namespace solidity::lll
 {
 
 void killBigints(sp::utree const& _this);
 void parseTreeLLL(std::string const& _s, sp::utree& o_out);
 void debugOutAST(std::ostream& _out, sp::utree const& _this);
 
-}
 }

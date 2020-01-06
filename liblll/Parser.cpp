@@ -32,13 +32,14 @@
 #include <boost/spirit/include/support_utree.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace dev::lll;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::lll;
 namespace qi = boost::spirit::qi;
 namespace px = boost::phoenix;
 namespace sp = boost::spirit;
 
-void dev::lll::killBigints(sp::utree const& _this)
+void solidity::lll::killBigints(sp::utree const& _this)
 {
 	switch (_this.which())
 	{
@@ -48,7 +49,7 @@ void dev::lll::killBigints(sp::utree const& _this)
 	}
 }
 
-void dev::lll::debugOutAST(ostream& _out, sp::utree const& _this)
+void solidity::lll::debugOutAST(ostream& _out, sp::utree const& _this)
 {
 	switch (_this.which())
 	{
@@ -74,7 +75,7 @@ void dev::lll::debugOutAST(ostream& _out, sp::utree const& _this)
 	}
 }
 
-namespace dev {
+namespace solidity {
 namespace lll {
 namespace parseTreeLLL_ {
 
@@ -89,11 +90,11 @@ struct tagNode
 
 }}}
 
-void dev::lll::parseTreeLLL(string const& _s, sp::utree& o_out)
+void solidity::lll::parseTreeLLL(string const& _s, sp::utree& o_out)
 {
 	using qi::standard::space;
 	using qi::standard::space_type;
-	using dev::lll::parseTreeLLL_::tagNode;
+	using solidity::lll::parseTreeLLL_::tagNode;
 	using symbol_type = sp::basic_string<std::string, sp::utree_type::symbol_type>;
 	using it = string::const_iterator;
 

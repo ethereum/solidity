@@ -30,8 +30,9 @@
 #include <solidity/BuildInfo.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::lll;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::lll;
 
 static string const VersionString =
 	string(ETH_PROJECT_VERSION) +

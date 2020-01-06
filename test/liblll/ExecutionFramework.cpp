@@ -25,7 +25,7 @@
 #include <test/liblll/ExecutionFramework.h>
 
 using namespace solidity::test;
-using namespace dev::lll::test;
+using namespace solidity::lll::test;
 
 LLLExecutionFramework::LLLExecutionFramework() :
 	ExecutionFramework()

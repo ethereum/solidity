@@ -29,9 +29,7 @@
 namespace boost { namespace spirit { class utree; } }
 namespace sp = boost::spirit;
 
-namespace dev
-{
-namespace lll
+namespace solidity::lll
 {
 
 struct CompilerState;
@@ -55,7 +53,7 @@ private:
 	template <class T> static void error() { BOOST_THROW_EXCEPTION(T() ); }
 	template <class T> static void error(std::string const& reason) {
 		auto err = T();
-		err << errinfo_comment(reason);
+		err << util::errinfo_comment(reason);
 		BOOST_THROW_EXCEPTION(err);
 	}
 	void constructOperation(sp::utree const& _t, CompilerState& _s);
@@ -67,5 +65,4 @@ private:
 
 static CodeFragment const NullCodeFragment;
 
-}
 }

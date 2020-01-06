@@ -33,14 +33,11 @@
 #define SUCCESS       encodeArgs(1)
 
 using namespace std;
-using namespace dev::lll;
+using namespace solidity::lll;
+using namespace solidity::util;
 using namespace solidity::test;
 
-namespace dev
-{
-namespace lll
-{
-namespace test
+namespace solidity::lll::test
 {
 
 namespace
@@ -652,6 +649,4 @@ BOOST_AUTO_TEST_CASE(bad_data)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

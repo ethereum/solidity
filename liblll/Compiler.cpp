@@ -25,10 +25,11 @@
 #include <liblll/CodeFragment.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::lll;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::lll;
 
-bytes dev::lll::compileLLL(string _src, langutil::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
+bytes solidity::lll::compileLLL(string _src, langutil::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
 {
 	try
 	{
@@ -66,7 +67,7 @@ bytes dev::lll::compileLLL(string _src, langutil::EVMVersion _evmVersion, bool _
 	return bytes();
 }
 
-std::string dev::lll::compileLLLToAsm(std::string _src, langutil::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
+std::string solidity::lll::compileLLLToAsm(std::string _src, langutil::EVMVersion _evmVersion, bool _opt, std::vector<std::string>* _errors, ReadCallback const& _readFile)
 {
 	try
 	{
@@ -104,7 +105,7 @@ std::string dev::lll::compileLLLToAsm(std::string _src, langutil::EVMVersion _ev
 	return string();
 }
 
-string dev::lll::parseLLL(string _src)
+string solidity::lll::parseLLL(string _src)
 {
 	sp::utree o;
 

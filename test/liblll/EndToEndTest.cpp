@@ -29,13 +29,10 @@
 #include <memory>
 
 using namespace std;
+using namespace solidity::util;
 using namespace solidity::test;
 
-namespace dev
-{
-namespace lll
-{
-namespace test
+namespace solidity::lll::test
 {
 
 BOOST_FIXTURE_TEST_SUITE(LLLEndToEndTest, LLLExecutionFramework)
@@ -1026,6 +1023,4 @@ BOOST_AUTO_TEST_CASE(string_literal)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

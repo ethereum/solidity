@@ -28,14 +28,11 @@
 #define ACCOUNT(n)    h256(account(n), h256::AlignRight)
 
 using namespace std;
-using namespace dev::lll;
+using namespace solidity::lll;
+using namespace solidity::util;
 using namespace solidity::test;
 
-namespace dev
-{
-namespace lll
-{
-namespace test
+namespace solidity::lll::test
 {
 
 namespace
@@ -503,6 +500,4 @@ BOOST_AUTO_TEST_CASE(fallback)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

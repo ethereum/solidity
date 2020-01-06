@@ -40,9 +40,10 @@
 
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::lll;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::evmasm;
+using namespace solidity::lll;
 
 void CodeFragment::finalise(CompilerState const& _cs)
 {
