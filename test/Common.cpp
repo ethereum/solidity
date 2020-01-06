@@ -117,8 +117,19 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 
 	po::command_line_parser cmdLineParser(argc, argv);
 	cmdLineParser.options(options);
-	po::store(cmdLineParser.run(), arguments);
+	auto parsedOptions = cmdLineParser.run();
+	po::store(parsedOptions, arguments);
 	po::notify(arguments);
+
+	for (auto const& parsedOption: parsedOptions.options)
+		if (parsedOption.position_key >= 0)
+		{
+			std::stringstream errorMessage;
+			errorMessage << "Unrecognized option: ";
+			for (auto const& token: parsedOption.original_tokens)
+				errorMessage << token;
+			throw std::runtime_error(errorMessage.str());
+		}
 
 	return true;
 }
