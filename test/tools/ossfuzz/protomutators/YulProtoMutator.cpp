@@ -571,6 +571,36 @@ static YulProtoMutator removeAssignment(
 	}
 );
 
+/// Add constant assignment
+static YulProtoMutator addConstantAssignment(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add constant assignment" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			auto assignmentStatement = new AssignmentStatement();
+			assignmentStatement->set_allocated_ref_id(
+				YulProtoMutator::varRef(_seed)
+			);
+			assignmentStatement->set_allocated_expr(
+				YulProtoMutator::litExpression(_seed)
+			);
+			auto newStmt = block->add_statements();
+			newStmt->set_allocated_assignment(assignmentStatement);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
 /// Add if statement
 static YulProtoMutator addIf(
 	Block::descriptor(),
@@ -1073,6 +1103,94 @@ static YulProtoMutator mutateUnaryOp(
 	}
 );
 
+/// Add pop(call())
+static YulProtoMutator addPopCall(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add pop(call) stmt" << std::endl;
+#endif
+			auto call = new LowLevelCall();
+			call->set_callty(
+				YulProtoMutator::EnumTypeConverter<LowLevelCall_Type>{}.enumFromSeed(_seed)
+			);
+			auto popExpr = new Expression();
+			popExpr->set_allocated_lowcall(call);
+			auto popStmt = new PopStmt();
+			popStmt->set_allocated_expr(popExpr);
+			auto block = static_cast<Block*>(_message);
+			auto stmt = block->add_statements();
+			stmt->set_allocated_pop(popStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Remove pop
+static YulProtoMutator removePopStmt(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Remove pop stmt" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			for (auto &stmt: *block->mutable_statements())
+				if (stmt.has_pop())
+				{
+					stmt.clear_pop();
+					break;
+				}
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Add pop(create)
+static YulProtoMutator addPopCreate(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add pop(create) stmt" << std::endl;
+#endif
+			auto create = new Create();
+			create->set_createty(
+				YulProtoMutator::EnumTypeConverter<Create_Type>{}.enumFromSeed(_seed)
+			);
+			auto popExpr = new Expression();
+			popExpr->set_allocated_create(create);
+			auto popStmt = new PopStmt();
+			popStmt->set_allocated_expr(popExpr);
+			auto block = static_cast<Block*>(_message);
+			auto stmt = block->add_statements();
+			stmt->set_allocated_pop(popStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
 
 Literal* YulProtoMutator::intLiteral(unsigned _value)
 {
@@ -1176,6 +1294,10 @@ T YulProtoMutator::EnumTypeConverter<T>::validEnum(unsigned _seed)
 		yulAssert(BinaryOp_BOp_IsValid(ret), "Yul proto mutator: Invalid enum");
 	else if constexpr (std::is_same_v<std::decay_t<T>, UnaryOp_UOp>)
 		yulAssert(UnaryOp_UOp_IsValid(ret), "Yul proto mutator: Invalid enum");
+	else if constexpr (std::is_same_v<std::decay_t<T>, LowLevelCall_Type>)
+		yulAssert(LowLevelCall_Type_IsValid(ret), "Yul proto mutator: Invalid enum");
+	else if constexpr (std::is_same_v<std::decay_t<T>, Create_Type>)
+		yulAssert(Create_Type_IsValid(ret), "Yul proto mutator: Invalid enum");
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
 	return ret;
@@ -1194,6 +1316,10 @@ int YulProtoMutator::EnumTypeConverter<T>::enumMax()
 		return BinaryOp_BOp_BOp_MAX;
 	else if constexpr (std::is_same_v<std::decay_t<T>, UnaryOp_UOp>)
 		return UnaryOp_UOp_UOp_MAX;
+	else if constexpr (std::is_same_v<std::decay_t<T>, LowLevelCall_Type>)
+		return LowLevelCall_Type_Type_MAX;
+	else if constexpr (std::is_same_v<std::decay_t<T>, Create_Type>)
+		return Create_Type_Type_MAX;
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
 }
@@ -1211,6 +1337,10 @@ int YulProtoMutator::EnumTypeConverter<T>::enumMin()
 		return BinaryOp_BOp_BOp_MIN;
 	else if constexpr (std::is_same_v<std::decay_t<T>, UnaryOp_UOp>)
 		return UnaryOp_UOp_UOp_MIN;
+	else if constexpr (std::is_same_v<std::decay_t<T>, LowLevelCall_Type>)
+		return LowLevelCall_Type_Type_MIN;
+	else if constexpr (std::is_same_v<std::decay_t<T>, Create_Type>)
+		return Create_Type_Type_MIN;
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
 }
