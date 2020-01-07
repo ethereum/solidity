@@ -637,7 +637,7 @@ public:
 	bool markedVirtual() const { return m_isVirtual; }
 	virtual bool virtualSemantics() const { return markedVirtual(); }
 
-	CallableDeclarationAnnotation& annotation() const override;
+	CallableDeclarationAnnotation& annotation() const override = 0;
 
 protected:
 	ASTPointer<ParameterList> m_parameters;

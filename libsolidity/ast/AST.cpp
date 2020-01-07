@@ -300,12 +300,6 @@ ContractKind FunctionDefinition::inContractKind() const
 	return contractDef->contractKind();
 }
 
-CallableDeclarationAnnotation& CallableDeclaration::annotation() const
-{
-	return abstractAnnotation<CallableDeclarationAnnotation>("CallableDeclarationAnnotation");
-}
-
-
 FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 {
 	if (_internal)
