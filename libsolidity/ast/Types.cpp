@@ -362,7 +362,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 				seenFunctions.insert(function);
 				if (function->parameters().empty())
 					continue;
-				FunctionTypePointer fun = FunctionType(*function, false).asCallableFunction(true, true);
+				FunctionTypePointer fun = FunctionType(*function, FunctionType::Kind::External).asCallableFunction(true, true);
 				if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
 					members.emplace_back(function->name(), fun, function);
 			}
@@ -1933,7 +1933,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 				if (!function->isVisibleInDerivedContracts() || !function->isImplemented())
 					continue;
 
-				auto functionType = TypeProvider::function(*function, true);
+				auto functionType = TypeProvider::function(*function, FunctionType::Kind::Internal);
 				bool functionWithEqualArgumentsFound = false;
 				for (auto const& member: members)
 				{
@@ -2465,12 +2465,16 @@ TypePointer TupleType::closestTemporaryType(Type const* _targetType) const
 	return TypeProvider::tuple(move(tempComponents));
 }
 
-FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
-	m_kind(_isInternal ? Kind::Internal : Kind::External),
+FunctionType::FunctionType(FunctionDefinition const& _function, Kind _kind):
+	m_kind(_kind),
 	m_stateMutability(_function.stateMutability()),
 	m_declaration(&_function)
 {
-	if (_isInternal && m_stateMutability == StateMutability::Payable)
+	solAssert(
+		_kind == Kind::Internal || _kind == Kind::External || _kind == Kind::Declaration,
+		"Only internal or external function types or function declaration types can be created from function definitions."
+	);
+	if (_kind == Kind::Internal && m_stateMutability == StateMutability::Payable)
 		m_stateMutability = StateMutability::NonPayable;
 
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
@@ -2689,6 +2693,7 @@ string FunctionType::richIdentifier() const
 	string id = "t_function_";
 	switch (m_kind)
 	{
+	case Kind::Declaration: id += "declaration"; break;
 	case Kind::Internal: id += "internal"; break;
 	case Kind::External: id += "external"; break;
 	case Kind::DelegateCall: id += "delegatecall"; break;
@@ -2755,7 +2760,12 @@ bool FunctionType::operator==(Type const& _other) const
 
 BoolResult FunctionType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return _convertTo.category() == category();
+	if (_convertTo.category() == category())
+	{
+		auto const& convertToType = dynamic_cast<FunctionType const&>(_convertTo);
+		return (m_kind == FunctionType::Kind::Declaration) == (convertToType.kind() == FunctionType::Kind::Declaration);
+	}
+	return false;
 }
 
 BoolResult FunctionType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -2808,7 +2818,18 @@ string FunctionType::canonicalName() const
 
 string FunctionType::toString(bool _short) const
 {
-	string name = "function (";
+	string name = "function ";
+	if (m_kind == Kind::Declaration)
+	{
+		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
+		solAssert(functionDefinition, "");
+		auto const* contract = dynamic_cast<ContractDefinition const*>(functionDefinition->scope());
+		solAssert(contract, "");
+		name += contract->annotation().canonicalName;
+		name += '.';
+		name += functionDefinition->name();
+	}
+	name += '(';
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
 		name += (*it)->toString(_short) + (it + 1 == m_parameterTypes.end() ? "" : ",");
 	name += ")";
@@ -2940,6 +2961,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 {
 	switch (m_kind)
 	{
+	case Kind::Declaration:
+		return {{"selector", TypeProvider::fixedBytes(4)}};
 	case Kind::External:
 	case Kind::Creation:
 	case Kind::BareCall:
@@ -3146,6 +3169,7 @@ string FunctionType::externalSignature() const
 	case Kind::External:
 	case Kind::DelegateCall:
 	case Kind::Event:
+	case Kind::Declaration:
 		break;
 	default:
 		solAssert(false, "Invalid function type for requesting external signature.");
@@ -3210,6 +3234,7 @@ TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 
 TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) const
 {
+	solAssert(m_kind != Kind::Declaration, "");
 	return TypeProvider::function(
 		m_parameterTypes,
 		m_returnParameterTypes,
@@ -3387,14 +3412,6 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 			auto const& currentBases = _currentScope->annotation().linearizedBaseContracts;
 			isBase = (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end());
 		}
-		if (contract.isLibrary())
-			for (FunctionDefinition const* function: contract.definedFunctions())
-				if (function->isVisibleAsLibraryMember())
-					members.emplace_back(
-						function->name(),
-						FunctionType(*function).asCallableFunction(true),
-						function
-					);
 		if (isBase)
 		{
 			// We are accessing the type of a base contract, so add all public and protected
@@ -3404,6 +3421,17 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 		}
 		else
 		{
+			bool inLibrary = contract.isLibrary();
+			for (FunctionDefinition const* function: contract.definedFunctions())
+				if (
+					(inLibrary && function->isVisibleAsLibraryMember()) ||
+					(!inLibrary && function->isPartOfExternalInterface())
+				)
+					members.emplace_back(
+						function->name(),
+						FunctionType(*function).asCallableFunction(inLibrary),
+						function
+					);
 			for (auto const& stru: contract.definedStructs())
 				members.emplace_back(stru->name(), stru->type(), stru);
 			for (auto const& enu: contract.definedEnums())

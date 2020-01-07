@@ -203,7 +203,7 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 			vector<FunctionTypePointer> functions;
 			for (FunctionDefinition const* f: contract->definedFunctions())
 				if (f->isPartOfExternalInterface())
-					functions.push_back(TypeProvider::function(*f, false));
+					functions.push_back(TypeProvider::function(*f, FunctionType::Kind::External));
 			for (VariableDeclaration const* v: contract->stateVariables())
 				if (v->isPartOfExternalInterface())
 					functions.push_back(TypeProvider::function(*v));
@@ -333,7 +333,7 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 		case Visibility::Private:
 		case Visibility::Internal:
 		case Visibility::Public:
-			return TypeProvider::function(*this, _internal);
+			return TypeProvider::function(*this, FunctionType::Kind::Internal);
 		case Visibility::External:
 			return {};
 		}
@@ -349,7 +349,7 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 			return {};
 		case Visibility::Public:
 		case Visibility::External:
-			return TypeProvider::function(*this, _internal);
+			return TypeProvider::function(*this, FunctionType::Kind::External);
 		}
 	}
 
@@ -360,7 +360,7 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 TypePointer FunctionDefinition::type() const
 {
 	solAssert(visibility() != Visibility::External, "");
-	return TypeProvider::function(*this);
+	return TypeProvider::function(*this, FunctionType::Kind::Internal);
 }
 
 string FunctionDefinition::externalSignature() const

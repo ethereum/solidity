@@ -1,6 +1,7 @@
 ### 0.6.2 (unreleased)
 
 Language Features:
+ * Allow accessing external functions via contract and interface names to obtain their selector.
 
 
 Compiler Features:
