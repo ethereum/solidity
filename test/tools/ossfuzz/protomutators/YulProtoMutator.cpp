@@ -823,7 +823,6 @@ static YulProtoMutator addFuncDef(
 			std::cout << "YULMUTATOR: Add function def" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
-			auto stmt = block->add_statements();
 			auto funcDef = new FunctionDef();
 			funcDef->set_num_input_params(_seed);
 			funcDef->set_num_output_params(_seed + block->ByteSizeLong());
@@ -831,6 +830,7 @@ static YulProtoMutator addFuncDef(
 			auto funcBlock = new Block();
 			funcBlock->CopyFrom(*block);
 			funcDef->set_allocated_block(funcBlock);
+			auto stmt = block->add_statements();
 			stmt->set_allocated_funcdef(funcDef);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -1216,6 +1216,57 @@ static YulProtoMutator addPopUserFunction(
 			auto block = static_cast<Block*>(_message);
 			auto stmt = block->add_statements();
 			stmt->set_allocated_pop(popStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Add function call in another function's body
+static YulProtoMutator addFuncCallInFuncBody(
+	FunctionDef::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add function call in func body" << std::endl;
+#endif
+			auto functioncall = new FunctionCall();
+			YulProtoMutator::configureCall(functioncall, _seed);
+			auto block = static_cast<FunctionDef*>(_message)->mutable_block();
+			auto stmt = block->add_statements();
+			stmt->set_allocated_functioncall(functioncall);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Remove function call from another function's body
+static YulProtoMutator removeFuncCallInFuncBody(
+	FunctionDef::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 1)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Remove function call in func body" << std::endl;
+#endif
+			for (auto &stmt: *static_cast<FunctionDef*>(_message)->mutable_block()->mutable_statements())
+				if (stmt.has_functioncall())
+				{
+					stmt.clear_functioncall();
+					break;
+				}
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 			std::cout << "----------------------------------" << std::endl;
