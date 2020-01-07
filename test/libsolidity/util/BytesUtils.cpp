@@ -159,10 +159,25 @@ string BytesUtils::formatBoolean(bytes const& _bytes)
 
 string BytesUtils::formatHex(bytes const& _bytes)
 {
-	soltestAssert(!_bytes.empty() && _bytes.size() <= 32, "");
-	u256 value = fromBigEndian<u256>(_bytes);
+	stringstream os;
 
-	return toCompactHexWithPrefix(value);
+	soltestAssert(!_bytes.empty() && _bytes.size() <= 32, "");
+
+	u256 value = fromBigEndian<u256>(_bytes);
+	string hexStr = toCompactHexWithPrefix(value);
+
+	// The bytes are left aligned if the hex string has 64 chars (32 bytes) + 2 prefix chars (0x)
+	if (hexStr.size() == 66)
+	{
+		size_t nonZerosLength = hexStr.size();
+		while (nonZerosLength != 0 && hexStr[nonZerosLength - 1] == '0')
+			--nonZerosLength;
+		os << "left(" << hexStr.substr(0, nonZerosLength) << ")";
+	}
+	else
+		os << hexStr;
+
+	return os.str();
 }
 
 string BytesUtils::formatHexString(bytes const& _bytes)
