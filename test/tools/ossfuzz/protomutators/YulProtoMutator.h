@@ -4,11 +4,7 @@
 
 #include <src/libfuzzer/libfuzzer_macro.h>
 
-namespace yul
-{
-namespace test
-{
-namespace yul_fuzzer
+namespace solidity::yul::test::yul_fuzzer
 {
 struct YulProtoMutator
 {
@@ -91,6 +87,4 @@ struct YulProtoMutator
 	/// Normalized modulo for block level mutations adjusted
 	static constexpr unsigned s_normalizedBlockIP = 7;
 };
-}
-}
 }

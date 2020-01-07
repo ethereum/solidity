@@ -5,7 +5,7 @@
 
 #define DEBUG
 
-using namespace yul::test::yul_fuzzer;
+using namespace solidity::yul::test::yul_fuzzer;
 
 /// Invert condition of an if statement
 static YulProtoMutator invertIfCondition(
