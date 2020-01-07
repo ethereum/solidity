@@ -810,13 +810,16 @@ pair<string, string> AssignCheckVisitor::visit(ArrayType const& _type)
 		length = getDynArrayLengthFromFuzz(_type.length(), counter());
 		lengthStr = to_string(length);
 		if (m_stateVar)
-			resizeBuffer = assignAndCheckStringPair(
-				m_varName + ".length",
-				m_paramName + ".length",
-				lengthStr,
-				lengthStr,
-				DataType::VALUE
-				);
+		{
+			// Dynamic storage arrays are resized via the empty push() operation
+			resizeBuffer.first = Whiskers(R"(<indentation>for (uint i = 0; i < <length>; i++) <arrayRef>.push();)")
+				("indentation", indentation())
+				("length", lengthStr)
+				("arrayRef", m_varName)
+				.render() + "\n";
+			// Add a dynamic check on the resized length
+			resizeBuffer.second = checkString(m_paramName + ".length", lengthStr, DataType::VALUE);
+		}
 		else
 		{
 			// Resizing memory arrays via the new operator
