@@ -39,7 +39,7 @@ if they are marked ``virtual``. For details, please see
         }
     }
 
-    contract mortal is owned {
+    contract retrievable is owned {
         // This contract inherits the `onlyOwner` modifier from
         // `owned` and applies it to the `close` function, which
         // causes that calls to `close` only have an effect if
