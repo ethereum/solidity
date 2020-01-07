@@ -60,7 +60,7 @@ public:
 	std::string programToString(Program const& _input);
 
 	/// Returns evm version
-	langutil::EVMVersion version()
+	solidity::langutil::EVMVersion version()
 	{
 		return m_evmVersion;
 	}
@@ -281,7 +281,7 @@ private:
 
 	/// Returns an EVMVersion object corresponding to the protobuf
 	/// enum of type Program_Version
-	langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
+	solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
 
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
@@ -382,6 +382,6 @@ private:
 	/// block is enabled.
 	bool m_forInitScopeExtEnabled;
 	/// Object that holds the targeted evm version specified by protobuf input
-	langutil::EVMVersion m_evmVersion;
+	solidity::langutil::EVMVersion m_evmVersion;
 };
 }

@@ -30,6 +30,7 @@
 using namespace std;
 using namespace solidity::yul::test::yul_fuzzer;
 using namespace solidity::yul::test;
+using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity;
 
@@ -86,26 +87,26 @@ string ProtoConverter::createAlphaNum(string const& _strBytes)
 	return tmp;
 }
 
-langutil::EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
+EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
 {
 	switch (_ver)
 	{
 	case Program::HOMESTEAD:
-		return langutil::EVMVersion::homestead();
+		return EVMVersion::homestead();
 	case Program::TANGERINE:
-		return langutil::EVMVersion::tangerineWhistle();
+		return EVMVersion::tangerineWhistle();
 	case Program::SPURIOUS:
-		return langutil::EVMVersion::spuriousDragon();
+		return EVMVersion::spuriousDragon();
 	case Program::BYZANTIUM:
-		return langutil::EVMVersion::byzantium();
+		return EVMVersion::byzantium();
 	case Program::CONSTANTINOPLE:
-		return langutil::EVMVersion::constantinople();
+		return EVMVersion::constantinople();
 	case Program::PETERSBURG:
-		return langutil::EVMVersion::petersburg();
+		return EVMVersion::petersburg();
 	case Program::ISTANBUL:
-		return langutil::EVMVersion::istanbul();
+		return EVMVersion::istanbul();
 	case Program::BERLIN:
-		return langutil::EVMVersion::berlin();
+		return EVMVersion::berlin();
 	}
 }
 
