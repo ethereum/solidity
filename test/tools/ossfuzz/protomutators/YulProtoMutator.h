@@ -48,6 +48,17 @@ struct YulProtoMutator
 	/// @param _seed: Pseudo-random unsigned integer
 	static void configureCall(FunctionCall *_call, unsigned _seed);
 
+	/// Configure function call arguments.
+	/// @param _callType: Enum stating type of function call
+	/// i.e., no-return, single-return, multi-decl, or multi-assign.
+	/// @param _call: Pre-allocated protobuf message of FunctionCall type
+	/// @param _seed: Pseudo-random unsigned integer.
+	static void configureCallArgs(
+		FunctionCall_Returns _callType,
+		FunctionCall *_call,
+		unsigned _seed
+	);
+
 	/// Helper type for type matching visitor.
 	template<class T> struct AlwaysFalse: std::false_type {};
 

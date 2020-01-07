@@ -1192,6 +1192,38 @@ static YulProtoMutator addPopCreate(
 	}
 );
 
+/// Add pop(f()) where f() -> r is a user-defined function
+/// Assumes that f() already exists, if it doesn't this
+/// turns into pop(constant)
+static YulProtoMutator addPopUserFunction(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add pop(f()) stmt" << std::endl;
+#endif
+			auto functioncall = new FunctionCall();
+			functioncall->set_ret(FunctionCall::SINGLE);
+			YulProtoMutator::configureCallArgs(FunctionCall::SINGLE, functioncall, _seed);
+			auto funcExpr = new Expression();
+			funcExpr->set_allocated_func_expr(functioncall);
+			auto popStmt = new PopStmt();
+			popStmt->set_allocated_expr(funcExpr);
+			auto block = static_cast<Block*>(_message);
+			auto stmt = block->add_statements();
+			stmt->set_allocated_pop(popStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
 Literal* YulProtoMutator::intLiteral(unsigned _value)
 {
 	auto lit = new Literal();
@@ -1227,12 +1259,20 @@ void YulProtoMutator::configureCall(FunctionCall *_call, unsigned int _seed)
 	auto type = EnumTypeConverter<FunctionCall_Returns>{}.enumFromSeed(_seed);
 	_call->set_ret(type);
 	_call->set_func_index(_seed);
+	configureCallArgs(type, _call, _seed);
+}
+
+void YulProtoMutator::configureCallArgs(
+	FunctionCall_Returns _callType,
+	FunctionCall *_call,
+	unsigned _seed
+)
+{
 	// Configuration rules:
-	// - In/Out parameters do not need to be configured for zero I/O call
-	// - Single in and zero out parameter needs to be configured for single I/O call
-	// - Four in and no out parameters need to be configured for multidecl call
-	// - Four in and out parameters need to be configured for multiassign call
-	switch (type)
+	// All function calls must configure four input arguments, because
+	// a function of any type may have at most four input arguments.
+	// Out arguments need to be configured only for multi-assign
+	switch (_callType)
 	{
 	case FunctionCall_Returns_MULTIASSIGN:
 	{
@@ -1250,6 +1290,10 @@ void YulProtoMutator::configureCall(FunctionCall *_call, unsigned int _seed)
 	}
 	BOOST_FALLTHROUGH;
 	case FunctionCall_Returns_MULTIDECL:
+	BOOST_FALLTHROUGH;
+	case FunctionCall_Returns_SINGLE:
+	BOOST_FALLTHROUGH;
+	case FunctionCall_Returns_ZERO:
 	{
 		auto inArg4 = new Expression();
 		auto inRef4 = YulProtoMutator::varRef(_seed * 4);
@@ -1265,18 +1309,13 @@ void YulProtoMutator::configureCall(FunctionCall *_call, unsigned int _seed)
 		auto inRef2 = YulProtoMutator::varRef(_seed * 2);
 		inArg2->set_allocated_varref(inRef2);
 		_call->set_allocated_in_param2(inArg2);
-	}
-	BOOST_FALLTHROUGH;
-	case FunctionCall_Returns_SINGLE:
-	{
+
 		auto inArg1 = new Expression();
 		auto inRef1 = YulProtoMutator::varRef(_seed);
 		inArg1->set_allocated_varref(inRef1);
 		_call->set_allocated_in_param1(inArg1);
-	}
-	BOOST_FALLTHROUGH;
-	case FunctionCall_Returns_ZERO:
 		break;
+	}
 	}
 }
 
