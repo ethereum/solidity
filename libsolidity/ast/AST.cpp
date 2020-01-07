@@ -305,7 +305,7 @@ TypeDeclarationAnnotation& EnumDefinition::annotation() const
 	return dynamic_cast<TypeDeclarationAnnotation&>(*m_annotation);
 }
 
-ContractDefinition::ContractKind FunctionDefinition::inContractKind() const
+ContractKind FunctionDefinition::inContractKind() const
 {
 	auto contractDef = dynamic_cast<ContractDefinition const*>(scope());
 	solAssert(contractDef, "Enclosing Scope of FunctionDefinition was not set.");

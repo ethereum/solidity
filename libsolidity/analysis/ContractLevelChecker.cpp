@@ -208,18 +208,18 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 
 	if (_contract.abstract())
 	{
-		if (_contract.contractKind() == ContractDefinition::ContractKind::Interface)
+		if (_contract.contractKind() == ContractKind::Interface)
 			m_errorReporter.typeError(_contract.location(), "Interfaces do not need the \"abstract\" keyword, they are abstract implicitly.");
-		else if (_contract.contractKind() == ContractDefinition::ContractKind::Library)
+		else if (_contract.contractKind() == ContractKind::Library)
 			m_errorReporter.typeError(_contract.location(), "Libraries cannot be abstract.");
 		else
-			solAssert(_contract.contractKind() == ContractDefinition::ContractKind::Contract, "");
+			solAssert(_contract.contractKind() == ContractKind::Contract, "");
 	}
 
 	// For libraries, we emit errors on function-level, so this is fine as long as we do
 	// not have inheritance for libraries.
 	if (
-		_contract.contractKind() == ContractDefinition::ContractKind::Contract &&
+		_contract.contractKind() == ContractKind::Contract &&
 		!_contract.abstract() &&
 		!_contract.annotation().unimplementedFunctions.empty()
 	)

@@ -834,15 +834,15 @@ string ASTJsonConverter::location(VariableDeclaration::Location _location)
 	return {};
 }
 
-string ASTJsonConverter::contractKind(ContractDefinition::ContractKind _kind)
+string ASTJsonConverter::contractKind(ContractKind _kind)
 {
 	switch (_kind)
 	{
-	case ContractDefinition::ContractKind::Interface:
+	case ContractKind::Interface:
 		return "interface";
-	case ContractDefinition::ContractKind::Contract:
+	case ContractKind::Contract:
 		return "contract";
-	case ContractDefinition::ContractKind::Library:
+	case ContractKind::Library:
 		return "library";
 	}
 

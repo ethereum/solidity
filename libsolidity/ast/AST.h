@@ -378,8 +378,6 @@ protected:
 class ContractDefinition: public Declaration, public Documented
 {
 public:
-	enum class ContractKind { Interface, Contract, Library };
-
 	ContractDefinition(
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
@@ -711,7 +709,7 @@ public:
 	/// @returns the external identifier of this function (the hash of the signature) as a hex string.
 	std::string externalIdentifierHex() const;
 
-	ContractDefinition::ContractKind inContractKind() const;
+	ContractKind inContractKind() const;
 
 	TypePointer type() const override;
 
