@@ -23,7 +23,7 @@
 #include <libyul/optimiser/BlockHasher.h>
 #include <libyul/AsmDataForward.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

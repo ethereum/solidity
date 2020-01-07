@@ -28,7 +28,7 @@
 #include <boost/operators.hpp>
 
 
-namespace langutil
+namespace solidity::langutil
 {
 
 /**
@@ -87,7 +87,7 @@ public:
 	bool hasChainID() const { return *this >= istanbul(); }
 	bool hasSelfBalance() const { return *this >= istanbul(); }
 
-	bool hasOpcode(dev::eth::Instruction _opcode) const;
+	bool hasOpcode(evmasm::Instruction _opcode) const;
 
 	/// Whether we have to retain the costs for the call opcode itself (false),
 	/// or whether we can just forward easily all remaining gas (true).

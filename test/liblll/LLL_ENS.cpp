@@ -28,14 +28,11 @@
 #define ACCOUNT(n)    h256(account(n), h256::AlignRight)
 
 using namespace std;
-using namespace dev::lll;
-using namespace dev::test;
+using namespace solidity::lll;
+using namespace solidity::util;
+using namespace solidity::test;
 
-namespace dev
-{
-namespace lll
-{
-namespace test
+namespace solidity::lll::test
 {
 
 namespace
@@ -346,7 +343,7 @@ protected:
 		if (!s_compiledEns)
 		{
 			vector<string> errors;
-			s_compiledEns.reset(new bytes(compileLLL(ensCode, dev::test::Options::get().evmVersion(), dev::test::Options::get().optimize, &errors)));
+			s_compiledEns.reset(new bytes(compileLLL(ensCode, solidity::test::Options::get().evmVersion(), solidity::test::Options::get().optimize, &errors)));
 			BOOST_REQUIRE(errors.empty());
 		}
 		sendMessage(*s_compiledEns, true);
@@ -503,6 +500,4 @@ BOOST_AUTO_TEST_CASE(fallback)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

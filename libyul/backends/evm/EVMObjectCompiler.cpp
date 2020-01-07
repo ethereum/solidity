@@ -26,7 +26,7 @@
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
 
-using namespace yul;
+using namespace solidity::yul;
 using namespace std;
 
 void EVMObjectCompiler::compile(Object& _object, AbstractAssembly& _assembly, EVMDialect const& _dialect, bool _evm15, bool _optimize)

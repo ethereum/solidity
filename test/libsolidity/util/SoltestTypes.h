@@ -14,15 +14,11 @@
 
 #pragma once
 
-#include <libdevcore/AnsiColorized.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/AnsiColorized.h>
+#include <libsolutil/CommonData.h>
 #include <libsolidity/ast/Types.h>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 /**
@@ -273,6 +269,4 @@ struct FunctionCall
 	bool isLibrary = false;
 };
 
-}
-}
 }

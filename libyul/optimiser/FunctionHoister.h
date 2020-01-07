@@ -24,7 +24,7 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 
-namespace yul
+namespace solidity::yul
 {
 struct OptimiserStepContext;
 

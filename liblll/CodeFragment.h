@@ -24,14 +24,12 @@
 #include <liblll/Exceptions.h>
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 namespace boost { namespace spirit { class utree; } }
 namespace sp = boost::spirit;
 
-namespace dev
-{
-namespace lll
+namespace solidity::lll
 {
 
 struct CompilerState;
@@ -47,7 +45,7 @@ public:
 	static CodeFragment compile(std::string _src, CompilerState& _s, ReadCallback const& _readFile);
 
 	/// Consolidates data and compiles code.
-	eth::Assembly& assembly(CompilerState const& _cs) { finalise(_cs); return m_asm; }
+	evmasm::Assembly& assembly(CompilerState const& _cs) { finalise(_cs); return m_asm; }
 
 private:
 	void finalise(CompilerState const& _cs);
@@ -55,17 +53,16 @@ private:
 	template <class T> static void error() { BOOST_THROW_EXCEPTION(T() ); }
 	template <class T> static void error(std::string const& reason) {
 		auto err = T();
-		err << errinfo_comment(reason);
+		err << util::errinfo_comment(reason);
 		BOOST_THROW_EXCEPTION(err);
 	}
 	void constructOperation(sp::utree const& _t, CompilerState& _s);
 
 	bool m_finalised = false;
-	eth::Assembly m_asm;
+	evmasm::Assembly m_asm;
 	ReadCallback m_readFile;
 };
 
 static CodeFragment const NullCodeFragment;
 
-}
 }

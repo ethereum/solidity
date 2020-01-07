@@ -25,12 +25,12 @@
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/AsmData.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::langutil;
 
 namespace
 {
@@ -56,7 +56,7 @@ private:
 
 void IntroduceSSA::operator()(Block& _block)
 {
-	iterateReplacing(
+	util::iterateReplacing(
 		_block.statements,
 		[&](Statement& _s) -> std::optional<vector<Statement>>
 		{
@@ -211,7 +211,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 	set<YulString> variablesDeclaredHere;
 	set<YulString> assignedVariables;
 
-	iterateReplacing(
+	util::iterateReplacing(
 		_block.statements,
 		[&](Statement& _s) -> std::optional<vector<Statement>>
 		{

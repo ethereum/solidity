@@ -24,9 +24,7 @@
 #include <string>
 #include <optional>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 enum class RevertStrings
@@ -59,5 +57,4 @@ inline std::optional<RevertStrings> revertStringsFromString(std::string const& _
 	return {};
 }
 
-}
 }

@@ -32,16 +32,14 @@
 #include <set>
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 struct Identifier;
 struct Dialect;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class Type;
@@ -251,5 +249,4 @@ struct FunctionCallAnnotation: ExpressionAnnotation
 	bool tryCall = false;
 };
 
-}
 }

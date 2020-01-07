@@ -23,8 +23,8 @@
 #include <liblll/CodeFragment.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::lll;
+using namespace solidity;
+using namespace solidity::lll;
 
 CompilerState::CompilerState()
 {

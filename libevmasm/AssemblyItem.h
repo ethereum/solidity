@@ -24,14 +24,12 @@
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/Assertions.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/Assertions.h>
 #include <iostream>
 #include <sstream>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 enum AssemblyItemType {
@@ -77,8 +75,8 @@ public:
 	AssemblyItem& operator=(AssemblyItem const&) = default;
 	AssemblyItem& operator=(AssemblyItem&&) = default;
 
-	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag, Exception, ""); return AssemblyItem(Tag, data()); }
-	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag, Exception, ""); return AssemblyItem(PushTag, data()); }
+	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag, util::Exception, ""); return AssemblyItem(Tag, data()); }
+	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag, util::Exception, ""); return AssemblyItem(PushTag, data()); }
 	/// Converts the tag to a subassembly tag. This has to be called in order to move a tag across assemblies.
 	/// @param _subId the identifier of the subassembly the tag is taken from.
 	AssemblyItem toSubAssemblyTag(size_t _subId) const;
@@ -89,11 +87,11 @@ public:
 	void setPushTagSubIdAndTag(size_t _subId, size_t _tag);
 
 	AssemblyItemType type() const { return m_type; }
-	u256 const& data() const { assertThrow(m_type != Operation, Exception, ""); return *m_data; }
-	void setData(u256 const& _data) { assertThrow(m_type != Operation, Exception, ""); m_data = std::make_shared<u256>(_data); }
+	u256 const& data() const { assertThrow(m_type != Operation, util::Exception, ""); return *m_data; }
+	void setData(u256 const& _data) { assertThrow(m_type != Operation, util::Exception, ""); m_data = std::make_shared<u256>(_data); }
 
 	/// @returns the instruction of this item (only valid if type() == Operation)
-	Instruction instruction() const { assertThrow(m_type == Operation, Exception, ""); return m_instruction; }
+	Instruction instruction() const { assertThrow(m_type == Operation, util::Exception, ""); return m_instruction; }
 
 	/// @returns true if the type and data of the items are equal.
 	bool operator==(AssemblyItem const& _other) const
@@ -177,5 +175,4 @@ inline std::ostream& operator<<(std::ostream& _out, AssemblyItems const& _items)
 	return _out;
 }
 
-}
 }

@@ -25,16 +25,14 @@
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SimplificationRule.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/multiprecision/detail/min_max.hpp>
 
 #include <vector>
 #include <functional>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 template <class S> S divWorkaround(S const& _a, S const& _b)
@@ -673,5 +671,4 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 	return rules;
 }
 
-}
 }

@@ -25,9 +25,7 @@
 
 #include <test/Options.h>
 
-namespace langutil
-{
-namespace test
+namespace solidity::langutil::test
 {
 
 BOOST_AUTO_TEST_SUITE(CharStreamtest)
@@ -43,11 +41,10 @@ BOOST_AUTO_TEST_CASE(test_fail)
 	BOOST_CHECK('w' == source->setPosition(2));
 	BOOST_REQUIRE_THROW(
 		source->setPosition(200),
-		::langutil::InternalCompilerError
+		::solidity::langutil::InternalCompilerError
 	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 } // end namespaces

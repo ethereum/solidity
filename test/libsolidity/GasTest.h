@@ -26,11 +26,7 @@
 #include <vector>
 #include <utility>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 class GasTest: AnalysisFramework, public TestCase
@@ -55,6 +51,4 @@ private:
 	std::map<std::string, std::map<std::string, std::string>> m_expectations;
 };
 
-}
-}
 }

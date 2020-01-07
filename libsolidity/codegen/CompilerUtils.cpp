@@ -28,13 +28,17 @@
 #include <libsolidity/codegen/ArrayUtils.h>
 #include <libsolidity/codegen/LValue.h>
 #include <libevmasm/Instruction.h>
-#include <libdevcore/Whiskers.h>
+#include <libsolutil/Whiskers.h>
 
 using namespace std;
-using namespace langutil;
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::evmasm;
+using namespace solidity::frontend;
+using namespace solidity::langutil;
+
+using solidity::util::Whiskers;
+using solidity::util::h256;
+using solidity::util::toCompactHexWithPrefix;
 
 unsigned const CompilerUtils::dataStartOffset = 4;
 size_t const CompilerUtils::freeMemoryPointer = 64;
@@ -86,7 +90,7 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 {
 	solAssert(_argumentType.isImplicitlyConvertibleTo(*TypeProvider::fromElementaryTypeName("string memory")), "");
 	fetchFreeMemoryPointer();
-	m_context << (u256(FixedHash<4>::Arith(FixedHash<4>(dev::keccak256("Error(string)")))) << (256 - 32));
+	m_context << (u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)")))) << (256 - 32));
 	m_context << Instruction::DUP2 << Instruction::MSTORE;
 	m_context << u256(4) << Instruction::ADD;
 	// Stack: <string data> <mem pos of encoding start>
@@ -1263,7 +1267,7 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 		BOOST_THROW_EXCEPTION(
 			CompilerError() <<
 			errinfo_sourceLocation(_variable.location()) <<
-			errinfo_comment("Stack too deep, try removing local variables.")
+			util::errinfo_comment("Stack too deep, try removing local variables.")
 		);
 	for (unsigned i = 0; i < size; ++i)
 		m_context << swapInstruction(stackPosition - size + 1) << Instruction::POP;
@@ -1316,7 +1320,7 @@ void CompilerUtils::popStackSlots(size_t _amount)
 		m_context << Instruction::POP;
 }
 
-void CompilerUtils::popAndJump(unsigned _toHeight, eth::AssemblyItem const& _jumpTo)
+void CompilerUtils::popAndJump(unsigned _toHeight, evmasm::AssemblyItem const& _jumpTo)
 {
 	solAssert(m_context.stackHeight() >= _toHeight, "");
 	unsigned amount = m_context.stackHeight() - _toHeight;
@@ -1349,7 +1353,7 @@ void CompilerUtils::copyContractCodeToMemory(ContractDefinition const& contract,
 		[&contract, _creation](CompilerContext& _context)
 		{
 			// copy the contract's code into memory
-			shared_ptr<eth::Assembly> assembly =
+			shared_ptr<evmasm::Assembly> assembly =
 				_creation ?
 				_context.compiledContract(contract) :
 				_context.compiledContractRuntime(contract);

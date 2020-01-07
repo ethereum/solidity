@@ -20,8 +20,9 @@
 
 #include <liblangutil/EVMVersion.h>
 
-using namespace langutil;
-using namespace dev::eth;
+using namespace solidity;
+using namespace solidity::evmasm;
+using namespace solidity::langutil;
 
 bool EVMVersion::hasOpcode(Instruction _opcode) const
 {

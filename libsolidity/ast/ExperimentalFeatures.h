@@ -23,9 +23,7 @@
 #include <map>
 #include <set>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 enum class ExperimentalFeature
@@ -51,5 +49,4 @@ static std::map<std::string, ExperimentalFeature> const ExperimentalFeatureNames
 	{ "__testOnlyAnalysis", ExperimentalFeature::TestOnlyAnalysis },
 };
 
-}
 }

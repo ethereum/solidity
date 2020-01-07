@@ -29,8 +29,9 @@
 #include <libevmasm/Instruction.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 NameDispenser::NameDispenser(Dialect const& _dialect, Block const& _ast, set<YulString> _reservedNames):
 	NameDispenser(_dialect, NameCollector(_ast).names() + std::move(_reservedNames))

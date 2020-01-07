@@ -26,8 +26,9 @@
 #include <libyul/Dialect.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 YulString Disambiguator::translateIdentifier(YulString _originalName)
 {

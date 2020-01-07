@@ -27,11 +27,9 @@
 
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace yul
-{
-namespace test
+namespace solidity::yul::test
 {
 
 namespace
@@ -175,5 +173,4 @@ BOOST_AUTO_TEST_CASE(switch_statement_large)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 }

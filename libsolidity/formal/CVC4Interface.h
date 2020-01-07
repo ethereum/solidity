@@ -33,11 +33,7 @@
 #undef _GLIBCXX_PERMIT_BACKWARD_HASH
 #endif
 
-namespace dev
-{
-namespace solidity
-{
-namespace smt
+namespace solidity::frontend::smt
 {
 
 class CVC4Interface: public SolverInterface, public boost::noncopyable
@@ -71,6 +67,4 @@ private:
 	static int const resourceLimit = 12000;
 };
 
-}
-}
 }

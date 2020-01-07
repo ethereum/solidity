@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 #include <libevmasm/AssemblyItem.h>
 
 #include <vector>
@@ -31,14 +31,12 @@
 #include <memory>
 #include <set>
 
-namespace langutil
+namespace solidity::langutil
 {
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class Pattern;
@@ -127,5 +125,4 @@ private:
 	std::vector<std::shared_ptr<AssemblyItem>> m_spareAssemblyItems;
 };
 
-}
 }

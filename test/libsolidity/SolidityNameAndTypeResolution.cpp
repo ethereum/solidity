@@ -26,20 +26,16 @@
 
 #include <libsolidity/ast/AST.h>
 
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <string>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 BOOST_FIXTURE_TEST_SUITE(SolidityNameAndTypeResolution, AnalysisFramework)
@@ -365,7 +361,7 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 			}
 		}
 	)";
-	if (dev::test::Options::get().evmVersion() == EVMVersion::homestead())
+	if (solidity::test::Options::get().evmVersion() == EVMVersion::homestead())
 		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type string memory.");
 	else
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
@@ -390,7 +386,7 @@ BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
 	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
 	});
-	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+	if (!solidity::test::Options::get().evmVersion().supportsReturndata())
 		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"returndatasize\" instruction is only available for Byzantium-compatible VMs")));
 	CHECK_ALLOW_MULTI(text, expectations);
 }
@@ -405,7 +401,7 @@ BOOST_AUTO_TEST_CASE(create2_as_variable)
 	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
 	});
-	if (!dev::test::Options::get().evmVersion().hasCreate2())
+	if (!solidity::test::Options::get().evmVersion().hasCreate2())
 		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"create2\" instruction is only available for Constantinople-compatible VMs")));
 	CHECK_ALLOW_MULTI(text, expectations);
 }
@@ -420,7 +416,7 @@ BOOST_AUTO_TEST_CASE(extcodehash_as_variable)
 	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
 		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
 	});
-	if (!dev::test::Options::get().evmVersion().hasExtCodeHash())
+	if (!solidity::test::Options::get().evmVersion().hasExtCodeHash())
 		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"extcodehash\" instruction is only available for Constantinople-compatible VMs")));
 	CHECK_ALLOW_MULTI(text, expectations);
 }
@@ -456,7 +452,7 @@ BOOST_AUTO_TEST_CASE(address_staticcall)
 		}
 	)";
 
-	if (dev::test::Options::get().evmVersion().hasStaticCall())
+	if (solidity::test::Options::get().evmVersion().hasStaticCall())
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 	else
 		CHECK_ERROR(sourceCode, TypeError, "\"staticcall\" is not supported by the VM version.");
@@ -464,7 +460,7 @@ BOOST_AUTO_TEST_CASE(address_staticcall)
 
 BOOST_AUTO_TEST_CASE(address_staticcall_value)
 {
-	if (dev::test::Options::get().evmVersion().hasStaticCall())
+	if (solidity::test::Options::get().evmVersion().hasStaticCall())
 	{
 		char const* sourceCode = R"(
 			contract C {
@@ -488,7 +484,7 @@ BOOST_AUTO_TEST_CASE(address_call_full_return_type)
 		}
 	)";
 
-	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::Options::get().evmVersion().supportsReturndata())
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 	else
 		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type bytes memory.");
@@ -505,7 +501,7 @@ BOOST_AUTO_TEST_CASE(address_delegatecall_full_return_type)
 		}
 	)";
 
-	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::Options::get().evmVersion().supportsReturndata())
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 	else
 		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type bytes memory.");
@@ -514,7 +510,7 @@ BOOST_AUTO_TEST_CASE(address_delegatecall_full_return_type)
 
 BOOST_AUTO_TEST_CASE(address_staticcall_full_return_type)
 {
-	if (dev::test::Options::get().evmVersion().hasStaticCall())
+	if (solidity::test::Options::get().evmVersion().hasStaticCall())
 	{
 		char const* sourceCode = R"(
 			contract C {
@@ -531,6 +527,4 @@ BOOST_AUTO_TEST_CASE(address_staticcall_full_return_type)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

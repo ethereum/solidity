@@ -27,7 +27,7 @@
 #include <memory>
 #include <string>
 
-namespace langutil
+namespace solidity::langutil
 {
 
 class ErrorReporter;

@@ -29,9 +29,7 @@
 #include <string>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class Type; // forward
@@ -60,5 +58,4 @@ private:
 	std::map<ContractDefinition const*, std::shared_ptr<MagicVariableDeclaration const>> mutable m_superPointer;
 };
 
-}
 }

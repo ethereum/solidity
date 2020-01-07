@@ -22,15 +22,15 @@
 
 #pragma once
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/range/adaptor/filtered.hpp>
 
-namespace langutil
+namespace solidity::langutil
 {
 
 class ErrorReporter
@@ -98,7 +98,7 @@ public:
 
 		auto filterEmpty = boost::adaptors::filtered([](std::string const& _s) { return !_s.empty(); });
 
-		std::string errorStr = dev::joinHumanReadable(descs | filterEmpty, " ");
+		std::string errorStr = util::joinHumanReadable(descs | filterEmpty, " ");
 
 		error(Error::Type::TypeError, _location, errorStr);
 	}

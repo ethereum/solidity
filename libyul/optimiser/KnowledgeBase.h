@@ -24,7 +24,7 @@
 #include <libyul/YulString.h>
 #include <map>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct Dialect;

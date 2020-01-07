@@ -24,9 +24,7 @@
 #include <liblll/CodeFragment.h>
 #include <boost/spirit/include/support_utree.hpp>
 
-namespace dev
-{
-namespace lll
+namespace solidity::lll
 {
 
 struct Macro
@@ -53,5 +51,4 @@ struct CompilerState
 	bool usedAlloc = false;
 };
 
-}
 }

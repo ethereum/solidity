@@ -30,9 +30,7 @@
 
 using namespace std;
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 inline vector<shared_ptr<MagicVariableDeclaration const>> constructMagicVariables()
@@ -111,5 +109,4 @@ MagicVariableDeclaration const* GlobalContext::currentSuper() const
 	return m_superPointer[m_currentContract].get();
 }
 
-}
 }

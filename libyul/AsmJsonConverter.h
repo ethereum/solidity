@@ -26,7 +26,7 @@
 #include <boost/variant.hpp>
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

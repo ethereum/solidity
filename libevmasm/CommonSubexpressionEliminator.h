@@ -28,8 +28,8 @@
 #include <set>
 #include <tuple>
 #include <ostream>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/Exceptions.h>
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SemanticInformation.h>
 #include <libevmasm/KnownState.h>
@@ -39,9 +39,7 @@ namespace langutil
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class AssemblyItem;
@@ -186,5 +184,4 @@ _AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
 	return _iterator;
 }
 
-}
 }

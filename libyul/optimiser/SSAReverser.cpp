@@ -17,13 +17,13 @@
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/AsmData.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <variant>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void SSAReverser::run(OptimiserStepContext&, Block& _block)
 {
@@ -35,7 +35,7 @@ void SSAReverser::run(OptimiserStepContext&, Block& _block)
 void SSAReverser::operator()(Block& _block)
 {
 	walkVector(_block.statements);
-	iterateReplacingWindow<2>(
+	util::iterateReplacingWindow<2>(
 		_block.statements,
 		[&](Statement& _stmt1, Statement& _stmt2) -> std::optional<vector<Statement>>
 		{
@@ -61,9 +61,9 @@ void SSAReverser::operator()(Block& _block)
 				{
 					// in the special case a == a_1, just remove the assignment
 					if (assignment->variableNames.front().name == identifier->name)
-						return make_vector<Statement>(std::move(_stmt1));
+						return util::make_vector<Statement>(std::move(_stmt1));
 					else
-						return make_vector<Statement>(
+						return util::make_vector<Statement>(
 							Assignment{
 								std::move(assignment->location),
 								assignment->variableNames,
@@ -99,7 +99,7 @@ void SSAReverser::operator()(Block& _block)
 						varDecl2->variables.front().location,
 						varDecl2->variables.front().name
 					});
-					return make_vector<Statement>(
+					return util::make_vector<Statement>(
 						VariableDeclaration{
 							std::move(varDecl2->location),
 							std::move(varDecl2->variables),

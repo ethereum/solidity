@@ -21,15 +21,15 @@
 #include <libsolidity/interface/Version.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SemVerHandler.h>
-#include <libdevcore/Algorithms.h>
+#include <libsolutil/Algorithms.h>
 
 #include <boost/range/adaptor/map.hpp>
 #include <memory>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 bool PostTypeChecker::check(ASTNode const& _astRoot)
 {
@@ -128,7 +128,7 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 
 	VariableDeclaration const* findCycle(VariableDeclaration const& _startingFrom)
 	{
-		auto visitor = [&](VariableDeclaration const& _variable, CycleDetector<VariableDeclaration>& _cycleDetector, size_t _depth)
+		auto visitor = [&](VariableDeclaration const& _variable, util::CycleDetector<VariableDeclaration>& _cycleDetector, size_t _depth)
 		{
 			if (_depth >= 256)
 				m_errorReporter.fatalDeclarationError(_variable.location(), "Variable definition exhausting cyclic dependency validator.");
@@ -148,7 +148,7 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 				if (_cycleDetector.run(*v))
 					return;
 		};
-		return CycleDetector<VariableDeclaration>(visitor).run(_startingFrom);
+		return util::CycleDetector<VariableDeclaration>(visitor).run(_startingFrom);
 	}
 
 private:

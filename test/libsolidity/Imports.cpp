@@ -32,11 +32,7 @@
 
 using namespace std;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 BOOST_AUTO_TEST_SUITE(SolidityImports)
@@ -51,7 +47,7 @@ BOOST_AUTO_TEST_CASE(remappings)
 		{"s_1.4.6/s.sol", "contract S {} pragma solidity >=0.0;"},
 		{"Tee/tee.sol", "contract Tee {} pragma solidity >=0.0;"}
 	});
-	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	c.setEVMVersion(solidity::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
 }
 
@@ -65,7 +61,7 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings)
 		{"s_1.4.6/s.sol", "contract SSix {} pragma solidity >=0.0;"},
 		{"s_1.4.7/s.sol", "contract SSeven {} pragma solidity >=0.0;"}
 	});
-	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	c.setEVMVersion(solidity::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
 }
 
@@ -83,7 +79,7 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings_ensure_default_and_module_pres
 		{"vendor/foo_1.0.0/foo.sol", "contract Foo1 {} pragma solidity >=0.0;"},
 		{"vendor/foo_2.0.0/foo.sol", "contract Foo2 {} pragma solidity >=0.0;"}
 	});
-	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	c.setEVMVersion(solidity::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
 }
 
@@ -97,7 +93,7 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent_1)
 		{"d/z.sol", "contract D {} pragma solidity >=0.0;"},
 		{"e/y/z/z.sol", "contract E {} pragma solidity >=0.0;"}
 	});
-	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	c.setEVMVersion(solidity::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
 }
 
@@ -111,12 +107,10 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent_2)
 		{"d/z.sol", "contract D {} pragma solidity >=0.0;"},
 		{"e/y/z/z.sol", "contract E {} pragma solidity >=0.0;"}
 	});
-	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	c.setEVMVersion(solidity::test::Options::get().evmVersion());
 	BOOST_CHECK(c.compile());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

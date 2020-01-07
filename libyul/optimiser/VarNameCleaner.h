@@ -27,7 +27,7 @@
 #include <set>
 #include <string>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct Dialect;

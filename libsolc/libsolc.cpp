@@ -24,8 +24,8 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
 #include <libyul/YulString.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/JSON.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/JSON.h>
 
 #include <cstdlib>
 #include <list>
@@ -34,8 +34,11 @@
 #include "license.h"
 
 using namespace std;
-using namespace dev;
 using namespace solidity;
+using namespace solidity::util;
+
+using solidity::frontend::ReadCallback;
+using solidity::frontend::StandardCompiler;
 
 namespace
 {
@@ -122,7 +125,7 @@ extern char const* solidity_license() noexcept
 
 extern char const* solidity_version() noexcept
 {
-	return VersionString.c_str();
+	return frontend::VersionString.c_str();
 }
 
 extern char* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext) noexcept

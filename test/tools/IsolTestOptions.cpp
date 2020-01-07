@@ -20,7 +20,7 @@
 
 #include <test/tools/IsolTestOptions.h>
 
-#include <libdevcore/Assertions.h>
+#include <libsolutil/Assertions.h>
 
 #include <boost/filesystem.hpp>
 
@@ -31,9 +31,7 @@
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
-namespace dev
-{
-namespace test
+namespace solidity::test
 {
 
 auto const description = R"(isoltest, tool for interactively managing test contracts.
@@ -86,5 +84,4 @@ void IsolTestOptions::validate() const
 	);
 }
 
-}
 }

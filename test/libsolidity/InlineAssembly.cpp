@@ -41,14 +41,10 @@
 #include <string>
 
 using namespace std;
-using namespace langutil;
-using namespace yul;
+using namespace solidity::langutil;
+using namespace solidity::yul;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 namespace
@@ -62,7 +58,7 @@ std::optional<Error> parseAndReturnFirstError(
 	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
 )
 {
-	AssemblyStack stack(dev::test::Options::get().evmVersion(), _language, dev::solidity::OptimiserSettings::none());
+	AssemblyStack stack(solidity::test::Options::get().evmVersion(), _language, solidity::frontend::OptimiserSettings::none());
 	bool success = false;
 	try
 	{
@@ -129,7 +125,7 @@ Error expectError(
 
 void parsePrintCompare(string const& _source, bool _canWarn = false)
 {
-	AssemblyStack stack(dev::test::Options::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
+	AssemblyStack stack(solidity::test::Options::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
 	BOOST_REQUIRE(stack.parseAndAnalyze("", _source));
 	if (_canWarn)
 		BOOST_REQUIRE(Error::containsOnlyWarnings(stack.errors()));
@@ -542,7 +538,7 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
 	string source = "{ let x := \"\\u1bac\" }";
 	string parsed = "object \"object\" {\n    code { let x := \"\\xe1\\xae\\xac\" }\n}\n";
-	AssemblyStack stack(dev::test::Options::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
+	AssemblyStack stack(solidity::test::Options::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
 	BOOST_REQUIRE(stack.parseAndAnalyze("", source));
 	BOOST_REQUIRE(stack.errors().empty());
 	BOOST_CHECK_EQUAL(stack.print(), parsed);
@@ -689,42 +685,42 @@ BOOST_AUTO_TEST_CASE(keccak256)
 
 BOOST_AUTO_TEST_CASE(returndatasize)
 {
-	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+	if (!solidity::test::Options::get().evmVersion().supportsReturndata())
 		return;
 	BOOST_CHECK(successAssemble("{ let r := returndatasize() }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy)
 {
-	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+	if (!solidity::test::Options::get().evmVersion().supportsReturndata())
 		return;
 	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy_functional)
 {
-	if (!dev::test::Options::get().evmVersion().supportsReturndata())
+	if (!solidity::test::Options::get().evmVersion().supportsReturndata())
 		return;
 	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
 }
 
 BOOST_AUTO_TEST_CASE(staticcall)
 {
-	if (!dev::test::Options::get().evmVersion().hasStaticCall())
+	if (!solidity::test::Options::get().evmVersion().hasStaticCall())
 		return;
 	BOOST_CHECK(successAssemble("{ pop(staticcall(10000, 0x123, 64, 0x10, 128, 0x10)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(create2)
 {
-	if (!dev::test::Options::get().evmVersion().hasCreate2())
+	if (!solidity::test::Options::get().evmVersion().hasCreate2())
 		return;
 	BOOST_CHECK(successAssemble("{ pop(create2(10, 0x123, 32, 64)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(shift)
 {
-	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (!solidity::test::Options::get().evmVersion().hasBitwiseShifting())
 		return;
 	BOOST_CHECK(successAssemble("{ pop(shl(10, 32)) }"));
 	BOOST_CHECK(successAssemble("{ pop(shr(10, 32)) }"));
@@ -733,7 +729,7 @@ BOOST_AUTO_TEST_CASE(shift)
 
 BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 {
-	if (dev::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (solidity::test::Options::get().evmVersion().hasBitwiseShifting())
 		return;
 	CHECK_PARSE_WARNING("{ pop(shl(10, 32)) }", TypeError, "The \"shl\" instruction is only available for Constantinople-compatible VMs");
 	CHECK_PARSE_WARNING("{ pop(shr(10, 32)) }", TypeError, "The \"shr\" instruction is only available for Constantinople-compatible VMs");
@@ -750,6 +746,4 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

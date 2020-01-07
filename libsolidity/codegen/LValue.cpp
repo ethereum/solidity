@@ -28,10 +28,11 @@
 #include <libevmasm/Instruction.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::solidity;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::evmasm;
+using namespace solidity::frontend;
+using namespace solidity::langutil;
+using namespace solidity::util;
 
 
 StackVariable::StackVariable(CompilerContext& _compilerContext, VariableDeclaration const& _declaration):

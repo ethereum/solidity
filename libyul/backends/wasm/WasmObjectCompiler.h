@@ -23,13 +23,9 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <libsolutil/Common.h>     // solidity::bytes
 
-namespace dev
-{
-using bytes = std::vector<uint8_t>;
-}
-
-namespace yul
+namespace solidity::yul
 {
 struct Object;
 struct Dialect;
@@ -42,7 +38,7 @@ class WasmObjectCompiler
 {
 public:
 	/// Compiles the given object and returns the Wasm text and binary representation.
-	static std::pair<std::string, dev::bytes> compile(Object& _object, Dialect const& _dialect);
+	static std::pair<std::string, bytes> compile(Object& _object, Dialect const& _dialect);
 private:
 	WasmObjectCompiler(Dialect const& _dialect):
 		m_dialect(_dialect)

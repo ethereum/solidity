@@ -24,9 +24,7 @@
 
 #include <cstddef>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 struct OptimiserSettings
@@ -102,5 +100,4 @@ struct OptimiserSettings
 	size_t expectedExecutionsPerDeployment = 200;
 };
 
-}
 }

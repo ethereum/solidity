@@ -39,15 +39,15 @@
 #include <string>
 #include <vector>
 
-namespace langutil
+using solidity::util::h256;
+
+namespace solidity::langutil
 {
 class ErrorReporter;
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class BMC: public SMTEncoder
@@ -185,5 +185,4 @@ private:
 	std::set<Expression const*> m_safeAssertions;
 };
 
-}
 }

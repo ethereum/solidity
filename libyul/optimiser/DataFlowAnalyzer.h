@@ -31,12 +31,12 @@
 // TODO avoid
 #include <libevmasm/Instruction.h>
 
-#include <libdevcore/InvertibleMap.h>
+#include <libsolutil/InvertibleMap.h>
 
 #include <map>
 #include <set>
 
-namespace yul
+namespace solidity::yul
 {
 struct Dialect;
 struct SideEffects;
@@ -133,7 +133,7 @@ protected:
 	bool inScope(YulString _variableName) const;
 
 	std::optional<std::pair<YulString, YulString>> isSimpleStore(
-		dev::eth::Instruction _store,
+		evmasm::Instruction _store,
 		ExpressionStatement const& _statement
 	) const;
 

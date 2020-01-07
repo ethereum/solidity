@@ -18,11 +18,11 @@
 #include <libsolidity/formal/Z3CHCInterface.h>
 
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/CommonIO.h>
+#include <libsolutil/CommonIO.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity::smt;
+using namespace solidity;
+using namespace solidity::frontend::smt;
 
 Z3CHCInterface::Z3CHCInterface():
 	m_z3Interface(make_unique<Z3Interface>()),

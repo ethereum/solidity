@@ -28,7 +28,7 @@
 #include <array>
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

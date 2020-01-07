@@ -25,15 +25,15 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/AST_accept.h>
 #include <libsolidity/ast/TypeProvider.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
 #include <algorithm>
 #include <functional>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::frontend;
 
 class IDDispenser
 {
@@ -114,11 +114,11 @@ vector<VariableDeclaration const*> ContractDefinition::stateVariablesIncludingIn
 	return stateVars;
 }
 
-map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() const
+map<util::FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() const
 {
 	auto exportedFunctionList = interfaceFunctionList();
 
-	map<FixedHash<4>, FunctionTypePointer> exportedFunctions;
+	map<util::FixedHash<4>, FunctionTypePointer> exportedFunctions;
 	for (auto const& it: exportedFunctionList)
 		exportedFunctions.insert(it);
 
@@ -192,12 +192,12 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 	return *m_interfaceEvents;
 }
 
-vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList() const
+vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList() const
 {
 	if (!m_interfaceFunctionList)
 	{
 		set<string> signaturesSeen;
-		m_interfaceFunctionList = make_unique<vector<pair<FixedHash<4>, FunctionTypePointer>>>();
+		m_interfaceFunctionList = make_unique<vector<pair<util::FixedHash<4>, FunctionTypePointer>>>();
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		{
 			vector<FunctionTypePointer> functions;
@@ -216,7 +216,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 				if (signaturesSeen.count(functionSignature) == 0)
 				{
 					signaturesSeen.insert(functionSignature);
-					FixedHash<4> hash(dev::keccak256(functionSignature));
+					util::FixedHash<4> hash(util::keccak256(functionSignature));
 					m_interfaceFunctionList->emplace_back(hash, fun);
 				}
 			}
@@ -749,7 +749,7 @@ bool Literal::looksLikeAddress() const
 bool Literal::passesAddressChecksum() const
 {
 	solAssert(isHexNumber(), "Expected hex number");
-	return dev::passesAddressChecksum(valueWithoutUnderscores(), true);
+	return util::passesAddressChecksum(valueWithoutUnderscores(), true);
 }
 
 string Literal::getChecksummedAddress() const
@@ -760,5 +760,5 @@ string Literal::getChecksummedAddress() const
 	if (address.length() > 40)
 		return string();
 	address.insert(address.begin(), 40 - address.size(), '0');
-	return dev::getChecksummedAddress(address);
+	return util::getChecksummedAddress(address);
 }

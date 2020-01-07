@@ -23,8 +23,9 @@
 #include <libyul/AsmData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 void NameCollector::operator()(VariableDeclaration const& _varDecl)
 {

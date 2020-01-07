@@ -41,19 +41,17 @@
 #pragma clang diagnostic pop
 #endif // defined(__clang__)
 
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/Exceptions.h>
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SemanticInformation.h>
 
-namespace langutil
+namespace solidity::langutil
 {
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class AssemblyItem;
@@ -181,5 +179,4 @@ private:
 	boost::bimap<Id, std::set<u256>> m_tagUnions;
 };
 
-}
 }

@@ -30,7 +30,7 @@
 
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/Instruction.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/FixedHash.h>
 
 #include <boost/noncopyable.hpp>
 #include <json/json.h>
@@ -40,16 +40,14 @@
 #include <string>
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 // Forward-declaration to <yul/AsmData.h>
 struct Block;
 struct Dialect;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class ASTVisitor;
@@ -416,8 +414,8 @@ public:
 
 	/// @returns a map of canonical function signatures to FunctionDefinitions
 	/// as intended for use by the ABI.
-	std::map<FixedHash<4>, FunctionTypePointer> interfaceFunctions() const;
-	std::vector<std::pair<FixedHash<4>, FunctionTypePointer>> const& interfaceFunctionList() const;
+	std::map<util::FixedHash<4>, FunctionTypePointer> interfaceFunctions() const;
+	std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>> const& interfaceFunctionList() const;
 
 	/// @returns a list of the inheritable members of this contract
 	std::vector<Declaration const*> const& inheritableMembers() const;
@@ -452,7 +450,7 @@ private:
 	ContractKind m_contractKind;
 	bool m_abstract{false};
 
-	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
+	mutable std::unique_ptr<std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
 	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents;
 	mutable std::unique_ptr<std::vector<Declaration const*>> m_inheritableMembers;
 };
@@ -1905,6 +1903,4 @@ private:
 
 /// @}
 
-
-}
 }

@@ -20,18 +20,14 @@
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/TestCase.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <utility>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 struct SyntaxTestError
@@ -74,7 +70,7 @@ public:
 			printErrorList(_stream, m_errorList, _linePrefix, false);
 	}
 
-	static std::string errorMessage(Exception const& _e);
+	static std::string errorMessage(util::Exception const& _e);
 protected:
 	void setupCompiler();
 	void parseAndAnalyze();
@@ -99,6 +95,4 @@ protected:
 	bool m_parserErrorRecovery = false;
 };
 
-}
-}
 }

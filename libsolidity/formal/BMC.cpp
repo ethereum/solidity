@@ -23,9 +23,10 @@
 #include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 BMC::BMC(
 	smt::EncodingContext& _context,

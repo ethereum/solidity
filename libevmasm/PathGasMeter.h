@@ -29,9 +29,7 @@
 #include <vector>
 #include <memory>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class KnownState;
@@ -84,5 +82,4 @@ private:
 	langutil::EVMVersion m_evmVersion;
 };
 
-}
 }

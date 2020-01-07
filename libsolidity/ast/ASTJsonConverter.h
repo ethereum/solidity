@@ -34,14 +34,12 @@
 #include <stack>
 #include <vector>
 
-namespace langutil
+namespace solidity::langutil
 {
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -193,5 +191,4 @@ private:
 	std::map<std::string, unsigned> m_sourceIndices;
 };
 
-}
 }

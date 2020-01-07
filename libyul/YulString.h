@@ -28,7 +28,7 @@
 #include <string>
 #include <functional>
 
-namespace yul
+namespace solidity::yul
 {
 
 /// Repository for YulStrings.

@@ -27,11 +27,7 @@
 
 using namespace std;
 
-namespace dev
-{
-namespace lll
-{
-namespace test
+namespace solidity::lll::test
 {
 
 namespace
@@ -182,6 +178,4 @@ BOOST_AUTO_TEST_CASE(macro_with_zero_args)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

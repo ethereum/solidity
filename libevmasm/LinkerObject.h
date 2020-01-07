@@ -21,12 +21,10 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/FixedHash.h>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 /**
@@ -46,7 +44,7 @@ struct LinkerObject
 	void append(LinkerObject const& _other);
 
 	/// Links the given libraries by replacing their uses in the code and removes them from the references.
-	void link(std::map<std::string, h160> const& _libraryAddresses);
+	void link(std::map<std::string, util::h160> const& _libraryAddresses);
 
 	/// @returns a hex representation of the bytecode of the given object, replacing unlinked
 	/// addresses by placeholders. This output is lowercase.
@@ -58,11 +56,10 @@ struct LinkerObject
 	static std::string libraryPlaceholder(std::string const& _libraryName);
 
 private:
-	static h160 const* matchLibrary(
+	static util::h160 const* matchLibrary(
 		std::string const& _linkRefName,
-		std::map<std::string, h160> const& _libraryAddresses
+		std::map<std::string, util::h160> const& _libraryAddresses
 	);
 };
 
-}
 }

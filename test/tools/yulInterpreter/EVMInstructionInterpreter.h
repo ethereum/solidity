@@ -22,24 +22,22 @@
 
 #include <libyul/AsmDataForward.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <vector>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 enum class Instruction: uint8_t;
 }
-}
 
-namespace yul
+namespace solidity::yul
 {
 class YulString;
 struct BuiltinFunctionForEVM;
+}
 
-namespace test
+namespace solidity::yul::test
 {
 
 struct InterpreterState;
@@ -70,32 +68,31 @@ public:
 		m_state(_state)
 	{}
 	/// Evaluate instruction
-	dev::u256 eval(dev::eth::Instruction _instruction, std::vector<dev::u256> const& _arguments);
+	u256 eval(evmasm::Instruction _instruction, std::vector<u256> const& _arguments);
 	/// Evaluate builtin function
-	dev::u256 evalBuiltin(BuiltinFunctionForEVM const& _fun, std::vector<dev::u256> const& _arguments);
+	u256 evalBuiltin(BuiltinFunctionForEVM const& _fun, std::vector<u256> const& _arguments);
 
 private:
 	/// Checks if the memory access is not too large for the interpreter and adjusts
 	/// msize accordingly.
 	/// @returns false if the amount of bytes read is lager than 0xffff
-	bool accessMemory(dev::u256 const& _offset, dev::u256 const& _size = 32);
+	bool accessMemory(u256 const& _offset, u256 const& _size = 32);
 	/// @returns the memory contents at the provided address.
 	/// Does not adjust msize, use @a accessMemory for that
-	dev::bytes readMemory(dev::u256 const& _offset, dev::u256 const& _size = 32);
+	bytes readMemory(u256 const& _offset, u256 const& _size = 32);
 	/// @returns the memory contents at the provided address.
 	/// Does not adjust msize, use @a accessMemory for that
-	dev::u256 readMemoryWord(dev::u256 const& _offset);
+	u256 readMemoryWord(u256 const& _offset);
 	/// @returns writes a word to memory
 	/// Does not adjust msize, use @a accessMemory for that
-	void writeMemoryWord(dev::u256 const& _offset, dev::u256 const& _value);
+	void writeMemoryWord(u256 const& _offset, u256 const& _value);
 
-	void logTrace(dev::eth::Instruction _instruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
+	void logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
 	/// Appends a log to the trace representing an instruction or similar operation by string,
 	/// with arguments and auxiliary data (if nonempty).
-	void logTrace(std::string const& _pseudoInstruction, std::vector<dev::u256> const& _arguments = {}, dev::bytes const& _data = {});
+	void logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
 
 	InterpreterState& m_state;
 };
 
-}
-}
+} // solidity::yul::test

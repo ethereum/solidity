@@ -26,8 +26,9 @@
 #include <liblangutil/EVMVersion.h>
 #include <libyul/Exceptions.h>
 
-using namespace yul;
-using namespace yul::test::yul_fuzzer;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::yul::test::yul_fuzzer;
 using namespace std;
 
 DEFINE_PROTO_FUZZER(Program const& _input)
@@ -52,7 +53,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	AssemblyStack stack(
 		langutil::EVMVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		dev::solidity::OptimiserSettings::full()
+		solidity::frontend::OptimiserSettings::full()
 	);
 
 	// Parse protobuf mutated YUL code

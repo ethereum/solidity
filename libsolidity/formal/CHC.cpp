@@ -28,14 +28,14 @@
 #include <libsolidity/ast/TypeProvider.h>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 CHC::CHC(
 	smt::EncodingContext& _context,
 	ErrorReporter& _errorReporter,
-	map<h256, string> const& _smtlib2Responses,
+	map<util::h256, string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
 	[[maybe_unused]] smt::SMTSolverChoice _enabledSolvers
 ):

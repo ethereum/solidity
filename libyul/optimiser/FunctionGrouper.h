@@ -23,7 +23,7 @@
 
 #include <libyul/AsmDataForward.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct OptimiserStepContext;

@@ -23,8 +23,8 @@
 #include <libyul/AsmData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 Expression Substitution::translate(Expression const& _expression)
 {

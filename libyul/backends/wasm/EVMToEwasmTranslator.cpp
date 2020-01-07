@@ -41,9 +41,10 @@
 #include <liblangutil/SourceReferenceFormatter.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
+using namespace solidity::langutil;
 
 namespace
 {

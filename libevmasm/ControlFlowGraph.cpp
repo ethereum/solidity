@@ -31,8 +31,8 @@
 #include <libevmasm/KnownState.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
+using namespace solidity;
+using namespace solidity::evmasm;
 
 BlockId::BlockId(u256 const& _id):
 	m_id(unsigned(_id))

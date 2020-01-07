@@ -20,16 +20,17 @@
 
 #include <libyul/backends/wasm/TextTransform.h>
 
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;
-using namespace yul;
-using namespace dev;
-using namespace yul::wasm;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::yul::wasm;
+using namespace solidity::util;
 
 string TextTransform::run(wasm::Module const& _module)
 {

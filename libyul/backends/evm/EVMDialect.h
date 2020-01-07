@@ -27,7 +27,7 @@
 
 #include <map>
 
-namespace yul
+namespace solidity::yul
 {
 
 class YulString;
@@ -47,7 +47,7 @@ struct BuiltinContext
 
 struct BuiltinFunctionForEVM: BuiltinFunction
 {
-	std::optional<dev::eth::Instruction> instruction;
+	std::optional<evmasm::Instruction> instruction;
 	/// Function to generate code for the given function call and append it to the abstract
 	/// assembly. The fourth parameter is called to visit (and generate code for) the arguments
 	/// from right to left.
@@ -80,7 +80,7 @@ struct EVMDialect: public Dialect
 
 	bool providesObjectAccess() const { return m_objectAccess; }
 
-	static SideEffects sideEffectsOfInstruction(dev::eth::Instruction _instruction);
+	static SideEffects sideEffectsOfInstruction(evmasm::Instruction _instruction);
 
 protected:
 	bool const m_objectAccess;

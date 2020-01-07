@@ -19,25 +19,23 @@
 
 #include <test/TestCase.h>
 
-namespace langutil
+namespace solidity::langutil
 {
 class Scanner;
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 }
 
-namespace yul
+namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 struct Block;
 }
 
-namespace yul
-{
-namespace test
+namespace solidity::yul::test
 {
 
-class ObjectCompilerTest: public dev::solidity::test::TestCase
+class ObjectCompilerTest: public solidity::frontend::test::TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
@@ -65,5 +63,4 @@ private:
 	std::string m_obtainedResult;
 };
 
-}
 }

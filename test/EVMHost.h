@@ -27,13 +27,11 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/FixedHash.h>
 
-namespace dev
+namespace solidity::test
 {
-namespace test
-{
-using Address = h160;
+using Address = util::h160;
 
 class EVMHost: public evmc::MockedHost
 {
@@ -69,8 +67,8 @@ public:
 
 	static Address convertFromEVMC(evmc::address const& _addr);
 	static evmc::address convertToEVMC(Address const& _addr);
-	static h256 convertFromEVMC(evmc::bytes32 const& _data);
-	static evmc::bytes32 convertToEVMC(h256 const& _data);
+	static util::h256 convertFromEVMC(evmc::bytes32 const& _data);
+	static evmc::bytes32 convertToEVMC(util::h256 const& _data);
 
 private:
 	evmc::address m_currentAddress = {};
@@ -96,5 +94,4 @@ private:
 };
 
 
-}
 }

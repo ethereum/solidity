@@ -27,7 +27,7 @@
 #include <map>
 #include <memory>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

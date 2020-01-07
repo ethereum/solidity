@@ -26,9 +26,7 @@
 #include <map>
 #include <memory>
 
-namespace yul
-{
-namespace wasm
+namespace solidity::yul::wasm
 {
 
 struct Literal;
@@ -101,5 +99,4 @@ struct Module
 	std::map<std::string, Module> subModules;
 };
 
-}
 }

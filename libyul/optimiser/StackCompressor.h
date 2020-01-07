@@ -23,7 +23,7 @@
 
 #include <memory>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct Dialect;

@@ -17,8 +17,9 @@
 #include <test/tools/ossfuzz/yulFuzzerCommon.h>
 
 using namespace std;
-using namespace yul;
-using namespace yul::test::yul_fuzzer;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::yul::test::yul_fuzzer;
 
 yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	ostream& _os,

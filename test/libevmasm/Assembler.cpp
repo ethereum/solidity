@@ -20,7 +20,7 @@
  * Tests for the assembler.
  */
 
-#include <libdevcore/JSON.h>
+#include <libsolutil/JSON.h>
 #include <libevmasm/Assembly.h>
 
 #include <boost/test/unit_test.hpp>
@@ -30,19 +30,15 @@
 #include <memory>
 
 using namespace std;
-using namespace langutil;
-using namespace dev::eth;
+using namespace solidity::langutil;
+using namespace solidity::evmasm;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 namespace
 {
-	void checkCompilation(::dev::eth::Assembly const& _assembly)
+	void checkCompilation(evmasm::Assembly const& _assembly)
 	{
 		LinkerObject output = _assembly.assemble();
 		BOOST_CHECK(output.bytecode.size() > 0);
@@ -127,7 +123,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"auxdata: 0x4266eeaa\n"
 	);
 	BOOST_CHECK_EQUAL(
-		dev::jsonCompactPrint(_assembly.assemblyJSON()),
+		util::jsonCompactPrint(_assembly.assemblyJSON()),
 		"{\".auxdata\":\"4266eeaa\",\".code\":[{\"begin\":1,\"end\":3,\"name\":\"tag\",\"value\":\"1\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"JUMPDEST\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"value\":\"1\"},"
@@ -150,6 +146,4 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

@@ -33,8 +33,9 @@
 #include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 wasm::Module WasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _ast)
 {

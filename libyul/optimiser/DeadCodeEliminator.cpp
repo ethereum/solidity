@@ -29,9 +29,9 @@
 #include <algorithm>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
-
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::yul;
 
 void DeadCodeEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {

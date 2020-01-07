@@ -20,18 +20,14 @@
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/TestCase.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <utility>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 /**
@@ -60,7 +56,7 @@ public:
 
 	/// Compiles and deploys currently held source.
 	/// Returns true if deployment was successful, false otherwise.
-	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, dev::test::Address> const& _libraries = {});
+	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
 
 private:
 	std::string m_source;
@@ -70,6 +66,4 @@ private:
 	bool m_runWithoutYul = true;
 };
 
-}
-}
 }

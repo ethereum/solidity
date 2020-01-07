@@ -20,15 +20,15 @@
  */
 
 #include <test/libsolidity/ErrorCheck.h>
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Exceptions.h>
 
 #include <string>
 #include <set>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 namespace
 {
@@ -38,7 +38,7 @@ std::string errorMessage(Error const& _e)
 }
 }
 
-bool dev::solidity::searchErrorMessage(Error const& _err, std::string const& _substr)
+bool solidity::frontend::test::searchErrorMessage(Error const& _err, std::string const& _substr)
 {
 	if (string const* errorMessage = _err.comment())
 	{
@@ -54,7 +54,7 @@ bool dev::solidity::searchErrorMessage(Error const& _err, std::string const& _su
 	return _substr.empty();
 }
 
-string dev::solidity::searchErrors(ErrorList const& _errors, vector<pair<Error::Type, string>> const& _expectations)
+string solidity::frontend::test::searchErrors(ErrorList const& _errors, vector<pair<Error::Type, string>> const& _expectations)
 {
 	auto expectations = _expectations;
 	for (auto const& error: _errors)

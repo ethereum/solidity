@@ -24,14 +24,14 @@
 
 #include <libyul/YulString.h>
 
-#include <libdevcore/Visitor.h>
+#include <libsolutil/Visitor.h>
 
 #include <functional>
 #include <memory>
 #include <optional>
 #include <variant>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct Scope

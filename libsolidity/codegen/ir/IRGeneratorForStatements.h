@@ -23,9 +23,7 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/ir/IRLValue.h>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class IRGenerationContext;
@@ -113,5 +111,4 @@ private:
 	std::unique_ptr<IRLValue> m_currentLValue;
 };
 
-}
 }

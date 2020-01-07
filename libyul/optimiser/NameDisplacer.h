@@ -26,7 +26,7 @@
 #include <set>
 #include <map>
 
-namespace yul
+namespace solidity::yul
 {
 struct Dialect;
 

@@ -27,16 +27,16 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/ParserBase.h>
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <memory>
 
-namespace langutil
+namespace solidity::langutil
 {
 class Scanner;
 }
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

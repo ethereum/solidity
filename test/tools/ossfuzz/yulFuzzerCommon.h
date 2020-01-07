@@ -17,12 +17,9 @@
 #include <test/tools/yulInterpreter/Interpreter.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
-namespace yul
+namespace solidity::yul::test::yul_fuzzer
 {
-namespace test
-{
-namespace yul_fuzzer
-{
+
 struct yulFuzzerUtil
 {
 	enum class TerminationReason
@@ -43,6 +40,5 @@ struct yulFuzzerUtil
 	static size_t constexpr maxSteps = 100;
 	static size_t constexpr maxTraceSize = 75;
 };
-}
-}
+
 }

@@ -23,17 +23,18 @@
 #include <test/Options.h>
 
 #include <libsolidity/interface/CompilerStack.h>
-#include <libdevcore/JSON.h>
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/JSON.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 
 ABIJsonTest::ABIJsonTest(string const& _filename)
 {
@@ -51,8 +52,8 @@ TestCase::TestResult ABIJsonTest::run(ostream& _stream, string const& _linePrefi
 	CompilerStack compiler;
 
 	compiler.setSources({{"", "pragma solidity >=0.0;\n" + m_source}});
-	compiler.setEVMVersion(dev::test::Options::get().evmVersion());
-	compiler.setOptimiserSettings(dev::test::Options::get().optimize);
+	compiler.setEVMVersion(solidity::test::Options::get().evmVersion());
+	compiler.setOptimiserSettings(solidity::test::Options::get().optimize);
 	if (!compiler.parseAndAnalyze())
 		BOOST_THROW_EXCEPTION(runtime_error("Parsing contract failed"));
 

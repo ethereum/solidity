@@ -24,9 +24,7 @@
 #include <cstddef>
 #include <set>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
@@ -46,5 +44,4 @@ private:
 	AssemblyItems& m_items;
 };
 
-}
 }

@@ -19,9 +19,9 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**
@@ -51,7 +51,7 @@ private:
 	void simplify(std::vector<Statement>& _statements);
 	bool expressionAlwaysTrue(Expression const& _expression);
 	bool expressionAlwaysFalse(Expression const& _expression);
-	std::optional<dev::u256> hasLiteralValue(Expression const& _expression) const;
+	std::optional<u256> hasLiteralValue(Expression const& _expression) const;
 };
 
 }

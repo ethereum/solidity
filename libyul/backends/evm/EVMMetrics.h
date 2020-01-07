@@ -24,7 +24,7 @@
 #include <liblangutil/EVMVersion.h>
 #include <libevmasm/Instruction.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct EVMDialect;
@@ -49,7 +49,7 @@ public:
 	size_t costs(Expression const& _expression) const;
 	/// @returns the combined costs of deploying and running the instruction, not including
 	/// the costs for its arguments.
-	size_t instructionCosts(dev::eth::Instruction _instruction) const;
+	size_t instructionCosts(evmasm::Instruction _instruction) const;
 
 private:
 	size_t combineCosts(std::pair<size_t, size_t> _costs) const;
@@ -69,7 +69,7 @@ public:
 	);
 
 	static std::pair<size_t, size_t> instructionCosts(
-		dev::eth::Instruction _instruction,
+		evmasm::Instruction _instruction,
 		EVMDialect const& _dialect,
 		bool _isCreation = false
 	);
@@ -89,7 +89,7 @@ private:
 	/// Computes the cost of storing and executing the single instruction (excluding its arguments).
 	/// For EXP, it assumes that the exponent is at most 255.
 	/// Does not work particularly exact for anything apart from arithmetic.
-	void instructionCostsInternal(dev::eth::Instruction _instruction);
+	void instructionCostsInternal(evmasm::Instruction _instruction);
 
 	EVMDialect const& m_dialect;
 	bool m_isCreation = false;

@@ -21,15 +21,13 @@
 
 #pragma once
 
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Exceptions.h>
 
-namespace dev
-{
-namespace lll
+namespace solidity::lll
 {
 
 /// Compile a Low-level Lisp-like Language program into EVM-code.
-class CompilerException: public dev::Exception {};
+class CompilerException: public util::Exception {};
 class InvalidOperation: public CompilerException {};
 class IntegerOutOfRange: public CompilerException {};
 class EmptyList: public CompilerException {};
@@ -41,5 +39,4 @@ class InvalidLiteral: public CompilerException {};
 class BareSymbol: public CompilerException {};
 class ParserException: public CompilerException {};
 
-}
 }

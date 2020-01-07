@@ -22,8 +22,8 @@
 #include <algorithm>
 
 using namespace std;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 bool CFG::constructFlow(ASTNode const& _astRoot)
 {

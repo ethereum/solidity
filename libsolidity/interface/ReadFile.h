@@ -23,10 +23,7 @@
 #include <functional>
 #include <string>
 
-namespace dev
-{
-
-namespace solidity
+namespace solidity::frontend
 {
 
 class ReadCallback: boost::noncopyable
@@ -62,5 +59,4 @@ public:
 	using Callback = std::function<Result(std::string const&, std::string const&)>;
 };
 
-}
 }

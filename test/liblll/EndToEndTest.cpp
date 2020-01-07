@@ -29,13 +29,10 @@
 #include <memory>
 
 using namespace std;
-using namespace dev::test;
+using namespace solidity::util;
+using namespace solidity::test;
 
-namespace dev
-{
-namespace lll
-{
-namespace test
+namespace solidity::lll::test
 {
 
 BOOST_FIXTURE_TEST_SUITE(LLLEndToEndTest, LLLExecutionFramework)
@@ -605,7 +602,7 @@ BOOST_AUTO_TEST_CASE(send_two_args)
 {
 	// "send" does not retain enough gas to be able to pay for account creation.
 	// Disabling for non-tangerineWhistle VMs.
-	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	if (solidity::test::Options::get().evmVersion().canOverchargeGasForCall())
 	{
 		char const* sourceCode = R"(
 			(returnlll
@@ -621,7 +618,7 @@ BOOST_AUTO_TEST_CASE(send_three_args)
 {
 	// "send" does not retain enough gas to be able to pay for account creation.
 	// Disabling for non-tangerineWhistle VMs.
-	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	if (solidity::test::Options::get().evmVersion().canOverchargeGasForCall())
 	{
 		char const* sourceCode = R"(
 			(returnlll
@@ -740,7 +737,7 @@ BOOST_AUTO_TEST_CASE(msg_three_args)
 {
 	// "msg" does not retain enough gas.
 	// Disabling for non-tangerineWhistle VMs.
-	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	if (solidity::test::Options::get().evmVersion().canOverchargeGasForCall())
 	{
 		char const* sourceCode = R"(
 			(returnlll
@@ -758,7 +755,7 @@ BOOST_AUTO_TEST_CASE(msg_two_args)
 {
 	// "msg" does not retain enough gas.
 	// Disabling for non-tangerineWhistle VMs.
-	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	if (solidity::test::Options::get().evmVersion().canOverchargeGasForCall())
 	{
 		char const* sourceCode = R"(
 			(returnlll
@@ -776,7 +773,7 @@ BOOST_AUTO_TEST_CASE(create_one_arg)
 {
 	// "call" does not retain enough gas.
 	// Disabling for non-tangerineWhistle VMs.
-	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	if (solidity::test::Options::get().evmVersion().canOverchargeGasForCall())
 	{
 		char const* sourceCode = R"(
 			(returnlll
@@ -795,7 +792,7 @@ BOOST_AUTO_TEST_CASE(create_two_args)
 {
 	// "call" does not retain enough gas.
 	// Disabling for non-tangerineWhistle VMs.
-	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	if (solidity::test::Options::get().evmVersion().canOverchargeGasForCall())
 	{
 		char const* sourceCode = R"(
 			(returnlll
@@ -874,7 +871,7 @@ BOOST_AUTO_TEST_CASE(ecrecover)
 {
 	// "ecrecover" does not retain enough gas.
 	// Disabling for non-tangerineWhistle VMs.
-	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	if (solidity::test::Options::get().evmVersion().canOverchargeGasForCall())
 	{
 		char const* sourceCode = R"(
 			(returnlll
@@ -898,7 +895,7 @@ BOOST_AUTO_TEST_CASE(sha256_two_args)
 {
 	// "sha256" does not retain enough gas.
 	// Disabling for non-tangerineWhistle VMs.
-	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	if (solidity::test::Options::get().evmVersion().canOverchargeGasForCall())
 	{
 		char const* sourceCode = R"(
 			(returnlll
@@ -918,7 +915,7 @@ BOOST_AUTO_TEST_CASE(ripemd160_two_args)
 {
 	// "ripemd160" does not retain enough gas.
 	// Disabling for non-tangerineWhistle VMs.
-	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	if (solidity::test::Options::get().evmVersion().canOverchargeGasForCall())
 	{
 		char const* sourceCode = R"(
 			(returnlll
@@ -938,7 +935,7 @@ BOOST_AUTO_TEST_CASE(sha256_one_arg)
 {
 	// "sha256" does not retain enough gas.
 	// Disabling for non-tangerineWhistle VMs.
-	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	if (solidity::test::Options::get().evmVersion().canOverchargeGasForCall())
 	{
 		char const* sourceCode = R"(
 			(returnlll
@@ -956,7 +953,7 @@ BOOST_AUTO_TEST_CASE(ripemd160_one_arg)
 {
 	// "ripemd160" does not retain enough gas.
 	// Disabling for non-tangerineWhistle VMs.
-	if (dev::test::Options::get().evmVersion().canOverchargeGasForCall())
+	if (solidity::test::Options::get().evmVersion().canOverchargeGasForCall())
 	{
 		char const* sourceCode = R"(
 			(returnlll
@@ -1026,6 +1023,4 @@ BOOST_AUTO_TEST_CASE(string_literal)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

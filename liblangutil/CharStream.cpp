@@ -54,7 +54,8 @@
 #include <liblangutil/Exceptions.h>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::langutil;
 
 char CharStream::advanceAndGet(size_t _chars)
 {

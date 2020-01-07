@@ -27,9 +27,7 @@
 #include <string>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -328,5 +326,4 @@ private:
 	std::function<void(ASTNode const&, ASTNode const&)> m_onEdge;
 };
 
-}
 }

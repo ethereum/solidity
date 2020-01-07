@@ -31,8 +31,8 @@
 
 #include <liblangutil/ErrorReporter.h>
 
-#include <libdevcore/Algorithms.h>
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/Algorithms.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -42,9 +42,10 @@
 #include <vector>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 bool TypeChecker::typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall)
 {

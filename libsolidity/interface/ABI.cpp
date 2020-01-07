@@ -23,8 +23,8 @@
 #include <libsolidity/ast/AST.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::frontend;
 
 namespace
 {

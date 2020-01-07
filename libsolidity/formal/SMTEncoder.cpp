@@ -25,9 +25,10 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 SMTEncoder::SMTEncoder(smt::EncodingContext& _context):
 	m_errorReporter(m_smtErrors),

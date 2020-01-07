@@ -21,14 +21,12 @@
 
 #pragma once
 
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Exceptions.h>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
-struct AssemblyException: virtual Exception {};
+struct AssemblyException: virtual util::Exception {};
 struct OptimizerException: virtual AssemblyException {};
 struct StackTooDeepException: virtual OptimizerException {};
 struct ItemNotAvailableException: virtual OptimizerException {};
@@ -36,5 +34,4 @@ struct ItemNotAvailableException: virtual OptimizerException {};
 DEV_SIMPLE_EXCEPTION(InvalidDeposit);
 DEV_SIMPLE_EXCEPTION(InvalidOpcode);
 
-}
 }

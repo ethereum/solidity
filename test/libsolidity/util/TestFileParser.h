@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 #include <libsolidity/ast/Types.h>
 #include <liblangutil/Exceptions.h>
 #include <test/libsolidity/util/SoltestTypes.h>
@@ -27,11 +27,7 @@
 #include <vector>
 #include <utility>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 /**
@@ -192,6 +188,4 @@ private:
 	size_t m_lineNumber = 0;
 };
 
-}
-}
 }

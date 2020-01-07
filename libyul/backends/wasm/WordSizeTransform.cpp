@@ -21,15 +21,16 @@
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/NameDisplacer.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <array>
 #include <map>
 #include <variant>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 void WordSizeTransform::operator()(FunctionDefinition& _fd)
 {

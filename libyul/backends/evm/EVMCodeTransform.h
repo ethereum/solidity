@@ -30,12 +30,12 @@
 #include <optional>
 #include <stack>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 }
 
-namespace yul
+namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 class EVMAssembly;

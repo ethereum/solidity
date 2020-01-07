@@ -24,11 +24,7 @@
 #include <libsolidity/formal/CHCSolverInterface.h>
 #include <libsolidity/formal/Z3Interface.h>
 
-namespace dev
-{
-namespace solidity
-{
-namespace smt
+namespace solidity::frontend::smt
 {
 
 class Z3CHCInterface: public CHCSolverInterface
@@ -56,6 +52,4 @@ private:
 	z3::fixedpoint m_solver;
 };
 
-}
-}
 }

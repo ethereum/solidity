@@ -31,7 +31,7 @@
 #include <boost/program_options.hpp>
 
 using namespace std;
-using namespace dev::test;
+using namespace solidity::test;
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 

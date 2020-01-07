@@ -24,9 +24,7 @@
 #include <memory>
 #include <string>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 // Forward declarations
@@ -66,5 +64,4 @@ private:
 	);
 };
 
-}
 }

@@ -21,12 +21,10 @@
 #pragma once
 
 #include <libevmasm/Instruction.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 #include <functional>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 /**
@@ -157,5 +155,4 @@ struct EVMBuiltins
 	static auto constexpr SELFDESTRUCT = PatternGenerator<Instruction::SELFDESTRUCT>{};
 };
 
-}
 }

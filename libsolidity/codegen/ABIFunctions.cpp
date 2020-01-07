@@ -23,16 +23,17 @@
 #include <libsolidity/codegen/ABIFunctions.h>
 
 #include <libsolidity/codegen/CompilerUtils.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Whiskers.h>
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Whiskers.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
 
 string ABIFunctions::tupleEncoder(
 	TypePointers const& _givenTypes,

@@ -56,7 +56,7 @@
 #include <string>
 #include <tuple>
 
-namespace langutil
+namespace solidity::langutil
 {
 
 /**

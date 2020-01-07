@@ -23,11 +23,7 @@
 
 #include <libsolidity/formal/SolverInterface.h>
 
-namespace dev
-{
-namespace solidity
-{
-namespace smt
+namespace solidity::frontend::smt
 {
 
 class CHCSolverInterface
@@ -51,6 +47,4 @@ public:
 	) = 0;
 };
 
-}
-}
 }

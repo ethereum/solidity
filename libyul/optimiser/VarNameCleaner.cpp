@@ -27,8 +27,8 @@
 #include <string>
 #include <regex>
 
-using namespace yul;
 using namespace std;
+using namespace solidity::yul;
 
 VarNameCleaner::VarNameCleaner(
 	Block const& _ast,

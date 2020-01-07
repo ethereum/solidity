@@ -21,12 +21,12 @@
 #include <tuple>
 #include <vector>
 
-namespace dev
+namespace solidity::util
 {
 struct Exception;
 }
 
-namespace langutil
+namespace solidity::langutil
 {
 
 struct LineColumn
@@ -68,7 +68,7 @@ namespace SourceReferenceExtractor
 		std::vector<SourceReference> secondary;
 	};
 
-	Message extract(dev::Exception const& _exception, std::string _category);
+	Message extract(util::Exception const& _exception, std::string _category);
 	SourceReference extract(SourceLocation const* _location, std::string message = "");
 }
 

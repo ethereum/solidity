@@ -23,16 +23,14 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <cstddef>
 #include <vector>
 #include <functional>
 #include <map>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class AssemblyItem;
@@ -89,5 +87,4 @@ private:
 	AssemblyItems& m_items;
 };
 
-}
 }

@@ -24,10 +24,10 @@
 #include <boost/test/framework.hpp>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
-using namespace dev;
-using namespace dev::test;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
+using namespace solidity;
+using namespace solidity::test;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 using namespace std;
 
 bytes SolidityExecutionFramework::compileContract(
@@ -39,7 +39,7 @@ bytes SolidityExecutionFramework::compileContract(
 	// Silence compiler version warning
 	std::string sourceCode = "pragma solidity >=0.0;\n";
 	if (
-		dev::test::Options::get().useABIEncoderV2 &&
+		solidity::test::Options::get().useABIEncoderV2 &&
 		_sourceCode.find("pragma experimental ABIEncoderV2;") == std::string::npos
 	)
 		sourceCode += "pragma experimental ABIEncoderV2;\n";
@@ -59,7 +59,7 @@ bytes SolidityExecutionFramework::compileContract(
 			formatter.printErrorInformation(*error);
 		BOOST_ERROR("Compiling contract failed");
 	}
-	eth::LinkerObject obj;
+	evmasm::LinkerObject obj;
 	if (m_compileViaYul)
 	{
 		yul::AssemblyStack asmStack(

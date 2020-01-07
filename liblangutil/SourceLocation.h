@@ -22,18 +22,18 @@
 
 #pragma once
 
-#include <libdevcore/Assertions.h>
-#include <libdevcore/Common.h> // defines noexcept macro for MSVC
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Assertions.h>
+#include <libsolutil/Common.h> // defines noexcept macro for MSVC
+#include <libsolutil/Exceptions.h>
 #include <liblangutil/CharStream.h>
 #include <memory>
 #include <string>
 #include <ostream>
 #include <tuple>
 
-namespace langutil
+namespace solidity::langutil
 {
-struct SourceLocationError: virtual dev::Exception {};
+struct SourceLocationError: virtual util::Exception {};
 
 /**
  * Representation of an interval of source positions.

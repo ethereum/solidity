@@ -31,7 +31,7 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/FixedHash.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
@@ -40,9 +40,11 @@
 #include <variant>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
-using namespace yul::test;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+
+using solidity::util::h256;
 
 void InterpreterState::dumpTraceAndState(ostream& _out) const
 {

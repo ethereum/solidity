@@ -30,8 +30,8 @@
 #include <set>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
+using namespace solidity;
+using namespace solidity::evmasm;
 
 
 bool BlockDeduplicator::deduplicate()

@@ -19,12 +19,13 @@
 #include <libyul/AsmData.h>
 #include <libyul/Utilities.h>
 #include <libyul/optimiser/NameCollector.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Visitor.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 void ConditionalSimplifier::operator()(Switch& _switch)
 {
