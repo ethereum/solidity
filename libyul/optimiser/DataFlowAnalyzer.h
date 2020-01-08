@@ -110,6 +110,8 @@ protected:
 	/// for example at points where control flow is merged.
 	void clearValues(std::set<YulString> _names);
 
+	void assignValue(YulString _variable, Expression const* _value);
+
 	/// Clears knowledge about storage or memory if they may be modified inside the block.
 	void clearKnowledgeIfInvalidated(Block const& _block);
 
@@ -144,6 +146,8 @@ protected:
 
 	/// Current values of variables, always movable.
 	std::map<YulString, Expression const*> m_value;
+	/// The loop nesting depth of the definition of variables (those used in m_value).
+	std::map<YulString, size_t> m_variableLoopDepth;
 	/// m_references.forward[a].contains(b) <=> the current expression assigned to a references b
 	/// m_references.backward[b].contains(a) <=> the current expression assigned to a references b
 	InvertibleRelation<YulString> m_references;
@@ -152,6 +156,9 @@ protected:
 	InvertibleMap<YulString, YulString> m_memory;
 
 	KnowledgeBase m_knowledgeBase;
+
+	/// Current nesting depth of loops.
+	size_t m_loopDepth{0};
 
 	struct Scope
 	{
