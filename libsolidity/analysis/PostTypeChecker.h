@@ -36,6 +36,9 @@ namespace solidity::frontend
  * This module performs analyses on the AST that are done after type checking and assignments of types:
  *  - whether there are circular references in constant state variables
  *  - whether override specifiers are actually contracts
+ *  - whether a modifier is in a function header
+ *  - whether an event is used outside of an emit statement
+ *  - whether a variable is declared in a interface
  *
  *  When adding a new checker, make sure a visitor that forwards calls that your
  *  checker uses exists in PostTypeChecker. Add missing ones.
@@ -67,7 +70,18 @@ private:
 	bool visit(VariableDeclaration const& _variable) override;
 	void endVisit(VariableDeclaration const& _variable) override;
 
+	bool visit(EmitStatement const& _emit) override;
+	void endVisit(EmitStatement const& _emit) override;
+
+	bool visit(FunctionCall const& _functionCall) override;
+
 	bool visit(Identifier const& _identifier) override;
+
+	bool visit(StructDefinition const& _struct) override;
+	void endVisit(StructDefinition const& _struct) override;
+
+	bool visit(ModifierInvocation const& _modifierInvocation) override;
+	void endVisit(ModifierInvocation const& _modifierInvocation) override;
 
 	template <class T>
 	bool callVisit(T const& _node)

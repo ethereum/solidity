@@ -62,11 +62,45 @@ void PostTypeChecker::endVisit(VariableDeclaration const& _variable)
 	callEndVisit(_variable);
 }
 
+bool PostTypeChecker::visit(EmitStatement const& _emit)
+{
+	return callVisit(_emit);
+}
+
+void PostTypeChecker::endVisit(EmitStatement const& _emit)
+{
+	callEndVisit(_emit);
+}
+
+bool PostTypeChecker::visit(FunctionCall const& _functionCall)
+{
+	return callVisit(_functionCall);
+}
+
 bool PostTypeChecker::visit(Identifier const& _identifier)
 {
 	return callVisit(_identifier);
 }
 
+bool PostTypeChecker::visit(StructDefinition const& _struct)
+{
+	return callVisit(_struct);
+}
+
+void PostTypeChecker::endVisit(StructDefinition const& _struct)
+{
+	callEndVisit(_struct);
+}
+
+bool PostTypeChecker::visit(ModifierInvocation const& _modifierInvocation)
+{
+	return callVisit(_modifierInvocation);
+}
+
+void PostTypeChecker::endVisit(ModifierInvocation const& _modifierInvocation)
+{
+	callEndVisit(_modifierInvocation);
+}
 
 namespace
 {
@@ -183,11 +217,137 @@ struct OverrideSpecifierChecker: public PostTypeChecker::Checker
 		}
 	}
 };
-}
 
+struct ModifierContextChecker: public PostTypeChecker::Checker
+{
+	ModifierContextChecker(ErrorReporter& _errorReporter):
+		Checker(_errorReporter) {}
+
+	bool visit(ModifierInvocation const&) override
+	{
+		m_insideModifierInvocation = true;
+
+		return true;
+	}
+
+	void endVisit(ModifierInvocation const&) override
+	{
+		m_insideModifierInvocation = false;
+	}
+
+	bool visit(Identifier const& _identifier) override
+	{
+		if (m_insideModifierInvocation)
+			return true;
+
+		if (ModifierType const* type = dynamic_cast<decltype(type)>(_identifier.annotation().type))
+		{
+			m_errorReporter.typeError(
+				_identifier.location(),
+				"Modifier can only be referenced in function headers."
+			);
+		}
+
+		return false;
+	}
+private:
+	/// Flag indicating whether we are currently inside the invocation of a modifier
+	bool m_insideModifierInvocation = false;
+};
+
+struct EventOutsideEmitChecker: public PostTypeChecker::Checker
+{
+	EventOutsideEmitChecker(ErrorReporter& _errorReporter):
+		Checker(_errorReporter) {}
+
+	bool visit(EmitStatement const&) override
+	{
+		m_insideEmitStatement = true;
+		return true;
+	}
+
+	void endVisit(EmitStatement const&) override
+	{
+		m_insideEmitStatement = true;
+	}
+
+	bool visit(FunctionCall const& _functionCall) override
+	{
+		if (_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
+			return true;
+
+		if (FunctionTypePointer const functionType = dynamic_cast<FunctionTypePointer const>(_functionCall.expression().annotation().type))
+			// Check for event outside of emit statement
+			if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
+				m_errorReporter.typeError(
+					_functionCall.location(),
+					"Event invocations have to be prefixed by \"emit\"."
+				);
+
+		return true;
+	}
+
+private:
+	/// Flag indicating whether we are currently inside an EmitStatement.
+	bool m_insideEmitStatement = false;
+};
+
+struct NoVariablesInInterfaceChecker: public PostTypeChecker::Checker
+{
+	NoVariablesInInterfaceChecker(ErrorReporter& _errorReporter):
+		Checker(_errorReporter)
+	{}
+
+	bool visit(VariableDeclaration const& _variable) override
+	{
+		// Forbid any variable declarations inside interfaces unless they are part of
+		// * a function's input/output parameters,
+		// * or inside of a struct definition.
+		if (
+			m_scope && m_scope->isInterface()
+			&& !_variable.isCallableOrCatchParameter()
+			&& !m_insideStruct
+		)
+			m_errorReporter.typeError(_variable.location(), "Variables cannot be declared in interfaces.");
+
+		return true;
+	}
+
+	bool visit(ContractDefinition const& _contract) override
+	{
+		m_scope = &_contract;
+		return true;
+	}
+
+	void endVisit(ContractDefinition const&) override
+	{
+		m_scope = nullptr;
+	}
+
+	bool visit(StructDefinition const&) override
+	{
+		solAssert(m_insideStruct >= 0, "");
+		m_insideStruct++;
+		return true;
+	}
+
+	void endVisit(StructDefinition const&) override
+	{
+		m_insideStruct--;
+		solAssert(m_insideStruct >= 0, "");
+	}
+private:
+	ContractDefinition const* m_scope = nullptr;
+	/// Flag indicating whether we are currently inside a StructDefinition.
+	int m_insideStruct = 0;
+};
+}
 
 PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter)
 {
 	m_checkers.push_back(make_shared<ConstStateVarCircularReferenceChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<OverrideSpecifierChecker>(_errorReporter));
+	m_checkers.push_back(make_shared<ModifierContextChecker>(_errorReporter));
+	m_checkers.push_back(make_shared<EventOutsideEmitChecker>(_errorReporter));
+	m_checkers.push_back(make_shared<NoVariablesInInterfaceChecker>(_errorReporter));
 }

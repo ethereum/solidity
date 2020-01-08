@@ -317,10 +317,7 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 	if (CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
 		m_errorReporter.fatalTypeError(_struct.location(), "Recursive struct definition.");
 
-	bool insideStruct = true;
-	swap(insideStruct, m_insideStruct);
 	ASTNode::listAccept(_struct.members(), *this);
-	m_insideStruct = insideStruct;
 
 	return false;
 }
@@ -451,16 +448,6 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 bool TypeChecker::visit(VariableDeclaration const& _variable)
 {
-	// Forbid any variable declarations inside interfaces unless they are part of
-	// * a function's input/output parameters,
-	// * or inside of a struct definition.
-	if (
-		m_scope->isInterface()
-		&& !_variable.isCallableOrCatchParameter()
-		&& !m_insideStruct
-	)
-		m_errorReporter.typeError(_variable.location(), "Variables cannot be declared in interfaces.");
-
 	if (_variable.typeName())
 		_variable.typeName()->accept(*this);
 
@@ -547,11 +534,7 @@ void TypeChecker::visitManually(
 	for (ASTPointer<Expression> const& argument: arguments)
 		argument->accept(*this);
 
-	{
-		m_insideModifierInvocation = true;
-		ScopeGuard resetFlag{[&] () { m_insideModifierInvocation = false; }};
-		_modifier.name()->accept(*this);
-	}
+	_modifier.name()->accept(*this);
 
 	auto const* declaration = &dereference(*_modifier.name());
 	vector<ASTPointer<VariableDeclaration>> emptyParameterList;
@@ -985,7 +968,6 @@ void TypeChecker::endVisit(EmitStatement const& _emit)
 		dynamic_cast<FunctionType const&>(*type(_emit.eventCall().expression())).kind() != FunctionType::Kind::Event
 	)
 		m_errorReporter.typeError(_emit.eventCall().expression().location(), "Expression has to be an event invocation.");
-	m_insideEmitStatement = false;
 }
 
 namespace
@@ -1717,13 +1699,6 @@ void TypeChecker::typeCheckFunctionCall(
 		m_errorReporter.typeError(
 			_functionCall.location(),
 			"\"staticcall\" is not supported by the VM version."
-		);
-
-	// Check for event outside of emit statement
-	if (!m_insideEmitStatement && _functionType->kind() == FunctionType::Kind::Event)
-		m_errorReporter.typeError(
-			_functionCall.location(),
-			"Event invocations have to be prefixed by \"emit\"."
 		);
 
 	// Perform standard function call type checking
@@ -2703,15 +2678,6 @@ bool TypeChecker::visit(Identifier const& _identifier)
 				"\"suicide\" has been deprecated in favour of \"selfdestruct\"."
 			);
 	}
-
-	if (!m_insideModifierInvocation)
-		if (ModifierType const* type = dynamic_cast<decltype(type)>(_identifier.annotation().type))
-		{
-			m_errorReporter.typeError(
-				_identifier.location(),
-				"Modifier can only be referenced in function headers."
-			);
-		}
 
 	return false;
 }
