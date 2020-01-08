@@ -67,4 +67,6 @@ struct FuncCallArguments
 	bool hasNamedArguments() const { return !names.empty(); }
 };
 
+enum class ContractKind { Interface, Contract, Library };
+
 }

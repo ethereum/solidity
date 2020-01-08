@@ -272,7 +272,7 @@ void ViewPureChecker::reportMutability(
 	{
 		// We do not warn for library functions because they cannot be payable anyway.
 		// Also internal functions should be allowed to use `msg.value`.
-		if (m_currentFunction->isPublic() && m_currentFunction->inContractKind() != ContractDefinition::ContractKind::Library)
+		if (m_currentFunction->isPublic() && m_currentFunction->inContractKind() != ContractKind::Library)
 		{
 			if (_nestedLocation)
 				m_errorReporter.typeError(

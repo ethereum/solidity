@@ -327,7 +327,7 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
-	bool isLibraryFunction = _function.inContractKind() == ContractDefinition::ContractKind::Library;
+	bool isLibraryFunction = _function.inContractKind() == ContractKind::Library;
 
 	if (_function.markedVirtual())
 	{
@@ -426,7 +426,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.isConstructor())
 			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in interfaces.");
 	}
-	else if (m_scope->contractKind() == ContractDefinition::ContractKind::Library)
+	else if (m_scope->contractKind() == ContractKind::Library)
 		if (_function.isConstructor())
 			m_errorReporter.typeError(_function.location(), "Constructor cannot be defined in libraries.");
 	if (_function.isImplemented())
@@ -1734,7 +1734,7 @@ void TypeChecker::typeCheckFallbackFunction(FunctionDefinition const& _function)
 {
 	solAssert(_function.isFallback(), "");
 
-	if (_function.inContractKind() == ContractDefinition::ContractKind::Library)
+	if (_function.inContractKind() == ContractKind::Library)
 		m_errorReporter.typeError(_function.location(), "Libraries cannot have fallback functions.");
 	if (_function.stateMutability() != StateMutability::NonPayable && _function.stateMutability() != StateMutability::Payable)
 		m_errorReporter.typeError(
@@ -1760,7 +1760,7 @@ void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
 {
 	solAssert(_function.isReceive(), "");
 
-	if (_function.inContractKind() == ContractDefinition::ContractKind::Library)
+	if (_function.inContractKind() == ContractKind::Library)
 		m_errorReporter.typeError(_function.location(), "Libraries cannot have receive ether functions.");
 
 	if (_function.stateMutability() != StateMutability::Payable)
