@@ -17,8 +17,8 @@ add_executable(isoltest
 	../Common.cpp
 	../EVMHost.cpp
 	../TestCase.cpp
-        ../libsolidity/util/BytesUtils.cpp
-        ../libsolidity/util/ContractABIUtils.cpp
+	../libsolidity/util/BytesUtils.cpp
+	../libsolidity/util/ContractABIUtils.cpp
 	../libsolidity/util/TestFileParser.cpp
 	../libsolidity/util/TestFunctionCall.cpp
 	../libsolidity/GasTest.cpp
