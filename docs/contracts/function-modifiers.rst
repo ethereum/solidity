@@ -41,8 +41,8 @@ if they are marked ``virtual``. For details, please see
 
     contract destructible is owned {
         // This contract inherits the `onlyOwner` modifier from
-        // `owned` and applies it to the `close` function, which
-        // causes that calls to `close` only have an effect if
+        // `owned` and applies it to the `destroy` function, which
+        // causes that calls to `destroy` only have an effect if
         // they are made by the stored owner.
         function destroy() public onlyOwner {
             selfdestruct(owner);
