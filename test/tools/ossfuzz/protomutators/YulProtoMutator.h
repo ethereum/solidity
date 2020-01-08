@@ -55,6 +55,10 @@ struct YulProtoMutator
 		unsigned _seed
 	);
 
+	/// Clear protobuf expression
+	/// @param _expr: Protobuf expression to be cleared
+	static void clearExpr(Expression* _expr);
+
 	/// Helper type for type matching visitor.
 	template<class T> struct AlwaysFalse: std::false_type {};
 

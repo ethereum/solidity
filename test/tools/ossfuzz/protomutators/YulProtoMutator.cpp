@@ -199,41 +199,7 @@ static YulProtoMutator addLoadZero(
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 			std::cout << "YULMUTATOR: expression mutated to load op" << std::endl;
 #endif
-			switch (expr->expr_oneof_case())
-			{
-			case Expression::kVarref:
-				expr->clear_varref();
-				break;
-			case Expression::kCons:
-				expr->clear_cons();
-				break;
-			case Expression::kBinop:
-				expr->clear_binop();
-				break;
-			case Expression::kUnop:
-				expr->clear_unop();
-				break;
-			case Expression::kTop:
-				expr->clear_top();
-				break;
-			case Expression::kNop:
-				expr->clear_nop();
-				break;
-			case Expression::kFuncExpr:
-				expr->clear_func_expr();
-				break;
-			case Expression::kLowcall:
-				expr->clear_lowcall();
-				break;
-			case Expression::kCreate:
-				expr->clear_create();
-				break;
-			case Expression::kUnopdata:
-				expr->clear_unopdata();
-				break;
-			case Expression::EXPR_ONEOF_NOT_SET:
-				break;
-			}
+			YulProtoMutator::clearExpr(expr);
 			expr->set_allocated_unop(YulProtoMutator::loadExpression(_seed));
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -1275,6 +1241,61 @@ static YulProtoMutator removeFuncCallInFuncBody(
 	}
 );
 
+/// Add dataoffset/datasize
+static YulProtoMutator addDataOffset(
+	Expression::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Mutate expression to dataoffset()" << std::endl;
+#endif
+			Expression *expr = static_cast<Expression*>(_message);
+			YulProtoMutator::clearExpr(expr);
+			auto unopdata = new UnaryOpData();
+			auto objId = new ObjectId();
+			objId->set_id(_seed);
+			unopdata->set_allocated_identifier(objId);
+			unopdata->set_op(
+				YulProtoMutator::EnumTypeConverter<UnaryOpData_UOpData>{}.enumFromSeed(_seed)
+			);
+			expr->set_allocated_unopdata(unopdata);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Add variable reference inside for-loop body
+static YulProtoMutator addVarRefInForBody(
+	BoundedForStmt::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add var ref inside bounded for loop body" << std::endl;
+#endif
+			auto forStmt = static_cast<BoundedForStmt*>(_message);
+			auto popStmt = new PopStmt();
+			popStmt->set_allocated_expr(YulProtoMutator::refExpression(_seed));
+			auto newStmt = forStmt->mutable_for_body()->add_statements();
+			newStmt->set_allocated_pop(popStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
 Literal* YulProtoMutator::intLiteral(unsigned _value)
 {
 	auto lit = new Literal();
@@ -1388,6 +1409,8 @@ T YulProtoMutator::EnumTypeConverter<T>::validEnum(unsigned _seed)
 		yulAssert(LowLevelCall_Type_IsValid(ret), "Yul proto mutator: Invalid enum");
 	else if constexpr (std::is_same_v<std::decay_t<T>, Create_Type>)
 		yulAssert(Create_Type_IsValid(ret), "Yul proto mutator: Invalid enum");
+	else if constexpr (std::is_same_v<std::decay_t<T>, UnaryOpData_UOpData>)
+		yulAssert(UnaryOpData_UOpData_IsValid(ret), "Yul proto mutator: Invalid enum");
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
 	return ret;
@@ -1410,6 +1433,8 @@ int YulProtoMutator::EnumTypeConverter<T>::enumMax()
 		return LowLevelCall_Type_Type_MAX;
 	else if constexpr (std::is_same_v<std::decay_t<T>, Create_Type>)
 		return Create_Type_Type_MAX;
+	else if constexpr (std::is_same_v<std::decay_t<T>, UnaryOpData_UOpData>)
+		return UnaryOpData_UOpData_UOpData_MAX;
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
 }
@@ -1431,6 +1456,8 @@ int YulProtoMutator::EnumTypeConverter<T>::enumMin()
 		return LowLevelCall_Type_Type_MIN;
 	else if constexpr (std::is_same_v<std::decay_t<T>, Create_Type>)
 		return Create_Type_Type_MIN;
+	else if constexpr (std::is_same_v<std::decay_t<T>, UnaryOpData_UOpData>)
+		return UnaryOpData_UOpData_UOpData_MIN;
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
 }
@@ -1452,4 +1479,43 @@ UnaryOp* YulProtoMutator::loadExpression(unsigned _seed)
 		break;
 	}
 	return unop;
+}
+
+void YulProtoMutator::clearExpr(Expression* _expr)
+{
+	switch (_expr->expr_oneof_case())
+	{
+	case Expression::kVarref:
+		_expr->clear_varref();
+		break;
+	case Expression::kCons:
+		_expr->clear_cons();
+		break;
+	case Expression::kBinop:
+		_expr->clear_binop();
+		break;
+	case Expression::kUnop:
+		_expr->clear_unop();
+		break;
+	case Expression::kTop:
+		_expr->clear_top();
+		break;
+	case Expression::kNop:
+		_expr->clear_nop();
+		break;
+	case Expression::kFuncExpr:
+		_expr->clear_func_expr();
+		break;
+	case Expression::kLowcall:
+		_expr->clear_lowcall();
+		break;
+	case Expression::kCreate:
+		_expr->clear_create();
+		break;
+	case Expression::kUnopdata:
+		_expr->clear_unopdata();
+		break;
+	case Expression::EXPR_ONEOF_NOT_SET:
+		break;
+	}
 }
