@@ -56,11 +56,11 @@ explanatory purposes.
           // Swarm URL is recommended
           "urls": [ "bzzr://56ab..." ]
         },
-        "retrievable": {
+        "destructible": {
           // Required: keccak256 hash of the source file
           "keccak256": "0x234...",
           // Required (unless "url" is used): literal contents of the source file
-          "content": "contract retrievable is owned { function shutdown() { if (msg.sender == owner) selfdestruct(owner); } }"
+          "content": "contract destructible is owned { function destroy() { if (msg.sender == owner) selfdestruct(owner); } }"
         }
       },
       // Required: Compiler settings
