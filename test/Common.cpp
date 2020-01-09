@@ -122,6 +122,11 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 	for (auto const& parsedOption: parsedOptions.options)
 		if (parsedOption.position_key >= 0)
 		{
+			if (
+				parsedOption.original_tokens.empty() ||
+				(parsedOption.original_tokens.size() == 1 && parsedOption.original_tokens.front().empty())
+			)
+				continue; // ignore empty options
 			std::stringstream errorMessage;
 			errorMessage << "Unrecognized option: ";
 			for (auto const& token: parsedOption.original_tokens)
