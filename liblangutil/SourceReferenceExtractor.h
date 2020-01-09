@@ -49,10 +49,11 @@ struct SourceReference
 	int endColumn = {-1};     ///< Highlighting range-end of text field.
 
 	/// Constructs a SourceReference containing a message only.
-	static SourceReference MessageOnly(std::string _msg)
+	static SourceReference MessageOnly(std::string _msg, std::string _sourceName = {})
 	{
 		SourceReference sref;
 		sref.message = std::move(_msg);
+		sref.sourceName = std::move(_sourceName);
 		return sref;
 	}
 };
