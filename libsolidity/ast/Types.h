@@ -211,7 +211,7 @@ public:
 	/// Always returns a value greater than zero and throws if the type cannot be encoded in calldata
 	/// (or is dynamically encoded).
 	/// If @a _padded then it is assumed that each element is padded to a multiple of 32 bytes.
-	virtual unsigned calldataEncodedSize(bool _padded) const { (void)_padded; solAssert(false, ""); }
+	virtual unsigned calldataEncodedSize([[maybe_unused]] bool _padded) const { solAssert(false, ""); }
 	/// Convenience version of @see calldataEncodedSize(bool)
 	unsigned calldataEncodedSize() const { return calldataEncodedSize(true); }
 	/// @returns the distance between two elements of this type in a calldata array, tuple or struct.
@@ -1432,7 +1432,7 @@ public:
 	BoolResult isImplicitlyConvertibleTo(Type const&) const override { return false; }
 	BoolResult isExplicitlyConvertibleTo(Type const&) const override { return false; }
 	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
-	unsigned calldataEncodedSize(bool _padded) const override { (void)_padded; return 32; }
+	unsigned calldataEncodedSize(bool) const override { return 32; }
 	bool canBeStored() const override { return false; }
 	bool canLiveOutsideStorage() const override { return false; }
 	bool isValueType() const override { return true; }

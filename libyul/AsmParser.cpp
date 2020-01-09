@@ -554,8 +554,7 @@ bool Parser::isValidNumberLiteral(string const& _literal)
 	try
 	{
 		// Try to convert _literal to u256.
-		auto tmp = u256(_literal);
-		(void) tmp;
+		[[maybe_unused]] auto tmp = u256(_literal);
 	}
 	catch (...)
 	{
