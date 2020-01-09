@@ -72,29 +72,26 @@ static YulProtoMutator removeInvertedIfCondition(
 	}
 );
 
-/// Add break statement in body of a for-loop statement
+/// Append break statement to a statement block
 static YulProtoMutator addBreak(
-	ForStmt::descriptor(),
+	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		auto forStmt = static_cast<ForStmt*>(_message);
-		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		auto block = static_cast<Block*>(_message);
+		if (_seed % 1/*YulProtoMutator::s_highIP*/ == 0)
 		{
-			if (forStmt->has_for_body())
-			{
 #ifdef DEBUG
-				std::cout << "----------------------------------" << std::endl;
-				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
-				std::cout << "YULMUTATOR: Break added" << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Break added" << std::endl;
 #endif
-				auto breakStmt = new BreakStmt();
-				auto statement = forStmt->mutable_for_body()->add_statements();
-				statement->set_allocated_breakstmt(breakStmt);
+			auto breakStmt = new BreakStmt();
+			auto statement = block->add_statements();
+			statement->set_allocated_breakstmt(breakStmt);
 #ifdef DEBUG
-				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
-				std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
 #endif
-			}
 		}
 	}
 );
@@ -117,6 +114,7 @@ static YulProtoMutator removeBreak(
 				for (auto &stmt: *forStmt->mutable_for_body()->mutable_statements())
 					if (stmt.has_breakstmt())
 					{
+						delete stmt.release_breakstmt();
 						stmt.clear_breakstmt();
 						break;
 					}
@@ -131,27 +129,24 @@ static YulProtoMutator removeBreak(
 
 /// Add continue statement in body of a for-loop statement
 static YulProtoMutator addContinue(
-	ForStmt::descriptor(),
+	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		auto forStmt = static_cast<ForStmt*>(_message);
-		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		auto block = static_cast<Block*>(_message);
+		if (_seed % 1/*YulProtoMutator::s_highIP*/ == 0)
 		{
-			if (forStmt->has_for_body())
-			{
 #ifdef DEBUG
-				std::cout << "----------------------------------" << std::endl;
-				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
-				std::cout << "YULMUTATOR: Continue added" << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Continue added" << std::endl;
 #endif
-				auto contStmt = new ContinueStmt();
-				auto statement = forStmt->mutable_for_body()->add_statements();
-				statement->set_allocated_contstmt(contStmt);
+			auto contStmt = new ContinueStmt();
+			auto statement = block->add_statements();
+			statement->set_allocated_contstmt(contStmt);
 #ifdef DEBUG
-				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
-				std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
 #endif
-			}
 		}
 	}
 );
@@ -174,6 +169,7 @@ static YulProtoMutator removeContinue(
 				for (auto &stmt: *forStmt->mutable_for_body()->mutable_statements())
 					if (stmt.has_contstmt())
 					{
+						delete stmt.release_contstmt();
 						stmt.clear_contstmt();
 						break;
 					}
@@ -192,7 +188,7 @@ static YulProtoMutator addLoadZero(
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
 		auto expr = static_cast<Expression*>(_message);
-		if (_seed % YulProtoMutator::s_mediumIP == 0)
+		if (_seed % YulProtoMutator::s_highIP == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -200,7 +196,7 @@ static YulProtoMutator addLoadZero(
 			std::cout << "YULMUTATOR: expression mutated to load op" << std::endl;
 #endif
 			YulProtoMutator::clearExpr(expr);
-			expr->set_allocated_unop(YulProtoMutator::loadExpression(_seed));
+			expr->set_allocated_unop(YulProtoMutator::loadExpression(_seed/23));
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 			std::cout << "----------------------------------" << std::endl;
@@ -228,6 +224,7 @@ static YulProtoMutator removeLoad(
 				std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 				std::cout << "YULMUTATOR: Remove mload" << std::endl;
 #endif
+				delete unaryOp->release_operand();
 				unaryOp->clear_op();
 				unaryOp->clear_operand();
 #ifdef DEBUG
@@ -253,13 +250,13 @@ static YulProtoMutator addStoreToZero(
 			std::cout << "YULMUTATOR: store added" << std::endl;
 #endif
 			auto storeStmt = new StoreFunc();
-			storeStmt->set_st(YulProtoMutator::EnumTypeConverter<StoreFunc_Storage>{}.enumFromSeed(_seed));
+			storeStmt->set_st(YulProtoMutator::EnumTypeConverter<StoreFunc_Storage>{}.enumFromSeed(_seed/37));
 			// One in two times, we force a store(0, varref). In the other instance,
 			// we leave loc and val unset.
 			if (_seed % 2)
 			{
 				storeStmt->set_allocated_loc(YulProtoMutator::litExpression(0));
-				storeStmt->set_allocated_val(YulProtoMutator::refExpression(_seed));
+				storeStmt->set_allocated_val(YulProtoMutator::refExpression(_seed/11));
 			}
 			auto stmt = block->add_statements();
 			stmt->set_allocated_storage_func(storeStmt);
@@ -287,6 +284,7 @@ static YulProtoMutator removeStore(
 			for (auto &stmt: *block->mutable_statements())
 				if (stmt.has_storage_func())
 				{
+					delete stmt.release_storage_func();
 					stmt.clear_storage_func();
 					break;
 				}
@@ -381,7 +379,7 @@ static YulProtoMutator funcCallForCondition(
 				forStmt->release_for_cond();
 				auto functionCall = new FunctionCall();
 				functionCall->set_ret(FunctionCall::SINGLE);
-				functionCall->set_func_index(_seed);
+				functionCall->set_func_index(_seed/41);
 				auto forCondExpr = new Expression();
 				forCondExpr->set_allocated_func_expr(functionCall);
 				forStmt->set_allocated_for_cond(forCondExpr);
@@ -412,10 +410,10 @@ static YulProtoMutator identityFunction(
 			functionDef->set_num_output_params(1);
 			auto functionBlock = new Block();
 			auto assignmentStatement = new AssignmentStatement();
-			auto varRef = YulProtoMutator::varRef(_seed);
+			auto varRef = YulProtoMutator::varRef(_seed/47);
 			assignmentStatement->set_allocated_ref_id(varRef);
 			auto rhs = new Expression();
-			auto rhsRef = YulProtoMutator::varRef(_seed + blockStmt->ByteSizeLong());
+			auto rhsRef = YulProtoMutator::varRef(_seed/79);
 			rhs->set_allocated_varref(rhsRef);
 			assignmentStatement->set_allocated_expr(rhs);
 			auto stmt = functionBlock->add_statements();
@@ -431,19 +429,19 @@ static YulProtoMutator identityFunction(
 	}
 );
 
-/// Add leave statement to an existing function.
+/// Add leave statement to a statement block
 static YulProtoMutator addLeave(
-	FunctionDef::descriptor(),
+	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_lowIP == 0) {
+		if (_seed % 1/*YulProtoMutator::s_highIP*/ == 0) {
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
-			std::cout << "YULMUTATOR: Leave in function" << std::endl;
+			std::cout << "YULMUTATOR: Add leave" << std::endl;
 #endif
-			auto funcDef = static_cast<FunctionDef*>(_message);
-			auto newStmt = funcDef->mutable_block()->add_statements();
+			auto block = static_cast<Block*>(_message);
+			auto newStmt = block->add_statements();
 			auto leaveStmt = new LeaveStmt();
 			newStmt->set_allocated_leave(leaveStmt);
 #ifdef DEBUG
@@ -454,7 +452,7 @@ static YulProtoMutator addLeave(
 	}
 );
 
-/// Remove leave statement from an existing function.
+/// Remove leave statement from a statement block
 static YulProtoMutator removeLeave(
 	FunctionDef::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
@@ -469,6 +467,7 @@ static YulProtoMutator removeLeave(
 			for (auto &stmt: *funcDef->mutable_block()->mutable_statements())
 				if (stmt.has_leave())
 				{
+					delete stmt.release_leave();
 					stmt.clear_leave();
 					break;
 				}
@@ -494,9 +493,9 @@ static YulProtoMutator addAssignment(
 #endif
 			auto block = static_cast<Block*>(_message);
 			auto assignmentStatement = new AssignmentStatement();
-			auto varRef = YulProtoMutator::varRef(_seed);
+			auto varRef = YulProtoMutator::varRef(_seed/11);
 			assignmentStatement->set_allocated_ref_id(varRef);
-			auto rhs = YulProtoMutator::varRef(_seed + block->ByteSizeLong());
+			auto rhs = YulProtoMutator::varRef(_seed/17);
 			auto rhsExpr = new Expression();
 			rhsExpr->set_allocated_varref(rhs);
 			assignmentStatement->set_allocated_expr(rhsExpr);
@@ -526,6 +525,7 @@ static YulProtoMutator removeAssignment(
 			for (auto &stmt: *block->mutable_statements())
 				if (stmt.has_assignment())
 				{
+					delete stmt.release_assignment();
 					stmt.clear_assignment();
 					break;
 				}
@@ -552,10 +552,10 @@ static YulProtoMutator addConstantAssignment(
 			auto block = static_cast<Block*>(_message);
 			auto assignmentStatement = new AssignmentStatement();
 			assignmentStatement->set_allocated_ref_id(
-				YulProtoMutator::varRef(_seed)
+				YulProtoMutator::varRef(_seed/11)
 			);
 			assignmentStatement->set_allocated_expr(
-				YulProtoMutator::litExpression(_seed)
+				YulProtoMutator::litExpression(_seed/59)
 			);
 			auto newStmt = block->add_statements();
 			newStmt->set_allocated_assignment(assignmentStatement);
@@ -572,7 +572,7 @@ static YulProtoMutator addIf(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
+		if (_seed % 1/*YulProtoMutator::s_normalizedBlockIP*/ == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -580,8 +580,11 @@ static YulProtoMutator addIf(
 			std::cout << "YULMUTATOR: Add if" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
+			auto varDecl = block->add_statements();
+			varDecl->set_allocated_decl(new VarDecl());
 			auto stmt = block->add_statements();
 			auto ifStmt = new IfStmt();
+			ifStmt->set_allocated_cond(YulProtoMutator::refExpression(_seed/11));
 			stmt->set_allocated_ifstmt(ifStmt);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -596,7 +599,7 @@ static YulProtoMutator removeIf(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
+		if (_seed % YulProtoMutator::s_lowIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -607,6 +610,7 @@ static YulProtoMutator removeIf(
 			for (auto &stmt: *block->mutable_statements())
 				if (stmt.has_ifstmt())
 				{
+					delete stmt.release_ifstmt();
 					stmt.clear_ifstmt();
 					break;
 				}
@@ -623,7 +627,7 @@ static YulProtoMutator addSwitch(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
+		if (_seed % 1/*YulProtoMutator::s_normalizedBlockIP*/ == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -631,11 +635,13 @@ static YulProtoMutator addSwitch(
 			std::cout << "YULMUTATOR: Add switch" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
+			auto varDecl = block->add_statements();
+			varDecl->set_allocated_decl(new VarDecl());
 			auto stmt = block->add_statements();
 			auto switchStmt = new SwitchStmt();
 			switchStmt->add_case_stmt();
 			Expression *switchExpr = new Expression();
-			switchExpr->set_allocated_varref(YulProtoMutator::varRef(_seed));
+			switchExpr->set_allocated_varref(YulProtoMutator::varRef(_seed/11));
 			switchStmt->set_allocated_switch_expr(switchExpr);
 			stmt->set_allocated_switchstmt(switchStmt);
 #ifdef DEBUG
@@ -651,7 +657,7 @@ static YulProtoMutator removeSwitch(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
+		if (_seed % YulProtoMutator::s_lowIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -662,6 +668,7 @@ static YulProtoMutator removeSwitch(
 			for (auto &stmt: *block->mutable_statements())
 				if (stmt.has_switchstmt())
 				{
+					delete stmt.release_switchstmt();
 					stmt.clear_switchstmt();
 					break;
 				}
@@ -714,6 +721,7 @@ static YulProtoMutator removeCall(
 			for (auto &stmt: *block->mutable_statements())
 				if (stmt.has_functioncall())
 				{
+					delete stmt.release_functioncall();
 					stmt.clear_functioncall();
 					break;
 				}
@@ -730,7 +738,7 @@ static YulProtoMutator addVarDecl(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
+		if (_seed % 1/*YulProtoMutator::s_normalizedBlockIP*/ == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -765,6 +773,7 @@ static YulProtoMutator removeVarDecl(
 			for (auto &stmt: *block->mutable_statements())
 				if (stmt.has_decl())
 				{
+					delete stmt.release_decl();
 					stmt.clear_decl();
 					break;
 				}
@@ -790,12 +799,8 @@ static YulProtoMutator addFuncDef(
 #endif
 			auto block = static_cast<Block*>(_message);
 			auto funcDef = new FunctionDef();
-			funcDef->set_num_input_params(_seed);
-			funcDef->set_num_output_params(_seed + block->ByteSizeLong());
-			// Copy block into function body
-			auto funcBlock = new Block();
-			funcBlock->CopyFrom(*block);
-			funcDef->set_allocated_block(funcBlock);
+			funcDef->set_num_input_params(_seed/11);
+			funcDef->set_num_output_params(_seed/17);
 			auto stmt = block->add_statements();
 			stmt->set_allocated_funcdef(funcDef);
 #ifdef DEBUG
@@ -822,6 +827,7 @@ static YulProtoMutator removeFuncDef(
 			for (auto &stmt: *block->mutable_statements())
 				if (stmt.has_funcdef())
 				{
+					delete stmt.release_funcdef();
 					stmt.clear_funcdef();
 					break;
 				}
@@ -862,7 +868,7 @@ static YulProtoMutator removeBoundedFor(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
+		if (_seed % YulProtoMutator::s_lowIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -873,6 +879,7 @@ static YulProtoMutator removeBoundedFor(
 			for (auto &stmt: *block->mutable_statements())
 				if (stmt.has_boundedforstmt())
 				{
+					delete stmt.release_boundedforstmt();
 					stmt.clear_boundedforstmt();
 					break;
 				}
@@ -913,7 +920,7 @@ static YulProtoMutator removeGenericFor(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
+		if (_seed % YulProtoMutator::s_lowIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -924,6 +931,7 @@ static YulProtoMutator removeGenericFor(
 			for (auto &stmt: *block->mutable_statements())
 				if (stmt.has_forstmt())
 				{
+					delete stmt.release_forstmt();
 					stmt.clear_forstmt();
 					break;
 				}
@@ -936,16 +944,16 @@ static YulProtoMutator removeGenericFor(
 );
 
 /// Add revert stmt
-static YulProtoMutator addTerminatingStmt(
+static YulProtoMutator addRevertStmt(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
+		if (_seed % 1/*YulProtoMutator::s_normalizedBlockIP*/ == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
-			std::cout << "YULMUTATOR: Add terminating stmt" << std::endl;
+			std::cout << "YULMUTATOR: Add revert stmt" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
 			auto stmt = block->add_statements();
@@ -969,7 +977,7 @@ static YulProtoMutator removeRevertStmt(
 	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
-		if (_seed % YulProtoMutator::s_normalizedBlockIP == 1)
+		if (_seed % YulProtoMutator::s_lowIP == 1)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -983,6 +991,7 @@ static YulProtoMutator removeRevertStmt(
 					stmt.terminatestmt().ret_rev().stmt() == RetRevStmt::REVERT
 				)
 				{
+					delete stmt.release_terminatestmt();
 					stmt.clear_terminatestmt();
 					break;
 				}
@@ -1009,7 +1018,7 @@ static YulProtoMutator mutateNullaryOp(
 			auto nullOpExpr = static_cast<NullaryOp*>(_message);
 			nullOpExpr->clear_op();
 			nullOpExpr->set_op(
-				YulProtoMutator::EnumTypeConverter<NullaryOp_NOp>{}.enumFromSeed(_seed)
+				YulProtoMutator::EnumTypeConverter<NullaryOp_NOp>{}.enumFromSeed(_seed/11)
 			);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -1034,7 +1043,7 @@ static YulProtoMutator mutateBinaryOp(
 			auto binOpExpr = static_cast<BinaryOp*>(_message);
 			binOpExpr->clear_op();
 			binOpExpr->set_op(
-				YulProtoMutator::EnumTypeConverter<BinaryOp_BOp>{}.enumFromSeed(_seed)
+				YulProtoMutator::EnumTypeConverter<BinaryOp_BOp>{}.enumFromSeed(_seed/11)
 			);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -1059,7 +1068,7 @@ static YulProtoMutator mutateUnaryOp(
 			auto unaryOpExpr = static_cast<UnaryOp*>(_message);
 			unaryOpExpr->clear_op();
 			unaryOpExpr->set_op(
-				YulProtoMutator::EnumTypeConverter<UnaryOp_UOp>{}.enumFromSeed(_seed)
+				YulProtoMutator::EnumTypeConverter<UnaryOp_UOp>{}.enumFromSeed(_seed/11)
 			);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
@@ -1083,7 +1092,7 @@ static YulProtoMutator addPopCall(
 #endif
 			auto call = new LowLevelCall();
 			call->set_callty(
-				YulProtoMutator::EnumTypeConverter<LowLevelCall_Type>{}.enumFromSeed(_seed)
+				YulProtoMutator::EnumTypeConverter<LowLevelCall_Type>{}.enumFromSeed(_seed/13)
 			);
 			auto popExpr = new Expression();
 			popExpr->set_allocated_lowcall(call);
@@ -1116,6 +1125,7 @@ static YulProtoMutator removePopStmt(
 			for (auto &stmt: *block->mutable_statements())
 				if (stmt.has_pop())
 				{
+					delete stmt.release_pop();
 					stmt.clear_pop();
 					break;
 				}
@@ -1141,7 +1151,7 @@ static YulProtoMutator addPopCreate(
 #endif
 			auto create = new Create();
 			create->set_createty(
-				YulProtoMutator::EnumTypeConverter<Create_Type>{}.enumFromSeed(_seed)
+				YulProtoMutator::EnumTypeConverter<Create_Type>{}.enumFromSeed(_seed/17)
 			);
 			auto popExpr = new Expression();
 			popExpr->set_allocated_create(create);
@@ -1192,7 +1202,7 @@ static YulProtoMutator addPopUserFunction(
 
 /// Add function call in another function's body
 static YulProtoMutator addFuncCallInFuncBody(
-	FunctionDef::descriptor(),
+	Block::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
 		if (_seed % YulProtoMutator::s_mediumIP == 0)
@@ -1200,11 +1210,11 @@ static YulProtoMutator addFuncCallInFuncBody(
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
-			std::cout << "YULMUTATOR: Add function call in func body" << std::endl;
+			std::cout << "YULMUTATOR: Add function call to statement block" << std::endl;
 #endif
 			auto functioncall = new FunctionCall();
 			YulProtoMutator::configureCall(functioncall, _seed);
-			auto block = static_cast<FunctionDef*>(_message)->mutable_block();
+			auto block = static_cast<Block*>(_message);
 			auto stmt = block->add_statements();
 			stmt->set_allocated_functioncall(functioncall);
 #ifdef DEBUG
@@ -1230,6 +1240,7 @@ static YulProtoMutator removeFuncCallInFuncBody(
 			for (auto &stmt: *static_cast<FunctionDef*>(_message)->mutable_block()->mutable_statements())
 				if (stmt.has_functioncall())
 				{
+					delete stmt.release_functioncall();
 					stmt.clear_functioncall();
 					break;
 				}
@@ -1257,10 +1268,10 @@ static YulProtoMutator addDataOffset(
 			YulProtoMutator::clearExpr(expr);
 			auto unopdata = new UnaryOpData();
 			auto objId = new ObjectId();
-			objId->set_id(_seed);
+			objId->set_id(_seed/23);
 			unopdata->set_allocated_identifier(objId);
 			unopdata->set_op(
-				YulProtoMutator::EnumTypeConverter<UnaryOpData_UOpData>{}.enumFromSeed(_seed)
+				YulProtoMutator::EnumTypeConverter<UnaryOpData_UOpData>{}.enumFromSeed(_seed/29)
 			);
 			expr->set_allocated_unopdata(unopdata);
 #ifdef DEBUG
@@ -1285,9 +1296,60 @@ static YulProtoMutator addVarRefInForBody(
 #endif
 			auto forStmt = static_cast<BoundedForStmt*>(_message);
 			auto popStmt = new PopStmt();
-			popStmt->set_allocated_expr(YulProtoMutator::refExpression(_seed));
+			popStmt->set_allocated_expr(YulProtoMutator::refExpression(_seed/31));
 			auto newStmt = forStmt->mutable_for_body()->add_statements();
 			newStmt->set_allocated_pop(popStmt);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Mutate expression to a function call
+static YulProtoMutator mutateExprToFuncCall(
+	Expression::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_highIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Mutate expression to function call" << std::endl;
+#endif
+			auto expr = static_cast<Expression*>(_message);
+			YulProtoMutator::clearExpr(expr);
+			auto functionCall = new FunctionCall();
+			functionCall->set_ret(FunctionCall::SINGLE);
+			functionCall->set_func_index(_seed/17);
+			expr->set_allocated_func_expr(functionCall);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+
+	}
+);
+
+/// Mutate expression to variable reference
+/// Mutate expression to a function call
+static YulProtoMutator mutateExprToVarRef(
+	Expression::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_highIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Mutate expression to variable ref" << std::endl;
+#endif
+			auto expr = static_cast<Expression*>(_message);
+			YulProtoMutator::clearExpr(expr);
+			expr->set_allocated_varref(YulProtoMutator::varRef(_seed/19));
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 			std::cout << "----------------------------------" << std::endl;
@@ -1348,16 +1410,16 @@ void YulProtoMutator::configureCallArgs(
 	{
 	case FunctionCall_Returns_MULTIASSIGN:
 	{
-		auto outRef4 = YulProtoMutator::varRef(_seed * 8);
+		auto outRef4 = YulProtoMutator::varRef(_seed/8);
 		_call->set_allocated_out_param4(outRef4);
 
-		auto outRef3 = YulProtoMutator::varRef(_seed * 7);
+		auto outRef3 = YulProtoMutator::varRef(_seed/7);
 		_call->set_allocated_out_param3(outRef3);
 
-		auto outRef2 = YulProtoMutator::varRef(_seed * 6);
+		auto outRef2 = YulProtoMutator::varRef(_seed/6);
 		_call->set_allocated_out_param2(outRef2);
 
-		auto outRef1 = YulProtoMutator::varRef(_seed * 5);
+		auto outRef1 = YulProtoMutator::varRef(_seed/5);
 		_call->set_allocated_out_param1(outRef1);
 	}
 	BOOST_FALLTHROUGH;
@@ -1368,17 +1430,17 @@ void YulProtoMutator::configureCallArgs(
 	case FunctionCall_Returns_ZERO:
 	{
 		auto inArg4 = new Expression();
-		auto inRef4 = YulProtoMutator::varRef(_seed * 4);
+		auto inRef4 = YulProtoMutator::varRef(_seed/4);
 		inArg4->set_allocated_varref(inRef4);
 		_call->set_allocated_in_param4(inArg4);
 
 		auto inArg3 = new Expression();
-		auto inRef3 = YulProtoMutator::varRef(_seed * 3);
+		auto inRef3 = YulProtoMutator::varRef(_seed/3);
 		inArg3->set_allocated_varref(inRef3);
 		_call->set_allocated_in_param3(inArg3);
 
 		auto inArg2 = new Expression();
-		auto inRef2 = YulProtoMutator::varRef(_seed * 2);
+		auto inRef2 = YulProtoMutator::varRef(_seed/2);
 		inArg2->set_allocated_varref(inRef2);
 		_call->set_allocated_in_param2(inArg2);
 
@@ -1486,33 +1548,43 @@ void YulProtoMutator::clearExpr(Expression* _expr)
 	switch (_expr->expr_oneof_case())
 	{
 	case Expression::kVarref:
+		delete _expr->release_varref();
 		_expr->clear_varref();
 		break;
 	case Expression::kCons:
+		delete _expr->release_cons();
 		_expr->clear_cons();
 		break;
 	case Expression::kBinop:
+		delete _expr->release_binop();
 		_expr->clear_binop();
 		break;
 	case Expression::kUnop:
+		delete _expr->release_unop();
 		_expr->clear_unop();
 		break;
 	case Expression::kTop:
+		delete _expr->release_top();
 		_expr->clear_top();
 		break;
 	case Expression::kNop:
+		delete _expr->release_nop();
 		_expr->clear_nop();
 		break;
 	case Expression::kFuncExpr:
+		delete _expr->release_func_expr();
 		_expr->clear_func_expr();
 		break;
 	case Expression::kLowcall:
+		delete _expr->release_lowcall();
 		_expr->clear_lowcall();
 		break;
 	case Expression::kCreate:
+		delete _expr->release_create();
 		_expr->clear_create();
 		break;
 	case Expression::kUnopdata:
+		delete _expr->release_unopdata();
 		_expr->clear_unopdata();
 		break;
 	case Expression::EXPR_ONEOF_NOT_SET:
