@@ -74,12 +74,12 @@ void Rematerialiser::visit(Expression& _e)
 		YulString name = identifier.name;
 		if (m_value.count(name))
 		{
-			assertThrow(m_value.at(name), OptimizerException, "");
-			auto const& value = *m_value.at(name);
+			assertThrow(m_value.at(name).value, OptimizerException, "");
+			AssignedValue const& value = m_value.at(name);
 			size_t refs = m_referenceCounts[name];
-			size_t cost = CodeCost::codeCost(m_dialect, value);
+			size_t cost = CodeCost::codeCost(m_dialect, *value.value);
 			if (
-				(refs <= 1 && m_variableLoopDepth.at(name) == m_loopDepth) ||
+				(refs <= 1 && value.loopDepth == m_loopDepth) ||
 				cost == 0 ||
 				(refs <= 5 && cost <= 1 && m_loopDepth == 0) ||
 				m_varsToAlwaysRematerialize.count(name)
@@ -90,9 +90,9 @@ void Rematerialiser::visit(Expression& _e)
 					assertThrow(inScope(ref), OptimizerException, "");
 				// update reference counts
 				m_referenceCounts[name]--;
-				for (auto const& ref: ReferencesCounter::countReferences(value))
+				for (auto const& ref: ReferencesCounter::countReferences(*value.value))
 					m_referenceCounts[ref.first] += ref.second;
-				_e = (ASTCopier{}).translate(value);
+				_e = (ASTCopier{}).translate(*value.value);
 			}
 		}
 	}
@@ -107,7 +107,7 @@ void LiteralRematerialiser::visit(Expression& _e)
 		YulString name = identifier.name;
 		if (m_value.count(name))
 		{
-			Expression const* value = m_value.at(name);
+			Expression const* value = m_value.at(name).value;
 			assertThrow(value, OptimizerException, "");
 			if (holds_alternative<Literal>(*value))
 				_e = *value;

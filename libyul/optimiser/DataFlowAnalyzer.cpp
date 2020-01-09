@@ -144,14 +144,12 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 {
 	// Save all information. We might rather reinstantiate this class,
 	// but this could be difficult if it is subclassed.
-	map<YulString, Expression const*> value;
-	map<YulString, size_t> variableLoopDepth;
+	map<YulString, AssignedValue> value;
 	size_t loopDepth{0};
 	InvertibleRelation<YulString> references;
 	InvertibleMap<YulString, YulString> storage;
 	InvertibleMap<YulString, YulString> memory;
 	swap(m_value, value);
-	swap(m_variableLoopDepth, variableLoopDepth);
 	swap(m_loopDepth, loopDepth);
 	swap(m_references, references);
 	swap(m_storage, storage);
@@ -173,7 +171,6 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 
 	popScope();
 	swap(m_value, value);
-	swap(m_variableLoopDepth, variableLoopDepth);
 	swap(m_loopDepth, loopDepth);
 	swap(m_references, references);
 	swap(m_storage, storage);
@@ -306,18 +303,14 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 
 	// Clear the value and update the reference relation.
 	for (auto const& name: _variables)
-	{
 		m_value.erase(name);
-		m_variableLoopDepth.erase(name);
-	}
 	for (auto const& name: _variables)
 		m_references.eraseKey(name);
 }
 
 void DataFlowAnalyzer::assignValue(YulString _variable, Expression const* _value)
 {
-	m_value[_variable] = _value;
-	m_variableLoopDepth[_variable] = m_loopDepth;
+	m_value[_variable] = {_value, m_loopDepth};
 }
 
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)

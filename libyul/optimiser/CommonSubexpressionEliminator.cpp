@@ -79,10 +79,10 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 		YulString name = identifier.name;
 		if (m_value.count(name))
 		{
-			assertThrow(m_value.at(name), OptimizerException, "");
-			if (holds_alternative<Identifier>(*m_value.at(name)))
+			assertThrow(m_value.at(name).value, OptimizerException, "");
+			if (holds_alternative<Identifier>(*m_value.at(name).value))
 			{
-				YulString value = std::get<Identifier>(*m_value.at(name)).name;
+				YulString value = std::get<Identifier>(*m_value.at(name).value).name;
 				assertThrow(inScope(value), OptimizerException, "");
 				_e = Identifier{locationOf(_e), value};
 			}
@@ -91,13 +91,13 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	else
 	{
 		// TODO this search is rather inefficient.
-		for (auto const& var: m_value)
+		for (auto const& [variable, value]: m_value)
 		{
-			assertThrow(var.second, OptimizerException, "");
-			assertThrow(inScope(var.first), OptimizerException, "");
-			if (SyntacticallyEqual{}(_e, *var.second))
+			assertThrow(value.value, OptimizerException, "");
+			assertThrow(inScope(variable), OptimizerException, "");
+			if (SyntacticallyEqual{}(_e, *value.value))
 			{
-				_e = Identifier{locationOf(_e), var.first};
+				_e = Identifier{locationOf(_e), variable};
 				break;
 			}
 		}
