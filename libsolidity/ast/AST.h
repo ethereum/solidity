@@ -117,17 +117,6 @@ protected:
 		return dynamic_cast<T&>(*m_annotation);
 	}
 
-	template <class T>
-	T& abstractAnnotation(std::string _className) const
-	{
-		solAssert(
-			m_annotation,
-			_className + " is an abstract base, need to call annotation on the concrete class first."
-		);
-
-		return dynamic_cast<T&>(*m_annotation);
-	}
-
 private:
 	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
 	mutable std::unique_ptr<ASTAnnotation> m_annotation;
