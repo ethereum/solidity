@@ -1691,6 +1691,16 @@ void TypeChecker::typeCheckFunctionCall(
 	solAssert(!!_functionType, "");
 	solAssert(_functionType->kind() != FunctionType::Kind::ABIDecode, "");
 
+	if (_functionType->kind() == FunctionType::Kind::Declaration)
+	{
+		m_errorReporter.typeError(
+			_functionCall.location(),
+			"Cannot call function via contract name."
+		);
+		return;
+	}
+
+
 	// Check for unsupported use of bare static call
 	if (
 		_functionType->kind() == FunctionType::Kind::BareStaticCall &&

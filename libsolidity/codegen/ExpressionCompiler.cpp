@@ -550,6 +550,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			solAssert(function.kind() == FunctionType::Kind::DelegateCall || function.kind() == FunctionType::Kind::Internal, "");
 		switch (function.kind())
 		{
+		case FunctionType::Kind::Declaration:
+			solAssert(false, "Attempted to generate code for calling a function definition.");
+			break;
 		case FunctionType::Kind::Internal:
 		{
 			// Calling convention: Caller pushes return address and arguments
@@ -1289,14 +1292,22 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			_memberAccess.expression().accept(*this);
 		return false;
 	}
-	// Another special case for `this.f.selector` which does not need the address.
-	// There are other uses of `.selector` which do need the address, but we want this
-	// specific use to be a pure expression.
+	// Another special case for `this.f.selector` and for ``C.f.selector`` which do not need the address.
+	// There are other uses of `.selector` which do need the address, but we want these
+	// specific uses to be pure expressions.
 	if (
-		_memberAccess.expression().annotation().type->category() == Type::Category::Function &&
-		member == "selector"
+		auto const* functionType = dynamic_cast<FunctionType const*>(_memberAccess.expression().annotation().type);
+		functionType && member == "selector"
 	)
-		if (auto const* expr = dynamic_cast<MemberAccess const*>(&_memberAccess.expression()))
+	{
+		if (functionType->kind() == FunctionType::Kind::Declaration)
+		{
+			m_context << functionType->externalIdentifier();
+			/// need to store it as bytes4
+			utils().leftShiftNumberOnStack(224);
+			return false;
+		}
+		else if (auto const* expr = dynamic_cast<MemberAccess const*>(&_memberAccess.expression()))
 			if (auto const* exprInt = dynamic_cast<Identifier const*>(&expr->expression()))
 				if (exprInt->name() == "this")
 					if (Declaration const* declaration = expr->annotation().referencedDeclaration)
@@ -1313,6 +1324,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 						utils().leftShiftNumberOnStack(224);
 						return false;
 					}
+	}
 	// Another special case for `address(this).balance`. Post-Istanbul, we can use the selfbalance
 	// opcode.
 	if (

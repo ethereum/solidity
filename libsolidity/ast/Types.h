@@ -1051,11 +1051,16 @@ public:
 		ABIEncodeWithSignature,
 		ABIDecode,
 		GasLeft, ///< gasleft()
-		MetaType ///< type(...)
+		MetaType, ///< type(...)
+		/// Refers to a function declaration without calling context
+		/// (i.e. when accessed directly via the name of the containing contract).
+		/// Cannot be called.
+		Declaration
 	};
 
 	/// Creates the type of a function.
-	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
+	/// @arg _kind must be Kind::Internal, Kind::External or Kind::Declaration.
+	explicit FunctionType(FunctionDefinition const& _function, Kind _kind = Kind::Declaration);
 	/// Creates the accessor function type of a state variable.
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	/// Creates the function type of an event.
@@ -1066,7 +1071,7 @@ public:
 	FunctionType(
 		strings const& _parameterTypes,
 		strings const& _returnParameterTypes,
-		Kind _kind = Kind::Internal,
+		Kind _kind,
 		bool _arbitraryParameters = false,
 		StateMutability _stateMutability = StateMutability::NonPayable
 	): FunctionType(
