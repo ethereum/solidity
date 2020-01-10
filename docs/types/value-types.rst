@@ -534,7 +534,7 @@ subsequent unsigned integer values starting from ``0``.
 
 ::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract test {
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
@@ -640,7 +640,7 @@ External (or public) functions have the following members:
 
 Example that shows how to use the members::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
 
     contract Example {
@@ -656,7 +656,7 @@ Example that shows how to use the members::
 
 Example that shows how to use internal function types::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
 
     library ArrayUtils {
@@ -714,7 +714,7 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
 
     contract Oracle {

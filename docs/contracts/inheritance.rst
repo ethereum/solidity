@@ -38,7 +38,7 @@ Details are given in the following example.
 
 ::
 
-    pragma solidity ^0.6.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
 
     contract Owned {
@@ -125,7 +125,7 @@ Note that above, we call ``mortal.kill()`` to "forward" the
 destruction request. The way this is done is problematic, as
 seen in the following example::
 
-    pragma solidity ^0.6.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract owned {
         constructor() public { owner = msg.sender; }
@@ -154,7 +154,7 @@ A call to ``Final.kill()`` will call ``Base2.kill`` because we specify it
 explicitly in the final override, but this function will bypass
 ``Base1.kill``. The way around this is to use ``super``::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     contract owned {
         constructor() public { owner = msg.sender; }
@@ -204,7 +204,7 @@ use the ``override`` keyword in the function header as shown in this example:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract Base
     {
@@ -227,7 +227,7 @@ bases, it has to explicitly override it:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract Base1
     {
@@ -253,7 +253,7 @@ that already overrides all other functions.
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract A { function f() public pure{} }
     contract B is A {}
@@ -293,7 +293,7 @@ of the variable:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract A
     {
@@ -324,7 +324,7 @@ and the ``override`` keyword must be used in the overriding modifier:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract Base
     {
@@ -342,7 +342,7 @@ explicitly:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract Base1
     {
@@ -389,7 +389,7 @@ equivalent to ``constructor() public {}``. For example:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract A {
         uint public a;
@@ -419,7 +419,7 @@ The constructors of all the base contracts will be called following the
 linearization rules explained below. If the base constructors have arguments,
 derived contracts need to specify all of them. This can be done in two ways::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     contract Base {
         uint x;
@@ -478,7 +478,7 @@ error "Linearization of inheritance graph impossible".
 
 ::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract X {}
     contract A is X {}
@@ -498,7 +498,7 @@ One area where inheritance linearization is especially important and perhaps not
 
 ::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract Base1 {
         constructor() public {}

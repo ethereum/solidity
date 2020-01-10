@@ -308,7 +308,7 @@ This will no longer compile with Solidity v0.5.0. However, you can define a comp
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
     interface OldContract {
         function someOldFunction(uint8 a) external;
         function anotherOldFunction() external returns (bool);
@@ -325,7 +325,7 @@ Given the interface defined above, you can now easily use the already deployed p
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     interface OldContract {
         function someOldFunction(uint8 a) external;
@@ -431,7 +431,7 @@ New version:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract OtherContract {
         uint x;

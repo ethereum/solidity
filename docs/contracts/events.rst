@@ -65,7 +65,7 @@ is that they are cheaper to deploy and call.
 
 ::
 
-    pragma solidity >=0.4.21 <0.7.0;
+    pragma solidity >=0.4.21 <0.8.0;
 
     contract ClientReceipt {
         event Deposit(
@@ -138,7 +138,7 @@ as topics. The event call above can be performed in the same way as
 
 ::
 
-    pragma solidity >=0.4.10 <0.7.0;
+    pragma solidity >=0.4.10 <0.8.0;
 
     contract C {
         function f() public payable {

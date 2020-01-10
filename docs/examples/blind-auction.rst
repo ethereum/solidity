@@ -24,7 +24,7 @@ to receive their money - contracts cannot activate themselves.
 
 ::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     contract SimpleAuction {
         // Parameters of the auction. Times are either
@@ -184,7 +184,7 @@ invalid bids.
 
 ::
 
-    pragma solidity >0.4.23 <0.7.0;
+    pragma solidity >0.4.23 <0.8.0;
 
     contract BlindAuction {
         struct Bid {
