@@ -49,7 +49,7 @@ cp $REPO_ROOT/build/solc/solc        $ZIP_TEMP_DIR
 # being for kernel-level dylibs.
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    python $REPO_ROOT/scripts/fix_homebrew_paths_in_standalone_zip.py $ZIP_TEMP_DIR
+    python3 $REPO_ROOT/scripts/fix_homebrew_paths_in_standalone_zip.py $ZIP_TEMP_DIR
 fi
 
 # And ZIP it all up, with a filename suffix passed in on the command-line.

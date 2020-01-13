@@ -12,7 +12,7 @@ for new_proof in $(git diff origin/develop --name-only test/formal/)
 do
 	set +e
 	echo "Proving $new_proof..."
-	output=$(python "$new_proof")
+	output=$(python3 "$new_proof")
 	result=$?
 	set -e
 

@@ -76,7 +76,7 @@ Build-Depends: debhelper (>= 9.0.0),
                git,
                libgmp-dev,
                dh-python,
-               python
+               python3
 Standards-Version: 3.9.6
 Homepage: https://github.com/Z3Prover/z3
 Vcs-Git: git://github.com/Z3Prover/z3.git
