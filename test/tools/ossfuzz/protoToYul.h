@@ -78,6 +78,7 @@ private:
 	void visit(VarRef const&);
 	void visit(Expression const&);
 	void visit(VarDecl const&);
+	void visit(MultiVarDecl const&);
 	void visit(TypedVarDecl const&);
 	void visit(UnaryOp const&);
 	void visit(AssignmentStatement const&);
@@ -283,6 +284,10 @@ private:
 	/// enum of type Program_Version
 	solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
 
+	/// Return variable reference.
+	/// @param _index: Index of variable to be referenced
+	std::string varRef(unsigned _index);
+
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
 	{
@@ -320,6 +325,8 @@ private:
 	{
 		return m_objectId - 1;
 	}
+
+	std::string dummyExpression();
 
 	std::ostringstream m_output;
 	/// Variables in all function definitions

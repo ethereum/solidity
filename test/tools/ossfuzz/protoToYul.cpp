@@ -34,6 +34,41 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity;
 
+string ProtoConverter::dummyExpression()
+{
+	string expression{};
+	string location{};
+	unsigned pseudoRandomNum = m_inputSize / 13;
+	if (varDeclAvailable())
+		location = varRef(pseudoRandomNum);
+	switch (pseudoRandomNum % 4)
+	{
+	case 0:
+		if (location.empty())
+			expression = "mload(0)";
+		else
+			expression = Whiskers(R"(mload(<loc>))")("loc", location).render();
+		break;
+	case 1:
+		if (location.empty())
+			expression = "sload(0)";
+		else
+			expression = Whiskers(R"(sload(<loc>))")("loc", location).render();
+		break;
+	case 2:
+		if (location.empty())
+			expression = "calldataload(0)";
+		else
+			expression = Whiskers(R"(calldataload(<loc>))")("loc", location).render();
+		break;
+	case 3:
+		expression = dictionaryToken();
+		break;
+	}
+	yulAssert(!expression.empty(), "Proto fuzzer: Invalid dummy expression");
+	return expression;
+}
+
 string ProtoConverter::dictionaryToken(HexPrefix _p)
 {
 	std::string token;
@@ -176,20 +211,25 @@ bool ProtoConverter::functionCallNotPossible(FunctionCall_Returns _type)
 		(_type == FunctionCall::MULTIASSIGN && !varDeclAvailable());
 }
 
-void ProtoConverter::visit(VarRef const& _x)
+string ProtoConverter::varRef(unsigned _index)
 {
 	if (m_inFunctionDef)
 	{
 		// Ensure that there is at least one variable declaration to reference in function scope.
 		yulAssert(m_currentFuncVars.size() > 0, "Proto fuzzer: No variables to reference.");
-		m_output << *m_currentFuncVars[_x.varnum() % m_currentFuncVars.size()];
+		return *m_currentFuncVars[_index % m_currentFuncVars.size()];
 	}
 	else
 	{
 		// Ensure that there is at least one variable declaration to reference in nested scopes.
 		yulAssert(m_currentGlobalVars.size() > 0, "Proto fuzzer: No global variables to reference.");
-		m_output << *m_currentGlobalVars[_x.varnum() % m_currentGlobalVars.size()];
+		return *m_currentGlobalVars[_index % m_currentGlobalVars.size()];
 	}
+}
+
+void ProtoConverter::visit(VarRef const& _x)
+{
+	m_output << varRef(_x.varnum());
 }
 
 void ProtoConverter::visit(Expression const& _x)
@@ -201,7 +241,7 @@ void ProtoConverter::visit(Expression const& _x)
 		// (because there are no variables in scope), we silently output a literal
 		// expression from the optimizer dictionary.
 		if (!varDeclAvailable())
-			m_output << dictionaryToken();
+			m_output << dummyExpression();
 		else
 			visit(_x.varref());
 		break;
@@ -232,7 +272,7 @@ void ProtoConverter::visit(Expression const& _x)
 		if (_x.func_expr().ret() == FunctionCall::SINGLE)
 			visit(_x.func_expr());
 		else
-			m_output << dictionaryToken();
+			m_output << dummyExpression();
 		break;
 	case Expression::kLowcall:
 		visit(_x.lowcall());
@@ -244,10 +284,10 @@ void ProtoConverter::visit(Expression const& _x)
 		if (m_isObject)
 			visit(_x.unopdata());
 		else
-			m_output << dictionaryToken();
+			m_output << dummyExpression();
 		break;
 	case Expression::EXPR_ONEOF_NOT_SET:
-		m_output << dictionaryToken();
+		m_output << dummyExpression();
 		break;
 	}
 }
@@ -259,7 +299,7 @@ void ProtoConverter::visit(BinaryOp const& _x)
 	if ((op == BinaryOp::SHL || op == BinaryOp::SHR || op == BinaryOp::SAR) &&
 		!m_evmVersion.hasBitwiseShifting())
 	{
-		m_output << dictionaryToken();
+		m_output << dummyExpression();
 		return;
 	}
 
@@ -398,6 +438,81 @@ void ProtoConverter::visit(VarDecl const& _x)
 	}
 }
 
+void ProtoConverter::visit(MultiVarDecl const& _x)
+{
+	m_output << "let ";
+	vector<string> varNames;
+	// We support up to 4 variables in a single
+	// declaration statement.
+	unsigned numVars = _x.num_vars() % 3 + 2;
+	string delimiter = "";
+	for (unsigned i = 0; i < numVars; i++)
+	{
+		string varName = newVarName();
+		varNames.push_back(varName);
+		m_output << delimiter << varName;
+		if (i == 0)
+			delimiter = ", ";
+	}
+	m_output << "\n";
+
+	// If we are inside a for-init block, there are two places
+	// where the visited vardecl may have been defined:
+	// - directly inside the for-init block
+	// - inside a block within the for-init block
+	// In the latter case, we don't scope extend.
+	if (m_inFunctionDef)
+	{
+		// Variables declared directly in for-init block
+		// are tracked separately because their scope
+		// extends beyond the block they are defined in
+		// to the rest of the for-loop statement.
+		if (m_inForInitScope && m_forInitScopeExtEnabled)
+		{
+			yulAssert(
+				!m_funcForLoopInitVars.empty() && !m_funcForLoopInitVars.back().empty(),
+				"Proto fuzzer: Invalid operation"
+			);
+			for (auto const& varName: varNames)
+				m_funcForLoopInitVars.back().back().push_back(varName);
+		}
+		else
+		{
+			yulAssert(
+				!m_funcVars.empty() && !m_funcVars.back().empty(),
+				"Proto fuzzer: Invalid operation"
+			);
+			for (auto const& varName: varNames)
+				m_funcVars.back().back().push_back(varName);
+		}
+
+	}
+	else
+	{
+		if (m_inForInitScope && m_forInitScopeExtEnabled)
+		{
+			yulAssert(
+				!m_globalForLoopInitVars.empty(),
+				"Proto fuzzer: Invalid operation"
+			);
+
+			for (auto const& varName: varNames)
+				m_globalForLoopInitVars.back().push_back(varName);
+		}
+		else
+		{
+			yulAssert(
+				!m_globalVars.empty(),
+				"Proto fuzzer: Invalid operation"
+			);
+
+			for (auto const& varName: varNames)
+				m_globalVars.back().push_back(varName);
+		}
+	}
+
+}
+
 void ProtoConverter::visit(TypedVarDecl const& _x)
 {
 	string varName = newVarName();
@@ -517,7 +632,7 @@ void ProtoConverter::visit(UnaryOp const& _x)
 	// token.
 	if (op == UnaryOp::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
 	{
-		m_output << dictionaryToken();
+		m_output << dummyExpression();
 		return;
 	}
 
@@ -601,7 +716,7 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		if (m_evmVersion.supportsReturndata())
 			m_output << "returndatasize()";
 		else
-			m_output << dictionaryToken();
+			m_output << dummyExpression();
 		break;
 	case NullaryOp::ADDRESS:
 		m_output << "address()";
@@ -639,7 +754,7 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		if (m_evmVersion.hasSelfBalance())
 			m_output << "selfbalance()";
 		else
-			m_output << dictionaryToken();
+			m_output << dummyExpression();
 		break;
 	case NullaryOp::CHAINID:
 		// Replace calls to chainid() on unsupported EVMs with a dictionary
@@ -647,7 +762,7 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		if (m_evmVersion.hasChainID())
 			m_output << "chainid()";
 		else
-			m_output << dictionaryToken();
+			m_output << dummyExpression();
 		break;
 	}
 }
@@ -866,7 +981,7 @@ void ProtoConverter::visit(FunctionCall const& _x)
 		// If there are no functions available, calls to functions that
 		// return a single value may be replaced by a dictionary token.
 		if (funcType == FunctionCall::SINGLE)
-			m_output << dictionaryToken();
+			m_output << dummyExpression();
 		return;
 	}
 
@@ -878,7 +993,7 @@ void ProtoConverter::visit(FunctionCall const& _x)
 	if (!functionValid(funcType, numOutParams))
 	{
 		if (funcType == FunctionCall::SINGLE)
-			m_output << dictionaryToken();
+			m_output << dummyExpression();
 		return;
 	}
 
@@ -1010,7 +1125,7 @@ void ProtoConverter::visit(Create const& _x)
 	// token.
 	if (type == Create::CREATE2 && !m_evmVersion.hasCreate2())
 	{
-		m_output << dictionaryToken();
+		m_output << dummyExpression();
 		return;
 	}
 
@@ -1306,19 +1421,23 @@ void ProtoConverter::visit(Statement const& _x)
 			visit(_x.assignment());
 		break;
 	case Statement::kIfstmt:
-		visit(_x.ifstmt());
+		if (_x.ifstmt().if_body().statements_size() > 0)
+			visit(_x.ifstmt());
 		break;
 	case Statement::kStorageFunc:
 		visit(_x.storage_func());
 		break;
 	case Statement::kBlockstmt:
-		visit(_x.blockstmt());
+		if (_x.blockstmt().statements_size() > 0)
+			visit(_x.blockstmt());
 		break;
 	case Statement::kForstmt:
-		visit(_x.forstmt());
+		if (_x.forstmt().for_body().statements_size() > 0)
+			visit(_x.forstmt());
 		break;
 	case Statement::kBoundedforstmt:
-		visit(_x.boundedforstmt());
+		if (_x.boundedforstmt().for_body().statements_size() > 0)
+			visit(_x.boundedforstmt());
 		break;
 	case Statement::kSwitchstmt:
 		visit(_x.switchstmt());
@@ -1350,8 +1469,9 @@ void ProtoConverter::visit(Statement const& _x)
 		visit(_x.functioncall());
 		break;
 	case Statement::kFuncdef:
-		if (!m_inForInitScope)
-			visit(_x.funcdef());
+		if (_x.funcdef().block().statements_size() > 0)
+			if (!m_inForInitScope)
+				visit(_x.funcdef());
 		break;
 	case Statement::kPop:
 		visit(_x.pop());
@@ -1359,6 +1479,9 @@ void ProtoConverter::visit(Statement const& _x)
 	case Statement::kLeave:
 		if (m_inFunctionDef)
 			visit(_x.leave());
+		break;
+	case Statement::kMultidecl:
+		visit(_x.multidecl());
 		break;
 	case Statement::STMT_ONEOF_NOT_SET:
 		break;
@@ -1528,7 +1651,7 @@ void ProtoConverter::visit(Block const& _x)
 	// scope belongs to for-init (in which function declarations
 	// are forbidden).
 	for (auto const& statement: _x.statements())
-		if (statement.has_funcdef() && !m_inForInitScope)
+		if (statement.has_funcdef() && statement.funcdef().block().statements_size() > 0 && !m_inForInitScope)
 			registerFunction(&statement.funcdef());
 
 	if (_x.statements_size() > 0)
@@ -1622,9 +1745,9 @@ void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
 			m_output << "sload(" << slot << ")";
 			break;
 		case 3:
-			// Call to dictionaryToken() automatically picks a token
+			// Call to dummyExpression() automatically picks a token
 			// at a pseudo-random location.
-			m_output << dictionaryToken();
+			m_output << dummyExpression();
 			break;
 		}
 		if (i < _numInParams - 1)
