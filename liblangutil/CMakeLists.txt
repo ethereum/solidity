@@ -28,4 +28,4 @@ set(sources
 )
 
 add_library(langutil ${sources})
-target_link_libraries(langutil PUBLIC devcore)
+target_link_libraries(langutil PUBLIC solutil)
