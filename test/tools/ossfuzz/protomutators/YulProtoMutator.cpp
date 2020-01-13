@@ -196,7 +196,7 @@ static YulProtoMutator addLoadZero(
 			std::cout << "YULMUTATOR: expression mutated to load op" << std::endl;
 #endif
 			YulProtoMutator::clearExpr(expr);
-			expr->set_allocated_unop(YulProtoMutator::loadExpression(_seed/23));
+			expr = YulProtoMutator::loadExpression(_seed/23);
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 			std::cout << "----------------------------------" << std::endl;
@@ -242,7 +242,7 @@ static YulProtoMutator addStoreToZero(
 	[](google::protobuf::Message* _message, unsigned int _seed)
 	{
 		auto block = static_cast<Block*>(_message);
-		if (_seed % YulProtoMutator::s_normalizedBlockIP == 0)
+		if (_seed % 1/*YulProtoMutator::s_normalizedBlockIP*/ == 0)
 		{
 #ifdef DEBUG
 			std::cout << "----------------------------------" << std::endl;
@@ -251,13 +251,8 @@ static YulProtoMutator addStoreToZero(
 #endif
 			auto storeStmt = new StoreFunc();
 			storeStmt->set_st(YulProtoMutator::EnumTypeConverter<StoreFunc_Storage>{}.enumFromSeed(_seed/37));
-			// One in two times, we force a store(0, varref). In the other instance,
-			// we leave loc and val unset.
-			if (_seed % 2)
-			{
-				storeStmt->set_allocated_loc(YulProtoMutator::litExpression(0));
-				storeStmt->set_allocated_val(YulProtoMutator::refExpression(_seed/11));
-			}
+			storeStmt->set_allocated_loc(YulProtoMutator::litExpression(0));
+			storeStmt->set_allocated_val(YulProtoMutator::refExpression(_seed/11));
 			auto stmt = block->add_statements();
 			stmt->set_allocated_storage_func(storeStmt);
 #ifdef DEBUG
@@ -580,8 +575,6 @@ static YulProtoMutator addIf(
 			std::cout << "YULMUTATOR: Add if" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
-			auto varDecl = block->add_statements();
-			varDecl->set_allocated_decl(new VarDecl());
 			auto stmt = block->add_statements();
 			auto ifStmt = new IfStmt();
 			ifStmt->set_allocated_cond(YulProtoMutator::refExpression(_seed/11));
@@ -635,8 +628,6 @@ static YulProtoMutator addSwitch(
 			std::cout << "YULMUTATOR: Add switch" << std::endl;
 #endif
 			auto block = static_cast<Block*>(_message);
-			auto varDecl = block->add_statements();
-			varDecl->set_allocated_decl(new VarDecl());
 			auto stmt = block->add_statements();
 			auto switchStmt = new SwitchStmt();
 			switchStmt->add_case_stmt();
@@ -749,6 +740,38 @@ static YulProtoMutator addVarDecl(
 			auto stmt = block->add_statements();
 			auto varDecl = new VarDecl();
 			stmt->set_allocated_decl(varDecl);
+			// Hoist var decl to beginning of block
+			if (block->statements_size() > 1)
+				block->mutable_statements(0)->Swap(block->mutable_statements(block->statements_size() - 1));
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Add multivar decl
+/// Add variable declaration
+static YulProtoMutator addMultiVarDecl(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % 1/*YulProtoMutator::s_normalizedBlockIP*/ == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add multi variable decl" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			auto stmt = block->add_statements();
+			auto multiVarDecl = new MultiVarDecl();
+			multiVarDecl->set_num_vars(_seed/17);
+			stmt->set_allocated_multidecl(multiVarDecl);
+			// Hoist multi var decl to beginning of block
+			if (block->statements_size() > 1)
+				block->mutable_statements(0)->Swap(block->mutable_statements(block->statements_size() - 1));
 #ifdef DEBUG
 			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
 			std::cout << "----------------------------------" << std::endl;
@@ -1335,7 +1358,6 @@ static YulProtoMutator mutateExprToFuncCall(
 );
 
 /// Mutate expression to variable reference
-/// Mutate expression to a function call
 static YulProtoMutator mutateExprToVarRef(
 	Expression::descriptor(),
 	[](google::protobuf::Message* _message, unsigned int _seed)
@@ -1357,6 +1379,366 @@ static YulProtoMutator mutateExprToVarRef(
 		}
 	}
 );
+
+/// Add varref to statement
+static YulProtoMutator addVarRefToStmt(
+	Statement::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_highIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add varref to statement" << std::endl;
+#endif
+			auto stmt = static_cast<Statement*>(_message);
+			YulProtoMutator::addArgs(stmt, _seed, YulProtoMutator::refExpression);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Add varrefs to statement arguments recursively
+/// Add varref to statement
+static YulProtoMutator addVarRefToStmtRec(
+	Statement::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_highIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add recursive varref to statement" << std::endl;
+#endif
+			auto stmt = static_cast<Statement*>(_message);
+			YulProtoMutator::addArgsRec(stmt, _seed, YulProtoMutator::initOrVarRef);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Add binop expression to statement
+static YulProtoMutator addBinopToStmt(
+	Statement::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_highIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add binop to statement" << std::endl;
+#endif
+			auto stmt = static_cast<Statement*>(_message);
+			YulProtoMutator::addArgs(stmt, _seed/7, YulProtoMutator::binopExpression);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+/// Add load expression to statement
+static YulProtoMutator addLoadToStmt(
+	Statement::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_highIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add load to statement" << std::endl;
+#endif
+			auto stmt = static_cast<Statement*>(_message);
+			YulProtoMutator::addArgs(stmt, _seed, YulProtoMutator::loadExpression);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+static YulProtoMutator addStmt(
+	Block::descriptor(),
+	[](google::protobuf::Message* _message, unsigned int _seed)
+	{
+		if (_seed % YulProtoMutator::s_highIP == 0)
+		{
+#ifdef DEBUG
+			std::cout << "----------------------------------" << std::endl;
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "YULMUTATOR: Add statement to block" << std::endl;
+#endif
+			auto block = static_cast<Block*>(_message);
+			YulProtoMutator::addStmt(block, _seed);
+#ifdef DEBUG
+			std::cout << protobuf_mutator::SaveMessageAsText(*_message) << std::endl;
+			std::cout << "----------------------------------" << std::endl;
+#endif
+		}
+	}
+);
+
+void YulProtoMutator::addArgs(
+	Statement *_stmt,
+	unsigned int _seed,
+	std::function<Expression *(unsigned int)> _func
+)
+{
+	switch (_stmt->stmt_oneof_case())
+	{
+	case Statement::kDecl:
+		if (!_stmt->decl().has_expr() || _stmt->decl().expr().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_decl()->set_allocated_expr(_func(_seed/13));
+		break;
+	case Statement::kAssignment:
+		if (!_stmt->assignment().has_expr() || _stmt->assignment().expr().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_assignment()->set_allocated_expr(_func(_seed/17));
+		break;
+	case Statement::kIfstmt:
+		if (!_stmt->ifstmt().has_cond() || _stmt->ifstmt().cond().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_ifstmt()->set_allocated_cond(_func(_seed/23));
+		break;
+	case Statement::kStorageFunc:
+		if (!_stmt->storage_func().has_loc() || _stmt->storage_func().loc().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_storage_func()->set_allocated_loc(_func(_seed/29));
+		if (!_stmt->storage_func().has_val() || _stmt->storage_func().val().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_storage_func()->set_allocated_val(_func(_seed/37));
+		break;
+	case Statement::kBlockstmt:
+		break;
+	case Statement::kForstmt:
+		if (!_stmt->forstmt().has_for_cond() || _stmt->forstmt().for_cond().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_forstmt()->set_allocated_for_cond(_func(_seed/41));
+		break;
+	case Statement::kBoundedforstmt:
+		break;
+	case Statement::kSwitchstmt:
+		if (!_stmt->switchstmt().has_switch_expr() || _stmt->switchstmt().switch_expr().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_switchstmt()->set_allocated_switch_expr(_func(_seed/43));
+		break;
+	case Statement::kBreakstmt:
+		break;
+	case Statement::kContstmt:
+		break;
+	case Statement::kLogFunc:
+		if (!_stmt->log_func().has_pos() || _stmt->log_func().pos().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_log_func()->set_allocated_pos(_func(_seed/19));
+		if (!_stmt->log_func().has_size() || _stmt->log_func().size().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_log_func()->set_allocated_size(_func(_seed/17));
+		if (!_stmt->log_func().has_t1() || _stmt->log_func().t1().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_log_func()->set_allocated_t1(_func(_seed/7));
+		if (!_stmt->log_func().has_t2() || _stmt->log_func().t2().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_log_func()->set_allocated_t2(_func(_seed/5));
+		if (!_stmt->log_func().has_t3() || _stmt->log_func().t3().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_log_func()->set_allocated_t3(_func(_seed/3));
+		if (!_stmt->log_func().has_t4() || _stmt->log_func().t4().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_log_func()->set_allocated_t4(_func(_seed));
+		break;
+	case Statement::kCopyFunc:
+		if (!_stmt->copy_func().has_target() || _stmt->copy_func().target().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_copy_func()->set_allocated_target(_func(_seed/17));
+		if (!_stmt->copy_func().has_source() || _stmt->copy_func().source().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_copy_func()->set_allocated_source(_func(_seed/13));
+		if (!_stmt->copy_func().has_size() || _stmt->copy_func().size().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_copy_func()->set_allocated_size(_func(_seed/11));
+		break;
+	case Statement::kExtcodeCopy:
+		if (!_stmt->extcode_copy().has_addr() || _stmt->extcode_copy().addr().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_extcode_copy()->set_allocated_addr(_func(_seed/19));
+		if (!_stmt->extcode_copy().has_target() || _stmt->extcode_copy().target().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_extcode_copy()->set_allocated_target(_func(_seed/17));
+		if (!_stmt->extcode_copy().has_source() || _stmt->extcode_copy().source().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_extcode_copy()->set_allocated_source(_func(_seed/13));
+		if (!_stmt->extcode_copy().has_size() || _stmt->extcode_copy().size().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_extcode_copy()->set_allocated_size(_func(_seed/11));
+		break;
+	case Statement::kTerminatestmt:
+		break;
+	case Statement::kFunctioncall:
+		if (!_stmt->functioncall().has_in_param1() || _stmt->functioncall().in_param1().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_functioncall()->set_allocated_in_param1(_func(_seed/101));
+		if (!_stmt->functioncall().has_in_param2() || _stmt->functioncall().in_param2().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_functioncall()->set_allocated_in_param2(_func(_seed/103));
+		if (!_stmt->functioncall().has_in_param3() || _stmt->functioncall().in_param3().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_functioncall()->set_allocated_in_param3(_func(_seed/107));
+		if (!_stmt->functioncall().has_in_param4() || _stmt->functioncall().in_param4().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_functioncall()->set_allocated_in_param4(_func(_seed/113));
+		break;
+	case Statement::kFuncdef:
+		break;
+	case Statement::kPop:
+		if (!_stmt->pop().has_expr() || _stmt->pop().expr().expr_oneof_case() == Expression::EXPR_ONEOF_NOT_SET)
+			_stmt->mutable_pop()->set_allocated_expr(_func(_seed/51));
+		break;
+	case Statement::kLeave:
+		break;
+	case Statement::kMultidecl:
+		break;
+	case Statement::STMT_ONEOF_NOT_SET:
+		break;
+	}
+}
+
+void YulProtoMutator::addArgsRec(
+	Statement *_stmt,
+	unsigned int _seed,
+	std::function<void(Expression*, unsigned int)> _func
+)
+{
+	switch (_stmt->stmt_oneof_case())
+	{
+	case Statement::kDecl:
+		_func(_stmt->mutable_decl()->mutable_expr(), _seed/13);
+		break;
+	case Statement::kAssignment:
+		_func(_stmt->mutable_assignment()->mutable_expr(), _seed/17);
+		break;
+	case Statement::kIfstmt:
+		_func(_stmt->mutable_ifstmt()->mutable_cond(), _seed/23);
+		break;
+	case Statement::kStorageFunc:
+		_func(_stmt->mutable_storage_func()->mutable_loc(), _seed/29);
+		_func(_stmt->mutable_storage_func()->mutable_val(), _seed/37);
+		break;
+	case Statement::kBlockstmt:
+		break;
+	case Statement::kForstmt:
+		_func(_stmt->mutable_forstmt()->mutable_for_cond(), _seed/41);
+		break;
+	case Statement::kBoundedforstmt:
+		break;
+	case Statement::kSwitchstmt:
+		_func(_stmt->mutable_switchstmt()->mutable_switch_expr(), _seed/43);
+		break;
+	case Statement::kBreakstmt:
+		break;
+	case Statement::kContstmt:
+		break;
+	case Statement::kLogFunc:
+		_func(_stmt->mutable_log_func()->mutable_pos(), _seed/19);
+		_func(_stmt->mutable_log_func()->mutable_size(), _seed/17);
+		_func(_stmt->mutable_log_func()->mutable_t1(), _seed/7);
+		_func(_stmt->mutable_log_func()->mutable_t2(), _seed/5);
+		_func(_stmt->mutable_log_func()->mutable_t3(), _seed/3);
+		_func(_stmt->mutable_log_func()->mutable_t4(), _seed);
+		break;
+	case Statement::kCopyFunc:
+		_func(_stmt->mutable_copy_func()->mutable_target(), _seed/17);
+		_func(_stmt->mutable_copy_func()->mutable_source(), _seed/13);
+		_func(_stmt->mutable_copy_func()->mutable_size(), _seed/11);
+		break;
+	case Statement::kExtcodeCopy:
+		_func(_stmt->mutable_extcode_copy()->mutable_addr(), _seed/19);
+		_func(_stmt->mutable_extcode_copy()->mutable_target(), _seed/17);
+		_func(_stmt->mutable_extcode_copy()->mutable_source(), _seed/13);
+		_func(_stmt->mutable_extcode_copy()->mutable_size(), _seed/11);
+		break;
+	case Statement::kTerminatestmt:
+		if (_stmt->terminatestmt().term_oneof_case() == TerminatingStmt::kRetRev)
+		{
+			_func(_stmt->mutable_terminatestmt()->mutable_ret_rev()->mutable_pos(), _seed/11);
+			_func(_stmt->mutable_terminatestmt()->mutable_ret_rev()->mutable_size(), _seed/13);
+		}
+		else if (_stmt->terminatestmt().term_oneof_case() == TerminatingStmt::kSelfDes)
+			_func(_stmt->mutable_terminatestmt()->mutable_self_des()->mutable_addr(), _seed/17);
+		break;
+	case Statement::kFunctioncall:
+		_func(_stmt->mutable_functioncall()->mutable_in_param1(), _seed/11);
+		_func(_stmt->mutable_functioncall()->mutable_in_param2(), _seed/13);
+		_func(_stmt->mutable_functioncall()->mutable_in_param3(), _seed/17);
+		_func(_stmt->mutable_functioncall()->mutable_in_param4(), _seed/19);
+		break;
+	case Statement::kFuncdef:
+		break;
+	case Statement::kPop:
+		_func(_stmt->mutable_pop()->mutable_expr(), _seed/11);
+		break;
+	case Statement::kLeave:
+		break;
+	case Statement::kMultidecl:
+		break;
+	case Statement::STMT_ONEOF_NOT_SET:
+		break;
+	}
+}
+
+void YulProtoMutator::addStmt(Block* _block, unsigned _seed)
+{
+	auto stmt = _block->add_statements();
+	switch ((_seed / 17) % 19)
+	{
+	case 0:
+		stmt->set_allocated_decl(new VarDecl());
+		break;
+	case 1:
+		stmt->set_allocated_assignment(new AssignmentStatement());
+		break;
+	case 2:
+		stmt->set_allocated_ifstmt(new IfStmt());
+		break;
+	case 3:
+		stmt->set_allocated_storage_func(new StoreFunc());
+		break;
+	case 4:
+		stmt->set_allocated_blockstmt(new Block());
+		break;
+	case 5:
+		stmt->set_allocated_forstmt(new ForStmt());
+		break;
+	case 6:
+		stmt->set_allocated_switchstmt(new SwitchStmt());
+		break;
+	case 7:
+		stmt->set_allocated_breakstmt(new BreakStmt());
+		break;
+	case 8:
+		stmt->set_allocated_contstmt(new ContinueStmt());
+		break;
+	case 9:
+		stmt->set_allocated_log_func(new LogFunc());
+		break;
+	case 10:
+		stmt->set_allocated_copy_func(new CopyFunc());
+		break;
+	case 11:
+		stmt->set_allocated_extcode_copy(new ExtCodeCopy());
+		break;
+	case 12:
+		stmt->set_allocated_terminatestmt(new TerminatingStmt());
+		break;
+	case 13:
+		stmt->set_allocated_functioncall(new FunctionCall());
+		break;
+	case 14:
+		stmt->set_allocated_boundedforstmt(new BoundedForStmt());
+		break;
+	case 15:
+		stmt->set_allocated_funcdef(new FunctionDef());
+		break;
+	case 16:
+		stmt->set_allocated_pop(new PopStmt());
+		break;
+	case 17:
+		stmt->set_allocated_leave(new LeaveStmt());
+		break;
+	case 18:
+		stmt->set_allocated_multidecl(new MultiVarDecl());
+		break;
+	}
+}
+
 
 Literal* YulProtoMutator::intLiteral(unsigned _value)
 {
@@ -1382,9 +1764,8 @@ VarRef* YulProtoMutator::varRef(unsigned _seed)
 
 Expression* YulProtoMutator::refExpression(unsigned _seed)
 {
-	auto ref = varRef(_seed);
 	auto refExpr = new Expression();
-	refExpr->set_allocated_varref(ref);
+	refExpr->set_allocated_varref(varRef(_seed));
 	return refExpr;
 }
 
@@ -1524,10 +1905,10 @@ int YulProtoMutator::EnumTypeConverter<T>::enumMin()
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
 }
 
-UnaryOp* YulProtoMutator::loadExpression(unsigned _seed)
+Expression* YulProtoMutator::loadExpression(unsigned _seed)
 {
 	auto unop = new UnaryOp();
-	unop->set_allocated_operand(litExpression(0));
+	unop->set_allocated_operand(refExpression(_seed/17));
 	switch (_seed % 3)
 	{
 	case 0:
@@ -1540,7 +1921,9 @@ UnaryOp* YulProtoMutator::loadExpression(unsigned _seed)
 		unop->set_op(UnaryOp::CALLDATALOAD);
 		break;
 	}
-	return unop;
+	auto expr = new Expression();
+	expr->set_allocated_unop(unop);
+	return expr;
 }
 
 void YulProtoMutator::clearExpr(Expression* _expr)
@@ -1588,6 +1971,166 @@ void YulProtoMutator::clearExpr(Expression* _expr)
 		_expr->clear_unopdata();
 		break;
 	case Expression::EXPR_ONEOF_NOT_SET:
+		break;
+	}
+}
+
+Expression* YulProtoMutator::binopExpression(unsigned _seed)
+{
+	auto binop = new BinaryOp();
+	binop->set_allocated_left(refExpression(_seed/17));
+	binop->set_allocated_right(refExpression(_seed/21));
+	binop->set_op(
+		YulProtoMutator::EnumTypeConverter<BinaryOp_BOp>{}.enumFromSeed(_seed/23)
+	);
+	auto expr = new Expression();
+	expr->set_allocated_binop(binop);
+	return expr;
+}
+
+void YulProtoMutator::initOrVarRef(Expression* _expr, unsigned _seed)
+{
+	switch (_expr->expr_oneof_case())
+	{
+	// Nothing to be done because expression does not
+	// contain sub-expression.
+	case Expression::kVarref:
+		break;
+	case Expression::kCons:
+		if (_expr->cons().literal_oneof_case() == Literal::LITERAL_ONEOF_NOT_SET)
+			_expr->mutable_cons()->set_intval(_seed);
+		break;
+	case Expression::kBinop:
+		if (!set(_expr->binop().left()))
+			_expr->mutable_binop()->mutable_left()->set_allocated_varref(varRef(_seed));
+		else
+			initOrVarRef(_expr->mutable_binop()->mutable_left(), _seed);
+
+		if (!set(_expr->binop().right()))
+			_expr->mutable_binop()->mutable_right()->set_allocated_varref(varRef(_seed/17));
+		else
+			initOrVarRef(_expr->mutable_binop()->mutable_right(), _seed);
+		break;
+	case Expression::kUnop:
+		if (!set(_expr->unop().operand()))
+			_expr->mutable_unop()->mutable_operand()->set_allocated_varref(varRef(_seed));
+		else
+			initOrVarRef(_expr->mutable_unop()->mutable_operand(), _seed);
+		break;
+	case Expression::kTop:
+		if (!set(_expr->top().arg1()))
+			_expr->mutable_top()->mutable_arg1()->set_allocated_varref(varRef(_seed));
+		else
+			initOrVarRef(_expr->mutable_top()->mutable_arg1(), _seed);
+
+		if (!set(_expr->top().arg2()))
+			_expr->mutable_top()->mutable_arg2()->set_allocated_varref(varRef(_seed/17));
+		else
+			initOrVarRef(_expr->mutable_top()->mutable_arg2(), _seed);
+
+		if (!set(_expr->top().arg3()))
+			_expr->mutable_top()->mutable_arg3()->set_allocated_varref(varRef(_seed));
+		else
+			initOrVarRef(_expr->mutable_top()->mutable_arg3(), _seed);
+		break;
+	case Expression::kNop:
+		break;
+	case Expression::kFuncExpr:
+		_expr->mutable_func_expr()->set_ret(FunctionCall_Returns::FunctionCall_Returns_SINGLE);
+
+		if (!set(_expr->func_expr().in_param1()))
+			_expr->mutable_func_expr()->mutable_in_param1()->set_allocated_varref(varRef(_seed));
+		else
+			initOrVarRef(_expr->mutable_func_expr()->mutable_in_param1(), _seed);
+
+		if (!set(_expr->func_expr().in_param2()))
+			_expr->mutable_func_expr()->mutable_in_param2()->set_allocated_varref(varRef(_seed/7));
+		else
+			initOrVarRef(_expr->mutable_func_expr()->mutable_in_param2(), _seed);
+
+		if (!set(_expr->func_expr().in_param3()))
+			_expr->mutable_func_expr()->mutable_in_param3()->set_allocated_varref(varRef(_seed/11));
+		else
+			initOrVarRef(_expr->mutable_func_expr()->mutable_in_param3(), _seed);
+
+		if (!set(_expr->func_expr().in_param4()))
+			_expr->mutable_func_expr()->mutable_in_param4()->set_allocated_varref(varRef(_seed));
+		else
+			initOrVarRef(_expr->mutable_func_expr()->mutable_in_param4(), _seed);
+
+		break;
+	case Expression::kLowcall:
+		// Wei
+		if (_expr->lowcall().callty() == LowLevelCall::CALLCODE || _expr->lowcall().callty() == LowLevelCall::CALL)
+		{
+			if (!set(_expr->lowcall().wei()))
+				_expr->mutable_lowcall()->mutable_wei()->set_allocated_varref(varRef(_seed));
+			else
+				initOrVarRef(_expr->mutable_lowcall()->mutable_wei(), _seed);
+		}
+
+		// Gas
+		if (!set(_expr->lowcall().gas()))
+			_expr->mutable_lowcall()->mutable_gas()->set_allocated_varref(varRef(_seed/7));
+		else
+			initOrVarRef(_expr->mutable_lowcall()->mutable_gas(), _seed);
+
+		// Addr
+		if (!set(_expr->lowcall().addr()))
+			_expr->mutable_lowcall()->mutable_addr()->set_allocated_varref(varRef(_seed/5));
+		else
+			initOrVarRef(_expr->mutable_lowcall()->mutable_addr(), _seed);
+
+		// In
+		if (!set(_expr->lowcall().in()))
+			_expr->mutable_lowcall()->mutable_in()->set_allocated_varref(varRef(_seed/3));
+		else
+			initOrVarRef(_expr->mutable_lowcall()->mutable_in(), _seed);
+		// Insize
+		if (!set(_expr->lowcall().insize()))
+			_expr->mutable_lowcall()->mutable_insize()->set_allocated_varref(varRef(_seed/11));
+		else
+			initOrVarRef(_expr->mutable_lowcall()->mutable_insize(), _seed);
+		// Out
+		if (!set(_expr->lowcall().out()))
+			_expr->mutable_lowcall()->mutable_out()->set_allocated_varref(varRef(_seed/13));
+		else
+			initOrVarRef(_expr->mutable_lowcall()->mutable_out(), _seed);
+		// Outsize
+		if (!set(_expr->lowcall().outsize()))
+			_expr->mutable_lowcall()->mutable_outsize()->set_allocated_varref(varRef(_seed/17));
+		else
+			initOrVarRef(_expr->mutable_lowcall()->mutable_outsize(), _seed);
+		break;
+	case Expression::kCreate:
+		// Value
+		if (_expr->create().createty() == Create_Type::Create_Type_CREATE2)
+		{
+			if (!set(_expr->create().value()))
+				_expr->mutable_create()->mutable_value()->set_allocated_varref(varRef(_seed/5));
+			else
+				initOrVarRef(_expr->mutable_create()->mutable_value(), _seed);
+		}
+		// Wei
+		if (!set(_expr->create().wei()))
+			_expr->mutable_create()->mutable_wei()->set_allocated_varref(varRef(_seed/7));
+		else
+			initOrVarRef(_expr->mutable_create()->mutable_wei(), _seed);
+		// Position
+		if (!set(_expr->create().position()))
+			_expr->mutable_create()->mutable_position()->set_allocated_varref(varRef(_seed/11));
+		else
+			initOrVarRef(_expr->mutable_create()->mutable_position(), _seed);
+		// Size
+		if (!set(_expr->create().size()))
+			_expr->mutable_create()->mutable_size()->set_allocated_varref(varRef(_seed/13));
+		else
+			initOrVarRef(_expr->mutable_create()->mutable_size(), _seed);
+		break;
+	case Expression::kUnopdata:
+		break;
+	case Expression::EXPR_ONEOF_NOT_SET:
+		_expr->set_allocated_varref(varRef(_seed/17));
 		break;
 	}
 }

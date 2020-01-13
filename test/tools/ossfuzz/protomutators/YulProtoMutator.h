@@ -37,7 +37,7 @@ struct YulProtoMutator
 	/// Return a load expression from location zero
 	/// @param _seed: Pseudo-random unsigned integer used to create
 	/// type of load i.e., memory, storage, or calldata.
-	static UnaryOp* loadExpression(unsigned _seed);
+	static Expression* loadExpression(unsigned _seed);
 
 	/// Configure function call from a pseudo-random seed.
 	/// @param _call: Pre-allocated FunctionCall protobuf message
@@ -58,6 +58,28 @@ struct YulProtoMutator
 	/// Clear protobuf expression
 	/// @param _expr: Protobuf expression to be cleared
 	static void clearExpr(Expression* _expr);
+
+	/// Convert all expression-type arguments of statement
+	/// to a given type.
+	static void addArgs(Statement* _stmt, unsigned _seed, std::function<Expression*(unsigned)>);
+
+	/// Convert all expression-type arguments of statement
+	/// to a given type recursively.
+	static void addArgsRec(Statement* _stmt, unsigned _seed, std::function<void(Expression*, unsigned)>);
+
+	/// Add a new statement to block
+	static void addStmt(Block *_block, unsigned _seed);
+
+	/// Create binary op expression of two variable references.
+	static Expression* binopExpression(unsigned _seed);
+
+	static void initOrVarRef(Expression* _expr, unsigned _seed);
+
+	/// Check if expression is set.
+	static bool set(Expression const& _expr)
+	{
+		return _expr.expr_oneof_case() != Expression::EXPR_ONEOF_NOT_SET;
+	}
 
 	/// Helper type for type matching visitor.
 	template<class T> struct AlwaysFalse: std::false_type {};
