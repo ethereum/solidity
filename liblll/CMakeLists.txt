@@ -11,4 +11,4 @@ set(sources
 )
 
 add_library(lll ${sources})
-target_link_libraries(lll PUBLIC evmasm devcore)
+target_link_libraries(lll PUBLIC evmasm solutil)

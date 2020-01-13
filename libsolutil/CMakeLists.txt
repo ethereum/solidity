@@ -33,11 +33,11 @@ set(sources
 	Whiskers.h
 )
 
-add_library(devcore ${sources})
-target_link_libraries(devcore PUBLIC jsoncpp Boost::boost Boost::filesystem Boost::system)
-target_include_directories(devcore PUBLIC "${CMAKE_SOURCE_DIR}")
-add_dependencies(devcore solidity_BuildInfo.h)
+add_library(solutil ${sources})
+target_link_libraries(solutil PUBLIC jsoncpp Boost::boost Boost::filesystem Boost::system)
+target_include_directories(solutil PUBLIC "${CMAKE_SOURCE_DIR}")
+add_dependencies(solutil solidity_BuildInfo.h)
 
 if(SOLC_LINK_STATIC)
-	target_link_libraries(devcore PUBLIC Threads::Threads)
+	target_link_libraries(solutil PUBLIC Threads::Threads)
 endif()

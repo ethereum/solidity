@@ -159,7 +159,7 @@ add_executable(soltest ${sources}
     ${libsolidity_sources}
     ${libsolidity_util_sources}
 )
-target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm devcore Boost::boost Boost::program_options Boost::unit_test_framework evmc)
+target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm solutil Boost::boost Boost::program_options Boost::unit_test_framework evmc)
 
 
 # Special compilation flag for Visual Studio (version 2019 at least affected)
