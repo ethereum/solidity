@@ -24,9 +24,11 @@ StructDefinition = 'struct' Identifier '{'
 ModifierDefinition = 'modifier' Identifier ParameterList?  ( 'virtual' | OverrideSpecifier )* Block
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
-FunctionDefinition = 'function' Identifier? ParameterList
+FunctionDefinition = FunctionDescriptor ParameterList
                      ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' | 'virtual' | OverrideSpecifier )*
                      ( 'returns' ParameterList )? ( ';' | Block )
+
+FunctionDescriptor = 'function' Identifier | 'constructor' | 'fallback' | 'receive'
 
 OverrideSpecifier = 'override' ( '(' UserDefinedTypeName (',' UserDefinedTypeName)* ')' )?
 
