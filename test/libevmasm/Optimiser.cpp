@@ -20,7 +20,7 @@
  * Tests for the Solidity optimizer.
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/PeepholeOptimiser.h>
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(cse_associativity2)
 
 BOOST_AUTO_TEST_CASE(cse_double_shift_right_overflow)
 {
-	if (solidity::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 	{
 		AssemblyItems input{
 			Instruction::CALLVALUE,
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(cse_double_shift_right_overflow)
 
 BOOST_AUTO_TEST_CASE(cse_double_shift_left_overflow)
 {
-	if (solidity::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 	{
 		AssemblyItems input{
 			Instruction::DUP1,
@@ -1132,7 +1132,7 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(u256(8));
 
-	main.optimise(true, solidity::test::Options::get().evmVersion(), false, 200);
+	main.optimise(true, solidity::test::CommonOptions::get().evmVersion(), false, 200);
 
 	AssemblyItems expectationMain{
 		AssemblyItem(PushSubSize, 0),
@@ -1178,7 +1178,7 @@ BOOST_AUTO_TEST_CASE(cse_sub_zero)
 
 BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 {
-	if (!solidity::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
 
 	for (int i = 1; i < 256; i++)
@@ -1326,7 +1326,7 @@ BOOST_AUTO_TEST_CASE(cse_remove_unwanted_masking_of_address)
 
 BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
 {
-	if (!solidity::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
 
 	checkCSE({

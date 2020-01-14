@@ -16,7 +16,7 @@
 */
 
 #include <test/libsolidity/SMTCheckerJSONTest.h>
-#include <test/Options.h>
+#include <test/Common.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>

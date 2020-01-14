@@ -20,7 +20,7 @@
  */
 
 #include <test/Metadata.h>
-#include <test/Options.h>
+#include <test/Common.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolutil/SwarmHash.h>
@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 			CompilerStack compilerStack;
 			compilerStack.overwriteReleaseFlag(release);
 			compilerStack.setSources({{"", std::string(sourceCode)}});
-			compilerStack.setEVMVersion(solidity::test::Options::get().evmVersion());
-			compilerStack.setOptimiserSettings(solidity::test::Options::get().optimize);
+			compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
+			compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 			compilerStack.setMetadataHash(metadataHash);
 			BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 			bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
@@ -129,8 +129,8 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 			CompilerStack compilerStack;
 			compilerStack.overwriteReleaseFlag(release);
 			compilerStack.setSources({{"", std::string(sourceCode)}});
-			compilerStack.setEVMVersion(solidity::test::Options::get().evmVersion());
-			compilerStack.setOptimiserSettings(solidity::test::Options::get().optimize);
+			compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
+			compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 			compilerStack.setMetadataHash(metadataHash);
 			BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 			bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
@@ -191,8 +191,8 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
 		{"A", std::string(sourceCodeA)},
 		{"B", std::string(sourceCodeB)},
 	});
-	compilerStack.setEVMVersion(solidity::test::Options::get().evmVersion());
-	compilerStack.setOptimiserSettings(solidity::test::Options::get().optimize);
+	compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
+	compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
 	std::string const& serialisedMetadata = compilerStack.metadata("A");
@@ -232,8 +232,8 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 		{"B", std::string(sourceCodeB)},
 		{"C", std::string(sourceCodeC)}
 	});
-	compilerStack.setEVMVersion(solidity::test::Options::get().evmVersion());
-	compilerStack.setOptimiserSettings(solidity::test::Options::get().optimize);
+	compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
+	compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
 	std::string const& serialisedMetadata = compilerStack.metadata("C");
@@ -260,8 +260,8 @@ BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
 	{
 		CompilerStack compilerStack;
 		compilerStack.setSources({{"", std::string(_src)}});
-		compilerStack.setEVMVersion(solidity::test::Options::get().evmVersion());
-		compilerStack.setOptimiserSettings(solidity::test::Options::get().optimize);
+		compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
+		compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 		compilerStack.useMetadataLiteralSources(_literal);
 		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 		string metadata_str = compilerStack.metadata("test");

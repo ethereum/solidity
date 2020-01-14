@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/DebugSettings.h>

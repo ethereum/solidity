@@ -16,7 +16,7 @@
 */
 
 #include <test/libsolidity/GasTest.h>
-#include <test/Options.h>
+#include <test/Common.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
 #include <liblangutil/SourceReferenceFormatterHuman.h>

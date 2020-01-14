@@ -19,7 +19,7 @@
 
 #include <test/tools/yulInterpreter/Interpreter.h>
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/wasm/WasmDialect.h>
@@ -67,7 +67,7 @@ TestCase::TestResult EwasmTranslationTest::run(ostream& _stream, string const& _
 		return TestResult::FatalError;
 
 	*m_object = EVMToEwasmTranslator(
-		EVMDialect::strictAssemblyForEVMObjects(solidity::test::Options::get().evmVersion())
+		EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion())
 	).run(*m_object);
 
 	// Add call to "main()".
@@ -111,7 +111,7 @@ void EwasmTranslationTest::printIndented(ostream& _stream, string const& _output
 bool EwasmTranslationTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	AssemblyStack stack(
-		solidity::test::Options::get().evmVersion(),
+		solidity::test::CommonOptions::get().evmVersion(),
 		AssemblyStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none()
 	);

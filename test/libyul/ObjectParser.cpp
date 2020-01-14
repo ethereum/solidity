@@ -19,7 +19,7 @@
  * Unit tests for the Yul object parser.
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <test/libsolidity/ErrorCheck.h>
 
@@ -49,7 +49,7 @@ std::pair<bool, ErrorList> parse(string const& _source)
 	try
 	{
 		AssemblyStack asmStack(
-			solidity::test::Options::get().evmVersion(),
+			solidity::test::CommonOptions::get().evmVersion(),
 			AssemblyStack::Language::StrictAssembly,
 			solidity::frontend::OptimiserSettings::none()
 		);
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(to_string)
 )";
 	expectation = boost::replace_all_copy(expectation, "\t", "    ");
 	AssemblyStack asmStack(
-		solidity::test::Options::get().evmVersion(),
+		solidity::test::CommonOptions::get().evmVersion(),
 		AssemblyStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none()
 	);

@@ -21,7 +21,7 @@
 
 #include <test/libyul/Common.h>
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -48,7 +48,7 @@ namespace
 {
 Dialect const& defaultDialect(bool _yul)
 {
-	return _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM(solidity::test::Options::get().evmVersion());
+	return _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion());
 }
 }
 
@@ -64,9 +64,9 @@ void yul::test::printErrors(ErrorList const& _errors)
 pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
 {
 	AssemblyStack stack(
-		solidity::test::Options::get().evmVersion(),
+		solidity::test::CommonOptions::get().evmVersion(),
 		_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
-		solidity::test::Options::get().optimize ?
+		solidity::test::CommonOptions::get().optimize ?
 			solidity::frontend::OptimiserSettings::standard() :
 			solidity::frontend::OptimiserSettings::minimal()
 	);

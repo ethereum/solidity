@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 		}
 	)";
 
-	if (!solidity::test::Options::get().useABIEncoderV2)
+	if (!solidity::test::CommonOptions::get().useABIEncoderV2)
 	{
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
@@ -752,7 +752,7 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor_indirect)
 			}
 		}
 	)";
-	if (solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 	{
 		NEW_ENCODER(
 			compileAndRun(sourceCode, 0, "D");

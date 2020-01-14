@@ -18,7 +18,7 @@
  * Unit tests for stack-reusing code generator.
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libyul/AssemblyStack.h>
 #include <libevmasm/Instruction.h>

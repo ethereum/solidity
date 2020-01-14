@@ -18,7 +18,7 @@
  * Unit tests for the code metrics.
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <test/libyul/Common.h>
 

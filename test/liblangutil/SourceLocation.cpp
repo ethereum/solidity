@@ -22,7 +22,7 @@
 
 #include <liblangutil/SourceLocation.h>
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <boost/test/unit_test.hpp>
 

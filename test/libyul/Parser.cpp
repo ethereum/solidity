@@ -19,7 +19,7 @@
  * Unit tests for parsing Yul.
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <test/libsolidity/ErrorCheck.h>
 #include <test/libyul/Common.h>

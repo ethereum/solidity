@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(enums)
 			}
 		}
 	)";
-	bool newDecoder = solidity::test::Options::get().useABIEncoderV2;
+	bool newDecoder = solidity::test::CommonOptions::get().useABIEncoderV2;
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction("f(uint8)", 0), encodeArgs(u256(0)));
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(cleanup)
 			}
 		}
 	)";
-	bool newDecoder = solidity::test::Options::get().useABIEncoderV2;
+	bool newDecoder = solidity::test::CommonOptions::get().useABIEncoderV2;
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		ABI_CHECK(
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(validation_function_type)
 			function i(function () external[] calldata a) external pure returns (uint r) { a[0]; r = 4; }
 		}
 	)";
-	bool newDecoder = solidity::test::Options::get().useABIEncoderV2;
+	bool newDecoder = solidity::test::CommonOptions::get().useABIEncoderV2;
 	string validFun{"01234567890123456789abcd"};
 	string invalidFun{"01234567890123456789abcdX"};
 	BOTH_ENCODERS(
@@ -950,7 +950,7 @@ BOOST_AUTO_TEST_CASE(out_of_bounds_bool_value)
 			function f(bool b) public pure returns (bool) { return b; }
 		}
 	)";
-	bool newDecoder = solidity::test::Options::get().useABIEncoderV2;
+	bool newDecoder = solidity::test::CommonOptions::get().useABIEncoderV2;
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction("f(bool)", true), encodeArgs(true));

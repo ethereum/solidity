@@ -16,7 +16,7 @@
 */
 
 #include <test/libyul/FunctionSideEffects.h>
-#include <test/Options.h>
+#include <test/Common.h>
 #include <test/libyul/Common.h>
 
 #include <libsolutil/AnsiColorized.h>

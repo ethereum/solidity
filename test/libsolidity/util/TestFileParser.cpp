@@ -18,7 +18,7 @@
 #include <test/libsolidity/util/TestFileParser.h>
 
 #include <test/libsolidity/util/BytesUtils.h>
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <liblangutil/Common.h>
 

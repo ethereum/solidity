@@ -13,7 +13,6 @@ target_link_libraries(yulopti PRIVATE solidity Boost::boost Boost::program_optio
 add_executable(isoltest
 	isoltest.cpp
 	IsolTestOptions.cpp
-	../Options.cpp
 	../Common.cpp
 	../EVMHost.cpp
 	../TestCase.cpp
