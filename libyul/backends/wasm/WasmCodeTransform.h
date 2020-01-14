@@ -28,7 +28,7 @@
 #include <stack>
 #include <map>
 
-namespace yul
+namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 

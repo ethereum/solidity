@@ -32,7 +32,7 @@
 #include <optional>
 #include <set>
 
-namespace yul
+namespace solidity::yul
 {
 
 class NameCollector;

@@ -30,12 +30,12 @@
 #include <optional>
 #include <stack>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 }
 
-namespace yul
+namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 class EVMAssembly;
@@ -170,7 +170,6 @@ protected:
 	void deleteVariable(Scope::Variable const& _var);
 
 public:
-	void operator()(Instruction const& _instruction);
 	void operator()(Literal const& _literal);
 	void operator()(Identifier const& _identifier);
 	void operator()(FunctionCall const&);

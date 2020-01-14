@@ -28,9 +28,9 @@
 #include <liblangutil/ErrorReporter.h>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 bool DocStringAnalyser::analyseDocStrings(SourceUnit const& _sourceUnit)
 {

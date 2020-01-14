@@ -22,18 +22,14 @@
 
 #include <test/Options.h>
 #include <string>
-#include <libdevcore/JSON.h>
+#include <libsolutil/JSON.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Exceptions.h>
 
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 class DocumentationChecker
@@ -48,7 +44,7 @@ public:
 	{
 		m_compilerStack.reset();
 		m_compilerStack.setSources({{"", "pragma solidity >=0.0;\n" + _code}});
-		m_compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
+		m_compilerStack.setEVMVersion(solidity::test::Options::get().evmVersion());
 		BOOST_REQUIRE_MESSAGE(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
 
 		Json::Value generatedDocumentation;
@@ -57,7 +53,7 @@ public:
 		else
 			generatedDocumentation = m_compilerStack.natspecDev(_contractName);
 		Json::Value expectedDocumentation;
-		jsonParseStrict(_expectedDocumentationString, expectedDocumentation);
+		util::jsonParseStrict(_expectedDocumentationString, expectedDocumentation);
 		BOOST_CHECK_MESSAGE(
 			expectedDocumentation == generatedDocumentation,
 			"Expected:\n" << expectedDocumentation.toStyledString() <<
@@ -69,7 +65,7 @@ public:
 	{
 		m_compilerStack.reset();
 		m_compilerStack.setSources({{"", "pragma solidity >=0.0;\n" + _code}});
-		m_compilerStack.setEVMVersion(dev::test::Options::get().evmVersion());
+		m_compilerStack.setEVMVersion(solidity::test::Options::get().evmVersion());
 		BOOST_CHECK(!m_compilerStack.parseAndAnalyze());
 		BOOST_REQUIRE(Error::containsErrorOfType(m_compilerStack.errors(), Error::Type::DocstringParsingError));
 	}
@@ -978,6 +974,4 @@ BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 }

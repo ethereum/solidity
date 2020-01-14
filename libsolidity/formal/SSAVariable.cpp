@@ -18,7 +18,8 @@
 #include <libsolidity/formal/SSAVariable.h>
 
 using namespace std;
-using namespace dev::solidity::smt;
+using namespace solidity::frontend;
+using namespace solidity::frontend::smt;
 
 SSAVariable::SSAVariable()
 {

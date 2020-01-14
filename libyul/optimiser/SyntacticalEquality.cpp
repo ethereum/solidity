@@ -24,11 +24,11 @@
 #include <libyul/AsmData.h>
 #include <libyul/Utilities.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 bool SyntacticallyEqual::operator()(Expression const& _lhs, Expression const& _rhs)
 {
@@ -50,7 +50,7 @@ bool SyntacticallyEqual::expressionEqual(FunctionCall const& _lhs, FunctionCall 
 {
 	return
 		expressionEqual(_lhs.functionName, _rhs.functionName) &&
-		containerEqual(_lhs.arguments, _rhs.arguments, [this](Expression const& _lhsExpr, Expression const& _rhsExpr) -> bool {
+		util::containerEqual(_lhs.arguments, _rhs.arguments, [this](Expression const& _lhsExpr, Expression const& _rhsExpr) -> bool {
 			return (*this)(_lhsExpr, _rhsExpr);
 		});
 }
@@ -79,7 +79,7 @@ bool SyntacticallyEqual::statementEqual(ExpressionStatement const& _lhs, Express
 }
 bool SyntacticallyEqual::statementEqual(Assignment const& _lhs, Assignment const& _rhs)
 {
-	return containerEqual(
+	return util::containerEqual(
 		_lhs.variableNames,
 		_rhs.variableNames,
 		[this](Identifier const& _lhsVarName, Identifier const& _rhsVarName) -> bool {
@@ -93,7 +93,7 @@ bool SyntacticallyEqual::statementEqual(VariableDeclaration const& _lhs, Variabl
 	// first visit expression, then variable declarations
 	if (!compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.value, _rhs.value))
 		return false;
-	return containerEqual(_lhs.variables, _rhs.variables, [this](TypedName const& _lhsVarName, TypedName const& _rhsVarName) -> bool {
+	return util::containerEqual(_lhs.variables, _rhs.variables, [this](TypedName const& _lhsVarName, TypedName const& _rhsVarName) -> bool {
 		return this->visitDeclaration(_lhsVarName, _rhsVarName);
 	});
 }
@@ -104,9 +104,9 @@ bool SyntacticallyEqual::statementEqual(FunctionDefinition const& _lhs, Function
 		return this->visitDeclaration(_lhsVarName, _rhsVarName);
 	};
 	// first visit parameter declarations, then body
-	if (!containerEqual(_lhs.parameters, _rhs.parameters, compare))
+	if (!util::containerEqual(_lhs.parameters, _rhs.parameters, compare))
 		return false;
-	if (!containerEqual(_lhs.returnVariables, _rhs.returnVariables, compare))
+	if (!util::containerEqual(_lhs.returnVariables, _rhs.returnVariables, compare))
 		return false;
 	return statementEqual(_lhs.body, _rhs.body);
 }
@@ -128,7 +128,7 @@ bool SyntacticallyEqual::statementEqual(Switch const& _lhs, Switch const& _rhs)
 		rhsCases.insert(&rhsCase);
 	return
 		compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.expression, _rhs.expression) &&
-		containerEqual(lhsCases, rhsCases, [this](Case const* _lhsCase, Case const* _rhsCase) -> bool {
+		util::containerEqual(lhsCases, rhsCases, [this](Case const* _lhsCase, Case const* _rhsCase) -> bool {
 			return this->switchCaseEqual(*_lhsCase, *_rhsCase);
 		});
 }
@@ -152,7 +152,7 @@ bool SyntacticallyEqual::statementEqual(ForLoop const& _lhs, ForLoop const& _rhs
 
 bool SyntacticallyEqual::statementEqual(Block const& _lhs, Block const& _rhs)
 {
-	return containerEqual(_lhs.statements, _rhs.statements, [this](Statement const& _lhsStmt, Statement const& _rhsStmt) -> bool {
+	return util::containerEqual(_lhs.statements, _rhs.statements, [this](Statement const& _lhsStmt, Statement const& _rhsStmt) -> bool {
 		return (*this)(_lhsStmt, _rhsStmt);
 	});
 }

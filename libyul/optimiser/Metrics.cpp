@@ -28,12 +28,13 @@
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
 
-#include <libdevcore/Visitor.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Visitor.h>
+#include <libsolutil/CommonData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 size_t CodeSize::codeSize(Statement const& _statement)
 {
@@ -152,12 +153,12 @@ void CodeCost::visit(Expression const& _expression)
 	ASTWalker::visit(_expression);
 }
 
-void CodeCost::addInstructionCost(eth::Instruction _instruction)
+void CodeCost::addInstructionCost(evmasm::Instruction _instruction)
 {
-	dev::eth::Tier gasPriceTier = dev::eth::instructionInfo(_instruction).gasPriceTier;
-	if (gasPriceTier < dev::eth::Tier::VeryLow)
+	evmasm::Tier gasPriceTier = evmasm::instructionInfo(_instruction).gasPriceTier;
+	if (gasPriceTier < evmasm::Tier::VeryLow)
 		m_cost -= 1;
-	else if (gasPriceTier < dev::eth::Tier::High)
+	else if (gasPriceTier < evmasm::Tier::High)
 		m_cost += 1;
 	else
 		m_cost += 49;

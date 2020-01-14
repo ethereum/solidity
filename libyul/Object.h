@@ -23,12 +23,12 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/YulString.h>
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <memory>
 #include <set>
 
-namespace yul
+namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 
@@ -49,10 +49,10 @@ struct ObjectNode
  */
 struct Data: ObjectNode
 {
-	Data(YulString _name, dev::bytes _data): data(std::move(_data)) { name = _name; }
+	Data(YulString _name, bytes _data): data(std::move(_data)) { name = _name; }
 	std::string toString(bool _yul) const override;
 
-	dev::bytes data;
+	bytes data;
 };
 
 /**

@@ -27,8 +27,8 @@
 #include <liblangutil/ErrorReporter.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::frontend;
 
 void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 {

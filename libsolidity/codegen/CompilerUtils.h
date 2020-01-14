@@ -27,8 +27,7 @@
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerContext.h>
 
-namespace dev {
-namespace solidity {
+namespace solidity::frontend {
 
 class Type; // forward
 
@@ -266,7 +265,7 @@ public:
 	/// Pops slots from the stack such that its height is _toHeight.
 	/// Adds jump to _jumpTo.
 	/// Readjusts the stack offset to the original value.
-	void popAndJump(unsigned _toHeight, eth::AssemblyItem const& _jumpTo);
+	void popAndJump(unsigned _toHeight, evmasm::AssemblyItem const& _jumpTo);
 
 	template <class T>
 	static unsigned sizeOnStack(std::vector<T> const& _variables);
@@ -325,5 +324,4 @@ unsigned CompilerUtils::sizeOnStack(std::vector<T> const& _variables)
 	return size;
 }
 
-}
 }

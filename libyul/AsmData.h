@@ -25,15 +25,11 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/YulString.h>
 
-#include <libevmasm/Instruction.h>
 #include <liblangutil/SourceLocation.h>
 
-#include <boost/noncopyable.hpp>
-
-#include <map>
 #include <memory>
 
-namespace yul
+namespace solidity::yul
 {
 
 using Type = YulString;
@@ -41,8 +37,6 @@ using Type = YulString;
 struct TypedName { langutil::SourceLocation location; YulString name; Type type; };
 using TypedNameList = std::vector<TypedName>;
 
-/// Direct EVM instruction (except PUSHi and JUMPDEST)
-struct Instruction { langutil::SourceLocation location; dev::eth::Instruction instruction; };
 /// Literal number or string (up to 32 bytes)
 enum class LiteralKind { Number, Boolean, String };
 struct Literal { langutil::SourceLocation location; LiteralKind kind; YulString value; Type type; };

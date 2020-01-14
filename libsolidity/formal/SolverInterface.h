@@ -20,8 +20,8 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/Exceptions.h>
 
 #include <boost/noncopyable.hpp>
 #include <cstdio>
@@ -29,11 +29,7 @@
 #include <string>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
-{
-namespace smt
+namespace solidity::frontend::smt
 {
 
 struct SMTSolverChoice
@@ -145,7 +141,7 @@ struct SortSort: public Sort
 };
 
 // Forward declaration.
-SortPointer smtSort(solidity::Type const& _type);
+SortPointer smtSort(Type const& _type);
 
 /// C++ representation of an SMTLIB2 expression.
 class Expression
@@ -153,7 +149,7 @@ class Expression
 	friend class SolverInterface;
 public:
 	explicit Expression(bool _v): Expression(_v ? "true" : "false", Kind::Bool) {}
-	explicit Expression(solidity::TypePointer _type): Expression(_type->toString(), {}, std::make_shared<SortSort>(smtSort(*_type))) {}
+	explicit Expression(frontend::TypePointer _type): Expression(_type->toString(), {}, std::make_shared<SortSort>(smtSort(*_type))) {}
 	Expression(size_t _number): Expression(std::to_string(_number), Kind::Int) {}
 	Expression(u256 const& _number): Expression(_number.str(), Kind::Int) {}
 	Expression(s256 const& _number): Expression(_number.str(), Kind::Int) {}
@@ -376,6 +372,4 @@ public:
 	virtual unsigned solvers() { return 1; }
 };
 
-}
-}
 }

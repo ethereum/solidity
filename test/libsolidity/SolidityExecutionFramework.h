@@ -33,15 +33,10 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend::test
 {
 
-namespace test
-{
-
-class SolidityExecutionFramework: public dev::test::ExecutionFramework
+class SolidityExecutionFramework: public solidity::test::ExecutionFramework
 {
 
 public:
@@ -55,7 +50,7 @@ public:
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
 		bytes const& _arguments = bytes(),
-		std::map<std::string, dev::test::Address> const& _libraryAddresses = std::map<std::string, dev::test::Address>()
+		std::map<std::string, solidity::test::Address> const& _libraryAddresses = std::map<std::string, solidity::test::Address>()
 	) override
 	{
 		bytes bytecode = compileContract(_sourceCode, _contractName, _libraryAddresses);
@@ -66,15 +61,13 @@ public:
 	bytes compileContract(
 		std::string const& _sourceCode,
 		std::string const& _contractName = "",
-		std::map<std::string, dev::test::Address> const& _libraryAddresses = std::map<std::string, dev::test::Address>()
+		std::map<std::string, solidity::test::Address> const& _libraryAddresses = std::map<std::string, solidity::test::Address>()
 	);
 
 protected:
-	dev::solidity::CompilerStack m_compiler;
+	solidity::frontend::CompilerStack m_compiler;
 	bool m_compileViaYul = false;
 };
 
-}
-}
 } // end namespaces
 

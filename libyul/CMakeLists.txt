@@ -158,4 +158,4 @@ add_library(yul
 	optimiser/VarNameCleaner.cpp
 	optimiser/VarNameCleaner.h
 )
-target_link_libraries(yul PUBLIC evmasm devcore langutil)
+target_link_libraries(yul PUBLIC evmasm solutil langutil)

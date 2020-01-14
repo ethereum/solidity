@@ -29,15 +29,13 @@
 #include <variant>
 #include <optional>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 class FunctionType;
 class ModifierType;
@@ -192,5 +190,4 @@ private:
 	std::map<ContractDefinition const*, OverrideProxyBySignatureMultiSet> mutable m_inheritedModifiers;
 };
 
-}
 }

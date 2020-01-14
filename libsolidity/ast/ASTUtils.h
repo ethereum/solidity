@@ -17,14 +17,13 @@
 
 #pragma once
 
-namespace dev
+namespace solidity::frontend
 {
-namespace solidity
-{
+
+class VariableDeclaration;
 
 /// Find the topmost referenced variable declaration when the given variable
 /// declaration value is an identifier. Works only for constant variable declarations.
 VariableDeclaration const* rootVariableDeclaration(VariableDeclaration const& _varDecl);
 
-}
 }

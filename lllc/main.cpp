@@ -24,14 +24,15 @@
 #include <iostream>
 #include <clocale>
 #include <liblll/Compiler.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/CommonData.h>
 #include <libevmasm/Instruction.h>
 #include <solidity/BuildInfo.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::lll;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::lll;
 
 static string const VersionString =
 	string(ETH_PROJECT_VERSION) +
@@ -129,7 +130,7 @@ int main(int argc, char** argv)
 	}
 	else if (mode == Disassemble)
 	{
-		cout << dev::eth::disassemble(fromHex(src)) << endl;
+		cout << evmasm::disassemble(fromHex(src)) << endl;
 	}
 	else if (mode == Binary || mode == Hex)
 	{

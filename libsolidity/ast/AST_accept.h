@@ -26,9 +26,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 void SourceUnit::accept(ASTVisitor& _visitor)
@@ -895,5 +893,4 @@ void Literal::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
-}
 }

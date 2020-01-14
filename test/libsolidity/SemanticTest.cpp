@@ -25,11 +25,11 @@
 #include <memory>
 #include <stdexcept>
 
-using namespace dev;
-using namespace solidity;
-using namespace dev::solidity::test;
-using namespace dev::formatting;
 using namespace std;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::util::formatting;
+using namespace solidity::frontend::test;
 using namespace boost;
 using namespace boost::algorithm;
 using namespace boost::unit_test;
@@ -78,7 +78,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 		for (auto& test: m_tests)
 			test.reset();
 
-		map<string, dev::test::Address> libraries;
+		map<string, solidity::test::Address> libraries;
 
 		bool constructed = false;
 
@@ -190,7 +190,7 @@ void SemanticTest::parseExpectations(istream& _stream)
 	std::move(functionCalls.begin(), functionCalls.end(), back_inserter(m_tests));
 }
 
-bool SemanticTest::deploy(string const& _contractName, u256 const& _value, bytes const& _arguments, map<string, dev::test::Address> const& _libraries)
+bool SemanticTest::deploy(string const& _contractName, u256 const& _value, bytes const& _arguments, map<string, solidity::test::Address> const& _libraries)
 {
 	auto output = compileAndRunWithoutCheck(m_source, _value, _contractName, _arguments, _libraries);
 	return !output.empty() && m_transactionSuccessful;

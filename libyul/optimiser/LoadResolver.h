@@ -25,7 +25,7 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libevmasm/Instruction.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct EVMDialect;
@@ -62,7 +62,7 @@ protected:
 
 	void tryResolve(
 		Expression& _e,
-		dev::eth::Instruction _instruction,
+		evmasm::Instruction _instruction,
 		std::vector<Expression> const& _arguments
 	);
 

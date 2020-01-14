@@ -29,15 +29,10 @@
 
 #include <functional>
 
-namespace dev
-{
-namespace lll
+namespace solidity::lll::test
 {
 
-namespace test
-{
-
-class LLLExecutionFramework: public dev::test::ExecutionFramework
+class LLLExecutionFramework: public solidity::test::ExecutionFramework
 {
 public:
 	LLLExecutionFramework();
@@ -47,7 +42,7 @@ public:
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
 		bytes const& _arguments = bytes(),
-		std::map<std::string, dev::test::Address> const& _libraryAddresses = {}
+		std::map<std::string, solidity::test::Address> const& _libraryAddresses = {}
 	) override
 	{
 		BOOST_REQUIRE(_contractName.empty());
@@ -56,8 +51,8 @@ public:
 		std::vector<std::string> errors;
 		bytes bytecode = lll::compileLLL(
 			_sourceCode,
-			dev::test::Options::get().evmVersion(),
-			m_optimiserSettings == solidity::OptimiserSettings::standard(),
+			solidity::test::Options::get().evmVersion(),
+			m_optimiserSettings == solidity::frontend::OptimiserSettings::standard(),
 			&errors
 		);
 		if (!errors.empty())
@@ -71,6 +66,4 @@ public:
 	}
 };
 
-}
-}
 } // end namespaces

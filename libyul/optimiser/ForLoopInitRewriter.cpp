@@ -16,16 +16,16 @@
 */
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/AsmData.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 #include <functional>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void ForLoopInitRewriter::operator()(Block& _block)
 {
-	iterateReplacing(
+	util::iterateReplacing(
 		_block.statements,
 		[&](Statement& _stmt) -> std::optional<vector<Statement>>
 		{

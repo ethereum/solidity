@@ -22,28 +22,24 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/CommonData.h>
 
 #include <functional>
 #include <memory>
 
-namespace langutil
+namespace solidity::langutil
 {
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 enum class Instruction: uint8_t;
 }
-}
 
-namespace yul
+namespace solidity::yul
 {
-struct Instruction;
 struct Identifier;
 
 ///
@@ -64,9 +60,9 @@ public:
 	virtual int stackHeight() const = 0;
 	virtual void setStackHeight(int height) = 0;
 	/// Append an EVM instruction.
-	virtual void appendInstruction(dev::eth::Instruction _instruction) = 0;
+	virtual void appendInstruction(evmasm::Instruction _instruction) = 0;
 	/// Append a constant.
-	virtual void appendConstant(dev::u256 const& _constant) = 0;
+	virtual void appendConstant(u256 const& _constant) = 0;
 	/// Append a label.
 	virtual void appendLabel(LabelID _labelId) = 0;
 	/// Append a label reference.
@@ -108,7 +104,7 @@ public:
 	/// Appends the size of the given sub-assembly or data.
 	virtual void appendDataSize(SubID _sub) = 0;
 	/// Appends the given data to the assembly and returns its ID.
-	virtual SubID appendData(dev::bytes const& _data) = 0;
+	virtual SubID appendData(bytes const& _data) = 0;
 };
 
 enum class IdentifierContext { LValue, RValue, VariableDeclaration };

@@ -27,12 +27,15 @@
 
 #include <libevmasm/Instruction.h>
 
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
-using namespace yul::test;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+
+using solidity::util::h256;
+using solidity::util::keccak256;
 
 namespace
 {
@@ -77,12 +80,12 @@ void copyZeroExtended(
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
 u256 EVMInstructionInterpreter::eval(
-	dev::eth::Instruction _instruction,
+	evmasm::Instruction _instruction,
 	vector<u256> const& _arguments
 )
 {
-	using namespace dev::eth;
-	using dev::eth::Instruction;
+	using namespace solidity::evmasm;
+	using evmasm::Instruction;
 
 	auto info = instructionInfo(_instruction);
 	yulAssert(size_t(info.args) == _arguments.size(), "");
@@ -484,19 +487,19 @@ void EVMInstructionInterpreter::writeMemoryWord(u256 const& _offset, u256 const&
 }
 
 
-void EVMInstructionInterpreter::logTrace(dev::eth::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EVMInstructionInterpreter::logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
 {
-	logTrace(dev::eth::instructionInfo(_instruction).name, _arguments, _data);
+	logTrace(evmasm::instructionInfo(_instruction).name, _arguments, _data);
 }
 
 void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments, bytes const& _data)
 {
 	string message = _pseudoInstruction + "(";
 	for (size_t i = 0; i < _arguments.size(); ++i)
-		message += (i > 0 ? ", " : "") + formatNumber(_arguments[i]);
+		message += (i > 0 ? ", " : "") + util::formatNumber(_arguments[i]);
 	message += ")";
 	if (!_data.empty())
-		message += " [" + toHex(_data) + "]";
+		message += " [" + util::toHex(_data) + "]";
 	m_state.trace.emplace_back(std::move(message));
 	if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
 	{

@@ -21,11 +21,7 @@
 #include <boost/noncopyable.hpp>
 #include <z3++.h>
 
-namespace dev
-{
-namespace solidity
-{
-namespace smt
+namespace solidity::frontend::smt
 {
 
 class Z3Interface: public SolverInterface, public boost::noncopyable
@@ -69,6 +65,4 @@ private:
 	z3::solver m_solver;
 };
 
-}
-}
 }

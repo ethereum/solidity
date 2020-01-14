@@ -25,11 +25,11 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/AST.h>
 
-#include <libdevcore/Whiskers.h>
+#include <libsolutil/Whiskers.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::frontend;
 
 IRLocalVariable::IRLocalVariable(
 	IRGenerationContext& _context,
@@ -68,7 +68,7 @@ IRStorageItem::IRStorageItem(
 	std::pair<u256, unsigned> slot_offset
 ):
 	IRLValue(std::move(_utils), &_type),
-	m_slot(toCompactHexWithPrefix(slot_offset.first)),
+	m_slot(util::toCompactHexWithPrefix(slot_offset.first)),
 	m_offset(slot_offset.second)
 {
 }

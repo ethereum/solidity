@@ -19,7 +19,7 @@
 #include <test/Options.h>
 #include <test/libyul/Common.h>
 
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <libyul/SideEffects.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
@@ -27,17 +27,18 @@
 #include <libyul/Object.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 
 
-using namespace dev;
-using namespace langutil;
-using namespace yul;
-using namespace yul::test;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 using namespace std;
 
 namespace

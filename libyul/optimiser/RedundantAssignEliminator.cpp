@@ -24,13 +24,13 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AsmData.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void RedundantAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
@@ -280,29 +280,28 @@ void RedundantAssignEliminator::changeUndecidedTo(YulString _variable, Redundant
 
 void RedundantAssignEliminator::finalize(YulString _variable, RedundantAssignEliminator::State _finalState)
 {
-	finalize(m_assignments, _variable, _finalState);
-	for (auto& assignments: m_forLoopInfo.pendingBreakStmts)
-		finalize(assignments, _variable, _finalState);
-	for (auto& assignments: m_forLoopInfo.pendingContinueStmts)
-		finalize(assignments, _variable, _finalState);
-}
+	std::map<Assignment const*, State> assignments;
+	joinMap(assignments, std::move(m_assignments[_variable]), State::join);
+	m_assignments.erase(_variable);
 
-void RedundantAssignEliminator::finalize(
-	TrackedAssignments& _assignments,
-	YulString _variable,
-	RedundantAssignEliminator::State _finalState
-)
-{
-	for (auto const& assignment: _assignments[_variable])
+	for (auto& breakAssignments: m_forLoopInfo.pendingBreakStmts)
+	{
+		joinMap(assignments, std::move(breakAssignments[_variable]), State::join);
+		breakAssignments.erase(_variable);
+	}
+	for (auto& continueAssignments: m_forLoopInfo.pendingContinueStmts)
+	{
+		joinMap(assignments, std::move(continueAssignments[_variable]), State::join);
+		continueAssignments.erase(_variable);
+	}
+
+	for (auto const& assignment: assignments)
 	{
 		State const state = assignment.second == State::Undecided ? _finalState : assignment.second;
 
 		if (state == State::Unused && SideEffectsCollector{*m_dialect, *assignment.first->value}.movable())
-			// TODO the only point where we actually need this
-			// to be a set is for the for loop
 			m_pendingRemovals.insert(assignment.first);
 	}
-	_assignments.erase(_variable);
 }
 
 void AssignmentRemover::operator()(Block& _block)

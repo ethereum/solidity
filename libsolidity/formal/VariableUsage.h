@@ -22,11 +22,7 @@
 #include <vector>
 #include <set>
 
-namespace dev
-{
-namespace solidity
-{
-namespace smt
+namespace solidity::frontend::smt
 {
 
 /**
@@ -60,6 +56,4 @@ private:
 	bool m_inlineFunctionCalls = false;
 };
 
-}
-}
 }

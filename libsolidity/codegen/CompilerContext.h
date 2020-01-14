@@ -32,7 +32,7 @@
 #include <libevmasm/Assembly.h>
 #include <libevmasm/Instruction.h>
 #include <liblangutil/EVMVersion.h>
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <functional>
 #include <ostream>
@@ -40,8 +40,7 @@
 #include <queue>
 #include <utility>
 
-namespace dev {
-namespace solidity {
+namespace solidity::frontend {
 
 class Compiler;
 
@@ -53,7 +52,7 @@ class CompilerContext
 {
 public:
 	explicit CompilerContext(langutil::EVMVersion _evmVersion, CompilerContext* _runtimeContext = nullptr):
-		m_asm(std::make_shared<eth::Assembly>()),
+		m_asm(std::make_shared<evmasm::Assembly>()),
 		m_evmVersion(_evmVersion),
 		m_runtimeContext(_runtimeContext),
 		m_abiFunctions(m_evmVersion)
@@ -78,8 +77,8 @@ public:
 	unsigned numberOfLocalVariables() const;
 
 	void setOtherCompilers(std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> const& _otherCompilers) { m_otherCompilers = _otherCompilers; }
-	std::shared_ptr<eth::Assembly> compiledContract(ContractDefinition const& _contract) const;
-	std::shared_ptr<eth::Assembly> compiledContractRuntime(ContractDefinition const& _contract) const;
+	std::shared_ptr<evmasm::Assembly> compiledContract(ContractDefinition const& _contract) const;
+	std::shared_ptr<evmasm::Assembly> compiledContractRuntime(ContractDefinition const& _contract) const;
 
 	void setStackOffset(int _offset) { m_asm->setDeposit(_offset); }
 	void adjustStackOffset(int _adjustment) { m_asm->adjustDeposit(_adjustment); }
@@ -89,10 +88,10 @@ public:
 	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
 
 	/// @returns the entry label of the given function and creates it if it does not exist yet.
-	eth::AssemblyItem functionEntryLabel(Declaration const& _declaration);
+	evmasm::AssemblyItem functionEntryLabel(Declaration const& _declaration);
 	/// @returns the entry label of the given function. Might return an AssemblyItem of type
 	/// UndefinedItem if it does not exist yet.
-	eth::AssemblyItem functionEntryLabelIfExists(Declaration const& _declaration) const;
+	evmasm::AssemblyItem functionEntryLabelIfExists(Declaration const& _declaration) const;
 	/// @returns the entry label of the given function and takes overrides into account.
 	FunctionDefinition const& resolveVirtualFunction(FunctionDefinition const& _function);
 	/// @returns the function that overrides the given declaration from the most derived class just
@@ -126,7 +125,7 @@ public:
 	/// list of low-level-functions to be generated, unless it already exists.
 	/// Note that the generator should not assume that objects are still alive when it is called,
 	/// unless they are guaranteed to be alive for the whole run of the compiler (AST nodes, for example).
-	eth::AssemblyItem lowLevelFunctionTag(
+	evmasm::AssemblyItem lowLevelFunctionTag(
 		std::string const& _name,
 		unsigned _inArgs,
 		unsigned _outArgs,
@@ -149,13 +148,13 @@ public:
 	std::pair<u256, unsigned> storageLocationOfVariable(Declaration const& _declaration) const;
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag
-	eth::AssemblyItem appendConditionalJump() { return m_asm->appendJumpI().tag(); }
+	evmasm::AssemblyItem appendConditionalJump() { return m_asm->appendJumpI().tag(); }
 	/// Appends a JUMPI instruction to @a _tag
-	CompilerContext& appendConditionalJumpTo(eth::AssemblyItem const& _tag) { m_asm->appendJumpI(_tag); return *this; }
+	CompilerContext& appendConditionalJumpTo(evmasm::AssemblyItem const& _tag) { m_asm->appendJumpI(_tag); return *this; }
 	/// Appends a JUMP to a new tag and @returns the tag
-	eth::AssemblyItem appendJumpToNew() { return m_asm->appendJump().tag(); }
+	evmasm::AssemblyItem appendJumpToNew() { return m_asm->appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
-	CompilerContext& appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
+	CompilerContext& appendJump(evmasm::AssemblyItem::JumpType _jumpType = evmasm::AssemblyItem::JumpType::Ordinary);
 	/// Appends an INVALID instruction
 	CompilerContext& appendInvalid();
 	/// Appends a conditional INVALID instruction
@@ -169,18 +168,18 @@ public:
 	CompilerContext& appendConditionalRevert(bool _forwardReturnData = false);
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(
-		eth::AssemblyItem const& _tag,
-		eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary
+		evmasm::AssemblyItem const& _tag,
+		evmasm::AssemblyItem::JumpType _jumpType = evmasm::AssemblyItem::JumpType::Ordinary
 	) { *m_asm << _tag.pushTag(); return appendJump(_jumpType); }
 	/// Appends pushing of a new tag and @returns the new tag.
-	eth::AssemblyItem pushNewTag() { return m_asm->append(m_asm->newPushTag()).tag(); }
+	evmasm::AssemblyItem pushNewTag() { return m_asm->append(m_asm->newPushTag()).tag(); }
 	/// @returns a new tag without pushing any opcodes or data
-	eth::AssemblyItem newTag() { return m_asm->newTag(); }
+	evmasm::AssemblyItem newTag() { return m_asm->newTag(); }
 	/// @returns a new tag identified by name.
-	eth::AssemblyItem namedTag(std::string const& _name) { return m_asm->namedTag(_name); }
+	evmasm::AssemblyItem namedTag(std::string const& _name) { return m_asm->namedTag(_name); }
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.
-	eth::AssemblyItem addSubroutine(eth::AssemblyPointer const& _assembly) { return m_asm->appendSubroutine(_assembly); }
+	evmasm::AssemblyItem addSubroutine(evmasm::AssemblyPointer const& _assembly) { return m_asm->appendSubroutine(_assembly); }
 	/// Pushes the size of the subroutine.
 	void pushSubroutineSize(size_t _subRoutine) { m_asm->pushSubroutineSize(_subRoutine); }
 	/// Pushes the offset of the subroutine.
@@ -188,12 +187,12 @@ public:
 	/// Pushes the size of the final program
 	void appendProgramSize() { m_asm->appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack
-	eth::AssemblyItem appendData(bytes const& _data) { return m_asm->append(_data); }
+	evmasm::AssemblyItem appendData(bytes const& _data) { return m_asm->append(_data); }
 	/// Appends the address (virtual, will be filled in by linker) of a library.
 	void appendLibraryAddress(std::string const& _identifier) { m_asm->appendLibraryAddress(_identifier); }
 	/// Appends a zero-address that can be replaced by something else at deploy time (if the
 	/// position in bytecode is known).
-	void appendDeployTimeAddress() { m_asm->append(eth::PushDeployTimeAddress); }
+	void appendDeployTimeAddress() { m_asm->append(evmasm::PushDeployTimeAddress); }
 	/// Resets the stack of visited nodes with a new stack having only @c _node
 	void resetVisitedNodes(ASTNode const* _node);
 	/// Pops the stack of visited nodes
@@ -202,8 +201,8 @@ public:
 	void pushVisitedNodes(ASTNode const* _node) { m_visitedNodes.push(_node); updateSourceLocation(); }
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
-	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm->append(_item); return *this; }
-	CompilerContext& operator<<(dev::eth::Instruction _instruction) { m_asm->append(_instruction); return *this; }
+	CompilerContext& operator<<(evmasm::AssemblyItem const& _item) { m_asm->append(_item); return *this; }
+	CompilerContext& operator<<(evmasm::Instruction _instruction) { m_asm->append(_instruction); return *this; }
 	CompilerContext& operator<<(u256 const& _value) { m_asm->append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm->append(_data); return *this; }
 
@@ -232,10 +231,10 @@ public:
 	size_t runtimeSub() const { return m_runtimeSub; }
 
 	/// @returns a const reference to the underlying assembly.
-	eth::Assembly const& assembly() const { return *m_asm; }
+	evmasm::Assembly const& assembly() const { return *m_asm; }
 	/// @returns a shared pointer to the assembly.
 	/// Should be avoided except when adding sub-assemblies.
-	std::shared_ptr<eth::Assembly> assemblyPtr() const { return m_asm; }
+	std::shared_ptr<evmasm::Assembly> assemblyPtr() const { return m_asm; }
 
 	/// @arg _sourceCodes is the map of input files to source code strings
 	std::string assemblyString(StringMap const& _sourceCodes = StringMap()) const
@@ -249,8 +248,8 @@ public:
 		return m_asm->assemblyJSON(_sourceCodes);
 	}
 
-	eth::LinkerObject const& assembledObject() const { return m_asm->assemble(); }
-	eth::LinkerObject const& assembledRuntimeObject(size_t _subIndex) const { return m_asm->sub(_subIndex).assemble(); }
+	evmasm::LinkerObject const& assembledObject() const { return m_asm->assemble(); }
+	evmasm::LinkerObject const& assembledRuntimeObject(size_t _subIndex) const { return m_asm->sub(_subIndex).assemble(); }
 
 	/**
 	 * Helper class to pop the visited nodes stack when a scope closes
@@ -276,7 +275,7 @@ private:
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
 
-	eth::Assembly::OptimiserSettings translateOptimiserSettings(OptimiserSettings const& _settings);
+	evmasm::Assembly::OptimiserSettings translateOptimiserSettings(OptimiserSettings const& _settings);
 
 	/**
 	 * Helper class that manages function labels and ensures that referenced functions are
@@ -286,10 +285,10 @@ private:
 	{
 		/// @returns the entry label of the given function and creates it if it does not exist yet.
 		/// @param _context compiler context used to create a new tag if needed
-		eth::AssemblyItem entryLabel(Declaration const& _declaration, CompilerContext& _context);
+		evmasm::AssemblyItem entryLabel(Declaration const& _declaration, CompilerContext& _context);
 		/// @returns the entry label of the given function. Might return an AssemblyItem of type
 		/// UndefinedItem if it does not exist yet.
-		eth::AssemblyItem entryLabelIfExists(Declaration const& _declaration) const;
+		evmasm::AssemblyItem entryLabelIfExists(Declaration const& _declaration) const;
 
 		/// @returns the next function in the queue of functions that are still to be compiled
 		/// (i.e. that were referenced during compilation but where we did not yet generate code for).
@@ -301,7 +300,7 @@ private:
 		void startFunction(Declaration const& _function);
 
 		/// Labels pointing to the entry points of functions.
-		std::map<Declaration const*, eth::AssemblyItem> m_entryLabels;
+		std::map<Declaration const*, evmasm::AssemblyItem> m_entryLabels;
 		/// Set of functions for which we did not yet generate code.
 		std::set<Declaration const*> m_alreadyCompiledFunctions;
 		/// Queue of functions that still need to be compiled (important to be a queue to maintain
@@ -310,7 +309,7 @@ private:
 		mutable std::queue<Declaration const*> m_functionsToCompile;
 	} m_functionCompilationQueue;
 
-	eth::AssemblyPointer m_asm;
+	evmasm::AssemblyPointer m_asm;
 	/// Version of the EVM to compile against.
 	langutil::EVMVersion m_evmVersion;
 	/// Activated experimental features.
@@ -333,12 +332,11 @@ private:
 	/// The index of the runtime subroutine.
 	size_t m_runtimeSub = -1;
 	/// An index of low-level function labels by name.
-	std::map<std::string, eth::AssemblyItem> m_lowLevelFunctions;
+	std::map<std::string, evmasm::AssemblyItem> m_lowLevelFunctions;
 	/// Container for ABI functions to be generated.
 	ABIFunctions m_abiFunctions;
 	/// The queue of low-level functions to generate.
 	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
 };
 
-}
 }

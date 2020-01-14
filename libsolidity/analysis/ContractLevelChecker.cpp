@@ -30,9 +30,9 @@
 
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 namespace
 {
@@ -208,18 +208,18 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 
 	if (_contract.abstract())
 	{
-		if (_contract.contractKind() == ContractDefinition::ContractKind::Interface)
+		if (_contract.contractKind() == ContractKind::Interface)
 			m_errorReporter.typeError(_contract.location(), "Interfaces do not need the \"abstract\" keyword, they are abstract implicitly.");
-		else if (_contract.contractKind() == ContractDefinition::ContractKind::Library)
+		else if (_contract.contractKind() == ContractKind::Library)
 			m_errorReporter.typeError(_contract.location(), "Libraries cannot be abstract.");
 		else
-			solAssert(_contract.contractKind() == ContractDefinition::ContractKind::Contract, "");
+			solAssert(_contract.contractKind() == ContractKind::Contract, "");
 	}
 
 	// For libraries, we emit errors on function-level, so this is fine as long as we do
 	// not have inheritance for libraries.
 	if (
-		_contract.contractKind() == ContractDefinition::ContractKind::Contract &&
+		_contract.contractKind() == ContractKind::Contract &&
 		!_contract.abstract() &&
 		!_contract.annotation().unimplementedFunctions.empty()
 	)
@@ -361,10 +361,10 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 
 void ContractLevelChecker::checkHashCollisions(ContractDefinition const& _contract)
 {
-	set<FixedHash<4>> hashes;
+	set<util::FixedHash<4>> hashes;
 	for (auto const& it: _contract.interfaceFunctionList())
 	{
-		FixedHash<4> const& hash = it.first;
+		util::FixedHash<4> const& hash = it.first;
 		if (hashes.count(hash))
 			m_errorReporter.typeError(
 				_contract.location(),

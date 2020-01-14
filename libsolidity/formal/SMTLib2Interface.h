@@ -21,8 +21,8 @@
 
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/FixedHash.h>
 
 #include <boost/noncopyable.hpp>
 #include <cstdio>
@@ -31,18 +31,14 @@
 #include <string>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
-{
-namespace smt
+namespace solidity::frontend::smt
 {
 
 class SMTLib2Interface: public SolverInterface, public boost::noncopyable
 {
 public:
 	explicit SMTLib2Interface(
-		std::map<h256, std::string> const& _queryResponses,
+		std::map<util::h256, std::string> const& _queryResponses,
 		ReadCallback::Callback const& _smtCallback
 	);
 
@@ -79,12 +75,10 @@ private:
 	std::vector<std::string> m_accumulatedOutput;
 	std::map<std::string, SortPointer> m_variables;
 
-	std::map<h256, std::string> const& m_queryResponses;
+	std::map<util::h256, std::string> const& m_queryResponses;
 	std::vector<std::string> m_unhandledQueries;
 
 	ReadCallback::Callback m_smtCallback;
 };
 
-}
-}
 }

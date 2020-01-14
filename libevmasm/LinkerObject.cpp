@@ -20,12 +20,13 @@
  */
 
 #include <libevmasm/LinkerObject.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Keccak256.h>
 
-using namespace dev;
-using namespace dev::eth;
 using namespace std;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::evmasm;
 
 void LinkerObject::append(LinkerObject const& _other)
 {
@@ -47,7 +48,7 @@ void LinkerObject::link(map<string, h160> const& _libraryAddresses)
 
 string LinkerObject::toHex() const
 {
-	string hex = dev::toHex(bytecode);
+	string hex = solidity::util::toHex(bytecode);
 	for (auto const& ref: linkReferences)
 	{
 		size_t pos = ref.first * 2;

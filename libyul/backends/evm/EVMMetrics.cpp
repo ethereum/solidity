@@ -28,19 +28,20 @@
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
 
-#include <libdevcore/Visitor.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Visitor.h>
+#include <libsolutil/CommonData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 size_t GasMeter::costs(Expression const& _expression) const
 {
 	return combineCosts(GasMeterVisitor::costs(_expression, m_dialect, m_isCreation));
 }
 
-size_t GasMeter::instructionCosts(eth::Instruction _instruction) const
+size_t GasMeter::instructionCosts(evmasm::Instruction _instruction) const
 {
 	return combineCosts(GasMeterVisitor::instructionCosts(_instruction, m_dialect, m_isCreation));
 }
@@ -63,7 +64,7 @@ pair<size_t, size_t> GasMeterVisitor::costs(
 }
 
 pair<size_t, size_t> GasMeterVisitor::instructionCosts(
-	dev::eth::Instruction _instruction,
+	evmasm::Instruction _instruction,
 	EVMDialect const& _dialect,
 	bool _isCreation
 )
@@ -87,31 +88,31 @@ void GasMeterVisitor::operator()(FunctionCall const& _funCall)
 
 void GasMeterVisitor::operator()(Literal const& _lit)
 {
-	m_runGas += dev::eth::GasMeter::runGas(dev::eth::Instruction::PUSH1);
+	m_runGas += evmasm::GasMeter::runGas(evmasm::Instruction::PUSH1);
 	m_dataGas +=
 		singleByteDataGas() +
-		size_t(dev::eth::GasMeter::dataGas(dev::toCompactBigEndian(valueOfLiteral(_lit), 1), m_isCreation, m_dialect.evmVersion()));
+		size_t(evmasm::GasMeter::dataGas(toCompactBigEndian(valueOfLiteral(_lit), 1), m_isCreation, m_dialect.evmVersion()));
 }
 
 void GasMeterVisitor::operator()(Identifier const&)
 {
-	m_runGas += dev::eth::GasMeter::runGas(dev::eth::Instruction::DUP1);
+	m_runGas += evmasm::GasMeter::runGas(evmasm::Instruction::DUP1);
 	m_dataGas += singleByteDataGas();
 }
 
 size_t GasMeterVisitor::singleByteDataGas() const
 {
 	if (m_isCreation)
-		return dev::eth::GasCosts::txDataNonZeroGas(m_dialect.evmVersion());
+		return evmasm::GasCosts::txDataNonZeroGas(m_dialect.evmVersion());
 	else
-		return dev::eth::GasCosts::createDataGas;
+		return evmasm::GasCosts::createDataGas;
 }
 
-void GasMeterVisitor::instructionCostsInternal(dev::eth::Instruction _instruction)
+void GasMeterVisitor::instructionCostsInternal(evmasm::Instruction _instruction)
 {
-	if (_instruction == eth::Instruction::EXP)
-		m_runGas += dev::eth::GasCosts::expGas + dev::eth::GasCosts::expByteGas(m_dialect.evmVersion());
+	if (_instruction == evmasm::Instruction::EXP)
+		m_runGas += evmasm::GasCosts::expGas + evmasm::GasCosts::expByteGas(m_dialect.evmVersion());
 	else
-		m_runGas += dev::eth::GasMeter::runGas(_instruction);
+		m_runGas += evmasm::GasMeter::runGas(_instruction);
 	m_dataGas += singleByteDataGas();
 }

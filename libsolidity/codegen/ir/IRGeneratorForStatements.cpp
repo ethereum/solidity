@@ -35,14 +35,14 @@
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/ASTCopier.h>
 
-#include <libdevcore/Whiskers.h>
-#include <libdevcore/StringUtils.h>
-#include <libdevcore/Whiskers.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Whiskers.h>
+#include <libsolutil/StringUtils.h>
+#include <libsolutil/Keccak256.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
 
 namespace
 {
@@ -543,7 +543,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		if (!event.isAnonymous())
 		{
 			indexedArgs.emplace_back(m_context.newYulVariable());
-			string signature = formatNumber(u256(h256::Arith(dev::keccak256(functionType->externalSignature()))));
+			string signature = formatNumber(u256(h256::Arith(keccak256(functionType->externalSignature()))));
 			m_code << "let " << indexedArgs.back() << " := " << signature << "\n";
 		}
 		for (size_t i = 0; i < event.parameters().size(); ++i)
@@ -1220,11 +1220,11 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	{
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
-		u256 gasNeededByCaller = eth::GasCosts::callGas(m_context.evmVersion()) + 10;
+		u256 gasNeededByCaller = evmasm::GasCosts::callGas(m_context.evmVersion()) + 10;
 		if (funType.valueSet())
-			gasNeededByCaller += eth::GasCosts::callValueTransferGas;
+			gasNeededByCaller += evmasm::GasCosts::callValueTransferGas;
 		if (!checkExistence)
-			gasNeededByCaller += eth::GasCosts::callNewAccountGas; // we never know
+			gasNeededByCaller += evmasm::GasCosts::callNewAccountGas; // we never know
 		templ("gas", "sub(gas(), " + formatNumber(gasNeededByCaller) + ")");
 	}
 	// Order is important here, STATICCALL might overlap with DELEGATECALL.

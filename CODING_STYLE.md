@@ -211,7 +211,7 @@ for (map<ComplexTypeOne, ComplexTypeTwo>::iterator i = l.begin(); i != l.end(); 
 
 ## 12. Include Headers
 
-1. Includes should go in increasing order of generality (`libsolidity` -> `libevmasm` -> `libdevcore` -> `boost` -> `STL`).
+1. Includes should go in increasing order of generality (`libsolidity` -> `libevmasm` -> `libsolutil` -> `boost` -> `STL`).
 2. The corresponding `.h` file should be the first include in the respective `.cpp` file.
 3. Insert empty lines between blocks of include files.
 
@@ -226,8 +226,8 @@ Example:
 
 #include <libevmasm/GasMeter.h>
 
-#include <libdevcore/Common.h>
-#include <libdevcore/SHA3.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/SHA3.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string/replace.hpp>

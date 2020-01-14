@@ -2,10 +2,10 @@
 
 #include <test/tools/ossfuzz/abiV2Proto.pb.h>
 
-#include <libdevcore/FixedHash.h>
-#include <libdevcore/Keccak256.h>
-#include <libdevcore/StringUtils.h>
-#include <libdevcore/Whiskers.h>
+#include <libsolutil/FixedHash.h>
+#include <libsolutil/Keccak256.h>
+#include <libsolutil/StringUtils.h>
+#include <libsolutil/Whiskers.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -131,12 +131,9 @@
  *	}
  */
 
-namespace dev
+namespace solidity::test::abiv2fuzzer
 {
-namespace test
-{
-namespace abiv2fuzzer
-{
+
 /// Converts a protobuf input into a Solidity program that tests
 /// abi coding.
 class ProtoConverter
@@ -485,7 +482,7 @@ public:
 	// Convert _counter to string and return its keccak256 hash
 	static u256 hashUnsignedInt(unsigned _counter)
 	{
-		return keccak256(h256(_counter));
+		return util::keccak256(util::h256(_counter));
 	}
 
 	static u256 maskUnsignedInt(unsigned _counter, unsigned _numMaskNibbles)
@@ -497,7 +494,7 @@ public:
 	// Note: Don't change HexPrefix::Add. See comment in fixedByteValueAsString().
 	static std::string maskUnsignedIntToHex(unsigned _counter, unsigned _numMaskNibbles)
 	{
-		return toHex(maskUnsignedInt(_counter, _numMaskNibbles), HexPrefix::Add);
+		return toHex(maskUnsignedInt(_counter, _numMaskNibbles), util::HexPrefix::Add);
 	}
 
 	/// Dynamically sized arrays can have a length of at least zero
@@ -933,6 +930,5 @@ public:
 
 	using AbiV2ProtoVisitor<bool>::visit;
 };
-}
-}
+
 }

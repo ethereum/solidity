@@ -60,9 +60,10 @@
 #include <tuple>
 
 using namespace std;
-using namespace langutil;
 
-string langutil::to_string(ScannerError _errorCode)
+namespace solidity::langutil {
+
+string to_string(ScannerError _errorCode)
 {
 	switch (_errorCode)
 	{
@@ -84,13 +85,10 @@ string langutil::to_string(ScannerError _errorCode)
 }
 
 
-ostream& langutil::operator<<(ostream& os, ScannerError _errorCode)
+ostream& operator<<(ostream& os, ScannerError _errorCode)
 {
 	return os << to_string(_errorCode);
 }
-
-namespace langutil
-{
 
 /// Scoped helper for literal recording. Automatically drops the literal
 /// if aborting the scanning before it's complete.
@@ -131,8 +129,6 @@ private:
 	Scanner* m_scanner;
 	bool m_complete;
 };
-
-}
 
 void Scanner::reset(CharStream _source)
 {
@@ -933,3 +929,5 @@ tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	literal.complete();
 	return TokenTraits::fromIdentifierOrKeyword(m_nextToken.literal);
 }
+
+} // namespace solidity::langutil

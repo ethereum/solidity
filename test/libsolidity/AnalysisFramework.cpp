@@ -29,15 +29,16 @@
 
 #include <liblangutil/Scanner.h>
 
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 
 pair<SourceUnit const*, ErrorList>
 AnalysisFramework::parseAnalyseAndReturnError(
@@ -50,7 +51,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 {
 	compiler().reset();
 	compiler().setSources({{"", _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source}});
-	compiler().setEVMVersion(dev::test::Options::get().evmVersion());
+	compiler().setEVMVersion(solidity::test::Options::get().evmVersion());
 	compiler().setParserErrorRecovery(_allowRecoveryErrors);
 	_allowMultipleErrors = _allowMultipleErrors || _allowRecoveryErrors;
 	if (!compiler().parse())
@@ -147,6 +148,6 @@ FunctionTypePointer AnalysisFramework::retrieveFunctionBySignature(
 	std::string const& _signature
 )
 {
-	FixedHash<4> hash(dev::keccak256(_signature));
+	FixedHash<4> hash(util::keccak256(_signature));
 	return _contract.interfaceFunctions()[hash];
 }

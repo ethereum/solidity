@@ -28,20 +28,21 @@
 #include <libyul/AsmData.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <variant>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::yul;
 
 
 void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 {
-	if (auto vars = isSimpleStore(dev::eth::Instruction::SSTORE, _statement))
+	if (auto vars = isSimpleStore(evmasm::Instruction::SSTORE, _statement))
 	{
 		ASTModifier::operator()(_statement);
 		set<YulString> keysToErase;
@@ -55,7 +56,7 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 			m_storage.eraseKey(key);
 		m_storage.set(vars->first, vars->second);
 	}
-	else if (auto vars = isSimpleStore(dev::eth::Instruction::MSTORE, _statement))
+	else if (auto vars = isSimpleStore(evmasm::Instruction::MSTORE, _statement))
 	{
 		ASTModifier::operator()(_statement);
 		set<YulString> keysToErase;
@@ -143,11 +144,13 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 {
 	// Save all information. We might rather reinstantiate this class,
 	// but this could be difficult if it is subclassed.
-	map<YulString, Expression const*> value;
+	map<YulString, AssignedValue> value;
+	size_t loopDepth{0};
 	InvertibleRelation<YulString> references;
 	InvertibleMap<YulString, YulString> storage;
 	InvertibleMap<YulString, YulString> memory;
-	m_value.swap(value);
+	swap(m_value, value);
+	swap(m_loopDepth, loopDepth);
 	swap(m_references, references);
 	swap(m_storage, storage);
 	swap(m_memory, memory);
@@ -167,7 +170,8 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	// statement.
 
 	popScope();
-	m_value.swap(value);
+	swap(m_value, value);
+	swap(m_loopDepth, loopDepth);
 	swap(m_references, references);
 	swap(m_storage, storage);
 	swap(m_memory, memory);
@@ -178,6 +182,8 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	// If the pre block was not empty,
 	// we would have to deal with more complicated scoping rules.
 	assertThrow(_for.pre.statements.empty(), OptimizerException, "");
+
+	++m_loopDepth;
 
 	AssignmentsSinceContinue assignmentsSinceCont;
 	assignmentsSinceCont(_for.body);
@@ -201,6 +207,8 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	clearKnowledgeIfInvalidated(*_for.condition);
 	clearKnowledgeIfInvalidated(_for.post);
 	clearKnowledgeIfInvalidated(_for.body);
+
+	--m_loopDepth;
 }
 
 void DataFlowAnalyzer::operator()(Block& _block)
@@ -221,7 +229,7 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 		movableChecker.visit(*_value);
 	else
 		for (auto const& var: _variables)
-			m_value[var] = &m_zero;
+			assignValue(var, &m_zero);
 
 	if (_value && _variables.size() == 1)
 	{
@@ -229,7 +237,7 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 		// Expression has to be movable and cannot contain a reference
 		// to the variable that will be assigned to.
 		if (movableChecker.movable() && !movableChecker.referencedVariables().count(name))
-			m_value[name] = _value;
+			assignValue(name, _value);
 	}
 
 	auto const& referencedVariables = movableChecker.referencedVariables();
@@ -300,6 +308,11 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 		m_references.eraseKey(name);
 }
 
+void DataFlowAnalyzer::assignValue(YulString _variable, Expression const* _value)
+{
+	m_value[_variable] = {_value, m_loopDepth};
+}
+
 void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 {
 	SideEffectsCollector sideEffects(m_dialect, _block, &m_functionSideEffects);
@@ -360,13 +373,13 @@ bool DataFlowAnalyzer::inScope(YulString _variableName) const
 }
 
 std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
-	dev::eth::Instruction _store,
+	evmasm::Instruction _store,
 	ExpressionStatement const& _statement
 ) const
 {
 	yulAssert(
-		_store == dev::eth::Instruction::MSTORE ||
-		_store == dev::eth::Instruction::SSTORE,
+		_store == evmasm::Instruction::MSTORE ||
+		_store == evmasm::Instruction::SSTORE,
 		""
 	);
 	if (holds_alternative<FunctionCall>(_statement.expression))

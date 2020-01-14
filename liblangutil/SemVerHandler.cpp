@@ -25,8 +25,8 @@
 #include <functional>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::langutil;
 
 SemVerVersion::SemVerVersion(string const& _versionString)
 {

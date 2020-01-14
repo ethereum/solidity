@@ -29,9 +29,7 @@
 #include <liblangutil/EVMVersion.h>
 #include <string>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class SourceUnit;
@@ -79,5 +77,4 @@ private:
 	YulUtilFunctions m_utils;
 };
 
-}
 }

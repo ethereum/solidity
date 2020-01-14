@@ -17,9 +17,9 @@
 
 #include <libsolidity/analysis/ControlFlowBuilder.h>
 
-using namespace dev;
-using namespace langutil;
 using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 using namespace std;
 
 ControlFlowBuilder::ControlFlowBuilder(CFG::NodeContainer& _nodeContainer, FunctionFlow const& _functionFlow):

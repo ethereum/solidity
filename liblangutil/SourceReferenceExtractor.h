@@ -21,12 +21,12 @@
 #include <tuple>
 #include <vector>
 
-namespace dev
+namespace solidity::util
 {
 struct Exception;
 }
 
-namespace langutil
+namespace solidity::langutil
 {
 
 struct LineColumn
@@ -49,10 +49,11 @@ struct SourceReference
 	int endColumn = {-1};     ///< Highlighting range-end of text field.
 
 	/// Constructs a SourceReference containing a message only.
-	static SourceReference MessageOnly(std::string _msg)
+	static SourceReference MessageOnly(std::string _msg, std::string _sourceName = {})
 	{
 		SourceReference sref;
 		sref.message = std::move(_msg);
+		sref.sourceName = std::move(_sourceName);
 		return sref;
 	}
 };
@@ -68,7 +69,7 @@ namespace SourceReferenceExtractor
 		std::vector<SourceReference> secondary;
 	};
 
-	Message extract(dev::Exception const& _exception, std::string _category);
+	Message extract(util::Exception const& _exception, std::string _category);
 	SourceReference extract(SourceLocation const* _location, std::string message = "");
 }
 

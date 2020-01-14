@@ -34,11 +34,9 @@
 #include <vector>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /// AST node factory that also tracks the begin and end position of an AST node
@@ -245,9 +243,9 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 	return nodeFactory.createNode<ImportDirective>(path, unitAlias, move(symbolAliases));
 }
 
-std::pair<ContractDefinition::ContractKind, bool> Parser::parseContractKind()
+std::pair<ContractKind, bool> Parser::parseContractKind()
 {
-	ContractDefinition::ContractKind kind;
+	ContractKind kind;
 	bool abstract = false;
 	if (m_scanner->currentToken() == Token::Abstract)
 	{
@@ -257,13 +255,13 @@ std::pair<ContractDefinition::ContractKind, bool> Parser::parseContractKind()
 	switch (m_scanner->currentToken())
 	{
 	case Token::Interface:
-		kind = ContractDefinition::ContractKind::Interface;
+		kind = ContractKind::Interface;
 		break;
 	case Token::Contract:
-		kind = ContractDefinition::ContractKind::Contract;
+		kind = ContractKind::Contract;
 		break;
 	case Token::Library:
-		kind = ContractDefinition::ContractKind::Library;
+		kind = ContractKind::Library;
 		break;
 	default:
 		solAssert(false, "Invalid contract kind.");
@@ -280,7 +278,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	ASTPointer<ASTString> docString;
 	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
 	vector<ASTPointer<ASTNode>> subNodes;
-	std::pair<ContractDefinition::ContractKind, bool> contractKind{};
+	std::pair<ContractKind, bool> contractKind{};
 	try
 	{
 		if (m_scanner->currentCommentLiteral() != "")
@@ -2087,5 +2085,4 @@ ASTPointer<ASTString> Parser::getLiteralAndAdvance()
 	return identifier;
 }
 
-}
 }

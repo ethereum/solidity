@@ -24,20 +24,20 @@ set(contracts_sources
 )
 detect_stray_source_files("${contracts_sources}" "contracts/")
 
-set(libdevcore_sources
-    libdevcore/Checksum.cpp
-    libdevcore/CommonData.cpp
-    libdevcore/IndentedWriter.cpp
-    libdevcore/IpfsHash.cpp
-    libdevcore/IterateReplacing.cpp
-    libdevcore/JSON.cpp
-    libdevcore/Keccak256.cpp
-    libdevcore/StringUtils.cpp
-    libdevcore/SwarmHash.cpp
-    libdevcore/UTF8.cpp
-    libdevcore/Whiskers.cpp
+set(libsolutil_sources
+    libsolutil/Checksum.cpp
+    libsolutil/CommonData.cpp
+    libsolutil/IndentedWriter.cpp
+    libsolutil/IpfsHash.cpp
+    libsolutil/IterateReplacing.cpp
+    libsolutil/JSON.cpp
+    libsolutil/Keccak256.cpp
+    libsolutil/StringUtils.cpp
+    libsolutil/SwarmHash.cpp
+    libsolutil/UTF8.cpp
+    libsolutil/Whiskers.cpp
 )
-detect_stray_source_files("${libdevcore_sources}" "libdevcore/")
+detect_stray_source_files("${libsolutil_sources}" "libsolutil/")
 
 set(libevmasm_sources
     libevmasm/Assembler.cpp
@@ -151,7 +151,7 @@ detect_stray_source_files("${libyul_sources}" "libyul/")
 
 add_executable(soltest ${sources}
     ${contracts_sources}
-    ${libdevcore_sources}
+    ${libsolutil_sources}
     ${liblangutil_sources}
     ${libevmasm_sources}
     ${libyul_sources}
@@ -159,7 +159,7 @@ add_executable(soltest ${sources}
     ${libsolidity_sources}
     ${libsolidity_util_sources}
 )
-target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm devcore Boost::boost Boost::program_options Boost::unit_test_framework evmc)
+target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm solutil Boost::boost Boost::program_options Boost::unit_test_framework evmc)
 
 
 # Special compilation flag for Visual Studio (version 2019 at least affected)

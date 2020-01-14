@@ -28,7 +28,7 @@
 #include <map>
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 struct Dialect;
 
@@ -161,8 +161,6 @@ private:
 	/// assignments to the final state. In this case, this also applies to pending
 	/// break and continue TrackedAssignments.
 	void finalize(YulString _variable, State _finalState);
-	/// Helper function for the above.
-	void finalize(TrackedAssignments& _assignments, YulString _variable, State _finalState);
 
 	Dialect const* m_dialect;
 	std::set<YulString> m_declaredVariables;

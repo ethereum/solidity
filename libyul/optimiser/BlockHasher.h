@@ -24,7 +24,7 @@
 #include <libyul/YulString.h>
 #include <libyul/AsmData.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

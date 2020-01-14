@@ -27,20 +27,18 @@
 #include <vector>
 #include <memory>
 
-namespace langutil
+namespace solidity::langutil
 {
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 }
 
-namespace yul
+namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 }
 
-namespace yul
-{
-namespace test
+namespace solidity::yul::test
 {
 
 void printErrors(langutil::ErrorList const& _errors);
@@ -49,5 +47,4 @@ parse(std::string const& _source, bool _yul = true);
 Block disambiguate(std::string const& _source, bool _yul = true);
 std::string format(std::string const& _source, bool _yul = true);
 
-}
 }

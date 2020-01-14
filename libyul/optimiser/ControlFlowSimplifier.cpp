@@ -20,15 +20,16 @@
 #include <libyul/AsmData.h>
 #include <libyul/Utilities.h>
 #include <libyul/Dialect.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Visitor.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::yul;
 
 using OptionalStatements = std::optional<vector<Statement>>;
 

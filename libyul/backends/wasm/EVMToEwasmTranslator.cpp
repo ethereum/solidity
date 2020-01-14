@@ -41,9 +41,10 @@
 #include <liblangutil/SourceReferenceFormatter.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
+using namespace solidity::langutil;
 
 namespace
 {
@@ -213,7 +214,10 @@ function cmp(a, b) -> r {
 		r := i64.ne(a, b)
 	}
 }
-
+)"
+// Split long string to make it compilable on msvc
+// https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?view=vs-2019
+R"(
 function lt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	switch cmp(x1, y1)
 	case 0 {
@@ -334,6 +338,11 @@ function signextend(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	// TODO implement
 	unreachable()
 }
+function u256_to_u128(x1, x2, x3, x4) -> v1, v2 {
+	if i64.ne(0, i64.or(x1, x2)) { invalid() }
+	v2 := x4
+	v1 := x3
+}
 
 function u256_to_i64(x1, x2, x3, x4) -> v {
 	if i64.ne(0, i64.or(i64.or(x1, x2), x3)) { invalid() }
@@ -346,8 +355,28 @@ function u256_to_i32(x1, x2, x3, x4) -> v {
 	v := x4
 }
 
+function u256_to_byte(x1, x2, x3, x4) -> v {
+	if i64.ne(0, i64.or(i64.or(x1, x2), x3)) { invalid() }
+	if i64.gt_u(x4, 255) { invalid() }
+	v := x4
+}
+
 function u256_to_i32ptr(x1, x2, x3, x4) -> v {
 	v := u256_to_i32(x1, x2, x3, x4)
+}
+
+function to_internal_i32ptr(x1, x2, x3, x4) -> r {
+	let p := u256_to_i32ptr(x1, x2, x3, x4)
+	r := i64.add(p, 64)
+	if i64.lt_u(r, p) { invalid() }
+}
+
+function u256_to_address(x1, x2, x3, x4) -> r1, r2, r3 {
+	if i64.ne(0, x1) { invalid() }
+	if i64.ne(0, i64.shr_u(x2, 32)) { invalid() }
+	r1 := x2
+	r2 := x3
+	r3 := x4
 }
 
 function keccak256(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
@@ -360,8 +389,9 @@ function address() -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := mload_internal(0)
 }
 function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	mstore_address(0, x1, x2, x3, x4)
+	eth.getExternalBalance(12, 48)
+	z1, z2, z3, z4 := mload_internal(32)
 }
 function selfbalance() -> z1, z2, z3, z4 {
 	// TODO: not part of current Ewasm spec
@@ -392,8 +422,7 @@ function calldatasize() -> z1, z2, z3, z4 {
 }
 function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 	eth.callDataCopy(
-		// scratch - TODO: overflow check
-		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
+		to_internal_i32ptr(x1, x2, x3, x4),
 		u256_to_i32(y1, y2, y3, y4),
 		u256_to_i32(z1, z2, z3, z4)
 	)
@@ -405,8 +434,7 @@ function codesize() -> z1, z2, z3, z4 {
 }
 function codecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 	eth.codeCopy(
-		// scratch - TODO: overflow check
-		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
+		to_internal_i32ptr(x1, x2, x3, x4),
 		u256_to_i32(y1, y2, y3, y4),
 		u256_to_i32(z1, z2, z3, z4)
 	)
@@ -420,17 +448,22 @@ function gasprice() -> z1, z2, z3, z4 {
 	eth.getTxGasPrice(0)
 	z1, z2, z3, z4 := mload_internal(0)
 }
+function extcodesize_internal(x1, x2, x3, x4) -> r {
+	mstore_address(0, x1, x2, x3, x4)
+	r := eth.getExternalCodeSize(12)
+}
 function extcodesize(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	z4 := extcodesize_internal(x1, x2, x3, x4)
 }
 function extcodehash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	// TODO: not part of current Ewasm spec
 	unreachable()
 }
-function extcodecopy(v1, v2, v3, v4, x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
-	// TODO implement
-	unreachable()
+function extcodecopy(a1, a2, a3, a4, p1, p2, p3, p4, o1, o2, o3, o4, l1, l2, l3, l4) {
+	mstore_address(0, a1, a2, a3, a4)
+	let codeOffset := u256_to_i32(o1, o2, o3, o4)
+	let codeLength := u256_to_i32(l1, l2, l3, l4)
+	eth.externalCodeCopy(12, to_internal_i32ptr(p1, p2, p3, p4), codeOffset, codeLength)
 }
 
 function returndatasize() -> z1, z2, z3, z4 {
@@ -438,20 +471,21 @@ function returndatasize() -> z1, z2, z3, z4 {
 }
 function returndatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 	eth.returnDataCopy(
-		// scratch - TODO: overflow check
-		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
+		to_internal_i32ptr(x1, x2, x3, x4),
 		u256_to_i32(y1, y2, y3, y4),
 		u256_to_i32(z1, z2, z3, z4)
 	)
 }
 
 function blockhash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	let r := eth.getBlockHash(u256_to_i64(x1, x2, x3, x4), 0)
+	if i64.eqz(r) {
+		z1, z2, z3, z4 := mload_internal(0)
+	}
 }
 function coinbase() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
+	eth.getBlockCoinbase(0)
+	z1, z2, z3, z4 := mload_internal(0)
 }
 function timestamp() -> z1, z2, z3, z4 {
 	z4 := eth.getBlockTimestamp()
@@ -521,11 +555,7 @@ function restore_temp_mem_64(t1, t2, t3, t4, t5, t6, t7, t8) {
 	i64.store(54, t8)
 }
 function mload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	let pos := u256_to_i32ptr(x1, x2, x3, x4)
-	// Make room for the scratch space
-	// TODO do we need to check for overflow?
-	pos := i64.add(pos, 64)
-	z1, z2, z3, z4 := mload_internal(pos)
+	z1, z2, z3, z4 := mload_internal(to_internal_i32ptr(x1, x2, x3, x4))
 }
 function mload_internal(pos) -> z1, z2, z3, z4 {
 	z1 := endian_swap(i64.load(pos))
@@ -534,17 +564,17 @@ function mload_internal(pos) -> z1, z2, z3, z4 {
 	z4 := endian_swap(i64.load(i64.add(pos, 24)))
 }
 function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {
-	let pos := u256_to_i32ptr(x1, x2, x3, x4)
-	// Make room for the scratch space
-	// TODO do we need to check for overflow?
-	pos := i64.add(pos, 64)
-	mstore_internal(pos, y1, y2, y3, y4)
+	mstore_internal(to_internal_i32ptr(x1, x2, x3, x4), y1, y2, y3, y4)
 }
 function mstore_internal(pos, y1, y2, y3, y4) {
 	i64.store(pos, endian_swap(y1))
 	i64.store(i64.add(pos, 8), endian_swap(y2))
 	i64.store(i64.add(pos, 16), endian_swap(y3))
 	i64.store(i64.add(pos, 24), endian_swap(y4))
+}
+function mstore_address(pos, a1, a2, a3, a4) {
+	a1, a2, a3 := u256_to_address(a1, a2, a3, a4)
+	mstore_internal(pos, 0, a1, a2, a3)
 }
 function mstore8(x1, x2, x3, x4, y1, y2, y3, y4) {
 	// TODO implement
@@ -577,47 +607,84 @@ function gas() -> z1, z2, z3, z4 {
 }
 
 function log0(p1, p2, p3, p4, s1, s2, s3, s4) {
-	// TODO implement
-	unreachable()
+	eth.log(
+		to_internal_i32ptr(p1, p2, p3, p4),
+		u256_to_i32(s1, s2, s3, s4),
+		0, 0, 0, 0, 0
+	)
 }
 function log1(
 	p1, p2, p3, p4, s1, s2, s3, s4,
-	t11, t12, t13, t14
+	t1_1, t1_2, t1_3, t1_4
 ) {
-	// TODO implement
-	unreachable()
+	eth.log(
+		to_internal_i32ptr(p1, p2, p3, p4),
+		u256_to_i32(s1, s2, s3, s4),
+		1,
+		to_internal_i32ptr(t1_1, t1_2, t1_3, t1_4),
+		0, 0, 0
+	)
 }
 function log2(
 	p1, p2, p3, p4, s1, s2, s3, s4,
-	t11, t12, t13, t14,
-	t21, t22, t23, t24
+	t1_1, t1_2, t1_3, t1_4,
+	t2_1, t2_2, t2_3, t2_4
 ) {
-	// TODO implement
-	unreachable()
+	eth.log(
+		to_internal_i32ptr(p1, p2, p3, p4),
+		u256_to_i32(s1, s2, s3, s4),
+		2,
+		to_internal_i32ptr(t1_1, t1_2, t1_3, t1_4),
+		to_internal_i32ptr(t2_1, t2_2, t2_3, t2_4),
+		0, 0
+	)
 }
 function log3(
 	p1, p2, p3, p4, s1, s2, s3, s4,
-	t11, t12, t13, t14,
-	t21, t22, t23, t24,
-	t31, t32, t33, t34
+	t1_1, t1_2, t1_3, t1_4,
+	t2_1, t2_2, t2_3, t2_4,
+	t3_1, t3_2, t3_3, t3_4
 ) {
-	// TODO implement
-	unreachable()
+	eth.log(
+		to_internal_i32ptr(p1, p2, p3, p4),
+		u256_to_i32(s1, s2, s3, s4),
+		3,
+		to_internal_i32ptr(t1_1, t1_2, t1_3, t1_4),
+		to_internal_i32ptr(t2_1, t2_2, t2_3, t2_4),
+		to_internal_i32ptr(t3_1, t3_2, t3_3, t3_4),
+		0
+	)
 }
 function log4(
 	p1, p2, p3, p4, s1, s2, s3, s4,
-	t11, t12, t13, t14,
-	t21, t22, t23, t24,
-	t31, t32, t33, t34,
-	t41, t42, t43, t44,
+	t1_1, t1_2, t1_3, t1_4,
+	t2_1, t2_2, t2_3, t2_4,
+	t3_1, t3_2, t3_3, t3_4,
+	t4_1, t4_2, t4_3, t4_4,
 ) {
-	// TODO implement
-	unreachable()
+	eth.log(
+		to_internal_i32ptr(p1, p2, p3, p4),
+		u256_to_i32(s1, s2, s3, s4),
+		4,
+		to_internal_i32ptr(t1_1, t1_2, t1_3, t1_4),
+		to_internal_i32ptr(t2_1, t2_2, t2_3, t2_4),
+		to_internal_i32ptr(t3_1, t3_2, t3_3, t3_4),
+		to_internal_i32ptr(t4_1, t4_2, t4_3, t4_4)
+	)
 }
 
-function create(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) -> a1, a2, a3, a4 {
-	// TODO implement
-	unreachable()
+function create(
+	x1, x2, x3, x4,
+	y1, y2, y3, y4,
+	z1, z2, z3, z4
+) -> a1, a2, a3, a4 {
+	let v1, v2 := u256_to_u128(x1, x2, x3, x4)
+	mstore_internal(0, 0, 0, v1, v2)
+
+	let r := eth.create(0, to_internal_i32ptr(y1, y2, y3, y4), u256_to_i32(z1, z2, z3, z4), 32)
+	if i64.eqz(r) {
+		a1, a2, a3, a4 := mload_internal(32)
+	}
 }
 function call(
 	a1, a2, a3, a4,
@@ -628,8 +695,13 @@ function call(
 	f1, f2, f3, f4,
 	g1, g2, g3, g4
 ) -> x1, x2, x3, x4 {
-	// TODO implement
-	unreachable()
+	let g := u256_to_i64(a1, a2, a3, a4)
+	mstore_address(0, b1, b2, b3, b4)
+
+	let v1, v2 := u256_to_u128(c1, c2, c3, c4)
+	mstore_internal(32, 0, 0, v1, v2)
+
+	x4 := eth.call(g, 12, 32, to_internal_i32ptr(d1, d2, d3, d4), u256_to_i32(e1, e2, e3, e4))
 }
 function callcode(
 	a1, a2, a3, a4,
@@ -640,8 +712,18 @@ function callcode(
 	f1, f2, f3, f4,
 	g1, g2, g3, g4
 ) -> x1, x2, x3, x4 {
-	// TODO implement
-	unreachable()
+	mstore_address(0, b1, b2, b3, b4)
+
+	let v1, v2 := u256_to_u128(c1, c2, c3, c4)
+	mstore_internal(32, 0, 0, v1, v2)
+
+	x4 := eth.callCode(
+		u256_to_i64(a1, a2, a3, a4),
+		12,
+		32,
+		to_internal_i32ptr(d1, d2, d3, d4),
+		u256_to_i32(e1, e2, e3, e4)
+	)
 }
 function delegatecall(
 	a1, a2, a3, a4,
@@ -651,8 +733,14 @@ function delegatecall(
 	e1, e2, e3, e4,
 	f1, f2, f3, f4
 ) -> x1, x2, x3, x4 {
-	// TODO implement
-	unreachable()
+	mstore_address(0, b1, b2, b3, b4)
+
+	x4 := eth.callDelegate(
+		u256_to_i64(a1, a2, a3, a4),
+		12,
+		to_internal_i32ptr(c1, c2, c3, c4),
+		u256_to_i32(d1, d2, d3, d4)
+	)
 }
 function staticcall(
 	a1, a2, a3, a4,
@@ -662,8 +750,14 @@ function staticcall(
 	e1, e2, e3, e4,
 	f1, f2, f3, f4
 ) -> x1, x2, x3, x4 {
-	// TODO implement
-	unreachable()
+	mstore_address(0, b1, b2, b3, b4)
+
+	x4 := eth.callStatic(
+		u256_to_i64(a1, a2, a3, a4),
+		12,
+		to_internal_i32ptr(c1, c2, c3, c4),
+		u256_to_i32(d1, d2, d3, d4)
+	)
 }
 function create2(
 	a1, a2, a3, a4,
@@ -675,22 +769,20 @@ function create2(
 	unreachable()
 }
 function selfdestruct(a1, a2, a3, a4) {
-	mstore(0, 0, 0, 0, a1, a2, a3, a4)
+	mstore_address(0, a1, a2, a3, a4)
 	// In EVM, addresses are padded to 32 bytes, so discard the first 12.
 	eth.selfDestruct(12)
 }
 
 function return(x1, x2, x3, x4, y1, y2, y3, y4) {
 	eth.finish(
-		// scratch - TODO: overflow check
-		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
+		to_internal_i32ptr(x1, x2, x3, x4),
 		u256_to_i32(y1, y2, y3, y4)
 	)
 }
 function revert(x1, x2, x3, x4, y1, y2, y3, y4) {
 	eth.revert(
-		// scratch - TODO: overflow check
-		i64.add(u256_to_i32ptr(x1, x2, x3, x4), 64),
+		to_internal_i32ptr(x1, x2, x3, x4),
 		u256_to_i32(y1, y2, y3, y4)
 	)
 }
@@ -767,4 +859,3 @@ void EVMToEwasmTranslator::parsePolyfill()
 	for (auto const& statement: m_polyfill->statements)
 		m_polyfillFunctions.insert(std::get<FunctionDefinition>(statement).name);
 }
-

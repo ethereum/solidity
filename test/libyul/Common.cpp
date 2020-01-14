@@ -40,14 +40,15 @@
 #include <variant>
 
 using namespace std;
-using namespace langutil;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::langutil;
 
 namespace
 {
 Dialect const& defaultDialect(bool _yul)
 {
-	return _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM(dev::test::Options::get().evmVersion());
+	return _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM(solidity::test::Options::get().evmVersion());
 }
 }
 
@@ -63,11 +64,11 @@ void yul::test::printErrors(ErrorList const& _errors)
 pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
 {
 	AssemblyStack stack(
-		dev::test::Options::get().evmVersion(),
+		solidity::test::Options::get().evmVersion(),
 		_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
-		dev::test::Options::get().optimize ?
-			dev::solidity::OptimiserSettings::standard() :
-			dev::solidity::OptimiserSettings::minimal()
+		solidity::test::Options::get().optimize ?
+			solidity::frontend::OptimiserSettings::standard() :
+			solidity::frontend::OptimiserSettings::minimal()
 	);
 	if (!stack.parseAndAnalyze("", _source) || !stack.errors().empty())
 		BOOST_FAIL("Invalid source.");

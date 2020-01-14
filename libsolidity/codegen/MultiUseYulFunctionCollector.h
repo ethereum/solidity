@@ -25,9 +25,7 @@
 #include <map>
 #include <string>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -52,5 +50,4 @@ private:
 	std::map<std::string, std::string> m_requestedFunctions;
 };
 
-}
 }

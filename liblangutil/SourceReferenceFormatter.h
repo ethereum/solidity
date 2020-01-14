@@ -28,12 +28,12 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceExtractor.h>
 
-namespace dev
+namespace solidity::util
 {
 struct Exception; // forward
 }
 
-namespace langutil
+namespace solidity::langutil
 {
 struct SourceLocation;
 class Scanner;
@@ -52,7 +52,7 @@ public:
 	virtual void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
 
 	virtual void printSourceLocation(SourceLocation const* _location);
-	virtual void printExceptionInformation(dev::Exception const& _exception, std::string const& _category);
+	virtual void printExceptionInformation(util::Exception const& _exception, std::string const& _category);
 	virtual void printErrorInformation(Error const& _error);
 
 	static std::string formatErrorInformation(Error const& _error)
@@ -64,7 +64,7 @@ public:
 	}
 
 	static std::string formatExceptionInformation(
-		dev::Exception const& _exception,
+		util::Exception const& _exception,
 		std::string const& _name
 	)
 	{

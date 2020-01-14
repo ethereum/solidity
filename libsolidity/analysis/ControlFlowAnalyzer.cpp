@@ -18,12 +18,12 @@
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 
 #include <liblangutil/SourceLocation.h>
-#include <libdevcore/Algorithms.h>
+#include <libsolutil/Algorithms.h>
 #include <boost/range/algorithm/sort.hpp>
 
 using namespace std;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 bool ControlFlowAnalyzer::analyze(ASTNode const& _astRoot)
 {
@@ -151,7 +151,7 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const* _exit, CFGNode const* _revert) const
 {
 	// collect all nodes reachable from the entry point
-	std::set<CFGNode const*> reachable = BreadthFirstSearch<CFGNode const*>{{_entry}}.run(
+	std::set<CFGNode const*> reachable = util::BreadthFirstSearch<CFGNode const*>{{_entry}}.run(
 		[](CFGNode const* _node, auto&& _addChild) {
 			for (CFGNode const* exit: _node->exits)
 				_addChild(exit);
@@ -161,7 +161,7 @@ void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const*
 	// traverse all paths backwards from exit and revert
 	// and extract (valid) source locations of unreachable nodes into sorted set
 	std::set<SourceLocation> unreachable;
-	BreadthFirstSearch<CFGNode const*>{{_exit, _revert}}.run(
+	util::BreadthFirstSearch<CFGNode const*>{{_exit, _revert}}.run(
 		[&](CFGNode const* _node, auto&& _addChild) {
 			if (!reachable.count(_node) && !_node->location.isEmpty())
 				unreachable.insert(_node->location);

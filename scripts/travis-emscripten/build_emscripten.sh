@@ -54,14 +54,6 @@ fi
 
 WORKSPACE=/root/project
 
-# Increase nodejs stack size
-if ! [ -e /emsdk_portable/node/current/bin/node_orig ]
-then
-  mv /emsdk_portable/node/current/bin/node /emsdk_portable/node/current/bin/node_orig
-  echo -e '#!/bin/sh\nexec /emsdk_portable/node/current/bin/node_orig --stack-size=8192 $@' > /emsdk_portable/node/current/bin/node
-  chmod 755 /emsdk_portable/node/current/bin/node
-fi
-
 # Boost
 echo -en 'travis_fold:start:compiling_boost\\r'
 test -e "$WORKSPACE"/boost_1_70_0_install/include/boost/version.hpp || (

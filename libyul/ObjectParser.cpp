@@ -25,11 +25,11 @@
 
 #include <liblangutil/Token.h>
 
-using namespace dev;
-using namespace langutil;
-using namespace yul;
 using namespace std;
-
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
+using namespace solidity::langutil;
 
 shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
 {

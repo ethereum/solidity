@@ -19,9 +19,9 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/Dialect.h>
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

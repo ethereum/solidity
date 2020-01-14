@@ -22,13 +22,13 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 
-#include <libdevcore/InvertibleMap.h>
+#include <libsolutil/InvertibleMap.h>
 
 #include <map>
 #include <optional>
 #include <set>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct CallGraph

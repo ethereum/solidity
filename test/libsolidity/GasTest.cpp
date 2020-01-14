@@ -17,8 +17,8 @@
 
 #include <test/libsolidity/GasTest.h>
 #include <test/Options.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/JSON.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/JSON.h>
 #include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -26,10 +26,10 @@
 #include <fstream>
 #include <stdexcept>
 
-using namespace langutil;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
-using namespace dev;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
+using namespace solidity;
 using namespace std;
 namespace fs = boost::filesystem;
 using namespace boost::unit_test;

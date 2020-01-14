@@ -26,7 +26,7 @@
 #include <map>
 #include <type_traits>
 
-namespace yul
+namespace solidity::yul
 {
 
 

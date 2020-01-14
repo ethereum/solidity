@@ -26,8 +26,8 @@
 #include <libevmasm/Assembly.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::frontend;
 
 void Compiler::compileContract(
 	ContractDefinition const& _contract,
@@ -51,13 +51,13 @@ void Compiler::compileContract(
 	m_context.optimise(m_optimiserSettings);
 }
 
-std::shared_ptr<eth::Assembly> Compiler::runtimeAssemblyPtr() const
+std::shared_ptr<evmasm::Assembly> Compiler::runtimeAssemblyPtr() const
 {
 	solAssert(m_context.runtimeContext(), "");
 	return m_context.runtimeContext()->assemblyPtr();
 }
 
-eth::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _function) const
+evmasm::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _function) const
 {
 	return m_runtimeContext.functionEntryLabelIfExists(_function);
 }

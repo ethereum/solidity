@@ -19,8 +19,8 @@
 
 #include <libsolidity/ast/Types.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/AnsiColorized.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/AnsiColorized.h>
+#include <libsolutil/CommonData.h>
 
 #include <json/json.h>
 
@@ -30,11 +30,7 @@
 #include <string>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 /**
@@ -135,6 +131,4 @@ private:
 	Json::Value m_contractABI;
 };
 
-}
-}
 }

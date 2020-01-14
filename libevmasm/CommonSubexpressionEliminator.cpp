@@ -23,14 +23,14 @@
 
 #include <functional>
 #include <boost/range/adaptor/reversed.hpp>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/AssemblyItem.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::evmasm;
+using namespace solidity::langutil;
 
 vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 {

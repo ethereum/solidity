@@ -21,7 +21,7 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

@@ -16,13 +16,14 @@
 */
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/AsmData.h>
-#include <libdevcore/Visitor.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Visitor.h>
+#include <libsolutil/CommonData.h>
 #include <functional>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 void BlockFlattener::operator()(Block& _block)
 {

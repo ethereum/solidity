@@ -25,8 +25,8 @@
 #include <libevmasm/SemanticInformation.h>
 
 using namespace std;
-using namespace dev::eth;
-using namespace dev;
+using namespace solidity;
+using namespace solidity::evmasm;
 
 // TODO: Extend this to use the tools from ExpressionClasses.cpp
 
@@ -362,7 +362,7 @@ bool PeepholeOptimiser::optimise()
 		);
 	if (m_optimisedItems.size() < m_items.size() || (
 		m_optimisedItems.size() == m_items.size() && (
-			eth::bytesRequired(m_optimisedItems, 3) < eth::bytesRequired(m_items, 3) ||
+			evmasm::bytesRequired(m_optimisedItems, 3) < evmasm::bytesRequired(m_items, 3) ||
 			numberOfPops(m_optimisedItems) > numberOfPops(m_items)
 		)
 	))

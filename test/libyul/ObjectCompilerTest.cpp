@@ -17,7 +17,7 @@
 
 #include <test/libyul/ObjectCompilerTest.h>
 
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <libyul/AssemblyStack.h>
 
@@ -29,12 +29,13 @@
 
 #include <fstream>
 
-using namespace dev;
-using namespace langutil;
-using namespace yul;
-using namespace yul::test;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 using namespace std;
 
 ObjectCompilerTest::ObjectCompilerTest(string const& _filename)
@@ -82,7 +83,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 			"Bytecode: " +
 			toHex(obj.bytecode->bytecode) +
 			"\nOpcodes: " +
-			boost::trim_copy(dev::eth::disassemble(obj.bytecode->bytecode)) +
+			boost::trim_copy(evmasm::disassemble(obj.bytecode->bytecode)) +
 			"\n";
 
 	if (m_expectation != m_obtainedResult)

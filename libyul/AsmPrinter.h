@@ -26,7 +26,7 @@
 
 #include <libyul/YulString.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 class AsmPrinter

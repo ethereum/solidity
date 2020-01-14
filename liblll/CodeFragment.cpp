@@ -23,7 +23,7 @@
 #include <liblll/CompilerState.h>
 #include <liblll/Parser.h>
 #include <libevmasm/Instruction.h>
-#include <libdevcore/CommonIO.h>
+#include <libsolutil/CommonIO.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -40,9 +40,10 @@
 
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::lll;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::evmasm;
+using namespace solidity::lll;
 
 void CodeFragment::finalise(CompilerState const& _cs)
 {
@@ -608,7 +609,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			int targetDeposit = hasDefault ? code[code.size() - 1].m_asm.deposit() : 0;
 
 			// The conditions
-			eth::AssemblyItems jumpTags;
+			evmasm::AssemblyItems jumpTags;
 			for (unsigned i = 0; i < code.size() - 1; i += 2)
 			{
 				requireDeposit(i, 1);
@@ -675,7 +676,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireMaxSize(3);
 			requireDeposit(1, 1);
 
-			auto subPush = m_asm.appendSubroutine(make_shared<eth::Assembly>(code[0].assembly(ns)));
+			auto subPush = m_asm.appendSubroutine(make_shared<evmasm::Assembly>(code[0].assembly(ns)));
 			m_asm.append(Instruction::DUP1);
 			if (code.size() == 3)
 			{

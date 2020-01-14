@@ -24,9 +24,7 @@
 
 #include <memory>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class CompilerContext;
@@ -119,5 +117,4 @@ private:
 	CompilerContext& m_context;
 };
 
-}
 }

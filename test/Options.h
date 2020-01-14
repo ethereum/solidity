@@ -27,9 +27,7 @@
 
 #include <functional>
 
-namespace dev
-{
-namespace test
+namespace solidity::test
 {
 
 struct Options: CommonOptions
@@ -43,5 +41,4 @@ private:
 	Options();
 };
 
-}
 }

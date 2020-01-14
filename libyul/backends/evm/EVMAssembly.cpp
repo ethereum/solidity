@@ -24,10 +24,10 @@
 #include <libevmasm/Instruction.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace langutil;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
+using namespace solidity::langutil;
 
 namespace
 {
@@ -43,7 +43,7 @@ void EVMAssembly::setSourceLocation(SourceLocation const&)
 	// Ignored for now;
 }
 
-void EVMAssembly::appendInstruction(dev::eth::Instruction _instr)
+void EVMAssembly::appendInstruction(evmasm::Instruction _instr)
 {
 	m_bytecode.push_back(uint8_t(_instr));
 	m_stackHeight += instructionInfo(_instr).ret - instructionInfo(_instr).args;
@@ -52,14 +52,14 @@ void EVMAssembly::appendInstruction(dev::eth::Instruction _instr)
 void EVMAssembly::appendConstant(u256 const& _constant)
 {
 	bytes data = toCompactBigEndian(_constant, 1);
-	appendInstruction(pushInstruction(data.size()));
+	appendInstruction(evmasm::pushInstruction(data.size()));
 	m_bytecode += data;
 }
 
 void EVMAssembly::appendLabel(LabelID _labelId)
 {
 	setLabelToCurrentPosition(_labelId);
-	appendInstruction(dev::eth::Instruction::JUMPDEST);
+	appendInstruction(evmasm::Instruction::JUMPDEST);
 }
 
 void EVMAssembly::appendLabelReference(LabelID _labelId)
@@ -67,7 +67,7 @@ void EVMAssembly::appendLabelReference(LabelID _labelId)
 	yulAssert(!m_evm15, "Cannot use plain label references in EMV1.5 mode.");
 	// @TODO we now always use labelReferenceSize for all labels, it could be shortened
 	// for some of them.
-	appendInstruction(dev::eth::pushInstruction(labelReferenceSize));
+	appendInstruction(evmasm::pushInstruction(labelReferenceSize));
 	m_labelReferences[m_bytecode.size()] = _labelId;
 	m_bytecode += bytes(labelReferenceSize);
 }
@@ -94,7 +94,7 @@ void EVMAssembly::appendLinkerSymbol(string const&)
 void EVMAssembly::appendJump(int _stackDiffAfter)
 {
 	yulAssert(!m_evm15, "Plain JUMP used for EVM 1.5");
-	appendInstruction(dev::eth::Instruction::JUMP);
+	appendInstruction(evmasm::Instruction::JUMP);
 	m_stackHeight += _stackDiffAfter;
 }
 
@@ -102,7 +102,7 @@ void EVMAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
 {
 	if (m_evm15)
 	{
-		m_bytecode.push_back(uint8_t(dev::eth::Instruction::JUMPTO));
+		m_bytecode.push_back(uint8_t(evmasm::Instruction::JUMPTO));
 		appendLabelReferenceInternal(_labelId);
 		m_stackHeight += _stackDiffAfter;
 	}
@@ -117,14 +117,14 @@ void EVMAssembly::appendJumpToIf(LabelID _labelId)
 {
 	if (m_evm15)
 	{
-		m_bytecode.push_back(uint8_t(dev::eth::Instruction::JUMPIF));
+		m_bytecode.push_back(uint8_t(evmasm::Instruction::JUMPIF));
 		appendLabelReferenceInternal(_labelId);
 		m_stackHeight--;
 	}
 	else
 	{
 		appendLabelReference(_labelId);
-		appendInstruction(dev::eth::Instruction::JUMPI);
+		appendInstruction(evmasm::Instruction::JUMPI);
 	}
 }
 
@@ -133,7 +133,7 @@ void EVMAssembly::appendBeginsub(LabelID _labelId, int _arguments)
 	yulAssert(m_evm15, "BEGINSUB used for EVM 1.0");
 	yulAssert(_arguments >= 0, "");
 	setLabelToCurrentPosition(_labelId);
-	m_bytecode.push_back(uint8_t(dev::eth::Instruction::BEGINSUB));
+	m_bytecode.push_back(uint8_t(evmasm::Instruction::BEGINSUB));
 	m_stackHeight += _arguments;
 }
 
@@ -141,7 +141,7 @@ void EVMAssembly::appendJumpsub(LabelID _labelId, int _arguments, int _returns)
 {
 	yulAssert(m_evm15, "JUMPSUB used for EVM 1.0");
 	yulAssert(_arguments >= 0 && _returns >= 0, "");
-	m_bytecode.push_back(uint8_t(dev::eth::Instruction::JUMPSUB));
+	m_bytecode.push_back(uint8_t(evmasm::Instruction::JUMPSUB));
 	appendLabelReferenceInternal(_labelId);
 	m_stackHeight += _returns - _arguments;
 }
@@ -150,11 +150,11 @@ void EVMAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 {
 	yulAssert(m_evm15, "RETURNSUB used for EVM 1.0");
 	yulAssert(_returns >= 0, "");
-	m_bytecode.push_back(uint8_t(dev::eth::Instruction::RETURNSUB));
+	m_bytecode.push_back(uint8_t(evmasm::Instruction::RETURNSUB));
 	m_stackHeight += _stackDiffAfter - _returns;
 }
 
-eth::LinkerObject EVMAssembly::finalize()
+evmasm::LinkerObject EVMAssembly::finalize()
 {
 	size_t bytecodeSize = m_bytecode.size();
 	for (auto const& ref: m_assemblySizePositions)
@@ -169,7 +169,7 @@ eth::LinkerObject EVMAssembly::finalize()
 		updateReference(referencePos, labelReferenceSize, u256(labelPos));
 	}
 
-	eth::LinkerObject obj;
+	evmasm::LinkerObject obj;
 	obj.bytecode = m_bytecode;
 	return obj;
 }
@@ -189,7 +189,7 @@ void EVMAssembly::appendLabelReferenceInternal(LabelID _labelId)
 
 void EVMAssembly::appendAssemblySize()
 {
-	appendInstruction(dev::eth::pushInstruction(assemblySizeReferenceSize));
+	appendInstruction(evmasm::pushInstruction(assemblySizeReferenceSize));
 	m_assemblySizePositions.push_back(m_bytecode.size());
 	m_bytecode += bytes(assemblySizeReferenceSize);
 }

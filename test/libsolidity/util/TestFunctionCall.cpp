@@ -17,7 +17,7 @@
 #include <test/libsolidity/util/BytesUtils.h>
 #include <test/libsolidity/util/ContractABIUtils.h>
 
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -25,9 +25,9 @@
 #include <stdexcept>
 #include <string>
 
-using namespace dev;
 using namespace solidity;
-using namespace dev::solidity::test;
+using namespace solidity::util;
+using namespace solidity::frontend::test;
 using namespace std;
 
 string TestFunctionCall::format(
@@ -110,7 +110,7 @@ string TestFunctionCall::format(
 				formatFailure(_errorReporter, m_call, m_rawBytes, _renderResult, highlight) :
 				formatRawParameters(m_call.expectations.result);
 			if (!result.empty())
-				AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << ws << result;
+				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND}) << ws << result;
 		}
 		else
 		{
@@ -159,7 +159,7 @@ string TestFunctionCall::format(
 			}
 
 			if (isFailure)
-				AnsiColorized(stream, highlight, {dev::formatting::RED_BACKGROUND}) << ws << result;
+				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND}) << ws << result;
 			else
 				if (!result.empty())
 					stream << ws << result;
@@ -190,12 +190,12 @@ string TestFunctionCall::formatBytesParameters(
 	ErrorReporter& _errorReporter,
 	bytes const& _bytes,
 	string const& _signature,
-	dev::solidity::test::ParameterList const& _parameters,
+	solidity::frontend::test::ParameterList const& _parameters,
 	bool _highlight,
 	bool _failure
 ) const
 {
-	using ParameterList = dev::solidity::test::ParameterList;
+	using ParameterList = solidity::frontend::test::ParameterList;
 
 	stringstream os;
 
@@ -248,7 +248,7 @@ string TestFunctionCall::formatBytesParameters(
 
 string TestFunctionCall::formatFailure(
 	ErrorReporter& _errorReporter,
-	dev::solidity::test::FunctionCall const& _call,
+	solidity::frontend::test::FunctionCall const& _call,
 	bytes const& _output,
 	bool _renderResult,
 	bool _highlight
@@ -279,7 +279,7 @@ string TestFunctionCall::formatFailure(
 }
 
 string TestFunctionCall::formatRawParameters(
-	dev::solidity::test::ParameterList const& _params,
+	solidity::frontend::test::ParameterList const& _params,
 	std::string const& _linePrefix
 ) const
 {

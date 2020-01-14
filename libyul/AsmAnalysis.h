@@ -35,13 +35,13 @@
 #include <memory>
 #include <optional>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 struct SourceLocation;
 }
 
-namespace yul
+namespace solidity::yul
 {
 
 struct AsmAnalysisInfo;
@@ -77,7 +77,6 @@ public:
 	/// Asserts on failure.
 	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object);
 
-	bool operator()(Instruction const&);
 	bool operator()(Literal const& _literal);
 	bool operator()(Identifier const&);
 	bool operator()(ExpressionStatement const&);
@@ -104,7 +103,7 @@ private:
 
 	Scope& scope(Block const* _block);
 	void expectValidType(std::string const& type, langutil::SourceLocation const& _location);
-	bool warnOnInstructions(dev::eth::Instruction _instr, langutil::SourceLocation const& _location);
+	bool warnOnInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
 	bool warnOnInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
 
 	int m_stackHeight = 0;

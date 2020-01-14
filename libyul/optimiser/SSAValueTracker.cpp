@@ -24,8 +24,8 @@
 #include <libyul/AsmData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void SSAValueTracker::operator()(Assignment const& _assignment)
 {

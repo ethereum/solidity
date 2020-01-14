@@ -38,12 +38,11 @@
 #include <string>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
 
-namespace yul
-{
-namespace test
+namespace solidity::yul::test
 {
 
 namespace
@@ -117,7 +116,7 @@ do \
 { \
 	Error err = expectError((text), dialect, false); \
 	BOOST_CHECK(err.type() == (Error::Type::typ)); \
-	BOOST_CHECK(dev::solidity::searchErrorMessage(err, (substring))); \
+	BOOST_CHECK(solidity::frontend::test::searchErrorMessage(err, (substring))); \
 } while(0)
 
 #define CHECK_ERROR(text, typ, substring) CHECK_ERROR_DIALECT(text, typ, substring, Dialect::yul())
@@ -569,5 +568,4 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
 } // end namespaces

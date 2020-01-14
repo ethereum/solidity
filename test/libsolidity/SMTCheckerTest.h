@@ -23,11 +23,7 @@
 
 #include <string>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 class SMTCheckerTest: public SyntaxTest
@@ -50,6 +46,4 @@ protected:
 	smt::SMTSolverChoice m_enabledSolvers;
 };
 
-}
-}
 }

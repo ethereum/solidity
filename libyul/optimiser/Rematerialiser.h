@@ -23,16 +23,17 @@
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**
- * Optimisation stage that replaces variables by their most recently assigned expressions,
+ * Optimisation stage that replaces variable references by those expressions
+ * that are most recently assigned to the referenced variables,
  * but only if the expression is movable and one of the following holds:
- *  - the variable is referenced exactly once
+ *  - the variable is referenced exactly once (and definition-to-reference does not cross a loop boundary)
  *  - the value is extremely cheap ("cost" of zero like ``caller()``)
  *  - the variable is referenced at most 5 times and the value is rather cheap
- *    ("cost" of at most 1 like a constant up to 0xff)
+ *    ("cost" of at most 1 like a constant up to 0xff) and we are not in a loop
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
@@ -67,6 +68,8 @@ protected:
 		FunctionDefinition& _function,
 		std::set<YulString> _varsToAlwaysRematerialize = {}
 	);
+
+	using DataFlowAnalyzer::operator();
 
 	using ASTModifier::visit;
 	void visit(Expression& _e) override;

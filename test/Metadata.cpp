@@ -21,16 +21,14 @@
 
 #include <string>
 #include <iostream>
-#include <libdevcore/Assertions.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/JSON.h>
+#include <libsolutil/Assertions.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/JSON.h>
 #include <test/Metadata.h>
 
 using namespace std;
 
-namespace dev
-{
-namespace test
+namespace solidity::test
 {
 
 bytes onlyMetadata(bytes const& _bytecode)
@@ -58,7 +56,7 @@ bytes bytecodeSansMetadata(bytes const& _bytecode)
 
 string bytecodeSansMetadata(string const& _bytecode)
 {
-	return toHex(bytecodeSansMetadata(fromHex(_bytecode, WhenError::Throw)));
+	return util::toHex(bytecodeSansMetadata(fromHex(_bytecode, util::WhenError::Throw)));
 }
 
 DEV_SIMPLE_EXCEPTION(CBORException);
@@ -84,7 +82,7 @@ public:
 		switch(nextType())
 		{
 			case MajorType::ByteString:
-				return toHex(readBytes(readLength()));
+				return util::toHex(readBytes(readLength()));
 			case MajorType::TextString:
 				return readString();
 			case MajorType::SimpleData:
@@ -174,7 +172,7 @@ std::optional<map<string, string>> parseCBORMetadata(bytes const& _metadata)
 bool isValidMetadata(string const& _metadata)
 {
 	Json::Value metadata;
-	if (!jsonParseStrict(_metadata, metadata))
+	if (!util::jsonParseStrict(_metadata, metadata))
 		return false;
 
 	if (
@@ -202,5 +200,4 @@ bool isValidMetadata(string const& _metadata)
 	return true;
 }
 
-}
 } // end namespaces

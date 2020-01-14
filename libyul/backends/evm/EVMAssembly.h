@@ -26,12 +26,12 @@
 
 #include <map>
 
-namespace langutil
+namespace solidity::langutil
 {
 struct SourceLocation;
 }
 
-namespace yul
+namespace solidity::yul
 {
 
 class EVMAssembly: public AbstractAssembly
@@ -47,9 +47,9 @@ public:
 	int stackHeight() const override { return m_stackHeight; }
 	void setStackHeight(int height) override { m_stackHeight = height; }
 	/// Append an EVM instruction.
-	void appendInstruction(dev::eth::Instruction _instruction) override;
+	void appendInstruction(evmasm::Instruction _instruction) override;
 	/// Append a constant.
-	void appendConstant(dev::u256 const& _constant) override;
+	void appendConstant(u256 const& _constant) override;
 	/// Append a label.
 	void appendLabel(LabelID _labelId) override;
 	/// Append a label reference.
@@ -81,20 +81,20 @@ public:
 	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() override;
 	void appendDataOffset(SubID _sub) override;
 	void appendDataSize(SubID _sub) override;
-	SubID appendData(dev::bytes const& _data) override;
+	SubID appendData(bytes const& _data) override;
 
 	/// Resolves references inside the bytecode and returns the linker object.
-	dev::eth::LinkerObject finalize();
+	evmasm::LinkerObject finalize();
 
 private:
 	void setLabelToCurrentPosition(AbstractAssembly::LabelID _labelId);
 	void appendLabelReferenceInternal(AbstractAssembly::LabelID _labelId);
-	void updateReference(size_t pos, size_t size, dev::u256 value);
+	void updateReference(size_t pos, size_t size, u256 value);
 
 	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
 	LabelID m_nextLabelId = 0;
 	int m_stackHeight = 0;
-	dev::bytes m_bytecode;
+	bytes m_bytecode;
 	std::map<std::string, LabelID> m_namedLabels;
 	std::map<LabelID, size_t> m_labelPositions;
 	std::map<size_t, LabelID> m_labelReferences;

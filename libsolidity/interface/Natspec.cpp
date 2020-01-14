@@ -29,8 +29,8 @@
 #include <boost/range/irange.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::frontend;
 
 Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 {

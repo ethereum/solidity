@@ -20,11 +20,11 @@
 
 #include <libyul/optimiser/EquivalentFunctionCombiner.h>
 #include <libyul/AsmData.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void EquivalentFunctionCombiner::run(OptimiserStepContext&, Block& _ast)
 {

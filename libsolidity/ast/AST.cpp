@@ -25,15 +25,15 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/AST_accept.h>
 #include <libsolidity/ast/TypeProvider.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
 #include <algorithm>
 #include <functional>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::frontend;
 
 class IDDispenser
 {
@@ -69,9 +69,7 @@ ASTAnnotation& ASTNode::annotation() const
 
 SourceUnitAnnotation& SourceUnit::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<SourceUnitAnnotation>();
-	return dynamic_cast<SourceUnitAnnotation&>(*m_annotation);
+	return initAnnotation<SourceUnitAnnotation>();
 }
 
 set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<SourceUnit const*> _skipList) const
@@ -93,9 +91,7 @@ set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<Sour
 
 ImportAnnotation& ImportDirective::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<ImportAnnotation>();
-	return dynamic_cast<ImportAnnotation&>(*m_annotation);
+	return initAnnotation<ImportAnnotation>();
 }
 
 TypePointer ImportDirective::type() const
@@ -114,11 +110,11 @@ vector<VariableDeclaration const*> ContractDefinition::stateVariablesIncludingIn
 	return stateVars;
 }
 
-map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() const
+map<util::FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() const
 {
 	auto exportedFunctionList = interfaceFunctionList();
 
-	map<FixedHash<4>, FunctionTypePointer> exportedFunctions;
+	map<util::FixedHash<4>, FunctionTypePointer> exportedFunctions;
 	for (auto const& it: exportedFunctionList)
 		exportedFunctions.insert(it);
 
@@ -192,18 +188,18 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 	return *m_interfaceEvents;
 }
 
-vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList() const
+vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList() const
 {
 	if (!m_interfaceFunctionList)
 	{
 		set<string> signaturesSeen;
-		m_interfaceFunctionList = make_unique<vector<pair<FixedHash<4>, FunctionTypePointer>>>();
+		m_interfaceFunctionList = make_unique<vector<pair<util::FixedHash<4>, FunctionTypePointer>>>();
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		{
 			vector<FunctionTypePointer> functions;
 			for (FunctionDefinition const* f: contract->definedFunctions())
 				if (f->isPartOfExternalInterface())
-					functions.push_back(TypeProvider::function(*f, false));
+					functions.push_back(TypeProvider::function(*f, FunctionType::Kind::External));
 			for (VariableDeclaration const* v: contract->stateVariables())
 				if (v->isPartOfExternalInterface())
 					functions.push_back(TypeProvider::function(*v));
@@ -216,7 +212,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 				if (signaturesSeen.count(functionSignature) == 0)
 				{
 					signaturesSeen.insert(functionSignature);
-					FixedHash<4> hash(dev::keccak256(functionSignature));
+					util::FixedHash<4> hash(util::keccak256(functionSignature));
 					m_interfaceFunctionList->emplace_back(hash, fun);
 				}
 			}
@@ -262,16 +258,12 @@ TypePointer ContractDefinition::type() const
 
 ContractDefinitionAnnotation& ContractDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<ContractDefinitionAnnotation>();
-	return dynamic_cast<ContractDefinitionAnnotation&>(*m_annotation);
+	return initAnnotation<ContractDefinitionAnnotation>();
 }
 
 TypeNameAnnotation& TypeName::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<TypeNameAnnotation>();
-	return dynamic_cast<TypeNameAnnotation&>(*m_annotation);
+	return initAnnotation<TypeNameAnnotation>();
 }
 
 TypePointer StructDefinition::type() const
@@ -281,9 +273,7 @@ TypePointer StructDefinition::type() const
 
 TypeDeclarationAnnotation& StructDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<TypeDeclarationAnnotation>();
-	return dynamic_cast<TypeDeclarationAnnotation&>(*m_annotation);
+	return initAnnotation<TypeDeclarationAnnotation>();
 }
 
 TypePointer EnumValue::type() const
@@ -300,27 +290,15 @@ TypePointer EnumDefinition::type() const
 
 TypeDeclarationAnnotation& EnumDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<TypeDeclarationAnnotation>();
-	return dynamic_cast<TypeDeclarationAnnotation&>(*m_annotation);
+	return initAnnotation<TypeDeclarationAnnotation>();
 }
 
-ContractDefinition::ContractKind FunctionDefinition::inContractKind() const
+ContractKind FunctionDefinition::inContractKind() const
 {
 	auto contractDef = dynamic_cast<ContractDefinition const*>(scope());
 	solAssert(contractDef, "Enclosing Scope of FunctionDefinition was not set.");
 	return contractDef->contractKind();
 }
-
-CallableDeclarationAnnotation& CallableDeclaration::annotation() const
-{
-	solAssert(
-		m_annotation,
-		"CallableDeclarationAnnotation is an abstract base, need to call annotation on the concrete class first."
-	);
-	return dynamic_cast<CallableDeclarationAnnotation&>(*m_annotation);
-}
-
 
 FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 {
@@ -333,7 +311,7 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 		case Visibility::Private:
 		case Visibility::Internal:
 		case Visibility::Public:
-			return TypeProvider::function(*this, _internal);
+			return TypeProvider::function(*this, FunctionType::Kind::Internal);
 		case Visibility::External:
 			return {};
 		}
@@ -349,7 +327,7 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 			return {};
 		case Visibility::Public:
 		case Visibility::External:
-			return TypeProvider::function(*this, _internal);
+			return TypeProvider::function(*this, FunctionType::Kind::External);
 		}
 	}
 
@@ -360,7 +338,7 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 TypePointer FunctionDefinition::type() const
 {
 	solAssert(visibility() != Visibility::External, "");
-	return TypeProvider::function(*this);
+	return TypeProvider::function(*this, FunctionType::Kind::Internal);
 }
 
 string FunctionDefinition::externalSignature() const
@@ -375,9 +353,7 @@ string FunctionDefinition::externalIdentifierHex() const
 
 FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<FunctionDefinitionAnnotation>();
-	return dynamic_cast<FunctionDefinitionAnnotation&>(*m_annotation);
+	return initAnnotation<FunctionDefinitionAnnotation>();
 }
 
 TypePointer ModifierDefinition::type() const
@@ -387,9 +363,7 @@ TypePointer ModifierDefinition::type() const
 
 ModifierDefinitionAnnotation& ModifierDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<ModifierDefinitionAnnotation>();
-	return dynamic_cast<ModifierDefinitionAnnotation&>(*m_annotation);
+	return initAnnotation<ModifierDefinitionAnnotation>();
 }
 
 TypePointer EventDefinition::type() const
@@ -407,16 +381,12 @@ FunctionTypePointer EventDefinition::functionType(bool _internal) const
 
 EventDefinitionAnnotation& EventDefinition::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<EventDefinitionAnnotation>();
-	return dynamic_cast<EventDefinitionAnnotation&>(*m_annotation);
+	return initAnnotation<EventDefinitionAnnotation>();
 }
 
 UserDefinedTypeNameAnnotation& UserDefinedTypeName::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<UserDefinedTypeNameAnnotation>();
-	return dynamic_cast<UserDefinedTypeNameAnnotation&>(*m_annotation);
+	return initAnnotation<UserDefinedTypeNameAnnotation>();
 }
 
 SourceUnit const& Scopable::sourceUnit() const
@@ -447,6 +417,11 @@ CallableDeclaration const* Scopable::functionOrModifierDefinition() const
 string Scopable::sourceUnitName() const
 {
 	return sourceUnit().annotation().path;
+}
+
+DeclarationAnnotation& Declaration::annotation() const
+{
+	return initAnnotation<DeclarationAnnotation>();
 }
 
 bool VariableDeclaration::isLValue() const
@@ -634,65 +609,62 @@ FunctionTypePointer VariableDeclaration::functionType(bool _internal) const
 
 VariableDeclarationAnnotation& VariableDeclaration::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<VariableDeclarationAnnotation>();
-	return dynamic_cast<VariableDeclarationAnnotation&>(*m_annotation);
+	return initAnnotation<VariableDeclarationAnnotation>();
 }
 
 StatementAnnotation& Statement::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<StatementAnnotation>();
-	return dynamic_cast<StatementAnnotation&>(*m_annotation);
+	return initAnnotation<StatementAnnotation>();
 }
 
 InlineAssemblyAnnotation& InlineAssembly::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<InlineAssemblyAnnotation>();
-	return dynamic_cast<InlineAssemblyAnnotation&>(*m_annotation);
+	return initAnnotation<InlineAssemblyAnnotation>();
+}
+
+BlockAnnotation& Block::annotation() const
+{
+	return initAnnotation<BlockAnnotation>();
+}
+
+TryCatchClauseAnnotation& TryCatchClause::annotation() const
+{
+	return initAnnotation<TryCatchClauseAnnotation>();
+}
+
+ForStatementAnnotation& ForStatement::annotation() const
+{
+	return initAnnotation<ForStatementAnnotation>();
 }
 
 ReturnAnnotation& Return::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<ReturnAnnotation>();
-	return dynamic_cast<ReturnAnnotation&>(*m_annotation);
+	return initAnnotation<ReturnAnnotation>();
 }
 
 ExpressionAnnotation& Expression::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<ExpressionAnnotation>();
-	return dynamic_cast<ExpressionAnnotation&>(*m_annotation);
+	return initAnnotation<ExpressionAnnotation>();
 }
 
 MemberAccessAnnotation& MemberAccess::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<MemberAccessAnnotation>();
-	return dynamic_cast<MemberAccessAnnotation&>(*m_annotation);
+	return initAnnotation<MemberAccessAnnotation>();
 }
 
 BinaryOperationAnnotation& BinaryOperation::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<BinaryOperationAnnotation>();
-	return dynamic_cast<BinaryOperationAnnotation&>(*m_annotation);
+	return initAnnotation<BinaryOperationAnnotation>();
 }
 
 FunctionCallAnnotation& FunctionCall::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<FunctionCallAnnotation>();
-	return dynamic_cast<FunctionCallAnnotation&>(*m_annotation);
+	return initAnnotation<FunctionCallAnnotation>();
 }
 
 IdentifierAnnotation& Identifier::annotation() const
 {
-	if (!m_annotation)
-		m_annotation = make_unique<IdentifierAnnotation>();
-	return dynamic_cast<IdentifierAnnotation&>(*m_annotation);
+	return initAnnotation<IdentifierAnnotation>();
 }
 
 ASTString Literal::valueWithoutUnderscores() const
@@ -721,7 +693,7 @@ bool Literal::looksLikeAddress() const
 bool Literal::passesAddressChecksum() const
 {
 	solAssert(isHexNumber(), "Expected hex number");
-	return dev::passesAddressChecksum(valueWithoutUnderscores(), true);
+	return util::passesAddressChecksum(valueWithoutUnderscores(), true);
 }
 
 string Literal::getChecksummedAddress() const
@@ -732,5 +704,5 @@ string Literal::getChecksummedAddress() const
 	if (address.length() > 40)
 		return string();
 	address.insert(address.begin(), 40 - address.size(), '0');
-	return dev::getChecksummedAddress(address);
+	return util::getChecksummedAddress(address);
 }

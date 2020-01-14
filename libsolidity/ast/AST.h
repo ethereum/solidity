@@ -30,7 +30,7 @@
 
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/Instruction.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/FixedHash.h>
 
 #include <boost/noncopyable.hpp>
 #include <json/json.h>
@@ -40,16 +40,14 @@
 #include <string>
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 // Forward-declaration to <yul/AsmData.h>
 struct Block;
 struct Dialect;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class ASTVisitor;
@@ -110,10 +108,18 @@ public:
 
 protected:
 	size_t const m_id = 0;
-	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
-	mutable std::unique_ptr<ASTAnnotation> m_annotation;
+
+	template <class T>
+	T& initAnnotation() const
+	{
+		if (!m_annotation)
+			m_annotation = std::make_unique<T>();
+		return dynamic_cast<T&>(*m_annotation);
+	}
 
 private:
+	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
+	mutable std::unique_ptr<ASTAnnotation> m_annotation;
 	SourceLocation m_location;
 };
 
@@ -159,8 +165,7 @@ public:
 	virtual ~Scopable() = default;
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
-	ASTNode const* scope() const { return m_scope; }
-	void setScope(ASTNode const* _scope) { m_scope = _scope; }
+	ASTNode const* scope() const { return annotation().scope; }
 
 	/// @returns the source unit this scopable is present in.
 	SourceUnit const& sourceUnit() const;
@@ -172,8 +177,7 @@ public:
 	/// Can be combined with annotation().canonicalName (if present) to form a globally unique name.
 	std::string sourceUnitName() const;
 
-protected:
-	ASTNode const* m_scope = nullptr;
+	virtual ScopableAnnotation& annotation() const = 0;
 };
 
 /**
@@ -230,6 +234,8 @@ public:
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
 	virtual FunctionTypePointer functionType(bool /*_internal*/) const { return {}; }
+
+	DeclarationAnnotation& annotation() const override;
 
 protected:
 	virtual Visibility defaultVisibility() const { return Visibility::Public; }
@@ -378,8 +384,6 @@ protected:
 class ContractDefinition: public Declaration, public Documented
 {
 public:
-	enum class ContractKind { Interface, Contract, Library };
-
 	ContractDefinition(
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
@@ -416,8 +420,8 @@ public:
 
 	/// @returns a map of canonical function signatures to FunctionDefinitions
 	/// as intended for use by the ABI.
-	std::map<FixedHash<4>, FunctionTypePointer> interfaceFunctions() const;
-	std::vector<std::pair<FixedHash<4>, FunctionTypePointer>> const& interfaceFunctionList() const;
+	std::map<util::FixedHash<4>, FunctionTypePointer> interfaceFunctions() const;
+	std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>> const& interfaceFunctionList() const;
 
 	/// @returns a list of the inheritable members of this contract
 	std::vector<Declaration const*> const& inheritableMembers() const;
@@ -452,7 +456,7 @@ private:
 	ContractKind m_contractKind;
 	bool m_abstract{false};
 
-	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
+	mutable std::unique_ptr<std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
 	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents;
 	mutable std::unique_ptr<std::vector<Declaration const*>> m_inheritableMembers;
 };
@@ -622,7 +626,7 @@ public:
 	bool markedVirtual() const { return m_isVirtual; }
 	virtual bool virtualSemantics() const { return markedVirtual(); }
 
-	CallableDeclarationAnnotation& annotation() const override;
+	CallableDeclarationAnnotation& annotation() const override = 0;
 
 protected:
 	ASTPointer<ParameterList> m_parameters;
@@ -711,7 +715,7 @@ public:
 	/// @returns the external identifier of this function (the hash of the signature) as a hex string.
 	std::string externalIdentifierHex() const;
 
-	ContractDefinition::ContractKind inContractKind() const;
+	ContractKind inContractKind() const;
 
 	TypePointer type() const override;
 
@@ -1169,6 +1173,8 @@ public:
 
 	std::vector<ASTPointer<Statement>> const& statements() const { return m_statements; }
 
+	BlockAnnotation& annotation() const override;
+
 private:
 	std::vector<ASTPointer<Statement>> m_statements;
 };
@@ -1247,6 +1253,8 @@ public:
 	ASTString const& errorName() const { return *m_errorName; }
 	ParameterList const* parameters() const { return m_parameters.get(); }
 	Block const& block() const { return *m_block; }
+
+	TryCatchClauseAnnotation& annotation() const override;
 
 private:
 	ASTPointer<ASTString> m_errorName;
@@ -1356,6 +1364,8 @@ public:
 	Expression const* condition() const { return m_condExpression.get(); }
 	ExpressionStatement const* loopExpression() const { return m_loopExpression.get(); }
 	Statement const& body() const { return *m_body; }
+
+	ForStatementAnnotation& annotation() const override;
 
 private:
 	/// For statement's initialization expression. for (XXX; ; ). Can be empty
@@ -1899,6 +1909,4 @@ private:
 
 /// @}
 
-
-}
 }

@@ -24,13 +24,9 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 BOOST_AUTO_TEST_SUITE(SolidityScanner)
@@ -666,6 +662,4 @@ BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_strings)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

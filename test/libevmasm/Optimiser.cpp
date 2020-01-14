@@ -36,14 +36,10 @@
 #include <memory>
 
 using namespace std;
-using namespace langutil;
-using namespace dev::eth;
+using namespace solidity::langutil;
+using namespace solidity::evmasm;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 namespace
@@ -57,20 +53,20 @@ namespace
 		return input;
 	}
 
-	eth::KnownState createInitialState(AssemblyItems const& _input)
+	evmasm::KnownState createInitialState(AssemblyItems const& _input)
 	{
-		eth::KnownState state;
+		evmasm::KnownState state;
 		for (auto const& item: addDummyLocations(_input))
 			state.feedItem(item, true);
 		return state;
 	}
 
-	AssemblyItems CSE(AssemblyItems const& _input, eth::KnownState const& _state = eth::KnownState())
+	AssemblyItems CSE(AssemblyItems const& _input, evmasm::KnownState const& _state = evmasm::KnownState())
 	{
 		AssemblyItems input = addDummyLocations(_input);
 
 		bool usesMsize = (find(_input.begin(), _input.end(), AssemblyItem{Instruction::MSIZE}) != _input.end());
-		eth::CommonSubexpressionEliminator cse(_state);
+		evmasm::CommonSubexpressionEliminator cse(_state);
 		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), usesMsize) == input.end());
 		AssemblyItems output = cse.getOptimizedItems();
 
@@ -84,7 +80,7 @@ namespace
 	void checkCSE(
 		AssemblyItems const& _input,
 		AssemblyItems const& _expectation,
-		KnownState const& _state = eth::KnownState()
+		KnownState const& _state = evmasm::KnownState()
 	)
 	{
 		AssemblyItems output = CSE(_input, _state);
@@ -118,8 +114,8 @@ BOOST_AUTO_TEST_SUITE(Optimiser)
 
 BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 {
-	eth::KnownState state;
-	eth::CommonSubexpressionEliminator cse(state);
+	evmasm::KnownState state;
+	evmasm::CommonSubexpressionEliminator cse(state);
 	AssemblyItems input{
 		Instruction::SWAP1, Instruction::POP, Instruction::ADD, u256(0), Instruction::SWAP1,
 		Instruction::SLOAD, Instruction::SWAP1, u256(100), Instruction::EXP, Instruction::SWAP1,
@@ -240,7 +236,7 @@ BOOST_AUTO_TEST_CASE(cse_associativity2)
 
 BOOST_AUTO_TEST_CASE(cse_double_shift_right_overflow)
 {
-	if (dev::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (solidity::test::Options::get().evmVersion().hasBitwiseShifting())
 	{
 		AssemblyItems input{
 			Instruction::CALLVALUE,
@@ -255,7 +251,7 @@ BOOST_AUTO_TEST_CASE(cse_double_shift_right_overflow)
 
 BOOST_AUTO_TEST_CASE(cse_double_shift_left_overflow)
 {
-	if (dev::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (solidity::test::Options::get().evmVersion().hasBitwiseShifting())
 	{
 		AssemblyItems input{
 			Instruction::DUP1,
@@ -508,7 +504,7 @@ BOOST_AUTO_TEST_CASE(cse_empty_keccak256)
 		Instruction::KECCAK256
 	};
 	checkCSE(input, {
-		u256(dev::keccak256(bytesConstRef()))
+		u256(util::keccak256(bytesConstRef()))
 	});
 }
 
@@ -526,7 +522,7 @@ BOOST_AUTO_TEST_CASE(cse_partial_keccak256)
 		u256(0xabcd) << (256 - 16),
 		u256(0),
 		Instruction::MSTORE,
-		u256(dev::keccak256(bytes{0xab, 0xcd}))
+		u256(util::keccak256(bytes{0xab, 0xcd}))
 	});
 }
 
@@ -651,7 +647,7 @@ BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_content_noninterfering_store_in_be
 
 BOOST_AUTO_TEST_CASE(cse_with_initially_known_stack)
 {
-	eth::KnownState state = createInitialState(AssemblyItems{
+	evmasm::KnownState state = createInitialState(AssemblyItems{
 		u256(0x12),
 		u256(0x20),
 		Instruction::ADD
@@ -664,7 +660,7 @@ BOOST_AUTO_TEST_CASE(cse_with_initially_known_stack)
 
 BOOST_AUTO_TEST_CASE(cse_equality_on_initially_known_stack)
 {
-	eth::KnownState state = createInitialState(AssemblyItems{Instruction::DUP1});
+	evmasm::KnownState state = createInitialState(AssemblyItems{Instruction::DUP1});
 	AssemblyItems input{
 		Instruction::EQ
 	};
@@ -677,7 +673,7 @@ BOOST_AUTO_TEST_CASE(cse_access_previous_sequence)
 {
 	// Tests that the code generator detects whether it tries to access SLOAD instructions
 	// from a sequenced expression which is not in its scope.
-	eth::KnownState state = createInitialState(AssemblyItems{
+	evmasm::KnownState state = createInitialState(AssemblyItems{
 		u256(0),
 		Instruction::SLOAD,
 		u256(1),
@@ -1136,7 +1132,7 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(u256(8));
 
-	main.optimise(true, dev::test::Options::get().evmVersion(), false, 200);
+	main.optimise(true, solidity::test::Options::get().evmVersion(), false, 200);
 
 	AssemblyItems expectationMain{
 		AssemblyItem(PushSubSize, 0),
@@ -1182,7 +1178,7 @@ BOOST_AUTO_TEST_CASE(cse_sub_zero)
 
 BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 {
-	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (!solidity::test::Options::get().evmVersion().hasBitwiseShifting())
 		return;
 
 	for (int i = 1; i < 256; i++)
@@ -1330,7 +1326,7 @@ BOOST_AUTO_TEST_CASE(cse_remove_unwanted_masking_of_address)
 
 BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
 {
-	if (!dev::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (!solidity::test::Options::get().evmVersion().hasBitwiseShifting())
 		return;
 
 	checkCSE({
@@ -1372,6 +1368,4 @@ BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

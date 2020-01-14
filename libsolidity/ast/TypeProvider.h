@@ -25,9 +25,7 @@
 #include <optional>
 #include <utility>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -122,8 +120,8 @@ public:
 		return _type;
 	}
 
-	/// @returns the internally-facing or externally-facing type of a function.
-	static FunctionType const* function(FunctionDefinition const& _function, bool _isInternal = true);
+	/// @returns the internally-facing or externally-facing type of a function or the type of a function declaration.
+	static FunctionType const* function(FunctionDefinition const& _function, FunctionType::Kind _kind = FunctionType::Kind::Declaration);
 
 	/// @returns the accessor function type of a state variable.
 	static FunctionType const* function(VariableDeclaration const& _varDecl);
@@ -225,5 +223,4 @@ private:
 	std::vector<std::unique_ptr<Type>> m_generalTypes{};
 };
 
-} // namespace solidity
-} // namespace dev
+}

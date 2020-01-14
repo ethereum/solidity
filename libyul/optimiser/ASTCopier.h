@@ -29,7 +29,7 @@
 #include <set>
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 
 class ExpressionCopier

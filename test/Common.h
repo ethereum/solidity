@@ -17,17 +17,14 @@
 
 #pragma once
 
-#include <libdevcore/Exceptions.h>
+#include <libsolutil/Exceptions.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/program_options.hpp>
 #include <boost/noncopyable.hpp>
 
-namespace dev
-{
-
-namespace test
+namespace solidity::test
 {
 
 #ifdef _WIN32
@@ -42,7 +39,7 @@ static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/r
 #endif
 
 
-struct ConfigException : public Exception {};
+struct ConfigException : public util::Exception {};
 
 struct CommonOptions: boost::noncopyable
 {
@@ -67,5 +64,4 @@ private:
 	std::string evmVersionString;
 };
 
-}
 }

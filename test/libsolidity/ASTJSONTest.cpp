@@ -17,7 +17,7 @@
 
 #include <test/libsolidity/ASTJSONTest.h>
 #include <test/Options.h>
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 #include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/interface/CompilerStack.h>
@@ -28,11 +28,12 @@
 #include <memory>
 #include <stdexcept>
 
-using namespace langutil;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
-using namespace dev::formatting;
-using namespace dev;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
+using namespace solidity::util::formatting;
+using namespace solidity::util;
+using namespace solidity;
 using namespace std;
 namespace fs = boost::filesystem;
 using namespace boost::unit_test;
@@ -102,7 +103,7 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 		sourceIndices[m_sources[i].first] = i + 1;
 	}
 	c.setSources(sources);
-	c.setEVMVersion(dev::test::Options::get().evmVersion());
+	c.setEVMVersion(solidity::test::Options::get().evmVersion());
 	if (c.parse())
 		c.analyze();
 	else

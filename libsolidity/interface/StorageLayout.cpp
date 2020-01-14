@@ -20,8 +20,8 @@
 #include <libsolidity/ast/TypeProvider.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::frontend;
 
 Json::Value StorageLayout::generate(ContractDefinition const& _contractDef)
 {

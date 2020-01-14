@@ -25,15 +25,13 @@
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/ast/AST.h>
 #include <liblangutil/ErrorReporter.h>
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/StringUtils.h>
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 NameAndTypeResolver::NameAndTypeResolver(
@@ -244,7 +242,7 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 
 void NameAndTypeResolver::warnVariablesNamedLikeInstructions()
 {
-	for (auto const& instruction: dev::eth::c_instructions)
+	for (auto const& instruction: evmasm::c_instructions)
 	{
 		string const instructionName{boost::algorithm::to_lower_copy(instruction.first)};
 		auto declarations = nameFromCurrentScope(instructionName, true);
@@ -460,7 +458,7 @@ vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMer
 
 string NameAndTypeResolver::similarNameSuggestions(ASTString const& _name) const
 {
-	return quotedAlternativesList(m_currentScope->similarNames(_name));
+	return util::quotedAlternativesList(m_currentScope->similarNames(_name));
 }
 
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(
@@ -639,7 +637,7 @@ void DeclarationRegistrationHelper::endVisit(FunctionDefinition&)
 
 bool DeclarationRegistrationHelper::visit(TryCatchClause& _tryCatchClause)
 {
-	_tryCatchClause.setScope(m_currentScope);
+	_tryCatchClause.annotation().scope = m_currentScope;
 	enterNewSubScope(_tryCatchClause);
 	return true;
 }
@@ -675,7 +673,7 @@ void DeclarationRegistrationHelper::endVisit(FunctionTypeName&)
 
 bool DeclarationRegistrationHelper::visit(Block& _block)
 {
-	_block.setScope(m_currentScope);
+	_block.annotation().scope = m_currentScope;
 	enterNewSubScope(_block);
 	return true;
 }
@@ -687,7 +685,7 @@ void DeclarationRegistrationHelper::endVisit(Block&)
 
 bool DeclarationRegistrationHelper::visit(ForStatement& _for)
 {
-	_for.setScope(m_currentScope);
+	_for.annotation().scope = m_currentScope;
 	enterNewSubScope(_for);
 	return true;
 }
@@ -761,7 +759,7 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 
 	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, warnAboutShadowing, inactive, m_errorReporter);
 
-	_declaration.setScope(m_currentScope);
+	_declaration.annotation().scope = m_currentScope;
 	if (_opensScope)
 		enterNewSubScope(_declaration);
 }
@@ -785,5 +783,4 @@ string DeclarationRegistrationHelper::currentCanonicalName() const
 	return ret;
 }
 
-}
 }

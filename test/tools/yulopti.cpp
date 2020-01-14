@@ -18,7 +18,7 @@
  * Interactive yul optimizer
  */
 
-#include <libdevcore/CommonIO.h>
+#include <libsolutil/CommonIO.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
 #include <libyul/AsmAnalysis.h>
@@ -66,7 +66,7 @@
 
 #include <libyul/backends/evm/EVMDialect.h>
 
-#include <libdevcore/JSON.h>
+#include <libsolutil/JSON.h>
 
 #include <boost/program_options.hpp>
 
@@ -76,10 +76,11 @@
 #include <variant>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
+using namespace solidity::yul;
 
 namespace po = boost::program_options;
 

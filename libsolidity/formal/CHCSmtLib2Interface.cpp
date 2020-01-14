@@ -17,7 +17,7 @@
 
 #include <libsolidity/formal/CHCSmtLib2Interface.h>
 
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -30,15 +30,16 @@
 #include <stdexcept>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
-using namespace dev::solidity::smt;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
+using namespace solidity::frontend::smt;
 
 CHCSmtLib2Interface::CHCSmtLib2Interface(
 	map<h256, string> const& _queryResponses,
 	ReadCallback::Callback const& _smtCallback
 ):
-	m_smtlib2(make_shared<SMTLib2Interface>(_queryResponses, _smtCallback)),
+	m_smtlib2(make_unique<SMTLib2Interface>(_queryResponses, _smtCallback)),
 	m_queryResponses(_queryResponses),
 	m_smtCallback(_smtCallback)
 {
@@ -153,7 +154,7 @@ void CHCSmtLib2Interface::write(string _data)
 
 string CHCSmtLib2Interface::querySolver(string const& _input)
 {
-	h256 inputHash = dev::keccak256(_input);
+	util::h256 inputHash = util::keccak256(_input);
 	if (m_queryResponses.count(inputHash))
 		return m_queryResponses.at(inputHash);
 	if (m_smtCallback)

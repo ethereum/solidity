@@ -9,17 +9,27 @@ Compiler Features:
 Bugfixes:
 
 
-
-### 0.6.1 (unreleased)
+### 0.6.2 (unreleased)
 
 Language Features:
+ * Allow accessing external functions via contract and interface names to obtain their selector.
 
 
 Compiler Features:
-
+ * General: Raise warning if runtime bytecode exceeds 24576 bytes (a limit introduced in Spurious Dragon).
+ * Yul Optimizer: Apply penalty when trying to rematerialize into loops.
 
 Bugfixes:
 
+
+Build System:
+ * Switch to building soljson.js with an embedded base64-encoded wasm binary.
+
+
+### 0.6.1 (2020-01-02)
+
+Bugfixes:
+ * Yul Optimizer: Fix bug in redundant assignment remover in combination with break and continue statements.
 
 
 ### 0.6.0 (2019-12-17)
@@ -57,6 +67,7 @@ Language Features:
  * Allow global enums and structs.
  * Allow public variables to override external functions.
  * Allow underscores as delimiters in hex strings.
+ * Allow to react on failing external calls using ``try`` and ``catch``.
  * Introduce syntax for array slices and implement them for dynamic calldata arrays.
  * Introduce ``push()`` for dynamic storage arrays. It returns a reference to the newly allocated element, if applicable.
  * Introduce ``virtual`` and ``override`` keywords.
@@ -67,6 +78,12 @@ Language Features:
 Compiler Features:
  * Allow revert strings to be stripped from the binary using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting.
  * ABIEncoderV2: Do not warn about enabled ABIEncoderV2 anymore (the pragma is still needed, though).
+
+
+### 0.5.16 (2020-01-02)
+
+Backported Bugfixes:
+ * Yul Optimizer: Fix bug in redundant assignment remover in combination with break and continue statements.
 
 
 ### 0.5.15 (2019-12-17)
@@ -911,7 +928,7 @@ Features:
  * ABI JSON: Include new field ``stateMutability`` with values ``pure``, ``view``,
    ``nonpayable`` and ``payable``.
  * Analyzer: Experimental partial support for Z3 SMT checker ("SMTChecker").
- * Build System: Shared libraries (``libdevcore``, ``libevmasm``, ``libsolidity``
+ * Build System: Shared libraries (``libsolutil``, ``libevmasm``, ``libsolidity``
    and ``liblll``) are no longer produced during the build process.
  * Code generator: Experimental new implementation of ABI encoder that can
    encode arbitrarily nested arrays ("ABIEncoderV2")

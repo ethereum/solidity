@@ -23,12 +23,13 @@
 #include <libsolidity/codegen/YulUtilFunctions.h>
 #include <libsolidity/ast/AST.h>
 
-#include <libdevcore/Whiskers.h>
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/Whiskers.h>
+#include <libsolutil/StringUtils.h>
 
-using namespace dev;
-using namespace dev::solidity;
 using namespace std;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
 
 string IRGenerationContext::addLocalVariable(VariableDeclaration const& _varDecl)
 {

@@ -24,10 +24,11 @@
 #include <libyul/YulString.h>
 #include <map>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct Dialect;
+struct AssignedValue;
 
 /**
  * Class that can answer questions about values of variables and their relations.
@@ -37,7 +38,7 @@ struct Dialect;
 class KnowledgeBase
 {
 public:
-	KnowledgeBase(Dialect const& _dialect, std::map<YulString, Expression const*> const& _variableValues):
+	KnowledgeBase(Dialect const& _dialect, std::map<YulString, AssignedValue> const& _variableValues):
 		m_dialect(_dialect),
 		m_variableValues(_variableValues)
 	{}
@@ -50,7 +51,7 @@ private:
 	Expression simplify(Expression _expression);
 
 	Dialect const& m_dialect;
-	std::map<YulString, Expression const*> const& m_variableValues;
+	std::map<YulString, AssignedValue> const& m_variableValues;
 	size_t m_recursionCounter = 0;
 };
 

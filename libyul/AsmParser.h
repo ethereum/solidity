@@ -29,11 +29,13 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ParserBase.h>
 
+#include <libevmasm/Instruction.h>
+
 #include <memory>
 #include <variant>
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 
 class Parser: public langutil::ParserBase
@@ -53,10 +55,10 @@ public:
 	std::shared_ptr<Block> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
 
 	/// @returns a map of all EVM instructions available to assembly.
-	static std::map<std::string, dev::eth::Instruction> const& instructions();
+	static std::map<std::string, evmasm::Instruction> const& instructions();
 
 protected:
-	using ElementaryOperation = std::variant<Instruction, Literal, Identifier, FunctionCall>;
+	using ElementaryOperation = std::variant<Literal, Identifier, FunctionCall>;
 
 	/// Creates an inline assembly node with the given source location.
 	template <class T> T createWithLocation(langutil::SourceLocation const& _loc = {}) const
@@ -80,7 +82,7 @@ protected:
 	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
 	Expression parseExpression();
-	static std::map<dev::eth::Instruction, std::string> const& instructionNames();
+	static std::map<evmasm::Instruction, std::string> const& instructionNames();
 	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
 	/// builtin functian call (only the name).
 	ElementaryOperation parseElementaryOperation();

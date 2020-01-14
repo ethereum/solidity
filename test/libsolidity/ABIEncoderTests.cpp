@@ -33,13 +33,10 @@
 
 using namespace std;
 using namespace std::placeholders;
-using namespace dev::test;
+using namespace solidity::util;
+using namespace solidity::test;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 #define REQUIRE_LOG_DATA(DATA) do { \
@@ -168,7 +165,7 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 		}
 	)";
 
-	if (!dev::test::Options::get().useABIEncoderV2)
+	if (!solidity::test::Options::get().useABIEncoderV2)
 	{
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
@@ -343,7 +340,7 @@ BOOST_AUTO_TEST_CASE(external_function)
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		callContractFunction("f(uint256)", u256(0));
-		string functionIdF = asString(m_contractAddress.ref()) + asString(FixedHash<4>(dev::keccak256("f(uint256)")).ref());
+		string functionIdF = asString(m_contractAddress.ref()) + asString(FixedHash<4>(keccak256("f(uint256)")).ref());
 		REQUIRE_LOG_DATA(encodeArgs(functionIdF, functionIdF));
 	)
 }
@@ -453,7 +450,7 @@ BOOST_AUTO_TEST_CASE(structs)
 		);
 		BOOST_CHECK(callContractFunction("f()") == encoded);
 		REQUIRE_LOG_DATA(encoded);
-		BOOST_CHECK_EQUAL(logTopic(0, 0), dev::keccak256(string("e(uint16,(uint16,uint16,(uint64[2])[],uint16))")));
+		BOOST_CHECK_EQUAL(logTopic(0, 0), keccak256(string("e(uint16,(uint16,uint16,(uint64[2])[],uint16))")));
 	)
 }
 
@@ -755,7 +752,7 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor_indirect)
 			}
 		}
 	)";
-	if (dev::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::Options::get().evmVersion().supportsReturndata())
 	{
 		NEW_ENCODER(
 			compileAndRun(sourceCode, 0, "D");
@@ -787,6 +784,4 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor_data_short)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces
