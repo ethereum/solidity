@@ -114,8 +114,13 @@ void CHC::analyze(SourceUnit const& _source)
 				unsafeAssertions.insert(assertions.begin(), assertions.end());
 			else
 			{
-				int assertion = stoi(model.at(0));
-				unsafeAssertions.insert(m_verificationTargets.at(assertion - 1));
+				int assertionId = stoi(model.at(0));
+				auto const* assertion = m_verificationTargets.at(assertionId - 1);
+				unsafeAssertions.insert(assertion);
+				m_outerErrorReporter.warning(
+					assertion->location(),
+					"Assertion violation happens here."
+				);
 			}
 		}
 	}

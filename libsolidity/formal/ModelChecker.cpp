@@ -39,7 +39,7 @@ void ModelChecker::analyze(SourceUnit const& _source)
 		return;
 
 	m_chc.analyze(_source);
-	m_bmc.analyze(_source, m_chc.safeAssertions());
+	//m_bmc.analyze(_source, m_chc.safeAssertions());
 }
 
 vector<string> ModelChecker::unhandledQueries()
