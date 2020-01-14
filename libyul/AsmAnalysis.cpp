@@ -378,26 +378,25 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	if (!expectExpression(*_switch.expression))
 		success = false;
 
-	{
-		YulString caseType;
-		bool mismatchingTypes = false;
-		for (auto const& _case: _switch.cases)
-			if (_case.value)
+	YulString caseType;
+	bool mismatchingTypes = false;
+	for (auto const& _case: _switch.cases)
+		if (_case.value)
+		{
+			if (caseType.empty())
+				caseType = _case.value->type;
+			else if (caseType != _case.value->type)
 			{
-				if (caseType.empty())
-					caseType = _case.value->type;
-				else if (caseType != _case.value->type)
-				{
-					mismatchingTypes = true;
-					break;
-				}
+				mismatchingTypes = true;
+				break;
 			}
-		if (mismatchingTypes)
-			m_errorReporter.typeError(
-				_switch.location,
-				"Switch cases have non-matching types."
-			);
-	}
+		}
+
+	if (mismatchingTypes)
+		m_errorReporter.typeError(
+			_switch.location,
+			"Switch cases have non-matching types."
+		);
 
 	set<u256> cases;
 	for (auto const& _case: _switch.cases)
