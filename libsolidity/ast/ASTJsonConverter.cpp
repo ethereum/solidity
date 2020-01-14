@@ -26,6 +26,8 @@
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AsmData.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/backends/evm/EVMDialect.h>
+
 #include <libsolutil/JSON.h>
 #include <libsolutil/UTF8.h>
 
@@ -492,13 +494,16 @@ bool ASTJsonConverter::visit(ArrayTypeName const& _node)
 bool ASTJsonConverter::visit(InlineAssembly const& _node)
 {
 	vector<pair<string, Json::Value>> externalReferences;
+
 	for (auto const& it: _node.annotation().externalReferences)
 		if (it.first)
 			externalReferences.emplace_back(make_pair(
 				it.first->name.str(),
 				inlineAssemblyIdentifierToJson(it)
 			));
+
 	Json::Value externalReferencesJson = Json::arrayValue;
+
 	for (auto&& it: boost::range::sort(externalReferences))
 		externalReferencesJson.append(std::move(it.second));
 
@@ -506,8 +511,10 @@ bool ASTJsonConverter::visit(InlineAssembly const& _node)
 			m_legacy ?
 			make_pair("operations", Json::Value(yul::AsmPrinter()(_node.operations()))) :
 			make_pair("AST", Json::Value(yul::AsmJsonConverter(sourceIndexFromLocation(_node.location()))(_node.operations()))),
-		make_pair("externalReferences", std::move(externalReferencesJson))
+		make_pair("externalReferences", std::move(externalReferencesJson)),
+		make_pair("evmVersion", dynamic_cast<solidity::yul::EVMDialect const&>(_node.dialect()).evmVersion().name())
 	});
+
 	return false;
 }
 
