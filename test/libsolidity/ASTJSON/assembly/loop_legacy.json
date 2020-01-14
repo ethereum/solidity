@@ -89,6 +89,7 @@
                 {
                   "attributes":
                   {
+                    "evmVersion": %EVMVERSION%,
                     "externalReferences":
                     [
                       null

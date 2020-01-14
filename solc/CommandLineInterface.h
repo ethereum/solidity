@@ -80,6 +80,12 @@ private:
 	/// It then tries to parse the contents and appends to m_libraries.
 	bool parseLibraryOption(std::string const& _input);
 
+	/// Tries to read @ m_sourceCodes as a JSONs holding ASTs
+	/// such that they can be imported into the compiler  (importASTs())
+	/// (produced by --combined-json ast,compact-format <file.sol>
+	/// or standard-json output
+	std::map<std::string, Json::Value> parseAstFromInput();
+
 	/// Create a file in the given directory
 	/// @arg _fileName the name of the file
 	/// @arg _data to be written

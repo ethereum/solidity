@@ -6,6 +6,7 @@ Language Features:
 
 Compiler Features:
  * General: Raise warning if runtime bytecode exceeds 24576 bytes (a limit introduced in Spurious Dragon).
+ * General: Support compiling starting from an imported AST. Among others, this can be used for mutation testing.
  * Yul Optimizer: Apply penalty when trying to rematerialize into loops.
 
 Bugfixes:

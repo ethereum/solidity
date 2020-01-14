@@ -28,6 +28,7 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/StandardCompiler.h>
@@ -120,6 +121,7 @@ static string const g_strEVMVersion = "evm-version";
 static string const g_strEwasm = "ewasm";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
+static string const g_strImportAst = "import-ast";
 static string const g_strInputFile = "input-file";
 static string const g_strInterface = "interface";
 static string const g_strYul = "yul";
@@ -184,6 +186,7 @@ static string const g_argCompactJSON = g_strCompactJSON;
 static string const g_argErrorRecovery = g_strErrorRecovery;
 static string const g_argGas = g_strGas;
 static string const g_argHelp = g_strHelp;
+static string const g_argImportAst = g_strImportAst;
 static string const g_argInputFile = g_strInputFile;
 static string const g_argYul = g_strYul;
 static string const g_argIR = g_strIR;
@@ -623,6 +626,33 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 	return true;
 }
 
+map<string, Json::Value> CommandLineInterface::parseAstFromInput()
+{
+	map<string, Json::Value> sourceJsons;
+	map<string, string> tmpSources;
+
+	for (auto const& srcPair: m_sourceCodes)
+	{
+		Json::Value ast;
+		astAssert(jsonParseStrict(srcPair.second, ast), "Input file could not be parsed to JSON");
+		astAssert(ast.isMember("sources"), "Invalid Format for import-JSON: Must have 'sources'-object");
+
+		for (auto& src: ast["sources"].getMemberNames())
+		{
+			std::string astKey = ast["sources"][src].isMember("ast") ? "ast" : "AST";
+
+			astAssert(ast["sources"][src].isMember(astKey), "astkey is not member");
+			astAssert(ast["sources"][src][astKey]["nodeType"].asString() == "SourceUnit",  "Top-level node should be a 'SourceUnit'");
+			astAssert(sourceJsons.count(src) == 0, "All sources must have unique names");
+			sourceJsons.emplace(src, move(ast["sources"][src][astKey]));
+			tmpSources[src] = util::jsonCompactPrint(ast);
+		}
+	}
+
+	m_sourceCodes = std::move(tmpSources);
+	return sourceJsons;
+}
+
 void CommandLineInterface::createFile(string const& _fileName, string const& _data)
 {
 	namespace fs = boost::filesystem;
@@ -722,6 +752,12 @@ Allowed options)",
 			"Switch to Standard JSON input / output mode, ignoring all options. "
 			"It reads from standard input and provides the result on the standard output."
 		)
+		(
+			g_argImportAst.c_str(),
+			"Import ASTs to be compiled, assumes input holds the AST in compact JSON format."
+			" Supported Inputs is the output of the standard-json or the one produced by --combined-json ast,compact-format"
+		)
+
 		(
 			g_argAssemble.c_str(),
 			"Switch to assembly mode, ignoring all options except --machine, --yul-dialect and --optimize and assumes input is assembly."
@@ -1065,10 +1101,9 @@ bool CommandLineInterface::processInput()
 			m_compiler->setMetadataHash(m_metadataHash);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_remappings);
-		m_compiler->setSources(m_sourceCodes);
+
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
-		m_compiler->setParserErrorRecovery(m_args.count(g_argErrorRecovery));
 		m_compiler->setEVMVersion(m_evmVersion);
 		m_compiler->setRevertStringBehaviour(m_revertStrings);
 		// TODO: Perhaps we should not compile unless requested
@@ -1081,6 +1116,32 @@ bool CommandLineInterface::processInput()
 		settings.runYulOptimiser = !m_args.count(g_strNoOptimizeYul);
 		settings.optimizeStackAllocation = settings.runYulOptimiser;
 		m_compiler->setOptimiserSettings(settings);
+
+		if (m_args.count(g_argImportAst))
+		{
+			try
+			{
+				m_compiler->importASTs(parseAstFromInput());
+
+				if (!m_compiler->analyze())
+				{
+					for (auto const& error: m_compiler->errors())
+						formatter->printErrorInformation(*error);
+					astAssert(false, "Analysis of the AST failed");
+				}
+			}
+			catch (Exception const& _exc)
+			{
+				serr() << string("Failed to import AST: ") << _exc.what() << endl;
+				return false;
+			}
+		}
+		else
+		{
+			m_compiler->setSources(m_sourceCodes);
+			if (m_args.count(g_argErrorRecovery))
+				m_compiler->setParserErrorRecovery(true);
+		}
 
 		bool successful = m_compiler->compile();
 

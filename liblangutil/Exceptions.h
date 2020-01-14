@@ -40,6 +40,7 @@ struct CompilerError: virtual util::Exception {};
 struct InternalCompilerError: virtual util::Exception {};
 struct FatalError: virtual util::Exception {};
 struct UnimplementedFeatureError: virtual util::Exception {};
+struct InvalidAstError: virtual util::Exception {};
 
 /// Assertion that throws an InternalCompilerError containing the given description if it is not met.
 #define solAssert(CONDITION, DESCRIPTION) \
@@ -50,6 +51,9 @@ struct UnimplementedFeatureError: virtual util::Exception {};
 
 #define solUnimplemented(DESCRIPTION) \
 	solUnimplementedAssert(false, DESCRIPTION)
+
+#define astAssert(CONDITION, DESCRIPTION) \
+	assertThrow(CONDITION, ::solidity::langutil::InvalidAstError, DESCRIPTION)
 
 class Error: virtual public util::Exception
 {

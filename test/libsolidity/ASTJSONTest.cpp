@@ -15,6 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <boost/algorithm/string/replace.hpp>
 #include <test/libsolidity/ASTJSONTest.h>
 #include <test/Options.h>
 #include <libsolutil/AnsiColorized.h>
@@ -37,6 +38,30 @@ using namespace solidity;
 using namespace std;
 namespace fs = boost::filesystem;
 using namespace boost::unit_test;
+
+namespace
+{
+
+void replaceVersionWithTag(string& _input)
+{
+	boost::algorithm::replace_all(
+		_input,
+		"\"" + solidity::test::Options::get().evmVersion().name() + "\"",
+		"%EVMVERSION%"
+	);
+}
+
+void replaceTagWithVersion(string& _input)
+{
+	boost::algorithm::replace_all(
+		_input,
+		"%EVMVERSION%",
+		"\"" + solidity::test::Options::get().evmVersion().name() + "\""
+	);
+}
+
+}
+
 
 ASTJSONTest::ASTJSONTest(string const& _filename)
 {
@@ -126,6 +151,8 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 
 	bool resultsMatch = true;
 
+	replaceTagWithVersion(m_expectation);
+
 	if (m_expectation != m_result)
 	{
 		string nextIndentLevel = _linePrefix + "  ";
@@ -157,6 +184,8 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 			m_resultLegacy += ",";
 		m_resultLegacy += "\n";
 	}
+
+	replaceTagWithVersion(m_expectationLegacy);
 
 	if (m_expectationLegacy != m_resultLegacy)
 	{
@@ -202,12 +231,21 @@ void ASTJSONTest::printUpdatedExpectations(std::ostream&, std::string const&) co
 	ofstream file(m_astFilename.c_str());
 	if (!file) BOOST_THROW_EXCEPTION(runtime_error("Cannot write AST expectation to \"" + m_astFilename + "\"."));
 	file.exceptions(ios::badbit);
-	file << m_result;
+
+	string replacedResult = m_result;
+	replaceVersionWithTag(replacedResult);
+
+	file << replacedResult;
 	file.flush();
 	file.close();
+
 	file.open(m_legacyAstFilename.c_str());
 	if (!file) BOOST_THROW_EXCEPTION(runtime_error("Cannot write legacy AST expectation to \"" + m_legacyAstFilename + "\"."));
-	file << m_resultLegacy;
+
+	string replacedResultLegacy = m_resultLegacy;
+	replaceVersionWithTag(replacedResultLegacy);
+
+	file << replacedResultLegacy;
 	file.flush();
 	file.close();
 }

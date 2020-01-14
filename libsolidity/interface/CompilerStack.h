@@ -199,6 +199,10 @@ public:
 	/// @returns false on error.
 	bool parse();
 
+	/// Imports given SourceUnits so they can be analyzed. Leads to the same internal state as parse().
+	/// Will throw errors if the import fails
+	void importASTs(std::map<std::string, Json::Value> const& _sources);
+
 	/// Performs the analysis steps (imports, scopesetting, syntaxCheck, referenceResolving,
 	///  typechecking, staticAnalysis) on previously parsed sources.
 	/// @returns false on error.
@@ -440,6 +444,8 @@ private:
 	/// "context:prefix=target"
 	std::vector<Remapping> m_remappings;
 	std::map<std::string const, Source> m_sources;
+	// if imported, store AST-JSONS for each filename
+	std::map<std::string, Json::Value> m_sourceJsons;
 	std::vector<std::string> m_unhandledSMTLib2Queries;
 	std::map<util::h256, std::string> m_smtlib2Responses;
 	std::shared_ptr<GlobalContext> m_globalContext;
@@ -453,6 +459,7 @@ private:
 	MetadataHash m_metadataHash = MetadataHash::IPFS;
 	bool m_parserErrorRecovery = false;
 	State m_stackState = Empty;
+	bool m_importedSources = false;
 	/// Whether or not there has been an error during processing.
 	/// If this is true, the stack will refuse to generate code.
 	bool m_hasError = false;

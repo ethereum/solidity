@@ -446,7 +446,7 @@
                             [
                               null
                             ],
-                            "referencedDeclaration": 68,
+                            "referencedDeclaration": -28,
                             "type": "contract C",
                             "value": "this"
                           },
