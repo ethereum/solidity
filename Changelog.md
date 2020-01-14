@@ -11,6 +11,9 @@ Compiler Features:
 Bugfixes:
 
 
+Build System:
+ * Switch to building soljson.js with an embedded base64-encoded wasm binary.
+
 
 ### 0.6.1 (2020-01-02)
 
