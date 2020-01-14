@@ -232,7 +232,7 @@ Given the contract:
 
 ::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
 
     contract Foo {
@@ -532,7 +532,7 @@ For example,
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
 
     contract Test {
@@ -580,7 +580,7 @@ As an example, the code
 
 ::
 
-    pragma solidity >=0.4.19 <0.7.0;
+    pragma solidity >=0.4.19 <0.8.0;
     pragma experimental ABIEncoderV2;
 
 

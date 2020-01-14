@@ -25,7 +25,7 @@ you can use state machine-like constructs inside a contract.
 
 ::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     contract Purchase {
         uint public value;

@@ -17,7 +17,7 @@ if they are marked ``virtual``. For details, please see
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract owned {
         constructor() public { owner = msg.sender; }

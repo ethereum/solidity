@@ -42,7 +42,7 @@ namespace
 {
 
 static char const* registrarCode = R"DELIMITER(
-pragma solidity >=0.4.0 <0.7.0;
+pragma solidity >=0.4.0 <0.8.0;
 
 abstract contract NameRegister {
 	function addr(string memory _name) public virtual view returns (address o_owner);

@@ -52,7 +52,7 @@ Surround top level declarations in solidity source with two blank lines.
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract A {
         // ...
@@ -70,7 +70,7 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract A {
         // ...
@@ -89,7 +89,7 @@ Blank lines may be omitted between groups of related one-liners (such as stub fu
 
 Yes::
 
-    pragma solidity ^0.6.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     abstract contract A {
         function spam() public virtual pure;
@@ -109,7 +109,7 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     abstract contract A {
         function spam() virtual pure public;
@@ -243,7 +243,7 @@ Import statements should always be placed at the top of the file.
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     import "./Owned.sol";
 
@@ -257,7 +257,7 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract A {
         // ...
@@ -290,7 +290,7 @@ Within a grouping, place the ``view`` and ``pure`` functions last.
 
 Yes::
 
-    pragma solidity ^0.6.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract A {
         constructor() public {
@@ -326,7 +326,7 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract A {
 
@@ -434,7 +434,7 @@ should:
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract Coin {
         struct Bank {
@@ -445,7 +445,7 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract Coin
     {
@@ -745,7 +745,7 @@ manner as modifiers if the function declaration is long or hard to read.
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     // Base contracts just to make this compile
     contract B {
@@ -777,7 +777,7 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
 
     // Base contracts just to make this compile
@@ -1000,7 +1000,7 @@ As shown in the example below, if the contract name is `Congress` and the librar
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
 
     // Owned.sol
@@ -1023,7 +1023,7 @@ Yes::
 
 and in ``Congress.sol``::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     import "./Owned.sol";
 
@@ -1034,7 +1034,7 @@ and in ``Congress.sol``::
 
 No::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
 
     // owned.sol
@@ -1138,7 +1138,7 @@ multiline comment starting with `/**` and ending with `*/`.
 For example, the contract from `a simple smart contract <simple-smart-contract>`_ with the comments
 added looks like the one below::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
 
     /// @author The Solidity Team
