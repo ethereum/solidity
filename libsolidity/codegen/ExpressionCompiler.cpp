@@ -1300,7 +1300,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		functionType && member == "selector"
 	)
 	{
-		if (functionType->kind() == FunctionType::Kind::Declaration)
+		if (functionType->hasDeclaration())
 		{
 			m_context << functionType->externalIdentifier();
 			/// need to store it as bytes4

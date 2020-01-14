@@ -11,8 +11,11 @@ Compiler Features:
  * General: Support compiling starting from an imported AST. Among others, this can be used for mutation testing.
  * Yul Optimizer: Apply penalty when trying to rematerialize into loops.
 
+
 Bugfixes:
  * Commandline interface: Only activate yul optimizer if ``--optimize`` is given.
+ * Fixes internal compiler error on explicitly calling unimplemented base functions.
+
 
 Build System:
  * Switch to building soljson.js with an embedded base64-encoded wasm binary.
