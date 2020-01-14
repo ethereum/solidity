@@ -25,6 +25,7 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/AsmData.h>
 
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace solidity::langutil;

@@ -27,6 +27,8 @@
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/Exceptions.h>
 
+#include <boost/test/unit_test.hpp>
+
 using namespace solidity::langutil;
 
 namespace solidity::frontend::test

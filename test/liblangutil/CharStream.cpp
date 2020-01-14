@@ -25,6 +25,8 @@
 
 #include <test/Options.h>
 
+#include <boost/test/unit_test.hpp>
+
 namespace solidity::langutil::test
 {
 

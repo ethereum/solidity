@@ -27,6 +27,8 @@
 #include <liblangutil/SemVerHandler.h>
 #include <test/Options.h>
 
+#include <boost/test/unit_test.hpp>
+
 using namespace std;
 using namespace solidity::langutil;
 

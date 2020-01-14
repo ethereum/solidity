@@ -35,6 +35,7 @@
 #include <libevmasm/Assembly.h>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <memory>
 #include <optional>

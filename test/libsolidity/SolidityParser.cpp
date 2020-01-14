@@ -29,6 +29,8 @@
 #include <test/libsolidity/ErrorCheck.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
+#include <boost/test/unit_test.hpp>
+
 using namespace std;
 using namespace solidity::langutil;
 

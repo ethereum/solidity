@@ -23,6 +23,8 @@
 #include <libyul/AssemblyStack.h>
 #include <libevmasm/Instruction.h>
 
+#include <boost/test/unit_test.hpp>
+
 using namespace std;
 
 namespace solidity::yul::test

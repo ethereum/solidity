@@ -33,6 +33,8 @@
 #include <liblangutil/ErrorReporter.h>
 #include <test/Options.h>
 
+#include <boost/test/unit_test.hpp>
+
 using namespace std;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;

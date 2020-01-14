@@ -17,13 +17,8 @@
 
 #pragma once
 
-#include <liblangutil/EVMVersion.h>
 #include <test/Common.h>
 
-#include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-#include <boost/version.hpp>
 
 #include <functional>
 

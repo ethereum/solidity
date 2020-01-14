@@ -34,6 +34,8 @@
 
 #include <functional>
 
+#include <boost/test/unit_test.hpp>
+
 namespace solidity::test
 {
 class EVMHost;

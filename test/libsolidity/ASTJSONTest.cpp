@@ -25,6 +25,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/test/unit_test.hpp>
 #include <fstream>
 #include <memory>
 #include <stdexcept>
