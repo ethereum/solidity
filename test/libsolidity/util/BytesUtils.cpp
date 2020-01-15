@@ -158,12 +158,15 @@ string BytesUtils::formatBoolean(bytes const& _bytes)
 	return os.str();
 }
 
-string BytesUtils::formatHex(bytes const& _bytes)
+string BytesUtils::formatHex(bytes const& _bytes, bool _shorten)
 {
 	soltestAssert(!_bytes.empty() && _bytes.size() <= 32, "");
 	u256 value = fromBigEndian<u256>(_bytes);
+	string output = toCompactHexWithPrefix(value);
 
-	return toCompactHexWithPrefix(value);
+	if (_shorten)
+		return output.substr(0, output.size() - countRightPaddedZeros(_bytes) * 2);
+	return output;
 }
 
 string BytesUtils::formatHexString(bytes const& _bytes)
@@ -258,7 +261,7 @@ string BytesUtils::formatBytes(
 		os << formatBoolean(_bytes);
 		break;
 	case ABIType::Hex:
-		os << formatHex(_bytes);
+		os << formatHex(_bytes, _abiType.alignDeclared);
 		break;
 	case ABIType::HexString:
 		os << formatHexString(_bytes);
@@ -271,6 +274,9 @@ string BytesUtils::formatBytes(
 	case ABIType::None:
 		break;
 	}
+
+	if (_abiType.alignDeclared)
+		return (_abiType.align == ABIType::AlignLeft ? "left(" : "right(") + os.str() + ")";
 	return os.str();
 }
 

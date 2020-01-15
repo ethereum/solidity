@@ -80,7 +80,8 @@ public:
 	/// Converts \param _bytes to a soltest-compliant and human-readable
 	/// string representation of a byte array which is assumed to hold
 	/// a hex value.
-	static std::string formatHex(bytes const& _bytes);
+	/// The _shorten flag is used to trim leading and trailing zeros.
+	static std::string formatHex(bytes const& _bytes, bool _shorten = false);
 
 	/// Converts \param _bytes to a soltest-compliant and human-readable
 	/// string representation of a byte array which is assumed to hold
