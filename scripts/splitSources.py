@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # This script reads a syntaxTest file and writes all
 # sources into their own files. If one source-name specifies subdirectories
@@ -57,6 +57,6 @@ if __name__ == '__main__':
         srcString = ""
         for src in createdSources:
             srcString += src + ' '
-        print srcString
+        print(srcString)
     else:
         sys.exit(1)
