@@ -56,7 +56,6 @@ public:
 	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
 
 	AssemblyItem const& append(AssemblyItem const& _i);
-	AssemblyItem const& append(std::string const& _data) { return append(newPushString(_data)); }
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
 
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
@@ -136,18 +135,6 @@ public:
 	Json::Value assemblyJSON(
 		StringMap const& _sourceCodes = StringMap()
 	) const;
-
-public:
-	// These features are only used by LLL
-	AssemblyItem newPushString(std::string const& _data) { util::h256 h(util::keccak256(_data)); m_strings[h] = _data; return AssemblyItem(PushString, h); }
-
-	void append(Assembly const& _a);
-	void append(Assembly const& _a, int _deposit);
-
-	void injectStart(AssemblyItem const& _i);
-
-	AssemblyItem const& back() const { return m_items.back(); }
-	std::string backString() const { return m_items.size() && m_items.back().type() == PushString ? m_strings.at((util::h256)m_items.back().data()) : std::string(); }
 
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and

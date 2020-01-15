@@ -38,48 +38,6 @@ using namespace solidity::evmasm;
 using namespace solidity::langutil;
 using namespace solidity::util;
 
-void Assembly::append(Assembly const& _a)
-{
-	auto newDeposit = m_deposit + _a.deposit();
-	for (AssemblyItem i: _a.m_items)
-	{
-		switch (i.type())
-		{
-		case Tag:
-		case PushTag:
-			i.setData(i.data() + m_usedTags);
-			break;
-		case PushSub:
-		case PushSubSize:
-			i.setData(i.data() + m_subs.size());
-			break;
-		default:
-			break;
-		}
-		append(i);
-	}
-	m_deposit = newDeposit;
-	m_usedTags += _a.m_usedTags;
-	// This does not transfer the names of named tags on purpose. The tags themselves are
-	// transferred, but their names are only available inside the assembly.
-	for (auto const& i: _a.m_data)
-		m_data.insert(i);
-	for (auto const& i: _a.m_strings)
-		m_strings.insert(i);
-	m_subs += _a.m_subs;
-	for (auto const& lib: _a.m_libraries)
-		m_libraries.insert(lib);
-}
-
-void Assembly::append(Assembly const& _a, int _deposit)
-{
-	assertThrow(_deposit <= _a.m_deposit, InvalidDeposit, "");
-
-	append(_a);
-	while (_deposit++ < _a.m_deposit)
-		append(Instruction::POP);
-}
-
 AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 {
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
@@ -88,12 +46,7 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())
 		m_items.back().setLocation(m_currentSourceLocation);
 	m_items.back().m_modifierDepth = m_currentModifierDepth;
-	return back();
-}
-
-void Assembly::injectStart(AssemblyItem const& _i)
-{
-	m_items.insert(m_items.begin(), _i);
+	return m_items.back();
 }
 
 unsigned Assembly::bytesRequired(unsigned subTagSize) const
