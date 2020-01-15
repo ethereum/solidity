@@ -87,9 +87,9 @@ public:
 	bool operator()(If const& _if);
 	bool operator()(Switch const& _switch);
 	bool operator()(ForLoop const& _forLoop);
-	bool operator()(Break const&);
-	bool operator()(Continue const&);
-	bool operator()(Leave const&);
+	bool operator()(Break const&) { return true; }
+	bool operator()(Continue const&) { return true; }
+	bool operator()(Leave const&) { return true; }
 	bool operator()(Block const& _block);
 
 private:
