@@ -577,8 +577,8 @@ function mstore_address(pos, a1, a2, a3, a4) {
 	mstore_internal(pos, 0, a1, a2, a3)
 }
 function mstore8(x1, x2, x3, x4, y1, y2, y3, y4) {
-	// TODO implement
-	unreachable()
+	let v := u256_to_byte(y1, y2, y3, y4)
+	i64.store8(to_internal_i32ptr(x1, x2, x3, x4), v)
 }
 // Needed?
 function msize() -> z1, z2, z3, z4 {
