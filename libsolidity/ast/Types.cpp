@@ -210,7 +210,7 @@ pair<u256, unsigned> const* MemberList::memberStorageOffset(string const& _name)
 		memberTypes.reserve(m_memberTypes.size());
 		for (auto const& member: m_memberTypes)
 			memberTypes.push_back(member.type);
-		m_storageOffsets.reset(new StorageOffsets());
+		m_storageOffsets = std::make_unique<StorageOffsets>();
 		m_storageOffsets->computeOffsets(memberTypes);
 	}
 	for (size_t index = 0; index < m_memberTypes.size(); ++index)
