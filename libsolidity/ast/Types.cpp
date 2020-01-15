@@ -2354,7 +2354,7 @@ string EnumType::canonicalName() const
 size_t EnumType::numberOfMembers() const
 {
 	return m_enum.members().size();
-};
+}
 
 BoolResult EnumType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
