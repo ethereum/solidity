@@ -51,19 +51,6 @@ set(liblangutil_sources
 )
 detect_stray_source_files("${liblangutil_sources}" "liblangutil/")
 
-if(LLL)
-    set (liblll_sources
-        liblll/Compiler.cpp
-        liblll/EndToEndTest.cpp
-        liblll/ExecutionFramework.cpp
-        liblll/ExecutionFramework.h
-        liblll/LLL_ENS.cpp
-        liblll/LLL_ERC20.cpp
-        liblll/Parser.cpp
-    )
-    detect_stray_source_files("${liblll_sources}" "liblll/")
-endif(LLL)
-
 set(libsolidity_sources
     libsolidity/ABIDecoderTests.cpp
     libsolidity/ABIEncoderTests.cpp
@@ -155,7 +142,6 @@ add_executable(soltest ${sources}
     ${liblangutil_sources}
     ${libevmasm_sources}
     ${libyul_sources}
-    ${liblll_sources}
     ${libsolidity_sources}
     ${libsolidity_util_sources}
 )
@@ -168,11 +154,6 @@ target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm
 # TODO: Remove this option as soon as we have reduced the SLoC's in SolidityEndToEndTest.cpp
 if (MSVC)
     target_compile_options(soltest PUBLIC "/bigobj")
-endif()
-
-if (LLL)
-    target_link_libraries(soltest PRIVATE lll)
-    target_compile_definitions(soltest PRIVATE HAVE_LLL=1)
 endif()
 
 if (NOT Boost_USE_STATIC_LIBS)

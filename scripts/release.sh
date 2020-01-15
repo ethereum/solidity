@@ -39,7 +39,6 @@ mkdir -p $ZIP_TEMP_DIR
 
 # Copy all the solidity executables into a temporary directory prior to ZIP creation
 
-cp $REPO_ROOT/build/lllc/lllc        $ZIP_TEMP_DIR
 cp $REPO_ROOT/build/solc/solc        $ZIP_TEMP_DIR
 
 # For macOS, we run a fix-up script which alters all of the symbolic links within
