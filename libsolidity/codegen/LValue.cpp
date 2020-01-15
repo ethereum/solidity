@@ -340,7 +340,6 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				{
 					solAssert(sourceType.location() == DataLocation::Memory, "");
 					// stack layout: source_ref target_ref
-					TypePointer sourceMemberType = sourceType.memberType(member.name);
 					m_context << sourceType.memoryOffsetOfMember(member.name);
 					m_context << Instruction::DUP3 << Instruction::ADD;
 					MemoryItem(m_context, *sourceMemberType).retrieveValue(_location, true);
