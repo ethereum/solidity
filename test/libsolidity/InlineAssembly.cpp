@@ -224,8 +224,8 @@ BOOST_AUTO_TEST_CASE(vardecl_multi_conflict)
 
 BOOST_AUTO_TEST_CASE(vardecl_bool)
 {
-	CHECK_PARSE_ERROR("{ let x := true }", ParserError, "True and false are not valid literals.");
-	CHECK_PARSE_ERROR("{ let x := false }", ParserError, "True and false are not valid literals.");
+	successParse("{ let x := true }");
+	successParse("{ let x := false }");
 }
 
 BOOST_AUTO_TEST_CASE(vardecl_empty)
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
-	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal, identifier or instruction expected.");
+	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal or identifier expected.");
 	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected '(' but got reserved keyword 'default'");
 	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
 }
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(for_statement)
 
 BOOST_AUTO_TEST_CASE(for_invalid_expression)
 {
-	CHECK_PARSE_ERROR("{ for {} {} {} {} }", ParserError, "Literal, identifier or instruction expected.");
+	CHECK_PARSE_ERROR("{ for {} {} {} {} }", ParserError, "Literal or identifier expected.");
 	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected '{' but got 'Number'");

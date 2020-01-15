@@ -369,23 +369,18 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 			{}
 		};
 		advance();
-		if (m_dialect.flavour == AsmFlavour::Yul)
+		if (currentToken() == Token::Colon)
 		{
 			expectToken(Token::Colon);
 			literal.location.end = endPosition();
 			literal.type = expectAsmIdentifier();
 		}
-		else if (kind == LiteralKind::Boolean)
-			fatalParserError("True and false are not valid literals.");
+
 		ret = std::move(literal);
 		break;
 	}
 	default:
-		fatalParserError(
-			m_dialect.flavour == AsmFlavour::Yul ?
-			"Literal or identifier expected." :
-			"Literal, identifier or instruction expected."
-		);
+		fatalParserError("Literal or identifier expected.");
 	}
 	return ret;
 }
@@ -474,11 +469,7 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 	else if (holds_alternative<FunctionCall>(_initialOp))
 		ret = std::move(std::get<FunctionCall>(_initialOp));
 	else
-		fatalParserError(
-			m_dialect.flavour == AsmFlavour::Yul ?
-			"Function name expected." :
-			"Assembly instruction or function name required in front of \"(\")"
-		);
+		fatalParserError("Function name expected.");
 
 	expectToken(Token::LParen);
 	if (currentToken() != Token::RParen)
@@ -500,7 +491,7 @@ TypedName Parser::parseTypedName()
 	RecursionGuard recursionGuard(*this);
 	TypedName typedName = createWithLocation<TypedName>();
 	typedName.name = expectAsmIdentifier();
-	if (m_dialect.flavour == AsmFlavour::Yul)
+	if (currentToken() == Token::Colon)
 	{
 		expectToken(Token::Colon);
 		typedName.location.end = endPosition();

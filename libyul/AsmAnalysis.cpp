@@ -43,13 +43,6 @@ using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
-namespace
-{
-
-set<string> const builtinTypes{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "u128", "s128", "u256", "s256"};
-
-}
-
 bool AsmAnalyzer::analyze(Block const& _block)
 {
 	bool success = false;
@@ -88,7 +81,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 
 bool AsmAnalyzer::operator()(Literal const& _literal)
 {
-	expectValidType(_literal.type.str(), _literal.location);
+	expectValidType(_literal.type, _literal.location);
 	++m_stackHeight;
 	if (_literal.kind == LiteralKind::String && _literal.value.str().size() > 32)
 	{
@@ -107,10 +100,7 @@ bool AsmAnalyzer::operator()(Literal const& _literal)
 		return false;
 	}
 	else if (_literal.kind == LiteralKind::Boolean)
-	{
-		yulAssert(m_dialect.flavour == AsmFlavour::Yul, "");
 		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "");
-	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
 	return true;
 }
@@ -250,7 +240,7 @@ bool AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 
 	for (auto const& variable: _varDecl.variables)
 	{
-		expectValidType(variable.type.str(), variable.location);
+		expectValidType(variable.type, variable.location);
 		m_activeVariables.insert(&std::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)));
 	}
 	m_info.stackHeightInfo[&_varDecl] = m_stackHeight;
@@ -265,7 +255,7 @@ bool AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 	Scope& varScope = scope(virtualBlock);
 	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 	{
-		expectValidType(var.type.str(), var.location);
+		expectValidType(var.type, var.location);
 		m_activeVariables.insert(&std::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
 
@@ -388,27 +378,25 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	if (!expectExpression(*_switch.expression))
 		success = false;
 
-	if (m_dialect.flavour == AsmFlavour::Yul)
-	{
-		YulString caseType;
-		bool mismatchingTypes = false;
-		for (auto const& _case: _switch.cases)
-			if (_case.value)
+	YulString caseType;
+	bool mismatchingTypes = false;
+	for (auto const& _case: _switch.cases)
+		if (_case.value)
+		{
+			if (caseType.empty())
+				caseType = _case.value->type;
+			else if (caseType != _case.value->type)
 			{
-				if (caseType.empty())
-					caseType = _case.value->type;
-				else if (caseType != _case.value->type)
-				{
-					mismatchingTypes = true;
-					break;
-				}
+				mismatchingTypes = true;
+				break;
 			}
-		if (mismatchingTypes)
-			m_errorReporter.typeError(
-				_switch.location,
-				"Switch cases have non-matching types."
-			);
-	}
+		}
+
+	if (mismatchingTypes)
+		m_errorReporter.typeError(
+			_switch.location,
+			"Switch cases have non-matching types."
+		);
 
 	set<u256> cases;
 	for (auto const& _case: _switch.cases)
@@ -630,15 +618,12 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 	yulAssert(scopePtr, "Scope requested but not present.");
 	return *scopePtr;
 }
-void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
+void AsmAnalyzer::expectValidType(YulString _type, SourceLocation const& _location)
 {
-	if (m_dialect.flavour != AsmFlavour::Yul)
-		return;
-
-	if (!builtinTypes.count(type))
+	if (!_type.empty() && !contains(m_dialect.types, _type))
 		m_errorReporter.typeError(
 			_location,
-			"\"" + type + "\" is not a valid type (user defined types are not yet supported)."
+			"\"" + _type.str() + "\" is not a valid type (user defined types are not yet supported)."
 		);
 }
 
@@ -658,7 +643,6 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 	yulAssert(m_evmVersion.supportsReturndata() == m_evmVersion.hasStaticCall(), "");
 	// Similarly we assume bitwise shifting and create2 go together.
 	yulAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
-	yulAssert(m_dialect.flavour != AsmFlavour::Yul, "");
 
 	auto errorForVM = [=](string const& vmKindMessage) {
 		m_errorReporter.typeError(

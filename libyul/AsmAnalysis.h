@@ -102,7 +102,7 @@ private:
 	bool checkAssignment(Identifier const& _assignment, size_t _valueSize = size_t(-1));
 
 	Scope& scope(Block const* _block);
-	void expectValidType(std::string const& type, langutil::SourceLocation const& _location);
+	void expectValidType(YulString _type, langutil::SourceLocation const& _location);
 	bool warnOnInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
 	bool warnOnInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
 

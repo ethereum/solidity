@@ -39,11 +39,6 @@ map<YulString, int> CompilabilityChecker::run(
 	bool _optimizeStackAllocation
 )
 {
-	if (_dialect.flavour == AsmFlavour::Yul)
-		return {};
-
-	yulAssert(_dialect.flavour == AsmFlavour::Strict, "");
-
 	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{
 		NoOutputEVMDialect noOutputDialect(*evmDialect);
