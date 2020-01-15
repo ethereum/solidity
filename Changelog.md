@@ -11,7 +11,7 @@ Compiler Features:
  * Yul Optimizer: Apply penalty when trying to rematerialize into loops.
 
 Bugfixes:
-
+ * Commandline interface: Only activate yul optimizer if ``--optimize`` is given.
 
 Build System:
  * Switch to building soljson.js with an embedded base64-encoded wasm binary.
