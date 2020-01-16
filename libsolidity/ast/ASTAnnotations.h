@@ -78,6 +78,9 @@ struct ScopableAnnotation
 	/// The scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
 	ASTNode const* scope = nullptr;
+	/// Pointer to the contract this declaration resides in. Can be nullptr if the current scope
+	/// is not part of a contract. Available only after name and type resolution step.
+	ContractDefinition const* contract = nullptr;
 };
 
 struct DeclarationAnnotation: ASTAnnotation, ScopableAnnotation
@@ -121,8 +124,6 @@ struct CallableDeclarationAnnotation: DeclarationAnnotation
 
 struct FunctionDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAnnotation
 {
-	/// Pointer to the contract this function is defined in
-	ContractDefinition const* contract = nullptr;
 };
 
 struct EventDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAnnotation

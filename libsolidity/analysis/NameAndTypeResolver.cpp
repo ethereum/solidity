@@ -625,7 +625,6 @@ bool DeclarationRegistrationHelper::visit(FunctionDefinition& _function)
 {
 	registerDeclaration(_function, true);
 	m_currentFunction = &_function;
-	_function.annotation().contract = m_currentContract;
 	return true;
 }
 
@@ -760,6 +759,7 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, warnAboutShadowing, inactive, m_errorReporter);
 
 	_declaration.annotation().scope = m_currentScope;
+	_declaration.annotation().contract = m_currentContract;
 	if (_opensScope)
 		enterNewSubScope(_declaration);
 }

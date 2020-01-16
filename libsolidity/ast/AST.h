@@ -217,18 +217,21 @@ public:
 	Visibility visibility() const { return m_visibility == Visibility::Default ? defaultVisibility() : m_visibility; }
 	bool isPublic() const { return visibility() >= Visibility::Public; }
 	virtual bool isVisibleInContract() const { return visibility() != Visibility::External; }
-	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && visibility() >= Visibility::Internal; }
+	virtual bool isVisibleInDerivedContracts() const { return isVisibleInContract() && visibility() >= Visibility::Internal; }
 	bool isVisibleAsLibraryMember() const { return visibility() >= Visibility::Internal; }
+	virtual bool isVisibleViaContractTypeAccess() const { return false; }
 
 
 	virtual bool isLValue() const { return false; }
 	virtual bool isPartOfExternalInterface() const { return false; }
 
 	/// @returns the type of expressions referencing this declaration.
-	/// The current contract has to be given since this context can change the type, especially of
-	/// contract types.
 	/// This can only be called once types of variable declarations have already been resolved.
 	virtual TypePointer type() const = 0;
+
+	/// @returns the type for members of the containing contract type that refer to this declaration.
+	/// This can only be called once types of variable declarations have already been resolved.
+	virtual TypePointer typeViaContractName() const { return type(); }
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
@@ -420,13 +423,16 @@ public:
 	bool isInterface() const { return m_contractKind == ContractKind::Interface; }
 	bool isLibrary() const { return m_contractKind == ContractKind::Library; }
 
+	/// @returns true, if the contract derives from @arg _base.
+	bool derivesFrom(ContractDefinition const& _base) const;
+
 	/// @returns a map of canonical function signatures to FunctionDefinitions
 	/// as intended for use by the ABI.
 	std::map<util::FixedHash<4>, FunctionTypePointer> interfaceFunctions() const;
 	std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>> const& interfaceFunctionList() const;
 
-	/// @returns a list of the inheritable members of this contract
-	std::vector<Declaration const*> const& inheritableMembers() const;
+	/// @returns a list of all declarations in this contract
+	std::vector<Declaration const*> declarations() const { return filteredNodes<Declaration>(m_subNodes); }
 
 	/// Returns the constructor or nullptr if no constructor was specified.
 	FunctionDefinition const* constructor() const;
@@ -460,7 +466,6 @@ private:
 
 	mutable std::unique_ptr<std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
 	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents;
-	mutable std::unique_ptr<std::vector<Declaration const*>> m_inheritableMembers;
 };
 
 class InheritanceSpecifier: public ASTNode
@@ -534,6 +539,9 @@ public:
 
 	TypePointer type() const override;
 
+	bool isVisibleInDerivedContracts() const override { return true; }
+	bool isVisibleViaContractTypeAccess() const override { return true; }
+
 	TypeDeclarationAnnotation& annotation() const override;
 
 private:
@@ -552,6 +560,9 @@ public:
 		Declaration(_id, _location, _name), m_members(_members) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
+
+	bool isVisibleInDerivedContracts() const override { return true; }
+	bool isVisibleViaContractTypeAccess() const override { return true; }
 
 	std::vector<ASTPointer<EnumValue>> const& members() const { return m_members; }
 
@@ -715,6 +726,10 @@ public:
 	{
 		return Declaration::isVisibleInContract() && isOrdinary();
 	}
+	bool isVisibleViaContractTypeAccess() const override
+	{
+		return visibility() >= Visibility::Public;
+	}
 	bool isPartOfExternalInterface() const override { return isPublic() && isOrdinary(); }
 
 	/// @returns the external signature of the function
@@ -728,6 +743,7 @@ public:
 	ContractKind inContractKind() const;
 
 	TypePointer type() const override;
+	TypePointer typeViaContractName() const override;
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
@@ -880,6 +896,8 @@ public:
 
 	TypePointer type() const override;
 
+	Visibility defaultVisibility() const override { return Visibility::Internal; }
+
 	ModifierDefinitionAnnotation& annotation() const override;
 
 private:
@@ -941,6 +959,9 @@ public:
 
 	TypePointer type() const override;
 	FunctionTypePointer functionType(bool /*_internal*/) const override;
+
+	bool isVisibleInDerivedContracts() const override { return true; }
+	bool isVisibleViaContractTypeAccess() const override { return false; /* TODO */ }
 
 	EventDefinitionAnnotation& annotation() const override;
 

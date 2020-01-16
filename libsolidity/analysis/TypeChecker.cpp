@@ -1695,11 +1695,20 @@ void TypeChecker::typeCheckFunctionCall(
 	{
 		m_errorReporter.typeError(
 			_functionCall.location(),
-			"Cannot call function via contract name."
+			"Cannot call function via contract type name."
 		);
 		return;
 	}
-
+	if (_functionType->kind() == FunctionType::Kind::Internal && _functionType->hasDeclaration())
+		if (auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(&_functionType->declaration()))
+			// functionDefinition->annotation().contract != m_scope ensures that this is a qualified access,
+			// e.g. ``A.f();`` instead of a simple function call like ``f();`` (the latter is valid for unimplemented
+			// functions).
+			if (functionDefinition->annotation().contract != m_scope && !functionDefinition->isImplemented())
+				m_errorReporter.typeError(
+					_functionCall.location(),
+					"Cannot call unimplemented base function."
+				);
 
 	// Check for unsupported use of bare static call
 	if (
@@ -2660,8 +2669,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	);
 	annotation.isLValue = annotation.referencedDeclaration->isLValue();
 	annotation.type = annotation.referencedDeclaration->type();
-	if (!annotation.type)
-		m_errorReporter.fatalTypeError(_identifier.location(), "Declaration referenced before type could be determined.");
+	solAssert(annotation.type, "Declaration referenced before type could be determined.");
 	if (auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration))
 		annotation.isPure = annotation.isConstant = variableDeclaration->isConstant();
 	else if (dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
