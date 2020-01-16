@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
 	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected '(' but got '{'");
 	BOOST_CHECK("{ if calldatasize() {}");
-	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
+	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", TypeError, "Expected expression to evaluate to one value, but got 0 values instead.");
 	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected '{' but got reserved keyword 'let'");
 }
 
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal or identifier expected.");
 	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected '(' but got reserved keyword 'default'");
-	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
+	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to evaluate to one value, but got 0 values instead.");
 }
 
 BOOST_AUTO_TEST_CASE(switch_default_before_case)
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(for_invalid_expression)
 	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected '(' but got '{'");
-	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
+	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", TypeError, "Expected expression to evaluate to one value, but got 0 values instead.");
 }
 
 BOOST_AUTO_TEST_CASE(for_visibility)

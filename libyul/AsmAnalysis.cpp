@@ -45,14 +45,14 @@ using namespace solidity::langutil;
 
 bool AsmAnalyzer::analyze(Block const& _block)
 {
-	bool success = false;
+	m_success = true;
 	try
 	{
 		if (!(ScopeFiller(m_info, m_errorReporter))(_block))
 			return false;
 
-		success = (*this)(_block);
-		if (!success)
+		(*this)(_block);
+		if (!m_success)
 			yulAssert(m_errorReporter.hasErrors(), "No success but no error.");
 	}
 	catch (FatalError const&)
@@ -60,7 +60,7 @@ bool AsmAnalyzer::analyze(Block const& _block)
 		// This FatalError con occur if the errorReporter has too many errors.
 		yulAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
 	}
-	return success && !m_errorReporter.hasErrors();
+	return m_success && !m_errorReporter.hasErrors();
 }
 
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object)
@@ -79,127 +79,112 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 	return analysisInfo;
 }
 
-bool AsmAnalyzer::operator()(Literal const& _literal)
+vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
 {
 	expectValidType(_literal.type, _literal.location);
-	++m_stackHeight;
+
 	if (_literal.kind == LiteralKind::String && _literal.value.str().size() > 32)
-	{
-		m_errorReporter.typeError(
+		typeError(
 			_literal.location,
 			"String literal too long (" + to_string(_literal.value.str().size()) + " > 32)"
 		);
-		return false;
-	}
 	else if (_literal.kind == LiteralKind::Number && bigint(_literal.value.str()) > u256(-1))
-	{
-		m_errorReporter.typeError(
-			_literal.location,
-			"Number literal too large (> 256 bits)"
-		);
-		return false;
-	}
+		typeError(_literal.location, "Number literal too large (> 256 bits)");
 	else if (_literal.kind == LiteralKind::Boolean)
 		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "");
-	return true;
+
+	return {_literal.type};
 }
 
-bool AsmAnalyzer::operator()(Identifier const& _identifier)
+vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 {
 	yulAssert(!_identifier.name.empty(), "");
 	size_t numErrorsBefore = m_errorReporter.errors().size();
-	bool success = true;
+	YulString type = m_dialect.defaultType;
+
 	if (m_currentScope->lookup(_identifier.name, GenericVisitor{
 		[&](Scope::Variable const& _var)
 		{
 			if (!m_activeVariables.count(&_var))
-			{
-				m_errorReporter.declarationError(
+				declarationError(
 					_identifier.location,
 					"Variable " + _identifier.name.str() + " used before it was declared."
 				);
-				success = false;
-			}
-			++m_stackHeight;
+			type = _var.type;
 		},
 		[&](Scope::Function const&)
 		{
-			m_errorReporter.typeError(
+			typeError(
 				_identifier.location,
 				"Function " + _identifier.name.str() + " used without being called."
 			);
-			success = false;
 		}
 	}))
 	{
 	}
 	else
 	{
-		size_t stackSize(-1);
+		bool found = false;
 		if (m_resolver)
 		{
 			bool insideFunction = m_currentScope->insideFunction();
-			stackSize = m_resolver(_identifier, yul::IdentifierContext::RValue, insideFunction);
+			size_t stackSize = m_resolver(_identifier, yul::IdentifierContext::RValue, insideFunction);
+			if (stackSize != size_t(-1))
+			{
+				found = true;
+				yulAssert(stackSize == 1, "Invalid stack size of external reference.");
+			}
 		}
-		if (stackSize == size_t(-1))
+		if (!found)
 		{
 			// Only add an error message if the callback did not do it.
 			if (numErrorsBefore == m_errorReporter.errors().size())
-				m_errorReporter.declarationError(_identifier.location, "Identifier not found.");
-			success = false;
+				declarationError(_identifier.location, "Identifier not found.");
+			m_success = false;
 		}
-		m_stackHeight += stackSize == size_t(-1) ? 1 : stackSize;
 	}
-	return success;
+
+	return {type};
 }
 
-bool AsmAnalyzer::operator()(ExpressionStatement const& _statement)
+void AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
-	int initialStackHeight = m_stackHeight;
-	bool success = std::visit(*this, _statement.expression);
-	if (success && m_stackHeight != initialStackHeight)
-	{
-		string msg =
+	vector<YulString> types = std::visit(*this, _statement.expression);
+	if (m_success && !types.empty())
+		typeError(_statement.location,
 			"Top-level expressions are not supposed to return values (this expression returns " +
-			to_string(m_stackHeight - initialStackHeight) +
+			to_string(types.size()) +
 			" value" +
-			(m_stackHeight - initialStackHeight == 1 ? "" : "s") +
-			"). Use ``pop()`` or assign them.";
-		m_errorReporter.error(Error::Type::TypeError, _statement.location, msg);
-		success = false;
-	}
-	return success;
+			(types.size() == 1 ? "" : "s") +
+			"). Use ``pop()`` or assign them."
+		);
 }
 
-bool AsmAnalyzer::operator()(Assignment const& _assignment)
+void AsmAnalyzer::operator()(Assignment const& _assignment)
 {
 	yulAssert(_assignment.value, "");
-	int const expectedItems = _assignment.variableNames.size();
-	yulAssert(expectedItems >= 1, "");
-	int const stackHeight = m_stackHeight;
-	bool success = std::visit(*this, *_assignment.value);
-	if ((m_stackHeight - stackHeight) != expectedItems)
-	{
-		m_errorReporter.declarationError(
+	size_t const numVariables = _assignment.variableNames.size();
+	yulAssert(numVariables >= 1, "");
+
+	vector<YulString> types = std::visit(*this, *_assignment.value);
+
+	if (types.size() != numVariables)
+		declarationError(
 			_assignment.location,
 			"Variable count does not match number of values (" +
-			to_string(expectedItems) +
+			to_string(numVariables) +
 			" vs. " +
-			to_string(m_stackHeight - stackHeight) +
+			to_string(types.size()) +
 			")"
 		);
-		return false;
-	}
-	for (auto const& variableName: _assignment.variableNames)
-		if (!checkAssignment(variableName, 1))
-			success = false;
-	return success;
+
+	for (size_t i = 0; i < numVariables; ++i)
+		checkAssignment(_assignment.variableNames[i]);
 }
 
-bool AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
+void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 {
-	bool success = true;
-	int const numVariables = _varDecl.variables.size();
+	size_t const numVariables = _varDecl.variables.size();
 	if (m_resolver)
 		for (auto const& variable: _varDecl.variables)
 			// Call the resolver for variable declarations to allow it to raise errors on shadowing.
@@ -210,35 +195,27 @@ bool AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 			);
 	if (_varDecl.value)
 	{
-		int const stackHeight = m_stackHeight;
-		success = std::visit(*this, *_varDecl.value);
-		int numValues = m_stackHeight - stackHeight;
-		if (numValues != numVariables)
-		{
-			m_errorReporter.declarationError(_varDecl.location,
+		vector<YulString> types = std::visit(*this, *_varDecl.value);
+		if (types.size() != numVariables)
+			declarationError(_varDecl.location,
 				"Variable count mismatch: " +
 				to_string(numVariables) +
 				" variables and " +
-				to_string(numValues) +
+				to_string(types.size()) +
 				" values."
 			);
-			// Adjust stack height to avoid misleading additional errors.
-			m_stackHeight += numVariables - numValues;
-			return false;
-		}
 	}
-	else
-		m_stackHeight += numVariables;
 
-	for (auto const& variable: _varDecl.variables)
+	for (TypedName const& variable: _varDecl.variables)
 	{
 		expectValidType(variable.type, variable.location);
-		m_activeVariables.insert(&std::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)));
+		m_activeVariables.insert(&std::get<Scope::Variable>(
+			m_currentScope->identifiers.at(variable.name))
+		);
 	}
-	return success;
 }
 
-bool AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
+void AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 {
 	yulAssert(!_funDef.name.empty(), "");
 	Block const* virtualBlock = m_info.virtualBlocks.at(&_funDef).get();
@@ -250,112 +227,95 @@ bool AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 		m_activeVariables.insert(&std::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
 
-	int const stackHeight = m_stackHeight;
-	m_stackHeight = _funDef.parameters.size() + _funDef.returnVariables.size();
-
-	bool success = (*this)(_funDef.body);
-
-	m_stackHeight = stackHeight;
-	return success;
+	(*this)(_funDef.body);
 }
 
-bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
+vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 {
 	yulAssert(!_funCall.functionName.name.empty(), "");
-	bool success = true;
-	size_t parameters = 0;
-	size_t returns = 0;
+	vector<YulString> const* parameterTypes = nullptr;
+	vector<YulString> const* returnTypes = nullptr;
 	bool needsLiteralArguments = false;
+
 	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
 	{
-		// TODO: compare types, too
-		parameters = f->parameters.size();
-		returns = f->returns.size();
+		parameterTypes = &f->parameters;
+		returnTypes = &f->returns;
 		if (f->literalArguments)
 			needsLiteralArguments = true;
 	}
 	else if (!m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
 		[&](Scope::Variable const&)
 		{
-			m_errorReporter.typeError(
+			typeError(
 				_funCall.functionName.location,
 				"Attempt to call variable instead of function."
 			);
-			success = false;
 		},
 		[&](Scope::Function const& _fun)
 		{
-			/// TODO: compare types too
-			parameters = _fun.arguments.size();
-			returns = _fun.returns.size();
+			parameterTypes = &_fun.arguments;
+			returnTypes = &_fun.returns;
 		}
 	}))
 	{
 		if (!warnOnInstructions(_funCall.functionName.name.str(), _funCall.functionName.location))
-			m_errorReporter.declarationError(_funCall.functionName.location, "Function not found.");
-		success = false;
+			declarationError(_funCall.functionName.location, "Function not found.");
+		m_success = false;
 	}
-	if (success)
-		if (_funCall.arguments.size() != parameters)
-		{
-			m_errorReporter.typeError(
-				_funCall.functionName.location,
-				"Function expects " +
-				to_string(parameters) +
-				" arguments but got " +
-				to_string(_funCall.arguments.size()) + "."
-			);
-			success = false;
-		}
+	if (parameterTypes && _funCall.arguments.size() != parameterTypes->size())
+		typeError(
+			_funCall.functionName.location,
+			"Function expects " +
+			to_string(parameterTypes->size()) +
+			" arguments but got " +
+			to_string(_funCall.arguments.size()) + "."
+		);
 
+	vector<YulString> argTypes;
 	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
 	{
-		if (!expectExpression(arg))
-			success = false;
-		else if (needsLiteralArguments)
+		argTypes.emplace_back(expectExpression(arg));
+
+		if (needsLiteralArguments)
 		{
 			if (!holds_alternative<Literal>(arg))
-				m_errorReporter.typeError(
+				typeError(
 					_funCall.functionName.location,
 					"Function expects direct literals as arguments."
 				);
 			else if (!m_dataNames.count(std::get<Literal>(arg).value))
-				m_errorReporter.typeError(
+				typeError(
 					_funCall.functionName.location,
 					"Unknown data object \"" + std::get<Literal>(arg).value.str() + "\"."
 				);
 		}
 	}
-	// Use argument size instead of parameter count to avoid misleading errors.
-	m_stackHeight += int(returns) - int(_funCall.arguments.size());
-	return success;
+
+	if (m_success)
+	{
+		yulAssert(parameterTypes && parameterTypes->size() == argTypes.size(), "");
+		yulAssert(returnTypes, "");
+		return *returnTypes;
+	}
+	else if (returnTypes)
+		return vector<YulString>(returnTypes->size(), m_dialect.defaultType);
+	else
+		return {};
 }
 
-bool AsmAnalyzer::operator()(If const& _if)
+void AsmAnalyzer::operator()(If const& _if)
 {
-	bool success = true;
+	expectExpression(*_if.condition);
 
-	int const initialHeight = m_stackHeight;
-	if (!expectExpression(*_if.condition))
-		success = false;
-
-	m_stackHeight = initialHeight;
-
-	if (!(*this)(_if.body))
-		success = false;
-
-	return success;
+	(*this)(_if.body);
 }
 
-bool AsmAnalyzer::operator()(Switch const& _switch)
+void AsmAnalyzer::operator()(Switch const& _switch)
 {
 	yulAssert(_switch.expression, "");
 
-	bool success = true;
-
-	int const initialHeight = m_stackHeight;
-	if (!expectExpression(*_switch.expression))
-		success = false;
+	expectExpression(*_switch.expression);
 
 	YulString caseType;
 	bool mismatchingTypes = false;
@@ -370,7 +330,6 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 				break;
 			}
 		}
-
 	if (mismatchingTypes)
 		m_errorReporter.typeError(
 			_switch.location,
@@ -382,191 +341,103 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	{
 		if (_case.value)
 		{
-			int const initialStackHeight = m_stackHeight;
-			bool isCaseValueValid = true;
-			// We cannot use "expectExpression" here because *_case.value is not a
-			// Statement and would be converted to a Statement otherwise.
-			if (!(*this)(*_case.value))
-			{
-				isCaseValueValid = false;
-				success = false;
-			}
-			expectDeposit(1, initialStackHeight, _case.value->location);
-			m_stackHeight--;
+			// We cannot use "expectExpression" here because *_case.value is not an
+			// Expression and would be converted to an Expression otherwise.
+			(*this)(*_case.value);
 
-			// If the case value is not valid, we should not insert it into cases.
-			yulAssert(isCaseValueValid || m_errorReporter.hasErrors(), "Invalid case value.");
 			/// Note: the parser ensures there is only one default case
-			if (isCaseValueValid && !cases.insert(valueOfLiteral(*_case.value)).second)
-			{
-				m_errorReporter.declarationError(
-					_case.location,
-					"Duplicate case defined."
-				);
-				success = false;
-			}
+			if (m_success && !cases.insert(valueOfLiteral(*_case.value)).second)
+				declarationError(_case.location, "Duplicate case defined.");
 		}
 
-		if (!(*this)(_case.body))
-			success = false;
+		(*this)(_case.body);
 	}
-
-	m_stackHeight = initialHeight;
-
-	return success;
 }
 
-bool AsmAnalyzer::operator()(ForLoop const& _for)
+void AsmAnalyzer::operator()(ForLoop const& _for)
 {
 	yulAssert(_for.condition, "");
 
 	Scope* outerScope = m_currentScope;
 
-	int const initialHeight = m_stackHeight;
+	(*this)(_for.pre);
 
-	bool success = true;
-	if (!(*this)(_for.pre))
-		success = false;
 	// The block was closed already, but we re-open it again and stuff the
 	// condition, the body and the post part inside.
-	m_stackHeight += scope(&_for.pre).numberOfVariables();
 	m_currentScope = &scope(&_for.pre);
 
-	if (!expectExpression(*_for.condition))
-		success = false;
-
-	m_stackHeight--;
+	expectExpression(*_for.condition);
 
 	// backup outer for-loop & create new state
 	auto outerForLoop = m_currentForLoop;
 	m_currentForLoop = &_for;
 
-	if (!(*this)(_for.body))
-		success = false;
+	(*this)(_for.body);
+	(*this)(_for.post);
 
-	if (!(*this)(_for.post))
-		success = false;
-
-	m_stackHeight = initialHeight;
 	m_currentScope = outerScope;
 	m_currentForLoop = outerForLoop;
-
-	return success;
 }
 
-bool AsmAnalyzer::operator()(Block const& _block)
+void AsmAnalyzer::operator()(Block const& _block)
 {
-	bool success = true;
 	auto previousScope = m_currentScope;
 	m_currentScope = &scope(&_block);
 
-	int const initialStackHeight = m_stackHeight;
-
 	for (auto const& s: _block.statements)
-		if (!std::visit(*this, s))
-			success = false;
-
-	m_stackHeight -= scope(&_block).numberOfVariables();
-
-	int const stackDiff = m_stackHeight - initialStackHeight;
-	if (success && stackDiff != 0)
-	{
-		m_errorReporter.declarationError(
-			_block.location,
-			"Unbalanced stack at the end of a block: " +
-			(
-				stackDiff > 0 ?
-				to_string(stackDiff) + string(" surplus item(s).") :
-				to_string(-stackDiff) + string(" missing item(s).")
-			)
-		);
-		success = false;
-	}
+		std::visit(*this, s);
 
 	m_currentScope = previousScope;
-	return success;
 }
 
-bool AsmAnalyzer::expectExpression(Expression const& _expr)
+YulString AsmAnalyzer::expectExpression(Expression const& _expr)
 {
-	bool success = true;
-	int const initialHeight = m_stackHeight;
-	if (!std::visit(*this, _expr))
-		success = false;
-	if (success && !expectDeposit(1, initialHeight, locationOf(_expr)))
-		success = false;
-	return success;
-}
-
-bool AsmAnalyzer::expectDeposit(int _deposit, int _oldHeight, SourceLocation const& _location)
-{
-	if (m_stackHeight - _oldHeight != _deposit)
-	{
-		m_errorReporter.typeError(
-			_location,
-			"Expected expression to return one item to the stack, but did return " +
-			to_string(m_stackHeight - _oldHeight) +
-			" items."
+	vector<YulString> types = std::visit(*this, _expr);
+	if (types.size() != 1)
+		typeError(
+			locationOf(_expr),
+			"Expected expression to evaluate to one value, but got " +
+			to_string(types.size()) +
+			" values instead."
 		);
-		return false;
-	}
-	return true;
+	return types.empty() ? m_dialect.defaultType : types.front();
 }
 
-bool AsmAnalyzer::checkAssignment(Identifier const& _variable, size_t _valueSize)
+void AsmAnalyzer::checkAssignment(Identifier const& _variable)
 {
 	yulAssert(!_variable.name.empty(), "");
-	bool success = true;
 	size_t numErrorsBefore = m_errorReporter.errors().size();
-	size_t variableSize(-1);
+	bool found = false;
 	if (Scope::Identifier const* var = m_currentScope->lookup(_variable.name))
 	{
 		// Check that it is a variable
 		if (!holds_alternative<Scope::Variable>(*var))
-		{
-			m_errorReporter.typeError(_variable.location, "Assignment requires variable.");
-			success = false;
-		}
+			typeError(_variable.location, "Assignment requires variable.");
 		else if (!m_activeVariables.count(&std::get<Scope::Variable>(*var)))
-		{
-			m_errorReporter.declarationError(
+			declarationError(
 				_variable.location,
 				"Variable " + _variable.name.str() + " used before it was declared."
 			);
-			success = false;
-		}
-		variableSize = 1;
+		found = true;
 	}
 	else if (m_resolver)
 	{
 		bool insideFunction = m_currentScope->insideFunction();
-		variableSize = m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction);
+		size_t variableSize = m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction);
+		if (variableSize != size_t(-1))
+		{
+			found = true;
+			yulAssert(variableSize == 1, "Invalid stack size of external reference.");
+		}
 	}
-	if (variableSize == size_t(-1))
+
+	if (!found)
 	{
+		m_success = false;
 		// Only add message if the callback did not.
 		if (numErrorsBefore == m_errorReporter.errors().size())
-			m_errorReporter.declarationError(_variable.location, "Variable not found or variable not lvalue.");
-		success = false;
+			declarationError(_variable.location, "Variable not found or variable not lvalue.");
 	}
-	if (_valueSize == size_t(-1))
-		_valueSize = variableSize == size_t(-1) ? 1 : variableSize;
-
-	m_stackHeight -= _valueSize;
-
-	if (_valueSize != variableSize && variableSize != size_t(-1))
-	{
-		m_errorReporter.typeError(
-			_variable.location,
-			"Variable size (" +
-			to_string(variableSize) +
-			") and value size (" +
-			to_string(_valueSize) +
-			") do not match."
-		);
-		success = false;
-	}
-	return success;
 }
 
 Scope& AsmAnalyzer::scope(Block const* _block)
@@ -603,7 +474,7 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 	yulAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
 
 	auto errorForVM = [=](string const& vmKindMessage) {
-		m_errorReporter.typeError(
+		typeError(
 			_location,
 			"The \"" +
 			boost::to_lower_copy(instructionInfo(_instr).name)
@@ -664,9 +535,23 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 			"incorrect stack access. Because of that they are disallowed in strict assembly. "
 			"Use functions, \"switch\", \"if\" or \"for\" statements instead."
 		);
+		m_success = false;
 	}
 	else
 		return false;
 
 	return true;
 }
+
+void AsmAnalyzer::typeError(SourceLocation const& _location, string const& _description)
+{
+	m_errorReporter.typeError(_location, _description);
+	m_success = false;
+}
+
+void AsmAnalyzer::declarationError(SourceLocation const& _location, string const& _description)
+{
+	m_errorReporter.declarationError(_location, _description);
+	m_success = false;
+}
+
