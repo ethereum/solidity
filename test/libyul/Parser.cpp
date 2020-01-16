@@ -25,6 +25,7 @@
 #include <test/libyul/Common.h>
 
 #include <libyul/AsmParser.h>
+#include <libyul/AsmPrinter.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Dialect.h>
@@ -49,7 +50,7 @@ namespace solidity::yul::test
 namespace
 {
 
-bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter)
+shared_ptr<Block> parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter)
 {
 	try
 	{
@@ -58,18 +59,19 @@ bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorR
 		if (parserResult)
 		{
 			yul::AsmAnalysisInfo analysisInfo;
-			return (yul::AsmAnalyzer(
+			if (yul::AsmAnalyzer(
 				analysisInfo,
 				errorReporter,
 				_dialect
-			)).analyze(*parserResult);
+			).analyze(*parserResult))
+				return parserResult;
 		}
 	}
 	catch (FatalError const&)
 	{
 		BOOST_FAIL("Fatal error leaked.");
 	}
-	return false;
+	return {};
 }
 
 std::optional<Error> parseAndReturnFirstError(string const& _source, Dialect const& _dialect, bool _allowWarnings = true)
@@ -563,6 +565,47 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 	CHECK_ERROR_DIALECT("{ let a, b, c := builtin(1) }", TypeError, "Function expects 2 arguments but got 1", dialect);
 	CHECK_ERROR_DIALECT("{ let a, b := builtin(1, 2) }", DeclarationError, "Variable count mismatch: 2 variables and 3 values.", dialect);
 }
+
+BOOST_AUTO_TEST_CASE(default_types_set)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	shared_ptr<Block> result = parse(
+		"{"
+			"let x:bool := true:bool "
+			"let y := add(1, 2) "
+			"switch y case 0 {} default {} "
+		"}",
+		EVMDialectTyped::instance(EVMVersion{}),
+		reporter
+	);
+	BOOST_REQUIRE(!!result);
+
+	// Use no dialect so that all types are printed.
+	// This tests that the default types are properly assigned.
+	BOOST_CHECK_EQUAL(AsmPrinter{}(*result),
+		"{\n"
+		"    let x:bool := true:bool\n"
+		"    let y:u256 := add(1:u256, 2:u256)\n"
+		"    switch y\n"
+		"    case 0:u256 { }\n"
+		"    default { }\n"
+		"}"
+	);
+
+	// Now test again with type dialect. Now the default types
+	// should be omitted.
+	BOOST_CHECK_EQUAL(AsmPrinter{EVMDialectTyped::instance(EVMVersion{})}(*result),
+		"{\n"
+		"    let x:bool := true:bool\n"
+		"    let y := add(1, 2)\n"
+		"    switch y\n"
+		"    case 0 { }\n"
+		"    default { }\n"
+		"}"
+	);
+}
+
 
 
 BOOST_AUTO_TEST_SUITE_END()
