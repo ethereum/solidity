@@ -25,14 +25,6 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
-bool Scope::registerLabel(YulString _name)
-{
-	if (exists(_name))
-		return false;
-	identifiers[_name] = Label();
-	return true;
-}
-
 bool Scope::registerVariable(YulString _name, YulType const& _type)
 {
 	if (exists(_name))

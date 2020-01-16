@@ -123,10 +123,6 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 			}
 			++m_stackHeight;
 		},
-		[&](Scope::Label const&)
-		{
-			++m_stackHeight;
-		},
 		[&](Scope::Function const&)
 		{
 			m_errorReporter.typeError(
@@ -290,14 +286,6 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			m_errorReporter.typeError(
 				_funCall.functionName.location,
 				"Attempt to call variable instead of function."
-			);
-			success = false;
-		},
-		[&](Scope::Label const&)
-		{
-			m_errorReporter.typeError(
-				_funCall.functionName.location,
-				"Attempt to call label instead of function."
 			);
 			success = false;
 		},

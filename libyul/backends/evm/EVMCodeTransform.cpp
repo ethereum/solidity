@@ -88,7 +88,6 @@ void VariableReferenceCounter::increaseRefIfFound(YulString _variableName)
 		{
 			++m_context.variableReferences[&_var];
 		},
-		[=](Scope::Label const&) { },
 		[=](Scope::Function const&) { }
 	});
 }
@@ -286,7 +285,6 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		Scope::Function* function = nullptr;
 		yulAssert(m_scope->lookup(_call.functionName.name, GenericVisitor{
 			[=](Scope::Variable&) { yulAssert(false, "Expected function name."); },
-			[=](Scope::Label&) { yulAssert(false, "Expected function name."); },
 			[&](Scope::Function& _function) { function = &_function; }
 		}), "Function name not found.");
 		yulAssert(function, "");
@@ -322,10 +320,6 @@ void CodeTransform::operator()(Identifier const& _identifier)
 				// Store something to balance the stack
 				m_assembly.appendConstant(u256(0));
 			decreaseReference(_identifier.name, _var);
-		},
-		[=](Scope::Label& _label)
-		{
-			m_assembly.appendLabelReference(labelID(_label));
 		},
 		[=](Scope::Function&)
 		{
@@ -632,30 +626,6 @@ void CodeTransform::operator()(Block const& _block)
 
 	if (!m_stackErrors.empty())
 		BOOST_THROW_EXCEPTION(m_stackErrors.front());
-}
-
-AbstractAssembly::LabelID CodeTransform::labelFromIdentifier(Identifier const& _identifier)
-{
-	AbstractAssembly::LabelID label = AbstractAssembly::LabelID(-1);
-	if (!m_scope->lookup(_identifier.name, GenericVisitor{
-		[=](Scope::Variable&) { yulAssert(false, "Expected label"); },
-		[&](Scope::Label& _label)
-		{
-			label = labelID(_label);
-		},
-		[=](Scope::Function&) { yulAssert(false, "Expected label"); }
-	}))
-	{
-		yulAssert(false, "Identifier not found.");
-	}
-	return label;
-}
-
-AbstractAssembly::LabelID CodeTransform::labelID(Scope::Label const& _label)
-{
-	if (!m_context->labelIDs.count(&_label))
-		m_context->labelIDs[&_label] = m_assembly.newLabelId();
-	return m_context->labelIDs[&_label];
 }
 
 AbstractAssembly::LabelID CodeTransform::functionEntryID(YulString _name, Scope::Function const& _function)
