@@ -3,12 +3,12 @@
     function f() {}
 }
 // ====
-// step: mainFunction
 // dialect: yul
+// step: mainFunction
 // ----
 // {
 //     function main()
-//     { let a:u256 }
+//     { let a }
 //     function f()
 //     { }
 // }

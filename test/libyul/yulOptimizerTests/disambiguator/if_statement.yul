@@ -6,11 +6,11 @@
     }
 }
 // ====
-// step: disambiguator
 // dialect: yul
+// step: disambiguator
 // ----
 // {
-//     { let a:u256, b:u256, c:u256 }
+//     { let a, b, c }
 //     {
 //         let a_1:bool
 //         if a_1 { let b_2:bool := a_1 }
