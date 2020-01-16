@@ -833,10 +833,15 @@ smt::Expression CHC::summary(ContractDefinition const&)
 smt::Expression CHC::summary(FunctionDefinition const& _function)
 {
 	vector<smt::Expression> args{m_error.currentValue()};
-	args += initialStateVariables();
+	auto const* contract = dynamic_cast<ContractDefinition const*>(_function.scope());
+	solAssert(contract, "");
+	bool libOrIface = contract->isLibrary() || contract->isInterface();
+	if (!libOrIface)
+		args += initialStateVariables();
 	for (auto const& var: _function.parameters())
 		args.push_back(m_context.variable(*var)->valueAtIndex(0));
-	args += currentStateVariables();
+	if (!libOrIface)
+		args += currentStateVariables();
 	for (auto const& var: _function.returnParameters())
 		args.push_back(m_context.variable(*var)->currentValue());
 	return (*m_summaries.at(m_currentContract).at(&_function))(args);
@@ -970,11 +975,16 @@ smt::Expression CHC::predicate(FunctionCall const& _funCall)
 
 	m_error.increaseIndex();
 	vector<smt::Expression> args{m_error.currentValue()};
-	args += currentStateVariables();
+	auto const* contract = dynamic_cast<ContractDefinition const*>(function->scope());
+	solAssert(contract, "");
+	bool libOrIface = contract->isLibrary() || contract->isInterface();
+	if (!libOrIface)
+		args += currentStateVariables();
 	args += symbolicArguments(_funCall);
 	for (auto const& var: m_stateVariables)
 		m_context.variable(*var)->increaseIndex();
-	args += currentStateVariables();
+	if (!libOrIface)
+		args += currentStateVariables();
 
 	auto const& returnParams = function->returnParameters();
 	for (auto param: returnParams)
@@ -984,7 +994,6 @@ smt::Expression CHC::predicate(FunctionCall const& _funCall)
 			createVariable(*param);
 	for (auto const& var: function->returnParameters())
 		args.push_back(m_context.variable(*var)->currentValue());
-	auto const* contract = dynamic_cast<ContractDefinition const*>(function->scope());
 	return (*m_summaries.at(contract).at(function))(args);
 }
 
