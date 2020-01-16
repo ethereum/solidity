@@ -366,7 +366,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 			location(),
 			kind,
 			YulString{currentLiteral()},
-			{}
+			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
 		};
 		advance();
 		if (currentToken() == Token::Colon)
@@ -497,6 +497,9 @@ TypedName Parser::parseTypedName()
 		typedName.location.end = endPosition();
 		typedName.type = expectAsmIdentifier();
 	}
+	else
+		typedName.type = m_dialect.defaultType;
+
 	return typedName;
 }
 

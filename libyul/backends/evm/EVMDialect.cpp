@@ -218,6 +218,9 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 	EVMDialect(_evmVersion, _objectAccess)
 {
 	defaultType = "u256"_yulstring;
+	boolType = "bool"_yulstring;
+	types = {defaultType, boolType};
+
 	m_functions["lt"_yulstring].returns = {"bool"_yulstring};
 	m_functions["gt"_yulstring].returns = {"bool"_yulstring};
 	m_functions["slt"_yulstring].returns = {"bool"_yulstring};

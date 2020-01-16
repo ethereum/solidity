@@ -23,6 +23,7 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmData.h>
 #include <libyul/Exceptions.h>
+#include <libyul/Dialect.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -238,7 +239,8 @@ string AsmPrinter::formatTypedName(TypedName _variable) const
 
 string AsmPrinter::appendTypeName(YulString _type) const
 {
-	if (!_type.empty())
+	if (_type.empty() || (m_dialect && _type == m_dialect->defaultType))
+		return {};
+	else
 		return ":" + _type.str();
-	return "";
 }

@@ -365,7 +365,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		return TestResult::FatalError;
 	}
 
-	m_obtainedResult = AsmPrinter{}(*m_ast) + "\n";
+	m_obtainedResult = AsmPrinter{*m_dialect}(*m_ast) + "\n";
 
 	if (m_optimizerStep != m_validatedSettings["step"])
 	{

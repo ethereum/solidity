@@ -387,7 +387,7 @@ void CompilerContext::appendInlineAssembly(
 	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
 	auto parserResult = yul::Parser(errorReporter, dialect).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
-	cout << yul::AsmPrinter()(*parserResult) << endl;
+	cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
 #endif
 
 	auto reportError = [&](string const& _context)
@@ -438,7 +438,7 @@ void CompilerContext::appendInlineAssembly(
 
 #ifdef SOL_OUTPUT_ASM
 		cout << "After optimizer:" << endl;
-		cout << yul::AsmPrinter()(*parserResult) << endl;
+		cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
 #endif
 	}
 

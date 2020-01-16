@@ -51,7 +51,7 @@ struct Dialect: boost::noncopyable
 	YulString defaultType;
 	/// Type used for the literals "true" and "false".
 	YulString boolType;
-	std::vector<YulString> types;
+	std::set<YulString> types;
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	virtual BuiltinFunction const* builtin(YulString /*_name*/) const { return nullptr; }

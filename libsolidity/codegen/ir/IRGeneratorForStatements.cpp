@@ -892,6 +892,7 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 
 	solAssert(holds_alternative<yul::Block>(modified), "");
 
+	// Do not provide dialect so that we get the full type information.
 	m_code << yul::AsmPrinter()(std::get<yul::Block>(std::move(modified))) << "\n";
 	return false;
 }
