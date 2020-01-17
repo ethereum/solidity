@@ -798,10 +798,13 @@ unique_ptr<smt::SymbolicFunctionVariable> CHC::createSymbolicBlock(smt::SortPoin
 
 void CHC::defineSummaries(SourceUnit const& _source)
 {
-	for (auto const& node : _source.nodes())
+	for (auto const& node: _source.nodes())
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(node.get()))
-			for (auto const* function: overrideResolvedFunctions(*contract))
-				m_summaries[contract].emplace(function, createSummaryBlock(*function, *contract));
+			for (auto const* base: contract->annotation().linearizedBaseContracts)
+			//for (auto const* function: overrideResolvedFunctions(*contract))
+				for (auto const* function: base->definedFunctions())
+				//m_summaries[contract].emplace(function, createSummaryBlock(*function, *contract));
+					m_summaries[contract].emplace(function, createSummaryBlock(*function, *contract));
 }
 
 smt::Expression CHC::interface()
@@ -978,6 +981,9 @@ smt::Expression CHC::predicate(FunctionCall const& _funCall)
 	auto const* contract = dynamic_cast<ContractDefinition const*>(function->scope());
 	solAssert(contract, "");
 	bool libOrIface = contract->isLibrary() || contract->isInterface();
+
+	auto const* contractToCall = contract->isLibrary() ? contract : m_currentContract;
+
 	if (!libOrIface)
 		args += currentStateVariables();
 	args += symbolicArguments(_funCall);
@@ -994,7 +1000,8 @@ smt::Expression CHC::predicate(FunctionCall const& _funCall)
 			createVariable(*param);
 	for (auto const& var: function->returnParameters())
 		args.push_back(m_context.variable(*var)->currentValue());
-	return (*m_summaries.at(contract).at(function))(args);
+
+	return (*m_summaries.at(contractToCall).at(function))(args);
 }
 
 void CHC::addRule(smt::Expression const& _rule, string const& _ruleName)

@@ -109,7 +109,7 @@ vector<VariableDeclaration const*> ContractDefinition::stateVariablesIncludingIn
 	vector<VariableDeclaration const*> stateVars;
 	for (auto const& contract: annotation().linearizedBaseContracts)
 		for (auto var: contract->stateVariables())
-			if (*contract == *this || var->isVisibleInDerivedContracts())
+			//if (*contract == *this || var->isVisibleInDerivedContracts())
 				stateVars.push_back(var);
 	return stateVars;
 }

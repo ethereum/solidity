@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <libsolidity/formal/BMC.h>
+//#include <libsolidity/formal/BMC.h>
 #include <libsolidity/formal/CHC.h>
 #include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/SolverInterface.h>
@@ -61,7 +61,7 @@ public:
 
 private:
 	/// Bounded Model Checker engine.
-	BMC m_bmc;
+	//BMC m_bmc;
 
 	/// Constrained Horn Clauses engine.
 	CHC m_chc;
