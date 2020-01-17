@@ -15,6 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/Program.h>
 
@@ -39,8 +40,8 @@ struct CommandLineParsingResult
 
 void runAlgorithm(string const& _sourcePath)
 {
-	Program::load(_sourcePath);
-	cout << "Program load successful." << endl;
+	Program::load(_sourcePath).optimize(Chromosome::makeRandom(15).asSequence());
+	cout << "Program load and optimization successful." << endl;
 }
 
 CommandLineParsingResult parseCommandLine(int argc, char** argv)
