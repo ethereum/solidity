@@ -15,6 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <tools/yulPhaser/Exceptions.h>
+#include <tools/yulPhaser/Program.h>
 
 #include <boost/program_options.hpp>
 
@@ -22,6 +24,8 @@
 #include <string>
 
 using namespace std;
+using namespace solidity::phaser;
+
 namespace po = boost::program_options;
 
 namespace
@@ -35,7 +39,8 @@ struct CommandLineParsingResult
 
 void runAlgorithm(string const& _sourcePath)
 {
-	cout << "Input: " << _sourcePath << endl;
+	Program::load(_sourcePath);
+	cout << "Program load successful." << endl;
 }
 
 CommandLineParsingResult parseCommandLine(int argc, char** argv)
@@ -99,7 +104,15 @@ int main(int argc, char** argv)
 	if (parsingResult.exitCode != 0)
 		return parsingResult.exitCode;
 
-	runAlgorithm(parsingResult.arguments["input-file"].as<string>());
+	try
+	{
+		runAlgorithm(parsingResult.arguments["input-file"].as<string>());
+	}
+	catch (InvalidProgram const& _exception)
+	{
+		cerr << "ERROR: " << _exception.what() << endl;
+		return 1;
+	}
 
 	return 0;
 }
