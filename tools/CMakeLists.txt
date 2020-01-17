@@ -15,6 +15,8 @@ install(TARGETS solidity-upgrade DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 add_executable(yul-phaser
 	yulPhaser/main.cpp
+	yulPhaser/Population.h
+	yulPhaser/Population.cpp
 	yulPhaser/Chromosome.h
 	yulPhaser/Chromosome.cpp
 	yulPhaser/Program.h

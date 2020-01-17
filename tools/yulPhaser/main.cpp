@@ -15,9 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Exceptions.h>
-#include <tools/yulPhaser/Program.h>
+#include <tools/yulPhaser/Population.h>
 
 #include <boost/program_options.hpp>
 
@@ -40,8 +39,8 @@ struct CommandLineParsingResult
 
 void runAlgorithm(string const& _sourcePath)
 {
-	Program::load(_sourcePath).optimize(Chromosome::makeRandom(15).asSequence());
-	cout << "Program load and optimization successful." << endl;
+	auto population = Population::makeRandom(_sourcePath, 10);
+	population.run(nullopt, cout);
 }
 
 CommandLineParsingResult parseCommandLine(int argc, char** argv)
