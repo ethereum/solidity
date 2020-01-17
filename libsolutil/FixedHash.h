@@ -104,22 +104,6 @@ public:
 	/// @returns a copy of the object's data as a byte vector.
 	bytes asBytes() const { return bytes(data(), data() + N); }
 
-	/// Returns the index of the first bit set to one, or size() * 8 if no bits are set.
-	inline unsigned firstBitSet() const
-	{
-		unsigned ret = 0;
-		for (auto d: m_data)
-			if (d)
-			{
-				for (;; ++ret, d <<= 1)
-					if (d & 0x80)
-						return ret;
-			}
-			else
-				ret += 8;
-		return ret;
-	}
-
 private:
 	std::array<uint8_t, N> m_data;		///< The binary data.
 };

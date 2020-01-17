@@ -19,8 +19,6 @@
 
 #include <libevmasm/KnownState.h>
 
-#include <libsolutil/FixedHash.h>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -182,7 +180,14 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 		case Instruction::EXP:
 			gas = GasCosts::expGas;
 			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(-1)))
-				gas += GasCosts::expByteGas(m_evmVersion) * (32 - (h256(*value).firstBitSet() / 8));
+			{
+				if (*value)
+				{
+					// Note: msb() counts from 0 and throws on 0 as input.
+					unsigned const significantByteCount  = (boost::multiprecision::msb(*value) + 1 + 7) / 8;
+					gas += GasCosts::expByteGas(m_evmVersion) * significantByteCount;
+				}
+			}
 			else
 				gas += GasCosts::expByteGas(m_evmVersion) * 32;
 			break;

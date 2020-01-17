@@ -261,6 +261,9 @@ BOOST_AUTO_TEST_CASE(exponent_size)
 {
 	char const* sourceCode = R"(
 		contract A {
+			function f(uint x) public returns (uint) {
+				return x ** 0;
+			}
 			function g(uint x) public returns (uint) {
 				return x ** 0x100;
 			}
@@ -270,6 +273,7 @@ BOOST_AUTO_TEST_CASE(exponent_size)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
+	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2)});
 	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
 	testRunTimeGas("h(uint256)", vector<bytes>{encodeArgs(2)});
 }
