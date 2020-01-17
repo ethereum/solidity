@@ -138,6 +138,11 @@ set(libyul_sources
 )
 detect_stray_source_files("${libyul_sources}" "libyul/")
 
+set(yul_phaser_sources
+    yulPhaser/Chromosome.cpp
+)
+detect_stray_source_files("${yul_phaser_sources}" "yulPhaser/")
+
 add_executable(soltest ${sources}
     ${contracts_sources}
     ${libsolutil_sources}
@@ -146,6 +151,7 @@ add_executable(soltest ${sources}
     ${libyul_sources}
     ${libsolidity_sources}
     ${libsolidity_util_sources}
+    ${yul_phaser_sources}
 )
 target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm solutil Boost::boost Boost::program_options Boost::unit_test_framework evmc)
 
