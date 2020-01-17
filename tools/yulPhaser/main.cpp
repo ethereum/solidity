@@ -15,7 +15,91 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+
+#include <boost/program_options.hpp>
+
+#include <iostream>
+#include <string>
+
+using namespace std;
+namespace po = boost::program_options;
+
+namespace
 {
+
+struct CommandLineParsingResult
+{
+	int exitCode;
+	po::variables_map arguments;
+};
+
+void runAlgorithm(string const& _sourcePath)
+{
+	cout << "Input: " << _sourcePath << endl;
+}
+
+CommandLineParsingResult parseCommandLine(int argc, char** argv)
+{
+	po::options_description description(
+		"yul-phaser, a tool for finding the best sequence of Yul optimisation phases.\n"
+		"\n"
+		"Usage: yul-phaser [options] <file>\n"
+		"Reads <file> as Yul code and tries to find the best order in which to run optimisation"
+		" phases using a genetic algorithm.\n"
+		"Example:\n"
+		"yul-phaser program.yul\n"
+		"\n"
+		"Allowed options",
+		po::options_description::m_default_line_length,
+		po::options_description::m_default_line_length - 23
+	);
+
+	description.add_options()
+		("help", "Show help message and exit.")
+		("input-file", po::value<string>()->required(), "Input file")
+	;
+
+	po::positional_options_description positionalDescription;
+	po::variables_map arguments;
+	positionalDescription.add("input-file", 1);
+	po::notify(arguments);
+
+	try
+	{
+		po::command_line_parser parser(argc, argv);
+		parser.options(description).positional(positionalDescription);
+		po::store(parser.run(), arguments);
+	}
+	catch (po::error const & _exception)
+	{
+		cerr << _exception.what() << endl;
+		return {1, move(arguments)};
+	}
+
+	if (arguments.count("help") > 0)
+	{
+		cout << description << endl;
+		return {2, move(arguments)};
+	}
+
+	if (arguments.count("input-file") == 0)
+	{
+		cerr << "Missing argument: input-file." << endl;
+		return {1, move(arguments)};
+	}
+
+	return {0, arguments};
+}
+
+}
+
+int main(int argc, char** argv)
+{
+	CommandLineParsingResult parsingResult = parseCommandLine(argc, argv);
+	if (parsingResult.exitCode != 0)
+		return parsingResult.exitCode;
+
+	runAlgorithm(parsingResult.arguments["input-file"].as<string>());
+
 	return 0;
 }

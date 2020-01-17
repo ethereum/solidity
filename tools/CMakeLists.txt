@@ -16,5 +16,6 @@ install(TARGETS solidity-upgrade DESTINATION "${CMAKE_INSTALL_BINDIR}")
 add_executable(yul-phaser
 	yulPhaser/main.cpp
 )
+target_link_libraries(yul-phaser PRIVATE Boost::program_options)
 
 install(TARGETS yul-phaser DESTINATION "${CMAKE_INSTALL_BINDIR}")
