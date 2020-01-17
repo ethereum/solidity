@@ -17,6 +17,8 @@ add_executable(yul-phaser
 	yulPhaser/main.cpp
 	yulPhaser/Program.h
 	yulPhaser/Program.cpp
+	yulPhaser/Random.h
+	yulPhaser/Random.cpp
 )
 target_link_libraries(yul-phaser PRIVATE solidity Boost::program_options)
 
