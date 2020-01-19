@@ -164,7 +164,7 @@ private:
 	void addRule(smt::Expression const& _rule, std::string const& _ruleName);
 	/// @returns <true, empty> if query is unsatisfiable (safe).
 	/// @returns <false, model> otherwise.
-	std::pair<bool, std::vector<std::string>> query(smt::Expression const& _query, langutil::SourceLocation const& _location);
+	std::pair<smt::CheckResult, std::vector<std::string>> query(smt::Expression const& _query, langutil::SourceLocation const& _location);
 	//@}
 
 	/// Misc.
@@ -204,6 +204,13 @@ private:
 		"error",
 		m_context
 	};
+
+	smt::SymbolicIntVariable m_enabledAssertion{
+		TypeProvider::uint256(),
+		TypeProvider::uint256(),
+		"enabledAssertion",
+		m_context
+	};
 	//@}
 
 	/// Variables.
@@ -218,13 +225,14 @@ private:
 
 	/// Verification targets.
 	//@{
-	std::vector<Expression const*> m_verificationTargets;
+	//std::set<Expression const*> m_verificationTargets;
+	std::map<ASTNode const*, std::pair<smt::Expression, smt::Expression>> m_verificationTargets;
 
 	/// Assertions proven safe.
 	std::set<Expression const*> m_safeAssertions;
 	
 	/// Error predicates for each public function and constructor.
-	std::map<ASTNode const*, smt::Expression> m_functionErrors;
+	std::map<ASTNode const*, std::vector<std::pair<Expression const*, smt::Expression>>> m_functionErrors;
 	//@}
 
 	/// Control-flow.

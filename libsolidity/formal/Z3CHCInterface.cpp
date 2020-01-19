@@ -45,9 +45,9 @@ Z3CHCInterface::Z3CHCInterface():
 	p.set("fp.spacer.ground_pobs", false);
 	// These reduce performance but are needed for counterexamples.
 	// They might be removed when we use get_proof instead of get_answer.
-	p.set("fp.xform.slice", false);
-	p.set("fp.xform.inline_linear", false);
-	p.set("fp.xform.inline_eager", false);
+	//p.set("fp.xform.slice", false);
+	//p.set("fp.xform.inline_linear", false);
+	//p.set("fp.xform.inline_eager", false);
 	m_solver.set(p);
 }
 
@@ -65,7 +65,7 @@ void Z3CHCInterface::registerRelation(Expression const& _expr)
 void Z3CHCInterface::addRule(Expression const& _expr, string const& _name)
 {
 	z3::expr rule = m_z3Interface->toZ3Expr(_expr);
-	//cout << rule << "\n\n";
+	cout << rule << "\n\n";
 	if (m_z3Interface->constants().empty())
 		m_solver.add_rule(rule, m_context->str_symbol(_name.c_str()));
 	else
@@ -122,11 +122,12 @@ pair<CheckResult, vector<string>> Z3CHCInterface::query(Expression const& _expr)
 	return make_pair(result, values);
 }
 
-vector<string> Z3CHCInterface::parseCounterexample(z3::expr const& _cex) const
+vector<string> Z3CHCInterface::parseCounterexample(z3::expr const&/* _cex*/) const
 {
-	//auto trace = Z3_fixedpoint_get_rules_along_trace(*m_context, m_solver);
-	//cout << Z3_ast_vector_to_string(*m_context, trace) << endl;
+	auto trace = Z3_fixedpoint_get_rules_along_trace(*m_context, m_solver);
+	cout << Z3_ast_vector_to_string(*m_context, trace) << endl;
 	vector<string> model;
+	/*
 	solAssert(_cex.is_and(), "");
 	for (unsigned i = 0; i < _cex.num_args(); ++i)
 	{
@@ -139,5 +140,6 @@ vector<string> Z3CHCInterface::parseCounterexample(z3::expr const& _cex) const
 			model.push_back(predicate.arg(j).to_string());
 	}
 	solAssert(!model.empty(), "");
+	*/
 	return model;
 }

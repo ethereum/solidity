@@ -102,21 +102,47 @@ void CHC::analyze(SourceUnit const& _source)
 	}
 
 	set<Expression const*> unsafeAssertions;
-	for (auto const& [function, error]: m_functionErrors)
+	//for (auto const& [function, errors]: m_functionErrors)
+	for (auto const& [target, constraints]: m_verificationTargets)
 	{
+		/*
 		auto assertions = transactionAssertions(function);
 		if (assertions.empty())
 			continue;
-		auto [result, model] = query(error, function->location());
-		if (!result)
+		*/
+		/*
+		for (auto const* assertion: assertions)
 		{
-			if (model.size() == 0)
-				unsafeAssertions.insert(assertions.begin(), assertions.end());
-			else
+			createErrorBlock();
+			connectBlocks(errorPredicate, error(), m_error.currentValue() == assertion->id());
+		*/
+		auto assertions = transactionAssertions(target);
+		for (auto const* assertion: assertions)
+		{
+			createErrorBlock();
+			connectBlocks(constraints.first, error(), constraints.second && (m_error.currentValue() == assertion->id()));
+			//m_functionErrors[&_function].push_back({assertion, error()});
+		/*
+		}
+		for (auto const& error: errors)
+		{
+		*/
+			auto [result, model] = query(error(), assertion->location());
+			if (result == smt::CheckResult::SATISFIABLE)
 			{
-				int assertionId = stoi(model.at(0));
-				auto const* assertion = m_verificationTargets.at(assertionId - 1);
-				unsafeAssertions.insert(assertion);
+				/*
+				if (model.size() == 0)
+				{
+					unsafeAssertions.insert(assertions.begin(), assertions.end());
+					break;
+				}
+				else
+				{
+					int assertionId = stoi(model.at(0));
+					auto const* assertion = m_verificationTargets.at(assertionId - 1);
+				}
+				*/
+				//unsafeAssertions.insert(assertion);
 				m_outerErrorReporter.warning(
 					assertion->location(),
 					"Assertion violation happens here."
@@ -124,9 +150,11 @@ void CHC::analyze(SourceUnit const& _source)
 			}
 		}
 	}
-	for (auto const& assertion: m_verificationTargets)
+	/*
+	for (auto const* assertion: m_verificationTargets)
 		if (!unsafeAssertions.count(assertion))
 			m_safeAssertions.insert(assertion);
+	*/
 }
 
 vector<string> CHC::unhandledQueries() const
@@ -210,10 +238,17 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	auto stateExprs = vector<smt::Expression>{m_error.currentValue()} + currentStateVariables();
 	setCurrentBlock(*m_constructorSummaryPredicate, &stateExprs);
 
-	createErrorBlock();
-	connectBlocks(m_currentBlock, error(), m_error.currentValue() > 0);
-	m_functionErrors.emplace(m_currentContract, error());
+	/*
+	auto assertions = transactionAssertions(m_currentContract);
+	for (auto const* assertion: assertions)
+	{
+		createErrorBlock();
+		connectBlocks(m_currentBlock, error(), (m_error.currentValue() == assertion->id()));
+		m_functionErrors[m_currentContract].push_back({assertion, error()});
+	}
+	*/
 
+	m_verificationTargets.emplace(m_currentContract, pair<smt::Expression, smt::Expression>{m_currentBlock, smt::Expression(true)});
 	connectBlocks(m_currentBlock, interface(), m_error.currentValue() == 0);
 
 	SMTEncoder::endVisit(_contract);
@@ -309,10 +344,17 @@ void CHC::endVisit(FunctionDefinition const& _function)
 
 				if (_function.isPublic())
 				{
-					createErrorBlock();
-					connectBlocks(m_currentBlock, error(), sum && (m_error.currentValue() > 0));
+					/*
+					auto assertions = transactionAssertions(&_function);
+					for (auto const* assertion: assertions)
+					{
+						createErrorBlock();
+						connectBlocks(m_currentBlock, error(), sum && (m_error.currentValue() == assertion->id()));
+						m_functionErrors[&_function].push_back({assertion, error()});
+					}
+					*/
+					m_verificationTargets.emplace(&_function, pair<smt::Expression, smt::Expression>{m_currentBlock, sum});
 					connectBlocks(m_currentBlock, iface, sum && (m_error.currentValue() == 0));
-					m_functionErrors.emplace(&_function, error());
 				}
 			}
 		}
@@ -548,7 +590,7 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 	solAssert(args.size() == 1, "");
 	solAssert(args.front()->annotation().type->category() == Type::Category::Bool, "");
 
-	m_verificationTargets.push_back(&_funCall);
+	//m_verificationTargets.insert(&_funCall);
 	solAssert(m_currentContract, "");
 	solAssert(m_currentFunction, "");
 	if (m_currentFunction->isConstructor())
@@ -562,7 +604,7 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 	connectBlocks(
 		m_currentBlock,
 		m_currentFunction->isConstructor() ? summary(*m_currentContract) : summary(*m_currentFunction),
-		currentPathConditions() && !m_context.expression(*args.front())->currentValue() && (m_error.currentValue() == m_verificationTargets.size())
+		currentPathConditions() && !m_context.expression(*args.front())->currentValue() && (m_error.currentValue() == _funCall.id())
 	);
 
 	m_context.addAssertion(m_context.expression(*args.front())->currentValue());
@@ -636,6 +678,7 @@ void CHC::resetContractAnalysis()
 	m_breakDest = nullptr;
 	m_continueDest = nullptr;
 	m_error.resetIndex();
+	m_enabledAssertion.resetIndex();
 }
 
 void CHC::eraseKnowledge()
@@ -660,6 +703,7 @@ void CHC::clearIndices(ContractDefinition const* _contract, FunctionDefinition c
 	}
 
 	m_error.resetIndex();
+	m_enabledAssertion.resetIndex();
 }
 	
 bool CHC::shouldVisit(FunctionDefinition const& _function) const
@@ -1009,7 +1053,7 @@ void CHC::addRule(smt::Expression const& _rule, string const& _ruleName)
 	m_interface->addRule(_rule, _ruleName);
 }
 
-pair<bool, vector<string>> CHC::query(smt::Expression const& _query, langutil::SourceLocation const& _location)
+pair<smt::CheckResult, vector<string>> CHC::query(smt::Expression const& _query, langutil::SourceLocation const& _location)
 {
 	smt::CheckResult result;
 	vector<string> values;
@@ -1019,7 +1063,7 @@ pair<bool, vector<string>> CHC::query(smt::Expression const& _query, langutil::S
 	case smt::CheckResult::SATISFIABLE:
 		break;
 	case smt::CheckResult::UNSATISFIABLE:
-		return {true, values};
+		break;
 	case smt::CheckResult::UNKNOWN:
 		break;
 	case smt::CheckResult::CONFLICTING:
@@ -1029,7 +1073,7 @@ pair<bool, vector<string>> CHC::query(smt::Expression const& _query, langutil::S
 		m_outerErrorReporter.warning(_location, "Error trying to invoke SMT solver.");
 		break;
 	}
-	return {false, values};
+	return {result, values};
 }
 
 string CHC::uniquePrefix()
