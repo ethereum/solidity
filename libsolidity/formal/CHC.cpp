@@ -145,9 +145,17 @@ void CHC::analyze(SourceUnit const& _source)
 				//unsafeAssertions.insert(assertion);
 				m_outerErrorReporter.warning(
 					assertion->location(),
-					"Assertion violation happens here."
+					"Assertion violation happens here"
 				);
 			}
+			else if (
+				result == smt::CheckResult::ERROR ||
+				result == smt::CheckResult::UNKNOWN
+			)
+				m_outerErrorReporter.warning(
+					assertion->location(),
+					"Assertion violation might happen here"
+				);
 		}
 	}
 	/*
