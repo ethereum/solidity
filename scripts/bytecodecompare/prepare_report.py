@@ -6,7 +6,7 @@ import subprocess
 import json
 
 SOLC_BIN = sys.argv[1]
-REPORT_FILE = open("report.txt", "wb")
+REPORT_FILE = open("report.txt", "w")
 
 for optimize in [False, True]:
     for f in sorted(glob.glob("*.sol")):
@@ -26,9 +26,9 @@ for optimize in [False, True]:
         if optimize:
             args += ['--optimize']
         proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (out, err) = proc.communicate(json.dumps(input_json))
+        (out, err) = proc.communicate(json.dumps(input_json).encode('utf-8'))
         try:
-            result = json.loads(out.strip())
+            result = json.loads(out.decode('utf-8').strip())
             for filename in sorted(result['contracts'].keys()):
                 for contractName in sorted(result['contracts'][filename].keys()):
                     contractData = result['contracts'][filename][contractName]
