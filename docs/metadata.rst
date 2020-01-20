@@ -142,7 +142,7 @@ to the end of the deployed bytecode::
     0xa2
     0x64 'i' 'p' 'f' 's' 0x58 0x22 <34 bytes IPFS hash>
     0x64 's' 'o' 'l' 'c' 0x43 <3 byte version encoding>
-    0x00 0x32
+    0x00 0x33
 
 So in order to retrieve the data, the end of the deployed bytecode can be checked
 to match that pattern and use the IPFS hash to retrieve the file.
