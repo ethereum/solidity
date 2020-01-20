@@ -607,7 +607,7 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 		currentPathConditions() && !m_context.expression(*args.front())->currentValue() && (m_error.currentValue() == _funCall.id())
 	);
 
-	m_context.addAssertion(m_context.expression(*args.front())->currentValue());
+	//m_context.addAssertion(m_context.expression(*args.front())->currentValue());
 	m_context.addAssertion(m_error.currentValue() == previousError);
 
 	auto assertEntry = createBlock(&_funCall);
