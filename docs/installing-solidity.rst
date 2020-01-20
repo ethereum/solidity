@@ -174,7 +174,8 @@ Install it using ``brew``:
     # eg. Install 0.4.8
     brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/77cce03da9f289e5a3ffe579840d3c5dc0a62717/solidity.rb
 
-Gentoo Linux also provides a solidity package that can be installed using ``emerge``:
+Gentoo Linux has an `Ethereum overlay <https://overlays.gentoo.org/#ethereum>`_ that contains a solidity package.
+After the overlay is setup, ``solc`` can be installed in x86_64 architectures by:
 
 .. code-block:: bash
 
