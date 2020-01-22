@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(simple_inside_structures)
 	BOOST_CHECK_EQUAL(inlinableFunctions("{"
 		"function g(a:u256) -> b:u256 { b := a }"
 		"for {"
-		"} 1:u256 {"
+		"} true {"
 			"function f() -> x:u256 { x := g(2:u256) }"
 		"}"
 		"{"
