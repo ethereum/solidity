@@ -37,7 +37,7 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul;
 
-shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
+unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
 {
 	m_recursionDepth = 0;
 
@@ -47,7 +47,7 @@ shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	try
 	{
 		m_scanner = _scanner;
-		auto block = make_shared<Block>(parseBlock());
+		auto block = make_unique<Block>(parseBlock());
 		if (!_reuseScanner)
 			expectToken(Token::EOS);
 		return block;

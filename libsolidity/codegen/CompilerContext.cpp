@@ -385,7 +385,7 @@ void CompilerContext::appendInlineAssembly(
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(_assembly, "--CODEGEN--"));
 	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
-	auto parserResult = yul::Parser(errorReporter, dialect).parse(scanner, false);
+	shared_ptr<yul::Block> parserResult = yul::Parser(errorReporter, dialect).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter()(*parserResult) << endl;
 #endif
