@@ -130,9 +130,12 @@ void CompilerUtils::accessCalldataTail(Type const& _type)
 	// returns the absolute offset of the tail in "base_ref"
 	m_context.appendInlineAssembly(Whiskers(R"({
 		let rel_offset_of_tail := calldataload(ptr_to_tail)
-		if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { revert(0, 0) }
+		if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { <revertString> }
 		base_ref := add(base_ref, rel_offset_of_tail)
-	})")("neededLength", toCompactHexWithPrefix(tailSize)).render(), {"base_ref", "ptr_to_tail"});
+	})")
+	("neededLength", toCompactHexWithPrefix(tailSize))
+	("revertString", m_context.revertReasonIfDebug("Invalid calldata tail offset"))
+	.render(), {"base_ref", "ptr_to_tail"});
 	// stack layout: <absolute_offset_of_tail> <garbage>
 
 	if (!_type.isDynamicallySized())
@@ -158,9 +161,12 @@ void CompilerUtils::accessCalldataTail(Type const& _type)
 			Whiskers(R"({
 				length := calldataload(base_ref)
 				base_ref := add(base_ref, 0x20)
-				if gt(length, 0xffffffffffffffff) { revert(0, 0) }
+				if gt(length, 0xffffffffffffffff) { <revertString> }
 				if sgt(base_ref, sub(calldatasize(), mul(length, <calldataStride>))) { revert(0, 0) }
-			})")("calldataStride", toCompactHexWithPrefix(calldataStride)).render(),
+			})")
+			("calldataStride", toCompactHexWithPrefix(calldataStride))
+			("revertString", m_context.revertReasonIfDebug("Invalid calldata tail length"))
+			.render(),
 			{"base_ref", "length"}
 		);
 		// stack layout: <absolute_offset_of_tail> <length>
@@ -277,7 +283,13 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 	size_t encodedSize = 0;
 	for (auto const& t: _typeParameters)
 		encodedSize += t->decodingType()->calldataHeadSize();
-	m_context.appendInlineAssembly("{ if lt(len, " + to_string(encodedSize) + ") { revert(0, 0) } }", {"len"});
+
+	Whiskers templ(R"({
+		if lt(len, <encodedSize>) { <revertString> }
+	})");
+	templ("encodedSize", to_string(encodedSize));
+	templ("revertString", m_context.revertReasonIfDebug("Calldata too short"));
+	m_context.appendInlineAssembly(templ.render(), {"len"});
 
 	m_context << Instruction::DUP2 << Instruction::ADD;
 	m_context << Instruction::SWAP1;
@@ -319,19 +331,23 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 					// Check that the data pointer is valid and that length times
 					// item size is still inside the range.
 					Whiskers templ(R"({
-						if gt(ptr, 0x100000000) { revert(0, 0) }
+						if gt(ptr, 0x100000000) { <revertStringPointer> }
 						ptr := add(ptr, base_offset)
 						let array_data_start := add(ptr, 0x20)
-						if gt(array_data_start, input_end) { revert(0, 0) }
+						if gt(array_data_start, input_end) { <revertStringStart> }
 						let array_length := mload(ptr)
 						if or(
 							gt(array_length, 0x100000000),
 							gt(add(array_data_start, mul(array_length, <item_size>)), input_end)
-						) { revert(0, 0) }
+						) { <revertStringLength> }
 						mstore(dst, array_length)
 						dst := add(dst, 0x20)
 					})");
 					templ("item_size", to_string(arrayType.calldataStride()));
+					// TODO add test
+					templ("revertStringPointer", m_context.revertReasonIfDebug("ABI memory decoding: invalid data pointer"));
+					templ("revertStringStart", m_context.revertReasonIfDebug("ABI memory decoding: invalid data start"));
+					templ("revertStringLength", m_context.revertReasonIfDebug("ABI memory decoding: invalid data length"));
 					m_context.appendInlineAssembly(templ.render(), {"input_end", "base_offset", "offset", "ptr", "dst"});
 					// stack: v1 v2 ... v(k-1) dstmem input_end base_offset current_offset data_ptr dstdata
 					m_context << Instruction::SWAP1;
@@ -359,24 +375,33 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 					loadFromMemoryDynamic(*TypeProvider::uint256(), !_fromMemory);
 					m_context << Instruction::SWAP1;
 					// stack: input_end base_offset next_pointer data_offset
-					m_context.appendInlineAssembly("{ if gt(data_offset, 0x100000000) { revert(0, 0) } }", {"data_offset"});
+					m_context.appendInlineAssembly(Whiskers(R"({
+						if gt(data_offset, 0x100000000) { <revertString> }
+					})")
+					// TODO add test
+					("revertString", m_context.revertReasonIfDebug("ABI calldata decoding: invalid data offset"))
+					.render(), {"data_offset"});
 					m_context << Instruction::DUP3 << Instruction::ADD;
 					// stack: input_end base_offset next_pointer array_head_ptr
-					m_context.appendInlineAssembly(
-						"{ if gt(add(array_head_ptr, 0x20), input_end) { revert(0, 0) } }",
-						{"input_end", "base_offset", "next_ptr", "array_head_ptr"}
-					);
+					m_context.appendInlineAssembly(Whiskers(R"({
+						if gt(add(array_head_ptr, 0x20), input_end) { <revertString> }
+					})")
+					("revertString", m_context.revertReasonIfDebug("ABI calldata decoding: invalid head pointer"))
+					.render(), {"input_end", "base_offset", "next_ptr", "array_head_ptr"});
+
 					// retrieve length
 					loadFromMemoryDynamic(*TypeProvider::uint256(), !_fromMemory, true);
 					// stack: input_end base_offset next_pointer array_length data_pointer
 					m_context << Instruction::SWAP2;
 					// stack: input_end base_offset data_pointer array_length next_pointer
-					m_context.appendInlineAssembly(R"({
+					m_context.appendInlineAssembly(Whiskers(R"({
 						if or(
 							gt(array_length, 0x100000000),
 							gt(add(data_ptr, mul(array_length, )" + to_string(arrayType.calldataStride()) + R"()), input_end)
-						) { revert(0, 0) }
-					})", {"input_end", "base_offset", "data_ptr", "array_length", "next_ptr"});
+						) { <revertString> }
+					})")
+					("revertString", m_context.revertReasonIfDebug("ABI calldata decoding: invalid data pointer"))
+					.render(), {"input_end", "base_offset", "data_ptr", "array_length", "next_ptr"});
 				}
 				else
 				{
@@ -792,8 +817,7 @@ void CompilerUtils::convertType(
 			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
 			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
 			if (_asPartOfArgumentDecoding)
-				// TODO: error message?
-				m_context.appendConditionalRevert();
+				m_context.appendConditionalRevert(false, "Enum out of range");
 			else
 				m_context.appendConditionalInvalid();
 			enumOverflowCheckPending = false;

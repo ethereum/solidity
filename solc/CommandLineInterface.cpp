@@ -875,9 +875,9 @@ Allowed options)",
 			serr() << "Invalid option for --" << g_strRevertStrings << ": " << revertStringsString << endl;
 			return false;
 		}
-		if (*revertStrings != RevertStrings::Default && *revertStrings != RevertStrings::Strip)
+		if (*revertStrings == RevertStrings::VerboseDebug)
 		{
-			serr() << "Only \"default\" and \"strip\" are implemented for --" << g_strRevertStrings << " for now." << endl;
+			serr() << "Only \"default\", \"strip\" and \"debug\" are implemented for --" << g_strRevertStrings << " for now." << endl;
 			return false;
 		}
 		m_revertStrings = *revertStrings;

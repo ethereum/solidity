@@ -37,11 +37,15 @@ class SourceUnit;
 class IRGenerator
 {
 public:
-	IRGenerator(langutil::EVMVersion _evmVersion, OptimiserSettings _optimiserSettings):
+	IRGenerator(
+		langutil::EVMVersion _evmVersion,
+		RevertStrings _revertStrings,
+		OptimiserSettings _optimiserSettings
+	):
 		m_evmVersion(_evmVersion),
 		m_optimiserSettings(_optimiserSettings),
-		m_context(_evmVersion, std::move(_optimiserSettings)),
-		m_utils(_evmVersion, m_context.functionCollector())
+		m_context(_evmVersion, _revertStrings, std::move(_optimiserSettings)),
+		m_utils(_evmVersion, m_context.revertStrings(), m_context.functionCollector())
 	{}
 
 	/// Generates and returns the IR code, in unoptimized and optimized form

@@ -333,7 +333,7 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		templ["assignToParams"] = paramVars == 0 ? "" : "let " + suffixedVariableNameList("param_", 0, paramVars) + " := ";
 		templ["assignToRetParams"] = retVars == 0 ? "" : "let " + suffixedVariableNameList("ret_", 0, retVars) + " := ";
 
-		ABIFunctions abiFunctions(m_evmVersion, m_context.functionCollector());
+		ABIFunctions abiFunctions(m_evmVersion, m_context.revertStrings(), m_context.functionCollector());
 		templ["abiDecode"] = abiFunctions.tupleDecoder(type->parameterTypes());
 		templ["params"] = suffixedVariableNameList("param_", 0, paramVars);
 		templ["retParams"] = suffixedVariableNameList("ret_", retVars, 0);
@@ -386,8 +386,8 @@ void IRGenerator::resetContext(ContractDefinition const& _contract)
 		m_context.functionCollector()->requestedFunctions().empty(),
 		"Reset context while it still had functions."
 	);
-	m_context = IRGenerationContext(m_evmVersion, m_optimiserSettings);
-	m_utils = YulUtilFunctions(m_evmVersion, m_context.functionCollector());
+	m_context = IRGenerationContext(m_evmVersion, m_context.revertStrings(), m_optimiserSettings);
+	m_utils = YulUtilFunctions(m_evmVersion, m_context.revertStrings(), m_context.functionCollector());
 
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	for (auto const& var: ContractType(_contract).stateVariables())

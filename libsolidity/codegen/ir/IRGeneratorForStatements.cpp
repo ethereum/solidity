@@ -534,7 +534,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	{
 		auto const& event = dynamic_cast<EventDefinition const&>(functionType->declaration());
 		TypePointers paramTypes = functionType->parameterTypes();
-		ABIFunctions abi(m_context.evmVersion(), m_context.functionCollector());
+		ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
 
 		vector<string> indexedArgs;
 		string nonIndexedArgs;
@@ -1151,7 +1151,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 			m_code << "mstore(add(" << fetchFreeMem() << ", " << to_string(retSize) << "), 0)\n";
 	}
 
-	ABIFunctions abi(m_context.evmVersion(), m_context.functionCollector());
+	ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
 
 	solUnimplementedAssert(!funType.isBareCall(), "");
 	Whiskers templ(R"(

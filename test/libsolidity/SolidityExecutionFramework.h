@@ -27,6 +27,7 @@
 #include <test/ExecutionFramework.h>
 
 #include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/DebugSettings.h>
 
 #include <libyul/AssemblyStack.h>
 
@@ -67,6 +68,8 @@ public:
 protected:
 	solidity::frontend::CompilerStack m_compiler;
 	bool m_compileViaYul = false;
+	RevertStrings m_revertStrings = RevertStrings::Default;
+
 };
 
 } // end namespaces

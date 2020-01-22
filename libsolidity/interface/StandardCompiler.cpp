@@ -661,10 +661,10 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 			std::optional<RevertStrings> revertStrings = revertStringsFromString(settings["debug"]["revertStrings"].asString());
 			if (!revertStrings)
 				return formatFatalError("JSONError", "Invalid value for settings.debug.revertStrings.");
-			if (*revertStrings != RevertStrings::Default && *revertStrings != RevertStrings::Strip)
+			if (*revertStrings == RevertStrings::VerboseDebug)
 				return formatFatalError(
 					"UnimplementedFeatureError",
-					"Only \"default\" and \"strip\" are implemented for settings.debug.revertStrings for now."
+					"Only \"default\", \"strip\" and \"debug\" are implemented for settings.debug.revertStrings for now."
 				);
 			ret.revertStrings = *revertStrings;
 		}

@@ -165,7 +165,7 @@ void CompilerStack::setRevertStringBehaviour(RevertStrings _revertStrings)
 {
 	if (m_stackState >= ParsingPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set revert string settings before parsing."));
-	solUnimplementedAssert(_revertStrings == RevertStrings::Default || _revertStrings == RevertStrings::Strip, "");
+	solUnimplementedAssert(_revertStrings != RevertStrings::VerboseDebug, "");
 	m_revertStrings = _revertStrings;
 }
 
@@ -1112,7 +1112,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		generateIR(*dependency);
 
-	IRGenerator generator(m_evmVersion, m_optimiserSettings);
+	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings);
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract);
 }
 

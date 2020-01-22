@@ -70,6 +70,16 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 		}
 		m_settings.erase("ABIEncoderV1Only");
 	}
+
+	if (m_settings.count("revertStrings"))
+	{
+		auto revertStrings = revertStringsFromString(m_settings["revertStrings"]);
+		if (revertStrings)
+			m_revertStrings = *revertStrings;
+		m_validatedSettings["revertStrings"] = revertStringsToString(m_revertStrings);
+		m_settings.erase("revertStrings");
+	}
+
 	parseExpectations(file);
 	soltestAssert(!m_tests.empty(), "No tests specified in " + _filename);
 }

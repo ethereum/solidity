@@ -133,7 +133,7 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 		)");
 		templ("functionName", funName);
 		templ("comma", _in > 0 ? "," : "");
-		YulUtilFunctions utils(m_evmVersion, m_functions);
+		YulUtilFunctions utils(m_evmVersion, m_revertStrings, m_functions);
 		templ("in", suffixedVariableNameList("in_", 0, _in));
 		templ("arrow", _out > 0 ? "->" : "");
 		templ("out", suffixedVariableNameList("out_", 0, _out));
@@ -161,5 +161,10 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 
 YulUtilFunctions IRGenerationContext::utils()
 {
-	return YulUtilFunctions(m_evmVersion, m_functions);
+	return YulUtilFunctions(m_evmVersion, m_revertStrings, m_functions);
+}
+
+std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message)
+{
+	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
 }
