@@ -25,7 +25,6 @@
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmData.h>
 #include <libyul/AsmParser.h>
 #include <libyul/YulString.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -56,7 +55,7 @@ set<YulString> const Program::s_externallyUsedIdentifiers = {};
 Program Program::load(string const& _sourcePath)
 {
 	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
-	shared_ptr<Block> ast = parseSource(dialect, loadSource(_sourcePath));
+	unique_ptr<Block> ast = parseSource(dialect, loadSource(_sourcePath));
 	unique_ptr<AsmAnalysisInfo> analysisInfo = analyzeAST(dialect, *ast);
 
 	Program program(
@@ -85,14 +84,14 @@ CharStream Program::loadSource(string const& _sourcePath)
 	return CharStream(sourceCode, _sourcePath);
 }
 
-shared_ptr<Block> Program::parseSource(Dialect const& _dialect, CharStream _source)
+unique_ptr<Block> Program::parseSource(Dialect const& _dialect, CharStream _source)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(move(_source));
 	Parser parser(errorReporter, _dialect);
 
-	shared_ptr<Block> ast = parser.parse(scanner, false);
+	unique_ptr<Block> ast = parser.parse(scanner, false);
 	assertThrow(ast != nullptr, InvalidProgram, "Error parsing source");
 	assert(errorReporter.errors().empty());
 

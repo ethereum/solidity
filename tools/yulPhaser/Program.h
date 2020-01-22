@@ -19,6 +19,7 @@
 
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/NameDispenser.h>
+#include <libyul/AsmData.h>
 
 #include <optional>
 #include <set>
@@ -36,7 +37,6 @@ namespace solidity::yul
 {
 
 struct AsmAnalysisInfo;
-struct Block;
 struct Dialect;
 class YulString;
 
@@ -66,15 +66,15 @@ public:
 private:
 	Program(
 		yul::Dialect const& _dialect,
-		std::shared_ptr<yul::Block> _ast
+		std::unique_ptr<yul::Block> _ast
 	):
-		m_ast(_ast),
-		m_nameDispenser(_dialect, *_ast, s_externallyUsedIdentifiers),
+		m_ast(std::move(_ast)),
+		m_nameDispenser(_dialect, *m_ast, s_externallyUsedIdentifiers),
 		m_optimiserStepContext{_dialect, m_nameDispenser, s_externallyUsedIdentifiers}
 	{}
 
 	static langutil::CharStream loadSource(std::string const& _sourcePath);
-	static std::shared_ptr<yul::Block> parseSource(
+	static std::unique_ptr<yul::Block> parseSource(
 		yul::Dialect const& _dialect,
 		langutil::CharStream _source
 	);
@@ -94,7 +94,7 @@ private:
 	);
 	static size_t computeCodeSize(yul::Block const& _ast);
 
-	std::shared_ptr<yul::Block> m_ast;
+	std::unique_ptr<yul::Block> m_ast;
 	yul::NameDispenser m_nameDispenser;
 	yul::OptimiserStepContext m_optimiserStepContext;
 
