@@ -188,8 +188,10 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 	clearIndices(&_contract);
 
+	/*
 	if (_contract.contractKind() == ContractDefinition::ContractKind::Contract)
 	{
+	*/
 		string suffix = _contract.name() + "_" + to_string(_contract.id());
 		m_interfacePredicate = createSymbolicBlock(interfaceSort(), "interface_" + suffix);
 
@@ -205,7 +207,9 @@ bool CHC::visit(ContractDefinition const& _contract)
 		m_implicitConstructorPredicate = createSymbolicBlock(interfaceSort(), "implicit_constructor_" + suffix);
 		auto stateExprs = currentStateVariables();
 		setCurrentBlock(*m_interfacePredicate, &stateExprs);
+	/*
 	}
+	*/
 
 	SMTEncoder::visit(_contract);
 	return false;
@@ -213,11 +217,13 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 void CHC::endVisit(ContractDefinition const& _contract)
 {
+	/*
 	if (_contract.contractKind() != ContractDefinition::ContractKind::Contract)
 	{
 		SMTEncoder::endVisit(_contract);
 		return;
 	}
+	*/
 
 	for (auto const& var: m_stateVariables)
 	{
@@ -343,8 +349,10 @@ void CHC::endVisit(FunctionDefinition const& _function)
 			auto sum = summary(_function);
 			connectBlocks(m_currentBlock, sum);
 
+			/*
 			if (m_currentContract->contractKind() == ContractDefinition::ContractKind::Contract)
 			{
+			*/
 				auto iface = interface();
 
 				auto stateExprs = initialStateVariables();
@@ -364,7 +372,9 @@ void CHC::endVisit(FunctionDefinition const& _function)
 					m_verificationTargets.emplace(&_function, pair<smt::Expression, smt::Expression>{m_currentBlock, sum});
 					connectBlocks(m_currentBlock, iface, sum && (m_error.currentValue() == 0));
 				}
+			/*
 			}
+			*/
 		}
 		m_currentFunction = nullptr;
 	}
