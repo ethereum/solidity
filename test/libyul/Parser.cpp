@@ -247,11 +247,8 @@ BOOST_AUTO_TEST_CASE(optional_types)
 
 BOOST_AUTO_TEST_CASE(invalid_types)
 {
-	/// testing invalid literal
-	/// NOTE: these will need to change when types are compared
-	CHECK_ERROR("{ let x:bool := 1:invalid }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
-	/// testing invalid variable declaration
-	CHECK_ERROR("{ let x:invalid := 1:bool }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
+	CHECK_ERROR("{ let x:invalid }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
+	CHECK_ERROR("{ let x:invalid := 1:invalid }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
 	CHECK_ERROR("{ function f(a:invalid) {} }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
 }
 
@@ -267,16 +264,16 @@ BOOST_AUTO_TEST_CASE(number_literals)
 BOOST_AUTO_TEST_CASE(builtin_types)
 {
 	BOOST_CHECK(successParse("{ let x:bool := true:bool }"));
-	BOOST_CHECK(successParse("{ let x:u8 := 1:u8 }"));
-	BOOST_CHECK(successParse("{ let x:s8 := 1:u8 }"));
-	BOOST_CHECK(successParse("{ let x:u32 := 1:u32 }"));
-	BOOST_CHECK(successParse("{ let x:s32 := 1:s32 }"));
-	BOOST_CHECK(successParse("{ let x:u64 := 1:u64 }"));
-	BOOST_CHECK(successParse("{ let x:s64 := 1:s64 }"));
-	BOOST_CHECK(successParse("{ let x:u128 := 1:u128 }"));
-	BOOST_CHECK(successParse("{ let x:s128 := 1:s128 }"));
-	BOOST_CHECK(successParse("{ let x:u256 := 1:u256 }"));
-	BOOST_CHECK(successParse("{ let x:s256 := 1:s256 }"));
+	CHECK_ERROR("{ let x:u8 := 1:u8 }", ParserError, "is not a valid type");
+	CHECK_ERROR("{ let x:s8 := 1:s8 }", ParserError, "is not a valid type");
+	CHECK_ERROR("{ let x:u32 := 1:u32 }", ParserError, "is not a valid type");
+	CHECK_ERROR("{ let x:s32 := 1:s32 }", ParserError, "is not a valid type");
+	CHECK_ERROR("{ let x:u64 := 1:u64 }", ParserError, "is not a valid type");
+	CHECK_ERROR("{ let x:s64 := 1:s64 }", ParserError, "is not a valid type");
+	CHECK_ERROR("{ let x:u128 := 1:u128 }", ParserError, "is not a valid type");
+	CHECK_ERROR("{ let x:s128 := 1:s128 }", ParserError, "is not a valid type");
+	CHECK_ERROR("{ let x:s256 := 1:s256 }", ParserError, "is not a valid type");
+	BOOST_CHECK("{ let x:s256 := 1:s256 }");
 }
 
 BOOST_AUTO_TEST_CASE(recursion_depth)
@@ -501,7 +498,7 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 
 BOOST_AUTO_TEST_CASE(switch_case_types)
 {
-	CHECK_ERROR("{ switch 0:u256 case 0:u256 {} case 1:u32 {} }", TypeError, "Switch cases have non-matching types.");
+	CHECK_ERROR("{ switch 0:u256 case 0:u256 {} case 1:u32 {} }", TypeError, "Expected a value of \"u256\" but got \"u32\".");
 	// The following should be an error in the future, but this is not yet detected.
 	BOOST_CHECK(successParse("{ switch 0:u256 case 0:u32 {} case 1:u32 {} }"));
 }
