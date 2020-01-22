@@ -18,13 +18,20 @@
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/Population.h>
 
+#include <libsolutil/Assertions.h>
+#include <libsolutil/CommonIO.h>
+#include <liblangutil/CharStream.h>
+
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <iostream>
 #include <string>
 
 using namespace std;
+using namespace solidity::langutil;
 using namespace solidity::phaser;
+using namespace solidity::util;
 
 namespace po = boost::program_options;
 
@@ -37,9 +44,17 @@ struct CommandLineParsingResult
 	po::variables_map arguments;
 };
 
+CharStream loadSource(string const& _sourcePath)
+{
+	assertThrow(boost::filesystem::exists(_sourcePath), InvalidProgram, "Source file does not exist");
+
+	string sourceCode = readFileAsString(_sourcePath);
+	return CharStream(sourceCode, _sourcePath);
+}
+
 void runAlgorithm(string const& _sourcePath)
 {
-	auto population = Population::makeRandom(_sourcePath, 10);
+	auto population = Population::makeRandom(loadSource(_sourcePath), 10);
 	population.run(nullopt, cout);
 }
 

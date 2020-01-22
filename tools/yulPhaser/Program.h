@@ -65,7 +65,7 @@ public:
 	{}
 	Program operator=(Program&& program) = delete;
 
-	static Program load(std::string const& _sourcePath);
+	static Program load(langutil::CharStream& _sourceCode);
 	void optimise(std::vector<std::string> const& _optimisationSteps);
 
 	size_t codeSize() const { return computeCodeSize(*m_ast); }
@@ -84,7 +84,6 @@ private:
 		m_nameDispenser(_dialect, *m_ast, {})
 	{}
 
-	static langutil::CharStream loadSource(std::string const& _sourcePath);
 	static std::unique_ptr<yul::Block> parseSource(
 		yul::Dialect const& _dialect,
 		langutil::CharStream _source

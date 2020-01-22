@@ -38,10 +38,7 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/Suite.h>
 
-#include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
-
-#include <boost/filesystem.hpp>
 
 #include <cassert>
 #include <memory>
@@ -60,10 +57,11 @@ ostream& operator<<(ostream& _stream, Program const& _program);
 
 }
 
-Program Program::load(string const& _sourcePath)
+Program Program::load(CharStream& _sourceCode)
 {
+	// ASSUMPTION: parseSource() rewinds the stream on its own
 	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
-	unique_ptr<Block> ast = parseSource(dialect, loadSource(_sourcePath));
+	unique_ptr<Block> ast = parseSource(dialect, _sourceCode);
 	unique_ptr<AsmAnalysisInfo> analysisInfo = analyzeAST(dialect, *ast);
 
 	Program program(
@@ -93,14 +91,6 @@ string Program::toJson() const
 {
 	Json::Value serializedAst = AsmJsonConverter(0)(*m_ast);
 	return jsonPrettyPrint(serializedAst);
-}
-
-CharStream Program::loadSource(string const& _sourcePath)
-{
-	assertThrow(boost::filesystem::exists(_sourcePath), InvalidProgram, "Source file does not exist");
-
-	string sourceCode = readFileAsString(_sourcePath);
-	return CharStream(sourceCode, _sourcePath);
 }
 
 unique_ptr<Block> Program::parseSource(Dialect const& _dialect, CharStream _source)

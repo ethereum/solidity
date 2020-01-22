@@ -26,6 +26,7 @@
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::langutil;
 using namespace solidity::phaser;
 
 namespace solidity::phaser
@@ -48,25 +49,25 @@ ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 	return _stream;
 }
 
-Population::Population(string const& _sourcePath, vector<Chromosome> const& _chromosomes):
-	m_sourcePath{_sourcePath}
+Population::Population(CharStream _sourceCode, vector<Chromosome> const& _chromosomes):
+	m_sourceCode{move(_sourceCode)}
 {
 	for (auto const& chromosome: _chromosomes)
 		m_individuals.push_back({chromosome});
 }
 
-Population Population::makeRandom(string const& _sourcePath, size_t _size)
+Population Population::makeRandom(CharStream _sourceCode, size_t _size)
 {
 	vector<Individual> individuals;
 	for (size_t i = 0; i < _size; ++i)
 		individuals.push_back({Chromosome::makeRandom(randomChromosomeLength())});
 
-	return Population(_sourcePath, individuals);
+	return Population(move(_sourceCode), individuals);
 }
 
-size_t Population::measureFitness(Chromosome const& _chromosome, string const& _sourcePath)
+size_t Population::measureFitness(Chromosome const& _chromosome, CharStream& _sourceCode)
 {
-	auto program = Program::load(_sourcePath);
+	auto program = Program::load(_sourceCode);
 	program.optimise(_chromosome.optimisationSteps());
 	return program.codeSize();
 }
@@ -87,7 +88,7 @@ void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 
 ostream& phaser::operator<<(ostream& _stream, Population const& _population)
 {
-	_stream << "Source: " << _population.m_sourcePath << endl;
+	_stream << "Stream name: " << _population.m_sourceCode.name() << endl;
 
 	auto individual = _population.m_individuals.begin();
 	for (; individual != _population.m_individuals.end(); ++individual)
@@ -105,7 +106,7 @@ void Population::doEvaluation()
 {
 	for (auto& individual: m_individuals)
 		if (!individual.fitness.has_value())
-			individual.fitness = measureFitness(individual.chromosome, m_sourcePath);
+			individual.fitness = measureFitness(individual.chromosome, m_sourceCode);
 }
 
 void Population::doSelection()

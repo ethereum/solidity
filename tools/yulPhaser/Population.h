@@ -20,6 +20,8 @@
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Random.h>
 
+#include <liblangutil/CharStream.h>
+
 #include <optional>
 #include <ostream>
 #include <vector>
@@ -53,21 +55,21 @@ class Population
 public:
 	static constexpr size_t MaxChromosomeLength = 30;
 
-	explicit Population(std::string const& _sourcePath, std::vector<Chromosome> const& _chromosomes = {});
-	static Population makeRandom(std::string const& _sourcePath, size_t _size);
+	explicit Population(langutil::CharStream _sourceCode, std::vector<Chromosome> const& _chromosomes = {});
+	static Population makeRandom(langutil::CharStream _sourceCode, size_t _size);
 
 	void run(std::optional<size_t> _numRounds, std::ostream& _outputStream);
 
 	std::vector<Individual> const& individuals() const { return m_individuals; }
 
 	static size_t randomChromosomeLength() { return binomialRandomInt(MaxChromosomeLength, 0.5); }
-	static size_t measureFitness(Chromosome const& _chromosome, std::string const& _sourcePath);
+	static size_t measureFitness(Chromosome const& _chromosome, langutil::CharStream& _sourceCode);
 
 	friend std::ostream& operator<<(std::ostream& _stream, Population const& _population);
 
 private:
-	explicit Population(std::string const& _sourcePath, std::vector<Individual> _individuals = {}):
-		m_sourcePath{_sourcePath},
+	explicit Population(langutil::CharStream _sourceCode, std::vector<Individual> _individuals = {}):
+		m_sourceCode{std::move(_sourceCode)},
 		m_individuals{std::move(_individuals)} {}
 
 	void doMutation();
@@ -79,7 +81,7 @@ private:
 		size_t _count
 	);
 
-	std::string m_sourcePath;
+	langutil::CharStream m_sourceCode;
 
 	std::vector<Individual> m_individuals;
 };
