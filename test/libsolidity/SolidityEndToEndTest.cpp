@@ -10179,7 +10179,7 @@ BOOST_AUTO_TEST_CASE(create_dynamic_array_with_zero_length)
 
 BOOST_AUTO_TEST_CASE(correctly_initialize_memory_array_in_constructor)
 {
-	// Memory arrays are initialized using codecopy past the size of the code.
+	// Memory arrays are initialized using calldatacopy past the size of the calldata.
 	// This test checks that it also works in the constructor context.
 	char const* sourceCode = R"(
 		contract C {

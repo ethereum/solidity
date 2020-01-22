@@ -605,7 +605,7 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 		Whiskers templ(R"({
 			let size := mul(length, <element_size>)
 			// cheap way of zero-initializing a memory range
-			codecopy(memptr, codesize(), size)
+			calldatacopy(memptr, calldatasize(), size)
 			memptr := add(memptr, size)
 		})");
 		templ("element_size", to_string(_type.memoryStride()));
