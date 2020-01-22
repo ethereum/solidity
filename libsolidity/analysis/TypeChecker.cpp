@@ -2224,6 +2224,124 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	return false;
 }
 
+bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
+{
+	solAssert(_functionCallOptions.options().size() == _functionCallOptions.names().size(), "Lengths of name & value arrays differ!");
+
+	_functionCallOptions.expression().accept(*this);
+
+	auto expressionFunctionType = dynamic_cast<FunctionType const*>(type(_functionCallOptions.expression()));
+	if (!expressionFunctionType)
+	{
+		m_errorReporter.fatalTypeError(_functionCallOptions.location(), "Expected callable expression before call options.");
+		return false;
+	}
+
+	bool setSalt = false;
+	bool setValue = false;
+	bool setGas = false;
+
+	FunctionType::Kind kind = expressionFunctionType->kind();
+	if (
+		kind != FunctionType::Kind::Creation &&
+		kind != FunctionType::Kind::External &&
+		kind != FunctionType::Kind::BareCall &&
+		kind != FunctionType::Kind::BareCallCode &&
+		kind != FunctionType::Kind::BareDelegateCall &&
+		kind != FunctionType::Kind::BareStaticCall
+	)
+	{
+		m_errorReporter.fatalTypeError(
+			_functionCallOptions.location(),
+			"Function call options can only be set on external function calls or contract creations."
+		);
+		return false;
+	}
+
+	auto setCheckOption = [&](bool& _option, string const&& _name, bool _alreadySet = false)
+	{
+		if (_option || _alreadySet)
+			m_errorReporter.typeError(
+				_functionCallOptions.location(),
+				_alreadySet ?
+				"Option \"" + std::move(_name) + "\" has already been set." :
+				"Duplicate option \"" + std::move(_name) + "\"."
+			);
+
+		_option = true;
+	};
+
+	for (size_t i = 0; i < _functionCallOptions.names().size(); ++i)
+	{
+		string const& name = *(_functionCallOptions.names()[i]);
+		if (name == "salt")
+		{
+			if (kind == FunctionType::Kind::Creation)
+			{
+				setCheckOption(setSalt, "salt", expressionFunctionType->saltSet());
+				expectType(*_functionCallOptions.options()[i], *TypeProvider::fixedBytes(32));
+			}
+			else
+				m_errorReporter.typeError(
+					_functionCallOptions.location(),
+					"Function call option \"salt\" can only be used with \"new\"."
+				);
+		}
+		else if (name == "value")
+		{
+			if (kind == FunctionType::Kind::BareDelegateCall)
+				m_errorReporter.typeError(
+					_functionCallOptions.location(),
+					"Cannot set option \"value\" for delegatecall."
+				);
+			else if (kind == FunctionType::Kind::BareStaticCall)
+				m_errorReporter.typeError(
+					_functionCallOptions.location(),
+					"Cannot set option \"value\" for staticcall."
+				);
+			else if (!expressionFunctionType->isPayable())
+				m_errorReporter.typeError(
+					_functionCallOptions.location(),
+					"Cannot set option \"value\" on a non-payable function type."
+				);
+			else
+			{
+				expectType(*_functionCallOptions.options()[i], *TypeProvider::uint256());
+
+				setCheckOption(setValue, "value", expressionFunctionType->valueSet());
+			}
+		}
+		else if (name == "gas")
+		{
+			if (kind == FunctionType::Kind::Creation)
+				m_errorReporter.typeError(
+					_functionCallOptions.location(),
+					"Function call option \"gas\" cannot be used with \"new\"."
+				);
+			else
+			{
+				expectType(*_functionCallOptions.options()[i], *TypeProvider::uint256());
+
+				setCheckOption(setGas, "gas", expressionFunctionType->gasSet());
+			}
+		}
+		else
+			m_errorReporter.typeError(
+				_functionCallOptions.location(),
+				"Unknown call option \"" + name + "\". Valid options are \"salt\", \"value\" and \"gas\"."
+			);
+	}
+
+	if (setSalt && !m_evmVersion.hasCreate2())
+		m_errorReporter.typeError(
+			_functionCallOptions.location(),
+			"Unsupported call option \"salt\" (requires Constantinople-compatible VMs)."
+		);
+
+	_functionCallOptions.annotation().type = expressionFunctionType->copyAndSetCallOptions(setGas, setValue, setSalt);
+	return false;
+}
+
 void TypeChecker::endVisit(NewExpression const& _newExpression)
 {
 	TypePointer type = _newExpression.typeName().annotation().type;

@@ -724,6 +724,23 @@ bool ASTJsonConverter::visit(FunctionCall const& _node)
 	return false;
 }
 
+bool ASTJsonConverter::visit(FunctionCallOptions const& _node)
+{
+	Json::Value names(Json::arrayValue);
+	for (auto const& name: _node.names())
+		names.append(Json::Value(*name));
+
+	std::vector<pair<string, Json::Value>> attributes = {
+		make_pair("expression", toJson(_node.expression())),
+		make_pair("names", std::move(names)),
+		make_pair("options", toJson(_node.options())),
+	};
+	appendExpressionAttributes(attributes, _node.annotation());
+
+	setJsonNode(_node, "FunctionCallOptions", std::move(attributes));
+	return false;
+}
+
 bool ASTJsonConverter::visit(NewExpression const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {

@@ -111,6 +111,7 @@ public:
 	bool visit(UnaryOperation const& _node) override;
 	bool visit(BinaryOperation const& _node) override;
 	bool visit(FunctionCall const& _node) override;
+	bool visit(FunctionCallOptions const& _node) override;
 	bool visit(NewExpression const& _node) override;
 	bool visit(MemberAccess const& _node) override;
 	bool visit(IndexAccess const& _node) override;

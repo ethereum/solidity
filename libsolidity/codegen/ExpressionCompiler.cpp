@@ -620,6 +620,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::Creation:
 		{
 			_functionCall.expression().accept(*this);
+			// Stack: [salt], [value]
+
 			solAssert(!function.gasSet(), "Gas limit set for contract creation.");
 			solAssert(function.returnParameterTypes().size() == 1, "");
 			TypePointers argumentTypes;
@@ -633,16 +635,37 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().fetchFreeMemoryPointer();
 			utils().copyContractCodeToMemory(*contract, true);
 			utils().abiEncode(argumentTypes, function.parameterTypes());
-			// now on stack: memory_end_ptr
-			// need: size, offset, endowment
+			// now on stack: [salt], [value], memory_end_ptr
+			// need: [salt], size, offset, value
+
+			if (function.saltSet())
+			{
+				m_context << dupInstruction(2 + (function.valueSet() ? 1 : 0));
+				m_context << Instruction::SWAP1;
+			}
+
+			// now: [salt], [value], [salt], memory_end_ptr
 			utils().toSizeAfterFreeMemoryPointer();
+
+			// now: [salt], [value], [salt], size, offset
 			if (function.valueSet())
-				m_context << dupInstruction(3);
+				m_context << dupInstruction(3 + (function.saltSet() ? 1 : 0));
 			else
 				m_context << u256(0);
-			m_context << Instruction::CREATE;
+
+			// now: [salt], [value], [salt], size, offset, value
+			if (function.saltSet())
+				m_context << Instruction::CREATE2;
+			else
+				m_context << Instruction::CREATE;
+
+			// now: [salt], [value], address
+
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
+			if (function.saltSet())
+				m_context << swapInstruction(1) << Instruction::POP;
+
 			// Check if zero (reverted)
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
 			if (_functionCall.annotation().tryCall)
@@ -1189,6 +1212,49 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		}
 	}
+	return false;
+}
+
+bool ExpressionCompiler::visit(FunctionCallOptions const& _functionCallOptions)
+{
+	_functionCallOptions.expression().accept(*this);
+
+	// Desired Stack: [salt], [gas], [value]
+	enum Option { Salt, Gas, Value };
+
+	vector<Option> presentOptions;
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(
+		*_functionCallOptions.expression().annotation().type
+	);
+	if (funType.saltSet()) presentOptions.emplace_back(Salt);
+	if (funType.gasSet()) presentOptions.emplace_back(Gas);
+	if (funType.valueSet()) presentOptions.emplace_back(Value);
+
+	for (size_t i = 0; i < _functionCallOptions.options().size(); ++i)
+	{
+		string const& name = *_functionCallOptions.names()[i];
+		Type const* requiredType = TypeProvider::uint256();
+		Option newOption;
+		if (name == "salt")
+		{
+			newOption = Salt;
+			requiredType = TypeProvider::fixedBytes(32);
+		}
+		else if (name == "gas")
+			newOption = Gas;
+		else if (name == "value")
+			newOption = Value;
+		else
+			solAssert(false, "Unexpected option name!");
+		acceptAndConvert(*_functionCallOptions.options()[i], *requiredType);
+
+		solAssert(!contains(presentOptions, newOption), "");
+		size_t insertPos = presentOptions.end() - lower_bound(presentOptions.begin(), presentOptions.end(), newOption);
+
+		utils().moveIntoStack(insertPos, 1);
+		presentOptions.insert(presentOptions.end() - insertPos, newOption);
+	}
+
 	return false;
 }
 

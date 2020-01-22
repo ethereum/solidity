@@ -153,7 +153,8 @@ public:
 		Declaration const* _declaration = nullptr,
 		bool _gasSet = false,
 		bool _valueSet = false,
-		bool _bound = false
+		bool _bound = false,
+		bool _saltSet = false
 	);
 
 	/// Auto-detect the proper type for a literal. @returns an empty pointer if the literal does

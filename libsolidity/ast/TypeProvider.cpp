@@ -459,7 +459,8 @@ FunctionType const* TypeProvider::function(
 	Declaration const* _declaration,
 	bool _gasSet,
 	bool _valueSet,
-	bool _bound
+	bool _bound,
+	bool _saltSet
 )
 {
 	return createAndGet<FunctionType>(
@@ -473,7 +474,8 @@ FunctionType const* TypeProvider::function(
 		_declaration,
 		_gasSet,
 		_valueSet,
-		_bound
+		_bound,
+		_saltSet
 	);
 }
 

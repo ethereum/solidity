@@ -1643,6 +1643,7 @@ ASTPointer<Expression> Parser::parseUnaryExpression(
 		// potential postfix expression
 		ASTPointer<Expression> subExpression = parseLeftHandSideExpression(_partiallyParsedExpression);
 		token = m_scanner->currentToken();
+
 		if (!TokenTraits::isCountOp(token))
 			return subExpression;
 		nodeFactory.markEndPosition();
@@ -1736,6 +1737,25 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 			nodeFactory.markEndPosition();
 			expectToken(Token::RParen);
 			expression = nodeFactory.createNode<FunctionCall>(expression, arguments, names);
+			break;
+		}
+		case Token::LBrace:
+		{
+			// See if this is followed by <identifier>, followed by ":". If not, it is not
+			// a function call options but a Block (from a try statement).
+			if (
+				m_scanner->peekNextToken() != Token::Identifier ||
+				m_scanner->peekNextNextToken() != Token::Colon
+			)
+				return expression;
+
+			expectToken(Token::LBrace);
+			auto optionList = parseNamedArguments();
+
+			nodeFactory.markEndPosition();
+			expectToken(Token::RBrace);
+
+			expression = parseLeftHandSideExpression(nodeFactory.createNode<FunctionCallOptions>(expression, optionList.first, optionList.second));
 			break;
 		}
 		default:
@@ -1887,32 +1907,40 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 	{
 		// call({arg1 : 1, arg2 : 2 })
 		expectToken(Token::LBrace);
-
-		bool first = true;
-		while (m_scanner->currentToken() != Token::RBrace)
-		{
-			if (!first)
-				expectToken(Token::Comma);
-
-			ret.second.push_back(expectIdentifierToken());
-			expectToken(Token::Colon);
-			ret.first.push_back(parseExpression());
-
-			if (
-				m_scanner->currentToken() == Token::Comma &&
-				m_scanner->peekNextToken() == Token::RBrace
-			)
-			{
-				parserError("Unexpected trailing comma.");
-				m_scanner->next();
-			}
-
-			first = false;
-		}
+		ret = parseNamedArguments();
 		expectToken(Token::RBrace);
 	}
 	else
 		ret.first = parseFunctionCallListArguments();
+	return ret;
+}
+
+pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::parseNamedArguments()
+{
+	pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> ret;
+
+	bool first = true;
+	while (m_scanner->currentToken() != Token::RBrace)
+	{
+		if (!first)
+			expectToken(Token::Comma);
+
+		ret.second.push_back(expectIdentifierToken());
+		expectToken(Token::Colon);
+		ret.first.push_back(parseExpression());
+
+		if (
+			m_scanner->currentToken() == Token::Comma &&
+			m_scanner->peekNextToken() == Token::RBrace
+		)
+		{
+			parserError("Unexpected trailing comma.");
+			m_scanner->next();
+		}
+
+		first = false;
+	}
+
 	return ret;
 }
 
