@@ -54,6 +54,9 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 5.0 or greater.")
 		endif ()
 
+		# Use fancy colors in the compiler diagnostics
+		add_compile_options(-fdiagnostics-color)
+
 	# Additional Clang-specific compiler settings.
 	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
