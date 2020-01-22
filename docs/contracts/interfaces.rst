@@ -8,7 +8,7 @@ Interfaces
 
 Interfaces are similar to abstract contracts, but they cannot have any functions implemented. There are further restrictions:
 
-- They cannot inherit other contracts or interfaces.
+- They cannot inherit from other contracts, but they can inherit from other interfaces.
 - All declared functions must be external.
 - They cannot declare a constructor.
 - They cannot declare state variables.
@@ -36,6 +36,27 @@ All functions declared in interfaces are implicitly ``virtual``, which means tha
 they can be overridden. This does not automatically mean that an overriding function
 can be overridden again - this is only possible if the overriding
 function is marked ``virtual``.
+
+Interfaces can inherit from other interfaces. This has the same rules as normal
+inheritance.
+
+::
+
+    pragma solidity >0.6.1 <0.7.0;
+
+    interface ParentA {
+        function test() external returns (uint256);
+    }
+
+    interface ParentB {
+        function test() external returns (uint256);
+    }
+
+    interface SubInterface is ParentA, ParentB {
+        // Must redefine test in order to assert that the parent
+        // meanings are compatible.
+        function test() external override(ParentA, ParentB) returns (uint256);
+    }
 
 Types defined inside interfaces and other contract-like structures
 can be accessed from other contracts: ``Token.TokenType`` or ``Token.Coin``.

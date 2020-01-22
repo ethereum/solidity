@@ -237,8 +237,8 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
 	solAssert(base, "Base contract not available.");
 
-	if (m_scope->isInterface())
-		m_errorReporter.typeError(_inheritance.location(), "Interfaces cannot inherit.");
+	if (m_scope->isInterface() && !base->isInterface())
+		m_errorReporter.typeError(_inheritance.location(), "Interfaces can only inherit from other interfaces.");
 
 	if (base->isLibrary())
 		m_errorReporter.typeError(_inheritance.location(), "Libraries cannot be inherited from.");
