@@ -13,7 +13,7 @@ import hashlib
 from os.path import join, isfile
 
 def extract_test_cases(path):
-    lines = open(path, 'r').read().splitlines()
+    lines = open(path, mode='r', encoding='utf8').read().splitlines()
 
     inside = False
     delimiter = ''
@@ -43,7 +43,7 @@ def extract_docs_cases(path):
     tests = []
 
     # Collect all snippets of indented blocks
-    for l in open(path, 'r').read().splitlines():
+    for l in open(path, mode='r', encoding='utf8').read().splitlines():
         if l != '':
             if not inside and l.startswith(' '):
                 # start new test
@@ -72,14 +72,14 @@ def write_cases(f, tests):
         # so before checking remove 4 spaces from each line.
         remainder = re.sub(r'^ {4}', '', test, 0, re.MULTILINE)
         sol_filename = 'test_%s_%s.sol' % (hashlib.sha256(test.encode("utf-8")).hexdigest(), cleaned_filename)
-        open(sol_filename, 'w').write(remainder)
+        open(sol_filename, mode='w', encoding='utf8').write(remainder)
 
 def extract_and_write(f, path):
         if docs:
             cases = extract_docs_cases(path)
         else:
             if f.endswith('.sol'):
-                cases = [open(path, 'r').read()]
+                cases = [open(path, mode='r', encoding='utf8').read()]
             else:
                 cases = extract_test_cases(path)
         write_cases(f, cases)

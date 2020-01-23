@@ -10,7 +10,7 @@ import sys
 import re
 
 def extract_test_cases(_path):
-    lines = open(_path, 'rb').read().splitlines()
+    lines = open(_path, mode='rb', encoding='utf8').read().splitlines()
 
     inside = False
     delimiter = ''
@@ -22,7 +22,7 @@ def extract_test_cases(_path):
     for l in lines:
         if inside:
             if l.strip().endswith(')' + delimiter + '";'):
-                open('%03d_%s.sol' % (ctr, test_name), 'wb').write(test)
+                open('%03d_%s.sol' % (ctr, test_name), mode='wb', encoding='utf8').write(test)
                 ctr += 1
                 inside = False
                 test = ''
