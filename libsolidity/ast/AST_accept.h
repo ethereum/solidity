@@ -781,6 +781,26 @@ void FunctionCall::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void FunctionCallOptions::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_expression->accept(_visitor);
+		listAccept(m_options, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void FunctionCallOptions::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_expression->accept(_visitor);
+		listAccept(m_options, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
 void NewExpression::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))

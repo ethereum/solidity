@@ -1762,6 +1762,35 @@ private:
 };
 
 /**
+ * Expression that annotates a function call / a new expression with extra
+ * options like gas, value, salt: new SomeContract{salt=123}(params)
+ */
+class FunctionCallOptions: public Expression
+{
+public:
+	FunctionCallOptions(
+		int64_t _id,
+		SourceLocation const& _location,
+		ASTPointer<Expression> const& _expression,
+		std::vector<ASTPointer<Expression>> const& _options,
+		std::vector<ASTPointer<ASTString>> const& _names
+	):
+		Expression(_id, _location), m_expression(_expression), m_options(_options), m_names(_names) {}
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	Expression const& expression() const { return *m_expression; }
+	std::vector<ASTPointer<Expression const>> options() const { return {m_options.begin(), m_options.end()}; }
+	std::vector<ASTPointer<ASTString>> const& names() const { return m_names; }
+
+private:
+	ASTPointer<Expression> m_expression;
+	std::vector<ASTPointer<Expression>> m_options;
+	std::vector<ASTPointer<ASTString>> m_names;
+
+};
+
+/**
  * Expression that creates a new contract or memory-array,
  * e.g. the "new SomeContract" part in "new SomeContract(1, 2)".
  */

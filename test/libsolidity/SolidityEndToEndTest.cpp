@@ -1929,6 +1929,40 @@ BOOST_AUTO_TEST_CASE(gas_and_value_basic)
 	BOOST_REQUIRE(callContractFunction("checkState()") == encodeArgs(false, 20 - 5));
 }
 
+BOOST_AUTO_TEST_CASE(gas_and_value_brace_syntax)
+{
+	char const* sourceCode = R"(
+		contract helper {
+			bool flag;
+			function getBalance() payable public returns (uint256 myBalance) {
+				return address(this).balance;
+			}
+			function setFlag() public { flag = true; }
+			function getFlag() public returns (bool fl) { return flag; }
+		}
+		contract test {
+			helper h;
+			constructor() public payable { h = new helper(); }
+			function sendAmount(uint amount) public payable returns (uint256 bal) {
+				return h.getBalance{value: amount}();
+			}
+			function outOfGas() public returns (bool ret) {
+				h.setFlag{gas: 2}(); // should fail due to OOG
+				return true;
+			}
+			function checkState() public returns (bool flagAfter, uint myBal) {
+				flagAfter = h.getFlag();
+				myBal = address(this).balance;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 20);
+	BOOST_REQUIRE(callContractFunction("sendAmount(uint256)", 5) == encodeArgs(5));
+	// call to helper should not succeed but amount should be transferred anyway
+	BOOST_REQUIRE(callContractFunction("outOfGas()") == bytes());
+	BOOST_REQUIRE(callContractFunction("checkState()") == encodeArgs(false, 20 - 5));
+}
+
 BOOST_AUTO_TEST_CASE(gasleft_decrease)
 {
 	char const* sourceCode = R"(
