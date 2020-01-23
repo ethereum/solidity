@@ -111,6 +111,7 @@ private:
 	ASTPointer<UnaryOperation> createUnaryOperation(Json::Value const& _node);
 	ASTPointer<BinaryOperation> createBinaryOperation(Json::Value const& _node);
 	ASTPointer<FunctionCall> createFunctionCall(Json::Value const& _node);
+	ASTPointer<FunctionCallOptions> createFunctionCallOptions(Json::Value const& _node);
 	ASTPointer<NewExpression> createNewExpression(Json::Value const& _node);
 	ASTPointer<MemberAccess> createMemberAccess(Json::Value const& _node);
 	ASTPointer<IndexAccess> createIndexAccess(Json::Value const& _node);

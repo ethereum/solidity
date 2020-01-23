@@ -192,6 +192,8 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 		return createBinaryOperation(_json);
 	if (nodeType == "FunctionCall")
 		return createFunctionCall(_json);
+	if (nodeType == "FunctionCallOptions")
+		return createFunctionCallOptions(_json);
 	if (nodeType == "NewExpression")
 		return createNewExpression(_json);
 	if (nodeType == "MemberAccess")
@@ -748,6 +750,26 @@ ASTPointer<FunctionCall> ASTJsonImporter::createFunctionCall(Json::Value const& 
 		_node,
 		convertJsonToASTNode<Expression>(member(_node, "expression")),
 		arguments,
+		names
+	);
+}
+
+ASTPointer<FunctionCallOptions> ASTJsonImporter::createFunctionCallOptions(Json::Value const&  _node)
+{
+	std::vector<ASTPointer<Expression>> options;
+	for (auto& option: member(_node, "options"))
+		options.push_back(convertJsonToASTNode<Expression>(option));
+	std::vector<ASTPointer<ASTString>> names;
+	for (auto& name: member(_node, "names"))
+	{
+		astAssert(name.isString(), "Expected 'names' members to be strings!");
+		names.push_back(make_shared<ASTString>(name.asString()));
+	}
+
+	return createASTNode<FunctionCallOptions>(
+		_node,
+		convertJsonToASTNode<Expression>(member(_node, "expression")),
+		options,
 		names
 	);
 }
