@@ -25,7 +25,9 @@
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmJsonConverter.h>
 #include <libyul/AsmParser.h>
+#include <libyul/AsmPrinter.h>
 #include <libyul/YulString.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/Disambiguator.h>
@@ -33,10 +35,10 @@
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/Metrics.h>
-
 #include <libyul/optimiser/Suite.h>
 
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/JSON.h>
 
 #include <boost/filesystem.hpp>
 
@@ -49,6 +51,13 @@ using namespace solidity::langutil;
 using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::phaser;
+
+namespace solidity::phaser
+{
+
+ostream& operator<<(ostream& _stream, Program const& _program);
+
+}
 
 set<YulString> const Program::s_externallyUsedIdentifiers = {};
 
@@ -74,6 +83,17 @@ Program Program::load(string const& _sourcePath)
 void Program::optimise(vector<string> const& _optimisationSteps)
 {
 	applyOptimisationSteps(m_optimiserStepContext, *m_ast, _optimisationSteps);
+}
+
+ostream& phaser::operator<<(ostream& _stream, Program const& _program)
+{
+	return _stream << AsmPrinter()(*_program.m_ast);
+}
+
+string Program::toJson() const
+{
+	Json::Value serializedAst = AsmJsonConverter(0)(*m_ast);
+	return jsonPrettyPrint(serializedAst);
 }
 
 CharStream Program::loadSource(string const& _sourcePath)

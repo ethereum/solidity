@@ -24,6 +24,7 @@
 #include <boost/noncopyable.hpp>
 
 #include <optional>
+#include <ostream>
 #include <set>
 #include <string>
 #include <vector>
@@ -72,6 +73,9 @@ public:
 
 	size_t codeSize() const { return computeCodeSize(*m_ast); }
 	yul::Block const& ast() const { return *m_ast; }
+
+	friend std::ostream& operator<<(std::ostream& _stream, Program const& _program);
+	std::string toJson() const;
 
 private:
 	Program(
