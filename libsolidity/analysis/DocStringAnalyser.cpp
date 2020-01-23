@@ -73,6 +73,7 @@ bool DocStringAnalyser::visit(EventDefinition const& _event)
 
 void DocStringAnalyser::checkParameters(
 	CallableDeclaration const& _callable,
+	StructurallyDocumented const& _node,
 	StructurallyDocumentedAnnotation& _annotation
 )
 {
@@ -86,6 +87,7 @@ void DocStringAnalyser::checkParameters(
 	for (auto i = paramRange.first; i != paramRange.second; ++i)
 		if (!validParams.count(i->second.paramName))
 			appendError(
+				_node.documentation()->location(),
 				"Documented parameter \"" +
 				i->second.paramName +
 				"\" not found in the parameter list of the function."
@@ -101,7 +103,7 @@ void DocStringAnalyser::handleConstructor(
 {
 	static set<string> const validTags = set<string>{"author", "dev", "notice", "param"};
 	parseDocStrings(_node, _annotation, validTags, "constructor");
-	checkParameters(_callable, _annotation);
+	checkParameters(_callable, _node, _annotation);
 }
 
 void DocStringAnalyser::handleCallable(
@@ -112,7 +114,7 @@ void DocStringAnalyser::handleCallable(
 {
 	static set<string> const validTags = set<string>{"author", "dev", "notice", "return", "param"};
 	parseDocStrings(_node, _annotation, validTags, "functions");
-	checkParameters(_callable, _annotation);
+	checkParameters(_callable, _node, _annotation);
 }
 
 void DocStringAnalyser::parseDocStrings(
@@ -134,7 +136,10 @@ void DocStringAnalyser::parseDocStrings(
 	for (auto const& docTag: _annotation.docTags)
 	{
 		if (!_validTags.count(docTag.first))
-			appendError("Documentation tag @" + docTag.first + " not valid for " + _nodeName + ".");
+			appendError(
+				_node.documentation()->location(),
+				"Documentation tag @" + docTag.first + " not valid for " + _nodeName + "."
+			);
 		else
 			if (docTag.first == "return")
 			{
@@ -145,14 +150,18 @@ void DocStringAnalyser::parseDocStrings(
 					string firstWord = content.substr(0, content.find_first_of(" \t"));
 
 					if (returnTagsVisited > function->returnParameters().size())
-						appendError("Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
+						appendError(
+							_node.documentation()->location(),
+							"Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
 							" exceedes the number of return parameters."
 						);
 					else
 					{
 						auto parameter = function->returnParameters().at(returnTagsVisited - 1);
 						if (!parameter->name().empty() && parameter->name() != firstWord)
-							appendError("Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
+							appendError(
+								_node.documentation()->location(),
+								"Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
 								" does not contain the name of its return parameter."
 							);
 					}
@@ -161,8 +170,8 @@ void DocStringAnalyser::parseDocStrings(
 	}
 }
 
-void DocStringAnalyser::appendError(string const& _description)
+void DocStringAnalyser::appendError(SourceLocation const& _location, string const& _description)
 {
 	m_errorOccured = true;
-	m_errorReporter.docstringParsingError(_description);
+	m_errorReporter.docstringParsingError(_location, _description);
 }

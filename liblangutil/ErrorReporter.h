@@ -107,6 +107,7 @@ public:
 	void fatalTypeError(SourceLocation const& _location, SecondarySourceLocation const& _secondLocation, std::string const& _description);
 
 	void docstringParsingError(std::string const& _description);
+	void docstringParsingError(SourceLocation const& _location, std::string const& _description);
 
 	ErrorList const& errors() const;
 
