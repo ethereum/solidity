@@ -276,17 +276,17 @@ Example::
     arbitrary arguments and would also handle a first argument of type
     ``bytes4`` differently. These edge cases were removed in version 0.5.0.
 
-It is possible to adjust the supplied gas with the ``.gas()`` modifier::
+It is possible to adjust the supplied gas with the ``gas`` modifier::
 
-    address(nameReg).call.gas(1000000)(abi.encodeWithSignature("register(string)", "MyName"));
+    address(nameReg).call{gas: 1000000}(abi.encodeWithSignature("register(string)", "MyName"));
 
 Similarly, the supplied Ether value can be controlled too::
 
-    address(nameReg).call.value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
+    address(nameReg).call{value: 1 ether}(abi.encodeWithSignature("register(string)", "MyName"));
 
 Lastly, these modifiers can be combined. Their order does not matter::
 
-    address(nameReg).call.gas(1000000).value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
+    address(nameReg).call{gas: 1000000, value: 1 ether}(abi.encodeWithSignature("register(string)", "MyName"));
 
 In a similar way, the function ``delegatecall`` can be used: the difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used.
 
@@ -297,7 +297,8 @@ Since byzantium ``staticcall`` can be used as well. This is basically the same a
 
 All three functions ``call``, ``delegatecall`` and ``staticcall`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
 
-The ``.gas()`` option is available on all three methods, while the ``.value()`` option is not supported for ``delegatecall``.
+The ``gas`` option is available on all three methods, while the ``value`` option is not
+supported for ``delegatecall``.
 
 .. note::
     All contracts can be converted to ``address`` type, so it is possible to query the balance of the
@@ -635,8 +636,12 @@ External (or public) functions have the following members:
 
 * ``.address`` returns the address of the contract of the function.
 * ``.selector`` returns the :ref:`ABI function selector <abi_function_selector>`
-* ``.gas(uint)`` returns a callable function object which, when called, will send the specified amount of gas to the target function. See :ref:`External Function Calls <external-function-calls>` for more information.
-* ``.value(uint)`` returns a callable function object which, when called, will send the specified amount of wei to the target function. See :ref:`External Function Calls <external-function-calls>` for more information.
+* ``.gas(uint)`` returns a callable function object which, when called, will send
+  the specified amount of gas to the target function. Deprecated - use ``{gas: ...}`` instead.
+  See :ref:`External Function Calls <external-function-calls>` for more information.
+* ``.value(uint)`` returns a callable function object which, when called, will
+  send the specified amount of wei to the target function. Deprecated - use ``{value: ...}`` instead.
+  See :ref:`External Function Calls <external-function-calls>` for more information.
 
 Example that shows how to use the members::
 
@@ -651,6 +656,8 @@ Example that shows how to use the members::
 
         function g() public {
             this.f.gas(10).value(800)();
+            // New syntax:
+            // this.f{gas: 10, value: 800}()
         }
     }
 

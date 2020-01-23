@@ -335,7 +335,7 @@ operations as long as there is enough gas passed on to it.
 
 ::
 
-    pragma solidity ^0.6.0;
+    pragma solidity >0.6.1 <0.7.0;
 
     contract Test {
         // This function is called for all messages sent to
@@ -382,7 +382,7 @@ operations as long as there is enough gas passed on to it.
             (bool success,) = address(test).call(abi.encodeWithSignature("nonExistingFunction()"));
             require(success);
             // results in test.x becoming == 1 and test.y becoming 0.
-            (success,) = address(test).call.value(1)(abi.encodeWithSignature("nonExistingFunction()"));
+            (success,) = address(test).call{value: 1}(abi.encodeWithSignature("nonExistingFunction()"));
             require(success);
             // results in test.x becoming == 1 and test.y becoming 1.
 
