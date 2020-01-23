@@ -6,12 +6,12 @@ import subprocess
 import json
 
 SOLC_BIN = sys.argv[1]
-REPORT_FILE = open("report.txt", "w")
+REPORT_FILE = open("report.txt", mode="w", encoding='utf8')
 
 for optimize in [False, True]:
     for f in sorted(glob.glob("*.sol")):
         sources = {}
-        sources[f] = {'content': open(f, 'r').read()}
+        sources[f] = {'content': open(f, mode='r', encoding='utf8').read()}
         input_json = {
             'language': 'Solidity',
             'sources': sources,
