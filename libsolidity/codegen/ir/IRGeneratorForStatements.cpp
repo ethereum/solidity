@@ -739,6 +739,25 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	}
 }
 
+void IRGeneratorForStatements::endVisit(FunctionCallOptions const& _options)
+{
+	FunctionType const& previousType = dynamic_cast<FunctionType const&>(*_options.expression().annotation().type);
+
+	solUnimplementedAssert(!previousType.bound(), "");
+
+	// Copy over existing values.
+	for (auto const& item: previousType.stackItems())
+		define(IRVariable(_options).part(get<0>(item)), IRVariable(_options.expression()).part(get<0>(item)));
+
+	for (size_t i = 0; i < _options.names().size(); ++i)
+	{
+		string const& name = *_options.names()[i];
+		solAssert(name == "salt" || name == "gas" || name == "value", "");
+
+		define(IRVariable(_options).part(name), *_options.options()[i]);
+	}
+}
+
 void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 {
 	ASTString const& member = _memberAccess.memberName();
