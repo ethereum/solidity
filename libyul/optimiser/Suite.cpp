@@ -370,6 +370,49 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 	return instance;
 }
 
+map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
+{
+	static map<string, char> lookupTable{
+		{BlockFlattener::name,                'f'},
+		{CommonSubexpressionEliminator::name, 'c'},
+		{ConditionalSimplifier::name,         'C'},
+		{ConditionalUnsimplifier::name,       'U'},
+		{ControlFlowSimplifier::name,         'n'},
+		{DeadCodeEliminator::name,            'D'},
+		{EquivalentFunctionCombiner::name,    'v'},
+		{ExpressionInliner::name,             'e'},
+		{ExpressionJoiner::name,              'j'},
+		{ExpressionSimplifier::name,          's'},
+		{ExpressionSplitter::name,            'x'},
+		{ForLoopConditionIntoBody::name,      'I'},
+		{ForLoopConditionOutOfBody::name,     'O'},
+		{ForLoopInitRewriter::name,           'o'},
+		{FullInliner::name,                   'i'},
+		{FunctionGrouper::name,               'g'},
+		{FunctionHoister::name,               'h'},
+		{LiteralRematerialiser::name,         'T'},
+		{LoadResolver::name,                  'L'},
+		{LoopInvariantCodeMotion::name,       'M'},
+		{RedundantAssignEliminator::name,     'r'},
+		{Rematerialiser::name,                'm'},
+		{SSAReverser::name,                   'V'},
+		{SSATransform::name,                  'a'},
+		{StructuralSimplifier::name,          't'},
+		{UnusedPruner::name,                  'u'},
+		{VarDeclInitializer::name,            'd'},
+	};
+	yulAssert(lookupTable.size() == allSteps().size(), "");
+
+	return lookupTable;
+}
+
+map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
+{
+	static map<char, string> lookupTable = util::invertMap(stepNameToAbbreviationMap());
+
+	return lookupTable;
+}
+
 void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 {
 	unique_ptr<Block> copy;
