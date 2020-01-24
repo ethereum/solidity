@@ -919,9 +919,8 @@ An example Yul Object is shown below:
     // The single "code" node is the executable code of the object.
     // Every (other) named object or data section is serialized and
     // made accessible to the special built-in functions datacopy / dataoffset / datasize
-    // Access to nested objects can be performed by joining the names using ``.``.
-    // The current object and sub-objects and data items inside the current object
-    // are in scope without nested access.
+    // The current object, sub-objects and data items inside the current object
+    // are in scope.
     object "Contract1" {
         // This is the constructor code of the contract.
         code {
@@ -931,11 +930,11 @@ An example Yul Object is shown below:
                 mstore(0x40, add(ptr, size))
             }
 
-            // first create "runtime.Contract2"
-            let size := datasize("runtime.Contract2")
+            // first create "Contract2"
+            let size := datasize("Contract2")
             let offset := allocate(size)
             // This will turn into codecopy for EVM
-            datacopy(offset, dataoffset("runtime.Contract2"), size)
+            datacopy(offset, dataoffset("Contract2"), size)
             // constructor parameter is a single number 0x1234
             mstore(add(offset, size), 0x1234)
             pop(create(offset, add(size, 32), 0))
@@ -962,30 +961,25 @@ An example Yul Object is shown below:
 
                 // runtime code
 
-                let size := datasize("Contract2")
-                let offset := allocate(size)
-                // This will turn into codecopy for EVM
-                datacopy(offset, dataoffset("Contract2"), size)
-                // constructor parameter is a single number 0x1234
-                mstore(add(offset, size), 0x1234)
-                pop(create(offset, add(size, 32), 0))
+                mstore(0, "Hello, World!")
+                return(0, 0x20)
+            }
+        }
+
+        // Embedded object. Use case is that the outside is a factory contract,
+        // and Contract2 is the code to be created by the factory
+        object "Contract2" {
+            code {
+                // code here ...
             }
 
-            // Embedded object. Use case is that the outside is a factory contract,
-            // and Contract2 is the code to be created by the factory
-            object "Contract2" {
+            object "runtime" {
                 code {
                     // code here ...
                 }
-
-                object "runtime" {
-                    code {
-                        // code here ...
-                    }
-                }
-
-                data "Table1" hex"4123"
             }
+
+            data "Table1" hex"4123"
         }
     }
 
