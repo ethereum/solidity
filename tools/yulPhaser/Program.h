@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/AsmData.h>
 
@@ -41,7 +40,6 @@ namespace solidity::yul
 
 struct AsmAnalysisInfo;
 struct Dialect;
-class YulString;
 
 }
 
@@ -62,9 +60,8 @@ class Program: private boost::noncopyable
 public:
 	Program(Program&& program):
 		m_ast(std::move(program.m_ast)),
-		m_nameDispenser(std::move(program.m_nameDispenser)),
-		// Creating a new instance because a copied one would have a dangling reference to the old dispenser
-		m_optimiserStepContext{program.m_optimiserStepContext.dialect, m_nameDispenser, s_externallyUsedIdentifiers}
+		m_dialect{program.m_dialect},
+		m_nameDispenser(std::move(program.m_nameDispenser))
 	{}
 	Program operator=(Program&& program) = delete;
 
@@ -83,8 +80,8 @@ private:
 		std::unique_ptr<yul::Block> _ast
 	):
 		m_ast(std::move(_ast)),
-		m_nameDispenser(_dialect, *m_ast, s_externallyUsedIdentifiers),
-		m_optimiserStepContext{_dialect, m_nameDispenser, s_externallyUsedIdentifiers}
+		m_dialect{_dialect},
+		m_nameDispenser(_dialect, *m_ast, {})
 	{}
 
 	static langutil::CharStream loadSource(std::string const& _sourcePath);
@@ -102,21 +99,16 @@ private:
 		yul::AsmAnalysisInfo const& _analysisInfo
 	);
 	static void applyOptimisationSteps(
-		yul::OptimiserStepContext& _context,
+		yul::Dialect const& _dialect,
+		yul::NameDispenser& _nameDispenser,
 		yul::Block& _ast,
 		std::vector<std::string> const& _optimisationSteps
 	);
 	static size_t computeCodeSize(yul::Block const& _ast);
 
 	std::unique_ptr<yul::Block> m_ast;
+	yul::Dialect const& m_dialect;
 	yul::NameDispenser m_nameDispenser;
-	yul::OptimiserStepContext m_optimiserStepContext;
-
-	// Always empty set of reserved identifiers. It could be a constructor parameter but I don't
-	// think it would be useful in this tool. Other tools (like yulopti) have it empty too.
-	// We need it to live as long as m_optimiserStepContext because it stores a reference
-	// but since it's empty and read-only we can just have all objects share one static instance.
-	static std::set<yul::YulString> const s_externallyUsedIdentifiers;
 };
 
 }

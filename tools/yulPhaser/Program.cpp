@@ -35,6 +35,7 @@
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/Metrics.h>
+#include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/Suite.h>
 
 #include <libsolutil/CommonIO.h>
@@ -59,8 +60,6 @@ ostream& operator<<(ostream& _stream, Program const& _program);
 
 }
 
-set<YulString> const Program::s_externallyUsedIdentifiers = {};
-
 Program Program::load(string const& _sourcePath)
 {
 	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
@@ -82,7 +81,7 @@ Program Program::load(string const& _sourcePath)
 
 void Program::optimise(vector<string> const& _optimisationSteps)
 {
-	applyOptimisationSteps(m_optimiserStepContext, *m_ast, _optimisationSteps);
+	applyOptimisationSteps(m_dialect, m_nameDispenser, *m_ast, _optimisationSteps);
 }
 
 ostream& phaser::operator<<(ostream& _stream, Program const& _program)
@@ -138,19 +137,26 @@ unique_ptr<Block> Program::disambiguateAST(
 	AsmAnalysisInfo const& _analysisInfo
 )
 {
-	Disambiguator disambiguator(_dialect, _analysisInfo, s_externallyUsedIdentifiers);
+	set<YulString> const externallyUsedIdentifiers = {};
+	Disambiguator disambiguator(_dialect, _analysisInfo, externallyUsedIdentifiers);
 
 	return make_unique<Block>(get<Block>(disambiguator(_ast)));
 }
 
 void Program::applyOptimisationSteps(
-	OptimiserStepContext& _context,
+	Dialect const& _dialect,
+	NameDispenser& _nameDispenser,
 	Block& _ast,
 	vector<string> const& _optimisationSteps
 )
 {
+	// An empty set of reserved identifiers. It could be a constructor parameter but I don't
+	// think it would be useful in this tool. Other tools (like yulopti) have it empty too.
+	set<YulString> const externallyUsedIdentifiers = {};
+	OptimiserStepContext context{_dialect, _nameDispenser, externallyUsedIdentifiers};
+
 	for (string const& step: _optimisationSteps)
-		OptimiserSuite::allSteps().at(step)->run(_context, _ast);
+		OptimiserSuite::allSteps().at(step)->run(context, _ast);
 }
 
 size_t Program::computeCodeSize(Block const& _ast)
