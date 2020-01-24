@@ -94,6 +94,7 @@ private:
 	//@{
 	smt::SortPointer constructorSort();
 	smt::SortPointer interfaceSort();
+	smt::SortPointer interfaceSort(ContractDefinition const& _const);
 	smt::SortPointer sort(FunctionDefinition const& _function);
 	smt::SortPointer sort(ASTNode const* _block);
 	// Sort for function calls. This is:
@@ -114,6 +115,7 @@ private:
 	smt::Expression genesis() { return (*m_genesisPredicate)({}); }
 	/// Interface predicate over current variables.
 	smt::Expression interface();
+	smt::Expression interface(ContractDefinition const& _contract);
 	/// Error predicate over current variables.
 	smt::Expression error();
 	smt::Expression error(unsigned _idx);
@@ -134,6 +136,7 @@ private:
 	/// of the current transaction.
 	std::vector<smt::Expression> initialStateVariables();
 	std::vector<smt::Expression> stateVariablesAtIndex(int _index);
+	std::vector<smt::Expression> stateVariablesAtIndex(int _index, ContractDefinition const& _contract);
 	/// @returns the current symbolic values of the current state variables.
 	std::vector<smt::Expression> currentStateVariables();
 
@@ -189,7 +192,8 @@ private:
 
 	/// Artificial Interface predicate.
 	/// Single entry block for all functions.
-	std::unique_ptr<smt::SymbolicFunctionVariable> m_interfacePredicate;
+	std::map<ContractDefinition const*, std::unique_ptr<smt::SymbolicFunctionVariable>> m_interfaces;
+	//std::unique_ptr<smt::SymbolicFunctionVariable> m_interfacePredicate;
 
 	/// Artificial Error predicate.
 	/// Single error block for all assertions.
@@ -226,7 +230,7 @@ private:
 	/// Verification targets.
 	//@{
 	//std::set<Expression const*> m_verificationTargets;
-	std::map<ASTNode const*, std::pair<smt::Expression, smt::Expression>> m_verificationTargets;
+	std::map<ASTNode const*, std::tuple<smt::Expression, smt::Expression, smt::Expression>> m_verificationTargets;
 
 	/// Assertions proven safe.
 	std::set<Expression const*> m_safeAssertions;
