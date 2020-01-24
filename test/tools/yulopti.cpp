@@ -42,7 +42,6 @@
 
 #include <boost/program_options.hpp>
 
-#include <cassert>
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -94,6 +93,40 @@ public:
 		return true;
 	}
 
+	void printUsageBanner(
+		map<char, string> const& _optimizationSteps,
+		map<char, string> const& _extraOptions,
+		size_t _columns
+	)
+	{
+		auto hasShorterString = [](auto const& a, auto const& b){ return a.second.size() < b.second.size(); };
+		size_t longestDescriptionLength = max(
+			max_element(_optimizationSteps.begin(), _optimizationSteps.end(), hasShorterString)->second.size(),
+			max_element(_extraOptions.begin(), _extraOptions.end(), hasShorterString)->second.size()
+		);
+
+		size_t index = 0;
+		auto printPair = [&](auto const& optionAndDescription)
+		{
+			cout << optionAndDescription.first << ": ";
+			cout << setw(longestDescriptionLength) << setiosflags(ios::left);
+			cout << optionAndDescription.second << " ";
+
+			++index;
+			if (index % _columns == 0)
+				cout << endl;
+		};
+
+		for (auto const& optionAndDescription: _extraOptions)
+		{
+			yulAssert(_optimizationSteps.count(optionAndDescription.first) == 0, "");
+			printPair(optionAndDescription);
+		}
+
+		for (auto const& abbreviationAndName: _optimizationSteps)
+			printPair(abbreviationAndName);
+	}
+
 	void runInteractive(string source)
 	{
 		bool disambiguated = false;
@@ -111,21 +144,20 @@ public:
 				m_nameDispenser = make_shared<NameDispenser>(m_dialect, *m_ast, reservedIdentifiers);
 				disambiguated = true;
 			}
-			cout << "(q)uit/(f)latten/(c)se/initialize var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
-			cout << "  (e)xpr inline/(i)nline/(s)implify/varname c(l)eaner/(u)nusedprune/ss(a) transform/" << endl;
-			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-init-rewriter/for-loop-condition-(I)nto-body/" << endl;
-			cout << "  for-loop-condition-(O)ut-of-body/s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/" << endl;
-			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/(L)oad resolver/" << endl;
-			cout << "  (C)onditional simplifier/conditional (U)nsimplifier/loop-invariant code (M)otion?" << endl;
+			map<char, string> const& abbreviationMap = OptimiserSuite::stepAbbreviationToNameMap();
+			map<char, string> const& extraOptions = {
+				{'q', "quit"},
+				{'l', "VarNameCleaner"},
+				{'p', "StackCompressor"},
+			};
+
+			printUsageBanner(abbreviationMap, extraOptions, 4);
+			cout << "? ";
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
 
 			OptimiserStepContext context{m_dialect, *m_nameDispenser, reservedIdentifiers};
-
-			map<char, string> const& abbreviationMap = OptimiserSuite::stepAbbreviationToNameMap();
-			assert(abbreviationMap.count('q') == 0 && "We have chosen 'q' for quit");
-			assert(abbreviationMap.count('p') == 0 && "We have chosen 'p' for StackCompressor");
 
 			auto abbreviationAndName = abbreviationMap.find(option);
 			if (abbreviationAndName != abbreviationMap.end())
