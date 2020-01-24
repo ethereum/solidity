@@ -141,6 +141,7 @@ detect_stray_source_files("${libyul_sources}" "libyul/")
 set(yul_phaser_sources
     yulPhaser/Chromosome.cpp
     yulPhaser/Program.cpp
+    yulPhaser/Random.cpp
 
     # FIXME: yul-phaser is not a library so I can't just add it to target_link_libraries().
     # My current workaround is just to include its source files here but this introduces
