@@ -229,7 +229,8 @@ private:
 
 	Token scanString();
 	Token scanHexString();
-	Token scanSingleLineDocComment();
+	/// Scans a single line comment and returns its corrected end position.
+	int scanSingleLineDocComment();
 	Token scanMultiLineDocComment();
 	/// Scans a slash '/' and depending on the characters returns the appropriate token
 	Token scanSlash();
