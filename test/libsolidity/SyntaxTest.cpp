@@ -24,14 +24,15 @@
 #include <memory>
 #include <stdexcept>
 
-using namespace langutil;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
-using namespace dev::formatting;
-using namespace dev;
 using namespace std;
-namespace fs = boost::filesystem;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::util::formatting;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 using namespace boost::unit_test;
+namespace fs = boost::filesystem;
 
 namespace
 {

@@ -437,6 +437,19 @@ SOLTMPDIR=$(mktemp -d)
     fi
 )
 
+printTask "Testing AST import..."
+SOLTMPDIR=$(mktemp -d)
+(
+    cd "$SOLTMPDIR"
+    $REPO_ROOT/scripts/ASTImportTest.sh
+    if [ $? -ne 0 ]
+    then
+        rm -rf "$SOLTMPDIR"
+        exit 1
+    fi
+)
+rm -rf "$SOLTMPDIR"
+
 printTask "Testing soljson via the fuzzer..."
 SOLTMPDIR=$(mktemp -d)
 (

@@ -180,12 +180,12 @@ Input Description
             // `--allow-paths <path>`.
           ]
         },
-        "mortal":
+        "destructible":
         {
           // Optional: keccak256 hash of the source file
           "keccak256": "0x234...",
           // Required (unless "urls" is used): literal contents of the source file
-          "content": "contract mortal is owned { function kill() { if (msg.sender == owner) selfdestruct(owner); } }"
+          "content": "contract destructible is owned { function shutdown() { if (msg.sender == owner) selfdestruct(owner); } }"
         }
       },
       // Optional
@@ -220,8 +220,11 @@ Input Description
             "cse": false,
             // Optimize representation of literal numbers and strings in code.
             "constantOptimizer": false,
-            // The new Yul optimizer. Mostly operates on the code of ABIEncoderV2.
-            // It can only be activated through the details here.
+            // The new Yul optimizer. Mostly operates on the code of ABIEncoderV2
+            // and inline assembly.
+            // It is activated together with the global optimizer setting
+            // and can be deactivated here.
+            // Before Solidity 0.6.0 it had to be activated through this switch.
             "yul": false,
             // Tuning options for the Yul optimizer.
             "yulDetails": {

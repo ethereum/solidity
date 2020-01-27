@@ -15,8 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <test/Common.h>
 #include <test/tools/IsolTestOptions.h>
@@ -39,16 +39,18 @@
 #include <windows.h>
 #endif
 
-using namespace dev;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
-using namespace dev::formatting;
 using namespace std;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
+using namespace solidity::util::formatting;
+
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
 using TestCreator = TestCase::TestCaseCreator;
-using TestOptions = dev::test::IsolTestOptions;
+using TestOptions = solidity::test::IsolTestOptions;
 
 struct TestStats
 {
@@ -399,7 +401,7 @@ int main(int argc, char const *argv[])
 {
 	setupTerminal();
 
-	dev::test::IsolTestOptions options(&TestTool::editor);
+	solidity::test::IsolTestOptions options(&TestTool::editor);
 
 	try
 	{
@@ -414,12 +416,12 @@ int main(int argc, char const *argv[])
 		return 1;
 	}
 
-	bool disableSemantics = !dev::test::EVMHost::getVM(options.evmonePath.string());
+	bool disableSemantics = !solidity::test::EVMHost::getVM(options.evmonePath.string());
 	if (disableSemantics)
 	{
-		cout << "Unable to find " << dev::test::evmoneFilename << ". Please provide the path using --evmonepath <path>." << endl;
+		cout << "Unable to find " << solidity::test::evmoneFilename << ". Please provide the path using --evmonepath <path>." << endl;
 		cout << "You can download it at" << endl;
-		cout << dev::test::evmoneDownloadLink << endl;
+		cout << solidity::test::evmoneDownloadLink << endl;
 		cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
 	}
 
@@ -462,7 +464,7 @@ int main(int argc, char const *argv[])
 	cout << "." << endl;
 
 	if (disableSemantics)
-		cout << "\nNOTE: Skipped semantics tests because " << dev::test::evmoneFilename << " could not be found.\n" << endl;
+		cout << "\nNOTE: Skipped semantics tests because " << solidity::test::evmoneFilename << " could not be found.\n" << endl;
 
 	return global_stats ? 0 : 1;
 }

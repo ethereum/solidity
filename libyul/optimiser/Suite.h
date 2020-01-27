@@ -30,7 +30,7 @@
 #include <string>
 #include <memory>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct AsmAnalysisInfo;

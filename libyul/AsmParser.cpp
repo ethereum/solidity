@@ -24,7 +24,7 @@
 #include <libyul/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -32,9 +32,10 @@
 #include <algorithm>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::yul;
 
 shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
 {
@@ -59,17 +60,17 @@ shared_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	return nullptr;
 }
 
-std::map<string, dev::eth::Instruction> const& Parser::instructions()
+std::map<string, evmasm::Instruction> const& Parser::instructions()
 {
 	// Allowed instructions, lowercase names.
-	static map<string, dev::eth::Instruction> s_instructions;
+	static map<string, evmasm::Instruction> s_instructions;
 	if (s_instructions.empty())
 	{
-		for (auto const& instruction: dev::eth::c_instructions)
+		for (auto const& instruction: evmasm::c_instructions)
 		{
 			if (
-				instruction.second == dev::eth::Instruction::JUMPDEST ||
-				dev::eth::isPushInstruction(instruction.second)
+				instruction.second == evmasm::Instruction::JUMPDEST ||
+				evmasm::isPushInstruction(instruction.second)
 			)
 				continue;
 			string name = instruction.first;
@@ -298,16 +299,16 @@ Expression Parser::parseExpression()
 	}
 }
 
-std::map<dev::eth::Instruction, string> const& Parser::instructionNames()
+std::map<evmasm::Instruction, string> const& Parser::instructionNames()
 {
-	static map<dev::eth::Instruction, string> s_instructionNames;
+	static map<evmasm::Instruction, string> s_instructionNames;
 	if (s_instructionNames.empty())
 	{
 		for (auto const& instr: instructions())
 			s_instructionNames[instr.second] = instr.first;
 		// set the ambiguous instructions to a clear default
-		s_instructionNames[dev::eth::Instruction::SELFDESTRUCT] = "selfdestruct";
-		s_instructionNames[dev::eth::Instruction::KECCAK256] = "keccak256";
+		s_instructionNames[evmasm::Instruction::SELFDESTRUCT] = "selfdestruct";
+		s_instructionNames[evmasm::Instruction::KECCAK256] = "keccak256";
 	}
 	return s_instructionNames;
 }
@@ -368,23 +369,18 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 			{}
 		};
 		advance();
-		if (m_dialect.flavour == AsmFlavour::Yul)
+		if (currentToken() == Token::Colon)
 		{
 			expectToken(Token::Colon);
 			literal.location.end = endPosition();
 			literal.type = expectAsmIdentifier();
 		}
-		else if (kind == LiteralKind::Boolean)
-			fatalParserError("True and false are not valid literals.");
+
 		ret = std::move(literal);
 		break;
 	}
 	default:
-		fatalParserError(
-			m_dialect.flavour == AsmFlavour::Yul ?
-			"Literal or identifier expected." :
-			"Literal, identifier or instruction expected."
-		);
+		fatalParserError("Literal or identifier expected.");
 	}
 	return ret;
 }
@@ -473,11 +469,7 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 	else if (holds_alternative<FunctionCall>(_initialOp))
 		ret = std::move(std::get<FunctionCall>(_initialOp));
 	else
-		fatalParserError(
-			m_dialect.flavour == AsmFlavour::Yul ?
-			"Function name expected." :
-			"Assembly instruction or function name required in front of \"(\")"
-		);
+		fatalParserError("Function name expected.");
 
 	expectToken(Token::LParen);
 	if (currentToken() != Token::RParen)
@@ -499,7 +491,7 @@ TypedName Parser::parseTypedName()
 	RecursionGuard recursionGuard(*this);
 	TypedName typedName = createWithLocation<TypedName>();
 	typedName.name = expectAsmIdentifier();
-	if (m_dialect.flavour == AsmFlavour::Yul)
+	if (currentToken() == Token::Colon)
 	{
 		expectToken(Token::Colon);
 		typedName.location.end = endPosition();
@@ -553,8 +545,7 @@ bool Parser::isValidNumberLiteral(string const& _literal)
 	try
 	{
 		// Try to convert _literal to u256.
-		auto tmp = u256(_literal);
-		(void) tmp;
+		[[maybe_unused]] auto tmp = u256(_literal);
 	}
 	catch (...)
 	{

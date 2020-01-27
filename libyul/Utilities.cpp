@@ -23,8 +23,8 @@
 #include <libyul/AsmData.h>
 #include <libyul/Exceptions.h>
 
-#include <libdevcore/CommonData.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/FixedHash.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -34,13 +34,14 @@
 #include <vector>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 using boost::split;
 using boost::is_any_of;
 
-string yul::reindent(string const& _code)
+string solidity::yul::reindent(string const& _code)
 {
 	int constexpr indentationWidth = 4;
 
@@ -82,7 +83,7 @@ string yul::reindent(string const& _code)
 	return out.str();
 }
 
-u256 yul::valueOfNumberLiteral(Literal const& _literal)
+u256 solidity::yul::valueOfNumberLiteral(Literal const& _literal)
 {
 	yulAssert(_literal.kind == LiteralKind::Number, "Expected number literal!");
 
@@ -91,7 +92,7 @@ u256 yul::valueOfNumberLiteral(Literal const& _literal)
 	return u256(literalString);
 }
 
-u256 yul::valueOfStringLiteral(Literal const& _literal)
+u256 solidity::yul::valueOfStringLiteral(Literal const& _literal)
 {
 	yulAssert(_literal.kind == LiteralKind::String, "Expected string literal!");
 	yulAssert(_literal.value.str().size() <= 32, "Literal string too long!");
@@ -111,7 +112,7 @@ u256 yul::valueOfBoolLiteral(Literal const& _literal)
 	yulAssert(false, "Unexpected bool literal value!");
 }
 
-u256 yul::valueOfLiteral(Literal const& _literal)
+u256 solidity::yul::valueOfLiteral(Literal const& _literal)
 {
 	switch (_literal.kind)
 	{

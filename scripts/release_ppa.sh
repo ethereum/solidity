@@ -156,7 +156,6 @@ Package: solc
 Architecture: any-i386 any-amd64
 Multi-Arch: same
 Depends: \${shlibs:Depends}, \${misc:Depends}
-Replaces: lllc (<< 1:0.3.6)
 Conflicts: libethereum (<= 1.2.9)
 Description: Solidity compiler.
  The commandline interface to the Solidity smart contract compiler.
@@ -194,7 +193,7 @@ override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DINSTALL_LLLC=Off -DTESTS=OFF ${CMAKE_OPTIONS}
+	dh_auto_configure -- -DTESTS=OFF ${CMAKE_OPTIONS}
 EOF
 cat <<EOF > debian/copyright
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/

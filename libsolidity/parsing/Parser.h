@@ -26,14 +26,12 @@
 #include <liblangutil/ParserBase.h>
 #include <liblangutil/EVMVersion.h>
 
-namespace langutil
+namespace solidity::langutil
 {
 class Scanner;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class Parser: public langutil::ParserBase
@@ -84,9 +82,9 @@ private:
 	void parsePragmaVersion(langutil::SourceLocation const& _location, std::vector<Token> const& _tokens, std::vector<std::string> const& _literals);
 	ASTPointer<PragmaDirective> parsePragmaDirective();
 	ASTPointer<ImportDirective> parseImportDirective();
-	/// @returns an std::pair<ContractDefinition::ContractKind, bool>, where
+	/// @returns an std::pair<ContractKind, bool>, where
 	/// result.second is set to true, if an abstract contract was parsed, false otherwise.
-	std::pair<ContractDefinition::ContractKind, bool> parseContractKind();
+	std::pair<ContractKind, bool> parseContractKind();
 	ASTPointer<ContractDefinition> parseContractDefinition();
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	Visibility parseVisibilitySpecifier();
@@ -150,6 +148,7 @@ private:
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
 	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseFunctionCallArguments();
+	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseNamedArguments();
 	///@}
 
 	///@{
@@ -174,6 +173,9 @@ private:
 		std::vector<Index> indices;
 		bool empty() const;
 	};
+
+	/// Returns the next AST node ID
+	int64_t nextID() { return ++m_currentNodeID; }
 
 	std::pair<LookAheadInfo, IndexAccessedPath> tryParseIndexAccessedPath();
 	/// Performs limited look-ahead to distinguish between variable declaration and expression statement.
@@ -200,7 +202,8 @@ private:
 	/// Flag that signifies whether '_' is parsed as a PlaceholderStatement or a regular identifier.
 	bool m_insideModifier = false;
 	langutil::EVMVersion m_evmVersion;
+	/// Counter for the next AST node ID
+	int64_t m_currentNodeID = 0;
 };
 
-}
 }

@@ -51,10 +51,10 @@ Details are given in the following example.
     // contracts can access all non-private members including
     // internal functions and state variables. These cannot be
     // accessed externally via `this`, though.
-    contract Mortal is Owned {
+    contract Destructible is Owned {
         // The keyword `virtual` means that the function can change
         // its behaviour in derived classes ("overriding").
-        function kill() virtual public {
+        function destroy() virtual public {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
@@ -76,9 +76,9 @@ Details are given in the following example.
 
 
     // Multiple inheritance is possible. Note that `owned` is
-    // also a base class of `mortal`, yet there is only a single
+    // also a base class of `Destructible`, yet there is only a single
     // instance of `owned` (as for virtual inheritance in C++).
-    contract Named is Owned, Mortal {
+    contract Named is Owned, Destructible {
         constructor(bytes32 name) public {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
             NameReg(config.lookup(1)).register(name);
@@ -92,13 +92,13 @@ Details are given in the following example.
         // If you want the function to override, you need to use the
         // `override` keyword. You need to specify the `virtual` keyword again
         // if you want this function to be overridden again.
-        function kill() public virtual override {
+        function destroy() public virtual override {
             if (msg.sender == owner) {
                 Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
                 NameReg(config.lookup(1)).unregister();
                 // It is still possible to call a specific
                 // overridden function.
-                Mortal.kill();
+                Destructible.destroy();
             }
         }
     }
@@ -107,21 +107,21 @@ Details are given in the following example.
     // If a constructor takes an argument, it needs to be
     // provided in the header (or modifier-invocation-style at
     // the constructor of the derived contract (see below)).
-    contract PriceFeed is Owned, Mortal, Named("GoldFeed") {
+    contract PriceFeed is Owned, Destructible, Named("GoldFeed") {
         function updateInfo(uint newInfo) public {
             if (msg.sender == owner) info = newInfo;
         }
 
         // Here, we only specify `override` and not `virtual`.
         // This means that contracts deriving from `PriceFeed`
-        // cannot change the behaviour of `kill` anymore.
-        function kill() public override(Mortal, Named) { Named.kill(); }
+        // cannot change the behaviour of `destroy` anymore.
+        function destroy() public override(Destructible, Named) { Named.destroy(); }
         function get() public view returns(uint r) { return info; }
 
         uint info;
     }
 
-Note that above, we call ``mortal.kill()`` to "forward" the
+Note that above, we call ``Destructible.destroy()`` to "forward" the
 destruction request. The way this is done is problematic, as
 seen in the following example::
 
@@ -132,27 +132,27 @@ seen in the following example::
         address payable owner;
     }
 
-    contract mortal is owned {
-        function kill() public virtual {
+    contract Destructible is owned {
+        function destroy() public virtual {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
 
-    contract Base1 is mortal {
-        function kill() public virtual override { /* do cleanup 1 */ mortal.kill(); }
+    contract Base1 is Destructible {
+        function destroy() public virtual override { /* do cleanup 1 */ Destructible.destroy(); }
     }
 
-    contract Base2 is mortal {
-        function kill() public virtual override { /* do cleanup 2 */ mortal.kill(); }
+    contract Base2 is Destructible {
+        function destroy() public virtual override { /* do cleanup 2 */ Destructible.destroy(); }
     }
 
     contract Final is Base1, Base2 {
-        function kill() public override(Base1, Base2) { Base2.kill(); }
+        function destroy() public override(Base1, Base2) { Base2.destroy(); }
     }
 
-A call to ``Final.kill()`` will call ``Base2.kill`` because we specify it
+A call to ``Final.destroy()`` will call ``Base2.destroy`` because we specify it
 explicitly in the final override, but this function will bypass
-``Base1.kill``. The way around this is to use ``super``::
+``Base1.destroy``. The way around this is to use ``super``::
 
     pragma solidity >=0.4.22 <0.7.0;
 
@@ -161,31 +161,31 @@ explicitly in the final override, but this function will bypass
         address payable owner;
     }
 
-    contract mortal is owned {
-        function kill() virtual public {
+    contract Destructible is owned {
+        function destroy() virtual public {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
 
-    contract Base1 is mortal {
-        function kill() public virtual override { /* do cleanup 1 */ super.kill(); }
+    contract Base1 is Destructible {
+        function destroy() public virtual override { /* do cleanup 1 */ super.destroy(); }
     }
 
 
-    contract Base2 is mortal {
-        function kill() public virtual override { /* do cleanup 2 */ super.kill(); }
+    contract Base2 is Destructible {
+        function destroy() public virtual override { /* do cleanup 2 */ super.destroy(); }
     }
 
     contract Final is Base1, Base2 {
-        function kill() public override(Base1, Base2) { super.kill(); }
+        function destroy() public override(Base1, Base2) { super.destroy(); }
     }
 
 If ``Base2`` calls a function of ``super``, it does not simply
 call this function on one of its base contracts.  Rather, it
 calls this function on the next base contract in the final
-inheritance graph, so it will call ``Base1.kill()`` (note that
+inheritance graph, so it will call ``Base1.destroy()`` (note that
 the final inheritance sequence is -- starting with the most
-derived contract: Final, Base2, Base1, mortal, owned).
+derived contract: Final, Base2, Base1, Destructible, owned).
 The actual function that is called when using super is
 not known in the context of the class where it is used,
 although its type is known. This is similar for ordinary

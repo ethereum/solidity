@@ -23,8 +23,8 @@
 #include <libsolidity/ast/AST.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::frontend;
 
 namespace
 {
@@ -75,7 +75,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 	}
 	if (_contractDef.constructor())
 	{
-		FunctionType constrType(*_contractDef.constructor(), false);
+		FunctionType constrType(*_contractDef.constructor());
 		FunctionType const* externalFunctionType = constrType.interfaceFunctionType();
 		solAssert(!!externalFunctionType, "");
 		Json::Value method;
@@ -92,7 +92,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 	for (auto const* fallbackOrReceive: {_contractDef.fallbackFunction(), _contractDef.receiveFunction()})
 		if (fallbackOrReceive)
 		{
-			FunctionType const* externalFunctionType = FunctionType(*fallbackOrReceive, false).interfaceFunctionType();
+			auto const* externalFunctionType = FunctionType(*fallbackOrReceive).interfaceFunctionType();
 			solAssert(!!externalFunctionType, "");
 			Json::Value method;
 			method["type"] = TokenTraits::toString(fallbackOrReceive->kind());

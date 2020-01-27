@@ -30,13 +30,9 @@
 #include <libsolidity/ast/ASTVisitor.h>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 namespace
@@ -46,7 +42,7 @@ ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& 
 	ErrorReporter errorReporter(_errors);
 	ASTPointer<SourceUnit> sourceUnit = Parser(
 		errorReporter,
-		dev::test::Options::get().evmVersion(),
+		solidity::test::Options::get().evmVersion(),
 		errorRecovery
 	).parse(std::make_shared<Scanner>(CharStream(_source, "")));
 	if (!sourceUnit)
@@ -694,6 +690,4 @@ BOOST_AUTO_TEST_CASE(inline_asm_end_location)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

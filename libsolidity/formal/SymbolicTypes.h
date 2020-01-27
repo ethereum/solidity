@@ -22,57 +22,51 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
 
-namespace dev
-{
-namespace solidity
-{
-namespace smt
+namespace solidity::frontend::smt
 {
 
 /// Returns the SMT sort that models the Solidity type _type.
-SortPointer smtSort(solidity::Type const& _type);
-std::vector<SortPointer> smtSort(std::vector<solidity::TypePointer> const& _types);
+SortPointer smtSort(frontend::Type const& _type);
+std::vector<SortPointer> smtSort(std::vector<frontend::TypePointer> const& _types);
 /// If _type has type Function, abstract it to Integer.
 /// Otherwise return smtSort(_type).
-SortPointer smtSortAbstractFunction(solidity::Type const& _type);
+SortPointer smtSortAbstractFunction(frontend::Type const& _type);
 /// Returns the SMT kind that models the Solidity type type category _category.
-Kind smtKind(solidity::Type::Category _category);
+Kind smtKind(frontend::Type::Category _category);
 
 /// Returns true if type is fully supported (declaration and operations).
-bool isSupportedType(solidity::Type::Category _category);
-bool isSupportedType(solidity::Type const& _type);
+bool isSupportedType(frontend::Type::Category _category);
+bool isSupportedType(frontend::Type const& _type);
 /// Returns true if type is partially supported (declaration).
-bool isSupportedTypeDeclaration(solidity::Type::Category _category);
-bool isSupportedTypeDeclaration(solidity::Type const& _type);
+bool isSupportedTypeDeclaration(frontend::Type::Category _category);
+bool isSupportedTypeDeclaration(frontend::Type const& _type);
 
-bool isInteger(solidity::Type::Category _category);
-bool isRational(solidity::Type::Category _category);
-bool isFixedBytes(solidity::Type::Category _category);
-bool isAddress(solidity::Type::Category _category);
-bool isContract(solidity::Type::Category _category);
-bool isEnum(solidity::Type::Category _category);
-bool isNumber(solidity::Type::Category _category);
-bool isBool(solidity::Type::Category _category);
-bool isFunction(solidity::Type::Category _category);
-bool isMapping(solidity::Type::Category _category);
-bool isArray(solidity::Type::Category _category);
-bool isTuple(solidity::Type::Category _category);
-bool isStringLiteral(solidity::Type::Category _category);
+bool isInteger(frontend::Type::Category _category);
+bool isRational(frontend::Type::Category _category);
+bool isFixedBytes(frontend::Type::Category _category);
+bool isAddress(frontend::Type::Category _category);
+bool isContract(frontend::Type::Category _category);
+bool isEnum(frontend::Type::Category _category);
+bool isNumber(frontend::Type::Category _category);
+bool isBool(frontend::Type::Category _category);
+bool isFunction(frontend::Type::Category _category);
+bool isMapping(frontend::Type::Category _category);
+bool isArray(frontend::Type::Category _category);
+bool isTuple(frontend::Type::Category _category);
+bool isStringLiteral(frontend::Type::Category _category);
 
 /// Returns a new symbolic variable, according to _type.
 /// Also returns whether the type is abstract or not,
 /// which is true for unsupported types.
-std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(solidity::Type const& _type, std::string const& _uniqueName, EncodingContext& _context);
+std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(frontend::Type const& _type, std::string const& _uniqueName, EncodingContext& _context);
 
-Expression minValue(solidity::IntegerType const& _type);
-Expression maxValue(solidity::IntegerType const& _type);
-Expression zeroValue(solidity::TypePointer const& _type);
+Expression minValue(frontend::IntegerType const& _type);
+Expression maxValue(frontend::IntegerType const& _type);
+Expression zeroValue(frontend::TypePointer const& _type);
 
 void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _context);
-void setSymbolicZeroValue(Expression _expr, solidity::TypePointer const& _type, EncodingContext& _context);
+void setSymbolicZeroValue(Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context);
 void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext& _context);
-void setSymbolicUnknownValue(Expression _expr, solidity::TypePointer const& _type, EncodingContext& _context);
+void setSymbolicUnknownValue(Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context);
 
-}
-}
 }

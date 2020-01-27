@@ -16,13 +16,9 @@
 
 #include <test/libsolidity/util/SoltestTypes.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 /**
@@ -84,7 +80,8 @@ public:
 	/// Converts \param _bytes to a soltest-compliant and human-readable
 	/// string representation of a byte array which is assumed to hold
 	/// a hex value.
-	static std::string formatHex(bytes const& _bytes);
+	/// The _shorten flag is used to trim leading and trailing zeros.
+	static std::string formatHex(bytes const& _bytes, bool _shorten = false);
 
 	/// Converts \param _bytes to a soltest-compliant and human-readable
 	/// string representation of a byte array which is assumed to hold
@@ -128,6 +125,4 @@ public:
 	static size_t countRightPaddedZeros(bytes const& _bytes);
 };
 
-}
-}
 }

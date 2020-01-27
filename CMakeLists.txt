@@ -10,7 +10,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-set(PROJECT_VERSION "0.6.1")
+set(PROJECT_VERSION "0.6.2")
 project(solidity VERSION ${PROJECT_VERSION} LANGUAGES C CXX)
 
 include(TestBigEndian)
@@ -19,10 +19,7 @@ if (IS_BIG_ENDIAN)
 	message(FATAL_ERROR "${PROJECT_NAME} currently does not support big endian systems.")
 endif()
 
-option(LLL "Build LLL" OFF)
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
-option(LLLC_LINK_STATIC "Link lllc executable statically on supported platforms" OFF)
-option(INSTALL_LLLC "Include lllc executable in installation" ${LLL})
 
 # Setup cccache.
 include(EthCcache)
@@ -52,7 +49,7 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" include/licens
 include(EthOptions)
 configure_project(TESTS)
 
-add_subdirectory(libdevcore)
+add_subdirectory(libsolutil)
 add_subdirectory(liblangutil)
 add_subdirectory(libevmasm)
 add_subdirectory(libyul)
@@ -61,10 +58,6 @@ add_subdirectory(libsolc)
 
 if (NOT EMSCRIPTEN)
 	add_subdirectory(solc)
-	if (LLL)
-		add_subdirectory(liblll)
-		add_subdirectory(lllc)
-	endif()
 endif()
 
 if (TESTS AND NOT EMSCRIPTEN)

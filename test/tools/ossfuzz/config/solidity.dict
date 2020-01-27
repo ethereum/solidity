@@ -41,6 +41,7 @@
 ".delegatecall("
 ".gas("
 ".kill("
+".shutdown("
 ".length"
 ".pop();"
 ".push("

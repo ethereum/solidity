@@ -25,13 +25,13 @@
 #include <functional>
 #include <memory>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 struct SourceLocation;
 }
 
-namespace yul
+namespace solidity::yul
 {
 
 struct TypedName;

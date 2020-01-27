@@ -34,11 +34,9 @@
 #include <vector>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /// AST node factory that also tracks the begin and end position of an AST node
@@ -46,9 +44,9 @@ namespace solidity
 class Parser::ASTNodeFactory
 {
 public:
-	explicit ASTNodeFactory(Parser const& _parser):
+	explicit ASTNodeFactory(Parser& _parser):
 		m_parser(_parser), m_location{_parser.position(), -1, _parser.source()} {}
-	ASTNodeFactory(Parser const& _parser, ASTPointer<ASTNode> const& _childNode):
+	ASTNodeFactory(Parser& _parser, ASTPointer<ASTNode> const& _childNode):
 		m_parser(_parser), m_location{_childNode->location()} {}
 
 	void markEndPosition() { m_location.end = m_parser.endPosition(); }
@@ -63,18 +61,19 @@ public:
 		solAssert(m_location.source, "");
 		if (m_location.end < 0)
 			markEndPosition();
-		return make_shared<NodeType>(m_location, std::forward<Args>(_args)...);
+		return make_shared<NodeType>(m_parser.nextID(), m_location, std::forward<Args>(_args)...);
 	}
 
 	SourceLocation const& location() const noexcept { return m_location; }
 
 private:
-	Parser const& m_parser;
+	Parser& m_parser;
 	SourceLocation m_location;
 };
 
 ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 {
+	solAssert(!m_insideModifier, "");
 	try
 	{
 		m_recursionDepth = 0;
@@ -245,9 +244,9 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 	return nodeFactory.createNode<ImportDirective>(path, unitAlias, move(symbolAliases));
 }
 
-std::pair<ContractDefinition::ContractKind, bool> Parser::parseContractKind()
+std::pair<ContractKind, bool> Parser::parseContractKind()
 {
-	ContractDefinition::ContractKind kind;
+	ContractKind kind;
 	bool abstract = false;
 	if (m_scanner->currentToken() == Token::Abstract)
 	{
@@ -257,13 +256,13 @@ std::pair<ContractDefinition::ContractKind, bool> Parser::parseContractKind()
 	switch (m_scanner->currentToken())
 	{
 	case Token::Interface:
-		kind = ContractDefinition::ContractKind::Interface;
+		kind = ContractKind::Interface;
 		break;
 	case Token::Contract:
-		kind = ContractDefinition::ContractKind::Contract;
+		kind = ContractKind::Contract;
 		break;
 	case Token::Library:
-		kind = ContractDefinition::ContractKind::Library;
+		kind = ContractKind::Library;
 		break;
 	default:
 		solAssert(false, "Invalid contract kind.");
@@ -280,7 +279,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	ASTPointer<ASTString> docString;
 	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
 	vector<ASTPointer<ASTNode>> subNodes;
-	std::pair<ContractDefinition::ContractKind, bool> contractKind{};
+	std::pair<ContractKind, bool> contractKind{};
 	try
 	{
 		if (m_scanner->currentCommentLiteral() != "")
@@ -681,7 +680,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		fatalParserError(
 			"Expected a state variable declaration. If you intended this as a fallback function "
 			"or a function to handle plain ether transactions, use the \"fallback\" keyword "
-			"or the \"ether\" keyword instead."
+			"or the \"receive\" keyword instead."
 		);
 
 	bool isIndexed = false;
@@ -1195,7 +1194,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 		BOOST_THROW_EXCEPTION(FatalError());
 
 	location.end = block->location.end;
-	return make_shared<InlineAssembly>(location, _docString, dialect, block);
+	return make_shared<InlineAssembly>(nextID(), location, _docString, dialect, block);
 }
 
 ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _docString)
@@ -1644,6 +1643,7 @@ ASTPointer<Expression> Parser::parseUnaryExpression(
 		// potential postfix expression
 		ASTPointer<Expression> subExpression = parseLeftHandSideExpression(_partiallyParsedExpression);
 		token = m_scanner->currentToken();
+
 		if (!TokenTraits::isCountOp(token))
 			return subExpression;
 		nodeFactory.markEndPosition();
@@ -1737,6 +1737,25 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 			nodeFactory.markEndPosition();
 			expectToken(Token::RParen);
 			expression = nodeFactory.createNode<FunctionCall>(expression, arguments, names);
+			break;
+		}
+		case Token::LBrace:
+		{
+			// See if this is followed by <identifier>, followed by ":". If not, it is not
+			// a function call options but a Block (from a try statement).
+			if (
+				m_scanner->peekNextToken() != Token::Identifier ||
+				m_scanner->peekNextNextToken() != Token::Colon
+			)
+				return expression;
+
+			expectToken(Token::LBrace);
+			auto optionList = parseNamedArguments();
+
+			nodeFactory.markEndPosition();
+			expectToken(Token::RBrace);
+
+			expression = parseLeftHandSideExpression(nodeFactory.createNode<FunctionCallOptions>(expression, optionList.first, optionList.second));
 			break;
 		}
 		default:
@@ -1888,32 +1907,40 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 	{
 		// call({arg1 : 1, arg2 : 2 })
 		expectToken(Token::LBrace);
-
-		bool first = true;
-		while (m_scanner->currentToken() != Token::RBrace)
-		{
-			if (!first)
-				expectToken(Token::Comma);
-
-			ret.second.push_back(expectIdentifierToken());
-			expectToken(Token::Colon);
-			ret.first.push_back(parseExpression());
-
-			if (
-				m_scanner->currentToken() == Token::Comma &&
-				m_scanner->peekNextToken() == Token::RBrace
-			)
-			{
-				parserError("Unexpected trailing comma.");
-				m_scanner->next();
-			}
-
-			first = false;
-		}
+		ret = parseNamedArguments();
 		expectToken(Token::RBrace);
 	}
 	else
 		ret.first = parseFunctionCallListArguments();
+	return ret;
+}
+
+pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::parseNamedArguments()
+{
+	pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> ret;
+
+	bool first = true;
+	while (m_scanner->currentToken() != Token::RBrace)
+	{
+		if (!first)
+			expectToken(Token::Comma);
+
+		ret.second.push_back(expectIdentifierToken());
+		expectToken(Token::Colon);
+		ret.first.push_back(parseExpression());
+
+		if (
+			m_scanner->currentToken() == Token::Comma &&
+			m_scanner->peekNextToken() == Token::RBrace
+		)
+		{
+			parserError("Unexpected trailing comma.");
+			m_scanner->next();
+		}
+
+		first = false;
+	}
+
 	return ret;
 }
 
@@ -2087,5 +2114,4 @@ ASTPointer<ASTString> Parser::getLiteralAndAdvance()
 	return identifier;
 }
 
-}
 }

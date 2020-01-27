@@ -22,11 +22,11 @@
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AsmData.h>
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 using namespace std;
 
-namespace yul
+namespace solidity::yul
 {
 
 Json::Value AsmJsonConverter::operator()(Block const& _node) const
@@ -52,7 +52,7 @@ Json::Value AsmJsonConverter::operator()(Literal const& _node) const
 	{
 	case LiteralKind::Number:
 		solAssert(
-			dev::isValidDecimal(_node.value.str()) || dev::isValidHex(_node.value.str()),
+			util::isValidDecimal(_node.value.str()) || util::isValidHex(_node.value.str()),
 			"Invalid number literal"
 		);
 		ret["kind"] = "number";

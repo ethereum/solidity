@@ -26,9 +26,7 @@
 
 #include <string>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 // How a function can mutate the EVM state.
@@ -69,5 +67,6 @@ struct FuncCallArguments
 	bool hasNamedArguments() const { return !names.empty(); }
 };
 
-}
+enum class ContractKind { Interface, Contract, Library };
+
 }

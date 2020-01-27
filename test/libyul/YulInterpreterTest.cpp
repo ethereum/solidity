@@ -29,19 +29,20 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>
 
-using namespace dev;
-using namespace langutil;
-using namespace yul;
-using namespace yul::test;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 using namespace std;
 
 YulInterpreterTest::YulInterpreterTest(string const& _filename)
@@ -98,9 +99,9 @@ void YulInterpreterTest::printIndented(ostream& _stream, string const& _output, 
 bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	AssemblyStack stack(
-		dev::test::Options::get().evmVersion(),
+		solidity::test::Options::get().evmVersion(),
 		AssemblyStack::Language::StrictAssembly,
-		dev::solidity::OptimiserSettings::none()
+		solidity::frontend::OptimiserSettings::none()
 	);
 	if (stack.parseAndAnalyze("", m_source))
 	{

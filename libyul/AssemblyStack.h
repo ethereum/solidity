@@ -34,19 +34,19 @@
 #include <memory>
 #include <string>
 
-namespace langutil
+namespace solidity::langutil
 {
 class Scanner;
 }
 
-namespace yul
+namespace solidity::yul
 {
 class AbstractAssembly;
 
 
 struct MachineAssemblyObject
 {
-	std::shared_ptr<dev::eth::LinkerObject> bytecode;
+	std::shared_ptr<evmasm::LinkerObject> bytecode;
 	std::string assembly;
 };
 
@@ -61,9 +61,9 @@ public:
 	enum class Machine { EVM, EVM15, Ewasm };
 
 	AssemblyStack():
-		AssemblyStack(langutil::EVMVersion{}, Language::Assembly, dev::solidity::OptimiserSettings::none())
+		AssemblyStack(langutil::EVMVersion{}, Language::Assembly, solidity::frontend::OptimiserSettings::none())
 	{}
-	AssemblyStack(langutil::EVMVersion _evmVersion, Language _language, dev::solidity::OptimiserSettings _optimiserSettings):
+	AssemblyStack(langutil::EVMVersion _evmVersion, Language _language, solidity::frontend::OptimiserSettings _optimiserSettings):
 		m_language(_language),
 		m_evmVersion(_evmVersion),
 		m_optimiserSettings(std::move(_optimiserSettings)),
@@ -106,7 +106,7 @@ private:
 
 	Language m_language = Language::Assembly;
 	langutil::EVMVersion m_evmVersion;
-	dev::solidity::OptimiserSettings m_optimiserSettings;
+	solidity::frontend::OptimiserSettings m_optimiserSettings;
 
 	std::shared_ptr<langutil::Scanner> m_scanner;
 

@@ -27,7 +27,7 @@
 #include <libevmasm/Assembly.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/RuleList.h>
-#include <libdevcore/Assertions.h>
+#include <libsolutil/Assertions.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/noncopyable.hpp>
@@ -36,9 +36,9 @@
 #include <functional>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::evmasm;
+using namespace solidity::langutil;
 
 SimplificationRule<Pattern> const* Rules::findFirstMatch(
 	Expression const& _expr,

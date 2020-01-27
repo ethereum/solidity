@@ -26,15 +26,13 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <string>
 #include <memory>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class ContractDefinition;
@@ -84,9 +82,8 @@ public:
 	/// @returns the variable (or comma-separated list of variables) that contain
 	/// the value of the given expression.
 	std::string variable(Expression const& _expression);
-	/// @returns the variable of a multi-variable expression. Variables are numbered
-	/// starting from 1.
-	std::string variablePart(Expression const& _expression, size_t _part);
+	/// @returns the sub-variable of a multi-variable expression.
+	std::string variablePart(Expression const& _expression, std::string const& _part);
 
 	std::string internalDispatch(size_t _in, size_t _out);
 
@@ -106,5 +103,4 @@ private:
 	size_t m_varCounter = 0;
 };
 
-}
 }

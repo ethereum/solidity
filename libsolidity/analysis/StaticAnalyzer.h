@@ -28,14 +28,12 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class ConstructorUsesAssembly;
@@ -101,5 +99,4 @@ private:
 	ContractDefinition const* m_currentContract = nullptr;
 };
 
-}
 }

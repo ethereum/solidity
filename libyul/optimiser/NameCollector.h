@@ -25,7 +25,7 @@
 #include <map>
 #include <set>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

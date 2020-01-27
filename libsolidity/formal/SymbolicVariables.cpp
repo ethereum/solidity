@@ -21,12 +21,13 @@
 #include <libsolidity/ast/AST.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity::smt;
+using namespace solidity;
+using namespace solidity::frontend;
+using namespace solidity::frontend::smt;
 
 SymbolicVariable::SymbolicVariable(
-	solidity::TypePointer _type,
-	solidity::TypePointer _originalType,
+	TypePointer _type,
+	TypePointer _originalType,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -54,7 +55,7 @@ SymbolicVariable::SymbolicVariable(
 	solAssert(m_sort, "");
 }
 
-Expression SymbolicVariable::currentValue(solidity::TypePointer const&) const
+smt::Expression SymbolicVariable::currentValue(frontend::TypePointer const&) const
 {
 	return valueAtIndex(m_ssa->index());
 }
@@ -64,7 +65,7 @@ string SymbolicVariable::currentName() const
 	return uniqueSymbol(m_ssa->index());
 }
 
-Expression SymbolicVariable::valueAtIndex(int _index) const
+smt::Expression SymbolicVariable::valueAtIndex(int _index) const
 {
 	return m_context.newVariable(uniqueSymbol(_index), m_sort);
 }
@@ -79,31 +80,31 @@ string SymbolicVariable::uniqueSymbol(unsigned _index) const
 	return m_uniqueName + "_" + to_string(_index);
 }
 
-Expression SymbolicVariable::resetIndex()
+smt::Expression SymbolicVariable::resetIndex()
 {
 	m_ssa->resetIndex();
 	return currentValue();
 }
 
-Expression SymbolicVariable::increaseIndex()
+smt::Expression SymbolicVariable::increaseIndex()
 {
 	++(*m_ssa);
 	return currentValue();
 }
 
 SymbolicBoolVariable::SymbolicBoolVariable(
-	solidity::TypePointer _type,
+	frontend::TypePointer _type,
 	string _uniqueName,
 	EncodingContext& _context
 ):
 	SymbolicVariable(_type, _type, move(_uniqueName), _context)
 {
-	solAssert(m_type->category() == solidity::Type::Category::Bool, "");
+	solAssert(m_type->category() == frontend::Type::Category::Bool, "");
 }
 
 SymbolicIntVariable::SymbolicIntVariable(
-	solidity::TypePointer _type,
-	solidity::TypePointer _originalType,
+	frontend::TypePointer _type,
+	frontend::TypePointer _originalType,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -121,7 +122,7 @@ SymbolicAddressVariable::SymbolicAddressVariable(
 }
 
 SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
-	solidity::TypePointer _originalType,
+	frontend::TypePointer _originalType,
 	unsigned _numBytes,
 	string _uniqueName,
 	EncodingContext& _context
@@ -131,14 +132,14 @@ SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
 }
 
 SymbolicFunctionVariable::SymbolicFunctionVariable(
-	solidity::TypePointer _type,
+	frontend::TypePointer _type,
 	string _uniqueName,
 	EncodingContext& _context
 ):
 	SymbolicVariable(_type, _type, move(_uniqueName), _context),
 	m_declaration(m_context.newVariable(currentName(), m_sort))
 {
-	solAssert(m_type->category() == solidity::Type::Category::Function, "");
+	solAssert(m_type->category() == frontend::Type::Category::Function, "");
 }
 
 SymbolicFunctionVariable::SymbolicFunctionVariable(
@@ -152,33 +153,33 @@ SymbolicFunctionVariable::SymbolicFunctionVariable(
 	solAssert(m_sort->kind == Kind::Function, "");
 }
 
-Expression SymbolicFunctionVariable::currentValue(solidity::TypePointer const& _targetType) const
+smt::Expression SymbolicFunctionVariable::currentValue(frontend::TypePointer const& _targetType) const
 {
 	return m_abstract.currentValue(_targetType);
 }
 
-Expression SymbolicFunctionVariable::currentFunctionValue() const
+smt::Expression SymbolicFunctionVariable::currentFunctionValue() const
 {
 	return m_declaration;
 }
 
-Expression SymbolicFunctionVariable::valueAtIndex(int _index) const
+smt::Expression SymbolicFunctionVariable::valueAtIndex(int _index) const
 {
 	return m_abstract.valueAtIndex(_index);
 }
 
-Expression SymbolicFunctionVariable::functionValueAtIndex(int _index) const
+smt::Expression SymbolicFunctionVariable::functionValueAtIndex(int _index) const
 {
 	return SymbolicVariable::valueAtIndex(_index);
 }
 
-Expression SymbolicFunctionVariable::resetIndex()
+smt::Expression SymbolicFunctionVariable::resetIndex()
 {
 	SymbolicVariable::resetIndex();
 	return m_abstract.resetIndex();
 }
 
-Expression SymbolicFunctionVariable::increaseIndex()
+smt::Expression SymbolicFunctionVariable::increaseIndex()
 {
 	++(*m_ssa);
 	resetDeclaration();
@@ -186,7 +187,7 @@ Expression SymbolicFunctionVariable::increaseIndex()
 	return m_abstract.currentValue();
 }
 
-Expression SymbolicFunctionVariable::operator()(vector<Expression> _arguments) const
+smt::Expression SymbolicFunctionVariable::operator()(vector<smt::Expression> _arguments) const
 {
 	return m_declaration(_arguments);
 }
@@ -197,7 +198,7 @@ void SymbolicFunctionVariable::resetDeclaration()
 }
 
 SymbolicMappingVariable::SymbolicMappingVariable(
-	solidity::TypePointer _type,
+	frontend::TypePointer _type,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -207,8 +208,8 @@ SymbolicMappingVariable::SymbolicMappingVariable(
 }
 
 SymbolicArrayVariable::SymbolicArrayVariable(
-	solidity::TypePointer _type,
-	solidity::TypePointer _originalType,
+	frontend::TypePointer _type,
+	frontend::TypePointer _originalType,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -217,21 +218,21 @@ SymbolicArrayVariable::SymbolicArrayVariable(
 	solAssert(isArray(m_type->category()), "");
 }
 
-Expression SymbolicArrayVariable::currentValue(solidity::TypePointer const& _targetType) const
+smt::Expression SymbolicArrayVariable::currentValue(frontend::TypePointer const& _targetType) const
 {
 	if (_targetType)
 		// StringLiterals are encoded as SMT arrays in the generic case,
 		// but they can also be compared/assigned to fixed bytes, in which
 		// case they'd need to be encoded as numbers.
 		if (auto strType = dynamic_cast<StringLiteralType const*>(m_originalType))
-			if (_targetType->category() == solidity::Type::Category::FixedBytes)
-				return smt::Expression(u256(toHex(asBytes(strType->value()), HexPrefix::Add)));
+			if (_targetType->category() == frontend::Type::Category::FixedBytes)
+				return smt::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
 
 	return SymbolicVariable::currentValue(_targetType);
 }
 
 SymbolicEnumVariable::SymbolicEnumVariable(
-	solidity::TypePointer _type,
+	frontend::TypePointer _type,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -241,7 +242,7 @@ SymbolicEnumVariable::SymbolicEnumVariable(
 }
 
 SymbolicTupleVariable::SymbolicTupleVariable(
-	solidity::TypePointer _type,
+	frontend::TypePointer _type,
 	string _uniqueName,
 	EncodingContext& _context
 ):

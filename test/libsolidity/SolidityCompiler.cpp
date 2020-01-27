@@ -24,11 +24,7 @@
 
 using namespace std;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 BOOST_FIXTURE_TEST_SUITE(SolidityCompiler, AnalysisFramework)
@@ -42,11 +38,11 @@ BOOST_AUTO_TEST_CASE(does_not_include_creation_time_only_internal_functions)
 			function f() internal { for (uint i = 0; i < 10; ++i) x += 3 + i; }
 		}
 	)";
-	compiler().setOptimiserSettings(dev::test::Options::get().optimize);
+	compiler().setOptimiserSettings(solidity::test::Options::get().optimize);
 	BOOST_REQUIRE(success(sourceCode));
 	BOOST_REQUIRE_MESSAGE(compiler().compile(), "Compiling contract failed");
-	bytes const& creationBytecode = dev::test::bytecodeSansMetadata(compiler().object("C").bytecode);
-	bytes const& runtimeBytecode = dev::test::bytecodeSansMetadata(compiler().runtimeObject("C").bytecode);
+	bytes const& creationBytecode = solidity::test::bytecodeSansMetadata(compiler().object("C").bytecode);
+	bytes const& runtimeBytecode = solidity::test::bytecodeSansMetadata(compiler().runtimeObject("C").bytecode);
 	BOOST_CHECK(creationBytecode.size() >= 90);
 	BOOST_CHECK(creationBytecode.size() <= 120);
 	BOOST_CHECK(runtimeBytecode.size() >= 10);
@@ -55,6 +51,4 @@ BOOST_AUTO_TEST_CASE(does_not_include_creation_time_only_internal_functions)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 }

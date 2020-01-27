@@ -24,11 +24,12 @@
 
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 struct AsmAnalysisInfo;
+}
 
-namespace wasm
+namespace solidity::yul::wasm
 {
 
 class TextTransform
@@ -64,5 +65,4 @@ private:
 	);
 };
 
-}
 }

@@ -18,15 +18,11 @@
 
 #include <test/libsolidity/util/SoltestErrors.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <json/json.h>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 using ABITypes = std::vector<ABIType>;
@@ -97,6 +93,4 @@ private:
 	);
 };
 
-}
-}
 }

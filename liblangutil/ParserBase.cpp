@@ -25,7 +25,8 @@
 #include <liblangutil/ErrorReporter.h>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::langutil;
 
 int ParserBase::position() const
 {

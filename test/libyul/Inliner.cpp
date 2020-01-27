@@ -34,9 +34,10 @@
 #include <boost/algorithm/string/join.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
-using namespace yul::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
 
 namespace
 {

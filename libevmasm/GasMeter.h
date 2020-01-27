@@ -29,9 +29,7 @@
 #include <ostream>
 #include <tuple>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class KnownState;
@@ -179,5 +177,4 @@ inline std::ostream& operator<<(std::ostream& _str, GasMeter::GasConsumption con
 }
 
 
-}
 }

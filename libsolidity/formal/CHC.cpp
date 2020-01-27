@@ -28,33 +28,27 @@
 #include <libsolidity/ast/TypeProvider.h>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 CHC::CHC(
 	smt::EncodingContext& _context,
 	ErrorReporter& _errorReporter,
-	map<h256, string> const& _smtlib2Responses,
+	map<util::h256, string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
-	smt::SMTSolverChoice _enabledSolvers
+	[[maybe_unused]] smt::SMTSolverChoice _enabledSolvers
 ):
 	SMTEncoder(_context),
-#ifdef HAVE_Z3
-	m_interface(
-		_enabledSolvers.z3 ?
-		dynamic_pointer_cast<smt::CHCSolverInterface>(make_shared<smt::Z3CHCInterface>()) :
-		dynamic_pointer_cast<smt::CHCSolverInterface>(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback))
-	),
-#else
-	m_interface(make_shared<smt::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback)),
-#endif
 	m_outerErrorReporter(_errorReporter),
 	m_enabledSolvers(_enabledSolvers)
 {
-	(void)_smtlib2Responses;
-	(void)_enabledSolvers;
-	(void)_smtCallback;
+#ifdef HAVE_Z3
+	if (_enabledSolvers.z3)
+		m_interface = make_unique<smt::Z3CHCInterface>();
+#endif
+	if (!m_interface)
+		m_interface = make_unique<smt::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback);
 }
 
 void CHC::analyze(SourceUnit const& _source)
@@ -66,14 +60,14 @@ void CHC::analyze(SourceUnit const& _source)
 	usesZ3 = m_enabledSolvers.z3;
 	if (usesZ3)
 	{
-		auto z3Interface = dynamic_pointer_cast<smt::Z3CHCInterface>(m_interface);
+		auto z3Interface = dynamic_cast<smt::Z3CHCInterface const*>(m_interface.get());
 		solAssert(z3Interface, "");
 		m_context.setSolver(z3Interface->z3Interface());
 	}
 #endif
 	if (!usesZ3)
 	{
-		auto smtlib2Interface = dynamic_pointer_cast<smt::CHCSmtLib2Interface>(m_interface);
+		auto smtlib2Interface = dynamic_cast<smt::CHCSmtLib2Interface const*>(m_interface.get());
 		solAssert(smtlib2Interface, "");
 		m_context.setSolver(smtlib2Interface->smtlib2Interface());
 	}
@@ -95,7 +89,7 @@ void CHC::analyze(SourceUnit const& _source)
 
 vector<string> CHC::unhandledQueries() const
 {
-	if (auto smtlib2 = dynamic_pointer_cast<smt::CHCSmtLib2Interface>(m_interface))
+	if (auto smtlib2 = dynamic_cast<smt::CHCSmtLib2Interface const*>(m_interface.get()))
 		return smtlib2->unhandledQueries();
 
 	return {};

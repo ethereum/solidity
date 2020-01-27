@@ -28,14 +28,12 @@
 
 // Forward-declare all AST node types and related enums.
 
-namespace langutil
+namespace solidity::langutil
 {
 enum class Token : unsigned int;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class ASTNode;
@@ -106,5 +104,4 @@ using ASTPointer = std::shared_ptr<T>;
 
 using ASTString = std::string;
 
-}
 }

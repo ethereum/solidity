@@ -23,14 +23,15 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/Exceptions.h>
 
-#include <libdevcore/Visitor.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Visitor.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/algorithm/string/replace.hpp>
 
-using namespace dev;
-using namespace yul;
 using namespace std;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 namespace
 {
@@ -46,13 +47,13 @@ string indent(std::string const& _input)
 
 string Data::toString(bool) const
 {
-	return "data \"" + name.str() + "\" hex\"" + dev::toHex(data) + "\"";
+	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
 }
 
 string Object::toString(bool _yul) const
 {
 	yulAssert(code, "No code");
-	string inner = "code " + AsmPrinter{_yul}(*code);
+	string inner = "code " + AsmPrinter{}(*code);
 
 	for (auto const& obj: subObjects)
 		inner += "\n" + obj->toString(_yul);

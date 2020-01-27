@@ -29,21 +29,19 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <libdevcore/FixedHash.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/FixedHash.h>
+#include <libsolutil/Keccak256.h>
 
 #include <functional>
 
-namespace dev
-{
-namespace test
+namespace solidity::test
 {
 class EVMHost;
 
-using rational = boost::rational<dev::bigint>;
+using rational = boost::rational<bigint>;
 /// An Ethereum address: 20 bytes.
 /// @NOTE This is not endian-specific; it's just a bunch of bytes.
-using Address = h160;
+using Address = util::h160;
 
 // The various denominations; here for ease of use where needed within code.
 static const u256 wei = 1;
@@ -101,7 +99,7 @@ public:
 
 	bytes const& callContractFunctionWithValueNoEncoding(std::string _sig, u256 const& _value, bytes const& _arguments)
 	{
-		FixedHash<4> hash(dev::keccak256(_sig));
+		util::FixedHash<4> hash(util::keccak256(_sig));
 		sendMessage(hash.asBytes() + _arguments, false, _value);
 		return m_output;
 	}
@@ -131,9 +129,9 @@ public:
 		BOOST_CHECK_MESSAGE(
 			contractResult == cppResult,
 			"Computed values do not match.\nContract: " +
-				toHex(contractResult) +
+				util::toHex(contractResult) +
 				"\nC++:      " +
-				toHex(cppResult)
+				util::toHex(cppResult)
 		);
 	}
 
@@ -147,11 +145,11 @@ public:
 			BOOST_CHECK_MESSAGE(
 				contractResult == cppResult,
 				"Computed values do not match.\nContract: " +
-					toHex(contractResult) +
+					util::toHex(contractResult) +
 					"\nC++:      " +
-					toHex(cppResult) +
+					util::toHex(cppResult) +
 					"\nArgument: " +
-					toHex(encode(argument))
+					util::toHex(encode(argument))
 			);
 		}
 	}
@@ -163,7 +161,7 @@ public:
 	static bytes encode(size_t _value) { return encode(u256(_value)); }
 	static bytes encode(char const* _value) { return encode(std::string(_value)); }
 	static bytes encode(uint8_t _value) { return bytes(31, 0) + bytes{_value}; }
-	static bytes encode(u256 const& _value) { return toBigEndian(_value); }
+	static bytes encode(u256 const& _value) { return util::toBigEndian(_value); }
 	/// @returns the fixed-point encoding of a rational number with a given
 	/// number of fractional bits.
 	static bytes encode(std::pair<rational, int> const& _valueAndPrecision)
@@ -172,13 +170,13 @@ public:
 		int fractionalBits = _valueAndPrecision.second;
 		return encode(u256((value.numerator() << fractionalBits) / value.denominator()));
 	}
-	static bytes encode(h256 const& _value) { return _value.asBytes(); }
+	static bytes encode(util::h256 const& _value) { return _value.asBytes(); }
 	static bytes encode(bytes const& _value, bool _padLeft = true)
 	{
 		bytes padding = bytes((32 - _value.size() % 32) % 32, 0);
 		return _padLeft ? padding + _value : _value + padding;
 	}
-	static bytes encode(std::string const& _value) { return encode(asBytes(_value), false); }
+	static bytes encode(std::string const& _value) { return encode(util::asBytes(_value), false); }
 	template <class _T>
 	static bytes encode(std::vector<_T> const& _value)
 	{
@@ -265,13 +263,13 @@ protected:
 
 	size_t numLogs() const;
 	size_t numLogTopics(size_t _logIdx) const;
-	h256 logTopic(size_t _logIdx, size_t _topicIdx) const;
+	util::h256 logTopic(size_t _logIdx, size_t _topicIdx) const;
 	Address logAddress(size_t _logIdx) const;
 	bytes logData(size_t _logIdx) const;
 
 	langutil::EVMVersion m_evmVersion;
-	solidity::RevertStrings m_revertStrings = solidity::RevertStrings::Default;
-	solidity::OptimiserSettings m_optimiserSettings = solidity::OptimiserSettings::minimal();
+	solidity::frontend::RevertStrings m_revertStrings = solidity::frontend::RevertStrings::Default;
+	solidity::frontend::OptimiserSettings m_optimiserSettings = solidity::frontend::OptimiserSettings::minimal();
 	bool m_showMessages = false;
 	std::shared_ptr<EVMHost> m_evmHost;
 
@@ -290,6 +288,5 @@ protected:
 } while (0)
 
 
-}
 } // end namespaces
 

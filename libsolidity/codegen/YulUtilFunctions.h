@@ -28,9 +28,7 @@
 #include <string>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class Type;
@@ -294,5 +292,4 @@ private:
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;
 };
 
-}
 }

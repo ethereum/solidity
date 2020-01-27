@@ -34,17 +34,15 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
 
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 bool ReferencesResolver::resolve(ASTNode const& _root)
@@ -405,7 +403,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 		else
 		{
 			errorString = "Data location must be " +
-			joinHumanReadable(
+			util::joinHumanReadable(
 				allowedDataLocations | boost::adaptors::transformed(locationToString),
 				", ",
 				" or "
@@ -500,5 +498,4 @@ void ReferencesResolver::fatalDeclarationError(SourceLocation const& _location, 
 	m_errorReporter.fatalDeclarationError(_location, _description);
 }
 
-}
 }

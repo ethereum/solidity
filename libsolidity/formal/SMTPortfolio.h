@@ -20,17 +20,13 @@
 
 #include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/interface/ReadFile.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/FixedHash.h>
 
 #include <boost/noncopyable.hpp>
 #include <map>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
-{
-namespace smt
+namespace solidity::frontend::smt
 {
 
 /**
@@ -43,7 +39,7 @@ class SMTPortfolio: public SolverInterface, public boost::noncopyable
 {
 public:
 	SMTPortfolio(
-		std::map<h256, std::string> const& _smtlib2Responses,
+		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
 		SMTSolverChoice _enabledSolvers
 	);
@@ -69,6 +65,4 @@ private:
 	std::vector<smt::Expression> m_assertions;
 };
 
-}
-}
 }

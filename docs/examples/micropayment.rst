@@ -164,7 +164,7 @@ The full contract
         }
 
         /// destroy the contract and reclaim the leftover funds.
-        function kill() public {
+        function shutdown() public {
             require(msg.sender == owner);
             selfdestruct(msg.sender);
         }

@@ -20,7 +20,7 @@
 
 #pragma once
 
-namespace yul
+namespace solidity::yul
 {
 struct Object;
 class AbstractAssembly;

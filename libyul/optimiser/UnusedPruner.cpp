@@ -32,8 +32,8 @@
 #include <boost/algorithm/cxx11/none_of.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 UnusedPruner::UnusedPruner(
 	Dialect const& _dialect,

@@ -30,15 +30,13 @@
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/ErrorReporter.h>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class ModelChecker
@@ -74,5 +72,4 @@ private:
 	smt::EncodingContext m_context;
 };
 
-}
 }

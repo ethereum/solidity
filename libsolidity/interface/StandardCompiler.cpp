@@ -27,8 +27,8 @@
 #include <libyul/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <libevmasm/Instruction.h>
-#include <libdevcore/JSON.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/JSON.h>
+#include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/algorithm/string.hpp>
@@ -37,10 +37,10 @@
 #include <optional>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::frontend;
+using namespace solidity::langutil;
 
 namespace
 {
@@ -105,7 +105,7 @@ Json::Value formatSecondarySourceLocation(SecondarySourceLocation const* _second
 }
 
 Json::Value formatErrorWithException(
-	Exception const& _exception,
+	util::Exception const& _exception,
 	bool const& _warning,
 	string const& _type,
 	string const& _component,
@@ -115,7 +115,7 @@ Json::Value formatErrorWithException(
 	string message;
 	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _type);
 
-	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
+	if (string const* description = boost::get_error_info<util::errinfo_comment>(_exception))
 		message = ((_message.length() > 0) ? (_message + ":") : "") + *description;
 	else
 		message = _message;
@@ -151,9 +151,9 @@ bool hashMatchesContent(string const& _hash, string const& _content)
 {
 	try
 	{
-		return dev::h256(_hash) == dev::keccak256(_content);
+		return util::h256(_hash) == util::keccak256(_content);
 	}
-	catch (dev::BadHexCharacter const&)
+	catch (util::BadHexCharacter const&)
 	{
 		return false;
 	}
@@ -309,11 +309,11 @@ Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkRefere
 	return ret;
 }
 
-Json::Value collectEVMObject(eth::LinkerObject const& _object, string const* _sourceMap)
+Json::Value collectEVMObject(evmasm::LinkerObject const& _object, string const* _sourceMap)
 {
 	Json::Value output = Json::objectValue;
 	output["object"] = _object.toHex();
-	output["opcodes"] = dev::eth::disassemble(_object.bytecode);
+	output["opcodes"] = evmasm::disassemble(_object.bytecode);
 	output["sourceMap"] = _sourceMap ? *_sourceMap : "";
 	output["linkReferences"] = formatLinkReferences(_object.linkReferences);
 	return output;
@@ -606,12 +606,12 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 
 			for (auto const& hashString: smtlib2Responses.getMemberNames())
 			{
-				h256 hash;
+				util::h256 hash;
 				try
 				{
-					hash = h256(hashString);
+					hash = util::h256(hashString);
 				}
-				catch (dev::BadHexCharacter const&)
+				catch (util::BadHexCharacter const&)
 				{
 					return formatFatalError("JSONError", "Invalid hex encoding of SMTLib2 auxiliary input.");
 				}
@@ -721,9 +721,9 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 			try
 			{
 				// @TODO use libraries only for the given source
-				ret.libraries[library] = h160(address);
+				ret.libraries[library] = util::h160(address);
 			}
-			catch (dev::BadHexCharacter const&)
+			catch (util::BadHexCharacter const&)
 			{
 				return formatFatalError(
 					"JSONError",
@@ -867,7 +867,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			"Yul exception"
 		));
 	}
-	catch (Exception const& _exception)
+	catch (util::Exception const& _exception)
 	{
 		errors.append(formatError(
 			false,
@@ -912,7 +912,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 	if (!compilerStack.unhandledSMTLib2Queries().empty())
 		for (string const& query: compilerStack.unhandledSMTLib2Queries())
-			output["auxiliaryInputRequested"]["smtlib2queries"]["0x" + keccak256(query).hex()] = query;
+			output["auxiliaryInputRequested"]["smtlib2queries"]["0x" + util::keccak256(query).hex()] = query;
 
 	bool const wildcardMatchesExperimental = false;
 
@@ -1117,7 +1117,7 @@ Json::Value StandardCompiler::compile(Json::Value const& _input) noexcept
 	{
 		return formatFatalError("InternalCompilerError", string("JSON runtime exception: ") + _exception.what());
 	}
-	catch (Exception const& _exception)
+	catch (util::Exception const& _exception)
 	{
 		return formatFatalError("InternalCompilerError", "Internal exception in StandardCompiler::compile: " + boost::diagnostic_information(_exception));
 	}
@@ -1133,8 +1133,8 @@ string StandardCompiler::compile(string const& _input) noexcept
 	string errors;
 	try
 	{
-		if (!jsonParseStrict(_input, input, &errors))
-			return jsonCompactPrint(formatFatalError("JSONError", errors));
+		if (!util::jsonParseStrict(_input, input, &errors))
+			return util::jsonCompactPrint(formatFatalError("JSONError", errors));
 	}
 	catch (...)
 	{
@@ -1147,7 +1147,7 @@ string StandardCompiler::compile(string const& _input) noexcept
 
 	try
 	{
-		return jsonCompactPrint(output);
+		return util::jsonCompactPrint(output);
 	}
 	catch (...)
 	{

@@ -27,12 +27,12 @@
 
 #include <libevmasm/SemanticInformation.h>
 
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Algorithms.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Algorithms.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 
 SideEffectsCollector::SideEffectsCollector(
@@ -116,13 +116,13 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 		// TODO we could shortcut the search as soon as we find a
 		// function that has as bad side-effects as we can
 		// ever achieve via recursion.
-		auto search = [&](YulString const& _functionName, CycleDetector<YulString>& _cycleDetector, size_t) {
+		auto search = [&](YulString const& _functionName, util::CycleDetector<YulString>& _cycleDetector, size_t) {
 			for (auto const& callee: _directCallGraph.functionCalls.at(_functionName))
 				if (!_dialect.builtin(callee))
 					if (_cycleDetector.run(callee))
 						return;
 		};
-		if (CycleDetector<YulString>(search).run(call.first))
+		if (util::CycleDetector<YulString>(search).run(call.first))
 		{
 			ret[call.first].movable = false;
 			ret[call.first].sideEffectFree = false;
@@ -134,7 +134,7 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 	{
 		YulString funName = call.first;
 		SideEffects sideEffects;
-		BreadthFirstSearch<YulString>{call.second, {funName}}.run(
+		util::BreadthFirstSearch<YulString>{call.second, {funName}}.run(
 			[&](YulString _function, auto&& _addChild) {
 				if (sideEffects == SideEffects::worst())
 					return;
@@ -207,6 +207,6 @@ bool TerminationFinder::isTerminatingBuiltin(ExpressionStatement const& _exprStm
 		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_exprStmnt.expression).functionName.name))
 				if (builtin->instruction)
-					return eth::SemanticInformation::terminatesControlFlow(*builtin->instruction);
+					return evmasm::SemanticInformation::terminatesControlFlow(*builtin->instruction);
 	return false;
 }

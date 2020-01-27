@@ -24,13 +24,13 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AsmData.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void RedundantAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {

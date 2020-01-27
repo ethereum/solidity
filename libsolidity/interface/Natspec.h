@@ -30,9 +30,7 @@
 #include <string>
 #include <libsolidity/ast/AST.h>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 // Forward declarations
@@ -70,5 +68,4 @@ private:
 	static Json::Value extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, FunctionDefinition const& _functionDef);
 };
 
-} //solidity NS
-} // dev NS
+}

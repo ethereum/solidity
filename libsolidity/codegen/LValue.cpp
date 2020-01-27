@@ -28,10 +28,11 @@
 #include <libevmasm/Instruction.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::solidity;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::evmasm;
+using namespace solidity::frontend;
+using namespace solidity::langutil;
+using namespace solidity::util;
 
 
 StackVariable::StackVariable(CompilerContext& _compilerContext, VariableDeclaration const& _declaration):
@@ -339,7 +340,6 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				{
 					solAssert(sourceType.location() == DataLocation::Memory, "");
 					// stack layout: source_ref target_ref
-					TypePointer sourceMemberType = sourceType.memberType(member.name);
 					m_context << sourceType.memoryOffsetOfMember(member.name);
 					m_context << Instruction::DUP3 << Instruction::ADD;
 					MemoryItem(m_context, *sourceMemberType).retrieveValue(_location, true);

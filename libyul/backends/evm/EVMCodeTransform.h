@@ -30,12 +30,12 @@
 #include <optional>
 #include <stack>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 }
 
-namespace yul
+namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 class EVMAssembly;
@@ -53,7 +53,6 @@ struct StackTooDeepError: virtual YulException
 
 struct CodeTransformContext
 {
-	std::map<Scope::Label const*, AbstractAssembly::LabelID> labelIDs;
 	std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
 	std::map<Scope::Variable const*, int> variableStackHeights;
 	std::map<Scope::Variable const*, unsigned> variableReferences;
@@ -187,9 +186,6 @@ public:
 
 private:
 	AbstractAssembly::LabelID labelFromIdentifier(Identifier const& _identifier);
-	/// @returns the label ID corresponding to the given label, allocating a new one if
-	/// necessary.
-	AbstractAssembly::LabelID labelID(Scope::Label const& _label);
 	AbstractAssembly::LabelID functionEntryID(YulString _name, Scope::Function const& _function);
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(Expression const& _expression);

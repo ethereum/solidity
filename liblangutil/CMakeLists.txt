@@ -16,6 +16,7 @@ set(sources
 	SemVerHandler.cpp
 	SemVerHandler.h
 	SourceLocation.h
+	SourceLocation.cpp
 	SourceReferenceExtractor.cpp
 	SourceReferenceExtractor.h
 	SourceReferenceFormatter.cpp
@@ -28,4 +29,4 @@ set(sources
 )
 
 add_library(langutil ${sources})
-target_link_libraries(langutil PUBLIC devcore)
+target_link_libraries(langutil PUBLIC solutil)

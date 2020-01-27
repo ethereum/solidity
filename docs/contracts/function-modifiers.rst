@@ -39,12 +39,12 @@ if they are marked ``virtual``. For details, please see
         }
     }
 
-    contract mortal is owned {
+    contract destructible is owned {
         // This contract inherits the `onlyOwner` modifier from
-        // `owned` and applies it to the `close` function, which
-        // causes that calls to `close` only have an effect if
+        // `owned` and applies it to the `destroy` function, which
+        // causes that calls to `destroy` only have an effect if
         // they are made by the stored owner.
-        function close() public onlyOwner {
+        function destroy() public onlyOwner {
             selfdestruct(owner);
         }
     }
@@ -58,7 +58,7 @@ if they are marked ``virtual``. For details, please see
         }
     }
 
-    contract Register is priced, owned {
+    contract Register is priced, destructible {
         mapping (address => bool) registeredAddresses;
         uint price;
 

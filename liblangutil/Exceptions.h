@@ -26,32 +26,36 @@
 #include <utility>
 #include <vector>
 #include <memory>
-#include <libdevcore/Exceptions.h>
-#include <libdevcore/Assertions.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Exceptions.h>
+#include <libsolutil/Assertions.h>
+#include <libsolutil/CommonData.h>
 #include <liblangutil/SourceLocation.h>
 
-namespace langutil
+namespace solidity::langutil
 {
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 
-struct CompilerError: virtual dev::Exception {};
-struct InternalCompilerError: virtual dev::Exception {};
-struct FatalError: virtual dev::Exception {};
-struct UnimplementedFeatureError: virtual dev::Exception {};
+struct CompilerError: virtual util::Exception {};
+struct InternalCompilerError: virtual util::Exception {};
+struct FatalError: virtual util::Exception {};
+struct UnimplementedFeatureError: virtual util::Exception {};
+struct InvalidAstError: virtual util::Exception {};
 
 /// Assertion that throws an InternalCompilerError containing the given description if it is not met.
 #define solAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::langutil::InternalCompilerError, DESCRIPTION)
+	assertThrow(CONDITION, ::solidity::langutil::InternalCompilerError, DESCRIPTION)
 
 #define solUnimplementedAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::langutil::UnimplementedFeatureError, DESCRIPTION)
+	assertThrow(CONDITION, ::solidity::langutil::UnimplementedFeatureError, DESCRIPTION)
 
 #define solUnimplemented(DESCRIPTION) \
 	solUnimplementedAssert(false, DESCRIPTION)
 
-class Error: virtual public dev::Exception
+#define astAssert(CONDITION, DESCRIPTION) \
+	assertThrow(CONDITION, ::solidity::langutil::InvalidAstError, DESCRIPTION)
+
+class Error: virtual public util::Exception
 {
 public:
 	enum class Type

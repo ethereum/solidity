@@ -31,15 +31,23 @@
 // TODO avoid
 #include <libevmasm/Instruction.h>
 
-#include <libdevcore/InvertibleMap.h>
+#include <libsolutil/InvertibleMap.h>
 
 #include <map>
 #include <set>
 
-namespace yul
+namespace solidity::yul
 {
 struct Dialect;
 struct SideEffects;
+
+/// Value assigned to a variable.
+struct AssignedValue
+{
+	Expression const* value{nullptr};
+	/// Loop nesting depth of the definition of the variable.
+	size_t loopDepth{0};
+};
 
 /**
  * Base class to perform data flow analysis during AST walks.
@@ -110,6 +118,8 @@ protected:
 	/// for example at points where control flow is merged.
 	void clearValues(std::set<YulString> _names);
 
+	void assignValue(YulString _variable, Expression const* _value);
+
 	/// Clears knowledge about storage or memory if they may be modified inside the block.
 	void clearKnowledgeIfInvalidated(Block const& _block);
 
@@ -133,7 +143,7 @@ protected:
 	bool inScope(YulString _variableName) const;
 
 	std::optional<std::pair<YulString, YulString>> isSimpleStore(
-		dev::eth::Instruction _store,
+		evmasm::Instruction _store,
 		ExpressionStatement const& _statement
 	) const;
 
@@ -143,7 +153,7 @@ protected:
 	std::map<YulString, SideEffects> m_functionSideEffects;
 
 	/// Current values of variables, always movable.
-	std::map<YulString, Expression const*> m_value;
+	std::map<YulString, AssignedValue> m_value;
 	/// m_references.forward[a].contains(b) <=> the current expression assigned to a references b
 	/// m_references.backward[b].contains(a) <=> the current expression assigned to a references b
 	InvertibleRelation<YulString> m_references;
@@ -152,6 +162,9 @@ protected:
 	InvertibleMap<YulString, YulString> m_memory;
 
 	KnowledgeBase m_knowledgeBase;
+
+	/// Current nesting depth of loops.
+	size_t m_loopDepth{0};
 
 	struct Scope
 	{

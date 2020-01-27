@@ -22,15 +22,13 @@
 
 #include <libsolidity/codegen/YulUtilFunctions.h>
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <string>
 #include <ostream>
 #include <boost/variant.hpp>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class VariableDeclaration;
@@ -128,5 +126,4 @@ private:
 	bool m_byteArrayElement;
 };
 
-}
 }

@@ -26,7 +26,7 @@
 
 #include <test/evmc/evmc.hpp>
 
-#include <libdevcore/CommonIO.h>
+#include <libsolutil/CommonIO.h>
 
 #include <boost/test/framework.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -34,24 +34,25 @@
 #include <cstdlib>
 
 using namespace std;
-using namespace dev;
-using namespace dev::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::test;
 
 ExecutionFramework::ExecutionFramework():
-	ExecutionFramework(dev::test::Options::get().evmVersion())
+	ExecutionFramework(solidity::test::Options::get().evmVersion())
 {
 }
 
 ExecutionFramework::ExecutionFramework(langutil::EVMVersion _evmVersion):
 	m_evmVersion(_evmVersion),
-	m_optimiserSettings(solidity::OptimiserSettings::minimal()),
-	m_showMessages(dev::test::Options::get().showMessages),
+	m_optimiserSettings(solidity::frontend::OptimiserSettings::minimal()),
+	m_showMessages(solidity::test::Options::get().showMessages),
 	m_evmHost(make_shared<EVMHost>(m_evmVersion))
 {
-	if (dev::test::Options::get().optimizeYul)
-		m_optimiserSettings = solidity::OptimiserSettings::full();
-	else if (dev::test::Options::get().optimize)
-		m_optimiserSettings = solidity::OptimiserSettings::standard();
+	if (solidity::test::Options::get().optimizeYul)
+		m_optimiserSettings = solidity::frontend::OptimiserSettings::full();
+	else if (solidity::test::Options::get().optimize)
+		m_optimiserSettings = solidity::frontend::OptimiserSettings::standard();
 	m_evmHost->reset();
 
 	for (size_t i = 0; i < 10; i++)

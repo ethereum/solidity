@@ -39,15 +39,15 @@
 #include <string>
 #include <vector>
 
-namespace langutil
+using solidity::util::h256;
+
+namespace solidity::langutil
 {
 class ErrorReporter;
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class BMC: public SMTEncoder
@@ -70,8 +70,6 @@ public:
 
 	/// @returns true if _funCall should be inlined, otherwise false.
 	static bool shouldInlineFunctionCall(FunctionCall const& _funCall);
-
-	std::shared_ptr<smt::SolverInterface> solver() { return m_interface; }
 
 private:
 	/// AST visitors.
@@ -172,6 +170,8 @@ private:
 	smt::CheckResult checkSatisfiable();
 	//@}
 
+	std::unique_ptr<smt::SolverInterface> m_interface;
+
 	/// Flags used for better warning messages.
 	bool m_loopExecutionHappened = false;
 	bool m_externalFunctionCallHappened = false;
@@ -183,9 +183,6 @@ private:
 
 	/// Assertions that are known to be safe.
 	std::set<Expression const*> m_safeAssertions;
-
-	std::shared_ptr<smt::SolverInterface> m_interface;
 };
 
-}
 }

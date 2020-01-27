@@ -24,7 +24,7 @@
 #include <libyul/AsmData.h>
 #include <libyul/Exceptions.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -34,8 +34,9 @@
 #include <functional>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::yul;
 
 //@TODO source locations
 
@@ -237,7 +238,7 @@ string AsmPrinter::formatTypedName(TypedName _variable) const
 
 string AsmPrinter::appendTypeName(YulString _type) const
 {
-	if (m_yul && !_type.empty())
+	if (!_type.empty())
 		return ":" + _type.str();
 	return "";
 }

@@ -27,9 +27,7 @@
 #include <string>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -86,6 +84,7 @@ public:
 	virtual bool visit(UnaryOperation& _node) { return visitNode(_node); }
 	virtual bool visit(BinaryOperation& _node) { return visitNode(_node); }
 	virtual bool visit(FunctionCall& _node) { return visitNode(_node); }
+	virtual bool visit(FunctionCallOptions& _node) { return visitNode(_node); }
 	virtual bool visit(NewExpression& _node) { return visitNode(_node); }
 	virtual bool visit(MemberAccess& _node) { return visitNode(_node); }
 	virtual bool visit(IndexAccess& _node) { return visitNode(_node); }
@@ -136,6 +135,7 @@ public:
 	virtual void endVisit(UnaryOperation& _node) { endVisitNode(_node); }
 	virtual void endVisit(BinaryOperation& _node) { endVisitNode(_node); }
 	virtual void endVisit(FunctionCall& _node) { endVisitNode(_node); }
+	virtual void endVisit(FunctionCallOptions& _node) { endVisitNode(_node); }
 	virtual void endVisit(NewExpression& _node) { endVisitNode(_node); }
 	virtual void endVisit(MemberAccess& _node) { endVisitNode(_node); }
 	virtual void endVisit(IndexAccess& _node) { endVisitNode(_node); }
@@ -199,6 +199,7 @@ public:
 	virtual bool visit(UnaryOperation const& _node) { return visitNode(_node); }
 	virtual bool visit(BinaryOperation const& _node) { return visitNode(_node); }
 	virtual bool visit(FunctionCall const& _node) { return visitNode(_node); }
+	virtual bool visit(FunctionCallOptions const& _node) { return visitNode(_node); }
 	virtual bool visit(NewExpression const& _node) { return visitNode(_node); }
 	virtual bool visit(MemberAccess const& _node) { return visitNode(_node); }
 	virtual bool visit(IndexAccess const& _node) { return visitNode(_node); }
@@ -249,6 +250,7 @@ public:
 	virtual void endVisit(UnaryOperation const& _node) { endVisitNode(_node); }
 	virtual void endVisit(BinaryOperation const& _node) { endVisitNode(_node); }
 	virtual void endVisit(FunctionCall const& _node) { endVisitNode(_node); }
+	virtual void endVisit(FunctionCallOptions const& _node) { endVisitNode(_node); }
 	virtual void endVisit(NewExpression const& _node) { endVisitNode(_node); }
 	virtual void endVisit(MemberAccess const& _node) { endVisitNode(_node); }
 	virtual void endVisit(IndexAccess const& _node) { endVisitNode(_node); }
@@ -328,5 +330,4 @@ private:
 	std::function<void(ASTNode const&, ASTNode const&)> m_onEdge;
 };
 
-}
 }

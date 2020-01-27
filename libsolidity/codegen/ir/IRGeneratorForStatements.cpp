@@ -35,14 +35,14 @@
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/ASTCopier.h>
 
-#include <libdevcore/Whiskers.h>
-#include <libdevcore/StringUtils.h>
-#include <libdevcore/Whiskers.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Whiskers.h>
+#include <libsolutil/StringUtils.h>
+#include <libsolutil/Keccak256.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
 
 namespace
 {
@@ -78,7 +78,7 @@ struct CopyTranslate: public yul::ASTCopier
 					_identifier.location,
 					yul::LiteralKind::Number,
 					yul::YulString{value},
-					yul::YulString{"uint256"}
+					{}
 				};
 			}
 		}
@@ -543,7 +543,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		if (!event.isAnonymous())
 		{
 			indexedArgs.emplace_back(m_context.newYulVariable());
-			string signature = formatNumber(u256(h256::Arith(dev::keccak256(functionType->externalSignature()))));
+			string signature = formatNumber(u256(h256::Arith(keccak256(functionType->externalSignature()))));
 			m_code << "let " << indexedArgs.back() << " := " << signature << "\n";
 		}
 		for (size_t i = 0; i < event.parameters().size(); ++i)
@@ -717,11 +717,11 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			else
 				solAssert(false, "Contract member is neither variable nor function.");
 
-			defineExpressionPart(_memberAccess, 1) << expressionAsType(
+			defineExpressionPart(_memberAccess, "address") << expressionAsType(
 				_memberAccess.expression(),
 				type.isPayable() ? *TypeProvider::payableAddress() : *TypeProvider::address()
 			) << "\n";
-			defineExpressionPart(_memberAccess, 2) << formatNumber(identifier) << "\n";
+			defineExpressionPart(_memberAccess, "functionIdentifier") << formatNumber(identifier) << "\n";
 		}
 		else
 			solAssert(false, "Invalid member access in contract");
@@ -1177,7 +1177,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	templ("result", m_context.newYulVariable());
 	templ("freeMem", fetchFreeMem());
 	templ("shl28", m_utils.shiftLeftFunction(8 * (32 - 4)));
-	templ("funId", m_context.variablePart(_functionCall.expression(), 2));
+	templ("funId", m_context.variablePart(_functionCall.expression(), "functionIdentifier"));
 
 	// If the function takes arbitrary parameters or is a bare call, copy dynamic length data in place.
 	// Move arguments to memory, will not update the free memory pointer (but will update the memory
@@ -1203,7 +1203,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	else if (useStaticCall)
 		solAssert(!funType.valueSet(), "Value set for staticcall");
 	else if (funType.valueSet())
-		templ("value", m_context.variablePart(_functionCall.expression(), 4));
+		templ("value", m_context.variablePart(_functionCall.expression(), "value"));
 	else
 		templ("value", "0");
 
@@ -1212,7 +1212,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	templ("checkExistence", checkExistence);
 
 	if (funType.gasSet())
-		templ("gas", m_context.variablePart(_functionCall.expression(), 3));
+		templ("gas", m_context.variablePart(_functionCall.expression(), "gas"));
 	else if (m_context.evmVersion().canOverchargeGasForCall())
 		// Send all gas (requires tangerine whistle EVM)
 		templ("gas", "gas()");
@@ -1220,11 +1220,11 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	{
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
-		u256 gasNeededByCaller = eth::GasCosts::callGas(m_context.evmVersion()) + 10;
+		u256 gasNeededByCaller = evmasm::GasCosts::callGas(m_context.evmVersion()) + 10;
 		if (funType.valueSet())
-			gasNeededByCaller += eth::GasCosts::callValueTransferGas;
+			gasNeededByCaller += evmasm::GasCosts::callValueTransferGas;
 		if (!checkExistence)
-			gasNeededByCaller += eth::GasCosts::callNewAccountGas; // we never know
+			gasNeededByCaller += evmasm::GasCosts::callNewAccountGas; // we never know
 		templ("gas", "sub(gas(), " + formatNumber(gasNeededByCaller) + ")");
 	}
 	// Order is important here, STATICCALL might overlap with DELEGATECALL.
@@ -1285,7 +1285,7 @@ ostream& IRGeneratorForStatements::defineExpression(Expression const& _expressio
 	return m_code;
 }
 
-ostream& IRGeneratorForStatements::defineExpressionPart(Expression const& _expression, size_t _part)
+ostream& IRGeneratorForStatements::defineExpressionPart(Expression const& _expression, string const& _part)
 {
 	return m_code << "let " << m_context.variablePart(_expression, _part) << " := ";
 }

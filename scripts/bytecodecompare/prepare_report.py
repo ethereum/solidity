@@ -1,41 +1,41 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import glob
 import subprocess
 import json
 
-solc = sys.argv[1]
-report = open("report.txt", "wb")
+SOLC_BIN = sys.argv[1]
+REPORT_FILE = open("report.txt", mode="w", encoding='utf8')
 
 for optimize in [False, True]:
     for f in sorted(glob.glob("*.sol")):
         sources = {}
-        sources[f] = {'content': open(f, 'r').read()}
-        input = {
+        sources[f] = {'content': open(f, mode='r', encoding='utf8').read()}
+        input_json = {
             'language': 'Solidity',
             'sources': sources,
             'settings': {
                 'optimizer': {
                     'enabled': optimize
                 },
-                'outputSelection': { '*': { '*': ['evm.bytecode.object', 'metadata'] } }
+                'outputSelection': {'*': {'*': ['evm.bytecode.object', 'metadata']}}
             }
         }
-        args = [solc, '--standard-json']
+        args = [SOLC_BIN, '--standard-json']
         if optimize:
             args += ['--optimize']
         proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (out, err) = proc.communicate(json.dumps(input))
+        (out, err) = proc.communicate(json.dumps(input_json).encode('utf-8'))
         try:
-            result = json.loads(out.strip())
+            result = json.loads(out.decode('utf-8').strip())
             for filename in sorted(result['contracts'].keys()):
                 for contractName in sorted(result['contracts'][filename].keys()):
                     contractData = result['contracts'][filename][contractName]
                     if 'evm' in contractData and 'bytecode' in contractData['evm']:
-                        report.write(filename + ':' + contractName + ' ' + contractData['evm']['bytecode']['object'] + '\n')
+                        REPORT_FILE.write(filename + ':' + contractName + ' ' + contractData['evm']['bytecode']['object'] + '\n')
                     else:
-                        report.write(filename + ':' + contractName + ' NO BYTECODE\n')
-                    report.write(filename + ':' + contractName + ' ' + contractData['metadata'] + '\n')
+                        REPORT_FILE.write(filename + ':' + contractName + ' NO BYTECODE\n')
+                    REPORT_FILE.write(filename + ':' + contractName + ' ' + contractData['metadata'] + '\n')
         except KeyError:
-            report.write(f + ": ERROR\n")
+            REPORT_FILE.write(f + ": ERROR\n")

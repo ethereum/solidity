@@ -21,16 +21,9 @@
 #include <libyul/AsmScope.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
-
-bool Scope::registerLabel(YulString _name)
-{
-	if (exists(_name))
-		return false;
-	identifiers[_name] = Label();
-	return true;
-}
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
 
 bool Scope::registerVariable(YulString _name, YulType const& _type)
 {

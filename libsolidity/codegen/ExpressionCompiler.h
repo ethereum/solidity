@@ -28,18 +28,18 @@
 #include <libsolidity/interface/DebugSettings.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 
 #include <boost/noncopyable.hpp>
 #include <functional>
 #include <memory>
 
-namespace dev {
-namespace eth
+namespace solidity::evmasm
 {
 class AssemblyItem; // forward
 }
-namespace solidity {
+
+namespace solidity::frontend {
 
 // forward declarations
 class CompilerContext;
@@ -85,6 +85,7 @@ private:
 	bool visit(UnaryOperation const& _unaryOperation) override;
 	bool visit(BinaryOperation const& _binaryOperation) override;
 	bool visit(FunctionCall const& _functionCall) override;
+	bool visit(FunctionCallOptions const& _functionCallOptions) override;
 	bool visit(NewExpression const& _newExpression) override;
 	bool visit(MemberAccess const& _memberAccess) override;
 	bool visit(IndexAccess const& _indexAccess) override;
@@ -156,5 +157,4 @@ void ExpressionCompiler::setLValue(Expression const& _expression, _Arguments con
 		lvalue->retrieveValue(_expression.location(), true);
 }
 
-}
 }

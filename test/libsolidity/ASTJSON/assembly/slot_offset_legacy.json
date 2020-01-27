@@ -166,6 +166,7 @@
                 {
                   "attributes":
                   {
+                    "evmVersion": %EVMVERSION%,
                     "externalReferences":
                     [
                       {

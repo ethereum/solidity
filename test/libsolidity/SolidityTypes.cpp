@@ -23,17 +23,13 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/AST.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 BOOST_AUTO_TEST_SUITE(SolidityTypes)
@@ -149,7 +145,8 @@ BOOST_AUTO_TEST_CASE(type_identifier_escaping)
 
 BOOST_AUTO_TEST_CASE(type_identifiers)
 {
-	ASTNode::resetID();
+	int64_t id = 0;
+
 	BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("uint128")->identifier(), "t_uint128");
 	BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("int128")->identifier(), "t_int128");
 	BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("address")->identifier(), "t_address");
@@ -161,7 +158,7 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	BOOST_CHECK_EQUAL(RationalNumberType(rational(2 * 200, 2 * 77)).identifier(), "t_rational_200_by_77");
 	BOOST_CHECK_EQUAL(RationalNumberType(rational(-2 * 200, 2 * 77)).identifier(), "t_rational_minus_200_by_77");
 	BOOST_CHECK_EQUAL(
-		StringLiteralType(Literal(SourceLocation{}, Token::StringLiteral, make_shared<string>("abc - def"))).identifier(),
+		StringLiteralType(Literal(++id, SourceLocation{}, Token::StringLiteral, make_shared<string>("abc - def"))).identifier(),
 		 "t_stringliteral_196a9142ee0d40e274a6482393c762b16dd8315713207365e1e13d8d85b74fc4"
 	);
 	BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("byte")->identifier(), "t_bytes1");
@@ -182,14 +179,14 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	TypePointer multiArray = TypeProvider::array(DataLocation::Storage, stringArray);
 	BOOST_CHECK_EQUAL(multiArray->identifier(), "t_array$_t_array$_t_string_storage_$20_storage_$dyn_storage_ptr");
 
-	ContractDefinition c(SourceLocation{}, make_shared<string>("MyContract$"), {}, {}, {}, ContractDefinition::ContractKind::Contract);
+	ContractDefinition c(++id, SourceLocation{}, make_shared<string>("MyContract$"), {}, {}, {}, ContractKind::Contract);
 	BOOST_CHECK_EQUAL(c.type()->identifier(), "t_type$_t_contract$_MyContract$$$_$2_$");
 	BOOST_CHECK_EQUAL(ContractType(c, true).identifier(), "t_super$_MyContract$$$_$2");
 
-	StructDefinition s({}, make_shared<string>("Struct"), {});
+	StructDefinition s(++id, {}, make_shared<string>("Struct"), {});
 	BOOST_CHECK_EQUAL(s.type()->identifier(), "t_type$_t_struct$_Struct_$3_storage_ptr_$");
 
-	EnumDefinition e({}, make_shared<string>("Enum"), {});
+	EnumDefinition e(++id, {}, make_shared<string>("Enum"), {});
 	BOOST_CHECK_EQUAL(e.type()->identifier(), "t_type$_t_enum$_Enum_$4_$");
 
 	TupleType t({e.type(), s.type(), stringArray, nullptr});
@@ -207,11 +204,11 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 
 	// TypeType is tested with contract
 
-	auto emptyParams = make_shared<ParameterList>(SourceLocation(), std::vector<ASTPointer<VariableDeclaration>>());
-	ModifierDefinition mod(SourceLocation{}, make_shared<string>("modif"), {}, emptyParams, {}, {}, {});
+	auto emptyParams = make_shared<ParameterList>(++id, SourceLocation(), std::vector<ASTPointer<VariableDeclaration>>());
+	ModifierDefinition mod(++id, SourceLocation{}, make_shared<string>("modif"), {}, emptyParams, {}, {}, {});
 	BOOST_CHECK_EQUAL(ModifierType(mod).identifier(), "t_modifier$__$");
 
-	SourceUnit su({}, {});
+	SourceUnit su(++id, {}, {});
 	BOOST_CHECK_EQUAL(ModuleType(su).identifier(), "t_module_7");
 	BOOST_CHECK_EQUAL(MagicType(MagicType::Kind::Block).identifier(), "t_magic_block");
 	BOOST_CHECK_EQUAL(MagicType(MagicType::Kind::Message).identifier(), "t_magic_message");
@@ -274,7 +271,7 @@ BOOST_AUTO_TEST_CASE(helper_bool_result)
 
 BOOST_AUTO_TEST_CASE(helper_string_result)
 {
-	using StringResult = Result<string>;
+	using StringResult = util::Result<string>;
 
 	StringResult r1{string{"Success"}};
 	StringResult r2 = StringResult::err("Failure");
@@ -290,6 +287,4 @@ BOOST_AUTO_TEST_CASE(helper_string_result)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 }

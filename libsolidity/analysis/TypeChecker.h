@@ -29,14 +29,12 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/Types.h>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -128,7 +126,6 @@ private:
 	bool visit(WhileStatement const& _whileStatement) override;
 	bool visit(ForStatement const& _forStatement) override;
 	void endVisit(Return const& _return) override;
-	bool visit(EmitStatement const&) override { m_insideEmitStatement = true; return true; }
 	void endVisit(EmitStatement const& _emit) override;
 	bool visit(VariableDeclarationStatement const& _variable) override;
 	void endVisit(ExpressionStatement const& _statement) override;
@@ -138,6 +135,7 @@ private:
 	void endVisit(BinaryOperation const& _operation) override;
 	bool visit(UnaryOperation const& _operation) override;
 	bool visit(FunctionCall const& _functionCall) override;
+	bool visit(FunctionCallOptions const& _functionCallOptions) override;
 	void endVisit(NewExpression const& _newExpression) override;
 	bool visit(MemberAccess const& _memberAccess) override;
 	bool visit(IndexAccess const& _indexAccess) override;
@@ -166,17 +164,7 @@ private:
 
 	langutil::EVMVersion m_evmVersion;
 
-	/// Flag indicating whether we are currently inside an EmitStatement.
-	bool m_insideEmitStatement = false;
-
-	/// Flag indicating whether we are currently inside a StructDefinition.
-	bool m_insideStruct = false;
-
-	/// Flag indicating whether we are currently inside the invocation of a modifier
-	bool m_insideModifierInvocation = false;
-
 	langutil::ErrorReporter& m_errorReporter;
 };
 
-}
 }

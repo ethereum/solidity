@@ -34,6 +34,9 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	add_compile_options(-Wall)
 	add_compile_options(-Wextra)
 	add_compile_options(-Werror)
+	add_compile_options(-pedantic)
+	add_compile_options(-Wno-unknown-pragmas)
+	add_compile_options(-Wimplicit-fallthrough)
 
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g3 -DETH_DEBUG")
@@ -110,9 +113,13 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s STRICT=1")
 			# Export the Emscripten-generated auxiliary methods which are needed by solc-js.
 			# Which methods of libsolc itself are exported is specified in libsolc/CMakeLists.txt.
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXTRA_EXPORTED_RUNTIME_METHODS=['cwrap','addFunction','removeFunction','UTF8ToString','lengthBytesUTF8','_malloc','stringToUTF8','setValue']")
-			# Do not build as a WebAssembly target - we need an asm.js output.
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM=0")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXTRA_EXPORTED_RUNTIME_METHODS=['cwrap','addFunction','removeFunction','UTF8ToString','lengthBytesUTF8','stringToUTF8','setValue']")
+			# Build for webassembly target.
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM=1")
+			# Set webassembly build to synchronous loading.
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM_ASYNC_COMPILATION=0")
+			# Output a single js file with the wasm binary embedded as base64 string.
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s SINGLE_FILE=1")
 
 			# Disable warnings about not being pure asm.js due to memory growth.
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-almost-asm")

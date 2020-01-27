@@ -33,14 +33,11 @@
 #include <memory>
 
 using namespace std;
-using namespace dev::eth;
-using namespace dev::test;
+using namespace solidity::util;
+using namespace solidity::evmasm;
+using namespace solidity::test;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 class OptimizerTestFramework: public SolidityExecutionFramework
@@ -109,7 +106,7 @@ public:
 		bytes realCode = bytecodeSansMetadata(_bytecode);
 		BOOST_REQUIRE_MESSAGE(!realCode.empty(), "Invalid or missing metadata in bytecode.");
 		size_t instructions = 0;
-		dev::eth::eachInstruction(realCode, [&](Instruction _instr, u256 const&) {
+		evmasm::eachInstruction(realCode, [&](Instruction _instr, u256 const&) {
 			if (!_which || *_which == _instr)
 				instructions++;
 		});
@@ -714,6 +711,4 @@ BOOST_AUTO_TEST_CASE(shift_optimizer_bug)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

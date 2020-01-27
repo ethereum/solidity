@@ -27,9 +27,7 @@
 #include <stack>
 #include <vector>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -153,5 +151,4 @@ private:
 	std::map<FunctionDefinition const*, std::unique_ptr<FunctionFlow>> m_functionControlFlow;
 };
 
-}
 }

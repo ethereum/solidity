@@ -1,13 +1,13 @@
 #include <test/tools/ossfuzz/abiV2FuzzerCommon.h>
 
-using namespace dev::test::abiv2fuzzer;
+using namespace solidity::test::abiv2fuzzer;
 
 SolidityCompilationFramework::SolidityCompilationFramework(langutil::EVMVersion _evmVersion)
 {
 	m_evmVersion = _evmVersion;
 }
 
-dev::bytes SolidityCompilationFramework::compileContract(
+solidity::bytes SolidityCompilationFramework::compileContract(
 	std::string const& _sourceCode,
 	std::string const& _contractName
 )
@@ -27,7 +27,7 @@ dev::bytes SolidityCompilationFramework::compileContract(
 			);
 		std::cerr << "Compiling contract failed" << std::endl;
 	}
-	dev::eth::LinkerObject obj = m_compiler.object(
+	evmasm::LinkerObject obj = m_compiler.object(
 		_contractName.empty() ?
 		m_compiler.lastContractName() :
 		_contractName

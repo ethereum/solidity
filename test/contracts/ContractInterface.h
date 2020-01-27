@@ -22,9 +22,7 @@
 
 #include <functional>
 
-namespace dev
-{
-namespace test
+namespace solidity::test
 {
 
 class ContractInterface
@@ -58,7 +56,7 @@ protected:
 		BOOST_CHECK(call(_name + "(string,address,bool)", u256(0x60), _arg2, _arg3, _arg1.length(), _arg1).empty());
 	}
 
-	void callStringBytes32(std::string const& _name, std::string const& _arg1, h256 const& _arg2)
+	void callStringBytes32(std::string const& _name, std::string const& _arg1, util::h256 const& _arg2)
 	{
 		BOOST_CHECK(call(_name + "(string,bytes32)", u256(0x40), _arg2, _arg1.length(), _arg1).empty());
 	}
@@ -68,25 +66,25 @@ protected:
 		bytes const& ret = call(_name + "(string)", u256(0x20), _arg.length(), _arg);
 		BOOST_REQUIRE(ret.size() == 0x20);
 		BOOST_CHECK(std::count(ret.begin(), ret.begin() + 12, 0) == 12);
-		return u160(u256(h256(ret)));
+		return u160(u256(util::h256(ret)));
 	}
 
 	std::string callAddressReturnsString(std::string const& _name, u160 const& _arg)
 	{
 		bytesConstRef const ret(&call(_name + "(address)", _arg));
 		BOOST_REQUIRE(ret.size() >= 0x40);
-		u256 offset(h256(ret.cropped(0, 0x20)));
+		u256 offset(util::h256(ret.cropped(0, 0x20)));
 		BOOST_REQUIRE_EQUAL(offset, 0x20);
-		u256 len(h256(ret.cropped(0x20, 0x20)));
+		u256 len(util::h256(ret.cropped(0x20, 0x20)));
 		BOOST_REQUIRE_EQUAL(ret.size(), 0x40 + ((len + 0x1f) / 0x20) * 0x20);
 		return ret.cropped(0x40, size_t(len)).toString();
 	}
 
-	h256 callStringReturnsBytes32(std::string const& _name, std::string const& _arg)
+	util::h256 callStringReturnsBytes32(std::string const& _name, std::string const& _arg)
 	{
 		bytes const& ret = call(_name + "(string)", u256(0x20), _arg.length(), _arg);
 		BOOST_REQUIRE(ret.size() == 0x20);
-		return h256(ret);
+		return util::h256(ret);
 	}
 
 private:
@@ -94,6 +92,5 @@ private:
 	ExecutionFramework& m_framework;
 };
 
-}
 } // end namespaces
 

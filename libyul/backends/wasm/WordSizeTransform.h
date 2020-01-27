@@ -28,7 +28,7 @@
 #include <array>
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**
@@ -70,9 +70,14 @@ public:
 	static void run(Dialect const& _inputDialect, Block& _ast, NameDispenser& _nameDispenser);
 
 private:
-	explicit WordSizeTransform(Dialect const& _inputDialect, NameDispenser& _nameDispenser):
+	explicit WordSizeTransform(
+		Dialect const& _inputDialect,
+		NameDispenser& _nameDispenser,
+		YulString _defaultType
+	):
 		m_inputDialect(_inputDialect),
-		m_nameDispenser(_nameDispenser)
+		m_nameDispenser(_nameDispenser),
+		m_defaultType(_defaultType)
 	{ }
 
 	void rewriteVarDeclList(std::vector<TypedName>&);
@@ -94,6 +99,7 @@ private:
 
 	Dialect const& m_inputDialect;
 	NameDispenser& m_nameDispenser;
+	YulString m_defaultType;
 	/// maps original u256 variable's name to corresponding u64 variables' names
 	std::map<YulString, std::array<YulString, 4>> m_variableMapping;
 };

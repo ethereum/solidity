@@ -17,7 +17,7 @@
 
 #include <test/TestCase.h>
 
-#include <libdevcore/StringUtils.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/cxx11/none_of.hpp>
 #include <boost/algorithm/string.hpp>
@@ -29,10 +29,10 @@
 
 #include <iostream>
 
-using namespace dev;
-using namespace solidity;
-using namespace dev::solidity::test;
 using namespace std;
+using namespace solidity;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 
 void TestCase::printUpdatedSettings(ostream& _stream, const string& _linePrefix, const bool)
 {
@@ -57,7 +57,7 @@ bool TestCase::validateSettings(langutil::EVMVersion)
 	if (!m_settings.empty())
 		throw runtime_error(
 			"Unknown setting(s): " +
-			joinHumanReadable(m_settings | boost::adaptors::map_keys)
+			util::joinHumanReadable(m_settings | boost::adaptors::map_keys)
 		);
 	return true;
 }

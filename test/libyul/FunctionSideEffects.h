@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 #include <test/TestCase.h>
 
 #include <iosfwd>
@@ -25,12 +25,10 @@
 #include <vector>
 #include <utility>
 
-namespace yul
-{
-namespace test
+namespace solidity::yul::test
 {
 
-class FunctionSideEffects: public dev::solidity::test::TestCase
+class FunctionSideEffects: public solidity::frontend::test::TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
@@ -50,5 +48,4 @@ private:
 	std::string m_obtainedResult;
 };
 
-}
 }

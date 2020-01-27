@@ -25,13 +25,10 @@
 #include <test/libsolidity/util/TestFunctionCall.h>
 
 using namespace std;
-using namespace dev::test;
+using namespace solidity::util;
+using namespace solidity::test;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 BOOST_AUTO_TEST_SUITE(TestFunctionCallTest)
@@ -255,6 +252,4 @@ BOOST_AUTO_TEST_CASE(format_failure_singleline)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 }

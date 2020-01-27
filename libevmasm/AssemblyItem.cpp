@@ -17,21 +17,21 @@
 
 #include <libevmasm/AssemblyItem.h>
 
-#include <libdevcore/CommonData.h>
-#include <libdevcore/FixedHash.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/FixedHash.h>
 
 #include <fstream>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
+using namespace solidity;
+using namespace solidity::evmasm;
 
 static_assert(sizeof(size_t) <= 8, "size_t must be at most 64-bits wide");
 
 AssemblyItem AssemblyItem::toSubAssemblyTag(size_t _subId) const
 {
-	assertThrow(data() < (u256(1) << 64), Exception, "Tag already has subassembly set.");
-	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
+	assertThrow(data() < (u256(1) << 64), util::Exception, "Tag already has subassembly set.");
+	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
 	size_t tag = size_t(u256(data()) & 0xffffffffffffffffULL);
 	AssemblyItem r = *this;
 	r.m_type = PushTag;
@@ -41,7 +41,7 @@ AssemblyItem AssemblyItem::toSubAssemblyTag(size_t _subId) const
 
 pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 {
-	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
+	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
 	u256 combined = u256(data());
 	size_t subId = size_t((combined >> 64) - 1);
 	size_t tag = size_t(combined & 0xffffffffffffffffULL);
@@ -50,7 +50,7 @@ pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 
 void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 {
-	assertThrow(m_type == PushTag || m_type == Tag, Exception, "");
+	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
 	u256 data = _tag;
 	if (_subId != size_t(-1))
 		data |= (u256(_subId) + 1) << 64;
@@ -67,7 +67,7 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	case PushString:
 		return 1 + 32;
 	case Push:
-		return 1 + max<unsigned>(1, dev::bytesRequired(data()));
+		return 1 + max<unsigned>(1, util::bytesRequired(data()));
 	case PushSubSize:
 	case PushProgramSize:
 		return 1 + 4;		// worst case: a 16MB program
@@ -170,10 +170,10 @@ string AssemblyItem::toAssemblyText() const
 		break;
 	}
 	case Push:
-		text = toHex(toCompactBigEndian(data(), 1), HexPrefix::Add);
+		text = toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add);
 		break;
 	case PushString:
-		text = string("data_") + toHex(data());
+		text = string("data_") + util::toHex(data());
 		break;
 	case PushTag:
 	{
@@ -191,7 +191,7 @@ string AssemblyItem::toAssemblyText() const
 		text = string("tag_") + to_string(size_t(data())) + ":";
 		break;
 	case PushData:
-		text = string("data_") + toHex(data());
+		text = string("data_") + util::toHex(data());
 		break;
 	case PushSub:
 		text = string("dataOffset(sub_") + to_string(size_t(data())) + ")";
@@ -203,7 +203,7 @@ string AssemblyItem::toAssemblyText() const
 		text = string("bytecodeSize");
 		break;
 	case PushLibraryAddress:
-		text = string("linkerSymbol(\"") + toHex(data()) + string("\")");
+		text = string("linkerSymbol(\"") + util::toHex(data()) + string("\")");
 		break;
 	case PushDeployTimeAddress:
 		text = string("deployTimeAddress()");
@@ -225,7 +225,7 @@ string AssemblyItem::toAssemblyText() const
 	return text;
 }
 
-ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
+ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 {
 	switch (_item.type())
 	{
@@ -266,7 +266,7 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 		break;
 	case PushLibraryAddress:
 	{
-		string hash(h256((_item.data())).hex());
+		string hash(util::h256((_item.data())).hex());
 		_out << " PushLibraryAddress " << hash.substr(0, 8) + "..." + hash.substr(hash.length() - 8);
 		break;
 	}

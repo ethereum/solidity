@@ -31,13 +31,13 @@
 
 #include <test/tools/ossfuzz/yulFuzzerCommon.h>
 
-using namespace yul;
-using namespace yul::test::yul_fuzzer;
 using namespace std;
-
-using namespace langutil;
-using namespace dev;
-using namespace yul::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+using namespace solidity::yul::test::yul_fuzzer;
 
 namespace
 {
@@ -71,7 +71,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	AssemblyStack stack(
 		langutil::EVMVersion::berlin(),
 		AssemblyStack::Language::StrictAssembly,
-		dev::solidity::OptimiserSettings::full()
+		solidity::frontend::OptimiserSettings::full()
 	);
 
 	// Parse protobuf mutated YUL code

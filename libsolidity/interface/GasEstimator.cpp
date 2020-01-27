@@ -29,17 +29,17 @@
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/KnownState.h>
 #include <libevmasm/PathGasMeter.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 #include <functional>
 #include <map>
 #include <memory>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::evmasm;
+using namespace solidity::frontend;
+using namespace solidity::langutil;
 
 GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimation(
 	AssemblyItems const& _items,
@@ -140,7 +140,7 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 		ExpressionClasses& classes = state->expressionClasses();
 		using Id = ExpressionClasses::Id;
 		using Ids = vector<Id>;
-		Id hashValue = classes.find(u256(FixedHash<4>::Arith(FixedHash<4>(dev::keccak256(_signature)))));
+		Id hashValue = classes.find(u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256(_signature)))));
 		Id calldata = classes.find(Instruction::CALLDATALOAD, Ids{classes.find(u256(0))});
 		if (!m_evmVersion.hasBitwiseShifting())
 			// div(calldataload(0), 1 << 224) equals to hashValue

@@ -26,21 +26,19 @@
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SimplificationRule.h>
 
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/noncopyable.hpp>
 
 #include <functional>
 #include <vector>
 
-namespace langutil
+namespace solidity::langutil
 {
 struct SourceLocation;
 }
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 class Pattern;
@@ -89,7 +87,7 @@ public:
 	using Expression = ExpressionClasses::Expression;
 	using Id = ExpressionClasses::Id;
 
-	using Builtins = dev::eth::EVMBuiltins<Pattern>;
+	using Builtins = evmasm::EVMBuiltins<Pattern>;
 	static constexpr size_t WordSize = 256;
 	using Word = u256;
 
@@ -158,5 +156,4 @@ struct ExpressionTemplate
 	std::vector<ExpressionTemplate> arguments;
 };
 
-}
 }

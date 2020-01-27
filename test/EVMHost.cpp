@@ -25,14 +25,15 @@
 
 #include <libevmasm/GasMeter.h>
 
-#include <libdevcore/Exceptions.h>
-#include <libdevcore/Assertions.h>
-#include <libdevcore/Keccak256.h>
-#include <libdevcore/picosha2.h>
+#include <libsolutil/Exceptions.h>
+#include <libsolutil/Assertions.h>
+#include <libsolutil/Keccak256.h>
+#include <libsolutil/picosha2.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::test;
 using namespace evmc::literals;
 
 evmc::VM& EVMHost::getVM(string const& _path)
@@ -148,9 +149,9 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	evmc_message message = _message;
 	if (message.depth == 0)
 	{
-		message.gas -= message.kind == EVMC_CREATE ? eth::GasCosts::txCreateGas : eth::GasCosts::txGas;
+		message.gas -= message.kind == EVMC_CREATE ? evmasm::GasCosts::txCreateGas : evmasm::GasCosts::txGas;
 		for (size_t i = 0; i < message.input_size; ++i)
-			message.gas -= message.input_data[i] == 0 ? eth::GasCosts::txDataZeroGas : eth::GasCosts::txDataNonZeroGas(m_evmVersion);
+			message.gas -= message.input_data[i] == 0 ? evmasm::GasCosts::txDataZeroGas : evmasm::GasCosts::txDataNonZeroGas(m_evmVersion);
 		if (message.gas < 0)
 		{
 			evmc::result result({});
@@ -171,6 +172,28 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		message.destination = convertToEVMC(createAddress);
 		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
 	}
+	else if (message.kind == EVMC_CREATE2)
+	{
+		Address createAddress(keccak256(
+			bytes(1, 0xff) +
+			bytes(begin(message.sender.bytes), end(message.sender.bytes)) +
+			bytes(begin(message.create2_salt.bytes), end(message.create2_salt.bytes)) +
+			keccak256(bytes(message.input_data, message.input_data + message.input_size)).asBytes()
+		));
+		message.destination = convertToEVMC(createAddress);
+		if (accounts.count(message.destination) && (
+			accounts[message.destination].nonce > 0 ||
+			!accounts[message.destination].code.empty()
+		))
+		{
+			evmc::result result({});
+			result.status_code = EVMC_OUT_OF_GAS;
+			accounts = stateBackup;
+			return result;
+		}
+
+		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
+	}
 	else if (message.kind == EVMC_DELEGATECALL)
 	{
 		code = accounts[message.destination].code;
@@ -183,7 +206,6 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	}
 	else
 		code = accounts[message.destination].code;
-	//TODO CREATE2
 
 	auto& destination = accounts[message.destination];
 
@@ -198,9 +220,9 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 	evmc::result result = m_vm.execute(*this, m_evmRevision, message, code.data(), code.size());
 	m_currentAddress = currentAddress;
 
-	if (message.kind == EVMC_CREATE)
+	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
 	{
-		result.gas_left -= eth::GasCosts::createDataGas * result.output_size;
+		result.gas_left -= evmasm::GasCosts::createDataGas * result.output_size;
 		if (result.gas_left < 0)
 		{
 			result.gas_left = 0;

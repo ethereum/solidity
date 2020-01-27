@@ -26,7 +26,7 @@
 #include <memory>
 #include <vector>
 
-namespace yul
+namespace solidity::yul
 {
 
 struct Scope;

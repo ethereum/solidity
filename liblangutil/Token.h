@@ -42,7 +42,7 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/UndefMacros.h>
 
@@ -50,7 +50,7 @@
 #include <string>
 #include <tuple>
 
-namespace langutil
+namespace solidity::langutil
 {
 
 // TOKEN_LIST takes a list of 3 macros M, all of which satisfy the

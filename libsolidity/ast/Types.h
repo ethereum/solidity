@@ -27,9 +27,9 @@
 #include <libsolidity/parsing/Token.h>
 #include <liblangutil/Exceptions.h>
 
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/Result.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/Result.h>
 
 #include <boost/rational.hpp>
 
@@ -39,9 +39,7 @@
 #include <set>
 #include <string>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class TypeProvider;
@@ -50,9 +48,9 @@ class FunctionType; // forward
 using TypePointer = Type const*;
 using FunctionTypePointer = FunctionType const*;
 using TypePointers = std::vector<TypePointer>;
-using rational = boost::rational<dev::bigint>;
-using TypeResult = Result<TypePointer>;
-using BoolResult = Result<bool>;
+using rational = boost::rational<bigint>;
+using TypeResult = util::Result<TypePointer>;
+using BoolResult = util::Result<bool>;
 
 inline rational makeRational(bigint const& _numerator, bigint const& _denominator)
 {
@@ -213,7 +211,7 @@ public:
 	/// Always returns a value greater than zero and throws if the type cannot be encoded in calldata
 	/// (or is dynamically encoded).
 	/// If @a _padded then it is assumed that each element is padded to a multiple of 32 bytes.
-	virtual unsigned calldataEncodedSize(bool _padded) const { (void)_padded; solAssert(false, ""); }
+	virtual unsigned calldataEncodedSize([[maybe_unused]] bool _padded) const { solAssert(false, ""); }
 	/// Convenience version of @see calldataEncodedSize(bool)
 	unsigned calldataEncodedSize() const { return calldataEncodedSize(true); }
 	/// @returns the distance between two elements of this type in a calldata array, tuple or struct.
@@ -539,7 +537,7 @@ private:
 
 	/// @returns a truncated readable representation of the bigint keeping only
 	/// up to 4 leading and 4 trailing digits.
-	static std::string bigintToReadableString(dev::bigint const& num);
+	static std::string bigintToReadableString(bigint const& num);
 };
 
 /**
@@ -599,7 +597,7 @@ public:
 	bool leftAligned() const override { return true; }
 	bool isValueType() const override { return true; }
 
-	std::string toString(bool) const override { return "bytes" + dev::toString(m_bytes); }
+	std::string toString(bool) const override { return "bytes" + util::toString(m_bytes); }
 	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 	TypePointer encodingType() const override { return this; }
 	TypeResult interfaceType(bool) const override { return this; }
@@ -1053,11 +1051,16 @@ public:
 		ABIEncodeWithSignature,
 		ABIDecode,
 		GasLeft, ///< gasleft()
-		MetaType ///< type(...)
+		MetaType, ///< type(...)
+		/// Refers to a function declaration without calling context
+		/// (i.e. when accessed directly via the name of the containing contract).
+		/// Cannot be called.
+		Declaration,
 	};
 
 	/// Creates the type of a function.
-	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
+	/// @arg _kind must be Kind::Internal, Kind::External or Kind::Declaration.
+	explicit FunctionType(FunctionDefinition const& _function, Kind _kind = Kind::Declaration);
 	/// Creates the accessor function type of a state variable.
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	/// Creates the function type of an event.
@@ -1068,7 +1071,7 @@ public:
 	FunctionType(
 		strings const& _parameterTypes,
 		strings const& _returnParameterTypes,
-		Kind _kind = Kind::Internal,
+		Kind _kind,
 		bool _arbitraryParameters = false,
 		StateMutability _stateMutability = StateMutability::NonPayable
 	): FunctionType(
@@ -1095,6 +1098,7 @@ public:
 		Declaration const* _declaration = nullptr,
 		bool _gasSet = false,
 		bool _valueSet = false,
+		bool _saltSet = false,
 		bool _bound = false
 	):
 		m_parameterTypes(_parameterTypes),
@@ -1107,7 +1111,8 @@ public:
 		m_gasSet(_gasSet),
 		m_valueSet(_valueSet),
 		m_bound(_bound),
-		m_declaration(_declaration)
+		m_declaration(_declaration),
+		m_saltSet(_saltSet)
 	{
 		solAssert(
 			m_parameterNames.size() == m_parameterTypes.size(),
@@ -1232,11 +1237,12 @@ public:
 
 	bool gasSet() const { return m_gasSet; }
 	bool valueSet() const { return m_valueSet; }
+	bool saltSet() const { return m_saltSet; }
 	bool bound() const { return m_bound; }
 
 	/// @returns a copy of this type, where gas or value are set manually. This will never set one
 	/// of the parameters to false.
-	TypePointer copyAndSetGasOrValue(bool _setGas, bool _setValue) const;
+	TypePointer copyAndSetCallOptions(bool _setGas, bool _setValue, bool _setSalt) const;
 
 	/// @returns a copy of this function type where the location of reference types is changed
 	/// from CallData to Memory. This is the type that would be used when the function is
@@ -1261,6 +1267,7 @@ private:
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
 	bool const m_bound = false; ///< true iff the function is called as arg1.fun(arg2, ..., argn)
 	Declaration const* m_declaration = nullptr;
+	bool m_saltSet = false; ///< true iff the salt value to be used is on the stack
 };
 
 /**
@@ -1434,7 +1441,7 @@ public:
 	BoolResult isImplicitlyConvertibleTo(Type const&) const override { return false; }
 	BoolResult isExplicitlyConvertibleTo(Type const&) const override { return false; }
 	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
-	unsigned calldataEncodedSize(bool _padded) const override { (void)_padded; return 32; }
+	unsigned calldataEncodedSize(bool) const override { return 32; }
 	bool canBeStored() const override { return false; }
 	bool canLiveOutsideStorage() const override { return false; }
 	bool isValueType() const override { return true; }
@@ -1444,5 +1451,4 @@ public:
 	TypePointer decodingType() const override;
 };
 
-}
 }

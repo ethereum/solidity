@@ -25,8 +25,8 @@
 #include <libevmasm/AssemblyItem.h>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
+using namespace solidity;
+using namespace solidity::evmasm;
 
 bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool _msizeImportant)
 {
@@ -96,14 +96,14 @@ bool SemanticInformation::isDupInstruction(AssemblyItem const& _item)
 {
 	if (_item.type() != Operation)
 		return false;
-	return dev::eth::isDupInstruction(_item.instruction());
+	return evmasm::isDupInstruction(_item.instruction());
 }
 
 bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 {
 	if (_item.type() != Operation)
 		return false;
-	return dev::eth::isSwapInstruction(_item.instruction());
+	return evmasm::isSwapInstruction(_item.instruction());
 }
 
 bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)

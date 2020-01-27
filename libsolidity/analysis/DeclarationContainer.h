@@ -27,9 +27,7 @@
 #include <map>
 #include <set>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -75,5 +73,4 @@ private:
 	std::map<ASTString, std::vector<Declaration const*>> m_invisibleDeclarations;
 };
 
-}
 }

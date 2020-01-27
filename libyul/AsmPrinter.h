@@ -26,13 +26,14 @@
 
 #include <libyul/YulString.h>
 
-namespace yul
+namespace solidity::yul
 {
+struct Dialect;
 
 class AsmPrinter
 {
 public:
-	explicit AsmPrinter(bool _yul = false): m_yul(_yul) {}
+	explicit AsmPrinter() {}
 
 	std::string operator()(Literal const& _literal) const;
 	std::string operator()(Identifier const& _identifier) const;
@@ -52,8 +53,6 @@ public:
 private:
 	std::string formatTypedName(TypedName _variable) const;
 	std::string appendTypeName(YulString _type) const;
-
-	bool m_yul = false;
 };
 
 }

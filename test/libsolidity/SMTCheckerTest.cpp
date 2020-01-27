@@ -20,11 +20,11 @@
 
 #include <libsolidity/formal/ModelChecker.h>
 
-using namespace langutil;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
-using namespace dev;
 using namespace std;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 
 SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion _evmVersion): SyntaxTest(_filename, _evmVersion)
 {

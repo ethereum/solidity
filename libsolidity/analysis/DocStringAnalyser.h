@@ -25,14 +25,12 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 
-namespace langutil
+namespace solidity::langutil
 {
 class ErrorReporter;
 }
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 /**
@@ -81,5 +79,4 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 };
 
-}
 }

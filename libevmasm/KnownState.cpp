@@ -23,14 +23,14 @@
 
 #include <libevmasm/KnownState.h>
 #include <libevmasm/AssemblyItem.h>
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 #include <functional>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace langutil;
+using namespace solidity;
+using namespace solidity::evmasm;
+using namespace solidity::langutil;
 
 ostream& KnownState::stream(ostream& _out) const
 {
@@ -383,9 +383,9 @@ KnownState::Id KnownState::applyKeccak256(
 	{
 		bytes data;
 		for (Id a: arguments)
-			data += toBigEndian(*m_expressionClasses->knownConstant(a));
+			data += util::toBigEndian(*m_expressionClasses->knownConstant(a));
 		data.resize(size_t(*l));
-		v = m_expressionClasses->find(AssemblyItem(u256(dev::keccak256(data)), _location));
+		v = m_expressionClasses->find(AssemblyItem(u256(util::keccak256(data)), _location));
 	}
 	else
 		v = m_expressionClasses->find(keccak256Item, {_start, _length}, true, m_sequenceNumber);

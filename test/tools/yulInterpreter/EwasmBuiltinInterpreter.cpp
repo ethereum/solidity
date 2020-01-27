@@ -27,12 +27,14 @@
 
 #include <libevmasm/Instruction.h>
 
-#include <libdevcore/Keccak256.h>
+#include <libsolutil/Keccak256.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
-using namespace yul::test;
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+
+using solidity::util::h256;
 
 namespace
 {
@@ -95,7 +97,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return {};
 	else if (_fun == "unreachable"_yulstring)
 	{
-		logTrace(eth::Instruction::INVALID, {});
+		logTrace(evmasm::Instruction::INVALID, {});
 		throw ExplicitlyTerminated();
 	}
 	else if (_fun == "i64.add"_yulstring)
@@ -188,7 +190,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	{
 		// TODO read args from memory
 		// TODO use readAddress to read address.
-		logTrace(eth::Instruction::CALL, {});
+		logTrace(evmasm::Instruction::CALL, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "eth.callDataCopy"_yulstring)
@@ -208,21 +210,21 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	{
 		// TODO read args from memory
 		// TODO use readAddress to read address.
-		logTrace(eth::Instruction::CALLCODE, {});
+		logTrace(evmasm::Instruction::CALLCODE, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "eth.callDelegate"_yulstring)
 	{
 		// TODO read args from memory
 		// TODO use readAddress to read address.
-		logTrace(eth::Instruction::DELEGATECALL, {});
+		logTrace(evmasm::Instruction::DELEGATECALL, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "eth.callStatic"_yulstring)
 	{
 		// TODO read args from memory
 		// TODO use readAddress to read address.
-		logTrace(eth::Instruction::STATICCALL, {});
+		logTrace(evmasm::Instruction::STATICCALL, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "eth.storageStore"_yulstring)
@@ -266,7 +268,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	{
 		// TODO access memory
 		// TODO use writeAddress to store resulting address
-		logTrace(eth::Instruction::CREATE, {});
+		logTrace(evmasm::Instruction::CREATE, {});
 		return 0xcccccc + arg[1];
 	}
 	else if (_fun == "eth.getBlockDifficulty"_yulstring)
@@ -302,7 +304,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		uint64_t numberOfTopics = arg[2];
 		if (numberOfTopics > 4)
 			throw ExplicitlyTerminated();
-		logTrace(eth::logInstruction(numberOfTopics), {});
+		logTrace(evmasm::logInstruction(numberOfTopics), {});
 		return 0;
 	}
 	else if (_fun == "eth.getBlockNumber"_yulstring)
@@ -317,7 +319,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		bytes data;
 		if (accessMemory(arg[0], arg[1]))
 			data = readMemory(arg[0], arg[1]);
-		logTrace(eth::Instruction::RETURN, {}, data);
+		logTrace(evmasm::Instruction::RETURN, {}, data);
 		throw ExplicitlyTerminated();
 	}
 	else if (_fun == "eth.revert"_yulstring)
@@ -325,7 +327,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		bytes data;
 		if (accessMemory(arg[0], arg[1]))
 			data = readMemory(arg[0], arg[1]);
-		logTrace(eth::Instruction::REVERT, {}, data);
+		logTrace(evmasm::Instruction::REVERT, {}, data);
 		throw ExplicitlyTerminated();
 	}
 	else if (_fun == "eth.getReturnDataSize"_yulstring)
@@ -344,7 +346,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	else if (_fun == "eth.selfDestruct"_yulstring)
 	{
 		// TODO use readAddress to read address.
-		logTrace(eth::Instruction::SELFDESTRUCT, {});
+		logTrace(evmasm::Instruction::SELFDESTRUCT, {});
 		throw ExplicitlyTerminated();
 	}
 	else if (_fun == "eth.getBlockTimestamp"_yulstring)
@@ -417,19 +419,19 @@ u256 EwasmBuiltinInterpreter::readU256(uint64_t _offset, size_t _croppedTo)
 	return value;
 }
 
-void EwasmBuiltinInterpreter::logTrace(dev::eth::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EwasmBuiltinInterpreter::logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
 {
-	logTrace(dev::eth::instructionInfo(_instruction).name, _arguments, _data);
+	logTrace(evmasm::instructionInfo(_instruction).name, _arguments, _data);
 }
 
 void EwasmBuiltinInterpreter::logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments, bytes const& _data)
 {
 	string message = _pseudoInstruction + "(";
 	for (size_t i = 0; i < _arguments.size(); ++i)
-		message += (i > 0 ? ", " : "") + formatNumber(_arguments[i]);
+		message += (i > 0 ? ", " : "") + util::formatNumber(_arguments[i]);
 	message += ")";
 	if (!_data.empty())
-		message += " [" + toHex(_data) + "]";
+		message += " [" + util::toHex(_data) + "]";
 	m_state.trace.emplace_back(std::move(message));
 	if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
 	{

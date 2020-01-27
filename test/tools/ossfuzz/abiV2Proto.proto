@@ -101,4 +101,4 @@ message Contract {
     required Test test = 3;
 }
 
-package dev.test.abiv2fuzzer;
+package solidity.test.abiv2fuzzer;

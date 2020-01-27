@@ -17,16 +17,14 @@
 
 #include <test/Common.h>
 
-#include <libdevcore/Assertions.h>
+#include <libsolutil/Assertions.h>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
-namespace dev
-{
-namespace test
+namespace solidity::test
 {
 
 /// If non-empty returns the value of the env. variable ETH_TEST_PATH, otherwise
@@ -91,7 +89,7 @@ CommonOptions::CommonOptions(std::string _caption):
 {
 	options.add_options()
 		("evm-version", po::value(&evmVersionString), "which evm version to use")
-		("testpath", po::value<fs::path>(&this->testPath)->default_value(dev::test::testPath()), "path to test files")
+		("testpath", po::value<fs::path>(&this->testPath)->default_value(solidity::test::testPath()), "path to test files")
 		("evmonepath", po::value<fs::path>(&evmonePath)->default_value(EVMOneEnvOrDefaultPath()), "path to evmone library")
 		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker");
 }
@@ -117,8 +115,24 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 
 	po::command_line_parser cmdLineParser(argc, argv);
 	cmdLineParser.options(options);
-	po::store(cmdLineParser.run(), arguments);
+	auto parsedOptions = cmdLineParser.run();
+	po::store(parsedOptions, arguments);
 	po::notify(arguments);
+
+	for (auto const& parsedOption: parsedOptions.options)
+		if (parsedOption.position_key >= 0)
+		{
+			if (
+				parsedOption.original_tokens.empty() ||
+				(parsedOption.original_tokens.size() == 1 && parsedOption.original_tokens.front().empty())
+			)
+				continue; // ignore empty options
+			std::stringstream errorMessage;
+			errorMessage << "Unrecognized option: ";
+			for (auto const& token: parsedOption.original_tokens)
+				errorMessage << token;
+			throw std::runtime_error(errorMessage.str());
+		}
 
 	return true;
 }
@@ -135,8 +149,6 @@ langutil::EVMVersion CommonOptions::evmVersion() const
 	}
 	else
 		return langutil::EVMVersion();
-}
-
 }
 
 }

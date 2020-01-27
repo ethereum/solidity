@@ -23,9 +23,7 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/ir/IRLValue.h>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class IRGenerationContext;
@@ -82,8 +80,7 @@ private:
 	std::string expressionAsType(Expression const& _expression, Type const& _to);
 	std::ostream& defineExpression(Expression const& _expression);
 	/// Defines only one of many variables corresponding to an expression.
-	/// We start counting at 1 instead of 0.
-	std::ostream& defineExpressionPart(Expression const& _expression, size_t _part);
+	std::ostream& defineExpressionPart(Expression const& _expression, std::string const& _part);
 
 	void appendAndOrOperatorCode(BinaryOperation const& _binOp);
 	void appendSimpleUnaryOperation(UnaryOperation const& _operation, Expression const& _expr);
@@ -113,5 +110,4 @@ private:
 	std::unique_ptr<IRLValue> m_currentLValue;
 };
 
-}
 }

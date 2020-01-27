@@ -18,6 +18,7 @@ add_library(yul
 	AssemblyStack.cpp
 	CompilabilityChecker.cpp
 	CompilabilityChecker.h
+	Dialect.cpp
 	Dialect.h
 	Exceptions.h
 	Object.cpp
@@ -158,4 +159,4 @@ add_library(yul
 	optimiser/VarNameCleaner.cpp
 	optimiser/VarNameCleaner.h
 )
-target_link_libraries(yul PUBLIC evmasm devcore langutil)
+target_link_libraries(yul PUBLIC evmasm solutil langutil)

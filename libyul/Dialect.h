@@ -28,17 +28,11 @@
 #include <vector>
 #include <set>
 
-namespace yul
+namespace solidity::yul
 {
 
 class YulString;
 using Type = YulString;
-
-enum class AsmFlavour
-{
-	Strict, // no types, EVM instructions as functions, but no jumps and no direct stack manipulations
-	Yul     // same as Strict mode with types
-};
 
 struct BuiltinFunction
 {
@@ -54,7 +48,11 @@ struct BuiltinFunction
 
 struct Dialect: boost::noncopyable
 {
-	AsmFlavour const flavour = AsmFlavour::Strict;
+	YulString defaultType;
+	/// Type used for the literals "true" and "false".
+	YulString boolType;
+	std::vector<YulString> types;
+
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	virtual BuiltinFunction const* builtin(YulString /*_name*/) const { return nullptr; }
 
@@ -64,14 +62,10 @@ struct Dialect: boost::noncopyable
 
 	virtual std::set<YulString> fixedFunctionNames() const { return {}; }
 
-	Dialect(AsmFlavour _flavour): flavour(_flavour) {}
+	Dialect() = default;
 	virtual ~Dialect() = default;
 
-	static Dialect const& yul()
-	{
-		static Dialect yulDialect(AsmFlavour::Yul);
-		return yulDialect;
-	}
+	static Dialect const& yul();
 };
 
 }

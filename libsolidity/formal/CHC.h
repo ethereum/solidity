@@ -38,9 +38,7 @@
 
 #include <set>
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 class CHC: public SMTEncoder
@@ -49,7 +47,7 @@ public:
 	CHC(
 		smt::EncodingContext& _context,
 		langutil::ErrorReporter& _errorReporter,
-		std::map<h256, std::string> const& _smtlib2Responses,
+		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
 		smt::SMTSolverChoice _enabledSolvers
 	);
@@ -207,7 +205,7 @@ private:
 	//@}
 
 	/// CHC solver.
-	std::shared_ptr<smt::CHCSolverInterface> m_interface;
+	std::unique_ptr<smt::CHCSolverInterface> m_interface;
 
 	/// ErrorReporter that comes from CompilerStack.
 	langutil::ErrorReporter& m_outerErrorReporter;
@@ -216,5 +214,4 @@ private:
 	smt::SMTSolverChoice m_enabledSolvers;
 };
 
-}
 }

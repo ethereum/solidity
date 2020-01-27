@@ -26,8 +26,10 @@
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AsmData.h>
 #include <libyul/AsmPrinter.h>
-#include <libdevcore/JSON.h>
-#include <libdevcore/UTF8.h>
+#include <libyul/backends/evm/EVMDialect.h>
+
+#include <libsolutil/JSON.h>
+#include <libsolutil/UTF8.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/algorithm/sort.hpp>
@@ -36,11 +38,9 @@
 #include <algorithm>
 
 using namespace std;
-using namespace langutil;
+using namespace solidity::langutil;
 
-namespace dev
-{
-namespace solidity
+namespace solidity::frontend
 {
 
 ASTJsonConverter::ASTJsonConverter(bool _legacy, map<string, unsigned> _sourceIndices):
@@ -200,7 +200,7 @@ Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<yul::Identifie
 
 void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node)
 {
-	_stream << jsonPrettyPrint(toJson(_node));
+	_stream << util::jsonPrettyPrint(toJson(_node));
 }
 
 Json::Value&& ASTJsonConverter::toJson(ASTNode const& _node)
@@ -494,13 +494,16 @@ bool ASTJsonConverter::visit(ArrayTypeName const& _node)
 bool ASTJsonConverter::visit(InlineAssembly const& _node)
 {
 	vector<pair<string, Json::Value>> externalReferences;
+
 	for (auto const& it: _node.annotation().externalReferences)
 		if (it.first)
 			externalReferences.emplace_back(make_pair(
 				it.first->name.str(),
 				inlineAssemblyIdentifierToJson(it)
 			));
+
 	Json::Value externalReferencesJson = Json::arrayValue;
+
 	for (auto&& it: boost::range::sort(externalReferences))
 		externalReferencesJson.append(std::move(it.second));
 
@@ -508,8 +511,10 @@ bool ASTJsonConverter::visit(InlineAssembly const& _node)
 			m_legacy ?
 			make_pair("operations", Json::Value(yul::AsmPrinter()(_node.operations()))) :
 			make_pair("AST", Json::Value(yul::AsmJsonConverter(sourceIndexFromLocation(_node.location()))(_node.operations()))),
-		make_pair("externalReferences", std::move(externalReferencesJson))
+		make_pair("externalReferences", std::move(externalReferencesJson)),
+		make_pair("evmVersion", dynamic_cast<solidity::yul::EVMDialect const&>(_node.dialect()).evmVersion().name())
 	});
+
 	return false;
 }
 
@@ -719,6 +724,23 @@ bool ASTJsonConverter::visit(FunctionCall const& _node)
 	return false;
 }
 
+bool ASTJsonConverter::visit(FunctionCallOptions const& _node)
+{
+	Json::Value names(Json::arrayValue);
+	for (auto const& name: _node.names())
+		names.append(Json::Value(*name));
+
+	std::vector<pair<string, Json::Value>> attributes = {
+		make_pair("expression", toJson(_node.expression())),
+		make_pair("names", std::move(names)),
+		make_pair("options", toJson(_node.options())),
+	};
+	appendExpressionAttributes(attributes, _node.annotation());
+
+	setJsonNode(_node, "FunctionCallOptions", std::move(attributes));
+	return false;
+}
+
 bool ASTJsonConverter::visit(NewExpression const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {
@@ -792,13 +814,13 @@ bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 bool ASTJsonConverter::visit(Literal const& _node)
 {
 	Json::Value value{_node.value()};
-	if (!dev::validateUTF8(_node.value()))
+	if (!util::validateUTF8(_node.value()))
 		value = Json::nullValue;
 	Token subdenomination = Token(_node.subDenomination());
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair(m_legacy ? "token" : "kind", literalTokenKind(_node.token())),
 		make_pair("value", value),
-		make_pair(m_legacy ? "hexvalue" : "hexValue", toHex(asBytes(_node.value()))),
+		make_pair(m_legacy ? "hexvalue" : "hexValue", util::toHex(util::asBytes(_node.value()))),
 		make_pair(
 			"subdenomination",
 			subdenomination == Token::Illegal ?
@@ -834,15 +856,15 @@ string ASTJsonConverter::location(VariableDeclaration::Location _location)
 	return {};
 }
 
-string ASTJsonConverter::contractKind(ContractDefinition::ContractKind _kind)
+string ASTJsonConverter::contractKind(ContractKind _kind)
 {
 	switch (_kind)
 	{
-	case ContractDefinition::ContractKind::Interface:
+	case ContractKind::Interface:
 		return "interface";
-	case ContractDefinition::ContractKind::Contract:
+	case ContractKind::Contract:
 		return "contract";
-	case ContractDefinition::ContractKind::Library:
+	case ContractKind::Library:
 		return "library";
 	}
 
@@ -869,13 +891,13 @@ string ASTJsonConverter::literalTokenKind(Token _token)
 {
 	switch (_token)
 	{
-	case dev::solidity::Token::Number:
+	case Token::Number:
 		return "number";
-	case dev::solidity::Token::StringLiteral:
-	case dev::solidity::Token::HexStringLiteral:
+	case Token::StringLiteral:
+	case Token::HexStringLiteral:
 		return "string";
-	case dev::solidity::Token::TrueLiteral:
-	case dev::solidity::Token::FalseLiteral:
+	case Token::TrueLiteral:
+	case Token::FalseLiteral:
 		return "bool";
 	default:
 		solAssert(false, "Unknown kind of literal token.");
@@ -892,5 +914,4 @@ string ASTJsonConverter::type(VariableDeclaration const& _varDecl)
 	return _varDecl.annotation().type ? _varDecl.annotation().type->toString() : "Unknown";
 }
 
-}
 }

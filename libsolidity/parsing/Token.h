@@ -24,13 +24,10 @@
 
 #include <liblangutil/Token.h>
 
-namespace dev
+namespace solidity::frontend
 {
-namespace solidity
-{
-namespace TokenTraits = ::langutil::TokenTraits;
+namespace TokenTraits = langutil::TokenTraits;
 
-using ::langutil::Token;
-using ::langutil::ElementaryTypeNameToken;
-}
+using langutil::Token;
+using langutil::ElementaryTypeNameToken;
 }

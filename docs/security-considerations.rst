@@ -89,7 +89,7 @@ as it uses ``call`` which forwards all remaining gas by default:
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
-            (bool success,) = msg.sender.call.value(shares[msg.sender])("");
+            (bool success,) = msg.sender.call{value: shares[msg.sender]}("");
             if (success)
                 shares[msg.sender] = 0;
         }
@@ -149,7 +149,7 @@ Sending and Receiving Ether
   (for example in the "details" section in Remix).
 
 - There is a way to forward more gas to the receiving contract using
-  ``addr.call.value(x)("")``. This is essentially the same as ``addr.transfer(x)``,
+  ``addr.call{value: x}("")``. This is essentially the same as ``addr.transfer(x)``,
   only that it forwards all remaining gas and opens up the ability for the
   recipient to perform more expensive actions (and it returns a failure code
   instead of automatically propagating the error). This might include calling back

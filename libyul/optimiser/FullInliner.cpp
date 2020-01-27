@@ -30,14 +30,14 @@
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
 
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Visitor.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void FullInliner::run(OptimiserStepContext& _context, Block& _ast)
 {
@@ -154,14 +154,14 @@ void InlineModifier::operator()(Block& _block)
 		visit(_statement);
 		return tryInlineStatement(_statement);
 	};
-	iterateReplacing(_block.statements, f);
+	util::iterateReplacing(_block.statements, f);
 }
 
 std::optional<vector<Statement>> InlineModifier::tryInlineStatement(Statement& _statement)
 {
 	// Only inline for expression statements, assignments and variable declarations.
-	Expression* e = std::visit(GenericVisitor{
-		VisitorFallback<Expression*>{},
+	Expression* e = std::visit(util::GenericVisitor{
+		util::VisitorFallback<Expression*>{},
 		[](ExpressionStatement& _s) { return &_s.expression; },
 		[](Assignment& _s) { return _s.value.get(); },
 		[](VariableDeclaration& _s) { return _s.value.get(); }
@@ -169,8 +169,8 @@ std::optional<vector<Statement>> InlineModifier::tryInlineStatement(Statement& _
 	if (e)
 	{
 		// Only inline direct function calls.
-		FunctionCall* funCall = std::visit(GenericVisitor{
-			VisitorFallback<FunctionCall*>{},
+		FunctionCall* funCall = std::visit(util::GenericVisitor{
+			util::VisitorFallback<FunctionCall*>{},
 			[](FunctionCall& _e) { return &_e; }
 		}, *e);
 		if (funCall && m_driver.shallInline(*funCall, m_currentFunction))
@@ -210,8 +210,8 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	Statement newBody = BodyCopier(m_nameDispenser, variableReplacements)(function->body);
 	newStatements += std::move(std::get<Block>(newBody).statements);
 
-	std::visit(GenericVisitor{
-		VisitorFallback<>{},
+	std::visit(util::GenericVisitor{
+		util::VisitorFallback<>{},
 		[&](Assignment& _assignment)
 		{
 			for (size_t i = 0; i < _assignment.variableNames.size(); ++i)

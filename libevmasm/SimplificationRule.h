@@ -21,12 +21,10 @@
 #pragma once
 
 #include <libevmasm/Instruction.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/CommonData.h>
 #include <functional>
 
-namespace dev
-{
-namespace eth
+namespace solidity::evmasm
 {
 
 /**
@@ -67,7 +65,7 @@ struct EVMBuiltins
 		template<typename... Args> constexpr Pattern operator()(Args&&... _args) const
 		{
 			return {inst, {std::forward<Args>(_args)...}};
-		};
+		}
 	};
 
 	struct PatternGeneratorInstance
@@ -76,7 +74,7 @@ struct EVMBuiltins
 		template<typename... Args> constexpr Pattern operator()(Args&&... _args) const
 		{
 			return {instruction, {std::forward<Args>(_args)...}};
-		};
+		}
 	};
 
 
@@ -157,5 +155,4 @@ struct EVMBuiltins
 	static auto constexpr SELFDESTRUCT = PatternGenerator<Instruction::SELFDESTRUCT>{};
 };
 
-}
 }

@@ -22,8 +22,8 @@
 #include <algorithm>
 
 using namespace std;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 bool CFG::constructFlow(ASTNode const& _astRoot)
 {
@@ -47,6 +47,6 @@ FunctionFlow const& CFG::functionFlow(FunctionDefinition const& _function) const
 
 CFGNode* CFG::NodeContainer::newNode()
 {
-	m_nodes.emplace_back(new CFGNode());
+	m_nodes.emplace_back(std::make_unique<CFGNode>());
 	return m_nodes.back().get();
 }

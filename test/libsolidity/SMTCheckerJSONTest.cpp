@@ -18,8 +18,8 @@
 #include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/Options.h>
 #include <libsolidity/interface/StandardCompiler.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/JSON.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/JSON.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -29,11 +29,12 @@
 #include <stdexcept>
 #include <sstream>
 
-using namespace dev::solidity::test;
-using namespace dev::solidity;
-using namespace dev::formatting;
-using namespace dev;
 using namespace std;
+using namespace solidity;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
+using namespace solidity::util;
+using namespace solidity::util::formatting;
 using namespace boost::unit_test;
 
 SMTCheckerJSONTest::SMTCheckerJSONTest(string const& _filename, langutil::EVMVersion _evmVersion)

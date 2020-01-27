@@ -38,6 +38,7 @@
 #include <test/InteractiveTests.h>
 #include <test/Options.h>
 #include <test/EVMHost.h>
+#include <test/Common.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -45,7 +46,7 @@
 #include <string>
 
 using namespace boost::unit_test;
-using namespace dev::solidity::test;
+using namespace solidity::frontend::test;
 namespace fs = boost::filesystem;
 using namespace std;
 
@@ -68,7 +69,7 @@ int registerTests(
 {
 	int numTestsAdded = 0;
 	fs::path fullpath = _basepath / _path;
-	TestCase::Config config{fullpath.string(), dev::test::Options::get().evmVersion()};
+	TestCase::Config config{fullpath.string(), solidity::test::Options::get().evmVersion()};
 	if (fs::is_directory(fullpath))
 	{
 		test_suite* sub_suite = BOOST_TEST_SUITE(_path.filename().string());
@@ -93,7 +94,7 @@ int registerTests(
 					{
 						stringstream errorStream;
 						auto testCase = _testCaseCreator(config);
-						if (testCase->validateSettings(dev::test::Options::get().evmVersion()))
+						if (testCase->validateSettings(solidity::test::Options::get().evmVersion()))
 							switch (testCase->run(errorStream))
 							{
 								case TestCase::TestResult::Success:
@@ -126,20 +127,20 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 {
 	master_test_suite_t& master = framework::master_test_suite();
 	master.p_name.value = "SolidityTests";
-	dev::test::Options::get().validate();
+	solidity::test::Options::get().validate();
 
-	bool disableSemantics = !dev::test::EVMHost::getVM(dev::test::Options::get().evmonePath.string());
+	bool disableSemantics = !solidity::test::EVMHost::getVM(solidity::test::Options::get().evmonePath.string());
 	if (disableSemantics)
 	{
-		cout << "Unable to find " << dev::test::evmoneFilename << ". Please provide the path using -- --evmonepath <path>." << endl;
+		cout << "Unable to find " << solidity::test::evmoneFilename << ". Please provide the path using -- --evmonepath <path>." << endl;
 		cout << "You can download it at" << endl;
-		cout << dev::test::evmoneDownloadLink << endl;
+		cout << solidity::test::evmoneDownloadLink << endl;
 		cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
 	}
 	// Include the interactive tests in the automatic tests as well
 	for (auto const& ts: g_interactiveTestsuites)
 	{
-		auto const& options = dev::test::Options::get();
+		auto const& options = solidity::test::Options::get();
 
 		if (ts.smt && options.disableSMT)
 			continue;
@@ -163,11 +164,6 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			"SolidityAuctionRegistrar",
 			"SolidityFixedFeeRegistrar",
 			"SolidityWallet",
-#if HAVE_LLL
-			"LLLERC20",
-			"LLLENS",
-			"LLLEndToEndTest",
-#endif
 			"GasMeterTests",
 			"GasCostTests",
 			"SolidityEndToEndTest",
@@ -176,7 +172,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			removeTestSuite(suite);
 	}
 
-	if (dev::test::Options::get().disableSMT)
+	if (solidity::test::Options::get().disableSMT)
 		removeTestSuite("SMTChecker");
 
 	return 0;

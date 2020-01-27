@@ -7,4 +7,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (87-89): Literal, identifier or instruction expected.
+// ParserError: (87-89): Literal or identifier expected.

@@ -35,13 +35,11 @@
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 using namespace std;
-using namespace dev::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::test;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 namespace
@@ -161,7 +159,7 @@ BOOST_AUTO_TEST_CASE(reserve)
 	BOOST_REQUIRE(callContractFunctionWithValue("reserve(string)", m_fee + 1, encodeDyn(name[1])) == encodeArgs());
 	BOOST_CHECK(callContractFunction("owner(string)", encodeDyn(name[1])) == encodeArgs(h256(account(0), h256::AlignRight)));
 	BOOST_REQUIRE(callContractFunctionWithValue("reserve(string)", m_fee - 1, encodeDyn(name[2])) == encodeArgs());
-	BOOST_CHECK(callContractFunction("owner(string)", encodeDyn(name[2])) == encodeArgs(h256(0)));
+	BOOST_CHECK(callContractFunction("owner(string)", encodeDyn(name[2])) == encodeArgs(h256{}));
 }
 
 BOOST_AUTO_TEST_CASE(double_reserve)
@@ -249,6 +247,4 @@ BOOST_AUTO_TEST_CASE(disown)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

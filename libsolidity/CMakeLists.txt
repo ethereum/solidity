@@ -39,10 +39,14 @@ set(sources
 	ast/ASTAnnotations.h
 	ast/ASTEnums.h
 	ast/ASTForward.h
+	ast/AsmJsonImporter.cpp
+	ast/AsmJsonImporter.h
 	ast/ASTJsonConverter.cpp
 	ast/ASTJsonConverter.h
 	ast/ASTUtils.cpp
 	ast/ASTUtils.h
+	ast/ASTJsonImporter.cpp
+	ast/ASTJsonImporter.h
 	ast/ASTVisitor.h
 	ast/ExperimentalFeatures.h
 	ast/Types.cpp
@@ -151,7 +155,7 @@ if (NOT (${Z3_FOUND} OR ${CVC4_FOUND}))
 endif()
 
 add_library(solidity ${sources} ${z3_SRCS} ${cvc4_SRCS})
-target_link_libraries(solidity PUBLIC yul evmasm langutil devcore Boost::boost Boost::filesystem Boost::system)
+target_link_libraries(solidity PUBLIC yul evmasm langutil solutil Boost::boost Boost::filesystem Boost::system)
 
 if (${Z3_FOUND})
   target_link_libraries(solidity PUBLIC z3::libz3)

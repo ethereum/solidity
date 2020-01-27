@@ -46,7 +46,7 @@
 
 using namespace std;
 
-namespace langutil
+namespace solidity::langutil
 {
 
 void ElementaryTypeNameToken::assertDetails(Token _baseType, unsigned const& _first, unsigned const& _second)
@@ -82,7 +82,6 @@ void ElementaryTypeNameToken::assertDetails(Token _baseType, unsigned const& _fi
 
 namespace TokenTraits
 {
-
 char const* toString(Token tok)
 {
 	switch (tok)

@@ -38,17 +38,10 @@
 #include <utility>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace yul;
-using namespace dev;
-
-namespace
-{
-
-set<string> const builtinTypes{"bool", "u8", "s8", "u32", "s32", "u64", "s64", "u128", "s128", "u256", "s256"};
-
-}
+using namespace solidity;
+using namespace solidity::yul;
+using namespace solidity::util;
+using namespace solidity::langutil;
 
 bool AsmAnalyzer::analyze(Block const& _block)
 {
@@ -88,7 +81,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 
 bool AsmAnalyzer::operator()(Literal const& _literal)
 {
-	expectValidType(_literal.type.str(), _literal.location);
+	expectValidType(_literal.type, _literal.location);
 	++m_stackHeight;
 	if (_literal.kind == LiteralKind::String && _literal.value.str().size() > 32)
 	{
@@ -107,10 +100,7 @@ bool AsmAnalyzer::operator()(Literal const& _literal)
 		return false;
 	}
 	else if (_literal.kind == LiteralKind::Boolean)
-	{
-		yulAssert(m_dialect.flavour == AsmFlavour::Yul, "");
 		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "");
-	}
 	m_info.stackHeightInfo[&_literal] = m_stackHeight;
 	return true;
 }
@@ -131,10 +121,6 @@ bool AsmAnalyzer::operator()(Identifier const& _identifier)
 				);
 				success = false;
 			}
-			++m_stackHeight;
-		},
-		[&](Scope::Label const&)
-		{
 			++m_stackHeight;
 		},
 		[&](Scope::Function const&)
@@ -250,7 +236,7 @@ bool AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 
 	for (auto const& variable: _varDecl.variables)
 	{
-		expectValidType(variable.type.str(), variable.location);
+		expectValidType(variable.type, variable.location);
 		m_activeVariables.insert(&std::get<Scope::Variable>(m_currentScope->identifiers.at(variable.name)));
 	}
 	m_info.stackHeightInfo[&_varDecl] = m_stackHeight;
@@ -265,7 +251,7 @@ bool AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 	Scope& varScope = scope(virtualBlock);
 	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 	{
-		expectValidType(var.type.str(), var.location);
+		expectValidType(var.type, var.location);
 		m_activeVariables.insert(&std::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
 
@@ -300,14 +286,6 @@ bool AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			m_errorReporter.typeError(
 				_funCall.functionName.location,
 				"Attempt to call variable instead of function."
-			);
-			success = false;
-		},
-		[&](Scope::Label const&)
-		{
-			m_errorReporter.typeError(
-				_funCall.functionName.location,
-				"Attempt to call label instead of function."
 			);
 			success = false;
 		},
@@ -388,27 +366,25 @@ bool AsmAnalyzer::operator()(Switch const& _switch)
 	if (!expectExpression(*_switch.expression))
 		success = false;
 
-	if (m_dialect.flavour == AsmFlavour::Yul)
-	{
-		YulString caseType;
-		bool mismatchingTypes = false;
-		for (auto const& _case: _switch.cases)
-			if (_case.value)
+	YulString caseType;
+	bool mismatchingTypes = false;
+	for (auto const& _case: _switch.cases)
+		if (_case.value)
+		{
+			if (caseType.empty())
+				caseType = _case.value->type;
+			else if (caseType != _case.value->type)
 			{
-				if (caseType.empty())
-					caseType = _case.value->type;
-				else if (caseType != _case.value->type)
-				{
-					mismatchingTypes = true;
-					break;
-				}
+				mismatchingTypes = true;
+				break;
 			}
-		if (mismatchingTypes)
-			m_errorReporter.typeError(
-				_switch.location,
-				"Switch cases have non-matching types."
-			);
-	}
+		}
+
+	if (mismatchingTypes)
+		m_errorReporter.typeError(
+			_switch.location,
+			"Switch cases have non-matching types."
+		);
 
 	set<u256> cases;
 	for (auto const& _case: _switch.cases)
@@ -630,15 +606,12 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 	yulAssert(scopePtr, "Scope requested but not present.");
 	return *scopePtr;
 }
-void AsmAnalyzer::expectValidType(string const& type, SourceLocation const& _location)
+void AsmAnalyzer::expectValidType(YulString _type, SourceLocation const& _location)
 {
-	if (m_dialect.flavour != AsmFlavour::Yul)
-		return;
-
-	if (!builtinTypes.count(type))
+	if (!_type.empty() && !contains(m_dialect.types, _type))
 		m_errorReporter.typeError(
 			_location,
-			"\"" + type + "\" is not a valid type (user defined types are not yet supported)."
+			"\"" + _type.str() + "\" is not a valid type (user defined types are not yet supported)."
 		);
 }
 
@@ -651,14 +624,13 @@ bool AsmAnalyzer::warnOnInstructions(std::string const& _instructionIdentifier, 
 		return false;
 }
 
-bool AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocation const& _location)
+bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation const& _location)
 {
 	// We assume that returndatacopy, returndatasize and staticcall are either all available
 	// or all not available.
 	yulAssert(m_evmVersion.supportsReturndata() == m_evmVersion.hasStaticCall(), "");
 	// Similarly we assume bitwise shifting and create2 go together.
 	yulAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
-	yulAssert(m_dialect.flavour != AsmFlavour::Yul, "");
 
 	auto errorForVM = [=](string const& vmKindMessage) {
 		m_errorReporter.typeError(
@@ -675,44 +647,44 @@ bool AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocatio
 	};
 
 	if ((
-		_instr == dev::eth::Instruction::RETURNDATACOPY ||
-		_instr == dev::eth::Instruction::RETURNDATASIZE
+		_instr == evmasm::Instruction::RETURNDATACOPY ||
+		_instr == evmasm::Instruction::RETURNDATASIZE
 	) && !m_evmVersion.supportsReturndata())
 	{
 		errorForVM("only available for Byzantium-compatible");
 	}
-	else if (_instr == dev::eth::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
+	else if (_instr == evmasm::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
 	{
 		errorForVM("only available for Byzantium-compatible");
 	}
 	else if ((
-		_instr == dev::eth::Instruction::SHL ||
-		_instr == dev::eth::Instruction::SHR ||
-		_instr == dev::eth::Instruction::SAR
+		_instr == evmasm::Instruction::SHL ||
+		_instr == evmasm::Instruction::SHR ||
+		_instr == evmasm::Instruction::SAR
 	) && !m_evmVersion.hasBitwiseShifting())
 	{
 		errorForVM("only available for Constantinople-compatible");
 	}
-	else if (_instr == dev::eth::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
+	else if (_instr == evmasm::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
 	{
 		errorForVM("only available for Constantinople-compatible");
 	}
-	else if (_instr == dev::eth::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
+	else if (_instr == evmasm::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
 	{
 		errorForVM("only available for Constantinople-compatible");
 	}
-	else if (_instr == dev::eth::Instruction::CHAINID && !m_evmVersion.hasChainID())
+	else if (_instr == evmasm::Instruction::CHAINID && !m_evmVersion.hasChainID())
 	{
 		errorForVM("only available for Istanbul-compatible");
 	}
-	else if (_instr == dev::eth::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
+	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
 	{
 		errorForVM("only available for Istanbul-compatible");
 	}
 	else if (
-		_instr == dev::eth::Instruction::JUMP ||
-		_instr == dev::eth::Instruction::JUMPI ||
-		_instr == dev::eth::Instruction::JUMPDEST
+		_instr == evmasm::Instruction::JUMP ||
+		_instr == evmasm::Instruction::JUMPI ||
+		_instr == evmasm::Instruction::JUMPDEST
 	)
 	{
 		m_errorReporter.error(

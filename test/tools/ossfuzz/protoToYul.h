@@ -27,15 +27,11 @@
 
 #include <test/tools/ossfuzz/yulProto.pb.h>
 
-#include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
-#include <libdevcore/Whiskers.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/FixedHash.h>
+#include <libsolutil/Whiskers.h>
 
-namespace yul
-{
-namespace test
-{
-namespace yul_fuzzer
+namespace solidity::yul::test::yul_fuzzer
 {
 class ProtoConverter
 {
@@ -46,12 +42,15 @@ public:
 		m_globalVars = std::vector<std::vector<std::string>>{};
 		m_inForBodyScope = false;
 		m_inForInitScope = false;
+		m_inForCond = false;
 		m_numNestedForLoops = 0;
+		m_numForLoops = 0;
 		m_counter = 0;
 		m_inputSize = 0;
 		m_inFunctionDef = false;
 		m_objectId = 0;
 		m_isObject = false;
+		m_forInitScopeExtEnabled = true;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -269,7 +268,7 @@ private:
 	///		index = (m_inputSize * m_inputSize + counter) % dictionarySize
 	/// where m_inputSize is the size of the protobuf input and
 	/// dictionarySize is the total number of entries in the dictionary.
-	std::string dictionaryToken(dev::HexPrefix _p = dev::HexPrefix::Add);
+	std::string dictionaryToken(util::HexPrefix _p = util::HexPrefix::Add);
 
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
@@ -296,7 +295,7 @@ private:
 	/// enclosed within double quotes.
 	std::string newObjectId(bool _decorate = true)
 	{
-		return dev::Whiskers(R"(<?decorate>"</decorate>object<id><?decorate>"</decorate>)")
+		return util::Whiskers(R"(<?decorate>"</decorate>object<id><?decorate>"</decorate>)")
 			("decorate", _decorate)
 			("id", std::to_string(m_objectId++))
 			.render();
@@ -318,14 +317,18 @@ private:
 	std::vector<std::string const*> m_currentGlobalVars;
 	/// Functions in current scope
 	std::vector<std::vector<std::string>> m_scopeFuncs;
-	/// Variables
+	/// Global variables
 	std::vector<std::vector<std::string>> m_globalVars;
-	/// Functions
+	/// Variables declared in for loop init block that is in global scope
+	std::vector<std::vector<std::string>> m_globalForLoopInitVars;
+	/// Variables declared in for loop init block that is in function scope
+	std::vector<std::vector<std::vector<std::string>>> m_funcForLoopInitVars;
+	/// Vector of function names
 	std::vector<std::string> m_functions;
 	/// Maps FunctionDef object to its name
 	std::map<FunctionDef const*, std::string> m_functionDefMap;
 	// Set that is used for deduplicating switch case literals
-	std::stack<std::set<dev::u256>> m_switchLiteralSetPerScope;
+	std::stack<std::set<u256>> m_switchLiteralSetPerScope;
 	// Look-up table per function type that holds the number of input (output) function parameters
 	std::map<std::string, std::pair<unsigned, unsigned>> m_functionSigMap;
 	/// Tree of objects and their scopes
@@ -335,14 +338,21 @@ private:
 	static unsigned constexpr s_modOutputParams = 5;
 	/// Hard-coded identifier for a Yul object's data block
 	static auto constexpr s_dataIdentifier = "datablock";
-	/// Predicate to keep track of for body scope. If true, break/continue
+	/// Predicate to keep track of for body scope. If false, break/continue
 	/// statements can not be created.
 	bool m_inForBodyScope;
+	/// Maximum number of for loops that a test case may contain
+	static auto constexpr s_maxForLoops = 2;
 	// Index used for naming loop variable of bounded for loops
 	unsigned m_numNestedForLoops;
+	/// Counter for number of for loops
+	unsigned m_numForLoops;
 	/// Predicate to keep track of for loop init scope. If true, variable
 	/// or function declarations can not be created.
 	bool m_inForInitScope;
+	/// Flag that is true while converting for loop condition,
+	/// false otherwise.
+	bool m_inForCond;
 	/// Monotonically increasing counter
 	unsigned m_counter;
 	/// Size of protobuf input
@@ -354,7 +364,8 @@ private:
 	/// Flag to track whether program is an object (true) or a statement block
 	/// (false: default value)
 	bool m_isObject;
+	/// Flag to track whether scope extension of variables defined in for-init
+	/// block is enabled.
+	bool m_forInitScopeExtEnabled;
 };
-}
-}
 }

@@ -55,13 +55,13 @@
 #include <liblangutil/Token.h>
 #include <liblangutil/CharStream.h>
 #include <liblangutil/SourceLocation.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
+#include <libsolutil/Common.h>
+#include <libsolutil/CommonData.h>
 
 #include <optional>
 #include <iosfwd>
 
-namespace langutil
+namespace solidity::langutil
 {
 
 class AstRawString;
@@ -121,32 +121,32 @@ public:
 	/// @returns the current token
 	Token currentToken() const
 	{
-		return m_currentToken.token;
+		return m_tokens[Current].token;
 	}
 	ElementaryTypeNameToken currentElementaryTypeNameToken() const
 	{
 		unsigned firstSize;
 		unsigned secondSize;
-		std::tie(firstSize, secondSize) = m_currentToken.extendedTokenInfo;
-		return ElementaryTypeNameToken(m_currentToken.token, firstSize, secondSize);
+		std::tie(firstSize, secondSize) = m_tokens[Current].extendedTokenInfo;
+		return ElementaryTypeNameToken(m_tokens[Current].token, firstSize, secondSize);
 	}
 
-	SourceLocation currentLocation() const { return m_currentToken.location; }
-	std::string const& currentLiteral() const { return m_currentToken.literal; }
-	std::tuple<unsigned, unsigned> const& currentTokenInfo() const { return m_currentToken.extendedTokenInfo; }
+	SourceLocation currentLocation() const { return m_tokens[Current].location; }
+	std::string const& currentLiteral() const { return m_tokens[Current].literal; }
+	std::tuple<unsigned, unsigned> const& currentTokenInfo() const { return m_tokens[Current].extendedTokenInfo; }
 
 	/// Retrieves the last error that occurred during lexical analysis.
 	/// @note If no error occurred, the value is undefined.
-	ScannerError currentError() const noexcept { return m_currentToken.error; }
+	ScannerError currentError() const noexcept { return m_tokens[Current].error; }
 	///@}
 
 	///@{
 	///@name Information about the current comment token
 
-	SourceLocation currentCommentLocation() const { return m_skippedComment.location; }
-	std::string const& currentCommentLiteral() const { return m_skippedComment.literal; }
+	SourceLocation currentCommentLocation() const { return m_skippedComments[Current].location; }
+	std::string const& currentCommentLiteral() const { return m_skippedComments[Current].literal; }
 	/// Called by the parser during FunctionDefinition parsing to clear the current comment
-	void clearCurrentCommentLiteral() { m_skippedComment.literal.clear(); }
+	void clearCurrentCommentLiteral() { m_skippedComments[Current].literal.clear(); }
 
 	///@}
 
@@ -154,9 +154,11 @@ public:
 	///@name Information about the next token
 
 	/// @returns the next token without advancing input.
-	Token peekNextToken() const { return m_nextToken.token; }
-	SourceLocation peekLocation() const { return m_nextToken.location; }
-	std::string const& peekLiteral() const { return m_nextToken.literal; }
+	Token peekNextToken() const { return m_tokens[Next].token; }
+	SourceLocation peekLocation() const { return m_tokens[Next].location; }
+	std::string const& peekLiteral() const { return m_tokens[Next].literal; }
+
+	Token peekNextNextToken() const { return m_tokens[NextNext].token; }
 	///@}
 
 	///@{
@@ -176,7 +178,7 @@ public:
 private:
 	inline Token setError(ScannerError _error) noexcept
 	{
-		m_nextToken.error = _error;
+		m_tokens[NextNext].error = _error;
 		return Token::Illegal;
 	}
 
@@ -192,8 +194,8 @@ private:
 
 	///@{
 	///@name Literal buffer support
-	inline void addLiteralChar(char c) { m_nextToken.literal.push_back(c); }
-	inline void addCommentLiteralChar(char c) { m_nextSkippedComment.literal.push_back(c); }
+	inline void addLiteralChar(char c) { m_tokens[NextNext].literal.push_back(c); }
+	inline void addCommentLiteralChar(char c) { m_skippedComments[NextNext].literal.push_back(c); }
 	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
 	void addUnicodeAsUTF8(unsigned codepoint);
 	///@}
@@ -252,11 +254,10 @@ private:
 
 	bool m_supportPeriodInIdentifier = false;
 
-	TokenDesc m_skippedComment;  // desc for current skipped comment
-	TokenDesc m_nextSkippedComment; // desc for next skipped comment
+	enum TokenIndex { Current, Next, NextNext };
 
-	TokenDesc m_currentToken;  // desc for current token (as returned by Next())
-	TokenDesc m_nextToken;     // desc for next token (one token look-ahead)
+	TokenDesc m_skippedComments[3] = {}; // desc for the current, next and nextnext skipped comment
+	TokenDesc m_tokens[3] = {}; // desc for the current, next and nextnext token
 
 	std::shared_ptr<CharStream> m_source;
 

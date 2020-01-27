@@ -19,7 +19,7 @@
 
 #include <set>
 
-namespace yul
+namespace solidity::yul
 {
 
 /**

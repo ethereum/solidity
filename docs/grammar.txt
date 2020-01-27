@@ -24,9 +24,11 @@ StructDefinition = 'struct' Identifier '{'
 ModifierDefinition = 'modifier' Identifier ParameterList?  ( 'virtual' | OverrideSpecifier )* Block
 ModifierInvocation = Identifier ( '(' ExpressionList? ')' )?
 
-FunctionDefinition = 'function' Identifier? ParameterList
+FunctionDefinition = FunctionDescriptor ParameterList
                      ( ModifierInvocation | StateMutability | 'external' | 'public' | 'internal' | 'private' | 'virtual' | OverrideSpecifier )*
                      ( 'returns' ParameterList )? ( ';' | Block )
+
+FunctionDescriptor = 'function' Identifier | 'constructor' | 'fallback' | 'receive'
 
 OverrideSpecifier = 'override' ( '(' UserDefinedTypeName (',' UserDefinedTypeName)* ')' )?
 
@@ -72,7 +74,7 @@ Statement = IfStatement | TryStatement | WhileStatement | ForStatement | Block |
 ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 TryStatement = 'try' Expression ( 'returns' ParameterList )? Block CatchClause+
-CatchClause = 'catch' Identifier? ParameterList Block
+CatchClause = 'catch' ( Identifier? ParameterList )? Block
 WhileStatement = 'while' '(' Expression ')' Statement
 PlaceholderStatement = '_'
 SimpleStatement = VariableDefinition | ExpressionStatement

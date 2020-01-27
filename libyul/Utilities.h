@@ -20,18 +20,18 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
+#include <libsolutil/Common.h>
 #include <libyul/AsmDataForward.h>
 
-namespace yul
+namespace solidity::yul
 {
 
 std::string reindent(std::string const& _code);
 
-dev::u256 valueOfNumberLiteral(Literal const& _literal);
-dev::u256 valueOfStringLiteral(Literal const& _literal);
-dev::u256 valueOfBoolLiteral(Literal const& _literal);
-dev::u256 valueOfLiteral(Literal const& _literal);
+u256 valueOfNumberLiteral(Literal const& _literal);
+u256 valueOfStringLiteral(Literal const& _literal);
+u256 valueOfBoolLiteral(Literal const& _literal);
+u256 valueOfLiteral(Literal const& _literal);
 
 /**
  * Linear order on Yul AST nodes.

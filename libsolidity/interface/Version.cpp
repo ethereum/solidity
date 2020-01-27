@@ -23,31 +23,29 @@
 #include <libsolidity/interface/Version.h>
 
 #include <liblangutil/Exceptions.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Common.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Common.h>
 #include <solidity/BuildInfo.h>
 #include <string>
 
-using namespace dev;
-using namespace dev::solidity;
 using namespace std;
 
-char const* dev::solidity::VersionNumber = ETH_PROJECT_VERSION;
+char const* solidity::frontend::VersionNumber = ETH_PROJECT_VERSION;
 
-string const dev::solidity::VersionString =
-	string(dev::solidity::VersionNumber) +
+string const solidity::frontend::VersionString =
+	string(solidity::frontend::VersionNumber) +
 	(string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
 	(string(SOL_VERSION_BUILDINFO).empty() ? "" : "+" + string(SOL_VERSION_BUILDINFO));
 
-string const dev::solidity::VersionStringStrict =
-	string(dev::solidity::VersionNumber) +
+string const solidity::frontend::VersionStringStrict =
+	string(solidity::frontend::VersionNumber) +
 	(string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
 	(string(SOL_VERSION_COMMIT).empty() ? "" : "+" + string(SOL_VERSION_COMMIT));
 
-bytes const dev::solidity::VersionCompactBytes = {
+solidity::bytes const solidity::frontend::VersionCompactBytes = {
 	ETH_PROJECT_VERSION_MAJOR,
 	ETH_PROJECT_VERSION_MINOR,
 	ETH_PROJECT_VERSION_PATCH
 };
 
-bool const dev::solidity::VersionIsRelease = string(SOL_VERSION_PRERELEASE).empty();
+bool const solidity::frontend::VersionIsRelease = string(SOL_VERSION_PRERELEASE).empty();

@@ -26,9 +26,9 @@
 #include <variant>
 
 using namespace std;
-using namespace dev;
-using namespace langutil;
-using namespace dev::solidity;
+using namespace solidity;
+using namespace solidity::langutil;
+using namespace solidity::frontend;
 
 namespace
 {
@@ -110,11 +110,11 @@ public:
 	}
 
 private:
-	void checkInstruction(SourceLocation _location, dev::eth::Instruction _instruction)
+	void checkInstruction(SourceLocation _location, evmasm::Instruction _instruction)
 	{
-		if (eth::SemanticInformation::invalidInViewFunctions(_instruction))
+		if (evmasm::SemanticInformation::invalidInViewFunctions(_instruction))
 			m_reportMutability(StateMutability::NonPayable, _location);
-		else if (eth::SemanticInformation::invalidInPureFunctions(_instruction))
+		else if (evmasm::SemanticInformation::invalidInPureFunctions(_instruction))
 			m_reportMutability(StateMutability::View, _location);
 	}
 
@@ -272,7 +272,7 @@ void ViewPureChecker::reportMutability(
 	{
 		// We do not warn for library functions because they cannot be payable anyway.
 		// Also internal functions should be allowed to use `msg.value`.
-		if (m_currentFunction->isPublic() && m_currentFunction->inContractKind() != ContractDefinition::ContractKind::Library)
+		if (m_currentFunction->isPublic() && m_currentFunction->inContractKind() != ContractKind::Library)
 		{
 			if (_nestedLocation)
 				m_errorReporter.typeError(

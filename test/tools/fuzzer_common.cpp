@@ -17,7 +17,7 @@
 
 #include <test/tools/fuzzer_common.h>
 
-#include <libdevcore/JSON.h>
+#include <libsolutil/JSON.h>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/ConstantOptimiser.h>
 #include <libsolc/libsolc.h>
@@ -25,8 +25,9 @@
 #include <sstream>
 
 using namespace std;
-using namespace dev;
-using namespace dev::eth;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::evmasm;
 
 static vector<string> s_evmVersions = {
 	"homestead",

@@ -28,8 +28,8 @@
 #include <libyul/AsmData.h>
 
 using namespace std;
-using namespace dev;
-using namespace yul;
+using namespace solidity;
+using namespace solidity::yul;
 
 void LoadResolver::run(OptimiserStepContext& _context, Block& _ast)
 {
@@ -59,7 +59,7 @@ void LoadResolver::visit(Expression& _e)
 
 void LoadResolver::tryResolve(
 	Expression& _e,
-	dev::eth::Instruction _instruction,
+	evmasm::Instruction _instruction,
 	vector<Expression> const& _arguments
 )
 {
@@ -68,13 +68,13 @@ void LoadResolver::tryResolve(
 
 	YulString key = std::get<Identifier>(_arguments.at(0)).name;
 	if (
-		_instruction == dev::eth::Instruction::SLOAD &&
+		_instruction == evmasm::Instruction::SLOAD &&
 		m_storage.values.count(key)
 	)
 		_e = Identifier{locationOf(_e), m_storage.values[key]};
 	else if (
 		m_optimizeMLoad &&
-		_instruction == dev::eth::Instruction::MLOAD &&
+		_instruction == evmasm::Instruction::MLOAD &&
 		m_memory.values.count(key)
 	)
 		_e = Identifier{locationOf(_e), m_memory.values[key]};

@@ -14,7 +14,7 @@
 
 #pragma once
 
-namespace langutil
+namespace solidity::langutil
 {
 
 inline bool isDecimalDigit(char c)

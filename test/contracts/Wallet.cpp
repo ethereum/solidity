@@ -35,13 +35,10 @@
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 using namespace std;
-using namespace dev::test;
+using namespace solidity::test;
+using namespace solidity::util;
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 static char const* walletCode = R"DELIMITER(
@@ -378,7 +375,7 @@ contract Wallet is multisig, multiowned, daylimit {
 		multiowned.changeOwner(_from, _to);
 	}
 	// destroys the contract sending everything to `_to`.
-	function kill(address payable _to) onlymanyowners(keccak256(msg.data)) external {
+	function shutdown(address payable _to) onlymanyowners(keccak256(msg.data)) external {
 		selfdestruct(_to);
 	}
 
@@ -467,8 +464,8 @@ BOOST_AUTO_TEST_CASE(creation)
 {
 	deployWallet(200);
 	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(m_sender, h256::AlignRight)) == encodeArgs(true));
-	bool v2 = dev::test::Options::get().useABIEncoderV2;
-	BOOST_REQUIRE(callContractFunction("isOwner(address)", ~h256(m_sender, h256::AlignRight)) == (v2 ? encodeArgs() : encodeArgs(false)));
+	bool v2 = solidity::test::Options::get().useABIEncoderV2;
+	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(~0)) == (v2 ? encodeArgs() : encodeArgs(false)));
 }
 
 BOOST_AUTO_TEST_CASE(add_owners)
@@ -590,7 +587,7 @@ BOOST_AUTO_TEST_CASE(revoke_addOwner)
 	BOOST_REQUIRE(callContractFunction("changeRequirement(uint256)", u256(3)) == encodeArgs());
 	// add a new owner
 	Address deployer = m_sender;
-	h256 opHash = dev::keccak256(FixedHash<4>(dev::keccak256("addOwner(address)")).asBytes() + h256(0x33).asBytes());
+	h256 opHash = util::keccak256(FixedHash<4>(util::keccak256("addOwner(address)")).asBytes() + h256(0x33).asBytes());
 	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x33)) == encodeArgs());
 	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x33)) == encodeArgs(false));
 	m_sender = account(0);
@@ -703,6 +700,4 @@ BOOST_AUTO_TEST_CASE(daylimit_constructor)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}
-}
 } // end namespaces

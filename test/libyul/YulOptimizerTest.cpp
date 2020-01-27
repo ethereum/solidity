@@ -18,6 +18,7 @@
 #include <test/libyul/YulOptimizerTest.h>
 
 #include <test/libsolidity/util/SoltestErrors.h>
+#include <test/libyul/Common.h>
 #include <test/Options.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
@@ -70,7 +71,7 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
 
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>
@@ -78,12 +79,13 @@
 #include <fstream>
 #include <variant>
 
-using namespace dev;
-using namespace langutil;
-using namespace yul;
-using namespace yul::test;
-using namespace dev::solidity;
-using namespace dev::solidity::test;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::langutil;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+using namespace solidity::frontend;
+using namespace solidity::frontend::test;
 using namespace std;
 
 YulOptimizerTest::YulOptimizerTest(string const& _filename)
@@ -107,7 +109,7 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 		else if (dialectName == "ewasm")
 			m_dialect = &WasmDialect::instance();
 		else if (dialectName == "evm")
-			m_dialect = &EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion());
+			m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::Options::get().evmVersion());
 		else
 			BOOST_THROW_EXCEPTION(runtime_error("Invalid dialect " + dialectName));
 
@@ -115,7 +117,7 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 		m_settings.erase("dialect");
 	}
 	else
-		m_dialect = &EVMDialect::strictAssemblyForEVMObjects(dev::test::Options::get().evmVersion());
+		m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::Options::get().evmVersion());
 
 	if (m_settings.count("step"))
 	{
@@ -363,7 +365,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		return TestResult::FatalError;
 	}
 
-	m_obtainedResult = AsmPrinter{m_dialect->flavour == AsmFlavour::Yul}(*m_ast) + "\n";
+	m_obtainedResult = AsmPrinter{}(*m_ast) + "\n";
 
 	if (m_optimizerStep != m_validatedSettings["step"])
 	{
@@ -417,19 +419,15 @@ void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, st
 
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	AssemblyStack stack(
-		dev::test::Options::get().evmVersion(),
-		m_dialect->flavour == AsmFlavour::Yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
-		dev::solidity::OptimiserSettings::none()
-	);
-	if (!stack.parseAndAnalyze("", m_source) || !stack.errors().empty())
+	ErrorList errors;
+	soltestAssert(m_dialect, "");
+	std::tie(m_ast, m_analysisInfo) = yul::test::parse(m_source, *m_dialect, errors);
+	if (!m_ast || !m_analysisInfo || !errors.empty())
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
-		printErrors(_stream, stack.errors());
+		printErrors(_stream, errors);
 		return false;
 	}
-	m_ast = stack.parserResult()->code;
-	m_analysisInfo = stack.parserResult()->analysisInfo;
 	return true;
 }
 

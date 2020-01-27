@@ -33,11 +33,7 @@
 
 #include <boost/filesystem.hpp>
 
-namespace dev
-{
-namespace solidity
-{
-namespace test
+namespace solidity::frontend::test
 {
 
 /** Container for all information regarding a testsuite */
@@ -71,6 +67,4 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"Gas Estimates",       "libsolidity", "gasTests",            false, false, &GasTest::create}
 };
 
-}
-}
 }

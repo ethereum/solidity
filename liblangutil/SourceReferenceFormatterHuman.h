@@ -23,18 +23,18 @@
 #include <liblangutil/SourceReferenceExtractor.h>
 #include <liblangutil/SourceReferenceFormatter.h> // SourceReferenceFormatterBase
 
-#include <libdevcore/AnsiColorized.h>
+#include <libsolutil/AnsiColorized.h>
 
 #include <ostream>
 #include <sstream>
 #include <functional>
 
-namespace dev
+namespace solidity::util
 {
 struct Exception; // forward
 }
 
-namespace langutil
+namespace solidity::langutil
 {
 
 struct SourceLocation;
@@ -52,7 +52,7 @@ public:
 	using SourceReferenceFormatter::printExceptionInformation;
 
 	static std::string formatExceptionInformation(
-		dev::Exception const& _exception,
+		util::Exception const& _exception,
 		std::string const& _name,
 		bool colored = false
 	)
@@ -65,13 +65,13 @@ public:
 	}
 
 private:
-	dev::AnsiColorized normalColored() const;
-	dev::AnsiColorized frameColored() const;
-	dev::AnsiColorized errorColored() const;
-	dev::AnsiColorized messageColored() const;
-	dev::AnsiColorized secondaryColored() const;
-	dev::AnsiColorized highlightColored() const;
-	dev::AnsiColorized diagColored() const;
+	util::AnsiColorized normalColored() const;
+	util::AnsiColorized frameColored() const;
+	util::AnsiColorized errorColored() const;
+	util::AnsiColorized messageColored() const;
+	util::AnsiColorized secondaryColored() const;
+	util::AnsiColorized highlightColored() const;
+	util::AnsiColorized diagColored() const;
 
 private:
 	bool m_colored;
