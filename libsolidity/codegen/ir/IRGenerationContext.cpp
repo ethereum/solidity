@@ -108,12 +108,11 @@ string IRGenerationContext::variable(Expression const& _expression)
 		return suffixedVariableNameList(move(var) + "_", 1, 1 + size);
 }
 
-string IRGenerationContext::variablePart(Expression const& _expression, size_t _part)
+string IRGenerationContext::variablePart(Expression const& _expression, string const& _part)
 {
 	size_t numVars = _expression.annotation().type->sizeOnStack();
 	solAssert(numVars > 1, "");
-	solAssert(1 <= _part && _part <= numVars, "");
-	return "expr_" + to_string(_expression.id()) + "_" + to_string(_part);
+	return "expr_" + to_string(_expression.id()) + "_" + _part;
 }
 
 string IRGenerationContext::internalDispatch(size_t _in, size_t _out)

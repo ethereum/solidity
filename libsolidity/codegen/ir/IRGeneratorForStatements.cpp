@@ -717,11 +717,11 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			else
 				solAssert(false, "Contract member is neither variable nor function.");
 
-			defineExpressionPart(_memberAccess, 1) << expressionAsType(
+			defineExpressionPart(_memberAccess, "address") << expressionAsType(
 				_memberAccess.expression(),
 				type.isPayable() ? *TypeProvider::payableAddress() : *TypeProvider::address()
 			) << "\n";
-			defineExpressionPart(_memberAccess, 2) << formatNumber(identifier) << "\n";
+			defineExpressionPart(_memberAccess, "functionIdentifier") << formatNumber(identifier) << "\n";
 		}
 		else
 			solAssert(false, "Invalid member access in contract");
@@ -1177,7 +1177,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	templ("result", m_context.newYulVariable());
 	templ("freeMem", fetchFreeMem());
 	templ("shl28", m_utils.shiftLeftFunction(8 * (32 - 4)));
-	templ("funId", m_context.variablePart(_functionCall.expression(), 2));
+	templ("funId", m_context.variablePart(_functionCall.expression(), "functionIdentifier"));
 
 	// If the function takes arbitrary parameters or is a bare call, copy dynamic length data in place.
 	// Move arguments to memory, will not update the free memory pointer (but will update the memory
@@ -1203,7 +1203,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	else if (useStaticCall)
 		solAssert(!funType.valueSet(), "Value set for staticcall");
 	else if (funType.valueSet())
-		templ("value", m_context.variablePart(_functionCall.expression(), 4));
+		templ("value", m_context.variablePart(_functionCall.expression(), "value"));
 	else
 		templ("value", "0");
 
@@ -1212,7 +1212,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	templ("checkExistence", checkExistence);
 
 	if (funType.gasSet())
-		templ("gas", m_context.variablePart(_functionCall.expression(), 3));
+		templ("gas", m_context.variablePart(_functionCall.expression(), "gas"));
 	else if (m_context.evmVersion().canOverchargeGasForCall())
 		// Send all gas (requires tangerine whistle EVM)
 		templ("gas", "gas()");
@@ -1285,7 +1285,7 @@ ostream& IRGeneratorForStatements::defineExpression(Expression const& _expressio
 	return m_code;
 }
 
-ostream& IRGeneratorForStatements::defineExpressionPart(Expression const& _expression, size_t _part)
+ostream& IRGeneratorForStatements::defineExpressionPart(Expression const& _expression, string const& _part)
 {
 	return m_code << "let " << m_context.variablePart(_expression, _part) << " := ";
 }
