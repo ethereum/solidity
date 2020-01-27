@@ -1,11 +1,11 @@
-### 0.6.2 (unreleased)
+### 0.6.2 (2020-01-27)
 
 Language Features:
  * Allow accessing external functions via contract and interface names to obtain their selector.
- * Inline Assembly: Support literals ``true`` and ``false``.
  * Allow interfaces to inherit from other interfaces
- * Allow gas and value to be set in external function calls using ``f{gas: 10000, value: 4 ether}()``.
+ * Allow gas and value to be set in external function calls using ``c.f{gas: 10000, value: 4 ether}()``.
  * Allow specifying the ``salt`` for contract creations and thus the ``create2`` opcode using ``new C{salt: 0x1234, value: 1 ether}(arg1, arg2)``.
+ * Inline Assembly: Support literals ``true`` and ``false``.
 
 
 Compiler Features:
