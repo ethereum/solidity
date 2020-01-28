@@ -355,6 +355,7 @@ message FunctionDef {
   required uint32 num_input_params = 1;
   required uint32 num_output_params = 2;
   required Block block = 3;
+  required bool force_call = 4;
 }
 
 message PopStmt {
@@ -405,10 +406,21 @@ message Data {
 }
 
 message Program {
+  enum Version {
+    HOMESTEAD = 0;
+    TANGERINE = 1;
+    SPURIOUS = 2;
+    BYZANTIUM = 3;
+    CONSTANTINOPLE = 4;
+    PETERSBURG = 5;
+    ISTANBUL = 6;
+    BERLIN = 7;
+  }
   oneof program_oneof {
     Block block = 1;
     Object obj = 2;
   }
+  required Version ver = 3;
 }
 
 package solidity.yul.test.yul_fuzzer;
