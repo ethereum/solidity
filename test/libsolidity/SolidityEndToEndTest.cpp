@@ -784,26 +784,6 @@ BOOST_AUTO_TEST_CASE(small_signed_types)
 	testContractAgainstCpp("run()", small_signed_types_cpp);
 }
 
-BOOST_AUTO_TEST_CASE(strings)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function fixedBytes() public returns(bytes32 ret) {
-				return "abc\x00\xff__";
-			}
-			function pipeThrough(bytes2 small, bool one) public returns(bytes16 large, bool oneRet) {
-				oneRet = one;
-				large = small;
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("fixedBytes()"), encodeArgs(string("abc\0\xff__", 7)));
-		ABI_CHECK(callContractFunction("pipeThrough(bytes2,bool)", string("\0\x02", 2), true), encodeArgs(string("\0\x2", 2), true));
-	)
-}
-
 BOOST_AUTO_TEST_CASE(compound_assign)
 {
 	char const* sourceCode = R"(
@@ -840,40 +820,6 @@ BOOST_AUTO_TEST_CASE(compound_assign)
 		testContractAgainstCpp("f(uint256,uint256)", f, u256(5), u256(2));
 		testContractAgainstCpp("f(uint256,uint256)", f, u256(6), u256(51));
 		testContractAgainstCpp("f(uint256,uint256)", f, u256(7), u256(48));
-	)
-}
-
-BOOST_AUTO_TEST_CASE(simple_mapping)
-{
-	char const* sourceCode = R"(
-		contract test {
-			mapping(uint8 => uint8) table;
-			function get(uint8 k) public returns (uint8 v) {
-				return table[k];
-			}
-			function set(uint8 k, uint8 v) public {
-				table[k] = v;
-			}
-		}
-	)";
-
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0)), encodeArgs(uint8_t(0x00)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0x00)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
-		callContractFunction("set(uint8,uint8)", uint8_t(0x01), uint8_t(0xa1));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0x00)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0xa1)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
-		callContractFunction("set(uint8,uint8)", uint8_t(0x00), uint8_t(0xef));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0xef)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0xa1)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
-		callContractFunction("set(uint8,uint8)", uint8_t(0x01), uint8_t(0x05));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0xef)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0x05)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
 	)
 }
 
@@ -1055,34 +1001,6 @@ BOOST_AUTO_TEST_CASE(constructor)
 		testContractAgainstCpp("get(uint256)", get, u256(6));
 		testContractAgainstCpp("get(uint256)", get, u256(7));
 	)
-}
-
-BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
-{
-	char const* sourceCode = R"(
-		contract test {
-			uint256 public data;
-			bytes6 public name;
-			bytes32 public a_hash;
-			address public an_address;
-			constructor() public {
-				data = 8;
-				name = "Celina";
-				a_hash = keccak256("\x7b");
-				an_address = address(0x1337);
-				super_secret_data = 42;
-			}
-			uint256 super_secret_data;
-		}
-	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("data()"), encodeArgs(8));
-		ABI_CHECK(callContractFunction("name()"), encodeArgs("Celina"));
-		ABI_CHECK(callContractFunction("a_hash()"), encodeArgs(util::keccak256(bytes(1, 0x7b))));
-		ABI_CHECK(callContractFunction("an_address()"), encodeArgs(util::toBigEndian(u160(0x1337))));
-		ABI_CHECK(callContractFunction("super_secret_data()"), bytes());
-	);
 }
 
 BOOST_AUTO_TEST_CASE(balance)
