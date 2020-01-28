@@ -234,7 +234,6 @@ Given the contract:
 
     pragma solidity >=0.4.16 <0.7.0;
 
-
     contract Foo {
         function bar(bytes3[2] memory) public pure {}
         function baz(uint32 x, bool y) public pure returns (bool r) { r = x > 32 || y; }
@@ -583,12 +582,11 @@ As an example, the code
     pragma solidity >=0.4.19 <0.7.0;
     pragma experimental ABIEncoderV2;
 
-
     contract Test {
         struct S { uint a; uint[] b; T[] c; }
         struct T { uint x; uint y; }
-        function f(S memory s, T memory t, uint a) public {}
-        function g() public returns (S memory s, T memory t, uint a) {}
+        function f(S memory, T memory, uint) public pure {}
+        function g() public pure returns (S memory, T memory, uint) {}
     }
 
 would result in the JSON:

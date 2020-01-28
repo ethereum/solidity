@@ -154,7 +154,7 @@ A call to ``Final.destroy()`` will call ``Base2.destroy`` because we specify it
 explicitly in the final override, but this function will bypass
 ``Base1.destroy``. The way around this is to use ``super``::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     contract owned {
         constructor() public { owner = msg.sender; }
@@ -204,7 +204,7 @@ use the ``override`` keyword in the function header as shown in this example:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     contract Base
     {
@@ -227,7 +227,7 @@ bases, it has to explicitly override it:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     contract Base1
     {
@@ -253,7 +253,7 @@ that already overrides all other functions.
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     contract A { function f() public pure{} }
     contract B is A {}
@@ -293,7 +293,7 @@ of the variable:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     contract A
     {
@@ -324,7 +324,7 @@ and the ``override`` keyword must be used in the overriding modifier:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     contract Base
     {
@@ -342,7 +342,7 @@ explicitly:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     contract Base1
     {
@@ -498,7 +498,7 @@ One area where inheritance linearization is especially important and perhaps not
 
 ::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.22 <0.7.0;
 
     contract Base1 {
         constructor() public {}

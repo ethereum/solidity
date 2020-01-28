@@ -122,6 +122,10 @@ defaults:
       name: command line tests
       command: ./test/cmdlineTests.sh
 
+  - run_docs_version_pragma_check: &run_docs_version_pragma_check
+      name: docs version pragma check
+      command: ./scripts/docs_version_pragma_check.sh
+
   - test_ubuntu1604_clang: &test_ubuntu1604_clang
       docker:
         - image: ethereum/solidity-buildpack-deps:ubuntu1604-clang-ossfuzz-<< pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image-rev >>
@@ -605,6 +609,7 @@ jobs:
       - attach_workspace:
           at: build
       - run: *run_cmdline_tests
+      - run: *run_docs_version_pragma_check
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 

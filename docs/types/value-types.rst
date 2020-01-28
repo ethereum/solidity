@@ -650,7 +650,7 @@ External (or public) functions have the following members:
 
 Example that shows how to use the members::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
     // This will report a warning
 
     contract Example {
@@ -669,7 +669,6 @@ Example that shows how to use the members::
 Example that shows how to use internal function types::
 
     pragma solidity >=0.4.16 <0.7.0;
-
 
     library ArrayUtils {
         // internal functions can be used in internal library functions because
