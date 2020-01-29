@@ -180,6 +180,12 @@ public:
 				break;
 			case 'l':
 				VarNameCleaner::run(context, *m_ast);
+
+				// VarNameCleaner is not a real optimisation step, just like disambiguator is not.
+				// It currently does not even guarantee unique names and does not register added
+				// names in the name dispenser making the context unsafe to use with subsequent
+				// steps. We can easily fix that by rerunning the disambiguator.
+				disambiguated = false;
 				break;
 			case 'x':
 				ExpressionSplitter::run(context, *m_ast);
