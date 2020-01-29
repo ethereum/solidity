@@ -44,7 +44,7 @@ public:
 	{
 		m_compiler.reset();
 		m_compiler.setSources({{"", "pragma solidity >=0.0;\n" + _sourceCode}});
-		m_compiler.setOptimiserSettings(solidity::test::Options::get().optimize);
+		m_compiler.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 		m_compiler.setEVMVersion(m_evmVersion);
 		BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");
 
@@ -52,7 +52,7 @@ public:
 		ASTNode const& sourceUnit = m_compiler.ast("");
 		BOOST_REQUIRE(items != nullptr);
 		m_gasCosts = GasEstimator::breakToStatementLevel(
-			GasEstimator(solidity::test::Options::get().evmVersion()).structuralEstimation(*items, vector<ASTNode const*>({&sourceUnit})),
+			GasEstimator(solidity::test::CommonOptions::get().evmVersion()).structuralEstimation(*items, vector<ASTNode const*>({&sourceUnit})),
 			{&sourceUnit}
 		);
 	}
@@ -61,7 +61,7 @@ public:
 	{
 		compileAndRun(_sourceCode);
 		auto state = make_shared<KnownState>();
-		PathGasMeter meter(*m_compiler.assemblyItems(m_compiler.lastContractName()), solidity::test::Options::get().evmVersion());
+		PathGasMeter meter(*m_compiler.assemblyItems(m_compiler.lastContractName()), solidity::test::CommonOptions::get().evmVersion());
 		GasMeter::GasConsumption gas = meter.estimateMax(0, state);
 		u256 bytecodeSize(m_compiler.runtimeObject(m_compiler.lastContractName()).bytecode.size());
 		// costs for deployment
@@ -71,7 +71,7 @@ public:
 
 		// Skip the tests when we force ABIEncoderV2.
 		// TODO: We should enable this again once the yul optimizer is activated.
-		if (!solidity::test::Options::get().useABIEncoderV2)
+		if (!solidity::test::CommonOptions::get().useABIEncoderV2)
 		{
 			BOOST_REQUIRE(!gas.isInfinite);
 			BOOST_CHECK_LE(m_gasUsed, gas.value);
@@ -94,13 +94,13 @@ public:
 			gas = max(gas, gasForTransaction(hash.asBytes() + arguments, false));
 		}
 
-		gas += GasEstimator(solidity::test::Options::get().evmVersion()).functionalEstimation(
+		gas += GasEstimator(solidity::test::CommonOptions::get().evmVersion()).functionalEstimation(
 			*m_compiler.runtimeAssemblyItems(m_compiler.lastContractName()),
 			_sig
 		);
 		// Skip the tests when we force ABIEncoderV2.
 		// TODO: We should enable this again once the yul optimizer is activated.
-		if (!solidity::test::Options::get().useABIEncoderV2)
+		if (!solidity::test::CommonOptions::get().useABIEncoderV2)
 		{
 			BOOST_REQUIRE(!gas.isInfinite);
 			BOOST_CHECK_LE(m_gasUsed, gas.value);
@@ -110,7 +110,7 @@ public:
 
 	static GasMeter::GasConsumption gasForTransaction(bytes const& _data, bool _isCreation)
 	{
-		auto evmVersion = solidity::test::Options::get().evmVersion();
+		auto evmVersion = solidity::test::CommonOptions::get().evmVersion();
 		GasMeter::GasConsumption gas = _isCreation ? GasCosts::txCreateGas : GasCosts::txGas;
 		for (auto i: _data)
 			gas += i != 0 ? GasCosts::txDataNonZeroGas(evmVersion) : GasCosts::txDataZeroGas;

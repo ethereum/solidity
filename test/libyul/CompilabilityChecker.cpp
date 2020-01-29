@@ -18,13 +18,14 @@
  * Unit tests for the compilability checker.
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <test/libyul/Common.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <libyul/CompilabilityChecker.h>
 
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 
@@ -38,7 +39,7 @@ string check(string const& _input)
 	Object obj;
 	std::tie(obj.code, obj.analysisInfo) = yul::test::parse(_input, false);
 	BOOST_REQUIRE(obj.code);
-	map<YulString, int> functions = CompilabilityChecker::run(EVMDialect::strictAssemblyForEVM(solidity::test::Options::get().evmVersion()), obj, true);
+	map<YulString, int> functions = CompilabilityChecker::run(EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion()), obj, true);
 	string out;
 	for (auto const& function: functions)
 		out += function.first.str() + ": " + to_string(function.second) + " ";

@@ -25,7 +25,9 @@
 #include <tuple>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
-#include <test/Options.h>
+#include <test/Common.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace solidity::langutil;

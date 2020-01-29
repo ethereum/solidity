@@ -24,7 +24,9 @@
 
 #include <libsolidity/ast/Types.h>  // for IntegerType
 
-#include <test/Options.h>
+#include <test/Common.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 

@@ -18,13 +18,14 @@
  * Unit tests for the code metrics.
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <test/libyul/Common.h>
 
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/AsmData.h>
 
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace solidity::langutil;

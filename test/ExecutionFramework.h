@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/DebugSettings.h>
@@ -33,6 +33,8 @@
 #include <libsolutil/Keccak256.h>
 
 #include <functional>
+
+#include <boost/test/unit_test.hpp>
 
 namespace solidity::test
 {

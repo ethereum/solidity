@@ -16,13 +16,14 @@
 */
 
 #include <test/libsolidity/SMTCheckerJSONTest.h>
-#include <test/Options.h>
+#include <test/Common.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
 #include <fstream>
 #include <memory>

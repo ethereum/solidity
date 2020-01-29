@@ -36,7 +36,7 @@
 #pragma GCC diagnostic pop
 
 #include <test/InteractiveTests.h>
-#include <test/Options.h>
+#include <test/Common.h>
 #include <test/EVMHost.h>
 #include <test/Common.h>
 
@@ -69,7 +69,7 @@ int registerTests(
 {
 	int numTestsAdded = 0;
 	fs::path fullpath = _basepath / _path;
-	TestCase::Config config{fullpath.string(), solidity::test::Options::get().evmVersion()};
+	TestCase::Config config{fullpath.string(), solidity::test::CommonOptions::get().evmVersion()};
 	if (fs::is_directory(fullpath))
 	{
 		test_suite* sub_suite = BOOST_TEST_SUITE(_path.filename().string());
@@ -94,7 +94,7 @@ int registerTests(
 					{
 						stringstream errorStream;
 						auto testCase = _testCaseCreator(config);
-						if (testCase->validateSettings(solidity::test::Options::get().evmVersion()))
+						if (testCase->validateSettings(solidity::test::CommonOptions::get().evmVersion()))
 							switch (testCase->run(errorStream))
 							{
 								case TestCase::TestResult::Success:
@@ -121,15 +121,27 @@ int registerTests(
 	}
 	return numTestsAdded;
 }
+
+void initializeOptions()
+{
+	auto const& suite = boost::unit_test::framework::master_test_suite();
+
+	auto options = std::make_unique<solidity::test::CommonOptions>();
+	solAssert(options->parse(suite.argc, suite.argv), "Failed to parse options!");
+	options->validate();
+
+	solidity::test::CommonOptions::setSingleton(std::move(options));
+}
 }
 
 test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 {
 	master_test_suite_t& master = framework::master_test_suite();
 	master.p_name.value = "SolidityTests";
-	solidity::test::Options::get().validate();
 
-	bool disableSemantics = !solidity::test::EVMHost::getVM(solidity::test::Options::get().evmonePath.string());
+	initializeOptions();
+
+	bool disableSemantics = !solidity::test::EVMHost::getVM(solidity::test::CommonOptions::get().evmonePath.string());
 	if (disableSemantics)
 	{
 		cout << "Unable to find " << solidity::test::evmoneFilename << ". Please provide the path using -- --evmonepath <path>." << endl;
@@ -140,7 +152,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	// Include the interactive tests in the automatic tests as well
 	for (auto const& ts: g_interactiveTestsuites)
 	{
-		auto const& options = solidity::test::Options::get();
+		auto const& options = solidity::test::CommonOptions::get();
 
 		if (ts.smt && options.disableSMT)
 			continue;
@@ -172,7 +184,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			removeTestSuite(suite);
 	}
 
-	if (solidity::test::Options::get().disableSMT)
+	if (solidity::test::CommonOptions::get().disableSMT)
 		removeTestSuite("SMTChecker");
 
 	return 0;

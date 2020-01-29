@@ -9,8 +9,6 @@ set(sources
     InteractiveTests.h
     Metadata.cpp
     Metadata.h
-    Options.cpp
-    Options.h
     TestCase.cpp
     TestCase.h
 )

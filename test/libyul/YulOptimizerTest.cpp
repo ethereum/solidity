@@ -19,7 +19,7 @@
 
 #include <test/libsolidity/util/SoltestErrors.h>
 #include <test/libyul/Common.h>
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
@@ -109,7 +109,7 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 		else if (dialectName == "ewasm")
 			m_dialect = &WasmDialect::instance();
 		else if (dialectName == "evm")
-			m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::Options::get().evmVersion());
+			m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion());
 		else
 			BOOST_THROW_EXCEPTION(runtime_error("Invalid dialect " + dialectName));
 
@@ -117,7 +117,7 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 		m_settings.erase("dialect");
 	}
 	else
-		m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::Options::get().evmVersion());
+		m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion());
 
 	if (m_settings.count("step"))
 	{

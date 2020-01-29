@@ -21,8 +21,8 @@
 #include <liblangutil/EVMVersion.h>
 
 #include <boost/filesystem/path.hpp>
-#include <boost/program_options.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/program_options.hpp>
 
 namespace solidity::test
 {
@@ -48,6 +48,8 @@ struct CommonOptions: boost::noncopyable
 	bool optimize = false;
 	bool optimizeYul = false;
 	bool disableSMT = false;
+	bool useABIEncoderV2 = false;
+	bool showMessages = false;
 
 	langutil::EVMVersion evmVersion() const;
 
@@ -55,13 +57,18 @@ struct CommonOptions: boost::noncopyable
 	// Throws a ConfigException on error
 	virtual void validate() const;
 
-protected:
+	static CommonOptions const& get();
+	static void setSingleton(std::unique_ptr<CommonOptions const>&& _instance);
+
 	CommonOptions(std::string caption = "");
+	virtual ~CommonOptions() {};
+protected:
 
 	boost::program_options::options_description options;
 
 private:
 	std::string evmVersionString;
+	static std::unique_ptr<CommonOptions const> m_singleton;
 };
 
 }

@@ -39,7 +39,7 @@ bytes SolidityExecutionFramework::compileContract(
 	// Silence compiler version warning
 	std::string sourceCode = "pragma solidity >=0.0;\n";
 	if (
-		solidity::test::Options::get().useABIEncoderV2 &&
+		solidity::test::CommonOptions::get().useABIEncoderV2 &&
 		_sourceCode.find("pragma experimental ABIEncoderV2;") == std::string::npos
 	)
 		sourceCode += "pragma experimental ABIEncoderV2;\n";

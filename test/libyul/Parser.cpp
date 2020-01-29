@@ -19,7 +19,7 @@
  * Unit tests for parsing Yul.
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <test/libsolidity/ErrorCheck.h>
 #include <test/libyul/Common.h>
@@ -32,6 +32,7 @@
 #include <liblangutil/ErrorReporter.h>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <memory>
 #include <optional>

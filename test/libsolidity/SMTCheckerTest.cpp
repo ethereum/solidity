@@ -16,7 +16,7 @@
 */
 
 #include <test/libsolidity/SMTCheckerTest.h>
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libsolidity/formal/ModelChecker.h>
 

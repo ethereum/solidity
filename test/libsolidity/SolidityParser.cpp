@@ -25,9 +25,11 @@
 #include <liblangutil/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <liblangutil/ErrorReporter.h>
-#include <test/Options.h>
+#include <test/Common.h>
 #include <test/libsolidity/ErrorCheck.h>
 #include <libsolidity/ast/ASTVisitor.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -42,7 +44,7 @@ ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& 
 	ErrorReporter errorReporter(_errors);
 	ASTPointer<SourceUnit> sourceUnit = Parser(
 		errorReporter,
-		solidity::test::Options::get().evmVersion(),
+		solidity::test::CommonOptions::get().evmVersion(),
 		errorRecovery
 	).parse(std::make_shared<Scanner>(CharStream(_source, "")));
 	if (!sourceUnit)
