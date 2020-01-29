@@ -270,87 +270,10 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 {
 	m_resolver.warnVariablesNamedLikeInstructions();
 
-	// Errors created in this stage are completely ignored because we do not yet know
-	// the type and size of external identifiers, which would result in false errors.
-	// The only purpose of this step is to fill the inline assembly annotation with
-	// external references.
-	ErrorList errors;
-	ErrorReporter errorsIgnored(errors);
-	yul::ExternalIdentifierAccess::Resolver resolver =
-	[&](yul::Identifier const& _identifier, yul::IdentifierContext _context, bool _crossesFunctionBoundary) {
-		bool isSlot = boost::algorithm::ends_with(_identifier.name.str(), "_slot");
-		bool isOffset = boost::algorithm::ends_with(_identifier.name.str(), "_offset");
-		if (_context == yul::IdentifierContext::VariableDeclaration)
-		{
-			string namePrefix = _identifier.name.str().substr(0, _identifier.name.str().find('.'));
-			if (isSlot || isOffset)
-				declarationError(_identifier.location, "In variable declarations _slot and _offset can not be used as a suffix.");
-			else if (
-				auto declarations = m_resolver.nameFromCurrentScope(namePrefix);
-				!declarations.empty()
-			)
-			{
-				SecondarySourceLocation ssl;
-				for (auto const* decl: declarations)
-					ssl.append("The shadowed declaration is here:", decl->location());
-				if (!ssl.infos.empty())
-					declarationError(
-						_identifier.location,
-						ssl,
-						namePrefix.size() < _identifier.name.str().size() ?
-						"The prefix of this declaration conflicts with a declaration outside the inline assembly block." :
-						"This declaration shadows a declaration outside the inline assembly block."
-					);
-			}
-			return size_t(-1);
-		}
-		auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
-		if (isSlot || isOffset)
-		{
-			// special mode to access storage variables
-			if (!declarations.empty())
-				// the special identifier exists itself, we should not allow that.
-				return size_t(-1);
-			string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - (
-				isSlot ?
-				string("_slot").size() :
-				string("_offset").size()
-			));
-			if (realName.empty())
-			{
-				declarationError(_identifier.location, "In variable names _slot and _offset can only be used as a suffix.");
-				return size_t(-1);
-			}
-			declarations = m_resolver.nameFromCurrentScope(realName);
-		}
-		if (declarations.size() > 1)
-		{
-			declarationError(_identifier.location, "Multiple matching identifiers. Resolving overloaded identifiers is not supported.");
-			return size_t(-1);
-		}
-		else if (declarations.size() == 0)
-			return size_t(-1);
-		if (auto var = dynamic_cast<VariableDeclaration const*>(declarations.front()))
-			if (var->isLocalVariable() && _crossesFunctionBoundary)
-			{
-				declarationError(_identifier.location, "Cannot access local Solidity variables from inside an inline assembly function.");
-				return size_t(-1);
-			}
-		_inlineAssembly.annotation().externalReferences[&_identifier].isSlot = isSlot;
-		_inlineAssembly.annotation().externalReferences[&_identifier].isOffset = isOffset;
-		_inlineAssembly.annotation().externalReferences[&_identifier].declaration = declarations.front();
-		return size_t(1);
-	};
+	m_yulAnnotation = &_inlineAssembly.annotation();
+	(*this)(_inlineAssembly.operations());
+	m_yulAnnotation = nullptr;
 
-	// Will be re-generated later with correct information
-	// We use the latest EVM version because we will re-run it anyway.
-	yul::AsmAnalysisInfo analysisInfo;
-	yul::AsmAnalyzer(
-		analysisInfo,
-		errorsIgnored,
-		yul::EVMDialect::strictAssemblyForEVM(m_evmVersion),
-		resolver
-	).analyze(_inlineAssembly.operations());
 	return false;
 }
 
@@ -466,6 +389,90 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 	}
 
 	_variable.annotation().type = type;
+}
+
+void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
+{
+	bool wasInsideFunction = m_yulInsideFunction;
+	m_yulInsideFunction = true;
+	this->operator()(_function.body);
+	m_yulInsideFunction = wasInsideFunction;
+}
+
+void ReferencesResolver::operator()(yul::Identifier const& _identifier)
+{
+	bool isSlot = boost::algorithm::ends_with(_identifier.name.str(), "_slot");
+	bool isOffset = boost::algorithm::ends_with(_identifier.name.str(), "_offset");
+
+	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
+	if (isSlot || isOffset)
+	{
+		// special mode to access storage variables
+		if (!declarations.empty())
+			// the special identifier exists itself, we should not allow that.
+			return;
+		string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - (
+			isSlot ?
+			string("_slot").size() :
+			string("_offset").size()
+		));
+		if (realName.empty())
+		{
+			declarationError(_identifier.location, "In variable names _slot and _offset can only be used as a suffix.");
+			return;
+		}
+		declarations = m_resolver.nameFromCurrentScope(realName);
+	}
+	if (declarations.size() > 1)
+	{
+		declarationError(_identifier.location, "Multiple matching identifiers. Resolving overloaded identifiers is not supported.");
+		return;
+	}
+	else if (declarations.size() == 0)
+		return;
+	if (auto var = dynamic_cast<VariableDeclaration const*>(declarations.front()))
+		if (var->isLocalVariable() && m_yulInsideFunction)
+		{
+			declarationError(_identifier.location, "Cannot access local Solidity variables from inside an inline assembly function.");
+			return;
+		}
+
+	m_yulAnnotation->externalReferences[&_identifier].isSlot = isSlot;
+	m_yulAnnotation->externalReferences[&_identifier].isOffset = isOffset;
+	m_yulAnnotation->externalReferences[&_identifier].declaration = declarations.front();
+}
+
+void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
+{
+	for (auto const& identifier: _varDecl.variables)
+	{
+		bool isSlot = boost::algorithm::ends_with(identifier.name.str(), "_slot");
+		bool isOffset = boost::algorithm::ends_with(identifier.name.str(), "_offset");
+
+		string namePrefix = identifier.name.str().substr(0, identifier.name.str().find('.'));
+		if (isSlot || isOffset)
+			declarationError(identifier.location, "In variable declarations _slot and _offset can not be used as a suffix.");
+		else if (
+			auto declarations = m_resolver.nameFromCurrentScope(namePrefix);
+			!declarations.empty()
+		)
+		{
+			SecondarySourceLocation ssl;
+			for (auto const* decl: declarations)
+				ssl.append("The shadowed declaration is here:", decl->location());
+			if (!ssl.infos.empty())
+				declarationError(
+					identifier.location,
+					ssl,
+					namePrefix.size() < identifier.name.str().size() ?
+					"The prefix of this declaration conflicts with a declaration outside the inline assembly block." :
+					"This declaration shadows a declaration outside the inline assembly block."
+				);
+		}
+	}
+
+	if (_varDecl.value)
+		visit(*_varDecl.value);
 }
 
 void ReferencesResolver::typeError(SourceLocation const& _location, string const& _description)

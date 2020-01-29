@@ -158,7 +158,23 @@
                   ]
                 },
                 "evmVersion": %EVMVERSION%,
-                "externalReferences": [],
+                "externalReferences":
+                [
+                  {
+                    "declaration": 5,
+                    "isOffset": false,
+                    "isSlot": false,
+                    "src": "141:1:1",
+                    "valueSize": 18446744073709551615
+                  },
+                  {
+                    "declaration": 5,
+                    "isOffset": false,
+                    "isSlot": false,
+                    "src": "172:1:1",
+                    "valueSize": 18446744073709551615
+                  }
+                ],
                 "id": 3,
                 "nodeType": "InlineAssembly",
                 "src": "52:138:1"
