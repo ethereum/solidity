@@ -65,7 +65,8 @@ struct Dialect: boost::noncopyable
 	Dialect() = default;
 	virtual ~Dialect() = default;
 
-	static Dialect const& yul();
+	/// Old "yul" dialect. This is only used for testing.
+	static Dialect const& yulDeprecated();
 };
 
 }

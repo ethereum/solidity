@@ -15,30 +15,30 @@ object "object" {
         function main()
         {
             let _1 := 0
-            mstore_internal(0:i64, _1, _1, _1, _1)
-            mstore_internal(32:i64, _1, _1, _1, 1)
-            eth.storageStore(0:i64, 32:i64)
+            mstore_internal(0, _1, _1, _1, _1)
+            mstore_internal(32, _1, _1, _1, 1)
+            eth.storageStore(0, 32)
         }
-        function endian_swap_16(x:i64) -> y:i64
+        function endian_swap_16(x) -> y
         {
-            y := i64.or(i64.and(i64.shl(x, 8:i64), 0xff00:i64), i64.and(i64.shr_u(x, 8:i64), 0xff:i64))
+            y := i64.or(i64.and(i64.shl(x, 8), 0xff00), i64.and(i64.shr_u(x, 8), 0xff))
         }
-        function endian_swap_32(x:i64) -> y:i64
+        function endian_swap_32(x) -> y
         {
-            let hi:i64 := i64.shl(endian_swap_16(x), 16:i64)
-            y := i64.or(hi, endian_swap_16(i64.shr_u(x, 16:i64)))
+            let hi := i64.shl(endian_swap_16(x), 16)
+            y := i64.or(hi, endian_swap_16(i64.shr_u(x, 16)))
         }
-        function endian_swap(x:i64) -> y:i64
+        function endian_swap(x) -> y
         {
-            let hi:i64 := i64.shl(endian_swap_32(x), 32:i64)
-            y := i64.or(hi, endian_swap_32(i64.shr_u(x, 32:i64)))
+            let hi := i64.shl(endian_swap_32(x), 32)
+            y := i64.or(hi, endian_swap_32(i64.shr_u(x, 32)))
         }
-        function mstore_internal(pos:i64, y1:i64, y2:i64, y3:i64, y4:i64)
+        function mstore_internal(pos, y1, y2, y3, y4)
         {
             i64.store(pos, endian_swap(y1))
-            i64.store(i64.add(pos, 8:i64), endian_swap(y2))
-            i64.store(i64.add(pos, 16:i64), endian_swap(y3))
-            i64.store(i64.add(pos, 24:i64), endian_swap(y4))
+            i64.store(i64.add(pos, 8), endian_swap(y2))
+            i64.store(i64.add(pos, 16), endian_swap(y3))
+            i64.store(i64.add(pos, 24), endian_swap(y4))
         }
     }
 }

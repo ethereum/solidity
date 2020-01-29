@@ -105,7 +105,7 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 	{
 		auto dialectName = m_settings["dialect"];
 		if (dialectName == "yul")
-			m_dialect = &Dialect::yul();
+			m_dialect = &Dialect::yulDeprecated();
 		else if (dialectName == "ewasm")
 			m_dialect = &WasmDialect::instance();
 		else if (dialectName == "evm")

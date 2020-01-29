@@ -99,12 +99,12 @@ std::optional<Error> parseAndReturnFirstError(string const& _source, Dialect con
 	return {};
 }
 
-bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yul(), bool _allowWarnings = true)
+bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarnings = true)
 {
 	return !parseAndReturnFirstError(_source, _dialect, _allowWarnings);
 }
 
-Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yul(), bool _allowWarnings = false)
+Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarnings = false)
 {
 
 	auto error = parseAndReturnFirstError(_source, _dialect, _allowWarnings);
@@ -122,7 +122,7 @@ do \
 	BOOST_CHECK(solidity::frontend::test::searchErrorMessage(err, (substring))); \
 } while(0)
 
-#define CHECK_ERROR(text, typ, substring) CHECK_ERROR_DIALECT(text, typ, substring, Dialect::yul())
+#define CHECK_ERROR(text, typ, substring) CHECK_ERROR_DIALECT(text, typ, substring, Dialect::yulDeprecated())
 
 BOOST_AUTO_TEST_SUITE(YulParser)
 
