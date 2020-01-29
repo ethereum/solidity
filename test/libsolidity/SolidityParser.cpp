@@ -98,7 +98,7 @@ void checkFunctionNatspec(
 	std::string const& _expectedDoc
 )
 {
-	auto doc = _function->documentation();
+	auto doc = _function->documentation()->text();
 	BOOST_CHECK_MESSAGE(doc != nullptr, "Function does not have Natspec Doc as expected");
 	BOOST_CHECK_EQUAL(*doc, _expectedDoc);
 }

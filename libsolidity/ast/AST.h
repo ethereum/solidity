@@ -346,6 +346,30 @@ private:
 };
 
 /**
+ * The doxygen-style, structured documentation class that represents an AST node.
+ */
+class StructuredDocumentation: public ASTNode
+{
+public:
+	StructuredDocumentation(
+		int64_t _id,
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _text
+	): ASTNode(_id, _location), m_text(_text)
+	{}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	/// @return A shared pointer of an ASTString.
+	/// Contains doxygen-style, structured documentation that is parsed later on.
+	ASTPointer<ASTString> const& text() const { return m_text; }
+
+private:
+	ASTPointer<ASTString> m_text;
+};
+
+/**
  * Abstract class that is added to each AST node that can receive documentation.
  */
 class Documented
@@ -361,6 +385,24 @@ public:
 protected:
 	ASTPointer<ASTString> m_documentation;
 };
+
+/**
+ * Abstract class that is added to each AST node that can receive a structured documentation.
+ */
+class StructurallyDocumented
+{
+public:
+	virtual ~StructurallyDocumented() = default;
+	explicit StructurallyDocumented(ASTPointer<StructuredDocumentation> const& _documentation): m_documentation(_documentation) {}
+
+	/// @return A shared pointer of a FormalDocumentation.
+	/// Can contain a nullptr in which case indicates absence of documentation
+	ASTPointer<StructuredDocumentation> const& documentation() const { return m_documentation; }
+
+protected:
+	ASTPointer<StructuredDocumentation> m_documentation;
+};
+
 
 /**
  * Abstract class that is added to AST nodes that can be marked as not being fully implemented
@@ -385,21 +427,21 @@ protected:
  * document order. It first visits all struct declarations, then all variable declarations and
  * finally all function declarations.
  */
-class ContractDefinition: public Declaration, public Documented
+class ContractDefinition: public Declaration, public StructurallyDocumented
 {
 public:
 	ContractDefinition(
 		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
-		ASTPointer<ASTString> const& _documentation,
+		ASTPointer<StructuredDocumentation> const& _documentation,
 		std::vector<ASTPointer<InheritanceSpecifier>> const& _baseContracts,
 		std::vector<ASTPointer<ASTNode>> const& _subNodes,
 		ContractKind _contractKind = ContractKind::Contract,
 		bool _abstract = false
 	):
 		Declaration(_id, _location, _name),
-		Documented(_documentation),
+		StructurallyDocumented(_documentation),
 		m_baseContracts(_baseContracts),
 		m_subNodes(_subNodes),
 		m_contractKind(_contractKind),
@@ -681,7 +723,7 @@ protected:
 	std::vector<ASTPointer<UserDefinedTypeName>> m_overrides;
 };
 
-class FunctionDefinition: public CallableDeclaration, public Documented, public ImplementationOptional
+class FunctionDefinition: public CallableDeclaration, public StructurallyDocumented, public ImplementationOptional
 {
 public:
 	FunctionDefinition(
@@ -693,14 +735,14 @@ public:
 		Token _kind,
 		bool _isVirtual,
 		ASTPointer<OverrideSpecifier> const& _overrides,
-		ASTPointer<ASTString> const& _documentation,
+		ASTPointer<StructuredDocumentation> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
 		std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
 		ASTPointer<ParameterList> const& _returnParameters,
 		ASTPointer<Block> const& _body
 	):
 		CallableDeclaration(_id, _location, _name, _visibility, _parameters, _isVirtual, _overrides, _returnParameters),
-		Documented(_documentation),
+		StructurallyDocumented(_documentation),
 		ImplementationOptional(_body != nullptr),
 		m_stateMutability(_stateMutability),
 		m_kind(_kind),
@@ -870,21 +912,21 @@ private:
 /**
  * Definition of a function modifier.
  */
-class ModifierDefinition: public CallableDeclaration, public Documented
+class ModifierDefinition: public CallableDeclaration, public StructurallyDocumented
 {
 public:
 	ModifierDefinition(
 		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
-		ASTPointer<ASTString> const& _documentation,
+		ASTPointer<StructuredDocumentation> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
 		bool _isVirtual,
 		ASTPointer<OverrideSpecifier> const& _overrides,
 		ASTPointer<Block> const& _body
 	):
 		CallableDeclaration(_id, _location, _name, Visibility::Internal, _parameters, _isVirtual, _overrides),
-		Documented(_documentation),
+		StructurallyDocumented(_documentation),
 		m_body(_body)
 	{
 	}
@@ -935,19 +977,19 @@ private:
 /**
  * Definition of a (loggable) event.
  */
-class EventDefinition: public CallableDeclaration, public Documented
+class EventDefinition: public CallableDeclaration, public StructurallyDocumented
 {
 public:
 	EventDefinition(
 		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
-		ASTPointer<ASTString> const& _documentation,
+		ASTPointer<StructuredDocumentation> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
 		bool _anonymous = false
 	):
 		CallableDeclaration(_id, _location, _name, Visibility::Default, _parameters),
-		Documented(_documentation),
+		StructurallyDocumented(_documentation),
 		m_anonymous(_anonymous)
 	{
 	}
