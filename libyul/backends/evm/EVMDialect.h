@@ -93,8 +93,7 @@ protected:
  *  - All comparison functions return type bool
  *  - bitwise operations are called bitor, bitand, bitxor and bitnot
  *  - and, or, xor take bool and return bool
- *  - iszero returns bool
- *  - isfalse takes bool and returns bool
+ *  - iszero is replaced by not, which takes bool and returns bool
  *  - there are conversion functions bool_to_u256 and u256_to_bool.
  *  - there is popbool
  */

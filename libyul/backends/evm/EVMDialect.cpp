@@ -226,19 +226,30 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 	m_functions["slt"_yulstring].returns = {"bool"_yulstring};
 	m_functions["sgt"_yulstring].returns = {"bool"_yulstring};
 	m_functions["eq"_yulstring].returns = {"bool"_yulstring};
-	m_functions["iszero"_yulstring].returns = {"bool"_yulstring};
+
+	// "not" and "bitnot" replace "iszero" and "not"
+	m_functions["bitnot"_yulstring] = m_functions["not"_yulstring];
+	m_functions["bitnot"_yulstring].name = "bitnot"_yulstring;
+	m_functions["not"_yulstring] = m_functions["iszero"_yulstring];
+	m_functions["not"_yulstring].name = "not"_yulstring;
+	m_functions["not"_yulstring].returns = {"bool"_yulstring};
+	m_functions["not"_yulstring].parameters = {"bool"_yulstring};
+	m_functions.erase("iszero"_yulstring);
+
 	m_functions["bitand"_yulstring] = m_functions["and"_yulstring];
+	m_functions["bitand"_yulstring].name = "bitand"_yulstring;
 	m_functions["bitor"_yulstring] = m_functions["or"_yulstring];
+	m_functions["bitor"_yulstring].name = "bitor"_yulstring;
 	m_functions["bitxor"_yulstring] = m_functions["xor"_yulstring];
+	m_functions["bitxor"_yulstring].name = "bitxor"_yulstring;
 	m_functions["and"_yulstring].parameters = {"bool"_yulstring, "bool"_yulstring};
 	m_functions["and"_yulstring].returns = {"bool"_yulstring};
 	m_functions["or"_yulstring].parameters = {"bool"_yulstring, "bool"_yulstring};
 	m_functions["or"_yulstring].returns = {"bool"_yulstring};
 	m_functions["xor"_yulstring].parameters = {"bool"_yulstring, "bool"_yulstring};
 	m_functions["xor"_yulstring].returns = {"bool"_yulstring};
-	m_functions["isfalse"_yulstring] = m_functions["iszero"_yulstring];
-	m_functions["isfalse"_yulstring].parameters = {"bool"_yulstring};
 	m_functions["popbool"_yulstring] = m_functions["pop"_yulstring];
+	m_functions["popbool"_yulstring].name = "popbool"_yulstring;
 	m_functions["popbool"_yulstring].parameters = {"bool"_yulstring};
 	m_functions.insert(createFunction("bool_to_u256", 1, 1, {}, false, [](
 		FunctionCall const&,
