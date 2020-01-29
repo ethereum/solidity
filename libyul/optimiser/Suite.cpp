@@ -308,9 +308,7 @@ void OptimiserSuite::run(
 		if (ast.statements.size() > 1 && std::get<Block>(ast.statements.front()).statements.empty())
 			ast.statements.erase(ast.statements.begin());
 	}
-	suite.runSequence({
-		VarNameCleaner::name
-	}, ast);
+	VarNameCleaner::run(suite.m_context, ast);
 
 	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
 }
@@ -366,8 +364,14 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			SSATransform,
 			StructuralSimplifier,
 			UnusedPruner,
-			VarDeclInitializer,
-			VarNameCleaner
+			VarDeclInitializer
+
+			// NOTE: VarNameCleaner implements the same interface but it's not a real optimisation
+			// step (just like disambiguator isn't one) and should not be included here. It currently
+			// does not even guarantee unique names and does not register added names in the name
+			// dispenser so it's not safe to run arbitrary steps after it without disambiguation
+			// and recreating the context.
+			//VarNameCleaner
 		>();
 	return instance;
 }
