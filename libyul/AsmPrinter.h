@@ -58,7 +58,7 @@ public:
 
 private:
 	std::string formatTypedName(TypedName _variable) const;
-	std::string appendTypeName(YulString _type) const;
+	std::string appendTypeName(YulString _type, bool _isBoolLiteral = false) const;
 
 	Dialect const* m_dialect = nullptr;
 };

@@ -50,7 +50,7 @@ string AsmPrinter::operator()(Literal const& _literal) const
 		return _literal.value.str() + appendTypeName(_literal.type);
 	case LiteralKind::Boolean:
 		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "Invalid bool literal.");
-		return ((_literal.value == "true"_yulstring) ? "true" : "false") + appendTypeName(_literal.type);
+		return ((_literal.value == "true"_yulstring) ? "true" : "false") + appendTypeName(_literal.type, true);
 	case LiteralKind::String:
 		break;
 	}
@@ -237,9 +237,17 @@ string AsmPrinter::formatTypedName(TypedName _variable) const
 	return _variable.name.str() + appendTypeName(_variable.type);
 }
 
-string AsmPrinter::appendTypeName(YulString _type) const
+string AsmPrinter::appendTypeName(YulString _type, bool _isBoolLiteral) const
 {
-	if (_type.empty() || (m_dialect && _type == m_dialect->defaultType))
+	if (m_dialect && !_type.empty())
+	{
+		if (!_isBoolLiteral && _type == m_dialect->defaultType)
+			_type = {};
+		else if (_isBoolLiteral && _type == m_dialect->boolType && !m_dialect->defaultType.empty())
+			// Special case: If we have a bool type but empty default type, do not remove the type.
+			_type = {};
+	}
+	if (_type.empty())
 		return {};
 	else
 		return ":" + _type.str();

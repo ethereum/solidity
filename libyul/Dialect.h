@@ -48,6 +48,7 @@ struct BuiltinFunction
 
 struct Dialect: boost::noncopyable
 {
+	/// Default type, can be omitted.
 	YulString defaultType;
 	/// Type used for the literals "true" and "false".
 	YulString boolType;

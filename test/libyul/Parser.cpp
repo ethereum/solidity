@@ -573,6 +573,7 @@ BOOST_AUTO_TEST_CASE(default_types_set)
 	shared_ptr<Block> result = parse(
 		"{"
 			"let x:bool := true:bool "
+			"let z:bool := true "
 			"let y := add(1, 2) "
 			"switch y case 0 {} default {} "
 		"}",
@@ -586,6 +587,7 @@ BOOST_AUTO_TEST_CASE(default_types_set)
 	BOOST_CHECK_EQUAL(AsmPrinter{}(*result),
 		"{\n"
 		"    let x:bool := true:bool\n"
+		"    let z:bool := true:bool\n"
 		"    let y:u256 := add(1:u256, 2:u256)\n"
 		"    switch y\n"
 		"    case 0:u256 { }\n"
@@ -597,7 +599,8 @@ BOOST_AUTO_TEST_CASE(default_types_set)
 	// should be omitted.
 	BOOST_CHECK_EQUAL(AsmPrinter{EVMDialectTyped::instance(EVMVersion{})}(*result),
 		"{\n"
-		"    let x:bool := true:bool\n"
+		"    let x:bool := true\n"
+		"    let z:bool := true\n"
 		"    let y := add(1, 2)\n"
 		"    switch y\n"
 		"    case 0 { }\n"
