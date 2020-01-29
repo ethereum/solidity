@@ -266,10 +266,15 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 		BuiltinContext&,
 		std::function<void()> _visitArguments
 	) {
-		// TODO Should a value larger than 1 be invalid?
+		// A value larger than 1 causes an invalid instruction.
 		_visitArguments();
-		_assembly.appendInstruction(evmasm::Instruction::ISZERO);
-		_assembly.appendInstruction(evmasm::Instruction::ISZERO);
+		_assembly.appendConstant(2);
+		_assembly.appendInstruction(evmasm::Instruction::DUP2);
+		_assembly.appendInstruction(evmasm::Instruction::LT);
+		AbstractAssembly::LabelID inRange = _assembly.newLabelId();
+		_assembly.appendJumpToIf(inRange);
+		_assembly.appendInstruction(evmasm::Instruction::INVALID);
+		_assembly.appendLabel(inRange);
 	}));
 	m_functions["u256_to_bool"_yulstring].returns = {"bool"_yulstring};
 }
