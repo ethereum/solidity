@@ -54,9 +54,6 @@ public:
 
 private:
 	static std::vector<std::string> allStepNames();
-	static std::vector<std::string> allStepNamesExcept(
-		std::vector<std::string> const& _excludedStepNames
-	);
 	static std::string const& randomOptimisationStep();
 
 	std::vector<std::string> m_optimisationSteps;

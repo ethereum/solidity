@@ -26,7 +26,6 @@
 
 using namespace std;
 using namespace solidity;
-using namespace solidity::util;
 using namespace solidity::yul;
 using namespace solidity::phaser;
 
@@ -63,50 +62,9 @@ vector<string> Chromosome::allStepNames()
 	return stepNames;
 }
 
-vector<string> Chromosome::allStepNamesExcept(vector<string> const& _excludedStepNames)
-{
-	// This is not very efficient but vectors are small and the caller will cache the results anyway.
-	// What matters a bit more is that using vector rather than a set gives us O(1) access to
-	// random elements in other functions.
-	return convertContainer<vector<string>>(
-		convertContainer<set<string>>(allStepNames()) -
-		convertContainer<set<string>>(_excludedStepNames)
-	);
-}
-
 string const& Chromosome::randomOptimisationStep()
 {
-	static vector<string> stepNames = allStepNamesExcept({
-		// All possible steps, listed and commented-out for easy tweaking.
-		// The uncommented ones are not used (possibly because they fail).
-		//{BlockFlattener::name},
-		//{CommonSubexpressionEliminator::name},
-		//{ConditionalSimplifier::name},
-		//{ConditionalUnsimplifier::name},
-		//{ControlFlowSimplifier::name},
-		//{DeadCodeEliminator::name},
-		//{EquivalentFunctionCombiner::name},
-		//{ExpressionInliner::name},
-		//{ExpressionJoiner::name},
-		//{ExpressionSimplifier::name},
-		//{ExpressionSplitter::name},
-		//{ForLoopConditionIntoBody::name},
-		//{ForLoopConditionOutOfBody::name},
-		//{ForLoopInitRewriter::name},
-		//{FullInliner::name},
-		//{FunctionGrouper::name},
-		//{FunctionHoister::name},
-		//{LiteralRematerialiser::name},
-		//{LoadResolver::name},
-		//{LoopInvariantCodeMotion::name},
-		//{RedundantAssignEliminator::name},
-		//{Rematerialiser::name},
-		//{SSAReverser::name},
-		//{SSATransform::name},
-		//{StructuralSimplifier::name},
-		//{UnusedPruner::name},
-		//{VarDeclInitializer::name},
-	});
+	static vector<string> stepNames = allStepNames();
 
 	return stepNames[uniformRandomInt(0, stepNames.size() - 1)];
 }
