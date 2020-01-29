@@ -156,6 +156,23 @@ T convertContainer(U&& _from)
 	};
 }
 
+/// Gets a @a K -> @a V map and returns a map where values from the original map are keys and keys
+/// from the original map are values.
+///
+/// @pre @a originalMap must have unique values.
+template <typename K, typename V>
+std::map<V, K> invertMap(std::map<K, V> const& originalMap)
+{
+	std::map<V, K> inverseMap;
+	for (auto const& [key, value]: originalMap)
+	{
+		assert(inverseMap.count(value) == 0);
+		inverseMap.insert({value, key});
+	}
+
+	return inverseMap;
+}
+
 // String conversion functions, mainly to/from hex/nibble/byte representations.
 
 enum class WhenError
