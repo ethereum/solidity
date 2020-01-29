@@ -5,6 +5,7 @@ Language Features:
 
 
 Compiler Features:
+ * Code Generator: Use ``calldatacopy`` past input to zero out memory instead of ``codecopy``.
 
 
 Bugfixes:
