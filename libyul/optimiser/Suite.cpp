@@ -308,9 +308,7 @@ void OptimiserSuite::run(
 		if (ast.statements.size() > 1 && std::get<Block>(ast.statements.front()).statements.empty())
 			ast.statements.erase(ast.statements.begin());
 	}
-	suite.runSequence({
-		VarNameCleaner::name
-	}, ast);
+	VarNameCleaner::run(suite.m_context, ast);
 
 	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
 }
@@ -366,9 +364,9 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			SSATransform,
 			StructuralSimplifier,
 			UnusedPruner,
-			VarDeclInitializer,
-			VarNameCleaner
+			VarDeclInitializer
 		>();
+	// Does not include VarNameCleaner because it destroys the property of unique names.
 	return instance;
 }
 
