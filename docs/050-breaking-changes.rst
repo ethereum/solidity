@@ -455,7 +455,7 @@ New version:
             uint z = someInteger();
             x += z;
             // Throw is now disallowed.
-            require(x > 100);
+            require(x <= 100);
             int y = -3 >> 1;
             require(y == -2);
             do {
