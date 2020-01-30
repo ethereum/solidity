@@ -51,24 +51,24 @@ private:
 
 	void checkParameters(
 		CallableDeclaration const& _callable,
-		DocumentedAnnotation& _annotation
+		StructurallyDocumentedAnnotation& _annotation
 	);
 
 	void handleConstructor(
 		CallableDeclaration const& _callable,
-		Documented const& _node,
-		DocumentedAnnotation& _annotation
+		StructurallyDocumented const& _node,
+		StructurallyDocumentedAnnotation& _annotation
 	);
 
 	void handleCallable(
 		CallableDeclaration const& _callable,
-		Documented const& _node,
-		DocumentedAnnotation& _annotation
+		StructurallyDocumented const& _node,
+		StructurallyDocumentedAnnotation& _annotation
 	);
 
 	void parseDocStrings(
-		Documented const& _node,
-		DocumentedAnnotation& _annotation,
+		StructurallyDocumented const& _node,
+		StructurallyDocumentedAnnotation& _annotation,
 		std::set<std::string> const& _validTags,
 		std::string const& _nodeName
 	);

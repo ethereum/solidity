@@ -6,6 +6,7 @@ Language Features:
 
 Compiler Features:
  * Code Generator: Use ``calldatacopy`` instead of ``codecopy`` to zero out memory past input.
+ * AST: Add a new node for doxygen-style, structured documentation that can be received by contract, function, event and modifier definitions.
 
 
 Bugfixes:

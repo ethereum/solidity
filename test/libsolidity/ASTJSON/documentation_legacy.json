@@ -6,7 +6,7 @@
     {
       "C":
       [
-        15
+        20
       ]
     }
   },
@@ -29,10 +29,10 @@
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
-          15
+          20
         ],
         "name": "C",
-        "scope": 16
+        "scope": 21
       },
       "children":
       [
@@ -40,11 +40,19 @@
           "attributes":
           {
             "anonymous": false,
-            "documentation": "Some comment on Evt.",
             "name": "Evt"
           },
           "children":
           [
+            {
+              "attributes":
+              {
+                "text": "Some comment on Evt."
+              },
+              "id": 7,
+              "name": "StructuredDocumentation",
+              "src": "15:26:3"
+            },
             {
               "attributes":
               {
@@ -54,19 +62,18 @@
                 ]
               },
               "children": [],
-              "id": 5,
+              "id": 8,
               "name": "ParameterList",
               "src": "51:2:3"
             }
           ],
-          "id": 6,
+          "id": 9,
           "name": "EventDefinition",
           "src": "42:12:3"
         },
         {
           "attributes":
           {
-            "documentation": "Some comment on mod.",
             "name": "mod",
             "overrides": null,
             "virtual": false,
@@ -77,55 +84,12 @@
             {
               "attributes":
               {
-                "parameters":
-                [
-                  null
-                ]
+                "text": "Some comment on mod."
               },
-              "children": [],
-              "id": 7,
-              "name": "ParameterList",
-              "src": "96:2:3"
+              "id": 10,
+              "name": "StructuredDocumentation",
+              "src": "57:26:3"
             },
-            {
-              "children":
-              [
-                {
-                  "id": 8,
-                  "name": "PlaceholderStatement",
-                  "src": "101:1:3"
-                }
-              ],
-              "id": 9,
-              "name": "Block",
-              "src": "99:6:3"
-            }
-          ],
-          "id": 10,
-          "name": "ModifierDefinition",
-          "src": "84:21:3"
-        },
-        {
-          "attributes":
-          {
-            "documentation": "Some comment on fn.",
-            "functionSelector": "a4a2c40b",
-            "implemented": true,
-            "isConstructor": false,
-            "kind": "function",
-            "modifiers":
-            [
-              null
-            ],
-            "name": "fn",
-            "overrides": null,
-            "scope": 15,
-            "stateMutability": "nonpayable",
-            "virtual": false,
-            "visibility": "public"
-          },
-          "children":
-          [
             {
               "attributes":
               {
@@ -136,6 +100,66 @@
               },
               "children": [],
               "id": 11,
+              "name": "ParameterList",
+              "src": "96:2:3"
+            },
+            {
+              "children":
+              [
+                {
+                  "id": 12,
+                  "name": "PlaceholderStatement",
+                  "src": "101:1:3"
+                }
+              ],
+              "id": 13,
+              "name": "Block",
+              "src": "99:6:3"
+            }
+          ],
+          "id": 14,
+          "name": "ModifierDefinition",
+          "src": "84:21:3"
+        },
+        {
+          "attributes":
+          {
+            "functionSelector": "a4a2c40b",
+            "implemented": true,
+            "isConstructor": false,
+            "kind": "function",
+            "modifiers":
+            [
+              null
+            ],
+            "name": "fn",
+            "overrides": null,
+            "scope": 20,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "text": "Some comment on fn."
+              },
+              "id": 15,
+              "name": "StructuredDocumentation",
+              "src": "108:25:3"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 16,
               "name": "ParameterList",
               "src": "145:2:3"
             },
@@ -148,7 +172,7 @@
                 ]
               },
               "children": [],
-              "id": 12,
+              "id": 17,
               "name": "ParameterList",
               "src": "155:0:3"
             },
@@ -161,22 +185,22 @@
                 ]
               },
               "children": [],
-              "id": 13,
+              "id": 18,
               "name": "Block",
               "src": "155:2:3"
             }
           ],
-          "id": 14,
+          "id": 19,
           "name": "FunctionDefinition",
           "src": "134:23:3"
         }
       ],
-      "id": 15,
+      "id": 20,
       "name": "ContractDefinition",
       "src": "0:159:3"
     }
   ],
-  "id": 16,
+  "id": 21,
   "name": "SourceUnit",
   "src": "0:160:3"
 }

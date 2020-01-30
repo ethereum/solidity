@@ -428,6 +428,7 @@ Token Scanner::scanSlash()
 			// doxygen style /// comment
 			Token comment;
 			m_skippedComments[NextNext].location.start = firstSlashPosition;
+			m_skippedComments[NextNext].location.source = m_source;
 			comment = scanSingleLineDocComment();
 			m_skippedComments[NextNext].location.end = sourcePos();
 			m_skippedComments[NextNext].token = comment;
@@ -454,6 +455,7 @@ Token Scanner::scanSlash()
 			// we actually have a multiline documentation comment
 			Token comment;
 			m_skippedComments[NextNext].location.start = firstSlashPosition;
+			m_skippedComments[NextNext].location.source = m_source;
 			comment = scanMultiLineDocComment();
 			m_skippedComments[NextNext].location.end = sourcePos();
 			m_skippedComments[NextNext].token = comment;

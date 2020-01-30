@@ -67,10 +67,24 @@ void ImportDirective::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void StructuredDocumentation::accept(ASTVisitor& _visitor)
+{
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
+
+void StructuredDocumentation::accept(ASTConstVisitor& _visitor) const
+{
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
+
 void ContractDefinition::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
 	{
+		if (m_documentation)
+			m_documentation->accept(_visitor);
 		listAccept(m_baseContracts, _visitor);
 		listAccept(m_subNodes, _visitor);
 	}
@@ -81,6 +95,8 @@ void ContractDefinition::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
+		if (m_documentation)
+			m_documentation->accept(_visitor);
 		listAccept(m_baseContracts, _visitor);
 		listAccept(m_subNodes, _visitor);
 	}
@@ -203,6 +219,8 @@ void FunctionDefinition::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
 	{
+		if (m_documentation)
+			m_documentation->accept(_visitor);
 		if (m_overrides)
 			m_overrides->accept(_visitor);
 		m_parameters->accept(_visitor);
@@ -219,6 +237,8 @@ void FunctionDefinition::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
+		if (m_documentation)
+			m_documentation->accept(_visitor);
 		if (m_overrides)
 			m_overrides->accept(_visitor);
 		m_parameters->accept(_visitor);
@@ -263,6 +283,8 @@ void ModifierDefinition::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
 	{
+		if (m_documentation)
+			m_documentation->accept(_visitor);
 		m_parameters->accept(_visitor);
 		if (m_overrides)
 			m_overrides->accept(_visitor);
@@ -275,6 +297,8 @@ void ModifierDefinition::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
+		if (m_documentation)
+			m_documentation->accept(_visitor);
 		m_parameters->accept(_visitor);
 		if (m_overrides)
 			m_overrides->accept(_visitor);
@@ -308,14 +332,22 @@ void ModifierInvocation::accept(ASTConstVisitor& _visitor) const
 void EventDefinition::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
+	{
+		if (m_documentation)
+			m_documentation->accept(_visitor);
 		m_parameters->accept(_visitor);
+	}
 	_visitor.endVisit(*this);
 }
 
 void EventDefinition::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
+	{
+		if (m_documentation)
+			m_documentation->accept(_visitor);
 		m_parameters->accept(_visitor);
+	}
 	_visitor.endVisit(*this);
 }
 

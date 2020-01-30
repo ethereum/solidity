@@ -1208,9 +1208,9 @@ public:
 	/// Currently, this will only return true for internal functions like keccak and ecrecover.
 	bool isPure() const;
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
-	/// @return A shared pointer of an ASTString.
-	/// Can contain a nullptr in which case indicates absence of documentation
-	ASTPointer<ASTString> documentation() const;
+	/// @return A shared pointer of StructuredDocumentation.
+	/// Can contain a nullptr in which case indicates absence of documentation.
+	ASTPointer<StructuredDocumentation> documentation() const;
 
 	/// true iff arguments are to be padded to multiples of 32 bytes for external calls
 	/// The only functions that do not pad are hash functions, the low-level call functions

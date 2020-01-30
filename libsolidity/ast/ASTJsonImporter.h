@@ -119,6 +119,7 @@ private:
 	ASTPointer<Identifier> createIdentifier(Json::Value const& _node);
 	ASTPointer<ElementaryTypeNameExpression> createElementaryTypeNameExpression(Json::Value const& _node);
 	ASTPointer<ASTNode> createLiteral(Json::Value const& _node);
+	ASTPointer<StructuredDocumentation> createDocumentation(Json::Value const& _node);
 	///@}
 
 	// =============== general helper functions ===================
