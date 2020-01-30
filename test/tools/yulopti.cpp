@@ -180,6 +180,8 @@ public:
 				break;
 			case 'l':
 				VarNameCleaner::run(context, *m_ast);
+				// VarNameCleaner destroys the unique names guarantee of the disambiguator.
+				disambiguated = false;
 				break;
 			case 'x':
 				ExpressionSplitter::run(context, *m_ast);
