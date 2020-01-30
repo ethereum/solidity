@@ -204,12 +204,16 @@ void WordSizeTransform::operator()(Block& _block)
 	);
 }
 
-void WordSizeTransform::run(Dialect const& _inputDialect, Block& _ast, NameDispenser& _nameDispenser)
+void WordSizeTransform::run(
+	Dialect const& _inputDialect,
+	YulString _targetDefaultType,
+	Block& _ast,
+	NameDispenser& _nameDispenser
+)
 {
 	// Free the name `or_bool`.
 	NameDisplacer{_nameDispenser, {"or_bool"_yulstring}}(_ast);
-	YulString defaultType; // should be i64 at some point.
-	WordSizeTransform{_inputDialect, _nameDispenser, defaultType}(_ast);
+	WordSizeTransform{_inputDialect, _nameDispenser, _targetDefaultType}(_ast);
 }
 
 void WordSizeTransform::rewriteVarDeclList(TypedNameList& _nameList)
