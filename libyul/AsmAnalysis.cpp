@@ -608,7 +608,7 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 }
 void AsmAnalyzer::expectValidType(YulString _type, SourceLocation const& _location)
 {
-	if (!_type.empty() && !contains(m_dialect.types, _type))
+	if (!_type.empty() && !m_dialect.types.count(_type))
 		m_errorReporter.typeError(
 			_location,
 			"\"" + _type.str() + "\" is not a valid type (user defined types are not yet supported)."

@@ -203,15 +203,6 @@ EVMDialect const& EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _
 	return *dialects[_version];
 }
 
-EVMDialect const& EVMDialect::yulForEVM(langutil::EVMVersion _version)
-{
-	static map<langutil::EVMVersion, unique_ptr<EVMDialect const>> dialects;
-	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
-	if (!dialects[_version])
-		dialects[_version] = make_unique<EVMDialect>(_version, false);
-	return *dialects[_version];
-}
-
 SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instruction)
 {
 	return SideEffects{
@@ -221,4 +212,78 @@ SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instructio
 		evmasm::SemanticInformation::invalidatesStorage(_instruction),
 		evmasm::SemanticInformation::invalidatesMemory(_instruction)
 	};
+}
+
+EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess):
+	EVMDialect(_evmVersion, _objectAccess)
+{
+	defaultType = "u256"_yulstring;
+	boolType = "bool"_yulstring;
+	types = {defaultType, boolType};
+
+	m_functions["lt"_yulstring].returns = {"bool"_yulstring};
+	m_functions["gt"_yulstring].returns = {"bool"_yulstring};
+	m_functions["slt"_yulstring].returns = {"bool"_yulstring};
+	m_functions["sgt"_yulstring].returns = {"bool"_yulstring};
+	m_functions["eq"_yulstring].returns = {"bool"_yulstring};
+
+	// "not" and "bitnot" replace "iszero" and "not"
+	m_functions["bitnot"_yulstring] = m_functions["not"_yulstring];
+	m_functions["bitnot"_yulstring].name = "bitnot"_yulstring;
+	m_functions["not"_yulstring] = m_functions["iszero"_yulstring];
+	m_functions["not"_yulstring].name = "not"_yulstring;
+	m_functions["not"_yulstring].returns = {"bool"_yulstring};
+	m_functions["not"_yulstring].parameters = {"bool"_yulstring};
+	m_functions.erase("iszero"_yulstring);
+
+	m_functions["bitand"_yulstring] = m_functions["and"_yulstring];
+	m_functions["bitand"_yulstring].name = "bitand"_yulstring;
+	m_functions["bitor"_yulstring] = m_functions["or"_yulstring];
+	m_functions["bitor"_yulstring].name = "bitor"_yulstring;
+	m_functions["bitxor"_yulstring] = m_functions["xor"_yulstring];
+	m_functions["bitxor"_yulstring].name = "bitxor"_yulstring;
+	m_functions["and"_yulstring].parameters = {"bool"_yulstring, "bool"_yulstring};
+	m_functions["and"_yulstring].returns = {"bool"_yulstring};
+	m_functions["or"_yulstring].parameters = {"bool"_yulstring, "bool"_yulstring};
+	m_functions["or"_yulstring].returns = {"bool"_yulstring};
+	m_functions["xor"_yulstring].parameters = {"bool"_yulstring, "bool"_yulstring};
+	m_functions["xor"_yulstring].returns = {"bool"_yulstring};
+	m_functions["popbool"_yulstring] = m_functions["pop"_yulstring];
+	m_functions["popbool"_yulstring].name = "popbool"_yulstring;
+	m_functions["popbool"_yulstring].parameters = {"bool"_yulstring};
+	m_functions.insert(createFunction("bool_to_u256", 1, 1, {}, false, [](
+		FunctionCall const&,
+		AbstractAssembly&,
+		BuiltinContext&,
+		std::function<void()> _visitArguments
+	) {
+		_visitArguments();
+	}));
+	m_functions["bool_to_u256"_yulstring].parameters = {"bool"_yulstring};
+	m_functions.insert(createFunction("u256_to_bool", 1, 1, {}, false, [](
+		FunctionCall const&,
+		AbstractAssembly& _assembly,
+		BuiltinContext&,
+		std::function<void()> _visitArguments
+	) {
+		// A value larger than 1 causes an invalid instruction.
+		_visitArguments();
+		_assembly.appendConstant(2);
+		_assembly.appendInstruction(evmasm::Instruction::DUP2);
+		_assembly.appendInstruction(evmasm::Instruction::LT);
+		AbstractAssembly::LabelID inRange = _assembly.newLabelId();
+		_assembly.appendJumpToIf(inRange);
+		_assembly.appendInstruction(evmasm::Instruction::INVALID);
+		_assembly.appendLabel(inRange);
+	}));
+	m_functions["u256_to_bool"_yulstring].returns = {"bool"_yulstring};
+}
+
+EVMDialectTyped const& EVMDialectTyped::instance(langutil::EVMVersion _version)
+{
+	static map<langutil::EVMVersion, unique_ptr<EVMDialectTyped const>> dialects;
+	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
+	if (!dialects[_version])
+		dialects[_version] = make_unique<EVMDialectTyped>(_version, true);
+	return *dialects[_version];
 }

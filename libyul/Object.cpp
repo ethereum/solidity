@@ -45,18 +45,18 @@ string indent(std::string const& _input)
 
 }
 
-string Data::toString(bool) const
+string Data::toString(Dialect const*) const
 {
 	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
 }
 
-string Object::toString(bool _yul) const
+string Object::toString(Dialect const* _dialect) const
 {
 	yulAssert(code, "No code");
-	string inner = "code " + AsmPrinter{}(*code);
+	string inner = "code " + (_dialect ? AsmPrinter{*_dialect} : AsmPrinter{})(*code);
 
 	for (auto const& obj: subObjects)
-		inner += "\n" + obj->toString(_yul);
+		inner += "\n" + obj->toString(_dialect);
 
 	return "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }

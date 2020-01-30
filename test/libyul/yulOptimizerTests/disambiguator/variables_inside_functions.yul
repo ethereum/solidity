@@ -6,18 +6,18 @@
     }
 }
 // ====
-// step: disambiguator
 // dialect: yul
+// step: disambiguator
 // ----
 // {
 //     {
-//         let c:u256
-//         let b:u256
+//         let c
+//         let b
 //     }
-//     function f(a:u256, c_1:u256) -> b_2:u256
-//     { let x:u256 }
+//     function f(a, c_1) -> b_2
+//     { let x }
 //     {
-//         let a_3:u256
-//         let x_4:u256
+//         let a_3
+//         let x_4
 //     }
 // }

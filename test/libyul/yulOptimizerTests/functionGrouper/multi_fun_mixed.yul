@@ -5,17 +5,17 @@
     let e:u256
 }
 // ====
-// step: functionGrouper
 // dialect: yul
+// step: functionGrouper
 // ----
 // {
 //     {
-//         let a:u256
-//         let c:u256
-//         let e:u256
+//         let a
+//         let c
+//         let e
 //     }
 //     function f()
-//     { let b:u256 }
+//     { let b }
 //     function g()
-//     { let d:u256 }
+//     { let d }
 // }

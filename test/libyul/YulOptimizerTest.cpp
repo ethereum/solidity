@@ -105,7 +105,7 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 	{
 		auto dialectName = m_settings["dialect"];
 		if (dialectName == "yul")
-			m_dialect = &Dialect::yul();
+			m_dialect = &Dialect::yulDeprecated();
 		else if (dialectName == "ewasm")
 			m_dialect = &WasmDialect::instance();
 		else if (dialectName == "evm")
@@ -365,7 +365,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		return TestResult::FatalError;
 	}
 
-	m_obtainedResult = AsmPrinter{}(*m_ast) + "\n";
+	m_obtainedResult = AsmPrinter{*m_dialect}(*m_ast) + "\n";
 
 	if (m_optimizerStep != m_validatedSettings["step"])
 	{

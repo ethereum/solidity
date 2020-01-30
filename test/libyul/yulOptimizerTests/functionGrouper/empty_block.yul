@@ -1,16 +1,16 @@
 { let a:u256 { } function f() -> x:bool { let b:u256 := 4:u256 {} for {} f() {} {} } }
 // ====
-// step: functionGrouper
 // dialect: yul
+// step: functionGrouper
 // ----
 // {
 //     {
-//         let a:u256
+//         let a
 //         { }
 //     }
 //     function f() -> x:bool
 //     {
-//         let b:u256 := 4:u256
+//         let b := 4
 //         { }
 //         for { } f() { }
 //         { }

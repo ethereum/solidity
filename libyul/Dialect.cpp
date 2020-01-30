@@ -23,7 +23,7 @@
 using namespace solidity::yul;
 using namespace std;
 
-Dialect const& Dialect::yul()
+Dialect const& Dialect::yulDeprecated()
 {
 	static unique_ptr<Dialect> dialect;
 	static YulStringRepository::ResetCallback callback{[&] { dialect.reset(); }};

@@ -7,13 +7,13 @@
     }
 }
 // ====
-// step: disambiguator
 // dialect: yul
+// step: disambiguator
 // ----
 // {
-//     { let a:u256, b:u256 }
+//     { let a, b }
 //     {
-//         for { let a_1:u256 } a_1 { a_1 := a_1 }
-//         { let b_2:u256 := a_1 }
+//         for { let a_1 } a_1 { a_1 := a_1 }
+//         { let b_2 := a_1 }
 //     }
 // }

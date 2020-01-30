@@ -248,7 +248,7 @@ public:
 			default:
 				cout << "Unknown option." << endl;
 			}
-			source = AsmPrinter{}(*m_ast);
+			source = AsmPrinter{m_dialect}(*m_ast);
 		}
 	}
 
