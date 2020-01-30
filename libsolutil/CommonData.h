@@ -164,10 +164,10 @@ template <typename K, typename V>
 std::map<V, K> invertMap(std::map<K, V> const& originalMap)
 {
 	std::map<V, K> inverseMap;
-	for (auto const& [key, value]: originalMap)
+	for (auto const& originalPair: originalMap)
 	{
-		assert(inverseMap.count(value) == 0);
-		inverseMap.insert({value, key});
+		assert(inverseMap.count(originalPair.second) == 0);
+		inverseMap.insert({originalPair.second, originalPair.first});
 	}
 
 	return inverseMap;
