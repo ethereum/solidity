@@ -20,70 +20,86 @@
 
 #include <libyul/backends/wasm/WasmDialect.h>
 
+#include <libyul/Exceptions.h>
+
 using namespace std;
 using namespace solidity::yul;
 
 WasmDialect::WasmDialect()
 {
-	defaultType = "i64"_yulstring;
-	boolType = "i64"_yulstring;
-	types = {"i64"_yulstring, "i32"_yulstring};
+	YulString i64 = "i64"_yulstring;
+	YulString i32 = "i32"_yulstring;
+	defaultType = i64;
+	boolType = i32;
+	types = {i64, i32};
 
-	for (auto const& name: {
-		"i64.add",
-		"i64.sub",
-		"i64.mul",
-		"i64.div_u",
-		"i64.rem_u",
-		"i64.and",
-		"i64.or",
-		"i64.xor",
-		"i64.shl",
-		"i64.shr_u",
-		"i64.eq",
-		"i64.ne",
-		"i64.lt_u",
-		"i64.gt_u",
-		"i64.le_u",
-		"i64.ge_u"
-	})
-		addFunction(name, 2, 1);
+	for (auto t: types)
+		for (auto const& name: {
+			"add",
+			"sub",
+			"mul",
+			"div_u",
+			"rem_u",
+			"and",
+			"or",
+			"xor",
+			"shl",
+			"shr_u",
+		})
+			addFunction(t.str() + "." + name, {t, t}, {t});
 
-	m_functions["i64.lt_u"_yulstring].returns.front() = "i32"_yulstring;
-	m_functions["i64.gt_u"_yulstring].returns.front() = "i32"_yulstring;
-	m_functions["i64.le_u"_yulstring].returns.front() = "i32"_yulstring;
-	m_functions["i64.ge_u"_yulstring].returns.front() = "i32"_yulstring;
-	m_functions["i64.eq"_yulstring].returns.front() = "i32"_yulstring;
-	m_functions["i64.ne"_yulstring].returns.front() = "i32"_yulstring;
+	for (auto t: types)
+		for (auto const& name: {
+			"eq",
+			"ne",
+			"lt_u",
+			"gt_u",
+			"le_u",
+			"ge_u"
+		})
+			addFunction(t.str() + "." + name, {t, t}, {i32});
 
-	addFunction("i64.eqz", 1, 1);
-	m_functions["i64.eqz"_yulstring].returns.front() = "i32"_yulstring;
+	addFunction("i32.eqz", {i32}, {i32});
+	addFunction("i64.eqz", {i64}, {i32});
 
-	addFunction("i64.clz", 1, 1);
+	addFunction("i32.clz", {i32}, {i32});
+	addFunction("i64.clz", {i64}, {i64});
 
-	addFunction("i64.store", 2, 0, false);
-	m_functions["i64.store"_yulstring].parameters.front() = "i32"_yulstring;
+	addFunction("i32.wrap_i64", {i64}, {i32});
+
+	addFunction("i64.extend_i32_u", {i32}, {i64});
+
+	addFunction("i32.store", {i32, i32}, {}, false);
+	m_functions["i32.store"_yulstring].sideEffects.invalidatesStorage = false;
+	addFunction("i64.store", {i32, i64}, {}, false);
 	m_functions["i64.store"_yulstring].sideEffects.invalidatesStorage = false;
 
-	addFunction("i64.store8", 2, 0, false);
-	m_functions["i64.store8"_yulstring].parameters.front() = "i32"_yulstring;
+	addFunction("i32.store8", {i32, i32}, {}, false);
+	m_functions["i32.store8"_yulstring].sideEffects.invalidatesStorage = false;
+	addFunction("i64.store8", {i32, i64}, {}, false);
 	m_functions["i64.store8"_yulstring].sideEffects.invalidatesStorage = false;
 
-	addFunction("i64.load", 1, 1, false);
-	m_functions["i64.load"_yulstring].parameters.front() = "i32"_yulstring;
+	addFunction("i32.load", {i32}, {i32}, false);
+	m_functions["i32.load"_yulstring].sideEffects.invalidatesStorage = false;
+	m_functions["i32.load"_yulstring].sideEffects.invalidatesMemory = false;
+	m_functions["i32.load"_yulstring].sideEffects.sideEffectFree = true;
+	m_functions["i32.load"_yulstring].sideEffects.sideEffectFreeIfNoMSize = true;
+	addFunction("i64.load", {i32}, {i64}, false);
 	m_functions["i64.load"_yulstring].sideEffects.invalidatesStorage = false;
 	m_functions["i64.load"_yulstring].sideEffects.invalidatesMemory = false;
 	m_functions["i64.load"_yulstring].sideEffects.sideEffectFree = true;
 	m_functions["i64.load"_yulstring].sideEffects.sideEffectFreeIfNoMSize = true;
 
-	addFunction("drop", 1, 0);
+	// Drop is actually overloaded for all types, but Yul does not support that.
+	// We could introduce "i32.drop".
+	addFunction("drop", {i64}, {});
 
-	addFunction("unreachable", 0, 0, false);
+	addFunction("unreachable", {}, {}, false);
 	m_functions["unreachable"_yulstring].sideEffects.invalidatesStorage = false;
 	m_functions["unreachable"_yulstring].sideEffects.invalidatesMemory = false;
 
-	addFunction("datasize", 1, 1, true, true);
-	addFunction("dataoffset", 1, 1, true, true);
+	addFunction("datasize", {i64}, {i64}, true, true);
+	addFunction("dataoffset", {i64}, {i64}, true, true);
 
 	addEthereumExternals();
 }
@@ -167,8 +183,8 @@ void WasmDialect::addEthereumExternals()
 
 void WasmDialect::addFunction(
 	string _name,
-	size_t _params,
-	size_t _returns,
+	vector<YulString> _params,
+	vector<YulString> _returns,
 	bool _movable,
 	bool _literalArguments
 )
@@ -176,8 +192,9 @@ void WasmDialect::addFunction(
 	YulString name{move(_name)};
 	BuiltinFunction& f = m_functions[name];
 	f.name = name;
-	f.parameters.resize(_params);
-	f.returns.resize(_returns);
+	f.parameters = std::move(_params);
+	yulAssert(_returns.size() <= 1, "The Wasm 1.0 specification only allows up to 1 return value.");
+	f.returns = std::move(_returns);
 	f.sideEffects = _movable ? SideEffects{} : SideEffects::worst();
 	f.isMSize = false;
 	f.literalArguments = _literalArguments;
