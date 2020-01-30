@@ -723,7 +723,7 @@ workflows:
       - b_docs: *workflow_trigger_on_tags
       - b_archlinux: *workflow_trigger_on_tags
       - b_ubu_cxx20: *workflow_trigger_on_tags
-      - b_ubu_ossfuzz: *workflow_trigger_on_tags
+#      - b_ubu_ossfuzz: *workflow_trigger_on_tags
 
       # OS/X build and tests
       - b_osx: *workflow_trigger_on_tags
@@ -768,8 +768,8 @@ workflows:
 
     jobs:
       # OSSFUZZ builds and (regression) tests
-      - b_ubu_ossfuzz: *workflow_trigger_on_tags
-      - t_ubu_ossfuzz: *workflow_ubuntu1904_ossfuzz
+#      - b_ubu_ossfuzz: *workflow_trigger_on_tags
+#      - t_ubu_ossfuzz: *workflow_ubuntu1904_ossfuzz
 
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *workflow_trigger_on_tags
