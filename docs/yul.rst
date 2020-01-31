@@ -833,15 +833,19 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 | insize, out, outsize)   |     |   | providing g gas and v wei and output area                       |
 |                         |     |   | mem[out...(out+outsize)) returning 0 on error (eg. out of gas)  |
 |                         |     |   | and 1 on success                                                |
+|                         |     |   | :ref:`See more <yul-call-return-area>`                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | callcode(g, a, v, in,   |     | F | identical to ``call`` but only use the code from a and stay     |
 | insize, out, outsize)   |     |   | in the context of the current contract otherwise                |
+|                         |     |   | :ref:`See more <yul-call-return-area>`                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | delegatecall(g, a, in,  |     | H | identical to ``callcode`` but also keep ``caller``              |
 | insize, out, outsize)   |     |   | and ``callvalue``                                               |
+|                         |     |   | :ref:`See more <yul-call-return-area>`                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | staticcall(g, a, in,    |     | B | identical to ``call(g, a, 0, in, insize, out, outsize)`` but do |
 | insize, out, outsize)   |     |   | not allow state modifications                                   |
+|                         |     |   | :ref:`See more <yul-call-return-area>`                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | return(p, s)            | `-` | F | end execution, return data mem[p...(p+s))                       |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -887,6 +891,17 @@ which are used to access other parts of a Yul object.
 ``datasize`` and ``dataoffset`` can only take string literals (the names of other objects)
 as arguments and return the size and offset in the data area, respectively.
 For the EVM, the ``datacopy`` function is equivalent to ``codecopy``.
+
+.. _yul-call-return-area:
+
+.. note::
+  The ``call*`` instructions use the ``out`` and ``outsize`` parameters to define an area in memory where
+  the return data is placed. This area is written to depending on how many bytes the called contract returns.
+  If it returns more data, only the first ``outsize`` bytes are written. You can access the rest of the data
+  using the ``returndatacopy`` opcode. If it returns less data, then the remaining bytes are not touched at all.
+  You need to use the ``returndatasize`` opcode to check which part of this memory area contains the return data.
+  The remaining bytes will retain their values as of before the call. If the call fails (it returns ``0``),
+  nothing is written to that area, but you can still retrieve the failure data using ``returndatacopy``.
 
 .. _yul-object:
 
