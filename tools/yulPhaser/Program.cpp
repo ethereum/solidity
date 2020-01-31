@@ -57,6 +57,13 @@ ostream& operator<<(ostream& _stream, Program const& _program);
 
 }
 
+Program::Program(Program const& program):
+	m_ast(make_unique<Block>(get<Block>(ASTCopier{}(*program.m_ast)))),
+	m_dialect{program.m_dialect},
+	m_nameDispenser(program.m_nameDispenser)
+{
+}
+
 Program Program::load(CharStream& _sourceCode)
 {
 	// ASSUMPTION: parseSource() rewinds the stream on its own

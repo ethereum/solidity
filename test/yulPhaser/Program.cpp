@@ -65,6 +65,26 @@ namespace solidity::phaser::test
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(ProgramTest)
 
+BOOST_AUTO_TEST_CASE(copy_constructor_should_make_deep_copy_of_ast)
+{
+	string sourceCode(
+		"{\n"
+		"    let x := 1\n"
+		"}\n"
+	);
+	CharStream sourceStream(sourceCode, current_test_case().p_name);
+	auto program = Program::load(sourceStream);
+
+	Program programCopy(program);
+
+	BOOST_TEST(&programCopy.ast() != &program.ast());
+
+	// There might be a more direct way to compare ASTs but converting to JSON should be good enough
+	// as long as the conversion is deterministic. A very nice side effect of doing it this way is
+	// that BOOST_TEST will print the complete AST structure of both programs in case of a mismatch.
+	BOOST_TEST(programCopy.toJson() == program.toJson());
+}
+
 BOOST_AUTO_TEST_CASE(load_should_rewind_the_stream)
 {
 	string sourceCode(

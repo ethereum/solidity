@@ -20,8 +20,6 @@
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/AsmData.h>
 
-#include <boost/noncopyable.hpp>
-
 #include <optional>
 #include <ostream>
 #include <set>
@@ -55,14 +53,16 @@ namespace solidity::phaser
  * The class allows the user to apply extra optimisations and obtain metrics and general
  * information about the resulting syntax tree.
  */
-class Program: private boost::noncopyable
+class Program
 {
 public:
+	Program(Program const& program);
 	Program(Program&& program):
 		m_ast(std::move(program.m_ast)),
 		m_dialect{program.m_dialect},
 		m_nameDispenser(std::move(program.m_nameDispenser))
 	{}
+	Program operator=(Program const& program) = delete;
 	Program operator=(Program&& program) = delete;
 
 	static Program load(langutil::CharStream& _sourceCode);
