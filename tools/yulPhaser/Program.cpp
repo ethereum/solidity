@@ -79,7 +79,7 @@ Program Program::load(CharStream& _sourceCode)
 
 void Program::optimise(vector<string> const& _optimisationSteps)
 {
-	applyOptimisationSteps(m_dialect, m_nameDispenser, *m_ast, _optimisationSteps);
+	m_ast = applyOptimisationSteps(m_dialect, m_nameDispenser, move(m_ast), _optimisationSteps);
 }
 
 ostream& phaser::operator<<(ostream& _stream, Program const& _program)
@@ -133,10 +133,10 @@ unique_ptr<Block> Program::disambiguateAST(
 	return make_unique<Block>(get<Block>(disambiguator(_ast)));
 }
 
-void Program::applyOptimisationSteps(
+unique_ptr<Block> Program::applyOptimisationSteps(
 	Dialect const& _dialect,
 	NameDispenser& _nameDispenser,
-	Block& _ast,
+	unique_ptr<Block> _ast,
 	vector<string> const& _optimisationSteps
 )
 {
@@ -146,7 +146,9 @@ void Program::applyOptimisationSteps(
 	OptimiserStepContext context{_dialect, _nameDispenser, externallyUsedIdentifiers};
 
 	for (string const& step: _optimisationSteps)
-		OptimiserSuite::allSteps().at(step)->run(context, _ast);
+		OptimiserSuite::allSteps().at(step)->run(context, *_ast);
+
+	return _ast;
 }
 
 size_t Program::computeCodeSize(Block const& _ast)

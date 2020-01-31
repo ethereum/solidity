@@ -97,10 +97,10 @@ private:
 		yul::Block const& _ast,
 		yul::AsmAnalysisInfo const& _analysisInfo
 	);
-	static void applyOptimisationSteps(
+	static std::unique_ptr<yul::Block> applyOptimisationSteps(
 		yul::Dialect const& _dialect,
 		yul::NameDispenser& _nameDispenser,
-		yul::Block& _ast,
+		std::unique_ptr<yul::Block> _ast,
 		std::vector<std::string> const& _optimisationSteps
 	);
 	static size_t computeCodeSize(yul::Block const& _ast);
