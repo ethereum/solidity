@@ -72,10 +72,11 @@ struct SourceLocation
 
 	bool hasText() const
 	{
-		return source
-			&& 0 <= start
-			&& start <= end
-			&& end <= int(source->source().length());
+		return
+			source &&
+			0 <= start &&
+			start <= end &&
+			end <= int(source->source().length());
 	}
 
 	std::string text() const
