@@ -2762,7 +2762,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 				SecondarySourceLocation ssl;
 
 				for (Declaration const* declaration: annotation.overloadedDeclarations)
-					if (declaration->location().isEmpty())
+					if (!declaration->location().isValid())
 					{
 						// Try to re-construct function definition
 						string description;

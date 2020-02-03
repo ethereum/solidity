@@ -51,7 +51,7 @@ Error::Error(Type _type, SourceLocation const& _location, string const& _descrip
 		break;
 	}
 
-	if (!_location.isEmpty())
+	if (_location.isValid())
 		*this << errinfo_sourceLocation(_location);
 	if (!_description.empty())
 		*this << util::errinfo_comment(_description);
@@ -60,7 +60,7 @@ Error::Error(Type _type, SourceLocation const& _location, string const& _descrip
 Error::Error(Error::Type _type, std::string const& _description, SourceLocation const& _location):
 	Error(_type)
 {
-	if (!_location.isEmpty())
+	if (_location.isValid())
 		*this << errinfo_sourceLocation(_location);
 	*this << util::errinfo_comment(_description);
 }

@@ -72,7 +72,7 @@ namespace
 
 		for (AssemblyItem const& item: output)
 		{
-			BOOST_CHECK(item == Instruction::POP || !item.location().isEmpty());
+			BOOST_CHECK(item == Instruction::POP || item.location().isValid());
 		}
 		return output;
 	}

@@ -54,7 +54,7 @@ T AsmJsonImporter::createAsmNode(Json::Value const& _node)
 {
 	T r;
 	r.location = createSourceLocation(_node);
-	astAssert(!r.location.isEmpty() || !r.location.source, "Invalid source location in Asm AST");
+	astAssert(!r.location.isValid() || r.location.hasText(), "Invalid source location in Asm AST");
 	return r;
 
 }
