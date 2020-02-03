@@ -65,7 +65,7 @@ protected:
 	{
 		T r;
 		r.location = _loc;
-		if (r.location.isEmpty())
+		if (!r.location.hasText())
 		{
 			r.location.start = position();
 			r.location.end = endPosition();

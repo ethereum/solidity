@@ -43,7 +43,7 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
 	m_deposit += _i.deposit();
 	m_items.emplace_back(_i);
-	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())
+	if (!m_items.back().location().isValid() && m_currentSourceLocation.isValid())
 		m_items.back().setLocation(m_currentSourceLocation);
 	m_items.back().m_modifierDepth = m_currentModifierDepth;
 	return m_items.back();
@@ -69,7 +69,7 @@ namespace
 
 string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location)
 {
-	if (_location.isEmpty() || !_location.source.get() || _sourceCodes.empty() || _location.start >= _location.end || _location.start < 0)
+	if (!_location.hasText() || _sourceCodes.empty())
 		return "";
 
 	auto it = _sourceCodes.find(_location.source->name());
@@ -97,7 +97,7 @@ public:
 
 	void feed(AssemblyItem const& _item)
 	{
-		if (!_item.location().isEmpty() && _item.location() != m_location)
+		if (_item.location().isValid() && _item.location() != m_location)
 		{
 			flush();
 			m_location = _item.location();
@@ -141,12 +141,12 @@ public:
 
 	void printLocation()
 	{
-		if (!m_location.source && m_location.isEmpty())
+		if (!m_location.isValid())
 			return;
 		m_out << m_prefix << "    /*";
 		if (m_location.source)
 			m_out << " \"" + m_location.source->name() + "\"";
-		if (!m_location.isEmpty())
+		if (m_location.hasText())
 			m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
 		m_out << "  " << locationFromSources(m_sourceCodes, m_location);
 		m_out << " */" << endl;
