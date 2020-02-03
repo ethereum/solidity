@@ -36,9 +36,6 @@ VER="v$VER"
 COMMIT=$(git rev-parse --short=8 HEAD)
 DATE=$(date --date="$(git log -1 --date=iso --format=%ad HEAD)" --utc +%Y.%-m.%-d)
 
-# remove leading zeros in components - they are not semver-compatible
-COMMIT=$(echo "$COMMIT" | sed -e 's/^0*//')
-
 ENCRYPTED_KEY_VAR="encrypted_${ENCRYPTION_LABEL}_key"
 ENCRYPTED_IV_VAR="encrypted_${ENCRYPTION_LABEL}_iv"
 ENCRYPTED_KEY=${!ENCRYPTED_KEY_VAR}
@@ -81,18 +78,22 @@ else
 fi
 
 
-NEWFILE=./bin/"soljson-$FULLVERSION.js"
+NEWFILE="soljson-$FULLVERSION.js"
 
 # Prepare for update script
 npm install
 
 # This file is assumed to be the product of the build_emscripten.sh script.
-cp ../soljson.js "$NEWFILE"
+cp ../soljson.js ./bin/"$NEWFILE"
+
+# For releases, add a symlink to the wasm directory.
+[ "$TRAVIS_BRANCH" = release ] && ln -sf ../bin/"$NEWFILE" ./wasm/"$NEWFILE"
 
 # Run update script
 npm run update
 
 # Publish updates
-git add "$NEWFILE"
+git add ./bin/"$NEWFILE"
+[ "$TRAVIS_BRANCH" = release ] && git add ./wasm/"$NEWFILE"
 git commit -a -m "Added compiler version $FULLVERSION"
 git push origin gh-pages
