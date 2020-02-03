@@ -71,6 +71,16 @@ public:
 	u256 evalBuiltin(YulString _fun, std::vector<u256> const& _arguments);
 
 private:
+	template <typename Word>
+	u256 evalWasmBuiltin(
+		std::string const& _fun,
+		std::vector<Word> const& _arguments
+	);
+	u256 evalEthBuiltin(
+		std::string const& _fun,
+		std::vector<uint64_t> const& _arguments
+	);
+
 	/// Checks if the memory access is not too large for the interpreter and adjusts
 	/// msize accordingly.
 	/// @returns false if the amount of bytes read is lager than 0xffff
@@ -78,12 +88,18 @@ private:
 	/// @returns the memory contents at the provided address.
 	/// Does not adjust msize, use @a accessMemory for that
 	bytes readMemory(uint64_t _offset, uint64_t _size = 32);
-	/// @returns the memory contents at the provided address (little-endian).
+	/// @returns the memory contents (8 bytes) at the provided address (little-endian).
 	/// Does not adjust msize, use @a accessMemory for that
 	uint64_t readMemoryWord(uint64_t _offset);
+	/// @returns the memory contents (4 bytes) at the provided address (little-endian).
+	/// Does not adjust msize, use @a accessMemory for that
+	uint32_t readMemoryHalfWord(uint64_t _offset);
 	/// Writes a word to memory (little-endian)
 	/// Does not adjust msize, use @a accessMemory for that
 	void writeMemoryWord(uint64_t _offset, uint64_t _value);
+	/// Writes a 4-byte value to memory (little-endian)
+	/// Does not adjust msize, use @a accessMemory for that
+	void writeMemoryHalfWord(uint64_t _offset, uint32_t _value);
 	/// Writes a byte to memory
 	/// Does not adjust msize, use @a accessMemory for that
 	void writeMemoryByte(uint64_t _offset, uint8_t _value);
