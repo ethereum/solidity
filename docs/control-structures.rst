@@ -717,3 +717,13 @@ in scope in the block that follows.
     in a catch block or the execution of the try/catch statement itself
     reverts (for example due to decoding failures as noted above or
     due to not providing a low-level catch clause).
+
+.. note::
+    The reason behind a failed call can be manifold. Do not assume that
+    the error message is coming directly from the called contract:
+    The error might have happened deeper down in the call chain and the
+    called contract just forwarded it. Also, it could be due to an
+    out-of-gas situation and not a deliberate error condition:
+    The caller always retains 63/64th of the gas in a call and thus
+    even if the called contract goes out of gas, the caller still
+    has some gas left.
