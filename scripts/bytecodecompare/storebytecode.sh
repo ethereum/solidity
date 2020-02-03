@@ -27,6 +27,13 @@
 
 set -e
 
+if [[ "${TRAVIS_PULL_REQUEST_BRANCH}" != "" ]]; then
+    # Variable is set to the branch's name iff current job is a pull request,
+    # or is set to empty string if it is a push build.
+    echo "Skipping bytecode comparison."
+    exit 0
+fi
+
 REPO_ROOT="$(dirname "$0")"/../..
 
 if test -z "$1"; then
