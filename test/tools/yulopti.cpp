@@ -30,40 +30,11 @@
 #include <libyul/Object.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
-#include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/Disambiguator.h>
-#include <libyul/optimiser/CallGraphGenerator.h>
-#include <libyul/optimiser/CommonSubexpressionEliminator.h>
-#include <libyul/optimiser/ConditionalSimplifier.h>
-#include <libyul/optimiser/ConditionalUnsimplifier.h>
-#include <libyul/optimiser/ControlFlowSimplifier.h>
-#include <libyul/optimiser/NameCollector.h>
-#include <libyul/optimiser/EquivalentFunctionCombiner.h>
-#include <libyul/optimiser/ExpressionSplitter.h>
-#include <libyul/optimiser/FunctionGrouper.h>
-#include <libyul/optimiser/FunctionHoister.h>
-#include <libyul/optimiser/ExpressionInliner.h>
-#include <libyul/optimiser/FullInliner.h>
-#include <libyul/optimiser/ForLoopConditionIntoBody.h>
-#include <libyul/optimiser/ForLoopConditionOutOfBody.h>
-#include <libyul/optimiser/ForLoopInitRewriter.h>
-#include <libyul/optimiser/MainFunction.h>
-#include <libyul/optimiser/Rematerialiser.h>
-#include <libyul/optimiser/ExpressionSimplifier.h>
-#include <libyul/optimiser/UnusedPruner.h>
-#include <libyul/optimiser/DeadCodeEliminator.h>
-#include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/RedundantAssignEliminator.h>
-#include <libyul/optimiser/SSAReverser.h>
-#include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StackCompressor.h>
-#include <libyul/optimiser/StructuralSimplifier.h>
-#include <libyul/optimiser/Semantics.h>
-#include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/VarNameCleaner.h>
-#include <libyul/optimiser/LoadResolver.h>
-#include <libyul/optimiser/LoopInvariantCodeMotion.h>
+#include <libyul/optimiser/Suite.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -122,6 +93,40 @@ public:
 		return true;
 	}
 
+	void printUsageBanner(
+		map<char, string> const& _optimizationSteps,
+		map<char, string> const& _extraOptions,
+		size_t _columns
+	)
+	{
+		auto hasShorterString = [](auto const& a, auto const& b){ return a.second.size() < b.second.size(); };
+		size_t longestDescriptionLength = max(
+			max_element(_optimizationSteps.begin(), _optimizationSteps.end(), hasShorterString)->second.size(),
+			max_element(_extraOptions.begin(), _extraOptions.end(), hasShorterString)->second.size()
+		);
+
+		size_t index = 0;
+		auto printPair = [&](auto const& optionAndDescription)
+		{
+			cout << optionAndDescription.first << ": ";
+			cout << setw(longestDescriptionLength) << setiosflags(ios::left);
+			cout << optionAndDescription.second << " ";
+
+			++index;
+			if (index % _columns == 0)
+				cout << endl;
+		};
+
+		for (auto const& optionAndDescription: _extraOptions)
+		{
+			yulAssert(_optimizationSteps.count(optionAndDescription.first) == 0, "");
+			printPair(optionAndDescription);
+		}
+
+		for (auto const& abbreviationAndName: _optimizationSteps)
+			printPair(abbreviationAndName);
+	}
+
 	void runInteractive(string source)
 	{
 		bool disambiguated = false;
@@ -139,100 +144,35 @@ public:
 				m_nameDispenser = make_shared<NameDispenser>(m_dialect, *m_ast, reservedIdentifiers);
 				disambiguated = true;
 			}
-			cout << "(q)uit/(f)latten/(c)se/initialize var(d)ecls/(x)plit/(j)oin/(g)rouper/(h)oister/" << endl;
-			cout << "  (e)xpr inline/(i)nline/(s)implify/varname c(l)eaner/(u)nusedprune/ss(a) transform/" << endl;
-			cout << "  (r)edundant assign elim./re(m)aterializer/f(o)r-loop-init-rewriter/for-loop-condition-(I)nto-body/" << endl;
-			cout << "  for-loop-condition-(O)ut-of-body/s(t)ructural simplifier/equi(v)alent function combiner/ssa re(V)erser/" << endl;
-			cout << "  co(n)trol flow simplifier/stack com(p)ressor/(D)ead code eliminator/(L)oad resolver/" << endl;
-			cout << "  (C)onditional simplifier/conditional (U)nsimplifier/loop-invariant code (M)otion?" << endl;
+			map<char, string> const& abbreviationMap = OptimiserSuite::stepAbbreviationToNameMap();
+			map<char, string> const& extraOptions = {
+				{'q', "quit"},
+				{'l', "VarNameCleaner"},
+				{'p', "StackCompressor"},
+			};
+
+			printUsageBanner(abbreviationMap, extraOptions, 4);
+			cout << "? ";
 			cout.flush();
 			int option = readStandardInputChar();
 			cout << ' ' << char(option) << endl;
 
 			OptimiserStepContext context{m_dialect, *m_nameDispenser, reservedIdentifiers};
-			switch (option)
+
+			auto abbreviationAndName = abbreviationMap.find(option);
+			if (abbreviationAndName != abbreviationMap.end())
+			{
+				OptimiserStep const& step = *OptimiserSuite::allSteps().at(abbreviationAndName->second);
+				step.run(context, *m_ast);
+			}
+			else switch (option)
 			{
 			case 'q':
 				return;
-			case 'f':
-				BlockFlattener::run(context, *m_ast);
-				break;
-			case 'o':
-				ForLoopInitRewriter::run(context, *m_ast);
-				break;
-			case 'O':
-				ForLoopConditionOutOfBody::run(context, *m_ast);
-				break;
-			case 'I':
-				ForLoopConditionIntoBody::run(context, *m_ast);
-				break;
-			case 'c':
-				CommonSubexpressionEliminator::run(context, *m_ast);
-				break;
-			case 'C':
-				ConditionalSimplifier::run(context, *m_ast);
-				break;
-			case 'U':
-				ConditionalUnsimplifier::run(context, *m_ast);
-				break;
-			case 'd':
-				VarDeclInitializer::run(context, *m_ast);
-				break;
 			case 'l':
 				VarNameCleaner::run(context, *m_ast);
 				// VarNameCleaner destroys the unique names guarantee of the disambiguator.
 				disambiguated = false;
-				break;
-			case 'x':
-				ExpressionSplitter::run(context, *m_ast);
-				break;
-			case 'j':
-				ExpressionJoiner::run(context, *m_ast);
-				break;
-			case 'g':
-				FunctionGrouper::run(context, *m_ast);
-				break;
-			case 'h':
-				FunctionHoister::run(context, *m_ast);
-				break;
-			case 'e':
-				ExpressionInliner::run(context, *m_ast);
-				break;
-			case 'i':
-				FullInliner::run(context, *m_ast);
-				break;
-			case 's':
-				ExpressionSimplifier::run(context, *m_ast);
-				break;
-			case 't':
-				StructuralSimplifier::run(context, *m_ast);
-				break;
-			case 'T':
-				LiteralRematerialiser::run(context, *m_ast);
-				break;
-			case 'n':
-				ControlFlowSimplifier::run(context, *m_ast);
-				break;
-			case 'u':
-				UnusedPruner::run(context, *m_ast);
-				break;
-			case 'D':
-				DeadCodeEliminator::run(context, *m_ast);
-				break;
-			case 'a':
-				SSATransform::run(context, *m_ast);
-				break;
-			case 'r':
-				RedundantAssignEliminator::run(context, *m_ast);
-				break;
-			case 'm':
-				Rematerialiser::run(context, *m_ast);
-				break;
-			case 'v':
-				EquivalentFunctionCombiner::run(context, *m_ast);
-				break;
-			case 'V':
-				SSAReverser::run(context, *m_ast);
 				break;
 			case 'p':
 			{
@@ -241,12 +181,6 @@ public:
 				StackCompressor::run(m_dialect, obj, true, 16);
 				break;
 			}
-			case 'L':
-				LoadResolver::run(context, *m_ast);
-				break;
-			case 'M':
-				LoopInvariantCodeMotion::run(context, *m_ast);
-				break;
 			default:
 				cout << "Unknown option." << endl;
 			}
