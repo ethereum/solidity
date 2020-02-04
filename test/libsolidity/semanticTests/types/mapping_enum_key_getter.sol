@@ -8,6 +8,8 @@ contract test {
         return this.table(k);
     }
 }
+// ====
+// ABIEncoderV1Only: true
 // ----
 // table(uint8): 0 -> 0
 // table(uint8): 0x01 -> 0

@@ -61,8 +61,24 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 		}
 		m_settings.erase("compileViaYul");
 	}
+	if (m_settings.count("ABIEncoderV1Only"))
+	{
+		if (m_settings["ABIEncoderV1Only"] == "true")
+		{
+			m_validatedSettings["ABIEncoderV1Only"] = "true";
+			m_runWithABIEncoderV1Only = true;
+		}
+		m_settings.erase("ABIEncoderV1Only");
+	}
 	parseExpectations(file);
 	soltestAssert(!m_tests.empty(), "No tests specified in " + _filename);
+}
+
+bool SemanticTest::validateSettings(langutil::EVMVersion _evmVersion)
+{
+	if (m_runWithABIEncoderV1Only && solidity::test::CommonOptions::get().useABIEncoderV2)
+		return false;
+	return EVMVersionRestrictedTestCase::validateSettings(_evmVersion);
 }
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
