@@ -349,7 +349,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		disambiguate();
 		ExpressionSplitter::run(*m_context, *m_ast);
-		WordSizeTransform::run(*m_dialect, *m_ast, *m_nameDispenser);
+		WordSizeTransform::run(*m_dialect, ""_yulstring, *m_ast, *m_nameDispenser);
 	}
 	else if (m_optimizerStep == "fullSuite")
 	{
