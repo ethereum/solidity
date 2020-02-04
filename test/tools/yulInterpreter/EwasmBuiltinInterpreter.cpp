@@ -93,66 +93,25 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 			);
 		return 0;
 	}
-	else if (_fun == "drop"_yulstring)
+	else if (_fun == "drop"_yulstring || _fun == "nop"_yulstring)
 		return {};
+	else if (_fun == "i32.wrap_i64"_yulstring)
+		return arg.at(0) & uint32_t(-1);
+	else if (_fun == "i64.extend_i32_u"_yulstring)
+		// Return the same as above because everything is u256 anyway.
+		return arg.at(0) & uint32_t(-1);
 	else if (_fun == "unreachable"_yulstring)
 	{
 		logTrace(evmasm::Instruction::INVALID, {});
 		throw ExplicitlyTerminated();
 	}
-	else if (_fun == "i64.add"_yulstring)
-		return arg[0] + arg[1];
-	else if (_fun == "i64.sub"_yulstring)
-		return arg[0] - arg[1];
-	else if (_fun == "i64.mul"_yulstring)
-		return arg[0] * arg[1];
-	else if (_fun == "i64.div_u"_yulstring)
-	{
-		if (arg[1] == 0)
-			throw ExplicitlyTerminated();
-		else
-			return arg[0] / arg[1];
-	}
-	else if (_fun == "i64.rem_u"_yulstring)
-	{
-		if (arg[1] == 0)
-			throw ExplicitlyTerminated();
-		else
-			return arg[0] % arg[1];
-	}
-	else if (_fun == "i64.and"_yulstring)
-		return arg[0] & arg[1];
-	else if (_fun == "i64.or"_yulstring)
-		return arg[0] | arg[1];
-	else if (_fun == "i64.xor"_yulstring)
-		return arg[0] ^ arg[1];
-	else if (_fun == "i64.shl"_yulstring)
-		return arg[0] << arg[1];
-	else if (_fun == "i64.shr_u"_yulstring)
-		return arg[0] >> arg[1];
-	else if (_fun == "i64.eq"_yulstring)
-		return arg[0] == arg[1] ? 1 : 0;
-	else if (_fun == "i64.ne"_yulstring)
-		return arg[0] != arg[1] ? 1 : 0;
-	else if (_fun == "i64.eqz"_yulstring)
-		return arg[0] == 0 ? 1 : 0;
-	else if (_fun == "i64.clz"_yulstring)
-		return clz(arg[0]);
-	else if (_fun == "i64.lt_u"_yulstring)
-		return arg[0] < arg[1] ? 1 : 0;
-	else if (_fun == "i64.gt_u"_yulstring)
-		return arg[0] > arg[1] ? 1 : 0;
-	else if (_fun == "i64.le_u"_yulstring)
-		return arg[0] <= arg[1] ? 1 : 0;
-	else if (_fun == "i64.ge_u"_yulstring)
-		return arg[0] >= arg[1] ? 1 : 0;
 	else if (_fun == "i64.store"_yulstring)
 	{
 		accessMemory(arg[0], 8);
 		writeMemoryWord(arg[0], arg[1]);
 		return 0;
 	}
-	else if (_fun == "i64.store8"_yulstring)
+	else if (_fun == "i64.store8"_yulstring || _fun == "i32.store8"_yulstring)
 	{
 		accessMemory(arg[0], 1);
 		writeMemoryByte(arg[0], static_cast<uint8_t>(arg[1] & 0xff));
@@ -163,12 +122,112 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		accessMemory(arg[0], 8);
 		return readMemoryWord(arg[0]);
 	}
-	else if (_fun == "eth.getAddress"_yulstring)
+	else if (_fun == "i32.store"_yulstring)
+	{
+		accessMemory(arg[0], 4);
+		writeMemoryHalfWord(arg[0], arg[1]);
+		return 0;
+	}
+	else if (_fun == "i32.load"_yulstring)
+	{
+		accessMemory(arg[0], 4);
+		return readMemoryHalfWord(arg[0]);
+	}
+
+
+	string prefix = _fun.str();
+	string suffix;
+	auto dot = prefix.find(".");
+	if (dot != string::npos)
+	{
+		suffix = prefix.substr(dot + 1);
+		prefix.resize(dot);
+	}
+
+	if (prefix == "i32")
+	{
+		vector<uint32_t> halfWordArgs;
+		for (uint64_t a: arg)
+			halfWordArgs.push_back(uint32_t(a & uint32_t(-1)));
+		return evalWasmBuiltin(suffix, halfWordArgs);
+	}
+	else if (prefix == "i64")
+		return evalWasmBuiltin(suffix, arg);
+	else if (prefix == "eth")
+		return evalEthBuiltin(suffix, arg);
+
+	yulAssert(false, "Unknown builtin: " + _fun.str() + " (or implementation did not return)");
+
+	return 0;
+}
+
+template <typename Word>
+u256 EwasmBuiltinInterpreter::evalWasmBuiltin(string const& _fun, vector<Word> const& _arguments)
+{
+	vector<Word> const& arg = _arguments;
+
+	if (_fun == "add")
+		return arg[0] + arg[1];
+	else if (_fun == "sub")
+		return arg[0] - arg[1];
+	else if (_fun == "mul")
+		return arg[0] * arg[1];
+	else if (_fun == "div_u")
+	{
+		if (arg[1] == 0)
+			throw ExplicitlyTerminated();
+		else
+			return arg[0] / arg[1];
+	}
+	else if (_fun == "rem_u")
+	{
+		if (arg[1] == 0)
+			throw ExplicitlyTerminated();
+		else
+			return arg[0] % arg[1];
+	}
+	else if (_fun == "and")
+		return arg[0] & arg[1];
+	else if (_fun == "or")
+		return arg[0] | arg[1];
+	else if (_fun == "xor")
+		return arg[0] ^ arg[1];
+	else if (_fun == "shl")
+		return arg[0] << arg[1];
+	else if (_fun == "shr_u")
+		return arg[0] >> arg[1];
+	else if (_fun == "eq")
+		return arg[0] == arg[1] ? 1 : 0;
+	else if (_fun == "ne")
+		return arg[0] != arg[1] ? 1 : 0;
+	else if (_fun == "eqz")
+		return arg[0] == 0 ? 1 : 0;
+	else if (_fun == "clz")
+		return clz(arg[0]);
+	else if (_fun == "lt_u")
+		return arg[0] < arg[1] ? 1 : 0;
+	else if (_fun == "gt_u")
+		return arg[0] > arg[1] ? 1 : 0;
+	else if (_fun == "le_u")
+		return arg[0] <= arg[1] ? 1 : 0;
+	else if (_fun == "ge_u")
+		return arg[0] >= arg[1] ? 1 : 0;
+
+	yulAssert(false, "Unknown builtin: " + _fun + " (or implementation did not return)");
+
+	return 0;
+}
+
+u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t> const& _arguments)
+{
+	vector<uint64_t> const& arg = _arguments;
+
+	if (_fun == "getAddress")
 	{
 		writeAddress(arg[0], m_state.address);
 		return 0;
 	}
-	else if (_fun == "eth.getExternalBalance"_yulstring)
+	else if (_fun == "getExternalBalance")
 	{
 		// TODO this does not read the address, but is consistent with
 		// EVM interpreter implementation.
@@ -176,7 +235,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		writeU128(arg[1], m_state.balance);
 		return 0;
 	}
-	else if (_fun == "eth.getBlockHash"_yulstring)
+	else if (_fun == "getBlockHash")
 	{
 		if (arg[0] >= m_state.blockNumber || arg[0] + 256 < m_state.blockNumber)
 			return 1;
@@ -186,14 +245,14 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 			return 0;
 		}
 	}
-	else if (_fun == "eth.call"_yulstring)
+	else if (_fun == "call")
 	{
 		// TODO read args from memory
 		// TODO use readAddress to read address.
 		logTrace(evmasm::Instruction::CALL, {});
 		return arg[0] & 1;
 	}
-	else if (_fun == "eth.callDataCopy"_yulstring)
+	else if (_fun == "callDataCopy")
 	{
 		if (arg[1] + arg[2] < arg[1] || arg[1] + arg[2] > m_state.calldata.size())
 			throw ExplicitlyTerminated();
@@ -204,51 +263,51 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 			);
 		return {};
 	}
-	else if (_fun == "eth.getCallDataSize"_yulstring)
+	else if (_fun == "getCallDataSize")
 		return m_state.calldata.size();
-	else if (_fun == "eth.callCode"_yulstring)
+	else if (_fun == "callCode")
 	{
 		// TODO read args from memory
 		// TODO use readAddress to read address.
 		logTrace(evmasm::Instruction::CALLCODE, {});
 		return arg[0] & 1;
 	}
-	else if (_fun == "eth.callDelegate"_yulstring)
+	else if (_fun == "callDelegate")
 	{
 		// TODO read args from memory
 		// TODO use readAddress to read address.
 		logTrace(evmasm::Instruction::DELEGATECALL, {});
 		return arg[0] & 1;
 	}
-	else if (_fun == "eth.callStatic"_yulstring)
+	else if (_fun == "callStatic")
 	{
 		// TODO read args from memory
 		// TODO use readAddress to read address.
 		logTrace(evmasm::Instruction::STATICCALL, {});
 		return arg[0] & 1;
 	}
-	else if (_fun == "eth.storageStore"_yulstring)
+	else if (_fun == "storageStore")
 	{
 		m_state.storage[h256(readU256(arg[0]))] = readU256((arg[1]));
 		return 0;
 	}
-	else if (_fun == "eth.storageLoad"_yulstring)
+	else if (_fun == "storageLoad")
 	{
 		writeU256(arg[1], m_state.storage[h256(readU256(arg[0]))]);
 		return 0;
 	}
-	else if (_fun == "eth.getCaller"_yulstring)
+	else if (_fun == "getCaller")
 	{
 		// TODO should this only write 20 bytes?
 		writeAddress(arg[0], m_state.caller);
 		return 0;
 	}
-	else if (_fun == "eth.getCallValue"_yulstring)
+	else if (_fun == "getCallValue")
 	{
 		writeU128(arg[0], m_state.callvalue);
 		return 0;
 	}
-	else if (_fun == "eth.codeCopy"_yulstring)
+	else if (_fun == "codeCopy")
 	{
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
@@ -257,26 +316,26 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 			);
 		return 0;
 	}
-	else if (_fun == "eth.getCodeSize"_yulstring)
+	else if (_fun == "getCodeSize")
 		return m_state.code.size();
-	else if (_fun == "eth.getBlockCoinbase"_yulstring)
+	else if (_fun == "getBlockCoinbase")
 	{
 		writeAddress(arg[0], m_state.coinbase);
 		return 0;
 	}
-	else if (_fun == "eth.create"_yulstring)
+	else if (_fun == "create")
 	{
 		// TODO access memory
 		// TODO use writeAddress to store resulting address
 		logTrace(evmasm::Instruction::CREATE, {});
 		return 0xcccccc + arg[1];
 	}
-	else if (_fun == "eth.getBlockDifficulty"_yulstring)
+	else if (_fun == "getBlockDifficulty")
 	{
 		writeU256(arg[0], m_state.difficulty);
 		return 0;
 	}
-	else if (_fun == "eth.externalCodeCopy"_yulstring)
+	else if (_fun == "externalCodeCopy")
 	{
 		// TODO use readAddress to read address.
 		if (accessMemory(arg[1], arg[3]))
@@ -287,19 +346,19 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 			);
 		return 0;
 	}
-	else if (_fun == "eth.getExternalCodeSize"_yulstring)
+	else if (_fun == "getExternalCodeSize")
 		// Generate "random" code length. Make sure it fits the page size.
 		return u256(keccak256(h256(readAddress(arg[0])))) & 0xfff;
-	else if (_fun == "eth.getGasLeft"_yulstring)
+	else if (_fun == "getGasLeft")
 		return 0x99;
-	else if (_fun == "eth.getBlockGasLimit"_yulstring)
+	else if (_fun == "getBlockGasLimit")
 		return uint64_t(m_state.gaslimit);
-	else if (_fun == "eth.getTxGasPrice"_yulstring)
+	else if (_fun == "getTxGasPrice")
 	{
 		writeU128(arg[0], m_state.gasprice);
 		return 0;
 	}
-	else if (_fun == "eth.log"_yulstring)
+	else if (_fun == "log")
 	{
 		uint64_t numberOfTopics = arg[2];
 		if (numberOfTopics > 4)
@@ -307,14 +366,14 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		logTrace(evmasm::logInstruction(numberOfTopics), {});
 		return 0;
 	}
-	else if (_fun == "eth.getBlockNumber"_yulstring)
+	else if (_fun == "getBlockNumber")
 		return m_state.blockNumber;
-	else if (_fun == "eth.getTxOrigin"_yulstring)
+	else if (_fun == "getTxOrigin")
 	{
 		writeAddress(arg[0], m_state.origin);
 		return 0;
 	}
-	else if (_fun == "eth.finish"_yulstring)
+	else if (_fun == "finish")
 	{
 		bytes data;
 		if (accessMemory(arg[0], arg[1]))
@@ -322,7 +381,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		logTrace(evmasm::Instruction::RETURN, {}, data);
 		throw ExplicitlyTerminated();
 	}
-	else if (_fun == "eth.revert"_yulstring)
+	else if (_fun == "revert")
 	{
 		bytes data;
 		if (accessMemory(arg[0], arg[1]))
@@ -330,9 +389,9 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		logTrace(evmasm::Instruction::REVERT, {}, data);
 		throw ExplicitlyTerminated();
 	}
-	else if (_fun == "eth.getReturnDataSize"_yulstring)
+	else if (_fun == "getReturnDataSize")
 		return m_state.returndata.size();
-	else if (_fun == "eth.returnDataCopy"_yulstring)
+	else if (_fun == "returnDataCopy")
 	{
 		if (arg[1] + arg[2] < arg[1] || arg[1] + arg[2] > m_state.returndata.size())
 			throw ExplicitlyTerminated();
@@ -343,16 +402,16 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 			);
 		return {};
 	}
-	else if (_fun == "eth.selfDestruct"_yulstring)
+	else if (_fun == "selfDestruct")
 	{
 		// TODO use readAddress to read address.
 		logTrace(evmasm::Instruction::SELFDESTRUCT, {});
 		throw ExplicitlyTerminated();
 	}
-	else if (_fun == "eth.getBlockTimestamp"_yulstring)
+	else if (_fun == "getBlockTimestamp")
 		return m_state.timestamp;
 
-	yulAssert(false, "Unknown builtin: " + _fun.str() + " (or implementation did not return)");
+	yulAssert(false, "Unknown builtin: " + _fun + " (or implementation did not return)");
 
 	return 0;
 }
@@ -388,9 +447,23 @@ uint64_t EwasmBuiltinInterpreter::readMemoryWord(uint64_t _offset)
 	return r;
 }
 
+uint32_t EwasmBuiltinInterpreter::readMemoryHalfWord(uint64_t _offset)
+{
+	uint32_t r = 0;
+	for (size_t i = 0; i < 4; i++)
+		r |= uint64_t(m_state.memory[_offset + i]) << (i * 8);
+	return r;
+}
+
 void EwasmBuiltinInterpreter::writeMemoryWord(uint64_t _offset, uint64_t _value)
 {
 	for (size_t i = 0; i < 8; i++)
+		m_state.memory[_offset + i] = uint8_t((_value >> (i * 8)) & 0xff);
+}
+
+void EwasmBuiltinInterpreter::writeMemoryHalfWord(uint64_t _offset, uint32_t _value)
+{
+	for (size_t i = 0; i < 4; i++)
 		m_state.memory[_offset + i] = uint8_t((_value >> (i * 8)) & 0xff);
 }
 

@@ -48,25 +48,26 @@ using namespace solidity::langutil;
 
 namespace
 {
-static string const polyfill{R"({
-function or_bool(a, b, c, d) -> r {
-	r := i64.or(i64.or(a, b), i64.or(c, d))
+static string const polyfill{R"(
+{
+function or_bool(a, b, c, d) -> r:i32 {
+	r := i32.eqz(i64.eqz(i64.or(i64.or(a, b), i64.or(c, d))))
 }
-function or_bool_320(a, b, c, d, e) -> r {
-	r := i64.or(or_bool(a, b, c, d), e)
+function or_bool_320(a, b, c, d, e) -> r:i32 {
+	r := i32.or(or_bool(a, b, c, 0), or_bool(d, e, 0, 0))
 }
-function or_bool_512(a, b, c, d, e, f, g, h) -> r {
-	r := i64.or(or_bool(a, b, c, d), or_bool(e, f, g, h))
+function or_bool_512(a, b, c, d, e, f, g, h) -> r:i32 {
+	r := i32.or(or_bool(a, b, c, d), or_bool(e, f, g, h))
 }
 // returns a + y + c plus carry value on 64 bit values.
 // c should be at most 1
 function add_carry(x, y, c) -> r, r_c {
 	let t := i64.add(x, y)
 	r := i64.add(t, c)
-	r_c := i64.or(
+	r_c := i64.extend_i32_u(i32.or(
 		i64.lt_u(t, x),
 		i64.lt_u(r, t)
-	)
+	))
 }
 function add(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	let carry
@@ -254,8 +255,8 @@ function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	let m3 := 0
 	let m4 := 1
 
-	for {} 1 {} {
-		if i64.or(i64.eqz(i64.clz(y1)), gte_256x256_64(y1, y2, y3, y4, x1, x2, x3, x4)) {
+	for {} true {} {
+		if i32.or(i64.eqz(i64.clz(y1)), gte_256x256_64(y1, y2, y3, y4, x1, x2, x3, x4)) {
 			break
 		}
 		y1, y2, y3, y4 := shl_internal(1, y1, y2, y3, y4)
@@ -276,7 +277,7 @@ function div(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 function sdiv(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	// Based on https://github.com/ewasm/evm2wasm/blob/master/wasm/SDIV.wast
 
-	let sign := i64.shr_u(i64.xor(x1, y1), 63)
+	let sign:i32 := i32.wrap_i64(i64.shr_u(i64.xor(x1, y1), 63))
 
 	if i64.eqz(i64.clz(x1)) {
 		x1, x2, x3, x4 := xor(
@@ -320,8 +321,8 @@ function mod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	let m3 := 0
 	let m4 := 1
 
-	for {} 1 {} {
-		if i64.or(i64.eqz(i64.clz(y1)), gte_256x256_64(y1, y2, y3, y4, r1, r2, r3, r4)) {
+	for {} true {} {
+		if i32.or(i64.eqz(i64.clz(y1)), gte_256x256_64(y1, y2, y3, y4, r1, r2, r3, r4)) {
 			break
 		}
 
@@ -356,8 +357,8 @@ function mod320(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> r1, r2, r3, r4, r5 {
 	r4 := x4
 	r5 := x5
 
-	for {} 1 {} {
-		if i64.or(i64.eqz(i64.clz(y1)), gte_320x320_64(y1, y2, y3, y4, y5, r1, r2, r3, r4, r5)) {
+	for {} true {} {
+		if i32.or(i64.eqz(i64.clz(y1)), gte_320x320_64(y1, y2, y3, y4, y5, r1, r2, r3, r4, r5)) {
 			break
 		}
 		y1, y2, y3, y4, y5 := shl320_internal(1, y1, y2, y3, y4, y5)
@@ -397,8 +398,8 @@ function mod512(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) 
 	r7 := x7
 	r8 := x8
 
-	for {} 1 {} {
-		if i64.or(
+	for {} true {} {
+		if i32.or(
 				i64.eqz(i64.clz(y1)),
 				gte_512x512_64(y1, y2, y3, y4, y5, y6, y7, y8, r1, r2, r3, r4, r5, r6, r7, r8)
 			)
@@ -425,7 +426,7 @@ function smod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	let m3 := 0
 	let m4 := 1
 
-	let sign := i64.shr_u(x1, 63)
+	let sign:i32 := i32.wrap_i64(i64.shr_u(x1, 63))
 
 	if i64.eqz(i64.clz(x1)) {
 		x1, x2, x3, x4 := xor(
@@ -456,7 +457,7 @@ function smod(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 function exp(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	r4 := 1
 	for {} or_bool(y1, y2, y3, y4) {} {
-		if i64.and(y4, 1) {
+		if i32.wrap_i64(i64.and(y4, 1)) {
 			r1, r2, r3, r4 := mul(r1, r2, r3, r4, x1, x2, x3, x4)
 		}
 		x1, x2, x3, x4 := mul(x1, x2, x3, x4, x1, x2, x3, x4)
@@ -499,17 +500,17 @@ function not(x1, x2, x3, x4) -> r1, r2, r3, r4 {
 	let mask := 0xffffffffffffffff
 	r1, r2, r3, r4 := xor(x1, x2, x3, x4, mask, mask, mask, mask)
 }
-function iszero(x1, x2, x3, x4) -> r1, r2, r3 ,r4 {
-	r4 := iszero256(x1, x2, x3, x4)
+function iszero(x1, x2, x3, x4) -> r1, r2, r3, r4 {
+	r4 := i64.extend_i32_u(iszero256(x1, x2, x3, x4))
 }
-function iszero256(x1, x2, x3, x4) -> r {
+function iszero256(x1, x2, x3, x4) -> r:i32 {
 	r := i64.eqz(i64.or(i64.or(x1, x2), i64.or(x3, x4)))
 }
-function iszero320(x1, x2, x3, x4, x5) -> r {
+function iszero320(x1, x2, x3, x4, x5) -> r:i32 {
 	r := i64.eqz(i64.or(i64.or(i64.or(x1, x2), i64.or(x3, x4)), x5))
 }
-function iszero512(x1, x2, x3, x4, x5, x6, x7, x8) -> r {
-	r := i64.and(iszero256(x1, x2, x3, x4), iszero256(x5, x6, x7, x8))
+function iszero512(x1, x2, x3, x4, x5, x6, x7, x8) -> r:i32 {
+	r := i32.and(iszero256(x1, x2, x3, x4), iszero256(x5, x6, x7, x8))
 }
 function eq(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 	if i64.eq(x1, y1) {
@@ -524,107 +525,108 @@ function eq(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 }
 
 // returns 0 if a == b, -1 if a < b and 1 if a > b
-function cmp(a, b) -> r {
+function cmp(a, b) -> r:i32 {
 	switch i64.lt_u(a, b)
-	case 1 { r := 0xffffffffffffffff }
+	case 1:i32 { r := 0xffffffff:i32 }
 	default {
 		r := i64.ne(a, b)
 	}
 }
-function lt_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> z {
+function lt_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> z:i32 {
 	switch cmp(x1, y1)
-	case 0 {
+	case 0:i32 {
 		switch cmp(x2, y2)
-		case 0 {
+		case 0:i32 {
 			switch cmp(x3, y3)
-			case 0 {
+			case 0:i32 {
 				switch cmp(x4, y4)
-				case 0 {
+				case 0:i32 {
 					z := i64.lt_u(x5, y5)
 				}
-				case 1 { z := 0 }
-				default { z := 1 }
+				case 1:i32 { z := 0:i32 }
+				default { z := 1:i32 }
 			}
-			case 1 { z := 0 }
-			default { z := 1 }
+			case 1:i32 { z := 0:i32 }
+			default { z := 1:i32 }
 		}
-		case 1 { z := 0 }
-		default { z := 1 }
+		case 1:i32 { z := 0:i32 }
+		default { z := 1:i32 }
 	}
-	case 1 { z := 0 }
-	default { z := 1 }
+	case 1:i32 { z := 0:i32 }
+	default { z := 1:i32 }
 }
-function lt_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> z {
+function lt_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> z:i32 {
 	switch cmp(x1, y1)
-	case 0 {
+	case 0:i32 {
 		switch cmp(x2, y2)
-		case 0 {
+		case 0:i32 {
 			switch cmp(x3, y3)
-			case 0 {
+			case 0:i32 {
 				switch cmp(x4, y4)
-				case 0 {
+				case 0:i32 {
 					switch cmp(x5, y5)
-					case 0 {
+					case 0:i32 {
 						switch cmp(x6, y6)
-						case 0 {
+						case 0:i32 {
 							switch cmp(x7, y7)
-							case 0 {
+							case 0:i32 {
 								z := i64.lt_u(x8, y8)
 							}
-							case 1 { z := 0 }
-							default { z := 1 }
+							case 1:i32 { z := 0:i32 }
+							default { z := 1:i32 }
 						}
-						case 1 { z := 0 }
-						default { z := 1 }
+						case 1:i32 { z := 0:i32 }
+						default { z := 1:i32 }
 					}
-					case 1 { z := 0 }
-					default { z := 1 }
+					case 1:i32 { z := 0:i32 }
+					default { z := 1:i32 }
 				}
-				case 1 { z := 0 }
-				default { z := 1 }
+				case 1:i32 { z := 0:i32 }
+				default { z := 1:i32 }
 			}
-			case 1 { z := 0 }
-			default { z := 1 }
+			case 1:i32 { z := 0:i32 }
+			default { z := 1:i32 }
 		}
-		case 1 { z := 0 }
-		default { z := 1 }
+		case 1:i32 { z := 0:i32 }
+		default { z := 1:i32 }
 	}
-	case 1 { z := 0 }
-	default { z := 1 }
-}
+	case 1:i32 { z := 0:i32 }
+	default { z := 1:i32 }
+}/*
 )"
 // Split long string to make it compilable on msvc
 // https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?view=vs-2019
 R"(
-function lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4) -> z {
+*/
+function lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4) -> z:i32 {
 	switch cmp(x1, y1)
-	case 0 {
+	case 0:i32 {
 		switch cmp(x2, y2)
-		case 0 {
+		case 0:i32 {
 			switch cmp(x3, y3)
-			case 0 {
+			case 0:i32 {
 				z := i64.lt_u(x4, y4)
 			}
-			case 1 { z := 0 }
-			default { z := 1 }
+			case 1:i32 { z := 0:i32 }
+			default { z := 1:i32 }
 		}
-		case 1 { z := 0 }
-		default { z := 1 }
+		case 1:i32 { z := 0:i32 }
+		default { z := 1:i32 }
 	}
-	case 1 { z := 0 }
-	default { z := 1 }
+	case 1:i32 { z := 0:i32 }
+	default { z := 1:i32 }
 }
 function lt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	z4 := lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4)
+	z4 := i64.extend_i32_u(lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4))
 }
-function gte_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4) -> z {
-	z := i64.eqz(lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4))
+function gte_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4) -> z:i32 {
+	z := i32.eqz(lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4))
 }
-function gte_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> z {
-	z := i64.eqz(lt_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5))
+function gte_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> z:i32 {
+	z := i32.eqz(lt_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5))
 }
-function gte_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> z {
-	z := i64.eqz(lt_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8))
+function gte_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8) -> z:i32 {
+	z := i32.eqz(lt_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y7, y8))
 }
 function gt(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := lt(y1, y2, y3, y4, x1, x2, x3, x4)
@@ -646,7 +648,7 @@ function shl_single(a, amount) -> x, y {
 }
 
 function shl(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	if i64.and(i64.eqz(x1), i64.eqz(x2)) {
+	if i32.and(i64.eqz(x1), i64.eqz(x2)) {
 		if i64.eqz(x3) {
 			if i64.lt_u(x4, 256) {
 				if i64.ge_u(x4, 128) {
@@ -683,7 +685,7 @@ function shr_single(a, amount) -> x, y {
 }
 
 function shr(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	if i64.and(i64.eqz(x1), i64.eqz(x2)) {
+	if i32.and(i64.eqz(x1), i64.eqz(x2)) {
 		if i64.eqz(x3) {
 			if i64.lt_u(x4, 256) {
 				if i64.ge_u(x4, 128) {
@@ -713,7 +715,7 @@ function shr(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 	}
 }
 function sar(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
-	if i64.clz(y1) {
+	if i64.gt_u(i64.clz(y1), 0) {
 		z1, z2, z3, z4 := shr(x1, x2, x3, x4, y1, y2, y3, y4)
 		leave
 	}
@@ -773,10 +775,10 @@ function u256_to_i64(x1, x2, x3, x4) -> v {
 	v := x4
 }
 
-function u256_to_i32(x1, x2, x3, x4) -> v {
+function u256_to_i32(x1, x2, x3, x4) -> v:i32 {
 	if i64.ne(0, i64.or(i64.or(x1, x2), x3)) { invalid() }
 	if i64.ne(0, i64.shr_u(x4, 32)) { invalid() }
-	v := x4
+	v := i32.wrap_i64(x4)
 }
 
 function u256_to_byte(x1, x2, x3, x4) -> v {
@@ -785,14 +787,14 @@ function u256_to_byte(x1, x2, x3, x4) -> v {
 	v := x4
 }
 
-function u256_to_i32ptr(x1, x2, x3, x4) -> v {
+function u256_to_i32ptr(x1, x2, x3, x4) -> v:i32 {
 	v := u256_to_i32(x1, x2, x3, x4)
 }
 
-function to_internal_i32ptr(x1, x2, x3, x4) -> r {
-	let p := u256_to_i32ptr(x1, x2, x3, x4)
-	r := i64.add(p, 64)
-	if i64.lt_u(r, p) { invalid() }
+function to_internal_i32ptr(x1, x2, x3, x4) -> r:i32 {
+	let p:i32 := u256_to_i32ptr(x1, x2, x3, x4)
+	r := i32.add(p, 64:i32)
+	if i32.lt_u(r, p) { invalid() }
 }
 
 function u256_to_address(x1, x2, x3, x4) -> r1, r2, r3 {
@@ -809,13 +811,13 @@ function keccak256(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 }
 
 function address() -> z1, z2, z3, z4 {
-	eth.getAddress(0)
-	z1, z2, z3, z4 := mload_internal(0)
+	eth.getAddress(0:i32)
+	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	mstore_address(0, x1, x2, x3, x4)
-	eth.getExternalBalance(12, 48)
-	z1, z2, z3, z4 := mload_internal(32)
+	mstore_address(0:i32, x1, x2, x3, x4)
+	eth.getExternalBalance(12:i32, 48:i32)
+	z1, z2, z3, z4 := mload_internal(32:i32)
 }
 function selfbalance() -> z1, z2, z3, z4 {
 	// TODO: not part of current Ewasm spec
@@ -826,23 +828,23 @@ function chainid() -> z1, z2, z3, z4 {
 	unreachable()
 }
 function origin() -> z1, z2, z3, z4 {
-	eth.getTxOrigin(0)
-	z1, z2, z3, z4 := mload_internal(0)
+	eth.getTxOrigin(0:i32)
+	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 function caller() -> z1, z2, z3, z4 {
-	eth.getCaller(0)
-	z1, z2, z3, z4 := mload_internal(0)
+	eth.getCaller(0:i32)
+	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 function callvalue() -> z1, z2, z3, z4 {
-	eth.getCallValue(0)
-	z1, z2, z3, z4 := mload_internal(0)
+	eth.getCallValue(0:i32)
+	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	eth.callDataCopy(0, u256_to_i32(x1, x2, x3, x4), 32)
-	z1, z2, z3, z4 := mload_internal(0)
+	eth.callDataCopy(0:i32, u256_to_i32(x1, x2, x3, x4), 32:i32)
+	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 function calldatasize() -> z1, z2, z3, z4 {
-	z4 := eth.getCallDataSize()
+	z4 := i64.extend_i32_u(eth.getCallDataSize())
 }
 function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 	eth.callDataCopy(
@@ -854,7 +856,7 @@ function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 
 // Needed?
 function codesize() -> z1, z2, z3, z4 {
-	z4 := eth.getCodeSize()
+	z4 := i64.extend_i32_u(eth.getCodeSize())
 }
 function codecopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 	eth.codeCopy(
@@ -869,29 +871,29 @@ function datacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 }
 
 function gasprice() -> z1, z2, z3, z4 {
-	eth.getTxGasPrice(0)
-	z1, z2, z3, z4 := mload_internal(0)
+	eth.getTxGasPrice(0:i32)
+	z1, z2, z3, z4 := mload_internal(0:i32)
 }
-function extcodesize_internal(x1, x2, x3, x4) -> r {
-	mstore_address(0, x1, x2, x3, x4)
-	r := eth.getExternalCodeSize(12)
+function extcodesize_internal(x1, x2, x3, x4) -> r:i32 {
+	mstore_address(0:i32, x1, x2, x3, x4)
+	r := eth.getExternalCodeSize(12:i32)
 }
 function extcodesize(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	z4 := extcodesize_internal(x1, x2, x3, x4)
+	z4 := i64.extend_i32_u(extcodesize_internal(x1, x2, x3, x4))
 }
 function extcodehash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	// TODO: not part of current Ewasm spec
 	unreachable()
 }
 function extcodecopy(a1, a2, a3, a4, p1, p2, p3, p4, o1, o2, o3, o4, l1, l2, l3, l4) {
-	mstore_address(0, a1, a2, a3, a4)
-	let codeOffset := u256_to_i32(o1, o2, o3, o4)
-	let codeLength := u256_to_i32(l1, l2, l3, l4)
-	eth.externalCodeCopy(12, to_internal_i32ptr(p1, p2, p3, p4), codeOffset, codeLength)
+	mstore_address(0:i32, a1, a2, a3, a4)
+	let codeOffset:i32 := u256_to_i32(o1, o2, o3, o4)
+	let codeLength:i32 := u256_to_i32(l1, l2, l3, l4)
+	eth.externalCodeCopy(12:i32, to_internal_i32ptr(p1, p2, p3, p4), codeOffset, codeLength)
 }
 
 function returndatasize() -> z1, z2, z3, z4 {
-	z4 := eth.getReturnDataSize()
+	z4 := i64.extend_i32_u(eth.getReturnDataSize())
 }
 function returndatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 	eth.returnDataCopy(
@@ -902,14 +904,14 @@ function returndatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 }
 
 function blockhash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	let r := eth.getBlockHash(u256_to_i64(x1, x2, x3, x4), 0)
-	if i64.eqz(r) {
-		z1, z2, z3, z4 := mload_internal(0)
+	let r:i32 := eth.getBlockHash(u256_to_i64(x1, x2, x3, x4), 0:i32)
+	if i32.eqz(r) {
+		z1, z2, z3, z4 := mload_internal(0:i32)
 	}
 }
 function coinbase() -> z1, z2, z3, z4 {
-	eth.getBlockCoinbase(0)
-	z1, z2, z3, z4 := mload_internal(0)
+	eth.getBlockCoinbase(0:i32)
+	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 function timestamp() -> z1, z2, z3, z4 {
 	z4 := eth.getBlockTimestamp()
@@ -918,8 +920,8 @@ function number() -> z1, z2, z3, z4 {
 	z4 := eth.getBlockNumber()
 }
 function difficulty() -> z1, z2, z3, z4 {
-	eth.getBlockDifficulty(0)
-	z1, z2, z3, z4 := mload_internal(0)
+	eth.getBlockDifficulty(0:i32)
+	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 function gaslimit() -> z1, z2, z3, z4 {
 	z4 := eth.getBlockGasLimit()
@@ -947,56 +949,56 @@ function endian_swap(x) -> y {
 	y := i64.or(hi, lo)
 }
 function save_temp_mem_32() -> t1, t2, t3, t4 {
-	t1 := i64.load(0)
-	t2 := i64.load(8)
-	t3 := i64.load(16)
-	t4 := i64.load(24)
+	t1 := i64.load(0:i32)
+	t2 := i64.load(8:i32)
+	t3 := i64.load(16:i32)
+	t4 := i64.load(24:i32)
 }
 function restore_temp_mem_32(t1, t2, t3, t4) {
-	i64.store(0, t1)
-	i64.store(8, t2)
-	i64.store(16, t3)
-	i64.store(24, t4)
+	i64.store(0:i32, t1)
+	i64.store(8:i32, t2)
+	i64.store(16:i32, t3)
+	i64.store(24:i32, t4)
 }
 function save_temp_mem_64() -> t1, t2, t3, t4, t5, t6, t7, t8 {
-	t1 := i64.load(0)
-	t2 := i64.load(8)
-	t3 := i64.load(16)
-	t4 := i64.load(24)
-	t5 := i64.load(32)
-	t6 := i64.load(40)
-	t7 := i64.load(48)
-	t8 := i64.load(54)
+	t1 := i64.load(0:i32)
+	t2 := i64.load(8:i32)
+	t3 := i64.load(16:i32)
+	t4 := i64.load(24:i32)
+	t5 := i64.load(32:i32)
+	t6 := i64.load(40:i32)
+	t7 := i64.load(48:i32)
+	t8 := i64.load(54:i32)
 }
 function restore_temp_mem_64(t1, t2, t3, t4, t5, t6, t7, t8) {
-	i64.store(0, t1)
-	i64.store(8, t2)
-	i64.store(16, t3)
-	i64.store(24, t4)
-	i64.store(32, t5)
-	i64.store(40, t6)
-	i64.store(48, t7)
-	i64.store(54, t8)
+	i64.store(0:i32, t1)
+	i64.store(8:i32, t2)
+	i64.store(16:i32, t3)
+	i64.store(24:i32, t4)
+	i64.store(32:i32, t5)
+	i64.store(40:i32, t6)
+	i64.store(48:i32, t7)
+	i64.store(54:i32, t8)
 }
 function mload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := mload_internal(to_internal_i32ptr(x1, x2, x3, x4))
 }
-function mload_internal(pos) -> z1, z2, z3, z4 {
+function mload_internal(pos:i32) -> z1, z2, z3, z4 {
 	z1 := endian_swap(i64.load(pos))
-	z2 := endian_swap(i64.load(i64.add(pos, 8)))
-	z3 := endian_swap(i64.load(i64.add(pos, 16)))
-	z4 := endian_swap(i64.load(i64.add(pos, 24)))
+	z2 := endian_swap(i64.load(i32.add(pos, 8:i32)))
+	z3 := endian_swap(i64.load(i32.add(pos, 16:i32)))
+	z4 := endian_swap(i64.load(i32.add(pos, 24:i32)))
 }
 function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {
 	mstore_internal(to_internal_i32ptr(x1, x2, x3, x4), y1, y2, y3, y4)
 }
-function mstore_internal(pos, y1, y2, y3, y4) {
+function mstore_internal(pos:i32, y1, y2, y3, y4) {
 	i64.store(pos, endian_swap(y1))
-	i64.store(i64.add(pos, 8), endian_swap(y2))
-	i64.store(i64.add(pos, 16), endian_swap(y3))
-	i64.store(i64.add(pos, 24), endian_swap(y4))
+	i64.store(i32.add(pos, 8:i32), endian_swap(y2))
+	i64.store(i32.add(pos, 16:i32), endian_swap(y3))
+	i64.store(i32.add(pos, 24:i32), endian_swap(y4))
 }
-function mstore_address(pos, a1, a2, a3, a4) {
+function mstore_address(pos:i32, a1, a2, a3, a4) {
 	a1, a2, a3 := u256_to_address(a1, a2, a3, a4)
 	mstore_internal(pos, 0, a1, a2, a3)
 }
@@ -1010,15 +1012,15 @@ function msize() -> z1, z2, z3, z4 {
 	unreachable()
 }
 function sload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	mstore_internal(0, x1, x2, x3, x4)
-	eth.storageLoad(0, 32)
-	z1, z2, z3, z4 := mload_internal(32)
+	mstore_internal(0:i32, x1, x2, x3, x4)
+	eth.storageLoad(0:i32, 32:i32)
+	z1, z2, z3, z4 := mload_internal(32:i32)
 }
 
 function sstore(x1, x2, x3, x4, y1, y2, y3, y4) {
-	mstore_internal(0, x1, x2, x3, x4)
-	mstore_internal(32, y1, y2, y3, y4)
-	eth.storageStore(0, 32)
+	mstore_internal(0:i32, x1, x2, x3, x4)
+	mstore_internal(32:i32, y1, y2, y3, y4)
+	eth.storageStore(0:i32, 32:i32)
 }
 
 // Needed?
@@ -1034,7 +1036,7 @@ function log0(p1, p2, p3, p4, s1, s2, s3, s4) {
 	eth.log(
 		to_internal_i32ptr(p1, p2, p3, p4),
 		u256_to_i32(s1, s2, s3, s4),
-		0, 0, 0, 0, 0
+		0:i32, 0:i32, 0:i32, 0:i32, 0:i32
 	)
 }
 function log1(
@@ -1044,9 +1046,9 @@ function log1(
 	eth.log(
 		to_internal_i32ptr(p1, p2, p3, p4),
 		u256_to_i32(s1, s2, s3, s4),
-		1,
+		1:i32,
 		to_internal_i32ptr(t1_1, t1_2, t1_3, t1_4),
-		0, 0, 0
+		0:i32, 0:i32, 0:i32
 	)
 }
 function log2(
@@ -1057,10 +1059,10 @@ function log2(
 	eth.log(
 		to_internal_i32ptr(p1, p2, p3, p4),
 		u256_to_i32(s1, s2, s3, s4),
-		2,
+		2:i32,
 		to_internal_i32ptr(t1_1, t1_2, t1_3, t1_4),
 		to_internal_i32ptr(t2_1, t2_2, t2_3, t2_4),
-		0, 0
+		0:i32, 0:i32
 	)
 }
 function log3(
@@ -1072,11 +1074,11 @@ function log3(
 	eth.log(
 		to_internal_i32ptr(p1, p2, p3, p4),
 		u256_to_i32(s1, s2, s3, s4),
-		3,
+		3:i32,
 		to_internal_i32ptr(t1_1, t1_2, t1_3, t1_4),
 		to_internal_i32ptr(t2_1, t2_2, t2_3, t2_4),
 		to_internal_i32ptr(t3_1, t3_2, t3_3, t3_4),
-		0
+		0:i32
 	)
 }
 function log4(
@@ -1089,7 +1091,7 @@ function log4(
 	eth.log(
 		to_internal_i32ptr(p1, p2, p3, p4),
 		u256_to_i32(s1, s2, s3, s4),
-		4,
+		4:i32,
 		to_internal_i32ptr(t1_1, t1_2, t1_3, t1_4),
 		to_internal_i32ptr(t2_1, t2_2, t2_3, t2_4),
 		to_internal_i32ptr(t3_1, t3_2, t3_3, t3_4),
@@ -1103,11 +1105,11 @@ function create(
 	z1, z2, z3, z4
 ) -> a1, a2, a3, a4 {
 	let v1, v2 := u256_to_u128(x1, x2, x3, x4)
-	mstore_internal(0, 0, 0, v1, v2)
+	mstore_internal(0:i32, 0, 0, v1, v2)
 
-	let r := eth.create(0, to_internal_i32ptr(y1, y2, y3, y4), u256_to_i32(z1, z2, z3, z4), 32)
-	if i64.eqz(r) {
-		a1, a2, a3, a4 := mload_internal(32)
+	let r:i32 := eth.create(0:i32, to_internal_i32ptr(y1, y2, y3, y4), u256_to_i32(z1, z2, z3, z4), 32:i32)
+	if i32.eqz(r) {
+		a1, a2, a3, a4 := mload_internal(32:i32)
 	}
 }
 function call(
@@ -1120,12 +1122,12 @@ function call(
 	g1, g2, g3, g4
 ) -> x1, x2, x3, x4 {
 	let g := u256_to_i64(a1, a2, a3, a4)
-	mstore_address(0, b1, b2, b3, b4)
+	mstore_address(0:i32, b1, b2, b3, b4)
 
 	let v1, v2 := u256_to_u128(c1, c2, c3, c4)
-	mstore_internal(32, 0, 0, v1, v2)
+	mstore_internal(32:i32, 0, 0, v1, v2)
 
-	x4 := eth.call(g, 12, 32, to_internal_i32ptr(d1, d2, d3, d4), u256_to_i32(e1, e2, e3, e4))
+	x4 := i64.extend_i32_u(eth.call(g, 12:i32, 32:i32, to_internal_i32ptr(d1, d2, d3, d4), u256_to_i32(e1, e2, e3, e4)))
 }
 function callcode(
 	a1, a2, a3, a4,
@@ -1136,18 +1138,18 @@ function callcode(
 	f1, f2, f3, f4,
 	g1, g2, g3, g4
 ) -> x1, x2, x3, x4 {
-	mstore_address(0, b1, b2, b3, b4)
+	mstore_address(0:i32, b1, b2, b3, b4)
 
 	let v1, v2 := u256_to_u128(c1, c2, c3, c4)
-	mstore_internal(32, 0, 0, v1, v2)
+	mstore_internal(32:i32, 0, 0, v1, v2)
 
-	x4 := eth.callCode(
+	x4 := i64.extend_i32_u(eth.callCode(
 		u256_to_i64(a1, a2, a3, a4),
-		12,
-		32,
+		12:i32,
+		32:i32,
 		to_internal_i32ptr(d1, d2, d3, d4),
 		u256_to_i32(e1, e2, e3, e4)
-	)
+	))
 }
 function delegatecall(
 	a1, a2, a3, a4,
@@ -1157,14 +1159,14 @@ function delegatecall(
 	e1, e2, e3, e4,
 	f1, f2, f3, f4
 ) -> x1, x2, x3, x4 {
-	mstore_address(0, b1, b2, b3, b4)
+	mstore_address(0:i32, b1, b2, b3, b4)
 
-	x4 := eth.callDelegate(
+	x4 := i64.extend_i32_u(eth.callDelegate(
 		u256_to_i64(a1, a2, a3, a4),
-		12,
+		12:i32,
 		to_internal_i32ptr(c1, c2, c3, c4),
 		u256_to_i32(d1, d2, d3, d4)
-	)
+	))
 }
 function staticcall(
 	a1, a2, a3, a4,
@@ -1174,14 +1176,14 @@ function staticcall(
 	e1, e2, e3, e4,
 	f1, f2, f3, f4
 ) -> x1, x2, x3, x4 {
-	mstore_address(0, b1, b2, b3, b4)
+	mstore_address(0:i32, b1, b2, b3, b4)
 
-	x4 := eth.callStatic(
+	x4 := i64.extend_i32_u(eth.callStatic(
 		u256_to_i64(a1, a2, a3, a4),
-		12,
+		12:i32,
 		to_internal_i32ptr(c1, c2, c3, c4),
 		u256_to_i32(d1, d2, d3, d4)
-	)
+	))
 }
 function create2(
 	a1, a2, a3, a4,
@@ -1193,9 +1195,9 @@ function create2(
 	unreachable()
 }
 function selfdestruct(a1, a2, a3, a4) {
-	mstore_address(0, a1, a2, a3, a4)
+	mstore_address(0:i32, a1, a2, a3, a4)
 	// In EVM, addresses are padded to 32 bytes, so discard the first 12.
-	eth.selfDestruct(12)
+	eth.selfDestruct(12:i32)
 }
 
 function return(x1, x2, x3, x4, y1, y2, y3, y4) {
@@ -1213,7 +1215,8 @@ function revert(x1, x2, x3, x4, y1, y2, y3, y4) {
 function invalid() {
 	unreachable()
 }
-})"};
+}
+)"};
 
 }
 
