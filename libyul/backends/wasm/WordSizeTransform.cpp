@@ -43,7 +43,11 @@ void WordSizeTransform::operator()(FunctionCall& _fc)
 {
 	if (BuiltinFunction const* fun = m_inputDialect.builtin(_fc.functionName.name))
 		if (fun->literalArguments)
+		{
+			for (Expression& arg: _fc.arguments)
+				get<Literal>(arg).type = m_defaultType;
 			return;
+		}
 
 	rewriteFunctionCallArguments(_fc.arguments);
 }
@@ -85,8 +89,13 @@ void WordSizeTransform::operator()(Block& _block)
 			{
 				VariableDeclaration& varDecl = std::get<VariableDeclaration>(_s);
 
-				// Special handling for datasize and dataoffset - they will only need one variable.
-				if (varDecl.value && holds_alternative<FunctionCall>(*varDecl.value))
+				if (!varDecl.value)
+					rewriteVarDeclList(varDecl.variables);
+				else if (holds_alternative<FunctionCall>(*varDecl.value))
+				{
+					visit(*varDecl.value);
+
+					// Special handling for datasize and dataoffset - they will only need one variable.
 					if (BuiltinFunction const* f = m_inputDialect.builtin(std::get<FunctionCall>(*varDecl.value).functionName.name))
 						if (f->literalArguments)
 						{
@@ -108,12 +117,6 @@ void WordSizeTransform::operator()(Block& _block)
 							return {std::move(ret)};
 						}
 
-				if (
-					!varDecl.value ||
-					holds_alternative<FunctionCall>(*varDecl.value)
-				)
-				{
-					if (varDecl.value) visit(*varDecl.value);
 					rewriteVarDeclList(varDecl.variables);
 					return std::nullopt;
 				}
@@ -144,8 +147,11 @@ void WordSizeTransform::operator()(Block& _block)
 				Assignment& assignment = std::get<Assignment>(_s);
 				yulAssert(assignment.value, "");
 
-				// Special handling for datasize and dataoffset - they will only need one variable.
 				if (holds_alternative<FunctionCall>(*assignment.value))
+				{
+					visit(*assignment.value);
+
+					// Special handling for datasize and dataoffset - they will only need one variable.
 					if (BuiltinFunction const* f = m_inputDialect.builtin(std::get<FunctionCall>(*assignment.value).functionName.name))
 						if (f->literalArguments)
 						{
@@ -167,9 +173,6 @@ void WordSizeTransform::operator()(Block& _block)
 							return {std::move(ret)};
 						}
 
-				if (holds_alternative<FunctionCall>(*assignment.value))
-				{
-					if (assignment.value) visit(*assignment.value);
 					rewriteIdentifierList(assignment.variableNames);
 					return std::nullopt;
 				}
