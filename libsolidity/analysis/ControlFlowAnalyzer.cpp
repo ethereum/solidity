@@ -163,7 +163,7 @@ void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const*
 	std::set<SourceLocation> unreachable;
 	util::BreadthFirstSearch<CFGNode const*>{{_exit, _revert}}.run(
 		[&](CFGNode const* _node, auto&& _addChild) {
-			if (!reachable.count(_node) && !_node->location.isEmpty())
+			if (!reachable.count(_node) && _node->location.isValid())
 				unreachable.insert(_node->location);
 			for (CFGNode const* entry: _node->entries)
 				_addChild(entry);
