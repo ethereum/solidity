@@ -112,8 +112,6 @@ wasm::Expression WasmCodeTransform::operator()(ExpressionStatement const& _state
 
 wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 {
-	bool typeConversionNeeded = false;
-
 	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
 	{
 		if (_call.functionName.name.str().substr(0, 4) == "eth.")
@@ -133,7 +131,6 @@ wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 					imp.paramTypes.emplace_back(translatedType(param));
 				m_functionsToImport[builtin->name] = std::move(imp);
 			}
-			typeConversionNeeded = true;
 		}
 		else if (builtin->literalArguments && contains(builtin->literalArguments.value(), true))
 		{
@@ -147,18 +144,10 @@ wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 			return wasm::BuiltinCall{_call.functionName.name.str(), std::move(literals)};
 		}
 		else
-		{
-			wasm::BuiltinCall call{
+			return wasm::BuiltinCall{
 				_call.functionName.name.str(),
-				injectTypeConversionIfNeeded(visit(_call.arguments), builtin->parameters)
+				visit(_call.arguments)
 			};
-			if (!builtin->returns.empty() && !builtin->returns.front().empty() && builtin->returns.front() != "i64"_yulstring)
-			{
-				yulAssert(builtin->returns.front() == "i32"_yulstring, "Invalid type " + builtin->returns.front().str());
-				call = wasm::BuiltinCall{"i64.extend_i32_u", make_vector<wasm::Expression>(std::move(call))};
-			}
-			return {std::move(call)};
-		}
 	}
 
 	// If this function returns multiple values, then the first one will
@@ -166,13 +155,7 @@ wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 	// The values have to be used right away in an assignment or variable declaration,
 	// so it is handled there.
 
-	wasm::FunctionCall funCall{_call.functionName.name.str(), visit(_call.arguments)};
-	if (typeConversionNeeded)
-		// Inject type conversion if needed on the fly. This is just a temporary measure
-		// and can be removed once we have proper types in Yul.
-		return injectTypeConversionIfNeeded(std::move(funCall));
-	else
-		return {std::move(funCall)};
+	return wasm::FunctionCall{_call.functionName.name.str(), visit(_call.arguments)};
 }
 
 wasm::Expression WasmCodeTransform::operator()(Identifier const& _identifier)
@@ -356,40 +339,6 @@ wasm::FunctionDefinition WasmCodeTransform::translateFunction(yul::FunctionDefin
 		fun.body.emplace_back(wasm::LocalVariable{_fun.returnVariables.front().name.str()});
 	}
 	return fun;
-}
-
-wasm::Expression WasmCodeTransform::injectTypeConversionIfNeeded(wasm::FunctionCall _call) const
-{
-	wasm::FunctionImport const& import = m_functionsToImport.at(YulString{_call.functionName});
-	for (size_t i = 0; i < _call.arguments.size(); ++i)
-		if (import.paramTypes.at(i) == wasm::Type::i32)
-			_call.arguments[i] = wasm::BuiltinCall{"i32.wrap_i64", make_vector<wasm::Expression>(std::move(_call.arguments[i]))};
-		else
-			yulAssert(import.paramTypes.at(i) == wasm::Type::i64, "Invalid Wasm type");
-
-	if (import.returnType && *import.returnType != wasm::Type::i64)
-	{
-		yulAssert(*import.returnType == wasm::Type::i32, "Invalid Wasm type");
-		return wasm::BuiltinCall{"i64.extend_i32_u", make_vector<wasm::Expression>(std::move(_call))};
-	}
-	return {std::move(_call)};
-}
-
-vector<wasm::Expression> WasmCodeTransform::injectTypeConversionIfNeeded(
-	vector<wasm::Expression> _arguments,
-	vector<Type> const& _parameterTypes
-) const
-{
-	for (size_t i = 0; i < _arguments.size(); ++i)
-		if (_parameterTypes.at(i) == "i32"_yulstring)
-			_arguments[i] = wasm::BuiltinCall{"i32.wrap_i64", make_vector<wasm::Expression>(std::move(_arguments[i]))};
-		else
-			yulAssert(
-				_parameterTypes.at(i).empty() || _parameterTypes.at(i) == "i64"_yulstring,
-				"Unknown type " + _parameterTypes.at(i).str()
-			);
-
-	return _arguments;
 }
 
 string WasmCodeTransform::newLabel()
