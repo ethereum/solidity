@@ -33,9 +33,9 @@ BOOST_AUTO_TEST_SUITE(SourceLocationTest)
 
 BOOST_AUTO_TEST_CASE(test_fail)
 {
-	auto const source = std::make_shared<CharStream>("lorem ipsum", "source");
-	auto const sourceA = std::make_shared<CharStream>("lorem ipsum", "sourceA");
-	auto const sourceB = std::make_shared<CharStream>("lorem ipsum", "sourceB");
+	auto const source = std::make_shared<CharStream>("", "source");
+	auto const sourceA = std::make_shared<CharStream>("", "sourceA");
+	auto const sourceB = std::make_shared<CharStream>("", "sourceB");
 
 	BOOST_CHECK(SourceLocation{} == SourceLocation{});
 	BOOST_CHECK((SourceLocation{0, 3, sourceA} != SourceLocation{0, 3, sourceB}));
