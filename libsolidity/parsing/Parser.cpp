@@ -1019,16 +1019,22 @@ ASTPointer<Mapping> Parser::parseMapping()
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Mapping);
 	expectToken(Token::LParen);
-	ASTPointer<ElementaryTypeName> keyType;
+	ASTPointer<TypeName> keyType;
 	Token token = m_scanner->currentToken();
-	if (!TokenTraits::isElementaryTypeName(token))
-		fatalParserError(string("Expected elementary type name for mapping key type"));
 	unsigned firstSize;
 	unsigned secondSize;
 	tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
-	ElementaryTypeNameToken elemTypeName(token, firstSize, secondSize);
-	keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(elemTypeName);
-	m_scanner->next();
+	if (token == Token::Identifier)
+		keyType = parseUserDefinedTypeName();
+	else if (TokenTraits::isElementaryTypeName(token))
+	{
+		keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(
+			ElementaryTypeNameToken{token, firstSize, secondSize}
+		);
+		m_scanner->next();
+	}
+	else
+		fatalParserError(string("Expected elementary type name or identifier for mapping key type"));
 	expectToken(Token::Arrow);
 	bool const allowVar = false;
 	ASTPointer<TypeName> valueType = parseTypeName(allowVar);

@@ -5,4 +5,4 @@ contract c {
 	mapping(S => uint) data;
 }
 // ----
-// ParserError: (49-50): Expected elementary type name for mapping key type
+// TypeError: (49-50): Only elementary types, contract types or enums are allowed as mapping keys.

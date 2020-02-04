@@ -59,7 +59,7 @@ TypeName = ElementaryTypeName
 
 UserDefinedTypeName = Identifier ( '.' Identifier )*
 
-Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
+Mapping = 'mapping' '(' ( ElementaryTypeName | UserDefinedTypeName ) '=>' TypeName ')'
 ArrayTypeName = TypeName '[' Expression? ']'
 FunctionTypeName = 'function' FunctionTypeParameterList ( 'internal' | 'external' | StateMutability )*
                    ( 'returns' FunctionTypeParameterList )?
