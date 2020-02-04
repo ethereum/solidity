@@ -2876,6 +2876,25 @@ void TypeChecker::endVisit(Literal const& _literal)
 	_literal.annotation().isPure = true;
 }
 
+bool TypeChecker::visit(Mapping const& _mapping)
+{
+	if (auto const* keyType = dynamic_cast<UserDefinedTypeName const*>(&_mapping.keyType()))
+	{
+		if (
+			keyType->annotation().type->category() != Type::Category::Contract &&
+			keyType->annotation().type->category() != Type::Category::Enum
+		)
+			m_errorReporter.typeError(
+				keyType->location(),
+				"Only elementary types, contract types or enums are allowed as mapping keys."
+			);
+	}
+	else
+		solAssert(dynamic_cast<ElementaryTypeName const*>(&_mapping.keyType()), "");
+	return true;
+}
+
+
 bool TypeChecker::contractDependenciesAreCyclic(
 	ContractDefinition const& _contract,
 	std::set<ContractDefinition const*> const& _seenContracts

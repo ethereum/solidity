@@ -1,7 +1,7 @@
 ### 0.6.3 (unreleased)
 
 Language Features:
-
+ * Allow contract types and enums as keys for mappings.
 
 
 Compiler Features:

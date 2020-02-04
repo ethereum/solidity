@@ -1152,18 +1152,18 @@ public:
 	Mapping(
 		int64_t _id,
 		SourceLocation const& _location,
-		ASTPointer<ElementaryTypeName> const& _keyType,
+		ASTPointer<TypeName> const& _keyType,
 		ASTPointer<TypeName> const& _valueType
 	):
 		TypeName(_id, _location), m_keyType(_keyType), m_valueType(_valueType) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	ElementaryTypeName const& keyType() const { return *m_keyType; }
+	TypeName const& keyType() const { return *m_keyType; }
 	TypeName const& valueType() const { return *m_valueType; }
 
 private:
-	ASTPointer<ElementaryTypeName> m_keyType;
+	ASTPointer<TypeName> m_keyType;
 	ASTPointer<TypeName> m_valueType;
 };
 
