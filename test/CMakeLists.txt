@@ -2,6 +2,8 @@ set(sources
     boostTest.cpp
     Common.cpp
     Common.h
+    CommonSyntaxTest.cpp
+    CommonSyntaxTest.h
     EVMHost.cpp
     EVMHost.h
     ExecutionFramework.cpp
@@ -127,6 +129,8 @@ set(libyul_sources
     libyul/ObjectParser.cpp
     libyul/Parser.cpp
     libyul/StackReuseCodegen.cpp
+    libyul/SyntaxTest.h
+    libyul/SyntaxTest.cpp
     libyul/YulInterpreterTest.cpp
     libyul/YulInterpreterTest.h
     libyul/YulOptimizerTest.cpp
