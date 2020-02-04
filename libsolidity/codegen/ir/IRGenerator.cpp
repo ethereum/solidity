@@ -159,21 +159,70 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 	solAssert(!_varDecl.isConstant(), "");
 	solAssert(_varDecl.isStateVariable(), "");
 
-	solUnimplementedAssert(type->isValueType(), "");
-
-	return m_context.functionCollector()->createFunction(functionName, [&]() {
-		pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
-
-		return Whiskers(R"(
-			function <functionName>() -> rval {
-				rval := <readStorage>(<slot>)
+	if (auto const* mappingType = dynamic_cast<MappingType const*>(type))
+		return m_context.functionCollector()->createFunction(functionName, [&]() {
+			pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
+			solAssert(slot_offset.second == 0, "");
+			FunctionType funType(_varDecl);
+			solUnimplementedAssert(funType.returnParameterTypes().size() == 1, "");
+			TypePointer returnType = funType.returnParameterTypes().front();
+			unsigned num_keys = 0;
+			stringstream indexAccesses;
+			string slot = m_context.newYulVariable();
+			do
+			{
+				solUnimplementedAssert(
+					mappingType->keyType()->sizeOnStack() == 1,
+					"Multi-slot mapping key unimplemented - might not be a problem"
+				);
+				indexAccesses <<
+					slot <<
+					" := " <<
+					m_utils.mappingIndexAccessFunction(*mappingType, *mappingType->keyType()) <<
+					"(" <<
+					slot;
+				if (mappingType->keyType()->sizeOnStack() > 0)
+					indexAccesses <<
+						", " <<
+						suffixedVariableNameList("key", num_keys, num_keys + mappingType->keyType()->sizeOnStack());
+				indexAccesses << ")\n";
+				num_keys += mappingType->keyType()->sizeOnStack();
 			}
-		)")
-		("functionName", functionName)
-		("readStorage", m_utils.readFromStorage(*type, slot_offset.second, false))
-		("slot", slot_offset.first.str())
-		.render();
-	});
+			while ((mappingType = dynamic_cast<MappingType const*>(mappingType->valueType())));
+
+			return Whiskers(R"(
+				function <functionName>(<keys>) -> rval {
+					let <slot> := <base>
+					<indexAccesses>
+					rval := <readStorage>(<slot>)
+				}
+			)")
+			("functionName", functionName)
+			("keys", suffixedVariableNameList("key", 0, num_keys))
+			("readStorage", m_utils.readFromStorage(*returnType, 0, false))
+			("indexAccesses", indexAccesses.str())
+			("slot", slot)
+			("base", slot_offset.first.str())
+			.render();
+		});
+	else
+	{
+		solUnimplementedAssert(type->isValueType(), "");
+
+		return m_context.functionCollector()->createFunction(functionName, [&]() {
+			pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
+
+			return Whiskers(R"(
+				function <functionName>() -> rval {
+					rval := <readStorage>(<slot>)
+				}
+			)")
+			("functionName", functionName)
+			("readStorage", m_utils.readFromStorage(*type, slot_offset.second, false))
+			("slot", slot_offset.first.str())
+			.render();
+		});
+	}
 }
 
 string IRGenerator::constructorCode(ContractDefinition const& _contract)
