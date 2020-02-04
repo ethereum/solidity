@@ -259,7 +259,13 @@ public:
 	/// Returns true if the type can be stored as a value (as opposed to a reference) on the stack,
 	/// i.e. it behaves differently in lvalue context and in value context.
 	virtual bool isValueType() const { return false; }
-	virtual unsigned sizeOnStack() const { return 1; }
+	std::vector<std::string> const& stackSlotNames() const
+	{
+		if (!m_stackSlotNames)
+			m_stackSlotNames = makeStackSlotNames();
+		return *m_stackSlotNames;
+	}
+	unsigned sizeOnStack() const { return stackSlotNames().size(); }
 	/// If it is possible to initialize such a value in memory by just writing zeros
 	/// of the size memoryHeadSize().
 	virtual bool hasSimpleZeroValueInMemory() const { return true; }
@@ -336,9 +342,12 @@ protected:
 	{
 		return MemberList::MemberMap();
 	}
+	virtual std::vector<std::string> makeStackSlotNames() const { return {{}}; }
+
 
 	/// List of member types (parameterised by scape), will be lazy-initialized.
 	mutable std::map<ContractDefinition const*, std::unique_ptr<MemberList>> m_members;
+	mutable std::optional<std::vector<std::string>> m_stackSlotNames;
 };
 
 /**
@@ -562,7 +571,6 @@ public:
 
 	bool canBeStored() const override { return false; }
 	bool canLiveOutsideStorage() const override { return false; }
-	unsigned sizeOnStack() const override { return 0; }
 
 	std::string toString(bool) const override;
 	TypePointer mobileType() const override;
@@ -571,6 +579,8 @@ public:
 
 	std::string const& value() const { return m_value; }
 
+protected:
+	std::vector<std::string> makeStackSlotNames() const override { return {}; }
 private:
 	std::string m_value;
 };
@@ -725,7 +735,6 @@ public:
 	bool isDynamicallyEncoded() const override;
 	u256 storageSize() const override;
 	bool canLiveOutsideStorage() const override { return m_baseType->canLiveOutsideStorage(); }
-	unsigned sizeOnStack() const override;
 	std::string toString(bool _short) const override;
 	std::string canonicalName() const override;
 	std::string signatureInExternalFunction(bool _structsByName) const override;
@@ -756,6 +765,8 @@ public:
 
 	void clearCache() const override;
 
+protected:
+	std::vector<std::string> makeStackSlotNames() const override;
 private:
 	/// String is interpreted as a subtype of Bytes.
 	enum class ArrayKind { Ordinary, Bytes, String };
@@ -785,7 +796,6 @@ public:
 	bool isDynamicallySized() const override { return true; }
 	bool isDynamicallyEncoded() const override { return true; }
 	bool canLiveOutsideStorage() const override { return m_arrayType.canLiveOutsideStorage(); }
-	unsigned sizeOnStack() const override { return 2; }
 	std::string toString(bool _short) const override;
 
 	/// @returns true if this is valid to be stored in calldata
@@ -796,6 +806,8 @@ public:
 
 	std::unique_ptr<ReferenceType> copyForLocation(DataLocation, bool) const override { solAssert(false, ""); }
 
+protected:
+	std::vector<std::string> makeStackSlotNames() const override { return {"offset", "length"}; }
 private:
 	ArrayType const& m_arrayType;
 };
@@ -825,7 +837,6 @@ public:
 	unsigned storageBytes() const override { solAssert(!isSuper(), ""); return 20; }
 	bool leftAligned() const override { solAssert(!isSuper(), ""); return false; }
 	bool canLiveOutsideStorage() const override { return !isSuper(); }
-	unsigned sizeOnStack() const override { return m_super ? 0 : 1; }
 	bool isValueType() const override { return !isSuper(); }
 	std::string toString(bool _short) const override;
 	std::string canonicalName() const override;
@@ -856,7 +867,14 @@ public:
 	/// @returns a list of all state variables (including inherited) of the contract and their
 	/// offsets in storage.
 	std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> stateVariables() const;
-
+protected:
+	std::vector<std::string> makeStackSlotNames() const override
+	{
+		if (m_super)
+			return {};
+		else
+			return {{}};
+	}
 private:
 	ContractDefinition const& m_contract;
 	/// If true, this is a special "super" type of m_contract containing only members that m_contract inherited
@@ -989,7 +1007,6 @@ public:
 	bool canBeStored() const override { return false; }
 	u256 storageSize() const override;
 	bool canLiveOutsideStorage() const override { return false; }
-	unsigned sizeOnStack() const override;
 	bool hasSimpleZeroValueInMemory() const override { return false; }
 	TypePointer mobileType() const override;
 	/// Converts components to their temporary types and performs some wildcard matching.
@@ -997,6 +1014,8 @@ public:
 
 	std::vector<TypePointer> const& components() const { return m_components; }
 
+protected:
+	std::vector<std::string> makeStackSlotNames() const override;
 private:
 	std::vector<TypePointer> const m_components;
 };
@@ -1158,7 +1177,6 @@ public:
 	unsigned storageBytes() const override;
 	bool isValueType() const override { return true; }
 	bool canLiveOutsideStorage() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
-	unsigned sizeOnStack() const override;
 	bool hasSimpleZeroValueInMemory() const override { return false; }
 	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	TypePointer encodingType() const override;
@@ -1252,6 +1270,8 @@ public:
 	/// @param _bound if true, the function type is set to be bound.
 	FunctionTypePointer asCallableFunction(bool _inLibrary, bool _bound = false) const;
 
+protected:
+	std::vector<std::string> makeStackSlotNames() const override;
 private:
 	static TypePointers parseElementaryTypeVector(strings const& _types);
 
@@ -1321,12 +1341,13 @@ public:
 	bool canBeStored() const override { return false; }
 	u256 storageSize() const override;
 	bool canLiveOutsideStorage() const override { return false; }
-	unsigned sizeOnStack() const override;
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string toString(bool _short) const override { return "type(" + m_actualType->toString(_short) + ")"; }
 	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+protected:
+	std::vector<std::string> makeStackSlotNames() const override;
 private:
 	TypePointer m_actualType;
 };
@@ -1346,12 +1367,13 @@ public:
 	bool canBeStored() const override { return false; }
 	u256 storageSize() const override;
 	bool canLiveOutsideStorage() const override { return false; }
-	unsigned sizeOnStack() const override { return 0; }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 	std::string toString(bool _short) const override;
 
+protected:
+	std::vector<std::string> makeStackSlotNames() const override { return {}; }
 private:
 	TypePointers m_parameterTypes;
 };
@@ -1374,11 +1396,12 @@ public:
 	bool canBeStored() const override { return false; }
 	bool canLiveOutsideStorage() const override { return true; }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
-	unsigned sizeOnStack() const override { return 0; }
 	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 
 	std::string toString(bool _short) const override;
 
+protected:
+	std::vector<std::string> makeStackSlotNames() const override { return {}; }
 private:
 	SourceUnit const& m_sourceUnit;
 };
@@ -1413,7 +1436,6 @@ public:
 	bool canBeStored() const override { return false; }
 	bool canLiveOutsideStorage() const override { return true; }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
-	unsigned sizeOnStack() const override { return 0; }
 	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 
 	std::string toString(bool _short) const override;
@@ -1422,6 +1444,8 @@ public:
 
 	TypePointer typeArgument() const;
 
+protected:
+	std::vector<std::string> makeStackSlotNames() const override { return {}; }
 private:
 	Kind m_kind;
 	/// Contract type used for contract metadata magic.
@@ -1445,7 +1469,6 @@ public:
 	bool canBeStored() const override { return false; }
 	bool canLiveOutsideStorage() const override { return false; }
 	bool isValueType() const override { return true; }
-	unsigned sizeOnStack() const override { return 1; }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string toString(bool) const override { return "inaccessible dynamic type"; }
 	TypePointer decodingType() const override;
