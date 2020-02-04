@@ -93,7 +93,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 			);
 		return 0;
 	}
-	else if (_fun == "drop"_yulstring)
+	else if (_fun == "drop"_yulstring || _fun == "nop"_yulstring)
 		return {};
 	else if (_fun == "i32.wrap_i64"_yulstring)
 		return arg.at(0) & uint32_t(-1);

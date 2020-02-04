@@ -94,6 +94,7 @@ WasmDialect::WasmDialect()
 	// We could introduce "i32.drop".
 	addFunction("drop", {i64}, {});
 
+	addFunction("nop", {}, {});
 	addFunction("unreachable", {}, {}, false);
 	m_functions["unreachable"_yulstring].sideEffects.invalidatesStorage = false;
 	m_functions["unreachable"_yulstring].sideEffects.invalidatesMemory = false;

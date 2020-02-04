@@ -311,7 +311,11 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 	bytes args = visit(_call.arguments);
 
 	if (_call.functionName == "unreachable")
-			return toBytes(Opcode::Unreachable);
+		return toBytes(Opcode::Unreachable);
+	else if (_call.functionName == "nop")
+		return toBytes(Opcode::Nop);
+	else if (_call.functionName == "drop")
+		return toBytes(Opcode::Drop);
 	else
 	{
 		yulAssert(builtins.count(_call.functionName), "Builtin " + _call.functionName + " not found");
