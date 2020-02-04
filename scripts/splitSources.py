@@ -27,8 +27,8 @@ def extractSourceName(line):
 # writes the following source into a file named sourceName
 def writeSourceToFile(lines):
     filePath, srcName = extractSourceName(lines[0])
-    # print "sourceName is", srcName
-    # print "filePath is", filePath
+    # print("sourceName is ", srcName)
+    # print("filePath is", filePath)
     if filePath != False:
         os.system("mkdir -p " + filePath)
     f = open(srcName, mode='a+', encoding='utf8')

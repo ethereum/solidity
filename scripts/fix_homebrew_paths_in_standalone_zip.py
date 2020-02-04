@@ -49,7 +49,9 @@ def readDependencies(fname):
         for line in o.stdout:
             if line[0] == '\t':
                 library = line.split(' ', 1)[0][1:]
-                if library.startswith("/usr/local/lib") or library.startswith("/usr/local/opt") or library.startswith("/Users/"):
+                if (library.startswith("/usr/local/lib") or
+                        library.startswith("/usr/local/opt") or
+                        library.startswith("/Users/")):
                     if (os.path.basename(library) != os.path.basename(fname)):
                         command = "install_name_tool -change " + \
                             library + " @executable_path/./" + \
