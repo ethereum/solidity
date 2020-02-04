@@ -76,8 +76,7 @@ struct SourceLocation
 			source &&
 			0 <= start &&
 			start <= end &&
-			// in some cases (json import) source->source() can be empty
-			(source->source().empty() || end <= int(source->source().length()));
+			end <= int(source->source().length());
 	}
 
 	std::string text() const
@@ -125,7 +124,7 @@ inline std::ostream& operator<<(std::ostream& _out, SourceLocation const& _locat
 	if (_location.source)
 		_out << _location.source->name();
 
-	_out << "[" << _location.start << "," << _location.end << ")";
+	_out << "[" << _location.start << "," << _location.end << "]";
 
 	return _out;
 }
