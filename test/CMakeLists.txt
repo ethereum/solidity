@@ -143,6 +143,7 @@ set(yul_phaser_sources
     yulPhaser/Common.cpp
     yulPhaser/CommonTest.cpp
     yulPhaser/Chromosome.cpp
+    yulPhaser/FitnessMetrics.cpp
     yulPhaser/Population.cpp
     yulPhaser/Program.cpp
     yulPhaser/SimulationRNG.cpp
