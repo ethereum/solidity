@@ -2,7 +2,7 @@
 Units and Globally Available Variables
 **************************************
 
-.. index:: wei, finney, szabo, ether
+.. index:: von, finney, szabo, lat
 
 PlatON Units
 ===========
