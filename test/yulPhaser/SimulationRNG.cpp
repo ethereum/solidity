@@ -31,6 +31,57 @@ namespace solidity::phaser::test
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(RandomTest)
 
+BOOST_AUTO_TEST_CASE(bernoulliTrial_should_produce_samples_with_right_expected_value_and_variance)
+{
+	SimulationRNG::reset(1);
+	constexpr size_t numSamples = 10000;
+	constexpr double successProbability = 0.4;
+	constexpr double relativeTolerance = 0.05;
+
+	// For bernoulli distribution with success probability p: EX = p, VarX = p(1 - p)
+	constexpr double expectedValue = successProbability;
+	constexpr double variance = successProbability * (1 - successProbability);
+
+	vector<uint32_t> samples;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples.push_back(static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability)));
+
+	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+}
+
+BOOST_AUTO_TEST_CASE(bernoulliTrial_can_be_reset)
+{
+	constexpr size_t numSamples = 10;
+	constexpr double successProbability = 0.4;
+
+	SimulationRNG::reset(1);
+	vector<uint32_t> samples1;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples1.push_back(static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability)));
+
+	vector<uint32_t> samples2;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples2.push_back(static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability)));
+
+	SimulationRNG::reset(1);
+	vector<uint32_t> samples3;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples3.push_back(static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability)));
+
+	SimulationRNG::reset(2);
+	vector<uint32_t> samples4;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples4.push_back(static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability)));
+
+	BOOST_TEST(samples1 != samples2);
+	BOOST_TEST(samples1 == samples3);
+	BOOST_TEST(samples1 != samples4);
+	BOOST_TEST(samples2 != samples3);
+	BOOST_TEST(samples2 != samples4);
+	BOOST_TEST(samples3 != samples4);
+}
+
 BOOST_AUTO_TEST_CASE(uniformInt_returns_different_values_when_called_multiple_times)
 {
 	SimulationRNG::reset(1);

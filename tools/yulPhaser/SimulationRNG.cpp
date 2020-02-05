@@ -17,6 +17,7 @@
 
 #include <tools/yulPhaser/SimulationRNG.h>
 
+#include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/binomial_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 
@@ -26,6 +27,13 @@ using namespace solidity;
 using namespace solidity::phaser;
 
 thread_local boost::random::mt19937 SimulationRNG::s_generator(SimulationRNG::generateSeed());
+
+bool SimulationRNG::bernoulliTrial(double _successProbability)
+{
+	boost::random::bernoulli_distribution<> distribution(_successProbability);
+
+	return static_cast<bool>(distribution(s_generator));
+}
 
 uint32_t SimulationRNG::uniformInt(uint32_t _min, uint32_t _max)
 {

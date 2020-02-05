@@ -37,6 +37,7 @@ namespace solidity::phaser
 class SimulationRNG
 {
 public:
+	static bool bernoulliTrial(double _successProbability);
 	static uint32_t uniformInt(uint32_t _min, uint32_t _max);
 	static uint32_t binomialInt(uint32_t _numTrials, double _successProbability);
 
