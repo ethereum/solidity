@@ -73,7 +73,11 @@ class Population
 public:
 	static constexpr size_t MaxChromosomeLength = 30;
 
-	explicit Population(Program _program, std::vector<Chromosome> const& _chromosomes = {});
+	explicit Population(Program _program, std::vector<Chromosome> _chromosomes = {}):
+		Population(
+			std::move(_program),
+			chromosomesToIndividuals(std::move(_chromosomes))
+		) {}
 
 	static Population makeRandom(
 		Program _program,
@@ -113,6 +117,9 @@ private:
 	static void randomizeWorstChromosomes(
 		std::vector<Individual>& _individuals,
 		size_t _count
+	);
+	static std::vector<Individual> chromosomesToIndividuals(
+		std::vector<Chromosome> _chromosomes
 	);
 
 	Program m_program;

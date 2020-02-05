@@ -63,13 +63,6 @@ bool phaser::isFitter(Individual const& a, Individual const& b)
 	);
 }
 
-Population::Population(Program _program, vector<Chromosome> const& _chromosomes):
-	m_program{move(_program)}
-{
-	for (auto const& chromosome: _chromosomes)
-		m_individuals.push_back({chromosome});
-}
-
 Population Population::makeRandom(
 	Program _program,
 	size_t _size,
@@ -174,4 +167,15 @@ void Population::randomizeWorstChromosomes(
 	{
 		*individual = {Chromosome::makeRandom(binomialChromosomeLength(MaxChromosomeLength))};
 	}
+}
+
+vector<Individual> Population::chromosomesToIndividuals(
+	vector<Chromosome> _chromosomes
+)
+{
+	vector<Individual> individuals;
+	for (auto& chromosome: _chromosomes)
+		individuals.push_back({move(chromosome)});
+
+	return individuals;
 }
