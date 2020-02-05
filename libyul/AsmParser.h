@@ -64,10 +64,9 @@ protected:
 	template <class T> T createWithLocation() const
 	{
 		T r;
-		r.location = location();
+		r.location = currentLocation();
 		return r;
 	}
-	langutil::SourceLocation location() const { return {position(), endPosition(), m_scanner->charStream()}; }
 
 	Block parseBlock();
 	Statement parseStatement();

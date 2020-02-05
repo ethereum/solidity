@@ -681,6 +681,7 @@ void Scanner::scanToken()
 	}
 	while (token == Token::Whitespace);
 	m_tokens[NextNext].location.end = sourcePos();
+	m_tokens[NextNext].location.source = m_source;
 	m_tokens[NextNext].token = token;
 	m_tokens[NextNext].extendedTokenInfo = make_tuple(m, n);
 }

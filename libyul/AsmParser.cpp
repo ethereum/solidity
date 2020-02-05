@@ -88,7 +88,7 @@ Block Parser::parseBlock()
 	expectToken(Token::LBrace);
 	while (currentToken() != Token::RBrace)
 		block.statements.emplace_back(parseStatement());
-	block.location.end = endPosition();
+	block.location.end = currentLocation().end;
 	advance();
 	return block;
 }
@@ -151,7 +151,7 @@ Statement Parser::parseStatement()
 		{
 			Statement stmt{createWithLocation<Leave>()};
 			if (!m_insideFunction)
-				m_errorReporter.syntaxError(location(), "Keyword \"leave\" can only be used inside a function.");
+				m_errorReporter.syntaxError(currentLocation(), "Keyword \"leave\" can only be used inside a function.");
 			m_scanner->next();
 			return stmt;
 		}
@@ -328,13 +328,13 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		YulString literal{currentLiteral()};
 		if (m_dialect.builtin(literal))
 		{
-			Identifier identifier{location(), literal};
+			Identifier identifier{currentLocation(), literal};
 			advance();
 			expectToken(Token::LParen, false);
 			return FunctionCall{identifier.location, identifier, {}};
 		}
 		else
-			ret = Identifier{location(), literal};
+			ret = Identifier{currentLocation(), literal};
 		advance();
 		break;
 	}
@@ -363,7 +363,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		}
 
 		Literal literal{
-			location(),
+			currentLocation(),
 			kind,
 			YulString{currentLiteral()},
 			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
@@ -372,7 +372,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		if (currentToken() == Token::Colon)
 		{
 			expectToken(Token::Colon);
-			literal.location.end = endPosition();
+			literal.location.end = currentLocation().end;
 			literal.type = expectAsmIdentifier();
 		}
 
@@ -415,7 +415,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 
 	if (m_currentForLoopComponent == ForLoopComponent::ForLoopPre)
 		m_errorReporter.syntaxError(
-			location(),
+			currentLocation(),
 			"Functions cannot be defined inside a for-loop init block."
 		);
 
@@ -481,7 +481,7 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 			ret.arguments.emplace_back(parseExpression());
 		}
 	}
-	ret.location.end = endPosition();
+	ret.location.end = currentLocation().end;
 	expectToken(Token::RParen);
 	return ret;
 }
@@ -494,7 +494,7 @@ TypedName Parser::parseTypedName()
 	if (currentToken() == Token::Colon)
 	{
 		expectToken(Token::Colon);
-		typedName.location.end = endPosition();
+		typedName.location.end = currentLocation().end;
 		typedName.type = expectAsmIdentifier();
 	}
 	else
@@ -530,13 +530,13 @@ void Parser::checkBreakContinuePosition(string const& _which)
 	switch (m_currentForLoopComponent)
 	{
 	case ForLoopComponent::None:
-		m_errorReporter.syntaxError(location(), "Keyword \"" + _which + "\" needs to be inside a for-loop body.");
+		m_errorReporter.syntaxError(currentLocation(), "Keyword \"" + _which + "\" needs to be inside a for-loop body.");
 		break;
 	case ForLoopComponent::ForLoopPre:
-		m_errorReporter.syntaxError(location(), "Keyword \"" + _which + "\" in for-loop init block is not allowed.");
+		m_errorReporter.syntaxError(currentLocation(), "Keyword \"" + _which + "\" in for-loop init block is not allowed.");
 		break;
 	case ForLoopComponent::ForLoopPost:
-		m_errorReporter.syntaxError(location(), "Keyword \"" + _which + "\" in for-loop post block is not allowed.");
+		m_errorReporter.syntaxError(currentLocation(), "Keyword \"" + _which + "\" in for-loop post block is not allowed.");
 		break;
 	case ForLoopComponent::ForLoopBody:
 		break;
