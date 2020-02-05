@@ -23,6 +23,8 @@ add_executable(yul-phaser
 	yulPhaser/FitnessMetrics.cpp
 	yulPhaser/Chromosome.h
 	yulPhaser/Chromosome.cpp
+	yulPhaser/PairSelections.h
+	yulPhaser/PairSelections.cpp
 	yulPhaser/Selections.h
 	yulPhaser/Selections.cpp
 	yulPhaser/Program.h
