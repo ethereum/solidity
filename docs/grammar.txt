@@ -96,6 +96,7 @@ Expression
   | IndexRangeAccess
   | MemberAccess
   | FunctionCall
+  | Expression '{' NameValueList '}'
   | '(' Expression ')'
   | ('!' | '~' | 'delete' | '++' | '--' | '+' | '-') Expression
   | Expression '**' Expression

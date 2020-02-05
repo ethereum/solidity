@@ -1768,7 +1768,7 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 			nodeFactory.markEndPosition();
 			expectToken(Token::RBrace);
 
-			expression = parseLeftHandSideExpression(nodeFactory.createNode<FunctionCallOptions>(expression, optionList.first, optionList.second));
+			expression = nodeFactory.createNode<FunctionCallOptions>(expression, optionList.first, optionList.second);
 			break;
 		}
 		default:
