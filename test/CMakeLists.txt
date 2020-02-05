@@ -144,6 +144,7 @@ set(yul_phaser_sources
     yulPhaser/CommonTest.cpp
     yulPhaser/Chromosome.cpp
     yulPhaser/FitnessMetrics.cpp
+    yulPhaser/GeneticAlgorithms.cpp
     yulPhaser/Population.cpp
     yulPhaser/Program.cpp
     yulPhaser/SimulationRNG.cpp
@@ -153,6 +154,7 @@ set(yul_phaser_sources
     # unnecessary duplication. Create a library or find a way to reuse the list in both places.
     ../tools/yulPhaser/Chromosome.cpp
     ../tools/yulPhaser/FitnessMetrics.cpp
+    ../tools/yulPhaser/GeneticAlgorithms.cpp
     ../tools/yulPhaser/Population.cpp
     ../tools/yulPhaser/Program.cpp
     ../tools/yulPhaser/SimulationRNG.cpp
