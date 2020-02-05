@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <vector>
 
 namespace solidity::phaser
@@ -47,6 +48,74 @@ public:
 	virtual ~Selection() = default;
 
 	virtual std::vector<size_t> materialise(size_t _poolSize) const = 0;
+};
+
+/**
+ * A selection that selects a contiguous slice of the container. Start and end of this part are
+ * specified as percentages of its size.
+ */
+class RangeSelection: public Selection
+{
+public:
+	explicit RangeSelection(double _startPercent = 0.0, double _endPercent = 1.0):
+		m_startPercent(_startPercent),
+		m_endPercent(_endPercent)
+	{
+		assert(0 <= m_startPercent && m_startPercent <= m_endPercent && m_endPercent <= 1.0);
+	}
+
+	std::vector<size_t> materialise(size_t _poolSize) const override;
+
+private:
+	double m_startPercent;
+	double m_endPercent;
+};
+
+/**
+ * A selection that selects elements at specific, fixed positions indicated by a repeating "pattern".
+ * If the positions in the pattern exceed the size of the container, they are capped at the maximum
+ * available position. Always selects as many elements as the size of the container multiplied by
+ * @a _selectionSize (unless the container is empty).
+ *
+ * E.g. if the pattern is {0, 9} and collection size is 5, the selection will materialise into
+ * {0, 4, 0, 4, 0}. If the size is 3, it will be {0, 2, 0}.
+ */
+class MosaicSelection: public Selection
+{
+public:
+	explicit MosaicSelection(std::vector<size_t> _pattern, double _selectionSize = 1.0):
+		m_pattern(move(_pattern)),
+		m_selectionSize(_selectionSize)
+	{
+		assert(m_pattern.size() > 0 || _selectionSize == 0.0);
+	}
+
+	std::vector<size_t> materialise(size_t _poolSize) const override;
+
+private:
+	std::vector<size_t> m_pattern;
+	double m_selectionSize;
+};
+
+/**
+ * A selection that randomly selects elements from a container. The resulting set of indices may
+ * contain duplicates and is different on each call to @a materialise(). Always selects as many
+ * elements as the size of the container multiplied by @a _selectionSize (unless the container is
+ * empty).
+ */
+class RandomSelection: public Selection
+{
+public:
+	explicit RandomSelection(double _selectionSize):
+		m_selectionSize(_selectionSize)
+	{
+		assert(_selectionSize >= 0);
+	}
+
+	std::vector<size_t> materialise(size_t _poolSize) const override;
+
+private:
+	double m_selectionSize;
 };
 
 }

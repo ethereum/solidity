@@ -147,6 +147,7 @@ set(yul_phaser_sources
     yulPhaser/GeneticAlgorithms.cpp
     yulPhaser/Population.cpp
     yulPhaser/Program.cpp
+    yulPhaser/Selections.cpp
     yulPhaser/SimulationRNG.cpp
 
     # FIXME: yul-phaser is not a library so I can't just add it to target_link_libraries().
@@ -157,6 +158,7 @@ set(yul_phaser_sources
     ../tools/yulPhaser/GeneticAlgorithms.cpp
     ../tools/yulPhaser/Population.cpp
     ../tools/yulPhaser/Program.cpp
+    ../tools/yulPhaser/Selections.cpp
     ../tools/yulPhaser/SimulationRNG.cpp
 )
 detect_stray_source_files("${yul_phaser_sources}" "yulPhaser/")
