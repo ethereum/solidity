@@ -71,7 +71,7 @@ CharStream loadSource(string const& _sourcePath)
 
 void runAlgorithm(string const& _sourcePath)
 {
-	constexpr size_t populationSize = 10;
+	constexpr size_t populationSize = 20;
 	constexpr size_t minChromosomeLength = 12;
 	constexpr size_t maxChromosomeLength = 30;
 
