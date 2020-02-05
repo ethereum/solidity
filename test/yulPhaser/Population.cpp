@@ -20,6 +20,7 @@
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Population.h>
 #include <tools/yulPhaser/Program.h>
+#include <tools/yulPhaser/Selections.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/SSAReverser.h>
@@ -220,6 +221,41 @@ BOOST_FIXTURE_TEST_CASE(plus_operator_should_add_two_populations, PopulationFixt
 		Population(m_fitnessMetric, {Chromosome("g"), Chromosome("h"), Chromosome("iI")}),
 		Population(m_fitnessMetric, {Chromosome("ac"), Chromosome("cx"), Chromosome("g"), Chromosome("h"), Chromosome("iI")})
 	);
+}
+
+BOOST_FIXTURE_TEST_CASE(select_should_return_population_containing_individuals_indicated_by_selection, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("a"), Chromosome("c"), Chromosome("g"), Chromosome("h")});
+	RangeSelection selection(0.25, 0.75);
+	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{1, 2}));
+
+	BOOST_TEST(
+		population.select(selection) ==
+		Population(m_fitnessMetric, {population.individuals()[1].chromosome, population.individuals()[2].chromosome})
+	);
+}
+
+BOOST_FIXTURE_TEST_CASE(select_should_include_duplicates_if_selection_contains_duplicates, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("a"), Chromosome("c")});
+	MosaicSelection selection({0, 1}, 2.0);
+	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{0, 1, 0, 1}));
+
+	BOOST_TEST(population.select(selection) == Population(m_fitnessMetric, {
+		population.individuals()[0].chromosome,
+		population.individuals()[1].chromosome,
+		population.individuals()[0].chromosome,
+		population.individuals()[1].chromosome,
+	}));
+}
+
+BOOST_FIXTURE_TEST_CASE(select_should_return_empty_population_if_selection_is_empty, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("a"), Chromosome("c")});
+	RangeSelection selection(0.0, 0.0);
+	assert(selection.materialise(population.individuals().size()).empty());
+
+	BOOST_TEST(population.select(selection).individuals().empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

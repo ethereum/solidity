@@ -39,6 +39,8 @@ solidity::phaser::Population operator+(solidity::phaser::Population _a, solidity
 namespace solidity::phaser
 {
 
+class Selection;
+
 /**
  * Information describing the state of an individual member of the population during the course
  * of the genetic algorithm.
@@ -102,6 +104,7 @@ public:
 	);
 
 	void run(std::optional<size_t> _numRounds, std::ostream& _outputStream);
+	Population select(Selection const& _selection) const;
 	friend Population (::operator+)(Population _a, Population _b);
 
 	std::shared_ptr<FitnessMetric const> fitnessMetric() const { return m_fitnessMetric; }

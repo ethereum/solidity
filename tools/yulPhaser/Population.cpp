@@ -17,6 +17,7 @@
 
 #include <tools/yulPhaser/Population.h>
 
+#include <tools/yulPhaser/Selections.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
@@ -93,6 +94,15 @@ void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 		_outputStream << "---------- ROUND " << round << " ----------" << endl;
 		_outputStream << *this;
 	}
+}
+
+Population Population::select(Selection const& _selection) const
+{
+	vector<Individual> selectedIndividuals;
+	for (size_t i: _selection.materialise(m_individuals.size()))
+		selectedIndividuals.emplace_back(m_individuals[i]);
+
+	return Population(m_fitnessMetric, selectedIndividuals);
 }
 
 Population operator+(Population _a, Population _b)
