@@ -112,4 +112,57 @@ private:
 	Options m_options;
 };
 
+/**
+ * A generational, elitist genetic algorithm that replaces the population by mutating and crossing
+ * over chromosomes from the elite.
+ *
+ * The elite consists of individuals not included in the crossover and mutation pools.
+ * The crossover operator used is @a randomPointCrossover. The mutation operator is randomly chosen
+ * from three possibilities: @a geneRandomisation, @a geneDeletion or @a geneAddition (with
+ * configurable probabilities). Each mutation also has a parameter determining the chance of a gene
+ * being affected by it.
+ */
+class GenerationalElitistWithExclusivePools: public GeneticAlgorithm
+{
+public:
+	struct Options
+	{
+		double mutationPoolSize;          ///< Percentage of population to regenerate using mutations in each round.
+		double crossoverPoolSize;         ///< Percentage of population to regenerate using crossover in each round.
+		double randomisationChance;       ///< The chance of choosing @a geneRandomisation as the mutation to perform
+		double deletionVsAdditionChance;  ///< The chance of choosing @a geneDeletion as the mutation if randomisation was not chosen.
+		double percentGenesToRandomise;   ///< The chance of any given gene being mutated in gene randomisation.
+		double percentGenesToAddOrDelete; ///< The chance of a gene being added (or deleted) in gene addition (or deletion).
+
+		bool isValid() const
+		{
+			return (
+				0 <= mutationPoolSize && mutationPoolSize <= 1.0 &&
+				0 <= crossoverPoolSize && crossoverPoolSize <= 1.0 &&
+				0 <= randomisationChance && randomisationChance <= 1.0 &&
+				0 <= deletionVsAdditionChance && deletionVsAdditionChance <= 1.0 &&
+				0 <= percentGenesToRandomise && percentGenesToRandomise <= 1.0 &&
+				0 <= percentGenesToAddOrDelete && percentGenesToAddOrDelete <= 1.0 &&
+				mutationPoolSize + crossoverPoolSize <= 1.0
+			);
+		}
+	};
+
+	GenerationalElitistWithExclusivePools(
+		Population _initialPopulation,
+		std::ostream& _outputStream,
+		Options const& _options
+	):
+		GeneticAlgorithm(_initialPopulation, _outputStream),
+		m_options(_options)
+	{
+		assert(_options.isValid());
+	}
+
+	void runNextRound() override;
+
+private:
+	Options m_options;
+};
+
 }
