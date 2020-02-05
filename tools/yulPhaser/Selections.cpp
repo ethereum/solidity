@@ -16,3 +16,33 @@
 */
 
 #include <tools/yulPhaser/Selections.h>
+
+#include <tools/yulPhaser/Random.h>
+
+#include <cmath>
+
+using namespace std;
+using namespace solidity::phaser;
+
+vector<size_t> RangeSelection::materialize(size_t _poolSize) const
+{
+	size_t beginIndex = static_cast<size_t>(round(_poolSize * m_startPercent));
+	size_t endIndex = static_cast<size_t>(round(_poolSize * m_endPercent));
+	vector<size_t> selection;
+
+	for (size_t i = beginIndex; i < endIndex; ++i)
+		selection.push_back(i);
+
+	return selection;
+}
+
+vector<size_t> RandomSelection::materialize(size_t _poolSize) const
+{
+	size_t count = static_cast<size_t>(round(_poolSize * m_selectionSize));
+
+	vector<size_t> selection;
+	for (size_t i = 0; i < count; ++i)
+		selection.push_back(uniformRandomInt(0, _poolSize - 1));
+
+	return selection;
+}

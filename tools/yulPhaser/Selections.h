@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <vector>
 
 namespace solidity::phaser
@@ -31,6 +32,38 @@ public:
 	virtual ~Selection() = default;
 
 	virtual std::vector<size_t> materialize(size_t _poolSize) const = 0;
+};
+
+class RangeSelection: public Selection
+{
+public:
+	explicit RangeSelection(double _startPercent = 0.0, double _endPercent = 1.0):
+		m_startPercent(_startPercent),
+		m_endPercent(_endPercent)
+	{
+		assert(0 <= m_startPercent && m_startPercent <= m_endPercent && m_endPercent <= 1.0);
+	}
+
+	std::vector<size_t> materialize(size_t _poolSize) const override;
+
+private:
+	double m_startPercent;
+	double m_endPercent;
+};
+
+class RandomSelection: public Selection
+{
+public:
+	explicit RandomSelection(double _selectionSize):
+		m_selectionSize(_selectionSize)
+	{
+		assert(_selectionSize >= 0);
+	}
+
+	std::vector<size_t> materialize(size_t _poolSize) const override;
+
+private:
+	double m_selectionSize;
 };
 
 }
