@@ -278,7 +278,8 @@ std::pair<ContractKind, bool> Parser::parseContractKind()
 		kind = ContractKind::Library;
 		break;
 	default:
-		solAssert(false, "Invalid contract kind.");
+		parserError("Expected keyword \"contract\", \"interface\" or \"library\".");
+		return std::make_pair(ContractKind::Contract, abstract);
 	}
 	m_scanner->next();
 	return std::make_pair(kind, abstract);

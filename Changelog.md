@@ -10,6 +10,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Parser: Fix an internal error for ``abstract`` without ``contract``.
 
 
 
