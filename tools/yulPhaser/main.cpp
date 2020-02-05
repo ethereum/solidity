@@ -41,7 +41,8 @@ namespace po = boost::program_options;
 
 enum class Algorithm
 {
-	Random
+	Random,
+	GEWEP
 };
 
 istream& operator>>(istream& inputStream, Algorithm& algorithm)
@@ -51,6 +52,8 @@ istream& operator>>(istream& inputStream, Algorithm& algorithm)
 
 	if (value == "random")
 		algorithm = Algorithm::Random;
+	else if (value == "GEWEP")
+		algorithm = Algorithm::GEWEP;
 	else
 		inputStream.setstate(ios_base::failbit);
 
@@ -61,6 +64,8 @@ ostream& operator<<(ostream& outputStream, Algorithm algorithm)
 {
 	if (algorithm == Algorithm::Random)
 		outputStream << "random";
+	else if (algorithm == Algorithm::GEWEP)
+		outputStream << "GEWEP";
 	else
 		outputStream.setstate(ios_base::failbit);
 
@@ -128,6 +133,23 @@ void runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 
 			break;
 		}
+		case Algorithm::GEWEP:
+		{
+			GenerationalElitistWithExclusivePools(
+				population,
+				cout,
+				{
+					/* mutationPoolSize = */ 0.25,
+					/* crossoverPoolSize = */ 0.25,
+					/* randomisationChance = */ 0.9,
+					/* deletionVsAdditionChance = */ 0.5,
+					/* percentGenesToRandomise = */ 0.1,
+					/* percentGenesToAddOrDelete = */ 0.1,
+				}
+			).run();
+
+			break;
+		}
 	}
 }
 
@@ -153,7 +175,7 @@ CommandLineParsingResult parseCommandLine(int argc, char** argv)
 		("seed", po::value<uint32_t>(), "Seed for the random number generator")
 		(
 			"algorithm",
-			po::value<Algorithm>()->default_value(Algorithm::Random),
+			po::value<Algorithm>()->default_value(Algorithm::GEWEP),
 			"Algorithm"
 		)
 	;
