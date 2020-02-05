@@ -121,6 +121,7 @@ private:
 	static std::vector<Individual> chromosomesToIndividuals(
 		std::vector<Chromosome> _chromosomes
 	);
+	static std::vector<Individual> sortedIndividuals(std::vector<Individual> _individuals);
 
 	Program m_program;
 	std::vector<Individual> m_individuals;
