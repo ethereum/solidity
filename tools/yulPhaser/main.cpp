@@ -71,6 +71,7 @@ CharStream loadSource(string const& _sourcePath)
 
 void runAlgorithm(string const& _sourcePath)
 {
+	constexpr size_t populationSize = 10;
 	constexpr size_t minChromosomeLength = 12;
 	constexpr size_t maxChromosomeLength = 30;
 
@@ -78,7 +79,7 @@ void runAlgorithm(string const& _sourcePath)
 	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode), 5);
 	auto population = Population::makeRandom(
 		fitnessMetric,
-		10,
+		populationSize,
 		minChromosomeLength,
 		maxChromosomeLength
 	);
@@ -86,7 +87,7 @@ void runAlgorithm(string const& _sourcePath)
 		population,
 		cout,
 		{
-			/* elitePoolSize = */ 0.5,
+			/* elitePoolSize = */ 1.0 / populationSize,
 			/* minChromosomeLength = */ minChromosomeLength,
 			/* maxChromosomeLength = */ maxChromosomeLength,
 		}
