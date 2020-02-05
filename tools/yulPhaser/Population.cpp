@@ -80,8 +80,8 @@ void Population::doMutation()
 
 void Population::doSelection()
 {
-	m_individuals = sortIndividuals(move(m_individuals));
 	randomizeWorstChromosomes(*m_fitnessMetric, m_individuals, m_individuals.size() / 2);
+	m_individuals = sortIndividuals(move(m_individuals));
 }
 
 void Population::randomizeWorstChromosomes(

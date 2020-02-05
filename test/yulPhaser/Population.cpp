@@ -76,12 +76,31 @@ BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_compute_fitness)
 	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceStream));
 	Population population(fitnessMetric, chromosomes);
 
-	BOOST_TEST(population.individuals().size() == 2);
-	BOOST_TEST(population.individuals()[0].chromosome == chromosomes[0]);
-	BOOST_TEST(population.individuals()[1].chromosome == chromosomes[1]);
+	vector<Individual> const& individuals = population.individuals();
 
-	BOOST_TEST(population.individuals()[0].fitness == fitnessMetric->evaluate(population.individuals()[0].chromosome));
-	BOOST_TEST(population.individuals()[1].fitness == fitnessMetric->evaluate(population.individuals()[1].chromosome));
+	BOOST_TEST(individuals.size() == 2);
+	BOOST_TEST(individuals[0].fitness == fitnessMetric->evaluate(individuals[0].chromosome));
+	BOOST_TEST(individuals[1].fitness == fitnessMetric->evaluate(individuals[1].chromosome));
+	BOOST_TEST(individuals[0].fitness <= individuals[0].fitness);
+
+	size_t fitness[2] = {
+		fitnessMetric->evaluate(chromosomes[0]),
+		fitnessMetric->evaluate(chromosomes[1])
+	};
+	BOOST_TEST((
+		// The order depends on fitness. We're getting random chromosomes so we have to be prepared
+		// for either one being first.
+		(
+			individuals[0].chromosome == chromosomes[0] &&
+			individuals[1].chromosome == chromosomes[1] &&
+			fitness[0] <= fitness[1]
+		) ||
+		(
+			individuals[0].chromosome == chromosomes[1] &&
+			individuals[1].chromosome == chromosomes[0] &&
+			fitness[0] >= fitness[1]
+		)
+	));
 }
 
 BOOST_AUTO_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes)

@@ -76,7 +76,7 @@ public:
 private:
 	explicit Population(std::shared_ptr<FitnessMetric const> _fitnessMetric, std::vector<Individual> _individuals):
 		m_fitnessMetric(std::move(_fitnessMetric)),
-		m_individuals{std::move(_individuals)} {}
+		m_individuals{sortIndividuals(std::move(_individuals))} {}
 
 	void doMutation();
 	void doSelection();
