@@ -46,7 +46,7 @@ namespace solidity::phaser
 struct Individual
 {
 	Chromosome chromosome;
-	std::optional<size_t> fitness = std::nullopt;
+	size_t fitness;
 
 	bool operator==(Individual const& _other) const { return fitness == _other.fitness && chromosome == _other.chromosome; }
 	bool operator!=(Individual const& _other) const { return !(*this == _other); }
@@ -67,6 +67,7 @@ bool isFitter(Individual const& a, Individual const& b);
  * An individual is a sequence of optimiser steps represented by a @a Chromosome instance.
  * Individuals are stored together with a fitness value that can be computed by the fitness metric
  * associated with the population.
+ * The fitness is computed using the metric as soon as an individual is inserted into the population.
  */
 class Population
 {
@@ -78,8 +79,8 @@ public:
 		std::vector<Chromosome> _chromosomes = {}
 	):
 		Population(
-			std::move(_fitnessMetric),
-			chromosomesToIndividuals(std::move(_chromosomes))
+			_fitnessMetric,
+			chromosomesToIndividuals(*_fitnessMetric, std::move(_chromosomes))
 		) {}
 
 	static Population makeRandom(
@@ -114,14 +115,15 @@ private:
 		m_individuals{std::move(_individuals)} {}
 
 	void doMutation();
-	void doEvaluation();
 	void doSelection();
 
 	static void randomizeWorstChromosomes(
+		FitnessMetric const& _fitnessMetric,
 		std::vector<Individual>& _individuals,
 		size_t _count
 	);
 	static std::vector<Individual> chromosomesToIndividuals(
+		FitnessMetric const& _fitnessMetric,
 		std::vector<Chromosome> _chromosomes
 	);
 	static std::vector<Individual> sortedIndividuals(std::vector<Individual> _individuals);

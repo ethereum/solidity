@@ -42,19 +42,6 @@ using namespace boost::unit_test::framework;
 namespace solidity::phaser::test
 {
 
-namespace
-{
-	bool fitnessNotSet(Individual const& individual)
-	{
-		return !individual.fitness.has_value();
-	}
-
-	bool fitnessSet(Individual const& individual)
-	{
-		return individual.fitness.has_value();
-	}
-}
-
 class PopulationFixture
 {
 protected:
@@ -94,7 +81,7 @@ BOOST_AUTO_TEST_CASE(isFitter_should_return_false_for_identical_individuals)
 	BOOST_TEST(!isFitter(Individual{Chromosome("acT"), 0}, Individual{Chromosome("acT"), 0}));
 }
 
-BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_and_compute_fitness, PopulationFixture)
 {
 	vector<Chromosome> chromosomes = {
 		Chromosome::makeRandom(5),
@@ -106,8 +93,8 @@ BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitn
 	BOOST_TEST(population.individuals()[0].chromosome == chromosomes[0]);
 	BOOST_TEST(population.individuals()[1].chromosome == chromosomes[1]);
 
-	auto fitnessNotSet = [](auto const& individual){ return !individual.fitness.has_value(); };
-	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
+	BOOST_TEST(population.individuals()[0].fitness == m_fitnessMetric->evaluate(population.individuals()[0].chromosome));
+	BOOST_TEST(population.individuals()[1].fitness == m_fitnessMetric->evaluate(population.individuals()[1].chromosome));
 }
 
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_generator, PopulationFixture)
@@ -181,22 +168,13 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromoso
 	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
 }
 
-BOOST_FIXTURE_TEST_CASE(makeRandom_should_not_compute_fitness, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(makeRandom_should_compute_fitness, PopulationFixture)
 {
 	auto population = Population::makeRandom(m_fitnessMetric, 3, 5, 10);
 
-	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
-}
-
-BOOST_FIXTURE_TEST_CASE(run_should_evaluate_fitness, PopulationFixture)
-{
-	stringstream output;
-	auto population = Population::makeRandom(m_fitnessMetric, 5, 5, 10);
-	assert(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
-
-	population.run(1, output);
-
-	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessSet));
+	BOOST_TEST(population.individuals()[0].fitness == m_fitnessMetric->evaluate(population.individuals()[0].chromosome));
+	BOOST_TEST(population.individuals()[1].fitness == m_fitnessMetric->evaluate(population.individuals()[1].chromosome));
+	BOOST_TEST(population.individuals()[2].fitness == m_fitnessMetric->evaluate(population.individuals()[2].chromosome));
 }
 
 BOOST_FIXTURE_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse, PopulationFixture)
@@ -220,12 +198,10 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse, Po
 	{
 		population.run(1, output);
 		BOOST_TEST(population.individuals().size() == 5);
-		BOOST_TEST(fitnessSet(population.individuals()[0]));
-		BOOST_TEST(fitnessSet(population.individuals()[1]));
 
 		size_t currentTopFitness[2] = {
-			population.individuals()[0].fitness.value(),
-			population.individuals()[1].fitness.value(),
+			population.individuals()[0].fitness,
+			population.individuals()[1].fitness,
 		};
 		BOOST_TEST(currentTopFitness[0] <= initialTopFitness[0]);
 		BOOST_TEST(currentTopFitness[1] <= initialTopFitness[1]);

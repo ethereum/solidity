@@ -41,11 +41,7 @@ ostream& operator<<(ostream& _stream, Population const& _population);
 
 ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 {
-	_stream << "Fitness: ";
-	if (_individual.fitness.has_value())
-		_stream << _individual.fitness.value();
-	else
-		_stream << "<NONE>";
+	_stream << "Fitness: " << _individual.fitness;
 	_stream << ", optimisations: " << _individual.chromosome;
 
 	return _stream;
@@ -53,12 +49,10 @@ ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 
 bool phaser::isFitter(Individual const& a, Individual const& b)
 {
-	assert(a.fitness.has_value() && b.fitness.has_value());
-
 	return (
-		(a.fitness.value() < b.fitness.value()) ||
-		(a.fitness.value() == b.fitness.value() && a.chromosome.length() < b.chromosome.length()) ||
-		(a.fitness.value() == b.fitness.value() && a.chromosome.length() == b.chromosome.length() && toString(a.chromosome) < toString(b.chromosome))
+		(a.fitness < b.fitness) ||
+		(a.fitness == b.fitness && a.chromosome.length() < b.chromosome.length()) ||
+		(a.fitness == b.fitness && a.chromosome.length() == b.chromosome.length() && toString(a.chromosome) < toString(b.chromosome))
 	);
 }
 
@@ -68,11 +62,11 @@ Population Population::makeRandom(
 	function<size_t()> _chromosomeLengthGenerator
 )
 {
-	vector<Individual> individuals;
+	vector<Chromosome> chromosomes;
 	for (size_t i = 0; i < _size; ++i)
-		individuals.push_back({Chromosome::makeRandom(_chromosomeLengthGenerator())});
+		chromosomes.push_back(Chromosome::makeRandom(_chromosomeLengthGenerator()));
 
-	return Population(move(_fitnessMetric), move(individuals));
+	return Population(move(_fitnessMetric), move(chromosomes));
 }
 
 Population Population::makeRandom(
@@ -91,12 +85,10 @@ Population Population::makeRandom(
 
 void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 {
-	doEvaluation();
 	for (size_t round = 0; !_numRounds.has_value() || round < _numRounds.value(); ++round)
 	{
 		doMutation();
 		doSelection();
-		doEvaluation();
 
 		_outputStream << "---------- ROUND " << round << " ----------" << endl;
 		_outputStream << *this;
@@ -134,20 +126,14 @@ void Population::doMutation()
 	// TODO: Implement mutation and crossover
 }
 
-void Population::doEvaluation()
-{
-	for (auto& individual: m_individuals)
-		if (!individual.fitness.has_value())
-			individual.fitness = m_fitnessMetric->evaluate(individual.chromosome);
-}
-
 void Population::doSelection()
 {
 	m_individuals = sortedIndividuals(move(m_individuals));
-	randomizeWorstChromosomes(m_individuals, m_individuals.size() / 2);
+	randomizeWorstChromosomes(*m_fitnessMetric, m_individuals, m_individuals.size() / 2);
 }
 
 void Population::randomizeWorstChromosomes(
+	FitnessMetric const& _fitnessMetric,
 	vector<Individual>& _individuals,
 	size_t _count
 )
@@ -158,25 +144,29 @@ void Population::randomizeWorstChromosomes(
 	auto individual = _individuals.begin() + (_individuals.size() - _count);
 	for (; individual != _individuals.end(); ++individual)
 	{
-		*individual = {Chromosome::makeRandom(binomialChromosomeLength(MaxChromosomeLength))};
+		auto chromosome = Chromosome::makeRandom(binomialChromosomeLength(MaxChromosomeLength));
+		size_t fitness = _fitnessMetric.evaluate(chromosome);
+		*individual = {move(chromosome), fitness};
 	}
 }
 
 vector<Individual> Population::chromosomesToIndividuals(
+	FitnessMetric const& _fitnessMetric,
 	vector<Chromosome> _chromosomes
 )
 {
 	vector<Individual> individuals;
 	for (auto& chromosome: _chromosomes)
-		individuals.push_back({move(chromosome)});
+	{
+		size_t fitness = _fitnessMetric.evaluate(chromosome);
+		individuals.push_back({move(chromosome), fitness});
+	}
 
 	return individuals;
 }
 
 vector<Individual> Population::sortedIndividuals(vector<Individual> _individuals)
 {
-	assert(all_of(_individuals.begin(), _individuals.end(), [](auto& i){ return i.fitness.has_value(); }));
-
 	sort(_individuals.begin(), _individuals.end(), isFitter);
 	return _individuals;
 }
