@@ -65,8 +65,7 @@ bool isFitter(Individual const& a, Individual const& b);
  * and selecting the best ones for the next round.
  *
  * An individual is a sequence of optimiser steps represented by a @a Chromosome instance.
- * Individuals are stored together with a fitness value that can be computed by the fitness metric
- * associated with the population.
+ * Individuals are always ordered by their fitness (based on @_fitnessMetric and @a isFitter()).
  * The fitness is computed using the metric as soon as an individual is inserted into the population.
  */
 class Population
@@ -112,7 +111,7 @@ public:
 private:
 	explicit Population(std::shared_ptr<FitnessMetric const> _fitnessMetric, std::vector<Individual> _individuals):
 		m_fitnessMetric(std::move(_fitnessMetric)),
-		m_individuals{std::move(_individuals)} {}
+		m_individuals{sortedIndividuals(std::move(_individuals))} {}
 
 	void doMutation();
 	void doSelection();

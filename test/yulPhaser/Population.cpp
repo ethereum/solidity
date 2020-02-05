@@ -81,20 +81,24 @@ BOOST_AUTO_TEST_CASE(isFitter_should_return_false_for_identical_individuals)
 	BOOST_TEST(!isFitter(Individual{Chromosome("acT"), 0}, Individual{Chromosome("acT"), 0}));
 }
 
-BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_and_compute_fitness, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_compute_fitness_and_sort_chromosomes, PopulationFixture)
 {
 	vector<Chromosome> chromosomes = {
 		Chromosome::makeRandom(5),
+		Chromosome::makeRandom(15),
 		Chromosome::makeRandom(10),
 	};
 	Population population(m_fitnessMetric, chromosomes);
 
-	BOOST_TEST(population.individuals().size() == 2);
-	BOOST_TEST(population.individuals()[0].chromosome == chromosomes[0]);
-	BOOST_TEST(population.individuals()[1].chromosome == chromosomes[1]);
+	vector<Individual> const& individuals = population.individuals();
 
-	BOOST_TEST(population.individuals()[0].fitness == m_fitnessMetric->evaluate(population.individuals()[0].chromosome));
-	BOOST_TEST(population.individuals()[1].fitness == m_fitnessMetric->evaluate(population.individuals()[1].chromosome));
+	BOOST_TEST(individuals.size() == 3);
+	BOOST_TEST(individuals[0].fitness == 5);
+	BOOST_TEST(individuals[1].fitness == 10);
+	BOOST_TEST(individuals[2].fitness == 15);
+	BOOST_TEST(individuals[0].chromosome == chromosomes[0]);
+	BOOST_TEST(individuals[1].chromosome == chromosomes[2]);
+	BOOST_TEST(individuals[2].chromosome == chromosomes[1]);
 }
 
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_generator, PopulationFixture)
