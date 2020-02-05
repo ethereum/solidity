@@ -101,14 +101,7 @@ void Population::doEvaluation()
 
 void Population::doSelection()
 {
-	assert(all_of(m_individuals.begin(), m_individuals.end(), [](auto& i){ return i.fitness.has_value(); }));
-
-	sort(
-		m_individuals.begin(),
-		m_individuals.end(),
-		[](auto const& a, auto const& b){ return a.fitness.value() < b.fitness.value(); }
-	);
-
+	m_individuals = sortIndividuals(move(m_individuals));
 	randomizeWorstChromosomes(m_individuals, m_individuals.size() / 2);
 }
 
@@ -136,4 +129,17 @@ vector<Individual> Population::chromosomesToIndividuals(
 		individuals.push_back({move(chromosome)});
 
 	return individuals;
+}
+
+vector<Individual> Population::sortIndividuals(vector<Individual> _individuals)
+{
+	assert(all_of(_individuals.begin(), _individuals.end(), [](auto& i){ return i.fitness.has_value(); }));
+
+	sort(
+		_individuals.begin(),
+		_individuals.end(),
+		[](auto const& a, auto const& b){ return a.fitness.value() < b.fitness.value(); }
+	);
+
+	return _individuals;
 }

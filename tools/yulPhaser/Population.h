@@ -86,6 +86,7 @@ private:
 	std::vector<Individual> chromosomesToIndividuals(
 		std::vector<Chromosome> _chromosomes
 	);
+	std::vector<Individual> sortIndividuals(std::vector<Individual> _individuals);
 
 	Program m_program;
 	std::vector<Individual> m_individuals;
