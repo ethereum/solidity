@@ -60,18 +60,11 @@ public:
 protected:
 	using ElementaryOperation = std::variant<Literal, Identifier, FunctionCall>;
 
-	/// Creates an inline assembly node with the given source location.
-	template <class T> T createWithLocation(langutil::SourceLocation const& _loc = {}) const
+	/// Creates an inline assembly node with the current source location.
+	template <class T> T createWithLocation() const
 	{
 		T r;
-		r.location = _loc;
-		if (!r.location.hasText())
-		{
-			r.location.start = position();
-			r.location.end = endPosition();
-		}
-		if (!r.location.source)
-			r.location.source = m_scanner->charStream();
+		r.location = location();
 		return r;
 	}
 	langutil::SourceLocation location() const { return {position(), endPosition(), m_scanner->charStream()}; }

@@ -206,8 +206,8 @@ Statement Parser::parseStatement()
 			elementary = parseElementaryOperation();
 		}
 
-		Assignment assignment =
-			createWithLocation<Assignment>(std::get<Identifier>(elementary).location);
+		Assignment assignment;
+		assignment.location = std::get<Identifier>(elementary).location;
 		assignment.variableNames = std::move(variableNames);
 
 		expectToken(Token::AssemblyAssign);
