@@ -65,6 +65,40 @@ void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 	}
 }
 
+Population Population::select(Selection const& _selection) const
+{
+	vector<Individual> selectedIndividuals;
+	for (size_t i: _selection.materialize(m_individuals.size()))
+		selectedIndividuals.emplace_back(m_individuals[i]);
+
+	return Population(m_fitnessMetric, selectedIndividuals);
+}
+
+Population Population::mutate(Selection const& _selection, function<Mutation> _mutation) const
+{
+	vector<Individual> mutatedIndividuals;
+	for (size_t i: _selection.materialize(m_individuals.size()))
+		mutatedIndividuals.emplace_back(_mutation(m_individuals[i].chromosome), *m_fitnessMetric);
+
+	return Population(m_fitnessMetric, mutatedIndividuals);
+}
+
+Population Population::crossover(PairSelection const& _selection, function<Crossover> _crossover) const
+{
+	vector<Individual> crossedIndividuals;
+	for (auto const& [i, j]: _selection.materialize(m_individuals.size()))
+	{
+		auto [childChromosome1, childChromosome2] = _crossover(
+			m_individuals[i].chromosome,
+			m_individuals[j].chromosome
+		);
+		crossedIndividuals.emplace_back(move(childChromosome1), *m_fitnessMetric);
+		crossedIndividuals.emplace_back(move(childChromosome2), *m_fitnessMetric);
+	}
+
+	return Population(m_fitnessMetric, crossedIndividuals);
+}
+
 Population operator+(Population _a, Population _b)
 {
 	// This operator is meant to be used only with populations sharing the same metric (and, to make
