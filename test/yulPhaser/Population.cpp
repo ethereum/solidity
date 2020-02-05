@@ -58,35 +58,7 @@ namespace
 class PopulationFixture
 {
 protected:
-	PopulationFixture():
-		m_sourceStream(SampleSourceCode, ""),
-		m_program(Program::load(m_sourceStream)) {}
-
-	static constexpr char SampleSourceCode[] =
-		"{\n"
-		"    let factor := 13\n"
-		"    {\n"
-		"        if factor\n"
-		"        {\n"
-		"            let variable := add(1, 2)\n"
-		"        }\n"
-		"        let result := factor\n"
-		"    }\n"
-		"    let something := 6\n"
-		"    {\n"
-		"        {\n"
-		"            {\n"
-		"                let value := 15\n"
-		"            }\n"
-		"        }\n"
-		"    }\n"
-		"    let something_else := mul(mul(something, 1), add(factor, 0))\n"
-		"    if 1 { let x := 1 }\n"
-		"    if 0 { let y := 2 }\n"
-		"}\n";
-
-	CharStream m_sourceStream;
-	Program m_program;
+	shared_ptr<FitnessMetric> m_fitnessMetric = make_shared<ChromosomeLengthMetric>();
 };
 
 BOOST_AUTO_TEST_SUITE(Phaser)
@@ -128,7 +100,7 @@ BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitn
 		Chromosome::makeRandom(5),
 		Chromosome::makeRandom(10),
 	};
-	Population population(m_program, chromosomes);
+	Population population(m_fitnessMetric, chromosomes);
 
 	BOOST_TEST(population.individuals().size() == 2);
 	BOOST_TEST(population.individuals()[0].chromosome == chromosomes[0]);
@@ -145,7 +117,7 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_
 	assert(chromosomeCount % maxLength == 0);
 
 	auto nextLength = [counter = 0, maxLength]() mutable { return counter++ % maxLength; };
-	auto population = Population::makeRandom(m_program, chromosomeCount, nextLength);
+	auto population = Population::makeRandom(m_fitnessMetric, chromosomeCount, nextLength);
 
 	// We can't rely on the order since the population sorts its chromosomes immediately but
 	// we can check the number of occurrences of each length.
@@ -161,7 +133,7 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_
 
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_range, PopulationFixture)
 {
-	auto population = Population::makeRandom(m_program, 100, 5, 10);
+	auto population = Population::makeRandom(m_fitnessMetric, 100, 5, 10);
 	BOOST_TEST(all_of(
 		population.individuals().begin(),
 		population.individuals().end(),
@@ -177,7 +149,7 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_use_random_chromosome_length, Populati
 	constexpr int maxLength = 10;
 	constexpr double relativeTolerance = 0.05;
 
-	auto population = Population::makeRandom(m_program, populationSize, minLength, maxLength);
+	auto population = Population::makeRandom(m_fitnessMetric, populationSize, minLength, maxLength);
 	vector<size_t> samples = chromosomeLengths(population);
 
 	const double expectedValue = (maxLength + minLength) / 2.0;
@@ -195,7 +167,7 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromoso
 	constexpr double relativeTolerance = 0.01;
 
 	map<string, size_t> stepIndices = enumerateOptmisationSteps();
-	auto population = Population::makeRandom(m_program, populationSize, chromosomeLength, chromosomeLength);
+	auto population = Population::makeRandom(m_fitnessMetric, populationSize, chromosomeLength, chromosomeLength);
 
 	vector<size_t> samples;
 	for (auto& individual: population.individuals())
@@ -211,7 +183,7 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromoso
 
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_not_compute_fitness, PopulationFixture)
 {
-	auto population = Population::makeRandom(m_program, 3, 5, 10);
+	auto population = Population::makeRandom(m_fitnessMetric, 3, 5, 10);
 
 	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 }
@@ -219,7 +191,7 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_not_compute_fitness, PopulationFixture
 BOOST_FIXTURE_TEST_CASE(run_should_evaluate_fitness, PopulationFixture)
 {
 	stringstream output;
-	auto population = Population::makeRandom(m_program, 5, 5, 10);
+	auto population = Population::makeRandom(m_fitnessMetric, 5, 5, 10);
 	assert(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 
 	population.run(1, output);
@@ -237,11 +209,11 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse, Po
 		Chromosome(vector<string>{UnusedPruner::name}),
 		Chromosome(vector<string>{StructuralSimplifier::name, BlockFlattener::name}),
 	};
-	Population population(m_program, chromosomes);
+	Population population(m_fitnessMetric, chromosomes);
 
 	size_t initialTopFitness[2] = {
-		Population::measureFitness(chromosomes[0], m_program),
-		Population::measureFitness(chromosomes[1], m_program),
+		m_fitnessMetric->evaluate(chromosomes[0]),
+		m_fitnessMetric->evaluate(chromosomes[1]),
 	};
 
 	for (int i = 0; i < 6; ++i)
@@ -264,9 +236,9 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse, Po
 BOOST_FIXTURE_TEST_CASE(plus_operator_should_add_two_populations, PopulationFixture)
 {
 	BOOST_CHECK_EQUAL(
-		Population(m_program, {Chromosome("ac"), Chromosome("cx")}) +
-		Population(m_program, {Chromosome("g"), Chromosome("h"), Chromosome("iI")}),
-		Population(m_program, {Chromosome("ac"), Chromosome("cx"), Chromosome("g"), Chromosome("h"), Chromosome("iI")})
+		Population(m_fitnessMetric, {Chromosome("ac"), Chromosome("cx")}) +
+		Population(m_fitnessMetric, {Chromosome("g"), Chromosome("h"), Chromosome("iI")}),
+		Population(m_fitnessMetric, {Chromosome("ac"), Chromosome("cx"), Chromosome("g"), Chromosome("h"), Chromosome("iI")})
 	);
 }
 

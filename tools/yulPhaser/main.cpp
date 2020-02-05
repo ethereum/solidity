@@ -17,6 +17,7 @@
 
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/Population.h>
+#include <tools/yulPhaser/FitnessMetrics.h>
 #include <tools/yulPhaser/Program.h>
 #include <tools/yulPhaser/SimulationRNG.h>
 
@@ -71,8 +72,9 @@ CharStream loadSource(string const& _sourcePath)
 void runAlgorithm(string const& _sourcePath)
 {
 	CharStream sourceCode = loadSource(_sourcePath);
+	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode));
 	auto population = Population::makeRandom(
-		Program::load(sourceCode),
+		fitnessMetric,
 		10,
 		bind(Population::binomialChromosomeLength, Population::MaxChromosomeLength)
 	);

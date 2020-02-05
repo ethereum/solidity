@@ -18,7 +18,7 @@
 #pragma once
 
 #include <tools/yulPhaser/Chromosome.h>
-#include <tools/yulPhaser/Program.h>
+#include <tools/yulPhaser/FitnessMetrics.h>
 #include <tools/yulPhaser/SimulationRNG.h>
 
 #include <optional>
@@ -64,28 +64,31 @@ bool isFitter(Individual const& a, Individual const& b);
  * Each round of the algorithm involves mutating existing individuals, evaluating their fitness
  * and selecting the best ones for the next round.
  *
- * An individual is a sequence of optimiser steps represented by a @a Chromosome instance. The whole
- * population is associated with a fixed Yul program. By applying the steps to the @a Program
- * instance the class can compute fitness of the individual.
+ * An individual is a sequence of optimiser steps represented by a @a Chromosome instance.
+ * Individuals are stored together with a fitness value that can be computed by the fitness metric
+ * associated with the population.
  */
 class Population
 {
 public:
 	static constexpr size_t MaxChromosomeLength = 30;
 
-	explicit Population(Program _program, std::vector<Chromosome> _chromosomes = {}):
+	explicit Population(
+		std::shared_ptr<FitnessMetric const> _fitnessMetric,
+		std::vector<Chromosome> _chromosomes = {}
+	):
 		Population(
-			std::move(_program),
+			std::move(_fitnessMetric),
 			chromosomesToIndividuals(std::move(_chromosomes))
 		) {}
 
 	static Population makeRandom(
-		Program _program,
+		std::shared_ptr<FitnessMetric const> _fitnessMetric,
 		size_t _size,
 		std::function<size_t()> _chromosomeLengthGenerator
 	);
 	static Population makeRandom(
-		Program _program,
+		std::shared_ptr<FitnessMetric const> _fitnessMetric,
 		size_t _size,
 		size_t _minChromosomeLength,
 		size_t _maxChromosomeLength
@@ -94,11 +97,11 @@ public:
 	void run(std::optional<size_t> _numRounds, std::ostream& _outputStream);
 	friend Population (::operator+)(Population _a, Population _b);
 
+	std::shared_ptr<FitnessMetric const> fitnessMetric() const { return m_fitnessMetric; }
 	std::vector<Individual> const& individuals() const { return m_individuals; }
 
 	static size_t uniformChromosomeLength(size_t _min, size_t _max) { return SimulationRNG::uniformInt(_min, _max); }
 	static size_t binomialChromosomeLength(size_t _max) { return SimulationRNG::binomialInt(_max, 0.5); }
-	static size_t measureFitness(Chromosome const& _chromosome, Program const& _program);
 
 	bool operator==(Population const& _other) const;
 	bool operator!=(Population const& _other) const { return !(*this == _other); }
@@ -106,8 +109,8 @@ public:
 	friend std::ostream& operator<<(std::ostream& _stream, Population const& _population);
 
 private:
-	explicit Population(Program _program, std::vector<Individual> _individuals):
-		m_program{std::move(_program)},
+	explicit Population(std::shared_ptr<FitnessMetric const> _fitnessMetric, std::vector<Individual> _individuals):
+		m_fitnessMetric(std::move(_fitnessMetric)),
 		m_individuals{std::move(_individuals)} {}
 
 	void doMutation();
@@ -123,7 +126,7 @@ private:
 	);
 	static std::vector<Individual> sortedIndividuals(std::vector<Individual> _individuals);
 
-	Program m_program;
+	std::shared_ptr<FitnessMetric const> m_fitnessMetric;
 	std::vector<Individual> m_individuals;
 };
 

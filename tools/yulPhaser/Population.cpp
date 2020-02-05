@@ -17,7 +17,6 @@
 
 #include <tools/yulPhaser/Population.h>
 
-#include <tools/yulPhaser/Program.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
@@ -64,7 +63,7 @@ bool phaser::isFitter(Individual const& a, Individual const& b)
 }
 
 Population Population::makeRandom(
-	Program _program,
+	shared_ptr<FitnessMetric const> _fitnessMetric,
 	size_t _size,
 	function<size_t()> _chromosomeLengthGenerator
 )
@@ -73,28 +72,21 @@ Population Population::makeRandom(
 	for (size_t i = 0; i < _size; ++i)
 		individuals.push_back({Chromosome::makeRandom(_chromosomeLengthGenerator())});
 
-	return Population(move(_program), individuals);
+	return Population(move(_fitnessMetric), move(individuals));
 }
 
 Population Population::makeRandom(
-	Program _program,
+	shared_ptr<FitnessMetric const> _fitnessMetric,
 	size_t _size,
 	size_t _minChromosomeLength,
 	size_t _maxChromosomeLength
 )
 {
 	return makeRandom(
-		move(_program),
+		move(_fitnessMetric),
 		_size,
 		std::bind(uniformChromosomeLength, _minChromosomeLength, _maxChromosomeLength)
 	);
-}
-
-size_t Population::measureFitness(Chromosome const& _chromosome, Program const& _program)
-{
-	Program programCopy = _program;
-	programCopy.optimise(_chromosome.optimisationSteps());
-	return programCopy.codeSize();
 }
 
 void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
@@ -113,16 +105,19 @@ void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 
 Population operator+(Population _a, Population _b)
 {
-	assert(toString(_a.m_program) == toString(_b.m_program));
+	// This operator is meant to be used only with populations sharing the same metric (and, to make
+	// things simple, "the same" here means the same exact object in memory).
+	assert(_a.m_fitnessMetric == _b.m_fitnessMetric);
 
-	return Population(_a.m_program, move(_a.m_individuals) + move(_b.m_individuals));
+	return Population(_a.m_fitnessMetric, move(_a.m_individuals) + move(_b.m_individuals));
 }
 
 bool Population::operator==(Population const& _other) const
 {
-	// TODO: Comparing programs is pretty heavy but it's just a stopgap. It will soon be replaced
-	// by a comparison of fitness metric associated with the population (once metrics are introduced).
-	return m_individuals == _other.m_individuals && toString(m_program) == toString(_other.m_program);
+	// We consider populations identical only if they share the same exact instance of the metric.
+	// It might be possible to define some notion of equality for metric objects but it would
+	// be an overkill since mixing populations using different metrics is not a common use case.
+	return m_individuals == _other.m_individuals && m_fitnessMetric == _other.m_fitnessMetric;
 }
 
 ostream& phaser::operator<<(ostream& _stream, Population const& _population)
@@ -143,7 +138,7 @@ void Population::doEvaluation()
 {
 	for (auto& individual: m_individuals)
 		if (!individual.fitness.has_value())
-			individual.fitness = measureFitness(individual.chromosome, m_program);
+			individual.fitness = m_fitnessMetric->evaluate(individual.chromosome);
 }
 
 void Population::doSelection()
