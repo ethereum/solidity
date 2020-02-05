@@ -16,3 +16,13 @@
 */
 
 #include <tools/yulPhaser/FitnessMetrics.h>
+
+using namespace std;
+using namespace solidity::phaser;
+
+size_t ProgramSize::evaluate(Chromosome const& _chromosome) const
+{
+	Program programCopy = m_program;
+	programCopy.optimise(_chromosome.optimisationSteps());
+	return programCopy.codeSize();
+}

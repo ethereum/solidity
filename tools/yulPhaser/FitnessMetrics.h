@@ -18,6 +18,7 @@
 #pragma once
 
 #include <tools/yulPhaser/Chromosome.h>
+#include <tools/yulPhaser/Program.h>
 
 #include <cstddef>
 
@@ -33,6 +34,17 @@ public:
 	virtual ~FitnessMetric() = default;
 
 	virtual size_t evaluate(Chromosome const& _chromosome) const = 0;
+};
+
+class ProgramSize: public FitnessMetric
+{
+public:
+	ProgramSize(Program _program): m_program(std::move(_program)) {}
+
+	size_t evaluate(Chromosome const& _chromosome) const override;
+
+private:
+	Program m_program;
 };
 
 }
