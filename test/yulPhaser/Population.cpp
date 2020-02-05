@@ -261,6 +261,15 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse, Po
 	}
 }
 
+BOOST_FIXTURE_TEST_CASE(plus_operator_should_add_two_populations, PopulationFixture)
+{
+	BOOST_CHECK_EQUAL(
+		Population(m_program, {Chromosome("ac"), Chromosome("cx")}) +
+		Population(m_program, {Chromosome("g"), Chromosome("h"), Chromosome("iI")}),
+		Population(m_program, {Chromosome("ac"), Chromosome("cx"), Chromosome("g"), Chromosome("h"), Chromosome("iI")})
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 

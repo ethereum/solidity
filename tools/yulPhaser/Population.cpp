@@ -19,6 +19,7 @@
 
 #include <tools/yulPhaser/Program.h>
 
+#include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
 
 #include <algorithm>
@@ -115,6 +116,13 @@ void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 		_outputStream << "---------- ROUND " << round << " ----------" << endl;
 		_outputStream << *this;
 	}
+}
+
+Population operator+(Population _a, Population _b)
+{
+	assert(toString(_a.m_program) == toString(_b.m_program));
+
+	return Population(_a.m_program, move(_a.m_individuals) + move(_b.m_individuals));
 }
 
 ostream& phaser::operator<<(ostream& _stream, Population const& _population)
