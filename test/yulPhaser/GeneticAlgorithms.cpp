@@ -90,6 +90,49 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_the_top_chromosome, GeneticAlgorithmFix
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE(RandomAlgorithmTest)
+
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_preserve_elite_and_randomise_rest_of_population, GeneticAlgorithmFixture)
+{
+	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+	RandomAlgorithm algorithm(population, m_output, {0.5, 1, 1});
+	assert((chromosomeLengths(algorithm.population()) == vector<size_t>{3, 3, 3, 3, 5, 5, 5, 5}));
+
+	algorithm.runNextRound();
+	BOOST_TEST((chromosomeLengths(algorithm.population()) == vector<size_t>{1, 1, 1, 1, 3, 3, 3, 3}));
+}
+
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_not_replace_elite_with_worse_individuals, GeneticAlgorithmFixture)
+{
+	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+	RandomAlgorithm algorithm(population, m_output, {0.5, 7, 7});
+	assert((chromosomeLengths(algorithm.population()) == vector<size_t>{3, 3, 3, 3, 5, 5, 5, 5}));
+
+	algorithm.runNextRound();
+	BOOST_TEST((chromosomeLengths(algorithm.population()) == vector<size_t>{3, 3, 3, 3, 7, 7, 7, 7}));
+}
+
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_replace_all_chromosomes_if_zero_size_elite, GeneticAlgorithmFixture)
+{
+	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+	RandomAlgorithm algorithm(population, m_output, {0.0, 1, 1});
+	assert((chromosomeLengths(algorithm.population()) == vector<size_t>{3, 3, 3, 3, 5, 5, 5, 5}));
+
+	algorithm.runNextRound();
+	BOOST_TEST((chromosomeLengths(algorithm.population()) == vector<size_t>{1, 1, 1, 1, 1, 1, 1, 1}));
+}
+
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_not_replace_any_chromosomes_if_whole_population_is_the_elite, GeneticAlgorithmFixture)
+{
+	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+	RandomAlgorithm algorithm(population, m_output, {1.0, 1, 1});
+	assert((chromosomeLengths(algorithm.population()) == vector<size_t>{3, 3, 3, 3, 5, 5, 5, 5}));
+
+	algorithm.runNextRound();
+	BOOST_TEST((chromosomeLengths(algorithm.population()) == vector<size_t>{3, 3, 3, 3, 5, 5, 5, 5}));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 

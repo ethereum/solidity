@@ -63,4 +63,53 @@ private:
 	std::ostream& m_outputStream;
 };
 
+/**
+ * Completely random genetic algorithm,
+ *
+ * The algorithm simply replaces the worst chromosomes with entirely new ones, generated
+ * randomly and not based on any member of the current population. Only a constant proportion of the
+ * chromosomes (the elite) is preserved in each round.
+ *
+ * Preserves the size of the population. You can use @a elitePoolSize to make the algorithm
+ * generational (replacing most members in each round) or steady state (replacing only one member).
+ * Both versions are equivalent in terms of the outcome but the generational one converges in a
+ * smaller number of rounds while the steady state one does less work per round. This may matter
+ * in case of metrics that take a long time to compute though in case of this particular
+ * algorithm the same result could also be achieved by simply making the population smaller.
+ */
+class RandomAlgorithm: public GeneticAlgorithm
+{
+public:
+	struct Options
+	{
+		double elitePoolSize;        ///< Percentage of the population treated as the elite
+		size_t minChromosomeLength;  ///< Minimum length of newly generated chromosomes
+		size_t maxChromosomeLength;  ///< Maximum length of newly generated chromosomes
+
+		bool isValid() const
+		{
+			return (
+				0 <= elitePoolSize && elitePoolSize <= 1.0 &&
+				minChromosomeLength <= maxChromosomeLength
+			);
+		}
+	};
+
+	explicit RandomAlgorithm(
+		Population _initialPopulation,
+		std::ostream& _outputStream,
+		Options const& _options
+	):
+		GeneticAlgorithm(_initialPopulation, _outputStream),
+		m_options(_options)
+	{
+		assert(_options.isValid());
+	}
+
+	void runNextRound() override;
+
+private:
+	Options m_options;
+};
+
 }

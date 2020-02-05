@@ -16,6 +16,7 @@
 */
 
 #include <tools/yulPhaser/GeneticAlgorithms.h>
+#include <tools/yulPhaser/Selections.h>
 
 using namespace std;
 using namespace solidity::phaser;
@@ -29,4 +30,21 @@ void GeneticAlgorithm::run(optional<size_t> _numRounds)
 		m_outputStream << "---------- ROUND " << round << " ----------" << endl;
 		m_outputStream << m_population;
 	}
+}
+
+void RandomAlgorithm::runNextRound()
+{
+	RangeSelection elite(0.0, m_options.elitePoolSize);
+
+	Population elitePopulation = m_population.select(elite);
+	size_t replacementCount = m_population.individuals().size() - elitePopulation.individuals().size();
+
+	m_population =
+		move(elitePopulation) +
+		Population::makeRandom(
+			m_population.fitnessMetric(),
+			replacementCount,
+			m_options.minChromosomeLength,
+			m_options.maxChromosomeLength
+		);
 }
