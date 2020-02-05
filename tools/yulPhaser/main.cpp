@@ -89,12 +89,12 @@ CharStream loadSource(string const& _sourcePath)
 
 void runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 {
-	constexpr size_t populationSize = 10;
+	constexpr size_t populationSize = 20;
 	constexpr size_t minChromosomeLength = 12;
 	constexpr size_t maxChromosomeLength = 30;
 
 	CharStream sourceCode = loadSource(_sourcePath);
-	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode));
+	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode), 5);
 	auto population = Population::makeRandom(
 		fitnessMetric,
 		populationSize,
@@ -110,7 +110,7 @@ void runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 				population,
 				cout,
 				{
-					/* elitePoolSize = */ 0.5,
+					/* _elitePoolSize = */ 1.0 / populationSize,
 					/* minChromosomeLength = */ minChromosomeLength,
 					/* maxChromosomeLength = */ maxChromosomeLength
 				}
@@ -159,7 +159,7 @@ CommandLineParsingResult parseCommandLine(int argc, char** argv)
 		("input-file", po::value<string>()->required(), "Input file")
 		(
 			"algorithm",
-			po::value<Algorithm>()->default_value(Algorithm::Random),
+			po::value<Algorithm>()->default_value(Algorithm::GEWEP),
 			"Algorithm"
 		)
 	;
