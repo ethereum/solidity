@@ -28,6 +28,17 @@
 namespace solidity::phaser
 {
 
+class Population;
+
+}
+
+// This operator+ must be declared in the global namespace. Otherwise it would shadow global
+// operator+ overloads from CommonData.h (e.g. the one for vector) in the namespace it was declared in.
+solidity::phaser::Population operator+(solidity::phaser::Population _a, solidity::phaser::Population _b);
+
+namespace solidity::phaser
+{
+
 /**
  * Information describing the state of an individual member of the population during the course
  * of the genetic algorithm.
@@ -72,6 +83,7 @@ public:
 	static Population makeRandom(std::shared_ptr<FitnessMetric const> _fitnessMetric, size_t _size);
 
 	void run(std::optional<size_t> _numRounds, std::ostream& _outputStream);
+	friend Population (::operator+)(Population _a, Population _b);
 
 	std::shared_ptr<FitnessMetric const> fitnessMetric() const { return m_fitnessMetric; }
 	std::vector<Individual> const& individuals() const { return m_individuals; }

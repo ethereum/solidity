@@ -17,6 +17,7 @@
 
 #include <tools/yulPhaser/Population.h>
 
+#include <libsolutil/CommonData.h>
 
 #include <algorithm>
 #include <cassert>
@@ -62,6 +63,15 @@ void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 		_outputStream << "---------- ROUND " << round << " ----------" << endl;
 		_outputStream << *this;
 	}
+}
+
+Population operator+(Population _a, Population _b)
+{
+	// This operator is meant to be used only with populations sharing the same metric (and, to make
+	// things simple, "the same" here means the same exact object in memory).
+	assert(_a.m_fitnessMetric == _b.m_fitnessMetric);
+
+	return Population(_a.m_fitnessMetric, move(_a.m_individuals) + move(_b.m_individuals));
 }
 
 ostream& phaser::operator<<(ostream& _stream, Population const& _population)
