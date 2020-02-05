@@ -18,6 +18,7 @@
 #include <test/yulPhaser/Common.h>
 
 #include <tools/yulPhaser/Chromosome.h>
+#include <tools/yulPhaser/PairSelections.h>
 #include <tools/yulPhaser/Population.h>
 #include <tools/yulPhaser/Program.h>
 #include <tools/yulPhaser/Selections.h>
@@ -31,6 +32,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cmath>
 #include <optional>
 #include <string>
 #include <sstream>
@@ -224,6 +226,70 @@ BOOST_FIXTURE_TEST_CASE(select_should_return_empty_population_if_selection_is_em
 	assert(selection.materialise(population.individuals().size()).empty());
 
 	BOOST_TEST(population.select(selection).individuals().empty());
+}
+
+BOOST_FIXTURE_TEST_CASE(mutate_should_return_population_containing_individuals_indicated_by_selection_with_mutation_applied, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
+	RangeSelection selection(0.25, 0.75);
+	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{1, 2}));
+
+	Population expectedPopulation(m_fitnessMetric, {Chromosome("fc"), Chromosome("fg")});
+
+	BOOST_TEST(population.mutate(selection, geneSubstitution(0, BlockFlattener::name)) == expectedPopulation);
+}
+
+BOOST_FIXTURE_TEST_CASE(mutate_should_include_duplicates_if_selection_contains_duplicates, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("aa")});
+	RangeSelection selection(0.0, 1.0);
+	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{0, 1}));
+
+	BOOST_TEST(
+		population.mutate(selection, geneSubstitution(0, BlockFlattener::name)) ==
+		Population(m_fitnessMetric, {Chromosome("fa"), Chromosome("fa")})
+	);
+}
+
+BOOST_FIXTURE_TEST_CASE(mutate_should_return_empty_population_if_selection_is_empty, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc")});
+	RangeSelection selection(0.0, 0.0);
+	assert(selection.materialise(population.individuals().size()).empty());
+
+	BOOST_TEST(population.mutate(selection, geneSubstitution(0, BlockFlattener::name)).individuals().empty());
+}
+
+BOOST_FIXTURE_TEST_CASE(crossover_should_return_population_containing_individuals_indicated_by_selection_with_crossover_applied, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
+	PairMosaicSelection selection({{0, 1}, {2, 1}}, 0.5);
+	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 1}, {2, 1}}));
+
+	Population expectedPopulation(m_fitnessMetric, {Chromosome("ac"), Chromosome("ca"), Chromosome("cg"), Chromosome("gc")});
+
+	BOOST_TEST(population.crossover(selection, fixedPointCrossover(0.5)) == expectedPopulation);
+}
+
+BOOST_FIXTURE_TEST_CASE(crossover_should_include_duplicates_if_selection_contains_duplicates, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("aa")});
+	PairMosaicSelection selection({{0, 0}, {1, 1}}, 1.0);
+	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 0}, {1, 1}}));
+
+	BOOST_TEST(
+		population.crossover(selection, fixedPointCrossover(0.5)) ==
+		Population(m_fitnessMetric, {Chromosome("aa"), Chromosome("aa"), Chromosome("aa"), Chromosome("aa")})
+	);
+}
+
+BOOST_FIXTURE_TEST_CASE(crossover_should_return_empty_population_if_selection_is_empty, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc")});
+	PairMosaicSelection selection({}, 0.0);
+	assert(selection.materialise(population.individuals().size()).empty());
+
+	BOOST_TEST(population.crossover(selection, fixedPointCrossover(0.5)).individuals().empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
