@@ -16,7 +16,7 @@
 //     for { } x { sstore(1, x) }
 //     {
 //         if x { continue }
-//         x := 0
+//         x := false
 //         sstore(0, x)
 //     }
 //     sstore(0, x)

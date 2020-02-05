@@ -24,7 +24,7 @@
 //         }
 //         {
 //             if y { continue }
-//             sstore(1, 0)
+//             sstore(1, false)
 //         }
 //         if y { revert(0, 0) }
 //     }

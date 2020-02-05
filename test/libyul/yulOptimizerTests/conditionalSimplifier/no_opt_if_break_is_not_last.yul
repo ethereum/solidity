@@ -26,7 +26,7 @@
 //             sstore(7, 8)
 //             break
 //         }
-//         x := 0
+//         x := false
 //         sstore(10, x)
 //     }
 // }

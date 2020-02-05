@@ -13,6 +13,6 @@
 //         sstore(0, x)
 //         revert(0, 0)
 //     }
-//     x := 0
+//     x := false
 //     sstore(1, x)
 // }

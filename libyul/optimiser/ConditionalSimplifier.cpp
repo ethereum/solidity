@@ -79,9 +79,9 @@ void ConditionalSimplifier::operator()(Block& _block)
 							{Identifier{location, condition}},
 							make_unique<Expression>(Literal{
 								location,
-								LiteralKind::Number,
-								"0"_yulstring,
-								{}
+								LiteralKind::Boolean,
+								"false"_yulstring,
+								m_dialect.boolType
 							})
 						}
 					);

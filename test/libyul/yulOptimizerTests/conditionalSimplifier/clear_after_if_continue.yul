@@ -12,6 +12,6 @@
 //     for { } and(y, 8) { pop(y) }
 //     {
 //         if y { continue }
-//         y := 0
+//         y := false
 //     }
 // }

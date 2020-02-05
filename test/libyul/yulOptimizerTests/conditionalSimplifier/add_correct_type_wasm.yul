@@ -1,15 +1,16 @@
 {
-    let y := mload(0x20)
-    for {} and(y, 8) { pop(y) } {
+    let y:i32 := 0:i32
+    for {} true { } {
         if y { break }
     }
 }
 // ====
+// dialect: ewasm
 // step: conditionalSimplifier
 // ----
 // {
-//     let y := mload(0x20)
-//     for { } and(y, 8) { pop(y) }
+//     let y:i32 := 0:i32
+//     for { } true { }
 //     {
 //         if y { break }
 //         y := false

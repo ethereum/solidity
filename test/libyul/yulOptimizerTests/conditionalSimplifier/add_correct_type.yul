@@ -1,15 +1,16 @@
 {
-    let y := mload(0x20)
-    for {} and(y, 8) { pop(y) } {
+    let y:bool := false
+    for {} true { } {
         if y { break }
     }
 }
 // ====
+// dialect: yul
 // step: conditionalSimplifier
 // ----
 // {
-//     let y := mload(0x20)
-//     for { } and(y, 8) { pop(y) }
+//     let y:bool := false
+//     for { } true { }
 //     {
 //         if y { break }
 //         y := false
