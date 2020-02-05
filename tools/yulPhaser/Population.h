@@ -67,7 +67,7 @@ public:
 	friend std::ostream& operator<<(std::ostream& _stream, Population const& _population);
 
 private:
-	explicit Population(Program _program, std::vector<Individual> _individuals = {}):
+	explicit Population(Program _program, std::vector<Individual> _individuals):
 		m_program{std::move(_program)},
 		m_individuals{std::move(_individuals)} {}
 
