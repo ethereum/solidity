@@ -16,8 +16,8 @@
 */
 
 #include <tools/yulPhaser/Exceptions.h>
-#include <tools/yulPhaser/Population.h>
 #include <tools/yulPhaser/FitnessMetrics.h>
+#include <tools/yulPhaser/GeneticAlgorithms.h>
 #include <tools/yulPhaser/Program.h>
 
 #include <libsolutil/Assertions.h>
@@ -39,7 +39,8 @@ namespace po = boost::program_options;
 
 enum class Algorithm
 {
-	Random
+	Random,
+	GEWEP
 };
 
 istream& operator>>(istream& inputStream, Algorithm& algorithm)
@@ -49,6 +50,8 @@ istream& operator>>(istream& inputStream, Algorithm& algorithm)
 
 	if (value == "random")
 		algorithm = Algorithm::Random;
+	else if (value == "GEWEP")
+		algorithm = Algorithm::GEWEP;
 	else
 		inputStream.setstate(ios_base::failbit);
 
@@ -59,6 +62,8 @@ ostream& operator<<(ostream& outputStream, Algorithm algorithm)
 {
 	if (algorithm == Algorithm::Random)
 		outputStream << "random";
+	else if (algorithm == Algorithm::GEWEP)
+		outputStream << "GEWEP";
 	else
 		outputStream.setstate(ios_base::failbit);
 
@@ -93,7 +98,31 @@ void runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 	{
 		case Algorithm::Random:
 		{
-			population.run(nullopt, cout);
+			RandomAlgorithm(
+				population,
+				cout,
+				{
+					/* elitePoolSize = */ 0.5
+				}
+			).run();
+
+			break;
+		}
+		case Algorithm::GEWEP:
+		{
+			GenerationalElitistWithExclusivePools(
+				population,
+				cout,
+				{
+					/* mutationPoolSize = */ 0.25,
+					/* crossoverPoolSize = */ 0.25,
+					/* randomizationChance = */ 0.9,
+					/* deletionVsAdditionChance = */ 0.5,
+					/* percentGenesToRandomize = */ 0.1,
+					/* percentGenesToAddOrDelete = */ 0.1
+				}
+			).run();
+
 			break;
 		}
 	}
