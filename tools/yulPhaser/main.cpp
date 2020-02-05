@@ -17,6 +17,7 @@
 
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/Population.h>
+#include <tools/yulPhaser/FitnessMetrics.h>
 #include <tools/yulPhaser/Program.h>
 
 #include <libsolutil/Assertions.h>
@@ -56,7 +57,8 @@ CharStream loadSource(string const& _sourcePath)
 void runAlgorithm(string const& _sourcePath)
 {
 	CharStream sourceCode = loadSource(_sourcePath);
-	auto population = Population::makeRandom(Program::load(sourceCode), 10);
+	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode));
+	auto population = Population::makeRandom(fitnessMetric, 10);
 	population.run(nullopt, cout);
 }
 

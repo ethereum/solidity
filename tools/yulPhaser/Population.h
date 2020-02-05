@@ -18,7 +18,7 @@
 #pragma once
 
 #include <tools/yulPhaser/Chromosome.h>
-#include <tools/yulPhaser/Program.h>
+#include <tools/yulPhaser/FitnessMetrics.h>
 #include <tools/yulPhaser/Random.h>
 
 #include <optional>
@@ -54,25 +54,28 @@ class Population
 public:
 	static constexpr size_t MaxChromosomeLength = 30;
 
-	explicit Population(Program _program, std::vector<Chromosome> _chromosomes = {}):
+	explicit Population(
+		std::shared_ptr<FitnessMetric const> _fitnessMetric,
+		std::vector<Chromosome> _chromosomes = {}
+	):
 		Population(
-			std::move(_program),
+			std::move(_fitnessMetric),
 			chromosomesToIndividuals(std::move(_chromosomes))
 		) {}
-	static Population makeRandom(Program _program, size_t _size);
+	static Population makeRandom(std::shared_ptr<FitnessMetric const> _fitnessMetric, size_t _size);
 
 	void run(std::optional<size_t> _numRounds, std::ostream& _outputStream);
 
+	std::shared_ptr<FitnessMetric const> fitnessMetric() const { return m_fitnessMetric; }
 	std::vector<Individual> const& individuals() const { return m_individuals; }
 
 	static size_t randomChromosomeLength() { return binomialRandomInt(MaxChromosomeLength, 0.5); }
-	static size_t measureFitness(Chromosome const& _chromosome, Program const& _program);
 
 	friend std::ostream& operator<<(std::ostream& _stream, Population const& _population);
 
 private:
-	explicit Population(Program _program, std::vector<Individual> _individuals):
-		m_program{std::move(_program)},
+	explicit Population(std::shared_ptr<FitnessMetric const> _fitnessMetric, std::vector<Individual> _individuals):
+		m_fitnessMetric(std::move(_fitnessMetric)),
 		m_individuals{std::move(_individuals)} {}
 
 	void doMutation();
@@ -88,7 +91,7 @@ private:
 	);
 	std::vector<Individual> sortIndividuals(std::vector<Individual> _individuals);
 
-	Program m_program;
+	std::shared_ptr<FitnessMetric const> m_fitnessMetric;
 	std::vector<Individual> m_individuals;
 };
 

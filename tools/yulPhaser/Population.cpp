@@ -17,7 +17,6 @@
 
 #include <tools/yulPhaser/Population.h>
 
-#include <tools/yulPhaser/Program.h>
 
 #include <algorithm>
 #include <cassert>
@@ -48,20 +47,13 @@ ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 	return _stream;
 }
 
-Population Population::makeRandom(Program _program, size_t _size)
+Population Population::makeRandom(shared_ptr<FitnessMetric const> _fitnessMetric, size_t _size)
 {
 	vector<Individual> individuals;
 	for (size_t i = 0; i < _size; ++i)
 		individuals.push_back({Chromosome::makeRandom(randomChromosomeLength())});
 
-	return Population(move(_program), individuals);
-}
-
-size_t Population::measureFitness(Chromosome const& _chromosome, Program const& _program)
-{
-	Program programCopy = _program;
-	programCopy.optimise(_chromosome.optimisationSteps());
-	return programCopy.codeSize();
+	return Population(move(_fitnessMetric), move(individuals));
 }
 
 void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
@@ -96,7 +88,7 @@ void Population::doEvaluation()
 {
 	for (auto& individual: m_individuals)
 		if (!individual.fitness.has_value())
-			individual.fitness = measureFitness(individual.chromosome, m_program);
+			individual.fitness = m_fitnessMetric->evaluate(individual.chromosome);
 }
 
 void Population::doSelection()

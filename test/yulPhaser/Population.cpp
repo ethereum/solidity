@@ -86,7 +86,8 @@ BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness
 		Chromosome::makeRandom(5),
 		Chromosome::makeRandom(10),
 	};
-	Population population(Program::load(sourceStream), chromosomes);
+	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceStream));
+	Population population(fitnessMetric, chromosomes);
 
 	BOOST_TEST(population.individuals().size() == 2);
 	BOOST_TEST(population.individuals()[0].chromosome == chromosomes[0]);
@@ -99,9 +100,9 @@ BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness
 BOOST_AUTO_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes)
 {
 	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto program = Program::load(sourceStream);
-	auto population1 = Population::makeRandom(program, 100);
-	auto population2 = Population::makeRandom(program, 100);
+	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceStream));
+	auto population1 = Population::makeRandom(fitnessMetric, 100);
+	auto population2 = Population::makeRandom(fitnessMetric, 100);
 
 	BOOST_TEST(population1.individuals().size() == 100);
 	BOOST_TEST(population2.individuals().size() == 100);
@@ -120,7 +121,8 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes
 BOOST_AUTO_TEST_CASE(makeRandom_should_not_compute_fitness)
 {
 	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto population = Population::makeRandom(Program::load(sourceStream), 5);
+	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceStream));
+	auto population = Population::makeRandom(fitnessMetric, 5);
 
 	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 }
