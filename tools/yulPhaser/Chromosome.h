@@ -52,9 +52,10 @@ public:
 	bool operator==(Chromosome const& _other) const { return m_optimisationSteps == _other.m_optimisationSteps; }
 	bool operator!=(Chromosome const& _other) const { return !(*this == _other); }
 
+	static std::string const& randomOptimisationStep();
+
 private:
 	static std::vector<std::string> allStepNames();
-	static std::string const& randomOptimisationStep();
 
 	std::vector<std::string> m_optimisationSteps;
 };
