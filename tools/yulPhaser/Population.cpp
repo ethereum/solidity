@@ -157,10 +157,7 @@ vector<Individual> Population::chromosomesToIndividuals(
 {
 	vector<Individual> individuals;
 	for (auto& chromosome: _chromosomes)
-	{
-		size_t fitness = _fitnessMetric.evaluate(chromosome);
-		individuals.push_back({move(chromosome), fitness});
-	}
+		individuals.emplace_back(move(chromosome), _fitnessMetric);
 
 	return individuals;
 }

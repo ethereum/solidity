@@ -53,32 +53,32 @@ BOOST_AUTO_TEST_SUITE(PopulationTest)
 
 BOOST_AUTO_TEST_CASE(isFitter_should_use_fitness_as_the_main_criterion)
 {
-	BOOST_TEST(isFitter(Individual{Chromosome("a"), 5}, Individual{Chromosome("a"), 10}));
-	BOOST_TEST(!isFitter(Individual{Chromosome("a"), 10}, Individual{Chromosome("a"), 5}));
+	BOOST_TEST(isFitter(Individual(Chromosome("a"), 5), Individual(Chromosome("a"), 10)));
+	BOOST_TEST(!isFitter(Individual(Chromosome("a"), 10), Individual(Chromosome("a"), 5)));
 
-	BOOST_TEST(isFitter(Individual{Chromosome("aaa"), 5}, Individual{Chromosome("aaaaa"), 10}));
-	BOOST_TEST(!isFitter(Individual{Chromosome("aaaaa"), 10}, Individual{Chromosome("aaa"), 5}));
+	BOOST_TEST(isFitter(Individual(Chromosome("aaa"), 5), Individual(Chromosome("aaaaa"), 10)));
+	BOOST_TEST(!isFitter(Individual(Chromosome("aaaaa"), 10), Individual(Chromosome("aaa"), 5)));
 
-	BOOST_TEST(isFitter(Individual{Chromosome("aaaaa"), 5}, Individual{Chromosome("aaa"), 10}));
-	BOOST_TEST(!isFitter(Individual{Chromosome("aaa"), 10}, Individual{Chromosome("aaaaa"), 5}));
+	BOOST_TEST(isFitter(Individual(Chromosome("aaaaa"), 5), Individual(Chromosome("aaa"), 10)));
+	BOOST_TEST(!isFitter(Individual(Chromosome("aaa"), 10), Individual(Chromosome("aaaaa"), 5)));
 }
 
 BOOST_AUTO_TEST_CASE(isFitter_should_use_alphabetical_order_when_fitness_is_the_same)
 {
-	BOOST_TEST(isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("c"), 3}));
-	BOOST_TEST(!isFitter(Individual{Chromosome("c"), 3}, Individual{Chromosome("a"), 3}));
+	BOOST_TEST(isFitter(Individual(Chromosome("a"), 3), Individual(Chromosome("c"), 3)));
+	BOOST_TEST(!isFitter(Individual(Chromosome("c"), 3), Individual(Chromosome("a"), 3)));
 
-	BOOST_TEST(isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("aa"), 3}));
-	BOOST_TEST(!isFitter(Individual{Chromosome("aa"), 3}, Individual{Chromosome("a"), 3}));
+	BOOST_TEST(isFitter(Individual(Chromosome("a"), 3), Individual(Chromosome("aa"), 3)));
+	BOOST_TEST(!isFitter(Individual(Chromosome("aa"), 3), Individual(Chromosome("a"), 3)));
 
-	BOOST_TEST(isFitter(Individual{Chromosome("T"), 3}, Individual{Chromosome("a"), 3}));
-	BOOST_TEST(!isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("T"), 3}));
+	BOOST_TEST(isFitter(Individual(Chromosome("T"), 3), Individual(Chromosome("a"), 3)));
+	BOOST_TEST(!isFitter(Individual(Chromosome("a"), 3), Individual(Chromosome("T"), 3)));
 }
 
 BOOST_AUTO_TEST_CASE(isFitter_should_return_false_for_identical_individuals)
 {
-	BOOST_TEST(!isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("a"), 3}));
-	BOOST_TEST(!isFitter(Individual{Chromosome("acT"), 0}, Individual{Chromosome("acT"), 0}));
+	BOOST_TEST(!isFitter(Individual(Chromosome("a"), 3), Individual(Chromosome("a"), 3)));
+	BOOST_TEST(!isFitter(Individual(Chromosome("acT"), 0), Individual(Chromosome("acT"), 0)));
 }
 
 BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_compute_fitness_and_sort_chromosomes, PopulationFixture)

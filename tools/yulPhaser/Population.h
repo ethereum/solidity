@@ -48,6 +48,13 @@ struct Individual
 	Chromosome chromosome;
 	size_t fitness;
 
+	Individual(Chromosome _chromosome, size_t _fitness):
+		chromosome(std::move(_chromosome)),
+		fitness(_fitness) {}
+	Individual(Chromosome _chromosome, FitnessMetric const& _fitnessMetric):
+		chromosome(std::move(_chromosome)),
+		fitness(_fitnessMetric.evaluate(chromosome)) {}
+
 	bool operator==(Individual const& _other) const { return fitness == _other.fitness && chromosome == _other.chromosome; }
 	bool operator!=(Individual const& _other) const { return !(*this == _other); }
 
