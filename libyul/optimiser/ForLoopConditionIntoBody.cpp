@@ -57,8 +57,8 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 			Literal {
 				loc,
 				LiteralKind::Number,
-				"1"_yulstring,
-				{}
+				"true"_yulstring,
+				m_dialect.boolType
 			}
 		);
 	}
