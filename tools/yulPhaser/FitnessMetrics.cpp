@@ -23,6 +23,8 @@ using namespace solidity::phaser;
 size_t ProgramSize::evaluate(Chromosome const& _chromosome) const
 {
 	Program programCopy = m_program;
-	programCopy.optimise(_chromosome.optimisationSteps());
+	for (size_t i = 0; i < m_repetitionCount; ++i)
+		programCopy.optimise(_chromosome.optimisationSteps());
+
 	return programCopy.codeSize();
 }

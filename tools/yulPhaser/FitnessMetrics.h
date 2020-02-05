@@ -53,12 +53,15 @@ public:
 class ProgramSize: public FitnessMetric
 {
 public:
-	ProgramSize(Program _program): m_program(std::move(_program)) {}
+	explicit ProgramSize(Program _program, size_t _repetitionCount = 1):
+		m_program(std::move(_program)),
+		m_repetitionCount(_repetitionCount) {}
 
 	size_t evaluate(Chromosome const& _chromosome) const override;
 
 private:
 	Program m_program;
+	size_t m_repetitionCount;
 };
 
 }
