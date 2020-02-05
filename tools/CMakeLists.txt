@@ -12,3 +12,18 @@ target_link_libraries(solidity-upgrade PRIVATE solidity Boost::boost Boost::prog
 
 include(GNUInstallDirs)
 install(TARGETS solidity-upgrade DESTINATION "${CMAKE_INSTALL_BINDIR}")
+
+add_executable(yul-phaser
+	yulPhaser/main.cpp
+	yulPhaser/Population.h
+	yulPhaser/Population.cpp
+	yulPhaser/Chromosome.h
+	yulPhaser/Chromosome.cpp
+	yulPhaser/Program.h
+	yulPhaser/Program.cpp
+	yulPhaser/Random.h
+	yulPhaser/Random.cpp
+)
+target_link_libraries(yul-phaser PRIVATE solidity Boost::program_options)
+
+install(TARGETS yul-phaser DESTINATION "${CMAKE_INSTALL_BINDIR}")
