@@ -37,11 +37,7 @@ ostream& operator<<(ostream& _stream, Population const& _population);
 
 ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 {
-	_stream << "Fitness: ";
-	if (_individual.fitness.has_value())
-		_stream << _individual.fitness.value();
-	else
-		_stream << "<NONE>";
+	_stream << "Fitness: " << _individual.fitness;
 	_stream << ", optimisations: " << _individual.chromosome;
 
 	return _stream;
@@ -49,21 +45,19 @@ ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 
 Population Population::makeRandom(shared_ptr<FitnessMetric const> _fitnessMetric, size_t _size)
 {
-	vector<Individual> individuals;
+	vector<Chromosome> chromosomes;
 	for (size_t i = 0; i < _size; ++i)
-		individuals.push_back({Chromosome::makeRandom(randomChromosomeLength())});
+		chromosomes.push_back(Chromosome::makeRandom(randomChromosomeLength()));
 
-	return Population(move(_fitnessMetric), move(individuals));
+	return Population(move(_fitnessMetric), move(chromosomes));
 }
 
 void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 {
-	doEvaluation();
 	for (size_t round = 0; !_numRounds.has_value() || round < _numRounds.value(); ++round)
 	{
 		doMutation();
 		doSelection();
-		doEvaluation();
 
 		_outputStream << "---------- ROUND " << round << " ----------" << endl;
 		_outputStream << *this;
@@ -84,20 +78,14 @@ void Population::doMutation()
 	// TODO: Implement mutation and crossover
 }
 
-void Population::doEvaluation()
-{
-	for (auto& individual: m_individuals)
-		if (!individual.fitness.has_value())
-			individual.fitness = m_fitnessMetric->evaluate(individual.chromosome);
-}
-
 void Population::doSelection()
 {
 	m_individuals = sortIndividuals(move(m_individuals));
-	randomizeWorstChromosomes(m_individuals, m_individuals.size() / 2);
+	randomizeWorstChromosomes(*m_fitnessMetric, m_individuals, m_individuals.size() / 2);
 }
 
 void Population::randomizeWorstChromosomes(
+	FitnessMetric const& _fitnessMetric,
 	vector<Individual>& _individuals,
 	size_t _count
 )
@@ -108,29 +96,33 @@ void Population::randomizeWorstChromosomes(
 	auto individual = _individuals.begin() + (_individuals.size() - _count);
 	for (; individual != _individuals.end(); ++individual)
 	{
-		*individual = {Chromosome::makeRandom(randomChromosomeLength())};
+		auto chromosome = Chromosome::makeRandom(randomChromosomeLength());
+		size_t fitness = _fitnessMetric.evaluate(chromosome);
+		*individual = {move(chromosome), fitness};
 	}
 }
 
 vector<Individual> Population::chromosomesToIndividuals(
+	FitnessMetric const& _fitnessMetric,
 	vector<Chromosome> _chromosomes
 )
 {
 	vector<Individual> individuals;
 	for (auto& chromosome: _chromosomes)
-		individuals.push_back({move(chromosome)});
+	{
+		size_t fitness = _fitnessMetric.evaluate(chromosome);
+		individuals.push_back({move(chromosome), fitness});
+	}
 
 	return individuals;
 }
 
 vector<Individual> Population::sortIndividuals(vector<Individual> _individuals)
 {
-	assert(all_of(_individuals.begin(), _individuals.end(), [](auto& i){ return i.fitness.has_value(); }));
-
 	sort(
 		_individuals.begin(),
 		_individuals.end(),
-		[](auto const& a, auto const& b){ return a.fitness.value() < b.fitness.value(); }
+		[](auto const& a, auto const& b){ return a.fitness < b.fitness; }
 	);
 
 	return _individuals;

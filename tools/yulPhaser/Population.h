@@ -35,7 +35,7 @@ namespace solidity::phaser
 struct Individual
 {
 	Chromosome chromosome;
-	std::optional<size_t> fitness = std::nullopt;
+	size_t fitness;
 
 	friend std::ostream& operator<<(std::ostream& _stream, Individual const& _individual);
 };
@@ -60,7 +60,7 @@ public:
 	):
 		Population(
 			std::move(_fitnessMetric),
-			chromosomesToIndividuals(std::move(_chromosomes))
+			chromosomesToIndividuals(*_fitnessMetric, std::move(_chromosomes))
 		) {}
 	static Population makeRandom(std::shared_ptr<FitnessMetric const> _fitnessMetric, size_t _size);
 
@@ -79,14 +79,15 @@ private:
 		m_individuals{std::move(_individuals)} {}
 
 	void doMutation();
-	void doEvaluation();
 	void doSelection();
 
 	static void randomizeWorstChromosomes(
+		FitnessMetric const& _fitnessMetric,
 		std::vector<Individual>& _individuals,
 		size_t _count
 	);
 	std::vector<Individual> chromosomesToIndividuals(
+		FitnessMetric const& _fitnessMetric,
 		std::vector<Chromosome> _chromosomes
 	);
 	std::vector<Individual> sortIndividuals(std::vector<Individual> _individuals);

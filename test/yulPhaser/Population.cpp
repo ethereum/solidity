@@ -40,19 +40,6 @@ using namespace boost::unit_test::framework;
 namespace solidity::phaser::test
 {
 
-namespace
-{
-	bool fitnessNotSet(Individual const& individual)
-	{
-		return !individual.fitness.has_value();
-	}
-
-	bool fitnessSet(Individual const& individual)
-	{
-		return individual.fitness.has_value();
-	}
-}
-
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(PopulationTest)
 
@@ -79,7 +66,7 @@ string const& sampleSourceCode =
 	"    if 0 { let y := 2 }\n"
 	"}\n";
 
-BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness)
+BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_compute_fitness)
 {
 	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
 	vector<Chromosome> chromosomes = {
@@ -93,8 +80,8 @@ BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness
 	BOOST_TEST(population.individuals()[0].chromosome == chromosomes[0]);
 	BOOST_TEST(population.individuals()[1].chromosome == chromosomes[1]);
 
-	auto fitnessNotSet = [](auto const& individual){ return !individual.fitness.has_value(); };
-	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
+	BOOST_TEST(population.individuals()[0].fitness == fitnessMetric->evaluate(population.individuals()[0].chromosome));
+	BOOST_TEST(population.individuals()[1].fitness == fitnessMetric->evaluate(population.individuals()[1].chromosome));
 }
 
 BOOST_AUTO_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes)
@@ -118,13 +105,15 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes
 	BOOST_TEST(numMatchingPositions < 10);
 }
 
-BOOST_AUTO_TEST_CASE(makeRandom_should_not_compute_fitness)
+BOOST_AUTO_TEST_CASE(makeRandom_should_compute_fitness)
 {
 	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
 	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceStream));
-	auto population = Population::makeRandom(fitnessMetric, 5);
+	auto population = Population::makeRandom(fitnessMetric, 3);
 
-	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
+	BOOST_TEST(population.individuals()[0].fitness == fitnessMetric->evaluate(population.individuals()[0].chromosome));
+	BOOST_TEST(population.individuals()[1].fitness == fitnessMetric->evaluate(population.individuals()[1].chromosome));
+	BOOST_TEST(population.individuals()[2].fitness == fitnessMetric->evaluate(population.individuals()[2].chromosome));
 }
 
 BOOST_AUTO_TEST_CASE(run_should_evaluate_fitness)
