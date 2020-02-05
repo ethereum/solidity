@@ -76,4 +76,47 @@ private:
 	Options m_options;
 };
 
+class GenerationalElitistWithExclusivePools: public GeneticAlgorithm
+{
+public:
+	struct Options
+	{
+		double mutationPoolSize;
+		double crossoverPoolSize;
+		double randomizationChance;
+		double deletionVsAdditionChance;
+		double percentGenesToRandomize;
+		double percentGenesToAddOrDelete;
+
+		bool isValid() const
+		{
+			return (
+				0 <= mutationPoolSize && mutationPoolSize <= 1.0 &&
+				0 <= crossoverPoolSize && crossoverPoolSize <= 1.0 &&
+				0 <= randomizationChance && randomizationChance <= 1.0 &&
+				0 <= deletionVsAdditionChance && deletionVsAdditionChance <= 1.0 &&
+				0 <= percentGenesToRandomize && percentGenesToRandomize <= 1.0 &&
+				0 <= percentGenesToAddOrDelete && percentGenesToAddOrDelete <= 1.0 &&
+				mutationPoolSize + crossoverPoolSize <= 1.0
+			);
+		}
+	};
+
+	GenerationalElitistWithExclusivePools(
+		Population _initialPopulation,
+		std::ostream& _outputStream,
+		Options const& _options
+	):
+		GeneticAlgorithm(_initialPopulation, _outputStream),
+		m_options(_options)
+	{
+		assert(_options.isValid());
+	}
+
+	void runNextRound() override;
+
+private:
+	Options m_options;
+};
+
 }

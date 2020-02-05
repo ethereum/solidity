@@ -16,7 +16,9 @@
 */
 
 #include <tools/yulPhaser/GeneticAlgorithms.h>
+#include <tools/yulPhaser/Mutations.h>
 #include <tools/yulPhaser/Selections.h>
+#include <tools/yulPhaser/PairSelections.h>
 
 using namespace std;
 using namespace solidity::phaser;
@@ -42,5 +44,31 @@ void RandomAlgorithm::runNextRound()
 	m_population = (
 		move(elitePopulation) +
 		Population::makeRandom(m_population.fitnessMetric(), replacementCount)
+	);
+}
+
+void GenerationalElitistWithExclusivePools::runNextRound()
+{
+	double elitePoolSize = m_options.mutationPoolSize + m_options.crossoverPoolSize;
+	RangeSelection elite(0.0, elitePoolSize);
+
+	m_population = (
+		m_population.select(elite) +
+		m_population.select(elite).mutate(
+			RandomSelection(0.5),
+			alternativeMutations(
+				m_options.randomizationChance,
+				geneRandomization(m_options.percentGenesToRandomize),
+				alternativeMutations(
+					m_options.deletionVsAdditionChance,
+					geneDeletion(m_options.percentGenesToAddOrDelete),
+					geneAddition(m_options.percentGenesToAddOrDelete)
+				)
+			)
+		) +
+		m_population.select(elite).crossover(
+			RandomPairSelection(0.25),
+			singlePointCrossover()
+		)
 	);
 }
