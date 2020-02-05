@@ -44,4 +44,36 @@ protected:
 	std::ostream& m_outputStream;
 };
 
+class RandomAlgorithm: public GeneticAlgorithm
+{
+public:
+	struct Options
+	{
+		double elitePoolSize;
+
+		bool isValid() const
+		{
+			return (
+				0 <= elitePoolSize && elitePoolSize <= 1.0
+			);
+		}
+	};
+
+	explicit RandomAlgorithm(
+		Population _initialPopulation,
+		std::ostream& _outputStream,
+		Options const& _options
+	):
+		GeneticAlgorithm(_initialPopulation, _outputStream),
+		m_options(_options)
+	{
+		assert(_options.isValid());
+	}
+
+	void runNextRound() override;
+
+private:
+	Options m_options;
+};
+
 }
