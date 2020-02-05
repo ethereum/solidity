@@ -72,7 +72,7 @@ CharStream loadSource(string const& _sourcePath)
 void runAlgorithm(string const& _sourcePath)
 {
 	CharStream sourceCode = loadSource(_sourcePath);
-	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode));
+	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode), 5);
 	auto population = Population::makeRandom(
 		fitnessMetric,
 		10,
