@@ -14,6 +14,7 @@ add_executable(isoltest
 	isoltest.cpp
 	IsolTestOptions.cpp
 	../Common.cpp
+	../CommonSyntaxTest.cpp
 	../EVMHost.cpp
 	../TestCase.cpp
 	../libsolidity/util/BytesUtils.cpp
@@ -34,6 +35,7 @@ add_executable(isoltest
 	../libyul/EwasmTranslationTest.cpp
 	../libyul/FunctionSideEffects.cpp
 	../libyul/ObjectCompilerTest.cpp
+	../libyul/SyntaxTest.cpp
 	../libyul/YulOptimizerTest.cpp
 	../libyul/YulInterpreterTest.cpp
 )

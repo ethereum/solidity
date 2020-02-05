@@ -17,44 +17,37 @@
 
 #pragma once
 
-#include <test/libsolidity/AnalysisFramework.h>
-#include <test/TestCase.h>
 #include <test/CommonSyntaxTest.h>
-#include <liblangutil/Exceptions.h>
-#include <libsolutil/AnsiColorized.h>
+#include <libyul/Dialect.h>
 
-#include <iosfwd>
-#include <string>
-#include <vector>
-#include <utility>
-
-namespace solidity::frontend::test
+namespace solidity::yul::test
 {
 
 using solidity::test::SyntaxTestError;
 
-class SyntaxTest: public AnalysisFramework, public solidity::test::CommonSyntaxTest
+class SyntaxTest: public solidity::test::CommonSyntaxTest
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
-		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion, false);
+		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion);
 	}
 	static std::unique_ptr<TestCase> createErrorRecovery(Config const& _config)
 	{
-		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion, true);
+		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion);
 	}
-	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion, bool _parserErrorRecovery = false);
+	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion):
+		CommonSyntaxTest(_filename, _evmVersion) {}
+	virtual ~SyntaxTest() {}
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
-
+	/// Validates the settings, i.e. moves them from m_settings to m_validatedSettings.
+	/// Throws a runtime exception if any setting is left at this class (i.e. unknown setting).
+	/// Returns true, if the test case is supported in the current environment and false
+	/// otherwise which causes this test to be skipped.
+	/// This might check e.g. for restrictions on the EVM version.
+	bool validateSettings(langutil::EVMVersion _evmVersion) override;
 protected:
-	void setupCompiler();
 	void parseAndAnalyze() override;
-	void filterObtainedErrors();
-
-	bool m_optimiseYul = true;
-	bool m_parserErrorRecovery = false;
 };
 
 }
