@@ -17,6 +17,8 @@ add_executable(yul-phaser
 	yulPhaser/main.cpp
 	yulPhaser/Population.h
 	yulPhaser/Population.cpp
+	yulPhaser/FitnessMetrics.h
+	yulPhaser/FitnessMetrics.cpp
 	yulPhaser/Chromosome.h
 	yulPhaser/Chromosome.cpp
 	yulPhaser/Program.h
