@@ -17,13 +17,23 @@
 
 #include <tools/yulPhaser/Random.h>
 
+#include <boost/random/bernoulli_distribution.hpp>
+#include <boost/random/binomial_distribution.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
-#include <boost/random/binomial_distribution.hpp>
 
 #include <ctime>
 
 using namespace solidity;
+
+
+bool phaser::bernoulliTrial(double _successProbability)
+{
+	static boost::random::mt19937 generator(time(0));
+	boost::random::bernoulli_distribution<> distribution(_successProbability);
+
+	return static_cast<bool>(distribution(generator));
+}
 
 uint32_t phaser::uniformRandomInt(uint32_t _min, uint32_t _max)
 {

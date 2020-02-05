@@ -22,6 +22,7 @@
 namespace solidity::phaser
 {
 
+bool bernoulliTrial(double _successProbability);
 uint32_t uniformRandomInt(uint32_t _min, uint32_t _max);
 uint32_t binomialRandomInt(uint32_t _numTrials, double _successProbability);
 
