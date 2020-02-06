@@ -45,11 +45,11 @@ class Parser::ASTNodeFactory
 {
 public:
 	explicit ASTNodeFactory(Parser& _parser):
-		m_parser(_parser), m_location{_parser.position(), -1, _parser.source()} {}
+		m_parser(_parser), m_location{_parser.currentLocation().start, -1, _parser.currentLocation().source} {}
 	ASTNodeFactory(Parser& _parser, ASTPointer<ASTNode> const& _childNode):
 		m_parser(_parser), m_location{_childNode->location()} {}
 
-	void markEndPosition() { m_location.end = m_parser.endPosition(); }
+	void markEndPosition() { m_location.end = m_parser.currentLocation().end; }
 	void setLocation(SourceLocation const& _location) { m_location = _location; }
 	void setLocationEmpty() { m_location.end = m_location.start; }
 	/// Set the end position to the one of the given node.
@@ -218,12 +218,12 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 			while (true)
 			{
 				ASTPointer<ASTString> alias;
-				SourceLocation aliasLocation = SourceLocation{position(), endPosition(), source()};
+				SourceLocation aliasLocation = currentLocation();
 				ASTPointer<Identifier> id = parseIdentifier();
 				if (m_scanner->currentToken() == Token::As)
 				{
 					expectToken(Token::As);
-					aliasLocation = SourceLocation{position(), endPosition(), source()};
+					aliasLocation = currentLocation();
 					alias = expectIdentifierToken();
 				}
 				symbolAliases.emplace_back(ImportDirective::SymbolAlias{move(id), move(alias), aliasLocation});
@@ -1189,7 +1189,7 @@ ASTPointer<Statement> Parser::parseStatement()
 ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> const& _docString)
 {
 	RecursionGuard recursionGuard(*this);
-	SourceLocation location{position(), -1, source()};
+	SourceLocation location = currentLocation();
 
 	expectToken(Token::Assembly);
 	yul::Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
@@ -2024,13 +2024,13 @@ Parser::IndexAccessedPath Parser::parseIndexAccessedPath()
 			ASTPointer<Expression> endIndex;
 			if (m_scanner->currentToken() != Token::RBrack)
 				endIndex = parseExpression();
-			indexLocation.end = endPosition();
+			indexLocation.end = currentLocation().end;
 			iap.indices.emplace_back(IndexAccessedPath::Index{index, {endIndex}, indexLocation});
 			expectToken(Token::RBrack);
 		}
 		else
 		{
-			indexLocation.end = endPosition();
+			indexLocation.end = currentLocation().end;
 			iap.indices.emplace_back(IndexAccessedPath::Index{index, {}, indexLocation});
 			expectToken(Token::RBrack);
 		}
