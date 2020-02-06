@@ -151,7 +151,7 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 void Type::clearCache() const
 {
 	m_members.clear();
-	m_stackSlots.reset();
+	m_stackItems.reset();
 	m_stackSize.reset();
 }
 
@@ -1703,14 +1703,22 @@ u256 ArrayType::storageSize() const
 	return max<u256>(1, u256(size));
 }
 
-vector<tuple<string, TypePointer>> ArrayType::makeStackSlots() const
+vector<tuple<string, TypePointer>> ArrayType::makeStackItems() const
 {
-	if (m_location == DataLocation::CallData && isDynamicallySized())
-		return {std::make_tuple("offset", TypeProvider::uint256()), std::make_tuple("length", TypeProvider::uint256())};
-	else
-		// storage slot or memory offset
-		// byte offset inside storage value is omitted
-		return {std::make_tuple(string(), nullptr)};
+	switch (m_location)
+	{
+		case DataLocation::CallData:
+			if (isDynamicallySized())
+				return {std::make_tuple("offset", TypeProvider::uint256()), std::make_tuple("length", TypeProvider::uint256())};
+			else
+				return {std::make_tuple("offset", TypeProvider::uint256())};
+		case DataLocation::Memory:
+			return {std::make_tuple("mpos", TypeProvider::uint256())};
+		case DataLocation::Storage:
+			// byte offset inside storage value is omitted
+			return {std::make_tuple("slot", TypeProvider::uint256())};
+	}
+	solAssert(false, "");
 }
 
 string ArrayType::toString(bool _short) const
@@ -1892,7 +1900,7 @@ string ArraySliceType::toString(bool _short) const
 	return m_arrayType.toString(_short) + " slice";
 }
 
-std::vector<std::tuple<std::string, TypePointer>> ArraySliceType::makeStackSlots() const
+std::vector<std::tuple<std::string, TypePointer>> ArraySliceType::makeStackItems() const
 {
 	return {{"offset", TypeProvider::uint256()}, {"length", TypeProvider::uint256()}};
 }
@@ -1995,12 +2003,12 @@ vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVar
 	return variablesAndOffsets;
 }
 
-vector<tuple<string, TypePointer>> ContractType::makeStackSlots() const
+vector<tuple<string, TypePointer>> ContractType::makeStackItems() const
 {
 	if (m_super)
 		return {};
 	else
-		return {make_tuple("address", isPayable() ? TypeProvider::payableAddress() :TypeProvider::address())};
+		return {make_tuple("address", isPayable() ? TypeProvider::payableAddress() : TypeProvider::address())};
 }
 
 void StructType::clearCache() const
@@ -2436,7 +2444,7 @@ u256 TupleType::storageSize() const
 	solAssert(false, "Storage size of non-storable tuple type requested.");
 }
 
-vector<tuple<string, TypePointer>> TupleType::makeStackSlots() const
+vector<tuple<string, TypePointer>> TupleType::makeStackItems() const
 {
 	vector<tuple<string, TypePointer>> slots;
 	unsigned i = 1;
@@ -2902,7 +2910,7 @@ unsigned FunctionType::storageBytes() const
 		solAssert(false, "Storage size of non-storable function type requested.");
 }
 
-vector<tuple<string, TypePointer>> FunctionType::makeStackSlots() const
+vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 {
 	vector<tuple<string, TypePointer>> slots;
 	Kind kind = m_kind;
@@ -2927,12 +2935,12 @@ vector<tuple<string, TypePointer>> FunctionType::makeStackSlots() const
 		slots = {make_tuple("address", TypeProvider::address())};
 		break;
 	case Kind::Internal:
-		slots = {make_tuple(string(), nullptr)};
+		slots = {make_tuple("functionIdentifier", TypeProvider::uint256())};
 		break;
 	case Kind::ArrayPush:
 	case Kind::ArrayPop:
 	case Kind::ByteArrayPush:
-		slots = {make_tuple(string(), nullptr)};
+		slots = {make_tuple("slot", TypeProvider::uint256())};
 		break;
 	default:
 		break;
@@ -2945,7 +2953,7 @@ vector<tuple<string, TypePointer>> FunctionType::makeStackSlots() const
 	if (m_saltSet)
 		slots.emplace_back("salt", TypeProvider::uint256());
 	if (bound())
-		for (auto const& [boundName, boundType]: m_parameterTypes.front()->stackSlots())
+		for (auto const& [boundName, boundType]: m_parameterTypes.front()->stackItems())
 			slots.emplace_back("self_" + boundName, boundType);
 	return slots;
 }
@@ -3441,7 +3449,7 @@ u256 TypeType::storageSize() const
 	solAssert(false, "Storage size of non-storable type type requested.");
 }
 
-vector<tuple<string, TypePointer>> TypeType::makeStackSlots() const
+vector<tuple<string, TypePointer>> TypeType::makeStackItems() const
 {
 	if (auto contractType = dynamic_cast<ContractType const*>(m_actualType))
 		if (contractType->contractDefinition().isLibrary())

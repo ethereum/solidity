@@ -1791,6 +1791,44 @@ string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const
 		"_to_" +
 		_to.identifier();
 	return m_functionCollector->createFunction(functionName, [&]() {
+		if (
+			auto fromTuple = dynamic_cast<TupleType const*>(&_from), toTuple = dynamic_cast<TupleType const*>(&_to);
+			fromTuple && toTuple && fromTuple->components().size() == toTuple->components().size()
+		)
+		{
+			size_t sourceStackSize = 0;
+			size_t destStackSize = 0;
+			std::string conversions;
+			for (size_t i = 0; i < fromTuple->components().size(); ++i)
+			{
+				auto fromComponent = fromTuple->components()[i];
+				auto toComponent = toTuple->components()[i];
+				solAssert(fromComponent, "");
+				if (toComponent)
+				{
+					conversions +=
+						suffixedVariableNameList("converted", destStackSize, destStackSize + toComponent->sizeOnStack()) +
+						" := " +
+						conversionFunction(*fromComponent, *toComponent) +
+						"(" +
+						suffixedVariableNameList("value", sourceStackSize, sourceStackSize + fromComponent->sizeOnStack()) +
+						")\n";
+					destStackSize += toComponent->sizeOnStack();
+				}
+				sourceStackSize += fromComponent->sizeOnStack();
+			}
+			return Whiskers(R"(
+				function <functionName>(<values>) -> <converted> {
+					<conversions>
+				}
+			)")
+			("functionName", functionName)
+			("values", suffixedVariableNameList("value", 0, sourceStackSize))
+			("converted", suffixedVariableNameList("converted", 0, destStackSize))
+			("conversions", conversions)
+			.render();
+		}
+
 		solUnimplementedAssert(
 			_from.category() == Type::Category::StringLiteral,
 			"Type conversion " + _from.toString() + " -> " + _to.toString() + " not yet implemented."
