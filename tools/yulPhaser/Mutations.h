@@ -23,11 +23,15 @@
 #include <tools/yulPhaser/Chromosome.h>
 
 #include <functional>
+#include <tuple>
 
 namespace solidity::phaser
 {
 
+using ChromosomePair = std::tuple<Chromosome, Chromosome>;
+
 using Mutation = Chromosome(Chromosome const&);
+using Crossover = ChromosomePair(Chromosome const&, Chromosome const&);
 
 // MUTATIONS
 
@@ -52,5 +56,21 @@ std::function<Mutation> alternativeMutations(
 	std::function<Mutation> _mutation1,
 	std::function<Mutation> _mutation2
 );
+
+// CROSSOVER
+
+/// Creates a crossover operator that randomly selects a number between 0 and 1 and uses it as the
+/// position at which to perform perform @a fixedPointCrossover.
+std::function<Crossover> randomPointCrossover();
+
+/// Creates a crossover operator that always chooses a point that lies at @a _crossoverPoint
+/// percent of the length of the shorter chromosome. Then creates a pair of chromosomes by
+/// splitting both inputs at the crossover point and stitching the resulting parts. The first
+/// output is created from the first half or first input and the second half of the second input
+/// The second output from the remaining two halves.
+///
+/// Avoids selecting position 0 (since this just produces a chromosome identical to the second one)
+/// unless there is no other choice (i.e. one of the chromosomes is empty).
+std::function<Crossover> fixedPointCrossover(double _crossoverPoint);
 
 }

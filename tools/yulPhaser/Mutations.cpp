@@ -19,6 +19,11 @@
 
 #include <tools/yulPhaser/SimulationRNG.h>
 
+#include <libsolutil/CommonData.h>
+
+#include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -87,5 +92,62 @@ function<Mutation> phaser::alternativeMutations(
 			return _mutation1(_chromosome);
 		else
 			return _mutation2(_chromosome);
+	};
+}
+
+namespace
+{
+
+ChromosomePair buildChromosomesBySwappingParts(
+	Chromosome const& _chromosome1,
+	Chromosome const& _chromosome2,
+	size_t _crossoverPoint
+)
+{
+	assert(_crossoverPoint <= _chromosome1.length());
+	assert(_crossoverPoint <= _chromosome2.length());
+
+	auto begin1 = _chromosome1.optimisationSteps().begin();
+	auto begin2 = _chromosome2.optimisationSteps().begin();
+
+	return ChromosomePair(
+		Chromosome(
+			vector<string>(begin1, begin1 + _crossoverPoint) +
+			vector<string>(begin2 + _crossoverPoint, _chromosome2.optimisationSteps().end())
+		),
+		Chromosome(
+			vector<string>(begin2, begin2 + _crossoverPoint) +
+			vector<string>(begin1 + _crossoverPoint, _chromosome1.optimisationSteps().end())
+		)
+	);
+}
+
+}
+
+function<Crossover> phaser::randomPointCrossover()
+{
+	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+	{
+		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
+
+		// Don't use position 0 (because this just swaps the values) unless it's the only choice.
+		size_t minPoint = (minLength > 0? 1 : 0);
+		assert(minPoint <= minLength);
+
+		size_t randomPoint = SimulationRNG::uniformInt(minPoint, minLength);
+		return buildChromosomesBySwappingParts(_chromosome1, _chromosome2, randomPoint);
+	};
+}
+
+function<Crossover> phaser::fixedPointCrossover(double _crossoverPoint)
+{
+	assert(0.0 <= _crossoverPoint && _crossoverPoint <= 1.0);
+
+	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+	{
+		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
+		size_t concretePoint = static_cast<size_t>(round(minLength * _crossoverPoint));
+
+		return buildChromosomesBySwappingParts(_chromosome1, _chromosome2, concretePoint);
 	};
 }
