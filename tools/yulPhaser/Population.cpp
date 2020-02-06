@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <numeric>
 
 using namespace std;
