@@ -37,6 +37,34 @@ using namespace solidity::util;
 
 namespace po = boost::program_options;
 
+enum class Algorithm
+{
+	Random
+};
+
+istream& operator>>(istream& inputStream, Algorithm& algorithm)
+{
+	string value;
+	inputStream >> value;
+
+	if (value == "random")
+		algorithm = Algorithm::Random;
+	else
+		inputStream.setstate(ios_base::failbit);
+
+	return inputStream;
+}
+
+ostream& operator<<(ostream& outputStream, Algorithm algorithm)
+{
+	if (algorithm == Algorithm::Random)
+		outputStream << "random";
+	else
+		outputStream.setstate(ios_base::failbit);
+
+	return outputStream;
+}
+
 namespace
 {
 
@@ -54,12 +82,21 @@ CharStream loadSource(string const& _sourcePath)
 	return CharStream(sourceCode, _sourcePath);
 }
 
-void runAlgorithm(string const& _sourcePath)
+void runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 {
+	constexpr size_t populationSize = 10;
+
 	CharStream sourceCode = loadSource(_sourcePath);
 	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode));
-	auto population = Population::makeRandom(fitnessMetric, 10);
-	population.run(nullopt, cout);
+	auto population = Population::makeRandom(fitnessMetric, populationSize);
+	switch (_algorithm)
+	{
+		case Algorithm::Random:
+		{
+			population.run(nullopt, cout);
+			break;
+		}
+	}
 }
 
 CommandLineParsingResult parseCommandLine(int argc, char** argv)
@@ -81,6 +118,11 @@ CommandLineParsingResult parseCommandLine(int argc, char** argv)
 	description.add_options()
 		("help", "Show help message and exit.")
 		("input-file", po::value<string>()->required(), "Input file")
+		(
+			"algorithm",
+			po::value<Algorithm>()->default_value(Algorithm::Random),
+			"Algorithm"
+		)
 	;
 
 	po::positional_options_description positionalDescription;
@@ -125,7 +167,10 @@ int main(int argc, char** argv)
 
 	try
 	{
-		runAlgorithm(parsingResult.arguments["input-file"].as<string>());
+		runAlgorithm(
+			parsingResult.arguments["input-file"].as<string>(),
+			parsingResult.arguments["algorithm"].as<Algorithm>()
+		);
 	}
 	catch (InvalidProgram const& _exception)
 	{
