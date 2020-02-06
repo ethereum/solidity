@@ -16,3 +16,50 @@
 */
 
 #include <tools/yulPhaser/PairSelections.h>
+
+#include <tools/yulPhaser/SimulationRNG.h>
+
+#include <cmath>
+
+using namespace std;
+using namespace solidity::phaser;
+
+vector<tuple<size_t, size_t>> RandomPairSelection::materialise(size_t _poolSize) const
+{
+	if (_poolSize < 2)
+		return {};
+
+	size_t count = static_cast<size_t>(round(_poolSize * m_selectionSize));
+
+	vector<tuple<size_t, size_t>> selection;
+	for (size_t i = 0; i < count; ++i)
+	{
+		size_t index1 = SimulationRNG::uniformInt(0, _poolSize - 1);
+		size_t index2;
+		do
+		{
+			index2 = SimulationRNG::uniformInt(0, _poolSize - 1);
+		} while (index1 == index2);
+
+		selection.push_back({index1, index2});
+	}
+
+	return selection;
+}
+
+vector<tuple<size_t, size_t>> PairMosaicSelection::materialise(size_t _poolSize) const
+{
+	if (_poolSize < 2)
+		return {};
+
+	size_t count = static_cast<size_t>(round(_poolSize * m_selectionSize));
+
+	vector<tuple<size_t, size_t>> selection;
+	for (size_t i = 0; i < count; ++i)
+	{
+		tuple<size_t, size_t> pair = m_pattern[i % m_pattern.size()];
+		selection.push_back({min(get<0>(pair), _poolSize - 1), min(get<1>(pair), _poolSize - 1)});
+	}
+
+	return selection;
+}

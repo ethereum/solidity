@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <tuple>
 #include <vector>
 
@@ -48,6 +49,51 @@ public:
 	virtual ~PairSelection() = default;
 
 	virtual std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const = 0;
+};
+
+/**
+ * A selection that selects pairs of random elements from a container. The resulting set of pairs
+ * may contain the same pair more than once but does not contain pairs of duplicates. Always
+ * selects as many pairs as the size of the container multiplied by @a _selectionSize (unless the
+ * container is empty).
+ */
+class RandomPairSelection: public PairSelection
+{
+public:
+	explicit RandomPairSelection(double _selectionSize):
+		m_selectionSize(_selectionSize) {}
+
+	std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const override;
+
+private:
+	double m_selectionSize;
+};
+
+/**
+ * A selection that selects pairs of elements at specific, fixed positions indicated by a repeating
+ * "pattern". If the positions in the pattern exceed the size of the container, they are capped at
+ * the maximum available position. Always selects as many pairs as the size of the container
+ * multiplied by @a _selectionSize (unless the container is empty).
+ *
+ * E.g. if the pattern is {{0, 1}, {3, 9}} and collection size is 5, the selection will materialise
+ * into {{0, 1}, {3, 4}, {0, 1}, {3, 4}, {0, 1}}. If the size is 3, it will be
+ * {{0, 1}, {2, 2}, {0, 1}}.
+ */
+class PairMosaicSelection: public PairSelection
+{
+public:
+	explicit PairMosaicSelection(std::vector<std::tuple<size_t, size_t>> _pattern, double _selectionSize = 1.0):
+		m_pattern(move(_pattern)),
+		m_selectionSize(_selectionSize)
+	{
+		assert(m_pattern.size() > 0 || _selectionSize == 0.0);
+	}
+
+	std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const override;
+
+private:
+	std::vector<std::tuple<size_t, size_t>> m_pattern;
+	double m_selectionSize;
 };
 
 }
