@@ -19,6 +19,9 @@
 
 #include <tools/yulPhaser/Random.h>
 
+#include <libsolutil/CommonData.h>
+
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -83,5 +86,31 @@ function<Mutation> phaser::alternativeMutations(
 			return _mutation1(_chromosome);
 		else
 			return _mutation2(_chromosome);
+	};
+}
+
+function<Crossover> phaser::singlePointCrossover()
+{
+	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+	{
+		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
+		if (minLength <= 1)
+			return ChromsomePair(_chromosome2, _chromosome1);
+
+		size_t crossoverPoint = uniformRandomInt(1, minLength - 1);
+
+		auto begin1 = _chromosome1.optimisationSteps().begin();
+		auto begin2 = _chromosome2.optimisationSteps().begin();
+
+		return ChromsomePair(
+			Chromosome(
+				vector<string>(begin1, begin1 + crossoverPoint) +
+				vector<string>(begin2 + crossoverPoint, _chromosome2.optimisationSteps().end())
+			),
+			Chromosome(
+				vector<string>(begin2, begin2 + crossoverPoint) +
+				vector<string>(begin1 + crossoverPoint, _chromosome1.optimisationSteps().end())
+			)
+		);
 	};
 }

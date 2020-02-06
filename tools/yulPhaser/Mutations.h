@@ -20,11 +20,15 @@
 #include <tools/yulPhaser/Chromosome.h>
 
 #include <functional>
+#include <tuple>
 
 namespace solidity::phaser
 {
 
+using ChromsomePair = std::tuple<Chromosome, Chromosome>;
+
 using Mutation = Chromosome(Chromosome const&);
+using Crossover = ChromsomePair(Chromosome const&, Chromosome const&);
 
 std::function<Mutation> geneRandomization(double _chance);
 std::function<Mutation> geneDeletion(double _chance);
@@ -34,5 +38,7 @@ std::function<Mutation> alternativeMutations(
 	std::function<Mutation> _mutation1,
 	std::function<Mutation> _mutation2
 );
+
+std::function<Crossover> singlePointCrossover();
 
 }
