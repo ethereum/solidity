@@ -85,7 +85,6 @@ public:
 		) {}
 	static Population makeRandom(std::shared_ptr<FitnessMetric const> _fitnessMetric, size_t _size);
 
-	void run(std::optional<size_t> _numRounds, std::ostream& _outputStream);
 	Population select(Selection const& _selection) const;
 	Population mutate(Selection const& _selection, std::function<Mutation> _mutation) const;
 	Population crossover(PairSelection const& _selection, std::function<Crossover> _crossover) const;
@@ -103,14 +102,6 @@ private:
 		m_fitnessMetric(std::move(_fitnessMetric)),
 		m_individuals{sortIndividuals(std::move(_individuals))} {}
 
-	void doMutation();
-	void doSelection();
-
-	static void randomizeWorstChromosomes(
-		FitnessMetric const& _fitnessMetric,
-		std::vector<Individual>& _individuals,
-		size_t _count
-	);
 	std::vector<Individual> chromosomesToIndividuals(
 		FitnessMetric const& _fitnessMetric,
 		std::vector<Chromosome> _chromosomes

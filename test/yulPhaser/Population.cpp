@@ -135,54 +135,6 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_compute_fitness)
 	BOOST_TEST(population.individuals()[2].fitness == fitnessMetric->evaluate(population.individuals()[2].chromosome));
 }
 
-BOOST_AUTO_TEST_CASE(run_should_evaluate_fitness)
-{
-	stringstream output;
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto population = Population::makeRandom(Program::load(sourceStream), 5);
-	assert(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
-
-	population.run(1, output);
-
-	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessSet));
-}
-
-BOOST_AUTO_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse)
-{
-	stringstream output;
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	vector<Chromosome> chromosomes = {
-		Chromosome({StructuralSimplifier::name}),
-		Chromosome({BlockFlattener::name}),
-		Chromosome({SSAReverser::name}),
-		Chromosome({UnusedPruner::name}),
-		Chromosome({StructuralSimplifier::name, BlockFlattener::name}),
-	};
-	auto program = Program::load(sourceStream);
-	Population population(program, chromosomes);
-
-	size_t initialTopFitness[2] = {
-		Population::measureFitness(chromosomes[0], program),
-		Population::measureFitness(chromosomes[1], program),
-	};
-
-	for (int i = 0; i < 6; ++i)
-	{
-		population.run(1, output);
-		BOOST_TEST(population.individuals().size() == 5);
-		BOOST_TEST(fitnessSet(population.individuals()[0]));
-		BOOST_TEST(fitnessSet(population.individuals()[1]));
-
-		size_t currentTopFitness[2] = {
-			population.individuals()[0].fitness.value(),
-			population.individuals()[1].fitness.value(),
-		};
-		BOOST_TEST(currentTopFitness[0] <= initialTopFitness[0]);
-		BOOST_TEST(currentTopFitness[1] <= initialTopFitness[1]);
-		BOOST_TEST(currentTopFitness[0] <= currentTopFitness[1]);
-	}
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
