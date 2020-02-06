@@ -5,4 +5,6 @@
     function h() { let x := msize() }
     function i() { let z := mload(0) }
 }
+// ====
+// dialect: evm
 // ----

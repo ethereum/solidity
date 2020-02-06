@@ -45,7 +45,7 @@ std::map<string const, yul::Dialect const& (*)(langutil::EVMVersion)> const vali
 	{
 		"evmTyped",
 		[](langutil::EVMVersion _evmVersion) -> yul::Dialect const&
-		{ return yul::EVMDialectTyped::strictAssemblyForEVM(_evmVersion); }
+		{ return yul::EVMDialectTyped::instance(_evmVersion); }
 	},
 	{
 		"yul",
