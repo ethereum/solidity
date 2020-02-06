@@ -44,13 +44,30 @@ ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 	return _stream;
 }
 
-Population Population::makeRandom(shared_ptr<FitnessMetric const> _fitnessMetric, size_t _size)
+Population Population::makeRandom(
+	shared_ptr<FitnessMetric const> _fitnessMetric,
+	size_t _size,
+	function<int()> _chromosomeLengthGenerator
+)
 {
 	vector<Chromosome> chromosomes;
 	for (size_t i = 0; i < _size; ++i)
-		chromosomes.push_back(Chromosome::makeRandom(randomChromosomeLength()));
+		chromosomes.push_back(Chromosome::makeRandom(_chromosomeLengthGenerator()));
 
 	return Population(move(_fitnessMetric), move(chromosomes));
+}
+
+Population Population::makeRandom(
+	std::shared_ptr<FitnessMetric const> _fitnessMetric,
+	size_t _size,
+	size_t _minChromosomeLength,
+	size_t _maxChromosomeLength
+)
+{
+	return makeRandom(
+		_fitnessMetric,
+		_size, std::bind(uniformChromosomeLength, _minChromosomeLength, _maxChromosomeLength)
+	);
 }
 
 Population Population::select(Selection const& _selection) const

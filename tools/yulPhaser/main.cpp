@@ -90,10 +90,18 @@ CharStream loadSource(string const& _sourcePath)
 void runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 {
 	constexpr size_t populationSize = 10;
+	constexpr size_t minChromosomeLength = 12;
+	constexpr size_t maxChromosomeLength = 30;
 
 	CharStream sourceCode = loadSource(_sourcePath);
 	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode));
-	auto population = Population::makeRandom(fitnessMetric, populationSize);
+	auto population = Population::makeRandom(
+		fitnessMetric,
+		populationSize,
+		minChromosomeLength,
+		maxChromosomeLength
+	);
+
 	switch (_algorithm)
 	{
 		case Algorithm::Random:
@@ -102,7 +110,9 @@ void runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 				population,
 				cout,
 				{
-					/* elitePoolSize = */ 0.5
+					/* elitePoolSize = */ 0.5,
+					/* minChromosomeLength = */ minChromosomeLength,
+					/* maxChromosomeLength = */ maxChromosomeLength
 				}
 			).run();
 

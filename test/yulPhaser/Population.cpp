@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes
 {
 	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
 	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceStream));
-	auto population1 = Population::makeRandom(fitnessMetric, 100);
-	auto population2 = Population::makeRandom(fitnessMetric, 100);
+	auto population1 = Population::makeRandom(fitnessMetric, 100, []{ return 30; });
+	auto population2 = Population::makeRandom(fitnessMetric, 100, []{ return 30; });
 
 	BOOST_TEST(population1.individuals().size() == 100);
 	BOOST_TEST(population2.individuals().size() == 100);
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_compute_fitness)
 {
 	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
 	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceStream));
-	auto population = Population::makeRandom(fitnessMetric, 3);
+	auto population = Population::makeRandom(fitnessMetric, 3, []{ return 10; });
 
 	BOOST_TEST(population.individuals()[0].fitness == fitnessMetric->evaluate(population.individuals()[0].chromosome));
 	BOOST_TEST(population.individuals()[1].fitness == fitnessMetric->evaluate(population.individuals()[1].chromosome));

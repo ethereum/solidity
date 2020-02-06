@@ -43,7 +43,12 @@ void RandomAlgorithm::runNextRound()
 
 	m_population = (
 		move(elitePopulation) +
-		Population::makeRandom(m_population.fitnessMetric(), replacementCount)
+		Population::makeRandom(
+			m_population.fitnessMetric(),
+			replacementCount,
+			m_options.minChromosomeLength,
+			m_options.maxChromosomeLength
+		)
 	);
 }
 

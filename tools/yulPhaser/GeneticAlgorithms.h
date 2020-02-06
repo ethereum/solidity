@@ -50,11 +50,14 @@ public:
 	struct Options
 	{
 		double elitePoolSize;
+		size_t minChromosomeLength;
+		size_t maxChromosomeLength;
 
 		bool isValid() const
 		{
 			return (
-				0 <= elitePoolSize && elitePoolSize <= 1.0
+				0 <= elitePoolSize && elitePoolSize <= 1.0 &&
+				minChromosomeLength <= maxChromosomeLength
 			);
 		}
 	};

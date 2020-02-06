@@ -73,8 +73,6 @@ struct Individual
 class Population
 {
 public:
-	static constexpr size_t MaxChromosomeLength = 30;
-
 	explicit Population(
 		std::shared_ptr<FitnessMetric const> _fitnessMetric,
 		std::vector<Chromosome> _chromosomes = {}
@@ -83,7 +81,18 @@ public:
 			std::move(_fitnessMetric),
 			chromosomesToIndividuals(*_fitnessMetric, std::move(_chromosomes))
 		) {}
-	static Population makeRandom(std::shared_ptr<FitnessMetric const> _fitnessMetric, size_t _size);
+
+	static Population makeRandom(
+		std::shared_ptr<FitnessMetric const> _fitnessMetric,
+		size_t _size,
+		std::function<int()> _chromosomeLengthGenerator
+	);
+	static Population makeRandom(
+		std::shared_ptr<FitnessMetric const> _fitnessMetric,
+		size_t _size,
+		size_t _minChromosomeLength,
+		size_t _maxChromosomeLength
+	);
 
 	Population select(Selection const& _selection) const;
 	Population mutate(Selection const& _selection, std::function<Mutation> _mutation) const;
@@ -93,7 +102,8 @@ public:
 	std::shared_ptr<FitnessMetric const> fitnessMetric() const { return m_fitnessMetric; }
 	std::vector<Individual> const& individuals() const { return m_individuals; }
 
-	static size_t randomChromosomeLength() { return binomialRandomInt(MaxChromosomeLength, 0.5); }
+	static size_t uniformChromosomeLength(size_t _min, size_t _max) { return uniformRandomInt(_min, _max); }
+	static size_t binomialChromosomeLength(size_t _max) { return binomialRandomInt(_max, 0.5); }
 
 	friend std::ostream& operator<<(std::ostream& _stream, Population const& _population);
 
