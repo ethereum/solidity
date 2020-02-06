@@ -83,5 +83,5 @@ sub_0: assembly {
         /* "--CODEGEN--":2:14   */
       revert
 
-    auxdata: 0xa164736f6c63782a302e362e332d646576656c6f702e323032302e322e362b636f6d6d69742e31353237396436392e6d6f640032
+    auxdata: AUXDATA REMOVED
 }

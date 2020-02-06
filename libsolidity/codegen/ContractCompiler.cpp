@@ -21,7 +21,6 @@
  */
 
 
-#include <functional>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -30,8 +29,8 @@
 #include <libsolidity/codegen/ExpressionCompiler.h>
 
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmAnalysis.h>
 #include <libyul/AsmData.h>
-#include <libyul/AsmDataForward.h>
 #include <libyul/backends/evm/AsmCodeGen.h>
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -49,14 +48,8 @@
 #include <libsolutil/Whiskers.h>
 
 #include <boost/range/adaptor/reversed.hpp>
+
 #include <algorithm>
-
-
-// Change to "define" to output all intermediate code
-#undef SOL_OUTPUT_ASM
-#ifdef SOL_OUTPUT_ASM
-#include <libyul/AsmPrinter.h>
-#endif
 
 using namespace std;
 using namespace solidity;
@@ -812,7 +805,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 
 	// Only used in the scope below, but required to live outside to keep the
 	// shared_ptr's alive
-	yul::Object object;
+	yul::Object object = {};
 
 	// The optimiser cannot handle external references
 	if (
@@ -820,48 +813,19 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		_inlineAssembly.annotation().externalReferences.empty()
 	)
 	{
-		// Create a modifiable copy of the code and analysis
-		object.code = make_shared<yul::Block>(yul::ASTCopier().translate(*code));
-		object.analysisInfo = make_shared<yul::AsmAnalysisInfo>();
-
-		{
-			ErrorList errList;
-			ErrorReporter errorReporter{errList};
-
-			yul::AsmAnalyzer analyzer(
-				*object.analysisInfo,
-				errorReporter,
-				_inlineAssembly.dialect()
-			);
-			solAssert(analyzer.analyze(*object.code), "Inline analysis failed.");
-		}
-
 		yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&_inlineAssembly.dialect());
 		solAssert(dialect, "");
 
-#ifdef SOL_OUTPUT_ASM
-		cout << yul::AsmPrinter(*dialect)(*object.code) << endl;
-#endif
+		// Create a modifiable copy of the code and analysis
+		object.code = make_shared<yul::Block>(yul::ASTCopier().translate(*code));
+		object.analysisInfo = make_shared<yul::AsmAnalysisInfo>(yul::AsmAnalyzer::analyzeStrictAssertCorrect(*dialect, object));
 
-		bool const isCreation = m_context.runtimeContext() != nullptr;
-		yul::GasMeter meter(*dialect, isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
-		yul::OptimiserSuite::run(
-			*dialect,
-			&meter,
-			object,
-			m_optimiserSettings.optimizeStackAllocation,
-			{}
-		);
+		m_context.optimizeYul(object, *dialect, m_optimiserSettings);
 
-#ifdef SOL_OUTPUT_ASM
-		cout << "After optimizer:" << endl;
-		cout << yul::AsmPrinter(*dialect)(*object.code) << endl;
-#endif
 		code = object.code.get();
 		analysisInfo = object.analysisInfo.get();
 	}
 
-	solAssert(analysisInfo, "");
 	yul::CodeGenerator::assemble(
 		*code,
 		*analysisInfo,
