@@ -2880,10 +2880,15 @@ bool TypeChecker::visit(Mapping const& _mapping)
 {
 	if (auto const* keyType = dynamic_cast<UserDefinedTypeName const*>(&_mapping.keyType()))
 	{
-		if (
-			keyType->annotation().type->category() != Type::Category::Contract &&
-			keyType->annotation().type->category() != Type::Category::Enum
-		)
+		if (auto const* contractType = dynamic_cast<ContractType const*>(keyType->annotation().type))
+		{
+			if (contractType->contractDefinition().isLibrary())
+				m_errorReporter.typeError(
+					keyType->location(),
+					"Library types cannot be used as mapping keys."
+				);
+		}
+		else if (keyType->annotation().type->category() != Type::Category::Enum)
 			m_errorReporter.typeError(
 				keyType->location(),
 				"Only elementary types, contract types or enums are allowed as mapping keys."
