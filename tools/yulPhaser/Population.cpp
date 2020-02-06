@@ -49,27 +49,27 @@ ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 	return _stream;
 }
 
-Population::Population(CharStream _sourceCode, vector<Chromosome> const& _chromosomes):
-	m_sourceCode{move(_sourceCode)}
+Population::Population(Program _program, vector<Chromosome> const& _chromosomes):
+	m_program{move(_program)}
 {
 	for (auto const& chromosome: _chromosomes)
 		m_individuals.push_back({chromosome});
 }
 
-Population Population::makeRandom(CharStream _sourceCode, size_t _size)
+Population Population::makeRandom(Program _program, size_t _size)
 {
 	vector<Individual> individuals;
 	for (size_t i = 0; i < _size; ++i)
 		individuals.push_back({Chromosome::makeRandom(randomChromosomeLength())});
 
-	return Population(move(_sourceCode), individuals);
+	return Population(move(_program), individuals);
 }
 
-size_t Population::measureFitness(Chromosome const& _chromosome, CharStream& _sourceCode)
+size_t Population::measureFitness(Chromosome const& _chromosome, Program const& _program)
 {
-	auto program = Program::load(_sourceCode);
-	program.optimise(_chromosome.optimisationSteps());
-	return program.codeSize();
+	Program programCopy = _program;
+	programCopy.optimise(_chromosome.optimisationSteps());
+	return programCopy.codeSize();
 }
 
 void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
@@ -88,8 +88,6 @@ void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 
 ostream& phaser::operator<<(ostream& _stream, Population const& _population)
 {
-	_stream << "Stream name: " << _population.m_sourceCode.name() << endl;
-
 	auto individual = _population.m_individuals.begin();
 	for (; individual != _population.m_individuals.end(); ++individual)
 		_stream << *individual << endl;
@@ -106,7 +104,7 @@ void Population::doEvaluation()
 {
 	for (auto& individual: m_individuals)
 		if (!individual.fitness.has_value())
-			individual.fitness = measureFitness(individual.chromosome, m_sourceCode);
+			individual.fitness = measureFitness(individual.chromosome, m_program);
 }
 
 void Population::doSelection()

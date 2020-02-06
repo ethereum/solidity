@@ -17,6 +17,7 @@
 
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/Population.h>
+#include <tools/yulPhaser/Program.h>
 
 #include <libsolutil/Assertions.h>
 #include <libsolutil/CommonIO.h>
@@ -54,7 +55,8 @@ CharStream loadSource(string const& _sourcePath)
 
 void runAlgorithm(string const& _sourcePath)
 {
-	auto population = Population::makeRandom(loadSource(_sourcePath), 10);
+	CharStream sourceCode = loadSource(_sourcePath);
+	auto population = Population::makeRandom(Program::load(sourceCode), 10);
 	population.run(nullopt, cout);
 }
 

@@ -18,9 +18,8 @@
 #pragma once
 
 #include <tools/yulPhaser/Chromosome.h>
+#include <tools/yulPhaser/Program.h>
 #include <tools/yulPhaser/Random.h>
-
-#include <liblangutil/CharStream.h>
 
 #include <optional>
 #include <ostream>
@@ -47,7 +46,7 @@ struct Individual
  * and selecting the best ones for the next round.
  *
  * An individual is a sequence of optimiser steps represented by a @a Chromosome instance. The whole
- * population is associated with a fixed Yul program. By loading the source code into a @a Program
+ * population is associated with a fixed Yul program. By applying the steps to the @a Program
  * instance the class can compute fitness of the individual.
  */
 class Population
@@ -55,21 +54,21 @@ class Population
 public:
 	static constexpr size_t MaxChromosomeLength = 30;
 
-	explicit Population(langutil::CharStream _sourceCode, std::vector<Chromosome> const& _chromosomes = {});
-	static Population makeRandom(langutil::CharStream _sourceCode, size_t _size);
+	explicit Population(Program _program, std::vector<Chromosome> const& _chromosomes = {});
+	static Population makeRandom(Program _program, size_t _size);
 
 	void run(std::optional<size_t> _numRounds, std::ostream& _outputStream);
 
 	std::vector<Individual> const& individuals() const { return m_individuals; }
 
 	static size_t randomChromosomeLength() { return binomialRandomInt(MaxChromosomeLength, 0.5); }
-	static size_t measureFitness(Chromosome const& _chromosome, langutil::CharStream& _sourceCode);
+	static size_t measureFitness(Chromosome const& _chromosome, Program const& _program);
 
 	friend std::ostream& operator<<(std::ostream& _stream, Population const& _population);
 
 private:
-	explicit Population(langutil::CharStream _sourceCode, std::vector<Individual> _individuals = {}):
-		m_sourceCode{std::move(_sourceCode)},
+	explicit Population(Program _program, std::vector<Individual> _individuals = {}):
+		m_program{std::move(_program)},
 		m_individuals{std::move(_individuals)} {}
 
 	void doMutation();
@@ -81,8 +80,7 @@ private:
 		size_t _count
 	);
 
-	langutil::CharStream m_sourceCode;
-
+	Program m_program;
 	std::vector<Individual> m_individuals;
 };
 

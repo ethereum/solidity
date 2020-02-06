@@ -17,6 +17,7 @@
 
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Population.h>
+#include <tools/yulPhaser/Program.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/SSAReverser.h>
@@ -85,7 +86,7 @@ BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness
 		Chromosome::makeRandom(5),
 		Chromosome::makeRandom(10),
 	};
-	Population population(sourceStream, chromosomes);
+	Population population(Program::load(sourceStream), chromosomes);
 
 	BOOST_TEST(population.individuals().size() == 2);
 	BOOST_TEST(population.individuals()[0].chromosome == chromosomes[0]);
@@ -98,8 +99,9 @@ BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness
 BOOST_AUTO_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes)
 {
 	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto population1 = Population::makeRandom(sourceStream, 100);
-	auto population2 = Population::makeRandom(sourceStream, 100);
+	auto program = Program::load(sourceStream);
+	auto population1 = Population::makeRandom(program, 100);
+	auto population2 = Population::makeRandom(program, 100);
 
 	BOOST_TEST(population1.individuals().size() == 100);
 	BOOST_TEST(population2.individuals().size() == 100);
@@ -118,7 +120,7 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes
 BOOST_AUTO_TEST_CASE(makeRandom_should_not_compute_fitness)
 {
 	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto population = Population::makeRandom(sourceStream, 5);
+	auto population = Population::makeRandom(Program::load(sourceStream), 5);
 
 	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 }
@@ -127,7 +129,7 @@ BOOST_AUTO_TEST_CASE(run_should_evaluate_fitness)
 {
 	stringstream output;
 	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto population = Population::makeRandom(sourceStream, 5);
+	auto population = Population::makeRandom(Program::load(sourceStream), 5);
 	assert(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 
 	population.run(1, output);
@@ -146,11 +148,12 @@ BOOST_AUTO_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse)
 		Chromosome({UnusedPruner::name}),
 		Chromosome({StructuralSimplifier::name, BlockFlattener::name}),
 	};
-	Population population(sourceStream, chromosomes);
+	auto program = Program::load(sourceStream);
+	Population population(program, chromosomes);
 
 	size_t initialTopFitness[2] = {
-		Population::measureFitness(chromosomes[0], sourceStream),
-		Population::measureFitness(chromosomes[1], sourceStream),
+		Population::measureFitness(chromosomes[0], program),
+		Population::measureFitness(chromosomes[1], program),
 	};
 
 	for (int i = 0; i < 6; ++i)
