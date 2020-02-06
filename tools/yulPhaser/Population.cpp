@@ -55,13 +55,31 @@ Population::Population(Program _program, vector<Chromosome> const& _chromosomes)
 		m_individuals.push_back({chromosome});
 }
 
-Population Population::makeRandom(Program _program, size_t _size)
+Population Population::makeRandom(
+	Program _program,
+	size_t _size,
+	function<size_t()> _chromosomeLengthGenerator
+)
 {
 	vector<Individual> individuals;
 	for (size_t i = 0; i < _size; ++i)
-		individuals.push_back({Chromosome::makeRandom(randomChromosomeLength())});
+		individuals.push_back({Chromosome::makeRandom(_chromosomeLengthGenerator())});
 
 	return Population(move(_program), individuals);
+}
+
+Population Population::makeRandom(
+	Program _program,
+	size_t _size,
+	size_t _minChromosomeLength,
+	size_t _maxChromosomeLength
+)
+{
+	return makeRandom(
+		move(_program),
+		_size,
+		std::bind(uniformChromosomeLength, _minChromosomeLength, _maxChromosomeLength)
+	);
 }
 
 size_t Population::measureFitness(Chromosome const& _chromosome, Program const& _program)
@@ -130,6 +148,6 @@ void Population::randomizeWorstChromosomes(
 	auto individual = _individuals.begin() + (_individuals.size() - _count);
 	for (; individual != _individuals.end(); ++individual)
 	{
-		*individual = {Chromosome::makeRandom(randomChromosomeLength())};
+		*individual = {Chromosome::makeRandom(binomialChromosomeLength(MaxChromosomeLength))};
 	}
 }

@@ -55,13 +55,25 @@ public:
 	static constexpr size_t MaxChromosomeLength = 30;
 
 	explicit Population(Program _program, std::vector<Chromosome> const& _chromosomes = {});
-	static Population makeRandom(Program _program, size_t _size);
+
+	static Population makeRandom(
+		Program _program,
+		size_t _size,
+		std::function<size_t()> _chromosomeLengthGenerator
+	);
+	static Population makeRandom(
+		Program _program,
+		size_t _size,
+		size_t _minChromosomeLength,
+		size_t _maxChromosomeLength
+	);
 
 	void run(std::optional<size_t> _numRounds, std::ostream& _outputStream);
 
 	std::vector<Individual> const& individuals() const { return m_individuals; }
 
-	static size_t randomChromosomeLength() { return SimulationRNG::binomialInt(MaxChromosomeLength, 0.5); }
+	static size_t uniformChromosomeLength(size_t _min, size_t _max) { return SimulationRNG::uniformInt(_min, _max); }
+	static size_t binomialChromosomeLength(size_t _max) { return SimulationRNG::binomialInt(_max, 0.5); }
 	static size_t measureFitness(Chromosome const& _chromosome, Program const& _program);
 
 	friend std::ostream& operator<<(std::ostream& _stream, Population const& _population);

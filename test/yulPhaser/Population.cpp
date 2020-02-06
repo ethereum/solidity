@@ -15,6 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <test/yulPhaser/Common.h>
+
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Population.h>
 #include <tools/yulPhaser/Program.h>
@@ -106,10 +108,59 @@ BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitn
 	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 }
 
+BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_generator, PopulationFixture)
+{
+	size_t chromosomeCount = 30;
+	size_t maxLength = 5;
+	assert(chromosomeCount % maxLength == 0);
+
+	auto nextLength = [counter = 0, maxLength]() mutable { return counter++ % maxLength; };
+	auto population = Population::makeRandom(m_program, chromosomeCount, nextLength);
+
+	// We can't rely on the order since the population sorts its chromosomes immediately but
+	// we can check the number of occurrences of each length.
+	for (size_t length = 0; length < maxLength; ++length)
+		BOOST_TEST(
+			count_if(
+				population.individuals().begin(),
+				population.individuals().end(),
+				[&length](auto const& individual) { return individual.chromosome.length() == length; }
+			) == chromosomeCount / maxLength
+		);
+}
+
+BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_range, PopulationFixture)
+{
+	auto population = Population::makeRandom(m_program, 100, 5, 10);
+	BOOST_TEST(all_of(
+		population.individuals().begin(),
+		population.individuals().end(),
+		[](auto const& individual){ return 5 <= individual.chromosome.length() && individual.chromosome.length() <= 10; }
+	));
+}
+
+BOOST_FIXTURE_TEST_CASE(makeRandom_should_use_random_chromosome_length, PopulationFixture)
+{
+	SimulationRNG::reset(1);
+	constexpr int populationSize = 200;
+	constexpr int minLength = 5;
+	constexpr int maxLength = 10;
+	constexpr double relativeTolerance = 0.05;
+
+	auto population = Population::makeRandom(m_program, populationSize, minLength, maxLength);
+	vector<size_t> samples = chromosomeLengths(population);
+
+	const double expectedValue = (maxLength + minLength) / 2.0;
+	const double variance = ((maxLength - minLength + 1) * (maxLength - minLength + 1) - 1) / 12.0;
+
+	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+}
+
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes, PopulationFixture)
 {
-	auto population1 = Population::makeRandom(m_program, 100);
-	auto population2 = Population::makeRandom(m_program, 100);
+	auto population1 = Population::makeRandom(m_program, 100, 30, 30);
+	auto population2 = Population::makeRandom(m_program, 100, 30, 30);
 
 	BOOST_TEST(population1.individuals().size() == 100);
 	BOOST_TEST(population2.individuals().size() == 100);
@@ -127,7 +178,7 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromoso
 
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_not_compute_fitness, PopulationFixture)
 {
-	auto population = Population::makeRandom(m_program, 5);
+	auto population = Population::makeRandom(m_program, 3, 5, 10);
 
 	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 }
@@ -135,7 +186,7 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_not_compute_fitness, PopulationFixture
 BOOST_FIXTURE_TEST_CASE(run_should_evaluate_fitness, PopulationFixture)
 {
 	stringstream output;
-	auto population = Population::makeRandom(m_program, 5);
+	auto population = Population::makeRandom(m_program, 5, 5, 10);
 	assert(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 
 	population.run(1, output);
