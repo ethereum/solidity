@@ -182,38 +182,6 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_compute_fitness, PopulationFixture)
 	BOOST_TEST(population.individuals()[2].fitness == m_fitnessMetric->evaluate(population.individuals()[2].chromosome));
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse, PopulationFixture)
-{
-	stringstream output;
-	vector<Chromosome> chromosomes = {
-		Chromosome(vector<string>{StructuralSimplifier::name}),
-		Chromosome(vector<string>{BlockFlattener::name}),
-		Chromosome(vector<string>{SSAReverser::name}),
-		Chromosome(vector<string>{UnusedPruner::name}),
-		Chromosome(vector<string>{StructuralSimplifier::name, BlockFlattener::name}),
-	};
-	Population population(m_fitnessMetric, chromosomes);
-
-	size_t initialTopFitness[2] = {
-		m_fitnessMetric->evaluate(chromosomes[0]),
-		m_fitnessMetric->evaluate(chromosomes[1]),
-	};
-
-	for (int i = 0; i < 6; ++i)
-	{
-		population.run(1, output);
-		BOOST_TEST(population.individuals().size() == 5);
-
-		size_t currentTopFitness[2] = {
-			population.individuals()[0].fitness,
-			population.individuals()[1].fitness,
-		};
-		BOOST_TEST(currentTopFitness[0] <= initialTopFitness[0]);
-		BOOST_TEST(currentTopFitness[1] <= initialTopFitness[1]);
-		BOOST_TEST(currentTopFitness[0] <= currentTopFitness[1]);
-	}
-}
-
 BOOST_FIXTURE_TEST_CASE(plus_operator_should_add_two_populations, PopulationFixture)
 {
 	BOOST_CHECK_EQUAL(
