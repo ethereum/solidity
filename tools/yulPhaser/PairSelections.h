@@ -34,4 +34,16 @@ public:
 	virtual std::vector<std::tuple<size_t, size_t>> materialize(size_t _poolSize) const = 0;
 };
 
+class RandomPairSelection: public PairSelection
+{
+public:
+	explicit RandomPairSelection(double _selectionSize):
+		m_selectionSize(_selectionSize) {}
+
+	std::vector<std::tuple<size_t, size_t>> materialize(size_t _poolSize) const override;
+
+private:
+	double m_selectionSize;
+};
+
 }

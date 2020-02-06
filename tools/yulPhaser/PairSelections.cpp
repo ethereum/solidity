@@ -16,3 +16,33 @@
 */
 
 #include <tools/yulPhaser/PairSelections.h>
+
+#include <tools/yulPhaser/Random.h>
+
+#include <cmath>
+
+using namespace std;
+using namespace solidity::phaser;
+
+vector<tuple<size_t, size_t>> RandomPairSelection::materialize(size_t _poolSize) const
+{
+	if (_poolSize < 2)
+		return {};
+
+	size_t count = static_cast<size_t>(round(_poolSize * m_selectionSize));
+
+	vector<tuple<size_t, size_t>> selection;
+	for (size_t i = 0; i < count; ++i)
+	{
+		size_t index1 = uniformRandomInt(0, _poolSize - 1);
+		size_t index2;
+		do
+		{
+			index2 = uniformRandomInt(0, _poolSize - 1);
+		} while (index1 == index2);
+
+		selection.push_back({index1, index2});
+	}
+
+	return selection;
+}
