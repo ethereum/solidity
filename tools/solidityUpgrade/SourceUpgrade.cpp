@@ -25,6 +25,15 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
 
+#ifdef _WIN32 // windows
+	#include <io.h>
+	#define isatty _isatty
+	#define fileno _fileno
+#else // unix
+	#include <unistd.h>
+#endif
+
+
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
