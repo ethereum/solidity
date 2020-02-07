@@ -1303,6 +1303,8 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			{
 				switch (funType->kind())
 				{
+				case FunctionType::Kind::Declaration:
+					break;
 				case FunctionType::Kind::Internal:
 					// We do not visit the expression here on purpose, because in the case of an
 					// internal library function call, this would push the library address forcing

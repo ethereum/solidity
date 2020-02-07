@@ -3,7 +3,7 @@ contract A {
 }
 
 contract B {
-    function g() external pure {
-        A.f.selector;
+    function g() external pure returns(bytes4) {
+        return A.f.selector;
     }
 }

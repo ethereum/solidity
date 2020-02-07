@@ -3,7 +3,7 @@ interface I {
 }
 
 contract B {
-    function g() external pure {
-        I.f.selector;
+    function g() external pure returns(bytes4) {
+        return I.f.selector;
     }
 }
