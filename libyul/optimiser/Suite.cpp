@@ -24,6 +24,7 @@
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/CircularReferencesPruner.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/ConditionalUnsimplifier.h>
@@ -99,6 +100,7 @@ void OptimiserSuite::run(
 		FunctionGrouper::name,
 		EquivalentFunctionCombiner::name,
 		UnusedPruner::name,
+		CircularReferencesPruner::name,
 		BlockFlattener::name,
 		ControlFlowSimplifier::name,
 		LiteralRematerialiser::name,
@@ -151,7 +153,8 @@ void OptimiserSuite::run(
 				BlockFlattener::name,
 				DeadCodeEliminator::name,
 				ForLoopConditionIntoBody::name,
-				UnusedPruner::name
+				UnusedPruner::name,
+				CircularReferencesPruner::name
 			}, ast);
 		}
 
@@ -161,6 +164,7 @@ void OptimiserSuite::run(
 				LoadResolver::name,
 				CommonSubexpressionEliminator::name,
 				UnusedPruner::name,
+				CircularReferencesPruner::name,
 			}, ast);
 		}
 
@@ -170,6 +174,7 @@ void OptimiserSuite::run(
 				SSAReverser::name,
 				CommonSubexpressionEliminator::name,
 				UnusedPruner::name,
+				CircularReferencesPruner::name,
 
 				ExpressionJoiner::name,
 				ExpressionJoiner::name,
@@ -183,6 +188,7 @@ void OptimiserSuite::run(
 			suite.runSequence({
 				ExpressionInliner::name,
 				UnusedPruner::name,
+				CircularReferencesPruner::name,
 			}, ast);
 		}
 
@@ -193,8 +199,10 @@ void OptimiserSuite::run(
 				SSATransform::name,
 				RedundantAssignEliminator::name,
 				UnusedPruner::name,
+				CircularReferencesPruner::name,
 				RedundantAssignEliminator::name,
 				UnusedPruner::name,
+				CircularReferencesPruner::name,
 			}, ast);
 		}
 
@@ -244,6 +252,7 @@ void OptimiserSuite::run(
 				RedundantAssignEliminator::name,
 				ForLoopConditionIntoBody::name,
 				UnusedPruner::name,
+				CircularReferencesPruner::name,
 				CommonSubexpressionEliminator::name,
 			}, ast);
 		}
@@ -255,10 +264,13 @@ void OptimiserSuite::run(
 		ExpressionJoiner::name,
 		Rematerialiser::name,
 		UnusedPruner::name,
+		CircularReferencesPruner::name,
 		ExpressionJoiner::name,
 		UnusedPruner::name,
+		CircularReferencesPruner::name,
 		ExpressionJoiner::name,
 		UnusedPruner::name,
+		CircularReferencesPruner::name,
 
 		SSAReverser::name,
 		CommonSubexpressionEliminator::name,
@@ -266,10 +278,12 @@ void OptimiserSuite::run(
 		ForLoopConditionOutOfBody::name,
 		CommonSubexpressionEliminator::name,
 		UnusedPruner::name,
+		CircularReferencesPruner::name,
 
 		ExpressionJoiner::name,
 		Rematerialiser::name,
 		UnusedPruner::name,
+		CircularReferencesPruner::name,
 	}, ast);
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
@@ -339,6 +353,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 	if (instance.empty())
 		instance = optimiserStepCollection<
 			BlockFlattener,
+			CircularReferencesPruner,
 			CommonSubexpressionEliminator,
 			ConditionalSimplifier,
 			ConditionalUnsimplifier,
@@ -374,6 +389,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 {
 	static map<string, char> lookupTable{
 		{BlockFlattener::name,                'f'},
+		{CircularReferencesPruner::name,      'l'},
 		{CommonSubexpressionEliminator::name, 'c'},
 		{ConditionalSimplifier::name,         'C'},
 		{ConditionalUnsimplifier::name,       'U'},
