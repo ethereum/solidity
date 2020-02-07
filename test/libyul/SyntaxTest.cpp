@@ -45,7 +45,7 @@ std::map<string const, yul::Dialect const& (*)(langutil::EVMVersion)> const vali
 	{
 		"evmTyped",
 		[](langutil::EVMVersion _evmVersion) -> yul::Dialect const&
-		{ return yul::EVMDialectTyped::strictAssemblyForEVM(_evmVersion); }
+		{ return yul::EVMDialectTyped::instance(_evmVersion); }
 	},
 	{
 		"yul",
@@ -70,7 +70,7 @@ vector<string> validDialectNames()
 
 void SyntaxTest::parseAndAnalyze()
 {
-	string dialectName = m_validatedSettings.count("Dialect") ? m_validatedSettings["Dialect"] : "evmTyped";
+	string dialectName = m_validatedSettings.count("dialect") ? m_validatedSettings["dialect"] : "evmTyped";
 
 	yul::Dialect const& dialect = validDialects.at(dialectName)(m_evmVersion);
 
@@ -119,12 +119,12 @@ bool SyntaxTest::validateSettings(langutil::EVMVersion _evmVersion)
 	if (!CommonSyntaxTest::validateSettings(_evmVersion))
 		return false;
 
-	if (!m_settings.count("Dialect"))
+	if (!m_settings.count("dialect"))
 		return true;
 
-	string const dialect = m_settings["Dialect"];
-	m_validatedSettings["Dialect"] = dialect;
-	m_settings.erase("Dialect");
+	string const dialect = m_settings["dialect"];
+	m_validatedSettings["dialect"] = dialect;
+	m_settings.erase("dialect");
 
 	if (!validDialects.count(dialect))
 		BOOST_THROW_EXCEPTION(runtime_error{
