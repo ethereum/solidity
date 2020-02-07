@@ -68,7 +68,8 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 				to_string(recommendedVersion.patch()) +
 				string(";\"");
 
-		m_errorReporter.warning(_sourceUnit.location(), errorString);
+		// when reporting the warning, print the source name only
+		m_errorReporter.warning({-1, -1, _sourceUnit.location().source}, errorString);
 	}
 	m_sourceUnit = nullptr;
 }
