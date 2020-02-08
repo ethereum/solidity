@@ -142,11 +142,11 @@ BOOST_AUTO_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse)
 	stringstream output;
 	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
 	vector<Chromosome> chromosomes = {
-		Chromosome({StructuralSimplifier::name}),
-		Chromosome({BlockFlattener::name}),
-		Chromosome({SSAReverser::name}),
-		Chromosome({UnusedPruner::name}),
-		Chromosome({StructuralSimplifier::name, BlockFlattener::name}),
+		Chromosome(vector<string>{StructuralSimplifier::name}),
+		Chromosome(vector<string>{BlockFlattener::name}),
+		Chromosome(vector<string>{SSAReverser::name}),
+		Chromosome(vector<string>{UnusedPruner::name}),
+		Chromosome(vector<string>{StructuralSimplifier::name, BlockFlattener::name}),
 	};
 	auto program = Program::load(sourceStream);
 	Population population(program, chromosomes);

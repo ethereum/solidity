@@ -21,8 +21,18 @@
 #include <tools/yulPhaser/SimulationRNG.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
-#include <libyul/optimiser/StructuralSimplifier.h>
+#include <libyul/optimiser/ConditionalSimplifier.h>
+#include <libyul/optimiser/ExpressionInliner.h>
+#include <libyul/optimiser/ExpressionSimplifier.h>
+#include <libyul/optimiser/ForLoopConditionOutOfBody.h>
+#include <libyul/optimiser/ForLoopConditionOutOfBody.h>
+#include <libyul/optimiser/ForLoopInitRewriter.h>
+#include <libyul/optimiser/FunctionHoister.h>
+#include <libyul/optimiser/LoopInvariantCodeMotion.h>
+#include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/Suite.h>
+#include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/UnusedPruner.h>
 
 #include <libsolutil/CommonIO.h>
@@ -38,6 +48,24 @@ namespace solidity::phaser::test
 
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(ChromosomeTest)
+
+BOOST_AUTO_TEST_CASE(constructor_should_convert_from_string_to_optimisation_steps)
+{
+	vector<string> expectedSteps{
+		ConditionalSimplifier::name,
+		FunctionHoister::name,
+		RedundantAssignEliminator::name,
+		ForLoopConditionOutOfBody::name,
+		Rematerialiser::name,
+		ForLoopConditionOutOfBody::name,
+		ExpressionSimplifier::name,
+		ForLoopInitRewriter::name,
+		LoopInvariantCodeMotion::name,
+		ExpressionInliner::name
+	};
+
+	BOOST_TEST(Chromosome("ChrOmOsoMe").optimisationSteps() == expectedSteps);
+}
 
 BOOST_AUTO_TEST_CASE(makeRandom_should_create_chromosome_with_random_optimisation_steps)
 {
