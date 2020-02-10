@@ -69,6 +69,8 @@ void SourceReferenceFormatter::printSourceName(SourceReference const& _ref)
 {
 	if (_ref.position.line != -1)
 		m_stream << _ref.sourceName << ":" << (_ref.position.line + 1) << ":" << (_ref.position.column + 1) << ": ";
+	else if (!_ref.sourceName.empty())
+		m_stream << _ref.sourceName << ": ";
 }
 
 void SourceReferenceFormatter::printExceptionInformation(util::Exception const& _exception, std::string const& _category)
