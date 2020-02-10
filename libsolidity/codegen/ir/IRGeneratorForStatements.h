@@ -75,7 +75,9 @@ private:
 		std::vector<ASTPointer<Expression const>> const& _arguments
 	);
 
-	std::string fetchFreeMem() const;
+	/// @returns code that evaluates to the first unused memory slot (which does not have to
+	/// be empty).
+	static std::string freeMemory();
 
 	/// Generates the required conversion code and @returns an IRVariable referring to the value of @a _variable
 	/// converted to type @a _to.
