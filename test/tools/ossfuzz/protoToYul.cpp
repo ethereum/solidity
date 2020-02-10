@@ -120,6 +120,8 @@ string ProtoConverter::visit(Literal const& _x)
 		return "0x" + createHex(_x.hexval());
 	case Literal::kStrval:
 		return "\"" + createAlphaNum(_x.strval()) + "\"";
+	case Literal::kBoolval:
+		return _x.boolval() ? "true" : "false";
 	case Literal::LITERAL_ONEOF_NOT_SET:
 		return dictionaryToken();
 	}
@@ -1170,6 +1172,8 @@ void ProtoConverter::visit(CaseStmt const& _x)
 		if (noDoubleQuoteStr.empty())
 			yulAssert(literalVal == 0, "Proto fuzzer: Empty string does not evaluate to zero");
 	}
+	else if (_x.case_lit().has_boolval())
+		literalVal = _x.case_lit().boolval() ? u256(1) : u256(0);
 	else
 		literalVal = u256(literal);
 
