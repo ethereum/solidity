@@ -134,7 +134,7 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 				FixedHash<hashHeaderSize>(keccak256("Error(string)"))
 			)) << (256 - hashHeaderSize * byteSize);
 
-		string const encodeFunc = ABIFunctions(m_evmVersion, m_functionCollector)
+		string const encodeFunc = ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector)
 			.tupleEncoder(
 				{_messageType},
 				{TypeProvider::stringMemory()}
@@ -1627,7 +1627,7 @@ string YulUtilFunctions::packedHashFunction(
 		templ("variables", suffixedVariableNameList("var_", 1, 1 + sizeOnStack));
 		templ("comma", sizeOnStack > 0 ? "," : "");
 		templ("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer));
-		templ("packedEncode", ABIFunctions(m_evmVersion, m_functionCollector).tupleEncoderPacked(_givenTypes, _targetTypes));
+		templ("packedEncode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleEncoderPacked(_givenTypes, _targetTypes));
 		return templ.render();
 	});
 }
@@ -1904,4 +1904,42 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 		("validate", _fromCalldata ? validatorFunction(_type) : "")
 		.render();
 	});
+}
+
+string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string const& _message)
+{
+	if (revertStrings >= RevertStrings::Debug && !_message.empty())
+	{
+		Whiskers templ(R"({
+			mstore(0, <sig>)
+			mstore(4, 0x20)
+			mstore(add(4, 0x20), <length>)
+			let reasonPos := add(4, 0x40)
+			<#word>
+				mstore(add(reasonPos, <offset>), <wordValue>)
+			</word>
+			revert(0, add(reasonPos, <end>))
+		})");
+		templ("sig", (u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)")))) << (256 - 32)).str());
+		templ("length", to_string(_message.length()));
+
+		size_t words = (_message.length() + 31) / 32;
+		vector<map<string, string>> wordParams(words);
+		for (size_t i = 0; i < words; ++i)
+		{
+			wordParams[i]["offset"] = to_string(i * 32);
+			wordParams[i]["wordValue"] = formatAsStringOrNumber(_message.substr(32 * i, 32));
+		}
+		templ("word", wordParams);
+		templ("end", to_string(words * 32));
+
+		return templ.render();
+	}
+	else
+		return "revert(0, 0)";
+}
+
+string YulUtilFunctions::revertReasonIfDebug(string const& _message)
+{
+	return revertReasonIfDebug(m_revertStrings, _message);
 }

@@ -37,6 +37,8 @@
 #include <libyul/Object.h>
 #include <libyul/YulString.h>
 
+#include <libsolutil/Whiskers.h>
+
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -55,6 +57,7 @@
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::util;
 using namespace solidity::evmasm;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
@@ -296,12 +299,13 @@ CompilerContext& CompilerContext::appendConditionalInvalid()
 	return *this;
 }
 
-CompilerContext& CompilerContext::appendRevert()
+CompilerContext& CompilerContext::appendRevert(string const& _message)
 {
-	return *this << u256(0) << u256(0) << Instruction::REVERT;
+	appendInlineAssembly("{ " + revertReasonIfDebug(_message) + " }");
+	return *this;
 }
 
-CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnData)
+CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnData, string const& _message)
 {
 	if (_forwardReturnData && m_evmVersion.supportsReturndata())
 		appendInlineAssembly(R"({
@@ -311,9 +315,7 @@ CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnDat
 			}
 		})", {"condition"});
 	else
-		appendInlineAssembly(R"({
-			if condition { revert(0, 0) }
-		})", {"condition"});
+		appendInlineAssembly("{ if condition { " + revertReasonIfDebug(_message) + " } }", {"condition"});
 	*this << Instruction::POP;
 	return *this;
 }
@@ -486,6 +488,11 @@ vector<ContractDefinition const*>::const_iterator CompilerContext::superContract
 	auto it = find(m_inheritanceHierarchy.begin(), m_inheritanceHierarchy.end(), &_contract);
 	solAssert(it != m_inheritanceHierarchy.end(), "Base not found in inheritance hierarchy.");
 	return ++it;
+}
+
+string CompilerContext::revertReasonIfDebug(string const& _message)
+{
+	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
 }
 
 void CompilerContext::updateSourceLocation()

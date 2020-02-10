@@ -58,10 +58,8 @@ class ExpressionCompiler: private ASTConstVisitor
 public:
 	ExpressionCompiler(
 		CompilerContext& _compilerContext,
-		RevertStrings _revertStrings,
 		bool _optimiseOrderLiterals
 	):
-		m_revertStrings(_revertStrings),
 		m_optimiseOrderLiterals(_optimiseOrderLiterals),
 		m_context(_compilerContext)
 	{}
@@ -139,7 +137,6 @@ private:
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();
 
-	RevertStrings m_revertStrings;
 	bool m_optimiseOrderLiterals;
 	CompilerContext& m_context;
 	std::unique_ptr<LValue> m_currentLValue;

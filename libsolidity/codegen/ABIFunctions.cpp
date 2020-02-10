@@ -180,11 +180,12 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 
 		Whiskers templ(R"(
 			function <functionName>(headStart, dataEnd) <arrow> <valueReturnParams> {
-				if slt(sub(dataEnd, headStart), <minimumSize>) { revert(0, 0) }
+				if slt(sub(dataEnd, headStart), <minimumSize>) { <revertString> }
 				<decodeElements>
 			}
 		)");
 		templ("functionName", functionName);
+		templ("revertString", revertReasonIfDebug("ABI decoding: tuple data too short"));
 		templ("minimumSize", to_string(headSize(decodingTypes)));
 
 		string decodeElements;
@@ -211,7 +212,7 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 				R"(
 				{
 					let offset := <load>(add(headStart, <pos>))
-					if gt(offset, 0xffffffffffffffff) { revert(0, 0) }
+					if gt(offset, 0xffffffffffffffff) { <revertString> }
 					<values> := <abiDecode>(add(headStart, offset), dataEnd)
 				}
 				)" :
@@ -222,6 +223,8 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 				}
 				)"
 			);
+			// TODO add test
+			elementTempl("revertString", revertReasonIfDebug("ABI decoding: invalid tuple offset"));
 			elementTempl("load", _fromMemory ? "mload" : "calldataload");
 			elementTempl("values", boost::algorithm::join(valueNamesLocal, ", "));
 			elementTempl("pos", to_string(headPos));
@@ -453,12 +456,14 @@ string ABIFunctions::abiEncodingFunctionCalldataArrayWithoutCleanup(
 			else
 				templ("scaleLengthByStride",
 					Whiskers(R"(
-						if gt(length, <maxLength>) { revert(0, 0) }
+						if gt(length, <maxLength>) { <revertString> }
 						length := mul(length, <stride>)
 					)")
 					("stride", toCompactHexWithPrefix(fromArrayType.calldataStride()))
 					("maxLength", toCompactHexWithPrefix(u256(-1) / fromArrayType.calldataStride()))
+					("revertString", revertReasonIfDebug("ABI encoding: array data too long"))
 					.render()
+					// TODO add revert test
 				);
 			templ("readableTypeNameFrom", _from.toString(true));
 			templ("readableTypeNameTo", _to.toString(true));
@@ -1124,7 +1129,7 @@ string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _from
 			R"(
 				// <readableTypeName>
 				function <functionName>(offset, end) -> array {
-					if iszero(slt(add(offset, 0x1f), end)) { revert(0, 0) }
+					if iszero(slt(add(offset, 0x1f), end)) { <revertString> }
 					let length := <retrieveLength>
 					array := <allocate>(<allocationSize>(length))
 					let dst := array
@@ -1141,6 +1146,8 @@ string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _from
 				}
 			)"
 		);
+		// TODO add test
+		templ("revertString", revertReasonIfDebug("ABI decoding: invalid calldata array offset"));
 		templ("functionName", functionName);
 		templ("readableTypeName", _type.toString(true));
 		templ("retrieveLength", !_type.isDynamicallySized() ? toCompactHexWithPrefix(_type.length()) : load + "(offset)");
@@ -1159,7 +1166,12 @@ string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _from
 		}
 		else
 		{
-			templ("staticBoundsCheck", "if gt(add(src, mul(length, " + calldataStride + ")), end) { revert(0, 0) }");
+			templ("staticBoundsCheck", "if gt(add(src, mul(length, " +
+				calldataStride +
+				")), end) { " +
+				revertReasonIfDebug("ABI decoding: invalid calldata array stride") +
+				" }"
+			);
 			templ("retrieveElementPos", "src");
 		}
 		templ("decodingFun", abiDecodingFunction(*_type.baseType(), _fromMemory, false));
@@ -1184,11 +1196,11 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 			templ = R"(
 				// <readableTypeName>
 				function <functionName>(offset, end) -> arrayPos, length {
-					if iszero(slt(add(offset, 0x1f), end)) { revert(0, 0) }
+					if iszero(slt(add(offset, 0x1f), end)) { <revertStringOffset> }
 					length := calldataload(offset)
-					if gt(length, 0xffffffffffffffff) { revert(0, 0) }
+					if gt(length, 0xffffffffffffffff) { <revertStringLength> }
 					arrayPos := add(offset, 0x20)
-					if gt(add(arrayPos, mul(length, <stride>)), end) { revert(0, 0) }
+					if gt(add(arrayPos, mul(length, <stride>)), end) { <revertStringPos> }
 				}
 			)";
 		else
@@ -1196,10 +1208,14 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 				// <readableTypeName>
 				function <functionName>(offset, end) -> arrayPos {
 					arrayPos := offset
-					if gt(add(arrayPos, mul(<length>, <stride>)), end) { revert(0, 0) }
+					if gt(add(arrayPos, mul(<length>, <stride>)), end) { <revertStringPos> }
 				}
 			)";
 		Whiskers w{templ};
+		// TODO add test
+		w("revertStringOffset", revertReasonIfDebug("ABI decoding: invalid calldata array offset"));
+		w("revertStringLength", revertReasonIfDebug("ABI decoding: invalid calldata array length"));
+		w("revertStringPos", revertReasonIfDebug("ABI decoding: invalid calldata array stride"));
 		w("functionName", functionName);
 		w("readableTypeName", _type.toString(true));
 		w("stride", toCompactHexWithPrefix(_type.calldataStride()));
@@ -1223,17 +1239,20 @@ string ABIFunctions::abiDecodingFunctionByteArray(ArrayType const& _type, bool _
 		Whiskers templ(
 			R"(
 				function <functionName>(offset, end) -> array {
-					if iszero(slt(add(offset, 0x1f), end)) { revert(0, 0) }
+					if iszero(slt(add(offset, 0x1f), end)) { <revertStringOffset> }
 					let length := <load>(offset)
 					array := <allocate>(<allocationSize>(length))
 					mstore(array, length)
 					let src := add(offset, 0x20)
 					let dst := add(array, 0x20)
-					if gt(add(src, length), end) { revert(0, 0) }
+					if gt(add(src, length), end) { <revertStringLength> }
 					<copyToMemFun>(src, dst, length)
 				}
 			)"
 		);
+		// TODO add test
+		templ("revertStringOffset", revertReasonIfDebug("ABI decoding: invalid byte array offset"));
+		templ("revertStringLength", revertReasonIfDebug("ABI decoding: invalid byte array length"));
 		templ("functionName", functionName);
 		templ("load", _fromMemory ? "mload" : "calldataload");
 		templ("allocate", m_utils.allocationFunction());
@@ -1254,10 +1273,12 @@ string ABIFunctions::abiDecodingFunctionCalldataStruct(StructType const& _type)
 		Whiskers w{R"(
 				// <readableTypeName>
 				function <functionName>(offset, end) -> value {
-					if slt(sub(end, offset), <minimumSize>) { revert(0, 0) }
+					if slt(sub(end, offset), <minimumSize>) { <revertString> }
 					value := offset
 				}
 		)"};
+		// TODO add test
+		w("revertString", revertReasonIfDebug("ABI decoding: struct calldata too short"));
 		w("functionName", functionName);
 		w("readableTypeName", _type.toString(true));
 		w("minimumSize", to_string(_type.isDynamicallyEncoded() ? _type.calldataEncodedTailSize() : _type.calldataEncodedSize(true)));
@@ -1277,7 +1298,7 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 		Whiskers templ(R"(
 			// <readableTypeName>
 			function <functionName>(headStart, end) -> value {
-				if slt(sub(end, headStart), <minimumSize>) { revert(0, 0) }
+				if slt(sub(end, headStart), <minimumSize>) { <revertString> }
 				value := <allocate>(<memorySize>)
 				<#members>
 				{
@@ -1287,6 +1308,8 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 				</members>
 			}
 		)");
+		// TODO add test
+		templ("revertString", revertReasonIfDebug("ABI decoding: struct data too short"));
 		templ("functionName", functionName);
 		templ("readableTypeName", _type.toString(true));
 		templ("allocate", m_utils.allocationFunction());
@@ -1305,7 +1328,7 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 				dynamic ?
 				R"(
 					let offset := <load>(add(headStart, <pos>))
-					if gt(offset, 0xffffffffffffffff) { revert(0, 0) }
+					if gt(offset, 0xffffffffffffffff) { <revertString> }
 					mstore(add(value, <memoryOffset>), <abiDecode>(add(headStart, offset), end))
 				)" :
 				R"(
@@ -1313,6 +1336,8 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 					mstore(add(value, <memoryOffset>), <abiDecode>(add(headStart, offset), end))
 				)"
 			);
+			// TODO add test
+			memberTempl("revertString", revertReasonIfDebug("ABI decoding: invalid struct offset"));
 			memberTempl("load", _fromMemory ? "mload" : "calldataload");
 			memberTempl("pos", to_string(headPos));
 			memberTempl("memoryOffset", toCompactHexWithPrefix(_type.memoryOffsetOfMember(member.name)));
@@ -1380,7 +1405,7 @@ string ABIFunctions::calldataAccessFunction(Type const& _type)
 			Whiskers w(R"(
 				function <functionName>(base_ref, ptr) -> <return> {
 					let rel_offset_of_tail := calldataload(ptr)
-					if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { revert(0, 0) }
+					if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { <revertStringOffset> }
 					value := add(rel_offset_of_tail, base_ref)
 					<handleLength>
 				}
@@ -1392,9 +1417,15 @@ string ABIFunctions::calldataAccessFunction(Type const& _type)
 				w("handleLength", Whiskers(R"(
 					length := calldataload(value)
 					value := add(value, 0x20)
-					if gt(length, 0xffffffffffffffff) { revert(0, 0) }
-					if sgt(base_ref, sub(calldatasize(), mul(length, <calldataStride>))) { revert(0, 0) }
-				)")("calldataStride", toCompactHexWithPrefix(arrayType->calldataStride())).render());
+					if gt(length, 0xffffffffffffffff) { <revertStringLength> }
+					if sgt(base_ref, sub(calldatasize(), mul(length, <calldataStride>))) { <revertStringStride> }
+				)")
+				("calldataStride", toCompactHexWithPrefix(arrayType->calldataStride()))
+				// TODO add test
+				("revertStringLength", revertReasonIfDebug("Invalid calldata access length"))
+				// TODO add test
+				("revertStringStride", revertReasonIfDebug("Invalid calldata access stride"))
+				.render());
 				w("return", "value, length");
 			}
 			else
@@ -1404,6 +1435,7 @@ string ABIFunctions::calldataAccessFunction(Type const& _type)
 			}
 			w("neededLength", toCompactHexWithPrefix(tailSize));
 			w("functionName", functionName);
+			w("revertStringOffset", revertReasonIfDebug("Invalid calldata access offset"));
 			return w.render();
 		}
 		else if (_type.isValueType())
@@ -1492,4 +1524,9 @@ size_t ABIFunctions::numVariablesForType(Type const& _type, EncodingOptions cons
 		return 1;
 	else
 		return _type.sizeOnStack();
+}
+
+std::string ABIFunctions::revertReasonIfDebug(std::string const& _message)
+{
+	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
 }

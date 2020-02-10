@@ -51,6 +51,7 @@ bytes SolidityExecutionFramework::compileContract(
 	m_compiler.setEVMVersion(m_evmVersion);
 	m_compiler.setOptimiserSettings(m_optimiserSettings);
 	m_compiler.enableIRGeneration(m_compileViaYul);
+	m_compiler.setRevertStringBehaviour(m_revertStrings);
 	if (!m_compiler.compile())
 	{
 		langutil::SourceReferenceFormatter formatter(std::cerr);

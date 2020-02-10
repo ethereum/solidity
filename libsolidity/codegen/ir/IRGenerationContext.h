@@ -21,6 +21,7 @@
 #pragma once
 
 #include <libsolidity/interface/OptimiserSettings.h>
+#include <libsolidity/interface/DebugSettings.h>
 
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 
@@ -47,8 +48,13 @@ class YulUtilFunctions;
 class IRGenerationContext
 {
 public:
-	IRGenerationContext(langutil::EVMVersion _evmVersion, OptimiserSettings _optimiserSettings):
+	IRGenerationContext(
+		langutil::EVMVersion _evmVersion,
+		RevertStrings _revertStrings,
+		OptimiserSettings _optimiserSettings
+	):
 		m_evmVersion(_evmVersion),
+		m_revertStrings(_revertStrings),
 		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_functions(std::make_shared<MultiUseYulFunctionCollector>())
 	{}
@@ -92,8 +98,15 @@ public:
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; };
 
+	/// @returns code that stores @param _message for revert reason
+	/// if m_revertStrings is debug.
+	std::string revertReasonIfDebug(std::string const& _message = "");
+
+	RevertStrings revertStrings() const { return m_revertStrings; }
+
 private:
 	langutil::EVMVersion m_evmVersion;
+	RevertStrings m_revertStrings;
 	OptimiserSettings m_optimiserSettings;
 	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
 	std::map<VariableDeclaration const*, std::string> m_localVariables;
