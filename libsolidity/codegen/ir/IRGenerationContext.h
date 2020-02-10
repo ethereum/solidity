@@ -99,6 +99,10 @@ public:
 
 	RevertStrings revertStrings() const { return m_revertStrings; }
 
+	/// @returns the variable name that can be used to inspect the success or failure of an external
+	/// function call that was invoked as part of the try statement.
+	std::string trySuccessConditionVariable(Expression const& _expression) const;
+
 private:
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;

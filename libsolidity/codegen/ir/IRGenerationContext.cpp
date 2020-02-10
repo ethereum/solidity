@@ -87,6 +87,17 @@ string IRGenerationContext::newYulVariable()
 	return "_" + to_string(++m_varCounter);
 }
 
+string IRGenerationContext::trySuccessConditionVariable(Expression const& _expression) const
+{
+	// NB: The TypeChecker already ensured that the Expression is of type FunctionCall.
+	solAssert(
+		static_cast<FunctionCallAnnotation const&>(_expression.annotation()).tryCall,
+		"Parameter must be a FunctionCall with tryCall-annotation set."
+	);
+
+	return "trySuccessCondition_" + to_string(_expression.id());
+}
+
 string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 {
 	string funName = "dispatch_internal_in_" + to_string(_in) + "_out_" + to_string(_out);
@@ -141,3 +152,4 @@ std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message
 {
 	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
 }
+

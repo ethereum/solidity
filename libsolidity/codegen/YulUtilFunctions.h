@@ -22,6 +22,7 @@
 
 #include <liblangutil/EVMVersion.h>
 
+#include <libsolidity/ast/Types.h>
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 
 #include <libsolidity/interface/DebugSettings.h>
@@ -322,6 +323,20 @@ public:
 	static std::string revertReasonIfDebug(RevertStrings revertStrings, std::string const& _message = "");
 
 	std::string revertReasonIfDebug(std::string const& _message = "");
+
+	/// Returns the name of a function that decodes an error message.
+	/// signature: () -> arrayPtr
+	///
+	/// Returns a newly allocated `bytes memory` array containing the decoded error message
+	/// or 0 on failure.
+	std::string tryDecodeErrorMessageFunction();
+
+
+	/// Returns a function name that returns a newly allocated `bytes` array that contains the return data.
+	///
+	/// If returndatacopy() is not supported by the underlying target, a empty array will be returned instead.
+	std::string extractReturndataFunction();
+
 private:
 	/// Special case of conversionFunction - handles everything that does not
 	/// use exactly one variable to hold the value.
