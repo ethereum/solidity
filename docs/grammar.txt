@@ -139,8 +139,15 @@ NumberLiteral = ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
 NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
            | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
 HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
-StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
 Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
+
+StringLiteral = StringLiteralFragment ([ \t\r\n\u000C]* StringLiteralFragment)* ;
+
+StringLiteralFragment = '"' DoubleQuotedStringCharacter* '"' | '\'' SingleQuotedStringCharacter* '\'' ;
+
+DoubleQuotedStringCharacter = [^"\r\n\\] | ('\\' .) ;
+
+SingleQuotedStringCharacter = [^'\r\n\\] | ('\\' .) ;
 
 HexNumber = '0x' [0-9a-fA-F]+
 DecimalNumber = [0-9]+ ( '.' [0-9]* )? ( [eE] [0-9]+ )?
