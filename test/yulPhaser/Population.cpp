@@ -104,6 +104,18 @@ BOOST_AUTO_TEST_CASE(isFitter_should_use_fitness_as_the_main_criterion)
 	BOOST_TEST(!isFitter(Individual{Chromosome("aaa"), 10}, Individual{Chromosome("aaaaa"), 5}));
 }
 
+BOOST_AUTO_TEST_CASE(isFitter_should_use_alphabetical_order_when_fitness_is_the_same)
+{
+	BOOST_TEST(isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("c"), 3}));
+	BOOST_TEST(!isFitter(Individual{Chromosome("c"), 3}, Individual{Chromosome("a"), 3}));
+
+	BOOST_TEST(isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("aa"), 3}));
+	BOOST_TEST(!isFitter(Individual{Chromosome("aa"), 3}, Individual{Chromosome("a"), 3}));
+
+	BOOST_TEST(isFitter(Individual{Chromosome("T"), 3}, Individual{Chromosome("a"), 3}));
+	BOOST_TEST(!isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("T"), 3}));
+}
+
 BOOST_AUTO_TEST_CASE(isFitter_should_return_false_for_identical_individuals)
 {
 	BOOST_TEST(!isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("a"), 3}));

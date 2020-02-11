@@ -40,7 +40,9 @@ struct Individual
 	friend std::ostream& operator<<(std::ostream& _stream, Individual const& _individual);
 };
 
-/// Determines which individual is better by comparing fitness values.
+/// Determines which individual is better by comparing fitness values. If fitness is the same
+/// takes into account all the other properties of the individual to make the comparison
+/// deterministic as long as the individuals are not equal.
 bool isFitter(Individual const& a, Individual const& b);
 
 /**

@@ -19,6 +19,8 @@
 
 #include <tools/yulPhaser/Program.h>
 
+#include <libsolutil/CommonIO.h>
+
 #include <algorithm>
 #include <cassert>
 #include <numeric>
@@ -26,6 +28,7 @@
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
+using namespace solidity::util;
 using namespace solidity::phaser;
 
 namespace solidity::phaser
@@ -52,7 +55,11 @@ bool phaser::isFitter(Individual const& a, Individual const& b)
 {
 	assert(a.fitness.has_value() && b.fitness.has_value());
 
-	return a.fitness.value() < b.fitness.value();
+	return (
+		(a.fitness.value() < b.fitness.value()) ||
+		(a.fitness.value() == b.fitness.value() && a.chromosome.length() < b.chromosome.length()) ||
+		(a.fitness.value() == b.fitness.value() && a.chromosome.length() == b.chromosome.length() && toString(a.chromosome) < toString(b.chromosome))
+	);
 }
 
 Population::Population(Program _program, vector<Chromosome> const& _chromosomes):
