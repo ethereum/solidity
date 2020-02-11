@@ -1767,12 +1767,12 @@ void ProtoConverter::visit(LeaveStmt const&)
 	m_output << "leave\n";
 }
 
-string ProtoConverter::getObjectIdentifier(ObjectId const& _x)
+string ProtoConverter::getObjectIdentifier(unsigned _x)
 {
 	unsigned currentId = currentObjectId();
 	yulAssert(m_objectScopeTree.size() > currentId, "Proto fuzzer: Error referencing object");
 	std::vector<std::string> objectIdsInScope = m_objectScopeTree[currentId];
-	return objectIdsInScope[_x.id() % objectIdsInScope.size()];
+	return objectIdsInScope[_x % objectIdsInScope.size()];
 }
 
 void ProtoConverter::visit(Code const& _x)
