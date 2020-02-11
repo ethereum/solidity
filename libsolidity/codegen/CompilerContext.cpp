@@ -423,18 +423,12 @@ void CompilerContext::appendInlineAssembly(
 	// so we essentially only optimize the ABI functions.
 	if (_optimiserSettings.runYulOptimiser && _localVariables.empty())
 	{
-		bool const isCreation = m_runtimeContext != nullptr;
-		yul::GasMeter meter(dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
 		yul::Object obj;
 		obj.code = parserResult;
 		obj.analysisInfo = make_shared<yul::AsmAnalysisInfo>(analysisInfo);
-		yul::OptimiserSuite::run(
-			dialect,
-			&meter,
-			obj,
-			_optimiserSettings.optimizeStackAllocation,
-			externallyUsedIdentifiers
-		);
+
+		optimizeYul(obj, dialect, _optimiserSettings, externallyUsedIdentifiers);
+
 		analysisInfo = std::move(*obj.analysisInfo);
 		parserResult = std::move(obj.code);
 
@@ -460,6 +454,29 @@ void CompilerContext::appendInlineAssembly(
 
 	// Reset the source location to the one of the node (instead of the CODEGEN source location)
 	updateSourceLocation();
+}
+
+
+void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSettings, std::set<yul::YulString> const& _externalIdentifiers)
+{
+#ifdef SOL_OUTPUT_ASM
+	cout << yul::AsmPrinter(*dialect)(*_object.code) << endl;
+#endif
+
+	bool const isCreation = runtimeContext() != nullptr;
+	yul::GasMeter meter(_dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
+	yul::OptimiserSuite::run(
+		_dialect,
+		&meter,
+		_object,
+		_optimiserSettings.optimizeStackAllocation,
+		_externalIdentifiers
+	);
+
+#ifdef SOL_OUTPUT_ASM
+	cout << "After optimizer:" << endl;
+	cout << yul::AsmPrinter(*dialect)(*object.code) << endl;
+#endif
 }
 
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(

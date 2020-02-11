@@ -32,8 +32,12 @@
 
 #include <libevmasm/Assembly.h>
 #include <libevmasm/Instruction.h>
+#include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 #include <libsolutil/Common.h>
+
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <functional>
 #include <ostream>
@@ -231,6 +235,8 @@ public:
 	/// stores @param _message in memory position 0 and reverts.
 	/// Otherwise returns "revert(0, 0)".
 	std::string revertReasonIfDebug(std::string const& _message = "");
+
+	void optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSetting, std::set<yul::YulString> const& _externalIdentifiers = {});
 
 	/// Appends arbitrary data to the end of the bytecode.
 	void appendAuxiliaryData(bytes const& _data) { m_asm->appendAuxiliaryDataToEnd(_data); }
