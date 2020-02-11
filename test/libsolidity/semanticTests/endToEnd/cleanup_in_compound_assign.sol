@@ -11,4 +11,3 @@ contract C {
 
 // ----
 // test() -> 0xff, 0xff
-// test():"" -> "255, 255"

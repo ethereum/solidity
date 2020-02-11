@@ -12,7 +12,7 @@ contract C {
         X garbled;
 
         assembly {
-            garbled: = 5
+            garbled := 5
         }
 
         return this.tested(garbled);
@@ -20,5 +20,4 @@ contract C {
 }
 
 // ----
-// test() -> 
-// test():"" -> ""
+// test() -> FAILURE

@@ -17,7 +17,5 @@ contract C {
 }
 
 // ----
-// use(uint256): encodeArgs(3)) -> 6
-// use(uint256):"[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3]" -> "6"
+// use(uint256): 3 -> 6
 // result_in_constructor() -> 4
-// result_in_constructor():"" -> "4"

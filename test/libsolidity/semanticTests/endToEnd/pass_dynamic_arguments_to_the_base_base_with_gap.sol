@@ -14,4 +14,3 @@ contract Final is Derived(4) {}
 
 // ----
 // m_i() -> 4
-// m_i():"" -> "4"

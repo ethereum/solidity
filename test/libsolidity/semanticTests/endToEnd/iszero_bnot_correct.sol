@@ -2,11 +2,11 @@ contract C {
     function f() public returns(bool) {
         bytes32 x = bytes32(uint256(1));
         assembly {
-            x: = not(x)
+            x := not(x)
         }
         if (x != ~bytes32(uint256(1))) return false;
         assembly {
-            x: = iszero(x)
+            x := iszero(x)
         }
         if (x != bytes32(0)) return false;
         return true;
@@ -15,4 +15,3 @@ contract C {
 
 // ----
 // f() -> true
-// f():"" -> "1"

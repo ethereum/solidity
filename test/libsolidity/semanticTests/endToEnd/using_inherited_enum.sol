@@ -14,4 +14,3 @@ contract test is base {
 
 // ----
 // answer() -> 1
-// answer():"" -> "1"

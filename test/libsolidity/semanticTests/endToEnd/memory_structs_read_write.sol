@@ -43,8 +43,5 @@ contract Test {
 
 // ----
 // testInit() -> 0, 0, 0, 0, true
-// testInit():"" -> "0, 0, 0, 0, 1"
 // testCopyRead() -> 1, 2, 3, 4
-// testCopyRead():"" -> "1, 2, 3, 4"
 // testAssign() -> 1, 2, 3, 4
-// testAssign():"" -> "1, 2, 3, 4"

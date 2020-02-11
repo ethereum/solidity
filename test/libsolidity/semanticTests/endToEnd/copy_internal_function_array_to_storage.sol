@@ -20,6 +20,4 @@ contract C {
 
 // ----
 // one() -> 3
-// one():"" -> "3"
-// two() -> 
-// two():"" -> ""
+// two() -> FAILURE

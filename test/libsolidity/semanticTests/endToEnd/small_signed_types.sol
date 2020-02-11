@@ -5,4 +5,4 @@ contract test {
 }
 
 // ----
-// run():  -> 0xc8
+// run() -> 0xc8

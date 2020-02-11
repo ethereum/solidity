@@ -23,9 +23,6 @@ contract Derived is Base {
 // ====
 // compileViaYul: also
 // ----
-// setData(uint256,uint256): 1, 2 -> true
-// setData(uint256,uint256):"1, 2" -> "1"
+// setData(uint256,uint256): 1, 2 -> 1
 // getViaBase() -> 1
-// getViaBase():"" -> "1"
 // getViaDerived() -> 1, 2
-// getViaDerived():"" -> "1, 2"

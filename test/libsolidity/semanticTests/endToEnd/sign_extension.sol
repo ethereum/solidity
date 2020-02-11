@@ -7,4 +7,4 @@ contract test {
 }
 
 // ----
-// run():  -> 0xff
+// run() -> 0xff

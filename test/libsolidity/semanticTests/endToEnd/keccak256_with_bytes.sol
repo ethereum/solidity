@@ -11,4 +11,3 @@ contract c {
 
 // ----
 // foo() -> true
-// foo():"" -> "1"

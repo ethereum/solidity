@@ -9,7 +9,5 @@ contract Test {
 }
 
 // ----
-// f(uint256): 11) -> 21
-// f(uint256):"11" -> "21"
-// f(uint256): 1) -> 
-// f(uint256):"1" -> ""
+// f(uint256): 11 -> 21
+// f(uint256): 1 -> FAILURE

@@ -14,7 +14,5 @@ contract Test {
 }
 
 // ----
-// callContractFunction( "f(string,uint256): 0x40), 2), 6), string("abcdef")  -> "c"
-// f(string,uint256):"64, 2, 6, abcdef" -> "c"
+// f(string,uint256): 64, 2, 6, "abcdef" -> "c"
 // l() -> 6
-// l():"" -> "6"

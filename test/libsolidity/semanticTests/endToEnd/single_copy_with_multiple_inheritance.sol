@@ -25,8 +25,5 @@ contract Derived is Base, B, A {}
 // compileViaYul: also
 // ----
 // getViaB() -> 0
-// getViaB():"" -> "0"
 // setViaA(uint256): 23 -> 
-// setViaA(uint256):"23" -> ""
 // getViaB() -> 23
-// getViaB():"" -> "23"

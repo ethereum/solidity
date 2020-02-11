@@ -9,5 +9,4 @@ contract test {
 // ====
 // compileViaYul: also
 // ----
-f(uint256, uint256): "5, 9" // f(uint256,uint256): 5, 9 -> 9, 8
-// f(uint256,uint256):"5, 9" -> "9, 8"
+// f(uint256,uint256): 5, 9 -> 9, 8

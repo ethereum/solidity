@@ -11,4 +11,4 @@ contract test {
 // ====
 // compileViaYul: also
 // ----
-// f():  -> 0xa
+// f() -> 0xa

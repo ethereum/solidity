@@ -19,15 +19,9 @@ contract c {
 }
 
 // ----
-// setData1(uint256,uint256,uint256): 10, 5, 4 -> bytes(
-// setData1(uint256,uint256,uint256):"10, 5, 4" -> ""
-// copyStorageStorage() -> bytes(
-// copyStorageStorage():"" -> ""
+// setData1(uint256,uint256,uint256): 10, 5, 4 -> 
+// copyStorageStorage() ->
 // getData2(uint256): 5 -> 10, 4
-// getData2(uint256):"5" -> "10, 4"
-// setData1(uint256,uint256,uint256): 0, 0, 0 -> bytes(
-// setData1(uint256,uint256,uint256):"0, 0, 0" -> ""
-// copyStorageStorage() -> bytes(
-// copyStorageStorage():"" -> ""
+// setData1(uint256,uint256,uint256): 0, 0, 0 ->
+// copyStorageStorage() ->
 // getData2(uint256): 0 -> 0, 0
-// getData2(uint256):"0" -> "0, 0"

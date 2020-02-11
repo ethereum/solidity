@@ -1,17 +1,17 @@
 contract C {
     function f() public {
         assembly {
-            let d: = 0x10
+            let d := 0x10
 
             function asmfun(a, b, c) - > x, y, z {
-                x: = g(a)
+                x := g(a)
                 function g(r) - > s {
-                    s: = mul(r, r)
+                    s := mul(r, r)
                 }
-                y: = g(b)
-                z: = 7
+                y := g(b)
+                z := 7
             }
-            let a1, b1, c1: = asmfun(1, 2, 3)
+            let a1, b1, c1 := asmfun(1, 2, 3)
             mstore(0x00, a1)
             mstore(0x20, b1)
             mstore(0x40, c1)
@@ -25,4 +25,3 @@ contract C {
 // compileViaYul: also
 // ----
 // f() -> 1, 4, 7, 0x10
-// f():"" -> "1, 4, 7, 16"

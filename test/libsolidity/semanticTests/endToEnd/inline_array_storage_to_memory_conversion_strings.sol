@@ -9,5 +9,4 @@ contract C {
 }
 
 // ----
-// f() -> 0x40, 0x80, 3, string("ray", 2, string("mi"
-// f():"" -> "64, 128, 3, ray, 2, mi"
+// f() -> 0x40, 0x80, 3, "ray", 2, "mi"

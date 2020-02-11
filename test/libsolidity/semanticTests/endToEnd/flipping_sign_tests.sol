@@ -8,4 +8,3 @@ contract test {
 
 // ----
 // f() -> true
-// f():"" -> "1"

@@ -17,5 +17,4 @@ contract Sample {
 }
 
 // ----
-// p(uint256): 0 ->  0xbbbb, 0xcccc, 0x80, 0xc0, 5, string("hello", 5, string("world" 
-// p(uint256):"0" -> "48059, 52428, 128, 192, 5, hello, 5, world"
+// p(uint256): 0 ->  0xbbbb, 0xcccc, 0x80, 0xc0, 5, "hello", 5, "world" 

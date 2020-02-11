@@ -15,7 +15,5 @@ contract c {
 // ====
 // compileViaYul: also
 // ----
-// fill() -> bytes(
-// fill():"" -> ""
-// clear() -> bytes(
-// clear():"" -> ""
+// fill() ->
+// clear() -> 

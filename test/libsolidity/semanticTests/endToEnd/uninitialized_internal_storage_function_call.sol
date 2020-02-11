@@ -8,5 +8,4 @@ contract Test {
 }
 
 // ----
-// f() -> 
-// f():"" -> ""
+// f() -> FAILURE

@@ -28,8 +28,5 @@ contract D {
 
 // ----
 // f() -> 1
-// f():"" -> "1"
-// fview() -> 
-// fview():"" -> ""
-// fpure() -> 
-// fpure():"" -> ""
+// fview() -> FAILURE
+// fpure() -> FAILURE

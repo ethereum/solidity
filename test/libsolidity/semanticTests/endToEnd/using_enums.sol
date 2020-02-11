@@ -17,4 +17,3 @@ contract test {
 
 // ----
 // getChoice() -> 2
-// getChoice():"" -> "2"

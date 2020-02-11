@@ -5,16 +5,16 @@ contract C {
         st = 0;
         assembly {
             function sideeffect(r) - > x {
-                sstore(0, add(sload(0), r)) x: = 1
+                sstore(0, add(sload(0), r)) x := 1
             }
             for {
-                let i: = a
+                let i := a
             }
             eq(i, sideeffect(2)) {
-                d: = add(d, 3)
+                d := add(d, 3)
             } {
-                b: = i
-                i: = 0
+                b := i
+                i := 0
             }
         }
         c = st;
@@ -24,9 +24,6 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-// f(uint256): 0) -> 0, 2, 0
-// f(uint256):"0" -> "0, 2, 0"
-// f(uint256): 1) -> 1, 4, 3
-// f(uint256):"1" -> "1, 4, 3"
-// f(uint256): 2) -> 0, 2, 0
-// f(uint256):"2" -> "0, 2, 0"
+// f(uint256): 0 -> 0, 2, 0
+// f(uint256): 1 -> 1, 4, 3
+// f(uint256): 2 -> 0, 2, 0

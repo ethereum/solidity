@@ -1,13 +1,3 @@
-contract C {
-    function test() public returns(uint) {
-        bytes memory c = type(D).creationCode;
-        D d;
-        assembly {
-            d: = create(0, add(c, 0x20), mload(c))
-        }
-        return d.f();
-    }
-}
 contract D {
     uint x;
     constructor() public {
@@ -18,7 +8,16 @@ contract D {
         return x;
     }
 }
+contract C {
+    function test() public returns(uint) {
+        bytes memory c = type(D).creationCode;
+        D d;
+        assembly {
+            d := create(0, add(c, 0x20), mload(c))
+        }
+        return d.f();
+    }
+}
 
 // ----
 // test() -> 7
-// test():"" -> "7"

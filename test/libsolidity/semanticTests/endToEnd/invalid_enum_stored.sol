@@ -8,7 +8,7 @@ contract C {
     function test_store() public returns(uint) {
         X garbled = X.A;
         assembly {
-            garbled: = 5
+            garbled := 5
         }
         x = garbled;
         return 1;
@@ -22,8 +22,5 @@ contract C {
 
 // ----
 // test_store_ok() -> 1
-// test_store_ok():"" -> "1"
 // x() -> 0
-// x():"" -> "0"
-// test_store() -> 
-// test_store():"" -> ""
+// test_store() -> FAILURE

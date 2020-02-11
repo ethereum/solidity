@@ -6,4 +6,3 @@ contract Lotto {
 // compileViaYul: also
 // ----
 // ticketPrice() -> 500
-// ticketPrice():"" -> "500"

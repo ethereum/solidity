@@ -22,6 +22,4 @@ contract c {
 
 // ----
 // fill() -> 8
-// fill():"" -> "8"
-// clear() -> bytes(
-// clear():"" -> ""
+// clear() ->

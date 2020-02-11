@@ -9,6 +9,4 @@ contract C {
 
 // ----
 // save() -> 24
-// save():"" -> "24"
 // save(): "abcdefg" -> 24
-// save():"abcdefg" -> "24"

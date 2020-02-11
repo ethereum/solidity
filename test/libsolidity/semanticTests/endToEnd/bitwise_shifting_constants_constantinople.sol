@@ -2,7 +2,7 @@ contract C {
     function shl_1() public returns(bool) {
         uint c;
         assembly {
-            c: = shl(2, 1)
+            c:= shl(2, 1)
         }
         assert(c == 4);
         return true;
@@ -11,7 +11,7 @@ contract C {
     function shl_2() public returns(bool) {
         uint c;
         assembly {
-            c: = shl(1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+            c:= shl(1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
         }
         assert(c == 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe);
         return true;
@@ -20,7 +20,7 @@ contract C {
     function shl_3() public returns(bool) {
         uint c;
         assembly {
-            c: = shl(256, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+            c:= shl(256, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
         }
         assert(c == 0);
         return true;
@@ -29,7 +29,7 @@ contract C {
     function shr_1() public returns(bool) {
         uint c;
         assembly {
-            c: = shr(1, 3)
+            c:= shr(1, 3)
         }
         assert(c == 1);
         return true;
@@ -38,7 +38,7 @@ contract C {
     function shr_2() public returns(bool) {
         uint c;
         assembly {
-            c: = shr(1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+            c:= shr(1, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
         }
         assert(c == 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
         return true;
@@ -47,7 +47,7 @@ contract C {
     function shr_3() public returns(bool) {
         uint c;
         assembly {
-            c: = shr(256, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
+            c:= shr(256, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
         }
         assert(c == 0);
         return true;
@@ -57,9 +57,9 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-shl_1(): ""
-shl_2(): ""
-shl_3(): ""
-shr_1(): ""
-shr_2(): ""
-shr_3(): ""
+// shl_1() -> true
+// shl_2() -> true
+// shl_3() -> true
+// shr_1() -> true
+// shr_2() -> true
+// shr_3() -> true

@@ -13,12 +13,7 @@ contract c {
 
 // ----
 // set(uint256): 1, 2 -> true
-// set(uint256):"1, 2" -> "1"
 // set(uint256): 2, 2, 3, 4, 5 -> true
-// set(uint256):"2, 2, 3, 4, 5" -> "1"
 // copy(uint256,uint256): 1, 2 -> true
-// copy(uint256,uint256):"1, 2" -> "1"
 // copy(uint256,uint256): 99, 1 -> true
-// copy(uint256,uint256):"99, 1" -> "1"
 // copy(uint256,uint256): 99, 2 -> true
-// copy(uint256,uint256):"99, 2" -> "1"

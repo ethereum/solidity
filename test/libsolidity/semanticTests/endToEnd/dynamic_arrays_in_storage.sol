@@ -43,24 +43,13 @@ contract c {
 
 // ----
 // getLengths() -> 0, 0
-// getLengths():"" -> "0, 0"
-// setLengths(uint256,uint256): 48, 49 -> bytes(
-// setLengths(uint256,uint256):"48, 49" -> ""
+// setLengths(uint256,uint256): 48, 49 ->
 // getLengths() -> 48, 49
-// getLengths():"" -> "48, 49"
-// setIDStatic(uint256): 11 -> bytes(
-// setIDStatic(uint256):"11" -> ""
+// setIDStatic(uint256): 11 ->
 // getID(uint256): 2 -> 11
-// getID(uint256):"2" -> "11"
-// setID(uint256,uint256): 7, 8 -> bytes(
-// setID(uint256,uint256):"7, 8" -> ""
+// setID(uint256,uint256): 7, 8 ->
 // getID(uint256): 7 -> 8
-// getID(uint256):"7" -> "8"
-// setData(uint256,uint256,uint256): 7, 8, 9 -> bytes(
-// setData(uint256,uint256,uint256):"7, 8, 9" -> ""
-// setData(uint256,uint256,uint256): 8, 10, 11 -> bytes(
-// setData(uint256,uint256,uint256):"8, 10, 11" -> ""
+// setData(uint256,uint256,uint256): 7, 8, 9 ->
+// setData(uint256,uint256,uint256): 8, 10, 11 ->
 // getData(uint256): 7 -> 8, 9
-// getData(uint256):"7" -> "8, 9"
 // getData(uint256): 8 -> 10, 11
-// getData(uint256):"8" -> "10, 11"

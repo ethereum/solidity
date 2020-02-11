@@ -43,4 +43,4 @@ contract C is A {
 
 // ----
 // getData() -> 0x4300
-// getData():"" -> "17152"
+// getData(): "string" -> 17152

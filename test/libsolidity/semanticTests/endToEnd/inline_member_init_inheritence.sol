@@ -17,6 +17,4 @@ contract Derived is Base {
 
 // ----
 // getBMember() -> 5
-// getBMember():"" -> "5"
 // getDMember() -> 6
-// getDMember():"" -> "6"

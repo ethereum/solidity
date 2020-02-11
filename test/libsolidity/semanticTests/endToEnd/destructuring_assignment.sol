@@ -33,5 +33,4 @@ contract C {
 }
 
 // ----
-// f(bytes): 0x20), 5), string("abcde") -> 0
-// f(bytes):"32, 5, abcde" -> "0"
+// f(bytes): 32, 5, "abcde" -> 0

@@ -17,13 +17,8 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-// f() -> 
-// f():"" -> ""
-// g(bool): false -> 
-// g(bool):"0" -> ""
-// g(bool): true -> true
-// g(bool):"1" -> "1"
-// h(bool): false -> 
-// h(bool):"0" -> ""
-// h(bool): true -> true
-// h(bool):"1" -> "1"
+// f() -> FAILURE
+// g(bool): 0 -> FAILURE
+// g(bool): 1 -> 1
+// h(bool): 0 -> FAILURE
+// h(bool): 1 -> 1

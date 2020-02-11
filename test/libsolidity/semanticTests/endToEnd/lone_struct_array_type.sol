@@ -14,4 +14,3 @@ contract C {
 // compileViaYul: also
 // ----
 // f() -> 3
-// f():"" -> "3"

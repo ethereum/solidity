@@ -34,14 +34,8 @@ contract sender {
 
 // ----
 // viaCalldata() -> 4
-// viaCalldata():"" -> "4"
 // viaMemory() -> 4
-// viaMemory():"" -> "4"
 // viaStorage() -> 4
-// viaStorage():"" -> "4"
-// callContractFunctionNoEncoding("viaCalldata(): unpadded -> 7
-// viaCalldata():"abc" -> "7"
-// callContractFunctionNoEncoding("viaMemory(): unpadded -> 7
-// viaMemory():"abc" -> "7"
-// callContractFunctionNoEncoding("viaStorage(): unpadded -> 7
-// viaStorage():"abc" -> "7"
+// viaCalldata(): "abc" -> 36
+// viaMemory(): "abc" -> 36
+// viaStorage(): "abc" -> 36

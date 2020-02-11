@@ -32,15 +32,9 @@ contract C {
 }
 
 // ----
-// test(uint256,uint256): 10), 0) -> 11
-// test(uint256,uint256):"10, 0" -> "11"
-// test(uint256,uint256): 10), 1) -> 12
-// test(uint256,uint256):"10, 1" -> "12"
-// test(uint256,uint256): 10), 2) -> 13
-// test(uint256,uint256):"10, 2" -> "13"
-// test(uint256,uint256): 10), 3) -> 15
-// test(uint256,uint256):"10, 3" -> "15"
-// test(uint256,uint256): 10), 4) -> 18
-// test(uint256,uint256):"10, 4" -> "18"
-// test(uint256,uint256): 10), 5) -> 
-// test(uint256,uint256):"10, 5" -> ""
+// test(uint256,uint256): 10, 0 -> 11
+// test(uint256,uint256): 10, 1 -> 12
+// test(uint256,uint256): 10, 2 -> 13
+// test(uint256,uint256): 10, 3 -> 15
+// test(uint256,uint256): 10, 4 -> 18
+// test(uint256,uint256): 10, 5 -> FAILURE

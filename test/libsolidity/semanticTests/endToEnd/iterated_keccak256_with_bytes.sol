@@ -10,5 +10,4 @@ contract c {
 }
 
 // ----
-// foo() ->  util::keccak256(bytes{'b'} + util::keccak256("xyz".asBytes( + bytes{'a'} 
-// foo():"" -> "81064592765372817159845741028275376000365320033790514016917613221788490640604"
+// foo() -> 0xb338eefce206f9f57b83aa738deecd5326dc4b72dd81ee6a7c621a6facb7acdc

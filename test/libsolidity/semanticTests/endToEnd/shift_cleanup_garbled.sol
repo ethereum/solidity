@@ -1,7 +1,7 @@
 contract C {
     function f() public returns(uint8 x) {
         assembly {
-            x: = 0xffff
+            x := 0xffff
         }
         x >>= 8;
     }
@@ -9,4 +9,3 @@ contract C {
 
 // ----
 // f() -> 0x0
-// f():"" -> "0"

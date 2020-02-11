@@ -15,8 +15,5 @@ contract A {
 
 // ----
 // test() -> false
-// test():"" -> "0"
-// testIt() -> 
-// testIt():"" -> ""
+// testIt() -> FAILURE
 // test() -> false
-// test():"" -> "0"

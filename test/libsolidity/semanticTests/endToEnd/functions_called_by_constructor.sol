@@ -17,4 +17,4 @@ contract Test {
 // ====
 // compileViaYul: also
 // ----
-getName(): ""
+// getName() -> "abc"

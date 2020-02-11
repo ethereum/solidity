@@ -26,13 +26,8 @@ contract test {
 // ====
 // compileViaYul: also
 // ----
-// getChoiceExp(uint256): 3 -> 
-// getChoiceExp(uint256):"3" -> ""
-// getChoiceFromSigned(int256): -1 -> 
-// getChoiceFromSigned(int256):"-1" -> ""
-// getChoiceFromNegativeLiteral() -> 
-// getChoiceFromNegativeLiteral():"" -> ""
+// getChoiceExp(uint256): 3 -> FAILURE
+// getChoiceFromSigned(int256): -1 -> FAILURE
+// getChoiceFromNegativeLiteral() -> FAILURE
 // getChoiceExp(uint256): 2 -> 2
-// getChoiceExp(uint256):"2" -> "2"
 // getChoiceExp(uint256): 0 -> 0
-// getChoiceExp(uint256):"0" -> "0"

@@ -31,10 +31,6 @@ contract buggystruct {
 
 // ----
 // getFirst() -> 10
-// getFirst():"" -> "10"
 // getSecond() -> 20
-// getSecond():"" -> "20"
 // getThird() -> 30
-// getThird():"" -> "30"
-// getLast() -> encodeDyn(s
-// getLast():"" -> "asdfghjkl"
+// getLast() -> 0x20, 9, "asdfghjkl"

@@ -9,5 +9,4 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-// f() -> 
-// f():"" -> ""
+// f() -> FAILURE

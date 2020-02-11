@@ -13,7 +13,5 @@ contract C {
 }
 
 // ----
-// intern() -> 
-// intern():"" -> ""
-// extern() -> 
-// extern():"" -> ""
+// intern() -> FAILURE
+// extern() -> FAILURE

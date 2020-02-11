@@ -20,5 +20,4 @@ contract C is A {
 }
 
 // ----
-// getData() -> 4 | 2
-// getData():"" -> "6"
+// getData() -> 6

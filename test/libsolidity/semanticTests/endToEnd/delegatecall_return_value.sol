@@ -24,24 +24,13 @@ contract C {
 
 // ----
 // get() -> 0
-// get():"" -> "0"
 // assert0_delegated() -> 1, 0x40, 0x00
-// assert0_delegated():"" -> "1, 64, 0"
 // get_delegated() -> 1, 0x40, 0x20, 0x00
-// get_delegated():"" -> "1, 64, 32, 0"
-// set(uint256): 1) -> 
-// set(uint256):"1" -> ""
+// set(uint256): 1 -> 
 // get() -> 1
-// get():"" -> "1"
 // assert0_delegated() -> 0, 0x40, 0x00
-// assert0_delegated():"" -> "0, 64, 0"
 // get_delegated() -> 1, 0x40, 0x20, 1
-// get_delegated():"" -> "1, 64, 32, 1"
-// set(uint256): 42) -> 
-// set(uint256):"42" -> ""
+// set(uint256): 42 -> 
 // get() -> 42
-// get():"" -> "42"
 // assert0_delegated() -> 0, 0x40, 0x00
-// assert0_delegated():"" -> "0, 64, 0"
 // get_delegated() -> 1, 0x40, 0x20, 42
-// get_delegated():"" -> "1, 64, 32, 42"

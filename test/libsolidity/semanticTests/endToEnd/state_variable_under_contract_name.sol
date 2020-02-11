@@ -8,4 +8,3 @@ contract Scope {
 
 // ----
 // getStateVar() -> 42
-// getStateVar():"" -> "42"

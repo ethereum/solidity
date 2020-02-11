@@ -10,12 +10,7 @@ contract C {
 
 // ----
 // leftU(uint8,uint8): 255, 8 -> 0
-// leftU(uint8,uint8):"255, 8" -> "0"
 // leftU(uint8,uint8): 255, 1 -> 254
-// leftU(uint8,uint8):"255, 1" -> "254"
 // leftU(uint8,uint8): 255, 0 -> 255
-// leftU(uint8,uint8):"255, 0" -> "255"
-// leftS(int8,int8): 1, 7 -> 0 - 128
-// leftS(int8,int8):"1, 7" -> "115792089237316195423570985008687907853269984665640564039457584007913129639808"
+// leftS(int8,int8): 1, 7 -> -128
 // leftS(int8,int8): 1, 6 -> 64
-// leftS(int8,int8):"1, 6" -> "64"

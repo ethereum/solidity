@@ -20,9 +20,6 @@ contract c {
 // ====
 // compileViaYul: also
 // ----
-// fill() -> bytes(
-// fill():"" -> ""
-// halfClear() -> bytes(
-// halfClear():"" -> ""
-// fullClear() -> bytes(
-// fullClear():"" -> ""
+// fill() -> 
+// halfClear() -> 
+// fullClear() -> 

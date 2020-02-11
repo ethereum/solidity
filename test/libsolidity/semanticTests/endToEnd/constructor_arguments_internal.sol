@@ -32,6 +32,6 @@ contract Main {
 
 // ----
 // getFlag() -> true
-// getFlag():"" -> "1"
+// getFlag(): "string" -> true
 // getName() -> "abc"
-// getName():"" -> "abc"
+// getName(): "string" -> "abc"

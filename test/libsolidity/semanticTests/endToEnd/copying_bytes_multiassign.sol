@@ -36,19 +36,11 @@ contract sender {
 }
 
 // ----
-// recv(uint256): 7 -> bytes(
-// recv(uint256):"7" -> ""
+// recv(uint256): 7 ->
 // val() -> 0
-// val():"" -> "0"
 // forward(bool): true -> true
-// forward(bool):"1" -> "1"
 // val() -> 8
-// val():"" -> "8"
 // forward(bool): false -> true
-// forward(bool):"0" -> "1"
 // val() -> 16
-// val():"" -> "16"
 // forward(bool): true -> true
-// forward(bool):"1" -> "1"
 // val() -> 0x80
-// val():"" -> "128"

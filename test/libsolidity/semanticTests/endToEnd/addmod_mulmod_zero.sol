@@ -19,9 +19,6 @@ contract C {
 }
 
 // ----
-// f(uint): 0 -> 
-// f(uint):"0" -> ""
-// g(uint): 0 -> 
-// g(uint):"0" -> ""
+// f(uint): 0 -> FAILURE
+// g(uint): 0 -> FAILURE
 // h() -> 2
-// h():"" -> "2"

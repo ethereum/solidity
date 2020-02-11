@@ -16,4 +16,3 @@ contract test {
 // compileViaYul: also
 // ----
 // g() -> 3
-// g():"" -> "3"

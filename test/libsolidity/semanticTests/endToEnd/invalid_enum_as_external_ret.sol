@@ -7,21 +7,21 @@ contract C {
     function test_return() public returns(X) {
         X garbled;
         assembly {
-            garbled: = 5
+            garbled := 5
         }
         return garbled;
     }
 
     function test_inline_assignment() public returns(X _ret) {
         assembly {
-            _ret: = 5
+            _ret := 5
         }
     }
 
     function test_assignment() public returns(X _ret) {
         X tmp;
         assembly {
-            tmp: = 5
+            tmp := 5
         }
         _ret = tmp;
     }
@@ -30,9 +30,6 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-// test_return() -> 
-// test_return():"" -> ""
-// test_inline_assignment() -> 
-// test_inline_assignment():"" -> ""
-// test_assignment() -> 
-// test_assignment():"" -> ""
+// test_return() -> FAILURE
+// test_inline_assignment() -> FAILURE
+// test_assignment() -> FAILURE

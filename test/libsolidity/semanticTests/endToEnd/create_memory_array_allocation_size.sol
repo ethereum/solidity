@@ -5,14 +5,13 @@ contract C {
         bytes memory b3 = new bytes(256);
         bytes memory b4 = new bytes(31);
         assembly {
-            d1: = sub(b2, b1)
-            d2: = sub(b3, b2)
-            d3: = sub(b4, b3)
-            memsize: = msize()
+            d1 := sub(b2, b1)
+            d2 := sub(b3, b2)
+            d3 := sub(b4, b3)
+            memsize := msize()
         }
     }
 }
 
 // ----
-// f() -> 0x40, 0x40, 0x20 + 256, 0x260
-// f():"" -> "64, 64, 288, 608"
+// f() -> 0x40, 0x40, 288, 0x260

@@ -14,4 +14,3 @@ contract C is A {
 
 // ----
 // f() -> false
-// f():"" -> "0"

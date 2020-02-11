@@ -13,7 +13,5 @@ contract C {
 }
 
 // ----
-// f() -> 0x40, 8, 3, string("abc"
-// f():"" -> "64, 8, 3, abc"
-// g() -> 0x40, 0x80, 3, string("abc", 3, string("def"
-// g():"" -> "64, 128, 3, abc, 3, def"
+// f() -> 0x40, 8, 3, "abc"
+// g() -> 0x40, 0x80, 3, "abc", 3, "def"

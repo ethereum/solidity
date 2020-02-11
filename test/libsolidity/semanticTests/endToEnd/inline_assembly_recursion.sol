@@ -4,16 +4,16 @@ contract C {
             function fac(n) - > nf {
                 switch n
                 case 0 {
-                    nf: = 1
+                    nf := 1
                 }
                 case 1 {
-                    nf: = 1
+                    nf := 1
                 }
                 default {
-                    nf: = mul(n, fac(sub(n, 1)))
+                    nf := mul(n, fac(sub(n, 1)))
                 }
             }
-            b: = fac(a)
+            b := fac(a)
         }
     }
 }
@@ -21,13 +21,8 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-// f(uint256): 0) -> 1
-// f(uint256):"0" -> "1"
-// f(uint256): 1) -> 1
-// f(uint256):"1" -> "1"
-// f(uint256): 2) -> 2
-// f(uint256):"2" -> "2"
-// f(uint256): 3) -> 6
-// f(uint256):"3" -> "6"
-// f(uint256): 4) -> 24
-// f(uint256):"4" -> "24"
+// f(uint256): 0 -> 1
+// f(uint256): 1 -> 1
+// f(uint256): 2 -> 2
+// f(uint256): 3 -> 6
+// f(uint256): 4 -> 24

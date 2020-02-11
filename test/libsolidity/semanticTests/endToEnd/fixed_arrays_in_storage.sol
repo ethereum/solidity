@@ -35,21 +35,12 @@ contract c {
 }
 
 // ----
-// setIDStatic(uint256): 11 -> bytes(
-// setIDStatic(uint256):"11" -> ""
+// setIDStatic(uint256): 11 ->
 // getID(uint256): 2 -> 11
-// getID(uint256):"2" -> "11"
-// setID(uint256,uint256): 7, 8 -> bytes(
-// setID(uint256,uint256):"7, 8" -> ""
+// setID(uint256,uint256): 7, 8 ->
 // getID(uint256): 7 -> 8
-// getID(uint256):"7" -> "8"
-// setData(uint256,uint256,uint256): 7, 8, 9 -> bytes(
-// setData(uint256,uint256,uint256):"7, 8, 9" -> ""
-// setData(uint256,uint256,uint256): 8, 10, 11 -> bytes(
-// setData(uint256,uint256,uint256):"8, 10, 11" -> ""
+// setData(uint256,uint256,uint256): 7, 8, 9 ->
+// setData(uint256,uint256,uint256): 8, 10, 11 ->
 // getData(uint256): 7 -> 8, 9
-// getData(uint256):"7" -> "8, 9"
 // getData(uint256): 8 -> 10, 11
-// getData(uint256):"8" -> "10, 11"
-// getLengths() -> 1 << 10, (1 << 10 + 3
-// getLengths():"" -> "1024, 1027"
+// getLengths() -> 1024, 1027

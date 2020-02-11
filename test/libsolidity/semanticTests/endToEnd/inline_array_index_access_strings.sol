@@ -12,6 +12,4 @@ contract C {
 
 // ----
 // test() -> 
-// test():"" -> ""
-// tester() -> 0x20, 3, string("abc"
-// tester():"" -> "32, 3, abc"
+// tester() -> 0x20, 3, "abc"

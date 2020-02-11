@@ -8,8 +8,8 @@ contract C {
         uint off2;
         assembly {
             sstore(z_slot, 7)
-            off1: = z_offset
-            off2: = y_offset
+            off1 := z_offset
+            off2 := y_offset
         }
         assert(off1 == 0);
         assert(off2 == 2);
@@ -19,6 +19,4 @@ contract C {
 
 // ----
 // f() -> true
-// f():"" -> "1"
 // z() -> 7
-// z():"" -> "7"

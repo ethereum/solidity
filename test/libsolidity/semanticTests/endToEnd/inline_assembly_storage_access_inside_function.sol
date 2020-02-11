@@ -9,9 +9,9 @@ contract C {
         assembly {
             function f() - > o1 {
                 sstore(z_slot, 7)
-                o1: = y_offset
+                o1 := y_offset
             }
-            off2: = f()
+            off2 := f()
         }
         assert(off2 == 2);
         return true;
@@ -20,6 +20,4 @@ contract C {
 
 // ----
 // f() -> true
-// f():"" -> "1"
 // z() -> 7
-// z():"" -> "7"

@@ -13,5 +13,4 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-// test() -> 
-// test():"" -> ""
+// test() -> FAILURE

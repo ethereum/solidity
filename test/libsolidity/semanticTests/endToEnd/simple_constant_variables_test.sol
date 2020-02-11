@@ -7,4 +7,3 @@ contract Foo {
 
 // ----
 // getX() -> 56
-// getX():"" -> "56"

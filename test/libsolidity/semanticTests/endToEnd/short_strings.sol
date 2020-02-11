@@ -105,11 +105,7 @@ contract A {
 }
 
 // ----
-// data1() -> encodeDyn(string("123"
-// data1():"" -> "123"
+// data1() -> 32, 3, 0x3132330000000000000000000000000000000000000000000000000000000000
 // lengthChange() -> 0
-// lengthChange():"" -> "0"
 // deleteElements() -> 0
-// deleteElements():"" -> "0"
 // copy() -> 0
-// copy():"" -> "0"

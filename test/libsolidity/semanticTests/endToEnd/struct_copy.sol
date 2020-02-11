@@ -34,22 +34,12 @@ contract c {
 
 // ----
 // set(uint256): 7 -> true
-// set(uint256):"7" -> "1"
 // retrieve(uint256): 7 -> 1, 3, 4, 2
-// retrieve(uint256):"7" -> "1, 3, 4, 2"
 // copy(uint256,uint256): 7, 8 -> true
-// copy(uint256,uint256):"7, 8" -> "1"
 // retrieve(uint256): 7 -> 1, 3, 4, 2
-// retrieve(uint256):"7" -> "1, 3, 4, 2"
 // retrieve(uint256): 8 -> 1, 3, 4, 2
-// retrieve(uint256):"8" -> "1, 3, 4, 2"
 // copy(uint256,uint256): 0, 7 -> true
-// copy(uint256,uint256):"0, 7" -> "1"
 // retrieve(uint256): 7 -> 0, 0, 0, 0
-// retrieve(uint256):"7" -> "0, 0, 0, 0"
 // retrieve(uint256): 8 -> 1, 3, 4, 2
-// retrieve(uint256):"8" -> "1, 3, 4, 2"
 // copy(uint256,uint256): 7, 8 -> true
-// copy(uint256,uint256):"7, 8" -> "1"
 // retrieve(uint256): 8 -> 0, 0, 0, 0
-// retrieve(uint256):"8" -> "0, 0, 0, 0"

@@ -11,4 +11,4 @@ contract Main {
 }
 
 // ----
-s(): ""
+// s() -> true

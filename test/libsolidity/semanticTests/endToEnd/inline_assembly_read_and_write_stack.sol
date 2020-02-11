@@ -2,7 +2,7 @@ contract C {
     function f() public returns(uint r) {
         for (uint x = 0; x < 10; ++x)
             assembly {
-                r: = add(r, x)
+                r := add(r, x)
             }
     }
 }
@@ -11,4 +11,3 @@ contract C {
 // compileViaYul: also
 // ----
 // f() -> 45
-// f():"" -> "45"

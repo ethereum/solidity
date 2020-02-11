@@ -25,20 +25,11 @@ contract c {
 // compileViaYul: also
 // ----
 // length() -> 0
-// length():"" -> "0"
-// get(uint256): 3 -> bytes(
-// get(uint256):"3" -> ""
+// get(uint256): 3 -> FAILURE
 // enlarge(uint256): 4 -> 4
-// enlarge(uint256):"4" -> "4"
 // length() -> 4
-// length():"" -> "4"
 // set(uint256,uint256): 3, 4 -> true
-// set(uint256,uint256):"3, 4" -> "1"
 // get(uint256): 3 -> 4
-// get(uint256):"3" -> "4"
 // length() -> 4
-// length():"" -> "4"
-// set(uint256,uint256): 4, 8 -> bytes(
-// set(uint256,uint256):"4, 8" -> ""
+// set(uint256,uint256): 4, 8 -> FAILURE
 // length() -> 4
-// length():"" -> "4"

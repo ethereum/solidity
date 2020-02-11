@@ -4,10 +4,10 @@ contract C {
         // Make memory dirty.
         assembly {
             for {
-                let i: = 0
+                let i := 0
             }
             lt(i, 64) {
-                i: = add(i, 1)
+                i := add(i, 1)
             } {
                 mstore(msize(), not(0))
             }
@@ -22,4 +22,3 @@ contract C {
 
 // ----
 // success() -> 1
-// success():"" -> "1"

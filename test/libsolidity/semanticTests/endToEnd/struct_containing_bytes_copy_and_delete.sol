@@ -26,11 +26,7 @@ contract c {
 }
 
 // ----
-// set(uint256,bytes,uint256): 12, 0x60, 13, data.length()), data -> true
-// set(uint256,bytes,uint256):"12, 96, 13, 33, 123456789012345678901234567890123" -> "1"
+// set(uint256,bytes,uint256): 12, 0x60, 13, 31, "1234567890123456789012345678901" -> true
 // copy() -> true
-// copy():"" -> "1"
-// set(uint256,bytes,uint256): 12, 0x60, 13, data.length()), data -> true
-// set(uint256,bytes,uint256):"12, 96, 13, 33, 123456789012345678901234567890123" -> "1"
+// set(uint256,bytes,uint256): 12, 0x60, 13, 31, "1234567890123456789012345678903" -> true
 // del() -> true
-// del():"" -> "1"

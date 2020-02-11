@@ -25,4 +25,3 @@ contract test {
 
 // ----
 // assign() -> 2, 2, 3, 3
-// assign():"" -> "2, 2, 3, 3"

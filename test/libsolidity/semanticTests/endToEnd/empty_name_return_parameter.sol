@@ -8,4 +8,3 @@ contract test {
 // compileViaYul: also
 // ----
 // f(uint256): 9 -> 9
-// f(uint256):"9" -> "9"

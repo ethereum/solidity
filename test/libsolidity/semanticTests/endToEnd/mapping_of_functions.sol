@@ -27,14 +27,8 @@ contract Flow {
 
 // ----
 // success() -> false
-// success():"" -> "0"
 // f() -> 7
-// f():"" -> "7"
 // f() -> 7
-// f():"" -> "7"
 // success() -> false
-// success():"" -> "0"
 // f() -> 7
-// f():"" -> "7"
 // success() -> true
-// success():"" -> "1"

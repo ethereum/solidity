@@ -8,4 +8,3 @@ contract A {
 // compileViaYul: also
 // ----
 // f() -> 
-// f():"" -> ""

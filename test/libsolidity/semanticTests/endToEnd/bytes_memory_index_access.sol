@@ -8,4 +8,4 @@ contract Test {
 // ====
 // compileViaYul: also
 // ----
-set(bytes, uint256): "64, 3, 8, abcdefgh"
+// set(bytes,uint256): 64, 3, 8, "abcdefgh" -> 8, 0x6400000000000000000000000000000000000000000000000000000000000000

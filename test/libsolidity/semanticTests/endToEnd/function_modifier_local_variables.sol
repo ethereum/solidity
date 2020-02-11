@@ -16,6 +16,4 @@ contract C {
 
 // ----
 // f(bool): true -> 0
-// f(bool):"1" -> "0"
 // f(bool): false -> 3
-// f(bool):"0" -> "3"

@@ -11,7 +11,7 @@ contract C {
         uint off;
         assembly {
             sstore(x_slot, 7)
-            off: = x_offset
+            off :=  x_offset
         }
         assert(off == 0);
         return true;
@@ -20,10 +20,6 @@ contract C {
 
 // ----
 // f() -> true
-// f():"" -> "1"
 // a() -> 7
-// a():"" -> "7"
 // separator() -> 0
-// separator():"" -> "0"
 // separator2() -> 0
-// separator2():"" -> "0"

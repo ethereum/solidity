@@ -17,4 +17,3 @@ contract test {
 
 // ----
 // deleteMember() -> 0
-// deleteMember():"" -> "0"

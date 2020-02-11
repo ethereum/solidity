@@ -2,7 +2,7 @@ contract C {
     modifier m {
         uint a = 1;
         assembly {
-            a: = 2
+            a := 2
         }
         if (a != 2)
             revert();
@@ -18,4 +18,3 @@ contract C {
 // compileViaYul: also
 // ----
 // f() -> true
-// f():"" -> "1"

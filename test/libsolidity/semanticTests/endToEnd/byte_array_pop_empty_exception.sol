@@ -11,5 +11,4 @@ contract c {
 }
 
 // ----
-// test() -> 
-// test():"" -> ""
+// test() -> FAILURE

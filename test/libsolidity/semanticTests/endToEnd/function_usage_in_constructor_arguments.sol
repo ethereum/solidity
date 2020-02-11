@@ -17,4 +17,3 @@ contract Derived is Base() {
 
 // ----
 // getA() -> 2
-// getA():"" -> "2"

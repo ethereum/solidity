@@ -12,4 +12,3 @@ contract test {
 
 // ----
 // answer() -> 1
-// answer():"" -> "1"

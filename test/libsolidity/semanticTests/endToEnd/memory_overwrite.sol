@@ -7,5 +7,4 @@ contract C {
 }
 
 // ----
-// f() -> encodeDyn(string("b23a5"
-// f():"" -> "b23a5"
+// f() -> 0x20, 5, "b23a5"

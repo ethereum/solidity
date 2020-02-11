@@ -9,4 +9,3 @@ contract c {
 
 // ----
 // test() -> 
-// test():"" -> ""

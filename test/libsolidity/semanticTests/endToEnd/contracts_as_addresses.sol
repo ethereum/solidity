@@ -15,4 +15,4 @@ contract test {
 }
 
 // ----
-getBalance(): ""
+// getBalance() -> 0, 0

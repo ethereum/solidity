@@ -16,4 +16,3 @@ contract test {
 
 // ----
 // deleteIt() -> 0
-// deleteIt():"" -> "0"

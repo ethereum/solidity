@@ -17,4 +17,3 @@ contract C is B {
 // compileViaYul: also
 // ----
 // g() -> 2
-// g():"" -> "2"

@@ -19,6 +19,4 @@ contract test {
 // compileViaYul: also
 // ----
 // g(bool): true -> 3
-// g(bool):"1" -> "3"
 // g(bool): false -> 10
-// g(bool):"0" -> "10"

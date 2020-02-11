@@ -12,5 +12,4 @@ contract c {
 // ====
 // compileViaYul: also
 // ----
-// test(uint256,uint256): 2, 3 -> 2+7, 3
-// test(uint256,uint256):"2, 3" -> "9, 3"
+// test(uint256,uint256): 2, 3 -> 9, 3

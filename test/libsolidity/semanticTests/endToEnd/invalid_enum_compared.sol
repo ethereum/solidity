@@ -7,7 +7,7 @@ contract C {
     function test_eq() public returns(bool) {
         X garbled;
         assembly {
-            garbled: = 5
+            garbled := 5
         }
         return garbled == garbled;
     }
@@ -20,7 +20,7 @@ contract C {
     function test_neq() public returns(bool) {
         X garbled;
         assembly {
-            garbled: = 5
+            garbled := 5
         }
         return garbled != garbled;
     }
@@ -28,8 +28,5 @@ contract C {
 
 // ----
 // test_eq_ok() -> 1
-// test_eq_ok():"" -> "1"
-// test_eq() -> 
-// test_eq():"" -> ""
-// test_neq() -> 
-// test_neq():"" -> ""
+// test_eq() -> FAILURE
+// test_neq() -> FAILURE

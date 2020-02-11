@@ -3,8 +3,8 @@ contract C {
         assembly {
             let x
             let y, z
-            a: = x
-            b: = z
+            a := x
+            b := z
         }
     }
 }
@@ -13,4 +13,3 @@ contract C {
 // compileViaYul: also
 // ----
 // f() -> 0, 0
-// f():"" -> "0, 0"

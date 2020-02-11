@@ -1,3 +1,15 @@
+contract D {
+    bytes32 public x;
+    constructor() public {
+        bytes32 codeHash;
+        assembly {
+            let size := codesize()
+            codecopy(mload(0x40), 0, size)
+            codeHash := keccak256(mload(0x40), size)
+        }
+        x = codeHash;
+    }
+}
 contract C {
     function testRuntime() public returns(bool) {
         D d = new D();
@@ -5,9 +17,9 @@ contract C {
         bytes32 otherHash;
         uint size;
         assembly {
-            size: = extcodesize(d)
+            size := extcodesize(d)
             extcodecopy(d, mload(0x40), 0, size)
-            otherHash: = keccak256(mload(0x40), size)
+            otherHash := keccak256(mload(0x40), size)
         }
         require(size == type(D).runtimeCode.length);
         require(runtimeHash == otherHash);
@@ -21,21 +33,7 @@ contract C {
         return true;
     }
 }
-contract D {
-    bytes32 public x;
-    constructor() public {
-        bytes32 codeHash;
-        assembly {
-            let size: = codesize()
-            codecopy(mload(0x40), 0, size)
-            codeHash: = keccak256(mload(0x40), size)
-        }
-        x = codeHash;
-    }
-}
 
 // ----
 // testRuntime() -> true
-// testRuntime():"" -> "1"
 // testCreation() -> true
-// testCreation():"" -> "1"

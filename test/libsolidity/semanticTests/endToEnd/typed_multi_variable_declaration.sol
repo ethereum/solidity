@@ -23,5 +23,4 @@ contract C {
 }
 
 // ----
-// f(): encodeArgs() -> true
-// f():"[]" -> "1"
+// f() -> true

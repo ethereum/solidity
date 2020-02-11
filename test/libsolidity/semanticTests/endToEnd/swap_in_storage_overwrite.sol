@@ -1,3 +1,9 @@
+// This tests a swap in storage which does not work as one
+// might expect because we do not have temporary storage.
+// (x, y) = (y, x) is the same as
+// y = x;
+// x = y;
+
 contract c {
     struct S {
         uint a;
@@ -20,18 +26,10 @@ contract c {
 
 // ----
 // x() -> 0, 0
-// x():"" -> "0, 0"
 // y() -> 0, 0
-// y():"" -> "0, 0"
 // set() -> 
-// set():"" -> ""
 // x() -> 1, 2
-// x():"" -> "1, 2"
 // y() -> 3, 4
-// y():"" -> "3, 4"
 // swap() -> 
-// swap():"" -> ""
 // x() -> 1, 2
-// x():"" -> "1, 2"
 // y() -> 1, 2
-// y():"" -> "1, 2"

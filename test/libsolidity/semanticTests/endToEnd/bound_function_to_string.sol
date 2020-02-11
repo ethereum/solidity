@@ -4,8 +4,7 @@ library D {
     }
 }
 contract C {
-    using D
-    for string;
+    using D for string;
     string x;
 
     function f() public returns(uint) {
@@ -20,30 +19,5 @@ contract C {
 }
 
 // ----
-
-library D {
-    function length(string memory self) public returns(uint) {
-        return bytes(self).length;
-    }
-}
-contract C {
-    using D
-    for string;
-    string x;
-
-    function f() public returns(uint) {
-        x = "abc";
-        return x.length();
-    }
-
-    function g() public returns(uint) {
-        string memory s = "abc";
-        return s.length();
-    }
-}
-
-// ----
-// f() -> 3
-// f():"" -> "3"
-// g() -> 3
-// g():"" -> "3"
+// f() -> FAILURE
+// g() -> FAILURE
