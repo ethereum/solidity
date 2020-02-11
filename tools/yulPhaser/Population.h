@@ -48,6 +48,9 @@ struct Individual
 	Chromosome chromosome;
 	std::optional<size_t> fitness = std::nullopt;
 
+	bool operator==(Individual const& _other) const { return fitness == _other.fitness && chromosome == _other.chromosome; }
+	bool operator!=(Individual const& _other) const { return !(*this == _other); }
+
 	friend std::ostream& operator<<(std::ostream& _stream, Individual const& _individual);
 };
 
@@ -92,6 +95,9 @@ public:
 	static size_t uniformChromosomeLength(size_t _min, size_t _max) { return SimulationRNG::uniformInt(_min, _max); }
 	static size_t binomialChromosomeLength(size_t _max) { return SimulationRNG::binomialInt(_max, 0.5); }
 	static size_t measureFitness(Chromosome const& _chromosome, Program const& _program);
+
+	bool operator==(Population const& _other) const;
+	bool operator!=(Population const& _other) const { return !(*this == _other); }
 
 	friend std::ostream& operator<<(std::ostream& _stream, Population const& _population);
 

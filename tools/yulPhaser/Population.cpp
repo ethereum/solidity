@@ -125,6 +125,13 @@ Population operator+(Population _a, Population _b)
 	return Population(_a.m_program, move(_a.m_individuals) + move(_b.m_individuals));
 }
 
+bool Population::operator==(Population const& _other) const
+{
+	// TODO: Comparing programs is pretty heavy but it's just a stopgap. It will soon be replaced
+	// by a comparison of fitness metric associated with the population (once metrics are introduced).
+	return m_individuals == _other.m_individuals && toString(m_program) == toString(_other.m_program);
+}
+
 ostream& phaser::operator<<(ostream& _stream, Population const& _population)
 {
 	auto individual = _population.m_individuals.begin();
