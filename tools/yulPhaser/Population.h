@@ -40,6 +40,9 @@ struct Individual
 	friend std::ostream& operator<<(std::ostream& _stream, Individual const& _individual);
 };
 
+/// Determines which individual is better by comparing fitness values.
+bool isFitter(Individual const& a, Individual const& b);
+
 /**
  * Represents a changing set of individuals undergoing a genetic algorithm.
  * Each round of the algorithm involves mutating existing individuals, evaluating their fitness

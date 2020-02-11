@@ -48,6 +48,13 @@ ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 	return _stream;
 }
 
+bool phaser::isFitter(Individual const& a, Individual const& b)
+{
+	assert(a.fitness.has_value() && b.fitness.has_value());
+
+	return a.fitness.value() < b.fitness.value();
+}
+
 Population::Population(Program _program, vector<Chromosome> const& _chromosomes):
 	m_program{move(_program)}
 {
@@ -128,12 +135,7 @@ void Population::doSelection()
 {
 	assert(all_of(m_individuals.begin(), m_individuals.end(), [](auto& i){ return i.fitness.has_value(); }));
 
-	sort(
-		m_individuals.begin(),
-		m_individuals.end(),
-		[](auto const& a, auto const& b){ return a.fitness.value() < b.fitness.value(); }
-	);
-
+	sort(m_individuals.begin(), m_individuals.end(), isFitter);
 	randomizeWorstChromosomes(m_individuals, m_individuals.size() / 2);
 }
 
