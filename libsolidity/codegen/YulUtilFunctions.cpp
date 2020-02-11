@@ -908,6 +908,58 @@ string YulUtilFunctions::memoryArrayIndexAccessFunction(ArrayType const& _type)
 	});
 }
 
+string YulUtilFunctions::calldataArrayIndexAccessFunction(ArrayType const& _type)
+{
+	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
+	string functionName = "calldata_array_index_access_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(base_ref<?dynamicallySized>, length</dynamicallySized>, index) -> addr<?dynamicallySizedBase>, len</dynamicallySizedBase> {
+				if iszero(lt(index, <?dynamicallySized>length<!dynamicallySized><arrayLen></dynamicallySized>)) { invalid() }
+				addr := add(base_ref, mul(index, <stride>))
+				<?dynamicallyEncodedBase>
+					addr<?dynamicallySizedBase>, len</dynamicallySizedBase> := <accessCalldataTail>(base_ref, addr)
+				</dynamicallyEncodedBase>
+			}
+		)")
+		("functionName", functionName)
+		("stride", to_string(_type.calldataStride()))
+		("dynamicallySized", _type.isDynamicallySized())
+		("dynamicallyEncodedBase", _type.baseType()->isDynamicallyEncoded())
+		("dynamicallySizedBase", _type.baseType()->isDynamicallySized())
+		("arrayLen",  toCompactHexWithPrefix(_type.length()))
+		("accessCalldataTail", _type.baseType()->isDynamicallyEncoded() ? accessCalldataTailFunction(*_type.baseType()): "")
+		.render();
+	});
+}
+
+string YulUtilFunctions::accessCalldataTailFunction(Type const& _type)
+{
+	solAssert(_type.isDynamicallyEncoded(), "");
+	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
+	string functionName = "access_calldata_tail_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(base_ref, ptr_to_tail) -> addr<?dynamicallySized>, length</dynamicallySized> {
+				let rel_offset_of_tail := calldataload(ptr_to_tail)
+				if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { revert(0, 0) }
+				addr := add(base_ref, rel_offset_of_tail)
+				<?dynamicallySized>
+					length := calldataload(addr)
+					if gt(length, 0xffffffffffffffff) { revert(0, 0) }
+					if sgt(base_ref, sub(calldatasize(), mul(length, <calldataStride>))) { revert(0, 0) }
+					addr := add(addr, 32)
+				</dynamicallySized>
+			}
+		)")
+		("functionName", functionName)
+		("dynamicallySized", _type.isDynamicallySized())
+		("neededLength", toCompactHexWithPrefix(_type.calldataEncodedTailSize()))
+		("calldataStride", toCompactHexWithPrefix(_type.isDynamicallySized() ? dynamic_cast<ArrayType const&>(_type).calldataStride() : 0))
+		.render();
+	});
+}
+
 string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 {
 	solAssert(!_type.isByteArray(), "");
@@ -1932,7 +1984,7 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 			function <functionName>(memPtr) -> value {
 				value := <load>(memPtr)
 				<?needsValidation>
-					value := <validate>(value)
+					<validate>(value)
 				</needsValidation>
 			}
 		)")

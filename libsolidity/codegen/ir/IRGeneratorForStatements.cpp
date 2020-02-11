@@ -815,7 +815,12 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		else if (member == "gasprice")
 			define(_memberAccess) << "gasprice()\n";
 		else if (member == "data")
-			solUnimplementedAssert(false, "");
+		{
+			IRVariable var(_memberAccess);
+			declare(var);
+			define(var.part("offset")) << "0\n";
+			define(var.part("length")) << "calldatasize()\n";
+		}
 		else if (member == "sig")
 			define(_memberAccess) <<
 				"and(calldataload(0), " <<
@@ -862,8 +867,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				switch (type.location())
 				{
 					case DataLocation::CallData:
-						solUnimplementedAssert(false, "");
-						//m_context << Instruction::SWAP1 << Instruction::POP;
+						define(_memberAccess, IRVariable(_memberAccess.expression()).part("length"));
 						break;
 					case DataLocation::Storage:
 					{
@@ -997,8 +1001,29 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 			}
 			case DataLocation::CallData:
 			{
-				solUnimplemented("calldata not yet implemented!");
-
+				IRVariable var(m_context.newYulVariable(), *arrayType.baseType());
+				define(var) <<
+					m_utils.calldataArrayIndexAccessFunction(arrayType) <<
+					"(" <<
+					IRVariable(_indexAccess.baseExpression()).commaSeparatedList() <<
+					", " <<
+					expressionAsType(*_indexAccess.indexExpression(), *TypeProvider::uint256()) <<
+					")\n";
+				if (arrayType.isByteArray())
+					define(_indexAccess) <<
+						m_utils.cleanupFunction(*arrayType.baseType()) <<
+						"(calldataload(" <<
+						var.name() <<
+						"))\n";
+				else if (arrayType.baseType()->isValueType())
+					define(_indexAccess) <<
+						m_utils.readFromCalldata(*arrayType.baseType()) <<
+						"(" <<
+						var.commaSeparatedList() <<
+						")\n";
+				else
+					define(_indexAccess, var);
+				break;
 			}
 		}
 	}
@@ -1534,7 +1559,10 @@ void IRGeneratorForStatements::setLValue(Expression const& _expression, IRLValue
 	solAssert(!m_currentLValue, "");
 
 	if (_expression.annotation().lValueRequested)
+	{
 		m_currentLValue.emplace(std::move(_lvalue));
+		solAssert(!_lvalue.type.dataStoredIn(DataLocation::CallData), "");
+	}
 	else
 		// Only define the expression, if it will not be written to.
 		define(_expression, readFromLValue(_lvalue));
