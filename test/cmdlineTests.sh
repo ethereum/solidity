@@ -33,7 +33,19 @@ set -e
 REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-build}
 source "${REPO_ROOT}/scripts/common.sh"
-SOLC="$REPO_ROOT/${SOLIDITY_BUILD_DIR}/solc/solc"
+
+case "$OSTYPE" in
+    msys)
+        SOLC="$REPO_ROOT/${SOLIDITY_BUILD_DIR}/solc/Release/solc.exe"
+
+        # prevents msys2 path translation for a remapping test
+        export MSYS2_ARG_CONV_EXCL="="
+        ;;
+    *)
+        SOLC="$REPO_ROOT/${SOLIDITY_BUILD_DIR}/solc/solc"
+        ;;
+esac
+
 INTERACTIVE=true
 if ! tty -s || [ "$CI" ]
 then
