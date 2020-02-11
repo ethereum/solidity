@@ -391,7 +391,9 @@ string TestFileParser::parseIdentifierOrTuple()
 	if (accept(Token::Identifier))
 	{
 		identOrTuple = m_scanner.currentLiteral();
-		expect(Token::Identifier);
+		expect(Token::Identifier, false);
+		validateType(identOrTuple);
+		m_scanner.scanNextToken();
 		parseArrayDimensions();
 		return identOrTuple;
 	}
@@ -410,6 +412,35 @@ string TestFileParser::parseIdentifierOrTuple()
 
 	parseArrayDimensions();
 	return identOrTuple;
+}
+
+void TestFileParser::validateType(std::string _type)
+{
+	auto validateBits = [&](string _baseType, auto&& _validator, bool _optional = false)
+	{
+		if (!boost::starts_with(_type, _baseType))
+			return;
+
+		if (_type.size() == _baseType.size())
+		{
+			if (_optional)
+				return;
+			else
+				throw Error(Error::Type::TypeError, "Missing bit suffix in '" + _type + "'.");
+		}
+
+		int bits = std::stoi(_type.substr(_baseType.size()));
+
+		if (!_validator(bits))
+			throw Error(Error::Type::TypeError, "Invalid bit width in '" + _type + "'.");
+	};
+
+	auto intSuffixValidator = [](int _bits) { return 0 <= _bits && _bits <= 256 && (_bits % 8 == 0); };
+
+	validateBits("int", intSuffixValidator);
+	validateBits("uint", intSuffixValidator);
+	validateBits("bytes", [](int _bits) { return 0 <= _bits && _bits <= 32; }, true);
+
 }
 
 string TestFileParser::parseBoolean()

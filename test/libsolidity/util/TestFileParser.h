@@ -125,6 +125,7 @@ private:
 
 	bool accept(soltest::Token _token, bool const _expect = false);
 	bool expect(soltest::Token _token, bool const _advance = true);
+	void validateType(std::string _type);
 
 	/// Parses a function call signature in the form of `f(uint256, ...)` and
 	/// returns the signature and a flag that indicates if the function name was

@@ -731,6 +731,46 @@ BOOST_AUTO_TEST_CASE(call_arguments_hex_string_right_align)
 	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
 }
 
+BOOST_AUTO_TEST_CASE(call_no_bitwidth_int)
+{
+	char const* source = R"(
+		// f(int): ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(call_no_bitwidth_uint)
+{
+	char const* source = R"(
+		// f(uint): ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(call_invalid_bitwidth_uint)
+{
+	char const* source = R"(
+		// f(uint257): ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(call_invalid_bitwidth_int)
+{
+	char const* source = R"(
+		// f(int257): ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
+BOOST_AUTO_TEST_CASE(call_invalid_bitwidth_bytes)
+{
+	char const* source = R"(
+		// f(bytes33): ->
+	)";
+	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+}
+
 BOOST_AUTO_TEST_CASE(call_newline_invalid)
 {
 	char const* source = R"(
