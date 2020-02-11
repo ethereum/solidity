@@ -81,7 +81,7 @@ private:
 	void endVisit(ModifierDefinition const& _modifierDefinition) override;
 	void endVisit(UserDefinedTypeName const& _typeName) override;
 	void endVisit(FunctionTypeName const& _typeName) override;
-	void endVisit(Mapping const& _typeName) override;
+	void endVisit(Mapping const& _mapping) override;
 	void endVisit(ArrayTypeName const& _typeName) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(Return const& _return) override;

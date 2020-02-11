@@ -224,15 +224,36 @@ void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
 	_typeName.annotation().type = TypeProvider::function(_typeName);
 }
 
-void ReferencesResolver::endVisit(Mapping const& _typeName)
+void ReferencesResolver::endVisit(Mapping const& _mapping)
 {
-	TypePointer keyType = _typeName.keyType().annotation().type;
-	TypePointer valueType = _typeName.valueType().annotation().type;
+	if (auto const* typeName = dynamic_cast<UserDefinedTypeName const*>(&_mapping.keyType()))
+	{
+		if (auto const* contractType = dynamic_cast<ContractType const*>(typeName->annotation().type))
+		{
+			if (contractType->contractDefinition().isLibrary())
+				m_errorReporter.fatalTypeError(
+					typeName->location(),
+					"Library types cannot be used as mapping keys."
+				);
+		}
+		else if (typeName->annotation().type->category() != Type::Category::Enum)
+			m_errorReporter.fatalTypeError(
+				typeName->location(),
+				"Only elementary types, contract types or enums are allowed as mapping keys."
+			);
+	}
+	else
+		solAssert(dynamic_cast<ElementaryTypeName const*>(&_mapping.keyType()), "");
+
+	TypePointer keyType = _mapping.keyType().annotation().type;
+	TypePointer valueType = _mapping.valueType().annotation().type;
+
 	// Convert key type to memory.
 	keyType = TypeProvider::withLocationIfReference(DataLocation::Memory, keyType);
+
 	// Convert value type to storage reference.
 	valueType = TypeProvider::withLocationIfReference(DataLocation::Storage, valueType);
-	_typeName.annotation().type = TypeProvider::mapping(keyType, valueType);
+	_mapping.annotation().type = TypeProvider::mapping(keyType, valueType);
 }
 
 void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)

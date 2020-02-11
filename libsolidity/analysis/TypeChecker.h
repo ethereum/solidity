@@ -143,7 +143,6 @@ private:
 	bool visit(Identifier const& _identifier) override;
 	void endVisit(ElementaryTypeNameExpression const& _expr) override;
 	void endVisit(Literal const& _literal) override;
-	bool visit(Mapping const& _mapping) override;
 
 	bool contractDependenciesAreCyclic(
 		ContractDefinition const& _contract,
