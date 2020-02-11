@@ -1,0 +1,10 @@
+contract test {
+    function a(bytes32 input) public returns(bytes32 sha256hash) {
+        return ripemd160(abi.encodePacked(input));
+    }
+}
+
+// ----
+// a(bytes32): 0x4 -> 0x1b0f3c404d12075c68c938f9f60ebea4f74941a0000000000000000000000000
+// a(bytes32): 0x5 -> 0xee54aa84fc32d8fed5a5fe160442ae84626829d9000000000000000000000000
+// a(bytes32): 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -> 0x1cf4e77f5966e13e109703cd8a0df7ceda7f3dc3000000000000000000000000

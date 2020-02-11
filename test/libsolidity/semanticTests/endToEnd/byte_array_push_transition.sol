@@ -1,0 +1,18 @@
+contract c {
+    bytes data;
+
+    function test() public returns(uint) {
+        for (uint8 i = 1; i < 40; i++) {
+            data.push(byte(i));
+            if (data.length != i) return 0x1000 + i;
+            if (data[data.length - 1] != byte(i)) return i;
+        }
+        for (uint8 i = 1; i < 40; i++)
+            if (data[i - 1] != byte(i)) return 0x1000000 + i;
+        return 0;
+    }
+}
+
+// ----
+// test() -> 0
+// test():"" -> "0"

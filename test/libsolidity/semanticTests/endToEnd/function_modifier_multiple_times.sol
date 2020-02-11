@@ -1,0 +1,17 @@
+contract C {
+    uint public a;
+    modifier mod(uint x) {
+        a += x;
+        _;
+    }
+
+    function f(uint x) mod(2) mod(5) mod(x) public returns(uint) {
+        return a;
+    }
+}
+
+// ----
+// f(uint256): 3) -> 2 + 5 + 3
+// f(uint256):"3" -> "10"
+// a() -> 2 + 5 + 3
+// a():"" -> "10"

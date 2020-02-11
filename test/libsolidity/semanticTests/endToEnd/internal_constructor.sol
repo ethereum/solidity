@@ -1,0 +1,5 @@
+contract C {
+    constructor() internal {}
+}
+
+// ----

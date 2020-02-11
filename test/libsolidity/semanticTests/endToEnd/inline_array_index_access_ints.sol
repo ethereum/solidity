@@ -1,0 +1,9 @@
+contract C {
+    function f() public returns(uint) {
+        return ([1, 2, 3, 4][2]);
+    }
+}
+
+// ----
+// f() -> 3
+// f():"" -> "3"
