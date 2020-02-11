@@ -298,7 +298,7 @@ private:
 
 	/// Returns a pseudo-randomly chosen object identifier that is in the
 	/// scope of the Yul object being visited.
-	std::string getObjectIdentifier(ObjectId const& _x);
+	std::string getObjectIdentifier(unsigned _x);
 
 	/// Return new object identifier as string. Identifier string
 	/// is a template of the form "\"object<n>\"" where <n> is
