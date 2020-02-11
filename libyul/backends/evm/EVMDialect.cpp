@@ -221,6 +221,15 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 	boolType = "bool"_yulstring;
 	types = {defaultType, boolType};
 
+	// Set all types to ``defaultType``
+	for (auto& fun: m_functions)
+	{
+		for (auto& p: fun.second.parameters)
+			p = defaultType;
+		for (auto& r: fun.second.returns)
+			r = defaultType;
+	}
+
 	m_functions["lt"_yulstring].returns = {"bool"_yulstring};
 	m_functions["gt"_yulstring].returns = {"bool"_yulstring};
 	m_functions["slt"_yulstring].returns = {"bool"_yulstring};
@@ -260,6 +269,7 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 		_visitArguments();
 	}));
 	m_functions["bool_to_u256"_yulstring].parameters = {"bool"_yulstring};
+	m_functions["bool_to_u256"_yulstring].returns = {"u256"_yulstring};
 	m_functions.insert(createFunction("u256_to_bool", 1, 1, {}, false, [](
 		FunctionCall const&,
 		AbstractAssembly& _assembly,
@@ -276,6 +286,7 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 		_assembly.appendInstruction(evmasm::Instruction::INVALID);
 		_assembly.appendLabel(inRange);
 	}));
+	m_functions["u256_to_bool"_yulstring].parameters = {"u256"_yulstring};
 	m_functions["u256_to_bool"_yulstring].returns = {"bool"_yulstring};
 }
 
