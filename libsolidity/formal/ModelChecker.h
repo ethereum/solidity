@@ -62,14 +62,14 @@ public:
 	static smt::SMTSolverChoice availableSolvers();
 
 private:
+	/// Stores the context of the encoding.
+	smt::EncodingContext m_context;
+
 	/// Bounded Model Checker engine.
 	BMC m_bmc;
 
 	/// Constrained Horn Clauses engine.
 	CHC m_chc;
-
-	/// Stores the context of the encoding.
-	smt::EncodingContext m_context;
 };
 
 }

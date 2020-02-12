@@ -58,11 +58,11 @@ private:
 	z3::sort z3Sort(smt::Sort const& _sort);
 	z3::sort_vector z3Sort(std::vector<smt::SortPointer> const& _sorts);
 
-	std::map<std::string, z3::expr> m_constants;
-	std::map<std::string, z3::func_decl> m_functions;
-
 	z3::context m_context;
 	z3::solver m_solver;
+
+	std::map<std::string, z3::expr> m_constants;
+	std::map<std::string, z3::func_decl> m_functions;
 };
 
 }
