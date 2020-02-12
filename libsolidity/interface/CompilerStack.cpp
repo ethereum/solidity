@@ -906,35 +906,42 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 {
 	solAssert(m_stackState < ParsingPerformed, "");
 	StringMap newSources;
-	for (auto const& node: _ast.nodes())
-		if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
-		{
-			solAssert(!import->path().empty(), "Import path cannot be empty.");
-
-			string importPath = util::absolutePath(import->path(), _sourcePath);
-			// The current value of `path` is the absolute path as seen from this source file.
-			// We first have to apply remappings before we can store the actual absolute path
-			// as seen globally.
-			importPath = applyRemapping(importPath, _sourcePath);
-			import->annotation().absolutePath = importPath;
-			if (m_sources.count(importPath) || newSources.count(importPath))
-				continue;
-
-			ReadCallback::Result result{false, string("File not supplied initially.")};
-			if (m_readFile)
-				result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), importPath);
-
-			if (result.success)
-				newSources[importPath] = result.responseOrErrorMessage;
-			else
+	try
+	{
+		for (auto const& node: _ast.nodes())
+			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
-				m_errorReporter.parserError(
-					import->location(),
-					string("Source \"" + importPath + "\" not found: " + result.responseOrErrorMessage)
-				);
-				continue;
+				solAssert(!import->path().empty(), "Import path cannot be empty.");
+
+				string importPath = util::absolutePath(import->path(), _sourcePath);
+				// The current value of `path` is the absolute path as seen from this source file.
+				// We first have to apply remappings before we can store the actual absolute path
+				// as seen globally.
+				importPath = applyRemapping(importPath, _sourcePath);
+				import->annotation().absolutePath = importPath;
+				if (m_sources.count(importPath) || newSources.count(importPath))
+					continue;
+
+				ReadCallback::Result result{false, string("File not supplied initially.")};
+				if (m_readFile)
+					result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), importPath);
+
+				if (result.success)
+					newSources[importPath] = result.responseOrErrorMessage;
+				else
+				{
+					m_errorReporter.parserError(
+						import->location(),
+						string("Source \"" + importPath + "\" not found: " + result.responseOrErrorMessage)
+					);
+					continue;
+				}
 			}
-		}
+	}
+	catch (FatalError const&)
+	{
+		solAssert(m_errorReporter.hasErrors(), "");
+	}
 	return newSources;
 }
 
