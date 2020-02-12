@@ -505,6 +505,23 @@ void CHC::eraseKnowledge()
 	m_context.resetVariables([&](VariableDeclaration const& _variable) { return _variable.hasReferenceOrMappingType(); });
 }
 
+void CHC::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)
+{
+	SMTEncoder::clearIndices(_contract, _function);
+	for (auto const* var: m_stateVariables)
+		/// SSA index 0 is reserved for state variables at the beginning
+		/// of the current transaction.
+		m_context.variable(*var)->increaseIndex();
+	if (_function)
+	{
+		for (auto const& var: _function->parameters() + _function->returnParameters())
+			m_context.variable(*var)->increaseIndex();
+		for (auto const& var: _function->localVariables())
+			m_context.variable(*var)->increaseIndex();
+	}
+}
+
+
 bool CHC::shouldVisit(ContractDefinition const& _contract) const
 {
 	if (

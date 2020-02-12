@@ -217,7 +217,7 @@ protected:
 	/// Resets the variable indices.
 	void resetVariableIndices(VariableIndices const& _indices);
 	/// Used when starting a new block.
-	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr);
+	virtual void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr);
 
 
 	/// @returns variables that are touched in _node's subtree.
