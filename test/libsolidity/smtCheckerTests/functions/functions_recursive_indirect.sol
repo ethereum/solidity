@@ -22,5 +22,4 @@ contract C
 	}
 }
 // ----
-// Warning: (206-209): Assertion checker does not support recursive function calls.
-// Warning: (111-114): Assertion checker does not support recursive function calls.
+// Warning: (130-144): Error trying to invoke SMT solver.

@@ -4,7 +4,9 @@ contract C
 {
 	uint[] array;
 	uint[][] array2d;
+	uint[][][][] array4d;
 	uint8[] tinyArray;
+	uint8[][][] tinyArray3d;
 	function f(
 		uint[] storage a,
 		uint[] storage b,
@@ -12,13 +14,13 @@ contract C
 		uint8[][] storage dd,
 		uint[][][] storage eee
 	) internal {
-		require(a[0] == 2);
-		require(array[0] == 42);
-		require(array2d[0][0] == 42);
-		require(tinyArray[0] == 42);
-		require(cc[0][0] == 42);
-		require(dd[0][0] == 42);
-		require(eee[0][0][0] == 42);
+		a[0] = 2;
+		array[0] = 42;
+		array2d[0][0] = 42;
+		tinyArray[0] = 42;
+		cc[0][0] = 42;
+		dd[0][0] = 42;
+		eee[0][0][0] = 42;
 		b[0] = 1;
 		// Fails because b == a is possible.
 		assert(a[0] == 2);
@@ -36,10 +38,19 @@ contract C
 		assert(eee[0][0][0] == 42);
 		assert(b[0] == 1);
 	}
+
+	function g(uint a, uint b, uint c, uint d, uint e) public {
+		f(array2d[a], array2d[b], array4d[c][c], tinyArray3d[d], array4d[e]);
+	}
 }
 // ----
-// Warning: (489-506): Assertion violation happens here
-// Warning: (553-575): Assertion violation happens here
-// Warning: (627-654): Assertion violation happens here
-// Warning: (795-817): Assertion violation happens here
-// Warning: (957-983): Assertion violation happens here
+// Warning: (468-485): Assertion violation happens here
+// Warning: (532-554): Assertion violation happens here
+// Warning: (606-633): Assertion violation happens here
+// Warning: (774-796): Assertion violation happens here
+// Warning: (936-962): Assertion violation happens here
+// Warning: (468-485): Assertion violation happens here
+// Warning: (532-554): Assertion violation happens here
+// Warning: (606-633): Assertion violation happens here
+// Warning: (774-796): Assertion violation happens here
+// Warning: (936-962): Assertion violation happens here

@@ -76,6 +76,7 @@ private:
 	void endVisit(Continue const& _node) override;
 
 	void visitAssert(FunctionCall const& _funCall);
+	void internalFunctionCall(FunctionCall const& _funCall);
 	void unknownFunctionCall(FunctionCall const& _funCall);
 	//@}
 
@@ -164,6 +165,8 @@ private:
 	smt::Expression predicate(smt::SymbolicFunctionVariable const& _block);
 	/// @returns a predicate application over @param _arguments.
 	smt::Expression predicate(smt::SymbolicFunctionVariable const& _block, std::vector<smt::Expression> const& _arguments);
+	/// @returns the summary predicate for the called function.
+	smt::Expression predicate(FunctionCall const& _funCall);
 	/// @returns a predicate that defines a constructor summary.
 	smt::Expression summary(ContractDefinition const& _contract);
 	/// @returns a predicate that defines a function summary.

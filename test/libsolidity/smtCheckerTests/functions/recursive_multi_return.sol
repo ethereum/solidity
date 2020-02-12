@@ -9,4 +9,3 @@ contract C {
 }
 //
 // ----
-// Warning: (126-129): Assertion checker does not support recursive function calls.

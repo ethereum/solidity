@@ -459,6 +459,8 @@ void CHC::endVisit(FunctionCall const& _funCall)
 		SMTEncoder::endVisit(_funCall);
 		break;
 	case FunctionType::Kind::Internal:
+		internalFunctionCall(_funCall);
+		break;
 	case FunctionType::Kind::External:
 	case FunctionType::Kind::DelegateCall:
 	case FunctionType::Kind::BareCall:
@@ -525,6 +527,39 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 	m_context.addAssertion(m_error.currentValue() == previousError);
 }
 
+void CHC::internalFunctionCall(FunctionCall const& _funCall)
+{
+	solAssert(m_currentContract, "");
+
+	auto const* function = functionCallToDefinition(_funCall);
+	if (function)
+	{
+		if (m_currentFunction && !m_currentFunction->isConstructor())
+			m_callGraph[m_currentFunction].insert(function);
+		else
+			m_callGraph[m_currentContract].insert(function);
+		auto const* contract = function->annotation().contract;
+
+		// Libraries can have constants as their "state" variables,
+		// so we need to ensure they were constructed correctly.
+		if (contract->isLibrary())
+			m_context.addAssertion(interface(*contract));
+	}
+
+	auto previousError = m_error.currentValue();
+
+	m_context.addAssertion(predicate(_funCall));
+
+	connectBlocks(
+		m_currentBlock,
+		(m_currentFunction && !m_currentFunction->isConstructor()) ? summary(*m_currentFunction) : summary(*m_currentContract),
+		(m_error.currentValue() > 0)
+	);
+	m_context.addAssertion(m_error.currentValue() == 0);
+	m_error.increaseIndex();
+	m_context.addAssertion(m_error.currentValue() == previousError);
+}
+
 void CHC::unknownFunctionCall(FunctionCall const&)
 {
 	/// Function calls are not handled at the moment,
@@ -580,12 +615,7 @@ void CHC::clearIndices(ContractDefinition const* _contract, FunctionDefinition c
 
 bool CHC::shouldVisit(FunctionDefinition const& _function) const
 {
-	if (
-		_function.isPublic() &&
-		_function.isImplemented()
-	)
-		return true;
-	return false;
+	return _function.isImplemented();
 }
 
 void CHC::setCurrentBlock(
@@ -917,6 +947,34 @@ smt::Expression CHC::predicate(
 )
 {
 	return _block(_arguments);
+}
+
+smt::Expression CHC::predicate(FunctionCall const& _funCall)
+{
+	auto const* function = functionCallToDefinition(_funCall);
+	if (!function)
+		return smt::Expression(true);
+
+	m_error.increaseIndex();
+	vector<smt::Expression> args{m_error.currentValue()};
+	auto const* contract = function->annotation().contract;
+
+	args += contract->isLibrary() ? stateVariablesAtIndex(0, *contract) : currentStateVariables();
+	args += symbolicArguments(_funCall);
+	for (auto const& var: m_stateVariables)
+		m_context.variable(*var)->increaseIndex();
+	args += contract->isLibrary() ? stateVariablesAtIndex(1, *contract) : currentStateVariables();
+
+	auto const& returnParams = function->returnParameters();
+	for (auto param: returnParams)
+		if (m_context.knownVariable(*param))
+			m_context.variable(*param)->increaseIndex();
+		else
+			createVariable(*param);
+	for (auto const& var: function->returnParameters())
+		args.push_back(m_context.variable(*var)->currentValue());
+
+	return (*m_summaries.at(contract).at(function))(args);
 }
 
 void CHC::addRule(smt::Expression const& _rule, string const& _ruleName)
