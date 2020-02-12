@@ -300,7 +300,11 @@ case $(uname -s) in
                         install_z3="libz3-dev"
                         ;;
                     bionic)
-                        echo "Installing solidity dependencies on Ubuntu Bionic (18.04)."
+                        echo "Installing solidity dependencies."
+                        install_z3="libz3-dev"
+                        ;;
+                    focal)
+                        echo "Installing solidity dependencies."
                         install_z3="libz3-dev"
                         ;;
                     betsy)
