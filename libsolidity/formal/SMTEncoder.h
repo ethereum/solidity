@@ -230,6 +230,11 @@ protected:
 	/// and set them as the components of the symbolic tuple.
 	void createReturnedExpressions(FunctionCall const& _funCall);
 
+	/// @returns the symbolic arguments for a function call,
+	/// taking into account bound functions and
+	/// type conversion.
+	std::vector<smt::Expression> symbolicArguments(FunctionCall const& _funCall);
+
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
 

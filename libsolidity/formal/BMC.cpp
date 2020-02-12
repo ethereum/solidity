@@ -441,26 +441,7 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 	}
 	else
 	{
-		vector<smt::Expression> funArgs;
-		Expression const* calledExpr = &_funCall.expression();
-		auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
-		solAssert(funType, "");
-
-		auto const& functionParams = funDef->parameters();
-		auto const& arguments = _funCall.arguments();
-		unsigned firstParam = 0;
-		if (funType->bound())
-		{
-			auto const& boundFunction = dynamic_cast<MemberAccess const*>(calledExpr);
-			solAssert(boundFunction, "");
-			funArgs.push_back(expr(boundFunction->expression(), functionParams.front()->type()));
-			firstParam = 1;
-		}
-
-		solAssert((arguments.size() + firstParam) == functionParams.size(), "");
-		for (unsigned i = 0; i < arguments.size(); ++i)
-			funArgs.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
-		initializeFunctionCallParameters(*funDef, funArgs);
+		initializeFunctionCallParameters(*funDef, symbolicArguments(_funCall));
 
 		// The reason why we need to pushCallStack here instead of visit(FunctionDefinition)
 		// is that there we don't have `_funCall`.
