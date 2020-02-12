@@ -66,5 +66,5 @@ string const& Chromosome::randomOptimisationStep()
 {
 	static vector<string> stepNames = allStepNames();
 
-	return stepNames[uniformRandomInt(0, stepNames.size() - 1)];
+	return stepNames[SimulationRNG::uniformInt(0, stepNames.size() - 1)];
 }

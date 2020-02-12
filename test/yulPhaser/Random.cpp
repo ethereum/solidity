@@ -29,7 +29,7 @@ namespace solidity::phaser::test
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(RandomTest)
 
-BOOST_AUTO_TEST_CASE(uniformRandomInt_returns_different_values_when_called_multiple_times)
+BOOST_AUTO_TEST_CASE(uniformInt_returns_different_values_when_called_multiple_times)
 {
 	constexpr uint32_t numSamples = 1000;
 	constexpr uint32_t numOutcomes = 100;
@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(uniformRandomInt_returns_different_values_when_called_multi
 	vector<uint32_t> samples2;
 	for (uint32_t i = 0; i < numSamples; ++i)
 	{
-		samples1.push_back(uniformRandomInt(0, numOutcomes - 1));
-		samples2.push_back(uniformRandomInt(0, numOutcomes - 1));
+		samples1.push_back(SimulationRNG::uniformInt(0, numOutcomes - 1));
+		samples2.push_back(SimulationRNG::uniformInt(0, numOutcomes - 1));
 	}
 
 	vector<uint32_t> counts1(numOutcomes, 0);
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(uniformRandomInt_returns_different_values_when_called_multi
 	BOOST_TEST(counts1 != counts2);
 }
 
-BOOST_AUTO_TEST_CASE(binomialRandomInt_returns_different_values_when_called_multiple_times)
+BOOST_AUTO_TEST_CASE(binomialInt_returns_different_values_when_called_multiple_times)
 {
 	constexpr uint32_t numSamples = 1000;
 	constexpr uint32_t numTrials = 100;
@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(binomialRandomInt_returns_different_values_when_called_mult
 	vector<uint32_t> samples2;
 	for (uint32_t i = 0; i < numSamples; ++i)
 	{
-		samples1.push_back(binomialRandomInt(numTrials, successProbability));
-		samples2.push_back(binomialRandomInt(numTrials, successProbability));
+		samples1.push_back(SimulationRNG::binomialInt(numTrials, successProbability));
+		samples2.push_back(SimulationRNG::binomialInt(numTrials, successProbability));
 	}
 
 	vector<uint32_t> counts1(numTrials, 0);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(binomialRandomInt_returns_different_values_when_called_mult
 		++counts2[samples2[i]];
 	}
 
-	// See remark for uniformRandomInt() above. Same applies here.
+	// See remark for uniformInt() above. Same applies here.
 	BOOST_TEST(counts1 != counts2);
 }
 

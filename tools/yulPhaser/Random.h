@@ -17,12 +17,24 @@
 
 #pragma once
 
+#include <boost/random/mersenne_twister.hpp>
+
 #include <cstdint>
 
 namespace solidity::phaser
 {
 
-uint32_t uniformRandomInt(uint32_t _min, uint32_t _max);
-uint32_t binomialRandomInt(uint32_t _numTrials, double _successProbability);
+/**
+ * A class that provides functions for generating random numbers good enough for simulation purposes.
+ *
+ * The numbers are not cryptographically secure so do not use this for anything that requires
+ * them to be truly unpredictable.
+ */
+class SimulationRNG
+{
+public:
+	static uint32_t uniformInt(uint32_t _min, uint32_t _max);
+	static uint32_t binomialInt(uint32_t _numTrials, double _successProbability);
+};
 
 }

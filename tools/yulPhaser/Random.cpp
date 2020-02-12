@@ -17,15 +17,15 @@
 
 #include <tools/yulPhaser/Random.h>
 
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/binomial_distribution.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 
 #include <ctime>
 
 using namespace solidity;
+using namespace solidity::phaser;
 
-uint32_t phaser::uniformRandomInt(uint32_t _min, uint32_t _max)
+uint32_t SimulationRNG::uniformInt(uint32_t _min, uint32_t _max)
 {
 	// TODO: Seed must be configurable
 	static boost::random::mt19937 generator(time(0));
@@ -34,7 +34,7 @@ uint32_t phaser::uniformRandomInt(uint32_t _min, uint32_t _max)
 	return distribution(generator);
 }
 
-uint32_t phaser::binomialRandomInt(uint32_t _numTrials, double _successProbability)
+uint32_t SimulationRNG::binomialInt(uint32_t _numTrials, double _successProbability)
 {
 	// TODO: Seed must be configurable
 	static boost::random::mt19937 generator(time(0));
