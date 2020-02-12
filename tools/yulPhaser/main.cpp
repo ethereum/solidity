@@ -18,6 +18,7 @@
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/Population.h>
 #include <tools/yulPhaser/Program.h>
+#include <tools/yulPhaser/SimulationRNG.h>
 
 #include <libsolutil/Assertions.h>
 #include <libsolutil/CommonIO.h>
@@ -44,6 +45,19 @@ struct CommandLineParsingResult
 	int exitCode;
 	po::variables_map arguments;
 };
+
+
+void initializeRNG(po::variables_map const& arguments)
+{
+	uint32_t seed;
+	if (arguments.count("seed") > 0)
+		seed = arguments["seed"].as<uint32_t>();
+	else
+		seed = SimulationRNG::generateSeed();
+
+	SimulationRNG::reset(seed);
+	cout << "Random seed: " << seed << endl;
+}
 
 CharStream loadSource(string const& _sourcePath)
 {
@@ -79,6 +93,7 @@ CommandLineParsingResult parseCommandLine(int argc, char** argv)
 	description.add_options()
 		("help", "Show help message and exit.")
 		("input-file", po::value<string>()->required(), "Input file")
+		("seed", po::value<uint32_t>(), "Seed for the random number generator")
 	;
 
 	po::positional_options_description positionalDescription;
@@ -120,6 +135,8 @@ int main(int argc, char** argv)
 	CommandLineParsingResult parsingResult = parseCommandLine(argc, argv);
 	if (parsingResult.exitCode != 0)
 		return parsingResult.exitCode;
+
+	initializeRNG(parsingResult.arguments);
 
 	try
 	{
