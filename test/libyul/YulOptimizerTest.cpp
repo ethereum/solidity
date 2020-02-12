@@ -28,6 +28,7 @@
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/CircularReferencesPruner.h>
 #include <libyul/optimiser/ConditionalUnsimplifier.h>
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -250,6 +251,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		CommonSubexpressionEliminator::run(*m_context, *m_ast);
 		ExpressionSimplifier::run(*m_context, *m_ast);
 		UnusedPruner::run(*m_context, *m_ast);
+		CircularReferencesPruner::run(*m_context, *m_ast);
 		DeadCodeEliminator::run(*m_context, *m_ast);
 		ExpressionJoiner::run(*m_context, *m_ast);
 		ExpressionJoiner::run(*m_context, *m_ast);
@@ -258,6 +260,12 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		disambiguate();
 		UnusedPruner::run(*m_context, *m_ast);
+	}
+	else if (m_optimizerStep == "circularReferencesPruner")
+	{
+		disambiguate();
+		FunctionHoister::run(*m_context, *m_ast);
+		CircularReferencesPruner::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "deadCodeEliminator")
 	{

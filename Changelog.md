@@ -8,6 +8,7 @@ Compiler Features:
  * Code Generator: Use ``calldatacopy`` instead of ``codecopy`` to zero out memory past input.
  * AST: Add a new node for doxygen-style, structured documentation that can be received by contract, function, event and modifier definitions.
  * Debug: Provide reason strings for compiler-generated internal reverts when using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting on ``debug`` mode.
+ * Yul Optimizer: Prune functions that call each other but are otherwise unreferenced.
 
 
 Bugfixes:
