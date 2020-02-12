@@ -31,8 +31,7 @@ class PrintDotsThread(object):
             time.sleep(self.interval)
 
 class regressor():
-    _re_sanitizer_log = re.compile(r"""ERROR: (?P<sanitizer>\w+).*""")
-    _error_blacklist = ["AddressSanitizer", "libFuzzer"]
+    _re_sanitizer_log = re.compile(r"""(.*runtime error: (?P<sanitizer>\w+).*|std::exception::what: (?P<description>\w+).*)""")
 
     def __init__(self, description, args):
         self._description = description
@@ -85,16 +84,13 @@ class regressor():
             bool: Test status.
                 True       -> Success
                 False      -> Failure
-            int: Number of suppressed memory leaks
         """
 
         ## Log may contain non ASCII characters, so we simply stringify them
         ## since they don't matter for regular expression matching
         rawtext = str(open(logfile, 'rb').read())
         list = re.findall(self._re_sanitizer_log, rawtext)
-        numSuppressedLeaks = list.count("LeakSanitizer")
-        rv = any(word in list for word in self._error_blacklist)
-        return not rv, numSuppressedLeaks
+        return len(list) == 0
 
     def run(self):
         """

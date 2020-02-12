@@ -414,7 +414,6 @@ jobs:
           name: Regression tests
           command: |
             mkdir -p test_results
-            export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
             scripts/regressions.py -o test_results
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
@@ -793,7 +792,7 @@ workflows:
     jobs:
       # OSSFUZZ builds and (regression) tests
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
-#      - t_ubu_ossfuzz: *workflow_ubuntu1904_ossfuzz
+      - t_ubu_ossfuzz: *workflow_ubuntu1904_ossfuzz
 
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *workflow_trigger_on_tags
