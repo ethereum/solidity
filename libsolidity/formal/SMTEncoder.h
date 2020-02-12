@@ -233,6 +233,13 @@ protected:
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
 
+	struct VerificationTarget
+	{
+		enum class Type { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert } type;
+		smt::Expression value;
+		smt::Expression constraints;
+	};
+
 	smt::VariableUsage m_variableUsage;
 	bool m_arrayAssignmentHappened = false;
 	// True if the "No SMT solver available" warning was already created.

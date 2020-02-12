@@ -575,7 +575,7 @@ void BMC::checkVerificationTargets(smt::Expression const& _constraints)
 		checkVerificationTarget(target, _constraints);
 }
 
-void BMC::checkVerificationTarget(VerificationTarget& _target, smt::Expression const& _constraints)
+void BMC::checkVerificationTarget(BMCVerificationTarget& _target, smt::Expression const& _constraints)
 {
 	switch (_target.type)
 	{
@@ -606,7 +606,7 @@ void BMC::checkVerificationTarget(VerificationTarget& _target, smt::Expression c
 	}
 }
 
-void BMC::checkConstantCondition(VerificationTarget& _target)
+void BMC::checkConstantCondition(BMCVerificationTarget& _target)
 {
 	checkBooleanNotConstant(
 		*_target.expression,
@@ -617,7 +617,7 @@ void BMC::checkConstantCondition(VerificationTarget& _target)
 	);
 }
 
-void BMC::checkUnderflow(VerificationTarget& _target, smt::Expression const& _constraints)
+void BMC::checkUnderflow(BMCVerificationTarget& _target, smt::Expression const& _constraints)
 {
 	solAssert(
 		_target.type == VerificationTarget::Type::Underflow ||
@@ -637,7 +637,7 @@ void BMC::checkUnderflow(VerificationTarget& _target, smt::Expression const& _co
 	);
 }
 
-void BMC::checkOverflow(VerificationTarget& _target, smt::Expression const& _constraints)
+void BMC::checkOverflow(BMCVerificationTarget& _target, smt::Expression const& _constraints)
 {
 	solAssert(
 		_target.type == VerificationTarget::Type::Overflow ||
@@ -657,7 +657,7 @@ void BMC::checkOverflow(VerificationTarget& _target, smt::Expression const& _con
 	);
 }
 
-void BMC::checkDivByZero(VerificationTarget& _target)
+void BMC::checkDivByZero(BMCVerificationTarget& _target)
 {
 	solAssert(_target.type == VerificationTarget::Type::DivByZero, "");
 	checkCondition(
@@ -671,7 +671,7 @@ void BMC::checkDivByZero(VerificationTarget& _target)
 	);
 }
 
-void BMC::checkBalance(VerificationTarget& _target)
+void BMC::checkBalance(BMCVerificationTarget& _target)
 {
 	solAssert(_target.type == VerificationTarget::Type::Balance, "");
 	checkCondition(
@@ -684,7 +684,7 @@ void BMC::checkBalance(VerificationTarget& _target)
 	);
 }
 
-void BMC::checkAssert(VerificationTarget& _target)
+void BMC::checkAssert(BMCVerificationTarget& _target)
 {
 	solAssert(_target.type == VerificationTarget::Type::Assert, "");
 	if (!m_safeAssertions.count(_target.expression))
@@ -703,10 +703,12 @@ void BMC::addVerificationTarget(
 	Expression const* _expression
 )
 {
-	VerificationTarget target{
-		_type,
-		_value,
-		currentPathConditions() && m_context.assertions(),
+	BMCVerificationTarget target{
+		{
+			_type,
+			_value,
+			currentPathConditions() && m_context.assertions()
+		},
 		_expression,
 		m_callStack,
 		modelExpressions()
