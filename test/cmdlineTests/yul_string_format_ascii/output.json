@@ -34,8 +34,8 @@ object \"C_10\" {
 
         }
 
-        function fun_f_9()  -> vloc__4 {
-            vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr()
+        function fun_f_9()  -> vloc__4_mpos {
+            vloc__4_mpos := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr()
             leave
 
         }
@@ -130,8 +130,8 @@ object \"C_10\" {
                 }
             }
 
-            function fun_f_9()  -> vloc__4 {
-                vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr()
+            function fun_f_9()  -> vloc__4_mpos {
+                vloc__4_mpos := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr()
                 leave
 
             }

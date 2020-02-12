@@ -151,6 +151,8 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 void Type::clearCache() const
 {
 	m_members.clear();
+	m_stackItems.reset();
+	m_stackSize.reset();
 }
 
 void StorageOffsets::computeOffsets(TypePointers const& _types)
@@ -1701,15 +1703,22 @@ u256 ArrayType::storageSize() const
 	return max<u256>(1, u256(size));
 }
 
-unsigned ArrayType::sizeOnStack() const
+vector<tuple<string, TypePointer>> ArrayType::makeStackItems() const
 {
-	if (m_location == DataLocation::CallData)
-		// offset [length] (stack top)
-		return 1 + (isDynamicallySized() ? 1 : 0);
-	else
-		// storage slot or memory offset
-		// byte offset inside storage value is omitted
-		return 1;
+	switch (m_location)
+	{
+		case DataLocation::CallData:
+			if (isDynamicallySized())
+				return {std::make_tuple("offset", TypeProvider::uint256()), std::make_tuple("length", TypeProvider::uint256())};
+			else
+				return {std::make_tuple("offset", TypeProvider::uint256())};
+		case DataLocation::Memory:
+			return {std::make_tuple("mpos", TypeProvider::uint256())};
+		case DataLocation::Storage:
+			// byte offset inside storage value is omitted
+			return {std::make_tuple("slot", TypeProvider::uint256())};
+	}
+	solAssert(false, "");
 }
 
 string ArrayType::toString(bool _short) const
@@ -1891,6 +1900,11 @@ string ArraySliceType::toString(bool _short) const
 	return m_arrayType.toString(_short) + " slice";
 }
 
+std::vector<std::tuple<std::string, TypePointer>> ArraySliceType::makeStackItems() const
+{
+	return {{"offset", TypeProvider::uint256()}, {"length", TypeProvider::uint256()}};
+}
+
 string ContractType::richIdentifier() const
 {
 	return (m_super ? "t_super" : "t_contract") + parenthesizeUserIdentifier(m_contract.name()) + to_string(m_contract.id());
@@ -1987,6 +2001,14 @@ vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVar
 		if (auto const* offset = offsets.offset(index))
 			variablesAndOffsets.emplace_back(variables[index], offset->first, offset->second);
 	return variablesAndOffsets;
+}
+
+vector<tuple<string, TypePointer>> ContractType::makeStackItems() const
+{
+	if (m_super)
+		return {};
+	else
+		return {make_tuple("address", isPayable() ? TypeProvider::payableAddress() : TypeProvider::address())};
 }
 
 void StructType::clearCache() const
@@ -2422,12 +2444,17 @@ u256 TupleType::storageSize() const
 	solAssert(false, "Storage size of non-storable tuple type requested.");
 }
 
-unsigned TupleType::sizeOnStack() const
+vector<tuple<string, TypePointer>> TupleType::makeStackItems() const
 {
-	unsigned size = 0;
+	vector<tuple<string, TypePointer>> slots;
+	unsigned i = 1;
 	for (auto const& t: components())
-		size += t ? t->sizeOnStack() : 0;
-	return size;
+	{
+		if (t)
+			slots.emplace_back("component_" + std::to_string(i), t);
+		++i;
+	}
+	return slots;
 }
 
 TypePointer TupleType::mobileType() const
@@ -2883,8 +2910,9 @@ unsigned FunctionType::storageBytes() const
 		solAssert(false, "Storage size of non-storable function type requested.");
 }
 
-unsigned FunctionType::sizeOnStack() const
+vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 {
+	vector<tuple<string, TypePointer>> slots;
 	Kind kind = m_kind;
 	if (m_kind == Kind::SetGas || m_kind == Kind::SetValue)
 	{
@@ -2892,39 +2920,42 @@ unsigned FunctionType::sizeOnStack() const
 		kind = dynamic_cast<FunctionType const&>(*m_returnParameterTypes.front()).m_kind;
 	}
 
-	unsigned size = 0;
-
 	switch (kind)
 	{
 	case Kind::External:
 	case Kind::DelegateCall:
-		size = 2;
+		slots = {make_tuple("address", TypeProvider::address()), make_tuple("functionIdentifier", TypeProvider::fixedBytes(4))};
 		break;
 	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::BareStaticCall:
+	case Kind::Transfer:
+	case Kind::Send:
+		slots = {make_tuple("address", TypeProvider::address())};
+		break;
 	case Kind::Internal:
+		slots = {make_tuple("functionIdentifier", TypeProvider::uint256())};
+		break;
 	case Kind::ArrayPush:
 	case Kind::ArrayPop:
 	case Kind::ByteArrayPush:
-	case Kind::Transfer:
-	case Kind::Send:
-		size = 1;
+		slots = {make_tuple("slot", TypeProvider::uint256())};
 		break;
 	default:
 		break;
 	}
 
 	if (m_gasSet)
-		size++;
+		slots.emplace_back("gas", TypeProvider::uint256());
 	if (m_valueSet)
-		size++;
+		slots.emplace_back("value", TypeProvider::uint256());
 	if (m_saltSet)
-		size++;
+		slots.emplace_back("salt", TypeProvider::uint256());
 	if (bound())
-		size += m_parameterTypes.front()->sizeOnStack();
-	return size;
+		for (auto const& [boundName, boundType]: m_parameterTypes.front()->stackItems())
+			slots.emplace_back("self_" + boundName, boundType);
+	return slots;
 }
 
 FunctionTypePointer FunctionType::interfaceFunctionType() const
@@ -3418,12 +3449,12 @@ u256 TypeType::storageSize() const
 	solAssert(false, "Storage size of non-storable type type requested.");
 }
 
-unsigned TypeType::sizeOnStack() const
+vector<tuple<string, TypePointer>> TypeType::makeStackItems() const
 {
 	if (auto contractType = dynamic_cast<ContractType const*>(m_actualType))
 		if (contractType->contractDefinition().isLibrary())
-			return 1;
-	return 0;
+			return {make_tuple("address", TypeProvider::address())};
+	return {};
 }
 
 MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _currentScope) const

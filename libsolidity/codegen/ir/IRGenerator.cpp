@@ -139,11 +139,11 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 		t("functionName", functionName);
 		string params;
 		for (auto const& varDecl: _function.parameters())
-			params += (params.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl);
+			params += (params.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl).commaSeparatedList();
 		t("params", params);
 		string retParams;
 		for (auto const& varDecl: _function.returnParameters())
-			retParams += (retParams.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl);
+			retParams += (retParams.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl).commaSeparatedList();
 		t("returns", retParams.empty() ? "" : " -> " + retParams);
 		t("body", generate(_function.body()));
 		return t.render();

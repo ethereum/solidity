@@ -31,23 +31,22 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 
-string IRGenerationContext::addLocalVariable(VariableDeclaration const& _varDecl)
+IRVariable const& IRGenerationContext::addLocalVariable(VariableDeclaration const& _varDecl)
 {
-	solUnimplementedAssert(
-		_varDecl.annotation().type->sizeOnStack() == 1,
-		"Multi-slot types not yet implemented."
+	auto const& [it, didInsert] = m_localVariables.emplace(
+		std::make_pair(&_varDecl, IRVariable{_varDecl})
 	);
-
-	return m_localVariables[&_varDecl] = "vloc_" + _varDecl.name() + "_" + to_string(_varDecl.id());
+	solAssert(didInsert, "Local variable added multiple times.");
+	return it->second;
 }
 
-string IRGenerationContext::localVariableName(VariableDeclaration const& _varDecl)
+IRVariable const& IRGenerationContext::localVariable(VariableDeclaration const& _varDecl)
 {
 	solAssert(
 		m_localVariables.count(&_varDecl),
 		"Unknown variable: " + _varDecl.name()
 	);
-	return m_localVariables[&_varDecl];
+	return m_localVariables.at(&_varDecl);
 }
 
 void IRGenerationContext::addStateVariable(
@@ -96,23 +95,6 @@ string IRGenerationContext::virtualFunctionName(FunctionDefinition const& _funct
 string IRGenerationContext::newYulVariable()
 {
 	return "_" + to_string(++m_varCounter);
-}
-
-string IRGenerationContext::variable(Expression const& _expression)
-{
-	unsigned size = _expression.annotation().type->sizeOnStack();
-	string var = "expr_" + to_string(_expression.id());
-	if (size == 1)
-		return var;
-	else
-		return suffixedVariableNameList(move(var) + "_", 1, 1 + size);
-}
-
-string IRGenerationContext::variablePart(Expression const& _expression, string const& _part)
-{
-	size_t numVars = _expression.annotation().type->sizeOnStack();
-	solAssert(numVars > 1, "");
-	return "expr_" + to_string(_expression.id()) + "_" + _part;
 }
 
 string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
