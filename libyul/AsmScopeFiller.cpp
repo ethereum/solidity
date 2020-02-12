@@ -151,13 +151,13 @@ bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const&
 
 bool ScopeFiller::registerFunction(FunctionDefinition const& _funDef)
 {
-	vector<Scope::YulType> arguments;
-	for (auto const& _argument: _funDef.parameters)
-		arguments.emplace_back(_argument.type.str());
+	vector<Scope::YulType> parameters;
+	for (auto const& parameter: _funDef.parameters)
+		parameters.emplace_back(parameter.type);
 	vector<Scope::YulType> returns;
-	for (auto const& _return: _funDef.returnVariables)
-		returns.emplace_back(_return.type.str());
-	if (!m_currentScope->registerFunction(_funDef.name, std::move(arguments), std::move(returns)))
+	for (auto const& returnVariable: _funDef.returnVariables)
+		returns.emplace_back(returnVariable.type);
+	if (!m_currentScope->registerFunction(_funDef.name, std::move(parameters), std::move(returns)))
 	{
 		//@TODO secondary location
 		m_errorReporter.declarationError(
