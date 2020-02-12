@@ -172,8 +172,13 @@ public:
 
 	/// @returns the name of a function that returns the calldata address for the
 	/// given array base ref and index.
-	/// signature: (baseRef, index) -> address
+	/// signature: (baseRef, index) -> offset[, length]
 	std::string calldataArrayIndexAccessFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that follows a calldata tail while performing
+	/// bounds checks.
+	/// signature: (baseRef, tailPointer) -> offset[, length]
+	std::string accessCalldataTailFunction(Type const& _type);
 
 	/// @returns the name of a function that advances an array data pointer to the next element.
 	/// Only works for memory arrays, calldata arrays and storage arrays that every item occupies one or multiple full slots.
