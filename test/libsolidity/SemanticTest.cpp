@@ -80,6 +80,12 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 		m_settings.erase("revertStrings");
 	}
 
+	if (m_settings.count("allowNonExistingFunctions"))
+	{
+		m_validatedSettings["allowNonExistingFunctions"] = true;
+		m_settings.erase("allowNonExistingFunctions");
+	}
+
 	parseExpectations(file);
 	soltestAssert(!m_tests.empty(), "No tests specified in " + _filename);
 }
@@ -143,13 +149,22 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 			}
 			else
 			{
-				bytes output = test.call().useCallWithoutSignature ?
-					callLowLevel(test.call().arguments.rawBytes(), test.call().value) :
-					callContractFunctionWithValueNoEncoding(
+				bytes output;
+				if (test.call().useCallWithoutSignature)
+					output = callLowLevel(test.call().arguments.rawBytes(), test.call().value);
+				else
+				{
+					soltestAssert(
+						m_validatedSettings.count("allowNonExistingFunctions") || m_compiler.methodIdentifiers(m_compiler.lastContractName()).isMember(test.call().signature),
+						"The function " + test.call().signature + " is not known to the compiler"
+					);
+
+					output = callContractFunctionWithValueNoEncoding(
 						test.call().signature,
 						test.call().value,
 						test.call().arguments.rawBytes()
 					);
+				}
 
 				if ((m_transactionSuccessful == test.call().expectations.failure) || (output != test.call().expectations.rawBytes()))
 					success = false;

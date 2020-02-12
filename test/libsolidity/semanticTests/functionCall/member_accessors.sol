@@ -13,6 +13,7 @@ contract test {
     uint256 super_secret_data;
 }
 // ====
+// allowNonExistingFunctions: true
 // compileViaYul: also
 // ----
 // data() -> 8

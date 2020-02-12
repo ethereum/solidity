@@ -4,6 +4,7 @@ contract C {
     }
 }
 // ====
+// allowNonExistingFunctions: true
 // compileViaYul: also
 // ----
 // f(uint256,uint256,uint256,uint256,uint256): 1, 1, 1, 1, 1
