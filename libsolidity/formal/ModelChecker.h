@@ -46,7 +46,7 @@ public:
 	/// should be used, even if all are available. The default choice is to use all.
 	ModelChecker(
 		langutil::ErrorReporter& _errorReporter,
-		std::map<h256, std::string> const& _smtlib2Responses,
+		std::map<solidity::util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback(),
 		smt::SMTSolverChoice _enabledSolvers = smt::SMTSolverChoice::All()
 	);
