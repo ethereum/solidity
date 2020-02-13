@@ -2154,7 +2154,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 
 	default:
-		m_errorReporter.typeError(_functionCall.location(), "Type is not callable");
+		m_errorReporter.fatalTypeError(_functionCall.location(), "Type is not callable");
 		funcCallAnno.kind = FunctionCallKind::Unset;
 		funcCallAnno.isPure = argumentsArePure;
 		break;
