@@ -53,40 +53,50 @@ namespace
 	}
 }
 
+class PopulationFixture
+{
+protected:
+	PopulationFixture():
+		m_sourceStream(SampleSourceCode, ""),
+		m_program(Program::load(m_sourceStream)) {}
+
+	static constexpr char SampleSourceCode[] =
+		"{\n"
+		"    let factor := 13\n"
+		"    {\n"
+		"        if factor\n"
+		"        {\n"
+		"            let variable := add(1, 2)\n"
+		"        }\n"
+		"        let result := factor\n"
+		"    }\n"
+		"    let something := 6\n"
+		"    {\n"
+		"        {\n"
+		"            {\n"
+		"                let value := 15\n"
+		"            }\n"
+		"        }\n"
+		"    }\n"
+		"    let something_else := mul(mul(something, 1), add(factor, 0))\n"
+		"    if 1 { let x := 1 }\n"
+		"    if 0 { let y := 2 }\n"
+		"}\n";
+
+	CharStream m_sourceStream;
+	Program m_program;
+};
+
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(PopulationTest)
 
-string const& sampleSourceCode =
-	"{\n"
-	"    let factor := 13\n"
-	"    {\n"
-	"        if factor\n"
-	"        {\n"
-	"            let variable := add(1, 2)\n"
-	"        }\n"
-	"        let result := factor\n"
-	"    }\n"
-	"    let something := 6\n"
-	"    {\n"
-	"        {\n"
-	"            {\n"
-	"                let value := 15\n"
-	"            }\n"
-	"        }\n"
-	"    }\n"
-	"    let something_else := mul(mul(something, 1), add(factor, 0))\n"
-	"    if 1 { let x := 1 }\n"
-	"    if 0 { let y := 2 }\n"
-	"}\n";
-
-BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness)
+BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness, PopulationFixture)
 {
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
 	vector<Chromosome> chromosomes = {
 		Chromosome::makeRandom(5),
 		Chromosome::makeRandom(10),
 	};
-	Population population(Program::load(sourceStream), chromosomes);
+	Population population(m_program, chromosomes);
 
 	BOOST_TEST(population.individuals().size() == 2);
 	BOOST_TEST(population.individuals()[0].chromosome == chromosomes[0]);
@@ -96,12 +106,10 @@ BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness
 	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 }
 
-BOOST_AUTO_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes)
+BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes, PopulationFixture)
 {
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto program = Program::load(sourceStream);
-	auto population1 = Population::makeRandom(program, 100);
-	auto population2 = Population::makeRandom(program, 100);
+	auto population1 = Population::makeRandom(m_program, 100);
+	auto population2 = Population::makeRandom(m_program, 100);
 
 	BOOST_TEST(population1.individuals().size() == 100);
 	BOOST_TEST(population2.individuals().size() == 100);
@@ -117,19 +125,17 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes
 	BOOST_TEST(numMatchingPositions < 10);
 }
 
-BOOST_AUTO_TEST_CASE(makeRandom_should_not_compute_fitness)
+BOOST_FIXTURE_TEST_CASE(makeRandom_should_not_compute_fitness, PopulationFixture)
 {
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto population = Population::makeRandom(Program::load(sourceStream), 5);
+	auto population = Population::makeRandom(m_program, 5);
 
 	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 }
 
-BOOST_AUTO_TEST_CASE(run_should_evaluate_fitness)
+BOOST_FIXTURE_TEST_CASE(run_should_evaluate_fitness, PopulationFixture)
 {
 	stringstream output;
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto population = Population::makeRandom(Program::load(sourceStream), 5);
+	auto population = Population::makeRandom(m_program, 5);
 	assert(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 
 	population.run(1, output);
@@ -137,10 +143,9 @@ BOOST_AUTO_TEST_CASE(run_should_evaluate_fitness)
 	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessSet));
 }
 
-BOOST_AUTO_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse)
+BOOST_FIXTURE_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse, PopulationFixture)
 {
 	stringstream output;
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
 	vector<Chromosome> chromosomes = {
 		Chromosome(vector<string>{StructuralSimplifier::name}),
 		Chromosome(vector<string>{BlockFlattener::name}),
@@ -148,12 +153,11 @@ BOOST_AUTO_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse)
 		Chromosome(vector<string>{UnusedPruner::name}),
 		Chromosome(vector<string>{StructuralSimplifier::name, BlockFlattener::name}),
 	};
-	auto program = Program::load(sourceStream);
-	Population population(program, chromosomes);
+	Population population(m_program, chromosomes);
 
 	size_t initialTopFitness[2] = {
-		Population::measureFitness(chromosomes[0], program),
-		Population::measureFitness(chromosomes[1], program),
+		Population::measureFitness(chromosomes[0], m_program),
+		Population::measureFitness(chromosomes[1], m_program),
 	};
 
 	for (int i = 0; i < 6; ++i)
