@@ -8,4 +8,3 @@ contract CrashContract {
 }
 // ----
 // TypeError: (170-177): Type is not callable
-// TypeError: (170-177): Type tuple() is not implicitly convertible to expected type tuple(struct CrashContract.S storage ref,struct CrashContract.S storage ref).
