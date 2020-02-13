@@ -108,12 +108,11 @@ Population Population::crossover(PairSelection const& _selection, function<Cross
 	vector<Individual> crossedIndividuals;
 	for (auto const& [i, j]: _selection.materialise(m_individuals.size()))
 	{
-		auto [childChromosome1, childChromosome2] = _crossover(
+		auto childChromosome = _crossover(
 			m_individuals[i].chromosome,
 			m_individuals[j].chromosome
 		);
-		crossedIndividuals.emplace_back(move(childChromosome1), *m_fitnessMetric);
-		crossedIndividuals.emplace_back(move(childChromosome2), *m_fitnessMetric);
+		crossedIndividuals.emplace_back(move(childChromosome), *m_fitnessMetric);
 	}
 
 	return Population(m_fitnessMetric, crossedIndividuals);

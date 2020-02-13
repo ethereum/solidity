@@ -214,11 +214,14 @@ BOOST_AUTO_TEST_CASE(alternativeMutations_should_always_choose_second_mutation_i
 
 BOOST_AUTO_TEST_CASE(randomPointCrossover_should_swap_chromosome_parts_at_random_point)
 {
-	SimulationRNG::reset(1);
 	function<Crossover> crossover = randomPointCrossover();
 
-	auto [result1, result2] = crossover(Chromosome("aaaaaaaaaa"), Chromosome("cccccc"));
+	SimulationRNG::reset(1);
+	Chromosome result1 = crossover(Chromosome("aaaaaaaaaa"), Chromosome("cccccc"));
 	BOOST_TEST(result1 == Chromosome("aaaccc"));
+
+	SimulationRNG::reset(1);
+	Chromosome result2 = crossover(Chromosome("cccccc"), Chromosome("aaaaaaaaaa"));
 	BOOST_TEST(result2 == Chromosome("cccaaaaaaa"));
 }
 
@@ -229,12 +232,19 @@ BOOST_AUTO_TEST_CASE(randomPointCrossover_should_only_consider_points_available_
 
 	for (size_t i = 0; i < 30; ++i)
 	{
-		auto [result1, result2] = crossover(Chromosome("aaa"), Chromosome("TTTTTTTTTTTTTTTTTTTT"));
+		Chromosome result1 = crossover(Chromosome("aaa"), Chromosome("TTTTTTTTTTTTTTTTTTTT"));
+		Chromosome result2 = crossover(Chromosome("TTTTTTTTTTTTTTTTTTTT"), Chromosome("aaa"));
 		BOOST_TEST((
-			(result1 == Chromosome("TTTTTTTTTTTTTTTTTTTT") && result2 == Chromosome("aaa")) ||
-			(result1 == Chromosome("aTTTTTTTTTTTTTTTTTTT") && result2 == Chromosome("Taa")) ||
-			(result1 == Chromosome("aaTTTTTTTTTTTTTTTTTT") && result2 == Chromosome("TTa")) ||
-			(result1 == Chromosome("aaaTTTTTTTTTTTTTTTTT") && result2 == Chromosome("TTT"))
+			result1 == Chromosome("TTTTTTTTTTTTTTTTTTTT") ||
+			result1 == Chromosome("aTTTTTTTTTTTTTTTTTTT") ||
+			result1 == Chromosome("aaTTTTTTTTTTTTTTTTTT") ||
+			result1 == Chromosome("aaaTTTTTTTTTTTTTTTTT")
+		));
+		BOOST_TEST((
+			result2 == Chromosome("aaa") ||
+			result2 == Chromosome("Taa") ||
+			result2 == Chromosome("TTa") ||
+			result2 == Chromosome("TTT")
 		));
 	}
 }
@@ -246,7 +256,8 @@ BOOST_AUTO_TEST_CASE(randomPointCrossover_should_never_split_at_position_zero_if
 
 	for (size_t i = 0; i < 30; ++i)
 	{
-		auto [result1, result2] = crossover(Chromosome("aa"), Chromosome("TTTTTTTTTTTTTTTTTTTT"));
+		Chromosome result1 = crossover(Chromosome("aa"), Chromosome("TTTTTTTTTTTTTTTTTTTT"));
+		Chromosome result2 = crossover(Chromosome("TTTTTTTTTTTTTTTTTTTT"), Chromosome("aa"));
 		BOOST_TEST(result1 != Chromosome("TTTTTTTTTTTTTTTTTTTT"));
 		BOOST_TEST(result2 != Chromosome("aa"));
 	}
@@ -259,7 +270,8 @@ BOOST_AUTO_TEST_CASE(randomPointCrossover_should_never_split_at_position_zero_if
 
 	for (size_t i = 0; i < 30; ++i)
 	{
-		auto [result1, result2] = crossover(Chromosome("a"), Chromosome("T"));
+		Chromosome result1 = crossover(Chromosome("a"), Chromosome("T"));
+		Chromosome result2 = crossover(Chromosome("T"), Chromosome("a"));
 		BOOST_TEST(result1 == Chromosome("a"));
 		BOOST_TEST(result2 == Chromosome("T"));
 	}
@@ -270,8 +282,8 @@ BOOST_AUTO_TEST_CASE(randomPointCrossover_should_work_even_if_one_chromosome_is_
 	function<Crossover> crossover = randomPointCrossover();
 
 	SimulationRNG::reset(1);
-	BOOST_CHECK(crossover(Chromosome("ff"), Chromosome("a")) == ChromosomePair(Chromosome("f"), Chromosome("af")));
-	BOOST_CHECK(crossover(Chromosome("a"), Chromosome("ff")) == ChromosomePair(Chromosome("af"), Chromosome("f")));
+	BOOST_CHECK(crossover(Chromosome("ff"), Chromosome("a")) == Chromosome("f"));
+	BOOST_CHECK(crossover(Chromosome("a"), Chromosome("ff")) == Chromosome("af"));
 }
 
 BOOST_AUTO_TEST_CASE(randomPointCrossover_should_split_at_position_zero_only_if_at_least_one_chromosome_is_empty)
@@ -282,52 +294,59 @@ BOOST_AUTO_TEST_CASE(randomPointCrossover_should_split_at_position_zero_only_if_
 	function<Crossover> crossover = randomPointCrossover();
 
 	SimulationRNG::reset(1);
-	BOOST_CHECK(crossover(empty, empty) == ChromosomePair(empty, empty));
-	BOOST_CHECK(crossover(unsplittable, empty) == ChromosomePair(empty, unsplittable));
-	BOOST_CHECK(crossover(empty, unsplittable) == ChromosomePair(unsplittable, empty));
-	BOOST_CHECK(crossover(splittable, empty) == ChromosomePair(empty, splittable));
-	BOOST_CHECK(crossover(empty, splittable) == ChromosomePair(splittable, empty));
+	BOOST_CHECK(crossover(empty, empty) == empty);
+	BOOST_CHECK(crossover(unsplittable, empty) == empty);
+	BOOST_CHECK(crossover(empty, unsplittable) == unsplittable);
+	BOOST_CHECK(crossover(splittable, empty) == empty);
+	BOOST_CHECK(crossover(empty, splittable) == splittable);
 }
 
 BOOST_AUTO_TEST_CASE(fixedPointCrossover_should_swap_chromosome_parts_at_given_point)
 {
-	auto [result1, result2] = fixedPointCrossover(0.8)(Chromosome("aaaaaaaaaa"), Chromosome("cccccccccc"));
+	Chromosome result1 = fixedPointCrossover(0.8)(Chromosome("aaaaaaaaaa"), Chromosome("cccccccccc"));
+	Chromosome result2 = fixedPointCrossover(0.8)(Chromosome("cccccccccc"), Chromosome("aaaaaaaaaa"));
 	BOOST_TEST(result1 == Chromosome("aaaaaaaacc"));
 	BOOST_TEST(result2 == Chromosome("ccccccccaa"));
 }
 
 BOOST_AUTO_TEST_CASE(fixedPointCrossover_should_determine_crossover_point_based_on_length_of_shorter_chromosome)
 {
-	auto [result1, result2] = fixedPointCrossover(0.4)(Chromosome("aaaaa"), Chromosome("cccccccccc"));
+	Chromosome result1 = fixedPointCrossover(0.4)(Chromosome("aaaaa"), Chromosome("cccccccccc"));
+	Chromosome result2 = fixedPointCrossover(0.4)(Chromosome("cccccccccc"), Chromosome("aaaaa"));
 	BOOST_TEST(result1 == Chromosome("aacccccccc"));
 	BOOST_TEST(result2 == Chromosome("ccaaa"));
 }
 
 BOOST_AUTO_TEST_CASE(fixedPointCrossover_should_round_split_point)
 {
-	auto [result1, result2] = fixedPointCrossover(0.49)(Chromosome("aaaaa"), Chromosome("ccccc"));
+	Chromosome result1 = fixedPointCrossover(0.49)(Chromosome("aaaaa"), Chromosome("ccccc"));
+	Chromosome result2 = fixedPointCrossover(0.49)(Chromosome("ccccc"), Chromosome("aaaaa"));
 	BOOST_TEST(result1 == Chromosome("aaccc"));
 	BOOST_TEST(result2 == Chromosome("ccaaa"));
 
-	auto [result3, result4] = fixedPointCrossover(0.50)(Chromosome("aaaaa"), Chromosome("ccccc"));
+	Chromosome result3 = fixedPointCrossover(0.50)(Chromosome("aaaaa"), Chromosome("ccccc"));
+	Chromosome result4 = fixedPointCrossover(0.50)(Chromosome("ccccc"), Chromosome("aaaaa"));
 	BOOST_TEST(result3 == Chromosome("aaacc"));
 	BOOST_TEST(result4 == Chromosome("cccaa"));
 
-	auto [result5, result6] = fixedPointCrossover(0.51)(Chromosome("aaaaa"), Chromosome("ccccc"));
+	Chromosome result5 = fixedPointCrossover(0.51)(Chromosome("aaaaa"), Chromosome("ccccc"));
+	Chromosome result6 = fixedPointCrossover(0.51)(Chromosome("ccccc"), Chromosome("aaaaa"));
 	BOOST_TEST(result5 == Chromosome("aaacc"));
 	BOOST_TEST(result6 == Chromosome("cccaa"));
 }
 
 BOOST_AUTO_TEST_CASE(fixedPointCrossover_should_split_at_position_zero_if_explicitly_requested)
 {
-	auto [result1, result2] = fixedPointCrossover(0.0)(Chromosome("aaaaa"), Chromosome("cccccccccc"));
+	Chromosome result1 = fixedPointCrossover(0.0)(Chromosome("aaaaa"), Chromosome("cccccccccc"));
+	Chromosome result2 = fixedPointCrossover(0.0)(Chromosome("cccccccccc"), Chromosome("aaaaa"));
 	BOOST_TEST(result1 == Chromosome("cccccccccc"));
 	BOOST_TEST(result2 == Chromosome("aaaaa"));
 }
 
 BOOST_AUTO_TEST_CASE(fixedPointCrossover_should_split_at_end_of_shorter_chromosome_if_crossover_point_is_after_last_position)
 {
-	auto [result1, result2] = fixedPointCrossover(1.0)(Chromosome("aaaaa"), Chromosome("cccccccccc"));
+	Chromosome result1 = fixedPointCrossover(1.0)(Chromosome("aaaaa"), Chromosome("cccccccccc"));
+	Chromosome result2 = fixedPointCrossover(1.0)(Chromosome("cccccccccc"), Chromosome("aaaaa"));
 	BOOST_TEST(result1 == Chromosome("aaaaaccccc"));
 	BOOST_TEST(result2 == Chromosome("ccccc"));
 }
@@ -335,16 +354,16 @@ BOOST_AUTO_TEST_CASE(fixedPointCrossover_should_split_at_end_of_shorter_chromoso
 BOOST_AUTO_TEST_CASE(fixedPointCrossover_should_select_correct_split_point_for_unsplittable_chromosomes)
 {
 	function<Crossover> crossover00 = fixedPointCrossover(0.0);
-	BOOST_CHECK(crossover00(Chromosome("fff"), Chromosome("a")) == ChromosomePair(Chromosome("a"), Chromosome("fff")));
-	BOOST_CHECK(crossover00(Chromosome("a"), Chromosome("fff")) == ChromosomePair(Chromosome("fff"), Chromosome("a")));
+	BOOST_CHECK(crossover00(Chromosome("fff"), Chromosome("a")) == Chromosome("a"));
+	BOOST_CHECK(crossover00(Chromosome("a"), Chromosome("fff")) == Chromosome("fff"));
 
-	BOOST_CHECK(crossover00(Chromosome("f"), Chromosome("a")) == ChromosomePair(Chromosome("a"), Chromosome("f")));
+	BOOST_CHECK(crossover00(Chromosome("f"), Chromosome("a")) == Chromosome("a"));
 
 	function<Crossover> crossover10 = fixedPointCrossover(1.0);
-	BOOST_CHECK(crossover10(Chromosome("fff"), Chromosome("a")) == ChromosomePair(Chromosome("f"), Chromosome("aff")));
-	BOOST_CHECK(crossover10(Chromosome("a"), Chromosome("fff")) == ChromosomePair(Chromosome("aff"), Chromosome("f")));
+	BOOST_CHECK(crossover10(Chromosome("fff"), Chromosome("a")) == Chromosome("f"));
+	BOOST_CHECK(crossover10(Chromosome("a"), Chromosome("fff")) == Chromosome("aff"));
 
-	BOOST_CHECK(crossover10(Chromosome("f"), Chromosome("a")) == ChromosomePair(Chromosome("f"), Chromosome("a")));
+	BOOST_CHECK(crossover10(Chromosome("f"), Chromosome("a")) == Chromosome("f"));
 }
 
 BOOST_AUTO_TEST_CASE(fixedPointCrossover_should_always_use_position_zero_as_split_point_when_chromosome_empty)
@@ -354,18 +373,18 @@ BOOST_AUTO_TEST_CASE(fixedPointCrossover_should_always_use_position_zero_as_spli
 	Chromosome splittable("aaaa");
 
 	function<Crossover> crossover00 = fixedPointCrossover(0.0);
-	BOOST_CHECK(crossover00(empty, empty) == ChromosomePair(empty, empty));
-	BOOST_CHECK(crossover00(unsplittable, empty) == ChromosomePair(empty, unsplittable));
-	BOOST_CHECK(crossover00(empty, unsplittable) == ChromosomePair(unsplittable, empty));
-	BOOST_CHECK(crossover00(splittable, empty) == ChromosomePair(empty, splittable));
-	BOOST_CHECK(crossover00(empty, splittable) == ChromosomePair(splittable, empty));
+	BOOST_CHECK(crossover00(empty, empty) == empty);
+	BOOST_CHECK(crossover00(unsplittable, empty) == empty);
+	BOOST_CHECK(crossover00(empty, unsplittable) == unsplittable);
+	BOOST_CHECK(crossover00(splittable, empty) == empty);
+	BOOST_CHECK(crossover00(empty, splittable) == splittable);
 
 	function<Crossover> crossover10 = fixedPointCrossover(1.0);
-	BOOST_CHECK(crossover10(empty, empty) == ChromosomePair(empty, empty));
-	BOOST_CHECK(crossover10(unsplittable, empty) == ChromosomePair(empty, unsplittable));
-	BOOST_CHECK(crossover10(empty, unsplittable) == ChromosomePair(unsplittable, empty));
-	BOOST_CHECK(crossover10(splittable, empty) == ChromosomePair(empty, splittable));
-	BOOST_CHECK(crossover10(empty, splittable) == ChromosomePair(splittable, empty));
+	BOOST_CHECK(crossover10(empty, empty) == empty);
+	BOOST_CHECK(crossover10(unsplittable, empty) == empty);
+	BOOST_CHECK(crossover10(empty, unsplittable) == unsplittable);
+	BOOST_CHECK(crossover10(splittable, empty) == empty);
+	BOOST_CHECK(crossover10(empty, splittable) == splittable);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

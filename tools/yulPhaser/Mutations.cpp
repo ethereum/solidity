@@ -98,7 +98,7 @@ function<Mutation> phaser::alternativeMutations(
 namespace
 {
 
-ChromosomePair buildChromosomesBySwappingParts(
+Chromosome buildChromosomesBySwappingParts(
 	Chromosome const& _chromosome1,
 	Chromosome const& _chromosome2,
 	size_t _crossoverPoint
@@ -110,15 +110,9 @@ ChromosomePair buildChromosomesBySwappingParts(
 	auto begin1 = _chromosome1.optimisationSteps().begin();
 	auto begin2 = _chromosome2.optimisationSteps().begin();
 
-	return ChromosomePair(
-		Chromosome(
-			vector<string>(begin1, begin1 + _crossoverPoint) +
-			vector<string>(begin2 + _crossoverPoint, _chromosome2.optimisationSteps().end())
-		),
-		Chromosome(
-			vector<string>(begin2, begin2 + _crossoverPoint) +
-			vector<string>(begin1 + _crossoverPoint, _chromosome1.optimisationSteps().end())
-		)
+	return Chromosome(
+		vector<string>(begin1, begin1 + _crossoverPoint) +
+		vector<string>(begin2 + _crossoverPoint, _chromosome2.optimisationSteps().end())
 	);
 }
 

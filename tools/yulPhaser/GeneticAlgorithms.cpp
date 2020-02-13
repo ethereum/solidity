@@ -71,7 +71,7 @@ void GenerationalElitistWithExclusivePools::runNextRound()
 			)
 		) +
 		m_population.select(elite).crossover(
-			RandomPairSelection(m_options.crossoverPoolSize / elitePoolSize / 2),
+			RandomPairSelection(m_options.crossoverPoolSize / elitePoolSize),
 			randomPointCrossover()
 		);
 }

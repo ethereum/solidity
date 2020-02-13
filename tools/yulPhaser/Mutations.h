@@ -28,10 +28,8 @@
 namespace solidity::phaser
 {
 
-using ChromosomePair = std::tuple<Chromosome, Chromosome>;
-
 using Mutation = Chromosome(Chromosome const&);
-using Crossover = ChromosomePair(Chromosome const&, Chromosome const&);
+using Crossover = Chromosome(Chromosome const&, Chromosome const&);
 
 // MUTATIONS
 
@@ -64,10 +62,9 @@ std::function<Mutation> alternativeMutations(
 std::function<Crossover> randomPointCrossover();
 
 /// Creates a crossover operator that always chooses a point that lies at @a _crossoverPoint
-/// percent of the length of the shorter chromosome. Then creates a pair of chromosomes by
-/// splitting both inputs at the crossover point and stitching the resulting parts. The first
-/// output is created from the first half or first input and the second half of the second input
-/// The second output from the remaining two halves.
+/// percent of the length of the shorter chromosome. Then creates a new chromosome by
+/// splitting both inputs at the crossover point and stitching output from the first half or first
+/// input and the second half of the second input.
 ///
 /// Avoids selecting position 0 (since this just produces a chromosome identical to the second one)
 /// unless there is no other choice (i.e. one of the chromosomes is empty).

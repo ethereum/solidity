@@ -263,10 +263,10 @@ BOOST_FIXTURE_TEST_CASE(mutate_should_return_empty_population_if_selection_is_em
 BOOST_FIXTURE_TEST_CASE(crossover_should_return_population_containing_individuals_indicated_by_selection_with_crossover_applied, PopulationFixture)
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
-	PairMosaicSelection selection({{0, 1}, {2, 1}}, 0.5);
-	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 1}, {2, 1}}));
+	PairMosaicSelection selection({{0, 1}, {2, 1}}, 1.0);
+	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 1}, {2, 1}, {0, 1}, {2, 1}}));
 
-	Population expectedPopulation(m_fitnessMetric, {Chromosome("ac"), Chromosome("ca"), Chromosome("cg"), Chromosome("gc")});
+	Population expectedPopulation(m_fitnessMetric, {Chromosome("ac"), Chromosome("ac"), Chromosome("gc"), Chromosome("gc")});
 
 	BOOST_TEST(population.crossover(selection, fixedPointCrossover(0.5)) == expectedPopulation);
 }
@@ -274,8 +274,8 @@ BOOST_FIXTURE_TEST_CASE(crossover_should_return_population_containing_individual
 BOOST_FIXTURE_TEST_CASE(crossover_should_include_duplicates_if_selection_contains_duplicates, PopulationFixture)
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("aa")});
-	PairMosaicSelection selection({{0, 0}, {1, 1}}, 1.0);
-	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 0}, {1, 1}}));
+	PairMosaicSelection selection({{0, 0}, {1, 1}}, 2.0);
+	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 0}, {1, 1}, {0, 0}, {1, 1}}));
 
 	BOOST_TEST(
 		population.crossover(selection, fixedPointCrossover(0.5)) ==
