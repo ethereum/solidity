@@ -48,6 +48,7 @@ public:
 	void initializeStateVar(VariableDeclaration const& _varDecl);
 
 	void endVisit(VariableDeclarationStatement const& _variableDeclaration) override;
+	bool visit(Conditional const& _conditional) override;
 	bool visit(Assignment const& _assignment) override;
 	bool visit(TupleExpression const& _tuple) override;
 	bool visit(IfStatement const& _ifStatement) override;

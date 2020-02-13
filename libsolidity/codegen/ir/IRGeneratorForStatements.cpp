@@ -180,6 +180,24 @@ void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _var
 				declare(m_context.addLocalVariable(*decl));
 }
 
+bool IRGeneratorForStatements::visit(Conditional const& _conditional)
+{
+	_conditional.condition().accept(*this);
+
+	string condition = expressionAsType(_conditional.condition(), *TypeProvider::boolean());
+	declare(_conditional);
+
+	m_code << "switch " << condition << "\n" "case 0 {\n";
+	_conditional.falseExpression().accept(*this);
+	assign(_conditional, _conditional.falseExpression());
+	m_code << "}\n" "default {\n";
+	_conditional.trueExpression().accept(*this);
+	assign(_conditional, _conditional.trueExpression());
+	m_code << "}\n";
+
+	return false;
+}
+
 bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 {
 	_assignment.rightHandSide().accept(*this);
