@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_CASE(uniformRandomInt_returns_different_values_when_called_multi
 		samples2.push_back(uniformRandomInt(0, numOutcomes - 1));
 	}
 
-	vector<uint32_t> counts1(numSamples, 0);
-	vector<uint32_t> counts2(numSamples, 0);
+	vector<uint32_t> counts1(numOutcomes, 0);
+	vector<uint32_t> counts2(numOutcomes, 0);
 	for (uint32_t i = 0; i < numSamples; ++i)
 	{
 		++counts1[samples1[i]];
@@ -77,8 +77,8 @@ BOOST_AUTO_TEST_CASE(binomialRandomInt_returns_different_values_when_called_mult
 		samples2.push_back(binomialRandomInt(numTrials, successProbability));
 	}
 
-	vector<uint32_t> counts1(numSamples, 0);
-	vector<uint32_t> counts2(numSamples, 0);
+	vector<uint32_t> counts1(numTrials, 0);
+	vector<uint32_t> counts2(numTrials, 0);
 	for (uint32_t i = 0; i < numSamples; ++i)
 	{
 		++counts1[samples1[i]];
