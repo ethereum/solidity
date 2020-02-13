@@ -114,6 +114,9 @@ string TestFunctionCall::format(
 		}
 		else
 		{
+			if (m_calledNonExistingFunction)
+				_errorReporter.warning("The function \"" + m_call.signature + "\" is not known to the compiler.");
+
 			bytes output = m_rawBytes;
 			bool const isFailure = m_failure;
 			result = isFailure ?
@@ -300,6 +303,7 @@ void TestFunctionCall::reset()
 {
 	m_rawBytes = bytes{};
 	m_failure = true;
+	m_calledNonExistingFunction = false;
 }
 
 bool TestFunctionCall::matchesExpectation() const

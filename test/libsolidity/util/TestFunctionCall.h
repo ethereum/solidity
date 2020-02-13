@@ -77,6 +77,7 @@ public:
 	void reset();
 
 	FunctionCall const& call() const { return m_call; }
+	void calledNonExistingFunction() { m_calledNonExistingFunction = true; }
 	void setFailure(const bool _failure) { m_failure = _failure; }
 	void setRawBytes(const bytes _rawBytes) { m_rawBytes = _rawBytes; }
 	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
@@ -129,6 +130,8 @@ private:
 	/// JSON object which holds the contract ABI and that is used to set the output formatting
 	/// in the interactive update routine.
 	Json::Value m_contractABI;
+	/// Flags that the test failed because the called function is not known to exist on the contract.
+	bool m_calledNonExistingFunction = false;
 };
 
 }
