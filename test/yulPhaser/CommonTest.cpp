@@ -51,6 +51,20 @@ BOOST_AUTO_TEST_CASE(enumerateOptimisationSteps_should_assing_indices_to_all_ava
 	}
 }
 
+BOOST_AUTO_TEST_CASE(stripWhitespace_should_remove_all_whitespace_characters_from_a_string)
+{
+	BOOST_TEST(stripWhitespace("") == "");
+	BOOST_TEST(stripWhitespace(" ") == "");
+	BOOST_TEST(stripWhitespace(" \n\t\v ") == "");
+
+	BOOST_TEST(stripWhitespace("abc") == "abc");
+	BOOST_TEST(stripWhitespace(" abc") == "abc");
+	BOOST_TEST(stripWhitespace("abc ") == "abc");
+	BOOST_TEST(stripWhitespace(" a b c ") == "abc");
+	BOOST_TEST(stripWhitespace(" a b\tc\n") == "abc");
+	BOOST_TEST(stripWhitespace("   a   b \n\n  c \n\t\v") == "abc");
+}
+
 BOOST_AUTO_TEST_CASE(mean_should_calculate_statistical_mean)
 {
 	BOOST_TEST(mean<int>({0}) == 0.0);

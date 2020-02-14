@@ -19,6 +19,8 @@
 
 #include <libyul/optimiser/Suite.h>
 
+#include <regex>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -31,4 +33,10 @@ map<string, size_t> phaser::test::enumerateOptmisationSteps()
 		stepIndices.insert({nameAndAbbreviation.first, i++});
 
 	return stepIndices;
+}
+
+string phaser::test::stripWhitespace(string const& input)
+{
+	regex whitespaceRegex("\\s+");
+	return regex_replace(input, whitespaceRegex, "");
 }

@@ -42,6 +42,11 @@ namespace solidity::phaser::test
 /// integers.
 std::map<std::string, size_t> enumerateOptmisationSteps();
 
+// STRING UTILITIES
+
+/// Returns the input string with all the whitespace characters (spaces, line endings, etc.) removed.
+std::string stripWhitespace(std::string const& input);
+
 // STATISTICAL UTILITIES
 
 /// Calculates the mean value of a series of samples given in a vector.
