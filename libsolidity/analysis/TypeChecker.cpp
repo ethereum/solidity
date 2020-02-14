@@ -2527,7 +2527,15 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	else if (TypeType const* typeType = dynamic_cast<decltype(typeType)>(exprType))
 	{
 		if (ContractType const* contractType = dynamic_cast<decltype(contractType)>(typeType->actualType()))
+		{
 			annotation.isLValue = annotation.referencedDeclaration->isLValue();
+			if (
+				auto const* functionType = dynamic_cast<FunctionType const*>(annotation.type);
+				functionType &&
+				functionType->kind() == FunctionType::Kind::Declaration
+			)
+				annotation.isPure = _memberAccess.expression().annotation().isPure;
+		}
 	}
 
 	// TODO some members might be pure, but for example `address(0x123).balance` is not pure
@@ -2535,6 +2543,20 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	if (auto tt = dynamic_cast<TypeType const*>(exprType))
 		if (tt->actualType()->category() == Type::Category::Enum)
 			annotation.isPure = true;
+	if (
+		auto const* functionType = dynamic_cast<FunctionType const*>(exprType);
+		functionType &&
+		functionType->hasDeclaration() &&
+		dynamic_cast<FunctionDefinition const*>(&functionType->declaration()) &&
+		memberName == "selector"
+	)
+		if (auto const* parentAccess = dynamic_cast<MemberAccess const*>(&_memberAccess.expression()))
+		{
+			annotation.isPure = parentAccess->expression().annotation().isPure;
+			if (auto const* exprInt = dynamic_cast<Identifier const*>(&parentAccess->expression()))
+				if (exprInt->name() == "this" || exprInt->name() == "super")
+					annotation.isPure = true;
+		}
 	if (auto magicType = dynamic_cast<MagicType const*>(exprType))
 	{
 		if (magicType->kind() == MagicType::Kind::ABI)
