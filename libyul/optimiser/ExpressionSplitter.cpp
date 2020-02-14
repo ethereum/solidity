@@ -23,11 +23,13 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/TypeInfo.h>
 
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -39,7 +41,8 @@ using namespace solidity::langutil;
 
 void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 {
-	ExpressionSplitter{_context.dialect, _context.dispenser}(_ast);
+	TypeInfo typeInfo(_context.dialect, _ast);
+	ExpressionSplitter{_context.dialect, _context.dispenser, typeInfo}(_ast);
 }
 
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
@@ -103,10 +106,13 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 
 	SourceLocation location = locationOf(_expr);
 	YulString var = m_nameDispenser.newName({});
+	YulString type = m_typeInfo.typeOf(_expr);
 	m_statementsToPrefix.emplace_back(VariableDeclaration{
 		location,
-		{{TypedName{location, var, {}}}},
+		{{TypedName{location, var, type}}},
 		make_unique<Expression>(std::move(_expr))
 	});
 	_expr = Identifier{location, var};
+	m_typeInfo.setVariableType(var, type);
 }
+
