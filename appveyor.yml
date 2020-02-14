@@ -71,7 +71,7 @@ test_script:
     - soltest.exe --show-progress -- --testpath %APPVEYOR_BUILD_FOLDER%\test --no-smt
 # Skip bytecode compare if private key is not available
     - cd %APPVEYOR_BUILD_FOLDER%
-    - ps: if ($env:priv_key) {
+    - ps: if ($env:priv_key -and -not $env:APPVEYOR_PULL_REQUEST_HEAD_COMMIT) {
         scripts\bytecodecompare\storebytecode.bat $Env:CONFIGURATION $bytecodedir
         }
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
