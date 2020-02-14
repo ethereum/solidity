@@ -83,6 +83,25 @@ BOOST_AUTO_TEST_CASE(stripWhitespace_should_remove_all_whitespace_characters_fro
 	BOOST_TEST(stripWhitespace("   a   b \n\n  c \n\t\v") == "abc");
 }
 
+BOOST_AUTO_TEST_CASE(countSubstringOccurrences_should_count_non_overlapping_substring_occurrences_in_a_string)
+{
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "a") == 6);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "aa") == 2);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "aaa") == 2);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "aaab") == 1);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "b") == 2);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "d") == 1);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "cdc") == 1);
+
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "x") == 0);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "aaaa") == 0);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "dcd") == 0);
+
+	BOOST_TEST(countSubstringOccurrences("", "a") == 0);
+	BOOST_TEST(countSubstringOccurrences("", "aa") == 0);
+	BOOST_TEST(countSubstringOccurrences("a", "aa") == 0);
+}
+
 BOOST_AUTO_TEST_CASE(mean_should_calculate_statistical_mean)
 {
 	BOOST_TEST(mean<int>({0}) == 0.0);

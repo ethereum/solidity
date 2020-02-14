@@ -49,3 +49,18 @@ string phaser::test::stripWhitespace(string const& input)
 	regex whitespaceRegex("\\s+");
 	return regex_replace(input, whitespaceRegex, "");
 }
+
+size_t phaser::test::countSubstringOccurrences(string const& _inputString, string const& _substring)
+{
+	assert(_substring.size() > 0);
+
+	size_t count = 0;
+	size_t lastOccurrence = 0;
+	while ((lastOccurrence = _inputString.find(_substring, lastOccurrence)) != string::npos)
+	{
+		++count;
+		lastOccurrence += _substring.size();
+	}
+
+	return count;
+}

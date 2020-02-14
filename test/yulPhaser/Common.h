@@ -67,6 +67,10 @@ std::map<std::string, size_t> enumerateOptmisationSteps();
 /// Returns the input string with all the whitespace characters (spaces, line endings, etc.) removed.
 std::string stripWhitespace(std::string const& input);
 
+/// Counts the number of times one strinng can be found inside another. Only non-overlapping
+/// occurrences are counted.
+size_t countSubstringOccurrences(std::string const& _inputString, std::string const& _substring);
+
 // STATISTICAL UTILITIES
 
 /// Calculates the mean value of a series of samples given in a vector.
