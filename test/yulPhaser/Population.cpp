@@ -159,21 +159,24 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_use_random_chromosome_length, Populati
 
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes, PopulationFixture)
 {
-	auto population1 = Population::makeRandom(m_program, 100, 30, 30);
-	auto population2 = Population::makeRandom(m_program, 100, 30, 30);
+	SimulationRNG::reset(1);
+	constexpr int populationSize = 100;
+	constexpr int chromosomeLength = 30;
+	constexpr double relativeTolerance = 0.01;
 
-	BOOST_TEST(population1.individuals().size() == 100);
-	BOOST_TEST(population2.individuals().size() == 100);
+	map<string, size_t> stepIndices = enumerateOptmisationSteps();
+	auto population = Population::makeRandom(m_program, populationSize, chromosomeLength, chromosomeLength);
 
-	int numMatchingPositions = 0;
-	for (size_t i = 0; i < 100; ++i)
-		if (population1.individuals()[i].chromosome == population2.individuals()[i].chromosome)
-			++numMatchingPositions;
+	vector<size_t> samples;
+	for (auto& individual: population.individuals())
+		for (auto& step: individual.chromosome.optimisationSteps())
+			samples.push_back(stepIndices.at(step));
 
-	// Assume that the results are random if there are no more than 10 identical chromosomes on the
-	// same positions. One duplicate is very unlikely but still possible after billions of runs
-	// (especially for short chromosomes). For ten the probability is so small that we can ignore it.
-	BOOST_TEST(numMatchingPositions < 10);
+	const double expectedValue = (stepIndices.size() - 1) / 2.0;
+	const double variance = (stepIndices.size() * stepIndices.size() - 1) / 12.0;
+
+	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
 }
 
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_not_compute_fitness, PopulationFixture)

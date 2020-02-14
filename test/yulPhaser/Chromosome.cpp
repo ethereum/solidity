@@ -67,25 +67,31 @@ BOOST_AUTO_TEST_CASE(constructor_should_convert_from_string_to_optimisation_step
 	BOOST_TEST(Chromosome("ChrOmOsoMe").optimisationSteps() == expectedSteps);
 }
 
-BOOST_AUTO_TEST_CASE(makeRandom_should_create_chromosome_with_random_optimisation_steps)
+BOOST_AUTO_TEST_CASE(makeRandom_should_return_different_chromosome_each_time)
 {
-	constexpr uint32_t numSteps = 1000;
+	SimulationRNG::reset(1);
+	for (size_t i = 0; i < 10; ++i)
+		BOOST_TEST(Chromosome::makeRandom(100) != Chromosome::makeRandom(100));
+}
 
-	auto chromosome1 = Chromosome::makeRandom(numSteps);
-	auto chromosome2 = Chromosome::makeRandom(numSteps);
-	BOOST_CHECK_EQUAL(chromosome1.length(), numSteps);
-	BOOST_CHECK_EQUAL(chromosome2.length(), numSteps);
+BOOST_AUTO_TEST_CASE(makeRandom_should_use_every_possible_step_with_the_same_probability)
+{
+	SimulationRNG::reset(1);
+	constexpr int samplesPerStep = 100;
+	constexpr double relativeTolerance = 0.01;
 
-	multiset<string> steps1;
-	multiset<string> steps2;
-	for (auto const& step: chromosome1.optimisationSteps())
-		steps1.insert(step);
-	for (auto const& step: chromosome2.optimisationSteps())
-		steps2.insert(step);
+	map<string, size_t> stepIndices = enumerateOptmisationSteps();
+	auto chromosome = Chromosome::makeRandom(stepIndices.size() * samplesPerStep);
 
-	// Check if steps are different and also if they're not just a permutation of the same set.
-	// Technically they could be the same and still random but the probability is infinitesimally low.
-	BOOST_TEST(steps1 != steps2);
+	vector<size_t> samples;
+	for (auto& step: chromosome.optimisationSteps())
+		samples.push_back(stepIndices.at(step));
+
+	const double expectedValue = (stepIndices.size() - 1) / 2.0;
+	const double variance = (stepIndices.size() * stepIndices.size() - 1) / 12.0;
+
+	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
 }
 
 BOOST_AUTO_TEST_CASE(constructor_should_store_optimisation_steps)
