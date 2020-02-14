@@ -29,10 +29,18 @@
 #pragma once
 
 #include <cassert>
+#include <map>
+#include <string>
 #include <vector>
 
 namespace solidity::phaser::test
 {
+
+// CHROMOSOME AND POPULATION HELPERS
+/// Assigns indices from 0 to N to all optimisation steps available in the OptimiserSuite.
+/// This is a convenience helper to make it easier to test their distribution with tools made for
+/// integers.
+std::map<std::string, size_t> enumerateOptmisationSteps();
 
 // STATISTICAL UTILITIES
 

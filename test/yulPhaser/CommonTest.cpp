@@ -17,8 +17,14 @@
 
 #include <test/yulPhaser/Common.h>
 
+#include <libyul/optimiser/Suite.h>
+
 #include <boost/test/unit_test.hpp>
 
+#include <set>
+
+using namespace std;
+using namespace solidity::yul;
 using namespace boost::test_tools;
 
 namespace solidity::phaser::test
@@ -26,6 +32,24 @@ namespace solidity::phaser::test
 
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(CommonTest)
+
+BOOST_AUTO_TEST_CASE(enumerateOptimisationSteps_should_assing_indices_to_all_available_optimisation_steps)
+{
+	map<string, char> stepsAndAbbreviations = OptimiserSuite::stepNameToAbbreviationMap();
+	map<string, size_t> stepsAndIndices = enumerateOptmisationSteps();
+	BOOST_TEST(stepsAndIndices.size() == stepsAndAbbreviations.size());
+
+	set<string> stepsSoFar;
+	for (auto& [name, index]: stepsAndIndices)
+	{
+		BOOST_TEST(index >= 0);
+		BOOST_TEST(index <= stepsAndAbbreviations.size());
+		BOOST_TEST(stepsAndAbbreviations.count(name) == 1);
+		BOOST_TEST(stepsSoFar.count(name) == 0);
+
+		stepsSoFar.insert(name);
+	}
+}
 
 BOOST_AUTO_TEST_CASE(mean_should_calculate_statistical_mean)
 {

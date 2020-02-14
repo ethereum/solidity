@@ -16,3 +16,19 @@
 */
 
 #include <test/yulPhaser/Common.h>
+
+#include <libyul/optimiser/Suite.h>
+
+using namespace std;
+using namespace solidity;
+using namespace solidity::yul;
+
+map<string, size_t> phaser::test::enumerateOptmisationSteps()
+{
+	map<string, size_t> stepIndices;
+	size_t i = 0;
+	for (auto const& nameAndAbbreviation: OptimiserSuite::stepNameToAbbreviationMap())
+		stepIndices.insert({nameAndAbbreviation.first, i++});
+
+	return stepIndices;
+}
