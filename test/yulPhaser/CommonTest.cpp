@@ -46,6 +46,17 @@ BOOST_AUTO_TEST_CASE(wholeChromosomeReplacement_should_replace_whole_chromosome_
 	BOOST_TEST(mutation(Chromosome("ccc")) == Chromosome("aaa"));
 }
 
+BOOST_AUTO_TEST_CASE(geneSubstitution_should_change_a_single_gene_at_a_given_index)
+{
+	Chromosome chromosome("aaccff");
+
+	function<Mutation> mutation1 = geneSubstitution(0, chromosome.optimisationSteps()[5]);
+	BOOST_TEST(mutation1(chromosome) == Chromosome("faccff"));
+
+	function<Mutation> mutation2 = geneSubstitution(5, chromosome.optimisationSteps()[0]);
+	BOOST_TEST(mutation2(chromosome) == Chromosome("aaccfa"));
+}
+
 BOOST_AUTO_TEST_CASE(chromosomeLengths_should_return_lengths_of_all_chromosomes_in_a_population)
 {
 	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ChromosomeLengthMetric>();

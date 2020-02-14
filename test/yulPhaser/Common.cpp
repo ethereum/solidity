@@ -31,6 +31,18 @@ function<Mutation> phaser::test::wholeChromosomeReplacement(Chromosome _newChrom
 	return [_newChromosome = move(_newChromosome)](Chromosome const&) { return _newChromosome; };
 }
 
+function<Mutation> phaser::test::geneSubstitution(size_t _geneIndex, string _geneValue)
+{
+	return [=](Chromosome const& _chromosome)
+	{
+		vector<string> newGenes = _chromosome.optimisationSteps();
+		assert(_geneIndex < newGenes.size());
+		newGenes[_geneIndex] = _geneValue;
+
+		return Chromosome(newGenes);
+	};
+}
+
 vector<size_t> phaser::test::chromosomeLengths(Population const& _population)
 {
 	vector<size_t> lengths;

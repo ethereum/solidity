@@ -59,6 +59,11 @@ public:
 /// Mutation that always replaces the whole chromosome with the one specified in the parameter.
 std::function<Mutation> wholeChromosomeReplacement(Chromosome _newChromosome);
 
+/// Mutation that always replaces the optimisation step at position @a _geneIndex with @a _geneValue.
+///
+/// The chromosome must be long enough for this position to exist.
+std::function<Mutation> geneSubstitution(size_t _geneIndex, std::string _geneValue);
+
 // CHROMOSOME AND POPULATION HELPERS
 
 /// Returns a vector containing lengths of all chromosomes in the population (in the same order).
