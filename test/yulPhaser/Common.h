@@ -30,9 +30,11 @@
 
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/FitnessMetrics.h>
+#include <tools/yulPhaser/Mutations.h>
 #include <tools/yulPhaser/Population.h>
 
 #include <cassert>
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -52,10 +54,20 @@ public:
 	size_t evaluate(Chromosome const& _chromosome) const override { return _chromosome.length(); }
 };
 
+// MUTATIONS
+
+/// Mutation that always replaces the whole chromosome with the one specified in the parameter.
+std::function<Mutation> wholeChromosomeReplacement(Chromosome _newChromosome);
+
 // CHROMOSOME AND POPULATION HELPERS
 
 /// Returns a vector containing lengths of all chromosomes in the population (in the same order).
 std::vector<size_t> chromosomeLengths(Population const& _population);
+
+/// Returns the number of genes that differ between two chromosomes.
+/// If the chromnosomes have different lengths, the positions that are present in only one of them
+/// are counted as mismatches.
+size_t countDifferences(Chromosome const& _chromosome1, Chromosome const& _chromosome2);
 
 /// Assigns indices from 0 to N to all optimisation steps available in the OptimiserSuite.
 /// This is a convenience helper to make it easier to test their distribution with tools made for
