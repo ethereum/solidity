@@ -27,3 +27,54 @@
  */
 
 #pragma once
+
+#include <cassert>
+#include <vector>
+
+namespace solidity::phaser::test
+{
+
+// STATISTICAL UTILITIES
+
+/// Calculates the mean value of a series of samples given in a vector.
+///
+/// Supports any integer and real type as a convenience but the precision of the result is limited
+/// to the precision of type @a double as all the values are internally converted to it.
+///
+/// This is a very simple, naive implementation that's more than enough for tests where we usually
+/// deal with relatively short sequences of small, positive integers. It's not numerically stable
+/// in more complicated cases. Don't use in production.
+template <typename T>
+double mean(std::vector<T> const& _samples)
+{
+	assert(_samples.size() > 0);
+
+	double sum = 0;
+	for (T const& sample: _samples)
+		sum += static_cast<double>(sample);
+
+	return sum / _samples.size();
+}
+
+/// Calculates the sum of squared differences between @a _expectedValue and the values of a series
+/// of samples given in a vector.
+///
+/// Supports any integer and real type as a convenience but the precision of the result is limited
+/// to the precision of type @a double as all the values are internally converted to it.
+///
+/// This is a very simple, naive implementation that's more than enough for tests where we usually
+/// deal with relatively short sequences of small, positive integers. It's not numerically stable
+/// in more complicated cases. Don't use in production.
+template <typename T>
+double meanSquaredError(std::vector<T> const& _samples, double _expectedValue)
+{
+	assert(_samples.size() > 0);
+
+	double sumOfSquaredDifferences = 0;
+	for (T const& sample: _samples)
+		sumOfSquaredDifferences += (sample - _expectedValue) * (sample - _expectedValue);
+
+	return sumOfSquaredDifferences / _samples.size();
+}
+
+}
