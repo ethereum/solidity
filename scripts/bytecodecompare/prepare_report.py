@@ -6,7 +6,7 @@ import subprocess
 import json
 
 SOLC_BIN = sys.argv[1]
-REPORT_FILE = open("report.txt", mode="w", encoding='utf8')
+REPORT_FILE = open("report.txt", mode="w", encoding='utf8', newline='\n')
 
 for optimize in [False, True]:
     for f in sorted(glob.glob("*.sol")):
