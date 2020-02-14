@@ -19,11 +19,14 @@
 
 #include <libyul/optimiser/Suite.h>
 
+#include <liblangutil/CharStream.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <set>
 
 using namespace std;
+using namespace solidity::langutil;
 using namespace solidity::yul;
 using namespace boost::test_tools;
 
@@ -32,6 +35,18 @@ namespace solidity::phaser::test
 
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(CommonTest)
+
+BOOST_AUTO_TEST_CASE(chromosomeLengths_should_return_lengths_of_all_chromosomes_in_a_population)
+{
+	CharStream sourceStream("{}", "");
+	auto program = Program::load(sourceStream);
+
+	Population population1(program, {Chromosome(), Chromosome("a"), Chromosome("aa"), Chromosome("aaa")});
+	BOOST_TEST((chromosomeLengths(population1) == vector<size_t>{0, 1, 2, 3}));
+
+	Population population2(program);
+	BOOST_TEST((chromosomeLengths(population2) == vector<size_t>{}));
+}
 
 BOOST_AUTO_TEST_CASE(enumerateOptimisationSteps_should_assing_indices_to_all_available_optimisation_steps)
 {

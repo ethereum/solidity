@@ -25,6 +25,15 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
+vector<size_t> phaser::test::chromosomeLengths(Population const& _population)
+{
+	vector<size_t> lengths;
+	for (auto const& individual: _population.individuals())
+		lengths.push_back(individual.chromosome.length());
+
+	return lengths;
+}
+
 map<string, size_t> phaser::test::enumerateOptmisationSteps()
 {
 	map<string, size_t> stepIndices;

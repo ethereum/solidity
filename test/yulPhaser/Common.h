@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <tools/yulPhaser/Population.h>
+
 #include <cassert>
 #include <map>
 #include <string>
@@ -37,6 +39,10 @@ namespace solidity::phaser::test
 {
 
 // CHROMOSOME AND POPULATION HELPERS
+
+/// Returns a vector containing lengths of all chromosomes in the population (in the same order).
+std::vector<size_t> chromosomeLengths(Population const& _population);
+
 /// Assigns indices from 0 to N to all optimisation steps available in the OptimiserSuite.
 /// This is a convenience helper to make it easier to test their distribution with tools made for
 /// integers.
