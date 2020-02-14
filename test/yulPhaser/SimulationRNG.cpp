@@ -15,6 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <test/yulPhaser/Common.h>
+
 #include <tools/yulPhaser/SimulationRNG.h>
 
 #include <boost/test/unit_test.hpp>
@@ -31,36 +33,22 @@ BOOST_AUTO_TEST_SUITE(RandomTest)
 
 BOOST_AUTO_TEST_CASE(uniformInt_returns_different_values_when_called_multiple_times)
 {
-	constexpr uint32_t numSamples = 1000;
-	constexpr uint32_t numOutcomes = 100;
+	SimulationRNG::reset(1);
+	constexpr size_t numSamples = 1000;
+	constexpr uint32_t minValue = 50;
+	constexpr uint32_t maxValue = 80;
+	constexpr double relativeTolerance = 0.05;
 
-	vector<uint32_t> samples1;
-	vector<uint32_t> samples2;
+	// For uniform distribution from range a..b: EX = (a + b) / 2, VarX = ((b - a + 1)^2 - 1) / 12
+	constexpr double expectedValue = (minValue + maxValue) / 2.0;
+	constexpr double variance = ((maxValue - minValue + 1) * (maxValue - minValue + 1) - 1) / 12.0;
+
+	vector<uint32_t> samples;
 	for (uint32_t i = 0; i < numSamples; ++i)
-	{
-		samples1.push_back(SimulationRNG::uniformInt(0, numOutcomes - 1));
-		samples2.push_back(SimulationRNG::uniformInt(0, numOutcomes - 1));
-	}
+		samples.push_back(SimulationRNG::uniformInt(minValue, maxValue));
 
-	vector<uint32_t> counts1(numOutcomes, 0);
-	vector<uint32_t> counts2(numOutcomes, 0);
-	for (uint32_t i = 0; i < numSamples; ++i)
-	{
-		++counts1[samples1[i]];
-		++counts2[samples2[i]];
-	}
-
-	// This test rules out not only the possibility that the two sequences are the same but also
-	// that they're just different permutations of the same values. The test is probabilistic so
-	// it's technically possible for it to fail even if generator is good but the probability is
-	// so low that it would happen on average once very 10^125 billion years if you repeated it
-	// every second. The chance is much lower than 1 in 1000^100 / 100!.
-	//
-	// This does not really guarantee that the generated numbers have the right distribution or
-	// or that they don't come in long, repeating sequences but the implementation is very simple
-	// (it just calls a generator from boost) so our goal here is just to make sure it's used
-	// properly and we're not getting something totally non-random, e.g. the same number every time.
-	BOOST_TEST(counts1 != counts2);
+	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
 }
 
 BOOST_AUTO_TEST_CASE(uniformInt_can_be_reset)
@@ -96,30 +84,24 @@ BOOST_AUTO_TEST_CASE(uniformInt_can_be_reset)
 	BOOST_TEST(samples3 != samples4);
 }
 
-BOOST_AUTO_TEST_CASE(binomialInt_returns_different_values_when_called_multiple_times)
+BOOST_AUTO_TEST_CASE(binomialInt_should_produce_samples_with_right_expected_value_and_variance)
 {
-	constexpr uint32_t numSamples = 1000;
+	SimulationRNG::reset(1);
+	constexpr size_t numSamples = 1000;
 	constexpr uint32_t numTrials = 100;
-	constexpr double successProbability = 0.6;
+	constexpr double successProbability = 0.2;
+	constexpr double relativeTolerance = 0.05;
 
-	vector<uint32_t> samples1;
-	vector<uint32_t> samples2;
+	// For binomial distribution with n trials and success probability p: EX = np, VarX = np(1 - p)
+	constexpr double expectedValue = numTrials * successProbability;
+	constexpr double variance = numTrials * successProbability * (1 - successProbability);
+
+	vector<uint32_t> samples;
 	for (uint32_t i = 0; i < numSamples; ++i)
-	{
-		samples1.push_back(SimulationRNG::binomialInt(numTrials, successProbability));
-		samples2.push_back(SimulationRNG::binomialInt(numTrials, successProbability));
-	}
+		samples.push_back(SimulationRNG::binomialInt(numTrials, successProbability));
 
-	vector<uint32_t> counts1(numTrials, 0);
-	vector<uint32_t> counts2(numTrials, 0);
-	for (uint32_t i = 0; i < numSamples; ++i)
-	{
-		++counts1[samples1[i]];
-		++counts2[samples2[i]];
-	}
-
-	// See remark for uniformInt() above. Same applies here.
-	BOOST_TEST(counts1 != counts2);
+	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
 }
 
 BOOST_AUTO_TEST_CASE(binomialInt_can_be_reset)
