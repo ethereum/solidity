@@ -2,6 +2,7 @@
 
 Language Features:
  * Allow contract types and enums as keys for mappings.
+ * Allow function selectors to be used as compile-time constants.
 
 
 Compiler Features:
@@ -13,6 +14,7 @@ Compiler Features:
 
 Bugfixes:
  * Parser: Fix an internal error for ``abstract`` without ``contract``.
+ * Type Checker: Make invalid calls to uncallable types fatal errors.
 
 
 
