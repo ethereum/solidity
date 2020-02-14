@@ -63,6 +63,39 @@ BOOST_AUTO_TEST_CASE(uniformInt_returns_different_values_when_called_multiple_ti
 	BOOST_TEST(counts1 != counts2);
 }
 
+BOOST_AUTO_TEST_CASE(uniformInt_can_be_reset)
+{
+	constexpr size_t numSamples = 10;
+	constexpr uint32_t minValue = 50;
+	constexpr uint32_t maxValue = 80;
+
+	SimulationRNG::reset(1);
+	vector<uint32_t> samples1;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples1.push_back(SimulationRNG::uniformInt(minValue, maxValue));
+
+	vector<uint32_t> samples2;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples2.push_back(SimulationRNG::uniformInt(minValue, maxValue));
+
+	SimulationRNG::reset(1);
+	vector<uint32_t> samples3;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples3.push_back(SimulationRNG::uniformInt(minValue, maxValue));
+
+	SimulationRNG::reset(2);
+	vector<uint32_t> samples4;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples4.push_back(SimulationRNG::uniformInt(minValue, maxValue));
+
+	BOOST_TEST(samples1 != samples2);
+	BOOST_TEST(samples1 == samples3);
+	BOOST_TEST(samples1 != samples4);
+	BOOST_TEST(samples2 != samples3);
+	BOOST_TEST(samples2 != samples4);
+	BOOST_TEST(samples3 != samples4);
+}
+
 BOOST_AUTO_TEST_CASE(binomialInt_returns_different_values_when_called_multiple_times)
 {
 	constexpr uint32_t numSamples = 1000;
@@ -87,6 +120,39 @@ BOOST_AUTO_TEST_CASE(binomialInt_returns_different_values_when_called_multiple_t
 
 	// See remark for uniformInt() above. Same applies here.
 	BOOST_TEST(counts1 != counts2);
+}
+
+BOOST_AUTO_TEST_CASE(binomialInt_can_be_reset)
+{
+	constexpr size_t numSamples = 10;
+	constexpr uint32_t numTrials = 10;
+	constexpr double successProbability = 0.6;
+
+	SimulationRNG::reset(1);
+	vector<uint32_t> samples1;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples1.push_back(SimulationRNG::binomialInt(numTrials, successProbability));
+
+	vector<uint32_t> samples2;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples2.push_back(SimulationRNG::binomialInt(numTrials, successProbability));
+
+	SimulationRNG::reset(1);
+	vector<uint32_t> samples3;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples3.push_back(SimulationRNG::binomialInt(numTrials, successProbability));
+
+	SimulationRNG::reset(2);
+	vector<uint32_t> samples4;
+	for (uint32_t i = 0; i < numSamples; ++i)
+		samples4.push_back(SimulationRNG::binomialInt(numTrials, successProbability));
+
+	BOOST_TEST(samples1 != samples2);
+	BOOST_TEST(samples1 == samples3);
+	BOOST_TEST(samples1 != samples4);
+	BOOST_TEST(samples2 != samples3);
+	BOOST_TEST(samples2 != samples4);
+	BOOST_TEST(samples3 != samples4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

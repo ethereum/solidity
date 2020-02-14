@@ -25,20 +25,24 @@
 using namespace solidity;
 using namespace solidity::phaser;
 
+thread_local boost::random::mt19937 SimulationRNG::s_generator(SimulationRNG::generateSeed());
+
 uint32_t SimulationRNG::uniformInt(uint32_t _min, uint32_t _max)
 {
-	// TODO: Seed must be configurable
-	static boost::random::mt19937 generator(time(0));
 	boost::random::uniform_int_distribution<> distribution(_min, _max);
-
-	return distribution(generator);
+	return distribution(s_generator);
 }
 
 uint32_t SimulationRNG::binomialInt(uint32_t _numTrials, double _successProbability)
 {
-	// TODO: Seed must be configurable
-	static boost::random::mt19937 generator(time(0));
 	boost::random::binomial_distribution<> distribution(_numTrials, _successProbability);
+	return distribution(s_generator);
+}
 
-	return distribution(generator);
+uint32_t SimulationRNG::generateSeed()
+{
+	// This is not a secure way to seed the generator but it's good enough for simulation purposes.
+	// The only thing that matters for us is that the sequence is different on each run and that
+	// it fits the expected distribution. It does not have to be 100% unpredictable.
+	return time(0);
 }
