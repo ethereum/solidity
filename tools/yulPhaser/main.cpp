@@ -143,8 +143,8 @@ void runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 					/* crossoverPoolSize = */ 0.25,
 					/* randomisationChance = */ 0.9,
 					/* deletionVsAdditionChance = */ 0.5,
-					/* percentGenesToRandomise = */ 0.1,
-					/* percentGenesToAddOrDelete = */ 0.1,
+					/* percentGenesToRandomise = */ 1.0 / maxChromosomeLength,
+					/* percentGenesToAddOrDelete = */ 1.0 / maxChromosomeLength,
 				}
 			).run();
 
