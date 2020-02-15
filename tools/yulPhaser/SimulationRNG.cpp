@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <tools/yulPhaser/Random.h>
+#include <tools/yulPhaser/SimulationRNG.h>
 
 #include <boost/random/binomial_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>

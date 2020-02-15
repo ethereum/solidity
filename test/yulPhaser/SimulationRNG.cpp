@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <tools/yulPhaser/Random.h>
+#include <tools/yulPhaser/SimulationRNG.h>
 
 #include <boost/test/unit_test.hpp>
 

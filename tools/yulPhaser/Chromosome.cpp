@@ -17,7 +17,7 @@
 
 #include <tools/yulPhaser/Chromosome.h>
 
-#include <tools/yulPhaser/Random.h>
+#include <tools/yulPhaser/SimulationRNG.h>
 
 #include <libyul/optimiser/Suite.h>
 #include <libsolutil/CommonData.h>

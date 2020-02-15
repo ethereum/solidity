@@ -19,7 +19,7 @@
 
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Program.h>
-#include <tools/yulPhaser/Random.h>
+#include <tools/yulPhaser/SimulationRNG.h>
 
 #include <optional>
 #include <ostream>

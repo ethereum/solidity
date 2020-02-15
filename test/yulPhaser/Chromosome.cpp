@@ -18,7 +18,7 @@
 #include <test/yulPhaser/Common.h>
 
 #include <tools/yulPhaser/Chromosome.h>
-#include <tools/yulPhaser/Random.h>
+#include <tools/yulPhaser/SimulationRNG.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
