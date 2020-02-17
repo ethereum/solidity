@@ -64,9 +64,9 @@ public:
 		return m_context.assemblyString(_sourceCodes);
 	}
 	/// @arg _sourceCodes is the map of input files to source code strings
-	Json::Value assemblyJSON(StringMap const& _sourceCodes = StringMap()) const
+	Json::Value assemblyJSON(std::map<std::string, unsigned> const& _indices = std::map<std::string, unsigned>()) const
 	{
-		return m_context.assemblyJSON(_sourceCodes);
+		return m_context.assemblyJSON(_indices);
 	}
 	/// @returns Assembly items of the normal compiler context
 	evmasm::AssemblyItems const& assemblyItems() const { return m_context.assembly().items(); }

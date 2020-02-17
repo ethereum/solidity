@@ -50,6 +50,10 @@ BOOST_AUTO_TEST_SUITE(Assembler)
 
 BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
+	map<string, unsigned> indices = {
+		{ "root.asm", 0 },
+		{ "sub.asm", 1 }
+	};
 	Assembly _assembly;
 	auto root_asm = make_shared<CharStream>("lorem ipsum", "root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
@@ -119,7 +123,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"auxdata: 0x4266eeaa\n"
 	);
 	BOOST_CHECK_EQUAL(
-		util::jsonCompactPrint(_assembly.assemblyJSON()),
+		util::jsonCompactPrint(_assembly.assemblyJSON(indices)),
 		"{\".auxdata\":\"4266eeaa\",\".code\":[{\"begin\":1,\"end\":3,\"name\":\"tag\",\"value\":\"1\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"JUMPDEST\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"value\":\"1\"},"
