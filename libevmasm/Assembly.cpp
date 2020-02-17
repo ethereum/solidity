@@ -225,8 +225,13 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 	Json::Value& collection = root[".code"] = Json::arrayValue;
 	for (AssemblyItem const& i: m_items)
 	{
-	    auto iter = _sourceIndices.find(i.location().source->name());
-	    unsigned sourceIndex = iter == _sourceIndices.end() ? unsigned(-1) : iter->second;
+        unsigned sourceIndex = unsigned(-1);
+	    if (i.location().source)
+	    {
+            auto iter = _sourceIndices.find(i.location().source->name());
+            if (iter != _sourceIndices.end())
+                sourceIndex = iter->second;
+        }
 
 		switch (i.type())
 		{
