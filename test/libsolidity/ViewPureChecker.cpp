@@ -121,9 +121,7 @@ BOOST_AUTO_TEST_CASE(assembly_staticcall)
 			}
 		}
 	)";
-	if (!solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
-		CHECK_ERROR(text, TypeError, "\"staticcall\" instruction is only available for Byzantium-compatible");
-	else
+	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 		CHECK_SUCCESS_NO_WARNINGS(text);
 }
 

@@ -732,9 +732,9 @@ BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 {
 	if (solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
-	CHECK_PARSE_WARNING("{ pop(shl(10, 32)) }", TypeError, "The \"shl\" instruction is only available for Constantinople-compatible VMs");
-	CHECK_PARSE_WARNING("{ pop(shr(10, 32)) }", TypeError, "The \"shr\" instruction is only available for Constantinople-compatible VMs");
-	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", TypeError, "The \"sar\" instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ shl(10, 32) }", TypeError, "The \"shl\" instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ shr(10, 32) }", TypeError, "The \"shr\" instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ sar(10, 32) }", TypeError, "The \"sar\" instruction is only available for Constantinople-compatible VMs");
 }
 
 BOOST_AUTO_TEST_CASE(jump_error)
