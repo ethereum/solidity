@@ -968,7 +968,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 			*_indexAccess.annotation().type,
 			IRLValue::Storage{
 				slot,
-				0
+				0u
 			}
 		});
 	}
