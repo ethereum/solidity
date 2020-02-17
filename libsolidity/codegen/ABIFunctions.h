@@ -204,7 +204,7 @@ private:
 	/// @param _fromMemory if decoding from memory instead of from calldata
 	/// @param _forUseOnStack if the decoded value is stored on stack or in memory.
 	std::string abiDecodingFunction(
-		Type const& _Type,
+		Type const& _type,
 		bool _fromMemory,
 		bool _forUseOnStack
 	);

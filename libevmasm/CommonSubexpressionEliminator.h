@@ -69,8 +69,8 @@ public:
 	/// Feeds AssemblyItems into the eliminator and @returns the iterator pointing at the first
 	/// item that must be fed into a new instance of the eliminator.
 	/// @param _msizeImportant if false, do not consider modification of MSIZE a side-effect
-	template <class _AssemblyItemIterator>
-	_AssemblyItemIterator feedItems(_AssemblyItemIterator _iterator, _AssemblyItemIterator _end, bool _msizeImportant);
+	template <class AssemblyItemIterator>
+	AssemblyItemIterator feedItems(AssemblyItemIterator _iterator, AssemblyItemIterator _end, bool _msizeImportant);
 
 	/// @returns the resulting items after optimization.
 	AssemblyItems getOptimizedItems();
@@ -169,10 +169,10 @@ private:
 	std::map<int, Id> m_targetStack;
 };
 
-template <class _AssemblyItemIterator>
-_AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
-	_AssemblyItemIterator _iterator,
-	_AssemblyItemIterator _end,
+template <class AssemblyItemIterator>
+AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
+	AssemblyItemIterator _iterator,
+	AssemblyItemIterator _end,
 	bool _msizeImportant
 )
 {

@@ -40,11 +40,11 @@ using namespace solidity::util;
 namespace
 {
 
-template <typename _T>
-inline _T readFile(std::string const& _file)
+template <typename T>
+inline T readFile(std::string const& _file)
 {
-	_T ret;
-	size_t const c_elementSize = sizeof(typename _T::value_type);
+	T ret;
+	size_t const c_elementSize = sizeof(typename T::value_type);
 	std::ifstream is(_file, std::ifstream::binary);
 	if (!is)
 		return ret;

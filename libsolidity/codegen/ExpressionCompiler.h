@@ -125,8 +125,8 @@ private:
 	void setLValueToStorageItem(Expression const& _expression);
 	/// Sets the current LValue to a new LValue constructed from the arguments.
 	/// Also retrieves the value if it was not requested by @a _expression.
-	template <class _LValueType, class... _Arguments>
-	void setLValue(Expression const& _expression, _Arguments const&... _arguments);
+	template <class LValueType, class... Arguments>
+	void setLValue(Expression const& _expression, Arguments const&... _arguments);
 
 	/// @returns true if the operator applied to the given type requires a cleanup prior to the
 	/// operation.
@@ -143,11 +143,11 @@ private:
 
 };
 
-template <class _LValueType, class... _Arguments>
-void ExpressionCompiler::setLValue(Expression const& _expression, _Arguments const&... _arguments)
+template <class LValueType, class... Arguments>
+void ExpressionCompiler::setLValue(Expression const& _expression, Arguments const&... _arguments)
 {
 	solAssert(!m_currentLValue, "Current LValue not reset before trying to set new one.");
-	std::unique_ptr<_LValueType> lvalue = std::make_unique<_LValueType>(m_context, _arguments...);
+	std::unique_ptr<LValueType> lvalue = std::make_unique<LValueType>(m_context, _arguments...);
 	if (_expression.annotation().lValueRequested)
 		m_currentLValue = move(lvalue);
 	else
