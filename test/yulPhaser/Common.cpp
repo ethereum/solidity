@@ -15,14 +15,20 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include <test/yulPhaser/Common.h>
 
-#include <cstdint>
+#include <libyul/optimiser/Suite.h>
 
-namespace solidity::phaser
+using namespace std;
+using namespace solidity;
+using namespace solidity::yul;
+
+map<string, size_t> phaser::test::enumerateOptmisationSteps()
 {
+	map<string, size_t> stepIndices;
+	size_t i = 0;
+	for (auto const& nameAndAbbreviation: OptimiserSuite::stepNameToAbbreviationMap())
+		stepIndices.insert({nameAndAbbreviation.first, i++});
 
-uint32_t uniformRandomInt(uint32_t _min, uint32_t _max);
-uint32_t binomialRandomInt(uint32_t _numTrials, double _successProbability);
-
+	return stepIndices;
 }

@@ -17,7 +17,7 @@
 
 #include <tools/yulPhaser/Chromosome.h>
 
-#include <tools/yulPhaser/Random.h>
+#include <tools/yulPhaser/SimulationRNG.h>
 
 #include <libyul/optimiser/Suite.h>
 #include <libsolutil/CommonData.h>
@@ -66,5 +66,5 @@ string const& Chromosome::randomOptimisationStep()
 {
 	static vector<string> stepNames = allStepNames();
 
-	return stepNames[uniformRandomInt(0, stepNames.size() - 1)];
+	return stepNames[SimulationRNG::uniformInt(0, stepNames.size() - 1)];
 }

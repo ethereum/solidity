@@ -21,8 +21,8 @@ add_executable(yul-phaser
 	yulPhaser/Chromosome.cpp
 	yulPhaser/Program.h
 	yulPhaser/Program.cpp
-	yulPhaser/Random.h
-	yulPhaser/Random.cpp
+	yulPhaser/SimulationRNG.h
+	yulPhaser/SimulationRNG.cpp
 )
 target_link_libraries(yul-phaser PRIVATE solidity Boost::program_options)
 

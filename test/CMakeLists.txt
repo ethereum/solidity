@@ -139,10 +139,13 @@ set(libyul_sources
 detect_stray_source_files("${libyul_sources}" "libyul/")
 
 set(yul_phaser_sources
+    yulPhaser/Common.h
+    yulPhaser/Common.cpp
+    yulPhaser/CommonTest.cpp
     yulPhaser/Chromosome.cpp
     yulPhaser/Population.cpp
     yulPhaser/Program.cpp
-    yulPhaser/Random.cpp
+    yulPhaser/SimulationRNG.cpp
 
     # FIXME: yul-phaser is not a library so I can't just add it to target_link_libraries().
     # My current workaround is just to include its source files here but this introduces
@@ -150,7 +153,7 @@ set(yul_phaser_sources
     ../tools/yulPhaser/Chromosome.cpp
     ../tools/yulPhaser/Population.cpp
     ../tools/yulPhaser/Program.cpp
-    ../tools/yulPhaser/Random.cpp
+    ../tools/yulPhaser/SimulationRNG.cpp
 )
 detect_stray_source_files("${yul_phaser_sources}" "yulPhaser/")
 

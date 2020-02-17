@@ -19,7 +19,7 @@
 
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Program.h>
-#include <tools/yulPhaser/Random.h>
+#include <tools/yulPhaser/SimulationRNG.h>
 
 #include <optional>
 #include <ostream>
@@ -61,7 +61,7 @@ public:
 
 	std::vector<Individual> const& individuals() const { return m_individuals; }
 
-	static size_t randomChromosomeLength() { return binomialRandomInt(MaxChromosomeLength, 0.5); }
+	static size_t randomChromosomeLength() { return SimulationRNG::binomialInt(MaxChromosomeLength, 0.5); }
 	static size_t measureFitness(Chromosome const& _chromosome, Program const& _program);
 
 	friend std::ostream& operator<<(std::ostream& _stream, Population const& _population);

@@ -15,7 +15,10 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <test/yulPhaser/Common.h>
+
 #include <tools/yulPhaser/Chromosome.h>
+#include <tools/yulPhaser/SimulationRNG.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
@@ -93,6 +96,24 @@ BOOST_AUTO_TEST_CASE(output_operator_should_create_concise_and_unambiguous_strin
 	BOOST_TEST(chromosome.length() == allSteps.size());
 	BOOST_TEST(chromosome.optimisationSteps() == allSteps);
 	BOOST_TEST(toString(chromosome) == "flcCUnDvejsxIOoighTLMrmVatud");
+}
+
+BOOST_AUTO_TEST_CASE(randomOptimisationStep_should_return_each_step_with_same_probability)
+{
+	SimulationRNG::reset(1);
+	constexpr int samplesPerStep = 100;
+	constexpr double relativeTolerance = 0.01;
+
+	map<string, size_t> stepIndices = enumerateOptmisationSteps();
+	vector<size_t> samples;
+	for (size_t i = 0; i <= stepIndices.size() * samplesPerStep; ++i)
+		samples.push_back(stepIndices.at(Chromosome::randomOptimisationStep()));
+
+	const double expectedValue = (stepIndices.size() - 1) / 2.0;
+	const double variance = (stepIndices.size() * stepIndices.size() - 1) / 12.0;
+
+	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
