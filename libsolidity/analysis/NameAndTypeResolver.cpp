@@ -405,13 +405,13 @@ void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract)
 	_contract.annotation().contractDependencies.insert(result.begin() + 1, result.end());
 }
 
-template <class _T>
-vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMerge)
+template <class T>
+vector<T const*> NameAndTypeResolver::cThreeMerge(list<list<T const*>>& _toMerge)
 {
 	// returns true iff _candidate appears only as last element of the lists
-	auto appearsOnlyAtHead = [&](_T const* _candidate) -> bool
+	auto appearsOnlyAtHead = [&](T const* _candidate) -> bool
 	{
-		for (list<_T const*> const& bases: _toMerge)
+		for (list<T const*> const& bases: _toMerge)
 		{
 			solAssert(!bases.empty(), "");
 			if (find(++bases.begin(), bases.end(), _candidate) != bases.end())
@@ -420,9 +420,9 @@ vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMer
 		return true;
 	};
 	// returns the next candidate to append to the linearized list or nullptr on failure
-	auto nextCandidate = [&]() -> _T const*
+	auto nextCandidate = [&]() -> T const*
 	{
-		for (list<_T const*> const& bases: _toMerge)
+		for (list<T const*> const& bases: _toMerge)
 		{
 			solAssert(!bases.empty(), "");
 			if (appearsOnlyAtHead(bases.front()))
@@ -431,7 +431,7 @@ vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMer
 		return nullptr;
 	};
 	// removes the given contract from all lists
-	auto removeCandidate = [&](_T const* _candidate)
+	auto removeCandidate = [&](T const* _candidate)
 	{
 		for (auto it = _toMerge.begin(); it != _toMerge.end();)
 		{
@@ -443,13 +443,13 @@ vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMer
 		}
 	};
 
-	_toMerge.remove_if([](list<_T const*> const& _bases) { return _bases.empty(); });
-	vector<_T const*> result;
+	_toMerge.remove_if([](list<T const*> const& _bases) { return _bases.empty(); });
+	vector<T const*> result;
 	while (!_toMerge.empty())
 	{
-		_T const* candidate = nextCandidate();
+		T const* candidate = nextCandidate();
 		if (!candidate)
-			return vector<_T const*>();
+			return vector<T const*>();
 		result.push_back(candidate);
 		removeCandidate(candidate);
 	}

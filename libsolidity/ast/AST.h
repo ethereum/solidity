@@ -88,8 +88,8 @@ public:
 	}
 
 	/// @returns a copy of the vector containing only the nodes which derive from T.
-	template <class _T>
-	static std::vector<_T const*> filteredNodes(std::vector<ASTPointer<ASTNode>> const& _nodes);
+	template <class T>
+	static std::vector<T const*> filteredNodes(std::vector<ASTPointer<ASTNode>> const& _nodes);
 
 	/// Returns the source code location of this node.
 	SourceLocation const& location() const { return m_location; }
@@ -121,12 +121,12 @@ private:
 	SourceLocation m_location;
 };
 
-template <class _T>
-std::vector<_T const*> ASTNode::filteredNodes(std::vector<ASTPointer<ASTNode>> const& _nodes)
+template <class T>
+std::vector<T const*> ASTNode::filteredNodes(std::vector<ASTPointer<ASTNode>> const& _nodes)
 {
-	std::vector<_T const*> ret;
+	std::vector<T const*> ret;
 	for (auto const& n: _nodes)
-		if (auto const* nt = dynamic_cast<_T const*>(n.get()))
+		if (auto const* nt = dynamic_cast<T const*>(n.get()))
 			ret.push_back(nt);
 	return ret;
 }

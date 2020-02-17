@@ -42,8 +42,8 @@ std::string readStandardInput();
 int readStandardInputChar();
 
 /// Converts arbitrary value to string representation using std::stringstream.
-template <class _T>
-std::string toString(_T const& _t)
+template <class T>
+std::string toString(T const& _t)
 {
 	std::ostringstream o;
 	o << _t;

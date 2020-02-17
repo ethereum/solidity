@@ -179,8 +179,8 @@ public:
 		return _padLeft ? padding + _value : _value + padding;
 	}
 	static bytes encode(std::string const& _value) { return encode(util::asBytes(_value), false); }
-	template <class _T>
-	static bytes encode(std::vector<_T> const& _value)
+	template <class T>
+	static bytes encode(std::vector<T> const& _value)
 	{
 		bytes ret;
 		for (auto const& v: _value)
