@@ -77,36 +77,40 @@ public:
 	/// Asserts on failure.
 	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object);
 
-	bool operator()(Literal const& _literal);
-	bool operator()(Identifier const&);
-	bool operator()(ExpressionStatement const&);
-	bool operator()(Assignment const& _assignment);
-	bool operator()(VariableDeclaration const& _variableDeclaration);
-	bool operator()(FunctionDefinition const& _functionDefinition);
-	bool operator()(FunctionCall const& _functionCall);
-	bool operator()(If const& _if);
-	bool operator()(Switch const& _switch);
-	bool operator()(ForLoop const& _forLoop);
-	bool operator()(Break const&) { return true; }
-	bool operator()(Continue const&) { return true; }
-	bool operator()(Leave const&) { return true; }
-	bool operator()(Block const& _block);
+	std::vector<YulString> operator()(Literal const& _literal);
+	std::vector<YulString> operator()(Identifier const&);
+	void operator()(ExpressionStatement const&);
+	void operator()(Assignment const& _assignment);
+	void operator()(VariableDeclaration const& _variableDeclaration);
+	void operator()(FunctionDefinition const& _functionDefinition);
+	std::vector<YulString> operator()(FunctionCall const& _functionCall);
+	void operator()(If const& _if);
+	void operator()(Switch const& _switch);
+	void operator()(ForLoop const& _forLoop);
+	void operator()(Break const&) { }
+	void operator()(Continue const&) { }
+	void operator()(Leave const&) { }
+	void operator()(Block const& _block);
 
 private:
-	/// Visits the statement and expects it to deposit one item onto the stack.
-	bool expectExpression(Expression const& _expr);
+	/// Visits the expression, expects that it evaluates to exactly one value and
+	/// returns the type. Reports errors on errors and returns the default type.
+	YulString expectExpression(Expression const& _expr);
 	bool expectDeposit(int _deposit, int _oldHeight, langutil::SourceLocation const& _location);
 
-	/// Verifies that a variable to be assigned to exists and has the same size
-	/// as the value, @a _valueSize, unless that is equal to -1.
-	bool checkAssignment(Identifier const& _assignment, size_t _valueSize = size_t(-1));
+	/// Verifies that a variable to be assigned to exists and can be assigned to.
+	void checkAssignment(Identifier const& _variable);
 
 	Scope& scope(Block const* _block);
 	void expectValidType(YulString _type, langutil::SourceLocation const& _location);
 	bool warnOnInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
 	bool warnOnInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
 
-	int m_stackHeight = 0;
+	void typeError(langutil::SourceLocation const& _location, std::string const& _description);
+	void declarationError(langutil::SourceLocation const& _location, std::string const& _description);
+
+	/// Success-flag, can be set to false at any time.
+	bool m_success = true;
 	yul::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
 	/// Variables that are active at the current point in assembly (as opposed to
