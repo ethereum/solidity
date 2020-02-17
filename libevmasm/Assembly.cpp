@@ -218,15 +218,15 @@ string Assembly::toStringInHex(u256 _value)
 	return hexStr.str();
 }
 
-Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _indices) const
+Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) const
 {
 	Json::Value root;
 
 	Json::Value& collection = root[".code"] = Json::arrayValue;
 	for (AssemblyItem const& i: m_items)
 	{
-	    auto iter = _indices.find(i.location().source->name());
-	    int index = iter != _indices.end() ? iter->second : -1;
+	    auto iter = _sourceIndices.find(i.location().source->name());
+	    unsigned sourceIndex = iter == _sourceIndices.end() ? unsigned(-1) : iter->second;
 
 		switch (i.type())
 		{
@@ -234,7 +234,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _indices) const
 			collection.append(
 				createJsonValue(
 					instructionInfo(i.instruction()).name,
-					index,
+					sourceIndex,
 					i.location().start,
 					i.location().end,
 					i.getJumpTypeAsString())
@@ -242,50 +242,50 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _indices) const
 			break;
 		case Push:
 			collection.append(
-				createJsonValue("PUSH", index, i.location().start, i.location().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
+				createJsonValue("PUSH", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
 			break;
 		case PushString:
 			collection.append(
-				createJsonValue("PUSH tag", index, i.location().start, i.location().end, m_strings.at((h256)i.data())));
+				createJsonValue("PUSH tag", sourceIndex, i.location().start, i.location().end, m_strings.at((h256)i.data())));
 			break;
 		case PushTag:
 			if (i.data() == 0)
 				collection.append(
-					createJsonValue("PUSH [ErrorTag]", index, i.location().start, i.location().end, ""));
+					createJsonValue("PUSH [ErrorTag]", sourceIndex, i.location().start, i.location().end, ""));
 			else
 				collection.append(
-					createJsonValue("PUSH [tag]", index, i.location().start, i.location().end, toString(i.data())));
+					createJsonValue("PUSH [tag]", sourceIndex, i.location().start, i.location().end, toString(i.data())));
 			break;
 		case PushSub:
 			collection.append(
-				createJsonValue("PUSH [$]", index, i.location().start, i.location().end, toString(h256(i.data()))));
+				createJsonValue("PUSH [$]", sourceIndex, i.location().start, i.location().end, toString(h256(i.data()))));
 			break;
 		case PushSubSize:
 			collection.append(
-				createJsonValue("PUSH #[$]", index, i.location().start, i.location().end, toString(h256(i.data()))));
+				createJsonValue("PUSH #[$]", sourceIndex, i.location().start, i.location().end, toString(h256(i.data()))));
 			break;
 		case PushProgramSize:
 			collection.append(
-				createJsonValue("PUSHSIZE", index, i.location().start, i.location().end));
+				createJsonValue("PUSHSIZE", sourceIndex, i.location().start, i.location().end));
 			break;
 		case PushLibraryAddress:
 			collection.append(
-				createJsonValue("PUSHLIB", index, i.location().start, i.location().end, m_libraries.at(h256(i.data())))
+				createJsonValue("PUSHLIB", sourceIndex, i.location().start, i.location().end, m_libraries.at(h256(i.data())))
 			);
 			break;
 		case PushDeployTimeAddress:
 			collection.append(
-				createJsonValue("PUSHDEPLOYADDRESS", index, i.location().start, i.location().end)
+				createJsonValue("PUSHDEPLOYADDRESS", sourceIndex, i.location().start, i.location().end)
 			);
 			break;
 		case Tag:
 			collection.append(
-				createJsonValue("tag", index, i.location().start, i.location().end, toString(i.data())));
+				createJsonValue("tag", sourceIndex, i.location().start, i.location().end, toString(i.data())));
 			collection.append(
-				createJsonValue("JUMPDEST", index, i.location().start, i.location().end));
+				createJsonValue("JUMPDEST", sourceIndex, i.location().start, i.location().end));
 			break;
 		case PushData:
-			collection.append(createJsonValue("PUSH data", index, i.location().start, i.location().end, toStringInHex(i.data())));
+			collection.append(createJsonValue("PUSH data", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data())));
 			break;
 		default:
 			assertThrow(false, InvalidOpcode, "");
@@ -303,7 +303,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _indices) const
 		{
 			std::stringstream hexStr;
 			hexStr << hex << i;
-			data[hexStr.str()] = m_subs[i]->assemblyJSON(_indices);
+			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceIndices);
 		}
 	}
 
