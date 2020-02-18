@@ -15,6 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <test/Common.h>
 #include <test/TestCase.h>
 
 #include <libsolutil/StringUtils.h>
@@ -52,14 +53,18 @@ bool TestCase::isTestFilename(boost::filesystem::path const& _filename)
 			!boost::starts_with(_filename.string(), ".");
 }
 
-bool TestCase::validateSettings(langutil::EVMVersion)
+void TestCase::validateSettings()
 {
 	if (!m_settings.empty())
 		throw runtime_error(
 			"Unknown setting(s): " +
 			util::joinHumanReadable(m_settings | boost::adaptors::map_keys)
 		);
-	return true;
+}
+
+bool TestCase::shouldRun()
+{
+	return m_shouldRun;
 }
 
 pair<map<string, string>, size_t> TestCase::parseSourcesAndSettingsWithLineNumbers(istream& _stream)
@@ -157,20 +162,19 @@ void TestCase::expect(string::iterator& _it, string::iterator _end, string::valu
 	++_it;
 }
 
-bool EVMVersionRestrictedTestCase::validateSettings(langutil::EVMVersion _evmVersion)
+void EVMVersionRestrictedTestCase::validateSettings()
 {
 	if (!m_settings.count("EVMVersion"))
-		return true;
+		return;
 
 	string versionString = m_settings["EVMVersion"];
 	m_validatedSettings["EVMVersion"] = versionString;
 	m_settings.erase("EVMVersion");
 
-	if (!TestCase::validateSettings(_evmVersion))
-		return false;
+	TestCase::validateSettings();
 
 	if (versionString.empty())
-		return true;
+		return;
 
 	string comparator;
 	size_t versionBegin = 0;
@@ -188,18 +192,23 @@ bool EVMVersionRestrictedTestCase::validateSettings(langutil::EVMVersion _evmVer
 	if (!version)
 		BOOST_THROW_EXCEPTION(runtime_error{"Invalid EVM version: \"" + versionString + "\""});
 
+	langutil::EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	bool comparisonResult;
 	if (comparator == ">")
-		return _evmVersion > version;
+		comparisonResult = evmVersion > version;
 	else if (comparator == ">=")
-		return _evmVersion >= version;
+		comparisonResult = evmVersion >= version;
 	else if (comparator == "<")
-		return _evmVersion < version;
+		comparisonResult = evmVersion < version;
 	else if (comparator == "<=")
-		return _evmVersion <= version;
+		comparisonResult = evmVersion <= version;
 	else if (comparator == "=")
-		return _evmVersion == version;
+		comparisonResult = evmVersion == version;
 	else if (comparator == "!")
-		return !(_evmVersion == version);
+		comparisonResult = !(evmVersion == version);
 	else
 		BOOST_THROW_EXCEPTION(runtime_error{"Invalid EVM comparator: \"" + comparator + "\""});
+
+	if (!comparisonResult)
+		m_shouldRun = false;
 }

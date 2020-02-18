@@ -37,8 +37,6 @@ public:
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
-	bool validateSettings(langutil::EVMVersion _evmVersion) override;
-
 protected:
 	/// This is set via option SMTSolvers in the test.
 	/// The possible options are `all`, `z3`, `cvc4`, `none`,
