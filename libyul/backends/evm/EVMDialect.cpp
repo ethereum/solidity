@@ -290,6 +290,28 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 	m_functions["u256_to_bool"_yulstring].returns = {"bool"_yulstring};
 }
 
+BuiltinFunctionForEVM const* EVMDialectTyped::discardFunction(YulString _type) const
+{
+	if (_type == "bool"_yulstring)
+		return builtin("popbool"_yulstring);
+	else
+	{
+		yulAssert(_type == defaultType, "");
+		return builtin("pop"_yulstring);
+	}
+}
+
+BuiltinFunctionForEVM const* EVMDialectTyped::equalityFunction(YulString _type) const
+{
+	if (_type == "bool"_yulstring)
+		return nullptr;
+	else
+	{
+		yulAssert(_type == defaultType, "");
+		return builtin("eq"_yulstring);
+	}
+}
+
 EVMDialectTyped const& EVMDialectTyped::instance(langutil::EVMVersion _version)
 {
 	static map<langutil::EVMVersion, unique_ptr<EVMDialectTyped const>> dialects;
