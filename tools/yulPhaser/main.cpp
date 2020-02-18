@@ -49,7 +49,7 @@ struct CommandLineParsingResult
 };
 
 
-void initializeRNG(po::variables_map const& arguments)
+void initialiseRNG(po::variables_map const& arguments)
 {
 	uint32_t seed;
 	if (arguments.count("seed") > 0)
@@ -156,7 +156,7 @@ int main(int argc, char** argv)
 	if (parsingResult.exitCode != 0)
 		return parsingResult.exitCode;
 
-	initializeRNG(parsingResult.arguments);
+	initialiseRNG(parsingResult.arguments);
 
 	try
 	{
