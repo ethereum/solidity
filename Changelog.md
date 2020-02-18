@@ -1,10 +1,21 @@
+### 0.6.4 (unreleased)
+
+Language Features:
+
+
+Compiler Features:
+
+
+Bugfixes:
+
+
+
 ### 0.6.3 (2020-02-18)
 
 Language Features:
  * Allow contract types and enums as keys for mappings.
  * Allow function selectors to be used as compile-time constants.
  * Report source locations for structured documentation errors.
-
 
 
 Compiler Features:
