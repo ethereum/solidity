@@ -1258,7 +1258,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strOpcodes) && m_compiler->compilationSuccessful())
 			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count(g_strAsm) && m_compiler->compilationSuccessful())
-			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName, m_sourceCodes);
+			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
 		if (requests.count(g_strSrcMap) && m_compiler->compilationSuccessful())
 		{
 			auto map = m_compiler->sourceMapping(contractName);
@@ -1612,7 +1612,7 @@ void CommandLineInterface::outputCompilationResults()
 		{
 			string ret;
 			if (m_args.count(g_argAsmJson))
-				ret = jsonPrettyPrint(m_compiler->assemblyJSON(contract, m_sourceCodes));
+				ret = jsonPrettyPrint(m_compiler->assemblyJSON(contract));
 			else
 				ret = m_compiler->assemblyString(contract, m_sourceCodes);
 

@@ -262,9 +262,9 @@ public:
 	}
 
 	/// @arg _sourceCodes is the map of input files to source code strings
-	Json::Value assemblyJSON(StringMap const& _sourceCodes = StringMap()) const
+	Json::Value assemblyJSON(std::map<std::string, unsigned> const& _indicies = std::map<std::string, unsigned>()) const
 	{
-		return m_asm->assemblyJSON(_sourceCodes);
+		return m_asm->assemblyJSON(_indicies);
 	}
 
 	evmasm::LinkerObject const& assembledObject() const { return m_asm->assemble(); }

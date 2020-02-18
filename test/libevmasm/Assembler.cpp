@@ -50,6 +50,10 @@ BOOST_AUTO_TEST_SUITE(Assembler)
 
 BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
+	map<string, unsigned> indices = {
+		{ "root.asm", 0 },
+		{ "sub.asm", 1 }
+	};
 	Assembly _assembly;
 	auto root_asm = make_shared<CharStream>("lorem ipsum", "root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
@@ -119,22 +123,23 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"auxdata: 0x4266eeaa\n"
 	);
 	BOOST_CHECK_EQUAL(
-		util::jsonCompactPrint(_assembly.assemblyJSON()),
-		"{\".auxdata\":\"4266eeaa\",\".code\":[{\"begin\":1,\"end\":3,\"name\":\"tag\",\"value\":\"1\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"JUMPDEST\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"value\":\"1\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"value\":\"2\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"KECCAK256\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSHSIZE\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSHLIB\",\"value\":\"someLibrary\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [tag]\",\"value\":\"1\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"JUMP\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH data\",\"value\":\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH #[$]\",\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [$]\",\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSHDEPLOYADDRESS\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"STOP\"}],"
-		"\".data\":{\"0\":{\".code\":[{\"begin\":6,\"end\":8,\"name\":\"INVALID\"}]},"
+		util::jsonCompactPrint(_assembly.assemblyJSON(indices)),
+		"{\".auxdata\":\"4266eeaa\",\".code\":["
+		"{\"begin\":1,\"end\":3,\"name\":\"tag\",\"source\":0,\"value\":\"1\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"JUMPDEST\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"source\":0,\"value\":\"1\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"source\":0,\"value\":\"2\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"KECCAK256\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSHSIZE\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSHLIB\",\"source\":0,\"value\":\"someLibrary\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [tag]\",\"source\":0,\"value\":\"1\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"JUMP\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH data\",\"source\":0,\"value\":\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH #[$]\",\"source\":0,\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [$]\",\"source\":0,\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSHDEPLOYADDRESS\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"name\":\"STOP\",\"source\":0}"
+		"],\".data\":{\"0\":{\".code\":[{\"begin\":6,\"end\":8,\"name\":\"INVALID\",\"source\":1}]},"
 		"\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\":\"01020304\"}}"
 	);
 }

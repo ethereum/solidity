@@ -133,7 +133,7 @@ public:
 
 	/// Create a JSON representation of the assembly.
 	Json::Value assemblyJSON(
-		StringMap const& _sourceCodes = StringMap()
+		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>()
 	) const;
 
 protected:
@@ -145,7 +145,14 @@ protected:
 	unsigned bytesRequired(unsigned subTagSize) const;
 
 private:
-	static Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string());
+	static Json::Value createJsonValue(
+		std::string _name,
+		int _source,
+		int _begin,
+		int _end,
+		std::string _value = std::string(),
+		std::string _jumpType = std::string()
+	);
 	static std::string toStringInHex(u256 _value);
 
 protected:
