@@ -7,5 +7,5 @@ contract C {
     }
 }
 // ----
-// DocstringParsingError: Documented parameter "" not found in the parameter list of the function.
-// DocstringParsingError: Documented parameter "_" not found in the parameter list of the function.
+// DocstringParsingError: (17-101): Documented parameter "" not found in the parameter list of the function.
+// DocstringParsingError: (17-101): Documented parameter "_" not found in the parameter list of the function.

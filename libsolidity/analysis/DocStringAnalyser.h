@@ -51,6 +51,7 @@ private:
 
 	void checkParameters(
 		CallableDeclaration const& _callable,
+		StructurallyDocumented const& _node,
 		StructurallyDocumentedAnnotation& _annotation
 	);
 
@@ -73,7 +74,7 @@ private:
 		std::string const& _nodeName
 	);
 
-	void appendError(std::string const& _description);
+	void appendError(langutil::SourceLocation const& _location, std::string const& _description);
 
 	bool m_errorOccured = false;
 	langutil::ErrorReporter& m_errorReporter;

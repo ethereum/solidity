@@ -244,3 +244,12 @@ void ErrorReporter::docstringParsingError(string const& _description)
 		_description
 	);
 }
+
+void ErrorReporter::docstringParsingError(SourceLocation const& _location, string const& _description)
+{
+	error(
+		Error::Type::DocstringParsingError,
+		_location,
+		_description
+	);
+}
