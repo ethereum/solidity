@@ -413,6 +413,7 @@ jobs:
       - run:
           name: Regression tests
           command: |
+            git clone https://github.com/ethereum/solidity-fuzzing-corpus /tmp/solidity-fuzzing-corpus
             mkdir -p test_results
             scripts/regressions.py -o test_results
       - run: *gitter_notify_failure
