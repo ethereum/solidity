@@ -1,4 +1,4 @@
-### 0.6.3 (unreleased)
+### 0.6.3 (2020-02-18)
 
 Language Features:
  * Allow contract types and enums as keys for mappings.
@@ -6,16 +6,16 @@ Language Features:
 
 
 Compiler Features:
- * Code Generator: Use ``calldatacopy`` instead of ``codecopy`` to zero out memory past input.
  * AST: Add a new node for doxygen-style, structured documentation that can be received by contract, function, event and modifier definitions.
+ * Code Generator: Use ``calldatacopy`` instead of ``codecopy`` to zero out memory past input.
  * Debug: Provide reason strings for compiler-generated internal reverts when using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting on ``debug`` mode.
  * Yul Optimizer: Prune functions that call each other but are otherwise unreferenced.
 
 
 Bugfixes:
- * Parser: Fix an internal error for ``abstract`` without ``contract``.
- * Type Checker: Make invalid calls to uncallable types fatal errors.
  * Assembly: Added missing `source` field to legacy assembly json output to complete the source reference.
+ * Parser: Fix an internal error for ``abstract`` without ``contract``.
+ * Type Checker: Make invalid calls to uncallable types fatal errors instead of regular.
 
 
 
