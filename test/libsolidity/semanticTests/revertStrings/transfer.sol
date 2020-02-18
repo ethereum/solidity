@@ -21,7 +21,7 @@ contract C {
 // EVMVersion: >=byzantium
 // revertStrings: debug
 // ----
-// (), 10 ether ->
+// (), 10 wei ->
 // g() -> 10
 // f() -> FAILURE, hex"08c379a0", 0x20, 10, "no_receive"
 // h() -> FAILURE

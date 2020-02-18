@@ -51,7 +51,7 @@ void testFunctionCall(
 		bool _failure = true,
 		bytes _arguments = bytes{},
 		bytes _expectations = bytes{},
-		u256 _value = 0,
+		FunctionValue _value = { 0 },
 		string _argumentComment = "",
 		string _expectationComment = "",
 		vector<string> _rawArguments = vector<string>{},
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_comments_success)
 		false,
 		fmt::encodeArgs(1, 1),
 		fmt::encodeArgs(),
-		0,
+		{0},
 		" Comment on the parameters. ",
 		" This call should not return a value, but still succeed. "
 	);
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_comments_success)
 		false,
 		fmt::encodeArgs(),
 		fmt::encodeArgs(1),
-		0,
+		{0},
 		" Comment on no parameters. ",
 		" This comment should be parsed. "
 	);
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(simple_single_line_call_comment_success)
 		false,
 		fmt::encodeArgs(1),
 		fmt::encodeArgs(),
-		0,
+		{0},
 		"",
 		" f(uint256) does not return a value. "
 	);
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(call_comments)
 		false,
 		fmt::encodeArgs(),
 		fmt::encodeArgs(1),
-		0,
+		{0},
 		" Parameter comment ",
 		" Expectation comment "
 	);
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(call_comments)
 		false,
 		fmt::encodeArgs(),
 		fmt::encodeArgs(1),
-		0,
+		{0},
 		" Parameter comment ",
 		" Expectation comment "
 	);
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(call_comments)
 BOOST_AUTO_TEST_CASE(call_arguments)
 {
 	char const* source = R"(
-		// f(uint256), 314 ether: 5 # optional ether value #
+		// f(uint256), 314 wei: 5 # optional wei value #
 		// -> 4
 	)";
 	auto const calls = parse(source);
@@ -307,7 +307,27 @@ BOOST_AUTO_TEST_CASE(call_arguments)
 		false,
 		fmt::encodeArgs(5),
 		fmt::encodeArgs(4),
-		314,
+		{314},
+		" optional wei value "
+	);
+}
+
+BOOST_AUTO_TEST_CASE(call_arguments_ether)
+{
+	char const* source = R"(
+		// f(uint256), 1 ether: 5 # optional ether value #
+		// -> 4
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	testFunctionCall(
+		calls.at(0),
+		Mode::MultiLine,
+		"f(uint256)",
+		false,
+		fmt::encodeArgs(5),
+		fmt::encodeArgs(4),
+		{exp256(u256(10), u256(18)) , FunctionValueUnit::Ether},
 		" optional ether value "
 	);
 }
@@ -521,7 +541,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_tuple_of_tuples)
 		false,
 		fmt::encodeArgs(),
 		fmt::encodeArgs(),
-		0,
+		{0},
 		" f(S memory s, uint256 b) "
 	);
 }
@@ -565,7 +585,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_mismatch)
 		false,
 		fmt::encodeArgs(1, 2),
 		fmt::encodeArgs(1),
-		0,
+		{0},
 		" This only throws at runtime "
 	);
 }
@@ -594,7 +614,7 @@ BOOST_AUTO_TEST_CASE(call_multiple_arguments)
 BOOST_AUTO_TEST_CASE(call_multiple_arguments_mixed_format)
 {
 	char const* source = R"(
-		// test(uint256, uint256), 314 ether:
+		// test(uint256, uint256), 314 wei:
 		// 1, -2
 		// -> -1, 2
 	)";
@@ -607,7 +627,7 @@ BOOST_AUTO_TEST_CASE(call_multiple_arguments_mixed_format)
 		false,
 		fmt::encodeArgs(1, -2),
 		fmt::encodeArgs(-1, 2),
-		314
+		{314}
 	);
 }
 
@@ -668,7 +688,7 @@ BOOST_AUTO_TEST_CASE(call_raw_arguments)
 		false,
 		fmt::encodeArgs(1, -2, -3),
 		fmt::encodeArgs(),
-		0,
+		{0},
 		"",
 		"",
 		{"1", "-2", "-3"}
@@ -899,7 +919,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 		false,
 		{},
 		{},
-		0,
+		{0},
 		"",
 		"",
 		{},
@@ -921,7 +941,7 @@ BOOST_AUTO_TEST_CASE(library)
 		false,
 		{},
 		{},
-		0,
+		{0},
 		"",
 		"",
 		{},
