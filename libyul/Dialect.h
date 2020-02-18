@@ -34,6 +34,7 @@ namespace solidity::yul
 class YulString;
 using Type = YulString;
 enum class LiteralKind;
+struct Literal;
 
 struct BuiltinFunction
 {
@@ -65,6 +66,8 @@ struct Dialect: boost::noncopyable
 	/// Check whether the given type is legal for the given literal value.
 	/// Should only be called if the type exists in the dialect at all.
 	virtual bool validTypeForLiteral(LiteralKind _kind, YulString _value, YulString _type) const;
+
+	virtual Literal zeroLiteralForType(YulString _type) const;
 
 	virtual std::set<YulString> fixedFunctionNames() const { return {}; }
 

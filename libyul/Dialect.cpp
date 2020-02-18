@@ -23,6 +23,14 @@
 
 using namespace solidity::yul;
 using namespace std;
+using namespace solidity::langutil;
+
+Literal Dialect::zeroLiteralForType(solidity::yul::YulString _type) const
+{
+	if (_type == boolType && _type != defaultType)
+		return {SourceLocation{}, LiteralKind::Boolean, "false"_yulstring, _type};
+	return {SourceLocation{}, LiteralKind::Number, "0"_yulstring, _type};
+}
 
 bool Dialect::validTypeForLiteral(LiteralKind _kind, YulString, YulString _type) const
 {
