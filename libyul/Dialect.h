@@ -58,8 +58,8 @@ struct Dialect: boost::noncopyable
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	virtual BuiltinFunction const* builtin(YulString /*_name*/) const { return nullptr; }
 
-	virtual BuiltinFunction const* discardFunction() const { return nullptr; }
-	virtual BuiltinFunction const* equalityFunction() const { return nullptr; }
+	virtual BuiltinFunction const* discardFunction(YulString /* _type */) const { return nullptr; }
+	virtual BuiltinFunction const* equalityFunction(YulString /* _type */) const { return nullptr; }
 	virtual BuiltinFunction const* booleanNegationFunction() const { return nullptr; }
 
 	/// Check whether the given type is legal for the given literal value.
