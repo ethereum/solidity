@@ -25,6 +25,8 @@
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
 
+#include <libsolidity/interface/DebugSettings.h>
+
 #include <liblangutil/EVMVersion.h>
 
 #include <functional>
@@ -55,11 +57,13 @@ class ABIFunctions
 public:
 	explicit ABIFunctions(
 		langutil::EVMVersion _evmVersion,
+		RevertStrings _revertStrings,
 		std::shared_ptr<MultiUseYulFunctionCollector> _functionCollector = std::make_shared<MultiUseYulFunctionCollector>()
 	):
 		m_evmVersion(_evmVersion),
+		m_revertStrings(_revertStrings),
 		m_functionCollector(std::move(_functionCollector)),
-		m_utils(_evmVersion, m_functionCollector)
+		m_utils(_evmVersion, m_revertStrings, m_functionCollector)
 	{}
 
 	/// @returns name of an assembly function to ABI-encode values of @a _givenTypes
@@ -200,7 +204,7 @@ private:
 	/// @param _fromMemory if decoding from memory instead of from calldata
 	/// @param _forUseOnStack if the decoded value is stored on stack or in memory.
 	std::string abiDecodingFunction(
-		Type const& _Type,
+		Type const& _type,
 		bool _fromMemory,
 		bool _forUseOnStack
 	);
@@ -249,7 +253,12 @@ private:
 	/// is true), for which it is two.
 	static size_t numVariablesForType(Type const& _type, EncodingOptions const& _options);
 
+	/// @returns code that stores @param _message for revert reason
+	/// if m_revertStrings is debug.
+	std::string revertReasonIfDebug(std::string const& _message = "");
+
 	langutil::EVMVersion m_evmVersion;
+	RevertStrings const m_revertStrings;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;
 	std::set<std::string> m_externallyUsedFunctions;
 	YulUtilFunctions m_utils;

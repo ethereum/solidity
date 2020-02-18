@@ -20,6 +20,7 @@
  * Solidity compiler.
  */
 
+
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -27,7 +28,16 @@
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmData.h>
 #include <libyul/backends/evm/AsmCodeGen.h>
+#include <libyul/backends/evm/EVMMetrics.h>
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/optimiser/Suite.h>
+#include <libyul/Object.h>
+#include <libyul/optimiser/ASTCopier.h>
+#include <libyul/YulString.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
@@ -38,6 +48,7 @@
 #include <libsolutil/Whiskers.h>
 
 #include <boost/range/adaptor/reversed.hpp>
+
 #include <algorithm>
 
 using namespace std;
@@ -128,8 +139,7 @@ void ContractCompiler::appendCallValueCheck()
 {
 	// Throw if function is not payable but call contained ether.
 	m_context << Instruction::CALLVALUE;
-	// TODO: error message?
-	m_context.appendConditionalRevert();
+	m_context.appendConditionalRevert(false, "Ether sent to non-payable function");
 }
 
 void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _contract)
@@ -409,7 +419,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	m_context << notFoundOrReceiveEther;
 
 	if (!fallback && !etherReceiver)
-		m_context.appendRevert();
+		m_context.appendRevert("Contract does not have fallback nor receive functions");
 	else
 	{
 		if (etherReceiver)
@@ -440,8 +450,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 			m_context << Instruction::STOP;
 		}
 		else
-			// TODO: error message here?
-			m_context.appendRevert();
+			m_context.appendRevert("Unknown signature and no fallback defined");
 	}
 
 
@@ -457,7 +466,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 			// If the function is not a view function and is called without DELEGATECALL,
 			// we revert.
 			m_context << dupInstruction(2);
-			m_context.appendConditionalRevert();
+			m_context.appendConditionalRevert(false, "Non-view function of library called without DELEGATECALL");
 		}
 		m_context.setStackOffset(0);
 		// We have to allow this for libraries, because value of the previous
@@ -517,7 +526,7 @@ void ContractCompiler::initializeStateVariables(ContractDefinition const& _contr
 	solAssert(!_contract.isLibrary(), "Tried to initialize state variables of library.");
 	for (VariableDeclaration const* variable: _contract.stateVariables())
 		if (variable->value() && !variable->isConstant())
-			ExpressionCompiler(m_context, m_revertStrings, m_optimiserSettings.runOrderLiterals).appendStateVariableInitialization(*variable);
+			ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals).appendStateVariableInitialization(*variable);
 }
 
 bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
@@ -530,10 +539,10 @@ bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
 	m_continueTags.clear();
 
 	if (_variableDeclaration.isConstant())
-		ExpressionCompiler(m_context, m_revertStrings, m_optimiserSettings.runOrderLiterals)
+		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals)
 			.appendConstStateVariableAccessor(_variableDeclaration);
 	else
-		ExpressionCompiler(m_context, m_revertStrings, m_optimiserSettings.runOrderLiterals)
+		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals)
 			.appendStateVariableAccessor(_variableDeclaration);
 
 	return false;
@@ -790,10 +799,36 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			_assembly.appendInstruction(Instruction::POP);
 		}
 	};
-	solAssert(_inlineAssembly.annotation().analysisInfo, "");
+
+	yul::Block const* code = &_inlineAssembly.operations();
+	yul::AsmAnalysisInfo* analysisInfo = _inlineAssembly.annotation().analysisInfo.get();
+
+	// Only used in the scope below, but required to live outside to keep the
+	// shared_ptr's alive
+	yul::Object object = {};
+
+	// The optimiser cannot handle external references
+	if (
+		m_optimiserSettings.runYulOptimiser &&
+		_inlineAssembly.annotation().externalReferences.empty()
+	)
+	{
+		yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&_inlineAssembly.dialect());
+		solAssert(dialect, "");
+
+		// Create a modifiable copy of the code and analysis
+		object.code = make_shared<yul::Block>(yul::ASTCopier().translate(*code));
+		object.analysisInfo = make_shared<yul::AsmAnalysisInfo>(yul::AsmAnalyzer::analyzeStrictAssertCorrect(*dialect, object));
+
+		m_context.optimizeYul(object, *dialect, m_optimiserSettings);
+
+		code = object.code.get();
+		analysisInfo = object.analysisInfo.get();
+	}
+
 	yul::CodeGenerator::assemble(
-		_inlineAssembly.operations(),
-		*_inlineAssembly.annotation().analysisInfo,
+		*code,
+		*analysisInfo,
 		*m_context.assemblyPtr(),
 		m_context.evmVersion(),
 		identifierAccess,
@@ -954,7 +989,8 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 				revert(0, returndatasize())
 			})");
 		else
-			m_context.appendRevert();
+			// Since both returndata and revert are >=byzantium, this should be unreachable.
+			solAssert(false, "");
 	}
 	m_context << endTag;
 }
@@ -1316,7 +1352,7 @@ void ContractCompiler::appendStackVariableInitialisation(VariableDeclaration con
 
 void ContractCompiler::compileExpression(Expression const& _expression, TypePointer const& _targetType)
 {
-	ExpressionCompiler expressionCompiler(m_context, m_revertStrings, m_optimiserSettings.runOrderLiterals);
+	ExpressionCompiler expressionCompiler(m_context, m_optimiserSettings.runOrderLiterals);
 	expressionCompiler.compile(_expression);
 	if (_targetType)
 		CompilerUtils(m_context).convertType(*_expression.annotation().type, *_targetType);

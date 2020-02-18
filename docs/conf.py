@@ -17,6 +17,8 @@ import sys
 import os
 import re
 
+from pygments_lexer_solidity import SolidityLexer
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -24,7 +26,6 @@ import re
 def setup(sphinx):
     thisdir = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, thisdir + '/utils')
-    from pygments_lexer_solidity import SolidityLexer
     sphinx.add_lexer('Solidity', SolidityLexer())
 
     sphinx.add_stylesheet('css/custom.css')
@@ -53,7 +54,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Solidity'
-copyright = '2016-2019, Ethereum'
+copyright = '2016-2020, Ethereum'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

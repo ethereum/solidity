@@ -6,7 +6,7 @@ import subprocess
 import json
 
 SOLC_BIN = sys.argv[1]
-REPORT_FILE = open("report.txt", mode="w", encoding='utf8')
+REPORT_FILE = open("report.txt", mode="w", encoding='utf8', newline='\n')
 
 for optimize in [False, True]:
     for f in sorted(glob.glob("*.sol")):
@@ -33,7 +33,8 @@ for optimize in [False, True]:
                 for contractName in sorted(result['contracts'][filename].keys()):
                     contractData = result['contracts'][filename][contractName]
                     if 'evm' in contractData and 'bytecode' in contractData['evm']:
-                        REPORT_FILE.write(filename + ':' + contractName + ' ' + contractData['evm']['bytecode']['object'] + '\n')
+                        REPORT_FILE.write(filename + ':' + contractName + ' ' +
+                                            contractData['evm']['bytecode']['object'] + '\n')
                     else:
                         REPORT_FILE.write(filename + ':' + contractName + ' NO BYTECODE\n')
                     REPORT_FILE.write(filename + ':' + contractName + ' ' + contractData['metadata'] + '\n')

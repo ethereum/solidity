@@ -16,7 +16,7 @@
 */
 
 #include <test/libyul/FunctionSideEffects.h>
-#include <test/Options.h>
+#include <test/Common.h>
 #include <test/libyul/Common.h>
 
 #include <libsolutil/AnsiColorized.h>
@@ -68,7 +68,8 @@ FunctionSideEffects::FunctionSideEffects(string const& _filename)
 	file.exceptions(ios::badbit);
 
 	m_source = parseSourceAndSettings(file);
-	m_expectation = parseSimpleExpectations(file);}
+	m_expectation = parseSimpleExpectations(file);
+}
 
 TestCase::TestResult FunctionSideEffects::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {

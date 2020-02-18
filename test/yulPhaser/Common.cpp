@@ -15,30 +15,20 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include <test/yulPhaser/Common.h>
 
-#include <liblangutil/EVMVersion.h>
-#include <test/Common.h>
+#include <libyul/optimiser/Suite.h>
 
-#include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-#include <boost/version.hpp>
+using namespace std;
+using namespace solidity;
+using namespace solidity::yul;
 
-#include <functional>
-
-namespace solidity::test
+map<string, size_t> phaser::test::enumerateOptmisationSteps()
 {
+	map<string, size_t> stepIndices;
+	size_t i = 0;
+	for (auto const& nameAndAbbreviation: OptimiserSuite::stepNameToAbbreviationMap())
+		stepIndices.insert({nameAndAbbreviation.first, i++});
 
-struct Options: CommonOptions
-{
-	bool showMessages = false;
-	bool useABIEncoderV2 = false;
-
-	static Options const& get();
-
-private:
-	Options();
-};
-
+	return stepIndices;
 }

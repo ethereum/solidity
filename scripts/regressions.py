@@ -31,8 +31,7 @@ class PrintDotsThread(object):
             time.sleep(self.interval)
 
 class regressor():
-    _re_sanitizer_log = re.compile(r"""ERROR: (?P<sanitizer>\w+).*""")
-    _error_blacklist = ["AddressSanitizer", "libFuzzer"]
+    _re_sanitizer_log = re.compile(r"""ERROR: (libFuzzer|UndefinedBehaviorSanitizer)""")
 
     def __init__(self, description, args):
         self._description = description
@@ -45,7 +44,7 @@ class regressor():
     def parseCmdLine(self, description, args):
         argParser = ArgumentParser(description)
         argParser.add_argument('-o', '--out-dir', required=True, type=str,
-                       help="""Directory where test results will be written""")
+                               help="""Directory where test results will be written""")
         return argParser.parse_args(args)
 
     @staticmethod
@@ -85,16 +84,12 @@ class regressor():
             bool: Test status.
                 True       -> Success
                 False      -> Failure
-            int: Number of suppressed memory leaks
         """
 
         ## Log may contain non ASCII characters, so we simply stringify them
         ## since they don't matter for regular expression matching
         rawtext = str(open(logfile, 'rb').read())
-        list = re.findall(self._re_sanitizer_log, rawtext)
-        numSuppressedLeaks = list.count("LeakSanitizer")
-        rv = any(word in list for word in self._error_blacklist)
-        return not rv, numSuppressedLeaks
+        return not re.search(self._re_sanitizer_log, rawtext)
 
     def run(self):
         """
@@ -110,29 +105,22 @@ class regressor():
             logfile = os.path.join(self._logpath, "{}.log".format(basename))
             corpus_dir = "/tmp/solidity-fuzzing-corpus/{0}_seed_corpus" \
                 .format(basename)
-            cmd = "find {0} -type f | xargs -n1 {1}".format(corpus_dir, fuzzer)
-            cmd_status = self.run_cmd(cmd, logfile=logfile)
-            if cmd_status:
-                ret, numLeaks = self.process_log(logfile)
-                if not ret:
-                    print(
-                        "\t[-] libFuzzer reported failure for {0}. "
-                        "Failure logged to test_results".format(
-                            basename))
-                    testStatus.append(cmd_status)
-                else:
-                    print("\t[+] {0} passed regression tests but leaked "
-                          "memory.".format(basename))
-                    print("\t\t[+] Suppressed {0} memory leak reports".format(
-                            numLeaks))
-                    testStatus.append(0)
+            cmd = "find {0} -type f | xargs -n1 sh -c '{1} $0 || exit 255'".format(corpus_dir, fuzzer)
+            self.run_cmd(cmd, logfile=logfile)
+            ret = self.process_log(logfile)
+            if not ret:
+                print(
+                    "\t[-] libFuzzer reported failure for {0}. "
+                    "Failure logged to test_results".format(
+                        basename))
+                testStatus.append(False)
             else:
                 print("\t[+] {0} passed regression tests.".format(basename))
-                testStatus.append(cmd_status)
-        return any(testStatus)
+                testStatus.append(True)
+        return all(testStatus)
 
 
 if __name__ == '__main__':
     dotprinter = PrintDotsThread()
     tool = regressor(DESCRIPTION, sys.argv[1:])
-    sys.exit(tool.run())
+    sys.exit(not tool.run())

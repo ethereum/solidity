@@ -677,7 +677,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context << errorCase;
 			}
 			else
-				// TODO: Can we bubble up here? There might be different reasons for failure, I think.
 				m_context.appendConditionalRevert(true);
 			break;
 		}
@@ -734,8 +733,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (function.kind() == FunctionType::Kind::Transfer)
 			{
 				// Check if zero (out of stack or not enough balance).
-				// TODO: bubble up here, but might also be different error.
 				m_context << Instruction::ISZERO;
+				// Revert message bubbles up.
 				m_context.appendConditionalRevert(true);
 			}
 			break;
@@ -752,7 +751,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// function-sel(Error(string)) + encoding
 				solAssert(arguments.size() == 1, "");
 				solAssert(function.parameterTypes().size() == 1, "");
-				if (m_revertStrings == RevertStrings::Strip)
+				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
 					if (!arguments.front()->annotation().isPure)
 					{
@@ -1032,7 +1031,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), false);
 
-			bool haveReasonString = arguments.size() > 1 && m_revertStrings != RevertStrings::Strip;
+			bool haveReasonString = arguments.size() > 1 && m_context.revertStrings() != RevertStrings::Strip;
 
 			if (arguments.size() > 1)
 			{
@@ -1041,7 +1040,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// function call.
 				solAssert(arguments.size() == 2, "");
 				solAssert(function.kind() == FunctionType::Kind::Require, "");
-				if (m_revertStrings == RevertStrings::Strip)
+				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
 					if (!arguments.at(1)->annotation().isPure)
 					{
@@ -1304,6 +1303,8 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			{
 				switch (funType->kind())
 				{
+				case FunctionType::Kind::Declaration:
+					break;
 				case FunctionType::Kind::Internal:
 					// We do not visit the expression here on purpose, because in the case of an
 					// internal library function call, this would push the library address forcing
@@ -1821,12 +1822,16 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 
 	m_context.appendInlineAssembly(
 		Whiskers(R"({
-					if gt(sliceStart, sliceEnd) { revert(0, 0) }
-					if gt(sliceEnd, length) { revert(0, 0) }
+					if gt(sliceStart, sliceEnd) { <revertStringStartEnd> }
+					if gt(sliceEnd, length) { <revertStringEndLength> }
 
 					offset := add(offset, mul(sliceStart, <stride>))
 					length := sub(sliceEnd, sliceStart)
-				})")("stride", toString(arrayType->calldataStride())).render(),
+				})")
+		("stride", toString(arrayType->calldataStride()))
+		("revertStringStartEnd", m_context.revertReasonIfDebug("Slice starts after end"))
+		("revertStringEndLength", m_context.revertReasonIfDebug("Slice is greater than length"))
+		.render(),
 		{"offset", "length", "sliceStart", "sliceEnd"}
 	);
 
@@ -2299,8 +2304,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
-		// TODO: error message?
-		m_context.appendConditionalRevert();
+		m_context.appendConditionalRevert(false, "Target contract does not contain code");
 		existenceChecked = true;
 	}
 

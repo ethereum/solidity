@@ -23,7 +23,7 @@
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
-#include <test/Options.h>
+#include <test/Common.h>
 #include <test/EVMHost.h>
 
 #include <liblangutil/Exceptions.h>
@@ -784,26 +784,6 @@ BOOST_AUTO_TEST_CASE(small_signed_types)
 	testContractAgainstCpp("run()", small_signed_types_cpp);
 }
 
-BOOST_AUTO_TEST_CASE(strings)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function fixedBytes() public returns(bytes32 ret) {
-				return "abc\x00\xff__";
-			}
-			function pipeThrough(bytes2 small, bool one) public returns(bytes16 large, bool oneRet) {
-				oneRet = one;
-				large = small;
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("fixedBytes()"), encodeArgs(string("abc\0\xff__", 7)));
-		ABI_CHECK(callContractFunction("pipeThrough(bytes2,bool)", string("\0\x02", 2), true), encodeArgs(string("\0\x2", 2), true));
-	)
-}
-
 BOOST_AUTO_TEST_CASE(compound_assign)
 {
 	char const* sourceCode = R"(
@@ -840,40 +820,6 @@ BOOST_AUTO_TEST_CASE(compound_assign)
 		testContractAgainstCpp("f(uint256,uint256)", f, u256(5), u256(2));
 		testContractAgainstCpp("f(uint256,uint256)", f, u256(6), u256(51));
 		testContractAgainstCpp("f(uint256,uint256)", f, u256(7), u256(48));
-	)
-}
-
-BOOST_AUTO_TEST_CASE(simple_mapping)
-{
-	char const* sourceCode = R"(
-		contract test {
-			mapping(uint8 => uint8) table;
-			function get(uint8 k) public returns (uint8 v) {
-				return table[k];
-			}
-			function set(uint8 k, uint8 v) public {
-				table[k] = v;
-			}
-		}
-	)";
-
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0)), encodeArgs(uint8_t(0x00)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0x00)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
-		callContractFunction("set(uint8,uint8)", uint8_t(0x01), uint8_t(0xa1));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0x00)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0xa1)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
-		callContractFunction("set(uint8,uint8)", uint8_t(0x00), uint8_t(0xef));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0xef)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0xa1)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
-		callContractFunction("set(uint8,uint8)", uint8_t(0x01), uint8_t(0x05));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x00)), encodeArgs(uint8_t(0xef)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0x01)), encodeArgs(uint8_t(0x05)));
-		ABI_CHECK(callContractFunction("get(uint8)", uint8_t(0xa7)), encodeArgs(uint8_t(0x00)));
 	)
 }
 
@@ -1055,34 +1001,6 @@ BOOST_AUTO_TEST_CASE(constructor)
 		testContractAgainstCpp("get(uint256)", get, u256(6));
 		testContractAgainstCpp("get(uint256)", get, u256(7));
 	)
-}
-
-BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
-{
-	char const* sourceCode = R"(
-		contract test {
-			uint256 public data;
-			bytes6 public name;
-			bytes32 public a_hash;
-			address public an_address;
-			constructor() public {
-				data = 8;
-				name = "Celina";
-				a_hash = keccak256("\x7b");
-				an_address = address(0x1337);
-				super_secret_data = 42;
-			}
-			uint256 super_secret_data;
-		}
-	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("data()"), encodeArgs(8));
-		ABI_CHECK(callContractFunction("name()"), encodeArgs("Celina"));
-		ABI_CHECK(callContractFunction("a_hash()"), encodeArgs(util::keccak256(bytes(1, 0x7b))));
-		ABI_CHECK(callContractFunction("an_address()"), encodeArgs(util::toBigEndian(u160(0x1337))));
-		ABI_CHECK(callContractFunction("super_secret_data()"), bytes());
-	);
 }
 
 BOOST_AUTO_TEST_CASE(balance)
@@ -2540,7 +2458,7 @@ BOOST_AUTO_TEST_CASE(default_fallback_throws)
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(0));
 
-	if (solidity::test::Options::get().evmVersion().hasStaticCall())
+	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 	{
 		char const* sourceCode = R"YY(
 			contract A {
@@ -3405,7 +3323,7 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 
 BOOST_AUTO_TEST_CASE(generic_staticcall)
 {
-	if (solidity::test::Options::get().evmVersion().hasStaticCall())
+	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 	{
 		char const* sourceCode = R"**(
 				contract A {
@@ -5791,7 +5709,7 @@ BOOST_AUTO_TEST_CASE(bool_conversion)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	bool v2 = solidity::test::Options::get().useABIEncoderV2;
+	bool v2 = solidity::test::CommonOptions::get().useABIEncoderV2;
 	ABI_CHECK(callContractFunction("f(bool)", 0), encodeArgs(0));
 	ABI_CHECK(callContractFunction("f(bool)", 1), encodeArgs(1));
 	ABI_CHECK(callContractFunction("f(bool)", 2), v2 ? encodeArgs() : encodeArgs(1));
@@ -10052,7 +9970,7 @@ BOOST_AUTO_TEST_CASE(cleanup_bytes_types)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	// We input longer data on purpose.
-	bool v2 = solidity::test::Options::get().useABIEncoderV2;
+	bool v2 = solidity::test::CommonOptions::get().useABIEncoderV2;
 	ABI_CHECK(callContractFunction("f(bytes2,uint16)", string("abc"), u256(0x040102)), v2 ? encodeArgs() : encodeArgs(0));
 }
 BOOST_AUTO_TEST_CASE(cleanup_bytes_types_shortening)
@@ -10089,7 +10007,7 @@ BOOST_AUTO_TEST_CASE(cleanup_address_types)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 
-	bool v2 = solidity::test::Options::get().useABIEncoderV2;
+	bool v2 = solidity::test::CommonOptions::get().useABIEncoderV2;
 	// We input longer data on purpose.
 	ABI_CHECK(callContractFunction("f(address)", u256("0xFFFF1234567890123456789012345678901234567890")), v2 ? encodeArgs() : encodeArgs(0));
 	ABI_CHECK(callContractFunction("g(address)", u256("0xFFFF1234567890123456789012345678901234567890")), v2 ? encodeArgs() : encodeArgs(0));
@@ -10213,7 +10131,7 @@ BOOST_AUTO_TEST_CASE(create_dynamic_array_with_zero_length)
 
 BOOST_AUTO_TEST_CASE(correctly_initialize_memory_array_in_constructor)
 {
-	// Memory arrays are initialized using codecopy past the size of the code.
+	// Memory arrays are initialized using calldatacopy past the size of the calldata.
 	// This test checks that it also works in the constructor context.
 	char const* sourceCode = R"(
 		contract C {
@@ -11342,7 +11260,7 @@ BOOST_AUTO_TEST_CASE(shift_right_garbled)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	bool v2 = solidity::test::Options::get().useABIEncoderV2;
+	bool v2 = solidity::test::CommonOptions::get().useABIEncoderV2;
 	ABI_CHECK(callContractFunction("f(uint8,uint8)", u256(0x0), u256(4)), encodeArgs(u256(0xf)));
 	ABI_CHECK(callContractFunction("f(uint8,uint8)", u256(0x0), u256(0x1004)), v2 ? encodeArgs() : encodeArgs(u256(0xf)));
 }
@@ -11368,7 +11286,7 @@ BOOST_AUTO_TEST_CASE(shift_right_garbled_signed)
 			}
 		)";
 	compileAndRun(sourceCode, 0, "C");
-	bool v2 = solidity::test::Options::get().useABIEncoderV2;
+	bool v2 = solidity::test::CommonOptions::get().useABIEncoderV2;
 	ABI_CHECK(callContractFunction("f(int8,uint8)", u256(0x0), u256(3)), encodeArgs(u256(-2)));
 	ABI_CHECK(callContractFunction("f(int8,uint8)", u256(0x0), u256(4)), encodeArgs(u256(-1)));
 	ABI_CHECK(callContractFunction("f(int8,uint8)", u256(0x0), u256(0xFF)), encodeArgs(u256(-1)));
@@ -11562,7 +11480,7 @@ BOOST_AUTO_TEST_CASE(shift_right_negative_lvalue_signextend_int8)
 			}
 		)";
 	compileAndRun(sourceCode, 0, "C");
-	bool v2 = solidity::test::Options::get().useABIEncoderV2;
+	bool v2 = solidity::test::CommonOptions::get().useABIEncoderV2;
 	ABI_CHECK(callContractFunction("f(int8,int8)", u256(0x99u), u256(0)), v2 ? encodeArgs() : encodeArgs(u256(-103)));
 	ABI_CHECK(callContractFunction("f(int8,int8)", u256(0x99u), u256(1)), v2 ? encodeArgs() : encodeArgs(u256(-52)));
 	ABI_CHECK(callContractFunction("f(int8,int8)", u256(0x99u), u256(2)), v2 ? encodeArgs() : encodeArgs(u256(-26)));
@@ -11580,7 +11498,7 @@ BOOST_AUTO_TEST_CASE(shift_right_negative_lvalue_signextend_int16)
 			}
 		)";
 	compileAndRun(sourceCode, 0, "C");
-	bool v2 = solidity::test::Options::get().useABIEncoderV2;
+	bool v2 = solidity::test::CommonOptions::get().useABIEncoderV2;
 	ABI_CHECK(callContractFunction("f(int16,int16)", u256(0xFF99u), u256(0)), v2 ? encodeArgs() : encodeArgs(u256(-103)));
 	ABI_CHECK(callContractFunction("f(int16,int16)", u256(0xFF99u), u256(1)), v2 ? encodeArgs() : encodeArgs(u256(-52)));
 	ABI_CHECK(callContractFunction("f(int16,int16)", u256(0xFF99u), u256(2)), v2 ? encodeArgs() : encodeArgs(u256(-26)));
@@ -11598,7 +11516,7 @@ BOOST_AUTO_TEST_CASE(shift_right_negative_lvalue_signextend_int32)
 			}
 		)";
 	compileAndRun(sourceCode, 0, "C");
-	bool v2 = solidity::test::Options::get().useABIEncoderV2;
+	bool v2 = solidity::test::CommonOptions::get().useABIEncoderV2;
 	ABI_CHECK(callContractFunction("f(int32,int32)", u256(0xFFFFFF99u), u256(0)), v2 ? encodeArgs() : encodeArgs(u256(-103)));
 	ABI_CHECK(callContractFunction("f(int32,int32)", u256(0xFFFFFF99u), u256(1)), v2 ? encodeArgs() : encodeArgs(u256(-52)));
 	ABI_CHECK(callContractFunction("f(int32,int32)", u256(0xFFFFFF99u), u256(2)), v2 ? encodeArgs() : encodeArgs(u256(-26)));
@@ -12126,7 +12044,7 @@ BOOST_AUTO_TEST_CASE(revert_with_cause)
 			}
 		}
 	)";
-	if (solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 	{
 		compileAndRun(sourceCode, 0, "C");
 		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
@@ -12200,7 +12118,7 @@ BOOST_AUTO_TEST_CASE(require_with_message)
 			}
 		}
 	)";
-	if (solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 	{
 		compileAndRun(sourceCode, 0, "C");
 		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
@@ -12246,7 +12164,7 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages)
 			}
 		}
 	)";
-	if (solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 	{
 		compileAndRun(sourceCode, 0, "C");
 		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
@@ -12284,7 +12202,7 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
 			}
 		}
 	)";
-	if (solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 	{
 		compileAndRun(sourceCode, 0, "C");
 		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
@@ -12323,7 +12241,7 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_create)
 			}
 		}
 	)";
-	if (solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 	{
 		compileAndRun(sourceCode, 0, "C");
 		bytes const errorSignature = bytes{0x08, 0xc3, 0x79, 0xa0};
@@ -12528,7 +12446,7 @@ BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(1)));
 	ABI_CHECK(callContractFunction("h()"), encodeArgs(u256(1)));
 
-	if (solidity::test::Options::get().evmVersion().hasStaticCall())
+	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 	{
 		char const* sourceCode = R"YY(
 			contract C {
@@ -12544,10 +12462,10 @@ BOOST_AUTO_TEST_CASE(bare_call_invalid_address)
 
 BOOST_AUTO_TEST_CASE(bare_call_return_data)
 {
-	if (solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 	{
 		vector<string> calltypes = {"call", "delegatecall"};
-		if (solidity::test::Options::get().evmVersion().hasStaticCall())
+		if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 			calltypes.emplace_back("staticcall");
 		for (string const& calltype: calltypes)
 		{
@@ -12671,7 +12589,7 @@ BOOST_AUTO_TEST_CASE(bare_call_return_data)
 
 BOOST_AUTO_TEST_CASE(delegatecall_return_value)
 {
-	if (solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 	{
 		char const* sourceCode = R"DELIMITER(
 			contract C {
@@ -13472,7 +13390,7 @@ BOOST_AUTO_TEST_CASE(abi_encode_empty_string)
 	)";
 
 	compileAndRun(sourceCode, 0, "C");
-	if (!solidity::test::Options::get().useABIEncoderV2)
+	if (!solidity::test::CommonOptions::get().useABIEncoderV2)
 	{
 		// ABI Encoder V2 has slightly different padding, tested below.
 		ABI_CHECK(callContractFunction("f()"), encodeArgs(
@@ -13596,7 +13514,7 @@ BOOST_AUTO_TEST_CASE(staticcall_for_view_and_pure)
 	compileAndRun(sourceCode, 0, "D");
 	// This should work (called via CALL)
 	ABI_CHECK(callContractFunction("f()"), encodeArgs(1));
-	if (solidity::test::Options::get().evmVersion().hasStaticCall())
+	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 	{
 		// These should throw (called via STATICCALL)
 		ABI_CHECK(callContractFunction("fview()"), encodeArgs());
@@ -13611,7 +13529,7 @@ BOOST_AUTO_TEST_CASE(staticcall_for_view_and_pure)
 
 BOOST_AUTO_TEST_CASE(bitwise_shifting_constantinople)
 {
-	if (!solidity::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
 	char const* sourceCode = R"(
 		contract C {
@@ -13650,7 +13568,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constantinople)
 
 BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 {
-	if (!solidity::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
 	char const* sourceCode = R"(
 		contract C {
@@ -13717,7 +13635,7 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constants_constantinople)
 
 BOOST_AUTO_TEST_CASE(bitwise_shifting_constantinople_combined)
 {
-	if (!solidity::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
 	char const* sourceCode = R"(
 		contract C {
@@ -14473,7 +14391,7 @@ BOOST_AUTO_TEST_CASE(try_catch_library_call)
 			}
 		}
 	)";
-	if (solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 	{
 		compileAndRun(sourceCode, 0, "L", bytes());
 		compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"L", m_contractAddress}});

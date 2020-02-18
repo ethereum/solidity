@@ -179,7 +179,7 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 
 /// Helper function for KnownState::reduceToCommonKnowledge, removes everything from
 /// _this which is not in or not equal to the value in _other.
-template <class _Mapping> void intersect(_Mapping& _this, _Mapping const& _other)
+template <class Mapping> void intersect(Mapping& _this, Mapping const& _other)
 {
 	for (auto it = _this.begin(); it != _this.end();)
 		if (_other.count(it->first) && _other.at(it->first) == it->second)

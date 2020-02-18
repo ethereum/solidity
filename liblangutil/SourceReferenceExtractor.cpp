@@ -46,7 +46,7 @@ SourceReference SourceReferenceExtractor::extract(SourceLocation const* _locatio
 	if (!_location || !_location->source.get()) // Nothing we can extract here
 		return SourceReference::MessageOnly(std::move(message));
 
-	if (_location->source->source().empty()) // No source text, so we can only extract the source name
+	if (!_location->hasText()) // No source text, so we can only extract the source name
 		return SourceReference::MessageOnly(std::move(message), _location->source->name());
 
 	shared_ptr<CharStream> const& source = _location->source;

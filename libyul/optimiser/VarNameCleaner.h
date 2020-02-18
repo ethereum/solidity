@@ -39,6 +39,10 @@ struct Dialect;
  * renumbered by their base name.
  * Function names are not modified.
  *
+ * NOTE: This step destroys the promise of the Disambiguator and thus cannot
+ * be used in the main loop of the optimizer without running the disambiguator again.
+ * Because of that, it is not included in the step list of the Optimizer Suite.
+ *
  * Prerequisites: Disambiguator, FunctionHoister, FunctionGrouper
  */
 class VarNameCleaner: public ASTModifier

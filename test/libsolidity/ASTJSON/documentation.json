@@ -4,10 +4,10 @@
   {
     "C":
     [
-      1
+      2
     ]
   },
-  "id": 2,
+  "id": 3,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -16,17 +16,23 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": "This contract is empty",
+      "documentation":
+      {
+        "id": 1,
+        "nodeType": "StructuredDocumentation",
+        "src": "0:27:1",
+        "text": "This contract is empty"
+      },
       "fullyImplemented": true,
-      "id": 1,
+      "id": 2,
       "linearizedBaseContracts":
       [
-        1
+        2
       ],
       "name": "C",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "scope": 2,
+      "scope": 3,
       "src": "28:13:1"
     }
   ],
@@ -38,10 +44,10 @@
   {
     "C":
     [
-      3
+      5
     ]
   },
-  "id": 4,
+  "id": 6,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -50,17 +56,23 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": "This contract is empty\nand has a line-breaking comment.",
+      "documentation":
+      {
+        "id": 4,
+        "nodeType": "StructuredDocumentation",
+        "src": "0:61:2",
+        "text": "This contract is empty\nand has a line-breaking comment."
+      },
       "fullyImplemented": true,
-      "id": 3,
+      "id": 5,
       "linearizedBaseContracts":
       [
-        3
+        5
       ],
       "name": "C",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "scope": 4,
+      "scope": 6,
       "src": "62:13:2"
     }
   ],
@@ -72,10 +84,10 @@
   {
     "C":
     [
-      15
+      20
     ]
   },
-  "id": 16,
+  "id": 21,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -86,10 +98,10 @@
       "contractKind": "contract",
       "documentation": null,
       "fullyImplemented": true,
-      "id": 15,
+      "id": 20,
       "linearizedBaseContracts":
       [
-        15
+        20
       ],
       "name": "C",
       "nodeType": "ContractDefinition",
@@ -97,13 +109,19 @@
       [
         {
           "anonymous": false,
-          "documentation": "Some comment on Evt.",
-          "id": 6,
+          "documentation":
+          {
+            "id": 7,
+            "nodeType": "StructuredDocumentation",
+            "src": "15:26:3",
+            "text": "Some comment on Evt."
+          },
+          "id": 9,
           "name": "Evt",
           "nodeType": "EventDefinition",
           "parameters":
           {
-            "id": 5,
+            "id": 8,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "51:2:3"
@@ -113,26 +131,32 @@
         {
           "body":
           {
-            "id": 9,
+            "id": 13,
             "nodeType": "Block",
             "src": "99:6:3",
             "statements":
             [
               {
-                "id": 8,
+                "id": 12,
                 "nodeType": "PlaceholderStatement",
                 "src": "101:1:3"
               }
             ]
           },
-          "documentation": "Some comment on mod.",
-          "id": 10,
+          "documentation":
+          {
+            "id": 10,
+            "nodeType": "StructuredDocumentation",
+            "src": "57:26:3",
+            "text": "Some comment on mod."
+          },
+          "id": 14,
           "name": "mod",
           "nodeType": "ModifierDefinition",
           "overrides": null,
           "parameters":
           {
-            "id": 7,
+            "id": 11,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "96:2:3"
@@ -144,14 +168,20 @@
         {
           "body":
           {
-            "id": 13,
+            "id": 18,
             "nodeType": "Block",
             "src": "155:2:3",
             "statements": []
           },
-          "documentation": "Some comment on fn.",
+          "documentation":
+          {
+            "id": 15,
+            "nodeType": "StructuredDocumentation",
+            "src": "108:25:3",
+            "text": "Some comment on fn."
+          },
           "functionSelector": "a4a2c40b",
-          "id": 14,
+          "id": 19,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
@@ -160,26 +190,26 @@
           "overrides": null,
           "parameters":
           {
-            "id": 11,
+            "id": 16,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "145:2:3"
           },
           "returnParameters":
           {
-            "id": 12,
+            "id": 17,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "155:0:3"
           },
-          "scope": 15,
+          "scope": 20,
           "src": "134:23:3",
           "stateMutability": "nonpayable",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "scope": 16,
+      "scope": 21,
       "src": "0:159:3"
     }
   ],

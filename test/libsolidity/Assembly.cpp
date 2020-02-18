@@ -20,7 +20,7 @@
  * Unit tests for Assembly Items from evmasm/Assembly.h
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/Assembly.h>
@@ -52,14 +52,14 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	Parser parser(errorReporter, solidity::test::Options::get().evmVersion());
+	Parser parser(errorReporter, solidity::test::CommonOptions::get().evmVersion());
 	ASTPointer<SourceUnit> sourceUnit;
 	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(_sourceCode)));
 	BOOST_CHECK(!!sourceUnit);
 
 	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
 	GlobalContext globalContext;
-	NameAndTypeResolver resolver(globalContext, solidity::test::Options::get().evmVersion(), scopes, errorReporter);
+	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), scopes, errorReporter);
 	solAssert(Error::containsOnlyWarnings(errorReporter.errors()), "");
 	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
@@ -72,7 +72,7 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			TypeChecker checker(solidity::test::Options::get().evmVersion(), errorReporter);
+			TypeChecker checker(solidity::test::CommonOptions::get().evmVersion(), errorReporter);
 			BOOST_REQUIRE_NO_THROW(checker.checkTypeRequirements(*contract));
 			if (!Error::containsOnlyWarnings(errorReporter.errors()))
 				return AssemblyItems();
@@ -81,9 +81,9 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			Compiler compiler(
-				solidity::test::Options::get().evmVersion(),
+				solidity::test::CommonOptions::get().evmVersion(),
 				RevertStrings::Default,
-				solidity::test::Options::get().optimize ? OptimiserSettings::standard() : OptimiserSettings::minimal()
+				solidity::test::CommonOptions::get().optimize ? OptimiserSettings::standard() : OptimiserSettings::minimal()
 			);
 			compiler.compileContract(*contract, map<ContractDefinition const*, shared_ptr<Compiler const>>{}, bytes());
 
@@ -161,34 +161,40 @@ BOOST_AUTO_TEST_CASE(location_test)
 	}
 	)", "");
 	AssemblyItems items = compileContract(sourceCode);
-	bool hasShifts = solidity::test::Options::get().evmVersion().hasBitwiseShifting();
+	bool hasShifts = solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting();
 
 	auto codegenCharStream = make_shared<CharStream>("", "--CODEGEN--");
 
 	vector<SourceLocation> locations;
-	if (solidity::test::Options::get().optimize)
+	if (solidity::test::CommonOptions::get().optimize)
 		locations =
 			vector<SourceLocation>(4, SourceLocation{2, 82, sourceCode}) +
-			vector<SourceLocation>(1, SourceLocation{8, 17, codegenCharStream}) +
-			vector<SourceLocation>(3, SourceLocation{5, 7, codegenCharStream}) +
-			vector<SourceLocation>(1, SourceLocation{30, 31, codegenCharStream}) +
+			vector<SourceLocation>(1, SourceLocation{5, 14, codegenCharStream}) +
+			vector<SourceLocation>(3, SourceLocation{2, 4, codegenCharStream}) +
 			vector<SourceLocation>(1, SourceLocation{27, 28, codegenCharStream}) +
-			vector<SourceLocation>(1, SourceLocation{20, 32, codegenCharStream}) +
-			vector<SourceLocation>(1, SourceLocation{5, 7, codegenCharStream}) +
-			vector<SourceLocation>(19, SourceLocation{2, 82, sourceCode}) +
+			vector<SourceLocation>(1, SourceLocation{24, 25, codegenCharStream}) +
+			vector<SourceLocation>(1, SourceLocation{17, 29, codegenCharStream}) +
+			vector<SourceLocation>(1, SourceLocation{2, 4, codegenCharStream}) +
+			vector<SourceLocation>(16, SourceLocation{2, 82, sourceCode}) +
+			vector<SourceLocation>(1, SourceLocation{12, 13, codegenCharStream}) +
+			vector<SourceLocation>(1, SourceLocation{9, 10, codegenCharStream}) +
+			vector<SourceLocation>(1, SourceLocation{2, 14, codegenCharStream}) +
 			vector<SourceLocation>(21, SourceLocation{20, 79, sourceCode}) +
 			vector<SourceLocation>(1, SourceLocation{72, 74, sourceCode}) +
 			vector<SourceLocation>(2, SourceLocation{20, 79, sourceCode});
 	else
 		locations =
 			vector<SourceLocation>(4, SourceLocation{2, 82, sourceCode}) +
-			vector<SourceLocation>(1, SourceLocation{8, 17, codegenCharStream}) +
-			vector<SourceLocation>(3, SourceLocation{5, 7, codegenCharStream}) +
-			vector<SourceLocation>(1, SourceLocation{30, 31, codegenCharStream}) +
+			vector<SourceLocation>(1, SourceLocation{5, 14, codegenCharStream}) +
+			vector<SourceLocation>(3, SourceLocation{2, 4, codegenCharStream}) +
 			vector<SourceLocation>(1, SourceLocation{27, 28, codegenCharStream}) +
-			vector<SourceLocation>(1, SourceLocation{20, 32, codegenCharStream}) +
-			vector<SourceLocation>(1, SourceLocation{5, 7, codegenCharStream}) +
-			vector<SourceLocation>(hasShifts ? 19 : 20, SourceLocation{2, 82, sourceCode}) +
+			vector<SourceLocation>(1, SourceLocation{24, 25, codegenCharStream}) +
+			vector<SourceLocation>(1, SourceLocation{17, 29, codegenCharStream}) +
+			vector<SourceLocation>(1, SourceLocation{2, 4, codegenCharStream}) +
+			vector<SourceLocation>(hasShifts ? 16 : 17, SourceLocation{2, 82, sourceCode}) +
+			vector<SourceLocation>(1, SourceLocation{12, 13, codegenCharStream}) +
+			vector<SourceLocation>(1, SourceLocation{9, 10, codegenCharStream}) +
+			vector<SourceLocation>(1, SourceLocation{2, 14, codegenCharStream}) +
 			vector<SourceLocation>(24, SourceLocation{20, 79, sourceCode}) +
 			vector<SourceLocation>(1, SourceLocation{49, 58, sourceCode}) +
 			vector<SourceLocation>(1, SourceLocation{72, 74, sourceCode}) +

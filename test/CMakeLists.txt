@@ -2,6 +2,8 @@ set(sources
     boostTest.cpp
     Common.cpp
     Common.h
+    CommonSyntaxTest.cpp
+    CommonSyntaxTest.h
     EVMHost.cpp
     EVMHost.h
     ExecutionFramework.cpp
@@ -9,8 +11,6 @@ set(sources
     InteractiveTests.h
     Metadata.cpp
     Metadata.h
-    Options.cpp
-    Options.h
     TestCase.cpp
     TestCase.h
 )
@@ -129,12 +129,33 @@ set(libyul_sources
     libyul/ObjectParser.cpp
     libyul/Parser.cpp
     libyul/StackReuseCodegen.cpp
+    libyul/SyntaxTest.h
+    libyul/SyntaxTest.cpp
     libyul/YulInterpreterTest.cpp
     libyul/YulInterpreterTest.h
     libyul/YulOptimizerTest.cpp
     libyul/YulOptimizerTest.h
 )
 detect_stray_source_files("${libyul_sources}" "libyul/")
+
+set(yul_phaser_sources
+    yulPhaser/Common.h
+    yulPhaser/Common.cpp
+    yulPhaser/CommonTest.cpp
+    yulPhaser/Chromosome.cpp
+    yulPhaser/Population.cpp
+    yulPhaser/Program.cpp
+    yulPhaser/SimulationRNG.cpp
+
+    # FIXME: yul-phaser is not a library so I can't just add it to target_link_libraries().
+    # My current workaround is just to include its source files here but this introduces
+    # unnecessary duplication. Create a library or find a way to reuse the list in both places.
+    ../tools/yulPhaser/Chromosome.cpp
+    ../tools/yulPhaser/Population.cpp
+    ../tools/yulPhaser/Program.cpp
+    ../tools/yulPhaser/SimulationRNG.cpp
+)
+detect_stray_source_files("${yul_phaser_sources}" "yulPhaser/")
 
 add_executable(soltest ${sources}
     ${contracts_sources}
@@ -144,6 +165,7 @@ add_executable(soltest ${sources}
     ${libyul_sources}
     ${libsolidity_sources}
     ${libsolidity_util_sources}
+    ${yul_phaser_sources}
 )
 target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm solutil Boost::boost Boost::program_options Boost::unit_test_framework evmc)
 

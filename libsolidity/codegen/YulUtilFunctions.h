@@ -24,6 +24,8 @@
 
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 
+#include <libsolidity/interface/DebugSettings.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -44,9 +46,11 @@ class YulUtilFunctions
 public:
 	explicit YulUtilFunctions(
 		langutil::EVMVersion _evmVersion,
+		RevertStrings _revertStrings,
 		std::shared_ptr<MultiUseYulFunctionCollector> _functionCollector
 	):
 		m_evmVersion(_evmVersion),
+		m_revertStrings(_revertStrings),
 		m_functionCollector(std::move(_functionCollector))
 	{}
 
@@ -168,8 +172,13 @@ public:
 
 	/// @returns the name of a function that returns the calldata address for the
 	/// given array base ref and index.
-	/// signature: (baseRef, index) -> address
+	/// signature: (baseRef, index) -> offset[, length]
 	std::string calldataArrayIndexAccessFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that follows a calldata tail while performing
+	/// bounds checks.
+	/// signature: (baseRef, tailPointer) -> offset[, length]
+	std::string accessCalldataTailFunction(Type const& _type);
 
 	/// @returns the name of a function that advances an array data pointer to the next element.
 	/// Only works for memory arrays, calldata arrays and storage arrays that every item occupies one or multiple full slots.
@@ -281,6 +290,13 @@ public:
 	/// zero
 	/// signature: (slot, offset) ->
 	std::string storageSetToZeroFunction(Type const& _type);
+
+	/// If revertStrings is debug, @returns inline assembly code that
+	/// stores @param _message in memory position 0 and reverts.
+	/// Otherwise returns "revert(0, 0)".
+	static std::string revertReasonIfDebug(RevertStrings revertStrings, std::string const& _message = "");
+
+	std::string revertReasonIfDebug(std::string const& _message = "");
 private:
 	/// Special case of conversionFunction - handles everything that does not
 	/// use exactly one variable to hold the value.
@@ -289,6 +305,7 @@ private:
 	std::string readFromMemoryOrCalldata(Type const& _type, bool _fromCalldata);
 
 	langutil::EVMVersion m_evmVersion;
+	RevertStrings m_revertStrings;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;
 };
 

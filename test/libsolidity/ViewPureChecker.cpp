@@ -20,7 +20,7 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"this",
 		"address(1).balance",
 	};
-	if (solidity::test::Options::get().evmVersion().hasStaticCall())
+	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 		view.emplace_back("address(0x4242).staticcall(\"\")");
 
 	// ``block.blockhash`` and ``blockhash`` are tested separately below because their usage will
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(address_staticcall)
 			}
 		}
 	)";
-	if (!solidity::test::Options::get().evmVersion().hasStaticCall())
+	if (!solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 		CHECK_ERROR(text, TypeError, "\"staticcall\" is not supported by the VM version.");
 	else
 		CHECK_SUCCESS_NO_WARNINGS(text);
@@ -121,9 +121,7 @@ BOOST_AUTO_TEST_CASE(assembly_staticcall)
 			}
 		}
 	)";
-	if (!solidity::test::Options::get().evmVersion().hasStaticCall())
-		CHECK_ERROR(text, TypeError, "\"staticcall\" instruction is only available for Byzantium-compatible");
-	else
+	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 		CHECK_SUCCESS_NO_WARNINGS(text);
 }
 

@@ -133,9 +133,9 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 
 	bool visit(VariableDeclaration const& _variable) override
 	{
-		solAssert(!m_currentConstVariable, "");
 		if (_variable.isConstant())
 		{
+			solAssert(!m_currentConstVariable, "");
 			m_currentConstVariable = &_variable;
 			m_constVariables.push_back(&_variable);
 		}

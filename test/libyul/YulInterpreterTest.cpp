@@ -19,7 +19,7 @@
 
 #include <test/tools/yulInterpreter/Interpreter.h>
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AsmParser.h>
@@ -99,7 +99,7 @@ void YulInterpreterTest::printIndented(ostream& _stream, string const& _output, 
 bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	AssemblyStack stack(
-		solidity::test::Options::get().evmVersion(),
+		solidity::test::CommonOptions::get().evmVersion(),
 		AssemblyStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none()
 	);

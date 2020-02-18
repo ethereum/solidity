@@ -750,7 +750,7 @@ Allowed options)",
 		(
 			g_argStandardJSON.c_str(),
 			"Switch to Standard JSON input / output mode, ignoring all options. "
-			"It reads from standard input and provides the result on the standard output."
+			"It reads from standard input, if no input file was given, otherwise it reads from the provided input file. The result will be written to standard output."
 		)
 		(
 			g_argImportAst.c_str(),
@@ -875,9 +875,9 @@ Allowed options)",
 			serr() << "Invalid option for --" << g_strRevertStrings << ": " << revertStringsString << endl;
 			return false;
 		}
-		if (*revertStrings != RevertStrings::Default && *revertStrings != RevertStrings::Strip)
+		if (*revertStrings == RevertStrings::VerboseDebug)
 		{
-			serr() << "Only \"default\" and \"strip\" are implemented for --" << g_strRevertStrings << " for now." << endl;
+			serr() << "Only \"default\", \"strip\" and \"debug\" are implemented for --" << g_strRevertStrings << " for now." << endl;
 			return false;
 		}
 		m_revertStrings = *revertStrings;
@@ -965,7 +965,22 @@ bool CommandLineInterface::processInput()
 
 	if (m_args.count(g_argStandardJSON))
 	{
-		string input = readStandardInput();
+		vector<string> inputFiles;
+		string jsonFile;
+		if (m_args.count(g_argInputFile))
+			inputFiles = m_args[g_argInputFile].as<vector<string>>();
+		if (inputFiles.size() == 1)
+			jsonFile = inputFiles[0];
+		else if (inputFiles.size() > 1)
+		{
+			serr() << "If --" << g_argStandardJSON << " is used, only zero or one input files are supported." << endl;
+			return false;
+		}
+		string input;
+		if (jsonFile.empty())
+			input = readStandardInput();
+		else
+			input = readFileAsString(jsonFile);
 		StandardCompiler compiler(fileReader);
 		sout() << compiler.compile(std::move(input)) << endl;
 		return true;
@@ -1243,7 +1258,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strOpcodes) && m_compiler->compilationSuccessful())
 			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count(g_strAsm) && m_compiler->compilationSuccessful())
-			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName, m_sourceCodes);
+			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
 		if (requests.count(g_strSrcMap) && m_compiler->compilationSuccessful())
 		{
 			auto map = m_compiler->sourceMapping(contractName);
@@ -1597,7 +1612,7 @@ void CommandLineInterface::outputCompilationResults()
 		{
 			string ret;
 			if (m_args.count(g_argAsmJson))
-				ret = jsonPrettyPrint(m_compiler->assemblyJSON(contract, m_sourceCodes));
+				ret = jsonPrettyPrint(m_compiler->assemblyJSON(contract));
 			else
 				ret = m_compiler->assemblyString(contract, m_sourceCodes);
 

@@ -27,8 +27,8 @@ def extractSourceName(line):
 # writes the following source into a file named sourceName
 def writeSourceToFile(lines):
     filePath, srcName = extractSourceName(lines[0])
-    # print "sourceName is", srcName
-    # print "filePath is", filePath
+    # print("sourceName is ", srcName)
+    # print("filePath is", filePath)
     if filePath != False:
         os.system("mkdir -p " + filePath)
     f = open(srcName, mode='a+', encoding='utf8')
@@ -48,7 +48,7 @@ def writeSourceToFile(lines):
 if __name__ == '__main__':
     filePath = sys.argv[1]
     # decide if file has multiple sources
-    lines = open(filePath, mode='rb', encoding='utf8').read().splitlines()
+    lines = open(filePath, mode='r', encoding='utf8').read().splitlines()
     if lines[0][:12] == "==== Source:":
         hasMultipleSources = True
         writeSourceToFile(lines)

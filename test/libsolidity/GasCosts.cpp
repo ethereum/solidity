@@ -93,14 +93,14 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	m_compiler.overwriteReleaseFlag(true);
 	compileAndRun(sourceCode);
 
-	auto evmVersion = solidity::test::Options::get().evmVersion();
+	auto evmVersion = solidity::test::CommonOptions::get().evmVersion();
 
 	if (evmVersion <= EVMVersion::byzantium())
 		CHECK_DEPLOY_GAS(134209, 130895, evmVersion);
 	// This is only correct on >=Constantinople.
-	else if (Options::get().useABIEncoderV2)
+	else if (CommonOptions::get().useABIEncoderV2)
 	{
-		if (Options::get().optimizeYul)
+		if (CommonOptions::get().optimizeYul)
 		{
 			// Costs with 0 are cases which cannot be triggered in tests.
 			if (evmVersion < EVMVersion::istanbul())
@@ -127,9 +127,9 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		if (evmVersion == EVMVersion::byzantium())
 			CHECK_GAS(21545, 21526, 20);
 		// This is only correct on >=Constantinople.
-		else if (Options::get().useABIEncoderV2)
+		else if (CommonOptions::get().useABIEncoderV2)
 		{
-			if (Options::get().optimizeYul)
+			if (CommonOptions::get().optimizeYul)
 			{
 				if (evmVersion < EVMVersion::istanbul())
 					CHECK_GAS(0, 21567, 20);

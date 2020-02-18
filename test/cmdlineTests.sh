@@ -155,6 +155,7 @@ function test_solc_behaviour()
         rm "$stdout_path.bak"
     else
         sed -i.bak -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
+        sed -i.bak -e 's/\(^[ ]*auxdata: \)0x[0-9a-f]*$/\1AUXDATA REMOVED/' "$stdout_path"
         sed -i.bak -e 's/ Consider adding "pragma .*$//' "$stderr_path"
         # Remove trailing empty lines. Needs a line break to make OSX sed happy.
         sed -i.bak -e '1{/^$/d
@@ -395,7 +396,9 @@ printTask "Testing assemble, yul, strict-assembly and optimize..."
     # Test yul and strict assembly output
     # Non-empty code results in non-empty binary representation with optimizations turned off,
     # while it results in empty binary representation with optimizations turned on.
-    test_solc_assembly_output "{ let x:u256 := 0:u256 }" "{ let x:u256 := 0:u256 }" "--yul"
+    test_solc_assembly_output "{ let x:u256 := 0:u256 }" "{ let x := 0 }" "--yul"
+    test_solc_assembly_output "{ let x:u256 := bitnot(7:u256) }" "{ let x := bitnot(7) }" "--yul"
+    test_solc_assembly_output "{ let t:bool := not(true) }" "{ let t:bool := not(true) }" "--yul"
     test_solc_assembly_output "{ let x := 0 }" "{ let x := 0 }" "--strict-assembly"
     test_solc_assembly_output "{ let x := 0 }" "{ { } }" "--strict-assembly --optimize"
 )

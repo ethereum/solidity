@@ -1,0 +1,87 @@
+
+======= optimizer_user_yul/input.sol:C =======
+EVM assembly:
+    /* "optimizer_user_yul/input.sol":24:489  contract C... */
+  mstore(0x40, 0x80)
+    /* "optimizer_user_yul/input.sol":72:77  int a */
+  0x00
+    /* "optimizer_user_yul/input.sol":38:487  constructor() public payable... */
+  dup1
+  0x00
+  dup1
+    /* "optimizer_user_yul/input.sol":176:177  1 */
+  0x01
+    /* "optimizer_user_yul/input.sol":173:174  0 */
+  0x00
+    /* "optimizer_user_yul/input.sol":166:178  sstore(0, 1) */
+  sstore
+    /* "optimizer_user_yul/input.sol":183:229  for { } sload(4) { } {... */
+tag_3:
+    /* "optimizer_user_yul/input.sol":197:198  4 */
+  0x04
+    /* "optimizer_user_yul/input.sol":191:199  sload(4) */
+  sload
+    /* "optimizer_user_yul/input.sol":183:229  for { } sload(4) { } {... */
+  iszero
+  tag_5
+  jumpi
+  pop
+    /* "optimizer_user_yul/input.sol":215:224  exp(x, y) */
+  dup1
+  dup3
+  exp
+    /* "optimizer_user_yul/input.sol":183:229  for { } sload(4) { } {... */
+  jump(tag_3)
+tag_5:
+    /* "optimizer_user_yul/input.sol":187:190  { } */
+  pop
+  pop
+  pop
+    /* "optimizer_user_yul/input.sol":239:240  2 */
+  0x02
+    /* "optimizer_user_yul/input.sol":234:240  a := 2 */
+  swap1
+  pop
+    /* "optimizer_user_yul/input.sol":340:341  3 */
+  0x03
+    /* "optimizer_user_yul/input.sol":337:338  2 */
+  0x02
+    /* "optimizer_user_yul/input.sol":330:342  sstore(2, 3) */
+  sstore
+    /* "optimizer_user_yul/input.sol":347:480  for { } sload(5) { } {... */
+tag_6:
+    /* "optimizer_user_yul/input.sol":361:362  5 */
+  0x05
+    /* "optimizer_user_yul/input.sol":355:363  sload(5) */
+  sload
+  tag_9
+  jumpi
+  jump(tag_8)
+tag_9:
+    /* "optimizer_user_yul/input.sol":347:480  for { } sload(5) { } {... */
+  jump(tag_6)
+tag_8:
+    /* "optimizer_user_yul/input.sol":311:484  {... */
+  pop
+    /* "optimizer_user_yul/input.sol":24:489  contract C... */
+  dataSize(sub_0)
+  dup1
+  dataOffset(sub_0)
+  0x00
+  codecopy
+  0x00
+  return
+stop
+
+sub_0: assembly {
+        /* "optimizer_user_yul/input.sol":24:489  contract C... */
+      mstore(0x40, 0x80)
+        /* "--CODEGEN--":12:13   */
+      0x00
+        /* "--CODEGEN--":9:10   */
+      dup1
+        /* "--CODEGEN--":2:14   */
+      revert
+
+    auxdata: AUXDATA REMOVED
+}

@@ -67,7 +67,12 @@ public:
 	void operator()(ForLoop&) override;
 	void operator()(Block& _block) override;
 
-	static void run(Dialect const& _inputDialect, Block& _ast, NameDispenser& _nameDispenser);
+	static void run(
+		Dialect const& _inputDialect,
+		YulString _targetDefaultType,
+		Block& _ast,
+		NameDispenser& _nameDispenser
+	);
 
 private:
 	explicit WordSizeTransform(

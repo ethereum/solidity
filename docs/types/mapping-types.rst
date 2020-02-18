@@ -7,9 +7,8 @@ Mapping Types
 Mapping types use the syntax ``mapping(_KeyType => _ValueType)`` and variables
 of mapping type are declared using the syntax ``mapping(_KeyType => _ValueType) _VariableName``.
 The ``_KeyType`` can be any
-built-in value type plus ``bytes`` and ``string``. User-defined
-or complex types such as contract types, enums, mappings, structs or array types
-apart from ``bytes`` and ``string`` are not allowed.
+built-in value type, ``bytes``, ``string``, or any contract or enum type. Other user-defined
+or complex types, such as mappings, structs or array types are not allowed.
 ``_ValueType`` can be any type, including mappings, arrays and structs.
 
 You can think of mappings as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_, which are virtually initialised

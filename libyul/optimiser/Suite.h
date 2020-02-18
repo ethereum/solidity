@@ -62,6 +62,8 @@ public:
 	void runSequence(std::vector<std::string> const& _steps, Block& _ast);
 
 	static std::map<std::string, std::unique_ptr<OptimiserStep>> const& allSteps();
+	static std::map<std::string, char> const& stepNameToAbbreviationMap();
+	static std::map<char, std::string> const& stepAbbreviationToNameMap();
 
 private:
 	OptimiserSuite(

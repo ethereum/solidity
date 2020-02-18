@@ -62,6 +62,11 @@ defaults:
       path: build/solc/solc
       destination: solc
 
+  # compiled tool executable target
+  - artifacts_tools: &artifacts_tools
+      path: build/tools/solidity-upgrade
+      destination: solidity-upgrade
+
   # compiled executable targets
   - artifacts_executables: &artifacts_executables
       root: build
@@ -257,6 +262,22 @@ jobs:
           name: Check for C++ coding style
           command: ./scripts/check_style.sh
 
+  chk_pylint:
+    docker:
+      - image: buildpack-deps:eoan
+    steps:
+      - checkout
+      - run:
+          name: Install pip
+          command: apt -q update && apt install -y python3-pip
+      - run:
+          name: Install pylint
+          command: python3 -m pip install pylint z3-solver pygments-lexer-solidity
+          # also z3-solver to make sure pylint knows about this module, pygments-lexer-solidity for docs
+      - run:
+          name: Linting Python Scripts
+          command: ./scripts/pylint_all.py
+
   chk_buglist:
     docker:
       - image: circleci/node
@@ -308,6 +329,7 @@ jobs:
       - checkout
       - run: *run_build
       - store_artifacts: *artifacts_solc
+      - store_artifacts: *artifacts_tools
       - persist_to_workspace: *artifacts_executables
 
   b_ubu_release: &build_ubuntu1904_release
@@ -391,8 +413,8 @@ jobs:
       - run:
           name: Regression tests
           command: |
+            git clone https://github.com/ethereum/solidity-fuzzing-corpus /tmp/solidity-fuzzing-corpus
             mkdir -p test_results
-            export ASAN_OPTIONS="check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2"
             scripts/regressions.py -o test_results
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
@@ -439,6 +461,7 @@ jobs:
             - /usr/local/Homebrew
       - run: *run_build
       - store_artifacts: *artifacts_solc
+      - store_artifacts: *artifacts_tools
       - persist_to_workspace: *artifacts_build_dir
 
   t_osx_soltest:
@@ -718,6 +741,7 @@ workflows:
       # DISABLED FOR 0.6.0 - chk_docs_examples: *workflow_trigger_on_tags
       - chk_buglist: *workflow_trigger_on_tags
       - chk_proofs: *workflow_trigger_on_tags
+      - chk_pylint: *workflow_trigger_on_tags
 
       # build-only
       - b_docs: *workflow_trigger_on_tags

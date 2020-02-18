@@ -31,6 +31,8 @@
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/Whiskers.h>
 
+#include <liblangutil/EVMVersion.h>
+
 namespace solidity::yul::test::yul_fuzzer
 {
 class ProtoConverter
@@ -55,6 +57,12 @@ public:
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
 	std::string programToString(Program const& _input);
+
+	/// Returns evm version
+	solidity::langutil::EVMVersion version()
+	{
+		return m_evmVersion;
+	}
 
 private:
 	void visit(BinaryOp const&);
@@ -270,6 +278,10 @@ private:
 	/// dictionarySize is the total number of entries in the dictionary.
 	std::string dictionaryToken(util::HexPrefix _p = util::HexPrefix::Add);
 
+	/// Returns an EVMVersion object corresponding to the protobuf
+	/// enum of type Program_Version
+	solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
+
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
 	{
@@ -286,7 +298,7 @@ private:
 
 	/// Returns a pseudo-randomly chosen object identifier that is in the
 	/// scope of the Yul object being visited.
-	std::string getObjectIdentifier(ObjectId const& _x);
+	std::string getObjectIdentifier(unsigned _x);
 
 	/// Return new object identifier as string. Identifier string
 	/// is a template of the form "\"object<n>\"" where <n> is
@@ -367,5 +379,7 @@ private:
 	/// Flag to track whether scope extension of variables defined in for-init
 	/// block is enabled.
 	bool m_forInitScopeExtEnabled;
+	/// Object that holds the targeted evm version specified by protobuf input
+	solidity::langutil::EVMVersion m_evmVersion;
 };
 }

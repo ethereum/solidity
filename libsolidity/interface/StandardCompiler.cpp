@@ -661,10 +661,10 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 			std::optional<RevertStrings> revertStrings = revertStringsFromString(settings["debug"]["revertStrings"].asString());
 			if (!revertStrings)
 				return formatFatalError("JSONError", "Invalid value for settings.debug.revertStrings.");
-			if (*revertStrings != RevertStrings::Default && *revertStrings != RevertStrings::Strip)
+			if (*revertStrings == RevertStrings::VerboseDebug)
 				return formatFatalError(
 					"UnimplementedFeatureError",
-					"Only \"default\" and \"strip\" are implemented for settings.debug.revertStrings for now."
+					"Only \"default\", \"strip\" and \"debug\" are implemented for settings.debug.revertStrings for now."
 				);
 			ret.revertStrings = *revertStrings;
 		}
@@ -967,7 +967,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.assembly", wildcardMatchesExperimental))
 			evmData["assembly"] = compilerStack.assemblyString(contractName, sourceList);
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.legacyAssembly", wildcardMatchesExperimental))
-			evmData["legacyAssembly"] = compilerStack.assemblyJSON(contractName, sourceList);
+			evmData["legacyAssembly"] = compilerStack.assemblyJSON(contractName);
 		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.methodIdentifiers", wildcardMatchesExperimental))
 			evmData["methodIdentifiers"] = compilerStack.methodIdentifiers(contractName);
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.gasEstimates", wildcardMatchesExperimental))

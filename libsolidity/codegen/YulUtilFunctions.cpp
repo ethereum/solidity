@@ -134,7 +134,7 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 				FixedHash<hashHeaderSize>(keccak256("Error(string)"))
 			)) << (256 - hashHeaderSize * byteSize);
 
-		string const encodeFunc = ABIFunctions(m_evmVersion, m_functionCollector)
+		string const encodeFunc = ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector)
 			.tupleEncoder(
 				{_messageType},
 				{TypeProvider::stringMemory()}
@@ -908,6 +908,58 @@ string YulUtilFunctions::memoryArrayIndexAccessFunction(ArrayType const& _type)
 	});
 }
 
+string YulUtilFunctions::calldataArrayIndexAccessFunction(ArrayType const& _type)
+{
+	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
+	string functionName = "calldata_array_index_access_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(base_ref<?dynamicallySized>, length</dynamicallySized>, index) -> addr<?dynamicallySizedBase>, len</dynamicallySizedBase> {
+				if iszero(lt(index, <?dynamicallySized>length<!dynamicallySized><arrayLen></dynamicallySized>)) { invalid() }
+				addr := add(base_ref, mul(index, <stride>))
+				<?dynamicallyEncodedBase>
+					addr<?dynamicallySizedBase>, len</dynamicallySizedBase> := <accessCalldataTail>(base_ref, addr)
+				</dynamicallyEncodedBase>
+			}
+		)")
+		("functionName", functionName)
+		("stride", to_string(_type.calldataStride()))
+		("dynamicallySized", _type.isDynamicallySized())
+		("dynamicallyEncodedBase", _type.baseType()->isDynamicallyEncoded())
+		("dynamicallySizedBase", _type.baseType()->isDynamicallySized())
+		("arrayLen",  toCompactHexWithPrefix(_type.length()))
+		("accessCalldataTail", _type.baseType()->isDynamicallyEncoded() ? accessCalldataTailFunction(*_type.baseType()): "")
+		.render();
+	});
+}
+
+string YulUtilFunctions::accessCalldataTailFunction(Type const& _type)
+{
+	solAssert(_type.isDynamicallyEncoded(), "");
+	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
+	string functionName = "access_calldata_tail_" + _type.identifier();
+	return m_functionCollector->createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(base_ref, ptr_to_tail) -> addr<?dynamicallySized>, length</dynamicallySized> {
+				let rel_offset_of_tail := calldataload(ptr_to_tail)
+				if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { revert(0, 0) }
+				addr := add(base_ref, rel_offset_of_tail)
+				<?dynamicallySized>
+					length := calldataload(addr)
+					if gt(length, 0xffffffffffffffff) { revert(0, 0) }
+					if sgt(base_ref, sub(calldatasize(), mul(length, <calldataStride>))) { revert(0, 0) }
+					addr := add(addr, 32)
+				</dynamicallySized>
+			}
+		)")
+		("functionName", functionName)
+		("dynamicallySized", _type.isDynamicallySized())
+		("neededLength", toCompactHexWithPrefix(_type.calldataEncodedTailSize()))
+		("calldataStride", toCompactHexWithPrefix(_type.isDynamicallySized() ? dynamic_cast<ArrayType const&>(_type).calldataStride() : 0))
+		.render();
+	});
+}
+
 string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 {
 	solAssert(!_type.isByteArray(), "");
@@ -1627,7 +1679,7 @@ string YulUtilFunctions::packedHashFunction(
 		templ("variables", suffixedVariableNameList("var_", 1, 1 + sizeOnStack));
 		templ("comma", sizeOnStack > 0 ? "," : "");
 		templ("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer));
-		templ("packedEncode", ABIFunctions(m_evmVersion, m_functionCollector).tupleEncoderPacked(_givenTypes, _targetTypes));
+		templ("packedEncode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleEncoderPacked(_givenTypes, _targetTypes));
 		return templ.render();
 	});
 }
@@ -1791,6 +1843,44 @@ string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const
 		"_to_" +
 		_to.identifier();
 	return m_functionCollector->createFunction(functionName, [&]() {
+		if (
+			auto fromTuple = dynamic_cast<TupleType const*>(&_from), toTuple = dynamic_cast<TupleType const*>(&_to);
+			fromTuple && toTuple && fromTuple->components().size() == toTuple->components().size()
+		)
+		{
+			size_t sourceStackSize = 0;
+			size_t destStackSize = 0;
+			std::string conversions;
+			for (size_t i = 0; i < fromTuple->components().size(); ++i)
+			{
+				auto fromComponent = fromTuple->components()[i];
+				auto toComponent = toTuple->components()[i];
+				solAssert(fromComponent, "");
+				if (toComponent)
+				{
+					conversions +=
+						suffixedVariableNameList("converted", destStackSize, destStackSize + toComponent->sizeOnStack()) +
+						" := " +
+						conversionFunction(*fromComponent, *toComponent) +
+						"(" +
+						suffixedVariableNameList("value", sourceStackSize, sourceStackSize + fromComponent->sizeOnStack()) +
+						")\n";
+					destStackSize += toComponent->sizeOnStack();
+				}
+				sourceStackSize += fromComponent->sizeOnStack();
+			}
+			return Whiskers(R"(
+				function <functionName>(<values>) -> <converted> {
+					<conversions>
+				}
+			)")
+			("functionName", functionName)
+			("values", suffixedVariableNameList("value", 0, sourceStackSize))
+			("converted", suffixedVariableNameList("converted", 0, destStackSize))
+			("conversions", conversions)
+			.render();
+		}
+
 		solUnimplementedAssert(
 			_from.category() == Type::Category::StringLiteral,
 			"Type conversion " + _from.toString() + " -> " + _to.toString() + " not yet implemented."
@@ -1894,7 +1984,7 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 			function <functionName>(memPtr) -> value {
 				value := <load>(memPtr)
 				<?needsValidation>
-					value := <validate>(value)
+					<validate>(value)
 				</needsValidation>
 			}
 		)")
@@ -1904,4 +1994,42 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 		("validate", _fromCalldata ? validatorFunction(_type) : "")
 		.render();
 	});
+}
+
+string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string const& _message)
+{
+	if (revertStrings >= RevertStrings::Debug && !_message.empty())
+	{
+		Whiskers templ(R"({
+			mstore(0, <sig>)
+			mstore(4, 0x20)
+			mstore(add(4, 0x20), <length>)
+			let reasonPos := add(4, 0x40)
+			<#word>
+				mstore(add(reasonPos, <offset>), <wordValue>)
+			</word>
+			revert(0, add(reasonPos, <end>))
+		})");
+		templ("sig", (u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)")))) << (256 - 32)).str());
+		templ("length", to_string(_message.length()));
+
+		size_t words = (_message.length() + 31) / 32;
+		vector<map<string, string>> wordParams(words);
+		for (size_t i = 0; i < words; ++i)
+		{
+			wordParams[i]["offset"] = to_string(i * 32);
+			wordParams[i]["wordValue"] = formatAsStringOrNumber(_message.substr(32 * i, 32));
+		}
+		templ("word", wordParams);
+		templ("end", to_string(words * 32));
+
+		return templ.render();
+	}
+	else
+		return "revert(0, 0)";
+}
+
+string YulUtilFunctions::revertReasonIfDebug(string const& _message)
+{
+	return revertReasonIfDebug(m_revertStrings, _message);
 }

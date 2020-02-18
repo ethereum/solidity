@@ -217,7 +217,7 @@ protected:
 	/// Resets the variable indices.
 	void resetVariableIndices(VariableIndices const& _indices);
 	/// Used when starting a new block.
-	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr);
+	virtual void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr);
 
 
 	/// @returns variables that are touched in _node's subtree.
@@ -230,8 +230,20 @@ protected:
 	/// and set them as the components of the symbolic tuple.
 	void createReturnedExpressions(FunctionCall const& _funCall);
 
+	/// @returns the symbolic arguments for a function call,
+	/// taking into account bound functions and
+	/// type conversion.
+	std::vector<smt::Expression> symbolicArguments(FunctionCall const& _funCall);
+
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
+
+	struct VerificationTarget
+	{
+		enum class Type { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert } type;
+		smt::Expression value;
+		smt::Expression constraints;
+	};
 
 	smt::VariableUsage m_variableUsage;
 	bool m_arrayAssignmentHappened = false;

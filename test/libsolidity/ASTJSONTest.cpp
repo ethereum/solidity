@@ -17,7 +17,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <test/libsolidity/ASTJSONTest.h>
-#include <test/Options.h>
+#include <test/Common.h>
 #include <libsolutil/AnsiColorized.h>
 #include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
@@ -25,6 +25,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/test/unit_test.hpp>
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -46,7 +47,7 @@ void replaceVersionWithTag(string& _input)
 {
 	boost::algorithm::replace_all(
 		_input,
-		"\"" + solidity::test::Options::get().evmVersion().name() + "\"",
+		"\"" + solidity::test::CommonOptions::get().evmVersion().name() + "\"",
 		"%EVMVERSION%"
 	);
 }
@@ -56,7 +57,7 @@ void replaceTagWithVersion(string& _input)
 	boost::algorithm::replace_all(
 		_input,
 		"%EVMVERSION%",
-		"\"" + solidity::test::Options::get().evmVersion().name() + "\""
+		"\"" + solidity::test::CommonOptions::get().evmVersion().name() + "\""
 	);
 }
 
@@ -128,7 +129,7 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 		sourceIndices[m_sources[i].first] = i + 1;
 	}
 	c.setSources(sources);
-	c.setEVMVersion(solidity::test::Options::get().evmVersion());
+	c.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	if (c.parse())
 		c.analyze();
 	else

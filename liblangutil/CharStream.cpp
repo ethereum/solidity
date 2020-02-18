@@ -93,10 +93,13 @@ string CharStream::lineAtPosition(int _position) const
 		lineStart = 0;
 	else
 		lineStart++;
-	return m_source.substr(
+	string line = m_source.substr(
 		lineStart,
 		min(m_source.find('\n', lineStart), m_source.size()) - lineStart
 	);
+	if (!line.empty() && line.back() == '\r')
+		line.pop_back();
+	return line;
 }
 
 tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const

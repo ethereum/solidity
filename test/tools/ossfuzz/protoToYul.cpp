@@ -30,6 +30,7 @@
 using namespace std;
 using namespace solidity::yul::test::yul_fuzzer;
 using namespace solidity::yul::test;
+using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity;
 
@@ -86,6 +87,29 @@ string ProtoConverter::createAlphaNum(string const& _strBytes)
 	return tmp;
 }
 
+EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
+{
+	switch (_ver)
+	{
+	case Program::HOMESTEAD:
+		return EVMVersion::homestead();
+	case Program::TANGERINE:
+		return EVMVersion::tangerineWhistle();
+	case Program::SPURIOUS:
+		return EVMVersion::spuriousDragon();
+	case Program::BYZANTIUM:
+		return EVMVersion::byzantium();
+	case Program::CONSTANTINOPLE:
+		return EVMVersion::constantinople();
+	case Program::PETERSBURG:
+		return EVMVersion::petersburg();
+	case Program::ISTANBUL:
+		return EVMVersion::istanbul();
+	case Program::BERLIN:
+		return EVMVersion::berlin();
+	}
+}
+
 string ProtoConverter::visit(Literal const& _x)
 {
 	switch (_x.literal_oneof_case())
@@ -96,6 +120,8 @@ string ProtoConverter::visit(Literal const& _x)
 		return "0x" + createHex(_x.hexval());
 	case Literal::kStrval:
 		return "\"" + createAlphaNum(_x.strval()) + "\"";
+	case Literal::kBoolval:
+		return _x.boolval() ? "true" : "false";
 	case Literal::LITERAL_ONEOF_NOT_SET:
 		return dictionaryToken();
 	}
@@ -230,7 +256,16 @@ void ProtoConverter::visit(Expression const& _x)
 
 void ProtoConverter::visit(BinaryOp const& _x)
 {
-	switch (_x.op())
+	BinaryOp_BOp op = _x.op();
+
+	if ((op == BinaryOp::SHL || op == BinaryOp::SHR || op == BinaryOp::SAR) &&
+		!m_evmVersion.hasBitwiseShifting())
+	{
+		m_output << dictionaryToken();
+		return;
+	}
+
+	switch (op)
 	{
 	case BinaryOp::ADD:
 		m_output << "add";
@@ -266,12 +301,15 @@ void ProtoConverter::visit(BinaryOp const& _x)
 		m_output << "gt";
 		break;
 	case BinaryOp::SHR:
+		yulAssert(m_evmVersion.hasBitwiseShifting(), "Proto fuzzer: Invalid evm version");
 		m_output << "shr";
 		break;
 	case BinaryOp::SHL:
+		yulAssert(m_evmVersion.hasBitwiseShifting(), "Proto fuzzer: Invalid evm version");
 		m_output << "shl";
 		break;
 	case BinaryOp::SAR:
+		yulAssert(m_evmVersion.hasBitwiseShifting(), "Proto fuzzer: Invalid evm version");
 		m_output << "sar";
 		break;
 	case BinaryOp::SDIV:
@@ -475,7 +513,17 @@ void ProtoConverter::visit(TypedVarDecl const& _x)
 
 void ProtoConverter::visit(UnaryOp const& _x)
 {
-	switch (_x.op())
+	UnaryOp_UOp op = _x.op();
+
+	// Replace calls to extcodehash on unsupported EVMs with a dictionary
+	// token.
+	if (op == UnaryOp::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
+	{
+		m_output << dictionaryToken();
+		return;
+	}
+
+	switch (op)
 	{
 	case UnaryOp::NOT:
 		m_output << "not";
@@ -550,7 +598,12 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		m_output << "codesize()";
 		break;
 	case NullaryOp::RETURNDATASIZE:
-		m_output << "returndatasize()";
+		// If evm supports returndatasize, we generate it. Otherwise,
+		// we output a dictionary token.
+		if (m_evmVersion.supportsReturndata())
+			m_output << "returndatasize()";
+		else
+			m_output << dictionaryToken();
 		break;
 	case NullaryOp::ADDRESS:
 		m_output << "address()";
@@ -583,10 +636,20 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		m_output << "gaslimit()";
 		break;
 	case NullaryOp::SELFBALANCE:
-		m_output << "selfbalance()";
+		// Replace calls to selfbalance() on unsupported EVMs with a dictionary
+		// token.
+		if (m_evmVersion.hasSelfBalance())
+			m_output << "selfbalance()";
+		else
+			m_output << dictionaryToken();
 		break;
 	case NullaryOp::CHAINID:
-		m_output << "chainid()";
+		// Replace calls to chainid() on unsupported EVMs with a dictionary
+		// token.
+		if (m_evmVersion.hasChainID())
+			m_output << "chainid()";
+		else
+			m_output << dictionaryToken();
 		break;
 	}
 }
@@ -600,6 +663,11 @@ void ProtoConverter::visit(CopyFunc const& _x)
 	if (type == CopyFunc::DATA && !m_isObject)
 		return;
 
+	// We don't generate code if the copy function is returndatacopy
+	// and the underlying evm does not support it.
+	if (type == CopyFunc::RETURNDATA && !m_evmVersion.supportsReturndata())
+		return;
+
 	switch (type)
 	{
 	case CopyFunc::CALLDATA:
@@ -609,6 +677,7 @@ void ProtoConverter::visit(CopyFunc const& _x)
 		m_output << "codecopy";
 		break;
 	case CopyFunc::RETURNDATA:
+		yulAssert(m_evmVersion.supportsReturndata(), "Proto fuzzer: Invalid evm version");
 		m_output << "returndatacopy";
 		break;
 	case CopyFunc::DATA:
@@ -890,6 +959,16 @@ void ProtoConverter::visit(FunctionCall const& _x)
 void ProtoConverter::visit(LowLevelCall const& _x)
 {
 	LowLevelCall_Type type = _x.callty();
+
+	// Generate staticcall if it is supported by the underlying evm
+	if (type == LowLevelCall::STATICCALL && !m_evmVersion.hasStaticCall())
+	{
+		// Since staticcall is supposed to return 0 on success and 1 on
+		// failure, we can use counter value to emulate it
+		m_output << ((counter() % 2) ? "0" : "1");
+		return;
+	}
+
 	switch (type)
 	{
 	case LowLevelCall::CALL:
@@ -902,6 +981,7 @@ void ProtoConverter::visit(LowLevelCall const& _x)
 		m_output << "delegatecall(";
 		break;
 	case LowLevelCall::STATICCALL:
+		yulAssert(m_evmVersion.hasStaticCall(), "Proto fuzzer: Invalid evm version");
 		m_output << "staticcall(";
 		break;
 	}
@@ -927,6 +1007,15 @@ void ProtoConverter::visit(LowLevelCall const& _x)
 void ProtoConverter::visit(Create const& _x)
 {
 	Create_Type type = _x.createty();
+
+	// Replace a call to create2 on unsupported EVMs with a dictionary
+	// token.
+	if (type == Create::CREATE2 && !m_evmVersion.hasCreate2())
+	{
+		m_output << dictionaryToken();
+		return;
+	}
+
 	switch (type)
 	{
 	case Create::CREATE:
@@ -1083,6 +1172,8 @@ void ProtoConverter::visit(CaseStmt const& _x)
 		if (noDoubleQuoteStr.empty())
 			yulAssert(literalVal == 0, "Proto fuzzer: Empty string does not evaluate to zero");
 	}
+	else if (_x.case_lit().has_boolval())
+		literalVal = _x.case_lit().boolval() ? u256(1) : u256(0);
 	else
 		literalVal = u256(literal);
 
@@ -1653,7 +1744,8 @@ void ProtoConverter::createFunctionDefAndCall(
 		!m_inForInitScope,
 		"Proto fuzzer: Trying to create function call inside for-init block"
 	);
-	createFunctionCall(funcName, _numInParams, _numOutParams);
+	if (_x.force_call())
+		createFunctionCall(funcName, _numInParams, _numOutParams);
 }
 
 void ProtoConverter::visit(FunctionDef const& _x)
@@ -1675,12 +1767,12 @@ void ProtoConverter::visit(LeaveStmt const&)
 	m_output << "leave\n";
 }
 
-string ProtoConverter::getObjectIdentifier(ObjectId const& _x)
+string ProtoConverter::getObjectIdentifier(unsigned _x)
 {
 	unsigned currentId = currentObjectId();
 	yulAssert(m_objectScopeTree.size() > currentId, "Proto fuzzer: Error referencing object");
 	std::vector<std::string> objectIdsInScope = m_objectScopeTree[currentId];
-	return objectIdsInScope[_x.id() % objectIdsInScope.size()];
+	return objectIdsInScope[_x % objectIdsInScope.size()];
 }
 
 void ProtoConverter::visit(Code const& _x)
@@ -1736,6 +1828,9 @@ void ProtoConverter::visit(Program const& _x)
 {
 	// Initialize input size
 	m_inputSize = _x.ByteSizeLong();
+
+	// Record EVM Version
+	m_evmVersion = evmVersionMapping(_x.ver());
 
 	// Program is either a yul object or a block of
 	// statements.

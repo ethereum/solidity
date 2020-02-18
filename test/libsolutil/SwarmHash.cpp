@@ -20,9 +20,11 @@
 
 #include <libsolutil/SwarmHash.h>
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libsolutil/Keccak256.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 

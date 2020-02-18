@@ -39,19 +39,19 @@ using namespace solidity::util;
 using namespace solidity::test;
 
 ExecutionFramework::ExecutionFramework():
-	ExecutionFramework(solidity::test::Options::get().evmVersion())
+	ExecutionFramework(solidity::test::CommonOptions::get().evmVersion())
 {
 }
 
 ExecutionFramework::ExecutionFramework(langutil::EVMVersion _evmVersion):
 	m_evmVersion(_evmVersion),
 	m_optimiserSettings(solidity::frontend::OptimiserSettings::minimal()),
-	m_showMessages(solidity::test::Options::get().showMessages),
+	m_showMessages(solidity::test::CommonOptions::get().showMessages),
 	m_evmHost(make_shared<EVMHost>(m_evmVersion))
 {
-	if (solidity::test::Options::get().optimizeYul)
+	if (solidity::test::CommonOptions::get().optimizeYul)
 		m_optimiserSettings = solidity::frontend::OptimiserSettings::full();
-	else if (solidity::test::Options::get().optimize)
+	else if (solidity::test::CommonOptions::get().optimize)
 		m_optimiserSettings = solidity::frontend::OptimiserSettings::standard();
 	m_evmHost->reset();
 

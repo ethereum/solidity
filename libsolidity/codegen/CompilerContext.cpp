@@ -37,6 +37,8 @@
 #include <libyul/Object.h>
 #include <libyul/YulString.h>
 
+#include <libsolutil/Whiskers.h>
+
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -55,6 +57,7 @@
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::util;
 using namespace solidity::evmasm;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
@@ -296,12 +299,13 @@ CompilerContext& CompilerContext::appendConditionalInvalid()
 	return *this;
 }
 
-CompilerContext& CompilerContext::appendRevert()
+CompilerContext& CompilerContext::appendRevert(string const& _message)
 {
-	return *this << u256(0) << u256(0) << Instruction::REVERT;
+	appendInlineAssembly("{ " + revertReasonIfDebug(_message) + " }");
+	return *this;
 }
 
-CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnData)
+CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnData, string const& _message)
 {
 	if (_forwardReturnData && m_evmVersion.supportsReturndata())
 		appendInlineAssembly(R"({
@@ -311,9 +315,7 @@ CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnDat
 			}
 		})", {"condition"});
 	else
-		appendInlineAssembly(R"({
-			if condition { revert(0, 0) }
-		})", {"condition"});
+		appendInlineAssembly("{ if condition { " + revertReasonIfDebug(_message) + " } }", {"condition"});
 	*this << Instruction::POP;
 	return *this;
 }
@@ -385,9 +387,9 @@ void CompilerContext::appendInlineAssembly(
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(_assembly, "--CODEGEN--"));
 	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
-	auto parserResult = yul::Parser(errorReporter, dialect).parse(scanner, false);
+	shared_ptr<yul::Block> parserResult = yul::Parser(errorReporter, dialect).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
-	cout << yul::AsmPrinter()(*parserResult) << endl;
+	cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
 #endif
 
 	auto reportError = [&](string const& _context)
@@ -421,24 +423,18 @@ void CompilerContext::appendInlineAssembly(
 	// so we essentially only optimize the ABI functions.
 	if (_optimiserSettings.runYulOptimiser && _localVariables.empty())
 	{
-		bool const isCreation = m_runtimeContext != nullptr;
-		yul::GasMeter meter(dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
 		yul::Object obj;
 		obj.code = parserResult;
 		obj.analysisInfo = make_shared<yul::AsmAnalysisInfo>(analysisInfo);
-		yul::OptimiserSuite::run(
-			dialect,
-			&meter,
-			obj,
-			_optimiserSettings.optimizeStackAllocation,
-			externallyUsedIdentifiers
-		);
+
+		optimizeYul(obj, dialect, _optimiserSettings, externallyUsedIdentifiers);
+
 		analysisInfo = std::move(*obj.analysisInfo);
 		parserResult = std::move(obj.code);
 
 #ifdef SOL_OUTPUT_ASM
 		cout << "After optimizer:" << endl;
-		cout << yul::AsmPrinter()(*parserResult) << endl;
+		cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
 #endif
 	}
 
@@ -458,6 +454,29 @@ void CompilerContext::appendInlineAssembly(
 
 	// Reset the source location to the one of the node (instead of the CODEGEN source location)
 	updateSourceLocation();
+}
+
+
+void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSettings, std::set<yul::YulString> const& _externalIdentifiers)
+{
+#ifdef SOL_OUTPUT_ASM
+	cout << yul::AsmPrinter(*dialect)(*_object.code) << endl;
+#endif
+
+	bool const isCreation = runtimeContext() != nullptr;
+	yul::GasMeter meter(_dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
+	yul::OptimiserSuite::run(
+		_dialect,
+		&meter,
+		_object,
+		_optimiserSettings.optimizeStackAllocation,
+		_externalIdentifiers
+	);
+
+#ifdef SOL_OUTPUT_ASM
+	cout << "After optimizer:" << endl;
+	cout << yul::AsmPrinter(*dialect)(*object.code) << endl;
+#endif
 }
 
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(
@@ -486,6 +505,11 @@ vector<ContractDefinition const*>::const_iterator CompilerContext::superContract
 	auto it = find(m_inheritanceHierarchy.begin(), m_inheritanceHierarchy.end(), &_contract);
 	solAssert(it != m_inheritanceHierarchy.end(), "Base not found in inheritance hierarchy.");
 	return ++it;
+}
+
+string CompilerContext::revertReasonIfDebug(string const& _message)
+{
+	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
 }
 
 void CompilerContext::updateSourceLocation()

@@ -63,7 +63,7 @@ This section highlights changes that affect syntax and semantics.
   last one only works for value types).  Change every ``keccak256(a, b, c)`` to
   ``keccak256(abi.encodePacked(a, b, c))``. Even though it is not a breaking
   change, it is suggested that developers change
-  ``x.call(bytes4(keccak256("f(uint256)"), a, b)`` to
+  ``x.call(bytes4(keccak256("f(uint256)")), a, b)`` to
   ``x.call(abi.encodeWithSignature("f(uint256)", a, b))``.
 
 * Functions ``.call()``, ``.delegatecall()`` and ``.staticcall()`` now return
@@ -455,7 +455,7 @@ New version:
             uint z = someInteger();
             x += z;
             // Throw is now disallowed.
-            require(x > 100);
+            require(x <= 100);
             int y = -3 >> 1;
             require(y == -2);
             do {

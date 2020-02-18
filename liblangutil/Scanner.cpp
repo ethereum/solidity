@@ -306,19 +306,24 @@ bool Scanner::tryScanEndOfLine()
 	return false;
 }
 
-Token Scanner::scanSingleLineDocComment()
+int Scanner::scanSingleLineDocComment()
 {
 	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
+	int endPosition = m_source->position();
 	advance(); //consume the last '/' at ///
 
 	skipWhitespaceExceptUnicodeLinebreak();
 
 	while (!isSourcePastEndOfInput())
 	{
+		endPosition = m_source->position();
 		if (tryScanEndOfLine())
 		{
-			// check if next line is also a documentation comment
-			skipWhitespace();
+			// Check if next line is also a single-line comment.
+			// If any whitespaces were skipped, use source position before.
+			if (!skipWhitespace())
+				endPosition = m_source->position();
+
 			if (!m_source->isPastEndOfInput(3) &&
 				m_source->get(0) == '/' &&
 				m_source->get(1) == '/' &&
@@ -338,7 +343,7 @@ Token Scanner::scanSingleLineDocComment()
 		advance();
 	}
 	literal.complete();
-	return Token::CommentLiteral;
+	return endPosition;
 }
 
 Token Scanner::skipMultiLineComment()
@@ -426,11 +431,10 @@ Token Scanner::scanSlash()
 		else if (m_char == '/')
 		{
 			// doxygen style /// comment
-			Token comment;
 			m_skippedComments[NextNext].location.start = firstSlashPosition;
-			comment = scanSingleLineDocComment();
-			m_skippedComments[NextNext].location.end = sourcePos();
-			m_skippedComments[NextNext].token = comment;
+			m_skippedComments[NextNext].location.source = m_source;
+			m_skippedComments[NextNext].token = Token::CommentLiteral;
+			m_skippedComments[NextNext].location.end = scanSingleLineDocComment();
 			return Token::Whitespace;
 		}
 		else
@@ -454,6 +458,7 @@ Token Scanner::scanSlash()
 			// we actually have a multiline documentation comment
 			Token comment;
 			m_skippedComments[NextNext].location.start = firstSlashPosition;
+			m_skippedComments[NextNext].location.source = m_source;
 			comment = scanMultiLineDocComment();
 			m_skippedComments[NextNext].location.end = sourcePos();
 			m_skippedComments[NextNext].token = comment;
@@ -679,6 +684,7 @@ void Scanner::scanToken()
 	}
 	while (token == Token::Whitespace);
 	m_tokens[NextNext].location.end = sourcePos();
+	m_tokens[NextNext].location.source = m_source;
 	m_tokens[NextNext].token = token;
 	m_tokens[NextNext].extendedTokenInfo = make_tuple(m, n);
 }

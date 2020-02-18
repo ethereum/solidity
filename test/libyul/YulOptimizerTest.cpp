@@ -19,7 +19,7 @@
 
 #include <test/libsolidity/util/SoltestErrors.h>
 #include <test/libyul/Common.h>
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/VarDeclInitializer.h>
@@ -28,6 +28,7 @@
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/CircularReferencesPruner.h>
 #include <libyul/optimiser/ConditionalUnsimplifier.h>
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -105,11 +106,11 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 	{
 		auto dialectName = m_settings["dialect"];
 		if (dialectName == "yul")
-			m_dialect = &Dialect::yul();
+			m_dialect = &Dialect::yulDeprecated();
 		else if (dialectName == "ewasm")
 			m_dialect = &WasmDialect::instance();
 		else if (dialectName == "evm")
-			m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::Options::get().evmVersion());
+			m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion());
 		else
 			BOOST_THROW_EXCEPTION(runtime_error("Invalid dialect " + dialectName));
 
@@ -117,7 +118,7 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 		m_settings.erase("dialect");
 	}
 	else
-		m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::Options::get().evmVersion());
+		m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion());
 
 	if (m_settings.count("step"))
 	{
@@ -250,6 +251,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		CommonSubexpressionEliminator::run(*m_context, *m_ast);
 		ExpressionSimplifier::run(*m_context, *m_ast);
 		UnusedPruner::run(*m_context, *m_ast);
+		CircularReferencesPruner::run(*m_context, *m_ast);
 		DeadCodeEliminator::run(*m_context, *m_ast);
 		ExpressionJoiner::run(*m_context, *m_ast);
 		ExpressionJoiner::run(*m_context, *m_ast);
@@ -258,6 +260,12 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		disambiguate();
 		UnusedPruner::run(*m_context, *m_ast);
+	}
+	else if (m_optimizerStep == "circularReferencesPruner")
+	{
+		disambiguate();
+		FunctionHoister::run(*m_context, *m_ast);
+		CircularReferencesPruner::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "deadCodeEliminator")
 	{
@@ -349,7 +357,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		disambiguate();
 		ExpressionSplitter::run(*m_context, *m_ast);
-		WordSizeTransform::run(*m_dialect, *m_ast, *m_nameDispenser);
+		WordSizeTransform::run(*m_dialect, ""_yulstring, *m_ast, *m_nameDispenser);
 	}
 	else if (m_optimizerStep == "fullSuite")
 	{
@@ -365,7 +373,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		return TestResult::FatalError;
 	}
 
-	m_obtainedResult = AsmPrinter{}(*m_ast) + "\n";
+	m_obtainedResult = AsmPrinter{*m_dialect}(*m_ast) + "\n";
 
 	if (m_optimizerStep != m_validatedSettings["step"])
 	{

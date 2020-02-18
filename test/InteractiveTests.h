@@ -30,6 +30,7 @@
 #include <test/libyul/YulInterpreterTest.h>
 #include <test/libyul/ObjectCompilerTest.h>
 #include <test/libyul/FunctionSideEffects.h>
+#include <test/libyul/SyntaxTest.h>
 
 #include <boost/filesystem.hpp>
 
@@ -57,6 +58,7 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"Yul Interpreter",     "libyul",      "yulInterpreterTests", false, false, &yul::test::YulInterpreterTest::create},
 	{"Yul Object Compiler", "libyul",      "objectCompiler",      false, false, &yul::test::ObjectCompilerTest::create},
 	{"Function Side Effects","libyul",     "functionSideEffects", false, false, &yul::test::FunctionSideEffects::create},
+	{"Yul Syntax",          "libyul",      "yulSyntaxTests",      false, false, &yul::test::SyntaxTest::create},
 	{"Syntax",              "libsolidity", "syntaxTests",         false, false, &SyntaxTest::create},
 	{"Error Recovery",      "libsolidity", "errorRecoveryTests",  false, false, &SyntaxTest::createErrorRecovery},
 	{"Semantic",            "libsolidity", "semanticTests",       false, true,  &SemanticTest::create},

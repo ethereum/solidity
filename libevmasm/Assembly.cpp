@@ -43,7 +43,7 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
 	m_deposit += _i.deposit();
 	m_items.emplace_back(_i);
-	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())
+	if (!m_items.back().location().isValid() && m_currentSourceLocation.isValid())
 		m_items.back().setLocation(m_currentSourceLocation);
 	m_items.back().m_modifierDepth = m_currentModifierDepth;
 	return m_items.back();
@@ -69,7 +69,7 @@ namespace
 
 string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location)
 {
-	if (_location.isEmpty() || !_location.source.get() || _sourceCodes.empty() || _location.start >= _location.end || _location.start < 0)
+	if (!_location.hasText() || _sourceCodes.empty())
 		return "";
 
 	auto it = _sourceCodes.find(_location.source->name());
@@ -97,7 +97,7 @@ public:
 
 	void feed(AssemblyItem const& _item)
 	{
-		if (!_item.location().isEmpty() && _item.location() != m_location)
+		if (_item.location().isValid() && _item.location() != m_location)
 		{
 			flush();
 			m_location = _item.location();
@@ -141,12 +141,12 @@ public:
 
 	void printLocation()
 	{
-		if (!m_location.source && m_location.isEmpty())
+		if (!m_location.isValid())
 			return;
 		m_out << m_prefix << "    /*";
 		if (m_location.source)
 			m_out << " \"" + m_location.source->name() + "\"";
-		if (!m_location.isEmpty())
+		if (m_location.hasText())
 			m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
 		m_out << "  " << locationFromSources(m_sourceCodes, m_location);
 		m_out << " */" << endl;
@@ -197,10 +197,11 @@ string Assembly::assemblyString(StringMap const& _sourceCodes) const
 	return tmp.str();
 }
 
-Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string _value, string _jumpType)
+Json::Value Assembly::createJsonValue(string _name, int _source, int _begin, int _end, string _value, string _jumpType)
 {
 	Json::Value value;
 	value["name"] = _name;
+	value["source"] = _source;
 	value["begin"] = _begin;
 	value["end"] = _end;
 	if (!_value.empty())
@@ -217,65 +218,79 @@ string Assembly::toStringInHex(u256 _value)
 	return hexStr.str();
 }
 
-Json::Value Assembly::assemblyJSON(StringMap const& _sourceCodes) const
+Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) const
 {
 	Json::Value root;
 
 	Json::Value& collection = root[".code"] = Json::arrayValue;
 	for (AssemblyItem const& i: m_items)
 	{
+		unsigned sourceIndex = unsigned(-1);
+		if (i.location().source)
+		{
+			auto iter = _sourceIndices.find(i.location().source->name());
+			if (iter != _sourceIndices.end())
+				sourceIndex = iter->second;
+		}
+
 		switch (i.type())
 		{
 		case Operation:
 			collection.append(
-				createJsonValue(instructionInfo(i.instruction()).name, i.location().start, i.location().end, i.getJumpTypeAsString()));
+				createJsonValue(
+					instructionInfo(i.instruction()).name,
+					sourceIndex,
+					i.location().start,
+					i.location().end,
+					i.getJumpTypeAsString())
+				);
 			break;
 		case Push:
 			collection.append(
-				createJsonValue("PUSH", i.location().start, i.location().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
+				createJsonValue("PUSH", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
 			break;
 		case PushString:
 			collection.append(
-				createJsonValue("PUSH tag", i.location().start, i.location().end, m_strings.at((h256)i.data())));
+				createJsonValue("PUSH tag", sourceIndex, i.location().start, i.location().end, m_strings.at((h256)i.data())));
 			break;
 		case PushTag:
 			if (i.data() == 0)
 				collection.append(
-					createJsonValue("PUSH [ErrorTag]", i.location().start, i.location().end, ""));
+					createJsonValue("PUSH [ErrorTag]", sourceIndex, i.location().start, i.location().end, ""));
 			else
 				collection.append(
-					createJsonValue("PUSH [tag]", i.location().start, i.location().end, toString(i.data())));
+					createJsonValue("PUSH [tag]", sourceIndex, i.location().start, i.location().end, toString(i.data())));
 			break;
 		case PushSub:
 			collection.append(
-				createJsonValue("PUSH [$]", i.location().start, i.location().end, toString(h256(i.data()))));
+				createJsonValue("PUSH [$]", sourceIndex, i.location().start, i.location().end, toString(h256(i.data()))));
 			break;
 		case PushSubSize:
 			collection.append(
-				createJsonValue("PUSH #[$]", i.location().start, i.location().end, toString(h256(i.data()))));
+				createJsonValue("PUSH #[$]", sourceIndex, i.location().start, i.location().end, toString(h256(i.data()))));
 			break;
 		case PushProgramSize:
 			collection.append(
-				createJsonValue("PUSHSIZE", i.location().start, i.location().end));
+				createJsonValue("PUSHSIZE", sourceIndex, i.location().start, i.location().end));
 			break;
 		case PushLibraryAddress:
 			collection.append(
-				createJsonValue("PUSHLIB", i.location().start, i.location().end, m_libraries.at(h256(i.data())))
+				createJsonValue("PUSHLIB", sourceIndex, i.location().start, i.location().end, m_libraries.at(h256(i.data())))
 			);
 			break;
 		case PushDeployTimeAddress:
 			collection.append(
-				createJsonValue("PUSHDEPLOYADDRESS", i.location().start, i.location().end)
+				createJsonValue("PUSHDEPLOYADDRESS", sourceIndex, i.location().start, i.location().end)
 			);
 			break;
 		case Tag:
 			collection.append(
-				createJsonValue("tag", i.location().start, i.location().end, toString(i.data())));
+				createJsonValue("tag", sourceIndex, i.location().start, i.location().end, toString(i.data())));
 			collection.append(
-				createJsonValue("JUMPDEST", i.location().start, i.location().end));
+				createJsonValue("JUMPDEST", sourceIndex, i.location().start, i.location().end));
 			break;
 		case PushData:
-			collection.append(createJsonValue("PUSH data", i.location().start, i.location().end, toStringInHex(i.data())));
+			collection.append(createJsonValue("PUSH data", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data())));
 			break;
 		default:
 			assertThrow(false, InvalidOpcode, "");
@@ -293,7 +308,7 @@ Json::Value Assembly::assemblyJSON(StringMap const& _sourceCodes) const
 		{
 			std::stringstream hexStr;
 			hexStr << hex << i;
-			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceCodes);
+			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceIndices);
 		}
 	}
 

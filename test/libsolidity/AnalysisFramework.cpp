@@ -20,7 +20,7 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -51,7 +51,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 {
 	compiler().reset();
 	compiler().setSources({{"", _insertVersionPragma ? "pragma solidity >=0.0;\n" + _source : _source}});
-	compiler().setEVMVersion(solidity::test::Options::get().evmVersion());
+	compiler().setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	compiler().setParserErrorRecovery(_allowRecoveryErrors);
 	_allowMultipleErrors = _allowMultipleErrors || _allowRecoveryErrors;
 	if (!compiler().parse())

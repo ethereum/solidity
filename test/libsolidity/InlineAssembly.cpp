@@ -20,7 +20,7 @@
  * Unit tests for inline assembly.
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <test/libsolidity/ErrorCheck.h>
 
@@ -35,6 +35,7 @@
 #include <libevmasm/Assembly.h>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <memory>
 #include <optional>
@@ -58,7 +59,7 @@ std::optional<Error> parseAndReturnFirstError(
 	AssemblyStack::Machine _machine = AssemblyStack::Machine::EVM
 )
 {
-	AssemblyStack stack(solidity::test::Options::get().evmVersion(), _language, solidity::frontend::OptimiserSettings::none());
+	AssemblyStack stack(solidity::test::CommonOptions::get().evmVersion(), _language, solidity::frontend::OptimiserSettings::none());
 	bool success = false;
 	try
 	{
@@ -125,7 +126,7 @@ Error expectError(
 
 void parsePrintCompare(string const& _source, bool _canWarn = false)
 {
-	AssemblyStack stack(solidity::test::Options::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
+	AssemblyStack stack(solidity::test::CommonOptions::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
 	BOOST_REQUIRE(stack.parseAndAnalyze("", _source));
 	if (_canWarn)
 		BOOST_REQUIRE(Error::containsOnlyWarnings(stack.errors()));
@@ -286,7 +287,7 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
 	CHECK_PARSE_ERROR("{ if mload {} }", ParserError, "Expected '(' but got '{'");
 	BOOST_CHECK("{ if calldatasize() {}");
-	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
+	CHECK_PARSE_ERROR("{ if mstore(1, 1) {} }", TypeError, "Expected expression to evaluate to one value, but got 0 values instead.");
 	CHECK_PARSE_ERROR("{ if 32 let x := 3 }", ParserError, "Expected '{' but got reserved keyword 'let'");
 }
 
@@ -315,7 +316,7 @@ BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
 	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal or identifier expected.");
 	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected '(' but got reserved keyword 'default'");
-	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
+	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to evaluate to one value, but got 0 values instead.");
 }
 
 BOOST_AUTO_TEST_CASE(switch_default_before_case)
@@ -351,7 +352,7 @@ BOOST_AUTO_TEST_CASE(for_invalid_expression)
 	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected '{' but got 'Number'");
 	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected '(' but got '{'");
-	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", TypeError, "Expected expression to return one item to the stack, but did return 0 items");
+	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", TypeError, "Expected expression to evaluate to one value, but got 0 values instead.");
 }
 
 BOOST_AUTO_TEST_CASE(for_visibility)
@@ -538,7 +539,7 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
 	string source = "{ let x := \"\\u1bac\" }";
 	string parsed = "object \"object\" {\n    code { let x := \"\\xe1\\xae\\xac\" }\n}\n";
-	AssemblyStack stack(solidity::test::Options::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
+	AssemblyStack stack(solidity::test::CommonOptions::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
 	BOOST_REQUIRE(stack.parseAndAnalyze("", source));
 	BOOST_REQUIRE(stack.errors().empty());
 	BOOST_CHECK_EQUAL(stack.print(), parsed);
@@ -685,42 +686,42 @@ BOOST_AUTO_TEST_CASE(keccak256)
 
 BOOST_AUTO_TEST_CASE(returndatasize)
 {
-	if (!solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (!solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 		return;
 	BOOST_CHECK(successAssemble("{ let r := returndatasize() }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy)
 {
-	if (!solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (!solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 		return;
 	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy_functional)
 {
-	if (!solidity::test::Options::get().evmVersion().supportsReturndata())
+	if (!solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 		return;
 	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
 }
 
 BOOST_AUTO_TEST_CASE(staticcall)
 {
-	if (!solidity::test::Options::get().evmVersion().hasStaticCall())
+	if (!solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 		return;
 	BOOST_CHECK(successAssemble("{ pop(staticcall(10000, 0x123, 64, 0x10, 128, 0x10)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(create2)
 {
-	if (!solidity::test::Options::get().evmVersion().hasCreate2())
+	if (!solidity::test::CommonOptions::get().evmVersion().hasCreate2())
 		return;
 	BOOST_CHECK(successAssemble("{ pop(create2(10, 0x123, 32, 64)) }"));
 }
 
 BOOST_AUTO_TEST_CASE(shift)
 {
-	if (!solidity::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
 	BOOST_CHECK(successAssemble("{ pop(shl(10, 32)) }"));
 	BOOST_CHECK(successAssemble("{ pop(shr(10, 32)) }"));
@@ -729,11 +730,11 @@ BOOST_AUTO_TEST_CASE(shift)
 
 BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 {
-	if (solidity::test::Options::get().evmVersion().hasBitwiseShifting())
+	if (solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
-	CHECK_PARSE_WARNING("{ pop(shl(10, 32)) }", TypeError, "The \"shl\" instruction is only available for Constantinople-compatible VMs");
-	CHECK_PARSE_WARNING("{ pop(shr(10, 32)) }", TypeError, "The \"shr\" instruction is only available for Constantinople-compatible VMs");
-	CHECK_PARSE_WARNING("{ pop(sar(10, 32)) }", TypeError, "The \"sar\" instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ shl(10, 32) }", TypeError, "The \"shl\" instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ shr(10, 32) }", TypeError, "The \"shr\" instruction is only available for Constantinople-compatible VMs");
+	CHECK_PARSE_WARNING("{ sar(10, 32) }", TypeError, "The \"sar\" instruction is only available for Constantinople-compatible VMs");
 }
 
 BOOST_AUTO_TEST_CASE(jump_error)

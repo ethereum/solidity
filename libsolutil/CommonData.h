@@ -156,6 +156,23 @@ T convertContainer(U&& _from)
 	};
 }
 
+/// Gets a @a K -> @a V map and returns a map where values from the original map are keys and keys
+/// from the original map are values.
+///
+/// @pre @a originalMap must have unique values.
+template <typename K, typename V>
+std::map<V, K> invertMap(std::map<K, V> const& originalMap)
+{
+	std::map<V, K> inverseMap;
+	for (auto const& originalPair: originalMap)
+	{
+		assert(inverseMap.count(originalPair.second) == 0);
+		inverseMap.insert({originalPair.second, originalPair.first});
+	}
+
+	return inverseMap;
+}
+
 // String conversion functions, mainly to/from hex/nibble/byte representations.
 
 enum class WhenError
@@ -232,14 +249,14 @@ inline void toBigEndian(T _val, Out& o_out)
 }
 
 /// Converts a big-endian byte-stream represented on a templated collection to a templated integer value.
-/// @a _In will typically be either std::string or bytes.
+/// @a In will typically be either std::string or bytes.
 /// @a T will typically by unsigned, u160, u256 or bigint.
-template <class T, class _In>
-inline T fromBigEndian(_In const& _bytes)
+template <class T, class In>
+inline T fromBigEndian(In const& _bytes)
 {
 	T ret = (T)0;
 	for (auto i: _bytes)
-		ret = (T)((ret << 8) | (uint8_t)(typename std::make_unsigned<typename _In::value_type>::type)i);
+		ret = (T)((ret << 8) | (uint8_t)(typename std::make_unsigned<typename In::value_type>::type)i);
 	return ret;
 }
 inline bytes toBigEndian(u256 _val) { bytes ret(32); toBigEndian(_val, ret); return ret; }

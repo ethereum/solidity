@@ -56,24 +56,33 @@ struct SourceLocation
 
 	inline bool contains(SourceLocation const& _other) const
 	{
-		if (isEmpty() || _other.isEmpty() || source.get() != _other.source.get())
+		if (!hasText() || !_other.hasText() || source.get() != _other.source.get())
 			return false;
 		return start <= _other.start && _other.end <= end;
 	}
 
 	inline bool intersects(SourceLocation const& _other) const
 	{
-		if (isEmpty() || _other.isEmpty() || source.get() != _other.source.get())
+		if (!hasText() || !_other.hasText() || source.get() != _other.source.get())
 			return false;
 		return _other.start < end && start < _other.end;
 	}
 
-	bool isEmpty() const { return start == -1 && end == -1; }
+	bool isValid() const { return source || start != -1 || end != -1; }
+
+	bool hasText() const
+	{
+		return
+			source &&
+			0 <= start &&
+			start <= end &&
+			end <= int(source->source().length());
+	}
 
 	std::string text() const
 	{
 		assertThrow(source, SourceLocationError, "Requested text from null source.");
-		assertThrow(!isEmpty(), SourceLocationError, "Requested text from empty source location.");
+		assertThrow(0 <= start, SourceLocationError, "Invalid source location.");
 		assertThrow(start <= end, SourceLocationError, "Invalid source location.");
 		assertThrow(end <= int(source->source().length()), SourceLocationError, "Invalid source location.");
 		return source->source().substr(start, end - start);
@@ -109,13 +118,13 @@ SourceLocation const parseSourceLocation(std::string const& _input, std::string 
 /// Stream output for Location (used e.g. in boost exceptions).
 inline std::ostream& operator<<(std::ostream& _out, SourceLocation const& _location)
 {
-	if (_location.isEmpty())
+	if (!_location.isValid())
 		return _out << "NO_LOCATION_SPECIFIED";
 
 	if (_location.source)
 		_out << _location.source->name();
 
-	_out << "[" << _location.start << "," << _location.end << ")";
+	_out << "[" << _location.start << "," << _location.end << "]";
 
 	return _out;
 }

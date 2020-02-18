@@ -57,7 +57,7 @@ packagename=solc
 
 static_build_distribution=disco
 
-DISTRIBUTIONS="bionic disco eoan"
+DISTRIBUTIONS="bionic disco eoan focal"
 
 if is_release
 then
@@ -83,7 +83,12 @@ else
     else
         pparepo=ethereum-dev
     fi
-    if [ $distribution = disco ]
+    if [ $distribution = focal ]
+    then
+        SMTDEPENDENCY="libz3-dev,
+               libcvc4-dev,
+               "
+    elif [ $distribution = disco ]
     then
         SMTDEPENDENCY="libz3-static-dev,
                libcvc4-dev,
