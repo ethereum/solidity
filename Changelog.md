@@ -15,6 +15,7 @@ Compiler Features:
 Bugfixes:
  * Parser: Fix an internal error for ``abstract`` without ``contract``.
  * Type Checker: Make invalid calls to uncallable types fatal errors.
+ * Assembly: Added missing `source` field to legacy assembly json output to complete the source reference.
 
 
 
