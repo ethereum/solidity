@@ -69,7 +69,7 @@ TypeInfo::TypeInfo(Dialect const& _dialect, Block const& _ast):
 	m_variableTypes = std::move(types.variableTypes);
 }
 
-YulString TypeInfo::typeOf(Expression const& _expression)
+YulString TypeInfo::typeOf(Expression const& _expression) const
 {
 	return std::visit(GenericVisitor{
 		[&](FunctionCall const& _funCall) {
