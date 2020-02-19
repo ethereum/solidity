@@ -96,3 +96,8 @@ YulString TypeInfo::typeOf(Expression const& _expression) const
 		}
 	}, _expression);
 }
+
+YulString TypeInfo::typeOfVariable(YulString _name) const
+{
+	return m_variableTypes.at(_name);
+}
