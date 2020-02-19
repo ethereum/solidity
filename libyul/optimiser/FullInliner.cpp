@@ -199,7 +199,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 		if (_value)
 			varDecl.value = make_unique<Expression>(std::move(*_value));
 		else
-			varDecl.value = make_unique<Expression>(m_dialect.zeroLiteralForType(varDecl.variables[0].type));
+			varDecl.value = make_unique<Expression>(m_dialect.zeroLiteralForType(varDecl.variables.front().type));
 		newStatements.emplace_back(std::move(varDecl));
 	};
 

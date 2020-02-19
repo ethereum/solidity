@@ -27,6 +27,8 @@
 
 #include <libsolutil/CommonData.h>
 
+#include <libyul/optimiser/TypeInfo.h>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -42,8 +44,14 @@ namespace
 class IntroduceSSA: public ASTModifier
 {
 public:
-	explicit IntroduceSSA(NameDispenser& _nameDispenser, set<YulString> const& _variablesToReplace):
-		m_nameDispenser(_nameDispenser), m_variablesToReplace(_variablesToReplace)
+	explicit IntroduceSSA(
+		NameDispenser& _nameDispenser,
+		set<YulString> const& _variablesToReplace,
+		TypeInfo& _typeInfo
+	):
+		m_nameDispenser(_nameDispenser),
+		m_variablesToReplace(_variablesToReplace),
+		m_typeInfo(_typeInfo)
 	{ }
 
 	void operator()(Block& _block) override;
@@ -51,6 +59,7 @@ public:
 private:
 	NameDispenser& m_nameDispenser;
 	set<YulString> const& m_variablesToReplace;
+	TypeInfo& m_typeInfo;
 };
 
 
@@ -83,12 +92,14 @@ void IntroduceSSA::operator()(Block& _block)
 				{
 					YulString oldName = var.name;
 					YulString newName = m_nameDispenser.newName(oldName);
-					newVariables.emplace_back(TypedName{loc, newName, {}});
+					newVariables.emplace_back(TypedName{loc, newName, var.type});
 					statements.emplace_back(VariableDeclaration{
 						loc,
-						{TypedName{loc, oldName, {}}},
+						{TypedName{loc, oldName, var.type}},
 						make_unique<Expression>(Identifier{loc, newName})
 					});
+					m_typeInfo.setVariableType(oldName, var.type);
+					m_typeInfo.setVariableType(oldName, var.type);
 				}
 				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
 				return { std::move(statements) };
@@ -110,12 +121,17 @@ void IntroduceSSA::operator()(Block& _block)
 				{
 					YulString oldName = var.name;
 					YulString newName = m_nameDispenser.newName(oldName);
-					newVariables.emplace_back(TypedName{loc, newName, {}});
+					newVariables.emplace_back(TypedName{
+						loc,
+						newName,
+						m_typeInfo.typeOfVariable(var.name)
+					});
 					statements.emplace_back(Assignment{
 						loc,
 						{Identifier{loc, oldName}},
 						make_unique<Expression>(Identifier{loc, newName})
 					});
+					m_typeInfo.setVariableType(newName, m_typeInfo.typeOfVariable(var.name));
 				}
 				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
 				return { std::move(statements) };
@@ -375,9 +391,10 @@ void PropagateValues::operator()(Block& _block)
 
 void SSATransform::run(OptimiserStepContext& _context, Block& _ast)
 {
+	TypeInfo typeInfo(_context.dialect, _ast);
 	Assignments assignments;
 	assignments(_ast);
-	IntroduceSSA{_context.dispenser, assignments.names()}(_ast);
+	IntroduceSSA{_context.dispenser, assignments.names(), typeInfo}(_ast);
 	IntroduceControlFlowSSA{_context.dispenser, assignments.names()}(_ast);
 	PropagateValues{assignments.names()}(_ast);
 }

@@ -90,3 +90,9 @@ YulString TypeInfo::typeOf(Expression const& _expression) const
 		}
 	}, _expression);
 }
+
+YulString TypeInfo::typeOfVariable(YulString _name) const
+{
+	auto varType = m_variableTypes.find(_name);
+	return varType == m_variableTypes.end() ? m_dialect.defaultType : varType->second;
+}
