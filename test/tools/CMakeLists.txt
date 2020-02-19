@@ -10,6 +10,19 @@ target_link_libraries(solfuzzer PRIVATE libsolc evmasm Boost::boost Boost::progr
 add_executable(yulopti yulopti.cpp)
 target_link_libraries(yulopti PRIVATE solidity Boost::boost Boost::program_options Boost::system)
 
+add_executable(end-to-end-extractor
+	end-to-end-extractor/main.cpp
+	end-to-end-extractor/EndToEndTests.h
+	end-to-end-extractor/EndToEndTests.cpp
+	end-to-end-extractor/ExtractorExecutionFramework.h
+	end-to-end-extractor/ExtractorExecutionFramework.cpp
+	end-to-end-extractor/ExtractionTask.h
+	end-to-end-extractor/ExtractionTask.cpp
+	../Common.cpp
+	../libsolidity/util/BytesUtils.cpp
+	../libsolidity/util/ContractABIUtils.cpp end-to-end-extractor/FakeEvmHost.hpp end-to-end-extractor/FakeCompilerStack.hpp)
+target_link_libraries(end-to-end-extractor PRIVATE evmc libsolc solidity yulInterpreter evmasm  Boost::boost Boost::program_options Boost::system)
+
 add_executable(isoltest
 	isoltest.cpp
 	IsolTestOptions.cpp
