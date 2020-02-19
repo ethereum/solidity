@@ -28,6 +28,7 @@
 #include <boost/program_options.hpp>
 
 #include <iostream>
+#include <functional>
 #include <string>
 
 using namespace std;
@@ -70,7 +71,11 @@ CharStream loadSource(string const& _sourcePath)
 void runAlgorithm(string const& _sourcePath)
 {
 	CharStream sourceCode = loadSource(_sourcePath);
-	auto population = Population::makeRandom(Program::load(sourceCode), 10);
+	auto population = Population::makeRandom(
+		Program::load(sourceCode),
+		10,
+		bind(Population::binomialChromosomeLength, Population::MaxChromosomeLength)
+	);
 	population.run(nullopt, cout);
 }
 

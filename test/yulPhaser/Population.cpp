@@ -15,6 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <test/yulPhaser/Common.h>
+
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Population.h>
 #include <tools/yulPhaser/Program.h>
@@ -53,40 +55,80 @@ namespace
 	}
 }
 
+class PopulationFixture
+{
+protected:
+	PopulationFixture():
+		m_sourceStream(SampleSourceCode, ""),
+		m_program(Program::load(m_sourceStream)) {}
+
+	static constexpr char SampleSourceCode[] =
+		"{\n"
+		"    let factor := 13\n"
+		"    {\n"
+		"        if factor\n"
+		"        {\n"
+		"            let variable := add(1, 2)\n"
+		"        }\n"
+		"        let result := factor\n"
+		"    }\n"
+		"    let something := 6\n"
+		"    {\n"
+		"        {\n"
+		"            {\n"
+		"                let value := 15\n"
+		"            }\n"
+		"        }\n"
+		"    }\n"
+		"    let something_else := mul(mul(something, 1), add(factor, 0))\n"
+		"    if 1 { let x := 1 }\n"
+		"    if 0 { let y := 2 }\n"
+		"}\n";
+
+	CharStream m_sourceStream;
+	Program m_program;
+};
+
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(PopulationTest)
 
-string const& sampleSourceCode =
-	"{\n"
-	"    let factor := 13\n"
-	"    {\n"
-	"        if factor\n"
-	"        {\n"
-	"            let variable := add(1, 2)\n"
-	"        }\n"
-	"        let result := factor\n"
-	"    }\n"
-	"    let something := 6\n"
-	"    {\n"
-	"        {\n"
-	"            {\n"
-	"                let value := 15\n"
-	"            }\n"
-	"        }\n"
-	"    }\n"
-	"    let something_else := mul(mul(something, 1), add(factor, 0))\n"
-	"    if 1 { let x := 1 }\n"
-	"    if 0 { let y := 2 }\n"
-	"}\n";
-
-BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness)
+BOOST_AUTO_TEST_CASE(isFitter_should_use_fitness_as_the_main_criterion)
 {
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
+	BOOST_TEST(isFitter(Individual{Chromosome("a"), 5}, Individual{Chromosome("a"), 10}));
+	BOOST_TEST(!isFitter(Individual{Chromosome("a"), 10}, Individual{Chromosome("a"), 5}));
+
+	BOOST_TEST(isFitter(Individual{Chromosome("aaa"), 5}, Individual{Chromosome("aaaaa"), 10}));
+	BOOST_TEST(!isFitter(Individual{Chromosome("aaaaa"), 10}, Individual{Chromosome("aaa"), 5}));
+
+	BOOST_TEST(isFitter(Individual{Chromosome("aaaaa"), 5}, Individual{Chromosome("aaa"), 10}));
+	BOOST_TEST(!isFitter(Individual{Chromosome("aaa"), 10}, Individual{Chromosome("aaaaa"), 5}));
+}
+
+BOOST_AUTO_TEST_CASE(isFitter_should_use_alphabetical_order_when_fitness_is_the_same)
+{
+	BOOST_TEST(isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("c"), 3}));
+	BOOST_TEST(!isFitter(Individual{Chromosome("c"), 3}, Individual{Chromosome("a"), 3}));
+
+	BOOST_TEST(isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("aa"), 3}));
+	BOOST_TEST(!isFitter(Individual{Chromosome("aa"), 3}, Individual{Chromosome("a"), 3}));
+
+	BOOST_TEST(isFitter(Individual{Chromosome("T"), 3}, Individual{Chromosome("a"), 3}));
+	BOOST_TEST(!isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("T"), 3}));
+}
+
+BOOST_AUTO_TEST_CASE(isFitter_should_return_false_for_identical_individuals)
+{
+	BOOST_TEST(!isFitter(Individual{Chromosome("a"), 3}, Individual{Chromosome("a"), 3}));
+	BOOST_TEST(!isFitter(Individual{Chromosome("acT"), 0}, Individual{Chromosome("acT"), 0}));
+}
+
+BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness, PopulationFixture)
+{
 	vector<Chromosome> chromosomes = {
 		Chromosome::makeRandom(5),
 		Chromosome::makeRandom(10),
 	};
-	Population population(Program::load(sourceStream), chromosomes);
+	Population population(m_program, chromosomes);
 
 	BOOST_TEST(population.individuals().size() == 2);
 	BOOST_TEST(population.individuals()[0].chromosome == chromosomes[0]);
@@ -96,40 +138,88 @@ BOOST_AUTO_TEST_CASE(constructor_should_copy_chromosomes_and_not_compute_fitness
 	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 }
 
-BOOST_AUTO_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes)
+BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_generator, PopulationFixture)
 {
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto program = Program::load(sourceStream);
-	auto population1 = Population::makeRandom(program, 100);
-	auto population2 = Population::makeRandom(program, 100);
+	size_t chromosomeCount = 30;
+	size_t maxLength = 5;
+	assert(chromosomeCount % maxLength == 0);
 
-	BOOST_TEST(population1.individuals().size() == 100);
-	BOOST_TEST(population2.individuals().size() == 100);
+	auto nextLength = [counter = 0, maxLength]() mutable { return counter++ % maxLength; };
+	auto population = Population::makeRandom(m_program, chromosomeCount, nextLength);
 
-	int numMatchingPositions = 0;
-	for (size_t i = 0; i < 100; ++i)
-		if (population1.individuals()[i].chromosome == population2.individuals()[i].chromosome)
-			++numMatchingPositions;
-
-	// Assume that the results are random if there are no more than 10 identical chromosomes on the
-	// same positions. One duplicate is very unlikely but still possible after billions of runs
-	// (especially for short chromosomes). For ten the probability is so small that we can ignore it.
-	BOOST_TEST(numMatchingPositions < 10);
+	// We can't rely on the order since the population sorts its chromosomes immediately but
+	// we can check the number of occurrences of each length.
+	for (size_t length = 0; length < maxLength; ++length)
+		BOOST_TEST(
+			count_if(
+				population.individuals().begin(),
+				population.individuals().end(),
+				[&length](auto const& individual) { return individual.chromosome.length() == length; }
+			) == chromosomeCount / maxLength
+		);
 }
 
-BOOST_AUTO_TEST_CASE(makeRandom_should_not_compute_fitness)
+BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_range, PopulationFixture)
 {
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto population = Population::makeRandom(Program::load(sourceStream), 5);
+	auto population = Population::makeRandom(m_program, 100, 5, 10);
+	BOOST_TEST(all_of(
+		population.individuals().begin(),
+		population.individuals().end(),
+		[](auto const& individual){ return 5 <= individual.chromosome.length() && individual.chromosome.length() <= 10; }
+	));
+}
+
+BOOST_FIXTURE_TEST_CASE(makeRandom_should_use_random_chromosome_length, PopulationFixture)
+{
+	SimulationRNG::reset(1);
+	constexpr int populationSize = 200;
+	constexpr int minLength = 5;
+	constexpr int maxLength = 10;
+	constexpr double relativeTolerance = 0.05;
+
+	auto population = Population::makeRandom(m_program, populationSize, minLength, maxLength);
+	vector<size_t> samples = chromosomeLengths(population);
+
+	const double expectedValue = (maxLength + minLength) / 2.0;
+	const double variance = ((maxLength - minLength + 1) * (maxLength - minLength + 1) - 1) / 12.0;
+
+	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+}
+
+BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes, PopulationFixture)
+{
+	SimulationRNG::reset(1);
+	constexpr int populationSize = 100;
+	constexpr int chromosomeLength = 30;
+	constexpr double relativeTolerance = 0.01;
+
+	map<string, size_t> stepIndices = enumerateOptmisationSteps();
+	auto population = Population::makeRandom(m_program, populationSize, chromosomeLength, chromosomeLength);
+
+	vector<size_t> samples;
+	for (auto& individual: population.individuals())
+		for (auto& step: individual.chromosome.optimisationSteps())
+			samples.push_back(stepIndices.at(step));
+
+	const double expectedValue = (stepIndices.size() - 1) / 2.0;
+	const double variance = (stepIndices.size() * stepIndices.size() - 1) / 12.0;
+
+	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+}
+
+BOOST_FIXTURE_TEST_CASE(makeRandom_should_not_compute_fitness, PopulationFixture)
+{
+	auto population = Population::makeRandom(m_program, 3, 5, 10);
 
 	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 }
 
-BOOST_AUTO_TEST_CASE(run_should_evaluate_fitness)
+BOOST_FIXTURE_TEST_CASE(run_should_evaluate_fitness, PopulationFixture)
 {
 	stringstream output;
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
-	auto population = Population::makeRandom(Program::load(sourceStream), 5);
+	auto population = Population::makeRandom(m_program, 5, 5, 10);
 	assert(all_of(population.individuals().begin(), population.individuals().end(), fitnessNotSet));
 
 	population.run(1, output);
@@ -137,23 +227,21 @@ BOOST_AUTO_TEST_CASE(run_should_evaluate_fitness)
 	BOOST_TEST(all_of(population.individuals().begin(), population.individuals().end(), fitnessSet));
 }
 
-BOOST_AUTO_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse)
+BOOST_FIXTURE_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse, PopulationFixture)
 {
 	stringstream output;
-	CharStream sourceStream(sampleSourceCode, current_test_case().p_name);
 	vector<Chromosome> chromosomes = {
-		Chromosome({StructuralSimplifier::name}),
-		Chromosome({BlockFlattener::name}),
-		Chromosome({SSAReverser::name}),
-		Chromosome({UnusedPruner::name}),
-		Chromosome({StructuralSimplifier::name, BlockFlattener::name}),
+		Chromosome(vector<string>{StructuralSimplifier::name}),
+		Chromosome(vector<string>{BlockFlattener::name}),
+		Chromosome(vector<string>{SSAReverser::name}),
+		Chromosome(vector<string>{UnusedPruner::name}),
+		Chromosome(vector<string>{StructuralSimplifier::name, BlockFlattener::name}),
 	};
-	auto program = Program::load(sourceStream);
-	Population population(program, chromosomes);
+	Population population(m_program, chromosomes);
 
 	size_t initialTopFitness[2] = {
-		Population::measureFitness(chromosomes[0], program),
-		Population::measureFitness(chromosomes[1], program),
+		Population::measureFitness(chromosomes[0], m_program),
+		Population::measureFitness(chromosomes[1], m_program),
 	};
 
 	for (int i = 0; i < 6; ++i)
@@ -171,6 +259,15 @@ BOOST_AUTO_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse)
 		BOOST_TEST(currentTopFitness[1] <= initialTopFitness[1]);
 		BOOST_TEST(currentTopFitness[0] <= currentTopFitness[1]);
 	}
+}
+
+BOOST_FIXTURE_TEST_CASE(plus_operator_should_add_two_populations, PopulationFixture)
+{
+	BOOST_CHECK_EQUAL(
+		Population(m_program, {Chromosome("ac"), Chromosome("cx")}) +
+		Population(m_program, {Chromosome("g"), Chromosome("h"), Chromosome("iI")}),
+		Population(m_program, {Chromosome("ac"), Chromosome("cx"), Chromosome("g"), Chromosome("h"), Chromosome("iI")})
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

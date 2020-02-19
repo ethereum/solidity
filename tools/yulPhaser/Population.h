@@ -28,6 +28,17 @@
 namespace solidity::phaser
 {
 
+class Population;
+
+}
+
+// This operator+ must be declared in the global namespace. Otherwise it would shadow global
+// operator+ overloads from CommonData.h (e.g. the one for vector) in the namespace it was declared in.
+solidity::phaser::Population operator+(solidity::phaser::Population _a, solidity::phaser::Population _b);
+
+namespace solidity::phaser
+{
+
 /**
  * Information describing the state of an individual member of the population during the course
  * of the genetic algorithm.
@@ -37,8 +48,16 @@ struct Individual
 	Chromosome chromosome;
 	std::optional<size_t> fitness = std::nullopt;
 
+	bool operator==(Individual const& _other) const { return fitness == _other.fitness && chromosome == _other.chromosome; }
+	bool operator!=(Individual const& _other) const { return !(*this == _other); }
+
 	friend std::ostream& operator<<(std::ostream& _stream, Individual const& _individual);
 };
+
+/// Determines which individual is better by comparing fitness values. If fitness is the same
+/// takes into account all the other properties of the individual to make the comparison
+/// deterministic as long as the individuals are not equal.
+bool isFitter(Individual const& a, Individual const& b);
 
 /**
  * Represents a changing set of individuals undergoing a genetic algorithm.
@@ -55,19 +74,35 @@ public:
 	static constexpr size_t MaxChromosomeLength = 30;
 
 	explicit Population(Program _program, std::vector<Chromosome> const& _chromosomes = {});
-	static Population makeRandom(Program _program, size_t _size);
+
+	static Population makeRandom(
+		Program _program,
+		size_t _size,
+		std::function<size_t()> _chromosomeLengthGenerator
+	);
+	static Population makeRandom(
+		Program _program,
+		size_t _size,
+		size_t _minChromosomeLength,
+		size_t _maxChromosomeLength
+	);
 
 	void run(std::optional<size_t> _numRounds, std::ostream& _outputStream);
+	friend Population (::operator+)(Population _a, Population _b);
 
 	std::vector<Individual> const& individuals() const { return m_individuals; }
 
-	static size_t randomChromosomeLength() { return SimulationRNG::binomialInt(MaxChromosomeLength, 0.5); }
+	static size_t uniformChromosomeLength(size_t _min, size_t _max) { return SimulationRNG::uniformInt(_min, _max); }
+	static size_t binomialChromosomeLength(size_t _max) { return SimulationRNG::binomialInt(_max, 0.5); }
 	static size_t measureFitness(Chromosome const& _chromosome, Program const& _program);
+
+	bool operator==(Population const& _other) const;
+	bool operator!=(Population const& _other) const { return !(*this == _other); }
 
 	friend std::ostream& operator<<(std::ostream& _stream, Population const& _population);
 
 private:
-	explicit Population(Program _program, std::vector<Individual> _individuals = {}):
+	explicit Population(Program _program, std::vector<Individual> _individuals):
 		m_program{std::move(_program)},
 		m_individuals{std::move(_individuals)} {}
 

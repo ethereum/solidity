@@ -19,14 +19,17 @@
 
 #include <tools/yulPhaser/Program.h>
 
+#include <libsolutil/CommonData.h>
+#include <libsolutil/CommonIO.h>
+
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <numeric>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
+using namespace solidity::util;
 using namespace solidity::phaser;
 
 namespace solidity::phaser
@@ -49,6 +52,17 @@ ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 	return _stream;
 }
 
+bool phaser::isFitter(Individual const& a, Individual const& b)
+{
+	assert(a.fitness.has_value() && b.fitness.has_value());
+
+	return (
+		(a.fitness.value() < b.fitness.value()) ||
+		(a.fitness.value() == b.fitness.value() && a.chromosome.length() < b.chromosome.length()) ||
+		(a.fitness.value() == b.fitness.value() && a.chromosome.length() == b.chromosome.length() && toString(a.chromosome) < toString(b.chromosome))
+	);
+}
+
 Population::Population(Program _program, vector<Chromosome> const& _chromosomes):
 	m_program{move(_program)}
 {
@@ -56,13 +70,31 @@ Population::Population(Program _program, vector<Chromosome> const& _chromosomes)
 		m_individuals.push_back({chromosome});
 }
 
-Population Population::makeRandom(Program _program, size_t _size)
+Population Population::makeRandom(
+	Program _program,
+	size_t _size,
+	function<size_t()> _chromosomeLengthGenerator
+)
 {
 	vector<Individual> individuals;
 	for (size_t i = 0; i < _size; ++i)
-		individuals.push_back({Chromosome::makeRandom(randomChromosomeLength())});
+		individuals.push_back({Chromosome::makeRandom(_chromosomeLengthGenerator())});
 
 	return Population(move(_program), individuals);
+}
+
+Population Population::makeRandom(
+	Program _program,
+	size_t _size,
+	size_t _minChromosomeLength,
+	size_t _maxChromosomeLength
+)
+{
+	return makeRandom(
+		move(_program),
+		_size,
+		std::bind(uniformChromosomeLength, _minChromosomeLength, _maxChromosomeLength)
+	);
 }
 
 size_t Population::measureFitness(Chromosome const& _chromosome, Program const& _program)
@@ -84,6 +116,20 @@ void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 		_outputStream << "---------- ROUND " << round << " ----------" << endl;
 		_outputStream << *this;
 	}
+}
+
+Population operator+(Population _a, Population _b)
+{
+	assert(toString(_a.m_program) == toString(_b.m_program));
+
+	return Population(_a.m_program, move(_a.m_individuals) + move(_b.m_individuals));
+}
+
+bool Population::operator==(Population const& _other) const
+{
+	// TODO: Comparing programs is pretty heavy but it's just a stopgap. It will soon be replaced
+	// by a comparison of fitness metric associated with the population (once metrics are introduced).
+	return m_individuals == _other.m_individuals && toString(m_program) == toString(_other.m_program);
 }
 
 ostream& phaser::operator<<(ostream& _stream, Population const& _population)
@@ -111,12 +157,7 @@ void Population::doSelection()
 {
 	assert(all_of(m_individuals.begin(), m_individuals.end(), [](auto& i){ return i.fitness.has_value(); }));
 
-	sort(
-		m_individuals.begin(),
-		m_individuals.end(),
-		[](auto const& a, auto const& b){ return a.fitness.value() < b.fitness.value(); }
-	);
-
+	sort(m_individuals.begin(), m_individuals.end(), isFitter);
 	randomizeWorstChromosomes(m_individuals, m_individuals.size() / 2);
 }
 
@@ -131,6 +172,6 @@ void Population::randomizeWorstChromosomes(
 	auto individual = _individuals.begin() + (_individuals.size() - _count);
 	for (; individual != _individuals.end(); ++individual)
 	{
-		*individual = {Chromosome::makeRandom(randomChromosomeLength())};
+		*individual = {Chromosome::makeRandom(binomialChromosomeLength(MaxChromosomeLength))};
 	}
 }

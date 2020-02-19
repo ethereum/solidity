@@ -42,6 +42,7 @@ public:
 	Chromosome() = default;
 	explicit Chromosome(std::vector<std::string> _optimisationSteps):
 		m_optimisationSteps(std::move(_optimisationSteps)) {}
+	explicit Chromosome(std::string const& _optimisationSteps);
 	static Chromosome makeRandom(size_t _length);
 
 	size_t length() const { return m_optimisationSteps.size(); }
