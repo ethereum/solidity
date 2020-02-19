@@ -14,7 +14,7 @@
 //     {
 //         let _1 := iszero(caller())
 //         for { }
-//         1
+//         true
 //         {
 //             for { } iszero(_1) { }
 //             { }
