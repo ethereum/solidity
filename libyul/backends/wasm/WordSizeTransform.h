@@ -53,7 +53,7 @@ namespace solidity::yul
  * take four times the parameters and each of type u64.
  * In addition, it uses a single other builtin function called `or_bool` that
  * takes four u64 parameters and is supposed to return the logical disjunction
- * of them as a u64 value. If this name is already used somewhere, it is renamed.
+ * of them as a i32 value. If this name is already used somewhere, it is renamed.
  *
  * Prerequisite: Disambiguator, ForLoopConditionIntoBody, ExpressionSplitter
  */
