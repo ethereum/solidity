@@ -26,6 +26,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cmath>
+
 using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::util;
@@ -119,6 +121,56 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_not_optimise_if_number_of_repetitions_is
 
 	BOOST_TEST(fitness == m_program.codeSize());
 	BOOST_TEST(fitness != m_optimisedProgram.codeSize());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE(RelativeProgramSizeTest)
+
+BOOST_FIXTURE_TEST_CASE(evaluate_should_compute_the_size_ratio_between_optimised_program_and_original_program, ProgramBasedMetricFixture)
+{
+	BOOST_TEST(RelativeProgramSize(m_program, 3).evaluate(m_chromosome) == round(1000.0 * m_optimisedProgram.codeSize() / m_program.codeSize()));
+}
+
+BOOST_FIXTURE_TEST_CASE(evaluate_should_repeat_the_optimisation_specified_number_of_times, ProgramBasedMetricFixture)
+{
+	Program const& programOptimisedOnce = m_optimisedProgram;
+	Program programOptimisedTwice = optimisedProgram(programOptimisedOnce);
+
+	RelativeProgramSize metric(m_program, 3, 2);
+	size_t fitness = metric.evaluate(m_chromosome);
+
+	BOOST_TEST(fitness != 1000);
+	BOOST_TEST(fitness != RelativeProgramSize(programOptimisedTwice, 3, 1).evaluate(m_chromosome));
+	BOOST_TEST(fitness == round(1000.0 * programOptimisedTwice.codeSize() / m_program.codeSize()));
+}
+
+BOOST_FIXTURE_TEST_CASE(evaluate_should_return_one_if_number_of_repetitions_is_zero, ProgramBasedMetricFixture)
+{
+	RelativeProgramSize metric(m_program, 3, 0);
+
+	BOOST_TEST(metric.evaluate(m_chromosome) == 1000);
+}
+
+BOOST_FIXTURE_TEST_CASE(evaluate_should_return_one_if_the_original_program_size_is_zero, ProgramBasedMetricFixture)
+{
+	CharStream sourceStream = CharStream("{}", "");
+	Program program = get<Program>(Program::load(sourceStream));
+
+	RelativeProgramSize metric(program, 3);
+
+	BOOST_TEST(metric.evaluate(m_chromosome) == 1000);
+	BOOST_TEST(metric.evaluate(Chromosome("")) == 1000);
+	BOOST_TEST(metric.evaluate(Chromosome("afcxjLTLTDoO")) == 1000);
+}
+
+BOOST_FIXTURE_TEST_CASE(evaluate_should_multiply_the_result_by_scaling_factor, ProgramBasedMetricFixture)
+{
+	double sizeRatio = static_cast<double>(m_optimisedProgram.codeSize()) / m_program.codeSize();
+	BOOST_TEST(RelativeProgramSize(m_program, 0).evaluate(m_chromosome) == round(1.0 * sizeRatio));
+	BOOST_TEST(RelativeProgramSize(m_program, 1).evaluate(m_chromosome) == round(10.0 * sizeRatio));
+	BOOST_TEST(RelativeProgramSize(m_program, 2).evaluate(m_chromosome) == round(100.0 * sizeRatio));
+	BOOST_TEST(RelativeProgramSize(m_program, 3).evaluate(m_chromosome) == round(1000.0 * sizeRatio));
+	BOOST_TEST(RelativeProgramSize(m_program, 4).evaluate(m_chromosome) == round(10000.0 * sizeRatio));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

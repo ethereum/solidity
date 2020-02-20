@@ -87,4 +87,30 @@ public:
 	size_t evaluate(Chromosome const& _chromosome) override;
 };
 
+/**
+ * Fitness metric based on the size of a specific program after applying the optimisations from the
+ * chromosome to it in relation to the original, unoptimised program.
+ *
+ * Since metric values are integers, the class multiplies the ratio by 10^@a _fixedPointPrecision
+ * before rounding it.
+ */
+class RelativeProgramSize: public ProgramBasedMetric
+{
+public:
+	explicit RelativeProgramSize(
+		Program _program,
+		size_t _fixedPointPrecision,
+		size_t _repetitionCount = 1
+	):
+		ProgramBasedMetric(std::move(_program), _repetitionCount),
+		m_fixedPointPrecision(_fixedPointPrecision) {}
+
+	size_t fixedPointPrecision() const { return m_fixedPointPrecision; }
+
+	size_t evaluate(Chromosome const& _chromosome) override;
+
+private:
+	size_t m_fixedPointPrecision;
+};
+
 }

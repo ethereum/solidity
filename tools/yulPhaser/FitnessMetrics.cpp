@@ -17,6 +17,8 @@
 
 #include <tools/yulPhaser/FitnessMetrics.h>
 
+#include <cmath>
+
 using namespace std;
 using namespace solidity::phaser;
 
@@ -32,4 +34,19 @@ Program ProgramBasedMetric::optimisedProgram(Chromosome const& _chromosome) cons
 size_t ProgramSize::evaluate(Chromosome const& _chromosome)
 {
 	return optimisedProgram(_chromosome).codeSize();
+}
+
+size_t RelativeProgramSize::evaluate(Chromosome const& _chromosome)
+{
+	size_t const scalingFactor = pow(10, m_fixedPointPrecision);
+
+	size_t unoptimisedSize = optimisedProgram(Chromosome("")).codeSize();
+	if (unoptimisedSize == 0)
+		return scalingFactor;
+
+	size_t optimisedSize = optimisedProgram(_chromosome).codeSize();
+
+	return static_cast<size_t>(round(
+		static_cast<double>(optimisedSize) / unoptimisedSize * scalingFactor
+	));
 }
