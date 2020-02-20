@@ -51,9 +51,10 @@ ENV CC clang
 ENV CXX clang++
 
 # Boost
-RUN git clone --recursive -b boost-1.69.0 https://github.com/boostorg/boost.git \
+RUN git clone -b boost-1.69.0 https://github.com/boostorg/boost.git \
     /usr/src/boost; \
     cd /usr/src/boost; \
+    git submodule update --init --recursive; \
     ./bootstrap.sh --with-toolset=clang --prefix=/usr; \
     ./b2 toolset=clang headers; \
     ./b2 toolset=clang variant=release \
@@ -76,7 +77,7 @@ RUN set -ex; \
 	git clone https://github.com/google/libprotobuf-mutator.git \
 	    /usr/src/libprotobuf-mutator; \
 	cd /usr/src/libprotobuf-mutator; \
-	git checkout d1fe8a7d8ae18f3d454f055eba5213c291986f21; \
+	git checkout 3521f47a2828da9ace403e4ecc4aece1a84feb36; \
 	mkdir build; \
 	cd build; \
 	cmake .. -GNinja -DLIB_PROTO_MUTATOR_DOWNLOAD_PROTOBUF=ON \
