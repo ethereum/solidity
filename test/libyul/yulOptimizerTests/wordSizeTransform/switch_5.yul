@@ -13,7 +13,7 @@
 //     let _2_0, _2_1, _2_2, _2_3 := calldataload(_1_0, _1_1, _1_2, _1_3)
 //     let run_default
 //     switch _2_0
-//     default { run_default := 1 }
+//     default { run_default := true }
 //     if run_default
 //     {
 //         let _3_0 := 0
