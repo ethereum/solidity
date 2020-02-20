@@ -343,18 +343,8 @@ i.e. the following is not valid: ``(x, uint y) = (1, 2);``
 Complications for Arrays and Structs
 ------------------------------------
 
-The semantics of assignments are a bit more complicated for
-non-value types like arrays and structs.
-Assigning *to* a state variable always creates an independent
-copy. On the other hand, assigning to a local variable creates
-an independent copy only for elementary types, i.e. static
-types that fit into 32 bytes. If structs or arrays (including
-``bytes`` and ``string``) are assigned from a state variable
-to a local variable, the local variable holds a reference to
-the original state variable. A second assignment to the local
-variable does not modify the state but only changes the
-reference. Assignments to members (or elements) of the local
-variable *do* change the state.
+The semantics of assignments are more complicated for non-value types like arrays and structs,
+including ``bytes`` and ``string``, see :ref:`Data location and assignment behaviour <data-location-assignment>` for details.
 
 In the example below the call to ``g(x)`` has no effect on ``x`` because it creates
 an independent copy of the storage value in memory. However, ``h(x)`` successfully modifies ``x``
