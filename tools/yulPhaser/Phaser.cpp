@@ -114,6 +114,9 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 PopulationFactory::Options PopulationFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
 	return {
+		_arguments.count("population") > 0 ?
+			_arguments["population"].as<vector<string>>() :
+			vector<string>{},
 		_arguments.count("random-population") > 0 ?
 			_arguments["random-population"].as<vector<size_t>>() :
 			vector<size_t>{},
@@ -125,7 +128,7 @@ Population PopulationFactory::build(
 	shared_ptr<FitnessMetric> _fitnessMetric
 )
 {
-	Population population(_fitnessMetric, vector<Chromosome>{});
+	Population population = buildFromStrings(_options.population, _fitnessMetric);
 
 	size_t combinedSize = 0;
 	for (size_t populationSize: _options.randomPopulation)
@@ -139,6 +142,17 @@ Population PopulationFactory::build(
 	return population;
 }
 
+Population PopulationFactory::buildFromStrings(
+	vector<string> const& _geneSequences,
+	shared_ptr<FitnessMetric> _fitnessMetric
+)
+{
+	vector<Chromosome> chromosomes;
+	for (string const& geneSequence: _geneSequences)
+		chromosomes.emplace_back(geneSequence);
+
+	return Population(move(_fitnessMetric), move(chromosomes));
+}
 
 Population PopulationFactory::buildRandom(
 	size_t _populationSize,
@@ -235,6 +249,13 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 
 	po::options_description populationDescription("POPULATION", lineLength, minDescriptionLength);
 	populationDescription.add_options()
+		(
+			"population",
+			po::value<vector<string>>()->multitoken()->value_name("<CHROMOSOMES>"),
+			"List of chromosomes to be included in the initial population. "
+			"You can specify multiple values separated with spaces or invoke the option multiple times "
+			"and all the values will be included."
+		)
 		(
 			"random-population",
 			po::value<vector<size_t>>()->value_name("<SIZE>"),

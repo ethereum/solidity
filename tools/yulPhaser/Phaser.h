@@ -106,6 +106,7 @@ public:
 
 	struct Options
 	{
+		std::vector<std::string> population;
 		std::vector<size_t> randomPopulation;
 
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
@@ -113,6 +114,10 @@ public:
 
 	static Population build(
 		Options const& _options,
+		std::shared_ptr<FitnessMetric> _fitnessMetric
+	);
+	static Population buildFromStrings(
+		std::vector<std::string> const& _geneSequences,
 		std::shared_ptr<FitnessMetric> _fitnessMetric
 	);
 	static Population buildRandom(
