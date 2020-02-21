@@ -20,9 +20,9 @@
 using namespace std;
 using namespace solidity::phaser;
 
-void AlgorithmRunner::run(GeneticAlgorithm& _algorithm, optional<size_t> _numRounds)
+void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 {
-	for (size_t round = 0; !_numRounds.has_value() || round < _numRounds.value(); ++round)
+	for (size_t round = 0; !m_options.maxRounds.has_value() || round < m_options.maxRounds.value(); ++round)
 	{
 		m_population = _algorithm.runNextRound(m_population);
 

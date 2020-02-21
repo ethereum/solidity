@@ -50,6 +50,7 @@ class AlgorithmRunnerFixture
 protected:
 	shared_ptr<FitnessMetric> m_fitnessMetric = make_shared<ChromosomeLengthMetric>();
 	output_test_stream m_output;
+	AlgorithmRunner::Options m_options;
 };
 
 BOOST_AUTO_TEST_SUITE(Phaser)
@@ -57,33 +58,38 @@ BOOST_AUTO_TEST_SUITE(AlgorithmRunnerTest)
 
 BOOST_FIXTURE_TEST_CASE(run_should_call_runNextRound_once_per_round, AlgorithmRunnerFixture)
 {
-	AlgorithmRunner runner(Population(m_fitnessMetric), m_output);
+	m_options.maxRounds = 5;
+	AlgorithmRunner runner(Population(m_fitnessMetric), m_options, m_output);
 	DummyAlgorithm algorithm;
 
 	BOOST_TEST(algorithm.m_currentRound == 0);
-	runner.run(algorithm, 10);
+	runner.run(algorithm);
+	BOOST_TEST(algorithm.m_currentRound == 5);
+	runner.run(algorithm);
 	BOOST_TEST(algorithm.m_currentRound == 10);
-	runner.run(algorithm, 3);
-	BOOST_TEST(algorithm.m_currentRound == 13);
 }
 
 BOOST_FIXTURE_TEST_CASE(run_should_print_the_top_chromosome, AlgorithmRunnerFixture)
 {
 	// run() is allowed to print more but should at least print the first one
 
+	m_options.maxRounds = 1;
 	AlgorithmRunner runner(
 		// NOTE: Chromosomes chosen so that they're not substrings of each other and are not
 		// words likely to appear in the output in normal circumstances.
 		Population(m_fitnessMetric, {Chromosome("fcCUnDve"), Chromosome("jsxIOo"), Chromosome("ighTLM")}),
+		m_options,
 		m_output
 	);
 
 	DummyAlgorithm algorithm;
 
 	BOOST_TEST(m_output.is_empty());
-	runner.run(algorithm, 1);
+	runner.run(algorithm);
 	BOOST_TEST(countSubstringOccurrences(m_output.str(), toString(runner.population().individuals()[0].chromosome)) == 1);
-	runner.run(algorithm, 3);
+	runner.run(algorithm);
+	runner.run(algorithm);
+	runner.run(algorithm);
 	BOOST_TEST(countSubstringOccurrences(m_output.str(), toString(runner.population().individuals()[0].chromosome)) == 4);
 }
 

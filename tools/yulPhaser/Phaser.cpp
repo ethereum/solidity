@@ -182,7 +182,7 @@ void Phaser::runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 		maxChromosomeLength
 	);
 
-	AlgorithmRunner algorithmRunner(population, cout);
+	AlgorithmRunner algorithmRunner(population, AlgorithmRunner::Options{}, cout);
 	switch (_algorithm)
 	{
 		case Algorithm::Random:

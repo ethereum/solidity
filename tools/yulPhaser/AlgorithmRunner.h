@@ -39,19 +39,28 @@ namespace solidity::phaser
 class AlgorithmRunner
 {
 public:
+	struct Options
+	{
+		std::optional<size_t> maxRounds = std::nullopt;
+	};
+
 	AlgorithmRunner(
 		Population _initialPopulation,
+		Options _options,
 		std::ostream& _outputStream
 	):
 		m_population(std::move(_initialPopulation)),
+		m_options(std::move(_options)),
 		m_outputStream(_outputStream) {}
 
-	void run(GeneticAlgorithm& _algorithm, std::optional<size_t> _numRounds = std::nullopt);
+	void run(GeneticAlgorithm& _algorithm);
 
+	Options const& options() const { return m_options; }
 	Population const& population() const { return m_population; }
 
 private:
 	Population m_population;
+	Options m_options;
 	std::ostream& m_outputStream;
 };
 
