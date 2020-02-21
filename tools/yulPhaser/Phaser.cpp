@@ -176,16 +176,25 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		lineLength,
 		minDescriptionLength
 	);
-	keywordDescription.add_options()
+
+	po::options_description generalDescription("GENERAL", lineLength, minDescriptionLength);
+	generalDescription.add_options()
 		("help", "Show help message and exit.")
 		("input-file", po::value<string>()->required(), "Input file")
 		("seed", po::value<uint32_t>(), "Seed for the random number generator")
+	;
+	keywordDescription.add(generalDescription);
+
+	po::options_description algorithmDescription("ALGORITHM", lineLength, minDescriptionLength);
+	algorithmDescription.add_options()
 		(
 			"algorithm",
 			po::value<Algorithm>()->default_value(Algorithm::GEWEP),
 			"Algorithm"
 		)
 	;
+	keywordDescription.add(algorithmDescription);
+
 
 	po::positional_options_description positionalDescription;
 	positionalDescription.add("input-file", 1);
