@@ -120,6 +120,9 @@ PopulationFactory::Options PopulationFactory::Options::fromCommandLine(po::varia
 		_arguments.count("random-population") > 0 ?
 			_arguments["random-population"].as<vector<size_t>>() :
 			vector<size_t>{},
+		_arguments.count("population-from-file") > 0 ?
+			_arguments["population-from-file"].as<vector<string>>() :
+			vector<string>{},
 	};
 }
 
@@ -138,6 +141,9 @@ Population PopulationFactory::build(
 		combinedSize,
 		_fitnessMetric
 	);
+
+	for (string const& populationFilePath: _options.populationFromFile)
+		population = move(population) + buildFromFile(populationFilePath, _fitnessMetric);
 
 	return population;
 }
@@ -165,6 +171,14 @@ Population PopulationFactory::buildRandom(
 		MinChromosomeLength,
 		MaxChromosomeLength
 	);
+}
+
+Population PopulationFactory::buildFromFile(
+	string const& _filePath,
+	shared_ptr<FitnessMetric> _fitnessMetric
+)
+{
+	return buildFromStrings(readLinesFromFile(_filePath), move(_fitnessMetric));
 }
 
 ProgramFactory::Options ProgramFactory::Options::fromCommandLine(po::variables_map const& _arguments)
@@ -260,6 +274,11 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			"random-population",
 			po::value<vector<size_t>>()->value_name("<SIZE>"),
 			"The number of randomly generated chromosomes to be included in the initial population."
+		)
+		(
+			"population-from-file",
+			po::value<vector<string>>()->value_name("<FILE>"),
+			"A text file with a list of chromosomes (one per line) to be included in the initial population."
 		)
 	;
 	keywordDescription.add(populationDescription);

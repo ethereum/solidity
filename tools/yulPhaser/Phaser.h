@@ -108,6 +108,7 @@ public:
 	{
 		std::vector<std::string> population;
 		std::vector<size_t> randomPopulation;
+		std::vector<std::string> populationFromFile;
 
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
 	};
@@ -122,6 +123,10 @@ public:
 	);
 	static Population buildRandom(
 		size_t _populationSize,
+		std::shared_ptr<FitnessMetric> _fitnessMetric
+	);
+	static Population buildFromFile(
+		std::string const& _filePath,
 		std::shared_ptr<FitnessMetric> _fitnessMetric
 	);
 };
