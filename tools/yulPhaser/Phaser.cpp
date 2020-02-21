@@ -158,9 +158,12 @@ int Phaser::main(int _argc, char** _argv)
 	return 0;
 }
 
-Phaser::CommandLineParsingResult Phaser::parseCommandLine(int _argc, char** _argv)
+Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 {
-	po::options_description description(
+	size_t const lineLength = po::options_description::m_default_line_length;
+	size_t const minDescriptionLength = lineLength - 23;
+
+	po::options_description keywordDescription(
 		"yul-phaser, a tool for finding the best sequence of Yul optimisation phases.\n"
 		"\n"
 		"Usage: yul-phaser [options] <file>\n"
@@ -170,11 +173,10 @@ Phaser::CommandLineParsingResult Phaser::parseCommandLine(int _argc, char** _arg
 		"yul-phaser program.yul\n"
 		"\n"
 		"Allowed options",
-		po::options_description::m_default_line_length,
-		po::options_description::m_default_line_length - 23
+		lineLength,
+		minDescriptionLength
 	);
-
-	description.add_options()
+	keywordDescription.add_options()
 		("help", "Show help message and exit.")
 		("input-file", po::value<string>()->required(), "Input file")
 		("seed", po::value<uint32_t>(), "Seed for the random number generator")
@@ -186,14 +188,22 @@ Phaser::CommandLineParsingResult Phaser::parseCommandLine(int _argc, char** _arg
 	;
 
 	po::positional_options_description positionalDescription;
-	po::variables_map arguments;
 	positionalDescription.add("input-file", 1);
+
+	return {keywordDescription, positionalDescription};
+}
+
+Phaser::CommandLineParsingResult Phaser::parseCommandLine(int _argc, char** _argv)
+{
+	auto [keywordDescription, positionalDescription] = buildCommandLineDescription();
+
+	po::variables_map arguments;
 	po::notify(arguments);
 
 	try
 	{
 		po::command_line_parser parser(_argc, _argv);
-		parser.options(description).positional(positionalDescription);
+		parser.options(keywordDescription).positional(positionalDescription);
 		po::store(parser.run(), arguments);
 	}
 	catch (po::error const & _exception)
@@ -204,7 +214,7 @@ Phaser::CommandLineParsingResult Phaser::parseCommandLine(int _argc, char** _arg
 
 	if (arguments.count("help") > 0)
 	{
-		cout << description << endl;
+		cout << keywordDescription << endl;
 		return {2, move(arguments)};
 	}
 

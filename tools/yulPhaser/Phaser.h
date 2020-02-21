@@ -131,12 +131,19 @@ public:
 	static int main(int argc, char** argv);
 
 private:
+	struct CommandLineDescription
+	{
+		boost::program_options::options_description keywordDescription;
+		boost::program_options::positional_options_description positionalDescription;
+	};
+
 	struct CommandLineParsingResult
 	{
 		int exitCode;
 		boost::program_options::variables_map arguments;
 	};
 
+	static CommandLineDescription buildCommandLineDescription();
 	static CommandLineParsingResult parseCommandLine(int _argc, char** _argv);
 	static void initialiseRNG(boost::program_options::variables_map const& _arguments);
 
