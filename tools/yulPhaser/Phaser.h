@@ -41,7 +41,7 @@ std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::Algorith
 /**
  * Main class that controls yul-phaser based on command-line parameters. The class is responsible
  * for command-line parsing, initialisation of global objects (like the random number generator),
- * creating instances of main components and running the genetic algorithm.
+ * creating instances of main components and feeding them into @a AlgorithmRunner.
  */
 class Phaser
 {

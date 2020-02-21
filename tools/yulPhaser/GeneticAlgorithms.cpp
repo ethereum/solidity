@@ -23,42 +23,31 @@
 using namespace std;
 using namespace solidity::phaser;
 
-void GeneticAlgorithm::run(optional<size_t> _numRounds)
-{
-	for (size_t round = 0; !_numRounds.has_value() || round < _numRounds.value(); ++round)
-	{
-		runNextRound();
-
-		m_outputStream << "---------- ROUND " << round << " ----------" << endl;
-		m_outputStream << m_population;
-	}
-}
-
-void RandomAlgorithm::runNextRound()
+Population RandomAlgorithm::runNextRound(Population _population)
 {
 	RangeSelection elite(0.0, m_options.elitePoolSize);
 
-	Population elitePopulation = m_population.select(elite);
-	size_t replacementCount = m_population.individuals().size() - elitePopulation.individuals().size();
+	Population elitePopulation = _population.select(elite);
+	size_t replacementCount = _population.individuals().size() - elitePopulation.individuals().size();
 
-	m_population =
+	return
 		move(elitePopulation) +
 		Population::makeRandom(
-			m_population.fitnessMetric(),
+			_population.fitnessMetric(),
 			replacementCount,
 			m_options.minChromosomeLength,
 			m_options.maxChromosomeLength
 		);
 }
 
-void GenerationalElitistWithExclusivePools::runNextRound()
+Population GenerationalElitistWithExclusivePools::runNextRound(Population _population)
 {
 	double elitePoolSize = 1.0 - (m_options.mutationPoolSize + m_options.crossoverPoolSize);
 	RangeSelection elite(0.0, elitePoolSize);
 
-	m_population =
-		m_population.select(elite) +
-		m_population.select(elite).mutate(
+	return
+		_population.select(elite) +
+		_population.select(elite).mutate(
 			RandomSelection(m_options.mutationPoolSize / elitePoolSize),
 			alternativeMutations(
 				m_options.randomisationChance,
@@ -70,7 +59,7 @@ void GenerationalElitistWithExclusivePools::runNextRound()
 				)
 			)
 		) +
-		m_population.select(elite).crossover(
+		_population.select(elite).crossover(
 			RandomPairSelection(m_options.crossoverPoolSize / elitePoolSize),
 			randomPointCrossover()
 		);

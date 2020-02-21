@@ -17,6 +17,7 @@
 
 #include <tools/yulPhaser/Phaser.h>
 
+#include <tools/yulPhaser/AlgorithmRunner.h>
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/FitnessMetrics.h>
 #include <tools/yulPhaser/GeneticAlgorithms.h>
@@ -181,37 +182,30 @@ void Phaser::runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 		maxChromosomeLength
 	);
 
+	AlgorithmRunner algorithmRunner(population, cout);
 	switch (_algorithm)
 	{
 		case Algorithm::Random:
 		{
-			RandomAlgorithm(
-				population,
-				cout,
-				{
-					/* elitePoolSize = */ 1.0 / populationSize,
-					/* minChromosomeLength = */ minChromosomeLength,
-					/* maxChromosomeLength = */ maxChromosomeLength,
-				}
-			).run();
-
+			RandomAlgorithm algorithm({
+				/* elitePoolSize = */ 1.0 / populationSize,
+				/* minChromosomeLength = */ minChromosomeLength,
+				/* maxChromosomeLength = */ maxChromosomeLength,
+			});
+			algorithmRunner.run(algorithm);
 			break;
 		}
 		case Algorithm::GEWEP:
 		{
-			GenerationalElitistWithExclusivePools(
-				population,
-				cout,
-				{
-					/* mutationPoolSize = */ 0.25,
-					/* crossoverPoolSize = */ 0.25,
-					/* randomisationChance = */ 0.9,
-					/* deletionVsAdditionChance = */ 0.5,
-					/* percentGenesToRandomise = */ 1.0 / maxChromosomeLength,
-					/* percentGenesToAddOrDelete = */ 1.0 / maxChromosomeLength,
-				}
-			).run();
-
+			GenerationalElitistWithExclusivePools algorithm({
+				/* mutationPoolSize = */ 0.25,
+				/* crossoverPoolSize = */ 0.25,
+				/* randomisationChance = */ 0.9,
+				/* deletionVsAdditionChance = */ 0.5,
+				/* percentGenesToRandomise = */ 1.0 / maxChromosomeLength,
+				/* percentGenesToAddOrDelete = */ 1.0 / maxChromosomeLength,
+			});
+			algorithmRunner.run(algorithm);
 			break;
 		}
 	}
