@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <tools/yulPhaser/AlgorithmRunner.h>
+
 #include <boost/program_options.hpp>
 
 #include <istream>
@@ -147,6 +149,7 @@ private:
 	static CommandLineDescription buildCommandLineDescription();
 	static std::optional<boost::program_options::variables_map> parseCommandLine(int _argc, char** _argv);
 	static void initialiseRNG(boost::program_options::variables_map const& _arguments);
+	static AlgorithmRunner::Options buildAlgorithmRunnerOptions(boost::program_options::variables_map const& _arguments);
 
 	static void runAlgorithm(boost::program_options::variables_map const& _arguments);
 };

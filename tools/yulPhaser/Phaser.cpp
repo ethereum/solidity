@@ -185,6 +185,11 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		("help", "Show help message and exit.")
 		("input-file", po::value<string>()->required()->value_name("<PATH>"), "Input file.")
 		("seed", po::value<uint32_t>()->value_name("<NUM>"), "Seed for the random number generator.")
+		(
+			"rounds",
+			po::value<size_t>()->value_name("<NUM>"),
+			"The number of rounds after which the algorithm should stop. (default=no limit)."
+		)
 	;
 	keywordDescription.add(generalDescription);
 
@@ -249,6 +254,13 @@ void Phaser::initialiseRNG(po::variables_map const& _arguments)
 	cout << "Random seed: " << seed << endl;
 }
 
+AlgorithmRunner::Options Phaser::buildAlgorithmRunnerOptions(po::variables_map const& _arguments)
+{
+	return {
+		_arguments.count("rounds") > 0 ? static_cast<optional<size_t>>(_arguments["rounds"].as<size_t>()) : nullopt
+	};
+}
+
 void Phaser::runAlgorithm(po::variables_map const& _arguments)
 {
 	auto programOptions = ProgramFactory::Options::fromCommandLine(_arguments);
@@ -266,6 +278,6 @@ void Phaser::runAlgorithm(po::variables_map const& _arguments)
 		PopulationFactory::MaxChromosomeLength
 	);
 
-	AlgorithmRunner algorithmRunner(population, AlgorithmRunner::Options{}, cout);
+	AlgorithmRunner algorithmRunner(population, buildAlgorithmRunnerOptions(_arguments), cout);
 	algorithmRunner.run(*geneticAlgorithm);
 }
