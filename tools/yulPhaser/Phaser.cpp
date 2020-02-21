@@ -180,8 +180,8 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	po::options_description generalDescription("GENERAL", lineLength, minDescriptionLength);
 	generalDescription.add_options()
 		("help", "Show help message and exit.")
-		("input-file", po::value<string>()->required(), "Input file")
-		("seed", po::value<uint32_t>(), "Seed for the random number generator")
+		("input-file", po::value<string>()->required(), "Input file.")
+		("seed", po::value<uint32_t>(), "Seed for the random number generator.")
 	;
 	keywordDescription.add(generalDescription);
 
