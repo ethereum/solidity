@@ -101,11 +101,22 @@ public:
 class PopulationFactory
 {
 public:
-	static constexpr size_t PopulationSize = 20;
 	static constexpr size_t MinChromosomeLength = 12;
 	static constexpr size_t MaxChromosomeLength = 30;
 
+	struct Options
+	{
+		std::vector<size_t> randomPopulation;
+
+		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
+	};
+
 	static Population build(
+		Options const& _options,
+		std::shared_ptr<FitnessMetric> _fitnessMetric
+	);
+	static Population buildRandom(
+		size_t _populationSize,
 		std::shared_ptr<FitnessMetric> _fitnessMetric
 	);
 };

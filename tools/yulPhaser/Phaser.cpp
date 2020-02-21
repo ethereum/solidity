@@ -111,13 +111,43 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	return make_unique<ProgramSize>(move(_program), _options.chromosomeRepetitions);
 }
 
+PopulationFactory::Options PopulationFactory::Options::fromCommandLine(po::variables_map const& _arguments)
+{
+	return {
+		_arguments.count("random-population") > 0 ?
+			_arguments["random-population"].as<vector<size_t>>() :
+			vector<size_t>{},
+	};
+}
+
 Population PopulationFactory::build(
+	Options const& _options,
+	shared_ptr<FitnessMetric> _fitnessMetric
+)
+{
+	Population population(_fitnessMetric, vector<Chromosome>{});
+
+	size_t combinedSize = 0;
+	for (size_t populationSize: _options.randomPopulation)
+		combinedSize += populationSize;
+
+	population = move(population) + buildRandom(
+		combinedSize,
+		_fitnessMetric
+	);
+
+	return population;
+}
+
+
+Population PopulationFactory::buildRandom(
+	size_t _populationSize,
 	shared_ptr<FitnessMetric> _fitnessMetric
 )
 {
 	return Population::makeRandom(
 		move(_fitnessMetric),
-		PopulationSize,
+		_populationSize,
 		MinChromosomeLength,
 		MaxChromosomeLength
 	);
@@ -203,6 +233,16 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	;
 	keywordDescription.add(algorithmDescription);
 
+	po::options_description populationDescription("POPULATION", lineLength, minDescriptionLength);
+	populationDescription.add_options()
+		(
+			"random-population",
+			po::value<vector<size_t>>()->value_name("<SIZE>"),
+			"The number of randomly generated chromosomes to be included in the initial population."
+		)
+	;
+	keywordDescription.add(populationDescription);
+
 	po::options_description metricsDescription("METRICS", lineLength, minDescriptionLength);
 	metricsDescription.add_options()
 		(
@@ -265,11 +305,12 @@ void Phaser::runAlgorithm(po::variables_map const& _arguments)
 {
 	auto programOptions = ProgramFactory::Options::fromCommandLine(_arguments);
 	auto metricOptions = FitnessMetricFactory::Options::fromCommandLine(_arguments);
+	auto populationOptions = PopulationFactory::Options::fromCommandLine(_arguments);
 	auto algorithmOptions = GeneticAlgorithmFactory::Options::fromCommandLine(_arguments);
 
 	Program program = ProgramFactory::build(programOptions);
 	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, move(program));
-	Population population = PopulationFactory::build(move(fitnessMetric));
+	Population population = PopulationFactory::build(populationOptions, move(fitnessMetric));
 
 	unique_ptr<GeneticAlgorithm> geneticAlgorithm = GeneticAlgorithmFactory::build(
 		algorithmOptions,
