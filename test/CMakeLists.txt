@@ -158,6 +158,7 @@ set(yul_phaser_sources
     # My current workaround is just to include its source files here but this introduces
     # unnecessary duplication. Create a library or find a way to reuse the list in both places.
     ../tools/yulPhaser/AlgorithmRunner.cpp
+    ../tools/yulPhaser/Common.cpp
     ../tools/yulPhaser/Chromosome.cpp
     ../tools/yulPhaser/FitnessMetrics.cpp
     ../tools/yulPhaser/GeneticAlgorithms.cpp

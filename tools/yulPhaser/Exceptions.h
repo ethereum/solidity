@@ -27,4 +27,7 @@ struct InvalidProgram: virtual BadInput {};
 struct NoInputFiles: virtual BadInput {};
 struct MissingFile: virtual BadInput {};
 
+struct FileOpenError: virtual util::Exception {};
+struct FileReadError: virtual util::Exception {};
+
 }

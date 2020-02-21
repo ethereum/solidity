@@ -22,9 +22,18 @@
 
 #include <iostream>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace solidity::phaser
 {
+
+/// Loads the whole file into memory, splits the content into lines, strips newlines and
+/// returns the result as a list of strings.
+///
+/// Throws FileOpenError if the file does not exist or cannot be opened for reading.
+/// Throws FileReadError if any read operation fails during the whole process.
+std::vector<std::string> readLinesFromFile(std::string const& _path);
 
 /// Reads a token from the input stream and translates it to a string using a map.
 /// Sets the failbit in the stream if there's no matching value in the map.

@@ -15,6 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <test/yulPhaser/TestHelpers.h>
+
 #include <tools/yulPhaser/Common.h>
 
 #include <libsolutil/CommonData.h>
@@ -22,6 +24,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 
+#include <fstream>
 #include <sstream>
 #include <string>
 
@@ -31,6 +34,12 @@ using namespace solidity::util;
 
 namespace solidity::phaser::test
 {
+
+class ReadLinesFromFileFixture
+{
+protected:
+	TemporaryDirectory m_tempDir;
+};
 
 namespace
 {
@@ -59,6 +68,17 @@ map<string, TestEnum> const StringToTestEnumMap = invertMap(TestEnumToStringMap)
 
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(CommonTest)
+
+BOOST_FIXTURE_TEST_CASE(readLinesFromFile_should_return_all_lines_from_a_text_file_as_strings_without_newlines, ReadLinesFromFileFixture)
+{
+	{
+		ofstream tmpFile(m_tempDir.memberPath("test-file.txt"));
+		tmpFile << endl << "Line 1" << endl << endl << endl << "Line 2" << endl << "#" << endl << endl;
+	}
+
+	vector<string> lines = readLinesFromFile(m_tempDir.memberPath("test-file.txt"));
+	BOOST_TEST((lines == vector<string>{"", "Line 1", "", "", "Line 2", "#", ""}));
+}
 
 BOOST_AUTO_TEST_CASE(deserializeChoice_should_convert_string_to_enum)
 {
