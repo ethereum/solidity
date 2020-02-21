@@ -68,17 +68,82 @@ ostream& phaser::operator<<(ostream& _outputStream, Algorithm _algorithm)
 	return _outputStream;
 }
 
-namespace
+GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
+	return {
+		_arguments["algorithm"].as<Algorithm>(),
+	};
+}
 
-CharStream loadSource(string const& _sourcePath)
+unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
+	Options const& _options,
+	size_t _populationSize,
+	size_t _minChromosomeLength,
+	size_t _maxChromosomeLength
+)
+{
+	assert(_populationSize > 0);
+
+	switch (_options.algorithm)
+	{
+		case Algorithm::Random:
+			return make_unique<RandomAlgorithm>(RandomAlgorithm::Options{
+				/* elitePoolSize = */ 1.0 / _populationSize,
+				/* minChromosomeLength = */ _minChromosomeLength,
+				/* maxChromosomeLength = */ _maxChromosomeLength,
+			});
+		case Algorithm::GEWEP:
+			return make_unique<GenerationalElitistWithExclusivePools>(GenerationalElitistWithExclusivePools::Options{
+				/* mutationPoolSize = */ 0.25,
+				/* crossoverPoolSize = */ 0.25,
+				/* randomisationChance = */ 0.9,
+				/* deletionVsAdditionChance = */ 0.5,
+				/* percentGenesToRandomise = */ 1.0 / _maxChromosomeLength,
+				/* percentGenesToAddOrDelete = */ 1.0 / _maxChromosomeLength,
+			});
+		default:
+			assertThrow(false, solidity::util::Exception, "Invalid Algorithm value.");
+	}
+}
+
+unique_ptr<FitnessMetric> FitnessMetricFactory::build(
+	Program _program
+)
+{
+	return make_unique<ProgramSize>(move(_program), RepetitionCount);
+}
+
+Population PopulationFactory::build(
+	shared_ptr<FitnessMetric> _fitnessMetric
+)
+{
+	return Population::makeRandom(
+		move(_fitnessMetric),
+		PopulationSize,
+		MinChromosomeLength,
+		MaxChromosomeLength
+	);
+}
+
+ProgramFactory::Options ProgramFactory::Options::fromCommandLine(po::variables_map const& _arguments)
+{
+	return {
+		_arguments["input-file"].as<string>(),
+	};
+}
+
+Program ProgramFactory::build(Options const& _options)
+{
+	CharStream sourceCode = loadSource(_options.inputFile);
+	return Program::load(sourceCode);
+}
+
+CharStream ProgramFactory::loadSource(string const& _sourcePath)
 {
 	assertThrow(boost::filesystem::exists(_sourcePath), InvalidProgram, "Source file does not exist");
 
 	string sourceCode = readFileAsString(_sourcePath);
 	return CharStream(sourceCode, _sourcePath);
-}
-
 }
 
 int Phaser::main(int _argc, char** _argv)
@@ -89,10 +154,7 @@ int Phaser::main(int _argc, char** _argv)
 
 	initialiseRNG(parsingResult.arguments);
 
-	runAlgorithm(
-		parsingResult.arguments["input-file"].as<string>(),
-		parsingResult.arguments["algorithm"].as<Algorithm>()
-	);
+	runAlgorithm(parsingResult.arguments);
 	return 0;
 }
 
@@ -167,46 +229,22 @@ void Phaser::initialiseRNG(po::variables_map const& _arguments)
 	cout << "Random seed: " << seed << endl;
 }
 
-void Phaser::runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
+void Phaser::runAlgorithm(po::variables_map const& _arguments)
 {
-	constexpr size_t populationSize = 20;
-	constexpr size_t minChromosomeLength = 12;
-	constexpr size_t maxChromosomeLength = 30;
+	auto programOptions = ProgramFactory::Options::fromCommandLine(_arguments);
+	auto algorithmOptions = GeneticAlgorithmFactory::Options::fromCommandLine(_arguments);
 
-	CharStream sourceCode = loadSource(_sourcePath);
-	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode), 5);
-	auto population = Population::makeRandom(
-		fitnessMetric,
-		populationSize,
-		minChromosomeLength,
-		maxChromosomeLength
+	Program program = ProgramFactory::build(programOptions);
+	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(move(program));
+	Population population = PopulationFactory::build(move(fitnessMetric));
+
+	unique_ptr<GeneticAlgorithm> geneticAlgorithm = GeneticAlgorithmFactory::build(
+		algorithmOptions,
+		population.individuals().size(),
+		PopulationFactory::MinChromosomeLength,
+		PopulationFactory::MaxChromosomeLength
 	);
 
 	AlgorithmRunner algorithmRunner(population, AlgorithmRunner::Options{}, cout);
-	switch (_algorithm)
-	{
-		case Algorithm::Random:
-		{
-			RandomAlgorithm algorithm({
-				/* elitePoolSize = */ 1.0 / populationSize,
-				/* minChromosomeLength = */ minChromosomeLength,
-				/* maxChromosomeLength = */ maxChromosomeLength,
-			});
-			algorithmRunner.run(algorithm);
-			break;
-		}
-		case Algorithm::GEWEP:
-		{
-			GenerationalElitistWithExclusivePools algorithm({
-				/* mutationPoolSize = */ 0.25,
-				/* crossoverPoolSize = */ 0.25,
-				/* randomisationChance = */ 0.9,
-				/* deletionVsAdditionChance = */ 0.5,
-				/* percentGenesToRandomise = */ 1.0 / maxChromosomeLength,
-				/* percentGenesToAddOrDelete = */ 1.0 / maxChromosomeLength,
-			});
-			algorithmRunner.run(algorithm);
-			break;
-		}
-	}
+	algorithmRunner.run(*geneticAlgorithm);
 }
