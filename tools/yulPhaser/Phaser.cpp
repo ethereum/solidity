@@ -280,6 +280,11 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			po::value<vector<string>>()->value_name("<FILE>"),
 			"A text file with a list of chromosomes (one per line) to be included in the initial population."
 		)
+		(
+			"population-autosave",
+			po::value<string>()->value_name("<FILE>"),
+			"If specified, the population is saved in the specified file after each round. (default=autosave disabled)"
+		)
 	;
 	keywordDescription.add(populationDescription);
 
@@ -337,7 +342,8 @@ void Phaser::initialiseRNG(po::variables_map const& _arguments)
 AlgorithmRunner::Options Phaser::buildAlgorithmRunnerOptions(po::variables_map const& _arguments)
 {
 	return {
-		_arguments.count("rounds") > 0 ? static_cast<optional<size_t>>(_arguments["rounds"].as<size_t>()) : nullopt
+		_arguments.count("rounds") > 0 ? static_cast<optional<size_t>>(_arguments["rounds"].as<size_t>()) : nullopt,
+		_arguments.count("population-autosave") > 0 ? static_cast<optional<string>>(_arguments["population-autosave"].as<string>()) : nullopt,
 	};
 }
 
