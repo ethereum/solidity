@@ -29,5 +29,6 @@ struct MissingFile: virtual BadInput {};
 
 struct FileOpenError: virtual util::Exception {};
 struct FileReadError: virtual util::Exception {};
+struct FileWriteError: virtual util::Exception {};
 
 }

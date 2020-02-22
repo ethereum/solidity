@@ -42,6 +42,7 @@ public:
 	struct Options
 	{
 		std::optional<size_t> maxRounds = std::nullopt;
+		std::optional<std::string> populationAutosaveFile = std::nullopt;
 	};
 
 	AlgorithmRunner(
@@ -59,6 +60,8 @@ public:
 	Population const& population() const { return m_population; }
 
 private:
+	void populationAutosave() const;
+
 	Population m_population;
 	Options m_options;
 	std::ostream& m_outputStream;
