@@ -11,6 +11,7 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/FixedHash.h>
 #include <test/libsolidity/util/BytesUtils.h>
+#include <test/libsolidity/util/TestFileParser.h>
 
 class ExtractionTask
 {
@@ -26,7 +27,7 @@ class ExtractionTask
 	{
 	}
 
-	void analyse() const { m_task(); }
+	void analyse();
 
 	[[nodiscard]] const std::string &name() const { return m_name; }
 
@@ -61,6 +62,7 @@ class ExtractionTask
 	void extractionNotPossible(const std::string &_reason)
 	{
 		m_extractable = false;
+
 		m_reasons.insert(_reason);
 	}
 
@@ -79,6 +81,13 @@ class ExtractionTask
 		m_expectations.emplace_back(o.str());
 	}
 
+	void setHighlevelComments(std::vector<std::string> const &_comments) { m_highlevelComments = _comments; }
+
+	void setExpectationComments(std::vector<std::pair<std::string, std::string>> const &_comments)
+	{
+		m_expectationComments = _comments;
+	}
+
   private:
 	std::string m_name;
 	std::function<void(void)> m_task;
@@ -87,4 +96,7 @@ class ExtractionTask
 	bool m_alsoViaYul{false};
 	std::set<std::string> m_reasons;
 	std::vector<std::string> m_expectations;
+	std::vector<solidity::frontend::test::FunctionCall> m_functionCalls;
+	std::vector<std::string> m_highlevelComments;
+	std::vector<std::pair<std::string, std::string>> m_expectationComments;
 };

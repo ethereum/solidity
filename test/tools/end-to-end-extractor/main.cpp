@@ -10,10 +10,11 @@ int main()
 	uint32_t extractable{0};
 	uint32_t non_extractable{0};
 
+	std::cout << SOLIDITY_ROOT << std::endl;
 	std::cout << "- analysing test-cases..." << std::endl;
+	extractor.analyze();
 	for (auto &task : extractor.testsuite())
 	{
-		task.second.analyse();
 		if (task.second.extractable())
 			++extractable;
 		else
@@ -29,6 +30,8 @@ int main()
 		if (task.second.extractable())
 			task.second.extract();
 	std::cout << "- extracting test-cases... done" << std::endl;
+
+
 
 	return 0;
 }

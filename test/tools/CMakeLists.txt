@@ -18,10 +18,17 @@ add_executable(end-to-end-extractor
 	end-to-end-extractor/ExtractorExecutionFramework.cpp
 	end-to-end-extractor/ExtractionTask.h
 	end-to-end-extractor/ExtractionTask.cpp
+	end-to-end-extractor/FakeEvmHost.hpp 
+	end-to-end-extractor/FakeCompilerStack.hpp 
+	end-to-end-extractor/EndToEndCppTestFile.cpp 
+	end-to-end-extractor/EndToEndCppTestFile.h
 	../Common.cpp
 	../libsolidity/util/BytesUtils.cpp
-	../libsolidity/util/ContractABIUtils.cpp end-to-end-extractor/FakeEvmHost.hpp end-to-end-extractor/FakeCompilerStack.hpp)
-target_link_libraries(end-to-end-extractor PRIVATE evmc libsolc solidity yulInterpreter evmasm  Boost::boost Boost::program_options Boost::system)
+	../libsolidity/util/TestFileParser.cpp
+	../libsolidity/util/ContractABIUtils.cpp
+)
+target_compile_definitions(end-to-end-extractor PRIVATE SOLIDITY_ROOT="${CMAKE_SOURCE_DIR}")
+target_link_libraries(end-to-end-extractor PRIVATE evmc libsolc solidity yulInterpreter evmasm Boost::boost Boost::program_options Boost::system)
 
 add_executable(isoltest
 	isoltest.cpp
