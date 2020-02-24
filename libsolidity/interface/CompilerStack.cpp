@@ -1005,7 +1005,6 @@ void CompilerStack::resolveImports()
 				if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 				{
 					string const& path = import->annotation().absolutePath;
-					solAssert(!path.empty(), "");
 					solAssert(m_sources.count(path), "");
 					import->annotation().sourceUnit = m_sources[path].ast.get();
 					toposort(&m_sources[path]);
