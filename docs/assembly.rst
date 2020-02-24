@@ -172,6 +172,11 @@ Assignments are possible to assembly-local variables and to function-local
 variables. Take care that when you assign to variables that point to
 memory or storage, you will only change the pointer and not the data.
 
+You can assign to the ``_slot`` part of a local storage variable pointer.
+For these (structs, arrays or mappings), the ``_offset`` part is always zero.
+It is not possible to assign to the ``_slot`` or ``_offset`` part of a state variable,
+though.
+
 
 
 Things to Avoid
@@ -225,4 +230,3 @@ first slot of the array and followed by the array elements.
     Statically-sized memory arrays do not have a length field, but it might be added later
     to allow better convertibility between statically- and dynamically-sized arrays, so
     do not rely on this.
-

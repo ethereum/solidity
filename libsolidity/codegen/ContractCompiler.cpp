@@ -781,7 +781,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		else
 		{
 			// lvalue context
-			solAssert(!ref->second.isOffset && !ref->second.isSlot, "");
+			solAssert(!ref->second.isOffset, "");
 			auto variable = dynamic_cast<VariableDeclaration const*>(decl);
 			solAssert(
 				!!variable && m_context.isLocalVariable(variable),
