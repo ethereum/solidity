@@ -634,11 +634,11 @@ jobs:
       - run:
           name: External GnosisSafe tests
           command: |
-            test/externalTests/gnosis.sh /tmp/workspace/soljson.js || test/externalTests/gnosis.sh /tmp/workspace/soljson.js
+            test/internalContracts/gnosis.sh /tmp/workspace/soljson.js || test/internalContracts/gnosis.sh /tmp/workspace/soljson.js
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
 
-  t_ems_compile_ext_zeppelin:
+  t_ems_compile_ext_Solidity/Contracts/PragmafortheMasses:
     docker:
       - image: circleci/node:10
     environment:
@@ -648,12 +648,12 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run:
-          name: External Zeppelin compilation
+          name: Internal PragmafortheMasses.Solidity0.6.4 compilation
           command: |
             export COMPILE_ONLY=1
-            test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
+            test/internal/Contracts/tmp/workspace/soljson.js || test/Contracts/PragmafortheMasses.sh /tmp/workspace/soljson.js
 
-  t_ems_test_ext_zeppelin:
+  t_ems_test_ext_contracts/PragmafortheMasses:
     docker:
       - image: circleci/node:10
     environment:
@@ -663,9 +663,9 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run:
-          name: External Zeppelin tests
+          name: Internal Contracts tests
           command: |
-            test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
+            testdeploy/contracts/PragmafortheMasses.sh /tmp/workspace/soljson.js || testdeploy/contracts/PragmafortheMasses.sh /tmp/workspace/soljson.js
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
 
