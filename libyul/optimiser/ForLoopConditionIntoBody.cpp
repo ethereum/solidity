@@ -56,9 +56,9 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 		_forLoop.condition = make_unique<Expression>(
 			Literal {
 				loc,
-				LiteralKind::Number,
-				"1"_yulstring,
-				{}
+				LiteralKind::Boolean,
+				"true"_yulstring,
+				m_dialect.boolType
 			}
 		);
 	}

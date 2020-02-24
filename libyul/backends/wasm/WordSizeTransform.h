@@ -53,7 +53,7 @@ namespace solidity::yul
  * take four times the parameters and each of type u64.
  * In addition, it uses a single other builtin function called `or_bool` that
  * takes four u64 parameters and is supposed to return the logical disjunction
- * of them as a u64 value. If this name is already used somewhere, it is renamed.
+ * of them as a i32 value. If this name is already used somewhere, it is renamed.
  *
  * Prerequisite: Disambiguator, ForLoopConditionIntoBody, ExpressionSplitter
  */
@@ -69,7 +69,7 @@ public:
 
 	static void run(
 		Dialect const& _inputDialect,
-		YulString _targetDefaultType,
+		Dialect const& _targetDialect,
 		Block& _ast,
 		NameDispenser& _nameDispenser
 	);
@@ -77,13 +77,9 @@ public:
 private:
 	explicit WordSizeTransform(
 		Dialect const& _inputDialect,
-		NameDispenser& _nameDispenser,
-		YulString _defaultType
-	):
-		m_inputDialect(_inputDialect),
-		m_nameDispenser(_nameDispenser),
-		m_defaultType(_defaultType)
-	{ }
+		Dialect const& _targetDialect,
+		NameDispenser& _nameDispenser
+	);
 
 	void rewriteVarDeclList(std::vector<TypedName>&);
 	void rewriteIdentifierList(std::vector<Identifier>&);
@@ -103,8 +99,8 @@ private:
 	std::vector<Expression> expandValueToVector(Expression const& _e);
 
 	Dialect const& m_inputDialect;
+	Dialect const& m_targetDialect;
 	NameDispenser& m_nameDispenser;
-	YulString m_defaultType;
 	/// maps original u256 variable's name to corresponding u64 variables' names
 	std::map<YulString, std::array<YulString, 4>> m_variableMapping;
 };

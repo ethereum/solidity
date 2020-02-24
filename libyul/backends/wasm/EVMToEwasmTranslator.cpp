@@ -1235,7 +1235,7 @@ Object EVMToEwasmTranslator::run(Object const& _object)
 	MainFunction{}(ast);
 	ForLoopConditionIntoBody::run(context, ast);
 	ExpressionSplitter::run(context, ast);
-	WordSizeTransform::run(m_dialect, WasmDialect::instance().defaultType, ast, nameDispenser);
+	WordSizeTransform::run(m_dialect, WasmDialect::instance(), ast, nameDispenser);
 
 	NameDisplacer{nameDispenser, m_polyfillFunctions}(ast);
 	for (auto const& st: m_polyfill->statements)
@@ -1251,8 +1251,12 @@ Object EVMToEwasmTranslator::run(Object const& _object)
 	AsmAnalyzer analyzer(*ret.analysisInfo, errorReporter, WasmDialect::instance(), {}, _object.dataNames());
 	if (!analyzer.analyze(*ret.code))
 	{
-		// TODO the errors here are "wrong" because they have invalid source references!
-		string message;
+		string message = "Invalid code generated after EVM to wasm translation.\n";
+		message += "Note that the source locations in the errors below will reference the original, not the translated code.\n";
+		message += "Translated code:\n";
+		message += "----------------------------------\n";
+		message += ret.toString(&WasmDialect::instance());
+		message += "----------------------------------\n";
 		for (auto const& err: errors)
 			message += langutil::SourceReferenceFormatter::formatErrorInformation(*err);
 		yulAssert(false, message);

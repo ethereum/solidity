@@ -67,13 +67,13 @@
 //                     let _10_3 := 3
 //                     sstore(_10_0, _10_1, _10_2, _10_3, _9_0, _9_1, _9_2, _9_3)
 //                 }
-//                 default { run_default := 1 }
+//                 default { run_default := true }
 //             }
-//             default { run_default := 1 }
+//             default { run_default := true }
 //         }
-//         default { run_default := 1 }
+//         default { run_default := true }
 //     }
-//     default { run_default := 1 }
+//     default { run_default := true }
 //     if run_default
 //     {
 //         let _11_0 := 0
