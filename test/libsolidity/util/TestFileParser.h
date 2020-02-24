@@ -39,6 +39,7 @@ namespace solidity::frontend::test
  * // f(uint256, uint256): 1, 1 # Signature and comma-separated list of arguments #
  * // -> 1, 1                   # Expected result value #
  * // g(), 2 ether              # (Optional) Ether to be send with the call #
+ * // g(), 1 wei                # (Optional) Wei to be sent with the call #
  * // -> 2, 3
  * // h(uint256), 1 ether: 42
  * // -> FAILURE                # If REVERT or other EVM failure was detected #
@@ -134,7 +135,7 @@ private:
 	/// Parses the optional ether value that can be passed alongside the
 	/// function call arguments. Throws an InvalidEtherValueEncoding exception
 	/// if given value cannot be converted to `u256`.
-	u256 parseFunctionCallValue();
+	FunctionValue parseFunctionCallValue();
 
 	/// Parses a comma-separated list of arguments passed with a function call.
 	/// Does not check for a potential mismatch between the signature and the number

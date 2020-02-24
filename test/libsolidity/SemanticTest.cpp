@@ -133,7 +133,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 			else
 			{
 				if (test.call().isConstructor)
-					deploy("", test.call().value, test.call().arguments.rawBytes(), libraries);
+					deploy("", test.call().value.value, test.call().arguments.rawBytes(), libraries);
 				else
 					soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
 				constructed = true;
@@ -151,7 +151,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 			{
 				bytes output;
 				if (test.call().useCallWithoutSignature)
-					output = callLowLevel(test.call().arguments.rawBytes(), test.call().value);
+					output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
 				else
 				{
 					soltestAssert(
@@ -161,7 +161,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 
 					output = callContractFunctionWithValueNoEncoding(
 						test.call().signature,
-						test.call().value,
+						test.call().value.value,
 						test.call().arguments.rawBytes()
 					);
 				}

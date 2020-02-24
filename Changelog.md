@@ -7,7 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
-
+ * isoltest: Added new keyword `wei` to express function value in semantic tests
 
 
 ### 0.6.3 (2020-02-18)
@@ -29,7 +29,6 @@ Bugfixes:
  * Assembly: Added missing `source` field to legacy assembly json output to complete the source reference.
  * Parser: Fix an internal error for ``abstract`` without ``contract``.
  * Type Checker: Make invalid calls to uncallable types fatal errors instead of regular.
-
 
 
 ### 0.6.2 (2020-01-27)

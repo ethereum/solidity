@@ -16,8 +16,8 @@ contract A {
 // data() -> 2
 // externalData() -> 0x20, 2, left(0x42ef)
 // balance() -> 0
-// (), 1 ether
+// (), 1 wei
 // balance() -> 1
-// (), 2 ether: hex"fefe"
+// (), 2 wei: hex"fefe"
 // balance() -> 2
 // externalData() -> 0x20, 2, left(0xfefe)
