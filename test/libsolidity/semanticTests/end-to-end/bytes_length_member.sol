@@ -1,0 +1,12 @@
+
+		contract c {
+			function set() public returns (bool) { data = msg.data; return true; }
+			function getLength() public returns (uint) { return data.length; }
+			bytes data;
+		}
+	
+// ----
+// getLength() -> 0
+// set(): 1, 2 -> true
+// getLength() -> 68
+
