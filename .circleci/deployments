@@ -4,3 +4,4 @@ run:
  command: ./ci/deploy_contracts/PragmafortheMasses
  - run:
     - build and deploy smart contract post artifacts=assets to listed contract address uint64 0x-public address.
+    - include comment signature
