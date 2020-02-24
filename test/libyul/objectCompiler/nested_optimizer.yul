@@ -38,3 +38,4 @@ object "a" {
 // }
 // Bytecode: 600060003555fe
 // Opcodes: PUSH1 0x0 PUSH1 0x0 CALLDATALOAD SSTORE INVALID
+// SourceMappings: 48:1:0:-:0;;35:15;107:20

@@ -19,3 +19,4 @@ object "a" {
 // }
 // Bytecode: fe
 // Opcodes: INVALID
+// SourceMappings:

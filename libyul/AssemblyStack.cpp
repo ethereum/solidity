@@ -204,6 +204,12 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		compileEVM(adapter, false, m_optimiserSettings.optimizeStackAllocation);
 		object.bytecode = make_shared<evmasm::LinkerObject>(assembly.assemble());
 		object.assembly = assembly.assemblyString();
+		object.sourceMappings = make_unique<string>(
+			evmasm::AssemblyItem::computeSourceMapping(
+				assembly.items(),
+				{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
+			)
+		);
 		return object;
 	}
 	case Machine::EVM15:

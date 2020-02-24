@@ -98,6 +98,7 @@ public:
 	std::string const& source() const noexcept { return m_source->source(); }
 
 	std::shared_ptr<CharStream> charStream() noexcept { return m_source; }
+	std::shared_ptr<CharStream const> charStream() const noexcept { return m_source; }
 
 	/// Resets the scanner as if newly constructed with _source as input.
 	void reset(CharStream _source);
