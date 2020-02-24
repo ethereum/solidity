@@ -7871,7 +7871,8 @@ BOOST_AUTO_TEST_CASE(state_variable_local_variable_mixture)
 	ABI_CHECK(callContractFunction("a()"), encodeArgs(u256(2)));
 }
 
-BOOST_AUTO_TEST_CASE(inherited_function) {
+BOOST_AUTO_TEST_CASE(inherited_function)
+{
 	char const* sourceCode = R"(
 		contract A { function f() virtual internal returns (uint) { return 1; } }
 		contract B is A {
@@ -7886,7 +7887,8 @@ BOOST_AUTO_TEST_CASE(inherited_function) {
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(1)));
 }
 
-BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory) {
+BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory)
+{
 	char const* sourceCode = R"(
 		contract A { function f(uint[] calldata a) virtual external returns (uint) { return a[0]; } }
 		contract B is A {
@@ -7904,7 +7906,8 @@ BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory) {
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(23)));
 }
 
-BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory_interface) {
+BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory_interface)
+{
 	char const* sourceCode = R"(
 		interface I { function f(uint[] calldata a) external returns (uint); }
 		contract A is I { function f(uint[] memory a) public override returns (uint) { return 42; } }
@@ -7921,7 +7924,8 @@ BOOST_AUTO_TEST_CASE(inherited_function_calldata_memory_interface) {
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(42)));
 }
 
-BOOST_AUTO_TEST_CASE(inherited_function_calldata_calldata_interface) {
+BOOST_AUTO_TEST_CASE(inherited_function_calldata_calldata_interface)
+{
 	char const* sourceCode = R"(
 		interface I { function f(uint[] calldata a) external returns (uint); }
 		contract A is I { function f(uint[] calldata a) external override returns (uint) { return 42; } }
@@ -7938,7 +7942,8 @@ BOOST_AUTO_TEST_CASE(inherited_function_calldata_calldata_interface) {
 	ABI_CHECK(callContractFunction("g()"), encodeArgs(u256(42)));
 }
 
-BOOST_AUTO_TEST_CASE(inherited_function_from_a_library) {
+BOOST_AUTO_TEST_CASE(inherited_function_from_a_library)
+{
 	char const* sourceCode = R"(
 		library A { function f() internal returns (uint) { return 1; } }
 		contract B {
