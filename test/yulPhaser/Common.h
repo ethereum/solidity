@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <tools/yulPhaser/Chromosome.h>
+#include <tools/yulPhaser/FitnessMetrics.h>
 #include <tools/yulPhaser/Population.h>
 
 #include <cassert>
@@ -37,6 +39,18 @@
 
 namespace solidity::phaser::test
 {
+
+/**
+ * Fitness metric that only takes into account the number of optimisation steps in the chromosome.
+ * Recommended for use in tests because it's much faster than ProgramSize metric and it's very
+ * easy to guess the result at a glance.
+ */
+class ChromosomeLengthMetric: public FitnessMetric
+{
+public:
+	using FitnessMetric::FitnessMetric;
+	size_t evaluate(Chromosome const& _chromosome) const override { return _chromosome.length(); }
+};
 
 // CHROMOSOME AND POPULATION HELPERS
 

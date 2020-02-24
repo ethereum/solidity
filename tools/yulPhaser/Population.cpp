@@ -17,7 +17,6 @@
 
 #include <tools/yulPhaser/Population.h>
 
-#include <tools/yulPhaser/Program.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
@@ -42,11 +41,7 @@ ostream& operator<<(ostream& _stream, Population const& _population);
 
 ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 {
-	_stream << "Fitness: ";
-	if (_individual.fitness.has_value())
-		_stream << _individual.fitness.value();
-	else
-		_stream << "<NONE>";
+	_stream << "Fitness: " << _individual.fitness;
 	_stream << ", optimisations: " << _individual.chromosome;
 
 	return _stream;
@@ -54,64 +49,46 @@ ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 
 bool phaser::isFitter(Individual const& a, Individual const& b)
 {
-	assert(a.fitness.has_value() && b.fitness.has_value());
-
 	return (
-		(a.fitness.value() < b.fitness.value()) ||
-		(a.fitness.value() == b.fitness.value() && a.chromosome.length() < b.chromosome.length()) ||
-		(a.fitness.value() == b.fitness.value() && a.chromosome.length() == b.chromosome.length() && toString(a.chromosome) < toString(b.chromosome))
+		(a.fitness < b.fitness) ||
+		(a.fitness == b.fitness && a.chromosome.length() < b.chromosome.length()) ||
+		(a.fitness == b.fitness && a.chromosome.length() == b.chromosome.length() && toString(a.chromosome) < toString(b.chromosome))
 	);
 }
 
-Population::Population(Program _program, vector<Chromosome> const& _chromosomes):
-	m_program{move(_program)}
-{
-	for (auto const& chromosome: _chromosomes)
-		m_individuals.push_back({chromosome});
-}
-
 Population Population::makeRandom(
-	Program _program,
+	shared_ptr<FitnessMetric const> _fitnessMetric,
 	size_t _size,
 	function<size_t()> _chromosomeLengthGenerator
 )
 {
-	vector<Individual> individuals;
+	vector<Chromosome> chromosomes;
 	for (size_t i = 0; i < _size; ++i)
-		individuals.push_back({Chromosome::makeRandom(_chromosomeLengthGenerator())});
+		chromosomes.push_back(Chromosome::makeRandom(_chromosomeLengthGenerator()));
 
-	return Population(move(_program), individuals);
+	return Population(move(_fitnessMetric), move(chromosomes));
 }
 
 Population Population::makeRandom(
-	Program _program,
+	shared_ptr<FitnessMetric const> _fitnessMetric,
 	size_t _size,
 	size_t _minChromosomeLength,
 	size_t _maxChromosomeLength
 )
 {
 	return makeRandom(
-		move(_program),
+		move(_fitnessMetric),
 		_size,
 		std::bind(uniformChromosomeLength, _minChromosomeLength, _maxChromosomeLength)
 	);
 }
 
-size_t Population::measureFitness(Chromosome const& _chromosome, Program const& _program)
-{
-	Program programCopy = _program;
-	programCopy.optimise(_chromosome.optimisationSteps());
-	return programCopy.codeSize();
-}
-
 void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 {
-	doEvaluation();
 	for (size_t round = 0; !_numRounds.has_value() || round < _numRounds.value(); ++round)
 	{
 		doMutation();
 		doSelection();
-		doEvaluation();
 
 		_outputStream << "---------- ROUND " << round << " ----------" << endl;
 		_outputStream << *this;
@@ -120,16 +97,19 @@ void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
 
 Population operator+(Population _a, Population _b)
 {
-	assert(toString(_a.m_program) == toString(_b.m_program));
+	// This operator is meant to be used only with populations sharing the same metric (and, to make
+	// things simple, "the same" here means the same exact object in memory).
+	assert(_a.m_fitnessMetric == _b.m_fitnessMetric);
 
-	return Population(_a.m_program, move(_a.m_individuals) + move(_b.m_individuals));
+	return Population(_a.m_fitnessMetric, move(_a.m_individuals) + move(_b.m_individuals));
 }
 
 bool Population::operator==(Population const& _other) const
 {
-	// TODO: Comparing programs is pretty heavy but it's just a stopgap. It will soon be replaced
-	// by a comparison of fitness metric associated with the population (once metrics are introduced).
-	return m_individuals == _other.m_individuals && toString(m_program) == toString(_other.m_program);
+	// We consider populations identical only if they share the same exact instance of the metric.
+	// It might be possible to define some notion of equality for metric objects but it would
+	// be an overkill since mixing populations using different metrics is not a common use case.
+	return m_individuals == _other.m_individuals && m_fitnessMetric == _other.m_fitnessMetric;
 }
 
 ostream& phaser::operator<<(ostream& _stream, Population const& _population)
@@ -146,22 +126,14 @@ void Population::doMutation()
 	// TODO: Implement mutation and crossover
 }
 
-void Population::doEvaluation()
-{
-	for (auto& individual: m_individuals)
-		if (!individual.fitness.has_value())
-			individual.fitness = measureFitness(individual.chromosome, m_program);
-}
-
 void Population::doSelection()
 {
-	assert(all_of(m_individuals.begin(), m_individuals.end(), [](auto& i){ return i.fitness.has_value(); }));
-
-	sort(m_individuals.begin(), m_individuals.end(), isFitter);
-	randomizeWorstChromosomes(m_individuals, m_individuals.size() / 2);
+	randomizeWorstChromosomes(*m_fitnessMetric, m_individuals, m_individuals.size() / 2);
+	m_individuals = sortedIndividuals(move(m_individuals));
 }
 
 void Population::randomizeWorstChromosomes(
+	FitnessMetric const& _fitnessMetric,
 	vector<Individual>& _individuals,
 	size_t _count
 )
@@ -172,6 +144,26 @@ void Population::randomizeWorstChromosomes(
 	auto individual = _individuals.begin() + (_individuals.size() - _count);
 	for (; individual != _individuals.end(); ++individual)
 	{
-		*individual = {Chromosome::makeRandom(binomialChromosomeLength(MaxChromosomeLength))};
+		auto chromosome = Chromosome::makeRandom(binomialChromosomeLength(MaxChromosomeLength));
+		size_t fitness = _fitnessMetric.evaluate(chromosome);
+		*individual = {move(chromosome), fitness};
 	}
+}
+
+vector<Individual> Population::chromosomesToIndividuals(
+	FitnessMetric const& _fitnessMetric,
+	vector<Chromosome> _chromosomes
+)
+{
+	vector<Individual> individuals;
+	for (auto& chromosome: _chromosomes)
+		individuals.emplace_back(move(chromosome), _fitnessMetric);
+
+	return individuals;
+}
+
+vector<Individual> Population::sortedIndividuals(vector<Individual> _individuals)
+{
+	sort(_individuals.begin(), _individuals.end(), isFitter);
+	return _individuals;
 }

@@ -19,14 +19,11 @@
 
 #include <libyul/optimiser/Suite.h>
 
-#include <liblangutil/CharStream.h>
-
 #include <boost/test/unit_test.hpp>
 
 #include <set>
 
 using namespace std;
-using namespace solidity::langutil;
 using namespace solidity::yul;
 using namespace boost::test_tools;
 
@@ -36,15 +33,21 @@ namespace solidity::phaser::test
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(CommonTest)
 
+BOOST_AUTO_TEST_CASE(ChromosomeLengthMetric_evaluate_should_return_chromosome_length)
+{
+	BOOST_TEST(ChromosomeLengthMetric{}.evaluate(Chromosome()) == 0);
+	BOOST_TEST(ChromosomeLengthMetric{}.evaluate(Chromosome("a")) == 1);
+	BOOST_TEST(ChromosomeLengthMetric{}.evaluate(Chromosome("aaaaa")) == 5);
+}
+
 BOOST_AUTO_TEST_CASE(chromosomeLengths_should_return_lengths_of_all_chromosomes_in_a_population)
 {
-	CharStream sourceStream("{}", "");
-	auto program = Program::load(sourceStream);
+	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ChromosomeLengthMetric>();
 
-	Population population1(program, {Chromosome(), Chromosome("a"), Chromosome("aa"), Chromosome("aaa")});
+	Population population1(fitnessMetric, {Chromosome(), Chromosome("a"), Chromosome("aa"), Chromosome("aaa")});
 	BOOST_TEST((chromosomeLengths(population1) == vector<size_t>{0, 1, 2, 3}));
 
-	Population population2(program);
+	Population population2(fitnessMetric);
 	BOOST_TEST((chromosomeLengths(population2) == vector<size_t>{}));
 }
 
