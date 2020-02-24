@@ -9,5 +9,5 @@
 // ====
 // compileViaYul: also
 // ----
-// getBalance() -> 23
-
+// constructor(), 23 ether ->
+// getBalance() -> 23000000000000000000

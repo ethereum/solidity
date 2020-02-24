@@ -10,7 +10,6 @@
 	
 // ----
 // div(uint256,uint256): 7, 2 -> 3
-// div(uint256,uint256): 7, 0 ->  # throws #
+// div(uint256,uint256): 7, 0 -> FAILURE # throws #
 // mod(uint256,uint256): 7, 2 -> 1
-// mod(uint256,uint256): 7, 0 ->  # throws #
-
+// mod(uint256,uint256): 7, 0 -> FAILURE # throws #

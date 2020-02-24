@@ -6,4 +6,5 @@
 // ====
 // compileViaYul: also
 // ----
+// constructor() ->
 

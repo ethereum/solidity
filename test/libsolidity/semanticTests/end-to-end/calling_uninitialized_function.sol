@@ -13,6 +13,5 @@
 		}
 	
 // ----
-// intern() ->  # This should throw exceptions #
-// extern() -> 
-
+// intern() -> FAILURE # This should throw exceptions #
+// extern() -> FAILURE

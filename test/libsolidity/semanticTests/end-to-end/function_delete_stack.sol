@@ -11,5 +11,4 @@
 // ====
 // compileViaYul: also
 // ----
-// test() -> 
-
+// test() -> FAILURE

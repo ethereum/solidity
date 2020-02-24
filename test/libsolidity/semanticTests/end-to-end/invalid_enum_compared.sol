@@ -24,6 +24,5 @@
 	
 // ----
 // test_eq_ok() -> 1
-// test_eq() ->  # both should throw #
-// test_neq() -> 
-
+// test_eq() -> FAILURE # both should throw #
+// test_neq() -> FAILURE

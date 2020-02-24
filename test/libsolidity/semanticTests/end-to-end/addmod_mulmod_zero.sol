@@ -18,7 +18,6 @@
 		}
 	
 // ----
-// f(uint): 0 -> 
-// g(uint): 0 -> 
+// f(uint256): 0 -> FAILURE
+// g(uint256): 0 -> FAILURE
 // h() -> 2
-

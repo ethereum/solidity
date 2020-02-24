@@ -10,5 +10,4 @@
 // ====
 // compileViaYul: also
 // ----
-// f() -> 
-
+// f() -> FAILURE

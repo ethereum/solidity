@@ -18,5 +18,4 @@
 		}
 	
 // ----
-// test() ->  # should throw #
-
+// test() -> FAILURE # should throw #

@@ -1,4 +1,16 @@
 
+		contract D {
+			bytes32 public x;
+			constructor() public {
+				bytes32 codeHash;
+				assembly {
+					let size := codesize()
+					codecopy(mload(0x40), 0, size)
+					codeHash := keccak256(mload(0x40), size)
+				}
+				x = codeHash;
+			}
+		}
 		contract C {
 			function testRuntime() public returns (bool) {
 				D d = new D();
@@ -19,18 +31,6 @@
 				bytes32 creationHash = keccak256(type(D).creationCode);
 				require(creationHash == d.x());
 				return true;
-			}
-		}
-		contract D {
-			bytes32 public x;
-			constructor() public {
-				bytes32 codeHash;
-				assembly {
-					let size := codesize()
-					codecopy(mload(0x40), 0, size)
-					codeHash := keccak256(mload(0x40), size)
-				}
-				x = codeHash;
 			}
 		}
 	

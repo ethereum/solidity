@@ -25,9 +25,8 @@
 // ====
 // compileViaYul: also
 // ----
-// getChoiceExp(uint256): 3 ->  # These should throw #
-// getChoiceFromSigned(int256): -1 -> 
-// getChoiceFromNegativeLiteral() -> 
+// getChoiceExp(uint256): 3 -> FAILURE # These should throw #
+// getChoiceFromSigned(int256): -1 -> FAILURE
+// getChoiceFromNegativeLiteral() -> FAILURE
 // getChoiceExp(uint256): 2 -> 2 # These should work #
 // getChoiceExp(uint256): 0 -> 0
-

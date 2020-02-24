@@ -1,4 +1,8 @@
-
+		contract D {
+			uint x;
+			constructor() public { x = 7; }
+			function f() public view returns (uint) { return x; }
+		}
 		contract C {
 			function test() public returns (uint) {
 				bytes memory c = type(D).creationCode;
@@ -8,11 +12,6 @@
 				}
 				return d.f();
 			}
-		}
-		contract D {
-			uint x;
-			constructor() public { x = 7; }
-			function f() public view returns (uint) { return x; }
 		}
 	
 // ----

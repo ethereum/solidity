@@ -16,9 +16,8 @@
 // ====
 // compileViaYul: also
 // ----
-// f() -> 
-// g(bool): false -> 
+// f() -> FAILURE
+// g(bool): false -> FAILURE
 // g(bool): true -> true
-// h(bool): false -> 
+// h(bool): false -> FAILURE
 // h(bool): true -> true
-

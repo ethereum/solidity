@@ -20,5 +20,4 @@
 // ----
 // test_store_ok() -> 1
 // x() -> 0
-// test_store() ->  # should throw #
-
+// test_store() -> FAILURE # should throw #

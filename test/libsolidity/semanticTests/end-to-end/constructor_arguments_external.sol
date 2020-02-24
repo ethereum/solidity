@@ -12,6 +12,7 @@
 		}
 	
 // ----
+// constructor(): "abc", true
 // getFlag() -> true
 // getName() -> "abc"
 

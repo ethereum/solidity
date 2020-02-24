@@ -4,4 +4,4 @@
 		contract C { function f() public { new B(); } }
 	
 // ----
-
+// constructor() ->

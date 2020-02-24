@@ -26,7 +26,6 @@
 // ====
 // compileViaYul: also
 // ----
-// test_return() ->  # both should throw #
-// test_inline_assignment() -> 
-// test_assignment() -> 
-
+// test_return() -> FAILURE # both should throw #
+// test_inline_assignment() -> FAILURE
+// test_assignment() -> FAILURE
