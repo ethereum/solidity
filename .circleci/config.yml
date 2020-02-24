@@ -15,7 +15,7 @@ parameters:
     default: "4"
   ubuntu-1904-clang-docker-image-rev:
     type: string
-    default: "4"
+    default: "5"
 
 defaults:
 
