@@ -1,14 +1,16 @@
+contract C {
+    function f(uint256 x) public returns (uint256) {
+        return eval(g, x);
+    }
 
-		contract C {
-			function f(uint x) public returns (uint) {
-				return eval(g, x);
-			}
-			function eval(function(uint) internal returns (uint) x, uint a) internal returns (uint) {
-				return x(a);
-			}
-			function g(uint x) public returns (uint) { return x + 1; }
-		}
-	
+    function eval(function(uint) internal returns (uint) x, uint a) internal returns (uint) {
+        return x(a);
+    }
+
+    function g(uint256 x) public returns (uint256) {
+        return x + 1;
+    }
+}
+
 // ----
 // f(uint256): 7 -> 8
-

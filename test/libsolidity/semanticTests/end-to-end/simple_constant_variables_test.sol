@@ -1,9 +1,10 @@
+contract Foo {
+    function getX() public returns (uint256 r) {
+        return x;
+    }
 
-		contract Foo {
-			function getX() public returns (uint r) { return x; }
-			uint constant x = 56;
-		}
-	
+    uint256 constant x = 56;
+}
+
 // ----
 // getX() -> 56
-

@@ -1,17 +1,16 @@
+contract C {
+    uint256 public x;
+    modifier setsx {
+        _;
+        x = 9;
+    }
 
-		contract C {
-			uint public x;
-			modifier setsx {
-				_;
-				x = 9;
-			}
-			function f() setsx public returns (uint) {
-				return 2;
-			}
-		}
-	
+    function f() public setsx returns (uint256) {
+        return 2;
+    }
+}
+
 // ----
 // x() -> 0
 // f() -> 2
 // x() -> 9
-

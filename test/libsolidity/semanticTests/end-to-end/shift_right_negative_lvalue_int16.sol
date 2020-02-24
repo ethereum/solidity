@@ -1,10 +1,9 @@
+contract C {
+    function f(int16 a, int16 b) public returns (int256) {
+        return a >> b;
+    }
+}
 
-			contract C {
-				function f(int16 a, int16 b) public returns (int) {
-					return a >> b;
-				}
-			}
-		
 // ----
 // f(int16,int16): -4266, 0 -> -4266
 // f(int16,int16): -4266, 1 -> -2133
@@ -18,4 +17,3 @@
 // f(int16,int16): -4267, 8 -> -17
 // f(int16,int16): -4267, 16 -> -1
 // f(int16,int16): -4267, 17 -> -1
-

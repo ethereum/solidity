@@ -1,12 +1,11 @@
+contract A {
+    uint256 x = 1;
+    uint256 y = 2;
 
-		contract A {
-			uint x = 1;
-			uint y = 2;
-			function a() public returns (uint x) {
-				x = A.y;
-			}
-		}
-	
+    function a() public returns (uint256 x) {
+        x = A.y;
+    }
+}
+
 // ----
 // a() -> 2
-

@@ -1,14 +1,25 @@
+interface I {
+    function f(uint256[] calldata a) external returns (uint256);
+}
 
-		interface I { function f(uint[] calldata a) external returns (uint); }
-		contract A is I { function f(uint[] calldata a) external override returns (uint) { return 42; } }
-		contract B {
-			function f(uint[] memory a) public returns (uint) { return a[1]; }
-			function g() public returns (uint) {
-				I i = I(new A());
-				return i.f(new uint[](2));
-			}
-		}
-	
+
+contract A is I {
+    function f(uint256[] calldata a) external override returns (uint256) {
+        return 42;
+    }
+}
+
+
+contract B {
+    function f(uint256[] memory a) public returns (uint256) {
+        return a[1];
+    }
+
+    function g() public returns (uint256) {
+        I i = I(new A());
+        return i.f(new uint256[](2));
+    }
+}
+
 // ----
 // g() -> 42
-

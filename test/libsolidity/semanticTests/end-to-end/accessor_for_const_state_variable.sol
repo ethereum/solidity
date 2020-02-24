@@ -1,8 +1,6 @@
+contract Lotto {
+    uint256 public constant ticketPrice = 555;
+}
 
-		contract Lotto{
-			uint constant public ticketPrice = 555;
-		}
-	
 // ----
 // ticketPrice() -> 555
-

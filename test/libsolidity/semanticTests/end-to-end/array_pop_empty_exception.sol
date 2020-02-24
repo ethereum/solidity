@@ -1,11 +1,11 @@
+contract c {
+    uint256[] data;
 
-		contract c {
-			uint[] data;
-			function test() public returns (bool) {
-				data.pop();
-				return true;
-			}
-		}
-	
+    function test() public returns (bool) {
+        data.pop();
+        return true;
+    }
+}
+
 // ----
 // test() -> FAILURE

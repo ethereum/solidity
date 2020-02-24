@@ -1,8 +1,10 @@
+contract A {
+    function f() public {
+        super;
+    }
+}
 
-		contract A { function f() public { super; } }
-	
 // ====
 // compileViaYul: also
 // ----
-// f() -> 
-
+// f() ->

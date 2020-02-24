@@ -1,12 +1,19 @@
+library A {
+    function f() internal returns (uint256) {
+        return 1;
+    }
+}
 
-		library A { function f() internal returns (uint) { return 1; } }
-		contract B {
-			function f() internal returns (uint) { return 2; }
-			function g() public returns (uint) {
-				return A.f();
-			}
-		}
-	
+
+contract B {
+    function f() internal returns (uint256) {
+        return 2;
+    }
+
+    function g() public returns (uint256) {
+        return A.f();
+    }
+}
+
 // ----
 // g() -> 1
-

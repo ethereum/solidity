@@ -1,12 +1,11 @@
+contract C {
+    function f() public {
+        assembly {
+            invalid()
+        }
+    }
+}
 
-		contract C {
-			function f() public {
-				assembly {
-					invalid()
-				}
-			}
-		}
-	
 // ====
 // compileViaYul: also
 // ----

@@ -1,14 +1,15 @@
+contract C {
+    function f() public returns (uint256 r) {
+        uint256;
+        uint256;
+        uint256;
+        uint256;
+        int256 x = -7;
+        return uint256(x);
+    }
+}
 
-		contract C {
-			function f() public returns (uint r) {
-				uint; uint; uint; uint;
-				int x = -7;
-				return uint(x);
-			}
-		}
-	
 // ====
 // compileViaYul: also
 // ----
 // f() -> -7
-

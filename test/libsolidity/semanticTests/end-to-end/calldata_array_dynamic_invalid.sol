@@ -1,15 +1,17 @@
+pragma experimental ABIEncoderV2;
 
-		pragma experimental ABIEncoderV2;
-		contract C {
-			function f(uint256[][] calldata a) external returns (uint) {
-				return 42;
-			}
-			function g(uint256[][] calldata a) external returns (uint) {
-				a[0];
-				return 42;
-			}
-		}
-	
+
+contract C {
+    function f(uint256[][] calldata a) external returns (uint256) {
+        return 42;
+    }
+
+    function g(uint256[][] calldata a) external returns (uint256) {
+        a[0];
+        return 42;
+    }
+}
+
 // ----
 // f(uint256[][]): 0x20, 0x0 -> 42 # valid access stub #
 // f(uint256[][]): 0x20, 0x1 -> FAILURE # invalid on argument decoding #

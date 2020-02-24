@@ -1,18 +1,17 @@
+library Arst {
+    struct Foo {
+        int256 Things;
+        int256 Stuff;
+    }
+}
 
-		library Arst {
-			struct Foo {
-				int Things;
-				int Stuff;
-			}
-		}
 
-		contract Tsra {
-			function f() public returns(uint) {
-				Arst.Foo;
-				return 1;
-			}
-		}
-	
+contract Tsra {
+    function f() public returns (uint256) {
+        Arst.Foo;
+        return 1;
+    }
+}
+
 // ----
 // f() -> 1
-

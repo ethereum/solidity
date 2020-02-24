@@ -1,12 +1,11 @@
+contract Test {
+    mapping(string => uint256) data;
 
-		contract Test {
-			mapping(string => uint) data;
-			function f() public returns (uint) {
-				data["abc"] = 2;
-				return data["abc"];
-			}
-		}
-	
+    function f() public returns (uint256) {
+        data["abc"] = 2;
+        return data["abc"];
+    }
+}
+
 // ----
 // f() -> 2
-
