@@ -1,6 +1,7 @@
 ### 0.6.4 (unreleased)
 
 Language Features:
+ * Inline Assembly: Allow assigning to `_slot` of local storage variable pointers.
 
 
 Compiler Features:

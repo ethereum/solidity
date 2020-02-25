@@ -677,10 +677,20 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					m_errorReporter.typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
 					return size_t(-1);
 				}
-				else if (_context != yul::IdentifierContext::RValue)
+				else if (_context == yul::IdentifierContext::LValue)
 				{
-					m_errorReporter.typeError(_identifier.location, "Storage variables cannot be assigned to.");
-					return size_t(-1);
+					if (var->isStateVariable())
+					{
+						m_errorReporter.typeError(_identifier.location, "State variables cannot be assigned to - you have to use \"sstore()\".");
+						return size_t(-1);
+					}
+					else if (ref->second.isOffset)
+					{
+						m_errorReporter.typeError(_identifier.location, "Only _slot can be assigned to.");
+						return size_t(-1);
+					}
+					else
+						solAssert(ref->second.isSlot, "");
 				}
 			}
 			else if (!var->isConstant() && var->isStateVariable())
