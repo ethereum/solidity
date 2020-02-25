@@ -565,7 +565,7 @@ string const* CompilerStack::sourceMapping(string const& _contractName) const
 	if (!c.sourceMapping)
 	{
 		if (auto items = assemblyItems(_contractName))
-			c.sourceMapping = make_unique<string>(computeSourceMapping(*items));
+			c.sourceMapping = make_unique<string>(evmasm::AssemblyItem::computeSourceMapping(*items, sourceIndices()));
 	}
 	return c.sourceMapping.get();
 }
@@ -579,7 +579,9 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 	if (!c.runtimeSourceMapping)
 	{
 		if (auto items = runtimeAssemblyItems(_contractName))
-			c.runtimeSourceMapping = make_unique<string>(computeSourceMapping(*items));
+			c.runtimeSourceMapping = make_unique<string>(
+				evmasm::AssemblyItem::computeSourceMapping(*items, sourceIndices())
+			);
 	}
 	return c.runtimeSourceMapping.get();
 }
@@ -1387,95 +1389,6 @@ bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimen
 	else
 		encoder.pushString("solc", VersionStringStrict);
 	return encoder.serialise();
-}
-
-string CompilerStack::computeSourceMapping(evmasm::AssemblyItems const& _items) const
-{
-	if (m_stackState != CompilationSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
-
-	string ret;
-	map<string, unsigned> sourceIndicesMap = sourceIndices();
-	int prevStart = -1;
-	int prevLength = -1;
-	int prevSourceIndex = -1;
-	size_t prevModifierDepth = -1;
-	char prevJump = 0;
-	for (auto const& item: _items)
-	{
-		if (!ret.empty())
-			ret += ";";
-
-		SourceLocation const& location = item.location();
-		int length = location.start != -1 && location.end != -1 ? location.end - location.start : -1;
-		int sourceIndex =
-			location.source && sourceIndicesMap.count(location.source->name()) ?
-			sourceIndicesMap.at(location.source->name()) :
-			-1;
-		char jump = '-';
-		if (item.getJumpType() == evmasm::AssemblyItem::JumpType::IntoFunction)
-			jump = 'i';
-		else if (item.getJumpType() == evmasm::AssemblyItem::JumpType::OutOfFunction)
-			jump = 'o';
-		size_t modifierDepth = item.m_modifierDepth;
-
-		unsigned components = 5;
-		if (modifierDepth == prevModifierDepth)
-		{
-			components--;
-			if (jump == prevJump)
-			{
-				components--;
-				if (sourceIndex == prevSourceIndex)
-				{
-					components--;
-					if (length == prevLength)
-					{
-						components--;
-						if (location.start == prevStart)
-							components--;
-					}
-				}
-			}
-		}
-
-		if (components-- > 0)
-		{
-			if (location.start != prevStart)
-				ret += to_string(location.start);
-			if (components-- > 0)
-			{
-				ret += ':';
-				if (length != prevLength)
-					ret += to_string(length);
-				if (components-- > 0)
-				{
-					ret += ':';
-					if (sourceIndex != prevSourceIndex)
-						ret += to_string(sourceIndex);
-					if (components-- > 0)
-					{
-						ret += ':';
-						if (jump != prevJump)
-							ret += jump;
-						if (components-- > 0)
-						{
-							ret += ':';
-							if (modifierDepth != prevModifierDepth)
-								ret += to_string(modifierDepth);
-						}
-					}
-				}
-			}
-		}
-
-		prevStart = location.start;
-		prevLength = length;
-		prevSourceIndex = sourceIndex;
-		prevJump = jump;
-		prevModifierDepth = modifierDepth;
-	}
-	return ret;
 }
 
 namespace

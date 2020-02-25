@@ -19,12 +19,14 @@
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FixedHash.h>
+#include <liblangutil/SourceLocation.h>
 
 #include <fstream>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
+using namespace solidity::langutil;
 
 static_assert(sizeof(size_t) <= 8, "size_t must be at most 64-bits wide");
 
@@ -280,4 +282,93 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 		assertThrow(false, InvalidOpcode, "");
 	}
 	return _out;
+}
+
+std::string AssemblyItem::computeSourceMapping(
+	AssemblyItems const& _items,
+	map<string, unsigned> const& _sourceIndicesMap
+)
+{
+	string ret;
+
+	int prevStart = -1;
+	int prevLength = -1;
+	int prevSourceIndex = -1;
+	size_t prevModifierDepth = -1;
+	char prevJump = 0;
+	for (auto const& item: _items)
+	{
+		if (!ret.empty())
+			ret += ";";
+
+		SourceLocation const& location = item.location();
+		int length = location.start != -1 && location.end != -1 ? location.end - location.start : -1;
+		int sourceIndex =
+			location.source && _sourceIndicesMap.count(location.source->name()) ?
+			_sourceIndicesMap.at(location.source->name()) :
+			-1;
+		char jump = '-';
+		if (item.getJumpType() == evmasm::AssemblyItem::JumpType::IntoFunction)
+			jump = 'i';
+		else if (item.getJumpType() == evmasm::AssemblyItem::JumpType::OutOfFunction)
+			jump = 'o';
+		size_t modifierDepth = item.m_modifierDepth;
+
+		unsigned components = 5;
+		if (modifierDepth == prevModifierDepth)
+		{
+			components--;
+			if (jump == prevJump)
+			{
+				components--;
+				if (sourceIndex == prevSourceIndex)
+				{
+					components--;
+					if (length == prevLength)
+					{
+						components--;
+						if (location.start == prevStart)
+							components--;
+					}
+				}
+			}
+		}
+
+		if (components-- > 0)
+		{
+			if (location.start != prevStart)
+				ret += to_string(location.start);
+			if (components-- > 0)
+			{
+				ret += ':';
+				if (length != prevLength)
+					ret += to_string(length);
+				if (components-- > 0)
+				{
+					ret += ':';
+					if (sourceIndex != prevSourceIndex)
+						ret += to_string(sourceIndex);
+					if (components-- > 0)
+					{
+						ret += ':';
+						if (jump != prevJump)
+							ret += jump;
+						if (components-- > 0)
+						{
+							ret += ':';
+							if (modifierDepth != prevModifierDepth)
+								ret += to_string(modifierDepth);
+						}
+					}
+				}
+			}
+		}
+
+		prevStart = location.start;
+		prevLength = length;
+		prevSourceIndex = sourceIndex;
+		prevJump = jump;
+		prevModifierDepth = modifierDepth;
+	}
+	return ret;
 }

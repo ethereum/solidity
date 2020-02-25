@@ -74,6 +74,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 
 	MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::EVM);
 	solAssert(obj.bytecode, "");
+	solAssert(obj.sourceMappings, "");
 
 	m_obtainedResult = "Assembly:\n" + obj.assembly;
 	if (obj.bytecode->bytecode.empty())
@@ -84,6 +85,8 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 			toHex(obj.bytecode->bytecode) +
 			"\nOpcodes: " +
 			boost::trim_copy(evmasm::disassemble(obj.bytecode->bytecode)) +
+			"\nSourceMappings:" +
+			(obj.sourceMappings->empty() ? "" : " " + *obj.sourceMappings) +
 			"\n";
 
 	if (m_expectation != m_obtainedResult)

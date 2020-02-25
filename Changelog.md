@@ -5,6 +5,7 @@ Language Features:
 
 
 Compiler Features:
+ * AssemblyStack: Support for source locations (source mappings) and thus debugging Yul sources.
 
 
 Bugfixes:

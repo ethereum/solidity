@@ -11,3 +11,4 @@ object "a" {
 //   sstore
 // Bytecode: 6001600055
 // Opcodes: PUSH1 0x1 PUSH1 0x0 SSTORE
+// SourceMappings: 32:1:0:-:0;29;22:12

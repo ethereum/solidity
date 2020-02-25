@@ -401,9 +401,6 @@ private:
 	/// @returns the metadata CBOR for the given serialised metadata JSON.
 	bytes createCBORMetadata(std::string const& _metadata, bool _experimentalMode);
 
-	/// @returns the computer source mapping string.
-	std::string computeSourceMapping(evmasm::AssemblyItems const& _items) const;
-
 	/// @returns the contract ABI as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
 	Json::Value const& contractABI(Contract const&) const;
