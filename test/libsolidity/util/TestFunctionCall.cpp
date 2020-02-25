@@ -52,6 +52,7 @@ string TestFunctionCall::format(
 		string comma = formatToken(Token::Comma);
 		string comment = formatToken(Token::Comment);
 		string ether = formatToken(Token::Ether);
+		string wei = formatToken(Token::Wei);
 		string newline = formatToken(Token::Newline);
 		string failure = formatToken(Token::Failure);
 
@@ -64,7 +65,14 @@ string TestFunctionCall::format(
 		/// Formats the function signature. This is the same independent from the display-mode.
 		stream << _linePrefix << newline << ws << m_call.signature;
 		if (m_call.value.value > u256(0))
-			stream << comma << ws << m_call.value.value << ws << ether;
+		{
+			if (m_call.value.unit == FunctionValueUnit::Ether)
+				stream << comma << ws << (m_call.value.value / exp256(10, 18)) << ws << ether;
+			else if (m_call.value.unit == FunctionValueUnit::Wei)
+				stream << comma << ws << m_call.value.value << ws << wei;
+			else
+				soltestAssert(false, "");
+		}
 		if (!m_call.arguments.rawBytes().empty())
 		{
 			string output = formatRawParameters(m_call.arguments.parameters, _linePrefix);
