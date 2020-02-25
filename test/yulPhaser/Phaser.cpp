@@ -62,6 +62,7 @@ protected:
 	Program m_program = get<Program>(Program::load(m_sourceStream));
 	FitnessMetricFactory::Options m_options = {
 		/* metric = */ MetricChoice::CodeSize,
+		/* relativeMetricScale = */ 5,
 		/* chromosomeRepetitions = */ 1,
 	};
 };
@@ -161,6 +162,18 @@ BOOST_FIXTURE_TEST_CASE(build_should_respect_chromosome_repetitions_option, Fitn
 	auto programSizeMetric = dynamic_cast<ProgramSize*>(metric.get());
 	BOOST_REQUIRE(programSizeMetric != nullptr);
 	BOOST_TEST(programSizeMetric->repetitionCount() == m_options.chromosomeRepetitions);
+}
+
+BOOST_FIXTURE_TEST_CASE(build_should_set_relative_metric_scale, FitnessMetricFactoryFixture)
+{
+	m_options.metric = MetricChoice::RelativeCodeSize;
+	m_options.relativeMetricScale = 10;
+	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_program);
+	BOOST_REQUIRE(metric != nullptr);
+
+	auto relativeProgramSizeMetric = dynamic_cast<RelativeProgramSize*>(metric.get());
+	BOOST_REQUIRE(relativeProgramSizeMetric != nullptr);
+	BOOST_TEST(relativeProgramSizeMetric->fixedPointPrecision() == m_options.relativeMetricScale);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

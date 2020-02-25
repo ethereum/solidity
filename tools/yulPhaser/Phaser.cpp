@@ -139,6 +139,7 @@ FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po:
 {
 	return {
 		_arguments["metric"].as<MetricChoice>(),
+		_arguments["relative-metric-scale"].as<size_t>(),
 		_arguments["chromosome-repetitions"].as<size_t>(),
 	};
 }
@@ -158,7 +159,7 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 		case MetricChoice::RelativeCodeSize:
 			return make_unique<RelativeProgramSize>(
 				move(_program),
-				3,
+				_options.relativeMetricScale,
 				_options.chromosomeRepetitions
 			);
 		default:
@@ -420,6 +421,18 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			"metric",
 			po::value<MetricChoice>()->value_name("<NAME>")->default_value(MetricChoice::CodeSize),
 			"Metric used to evaluate the fitness of a chromosome."
+		)
+		(
+			"relative-metric-scale",
+			po::value<size_t>()->value_name("<EXPONENT>")->default_value(3),
+			"Scaling factor for values produced by relative fitness metrics. \n"
+			"Since all metrics must produce integer values, the fractional part of the result is discarded. "
+			"To keep the numbers meaningful, a relative metric multiples its values by a scaling factor "
+			"and this option specifies the exponent of this factor. "
+			"For example with value of 3 the factor is 10^3 = 1000 and the metric will return "
+			"500 to represent 0.5, 1000 for 1.0, 2000 for 2.0 and so on. "
+			"Using a bigger factor allows discerning smaller relative differences between chromosomes "
+			"but makes the numbers less readable and may also lose precision if the numbers are very large."
 		)
 		(
 			"chromosome-repetitions",

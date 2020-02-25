@@ -100,6 +100,7 @@ public:
 	struct Options
 	{
 		MetricChoice metric;
+		size_t relativeMetricScale;
 		size_t chromosomeRepetitions;
 
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
