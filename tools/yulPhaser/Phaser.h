@@ -52,8 +52,16 @@ enum class Algorithm
 	GEWEP,
 };
 
+enum class MetricChoice
+{
+	CodeSize,
+	RelativeCodeSize,
+};
+
 std::istream& operator>>(std::istream& _inputStream, solidity::phaser::Algorithm& _algorithm);
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::Algorithm _algorithm);
+std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricChoice& _metric);
+std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::MetricChoice _metric);
 
 /**
  * Builds and validates instances of @a GeneticAlgorithm and its derived classes.
@@ -91,6 +99,7 @@ class FitnessMetricFactory
 public:
 	struct Options
 	{
+		MetricChoice metric;
 		size_t chromosomeRepetitions;
 
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);

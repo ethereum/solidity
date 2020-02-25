@@ -61,6 +61,7 @@ protected:
 	CharStream m_sourceStream = CharStream("{}", "");
 	Program m_program = get<Program>(Program::load(m_sourceStream));
 	FitnessMetricFactory::Options m_options = {
+		/* metric = */ MetricChoice::CodeSize,
 		/* chromosomeRepetitions = */ 1,
 	};
 };
@@ -141,16 +142,18 @@ BOOST_AUTO_TEST_SUITE(FitnessMetricFactoryTest)
 
 BOOST_FIXTURE_TEST_CASE(build_should_create_metric_of_the_right_type, FitnessMetricFactoryFixture)
 {
+	m_options.metric = MetricChoice::RelativeCodeSize;
 	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_program);
 	BOOST_REQUIRE(metric != nullptr);
 
-	auto programSizeMetric = dynamic_cast<ProgramSize*>(metric.get());
-	BOOST_REQUIRE(programSizeMetric != nullptr);
-	BOOST_TEST(toString(programSizeMetric->program()) == toString(m_program));
+	auto relativeProgramSizeMetric = dynamic_cast<RelativeProgramSize*>(metric.get());
+	BOOST_REQUIRE(relativeProgramSizeMetric != nullptr);
+	BOOST_TEST(toString(relativeProgramSizeMetric->program()) == toString(m_program));
 }
 
 BOOST_FIXTURE_TEST_CASE(build_should_respect_chromosome_repetitions_option, FitnessMetricFactoryFixture)
 {
+	m_options.metric = MetricChoice::CodeSize;
 	m_options.chromosomeRepetitions = 5;
 	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_program);
 	BOOST_REQUIRE(metric != nullptr);

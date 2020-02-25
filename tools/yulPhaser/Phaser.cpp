@@ -53,10 +53,19 @@ map<Algorithm, string> const AlgorithmToStringMap =
 };
 map<string, Algorithm> const StringToAlgorithmMap = invertMap(AlgorithmToStringMap);
 
+map<MetricChoice, string> MetricChoiceToStringMap =
+{
+	{MetricChoice::CodeSize, "code-size"},
+	{MetricChoice::RelativeCodeSize, "relative-code-size"},
+};
+map<string, MetricChoice> const StringToMetricChoiceMap = invertMap(MetricChoiceToStringMap);
+
 }
 
 istream& phaser::operator>>(istream& _inputStream, Algorithm& _algorithm) { return deserializeChoice(_inputStream, _algorithm, StringToAlgorithmMap); }
 ostream& phaser::operator<<(ostream& _outputStream, Algorithm _algorithm) { return serializeChoice(_outputStream, _algorithm, AlgorithmToStringMap); }
+istream& phaser::operator>>(istream& _inputStream, MetricChoice& _metric) { return deserializeChoice(_inputStream, _metric, StringToMetricChoiceMap); }
+ostream& phaser::operator<<(ostream& _outputStream, MetricChoice _metric) { return serializeChoice(_outputStream, _metric, MetricChoiceToStringMap); }
 
 GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
@@ -129,6 +138,7 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
 	return {
+		_arguments["metric"].as<MetricChoice>(),
 		_arguments["chromosome-repetitions"].as<size_t>(),
 	};
 }
@@ -138,7 +148,22 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	Program _program
 )
 {
-	return make_unique<ProgramSize>(move(_program), _options.chromosomeRepetitions);
+	switch (_options.metric)
+	{
+		case MetricChoice::CodeSize:
+			return make_unique<ProgramSize>(
+				move(_program),
+				_options.chromosomeRepetitions
+			);
+		case MetricChoice::RelativeCodeSize:
+			return make_unique<RelativeProgramSize>(
+				move(_program),
+				3,
+				_options.chromosomeRepetitions
+			);
+		default:
+			assertThrow(false, solidity::util::Exception, "Invalid MetricChoice value.");
+	}
 }
 
 PopulationFactory::Options PopulationFactory::Options::fromCommandLine(po::variables_map const& _arguments)
@@ -391,6 +416,11 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 
 	po::options_description metricsDescription("METRICS", lineLength, minDescriptionLength);
 	metricsDescription.add_options()
+		(
+			"metric",
+			po::value<MetricChoice>()->value_name("<NAME>")->default_value(MetricChoice::CodeSize),
+			"Metric used to evaluate the fitness of a chromosome."
+		)
 		(
 			"chromosome-repetitions",
 			po::value<size_t>()->value_name("<COUNT>")->default_value(1),
