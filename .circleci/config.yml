@@ -16,6 +16,9 @@ parameters:
   ubuntu-1904-clang-docker-image-rev:
     type: string
     default: "5"
+  ubuntu-1604-clang-ossfuzz-docker-image-rev:
+    type: string
+    default: "1"
 
 defaults:
 
@@ -119,6 +122,17 @@ defaults:
       name: command line tests
       command: ./test/cmdlineTests.sh
 
+  - test_ubuntu1604_clang: &test_ubuntu1604_clang
+      docker:
+        - image: ethereum/solidity-buildpack-deps:ubuntu1604-clang-ossfuzz-<< pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image-rev >>
+      steps:
+        - checkout
+        - attach_workspace:
+            at: build
+        - run: *run_soltest
+        - store_test_results: *store_test_results
+        - store_artifacts: *artifacts_test_results
+
   - test_ubuntu1904_clang: &test_ubuntu1904_clang
       docker:
         - image: ethereum/solidity-buildpack-deps:ubuntu1904-clang-<< pipeline.parameters.ubuntu-1904-clang-docker-image-rev >>
@@ -166,6 +180,11 @@ defaults:
       requires:
         - b_ubu
 
+  - workflow_ubuntu1604_clang: &workflow_ubuntu1604_clang
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_ubu_ossfuzz
+
   - workflow_ubuntu1904_clang: &workflow_ubuntu1904_clang
       <<: *workflow_trigger_on_tags
       requires:
@@ -196,7 +215,7 @@ defaults:
       requires:
         - b_ems
 
-  - workflow_ubuntu1904_ossfuzz: &workflow_ubuntu1904_ossfuzz
+  - workflow_ubuntu1604_ossfuzz: &workflow_ubuntu1604_ossfuzz
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_ossfuzz
@@ -397,12 +416,13 @@ jobs:
       - checkout
       - run: *run_build
 
-  b_ubu_ossfuzz:
-    <<: *build_ubuntu1904_clang
+  b_ubu_ossfuzz: &build_ubuntu1604_clang
+    docker:
+      - image: ethereum/solidity-buildpack-deps:ubuntu1604-clang-ossfuzz-<< pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image-rev >>
     environment:
-      TERM: xterm
       CC: clang
       CXX: clang++
+      TERM: xterm
       CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
     steps:
       - checkout
@@ -411,7 +431,7 @@ jobs:
       - persist_to_workspace: *artifacts_executables_ossfuzz
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
-    <<: *test_ubuntu1904_clang
+    <<: *test_ubuntu1604_clang
     steps:
       - checkout
       - attach_workspace:
@@ -799,7 +819,7 @@ workflows:
     jobs:
       # OSSFUZZ builds and (regression) tests
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
-      - t_ubu_ossfuzz: *workflow_ubuntu1904_ossfuzz
+      - t_ubu_ossfuzz: *workflow_ubuntu1604_ossfuzz
 
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *workflow_trigger_on_tags
