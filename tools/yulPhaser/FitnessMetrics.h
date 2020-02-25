@@ -113,4 +113,60 @@ private:
 	size_t m_fixedPointPrecision;
 };
 
+/**
+ * Abstract base class for fitness metrics that compute their value based on values of multiple
+ * other, nested metrics.
+ */
+class FitnessMetricCombination: public FitnessMetric
+{
+public:
+	explicit FitnessMetricCombination(std::vector<std::shared_ptr<FitnessMetric>> _metrics):
+		m_metrics(std::move(_metrics)) {}
+
+	std::vector<std::shared_ptr<FitnessMetric>> const& metrics() const { return m_metrics; }
+
+protected:
+	std::vector<std::shared_ptr<FitnessMetric>> m_metrics;
+};
+
+/**
+ * Fitness metric that returns the average of values of its nested metrics.
+ */
+class FitnessMetricAverage: public FitnessMetricCombination
+{
+public:
+	using FitnessMetricCombination::FitnessMetricCombination;
+	size_t evaluate(Chromosome const& _chromosome) override;
+};
+
+/**
+ * Fitness metric that returns the sum of values of its nested metrics.
+ */
+class FitnessMetricSum: public FitnessMetricCombination
+{
+public:
+	using FitnessMetricCombination::FitnessMetricCombination;
+	size_t evaluate(Chromosome const& _chromosome) override;
+};
+
+/**
+ * Fitness metric that returns the highest of values of its nested metrics.
+ */
+class FitnessMetricMaximum: public FitnessMetricCombination
+{
+public:
+	using FitnessMetricCombination::FitnessMetricCombination;
+	size_t evaluate(Chromosome const& _chromosome) override;
+};
+
+/**
+ * Fitness metric that returns the lowest of values of its nested metrics.
+ */
+class FitnessMetricMinimum: public FitnessMetricCombination
+{
+public:
+	using FitnessMetricCombination::FitnessMetricCombination;
+	size_t evaluate(Chromosome const& _chromosome) override;
+};
+
 }

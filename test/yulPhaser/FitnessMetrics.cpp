@@ -78,6 +78,21 @@ protected:
 	Program m_optimisedProgram = optimisedProgram(m_program);
 };
 
+class FitnessMetricCombinationFixture: public ProgramBasedMetricFixture
+{
+protected:
+	vector<shared_ptr<FitnessMetric>> m_simpleMetrics = {
+		make_shared<ProgramSize>(m_program, 1),
+		make_shared<ProgramSize>(m_program, 2),
+		make_shared<ProgramSize>(m_program, 3),
+	};
+	vector<size_t> m_fitness = {
+		m_simpleMetrics[0]->evaluate(m_chromosome),
+		m_simpleMetrics[1]->evaluate(m_chromosome),
+		m_simpleMetrics[2]->evaluate(m_chromosome),
+	};
+};
+
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(FitnessMetricsTest)
 BOOST_AUTO_TEST_SUITE(ProgramBasedMetricTest)
@@ -171,6 +186,45 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_multiply_the_result_by_scaling_factor, P
 	BOOST_TEST(RelativeProgramSize(m_program, 2).evaluate(m_chromosome) == round(100.0 * sizeRatio));
 	BOOST_TEST(RelativeProgramSize(m_program, 3).evaluate(m_chromosome) == round(1000.0 * sizeRatio));
 	BOOST_TEST(RelativeProgramSize(m_program, 4).evaluate(m_chromosome) == round(10000.0 * sizeRatio));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE(FitnessMetricCombinationTest)
+
+BOOST_FIXTURE_TEST_CASE(FitnessMetricAverage_evaluate_should_compute_average_of_values_returned_by_metrics_passed_to_it, FitnessMetricCombinationFixture)
+{
+	FitnessMetricAverage metric(m_simpleMetrics);
+
+	assert(m_simpleMetrics.size() == 3);
+	BOOST_TEST(metric.evaluate(m_chromosome) == (m_fitness[0] + m_fitness[1] + m_fitness[2]) / 3);
+	BOOST_TEST(metric.metrics() == m_simpleMetrics);
+}
+
+BOOST_FIXTURE_TEST_CASE(FitnessMetricSum_evaluate_should_compute_sum_of_values_returned_by_metrics_passed_to_it, FitnessMetricCombinationFixture)
+{
+	FitnessMetricSum metric(m_simpleMetrics);
+
+	assert(m_simpleMetrics.size() == 3);
+	BOOST_TEST(metric.evaluate(m_chromosome) == m_fitness[0] + m_fitness[1] + m_fitness[2]);
+	BOOST_TEST(metric.metrics() == m_simpleMetrics);
+}
+
+BOOST_FIXTURE_TEST_CASE(FitnessMetricMaximum_evaluate_should_compute_maximum_of_values_returned_by_metrics_passed_to_it, FitnessMetricCombinationFixture)
+{
+	FitnessMetricMaximum metric(m_simpleMetrics);
+
+	assert(m_simpleMetrics.size() == 3);
+	BOOST_TEST(metric.evaluate(m_chromosome) == max(m_fitness[0], max(m_fitness[1], m_fitness[2])));
+	BOOST_TEST(metric.metrics() == m_simpleMetrics);
+}
+
+BOOST_FIXTURE_TEST_CASE(FitnessMetricMinimum_evaluate_should_compute_minimum_of_values_returned_by_metrics_passed_to_it, FitnessMetricCombinationFixture)
+{
+	FitnessMetricMinimum metric(m_simpleMetrics);
+
+	assert(m_simpleMetrics.size() == 3);
+	BOOST_TEST(metric.evaluate(m_chromosome) == min(m_fitness[0], min(m_fitness[1], m_fitness[2])));
+	BOOST_TEST(metric.metrics() == m_simpleMetrics);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
