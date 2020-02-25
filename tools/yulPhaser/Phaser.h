@@ -108,7 +108,7 @@ public:
 
 	static std::unique_ptr<FitnessMetric> build(
 		Options const& _options,
-		Program _program
+		std::vector<Program> _programs
 	);
 };
 
@@ -157,12 +157,12 @@ class ProgramFactory
 public:
 	struct Options
 	{
-		std::string inputFile;
+		std::vector<std::string> inputFiles;
 
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
 	};
 
-	static Program build(Options const& _options);
+	static std::vector<Program> build(Options const& _options);
 
 private:
 	static langutil::CharStream loadSource(std::string const& _sourcePath);

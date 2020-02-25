@@ -146,25 +146,39 @@ FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po:
 
 unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	Options const& _options,
-	Program _program
+	vector<Program> _programs
 )
 {
+	assert(_programs.size() > 0 && "Validations should prevent this from being executed with zero files.");
+
+	vector<shared_ptr<FitnessMetric>> metrics;
 	switch (_options.metric)
 	{
 		case MetricChoice::CodeSize:
-			return make_unique<ProgramSize>(
-				move(_program),
-				_options.chromosomeRepetitions
-			);
+		{
+			for (Program& program: _programs)
+				metrics.push_back(make_unique<ProgramSize>(
+					move(program),
+					_options.chromosomeRepetitions
+				));
+
+			break;
+		}
 		case MetricChoice::RelativeCodeSize:
-			return make_unique<RelativeProgramSize>(
-				move(_program),
-				_options.relativeMetricScale,
-				_options.chromosomeRepetitions
-			);
+		{
+			for (Program& program: _programs)
+				metrics.push_back(make_unique<RelativeProgramSize>(
+					move(program),
+					_options.relativeMetricScale,
+					_options.chromosomeRepetitions
+				));
+			break;
+		}
 		default:
 			assertThrow(false, solidity::util::Exception, "Invalid MetricChoice value.");
 	}
+
+	return make_unique<FitnessMetricAverage>(move(metrics));
 }
 
 PopulationFactory::Options PopulationFactory::Options::fromCommandLine(po::variables_map const& _arguments)
@@ -246,20 +260,26 @@ Population PopulationFactory::buildFromFile(
 ProgramFactory::Options ProgramFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
 	return {
-		_arguments["input-file"].as<string>(),
+		_arguments["input-files"].as<vector<string>>(),
 	};
 }
 
-Program ProgramFactory::build(Options const& _options)
+vector<Program> ProgramFactory::build(Options const& _options)
 {
-	CharStream sourceCode = loadSource(_options.inputFile);
-	variant<Program, ErrorList> programOrErrors = Program::load(sourceCode);
-	if (holds_alternative<ErrorList>(programOrErrors))
+	vector<Program> inputPrograms;
+	for (auto& path: _options.inputFiles)
 	{
-		cerr << get<ErrorList>(programOrErrors) << endl;
-		assertThrow(false, InvalidProgram, "Failed to load program " + _options.inputFile);
+		CharStream sourceCode = loadSource(path);
+		variant<Program, ErrorList> programOrErrors = Program::load(sourceCode);
+		if (holds_alternative<ErrorList>(programOrErrors))
+		{
+			cerr << get<ErrorList>(programOrErrors) << endl;
+			assertThrow(false, InvalidProgram, "Failed to load program " + path);
+		}
+		inputPrograms.push_back(move(get<Program>(programOrErrors)));
 	}
-	return move(get<Program>(programOrErrors));
+
+	return inputPrograms;
 }
 
 CharStream ProgramFactory::loadSource(string const& _sourcePath)
@@ -303,7 +323,7 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	po::options_description generalDescription("GENERAL", lineLength, minDescriptionLength);
 	generalDescription.add_options()
 		("help", "Show help message and exit.")
-		("input-file", po::value<string>()->required()->value_name("<PATH>"), "Input file.")
+		("input-files", po::value<vector<string>>()->required()->value_name("<PATH>"), "Input files.")
 		("seed", po::value<uint32_t>()->value_name("<NUM>"), "Seed for the random number generator.")
 		(
 			"rounds",
@@ -443,7 +463,7 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	keywordDescription.add(metricsDescription);
 
 	po::positional_options_description positionalDescription;
-	positionalDescription.add("input-file", 1);
+	positionalDescription.add("input-files", -1);
 
 	return {keywordDescription, positionalDescription};
 }
@@ -465,8 +485,8 @@ optional<po::variables_map> Phaser::parseCommandLine(int _argc, char** _argv)
 		return nullopt;
 	}
 
-	if (arguments.count("input-file") == 0)
-		assertThrow(false, NoInputFiles, "Missing argument: input-file.");
+	if (arguments.count("input-files") == 0)
+		assertThrow(false, NoInputFiles, "Missing argument: input-files.");
 
 	return arguments;
 }
@@ -501,8 +521,8 @@ void Phaser::runAlgorithm(po::variables_map const& _arguments)
 	auto populationOptions = PopulationFactory::Options::fromCommandLine(_arguments);
 	auto algorithmOptions = GeneticAlgorithmFactory::Options::fromCommandLine(_arguments);
 
-	Program program = ProgramFactory::build(programOptions);
-	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, move(program));
+	vector<Program> programs = ProgramFactory::build(programOptions);
+	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, move(programs));
 	Population population = PopulationFactory::build(populationOptions, move(fitnessMetric));
 
 	unique_ptr<GeneticAlgorithm> geneticAlgorithm = GeneticAlgorithmFactory::build(

@@ -58,8 +58,16 @@ protected:
 class FitnessMetricFactoryFixture
 {
 protected:
-	CharStream m_sourceStream = CharStream("{}", "");
-	Program m_program = get<Program>(Program::load(m_sourceStream));
+	vector<CharStream> m_sourceStreams = {
+		CharStream("{}", ""),
+		CharStream("{{}}", ""),
+		CharStream("{{{}}}", ""),
+	};
+	vector<Program> m_programs = {
+		get<Program>(Program::load(m_sourceStreams[0])),
+		get<Program>(Program::load(m_sourceStreams[1])),
+		get<Program>(Program::load(m_sourceStreams[2])),
+	};
 	FitnessMetricFactory::Options m_options = {
 		/* metric = */ MetricChoice::CodeSize,
 		/* relativeMetricScale = */ 5,
@@ -144,22 +152,32 @@ BOOST_AUTO_TEST_SUITE(FitnessMetricFactoryTest)
 BOOST_FIXTURE_TEST_CASE(build_should_create_metric_of_the_right_type, FitnessMetricFactoryFixture)
 {
 	m_options.metric = MetricChoice::RelativeCodeSize;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_program);
+	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]});
 	BOOST_REQUIRE(metric != nullptr);
 
-	auto relativeProgramSizeMetric = dynamic_cast<RelativeProgramSize*>(metric.get());
+	auto averageMetric = dynamic_cast<FitnessMetricAverage*>(metric.get());
+	BOOST_REQUIRE(averageMetric != nullptr);
+	BOOST_REQUIRE(averageMetric->metrics().size() == 1);
+	BOOST_REQUIRE(averageMetric->metrics()[0] != nullptr);
+
+	auto relativeProgramSizeMetric = dynamic_cast<RelativeProgramSize*>(averageMetric->metrics()[0].get());
 	BOOST_REQUIRE(relativeProgramSizeMetric != nullptr);
-	BOOST_TEST(toString(relativeProgramSizeMetric->program()) == toString(m_program));
+	BOOST_TEST(toString(relativeProgramSizeMetric->program()) == toString(m_programs[0]));
 }
 
 BOOST_FIXTURE_TEST_CASE(build_should_respect_chromosome_repetitions_option, FitnessMetricFactoryFixture)
 {
 	m_options.metric = MetricChoice::CodeSize;
 	m_options.chromosomeRepetitions = 5;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_program);
+	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]});
 	BOOST_REQUIRE(metric != nullptr);
 
-	auto programSizeMetric = dynamic_cast<ProgramSize*>(metric.get());
+	auto averageMetric = dynamic_cast<FitnessMetricAverage*>(metric.get());
+	BOOST_REQUIRE(averageMetric != nullptr);
+	BOOST_REQUIRE(averageMetric->metrics().size() == 1);
+	BOOST_REQUIRE(averageMetric->metrics()[0] != nullptr);
+
+	auto programSizeMetric = dynamic_cast<ProgramSize*>(averageMetric->metrics()[0].get());
 	BOOST_REQUIRE(programSizeMetric != nullptr);
 	BOOST_TEST(programSizeMetric->repetitionCount() == m_options.chromosomeRepetitions);
 }
@@ -168,12 +186,27 @@ BOOST_FIXTURE_TEST_CASE(build_should_set_relative_metric_scale, FitnessMetricFac
 {
 	m_options.metric = MetricChoice::RelativeCodeSize;
 	m_options.relativeMetricScale = 10;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_program);
+	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]});
 	BOOST_REQUIRE(metric != nullptr);
 
-	auto relativeProgramSizeMetric = dynamic_cast<RelativeProgramSize*>(metric.get());
+	auto averageMetric = dynamic_cast<FitnessMetricAverage*>(metric.get());
+	BOOST_REQUIRE(averageMetric != nullptr);
+	BOOST_REQUIRE(averageMetric->metrics().size() == 1);
+	BOOST_REQUIRE(averageMetric->metrics()[0] != nullptr);
+
+	auto relativeProgramSizeMetric = dynamic_cast<RelativeProgramSize*>(averageMetric->metrics()[0].get());
 	BOOST_REQUIRE(relativeProgramSizeMetric != nullptr);
 	BOOST_TEST(relativeProgramSizeMetric->fixedPointPrecision() == m_options.relativeMetricScale);
+}
+
+BOOST_FIXTURE_TEST_CASE(build_should_create_metric_for_each_input_program, FitnessMetricFactoryFixture)
+{
+	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_programs);
+	BOOST_REQUIRE(metric != nullptr);
+
+	auto combinedMetric = dynamic_cast<FitnessMetricCombination*>(metric.get());
+	BOOST_REQUIRE(combinedMetric != nullptr);
+	BOOST_REQUIRE(combinedMetric->metrics().size() == m_programs.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -283,20 +316,30 @@ BOOST_FIXTURE_TEST_CASE(build_should_combine_populations_from_all_sources, Poula
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(ProgramFactoryTest)
 
-BOOST_AUTO_TEST_CASE(build_should_load_program_from_file)
+BOOST_AUTO_TEST_CASE(build_should_load_programs_from_files)
 {
 	TemporaryDirectory tempDir;
+	vector<string> sources{"{}", "{{}}", "{{{}}}"};
+	ProgramFactory::Options options{/* inputFiles = */ {
+		tempDir.memberPath("program1.yul"),
+		tempDir.memberPath("program2.yul"),
+		tempDir.memberPath("program3.yul"),
+	}};
+
+	for (size_t i = 0; i < sources.size(); ++i)
 	{
-		ofstream tmpFile(tempDir.memberPath("program.yul"));
-		tmpFile << "{}" << endl;
+		ofstream tmpFile(options.inputFiles[i]);
+		tmpFile << sources[i] << endl;
 	}
 
-	ProgramFactory::Options options{/* inputFile = */ tempDir.memberPath("program.yul")};
-	CharStream expectedProgramSource("{}", "");
+	vector<Program> programs = ProgramFactory::build(options);
 
-	auto program = ProgramFactory::build(options);
-
-	BOOST_TEST(toString(program) == toString(get<Program>(Program::load(expectedProgramSource))));
+	BOOST_TEST(programs.size() == sources.size());
+	for (size_t i = 0; i < sources.size(); ++i)
+	{
+		CharStream sourceStream(sources[i], options.inputFiles[i]);
+		BOOST_TEST(toString(programs[i]) == toString(get<Program>(Program::load(sourceStream))));
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()
