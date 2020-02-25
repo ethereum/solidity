@@ -411,6 +411,12 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 {
 	astAssert(_node["name"].isString(), "Expected 'name' to be a string!");
 
+	VariableDeclaration::Constantness constantness{};
+	if (memberAsBool(_node, "constant"))
+		constantness = VariableDeclaration::Constantness::Constant;
+	else
+		constantness = VariableDeclaration::Constantness::Mutable;
+
 	return createASTNode<VariableDeclaration>(
 		_node,
 		nullOrCast<TypeName>(member(_node, "typeName")),
@@ -419,7 +425,7 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 		visibility(_node),
 		memberAsBool(_node, "stateVariable"),
 		_node.isMember("indexed") ? memberAsBool(_node, "indexed") : false,
-		memberAsBool(_node, "constant"),
+		constantness,
 		_node["overrides"].isNull() ? nullptr : createOverrideSpecifier(member(_node, "overrides")),
 		location(_node)
 	);
