@@ -26,7 +26,7 @@ void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 	{
 		m_population = _algorithm.runNextRound(m_population);
 
-		m_outputStream << "---------- ROUND " << round << " ----------" << endl;
+		m_outputStream << "---------- ROUND " << round + 1 << " ----------" << endl;
 		m_outputStream << m_population;
 	}
 }
