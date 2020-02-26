@@ -188,6 +188,55 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_save_population_to_file_if_autosave_file_
 	BOOST_TEST(!fs::exists(m_autosavePath));
 }
 
+BOOST_FIXTURE_TEST_CASE(run_should_randomise_duplicate_chromosomes_if_requested, AlgorithmRunnerFixture)
+{
+	Chromosome duplicate("afc");
+	Population population(m_fitnessMetric, {duplicate, duplicate, duplicate});
+	CountingAlgorithm algorithm;
+
+	m_options.maxRounds = 1;
+	m_options.randomiseDuplicates = true;
+	m_options.minChromosomeLength = 50;
+	m_options.maxChromosomeLength = 50;
+	AlgorithmRunner runner(population, m_options, m_output);
+
+	runner.run(algorithm);
+
+	auto const& newIndividuals = runner.population().individuals();
+
+	BOOST_TEST(newIndividuals.size() == 3);
+	BOOST_TEST((
+		newIndividuals[0].chromosome == duplicate ||
+		newIndividuals[1].chromosome == duplicate ||
+		newIndividuals[2].chromosome == duplicate
+	));
+	BOOST_TEST(newIndividuals[0] != newIndividuals[1]);
+	BOOST_TEST(newIndividuals[0] != newIndividuals[2]);
+	BOOST_TEST(newIndividuals[1] != newIndividuals[2]);
+
+	BOOST_TEST((newIndividuals[0].chromosome.length() == 50 || newIndividuals[0].chromosome == duplicate));
+	BOOST_TEST((newIndividuals[1].chromosome.length() == 50 || newIndividuals[1].chromosome == duplicate));
+	BOOST_TEST((newIndividuals[2].chromosome.length() == 50 || newIndividuals[2].chromosome == duplicate));
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_not_randomise_duplicate_chromosomes_if_not_requested, AlgorithmRunnerFixture)
+{
+	Chromosome duplicate("afc");
+	Population population(m_fitnessMetric, {duplicate, duplicate, duplicate});
+	CountingAlgorithm algorithm;
+
+	m_options.maxRounds = 1;
+	m_options.randomiseDuplicates = false;
+	AlgorithmRunner runner(population, m_options, m_output);
+
+	runner.run(algorithm);
+
+	BOOST_TEST(runner.population().individuals().size() == 3);
+	BOOST_TEST(runner.population().individuals()[0].chromosome == duplicate);
+	BOOST_TEST(runner.population().individuals()[1].chromosome == duplicate);
+	BOOST_TEST(runner.population().individuals()[2].chromosome == duplicate);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 

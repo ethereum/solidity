@@ -35,6 +35,7 @@ void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 	for (size_t round = 0; !m_options.maxRounds.has_value() || round < m_options.maxRounds.value(); ++round)
 	{
 		m_population = _algorithm.runNextRound(m_population);
+		randomiseDuplicates();
 
 		m_outputStream << "---------- ROUND " << round + 1 << " ----------" << endl;
 		m_outputStream << m_population;
@@ -62,5 +63,43 @@ void AlgorithmRunner::populationAutosave() const
 		!outputStream.bad(),
 		FileWriteError,
 		"Error while writing to file '" + m_options.populationAutosaveFile.value() + "': " + strerror(errno)
+	);
+}
+
+void AlgorithmRunner::randomiseDuplicates()
+{
+	if (m_options.randomiseDuplicates)
+	{
+		assert(m_options.minChromosomeLength.has_value());
+		assert(m_options.maxChromosomeLength.has_value());
+
+		m_population = randomiseDuplicates(
+			m_population,
+			m_options.minChromosomeLength.value(),
+			m_options.maxChromosomeLength.value()
+		);
+	}
+}
+
+Population AlgorithmRunner::randomiseDuplicates(
+	Population _population,
+	size_t _minChromosomeLength,
+	size_t _maxChromosomeLength
+)
+{
+	if (_population.individuals().size() == 0)
+		return _population;
+
+	vector<Chromosome> chromosomes{_population.individuals()[0].chromosome};
+	size_t duplicateCount = 0;
+	for (size_t i = 1; i < _population.individuals().size(); ++i)
+		if (_population.individuals()[i].chromosome == _population.individuals()[i - 1].chromosome)
+			++duplicateCount;
+		else
+			chromosomes.push_back(_population.individuals()[i].chromosome);
+
+	return (
+		Population(_population.fitnessMetric(), chromosomes) +
+		Population::makeRandom(_population.fitnessMetric(), duplicateCount, _minChromosomeLength, _maxChromosomeLength)
 	);
 }
