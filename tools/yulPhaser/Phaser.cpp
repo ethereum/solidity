@@ -18,6 +18,7 @@
 #include <tools/yulPhaser/Phaser.h>
 
 #include <tools/yulPhaser/AlgorithmRunner.h>
+#include <tools/yulPhaser/Common.h>
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/FitnessMetrics.h>
 #include <tools/yulPhaser/GeneticAlgorithms.h>
@@ -27,6 +28,7 @@
 #include <liblangutil/CharStream.h>
 
 #include <libsolutil/Assertions.h>
+#include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
 
 #include <boost/filesystem.hpp>
@@ -41,32 +43,20 @@ using namespace solidity::phaser;
 
 namespace po = boost::program_options;
 
-istream& phaser::operator>>(istream& _inputStream, Algorithm& _algorithm)
+namespace
 {
-	string value;
-	_inputStream >> value;
 
-	if (value == "random")
-		_algorithm = Algorithm::Random;
-	else if (value == "GEWEP")
-		_algorithm = Algorithm::GEWEP;
-	else
-		_inputStream.setstate(ios_base::failbit);
+map<Algorithm, string> const AlgorithmToStringMap =
+{
+	{Algorithm::Random, "random"},
+	{Algorithm::GEWEP, "GEWEP"},
+};
+map<string, Algorithm> const StringToAlgorithmMap = invertMap(AlgorithmToStringMap);
 
-	return _inputStream;
 }
 
-ostream& phaser::operator<<(ostream& _outputStream, Algorithm _algorithm)
-{
-	if (_algorithm == Algorithm::Random)
-		_outputStream << "random";
-	else if (_algorithm == Algorithm::GEWEP)
-		_outputStream << "GEWEP";
-	else
-		_outputStream.setstate(ios_base::failbit);
-
-	return _outputStream;
-}
+istream& phaser::operator>>(istream& _inputStream, Algorithm& _algorithm) { return deserializeChoice(_inputStream, _algorithm, StringToAlgorithmMap); }
+ostream& phaser::operator<<(ostream& _outputStream, Algorithm _algorithm) { return serializeChoice(_outputStream, _algorithm, AlgorithmToStringMap); }
 
 GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
