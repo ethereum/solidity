@@ -158,9 +158,11 @@ FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po:
 
 unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	Options const& _options,
-	vector<Program> _programs
+	vector<Program> _programs,
+	vector<shared_ptr<ProgramCache>> _programCaches
 )
 {
+	assert(_programCaches.size() == _programs.size());
 	assert(_programs.size() > 0 && "Validations should prevent this from being executed with zero files.");
 
 	vector<shared_ptr<FitnessMetric>> metrics;
@@ -168,10 +170,10 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	{
 		case MetricChoice::CodeSize:
 		{
-			for (Program& program: _programs)
+			for (size_t i = 0; i < _programs.size(); ++i)
 				metrics.push_back(make_unique<ProgramSize>(
-					move(program),
-					nullptr,
+					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
+					move(_programCaches[i]),
 					_options.chromosomeRepetitions
 				));
 
@@ -179,10 +181,10 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 		}
 		case MetricChoice::RelativeCodeSize:
 		{
-			for (Program& program: _programs)
+			for (size_t i = 0; i < _programs.size(); ++i)
 				metrics.push_back(make_unique<RelativeProgramSize>(
-					move(program),
-					nullptr,
+					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
+					move(_programCaches[i]),
 					_options.relativeMetricScale,
 					_options.chromosomeRepetitions
 				));
@@ -528,6 +530,19 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	;
 	keywordDescription.add(metricsDescription);
 
+	po::options_description cacheDescription("CACHE", lineLength, minDescriptionLength);
+	cacheDescription.add_options()
+		(
+			"program-cache",
+			po::bool_switch(),
+			"Enables caching of intermediate programs corresponding to chromosome prefixes.\n"
+			"This speeds up fitness evaluation by a lot but eats tons of memory if the chromosomes are long. "
+			"Disabled by default since there's currently no way to set an upper limit on memory usage but "
+			"highly recommended if your computer has enough RAM."
+		)
+	;
+	keywordDescription.add(cacheDescription);
+
 	po::positional_options_description positionalDescription;
 	positionalDescription.add("input-files", -1);
 
@@ -583,12 +598,15 @@ AlgorithmRunner::Options Phaser::buildAlgorithmRunnerOptions(po::variables_map c
 void Phaser::runAlgorithm(po::variables_map const& _arguments)
 {
 	auto programOptions = ProgramFactory::Options::fromCommandLine(_arguments);
+	auto cacheOptions = ProgramCacheFactory::Options::fromCommandLine(_arguments);
 	auto metricOptions = FitnessMetricFactory::Options::fromCommandLine(_arguments);
 	auto populationOptions = PopulationFactory::Options::fromCommandLine(_arguments);
 	auto algorithmOptions = GeneticAlgorithmFactory::Options::fromCommandLine(_arguments);
 
 	vector<Program> programs = ProgramFactory::build(programOptions);
-	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, move(programs));
+	vector<shared_ptr<ProgramCache>> programCaches = ProgramCacheFactory::build(cacheOptions, programs);
+
+	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, move(programs), programCaches);
 	Population population = PopulationFactory::build(populationOptions, move(fitnessMetric));
 
 	unique_ptr<GeneticAlgorithm> geneticAlgorithm = GeneticAlgorithmFactory::build(
@@ -596,6 +614,6 @@ void Phaser::runAlgorithm(po::variables_map const& _arguments)
 		population.individuals().size()
 	);
 
-	AlgorithmRunner algorithmRunner(population, vector<shared_ptr<ProgramCache>>(programs.size(), nullptr), buildAlgorithmRunnerOptions(_arguments), cout);
+	AlgorithmRunner algorithmRunner(population, move(programCaches), buildAlgorithmRunnerOptions(_arguments), cout);
 	algorithmRunner.run(*geneticAlgorithm);
 }

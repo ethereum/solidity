@@ -120,7 +120,8 @@ public:
 
 	static std::unique_ptr<FitnessMetric> build(
 		Options const& _options,
-		std::vector<Program> _programs
+		std::vector<Program> _programs,
+		std::vector<std::shared_ptr<ProgramCache>> _programCaches
 	);
 };
 
