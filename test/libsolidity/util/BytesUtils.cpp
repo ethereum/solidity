@@ -225,7 +225,7 @@ string BytesUtils::formatRawBytes(
 	{
 		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
 
-		os << _linePrefix << formatBytes(byteRange, parameter.abiType);
+		os << _linePrefix << byteRange;
 		if (&parameter != &parameters.back())
 			os << endl;
 
