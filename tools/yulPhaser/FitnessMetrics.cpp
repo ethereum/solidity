@@ -29,7 +29,7 @@ Program ProgramBasedMetric::optimisedProgram(Chromosome const& _chromosome) cons
 	return programCopy;
 }
 
-size_t ProgramSize::evaluate(Chromosome const& _chromosome) const
+size_t ProgramSize::evaluate(Chromosome const& _chromosome)
 {
 	return optimisedProgram(_chromosome).codeSize();
 }

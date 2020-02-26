@@ -38,7 +38,7 @@ class DummyProgramBasedMetric: public ProgramBasedMetric
 {
 public:
 	using ProgramBasedMetric::ProgramBasedMetric;
-	size_t evaluate(Chromosome const&) const override { return 0; }
+	size_t evaluate(Chromosome const&) override { return 0; }
 };
 
 class ProgramBasedMetricFixture

@@ -43,7 +43,7 @@ public:
 	FitnessMetric& operator=(FitnessMetric const&) = delete;
 	virtual ~FitnessMetric() = default;
 
-	virtual size_t evaluate(Chromosome const& _chromosome) const = 0;
+	virtual size_t evaluate(Chromosome const& _chromosome) = 0;
 };
 
 /**
@@ -84,7 +84,7 @@ class ProgramSize: public ProgramBasedMetric
 {
 public:
 	using ProgramBasedMetric::ProgramBasedMetric;
-	size_t evaluate(Chromosome const& _chromosome) const override;
+	size_t evaluate(Chromosome const& _chromosome) override;
 };
 
 }
