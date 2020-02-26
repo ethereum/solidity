@@ -64,6 +64,19 @@ GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLi
 		_arguments["algorithm"].as<Algorithm>(),
 		_arguments["min-chromosome-length"].as<size_t>(),
 		_arguments["max-chromosome-length"].as<size_t>(),
+		_arguments.count("random-elite-pool-size") > 0 ?
+			_arguments["random-elite-pool-size"].as<double>() :
+			optional<double>{},
+		_arguments["gewep-mutation-pool-size"].as<double>(),
+		_arguments["gewep-crossover-pool-size"].as<double>(),
+		_arguments["gewep-randomisation-chance"].as<double>(),
+		_arguments["gewep-deletion-vs-addition-chance"].as<double>(),
+		_arguments.count("gewep-genes-to-randomise") > 0 ?
+			_arguments["gewep-genes-to-randomise"].as<double>() :
+			optional<double>{},
+		_arguments.count("gewep-genes-to-add-or-delete") > 0 ?
+			_arguments["gewep-genes-to-add-or-delete"].as<double>() :
+			optional<double>{},
 	};
 }
 
@@ -77,20 +90,37 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 	switch (_options.algorithm)
 	{
 		case Algorithm::Random:
+		{
+			double elitePoolSize = 1.0 / _populationSize;
+
+			if (_options.randomElitePoolSize.has_value())
+				elitePoolSize = _options.randomElitePoolSize.value();
+
 			return make_unique<RandomAlgorithm>(RandomAlgorithm::Options{
-				/* elitePoolSize = */ 1.0 / _populationSize,
+				/* elitePoolSize = */ elitePoolSize,
 				/* minChromosomeLength = */ _options.minChromosomeLength,
 				/* maxChromosomeLength = */ _options.maxChromosomeLength,
 			});
+		}
 		case Algorithm::GEWEP:
+		{
+			double percentGenesToRandomise = 1.0 / _options.maxChromosomeLength;
+			double percentGenesToAddOrDelete = percentGenesToRandomise;
+
+			if (_options.gewepGenesToRandomise.has_value())
+				percentGenesToRandomise = _options.gewepGenesToRandomise.value();
+			if (_options.gewepGenesToAddOrDelete.has_value())
+				percentGenesToAddOrDelete = _options.gewepGenesToAddOrDelete.value();
+
 			return make_unique<GenerationalElitistWithExclusivePools>(GenerationalElitistWithExclusivePools::Options{
-				/* mutationPoolSize = */ 0.25,
-				/* crossoverPoolSize = */ 0.25,
-				/* randomisationChance = */ 0.9,
-				/* deletionVsAdditionChance = */ 0.5,
-				/* percentGenesToRandomise = */ 1.0 / _options.maxChromosomeLength,
-				/* percentGenesToAddOrDelete = */ 1.0 / _options.maxChromosomeLength,
+				/* mutationPoolSize = */ _options.gewepMutationPoolSize,
+				/* crossoverPoolSize = */ _options.gewepCrossoverPoolSize,
+				/* randomisationChance = */ _options.gewepRandomisationChance,
+				/* deletionVsAdditionChance = */ _options.gewepDeletionVsAdditionChance,
+				/* percentGenesToRandomise = */ percentGenesToRandomise,
+				/* percentGenesToAddOrDelete = */ percentGenesToAddOrDelete,
 			});
+		}
 		default:
 			assertThrow(false, solidity::util::Exception, "Invalid Algorithm value.");
 	}
@@ -276,6 +306,54 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		)
 	;
 	keywordDescription.add(algorithmDescription);
+
+	po::options_description gewepAlgorithmDescription("GEWEP ALGORITHM", lineLength, minDescriptionLength);
+	gewepAlgorithmDescription.add_options()
+		(
+			"gewep-mutation-pool-size",
+			po::value<double>()->value_name("<FRACTION>")->default_value(0.25),
+			"Percentage of population to regenerate using mutations in each round."
+		)
+		(
+			"gewep-crossover-pool-size",
+			po::value<double>()->value_name("<FRACTION>")->default_value(0.25),
+			"Percentage of population to regenerate using crossover in each round."
+		)
+		(
+			"gewep-randomisation-chance",
+			po::value<double>()->value_name("<PROBABILITY>")->default_value(0.9),
+			"The chance of choosing gene randomisation as the mutation to perform."
+		)
+		(
+			"gewep-deletion-vs-addition-chance",
+			po::value<double>()->value_name("<PROBABILITY>")->default_value(0.5),
+			"The chance of choosing gene deletion as the mutation if randomisation was not chosen."
+		)
+		(
+			"gewep-genes-to-randomise",
+			po::value<double>()->value_name("<PROBABILITY>"),
+			"The chance of any given gene being mutated in gene randomisation. "
+			"(default=1/max-chromosome-length)"
+		)
+		(
+			"gewep-genes-to-add-or-delete",
+			po::value<double>()->value_name("<PROBABILITY>"),
+			"The chance of a gene being added (or deleted) in gene addition (or deletion). "
+			"(default=1/max-chromosome-length)"
+		)
+	;
+	keywordDescription.add(gewepAlgorithmDescription);
+
+	po::options_description randomAlgorithmDescription("RANDOM ALGORITHM", lineLength, minDescriptionLength);
+	randomAlgorithmDescription.add_options()
+		(
+			"random-elite-pool-size",
+			po::value<double>()->value_name("<FRACTION>"),
+			"Percentage of the population preserved in each round. "
+			"(default=one individual, regardless of population size)"
+		)
+	;
+	keywordDescription.add(randomAlgorithmDescription);
 
 	po::options_description populationDescription("POPULATION", lineLength, minDescriptionLength);
 	populationDescription.add_options()

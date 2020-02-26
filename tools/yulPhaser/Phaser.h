@@ -66,6 +66,13 @@ public:
 		Algorithm algorithm;
 		size_t minChromosomeLength;
 		size_t maxChromosomeLength;
+		std::optional<double> randomElitePoolSize;
+		double gewepMutationPoolSize;
+		double gewepCrossoverPoolSize;
+		double gewepRandomisationChance;
+		double gewepDeletionVsAdditionChance;
+		std::optional<double> gewepGenesToRandomise;
+		std::optional<double> gewepGenesToAddOrDelete;
 
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
 	};
