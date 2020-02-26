@@ -463,7 +463,7 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	metricsDescription.add_options()
 		(
 			"metric",
-			po::value<MetricChoice>()->value_name("<NAME>")->default_value(MetricChoice::CodeSize),
+			po::value<MetricChoice>()->value_name("<NAME>")->default_value(MetricChoice::RelativeCodeSize),
 			"Metric used to evaluate the fitness of a chromosome."
 		)
 		(
