@@ -18,7 +18,7 @@ parameters:
     default: "5"
   ubuntu-1604-clang-ossfuzz-docker-image-rev:
     type: string
-    default: "1"
+    default: "2"
 
 defaults:
 
