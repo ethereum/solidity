@@ -35,6 +35,8 @@ add_executable(yul-phaser
 	yulPhaser/PairSelections.cpp
 	yulPhaser/Selections.h
 	yulPhaser/Selections.cpp
+	yulPhaser/ProgramCache.h
+	yulPhaser/ProgramCache.cpp
 	yulPhaser/Program.h
 	yulPhaser/Program.cpp
 	yulPhaser/SimulationRNG.h
