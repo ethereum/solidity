@@ -171,6 +171,7 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 			for (Program& program: _programs)
 				metrics.push_back(make_unique<ProgramSize>(
 					move(program),
+					nullptr,
 					_options.chromosomeRepetitions
 				));
 
@@ -181,6 +182,7 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 			for (Program& program: _programs)
 				metrics.push_back(make_unique<RelativeProgramSize>(
 					move(program),
+					nullptr,
 					_options.relativeMetricScale,
 					_options.chromosomeRepetitions
 				));
