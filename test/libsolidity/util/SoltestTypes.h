@@ -238,23 +238,12 @@ enum class FunctionValueUnit
 };
 
 /// Holds value along with unit it was expressed in originally.
-/// Value should be always converted to wei, no meter on which unit it was originally
+/// @a value is always in wei - it is converted back when stringifying again.
 struct FunctionValue
 {
 	u256 value;
 	FunctionValueUnit unit = FunctionValueUnit::Wei;
 };
-
-inline bool operator==(FunctionValue const& _a, FunctionValue const& _b)
-{
-	return _a.value == _b.value;
-}
-
-inline std::ostream& operator<<(std::ostream& _os, FunctionValue const& _v)
-{
-	_os << _v.value << (_v.unit == FunctionValueUnit::Wei ? " wei" : " ether");
-	return _os;
-}
 
 /**
  * Represents a function call read from an input stream. It contains the signature, the
