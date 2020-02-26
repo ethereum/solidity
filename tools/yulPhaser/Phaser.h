@@ -64,15 +64,15 @@ public:
 	struct Options
 	{
 		Algorithm algorithm;
+		size_t minChromosomeLength;
+		size_t maxChromosomeLength;
 
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
 	};
 
 	static std::unique_ptr<GeneticAlgorithm> build(
 		Options const& _options,
-		size_t _populationSize,
-		size_t _minChromosomeLength,
-		size_t _maxChromosomeLength
+		size_t _populationSize
 	);
 };
 
@@ -101,11 +101,10 @@ public:
 class PopulationFactory
 {
 public:
-	static constexpr size_t MinChromosomeLength = 12;
-	static constexpr size_t MaxChromosomeLength = 30;
-
 	struct Options
 	{
+		size_t minChromosomeLength;
+		size_t maxChromosomeLength;
 		std::vector<std::string> population;
 		std::vector<size_t> randomPopulation;
 		std::vector<std::string> populationFromFile;
@@ -123,6 +122,8 @@ public:
 	);
 	static Population buildRandom(
 		size_t _populationSize,
+		size_t _minChromosomeLength,
+		size_t _maxChromosomeLength,
 		std::shared_ptr<FitnessMetric> _fitnessMetric
 	);
 	static Population buildFromFile(

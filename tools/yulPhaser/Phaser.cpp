@@ -62,14 +62,14 @@ GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLi
 {
 	return {
 		_arguments["algorithm"].as<Algorithm>(),
+		_arguments["min-chromosome-length"].as<size_t>(),
+		_arguments["max-chromosome-length"].as<size_t>(),
 	};
 }
 
 unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 	Options const& _options,
-	size_t _populationSize,
-	size_t _minChromosomeLength,
-	size_t _maxChromosomeLength
+	size_t _populationSize
 )
 {
 	assert(_populationSize > 0);
@@ -79,8 +79,8 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 		case Algorithm::Random:
 			return make_unique<RandomAlgorithm>(RandomAlgorithm::Options{
 				/* elitePoolSize = */ 1.0 / _populationSize,
-				/* minChromosomeLength = */ _minChromosomeLength,
-				/* maxChromosomeLength = */ _maxChromosomeLength,
+				/* minChromosomeLength = */ _options.minChromosomeLength,
+				/* maxChromosomeLength = */ _options.maxChromosomeLength,
 			});
 		case Algorithm::GEWEP:
 			return make_unique<GenerationalElitistWithExclusivePools>(GenerationalElitistWithExclusivePools::Options{
@@ -88,8 +88,8 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 				/* crossoverPoolSize = */ 0.25,
 				/* randomisationChance = */ 0.9,
 				/* deletionVsAdditionChance = */ 0.5,
-				/* percentGenesToRandomise = */ 1.0 / _maxChromosomeLength,
-				/* percentGenesToAddOrDelete = */ 1.0 / _maxChromosomeLength,
+				/* percentGenesToRandomise = */ 1.0 / _options.maxChromosomeLength,
+				/* percentGenesToAddOrDelete = */ 1.0 / _options.maxChromosomeLength,
 			});
 		default:
 			assertThrow(false, solidity::util::Exception, "Invalid Algorithm value.");
@@ -114,6 +114,8 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 PopulationFactory::Options PopulationFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
 	return {
+		_arguments["min-chromosome-length"].as<size_t>(),
+		_arguments["max-chromosome-length"].as<size_t>(),
 		_arguments.count("population") > 0 ?
 			_arguments["population"].as<vector<string>>() :
 			vector<string>{},
@@ -139,6 +141,8 @@ Population PopulationFactory::build(
 
 	population = move(population) + buildRandom(
 		combinedSize,
+		_options.minChromosomeLength,
+		_options.maxChromosomeLength,
 		_fitnessMetric
 	);
 
@@ -162,14 +166,16 @@ Population PopulationFactory::buildFromStrings(
 
 Population PopulationFactory::buildRandom(
 	size_t _populationSize,
+	size_t _minChromosomeLength,
+	size_t _maxChromosomeLength,
 	shared_ptr<FitnessMetric> _fitnessMetric
 )
 {
 	return Population::makeRandom(
 		move(_fitnessMetric),
 		_populationSize,
-		MinChromosomeLength,
-		MaxChromosomeLength
+		_minChromosomeLength,
+		_maxChromosomeLength
 	);
 }
 
@@ -257,6 +263,16 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			"algorithm",
 			po::value<Algorithm>()->value_name("<NAME>")->default_value(Algorithm::GEWEP),
 			"Algorithm"
+		)
+		(
+			"min-chromosome-length",
+			po::value<size_t>()->value_name("<NUM>")->default_value(12),
+			"Minimum length of randomly generated chromosomes."
+		)
+		(
+			"max-chromosome-length",
+			po::value<size_t>()->value_name("<NUM>")->default_value(30),
+			"Maximum length of randomly generated chromosomes."
 		)
 	;
 	keywordDescription.add(algorithmDescription);
@@ -360,9 +376,7 @@ void Phaser::runAlgorithm(po::variables_map const& _arguments)
 
 	unique_ptr<GeneticAlgorithm> geneticAlgorithm = GeneticAlgorithmFactory::build(
 		algorithmOptions,
-		population.individuals().size(),
-		PopulationFactory::MinChromosomeLength,
-		PopulationFactory::MaxChromosomeLength
+		population.individuals().size()
 	);
 
 	AlgorithmRunner algorithmRunner(population, buildAlgorithmRunnerOptions(_arguments), cout);
