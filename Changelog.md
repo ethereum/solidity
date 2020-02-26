@@ -6,6 +6,7 @@ Language Features:
 
 Compiler Features:
  * AssemblyStack: Support for source locations (source mappings) and thus debugging Yul sources.
+ * Commandline Interface: Enable output of experimental optimized IR via ``--ir-optimized``.
 
 
 Bugfixes:
