@@ -60,12 +60,23 @@ map<MetricChoice, string> MetricChoiceToStringMap =
 };
 map<string, MetricChoice> const StringToMetricChoiceMap = invertMap(MetricChoiceToStringMap);
 
+map<MetricAggregatorChoice, string> const MetricAggregatorChoiceToStringMap =
+{
+	{MetricAggregatorChoice::Average, "average"},
+	{MetricAggregatorChoice::Sum, "sum"},
+	{MetricAggregatorChoice::Maximum, "maximum"},
+	{MetricAggregatorChoice::Minimum, "minimum"},
+};
+map<string, MetricAggregatorChoice> const StringToMetricAggregatorChoiceMap = invertMap(MetricAggregatorChoiceToStringMap);
+
 }
 
 istream& phaser::operator>>(istream& _inputStream, Algorithm& _algorithm) { return deserializeChoice(_inputStream, _algorithm, StringToAlgorithmMap); }
 ostream& phaser::operator<<(ostream& _outputStream, Algorithm _algorithm) { return serializeChoice(_outputStream, _algorithm, AlgorithmToStringMap); }
 istream& phaser::operator>>(istream& _inputStream, MetricChoice& _metric) { return deserializeChoice(_inputStream, _metric, StringToMetricChoiceMap); }
 ostream& phaser::operator<<(ostream& _outputStream, MetricChoice _metric) { return serializeChoice(_outputStream, _metric, MetricChoiceToStringMap); }
+istream& phaser::operator>>(istream& _inputStream, MetricAggregatorChoice& _aggregator) { return deserializeChoice(_inputStream, _aggregator, StringToMetricAggregatorChoiceMap); }
+ostream& phaser::operator<<(ostream& _outputStream, MetricAggregatorChoice _aggregator) { return serializeChoice(_outputStream, _aggregator, MetricAggregatorChoiceToStringMap); }
 
 GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
@@ -139,6 +150,7 @@ FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po:
 {
 	return {
 		_arguments["metric"].as<MetricChoice>(),
+		_arguments["metric-aggregator"].as<MetricAggregatorChoice>(),
 		_arguments["relative-metric-scale"].as<size_t>(),
 		_arguments["chromosome-repetitions"].as<size_t>(),
 	};
@@ -178,7 +190,19 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 			assertThrow(false, solidity::util::Exception, "Invalid MetricChoice value.");
 	}
 
-	return make_unique<FitnessMetricAverage>(move(metrics));
+	switch (_options.metricAggregator)
+	{
+		case MetricAggregatorChoice::Average:
+			return make_unique<FitnessMetricAverage>(move(metrics));
+		case MetricAggregatorChoice::Sum:
+			return make_unique<FitnessMetricSum>(move(metrics));
+		case MetricAggregatorChoice::Maximum:
+			return make_unique<FitnessMetricMaximum>(move(metrics));
+		case MetricAggregatorChoice::Minimum:
+			return make_unique<FitnessMetricMinimum>(move(metrics));
+		default:
+			assertThrow(false, solidity::util::Exception, "Invalid MetricAggregatorChoice value.");
+	}
 }
 
 PopulationFactory::Options PopulationFactory::Options::fromCommandLine(po::variables_map const& _arguments)
@@ -441,6 +465,12 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			"metric",
 			po::value<MetricChoice>()->value_name("<NAME>")->default_value(MetricChoice::CodeSize),
 			"Metric used to evaluate the fitness of a chromosome."
+		)
+		(
+			"metric-aggregator",
+			po::value<MetricAggregatorChoice>()->value_name("<NAME>")->default_value(MetricAggregatorChoice::Average),
+			"Operator used to combine multiple fitness metric obtained by evaluating a chromosome "
+			"separately for each input program."
 		)
 		(
 			"relative-metric-scale",

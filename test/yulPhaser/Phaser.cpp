@@ -70,6 +70,7 @@ protected:
 	};
 	FitnessMetricFactory::Options m_options = {
 		/* metric = */ MetricChoice::CodeSize,
+		/* metricAggregator = */ MetricAggregatorChoice::Average,
 		/* relativeMetricScale = */ 5,
 		/* chromosomeRepetitions = */ 1,
 	};
@@ -152,15 +153,16 @@ BOOST_AUTO_TEST_SUITE(FitnessMetricFactoryTest)
 BOOST_FIXTURE_TEST_CASE(build_should_create_metric_of_the_right_type, FitnessMetricFactoryFixture)
 {
 	m_options.metric = MetricChoice::RelativeCodeSize;
+	m_options.metricAggregator = MetricAggregatorChoice::Sum;
 	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]});
 	BOOST_REQUIRE(metric != nullptr);
 
-	auto averageMetric = dynamic_cast<FitnessMetricAverage*>(metric.get());
-	BOOST_REQUIRE(averageMetric != nullptr);
-	BOOST_REQUIRE(averageMetric->metrics().size() == 1);
-	BOOST_REQUIRE(averageMetric->metrics()[0] != nullptr);
+	auto sumMetric = dynamic_cast<FitnessMetricSum*>(metric.get());
+	BOOST_REQUIRE(sumMetric != nullptr);
+	BOOST_REQUIRE(sumMetric->metrics().size() == 1);
+	BOOST_REQUIRE(sumMetric->metrics()[0] != nullptr);
 
-	auto relativeProgramSizeMetric = dynamic_cast<RelativeProgramSize*>(averageMetric->metrics()[0].get());
+	auto relativeProgramSizeMetric = dynamic_cast<RelativeProgramSize*>(sumMetric->metrics()[0].get());
 	BOOST_REQUIRE(relativeProgramSizeMetric != nullptr);
 	BOOST_TEST(toString(relativeProgramSizeMetric->program()) == toString(m_programs[0]));
 }
@@ -168,6 +170,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_create_metric_of_the_right_type, FitnessMet
 BOOST_FIXTURE_TEST_CASE(build_should_respect_chromosome_repetitions_option, FitnessMetricFactoryFixture)
 {
 	m_options.metric = MetricChoice::CodeSize;
+	m_options.metricAggregator = MetricAggregatorChoice::Average;
 	m_options.chromosomeRepetitions = 5;
 	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]});
 	BOOST_REQUIRE(metric != nullptr);
@@ -185,6 +188,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_respect_chromosome_repetitions_option, Fitn
 BOOST_FIXTURE_TEST_CASE(build_should_set_relative_metric_scale, FitnessMetricFactoryFixture)
 {
 	m_options.metric = MetricChoice::RelativeCodeSize;
+	m_options.metricAggregator = MetricAggregatorChoice::Average;
 	m_options.relativeMetricScale = 10;
 	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]});
 	BOOST_REQUIRE(metric != nullptr);

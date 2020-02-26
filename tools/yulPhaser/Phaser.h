@@ -58,10 +58,20 @@ enum class MetricChoice
 	RelativeCodeSize,
 };
 
+enum class MetricAggregatorChoice
+{
+	Average,
+	Sum,
+	Maximum,
+	Minimum,
+};
+
 std::istream& operator>>(std::istream& _inputStream, solidity::phaser::Algorithm& _algorithm);
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::Algorithm _algorithm);
 std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricChoice& _metric);
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::MetricChoice _metric);
+std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricAggregatorChoice& _aggregator);
+std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::MetricAggregatorChoice _aggregator);
 
 /**
  * Builds and validates instances of @a GeneticAlgorithm and its derived classes.
@@ -100,6 +110,7 @@ public:
 	struct Options
 	{
 		MetricChoice metric;
+		MetricAggregatorChoice metricAggregator;
 		size_t relativeMetricScale;
 		size_t chromosomeRepetitions;
 
