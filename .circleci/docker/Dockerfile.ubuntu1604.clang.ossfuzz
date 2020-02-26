@@ -30,7 +30,7 @@ RUN apt-get update; \
 		build-essential \
 		software-properties-common \
 		ninja-build git wget \
-		libbz2-dev zlib1g-dev git; \
+		libbz2-dev zlib1g-dev git curl; \
     apt-get install -qy python-pip python-sphinx;
 
 # Install cmake 3.14 (minimum requirement is cmake 3.10)
