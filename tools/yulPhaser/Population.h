@@ -39,6 +39,8 @@ solidity::phaser::Population operator+(solidity::phaser::Population _a, solidity
 namespace solidity::phaser
 {
 
+class Selection;
+
 /**
  * Information describing the state of an individual member of the population during the course
  * of the genetic algorithm.
@@ -67,19 +69,19 @@ struct Individual
 bool isFitter(Individual const& a, Individual const& b);
 
 /**
- * Represents a changing set of individuals undergoing a genetic algorithm.
- * Each round of the algorithm involves mutating existing individuals, evaluating their fitness
- * and selecting the best ones for the next round.
+ * Represents a snapshot of a population undergoing a genetic algorithm. Consists of a set of
+ * chromosomes with associated fitness values.
  *
  * An individual is a sequence of optimiser steps represented by a @a Chromosome instance.
  * Individuals are always ordered by their fitness (based on @_fitnessMetric and @a isFitter()).
  * The fitness is computed using the metric as soon as an individual is inserted into the population.
+ *
+ * The population is immutable. Selections, mutations and crossover work by producing a new
+ * instance and copying the individuals.
  */
 class Population
 {
 public:
-	static constexpr size_t MaxChromosomeLength = 30;
-
 	explicit Population(
 		std::shared_ptr<FitnessMetric const> _fitnessMetric,
 		std::vector<Chromosome> _chromosomes = {}
@@ -101,7 +103,7 @@ public:
 		size_t _maxChromosomeLength
 	);
 
-	void run(std::optional<size_t> _numRounds, std::ostream& _outputStream);
+	Population select(Selection const& _selection) const;
 	friend Population (::operator+)(Population _a, Population _b);
 
 	std::shared_ptr<FitnessMetric const> fitnessMetric() const { return m_fitnessMetric; }
@@ -120,14 +122,6 @@ private:
 		m_fitnessMetric(std::move(_fitnessMetric)),
 		m_individuals{sortedIndividuals(std::move(_individuals))} {}
 
-	void doMutation();
-	void doSelection();
-
-	static void randomizeWorstChromosomes(
-		FitnessMetric const& _fitnessMetric,
-		std::vector<Individual>& _individuals,
-		size_t _count
-	);
 	static std::vector<Individual> chromosomesToIndividuals(
 		FitnessMetric const& _fitnessMetric,
 		std::vector<Chromosome> _chromosomes

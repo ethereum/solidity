@@ -17,6 +17,7 @@
 
 #include <tools/yulPhaser/Population.h>
 
+#include <tools/yulPhaser/Selections.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
@@ -83,16 +84,13 @@ Population Population::makeRandom(
 	);
 }
 
-void Population::run(optional<size_t> _numRounds, ostream& _outputStream)
+Population Population::select(Selection const& _selection) const
 {
-	for (size_t round = 0; !_numRounds.has_value() || round < _numRounds.value(); ++round)
-	{
-		doMutation();
-		doSelection();
+	vector<Individual> selectedIndividuals;
+	for (size_t i: _selection.materialise(m_individuals.size()))
+		selectedIndividuals.emplace_back(m_individuals[i]);
 
-		_outputStream << "---------- ROUND " << round << " ----------" << endl;
-		_outputStream << *this;
-	}
+	return Population(m_fitnessMetric, selectedIndividuals);
 }
 
 Population operator+(Population _a, Population _b)
@@ -119,35 +117,6 @@ ostream& phaser::operator<<(ostream& _stream, Population const& _population)
 		_stream << *individual << endl;
 
 	return _stream;
-}
-
-void Population::doMutation()
-{
-	// TODO: Implement mutation and crossover
-}
-
-void Population::doSelection()
-{
-	randomizeWorstChromosomes(*m_fitnessMetric, m_individuals, m_individuals.size() / 2);
-	m_individuals = sortedIndividuals(move(m_individuals));
-}
-
-void Population::randomizeWorstChromosomes(
-	FitnessMetric const& _fitnessMetric,
-	vector<Individual>& _individuals,
-	size_t _count
-)
-{
-	assert(_individuals.size() >= _count);
-	// ASSUMPTION: _individuals is sorted in ascending order
-
-	auto individual = _individuals.begin() + (_individuals.size() - _count);
-	for (; individual != _individuals.end(); ++individual)
-	{
-		auto chromosome = Chromosome::makeRandom(binomialChromosomeLength(MaxChromosomeLength));
-		size_t fitness = _fitnessMetric.evaluate(chromosome);
-		*individual = {move(chromosome), fitness};
-	}
 }
 
 vector<Individual> Population::chromosomesToIndividuals(

@@ -20,6 +20,7 @@
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Population.h>
 #include <tools/yulPhaser/Program.h>
+#include <tools/yulPhaser/Selections.h>
 
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/SSAReverser.h>
@@ -181,38 +182,6 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_compute_fitness, PopulationFixture)
 	BOOST_TEST(population.individuals()[2].fitness == m_fitnessMetric->evaluate(population.individuals()[2].chromosome));
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_not_make_fitness_of_top_chromosomes_worse, PopulationFixture)
-{
-	stringstream output;
-	vector<Chromosome> chromosomes = {
-		Chromosome(vector<string>{StructuralSimplifier::name}),
-		Chromosome(vector<string>{BlockFlattener::name}),
-		Chromosome(vector<string>{SSAReverser::name}),
-		Chromosome(vector<string>{UnusedPruner::name}),
-		Chromosome(vector<string>{StructuralSimplifier::name, BlockFlattener::name}),
-	};
-	Population population(m_fitnessMetric, chromosomes);
-
-	size_t initialTopFitness[2] = {
-		m_fitnessMetric->evaluate(chromosomes[0]),
-		m_fitnessMetric->evaluate(chromosomes[1]),
-	};
-
-	for (int i = 0; i < 6; ++i)
-	{
-		population.run(1, output);
-		BOOST_TEST(population.individuals().size() == 5);
-
-		size_t currentTopFitness[2] = {
-			population.individuals()[0].fitness,
-			population.individuals()[1].fitness,
-		};
-		BOOST_TEST(currentTopFitness[0] <= initialTopFitness[0]);
-		BOOST_TEST(currentTopFitness[1] <= initialTopFitness[1]);
-		BOOST_TEST(currentTopFitness[0] <= currentTopFitness[1]);
-	}
-}
-
 BOOST_FIXTURE_TEST_CASE(plus_operator_should_add_two_populations, PopulationFixture)
 {
 	BOOST_CHECK_EQUAL(
@@ -220,6 +189,41 @@ BOOST_FIXTURE_TEST_CASE(plus_operator_should_add_two_populations, PopulationFixt
 		Population(m_fitnessMetric, {Chromosome("g"), Chromosome("h"), Chromosome("iI")}),
 		Population(m_fitnessMetric, {Chromosome("ac"), Chromosome("cx"), Chromosome("g"), Chromosome("h"), Chromosome("iI")})
 	);
+}
+
+BOOST_FIXTURE_TEST_CASE(select_should_return_population_containing_individuals_indicated_by_selection, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("a"), Chromosome("c"), Chromosome("g"), Chromosome("h")});
+	RangeSelection selection(0.25, 0.75);
+	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{1, 2}));
+
+	BOOST_TEST(
+		population.select(selection) ==
+		Population(m_fitnessMetric, {population.individuals()[1].chromosome, population.individuals()[2].chromosome})
+	);
+}
+
+BOOST_FIXTURE_TEST_CASE(select_should_include_duplicates_if_selection_contains_duplicates, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("a"), Chromosome("c")});
+	MosaicSelection selection({0, 1}, 2.0);
+	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{0, 1, 0, 1}));
+
+	BOOST_TEST(population.select(selection) == Population(m_fitnessMetric, {
+		population.individuals()[0].chromosome,
+		population.individuals()[1].chromosome,
+		population.individuals()[0].chromosome,
+		population.individuals()[1].chromosome,
+	}));
+}
+
+BOOST_FIXTURE_TEST_CASE(select_should_return_empty_population_if_selection_is_empty, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("a"), Chromosome("c")});
+	RangeSelection selection(0.0, 0.0);
+	assert(selection.materialise(population.individuals().size()).empty());
+
+	BOOST_TEST(population.select(selection).individuals().empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
