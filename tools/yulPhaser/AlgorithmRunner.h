@@ -22,6 +22,7 @@
 
 #include <tools/yulPhaser/GeneticAlgorithms.h>
 #include <tools/yulPhaser/Population.h>
+#include <tools/yulPhaser/ProgramCache.h>
 
 #include <optional>
 #include <ostream>
@@ -50,10 +51,12 @@ public:
 
 	AlgorithmRunner(
 		Population _initialPopulation,
+		std::vector<std::shared_ptr<ProgramCache>> _programCaches,
 		Options _options,
 		std::ostream& _outputStream
 	):
 		m_population(std::move(_initialPopulation)),
+		m_programCaches(std::move(_programCaches)),
 		m_options(std::move(_options)),
 		m_outputStream(_outputStream) {}
 
@@ -65,6 +68,9 @@ public:
 private:
 	void populationAutosave() const;
 	void randomiseDuplicates();
+	void cacheClear();
+	void cacheStartRound(size_t _roundNumber);
+
 	static Population randomiseDuplicates(
 		Population _population,
 		size_t _minChromosomeLength,
@@ -72,6 +78,7 @@ private:
 	);
 
 	Population m_population;
+	std::vector<std::shared_ptr<ProgramCache>> m_programCaches;
 	Options m_options;
 	std::ostream& m_outputStream;
 };

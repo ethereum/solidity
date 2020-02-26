@@ -31,9 +31,12 @@ using namespace solidity::phaser;
 void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 {
 	populationAutosave();
+	cacheClear();
 
 	for (size_t round = 0; !m_options.maxRounds.has_value() || round < m_options.maxRounds.value(); ++round)
 	{
+		cacheStartRound(round + 1);
+
 		m_population = _algorithm.runNextRound(m_population);
 		randomiseDuplicates();
 
@@ -64,6 +67,20 @@ void AlgorithmRunner::populationAutosave() const
 		FileWriteError,
 		"Error while writing to file '" + m_options.populationAutosaveFile.value() + "': " + strerror(errno)
 	);
+}
+
+void AlgorithmRunner::cacheClear()
+{
+	for (auto& cache: m_programCaches)
+		if (cache != nullptr)
+			cache->clear();
+}
+
+void AlgorithmRunner::cacheStartRound(size_t _roundNumber)
+{
+	for (auto& cache: m_programCaches)
+		if (cache != nullptr)
+			cache->startRound(_roundNumber);
 }
 
 void AlgorithmRunner::randomiseDuplicates()

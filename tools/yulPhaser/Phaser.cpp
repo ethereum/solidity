@@ -577,6 +577,6 @@ void Phaser::runAlgorithm(po::variables_map const& _arguments)
 		population.individuals().size()
 	);
 
-	AlgorithmRunner algorithmRunner(population, buildAlgorithmRunnerOptions(_arguments), cout);
+	AlgorithmRunner algorithmRunner(population, vector<shared_ptr<ProgramCache>>(programs.size(), nullptr), buildAlgorithmRunnerOptions(_arguments), cout);
 	algorithmRunner.run(*geneticAlgorithm);
 }

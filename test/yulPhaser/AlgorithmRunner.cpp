@@ -20,6 +20,8 @@
 #include <tools/yulPhaser/AlgorithmRunner.h>
 #include <tools/yulPhaser/Common.h>
 
+#include <liblangutil/CharStream.h>
+
 #include <libsolutil/CommonIO.h>
 
 #include <boost/filesystem.hpp>
@@ -29,6 +31,7 @@
 using namespace std;
 using namespace boost::unit_test::framework;
 using namespace boost::test_tools;
+using namespace solidity::langutil;
 using namespace solidity::util;
 
 namespace fs = boost::filesystem;
@@ -92,7 +95,7 @@ BOOST_AUTO_TEST_SUITE(AlgorithmRunnerTest)
 BOOST_FIXTURE_TEST_CASE(run_should_call_runNextRound_once_per_round, AlgorithmRunnerFixture)
 {
 	m_options.maxRounds = 5;
-	AlgorithmRunner runner(Population(m_fitnessMetric), m_options, m_output);
+	AlgorithmRunner runner(Population(m_fitnessMetric), {}, m_options, m_output);
 
 	CountingAlgorithm algorithm;
 
@@ -112,6 +115,7 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_the_top_chromosome, AlgorithmRunnerFixt
 		// NOTE: Chromosomes chosen so that they're not substrings of each other and are not
 		// words likely to appear in the output in normal circumstances.
 		Population(m_fitnessMetric, {Chromosome("fcCUnDve"), Chromosome("jsxIOo"), Chromosome("ighTLM")}),
+		{},
 		m_options,
 		m_output
 	);
@@ -131,7 +135,7 @@ BOOST_FIXTURE_TEST_CASE(run_should_save_initial_population_to_file_if_autosave_f
 {
 	m_options.maxRounds = 0;
 	m_options.populationAutosaveFile = m_autosavePath;
-	AlgorithmRunner runner(m_population, m_options, m_output);
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
 	assert(!fs::exists(m_autosavePath));
 
 	runner.run(m_algorithm);
@@ -145,7 +149,7 @@ BOOST_FIXTURE_TEST_CASE(run_should_save_population_to_file_if_autosave_file_spec
 {
 	m_options.maxRounds = 1;
 	m_options.populationAutosaveFile = m_autosavePath;
-	AlgorithmRunner runner(m_population, m_options, m_output);
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
 	assert(!fs::exists(m_autosavePath));
 
 	runner.run(m_algorithm);
@@ -159,7 +163,7 @@ BOOST_FIXTURE_TEST_CASE(run_should_overwrite_existing_file_if_autosave_file_spec
 {
 	m_options.maxRounds = 5;
 	m_options.populationAutosaveFile = m_autosavePath;
-	AlgorithmRunner runner(m_population, m_options, m_output);
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
 	assert(!fs::exists(m_autosavePath));
 
 	vector<string> originalContent = {"Original content"};
@@ -180,7 +184,7 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_save_population_to_file_if_autosave_file_
 {
 	m_options.maxRounds = 5;
 	m_options.populationAutosaveFile = nullopt;
-	AlgorithmRunner runner(m_population, m_options, m_output);
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
 	assert(!fs::exists(m_autosavePath));
 
 	runner.run(m_algorithm);
@@ -198,7 +202,7 @@ BOOST_FIXTURE_TEST_CASE(run_should_randomise_duplicate_chromosomes_if_requested,
 	m_options.randomiseDuplicates = true;
 	m_options.minChromosomeLength = 50;
 	m_options.maxChromosomeLength = 50;
-	AlgorithmRunner runner(population, m_options, m_output);
+	AlgorithmRunner runner(population, {}, m_options, m_output);
 
 	runner.run(algorithm);
 
@@ -227,7 +231,7 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_randomise_duplicate_chromosomes_if_not_re
 
 	m_options.maxRounds = 1;
 	m_options.randomiseDuplicates = false;
-	AlgorithmRunner runner(population, m_options, m_output);
+	AlgorithmRunner runner(population, {}, m_options, m_output);
 
 	runner.run(algorithm);
 
@@ -235,6 +239,33 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_randomise_duplicate_chromosomes_if_not_re
 	BOOST_TEST(runner.population().individuals()[0].chromosome == duplicate);
 	BOOST_TEST(runner.population().individuals()[1].chromosome == duplicate);
 	BOOST_TEST(runner.population().individuals()[2].chromosome == duplicate);
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_clear_cache_at_the_beginning_and_update_it_before_each_round, AlgorithmRunnerFixture)
+{
+	CharStream sourceStream = CharStream("{}", current_test_case().p_name);
+	vector<shared_ptr<ProgramCache>> caches = {
+		make_shared<ProgramCache>(get<Program>(Program::load(sourceStream))),
+		make_shared<ProgramCache>(get<Program>(Program::load(sourceStream))),
+	};
+
+	m_options.maxRounds = 10;
+	AlgorithmRunner runner(Population(m_fitnessMetric), caches, m_options, m_output);
+	CountingAlgorithm algorithm;
+
+	BOOST_TEST(algorithm.m_currentRound == 0);
+	BOOST_TEST(caches[0]->currentRound() == 0);
+	BOOST_TEST(caches[1]->currentRound() == 0);
+
+	runner.run(algorithm);
+	BOOST_TEST(algorithm.m_currentRound == 10);
+	BOOST_TEST(caches[0]->currentRound() == 10);
+	BOOST_TEST(caches[1]->currentRound() == 10);
+
+	runner.run(algorithm);
+	BOOST_TEST(algorithm.m_currentRound == 20);
+	BOOST_TEST(caches[0]->currentRound() == 10);
+	BOOST_TEST(caches[1]->currentRound() == 10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
