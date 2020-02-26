@@ -47,24 +47,44 @@ public:
 };
 
 /**
- * Fitness metric based on the size of a specific program after applying the optimisations from the
- * chromosome to it.
+ * Abstract base class for fitness metrics that return values based on program size.
+ *
+ * The class provides utilities for optimising programs according to the information stored in
+ * chromosomes.
+ *
+ * It can also store weights for the @a CodeSize metric. It does not do anything with
+ * them because it does not actually compute the code size but they are readily available for use
+ * by derived classes.
  */
-class ProgramSize: public FitnessMetric
+class ProgramBasedMetric: public FitnessMetric
 {
 public:
-	explicit ProgramSize(Program _program, size_t _repetitionCount = 1):
+	explicit ProgramBasedMetric(
+		Program _program,
+		size_t _repetitionCount = 1
+	):
 		m_program(std::move(_program)),
 		m_repetitionCount(_repetitionCount) {}
 
 	Program const& program() const { return m_program; }
 	size_t repetitionCount() const { return m_repetitionCount; }
 
-	size_t evaluate(Chromosome const& _chromosome) const override;
+	Program optimisedProgram(Chromosome const& _chromosome) const;
 
 private:
 	Program m_program;
 	size_t m_repetitionCount;
+};
+
+/**
+ * Fitness metric based on the size of a specific program after applying the optimisations from the
+ * chromosome to it.
+ */
+class ProgramSize: public ProgramBasedMetric
+{
+public:
+	using ProgramBasedMetric::ProgramBasedMetric;
+	size_t evaluate(Chromosome const& _chromosome) const override;
 };
 
 }

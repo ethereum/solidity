@@ -22,16 +22,26 @@
 
 #include <liblangutil/CharStream.h>
 
+#include <libsolutil/CommonIO.h>
+
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace solidity::langutil;
+using namespace solidity::util;
 using namespace solidity::yul;
 
 namespace solidity::phaser::test
 {
 
-class FitnessMetricFixture
+class DummyProgramBasedMetric: public ProgramBasedMetric
+{
+public:
+	using ProgramBasedMetric::ProgramBasedMetric;
+	size_t evaluate(Chromosome const&) const override { return 0; }
+};
+
+class ProgramBasedMetricFixture
 {
 protected:
 	static constexpr char SampleSourceCode[] =
@@ -68,9 +78,20 @@ protected:
 
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(FitnessMetricsTest)
+BOOST_AUTO_TEST_SUITE(ProgramBasedMetricTest)
+
+BOOST_FIXTURE_TEST_CASE(optimisedProgram_should_return_optimised_program, ProgramBasedMetricFixture)
+{
+	string code = toString(DummyProgramBasedMetric(m_program).optimisedProgram(m_chromosome));
+
+	BOOST_TEST(code != toString(m_program));
+	BOOST_TEST(code == toString(m_optimisedProgram));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(ProgramSizeTest)
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_compute_size_of_the_optimised_program, FitnessMetricFixture)
+BOOST_FIXTURE_TEST_CASE(evaluate_should_compute_size_of_the_optimised_program, ProgramBasedMetricFixture)
 {
 	size_t fitness = ProgramSize(m_program).evaluate(m_chromosome);
 
@@ -78,7 +99,7 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_compute_size_of_the_optimised_program, F
 	BOOST_TEST(fitness == m_optimisedProgram.codeSize());
 }
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_repeat_the_optimisation_specified_number_of_times, FitnessMetricFixture)
+BOOST_FIXTURE_TEST_CASE(evaluate_should_repeat_the_optimisation_specified_number_of_times, ProgramBasedMetricFixture)
 {
 	Program const& programOptimisedOnce = m_optimisedProgram;
 	Program programOptimisedTwice = optimisedProgram(programOptimisedOnce);
@@ -91,7 +112,7 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_repeat_the_optimisation_specified_number
 	BOOST_TEST(fitness == programOptimisedTwice.codeSize());
 }
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_not_optimise_if_number_of_repetitions_is_zero, FitnessMetricFixture)
+BOOST_FIXTURE_TEST_CASE(evaluate_should_not_optimise_if_number_of_repetitions_is_zero, ProgramBasedMetricFixture)
 {
 	ProgramSize metric(m_program, 0);
 	size_t fitness = metric.evaluate(m_chromosome);
