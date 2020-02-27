@@ -69,7 +69,7 @@ class AlgorithmRunnerFixture
 {
 protected:
 	// NOTE: Regexes here should not contain spaces because we strip them before matching
-	regex RoundSummaryRegex{R"(-+ROUND\d+-+)"};
+	regex RoundSummaryRegex{R"(-+ROUND\d+\[round:[0-9.]+s,total:[0-9.]+s\]-+)"};
 	regex InitialPopulationHeaderRegex{"-+INITIALPOPULATION-+"};
 
 	string individualPattern(Individual const& individual) const

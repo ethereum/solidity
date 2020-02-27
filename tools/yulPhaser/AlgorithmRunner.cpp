@@ -34,27 +34,37 @@ void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 	printInitialPopulation();
 	cacheClear();
 
+	chrono::steady_clock::time_point totalTimeStart = std::chrono::steady_clock::now();
 	for (size_t round = 0; !m_options.maxRounds.has_value() || round < m_options.maxRounds.value(); ++round)
 	{
+		chrono::steady_clock::time_point roundTimeStart = std::chrono::steady_clock::now();
 		cacheStartRound(round + 1);
 
 		m_population = _algorithm.runNextRound(m_population);
 		randomiseDuplicates();
 
-		printRoundSummary(round);
+		printRoundSummary(round, roundTimeStart, totalTimeStart);
 		populationAutosave();
 	}
 }
 
 void AlgorithmRunner::printRoundSummary(
-	size_t _round
+	size_t _round,
+	chrono::steady_clock::time_point _roundTimeStart,
+	chrono::steady_clock::time_point _totalTimeStart
 ) const
 {
 	if (!m_options.showOnlyTopChromosome)
 	{
 		if (m_options.showRoundInfo)
 		{
+			chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+			auto roundTime = chrono::duration_cast<chrono::milliseconds>(now - _roundTimeStart).count();
+			auto totalTime = chrono::duration_cast<chrono::milliseconds>(now - _totalTimeStart).count();
+
 			m_outputStream << "---------- ROUND " << _round + 1;
+			m_outputStream << " [round: " << fixed << setprecision(1) << roundTime / 1000.0 << " s,";
+			m_outputStream << " total: " << fixed << setprecision(1) << totalTime / 1000.0 << " s]";
 			m_outputStream << " ----------" << endl;
 		}
 		else if (m_population.individuals().size() > 0)

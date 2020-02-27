@@ -71,7 +71,9 @@ public:
 
 private:
 	void printRoundSummary(
-		size_t _round
+		size_t _round,
+		std::chrono::steady_clock::time_point _roundTimeStart,
+		std::chrono::steady_clock::time_point _totalTimeStart
 	) const;
 	void printInitialPopulation() const;
 	void populationAutosave() const;
