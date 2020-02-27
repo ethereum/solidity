@@ -480,6 +480,10 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 				"Initial value for constant variable has to be compile-time constant."
 			);
 	}
+	else if (_variable.immutable())
+		if (!_variable.type()->isValueType())
+			m_errorReporter.typeError(_variable.location(), "Immutable variables cannot have a non-value type.");
+
 	if (!_variable.isStateVariable())
 	{
 		if (varType->dataStoredIn(DataLocation::Memory) || varType->dataStoredIn(DataLocation::CallData))
@@ -641,6 +645,11 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
 			solAssert(var->type(), "Expected variable type!");
+			if (var->immutable())
+			{
+				m_errorReporter.typeError(_identifier.location, "Assembly access to immutable variables is not supported.");
+				return size_t(-1);
+			}
 			if (var->isConstant())
 			{
 				var = rootConstVariableDeclaration(*var);

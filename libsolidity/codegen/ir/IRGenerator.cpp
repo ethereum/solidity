@@ -157,6 +157,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 	Type const* type = _varDecl.annotation().type;
 
 	solAssert(!_varDecl.isConstant(), "");
+	solAssert(!_varDecl.immutable(), "");
 	solAssert(_varDecl.isStateVariable(), "");
 
 	if (auto const* mappingType = dynamic_cast<MappingType const*>(type))
@@ -249,7 +250,7 @@ string IRGenerator::constructorCode(ContractDefinition const& _contract)
 
 		IRGeneratorForStatements generator{m_context, m_utils};
 		for (VariableDeclaration const* variable: contract->stateVariables())
-			if (!variable->isConstant())
+			if (!variable->isConstant() && !variable->immutable())
 				generator.initializeStateVar(*variable);
 		out << generator.code();
 

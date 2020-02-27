@@ -525,7 +525,7 @@ void ContractCompiler::initializeStateVariables(ContractDefinition const& _contr
 {
 	solAssert(!_contract.isLibrary(), "Tried to initialize state variables of library.");
 	for (VariableDeclaration const* variable: _contract.stateVariables())
-		if (variable->value() && !variable->isConstant())
+		if (variable->value() && !variable->isConstant() && !variable->immutable())
 			ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals).appendStateVariableInitialization(*variable);
 }
 
@@ -541,6 +541,8 @@ bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
 	if (_variableDeclaration.isConstant())
 		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals)
 			.appendConstStateVariableAccessor(_variableDeclaration);
+	else if (_variableDeclaration.immutable())
+		solUnimplementedAssert(false, "");
 	else
 		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals)
 			.appendStateVariableAccessor(_variableDeclaration);
@@ -680,6 +682,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else if (auto variable = dynamic_cast<VariableDeclaration const*>(decl))
 			{
+				solAssert(!variable->immutable(), "");
 				if (variable->isConstant())
 				{
 					variable = rootConstVariableDeclaration(*variable);

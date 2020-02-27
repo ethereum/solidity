@@ -730,8 +730,18 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		{
 			if (_options.allowIndexed && token == Token::Indexed)
 				isIndexed = true;
-			else if (token == Token::Constant)
-				constantness = VariableDeclaration::Constantness::Constant;
+			else if (token == Token::Constant || token == Token::Immutable)
+			{
+				if (constantness != VariableDeclaration::Constantness::Mutable)
+					parserError(
+						string("Constantness already set to ") +
+						(constantness == VariableDeclaration::Constantness::Constant ? "\"constant\"" : "\"immutable\"")
+					);
+				else if (token == Token::Constant)
+					constantness = VariableDeclaration::Constantness::Constant;
+				else if (token == Token::Immutable)
+					constantness = VariableDeclaration::Constantness::Immutable;
+			}
 			else if (_options.allowLocationSpecifier && TokenTraits::isLocationSpecifier(token))
 			{
 				if (location != VariableDeclaration::Location::Unspecified)

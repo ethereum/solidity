@@ -88,7 +88,7 @@ void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration co
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
-	solAssert(!_varDecl.isConstant(), "");
+	solAssert(!_varDecl.isConstant() && !_varDecl.immutable(), "");
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	FunctionType accessorType(_varDecl);
 
@@ -2438,10 +2438,12 @@ void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
 
 void ExpressionCompiler::appendVariable(VariableDeclaration const& _variable, Expression const& _expression)
 {
-	if (!_variable.isConstant())
-		setLValueFromDeclaration(_variable, _expression);
-	else
+	if (_variable.isConstant())
 		acceptAndConvert(*_variable.value(), *_variable.annotation().type);
+	else if (_variable.immutable())
+		solUnimplemented("");
+	else
+		setLValueFromDeclaration(_variable, _expression);
 }
 
 void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaration, Expression const& _expression)
