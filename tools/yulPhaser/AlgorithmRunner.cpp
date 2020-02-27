@@ -31,6 +31,7 @@ using namespace solidity::phaser;
 void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 {
 	populationAutosave();
+	printInitialPopulation();
 	cacheClear();
 
 	for (size_t round = 0; !m_options.maxRounds.has_value() || round < m_options.maxRounds.value(); ++round)
@@ -45,6 +46,15 @@ void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 
 		populationAutosave();
 	}
+}
+
+void AlgorithmRunner::printInitialPopulation() const
+{
+	if (!m_options.showInitialPopulation)
+		return;
+
+	m_outputStream << "---------- INITIAL POPULATION ----------" << endl;
+	m_outputStream << m_population;
 }
 
 void AlgorithmRunner::populationAutosave() const

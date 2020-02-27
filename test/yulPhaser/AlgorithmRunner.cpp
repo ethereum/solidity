@@ -70,6 +70,7 @@ class AlgorithmRunnerFixture
 protected:
 	// NOTE: Regexes here should not contain spaces because we strip them before matching
 	regex RoundSummaryRegex{R"(-+ROUND\d+-+)"};
+	regex InitialPopulationHeaderRegex{"-+INITIALPOPULATION-+"};
 
 	string individualPattern(Individual const& individual) const
 	{
@@ -133,6 +134,7 @@ BOOST_FIXTURE_TEST_CASE(run_should_call_runNextRound_once_per_round, AlgorithmRu
 BOOST_FIXTURE_TEST_CASE(run_should_print_round_summary_after_each_round, AlgorithmRunnerFixture)
 {
 	m_options.maxRounds = 1;
+	m_options.showInitialPopulation = false;
 	AlgorithmRunner runner(m_population, {}, m_options, m_output);
 	RandomisingAlgorithm algorithm;
 
@@ -145,6 +147,33 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_round_summary_after_each_round, Algorit
 	BOOST_TEST(nextLineMatches(m_output, RoundSummaryRegex));
 	for (auto const& individual: runner.population().individuals())
 		BOOST_TEST(nextLineMatches(m_output, regex(individualPattern(individual))));
+	BOOST_TEST(m_output.peek() == EOF);
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_print_initial_population_if_requested, AlgorithmRunnerFixture)
+{
+	m_options.maxRounds = 0;
+	m_options.showInitialPopulation = true;
+	RandomisingAlgorithm algorithm;
+
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
+	runner.run(algorithm);
+
+	BOOST_TEST(nextLineMatches(m_output, InitialPopulationHeaderRegex));
+	for (auto const& individual: m_population.individuals())
+		BOOST_TEST(nextLineMatches(m_output, regex(individualPattern(individual))));
+	BOOST_TEST(m_output.peek() == EOF);
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_not_print_initial_population_if_not_requested, AlgorithmRunnerFixture)
+{
+	m_options.maxRounds = 0;
+	m_options.showInitialPopulation = false;
+	RandomisingAlgorithm algorithm;
+
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
+	runner.run(algorithm);
+
 	BOOST_TEST(m_output.peek() == EOF);
 }
 

@@ -543,6 +543,16 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	;
 	keywordDescription.add(cacheDescription);
 
+	po::options_description outputDescription("OUTPUT", lineLength, minDescriptionLength);
+	outputDescription.add_options()
+		(
+			"show-initial-population",
+			po::bool_switch(),
+			"Print the state of the population before the algorithm starts."
+		)
+	;
+	keywordDescription.add(outputDescription);
+
 	po::positional_options_description positionalDescription;
 	positionalDescription.add("input-files", -1);
 
@@ -592,6 +602,7 @@ AlgorithmRunner::Options Phaser::buildAlgorithmRunnerOptions(po::variables_map c
 		!_arguments["no-randomise-duplicates"].as<bool>(),
 		_arguments["min-chromosome-length"].as<size_t>(),
 		_arguments["max-chromosome-length"].as<size_t>(),
+		_arguments["show-initial-population"].as<bool>(),
 	};
 }
 

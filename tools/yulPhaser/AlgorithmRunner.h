@@ -47,6 +47,7 @@ public:
 		bool randomiseDuplicates = false;
 		std::optional<size_t> minChromosomeLength = std::nullopt;
 		std::optional<size_t> maxChromosomeLength = std::nullopt;
+		bool showInitialPopulation = false;
 	};
 
 	AlgorithmRunner(
@@ -66,6 +67,7 @@ public:
 	Population const& population() const { return m_population; }
 
 private:
+	void printInitialPopulation() const;
 	void populationAutosave() const;
 	void randomiseDuplicates();
 	void cacheClear();
