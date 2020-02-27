@@ -1,0 +1,147 @@
+# 
+
+version: 2.1
+jobs:
+  Hello-World:
+    docker:
+      - image: alpine:3.7
+    steps:
+      - run:
+          name: Hello World
+          command: |
+            echo 'Hello World!'
+            echo 'This is the delivery pipeline'
+  I-Have-Code:
+    docker:
+      - image: alpine:3.7
+    steps:
+      - checkout
+      - run:
+          name: Code Has Arrived
+          command: |
+            ls -al
+            echo '^^^That should look familiar^^^'
+  Run-With-Node:
+    docker:
+      - image: circleci/node:10-browsers
+    steps:
+      - run:
+          name: Running In A Container With Node
+          command: |
+            node -v
+  Now-Complete:
+    docker:
+      - image: alpine:3.7
+    steps:
+      - run:
+          name: Approval Complete
+          command: |
+            echo 'Do work once the approval has completed'
+
+workflows:
+ version: 2
+ Example_Workflow:
+   jobs:
+     - Hello-World
+     - I-Have-Code:
+         requires:
+           - Hello-World
+     - Run-With-Node:
+         requires:
+           - Hello-World
+     - Hold-For-Approval:
+         type: approval
+         requires:
+           - Run-With-Node
+           - I-Have-Code
+     - Now-Complete:
+         requires:
+           - Hold-For-Approval
+           - ~/.circleci/config.yml
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/<language>:<version TAG>
+    parallelism: 4
+    steps:
+      - run:
+          command: |
+            echo $(circleci tests glob "foo/**/*" "bar/**/*")
+            circleci tests glob "foo/**/*" "bar/**/*" | xargs -n 1 echo
+--timings-type flag.
+cat my_java_test_classnames | circleci tests split --split-by=timings --timings-type=classname
+circleci tests glob "test/**/*.java" | circleci tests split
+version: 2.1
+  jobs:
+   build:
+    machine:
+      image: ubuntu-1604:201903-0. 
+      # recommended linux image - includes Ubuntu 16.04, docker 18.09.3,   docker-compose 1.23.1
+  resource_class: 2xlarge
+    steps:
+      ... // other config
+     build:
+      executor: win/2xlarge
+    steps:
+      - run: Write-Host 'Hello, World'
+    build:
+     working_directory: ~/repository-python
+      environment:
+       FOO: bar
+steps:
+  - run:
+     name: Running tests
+       command: make test  
+    - run:
+        command: |
+           echo Running test
+      mkdir -p /tmp/test-results
+  make test:
+    steps:
+      - run:
+          name: Testing application
+            command: make test
+               shell: /bin/bash
+      working_directory: ~/my-app
+      no_output_timeout: 30m
+        environment:
+          FOO: bar
+      - run: echo 127.0.0.1 devhost | sudo tee-a /etc/hosts -  
+      - run: |  sudo -u root createuser -h      localhost--superuser ubuntu && sudo createdb -h localhost test_db
+      - run:
+          name: Upload Failed Tests
+            command: curl --data fail_tests.log
+              http://example.com/error_logs
+                when: on_fail jobs: # conditional
+steps may also be. defined in  commands:`job_with_optional_custom_checkout:
+   parameters:
+     custom_checkout:
+       type: string
+          default: "SUB (^Z)"
+             machine: true
+               steps:
+                  - when:
+                  - condition: <<parameters.custom_checkout>>
+                steps:
+                  - run: echo "my custom checkout"
+                  - unless:
+                     condition:
+<<parameters.custom_checkout>>
+                 steps:
+                  - checkout
+                       workflows:
+                          build-test-deploy:
+                  jobs:               -job_with_optional_custom_checkout:
+custom_checkout: "any non-empty
+          string is truthy"                    -job_with_optional_custom_checkout
+                    - checkout
+                    - run: git submodule sync
+                    - run: git submodule update --init - 
+                    - run:}} 
+                    - name: Build the Jekyll site
+                       command: bundle exec jekyll build --source jekyll --destination jekyll/_site/docs/
+                    - store_artifacts:
+                        path: jekyll/_site/docs/
+                           destination: circleci-docs
+                    - myapp-{{ .Branch }}-{{ checksum "package-lock.json" 
