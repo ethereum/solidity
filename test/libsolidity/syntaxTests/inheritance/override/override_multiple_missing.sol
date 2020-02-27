@@ -18,5 +18,6 @@ abstract contract X is A, B, C, D {
 	function foo() internal override(A, C) virtual returns (uint256);
 }
 // ----
+// Warning: (533-550): Override specifier list order differs from inheritance order.
 // TypeError: (533-550): Invalid contract specified in override list: "C".
 // TypeError: (603-617): Function needs to specify overridden contracts "B" and "D".

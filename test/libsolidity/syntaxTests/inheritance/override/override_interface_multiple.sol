@@ -12,3 +12,4 @@ contract X is A, B {
 	function test2() external override(B, A) returns (uint256) {}
 }
 // ----
+// Warning: (325-339): Override specifier list order differs from inheritance order.

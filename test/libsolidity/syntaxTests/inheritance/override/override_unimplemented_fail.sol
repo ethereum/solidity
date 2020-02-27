@@ -12,4 +12,5 @@ abstract contract D is B, A {
 }
 // ----
 // TypeError: (154-199): Overriding an implemented function with an unimplemented function is not allowed.
+// Warning: (266-280): Override specifier list order differs from inheritance order.
 // TypeError: (236-281): Overriding an implemented function with an unimplemented function is not allowed.

@@ -2,6 +2,7 @@
 
 Language Features:
  * Inline Assembly: Allow assigning to `_slot` of local storage variable pointers.
+ * Type Checker: Warn if override specifier list order differs from inheritance order.
 
 
 Compiler Features:

@@ -767,6 +767,38 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 			}
 		}
 	}
+	else if (specifiedContracts.size() > 1)
+	{
+		vector<int64_t> overrideSpecifierContractIds;
+		vector<int64_t> inheritanceContractsIds;
+
+		for (auto const& overrideName: _item.overrides()->overrides())
+		{
+			int64_t const contractId = overrideName->annotation().referencedDeclaration->id();
+
+			auto const matchId = [&](ContractDefinition const* _contract)
+			{
+				return contractId == _contract->id();
+			};
+
+			// Only compare contracts that exist in the inheritance chain
+			if (util::contains_if(_item.contract().annotation().linearizedBaseContracts, matchId))
+				overrideSpecifierContractIds.emplace_back(contractId);
+		}
+
+		for (size_t i = _item.contract().annotation().linearizedBaseContracts.size() - 1; i > 0; i--)
+		{
+			int64_t contractId = _item.contract().annotation().linearizedBaseContracts[i]->id();
+			if (util::contains(overrideSpecifierContractIds, contractId))
+				inheritanceContractsIds.emplace_back(contractId);
+		}
+
+		if (overrideSpecifierContractIds != inheritanceContractsIds)
+			m_errorReporter.warning(
+				_item.overrides()->location(),
+				"Override specifier list order differs from inheritance order."
+			);
+	}
 
 	set<ContractDefinition const*, CompareByID> expectedContracts;
 
