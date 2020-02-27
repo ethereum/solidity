@@ -211,10 +211,10 @@ bool OverrideProxy::CompareBySignature::operator()(OverrideProxy const& _a, Over
 	return _a.overrideComparator() < _b.overrideComparator();
 }
 
-size_t OverrideProxy::id() const
+int64_t OverrideProxy::id() const
 {
 	return std::visit(GenericVisitor{
-		[&](auto const* _item) -> size_t { return _item->id(); }
+		[&](auto const* _item) -> int64_t { return _item->id(); }
 	}, m_item);
 }
 

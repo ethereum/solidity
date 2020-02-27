@@ -66,7 +66,7 @@ public:
 	bool isFunction() const;
 	bool isModifier() const;
 
-	size_t id() const;
+	int64_t id() const;
 	std::shared_ptr<OverrideSpecifier> overrides() const;
 	std::set<OverrideProxy> baseFunctions() const;
 	/// This stores the item in the list of base items.
