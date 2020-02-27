@@ -78,6 +78,12 @@ protected:
 		output << "Fitness:" << individual.fitness << ",";
 		output << "optimisations:" << individual.chromosome;
 		return output.str();
+	}
+
+	string topChromosomePattern(size_t roundNumber, Individual const& individual) const
+	{
+		ostringstream output;
+		output << roundNumber << "\\|" << individualPattern(individual);
 		return output.str();
 	}
 
@@ -135,6 +141,8 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_round_summary_after_each_round, Algorit
 {
 	m_options.maxRounds = 1;
 	m_options.showInitialPopulation = false;
+	m_options.showOnlyTopChromosome = false;
+	m_options.showRoundInfo = true;
 	AlgorithmRunner runner(m_population, {}, m_options, m_output);
 	RandomisingAlgorithm algorithm;
 
@@ -150,10 +158,83 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_round_summary_after_each_round, Algorit
 	BOOST_TEST(m_output.peek() == EOF);
 }
 
+BOOST_FIXTURE_TEST_CASE(run_should_not_print_round_summary_if_not_requested, AlgorithmRunnerFixture)
+{
+	m_options.maxRounds = 1;
+	m_options.showInitialPopulation = false;
+	m_options.showOnlyTopChromosome = false;
+	m_options.showRoundInfo = false;
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
+	RandomisingAlgorithm algorithm;
+
+	runner.run(algorithm);
+	BOOST_TEST(nextLineMatches(m_output, regex("")));
+	for (auto const& individual: runner.population().individuals())
+		BOOST_TEST(nextLineMatches(m_output, regex(individualPattern(individual))));
+	BOOST_TEST(m_output.peek() == EOF);
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_not_print_population_if_its_empty, AlgorithmRunnerFixture)
+{
+	m_options.maxRounds = 1;
+	m_options.showInitialPopulation = false;
+	m_options.showOnlyTopChromosome = false;
+	m_options.showRoundInfo = true;
+	AlgorithmRunner runner(Population(m_fitnessMetric), {}, m_options, m_output);
+	RandomisingAlgorithm algorithm;
+
+	runner.run(algorithm);
+	BOOST_TEST(nextLineMatches(m_output, RoundSummaryRegex));
+	BOOST_TEST(m_output.peek() == EOF);
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_print_only_top_chromosome_if_requested, AlgorithmRunnerFixture)
+{
+	m_options.maxRounds = 1;
+	m_options.showInitialPopulation = false;
+	m_options.showOnlyTopChromosome = true;
+	m_options.showRoundInfo = true;
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
+	RandomisingAlgorithm algorithm;
+
+	runner.run(algorithm);
+	BOOST_TEST(nextLineMatches(m_output, regex(topChromosomePattern(1, runner.population().individuals()[0]))));
+	BOOST_TEST(m_output.peek() == EOF);
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_not_print_round_number_for_top_chromosome_if_round_info_not_requested, AlgorithmRunnerFixture)
+{
+	m_options.maxRounds = 1;
+	m_options.showInitialPopulation = false;
+	m_options.showOnlyTopChromosome = true;
+	m_options.showRoundInfo = false;
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
+	RandomisingAlgorithm algorithm;
+
+	runner.run(algorithm);
+	BOOST_TEST(nextLineMatches(m_output, regex(individualPattern(runner.population().individuals()[0]))));
+	BOOST_TEST(m_output.peek() == EOF);
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_not_print_population_if_its_empty_and_only_top_chromosome_requested, AlgorithmRunnerFixture)
+{
+	m_options.maxRounds = 3;
+	m_options.showRoundInfo = true;
+	m_options.showInitialPopulation = false;
+	m_options.showOnlyTopChromosome = true;
+	AlgorithmRunner runner(Population(m_fitnessMetric), {}, m_options, m_output);
+	RandomisingAlgorithm algorithm;
+
+	runner.run(algorithm);
+	BOOST_TEST(m_output.peek() == EOF);
+}
+
 BOOST_FIXTURE_TEST_CASE(run_should_print_initial_population_if_requested, AlgorithmRunnerFixture)
 {
 	m_options.maxRounds = 0;
 	m_options.showInitialPopulation = true;
+	m_options.showRoundInfo = false;
+	m_options.showOnlyTopChromosome = false;
 	RandomisingAlgorithm algorithm;
 
 	AlgorithmRunner runner(m_population, {}, m_options, m_output);
@@ -169,11 +250,30 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_print_initial_population_if_not_requested
 {
 	m_options.maxRounds = 0;
 	m_options.showInitialPopulation = false;
+	m_options.showRoundInfo = false;
+	m_options.showOnlyTopChromosome = false;
 	RandomisingAlgorithm algorithm;
 
 	AlgorithmRunner runner(m_population, {}, m_options, m_output);
 	runner.run(algorithm);
 
+	BOOST_TEST(m_output.peek() == EOF);
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_print_whole_initial_population_even_if_only_top_chromosome_requested, AlgorithmRunnerFixture)
+{
+	m_options.maxRounds = 0;
+	m_options.showInitialPopulation = true;
+	m_options.showRoundInfo = false;
+	m_options.showOnlyTopChromosome = true;
+	RandomisingAlgorithm algorithm;
+
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
+	runner.run(algorithm);
+
+	BOOST_TEST(nextLineMatches(m_output, InitialPopulationHeaderRegex));
+	for (auto const& individual: m_population.individuals())
+		BOOST_TEST(nextLineMatches(m_output, regex(individualPattern(individual))));
 	BOOST_TEST(m_output.peek() == EOF);
 }
 

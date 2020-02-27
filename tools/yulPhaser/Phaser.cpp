@@ -550,6 +550,16 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			po::bool_switch(),
 			"Print the state of the population before the algorithm starts."
 		)
+		(
+			"show-only-top-chromosome",
+			po::bool_switch(),
+			"Print only the best chromosome found in each round rather than the whole population."
+		)
+		(
+			"hide-round",
+			po::bool_switch(),
+			"Hide information about the current round (round number and elapsed time)."
+		)
 	;
 	keywordDescription.add(outputDescription);
 
@@ -603,6 +613,8 @@ AlgorithmRunner::Options Phaser::buildAlgorithmRunnerOptions(po::variables_map c
 		_arguments["min-chromosome-length"].as<size_t>(),
 		_arguments["max-chromosome-length"].as<size_t>(),
 		_arguments["show-initial-population"].as<bool>(),
+		_arguments["show-only-top-chromosome"].as<bool>(),
+		!_arguments["hide-round"].as<bool>(),
 	};
 }
 

@@ -41,10 +41,33 @@ void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 		m_population = _algorithm.runNextRound(m_population);
 		randomiseDuplicates();
 
-		m_outputStream << "---------- ROUND " << round + 1 << " ----------" << endl;
-		m_outputStream << m_population;
-
+		printRoundSummary(round);
 		populationAutosave();
+	}
+}
+
+void AlgorithmRunner::printRoundSummary(
+	size_t _round
+) const
+{
+	if (!m_options.showOnlyTopChromosome)
+	{
+		if (m_options.showRoundInfo)
+		{
+			m_outputStream << "---------- ROUND " << _round + 1;
+			m_outputStream << " ----------" << endl;
+		}
+		else if (m_population.individuals().size() > 0)
+			m_outputStream << endl;
+
+		m_outputStream << m_population;
+	}
+	else if (m_population.individuals().size() > 0)
+	{
+		if (m_options.showRoundInfo)
+			m_outputStream << setw(5) << _round + 1 << " | ";
+
+		m_outputStream << m_population.individuals()[0] << endl;
 	}
 }
 
