@@ -899,8 +899,7 @@ h256 const& CompilerStack::Source::swarmHash() const
 string const& CompilerStack::Source::ipfsUrl() const
 {
 	if (ipfsUrlCached.empty())
-		if (scanner->source().size() < 1024 * 256)
-			ipfsUrlCached = "dweb:/ipfs/" + util::ipfsHashBase58(scanner->source());
+		ipfsUrlCached = "dweb:/ipfs/" + util::ipfsHashBase58(scanner->source());
 	return ipfsUrlCached;
 }
 
@@ -1373,10 +1372,7 @@ bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimen
 	MetadataCBOREncoder encoder;
 
 	if (m_metadataHash == MetadataHash::IPFS)
-	{
-		solAssert(_metadata.length() < 1024 * 256, "Metadata too large.");
 		encoder.pushBytes("ipfs", util::ipfsHash(_metadata));
-	}
 	else if (m_metadataHash == MetadataHash::Bzzr1)
 		encoder.pushBytes("bzzr1", util::bzzr1Hash(_metadata).asBytes());
 	else

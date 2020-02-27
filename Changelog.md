@@ -4,10 +4,10 @@ Language Features:
 
 
 Compiler Features:
+ * Metadata: Added support for IPFS hashes of large files that need to be split in multiple chunks.
 
 
 Bugfixes:
-
 
 
 ### 0.6.4 (2020-03-10)
@@ -29,7 +29,6 @@ Bugfixes:
  * Standard-JSON-Interface: Fix a bug related to empty filenames and imports.
  * SMTChecker: Fix internal errors when analysing tuples.
  * Yul AST Import: correctly import blocks as statements, switch statements and string literals.
-
 
 ### 0.6.3 (2020-02-18)
 
