@@ -620,6 +620,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::Creation:
 		{
 			_functionCall.expression().accept(*this);
+			// Stack: [salt], [value]
+
 			solAssert(!function.gasSet(), "Gas limit set for contract creation.");
 			solAssert(function.returnParameterTypes().size() == 1, "");
 			TypePointers argumentTypes;
@@ -633,16 +635,37 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().fetchFreeMemoryPointer();
 			utils().copyContractCodeToMemory(*contract, true);
 			utils().abiEncode(argumentTypes, function.parameterTypes());
-			// now on stack: memory_end_ptr
-			// need: size, offset, endowment
+			// now on stack: [salt], [value], memory_end_ptr
+			// need: [salt], size, offset, value
+
+			if (function.saltSet())
+			{
+				m_context << dupInstruction(2 + (function.valueSet() ? 1 : 0));
+				m_context << Instruction::SWAP1;
+			}
+
+			// now: [salt], [value], [salt], memory_end_ptr
 			utils().toSizeAfterFreeMemoryPointer();
+
+			// now: [salt], [value], [salt], size, offset
 			if (function.valueSet())
-				m_context << dupInstruction(3);
+				m_context << dupInstruction(3 + (function.saltSet() ? 1 : 0));
 			else
 				m_context << u256(0);
-			m_context << Instruction::CREATE;
+
+			// now: [salt], [value], [salt], size, offset, value
+			if (function.saltSet())
+				m_context << Instruction::CREATE2;
+			else
+				m_context << Instruction::CREATE;
+
+			// now: [salt], [value], address
+
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
+			if (function.saltSet())
+				m_context << swapInstruction(1) << Instruction::POP;
+
 			// Check if zero (reverted)
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
 			if (_functionCall.annotation().tryCall)
@@ -654,7 +677,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context << errorCase;
 			}
 			else
-				// TODO: Can we bubble up here? There might be different reasons for failure, I think.
 				m_context.appendConditionalRevert(true);
 			break;
 		}
@@ -711,8 +733,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (function.kind() == FunctionType::Kind::Transfer)
 			{
 				// Check if zero (out of stack or not enough balance).
-				// TODO: bubble up here, but might also be different error.
 				m_context << Instruction::ISZERO;
+				// Revert message bubbles up.
 				m_context.appendConditionalRevert(true);
 			}
 			break;
@@ -729,7 +751,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// function-sel(Error(string)) + encoding
 				solAssert(arguments.size() == 1, "");
 				solAssert(function.parameterTypes().size() == 1, "");
-				if (m_revertStrings == RevertStrings::Strip)
+				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
 					if (!arguments.front()->annotation().isPure)
 					{
@@ -1009,7 +1031,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), false);
 
-			bool haveReasonString = arguments.size() > 1 && m_revertStrings != RevertStrings::Strip;
+			bool haveReasonString = arguments.size() > 1 && m_context.revertStrings() != RevertStrings::Strip;
 
 			if (arguments.size() > 1)
 			{
@@ -1018,7 +1040,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// function call.
 				solAssert(arguments.size() == 2, "");
 				solAssert(function.kind() == FunctionType::Kind::Require, "");
-				if (m_revertStrings == RevertStrings::Strip)
+				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
 					if (!arguments.at(1)->annotation().isPure)
 					{
@@ -1192,6 +1214,49 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	return false;
 }
 
+bool ExpressionCompiler::visit(FunctionCallOptions const& _functionCallOptions)
+{
+	_functionCallOptions.expression().accept(*this);
+
+	// Desired Stack: [salt], [gas], [value]
+	enum Option { Salt, Gas, Value };
+
+	vector<Option> presentOptions;
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(
+		*_functionCallOptions.expression().annotation().type
+	);
+	if (funType.saltSet()) presentOptions.emplace_back(Salt);
+	if (funType.gasSet()) presentOptions.emplace_back(Gas);
+	if (funType.valueSet()) presentOptions.emplace_back(Value);
+
+	for (size_t i = 0; i < _functionCallOptions.options().size(); ++i)
+	{
+		string const& name = *_functionCallOptions.names()[i];
+		Type const* requiredType = TypeProvider::uint256();
+		Option newOption;
+		if (name == "salt")
+		{
+			newOption = Salt;
+			requiredType = TypeProvider::fixedBytes(32);
+		}
+		else if (name == "gas")
+			newOption = Gas;
+		else if (name == "value")
+			newOption = Value;
+		else
+			solAssert(false, "Unexpected option name!");
+		acceptAndConvert(*_functionCallOptions.options()[i], *requiredType);
+
+		solAssert(!contains(presentOptions, newOption), "");
+		size_t insertPos = presentOptions.end() - lower_bound(presentOptions.begin(), presentOptions.end(), newOption);
+
+		utils().moveIntoStack(insertPos, 1);
+		presentOptions.insert(presentOptions.end() - insertPos, newOption);
+	}
+
+	return false;
+}
+
 bool ExpressionCompiler::visit(NewExpression const&)
 {
 	// code is created for the function call (CREATION) only
@@ -1238,6 +1303,8 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			{
 				switch (funType->kind())
 				{
+				case FunctionType::Kind::Declaration:
+					break;
 				case FunctionType::Kind::Internal:
 					// We do not visit the expression here on purpose, because in the case of an
 					// internal library function call, this would push the library address forcing
@@ -1300,7 +1367,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		functionType && member == "selector"
 	)
 	{
-		if (functionType->kind() == FunctionType::Kind::Declaration)
+		if (functionType->hasDeclaration())
 		{
 			m_context << functionType->externalIdentifier();
 			/// need to store it as bytes4
@@ -1755,12 +1822,16 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 
 	m_context.appendInlineAssembly(
 		Whiskers(R"({
-					if gt(sliceStart, sliceEnd) { revert(0, 0) }
-					if gt(sliceEnd, length) { revert(0, 0) }
+					if gt(sliceStart, sliceEnd) { <revertStringStartEnd> }
+					if gt(sliceEnd, length) { <revertStringEndLength> }
 
 					offset := add(offset, mul(sliceStart, <stride>))
 					length := sub(sliceEnd, sliceStart)
-				})")("stride", toString(arrayType->calldataStride())).render(),
+				})")
+		("stride", toString(arrayType->calldataStride()))
+		("revertStringStartEnd", m_context.revertReasonIfDebug("Slice starts after end"))
+		("revertStringEndLength", m_context.revertReasonIfDebug("Slice is greater than length"))
+		.render(),
 		{"offset", "length", "sliceStart", "sliceEnd"}
 	);
 
@@ -2233,8 +2304,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::DelegateCall)
 	{
 		m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
-		// TODO: error message?
-		m_context.appendConditionalRevert();
+		m_context.appendConditionalRevert(false, "Target contract does not contain code");
 		existenceChecked = true;
 	}
 

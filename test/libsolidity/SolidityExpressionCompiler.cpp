@@ -31,7 +31,9 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <liblangutil/ErrorReporter.h>
-#include <test/Options.h>
+#include <test/Common.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace solidity::evmasm;
@@ -98,7 +100,7 @@ bytes compileFirstExpression(
 	{
 		ErrorList errors;
 		ErrorReporter errorReporter(errors);
-		sourceUnit = Parser(errorReporter, solidity::test::Options::get().evmVersion()).parse(
+		sourceUnit = Parser(errorReporter, solidity::test::CommonOptions::get().evmVersion()).parse(
 			make_shared<Scanner>(CharStream(_sourceCode, ""))
 		);
 		if (!sourceUnit)
@@ -114,7 +116,7 @@ bytes compileFirstExpression(
 	ErrorReporter errorReporter(errors);
 	GlobalContext globalContext;
 	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
-	NameAndTypeResolver resolver(globalContext, solidity::test::Options::get().evmVersion(), scopes, errorReporter);
+	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), scopes, errorReporter);
 	resolver.registerDeclarations(*sourceUnit);
 
 	vector<ContractDefinition const*> inheritanceHierarchy;
@@ -128,7 +130,7 @@ bytes compileFirstExpression(
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			ErrorReporter errorReporter(errors);
-			TypeChecker typeChecker(solidity::test::Options::get().evmVersion(), errorReporter);
+			TypeChecker typeChecker(solidity::test::CommonOptions::get().evmVersion(), errorReporter);
 			BOOST_REQUIRE(typeChecker.checkTypeRequirements(*contract));
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
@@ -137,7 +139,10 @@ bytes compileFirstExpression(
 			FirstExpressionExtractor extractor(*contract);
 			BOOST_REQUIRE(extractor.expression() != nullptr);
 
-			CompilerContext context(solidity::test::Options::get().evmVersion());
+			CompilerContext context(
+				solidity::test::CommonOptions::get().evmVersion(),
+				RevertStrings::Default
+			);
 			context.resetVisitedNodes(contract);
 			context.setInheritanceHierarchy(inheritanceHierarchy);
 			unsigned parametersSize = _localVariables.size(); // assume they are all one slot on the stack
@@ -150,8 +155,7 @@ bytes compileFirstExpression(
 
 			ExpressionCompiler(
 				context,
-				RevertStrings::Default,
-				solidity::test::Options::get().optimize
+				solidity::test::CommonOptions::get().optimize
 			).compile(*extractor.expression());
 
 			for (vector<string> const& function: _functions)
@@ -282,7 +286,7 @@ BOOST_AUTO_TEST_CASE(comparison)
 	bytes code = compileFirstExpression(sourceCode);
 
 	bytes expectation;
-	if (solidity::test::Options::get().optimize)
+	if (solidity::test::CommonOptions::get().optimize)
 		expectation = {
 			uint8_t(Instruction::PUSH2), 0x11, 0xaa,
 			uint8_t(Instruction::PUSH2), 0x10, 0xaa,
@@ -345,7 +349,7 @@ BOOST_AUTO_TEST_CASE(arithmetic)
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
 
 	bytes expectation;
-	if (solidity::test::Options::get().optimize)
+	if (solidity::test::CommonOptions::get().optimize)
 		expectation = {
 			uint8_t(Instruction::PUSH1), 0x2,
 			uint8_t(Instruction::PUSH1), 0x3,
@@ -426,7 +430,7 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
 
 	bytes expectation;
-	if (solidity::test::Options::get().optimize)
+	if (solidity::test::CommonOptions::get().optimize)
 		expectation = {
 			uint8_t(Instruction::DUP1),
 			uint8_t(Instruction::PUSH1), 0x0,
@@ -517,7 +521,7 @@ BOOST_AUTO_TEST_CASE(assignment)
 
 	// Stack: a, b
 	bytes expectation;
-	if (solidity::test::Options::get().optimize)
+	if (solidity::test::CommonOptions::get().optimize)
 		expectation = {
 			uint8_t(Instruction::DUP1),
 			uint8_t(Instruction::DUP3),
@@ -629,7 +633,7 @@ BOOST_AUTO_TEST_CASE(selfbalance)
 
 	bytes code = compileFirstExpression(sourceCode, {}, {});
 
-	if (solidity::test::Options::get().evmVersion() == EVMVersion::istanbul())
+	if (solidity::test::CommonOptions::get().evmVersion() == EVMVersion::istanbul())
 	{
 		bytes expectation({uint8_t(Instruction::SELFBALANCE)});
 		BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());

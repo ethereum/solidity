@@ -7,16 +7,16 @@
     }
 }
 // ====
-// step: functionHoister
 // dialect: yul
+// step: functionHoister
 // ----
 // {
-//     let a:u256
+//     let a
 //     function g()
-//     { let c:u256 }
+//     { let c }
 //     function f()
 //     {
-//         let b:u256
-//         let d:u256
+//         let b
+//         let d
 //     }
 // }

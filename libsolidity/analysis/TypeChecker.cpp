@@ -237,8 +237,8 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
 	solAssert(base, "Base contract not available.");
 
-	if (m_scope->isInterface())
-		m_errorReporter.typeError(_inheritance.location(), "Interfaces cannot inherit.");
+	if (m_scope->isInterface() && !base->isInterface())
+		m_errorReporter.typeError(_inheritance.location(), "Interfaces can only inherit from other interfaces.");
 
 	if (base->isLibrary())
 		m_errorReporter.typeError(_inheritance.location(), "Libraries cannot be inherited from.");
@@ -677,10 +677,20 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					m_errorReporter.typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
 					return size_t(-1);
 				}
-				else if (_context != yul::IdentifierContext::RValue)
+				else if (_context == yul::IdentifierContext::LValue)
 				{
-					m_errorReporter.typeError(_identifier.location, "Storage variables cannot be assigned to.");
-					return size_t(-1);
+					if (var->isStateVariable())
+					{
+						m_errorReporter.typeError(_identifier.location, "State variables cannot be assigned to - you have to use \"sstore()\".");
+						return size_t(-1);
+					}
+					else if (ref->second.isOffset)
+					{
+						m_errorReporter.typeError(_identifier.location, "Only _slot can be assigned to.");
+						return size_t(-1);
+					}
+					else
+						solAssert(ref->second.isSlot, "");
 				}
 			}
 			else if (!var->isConstant() && var->isStateVariable())
@@ -1695,11 +1705,20 @@ void TypeChecker::typeCheckFunctionCall(
 	{
 		m_errorReporter.typeError(
 			_functionCall.location(),
-			"Cannot call function via contract name."
+			"Cannot call function via contract type name."
 		);
 		return;
 	}
-
+	if (_functionType->kind() == FunctionType::Kind::Internal && _functionType->hasDeclaration())
+		if (auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(&_functionType->declaration()))
+			// functionDefinition->annotation().contract != m_scope ensures that this is a qualified access,
+			// e.g. ``A.f();`` instead of a simple function call like ``f();`` (the latter is valid for unimplemented
+			// functions).
+			if (functionDefinition->annotation().contract != m_scope && !functionDefinition->isImplemented())
+				m_errorReporter.typeError(
+					_functionCall.location(),
+					"Cannot call unimplemented base function."
+				);
 
 	// Check for unsupported use of bare static call
 	if (
@@ -2145,7 +2164,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 
 	default:
-		m_errorReporter.typeError(_functionCall.location(), "Type is not callable");
+		m_errorReporter.fatalTypeError(_functionCall.location(), "Type is not callable");
 		funcCallAnno.kind = FunctionCallKind::Unset;
 		funcCallAnno.isPure = argumentsArePure;
 		break;
@@ -2212,6 +2231,124 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		break;
 	}
 
+	return false;
+}
+
+bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
+{
+	solAssert(_functionCallOptions.options().size() == _functionCallOptions.names().size(), "Lengths of name & value arrays differ!");
+
+	_functionCallOptions.expression().accept(*this);
+
+	auto expressionFunctionType = dynamic_cast<FunctionType const*>(type(_functionCallOptions.expression()));
+	if (!expressionFunctionType)
+	{
+		m_errorReporter.fatalTypeError(_functionCallOptions.location(), "Expected callable expression before call options.");
+		return false;
+	}
+
+	bool setSalt = false;
+	bool setValue = false;
+	bool setGas = false;
+
+	FunctionType::Kind kind = expressionFunctionType->kind();
+	if (
+		kind != FunctionType::Kind::Creation &&
+		kind != FunctionType::Kind::External &&
+		kind != FunctionType::Kind::BareCall &&
+		kind != FunctionType::Kind::BareCallCode &&
+		kind != FunctionType::Kind::BareDelegateCall &&
+		kind != FunctionType::Kind::BareStaticCall
+	)
+	{
+		m_errorReporter.fatalTypeError(
+			_functionCallOptions.location(),
+			"Function call options can only be set on external function calls or contract creations."
+		);
+		return false;
+	}
+
+	auto setCheckOption = [&](bool& _option, string const&& _name, bool _alreadySet = false)
+	{
+		if (_option || _alreadySet)
+			m_errorReporter.typeError(
+				_functionCallOptions.location(),
+				_alreadySet ?
+				"Option \"" + std::move(_name) + "\" has already been set." :
+				"Duplicate option \"" + std::move(_name) + "\"."
+			);
+
+		_option = true;
+	};
+
+	for (size_t i = 0; i < _functionCallOptions.names().size(); ++i)
+	{
+		string const& name = *(_functionCallOptions.names()[i]);
+		if (name == "salt")
+		{
+			if (kind == FunctionType::Kind::Creation)
+			{
+				setCheckOption(setSalt, "salt", expressionFunctionType->saltSet());
+				expectType(*_functionCallOptions.options()[i], *TypeProvider::fixedBytes(32));
+			}
+			else
+				m_errorReporter.typeError(
+					_functionCallOptions.location(),
+					"Function call option \"salt\" can only be used with \"new\"."
+				);
+		}
+		else if (name == "value")
+		{
+			if (kind == FunctionType::Kind::BareDelegateCall)
+				m_errorReporter.typeError(
+					_functionCallOptions.location(),
+					"Cannot set option \"value\" for delegatecall."
+				);
+			else if (kind == FunctionType::Kind::BareStaticCall)
+				m_errorReporter.typeError(
+					_functionCallOptions.location(),
+					"Cannot set option \"value\" for staticcall."
+				);
+			else if (!expressionFunctionType->isPayable())
+				m_errorReporter.typeError(
+					_functionCallOptions.location(),
+					"Cannot set option \"value\" on a non-payable function type."
+				);
+			else
+			{
+				expectType(*_functionCallOptions.options()[i], *TypeProvider::uint256());
+
+				setCheckOption(setValue, "value", expressionFunctionType->valueSet());
+			}
+		}
+		else if (name == "gas")
+		{
+			if (kind == FunctionType::Kind::Creation)
+				m_errorReporter.typeError(
+					_functionCallOptions.location(),
+					"Function call option \"gas\" cannot be used with \"new\"."
+				);
+			else
+			{
+				expectType(*_functionCallOptions.options()[i], *TypeProvider::uint256());
+
+				setCheckOption(setGas, "gas", expressionFunctionType->gasSet());
+			}
+		}
+		else
+			m_errorReporter.typeError(
+				_functionCallOptions.location(),
+				"Unknown call option \"" + name + "\". Valid options are \"salt\", \"value\" and \"gas\"."
+			);
+	}
+
+	if (setSalt && !m_evmVersion.hasCreate2())
+		m_errorReporter.typeError(
+			_functionCallOptions.location(),
+			"Unsupported call option \"salt\" (requires Constantinople-compatible VMs)."
+		);
+
+	_functionCallOptions.annotation().type = expressionFunctionType->copyAndSetCallOptions(setGas, setValue, setSalt);
 	return false;
 }
 
@@ -2400,7 +2537,15 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	else if (TypeType const* typeType = dynamic_cast<decltype(typeType)>(exprType))
 	{
 		if (ContractType const* contractType = dynamic_cast<decltype(contractType)>(typeType->actualType()))
+		{
 			annotation.isLValue = annotation.referencedDeclaration->isLValue();
+			if (
+				auto const* functionType = dynamic_cast<FunctionType const*>(annotation.type);
+				functionType &&
+				functionType->kind() == FunctionType::Kind::Declaration
+			)
+				annotation.isPure = _memberAccess.expression().annotation().isPure;
+		}
 	}
 
 	// TODO some members might be pure, but for example `address(0x123).balance` is not pure
@@ -2408,6 +2553,20 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	if (auto tt = dynamic_cast<TypeType const*>(exprType))
 		if (tt->actualType()->category() == Type::Category::Enum)
 			annotation.isPure = true;
+	if (
+		auto const* functionType = dynamic_cast<FunctionType const*>(exprType);
+		functionType &&
+		functionType->hasDeclaration() &&
+		dynamic_cast<FunctionDefinition const*>(&functionType->declaration()) &&
+		memberName == "selector"
+	)
+		if (auto const* parentAccess = dynamic_cast<MemberAccess const*>(&_memberAccess.expression()))
+		{
+			annotation.isPure = parentAccess->expression().annotation().isPure;
+			if (auto const* exprInt = dynamic_cast<Identifier const*>(&parentAccess->expression()))
+				if (exprInt->name() == "this" || exprInt->name() == "super")
+					annotation.isPure = true;
+		}
 	if (auto magicType = dynamic_cast<MagicType const*>(exprType))
 	{
 		if (magicType->kind() == MagicType::Kind::ABI)
@@ -2635,7 +2794,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 				SecondarySourceLocation ssl;
 
 				for (Declaration const* declaration: annotation.overloadedDeclarations)
-					if (declaration->location().isEmpty())
+					if (!declaration->location().isValid())
 					{
 						// Try to re-construct function definition
 						string description;
@@ -2660,8 +2819,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	);
 	annotation.isLValue = annotation.referencedDeclaration->isLValue();
 	annotation.type = annotation.referencedDeclaration->type();
-	if (!annotation.type)
-		m_errorReporter.fatalTypeError(_identifier.location(), "Declaration referenced before type could be determined.");
+	solAssert(annotation.type, "Declaration referenced before type could be determined.");
 	if (auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration))
 		annotation.isPure = annotation.isConstant = variableDeclaration->isConstant();
 	else if (dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))

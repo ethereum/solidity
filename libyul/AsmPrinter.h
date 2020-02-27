@@ -28,11 +28,18 @@
 
 namespace solidity::yul
 {
+struct Dialect;
 
+/**
+ * Converts a parsed Yul AST into readable string representation.
+ * Ignores source locations.
+ * If a dialect is provided, the dialect's default type is omitted.
+ */
 class AsmPrinter
 {
 public:
-	explicit AsmPrinter(bool _yul = false): m_yul(_yul) {}
+	AsmPrinter() {}
+	explicit AsmPrinter(Dialect const& _dialect): m_dialect(&_dialect) {}
 
 	std::string operator()(Literal const& _literal) const;
 	std::string operator()(Identifier const& _identifier) const;
@@ -51,9 +58,9 @@ public:
 
 private:
 	std::string formatTypedName(TypedName _variable) const;
-	std::string appendTypeName(YulString _type) const;
+	std::string appendTypeName(YulString _type, bool _isBoolLiteral = false) const;
 
-	bool m_yul = false;
+	Dialect const* m_dialect = nullptr;
 };
 
 }

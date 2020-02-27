@@ -89,9 +89,23 @@
                 {
                   "attributes":
                   {
+                    "evmVersion": %EVMVERSION%,
                     "externalReferences":
                     [
-                      null
+                      {
+                        "declaration": 5,
+                        "isOffset": false,
+                        "isSlot": false,
+                        "src": "141:1:1",
+                        "valueSize": 18446744073709551615
+                      },
+                      {
+                        "declaration": 5,
+                        "isOffset": false,
+                        "isSlot": false,
+                        "src": "172:1:1",
+                        "valueSize": 18446744073709551615
+                      }
                     ],
                     "operations": "{\n    let f := 0\n    switch calldatasize()\n    case 0 { f := 1 }\n    default { f := 2 }\n}"
                   },

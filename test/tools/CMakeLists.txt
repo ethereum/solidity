@@ -13,8 +13,8 @@ target_link_libraries(yulopti PRIVATE solidity Boost::boost Boost::program_optio
 add_executable(isoltest
 	isoltest.cpp
 	IsolTestOptions.cpp
-	../Options.cpp
 	../Common.cpp
+	../CommonSyntaxTest.cpp
 	../EVMHost.cpp
 	../TestCase.cpp
 	../libsolidity/util/BytesUtils.cpp
@@ -35,6 +35,7 @@ add_executable(isoltest
 	../libyul/EwasmTranslationTest.cpp
 	../libyul/FunctionSideEffects.cpp
 	../libyul/ObjectCompilerTest.cpp
+	../libyul/SyntaxTest.cpp
 	../libyul/YulOptimizerTest.cpp
 	../libyul/YulInterpreterTest.cpp
 )

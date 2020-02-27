@@ -35,29 +35,10 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
-class IDDispenser
-{
-public:
-	static size_t next() { return ++instance(); }
-	static void reset() { instance() = 0; }
-private:
-	static size_t& instance()
-	{
-		static IDDispenser dispenser;
-		return dispenser.id;
-	}
-	size_t id = 0;
-};
-
-ASTNode::ASTNode(SourceLocation const& _location):
-	m_id(IDDispenser::next()),
+ASTNode::ASTNode(int64_t _id, SourceLocation const& _location):
+	m_id(_id),
 	m_location(_location)
 {
-}
-
-void ASTNode::resetID()
-{
-	IDDispenser::reset();
 }
 
 ASTAnnotation& ASTNode::annotation() const
@@ -108,6 +89,11 @@ vector<VariableDeclaration const*> ContractDefinition::stateVariablesIncludingIn
 			if (*contract == *this || var->isVisibleInDerivedContracts())
 				stateVars.push_back(var);
 	return stateVars;
+}
+
+bool ContractDefinition::derivesFrom(ContractDefinition const& _base) const
+{
+	return util::contains(annotation().linearizedBaseContracts, &_base);
 }
 
 map<util::FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() const
@@ -221,36 +207,6 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 	return *m_interfaceFunctionList;
 }
 
-vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
-{
-	if (!m_inheritableMembers)
-	{
-		m_inheritableMembers = make_unique<vector<Declaration const*>>();
-		auto addInheritableMember = [&](Declaration const* _decl)
-		{
-			solAssert(_decl, "addInheritableMember got a nullpointer.");
-			if (_decl->isVisibleInDerivedContracts())
-				m_inheritableMembers->push_back(_decl);
-		};
-
-		for (FunctionDefinition const* f: definedFunctions())
-			addInheritableMember(f);
-
-		for (VariableDeclaration const* v: stateVariables())
-			addInheritableMember(v);
-
-		for (StructDefinition const* s: definedStructs())
-			addInheritableMember(s);
-
-		for (EnumDefinition const* e: definedEnums())
-			addInheritableMember(e);
-
-		for (EventDefinition const* e: events())
-			addInheritableMember(e);
-	}
-	return *m_inheritableMembers;
-}
-
 TypePointer ContractDefinition::type() const
 {
 	return TypeProvider::typeType(TypeProvider::contract(*this));
@@ -339,6 +295,13 @@ TypePointer FunctionDefinition::type() const
 {
 	solAssert(visibility() != Visibility::External, "");
 	return TypeProvider::function(*this, FunctionType::Kind::Internal);
+}
+
+TypePointer FunctionDefinition::typeViaContractName() const
+{
+	if (annotation().contract->isLibrary())
+		return FunctionType(*this).asCallableFunction(true);
+	return TypeProvider::function(*this, FunctionType::Kind::Declaration);
 }
 
 string FunctionDefinition::externalSignature() const

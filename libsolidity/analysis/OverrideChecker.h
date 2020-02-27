@@ -129,6 +129,7 @@ private:
 class OverrideChecker
 {
 public:
+	using OverrideProxyBySignatureMultiSet = std::multiset<OverrideProxy, OverrideProxy::CompareBySignature>;
 
 	/// @param _errorReporter provides the error logging functionality.
 	explicit OverrideChecker(langutil::ErrorReporter& _errorReporter):
@@ -137,12 +138,17 @@ public:
 
 	void check(ContractDefinition const& _contract);
 
-private:
 	struct CompareByID
 	{
 		bool operator()(ContractDefinition const* _a, ContractDefinition const* _b) const;
 	};
 
+	/// Returns all functions of bases (including public state variables) that have not yet been overwritten.
+	/// May contain the same function multiple times when used with shared bases.
+	OverrideProxyBySignatureMultiSet const& inheritedFunctions(ContractDefinition const& _contract) const;
+	OverrideProxyBySignatureMultiSet const& inheritedModifiers(ContractDefinition const& _contract) const;
+
+private:
 	void checkIllegalOverrides(ContractDefinition const& _contract);
 	/// Performs various checks related to @a _overriding overriding @a _super like
 	/// different return type, invalid visibility change, etc.
@@ -174,14 +180,7 @@ private:
 	/// Resolves an override list of UserDefinedTypeNames to a list of contracts.
 	std::set<ContractDefinition const*, CompareByID> resolveOverrideList(OverrideSpecifier const& _overrides) const;
 
-	using OverrideProxyBySignatureMultiSet = std::multiset<OverrideProxy, OverrideProxy::CompareBySignature>;
-
 	void checkOverrideList(OverrideProxy _item, OverrideProxyBySignatureMultiSet const& _inherited);
-
-	/// Returns all functions of bases (including public state variables) that have not yet been overwritten.
-	/// May contain the same function multiple times when used with shared bases.
-	OverrideProxyBySignatureMultiSet const& inheritedFunctions(ContractDefinition const& _contract) const;
-	OverrideProxyBySignatureMultiSet const& inheritedModifiers(ContractDefinition const& _contract) const;
 
 	langutil::ErrorReporter& m_errorReporter;
 

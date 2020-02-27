@@ -3,11 +3,11 @@
     let y:u256 := f(7:u256)
 }
 // ====
-// step: expressionInliner
 // dialect: yul
+// step: expressionInliner
 // ----
 // {
-//     function f(a:u256) -> x:u256
+//     function f(a) -> x
 //     { x := a }
-//     let y:u256 := 7:u256
+//     let y := 7
 // }

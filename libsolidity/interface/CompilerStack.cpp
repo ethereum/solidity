@@ -38,6 +38,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/ast/ASTJsonImporter.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/formal/ModelChecker.h>
 #include <libsolidity/interface/ABI.h>
@@ -164,7 +165,7 @@ void CompilerStack::setRevertStringBehaviour(RevertStrings _revertStrings)
 {
 	if (m_stackState >= ParsingPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set revert string settings before parsing."));
-	solUnimplementedAssert(_revertStrings == RevertStrings::Default || _revertStrings == RevertStrings::Strip, "");
+	solUnimplementedAssert(_revertStrings != RevertStrings::VerboseDebug, "");
 	m_revertStrings = _revertStrings;
 }
 
@@ -233,10 +234,11 @@ bool CompilerStack::parse()
 	if (m_stackState != SourcesSet)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call parse only after the SourcesSet state."));
 	m_errorReporter.clear();
-	ASTNode::resetID();
 
 	if (SemVerVersion{string(VersionString)}.isPrerelease())
 		m_errorReporter.warning("This is a pre-release compiler version, please do not use it in production.");
+
+	Parser parser{m_errorReporter, m_evmVersion, m_parserErrorRecovery};
 
 	vector<string> sourcesToParse;
 	for (auto const& s: m_sources)
@@ -246,7 +248,7 @@ bool CompilerStack::parse()
 		string const& path = sourcesToParse[i];
 		Source& source = m_sources[path];
 		source.scanner->reset();
-		source.ast = Parser(m_errorReporter, m_evmVersion, m_parserErrorRecovery).parse(source.scanner);
+		source.ast = parser.parse(source.scanner);
 		if (!source.ast)
 			solAssert(!Error::containsOnlyWarnings(m_errorReporter.errors()), "Parser returned null but did not report error.");
 		else
@@ -266,6 +268,26 @@ bool CompilerStack::parse()
 	if (!Error::containsOnlyWarnings(m_errorReporter.errors()))
 		m_hasError = true;
 	return !m_hasError;
+}
+
+void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
+{
+	if (m_stackState != Empty)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call importASTs only before the SourcesSet state."));
+	m_sourceJsons = _sources;
+	map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(m_evmVersion).jsonToSourceUnit(m_sourceJsons);
+	for (auto& src: reconstructedSources)
+	{
+		string const& path = src.first;
+		Source source;
+		source.ast = src.second;
+		string srcString = util::jsonCompactPrint(m_sourceJsons[src.first]);
+		ASTPointer<Scanner> scanner = make_shared<Scanner>(langutil::CharStream(srcString, src.first));
+		source.scanner = scanner;
+		m_sources[path] = source;
+	}
+	m_stackState = ParsingPerformed;
+	m_importedSources = true;
 }
 
 bool CompilerStack::analyze()
@@ -310,12 +332,19 @@ bool CompilerStack::analyze()
 					if (!resolver.resolveNamesAndTypes(*node))
 						return false;
 					if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+					{
 						// Note that we now reference contracts by their fully qualified names, and
-						// thus contracts can only conflict if declared in the same source file.  This
-						// already causes a double-declaration error elsewhere, so we do not report
-						// an error here and instead silently drop any additional contracts we find.
+						// thus contracts can only conflict if declared in the same source file. This
+						// should already cause a double-declaration error elsewhere.
 						if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
 							m_contracts[contract->fullyQualifiedName()].contract = contract;
+						else
+							solAssert(
+								m_errorReporter.hasErrors(),
+								"Contract already present (name clash?), but no error was reported."
+							);
+					}
+
 				}
 
 		// Next, we check inheritance, overrides, function collisions and other things at
@@ -536,7 +565,7 @@ string const* CompilerStack::sourceMapping(string const& _contractName) const
 	if (!c.sourceMapping)
 	{
 		if (auto items = assemblyItems(_contractName))
-			c.sourceMapping = make_unique<string>(computeSourceMapping(*items));
+			c.sourceMapping = make_unique<string>(evmasm::AssemblyItem::computeSourceMapping(*items, sourceIndices()));
 	}
 	return c.sourceMapping.get();
 }
@@ -550,7 +579,9 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 	if (!c.runtimeSourceMapping)
 	{
 		if (auto items = runtimeAssemblyItems(_contractName))
-			c.runtimeSourceMapping = make_unique<string>(computeSourceMapping(*items));
+			c.runtimeSourceMapping = make_unique<string>(
+				evmasm::AssemblyItem::computeSourceMapping(*items, sourceIndices())
+			);
 	}
 	return c.runtimeSourceMapping.get();
 }
@@ -641,14 +672,14 @@ string CompilerStack::assemblyString(string const& _contractName, StringMap _sou
 }
 
 /// TODO: cache the JSON
-Json::Value CompilerStack::assemblyJSON(string const& _contractName, StringMap const& _sourceCodes) const
+Json::Value CompilerStack::assemblyJSON(string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
 
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.compiler)
-		return currentContract.compiler->assemblyJSON(_sourceCodes);
+		return currentContract.compiler->assemblyJSON(sourceIndices());
 	else
 		return Json::Value();
 }
@@ -877,35 +908,42 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 {
 	solAssert(m_stackState < ParsingPerformed, "");
 	StringMap newSources;
-	for (auto const& node: _ast.nodes())
-		if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
-		{
-			solAssert(!import->path().empty(), "Import path cannot be empty.");
-
-			string importPath = util::absolutePath(import->path(), _sourcePath);
-			// The current value of `path` is the absolute path as seen from this source file.
-			// We first have to apply remappings before we can store the actual absolute path
-			// as seen globally.
-			importPath = applyRemapping(importPath, _sourcePath);
-			import->annotation().absolutePath = importPath;
-			if (m_sources.count(importPath) || newSources.count(importPath))
-				continue;
-
-			ReadCallback::Result result{false, string("File not supplied initially.")};
-			if (m_readFile)
-				result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), importPath);
-
-			if (result.success)
-				newSources[importPath] = result.responseOrErrorMessage;
-			else
+	try
+	{
+		for (auto const& node: _ast.nodes())
+			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
-				m_errorReporter.parserError(
-					import->location(),
-					string("Source \"" + importPath + "\" not found: " + result.responseOrErrorMessage)
-				);
-				continue;
+				solAssert(!import->path().empty(), "Import path cannot be empty.");
+
+				string importPath = util::absolutePath(import->path(), _sourcePath);
+				// The current value of `path` is the absolute path as seen from this source file.
+				// We first have to apply remappings before we can store the actual absolute path
+				// as seen globally.
+				importPath = applyRemapping(importPath, _sourcePath);
+				import->annotation().absolutePath = importPath;
+				if (m_sources.count(importPath) || newSources.count(importPath))
+					continue;
+
+				ReadCallback::Result result{false, string("File not supplied initially.")};
+				if (m_readFile)
+					result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), importPath);
+
+				if (result.success)
+					newSources[importPath] = result.responseOrErrorMessage;
+				else
+				{
+					m_errorReporter.parserError(
+						import->location(),
+						string("Source \"" + importPath + "\" not found: " + result.responseOrErrorMessage)
+					);
+					continue;
+				}
 			}
-		}
+	}
+	catch (FatalError const&)
+	{
+		solAssert(m_errorReporter.hasErrors(), "");
+	}
 	return newSources;
 }
 
@@ -969,7 +1007,6 @@ void CompilerStack::resolveImports()
 				if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 				{
 					string const& path = import->annotation().absolutePath;
-					solAssert(!path.empty(), "");
 					solAssert(m_sources.count(path), "");
 					import->annotation().sourceUnit = m_sources[path].ast.get();
 					toposort(&m_sources[path]);
@@ -1083,7 +1120,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		generateIR(*dependency);
 
-	IRGenerator generator(m_evmVersion, m_optimiserSettings);
+	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings);
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract);
 }
 
@@ -1158,7 +1195,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 {
 	Json::Value meta;
 	meta["version"] = 1;
-	meta["language"] = "Solidity";
+	meta["language"] = m_importedSources ? "SolidityAST" : "Solidity";
 	meta["compiler"]["version"] = VersionStringStrict;
 
 	/// All the source files (including self), which should be included in the metadata.
@@ -1352,95 +1389,6 @@ bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimen
 	else
 		encoder.pushString("solc", VersionStringStrict);
 	return encoder.serialise();
-}
-
-string CompilerStack::computeSourceMapping(evmasm::AssemblyItems const& _items) const
-{
-	if (m_stackState != CompilationSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
-
-	string ret;
-	map<string, unsigned> sourceIndicesMap = sourceIndices();
-	int prevStart = -1;
-	int prevLength = -1;
-	int prevSourceIndex = -1;
-	size_t prevModifierDepth = -1;
-	char prevJump = 0;
-	for (auto const& item: _items)
-	{
-		if (!ret.empty())
-			ret += ";";
-
-		SourceLocation const& location = item.location();
-		int length = location.start != -1 && location.end != -1 ? location.end - location.start : -1;
-		int sourceIndex =
-			location.source && sourceIndicesMap.count(location.source->name()) ?
-			sourceIndicesMap.at(location.source->name()) :
-			-1;
-		char jump = '-';
-		if (item.getJumpType() == evmasm::AssemblyItem::JumpType::IntoFunction)
-			jump = 'i';
-		else if (item.getJumpType() == evmasm::AssemblyItem::JumpType::OutOfFunction)
-			jump = 'o';
-		size_t modifierDepth = item.m_modifierDepth;
-
-		unsigned components = 5;
-		if (modifierDepth == prevModifierDepth)
-		{
-			components--;
-			if (jump == prevJump)
-			{
-				components--;
-				if (sourceIndex == prevSourceIndex)
-				{
-					components--;
-					if (length == prevLength)
-					{
-						components--;
-						if (location.start == prevStart)
-							components--;
-					}
-				}
-			}
-		}
-
-		if (components-- > 0)
-		{
-			if (location.start != prevStart)
-				ret += to_string(location.start);
-			if (components-- > 0)
-			{
-				ret += ':';
-				if (length != prevLength)
-					ret += to_string(length);
-				if (components-- > 0)
-				{
-					ret += ':';
-					if (sourceIndex != prevSourceIndex)
-						ret += to_string(sourceIndex);
-					if (components-- > 0)
-					{
-						ret += ':';
-						if (jump != prevJump)
-							ret += jump;
-						if (components-- > 0)
-						{
-							ret += ':';
-							if (modifierDepth != prevModifierDepth)
-								ret += to_string(modifierDepth);
-						}
-					}
-				}
-			}
-		}
-
-		prevStart = location.start;
-		prevLength = length;
-		prevSourceIndex = sourceIndex;
-		prevJump = jump;
-		prevModifierDepth = modifierDepth;
-	}
-	return ret;
 }
 
 namespace

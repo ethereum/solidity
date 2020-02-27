@@ -13,7 +13,7 @@
 */
 
 #include <test/libsolidity/SemanticTest.h>
-#include <test/Options.h>
+#include <test/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -61,8 +61,40 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 		}
 		m_settings.erase("compileViaYul");
 	}
+	if (m_settings.count("ABIEncoderV1Only"))
+	{
+		if (m_settings["ABIEncoderV1Only"] == "true")
+		{
+			m_validatedSettings["ABIEncoderV1Only"] = "true";
+			m_runWithABIEncoderV1Only = true;
+		}
+		m_settings.erase("ABIEncoderV1Only");
+	}
+
+	if (m_settings.count("revertStrings"))
+	{
+		auto revertStrings = revertStringsFromString(m_settings["revertStrings"]);
+		if (revertStrings)
+			m_revertStrings = *revertStrings;
+		m_validatedSettings["revertStrings"] = revertStringsToString(m_revertStrings);
+		m_settings.erase("revertStrings");
+	}
+
+	if (m_settings.count("allowNonExistingFunctions"))
+	{
+		m_validatedSettings["allowNonExistingFunctions"] = true;
+		m_settings.erase("allowNonExistingFunctions");
+	}
+
 	parseExpectations(file);
 	soltestAssert(!m_tests.empty(), "No tests specified in " + _filename);
+}
+
+bool SemanticTest::validateSettings(langutil::EVMVersion _evmVersion)
+{
+	if (m_runWithABIEncoderV1Only && solidity::test::CommonOptions::get().useABIEncoderV2)
+		return false;
+	return EVMVersionRestrictedTestCase::validateSettings(_evmVersion);
 }
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
@@ -101,7 +133,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 			else
 			{
 				if (test.call().isConstructor)
-					deploy("", test.call().value, test.call().arguments.rawBytes(), libraries);
+					deploy("", test.call().value.value, test.call().arguments.rawBytes(), libraries);
 				else
 					soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
 				constructed = true;
@@ -117,13 +149,22 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 			}
 			else
 			{
-				bytes output = test.call().useCallWithoutSignature ?
-					callLowLevel(test.call().arguments.rawBytes(), test.call().value) :
-					callContractFunctionWithValueNoEncoding(
+				bytes output;
+				if (test.call().useCallWithoutSignature)
+					output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
+				else
+				{
+					soltestAssert(
+						m_validatedSettings.count("allowNonExistingFunctions") || m_compiler.methodIdentifiers(m_compiler.lastContractName()).isMember(test.call().signature),
+						"The function " + test.call().signature + " is not known to the compiler"
+					);
+
+					output = callContractFunctionWithValueNoEncoding(
 						test.call().signature,
-						test.call().value,
+						test.call().value.value,
 						test.call().arguments.rawBytes()
 					);
+				}
 
 				if ((m_transactionSuccessful == test.call().expectations.failure) || (output != test.call().expectations.rawBytes()))
 					success = false;

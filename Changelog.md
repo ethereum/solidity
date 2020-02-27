@@ -9,17 +9,62 @@ Compiler Features:
 Bugfixes:
 
 
-### 0.6.2 (unreleased)
+### 0.6.4 (unreleased)
 
 Language Features:
- * Allow accessing external functions via contract and interface names to obtain their selector.
+ * Inline Assembly: Allow assigning to `_slot` of local storage variable pointers.
 
 
 Compiler Features:
- * General: Raise warning if runtime bytecode exceeds 24576 bytes (a limit introduced in Spurious Dragon).
- * Yul Optimizer: Apply penalty when trying to rematerialize into loops.
+ * AssemblyStack: Support for source locations (source mappings) and thus debugging Yul sources.
+
 
 Bugfixes:
+ * isoltest: Added new keyword `wei` to express function value in semantic tests
+ * Standard-JSON-Interface: Fix a bug related to empty filenames and imports.
+
+
+### 0.6.3 (2020-02-18)
+
+Language Features:
+ * Allow contract types and enums as keys for mappings.
+ * Allow function selectors to be used as compile-time constants.
+ * Report source locations for structured documentation errors.
+
+
+Compiler Features:
+ * AST: Add a new node for doxygen-style, structured documentation that can be received by contract, function, event and modifier definitions.
+ * Code Generator: Use ``calldatacopy`` instead of ``codecopy`` to zero out memory past input.
+ * Debug: Provide reason strings for compiler-generated internal reverts when using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting on ``debug`` mode.
+ * Yul Optimizer: Prune functions that call each other but are otherwise unreferenced.
+
+
+Bugfixes:
+ * Assembly: Added missing `source` field to legacy assembly json output to complete the source reference.
+ * Parser: Fix an internal error for ``abstract`` without ``contract``.
+ * Type Checker: Make invalid calls to uncallable types fatal errors instead of regular.
+
+
+### 0.6.2 (2020-01-27)
+
+Language Features:
+ * Allow accessing external functions via contract and interface names to obtain their selector.
+ * Allow interfaces to inherit from other interfaces
+ * Allow gas and value to be set in external function calls using ``c.f{gas: 10000, value: 4 ether}()``.
+ * Allow specifying the ``salt`` for contract creations and thus the ``create2`` opcode using ``new C{salt: 0x1234, value: 1 ether}(arg1, arg2)``.
+ * Inline Assembly: Support literals ``true`` and ``false``.
+
+
+Compiler Features:
+ * LLL: The LLL compiler has been removed.
+ * General: Raise warning if runtime bytecode exceeds 24576 bytes (a limit introduced in Spurious Dragon).
+ * General: Support compiling starting from an imported AST. Among others, this can be used for mutation testing.
+ * Yul Optimizer: Apply penalty when trying to rematerialize into loops.
+
+
+Bugfixes:
+ * Commandline interface: Only activate yul optimizer if ``--optimize`` is given.
+ * Fixes internal compiler error on explicitly calling unimplemented base functions.
 
 
 Build System:

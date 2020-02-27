@@ -7,4 +7,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (107-108): Literal, identifier or instruction expected.
+// ParserError: (109-110): Expected identifier but got '='

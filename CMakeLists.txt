@@ -19,10 +19,7 @@ if (IS_BIG_ENDIAN)
 	message(FATAL_ERROR "${PROJECT_NAME} currently does not support big endian systems.")
 endif()
 
-option(LLL "Build LLL" OFF)
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
-option(LLLC_LINK_STATIC "Link lllc executable statically on supported platforms" OFF)
-option(INSTALL_LLLC "Include lllc executable in installation" ${LLL})
 
 # Setup cccache.
 include(EthCcache)
@@ -58,13 +55,10 @@ add_subdirectory(libevmasm)
 add_subdirectory(libyul)
 add_subdirectory(libsolidity)
 add_subdirectory(libsolc)
+add_subdirectory(tools)
 
 if (NOT EMSCRIPTEN)
 	add_subdirectory(solc)
-	if (LLL)
-		add_subdirectory(liblll)
-		add_subdirectory(lllc)
-	endif()
 endif()
 
 if (TESTS AND NOT EMSCRIPTEN)

@@ -18,7 +18,7 @@
 #include <test/libsolidity/util/TestFileParser.h>
 
 #include <test/libsolidity/util/BytesUtils.h>
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <liblangutil/Common.h>
 
@@ -88,6 +88,7 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						tie(call.signature, call.useCallWithoutSignature) = parseFunctionSignature();
 						if (accept(Token::Comma, true))
 							call.value = parseFunctionCallValue();
+
 						if (accept(Token::Colon, true))
 							call.arguments = parseFunctionCallArguments();
 
@@ -199,13 +200,19 @@ pair<string, bool> TestFileParser::parseFunctionSignature()
 	return {signature, !hasName};
 }
 
-u256 TestFileParser::parseFunctionCallValue()
+FunctionValue TestFileParser::parseFunctionCallValue()
 {
 	try
 	{
-		u256 value{parseDecimalNumber()};
-		expect(Token::Ether);
-		return value;
+		u256 value{ parseDecimalNumber() };
+		Token token = m_scanner.currentToken();
+		if (token != Token::Ether && token != Token::Wei)
+			throw Error(Error::Type::ParserError, "Invalid value unit provided. Coins can be wei or ether.");
+
+		m_scanner.scanNextToken();
+
+		FunctionValueUnit unit = token == Token::Wei ? FunctionValueUnit::Wei : FunctionValueUnit::Ether;
+		return { (unit == FunctionValueUnit::Wei ? u256(1) : exp256(u256(10), u256(18))) * value, unit };
 	}
 	catch (std::exception const&)
 	{
@@ -467,6 +474,7 @@ void TestFileParser::Scanner::scanNextToken()
 		if (_literal == "true") return TokenDesc{Token::Boolean, _literal};
 		if (_literal == "false") return TokenDesc{Token::Boolean, _literal};
 		if (_literal == "ether") return TokenDesc{Token::Ether, _literal};
+		if (_literal == "wei") return TokenDesc{Token::Wei, _literal};
 		if (_literal == "left") return TokenDesc{Token::Left, _literal};
 		if (_literal == "library") return TokenDesc{Token::Library, _literal};
 		if (_literal == "right") return TokenDesc{Token::Right, _literal};

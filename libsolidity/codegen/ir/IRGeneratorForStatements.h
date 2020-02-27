@@ -22,6 +22,7 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/ir/IRLValue.h>
+#include <libsolidity/codegen/ir/IRVariable.h>
 
 namespace solidity::frontend
 {
@@ -47,6 +48,7 @@ public:
 	void initializeStateVar(VariableDeclaration const& _varDecl);
 
 	void endVisit(VariableDeclarationStatement const& _variableDeclaration) override;
+	bool visit(Conditional const& _conditional) override;
 	bool visit(Assignment const& _assignment) override;
 	bool visit(TupleExpression const& _tuple) override;
 	bool visit(IfStatement const& _ifStatement) override;
@@ -73,15 +75,29 @@ private:
 		std::vector<ASTPointer<Expression const>> const& _arguments
 	);
 
-	std::string fetchFreeMem() const;
+	/// @returns code that evaluates to the first unused memory slot (which does not have to
+	/// be empty).
+	static std::string freeMemory();
+
+	/// Generates the required conversion code and @returns an IRVariable referring to the value of @a _variable
+	/// converted to type @a _to.
+	IRVariable convert(IRVariable const& _variable, Type const& _to);
 
 	/// @returns a Yul expression representing the current value of @a _expression,
 	/// converted to type @a _to if it does not yet have that type.
 	std::string expressionAsType(Expression const& _expression, Type const& _to);
-	std::ostream& defineExpression(Expression const& _expression);
-	/// Defines only one of many variables corresponding to an expression.
-	/// We start counting at 1 instead of 0.
-	std::ostream& defineExpressionPart(Expression const& _expression, size_t _part);
+
+	/// @returns an output stream that can be used to define @a _var using a function call or
+	/// single stack slot expression.
+	std::ostream& define(IRVariable const& _var);
+	/// Defines @a _var using the value of @a _value while performing type conversions, if required.
+	void define(IRVariable const& _var, IRVariable const& _value) { declareAssign(_var, _value, true); }
+	/// Assigns @a _var to the value of @a _value while performing type conversions, if required.
+	void assign(IRVariable const& _var, IRVariable const& _value) { declareAssign(_var, _value, false); }
+	/// Declares variable @a _var.
+	void declare(IRVariable const& _var);
+
+	void declareAssign(IRVariable const& _var, IRVariable const& _value, bool _define);
 
 	void appendAndOrOperatorCode(BinaryOperation const& _binOp);
 	void appendSimpleUnaryOperation(UnaryOperation const& _operation, Expression const& _expr);
@@ -94,7 +110,14 @@ private:
 		std::string const& _right
 	);
 
-	void setLValue(Expression const& _expression, std::unique_ptr<IRLValue> _lvalue);
+	/// Assigns the value of @a _value to the lvalue @a _lvalue.
+	void writeToLValue(IRLValue const& _lvalue, IRVariable const& _value);
+	/// @returns a fresh IR variable containing the value of the lvalue @a _lvalue.
+	IRVariable readFromLValue(IRLValue const& _lvalue);
+
+	/// Stores the given @a _lvalue in m_currentLValue, if it will be written to (lValueRequested). Otherwise
+	/// defines the expression @a _expression by reading the value from @a _lvalue.
+	void setLValue(Expression const& _expression, IRLValue _lvalue);
 	void generateLoop(
 		Statement const& _body,
 		Expression const* _conditionExpression,
@@ -108,7 +131,7 @@ private:
 	std::ostringstream m_code;
 	IRGenerationContext& m_context;
 	YulUtilFunctions& m_utils;
-	std::unique_ptr<IRLValue> m_currentLValue;
+	std::optional<IRLValue> m_currentLValue;
 };
 
 }

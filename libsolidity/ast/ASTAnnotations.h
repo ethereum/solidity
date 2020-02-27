@@ -56,9 +56,9 @@ struct DocTag
 	std::string paramName;	///< Only used for @param, stores the parameter name.
 };
 
-struct DocumentedAnnotation
+struct StructurallyDocumentedAnnotation
 {
-	virtual ~DocumentedAnnotation() = default;
+	virtual ~StructurallyDocumentedAnnotation() = default;
 	/// Mapping docstring tag name -> content.
 	std::multimap<std::string, DocTag> docTags;
 };
@@ -78,6 +78,9 @@ struct ScopableAnnotation
 	/// The scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
 	ASTNode const* scope = nullptr;
+	/// Pointer to the contract this declaration resides in. Can be nullptr if the current scope
+	/// is not part of a contract. Available only after name and type resolution step.
+	ContractDefinition const* contract = nullptr;
 };
 
 struct DeclarationAnnotation: ASTAnnotation, ScopableAnnotation
@@ -98,7 +101,7 @@ struct TypeDeclarationAnnotation: DeclarationAnnotation
 	std::string canonicalName;
 };
 
-struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnotation
+struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 	/// List of functions without a body. Can also contain functions from base classes.
 	std::vector<FunctionDefinition const*> unimplementedFunctions;
@@ -119,17 +122,15 @@ struct CallableDeclarationAnnotation: DeclarationAnnotation
 	std::set<CallableDeclaration const*> baseFunctions;
 };
 
-struct FunctionDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAnnotation
-{
-	/// Pointer to the contract this function is defined in
-	ContractDefinition const* contract = nullptr;
-};
-
-struct EventDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAnnotation
+struct FunctionDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 };
 
-struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, DocumentedAnnotation
+struct EventDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
+{
+};
+
+struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 };
 
@@ -141,7 +142,7 @@ struct VariableDeclarationAnnotation: DeclarationAnnotation
 	std::set<CallableDeclaration const*> baseFunctions;
 };
 
-struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
+struct StatementAnnotation: ASTAnnotation
 {
 };
 

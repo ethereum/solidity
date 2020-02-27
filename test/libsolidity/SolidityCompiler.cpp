@@ -20,7 +20,9 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/Metadata.h>
-#include <test/Options.h>
+#include <test/Common.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 
@@ -38,7 +40,7 @@ BOOST_AUTO_TEST_CASE(does_not_include_creation_time_only_internal_functions)
 			function f() internal { for (uint i = 0; i < 10; ++i) x += 3 + i; }
 		}
 	)";
-	compiler().setOptimiserSettings(solidity::test::Options::get().optimize);
+	compiler().setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	BOOST_REQUIRE(success(sourceCode));
 	BOOST_REQUIRE_MESSAGE(compiler().compile(), "Compiling contract failed");
 	bytes const& creationBytecode = solidity::test::bytecodeSansMetadata(compiler().object("C").bytecode);

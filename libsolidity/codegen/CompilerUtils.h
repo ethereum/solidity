@@ -24,6 +24,7 @@
 
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerContext.h>
 
@@ -34,7 +35,8 @@ class Type; // forward
 class CompilerUtils
 {
 public:
-	explicit CompilerUtils(CompilerContext& _context): m_context(_context) {}
+	explicit CompilerUtils(CompilerContext& _context): m_context(_context)
+	{}
 
 	/// Stores the initial value of the free-memory-pointer at its position;
 	void initialiseFreeMemoryPointer();

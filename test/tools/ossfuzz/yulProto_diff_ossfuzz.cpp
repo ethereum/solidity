@@ -55,7 +55,9 @@ void printErrors(ostream& _stream, ErrorList const& _errors)
 
 DEFINE_PROTO_FUZZER(Program const& _input)
 {
-	string yul_source = ProtoConverter().programToString(_input);
+	ProtoConverter converter;
+	string yul_source = converter.programToString(_input);
+	EVMVersion version = converter.version();
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
@@ -69,7 +71,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	// AssemblyStack entry point
 	AssemblyStack stack(
-		langutil::EVMVersion::berlin(),
+		version,
 		AssemblyStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::full()
 	);
@@ -87,7 +89,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
 		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion::berlin())
+		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 
 	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
@@ -97,7 +99,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	termReason = yulFuzzerUtil::interpret(
 		os2,
 		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion::berlin()),
+		EVMDialect::strictAssemblyForEVMObjects(version),
 		(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 4)
 	);
 

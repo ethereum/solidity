@@ -19,12 +19,13 @@
  * Unit tests for parsing Yul.
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <test/libsolidity/ErrorCheck.h>
 #include <test/libyul/Common.h>
 
 #include <libyul/AsmParser.h>
+#include <libyul/AsmPrinter.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Dialect.h>
@@ -32,6 +33,7 @@
 #include <liblangutil/ErrorReporter.h>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <memory>
 #include <optional>
@@ -48,7 +50,7 @@ namespace solidity::yul::test
 namespace
 {
 
-bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter)
+shared_ptr<Block> parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter)
 {
 	try
 	{
@@ -57,18 +59,19 @@ bool parse(string const& _source, Dialect const& _dialect, ErrorReporter& errorR
 		if (parserResult)
 		{
 			yul::AsmAnalysisInfo analysisInfo;
-			return (yul::AsmAnalyzer(
+			if (yul::AsmAnalyzer(
 				analysisInfo,
 				errorReporter,
 				_dialect
-			)).analyze(*parserResult);
+			).analyze(*parserResult))
+				return parserResult;
 		}
 	}
 	catch (FatalError const&)
 	{
 		BOOST_FAIL("Fatal error leaked.");
 	}
-	return false;
+	return {};
 }
 
 std::optional<Error> parseAndReturnFirstError(string const& _source, Dialect const& _dialect, bool _allowWarnings = true)
@@ -96,12 +99,12 @@ std::optional<Error> parseAndReturnFirstError(string const& _source, Dialect con
 	return {};
 }
 
-bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yul(), bool _allowWarnings = true)
+bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarnings = true)
 {
 	return !parseAndReturnFirstError(_source, _dialect, _allowWarnings);
 }
 
-Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yul(), bool _allowWarnings = false)
+Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarnings = false)
 {
 
 	auto error = parseAndReturnFirstError(_source, _dialect, _allowWarnings);
@@ -119,7 +122,7 @@ do \
 	BOOST_CHECK(solidity::frontend::test::searchErrorMessage(err, (substring))); \
 } while(0)
 
-#define CHECK_ERROR(text, typ, substring) CHECK_ERROR_DIALECT(text, typ, substring, Dialect::yul())
+#define CHECK_ERROR(text, typ, substring) CHECK_ERROR_DIALECT(text, typ, substring, Dialect::yulDeprecated())
 
 BOOST_AUTO_TEST_SUITE(YulParser)
 
@@ -161,9 +164,9 @@ BOOST_AUTO_TEST_CASE(period_not_as_identifier_start)
 
 BOOST_AUTO_TEST_CASE(period_in_identifier_spaced)
 {
-	CHECK_ERROR("{ let x. y:u256 }", ParserError, "Expected ':' but got identifier");
-	CHECK_ERROR("{ let x .y:u256 }", ParserError, "Expected ':' but got '.'");
-	CHECK_ERROR("{ let x . y:u256 }", ParserError, "Expected ':' but got '.'");
+	CHECK_ERROR("{ let x. y:u256 }", ParserError, "Call or assignment expected");
+	CHECK_ERROR("{ let x .y:u256 }", ParserError, "Literal or identifier expected");
+	CHECK_ERROR("{ let x . y:u256 }", ParserError, "Literal or identifier expected");
 }
 
 BOOST_AUTO_TEST_CASE(period_in_identifier_start)
@@ -234,22 +237,12 @@ BOOST_AUTO_TEST_CASE(tokens_as_identifers)
 	BOOST_CHECK(successParse("{ let bool:u256 := 1:u256 }"));
 }
 
-BOOST_AUTO_TEST_CASE(lacking_types)
+BOOST_AUTO_TEST_CASE(optional_types)
 {
-	CHECK_ERROR("{ let x := 1:u256 }", ParserError, "Expected ':' but got ':='");
-	CHECK_ERROR("{ let x:u256 := 1 }", ParserError, "Expected ':' but got '}'");
-	CHECK_ERROR("{ function f(a) {} }", ParserError, "Expected ':' but got ')'");
-	CHECK_ERROR("{ function f(a:u256) -> b {} }", ParserError, "Expected ':' but got '{'");
-}
-
-BOOST_AUTO_TEST_CASE(invalid_types)
-{
-	/// testing invalid literal
-	/// NOTE: these will need to change when types are compared
-	CHECK_ERROR("{ let x:bool := 1:invalid }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
-	/// testing invalid variable declaration
-	CHECK_ERROR("{ let x:invalid := 1:bool }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
-	CHECK_ERROR("{ function f(a:invalid) {} }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
+	BOOST_CHECK(successParse("{ let x := 1:u256 }"));
+	BOOST_CHECK(successParse("{ let x:u256 := 1 }"));
+	BOOST_CHECK(successParse("{ function f(a) {} }"));
+	BOOST_CHECK(successParse("{ function f(a:u256) -> b {} }"));
 }
 
 BOOST_AUTO_TEST_CASE(number_literals)
@@ -265,7 +258,7 @@ BOOST_AUTO_TEST_CASE(builtin_types)
 {
 	BOOST_CHECK(successParse("{ let x:bool := true:bool }"));
 	BOOST_CHECK(successParse("{ let x:u8 := 1:u8 }"));
-	BOOST_CHECK(successParse("{ let x:s8 := 1:u8 }"));
+	BOOST_CHECK(successParse("{ let x:s8 := 1:s8 }"));
 	BOOST_CHECK(successParse("{ let x:u32 := 1:u32 }"));
 	BOOST_CHECK(successParse("{ let x:s32 := 1:s32 }"));
 	BOOST_CHECK(successParse("{ let x:u64 := 1:u64 }"));
@@ -492,15 +485,7 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
 	CHECK_ERROR("{ if let x:u256 {} }", ParserError, "Literal or identifier expected.");
 	CHECK_ERROR("{ if true:bool let x:u256 := 3:u256 }", ParserError, "Expected '{' but got reserved keyword 'let'");
-	// TODO change this to an error once we check types.
-	BOOST_CHECK(successParse("{ if 42:u256 { } }"));
-}
-
-BOOST_AUTO_TEST_CASE(switch_case_types)
-{
-	CHECK_ERROR("{ switch 0:u256 case 0:u256 {} case 1:u32 {} }", TypeError, "Switch cases have non-matching types.");
-	// The following should be an error in the future, but this is not yet detected.
-	BOOST_CHECK(successParse("{ switch 0:u256 case 0:u32 {} case 1:u32 {} }"));
+	CHECK_ERROR("{ if 42:u256 { } }", TypeError, "Expected a value of boolean type");
 }
 
 BOOST_AUTO_TEST_CASE(switch_duplicate_case)
@@ -531,7 +516,6 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 {
 	struct SimpleDialect: public Dialect
 	{
-		SimpleDialect(): Dialect(AsmFlavour::Strict) {}
 		BuiltinFunction const* builtin(YulString _name) const override
 		{
 			return _name == "builtin"_yulstring ? &f : nullptr;
@@ -551,7 +535,6 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 {
 	struct SimpleDialect: public Dialect
 	{
-		SimpleDialect(): Dialect(AsmFlavour::Strict) {}
 		BuiltinFunction const* builtin(YulString _name) const override
 		{
 			return _name == "builtin"_yulstring ? &f : nullptr;
@@ -564,6 +547,50 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 	CHECK_ERROR_DIALECT("{ let a, b, c := builtin(1) }", TypeError, "Function expects 2 arguments but got 1", dialect);
 	CHECK_ERROR_DIALECT("{ let a, b := builtin(1, 2) }", DeclarationError, "Variable count mismatch: 2 variables and 3 values.", dialect);
 }
+
+BOOST_AUTO_TEST_CASE(default_types_set)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	shared_ptr<Block> result = parse(
+		"{"
+			"let x:bool := true:bool "
+			"let z:bool := true "
+			"let y := add(1, 2) "
+			"switch y case 0 {} default {} "
+		"}",
+		EVMDialectTyped::instance(EVMVersion{}),
+		reporter
+	);
+	BOOST_REQUIRE(!!result);
+
+	// Use no dialect so that all types are printed.
+	// This tests that the default types are properly assigned.
+	BOOST_CHECK_EQUAL(AsmPrinter{}(*result),
+		"{\n"
+		"    let x:bool := true:bool\n"
+		"    let z:bool := true:bool\n"
+		"    let y:u256 := add(1:u256, 2:u256)\n"
+		"    switch y\n"
+		"    case 0:u256 { }\n"
+		"    default { }\n"
+		"}"
+	);
+
+	// Now test again with type dialect. Now the default types
+	// should be omitted.
+	BOOST_CHECK_EQUAL(AsmPrinter{EVMDialectTyped::instance(EVMVersion{})}(*result),
+		"{\n"
+		"    let x:bool := true\n"
+		"    let z:bool := true\n"
+		"    let y := add(1, 2)\n"
+		"    switch y\n"
+		"    case 0 { }\n"
+		"    default { }\n"
+		"}"
+	);
+}
+
 
 
 BOOST_AUTO_TEST_SUITE_END()

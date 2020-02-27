@@ -19,7 +19,7 @@
  */
 
 #include <test/libsolidity/AnalysisFramework.h>
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(import_base)
 		}
 	)"}
 	});
-	c.setEVMVersion(solidity::test::Options::get().evmVersion());
+	c.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	BOOST_CHECK(c.compile());
 
 	unsigned asserts = 0;
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(import_library)
 		}
 	)"}
 	});
-	c.setEVMVersion(solidity::test::Options::get().evmVersion());
+	c.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	BOOST_CHECK(c.compile());
 
 	unsigned asserts = 0;

@@ -67,13 +67,20 @@ AnsiColorized SourceReferenceFormatterHuman::diagColored() const
 
 void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _ref)
 {
-	if (_ref.position.line < 0)
+	if (_ref.sourceName.empty())
 		return; // Nothing we can print here
 
 	int const leftpad = static_cast<int>(log10(max(_ref.position.line, 1))) + 1;
 
 	// line 0: source name
 	frameColored() << string(leftpad, ' ') << "--> ";
+
+	if (_ref.position.line < 0)
+	{
+		m_stream << _ref.sourceName << "\n";
+		return; // No line available, nothing else to print
+	}
+
 	m_stream << _ref.sourceName << ":" << (_ref.position.line + 1) << ":" << (_ref.position.column + 1) << ":" << '\n';
 
 	if (!_ref.multiline)

@@ -2,6 +2,8 @@ set(sources
     boostTest.cpp
     Common.cpp
     Common.h
+    CommonSyntaxTest.cpp
+    CommonSyntaxTest.h
     EVMHost.cpp
     EVMHost.h
     ExecutionFramework.cpp
@@ -9,8 +11,6 @@ set(sources
     InteractiveTests.h
     Metadata.cpp
     Metadata.h
-    Options.cpp
-    Options.h
     TestCase.cpp
     TestCase.h
 )
@@ -50,19 +50,6 @@ set(liblangutil_sources
     liblangutil/SourceLocation.cpp
 )
 detect_stray_source_files("${liblangutil_sources}" "liblangutil/")
-
-if(LLL)
-    set (liblll_sources
-        liblll/Compiler.cpp
-        liblll/EndToEndTest.cpp
-        liblll/ExecutionFramework.cpp
-        liblll/ExecutionFramework.h
-        liblll/LLL_ENS.cpp
-        liblll/LLL_ERC20.cpp
-        liblll/Parser.cpp
-    )
-    detect_stray_source_files("${liblll_sources}" "liblll/")
-endif(LLL)
 
 set(libsolidity_sources
     libsolidity/ABIDecoderTests.cpp
@@ -142,6 +129,8 @@ set(libyul_sources
     libyul/ObjectParser.cpp
     libyul/Parser.cpp
     libyul/StackReuseCodegen.cpp
+    libyul/SyntaxTest.h
+    libyul/SyntaxTest.cpp
     libyul/YulInterpreterTest.cpp
     libyul/YulInterpreterTest.h
     libyul/YulOptimizerTest.cpp
@@ -149,15 +138,40 @@ set(libyul_sources
 )
 detect_stray_source_files("${libyul_sources}" "libyul/")
 
+set(yul_phaser_sources
+    yulPhaser/Common.h
+    yulPhaser/Common.cpp
+    yulPhaser/CommonTest.cpp
+    yulPhaser/Chromosome.cpp
+    yulPhaser/FitnessMetrics.cpp
+    yulPhaser/GeneticAlgorithms.cpp
+    yulPhaser/Population.cpp
+    yulPhaser/Program.cpp
+    yulPhaser/Selections.cpp
+    yulPhaser/SimulationRNG.cpp
+
+    # FIXME: yul-phaser is not a library so I can't just add it to target_link_libraries().
+    # My current workaround is just to include its source files here but this introduces
+    # unnecessary duplication. Create a library or find a way to reuse the list in both places.
+    ../tools/yulPhaser/Chromosome.cpp
+    ../tools/yulPhaser/FitnessMetrics.cpp
+    ../tools/yulPhaser/GeneticAlgorithms.cpp
+    ../tools/yulPhaser/Population.cpp
+    ../tools/yulPhaser/Program.cpp
+    ../tools/yulPhaser/Selections.cpp
+    ../tools/yulPhaser/SimulationRNG.cpp
+)
+detect_stray_source_files("${yul_phaser_sources}" "yulPhaser/")
+
 add_executable(soltest ${sources}
     ${contracts_sources}
     ${libsolutil_sources}
     ${liblangutil_sources}
     ${libevmasm_sources}
     ${libyul_sources}
-    ${liblll_sources}
     ${libsolidity_sources}
     ${libsolidity_util_sources}
+    ${yul_phaser_sources}
 )
 target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm solutil Boost::boost Boost::program_options Boost::unit_test_framework evmc)
 
@@ -168,11 +182,6 @@ target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm
 # TODO: Remove this option as soon as we have reduced the SLoC's in SolidityEndToEndTest.cpp
 if (MSVC)
     target_compile_options(soltest PUBLIC "/bigobj")
-endif()
-
-if (LLL)
-    target_link_libraries(soltest PRIVATE lll)
-    target_compile_definitions(soltest PRIVATE HAVE_LLL=1)
 endif()
 
 if (NOT Boost_USE_STATIC_LIBS)

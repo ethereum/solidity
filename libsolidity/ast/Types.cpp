@@ -151,6 +151,8 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 void Type::clearCache() const
 {
 	m_members.clear();
+	m_stackItems.reset();
+	m_stackSize.reset();
 }
 
 void StorageOffsets::computeOffsets(TypePointers const& _types)
@@ -210,7 +212,7 @@ pair<u256, unsigned> const* MemberList::memberStorageOffset(string const& _name)
 		memberTypes.reserve(m_memberTypes.size());
 		for (auto const& member: m_memberTypes)
 			memberTypes.push_back(member.type);
-		m_storageOffsets.reset(new StorageOffsets());
+		m_storageOffsets = std::make_unique<StorageOffsets>();
 		m_storageOffsets->computeOffsets(memberTypes);
 	}
 	for (size_t index = 0; index < m_memberTypes.size(); ++index)
@@ -1701,15 +1703,22 @@ u256 ArrayType::storageSize() const
 	return max<u256>(1, u256(size));
 }
 
-unsigned ArrayType::sizeOnStack() const
+vector<tuple<string, TypePointer>> ArrayType::makeStackItems() const
 {
-	if (m_location == DataLocation::CallData)
-		// offset [length] (stack top)
-		return 1 + (isDynamicallySized() ? 1 : 0);
-	else
-		// storage slot or memory offset
-		// byte offset inside storage value is omitted
-		return 1;
+	switch (m_location)
+	{
+		case DataLocation::CallData:
+			if (isDynamicallySized())
+				return {std::make_tuple("offset", TypeProvider::uint256()), std::make_tuple("length", TypeProvider::uint256())};
+			else
+				return {std::make_tuple("offset", TypeProvider::uint256())};
+		case DataLocation::Memory:
+			return {std::make_tuple("mpos", TypeProvider::uint256())};
+		case DataLocation::Storage:
+			// byte offset inside storage value is omitted
+			return {std::make_tuple("slot", TypeProvider::uint256())};
+	}
+	solAssert(false, "");
 }
 
 string ArrayType::toString(bool _short) const
@@ -1891,6 +1900,11 @@ string ArraySliceType::toString(bool _short) const
 	return m_arrayType.toString(_short) + " slice";
 }
 
+std::vector<std::tuple<std::string, TypePointer>> ArraySliceType::makeStackItems() const
+{
+	return {{"offset", TypeProvider::uint256()}, {"length", TypeProvider::uint256()}};
+}
+
 string ContractType::richIdentifier() const
 {
 	return (m_super ? "t_super" : "t_contract") + parenthesizeUserIdentifier(m_contract.name()) + to_string(m_contract.id());
@@ -1987,6 +2001,14 @@ vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVar
 		if (auto const* offset = offsets.offset(index))
 			variablesAndOffsets.emplace_back(variables[index], offset->first, offset->second);
 	return variablesAndOffsets;
+}
+
+vector<tuple<string, TypePointer>> ContractType::makeStackItems() const
+{
+	if (m_super)
+		return {};
+	else
+		return {make_tuple("address", isPayable() ? TypeProvider::payableAddress() : TypeProvider::address())};
 }
 
 void StructType::clearCache() const
@@ -2354,7 +2376,7 @@ string EnumType::canonicalName() const
 size_t EnumType::numberOfMembers() const
 {
 	return m_enum.members().size();
-};
+}
 
 BoolResult EnumType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
@@ -2422,12 +2444,17 @@ u256 TupleType::storageSize() const
 	solAssert(false, "Storage size of non-storable tuple type requested.");
 }
 
-unsigned TupleType::sizeOnStack() const
+vector<tuple<string, TypePointer>> TupleType::makeStackItems() const
 {
-	unsigned size = 0;
+	vector<tuple<string, TypePointer>> slots;
+	unsigned i = 1;
 	for (auto const& t: components())
-		size += t ? t->sizeOnStack() : 0;
-	return size;
+	{
+		if (t)
+			slots.emplace_back("component_" + std::to_string(i), t);
+		++i;
+	}
+	return slots;
 }
 
 TypePointer TupleType::mobileType() const
@@ -2741,6 +2768,8 @@ string FunctionType::richIdentifier() const
 		id += "gas";
 	if (m_valueSet)
 		id += "value";
+	if (m_saltSet)
+		id += "salt";
 	if (bound())
 		id += "bound_to" + identifierList(selfType());
 	return id;
@@ -2881,8 +2910,9 @@ unsigned FunctionType::storageBytes() const
 		solAssert(false, "Storage size of non-storable function type requested.");
 }
 
-unsigned FunctionType::sizeOnStack() const
+vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 {
+	vector<tuple<string, TypePointer>> slots;
 	Kind kind = m_kind;
 	if (m_kind == Kind::SetGas || m_kind == Kind::SetValue)
 	{
@@ -2890,37 +2920,42 @@ unsigned FunctionType::sizeOnStack() const
 		kind = dynamic_cast<FunctionType const&>(*m_returnParameterTypes.front()).m_kind;
 	}
 
-	unsigned size = 0;
-
 	switch (kind)
 	{
 	case Kind::External:
 	case Kind::DelegateCall:
-		size = 2;
+		slots = {make_tuple("address", TypeProvider::address()), make_tuple("functionIdentifier", TypeProvider::fixedBytes(4))};
 		break;
 	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::BareStaticCall:
+	case Kind::Transfer:
+	case Kind::Send:
+		slots = {make_tuple("address", TypeProvider::address())};
+		break;
 	case Kind::Internal:
+		slots = {make_tuple("functionIdentifier", TypeProvider::uint256())};
+		break;
 	case Kind::ArrayPush:
 	case Kind::ArrayPop:
 	case Kind::ByteArrayPush:
-	case Kind::Transfer:
-	case Kind::Send:
-		size = 1;
+		slots = {make_tuple("slot", TypeProvider::uint256())};
 		break;
 	default:
 		break;
 	}
 
 	if (m_gasSet)
-		size++;
+		slots.emplace_back("gas", TypeProvider::uint256());
 	if (m_valueSet)
-		size++;
+		slots.emplace_back("value", TypeProvider::uint256());
+	if (m_saltSet)
+		slots.emplace_back("salt", TypeProvider::uint256());
 	if (bound())
-		size += m_parameterTypes.front()->sizeOnStack();
-	return size;
+		for (auto const& [boundName, boundType]: m_parameterTypes.front()->stackItems())
+			slots.emplace_back("self_" + boundName, boundType);
+	return slots;
 }
 
 FunctionTypePointer FunctionType::interfaceFunctionType() const
@@ -2957,12 +2992,30 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 	);
 }
 
-MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) const
+MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const* _scope) const
 {
 	switch (m_kind)
 	{
 	case Kind::Declaration:
-		return {{"selector", TypeProvider::fixedBytes(4)}};
+		if (declaration().isPartOfExternalInterface())
+			return {{"selector", TypeProvider::fixedBytes(4)}};
+		else
+			return MemberList::MemberMap();
+	case Kind::Internal:
+		if (
+			auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
+			functionDefinition &&
+			_scope &&
+			functionDefinition->annotation().contract &&
+			_scope != functionDefinition->annotation().contract &&
+			functionDefinition->isPartOfExternalInterface()
+		)
+		{
+			solAssert(_scope->derivesFrom(*functionDefinition->annotation().contract), "");
+			return {{"selector", TypeProvider::fixedBytes(4)}};
+		}
+		else
+			return MemberList::MemberMap();
 	case Kind::External:
 	case Kind::Creation:
 	case Kind::BareCall:
@@ -2983,7 +3036,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					"value",
 					TypeProvider::function(
 						parseElementaryTypeVector({"uint"}),
-						TypePointers{copyAndSetGasOrValue(false, true)},
+						TypePointers{copyAndSetCallOptions(false, true, false)},
 						strings(1, ""),
 						strings(1, ""),
 						Kind::SetValue,
@@ -2991,7 +3044,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 						StateMutability::Pure,
 						nullptr,
 						m_gasSet,
-						m_valueSet
+						m_valueSet,
+						m_saltSet
 					)
 				);
 		}
@@ -3000,7 +3054,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 				"gas",
 				TypeProvider::function(
 					parseElementaryTypeVector({"uint"}),
-					TypePointers{copyAndSetGasOrValue(true, false)},
+					TypePointers{copyAndSetCallOptions(true, false, false)},
 					strings(1, ""),
 					strings(1, ""),
 					Kind::SetGas,
@@ -3008,7 +3062,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					StateMutability::Pure,
 					nullptr,
 					m_gasSet,
-					m_valueSet
+					m_valueSet,
+					m_saltSet
 				)
 			);
 		return members;
@@ -3131,7 +3186,7 @@ bool FunctionType::equalExcludingStateMutability(FunctionType const& _other) con
 		return false;
 
 	//@todo this is ugly, but cannot be prevented right now
-	if (m_gasSet != _other.m_gasSet || m_valueSet != _other.m_valueSet)
+	if (m_gasSet != _other.m_gasSet || m_valueSet != _other.m_valueSet || m_saltSet != _other.m_saltSet)
 		return false;
 
 	if (bound() != _other.bound())
@@ -3232,7 +3287,7 @@ TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 	return pointers;
 }
 
-TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) const
+TypePointer FunctionType::copyAndSetCallOptions(bool _setGas, bool _setValue, bool _setSalt) const
 {
 	solAssert(m_kind != Kind::Declaration, "");
 	return TypeProvider::function(
@@ -3246,6 +3301,7 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 		m_declaration,
 		m_gasSet || _setGas,
 		m_valueSet || _setValue,
+		m_saltSet || _setSalt,
 		m_bound
 	);
 }
@@ -3286,6 +3342,7 @@ FunctionTypePointer FunctionType::asCallableFunction(bool _inLibrary, bool _boun
 		m_declaration,
 		m_gasSet,
 		m_valueSet,
+		m_saltSet,
 		_bound
 	);
 }
@@ -3297,13 +3354,13 @@ Type const* FunctionType::selfType() const
 	return m_parameterTypes.at(0);
 }
 
-ASTPointer<ASTString> FunctionType::documentation() const
+ASTPointer<StructuredDocumentation> FunctionType::documentation() const
 {
-	auto function = dynamic_cast<Documented const*>(m_declaration);
+	auto function = dynamic_cast<StructurallyDocumented const*>(m_declaration);
 	if (function)
 		return function->documentation();
 
-	return ASTPointer<ASTString>();
+	return ASTPointer<StructuredDocumentation>();
 }
 
 bool FunctionType::padArguments() const
@@ -3392,12 +3449,12 @@ u256 TypeType::storageSize() const
 	solAssert(false, "Storage size of non-storable type type requested.");
 }
 
-unsigned TypeType::sizeOnStack() const
+vector<tuple<string, TypePointer>> TypeType::makeStackItems() const
 {
 	if (auto contractType = dynamic_cast<ContractType const*>(m_actualType))
 		if (contractType->contractDefinition().isLibrary())
-			return 1;
-	return 0;
+			return {make_tuple("address", TypeProvider::address())};
+	return {};
 }
 
 MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _currentScope) const
@@ -3406,36 +3463,20 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 	if (m_actualType->category() == Category::Contract)
 	{
 		ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_actualType).contractDefinition();
-		bool isBase = false;
-		if (_currentScope != nullptr)
+		bool inDerivingScope = _currentScope && _currentScope->derivesFrom(contract);
+
+		for (auto const* declaration: contract.declarations())
 		{
-			auto const& currentBases = _currentScope->annotation().linearizedBaseContracts;
-			isBase = (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end());
-		}
-		if (isBase)
-		{
-			// We are accessing the type of a base contract, so add all public and protected
-			// members. Note that this does not add inherited functions on purpose.
-			for (Declaration const* decl: contract.inheritableMembers())
-				members.emplace_back(decl->name(), decl->type(), decl);
-		}
-		else
-		{
-			bool inLibrary = contract.isLibrary();
-			for (FunctionDefinition const* function: contract.definedFunctions())
-				if (
-					(inLibrary && function->isVisibleAsLibraryMember()) ||
-					(!inLibrary && function->isPartOfExternalInterface())
-				)
-					members.emplace_back(
-						function->name(),
-						FunctionType(*function).asCallableFunction(inLibrary),
-						function
-					);
-			for (auto const& stru: contract.definedStructs())
-				members.emplace_back(stru->name(), stru->type(), stru);
-			for (auto const& enu: contract.definedEnums())
-				members.emplace_back(enu->name(), enu->type(), enu);
+			if (dynamic_cast<ModifierDefinition const*>(declaration))
+				continue;
+
+			if (!contract.isLibrary() && inDerivingScope && declaration->isVisibleInDerivedContracts())
+				members.emplace_back(declaration->name(), declaration->type(), declaration);
+			else if (
+				(contract.isLibrary() && declaration->isVisibleAsLibraryMember()) ||
+				declaration->isVisibleViaContractTypeAccess()
+			)
+				members.emplace_back(declaration->name(), declaration->typeViaContractName(), declaration);
 		}
 	}
 	else if (m_actualType->category() == Category::Enum)

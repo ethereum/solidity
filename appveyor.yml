@@ -64,14 +64,14 @@ build_script:
     - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
     - scripts\release.bat %CONFIGURATION% 2017
-    - ps: $bytecodedir = git show -s --format="%cd-%H" --date=short
+    - ps: $bytecodedir = git show -s --format="%cd-%H" --date="format:%Y-%m-%d-%H-%M"
 
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
     - soltest.exe --show-progress -- --testpath %APPVEYOR_BUILD_FOLDER%\test --no-smt
 # Skip bytecode compare if private key is not available
     - cd %APPVEYOR_BUILD_FOLDER%
-    - ps: if ($env:priv_key) {
+    - ps: if ($env:priv_key -and -not $env:APPVEYOR_PULL_REQUEST_HEAD_COMMIT) {
         scripts\bytecodecompare\storebytecode.bat $Env:CONFIGURATION $bytecodedir
         }
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%

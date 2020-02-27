@@ -328,7 +328,7 @@ Whiskers
 compiler in various places to aid readability, and thus maintainability and verifiability, of the code.
 
 The syntax comes with a substantial difference to Mustache. The template markers ``{{`` and ``}}`` are
-replaced by ``<`` and ``>`` in order to aid parsing and avoid conflicts with :ref:`inline-assembly`
+replaced by ``<`` and ``>`` in order to aid parsing and avoid conflicts with :ref:`yul`
 (The symbols ``<`` and ``>`` are invalid in inline assembly, while ``{`` and ``}`` are used to delimit blocks).
 Another limitation is that lists are only resolved one depth and they do not recurse. This may change in the future.
 

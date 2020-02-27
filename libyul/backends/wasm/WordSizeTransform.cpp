@@ -43,7 +43,11 @@ void WordSizeTransform::operator()(FunctionCall& _fc)
 {
 	if (BuiltinFunction const* fun = m_inputDialect.builtin(_fc.functionName.name))
 		if (fun->literalArguments)
+		{
+			for (Expression& arg: _fc.arguments)
+				get<Literal>(arg).type = m_targetDialect.defaultType;
 			return;
+		}
 
 	rewriteFunctionCallArguments(_fc.arguments);
 }
@@ -85,8 +89,13 @@ void WordSizeTransform::operator()(Block& _block)
 			{
 				VariableDeclaration& varDecl = std::get<VariableDeclaration>(_s);
 
-				// Special handling for datasize and dataoffset - they will only need one variable.
-				if (varDecl.value && holds_alternative<FunctionCall>(*varDecl.value))
+				if (!varDecl.value)
+					rewriteVarDeclList(varDecl.variables);
+				else if (holds_alternative<FunctionCall>(*varDecl.value))
+				{
+					visit(*varDecl.value);
+
+					// Special handling for datasize and dataoffset - they will only need one variable.
 					if (BuiltinFunction const* f = m_inputDialect.builtin(std::get<FunctionCall>(*varDecl.value).functionName.name))
 						if (f->literalArguments)
 						{
@@ -97,23 +106,22 @@ void WordSizeTransform::operator()(Block& _block)
 							for (int i = 0; i < 3; i++)
 								ret.push_back(VariableDeclaration{
 									varDecl.location,
-									{TypedName{varDecl.location, newLhs[i], "u64"_yulstring}},
-									make_unique<Expression>(Literal{locationOf(*varDecl.value), LiteralKind::Number, "0"_yulstring, "u64"_yulstring})
+									{TypedName{varDecl.location, newLhs[i], m_targetDialect.defaultType}},
+									make_unique<Expression>(Literal{
+										locationOf(*varDecl.value),
+										LiteralKind::Number,
+										"0"_yulstring,
+										m_targetDialect.defaultType
+									})
 								});
 							ret.push_back(VariableDeclaration{
 								varDecl.location,
-								{TypedName{varDecl.location, newLhs[3], "u64"_yulstring}},
+								{TypedName{varDecl.location, newLhs[3], m_targetDialect.defaultType}},
 								std::move(varDecl.value)
 							});
 							return {std::move(ret)};
 						}
 
-				if (
-					!varDecl.value ||
-					holds_alternative<FunctionCall>(*varDecl.value)
-				)
-				{
-					if (varDecl.value) visit(*varDecl.value);
 					rewriteVarDeclList(varDecl.variables);
 					return std::nullopt;
 				}
@@ -130,7 +138,7 @@ void WordSizeTransform::operator()(Block& _block)
 						ret.push_back(
 							VariableDeclaration{
 								varDecl.location,
-								{TypedName{varDecl.location, newLhs[i], "u64"_yulstring}},
+								{TypedName{varDecl.location, newLhs[i], m_targetDialect.defaultType}},
 								std::move(newRhs[i])
 							}
 						);
@@ -144,8 +152,11 @@ void WordSizeTransform::operator()(Block& _block)
 				Assignment& assignment = std::get<Assignment>(_s);
 				yulAssert(assignment.value, "");
 
-				// Special handling for datasize and dataoffset - they will only need one variable.
 				if (holds_alternative<FunctionCall>(*assignment.value))
+				{
+					visit(*assignment.value);
+
+					// Special handling for datasize and dataoffset - they will only need one variable.
 					if (BuiltinFunction const* f = m_inputDialect.builtin(std::get<FunctionCall>(*assignment.value).functionName.name))
 						if (f->literalArguments)
 						{
@@ -157,7 +168,12 @@ void WordSizeTransform::operator()(Block& _block)
 								ret.push_back(Assignment{
 									assignment.location,
 									{Identifier{assignment.location, newLhs[i]}},
-									make_unique<Expression>(Literal{locationOf(*assignment.value), LiteralKind::Number, "0"_yulstring, "u64"_yulstring})
+									make_unique<Expression>(Literal{
+										locationOf(*assignment.value),
+										LiteralKind::Number,
+										"0"_yulstring,
+										m_targetDialect.defaultType
+									})
 								});
 							ret.push_back(Assignment{
 								assignment.location,
@@ -167,9 +183,6 @@ void WordSizeTransform::operator()(Block& _block)
 							return {std::move(ret)};
 						}
 
-				if (holds_alternative<FunctionCall>(*assignment.value))
-				{
-					if (assignment.value) visit(*assignment.value);
 					rewriteIdentifierList(assignment.variableNames);
 					return std::nullopt;
 				}
@@ -204,11 +217,27 @@ void WordSizeTransform::operator()(Block& _block)
 	);
 }
 
-void WordSizeTransform::run(Dialect const& _inputDialect, Block& _ast, NameDispenser& _nameDispenser)
+void WordSizeTransform::run(
+	Dialect const& _inputDialect,
+	Dialect const& _targetDialect,
+	Block& _ast,
+	NameDispenser& _nameDispenser
+)
 {
 	// Free the name `or_bool`.
 	NameDisplacer{_nameDispenser, {"or_bool"_yulstring}}(_ast);
-	WordSizeTransform{_inputDialect, _nameDispenser}(_ast);
+	WordSizeTransform{_inputDialect, _targetDialect, _nameDispenser}(_ast);
+}
+
+WordSizeTransform::WordSizeTransform(
+	Dialect const& _inputDialect,
+	Dialect const& _targetDialect,
+	NameDispenser& _nameDispenser
+):
+	m_inputDialect(_inputDialect),
+	m_targetDialect(_targetDialect),
+	m_nameDispenser(_nameDispenser)
+{
 }
 
 void WordSizeTransform::rewriteVarDeclList(TypedNameList& _nameList)
@@ -219,7 +248,7 @@ void WordSizeTransform::rewriteVarDeclList(TypedNameList& _nameList)
 		{
 			TypedNameList ret;
 			for (auto newName: generateU64IdentifierNames(_n.name))
-				ret.emplace_back(TypedName{_n.location, newName, "u64"_yulstring});
+				ret.emplace_back(TypedName{_n.location, newName, m_targetDialect.defaultType});
 			return ret;
 		}
 	);
@@ -283,7 +312,7 @@ vector<Statement> WordSizeTransform::handleSwitchInternal(
 
 	for (auto& c: cases)
 	{
-		Literal label{_location, LiteralKind::Number, YulString(c.first.str()), "u64"_yulstring};
+		Literal label{_location, LiteralKind::Number, YulString(c.first.str()), m_targetDialect.defaultType};
 		ret.cases.emplace_back(Case{
 			c.second.front().location,
 			make_unique<Literal>(std::move(label)),
@@ -304,7 +333,7 @@ vector<Statement> WordSizeTransform::handleSwitchInternal(
 				Assignment{
 					_location,
 					{{_location, _runDefaultFlag}},
-					make_unique<Expression>(Literal{_location, LiteralKind::Number, "1"_yulstring, "u64"_yulstring})
+					make_unique<Expression>(Literal{_location, LiteralKind::Boolean, "true"_yulstring, m_targetDialect.boolType})
 				}
 			)}
 		});
@@ -329,7 +358,7 @@ std::vector<Statement> WordSizeTransform::handleSwitch(Switch& _switch)
 		_switch.cases.pop_back();
 		ret.emplace_back(VariableDeclaration{
 			_switch.location,
-			{TypedName{_switch.location, runDefaultFlag, "u64"_yulstring}},
+			{TypedName{_switch.location, runDefaultFlag, m_targetDialect.boolType}},
 			{}
 		});
 	}
@@ -384,7 +413,7 @@ array<unique_ptr<Expression>, 4> WordSizeTransform::expandValue(Expression const
 					lit.location,
 					LiteralKind::Number,
 					YulString(currentVal.str()),
-					"u64"_yulstring
+					m_targetDialect.defaultType
 				}
 			);
 		}

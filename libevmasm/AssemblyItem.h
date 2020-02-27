@@ -48,6 +48,8 @@ enum AssemblyItemType {
 };
 
 class Assembly;
+class AssemblyItem;
+using AssemblyItems = std::vector<AssemblyItem>;
 
 class AssemblyItem
 {
@@ -122,6 +124,11 @@ public:
 	}
 	bool operator!=(Instruction _instr) const { return !operator==(_instr); }
 
+	static std::string computeSourceMapping(
+		AssemblyItems const& _items,
+		std::map<std::string, unsigned> const& _sourceIndicesMap
+	);
+
 	/// @returns an upper bound for the number of bytes required by this item, assuming that
 	/// the value of a jump tag takes @a _addressLength bytes.
 	unsigned bytesRequired(unsigned _addressLength) const;
@@ -156,8 +163,6 @@ private:
 	/// e.g. PushSubSize, PushTag, PushSub, etc.
 	mutable std::shared_ptr<u256> m_pushedValue;
 };
-
-using AssemblyItems = std::vector<AssemblyItem>;
 
 inline size_t bytesRequired(AssemblyItems const& _items, size_t _addressLength)
 {

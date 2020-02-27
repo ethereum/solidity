@@ -18,10 +18,12 @@
  * Unit tests for stack-reusing code generator.
  */
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libyul/AssemblyStack.h>
 #include <libevmasm/Instruction.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 

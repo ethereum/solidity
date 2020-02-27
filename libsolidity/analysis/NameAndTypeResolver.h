@@ -122,8 +122,8 @@ private:
 	void linearizeBaseContracts(ContractDefinition& _contract);
 	/// Computes the C3-merge of the given list of lists of bases.
 	/// @returns the linearized vector or an empty vector if linearization is not possible.
-	template <class _T>
-	static std::vector<_T const*> cThreeMerge(std::list<std::list<_T const*>>& _toMerge);
+	template <class T>
+	static std::vector<T const*> cThreeMerge(std::list<std::list<T const*>>& _toMerge);
 
 	/// Maps nodes declaring a scope to scopes, i.e. ContractDefinition and FunctionDeclaration,
 	/// where nullptr denotes the global scope. Note that structs are not scope since they do

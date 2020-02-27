@@ -37,7 +37,7 @@ git clean -f -d -x 2>&1
 if not exist %DIRECTORY% mkdir %DIRECTORY%
 set REPORT=%DIRECTORY%/windows.txt
 cp ../report.txt %REPORT%
-git add %REPORT%
+git add %REPORT% 2>$1
 git commit -a -m "Added report."
 git pull --rebase 2>&1
 git push origin 2>&1

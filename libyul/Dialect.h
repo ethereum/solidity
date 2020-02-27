@@ -33,12 +33,8 @@ namespace solidity::yul
 
 class YulString;
 using Type = YulString;
-
-enum class AsmFlavour
-{
-	Strict, // no types, EVM instructions as functions, but no jumps and no direct stack manipulations
-	Yul     // same as Strict mode with types
-};
+enum class LiteralKind;
+struct Literal;
 
 struct BuiltinFunction
 {
@@ -54,24 +50,32 @@ struct BuiltinFunction
 
 struct Dialect: boost::noncopyable
 {
-	AsmFlavour const flavour = AsmFlavour::Strict;
+	/// Default type, can be omitted.
+	YulString defaultType;
+	/// Type used for the literals "true" and "false".
+	YulString boolType;
+	std::set<YulString> types = {{}};
+
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	virtual BuiltinFunction const* builtin(YulString /*_name*/) const { return nullptr; }
 
-	virtual BuiltinFunction const* discardFunction() const { return nullptr; }
-	virtual BuiltinFunction const* equalityFunction() const { return nullptr; }
+	virtual BuiltinFunction const* discardFunction(YulString /* _type */) const { return nullptr; }
+	virtual BuiltinFunction const* equalityFunction(YulString /* _type */) const { return nullptr; }
 	virtual BuiltinFunction const* booleanNegationFunction() const { return nullptr; }
+
+	/// Check whether the given type is legal for the given literal value.
+	/// Should only be called if the type exists in the dialect at all.
+	virtual bool validTypeForLiteral(LiteralKind _kind, YulString _value, YulString _type) const;
+
+	virtual Literal zeroLiteralForType(YulString _type) const;
 
 	virtual std::set<YulString> fixedFunctionNames() const { return {}; }
 
-	Dialect(AsmFlavour _flavour): flavour(_flavour) {}
+	Dialect() = default;
 	virtual ~Dialect() = default;
 
-	static Dialect const& yul()
-	{
-		static Dialect yulDialect(AsmFlavour::Yul);
-		return yulDialect;
-	}
+	/// Old "yul" dialect. This is only used for testing.
+	static Dialect const& yulDeprecated();
 };
 
 }

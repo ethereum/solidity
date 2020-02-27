@@ -21,8 +21,9 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Exceptions.h>
 
+#include <test/Common.h>
 
-#include <test/Options.h>
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 

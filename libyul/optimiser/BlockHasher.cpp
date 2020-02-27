@@ -30,9 +30,9 @@ using namespace solidity::util;
 
 namespace
 {
-static constexpr uint64_t compileTimeLiteralHash(char const* _literal, size_t _N)
+static constexpr uint64_t compileTimeLiteralHash(char const* _literal, size_t _n)
 {
-	return (_N == 0) ? BlockHasher::fnvEmptyHash : (static_cast<uint64_t>(_literal[0]) * BlockHasher::fnvPrime) ^ compileTimeLiteralHash(_literal + 1, _N - 1);
+	return (_n == 0) ? BlockHasher::fnvEmptyHash : (static_cast<uint64_t>(_literal[0]) * BlockHasher::fnvPrime) ^ compileTimeLiteralHash(_literal + 1, _n - 1);
 }
 
 template<size_t N>

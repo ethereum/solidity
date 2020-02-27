@@ -52,7 +52,7 @@ public:
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @param _reuseScanner if true, do check for end of input after the `}`.
 	/// @returns an empty shared pointer on error.
-	std::shared_ptr<Block> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
+	std::unique_ptr<Block> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
 
 	/// @returns a map of all EVM instructions available to assembly.
 	static std::map<std::string, evmasm::Instruction> const& instructions();
@@ -60,21 +60,13 @@ public:
 protected:
 	using ElementaryOperation = std::variant<Literal, Identifier, FunctionCall>;
 
-	/// Creates an inline assembly node with the given source location.
-	template <class T> T createWithLocation(langutil::SourceLocation const& _loc = {}) const
+	/// Creates an inline assembly node with the current source location.
+	template <class T> T createWithLocation() const
 	{
 		T r;
-		r.location = _loc;
-		if (r.location.isEmpty())
-		{
-			r.location.start = position();
-			r.location.end = endPosition();
-		}
-		if (!r.location.source)
-			r.location.source = m_scanner->charStream();
+		r.location = currentLocation();
 		return r;
 	}
-	langutil::SourceLocation location() const { return {position(), endPosition(), m_scanner->charStream()}; }
 
 	Block parseBlock();
 	Statement parseStatement();

@@ -60,7 +60,7 @@ void InterpreterState::dumpTraceAndState(ostream& _out) const
 			_out << "  " << std::uppercase << std::hex << std::setw(4) << offset << ": " << h256(value).hex() << endl;
 	_out << "Storage dump:" << endl;
 	for (auto const& slot: storage)
-		if (slot.second != h256(0))
+		if (slot.second != h256{})
 			_out << "  " << slot.first.hex() << ": " << slot.second.hex() << endl;
 }
 

@@ -63,9 +63,6 @@ public:
 	/// Convert from the corresponding arithmetic type.
 	FixedHash(Arith const& _arith) { toBigEndian(_arith, m_data); }
 
-	/// Convert from unsigned
-	explicit FixedHash(unsigned _u) { toBigEndian(_u, m_data); }
-
 	/// Explicitly construct, copying from a byte array.
 	explicit FixedHash(bytes const& _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
 
@@ -78,16 +75,11 @@ public:
 	/// Convert to arithmetic type.
 	operator Arith() const { return fromBigEndian<Arith>(m_data); }
 
-	/// @returns true iff this is the empty hash.
-	explicit operator bool() const { return std::any_of(m_data.begin(), m_data.end(), [](uint8_t _b) { return _b != 0; }); }
-
 	// The obvious comparison operators.
 	bool operator==(FixedHash const& _c) const { return m_data == _c.m_data; }
 	bool operator!=(FixedHash const& _c) const { return m_data != _c.m_data; }
 	/// Required to sort objects of this type or use them as map keys.
 	bool operator<(FixedHash const& _c) const { for (unsigned i = 0; i < N; ++i) if (m_data[i] < _c.m_data[i]) return true; else if (m_data[i] > _c.m_data[i]) return false; return false; }
-
-	FixedHash operator~() const { FixedHash ret; for (unsigned i = 0; i < N; ++i) ret[i] = ~m_data[i]; return ret; }
 
 	/// @returns a particular byte from the hash.
 	uint8_t& operator[](unsigned _i) { return m_data[_i]; }
@@ -111,30 +103,6 @@ public:
 
 	/// @returns a copy of the object's data as a byte vector.
 	bytes asBytes() const { return bytes(data(), data() + N); }
-
-	/// @returns a mutable reference to the object's data as an STL array.
-	std::array<uint8_t, N>& asArray() { return m_data; }
-
-	/// @returns a constant reference to the object's data as an STL array.
-	std::array<uint8_t, N> const& asArray() const { return m_data; }
-
-	/// Returns the index of the first bit set to one, or size() * 8 if no bits are set.
-	inline unsigned firstBitSet() const
-	{
-		unsigned ret = 0;
-		for (auto d: m_data)
-			if (d)
-			{
-				for (;; ++ret, d <<= 1)
-					if (d & 0x80)
-						return ret;
-			}
-			else
-				ret += 8;
-		return ret;
-	}
-
-	void clear() { m_data.fill(0); }
 
 private:
 	std::array<uint8_t, N> m_data;		///< The binary data.

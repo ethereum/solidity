@@ -28,14 +28,9 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 
-int ParserBase::position() const
+SourceLocation ParserBase::currentLocation() const
 {
-	return m_scanner->currentLocation().start;
-}
-
-int ParserBase::endPosition() const
-{
-	return m_scanner->currentLocation().end;
+	return m_scanner->currentLocation();
 }
 
 Token ParserBase::currentToken() const
@@ -101,8 +96,8 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		int startPosition = position();
-		SourceLocation errorLoc = SourceLocation{startPosition, endPosition(), source()};
+		SourceLocation errorLoc = currentLocation();
+		int startPosition = errorLoc.start;
 		while (m_scanner->currentToken() != _value && m_scanner->currentToken() != Token::EOS)
 			m_scanner->next();
 
@@ -150,7 +145,7 @@ void ParserBase::decreaseRecursionDepth()
 
 void ParserBase::parserWarning(string const& _description)
 {
-	m_errorReporter.warning(SourceLocation{position(), endPosition(), source()}, _description);
+	m_errorReporter.warning(currentLocation(), _description);
 }
 
 void ParserBase::parserError(SourceLocation const& _location, string const& _description)
@@ -160,12 +155,12 @@ void ParserBase::parserError(SourceLocation const& _location, string const& _des
 
 void ParserBase::parserError(string const& _description)
 {
-	parserError(SourceLocation{position(), endPosition(), source()}, _description);
+	parserError(currentLocation(), _description);
 }
 
 void ParserBase::fatalParserError(string const& _description)
 {
-	fatalParserError(SourceLocation{position(), endPosition(), source()}, _description);
+	fatalParserError(currentLocation(), _description);
 }
 
 void ParserBase::fatalParserError(SourceLocation const& _location, string const& _description)

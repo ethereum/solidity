@@ -1,0 +1,227 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      17
+    ]
+  },
+  "id": 18,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 17,
+      "linearizedBaseContracts":
+      [
+        17
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "canonicalName": "C.E",
+          "id": 4,
+          "members":
+          [
+            {
+              "id": 1,
+              "name": "A",
+              "nodeType": "EnumValue",
+              "src": "26:1:1"
+            },
+            {
+              "id": 2,
+              "name": "B",
+              "nodeType": "EnumValue",
+              "src": "29:1:1"
+            },
+            {
+              "id": 3,
+              "name": "C",
+              "nodeType": "EnumValue",
+              "src": "32:1:1"
+            }
+          ],
+          "name": "E",
+          "nodeType": "EnumDefinition",
+          "src": "17:18:1"
+        },
+        {
+          "constant": false,
+          "id": 8,
+          "name": "a",
+          "nodeType": "VariableDeclaration",
+          "overrides": null,
+          "scope": 17,
+          "src": "40:20:1",
+          "stateVariable": true,
+          "storageLocation": "default",
+          "typeDescriptions":
+          {
+            "typeIdentifier": "t_mapping$_t_contract$_C_$17_$_t_bool_$",
+            "typeString": "mapping(contract C => bool)"
+          },
+          "typeName":
+          {
+            "id": 7,
+            "keyType":
+            {
+              "contractScope": null,
+              "id": 5,
+              "name": "C",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 17,
+              "src": "48:1:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_contract$_C_$17",
+                "typeString": "contract C"
+              }
+            },
+            "nodeType": "Mapping",
+            "src": "40:18:1",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_mapping$_t_contract$_C_$17_$_t_bool_$",
+              "typeString": "mapping(contract C => bool)"
+            },
+            "valueType":
+            {
+              "id": 6,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "53:4:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_bool",
+                "typeString": "bool"
+              }
+            }
+          },
+          "value": null,
+          "visibility": "internal"
+        },
+        {
+          "constant": false,
+          "id": 12,
+          "name": "b",
+          "nodeType": "VariableDeclaration",
+          "overrides": null,
+          "scope": 17,
+          "src": "66:26:1",
+          "stateVariable": true,
+          "storageLocation": "default",
+          "typeDescriptions":
+          {
+            "typeIdentifier": "t_mapping$_t_address_$_t_bool_$",
+            "typeString": "mapping(address => bool)"
+          },
+          "typeName":
+          {
+            "id": 11,
+            "keyType":
+            {
+              "id": 9,
+              "name": "address",
+              "nodeType": "ElementaryTypeName",
+              "src": "74:7:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_address",
+                "typeString": "address"
+              }
+            },
+            "nodeType": "Mapping",
+            "src": "66:24:1",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_mapping$_t_address_$_t_bool_$",
+              "typeString": "mapping(address => bool)"
+            },
+            "valueType":
+            {
+              "id": 10,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "85:4:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_bool",
+                "typeString": "bool"
+              }
+            }
+          },
+          "value": null,
+          "visibility": "internal"
+        },
+        {
+          "constant": false,
+          "id": 16,
+          "name": "c",
+          "nodeType": "VariableDeclaration",
+          "overrides": null,
+          "scope": 17,
+          "src": "98:20:1",
+          "stateVariable": true,
+          "storageLocation": "default",
+          "typeDescriptions":
+          {
+            "typeIdentifier": "t_mapping$_t_enum$_E_$4_$_t_bool_$",
+            "typeString": "mapping(enum C.E => bool)"
+          },
+          "typeName":
+          {
+            "id": 15,
+            "keyType":
+            {
+              "contractScope": null,
+              "id": 13,
+              "name": "E",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 4,
+              "src": "106:1:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_enum$_E_$4",
+                "typeString": "enum C.E"
+              }
+            },
+            "nodeType": "Mapping",
+            "src": "98:18:1",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_mapping$_t_enum$_E_$4_$_t_bool_$",
+              "typeString": "mapping(enum C.E => bool)"
+            },
+            "valueType":
+            {
+              "id": 14,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "111:4:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_bool",
+                "typeString": "bool"
+              }
+            }
+          },
+          "value": null,
+          "visibility": "internal"
+        }
+      ],
+      "scope": 18,
+      "src": "0:121:1"
+    }
+  ],
+  "src": "0:122:1"
+}

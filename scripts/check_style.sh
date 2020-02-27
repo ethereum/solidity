@@ -17,6 +17,7 @@ fi
 
 FORMATERROR=$(
 (
+	git grep -nIE "#include \"" -- '*.h' '*.cpp' | egrep -v -e "license.h" -e "BuildInfo.h"  # Use include with <> characters
 	git grep -nIE "\<(if|for|while|switch)\(" -- '*.h' '*.cpp' # no space after "if", "for", "while" or "switch"
 	git grep -nIE "\<for\>\s*\([^=]*\>\s:\s.*\)" -- '*.h' '*.cpp' # no space before range based for-loop
 	git grep -nIE "\<if\>\s*\(.*\)\s*\{\s*$" -- '*.h' '*.cpp' # "{\n" on same line as "if" / "for"

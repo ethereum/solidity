@@ -100,6 +100,7 @@ message Literal {
     uint64 intval = 1;
     string hexval = 2;
     string strval = 3;
+    bool boolval = 4;
   }
 }
 
@@ -173,7 +174,7 @@ message UnaryOpData {
     OFFSET = 2;
   }
   required UOpData op = 1;
-  required ObjectId identifier = 2;
+  required uint64 identifier = 2;
 }
 
 message TernaryOp {
@@ -205,18 +206,6 @@ message ExtCodeCopy {
   required Expression target = 2;
   required Expression source = 3;
   required Expression size = 4;
-}
-
-message ObjectId {
-  required uint64 id = 1;
-}
-
-message DataSize {
-  required ObjectId identifier = 1;
-}
-
-message DataOffset {
-  required ObjectId identifier = 1;
 }
 
 message NullaryOp {
@@ -355,6 +344,7 @@ message FunctionDef {
   required uint32 num_input_params = 1;
   required uint32 num_output_params = 2;
   required Block block = 3;
+  required bool force_call = 4;
 }
 
 message PopStmt {
@@ -405,10 +395,21 @@ message Data {
 }
 
 message Program {
+  enum Version {
+    HOMESTEAD = 0;
+    TANGERINE = 1;
+    SPURIOUS = 2;
+    BYZANTIUM = 3;
+    CONSTANTINOPLE = 4;
+    PETERSBURG = 5;
+    ISTANBUL = 6;
+    BERLIN = 7;
+  }
   oneof program_oneof {
     Block block = 1;
     Object obj = 2;
   }
+  required Version ver = 3;
 }
 
 package solidity.yul.test.yul_fuzzer;

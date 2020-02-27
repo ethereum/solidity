@@ -21,7 +21,7 @@
 
 #include <test/libyul/Common.h>
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -48,7 +48,7 @@ namespace
 {
 Dialect const& defaultDialect(bool _yul)
 {
-	return _yul ? yul::Dialect::yul() : yul::EVMDialect::strictAssemblyForEVM(solidity::test::Options::get().evmVersion());
+	return _yul ? yul::Dialect::yulDeprecated() : yul::EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion());
 }
 }
 
@@ -64,15 +64,36 @@ void yul::test::printErrors(ErrorList const& _errors)
 pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
 {
 	AssemblyStack stack(
-		solidity::test::Options::get().evmVersion(),
+		solidity::test::CommonOptions::get().evmVersion(),
 		_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
-		solidity::test::Options::get().optimize ?
+		solidity::test::CommonOptions::get().optimize ?
 			solidity::frontend::OptimiserSettings::standard() :
 			solidity::frontend::OptimiserSettings::minimal()
 	);
 	if (!stack.parseAndAnalyze("", _source) || !stack.errors().empty())
 		BOOST_FAIL("Invalid source.");
 	return make_pair(stack.parserResult()->code, stack.parserResult()->analysisInfo);
+}
+
+pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(
+	string const& _source,
+	Dialect const& _dialect,
+	ErrorList& _errors
+)
+{
+	ErrorReporter errorReporter(_errors);
+	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_source, ""));
+	shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _dialect).parse(scanner, false);
+	if (!parserResult)
+		return {};
+	if (!parserResult->code || !errorReporter.errors().empty())
+		return {};
+	shared_ptr<AsmAnalysisInfo> analysisInfo = make_shared<AsmAnalysisInfo>();
+	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect, {}, parserResult->dataNames());
+	// TODO this should be done recursively.
+	if (!analyzer.analyze(*parserResult->code) || !errorReporter.errors().empty())
+		return {};
+	return {std::move(parserResult->code), std::move(analysisInfo)};
 }
 
 yul::Block yul::test::disambiguate(string const& _source, bool _yul)
@@ -83,5 +104,5 @@ yul::Block yul::test::disambiguate(string const& _source, bool _yul)
 
 string yul::test::format(string const& _source, bool _yul)
 {
-	return yul::AsmPrinter(_yul)(*parse(_source, _yul).first);
+	return yul::AsmPrinter()(*parse(_source, _yul).first);
 }

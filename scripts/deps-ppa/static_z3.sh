@@ -29,7 +29,7 @@ packagename=libz3-static-dev
 version=4.8.7
 version_patchsuffix=-1
 
-DISTRIBUTIONS="bionic disco eoan"
+DISTRIBUTIONS="bionic disco eoan focal"
 
 for distribution in $DISTRIBUTIONS
 do
@@ -72,11 +72,11 @@ Priority: extra
 Maintainer: Daniel Kirchner <daniel@ekpyron.org>
 Build-Depends: debhelper (>= 9.0.0),
                cmake,
-               g++,
+               g++ (>= 5.0),
                git,
                libgmp-dev,
                dh-python,
-               python
+               python3
 Standards-Version: 3.9.6
 Homepage: https://github.com/Z3Prover/z3
 Vcs-Git: git://github.com/Z3Prover/z3.git

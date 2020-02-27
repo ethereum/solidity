@@ -30,6 +30,7 @@
 
 namespace solidity::yul
 {
+struct Dialect;
 struct AsmAnalysisInfo;
 
 
@@ -39,7 +40,8 @@ struct AsmAnalysisInfo;
 struct ObjectNode
 {
 	virtual ~ObjectNode() = default;
-	virtual std::string toString(bool _yul) const = 0;
+	virtual std::string toString(Dialect const* _dialect) const = 0;
+	std::string toString() { return toString(nullptr); }
 
 	YulString name;
 };
@@ -50,7 +52,7 @@ struct ObjectNode
 struct Data: ObjectNode
 {
 	Data(YulString _name, bytes _data): data(std::move(_data)) { name = _name; }
-	std::string toString(bool _yul) const override;
+	std::string toString(Dialect const* _dialect) const override;
 
 	bytes data;
 };
@@ -62,7 +64,7 @@ struct Object: ObjectNode
 {
 public:
 	/// @returns a (parseable) string representation. Includes types if @a _yul is set.
-	std::string toString(bool _yul) const override;
+	std::string toString(Dialect const* _dialect) const override;
 
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object.

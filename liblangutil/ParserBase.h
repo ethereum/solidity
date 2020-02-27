@@ -62,10 +62,8 @@ protected:
 		ParserBase& m_parser;
 	};
 
-	/// Start position of the current token
-	int position() const;
-	/// End position of the current token
-	int endPosition() const;
+	/// Location of the current token
+	SourceLocation currentLocation() const;
 
 	///@{
 	///@name Helper functions

@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(format_unsigned_singleline)
 	Parameter param{expectedBytes, "1", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
-	FunctionCall call{"f(uint8)", 0, arguments, expectations};
+	FunctionCall call{"f(uint8)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 
 	TestFunctionCall test{call};
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(format_unsigned_singleline_signed_encoding)
 	Parameter param{expectedBytes, "1", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
-	FunctionCall call{"f(uint8)", 0, arguments, expectations};
+	FunctionCall call{"f(uint8)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 
 	TestFunctionCall test{call};
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(format_unsigned_multiline)
 	Parameter result{expectedBytes, "1", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{result}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{}, string{}};
-	FunctionCall call{"f(uint8)", 0, arguments, expectations};
+	FunctionCall call{"f(uint8)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 	call.displayMode = FunctionCall::DisplayMode::MultiLine;
 	TestFunctionCall test{call};
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(format_multiple_unsigned_singleline)
 	Parameter param{expectedBytes, "1", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param, param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param, param}, string{}};
-	FunctionCall call{"f(uint8, uint8)", 0, arguments, expectations};
+	FunctionCall call{"f(uint8, uint8)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 	TestFunctionCall test{call};
 
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(format_signed_singleline)
 	Parameter param{expectedBytes, "-1", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
-	FunctionCall call{"f(int8)", 0, arguments, expectations};
+	FunctionCall call{"f(int8)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 	TestFunctionCall test{call};
 
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(format_hex_singleline)
 	Parameter param{expectedBytes, "0x31", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
-	FunctionCall call{"f(bytes32)", 0, arguments, expectations};
+	FunctionCall call{"f(bytes32)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 	TestFunctionCall test{call};
 
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(format_hex_string_singleline)
 	Parameter param{expectedBytes, "hex\"4200ef\"", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
-	FunctionCall call{"f(string)", 0, arguments, expectations};
+	FunctionCall call{"f(string)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 	TestFunctionCall test{call};
 
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(format_bool_true_singleline)
 	Parameter param{expectedBytes, "true", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
-	FunctionCall call{"f(bool)", 0, arguments, expectations};
+	FunctionCall call{"f(bool)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 	TestFunctionCall test{call};
 
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(format_bool_false_singleline)
 	Parameter param{expectedBytes, "false", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
-	FunctionCall call{"f(bool)", 0, arguments, expectations};
+	FunctionCall call{"f(bool)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 	TestFunctionCall test{call};
 
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(format_bool_left_singleline)
 	Parameter param{expectedBytes, "left(false)", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
-	FunctionCall call{"f(bool)", 0, arguments, expectations};
+	FunctionCall call{"f(bool)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 	TestFunctionCall test{call};
 
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(format_hex_number_right_singleline)
 	Parameter param{expectedBytes, "right(0x42)", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
-	FunctionCall call{"f(bool)", 0, arguments, expectations};
+	FunctionCall call{"f(bool)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 	TestFunctionCall test{call};
 
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(format_empty_byte_range)
 	Parameter param{expectedBytes, "1", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{param}, false, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{}, string{}};
-	FunctionCall call{"f()", 0, arguments, expectations};
+	FunctionCall call{"f()", {0}, arguments, expectations};
 	call.omitsArrow = false;
 	TestFunctionCall test{call};
 
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(format_failure_singleline)
 	Parameter param{expectedBytes, "1", abiType, FormatInfo{}};
 	FunctionCallExpectations expectations{vector<Parameter>{}, true, string{}};
 	FunctionCallArgs arguments{vector<Parameter>{param}, string{}};
-	FunctionCall call{"f(uint8)", 0, arguments, expectations};
+	FunctionCall call{"f(uint8)", {0}, arguments, expectations};
 	call.omitsArrow = false;
 	TestFunctionCall test{call};
 

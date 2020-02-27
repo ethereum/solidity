@@ -37,20 +37,17 @@ namespace solidity::yul
 struct Scope
 {
 	using YulType = YulString;
-	using LabelID = size_t;
 
 	struct Variable { YulType type; };
-	struct Label { };
 	struct Function
 	{
 		std::vector<YulType> arguments;
 		std::vector<YulType> returns;
 	};
 
-	using Identifier = std::variant<Variable, Label, Function>;
+	using Identifier = std::variant<Variable, Function>;
 
 	bool registerVariable(YulString _name, YulType const& _type);
-	bool registerLabel(YulString _name);
 	bool registerFunction(
 		YulString _name,
 		std::vector<YulType> _arguments,

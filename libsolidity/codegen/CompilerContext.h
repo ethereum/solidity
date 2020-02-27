@@ -27,12 +27,17 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/codegen/ABIFunctions.h>
 
+#include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 
 #include <libevmasm/Assembly.h>
 #include <libevmasm/Instruction.h>
+#include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 #include <libsolutil/Common.h>
+
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <functional>
 #include <ostream>
@@ -51,11 +56,16 @@ class Compiler;
 class CompilerContext
 {
 public:
-	explicit CompilerContext(langutil::EVMVersion _evmVersion, CompilerContext* _runtimeContext = nullptr):
+	explicit CompilerContext(
+		langutil::EVMVersion _evmVersion,
+		RevertStrings _revertStrings,
+		CompilerContext* _runtimeContext = nullptr
+	):
 		m_asm(std::make_shared<evmasm::Assembly>()),
 		m_evmVersion(_evmVersion),
+		m_revertStrings(_revertStrings),
 		m_runtimeContext(_runtimeContext),
-		m_abiFunctions(m_evmVersion)
+		m_abiFunctions(m_evmVersion, m_revertStrings)
 	{
 		if (m_runtimeContext)
 			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());
@@ -160,12 +170,14 @@ public:
 	/// Appends a conditional INVALID instruction
 	CompilerContext& appendConditionalInvalid();
 	/// Appends a REVERT(0, 0) call
-	CompilerContext& appendRevert();
+	/// @param _message is an optional revert message used in debug mode
+	CompilerContext& appendRevert(std::string const& _message = "");
 	/// Appends a conditional REVERT-call, either forwarding the RETURNDATA or providing the
 	/// empty string. Consumes the condition.
 	/// If the current EVM version does not support RETURNDATA, uses REVERT but does not forward
 	/// the data.
-	CompilerContext& appendConditionalRevert(bool _forwardReturnData = false);
+	/// @param _message is an optional revert message used in debug mode
+	CompilerContext& appendConditionalRevert(bool _forwardReturnData = false, std::string const& _message = "");
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(
 		evmasm::AssemblyItem const& _tag,
@@ -219,6 +231,13 @@ public:
 		OptimiserSettings const& _optimiserSettings = OptimiserSettings::none()
 	);
 
+	/// If m_revertStrings is debug, @returns inline assembly code that
+	/// stores @param _message in memory position 0 and reverts.
+	/// Otherwise returns "revert(0, 0)".
+	std::string revertReasonIfDebug(std::string const& _message = "");
+
+	void optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSetting, std::set<yul::YulString> const& _externalIdentifiers = {});
+
 	/// Appends arbitrary data to the end of the bytecode.
 	void appendAuxiliaryData(bytes const& _data) { m_asm->appendAuxiliaryDataToEnd(_data); }
 
@@ -243,9 +262,9 @@ public:
 	}
 
 	/// @arg _sourceCodes is the map of input files to source code strings
-	Json::Value assemblyJSON(StringMap const& _sourceCodes = StringMap()) const
+	Json::Value assemblyJSON(std::map<std::string, unsigned> const& _indicies = std::map<std::string, unsigned>()) const
 	{
-		return m_asm->assemblyJSON(_sourceCodes);
+		return m_asm->assemblyJSON(_indicies);
 	}
 
 	evmasm::LinkerObject const& assembledObject() const { return m_asm->assemble(); }
@@ -262,6 +281,8 @@ public:
 	};
 
 	void setModifierDepth(size_t _modifierDepth) { m_asm->m_currentModifierDepth = _modifierDepth; }
+
+	RevertStrings revertStrings() const { return m_revertStrings; }
 
 private:
 	/// Searches the inheritance hierarchy towards the base starting from @a _searchStart and returns
@@ -312,6 +333,7 @@ private:
 	evmasm::AssemblyPointer m_asm;
 	/// Version of the EVM to compile against.
 	langutil::EVMVersion m_evmVersion;
+	RevertStrings const m_revertStrings;
 	/// Activated experimental features.
 	std::set<ExperimentalFeature> m_experimentalFeatures;
 	/// Other already compiled contracts to be used in contract creation calls.

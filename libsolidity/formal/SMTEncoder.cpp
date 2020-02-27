@@ -1682,3 +1682,31 @@ void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)
 	else if (returnParams.size() == 1)
 		defineExpr(_funCall, currentValue(*returnParams.front()));
 }
+
+vector<smt::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _funCall)
+{
+	auto const* function = functionCallToDefinition(_funCall);
+	solAssert(function, "");
+
+	vector<smt::Expression> args;
+	Expression const* calledExpr = &_funCall.expression();
+	auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
+	solAssert(funType, "");
+
+	auto const& functionParams = function->parameters();
+	auto const& arguments = _funCall.arguments();
+	unsigned firstParam = 0;
+	if (funType->bound())
+	{
+		auto const& boundFunction = dynamic_cast<MemberAccess const*>(calledExpr);
+		solAssert(boundFunction, "");
+		args.push_back(expr(boundFunction->expression(), functionParams.front()->type()));
+		firstParam = 1;
+	}
+
+	solAssert((arguments.size() + firstParam) == functionParams.size(), "");
+	for (unsigned i = 0; i < arguments.size(); ++i)
+		args.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
+
+	return args;
+}

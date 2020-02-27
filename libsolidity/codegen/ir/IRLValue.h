@@ -15,115 +15,51 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Generator for code that handles LValues.
+ * Classes that store locations of lvalues.
  */
 
 #pragma once
 
-#include <libsolidity/codegen/YulUtilFunctions.h>
-
-#include <libsolutil/Common.h>
-
-#include <string>
-#include <ostream>
-#include <boost/variant.hpp>
+#include <libsolidity/codegen/ir/IRVariable.h>
+#include <variant>
 
 namespace solidity::frontend
 {
 
-class VariableDeclaration;
-class IRGenerationContext;
 class Type;
-class ArrayType;
 
-/**
- * Abstract class used to retrieve, delete and store data in LValues.
- */
-class IRLValue
+struct IRLValue
 {
-protected:
-	explicit IRLValue(YulUtilFunctions _utils, Type const* _type = nullptr):
-		m_utils(std::move(_utils)),
-		m_type(_type)
-	{}
-
-public:
-	virtual ~IRLValue() = default;
-	/// @returns an expression to retrieve the value of the lvalue.
-	virtual std::string retrieveValue() const = 0;
-	/// Returns code that stores the value of @a _value (should be an identifier)
-	/// of type @a _type in the lvalue. Might perform type conversion.
-	virtual std::string storeValue(std::string const& _value, Type const& _type) const = 0;
-
-	/// Returns code that will reset the stored value to zero
-	virtual std::string setToZero() const = 0;
-protected:
-	YulUtilFunctions mutable m_utils;
-	Type const* m_type;
-};
-
-class IRLocalVariable: public IRLValue
-{
-public:
-	IRLocalVariable(
-		IRGenerationContext& _context,
-		VariableDeclaration const& _varDecl
-	);
-	std::string retrieveValue() const override { return m_variableName; }
-	std::string storeValue(std::string const& _value, Type const& _type) const override;
-
-	std::string setToZero() const override;
-private:
-	std::string m_variableName;
-};
-
-class IRStorageItem: public IRLValue
-{
-public:
-	IRStorageItem(
-		IRGenerationContext& _context,
-		VariableDeclaration const& _varDecl
-	);
-	IRStorageItem(
-		YulUtilFunctions _utils,
-		std::string _slot,
-		boost::variant<std::string, unsigned> _offset,
-		Type const& _type
-	);
-	std::string retrieveValue() const override;
-	std::string storeValue(std::string const& _value, Type const& _type) const override;
-
-	std::string setToZero() const override;
-private:
-	IRStorageItem(
-		YulUtilFunctions _utils,
-		Type const& _type,
-		std::pair<u256, unsigned> slot_offset
-	);
-
-	std::string const m_slot;
-	/// unsigned: Used when the offset is known at compile time, uses optimized
-	///           functions
-	/// string: Used when the offset is determined at run time
-	boost::variant<std::string, unsigned> const m_offset;
-};
-
-class IRMemoryItem: public IRLValue
-{
-public:
-	IRMemoryItem(
-		YulUtilFunctions _utils,
-		std::string _address,
-		bool _byteArrayElement,
-		Type const& _type
-	);
-	std::string retrieveValue() const override;
-	std::string storeValue(std::string const& _value, Type const& _type) const override;
-
-	std::string setToZero() const override;
-private:
-	std::string const m_address;
-	bool m_byteArrayElement;
+	Type const& type;
+	struct Stack
+	{
+		IRVariable variable;
+	};
+	struct Storage
+	{
+		std::string const slot;
+		/// unsigned: Used when the offset is known at compile time, uses optimized
+		///           functions
+		/// string: Used when the offset is determined at run time
+		std::variant<std::string, unsigned> const offset;
+		std::string offsetString() const
+		{
+			if (std::holds_alternative<unsigned>(offset))
+				return std::to_string(std::get<unsigned>(offset));
+			else
+				return std::get<std::string>(offset);
+		}
+	};
+	struct Memory
+	{
+		std::string const address;
+		bool byteArrayElement = false;
+	};
+	struct Tuple
+	{
+		std::vector<std::optional<IRLValue>> components;
+	};
+	std::variant<Stack, Storage, Memory, Tuple> kind;
 };
 
 }

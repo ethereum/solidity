@@ -35,19 +35,19 @@ struct Object;
 /**
  * Yul dialect for Wasm as a backend.
  *
- * Builtin functions are a subset of the wasm instructions, always implicitly assuming
- * unsigned 64 bit types.
+ * Builtin functions are a subset of the wasm instructions.
  *
- * !This is subject to changes!
+ * There is a builtin function `i32.drop` that takes an i32, while `drop` takes i64.
+ *
  */
 struct WasmDialect: public Dialect
 {
 	WasmDialect();
 
 	BuiltinFunction const* builtin(YulString _name) const override;
-	BuiltinFunction const* discardFunction() const override { return builtin("drop"_yulstring); }
-	BuiltinFunction const* equalityFunction() const override { return builtin("i64.eq"_yulstring); }
-	BuiltinFunction const* booleanNegationFunction() const override { return builtin("i64.eqz"_yulstring); }
+	BuiltinFunction const* discardFunction(YulString _type) const override;
+	BuiltinFunction const* equalityFunction(YulString _type) const override;
+	BuiltinFunction const* booleanNegationFunction() const override { return builtin("i32.eqz"_yulstring); }
 
 	std::set<YulString> fixedFunctionNames() const override { return {"main"_yulstring}; }
 
@@ -56,7 +56,13 @@ struct WasmDialect: public Dialect
 private:
 	void addEthereumExternals();
 
-	void addFunction(std::string _name, size_t _params, size_t _returns, bool _movable = true, bool _literalArguments = false);
+	void addFunction(
+		std::string _name,
+		std::vector<YulString> _params,
+		std::vector<YulString> _returns,
+		bool _movable = true,
+		bool _literalArguments = false
+	);
 
 	std::map<YulString, BuiltinFunction> m_functions;
 };

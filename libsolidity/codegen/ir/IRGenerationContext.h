@@ -20,7 +20,9 @@
 
 #pragma once
 
+#include <libsolidity/codegen/ir/IRVariable.h>
 #include <libsolidity/interface/OptimiserSettings.h>
+#include <libsolidity/interface/DebugSettings.h>
 
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 
@@ -47,8 +49,13 @@ class YulUtilFunctions;
 class IRGenerationContext
 {
 public:
-	IRGenerationContext(langutil::EVMVersion _evmVersion, OptimiserSettings _optimiserSettings):
+	IRGenerationContext(
+		langutil::EVMVersion _evmVersion,
+		RevertStrings _revertStrings,
+		OptimiserSettings _optimiserSettings
+	):
 		m_evmVersion(_evmVersion),
+		m_revertStrings(_revertStrings),
 		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_functions(std::make_shared<MultiUseYulFunctionCollector>())
 	{}
@@ -62,9 +69,9 @@ public:
 	}
 
 
-	std::string addLocalVariable(VariableDeclaration const& _varDecl);
+	IRVariable const& addLocalVariable(VariableDeclaration const& _varDecl);
 	bool isLocalVariable(VariableDeclaration const& _varDecl) const { return m_localVariables.count(&_varDecl); }
-	std::string localVariableName(VariableDeclaration const& _varDecl);
+	IRVariable const& localVariable(VariableDeclaration const& _varDecl);
 
 	void addStateVariable(VariableDeclaration const& _varDecl, u256 _storageOffset, unsigned _byteOffset);
 	bool isStateVariable(VariableDeclaration const& _varDecl) const { return m_stateVariables.count(&_varDecl); }
@@ -79,12 +86,6 @@ public:
 	std::string virtualFunctionName(FunctionDefinition const& _functionDeclaration);
 
 	std::string newYulVariable();
-	/// @returns the variable (or comma-separated list of variables) that contain
-	/// the value of the given expression.
-	std::string variable(Expression const& _expression);
-	/// @returns the variable of a multi-variable expression. Variables are numbered
-	/// starting from 1.
-	std::string variablePart(Expression const& _expression, size_t _part);
 
 	std::string internalDispatch(size_t _in, size_t _out);
 
@@ -93,11 +94,18 @@ public:
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; };
 
+	/// @returns code that stores @param _message for revert reason
+	/// if m_revertStrings is debug.
+	std::string revertReasonIfDebug(std::string const& _message = "");
+
+	RevertStrings revertStrings() const { return m_revertStrings; }
+
 private:
 	langutil::EVMVersion m_evmVersion;
+	RevertStrings m_revertStrings;
 	OptimiserSettings m_optimiserSettings;
 	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
-	std::map<VariableDeclaration const*, std::string> m_localVariables;
+	std::map<VariableDeclaration const*, IRVariable> m_localVariables;
 	/// Storage offsets of state variables
 	std::map<VariableDeclaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functions;

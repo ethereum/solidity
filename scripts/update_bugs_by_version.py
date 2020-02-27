@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # This script is used to generate the list of bugs per compiler version
 # from the list of bugs.

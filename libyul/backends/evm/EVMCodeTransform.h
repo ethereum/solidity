@@ -53,7 +53,6 @@ struct StackTooDeepError: virtual YulException
 
 struct CodeTransformContext
 {
-	std::map<Scope::Label const*, AbstractAssembly::LabelID> labelIDs;
 	std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
 	std::map<Scope::Variable const*, int> variableStackHeights;
 	std::map<Scope::Variable const*, unsigned> variableReferences;
@@ -135,7 +134,6 @@ public:
 		_evm15,
 		_identifierAccess,
 		_useNamedLabelsForFunctions,
-		_assembly.stackHeight(),
 		nullptr
 	)
 	{
@@ -156,7 +154,6 @@ protected:
 		bool _evm15,
 		ExternalIdentifierAccess const& _identifierAccess,
 		bool _useNamedLabelsForFunctions,
-		int _stackAdjustment,
 		std::shared_ptr<Context> _context
 	);
 
@@ -187,9 +184,6 @@ public:
 
 private:
 	AbstractAssembly::LabelID labelFromIdentifier(Identifier const& _identifier);
-	/// @returns the label ID corresponding to the given label, allocating a new one if
-	/// necessary.
-	AbstractAssembly::LabelID labelID(Scope::Label const& _label);
 	AbstractAssembly::LabelID functionEntryID(YulString _name, Scope::Function const& _function);
 	/// Generates code for an expression that is supposed to return a single value.
 	void visitExpression(Expression const& _expression);
@@ -210,8 +204,6 @@ private:
 
 	void expectDeposit(int _deposit, int _oldHeight) const;
 
-	void checkStackHeight(void const* _astElement) const;
-
 	/// Stores the stack error in the list of errors, appends an invalid opcode
 	/// and corrects the stack height to the target stack height.
 	void stackError(StackTooDeepError _error, int _targetStackSize);
@@ -229,11 +221,6 @@ private:
 	bool const m_evm15 = false;
 	bool const m_useNamedLabelsForFunctions = false;
 	ExternalIdentifierAccess m_identifierAccess;
-	/// Adjustment between the stack height as determined during the analysis phase
-	/// and the stack height in the assembly. This is caused by an initial stack being present
-	/// for inline assembly and different stack heights depending on the EVM backend used
-	/// (EVM 1.0 or 1.5).
-	int m_stackAdjustment = 0;
 	std::shared_ptr<Context> m_context;
 
 	/// Set of variables whose reference counter has reached zero,

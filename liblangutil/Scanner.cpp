@@ -108,18 +108,18 @@ public:
 		m_complete(false)
 	{
 		if (_type == LITERAL_TYPE_COMMENT)
-			m_scanner->m_nextSkippedComment.literal.clear();
+			m_scanner->m_skippedComments[Scanner::NextNext].literal.clear();
 		else
-			m_scanner->m_nextToken.literal.clear();
+			m_scanner->m_tokens[Scanner::NextNext].literal.clear();
 	}
 	~LiteralScope()
 	{
 		if (!m_complete)
 		{
 			if (m_type == LITERAL_TYPE_COMMENT)
-				m_scanner->m_nextSkippedComment.literal.clear();
+				m_scanner->m_skippedComments[Scanner::NextNext].literal.clear();
 			else
-				m_scanner->m_nextToken.literal.clear();
+				m_scanner->m_tokens[Scanner::NextNext].literal.clear();
 		}
 	}
 	void complete() { m_complete = true; }
@@ -151,12 +151,14 @@ void Scanner::reset()
 	skipWhitespace();
 	next();
 	next();
+	next();
 }
 
 void Scanner::setPosition(size_t _offset)
 {
 	m_char = m_source->setPosition(_offset);
 	scanToken();
+	next();
 	next();
 }
 
@@ -222,11 +224,12 @@ void Scanner::addUnicodeAsUTF8(unsigned codepoint)
 void Scanner::rescan()
 {
 	size_t rollbackTo = 0;
-	if (m_skippedComment.literal.empty())
-		rollbackTo = m_currentToken.location.start;
+	if (m_skippedComments[Current].literal.empty())
+		rollbackTo = m_tokens[Current].location.start;
 	else
-		rollbackTo = m_skippedComment.location.start;
+		rollbackTo = m_skippedComments[Current].location.start;
 	m_char = m_source->rollback(size_t(m_source->position()) - rollbackTo);
+	next();
 	next();
 	next();
 }
@@ -236,11 +239,14 @@ BOOST_STATIC_ASSERT(TokenTraits::count() <= 0x100);
 
 Token Scanner::next()
 {
-	m_currentToken = m_nextToken;
-	m_skippedComment = m_nextSkippedComment;
+	m_tokens[Current] = std::move(m_tokens[Next]);
+	m_tokens[Next] = std::move(m_tokens[NextNext]);
+	m_skippedComments[Current] = std::move(m_skippedComments[Next]);
+	m_skippedComments[Next] = std::move(m_skippedComments[NextNext]);
+
 	scanToken();
 
-	return m_currentToken.token;
+	return m_tokens[Current].token;
 }
 
 Token Scanner::selectToken(char _next, Token _then, Token _else)
@@ -300,19 +306,24 @@ bool Scanner::tryScanEndOfLine()
 	return false;
 }
 
-Token Scanner::scanSingleLineDocComment()
+int Scanner::scanSingleLineDocComment()
 {
 	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
+	int endPosition = m_source->position();
 	advance(); //consume the last '/' at ///
 
 	skipWhitespaceExceptUnicodeLinebreak();
 
 	while (!isSourcePastEndOfInput())
 	{
+		endPosition = m_source->position();
 		if (tryScanEndOfLine())
 		{
-			// check if next line is also a documentation comment
-			skipWhitespace();
+			// Check if next line is also a single-line comment.
+			// If any whitespaces were skipped, use source position before.
+			if (!skipWhitespace())
+				endPosition = m_source->position();
+
 			if (!m_source->isPastEndOfInput(3) &&
 				m_source->get(0) == '/' &&
 				m_source->get(1) == '/' &&
@@ -332,7 +343,7 @@ Token Scanner::scanSingleLineDocComment()
 		advance();
 	}
 	literal.complete();
-	return Token::CommentLiteral;
+	return endPosition;
 }
 
 Token Scanner::skipMultiLineComment()
@@ -420,11 +431,10 @@ Token Scanner::scanSlash()
 		else if (m_char == '/')
 		{
 			// doxygen style /// comment
-			Token comment;
-			m_nextSkippedComment.location.start = firstSlashPosition;
-			comment = scanSingleLineDocComment();
-			m_nextSkippedComment.location.end = sourcePos();
-			m_nextSkippedComment.token = comment;
+			m_skippedComments[NextNext].location.start = firstSlashPosition;
+			m_skippedComments[NextNext].location.source = m_source;
+			m_skippedComments[NextNext].token = Token::CommentLiteral;
+			m_skippedComments[NextNext].location.end = scanSingleLineDocComment();
 			return Token::Whitespace;
 		}
 		else
@@ -447,10 +457,11 @@ Token Scanner::scanSlash()
 			}
 			// we actually have a multiline documentation comment
 			Token comment;
-			m_nextSkippedComment.location.start = firstSlashPosition;
+			m_skippedComments[NextNext].location.start = firstSlashPosition;
+			m_skippedComments[NextNext].location.source = m_source;
 			comment = scanMultiLineDocComment();
-			m_nextSkippedComment.location.end = sourcePos();
-			m_nextSkippedComment.token = comment;
+			m_skippedComments[NextNext].location.end = sourcePos();
+			m_skippedComments[NextNext].token = comment;
 			if (comment == Token::Illegal)
 				return Token::Illegal; // error already set
 			else
@@ -467,11 +478,8 @@ Token Scanner::scanSlash()
 
 void Scanner::scanToken()
 {
-	m_nextToken.error = ScannerError::NoError;
-	m_nextToken.literal.clear();
-	m_nextToken.extendedTokenInfo = make_tuple(0, 0);
-	m_nextSkippedComment.literal.clear();
-	m_nextSkippedComment.extendedTokenInfo = make_tuple(0, 0);
+	m_tokens[NextNext] = {};
+	m_skippedComments[NextNext] = {};
 
 	Token token;
 	// M and N are for the purposes of grabbing different type sizes
@@ -480,7 +488,7 @@ void Scanner::scanToken()
 	do
 	{
 		// Remember the position of the next token
-		m_nextToken.location.start = sourcePos();
+		m_tokens[NextNext].location.start = sourcePos();
 		switch (m_char)
 		{
 		case '"':
@@ -675,9 +683,10 @@ void Scanner::scanToken()
 		// whitespace.
 	}
 	while (token == Token::Whitespace);
-	m_nextToken.location.end = sourcePos();
-	m_nextToken.token = token;
-	m_nextToken.extendedTokenInfo = make_tuple(m, n);
+	m_tokens[NextNext].location.end = sourcePos();
+	m_tokens[NextNext].location.source = m_source;
+	m_tokens[NextNext].token = token;
+	m_tokens[NextNext].extendedTokenInfo = make_tuple(m, n);
 }
 
 bool Scanner::scanEscape()
@@ -927,7 +936,7 @@ tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	while (isIdentifierPart(m_char) || (m_char == '.' && m_supportPeriodInIdentifier))
 		addLiteralCharAndAdvance();
 	literal.complete();
-	return TokenTraits::fromIdentifierOrKeyword(m_nextToken.literal);
+	return TokenTraits::fromIdentifierOrKeyword(m_tokens[NextNext].literal);
 }
 
 } // namespace solidity::langutil

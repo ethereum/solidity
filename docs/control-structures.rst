@@ -75,9 +75,10 @@ all function arguments have to be copied to memory.
     it is a message call as part of the overall transaction.
 
 When calling functions of other contracts, you can specify the amount of Wei or
-gas sent with the call with the special options ``.value()`` and ``.gas()``,
-respectively. Any Wei you send to the contract is added to the total balance
-of the contract:
+gas sent with the call with the special options ``{value: 10, gas: 10000}``.
+Note that it is discouraged to specify gas values explicitly, since the gas costs
+of opcodes can change in the future. Any Wei you send to the contract is added
+to the total balance of that contract:
 
 ::
 
@@ -90,14 +91,14 @@ of the contract:
     contract Consumer {
         InfoFeed feed;
         function setFeed(InfoFeed addr) public { feed = addr; }
-        function callFeed() public { feed.info.value(10).gas(800)(); }
+        function callFeed() public { feed.info{value: 10, gas: 800}(); }
     }
 
 You need to use the modifier ``payable`` with the ``info`` function because
-otherwise, the ``.value()`` option would not be available.
+otherwise, the ``value`` option would not be available.
 
 .. warning::
-  Be careful that ``feed.info.value(10).gas(800)`` only locally sets the
+  Be careful that ``feed.info{value: 10, gas: 800}`` only locally sets the
   ``value`` and amount of ``gas`` sent with the function call, and the
   parentheses at the end perform the actual call. So in this case, the
   function is not called and the ``value`` and ``gas`` settings are lost.
@@ -120,6 +121,11 @@ throws an exception or goes out of gas.
     via its functions. Write your functions in a way that, for example, calls to
     external functions happen after any changes to state variables in your contract
     so your contract is not vulnerable to a reentrancy exploit.
+
+.. note::
+    Before Solidity 0.6.2, the recommended way to specify the value and gas
+    was to use ``f.value(x).gas(g)()``. This is still possible but deprecated
+    and will be removed with Solidity 0.7.0.
 
 Named Calls and Anonymous Function Parameters
 ---------------------------------------------
@@ -196,16 +202,80 @@ is compiled so recursive creation-dependencies are not possible.
 
         function createAndEndowD(uint arg, uint amount) public payable {
             // Send ether along with the creation
-            D newD = (new D).value(amount)(arg);
+            D newD = new D{value: amount}(arg);
             newD.x();
         }
     }
 
 As seen in the example, it is possible to send Ether while creating
-an instance of ``D`` using the ``.value()`` option, but it is not possible
+an instance of ``D`` using the ``value`` option, but it is not possible
 to limit the amount of gas.
 If the creation fails (due to out-of-stack, not enough balance or other problems),
 an exception is thrown.
+
+Salted contract creations / create2
+-----------------------------------
+
+When creating a contract, the address of the contract is computed from
+the address of the creating contract and a counter that is increased with
+each contract creation.
+
+If you specify the option ``salt`` (a bytes32 value), then contract creation will
+use a different mechanism to come up with the address of the new contract:
+
+It will compute the address from the address of the creating contract,
+the given salt value, the (creation) bytecode of the created contract and the constructor
+arguments.
+
+In particular, the counter ("nonce") is not used. This allows for more flexibility
+in creating contracts: You are able to derive the address of the
+new contract before it is created. Furthermore, you can rely on this address
+also in case the creating
+contracts creates other contracts in the meantime.
+
+The main use-case here is contracts that act as judges for off-chain interactions,
+which only need to be created if there is a dispute.
+
+::
+
+    pragma solidity >0.6.1 <0.8.0;
+
+    contract D {
+        uint public x;
+        constructor(uint a) public {
+            x = a;
+        }
+    }
+
+    contract C {
+        function createDSalted(bytes32 salt, uint arg) public {
+            /// This complicated expression just tells you how the address
+            /// can be pre-computed. It is just there for illustration.
+            /// You actually only need ``new D{salt: salt}(arg)``.
+            address predictedAddress = address(bytes20(keccak256(abi.encodePacked(
+                byte(0xff),
+                address(this),
+                salt,
+                keccak256(abi.encodePacked(
+                    type(D).creationCode,
+                    arg
+                ))
+            ))));
+
+            D d = new D{salt: salt}(arg);
+            require(address(d) == predictedAddress);
+        }
+    }
+
+.. warning::
+    There are some peculiarities in relation to salted creation. A contract can be
+    re-created at the same address after having been destroyed. Yet, it is possible
+    for that newly created contract to have a different deployed bytecode even
+    though the creation bytecode has been the same (which is a requirement because
+    otherwise the address would change). This is due to the fact that the compiler
+    can query external state that might have changed between the two creations
+    and incorporate that into the deployed bytecode before it is stored.
+
 
 Order of Evaluation of Expressions
 ==================================
@@ -273,18 +343,8 @@ i.e. the following is not valid: ``(x, uint y) = (1, 2);``
 Complications for Arrays and Structs
 ------------------------------------
 
-The semantics of assignments are a bit more complicated for
-non-value types like arrays and structs.
-Assigning *to* a state variable always creates an independent
-copy. On the other hand, assigning to a local variable creates
-an independent copy only for elementary types, i.e. static
-types that fit into 32 bytes. If structs or arrays (including
-``bytes`` and ``string``) are assigned from a state variable
-to a local variable, the local variable holds a reference to
-the original state variable. A second assignment to the local
-variable does not modify the state but only changes the
-reference. Assignments to members (or elements) of the local
-variable *do* change the state.
+The semantics of assignments are more complicated for non-value types like arrays and structs,
+including ``bytes`` and ``string``, see :ref:`Data location and assignment behaviour <data-location-assignment>` for details.
 
 In the example below the call to ``g(x)`` has no effect on ``x`` because it creates
 an independent copy of the storage value in memory. However, ``h(x)`` successfully modifies ``x``
@@ -647,3 +707,13 @@ in scope in the block that follows.
     in a catch block or the execution of the try/catch statement itself
     reverts (for example due to decoding failures as noted above or
     due to not providing a low-level catch clause).
+
+.. note::
+    The reason behind a failed call can be manifold. Do not assume that
+    the error message is coming directly from the called contract:
+    The error might have happened deeper down in the call chain and the
+    called contract just forwarded it. Also, it could be due to an
+    out-of-gas situation and not a deliberate error condition:
+    The caller always retains 63/64th of the gas in a call and thus
+    even if the called contract goes out of gas, the caller still
+    has some gas left.

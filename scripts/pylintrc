@@ -1,0 +1,74 @@
+# vim:et:ts=4
+[MESSAGES CONTROL]
+
+# Disable the message, report, category or checker with the given id(s). You
+# can either give multiple identifiers separated by comma (,) or put this
+# option multiple times (only on the command line, not in the configuration
+# file where it should appear only once).You can also use "--disable=all" to
+# disable everything first and then re-enable specific checks. For example, if
+# you want to run only the similarities checker, you can use "--disable=all
+# --enable=similarities". If you want to run only the classes checker, but have
+# no Warning level messages displayed, use"--disable=all --enable=classes
+# --disable=W"
+
+# ATTENTION: This list should be extended with care, consider using NOLINT comments inside your
+# python files instead, as the goal is actually to reduce the list of globally disabled checks.
+#
+# TODO: What could be eliminated in future PRs: bad-continuation, invalid-name, redefined-builtin,
+# undefined-variable, unused-*, useless-object-inheritance.
+disable=
+    bad-continuation,
+    bad-indentation,
+    bad-whitespace,
+    consider-using-sys-exit,
+    invalid-name,
+    missing-docstring,
+    mixed-indentation,
+    no-else-return,
+    no-self-use,
+    pointless-string-statement,
+    redefined-builtin,
+    redefined-outer-name,
+    singleton-comparison,
+    superfluous-parens,
+    too-few-public-methods,
+    trailing-newlines,
+    undefined-variable,
+    ungrouped-imports,
+    unnecessary-semicolon,
+    unused-import,
+    unused-variable,
+    unused-wildcard-import,
+    useless-object-inheritance,
+    wildcard-import
+
+[BASIC]
+
+# Good variable names which should always be accepted, separated by a comma
+# added: f, h, x, a, b, p
+good-names=
+    Run,
+    _,
+    a,
+    b,
+    ex,
+    f,
+    f,
+    h,
+    h,
+    i,
+    j,
+    k,
+    l,
+    m,
+    n,
+    p,
+    x
+
+[FORMAT]
+
+# Expected format of line ending, e.g. empty (any line ending), LF or CRLF.
+expected-line-ending-format=LF
+
+# Maximum number of characters on a single line.
+max-line-length=130

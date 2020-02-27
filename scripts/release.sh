@@ -39,7 +39,6 @@ mkdir -p $ZIP_TEMP_DIR
 
 # Copy all the solidity executables into a temporary directory prior to ZIP creation
 
-cp $REPO_ROOT/build/lllc/lllc        $ZIP_TEMP_DIR
 cp $REPO_ROOT/build/solc/solc        $ZIP_TEMP_DIR
 
 # For macOS, we run a fix-up script which alters all of the symbolic links within
@@ -49,7 +48,7 @@ cp $REPO_ROOT/build/solc/solc        $ZIP_TEMP_DIR
 # being for kernel-level dylibs.
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    python $REPO_ROOT/scripts/fix_homebrew_paths_in_standalone_zip.py $ZIP_TEMP_DIR
+    python3 $REPO_ROOT/scripts/fix_homebrew_paths_in_standalone_zip.py $ZIP_TEMP_DIR
 fi
 
 # And ZIP it all up, with a filename suffix passed in on the command-line.

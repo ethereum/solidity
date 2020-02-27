@@ -56,7 +56,6 @@ public:
 	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
 
 	AssemblyItem const& append(AssemblyItem const& _i);
-	AssemblyItem const& append(std::string const& _data) { return append(newPushString(_data)); }
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
 
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
@@ -134,20 +133,8 @@ public:
 
 	/// Create a JSON representation of the assembly.
 	Json::Value assemblyJSON(
-		StringMap const& _sourceCodes = StringMap()
+		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>()
 	) const;
-
-public:
-	// These features are only used by LLL
-	AssemblyItem newPushString(std::string const& _data) { util::h256 h(util::keccak256(_data)); m_strings[h] = _data; return AssemblyItem(PushString, h); }
-
-	void append(Assembly const& _a);
-	void append(Assembly const& _a, int _deposit);
-
-	void injectStart(AssemblyItem const& _i);
-
-	AssemblyItem const& back() const { return m_items.back(); }
-	std::string backString() const { return m_items.size() && m_items.back().type() == PushString ? m_strings.at((util::h256)m_items.back().data()) : std::string(); }
 
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
@@ -158,7 +145,14 @@ protected:
 	unsigned bytesRequired(unsigned subTagSize) const;
 
 private:
-	static Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string());
+	static Json::Value createJsonValue(
+		std::string _name,
+		int _source,
+		int _begin,
+		int _end,
+		std::string _value = std::string(),
+		std::string _jumpType = std::string()
+	);
 	static std::string toStringInHex(u256 _value);
 
 protected:

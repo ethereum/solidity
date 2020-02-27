@@ -1,0 +1,10 @@
+{
+	"language": "Solidity",
+	"sources":
+	{
+		"":
+		{
+			"content": "pragma solidity >=0.0; import {A} from \".\";"
+		}
+	}
+}

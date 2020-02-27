@@ -83,6 +83,7 @@ private:
 	//@{
 	void reset();
 	void eraseKnowledge();
+	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr) override;
 	bool shouldVisit(ContractDefinition const& _contract) const;
 	bool shouldVisit(FunctionDefinition const& _function) const;
 	void setCurrentBlock(smt::SymbolicFunctionVariable const& _block, std::vector<smt::Expression> const* _arguments = nullptr);

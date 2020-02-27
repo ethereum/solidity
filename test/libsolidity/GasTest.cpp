@@ -16,12 +16,14 @@
 */
 
 #include <test/libsolidity/GasTest.h>
-#include <test/Options.h>
+#include <test/Common.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
 #include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
 #include <fstream>
 #include <stdexcept>

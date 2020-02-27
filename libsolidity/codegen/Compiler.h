@@ -37,9 +37,8 @@ class Compiler
 public:
 	Compiler(langutil::EVMVersion _evmVersion, RevertStrings _revertStrings, OptimiserSettings _optimiserSettings):
 		m_optimiserSettings(std::move(_optimiserSettings)),
-		m_revertStrings(_revertStrings),
-		m_runtimeContext(_evmVersion),
-		m_context(_evmVersion, &m_runtimeContext)
+		m_runtimeContext(_evmVersion, _revertStrings),
+		m_context(_evmVersion, _revertStrings, &m_runtimeContext)
 	{ }
 
 	/// Compiles a contract.
@@ -65,9 +64,9 @@ public:
 		return m_context.assemblyString(_sourceCodes);
 	}
 	/// @arg _sourceCodes is the map of input files to source code strings
-	Json::Value assemblyJSON(StringMap const& _sourceCodes = StringMap()) const
+	Json::Value assemblyJSON(std::map<std::string, unsigned> const& _indices = std::map<std::string, unsigned>()) const
 	{
-		return m_context.assemblyJSON(_sourceCodes);
+		return m_context.assemblyJSON(_indices);
 	}
 	/// @returns Assembly items of the normal compiler context
 	evmasm::AssemblyItems const& assemblyItems() const { return m_context.assembly().items(); }
@@ -80,7 +79,6 @@ public:
 
 private:
 	OptimiserSettings const m_optimiserSettings;
-	RevertStrings const m_revertStrings;
 	CompilerContext m_runtimeContext;
 	size_t m_runtimeSub = size_t(-1); ///< Identifier of the runtime sub-assembly, if present.
 	CompilerContext m_context;

@@ -31,6 +31,8 @@
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/Whiskers.h>
 
+#include <liblangutil/EVMVersion.h>
+
 namespace solidity::yul::test::yul_fuzzer
 {
 class ProtoConverter
@@ -42,16 +44,25 @@ public:
 		m_globalVars = std::vector<std::vector<std::string>>{};
 		m_inForBodyScope = false;
 		m_inForInitScope = false;
+		m_inForCond = false;
 		m_numNestedForLoops = 0;
+		m_numForLoops = 0;
 		m_counter = 0;
 		m_inputSize = 0;
 		m_inFunctionDef = false;
 		m_objectId = 0;
 		m_isObject = false;
+		m_forInitScopeExtEnabled = true;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
 	std::string programToString(Program const& _input);
+
+	/// Returns evm version
+	solidity::langutil::EVMVersion version()
+	{
+		return m_evmVersion;
+	}
 
 private:
 	void visit(BinaryOp const&);
@@ -267,6 +278,10 @@ private:
 	/// dictionarySize is the total number of entries in the dictionary.
 	std::string dictionaryToken(util::HexPrefix _p = util::HexPrefix::Add);
 
+	/// Returns an EVMVersion object corresponding to the protobuf
+	/// enum of type Program_Version
+	solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
+
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
 	{
@@ -283,7 +298,7 @@ private:
 
 	/// Returns a pseudo-randomly chosen object identifier that is in the
 	/// scope of the Yul object being visited.
-	std::string getObjectIdentifier(ObjectId const& _x);
+	std::string getObjectIdentifier(unsigned _x);
 
 	/// Return new object identifier as string. Identifier string
 	/// is a template of the form "\"object<n>\"" where <n> is
@@ -314,9 +329,13 @@ private:
 	std::vector<std::string const*> m_currentGlobalVars;
 	/// Functions in current scope
 	std::vector<std::vector<std::string>> m_scopeFuncs;
-	/// Variables
+	/// Global variables
 	std::vector<std::vector<std::string>> m_globalVars;
-	/// Functions
+	/// Variables declared in for loop init block that is in global scope
+	std::vector<std::vector<std::string>> m_globalForLoopInitVars;
+	/// Variables declared in for loop init block that is in function scope
+	std::vector<std::vector<std::vector<std::string>>> m_funcForLoopInitVars;
+	/// Vector of function names
 	std::vector<std::string> m_functions;
 	/// Maps FunctionDef object to its name
 	std::map<FunctionDef const*, std::string> m_functionDefMap;
@@ -331,14 +350,21 @@ private:
 	static unsigned constexpr s_modOutputParams = 5;
 	/// Hard-coded identifier for a Yul object's data block
 	static auto constexpr s_dataIdentifier = "datablock";
-	/// Predicate to keep track of for body scope. If true, break/continue
+	/// Predicate to keep track of for body scope. If false, break/continue
 	/// statements can not be created.
 	bool m_inForBodyScope;
+	/// Maximum number of for loops that a test case may contain
+	static auto constexpr s_maxForLoops = 2;
 	// Index used for naming loop variable of bounded for loops
 	unsigned m_numNestedForLoops;
+	/// Counter for number of for loops
+	unsigned m_numForLoops;
 	/// Predicate to keep track of for loop init scope. If true, variable
 	/// or function declarations can not be created.
 	bool m_inForInitScope;
+	/// Flag that is true while converting for loop condition,
+	/// false otherwise.
+	bool m_inForCond;
 	/// Monotonically increasing counter
 	unsigned m_counter;
 	/// Size of protobuf input
@@ -350,5 +376,10 @@ private:
 	/// Flag to track whether program is an object (true) or a statement block
 	/// (false: default value)
 	bool m_isObject;
+	/// Flag to track whether scope extension of variables defined in for-init
+	/// block is enabled.
+	bool m_forInitScopeExtEnabled;
+	/// Object that holds the targeted evm version specified by protobuf input
+	solidity::langutil::EVMVersion m_evmVersion;
 };
 }

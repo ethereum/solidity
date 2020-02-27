@@ -20,7 +20,7 @@
 
 #include <test/libsolidity/ABIJsonTest.h>
 
-#include <test/Options.h>
+#include <test/Common.h>
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolutil/JSON.h>
@@ -52,8 +52,8 @@ TestCase::TestResult ABIJsonTest::run(ostream& _stream, string const& _linePrefi
 	CompilerStack compiler;
 
 	compiler.setSources({{"", "pragma solidity >=0.0;\n" + m_source}});
-	compiler.setEVMVersion(solidity::test::Options::get().evmVersion());
-	compiler.setOptimiserSettings(solidity::test::Options::get().optimize);
+	compiler.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
+	compiler.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	if (!compiler.parseAndAnalyze())
 		BOOST_THROW_EXCEPTION(runtime_error("Parsing contract failed"));
 

@@ -50,12 +50,16 @@ BOOST_AUTO_TEST_SUITE(Assembler)
 
 BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
+	map<string, unsigned> indices = {
+		{ "root.asm", 0 },
+		{ "sub.asm", 1 }
+	};
 	Assembly _assembly;
-	auto root_asm = make_shared<CharStream>("", "root.asm");
+	auto root_asm = make_shared<CharStream>("lorem ipsum", "root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
 
 	Assembly _subAsm;
-	auto sub_asm = make_shared<CharStream>("", "sub.asm");
+	auto sub_asm = make_shared<CharStream>("lorem ipsum", "sub.asm");
 	_subAsm.setSourceLocation({6, 8, sub_asm});
 	_subAsm.append(Instruction::INVALID);
 	shared_ptr<Assembly> _subAsmPtr = make_shared<Assembly>(_subAsm);
@@ -74,8 +78,6 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	_assembly.appendLibraryAddress("someLibrary");
 	// PushTag + Operation
 	_assembly.appendJump(tag);
-	// PushString
-	_assembly.append("Unused feature for pushing string");
 	// PushData
 	_assembly.append(bytes{0x1, 0x2, 0x3, 0x4});
 	// PushSubSize
@@ -93,9 +95,8 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 
 	BOOST_CHECK_EQUAL(
 		_assembly.assemble().toHex(),
-		"5b6001600220606773__$bf005014d9d0f534b8fcb268bd84c491a2$__"
-		"6000567f556e75736564206665617475726520666f722070757368696e"
-		"6720737472696e605f6001605e73000000000000000000000000000000000000000000fe"
+		"5b6001600220604673__$bf005014d9d0f534b8fcb268bd84c491a2$__"
+		"600056603e6001603d73000000000000000000000000000000000000000000fe"
 		"fe010203044266eeaa"
 	);
 	BOOST_CHECK_EQUAL(
@@ -106,7 +107,6 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"  bytecodeSize\n"
 		"  linkerSymbol(\"bf005014d9d0f534b8fcb268bd84c491a2380f4acd260d1ccfe9cd8201f7e994\")\n"
 		"  jump(tag_1)\n"
-		"  data_027497964124140851e8a9992ba16b5c1aaf9730b78d6036c8d65e3bb5ea4c8f\n"
 		"  data_a6885b3731702da62e8e4a8f584ac46a7f6822f4e2ba50fba902f67b1588d23b\n"
 		"  dataSize(sub_0)\n"
 		"  dataOffset(sub_0)\n"
@@ -123,23 +123,23 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"auxdata: 0x4266eeaa\n"
 	);
 	BOOST_CHECK_EQUAL(
-		util::jsonCompactPrint(_assembly.assemblyJSON()),
-		"{\".auxdata\":\"4266eeaa\",\".code\":[{\"begin\":1,\"end\":3,\"name\":\"tag\",\"value\":\"1\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"JUMPDEST\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"value\":\"1\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"value\":\"2\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"KECCAK256\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSHSIZE\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSHLIB\",\"value\":\"someLibrary\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [tag]\",\"value\":\"1\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"JUMP\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH tag\",\"value\":\"Unused feature for pushing string\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH data\",\"value\":\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH #[$]\",\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [$]\",\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"PUSHDEPLOYADDRESS\"},"
-		"{\"begin\":1,\"end\":3,\"name\":\"STOP\"}],"
-		"\".data\":{\"0\":{\".code\":[{\"begin\":6,\"end\":8,\"name\":\"INVALID\"}]},"
+		util::jsonCompactPrint(_assembly.assemblyJSON(indices)),
+		"{\".auxdata\":\"4266eeaa\",\".code\":["
+		"{\"begin\":1,\"end\":3,\"name\":\"tag\",\"source\":0,\"value\":\"1\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"JUMPDEST\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"source\":0,\"value\":\"1\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"source\":0,\"value\":\"2\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"KECCAK256\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSHSIZE\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSHLIB\",\"source\":0,\"value\":\"someLibrary\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [tag]\",\"source\":0,\"value\":\"1\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"JUMP\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH data\",\"source\":0,\"value\":\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH #[$]\",\"source\":0,\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSH [$]\",\"source\":0,\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
+		"{\"begin\":1,\"end\":3,\"name\":\"PUSHDEPLOYADDRESS\",\"source\":0},"
+		"{\"begin\":1,\"end\":3,\"name\":\"STOP\",\"source\":0}"
+		"],\".data\":{\"0\":{\".code\":[{\"begin\":6,\"end\":8,\"name\":\"INVALID\",\"source\":1}]},"
 		"\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\":\"01020304\"}}"
 	);
 }
