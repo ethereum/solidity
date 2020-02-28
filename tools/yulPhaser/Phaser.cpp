@@ -49,6 +49,8 @@ namespace
 map<PhaserMode, string> const PhaserModeToStringMap =
 {
 	{PhaserMode::RunAlgorithm, "run-algorithm"},
+	{PhaserMode::PrintOptimisedPrograms, "print-optimised-programs"},
+	{PhaserMode::PrintOptimisedASTs, "print-optimised-asts"},
 };
 map<string, PhaserMode> const StringToPhaserModeMap = invertMap(PhaserModeToStringMap);
 
@@ -642,11 +644,13 @@ void Phaser::runPhaser(po::variables_map const& _arguments)
 	vector<Program> programs = ProgramFactory::build(programOptions);
 	vector<shared_ptr<ProgramCache>> programCaches = ProgramCacheFactory::build(cacheOptions, programs);
 
-	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, move(programs), programCaches);
+	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, programs, programCaches);
 	Population population = PopulationFactory::build(populationOptions, move(fitnessMetric));
 
 	if (_arguments["mode"].as<PhaserMode>() == PhaserMode::RunAlgorithm)
 		runAlgorithm(_arguments, move(population), move(programCaches));
+	else
+		printOptimisedProgramsOrASTs(_arguments, population, move(programs), _arguments["mode"].as<PhaserMode>());
 }
 
 void Phaser::runAlgorithm(
@@ -664,4 +668,39 @@ void Phaser::runAlgorithm(
 
 	AlgorithmRunner algorithmRunner(move(_population), move(_programCaches), buildAlgorithmRunnerOptions(_arguments), cout);
 	algorithmRunner.run(*geneticAlgorithm);
+}
+
+void Phaser::printOptimisedProgramsOrASTs(
+	po::variables_map const& _arguments,
+	Population const& _population,
+	vector<Program> _programs,
+	PhaserMode phaserMode
+)
+{
+	assert(phaserMode == PhaserMode::PrintOptimisedPrograms || phaserMode == PhaserMode::PrintOptimisedASTs);
+	assert(_programs.size() == _arguments["input-files"].as<vector<string>>().size());
+
+	if (_population.individuals().size() == 0)
+	{
+		cout << "<EMPTY POPULATION>" << endl;
+		return;
+	}
+
+	vector<string> const& paths = _arguments["input-files"].as<vector<string>>();
+	for (auto& individual: _population.individuals())
+	{
+		cout << "Chromosome: " << individual.chromosome << endl;
+
+		for (size_t i = 0; i < _programs.size(); ++i)
+		{
+			for (size_t j = 0; j < _arguments["chromosome-repetitions"].as<size_t>(); ++j)
+				_programs[i].optimise(individual.chromosome.optimisationSteps());
+
+			cout << "Program: " << paths[i] << endl;
+			if (phaserMode == PhaserMode::PrintOptimisedPrograms)
+				cout << _programs[i] << endl;
+			else
+				cout << _programs[i].toJson() << endl;
+		}
+	}
 }

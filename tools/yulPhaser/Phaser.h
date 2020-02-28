@@ -50,6 +50,8 @@ class ProgramCache;
 enum class PhaserMode
 {
 	RunAlgorithm,
+	PrintOptimisedPrograms,
+	PrintOptimisedASTs,
 };
 
 enum class Algorithm
@@ -235,6 +237,12 @@ private:
 		boost::program_options::variables_map const& _arguments,
 		Population _population,
 		std::vector<std::shared_ptr<ProgramCache>> _programCaches
+	);
+	static void printOptimisedProgramsOrASTs(
+		boost::program_options::variables_map const& _arguments,
+		Population const& _population,
+		std::vector<Program> _programs,
+		PhaserMode phaserMode
 	);
 };
 
