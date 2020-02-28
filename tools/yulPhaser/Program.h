@@ -41,6 +41,13 @@ struct Dialect;
 
 }
 
+namespace std
+{
+
+std::ostream& operator<<(std::ostream& _outputStream, solidity::langutil::ErrorList const& _errors);
+
+}
+
 namespace solidity::phaser
 {
 

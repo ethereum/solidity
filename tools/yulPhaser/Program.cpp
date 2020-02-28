@@ -22,6 +22,7 @@
 #include <liblangutil/CharStream.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -55,6 +56,16 @@ namespace solidity::phaser
 
 ostream& operator<<(ostream& _stream, Program const& _program);
 
+}
+
+ostream& std::operator<<(ostream& _outputStream, ErrorList const& _errors)
+{
+	SourceReferenceFormatter formatter(_outputStream);
+
+	for (auto const& error: _errors)
+		formatter.printErrorInformation(*error);
+
+	return _outputStream;
 }
 
 Program::Program(Program const& program):
