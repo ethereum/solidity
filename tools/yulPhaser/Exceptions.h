@@ -22,6 +22,9 @@
 namespace solidity::phaser
 {
 
-struct InvalidProgram: virtual util::Exception {};
+struct BadInput: virtual util::Exception {};
+struct InvalidProgram: virtual BadInput {};
+struct NoInputFiles: virtual BadInput {};
+struct MissingFile: virtual BadInput {};
 
 }

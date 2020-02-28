@@ -136,7 +136,7 @@ Program ProgramFactory::build(Options const& _options)
 
 CharStream ProgramFactory::loadSource(string const& _sourcePath)
 {
-	assertThrow(boost::filesystem::exists(_sourcePath), InvalidProgram, "Source file does not exist");
+	assertThrow(boost::filesystem::exists(_sourcePath), MissingFile, "Source file does not exist: " + _sourcePath);
 
 	string sourceCode = readFileAsString(_sourcePath);
 	return CharStream(sourceCode, _sourcePath);
@@ -216,10 +216,7 @@ Phaser::CommandLineParsingResult Phaser::parseCommandLine(int _argc, char** _arg
 	}
 
 	if (arguments.count("input-file") == 0)
-	{
-		cerr << "Missing argument: input-file." << endl;
-		return {1, move(arguments)};
-	}
+		assertThrow(false, NoInputFiles, "Missing argument: input-file.");
 
 	return {0, arguments};
 }

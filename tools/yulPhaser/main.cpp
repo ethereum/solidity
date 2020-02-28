@@ -36,10 +36,10 @@ int main(int argc, char** argv)
 		std::cerr << "ERROR: " << exception.what() << std::endl;
 		return 1;
 	}
-	catch (solidity::phaser::InvalidProgram const& exception)
+	catch (solidity::phaser::BadInput const& exception)
 	{
-		// Error in the input data. One of the provided programs contains errors and could not be loaded.
-		// Handle it and exit.
+		// Bad input data. Syntax errors in the input program, semantic errors in command-line
+		// parameters, etc.
 
 		std::cerr << std::endl;
 		std::cerr << "ERROR: " << exception.what() << std::endl;
