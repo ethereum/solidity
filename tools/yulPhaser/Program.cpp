@@ -17,11 +17,8 @@
 
 #include <tools/yulPhaser/Program.h>
 
-#include <tools/yulPhaser/Exceptions.h>
-
 #include <liblangutil/CharStream.h>
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libyul/AsmAnalysis.h>
@@ -75,16 +72,29 @@ Program::Program(Program const& program):
 {
 }
 
-Program Program::load(CharStream& _sourceCode)
+variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 {
 	// ASSUMPTION: parseSource() rewinds the stream on its own
 	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
-	unique_ptr<Block> ast = parseSource(dialect, _sourceCode);
-	unique_ptr<AsmAnalysisInfo> analysisInfo = analyzeAST(dialect, *ast);
+
+	variant<unique_ptr<Block>, ErrorList> astOrErrors = parseSource(dialect, _sourceCode);
+	if (holds_alternative<ErrorList>(astOrErrors))
+		return get<ErrorList>(astOrErrors);
+
+	variant<unique_ptr<AsmAnalysisInfo>, ErrorList> analysisInfoOrErrors = analyzeAST(
+		dialect,
+		*get<unique_ptr<Block>>(astOrErrors)
+	);
+	if (holds_alternative<ErrorList>(analysisInfoOrErrors))
+		return get<ErrorList>(analysisInfoOrErrors);
 
 	Program program(
 		dialect,
-		disambiguateAST(dialect, *ast, *analysisInfo)
+		disambiguateAST(
+			dialect,
+			*get<unique_ptr<Block>>(astOrErrors),
+			*get<unique_ptr<AsmAnalysisInfo>>(analysisInfoOrErrors)
+		)
 	);
 	program.optimise({
 		FunctionHoister::name,
@@ -111,7 +121,7 @@ string Program::toJson() const
 	return jsonPrettyPrint(serializedAst);
 }
 
-unique_ptr<Block> Program::parseSource(Dialect const& _dialect, CharStream _source)
+variant<unique_ptr<Block>, ErrorList> Program::parseSource(Dialect const& _dialect, CharStream _source)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
@@ -119,13 +129,14 @@ unique_ptr<Block> Program::parseSource(Dialect const& _dialect, CharStream _sour
 	Parser parser(errorReporter, _dialect);
 
 	unique_ptr<Block> ast = parser.parse(scanner, false);
-	assertThrow(ast != nullptr, InvalidProgram, "Error parsing source");
-	assert(errorReporter.errors().empty());
+	if (ast == nullptr)
+		return errors;
 
+	assert(errorReporter.errors().empty());
 	return ast;
 }
 
-unique_ptr<AsmAnalysisInfo> Program::analyzeAST(Dialect const& _dialect, Block const& _ast)
+variant<unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Dialect const& _dialect, Block const& _ast)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
@@ -133,9 +144,10 @@ unique_ptr<AsmAnalysisInfo> Program::analyzeAST(Dialect const& _dialect, Block c
 	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect);
 
 	bool analysisSuccessful = analyzer.analyze(_ast);
-	assertThrow(analysisSuccessful, InvalidProgram, "Error analyzing source");
-	assert(errorReporter.errors().empty());
+	if (!analysisSuccessful)
+		return errors;
 
+	assert(errorReporter.errors().empty());
 	return analysisInfo;
 }
 

@@ -36,7 +36,7 @@ class FitnessMetricFixture
 protected:
 	FitnessMetricFixture():
 		m_sourceStream(SampleSourceCode, ""),
-		m_program(Program::load(m_sourceStream)) {}
+		m_program(get<Program>(Program::load(m_sourceStream))) {}
 
 	static constexpr char SampleSourceCode[] =
 		"{\n"

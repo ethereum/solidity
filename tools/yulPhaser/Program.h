@@ -20,10 +20,13 @@
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/AsmData.h>
 
+#include <liblangutil/Exceptions.h>
+
 #include <optional>
 #include <ostream>
 #include <set>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace solidity::langutil
@@ -72,7 +75,7 @@ public:
 	Program operator=(Program const& program) = delete;
 	Program operator=(Program&& program) = delete;
 
-	static Program load(langutil::CharStream& _sourceCode);
+	static std::variant<Program, langutil::ErrorList> load(langutil::CharStream& _sourceCode);
 	void optimise(std::vector<std::string> const& _optimisationSteps);
 
 	size_t codeSize() const { return computeCodeSize(*m_ast); }
@@ -91,11 +94,11 @@ private:
 		m_nameDispenser(_dialect, *m_ast, {})
 	{}
 
-	static std::unique_ptr<yul::Block> parseSource(
+	static std::variant<std::unique_ptr<yul::Block>, langutil::ErrorList> parseSource(
 		yul::Dialect const& _dialect,
 		langutil::CharStream _source
 	);
-	static std::unique_ptr<yul::AsmAnalysisInfo> analyzeAST(
+	static std::variant<std::unique_ptr<yul::AsmAnalysisInfo>, langutil::ErrorList> analyzeAST(
 		yul::Dialect const& _dialect,
 		yul::Block const& _ast
 	);

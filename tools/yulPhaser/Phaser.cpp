@@ -125,7 +125,13 @@ ProgramFactory::Options ProgramFactory::Options::fromCommandLine(po::variables_m
 Program ProgramFactory::build(Options const& _options)
 {
 	CharStream sourceCode = loadSource(_options.inputFile);
-	return Program::load(sourceCode);
+	variant<Program, ErrorList> programOrErrors = Program::load(sourceCode);
+	if (holds_alternative<ErrorList>(programOrErrors))
+	{
+		cerr << get<ErrorList>(programOrErrors) << endl;
+		assertThrow(false, InvalidProgram, "Failed to load program " + _options.inputFile);
+	}
+	return move(get<Program>(programOrErrors));
 }
 
 CharStream ProgramFactory::loadSource(string const& _sourcePath)
