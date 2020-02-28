@@ -55,7 +55,7 @@ protected:
 	};
 };
 
-class FitnessMetricFactoryFixture
+class FixtureWithPrograms
 {
 protected:
 	vector<CharStream> m_sourceStreams = {
@@ -68,6 +68,11 @@ protected:
 		get<Program>(Program::load(m_sourceStreams[1])),
 		get<Program>(Program::load(m_sourceStreams[2])),
 	};
+};
+
+class FitnessMetricFactoryFixture: public FixtureWithPrograms
+{
+protected:
 	FitnessMetricFactory::Options m_options = {
 		/* metric = */ MetricChoice::CodeSize,
 		/* metricAggregator = */ MetricAggregatorChoice::Average,
@@ -315,6 +320,35 @@ BOOST_FIXTURE_TEST_CASE(build_should_combine_populations_from_all_sources, Poula
 	BOOST_TEST(all_of(begin, end, [](auto const& individual){ return individual.chromosome.length() == 3; }));
 	BOOST_TEST(count(begin, end, Individual(Chromosome("axc"), *m_fitnessMetric)) >= 2);
 	BOOST_TEST(count(begin, end, Individual(Chromosome("fcL"), *m_fitnessMetric)) >= 2);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE(ProgramCacheFactoryTest)
+
+BOOST_FIXTURE_TEST_CASE(build_should_create_cache_for_each_input_program_if_cache_enabled, FixtureWithPrograms)
+{
+	ProgramCacheFactory::Options options{/* programCacheEnabled = */ true};
+	vector<shared_ptr<ProgramCache>> caches = ProgramCacheFactory::build(options, m_programs);
+	assert(m_programs.size() >= 2 && "There must be at least 2 programs for this test to be meaningful");
+
+	BOOST_TEST(caches.size() == m_programs.size());
+	for (size_t i = 0; i < m_programs.size(); ++i)
+	{
+		BOOST_REQUIRE(caches[i] != nullptr);
+		BOOST_TEST(toString(caches[i]->program()) == toString(m_programs[i]));
+	}
+}
+
+BOOST_FIXTURE_TEST_CASE(build_should_return_nullptr_for_each_input_program_if_cache_disabled, FixtureWithPrograms)
+{
+	ProgramCacheFactory::Options options{/* programCacheEnabled = */ false};
+	vector<shared_ptr<ProgramCache>> caches = ProgramCacheFactory::build(options, m_programs);
+	assert(m_programs.size() >= 2 && "There must be at least 2 programs for this test to be meaningful");
+
+	BOOST_TEST(caches.size() == m_programs.size());
+	for (size_t i = 0; i < m_programs.size(); ++i)
+		BOOST_TEST(caches[i] == nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

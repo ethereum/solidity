@@ -283,6 +283,25 @@ Population PopulationFactory::buildFromFile(
 	return buildFromStrings(readLinesFromFile(_filePath), move(_fitnessMetric));
 }
 
+ProgramCacheFactory::Options ProgramCacheFactory::Options::fromCommandLine(po::variables_map const& _arguments)
+{
+	return {
+		_arguments["program-cache"].as<bool>(),
+	};
+}
+
+vector<shared_ptr<ProgramCache>> ProgramCacheFactory::build(
+	Options const& _options,
+	vector<Program> _programs
+)
+{
+	vector<shared_ptr<ProgramCache>> programCaches;
+	for (Program& program: _programs)
+		programCaches.push_back(_options.programCacheEnabled ? make_shared<ProgramCache>(move(program)) : nullptr);
+
+	return programCaches;
+}
+
 ProgramFactory::Options ProgramFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
 	return {
