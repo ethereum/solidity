@@ -24,7 +24,7 @@
 		}
 	
 // ----
+// constructor(), 10 wei ->
 // sendAmount(uint256): 5 -> 5
-// outOfGas() ->  # call to helper should not succeed but amount should be transferred anyway #
-// checkState() -> false, 15
-
+// outOfGas() -> FAILURE # call to helper should not succeed but amount should be transferred anyway #
+// checkState() -> false, 5

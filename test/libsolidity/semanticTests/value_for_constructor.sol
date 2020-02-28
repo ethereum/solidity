@@ -20,6 +20,7 @@
 		}
 	
 // ----
+// constructor(), 22 wei ->
 // getFlag() -> true
 // getName() -> "abc"
 // getBalances() -> 12, 10
