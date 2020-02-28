@@ -1,11 +1,20 @@
+contract c {
+    uint256[4] data;
 
-		contract c {
-			uint[4] data;
-			function set(uint index, uint value) public returns (bool) { data[index] = value; return true; }
-			function get(uint index) public returns (uint) { return data[index]; }
-			function length() public returns (uint) { return data.length; }
-		}
-	
+    function set(uint256 index, uint256 value) public returns (bool) {
+        data[index] = value;
+        return true;
+    }
+
+    function get(uint256 index) public returns (uint256) {
+        return data[index];
+    }
+
+    function length() public returns (uint256) {
+        return data.length;
+    }
+}
+
 // ====
 // compileViaYul: also
 // ----
