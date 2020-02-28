@@ -212,7 +212,7 @@ Phaser::CommandLineParsingResult Phaser::parseCommandLine(int _argc, char** _arg
 	if (arguments.count("help") > 0)
 	{
 		cout << keywordDescription << endl;
-		return {2, move(arguments)};
+		return {0, move(arguments)};
 	}
 
 	if (arguments.count("input-file") == 0)
