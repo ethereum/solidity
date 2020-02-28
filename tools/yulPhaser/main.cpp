@@ -28,6 +28,14 @@ int main(int argc, char** argv)
 	{
 		return solidity::phaser::Phaser::main(argc, argv);
 	}
+	catch (boost::program_options::error const& exception)
+	{
+		// Bad input data. Invalid command-line parameters.
+
+		std::cerr << std::endl;
+		std::cerr << "ERROR: " << exception.what() << std::endl;
+		return 1;
+	}
 	catch (solidity::phaser::InvalidProgram const& exception)
 	{
 		// Error in the input data. One of the provided programs contains errors and could not be loaded.

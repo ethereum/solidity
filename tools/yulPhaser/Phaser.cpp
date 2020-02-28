@@ -205,17 +205,9 @@ Phaser::CommandLineParsingResult Phaser::parseCommandLine(int _argc, char** _arg
 	po::variables_map arguments;
 	po::notify(arguments);
 
-	try
-	{
-		po::command_line_parser parser(_argc, _argv);
-		parser.options(keywordDescription).positional(positionalDescription);
-		po::store(parser.run(), arguments);
-	}
-	catch (po::error const & _exception)
-	{
-		cerr << _exception.what() << endl;
-		return {1, move(arguments)};
-	}
+	po::command_line_parser parser(_argc, _argv);
+	parser.options(keywordDescription).positional(positionalDescription);
+	po::store(parser.run(), arguments);
 
 	if (arguments.count("help") > 0)
 	{
