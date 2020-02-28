@@ -46,6 +46,12 @@ namespace po = boost::program_options;
 namespace
 {
 
+map<PhaserMode, string> const PhaserModeToStringMap =
+{
+	{PhaserMode::RunAlgorithm, "run-algorithm"},
+};
+map<string, PhaserMode> const StringToPhaserModeMap = invertMap(PhaserModeToStringMap);
+
 map<Algorithm, string> const AlgorithmToStringMap =
 {
 	{Algorithm::Random, "random"},
@@ -71,6 +77,8 @@ map<string, MetricAggregatorChoice> const StringToMetricAggregatorChoiceMap = in
 
 }
 
+istream& phaser::operator>>(istream& _inputStream, PhaserMode& _phaserMode) { return deserializeChoice(_inputStream, _phaserMode, StringToPhaserModeMap); }
+ostream& phaser::operator<<(ostream& _outputStream, PhaserMode _phaserMode) { return serializeChoice(_outputStream, _phaserMode, PhaserModeToStringMap); }
 istream& phaser::operator>>(istream& _inputStream, Algorithm& _algorithm) { return deserializeChoice(_inputStream, _algorithm, StringToAlgorithmMap); }
 ostream& phaser::operator<<(ostream& _outputStream, Algorithm _algorithm) { return serializeChoice(_outputStream, _algorithm, AlgorithmToStringMap); }
 istream& phaser::operator>>(istream& _inputStream, MetricChoice& _metric) { return deserializeChoice(_inputStream, _metric, StringToMetricChoiceMap); }
@@ -348,7 +356,7 @@ void Phaser::main(int _argc, char** _argv)
 
 	initialiseRNG(arguments.value());
 
-	runAlgorithm(arguments.value());
+	runPhaser(arguments.value());
 }
 
 Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
@@ -391,6 +399,12 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			"rounds",
 			po::value<size_t>()->value_name("<NUM>"),
 			"The number of rounds after which the algorithm should stop. (default=no limit)."
+		)
+		(
+			"mode",
+			po::value<PhaserMode>()->value_name("<NAME>")->default_value(PhaserMode::RunAlgorithm),
+			"Mode of operation. The default is to run the algorithm but you can also tell phaser "
+			"to do something else with its parameters, e.g. just print the optimised programs and exit."
 		)
 	;
 	keywordDescription.add(generalDescription);
@@ -618,13 +632,12 @@ AlgorithmRunner::Options Phaser::buildAlgorithmRunnerOptions(po::variables_map c
 	};
 }
 
-void Phaser::runAlgorithm(po::variables_map const& _arguments)
+void Phaser::runPhaser(po::variables_map const& _arguments)
 {
 	auto programOptions = ProgramFactory::Options::fromCommandLine(_arguments);
 	auto cacheOptions = ProgramCacheFactory::Options::fromCommandLine(_arguments);
 	auto metricOptions = FitnessMetricFactory::Options::fromCommandLine(_arguments);
 	auto populationOptions = PopulationFactory::Options::fromCommandLine(_arguments);
-	auto algorithmOptions = GeneticAlgorithmFactory::Options::fromCommandLine(_arguments);
 
 	vector<Program> programs = ProgramFactory::build(programOptions);
 	vector<shared_ptr<ProgramCache>> programCaches = ProgramCacheFactory::build(cacheOptions, programs);
@@ -632,11 +645,23 @@ void Phaser::runAlgorithm(po::variables_map const& _arguments)
 	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, move(programs), programCaches);
 	Population population = PopulationFactory::build(populationOptions, move(fitnessMetric));
 
+	if (_arguments["mode"].as<PhaserMode>() == PhaserMode::RunAlgorithm)
+		runAlgorithm(_arguments, move(population), move(programCaches));
+}
+
+void Phaser::runAlgorithm(
+	po::variables_map const& _arguments,
+	Population _population,
+	vector<shared_ptr<ProgramCache>> _programCaches
+)
+{
+	auto algorithmOptions = GeneticAlgorithmFactory::Options::fromCommandLine(_arguments);
+
 	unique_ptr<GeneticAlgorithm> geneticAlgorithm = GeneticAlgorithmFactory::build(
 		algorithmOptions,
-		population.individuals().size()
+		_population.individuals().size()
 	);
 
-	AlgorithmRunner algorithmRunner(population, move(programCaches), buildAlgorithmRunnerOptions(_arguments), cout);
+	AlgorithmRunner algorithmRunner(move(_population), move(_programCaches), buildAlgorithmRunnerOptions(_arguments), cout);
 	algorithmRunner.run(*geneticAlgorithm);
 }
