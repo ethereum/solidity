@@ -152,7 +152,7 @@ public:
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
 	std::string contractToString(Contract const& _input);
-private:
+
 	enum class Delimiter
 	{
 		ADD,
@@ -205,7 +205,7 @@ private:
 	/// Solidity code to be placed inside test function scope.
 	template <typename T>
 	std::pair<std::string, std::string> processType(T const& _type, bool _isValueType);
-
+private:
 	/// Convert a protobuf type @a _T into Solidity variable assignment and check
 	/// statements to be placed inside contract and test function scopes.
 	/// @param: _varName is the name of the Solidity variable
@@ -348,6 +348,8 @@ private:
 			return s_paramNamePrefix;
 		case Contract_Test::Contract_Test_RETURNDATA_CODER:
 			return s_localVarNamePrefix;
+		default:
+			return s_localVarNamePrefix;
 		}
 	}
 
@@ -375,6 +377,7 @@ private:
 	std::ostringstream m_typedReturn;
 	/// Argument names to be passed to coder functions
 	std::ostringstream m_argsCoder;
+public:
 	/// Predicate that is true if we are in contract scope
 	bool m_isStateVar;
 	unsigned m_counter;
@@ -588,12 +591,13 @@ private:
 class TypeVisitor: public AbiV2ProtoVisitor<std::string>
 {
 public:
-	TypeVisitor(unsigned _structSuffix = 0):
-		m_indentation(1),
+	TypeVisitor(unsigned _structSuffix = 0, unsigned _indentation = 1, std::string _structPrefix = "S"):
+		m_indentation(_indentation),
 		m_structCounter(_structSuffix),
 		m_structStartCounter(_structSuffix),
 		m_structFieldCounter(0),
-		m_isLastDynParamRightPadded(false)
+		m_isLastDynParamRightPadded(false),
+		m_structPrefix(_structPrefix)
 	{}
 
 	std::string visit(BoolType const&) override;
@@ -649,8 +653,7 @@ private:
 	unsigned m_structStartCounter;
 	unsigned m_structFieldCounter;
 	bool m_isLastDynParamRightPadded;
-
-	static auto constexpr s_structTypeName = "S";
+	std::string m_structPrefix;
 };
 
 /// Returns a pair of strings, first of which contains assignment statements
