@@ -9,5 +9,5 @@ contract test {
 // ====
 // compileViaYul: also
 // ----
-// constructor(), 23 ether ->
-// getBalance() -> 23000000000000000000
+// constructor(), 23 wei ->
+// getBalance() -> 23
