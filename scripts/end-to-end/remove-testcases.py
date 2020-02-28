@@ -6,13 +6,14 @@ import sys
 
 
 def main():
-    e2e_path = os.path.dirname(__file__) + "/extracted/libsolidity/semanticTests/end-to-end/"
+    base_path = os.path.dirname(__file__)
+    e2e_path = base_path + "/extracted/libsolidity/semanticTests/end-to-end/"
     tests = []
     for f in os.listdir(e2e_path):
         if f.endswith(".sol"):
             tests.append(f.replace(".sol", ""))
 
-    cpp_file = open(os.path.dirname(__file__) + "/../../libsolidity/SolidityEndToEndTest.cpp", "r")
+    cpp_file = open(base_path + "/../../test/libsolidity/SolidityEndToEndTest.cpp", "r")
     inside_test = False
     test_name = "'"
     ignore = False

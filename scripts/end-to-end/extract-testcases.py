@@ -23,10 +23,8 @@ class Test:
                             "m_revertStrings", "m_optimiserSettings", "gasLimit(", "gasPrice(", "blockNumber(",
                             "blockTimestamp(",
                             "numLogTopics(", "logTopic(", "numLogs(", "m_output", "m_sender", "sendMessage(",
-                            "m_transactionSuccessful", "BOOST_CHECK", "BOOST_REQUIRE",
-                            "solidity::test::CommonOptions::get()", 'bytes{',
-                            'bytes(', "testContractAgainstCppOnRange(", "testContractAgainstCpp(",
-                            "callContractFunctionWithValue(", ')YY\";']:
+                            "m_transactionSuccessful",
+                            "solidity::test::CommonOptions::get()", "testContractAgainstCppOnRange(", "testContractAgainstCpp("]:
             self.extractable &= (self.content.find(not_allowed) == -1)
 
         self.extractable &= self.content.count("compileAndRun") == 1
@@ -41,9 +39,15 @@ class Test:
         return self.extractable
 
     def get_source(self):
-        for pattern in [r'R"\((.+)\)";', r'R"YY\((.+)\)YY";', r'R"ABC\((.+)\)ABC";', r'R"\*\*\((.+)\)\*\*";',
-                        r'R"T\((.+)\)T";', r'R"DELIMITER\((.+)\)DELIMITER";', r'R"XX\((.+)\)XX";']:
+        for pattern in [r'R"\((.+?)\)";', r'R"YY\((.+?)\)YY";', r'R"ABC\((.+?)\)ABC";', r'R"\*\*\((.+?)\)\*\*";',
+                        r'R"T\((.+?)\)T";', r'R"DELIMITER\((.+?)\)DELIMITER";', r'R"XX\((.+?)\)XX";']:
             search = re.search(pattern, self.content, re.MULTILINE | re.DOTALL)
+
+            # check for other sources, test-cases with multiple source definitions will be marked as not extractable
+            found = re.findall(pattern, self.content, re.MULTILINE | re.DOTALL)
+            if len(found) > 1:
+                self.extractable = False
+
             if search:
                 return search.group(1)
         return ""
@@ -61,7 +65,7 @@ class Test:
                 test_section = True
             if test_section & line.startswith("//"):
                 test_comment += line[2:]
-            if line.startswith("ABI_CHECK("):
+            if line.startswith("ABI_CHECK(") or line.startswith("BOOST_CHECK(") or line.startswith("BOOST_REQUIRE("):
                 comment = comment.strip()
                 if comment:
                     self.comment = comment
@@ -70,17 +74,23 @@ class Test:
                 comment = ""
                 test_comment = ""
 
-        if self.extractable:
-            print(self.name + ":")
-            if self.comment:
-                print("    // " + self.comment.replace("\n", "\n    //"))
-            for test in self.tests:
-                print("    " + test)
+        # if self.extractable:
+        #     print(self.name + ":")
+        #     if self.comment:
+        #         print("    // " + self.comment.replace("\n", "\n    //"))
+        #     for test in self.tests:
+        #         print("    " + test)
 
     def eval_and_correct(self, string):
-        string = string.replace("u256(", "").replace(")", "").replace("string(", "").replace("encodeArgs(", ""). \
-            replace("\"true\"", "true").replace("\"false\"", "false").strip()
+        if not string:
+            return ""
+        string = string.replace("u256(", "").replace(")", "").replace("string(", "").replace("encodeArgs(", "").replace(
+            "asString(", "").replace("fromHex(", "0x").replace("\"true\"", "true").replace("\"false\"", "false").strip()
         result = ""
+        if string.startswith(","):
+            string = string[1:].strip()
+        if string.startswith("0x") and string.endswith("\""):
+            string = string.replace("\"", "")
         if string:
             r = ""
             for arg in string.split(","):
@@ -106,11 +116,18 @@ class Test:
             return result[:-2]
         return ""
 
-    def create_call(self, signature, parameters, expectations, comment):
+    def create_call(self, signature, parameters, expectations, comment, withValue=False):
         result = signature
+        value = ""
+        if withValue:
+            if parameters.find(",") == -1:
+                value = parameters
+                parameters = ''
         if parameters:
             result += ": "
             result += parameters
+        if value:
+            result += ", " + str(value) + " wei"
         result += " -> "
         if expectations:
             result += expectations
@@ -123,35 +140,77 @@ class Test:
                            re.M | re.I)
         if search:
             result = self.create_call(search.group(1).strip(), self.eval_and_correct(search.group(2)),
-                                               self.eval_and_correct(search.group(4)), test_comment)
+                                      self.eval_and_correct(search.group(4)), test_comment)
+            return result
+
+        search = re.search(
+            r'ABI_CHECK\(callContractFunctionWithValue\(\"(.*)\",((.|\s)*)\), encodeArgs\(((.|\s)*)\)\);', line,
+            re.M | re.I)
+        if search:
+            result = self.create_call(search.group(1).strip(), self.eval_and_correct(search.group(2)),
+                                      self.eval_and_correct(search.group(4)), test_comment, True)
             return result
 
         search = re.search(r'ABI_CHECK\(callContractFunction\(\"(.*)\",((.|\s)*)\), fromHex\("((.|\s)*)"\)\);', line,
                            re.M | re.I)
         if search:
             result = self.create_call(search.group(1).strip(), self.eval_and_correct(search.group(2)),
-                                               self.eval_and_correct("0x" + search.group(4)), test_comment)
+                                      self.eval_and_correct("0x" + search.group(4)), test_comment)
             return result
 
         search = re.search(r'ABI_CHECK\(callContractFunction\("(.*)"\), encodeArgs\(((.|\s)*)\)\);', line, re.M | re.I)
         if search:
             result = self.create_call(search.group(1).strip(), "", self.eval_and_correct(search.group(2)),
-                                               test_comment)
+                                      test_comment)
             return result
 
         search = re.search(r'ABI_CHECK\(callContractFunction\("(.*)"\), encodeDyn\(((.|\s)*)\)\);', line, re.M | re.I)
         if search:
             result = self.create_call(search.group(1).strip(), "",
-                                               self.eval_and_correct(search.group(2)), test_comment)
+                                      self.eval_and_correct(search.group(2)), test_comment)
             return result
 
         search = re.search(r'ABI_CHECK\(callContractFunction\("(.*)"\), fromHex\("((.|\s)*)"\)\);', line, re.M | re.I)
         if search:
             result = self.create_call(search.group(1).strip(), "",
-                                               self.eval_and_correct(search.group(2)), test_comment)
+                                      self.eval_and_correct(search.group(2)), test_comment)
             return result
 
+        search = re.search(r'ABI_CHECK\(callContractFunction\("(.*)"\),\s*bytes{}\);', line, re.M | re.I)
+        if search:
+            result = self.create_call(search.group(1).strip(), "", "", test_comment)
+            return result
+
+        search = re.search(r'ABI_CHECK\(callContractFunction\("(.*)"\,((.|\s)*)\),\s*bytes\(\)\);', line, re.M | re.I)
+        if search:
+            result = self.create_call(search.group(1).strip(), self.eval_and_correct(search.group(2)), "", test_comment)
+            return result
+
+        search = re.search(r'BOOST_CHECK\(callContractFunction\(\"(.*)\"(,\s*.*?)*\)\s*==\s*(.*)\);', line, re.M | re.I)
+        if search:
+            result = self.create_call(search.group(1).strip(), self.eval_and_correct(search.group(2)),
+                                      self.eval_and_correct(search.group(3)), test_comment)
+            return result
+
+        search = re.search(r'BOOST_REQUIRE\(callContractFunction\(\"(.*)\"(,\s*.*?)*\)\s*==\sbytes\(\)\);', line, re.M | re.I)
+        if search:
+            result = self.create_call(search.group(1).strip(), self.eval_and_correct(search.group(2)),
+                                      "", test_comment)
+            return result
+
+        search = re.search(r'BOOST_REQUIRE\(callContractFunction\(\"(.*)\"(,\s*.*?)*\)\s*==\s*(.*)\);', line, re.M | re.I)
+        if search:
+            result = self.create_call(search.group(1).strip(), self.eval_and_correct(search.group(2)),
+                                      self.eval_and_correct(search.group(3)), test_comment)
+            return result
+
+
         self.extractable = False
+        # if line.endswith("encodeArgs("):
+        print(self.name + " -> " + line)
+        # print("\n***")
+        # print(self.name)
+        # print(self.content)
         return "?"
 
     def extract(self):
@@ -178,22 +237,23 @@ def main():
     inside_test = False
     tests = {}
 
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libsolidity/semanticTests/end-to-end", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libsolidity/ABIJson", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libsolidity/ASTJSON", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libsolidity/errorRecoveryTests", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libsolidity/gasTests", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libsolidity/smtCheckerTests", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libsolidity/smtCheckerTestsJSON", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libsolidity/syntaxTests", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libyul/ewasmTranslationTests", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libyul/functionSideEffects", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libyul/objectCompiler/yulInterpreterTests", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libyul/yulInterpreterTests", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libyul/yulOptimizerTests", 0o777, True)
-    os.makedirs(os.path.dirname(__file__) + "/extracted/libyul/yulSyntaxTests", 0o777, True)
+    base_path = os.path.dirname(__file__)
+    os.makedirs(base_path + "/extracted/libsolidity/semanticTests/end-to-end", 0o777, True)
+    os.makedirs(base_path + "/extracted/libsolidity/ABIJson", 0o777, True)
+    os.makedirs(base_path + "/extracted/libsolidity/ASTJSON", 0o777, True)
+    os.makedirs(base_path + "/extracted/libsolidity/errorRecoveryTests", 0o777, True)
+    os.makedirs(base_path + "/extracted/libsolidity/gasTests", 0o777, True)
+    os.makedirs(base_path + "/extracted/libsolidity/smtCheckerTests", 0o777, True)
+    os.makedirs(base_path + "/extracted/libsolidity/smtCheckerTestsJSON", 0o777, True)
+    os.makedirs(base_path + "/extracted/libsolidity/syntaxTests", 0o777, True)
+    os.makedirs(base_path + "/extracted/libyul/ewasmTranslationTests", 0o777, True)
+    os.makedirs(base_path + "/extracted/libyul/functionSideEffects", 0o777, True)
+    os.makedirs(base_path + "/extracted/libyul/objectCompiler/yulInterpreterTests", 0o777, True)
+    os.makedirs(base_path + "/extracted/libyul/yulInterpreterTests", 0o777, True)
+    os.makedirs(base_path + "/extracted/libyul/yulOptimizerTests", 0o777, True)
+    os.makedirs(base_path + "/extracted/libyul/yulSyntaxTests", 0o777, True)
 
-    cpp_file = open(os.path.dirname(__file__) + "/../../libsolidity/SolidityEndToEndTest.cpp", "r")
+    cpp_file = open(base_path + "/../../test/libsolidity/SolidityEndToEndTest.cpp", "r")
     for line in cpp_file.readlines():
         test = re.search(r'BOOST_AUTO_TEST_CASE\((.*)\)', line, re.M | re.I)
         if test:
