@@ -25,6 +25,7 @@
 
 #include <istream>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <string>
 
@@ -128,7 +129,7 @@ private:
 class Phaser
 {
 public:
-	static int main(int argc, char** argv);
+	static void main(int argc, char** argv);
 
 private:
 	struct CommandLineDescription
@@ -137,14 +138,8 @@ private:
 		boost::program_options::positional_options_description positionalDescription;
 	};
 
-	struct CommandLineParsingResult
-	{
-		int exitCode;
-		boost::program_options::variables_map arguments;
-	};
-
 	static CommandLineDescription buildCommandLineDescription();
-	static CommandLineParsingResult parseCommandLine(int _argc, char** _argv);
+	static std::optional<boost::program_options::variables_map> parseCommandLine(int _argc, char** _argv);
 	static void initialiseRNG(boost::program_options::variables_map const& _arguments);
 
 	static void runAlgorithm(boost::program_options::variables_map const& _arguments);

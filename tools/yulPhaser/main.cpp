@@ -26,7 +26,8 @@ int main(int argc, char** argv)
 {
 	try
 	{
-		return solidity::phaser::Phaser::main(argc, argv);
+		solidity::phaser::Phaser::main(argc, argv);
+		return 0;
 	}
 	catch (boost::program_options::error const& exception)
 	{

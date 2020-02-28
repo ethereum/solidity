@@ -142,16 +142,15 @@ CharStream ProgramFactory::loadSource(string const& _sourcePath)
 	return CharStream(sourceCode, _sourcePath);
 }
 
-int Phaser::main(int _argc, char** _argv)
+void Phaser::main(int _argc, char** _argv)
 {
-	CommandLineParsingResult parsingResult = parseCommandLine(_argc, _argv);
-	if (parsingResult.exitCode != 0)
-		return parsingResult.exitCode;
+	optional<po::variables_map> arguments = parseCommandLine(_argc, _argv);
+	if (!arguments.has_value())
+		return;
 
-	initialiseRNG(parsingResult.arguments);
+	initialiseRNG(arguments.value());
 
-	runAlgorithm(parsingResult.arguments);
-	return 0;
+	runAlgorithm(arguments.value());
 }
 
 Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
@@ -198,7 +197,7 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	return {keywordDescription, positionalDescription};
 }
 
-Phaser::CommandLineParsingResult Phaser::parseCommandLine(int _argc, char** _argv)
+optional<po::variables_map> Phaser::parseCommandLine(int _argc, char** _argv)
 {
 	auto [keywordDescription, positionalDescription] = buildCommandLineDescription();
 
@@ -212,13 +211,13 @@ Phaser::CommandLineParsingResult Phaser::parseCommandLine(int _argc, char** _arg
 	if (arguments.count("help") > 0)
 	{
 		cout << keywordDescription << endl;
-		return {0, move(arguments)};
+		return nullopt;
 	}
 
 	if (arguments.count("input-file") == 0)
 		assertThrow(false, NoInputFiles, "Missing argument: input-file.");
 
-	return {0, arguments};
+	return arguments;
 }
 
 void Phaser::initialiseRNG(po::variables_map const& _arguments)
