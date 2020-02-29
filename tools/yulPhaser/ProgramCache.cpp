@@ -135,7 +135,7 @@ size_t ProgramCache::calculateTotalCachedCodeSize() const
 {
 	size_t size = 0;
 	for (auto const& pair: m_entries)
-		size += pair.second.program.codeSize(CodeWeights{});
+		size += pair.second.program.codeSize(CacheStats::StorageWeights);
 
 	return size;
 }
