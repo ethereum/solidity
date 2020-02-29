@@ -67,6 +67,8 @@
 
 #include <libsolutil/CommonData.h>
 
+#include <boost/range/algorithm_ext/erase.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -243,8 +245,8 @@ void OptimiserSuite::run(
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
 	size_t stackCompressorMaxIterations = 16;
-	suite.runSequence({
-		FunctionGrouper::name
+	suite.runSequence(vector<string>{
+		FunctionGrouper::name,
 	}, ast);
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
@@ -382,6 +384,59 @@ map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
 	static map<char, string> lookupTable = util::invertMap(stepNameToAbbreviationMap());
 
 	return lookupTable;
+}
+
+void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
+{
+	string input = _stepAbbreviations;
+	boost::remove_erase(input, ' ');
+	boost::remove_erase(input, '\n');
+
+	bool insideLoop = false;
+	for (char abbreviation: input)
+		switch (abbreviation)
+		{
+		case '(':
+			assertThrow(!insideLoop, OptimizerException, "Nested parentheses not supported");
+			insideLoop = true;
+			break;
+		case ')':
+			assertThrow(insideLoop, OptimizerException, "Unbalanced parenthesis");
+			insideLoop = false;
+			break;
+		default:
+			assertThrow(
+				stepAbbreviationToNameMap().find(abbreviation) != stepAbbreviationToNameMap().end(),
+				OptimizerException,
+				"Invalid optimisation step abbreviation"
+			);
+		}
+	assertThrow(!insideLoop, OptimizerException, "Unbalanced parenthesis");
+
+	auto abbreviationsToSteps = [](string const& _sequence) -> vector<string>
+	{
+		vector<string> steps;
+		for (char abbreviation: _sequence)
+			steps.emplace_back(stepAbbreviationToNameMap().at(abbreviation));
+		return steps;
+	};
+
+	// The sequence has now been validated and must consist of pairs of segments that look like this: `aaa(bbb)`
+	// `aaa` or `(bbb)` can be empty. For example we consider a sequence like `fgo(aaf)Oo` to have
+	// four segments, the last of which is an empty parenthesis.
+	size_t currentPairStart = 0;
+	while (currentPairStart < input.size())
+	{
+		size_t openingParenthesis = input.find('(', currentPairStart);
+		size_t closingParenthesis = input.find(')', openingParenthesis);
+		size_t firstCharInside = (openingParenthesis == string::npos ? input.size() : openingParenthesis + 1);
+		yulAssert((openingParenthesis == string::npos) == (closingParenthesis == string::npos), "");
+
+		runSequence(abbreviationsToSteps(input.substr(currentPairStart, openingParenthesis - currentPairStart)), _ast);
+		runSequenceUntilStable(abbreviationsToSteps(input.substr(firstCharInside, closingParenthesis - firstCharInside)), _ast);
+
+		currentPairStart = (closingParenthesis == string::npos ? input.size() : closingParenthesis + 1);
+	}
 }
 
 void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)

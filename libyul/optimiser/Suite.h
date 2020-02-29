@@ -62,6 +62,7 @@ public:
 	);
 
 	void runSequence(std::vector<std::string> const& _steps, Block& _ast);
+	void runSequence(std::string const& _stepAbbreviations, Block& _ast);
 	void runSequenceUntilStable(
 		std::vector<std::string> const& _steps,
 		Block& _ast,
