@@ -113,150 +113,105 @@ void OptimiserSuite::run(
 
 	// None of the above can make stack problems worse.
 
-	size_t codeSize = 0;
-	for (size_t rounds = 0; rounds < 12; ++rounds)
-	{
-		{
-			size_t newSize = CodeSize::codeSizeIncludingFunctions(ast);
-			if (newSize == codeSize)
-				break;
-			codeSize = newSize;
-		}
+	suite.runSequenceUntilStable({
+		// Turn into SSA and simplify
+		ExpressionSplitter::name,
+		SSATransform::name,
+		RedundantAssignEliminator::name,
+		RedundantAssignEliminator::name,
+		ExpressionSimplifier::name,
+		CommonSubexpressionEliminator::name,
+		LoadResolver::name,
+		LoopInvariantCodeMotion::name,
 
-		{
-			// Turn into SSA and simplify
-			suite.runSequence({
-				ExpressionSplitter::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				ExpressionSimplifier::name,
-				CommonSubexpressionEliminator::name,
-				LoadResolver::name,
-				LoopInvariantCodeMotion::name
-			}, ast);
-		}
+		// perform structural simplification
+		CommonSubexpressionEliminator::name,
+		ConditionalSimplifier::name,
+		LiteralRematerialiser::name,
+		ConditionalUnsimplifier::name,
+		StructuralSimplifier::name,
+		LiteralRematerialiser::name,
+		ForLoopConditionOutOfBody::name,
+		ControlFlowSimplifier::name,
+		StructuralSimplifier::name,
+		ControlFlowSimplifier::name,
+		BlockFlattener::name,
+		DeadCodeEliminator::name,
+		ForLoopConditionIntoBody::name,
+		UnusedPruner::name,
+		CircularReferencesPruner::name,
 
-		{
-			// perform structural simplification
-			suite.runSequence({
-				CommonSubexpressionEliminator::name,
-				ConditionalSimplifier::name,
-				LiteralRematerialiser::name,
-				ConditionalUnsimplifier::name,
-				StructuralSimplifier::name,
-				LiteralRematerialiser::name,
-				ForLoopConditionOutOfBody::name,
-				ControlFlowSimplifier::name,
-				StructuralSimplifier::name,
-				ControlFlowSimplifier::name,
-				BlockFlattener::name,
-				DeadCodeEliminator::name,
-				ForLoopConditionIntoBody::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name
-			}, ast);
-		}
+		// simplify again
+		LoadResolver::name,
+		CommonSubexpressionEliminator::name,
+		UnusedPruner::name,
+		CircularReferencesPruner::name,
 
-		{
-			// simplify again
-			suite.runSequence({
-				LoadResolver::name,
-				CommonSubexpressionEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-			}, ast);
-		}
+		// reverse SSA
+		SSAReverser::name,
+		CommonSubexpressionEliminator::name,
+		UnusedPruner::name,
+		CircularReferencesPruner::name,
 
-		{
-			// reverse SSA
-			suite.runSequence({
-				SSAReverser::name,
-				CommonSubexpressionEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-
-				ExpressionJoiner::name,
-				ExpressionJoiner::name,
-			}, ast);
-		}
+		ExpressionJoiner::name,
+		ExpressionJoiner::name,
 
 		// should have good "compilability" property here.
 
-		{
-			// run functional expression inliner
-			suite.runSequence({
-				ExpressionInliner::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-			}, ast);
-		}
+		// run functional expression inliner
+		ExpressionInliner::name,
+		UnusedPruner::name,
+		CircularReferencesPruner::name,
 
-		{
-			// Prune a bit more in SSA
-			suite.runSequence({
-				ExpressionSplitter::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-				RedundantAssignEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-			}, ast);
-		}
+		// Prune a bit more in SSA
+		ExpressionSplitter::name,
+		SSATransform::name,
+		RedundantAssignEliminator::name,
+		UnusedPruner::name,
+		CircularReferencesPruner::name,
+		RedundantAssignEliminator::name,
+		UnusedPruner::name,
+		CircularReferencesPruner::name,
 
-		{
-			// Turn into SSA again and simplify
-			suite.runSequence({
-				ExpressionSplitter::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				CommonSubexpressionEliminator::name,
-				LoadResolver::name,
-			}, ast);
-		}
+		// Turn into SSA again and simplify
+		ExpressionSplitter::name,
+		SSATransform::name,
+		RedundantAssignEliminator::name,
+		RedundantAssignEliminator::name,
+		CommonSubexpressionEliminator::name,
+		LoadResolver::name,
 
-		{
-			// run full inliner
-			suite.runSequence({
-				FunctionGrouper::name,
-				EquivalentFunctionCombiner::name,
-				FullInliner::name,
-				BlockFlattener::name
-			}, ast);
-		}
+		// run full inliner
+		FunctionGrouper::name,
+		EquivalentFunctionCombiner::name,
+		FullInliner::name,
+		BlockFlattener::name,
 
-		{
-			// SSA plus simplify
-			suite.runSequence({
-				ConditionalSimplifier::name,
-				LiteralRematerialiser::name,
-				ConditionalUnsimplifier::name,
-				CommonSubexpressionEliminator::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				LoadResolver::name,
-				ExpressionSimplifier::name,
-				LiteralRematerialiser::name,
-				ForLoopConditionOutOfBody::name,
-				StructuralSimplifier::name,
-				BlockFlattener::name,
-				DeadCodeEliminator::name,
-				ControlFlowSimplifier::name,
-				CommonSubexpressionEliminator::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				ForLoopConditionIntoBody::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-				CommonSubexpressionEliminator::name,
-			}, ast);
-		}
-	}
+		// SSA plus simplify
+		ConditionalSimplifier::name,
+		LiteralRematerialiser::name,
+		ConditionalUnsimplifier::name,
+		CommonSubexpressionEliminator::name,
+		SSATransform::name,
+		RedundantAssignEliminator::name,
+		RedundantAssignEliminator::name,
+		LoadResolver::name,
+		ExpressionSimplifier::name,
+		LiteralRematerialiser::name,
+		ForLoopConditionOutOfBody::name,
+		StructuralSimplifier::name,
+		BlockFlattener::name,
+		DeadCodeEliminator::name,
+		ControlFlowSimplifier::name,
+		CommonSubexpressionEliminator::name,
+		SSATransform::name,
+		RedundantAssignEliminator::name,
+		RedundantAssignEliminator::name,
+		ForLoopConditionIntoBody::name,
+		UnusedPruner::name,
+		CircularReferencesPruner::name,
+		CommonSubexpressionEliminator::name,
+	}, ast);
 
 	// Make source short and pretty.
 
@@ -451,5 +406,23 @@ void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 				copy = make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
 			}
 		}
+	}
+}
+
+void OptimiserSuite::runSequenceUntilStable(
+	std::vector<string> const& _steps,
+	Block& _ast,
+	size_t maxRounds
+)
+{
+	size_t codeSize = 0;
+	for (size_t rounds = 0; rounds < maxRounds; ++rounds)
+	{
+		size_t newSize = CodeSize::codeSizeIncludingFunctions(_ast);
+		if (newSize == codeSize)
+			break;
+		codeSize = newSize;
+
+		runSequence(_steps, _ast);
 	}
 }
