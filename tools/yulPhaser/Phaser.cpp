@@ -39,6 +39,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
+using namespace solidity::yul;
 using namespace solidity::phaser;
 
 namespace po = boost::program_options;
@@ -216,6 +217,7 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 				metrics.push_back(make_unique<ProgramSize>(
 					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
 					move(_programCaches[i]),
+					CodeWeights{},
 					_options.chromosomeRepetitions
 				));
 
@@ -228,6 +230,7 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
 					move(_programCaches[i]),
 					_options.relativeMetricScale,
+					CodeWeights{},
 					_options.chromosomeRepetitions
 				));
 			break;

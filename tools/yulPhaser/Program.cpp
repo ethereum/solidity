@@ -207,7 +207,7 @@ unique_ptr<Block> Program::applyOptimisationSteps(
 	return _ast;
 }
 
-size_t Program::computeCodeSize(Block const& _ast)
+size_t Program::computeCodeSize(Block const& _ast, CodeWeights const& _weights)
 {
-	return CodeSize::codeSizeIncludingFunctions(_ast);
+	return CodeSize::codeSizeIncludingFunctions(_ast, _weights);
 }

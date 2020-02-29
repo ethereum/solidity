@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(codeSize)
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
 	Program program = get<Program>(Program::load(sourceStream));
 
-	BOOST_TEST(program.codeSize() == CodeSize::codeSizeIncludingFunctions(program.ast()));
+	BOOST_TEST(program.codeSize(CodeWeights{}) == CodeSize::codeSizeIncludingFunctions(program.ast()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
