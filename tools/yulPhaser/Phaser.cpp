@@ -680,9 +680,11 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 
 	po::options_description metricWeightDescription("METRIC WEIGHTS", lineLength, minDescriptionLength);
 	metricWeightDescription.add_options()
-		("expression-statement-cost", po::value<size_t>()->value_name("<COST>")->default_value(0))
-		("assignment-cost",           po::value<size_t>()->value_name("<COST>")->default_value(0))
-		("variable-declaration-cost", po::value<size_t>()->value_name("<COST>")->default_value(0))
+		// TODO: We need to figure out the best set of weights for the phaser.
+		// This one is just a stopgap to make sure no statement or expression has zero cost.
+		("expression-statement-cost", po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("assignment-cost",           po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("variable-declaration-cost", po::value<size_t>()->value_name("<COST>")->default_value(1))
 		("function-definition-cost",  po::value<size_t>()->value_name("<COST>")->default_value(1))
 		("if-cost",                   po::value<size_t>()->value_name("<COST>")->default_value(2))
 		("switch-cost",               po::value<size_t>()->value_name("<COST>")->default_value(1))
@@ -691,9 +693,9 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		("break-cost",                po::value<size_t>()->value_name("<COST>")->default_value(2))
 		("continue-cost",             po::value<size_t>()->value_name("<COST>")->default_value(2))
 		("leave-cost",                po::value<size_t>()->value_name("<COST>")->default_value(2))
-		("block-cost",                po::value<size_t>()->value_name("<COST>")->default_value(0))
+		("block-cost",                po::value<size_t>()->value_name("<COST>")->default_value(1))
 		("function-call-cost",        po::value<size_t>()->value_name("<COST>")->default_value(1))
-		("identifier-cost",           po::value<size_t>()->value_name("<COST>")->default_value(0))
+		("identifier-cost",           po::value<size_t>()->value_name("<COST>")->default_value(1))
 		("literal-cost",              po::value<size_t>()->value_name("<COST>")->default_value(1))
 	;
 	keywordDescription.add(metricWeightDescription);
