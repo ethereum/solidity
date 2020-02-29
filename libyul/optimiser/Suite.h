@@ -45,6 +45,8 @@ struct Object;
 class OptimiserSuite
 {
 public:
+	static constexpr size_t MaxRounds = 12;
+
 	enum class Debug
 	{
 		None,

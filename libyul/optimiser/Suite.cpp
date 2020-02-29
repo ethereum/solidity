@@ -114,7 +114,7 @@ void OptimiserSuite::run(
 	// None of the above can make stack problems worse.
 
 	size_t codeSize = 0;
-	for (size_t rounds = 0; rounds < 12; ++rounds)
+	for (size_t rounds = 0; rounds < MaxRounds; ++rounds)
 	{
 		{
 			size_t newSize = CodeSize::codeSizeIncludingFunctions(ast);
