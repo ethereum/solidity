@@ -243,8 +243,8 @@ void OptimiserSuite::run(
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
 	size_t stackCompressorMaxIterations = 16;
-	suite.runSequence({
-		FunctionGrouper::name
+	suite.runSequence(vector<string>{
+		FunctionGrouper::name,
 	}, ast);
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
@@ -382,6 +382,50 @@ map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
 	static map<char, string> lookupTable = util::invertMap(stepNameToAbbreviationMap());
 
 	return lookupTable;
+}
+
+void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
+{
+	bool insideLoop = false;
+	vector<string> steps;
+	for (char abbreviation: _stepAbbreviations)
+	{
+		auto const& step = stepAbbreviationToNameMap().find(abbreviation);
+		if (step != stepAbbreviationToNameMap().end())
+			steps.push_back(step->second);
+		else if (abbreviation == ' ' || abbreviation == '\n')
+		{
+			// Ignore spaces and newlines added for readability
+		}
+		else if (abbreviation == '(')
+		{
+			assertThrow(!insideLoop, OptimizerException, "Nested parentheses not supported");
+
+			insideLoop = true;
+			if (steps.size() > 0)
+			{
+				runSequence(steps, _ast);
+				steps.clear();
+			}
+		}
+		else if (abbreviation == ')')
+		{
+			assertThrow(insideLoop, OptimizerException, "Unbalanced parenthesis");
+
+			insideLoop = false;
+			if (steps.size() > 0)
+			{
+				runSequenceUntilStable(steps, _ast);
+				steps.clear();
+			}
+		}
+		else
+			assertThrow(false, OptimizerException, "Invalid optimisation step abbreviation");
+	}
+
+	assertThrow(!insideLoop, OptimizerException, "Unbalanced parenthesis");
+	if (steps.size() > 0)
+		runSequence(steps, _ast);
 }
 
 void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
