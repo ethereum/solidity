@@ -576,6 +576,11 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			po::bool_switch(),
 			"Hide information about the current round (round number and elapsed time)."
 		)
+		(
+			"show-cache-stats",
+			po::bool_switch(),
+			"Print information about cache size and effectiveness after each round."
+		)
 	;
 	keywordDescription.add(outputDescription);
 
@@ -631,6 +636,7 @@ AlgorithmRunner::Options Phaser::buildAlgorithmRunnerOptions(po::variables_map c
 		_arguments["show-initial-population"].as<bool>(),
 		_arguments["show-only-top-chromosome"].as<bool>(),
 		!_arguments["hide-round"].as<bool>(),
+		_arguments["show-cache-stats"].as<bool>(),
 	};
 }
 

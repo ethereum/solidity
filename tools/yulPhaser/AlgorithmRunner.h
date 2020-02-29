@@ -51,6 +51,7 @@ public:
 		bool showInitialPopulation = false;
 		bool showOnlyTopChromosome = false;
 		bool showRoundInfo = true;
+		bool showCacheStats = false;
 	};
 
 	AlgorithmRunner(
@@ -76,6 +77,7 @@ private:
 		std::chrono::steady_clock::time_point _totalTimeStart
 	) const;
 	void printInitialPopulation() const;
+	void printCacheStats() const;
 	void populationAutosave() const;
 	void randomiseDuplicates();
 	void cacheClear();

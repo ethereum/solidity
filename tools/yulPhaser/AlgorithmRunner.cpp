@@ -44,6 +44,7 @@ void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 		randomiseDuplicates();
 
 		printRoundSummary(round, roundTimeStart, totalTimeStart);
+		printCacheStats();
 		populationAutosave();
 	}
 }
@@ -88,6 +89,39 @@ void AlgorithmRunner::printInitialPopulation() const
 
 	m_outputStream << "---------- INITIAL POPULATION ----------" << endl;
 	m_outputStream << m_population;
+}
+
+void AlgorithmRunner::printCacheStats() const
+{
+	if (!m_options.showCacheStats)
+		return;
+
+	CacheStats totalStats{};
+	size_t disabledCacheCount = 0;
+	for (size_t i = 0; i < m_programCaches.size(); ++i)
+		if (m_programCaches[i] != nullptr)
+			totalStats += m_programCaches[i]->gatherStats();
+		else
+			++disabledCacheCount;
+
+	m_outputStream << "---------- CACHE STATS ----------" << endl;
+
+	if (disabledCacheCount < m_programCaches.size())
+	{
+		for (auto& [round, count]: totalStats.roundEntryCounts)
+			m_outputStream << "Round " << round << ": " << count << " entries" << endl;
+		m_outputStream << "Total hits: " << totalStats.hits << endl;
+		m_outputStream << "Total misses: " << totalStats.misses << endl;
+		m_outputStream << "Size of cached code: " << totalStats.totalCodeSize << endl;
+	}
+
+	if (disabledCacheCount == m_programCaches.size())
+		m_outputStream << "Program cache disabled" << endl;
+	else if (disabledCacheCount > 0)
+	{
+		m_outputStream << "Program cache disabled for " << disabledCacheCount << " out of ";
+		m_outputStream << m_programCaches.size() << " programs" << endl;
+	}
 }
 
 void AlgorithmRunner::populationAutosave() const

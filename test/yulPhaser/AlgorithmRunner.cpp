@@ -19,6 +19,7 @@
 
 #include <tools/yulPhaser/AlgorithmRunner.h>
 #include <tools/yulPhaser/Common.h>
+#include <tools/yulPhaser/FitnessMetrics.h>
 
 #include <liblangutil/CharStream.h>
 
@@ -274,6 +275,111 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_whole_initial_population_even_if_only_t
 	BOOST_TEST(nextLineMatches(m_output, InitialPopulationHeaderRegex));
 	for (auto const& individual: m_population.individuals())
 		BOOST_TEST(nextLineMatches(m_output, regex(individualPattern(individual))));
+	BOOST_TEST(m_output.peek() == EOF);
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_print_cache_stats_if_requested, AlgorithmRunnerFixture)
+{
+	m_options.maxRounds = 4;
+	m_options.showInitialPopulation = false;
+	m_options.showRoundInfo = false;
+	m_options.showOnlyTopChromosome = true;
+	m_options.showCacheStats = true;
+	RandomisingAlgorithm algorithm;
+
+	vector<CharStream> sourceStreams = {
+		CharStream("{mstore(10, 20)}", ""),
+		CharStream("{mstore(10, 20)\nsstore(10, 20)}", ""),
+	};
+	vector<Program> programs = {
+		get<Program>(Program::load(sourceStreams[0])),
+		get<Program>(Program::load(sourceStreams[1])),
+	};
+	vector<shared_ptr<ProgramCache>> caches = {
+		make_shared<ProgramCache>(programs[0]),
+		make_shared<ProgramCache>(programs[1]),
+	};
+	shared_ptr<FitnessMetric> fitnessMetric = make_shared<FitnessMetricAverage>(vector<shared_ptr<FitnessMetric>>{
+		make_shared<ProgramSize>(nullopt, caches[0]),
+		make_shared<ProgramSize>(nullopt, caches[1]),
+	});
+	Population population = Population::makeRandom(fitnessMetric, 2, 0, 5);
+
+	AlgorithmRunner runner(population, caches, m_options, m_output);
+	runner.run(algorithm);
+
+	BOOST_TEST(caches[0]->currentRound() == m_options.maxRounds.value());
+	BOOST_TEST(caches[1]->currentRound() == m_options.maxRounds.value());
+
+	CacheStats stats = caches[0]->gatherStats() + caches[1]->gatherStats();
+
+	for (size_t i = 0; i < m_options.maxRounds.value() - 1; ++i)
+	{
+		BOOST_TEST(nextLineMatches(m_output, regex(".*")));
+		BOOST_TEST(nextLineMatches(m_output, regex("-+CACHESTATS-+")));
+		if (i > 0)
+			BOOST_TEST(nextLineMatches(m_output, regex(R"(Round\d+:\d+entries)")));
+		BOOST_TEST(nextLineMatches(m_output, regex(R"(Round\d+:\d+entries)")));
+		BOOST_TEST(nextLineMatches(m_output, regex(R"(Totalhits:\d+)")));
+		BOOST_TEST(nextLineMatches(m_output, regex(R"(Totalmisses:\d+)")));
+		BOOST_TEST(nextLineMatches(m_output, regex(R"(Sizeofcachedcode:\d+)")));
+	}
+
+	BOOST_REQUIRE(stats.roundEntryCounts.size() == 2);
+	BOOST_REQUIRE(stats.roundEntryCounts.count(m_options.maxRounds.value() - 1) == 1);
+	BOOST_REQUIRE(stats.roundEntryCounts.count(m_options.maxRounds.value()) == 1);
+
+	size_t round = m_options.maxRounds.value();
+	BOOST_TEST(nextLineMatches(m_output, regex(".*")));
+	BOOST_TEST(nextLineMatches(m_output, regex("-+CACHESTATS-+")));
+	BOOST_TEST(nextLineMatches(m_output, regex("Round" + toString(round - 1) + ":" + toString(stats.roundEntryCounts[round - 1]) + "entries")));
+	BOOST_TEST(nextLineMatches(m_output, regex("Round" + toString(round) + ":" + toString(stats.roundEntryCounts[round]) + "entries")));
+	BOOST_TEST(nextLineMatches(m_output, regex("Totalhits:" + toString(stats.hits))));
+	BOOST_TEST(nextLineMatches(m_output, regex("Totalmisses:" + toString(stats.misses))));
+	BOOST_TEST(nextLineMatches(m_output, regex("Sizeofcachedcode:" + toString(stats.totalCodeSize))));
+	BOOST_TEST(m_output.peek() == EOF);
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_print_message_if_cache_stats_requested_but_cache_disabled, AlgorithmRunnerFixture)
+{
+	m_options.maxRounds = 1;
+	m_options.showInitialPopulation = false;
+	m_options.showRoundInfo = false;
+	m_options.showOnlyTopChromosome = true;
+	m_options.showCacheStats = true;
+	RandomisingAlgorithm algorithm;
+
+	AlgorithmRunner runner(m_population, {nullptr}, m_options, m_output);
+	runner.run(algorithm);
+
+	BOOST_TEST(nextLineMatches(m_output, regex(".*")));
+	BOOST_TEST(nextLineMatches(m_output, regex("-+CACHESTATS-+")));
+	BOOST_TEST(nextLineMatches(m_output, regex(stripWhitespace("Program cache disabled"))));
+	BOOST_TEST(m_output.peek() == EOF);
+}
+
+BOOST_FIXTURE_TEST_CASE(run_should_print_partial_stats_and_message_if_some_caches_disabled, AlgorithmRunnerFixture)
+{
+	m_options.maxRounds = 1;
+	m_options.showInitialPopulation = false;
+	m_options.showRoundInfo = false;
+	m_options.showOnlyTopChromosome = true;
+	m_options.showCacheStats = true;
+	RandomisingAlgorithm algorithm;
+
+	CharStream sourceStream = CharStream("{}", "");
+	shared_ptr<ProgramCache> cache = make_shared<ProgramCache>(get<Program>(Program::load(sourceStream)));
+
+	AlgorithmRunner runner(m_population, {cache, nullptr}, m_options, m_output);
+	BOOST_REQUIRE(cache->gatherStats().roundEntryCounts.size() == 0);
+
+	runner.run(algorithm);
+	BOOST_TEST(nextLineMatches(m_output, regex(".*")));
+	BOOST_TEST(nextLineMatches(m_output, regex("-+CACHESTATS-+")));
+	BOOST_TEST(nextLineMatches(m_output, regex(R"(Totalhits:\d+)")));
+	BOOST_TEST(nextLineMatches(m_output, regex(R"(Totalmisses:\d+)")));
+	BOOST_TEST(nextLineMatches(m_output, regex(R"(Sizeofcachedcode:\d+)")));
+	BOOST_TEST(nextLineMatches(m_output, regex(stripWhitespace("Program cache disabled for 1 out of 2 programs"))));
 	BOOST_TEST(m_output.peek() == EOF);
 }
 
