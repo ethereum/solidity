@@ -23,6 +23,30 @@ using namespace std;
 using namespace solidity::yul;
 using namespace solidity::phaser;
 
+CacheStats& CacheStats::operator+=(CacheStats const& _other)
+{
+	hits += _other.hits;
+	misses += _other.misses;
+	totalCodeSize += _other.totalCodeSize;
+
+	for (auto& [round, count]: _other.roundEntryCounts)
+		if (roundEntryCounts.find(round) != roundEntryCounts.end())
+			roundEntryCounts.at(round) += count;
+		else
+			roundEntryCounts.insert({round, count});
+
+	return *this;
+}
+
+bool CacheStats::operator==(CacheStats const& _other) const
+{
+	return
+		hits == _other.hits &&
+		misses == _other.misses &&
+		totalCodeSize == _other.totalCodeSize &&
+		roundEntryCounts == _other.roundEntryCounts;
+}
+
 Program ProgramCache::optimiseProgram(
 	string const& _abbreviatedOptimisationSteps,
 	size_t _repetitionCount
@@ -40,6 +64,7 @@ Program ProgramCache::optimiseProgram(
 		{
 			pair->second.roundNumber = m_currentRound;
 			++prefixSize;
+			++m_hits;
 		}
 		else
 			break;
@@ -57,6 +82,7 @@ Program ProgramCache::optimiseProgram(
 		intermediateProgram.optimise({stepName});
 
 		m_entries.insert({targetOptimisations.substr(0, i), {intermediateProgram, m_currentRound}});
+		++m_misses;
 	}
 
 	return intermediateProgram;
@@ -91,4 +117,35 @@ Program const* ProgramCache::find(string const& _abbreviatedOptimisationSteps) c
 		return nullptr;
 
 	return &(pair->second.program);
+}
+
+CacheStats ProgramCache::gatherStats() const
+{
+	return {
+		/* hits = */ m_hits,
+		/* misses = */ m_misses,
+		/* totalCodeSize = */ calculateTotalCachedCodeSize(),
+		/* roundEntryCounts = */ countRoundEntries(),
+	};
+}
+
+size_t ProgramCache::calculateTotalCachedCodeSize() const
+{
+	size_t size = 0;
+	for (auto const& pair: m_entries)
+		size += pair.second.program.codeSize();
+
+	return size;
+}
+
+map<size_t, size_t> ProgramCache::countRoundEntries() const
+{
+	map<size_t, size_t> counts;
+	for (auto& pair: m_entries)
+		if (counts.find(pair.second.roundNumber) != counts.end())
+			++counts.at(pair.second.roundNumber);
+		else
+			counts.insert({pair.second.roundNumber, 1});
+
+	return counts;
 }
