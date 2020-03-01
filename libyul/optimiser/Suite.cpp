@@ -93,161 +93,30 @@ void OptimiserSuite::run(
 
 	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast);
 
-	suite.runSequence({
-		VarDeclInitializer::name,
-		FunctionHoister::name,
-		BlockFlattener::name,
-		ForLoopInitRewriter::name,
-		DeadCodeEliminator::name,
-		FunctionGrouper::name,
-		EquivalentFunctionCombiner::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-		BlockFlattener::name,
-		ControlFlowSimplifier::name,
-		LiteralRematerialiser::name,
-		ConditionalUnsimplifier::name,
-		StructuralSimplifier::name,
-		ControlFlowSimplifier::name,
-		ForLoopConditionIntoBody::name,
-		BlockFlattener::name
-	}, ast);
+	suite.runSequence(
+		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
+		"("
+			"xarrscLM"                 // Turn into SSA and simplify
+			"cCTUtTOntnfDIul"          // Perform structural simplification
+			"Lcul"                     // Simplify again
+			"Vcul jj"                  // Reverse SSA
 
-	// None of the above can make stack problems worse.
+			// should have good "compilability" property here.
 
-	suite.runSequenceUntilStable({
-		// Turn into SSA and simplify
-		ExpressionSplitter::name,
-		SSATransform::name,
-		RedundantAssignEliminator::name,
-		RedundantAssignEliminator::name,
-		ExpressionSimplifier::name,
-		CommonSubexpressionEliminator::name,
-		LoadResolver::name,
-		LoopInvariantCodeMotion::name,
-
-		// perform structural simplification
-		CommonSubexpressionEliminator::name,
-		ConditionalSimplifier::name,
-		LiteralRematerialiser::name,
-		ConditionalUnsimplifier::name,
-		StructuralSimplifier::name,
-		LiteralRematerialiser::name,
-		ForLoopConditionOutOfBody::name,
-		ControlFlowSimplifier::name,
-		StructuralSimplifier::name,
-		ControlFlowSimplifier::name,
-		BlockFlattener::name,
-		DeadCodeEliminator::name,
-		ForLoopConditionIntoBody::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-
-		// simplify again
-		LoadResolver::name,
-		CommonSubexpressionEliminator::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-
-		// reverse SSA
-		SSAReverser::name,
-		CommonSubexpressionEliminator::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-
-		ExpressionJoiner::name,
-		ExpressionJoiner::name,
-
-		// should have good "compilability" property here.
-
-		// run functional expression inliner
-		ExpressionInliner::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-
-		// Prune a bit more in SSA
-		ExpressionSplitter::name,
-		SSATransform::name,
-		RedundantAssignEliminator::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-		RedundantAssignEliminator::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-
-		// Turn into SSA again and simplify
-		ExpressionSplitter::name,
-		SSATransform::name,
-		RedundantAssignEliminator::name,
-		RedundantAssignEliminator::name,
-		CommonSubexpressionEliminator::name,
-		LoadResolver::name,
-
-		// run full inliner
-		FunctionGrouper::name,
-		EquivalentFunctionCombiner::name,
-		FullInliner::name,
-		BlockFlattener::name,
-
-		// SSA plus simplify
-		ConditionalSimplifier::name,
-		LiteralRematerialiser::name,
-		ConditionalUnsimplifier::name,
-		CommonSubexpressionEliminator::name,
-		SSATransform::name,
-		RedundantAssignEliminator::name,
-		RedundantAssignEliminator::name,
-		LoadResolver::name,
-		ExpressionSimplifier::name,
-		LiteralRematerialiser::name,
-		ForLoopConditionOutOfBody::name,
-		StructuralSimplifier::name,
-		BlockFlattener::name,
-		DeadCodeEliminator::name,
-		ControlFlowSimplifier::name,
-		CommonSubexpressionEliminator::name,
-		SSATransform::name,
-		RedundantAssignEliminator::name,
-		RedundantAssignEliminator::name,
-		ForLoopConditionIntoBody::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-		CommonSubexpressionEliminator::name,
-	}, ast);
-
-	// Make source short and pretty.
-
-	suite.runSequence({
-		ExpressionJoiner::name,
-		Rematerialiser::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-		ExpressionJoiner::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-		ExpressionJoiner::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-
-		SSAReverser::name,
-		CommonSubexpressionEliminator::name,
-		LiteralRematerialiser::name,
-		ForLoopConditionOutOfBody::name,
-		CommonSubexpressionEliminator::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-
-		ExpressionJoiner::name,
-		Rematerialiser::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-	}, ast);
+			"eul"                      // Run functional expression inliner
+			"xarulrul"                 // Prune a bit more in SSA
+			"xarrcL"                   // Turn into SSA again and simplify
+			"gvif"                     // Run full inliner
+			"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
+		")"
+		"jmuljuljul VcTOcul jmul",     // Make source short and pretty
+		ast
+	);
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
 	size_t stackCompressorMaxIterations = 16;
-	suite.runSequence(vector<string>{
-		FunctionGrouper::name,
-	}, ast);
+	suite.runSequence("g", ast);
+
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
 	StackCompressor::run(
@@ -256,16 +125,7 @@ void OptimiserSuite::run(
 		_optimizeStackAllocation,
 		stackCompressorMaxIterations
 	);
-	suite.runSequence({
-		BlockFlattener::name,
-		DeadCodeEliminator::name,
-		ControlFlowSimplifier::name,
-		LiteralRematerialiser::name,
-		ForLoopConditionOutOfBody::name,
-		CommonSubexpressionEliminator::name,
-
-		FunctionGrouper::name,
-	}, ast);
+	suite.runSequence("fDnTOc g", ast);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{
