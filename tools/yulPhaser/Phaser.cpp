@@ -96,11 +96,19 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 	}
 }
 
+FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po::variables_map const& _arguments)
+{
+	return {
+		_arguments["chromosome-repetitions"].as<size_t>(),
+	};
+}
+
 unique_ptr<FitnessMetric> FitnessMetricFactory::build(
+	Options const& _options,
 	Program _program
 )
 {
-	return make_unique<ProgramSize>(move(_program), RepetitionCount);
+	return make_unique<ProgramSize>(move(_program), _options.chromosomeRepetitions);
 }
 
 Population PopulationFactory::build(
@@ -190,6 +198,15 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	;
 	keywordDescription.add(algorithmDescription);
 
+	po::options_description metricsDescription("METRICS", lineLength, minDescriptionLength);
+	metricsDescription.add_options()
+		(
+			"chromosome-repetitions",
+			po::value<size_t>()->value_name("<COUNT>")->default_value(1),
+			"Number of times to repeat the sequence optimisation steps represented by a chromosome."
+		)
+	;
+	keywordDescription.add(metricsDescription);
 
 	po::positional_options_description positionalDescription;
 	positionalDescription.add("input-file", 1);
@@ -235,10 +252,11 @@ void Phaser::initialiseRNG(po::variables_map const& _arguments)
 void Phaser::runAlgorithm(po::variables_map const& _arguments)
 {
 	auto programOptions = ProgramFactory::Options::fromCommandLine(_arguments);
+	auto metricOptions = FitnessMetricFactory::Options::fromCommandLine(_arguments);
 	auto algorithmOptions = GeneticAlgorithmFactory::Options::fromCommandLine(_arguments);
 
 	Program program = ProgramFactory::build(programOptions);
-	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(move(program));
+	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, move(program));
 	Population population = PopulationFactory::build(move(fitnessMetric));
 
 	unique_ptr<GeneticAlgorithm> geneticAlgorithm = GeneticAlgorithmFactory::build(

@@ -80,9 +80,15 @@ public:
 class FitnessMetricFactory
 {
 public:
-	static constexpr size_t RepetitionCount = 5;
+	struct Options
+	{
+		size_t chromosomeRepetitions;
+
+		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
+	};
 
 	static std::unique_ptr<FitnessMetric> build(
+		Options const& _options,
 		Program _program
 	);
 };
