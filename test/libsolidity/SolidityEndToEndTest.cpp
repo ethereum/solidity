@@ -4578,10 +4578,7 @@ BOOST_AUTO_TEST_CASE(calldata_dynamic_array_to_memory)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 
-	ABI_CHECK(
-		callContractFunction("f(uint256[][])", 0x20, 1, 0x20, 2, 23, 42),
-		encodeArgs(1, 0x40, 2, 23, 42)
-	);
+	ABI_CHECK(callContractFunction("f(uint256[][])", 0x20, 1, 0x20, 2, 23, 42), encodeArgs(1, 0x40, 2, 23, 42));
 }
 
 BOOST_AUTO_TEST_CASE(calldata_bytes_array_to_memory)
@@ -4869,13 +4866,7 @@ BOOST_AUTO_TEST_CASE(string_bytes_conversion)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Test");
-	ABI_CHECK(callContractFunction(
-		"f(string,uint256)",
-		u256(0x40),
-		u256(2),
-		u256(6),
-		string("abcdef")
-	), encodeArgs("c"));
+	ABI_CHECK(callContractFunction("f(string,uint256)", u256(0x40), u256(2), u256(6), string("abcdef")), encodeArgs("c"));
 	ABI_CHECK(callContractFunction("l()"), encodeArgs(u256(6)));
 }
 
@@ -7098,10 +7089,7 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked_from_storage)
 		ABI_CHECK(callContractFunction("lf()"), encodeArgs(0x20, 5 * 32 + 2, "\x01" + asString(encodeArgs(payload)) + "\x02"));
 		ABI_CHECK(callContractFunction("ld()"), encodeArgs(0x20, 5 * 32 + 2, "\x01" + asString(encodeArgs(payload)) + "\x02"));
 		ABI_CHECK(callContractFunction("bytes_short()"), encodeArgs(0x20, 6, "\x01" "abcd\x02"));
-		ABI_CHECK(
-			callContractFunction("bytes_long()"),
-			encodeArgs(0x20, 42, "\x01" "0123456789012345678901234567890123456789\x02")
-		);
+		ABI_CHECK(callContractFunction("bytes_long()"), encodeArgs(0x20, 42, "\x01" "0123456789012345678901234567890123456789\x02"));
 	}
 }
 
@@ -7824,10 +7812,7 @@ BOOST_AUTO_TEST_CASE(abi_encode_decode_simple)
 		}
 	)XX";
 	compileAndRun(sourceCode);
-	ABI_CHECK(
-		callContractFunction("f()"),
-		encodeArgs(33, 0x40, 7, "abcdefg")
-	);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(33, 0x40, 7, "abcdefg"));
 }
 
 BOOST_AUTO_TEST_CASE(abi_decode_simple)
@@ -7840,10 +7825,7 @@ BOOST_AUTO_TEST_CASE(abi_decode_simple)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(
-		callContractFunction("f(bytes)", 0x20, 0x20 * 4, 33, 0x40, 7, "abcdefg"),
-		encodeArgs(33, 0x40, 7, "abcdefg")
-	);
+	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 0x20 * 4, 33, 0x40, 7, "abcdefg"), encodeArgs(33, 0x40, 7, "abcdefg"));
 }
 
 BOOST_AUTO_TEST_CASE(abi_decode_v2)
@@ -7864,10 +7846,7 @@ BOOST_AUTO_TEST_CASE(abi_decode_v2)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(
-		callContractFunction("f()"),
-		encodeArgs(0x20, 8, 0x40, 3, 9, 10, 11)
-	);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x20, 8, 0x40, 3, 9, 10, 11));
 }
 
 BOOST_AUTO_TEST_CASE(abi_decode_simple_storage)
@@ -7882,10 +7861,7 @@ BOOST_AUTO_TEST_CASE(abi_decode_simple_storage)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(
-		callContractFunction("f(bytes)", 0x20, 0x20 * 4, 33, 0x40, 7, "abcdefg"),
-		encodeArgs(33, 0x40, 7, "abcdefg")
-	);
+	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 0x20 * 4, 33, 0x40, 7, "abcdefg"), encodeArgs(33, 0x40, 7, "abcdefg"));
 }
 
 BOOST_AUTO_TEST_CASE(abi_decode_v2_storage)
@@ -7908,10 +7884,7 @@ BOOST_AUTO_TEST_CASE(abi_decode_v2_storage)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(
-		callContractFunction("f()"),
-		encodeArgs(0x20, 8, 0x40, 3, 9, 10, 11)
-	);
+	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x20, 8, 0x40, 3, 9, 10, 11));
 }
 
 BOOST_AUTO_TEST_CASE(abi_decode_calldata)
@@ -7924,10 +7897,7 @@ BOOST_AUTO_TEST_CASE(abi_decode_calldata)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(
-		callContractFunction("f(bytes)", 0x20, 0x20 * 4, 33, 0x40, 7, "abcdefg"),
-		encodeArgs(33, 0x40, 7, "abcdefg")
-	);
+	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 0x20 * 4, 33, 0x40, 7, "abcdefg"), encodeArgs(33, 0x40, 7, "abcdefg"));
 }
 
 BOOST_AUTO_TEST_CASE(abi_decode_v2_calldata)
@@ -7942,10 +7912,7 @@ BOOST_AUTO_TEST_CASE(abi_decode_v2_calldata)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(
-		callContractFunction("f(bytes)", 0x20, 0x20 * 7, 0x20, 33, 0x40, 3, 10, 11, 12),
-		encodeArgs(0x20, 33, 0x40, 3, 10, 11, 12)
-	);
+	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 0x20 * 7, 0x20, 33, 0x40, 3, 10, 11, 12), encodeArgs(0x20, 33, 0x40, 3, 10, 11, 12));
 }
 
 BOOST_AUTO_TEST_CASE(abi_decode_static_array)
@@ -7958,10 +7925,7 @@ BOOST_AUTO_TEST_CASE(abi_decode_static_array)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(
-		callContractFunction("f(bytes)", 0x20, 6 * 0x20, 1, 2, 3, 4, 5, 6),
-		encodeArgs(1, 2, 3, 4, 5, 6)
-	);
+	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 6 * 0x20, 1, 2, 3, 4, 5, 6), encodeArgs(1, 2, 3, 4, 5, 6));
 }
 
 BOOST_AUTO_TEST_CASE(abi_decode_static_array_v2)
@@ -7975,10 +7939,7 @@ BOOST_AUTO_TEST_CASE(abi_decode_static_array_v2)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(
-		callContractFunction("f(bytes)", 0x20, 6 * 0x20, 1, 2, 3, 4, 5, 6),
-		encodeArgs(1, 2, 3, 4, 5, 6)
-	);
+	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 6 * 0x20, 1, 2, 3, 4, 5, 6), encodeArgs(1, 2, 3, 4, 5, 6));
 }
 
 BOOST_AUTO_TEST_CASE(abi_decode_dynamic_array)
@@ -7991,10 +7952,7 @@ BOOST_AUTO_TEST_CASE(abi_decode_dynamic_array)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(
-		callContractFunction("f(bytes)", 0x20, 6 * 0x20, 0x20, 4, 3, 4, 5, 6),
-		encodeArgs(0x20, 4, 3, 4, 5, 6)
-	);
+	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 6 * 0x20, 0x20, 4, 3, 4, 5, 6), encodeArgs(0x20, 4, 3, 4, 5, 6));
 }
 
 BOOST_AUTO_TEST_CASE(code_access)
