@@ -599,7 +599,7 @@ void CompilerUtils::abiEncodeV2(
 		_padToWordBoundaries ?
 		m_context.abiFunctions().tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes) :
 		m_context.abiFunctions().tupleEncoderPacked(_givenTypes, _targetTypes);
-	m_context.callYulUtilFunction(encoderName, sizeOnStack(_givenTypes) + 1, 1);
+	m_context.callYulFunction(encoderName, sizeOnStack(_givenTypes) + 1, 1);
 }
 
 void CompilerUtils::abiDecodeV2(TypePointers const& _parameterTypes, bool _fromMemory)
@@ -609,7 +609,7 @@ void CompilerUtils::abiDecodeV2(TypePointers const& _parameterTypes, bool _fromM
 	m_context << Instruction::SWAP1;
 	// stack: <end> <start>
 	string decoderName = m_context.abiFunctions().tupleDecoder(_parameterTypes, _fromMemory);
-	m_context.callYulUtilFunction(decoderName, 2, sizeOnStack(_parameterTypes));
+	m_context.callYulFunction(decoderName, 2, sizeOnStack(_parameterTypes));
 }
 
 void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)

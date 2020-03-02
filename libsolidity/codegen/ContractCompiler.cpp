@@ -1267,12 +1267,12 @@ void ContractCompiler::appendMissingFunctions()
 		solAssert(m_context.nextFunctionToCompile() != function, "Compiled the wrong function?");
 	}
 	m_context.appendMissingLowLevelFunctions();
-	auto yulFunctions = m_context.requestedYulFunctions();
-	if (!yulFunctions.first.empty())
+	auto [yulFunctions, externallyUsedYulFunctions] = m_context.requestedYulFunctions();
+	if (!yulFunctions.empty())
 		m_context.appendInlineAssembly(
-			"{" + move(yulFunctions.first) + "}",
+			"{" + move(yulFunctions) + "}",
 			{},
-			yulFunctions.second,
+			externallyUsedYulFunctions,
 			true,
 			m_optimiserSettings
 		);

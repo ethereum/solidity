@@ -65,8 +65,8 @@ public:
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
 		m_runtimeContext(_runtimeContext),
-		m_abiFunctions(m_evmVersion, m_revertStrings, m_functionCollector),
-		m_yulUtilFunctions(m_evmVersion, m_revertStrings, m_functionCollector)
+		m_abiFunctions(m_evmVersion, m_revertStrings, m_yulFunctionCollector),
+		m_yulUtilFunctions(m_evmVersion, m_revertStrings, m_yulFunctionCollector)
 	{
 		if (m_runtimeContext)
 			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());
@@ -133,8 +133,8 @@ public:
 		std::function<void(CompilerContext&)> const& _generator
 	);
 
-	/// Appends a call to a yul util function and registers the function as externally used.
-	void callYulUtilFunction(
+	/// Appends a call to a yul function and registers the function as externally used.
+	void callYulFunction(
 		std::string const& _name,
 		unsigned _inArgs,
 		unsigned _outArgs
@@ -370,10 +370,10 @@ private:
 	size_t m_runtimeSub = -1;
 	/// An index of low-level function labels by name.
 	std::map<std::string, evmasm::AssemblyItem> m_lowLevelFunctions;
-	// Collector for yul functions.
-	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector = std::make_shared<MultiUseYulFunctionCollector>();
+	/// Collector for yul functions.
+	std::shared_ptr<MultiUseYulFunctionCollector> m_yulFunctionCollector = std::make_shared<MultiUseYulFunctionCollector>();
 	/// Set of externally used yul functions.
-	std::set<std::string> m_externallyUsedFunctions;
+	std::set<std::string> m_externallyUsedYulFunctions;
 	/// Container for ABI functions to be generated.
 	ABIFunctions m_abiFunctions;
 	/// Container for Yul Util functions to be generated.

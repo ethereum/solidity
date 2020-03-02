@@ -94,14 +94,14 @@ void CompilerContext::callLowLevelFunction(
 	*this << retTag.tag();
 }
 
-void CompilerContext::callYulUtilFunction(
+void CompilerContext::callYulFunction(
 	string const& _name,
 	unsigned _inArgs,
 	unsigned _outArgs
 )
 {
-	m_externallyUsedFunctions.insert(_name);
-	auto retTag = pushNewTag();
+	m_externallyUsedYulFunctions.insert(_name);
+	auto const retTag = pushNewTag();
 	CompilerUtils(*this).moveIntoStack(_inArgs);
 	appendJumpTo(namedTag(_name));
 	adjustStackOffset(int(_outArgs) - 1 - _inArgs);
@@ -150,8 +150,8 @@ void CompilerContext::appendMissingLowLevelFunctions()
 pair<string, set<string>> CompilerContext::requestedYulFunctions()
 {
 	set<string> empty;
-	swap(empty, m_externallyUsedFunctions);
-	return make_pair(m_functionCollector->requestedFunctions(), std::move(empty));
+	swap(empty, m_externallyUsedYulFunctions);
+	return make_pair(m_yulFunctionCollector->requestedFunctions(), std::move(empty));
 }
 
 void CompilerContext::addVariable(
