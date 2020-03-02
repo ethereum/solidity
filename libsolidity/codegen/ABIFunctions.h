@@ -104,12 +104,6 @@ public:
 	/// stack slot, it takes exactly that number of values.
 	std::string tupleDecoder(TypePointers const& _types, bool _fromMemory = false);
 
-	/// @returns concatenation of all generated functions and a set of the
-	/// externally used functions.
-	/// Clears the internal list, i.e. calling it again will result in an
-	/// empty return value.
-	std::pair<std::string, std::set<std::string>> requestedFunctions();
-
 private:
 	struct EncodingOptions
 	{
@@ -260,7 +254,6 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings const m_revertStrings;
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;
-	std::set<std::string> m_externallyUsedFunctions;
 	YulUtilFunctions m_utils;
 };
 

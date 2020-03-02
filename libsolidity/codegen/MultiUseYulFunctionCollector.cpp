@@ -30,13 +30,15 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
-string MultiUseYulFunctionCollector::requestedFunctions()
+pair<string, set<string>> MultiUseYulFunctionCollector::requestedFunctions()
 {
 	string result;
 	for (auto const& f: m_requestedFunctions)
 		result += f.second;
 	m_requestedFunctions.clear();
-	return result;
+	std::set<string> empty;
+	swap(empty, m_externallyUsedFunctions);
+	return make_pair(result, std::move(empty));
 }
 
 string MultiUseYulFunctionCollector::createFunction(string const& _name, function<string ()> const& _creator)
@@ -49,4 +51,10 @@ string MultiUseYulFunctionCollector::createFunction(string const& _name, functio
 		m_requestedFunctions[_name] = std::move(fun);
 	}
 	return _name;
+}
+
+string MultiUseYulFunctionCollector::createExternallyUsedFunction(string const& _name, function<string ()> const& _creator)
+{
+	m_externallyUsedFunctions.insert(_name);
+	return createFunction(_name, _creator);
 }

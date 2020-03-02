@@ -65,7 +65,8 @@ public:
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
 		m_runtimeContext(_runtimeContext),
-		m_abiFunctions(m_evmVersion, m_revertStrings)
+		m_abiFunctions(m_evmVersion, m_revertStrings, m_functionCollector),
+		m_yulUtilFunctions(m_evmVersion, m_revertStrings, m_functionCollector)
 	{
 		if (m_runtimeContext)
 			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());
@@ -131,6 +132,14 @@ public:
 		unsigned _outArgs,
 		std::function<void(CompilerContext&)> const& _generator
 	);
+
+	/// Appends a call to a yul util function and registers the function as externally used.
+	void callYulUtilFunction(
+		std::string const& _name,
+		unsigned _inArgs,
+		unsigned _outArgs
+	);
+
 	/// Returns the tag of the named low-level function and inserts the generator into the
 	/// list of low-level-functions to be generated, unless it already exists.
 	/// Note that the generator should not assume that objects are still alive when it is called,
@@ -144,6 +153,11 @@ public:
 	/// Generates the code for missing low-level functions, i.e. calls the generators passed above.
 	void appendMissingLowLevelFunctions();
 	ABIFunctions& abiFunctions() { return m_abiFunctions; }
+	YulUtilFunctions& utilFunctions() { return m_yulUtilFunctions; }
+	std::pair<std::string, std::set<std::string>> requestedYulFunctions()
+	{
+		return m_functionCollector->requestedFunctions();
+	}
 
 	ModifierDefinition const& resolveVirtualFunctionModifier(ModifierDefinition const& _modifier) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
@@ -355,8 +369,12 @@ private:
 	size_t m_runtimeSub = -1;
 	/// An index of low-level function labels by name.
 	std::map<std::string, evmasm::AssemblyItem> m_lowLevelFunctions;
+	// Collector for yul functions.
+	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector = std::make_shared<MultiUseYulFunctionCollector>();
 	/// Container for ABI functions to be generated.
 	ABIFunctions m_abiFunctions;
+	/// Container for Yul Util functions to be generated.
+	YulUtilFunctions m_yulUtilFunctions;
 	/// The queue of low-level functions to generate.
 	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
 };

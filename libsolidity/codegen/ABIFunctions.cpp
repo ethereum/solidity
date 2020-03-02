@@ -240,13 +240,6 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 	});
 }
 
-pair<string, set<string>> ABIFunctions::requestedFunctions()
-{
-	std::set<string> empty;
-	swap(empty, m_externallyUsedFunctions);
-	return make_pair(m_functionCollector->requestedFunctions(), std::move(empty));
-}
-
 string ABIFunctions::EncodingOptions::toFunctionNameSuffix() const
 {
 	string suffix;
@@ -1504,9 +1497,7 @@ string ABIFunctions::createFunction(string const& _name, function<string ()> con
 
 string ABIFunctions::createExternallyUsedFunction(string const& _name, function<string ()> const& _creator)
 {
-	string name = createFunction(_name, _creator);
-	m_externallyUsedFunctions.insert(name);
-	return name;
+	return m_functionCollector->createExternallyUsedFunction(_name, _creator);
 }
 
 size_t ABIFunctions::headSize(TypePointers const& _targetTypes)

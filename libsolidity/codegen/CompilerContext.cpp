@@ -94,6 +94,20 @@ void CompilerContext::callLowLevelFunction(
 	*this << retTag.tag();
 }
 
+void CompilerContext::callYulUtilFunction(
+	string const& _name,
+	unsigned _inArgs,
+	unsigned _outArgs
+)
+{
+	m_functionCollector->markAsExternallyUsed(_name);
+	auto retTag = pushNewTag();
+	CompilerUtils(*this).moveIntoStack(_inArgs);
+	appendJumpTo(namedTag(_name));
+	adjustStackOffset(int(_outArgs) - 1 - _inArgs);
+	*this << retTag.tag();
+}
+
 evmasm::AssemblyItem CompilerContext::lowLevelFunctionTag(
 	string const& _name,
 	unsigned _inArgs,
