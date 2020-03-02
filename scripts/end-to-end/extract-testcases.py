@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=eval-used, too-many-arguments, too-many-branches, too-many-nested-blocks, too-many-return-statements, too-many-instance-attributes
 
 import re
 import os
@@ -12,6 +13,7 @@ class Test:
         self.source = ""
         self.comment = ""
         self.tests = []
+        self.not_matching_lines = []
         self.alsoViaYul = False
 
     def analyse(self):
@@ -73,13 +75,8 @@ class Test:
                 self.tests.append(self.create_isoltest_call(line, test_comment))
                 comment = ""
                 test_comment = ""
-
-        # if self.extractable:
-        #     print(self.name + ":")
-        #     if self.comment:
-        #         print("    // " + self.comment.replace("\n", "\n    //"))
-        #     for test in self.tests:
-        #         print("    " + test)
+            else:
+                self.not_matching_lines.append(line)
 
     def eval_and_correct(self, string):
         if not string:
@@ -102,15 +99,15 @@ class Test:
                 else:
                     try:
                         evaluated = eval(arg)
-                        if type(evaluated) is int:
+                        if isinstance(evaluated, int):
                             if string.find("0x") >= 0:
                                 r = hex(evaluated)
                             else:
                                 r = int(evaluated)
-                        elif type(evaluated) is str:
+                        elif isinstance(evaluated, str):
                             r = arg
                         result += str(r) + ", "
-                    except:
+                    except (SyntaxError, NameError, TypeError, ZeroDivisionError):
                         self.extractable = False
                         result += "?, "
             return result[:-2]
@@ -206,11 +203,8 @@ class Test:
 
 
         self.extractable = False
-        # if line.endswith("encodeArgs("):
-        print(self.name + " -> " + line)
-        # print("\n***")
-        # print(self.name)
-        # print(self.content)
+
+        print("        WARNING: no matching regexp found for  '" + line + "'")
         return "?"
 
     def extract(self):
@@ -276,6 +270,9 @@ def main():
     for test in tests:
         if tests[test].extractable:
             tests[test].extract()
+            print(tests[test].name)
+            for not_matching in tests[test].not_matching_lines:
+                print("    ", not_matching)
             extractable = extractable + 1
         else:
             not_extractable = not_extractable + 1

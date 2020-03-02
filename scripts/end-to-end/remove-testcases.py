@@ -23,10 +23,7 @@ def main():
         if test:
             test_name = test.group(1)
             inside_test = True
-        if inside_test & (test_name in tests):
-            ignore = True
-        else:
-            ignore = False
+        ignore = inside_test & (test_name in tests)
         if not ignore:
             if line == "\n":
                 new_lines = new_lines + 1
