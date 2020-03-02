@@ -46,6 +46,8 @@ public:
 
 	/// Generates code to initialize the given state variable.
 	void initializeStateVar(VariableDeclaration const& _varDecl);
+	/// Generates code to initialize the given local variable.
+	void initializeLocalVar(VariableDeclaration const& _varDecl);
 
 	void endVisit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Conditional const& _conditional) override;
@@ -99,6 +101,11 @@ private:
 	void declare(IRVariable const& _var);
 
 	void declareAssign(IRVariable const& _var, IRVariable const& _value, bool _define);
+
+	/// @returns an IRVariable with the zero
+	/// value of @a _type.
+	/// @param _splitFunctionTypes if false, returns two zeroes
+	IRVariable zeroValue(Type const& _type, bool _splitFunctionTypes = true);
 
 	void appendAndOrOperatorCode(BinaryOperation const& _binOp);
 	void appendSimpleUnaryOperation(UnaryOperation const& _operation, Expression const& _expr);

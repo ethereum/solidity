@@ -2338,7 +2338,7 @@ TypePointers StructType::memoryMemberTypes() const
 	TypePointers types;
 	for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
 		if (variable->annotation().type->canLiveOutsideStorage())
-			types.push_back(variable->annotation().type);
+			types.push_back(TypeProvider::withLocationIfReference(DataLocation::Memory, variable->annotation().type));
 	return types;
 }
 

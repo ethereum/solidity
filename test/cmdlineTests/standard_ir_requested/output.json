@@ -20,6 +20,7 @@ object \"C_6\" {
 
         function fun_f_5()  {
 
+
         }
 
     }
@@ -68,6 +69,7 @@ object \"C_6\" {
             }
 
             function fun_f_5()  {
+
 
             }
 
