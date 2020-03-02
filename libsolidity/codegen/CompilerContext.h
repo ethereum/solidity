@@ -371,7 +371,7 @@ private:
 	/// An index of low-level function labels by name.
 	std::map<std::string, evmasm::AssemblyItem> m_lowLevelFunctions;
 	/// Collector for yul functions.
-	std::shared_ptr<MultiUseYulFunctionCollector> m_yulFunctionCollector = std::make_shared<MultiUseYulFunctionCollector>();
+	MultiUseYulFunctionCollector m_yulFunctionCollector;
 	/// Set of externally used yul functions.
 	std::set<std::string> m_externallyUsedYulFunctions;
 	/// Container for ABI functions to be generated.
