@@ -4565,22 +4565,6 @@ BOOST_AUTO_TEST_CASE(calldata_array_dynamic_bytes)
 	);
 }
 
-BOOST_AUTO_TEST_CASE(calldata_dynamic_array_to_memory)
-{
-	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
-		contract C {
-			function f(uint256[][] calldata a) external returns (uint, uint256[] memory) {
-				uint256[] memory m = a[0];
-				return (a.length, m);
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "C");
-
-	ABI_CHECK(callContractFunction("f(uint256[][])", 0x20, 1, 0x20, 2, 23, 42), encodeArgs(1, 0x40, 2, 23, 42));
-}
-
 BOOST_AUTO_TEST_CASE(calldata_bytes_array_to_memory)
 {
 	char const* sourceCode = R"(
@@ -7801,20 +7785,6 @@ BOOST_AUTO_TEST_CASE(bitwise_shifting_constantinople_combined)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(abi_encode_decode_simple)
-{
-	char const* sourceCode = R"XX(
-		contract C {
-			function f() public pure returns (uint, bytes memory) {
-				bytes memory arg = "abcdefg";
-				return abi.decode(abi.encode(uint(33), arg), (uint, bytes));
-			}
-		}
-	)XX";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(33, 0x40, 7, "abcdefg"));
-}
-
 BOOST_AUTO_TEST_CASE(abi_decode_simple)
 {
 	char const* sourceCode = R"(
@@ -7826,27 +7796,6 @@ BOOST_AUTO_TEST_CASE(abi_decode_simple)
 	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 0x20 * 4, 33, 0x40, 7, "abcdefg"), encodeArgs(33, 0x40, 7, "abcdefg"));
-}
-
-BOOST_AUTO_TEST_CASE(abi_decode_v2)
-{
-	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
-		contract C {
-			struct S { uint a; uint[] b; }
-			function f() public pure returns (S memory) {
-				S memory s;
-				s.a = 8;
-				s.b = new uint[](3);
-				s.b[0] = 9;
-				s.b[1] = 10;
-				s.b[2] = 11;
-				return abi.decode(abi.encode(s), (S));
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x20, 8, 0x40, 3, 9, 10, 11));
 }
 
 BOOST_AUTO_TEST_CASE(abi_decode_simple_storage)
@@ -7864,29 +7813,6 @@ BOOST_AUTO_TEST_CASE(abi_decode_simple_storage)
 	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 0x20 * 4, 33, 0x40, 7, "abcdefg"), encodeArgs(33, 0x40, 7, "abcdefg"));
 }
 
-BOOST_AUTO_TEST_CASE(abi_decode_v2_storage)
-{
-	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
-		contract C {
-			bytes data;
-			struct S { uint a; uint[] b; }
-			function f() public returns (S memory) {
-				S memory s;
-				s.a = 8;
-				s.b = new uint[](3);
-				s.b[0] = 9;
-				s.b[1] = 10;
-				s.b[2] = 11;
-				data = abi.encode(s);
-				return abi.decode(data, (S));
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(0x20, 8, 0x40, 3, 9, 10, 11));
-}
-
 BOOST_AUTO_TEST_CASE(abi_decode_calldata)
 {
 	char const* sourceCode = R"(
@@ -7898,61 +7824,6 @@ BOOST_AUTO_TEST_CASE(abi_decode_calldata)
 	)";
 	compileAndRun(sourceCode);
 	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 0x20 * 4, 33, 0x40, 7, "abcdefg"), encodeArgs(33, 0x40, 7, "abcdefg"));
-}
-
-BOOST_AUTO_TEST_CASE(abi_decode_v2_calldata)
-{
-	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
-		contract C {
-			struct S { uint a; uint[] b; }
-			function f(bytes calldata data) external pure returns (S memory) {
-				return abi.decode(data, (S));
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 0x20 * 7, 0x20, 33, 0x40, 3, 10, 11, 12), encodeArgs(0x20, 33, 0x40, 3, 10, 11, 12));
-}
-
-BOOST_AUTO_TEST_CASE(abi_decode_static_array)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f(bytes calldata data) external pure returns (uint[2][3] memory) {
-				return abi.decode(data, (uint[2][3]));
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 6 * 0x20, 1, 2, 3, 4, 5, 6), encodeArgs(1, 2, 3, 4, 5, 6));
-}
-
-BOOST_AUTO_TEST_CASE(abi_decode_static_array_v2)
-{
-	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
-		contract C {
-			function f(bytes calldata data) external pure returns (uint[2][3] memory) {
-				return abi.decode(data, (uint[2][3]));
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 6 * 0x20, 1, 2, 3, 4, 5, 6), encodeArgs(1, 2, 3, 4, 5, 6));
-}
-
-BOOST_AUTO_TEST_CASE(abi_decode_dynamic_array)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f(bytes calldata data) external pure returns (uint[] memory) {
-				return abi.decode(data, (uint[]));
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("f(bytes)", 0x20, 6 * 0x20, 0x20, 4, 3, 4, 5, 6), encodeArgs(0x20, 4, 3, 4, 5, 6));
 }
 
 BOOST_AUTO_TEST_CASE(code_access)
