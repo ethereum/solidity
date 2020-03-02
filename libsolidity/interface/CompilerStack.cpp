@@ -87,7 +87,7 @@ CompilerStack::CompilerStack(ReadCallback::Callback const& _readFile):
 {
 	// Because TypeProvider is currently a singleton API, we must ensure that
 	// no more than one entity is actually using it at a time.
-	solAssert(g_compilerStackCounts == 0, "You shall not have another CompilerStack aside me.");
+	while(g_compilerStackCounts != 0);
 	++g_compilerStackCounts;
 }
 
