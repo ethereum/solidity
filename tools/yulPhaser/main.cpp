@@ -45,31 +45,31 @@ enum class Algorithm
 	GEWEP
 };
 
-istream& operator>>(istream& inputStream, Algorithm& algorithm)
+istream& operator>>(istream& _inputStream, Algorithm& _algorithm)
 {
 	string value;
-	inputStream >> value;
+	_inputStream >> value;
 
 	if (value == "random")
-		algorithm = Algorithm::Random;
+		_algorithm = Algorithm::Random;
 	else if (value == "GEWEP")
-		algorithm = Algorithm::GEWEP;
+		_algorithm = Algorithm::GEWEP;
 	else
-		inputStream.setstate(ios_base::failbit);
+		_inputStream.setstate(ios_base::failbit);
 
-	return inputStream;
+	return _inputStream;
 }
 
-ostream& operator<<(ostream& outputStream, Algorithm algorithm)
+ostream& operator<<(ostream& _outputStream, Algorithm _algorithm)
 {
-	if (algorithm == Algorithm::Random)
-		outputStream << "random";
-	else if (algorithm == Algorithm::GEWEP)
-		outputStream << "GEWEP";
+	if (_algorithm == Algorithm::Random)
+		_outputStream << "random";
+	else if (_algorithm == Algorithm::GEWEP)
+		_outputStream << "GEWEP";
 	else
-		outputStream.setstate(ios_base::failbit);
+		_outputStream.setstate(ios_base::failbit);
 
-	return outputStream;
+	return _outputStream;
 }
 
 namespace
@@ -82,11 +82,11 @@ struct CommandLineParsingResult
 };
 
 
-void initialiseRNG(po::variables_map const& arguments)
+void initialiseRNG(po::variables_map const& _arguments)
 {
 	uint32_t seed;
-	if (arguments.count("seed") > 0)
-		seed = arguments["seed"].as<uint32_t>();
+	if (_arguments.count("seed") > 0)
+		seed = _arguments["seed"].as<uint32_t>();
 	else
 		seed = SimulationRNG::generateSeed();
 
@@ -153,7 +153,7 @@ void runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 	}
 }
 
-CommandLineParsingResult parseCommandLine(int argc, char** argv)
+CommandLineParsingResult parseCommandLine(int _argc, char** _argv)
 {
 	po::options_description description(
 		"yul-phaser, a tool for finding the best sequence of Yul optimisation phases.\n"
@@ -187,7 +187,7 @@ CommandLineParsingResult parseCommandLine(int argc, char** argv)
 
 	try
 	{
-		po::command_line_parser parser(argc, argv);
+		po::command_line_parser parser(_argc, _argv);
 		parser.options(description).positional(positionalDescription);
 		po::store(parser.run(), arguments);
 	}
