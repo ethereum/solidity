@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <test/yulPhaser/Common.h>
+#include <test/yulPhaser/TestHelpers.h>
 
 #include <libyul/optimiser/Suite.h>
 
@@ -31,7 +31,7 @@ namespace solidity::phaser::test
 {
 
 BOOST_AUTO_TEST_SUITE(Phaser)
-BOOST_AUTO_TEST_SUITE(CommonTest)
+BOOST_AUTO_TEST_SUITE(TestHelpersTest)
 
 BOOST_AUTO_TEST_CASE(ChromosomeLengthMetric_evaluate_should_return_chromosome_length)
 {

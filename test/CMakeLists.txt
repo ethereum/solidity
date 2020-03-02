@@ -139,9 +139,9 @@ set(libyul_sources
 detect_stray_source_files("${libyul_sources}" "libyul/")
 
 set(yul_phaser_sources
-    yulPhaser/Common.h
-    yulPhaser/Common.cpp
-    yulPhaser/CommonTest.cpp
+    yulPhaser/TestHelpers.h
+    yulPhaser/TestHelpers.cpp
+    yulPhaser/TestHelpersTest.cpp
     yulPhaser/Chromosome.cpp
     yulPhaser/FitnessMetrics.cpp
     yulPhaser/AlgorithmRunner.cpp
