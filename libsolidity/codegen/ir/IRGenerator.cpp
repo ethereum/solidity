@@ -107,7 +107,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
 		for (auto const* fun: contract->definedFunctions())
 			generateFunction(*fun);
-	t("functions", m_context.functionCollector()->requestedFunctions().first);
+	t("functions", m_context.functionCollector()->requestedFunctions());
 
 	resetContext(_contract);
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
@@ -116,7 +116,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
 		for (auto const* fun: contract->definedFunctions())
 			generateFunction(*fun);
-	t("runtimeFunctions", m_context.functionCollector()->requestedFunctions().first);
+	t("runtimeFunctions", m_context.functionCollector()->requestedFunctions());
 	return t.render();
 }
 
@@ -383,7 +383,7 @@ string IRGenerator::memoryInit()
 void IRGenerator::resetContext(ContractDefinition const& _contract)
 {
 	solAssert(
-		m_context.functionCollector()->requestedFunctions().first.empty(),
+		m_context.functionCollector()->requestedFunctions().empty(),
 		"Reset context while it still had functions."
 	);
 	m_context = IRGenerationContext(m_evmVersion, m_context.revertStrings(), m_optimiserSettings);

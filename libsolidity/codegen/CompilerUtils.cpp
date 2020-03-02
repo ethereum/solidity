@@ -595,31 +595,21 @@ void CompilerUtils::abiEncodeV2(
 
 	// stack: <$value0> <$value1> ... <$value(n-1)> <$headStart>
 
-	auto ret = m_context.pushNewTag();
-	moveIntoStack(sizeOnStack(_givenTypes) + 1);
-
 	string encoderName =
 		_padToWordBoundaries ?
 		m_context.abiFunctions().tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes) :
 		m_context.abiFunctions().tupleEncoderPacked(_givenTypes, _targetTypes);
-	m_context.appendJumpTo(m_context.namedTag(encoderName));
-	m_context.adjustStackOffset(-int(sizeOnStack(_givenTypes)) - 1);
-	m_context << ret.tag();
+	m_context.callYulUtilFunction(encoderName, sizeOnStack(_givenTypes) + 1, 1);
 }
 
 void CompilerUtils::abiDecodeV2(TypePointers const& _parameterTypes, bool _fromMemory)
 {
 	// stack: <source_offset> <length> [stack top]
-	auto ret = m_context.pushNewTag();
-	moveIntoStack(2);
-	// stack: <return tag> <source_offset> <length> [stack top]
 	m_context << Instruction::DUP2 << Instruction::ADD;
 	m_context << Instruction::SWAP1;
-	// stack: <return tag> <end> <start>
+	// stack: <end> <start>
 	string decoderName = m_context.abiFunctions().tupleDecoder(_parameterTypes, _fromMemory);
-	m_context.appendJumpTo(m_context.namedTag(decoderName));
-	m_context.adjustStackOffset(int(sizeOnStack(_parameterTypes)) - 3);
-	m_context << ret.tag();
+	m_context.callYulUtilFunction(decoderName, 2, sizeOnStack(_parameterTypes));
 }
 
 void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)

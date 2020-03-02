@@ -100,7 +100,7 @@ void CompilerContext::callYulUtilFunction(
 	unsigned _outArgs
 )
 {
-	m_functionCollector->markAsExternallyUsed(_name);
+	m_externallyUsedFunctions.insert(_name);
 	auto retTag = pushNewTag();
 	CompilerUtils(*this).moveIntoStack(_inArgs);
 	appendJumpTo(namedTag(_name));
@@ -145,6 +145,13 @@ void CompilerContext::appendMissingLowLevelFunctions()
 		appendJump(evmasm::AssemblyItem::JumpType::OutOfFunction);
 		solAssert(stackHeight() == outArgs, "Invalid stack height in low-level function " + name + ".");
 	}
+}
+
+pair<string, set<string>> CompilerContext::requestedYulFunctions()
+{
+	set<string> empty;
+	swap(empty, m_externallyUsedFunctions);
+	return make_pair(m_functionCollector->requestedFunctions(), std::move(empty));
 }
 
 void CompilerContext::addVariable(

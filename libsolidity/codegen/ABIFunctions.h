@@ -31,7 +31,6 @@
 
 #include <functional>
 #include <map>
-#include <set>
 #include <vector>
 
 namespace solidity::frontend
@@ -232,11 +231,6 @@ private:
 	/// @a m_requestedFunctions if it has not been created yet and returns @a _name in both
 	/// cases.
 	std::string createFunction(std::string const& _name, std::function<std::string()> const& _creator);
-
-	/// Helper function that uses @a _creator to create a function and add it to
-	/// @a m_requestedFunctions if it has not been created yet and returns @a _name in both
-	/// cases. Also adds it to the list of externally used functions.
-	std::string createExternallyUsedFunction(std::string const& _name, std::function<std::string()> const& _creator);
 
 	/// @returns the size of the static part of the encoding of the given types.
 	static size_t headSize(TypePointers const& _targetTypes);

@@ -23,7 +23,6 @@
 
 #include <functional>
 #include <map>
-#include <set>
 #include <string>
 
 namespace solidity::frontend
@@ -41,28 +40,14 @@ public:
 	/// cases.
 	std::string createFunction(std::string const& _name, std::function<std::string()> const& _creator);
 
-	/// Helper function that uses @a _creator to create a function and add it to
-	/// @a m_requestedFunctions if it has not been created yet and returns @a _name in both
-	/// cases.
-	std::string createExternallyUsedFunction(std::string const& _name, std::function<std::string()> const& _creator);
-
-	/// Manually mark a function as externally used.
-	void markAsExternallyUsed(std::string const& _name)
-	{
-		m_externallyUsedFunctions.insert(_name);
-	}
-
-	/// @returns concatenation of all generated functions and a set of the
-	/// externally used functions.
+	/// @returns concatenation of all generated functions.
 	/// Clears the internal list, i.e. calling it again will result in an
 	/// empty return value.
-	std::pair<std::string, std::set<std::string>> requestedFunctions();
+	std::string requestedFunctions();
 
 private:
 	/// Map from function name to code for a multi-use function.
 	std::map<std::string, std::string> m_requestedFunctions;
-	// Set of externally used functions.
-	std::set<std::string> m_externallyUsedFunctions;
 };
 
 }

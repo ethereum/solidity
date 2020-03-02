@@ -154,10 +154,11 @@ public:
 	void appendMissingLowLevelFunctions();
 	ABIFunctions& abiFunctions() { return m_abiFunctions; }
 	YulUtilFunctions& utilFunctions() { return m_yulUtilFunctions; }
-	std::pair<std::string, std::set<std::string>> requestedYulFunctions()
-	{
-		return m_functionCollector->requestedFunctions();
-	}
+	/// @returns concatenation of all generated functions and a set of the
+	/// externally used functions.
+	/// Clears the internal list, i.e. calling it again will result in an
+	/// empty return value.
+	std::pair<std::string, std::set<std::string>> requestedYulFunctions();
 
 	ModifierDefinition const& resolveVirtualFunctionModifier(ModifierDefinition const& _modifier) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
@@ -371,6 +372,8 @@ private:
 	std::map<std::string, evmasm::AssemblyItem> m_lowLevelFunctions;
 	// Collector for yul functions.
 	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector = std::make_shared<MultiUseYulFunctionCollector>();
+	/// Set of externally used yul functions.
+	std::set<std::string> m_externallyUsedFunctions;
 	/// Container for ABI functions to be generated.
 	ABIFunctions m_abiFunctions;
 	/// Container for Yul Util functions to be generated.

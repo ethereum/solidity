@@ -55,7 +55,7 @@ string ABIFunctions::tupleEncoder(
 		functionName += t->identifier() + "_";
 	functionName += options.toFunctionNameSuffix();
 
-	return createExternallyUsedFunction(functionName, [&]() {
+	return createFunction(functionName, [&]() {
 		// Note that the values are in reverse due to the difference in calling semantics.
 		Whiskers templ(R"(
 			function <functionName>(headStart <valueParams>) -> tail {
@@ -121,7 +121,7 @@ string ABIFunctions::tupleEncoderPacked(
 		functionName += t->identifier() + "_";
 	functionName += options.toFunctionNameSuffix();
 
-	return createExternallyUsedFunction(functionName, [&]() {
+	return createFunction(functionName, [&]() {
 		solAssert(!_givenTypes.empty(), "");
 
 		// Note that the values are in reverse due to the difference in calling semantics.
@@ -173,7 +173,7 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 	if (_fromMemory)
 		functionName += "_fromMemory";
 
-	return createExternallyUsedFunction(functionName, [&]() {
+	return createFunction(functionName, [&]() {
 		TypePointers decodingTypes;
 		for (auto const& t: _types)
 			decodingTypes.emplace_back(t->decodingType());
@@ -1493,11 +1493,6 @@ string ABIFunctions::arrayStoreLengthForEncodingFunction(ArrayType const& _type,
 string ABIFunctions::createFunction(string const& _name, function<string ()> const& _creator)
 {
 	return m_functionCollector->createFunction(_name, _creator);
-}
-
-string ABIFunctions::createExternallyUsedFunction(string const& _name, function<string ()> const& _creator)
-{
-	return m_functionCollector->createExternallyUsedFunction(_name, _creator);
 }
 
 size_t ABIFunctions::headSize(TypePointers const& _targetTypes)
