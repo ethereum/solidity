@@ -14,7 +14,7 @@ interface SuperB {
     function test5() external returns (uint256);
 }
 
-interface Sub is SuperA, SuperB {
+interface Sub is SuperB, SuperA {
     function test1() external returns (uint256);
     function test2() external override returns (uint256);
     function test3() external override(SuperA) returns (uint256);
@@ -25,7 +25,8 @@ interface Sub is SuperA, SuperB {
 // ----
 // TypeError: (572-616): Overriding function is missing "override" specifier.
 // TypeError: (572-616): Overriding function is missing "override" specifier.
-// TypeError: (572-616): Function needs to specify overridden contracts "SuperA" and "SuperB".
-// TypeError: (647-655): Function needs to specify overridden contracts "SuperA" and "SuperB".
+// TypeError: (572-616): Function needs to specify overridden contracts "SuperB" and "SuperA".
+// TypeError: (647-655): Function needs to specify overridden contracts "SuperB" and "SuperA".
 // TypeError: (705-721): Function needs to specify overridden contract "SuperB".
 // TypeError: (771-787): Function needs to specify overridden contract "SuperA".
+// Warning: (837-861): Override specifier list order differs from inheritance order.

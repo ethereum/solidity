@@ -565,18 +565,17 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 
 void OverrideChecker::overrideListError(
 	OverrideProxy const& _item,
-	set<ContractDefinition const*, CompareByID> _secondary,
+	vector<ContractDefinition const*> _secondary,
 	string const& _message1,
 	string const& _message2
 )
 {
-	// Using a set rather than a vector so the order is always the same
-	set<string> names;
+	vector<string> names;
 	SecondarySourceLocation ssl;
 	for (Declaration const* c: _secondary)
 	{
 		ssl.append("This contract: ", c->location());
-		names.insert("\"" + c->name() + "\"");
+		names.emplace_back("\"" + c->name() + "\"");
 	}
 	string contractSingularPlural = "contract ";
 	if (_secondary.size() > 1)
@@ -823,18 +822,28 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 		missingContracts = expectedContracts - specifiedContracts;
 
 	if (!missingContracts.empty())
+	{
+		vector<ContractDefinition const*> sortedMissingContracts;
+		for (size_t i = _item.contract().annotation().linearizedBaseContracts.size() - 1; i > 0; i--)
+		{
+			auto contract = _item.contract().annotation().linearizedBaseContracts[i];
+			if (missingContracts.count(contract))
+				sortedMissingContracts.emplace_back(contract);
+		}
+
 		overrideListError(
 			_item,
-			missingContracts,
+			sortedMissingContracts,
 			_item.astNodeNameCapitalized() + " needs to specify overridden ",
 			""
 		);
+	}
 
 	auto surplusContracts = specifiedContracts - expectedContracts;
 	if (!surplusContracts.empty())
 		overrideListError(
 			_item,
-			surplusContracts,
+			util::convertContainer<vector<ContractDefinition const*>>(surplusContracts),
 			"Invalid ",
 			"specified in override list: "
 		);

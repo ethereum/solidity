@@ -157,7 +157,7 @@ private:
 	void checkOverride(OverrideProxy const& _overriding, OverrideProxy const& _super);
 	void overrideListError(
 		OverrideProxy const& _item,
-		std::set<ContractDefinition const*, CompareByID> _secondary,
+		std::vector<ContractDefinition const*> _secondary,
 		std::string const& _message1,
 		std::string const& _message2
 	);
