@@ -142,6 +142,7 @@ set(yul_phaser_sources
     yulPhaser/TestHelpers.h
     yulPhaser/TestHelpers.cpp
     yulPhaser/TestHelpersTest.cpp
+    yulPhaser/Common.cpp
     yulPhaser/Chromosome.cpp
     yulPhaser/FitnessMetrics.cpp
     yulPhaser/AlgorithmRunner.cpp
