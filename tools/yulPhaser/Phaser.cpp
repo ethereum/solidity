@@ -295,6 +295,13 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			"Algorithm"
 		)
 		(
+			"no-randomise-duplicates",
+			po::bool_switch(),
+			"By default, after each round of the algorithm duplicate chromosomes are removed from"
+			"the population and replaced with randomly generated ones. "
+			"This option disables this postprocessing."
+		)
+		(
 			"min-chromosome-length",
 			po::value<size_t>()->value_name("<NUM>")->default_value(12),
 			"Minimum length of randomly generated chromosomes."
@@ -438,9 +445,9 @@ AlgorithmRunner::Options Phaser::buildAlgorithmRunnerOptions(po::variables_map c
 	return {
 		_arguments.count("rounds") > 0 ? static_cast<optional<size_t>>(_arguments["rounds"].as<size_t>()) : nullopt,
 		_arguments.count("population-autosave") > 0 ? static_cast<optional<string>>(_arguments["population-autosave"].as<string>()) : nullopt,
-		false,
-		nullopt,
-		nullopt,
+		!_arguments["no-randomise-duplicates"].as<bool>(),
+		_arguments["min-chromosome-length"].as<size_t>(),
+		_arguments["max-chromosome-length"].as<size_t>(),
 	};
 }
 
