@@ -251,6 +251,8 @@ private:
 	}
 
 protected:
+	void reset();
+
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
 	void sendEther(Address const& _to, u256 const& _value);
 	size_t currentTimestamp();
