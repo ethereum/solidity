@@ -47,6 +47,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
+using namespace std::string_literals;
 
 namespace
 {
@@ -1204,7 +1205,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 		argumentTypes.emplace_back(&type(*arg));
 		argumentStrings.emplace_back(IRVariable(*arg).commaSeparatedList());
 	}
-	string argumentString = ", " + joinHumanReadable(argumentStrings);
+	string argumentString = argumentStrings.empty() ? ""s : (", " + joinHumanReadable(argumentStrings));
 
 	solUnimplementedAssert(funKind != FunctionType::Kind::ECRecover, "");
 
