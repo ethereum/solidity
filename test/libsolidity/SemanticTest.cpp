@@ -101,6 +101,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 {
 	for(bool compileViaYul: set<bool>{!m_runWithoutYul, m_runWithYul})
 	{
+		reset();
 		bool success = true;
 
 		m_compileViaYul = compileViaYul;
