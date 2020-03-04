@@ -2,6 +2,7 @@
 
 Language Features:
  * Inline Assembly: Allow assigning to `_slot` of local storage variable pointers.
+ * General: Deprecated `value(...)` and `gas(...)` in favor of `{value: ...}` and `{gas: ...}`
 
 
 Compiler Features:

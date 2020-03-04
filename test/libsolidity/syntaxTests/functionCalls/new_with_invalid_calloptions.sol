@@ -14,14 +14,14 @@ contract C {
 // ====
 // EVMVersion: >=constantinople
 // ----
-// TypeError: (64-98): Cannot set option "value" on a non-payable function type.
+// TypeError: (64-98): Cannot set option "value", since the constructor of contract D is not payable.
 // TypeError: (64-98): Function call option "gas" cannot be used with "new".
 // TypeError: (102-123): Unknown call option "slt". Valid options are "salt", "value" and "gas".
-// TypeError: (102-123): Cannot set option "value" on a non-payable function type.
+// TypeError: (102-123): Cannot set option "value", since the constructor of contract D is not payable.
 // TypeError: (127-139): Unknown call option "val". Valid options are "salt", "value" and "gas".
 // TypeError: (143-172): Duplicate option "salt".
-// TypeError: (176-199): Cannot set option "value" on a non-payable function type.
-// TypeError: (176-199): Cannot set option "value" on a non-payable function type.
+// TypeError: (176-199): Cannot set option "value", since the constructor of contract D is not payable.
+// TypeError: (176-199): Cannot set option "value", since the constructor of contract D is not payable.
 // TypeError: (203-220): Unknown call option "random". Valid options are "salt", "value" and "gas".
 // TypeError: (224-242): Unknown call option "what". Valid options are "salt", "value" and "gas".
 // TypeError: (246-259): Function call option "gas" cannot be used with "new".

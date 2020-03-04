@@ -2312,7 +2312,11 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 			else if (!expressionFunctionType->isPayable())
 				m_errorReporter.typeError(
 					_functionCallOptions.location(),
-					"Cannot set option \"value\" on a non-payable function type."
+					kind == FunctionType::Kind::Creation ?
+						"Cannot set option \"value\", since the constructor of " +
+						expressionFunctionType->returnParameterTypes().front()->toString() +
+						" is not payable." :
+						"Cannot set option \"value\" on a non-payable function type."
 				);
 			else
 			{
@@ -2522,11 +2526,23 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	annotation.type = possibleMembers.front().type;
 
 	if (auto funType = dynamic_cast<FunctionType const*>(annotation.type))
+	{
 		solAssert(
 			!funType->bound() || exprType->isImplicitlyConvertibleTo(*funType->selfType()),
 			"Function \"" + memberName + "\" cannot be called on an object of type " +
 			exprType->toString() + " (expected " + funType->selfType()->toString() + ")."
 		);
+
+		if (
+			dynamic_cast<FunctionType const*>(exprType) &&
+			!annotation.referencedDeclaration &&
+			(memberName == "value" || memberName == "gas")
+		)
+			m_errorReporter.warning(
+				_memberAccess.location(),
+				"Using \"." + memberName + "(...)\" is deprecated. Use \"{" + memberName + ": ...}\" instead."
+			);
+	}
 
 	if (auto const* structType = dynamic_cast<StructType const*>(exprType))
 		annotation.isLValue = !structType->dataStoredIn(DataLocation::CallData);
