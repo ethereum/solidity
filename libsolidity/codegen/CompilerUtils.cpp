@@ -539,6 +539,10 @@ void CompilerUtils::encodeToMemory(
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
 			// copy tail pointer (=mem_end - mem_start) to memory
+			solAssert(
+				(2 + dynPointers) <= 16,
+				"Stack too deep(" + to_string(2 + dynPointers) + "), try using fewer variables."
+			);
 			m_context << dupInstruction(2 + dynPointers) << Instruction::DUP2;
 			m_context << Instruction::SUB;
 			m_context << dupInstruction(2 + dynPointers - thisDynPointer);
