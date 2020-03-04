@@ -34,10 +34,6 @@ namespace solidity::phaser::test
 class FitnessMetricFixture
 {
 protected:
-	FitnessMetricFixture():
-		m_sourceStream(SampleSourceCode, ""),
-		m_program(get<Program>(Program::load(m_sourceStream))) {}
-
 	static constexpr char SampleSourceCode[] =
 		"{\n"
 		"    function foo() -> result\n"
@@ -52,8 +48,22 @@ protected:
 		"    mstore(foo(), bar())\n"
 		"}\n";
 
-	CharStream m_sourceStream;
-	Program m_program;
+	Program optimisedProgram(Program _program) const
+	{
+		[[maybe_unused]] size_t originalSize = _program.codeSize();
+		Program result = move(_program);
+		result.optimise(m_chromosome.optimisationSteps());
+
+		// Make sure that the program and the chromosome we have chosen are suitable for the test
+		assert(result.codeSize() != originalSize);
+
+		return result;
+	}
+
+	CharStream m_sourceStream = CharStream(SampleSourceCode, "");
+	Chromosome m_chromosome{vector<string>{UnusedPruner::name, EquivalentFunctionCombiner::name}};
+	Program m_program = get<Program>(Program::load(m_sourceStream));
+	Program m_optimisedProgram = optimisedProgram(m_program);
 };
 
 BOOST_AUTO_TEST_SUITE(Phaser)
@@ -62,47 +72,32 @@ BOOST_AUTO_TEST_SUITE(ProgramSizeTest)
 
 BOOST_FIXTURE_TEST_CASE(evaluate_should_compute_size_of_the_optimised_program, FitnessMetricFixture)
 {
-	Chromosome chromosome(vector<string>{UnusedPruner::name, EquivalentFunctionCombiner::name});
+	size_t fitness = ProgramSize(m_program).evaluate(m_chromosome);
 
-	Program optimisedProgram = m_program;
-	optimisedProgram.optimise(chromosome.optimisationSteps());
-	assert(m_program.codeSize() != optimisedProgram.codeSize());
-
-	BOOST_TEST(ProgramSize(m_program).evaluate(chromosome) != m_program.codeSize());
-	BOOST_TEST(ProgramSize(m_program).evaluate(chromosome) == optimisedProgram.codeSize());
+	BOOST_TEST(fitness != m_program.codeSize());
+	BOOST_TEST(fitness == m_optimisedProgram.codeSize());
 }
 
 BOOST_FIXTURE_TEST_CASE(evaluate_should_repeat_the_optimisation_specified_number_of_times, FitnessMetricFixture)
 {
-	Chromosome chromosome(vector<string>{UnusedPruner::name, EquivalentFunctionCombiner::name});
-
-	Program programOptimisedOnce = m_program;
-	programOptimisedOnce.optimise(chromosome.optimisationSteps());
-	Program programOptimisedTwice = programOptimisedOnce;
-	programOptimisedTwice.optimise(chromosome.optimisationSteps());
-	assert(m_program.codeSize() != programOptimisedOnce.codeSize());
-	assert(m_program.codeSize() != programOptimisedTwice.codeSize());
-	assert(programOptimisedOnce.codeSize() != programOptimisedTwice.codeSize());
+	Program const& programOptimisedOnce = m_optimisedProgram;
+	Program programOptimisedTwice = optimisedProgram(programOptimisedOnce);
 
 	ProgramSize metric(m_program, 2);
+	size_t fitness = metric.evaluate(m_chromosome);
 
-	BOOST_TEST(metric.evaluate(chromosome) != m_program.codeSize());
-	BOOST_TEST(metric.evaluate(chromosome) != programOptimisedOnce.codeSize());
-	BOOST_TEST(metric.evaluate(chromosome) == programOptimisedTwice.codeSize());
+	BOOST_TEST(fitness != m_program.codeSize());
+	BOOST_TEST(fitness != programOptimisedOnce.codeSize());
+	BOOST_TEST(fitness == programOptimisedTwice.codeSize());
 }
 
 BOOST_FIXTURE_TEST_CASE(evaluate_should_not_optimise_if_number_of_repetitions_is_zero, FitnessMetricFixture)
 {
-	Chromosome chromosome(vector<string>{UnusedPruner::name, EquivalentFunctionCombiner::name});
-
-	Program optimisedProgram = m_program;
-	optimisedProgram.optimise(chromosome.optimisationSteps());
-	assert(m_program.codeSize() != optimisedProgram.codeSize());
-
 	ProgramSize metric(m_program, 0);
+	size_t fitness = metric.evaluate(m_chromosome);
 
-	BOOST_TEST(metric.evaluate(chromosome) == m_program.codeSize());
-	BOOST_TEST(metric.evaluate(chromosome) != optimisedProgram.codeSize());
+	BOOST_TEST(fitness == m_program.codeSize());
+	BOOST_TEST(fitness != m_optimisedProgram.codeSize());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -110,4 +105,3 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 }
-
