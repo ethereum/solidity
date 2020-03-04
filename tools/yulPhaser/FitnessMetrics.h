@@ -57,6 +57,9 @@ public:
 		m_program(std::move(_program)),
 		m_repetitionCount(_repetitionCount) {}
 
+	Program const& program() const { return m_program; }
+	size_t repetitionCount() const { return m_repetitionCount; }
+
 	size_t evaluate(Chromosome const& _chromosome) const override;
 
 private:

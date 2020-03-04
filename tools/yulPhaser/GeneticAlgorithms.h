@@ -81,6 +81,8 @@ public:
 		assert(_options.isValid());
 	}
 
+	Options const& options() const { return m_options; }
+
 	Population runNextRound(Population _population) override;
 
 private:
@@ -128,6 +130,8 @@ public:
 	{
 		assert(_options.isValid());
 	}
+
+	Options const& options() const { return m_options; }
 
 	Population runNextRound(Population _population) override;
 
