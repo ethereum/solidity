@@ -52,6 +52,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 
 	for (auto const& it: _contractDef.interfaceFunctions())
 		if (it.second->hasDeclaration())
+		{
 			if (auto const* f = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
 			{
 				string value = extractDoc(f->annotation().docTags, "notice");
@@ -63,6 +64,18 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 					methods[it.second->externalSignature()] = user;
 				}
 			}
+			if (auto var = dynamic_cast<VariableDeclaration const*>(&it.second->declaration()))
+			{
+				string value = extractDoc(var->annotation().docTags, "notice");
+				if (!value.empty())
+				{
+					Json::Value user;
+					// since @notice is the only user tag if missing function should not appear
+					user["notice"] = Json::Value(value);
+					methods[it.second->externalSignature()] = user;
+				}
+			}
+		}
 	doc["methods"] = methods;
 
 	return doc;
@@ -107,6 +120,19 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 
 			if (!method.empty())
 				methods[it.second->externalSignature()] = method;
+		}
+		if (auto var = dynamic_cast<VariableDeclaration const*>(&it.second->declaration()))
+		{
+			Json::Value method(devDocumentation(var->annotation().docTags));
+			if (!method.empty())
+			{
+//				Json::Value jsonReturn = extractReturnParameterDocs(var->annotation().docTags, *var);
+
+//				if (!jsonReturn.empty())
+//					method["returns"] = jsonReturn;
+
+				methods[it.second->externalSignature()] = method;
+			}
 		}
 	}
 

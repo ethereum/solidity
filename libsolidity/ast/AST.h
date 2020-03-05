@@ -859,7 +859,7 @@ private:
  * Declaration of a variable. This can be used in various places, e.g. in function parameter
  * lists, struct definitions and even function bodies.
  */
-class VariableDeclaration: public Declaration
+class VariableDeclaration: public Declaration, public StructurallyDocumented
 {
 public:
 	enum Location { Unspecified, Storage, Memory, CallData };
@@ -882,6 +882,7 @@ public:
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<Expression> _value,
 		Visibility _visibility,
+        ASTPointer<StructuredDocumentation> const& _documentation,
 		bool _isStateVar = false,
 		bool _isIndexed = false,
 		Mutability _mutability = Mutability::Mutable,
@@ -889,8 +890,9 @@ public:
 		Location _referenceLocation = Location::Unspecified
 	):
 		Declaration(_id, _location, _name, _visibility),
-		m_typeName(std::move(_type)),
-		m_value(std::move(_value)),
+        StructurallyDocumented(_documentation),
+		m_typeName(_type),
+		m_value(_value),
 		m_isStateVariable(_isStateVar),
 		m_isIndexed(_isIndexed),
 		m_mutability(_mutability),

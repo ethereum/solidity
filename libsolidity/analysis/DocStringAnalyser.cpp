@@ -57,6 +57,13 @@ bool DocStringAnalyser::visit(FunctionDefinition const& _function)
 	return true;
 }
 
+bool DocStringAnalyser::visit(VariableDeclaration const& _variable)
+{
+	if (_variable.isStateVariable() && _variable.isPartOfExternalInterface())
+		handleDeclaration(_variable, _variable, _variable.annotation());
+	return true;
+}
+
 bool DocStringAnalyser::visit(ModifierDefinition const& _modifier)
 {
 	handleCallable(_modifier, _modifier, _modifier.annotation());
@@ -115,6 +122,16 @@ void DocStringAnalyser::handleCallable(
 	static set<string> const validTags = set<string>{"author", "dev", "notice", "return", "param"};
 	parseDocStrings(_node, _annotation, validTags, "functions");
 	checkParameters(_callable, _node, _annotation);
+}
+
+void DocStringAnalyser::handleDeclaration(
+	Declaration const&,
+	StructurallyDocumented const& _node,
+	StructurallyDocumentedAnnotation& _annotation
+)
+{
+	static set<string> const validTags = set<string>{"author", "dev", "notice", "return", "param"};
+	parseDocStrings(_node, _annotation, validTags, "state variables");
 }
 
 void DocStringAnalyser::parseDocStrings(

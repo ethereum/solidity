@@ -390,7 +390,10 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type, true))
 	};
 	if (_node.isStateVariable() && _node.isPublic())
+	{
 		attributes.emplace_back("functionSelector", _node.externalIdentifierHex());
+		attributes.emplace_back("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue);
+	}
 	if (m_inEvent)
 		attributes.emplace_back("indexed", _node.isIndexed());
 	if (!_node.annotation().baseFunctions.empty())
