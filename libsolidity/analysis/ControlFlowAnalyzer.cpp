@@ -37,7 +37,7 @@ bool ControlFlowAnalyzer::visit(FunctionDefinition const& _function)
 	{
 		auto const& functionFlow = m_cfg.functionFlow(_function);
 		checkUninitializedAccess(functionFlow.entry, functionFlow.exit);
-		checkUnreachable(functionFlow.entry, functionFlow.exit, functionFlow.revert);
+		checkUnreachable(functionFlow.entry, functionFlow.exit, functionFlow.revert, functionFlow.transactionReturn);
 	}
 	return false;
 }
@@ -137,7 +137,7 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 
 			m_errorReporter.typeError(
 				variableOccurrence->occurrence() ?
-					variableOccurrence->occurrence()->location() :
+					*variableOccurrence->occurrence() :
 					variableOccurrence->declaration().location(),
 				ssl,
 				string("This variable is of storage pointer type and can be ") +
@@ -148,7 +148,7 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 	}
 }
 
-void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const* _exit, CFGNode const* _revert) const
+void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const* _exit, CFGNode const* _revert, CFGNode const* _transactionReturn) const
 {
 	// collect all nodes reachable from the entry point
 	std::set<CFGNode const*> reachable = util::BreadthFirstSearch<CFGNode const*>{{_entry}}.run(
@@ -158,10 +158,10 @@ void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const*
 		}
 	).visited;
 
-	// traverse all paths backwards from exit and revert
+	// traverse all paths backwards from exit, revert and transaction return
 	// and extract (valid) source locations of unreachable nodes into sorted set
 	std::set<SourceLocation> unreachable;
-	util::BreadthFirstSearch<CFGNode const*>{{_exit, _revert}}.run(
+	util::BreadthFirstSearch<CFGNode const*>{{_exit, _revert, _transactionReturn}}.run(
 		[&](CFGNode const* _node, auto&& _addChild) {
 			if (!reachable.count(_node) && _node->location.isValid())
 				unreachable.insert(_node->location);

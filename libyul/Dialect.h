@@ -22,6 +22,7 @@
 
 #include <libyul/YulString.h>
 #include <libyul/SideEffects.h>
+#include <libyul/ControlFlowSideEffects.h>
 
 #include <boost/noncopyable.hpp>
 
@@ -42,6 +43,7 @@ struct BuiltinFunction
 	std::vector<Type> parameters;
 	std::vector<Type> returns;
 	SideEffects sideEffects;
+	ControlFlowSideEffects controlFlowSideEffects;
 	/// If true, this is the msize instruction.
 	bool isMSize = false;
 	/// If true, can only accept literals as arguments and they cannot be moved to variables.
