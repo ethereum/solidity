@@ -678,6 +678,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	ASTNodeFactory nodeFactory = _lookAheadArrayType ?
 		ASTNodeFactory(*this, _lookAheadArrayType) : ASTNodeFactory(*this);
 	ASTPointer<TypeName> type;
+    ASTPointer<StructuredDocumentation> documentation = parseStructuredDocumentation();
 	if (_lookAheadArrayType)
 		type = _lookAheadArrayType;
 	else
@@ -686,6 +687,9 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		if (type != nullptr)
 			nodeFactory.setEndPositionFromNode(type);
 	}
+
+//	if (!_options.isStateVariable && documentation != nullptr)
+//		fatalParserError("Only state variables can retrieve a docstring.");
 
 	if (dynamic_cast<FunctionTypeName*>(type.get()) && _options.isStateVariable && m_scanner->currentToken() == Token::LBrace)
 		fatalParserError(
@@ -788,6 +792,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		identifier,
 		value,
 		visibility,
+        documentation,
 		_options.isStateVariable,
 		isIndexed,
 		isDeclaredConst,
@@ -1546,7 +1551,8 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 						ASTPointer<TypeName>(),
 						name,
 						ASTPointer<Expression>(),
-						Visibility::Default
+                        Visibility::Default,
+                        nullptr
 					);
 				}
 				variables.push_back(var);
