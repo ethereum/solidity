@@ -133,7 +133,7 @@ variant<unique_ptr<Block>, ErrorList> Program::parseSource(Dialect const& _diale
 		return errors;
 
 	assert(errorReporter.errors().empty());
-	return ast;
+	return variant<unique_ptr<Block>, ErrorList>(move(ast));
 }
 
 variant<unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Dialect const& _dialect, Block const& _ast)
@@ -148,7 +148,7 @@ variant<unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Dialect cons
 		return errors;
 
 	assert(errorReporter.errors().empty());
-	return analysisInfo;
+	return variant<unique_ptr<AsmAnalysisInfo>, ErrorList>(move(analysisInfo));
 }
 
 unique_ptr<Block> Program::disambiguateAST(
