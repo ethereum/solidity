@@ -204,6 +204,45 @@ BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 	checkNatspec(sourceCode, "test", userNatspec, true);
 }
 
+BOOST_AUTO_TEST_CASE(dev_state_variable)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev Public accessor for the internal state
+			/// @notice Keeps track of the internal state
+			uint public state;
+		}
+	)";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"state()\":{ \n"
+	"        \"details\": \"Public accessor for the internal state\",\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, "test", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(user_state_variable)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @notice Keeps track of the internal state
+			uint public state;
+		}
+	)";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"state()\":{ \n"
+	"        \"notice\": \"Keeps track of the internal state\",n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
 {
 	char const* sourceCode = R"(
