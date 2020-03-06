@@ -800,11 +800,19 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::Function:
 		if (member == "selector")
 		{
-			solUnimplementedAssert(false, "");
+			solUnimplementedAssert(
+				dynamic_cast<FunctionType const&>(*_memberAccess.expression().annotation().type).kind() ==
+				FunctionType::Kind::External, ""
+			);
+			define(IRVariable{_memberAccess}, IRVariable(_memberAccess.expression()).part("functionIdentifier"));
 		}
 		else if (member == "address")
 		{
-			solUnimplementedAssert(false, "");
+			solUnimplementedAssert(
+				dynamic_cast<FunctionType const&>(*_memberAccess.expression().annotation().type).kind() ==
+				FunctionType::Kind::External, ""
+			);
+			define(IRVariable{_memberAccess}, IRVariable(_memberAccess.expression()).part("address"));
 		}
 		else
 			solAssert(

@@ -2924,7 +2924,10 @@ vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 	{
 	case Kind::External:
 	case Kind::DelegateCall:
-		slots = {make_tuple("address", TypeProvider::address()), make_tuple("functionIdentifier", TypeProvider::fixedBytes(4))};
+		slots = {
+			make_tuple("address", TypeProvider::address()),
+			make_tuple("functionIdentifier", TypeProvider::uint(32))
+		};
 		break;
 	case Kind::BareCall:
 	case Kind::BareCallCode:
