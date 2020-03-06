@@ -3471,7 +3471,15 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 				continue;
 
 			if (!contract.isLibrary() && inDerivingScope && declaration->isVisibleInDerivedContracts())
-				members.emplace_back(declaration->name(), declaration->type(), declaration);
+			{
+				if (
+					auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(declaration);
+					functionDefinition && !functionDefinition->isImplemented()
+				)
+					members.emplace_back(declaration->name(), declaration->typeViaContractName(), declaration);
+				else
+					members.emplace_back(declaration->name(), declaration->type(), declaration);
+			}
 			else if (
 				(contract.isLibrary() && declaration->isVisibleAsLibraryMember()) ||
 				declaration->isVisibleViaContractTypeAccess()
