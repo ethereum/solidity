@@ -56,16 +56,12 @@ int parseUnsignedInteger(string::iterator& _it, string::iterator _end)
 
 }
 
-CommonSyntaxTest::CommonSyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion): m_evmVersion(_evmVersion)
+CommonSyntaxTest::CommonSyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion):
+	EVMVersionRestrictedTestCase(_filename),
+	m_evmVersion(_evmVersion)
 {
-	ifstream file(_filename);
-	if (!file)
-		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test contract: \"" + _filename + "\"."));
-	file.exceptions(ios::badbit);
-
-	m_sources = parseSourcesAndSettings(file);
-
-	m_expectations = parseExpectations(file);
+	m_sources = m_reader.sources();
+	m_expectations = parseExpectations(m_reader.stream());
 }
 
 TestCase::TestResult CommonSyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)

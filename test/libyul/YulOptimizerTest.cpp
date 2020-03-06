@@ -89,7 +89,8 @@ using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
 
-YulOptimizerTest::YulOptimizerTest(string const& _filename)
+YulOptimizerTest::YulOptimizerTest(string const& _filename):
+	EVMVersionRestrictedTestCase(_filename)
 {
 	boost::filesystem::path path(_filename);
 
@@ -97,38 +98,23 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 		BOOST_THROW_EXCEPTION(runtime_error("Filename path has to contain a directory: \"" + _filename + "\"."));
 	m_optimizerStep = std::prev(std::prev(path.end()))->string();
 
-	ifstream file(_filename);
-	soltestAssert(file, "Cannot open test contract: \"" + _filename + "\".");
-	file.exceptions(ios::badbit);
+	m_source = m_reader.source();
 
-	m_source = parseSourceAndSettings(file);
-	if (m_settings.count("dialect"))
-	{
-		auto dialectName = m_settings["dialect"];
-		if (dialectName == "yul")
-			m_dialect = &Dialect::yulDeprecated();
-		else if (dialectName == "ewasm")
-			m_dialect = &WasmDialect::instance();
-		else if (dialectName == "evm")
-			m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion());
-		else if (dialectName == "evmTyped")
-			m_dialect = &EVMDialectTyped::instance(solidity::test::CommonOptions::get().evmVersion());
-		else
-			BOOST_THROW_EXCEPTION(runtime_error("Invalid dialect " + dialectName));
-
-		m_validatedSettings["dialect"] = dialectName;
-		m_settings.erase("dialect");
-	}
-	else
+	auto dialectName = m_reader.stringSetting("dialect", "evm");
+	if (dialectName == "yul")
+		m_dialect = &Dialect::yulDeprecated();
+	else if (dialectName == "ewasm")
+		m_dialect = &WasmDialect::instance();
+	else if (dialectName == "evm")
 		m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion());
+	else if (dialectName == "evmTyped")
+		m_dialect = &EVMDialectTyped::instance(solidity::test::CommonOptions::get().evmVersion());
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid dialect " + dialectName));
 
-	if (m_settings.count("step"))
-	{
-		m_validatedSettings["step"] = m_settings["step"];
-		m_settings.erase("step");
-	}
+	m_step = m_reader.stringSetting("step", "");
 
-	m_expectation = parseSimpleExpectations(file);
+	m_expectation = m_reader.simpleExpectations();
 }
 
 TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
@@ -377,13 +363,13 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 
 	m_obtainedResult = AsmPrinter{*m_dialect}(*m_ast) + "\n";
 
-	if (m_optimizerStep != m_validatedSettings["step"])
+	if (m_optimizerStep != m_step)
 	{
 		string nextIndentLevel = _linePrefix + "  ";
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) <<
 			_linePrefix <<
 			"Invalid optimizer step. Given: \"" <<
-			m_validatedSettings["step"] <<
+			m_step <<
 			"\", should be: \"" <<
 			m_optimizerStep <<
 			"\"." <<
@@ -410,7 +396,8 @@ void YulOptimizerTest::printSource(ostream& _stream, string const& _linePrefix, 
 
 void YulOptimizerTest::printUpdatedSettings(ostream& _stream, const string& _linePrefix, const bool _formatted)
 {
-	m_validatedSettings["step"] = m_optimizerStep;
+	m_step = m_optimizerStep;
+	m_reader.setSetting("step", m_step);
 	EVMVersionRestrictedTestCase::printUpdatedSettings(_stream, _linePrefix, _formatted);
 }
 

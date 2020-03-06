@@ -70,9 +70,7 @@ vector<string> validDialectNames()
 
 void SyntaxTest::parseAndAnalyze()
 {
-	string dialectName = m_validatedSettings.count("dialect") ? m_validatedSettings["dialect"] : "evmTyped";
-
-	yul::Dialect const& dialect = validDialects.at(dialectName)(m_evmVersion);
+	yul::Dialect const& dialect = validDialects.at(m_dialectName)(m_evmVersion);
 
 	if (m_sources.size() != 1)
 		BOOST_THROW_EXCEPTION(runtime_error{"Expected only one source for yul test."});
@@ -114,21 +112,15 @@ void SyntaxTest::parseAndAnalyze()
 
 }
 
-void SyntaxTest::validateSettings()
+SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion):
+	CommonSyntaxTest(_filename, _evmVersion)
 {
-	CommonSyntaxTest::validateSettings();
+	m_dialectName = m_reader.stringSetting("dialect", "evmTyped");
 
-	if (!m_settings.count("dialect"))
-		return;
-
-	string const dialect = m_settings["dialect"];
-	m_validatedSettings["dialect"] = dialect;
-	m_settings.erase("dialect");
-
-	if (!validDialects.count(dialect))
+	if (!validDialects.count(m_dialectName))
 		BOOST_THROW_EXCEPTION(runtime_error{
 			"Invalid Dialect \"" +
-			dialect +
+			m_dialectName +
 			"\". Valid dialects are " +
 			joinHumanReadable(validDialectNames(), ", ", " and ") +
 			"."

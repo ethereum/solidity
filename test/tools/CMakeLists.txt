@@ -17,6 +17,7 @@ add_executable(isoltest
 	../CommonSyntaxTest.cpp
 	../EVMHost.cpp
 	../TestCase.cpp
+	../TestCaseReader.cpp
 	../libsolidity/util/BytesUtils.cpp
 	../libsolidity/util/ContractABIUtils.cpp
 	../libsolidity/util/TestFileParser.cpp

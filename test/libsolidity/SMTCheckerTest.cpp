@@ -28,22 +28,17 @@ using namespace solidity::frontend::test;
 
 SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion _evmVersion): SyntaxTest(_filename, _evmVersion)
 {
-	if (m_settings.count("SMTSolvers"))
-	{
-		auto const& choice = m_settings.at("SMTSolvers");
-		if (choice == "any")
-			m_enabledSolvers = smt::SMTSolverChoice::All();
-		else if (choice == "z3")
-			m_enabledSolvers = smt::SMTSolverChoice::Z3();
-		else if (choice == "cvc4")
-			m_enabledSolvers = smt::SMTSolverChoice::CVC4();
-		else if (choice == "none")
-			m_enabledSolvers = smt::SMTSolverChoice::None();
-		else
-			BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT solver choice."));
-	}
-	else
+	auto const& choice = m_reader.stringSetting("SMTSolvers", "any");
+	if (choice == "any")
 		m_enabledSolvers = smt::SMTSolverChoice::All();
+	else if (choice == "z3")
+		m_enabledSolvers = smt::SMTSolverChoice::Z3();
+	else if (choice == "cvc4")
+		m_enabledSolvers = smt::SMTSolverChoice::CVC4();
+	else if (choice == "none")
+		m_enabledSolvers = smt::SMTSolverChoice::None();
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT solver choice."));
 
 	auto available = ModelChecker::availableSolvers();
 	if (!available.z3)
