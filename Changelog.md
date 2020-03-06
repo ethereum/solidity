@@ -10,6 +10,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Inheritance: Fix incorrect error on calling unimplemented base functions.
  * isoltest: Added new keyword `wei` to express function value in semantic tests
  * Standard-JSON-Interface: Fix a bug related to empty filenames and imports.
  * SMTChecker: Fix internal errors when analysing tuples.

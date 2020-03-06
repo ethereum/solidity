@@ -1703,22 +1703,21 @@ void TypeChecker::typeCheckFunctionCall(
 
 	if (_functionType->kind() == FunctionType::Kind::Declaration)
 	{
-		m_errorReporter.typeError(
-			_functionCall.location(),
-			"Cannot call function via contract type name."
-		);
+		if (
+			m_scope->derivesFrom(*_functionType->declaration().annotation().contract) &&
+			!dynamic_cast<FunctionDefinition const&>(_functionType->declaration()).isImplemented()
+		)
+			m_errorReporter.typeError(
+				_functionCall.location(),
+				"Cannot call unimplemented base function."
+			);
+		else
+			m_errorReporter.typeError(
+				_functionCall.location(),
+				"Cannot call function via contract type name."
+			);
 		return;
 	}
-	if (_functionType->kind() == FunctionType::Kind::Internal && _functionType->hasDeclaration())
-		if (auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(&_functionType->declaration()))
-			// functionDefinition->annotation().contract != m_scope ensures that this is a qualified access,
-			// e.g. ``A.f();`` instead of a simple function call like ``f();`` (the latter is valid for unimplemented
-			// functions).
-			if (functionDefinition->annotation().contract != m_scope && !functionDefinition->isImplemented())
-				m_errorReporter.typeError(
-					_functionCall.location(),
-					"Cannot call unimplemented base function."
-				);
 
 	// Check for unsupported use of bare static call
 	if (
