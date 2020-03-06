@@ -933,6 +933,28 @@ string YulUtilFunctions::calldataArrayIndexAccessFunction(ArrayType const& _type
 	});
 }
 
+string YulUtilFunctions::calldataArrayIndexRangeAccess(ArrayType const& _type)
+{
+	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
+	solAssert(_type.isDynamicallySized(), "");
+	string functionName = "calldata_array_index_range_access_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(offset, length, startIndex, endIndex) -> offsetOut, lengthOut {
+				if gt(startIndex, endIndex) { <revertSliceStartAfterEnd> }
+				if gt(endIndex, length) { <revertSliceGreaterThanLength> }
+				offsetOut := add(offset, mul(startIndex, <stride>))
+				lengthOut := sub(endIndex, startIndex)
+			}
+		)")
+		("functionName", functionName)
+		("stride", to_string(_type.calldataStride()))
+		("revertSliceStartAfterEnd", revertReasonIfDebug("Slice starts after end"))
+		("revertSliceGreaterThanLength", revertReasonIfDebug("Slice is greater than length"))
+		.render();
+	});
+}
+
 string YulUtilFunctions::accessCalldataTailFunction(Type const& _type)
 {
 	solAssert(_type.isDynamicallyEncoded(), "");
@@ -1358,6 +1380,37 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 				function <functionName>(addr, functionId) -> outAddr, outFunctionId {
 					outAddr := addr
 					outFunctionId := functionId
+				}
+			)")
+			("functionName", functionName)
+			.render();
+		});
+	}
+
+	if (_from.category() == Type::Category::ArraySlice)
+	{
+		solAssert(_from.isDynamicallySized(), "");
+		solAssert(_from.dataStoredIn(DataLocation::CallData), "");
+		solAssert(_to.category() == Type::Category::Array, "");
+
+		ArraySliceType const& fromType = dynamic_cast<ArraySliceType const&>(_from);
+		ArrayType const& targetType = dynamic_cast<ArrayType const&>(_to);
+
+		solAssert(
+			*fromType.arrayType().baseType() == *targetType.baseType(),
+			"Converting arrays of different type is not possible"
+		);
+
+		string const functionName =
+			"convert_" +
+			_from.identifier() +
+			"_to_" +
+			_to.identifier();
+		return m_functionCollector.createFunction(functionName, [&]() {
+			return Whiskers(R"(
+				function <functionName>(offset, length) -> outOffset, outLength {
+					outOffset := offset
+					outLength := length
 				}
 			)")
 			("functionName", functionName)

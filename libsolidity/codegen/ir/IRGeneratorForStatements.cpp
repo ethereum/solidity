@@ -1001,9 +1001,16 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 			}
 		});
 	}
-	else if (baseType.category() == Type::Category::Array)
+	else if (baseType.category() == Type::Category::Array || baseType.category() == Type::Category::ArraySlice)
 	{
-		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
+		ArrayType const& arrayType =
+			baseType.category() == Type::Category::Array ?
+			dynamic_cast<ArrayType const&>(baseType) :
+			dynamic_cast<ArraySliceType const&>(baseType).arrayType();
+
+		if (baseType.category() == Type::Category::ArraySlice)
+			solAssert(arrayType.dataStoredIn(DataLocation::CallData) && arrayType.isDynamicallySized(), "");
+
 		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
 		switch (arrayType.location())
@@ -1086,9 +1093,50 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 		solAssert(false, "Index access only allowed for mappings or arrays.");
 }
 
-void IRGeneratorForStatements::endVisit(IndexRangeAccess const&)
+void IRGeneratorForStatements::endVisit(IndexRangeAccess const& _indexRangeAccess)
 {
-	solUnimplementedAssert(false, "Index range accesses not yet implemented.");
+	Type const& baseType = *_indexRangeAccess.baseExpression().annotation().type;
+	solAssert(
+		baseType.category() == Type::Category::Array || baseType.category() == Type::Category::ArraySlice,
+		"Index range accesses is available only on arrays and array slices."
+	);
+
+	ArrayType const& arrayType =
+		baseType.category() == Type::Category::Array ?
+		dynamic_cast<ArrayType const &>(baseType) :
+		dynamic_cast<ArraySliceType const &>(baseType).arrayType();
+
+	switch (arrayType.location())
+	{
+		case DataLocation::CallData:
+		{
+			solAssert(baseType.isDynamicallySized(), "");
+			IRVariable sliceStart{m_context.newYulVariable(), *TypeProvider::uint256()};
+			if (_indexRangeAccess.startExpression())
+				define(sliceStart, IRVariable{*_indexRangeAccess.startExpression()});
+			else
+				define(sliceStart) << u256(0) << "\n";
+
+			IRVariable sliceEnd{
+				m_context.newYulVariable(),
+				*TypeProvider::uint256()
+			};
+			if (_indexRangeAccess.endExpression())
+				define(sliceEnd, IRVariable{*_indexRangeAccess.endExpression()});
+			else
+				define(sliceEnd, IRVariable{_indexRangeAccess.baseExpression()}.part("length"));
+
+			IRVariable range{_indexRangeAccess};
+			define(range) <<
+				m_utils.calldataArrayIndexRangeAccess(arrayType) << "(" <<
+				IRVariable{_indexRangeAccess.baseExpression()}.commaSeparatedList() << ", " <<
+				sliceStart.name() << ", " <<
+				sliceEnd.name() << ")\n";
+			break;
+		}
+		default:
+			solUnimplementedAssert(false, "Index range accesses is implemented only on calldata arrays.");
+	}
 }
 
 void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
