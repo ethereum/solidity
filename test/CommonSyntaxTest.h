@@ -73,7 +73,8 @@ protected:
 		bool _formatted = false
 	);
 
-	virtual bool printExpectationAndError(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false);
+	TestResult conclude(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false);
+	void printExpectationAndError(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false);
 
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 

@@ -135,7 +135,7 @@ TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _li
 		}
 	}
 
-	return printExpectationAndError(_stream, _linePrefix, _formatted) ? TestResult::Success : TestResult::Failure;
+	return conclude(_stream, _linePrefix, _formatted);
 }
 
 vector<string> SMTCheckerJSONTest::hashesFromJson(Json::Value const& _jsonObj, string const& _auxInput, string const& _smtlib)

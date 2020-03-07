@@ -68,21 +68,25 @@ TestCase::TestResult CommonSyntaxTest::run(ostream& _stream, string const& _line
 {
 	parseAndAnalyze();
 
-	return printExpectationAndError(_stream, _linePrefix, _formatted) ? TestResult::Success : TestResult::Failure;
+	return conclude(_stream, _linePrefix, _formatted);
 }
 
-bool CommonSyntaxTest::printExpectationAndError(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult CommonSyntaxTest::conclude(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
-	if (m_expectations != m_errorList)
-	{
-		string nextIndentLevel = _linePrefix + "  ";
-		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
-		printErrorList(_stream, m_expectations, nextIndentLevel, _formatted);
-		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
-		printErrorList(_stream, m_errorList, nextIndentLevel, _formatted);
-		return false;
-	}
-	return true;
+	if (m_expectations == m_errorList)
+		return TestResult::Success;
+
+	printExpectationAndError(_stream, _linePrefix, _formatted);
+	return TestResult::Failure;
+}
+
+void CommonSyntaxTest::printExpectationAndError(ostream& _stream, string const& _linePrefix, bool _formatted)
+{
+	string nextIndentLevel = _linePrefix + "  ";
+	AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
+	printErrorList(_stream, m_expectations, nextIndentLevel, _formatted);
+	AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+	printErrorList(_stream, m_errorList, nextIndentLevel, _formatted);
 }
 
 void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, bool _formatted) const
