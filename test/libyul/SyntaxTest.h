@@ -42,7 +42,7 @@ protected:
 	void parseAndAnalyze() override;
 
 private:
-	std::string m_dialectName;
+	Dialect const* m_dialect = nullptr;
 };
 
 }

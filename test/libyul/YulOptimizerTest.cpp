@@ -101,16 +101,7 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename):
 	m_source = m_reader.source();
 
 	auto dialectName = m_reader.stringSetting("dialect", "evm");
-	if (dialectName == "yul")
-		m_dialect = &Dialect::yulDeprecated();
-	else if (dialectName == "ewasm")
-		m_dialect = &WasmDialect::instance();
-	else if (dialectName == "evm")
-		m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion());
-	else if (dialectName == "evmTyped")
-		m_dialect = &EVMDialectTyped::instance(solidity::test::CommonOptions::get().evmVersion());
-	else
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid dialect " + dialectName));
+	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
 
 	m_step = m_reader.stringSetting("step", "");
 
