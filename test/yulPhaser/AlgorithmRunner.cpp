@@ -28,6 +28,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 
+#include <regex>
+#include <sstream>
+
 using namespace std;
 using namespace boost::unit_test::framework;
 using namespace boost::test_tools;
@@ -65,8 +68,29 @@ public:
 class AlgorithmRunnerFixture
 {
 protected:
+	// NOTE: Regexes here should not contain spaces because we strip them before matching
+	regex RoundSummaryRegex{R"(-+ROUND\d+-+)"};
+
+	string individualPattern(Individual const& individual) const
+	{
+		ostringstream output;
+		output << "Fitness:" << individual.fitness << ",";
+		output << "optimisations:" << individual.chromosome;
+		return output.str();
+		return output.str();
+	}
+
+	bool nextLineMatches(stringstream& stream, regex const& pattern) const
+	{
+		string line;
+		if (getline(stream, line).fail())
+			return false;
+
+		return regex_match(stripWhitespace(line), pattern);
+	}
+
 	shared_ptr<FitnessMetric> m_fitnessMetric = make_shared<ChromosomeLengthMetric>();
-	output_test_stream m_output;
+	stringstream m_output;
 	AlgorithmRunner::Options m_options;
 };
 
@@ -106,29 +130,24 @@ BOOST_FIXTURE_TEST_CASE(run_should_call_runNextRound_once_per_round, AlgorithmRu
 	BOOST_TEST(algorithm.m_currentRound == 10);
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_print_the_top_chromosome, AlgorithmRunnerFixture)
+BOOST_FIXTURE_TEST_CASE(run_should_print_round_summary_after_each_round, AlgorithmRunnerFixture)
 {
-	// run() is allowed to print more but should at least print the first one
+	Population population(m_fitnessMetric, {Chromosome("fcCUnDve"), Chromosome("jsxIOo"), Chromosome("ighTLM")});
 
 	m_options.maxRounds = 1;
-	AlgorithmRunner runner(
-		// NOTE: Chromosomes chosen so that they're not substrings of each other and are not
-		// words likely to appear in the output in normal circumstances.
-		Population(m_fitnessMetric, {Chromosome("fcCUnDve"), Chromosome("jsxIOo"), Chromosome("ighTLM")}),
-		{},
-		m_options,
-		m_output
-	);
+	AlgorithmRunner runner(population, {}, m_options, m_output);
+	RandomisingAlgorithm algorithm;
 
-	CountingAlgorithm algorithm;
+	runner.run(algorithm);
+	BOOST_TEST(nextLineMatches(m_output, RoundSummaryRegex));
+	for (auto const& individual: runner.population().individuals())
+		BOOST_TEST(nextLineMatches(m_output, regex(individualPattern(individual))));
 
-	BOOST_TEST(m_output.is_empty());
 	runner.run(algorithm);
-	BOOST_TEST(countSubstringOccurrences(m_output.str(), toString(runner.population().individuals()[0].chromosome)) == 1);
-	runner.run(algorithm);
-	runner.run(algorithm);
-	runner.run(algorithm);
-	BOOST_TEST(countSubstringOccurrences(m_output.str(), toString(runner.population().individuals()[0].chromosome)) == 4);
+	BOOST_TEST(nextLineMatches(m_output, RoundSummaryRegex));
+	for (auto const& individual: runner.population().individuals())
+		BOOST_TEST(nextLineMatches(m_output, regex(individualPattern(individual))));
+	BOOST_TEST(m_output.peek() == EOF);
 }
 
 BOOST_FIXTURE_TEST_CASE(run_should_save_initial_population_to_file_if_autosave_file_specified, AlgorithmRunnerAutosaveFixture)
