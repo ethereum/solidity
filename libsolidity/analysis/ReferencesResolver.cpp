@@ -67,6 +67,22 @@ void ReferencesResolver::endVisit(Block const& _block)
 	m_resolver.setScope(_block.scope());
 }
 
+bool ReferencesResolver::visit(TryCatchClause const& _tryCatchClause)
+{
+	if (!m_resolveInsideCode)
+		return false;
+	m_resolver.setScope(&_tryCatchClause);
+	return true;
+}
+
+void ReferencesResolver::endVisit(TryCatchClause const& _tryCatchClause)
+{
+	if (!m_resolveInsideCode)
+		return;
+
+	m_resolver.setScope(_tryCatchClause.scope());
+}
+
 bool ReferencesResolver::visit(ForStatement const& _for)
 {
 	if (!m_resolveInsideCode)
