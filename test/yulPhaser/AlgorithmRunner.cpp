@@ -90,6 +90,7 @@ protected:
 	}
 
 	shared_ptr<FitnessMetric> m_fitnessMetric = make_shared<ChromosomeLengthMetric>();
+	Population const m_population = Population::makeRandom(m_fitnessMetric, 5, 0, 20);
 	stringstream m_output;
 	AlgorithmRunner::Options m_options;
 };
@@ -109,7 +110,6 @@ public:
 protected:
 	TemporaryDirectory m_tempDir;
 	string const m_autosavePath = m_tempDir.memberPath("population-autosave.txt");
-	Population const m_population = Population::makeRandom(m_fitnessMetric, 5, 0, 20);
 	RandomisingAlgorithm m_algorithm;
 };
 
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_SUITE(AlgorithmRunnerTest)
 BOOST_FIXTURE_TEST_CASE(run_should_call_runNextRound_once_per_round, AlgorithmRunnerFixture)
 {
 	m_options.maxRounds = 5;
-	AlgorithmRunner runner(Population(m_fitnessMetric), {}, m_options, m_output);
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
 
 	CountingAlgorithm algorithm;
 
@@ -132,10 +132,8 @@ BOOST_FIXTURE_TEST_CASE(run_should_call_runNextRound_once_per_round, AlgorithmRu
 
 BOOST_FIXTURE_TEST_CASE(run_should_print_round_summary_after_each_round, AlgorithmRunnerFixture)
 {
-	Population population(m_fitnessMetric, {Chromosome("fcCUnDve"), Chromosome("jsxIOo"), Chromosome("ighTLM")});
-
 	m_options.maxRounds = 1;
-	AlgorithmRunner runner(population, {}, m_options, m_output);
+	AlgorithmRunner runner(m_population, {}, m_options, m_output);
 	RandomisingAlgorithm algorithm;
 
 	runner.run(algorithm);
@@ -269,7 +267,7 @@ BOOST_FIXTURE_TEST_CASE(run_should_clear_cache_at_the_beginning_and_update_it_be
 	};
 
 	m_options.maxRounds = 10;
-	AlgorithmRunner runner(Population(m_fitnessMetric), caches, m_options, m_output);
+	AlgorithmRunner runner(m_population, caches, m_options, m_output);
 	CountingAlgorithm algorithm;
 
 	BOOST_TEST(algorithm.m_currentRound == 0);
