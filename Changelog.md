@@ -14,6 +14,7 @@ Bugfixes:
  * isoltest: Added new keyword `wei` to express function value in semantic tests
  * Standard-JSON-Interface: Fix a bug related to empty filenames and imports.
  * SMTChecker: Fix internal errors when analysing tuples.
+ * Yul AST Import: correctly import blocks as statements, switch statements and string literals.
 
 
 ### 0.6.3 (2020-02-18)
