@@ -70,6 +70,8 @@ private:
 
 	bool visit(Block const& _block) override;
 	void endVisit(Block const& _block) override;
+	bool visit(TryCatchClause const& _tryCatchClause) override;
+	void endVisit(TryCatchClause const& _tryCatchClause) override;
 	bool visit(ForStatement const& _for) override;
 	void endVisit(ForStatement const& _for) override;
 	void endVisit(VariableDeclarationStatement const& _varDeclStatement) override;
