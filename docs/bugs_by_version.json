@@ -211,6 +211,7 @@
     },
     "0.3.0": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -232,6 +233,7 @@
     },
     "0.3.1": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -252,6 +254,7 @@
     },
     "0.3.2": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -272,6 +275,7 @@
     },
     "0.3.3": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -291,6 +295,7 @@
     },
     "0.3.4": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -310,6 +315,7 @@
     },
     "0.3.5": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -329,6 +335,7 @@
     },
     "0.3.6": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -346,6 +353,7 @@
     },
     "0.4.0": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -363,6 +371,7 @@
     },
     "0.4.1": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -380,6 +389,7 @@
     },
     "0.4.10": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -395,6 +405,7 @@
     },
     "0.4.11": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -409,6 +420,7 @@
     },
     "0.4.12": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -422,6 +434,7 @@
     },
     "0.4.13": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -435,6 +448,7 @@
     },
     "0.4.14": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -447,6 +461,7 @@
     },
     "0.4.15": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -458,6 +473,7 @@
     },
     "0.4.16": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -471,6 +487,7 @@
     },
     "0.4.17": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -485,6 +502,7 @@
     },
     "0.4.18": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -498,6 +516,7 @@
     },
     "0.4.19": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -512,6 +531,7 @@
     },
     "0.4.2": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -528,6 +548,7 @@
     },
     "0.4.20": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -542,6 +563,7 @@
     },
     "0.4.21": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -556,6 +578,7 @@
     },
     "0.4.22": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -570,6 +593,7 @@
     },
     "0.4.23": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -583,6 +607,7 @@
     },
     "0.4.24": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -596,6 +621,7 @@
     },
     "0.4.25": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -607,6 +633,7 @@
     },
     "0.4.26": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2"
@@ -615,6 +642,7 @@
     },
     "0.4.3": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -630,6 +658,7 @@
     },
     "0.4.4": {
         "bugs": [
+            "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -644,6 +673,7 @@
     },
     "0.4.5": {
         "bugs": [
+            "privateCanBeOverridden",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -660,6 +690,7 @@
     },
     "0.4.6": {
         "bugs": [
+            "privateCanBeOverridden",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -675,6 +706,7 @@
     },
     "0.4.7": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -690,6 +722,7 @@
     },
     "0.4.8": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -705,6 +738,7 @@
     },
     "0.4.9": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -720,6 +754,7 @@
     },
     "0.5.0": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -731,6 +766,7 @@
     },
     "0.5.1": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -742,6 +778,7 @@
     },
     "0.5.10": {
         "bugs": [
+            "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers"
         ],
@@ -749,24 +786,28 @@
     },
     "0.5.11": {
         "bugs": [
+            "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5"
         ],
         "released": "2019-08-12"
     },
     "0.5.12": {
         "bugs": [
+            "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5"
         ],
         "released": "2019-10-01"
     },
     "0.5.13": {
         "bugs": [
+            "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5"
         ],
         "released": "2019-11-14"
     },
     "0.5.14": {
         "bugs": [
+            "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2LoopYulOptimizer"
         ],
@@ -774,16 +815,20 @@
     },
     "0.5.15": {
         "bugs": [
+            "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5"
         ],
         "released": "2019-12-17"
     },
     "0.5.16": {
-        "bugs": [],
+        "bugs": [
+            "privateCanBeOverridden"
+        ],
         "released": "2020-01-02"
     },
     "0.5.2": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -795,6 +840,7 @@
     },
     "0.5.3": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -806,6 +852,7 @@
     },
     "0.5.4": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -817,6 +864,7 @@
     },
     "0.5.5": {
         "bugs": [
+            "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
             "DynamicConstructorArgumentsClippedABIV2",
@@ -830,6 +878,7 @@
     },
     "0.5.6": {
         "bugs": [
+            "privateCanBeOverridden",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -843,6 +892,7 @@
     },
     "0.5.7": {
         "bugs": [
+            "privateCanBeOverridden",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -854,6 +904,7 @@
     },
     "0.5.8": {
         "bugs": [
+            "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
@@ -864,6 +915,7 @@
     },
     "0.5.9": {
         "bugs": [
+            "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
