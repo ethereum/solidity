@@ -3,6 +3,7 @@
 Language Features:
  * Inline Assembly: Allow assigning to `_slot` of local storage variable pointers.
  * General: Deprecated `value(...)` and `gas(...)` in favor of `{value: ...}` and `{gas: ...}`
+ * Inline Assembly: Perform control flow analysis on inline assembly. Allows storage returns to be set in assembly only.
 
 
 Compiler Features:
