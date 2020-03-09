@@ -942,13 +942,13 @@ string YulUtilFunctions::accessCalldataTailFunction(Type const& _type)
 		return Whiskers(R"(
 			function <functionName>(base_ref, ptr_to_tail) -> addr<?dynamicallySized>, length</dynamicallySized> {
 				let rel_offset_of_tail := calldataload(ptr_to_tail)
-				if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { revert(0, 0) }
+				if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { <invalidCalldataTailOffset> }
 				addr := add(base_ref, rel_offset_of_tail)
 				<?dynamicallySized>
 					length := calldataload(addr)
-					if gt(length, 0xffffffffffffffff) { revert(0, 0) }
-					if sgt(base_ref, sub(calldatasize(), mul(length, <calldataStride>))) { revert(0, 0) }
+					if gt(length, 0xffffffffffffffff) { <invalidCalldataTailLength> }
 					addr := add(addr, 32)
+					if sgt(addr, sub(calldatasize(), mul(length, <calldataStride>))) { <shortCalldataTail> }
 				</dynamicallySized>
 			}
 		)")
@@ -956,6 +956,9 @@ string YulUtilFunctions::accessCalldataTailFunction(Type const& _type)
 		("dynamicallySized", _type.isDynamicallySized())
 		("neededLength", toCompactHexWithPrefix(_type.calldataEncodedTailSize()))
 		("calldataStride", toCompactHexWithPrefix(_type.isDynamicallySized() ? dynamic_cast<ArrayType const&>(_type).calldataStride() : 0))
+		("invalidCalldataTailOffset", revertReasonIfDebug("Invalid calldata tail offset"))
+		("invalidCalldataTailLength", revertReasonIfDebug("Invalid calldata tail length"))
+		("shortCalldataTail", revertReasonIfDebug("Calldata tail too short"))
 		.render();
 	});
 }
