@@ -581,6 +581,11 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			po::bool_switch(),
 			"Print information about cache size and effectiveness after each round."
 		)
+		(
+			"show-seed",
+			po::bool_switch(),
+			"Print the selected random seed."
+		)
 	;
 	keywordDescription.add(outputDescription);
 
@@ -622,7 +627,8 @@ void Phaser::initialiseRNG(po::variables_map const& _arguments)
 		seed = SimulationRNG::generateSeed();
 
 	SimulationRNG::reset(seed);
-	cout << "Random seed: " << seed << endl;
+	if (_arguments["show-seed"].as<bool>())
+		cout << "Random seed: " << seed << endl;
 }
 
 AlgorithmRunner::Options Phaser::buildAlgorithmRunnerOptions(po::variables_map const& _arguments)
