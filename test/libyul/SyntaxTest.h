@@ -42,10 +42,7 @@ public:
 
 	/// Validates the settings, i.e. moves them from m_settings to m_validatedSettings.
 	/// Throws a runtime exception if any setting is left at this class (i.e. unknown setting).
-	/// Returns true, if the test case is supported in the current environment and false
-	/// otherwise which causes this test to be skipped.
-	/// This might check e.g. for restrictions on the EVM version.
-	bool validateSettings(langutil::EVMVersion _evmVersion) override;
+	void validateSettings() override;
 protected:
 	void parseAndAnalyze() override;
 };

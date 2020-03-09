@@ -161,7 +161,8 @@ TestTool::Result TestTool::process()
 			(AnsiColorized(cout, formatted, {BOLD}) << m_name << ": ").flush();
 
 			m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_options.evmVersion()});
-			if (m_test->validateSettings(m_options.evmVersion()))
+			m_test->validateSettings();
+			if (m_test->shouldRun())
 				switch (TestCase::TestResult result = m_test->run(outputMessages, "  ", formatted))
 				{
 					case TestCase::TestResult::Success:
