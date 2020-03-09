@@ -43,8 +43,7 @@ ostream& operator<<(ostream& _stream, Population const& _population);
 
 ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 {
-	_stream << "Fitness: " << _individual.fitness;
-	_stream << ", optimisations: " << _individual.chromosome;
+	_stream << _individual.fitness << " " << _individual.chromosome;
 
 	return _stream;
 }

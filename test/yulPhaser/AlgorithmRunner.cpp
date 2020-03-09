@@ -76,8 +76,7 @@ protected:
 	string individualPattern(Individual const& individual) const
 	{
 		ostringstream output;
-		output << "Fitness:" << individual.fitness << ",";
-		output << "optimisations:" << individual.chromosome;
+		output << individual.fitness << individual.chromosome;
 		return output.str();
 	}
 
