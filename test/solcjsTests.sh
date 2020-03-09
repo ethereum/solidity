@@ -58,6 +58,7 @@ DIR=$(mktemp -d)
     npm version --allow-same-version --no-git-tag-version $VERSION
 
     echo "Running solc-js tests..."
+    sed -i -e 's/latest/v0.5.0+commit.1d4f565a/' test/package.js
     npm run test
 )
 rm -rf "$DIR"
