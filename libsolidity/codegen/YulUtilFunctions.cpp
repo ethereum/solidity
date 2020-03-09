@@ -1333,6 +1333,35 @@ string YulUtilFunctions::allocateMemoryArrayFunction(ArrayType const& _type)
 
 string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 {
+	if (_from.category() == Type::Category::Function)
+	{
+		solAssert(_to.category() == Type::Category::Function, "");
+		FunctionType const& fromType = dynamic_cast<FunctionType const&>(_from);
+		FunctionType const& targetType = dynamic_cast<FunctionType const&>(_to);
+		solAssert(
+			fromType.isImplicitlyConvertibleTo(targetType) &&
+			fromType.sizeOnStack() == targetType.sizeOnStack() &&
+			(fromType.kind() == FunctionType::Kind::Internal || fromType.kind() == FunctionType::Kind::External) &&
+			fromType.kind() == targetType.kind(),
+			"Invalid function type conversion requested."
+		);
+		string const functionName =
+			"convert_" +
+			_from.identifier() +
+			"_to_" +
+			_to.identifier();
+		return m_functionCollector->createFunction(functionName, [&]() {
+			return Whiskers(R"(
+				function <functionName>(addr, functionId) -> outAddr, outFunctionId {
+					outAddr := addr
+					outFunctionId := functionId
+				}
+			)")
+			("functionName", functionName)
+			.render();
+		});
+	}
+
 	if (_from.sizeOnStack() != 1 || _to.sizeOnStack() != 1)
 		return conversionFunctionSpecial(_from, _to);
 
