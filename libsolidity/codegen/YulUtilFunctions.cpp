@@ -1350,7 +1350,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			_from.identifier() +
 			"_to_" +
 			_to.identifier();
-		return m_functionCollector->createFunction(functionName, [&]() {
+		return m_functionCollector.createFunction(functionName, [&]() {
 			return Whiskers(R"(
 				function <functionName>(addr, functionId) -> outAddr, outFunctionId {
 					outAddr := addr
