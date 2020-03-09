@@ -24,7 +24,7 @@
 #include <tools/yulPhaser/Population.h>
 #include <tools/yulPhaser/ProgramCache.h>
 
-#include <chrono>
+#include <ctime>
 #include <optional>
 #include <ostream>
 
@@ -73,8 +73,8 @@ public:
 private:
 	void printRoundSummary(
 		size_t _round,
-		std::chrono::steady_clock::time_point _roundTimeStart,
-		std::chrono::steady_clock::time_point _totalTimeStart
+		clock_t _roundTimeStart,
+		clock_t _totalTimeStart
 	) const;
 	void printInitialPopulation() const;
 	void printCacheStats() const;

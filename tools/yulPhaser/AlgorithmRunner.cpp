@@ -34,10 +34,10 @@ void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 	printInitialPopulation();
 	cacheClear();
 
-	chrono::steady_clock::time_point totalTimeStart = std::chrono::steady_clock::now();
+	clock_t totalTimeStart = clock();
 	for (size_t round = 0; !m_options.maxRounds.has_value() || round < m_options.maxRounds.value(); ++round)
 	{
-		chrono::steady_clock::time_point roundTimeStart = std::chrono::steady_clock::now();
+		clock_t roundTimeStart = clock();
 		cacheStartRound(round + 1);
 
 		m_population = _algorithm.runNextRound(m_population);
@@ -51,21 +51,21 @@ void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 
 void AlgorithmRunner::printRoundSummary(
 	size_t _round,
-	chrono::steady_clock::time_point _roundTimeStart,
-	chrono::steady_clock::time_point _totalTimeStart
+	clock_t _roundTimeStart,
+	clock_t _totalTimeStart
 ) const
 {
 	if (!m_options.showOnlyTopChromosome)
 	{
 		if (m_options.showRoundInfo)
 		{
-			chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-			auto roundTime = chrono::duration_cast<chrono::milliseconds>(now - _roundTimeStart).count();
-			auto totalTime = chrono::duration_cast<chrono::milliseconds>(now - _totalTimeStart).count();
+			clock_t now = clock();
+			double roundTime = static_cast<double>(now - _roundTimeStart) / CLOCKS_PER_SEC;
+			double totalTime = static_cast<double>(now - _totalTimeStart) / CLOCKS_PER_SEC;
 
 			m_outputStream << "---------- ROUND " << _round + 1;
-			m_outputStream << " [round: " << fixed << setprecision(1) << roundTime / 1000.0 << " s,";
-			m_outputStream << " total: " << fixed << setprecision(1) << totalTime / 1000.0 << " s]";
+			m_outputStream << " [round: " << fixed << setprecision(1) << roundTime << " s,";
+			m_outputStream << " total: " << fixed << setprecision(1) << totalTime << " s]";
 			m_outputStream << " ----------" << endl;
 		}
 		else if (m_population.individuals().size() > 0)
