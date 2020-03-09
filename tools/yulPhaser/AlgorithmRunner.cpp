@@ -55,14 +55,14 @@ void AlgorithmRunner::printRoundSummary(
 	clock_t _totalTimeStart
 ) const
 {
+	clock_t now = clock();
+	double roundTime = static_cast<double>(now - _roundTimeStart) / CLOCKS_PER_SEC;
+	double totalTime = static_cast<double>(now - _totalTimeStart) / CLOCKS_PER_SEC;
+
 	if (!m_options.showOnlyTopChromosome)
 	{
 		if (m_options.showRoundInfo)
 		{
-			clock_t now = clock();
-			double roundTime = static_cast<double>(now - _roundTimeStart) / CLOCKS_PER_SEC;
-			double totalTime = static_cast<double>(now - _totalTimeStart) / CLOCKS_PER_SEC;
-
 			m_outputStream << "---------- ROUND " << _round + 1;
 			m_outputStream << " [round: " << fixed << setprecision(1) << roundTime << " s,";
 			m_outputStream << " total: " << fixed << setprecision(1) << totalTime << " s]";
@@ -76,7 +76,10 @@ void AlgorithmRunner::printRoundSummary(
 	else if (m_population.individuals().size() > 0)
 	{
 		if (m_options.showRoundInfo)
+		{
 			m_outputStream << setw(5) << _round + 1 << " | ";
+			m_outputStream << setw(5) << fixed << setprecision(1) << totalTime << " | ";
+		}
 
 		m_outputStream << m_population.individuals()[0] << endl;
 	}

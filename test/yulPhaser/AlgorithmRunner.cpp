@@ -84,7 +84,7 @@ protected:
 	string topChromosomePattern(size_t roundNumber, Individual const& individual) const
 	{
 		ostringstream output;
-		output << roundNumber << "\\|" << individualPattern(individual);
+		output << roundNumber << R"(\|[0-9.]+\|)" << individualPattern(individual);
 		return output.str();
 	}
 
