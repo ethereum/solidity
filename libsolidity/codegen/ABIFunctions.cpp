@@ -1492,7 +1492,7 @@ string ABIFunctions::arrayStoreLengthForEncodingFunction(ArrayType const& _type,
 
 string ABIFunctions::createFunction(string const& _name, function<string ()> const& _creator)
 {
-	return m_functionCollector->createFunction(_name, _creator);
+	return m_functionCollector.createFunction(_name, _creator);
 }
 
 size_t ABIFunctions::headSize(TypePointers const& _targetTypes)

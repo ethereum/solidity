@@ -57,11 +57,11 @@ public:
 	explicit ABIFunctions(
 		langutil::EVMVersion _evmVersion,
 		RevertStrings _revertStrings,
-		std::shared_ptr<MultiUseYulFunctionCollector> _functionCollector = std::make_shared<MultiUseYulFunctionCollector>()
+		MultiUseYulFunctionCollector& _functionCollector
 	):
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
-		m_functionCollector(std::move(_functionCollector)),
+		m_functionCollector(_functionCollector),
 		m_utils(_evmVersion, m_revertStrings, m_functionCollector)
 	{}
 
@@ -247,7 +247,7 @@ private:
 
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings const m_revertStrings;
-	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;
+	MultiUseYulFunctionCollector& m_functionCollector;
 	YulUtilFunctions m_utils;
 };
 

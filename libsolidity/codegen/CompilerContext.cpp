@@ -151,7 +151,7 @@ pair<string, set<string>> CompilerContext::requestedYulFunctions()
 {
 	set<string> empty;
 	swap(empty, m_externallyUsedYulFunctions);
-	return make_pair(m_yulFunctionCollector->requestedFunctions(), std::move(empty));
+	return {m_yulFunctionCollector.requestedFunctions(), std::move(empty)};
 }
 
 void CompilerContext::addVariable(

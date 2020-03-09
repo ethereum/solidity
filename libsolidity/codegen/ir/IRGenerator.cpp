@@ -107,7 +107,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
 		for (auto const* fun: contract->definedFunctions())
 			generateFunction(*fun);
-	t("functions", m_context.functionCollector()->requestedFunctions());
+	t("functions", m_context.functionCollector().requestedFunctions());
 
 	resetContext(_contract);
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
@@ -116,7 +116,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
 		for (auto const* fun: contract->definedFunctions())
 			generateFunction(*fun);
-	t("runtimeFunctions", m_context.functionCollector()->requestedFunctions());
+	t("runtimeFunctions", m_context.functionCollector().requestedFunctions());
 	return t.render();
 }
 
@@ -130,7 +130,7 @@ string IRGenerator::generate(Block const& _block)
 string IRGenerator::generateFunction(FunctionDefinition const& _function)
 {
 	string functionName = m_context.functionName(_function);
-	return m_context.functionCollector()->createFunction(functionName, [&]() {
+	return m_context.functionCollector().createFunction(functionName, [&]() {
 		Whiskers t(R"(
 			function <functionName>(<params>) <returns> {
 				<body>
@@ -160,7 +160,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 	solAssert(_varDecl.isStateVariable(), "");
 
 	if (auto const* mappingType = dynamic_cast<MappingType const*>(type))
-		return m_context.functionCollector()->createFunction(functionName, [&]() {
+		return m_context.functionCollector().createFunction(functionName, [&]() {
 			pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
 			solAssert(slot_offset.second == 0, "");
 			FunctionType funType(_varDecl);
@@ -209,7 +209,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 	{
 		solUnimplementedAssert(type->isValueType(), "");
 
-		return m_context.functionCollector()->createFunction(functionName, [&]() {
+		return m_context.functionCollector().createFunction(functionName, [&]() {
 			pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
 
 			return Whiskers(R"(
@@ -383,11 +383,10 @@ string IRGenerator::memoryInit()
 void IRGenerator::resetContext(ContractDefinition const& _contract)
 {
 	solAssert(
-		m_context.functionCollector()->requestedFunctions().empty(),
+		m_context.functionCollector().requestedFunctions().empty(),
 		"Reset context while it still had functions."
 	);
 	m_context = IRGenerationContext(m_evmVersion, m_context.revertStrings(), m_optimiserSettings);
-	m_utils = YulUtilFunctions(m_evmVersion, m_context.revertStrings(), m_context.functionCollector());
 
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
 	for (auto const& var: ContractType(_contract).stateVariables())
