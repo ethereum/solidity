@@ -62,6 +62,24 @@ class ASTConstVisitor;
 class ASTNode: private boost::noncopyable
 {
 public:
+	struct CompareByID
+	{
+		using is_transparent = void;
+
+		bool operator()(ASTNode const* _lhs, ASTNode const* _rhs) const
+		{
+			return _lhs->id() < _rhs->id();
+		}
+		bool operator()(ASTNode const* _lhs, int64_t _rhs) const
+		{
+			return _lhs->id() < _rhs;
+		}
+		bool operator()(int64_t _lhs, ASTNode const* _rhs) const
+		{
+			return _lhs < _rhs->id();
+		}
+	};
+
 	using SourceLocation = langutil::SourceLocation;
 
 	explicit ASTNode(int64_t _id, SourceLocation const& _location);

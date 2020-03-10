@@ -14,6 +14,8 @@ set(sources
 	analysis/DeclarationContainer.h
 	analysis/DocStringAnalyser.cpp
 	analysis/DocStringAnalyser.h
+	analysis/ImmutableValidator.cpp
+	analysis/ImmutableValidator.h
 	analysis/GlobalContext.cpp
 	analysis/GlobalContext.h
 	analysis/NameAndTypeResolver.cpp
