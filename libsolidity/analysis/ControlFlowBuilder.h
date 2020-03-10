@@ -76,7 +76,7 @@ private:
 	void operator()(yul::Assignment const& _assignment) override;
 	void operator()(yul::FunctionCall const& _functionCall) override;
 	void operator()(yul::FunctionDefinition const& _functionDefinition) override;
-	void operator()(yul::Leave const& _leave) override;
+	void operator()(yul::Leave const& _leaveStatement) override;
 	bool visit(VariableDeclaration const& _variableDeclaration) override;
 	bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	bool visit(Identifier const& _identifier) override;
