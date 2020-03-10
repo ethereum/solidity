@@ -245,16 +245,6 @@ BOOST_AUTO_TEST_CASE(optional_types)
 	BOOST_CHECK(successParse("{ function f(a:u256) -> b {} }"));
 }
 
-BOOST_AUTO_TEST_CASE(invalid_types)
-{
-	/// testing invalid literal
-	/// NOTE: these will need to change when types are compared
-	CHECK_ERROR("{ let x:bool := 1:invalid }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
-	/// testing invalid variable declaration
-	CHECK_ERROR("{ let x:invalid := 1:bool }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
-	CHECK_ERROR("{ function f(a:invalid) {} }", TypeError, "\"invalid\" is not a valid type (user defined types are not yet supported).");
-}
-
 BOOST_AUTO_TEST_CASE(number_literals)
 {
 	BOOST_CHECK(successParse("{ let x:u256 := 1:u256 }"));
@@ -268,7 +258,7 @@ BOOST_AUTO_TEST_CASE(builtin_types)
 {
 	BOOST_CHECK(successParse("{ let x:bool := true:bool }"));
 	BOOST_CHECK(successParse("{ let x:u8 := 1:u8 }"));
-	BOOST_CHECK(successParse("{ let x:s8 := 1:u8 }"));
+	BOOST_CHECK(successParse("{ let x:s8 := 1:s8 }"));
 	BOOST_CHECK(successParse("{ let x:u32 := 1:u32 }"));
 	BOOST_CHECK(successParse("{ let x:s32 := 1:s32 }"));
 	BOOST_CHECK(successParse("{ let x:u64 := 1:u64 }"));
@@ -495,15 +485,7 @@ BOOST_AUTO_TEST_CASE(if_statement_invalid)
 {
 	CHECK_ERROR("{ if let x:u256 {} }", ParserError, "Literal or identifier expected.");
 	CHECK_ERROR("{ if true:bool let x:u256 := 3:u256 }", ParserError, "Expected '{' but got reserved keyword 'let'");
-	// TODO change this to an error once we check types.
-	BOOST_CHECK(successParse("{ if 42:u256 { } }"));
-}
-
-BOOST_AUTO_TEST_CASE(switch_case_types)
-{
-	CHECK_ERROR("{ switch 0:u256 case 0:u256 {} case 1:u32 {} }", TypeError, "Switch cases have non-matching types.");
-	// The following should be an error in the future, but this is not yet detected.
-	BOOST_CHECK(successParse("{ switch 0:u256 case 0:u32 {} case 1:u32 {} }"));
+	CHECK_ERROR("{ if 42:u256 { } }", TypeError, "Expected a value of boolean type");
 }
 
 BOOST_AUTO_TEST_CASE(switch_duplicate_case)
@@ -557,7 +539,7 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 		{
 			return _name == "builtin"_yulstring ? &f : nullptr;
 		}
-		BuiltinFunction f{"builtin"_yulstring, vector<Type>(2), vector<Type>(3), {}};
+		BuiltinFunction f{"builtin"_yulstring, vector<Type>(2), vector<Type>(3), {}, {}};
 	};
 
 	SimpleDialect dialect;

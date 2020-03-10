@@ -114,13 +114,12 @@ void SyntaxTest::parseAndAnalyze()
 
 }
 
-bool SyntaxTest::validateSettings(langutil::EVMVersion _evmVersion)
+void SyntaxTest::validateSettings()
 {
-	if (!CommonSyntaxTest::validateSettings(_evmVersion))
-		return false;
+	CommonSyntaxTest::validateSettings();
 
 	if (!m_settings.count("dialect"))
-		return true;
+		return;
 
 	string const dialect = m_settings["dialect"];
 	m_validatedSettings["dialect"] = dialect;
@@ -134,6 +133,4 @@ bool SyntaxTest::validateSettings(langutil::EVMVersion _evmVersion)
 			joinHumanReadable(validDialectNames(), ", ", " and ") +
 			"."
 		});
-
-	return true;
 }

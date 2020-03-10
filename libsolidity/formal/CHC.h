@@ -79,22 +79,38 @@ private:
 	void unknownFunctionCall(FunctionCall const& _funCall);
 	//@}
 
+	struct IdCompare
+	{
+		bool operator()(ASTNode const* lhs, ASTNode const* rhs) const
+		{
+			return lhs->id() < rhs->id();
+		}
+	};
+
 	/// Helpers.
 	//@{
-	void reset();
+	void resetSourceAnalysis();
+	void resetContractAnalysis();
 	void eraseKnowledge();
 	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr) override;
-	bool shouldVisit(ContractDefinition const& _contract) const;
 	bool shouldVisit(FunctionDefinition const& _function) const;
 	void setCurrentBlock(smt::SymbolicFunctionVariable const& _block, std::vector<smt::Expression> const* _arguments = nullptr);
+	std::set<Expression const*, IdCompare> transactionAssertions(ASTNode const* _txRoot);
+	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
 	//@}
 
 	/// Sort helpers.
 	//@{
+	static std::vector<smt::SortPointer> stateSorts(ContractDefinition const& _contract);
 	smt::SortPointer constructorSort();
 	smt::SortPointer interfaceSort();
+	static smt::SortPointer interfaceSort(ContractDefinition const& _const);
 	smt::SortPointer sort(FunctionDefinition const& _function);
 	smt::SortPointer sort(ASTNode const* _block);
+	/// @returns the sort of a predicate that represents the summary of _function in the scope of _contract.
+	/// The _contract is also needed because the same function might be in many contracts due to inheritance,
+	/// where the sort changes because the set of state variables might change.
+	static smt::SortPointer summarySort(FunctionDefinition const& _function, ContractDefinition const& _contract);
 	//@}
 
 	/// Predicate helpers.
@@ -102,14 +118,24 @@ private:
 	/// @returns a new block of given _sort and _name.
 	std::unique_ptr<smt::SymbolicFunctionVariable> createSymbolicBlock(smt::SortPointer _sort, std::string const& _name);
 
+	/// Creates summary predicates for all functions of all contracts
+	/// in a given _source.
+	void defineInterfacesAndSummaries(SourceUnit const& _source);
+
+	/// Genesis predicate.
+	smt::Expression genesis() { return (*m_genesisPredicate)({}); }
 	/// Interface predicate over current variables.
 	smt::Expression interface();
+	smt::Expression interface(ContractDefinition const& _contract);
 	/// Error predicate over current variables.
 	smt::Expression error();
 	smt::Expression error(unsigned _idx);
 
 	/// Creates a block for the given _node.
 	std::unique_ptr<smt::SymbolicFunctionVariable> createBlock(ASTNode const* _node, std::string const& _prefix = "");
+	/// Creates a call block for the given function _function from contract _contract.
+	/// The contract is needed here because of inheritance.
+	std::unique_ptr<smt::SymbolicFunctionVariable> createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract);
 
 	/// Creates a new error block to be used by an assertion.
 	/// Also registers the predicate.
@@ -117,6 +143,11 @@ private:
 
 	void connectBlocks(smt::Expression const& _from, smt::Expression const& _to, smt::Expression const& _constraints = smt::Expression(true));
 
+	/// @returns the symbolic values of the state variables at the beginning
+	/// of the current transaction.
+	std::vector<smt::Expression> initialStateVariables();
+	std::vector<smt::Expression> stateVariablesAtIndex(int _index);
+	std::vector<smt::Expression> stateVariablesAtIndex(int _index, ContractDefinition const& _contract);
 	/// @returns the current symbolic values of the current state variables.
 	std::vector<smt::Expression> currentStateVariables();
 
@@ -128,19 +159,26 @@ private:
 	std::vector<smt::Expression> currentBlockVariables();
 
 	/// @returns the predicate name for a given node.
-	std::string predicateName(ASTNode const* _node);
+	std::string predicateName(ASTNode const* _node, ContractDefinition const* _contract = nullptr);
 	/// @returns a predicate application over the current scoped variables.
 	smt::Expression predicate(smt::SymbolicFunctionVariable const& _block);
 	/// @returns a predicate application over @param _arguments.
 	smt::Expression predicate(smt::SymbolicFunctionVariable const& _block, std::vector<smt::Expression> const& _arguments);
+	/// @returns a predicate that defines a constructor summary.
+	smt::Expression summary(ContractDefinition const& _contract);
+	/// @returns a predicate that defines a function summary.
+	smt::Expression summary(FunctionDefinition const& _function);
 	//@}
 
 	/// Solver related.
 	//@{
 	/// Adds Horn rule to the solver.
 	void addRule(smt::Expression const& _rule, std::string const& _ruleName);
-	/// @returns true if query is unsatisfiable (safe).
-	bool query(smt::Expression const& _query, langutil::SourceLocation const& _location);
+	/// @returns <true, empty> if query is unsatisfiable (safe).
+	/// @returns <false, model> otherwise.
+	std::pair<smt::CheckResult, std::vector<std::string>> query(smt::Expression const& _query, langutil::SourceLocation const& _location);
+
+	void addVerificationTarget(ASTNode const* _scope, smt::Expression _from, smt::Expression _constraints, smt::Expression _errorId);
 	//@}
 
 	/// Misc.
@@ -157,15 +195,29 @@ private:
 
 	/// Implicit constructor predicate.
 	/// Explicit constructors are handled as functions.
-	std::unique_ptr<smt::SymbolicFunctionVariable> m_constructorPredicate;
+	std::unique_ptr<smt::SymbolicFunctionVariable> m_implicitConstructorPredicate;
+
+	/// Constructor summary predicate, exists after the constructor
+	/// (implicit or explicit) and before the interface.
+	std::unique_ptr<smt::SymbolicFunctionVariable> m_constructorSummaryPredicate;
 
 	/// Artificial Interface predicate.
 	/// Single entry block for all functions.
-	std::unique_ptr<smt::SymbolicFunctionVariable> m_interfacePredicate;
+	std::map<ContractDefinition const*, std::unique_ptr<smt::SymbolicFunctionVariable>> m_interfaces;
 
 	/// Artificial Error predicate.
 	/// Single error block for all assertions.
 	std::unique_ptr<smt::SymbolicFunctionVariable> m_errorPredicate;
+
+	/// Function predicates.
+	std::map<ContractDefinition const*, std::map<FunctionDefinition const*, std::unique_ptr<smt::SymbolicFunctionVariable>>> m_summaries;
+
+	smt::SymbolicIntVariable m_error{
+		TypeProvider::uint256(),
+		TypeProvider::uint256(),
+		"error",
+		m_context
+	};
 	//@}
 
 	/// Variables.
@@ -180,7 +232,12 @@ private:
 
 	/// Verification targets.
 	//@{
-	std::vector<Expression const*> m_verificationTargets;
+	struct CHCVerificationTarget: VerificationTarget
+	{
+		smt::Expression errorId;
+	};
+
+	std::map<ASTNode const*, CHCVerificationTarget, IdCompare> m_verificationTargets;
 
 	/// Assertions proven safe.
 	std::set<Expression const*> m_safeAssertions;
@@ -189,6 +246,10 @@ private:
 	/// Control-flow.
 	//@{
 	FunctionDefinition const* m_currentFunction = nullptr;
+
+	std::map<ASTNode const*, std::set<ASTNode const*, IdCompare>, IdCompare> m_callGraph;
+
+	std::map<ASTNode const*, std::set<Expression const*>, IdCompare> m_functionAssertions;
 
 	/// The current block.
 	smt::Expression m_currentBlock = smt::Expression(true);

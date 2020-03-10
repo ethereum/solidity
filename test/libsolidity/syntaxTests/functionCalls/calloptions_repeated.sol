@@ -15,6 +15,7 @@ contract C {
 // TypeError: (78-110): Option "gas" has already been set.
 // TypeError: (120-154): Option "gas" has already been set.
 // TypeError: (164-198): Option "value" has already been set.
+// Warning: (208-222): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
 // TypeError: (208-242): Option "value" has already been set.
 // TypeError: (252-293): Option "value" has already been set.
 // TypeError: (252-293): Option "gas" has already been set.

@@ -48,6 +48,7 @@ struct MachineAssemblyObject
 {
 	std::shared_ptr<evmasm::LinkerObject> bytecode;
 	std::string assembly;
+	std::unique_ptr<std::string> sourceMappings;
 };
 
 /*
@@ -114,6 +115,8 @@ private:
 	std::shared_ptr<yul::Object> m_parserResult;
 	langutil::ErrorList m_errors;
 	langutil::ErrorReporter m_errorReporter;
+
+	std::unique_ptr<std::string> m_sourceMappings;
 };
 
 }

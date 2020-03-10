@@ -126,7 +126,7 @@ EOF
         git config user.email "chris@ethereum.org"
         git clean -f -d -x
 
-        DIRNAME=$(cd "$REPO_ROOT" && git show -s --format="%cd-%H" --date=short)
+        DIRNAME=$(cd "$REPO_ROOT" && git show -s --format="%cd-%H" --date="format:%Y-%m-%d-%H-%M")
         mkdir -p "$DIRNAME"
         REPORT="$DIRNAME/$ZIP_SUFFIX.txt"
         cp ../report.txt "$REPORT"

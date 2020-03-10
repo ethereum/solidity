@@ -11,7 +11,7 @@ You can interleave Solidity statements with inline assembly in a language close
 to the one of the Ethereum virtual machine. This gives you more fine-grained control,
 which is especially useful when you are enhancing the language by writing libraries.
 
-The language used for inline assembly in Solidity is called `Yul <yul>`_
+The language used for inline assembly in Solidity is called :ref:`Yul <yul>`
 and it is documented in its own section. This section will only cover
 how the inline assembly code can interface with the surrounding Solidity code.
 
@@ -24,7 +24,7 @@ how the inline assembly code can interface with the surrounding Solidity code.
 
 
 An inline assembly block is marked by ``assembly { ... }``, where the code inside
-the curly braces is code in the `Yul <yul>`_ language.
+the curly braces is code in the :ref:`Yul <yul>` language.
 
 The inline assembly code can access local Solidity variables as explained below.
 
@@ -172,6 +172,11 @@ Assignments are possible to assembly-local variables and to function-local
 variables. Take care that when you assign to variables that point to
 memory or storage, you will only change the pointer and not the data.
 
+You can assign to the ``_slot`` part of a local storage variable pointer.
+For these (structs, arrays or mappings), the ``_offset`` part is always zero.
+It is not possible to assign to the ``_slot`` or ``_offset`` part of a state variable,
+though.
+
 
 
 Things to Avoid
@@ -225,4 +230,3 @@ first slot of the array and followed by the array elements.
     Statically-sized memory arrays do not have a length field, but it might be added later
     to allow better convertibility between statically- and dynamically-sized arrays, so
     do not rely on this.
-

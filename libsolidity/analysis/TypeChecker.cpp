@@ -677,10 +677,20 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					m_errorReporter.typeError(_identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
 					return size_t(-1);
 				}
-				else if (_context != yul::IdentifierContext::RValue)
+				else if (_context == yul::IdentifierContext::LValue)
 				{
-					m_errorReporter.typeError(_identifier.location, "Storage variables cannot be assigned to.");
-					return size_t(-1);
+					if (var->isStateVariable())
+					{
+						m_errorReporter.typeError(_identifier.location, "State variables cannot be assigned to - you have to use \"sstore()\".");
+						return size_t(-1);
+					}
+					else if (ref->second.isOffset)
+					{
+						m_errorReporter.typeError(_identifier.location, "Only _slot can be assigned to.");
+						return size_t(-1);
+					}
+					else
+						solAssert(ref->second.isSlot, "");
 				}
 			}
 			else if (!var->isConstant() && var->isStateVariable())
@@ -1693,22 +1703,21 @@ void TypeChecker::typeCheckFunctionCall(
 
 	if (_functionType->kind() == FunctionType::Kind::Declaration)
 	{
-		m_errorReporter.typeError(
-			_functionCall.location(),
-			"Cannot call function via contract type name."
-		);
+		if (
+			m_scope->derivesFrom(*_functionType->declaration().annotation().contract) &&
+			!dynamic_cast<FunctionDefinition const&>(_functionType->declaration()).isImplemented()
+		)
+			m_errorReporter.typeError(
+				_functionCall.location(),
+				"Cannot call unimplemented base function."
+			);
+		else
+			m_errorReporter.typeError(
+				_functionCall.location(),
+				"Cannot call function via contract type name."
+			);
 		return;
 	}
-	if (_functionType->kind() == FunctionType::Kind::Internal && _functionType->hasDeclaration())
-		if (auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(&_functionType->declaration()))
-			// functionDefinition->annotation().contract != m_scope ensures that this is a qualified access,
-			// e.g. ``A.f();`` instead of a simple function call like ``f();`` (the latter is valid for unimplemented
-			// functions).
-			if (functionDefinition->annotation().contract != m_scope && !functionDefinition->isImplemented())
-				m_errorReporter.typeError(
-					_functionCall.location(),
-					"Cannot call unimplemented base function."
-				);
 
 	// Check for unsupported use of bare static call
 	if (
@@ -2302,7 +2311,11 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 			else if (!expressionFunctionType->isPayable())
 				m_errorReporter.typeError(
 					_functionCallOptions.location(),
-					"Cannot set option \"value\" on a non-payable function type."
+					kind == FunctionType::Kind::Creation ?
+						"Cannot set option \"value\", since the constructor of " +
+						expressionFunctionType->returnParameterTypes().front()->toString() +
+						" is not payable." :
+						"Cannot set option \"value\" on a non-payable function type."
 				);
 			else
 			{
@@ -2512,11 +2525,23 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	annotation.type = possibleMembers.front().type;
 
 	if (auto funType = dynamic_cast<FunctionType const*>(annotation.type))
+	{
 		solAssert(
 			!funType->bound() || exprType->isImplicitlyConvertibleTo(*funType->selfType()),
 			"Function \"" + memberName + "\" cannot be called on an object of type " +
 			exprType->toString() + " (expected " + funType->selfType()->toString() + ")."
 		);
+
+		if (
+			dynamic_cast<FunctionType const*>(exprType) &&
+			!annotation.referencedDeclaration &&
+			(memberName == "value" || memberName == "gas")
+		)
+			m_errorReporter.warning(
+				_memberAccess.location(),
+				"Using \"." + memberName + "(...)\" is deprecated. Use \"{" + memberName + ": ...}\" instead."
+			);
+	}
 
 	if (auto const* structType = dynamic_cast<StructType const*>(exprType))
 		annotation.isLValue = !structType->dataStoredIn(DataLocation::CallData);

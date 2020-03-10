@@ -15,6 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <test/yulPhaser/Common.h>
+
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/Program.h>
 
@@ -30,7 +32,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <cassert>
-#include <regex>
 #include <string>
 
 using namespace std;
@@ -50,12 +51,6 @@ namespace
 			return skipRedundantBlocks(get<Block>(_block.statements[0]));
 		else
 			return _block;
-	}
-
-	string stripWhitespace(string const& input)
-	{
-		regex whitespaceRegex("\\s+");
-		return regex_replace(input, whitespaceRegex, "");
 	}
 }
 

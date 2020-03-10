@@ -390,7 +390,7 @@ DeclarationAnnotation& Declaration::annotation() const
 bool VariableDeclaration::isLValue() const
 {
 	// Constant declared variables are Read-Only
-	if (m_isConstant)
+	if (isConstant())
 		return false;
 	// External function arguments of reference type are Read-Only
 	if (isExternalCallableParameter() && dynamic_cast<ReferenceType const*>(type()))

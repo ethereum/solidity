@@ -1,6 +1,8 @@
 contract receiver { function nopay() public {} }
 contract test {
-    function f() public { (new receiver()).nopay.value(10)(); }
+    function f() public { (new receiver()).nopay{value: 10}(); }
+    function g() public { (new receiver()).nopay.value(10)(); }
 }
 // ----
-// TypeError: (91-119): Member "value" is only available for payable functions.
+// TypeError: (91-124): Cannot set option "value" on a non-payable function type.
+// TypeError: (156-184): Member "value" is only available for payable functions.

@@ -19,9 +19,20 @@
 
 #include <libyul/optimiser/Suite.h>
 
+#include <regex>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
+
+vector<size_t> phaser::test::chromosomeLengths(Population const& _population)
+{
+	vector<size_t> lengths;
+	for (auto const& individual: _population.individuals())
+		lengths.push_back(individual.chromosome.length());
+
+	return lengths;
+}
 
 map<string, size_t> phaser::test::enumerateOptmisationSteps()
 {
@@ -31,4 +42,25 @@ map<string, size_t> phaser::test::enumerateOptmisationSteps()
 		stepIndices.insert({nameAndAbbreviation.first, i++});
 
 	return stepIndices;
+}
+
+string phaser::test::stripWhitespace(string const& input)
+{
+	regex whitespaceRegex("\\s+");
+	return regex_replace(input, whitespaceRegex, "");
+}
+
+size_t phaser::test::countSubstringOccurrences(string const& _inputString, string const& _substring)
+{
+	assert(_substring.size() > 0);
+
+	size_t count = 0;
+	size_t lastOccurrence = 0;
+	while ((lastOccurrence = _inputString.find(_substring, lastOccurrence)) != string::npos)
+	{
+		++count;
+		lastOccurrence += _substring.size();
+	}
+
+	return count;
 }

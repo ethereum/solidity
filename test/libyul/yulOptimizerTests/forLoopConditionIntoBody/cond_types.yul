@@ -19,7 +19,7 @@
 //     { }
 //     for { } a { }
 //     { }
-//     for { } 1 { }
+//     for { } true { }
 //     {
 //         if iszero(add(a, a)) { break }
 //     }

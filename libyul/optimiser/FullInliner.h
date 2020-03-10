@@ -69,7 +69,7 @@ class FullInliner: public ASTModifier
 {
 public:
 	static constexpr char const* name{"FullInliner"};
-	static void run(OptimiserStepContext&, Block& _ast);
+	static void run(OptimiserStepContext& _context, Block& _ast);
 
 	/// Inlining heuristic.
 	/// @param _callSite the name of the function in which the function call is located.
@@ -89,7 +89,7 @@ public:
 	void tentativelyUpdateCodeSize(YulString _function, YulString _callSite);
 
 private:
-	FullInliner(Block& _ast, NameDispenser& _dispenser);
+	FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& _dialect);
 	void run();
 
 	void updateCodeSize(FunctionDefinition const& _fun);
@@ -108,6 +108,7 @@ private:
 	std::set<YulString> m_constants;
 	std::map<YulString, size_t> m_functionSizes;
 	NameDispenser& m_nameDispenser;
+	Dialect const& m_dialect;
 };
 
 /**
@@ -117,10 +118,11 @@ private:
 class InlineModifier: public ASTModifier
 {
 public:
-	InlineModifier(FullInliner& _driver, NameDispenser& _nameDispenser, YulString _functionName):
+	InlineModifier(FullInliner& _driver, NameDispenser& _nameDispenser, YulString _functionName, Dialect const& _dialect):
 		m_currentFunction(std::move(_functionName)),
 		m_driver(_driver),
-		m_nameDispenser(_nameDispenser)
+		m_nameDispenser(_nameDispenser),
+		m_dialect(_dialect)
 	{ }
 
 	void operator()(Block& _block) override;
@@ -132,6 +134,7 @@ private:
 	YulString m_currentFunction;
 	FullInliner& m_driver;
 	NameDispenser& m_nameDispenser;
+	Dialect const& m_dialect;
 };
 
 /**

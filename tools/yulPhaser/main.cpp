@@ -17,6 +17,8 @@
 
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/Population.h>
+#include <tools/yulPhaser/FitnessMetrics.h>
+#include <tools/yulPhaser/GeneticAlgorithms.h>
 #include <tools/yulPhaser/Program.h>
 #include <tools/yulPhaser/SimulationRNG.h>
 
@@ -69,9 +71,27 @@ CharStream loadSource(string const& _sourcePath)
 
 void runAlgorithm(string const& _sourcePath)
 {
+	constexpr size_t populationSize = 20;
+	constexpr size_t minChromosomeLength = 12;
+	constexpr size_t maxChromosomeLength = 30;
+
 	CharStream sourceCode = loadSource(_sourcePath);
-	auto population = Population::makeRandom(Program::load(sourceCode), 10);
-	population.run(nullopt, cout);
+	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode), 5);
+	auto population = Population::makeRandom(
+		fitnessMetric,
+		populationSize,
+		minChromosomeLength,
+		maxChromosomeLength
+	);
+	RandomAlgorithm(
+		population,
+		cout,
+		{
+			/* elitePoolSize = */ 1.0 / populationSize,
+			/* minChromosomeLength = */ minChromosomeLength,
+			/* maxChromosomeLength = */ maxChromosomeLength,
+		}
+	).run();
 }
 
 CommandLineParsingResult parseCommandLine(int argc, char** argv)

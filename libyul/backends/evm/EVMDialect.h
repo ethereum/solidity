@@ -68,8 +68,8 @@ struct EVMDialect: public Dialect
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
 
-	BuiltinFunctionForEVM const* discardFunction() const override { return builtin("pop"_yulstring); }
-	BuiltinFunctionForEVM const* equalityFunction() const override { return builtin("eq"_yulstring); }
+	BuiltinFunctionForEVM const* discardFunction(YulString /*_type*/) const override { return builtin("pop"_yulstring); }
+	BuiltinFunctionForEVM const* equalityFunction(YulString /*_type*/) const override { return builtin("eq"_yulstring); }
 	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("iszero"_yulstring); }
 
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
@@ -101,6 +101,10 @@ struct EVMDialectTyped: public EVMDialect
 {
 	/// Constructor, should only be used internally. Use the factory function below.
 	EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess);
+
+	BuiltinFunctionForEVM const* discardFunction(YulString _type) const override;
+	BuiltinFunctionForEVM const* equalityFunction(YulString _type) const override;
+	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("not"_yulstring); }
 
 	static EVMDialectTyped const& instance(langutil::EVMVersion _version);
 };

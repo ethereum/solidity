@@ -13,5 +13,5 @@ contract C
 		assert(a[1][1] == 0);
 	}
 }
-// ====
-// SMTSolvers: z3
+// ----
+// Warning: (184-204): Assertion violation happens here

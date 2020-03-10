@@ -646,7 +646,7 @@ External (or public) functions have the following members:
 Example that shows how to use the members::
 
     pragma solidity >=0.4.16 <0.7.0;
-
+    // This will report a warning
 
     contract Example {
         function f() public payable returns (bytes4) {

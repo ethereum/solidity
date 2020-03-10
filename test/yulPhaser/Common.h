@@ -28,6 +28,10 @@
 
 #pragma once
 
+#include <tools/yulPhaser/Chromosome.h>
+#include <tools/yulPhaser/FitnessMetrics.h>
+#include <tools/yulPhaser/Population.h>
+
 #include <cassert>
 #include <map>
 #include <string>
@@ -36,11 +40,36 @@
 namespace solidity::phaser::test
 {
 
+/**
+ * Fitness metric that only takes into account the number of optimisation steps in the chromosome.
+ * Recommended for use in tests because it's much faster than ProgramSize metric and it's very
+ * easy to guess the result at a glance.
+ */
+class ChromosomeLengthMetric: public FitnessMetric
+{
+public:
+	using FitnessMetric::FitnessMetric;
+	size_t evaluate(Chromosome const& _chromosome) const override { return _chromosome.length(); }
+};
+
 // CHROMOSOME AND POPULATION HELPERS
+
+/// Returns a vector containing lengths of all chromosomes in the population (in the same order).
+std::vector<size_t> chromosomeLengths(Population const& _population);
+
 /// Assigns indices from 0 to N to all optimisation steps available in the OptimiserSuite.
 /// This is a convenience helper to make it easier to test their distribution with tools made for
 /// integers.
 std::map<std::string, size_t> enumerateOptmisationSteps();
+
+// STRING UTILITIES
+
+/// Returns the input string with all the whitespace characters (spaces, line endings, etc.) removed.
+std::string stripWhitespace(std::string const& input);
+
+/// Counts the number of times one strinng can be found inside another. Only non-overlapping
+/// occurrences are counted.
+size_t countSubstringOccurrences(std::string const& _inputString, std::string const& _substring);
 
 // STATISTICAL UTILITIES
 

@@ -10,6 +10,7 @@ SOLC=${REPO_ROOT}/${SOLIDITY_BUILD_DIR}/solc/solc
 SPLITSOURCES=${REPO_ROOT}/scripts/splitSources.py
 
 SYNTAXTESTS_DIR="${REPO_ROOT}/test/libsolidity/syntaxTests"
+ASTJSONTESTS_DIR="${REPO_ROOT}/test/libsolidity/ASTJSON"
 NSOURCES="$(find $SYNTAXTESTS_DIR -type f | wc -l)"
 
 # DEV_DIR="${REPO_ROOT}/../tmp/contracts/"
@@ -75,7 +76,7 @@ echo "Looking at $NSOURCES .sol files..."
 WORKINGDIR=$PWD
 
 # for solfile in $(find $DEV_DIR -name *.sol)
-for solfile in $(find $SYNTAXTESTS_DIR -name *.sol)
+for solfile in $(find $SYNTAXTESTS_DIR $ASTJSONTESTS_DIR -name *.sol)
 do
     echo -n "."
     # create a temporary sub-directory

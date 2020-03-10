@@ -50,6 +50,7 @@ namespace solidity::frontend::test
 	T(Identifier, "identifier", 0) \
 	/* type keywords */            \
 	K(Ether, "ether", 0)           \
+	K(Wei, "wei", 0)               \
 	K(Hex, "hex", 0)               \
 	K(Boolean, "boolean", 0)       \
 	/* special keywords */         \
@@ -229,6 +230,21 @@ struct FunctionCallArgs
 	}
 };
 
+/// Units that can be used to express function value
+enum class FunctionValueUnit
+{
+	Wei,
+	Ether
+};
+
+/// Holds value along with unit it was expressed in originally.
+/// @a value is always in wei - it is converted back when stringifying again.
+struct FunctionValue
+{
+	u256 value;
+	FunctionValueUnit unit = FunctionValueUnit::Wei;
+};
+
 /**
  * Represents a function call read from an input stream. It contains the signature, the
  * arguments, an optional ether value and an expected execution result.
@@ -237,8 +253,10 @@ struct FunctionCall
 {
 	/// Signature of the function call, e.g. `f(uint256, uint256)`.
 	std::string signature;
-	/// Optional `ether` value that can be send with the call.
-	u256 value;
+	/// Optional value that can be sent with the call.
+	/// Value is expressed in wei, smallest unit of ether
+	/// Value has a field unit which represents denomination on which value was expressed originally
+	FunctionValue value;
 	/// Object that holds all function parameters in their `bytes`
 	/// representations given by the contract ABI.
 	FunctionCallArgs arguments;

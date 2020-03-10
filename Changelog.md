@@ -1,10 +1,30 @@
+### 0.6.4 (2020-03-10)
+
+Language Features:
+ * General: Deprecated `value(...)` and `gas(...)` in favor of `{value: ...}` and `{gas: ...}`
+ * Inline Assembly: Allow assigning to `_slot` of local storage variable pointers.
+ * Inline Assembly: Perform control flow analysis on inline assembly. Allows storage returns to be set in assembly only.
+
+
+Compiler Features:
+ * AssemblyStack: Support for source locations (source mappings) and thus debugging Yul sources.
+ * Commandline Interface: Enable output of experimental optimized IR via ``--ir-optimized``.
+
+
+Bugfixes:
+ * Inheritance: Fix incorrect error on calling unimplemented base functions.
+ * Reference Resolver: Fix scoping issue following try/catch statements.
+ * Standard-JSON-Interface: Fix a bug related to empty filenames and imports.
+ * SMTChecker: Fix internal errors when analysing tuples.
+ * Yul AST Import: correctly import blocks as statements, switch statements and string literals.
+
+
 ### 0.6.3 (2020-02-18)
 
 Language Features:
  * Allow contract types and enums as keys for mappings.
  * Allow function selectors to be used as compile-time constants.
  * Report source locations for structured documentation errors.
-
 
 
 Compiler Features:
@@ -18,7 +38,6 @@ Bugfixes:
  * Assembly: Added missing `source` field to legacy assembly json output to complete the source reference.
  * Parser: Fix an internal error for ``abstract`` without ``contract``.
  * Type Checker: Make invalid calls to uncallable types fatal errors instead of regular.
-
 
 
 ### 0.6.2 (2020-01-27)

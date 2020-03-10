@@ -94,7 +94,8 @@ int registerTests(
 					{
 						stringstream errorStream;
 						auto testCase = _testCaseCreator(config);
-						if (testCase->validateSettings(solidity::test::CommonOptions::get().evmVersion()))
+						testCase->validateSettings();
+						if (testCase->shouldRun())
 							switch (testCase->run(errorStream))
 							{
 								case TestCase::TestResult::Success:

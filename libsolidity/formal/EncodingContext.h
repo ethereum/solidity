@@ -140,6 +140,7 @@ public:
 	void pushSolver();
 	void popSolver();
 	void addAssertion(Expression const& _e);
+	unsigned solverStackHeigh() { return m_assertions.size(); } const
 	SolverInterface* solver()
 	{
 		solAssert(m_solver, "");

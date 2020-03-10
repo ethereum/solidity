@@ -166,6 +166,7 @@ namespace solidity::langutil
 	K(Indexed, "indexed", 0)                                           \
 	K(Interface, "interface", 0)                                       \
 	K(Internal, "internal", 0)                                         \
+	K(Immutable, "immutable", 0)                                       \
 	K(Import, "import", 0)                                             \
 	K(Is, "is", 0)                                                     \
 	K(Library, "library", 0)                                           \
@@ -243,7 +244,6 @@ namespace solidity::langutil
 	K(Default, "default", 0)                                           \
 	K(Define, "define", 0)                                             \
 	K(Final, "final", 0)                                               \
-	K(Immutable, "immutable", 0)                                       \
 	K(Implements, "implements", 0)                                     \
 	K(In, "in", 0)                                                     \
 	K(Inline, "inline", 0)                                             \

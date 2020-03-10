@@ -91,13 +91,16 @@ WasmDialect::WasmDialect()
 	m_functions["i64.load"_yulstring].sideEffects.sideEffectFreeIfNoMSize = true;
 
 	// Drop is actually overloaded for all types, but Yul does not support that.
-	// We could introduce "i32.drop".
+	// Because of that, we introduce "i32.drop".
 	addFunction("drop", {i64}, {});
+	addFunction("i32.drop", {i32}, {});
 
 	addFunction("nop", {}, {});
 	addFunction("unreachable", {}, {}, false);
 	m_functions["unreachable"_yulstring].sideEffects.invalidatesStorage = false;
 	m_functions["unreachable"_yulstring].sideEffects.invalidatesMemory = false;
+	m_functions["unreachable"_yulstring].controlFlowSideEffects.terminates = true;
+	m_functions["unreachable"_yulstring].controlFlowSideEffects.reverts = true;
 
 	addFunction("datasize", {i64}, {i64}, true, true);
 	addFunction("dataoffset", {i64}, {i64}, true, true);
@@ -112,6 +115,22 @@ BuiltinFunction const* WasmDialect::builtin(YulString _name) const
 		return &it->second;
 	else
 		return nullptr;
+}
+
+BuiltinFunction const* WasmDialect::discardFunction(YulString _type) const
+{
+	if (_type == "i32"_yulstring)
+		return builtin("i32.drop"_yulstring);
+	yulAssert(_type == "i64"_yulstring, "");
+	return builtin("drop"_yulstring);
+}
+
+BuiltinFunction const* WasmDialect::equalityFunction(YulString _type) const
+{
+	if (_type == "i32"_yulstring)
+		return builtin("i32.eq"_yulstring);
+	yulAssert(_type == "i64"_yulstring, "");
+	return builtin("i64.eq"_yulstring);
 }
 
 WasmDialect const& WasmDialect::instance()
@@ -130,7 +149,13 @@ void WasmDialect::addEthereumExternals()
 	static string const i64{"i64"};
 	static string const i32{"i32"};
 	static string const i32ptr{"i32"}; // Uses "i32" on purpose.
-	struct External { string name; vector<string> parameters; vector<string> returns; };
+	struct External
+	{
+		string name;
+		vector<string> parameters;
+		vector<string> returns;
+		ControlFlowSideEffects controlFlowSideEffects = ControlFlowSideEffects{};
+	};
 	static vector<External> externals{
 		{"getAddress", {i32ptr}, {}},
 		{"getExternalBalance", {i32ptr, i32ptr}, {}},
@@ -158,11 +183,11 @@ void WasmDialect::addEthereumExternals()
 		{"log", {i32ptr, i32, i32, i32ptr, i32ptr, i32ptr, i32ptr}, {}},
 		{"getBlockNumber", {}, {i64}},
 		{"getTxOrigin", {i32ptr}, {}},
-		{"finish", {i32ptr, i32}, {}},
-		{"revert", {i32ptr, i32}, {}},
+		{"finish", {i32ptr, i32}, {}, ControlFlowSideEffects{true, false}},
+		{"revert", {i32ptr, i32}, {}, ControlFlowSideEffects{true, true}},
 		{"getReturnDataSize", {}, {i32}},
 		{"returnDataCopy", {i32ptr, i32, i32}, {}},
-		{"selfDestruct", {i32ptr}, {}},
+		{"selfDestruct", {i32ptr}, {}, ControlFlowSideEffects{true, false}},
 		{"getBlockTimestamp", {}, {i64}}
 	};
 	for (External const& ext: externals)
@@ -176,6 +201,7 @@ void WasmDialect::addEthereumExternals()
 			f.returns.emplace_back(YulString(p));
 		// TODO some of them are side effect free.
 		f.sideEffects = SideEffects::worst();
+		f.controlFlowSideEffects = ext.controlFlowSideEffects;
 		f.isMSize = false;
 		f.sideEffects.invalidatesStorage = (ext.name == "storageStore");
 		f.literalArguments = false;

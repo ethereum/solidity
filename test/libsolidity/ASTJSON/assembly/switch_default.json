@@ -1,0 +1,116 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      6
+    ]
+  },
+  "id": 7,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "documentation": null,
+      "fullyImplemented": true,
+      "id": 6,
+      "linearizedBaseContracts":
+      [
+        6
+      ],
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 4,
+            "nodeType": "Block",
+            "src": "42:48:1",
+            "statements":
+            [
+              {
+                "AST":
+                {
+                  "nodeType": "YulBlock",
+                  "src": "61:23:1",
+                  "statements":
+                  [
+                    {
+                      "cases":
+                      [
+                        {
+                          "body":
+                          {
+                            "nodeType": "YulBlock",
+                            "src": "80:2:1",
+                            "statements": []
+                          },
+                          "nodeType": "YulCase",
+                          "src": "72:10:1",
+                          "value": "default"
+                        }
+                      ],
+                      "expression":
+                      {
+                        "kind": "number",
+                        "nodeType": "YulLiteral",
+                        "src": "70:1:1",
+                        "type": "",
+                        "value": "0"
+                      },
+                      "nodeType": "YulSwitch",
+                      "src": "63:19:1"
+                    }
+                  ]
+                },
+                "evmVersion": %EVMVERSION%,
+                "externalReferences": [],
+                "id": 3,
+                "nodeType": "InlineAssembly",
+                "src": "52:32:1"
+              }
+            ]
+          },
+          "documentation": null,
+          "functionSelector": "e2179b8e",
+          "id": 5,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "g",
+          "nodeType": "FunctionDefinition",
+          "overrides": null,
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "27:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "42:0:1"
+          },
+          "scope": 6,
+          "src": "17:73:1",
+          "stateMutability": "view",
+          "virtual": false,
+          "visibility": "public"
+        }
+      ],
+      "scope": 7,
+      "src": "0:92:1"
+    }
+  ],
+  "src": "0:93:1"
+}

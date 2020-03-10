@@ -71,6 +71,9 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 		m_settings.erase("ABIEncoderV1Only");
 	}
 
+	if (m_runWithABIEncoderV1Only && solidity::test::CommonOptions::get().useABIEncoderV2)
+		m_shouldRun = false;
+
 	if (m_settings.count("revertStrings"))
 	{
 		auto revertStrings = revertStringsFromString(m_settings["revertStrings"]);
@@ -90,17 +93,11 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	soltestAssert(!m_tests.empty(), "No tests specified in " + _filename);
 }
 
-bool SemanticTest::validateSettings(langutil::EVMVersion _evmVersion)
-{
-	if (m_runWithABIEncoderV1Only && solidity::test::CommonOptions::get().useABIEncoderV2)
-		return false;
-	return EVMVersionRestrictedTestCase::validateSettings(_evmVersion);
-}
-
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	for(bool compileViaYul: set<bool>{!m_runWithoutYul, m_runWithYul})
 	{
+		reset();
 		bool success = true;
 
 		m_compileViaYul = compileViaYul;
@@ -133,7 +130,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 			else
 			{
 				if (test.call().isConstructor)
-					deploy("", test.call().value, test.call().arguments.rawBytes(), libraries);
+					deploy("", test.call().value.value, test.call().arguments.rawBytes(), libraries);
 				else
 					soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
 				constructed = true;
@@ -151,7 +148,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 			{
 				bytes output;
 				if (test.call().useCallWithoutSignature)
-					output = callLowLevel(test.call().arguments.rawBytes(), test.call().value);
+					output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
 				else
 				{
 					soltestAssert(
@@ -161,7 +158,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 
 					output = callContractFunctionWithValueNoEncoding(
 						test.call().signature,
-						test.call().value,
+						test.call().value.value,
 						test.call().arguments.rawBytes()
 					);
 				}

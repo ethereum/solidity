@@ -56,11 +56,10 @@ public:
 	):
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
-		m_optimiserSettings(std::move(_optimiserSettings)),
-		m_functions(std::make_shared<MultiUseYulFunctionCollector>())
+		m_optimiserSettings(std::move(_optimiserSettings))
 	{}
 
-	std::shared_ptr<MultiUseYulFunctionCollector> functionCollector() const { return m_functions; }
+	MultiUseYulFunctionCollector& functionCollector() { return m_functions; }
 
 	/// Sets the current inheritance hierarchy from derived to base.
 	void setInheritanceHierarchy(std::vector<ContractDefinition const*> _hierarchy)
@@ -108,7 +107,7 @@ private:
 	std::map<VariableDeclaration const*, IRVariable> m_localVariables;
 	/// Storage offsets of state variables
 	std::map<VariableDeclaration const*, std::pair<u256, unsigned>> m_stateVariables;
-	std::shared_ptr<MultiUseYulFunctionCollector> m_functions;
+	MultiUseYulFunctionCollector m_functions;
 	size_t m_varCounter = 0;
 };
 

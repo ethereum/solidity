@@ -127,6 +127,7 @@ static string const g_strInterface = "interface";
 static string const g_strYul = "yul";
 static string const g_strYulDialect = "yul-dialect";
 static string const g_strIR = "ir";
+static string const g_strIROptimized = "ir-optimized";
 static string const g_strIPFS = "ipfs";
 static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
@@ -190,6 +191,7 @@ static string const g_argImportAst = g_strImportAst;
 static string const g_argInputFile = g_strInputFile;
 static string const g_argYul = g_strYul;
 static string const g_argIR = g_strIR;
+static string const g_argIROptimized = g_strIROptimized;
 static string const g_argEwasm = g_strEwasm;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
@@ -336,36 +338,50 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 
 void CommandLineInterface::handleIR(string const& _contractName)
 {
-	if (m_args.count(g_argIR))
+	if (!m_args.count(g_argIR))
+		return;
+
+	if (m_args.count(g_argOutputDir))
+		createFile(m_compiler->filesystemFriendlyName(_contractName) + ".yul", m_compiler->yulIR(_contractName));
+	else
 	{
-		if (m_args.count(g_argOutputDir))
-			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".yul", m_compiler->yulIR(_contractName));
-		else
-		{
-			sout() << "IR:" << endl;
-			sout() << m_compiler->yulIR(_contractName) << endl;
-		}
+		sout() << "IR:" << endl;
+		sout() << m_compiler->yulIR(_contractName) << endl;
+	}
+}
+
+void CommandLineInterface::handleIROptimized(string const& _contractName)
+{
+	if (!m_args.count(g_argIROptimized))
+		return;
+
+	if (m_args.count(g_argOutputDir))
+		createFile(m_compiler->filesystemFriendlyName(_contractName) + "_opt.yul", m_compiler->yulIROptimized(_contractName));
+	else
+	{
+		sout() << "Optimized IR:" << endl;
+		sout() << m_compiler->yulIROptimized(_contractName) << endl;
 	}
 }
 
 void CommandLineInterface::handleEwasm(string const& _contractName)
 {
-	if (m_args.count(g_argEwasm))
+	if (!m_args.count(g_argEwasm))
+		return;
+
+	if (m_args.count(g_argOutputDir))
 	{
-		if (m_args.count(g_argOutputDir))
-		{
-			createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->ewasm(_contractName));
-			createFile(
-				m_compiler->filesystemFriendlyName(_contractName) + ".wasm",
-				asString(m_compiler->ewasmObject(_contractName).bytecode)
-			);
-		}
-		else
-		{
-			sout() << "Ewasm text:" << endl;
-			sout() << m_compiler->ewasm(_contractName) << endl;
-			sout() << "Ewasm binary (hex): " << m_compiler->ewasmObject(_contractName).toHex() << endl;
-		}
+		createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->ewasm(_contractName));
+		createFile(
+			m_compiler->filesystemFriendlyName(_contractName) + ".wasm",
+			asString(m_compiler->ewasmObject(_contractName).bytecode)
+		);
+	}
+	else
+	{
+		sout() << "Ewasm text:" << endl;
+		sout() << m_compiler->ewasm(_contractName) << endl;
+		sout() << "Ewasm binary (hex): " << m_compiler->ewasmObject(_contractName).toHex() << endl;
 	}
 }
 
@@ -812,6 +828,7 @@ Allowed options)",
 		(g_argBinaryRuntime.c_str(), "Binary of the runtime part of the contracts in hex.")
 		(g_argAbi.c_str(), "ABI specification of the contracts.")
 		(g_argIR.c_str(), "Intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
+		(g_argIROptimized.c_str(), "Optimized intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
 		(g_argEwasm.c_str(), "Ewasm text representation of all contracts (EXPERIMENTAL).")
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
@@ -1123,7 +1140,7 @@ bool CommandLineInterface::processInput()
 		m_compiler->setRevertStringBehaviour(m_revertStrings);
 		// TODO: Perhaps we should not compile unless requested
 
-		m_compiler->enableIRGeneration(m_args.count(g_argIR));
+		m_compiler->enableIRGeneration(m_args.count(g_argIR) || m_args.count(g_argIROptimized));
 		m_compiler->enableEwasmGeneration(m_args.count(g_argEwasm));
 
 		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::standard() : OptimiserSettings::minimal();
@@ -1631,6 +1648,7 @@ void CommandLineInterface::outputCompilationResults()
 
 		handleBytecode(contract);
 		handleIR(contract);
+		handleIROptimized(contract);
 		handleEwasm(contract);
 		handleSignatureHashes(contract);
 		handleMetadata(contract);

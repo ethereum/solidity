@@ -36,6 +36,12 @@ ostream& operator<<(ostream& _stream, Chromosome const& _chromosome);
 
 }
 
+Chromosome::Chromosome(string const& _optimisationSteps)
+{
+	for (char abbreviation: _optimisationSteps)
+		m_optimisationSteps.push_back(OptimiserSuite::stepAbbreviationToNameMap().at(abbreviation));
+}
+
 Chromosome Chromosome::makeRandom(size_t _length)
 {
 	vector<string> steps;

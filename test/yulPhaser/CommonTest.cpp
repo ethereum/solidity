@@ -33,6 +33,24 @@ namespace solidity::phaser::test
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(CommonTest)
 
+BOOST_AUTO_TEST_CASE(ChromosomeLengthMetric_evaluate_should_return_chromosome_length)
+{
+	BOOST_TEST(ChromosomeLengthMetric{}.evaluate(Chromosome()) == 0);
+	BOOST_TEST(ChromosomeLengthMetric{}.evaluate(Chromosome("a")) == 1);
+	BOOST_TEST(ChromosomeLengthMetric{}.evaluate(Chromosome("aaaaa")) == 5);
+}
+
+BOOST_AUTO_TEST_CASE(chromosomeLengths_should_return_lengths_of_all_chromosomes_in_a_population)
+{
+	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ChromosomeLengthMetric>();
+
+	Population population1(fitnessMetric, {Chromosome(), Chromosome("a"), Chromosome("aa"), Chromosome("aaa")});
+	BOOST_TEST((chromosomeLengths(population1) == vector<size_t>{0, 1, 2, 3}));
+
+	Population population2(fitnessMetric);
+	BOOST_TEST((chromosomeLengths(population2) == vector<size_t>{}));
+}
+
 BOOST_AUTO_TEST_CASE(enumerateOptimisationSteps_should_assing_indices_to_all_available_optimisation_steps)
 {
 	map<string, char> stepsAndAbbreviations = OptimiserSuite::stepNameToAbbreviationMap();
@@ -49,6 +67,39 @@ BOOST_AUTO_TEST_CASE(enumerateOptimisationSteps_should_assing_indices_to_all_ava
 
 		stepsSoFar.insert(name);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(stripWhitespace_should_remove_all_whitespace_characters_from_a_string)
+{
+	BOOST_TEST(stripWhitespace("") == "");
+	BOOST_TEST(stripWhitespace(" ") == "");
+	BOOST_TEST(stripWhitespace(" \n\t\v ") == "");
+
+	BOOST_TEST(stripWhitespace("abc") == "abc");
+	BOOST_TEST(stripWhitespace(" abc") == "abc");
+	BOOST_TEST(stripWhitespace("abc ") == "abc");
+	BOOST_TEST(stripWhitespace(" a b c ") == "abc");
+	BOOST_TEST(stripWhitespace(" a b\tc\n") == "abc");
+	BOOST_TEST(stripWhitespace("   a   b \n\n  c \n\t\v") == "abc");
+}
+
+BOOST_AUTO_TEST_CASE(countSubstringOccurrences_should_count_non_overlapping_substring_occurrences_in_a_string)
+{
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "a") == 6);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "aa") == 2);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "aaa") == 2);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "aaab") == 1);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "b") == 2);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "d") == 1);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "cdc") == 1);
+
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "x") == 0);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "aaaa") == 0);
+	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "dcd") == 0);
+
+	BOOST_TEST(countSubstringOccurrences("", "a") == 0);
+	BOOST_TEST(countSubstringOccurrences("", "aa") == 0);
+	BOOST_TEST(countSubstringOccurrences("a", "aa") == 0);
 }
 
 BOOST_AUTO_TEST_CASE(mean_should_calculate_statistical_mean)

@@ -695,7 +695,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		);
 
 	bool isIndexed = false;
-	bool isDeclaredConst = false;
+	VariableDeclaration::Constantness constantness = VariableDeclaration::Constantness::Mutable;
 	ASTPointer<OverrideSpecifier> overrides = nullptr;
 	Visibility visibility(Visibility::Default);
 	VariableDeclaration::Location location = VariableDeclaration::Location::Unspecified;
@@ -731,7 +731,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			if (_options.allowIndexed && token == Token::Indexed)
 				isIndexed = true;
 			else if (token == Token::Constant)
-				isDeclaredConst = true;
+				constantness = VariableDeclaration::Constantness::Constant;
 			else if (_options.allowLocationSpecifier && TokenTraits::isLocationSpecifier(token))
 			{
 				if (location != VariableDeclaration::Location::Unspecified)
@@ -790,7 +790,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		visibility,
 		_options.isStateVariable,
 		isIndexed,
-		isDeclaredConst,
+		constantness,
 		overrides,
 		location
 	);

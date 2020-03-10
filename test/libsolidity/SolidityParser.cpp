@@ -540,7 +540,6 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 		"default",
 		"define",
 		"final",
-		"immutable",
 		"implements",
 		"in",
 		"inline",

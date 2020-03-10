@@ -17,3 +17,4 @@
 //   sstore
 // Bytecode: 600060003555
 // Opcodes: PUSH1 0x0 PUSH1 0x0 CALLDATALOAD SSTORE
+// SourceMappings: 26:1:0:-:0;;13:15;79:20

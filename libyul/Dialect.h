@@ -22,6 +22,7 @@
 
 #include <libyul/YulString.h>
 #include <libyul/SideEffects.h>
+#include <libyul/ControlFlowSideEffects.h>
 
 #include <boost/noncopyable.hpp>
 
@@ -33,6 +34,8 @@ namespace solidity::yul
 
 class YulString;
 using Type = YulString;
+enum class LiteralKind;
+struct Literal;
 
 struct BuiltinFunction
 {
@@ -40,6 +43,7 @@ struct BuiltinFunction
 	std::vector<Type> parameters;
 	std::vector<Type> returns;
 	SideEffects sideEffects;
+	ControlFlowSideEffects controlFlowSideEffects;
 	/// If true, this is the msize instruction.
 	bool isMSize = false;
 	/// If true, can only accept literals as arguments and they cannot be moved to variables.
@@ -52,14 +56,20 @@ struct Dialect: boost::noncopyable
 	YulString defaultType;
 	/// Type used for the literals "true" and "false".
 	YulString boolType;
-	std::set<YulString> types;
+	std::set<YulString> types = {{}};
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	virtual BuiltinFunction const* builtin(YulString /*_name*/) const { return nullptr; }
 
-	virtual BuiltinFunction const* discardFunction() const { return nullptr; }
-	virtual BuiltinFunction const* equalityFunction() const { return nullptr; }
+	virtual BuiltinFunction const* discardFunction(YulString /* _type */) const { return nullptr; }
+	virtual BuiltinFunction const* equalityFunction(YulString /* _type */) const { return nullptr; }
 	virtual BuiltinFunction const* booleanNegationFunction() const { return nullptr; }
+
+	/// Check whether the given type is legal for the given literal value.
+	/// Should only be called if the type exists in the dialect at all.
+	virtual bool validTypeForLiteral(LiteralKind _kind, YulString _value, YulString _type) const;
+
+	virtual Literal zeroLiteralForType(YulString _type) const;
 
 	virtual std::set<YulString> fixedFunctionNames() const { return {}; }
 

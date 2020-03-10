@@ -52,6 +52,8 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	f.parameters.resize(info.args);
 	f.returns.resize(info.ret);
 	f.sideEffects = EVMDialect::sideEffectsOfInstruction(_instruction);
+	f.controlFlowSideEffects.terminates = evmasm::SemanticInformation::terminatesControlFlow(_instruction);
+	f.controlFlowSideEffects.reverts = evmasm::SemanticInformation::reverts(_instruction);
 	f.isMSize = _instruction == evmasm::Instruction::MSIZE;
 	f.literalArguments = false;
 	f.instruction = _instruction;
@@ -288,6 +290,28 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 	}));
 	m_functions["u256_to_bool"_yulstring].parameters = {"u256"_yulstring};
 	m_functions["u256_to_bool"_yulstring].returns = {"bool"_yulstring};
+}
+
+BuiltinFunctionForEVM const* EVMDialectTyped::discardFunction(YulString _type) const
+{
+	if (_type == "bool"_yulstring)
+		return builtin("popbool"_yulstring);
+	else
+	{
+		yulAssert(_type == defaultType, "");
+		return builtin("pop"_yulstring);
+	}
+}
+
+BuiltinFunctionForEVM const* EVMDialectTyped::equalityFunction(YulString _type) const
+{
+	if (_type == "bool"_yulstring)
+		return nullptr;
+	else
+	{
+		yulAssert(_type == defaultType, "");
+		return builtin("eq"_yulstring);
+	}
 }
 
 EVMDialectTyped const& EVMDialectTyped::instance(langutil::EVMVersion _version)

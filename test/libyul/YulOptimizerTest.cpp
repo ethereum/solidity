@@ -111,6 +111,8 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename)
 			m_dialect = &WasmDialect::instance();
 		else if (dialectName == "evm")
 			m_dialect = &EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion());
+		else if (dialectName == "evmTyped")
+			m_dialect = &EVMDialectTyped::instance(solidity::test::CommonOptions::get().evmVersion());
 		else
 			BOOST_THROW_EXCEPTION(runtime_error("Invalid dialect " + dialectName));
 
@@ -357,7 +359,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		disambiguate();
 		ExpressionSplitter::run(*m_context, *m_ast);
-		WordSizeTransform::run(*m_dialect, ""_yulstring, *m_ast, *m_nameDispenser);
+		WordSizeTransform::run(*m_dialect, *m_dialect, *m_ast, *m_nameDispenser);
 	}
 	else if (m_optimizerStep == "fullSuite")
 	{
