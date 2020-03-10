@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Inline Assembly: Fix internal error when accessing incorrect constant variables.
 
 
 ### 0.6.4 (2020-03-10)
