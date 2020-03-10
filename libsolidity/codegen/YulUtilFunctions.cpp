@@ -1472,22 +1472,34 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			break;
 		case Type::Category::Array:
 		{
-			bool equal = _from == _to;
-
-			if (!equal)
+			if (_from == _to)
+				body = "converted := value";
+			else
 			{
 				ArrayType const& from = dynamic_cast<decltype(from)>(_from);
 				ArrayType const& to = dynamic_cast<decltype(to)>(_to);
 
-				if (*from.mobileType() == *to.mobileType())
-					equal = true;
+				switch (to.location())
+				{
+				case DataLocation::Storage:
+					// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
+					solAssert(
+						(to.isPointer() || (from.isByteArray() && to.isByteArray())) &&
+						from.location() == DataLocation::Storage,
+						"Invalid conversion to storage type."
+					);
+					body = "converted := value";
+					break;
+				case DataLocation::Memory:
+					// Copy the array to a free position in memory, unless it is already in memory.
+					solUnimplementedAssert(from.location() == DataLocation::Memory, "Not implemented yet.");
+					body = "converted := value";
+					break;
+				case DataLocation::CallData:
+					solUnimplemented("Conversion of calldata types not yet implemented.");
+					break;
+				}
 			}
-
-			if (equal)
-				body = "converted := value";
-			else
-				solUnimplementedAssert(false, "Array conversion not implemented.");
-
 			break;
 		}
 		case Type::Category::Struct:
