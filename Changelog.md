@@ -1,8 +1,8 @@
-### 0.6.4 (unreleased)
+### 0.6.4 (2020-03-10)
 
 Language Features:
- * Inline Assembly: Allow assigning to `_slot` of local storage variable pointers.
  * General: Deprecated `value(...)` and `gas(...)` in favor of `{value: ...}` and `{gas: ...}`
+ * Inline Assembly: Allow assigning to `_slot` of local storage variable pointers.
  * Inline Assembly: Perform control flow analysis on inline assembly. Allows storage returns to be set in assembly only.
 
 
@@ -13,7 +13,6 @@ Compiler Features:
 
 Bugfixes:
  * Inheritance: Fix incorrect error on calling unimplemented base functions.
- * isoltest: Added new keyword `wei` to express function value in semantic tests
  * Reference Resolver: Fix scoping issue following try/catch statements.
  * Standard-JSON-Interface: Fix a bug related to empty filenames and imports.
  * SMTChecker: Fix internal errors when analysing tuples.
