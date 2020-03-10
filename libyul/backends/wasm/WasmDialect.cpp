@@ -149,11 +149,12 @@ void WasmDialect::addEthereumExternals()
 	static string const i64{"i64"};
 	static string const i32{"i32"};
 	static string const i32ptr{"i32"}; // Uses "i32" on purpose.
-	struct External {
+	struct External
+	{
 		string name;
 		vector<string> parameters;
 		vector<string> returns;
-		ControlFlowSideEffects controlFlowSideEffects = {};
+		ControlFlowSideEffects controlFlowSideEffects = ControlFlowSideEffects{};
 	};
 	static vector<External> externals{
 		{"getAddress", {i32ptr}, {}},
@@ -182,11 +183,11 @@ void WasmDialect::addEthereumExternals()
 		{"log", {i32ptr, i32, i32, i32ptr, i32ptr, i32ptr, i32ptr}, {}},
 		{"getBlockNumber", {}, {i64}},
 		{"getTxOrigin", {i32ptr}, {}},
-		{"finish", {i32ptr, i32}, {}, {true, false}},
-		{"revert", {i32ptr, i32}, {}, {true, true}},
+		{"finish", {i32ptr, i32}, {}, ControlFlowSideEffects{true, false}},
+		{"revert", {i32ptr, i32}, {}, ControlFlowSideEffects{true, true}},
 		{"getReturnDataSize", {}, {i32}},
 		{"returnDataCopy", {i32ptr, i32, i32}, {}},
-		{"selfDestruct", {i32ptr}, {}, {true, false}},
+		{"selfDestruct", {i32ptr}, {}, ControlFlowSideEffects{true, false}},
 		{"getBlockTimestamp", {}, {i64}}
 	};
 	for (External const& ext: externals)
