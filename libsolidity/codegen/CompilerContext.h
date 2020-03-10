@@ -64,6 +64,7 @@ public:
 		m_asm(std::make_shared<evmasm::Assembly>()),
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
+		m_reservedMemory{0},
 		m_runtimeContext(_runtimeContext),
 		m_abiFunctions(m_evmVersion, m_revertStrings, m_yulFunctionCollector),
 		m_yulUtilFunctions(m_evmVersion, m_revertStrings, m_yulFunctionCollector)
@@ -80,6 +81,16 @@ public:
 	bool experimentalFeatureActive(ExperimentalFeature _feature) const { return m_experimentalFeatures.count(_feature); }
 
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
+	void addImmutable(VariableDeclaration const& _declaration);
+
+	/// @returns the reserved memory for storing the value of the immutable @a _variable during contract creation.
+	size_t immutableMemoryOffset(VariableDeclaration const& _variable) const;
+	/// @returns a list of slot names referring to the stack slots of an immutable variable.
+	static std::vector<std::string> immutableVariableSlotNames(VariableDeclaration const& _variable);
+
+	/// @returns the reserved memory and resets it to mark it as used.
+	size_t reservedMemory();
+
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void removeVariable(Declaration const& _declaration);
 	/// Removes all local variables currently allocated above _stackHeight.
@@ -217,6 +228,10 @@ public:
 	evmasm::AssemblyItem appendData(bytes const& _data) { return m_asm->append(_data); }
 	/// Appends the address (virtual, will be filled in by linker) of a library.
 	void appendLibraryAddress(std::string const& _identifier) { m_asm->appendLibraryAddress(_identifier); }
+	/// Appends an immutable variable. The value will be filled in by the constructor.
+	void appendImmutable(std::string const& _identifier) { m_asm->appendImmutable(_identifier); }
+	/// Appends an assignment to an immutable variable. Only valid in creation code.
+	void appendImmutableAssignment(std::string const& _identifier) { m_asm->appendImmutableAssignment(_identifier); }
 	/// Appends a zero-address that can be replaced by something else at deploy time (if the
 	/// position in bytecode is known).
 	void appendDeployTimeAddress() { m_asm->append(evmasm::PushDeployTimeAddress); }
@@ -282,7 +297,7 @@ public:
 		return m_asm->assemblyJSON(_indicies);
 	}
 
-	evmasm::LinkerObject const& assembledObject() const { return m_asm->assemble(); }
+	evmasm::LinkerObject const& assembledObject() const;
 	evmasm::LinkerObject const& assembledRuntimeObject(size_t _subIndex) const { return m_asm->sub(_subIndex).assemble(); }
 
 	/**
@@ -355,6 +370,12 @@ private:
 	std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> m_otherCompilers;
 	/// Storage offsets of state variables
 	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
+	/// Memory offsets reserved for the values of immutable variables during contract creation.
+	std::map<VariableDeclaration const*, size_t> m_immutableVariables;
+	/// Total amount of reserved memory. Reserved memory is used to store immutable variables during contract creation.
+	/// This has to be finalized before initialiseFreeMemoryPointer() is called. That function
+	/// will reset the optional to verify that.
+	std::optional<size_t> m_reservedMemory = {0};
 	/// Offsets of local variables on the stack (relative to stack base).
 	/// This needs to be a stack because if a modifier contains a local variable and this
 	/// modifier is applied twice, the position of the variable needs to be restored

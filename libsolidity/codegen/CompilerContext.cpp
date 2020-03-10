@@ -71,6 +71,55 @@ void CompilerContext::addStateVariable(
 	m_stateVariables[&_declaration] = make_pair(_storageOffset, _byteOffset);
 }
 
+void CompilerContext::addImmutable(VariableDeclaration const& _variable)
+{
+	solAssert(_variable.immutable(), "Attempted to register a non-immutable variable as immutable.");
+	solUnimplementedAssert(_variable.annotation().type->isValueType(), "Only immutable variables of value type are supported.");
+	solAssert(m_runtimeContext, "Attempted to register an immutable variable for runtime code generation.");
+	m_immutableVariables[&_variable] = CompilerUtils::generalPurposeMemoryStart + *m_reservedMemory;
+	solAssert(_variable.annotation().type->memoryHeadSize() == 32, "Memory writes might overlap.");
+	*m_reservedMemory += _variable.annotation().type->memoryHeadSize();
+}
+
+size_t CompilerContext::immutableMemoryOffset(VariableDeclaration const& _variable) const
+{
+	solAssert(m_immutableVariables.count(&_variable), "Memory offset of unknown immutable queried.");
+	solAssert(m_runtimeContext, "Attempted to fetch the memory offset of an immutable variable during runtime code generation.");
+	return m_immutableVariables.at(&_variable);
+}
+
+vector<string> CompilerContext::immutableVariableSlotNames(VariableDeclaration const& _variable)
+{
+	string baseName =
+		_variable.annotation().contract->fullyQualifiedName() +
+		"." +
+		_variable.name() +
+		" (" +
+		to_string(_variable.id()) +
+		")";
+	solAssert(_variable.annotation().type->sizeOnStack() > 0, "");
+	if (_variable.annotation().type->sizeOnStack() == 1)
+		return {baseName};
+	vector<string> names;
+	auto collectSlotNames = [&](string const& _baseName, TypePointer type, auto const& _recurse) -> void {
+		for (auto const& [slot, type]: type->stackItems())
+			if (type)
+				_recurse(_baseName + " " + slot, type, _recurse);
+			else
+				names.emplace_back(_baseName);
+	};
+	collectSlotNames(baseName, _variable.annotation().type, collectSlotNames);
+	return names;
+}
+
+size_t CompilerContext::reservedMemory()
+{
+	solAssert(m_reservedMemory.has_value(), "Reserved memory was used before ");
+	size_t reservedMemory = *m_reservedMemory;
+	m_reservedMemory = std::nullopt;
+	return reservedMemory;
+}
+
 void CompilerContext::startFunction(Declaration const& _function)
 {
 	m_functionCompilationQueue.startFunction(_function);
@@ -498,6 +547,13 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 	cout << "After optimizer:" << endl;
 	cout << yul::AsmPrinter(*dialect)(*object.code) << endl;
 #endif
+}
+
+LinkerObject const& CompilerContext::assembledObject() const
+{
+	LinkerObject const& object = m_asm->assemble();
+	solAssert(object.immutableReferences.empty(), "Leftover immutables.");
+	return object;
 }
 
 FunctionDefinition const& CompilerContext::resolveVirtualFunction(

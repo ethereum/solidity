@@ -91,6 +91,10 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 	{
 		// can be ignored
 	}
+	else if (_item.type() == AssignImmutable)
+		// Since AssignImmutable breaks blocks, it should be fine to only consider its changes to the stack, which
+		// is the same as POP.
+		return feedItem(AssemblyItem(Instruction::POP), _copyItem);
 	else if (_item.type() != Operation)
 	{
 		assertThrow(_item.deposit() == 1, InvalidDeposit, "");

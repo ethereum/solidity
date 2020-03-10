@@ -130,6 +130,8 @@ void ContractCompiler::initializeContext(
 	m_context.setExperimentalFeatures(_contract.sourceUnit().annotation().experimentalFeatures);
 	m_context.setOtherCompilers(_otherCompilers);
 	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	if (m_runtimeCompiler)
+		registerImmutableVariables(_contract);
 	CompilerUtils(m_context).initialiseFreeMemoryPointer();
 	registerStateVariables(_contract);
 	m_context.resetVisitedNodes(&_contract);
@@ -183,10 +185,26 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	m_context << deployRoutine;
 
 	solAssert(m_context.runtimeSub() != size_t(-1), "Runtime sub not registered");
+
+	ContractType contractType(_contract);
+	auto const& immutables = contractType.immutableVariables();
+	// Push all immutable values on the stack.
+	for (auto const& immutable: immutables)
+		CompilerUtils(m_context).loadFromMemory(m_context.immutableMemoryOffset(*immutable), *immutable->annotation().type);
 	m_context.pushSubroutineSize(m_context.runtimeSub());
-	m_context << Instruction::DUP1;
+	if (immutables.empty())
+		m_context << Instruction::DUP1;
 	m_context.pushSubroutineOffset(m_context.runtimeSub());
 	m_context << u256(0) << Instruction::CODECOPY;
+	// Assign immutable values from stack in reversed order.
+	for (auto const& immutable: immutables | boost::adaptors::reversed)
+	{
+		auto slotNames = m_context.immutableVariableSlotNames(*immutable);
+		for (auto&& slotName: slotNames | boost::adaptors::reversed)
+			m_context.appendImmutableAssignment(slotName);
+	}
+	if (!immutables.empty())
+		m_context.pushSubroutineSize(m_context.runtimeSub());
 	m_context << u256(0) << Instruction::RETURN;
 
 	return m_context.runtimeSub();
@@ -519,6 +537,13 @@ void ContractCompiler::registerStateVariables(ContractDefinition const& _contrac
 {
 	for (auto const& var: ContractType(_contract).stateVariables())
 		m_context.addStateVariable(*get<0>(var), get<1>(var), get<2>(var));
+}
+
+void ContractCompiler::registerImmutableVariables(ContractDefinition const& _contract)
+{
+	solAssert(m_runtimeCompiler, "Attempted to register immutables for runtime code generation.");
+	for (auto const& var: ContractType(_contract).immutableVariables())
+		m_context.addImmutable(*var);
 }
 
 void ContractCompiler::initializeStateVariables(ContractDefinition const& _contract)

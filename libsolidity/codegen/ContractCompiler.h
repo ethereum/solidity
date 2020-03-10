@@ -99,6 +99,7 @@ private:
 	void appendReturnValuePacker(TypePointers const& _typeParameters, bool _isLibrary);
 
 	void registerStateVariables(ContractDefinition const& _contract);
+	void registerImmutableVariables(ContractDefinition const& _contract);
 	void initializeStateVariables(ContractDefinition const& _contract);
 
 	bool visit(VariableDeclaration const& _variableDeclaration) override;

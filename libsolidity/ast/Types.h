@@ -895,6 +895,8 @@ public:
 	/// @returns a list of all state variables (including inherited) of the contract and their
 	/// offsets in storage.
 	std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> stateVariables() const;
+	/// @returns a list of all immutable variables (including inherited) of the contract.
+	std::vector<VariableDeclaration const*> immutableVariables() const;
 protected:
 	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
 private:
