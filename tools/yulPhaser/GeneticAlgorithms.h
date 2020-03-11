@@ -20,10 +20,30 @@
 
 #pragma once
 
+#include <tools/yulPhaser/Mutations.h>
 #include <tools/yulPhaser/Population.h>
+
+#include <optional>
 
 namespace solidity::phaser
 {
+
+enum class CrossoverChoice
+{
+	SinglePoint,
+	TwoPoint,
+	Uniform,
+};
+
+std::function<Crossover> buildCrossoverOperator(
+	CrossoverChoice _choice,
+	std::optional<double> _uniformCrossoverSwapChance
+);
+
+std::function<SymmetricCrossover> buildSymmetricCrossoverOperator(
+	CrossoverChoice _choice,
+	std::optional<double> _uniformCrossoverSwapChance
+);
 
 /**
  * Abstract base class for genetic algorithms.
