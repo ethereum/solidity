@@ -43,24 +43,24 @@ Population RandomAlgorithm::runNextRound(Population _population)
 Population GenerationalElitistWithExclusivePools::runNextRound(Population _population)
 {
 	double elitePoolSize = 1.0 - (m_options.mutationPoolSize + m_options.crossoverPoolSize);
-	RangeSelection elite(0.0, elitePoolSize);
+
+	RangeSelection elitePool(0.0, elitePoolSize);
+	RandomSelection mutationPoolFromElite(m_options.mutationPoolSize / elitePoolSize);
+	RandomPairSelection crossoverPoolFromElite(m_options.crossoverPoolSize / elitePoolSize);
+
+	std::function<Mutation> mutationOperator = alternativeMutations(
+		m_options.randomisationChance,
+		geneRandomisation(m_options.percentGenesToRandomise),
+		alternativeMutations(
+			m_options.deletionVsAdditionChance,
+			geneDeletion(m_options.percentGenesToAddOrDelete),
+			geneAddition(m_options.percentGenesToAddOrDelete)
+		)
+	);
+	std::function<Crossover> crossoverOperator = randomPointCrossover();
 
 	return
-		_population.select(elite) +
-		_population.select(elite).mutate(
-			RandomSelection(m_options.mutationPoolSize / elitePoolSize),
-			alternativeMutations(
-				m_options.randomisationChance,
-				geneRandomisation(m_options.percentGenesToRandomise),
-				alternativeMutations(
-					m_options.deletionVsAdditionChance,
-					geneDeletion(m_options.percentGenesToAddOrDelete),
-					geneAddition(m_options.percentGenesToAddOrDelete)
-				)
-			)
-		) +
-		_population.select(elite).crossover(
-			RandomPairSelection(m_options.crossoverPoolSize / elitePoolSize),
-			randomPointCrossover()
-		);
+		_population.select(elitePool) +
+		_population.select(elitePool).mutate(mutationPoolFromElite, mutationOperator) +
+		_population.select(elitePool).crossover(crossoverPoolFromElite, crossoverOperator);
 }
