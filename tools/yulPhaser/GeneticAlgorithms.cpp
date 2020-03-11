@@ -64,3 +64,65 @@ Population GenerationalElitistWithExclusivePools::runNextRound(Population _popul
 		_population.select(elitePool).mutate(mutationPoolFromElite, mutationOperator) +
 		_population.select(elitePool).crossover(crossoverPoolFromElite, crossoverOperator);
 }
+
+Population ClassicGeneticAlgorithm::runNextRound(Population _population)
+{
+	Population elite = _population.select(RangeSelection(0.0, m_options.elitePoolSize));
+	Population rest = _population.select(RangeSelection(m_options.elitePoolSize, 1.0));
+
+	Population selectedPopulation = select(_population, rest.individuals().size());
+
+	Population crossedPopulation = Population::combine(
+		selectedPopulation.symmetricCrossoverWithRemainder(
+			PairsFromRandomSubset(m_options.crossoverChance),
+			symmetricRandomPointCrossover()
+		)
+	);
+
+	std::function<Mutation> mutationOperator = mutationSequence({
+		geneRandomisation(m_options.mutationChance),
+		geneDeletion(m_options.deletionChance),
+		geneAddition(m_options.additionChance),
+	});
+
+	RangeSelection all(0.0, 1.0);
+	Population mutatedPopulation = crossedPopulation.mutate(all, mutationOperator);
+
+	return elite + mutatedPopulation;
+}
+
+Population ClassicGeneticAlgorithm::select(Population _population, size_t _selectionSize)
+{
+	if (_population.individuals().size() == 0)
+		return _population;
+
+	size_t maxFitness = 0;
+	for (auto const& individual: _population.individuals())
+		maxFitness = max(maxFitness, individual.fitness);
+
+	size_t rouletteRange = 0;
+	for (auto const& individual: _population.individuals())
+		// Add 1 to make sure that every chromosome has non-zero probability of being chosen
+		rouletteRange += maxFitness + 1 - individual.fitness;
+
+	vector<Individual> selectedIndividuals;
+	for (size_t i = 0; i < _selectionSize; ++i)
+	{
+		uint32_t ball = SimulationRNG::uniformInt(0, rouletteRange - 1);
+
+		size_t cumulativeFitness = 0;
+		for (auto const& individual: _population.individuals())
+		{
+			size_t pocketSize = maxFitness + 1 - individual.fitness;
+			if (ball < cumulativeFitness + pocketSize)
+			{
+				selectedIndividuals.push_back(individual);
+				break;
+			}
+			cumulativeFitness += pocketSize;
+		}
+	}
+
+	assert(selectedIndividuals.size() == _selectionSize);
+	return Population(_population.fitnessMetric(), selectedIndividuals);
+}
