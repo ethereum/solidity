@@ -106,6 +106,7 @@ public:
 	) const;
 
 	friend Population operator+(Population _a, Population _b);
+	static Population combine(std::tuple<Population, Population> _populationPair);
 
 	std::shared_ptr<FitnessMetric> fitnessMetric() { return m_fitnessMetric; }
 	std::vector<Individual> const& individuals() const { return m_individuals; }

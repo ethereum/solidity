@@ -163,6 +163,11 @@ Population operator+(Population _a, Population _b)
 
 }
 
+Population Population::combine(std::tuple<Population, Population> _populationPair)
+{
+	return get<0>(_populationPair) + get<1>(_populationPair);
+}
+
 bool Population::operator==(Population const& _other) const
 {
 	// We consider populations identical only if they share the same exact instance of the metric.

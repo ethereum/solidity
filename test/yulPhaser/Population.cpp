@@ -364,6 +364,14 @@ BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_return_empty_popu
 	);
 }
 
+BOOST_FIXTURE_TEST_CASE(combine_should_add_two_populations_from_a_pair, PopulationFixture)
+{
+	Population population1(m_fitnessMetric, {Chromosome("aa"), Chromosome("hh")});
+	Population population2(m_fitnessMetric, {Chromosome("gg"), Chromosome("cc")});
+
+	BOOST_TEST(Population::combine({population1, population2}) == population1 + population2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
