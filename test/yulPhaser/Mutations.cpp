@@ -225,6 +225,20 @@ BOOST_AUTO_TEST_CASE(randomPointCrossover_should_swap_chromosome_parts_at_random
 	BOOST_TEST(result2 == Chromosome("cccaaaaaaa"));
 }
 
+BOOST_AUTO_TEST_CASE(symmetricRandomPointCrossover_should_swap_chromosome_parts_at_random_point)
+{
+	function<SymmetricCrossover> crossover = symmetricRandomPointCrossover();
+
+	SimulationRNG::reset(1);
+	tuple<Chromosome, Chromosome> result1 = crossover(Chromosome("aaaaaaaaaa"), Chromosome("cccccc"));
+	tuple<Chromosome, Chromosome> expectedPair1 = {Chromosome("aaaccc"), Chromosome("cccaaaaaaa")};
+	BOOST_TEST(result1 == expectedPair1);
+
+	tuple<Chromosome, Chromosome> result2 = crossover(Chromosome("cccccc"), Chromosome("aaaaaaaaaa"));
+	tuple<Chromosome, Chromosome> expectedPair2 = {Chromosome("ccccccaaaa"), Chromosome("aaaaaa")};
+	BOOST_TEST(result2 == expectedPair2);
+}
+
 BOOST_AUTO_TEST_CASE(randomPointCrossover_should_only_consider_points_available_on_both_chromosomes)
 {
 	SimulationRNG::reset(1);
