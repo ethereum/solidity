@@ -70,10 +70,12 @@ public:
 
 	/// Validates the settings, i.e. moves them from m_settings to m_validatedSettings.
 	/// Throws a runtime exception if any setting is left at this class (i.e. unknown setting).
+	virtual void validateSettings();
+
 	/// Returns true, if the test case is supported in the current environment and false
 	/// otherwise which causes this test to be skipped.
 	/// This might check e.g. for restrictions on the EVM version.
-	virtual bool validateSettings(langutil::EVMVersion /*_evmVersion*/);
+	bool shouldRun();
 
 protected:
 	std::pair<std::map<std::string, std::string>, std::size_t> parseSourcesAndSettingsWithLineNumbers(std::istream& _file);
@@ -102,13 +104,14 @@ protected:
 	std::map<std::string, std::string> m_settings;
 	/// Updated settings after validation.
 	std::map<std::string, std::string> m_validatedSettings;
+
+	bool m_shouldRun = true;
 };
 
 class EVMVersionRestrictedTestCase: public TestCase
 {
 public:
-	/// Returns true, if the test case is supported for EVM version @arg _evmVersion, false otherwise.
-	bool validateSettings(langutil::EVMVersion _evmVersion) override;
+	void validateSettings() override;
 };
 
 }

@@ -814,6 +814,7 @@ class VariableDeclaration: public Declaration
 {
 public:
 	enum Location { Unspecified, Storage, Memory, CallData };
+	enum class Constantness { Mutable, Immutable, Constant };
 
 	VariableDeclaration(
 		int64_t _id,
@@ -824,7 +825,7 @@ public:
 		Visibility _visibility,
 		bool _isStateVar = false,
 		bool _isIndexed = false,
-		bool _isConstant = false,
+		Constantness _constantness = Constantness::Mutable,
 		ASTPointer<OverrideSpecifier> const& _overrides = nullptr,
 		Location _referenceLocation = Location::Unspecified
 	):
@@ -833,7 +834,7 @@ public:
 		m_value(_value),
 		m_isStateVariable(_isStateVar),
 		m_isIndexed(_isIndexed),
-		m_isConstant(_isConstant),
+		m_constantness(_constantness),
 		m_overrides(_overrides),
 		m_location(_referenceLocation) {}
 
@@ -877,7 +878,7 @@ public:
 	bool hasReferenceOrMappingType() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
-	bool isConstant() const { return m_isConstant; }
+	bool isConstant() const { return m_constantness == Constantness::Constant; }
 	ASTPointer<OverrideSpecifier> const& overrides() const { return m_overrides; }
 	Location referenceLocation() const { return m_location; }
 	/// @returns a set of allowed storage locations for the variable.
@@ -904,7 +905,8 @@ private:
 	ASTPointer<Expression> m_value;
 	bool m_isStateVariable = false; ///< Whether or not this is a contract state variable
 	bool m_isIndexed = false; ///< Whether this is an indexed variable (used by events).
-	bool m_isConstant = false; ///< Whether the variable is a compile-time constant.
+	/// Whether the variable is "constant", "immutable" or non-marked (mutable).
+	Constantness m_constantness = Constantness::Mutable;
 	ASTPointer<OverrideSpecifier> m_overrides; ///< Contains the override specifier node
 	Location m_location = Location::Unspecified; ///< Location of the variable if it is of reference type.
 };

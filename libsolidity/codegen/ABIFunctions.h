@@ -31,7 +31,6 @@
 
 #include <functional>
 #include <map>
-#include <set>
 #include <vector>
 
 namespace solidity::frontend
@@ -58,11 +57,11 @@ public:
 	explicit ABIFunctions(
 		langutil::EVMVersion _evmVersion,
 		RevertStrings _revertStrings,
-		std::shared_ptr<MultiUseYulFunctionCollector> _functionCollector = std::make_shared<MultiUseYulFunctionCollector>()
+		MultiUseYulFunctionCollector& _functionCollector
 	):
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
-		m_functionCollector(std::move(_functionCollector)),
+		m_functionCollector(_functionCollector),
 		m_utils(_evmVersion, m_revertStrings, m_functionCollector)
 	{}
 
@@ -103,12 +102,6 @@ public:
 	/// The values represent stack slots. If a type occupies more or less than one
 	/// stack slot, it takes exactly that number of values.
 	std::string tupleDecoder(TypePointers const& _types, bool _fromMemory = false);
-
-	/// @returns concatenation of all generated functions and a set of the
-	/// externally used functions.
-	/// Clears the internal list, i.e. calling it again will result in an
-	/// empty return value.
-	std::pair<std::string, std::set<std::string>> requestedFunctions();
 
 private:
 	struct EncodingOptions
@@ -239,11 +232,6 @@ private:
 	/// cases.
 	std::string createFunction(std::string const& _name, std::function<std::string()> const& _creator);
 
-	/// Helper function that uses @a _creator to create a function and add it to
-	/// @a m_requestedFunctions if it has not been created yet and returns @a _name in both
-	/// cases. Also adds it to the list of externally used functions.
-	std::string createExternallyUsedFunction(std::string const& _name, std::function<std::string()> const& _creator);
-
 	/// @returns the size of the static part of the encoding of the given types.
 	static size_t headSize(TypePointers const& _targetTypes);
 
@@ -259,8 +247,7 @@ private:
 
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings const m_revertStrings;
-	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;
-	std::set<std::string> m_externallyUsedFunctions;
+	MultiUseYulFunctionCollector& m_functionCollector;
 	YulUtilFunctions m_utils;
 };
 

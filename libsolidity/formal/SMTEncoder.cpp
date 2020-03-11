@@ -407,19 +407,26 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_tuple));
 		solAssert(symbTuple, "");
 		auto const& symbComponents = symbTuple->components();
-		auto const& tupleComponents = _tuple.components();
-		solAssert(symbComponents.size() == _tuple.components().size(), "");
+		auto const* tupleComponents = &_tuple.components();
+		while (tupleComponents->size() == 1)
+		{
+			auto innerTuple = dynamic_pointer_cast<TupleExpression>(tupleComponents->front());
+			solAssert(innerTuple, "");
+			tupleComponents = &innerTuple->components();
+		}
+		solAssert(symbComponents.size() == tupleComponents->size(), "");
 		for (unsigned i = 0; i < symbComponents.size(); ++i)
 		{
 			auto sComponent = symbComponents.at(i);
-			auto tComponent = tupleComponents.at(i);
+			auto tComponent = tupleComponents->at(i);
 			if (sComponent && tComponent)
 			{
 				if (auto varDecl = identifierToVariable(*tComponent))
 					m_context.addAssertion(sComponent->currentValue() == currentValue(*varDecl));
 				else
 				{
-					solAssert(m_context.knownExpression(*tComponent), "");
+					if (!m_context.knownExpression(*tComponent))
+						createExpr(*tComponent);
 					m_context.addAssertion(sComponent->currentValue() == expr(*tComponent));
 				}
 			}
@@ -666,7 +673,6 @@ void SMTEncoder::visitAssert(FunctionCall const& _funCall)
 	auto const& args = _funCall.arguments();
 	solAssert(args.size() == 1, "");
 	solAssert(args.front()->annotation().type->category() == Type::Category::Bool, "");
-	addPathImpliedExpression(expr(*args.front()));
 }
 
 void SMTEncoder::visitRequire(FunctionCall const& _funCall)

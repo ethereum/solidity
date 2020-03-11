@@ -12,12 +12,12 @@ contract LoopFor2 {
 			b[i] = i + 1;
 			c[i] = b[i];
 		}
+		// This is safe but too hard to solve currently.
 		assert(b[0] == c[0]);
 		assert(a[0] == 900);
 		assert(b[0] == 900);
 	}
 }
-// ====
-// SMTSolvers: z3
 // ----
-// Warning: (312-331): Assertion violation happens here
+// Warning: (316-336): Assertion violation happens here
+// Warning: (363-382): Assertion violation happens here

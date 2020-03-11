@@ -20,6 +20,7 @@
 #include <libsolidity/analysis/ControlFlowGraph.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libyul/optimiser/ASTWalker.h>
 
 #include <array>
 #include <memory>
@@ -30,7 +31,7 @@ namespace solidity::frontend {
  * Modifiers are not yet applied to the functions. This is done in a second
  * step in the CFG class.
  */
-class ControlFlowBuilder: private ASTConstVisitor
+class ControlFlowBuilder: private ASTConstVisitor, private yul::ASTWalker
 {
 public:
 	static std::unique_ptr<FunctionFlow> createFunctionFlow(
@@ -39,7 +40,10 @@ public:
 	);
 
 private:
-	explicit ControlFlowBuilder(CFG::NodeContainer& _nodeContainer, FunctionFlow const& _functionFlow);
+	explicit ControlFlowBuilder(
+		CFG::NodeContainer& _nodeContainer,
+		FunctionFlow const& _functionFlow
+	);
 
 	// Visits for constructing the control flow.
 	bool visit(BinaryOperation const& _operation) override;
@@ -62,6 +66,17 @@ private:
 	// Visits for filling variable occurrences.
 	bool visit(FunctionTypeName const& _functionTypeName) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
+	void visit(yul::Statement const& _statement) override;
+	void operator()(yul::If const& _if) override;
+	void operator()(yul::Switch const& _switch) override;
+	void operator()(yul::ForLoop const& _for) override;
+	void operator()(yul::Break const&) override;
+	void operator()(yul::Continue const&) override;
+	void operator()(yul::Identifier const& _identifier) override;
+	void operator()(yul::Assignment const& _assignment) override;
+	void operator()(yul::FunctionCall const& _functionCall) override;
+	void operator()(yul::FunctionDefinition const& _functionDefinition) override;
+	void operator()(yul::Leave const& _leaveStatement) override;
 	bool visit(VariableDeclaration const& _variableDeclaration) override;
 	bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	bool visit(Identifier const& _identifier) override;
@@ -70,6 +85,9 @@ protected:
 	bool visitNode(ASTNode const&) override;
 
 private:
+	using ASTConstVisitor::visit;
+	using yul::ASTWalker::visit;
+	using yul::ASTWalker::operator();
 
 	/// Appends the control flow of @a _node to the current control flow.
 	void appendControlFlow(ASTNode const& _node);
@@ -136,6 +154,7 @@ private:
 	CFGNode* m_currentNode = nullptr;
 	CFGNode* m_returnNode = nullptr;
 	CFGNode* m_revertNode = nullptr;
+	CFGNode* m_transactionReturnNode = nullptr;
 
 	/// The current jump destination of break Statements.
 	CFGNode* m_breakJump = nullptr;
@@ -144,6 +163,8 @@ private:
 
 	CFGNode* m_placeholderEntry = nullptr;
 	CFGNode* m_placeholderExit = nullptr;
+
+	InlineAssembly const* m_inlineAssembly = nullptr;
 
 	/// Helper class that replaces the break and continue jump destinations for the
 	/// current scope and restores the originals at the end of the scope.

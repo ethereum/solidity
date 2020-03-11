@@ -5,6 +5,7 @@ contract C {
     }
 }
 // ----
+// Warning: (105-115): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
 // TypeError: (91-100): This type cannot be encoded.
 // TypeError: (102-103): This type cannot be encoded.
 // TypeError: (105-115): This type cannot be encoded.

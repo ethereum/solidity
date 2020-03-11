@@ -9,20 +9,37 @@ Compiler Features:
 Bugfixes:
 
 
-### 0.6.4 (unreleased)
+### 0.6.5 (unreleased)
 
 Language Features:
+
+
+Compiler Features:
+
+
+Bugfixes:
+ * Metadata: Added support for IPFS hashes of large files that need to be split in multiple chunks.
+
+
+### 0.6.4 (2020-03-10)
+
+Language Features:
+ * General: Deprecated `value(...)` and `gas(...)` in favor of `{value: ...}` and `{gas: ...}`
  * Inline Assembly: Allow assigning to `_slot` of local storage variable pointers.
+ * Inline Assembly: Perform control flow analysis on inline assembly. Allows storage returns to be set in assembly only.
 
 
 Compiler Features:
  * AssemblyStack: Support for source locations (source mappings) and thus debugging Yul sources.
+ * Commandline Interface: Enable output of experimental optimized IR via ``--ir-optimized``.
 
 
 Bugfixes:
- * isoltest: Added new keyword `wei` to express function value in semantic tests
+ * Inheritance: Fix incorrect error on calling unimplemented base functions.
+ * Reference Resolver: Fix scoping issue following try/catch statements.
  * Standard-JSON-Interface: Fix a bug related to empty filenames and imports.
-
+ * SMTChecker: Fix internal errors when analysing tuples.
+ * Yul AST Import: correctly import blocks as statements, switch statements and string literals.
 
 ### 0.6.3 (2020-02-18)
 
@@ -37,6 +54,7 @@ Compiler Features:
  * Code Generator: Use ``calldatacopy`` instead of ``codecopy`` to zero out memory past input.
  * Debug: Provide reason strings for compiler-generated internal reverts when using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting on ``debug`` mode.
  * Yul Optimizer: Prune functions that call each other but are otherwise unreferenced.
+ * SMTChecker: CHC support to internal function calls.
 
 
 Bugfixes:

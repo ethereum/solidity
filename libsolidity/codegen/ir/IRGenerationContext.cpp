@@ -100,7 +100,7 @@ string IRGenerationContext::newYulVariable()
 string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 {
 	string funName = "dispatch_internal_in_" + to_string(_in) + "_out_" + to_string(_out);
-	return m_functions->createFunction(funName, [&]() {
+	return m_functions.createFunction(funName, [&]() {
 		Whiskers templ(R"(
 			function <functionName>(fun <comma> <in>) <arrow> <out> {
 				switch fun

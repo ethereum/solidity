@@ -77,6 +77,11 @@ function compileFull()
         expect_output=1
         shift;
     fi
+    if [[ $1 = '-o' ]]
+    then
+        expect_output=2
+        shift;
+    fi
 
     local files="$*"
     local output
@@ -93,7 +98,7 @@ function compileFull()
     if [[ \
         "$exit_code" -ne "$expected_exit_code" || \
             ( $expect_output -eq 0 && -n "$errors" ) || \
-            ( $expect_output -ne 0 && -z "$errors" ) \
+            ( $expect_output -eq 1 && -z "$errors" ) \
     ]]
     then
         printError "Unexpected compilation result:"
@@ -349,6 +354,10 @@ SOLTMPDIR=$(mktemp -d)
         if grep "This will report a warning" "$f" >/dev/null
         then
             opts="$opts -w"
+        fi
+        if grep "This may report a warning" "$f" >/dev/null
+        then
+            opts="$opts -o"
         fi
         compileFull $opts "$SOLTMPDIR/$f"
     done

@@ -547,6 +547,7 @@ not mean loss of proving power.
 
     pragma solidity >=0.5.0;
     pragma experimental SMTChecker;
+    // This may report a warning if no SMT solver available.
 
     contract Recover
     {
@@ -601,6 +602,7 @@ types.
     pragma solidity >=0.5.0;
     pragma experimental SMTChecker;
     // This will report a warning
+
     contract Aliasing
     {
         uint[] array;

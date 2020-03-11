@@ -55,7 +55,7 @@ string ABIFunctions::tupleEncoder(
 		functionName += t->identifier() + "_";
 	functionName += options.toFunctionNameSuffix();
 
-	return createExternallyUsedFunction(functionName, [&]() {
+	return createFunction(functionName, [&]() {
 		// Note that the values are in reverse due to the difference in calling semantics.
 		Whiskers templ(R"(
 			function <functionName>(headStart <valueParams>) -> tail {
@@ -121,7 +121,7 @@ string ABIFunctions::tupleEncoderPacked(
 		functionName += t->identifier() + "_";
 	functionName += options.toFunctionNameSuffix();
 
-	return createExternallyUsedFunction(functionName, [&]() {
+	return createFunction(functionName, [&]() {
 		solAssert(!_givenTypes.empty(), "");
 
 		// Note that the values are in reverse due to the difference in calling semantics.
@@ -173,7 +173,7 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 	if (_fromMemory)
 		functionName += "_fromMemory";
 
-	return createExternallyUsedFunction(functionName, [&]() {
+	return createFunction(functionName, [&]() {
 		TypePointers decodingTypes;
 		for (auto const& t: _types)
 			decodingTypes.emplace_back(t->decodingType());
@@ -238,13 +238,6 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 
 		return templ.render();
 	});
-}
-
-pair<string, set<string>> ABIFunctions::requestedFunctions()
-{
-	std::set<string> empty;
-	swap(empty, m_externallyUsedFunctions);
-	return make_pair(m_functionCollector->requestedFunctions(), std::move(empty));
 }
 
 string ABIFunctions::EncodingOptions::toFunctionNameSuffix() const
@@ -1499,14 +1492,7 @@ string ABIFunctions::arrayStoreLengthForEncodingFunction(ArrayType const& _type,
 
 string ABIFunctions::createFunction(string const& _name, function<string ()> const& _creator)
 {
-	return m_functionCollector->createFunction(_name, _creator);
-}
-
-string ABIFunctions::createExternallyUsedFunction(string const& _name, function<string ()> const& _creator)
-{
-	string name = createFunction(_name, _creator);
-	m_externallyUsedFunctions.insert(name);
-	return name;
+	return m_functionCollector.createFunction(_name, _creator);
 }
 
 size_t ABIFunctions::headSize(TypePointers const& _targetTypes)

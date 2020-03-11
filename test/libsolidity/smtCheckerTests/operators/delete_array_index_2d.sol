@@ -4,7 +4,7 @@ contract C
 {
 	uint[][] a;
 	function f(bool b) public {
-		require(a[2][3] == 4);
+		a[2][3] = 4;
 		if (b)
 			delete a;
 		else
@@ -15,3 +15,5 @@ contract C
 }
 // ====
 // SMTSolvers: z3
+// ----
+// Warning: (174-194): Assertion violation happens here

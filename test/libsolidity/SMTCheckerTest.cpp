@@ -44,6 +44,15 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion _ev
 	}
 	else
 		m_enabledSolvers = smt::SMTSolverChoice::All();
+
+	auto available = ModelChecker::availableSolvers();
+	if (!available.z3)
+		m_enabledSolvers.z3 = false;
+	if (!available.cvc4)
+		m_enabledSolvers.cvc4 = false;
+
+	if (m_enabledSolvers.none())
+		m_shouldRun = false;
 }
 
 TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
@@ -54,18 +63,4 @@ TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePr
 	filterObtainedErrors();
 
 	return printExpectationAndError(_stream, _linePrefix, _formatted) ? TestResult::Success : TestResult::Failure;
-}
-
-bool SMTCheckerTest::validateSettings(langutil::EVMVersion _evmVersion)
-{
-	auto available = ModelChecker::availableSolvers();
-	if (!available.z3)
-		m_enabledSolvers.z3 = false;
-	if (!available.cvc4)
-		m_enabledSolvers.cvc4 = false;
-
-	if (m_enabledSolvers.none())
-		return false;
-
-	return SyntaxTest::validateSettings(_evmVersion);
 }

@@ -2924,7 +2924,10 @@ vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 	{
 	case Kind::External:
 	case Kind::DelegateCall:
-		slots = {make_tuple("address", TypeProvider::address()), make_tuple("functionIdentifier", TypeProvider::fixedBytes(4))};
+		slots = {
+			make_tuple("address", TypeProvider::address()),
+			make_tuple("functionIdentifier", TypeProvider::uint(32))
+		};
 		break;
 	case Kind::BareCall:
 	case Kind::BareCallCode:
@@ -3471,7 +3474,15 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 				continue;
 
 			if (!contract.isLibrary() && inDerivingScope && declaration->isVisibleInDerivedContracts())
-				members.emplace_back(declaration->name(), declaration->type(), declaration);
+			{
+				if (
+					auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(declaration);
+					functionDefinition && !functionDefinition->isImplemented()
+				)
+					members.emplace_back(declaration->name(), declaration->typeViaContractName(), declaration);
+				else
+					members.emplace_back(declaration->name(), declaration->type(), declaration);
+			}
 			else if (
 				(contract.isLibrary() && declaration->isVisibleAsLibraryMember()) ||
 				declaration->isVisibleViaContractTypeAccess()

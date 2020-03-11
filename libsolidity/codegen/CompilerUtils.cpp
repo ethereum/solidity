@@ -121,56 +121,12 @@ void CompilerUtils::returnDataToArray()
 
 void CompilerUtils::accessCalldataTail(Type const& _type)
 {
-	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
-	solAssert(_type.isDynamicallyEncoded(), "");
-
-	unsigned int tailSize = _type.calldataEncodedTailSize();
-	solAssert(tailSize > 1, "");
-
-	// returns the absolute offset of the tail in "base_ref"
-	m_context.appendInlineAssembly(Whiskers(R"({
-		let rel_offset_of_tail := calldataload(ptr_to_tail)
-		if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { <revertString> }
-		base_ref := add(base_ref, rel_offset_of_tail)
-	})")
-	("neededLength", toCompactHexWithPrefix(tailSize))
-	("revertString", m_context.revertReasonIfDebug("Invalid calldata tail offset"))
-	.render(), {"base_ref", "ptr_to_tail"});
-	// stack layout: <absolute_offset_of_tail> <garbage>
-
-	if (!_type.isDynamicallySized())
-	{
-		m_context << Instruction::POP;
-		// stack layout: <absolute_offset_of_tail>
-		solAssert(
-			_type.category() == Type::Category::Struct ||
-			_type.category() == Type::Category::Array,
-			"Invalid dynamically encoded base type on tail access."
-		);
-	}
-	else
-	{
-		auto const* arrayType = dynamic_cast<ArrayType const*>(&_type);
-		solAssert(!!arrayType, "Invalid dynamically sized type.");
-		unsigned int calldataStride = arrayType->calldataStride();
-		solAssert(calldataStride > 0, "");
-
-		// returns the absolute offset of the tail in "base_ref"
-		// and the length of the tail in "length"
-		m_context.appendInlineAssembly(
-			Whiskers(R"({
-				length := calldataload(base_ref)
-				base_ref := add(base_ref, 0x20)
-				if gt(length, 0xffffffffffffffff) { <revertString> }
-				if sgt(base_ref, sub(calldatasize(), mul(length, <calldataStride>))) { revert(0, 0) }
-			})")
-			("calldataStride", toCompactHexWithPrefix(calldataStride))
-			("revertString", m_context.revertReasonIfDebug("Invalid calldata tail length"))
-			.render(),
-			{"base_ref", "length"}
-		);
-		// stack layout: <absolute_offset_of_tail> <length>
-	}
+	m_context << Instruction::SWAP1;
+	m_context.callYulFunction(
+		m_context.utilFunctions().accessCalldataTailFunction(_type),
+		2,
+		_type.isDynamicallySized() ? 2 : 1
+	);
 }
 
 unsigned CompilerUtils::loadFromMemory(
@@ -539,6 +495,10 @@ void CompilerUtils::encodeToMemory(
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
 			// copy tail pointer (=mem_end - mem_start) to memory
+			solAssert(
+				(2 + dynPointers) <= 16,
+				"Stack too deep(" + to_string(2 + dynPointers) + "), try using fewer variables."
+			);
 			m_context << dupInstruction(2 + dynPointers) << Instruction::DUP2;
 			m_context << Instruction::SUB;
 			m_context << dupInstruction(2 + dynPointers - thisDynPointer);
@@ -595,31 +555,21 @@ void CompilerUtils::abiEncodeV2(
 
 	// stack: <$value0> <$value1> ... <$value(n-1)> <$headStart>
 
-	auto ret = m_context.pushNewTag();
-	moveIntoStack(sizeOnStack(_givenTypes) + 1);
-
 	string encoderName =
 		_padToWordBoundaries ?
 		m_context.abiFunctions().tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes) :
 		m_context.abiFunctions().tupleEncoderPacked(_givenTypes, _targetTypes);
-	m_context.appendJumpTo(m_context.namedTag(encoderName));
-	m_context.adjustStackOffset(-int(sizeOnStack(_givenTypes)) - 1);
-	m_context << ret.tag();
+	m_context.callYulFunction(encoderName, sizeOnStack(_givenTypes) + 1, 1);
 }
 
 void CompilerUtils::abiDecodeV2(TypePointers const& _parameterTypes, bool _fromMemory)
 {
 	// stack: <source_offset> <length> [stack top]
-	auto ret = m_context.pushNewTag();
-	moveIntoStack(2);
-	// stack: <return tag> <source_offset> <length> [stack top]
 	m_context << Instruction::DUP2 << Instruction::ADD;
 	m_context << Instruction::SWAP1;
-	// stack: <return tag> <end> <start>
+	// stack: <end> <start>
 	string decoderName = m_context.abiFunctions().tupleDecoder(_parameterTypes, _fromMemory);
-	m_context.appendJumpTo(m_context.namedTag(decoderName));
-	m_context.adjustStackOffset(int(sizeOnStack(_parameterTypes)) - 3);
-	m_context << ret.tag();
+	m_context.callYulFunction(decoderName, 2, sizeOnStack(_parameterTypes));
 }
 
 void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)

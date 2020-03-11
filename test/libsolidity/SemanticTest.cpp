@@ -71,6 +71,9 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 		m_settings.erase("ABIEncoderV1Only");
 	}
 
+	if (m_runWithABIEncoderV1Only && solidity::test::CommonOptions::get().useABIEncoderV2)
+		m_shouldRun = false;
+
 	if (m_settings.count("revertStrings"))
 	{
 		auto revertStrings = revertStringsFromString(m_settings["revertStrings"]);
@@ -90,17 +93,11 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	soltestAssert(!m_tests.empty(), "No tests specified in " + _filename);
 }
 
-bool SemanticTest::validateSettings(langutil::EVMVersion _evmVersion)
-{
-	if (m_runWithABIEncoderV1Only && solidity::test::CommonOptions::get().useABIEncoderV2)
-		return false;
-	return EVMVersionRestrictedTestCase::validateSettings(_evmVersion);
-}
-
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	for(bool compileViaYul: set<bool>{!m_runWithoutYul, m_runWithYul})
 	{
+		reset();
 		bool success = true;
 
 		m_compileViaYul = compileViaYul;

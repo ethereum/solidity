@@ -47,11 +47,11 @@ public:
 	explicit YulUtilFunctions(
 		langutil::EVMVersion _evmVersion,
 		RevertStrings _revertStrings,
-		std::shared_ptr<MultiUseYulFunctionCollector> _functionCollector
+		MultiUseYulFunctionCollector& _functionCollector
 	):
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
-		m_functionCollector(std::move(_functionCollector))
+		m_functionCollector(_functionCollector)
 	{}
 
 	/// @returns a function that combines the address and selector to a single value
@@ -306,7 +306,7 @@ private:
 
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
-	std::shared_ptr<MultiUseYulFunctionCollector> m_functionCollector;
+	MultiUseYulFunctionCollector& m_functionCollector;
 };
 
 }
