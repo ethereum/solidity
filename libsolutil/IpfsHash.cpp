@@ -40,6 +40,21 @@ bytes varintEncoding(size_t _n)
 	return encoded;
 }
 
+bytes encodeByteArray(bytes const& _data)
+{
+	return bytes{0x0a} + varintEncoding(_data.size()) + _data;
+}
+
+bytes encodeHash(bytes const& _data)
+{
+	return bytes{0x12, 0x20} + picosha2::hash256(_data);
+}
+
+bytes encodeLinkData(bytes const& _data)
+{
+	return bytes{0x12} + varintEncoding(_data.size()) + _data;
+}
+
 string base58Encode(bytes const& _data)
 {
 	static string const alphabet{"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"};
@@ -53,36 +68,132 @@ string base58Encode(bytes const& _data)
 	reverse(output.begin(), output.end());
 	return output;
 }
+
+struct Chunk
+{
+	Chunk() = default;
+	Chunk(bytes _hash, size_t _size, size_t _blockSize):
+		hash(std::move(_hash)),
+		size(_size),
+		blockSize(_blockSize)
+	{}
+
+	bytes hash = {};
+	size_t size = 0;
+	size_t blockSize = 0;
+};
+
+using Chunks = vector<Chunk>;
+
+Chunk combineLinks(Chunks& _links)
+{
+	bytes data = {};
+	bytes lengths = {};
+	Chunk chunk = {};
+	for (Chunk& link: _links)
+	{
+		chunk.size += link.size;
+		chunk.blockSize += link.blockSize;
+
+		data += encodeLinkData(
+			bytes {0x0a} +
+			varintEncoding(link.hash.size()) +
+			std::move(link.hash) +
+			bytes{0x12, 0x00, 0x18} +
+			varintEncoding(link.blockSize)
+		);
+
+		lengths += bytes{0x20} + varintEncoding(link.size);
+	}
+
+	bytes blockData = data + encodeByteArray(bytes{0x08, 0x02, 0x18} + varintEncoding(chunk.size) + lengths);
+
+	chunk.blockSize += blockData.size();
+	chunk.hash = encodeHash(blockData);
+
+	return chunk;
+}
+
+Chunks buildNextLevel(Chunks& _currentLevel)
+{
+	size_t const maxChildNum = 174;
+
+	Chunks nextLevel;
+	Chunks links;
+
+	for (Chunk& chunk: _currentLevel)
+	{
+		links.emplace_back(std::move(chunk.hash), chunk.size, chunk.blockSize);
+		if (links.size() == maxChildNum)
+		{
+			nextLevel.emplace_back(combineLinks(links));
+			links = {};
+		}
+	}
+	if (!links.empty())
+		nextLevel.emplace_back(combineLinks(links));
+
+	return nextLevel;
+}
+
+/// Builds a tree starting from the bottom level where nodes are data nodes.
+/// Data nodes should be calculated and passed as the only level in chunk levels
+/// Each next level is calculated as following:
+///   - Pick up to maxChildNum (174) nodes until a whole level is added, group them and pass to the node in the next level
+///   - Do this until the current level has only one node, return the hash in that node
+bytes groupChunksBottomUp(Chunks _currentLevel)
+{
+	// when we reach root it will be the only node in that level
+	while (_currentLevel.size() != 1)
+		_currentLevel = buildNextLevel(_currentLevel);
+
+	// top level's only node stores the hash for file
+	return _currentLevel.front().hash;
+}
 }
 
 bytes solidity::util::ipfsHash(string _data)
 {
-	assertThrow(_data.length() < 1024 * 256, DataTooLong, "IPFS hash for large (chunked) files not yet implemented.");
+	size_t const maxChunkSize = 1024 * 256;
+	size_t chunkCount = _data.length() / maxChunkSize + (_data.length() % maxChunkSize > 0 ? 1 : 0);
+	chunkCount = chunkCount == 0 ? 1 : chunkCount;
 
-	bytes lengthAsVarint = varintEncoding(_data.size());
+	Chunks allChunks;
 
-	bytes protobufEncodedData;
-	// Type: File
-	protobufEncodedData += bytes{0x08, 0x02};
-	if (!_data.empty())
+	for (unsigned long chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++)
 	{
-		// Data (length delimited bytes)
-		protobufEncodedData += bytes{0x12};
-		protobufEncodedData += lengthAsVarint;
-		protobufEncodedData += asBytes(std::move(_data));
+		bytes chunkBytes = asBytes(
+			_data.substr(chunkIndex * maxChunkSize, min(maxChunkSize, _data.length() - chunkIndex * maxChunkSize))
+		);
+
+		bytes lengthAsVarint = varintEncoding(chunkBytes.size());
+
+		bytes protobufEncodedData;
+		// Type: File
+		protobufEncodedData += bytes{0x08, 0x02};
+		if (!chunkBytes.empty())
+		{
+			// Data (length delimited bytes)
+			protobufEncodedData += bytes{0x12};
+			protobufEncodedData += lengthAsVarint;
+			protobufEncodedData += chunkBytes;
+		}
+		// filesize: length as varint
+		protobufEncodedData += bytes{0x18} + lengthAsVarint;
+
+		// PBDag:
+		// Data: (length delimited bytes)
+		bytes blockData = encodeByteArray(protobufEncodedData);
+
+		// Multihash: sha2-256, 256 bits
+		allChunks.emplace_back(
+			encodeHash(blockData),
+			chunkBytes.size(),
+			blockData.size()
+		);
 	}
-	// filesize: length as varint
-	protobufEncodedData += bytes{0x18} + lengthAsVarint;
 
-	// PBDag:
-	// Data: (length delimited bytes)
-	size_t protobufLength = protobufEncodedData.size();
-	bytes blockData = bytes{0x0a} + varintEncoding(protobufLength) + std::move(protobufEncodedData);
-	// TODO Handle "large" files with multiple blocks
-
-	// Multihash: sha2-256, 256 bits
-	bytes hash = bytes{0x12, 0x20} + picosha2::hash256(std::move(blockData));
-	return hash;
+	return groupChunksBottomUp(std::move(allChunks));
 }
 
 string solidity::util::ipfsHashBase58(string _data)
