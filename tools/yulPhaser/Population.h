@@ -100,6 +100,10 @@ public:
 	Population select(Selection const& _selection) const;
 	Population mutate(Selection const& _selection, std::function<Mutation> _mutation) const;
 	Population crossover(PairSelection const& _selection, std::function<Crossover> _crossover) const;
+	std::tuple<Population, Population> symmetricCrossoverWithRemainder(
+		PairSelection const& _selection,
+		std::function<SymmetricCrossover> _symmetricCrossover
+	) const;
 
 	friend Population operator+(Population _a, Population _b);
 

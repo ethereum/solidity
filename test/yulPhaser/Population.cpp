@@ -48,6 +48,14 @@ namespace solidity::phaser::test
 class PopulationFixture
 {
 protected:
+	static ChromosomePair twoStepSwap(Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+	{
+		return ChromosomePair{
+			Chromosome(vector<string>{_chromosome1.optimisationSteps()[0], _chromosome2.optimisationSteps()[1]}),
+			Chromosome(vector<string>{_chromosome2.optimisationSteps()[0], _chromosome1.optimisationSteps()[1]}),
+		};
+	}
+
 	shared_ptr<FitnessMetric> m_fitnessMetric = make_shared<ChromosomeLengthMetric>();
 };
 
@@ -307,6 +315,53 @@ BOOST_FIXTURE_TEST_CASE(crossover_should_return_empty_population_if_selection_is
 	assert(selection.materialise(population.individuals().size()).empty());
 
 	BOOST_TEST(population.crossover(selection, fixedPointCrossover(0.5)).individuals().empty());
+}
+
+BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_return_crossed_population_and_remainder, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
+	PairMosaicSelection selection({{2, 1}}, 0.25);
+	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{2, 1}}));
+
+	Population expectedCrossedPopulation(m_fitnessMetric, {Chromosome("gc"), Chromosome("cg")});
+	Population expectedRemainder(m_fitnessMetric, {Chromosome("aa"), Chromosome("hh")});
+
+	BOOST_TEST(
+		population.symmetricCrossoverWithRemainder(selection, twoStepSwap) ==
+		(tuple<Population, Population>{expectedCrossedPopulation, expectedRemainder})
+	);
+}
+
+BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_allow_crossing_the_same_individual_multiple_times, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
+	PairMosaicSelection selection({{0, 0}, {2, 1}}, 1.0);
+	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 0}, {2, 1}, {0, 0}, {2, 1}}));
+
+	Population expectedCrossedPopulation(m_fitnessMetric, {
+		Chromosome("aa"), Chromosome("aa"),
+		Chromosome("aa"), Chromosome("aa"),
+		Chromosome("gc"), Chromosome("cg"),
+		Chromosome("gc"), Chromosome("cg"),
+	});
+	Population expectedRemainder(m_fitnessMetric, {Chromosome("hh")});
+
+	BOOST_TEST(
+		population.symmetricCrossoverWithRemainder(selection, twoStepSwap) ==
+		(tuple<Population, Population>{expectedCrossedPopulation, expectedRemainder})
+	);
+}
+
+BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_return_empty_population_if_selection_is_empty, PopulationFixture)
+{
+	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc")});
+	PairMosaicSelection selection({}, 0.0);
+	assert(selection.materialise(population.individuals().size()).empty());
+
+	BOOST_TEST(
+		population.symmetricCrossoverWithRemainder(selection, twoStepSwap) ==
+		(tuple<Population, Population>{Population(m_fitnessMetric), population})
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

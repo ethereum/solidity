@@ -117,6 +117,37 @@ Population Population::crossover(PairSelection const& _selection, function<Cross
 	return Population(m_fitnessMetric, crossedIndividuals);
 }
 
+tuple<Population, Population> Population::symmetricCrossoverWithRemainder(
+	PairSelection const& _selection,
+	function<SymmetricCrossover> _symmetricCrossover
+) const
+{
+	vector<int> indexSelected(m_individuals.size(), false);
+
+	vector<Individual> crossedIndividuals;
+	for (auto const& [i, j]: _selection.materialise(m_individuals.size()))
+	{
+		auto children = _symmetricCrossover(
+			m_individuals[i].chromosome,
+			m_individuals[j].chromosome
+		);
+		crossedIndividuals.emplace_back(move(get<0>(children)), *m_fitnessMetric);
+		crossedIndividuals.emplace_back(move(get<1>(children)), *m_fitnessMetric);
+		indexSelected[i] = true;
+		indexSelected[j] = true;
+	}
+
+	vector<Individual> remainder;
+	for (size_t i = 0; i < indexSelected.size(); ++i)
+		if (!indexSelected[i])
+			remainder.emplace_back(m_individuals[i]);
+
+	return {
+		Population(m_fitnessMetric, crossedIndividuals),
+		Population(m_fitnessMetric, remainder),
+	};
+}
+
 namespace solidity::phaser
 {
 
