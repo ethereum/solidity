@@ -96,7 +96,10 @@ Population GenerationalElitistWithExclusivePools::runNextRound(Population _popul
 			geneAddition(m_options.percentGenesToAddOrDelete)
 		)
 	);
-	std::function<Crossover> crossoverOperator = randomPointCrossover();
+	std::function<Crossover> crossoverOperator = buildCrossoverOperator(
+		m_options.crossover,
+		m_options.uniformCrossoverSwapChance
+	);
 
 	return
 		_population.select(elitePool) +
@@ -111,10 +114,15 @@ Population ClassicGeneticAlgorithm::runNextRound(Population _population)
 
 	Population selectedPopulation = select(_population, rest.individuals().size());
 
+	std::function<SymmetricCrossover> crossoverOperator = buildSymmetricCrossoverOperator(
+		m_options.crossover,
+		m_options.uniformCrossoverSwapChance
+	);
+
 	Population crossedPopulation = Population::combine(
 		selectedPopulation.symmetricCrossoverWithRemainder(
 			PairsFromRandomSubset(m_options.crossoverChance),
-			symmetricRandomPointCrossover()
+			crossoverOperator
 		)
 	);
 

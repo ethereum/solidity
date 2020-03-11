@@ -130,6 +130,8 @@ public:
 		double deletionVsAdditionChance;  ///< The chance of choosing @a geneDeletion as the mutation if randomisation was not chosen.
 		double percentGenesToRandomise;   ///< The chance of any given gene being mutated in gene randomisation.
 		double percentGenesToAddOrDelete; ///< The chance of a gene being added (or deleted) in gene addition (or deletion).
+		CrossoverChoice crossover;        ///< The crossover operator to use.
+		std::optional<double> uniformCrossoverSwapChance; ///< Chance of a pair of genes being swapped in uniform crossover.
 
 		bool isValid() const
 		{
@@ -140,6 +142,7 @@ public:
 				0 <= deletionVsAdditionChance && deletionVsAdditionChance <= 1.0 &&
 				0 <= percentGenesToRandomise && percentGenesToRandomise <= 1.0 &&
 				0 <= percentGenesToAddOrDelete && percentGenesToAddOrDelete <= 1.0 &&
+				0 <= uniformCrossoverSwapChance && uniformCrossoverSwapChance <= 1.0 &&
 				mutationPoolSize + crossoverPoolSize <= 1.0
 			);
 		}
@@ -185,6 +188,8 @@ public:
 		double mutationChance;     ///< The chance of a particular gene being randomised in @a geneRandomisation mutation.
 		double deletionChance;     ///< The chance of a particular gene being deleted in @a geneDeletion mutation.
 		double additionChance;     ///< The chance of a particular gene being added in @a geneAddition mutation.
+		CrossoverChoice crossover; ///< The crossover operator to use
+		std::optional<double> uniformCrossoverSwapChance; ///< Chance of a pair of genes being swapped in uniform crossover.
 
 		bool isValid() const
 		{
@@ -193,7 +198,8 @@ public:
 				0 <= crossoverChance && crossoverChance <= 1.0 &&
 				0 <= mutationChance && mutationChance <= 1.0 &&
 				0 <= deletionChance && deletionChance <= 1.0 &&
-				0 <= additionChance && additionChance <= 1.0
+				0 <= additionChance && additionChance <= 1.0 &&
+				0 <= uniformCrossoverSwapChance && uniformCrossoverSwapChance <= 1.0
 			);
 		}
 	};

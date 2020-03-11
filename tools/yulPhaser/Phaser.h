@@ -22,6 +22,7 @@
 #pragma once
 
 #include <tools/yulPhaser/AlgorithmRunner.h>
+#include <tools/yulPhaser/GeneticAlgorithms.h>
 
 #include <boost/program_options.hpp>
 
@@ -83,6 +84,8 @@ std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricCho
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::MetricChoice _metric);
 std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricAggregatorChoice& _aggregator);
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::MetricAggregatorChoice _aggregator);
+std::istream& operator>>(std::istream& _inputStream, solidity::phaser::CrossoverChoice& _crossover);
+std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::CrossoverChoice _crossover);
 
 /**
  * Builds and validates instances of @a GeneticAlgorithm and its derived classes.
@@ -95,13 +98,18 @@ public:
 		Algorithm algorithm;
 		size_t minChromosomeLength;
 		size_t maxChromosomeLength;
+		CrossoverChoice crossover;
+		double uniformCrossoverSwapChance;
+
 		std::optional<double> randomElitePoolSize;
+
 		double gewepMutationPoolSize;
 		double gewepCrossoverPoolSize;
 		double gewepRandomisationChance;
 		double gewepDeletionVsAdditionChance;
 		std::optional<double> gewepGenesToRandomise;
 		std::optional<double> gewepGenesToAddOrDelete;
+
 		double classicElitePoolSize;
 		double classicCrossoverChance;
 		double classicMutationChance;
