@@ -17,6 +17,7 @@
 
 #include <tools/yulPhaser/PairSelections.h>
 
+#include <tools/yulPhaser/Selections.h>
 #include <tools/yulPhaser/SimulationRNG.h>
 
 #include <cmath>
@@ -45,6 +46,43 @@ vector<tuple<size_t, size_t>> RandomPairSelection::materialise(size_t _poolSize)
 	}
 
 	return selection;
+}
+
+vector<tuple<size_t, size_t>> PairsFromRandomSubset::materialise(size_t _poolSize) const
+{
+	vector<size_t> selectedIndices = RandomSubset(m_selectionChance).materialise(_poolSize);
+
+	if (selectedIndices.size() % 2 != 0)
+	{
+		if (selectedIndices.size() < _poolSize && SimulationRNG::bernoulliTrial(0.5))
+		{
+			do
+			{
+				size_t extraIndex = SimulationRNG::uniformInt(0, selectedIndices.size() - 1);
+				if (find(selectedIndices.begin(), selectedIndices.end(), extraIndex) == selectedIndices.end())
+					selectedIndices.push_back(extraIndex);
+			} while (selectedIndices.size() % 2 != 0);
+		}
+		else
+			selectedIndices.erase(selectedIndices.begin() + SimulationRNG::uniformInt(0, selectedIndices.size() - 1));
+	}
+	assert(selectedIndices.size() % 2 == 0);
+
+	vector<tuple<size_t, size_t>> selectedPairs;
+	for (size_t i = selectedIndices.size() / 2; i > 0; --i)
+	{
+		size_t position1 = SimulationRNG::uniformInt(0, selectedIndices.size() - 1);
+		size_t value1 = selectedIndices[position1];
+		selectedIndices.erase(selectedIndices.begin() + position1);
+		size_t position2 = SimulationRNG::uniformInt(0, selectedIndices.size() - 1);
+		size_t value2 = selectedIndices[position2];
+		selectedIndices.erase(selectedIndices.begin() + position2);
+
+		selectedPairs.push_back({value1, value2});
+	}
+	assert(selectedIndices.size() == 0);
+
+	return selectedPairs;
 }
 
 vector<tuple<size_t, size_t>> PairMosaicSelection::materialise(size_t _poolSize) const

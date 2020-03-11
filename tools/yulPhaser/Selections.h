@@ -118,4 +118,26 @@ private:
 	double m_selectionSize;
 };
 
+/**
+ * A selection that goes over all elements in a container, for each one independently deciding
+ * whether to select it or not. Each element has the same chance of being selected and can be
+ * selected at most once. The order of selected elements is the same as the order of elements in
+ * the container. The number of selected elements is random and can be different with each call
+ * to @a materialise().
+ */
+class RandomSubset: public Selection
+{
+public:
+	explicit RandomSubset(double _selectionChance):
+		m_selectionChance(_selectionChance)
+	{
+		assert(0.0 <= _selectionChance && _selectionChance <= 1.0);
+	}
+
+	std::vector<size_t> materialise(size_t _poolSize) const override;
+
+private:
+	double m_selectionChance;
+};
+
 }
