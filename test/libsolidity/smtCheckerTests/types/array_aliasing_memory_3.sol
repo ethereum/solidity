@@ -1,12 +1,13 @@
 pragma experimental SMTChecker;
+pragma experimental ABIEncoderV2;
 
 contract C
 {
 	uint[] array;
-	function f(uint[] memory a, uint[] memory b) internal view {
-		require(array[0] == 42);
+	function f(uint[] memory a, uint[] memory b) public {
+		array[0] = 42;
 		uint[] storage c = array;
-		require(a[0] == 2);
+		a[0] = 2;
 		b[0] = 1;
 		// Erasing knowledge about memory references should not
 		// erase knowledge about state variables.
@@ -19,4 +20,4 @@ contract C
 	}
 }
 // ----
-// Warning: (469-486): Assertion violation happens here
+// Warning: (476-493): Assertion violation happens here
