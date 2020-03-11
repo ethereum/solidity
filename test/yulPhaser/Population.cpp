@@ -104,6 +104,23 @@ BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_compute_fitness_and_
 	BOOST_TEST(individuals[2].chromosome == chromosomes[1]);
 }
 
+BOOST_FIXTURE_TEST_CASE(constructor_should_accept_individuals_without_recalculating_fitness, PopulationFixture)
+{
+	vector<Individual> customIndividuals = {
+		Individual(Chromosome("aaaccc"), 20),
+		Individual(Chromosome("aaa"), 10),
+		Individual(Chromosome("aaaf"), 30),
+	};
+	assert(customIndividuals[0].fitness != m_fitnessMetric->evaluate(customIndividuals[0].chromosome));
+	assert(customIndividuals[1].fitness != m_fitnessMetric->evaluate(customIndividuals[1].chromosome));
+	assert(customIndividuals[2].fitness != m_fitnessMetric->evaluate(customIndividuals[2].chromosome));
+
+	Population population(m_fitnessMetric, customIndividuals);
+
+	vector<Individual> expectedIndividuals{customIndividuals[1], customIndividuals[0], customIndividuals[2]};
+	BOOST_TEST(population.individuals() == expectedIndividuals);
+}
+
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_generator, PopulationFixture)
 {
 	size_t chromosomeCount = 30;

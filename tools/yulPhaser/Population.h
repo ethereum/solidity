@@ -81,6 +81,9 @@ public:
 			_fitnessMetric,
 			chromosomesToIndividuals(*_fitnessMetric, std::move(_chromosomes))
 		) {}
+	explicit Population(std::shared_ptr<FitnessMetric> _fitnessMetric, std::vector<Individual> _individuals):
+		m_fitnessMetric(std::move(_fitnessMetric)),
+		m_individuals{sortedIndividuals(std::move(_individuals))} {}
 
 	static Population makeRandom(
 		std::shared_ptr<FitnessMetric> _fitnessMetric,
@@ -112,10 +115,6 @@ public:
 	friend std::ostream& operator<<(std::ostream& _stream, Population const& _population);
 
 private:
-	explicit Population(std::shared_ptr<FitnessMetric> _fitnessMetric, std::vector<Individual> _individuals):
-		m_fitnessMetric(std::move(_fitnessMetric)),
-		m_individuals{sortedIndividuals(std::move(_individuals))} {}
-
 	static std::vector<Individual> chromosomesToIndividuals(
 		FitnessMetric& _fitnessMetric,
 		std::vector<Chromosome> _chromosomes
