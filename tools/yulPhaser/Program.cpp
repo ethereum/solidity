@@ -78,7 +78,7 @@ variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 	// ASSUMPTION: parseSource() rewinds the stream on its own
 	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
 
-	variant<unique_ptr<Block>, ErrorList> astOrErrors = parseSource(dialect, _sourceCode);
+	variant<unique_ptr<Block>, ErrorList> astOrErrors = parseObject(dialect, _sourceCode);
 	if (holds_alternative<ErrorList>(astOrErrors))
 		return get<ErrorList>(astOrErrors);
 
@@ -120,21 +120,6 @@ string Program::toJson() const
 {
 	Json::Value serializedAst = AsmJsonConverter(0)(*m_ast);
 	return jsonPrettyPrint(serializedAst);
-}
-
-variant<unique_ptr<Block>, ErrorList> Program::parseSource(Dialect const& _dialect, CharStream _source)
-{
-	ErrorList errors;
-	ErrorReporter errorReporter(errors);
-	auto scanner = make_shared<Scanner>(move(_source));
-	Parser parser(errorReporter, _dialect);
-
-	unique_ptr<Block> ast = parser.parse(scanner, false);
-	if (ast == nullptr)
-		return errors;
-
-	assert(errorReporter.errors().empty());
-	return variant<unique_ptr<Block>, ErrorList>(move(ast));
 }
 
 variant<unique_ptr<Block>, ErrorList> Program::parseObject(Dialect const& _dialect, CharStream _source)
