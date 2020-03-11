@@ -21,6 +21,7 @@
  */
 
 #include <cstdlib>
+#include <iostream>
 #include <boost/test/framework.hpp>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
@@ -60,6 +61,7 @@ bytes SolidityExecutionFramework::compileContract(
 			formatter.printErrorInformation(*error);
 		BOOST_ERROR("Compiling contract failed");
 	}
+	std::string contractName(_contractName.empty() ? m_compiler.lastContractName() : _contractName);
 	evmasm::LinkerObject obj;
 	if (m_compileViaYul)
 	{
@@ -70,9 +72,7 @@ bytes SolidityExecutionFramework::compileContract(
 					// get code that does not exhaust the stack.
 					OptimiserSettings::full()
 					);
-		if (!asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(
-			_contractName.empty() ? m_compiler.lastContractName() : _contractName
-		)))
+		if (!asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName)))
 		{
 			langutil::SourceReferenceFormatter formatter(std::cerr);
 
@@ -84,7 +84,9 @@ bytes SolidityExecutionFramework::compileContract(
 		obj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
 	}
 	else
-		obj = m_compiler.object(_contractName.empty() ? m_compiler.lastContractName() : _contractName);
+		obj = m_compiler.object(contractName);
 	BOOST_REQUIRE(obj.linkReferences.empty());
+	if (m_showMetadata)
+		cout << "metadata: " << m_compiler.metadata(contractName) << endl;
 	return obj.bytecode;
 }

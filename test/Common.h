@@ -50,6 +50,7 @@ struct CommonOptions: boost::noncopyable
 	bool disableSMT = false;
 	bool useABIEncoderV2 = false;
 	bool showMessages = false;
+	bool showMetadata = false;
 
 	langutil::EVMVersion evmVersion() const;
 
