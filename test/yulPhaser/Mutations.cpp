@@ -212,6 +212,39 @@ BOOST_AUTO_TEST_CASE(alternativeMutations_should_always_choose_second_mutation_i
 		BOOST_TEST(mutation(chromosome) == Chromosome("f"));
 }
 
+BOOST_AUTO_TEST_CASE(mutationSequence_should_apply_all_mutations)
+{
+	Chromosome chromosome("aaaaa");
+	function<Mutation> mutation = mutationSequence({
+		geneSubstitution(3, Chromosome("g").optimisationSteps()[0]),
+		geneSubstitution(2, Chromosome("f").optimisationSteps()[0]),
+		geneSubstitution(1, Chromosome("c").optimisationSteps()[0]),
+	});
+
+	BOOST_TEST(mutation(chromosome) == Chromosome("acfga"));
+}
+
+BOOST_AUTO_TEST_CASE(mutationSequence_apply_mutations_in_the_order_they_are_given)
+{
+	Chromosome chromosome("aa");
+	function<Mutation> mutation = mutationSequence({
+		geneSubstitution(0, Chromosome("g").optimisationSteps()[0]),
+		geneSubstitution(1, Chromosome("c").optimisationSteps()[0]),
+		geneSubstitution(0, Chromosome("f").optimisationSteps()[0]),
+		geneSubstitution(1, Chromosome("o").optimisationSteps()[0]),
+	});
+
+	BOOST_TEST(mutation(chromosome) == Chromosome("fo"));
+}
+
+BOOST_AUTO_TEST_CASE(mutationSequence_should_return_unmodified_chromosome_if_given_no_mutations)
+{
+	Chromosome chromosome("aa");
+	function<Mutation> mutation = mutationSequence({});
+
+	BOOST_TEST(mutation(chromosome) == chromosome);
+}
+
 BOOST_AUTO_TEST_CASE(randomPointCrossover_should_swap_chromosome_parts_at_random_point)
 {
 	function<Crossover> crossover = randomPointCrossover();

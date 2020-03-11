@@ -95,6 +95,18 @@ function<Mutation> phaser::alternativeMutations(
 	};
 }
 
+function<Mutation> phaser::mutationSequence(vector<function<Mutation>> _mutations)
+{
+	return [=](Chromosome const& _chromosome)
+	{
+		Chromosome mutatedChromosome = _chromosome;
+		for (size_t i = 0; i < _mutations.size(); ++i)
+			mutatedChromosome = _mutations[i](move(mutatedChromosome));
+
+		return mutatedChromosome;
+	};
+}
+
 namespace
 {
 

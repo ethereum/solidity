@@ -58,6 +58,9 @@ std::function<Mutation> alternativeMutations(
 	std::function<Mutation> _mutation2
 );
 
+/// Creates a mutation operator that sequentially applies all the operators given in @a _mutations.
+std::function<Mutation> mutationSequence(std::vector<std::function<Mutation>> _mutations);
+
 // CROSSOVER
 
 /// Creates a crossover operator that randomly selects a number between 0 and 1 and uses it as the
