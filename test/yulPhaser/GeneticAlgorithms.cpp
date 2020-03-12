@@ -29,6 +29,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 
+#include <algorithm>
 #include <vector>
 
 using namespace std;
@@ -130,6 +131,107 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_not_replace_any_chromosomes_if_whole
 
 	algorithm.runNextRound();
 	BOOST_TEST((chromosomeLengths(algorithm.population()) == vector<size_t>{3, 3, 3, 3, 5, 5, 5, 5}));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE(GenerationalElitistWithExclusivePoolsTest)
+
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_preserve_elite_and_regenerate_rest_of_population, GeneticAlgorithmFixture)
+{
+	auto population = Population::makeRandom(m_fitnessMetric, 6, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+
+	GenerationalElitistWithExclusivePools::Options options = {
+		/* mutationPoolSize = */ 0.2,
+		/* crossoverPoolSize = */ 0.2,
+		/* randomisationChance = */ 0.0,
+		/* deletionVsAdditionChance = */ 1.0,
+		/* percentGenesToRandomise = */ 0.0,
+		/* percentGenesToAddOrDelete = */ 1.0,
+	};
+	GenerationalElitistWithExclusivePools algorithm(population, m_output, options);
+	assert((chromosomeLengths(algorithm.population()) == vector<size_t>{3, 3, 3, 3, 3, 3, 5, 5, 5, 5}));
+
+	algorithm.runNextRound();
+
+	BOOST_TEST((chromosomeLengths(algorithm.population()) == vector<size_t>{0, 0, 3, 3, 3, 3, 3, 3, 3, 3}));
+}
+
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_not_replace_elite_with_worse_individuals, GeneticAlgorithmFixture)
+{
+	auto population = Population::makeRandom(m_fitnessMetric, 6, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+
+	GenerationalElitistWithExclusivePools::Options options = {
+		/* mutationPoolSize = */ 0.2,
+		/* crossoverPoolSize = */ 0.2,
+		/* randomisationChance = */ 0.0,
+		/* deletionVsAdditionChance = */ 0.0,
+		/* percentGenesToRandomise = */ 0.0,
+		/* percentGenesToAddOrDelete = */ 1.0,
+	};
+	GenerationalElitistWithExclusivePools algorithm(population, m_output, options);
+	assert(chromosomeLengths(algorithm.population()) == (vector<size_t>{3, 3, 3, 3, 3, 3, 5, 5, 5, 5}));
+
+	algorithm.runNextRound();
+
+	BOOST_TEST((chromosomeLengths(algorithm.population()) == vector<size_t>{3, 3, 3, 3, 3, 3, 3, 3, 7, 7}));
+}
+
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_generate_individuals_in_the_crossover_pool_by_mutating_the_elite, GeneticAlgorithmFixture)
+{
+	auto population = Population::makeRandom(m_fitnessMetric, 20, 5, 5);
+
+	GenerationalElitistWithExclusivePools::Options options = {
+		/* mutationPoolSize = */ 0.8,
+		/* crossoverPoolSize = */ 0.0,
+		/* randomisationChance = */ 0.5,
+		/* deletionVsAdditionChance = */ 0.5,
+		/* percentGenesToRandomise = */ 1.0,
+		/* percentGenesToAddOrDelete = */ 1.0,
+	};
+	GenerationalElitistWithExclusivePools algorithm(population, m_output, options);
+
+	SimulationRNG::reset(1);
+	algorithm.runNextRound();
+
+	BOOST_TEST((
+		chromosomeLengths(algorithm.population()) ==
+		vector<size_t>{0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 11, 11, 11}
+	));
+}
+
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_generate_individuals_in_the_crossover_pool_by_crossing_over_the_elite, GeneticAlgorithmFixture)
+{
+	auto population = (
+		Population(m_fitnessMetric, {Chromosome("aa"), Chromosome("ff")}) +
+		Population::makeRandom(m_fitnessMetric, 8, 6, 6)
+	);
+
+	GenerationalElitistWithExclusivePools::Options options = {
+		/* mutationPoolSize = */ 0.0,
+		/* crossoverPoolSize = */ 0.8,
+		/* randomisationChance = */ 0.0,
+		/* deletionVsAdditionChance = */ 0.0,
+		/* percentGenesToRandomise = */ 0.0,
+		/* percentGenesToAddOrDelete = */ 0.0,
+	};
+	GenerationalElitistWithExclusivePools algorithm(population, m_output, options);
+	assert((chromosomeLengths(algorithm.population()) == vector<size_t>{2, 2, 6, 6, 6, 6, 6, 6, 6, 6}));
+
+	SimulationRNG::reset(1);
+	algorithm.runNextRound();
+
+	vector<Individual> const& newIndividuals = algorithm.population().individuals();
+	BOOST_TEST((chromosomeLengths(algorithm.population()) == vector<size_t>{2, 2, 2, 2, 2, 2, 2, 2, 2, 2}));
+	for (auto& individual: newIndividuals)
+		BOOST_TEST((
+			individual.chromosome == Chromosome("aa") ||
+			individual.chromosome == Chromosome("af") ||
+			individual.chromosome == Chromosome("fa") ||
+			individual.chromosome == Chromosome("ff")
+		));
+	BOOST_TEST(any_of(newIndividuals.begin() + 2, newIndividuals.end(), [](auto& individual){
+		return individual.chromosome != Chromosome("aa") && individual.chromosome != Chromosome("ff");
+	}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

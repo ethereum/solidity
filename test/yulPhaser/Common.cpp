@@ -24,6 +24,24 @@
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
+using namespace solidity::phaser;
+
+function<Mutation> phaser::test::wholeChromosomeReplacement(Chromosome _newChromosome)
+{
+	return [_newChromosome = move(_newChromosome)](Chromosome const&) { return _newChromosome; };
+}
+
+function<Mutation> phaser::test::geneSubstitution(size_t _geneIndex, string _geneValue)
+{
+	return [=](Chromosome const& _chromosome)
+	{
+		vector<string> newGenes = _chromosome.optimisationSteps();
+		assert(_geneIndex < newGenes.size());
+		newGenes[_geneIndex] = _geneValue;
+
+		return Chromosome(newGenes);
+	};
+}
 
 vector<size_t> phaser::test::chromosomeLengths(Population const& _population)
 {
@@ -42,6 +60,15 @@ map<string, size_t> phaser::test::enumerateOptmisationSteps()
 		stepIndices.insert({nameAndAbbreviation.first, i++});
 
 	return stepIndices;
+}
+
+size_t phaser::test::countDifferences(Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+{
+	size_t count = 0;
+	for (size_t i = 0; i < min(_chromosome1.length(), _chromosome2.length()); ++i)
+		count += static_cast<int>(_chromosome1.optimisationSteps()[i] != _chromosome2.optimisationSteps()[i]);
+
+	return count + abs(static_cast<int>(_chromosome1.length() - _chromosome2.length()));
 }
 
 string phaser::test::stripWhitespace(string const& input)

@@ -145,6 +145,8 @@ set(yul_phaser_sources
     yulPhaser/Chromosome.cpp
     yulPhaser/FitnessMetrics.cpp
     yulPhaser/GeneticAlgorithms.cpp
+    yulPhaser/Mutations.cpp
+    yulPhaser/PairSelections.cpp
     yulPhaser/Population.cpp
     yulPhaser/Program.cpp
     yulPhaser/Selections.cpp
@@ -156,6 +158,8 @@ set(yul_phaser_sources
     ../tools/yulPhaser/Chromosome.cpp
     ../tools/yulPhaser/FitnessMetrics.cpp
     ../tools/yulPhaser/GeneticAlgorithms.cpp
+    ../tools/yulPhaser/Mutations.cpp
+    ../tools/yulPhaser/PairSelections.cpp
     ../tools/yulPhaser/Population.cpp
     ../tools/yulPhaser/Program.cpp
     ../tools/yulPhaser/Selections.cpp

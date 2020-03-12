@@ -39,6 +39,39 @@ using namespace solidity::util;
 
 namespace po = boost::program_options;
 
+enum class Algorithm
+{
+	Random,
+	GEWEP
+};
+
+istream& operator>>(istream& inputStream, Algorithm& algorithm)
+{
+	string value;
+	inputStream >> value;
+
+	if (value == "random")
+		algorithm = Algorithm::Random;
+	else if (value == "GEWEP")
+		algorithm = Algorithm::GEWEP;
+	else
+		inputStream.setstate(ios_base::failbit);
+
+	return inputStream;
+}
+
+ostream& operator<<(ostream& outputStream, Algorithm algorithm)
+{
+	if (algorithm == Algorithm::Random)
+		outputStream << "random";
+	else if (algorithm == Algorithm::GEWEP)
+		outputStream << "GEWEP";
+	else
+		outputStream.setstate(ios_base::failbit);
+
+	return outputStream;
+}
+
 namespace
 {
 
@@ -49,7 +82,7 @@ struct CommandLineParsingResult
 };
 
 
-void initializeRNG(po::variables_map const& arguments)
+void initialiseRNG(po::variables_map const& arguments)
 {
 	uint32_t seed;
 	if (arguments.count("seed") > 0)
@@ -69,7 +102,7 @@ CharStream loadSource(string const& _sourcePath)
 	return CharStream(sourceCode, _sourcePath);
 }
 
-void runAlgorithm(string const& _sourcePath)
+void runAlgorithm(string const& _sourcePath, Algorithm _algorithm)
 {
 	constexpr size_t populationSize = 20;
 	constexpr size_t minChromosomeLength = 12;
@@ -83,15 +116,41 @@ void runAlgorithm(string const& _sourcePath)
 		minChromosomeLength,
 		maxChromosomeLength
 	);
-	RandomAlgorithm(
-		population,
-		cout,
+
+	switch (_algorithm)
+	{
+		case Algorithm::Random:
 		{
-			/* elitePoolSize = */ 1.0 / populationSize,
-			/* minChromosomeLength = */ minChromosomeLength,
-			/* maxChromosomeLength = */ maxChromosomeLength,
+			RandomAlgorithm(
+				population,
+				cout,
+				{
+					/* elitePoolSize = */ 1.0 / populationSize,
+					/* minChromosomeLength = */ minChromosomeLength,
+					/* maxChromosomeLength = */ maxChromosomeLength,
+				}
+			).run();
+
+			break;
 		}
-	).run();
+		case Algorithm::GEWEP:
+		{
+			GenerationalElitistWithExclusivePools(
+				population,
+				cout,
+				{
+					/* mutationPoolSize = */ 0.25,
+					/* crossoverPoolSize = */ 0.25,
+					/* randomisationChance = */ 0.9,
+					/* deletionVsAdditionChance = */ 0.5,
+					/* percentGenesToRandomise = */ 1.0 / maxChromosomeLength,
+					/* percentGenesToAddOrDelete = */ 1.0 / maxChromosomeLength,
+				}
+			).run();
+
+			break;
+		}
+	}
 }
 
 CommandLineParsingResult parseCommandLine(int argc, char** argv)
@@ -114,6 +173,11 @@ CommandLineParsingResult parseCommandLine(int argc, char** argv)
 		("help", "Show help message and exit.")
 		("input-file", po::value<string>()->required(), "Input file")
 		("seed", po::value<uint32_t>(), "Seed for the random number generator")
+		(
+			"algorithm",
+			po::value<Algorithm>()->default_value(Algorithm::GEWEP),
+			"Algorithm"
+		)
 	;
 
 	po::positional_options_description positionalDescription;
@@ -156,11 +220,14 @@ int main(int argc, char** argv)
 	if (parsingResult.exitCode != 0)
 		return parsingResult.exitCode;
 
-	initializeRNG(parsingResult.arguments);
+	initialiseRNG(parsingResult.arguments);
 
 	try
 	{
-		runAlgorithm(parsingResult.arguments["input-file"].as<string>());
+		runAlgorithm(
+			parsingResult.arguments["input-file"].as<string>(),
+			parsingResult.arguments["algorithm"].as<Algorithm>()
+		);
 	}
 	catch (InvalidProgram const& _exception)
 	{
