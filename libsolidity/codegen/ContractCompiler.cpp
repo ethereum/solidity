@@ -682,7 +682,12 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			{
 				if (variable->isConstant())
 				{
-					variable = rootVariableDeclaration(*variable);
+					variable = rootConstVariableDeclaration(*variable);
+					// If rootConstVariableDeclaration fails and returns nullptr,
+					// it should have failed in TypeChecker already, causing a compilation error.
+					// In such case we should not get here.
+					solAssert(variable, "");
+
 					u256 value;
 					if (variable->value()->annotation().type->category() == Type::Category::RationalNumber)
 					{

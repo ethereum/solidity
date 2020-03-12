@@ -643,14 +643,14 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			solAssert(var->type(), "Expected variable type!");
 			if (var->isConstant())
 			{
-				var = rootVariableDeclaration(*var);
+				var = rootConstVariableDeclaration(*var);
 
-				if (!var->value())
+				if (var && !var->value())
 				{
 					m_errorReporter.typeError(_identifier.location, "Constant has no value.");
 					return size_t(-1);
 				}
-				else if (!type(*var)->isValueType() || (
+				else if (!var || !type(*var)->isValueType() || (
 					dynamic_cast<Literal const*>(var->value().get()) == nullptr &&
 					type(*var->value())->category() != Type::Category::RationalNumber
 				))
