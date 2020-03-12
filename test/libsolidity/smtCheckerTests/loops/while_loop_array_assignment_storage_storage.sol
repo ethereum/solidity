@@ -4,12 +4,13 @@ contract LoopFor2 {
 	uint[] b;
 	uint[] c;
 
-	function testUnboundedForLoop(uint n) public {
+	function testUnboundedForLoop() public {
 		b[0] = 900;
 		uint[] storage a = b;
-		require(n > 0 && n < 100);
+		require(b.length == c.length);
+		require(b.length > 0 && b.length < 100);
 		uint i;
-		while (i < n) {
+		while (i < b.length) {
 			b[i] = i + 1;
 			c[i] = b[i];
 			++i;
@@ -21,6 +22,8 @@ contract LoopFor2 {
 	}
 }
 // ----
-// Warning: (296-316): Assertion violation happens here
-// Warning: (320-339): Assertion violation happens here
-// Warning: (343-362): Assertion violation happens here
+// Warning: (277-282): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (303-306): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (344-364): Assertion violation happens here
+// Warning: (368-387): Assertion violation happens here
+// Warning: (391-410): Assertion violation happens here

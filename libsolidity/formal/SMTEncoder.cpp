@@ -864,6 +864,25 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 			return false;
 		}
 	}
+	else if (exprType->category() == Type::Category::Array)
+	{
+		_memberAccess.expression().accept(*this);
+		if (_memberAccess.memberName() == "length")
+		{
+			m_uninterpretedTerms.insert(&_memberAccess);
+			arrayLength(_memberAccess);
+		}
+		else
+		{
+			auto const& name = _memberAccess.memberName();
+			solAssert(name == "push" || name == "pop", "");
+			m_errorReporter.warning(
+				_memberAccess.location(),
+				"Assertion checker does not yet support array member \"" + name + "\"."
+			);
+		}
+		return false;
+	}
 	else
 		m_errorReporter.warning(
 			_memberAccess.location(),
@@ -983,12 +1002,16 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 					return false;
 				});
 
+			if (varDecl->type()->category() == Type::Category::Array)
+				copyOldArrayLength(varDecl->type(), m_context.variable(*varDecl));
+
 			smt::Expression store = smt::Expression::store(
 				m_context.variable(*varDecl)->currentValue(),
 				expr(*indexAccess->indexExpression()),
 				toStore
 			);
 			m_context.addAssertion(m_context.newValue(*varDecl) == store);
+
 			// Update the SMT select value after the assignment,
 			// necessary for sound models.
 			defineExpr(*indexAccess, smt::Expression::select(
@@ -1002,6 +1025,9 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 		{
 			toStore = smt::Expression::store(expr(*base), expr(*indexAccess->indexExpression()), toStore);
 			indexAccess = base;
+
+			if (base->annotation().type->category() == Type::Category::Array)
+				copyOldArrayLength(base->annotation().type, m_context.expression(*base));
 		}
 		else
 		{

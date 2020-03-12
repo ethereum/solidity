@@ -3,11 +3,12 @@ pragma experimental SMTChecker;
 contract LoopFor2 {
 	uint[] a;
 
-	function testUnboundedForLoop(uint n, uint[] memory b, uint[] memory c) public {
+	function testUnboundedForLoop(uint[] memory b, uint[] memory c) public {
 		b[0] = 900;
 		a = b;
-		require(n > 0 && n < 100);
-		for (uint i = 0; i < n; i += 1) {
+		require(b.length == c.length);
+		require(b.length > 0 && b.length < 100);
+		for (uint i = 0; i < b.length; i++) {
 			b[i] = i + 1;
 			c[i] = b[i];
 		}
@@ -16,8 +17,7 @@ contract LoopFor2 {
 		assert(b[0] == 900);
 	}
 }
-// ====
-// SMTSolvers: z3
 // ----
-// Warning: (274-294): Assertion violation happens here
-// Warning: (321-340): Assertion violation happens here
+// Warning: (288-293): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (317-337): Assertion violation happens here
+// Warning: (364-383): Assertion violation happens here

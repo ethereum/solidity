@@ -91,7 +91,7 @@ void CHC::analyze(SourceUnit const& _source)
 	for (auto const& source: _source.referencedSourceUnits(true))
 		sources.insert(source);
 	for (auto const* source: sources)
-		defineInterfacesAndSummaries(*source);
+		defineSymbols(*source);
 	for (auto const* source: sources)
 		source->accept(*this);
 
@@ -568,6 +568,38 @@ void CHC::unknownFunctionCall(FunctionCall const&)
 	m_unknownFunctionCallSeen = true;
 }
 
+void CHC::arrayLength(MemberAccess const& _arrayLength)
+{
+	auto const& array = _arrayLength.expression();
+	auto const* type = array.annotation().type;
+	solAssert(type->category() == Type::Category::Array, "");
+	solAssert(_arrayLength.memberName() == "length", "");
+
+	auto typeName = type->toString(true);
+	auto const& lengthArray = m_arrayLengths.at(typeName);
+	defineExpr(_arrayLength, smt::Expression::select(
+		lengthArray.currentValue(),
+		expr(array)
+	));
+}
+
+void CHC::copyOldArrayLength(TypePointer _type, shared_ptr<smt::SymbolicVariable> const& _symbVar)
+{
+	solAssert(_type->category() == Type::Category::Array, "");
+
+	auto typeName = _type->toString(true);
+	auto const& lengthArray = m_arrayLengths.at(typeName);
+	auto oldLength = smt::Expression::select(
+		lengthArray.currentValue(),
+		_symbVar->currentValue()
+	);
+	auto newLength = smt::Expression::select(
+		lengthArray.currentValue(),
+		_symbVar->valueAtIndex(_symbVar->index() + 1)
+	);
+	m_context.addAssertion(oldLength == newLength);
+}
+
 void CHC::resetSourceAnalysis()
 {
 	m_verificationTargets.clear();
@@ -575,6 +607,7 @@ void CHC::resetSourceAnalysis()
 	m_functionAssertions.clear();
 	m_callGraph.clear();
 	m_summaries.clear();
+	m_arrayLengths.clear();
 }
 
 void CHC::resetContractAnalysis()
@@ -650,6 +683,82 @@ vector<VariableDeclaration const*> CHC::stateVariablesIncludingInheritedAndPriva
 	return stateVars;
 }
 
+void CHC::createArrayLengths(Type const& _type)
+{
+	set<Type const*> types;
+	solidity::util::BreadthFirstSearch<Type const*>{{&_type}}.run([&](auto const* type, auto&& _addChild) {
+		vector<Type const*> toVisitInner;
+		if (auto arrayType = dynamic_cast<ArrayType const*>(type))
+		{
+			types.insert(type);
+			toVisitInner.emplace_back(arrayType->baseType());
+		}
+		else if (auto mapType = dynamic_cast<MappingType const*>(type))
+		{
+			toVisitInner.emplace_back(mapType->keyType());
+			toVisitInner.emplace_back(mapType->valueType());
+		}
+		else if (auto structType = dynamic_cast<StructType const*>(type))
+			toVisitInner += structType->memoryMemberTypes();
+
+		for (auto const* innerType: toVisitInner)
+			_addChild(innerType);
+	});
+
+	for (auto const* arrayType: types)
+	{
+		solAssert(arrayType->category() == Type::Category::Array, "");
+
+		auto const& arrayTypeName = arrayType->toString(true);
+		if (m_arrayLengths.count(arrayTypeName))
+			continue;
+
+		auto arraySort = smt::smtSort(*arrayType);
+		auto lengthArraySort = make_shared<smt::ArraySort>(arraySort, smt::SortProvider::intSort);
+		m_arrayLengths.emplace(
+			arrayTypeName,
+			smt::SymbolicArrayVariable(
+				lengthArraySort,
+				arrayTypeName + "_length",
+				m_context
+			)
+		);
+	}
+}
+
+void CHC::createContractArrayLengths(ContractDefinition const& _contract)
+{
+	for (auto const* var: stateVariablesIncludingInheritedAndPrivate(_contract))
+		createArrayLengths(*var->type());
+}
+
+void CHC::createFunctionArrayLengths(FunctionDefinition const& _function)
+{
+	for (auto const& var: _function.parameters())
+		createArrayLengths(*var->type());
+	for (auto const& var: _function.returnParameters())
+		createArrayLengths(*var->type());
+	for (auto const& var: _function.localVariables())
+		createArrayLengths(*var->type());
+
+	struct LengthCollector: public ASTConstVisitor
+	{
+		void endVisit(MemberAccess const& _memberAccess) {
+			auto exprType = _memberAccess.expression().annotation().type;
+			if (exprType->category() == Type::Category::Array)
+				if (_memberAccess.memberName() == "length")
+					types.insert(exprType);
+		}
+
+		set<TypePointer> types;
+	};
+	LengthCollector collector;
+	if (_function.isImplemented())
+		_function.body().accept(collector);
+	for (auto type: collector.types)
+		createArrayLengths(*type);
+}
+
 vector<smt::SortPointer> CHC::stateSorts(ContractDefinition const& _contract)
 {
 	vector<smt::SortPointer> stateSorts;
@@ -701,8 +810,16 @@ smt::SortPointer CHC::sort(FunctionDefinition const& _function)
 	vector<smt::SortPointer> outputSorts;
 	for (auto const& var: _function.returnParameters())
 		outputSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
+
+	vector<smt::SortPointer> arrayLengthSorts;
+	for (auto const& [typeName, lengthArray]: m_arrayLengths)
+	{
+		(void)typeName;
+		arrayLengthSorts.push_back(lengthArray.sort());
+	}
+
 	return make_shared<smt::FunctionSort>(
-		vector<smt::SortPointer>{smt::SortProvider::intSort} + m_stateSorts + inputSorts + m_stateSorts + inputSorts + outputSorts,
+		vector<smt::SortPointer>{smt::SortProvider::intSort} + arrayLengthSorts + m_stateSorts + inputSorts + m_stateSorts + inputSorts + outputSorts,
 		smt::SortProvider::boolSort
 	);
 }
@@ -751,19 +868,33 @@ unique_ptr<smt::SymbolicFunctionVariable> CHC::createSymbolicBlock(smt::SortPoin
 	return block;
 }
 
-void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
+void CHC::defineSymbols(SourceUnit const& _source)
 {
 	for (auto const& node: _source.nodes())
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(node.get()))
 			for (auto const* base: contract->annotation().linearizedBaseContracts)
 			{
 				string suffix = base->name() + "_" + to_string(base->id());
+
+				// Define interfaces
 				m_interfaces[base] = createSymbolicBlock(interfaceSort(*base), "interface_" + suffix);
+
+				// Define symbolic variables
 				for (auto const* var: stateVariablesIncludingInheritedAndPrivate(*base))
 					if (!m_context.knownVariable(*var))
 						createVariable(*var);
+
+				// Define symbolic array lengths
+				createContractArrayLengths(*base);
+
 				for (auto const* function: base->definedFunctions())
+				{
+					// Define summaries
 					m_summaries[contract].emplace(function, createSummaryBlock(*function, *contract));
+
+					// Define symbolic array lengths
+					createFunctionArrayLengths(*function);
+				}
 			}
 }
 
@@ -889,7 +1020,16 @@ vector<smt::Expression> CHC::currentFunctionVariables()
 	vector<smt::Expression> returnExprs;
 	for (auto const& var: m_currentFunction->returnParameters())
 		returnExprs.push_back(m_context.variable(*var)->currentValue());
+
+	vector<smt::Expression> arrayLengths;
+	for (auto const& [typeName, lengthArray]: m_arrayLengths)
+	{
+		(void)typeName;
+		arrayLengths.push_back(lengthArray.currentValue());
+	}
+
 	return vector<smt::Expression>{m_error.currentValue()} +
+		arrayLengths +
 		initialStateVariables() +
 		initInputExprs +
 		currentStateVariables() +

@@ -78,6 +78,12 @@ private:
 	void visitAssert(FunctionCall const& _funCall);
 	void internalFunctionCall(FunctionCall const& _funCall);
 	void unknownFunctionCall(FunctionCall const& _funCall);
+
+	/// Handles access to array length.
+	void arrayLength(MemberAccess const& _arrayLength) override;
+	/// Asserts that the length of an array is the same after
+	/// an assignment to an element.
+	void copyOldArrayLength(TypePointer _type, std::shared_ptr<smt::SymbolicVariable> const& _symbVar) override;
 	//@}
 
 	struct IdCompare
@@ -98,6 +104,13 @@ private:
 	void setCurrentBlock(smt::SymbolicFunctionVariable const& _block, std::vector<smt::Expression> const* _arguments = nullptr);
 	std::set<Expression const*, IdCompare> transactionAssertions(ASTNode const* _txRoot);
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
+
+	/// Creates the array that contains array lengths for the given type.
+	void createArrayLengths(Type const& _type);
+	/// Creates the array that contains array lengths for state variables.
+	void createContractArrayLengths(ContractDefinition const& _contract);
+	/// Creates the array that contains array lengths for function variables.
+	void createFunctionArrayLengths(FunctionDefinition const& _function);
 	//@}
 
 	/// Sort helpers.
@@ -119,9 +132,11 @@ private:
 	/// @returns a new block of given _sort and _name.
 	std::unique_ptr<smt::SymbolicFunctionVariable> createSymbolicBlock(smt::SortPointer _sort, std::string const& _name);
 
-	/// Creates summary predicates for all functions of all contracts
+	/// Creates the symbolic entities that are used by predicates:
+	/// interfaces, summaries and array length functions
+	/// for all functions of all contracts
 	/// in a given _source.
-	void defineInterfacesAndSummaries(SourceUnit const& _source);
+	void defineSymbols(SourceUnit const& _source);
 
 	/// Genesis predicate.
 	smt::Expression genesis() { return (*m_genesisPredicate)({}); }
@@ -231,6 +246,12 @@ private:
 	/// State variables.
 	/// Used to create all predicates.
 	std::vector<VariableDeclaration const*> m_stateVariables;
+
+	/// Maps an array type (from its canonical name) to a symbolic
+	/// array that maps arrays to their lengths.
+	/// Ideally this would be an Uninterpreted Function, but z3
+	/// does not allow functions as arguments (second order).
+	std::map<std::string, smt::SymbolicArrayVariable> m_arrayLengths;
 	//@}
 
 	/// Verification targets.

@@ -136,6 +136,9 @@ protected:
 	void arrayAssignment();
 	/// Handles assignment to SMT array index.
 	void arrayIndexAssignment(Expression const& _expr, smt::Expression const& _rightHandSide);
+	/// Asserts that the length of an array is the same after
+	/// an assignment to an element.
+	virtual void copyOldArrayLength(TypePointer /*_type*/, std::shared_ptr<smt::SymbolicVariable> const& /*_symbVar*/) {}
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
@@ -237,6 +240,9 @@ protected:
 
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
+
+	/// Allows each engine to handle array length.
+	virtual void arrayLength(MemberAccess const& /*_arrayLength*/) {}
 
 	struct VerificationTarget
 	{

@@ -7,8 +7,9 @@ contract LoopFor2 {
 	function testUnboundedForLoop(uint n) public {
 		b[0] = 900;
 		uint[] memory a = b;
-		require(n > 0 && n < 100);
-		for (uint i = 0; i < n; i += 1) {
+		require(b.length == c.length);
+		require(b.length > 0 && b.length < 100);
+		for (uint i = 0; i < b.length; i++) {
 			b[i] = i + 1;
 			c[i] = b[i];
 		}
@@ -19,5 +20,7 @@ contract LoopFor2 {
 	}
 }
 // ----
-// Warning: (316-336): Assertion violation happens here
-// Warning: (363-382): Assertion violation happens here
+// Warning: (107-113): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning: (287-292): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (367-387): Assertion violation happens here
+// Warning: (414-433): Assertion violation happens here

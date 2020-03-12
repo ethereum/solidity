@@ -12,6 +12,8 @@ Language Features:
 Compiler Features:
  * Metadata: Added support for IPFS hashes of large files that need to be split in multiple chunks.
  * Commandline Interface: Enable output of storage layout with `--storage-layout`.
+ * SMTChecker: Support array member ``length``.
+
 
 
 Bugfixes:
