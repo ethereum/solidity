@@ -2954,7 +2954,7 @@ vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 	if (m_valueSet)
 		slots.emplace_back("value", TypeProvider::uint256());
 	if (m_saltSet)
-		slots.emplace_back("salt", TypeProvider::uint256());
+		slots.emplace_back("salt", TypeProvider::fixedBytes(32));
 	if (bound())
 		for (auto const& [boundName, boundType]: m_parameterTypes.front()->stackItems())
 			slots.emplace_back("self_" + boundName, boundType);
