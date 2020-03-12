@@ -140,6 +140,7 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 {
 	solAssert(m_context.isStateVariable(_varDecl), "Must be a state variable.");
 	solAssert(!_varDecl.isConstant(), "");
+	solAssert(!_varDecl.immutable(), "");
 	if (_varDecl.value())
 	{
 		_varDecl.value()->accept(*this);
@@ -1123,6 +1124,7 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 		// If the value is visited twice, `defineExpression` is called twice on
 		// the same expression.
 		solUnimplementedAssert(!varDecl->isConstant(), "");
+		solUnimplementedAssert(!varDecl->immutable(), "");
 		if (m_context.isLocalVariable(*varDecl))
 			setLValue(_identifier, IRLValue{
 				*varDecl->annotation().type,
