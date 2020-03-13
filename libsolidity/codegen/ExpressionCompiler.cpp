@@ -1800,6 +1800,7 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _indexAccess);
 	_indexAccess.baseExpression().accept(*this);
+	// stack: offset length
 
 	Type const& baseType = *_indexAccess.baseExpression().annotation().type;
 
@@ -1815,27 +1816,21 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 		acceptAndConvert(*_indexAccess.startExpression(), *TypeProvider::uint256());
 	else
 		m_context << u256(0);
+	// stack: offset length sliceStart
+
+	m_context << Instruction::SWAP1;
+	// stack: offset sliceStart length
+
 	if (_indexAccess.endExpression())
 		acceptAndConvert(*_indexAccess.endExpression(), *TypeProvider::uint256());
 	else
-		m_context << Instruction::DUP2;
+		m_context << Instruction::DUP1;
+	// stack: offset sliceStart length sliceEnd
 
-	m_context.appendInlineAssembly(
-		Whiskers(R"({
-					if gt(sliceStart, sliceEnd) { <revertStringStartEnd> }
-					if gt(sliceEnd, length) { <revertStringEndLength> }
+	m_context << Instruction::SWAP3;
+	// stack: sliceEnd sliceStart length offset
 
-					offset := add(offset, mul(sliceStart, <stride>))
-					length := sub(sliceEnd, sliceStart)
-				})")
-		("stride", toString(arrayType->calldataStride()))
-		("revertStringStartEnd", m_context.revertReasonIfDebug("Slice starts after end"))
-		("revertStringEndLength", m_context.revertReasonIfDebug("Slice is greater than length"))
-		.render(),
-		{"offset", "length", "sliceStart", "sliceEnd"}
-	);
-
-	m_context << Instruction::POP << Instruction::POP;
+	m_context.callYulFunction(m_context.utilFunctions().calldataArrayIndexRangeAccess(*arrayType), 4, 2);
 
 	return false;
 }

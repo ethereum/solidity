@@ -175,6 +175,11 @@ public:
 	/// signature: (baseRef, index) -> offset[, length]
 	std::string calldataArrayIndexAccessFunction(ArrayType const& _type);
 
+	/// @returns the name of a function that returns offset and length for array slice
+	/// for the given array offset, length and start and end indices for slice
+	/// signature: (arrayOffset, arrayLength, sliceStart, sliceEnd) -> offset, length
+	std::string calldataArrayIndexRangeAccess(ArrayType const& _type);
+
 	/// @returns the name of a function that follows a calldata tail while performing
 	/// bounds checks.
 	/// signature: (baseRef, tailPointer) -> offset[, length]
