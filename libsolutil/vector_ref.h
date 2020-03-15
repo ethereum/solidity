@@ -44,7 +44,6 @@ public:
 	std::vector<unsigned char> toBytes() const { return std::vector<unsigned char>(reinterpret_cast<unsigned char const*>(m_data), reinterpret_cast<unsigned char const*>(m_data) + m_count * sizeof(T)); }
 	std::string toString() const { return std::string((char const*)m_data, ((char const*)m_data) + m_count * sizeof(T)); }
 
-	template <class T2> explicit operator vector_ref<T2>() const { assert(m_count * sizeof(T) / sizeof(T2) * sizeof(T2) / sizeof(T) == m_count); return vector_ref<T2>(reinterpret_cast<T2*>(m_data), m_count * sizeof(T) / sizeof(T2)); }
 	operator vector_ref<T const>() const { return vector_ref<T const>(m_data, m_count); }
 
 	T* data() const { return m_data; }
