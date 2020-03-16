@@ -15,20 +15,18 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <tools/yulPhaser/Exceptions.h>
-#include <tools/yulPhaser/Phaser.h>
+#include <tools/yulPhaser/AlgorithmRunner.h>
 
-#include <iostream>
+using namespace std;
+using namespace solidity::phaser;
 
-int main(int argc, char** argv)
+void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 {
-	try
+	for (size_t round = 0; !m_options.maxRounds.has_value() || round < m_options.maxRounds.value(); ++round)
 	{
-		return solidity::phaser::Phaser::main(argc, argv);
-	}
-	catch (solidity::phaser::InvalidProgram const& exception)
-	{
-		std::cerr << "ERROR: " << exception.what() << std::endl;
-		return 1;
+		m_population = _algorithm.runNextRound(m_population);
+
+		m_outputStream << "---------- ROUND " << round + 1 << " ----------" << endl;
+		m_outputStream << m_population;
 	}
 }

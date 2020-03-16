@@ -15,79 +15,115 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <test/yulPhaser/Common.h>
+#include <tools/yulPhaser/Common.h>
 
-#include <libyul/optimiser/Suite.h>
+#include <libsolutil/CommonData.h>
 
-#include <regex>
+#include <boost/test/unit_test.hpp>
+#include <boost/test/tools/output_test_stream.hpp>
+
+#include <sstream>
+#include <string>
 
 using namespace std;
-using namespace solidity;
-using namespace solidity::yul;
-using namespace solidity::phaser;
+using namespace boost::test_tools;
+using namespace solidity::util;
 
-function<Mutation> phaser::test::wholeChromosomeReplacement(Chromosome _newChromosome)
+namespace solidity::phaser::test
 {
-	return [_newChromosome = move(_newChromosome)](Chromosome const&) { return _newChromosome; };
+
+namespace
+{
+
+enum class TestEnum
+{
+	A,
+	B,
+	AB,
+	CD,
+	EF,
+	GH,
+};
+
+map<TestEnum, string> const TestEnumToStringMap =
+{
+	{TestEnum::A, "a"},
+	{TestEnum::B, "b"},
+	{TestEnum::AB, "a b"},
+	{TestEnum::CD, "c-d"},
+	{TestEnum::EF, "e f"},
+};
+map<string, TestEnum> const StringToTestEnumMap = invertMap(TestEnumToStringMap);
+
 }
 
-function<Mutation> phaser::test::geneSubstitution(size_t _geneIndex, string _geneValue)
-{
-	return [=](Chromosome const& _chromosome)
-	{
-		vector<string> newGenes = _chromosome.optimisationSteps();
-		assert(_geneIndex < newGenes.size());
-		newGenes[_geneIndex] = _geneValue;
+BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(CommonTest)
 
-		return Chromosome(newGenes);
-	};
+BOOST_AUTO_TEST_CASE(deserializeChoice_should_convert_string_to_enum)
+{
+	istringstream aStream("a");
+	TestEnum aResult;
+	deserializeChoice(aStream, aResult, StringToTestEnumMap);
+	BOOST_CHECK(aResult == TestEnum::A);
+	BOOST_TEST(!aStream.fail());
+
+	istringstream bStream("b");
+	TestEnum bResult;
+	deserializeChoice(bStream, bResult, StringToTestEnumMap);
+	BOOST_CHECK(bResult == TestEnum::B);
+	BOOST_TEST(!bStream.fail());
+
+	istringstream cdStream("c-d");
+	TestEnum cdResult;
+	deserializeChoice(cdStream, cdResult, StringToTestEnumMap);
+	BOOST_CHECK(cdResult == TestEnum::CD);
+	BOOST_TEST(!cdStream.fail());
 }
 
-vector<size_t> phaser::test::chromosomeLengths(Population const& _population)
+BOOST_AUTO_TEST_CASE(deserializeChoice_should_set_failbit_if_there_is_no_enum_corresponding_to_string)
 {
-	vector<size_t> lengths;
-	for (auto const& individual: _population.individuals())
-		lengths.push_back(individual.chromosome.length());
-
-	return lengths;
+	istringstream xyzStream("xyz");
+	TestEnum xyzResult;
+	deserializeChoice(xyzStream, xyzResult, StringToTestEnumMap);
+	BOOST_TEST(xyzStream.fail());
 }
 
-map<string, size_t> phaser::test::enumerateOptmisationSteps()
+BOOST_AUTO_TEST_CASE(deserializeChoice_does_not_have_to_support_strings_with_spaces)
 {
-	map<string, size_t> stepIndices;
-	size_t i = 0;
-	for (auto const& nameAndAbbreviation: OptimiserSuite::stepNameToAbbreviationMap())
-		stepIndices.insert({nameAndAbbreviation.first, i++});
+	istringstream abStream("a b");
+	TestEnum abResult;
+	deserializeChoice(abStream, abResult, StringToTestEnumMap);
+	BOOST_CHECK(abResult == TestEnum::A);
+	BOOST_TEST(!abStream.fail());
 
-	return stepIndices;
+	istringstream efStream("e f");
+	TestEnum efResult;
+	deserializeChoice(efStream, efResult, StringToTestEnumMap);
+	BOOST_TEST(efStream.fail());
 }
 
-size_t phaser::test::countDifferences(Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+BOOST_AUTO_TEST_CASE(serializeChoice_should_convert_enum_to_string)
 {
-	size_t count = 0;
-	for (size_t i = 0; i < min(_chromosome1.length(), _chromosome2.length()); ++i)
-		count += static_cast<int>(_chromosome1.optimisationSteps()[i] != _chromosome2.optimisationSteps()[i]);
+	output_test_stream output;
 
-	return count + abs(static_cast<int>(_chromosome1.length() - _chromosome2.length()));
+	serializeChoice(output, TestEnum::A, TestEnumToStringMap);
+	BOOST_CHECK(output.is_equal("a"));
+	BOOST_TEST(!output.fail());
+
+	serializeChoice(output, TestEnum::AB, TestEnumToStringMap);
+	BOOST_CHECK(output.is_equal("a b"));
+	BOOST_TEST(!output.fail());
 }
 
-string phaser::test::stripWhitespace(string const& input)
+BOOST_AUTO_TEST_CASE(serializeChoice_should_set_failbit_if_there_is_no_string_corresponding_to_enum)
 {
-	regex whitespaceRegex("\\s+");
-	return regex_replace(input, whitespaceRegex, "");
+	output_test_stream output;
+	serializeChoice(output, TestEnum::GH, TestEnumToStringMap);
+	BOOST_TEST(output.fail());
 }
 
-size_t phaser::test::countSubstringOccurrences(string const& _inputString, string const& _substring)
-{
-	assert(_substring.size() > 0);
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
-	size_t count = 0;
-	size_t lastOccurrence = 0;
-	while ((lastOccurrence = _inputString.find(_substring, lastOccurrence)) != string::npos)
-	{
-		++count;
-		lastOccurrence += _substring.size();
-	}
-
-	return count;
 }

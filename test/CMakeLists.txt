@@ -139,11 +139,13 @@ set(libyul_sources
 detect_stray_source_files("${libyul_sources}" "libyul/")
 
 set(yul_phaser_sources
-    yulPhaser/Common.h
+    yulPhaser/TestHelpers.h
+    yulPhaser/TestHelpers.cpp
+    yulPhaser/TestHelpersTest.cpp
     yulPhaser/Common.cpp
-    yulPhaser/CommonTest.cpp
     yulPhaser/Chromosome.cpp
     yulPhaser/FitnessMetrics.cpp
+    yulPhaser/AlgorithmRunner.cpp
     yulPhaser/GeneticAlgorithms.cpp
     yulPhaser/Mutations.cpp
     yulPhaser/PairSelections.cpp
@@ -155,6 +157,7 @@ set(yul_phaser_sources
     # FIXME: yul-phaser is not a library so I can't just add it to target_link_libraries().
     # My current workaround is just to include its source files here but this introduces
     # unnecessary duplication. Create a library or find a way to reuse the list in both places.
+    ../tools/yulPhaser/AlgorithmRunner.cpp
     ../tools/yulPhaser/Chromosome.cpp
     ../tools/yulPhaser/FitnessMetrics.cpp
     ../tools/yulPhaser/GeneticAlgorithms.cpp
