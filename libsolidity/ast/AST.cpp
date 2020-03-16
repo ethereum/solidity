@@ -756,3 +756,25 @@ string Literal::getChecksummedAddress() const
 	address.insert(address.begin(), 40 - address.size(), '0');
 	return util::getChecksummedAddress(address);
 }
+
+TryCatchClause const* TryStatement::successClause() const
+{
+	solAssert(m_clauses.size() > 0, "");
+	return m_clauses[0].get();
+}
+
+TryCatchClause const* TryStatement::structuredClause() const
+{
+	for (size_t i = 1; i < m_clauses.size(); ++i)
+		if (m_clauses[i]->errorName() == "Error")
+			return m_clauses[i].get();
+	return nullptr;
+}
+
+TryCatchClause const* TryStatement::fallbackClause() const
+{
+	for (size_t i = 1; i < m_clauses.size(); ++i)
+		if (m_clauses[i]->errorName().empty())
+			return m_clauses[i].get();
+	return nullptr;
+}
