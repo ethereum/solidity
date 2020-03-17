@@ -203,6 +203,9 @@ void ContractLevelChecker::checkFunctionOverride(FunctionDefinition const& _func
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
+	if (_super.visibility() == Declaration::Visibility::Private)
+		overrideError(_function, _super, "Private functions cannot be overridden.");
+
 }
 
 void ContractLevelChecker::overrideError(FunctionDefinition const& function, FunctionDefinition const& super, string message)

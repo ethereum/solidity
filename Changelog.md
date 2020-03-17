@@ -1,3 +1,8 @@
+### 0.5.17 (2020-03-17)
+
+Bugfixes:
+ * Type Checker: Disallow overriding of private functions.
+
 ### 0.5.16 (2020-01-02)
 
 Bugfixes:
