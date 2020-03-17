@@ -133,6 +133,12 @@ Compiler Features:
  * ABIEncoderV2: Do not warn about enabled ABIEncoderV2 anymore (the pragma is still needed, though).
 
 
+### 0.5.17 (2020-03-17)
+
+Bugfixes:
+ * Type Checker: Disallow overriding of private functions.
+
+
 ### 0.5.16 (2020-01-02)
 
 Backported Bugfixes:

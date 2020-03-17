@@ -826,6 +826,10 @@
         ],
         "released": "2020-01-02"
     },
+    "0.5.17": {
+        "bugs": [],
+        "released": "2020-03-17"
+    },
     "0.5.2": {
         "bugs": [
             "privateCanBeOverridden",
