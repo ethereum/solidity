@@ -9,9 +9,9 @@ object "main" {
     }
     data "abc" "Hello, World!"
 }
-// ====
-// step: expressionSplitter
 // ----
+// step: expressionSplitter
+//
 // {
 //     let x := dataoffset("abc")
 //     let y := datasize("abc")

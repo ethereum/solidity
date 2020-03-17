@@ -9,9 +9,9 @@
     mstore(b, 8)
     sstore(mload(a), mload(b))
 }
-// ====
-// step: loadResolver
 // ----
+// step: loadResolver
+//
 // {
 //     let x := calldataload(1)
 //     let a := add(x, 10)

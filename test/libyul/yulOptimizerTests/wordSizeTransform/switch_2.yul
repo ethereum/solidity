@@ -5,9 +5,9 @@
     case 0x01000000000000000000000000000000000000020 { sstore(2, 1) }
     case 0x02000000000000000000000000000000000000020 { sstore(3, 1) }
 }
-// ====
-// step: wordSizeTransform
 // ----
+// step: wordSizeTransform
+//
 // {
 //     let _1_0 := 0
 //     let _1_1 := 0

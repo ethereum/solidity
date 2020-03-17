@@ -3,9 +3,9 @@
 	function f() { let f_1 }
 	let f_10
 }
-// ====
-// step: varNameCleaner
 // ----
+// step: varNameCleaner
+//
 // {
 //     let f_1
 //     function f()

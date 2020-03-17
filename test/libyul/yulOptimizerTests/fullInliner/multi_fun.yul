@@ -3,9 +3,9 @@
 	function g(b, c) -> y { y := mul(mload(c), f(b)) }
 	let y := g(f(3), 7)
 }
-// ====
-// step: fullInliner
 // ----
+// step: fullInliner
+//
 // {
 //     {
 //         let _1 := 7

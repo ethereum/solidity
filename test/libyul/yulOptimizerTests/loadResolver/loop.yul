@@ -4,9 +4,9 @@
         x := add(x, 1)} {y := add(x, y)
     }
 }
-// ====
-// step: loadResolver
 // ----
+// step: loadResolver
+//
 // {
 //     let _1 := 123213
 //     let _2 := 0

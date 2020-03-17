@@ -11,9 +11,9 @@
 	}
 	sstore(x, 3)
 }
-// ====
-// step: expressionJoiner
 // ----
+// step: expressionJoiner
+//
 // {
 //     let x := calldataload(mload(2))
 //     sstore(x, 3)

@@ -3,9 +3,9 @@
   let a
   let b
 }
-// ====
-// step: varDeclInitializer
 // ----
+// step: varDeclInitializer
+//
 // {
 //     let x := 0
 //     let y := 0

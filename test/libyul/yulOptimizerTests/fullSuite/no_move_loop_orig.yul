@@ -7,9 +7,9 @@
   }
   {}
 }
-// ====
-// step: fullSuite
 // ----
+// step: fullSuite
+//
 // {
 //     {
 //         let _1 := iszero(caller())

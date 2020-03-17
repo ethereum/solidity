@@ -18,9 +18,9 @@
     pop(f())
 }
 
-// ====
-// step: deadCodeEliminator
 // ----
+// step: deadCodeEliminator
+//
 // {
 //     function f() -> x
 //     {

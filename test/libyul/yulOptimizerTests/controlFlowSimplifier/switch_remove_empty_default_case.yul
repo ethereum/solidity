@@ -5,9 +5,9 @@
 	case 2 { y := 10 }
 	default { }
 }
-// ====
-// step: controlFlowSimplifier
 // ----
+// step: controlFlowSimplifier
+//
 // {
 //     let y := 200
 //     switch calldataload(0)

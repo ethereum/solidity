@@ -228,9 +228,9 @@
         mstore(0x00, keccak256(0x300, mul(n, 0x80)))
     }
 }
-// ====
-// step: fullSuite
 // ----
+// step: fullSuite
+//
 // {
 //     {
 //         let _1 := 0x80

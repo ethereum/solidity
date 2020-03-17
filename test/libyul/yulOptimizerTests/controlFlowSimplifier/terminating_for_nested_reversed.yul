@@ -7,9 +7,9 @@
         break
     }
 }
-// ====
-// step: controlFlowSimplifier
 // ----
+// step: controlFlowSimplifier
+//
 // {
 //     if calldatasize()
 //     {

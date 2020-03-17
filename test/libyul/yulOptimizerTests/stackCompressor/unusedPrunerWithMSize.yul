@@ -18,9 +18,9 @@
         extcodecopy(1, msize(), 1, 1)
     }
 }
-// ====
-// step: stackCompressor
 // ----
+// step: stackCompressor
+//
 // {
 //     let _17_72 := pc()
 //     let _22_75 := pc()

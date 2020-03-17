@@ -103,8 +103,6 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename):
 	auto dialectName = m_reader.stringSetting("dialect", "evm");
 	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
 
-	m_step = m_reader.stringSetting("step", "");
-
 	m_expectation = m_reader.simpleExpectations();
 }
 
@@ -352,21 +350,8 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		return TestResult::FatalError;
 	}
 
-	m_obtainedResult = AsmPrinter{*m_dialect}(*m_ast) + "\n";
+	m_obtainedResult = "step: " + m_optimizerStep + "\n\n" + AsmPrinter{ *m_dialect }(*m_ast) + "\n";
 
-	if (m_optimizerStep != m_step)
-	{
-		string nextIndentLevel = _linePrefix + "  ";
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) <<
-			_linePrefix <<
-			"Invalid optimizer step. Given: \"" <<
-			m_step <<
-			"\", should be: \"" <<
-			m_optimizerStep <<
-			"\"." <<
-			endl;
-		return TestResult::FatalError;
-	}
 	if (m_expectation != m_obtainedResult)
 	{
 		string nextIndentLevel = _linePrefix + "  ";
@@ -383,13 +368,6 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 void YulOptimizerTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
 {
 	printIndented(_stream, m_source, _linePrefix);
-}
-
-void YulOptimizerTest::printUpdatedSettings(ostream& _stream, const string& _linePrefix, const bool _formatted)
-{
-	m_step = m_optimizerStep;
-	m_reader.setSetting("step", m_step);
-	EVMVersionRestrictedTestCase::printUpdatedSettings(_stream, _linePrefix, _formatted);
 }
 
 void YulOptimizerTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const

@@ -8,9 +8,9 @@
     x := 3
     y := 4
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     function f() -> a, b
 //     { }

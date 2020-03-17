@@ -10,9 +10,9 @@
         }
     }
 }
-// ====
-// step: ssaPlusCleanup
 // ----
+// step: ssaPlusCleanup
+//
 // {
 //     function copy(from, to) -> length
 //     {

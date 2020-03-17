@@ -10,9 +10,10 @@
     mstore(0, sload(a))
 }
 // ====
-// step: loadResolver
 // EVMVersion: >=byzantium
 // ----
+// step: loadResolver
+//
 // {
 //     let a := 0
 //     let b := 1

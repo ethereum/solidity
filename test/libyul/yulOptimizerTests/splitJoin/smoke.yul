@@ -1,5 +1,5 @@
 {}
-// ====
-// step: splitJoin
 // ----
+// step: splitJoin
+//
 // { }

@@ -22,9 +22,9 @@
 		f(100)
 	}
 }
-// ====
-// step: fullInliner
 // ----
+// step: fullInliner
+//
 // {
 //     {
 //         let x_8 := 100

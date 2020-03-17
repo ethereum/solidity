@@ -2,9 +2,9 @@
     if calldataload(0) { sstore(0, 1) }
     if add(calldataload(0), calldataload(1)) { sstore(0, 2) }
 }
-// ====
-// step: wordSizeTransform
 // ----
+// step: wordSizeTransform
+//
 // {
 //     let _1_0 := 0
 //     let _1_1 := 0

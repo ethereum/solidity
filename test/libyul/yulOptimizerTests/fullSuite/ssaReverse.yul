@@ -31,9 +31,9 @@
     a,b := abi_decode_t_bytes_calldata_ptr(a,b)
     mstore(a,b)
 }
-// ====
-// step: fullSuite
 // ----
+// step: fullSuite
+//
 // {
 //     {
 //         let a, b := abi_decode_t_bytes_calldata_ptr(mload(0), mload(1))

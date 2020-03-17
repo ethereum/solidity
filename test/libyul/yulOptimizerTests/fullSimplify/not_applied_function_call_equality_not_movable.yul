@@ -4,9 +4,9 @@
 	let b := sub(f(), f())
 	mstore(0, b)
 }
-// ====
-// step: fullSimplify
 // ----
+// step: fullSimplify
+//
 // {
 //     function f() -> a
 //     { mstore(1, 2) }

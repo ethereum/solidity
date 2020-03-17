@@ -7,9 +7,9 @@
     let q := mload(calldataload(0))
     sstore(t, q)
 }
-// ====
-// step: loadResolver
 // ----
+// step: loadResolver
+//
 // {
 //     let _2 := calldataload(10)
 //     let _3 := 0

@@ -9,9 +9,9 @@
     mstore(a, inv)
   }
 }
-// ====
-// step: loopInvariantCodeMotion
 // ----
+// step: loopInvariantCodeMotion
+//
 // {
 //     let b := 1
 //     let a := 1

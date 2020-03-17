@@ -20,9 +20,9 @@
 	sstore(0,0)
 	sstore(3,1)
 }
-// ====
-// step: fullSuite
 // ----
+// step: fullSuite
+//
 // {
 //     {
 //         let _1 := gt(not(pc()), 1)

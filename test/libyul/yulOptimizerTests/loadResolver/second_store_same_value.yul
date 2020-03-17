@@ -6,9 +6,9 @@
     // written are 7.
     mstore(0, sload(x))
 }
-// ====
-// step: loadResolver
 // ----
+// step: loadResolver
+//
 // {
 //     let x := calldataload(1)
 //     let _2 := 7

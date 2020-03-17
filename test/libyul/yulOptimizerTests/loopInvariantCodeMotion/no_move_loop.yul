@@ -8,9 +8,9 @@
     let q := g()
   }
 }
-// ====
-// step: loopInvariantCodeMotion
 // ----
+// step: loopInvariantCodeMotion
+//
 // {
 //     function f() -> x
 //     { x := g() }

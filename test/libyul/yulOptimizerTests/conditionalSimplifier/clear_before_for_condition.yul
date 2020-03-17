@@ -7,9 +7,9 @@
         x := 2
     }
 }
-// ====
-// step: conditionalSimplifier
 // ----
+// step: conditionalSimplifier
+//
 // {
 //     let x := mload(0)
 //     let y := mload(0)

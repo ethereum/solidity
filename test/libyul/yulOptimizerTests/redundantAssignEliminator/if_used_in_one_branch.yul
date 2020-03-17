@@ -10,9 +10,9 @@
     d := 3
     mstore(0, d)
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     let c
 //     let d

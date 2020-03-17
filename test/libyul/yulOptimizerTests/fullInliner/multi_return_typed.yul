@@ -6,8 +6,9 @@
 }
 // ====
 // dialect: evmTyped
-// step: fullInliner
 // ----
+// step: fullInliner
+//
 // {
 //     {
 //         let a_3 := mload(3)

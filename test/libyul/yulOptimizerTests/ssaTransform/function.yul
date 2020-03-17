@@ -6,9 +6,9 @@
     a := add(a, d)
   }
 }
-// ====
-// step: ssaTransform
 // ----
+// step: ssaTransform
+//
 // {
 //     function f(a, b) -> c, d
 //     {

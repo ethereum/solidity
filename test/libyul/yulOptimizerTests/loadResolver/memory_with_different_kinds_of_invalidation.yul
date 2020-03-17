@@ -14,9 +14,9 @@
 
     function g() {}
 }
-// ====
-// step: loadResolver
 // ----
+// step: loadResolver
+//
 // {
 //     let _1 := 9
 //     let _2 := 2

@@ -5,9 +5,9 @@
 		break
 	}
 }
-// ====
-// step: controlFlowSimplifier
 // ----
+// step: controlFlowSimplifier
+//
 // {
 //     for { } calldatasize() { mstore(1, 2) }
 //     {

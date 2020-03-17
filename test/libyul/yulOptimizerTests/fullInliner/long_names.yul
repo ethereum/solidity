@@ -7,9 +7,9 @@
 	mstore(0, verylongfunctionname(verylongvariablename2))
 	mstore(1, verylongvariablename2)
 }
-// ====
-// step: fullInliner
 // ----
+// step: fullInliner
+//
 // {
 //     {
 //         let verylongvariablename2_1 := 3

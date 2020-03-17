@@ -11,9 +11,9 @@
     // but not above because end of block
     mstore(0, x)
 }
-// ====
-// step: ssaTransform
 // ----
+// step: ssaTransform
+//
 // {
 //     let a
 //     let b

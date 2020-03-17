@@ -8,9 +8,9 @@
   }
   let t := add(3, 9)
 }
-// ====
-// step: blockFlattener
 // ----
+// step: blockFlattener
+//
 // {
 //     if add(mload(7), sload(mload(3)))
 //     {

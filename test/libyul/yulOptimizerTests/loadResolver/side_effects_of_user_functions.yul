@@ -8,9 +8,9 @@
     stores()
     sstore(0, mload(2))
 }
-// ====
-// step: loadResolver
 // ----
+// step: loadResolver
+//
 // {
 //     function stores()
 //     { mstore(0, 1) }
