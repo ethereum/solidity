@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <tools/yulPhaser/AlgorithmRunner.h>
+
 #include <boost/program_options.hpp>
 
 #include <istream>
@@ -62,15 +64,22 @@ public:
 	struct Options
 	{
 		Algorithm algorithm;
+		size_t minChromosomeLength;
+		size_t maxChromosomeLength;
+		std::optional<double> randomElitePoolSize;
+		double gewepMutationPoolSize;
+		double gewepCrossoverPoolSize;
+		double gewepRandomisationChance;
+		double gewepDeletionVsAdditionChance;
+		std::optional<double> gewepGenesToRandomise;
+		std::optional<double> gewepGenesToAddOrDelete;
 
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
 	};
 
 	static std::unique_ptr<GeneticAlgorithm> build(
 		Options const& _options,
-		size_t _populationSize,
-		size_t _minChromosomeLength,
-		size_t _maxChromosomeLength
+		size_t _populationSize
 	);
 };
 
@@ -80,9 +89,15 @@ public:
 class FitnessMetricFactory
 {
 public:
-	static constexpr size_t RepetitionCount = 5;
+	struct Options
+	{
+		size_t chromosomeRepetitions;
+
+		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
+	};
 
 	static std::unique_ptr<FitnessMetric> build(
+		Options const& _options,
 		Program _program
 	);
 };
@@ -93,11 +108,33 @@ public:
 class PopulationFactory
 {
 public:
-	static constexpr size_t PopulationSize = 20;
-	static constexpr size_t MinChromosomeLength = 12;
-	static constexpr size_t MaxChromosomeLength = 30;
+	struct Options
+	{
+		size_t minChromosomeLength;
+		size_t maxChromosomeLength;
+		std::vector<std::string> population;
+		std::vector<size_t> randomPopulation;
+		std::vector<std::string> populationFromFile;
+
+		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
+	};
 
 	static Population build(
+		Options const& _options,
+		std::shared_ptr<FitnessMetric> _fitnessMetric
+	);
+	static Population buildFromStrings(
+		std::vector<std::string> const& _geneSequences,
+		std::shared_ptr<FitnessMetric> _fitnessMetric
+	);
+	static Population buildRandom(
+		size_t _populationSize,
+		size_t _minChromosomeLength,
+		size_t _maxChromosomeLength,
+		std::shared_ptr<FitnessMetric> _fitnessMetric
+	);
+	static Population buildFromFile(
+		std::string const& _filePath,
 		std::shared_ptr<FitnessMetric> _fitnessMetric
 	);
 };
@@ -141,6 +178,7 @@ private:
 	static CommandLineDescription buildCommandLineDescription();
 	static std::optional<boost::program_options::variables_map> parseCommandLine(int _argc, char** _argv);
 	static void initialiseRNG(boost::program_options::variables_map const& _arguments);
+	static AlgorithmRunner::Options buildAlgorithmRunnerOptions(boost::program_options::variables_map const& _arguments);
 
 	static void runAlgorithm(boost::program_options::variables_map const& _arguments);
 };

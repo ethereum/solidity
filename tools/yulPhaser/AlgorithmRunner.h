@@ -42,6 +42,10 @@ public:
 	struct Options
 	{
 		std::optional<size_t> maxRounds = std::nullopt;
+		std::optional<std::string> populationAutosaveFile = std::nullopt;
+		bool randomiseDuplicates = false;
+		std::optional<size_t> minChromosomeLength = std::nullopt;
+		std::optional<size_t> maxChromosomeLength = std::nullopt;
 	};
 
 	AlgorithmRunner(
@@ -59,6 +63,14 @@ public:
 	Population const& population() const { return m_population; }
 
 private:
+	void populationAutosave() const;
+	void randomiseDuplicates();
+	static Population randomiseDuplicates(
+		Population _population,
+		size_t _minChromosomeLength,
+		size_t _maxChromosomeLength
+	);
+
 	Population m_population;
 	Options m_options;
 	std::ostream& m_outputStream;
