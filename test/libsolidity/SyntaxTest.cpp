@@ -37,20 +37,7 @@ namespace fs = boost::filesystem;
 
 SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion, bool _parserErrorRecovery): CommonSyntaxTest(_filename, _evmVersion)
 {
-	if (m_settings.count("optimize-yul"))
-	{
-		if (m_settings["optimize-yul"] == "true")
-		{
-			m_validatedSettings["optimize-yul"] = "true";
-			m_settings.erase("optimize-yul");
-		}
-		else if (m_settings["optimize-yul"] == "false")
-		{
-			m_validatedSettings["optimize-yul"] = "false";
-			m_settings.erase("optimize-yul");
-			m_optimiseYul = false;
-		}
-	}
+	m_optimiseYul = m_reader.boolSetting("optimize-yul", true);
 	m_parserErrorRecovery = _parserErrorRecovery;
 }
 
@@ -60,7 +47,7 @@ TestCase::TestResult SyntaxTest::run(ostream& _stream, string const& _linePrefix
 	parseAndAnalyze();
 	filterObtainedErrors();
 
-	return printExpectationAndError(_stream, _linePrefix, _formatted) ? TestResult::Success : TestResult::Failure;
+	return conclude(_stream, _linePrefix, _formatted);
 }
 
 void SyntaxTest::setupCompiler()

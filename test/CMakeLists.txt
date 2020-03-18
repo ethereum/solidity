@@ -13,6 +13,8 @@ set(sources
     Metadata.h
     TestCase.cpp
     TestCase.h
+    TestCaseReader.cpp
+    TestCaseReader.h
 )
 detect_stray_source_files("${sources}" ".")
 

@@ -36,35 +36,14 @@ using namespace std;
 namespace fs = boost::filesystem;
 using namespace boost::unit_test;
 
-GasTest::GasTest(string const& _filename)
+GasTest::GasTest(string const& _filename):
+	TestCase(_filename)
 {
-	ifstream file(_filename);
-	if (!file)
-		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test contract: \"" + _filename + "\"."));
-	file.exceptions(ios::badbit);
-
-	m_source = parseSourceAndSettings(file);
-
-	if (m_settings.count("optimize"))
-	{
-		m_optimise = true;
-		m_validatedSettings["optimize"] = "true";
-		m_settings.erase("optimize");
-	}
-	if (m_settings.count("optimize-yul"))
-	{
-		m_optimiseYul = true;
-		m_validatedSettings["optimize-yul"] = "true";
-		m_settings.erase("optimize-yul");
-	}
-	if (m_settings.count("optimize-runs"))
-	{
-		m_optimiseRuns = stoul(m_settings["optimize-runs"]);
-		m_validatedSettings["optimize-runs"] = m_settings["optimize-runs"];
-		m_settings.erase("optimize-runs");
-	}
-
-	parseExpectations(file);
+	m_source = m_reader.source();
+	m_optimise = m_reader.boolSetting("optimize", false);
+	m_optimiseYul = m_reader.boolSetting("optimize-yul", false);
+	m_optimiseRuns = m_reader.sizetSetting("optimize-runs", 200);
+	parseExpectations(m_reader.stream());
 }
 
 void GasTest::parseExpectations(std::istream& _stream)
