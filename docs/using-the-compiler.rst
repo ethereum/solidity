@@ -687,7 +687,7 @@ The command above applies all changes as shown below. Please review them careful
 
 .. code-block:: none
 
-    pragma solidity >0.4.23;
+    pragma solidity >=0.6.0 <0.7.0;
 
     abstract contract Updateable {
         function run() public view virtual returns (bool);

@@ -13,7 +13,7 @@ This can be done by using the ``abstract`` keyword as shown in the following exa
 defined as abstract, because the function ``utterance()`` was defined, but no implementation was
 provided (no implementation body ``{ }`` was given).::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     abstract contract Feline {
         function utterance() public virtual returns (bytes32);

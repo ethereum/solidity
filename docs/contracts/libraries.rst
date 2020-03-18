@@ -47,12 +47,14 @@ more advanced example to implement a set).
 
 ::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
 
     // We define a new struct datatype that will be used to
     // hold its data in the calling contract.
-    struct Data { mapping(uint => bool) flags; }
+    struct Data {
+        mapping(uint => bool) flags;
+    }
 
     library Set {
         // Note that the first parameter is of type "storage
@@ -123,7 +125,7 @@ custom types without the overhead of external function calls:
 
 ::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     struct bigint {
         uint[] limbs;
@@ -237,7 +239,7 @@ Its value can be obtained from Solidity using the ``.selector`` member as follow
 
 ::
 
-    pragma solidity >0.5.13 <0.7.0;
+    pragma solidity >=0.5.14 <0.7.0;
 
     library L {
         function f(uint256) external {}
