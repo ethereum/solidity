@@ -125,27 +125,32 @@ ProgramFactory::Options ProgramFactory::Options::fromCommandLine(po::variables_m
 Program ProgramFactory::build(Options const& _options)
 {
 	CharStream sourceCode = loadSource(_options.inputFile);
-	return Program::load(sourceCode);
+	variant<Program, ErrorList> programOrErrors = Program::load(sourceCode);
+	if (holds_alternative<ErrorList>(programOrErrors))
+	{
+		cerr << get<ErrorList>(programOrErrors) << endl;
+		assertThrow(false, InvalidProgram, "Failed to load program " + _options.inputFile);
+	}
+	return move(get<Program>(programOrErrors));
 }
 
 CharStream ProgramFactory::loadSource(string const& _sourcePath)
 {
-	assertThrow(boost::filesystem::exists(_sourcePath), InvalidProgram, "Source file does not exist");
+	assertThrow(boost::filesystem::exists(_sourcePath), MissingFile, "Source file does not exist: " + _sourcePath);
 
 	string sourceCode = readFileAsString(_sourcePath);
 	return CharStream(sourceCode, _sourcePath);
 }
 
-int Phaser::main(int _argc, char** _argv)
+void Phaser::main(int _argc, char** _argv)
 {
-	CommandLineParsingResult parsingResult = parseCommandLine(_argc, _argv);
-	if (parsingResult.exitCode != 0)
-		return parsingResult.exitCode;
+	optional<po::variables_map> arguments = parseCommandLine(_argc, _argv);
+	if (!arguments.has_value())
+		return;
 
-	initialiseRNG(parsingResult.arguments);
+	initialiseRNG(arguments.value());
 
-	runAlgorithm(parsingResult.arguments);
-	return 0;
+	runAlgorithm(arguments.value());
 }
 
 Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
@@ -192,38 +197,27 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	return {keywordDescription, positionalDescription};
 }
 
-Phaser::CommandLineParsingResult Phaser::parseCommandLine(int _argc, char** _argv)
+optional<po::variables_map> Phaser::parseCommandLine(int _argc, char** _argv)
 {
 	auto [keywordDescription, positionalDescription] = buildCommandLineDescription();
 
 	po::variables_map arguments;
 	po::notify(arguments);
 
-	try
-	{
-		po::command_line_parser parser(_argc, _argv);
-		parser.options(keywordDescription).positional(positionalDescription);
-		po::store(parser.run(), arguments);
-	}
-	catch (po::error const & _exception)
-	{
-		cerr << _exception.what() << endl;
-		return {1, move(arguments)};
-	}
+	po::command_line_parser parser(_argc, _argv);
+	parser.options(keywordDescription).positional(positionalDescription);
+	po::store(parser.run(), arguments);
 
 	if (arguments.count("help") > 0)
 	{
 		cout << keywordDescription << endl;
-		return {2, move(arguments)};
+		return nullopt;
 	}
 
 	if (arguments.count("input-file") == 0)
-	{
-		cerr << "Missing argument: input-file." << endl;
-		return {1, move(arguments)};
-	}
+		assertThrow(false, NoInputFiles, "Missing argument: input-file.");
 
-	return {0, arguments};
+	return arguments;
 }
 
 void Phaser::initialiseRNG(po::variables_map const& _arguments)
