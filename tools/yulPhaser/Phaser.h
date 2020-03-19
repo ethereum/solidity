@@ -52,8 +52,26 @@ enum class Algorithm
 	GEWEP,
 };
 
+enum class MetricChoice
+{
+	CodeSize,
+	RelativeCodeSize,
+};
+
+enum class MetricAggregatorChoice
+{
+	Average,
+	Sum,
+	Maximum,
+	Minimum,
+};
+
 std::istream& operator>>(std::istream& _inputStream, solidity::phaser::Algorithm& _algorithm);
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::Algorithm _algorithm);
+std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricChoice& _metric);
+std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::MetricChoice _metric);
+std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricAggregatorChoice& _aggregator);
+std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::MetricAggregatorChoice _aggregator);
 
 /**
  * Builds and validates instances of @a GeneticAlgorithm and its derived classes.
@@ -91,6 +109,9 @@ class FitnessMetricFactory
 public:
 	struct Options
 	{
+		MetricChoice metric;
+		MetricAggregatorChoice metricAggregator;
+		size_t relativeMetricScale;
 		size_t chromosomeRepetitions;
 
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
@@ -98,7 +119,7 @@ public:
 
 	static std::unique_ptr<FitnessMetric> build(
 		Options const& _options,
-		Program _program
+		std::vector<Program> _programs
 	);
 };
 
@@ -147,12 +168,12 @@ class ProgramFactory
 public:
 	struct Options
 	{
-		std::string inputFile;
+		std::vector<std::string> inputFiles;
 
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
 	};
 
-	static Program build(Options const& _options);
+	static std::vector<Program> build(Options const& _options);
 
 private:
 	static langutil::CharStream loadSource(std::string const& _sourcePath);

@@ -59,7 +59,7 @@ bool phaser::isFitter(Individual const& a, Individual const& b)
 }
 
 Population Population::makeRandom(
-	shared_ptr<FitnessMetric const> _fitnessMetric,
+	shared_ptr<FitnessMetric> _fitnessMetric,
 	size_t _size,
 	function<size_t()> _chromosomeLengthGenerator
 )
@@ -72,7 +72,7 @@ Population Population::makeRandom(
 }
 
 Population Population::makeRandom(
-	shared_ptr<FitnessMetric const> _fitnessMetric,
+	shared_ptr<FitnessMetric> _fitnessMetric,
 	size_t _size,
 	size_t _minChromosomeLength,
 	size_t _maxChromosomeLength
@@ -145,7 +145,7 @@ ostream& phaser::operator<<(ostream& _stream, Population const& _population)
 }
 
 vector<Individual> Population::chromosomesToIndividuals(
-	FitnessMetric const& _fitnessMetric,
+	FitnessMetric& _fitnessMetric,
 	vector<Chromosome> _chromosomes
 )
 {

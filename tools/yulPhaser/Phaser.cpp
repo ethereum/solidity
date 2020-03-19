@@ -53,10 +53,30 @@ map<Algorithm, string> const AlgorithmToStringMap =
 };
 map<string, Algorithm> const StringToAlgorithmMap = invertMap(AlgorithmToStringMap);
 
+map<MetricChoice, string> MetricChoiceToStringMap =
+{
+	{MetricChoice::CodeSize, "code-size"},
+	{MetricChoice::RelativeCodeSize, "relative-code-size"},
+};
+map<string, MetricChoice> const StringToMetricChoiceMap = invertMap(MetricChoiceToStringMap);
+
+map<MetricAggregatorChoice, string> const MetricAggregatorChoiceToStringMap =
+{
+	{MetricAggregatorChoice::Average, "average"},
+	{MetricAggregatorChoice::Sum, "sum"},
+	{MetricAggregatorChoice::Maximum, "maximum"},
+	{MetricAggregatorChoice::Minimum, "minimum"},
+};
+map<string, MetricAggregatorChoice> const StringToMetricAggregatorChoiceMap = invertMap(MetricAggregatorChoiceToStringMap);
+
 }
 
 istream& phaser::operator>>(istream& _inputStream, Algorithm& _algorithm) { return deserializeChoice(_inputStream, _algorithm, StringToAlgorithmMap); }
 ostream& phaser::operator<<(ostream& _outputStream, Algorithm _algorithm) { return serializeChoice(_outputStream, _algorithm, AlgorithmToStringMap); }
+istream& phaser::operator>>(istream& _inputStream, MetricChoice& _metric) { return deserializeChoice(_inputStream, _metric, StringToMetricChoiceMap); }
+ostream& phaser::operator<<(ostream& _outputStream, MetricChoice _metric) { return serializeChoice(_outputStream, _metric, MetricChoiceToStringMap); }
+istream& phaser::operator>>(istream& _inputStream, MetricAggregatorChoice& _aggregator) { return deserializeChoice(_inputStream, _aggregator, StringToMetricAggregatorChoiceMap); }
+ostream& phaser::operator<<(ostream& _outputStream, MetricAggregatorChoice _aggregator) { return serializeChoice(_outputStream, _aggregator, MetricAggregatorChoiceToStringMap); }
 
 GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
@@ -129,16 +149,60 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
 	return {
+		_arguments["metric"].as<MetricChoice>(),
+		_arguments["metric-aggregator"].as<MetricAggregatorChoice>(),
+		_arguments["relative-metric-scale"].as<size_t>(),
 		_arguments["chromosome-repetitions"].as<size_t>(),
 	};
 }
 
 unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	Options const& _options,
-	Program _program
+	vector<Program> _programs
 )
 {
-	return make_unique<ProgramSize>(move(_program), _options.chromosomeRepetitions);
+	assert(_programs.size() > 0 && "Validations should prevent this from being executed with zero files.");
+
+	vector<shared_ptr<FitnessMetric>> metrics;
+	switch (_options.metric)
+	{
+		case MetricChoice::CodeSize:
+		{
+			for (Program& program: _programs)
+				metrics.push_back(make_unique<ProgramSize>(
+					move(program),
+					_options.chromosomeRepetitions
+				));
+
+			break;
+		}
+		case MetricChoice::RelativeCodeSize:
+		{
+			for (Program& program: _programs)
+				metrics.push_back(make_unique<RelativeProgramSize>(
+					move(program),
+					_options.relativeMetricScale,
+					_options.chromosomeRepetitions
+				));
+			break;
+		}
+		default:
+			assertThrow(false, solidity::util::Exception, "Invalid MetricChoice value.");
+	}
+
+	switch (_options.metricAggregator)
+	{
+		case MetricAggregatorChoice::Average:
+			return make_unique<FitnessMetricAverage>(move(metrics));
+		case MetricAggregatorChoice::Sum:
+			return make_unique<FitnessMetricSum>(move(metrics));
+		case MetricAggregatorChoice::Maximum:
+			return make_unique<FitnessMetricMaximum>(move(metrics));
+		case MetricAggregatorChoice::Minimum:
+			return make_unique<FitnessMetricMinimum>(move(metrics));
+		default:
+			assertThrow(false, solidity::util::Exception, "Invalid MetricAggregatorChoice value.");
+	}
 }
 
 PopulationFactory::Options PopulationFactory::Options::fromCommandLine(po::variables_map const& _arguments)
@@ -220,20 +284,26 @@ Population PopulationFactory::buildFromFile(
 ProgramFactory::Options ProgramFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
 	return {
-		_arguments["input-file"].as<string>(),
+		_arguments["input-files"].as<vector<string>>(),
 	};
 }
 
-Program ProgramFactory::build(Options const& _options)
+vector<Program> ProgramFactory::build(Options const& _options)
 {
-	CharStream sourceCode = loadSource(_options.inputFile);
-	variant<Program, ErrorList> programOrErrors = Program::load(sourceCode);
-	if (holds_alternative<ErrorList>(programOrErrors))
+	vector<Program> inputPrograms;
+	for (auto& path: _options.inputFiles)
 	{
-		cerr << get<ErrorList>(programOrErrors) << endl;
-		assertThrow(false, InvalidProgram, "Failed to load program " + _options.inputFile);
+		CharStream sourceCode = loadSource(path);
+		variant<Program, ErrorList> programOrErrors = Program::load(sourceCode);
+		if (holds_alternative<ErrorList>(programOrErrors))
+		{
+			cerr << get<ErrorList>(programOrErrors) << endl;
+			assertThrow(false, InvalidProgram, "Failed to load program " + path);
+		}
+		inputPrograms.push_back(move(get<Program>(programOrErrors)));
 	}
-	return move(get<Program>(programOrErrors));
+
+	return inputPrograms;
 }
 
 CharStream ProgramFactory::loadSource(string const& _sourcePath)
@@ -277,7 +347,7 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	po::options_description generalDescription("GENERAL", lineLength, minDescriptionLength);
 	generalDescription.add_options()
 		("help", "Show help message and exit.")
-		("input-file", po::value<string>()->required()->value_name("<PATH>"), "Input file.")
+		("input-files", po::value<vector<string>>()->required()->value_name("<PATH>"), "Input files.")
 		("seed", po::value<uint32_t>()->value_name("<NUM>"), "Seed for the random number generator.")
 		(
 			"rounds",
@@ -392,6 +462,29 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	po::options_description metricsDescription("METRICS", lineLength, minDescriptionLength);
 	metricsDescription.add_options()
 		(
+			"metric",
+			po::value<MetricChoice>()->value_name("<NAME>")->default_value(MetricChoice::RelativeCodeSize),
+			"Metric used to evaluate the fitness of a chromosome."
+		)
+		(
+			"metric-aggregator",
+			po::value<MetricAggregatorChoice>()->value_name("<NAME>")->default_value(MetricAggregatorChoice::Average),
+			"Operator used to combine multiple fitness metric obtained by evaluating a chromosome "
+			"separately for each input program."
+		)
+		(
+			"relative-metric-scale",
+			po::value<size_t>()->value_name("<EXPONENT>")->default_value(3),
+			"Scaling factor for values produced by relative fitness metrics. \n"
+			"Since all metrics must produce integer values, the fractional part of the result is discarded. "
+			"To keep the numbers meaningful, a relative metric multiples its values by a scaling factor "
+			"and this option specifies the exponent of this factor. "
+			"For example with value of 3 the factor is 10^3 = 1000 and the metric will return "
+			"500 to represent 0.5, 1000 for 1.0, 2000 for 2.0 and so on. "
+			"Using a bigger factor allows discerning smaller relative differences between chromosomes "
+			"but makes the numbers less readable and may also lose precision if the numbers are very large."
+		)
+		(
 			"chromosome-repetitions",
 			po::value<size_t>()->value_name("<COUNT>")->default_value(1),
 			"Number of times to repeat the sequence optimisation steps represented by a chromosome."
@@ -400,7 +493,7 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	keywordDescription.add(metricsDescription);
 
 	po::positional_options_description positionalDescription;
-	positionalDescription.add("input-file", 1);
+	positionalDescription.add("input-files", -1);
 
 	return {keywordDescription, positionalDescription};
 }
@@ -422,8 +515,8 @@ optional<po::variables_map> Phaser::parseCommandLine(int _argc, char** _argv)
 		return nullopt;
 	}
 
-	if (arguments.count("input-file") == 0)
-		assertThrow(false, NoInputFiles, "Missing argument: input-file.");
+	if (arguments.count("input-files") == 0)
+		assertThrow(false, NoInputFiles, "Missing argument: input-files.");
 
 	return arguments;
 }
@@ -458,8 +551,8 @@ void Phaser::runAlgorithm(po::variables_map const& _arguments)
 	auto populationOptions = PopulationFactory::Options::fromCommandLine(_arguments);
 	auto algorithmOptions = GeneticAlgorithmFactory::Options::fromCommandLine(_arguments);
 
-	Program program = ProgramFactory::build(programOptions);
-	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, move(program));
+	vector<Program> programs = ProgramFactory::build(programOptions);
+	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, move(programs));
 	Population population = PopulationFactory::build(populationOptions, move(fitnessMetric));
 
 	unique_ptr<GeneticAlgorithm> geneticAlgorithm = GeneticAlgorithmFactory::build(

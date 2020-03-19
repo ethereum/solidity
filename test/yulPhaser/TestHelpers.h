@@ -51,7 +51,7 @@ class ChromosomeLengthMetric: public FitnessMetric
 {
 public:
 	using FitnessMetric::FitnessMetric;
-	size_t evaluate(Chromosome const& _chromosome) const override { return _chromosome.length(); }
+	size_t evaluate(Chromosome const& _chromosome) override { return _chromosome.length(); }
 };
 
 // MUTATIONS
