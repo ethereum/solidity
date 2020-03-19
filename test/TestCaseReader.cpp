@@ -49,14 +49,9 @@ string TestCaseReader::simpleExpectations()
 	return parseSimpleExpectations(m_file);
 }
 
-bool TestCaseReader::hasSetting(std::string const& _name) const
-{
-	return m_settings.count(_name) != 0;
-}
-
 bool TestCaseReader::boolSetting(std::string const& _name, bool _defaultValue)
 {
-	if (!hasSetting(_name))
+	if (m_settings.count(_name) == 0)
 		return _defaultValue;
 
 	m_unreadSettings.erase(_name);
@@ -71,7 +66,7 @@ bool TestCaseReader::boolSetting(std::string const& _name, bool _defaultValue)
 
 size_t TestCaseReader::sizetSetting(std::string const& _name, size_t _defaultValue)
 {
-	if (!hasSetting(_name))
+	if (m_settings.count(_name) == 0)
 		return _defaultValue;
 
 	m_unreadSettings.erase(_name);
@@ -82,16 +77,11 @@ size_t TestCaseReader::sizetSetting(std::string const& _name, size_t _defaultVal
 
 string TestCaseReader::stringSetting(string const& _name, string const& _defaultValue)
 {
-	if (!hasSetting(_name))
+	if (m_settings.count(_name) == 0)
 		return _defaultValue;
 
 	m_unreadSettings.erase(_name);
 	return m_settings.at(_name);
-}
-
-void TestCaseReader::setSetting(std::string const& _name, std::string const& _value)
-{
-	m_settings[_name] = _value;
 }
 
 void TestCaseReader::ensureAllSettingsRead() const

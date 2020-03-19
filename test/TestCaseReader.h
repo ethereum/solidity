@@ -40,11 +40,9 @@ public:
 
 	std::string simpleExpectations();
 
-	bool hasSetting(std::string const& _name) const;
 	bool boolSetting(std::string const& _name, bool _defaultValue);
 	size_t sizetSetting(std::string const& _name, size_t _defaultValue);
 	std::string stringSetting(std::string const& _name, std::string const& _defaultValue);
-	void setSetting(std::string const& _name, std::string const& _value);
 
 	void ensureAllSettingsRead() const;
 

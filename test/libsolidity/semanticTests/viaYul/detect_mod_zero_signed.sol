@@ -7,7 +7,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: only
+// compileViaYul: true
 // ----
 // f(int256,int256): 10, 3 -> 1
 // f(int256,int256): 10, 2 -> 0
