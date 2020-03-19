@@ -1,6 +1,6 @@
 {
 }
-// ====
-// step: functionHoister
 // ----
+// step: functionHoister
+//
 // { }

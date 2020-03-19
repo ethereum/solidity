@@ -6,9 +6,9 @@
     mstore(add(a, a), mload(a))
     sstore(a, sload(a))
 }
-// ====
-// step: rematerialiser
 // ----
+// step: rematerialiser
+//
 // {
 //     let a := caller()
 //     mstore(caller(), caller())

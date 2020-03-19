@@ -5,9 +5,9 @@
         pop(a)
     }
 }
-// ====
-// step: rematerialiser
 // ----
+// step: rematerialiser
+//
 // {
 //     let a := caller()
 //     pop(caller())

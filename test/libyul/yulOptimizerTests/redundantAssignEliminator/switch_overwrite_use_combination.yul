@@ -7,9 +7,9 @@
     default { mstore(x, 1) }
     mstore(x, 0)
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     let x
 //     x := 1

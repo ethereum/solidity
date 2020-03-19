@@ -17,9 +17,9 @@
         v := add(v, calldataload(7))
     }
 }
-// ====
-// step: fullSuite
 // ----
+// step: fullSuite
+//
 // {
 //     {
 //         let _1 := calldataload(0)

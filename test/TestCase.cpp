@@ -28,7 +28,7 @@ using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-void TestCase::printUpdatedSettings(ostream& _stream, const string& _linePrefix, const bool)
+void TestCase::printSettings(ostream& _stream, const string& _linePrefix, const bool)
 {
 	auto& settings = m_reader.settings();
 	if (settings.empty())
@@ -63,10 +63,9 @@ void TestCase::expect(string::iterator& _it, string::iterator _end, string::valu
 EVMVersionRestrictedTestCase::EVMVersionRestrictedTestCase(string const& _filename):
 	TestCase(_filename)
 {
-	if (!m_reader.hasSetting("EVMVersion"))
+	string versionString = m_reader.stringSetting("EVMVersion", "any");
+	if (versionString == "any")
 		return;
-
-	string versionString = m_reader.stringSetting("EVMVersion", "");
 
 	string comparator;
 	size_t versionBegin = 0;

@@ -14,9 +14,9 @@ object "main" {
     }
     data "abc" "Hello, World!"
 }
-// ====
-// step: commonSubexpressionEliminator
 // ----
+// step: commonSubexpressionEliminator
+//
 // {
 //     let r := "abc"
 //     let a := datasize("abc")

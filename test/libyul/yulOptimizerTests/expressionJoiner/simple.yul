@@ -3,9 +3,9 @@
 	let x := calldataload(a)
 	sstore(x, 3)
 }
-// ====
-// step: expressionJoiner
 // ----
+// step: expressionJoiner
+//
 // {
 //     sstore(calldataload(mload(2)), 3)
 // }

@@ -57,8 +57,8 @@ public:
 	/// If @arg _formatted is true, color-coding may be used to indicate
 	/// error locations in the contract, if applicable.
 	virtual void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false) const = 0;
-	/// Outputs the updated settings.
-	virtual void printUpdatedSettings(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false);
+	/// Outputs settings.
+	virtual void printSettings(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false);
 	/// Outputs test expectations to @arg _stream that match the actual results of the test.
 	/// Each line of output is prefixed with @arg _linePrefix.
 	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const = 0;

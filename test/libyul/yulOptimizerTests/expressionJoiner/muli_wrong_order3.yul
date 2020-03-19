@@ -4,9 +4,9 @@
 	let x := mul(add(b, a), mload(2))
 	sstore(x, 3)
 }
-// ====
-// step: expressionJoiner
 // ----
+// step: expressionJoiner
+//
 // {
 //     let a := mload(3)
 //     let b := mload(6)

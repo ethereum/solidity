@@ -5,9 +5,9 @@
     mstore(y, add(add(add(add(add(add(add(add(add(add(add(add(add(add(add(add(add(add(y, 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1), 1))
   }
 }
-// ====
-// step: stackCompressor
 // ----
+// step: stackCompressor
+//
 // {
 //     let x := 8
 //     function f()

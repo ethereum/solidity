@@ -7,9 +7,9 @@
         sstore(10, x)
     }
 }
-// ====
-// step: conditionalSimplifier
 // ----
+// step: conditionalSimplifier
+//
 // {
 //     let x := mload(0)
 //     for { } 1 { }

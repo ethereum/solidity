@@ -1,5 +1,5 @@
 { if mload(0) {} }
-// ====
-// step: controlFlowSimplifier
 // ----
+// step: controlFlowSimplifier
+//
 // { pop(mload(0)) }

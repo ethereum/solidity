@@ -12,9 +12,9 @@
 
     pop(add(1, 1))
 }
-// ====
-// step: deadCodeEliminator
 // ----
+// step: deadCodeEliminator
+//
 // {
 //     fun()
 //     revert(0, 0)

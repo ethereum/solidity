@@ -7,7 +7,7 @@
     }
     let x := f(g(2))
 }
-// ====
-// step: unusedPruner
 // ----
+// step: unusedPruner
+//
 // { }

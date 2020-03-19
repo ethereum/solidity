@@ -35,9 +35,9 @@
     }
     sstore(_1, sum_50)
 }
-// ====
-// step: commonSubexpressionEliminator
 // ----
+// step: commonSubexpressionEliminator
+//
 // {
 //     let _1 := 0
 //     let _33 := calldataload(_1)

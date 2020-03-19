@@ -9,9 +9,9 @@
     }
     mstore(a, b)
 }
-// ====
-// step: fullSuite
 // ----
+// step: fullSuite
+//
 // {
 //     {
 //         let a := mload(0)

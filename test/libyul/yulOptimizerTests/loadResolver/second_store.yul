@@ -6,9 +6,9 @@
     // if the two slots are different.
     mstore(0, sload(x))
 }
-// ====
-// step: loadResolver
 // ----
+// step: loadResolver
+//
 // {
 //     let x := calldataload(1)
 //     sstore(x, 7)

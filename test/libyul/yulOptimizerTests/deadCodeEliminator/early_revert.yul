@@ -15,9 +15,9 @@
     }
 }
 
-// ====
-// step: deadCodeEliminator
 // ----
+// step: deadCodeEliminator
+//
 // {
 //     let b := 20
 //     revert(0, 0)

@@ -4,8 +4,9 @@
 }
 // ====
 // dialect: yul
-// step: mainFunction
 // ----
+// step: mainFunction
+//
 // {
 //     function main()
 //     { let a }

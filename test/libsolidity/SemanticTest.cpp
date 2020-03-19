@@ -43,21 +43,24 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	m_source = m_reader.source();
 	m_lineOffset = m_reader.lineNumber();
 
-	if (m_reader.hasSetting("compileViaYul"))
+	string choice = m_reader.stringSetting("compileViaYul", "false");
+	if (choice == "also")
 	{
-		string choice = m_reader.stringSetting("compileViaYul", "");
-		if (choice == "also")
-		{
-			m_runWithYul = true;
-			m_runWithoutYul = true;
-		}
-		else
-		{
-			m_reader.setSetting("compileViaYul", "only");
-			m_runWithYul = true;
-			m_runWithoutYul = false;
-		}
+		m_runWithYul = true;
+		m_runWithoutYul = true;
 	}
+	else if (choice == "true")
+	{
+		m_runWithYul = true;
+		m_runWithoutYul = false;
+	}
+	else if (choice == "false")
+	{
+		m_runWithYul = false;
+		m_runWithoutYul = true;
+	}
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid compileViaYul value: " + choice + "."));
 
 	m_runWithABIEncoderV1Only = m_reader.boolSetting("ABIEncoderV1Only", false);
 	if (m_runWithABIEncoderV1Only && solidity::test::CommonOptions::get().useABIEncoderV2)

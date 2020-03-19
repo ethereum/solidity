@@ -4,9 +4,9 @@
 	}
 	f(mload(0))
 }
-// ====
-// step: fullInliner
 // ----
+// step: fullInliner
+//
 // {
 //     { f(mload(0)) }
 //     function f(a)

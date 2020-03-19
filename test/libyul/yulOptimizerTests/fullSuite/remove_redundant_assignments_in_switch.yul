@@ -6,9 +6,9 @@
     default { invalid() }
     mstore(1, 1)
 }
-// ====
-// step: fullSuite
 // ----
+// step: fullSuite
+//
 // {
 //     {
 //         switch mload(0)

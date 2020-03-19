@@ -7,8 +7,9 @@
 }
 // ====
 // EVMVersion: >=constantinople
-// step: constantOptimiser
 // ----
+// step: constantOptimiser
+//
 // {
 //     let a := shl(172, 1)
 //     let x := add(shl(248, 17), 0xffffffffffffffffffffffff23)

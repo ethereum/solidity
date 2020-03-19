@@ -5,9 +5,9 @@
 		x := add(a, 3)
 	}
 }
-// ====
-// step: expressionJoiner
 // ----
+// step: expressionJoiner
+//
 // {
 //     function f(a) -> x
 //     {

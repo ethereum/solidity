@@ -172,7 +172,7 @@ TestTool::Result TestTool::process()
 
 						AnsiColorized(cout, formatted, {BOLD, CYAN}) << "  Contract:" << endl;
 						m_test->printSource(cout, "    ", formatted);
-						m_test->printUpdatedSettings(cout, "    ", formatted);
+						m_test->printSettings(cout, "    ", formatted);
 
 						cout << endl << outputMessages.str() << endl;
 						return result == TestCase::TestResult::FatalError ? Result::Exception : Result::Failure;
@@ -231,7 +231,7 @@ TestTool::Request TestTool::handleResponse(bool _exception)
 				cout << endl;
 				ofstream file(m_path.string(), ios::trunc);
 				m_test->printSource(file);
-				m_test->printUpdatedSettings(file);
+				m_test->printSettings(file);
 				file << "// ----" << endl;
 				m_test->printUpdatedExpectations(file, "// ");
 				return Request::Rerun;

@@ -20,9 +20,9 @@
         t := 8
     }
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     function f(a, b) -> x
 //     {

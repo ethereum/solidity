@@ -4,9 +4,9 @@
         illegal3 := add(illegal1, illegal2)
     }
 }
-// ====
-// step: nameDisplacer
 // ----
+// step: nameDisplacer
+//
 // {
 //     function f(illegal1_1, illegal2_2) -> illegal3_3
 //     {

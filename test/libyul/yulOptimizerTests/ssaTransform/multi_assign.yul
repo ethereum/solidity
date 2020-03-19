@@ -7,9 +7,9 @@
   b := mload(a)
   function f() -> x, y {}
 }
-// ====
-// step: ssaTransform
 // ----
+// step: ssaTransform
+//
 // {
 //     let a_1 := mload(0)
 //     let a := a_1

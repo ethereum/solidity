@@ -6,7 +6,7 @@
 		x := 1
 	}
 }
-// ====
-// step: structuralSimplifier
 // ----
+// step: structuralSimplifier
+//
 // { let x := 0 }

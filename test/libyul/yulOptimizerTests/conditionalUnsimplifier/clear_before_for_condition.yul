@@ -9,9 +9,9 @@
         x := 2
     }
 }
-// ====
-// step: conditionalUnsimplifier
 // ----
+// step: conditionalUnsimplifier
+//
 // {
 //     let x := mload(0)
 //     let y := mload(0)

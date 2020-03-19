@@ -4,9 +4,9 @@
     a := f()
     b := 1
 }
-// ====
-// step: unusedPruner
 // ----
+// step: unusedPruner
+//
 // {
 //     let a, b
 //     function f() -> x

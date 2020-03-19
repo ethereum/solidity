@@ -4,8 +4,9 @@
 }
 // ====
 // dialect: yul
-// step: expressionInliner
 // ----
+// step: expressionInliner
+//
 // {
 //     function f() -> x
 //     { x := 2 }

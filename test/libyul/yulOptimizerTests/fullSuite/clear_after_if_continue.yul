@@ -6,9 +6,9 @@
     }
     if y { revert(0, 0) }
 }
-// ====
-// step: fullSuite
 // ----
+// step: fullSuite
+//
 // {
 //     {
 //         let y := mload(0x20)

@@ -8,9 +8,9 @@
     a := add(a, 1)
   }
 }
-// ====
-// step: loopInvariantCodeMotion
 // ----
+// step: loopInvariantCodeMotion
+//
 // {
 //     let b := 1
 //     let a := 1

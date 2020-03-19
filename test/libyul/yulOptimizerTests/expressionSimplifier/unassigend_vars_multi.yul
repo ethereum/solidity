@@ -3,9 +3,9 @@
 	let c, d
 	let y := add(d, add(c, 7))
 }
-// ====
-// step: expressionSimplifier
 // ----
+// step: expressionSimplifier
+//
 // {
 //     let c, d
 //     let y := 7

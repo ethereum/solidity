@@ -6,8 +6,9 @@
 }
 // ====
 // EVMVersion: >=constantinople
-// step: expressionSimplifier
 // ----
+// step: expressionSimplifier
+//
 // {
 //     let a := 0
 //     let b := 0
