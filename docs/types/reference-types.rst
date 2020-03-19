@@ -124,6 +124,12 @@ Accessing an array past its end causes a failing assertion. Methods ``.push()`` 
 to append a new element at the end of the array, where ``.push()`` appends a zero-initialized element and returns
 a reference to it.
 
+.. index:: ! string, ! bytes
+
+.. _strings:
+
+.. _bytes:
+
 ``bytes`` and ``strings`` as Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
