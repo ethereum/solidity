@@ -58,8 +58,8 @@ public:
 	GeneticAlgorithm& operator=(GeneticAlgorithm const&) = delete;
 	virtual ~GeneticAlgorithm() = default;
 
-	/// The method that actually implements the algorithm. Should use @a m_population as input and
-	/// replace it with the updated state after the round.
+	/// The method that actually implements the algorithm. Should accept the current population in
+	/// @a _population and return the updated one after the round.
 	virtual Population runNextRound(Population _population) = 0;
 };
 
