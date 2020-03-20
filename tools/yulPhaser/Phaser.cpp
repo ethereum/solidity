@@ -473,17 +473,17 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		)
 		(
 			"min-chromosome-length",
-			po::value<size_t>()->value_name("<NUM>")->default_value(12),
+			po::value<size_t>()->value_name("<NUM>")->default_value(100),
 			"Minimum length of randomly generated chromosomes."
 		)
 		(
 			"max-chromosome-length",
-			po::value<size_t>()->value_name("<NUM>")->default_value(30),
+			po::value<size_t>()->value_name("<NUM>")->default_value(100),
 			"Maximum length of randomly generated chromosomes."
 		)
 		(
 			"crossover",
-			po::value<CrossoverChoice>()->value_name("<NAME>")->default_value(CrossoverChoice::SinglePoint),
+			po::value<CrossoverChoice>()->value_name("<NAME>")->default_value(CrossoverChoice::Uniform),
 			(
 				"Type of the crossover operator to use.\n"
 				"\n"
@@ -542,7 +542,7 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	classicGeneticAlgorithmDescription.add_options()
 		(
 			"classic-elite-pool-size",
-			po::value<double>()->value_name("<FRACTION>")->default_value(0),
+			po::value<double>()->value_name("<FRACTION>")->default_value(0.25),
 			"Percentage of population to regenerate using mutations in each round."
 		)
 		(
