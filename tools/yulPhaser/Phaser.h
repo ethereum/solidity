@@ -169,6 +169,7 @@ public:
 	struct Options
 	{
 		std::vector<std::string> inputFiles;
+		std::string prefix;
 
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
 	};
