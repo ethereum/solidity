@@ -623,8 +623,8 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			"metric-aggregator",
 			po::value<MetricAggregatorChoice>()->value_name("<NAME>")->default_value(MetricAggregatorChoice::Average),
 			(
-				"Operator used to combine multiple fitness metric obtained by evaluating a chromosome "
-				"separately for each input program.\n"
+				"Operator used to combine multiple fitness metric values obtained by evaluating a "
+				"chromosome separately for each input program.\n"
 				"\n"
 				"AVAILABLE METRIC AGGREGATORS:\n"
 				"* " + toString(MetricAggregatorChoice::Average) + "\n" +
