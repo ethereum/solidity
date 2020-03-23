@@ -259,11 +259,28 @@ string IRGenerator::constructorCode(ContractDefinition const& _contract)
 
 	if (constructor)
 	{
-		solUnimplementedAssert(constructor->parameters().empty(), "");
+		ABIFunctions abiFunctions(m_evmVersion, m_context.revertStrings(), m_context.functionCollector());
+		unsigned paramVars = make_shared<TupleType>(constructor->functionType(false)->parameterTypes())->sizeOnStack();
 
-		// TODO base constructors
+		Whiskers t(R"X(
+			let programSize := datasize("<object>")
+			let argSize := sub(codesize(), programSize)
 
-		out << m_context.functionName(*constructor) + "()\n";
+			let memoryDataOffset := <allocate>(argSize)
+			codecopy(memoryDataOffset, programSize, argSize)
+
+			<assignToParams> <abiDecode>(memoryDataOffset, add(memoryDataOffset, argSize))
+
+			<constructorName>(<params>)
+		)X");
+		t("object", creationObjectName(_contract));
+		t("allocate", m_utils.allocationFunction());
+		t("assignToParams", paramVars == 0 ? "" : "let " + suffixedVariableNameList("param_", 0, paramVars) + " := ");
+		t("params", suffixedVariableNameList("param_", 0, paramVars));
+		t("abiDecode", abiFunctions.tupleDecoder(constructor->functionType(false)->parameterTypes(), true));
+		t("constructorName", m_context.functionName(*constructor));
+
+		out << t.render();
 	}
 
 	return out.str();
