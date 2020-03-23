@@ -1588,7 +1588,7 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 					solAssert(dynamic_cast<ReferenceType const*>(&_lvalue.type), "");
 					auto const* valueReferenceType = dynamic_cast<ReferenceType const*>(&_value.type());
 					solAssert(valueReferenceType && valueReferenceType->dataStoredIn(DataLocation::Memory), "");
-					m_code << "mstore(" + _memory.address + ", " + _value.name() + ")\n";
+					m_code << "mstore(" + _memory.address + ", " + _value.part("mpos").name() + ")\n";
 				}
 			},
 			[&](IRLValue::Stack const& _stack) { assign(_stack.variable, _value); },
