@@ -441,7 +441,7 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 		make_shared<ASTString>(member(_node, "name").asString()),
 		nullOrCast<Expression>(member(_node, "value")),
 		visibility(_node),
-        _node["documentation"].isNull() ? nullptr : createDocumentation(member(_node, "documentation")),
+		_node["documentation"].isNull() ? nullptr : createDocumentation(member(_node, "documentation")),
 		memberAsBool(_node, "stateVariable"),
 		_node.isMember("indexed") ? memberAsBool(_node, "indexed") : false,
 		mutability,

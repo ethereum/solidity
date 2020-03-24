@@ -63,7 +63,7 @@ complete contract):
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// @dev Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
@@ -87,7 +87,7 @@ as it uses ``call`` which forwards all remaining gas by default:
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// @dev Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
@@ -106,7 +106,7 @@ outlined further below:
     pragma solidity >=0.4.11 <0.7.0;
 
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// @dev Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {

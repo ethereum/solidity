@@ -59,9 +59,27 @@ bool DocStringAnalyser::visit(FunctionDefinition const& _function)
 
 bool DocStringAnalyser::visit(VariableDeclaration const& _variable)
 {
-	if (_variable.isStateVariable() && _variable.isPartOfExternalInterface())
-		handleDeclaration(_variable, _variable, _variable.annotation());
-	return true;
+	if (_variable.isStateVariable())
+	{
+		static set<string> const validPublicTags = set<string>{"dev", "notice", "return", "title", "author"};
+		if (_variable.isPublic())
+			parseDocStrings(_variable, _variable.annotation(), validPublicTags, "public state variables");
+		else
+		{
+			parseDocStrings(_variable, _variable.annotation(), validPublicTags, "non-public state variables");
+			if (_variable.annotation().docTags.count("notice") > 0)
+				m_errorReporter.warning(
+					9098_error, _variable.documentation()->location(),
+					"Documentation tag on non-public state variables will be disallowed in 0.7.0. You will need to use the @dev tag explicitly."
+				);
+		}
+		if (_variable.annotation().docTags.count("title") > 0 || _variable.annotation().docTags.count("author") > 0)
+			m_errorReporter.warning(
+				4822_error, _variable.documentation()->location(),
+				"Documentation tag @title and @author is only allowed on contract definitions. It will be disallowed in 0.7.0."
+			);
+	}
+	return false;
 }
 
 bool DocStringAnalyser::visit(ModifierDefinition const& _modifier)
@@ -124,16 +142,6 @@ void DocStringAnalyser::handleCallable(
 	checkParameters(_callable, _node, _annotation);
 }
 
-void DocStringAnalyser::handleDeclaration(
-	Declaration const&,
-	StructurallyDocumented const& _node,
-	StructurallyDocumentedAnnotation& _annotation
-)
-{
-	static set<string> const validTags = set<string>{"author", "dev", "notice", "return", "param"};
-	parseDocStrings(_node, _annotation, validTags, "state variables");
-}
-
 void DocStringAnalyser::parseDocStrings(
 	StructurallyDocumented const& _node,
 	StructurallyDocumentedAnnotation& _annotation,
@@ -161,7 +169,20 @@ void DocStringAnalyser::parseDocStrings(
 			if (docTag.first == "return")
 			{
 				returnTagsVisited++;
-				if (auto* function = dynamic_cast<FunctionDefinition const*>(&_node))
+				if (auto* varDecl = dynamic_cast<VariableDeclaration const*>(&_node))
+				{
+					if (!varDecl->isPublic())
+						appendError(
+							_node.documentation()->location(),
+							"Documentation tag \"@" + docTag.first + "\" is only allowed on public state-variables."
+						);
+					if (returnTagsVisited > 1)
+						appendError(
+							_node.documentation()->location(),
+							"Documentation tag \"@" + docTag.first + "\" is only allowed once on state-variables."
+						);
+				}
+				else if (auto* function = dynamic_cast<FunctionDefinition const*>(&_node))
 				{
 					string content = docTag.second.content;
 					string firstWord = content.substr(0, content.find_first_of(" \t"));

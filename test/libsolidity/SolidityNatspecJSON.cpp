@@ -204,43 +204,75 @@ BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 	checkNatspec(sourceCode, "test", userNatspec, true);
 }
 
-BOOST_AUTO_TEST_CASE(dev_state_variable)
+BOOST_AUTO_TEST_CASE(public_state_variable)
 {
 	char const* sourceCode = R"(
 		contract test {
-			/// @dev Public accessor for the internal state
-			/// @notice Keeps track of the internal state
+			/// @notice example of notice
+			/// @dev example of dev
+			/// @return returns state
 			uint public state;
 		}
 	)";
 
-	char const* natspec = "{"
-	"\"methods\":{"
-	"    \"state()\":{ \n"
-	"        \"details\": \"Public accessor for the internal state\",\n"
-	"    }\n"
-	"}}";
+	char const* devDoc = R"R(
+	{
+		"methods" : {},
+		"stateVariables" :
+		{
+			"state" :
+			{
+				"details" : "example of dev",
+				"return" : "returns state"
+			}
+		}
+	}
+	)R";
+	checkNatspec(sourceCode, "test", devDoc, false);
 
-	checkNatspec(sourceCode, "test", natspec, false);
+	char const* userDoc = R"R(
+	{
+		"methods" :
+		{
+			"state()" :
+			{
+				"notice": "example of notice"
+			}
+		}
+	}
+	)R";
+	checkNatspec(sourceCode, "test", userDoc, true);
 }
 
-BOOST_AUTO_TEST_CASE(user_state_variable)
+BOOST_AUTO_TEST_CASE(private_state_variable)
 {
 	char const* sourceCode = R"(
 		contract test {
-			/// @notice Keeps track of the internal state
-			uint public state;
+			/// @dev example of dev
+			uint private state;
 		}
 	)";
 
-	char const* natspec = "{"
-	"\"methods\":{"
-	"    \"state()\":{ \n"
-	"        \"notice\": \"Keeps track of the internal state\",n"
-	"    }\n"
-	"}}";
+	char const* devDoc = R"(
+	{
+		"methods" : {},
+		"stateVariables" :
+		{
+			"state" :
+			{
+				"details" : "example of dev"
+			}
+		}
+	}
+	)";
+	checkNatspec(sourceCode, "test", devDoc, false);
 
-	checkNatspec(sourceCode, "test", natspec, true);
+	char const* userDoc = R"(
+	{
+		"methods":{}
+	}
+	)";
+	checkNatspec(sourceCode, "test", userDoc, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)

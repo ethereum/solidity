@@ -87,10 +87,10 @@
   {
     "C":
     [
-      20
+      23
     ]
   },
-  "id": 21,
+  "id": 24,
   "license": null,
   "nodeType": "SourceUnit",
   "nodes":
@@ -102,90 +102,129 @@
       "contractKind": "contract",
       "documentation": null,
       "fullyImplemented": true,
-      "id": 20,
+      "id": 23,
       "linearizedBaseContracts":
       [
-        20
+        23
       ],
       "name": "C",
       "nodeType": "ContractDefinition",
       "nodes":
       [
         {
-          "anonymous": false,
+          "constant": false,
           "documentation":
           {
             "id": 7,
             "nodeType": "StructuredDocumentation",
-            "src": "15:26:3",
-            "text": "Some comment on Evt."
+            "src": "15:32:3",
+            "text": "Some comment on state var."
           },
+          "functionSelector": "c19d93fb",
           "id": 9,
-          "name": "Evt",
-          "nodeType": "EventDefinition",
-          "parameters":
+          "mutability": "mutable",
+          "name": "state",
+          "nodeType": "VariableDeclaration",
+          "overrides": null,
+          "scope": 23,
+          "src": "48:17:3",
+          "stateVariable": true,
+          "storageLocation": "default",
+          "typeDescriptions":
+          {
+            "typeIdentifier": "t_uint256",
+            "typeString": "uint256"
+          },
+          "typeName":
           {
             "id": 8,
-            "nodeType": "ParameterList",
-            "parameters": [],
-            "src": "51:2:3"
+            "name": "uint",
+            "nodeType": "ElementaryTypeName",
+            "src": "48:4:3",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_uint256",
+              "typeString": "uint256"
+            }
           },
-          "src": "42:12:3"
+          "value": null,
+          "visibility": "public"
         },
         {
-          "body":
-          {
-            "id": 13,
-            "nodeType": "Block",
-            "src": "99:6:3",
-            "statements":
-            [
-              {
-                "id": 12,
-                "nodeType": "PlaceholderStatement",
-                "src": "101:1:3"
-              }
-            ]
-          },
+          "anonymous": false,
           "documentation":
           {
             "id": 10,
             "nodeType": "StructuredDocumentation",
-            "src": "57:26:3",
-            "text": "Some comment on mod."
+            "src": "69:26:3",
+            "text": "Some comment on Evt."
           },
-          "id": 14,
-          "name": "mod",
-          "nodeType": "ModifierDefinition",
-          "overrides": null,
+          "id": 12,
+          "name": "Evt",
+          "nodeType": "EventDefinition",
           "parameters":
           {
             "id": 11,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "96:2:3"
+            "src": "105:2:3"
           },
-          "src": "84:21:3",
+          "src": "96:12:3"
+        },
+        {
+          "body":
+          {
+            "id": 16,
+            "nodeType": "Block",
+            "src": "153:6:3",
+            "statements":
+            [
+              {
+                "id": 15,
+                "nodeType": "PlaceholderStatement",
+                "src": "155:1:3"
+              }
+            ]
+          },
+          "documentation":
+          {
+            "id": 13,
+            "nodeType": "StructuredDocumentation",
+            "src": "111:26:3",
+            "text": "Some comment on mod."
+          },
+          "id": 17,
+          "name": "mod",
+          "nodeType": "ModifierDefinition",
+          "overrides": null,
+          "parameters":
+          {
+            "id": 14,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "150:2:3"
+          },
+          "src": "138:21:3",
           "virtual": false,
           "visibility": "internal"
         },
         {
           "body":
           {
-            "id": 18,
+            "id": 21,
             "nodeType": "Block",
-            "src": "155:2:3",
+            "src": "209:2:3",
             "statements": []
           },
           "documentation":
           {
-            "id": 15,
+            "id": 18,
             "nodeType": "StructuredDocumentation",
-            "src": "108:25:3",
+            "src": "162:25:3",
             "text": "Some comment on fn."
           },
           "functionSelector": "a4a2c40b",
-          "id": 19,
+          "id": 22,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
@@ -194,29 +233,29 @@
           "overrides": null,
           "parameters":
           {
-            "id": 16,
+            "id": 19,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "145:2:3"
+            "src": "199:2:3"
           },
           "returnParameters":
           {
-            "id": 17,
+            "id": 20,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "155:0:3"
+            "src": "209:0:3"
           },
-          "scope": 20,
-          "src": "134:23:3",
+          "scope": 23,
+          "src": "188:23:3",
           "stateMutability": "nonpayable",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "scope": 21,
-      "src": "0:159:3"
+      "scope": 24,
+      "src": "0:213:3"
     }
   ],
-  "src": "0:160:3"
+  "src": "0:214:3"
 }
 ]

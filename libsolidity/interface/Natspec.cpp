@@ -40,7 +40,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 	auto constructorDefinition(_contractDef.constructor());
 	if (constructorDefinition)
 	{
-		string value = extractDoc(constructorDefinition->annotation().docTags, "notice");
+		string const value = extractDoc(constructorDefinition->annotation().docTags, "notice");
 		if (!value.empty())
 			// add the constructor, only if we have any documentation to add
 			methods["constructor"] = Json::Value(value);
@@ -64,8 +64,9 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 					methods[it.second->externalSignature()] = user;
 				}
 			}
-			if (auto var = dynamic_cast<VariableDeclaration const*>(&it.second->declaration()))
+			else if (auto var = dynamic_cast<VariableDeclaration const*>(&it.second->declaration()))
 			{
+				solAssert(var->isStateVariable() && var->isPublic(), "");
 				string value = extractDoc(var->annotation().docTags, "notice");
 				if (!value.empty())
 				{
@@ -121,22 +122,22 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 			if (!method.empty())
 				methods[it.second->externalSignature()] = method;
 		}
-		if (auto var = dynamic_cast<VariableDeclaration const*>(&it.second->declaration()))
-		{
-			Json::Value method(devDocumentation(var->annotation().docTags));
-			if (!method.empty())
-			{
-//				Json::Value jsonReturn = extractReturnParameterDocs(var->annotation().docTags, *var);
+	}
 
-//				if (!jsonReturn.empty())
-//					method["returns"] = jsonReturn;
+	Json::Value stateVariables(Json::objectValue);
+	for (VariableDeclaration const* varDecl: _contractDef.stateVariables())
+	{
+		if (auto devDoc = devDocumentation(varDecl->annotation().docTags); !devDoc.empty())
+			stateVariables[varDecl->name()] = devDoc;
 
-				methods[it.second->externalSignature()] = method;
-			}
-		}
+		solAssert(varDecl->annotation().docTags.count("return") <= 1, "");
+		if (varDecl->annotation().docTags.count("return") == 1)
+			stateVariables[varDecl->name()]["return"] = extractDoc(varDecl->annotation().docTags, "return");
 	}
 
 	doc["methods"] = methods;
+	if (!stateVariables.empty())
+		doc["stateVariables"] = stateVariables;
 
 	return doc;
 }

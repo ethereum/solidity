@@ -255,9 +255,9 @@ which only need to be created if there is a dispute.
 
     contract C {
         function createDSalted(bytes32 salt, uint arg) public {
-            /// This complicated expression just tells you how the address
-            /// can be pre-computed. It is just there for illustration.
-            /// You actually only need ``new D{salt: salt}(arg)``.
+            // This complicated expression just tells you how the address
+            // can be pre-computed. It is just there for illustration.
+            // You actually only need ``new D{salt: salt}(arg)``.
             address predictedAddress = address(uint(keccak256(abi.encodePacked(
                 byte(0xff),
                 address(this),
