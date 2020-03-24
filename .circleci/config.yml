@@ -307,6 +307,18 @@ jobs:
           name: Linting Python Scripts
           command: ./scripts/pylint_all.py
 
+  chk_antlr_grammar:
+    docker:
+      - image: buildpack-deps:eoan
+    steps:
+      - checkout
+      - run:
+          name: Install Java
+          command: apt -q update && apt install -y openjdk-14-jdk
+      - run:
+          name: Run tests
+          command: ./scripts/test_antlr_grammar.sh
+
   chk_buglist:
     docker:
       - image: circleci/node
@@ -773,6 +785,7 @@ workflows:
       - chk_buglist: *workflow_trigger_on_tags
       - chk_proofs: *workflow_trigger_on_tags
       - chk_pylint: *workflow_trigger_on_tags
+      - chk_antlr_grammar: *workflow_trigger_on_tags
 
       # build-only
       - b_docs: *workflow_trigger_on_tags
