@@ -24,7 +24,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	if (_size <= 600)
 	{
 		string input(reinterpret_cast<char const*>(_data), _size);
-		FuzzerUtil::testCompiler(input, /*optimize=*/false, /*quiet=*/true);
+		FuzzerUtil::testCompiler(input, /*optimize=*/false);
 	}
 	return 0;
 }
