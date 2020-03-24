@@ -94,7 +94,7 @@ private:
 		m_nameDispenser(_dialect, *m_ast, {})
 	{}
 
-	static std::variant<std::unique_ptr<yul::Block>, langutil::ErrorList> parseSource(
+	static std::variant<std::unique_ptr<yul::Block>, langutil::ErrorList> parseObject(
 		yul::Dialect const& _dialect,
 		langutil::CharStream _source
 	);

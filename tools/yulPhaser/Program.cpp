@@ -26,6 +26,7 @@
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/ObjectParser.h>
 #include <libyul/YulString.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/Disambiguator.h>
@@ -77,7 +78,7 @@ variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 	// ASSUMPTION: parseSource() rewinds the stream on its own
 	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
 
-	variant<unique_ptr<Block>, ErrorList> astOrErrors = parseSource(dialect, _sourceCode);
+	variant<unique_ptr<Block>, ErrorList> astOrErrors = parseObject(dialect, _sourceCode);
 	if (holds_alternative<ErrorList>(astOrErrors))
 		return get<ErrorList>(astOrErrors);
 
@@ -121,19 +122,44 @@ string Program::toJson() const
 	return jsonPrettyPrint(serializedAst);
 }
 
-variant<unique_ptr<Block>, ErrorList> Program::parseSource(Dialect const& _dialect, CharStream _source)
+variant<unique_ptr<Block>, ErrorList> Program::parseObject(Dialect const& _dialect, CharStream _source)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<Scanner>(move(_source));
-	Parser parser(errorReporter, _dialect);
 
-	unique_ptr<Block> ast = parser.parse(scanner, false);
-	if (ast == nullptr)
+	ObjectParser parser(errorReporter, _dialect);
+	shared_ptr<Object> object = parser.parse(scanner, false);
+	if (object == nullptr || !errorReporter.errors().empty())
+		// NOTE: It's possible to get errors even if the returned object is non-null.
+		// For example when there are errors in a nested object.
 		return errors;
 
-	assert(errorReporter.errors().empty());
-	return variant<unique_ptr<Block>, ErrorList>(move(ast));
+	Object* deployedObject = nullptr;
+	if (object->subObjects.size() > 0)
+		for (auto& subObject: object->subObjects)
+			// solc --ir produces an object with a subobject of the same name as the outer object
+			// but suffixed with  "_deployed".
+			// The other object references the nested one which makes analysis fail. Below we try to
+			// extract just the nested one for that reason. This is just a heuristic. If there's no
+			// subobject with such a suffix we fall back to accepting the whole object as is.
+			if (subObject != nullptr && subObject->name.str() == object->name.str() + "_deployed")
+			{
+				deployedObject = dynamic_cast<Object*>(subObject.get());
+				if (deployedObject != nullptr)
+					break;
+			}
+	Object* selectedObject = (deployedObject != nullptr ? deployedObject : object.get());
+
+	// NOTE: I'm making a copy of the whole AST to get unique_ptr rather than shared_ptr.
+	// This is a slight performance hit but it's much less than the parsing itself.
+	// unique_ptr lets me be sure that two Program instances can never share the AST by mistake.
+	// The public API of the class does not provide access to the smart pointer so it won't be hard
+	// to switch to shared_ptr if the copying turns out to be an issue (though it would be better
+	// to refactor ObjectParser and Object to use unique_ptr instead).
+	auto astCopy = make_unique<Block>(get<Block>(ASTCopier{}(*selectedObject->code)));
+
+	return variant<unique_ptr<Block>, ErrorList>(move(astCopy));
 }
 
 variant<unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Dialect const& _dialect, Block const& _ast)
