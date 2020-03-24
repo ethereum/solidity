@@ -22,8 +22,10 @@
 
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Program.h>
+#include <tools/yulPhaser/ProgramCache.h>
 
 #include <cstddef>
+#include <optional>
 
 namespace solidity::phaser
 {
@@ -50,7 +52,7 @@ public:
  * Abstract base class for fitness metrics that return values based on program size.
  *
  * The class provides utilities for optimising programs according to the information stored in
- * chromosomes.
+ * chromosomes. Allows using @a ProgramCache.
  *
  * It can also store weights for the @a CodeSize metric. It does not do anything with
  * them because it does not actually compute the code size but they are readily available for use
@@ -60,19 +62,27 @@ class ProgramBasedMetric: public FitnessMetric
 {
 public:
 	explicit ProgramBasedMetric(
-		Program _program,
+		std::optional<Program> _program,
+		std::shared_ptr<ProgramCache> _programCache,
 		size_t _repetitionCount = 1
 	):
 		m_program(std::move(_program)),
-		m_repetitionCount(_repetitionCount) {}
+		m_programCache(std::move(_programCache)),
+		m_repetitionCount(_repetitionCount)
+	{
+		assert(m_program.has_value() == (m_programCache == nullptr));
+	}
 
-	Program const& program() const { return m_program; }
+	Program const& program() const;
+	ProgramCache const* programCache() const { return m_programCache.get(); }
 	size_t repetitionCount() const { return m_repetitionCount; }
 
-	Program optimisedProgram(Chromosome const& _chromosome) const;
+	Program optimisedProgram(Chromosome const& _chromosome);
+	Program optimisedProgramNoCache(Chromosome const& _chromosome) const;
 
 private:
-	Program m_program;
+	std::optional<Program> m_program;
+	std::shared_ptr<ProgramCache> m_programCache;
 	size_t m_repetitionCount;
 };
 
@@ -98,11 +108,12 @@ class RelativeProgramSize: public ProgramBasedMetric
 {
 public:
 	explicit RelativeProgramSize(
-		Program _program,
+		std::optional<Program> _program,
+		std::shared_ptr<ProgramCache> _programCache,
 		size_t _fixedPointPrecision,
 		size_t _repetitionCount = 1
 	):
-		ProgramBasedMetric(std::move(_program), _repetitionCount),
+		ProgramBasedMetric(std::move(_program), std::move(_programCache), _repetitionCount),
 		m_fixedPointPrecision(_fixedPointPrecision) {}
 
 	size_t fixedPointPrecision() const { return m_fixedPointPrecision; }

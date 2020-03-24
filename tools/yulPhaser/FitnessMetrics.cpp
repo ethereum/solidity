@@ -17,14 +17,36 @@
 
 #include <tools/yulPhaser/FitnessMetrics.h>
 
+#include <libsolutil/CommonIO.h>
+
 #include <cmath>
 
 using namespace std;
+using namespace solidity::util;
 using namespace solidity::phaser;
 
-Program ProgramBasedMetric::optimisedProgram(Chromosome const& _chromosome) const
+Program const& ProgramBasedMetric::program() const
 {
-	Program programCopy = m_program;
+	if (m_programCache == nullptr)
+		return m_program.value();
+	else
+		return m_programCache->program();
+}
+
+Program ProgramBasedMetric::optimisedProgram(Chromosome const& _chromosome)
+{
+	if (m_programCache == nullptr)
+		return optimisedProgramNoCache(_chromosome);
+
+	return m_programCache->optimiseProgram(
+		toString(_chromosome),
+		m_repetitionCount
+	);
+}
+
+Program ProgramBasedMetric::optimisedProgramNoCache(Chromosome const& _chromosome) const
+{
+	Program programCopy = program();
 	for (size_t i = 0; i < m_repetitionCount; ++i)
 		programCopy.optimise(_chromosome.optimisationSteps());
 

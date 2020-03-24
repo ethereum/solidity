@@ -154,6 +154,7 @@ set(yul_phaser_sources
     yulPhaser/Phaser.cpp
     yulPhaser/Population.cpp
     yulPhaser/Program.cpp
+    yulPhaser/ProgramCache.cpp
     yulPhaser/Selections.cpp
     yulPhaser/SimulationRNG.cpp
 
@@ -170,6 +171,7 @@ set(yul_phaser_sources
     ../tools/yulPhaser/Phaser.cpp
     ../tools/yulPhaser/Population.cpp
     ../tools/yulPhaser/Program.cpp
+    ../tools/yulPhaser/ProgramCache.cpp
     ../tools/yulPhaser/Selections.cpp
     ../tools/yulPhaser/SimulationRNG.cpp
 )

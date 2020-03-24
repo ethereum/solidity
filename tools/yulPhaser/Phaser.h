@@ -45,6 +45,7 @@ class FitnessMetric;
 class GeneticAlgorithm;
 class Population;
 class Program;
+class ProgramCache;
 
 enum class Algorithm
 {
@@ -119,7 +120,8 @@ public:
 
 	static std::unique_ptr<FitnessMetric> build(
 		Options const& _options,
-		std::vector<Program> _programs
+		std::vector<Program> _programs,
+		std::vector<std::shared_ptr<ProgramCache>> _programCaches
 	);
 };
 
@@ -157,6 +159,25 @@ public:
 	static Population buildFromFile(
 		std::string const& _filePath,
 		std::shared_ptr<FitnessMetric> _fitnessMetric
+	);
+};
+
+/**
+ * Builds and validates instances of @a ProgramCache.
+ */
+class ProgramCacheFactory
+{
+public:
+	struct Options
+	{
+		bool programCacheEnabled;
+
+		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
+	};
+
+	static std::vector<std::shared_ptr<ProgramCache>> build(
+		Options const& _options,
+		std::vector<Program> _programs
 	);
 };
 
