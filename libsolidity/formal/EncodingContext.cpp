@@ -28,8 +28,8 @@ EncodingContext::EncodingContext():
 	m_thisAddress(make_unique<SymbolicAddressVariable>("this", *this))
 {
 	auto sort = make_shared<ArraySort>(
-		make_shared<Sort>(Kind::Int),
-		make_shared<Sort>(Kind::Int)
+		SortProvider::intSort,
+		SortProvider::intSort
 	);
 	m_balances = make_unique<SymbolicVariable>(sort, "balances", *this);
 }

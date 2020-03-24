@@ -100,6 +100,8 @@ set(sources
 	formal/SMTPortfolio.cpp
 	formal/SMTPortfolio.h
 	formal/SolverInterface.h
+	formal/Sorts.cpp
+	formal/Sorts.h
 	formal/SSAVariable.cpp
 	formal/SSAVariable.h
 	formal/SymbolicTypes.cpp

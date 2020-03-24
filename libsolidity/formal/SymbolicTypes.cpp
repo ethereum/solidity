@@ -32,9 +32,9 @@ SortPointer smtSort(frontend::Type const& _type)
 	switch (smtKind(_type.category()))
 	{
 	case Kind::Int:
-		return make_shared<Sort>(Kind::Int);
+		return SortProvider::intSort;
 	case Kind::Bool:
-		return make_shared<Sort>(Kind::Bool);
+		return SortProvider::boolSort;
 	case Kind::Function:
 	{
 		auto fType = dynamic_cast<frontend::FunctionType const*>(&_type);
@@ -45,10 +45,10 @@ SortPointer smtSort(frontend::Type const& _type)
 		// TODO change this when we support tuples.
 		if (returnTypes.size() == 0)
 			// We cannot declare functions without a return sort, so we use the smallest.
-			returnSort = make_shared<Sort>(Kind::Bool);
+			returnSort = SortProvider::boolSort;
 		else if (returnTypes.size() > 1)
 			// Abstract sort.
-			returnSort = make_shared<Sort>(Kind::Int);
+			returnSort = SortProvider::intSort;
 		else
 			returnSort = smtSort(*returnTypes.front());
 		return make_shared<FunctionSort>(parameterSorts, returnSort);
@@ -65,20 +65,19 @@ SortPointer smtSort(frontend::Type const& _type)
 		{
 			auto stringLitType = dynamic_cast<frontend::StringLiteralType const*>(&_type);
 			solAssert(stringLitType, "");
-			auto intSort = make_shared<Sort>(Kind::Int);
-			return make_shared<ArraySort>(intSort, intSort);
+			return make_shared<ArraySort>(SortProvider::intSort, SortProvider::intSort);
 		}
 		else
 		{
 			solAssert(isArray(_type.category()), "");
 			auto arrayType = dynamic_cast<frontend::ArrayType const*>(&_type);
 			solAssert(arrayType, "");
-			return make_shared<ArraySort>(make_shared<Sort>(Kind::Int), smtSortAbstractFunction(*arrayType->baseType()));
+			return make_shared<ArraySort>(SortProvider::intSort, smtSortAbstractFunction(*arrayType->baseType()));
 		}
 	}
 	default:
 		// Abstract case.
-		return make_shared<Sort>(Kind::Int);
+		return SortProvider::intSort;
 	}
 }
 
@@ -93,7 +92,7 @@ vector<SortPointer> smtSort(vector<frontend::TypePointer> const& _types)
 SortPointer smtSortAbstractFunction(frontend::Type const& _type)
 {
 	if (isFunction(_type.category()))
-		return make_shared<Sort>(Kind::Int);
+		return SortProvider::intSort;
 	return smtSort(_type);
 }
 
