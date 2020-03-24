@@ -18,6 +18,7 @@
 #include <libsolidity/formal/BMC.h>
 
 #include <libsolidity/formal/SMTPortfolio.h>
+#include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -376,7 +377,7 @@ void BMC::endVisit(FunctionCall const& _funCall)
 		SMTEncoder::endVisit(_funCall);
 		auto value = _funCall.arguments().front();
 		solAssert(value, "");
-		smt::Expression thisBalance = m_context.balance();
+		smt::Expression thisBalance = m_context.state().balance();
 
 		addVerificationTarget(
 			VerificationTarget::Type::Balance,
