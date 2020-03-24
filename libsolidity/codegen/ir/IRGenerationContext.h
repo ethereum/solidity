@@ -61,11 +61,12 @@ public:
 
 	MultiUseYulFunctionCollector& functionCollector() { return m_functions; }
 
-	/// Sets the current inheritance hierarchy from derived to base.
-	void setInheritanceHierarchy(std::vector<ContractDefinition const*> _hierarchy)
+	/// Sets the most derived contract (the one currently being compiled)>
+	void setMostDerivedContract(ContractDefinition const& _mostDerivedContract)
 	{
-		m_inheritanceHierarchy = std::move(_hierarchy);
+		m_mostDerivedContract = &_mostDerivedContract;
 	}
+	ContractDefinition const& mostDerivedContract() const;
 
 
 	IRVariable const& addLocalVariable(VariableDeclaration const& _varDecl);
@@ -81,7 +82,6 @@ public:
 
 	std::string functionName(FunctionDefinition const& _function);
 	std::string functionName(VariableDeclaration const& _varDecl);
-	FunctionDefinition const& virtualFunction(FunctionDefinition const& _functionDeclaration);
 	std::string virtualFunctionName(FunctionDefinition const& _functionDeclaration);
 
 	std::string newYulVariable();
@@ -103,7 +103,7 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
 	OptimiserSettings m_optimiserSettings;
-	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
+	ContractDefinition const* m_mostDerivedContract = nullptr;
 	std::map<VariableDeclaration const*, IRVariable> m_localVariables;
 	/// Storage offsets of state variables
 	std::map<VariableDeclaration const*, std::pair<u256, unsigned>> m_stateVariables;

@@ -114,15 +114,14 @@ public:
 	/// @returns the entry label of the given function. Might return an AssemblyItem of type
 	/// UndefinedItem if it does not exist yet.
 	evmasm::AssemblyItem functionEntryLabelIfExists(Declaration const& _declaration) const;
-	/// @returns the entry label of the given function and takes overrides into account.
-	FunctionDefinition const& resolveVirtualFunction(FunctionDefinition const& _function);
 	/// @returns the function that overrides the given declaration from the most derived class just
 	/// above _base in the current inheritance hierarchy.
 	FunctionDefinition const& superFunction(FunctionDefinition const& _function, ContractDefinition const& _base);
 	/// @returns the next constructor in the inheritance hierarchy.
 	FunctionDefinition const* nextConstructor(ContractDefinition const& _contract) const;
-	/// Sets the current inheritance hierarchy from derived to base.
-	void setInheritanceHierarchy(std::vector<ContractDefinition const*> const& _hierarchy) { m_inheritanceHierarchy = _hierarchy; }
+	/// Sets the contract currently being compiled - the most derived one.
+	void setMostDerivedContract(ContractDefinition const& _contract) { m_mostDerivedContract = &_contract; }
+	ContractDefinition const& mostDerivedContract() const;
 
 	/// @returns the next function in the queue of functions that are still to be compiled
 	/// (i.e. that were referenced during compilation but where we did not yet generate code for).
@@ -171,7 +170,6 @@ public:
 	/// empty return value.
 	std::pair<std::string, std::set<std::string>> requestedYulFunctions();
 
-	ModifierDefinition const& resolveVirtualFunctionModifier(ModifierDefinition const& _modifier) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
 	unsigned baseStackOffsetOfVariable(Declaration const& _declaration) const;
 	/// If supplied by a value returned by @ref baseStackOffsetOfVariable(variable), returns
@@ -315,14 +313,8 @@ public:
 	RevertStrings revertStrings() const { return m_revertStrings; }
 
 private:
-	/// Searches the inheritance hierarchy towards the base starting from @a _searchStart and returns
-	/// the first function definition that is overwritten by _function.
-	FunctionDefinition const& resolveVirtualFunction(
-		FunctionDefinition const& _function,
-		std::vector<ContractDefinition const*>::const_iterator _searchStart
-	);
-	/// @returns an iterator to the contract directly above the given contract.
-	std::vector<ContractDefinition const*>::const_iterator superContract(ContractDefinition const& _contract) const;
+	/// @returns a pointer to the contract directly above the given contract.
+	ContractDefinition const* superContract(ContractDefinition const& _contract) const;
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
 
@@ -381,8 +373,8 @@ private:
 	/// modifier is applied twice, the position of the variable needs to be restored
 	/// after the nested modifier is left.
 	std::map<Declaration const*, std::vector<unsigned>> m_localVariables;
-	/// List of current inheritance hierarchy from derived to base.
-	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
+	/// The contract currently being compiled. Virtual function lookup starts from this contarct.
+	ContractDefinition const* m_mostDerivedContract = nullptr;
 	/// Stack of current visited AST nodes, used for location attachment
 	std::stack<ASTNode const*> m_visitedNodes;
 	/// The runtime context if in Creation mode, this is used for generating tags that would be stored into the storage and then used at runtime.
