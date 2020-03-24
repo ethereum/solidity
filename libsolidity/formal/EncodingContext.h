@@ -18,6 +18,7 @@
 #pragma once
 
 #include <libsolidity/formal/SolverInterface.h>
+#include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicVariables.h>
 
 #include <unordered_map>
@@ -121,18 +122,6 @@ public:
 	bool knownGlobalSymbol(std::string const& _var) const;
 	//@}
 
-	/// Blockchain.
-	//@{
-	/// Value of `this` address.
-	Expression thisAddress();
-	/// @returns the symbolic balance of address `this`.
-	Expression balance();
-	/// @returns the symbolic balance of an address.
-	Expression balance(Expression _address);
-	/// Transfer _value from _from to _to.
-	void transfer(Expression _from, Expression _to, Expression _value);
-	//@}
-
 	/// Solver.
 	//@{
 	/// @returns conjunction of all added assertions.
@@ -148,10 +137,9 @@ public:
 	}
 	//@}
 
-private:
-	/// Adds _value to _account's balance.
-	void addBalance(Expression _account, Expression _value);
+	SymbolicState& state() { return m_state; }
 
+private:
 	/// Symbolic expressions.
 	//{@
 	/// Symbolic variables.
@@ -164,11 +152,8 @@ private:
 	/// variables and functions.
 	std::unordered_map<std::string, std::shared_ptr<smt::SymbolicVariable>> m_globalContext;
 
-	/// Symbolic `this` address.
-	std::unique_ptr<SymbolicAddressVariable> m_thisAddress;
-
-	/// Symbolic balances.
-	std::unique_ptr<SymbolicVariable> m_balances;
+	/// Symbolic representation of the blockchain state.
+	SymbolicState m_state;
 	//@}
 
 	/// Solver related.
