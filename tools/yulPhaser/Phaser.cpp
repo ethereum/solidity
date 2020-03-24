@@ -285,6 +285,7 @@ ProgramFactory::Options ProgramFactory::Options::fromCommandLine(po::variables_m
 {
 	return {
 		_arguments["input-files"].as<vector<string>>(),
+		_arguments["prefix"].as<string>(),
 	};
 }
 
@@ -300,6 +301,8 @@ vector<Program> ProgramFactory::build(Options const& _options)
 			cerr << get<ErrorList>(programOrErrors) << endl;
 			assertThrow(false, InvalidProgram, "Failed to load program " + path);
 		}
+
+		get<Program>(programOrErrors).optimise(Chromosome(_options.prefix).optimisationSteps());
 		inputPrograms.push_back(move(get<Program>(programOrErrors)));
 	}
 
@@ -348,6 +351,18 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	generalDescription.add_options()
 		("help", "Show help message and exit.")
 		("input-files", po::value<vector<string>>()->required()->value_name("<PATH>"), "Input files.")
+		(
+			"prefix",
+			po::value<string>()->value_name("<CHROMOSOME>")->default_value(""),
+			"Initial optimisation steps automatically applied to every input program.\n"
+			"The result is treated as if it was the actual input, i.e. the steps are not considered "
+			"a part of the chromosomes and cannot be mutated. The values of relative metric values "
+			"are also relative to the fitness of a program with these steps applied rather than the "
+			"fitness of the original program.\n"
+			"Note that phaser always adds a 'hgo' prefix to ensure that chromosomes can "
+			"contain arbitrary optimisation steps. This implicit prefix cannot be changed or "
+			"or removed using this option. The value given here is applied after it."
+		)
 		("seed", po::value<uint32_t>()->value_name("<NUM>"), "Seed for the random number generator.")
 		(
 			"rounds",

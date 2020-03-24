@@ -324,11 +324,14 @@ BOOST_AUTO_TEST_CASE(build_should_load_programs_from_files)
 {
 	TemporaryDirectory tempDir;
 	vector<string> sources{"{}", "{{}}", "{{{}}}"};
-	ProgramFactory::Options options{/* inputFiles = */ {
-		tempDir.memberPath("program1.yul"),
-		tempDir.memberPath("program2.yul"),
-		tempDir.memberPath("program3.yul"),
-	}};
+	ProgramFactory::Options options{
+		/* inputFiles = */ {
+			tempDir.memberPath("program1.yul"),
+			tempDir.memberPath("program2.yul"),
+			tempDir.memberPath("program3.yul"),
+		},
+		/* prefix = */ "",
+	};
 
 	for (size_t i = 0; i < sources.size(); ++i)
 	{
@@ -344,6 +347,31 @@ BOOST_AUTO_TEST_CASE(build_should_load_programs_from_files)
 		CharStream sourceStream(sources[i], options.inputFiles[i]);
 		BOOST_TEST(toString(programs[i]) == toString(get<Program>(Program::load(sourceStream))));
 	}
+}
+
+BOOST_AUTO_TEST_CASE(build_should_apply_prefix)
+{
+	TemporaryDirectory tempDir;
+	ProgramFactory::Options options{
+		/* inputFiles = */ {tempDir.memberPath("program1.yul")},
+		/* prefix = */ "f",
+	};
+
+	CharStream nestedSource("{{{let x:= 1}}}", "");
+	Program nestedProgram = get<Program>(Program::load(nestedSource));
+	Program flatProgram = get<Program>(Program::load(nestedSource));
+	flatProgram.optimise(Chromosome("f").optimisationSteps());
+	assert(toString(nestedProgram) != toString(flatProgram));
+
+	{
+		ofstream tmpFile(options.inputFiles[0]);
+		tmpFile << nestedSource.source() << endl;
+	}
+
+	vector<Program> programs = ProgramFactory::build(options);
+
+	BOOST_TEST(programs.size() == 1);
+	BOOST_TEST(toString(programs[0]) == toString(flatProgram));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
