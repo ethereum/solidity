@@ -2436,7 +2436,7 @@ void ExpressionCompiler::appendVariable(VariableDeclaration const& _variable, Ex
 	if (_variable.isConstant())
 		acceptAndConvert(*_variable.value(), *_variable.annotation().type);
 	else if (_variable.immutable())
-		solUnimplemented("");
+		setLValue<ImmutableItem>(_expression, _variable);
 	else
 		setLValueFromDeclaration(_variable, _expression);
 }

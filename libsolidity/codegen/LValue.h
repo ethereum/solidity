@@ -23,6 +23,7 @@
 #pragma once
 
 #include <libsolidity/codegen/ArrayUtils.h>
+#include <libsolutil/Common.h>
 #include <liblangutil/SourceLocation.h>
 #include <memory>
 #include <vector>
@@ -82,12 +83,12 @@ public:
 
 	unsigned sizeOnStack() const override { return 0; }
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
-	virtual void storeValue(
+	void storeValue(
 		Type const& _sourceType,
 		langutil::SourceLocation const& _location = {},
 		bool _move = false
 	) const override;
-	virtual void setToZero(
+	void setToZero(
 		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const override;
@@ -108,18 +109,42 @@ public:
 	MemoryItem(CompilerContext& _compilerContext, Type const& _type, bool _padded = true);
 	unsigned sizeOnStack() const override { return 1; }
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
-	virtual void storeValue(
+	void storeValue(
 		Type const& _sourceType,
 		langutil::SourceLocation const& _location = {},
 		bool _move = false
 	) const override;
-	virtual void setToZero(
+	void setToZero(
 		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const override;
 private:
 	/// Special flag to deal with byte array elements.
 	bool m_padded = false;
+};
+
+/**
+ * Reference to an immutable variable. During contract creation this refers to a location in memory. At the
+ * end of contract creation the values from these memory locations are copied into all occurrences of the immutable
+ * variable in the runtime code.
+ */
+class ImmutableItem: public LValue
+{
+public:
+	ImmutableItem(CompilerContext& _compilerContext, VariableDeclaration const& _variable);
+	unsigned sizeOnStack() const override { return 0; }
+	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
+	void storeValue(
+		Type const& _sourceType,
+		langutil::SourceLocation const& _location = {},
+		bool _move = false
+	) const override;
+	void setToZero(
+		langutil::SourceLocation const& _location = {},
+		bool _removeReference = true
+	) const override;
+private:
+	VariableDeclaration const& m_variable;
 };
 
 /**
@@ -136,12 +161,12 @@ public:
 	StorageItem(CompilerContext& _compilerContext, Type const& _type);
 	unsigned sizeOnStack() const override { return 2; }
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
-	virtual void storeValue(
+	void storeValue(
 		Type const& _sourceType,
 		langutil::SourceLocation const& _location = {},
 		bool _move = false
 	) const override;
-	virtual void setToZero(
+	void setToZero(
 		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const override;
@@ -158,12 +183,12 @@ public:
 	StorageByteArrayElement(CompilerContext& _compilerContext);
 	unsigned sizeOnStack() const override { return 2; }
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
-	virtual void storeValue(
+	void storeValue(
 		Type const& _sourceType,
 		langutil::SourceLocation const& _location = {},
 		bool _move = false
 	) const override;
-	virtual void setToZero(
+	void setToZero(
 		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const override;
@@ -180,12 +205,12 @@ public:
 	TupleObject(CompilerContext& _compilerContext, std::vector<std::unique_ptr<LValue>>&& _lvalues);
 	unsigned sizeOnStack() const override;
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
-	virtual void storeValue(
+	void storeValue(
 		Type const& _sourceType,
 		langutil::SourceLocation const& _location = {},
 		bool _move = false
 	) const override;
-	virtual void setToZero(
+	void setToZero(
 		langutil::SourceLocation const& _location = {},
 		bool _removeReference = true
 	) const override;
