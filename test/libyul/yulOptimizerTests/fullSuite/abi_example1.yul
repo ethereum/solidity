@@ -458,8 +458,9 @@
 }
 // ====
 // EVMVersion: >=constantinople
-// step: fullSuite
 // ----
+// step: fullSuite
+//
 // {
 //     {
 //         let _1 := 0

@@ -5,9 +5,9 @@
     function h() -> z { z := g() }
     a := h()
 }
-// ====
-// step: circularReferencesPruner
 // ----
+// step: circularReferencesPruner
+//
 // {
 //     let a
 //     a := h()

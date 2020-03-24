@@ -12,9 +12,9 @@
     }
 }
 
-// ====
-// step: wordSizeTransform
 // ----
+// step: wordSizeTransform
+//
 // {
 //     function swap(x_0, x_1, x_2, x_3, y_0, y_1, y_2, y_3) -> a_0, a_1, a_2, a_3, b_0, b_1, b_2, b_3
 //     {

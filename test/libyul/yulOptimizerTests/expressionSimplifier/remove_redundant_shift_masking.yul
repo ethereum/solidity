@@ -6,8 +6,9 @@
 }
 // ====
 // EVMVersion: >=constantinople
-// step: expressionSimplifier
 // ----
+// step: expressionSimplifier
+//
 // {
 //     let a := shr(248, calldataload(0))
 //     let b := shr(248, calldataload(0))

@@ -9,9 +9,9 @@
         sstore(10, x)
     }
 }
-// ====
-// step: conditionalUnsimplifier
 // ----
+// step: conditionalUnsimplifier
+//
 // {
 //     let x := mload(0)
 //     for { } 1 { }

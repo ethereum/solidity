@@ -16,157 +16,74 @@
 */
 
 #include <tools/yulPhaser/Exceptions.h>
-#include <tools/yulPhaser/Population.h>
-#include <tools/yulPhaser/FitnessMetrics.h>
-#include <tools/yulPhaser/GeneticAlgorithms.h>
-#include <tools/yulPhaser/Program.h>
-#include <tools/yulPhaser/SimulationRNG.h>
+#include <tools/yulPhaser/Phaser.h>
 
-#include <libsolutil/Assertions.h>
-#include <libsolutil/CommonIO.h>
-#include <liblangutil/CharStream.h>
-
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
+#include <libsolutil/Exceptions.h>
 
 #include <iostream>
-#include <string>
-
-using namespace std;
-using namespace solidity::langutil;
-using namespace solidity::phaser;
-using namespace solidity::util;
-
-namespace po = boost::program_options;
-
-namespace
-{
-
-struct CommandLineParsingResult
-{
-	int exitCode;
-	po::variables_map arguments;
-};
-
-
-void initializeRNG(po::variables_map const& arguments)
-{
-	uint32_t seed;
-	if (arguments.count("seed") > 0)
-		seed = arguments["seed"].as<uint32_t>();
-	else
-		seed = SimulationRNG::generateSeed();
-
-	SimulationRNG::reset(seed);
-	cout << "Random seed: " << seed << endl;
-}
-
-CharStream loadSource(string const& _sourcePath)
-{
-	assertThrow(boost::filesystem::exists(_sourcePath), InvalidProgram, "Source file does not exist");
-
-	string sourceCode = readFileAsString(_sourcePath);
-	return CharStream(sourceCode, _sourcePath);
-}
-
-void runAlgorithm(string const& _sourcePath)
-{
-	constexpr size_t populationSize = 20;
-	constexpr size_t minChromosomeLength = 12;
-	constexpr size_t maxChromosomeLength = 30;
-
-	CharStream sourceCode = loadSource(_sourcePath);
-	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ProgramSize>(Program::load(sourceCode), 5);
-	auto population = Population::makeRandom(
-		fitnessMetric,
-		populationSize,
-		minChromosomeLength,
-		maxChromosomeLength
-	);
-	RandomAlgorithm(
-		population,
-		cout,
-		{
-			/* elitePoolSize = */ 1.0 / populationSize,
-			/* minChromosomeLength = */ minChromosomeLength,
-			/* maxChromosomeLength = */ maxChromosomeLength,
-		}
-	).run();
-}
-
-CommandLineParsingResult parseCommandLine(int argc, char** argv)
-{
-	po::options_description description(
-		"yul-phaser, a tool for finding the best sequence of Yul optimisation phases.\n"
-		"\n"
-		"Usage: yul-phaser [options] <file>\n"
-		"Reads <file> as Yul code and tries to find the best order in which to run optimisation"
-		" phases using a genetic algorithm.\n"
-		"Example:\n"
-		"yul-phaser program.yul\n"
-		"\n"
-		"Allowed options",
-		po::options_description::m_default_line_length,
-		po::options_description::m_default_line_length - 23
-	);
-
-	description.add_options()
-		("help", "Show help message and exit.")
-		("input-file", po::value<string>()->required(), "Input file")
-		("seed", po::value<uint32_t>(), "Seed for the random number generator")
-	;
-
-	po::positional_options_description positionalDescription;
-	po::variables_map arguments;
-	positionalDescription.add("input-file", 1);
-	po::notify(arguments);
-
-	try
-	{
-		po::command_line_parser parser(argc, argv);
-		parser.options(description).positional(positionalDescription);
-		po::store(parser.run(), arguments);
-	}
-	catch (po::error const & _exception)
-	{
-		cerr << _exception.what() << endl;
-		return {1, move(arguments)};
-	}
-
-	if (arguments.count("help") > 0)
-	{
-		cout << description << endl;
-		return {2, move(arguments)};
-	}
-
-	if (arguments.count("input-file") == 0)
-	{
-		cerr << "Missing argument: input-file." << endl;
-		return {1, move(arguments)};
-	}
-
-	return {0, arguments};
-}
-
-}
 
 int main(int argc, char** argv)
 {
-	CommandLineParsingResult parsingResult = parseCommandLine(argc, argv);
-	if (parsingResult.exitCode != 0)
-		return parsingResult.exitCode;
-
-	initializeRNG(parsingResult.arguments);
-
 	try
 	{
-		runAlgorithm(parsingResult.arguments["input-file"].as<string>());
+		solidity::phaser::Phaser::main(argc, argv);
+		return 0;
 	}
-	catch (InvalidProgram const& _exception)
+	catch (boost::program_options::error const& exception)
 	{
-		cerr << "ERROR: " << _exception.what() << endl;
+		// Bad input data. Invalid command-line parameters.
+
+		std::cerr << std::endl;
+		std::cerr << "ERROR: " << exception.what() << std::endl;
 		return 1;
 	}
+	catch (solidity::phaser::BadInput const& exception)
+	{
+		// Bad input data. Syntax errors in the input program, semantic errors in command-line
+		// parameters, etc.
 
-	return 0;
+		std::cerr << std::endl;
+		std::cerr << "ERROR: " << exception.what() << std::endl;
+		return 1;
+	}
+	catch (solidity::util::Exception const& exception)
+	{
+		// Something's seriously wrong. Probably a bug in the program or a missing handler (which
+		// is really also a bug). The exception should have been handled gracefully by this point
+		// if it's something that can happen in normal usage. E.g. an error in the input or a
+		// failure of some part of the system that's outside of control of the application (disk,
+		// network, etc.). The bug should be reported and investigated so our job here is just to
+		// provide as much useful information about it as possible.
+
+		std::cerr << std::endl;
+		std::cerr << "UNCAUGHT EXCEPTION!" << std::endl;
+
+		// We can print some useful diagnostic info for this particular exception type.
+		std::cerr << "Location: " << exception.lineInfo() << std::endl;
+
+		char const* const* function = boost::get_error_info<boost::throw_function>(exception);
+		if (function != nullptr)
+			std::cerr << "Function: " << *function << std::endl;
+
+		// Let it crash. The terminate() will print some more stuff useful for debugging like
+		// what() and the actual exception type.
+		throw;
+	}
+	catch (std::exception const&)
+	{
+		// Again, probably a bug but this time it's just plain std::exception so there's no point
+		// in doing anything special. terminate() will do an adequate job.
+		std::cerr << std::endl;
+		std::cerr << "UNCAUGHT EXCEPTION!" << std::endl;
+		throw;
+	}
+	catch (...)
+	{
+		// Some people don't believe these exist.
+		// I have no idea what this is and it's flying towards me so technically speaking it's an
+		// unidentified flying object.
+		std::cerr << std::endl;
+		std::cerr << "UFO SPOTTED!" << std::endl;
+		throw;
+	}
 }

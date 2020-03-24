@@ -94,7 +94,6 @@ int registerTests(
 					{
 						stringstream errorStream;
 						auto testCase = _testCaseCreator(config);
-						testCase->validateSettings();
 						if (testCase->shouldRun())
 							switch (testCase->run(errorStream))
 							{

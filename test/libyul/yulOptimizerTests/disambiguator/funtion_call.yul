@@ -8,8 +8,9 @@
 }
 // ====
 // dialect: yul
-// step: disambiguator
 // ----
+// step: disambiguator
+//
 // {
 //     { let a, b, c, d, f }
 //     {

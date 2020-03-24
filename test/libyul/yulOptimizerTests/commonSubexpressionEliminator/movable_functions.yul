@@ -7,9 +7,9 @@
     let c := double_with_se(i)
     let d := double_with_se(i)
 }
-// ====
-// step: commonSubexpressionEliminator
 // ----
+// step: commonSubexpressionEliminator
+//
 // {
 //     function double(x) -> y
 //     { y := add(x, x) }

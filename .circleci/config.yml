@@ -122,6 +122,10 @@ defaults:
       name: command line tests
       command: ./test/cmdlineTests.sh
 
+  - run_docs_version_pragma_check: &run_docs_version_pragma_check
+      name: docs version pragma check
+      command: ./scripts/docs_version_pragma_check.sh
+
   - test_ubuntu1604_clang: &test_ubuntu1604_clang
       docker:
         - image: ethereum/solidity-buildpack-deps:ubuntu1604-clang-ossfuzz-<< pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image-rev >>
@@ -302,6 +306,18 @@ jobs:
       - run:
           name: Linting Python Scripts
           command: ./scripts/pylint_all.py
+
+  chk_antlr_grammar:
+    docker:
+      - image: buildpack-deps:eoan
+    steps:
+      - checkout
+      - run:
+          name: Install Java
+          command: apt -q update && apt install -y openjdk-14-jdk
+      - run:
+          name: Run tests
+          command: ./scripts/test_antlr_grammar.sh
 
   chk_buglist:
     docker:
@@ -605,6 +621,7 @@ jobs:
       - attach_workspace:
           at: build
       - run: *run_cmdline_tests
+      - run: *run_docs_version_pragma_check
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -768,6 +785,7 @@ workflows:
       - chk_buglist: *workflow_trigger_on_tags
       - chk_proofs: *workflow_trigger_on_tags
       - chk_pylint: *workflow_trigger_on_tags
+      - chk_antlr_grammar: *workflow_trigger_on_tags
 
       # build-only
       - b_docs: *workflow_trigger_on_tags

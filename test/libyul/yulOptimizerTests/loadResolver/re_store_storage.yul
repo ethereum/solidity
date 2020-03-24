@@ -7,9 +7,9 @@
     sstore(a, c)
     mstore(32, sload(a))
 }
-// ====
-// step: loadResolver
 // ----
+// step: loadResolver
+//
 // {
 //     let a := 0
 //     let b := 1

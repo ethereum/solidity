@@ -10,8 +10,9 @@
 }
 // ====
 // dialect: yul
-// step: functionGrouper
 // ----
+// step: functionGrouper
+//
 // {
 //     { let a }
 //     function f()

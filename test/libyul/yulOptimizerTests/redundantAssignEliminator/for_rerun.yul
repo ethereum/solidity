@@ -10,9 +10,9 @@
     }
     x := 3
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     let x
 //     x := 1

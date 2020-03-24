@@ -7,9 +7,9 @@
         a := 7
     }
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     let a := 2
 //     a := 3

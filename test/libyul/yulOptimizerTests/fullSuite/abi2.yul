@@ -1071,9 +1071,10 @@
     }
 }
 // ====
-// step: fullSuite
 // EVMVersion: >=constantinople
 // ----
+// step: fullSuite
+//
 // {
 //     {
 //         let _1 := mload(1)

@@ -879,6 +879,7 @@ public:
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_constantness == Constantness::Constant; }
+	bool immutable() const { return m_constantness == Constantness::Immutable; }
 	ASTPointer<OverrideSpecifier> const& overrides() const { return m_overrides; }
 	Location referenceLocation() const { return m_location; }
 	/// @returns a set of allowed storage locations for the variable.

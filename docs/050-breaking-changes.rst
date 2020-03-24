@@ -292,8 +292,9 @@ Consider you have the following pre-0.5.0 contract already deployed:
 
 ::
 
-    // This will not compile with the current version of the compiler
     pragma solidity ^0.4.25;
+    // This will report a warning until version 0.4.25 of the compiler
+    // This will not compile after 0.5.0
     contract OldContract {
         function someOldFunction(uint8 a) {
             //...
@@ -369,8 +370,8 @@ Old version:
 
 ::
 
-    // This will not compile
     pragma solidity ^0.4.25;
+    // This will not compile after 0.5.0
 
     contract OtherContract {
         uint x;
@@ -396,7 +397,7 @@ Old version:
             // Throw is fine in this version.
             if (x > 100)
                 throw;
-            bytes b = new bytes(x);
+            bytes memory b = new bytes(x);
             y = -3 >> 1;
             // y == -1 (wrong, should be -2)
             do {
@@ -431,14 +432,15 @@ New version:
 
 ::
 
-    pragma solidity >=0.5.0 <0.8.0;
+    pragma solidity >=0.5.0 <0.5.99;
+    // This will not compile after 0.6.0
 
     contract OtherContract {
         uint x;
         function f(uint y) external {
             x = y;
         }
-        receive() payable external {}
+        function() payable external {}
     }
 
     contract New {

@@ -18,9 +18,9 @@
     }
     }
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     for { } 1 { }
 //     {

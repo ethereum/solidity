@@ -16,9 +16,9 @@
     let y11:= ref1(y1)
     let y12:= ref3(y1)
 }
-// ====
-// step: expressionInliner
 // ----
+// step: expressionInliner
+//
 // {
 //     function ref1(a) -> x
 //     { x := add(a, 1) }

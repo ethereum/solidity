@@ -3,9 +3,9 @@
     function g() -> x { leave x := 7 }
     function h() -> x { if x { leave } }
 }
-// ====
-// step: controlFlowSimplifier
 // ----
+// step: controlFlowSimplifier
+//
 // {
 //     function f() -> x
 //     { x := 7 }

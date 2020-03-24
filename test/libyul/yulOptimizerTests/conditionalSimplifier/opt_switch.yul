@@ -7,9 +7,9 @@
 
     pop(x)
 }
-// ====
-// step: conditionalSimplifier
 // ----
+// step: conditionalSimplifier
+//
 // {
 //     let x := calldataload(0)
 //     switch x

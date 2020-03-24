@@ -5,9 +5,9 @@
     // create cannot be removed.
     let d := byte(33, create(0, 0, 0x20))
 }
-// ====
-// step: expressionSimplifier
 // ----
+// step: expressionSimplifier
+//
 // {
 //     let a := calldataload(0)
 //     let b := 0

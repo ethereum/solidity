@@ -6,9 +6,9 @@
         }
     }
 }
-// ====
-// step: splitJoin
 // ----
+// step: splitJoin
+//
 // {
 //     if mul(add(calldataload(0), 2), 3)
 //     {

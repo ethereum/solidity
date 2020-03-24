@@ -14,9 +14,9 @@
     a := 39
     mstore(sload(a), 11)
 }
-// ====
-// step: loadResolver
 // ----
+// step: loadResolver
+//
 // {
 //     let x := calldataload(1)
 //     let a := add(x, 10)

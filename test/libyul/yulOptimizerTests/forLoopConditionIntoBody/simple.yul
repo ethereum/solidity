@@ -4,9 +4,9 @@
     a := add(a, 1)
   }
 }
-// ====
-// step: forLoopConditionIntoBody
 // ----
+// step: forLoopConditionIntoBody
+//
 // {
 //     let random := 42
 //     for { let a := 1 } true { a := add(a, 1) }

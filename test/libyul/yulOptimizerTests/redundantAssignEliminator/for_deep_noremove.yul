@@ -25,9 +25,9 @@
     }
     x := 13
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     let x := 1
 //     let y := 2

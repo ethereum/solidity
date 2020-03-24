@@ -7,9 +7,9 @@
     // run of CSE afterwards.
     mstore(b, eq(calldataload(0), a))
 }
-// ====
-// step: fullSimplify
 // ----
+// step: fullSimplify
+//
 // {
 //     let a := calldataload(0)
 //     let _4 := 0

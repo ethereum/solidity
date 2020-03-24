@@ -109,7 +109,7 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     abstract contract A {
         function spam() virtual pure public;
@@ -326,7 +326,7 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract A {
 
@@ -745,7 +745,7 @@ manner as modifiers if the function declaration is long or hard to read.
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     // Base contracts just to make this compile
     contract B {
@@ -777,7 +777,7 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
 
     // Base contracts just to make this compile
@@ -1000,7 +1000,7 @@ As shown in the example below, if the contract name is `Congress` and the librar
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
 
     // Owned.sol
@@ -1034,7 +1034,7 @@ and in ``Congress.sol``::
 
 No::
 
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
 
     // owned.sol
@@ -1138,7 +1138,7 @@ multiline comment starting with `/**` and ending with `*/`.
 For example, the contract from `a simple smart contract <simple-smart-contract>`_ with the comments
 added looks like the one below::
 
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
 
     /// @author The Solidity Team

@@ -6,9 +6,9 @@
   sstore(a, b)
   function f(t, v) -> w, z {}
 }
-// ====
-// step: ssaTransform
 // ----
+// step: ssaTransform
+//
 // {
 //     let x_1, y_2 := f(1, 2)
 //     let x := x_1

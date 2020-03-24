@@ -6,6 +6,8 @@ contract C {
         return (x[start:end][index], x[start:][0:end-start][index], x[:end][start:][index]);
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f(uint256[],uint256,uint256): 0x80, 0, 0, 0, 1, 42 ->
 // f(uint256[],uint256,uint256): 0x80, 0, 1, 0, 1, 42 ->

@@ -11,9 +11,9 @@
     }
     r := 2
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     let r
 //     function f(x, y) -> a, b

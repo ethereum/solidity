@@ -15,9 +15,9 @@
         b := mload(a)
     }
 }
-// ====
-// step: ssaAndBack
 // ----
+// step: ssaAndBack
+//
 // {
 //     let a := mload(0)
 //     let b := mload(1)

@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <test/yulPhaser/Common.h>
+#include <test/yulPhaser/TestHelpers.h>
 
 #include <tools/yulPhaser/Exceptions.h>
 #include <tools/yulPhaser/Program.h>
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(copy_constructor_should_make_deep_copy_of_ast)
 		"}\n"
 	);
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
-	auto program = Program::load(sourceStream);
+	Program program = get<Program>(Program::load(sourceStream));
 
 	Program programCopy(program);
 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(load_should_rewind_the_stream)
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
 	sourceStream.setPosition(5);
 
-	auto program = Program::load(sourceStream);
+	Program program = get<Program>(Program::load(sourceStream));
 
 	BOOST_TEST(CodeSize::codeSize(program.ast()) == 2);
 }
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(load_should_disambiguate)
 		"}\n"
 	);
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
-	auto program = Program::load(sourceStream);
+	Program program = get<Program>(Program::load(sourceStream));
 
 	// skipRedundantBlocks() makes the test independent of whether load() includes function grouping or not.
 	Block const& parentBlock = skipRedundantBlocks(program.ast());
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(load_should_do_function_grouping_and_hoisting)
 		"}\n"
 	);
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
-	auto program = Program::load(sourceStream);
+	Program program = get<Program>(Program::load(sourceStream));
 
 	BOOST_TEST(program.ast().statements.size() == 3);
 	BOOST_TEST(holds_alternative<Block>(program.ast().statements[0]));
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(load_should_do_loop_init_rewriting)
 		"}\n"
 	);
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
-	auto program = Program::load(sourceStream);
+	Program program = get<Program>(Program::load(sourceStream));
 
 	// skipRedundantBlocks() makes the test independent of whether load() includes function grouping or not.
 	Block const& parentBlock = skipRedundantBlocks(program.ast());
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(load_should_throw_InvalidProgram_if_program_cant_be_parsed)
 	string sourceCode("invalid program\n");
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
 
-	BOOST_CHECK_THROW(Program::load(sourceStream), InvalidProgram);
+	BOOST_TEST(holds_alternative<ErrorList>(Program::load(sourceStream)));
 }
 
 BOOST_AUTO_TEST_CASE(load_should_throw_InvalidProgram_if_program_cant_be_analyzed)
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(load_should_throw_InvalidProgram_if_program_cant_be_analyze
 	);
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
 
-	BOOST_CHECK_THROW(Program::load(sourceStream), InvalidProgram);
+	BOOST_TEST(holds_alternative<ErrorList>(Program::load(sourceStream)));
 }
 
 BOOST_AUTO_TEST_CASE(optimise)
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(optimise)
 		"}\n"
 	);
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
-	auto program = Program::load(sourceStream);
+	Program program = get<Program>(Program::load(sourceStream));
 
 	[[maybe_unused]] Block const& parentBlockBefore = skipRedundantBlocks(program.ast());
 	assert(parentBlockBefore.statements.size() == 2);
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(output_operator)
 		"}\n"
 	);
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
-	auto program = Program::load(sourceStream);
+	Program program = get<Program>(Program::load(sourceStream));
 
 	// NOTE: The snippet above was chosen so that the few optimisations applied automatically by load()
 	// as of now do not change the code significantly. If that changes, you may have to update it.
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(toJson)
 		"}\n"
 	);
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
-	auto program = Program::load(sourceStream);
+	Program program = get<Program>(Program::load(sourceStream));
 
 	Json::Value parsingResult;
 	string errors;
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(codeSize)
 		"}\n"
 	);
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
-	auto program = Program::load(sourceStream);
+	Program program = get<Program>(Program::load(sourceStream));
 
 	BOOST_TEST(program.codeSize() == CodeSize::codeSizeIncludingFunctions(program.ast()));
 }

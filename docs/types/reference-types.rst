@@ -57,7 +57,7 @@ Data locations are not only relevant for persistency of data, but also for the s
 
 ::
 
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract C {
         // The data location of x is storage.
@@ -268,7 +268,7 @@ Array Members
 
 ::
 
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract ArrayContract {
         uint[2**20] m_aLotOfIntegers;
@@ -400,7 +400,7 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
 
 ::
 
-    pragma solidity >=0.4.99 <0.8.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract Proxy {
         /// Address of the client contract managed by proxy i.e., this contract
@@ -437,7 +437,7 @@ shown in the following example:
 
 ::
 
-    pragma solidity >=0.4.11 <0.8.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     // Defines a new type with two fields.
     // Declaring a struct outside of a contract allows

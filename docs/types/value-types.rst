@@ -301,6 +301,11 @@ The ``gas`` option is available on all three methods, while the ``value`` option
 supported for ``delegatecall``.
 
 .. note::
+    It is best to avoid relying on hardcoded gas values in your smart contract code,
+    regardless of whether state is read from or written to, as this can have many pitfalls.
+    Also, access to gas might change in the future.
+
+.. note::
     All contracts can be converted to ``address`` type, so it is possible to query the balance of the
     current contract using ``address(this).balance``.
 
@@ -645,7 +650,7 @@ External (or public) functions have the following members:
 
 Example that shows how to use the members::
 
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.6.0 <0.8.0;
     // This will report a warning
 
     contract Example {
@@ -664,7 +669,6 @@ Example that shows how to use the members::
 Example that shows how to use internal function types::
 
     pragma solidity >=0.4.16 <0.8.0;
-
 
     library ArrayUtils {
         // internal functions can be used in internal library functions because

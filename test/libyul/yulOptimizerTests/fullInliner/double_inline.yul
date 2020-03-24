@@ -4,9 +4,9 @@
     let b3, c3 := f(a1)
     let b4, c4 := f(c3)
 }
-// ====
-// step: fullInliner
 // ----
+// step: fullInliner
+//
 // {
 //     {
 //         let a_2 := calldataload(0)

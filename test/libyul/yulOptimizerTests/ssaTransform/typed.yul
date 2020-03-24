@@ -14,8 +14,9 @@
 }
 // ====
 // dialect: evmTyped
-// step: ssaTransform
 // ----
+// step: ssaTransform
+//
 // {
 //     let b_1:bool := true
 //     let b:bool := b_1

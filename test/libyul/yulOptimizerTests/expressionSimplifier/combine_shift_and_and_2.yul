@@ -10,8 +10,9 @@
 }
 // ====
 // EVMVersion: >byzantium
-// step: expressionSimplifier
 // ----
+// step: expressionSimplifier
+//
 // {
 //     let x := calldataload(0)
 //     let a := 0

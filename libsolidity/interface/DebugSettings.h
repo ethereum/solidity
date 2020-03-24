@@ -54,7 +54,7 @@ inline std::optional<RevertStrings> revertStringsFromString(std::string const& _
 	for (auto i: {RevertStrings::Default, RevertStrings::Strip, RevertStrings::Debug, RevertStrings::VerboseDebug})
 		if (revertStringsToString(i) == _str)
 			return i;
-	return {};
+	return std::nullopt;
 }
 
 }

@@ -37,59 +37,42 @@ namespace fs = boost::filesystem;
 
 
 SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVersion):
-	SolidityExecutionFramework(_evmVersion)
+	SolidityExecutionFramework(_evmVersion),
+	EVMVersionRestrictedTestCase(_filename)
 {
-	ifstream file(_filename);
-	soltestAssert(file, "Cannot open test contract: \"" + _filename + "\".");
-	file.exceptions(ios::badbit);
+	m_source = m_reader.source();
+	m_lineOffset = m_reader.lineNumber();
 
-	std::tie(m_source, m_lineOffset) = parseSourceAndSettingsWithLineNumbers(file);
-
-	if (m_settings.count("compileViaYul"))
+	string choice = m_reader.stringSetting("compileViaYul", "false");
+	if (choice == "also")
 	{
-		if (m_settings["compileViaYul"] == "also")
-		{
-			m_validatedSettings["compileViaYul"] = m_settings["compileViaYul"];
-			m_runWithYul = true;
-			m_runWithoutYul = true;
-		}
-		else
-		{
-			m_validatedSettings["compileViaYul"] = "only";
-			m_runWithYul = true;
-			m_runWithoutYul = false;
-		}
-		m_settings.erase("compileViaYul");
+		m_runWithYul = true;
+		m_runWithoutYul = true;
 	}
-	if (m_settings.count("ABIEncoderV1Only"))
+	else if (choice == "true")
 	{
-		if (m_settings["ABIEncoderV1Only"] == "true")
-		{
-			m_validatedSettings["ABIEncoderV1Only"] = "true";
-			m_runWithABIEncoderV1Only = true;
-		}
-		m_settings.erase("ABIEncoderV1Only");
+		m_runWithYul = true;
+		m_runWithoutYul = false;
 	}
+	else if (choice == "false")
+	{
+		m_runWithYul = false;
+		m_runWithoutYul = true;
+	}
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid compileViaYul value: " + choice + "."));
 
+	m_runWithABIEncoderV1Only = m_reader.boolSetting("ABIEncoderV1Only", false);
 	if (m_runWithABIEncoderV1Only && solidity::test::CommonOptions::get().useABIEncoderV2)
 		m_shouldRun = false;
 
-	if (m_settings.count("revertStrings"))
-	{
-		auto revertStrings = revertStringsFromString(m_settings["revertStrings"]);
-		if (revertStrings)
-			m_revertStrings = *revertStrings;
-		m_validatedSettings["revertStrings"] = revertStringsToString(m_revertStrings);
-		m_settings.erase("revertStrings");
-	}
+	auto revertStrings = revertStringsFromString(m_reader.stringSetting("revertStrings", "default"));
+	soltestAssert(revertStrings, "Invalid revertStrings setting.");
+	m_revertStrings = revertStrings.value();
 
-	if (m_settings.count("allowNonExistingFunctions"))
-	{
-		m_validatedSettings["allowNonExistingFunctions"] = true;
-		m_settings.erase("allowNonExistingFunctions");
-	}
+	m_allowNonExistingFunctions = m_reader.boolSetting("allowNonExistingFunctions", false);
 
-	parseExpectations(file);
+	parseExpectations(m_reader.stream());
 	soltestAssert(!m_tests.empty(), "No tests specified in " + _filename);
 }
 
@@ -152,7 +135,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 				else
 				{
 					soltestAssert(
-						m_validatedSettings.count("allowNonExistingFunctions") || m_compiler.methodIdentifiers(m_compiler.lastContractName()).isMember(test.call().signature),
+						m_allowNonExistingFunctions || m_compiler.methodIdentifiers(m_compiler.lastContractName()).isMember(test.call().signature),
 						"The function " + test.call().signature + " is not known to the compiler"
 					);
 

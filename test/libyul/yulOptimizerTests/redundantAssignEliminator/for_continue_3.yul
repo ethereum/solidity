@@ -11,9 +11,9 @@
         x := 3
     }
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     let x
 //     for { } calldataload(0) { mstore(x, 0x42) }

@@ -7,8 +7,9 @@
 }
 // ====
 // dialect: yul
-// step: functionHoister
 // ----
+// step: functionHoister
+//
 // {
 //     let a
 //     let c

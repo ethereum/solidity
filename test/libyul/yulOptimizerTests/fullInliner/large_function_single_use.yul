@@ -10,9 +10,9 @@
     // Single-use functions are always inlined.
     let r := f(mload(1))
 }
-// ====
-// step: fullInliner
 // ----
+// step: fullInliner
+//
 // {
 //     {
 //         let a_6 := mload(1)

@@ -6,8 +6,9 @@
 }
 // ====
 // dialect: yul
-// step: conditionalSimplifier
 // ----
+// step: conditionalSimplifier
+//
 // {
 //     let y:bool := false
 //     for { } true { }

@@ -7,9 +7,9 @@
 	}
 	let b := x
 }
-// ====
-// step: rematerialiser
 // ----
+// step: rematerialiser
+//
 // {
 //     let x
 //     {

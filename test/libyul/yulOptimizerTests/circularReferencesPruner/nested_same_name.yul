@@ -8,7 +8,7 @@
     	function y() -> x { x := z() }
     }
 }
-// ====
-// step: circularReferencesPruner
 // ----
+// step: circularReferencesPruner
+//
 // { }

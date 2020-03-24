@@ -41,7 +41,7 @@ without a compiler change.
 
 .. code::
 
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
     library GetCode {
         function at(address _addr) public view returns (bytes memory o_code) {
@@ -136,7 +136,7 @@ Local Solidity variables are available for assignments, for example:
 
 .. code::
 
-    pragma solidity >=0.4.11 <0.8.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract C {
         uint b;

@@ -4,9 +4,10 @@
   }
 }
 // ====
-// step: expressionSimplifier
 // EVMVersion: >byzantium
 // ----
+// step: expressionSimplifier
+//
 // {
 //     for { } div(create(0, 1, 0), shl(msize(), 1)) { }
 //     { }

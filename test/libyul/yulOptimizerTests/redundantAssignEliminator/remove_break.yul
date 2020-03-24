@@ -11,9 +11,9 @@
         mstore(0, x)
     }
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     let i := 0
 //     for { } lt(i, 2) { i := add(i, 1) }

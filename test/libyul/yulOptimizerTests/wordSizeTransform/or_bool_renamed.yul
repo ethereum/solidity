@@ -2,9 +2,9 @@
     let or_bool := 2
     if or_bool { sstore(0, 1) }
 }
-// ====
-// step: wordSizeTransform
 // ----
+// step: wordSizeTransform
+//
 // {
 //     let or_bool_3_0 := 0
 //     let or_bool_3_1 := 0

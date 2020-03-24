@@ -7,9 +7,9 @@
 		}
 	}
 }
-// ====
-// step: expressionSplitter
 // ----
+// step: expressionSplitter
+//
 // {
 //     let _1 := 0
 //     let x := calldataload(_1)

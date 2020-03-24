@@ -7,9 +7,9 @@
     }
     sstore(0, x)
 }
-// ====
-// step: conditionalUnsimplifier
 // ----
+// step: conditionalUnsimplifier
+//
 // {
 //     let x
 //     for { } x { sstore(1, x) }

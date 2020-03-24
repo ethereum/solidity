@@ -141,7 +141,7 @@ struct MeanSigma
 double const d = 0;
 int i = 0;
 int j = 0;
-char* s;
+char* s = nullptr;
 MeanAndSigma ms meanAndSigma(std::vector<float> const& _v, Accuracy _a);
 Derived* x = dynamic_cast<Derived*>(base);
 for (auto i = x->begin(); i != x->end(); ++i) {}

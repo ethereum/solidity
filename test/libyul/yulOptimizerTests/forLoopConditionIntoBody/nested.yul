@@ -13,9 +13,9 @@
     mstore(b,b)
   }
 }
-// ====
-// step: forLoopConditionIntoBody
 // ----
+// step: forLoopConditionIntoBody
+//
 // {
 //     let random := 42
 //     for {

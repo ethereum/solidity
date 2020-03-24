@@ -7,9 +7,9 @@
     }
     sstore(0, mload(2))
 }
-// ====
-// step: loadResolver
 // ----
+// step: loadResolver
+//
 // {
 //     let _1 := 3
 //     let _2 := 2

@@ -19,9 +19,9 @@
   mstore(17, or(x, not(x)))
   mstore(18, or(not(x), x))
 }
-// ====
-// step: fullSimplify
 // ----
+// step: fullSimplify
+//
 // {
 //     mstore(1, 0)
 //     mstore(2, 0)

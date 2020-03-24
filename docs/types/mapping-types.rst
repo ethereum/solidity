@@ -66,7 +66,7 @@ The example below uses ``_allowances`` to record the amount someone else is allo
 
 ::
 
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     contract MappingExample {
 
@@ -120,7 +120,7 @@ the ``sum`` function iterates over to sum all the values.
 
 ::
 
-    pragma solidity >=0.5.99 <0.8.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     struct IndexValue { uint keyIndex; uint value; }
     struct KeyFlag { uint key; bool deleted; }

@@ -7,9 +7,9 @@
   let s := 3
   let t
 }
-// ====
-// step: varDeclInitializer
 // ----
+// step: varDeclInitializer
+//
 // {
 //     function f() -> x, y
 //     {

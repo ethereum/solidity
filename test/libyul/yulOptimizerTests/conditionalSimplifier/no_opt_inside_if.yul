@@ -3,9 +3,9 @@
     if x { sstore(0, x) }
     sstore(1, x)
 }
-// ====
-// step: conditionalSimplifier
 // ----
+// step: conditionalSimplifier
+//
 // {
 //     let x := mload(0)
 //     if x { sstore(0, x) }

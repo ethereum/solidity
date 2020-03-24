@@ -4,9 +4,9 @@
 	}
 	f(mload(0))
 }
-// ====
-// step: fullInliner
 // ----
+// step: fullInliner
+//
 // {
 //     {
 //         let a_3 := mload(0)

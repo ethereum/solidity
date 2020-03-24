@@ -2,9 +2,9 @@
     let a := gas()
     let b := gas()
 }
-// ====
-// step: commonSubexpressionEliminator
 // ----
+// step: commonSubexpressionEliminator
+//
 // {
 //     let a := gas()
 //     let b := gas()

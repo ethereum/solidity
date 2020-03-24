@@ -81,7 +81,7 @@ as it uses ``call`` which forwards all remaining gas by default:
 
 ::
 
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.6.2 <0.8.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
@@ -277,7 +277,7 @@ field of a ``struct`` that is the base type of a dynamic storage array.  The
 
 ::
 
-    pragma solidity >=0.5.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract Map {
         mapping (uint => uint)[] array;

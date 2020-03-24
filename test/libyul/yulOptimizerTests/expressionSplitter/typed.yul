@@ -11,8 +11,9 @@
 }
 // ====
 // dialect: ewasm
-// step: expressionSplitter
 // ----
+// step: expressionSplitter
+//
 // {
 //     function fun(x:i32, y) -> t:i32, z:i32
 //     {

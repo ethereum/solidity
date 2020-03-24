@@ -19,14 +19,13 @@
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmParser.h>
 
-#include <libyul/backends/wasm/WasmDialect.h>
-#include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/backends/wasm/WasmDialect.h>
-
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/Exceptions.h>
 
+#include <test/libyul/Common.h>
 #include <test/libyul/SyntaxTest.h>
+
+#include <test/Common.h>
 
 using namespace std;
 using namespace solidity;
@@ -34,46 +33,8 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul::test;
 
-namespace
-{
-std::map<string const, yul::Dialect const& (*)(langutil::EVMVersion)> const validDialects = {
-	{
-		"evm",
-		[](langutil::EVMVersion _evmVersion) -> yul::Dialect const&
-		{ return yul::EVMDialect::strictAssemblyForEVM(_evmVersion); }
-	},
-	{
-		"evmTyped",
-		[](langutil::EVMVersion _evmVersion) -> yul::Dialect const&
-		{ return yul::EVMDialectTyped::instance(_evmVersion); }
-	},
-	{
-		"yul",
-		[](langutil::EVMVersion) -> yul::Dialect const&
-		{ return yul::Dialect::yulDeprecated(); }
-	},
-	{
-		"ewasm",
-		[](langutil::EVMVersion) -> yul::Dialect const&
-		{ return yul::WasmDialect::instance(); }
-	}
-};
-
-vector<string> validDialectNames()
-{
-	vector<string> names{size(validDialects), ""};
-	transform(begin(validDialects), end(validDialects), names.begin(), [](auto const& dialect) { return dialect.first; });
-
-	return names;
-}
-}
-
 void SyntaxTest::parseAndAnalyze()
 {
-	string dialectName = m_validatedSettings.count("dialect") ? m_validatedSettings["dialect"] : "evmTyped";
-
-	yul::Dialect const& dialect = validDialects.at(dialectName)(m_evmVersion);
-
 	if (m_sources.size() != 1)
 		BOOST_THROW_EXCEPTION(runtime_error{"Expected only one source for yul test."});
 
@@ -84,12 +45,12 @@ void SyntaxTest::parseAndAnalyze()
 	ErrorReporter errorReporter{errorList};
 
 	auto scanner = make_shared<Scanner>(CharStream(source, name));
-	auto parserResult = yul::Parser(errorReporter, dialect).parse(scanner, false);
+	auto parserResult = yul::Parser(errorReporter, *m_dialect).parse(scanner, false);
 
 	if (parserResult)
 	{
 		yul::AsmAnalysisInfo analysisInfo;
-		yul::AsmAnalyzer(analysisInfo, errorReporter, dialect).analyze(*parserResult);
+		yul::AsmAnalyzer(analysisInfo, errorReporter, *m_dialect).analyze(*parserResult);
 	}
 
 	for (auto const& error: errorList)
@@ -114,23 +75,9 @@ void SyntaxTest::parseAndAnalyze()
 
 }
 
-void SyntaxTest::validateSettings()
+SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion):
+	CommonSyntaxTest(_filename, _evmVersion)
 {
-	CommonSyntaxTest::validateSettings();
-
-	if (!m_settings.count("dialect"))
-		return;
-
-	string const dialect = m_settings["dialect"];
-	m_validatedSettings["dialect"] = dialect;
-	m_settings.erase("dialect");
-
-	if (!validDialects.count(dialect))
-		BOOST_THROW_EXCEPTION(runtime_error{
-			"Invalid Dialect \"" +
-			dialect +
-			"\". Valid dialects are " +
-			joinHumanReadable(validDialectNames(), ", ", " and ") +
-			"."
-		});
+	string dialectName = m_reader.stringSetting("dialect", "evmTyped");
+	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
 }
