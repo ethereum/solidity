@@ -24,6 +24,7 @@
 #include <tools/yulPhaser/Population.h>
 #include <tools/yulPhaser/ProgramCache.h>
 
+#include <ctime>
 #include <optional>
 #include <ostream>
 
@@ -47,6 +48,10 @@ public:
 		bool randomiseDuplicates = false;
 		std::optional<size_t> minChromosomeLength = std::nullopt;
 		std::optional<size_t> maxChromosomeLength = std::nullopt;
+		bool showInitialPopulation = false;
+		bool showOnlyTopChromosome = false;
+		bool showRoundInfo = true;
+		bool showCacheStats = false;
 	};
 
 	AlgorithmRunner(
@@ -66,6 +71,13 @@ public:
 	Population const& population() const { return m_population; }
 
 private:
+	void printRoundSummary(
+		size_t _round,
+		clock_t _roundTimeStart,
+		clock_t _totalTimeStart
+	) const;
+	void printInitialPopulation() const;
+	void printCacheStats() const;
 	void populationAutosave() const;
 	void randomiseDuplicates();
 	void cacheClear();

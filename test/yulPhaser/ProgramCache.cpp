@@ -71,6 +71,15 @@ protected:
 BOOST_AUTO_TEST_SUITE(Phaser)
 BOOST_AUTO_TEST_SUITE(ProgramCacheTest)
 
+BOOST_AUTO_TEST_CASE(CacheStats_operator_plus_should_add_stats_together)
+{
+	CacheStats statsA{11, 12, 13, {{1, 14}, {2, 15}}};
+	CacheStats statsB{21, 22, 23, {{2, 24}, {3, 25}}};
+	CacheStats statsC{32, 34, 36, {{1, 14}, {2, 39}, {3, 25}}};
+
+	BOOST_CHECK(statsA + statsB == statsC);
+}
+
 BOOST_FIXTURE_TEST_CASE(optimiseProgram_should_apply_optimisation_steps_to_program, ProgramCacheFixture)
 {
 	Program expectedProgram = optimisedProgram(m_program, "IuO");
@@ -199,6 +208,45 @@ BOOST_FIXTURE_TEST_CASE(startRound_should_remove_entries_older_than_two_rounds, 
 
 	BOOST_TEST(m_programCache.currentRound() == 3);
 	BOOST_TEST(m_programCache.size() == 0);
+}
+
+BOOST_FIXTURE_TEST_CASE(gatherStats_should_return_cache_statistics, ProgramCacheFixture)
+{
+	size_t sizeI = optimisedProgram(m_program, "I").codeSize();
+	size_t sizeIu = optimisedProgram(m_program, "Iu").codeSize();
+	size_t sizeIuO = optimisedProgram(m_program, "IuO").codeSize();
+	size_t sizeL = optimisedProgram(m_program, "L").codeSize();
+	size_t sizeLT = optimisedProgram(m_program, "LT").codeSize();
+
+	m_programCache.optimiseProgram("L");
+	m_programCache.optimiseProgram("Iu");
+	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"L", "I", "Iu"}));
+	CacheStats expectedStats1{0, 3, sizeL + sizeI + sizeIu, {{0, 3}}};
+	BOOST_CHECK(m_programCache.gatherStats() == expectedStats1);
+
+	m_programCache.optimiseProgram("IuO");
+	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"L", "I", "Iu", "IuO"}));
+	CacheStats expectedStats2{2, 4, sizeL + sizeI + sizeIu + sizeIuO, {{0, 4}}};
+	BOOST_CHECK(m_programCache.gatherStats() == expectedStats2);
+
+	m_programCache.startRound(1);
+	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"L", "I", "Iu", "IuO"}));
+	BOOST_CHECK(m_programCache.gatherStats() == expectedStats2);
+
+	m_programCache.optimiseProgram("IuO");
+	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"L", "I", "Iu", "IuO"}));
+	CacheStats expectedStats3{5, 4, sizeL + sizeI + sizeIu + sizeIuO, {{0, 1}, {1, 3}}};
+	BOOST_CHECK(m_programCache.gatherStats() == expectedStats3);
+
+	m_programCache.startRound(2);
+	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"I", "Iu", "IuO"}));
+	CacheStats expectedStats4{5, 4, sizeI + sizeIu + sizeIuO, {{1, 3}}};
+	BOOST_CHECK(m_programCache.gatherStats() == expectedStats4);
+
+	m_programCache.optimiseProgram("LT");
+	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"L", "LT", "I", "Iu", "IuO"}));
+	CacheStats expectedStats5{5, 6, sizeL + sizeLT + sizeI + sizeIu + sizeIuO, {{1, 3}, {2, 2}}};
+	BOOST_CHECK(m_programCache.gatherStats() == expectedStats5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

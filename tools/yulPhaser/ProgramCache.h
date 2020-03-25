@@ -40,6 +40,23 @@ struct CacheEntry
 };
 
 /**
+ * Stores statistics about current cache usage.
+ */
+struct CacheStats
+{
+	size_t hits;
+	size_t misses;
+	size_t totalCodeSize;
+	std::map<size_t, size_t> roundEntryCounts;
+
+	CacheStats& operator+=(CacheStats const& _other);
+	CacheStats operator+(CacheStats const& _other) const { return CacheStats(*this) += _other; }
+
+	bool operator==(CacheStats const& _other) const;
+	bool operator!=(CacheStats const& _other) const { return !(*this == _other); }
+};
+
+/**
  * Class that optimises programs one step at a time which allows it to store and later reuse the
  * results of the intermediate steps.
  *
@@ -48,6 +65,8 @@ struct CacheEntry
  * can be purged. The current strategy is to store programs corresponding to all possible prefixes
  * encountered in the current and the previous rounds. Entries older than that get removed to
  * conserve memory.
+ *
+ * @a gatherStats() allows getting statistics useful for determining cache effectiveness.
  *
  * The current strategy does speed things up (about 4:1 hit:miss ratio observed in my limited
  * experiments) but there's room for improvement. We could fit more useful programs in
@@ -74,11 +93,16 @@ public:
 	Program const* find(std::string const& _abbreviatedOptimisationSteps) const;
 	bool contains(std::string const& _abbreviatedOptimisationSteps) const { return find(_abbreviatedOptimisationSteps) != nullptr; }
 
+	CacheStats gatherStats() const;
+
 	std::map<std::string, CacheEntry> const& entries() const { return m_entries; };
 	Program const& program() const { return m_program; }
 	size_t currentRound() const { return m_currentRound; }
 
 private:
+	size_t calculateTotalCachedCodeSize() const;
+	std::map<size_t, size_t> countRoundEntries() const;
+
 	// The best matching data structure here would be a trie of chromosome prefixes but since
 	// the programs are orders of magnitude larger than the prefixes, it does not really matter.
 	// A map should be good enough.
@@ -86,6 +110,8 @@ private:
 
 	Program m_program;
 	size_t m_currentRound = 0;
+	size_t m_hits = 0;
+	size_t m_misses = 0;
 };
 
 }

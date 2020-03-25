@@ -47,6 +47,13 @@ class Population;
 class Program;
 class ProgramCache;
 
+enum class PhaserMode
+{
+	RunAlgorithm,
+	PrintOptimisedPrograms,
+	PrintOptimisedASTs,
+};
+
 enum class Algorithm
 {
 	Random,
@@ -67,6 +74,8 @@ enum class MetricAggregatorChoice
 	Minimum,
 };
 
+std::istream& operator>>(std::istream& _inputStream, solidity::phaser::PhaserMode& _phaserMode);
+std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::PhaserMode _phaserMode);
 std::istream& operator>>(std::istream& _inputStream, solidity::phaser::Algorithm& _algorithm);
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::Algorithm _algorithm);
 std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricChoice& _metric);
@@ -223,7 +232,18 @@ private:
 	static void initialiseRNG(boost::program_options::variables_map const& _arguments);
 	static AlgorithmRunner::Options buildAlgorithmRunnerOptions(boost::program_options::variables_map const& _arguments);
 
-	static void runAlgorithm(boost::program_options::variables_map const& _arguments);
+	static void runPhaser(boost::program_options::variables_map const& _arguments);
+	static void runAlgorithm(
+		boost::program_options::variables_map const& _arguments,
+		Population _population,
+		std::vector<std::shared_ptr<ProgramCache>> _programCaches
+	);
+	static void printOptimisedProgramsOrASTs(
+		boost::program_options::variables_map const& _arguments,
+		Population const& _population,
+		std::vector<Program> _programs,
+		PhaserMode phaserMode
+	);
 };
 
 }
