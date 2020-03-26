@@ -33,10 +33,6 @@ class Population;
 
 }
 
-// This operator+ must be declared in the global namespace. Otherwise it would shadow global
-// operator+ overloads from CommonData.h (e.g. the one for vector) in the namespace it was declared in.
-solidity::phaser::Population operator+(solidity::phaser::Population _a, solidity::phaser::Population _b);
-
 namespace solidity::phaser
 {
 
@@ -108,7 +104,8 @@ public:
 	Population select(Selection const& _selection) const;
 	Population mutate(Selection const& _selection, std::function<Mutation> _mutation) const;
 	Population crossover(PairSelection const& _selection, std::function<Crossover> _crossover) const;
-	friend Population (::operator+)(Population _a, Population _b);
+
+	friend Population operator+(Population _a, Population _b);
 
 	std::shared_ptr<FitnessMetric> fitnessMetric() { return m_fitnessMetric; }
 	std::vector<Individual> const& individuals() const { return m_individuals; }
