@@ -110,7 +110,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	t("functions", m_context.functionCollector().requestedFunctions());
 
 	resetContext(_contract);
-	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	m_context.setMostDerivedContract(_contract);
 	t("RuntimeObject", runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
 	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
@@ -389,7 +389,7 @@ void IRGenerator::resetContext(ContractDefinition const& _contract)
 	);
 	m_context = IRGenerationContext(m_evmVersion, m_context.revertStrings(), m_optimiserSettings);
 
-	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	m_context.setMostDerivedContract(_contract);
 	for (auto const& var: ContractType(_contract).stateVariables())
 		m_context.addStateVariable(*get<0>(var), get<1>(var), get<2>(var));
 }

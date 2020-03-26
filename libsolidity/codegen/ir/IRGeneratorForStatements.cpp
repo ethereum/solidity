@@ -1165,7 +1165,7 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 		return;
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
-		define(_identifier) << to_string(m_context.virtualFunction(*functionDef).id()) << "\n";
+		define(_identifier) << to_string(functionDef->resolveVirtual(m_context.mostDerivedContract()).id()) << "\n";
 	else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
 		// TODO for the constant case, we have to be careful:

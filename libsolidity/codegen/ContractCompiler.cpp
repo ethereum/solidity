@@ -129,7 +129,7 @@ void ContractCompiler::initializeContext(
 {
 	m_context.setExperimentalFeatures(_contract.sourceUnit().annotation().experimentalFeatures);
 	m_context.setOtherCompilers(_otherCompilers);
-	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	m_context.setMostDerivedContract(_contract);
 	if (m_runtimeCompiler)
 		registerImmutableVariables(_contract);
 	CompilerUtils(m_context).initialiseFreeMemoryPointer();
@@ -689,7 +689,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(decl))
 			{
 				solAssert(!ref->second.isOffset && !ref->second.isSlot, "");
-				functionDef = &m_context.resolveVirtualFunction(*functionDef);
+				functionDef = &functionDef->resolveVirtual(m_context.mostDerivedContract());
 				auto functionEntryLabel = m_context.functionEntryLabel(*functionDef).pushTag();
 				solAssert(functionEntryLabel.data() <= std::numeric_limits<size_t>::max(), "");
 				_assembly.appendLabelReference(size_t(functionEntryLabel.data()));
@@ -1335,10 +1335,9 @@ void ContractCompiler::appendModifierOrFunctionCode()
 			appendModifierOrFunctionCode();
 		else
 		{
-			ModifierDefinition const& nonVirtualModifier = dynamic_cast<ModifierDefinition const&>(
+			ModifierDefinition const& modifier = dynamic_cast<ModifierDefinition const&>(
 				*modifierInvocation->name()->annotation().referencedDeclaration
-			);
-			ModifierDefinition const& modifier = m_context.resolveVirtualFunctionModifier(nonVirtualModifier);
+			).resolveVirtual(m_context.mostDerivedContract());
 			CompilerContext::LocationSetter locationSetter(m_context, modifier);
 			std::vector<ASTPointer<Expression>> const& modifierArguments =
 				modifierInvocation->arguments() ? *modifierInvocation->arguments() : std::vector<ASTPointer<Expression>>();

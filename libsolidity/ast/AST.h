@@ -689,6 +689,18 @@ public:
 
 	CallableDeclarationAnnotation& annotation() const override = 0;
 
+	/// Performs virtual or super function/modifier lookup:
+	/// If @a _searchStart is nullptr, performs virtual function lookup, i.e.
+	/// searches the inheritance hierarchy of @a _mostDerivedContract towards the base
+	/// and returns the first function/modifier definition that
+	/// is overwritten by this callable.
+	/// If @a _searchStart is non-null, starts searching only from that contract, but
+	/// still in the hierarchy of @a _mostDerivedContract.
+	virtual CallableDeclaration const& resolveVirtual(
+		ContractDefinition const& _mostDerivedContract,
+		ContractDefinition const* _searchStart = nullptr
+	) const = 0;
+
 protected:
 	ASTPointer<ParameterList> m_parameters;
 	ASTPointer<OverrideSpecifier> m_overrides;
@@ -799,6 +811,12 @@ public:
 			CallableDeclaration::virtualSemantics() ||
 			(annotation().contract && annotation().contract->isInterface());
 	}
+
+	FunctionDefinition const& resolveVirtual(
+		ContractDefinition const& _mostDerivedContract,
+		ContractDefinition const* _searchStart = nullptr
+	) const override;
+
 private:
 	StateMutability m_stateMutability;
 	Token const m_kind;
@@ -945,6 +963,12 @@ public:
 
 	ModifierDefinitionAnnotation& annotation() const override;
 
+	ModifierDefinition const& resolveVirtual(
+		ContractDefinition const& _mostDerivedContract,
+		ContractDefinition const* _searchStart = nullptr
+	) const override;
+
+
 private:
 	ASTPointer<Block> m_body;
 };
@@ -1009,6 +1033,14 @@ public:
 	bool isVisibleViaContractTypeAccess() const override { return false; /* TODO */ }
 
 	EventDefinitionAnnotation& annotation() const override;
+
+	CallableDeclaration const& resolveVirtual(
+		ContractDefinition const&,
+		ContractDefinition const*
+	) const override
+	{
+		solAssert(false, "Tried to resolve virtual event.");
+	}
 
 private:
 	bool m_anonymous = false;
