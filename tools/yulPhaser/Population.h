@@ -29,13 +29,6 @@
 namespace solidity::phaser
 {
 
-class Population;
-
-}
-
-namespace solidity::phaser
-{
-
 class PairSelection;
 class Selection;
 
