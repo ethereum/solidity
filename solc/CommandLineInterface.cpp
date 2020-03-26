@@ -34,6 +34,7 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/interface/DebugSettings.h>
+#include <libsolidity/interface/StorageLayout.h>
 
 #include <libyul/AssemblyStack.h>
 
@@ -147,6 +148,7 @@ static string const g_strOptimizeYul = "optimize-yul";
 static string const g_strOutputDir = "output-dir";
 static string const g_strOverwrite = "overwrite";
 static string const g_strRevertStrings = "revert-strings";
+static string const g_strStorageLayout = "storage-layout";
 
 /// Possible arguments to for --revert-strings
 static set<string> const g_revertStringsArgs
@@ -207,6 +209,7 @@ static string const g_argOptimizeRuns = g_strOptimizeRuns;
 static string const g_argOutputDir = g_strOutputDir;
 static string const g_argSignatureHashes = g_strSignatureHashes;
 static string const g_argStandardJSON = g_strStandardJSON;
+static string const g_argStorageLayout = g_strStorageLayout;
 static string const g_argStrictAssembly = g_strStrictAssembly;
 static string const g_argVersion = g_strVersion;
 static string const g_stdinFileName = g_stdinFileNameStr;
@@ -231,7 +234,8 @@ static set<string> const g_combinedJsonArgs
 	g_strOpcodes,
 	g_strSignatureHashes,
 	g_strSrcMap,
-	g_strSrcMapRuntime
+	g_strSrcMapRuntime,
+	g_strStorageLayout
 };
 
 /// Possible arguments to for --machine
@@ -293,7 +297,8 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argNatspecUser,
 		g_argNatspecDev,
 		g_argOpcodes,
-		g_argSignatureHashes
+		g_argSignatureHashes,
+		g_argStorageLayout
 	})
 		if (_args.count(arg))
 			return true;
@@ -431,6 +436,18 @@ void CommandLineInterface::handleABI(string const& _contract)
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".abi", data);
 	else
 		sout() << "Contract JSON ABI" << endl << data << endl;
+}
+
+void CommandLineInterface::handleStorageLayout(string const& _contract)
+{
+	if (!m_args.count(g_argStorageLayout))
+		return;
+
+	string data = jsonCompactPrint(m_compiler->storageLayout(_contract));
+	if (m_args.count(g_argOutputDir))
+		createFile(m_compiler->filesystemFriendlyName(_contract) + "_storage.json", data);
+	else
+		sout() << "Contract Storage Layout:" << endl << data << endl;
 }
 
 void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contract)
@@ -833,7 +850,8 @@ Allowed options)",
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
-		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.");
+		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
+		(g_argStorageLayout.c_str(), "Slots, offsets and types of the contract's state variables.");
 	desc.add(outputComponents);
 
 	po::options_description allOptions = desc;
@@ -1276,6 +1294,8 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count(g_strAsm) && m_compiler->compilationSuccessful())
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
+		if (requests.count(g_strStorageLayout) && m_compiler->compilationSuccessful())
+			contractData[g_strStorageLayout] = jsonCompactPrint(m_compiler->storageLayout(contractName));
 		if (requests.count(g_strSrcMap) && m_compiler->compilationSuccessful())
 		{
 			auto map = m_compiler->sourceMapping(contractName);
@@ -1653,6 +1673,7 @@ void CommandLineInterface::outputCompilationResults()
 		handleSignatureHashes(contract);
 		handleMetadata(contract);
 		handleABI(contract);
+		handleStorageLayout(contract);
 		handleNatspec(true, contract);
 		handleNatspec(false, contract);
 	} // end of contracts iteration
