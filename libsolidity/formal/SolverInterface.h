@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <libsolidity/formal/Sorts.h>
+
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/Exceptions.h>
@@ -50,94 +52,6 @@ struct SMTSolverChoice
 enum class CheckResult
 {
 	SATISFIABLE, UNSATISFIABLE, UNKNOWN, CONFLICTING, ERROR
-};
-
-enum class Kind
-{
-	Int,
-	Bool,
-	Function,
-	Array,
-	Sort
-};
-
-struct Sort
-{
-	Sort(Kind _kind):
-		kind(_kind) {}
-	virtual ~Sort() = default;
-	virtual bool operator==(Sort const& _other) const { return kind == _other.kind; }
-
-	Kind const kind;
-};
-using SortPointer = std::shared_ptr<Sort>;
-
-struct FunctionSort: public Sort
-{
-	FunctionSort(std::vector<SortPointer> _domain, SortPointer _codomain):
-		Sort(Kind::Function), domain(std::move(_domain)), codomain(std::move(_codomain)) {}
-	bool operator==(Sort const& _other) const override
-	{
-		if (!Sort::operator==(_other))
-			return false;
-		auto _otherFunction = dynamic_cast<FunctionSort const*>(&_other);
-		solAssert(_otherFunction, "");
-		if (domain.size() != _otherFunction->domain.size())
-			return false;
-		if (!std::equal(
-			domain.begin(),
-			domain.end(),
-			_otherFunction->domain.begin(),
-			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
-		))
-			return false;
-		solAssert(codomain, "");
-		solAssert(_otherFunction->codomain, "");
-		return *codomain == *_otherFunction->codomain;
-	}
-
-	std::vector<SortPointer> domain;
-	SortPointer codomain;
-};
-
-struct ArraySort: public Sort
-{
-	/// _domain is the sort of the indices
-	/// _range is the sort of the values
-	ArraySort(SortPointer _domain, SortPointer _range):
-		Sort(Kind::Array), domain(std::move(_domain)), range(std::move(_range)) {}
-	bool operator==(Sort const& _other) const override
-	{
-		if (!Sort::operator==(_other))
-			return false;
-		auto _otherArray = dynamic_cast<ArraySort const*>(&_other);
-		solAssert(_otherArray, "");
-		solAssert(_otherArray->domain, "");
-		solAssert(_otherArray->range, "");
-		solAssert(domain, "");
-		solAssert(range, "");
-		return *domain == *_otherArray->domain && *range == *_otherArray->range;
-	}
-
-	SortPointer domain;
-	SortPointer range;
-};
-
-struct SortSort: public Sort
-{
-	SortSort(SortPointer _inner): Sort(Kind::Sort), inner(std::move(_inner)) {}
-	bool operator==(Sort const& _other) const override
-	{
-		if (!Sort::operator==(_other))
-			return false;
-		auto _otherSort = dynamic_cast<SortSort const*>(&_other);
-		solAssert(_otherSort, "");
-		solAssert(_otherSort->inner, "");
-		solAssert(inner, "");
-		return *inner == *_otherSort->inner;
-	}
-
-	SortPointer inner;
 };
 
 // Forward declaration.
