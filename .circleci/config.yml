@@ -651,6 +651,19 @@ jobs:
       SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
 
+  t_ubu_pragma_docs_test: &t_ubu_pragma_docs_test
+    docker:
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-<< pipeline.parameters.ubuntu-1904-docker-image-rev >>
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run: *run_docs_version_pragma_check
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
+
   t_ems_solcjs:
     docker:
       - image: ethereum/solidity-buildpack-deps:ubuntu1904
@@ -802,6 +815,7 @@ workflows:
       - b_ubu: *workflow_trigger_on_tags
       - b_ubu18: *workflow_trigger_on_tags
       - t_ubu_cli: *workflow_ubuntu1904
+      - t_ubu_pragma_docs_test: *workflow_ubuntu1904
       - t_ubu_soltest: *workflow_ubuntu1904
       - b_ubu_clang: *workflow_trigger_on_tags
       - t_ubu_clang_soltest: *workflow_ubuntu1904_clang
