@@ -809,5 +809,5 @@ These keywords are reserved in Solidity. They might become part of the syntax in
 Language Grammar
 ================
 
-.. literalinclude:: grammar.txt
-   :language: none
+.. literalinclude:: Solidity.g4
+   :language: antlr
