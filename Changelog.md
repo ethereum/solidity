@@ -10,6 +10,7 @@ Compiler Features:
 Bugfixes:
  * Inline Assembly: Fix internal error when accessing invalid constant variables.
  * Reference Resolver: Fix internal error when accessing invalid struct members.
+ * Type Checker: Fix internal errors when assigning nested tuples.
  * Inheritance: Allow public state variables to override functions with dynamic memory types in their return values.
  * JSON AST: Always add pointer suffix for memory reference types.
 
