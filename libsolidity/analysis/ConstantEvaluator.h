@@ -54,11 +54,11 @@ public:
 	TypePointer evaluate(Expression const& _expr);
 
 private:
-	virtual void endVisit(BinaryOperation const& _operation);
-	virtual void endVisit(UnaryOperation const& _operation);
-	virtual void endVisit(Literal const& _literal);
-	virtual void endVisit(Identifier const& _identifier);
-	virtual void endVisit(TupleExpression const& _tuple);
+	void endVisit(BinaryOperation const& _operation) override;
+	void endVisit(UnaryOperation const& _operation) override;
+	void endVisit(Literal const& _literal) override;
+	void endVisit(Identifier const& _identifier) override;
+	void endVisit(TupleExpression const& _tuple) override;
 
 	void setType(ASTNode const& _node, TypePointer const& _type);
 	TypePointer type(ASTNode const& _node);

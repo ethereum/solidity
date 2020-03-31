@@ -50,7 +50,7 @@ class StaticAnalyzer: private ASTConstVisitor
 public:
 	/// @param _errorReporter provides the error logging functionality.
 	explicit StaticAnalyzer(langutil::ErrorReporter& _errorReporter);
-	~StaticAnalyzer();
+	~StaticAnalyzer() override;
 
 	/// Performs static analysis on the given source unit and all of its sub-nodes.
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings

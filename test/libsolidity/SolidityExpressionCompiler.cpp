@@ -52,15 +52,15 @@ public:
 	FirstExpressionExtractor(ASTNode& _node): m_expression(nullptr) { _node.accept(*this); }
 	Expression* expression() const { return m_expression; }
 private:
-	virtual bool visit(Assignment& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(UnaryOperation& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(BinaryOperation& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(FunctionCall& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(MemberAccess& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(IndexAccess& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Identifier& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(ElementaryTypeNameExpression& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Literal& _expression) override { return checkExpression(_expression); }
+	bool visit(Assignment& _expression) override { return checkExpression(_expression); }
+	bool visit(UnaryOperation& _expression) override { return checkExpression(_expression); }
+	bool visit(BinaryOperation& _expression) override { return checkExpression(_expression); }
+	bool visit(FunctionCall& _expression) override { return checkExpression(_expression); }
+	bool visit(MemberAccess& _expression) override { return checkExpression(_expression); }
+	bool visit(IndexAccess& _expression) override { return checkExpression(_expression); }
+	bool visit(Identifier& _expression) override { return checkExpression(_expression); }
+	bool visit(ElementaryTypeNameExpression& _expression) override { return checkExpression(_expression); }
+	bool visit(Literal& _expression) override { return checkExpression(_expression); }
 	bool checkExpression(Expression& _expression)
 	{
 		if (m_expression == nullptr)

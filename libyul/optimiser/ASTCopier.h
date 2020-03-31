@@ -65,7 +65,7 @@ public:
 class ASTCopier: public ExpressionCopier, public StatementCopier
 {
 public:
-	virtual ~ASTCopier() = default;
+	~ASTCopier() override = default;
 	Expression operator()(Literal const& _literal) override;
 	Expression operator()(Identifier const& _identifier) override;
 	Expression operator()(FunctionCall const&) override;
