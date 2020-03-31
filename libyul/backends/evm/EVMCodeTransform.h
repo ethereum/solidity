@@ -92,10 +92,10 @@ public:
 	{}
 
 public:
-	void operator()(Identifier const& _identifier);
-	void operator()(FunctionDefinition const&);
-	void operator()(ForLoop const&);
-	void operator()(Block const& _block);
+	void operator()(Identifier const& _identifier) override;
+	void operator()(FunctionDefinition const&) override;
+	void operator()(ForLoop const&) override;
+	void operator()(Block const& _block) override;
 
 private:
 	void increaseRefIfFound(YulString _variableName);

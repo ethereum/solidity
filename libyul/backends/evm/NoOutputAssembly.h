@@ -45,7 +45,7 @@ class NoOutputAssembly: public AbstractAssembly
 {
 public:
 	explicit NoOutputAssembly(bool _evm15 = false): m_evm15(_evm15) { }
-	virtual ~NoOutputAssembly() = default;
+	~NoOutputAssembly() override = default;
 
 	void setSourceLocation(langutil::SourceLocation const&) override {}
 	int stackHeight() const override { return m_stackHeight; }

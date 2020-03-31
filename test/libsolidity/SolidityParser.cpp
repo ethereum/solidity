@@ -672,7 +672,7 @@ BOOST_AUTO_TEST_CASE(inline_asm_end_location)
 	{
 	public:
 		bool visited = false;
-		virtual bool visit(InlineAssembly const& _inlineAsm)
+		bool visit(InlineAssembly const& _inlineAsm) override
 		{
 			auto loc = _inlineAsm.location();
 			auto asmStr = loc.source->source().substr(loc.start, loc.end - loc.start);
