@@ -86,7 +86,7 @@ public:
 	void translate(Language _targetLanguage);
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
-	[[nodiscard]] MachineAssemblyObject assemble(Machine _machine) const;
+	MachineAssemblyObject assemble(Machine _machine) const;
 
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
 	[[nodiscard]] langutil::ErrorList const& errors() const { return m_errors; }

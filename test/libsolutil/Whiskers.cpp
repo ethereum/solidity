@@ -52,14 +52,14 @@ BOOST_AUTO_TEST_CASE(tag_unavailable)
 {
 	string templ = "<b>";
 	Whiskers m(templ);
-	BOOST_CHECK_THROW(m.render(), WhiskersError);
+	BOOST_CHECK_THROW(auto a = m.render(), WhiskersError);
 }
 
 BOOST_AUTO_TEST_CASE(list_unavailable)
 {
 	string templ = "<#b></b>";
 	Whiskers m(templ);
-	BOOST_CHECK_THROW(m.render(), WhiskersError);
+	BOOST_CHECK_THROW(auto a = m.render(), WhiskersError);
 }
 
 BOOST_AUTO_TEST_CASE(name_type_collision)
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(non_existing_list)
 {
 	string templ = "a <#b></b>";
 	Whiskers m(templ);
-	BOOST_CHECK_THROW(m.render(), WhiskersError);
+	BOOST_CHECK_THROW(auto a = m.render(), WhiskersError);
 }
 
 BOOST_AUTO_TEST_CASE(empty_list)
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(parameter_collision)
 	list[0]["a"] = "x";
 	Whiskers m(templ);
 	m("a", "X")("b", list);
-	BOOST_CHECK_THROW(m.render(), WhiskersError);
+	BOOST_CHECK_THROW(auto a = m.render(), WhiskersError);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_param)
