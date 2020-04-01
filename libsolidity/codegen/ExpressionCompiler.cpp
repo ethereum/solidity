@@ -995,6 +995,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Fetch requested length.
 			acceptAndConvert(*arguments[0], *TypeProvider::uint256());
 
+			// Make sure we can allocate memory without overflow
+			m_context << u256(0xffffffffffffffff);
+			m_context << Instruction::DUP2;
+			m_context << Instruction::GT;
+			m_context.appendConditionalRevert();
+
 			// Stack: requested_length
 			utils().fetchFreeMemoryPointer();
 
