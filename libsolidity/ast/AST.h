@@ -1039,7 +1039,7 @@ public:
 		ContractDefinition const*
 	) const override
 	{
-		solAssert(false, "Tried to resolve virtual event.");
+		return *this;
 	}
 
 private:
