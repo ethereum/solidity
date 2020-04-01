@@ -21,6 +21,8 @@
 #include <liblangutil/SourceLocation.h>
 
 #include <algorithm>
+#include <utility>
+
 
 namespace solidity::tools
 {
@@ -50,7 +52,7 @@ public:
 	:
 		m_location(_location),
 		m_source(_location.source->source()),
-		m_patch(_patch),
+		m_patch(std::move(_patch)),
 		m_level(_level) {}
 
 	~UpgradeChange() {}

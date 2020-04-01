@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include <vector>
 #include <map>
 #include <set>
@@ -83,7 +85,7 @@ public:
 
 	explicit KnownState(
 		std::shared_ptr<ExpressionClasses> _expressionClasses = std::make_shared<ExpressionClasses>()
-	): m_expressionClasses(_expressionClasses)
+	): m_expressionClasses(std::move(_expressionClasses))
 	{
 	}
 

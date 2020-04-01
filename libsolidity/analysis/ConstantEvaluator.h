@@ -24,6 +24,10 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 
+
+#include <utility>
+
+
 namespace solidity::langutil
 {
 class ErrorReporter;
@@ -47,7 +51,7 @@ public:
 	):
 		m_errorReporter(_errorReporter),
 		m_depth(_newDepth),
-		m_types(_types)
+		m_types(std::move(_types))
 	{
 	}
 

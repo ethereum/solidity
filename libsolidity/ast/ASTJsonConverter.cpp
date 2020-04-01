@@ -34,6 +34,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/algorithm/sort.hpp>
 
+#include <utility>
+
 #include <vector>
 #include <algorithm>
 
@@ -45,7 +47,7 @@ namespace solidity::frontend
 
 ASTJsonConverter::ASTJsonConverter(bool _legacy, map<string, unsigned> _sourceIndices):
 	m_legacy(_legacy),
-	m_sourceIndices(_sourceIndices)
+	m_sourceIndices(std::move(_sourceIndices))
 {
 }
 
