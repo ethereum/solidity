@@ -591,7 +591,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 						));
 					else
 					{
-						ret.sources[sourceName] =  result.responseOrErrorMessage;
+						ret.sources[sourceName] = result.responseOrErrorMessage;
 						found = true;
 						break;
 					}

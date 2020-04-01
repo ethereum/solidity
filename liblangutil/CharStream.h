@@ -55,6 +55,7 @@
 #include <cstdint>
 #include <string>
 #include <tuple>
+#include <utility>
 
 namespace solidity::langutil
 {
@@ -68,8 +69,8 @@ class CharStream
 {
 public:
 	CharStream() = default;
-	explicit CharStream(std::string const& _source, std::string const& name):
-		m_source(_source), m_name(name) {}
+	explicit CharStream(std::string  _source, std::string  name):
+		m_source(std::move(_source)), m_name(std::move(name)) {}
 
 	int position() const { return m_position; }
 	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }

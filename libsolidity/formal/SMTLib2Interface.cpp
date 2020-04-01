@@ -29,6 +29,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 using namespace std;
 using namespace solidity;
@@ -38,10 +39,10 @@ using namespace solidity::frontend::smt;
 
 SMTLib2Interface::SMTLib2Interface(
 	map<h256, string> const& _queryResponses,
-	ReadCallback::Callback const& _smtCallback
+	ReadCallback::Callback _smtCallback
 ):
 	m_queryResponses(_queryResponses),
-	m_smtCallback(_smtCallback)
+	m_smtCallback(std::move(_smtCallback))
 {
 	reset();
 }

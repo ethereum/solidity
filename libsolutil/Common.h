@@ -47,6 +47,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 #include <map>
+#include <utility>
 #include <vector>
 #include <functional>
 #include <string>
@@ -120,7 +121,7 @@ inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
 class ScopeGuard
 {
 public:
-	explicit ScopeGuard(std::function<void(void)> _f): m_f(_f) {}
+	explicit ScopeGuard(std::function<void(void)> _f): m_f(std::move(_f)) {}
 	~ScopeGuard() { m_f(); }
 
 private:

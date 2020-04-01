@@ -28,16 +28,18 @@
 #include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
+
 #include <algorithm>
 #include <functional>
+#include <utility>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
-ASTNode::ASTNode(int64_t _id, SourceLocation const& _location):
+ASTNode::ASTNode(int64_t _id, SourceLocation _location):
 	m_id(_id),
-	m_location(_location)
+	m_location(std::move(_location))
 {
 }
 

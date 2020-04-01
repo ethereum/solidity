@@ -31,6 +31,7 @@
 
 #include <optional>
 #include <set>
+#include <utility>
 
 namespace solidity::yul
 {
@@ -147,10 +148,10 @@ class BodyCopier: public ASTCopier
 public:
 	BodyCopier(
 		NameDispenser& _nameDispenser,
-		std::map<YulString, YulString> const& _variableReplacements
+		std::map<YulString, YulString> _variableReplacements
 	):
 		m_nameDispenser(_nameDispenser),
-		m_variableReplacements(_variableReplacements)
+		m_variableReplacements(std::move(_variableReplacements))
 	{}
 
 	using ASTCopier::operator ();

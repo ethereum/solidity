@@ -68,6 +68,7 @@
 #include <json/json.h>
 
 #include <boost/algorithm/string.hpp>
+#include <utility>
 
 using namespace std;
 using namespace solidity;
@@ -79,8 +80,8 @@ using solidity::util::toHex;
 
 static int g_compilerStackCounts = 0;
 
-CompilerStack::CompilerStack(ReadCallback::Callback const& _readFile):
-	m_readFile{_readFile},
+CompilerStack::CompilerStack(ReadCallback::Callback _readFile):
+	m_readFile{std::move(_readFile)},
 	m_enabledSMTSolvers{smt::SMTSolverChoice::All()},
 	m_generateIR{false},
 	m_generateEwasm{false},
