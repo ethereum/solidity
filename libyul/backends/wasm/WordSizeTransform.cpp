@@ -104,7 +104,7 @@ void WordSizeTransform::operator()(Block& _block)
 							auto newLhs = generateU64IdentifierNames(varDecl.variables[0].name);
 							vector<Statement> ret;
 							for (int i = 0; i < 3; i++)
-								ret.push_back(VariableDeclaration{
+								ret.emplace_back(VariableDeclaration{
 									varDecl.location,
 									{TypedName{varDecl.location, newLhs[i], m_targetDialect.defaultType}},
 									make_unique<Expression>(Literal{
@@ -114,7 +114,7 @@ void WordSizeTransform::operator()(Block& _block)
 										m_targetDialect.defaultType
 									})
 								});
-							ret.push_back(VariableDeclaration{
+							ret.emplace_back(VariableDeclaration{
 								varDecl.location,
 								{TypedName{varDecl.location, newLhs[3], m_targetDialect.defaultType}},
 								std::move(varDecl.value)
@@ -135,8 +135,7 @@ void WordSizeTransform::operator()(Block& _block)
 					auto newLhs = generateU64IdentifierNames(varDecl.variables[0].name);
 					vector<Statement> ret;
 					for (int i = 0; i < 4; i++)
-						ret.push_back(
-							VariableDeclaration{
+						ret.emplace_back(VariableDeclaration{
 								varDecl.location,
 								{TypedName{varDecl.location, newLhs[i], m_targetDialect.defaultType}},
 								std::move(newRhs[i])
@@ -165,7 +164,7 @@ void WordSizeTransform::operator()(Block& _block)
 							auto newLhs = generateU64IdentifierNames(assignment.variableNames[0].name);
 							vector<Statement> ret;
 							for (int i = 0; i < 3; i++)
-								ret.push_back(Assignment{
+								ret.emplace_back(Assignment{
 									assignment.location,
 									{Identifier{assignment.location, newLhs[i]}},
 									make_unique<Expression>(Literal{
@@ -175,7 +174,7 @@ void WordSizeTransform::operator()(Block& _block)
 										m_targetDialect.defaultType
 									})
 								});
-							ret.push_back(Assignment{
+							ret.emplace_back(Assignment{
 								assignment.location,
 								{Identifier{assignment.location, newLhs[3]}},
 								std::move(assignment.value)
@@ -196,8 +195,7 @@ void WordSizeTransform::operator()(Block& _block)
 					YulString lhsName = assignment.variableNames[0].name;
 					vector<Statement> ret;
 					for (int i = 0; i < 4; i++)
-						ret.push_back(
-							Assignment{
+						ret.emplace_back(Assignment{
 								assignment.location,
 								{Identifier{assignment.location, m_variableMapping.at(lhsName)[i]}},
 								std::move(newRhs[i])

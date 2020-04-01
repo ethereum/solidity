@@ -106,12 +106,10 @@ void AbstractContract::endVisit(ContractDefinition const& _contract)
 		!_contract.abstract() &&
 		!_contract.isInterface()
 	)
-		m_changes.push_back(
-			UpgradeChange{
+		m_changes.emplace_back(
 				UpgradeChange::Level::Safe,
 				_contract.location(),
 				SourceTransform::insertBeforeKeyword(_contract.location(), "contract", "abstract")
-			}
 		);
 }
 
@@ -132,12 +130,10 @@ void OverridingFunction::endVisit(ContractDefinition const& _contract)
 
 			/// Add override with contract list, if needed.
 			if (!function->overrides() && expectedContracts.size() > 1)
-				m_changes.push_back(
-					UpgradeChange{
+				m_changes.emplace_back(
 						UpgradeChange::Level::Safe,
 						function->location(),
 						appendOverride(*function, expectedContracts)
-					}
 				);
 
 			for (auto [begin, end] = inheritedFunctions.equal_range(proxy); begin != end; begin++)
@@ -151,12 +147,10 @@ void OverridingFunction::endVisit(ContractDefinition const& _contract)
 					/// If function does not specify override and no override with
 					/// contract list was added before.
 					if (!function->overrides() && expectedContracts.size() <= 1)
-						m_changes.push_back(
-							UpgradeChange{
+						m_changes.emplace_back(
 								UpgradeChange::Level::Safe,
 								function->location(),
 								appendOverride(*function, expectedContracts)
-							}
 						);
 				}
 			}
@@ -181,12 +175,10 @@ void VirtualFunction::endVisit(ContractDefinition const& _contract)
 				function->visibility() > Visibility::Private
 			)
 			{
-				m_changes.push_back(
-					UpgradeChange{
+				m_changes.emplace_back(
 						UpgradeChange::Level::Safe,
 						function->location(),
 						appendVirtual(*function)
-					}
 				);
 			}
 
@@ -198,12 +190,10 @@ void VirtualFunction::endVisit(ContractDefinition const& _contract)
 					!super.virtualSemantics()
 				)
 				{
-					m_changes.push_back(
-						UpgradeChange{
+					m_changes.emplace_back(
 							UpgradeChange::Level::Safe,
 							function->location(),
 							appendVirtual(*function)
-						}
 					);
 				}
 			}

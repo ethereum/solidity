@@ -104,7 +104,7 @@ Allowed options)",
 	else if (arguments.count("input-files"))
 		inputs = arguments["input-files"].as<vector<string>>();
 	else
-		inputs.push_back("");
+		inputs.emplace_back("");
 
 	bool optimize = !arguments.count("without-optimizer");
 	int retResult = 0;
