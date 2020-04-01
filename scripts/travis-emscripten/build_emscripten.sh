@@ -86,7 +86,7 @@ make -j 4
 
 cd ..
 mkdir -p upload
-echo -n ";/* forwards compatibility */var Solidity = Module;" >> $BUILD_DIR/libsolc/soljson.js
+echo -n ";/* backwards compatibility */var Module = Solidity;" >> $BUILD_DIR/libsolc/soljson.js
 cp $BUILD_DIR/libsolc/soljson.js upload/
 cp $BUILD_DIR/libsolc/soljson.js ./
 
