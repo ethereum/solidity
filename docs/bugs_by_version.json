@@ -151,6 +151,7 @@
     },
     "0.2.0": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -171,6 +172,7 @@
     },
     "0.2.1": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -191,6 +193,7 @@
     },
     "0.2.2": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -211,6 +214,7 @@
     },
     "0.3.0": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -233,6 +237,7 @@
     },
     "0.3.1": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -254,6 +259,7 @@
     },
     "0.3.2": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -275,6 +281,7 @@
     },
     "0.3.3": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -295,6 +302,7 @@
     },
     "0.3.4": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -315,6 +323,7 @@
     },
     "0.3.5": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -335,6 +344,7 @@
     },
     "0.3.6": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -353,6 +363,7 @@
     },
     "0.4.0": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -371,6 +382,7 @@
     },
     "0.4.1": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -389,6 +401,7 @@
     },
     "0.4.10": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -405,6 +418,7 @@
     },
     "0.4.11": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -420,6 +434,7 @@
     },
     "0.4.12": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -434,6 +449,7 @@
     },
     "0.4.13": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -448,6 +464,7 @@
     },
     "0.4.14": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -461,6 +478,7 @@
     },
     "0.4.15": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -473,6 +491,7 @@
     },
     "0.4.16": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -487,6 +506,7 @@
     },
     "0.4.17": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -502,6 +522,7 @@
     },
     "0.4.18": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -516,6 +537,7 @@
     },
     "0.4.19": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -531,6 +553,7 @@
     },
     "0.4.2": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -548,6 +571,7 @@
     },
     "0.4.20": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -563,6 +587,7 @@
     },
     "0.4.21": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -578,6 +603,7 @@
     },
     "0.4.22": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -593,6 +619,7 @@
     },
     "0.4.23": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -607,6 +634,7 @@
     },
     "0.4.24": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -621,6 +649,7 @@
     },
     "0.4.25": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -633,6 +662,7 @@
     },
     "0.4.26": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -642,6 +672,7 @@
     },
     "0.4.3": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -658,6 +689,7 @@
     },
     "0.4.4": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "IncorrectEventSignatureInLibraries_0.4.x",
             "ExpExponentCleanup",
@@ -673,6 +705,7 @@
     },
     "0.4.5": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -690,6 +723,7 @@
     },
     "0.4.6": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "UninitializedFunctionPointerInConstructor_0.4.x",
             "IncorrectEventSignatureInLibraries_0.4.x",
@@ -706,6 +740,7 @@
     },
     "0.4.7": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -722,6 +757,7 @@
     },
     "0.4.8": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -738,6 +774,7 @@
     },
     "0.4.9": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "UninitializedFunctionPointerInConstructor_0.4.x",
@@ -754,6 +791,7 @@
     },
     "0.5.0": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -766,6 +804,7 @@
     },
     "0.5.1": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -778,6 +817,7 @@
     },
     "0.5.10": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers"
@@ -786,6 +826,7 @@
     },
     "0.5.11": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5"
         ],
@@ -793,6 +834,7 @@
     },
     "0.5.12": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5"
         ],
@@ -800,6 +842,7 @@
     },
     "0.5.13": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5"
         ],
@@ -807,6 +850,7 @@
     },
     "0.5.14": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2LoopYulOptimizer"
@@ -815,6 +859,7 @@
     },
     "0.5.15": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5"
         ],
@@ -822,16 +867,20 @@
     },
     "0.5.16": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden"
         ],
         "released": "2020-01-02"
     },
     "0.5.17": {
-        "bugs": [],
+        "bugs": [
+            "MemoryArrayCreationOverflow"
+        ],
         "released": "2020-03-17"
     },
     "0.5.2": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -844,6 +893,7 @@
     },
     "0.5.3": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -856,6 +906,7 @@
     },
     "0.5.4": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -868,6 +919,7 @@
     },
     "0.5.5": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "SignedArrayStorageCopy",
             "ABIEncoderV2StorageArrayWithMultiSlotElement",
@@ -882,6 +934,7 @@
     },
     "0.5.6": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
@@ -896,6 +949,7 @@
     },
     "0.5.7": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
             "SignedArrayStorageCopy",
@@ -908,6 +962,7 @@
     },
     "0.5.8": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
@@ -919,6 +974,7 @@
     },
     "0.5.9": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
             "YulOptimizerRedundantAssignmentBreakContinue0.5",
             "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
@@ -929,24 +985,33 @@
     },
     "0.6.0": {
         "bugs": [
+            "MemoryArrayCreationOverflow",
             "YulOptimizerRedundantAssignmentBreakContinue"
         ],
         "released": "2019-12-17"
     },
     "0.6.1": {
-        "bugs": [],
+        "bugs": [
+            "MemoryArrayCreationOverflow"
+        ],
         "released": "2020-01-02"
     },
     "0.6.2": {
-        "bugs": [],
+        "bugs": [
+            "MemoryArrayCreationOverflow"
+        ],
         "released": "2020-01-27"
     },
     "0.6.3": {
-        "bugs": [],
+        "bugs": [
+            "MemoryArrayCreationOverflow"
+        ],
         "released": "2020-02-18"
     },
     "0.6.4": {
-        "bugs": [],
+        "bugs": [
+            "MemoryArrayCreationOverflow"
+        ],
         "released": "2020-03-10"
     }
 }

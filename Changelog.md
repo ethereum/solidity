@@ -1,5 +1,9 @@
 ### 0.6.5 (unreleased)
 
+Important Bugfixes:
+ * Code Generator: Restrict the size of dynamic memory arrays to 64 bits during creation at runtime fixing a possible overflow.
+
+
 Language Features:
 
 
