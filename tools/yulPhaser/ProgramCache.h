@@ -89,19 +89,19 @@ public:
 	void startRound(size_t _nextRoundNumber);
 	void clear();
 
-	size_t size() const { return m_entries.size(); }
-	Program const* find(std::string const& _abbreviatedOptimisationSteps) const;
-	bool contains(std::string const& _abbreviatedOptimisationSteps) const { return find(_abbreviatedOptimisationSteps) != nullptr; }
+	[[nodiscard]] size_t size() const { return m_entries.size(); }
+	[[nodiscard]] Program const* find(std::string const& _abbreviatedOptimisationSteps) const;
+	[[nodiscard]] bool contains(std::string const& _abbreviatedOptimisationSteps) const { return find(_abbreviatedOptimisationSteps) != nullptr; }
 
-	CacheStats gatherStats() const;
+	[[nodiscard]] CacheStats gatherStats() const;
 
-	std::map<std::string, CacheEntry> const& entries() const { return m_entries; };
-	Program const& program() const { return m_program; }
-	size_t currentRound() const { return m_currentRound; }
+	[[nodiscard]] std::map<std::string, CacheEntry> const& entries() const { return m_entries; };
+	[[nodiscard]] Program const& program() const { return m_program; }
+	[[nodiscard]] size_t currentRound() const { return m_currentRound; }
 
 private:
-	size_t calculateTotalCachedCodeSize() const;
-	std::map<size_t, size_t> countRoundEntries() const;
+	[[nodiscard]] size_t calculateTotalCachedCodeSize() const;
+	[[nodiscard]] std::map<size_t, size_t> countRoundEntries() const;
 
 	// The best matching data structure here would be a trie of chromosome prefixes but since
 	// the programs are orders of magnitude larger than the prefixes, it does not really matter.

@@ -73,7 +73,7 @@ public:
 	{
 		enum Target { Invalid, Memory, Storage };
 
-		bool isValid() const { return target != Invalid; }
+		[[nodiscard]] bool isValid() const { return target != Invalid; }
 
 		Target target{Invalid};
 		Id slot{std::numeric_limits<Id>::max()};
@@ -103,7 +103,7 @@ public:
 	/// Resets any knowledge.
 	void reset() { resetStorage(); resetMemory(); resetStack(); }
 
-	unsigned sequenceNumber() const { return m_sequenceNumber; }
+	[[nodiscard]] unsigned sequenceNumber() const { return m_sequenceNumber; }
 
 	/// Replaces the state by the intersection with _other, i.e. only equal knowledge is retained.
 	/// If the stack heighht is different, the smaller one is used and the stack is compared
@@ -112,7 +112,7 @@ public:
 	void reduceToCommonKnowledge(KnownState const& _other, bool _combineSequenceNumbers);
 
 	/// @returns a shared pointer to a copy of this state.
-	std::shared_ptr<KnownState> copy() const { return std::make_shared<KnownState>(*this); }
+	[[nodiscard]] std::shared_ptr<KnownState> copy() const { return std::make_shared<KnownState>(*this); }
 
 	/// @returns true if the knowledge about the state of both objects is (known to be) equal.
 	bool operator==(KnownState const& _other) const;
@@ -130,11 +130,11 @@ public:
 	/// This removes such classes not to confuse later analyzers.
 	void clearTagUnions();
 
-	int stackHeight() const { return m_stackHeight; }
-	std::map<int, Id> const& stackElements() const { return m_stackElements; }
-	ExpressionClasses& expressionClasses() const { return *m_expressionClasses; }
+	[[nodiscard]] int stackHeight() const { return m_stackHeight; }
+	[[nodiscard]] std::map<int, Id> const& stackElements() const { return m_stackElements; }
+	[[nodiscard]] ExpressionClasses& expressionClasses() const { return *m_expressionClasses; }
 
-	std::map<Id, Id> const& storageContent() const { return m_storageContent; }
+	[[nodiscard]] std::map<Id, Id> const& storageContent() const { return m_storageContent; }
 
 private:
 	/// Assigns a new equivalence class to the next sequence number of the given stack element.

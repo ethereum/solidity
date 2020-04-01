@@ -66,7 +66,7 @@ public:
 		size_t minChromosomeLength;  ///< Minimum length of newly generated chromosomes
 		size_t maxChromosomeLength;  ///< Maximum length of newly generated chromosomes
 
-		bool isValid() const
+		[[nodiscard]] bool isValid() const
 		{
 			return (
 				0 <= elitePoolSize && elitePoolSize <= 1.0 &&
@@ -81,7 +81,7 @@ public:
 		assert(_options.isValid());
 	}
 
-	Options const& options() const { return m_options; }
+	[[nodiscard]] Options const& options() const { return m_options; }
 
 	Population runNextRound(Population _population) override;
 
@@ -111,7 +111,7 @@ public:
 		double percentGenesToRandomise;   ///< The chance of any given gene being mutated in gene randomisation.
 		double percentGenesToAddOrDelete; ///< The chance of a gene being added (or deleted) in gene addition (or deletion).
 
-		bool isValid() const
+		[[nodiscard]] bool isValid() const
 		{
 			return (
 				0 <= mutationPoolSize && mutationPoolSize <= 1.0 &&
@@ -131,7 +131,7 @@ public:
 		assert(_options.isValid());
 	}
 
-	Options const& options() const { return m_options; }
+	[[nodiscard]] Options const& options() const { return m_options; }
 
 	Population runNextRound(Population _population) override;
 

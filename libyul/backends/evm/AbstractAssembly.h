@@ -57,7 +57,7 @@ public:
 	virtual void setSourceLocation(langutil::SourceLocation const& _location) = 0;
 	/// Retrieve the current height of the stack. This does not have to be zero
 	/// at the beginning.
-	virtual int stackHeight() const = 0;
+	[[nodiscard]] virtual int stackHeight() const = 0;
 	virtual void setStackHeight(int height) = 0;
 	/// Append an EVM instruction.
 	virtual void appendInstruction(evmasm::Instruction _instruction) = 0;

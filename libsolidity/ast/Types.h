@@ -75,9 +75,9 @@ public:
 	/// of the elements of @a _types.
 	void computeOffsets(TypePointers const& _types);
 	/// @returns the offset of the given member, might be null if the member is not part of storage.
-	std::pair<u256, unsigned> const* offset(size_t _index) const;
+	[[nodiscard]] std::pair<u256, unsigned> const* offset(size_t _index) const;
 	/// @returns the total number of slots occupied by all members.
-	u256 const& storageSize() const { return m_storageSize; }
+	[[nodiscard]] u256 const& storageSize() const { return m_storageSize; }
 
 private:
 	u256 m_storageSize;

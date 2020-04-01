@@ -167,7 +167,7 @@ struct Parameter
 	/// Stores the parsed alignment, which can be either left(...) or right(...).
 	Alignment alignment = Alignment::None;
 	/// Compares _bytes to the bytes stored in this object.
-	bool matchesBytes(bytes const& _bytes) const
+	[[nodiscard]] bool matchesBytes(bytes const& _bytes) const
 	{
 		return rawBytes == _bytes;
 	}
@@ -195,7 +195,7 @@ struct FunctionCallExpectations
 	std::string comment;
 	/// ABI encoded `bytes` of parsed expected return values. It is checked
 	/// against the actual result of a function call when used in test framework.
-	bytes rawBytes() const
+	[[nodiscard]] bytes rawBytes() const
 	{
 		bytes raw;
 		for (auto const& param: result)
@@ -221,7 +221,7 @@ struct FunctionCallArgs
 	std::string comment;
 	/// ABI encoded `bytes` of parsed parameters. These `bytes`
 	/// passed to the function call.
-	bytes rawBytes() const
+	[[nodiscard]] bytes rawBytes() const
 	{
 		bytes raw;
 		for (auto const& param: parameters)

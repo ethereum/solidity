@@ -47,7 +47,7 @@ public:
 	Selection& operator=(Selection const&) = delete;
 	virtual ~Selection() = default;
 
-	virtual std::vector<size_t> materialise(size_t _poolSize) const = 0;
+	[[nodiscard]] virtual std::vector<size_t> materialise(size_t _poolSize) const = 0;
 };
 
 /**
@@ -64,7 +64,7 @@ public:
 		assert(0 <= m_startPercent && m_startPercent <= m_endPercent && m_endPercent <= 1.0);
 	}
 
-	std::vector<size_t> materialise(size_t _poolSize) const override;
+	[[nodiscard]] std::vector<size_t> materialise(size_t _poolSize) const override;
 
 private:
 	double m_startPercent;
@@ -90,7 +90,7 @@ public:
 		assert(m_pattern.size() > 0 || _selectionSize == 0.0);
 	}
 
-	std::vector<size_t> materialise(size_t _poolSize) const override;
+	[[nodiscard]] std::vector<size_t> materialise(size_t _poolSize) const override;
 
 private:
 	std::vector<size_t> m_pattern;
@@ -112,7 +112,7 @@ public:
 		assert(_selectionSize >= 0);
 	}
 
-	std::vector<size_t> materialise(size_t _poolSize) const override;
+	[[nodiscard]] std::vector<size_t> materialise(size_t _poolSize) const override;
 
 private:
 	double m_selectionSize;

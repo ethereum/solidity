@@ -95,10 +95,10 @@ public:
 	explicit Scanner(std::shared_ptr<CharStream> _source) { reset(std::move(_source)); }
 	explicit Scanner(CharStream _source = CharStream()) { reset(std::move(_source)); }
 
-	std::string const& source() const noexcept { return m_source->source(); }
+	[[nodiscard]] std::string const& source() const noexcept { return m_source->source(); }
 
 	std::shared_ptr<CharStream> charStream() noexcept { return m_source; }
-	std::shared_ptr<CharStream const> charStream() const noexcept { return m_source; }
+	[[nodiscard]] std::shared_ptr<CharStream const> charStream() const noexcept { return m_source; }
 
 	/// Resets the scanner as if newly constructed with _source as input.
 	void reset(CharStream _source);
@@ -120,11 +120,11 @@ public:
 	///@name Information about the current token
 
 	/// @returns the current token
-	Token currentToken() const
+	[[nodiscard]] Token currentToken() const
 	{
 		return m_tokens[Current].token;
 	}
-	ElementaryTypeNameToken currentElementaryTypeNameToken() const
+	[[nodiscard]] ElementaryTypeNameToken currentElementaryTypeNameToken() const
 	{
 		unsigned firstSize;
 		unsigned secondSize;
@@ -132,20 +132,20 @@ public:
 		return ElementaryTypeNameToken(m_tokens[Current].token, firstSize, secondSize);
 	}
 
-	SourceLocation currentLocation() const { return m_tokens[Current].location; }
-	std::string const& currentLiteral() const { return m_tokens[Current].literal; }
-	std::tuple<unsigned, unsigned> const& currentTokenInfo() const { return m_tokens[Current].extendedTokenInfo; }
+	[[nodiscard]] SourceLocation currentLocation() const { return m_tokens[Current].location; }
+	[[nodiscard]] std::string const& currentLiteral() const { return m_tokens[Current].literal; }
+	[[nodiscard]] std::tuple<unsigned, unsigned> const& currentTokenInfo() const { return m_tokens[Current].extendedTokenInfo; }
 
 	/// Retrieves the last error that occurred during lexical analysis.
 	/// @note If no error occurred, the value is undefined.
-	ScannerError currentError() const noexcept { return m_tokens[Current].error; }
+	[[nodiscard]] ScannerError currentError() const noexcept { return m_tokens[Current].error; }
 	///@}
 
 	///@{
 	///@name Information about the current comment token
 
-	SourceLocation currentCommentLocation() const { return m_skippedComments[Current].location; }
-	std::string const& currentCommentLiteral() const { return m_skippedComments[Current].literal; }
+	[[nodiscard]] SourceLocation currentCommentLocation() const { return m_skippedComments[Current].location; }
+	[[nodiscard]] std::string const& currentCommentLiteral() const { return m_skippedComments[Current].literal; }
 	/// Called by the parser during FunctionDefinition parsing to clear the current comment
 	void clearCurrentCommentLiteral() { m_skippedComments[Current].literal.clear(); }
 
@@ -155,19 +155,19 @@ public:
 	///@name Information about the next token
 
 	/// @returns the next token without advancing input.
-	Token peekNextToken() const { return m_tokens[Next].token; }
-	SourceLocation peekLocation() const { return m_tokens[Next].location; }
-	std::string const& peekLiteral() const { return m_tokens[Next].literal; }
+	[[nodiscard]] Token peekNextToken() const { return m_tokens[Next].token; }
+	[[nodiscard]] SourceLocation peekLocation() const { return m_tokens[Next].location; }
+	[[nodiscard]] std::string const& peekLiteral() const { return m_tokens[Next].literal; }
 
-	Token peekNextNextToken() const { return m_tokens[NextNext].token; }
+	[[nodiscard]] Token peekNextNextToken() const { return m_tokens[NextNext].token; }
 	///@}
 
 	///@{
 	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
-	std::string lineAtPosition(int _position) const { return m_source->lineAtPosition(_position); }
-	std::tuple<int, int> translatePositionToLineColumn(int _position) const { return m_source->translatePositionToLineColumn(_position); }
+	[[nodiscard]] std::string lineAtPosition(int _position) const { return m_source->lineAtPosition(_position); }
+	[[nodiscard]] std::tuple<int, int> translatePositionToLineColumn(int _position) const { return m_source->translatePositionToLineColumn(_position); }
 	///@}
 
 private:
@@ -219,7 +219,7 @@ private:
 	Token skipMultiLineComment();
 
 	/// Tests if current source position is CR, LF or CRLF.
-	bool atEndOfLine() const;
+	[[nodiscard]] bool atEndOfLine() const;
 
 	/// Tries to consume CR, LF or CRLF line terminators and returns success or failure.
 	bool tryScanEndOfLine();
@@ -245,8 +245,8 @@ private:
 	bool isUnicodeLinebreak();
 
 	/// Return the current source position.
-	int sourcePos() const { return m_source->position(); }
-	bool isSourcePastEndOfInput() const { return m_source->isPastEndOfInput(); }
+	[[nodiscard]] int sourcePos() const { return m_source->position(); }
+	[[nodiscard]] bool isSourcePastEndOfInput() const { return m_source->isPastEndOfInput(); }
 
 	bool m_supportPeriodInIdentifier = false;
 

@@ -95,10 +95,10 @@ public:
 	TemporaryDirectory(std::string const& _prefix = "yul-phaser-test-");
 	~TemporaryDirectory();
 
-	std::string const& path() const { return m_path; }
+	[[nodiscard]] std::string const& path() const { return m_path; }
 
 	/// Converts a path relative to the directory held by the object into an absolute one.
-	std::string memberPath(std::string const& _relativePath) const;
+	[[nodiscard]] std::string memberPath(std::string const& _relativePath) const;
 
 private:
 	std::string m_path;

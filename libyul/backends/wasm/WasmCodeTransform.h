@@ -79,8 +79,8 @@ private:
 
 	wasm::FunctionDefinition translateFunction(yul::FunctionDefinition const& _funDef);
 
-	wasm::Expression injectTypeConversionIfNeeded(wasm::FunctionCall _call) const;
-	std::vector<wasm::Expression> injectTypeConversionIfNeeded(
+	[[nodiscard]] wasm::Expression injectTypeConversionIfNeeded(wasm::FunctionCall _call) const;
+	[[nodiscard]] std::vector<wasm::Expression> injectTypeConversionIfNeeded(
 		std::vector<wasm::Expression> _arguments,
 		std::vector<yul::Type> const& _parameterTypes
 	) const;

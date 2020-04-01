@@ -50,7 +50,7 @@ class FirstExpressionExtractor: private ASTVisitor
 {
 public:
 	FirstExpressionExtractor(ASTNode& _node): m_expression(nullptr) { _node.accept(*this); }
-	Expression* expression() const { return m_expression; }
+	[[nodiscard]] Expression* expression() const { return m_expression; }
 private:
 	virtual bool visit(Assignment& _expression) override { return checkExpression(_expression); }
 	virtual bool visit(UnaryOperation& _expression) override { return checkExpression(_expression); }

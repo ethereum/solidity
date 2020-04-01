@@ -130,7 +130,7 @@ private:
 	void generateClassElement(Id _c, bool _allowSequenced = false);
 	/// @returns the position of the representative of the given id on the stack.
 	/// @note throws an exception if it is not on the stack.
-	int classElementPosition(Id _id) const;
+	[[nodiscard]] int classElementPosition(Id _id) const;
 
 	/// @returns true if the copy of @a _element can be removed from stack position _fromPosition
 	/// - in general or, if given, while computing @a _result.

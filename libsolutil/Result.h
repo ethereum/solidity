@@ -56,11 +56,11 @@ public:
 	/// Wrapper functions that provide implicit conversions to and explicit retrieval of
 	/// the value this result holds.
 	operator ResultType const&() const { return m_value; }
-	ResultType const& get() const { return m_value; }
+	[[nodiscard]] ResultType const& get() const { return m_value; }
 	/// @}
 
 	/// @returns the error message (can be empty).
-	std::string const& message() const { return m_message; }
+	[[nodiscard]] std::string const& message() const { return m_message; }
 
 	/// Merges _other into this using the _merger
 	/// and appends the error messages. Meant to be called

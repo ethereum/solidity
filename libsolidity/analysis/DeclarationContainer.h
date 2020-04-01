@@ -48,10 +48,10 @@ public:
 	/// @param _update if true, replaces a potential declaration that is already present
 	/// @returns false if the name was already declared.
 	bool registerDeclaration(Declaration const& _declaration, ASTString const* _name = nullptr, bool _invisible = false, bool _update = false);
-	std::vector<Declaration const*> resolveName(ASTString const& _name, bool _recursive = false, bool _alsoInvisible = false) const;
-	ASTNode const* enclosingNode() const { return m_enclosingNode; }
-	DeclarationContainer const* enclosingContainer() const { return m_enclosingContainer; }
-	std::map<ASTString, std::vector<Declaration const*>> const& declarations() const { return m_declarations; }
+	[[nodiscard]] std::vector<Declaration const*> resolveName(ASTString const& _name, bool _recursive = false, bool _alsoInvisible = false) const;
+	[[nodiscard]] ASTNode const* enclosingNode() const { return m_enclosingNode; }
+	[[nodiscard]] DeclarationContainer const* enclosingContainer() const { return m_enclosingContainer; }
+	[[nodiscard]] std::map<ASTString, std::vector<Declaration const*>> const& declarations() const { return m_declarations; }
 	/// @returns whether declaration is valid, and if not also returns previous declaration.
 	Declaration const* conflictingDeclaration(Declaration const& _declaration, ASTString const* _name = nullptr) const;
 
@@ -60,11 +60,11 @@ public:
 	void activateVariable(ASTString const& _name);
 
 	/// @returns true if declaration is currently invisible.
-	bool isInvisible(ASTString const& _name) const;
+	[[nodiscard]] bool isInvisible(ASTString const& _name) const;
 
 	/// @returns existing declaration names similar to @a _name.
 	/// Searches this and all parent containers.
-	std::vector<ASTString> similarNames(ASTString const& _name) const;
+	[[nodiscard]] std::vector<ASTString> similarNames(ASTString const& _name) const;
 
 private:
 	ASTNode const* m_enclosingNode;

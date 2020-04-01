@@ -47,7 +47,7 @@ public:
 	/// @returns true if something was changed
 	bool deduplicate();
 	/// @returns the tags that were replaced.
-	std::map<u256, u256> const& replacedTags() const { return m_replacedTags; }
+	[[nodiscard]] std::map<u256, u256> const& replacedTags() const { return m_replacedTags; }
 
 	/// Replaces all PushTag operations insied @a _items that match a key in
 	/// @a _replacements by the respective value. If @a _subID is not -1, only

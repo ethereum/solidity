@@ -65,7 +65,7 @@ public:
 
 		return Handle{id, h};
 	}
-	std::string const& idToString(size_t _id) const	{ return *m_strings.at(_id); }
+	[[nodiscard]] std::string const& idToString(size_t _id) const	{ return *m_strings.at(_id); }
 
 	static std::uint64_t hash(std::string const& v)
 	{
@@ -148,13 +148,13 @@ public:
 	bool operator==(YulString const& _other) const { return m_handle.id == _other.m_handle.id; }
 	bool operator!=(YulString const& _other) const { return m_handle.id != _other.m_handle.id; }
 
-	bool empty() const { return m_handle.id == 0; }
-	std::string const& str() const
+	[[nodiscard]] bool empty() const { return m_handle.id == 0; }
+	[[nodiscard]] std::string const& str() const
 	{
 		return YulStringRepository::instance().idToString(m_handle.id);
 	}
 
-	uint64_t hash() const { return m_handle.hash; }
+	[[nodiscard]] uint64_t hash() const { return m_handle.hash; }
 
 private:
 	/// Handle of the string. Assumes that the empty string has ID zero.

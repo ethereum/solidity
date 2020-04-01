@@ -87,22 +87,22 @@ public:
 	uint8_t operator[](unsigned _i) const { return m_data[_i]; }
 
 	/// @returns the hash as a user-readable hex string.
-	std::string hex() const { return toHex(asBytes()); }
+	[[nodiscard]] std::string hex() const { return toHex(asBytes()); }
 
 	/// @returns a mutable byte vector_ref to the object's data.
 	bytesRef ref() { return bytesRef(m_data.data(), N); }
 
 	/// @returns a constant byte vector_ref to the object's data.
-	bytesConstRef ref() const { return bytesConstRef(m_data.data(), N); }
+	[[nodiscard]] bytesConstRef ref() const { return bytesConstRef(m_data.data(), N); }
 
 	/// @returns a mutable byte pointer to the object's data.
 	uint8_t* data() { return m_data.data(); }
 
 	/// @returns a constant byte pointer to the object's data.
-	uint8_t const* data() const { return m_data.data(); }
+	[[nodiscard]] uint8_t const* data() const { return m_data.data(); }
 
 	/// @returns a copy of the object's data as a byte vector.
-	bytes asBytes() const { return bytes(data(), data() + N); }
+	[[nodiscard]] bytes asBytes() const { return bytes(data(), data() + N); }
 
 private:
 	std::array<uint8_t, N> m_data;		///< The binary data.

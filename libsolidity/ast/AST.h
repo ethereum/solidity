@@ -163,19 +163,19 @@ public:
 	virtual ~Scopable() = default;
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
-	ASTNode const* scope() const { return annotation().scope; }
+	[[nodiscard]] ASTNode const* scope() const { return annotation().scope; }
 
 	/// @returns the source unit this scopable is present in.
-	SourceUnit const& sourceUnit() const;
+	[[nodiscard]] SourceUnit const& sourceUnit() const;
 
 	/// @returns the function or modifier definition this scopable is present in or nullptr.
-	CallableDeclaration const* functionOrModifierDefinition() const;
+	[[nodiscard]] CallableDeclaration const* functionOrModifierDefinition() const;
 
 	/// @returns the source name this scopable is present in.
 	/// Can be combined with annotation().canonicalName (if present) to form a globally unique name.
-	std::string sourceUnitName() const;
+	[[nodiscard]] std::string sourceUnitName() const;
 
-	virtual ScopableAnnotation& annotation() const = 0;
+	[[nodiscard]] virtual ScopableAnnotation& annotation() const = 0;
 };
 
 /**
@@ -339,7 +339,7 @@ class VariableScope
 public:
 	virtual ~VariableScope() = default;
 	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
-	std::vector<VariableDeclaration const*> const& localVariables() const { return m_localVariables; }
+	[[nodiscard]] std::vector<VariableDeclaration const*> const& localVariables() const { return m_localVariables; }
 
 private:
 	std::vector<VariableDeclaration const*> m_localVariables;
@@ -380,7 +380,7 @@ public:
 
 	/// @return A shared pointer of an ASTString.
 	/// Can contain a nullptr in which case indicates absence of documentation
-	ASTPointer<ASTString> const& documentation() const { return m_documentation; }
+	[[nodiscard]] ASTPointer<ASTString> const& documentation() const { return m_documentation; }
 
 protected:
 	ASTPointer<ASTString> m_documentation;
@@ -397,7 +397,7 @@ public:
 
 	/// @return A shared pointer of a FormalDocumentation.
 	/// Can contain a nullptr in which case indicates absence of documentation
-	ASTPointer<StructuredDocumentation> const& documentation() const { return m_documentation; }
+	[[nodiscard]] ASTPointer<StructuredDocumentation> const& documentation() const { return m_documentation; }
 
 protected:
 	ASTPointer<StructuredDocumentation> m_documentation;
@@ -414,7 +414,7 @@ public:
 	explicit ImplementationOptional(bool _implemented): m_implemented(_implemented) {}
 
 	/// @return whether this node is fully implemented or not
-	bool isImplemented() const { return m_implemented; }
+	[[nodiscard]] bool isImplemented() const { return m_implemented; }
 
 protected:
 	bool m_implemented;

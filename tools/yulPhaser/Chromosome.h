@@ -45,8 +45,8 @@ public:
 	explicit Chromosome(std::string const& _optimisationSteps);
 	static Chromosome makeRandom(size_t _length);
 
-	size_t length() const { return m_optimisationSteps.size(); }
-	std::vector<std::string> const& optimisationSteps() const { return m_optimisationSteps; }
+	[[nodiscard]] size_t length() const { return m_optimisationSteps.size(); }
+	[[nodiscard]] std::vector<std::string> const& optimisationSteps() const { return m_optimisationSteps; }
 
 	friend std::ostream& operator<<(std::ostream& _stream, Chromosome const& _chromosome);
 

@@ -44,12 +44,12 @@ struct WasmDialect: public Dialect
 {
 	WasmDialect();
 
-	BuiltinFunction const* builtin(YulString _name) const override;
-	BuiltinFunction const* discardFunction(YulString _type) const override;
-	BuiltinFunction const* equalityFunction(YulString _type) const override;
-	BuiltinFunction const* booleanNegationFunction() const override { return builtin("i32.eqz"_yulstring); }
+	[[nodiscard]] BuiltinFunction const* builtin(YulString _name) const override;
+	[[nodiscard]] BuiltinFunction const* discardFunction(YulString _type) const override;
+	[[nodiscard]] BuiltinFunction const* equalityFunction(YulString _type) const override;
+	[[nodiscard]] BuiltinFunction const* booleanNegationFunction() const override { return builtin("i32.eqz"_yulstring); }
 
-	std::set<YulString> fixedFunctionNames() const override { return {"main"_yulstring}; }
+	[[nodiscard]] std::set<YulString> fixedFunctionNames() const override { return {"main"_yulstring}; }
 
 	static WasmDialect const& instance();
 

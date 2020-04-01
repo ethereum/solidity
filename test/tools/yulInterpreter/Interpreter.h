@@ -126,9 +126,9 @@ public:
 	void operator()(Leave const&) override;
 	void operator()(Block const& _block) override;
 
-	std::vector<std::string> const& trace() const { return m_state.trace; }
+	[[nodiscard]] std::vector<std::string> const& trace() const { return m_state.trace; }
 
-	u256 valueOfVariable(YulString _name) const { return m_variables.at(_name); }
+	[[nodiscard]] u256 valueOfVariable(YulString _name) const { return m_variables.at(_name); }
 
 private:
 	/// Asserts that the expression evaluates to exactly one value and returns it.
@@ -173,9 +173,9 @@ public:
 	void operator()(FunctionCall const& _funCall) override;
 
 	/// Asserts that the expression has exactly one value and returns it.
-	u256 value() const;
+	[[nodiscard]] u256 value() const;
 	/// Returns the list of values of the expression.
-	std::vector<u256> values() const { return m_values; }
+	[[nodiscard]] std::vector<u256> values() const { return m_values; }
 
 private:
 	void setValue(u256 _value);
@@ -186,7 +186,7 @@ private:
 
 	/// Finds the function called @a _functionName in the current scope stack and returns
 	/// the function's scope stack (with variables removed) and definition.
-	std::pair<
+	[[nodiscard]] std::pair<
 		std::vector<std::map<YulString, FunctionDefinition const*>>,
 		FunctionDefinition const*
 	> findFunctionAndScope(YulString _functionName) const;

@@ -45,7 +45,7 @@ public:
 		m_parserErrorRecovery = _parserErrorRecovery;
 	}
 
-	std::shared_ptr<CharStream> source() const { return m_scanner->charStream(); }
+	[[nodiscard]] std::shared_ptr<CharStream> source() const { return m_scanner->charStream(); }
 
 protected:
 	/// Utility class that creates an error and throws an exception if the
@@ -63,7 +63,7 @@ protected:
 	};
 
 	/// Location of the current token
-	SourceLocation currentLocation() const;
+	[[nodiscard]] SourceLocation currentLocation() const;
 
 	///@{
 	///@name Helper functions
@@ -75,10 +75,10 @@ protected:
 	/// the expected token or EOS is seen. If EOS is encountered, back up to the error point,
 	/// and throw an exception so that a higher grammar rule has an opportunity to recover.
 	void expectTokenOrConsumeUntil(Token _value, std::string const& _currentNodeName, bool _advance = true);
-	Token currentToken() const;
-	Token peekNextToken() const;
+	[[nodiscard]] Token currentToken() const;
+	[[nodiscard]] Token peekNextToken() const;
 	std::string tokenName(Token _token);
-	std::string currentLiteral() const;
+	[[nodiscard]] std::string currentLiteral() const;
 	Token advance();
 	///@}
 

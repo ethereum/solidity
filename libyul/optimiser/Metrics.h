@@ -101,7 +101,7 @@ class AssignmentCounter: public ASTWalker
 public:
 	using ASTWalker::operator();
 	void operator()(Assignment const& _assignment) override;
-	std::size_t assignmentCount(YulString _name) const;
+	[[nodiscard]] std::size_t assignmentCount(YulString _name) const;
 private:
 	std::map<YulString, size_t> m_assignmentCounters;
 };

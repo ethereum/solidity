@@ -73,12 +73,12 @@ public:
 		assert(m_program.has_value() == (m_programCache == nullptr));
 	}
 
-	Program const& program() const;
-	ProgramCache const* programCache() const { return m_programCache.get(); }
-	size_t repetitionCount() const { return m_repetitionCount; }
+	[[nodiscard]] Program const& program() const;
+	[[nodiscard]] ProgramCache const* programCache() const { return m_programCache.get(); }
+	[[nodiscard]] size_t repetitionCount() const { return m_repetitionCount; }
 
 	Program optimisedProgram(Chromosome const& _chromosome);
-	Program optimisedProgramNoCache(Chromosome const& _chromosome) const;
+	[[nodiscard]] Program optimisedProgramNoCache(Chromosome const& _chromosome) const;
 
 private:
 	std::optional<Program> m_program;
@@ -116,7 +116,7 @@ public:
 		ProgramBasedMetric(std::move(_program), std::move(_programCache), _repetitionCount),
 		m_fixedPointPrecision(_fixedPointPrecision) {}
 
-	size_t fixedPointPrecision() const { return m_fixedPointPrecision; }
+	[[nodiscard]] size_t fixedPointPrecision() const { return m_fixedPointPrecision; }
 
 	size_t evaluate(Chromosome const& _chromosome) override;
 
@@ -134,7 +134,7 @@ public:
 	explicit FitnessMetricCombination(std::vector<std::shared_ptr<FitnessMetric>> _metrics):
 		m_metrics(std::move(_metrics)) {}
 
-	std::vector<std::shared_ptr<FitnessMetric>> const& metrics() const { return m_metrics; }
+	[[nodiscard]] std::vector<std::shared_ptr<FitnessMetric>> const& metrics() const { return m_metrics; }
 
 protected:
 	std::vector<std::shared_ptr<FitnessMetric>> m_metrics;

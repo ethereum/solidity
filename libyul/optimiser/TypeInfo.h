@@ -42,10 +42,10 @@ public:
 	void setVariableType(YulString _name, YulString _type) { m_variableTypes[_name] = _type; }
 
 	/// @returns the type of an expression that is assumed to return exactly one value.
-	YulString typeOf(Expression const& _expression) const;
+	[[nodiscard]] YulString typeOf(Expression const& _expression) const;
 
 	/// \returns the type of variable
-	YulString typeOfVariable(YulString _name) const;
+	[[nodiscard]] YulString typeOfVariable(YulString _name) const;
 
 private:
 	class TypeCollector;

@@ -62,9 +62,9 @@ struct FuncCallArguments
 	/// Names of the arguments if given, otherwise unset
 	std::vector<ASTPointer<ASTString>> names;
 
-	size_t numArguments() const { return types.size(); }
-	size_t numNames() const { return names.size(); }
-	bool hasNamedArguments() const { return !names.empty(); }
+	[[nodiscard]] size_t numArguments() const { return types.size(); }
+	[[nodiscard]] size_t numNames() const { return names.size(); }
+	[[nodiscard]] bool hasNamedArguments() const { return !names.empty(); }
 };
 
 enum class ContractKind { Interface, Contract, Library };

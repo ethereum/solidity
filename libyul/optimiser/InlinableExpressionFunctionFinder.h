@@ -41,7 +41,7 @@ class InlinableExpressionFunctionFinder: public ASTWalker
 {
 public:
 
-	std::map<YulString, FunctionDefinition const*> const& inlinableFunctions() const
+	[[nodiscard]] std::map<YulString, FunctionDefinition const*> const& inlinableFunctions() const
 	{
 		return m_inlinableFunctions;
 	}

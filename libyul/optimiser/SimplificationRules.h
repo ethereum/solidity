@@ -58,7 +58,7 @@ public:
 
 	/// Checks whether the rulelist is non-empty. This is usually enforced
 	/// by the constructor, but we had some issues with static initialization.
-	bool isInitialized() const;
+	[[nodiscard]] bool isInitialized() const;
 
 	static std::optional<std::pair<evmasm::Instruction, std::vector<Expression> const*>>
 	instructionAndArguments(Dialect const& _dialect, Expression const& _expr);
@@ -106,26 +106,26 @@ public:
 	/// Inside one rule, all patterns in the same match group have to match expressions from the
 	/// same expression equivalence class.
 	void setMatchGroup(unsigned _group, std::map<unsigned, Expression const*>& _matchGroups);
-	unsigned matchGroup() const { return m_matchGroup; }
-	bool matches(
+	[[nodiscard]] unsigned matchGroup() const { return m_matchGroup; }
+	[[nodiscard]] bool matches(
 		Expression const& _expr,
 		Dialect const& _dialect,
 		std::map<YulString, AssignedValue> const& _ssaValues
 	) const;
 
-	std::vector<Pattern> arguments() const { return m_arguments; }
+	[[nodiscard]] std::vector<Pattern> arguments() const { return m_arguments; }
 
 	/// @returns the data of the matched expression if this pattern is part of a match group.
-	u256 d() const;
+	[[nodiscard]] u256 d() const;
 
-	evmasm::Instruction instruction() const;
+	[[nodiscard]] evmasm::Instruction instruction() const;
 
 	/// Turns this pattern into an actual expression. Should only be called
 	/// for patterns resulting from an action, i.e. with match groups assigned.
-	Expression toExpression(langutil::SourceLocation const& _location) const;
+	[[nodiscard]] Expression toExpression(langutil::SourceLocation const& _location) const;
 
 private:
-	Expression const& matchGroupValue() const;
+	[[nodiscard]] Expression const& matchGroupValue() const;
 
 	PatternKind m_kind = PatternKind::Any;
 	evmasm::Instruction m_instruction; ///< Only valid if m_kind is Operation

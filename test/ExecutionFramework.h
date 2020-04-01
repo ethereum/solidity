@@ -205,10 +205,10 @@ public:
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
 	}
 
-	u256 gasLimit() const;
-	u256 gasPrice() const;
-	u256 blockHash(u256 const& _blockNumber) const;
-	u256 blockNumber() const;
+	[[nodiscard]] u256 gasLimit() const;
+	[[nodiscard]] u256 gasPrice() const;
+	[[nodiscard]] u256 blockHash(u256 const& _blockNumber) const;
+	[[nodiscard]] u256 blockNumber() const;
 
 	template<typename Range>
 	static bytes encodeArray(bool _dynamicallySized, bool _dynamicallyEncoded, Range const& _elements)
@@ -265,11 +265,11 @@ protected:
 	bool storageEmpty(Address const& _addr);
 	bool addressHasCode(Address const& _addr);
 
-	size_t numLogs() const;
-	size_t numLogTopics(size_t _logIdx) const;
-	util::h256 logTopic(size_t _logIdx, size_t _topicIdx) const;
-	Address logAddress(size_t _logIdx) const;
-	bytes logData(size_t _logIdx) const;
+	[[nodiscard]] size_t numLogs() const;
+	[[nodiscard]] size_t numLogTopics(size_t _logIdx) const;
+	[[nodiscard]] util::h256 logTopic(size_t _logIdx, size_t _topicIdx) const;
+	[[nodiscard]] Address logAddress(size_t _logIdx) const;
+	[[nodiscard]] bytes logData(size_t _logIdx) const;
 
 	langutil::EVMVersion m_evmVersion;
 	solidity::frontend::RevertStrings m_revertStrings = solidity::frontend::RevertStrings::Default;

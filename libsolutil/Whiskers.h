@@ -82,7 +82,7 @@ public:
 		std::vector<StringMap> _values
 	);
 
-	std::string render() const;
+	[[nodiscard]] std::string render() const;
 
 private:
 	// Prevent implicit cast to bool

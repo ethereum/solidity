@@ -342,10 +342,10 @@ public:
     virtual ~HostInterface() noexcept = default;
 
     /// @copydoc evmc_host_interface::account_exists
-    virtual bool account_exists(const address& addr) const noexcept = 0;
+    [[nodiscard]] virtual bool account_exists(const address& addr) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_storage
-    virtual bytes32 get_storage(const address& addr, const bytes32& key) const noexcept = 0;
+    [[nodiscard]] virtual bytes32 get_storage(const address& addr, const bytes32& key) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::set_storage
     virtual evmc_storage_status set_storage(const address& addr,
@@ -353,13 +353,13 @@ public:
                                             const bytes32& value) noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_balance
-    virtual uint256be get_balance(const address& addr) const noexcept = 0;
+    [[nodiscard]] virtual uint256be get_balance(const address& addr) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_code_size
-    virtual size_t get_code_size(const address& addr) const noexcept = 0;
+    [[nodiscard]] virtual size_t get_code_size(const address& addr) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_code_hash
-    virtual bytes32 get_code_hash(const address& addr) const noexcept = 0;
+    [[nodiscard]] virtual bytes32 get_code_hash(const address& addr) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::copy_code
     virtual size_t copy_code(const address& addr,
@@ -374,10 +374,10 @@ public:
     virtual result call(const evmc_message& msg) noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_tx_context
-    virtual evmc_tx_context get_tx_context() const noexcept = 0;
+    [[nodiscard]] virtual evmc_tx_context get_tx_context() const noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_block_hash
-    virtual bytes32 get_block_hash(int64_t block_number) const noexcept = 0;
+    [[nodiscard]] virtual bytes32 get_block_hash(int64_t block_number) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::emit_log
     virtual void emit_log(const address& addr,
@@ -562,22 +562,22 @@ public:
     explicit operator bool() const noexcept { return m_instance != nullptr; }
 
     /// Checks whenever the VM instance is ABI compatible with the current EVMC API.
-    bool is_abi_compatible() const noexcept { return m_instance->abi_version == EVMC_ABI_VERSION; }
+    [[nodiscard]] bool is_abi_compatible() const noexcept { return m_instance->abi_version == EVMC_ABI_VERSION; }
 
     /// @copydoc evmc_vm::name
-    char const* name() const noexcept { return m_instance->name; }
+    [[nodiscard]] char const* name() const noexcept { return m_instance->name; }
 
     /// @copydoc evmc_vm::version
-    char const* version() const noexcept { return m_instance->version; }
+    [[nodiscard]] char const* version() const noexcept { return m_instance->version; }
 
     /// Checks if the VM has the given capability.
-    bool has_capability(evmc_capabilities capability) const noexcept
+    [[nodiscard]] bool has_capability(evmc_capabilities capability) const noexcept
     {
         return (get_capabilities() & static_cast<evmc_capabilities_flagset>(capability)) != 0;
     }
 
     /// @copydoc evmc::vm::get_capabilities
-    evmc_capabilities_flagset get_capabilities() const noexcept
+    [[nodiscard]] evmc_capabilities_flagset get_capabilities() const noexcept
     {
         return m_instance->get_capabilities(m_instance);
     }

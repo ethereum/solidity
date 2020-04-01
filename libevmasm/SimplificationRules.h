@@ -62,7 +62,7 @@ public:
 
 	/// Checks whether the rulelist is non-empty. This is usually enforced
 	/// by the constructor, but we had some issues with static initialization.
-	bool isInitialized() const;
+	[[nodiscard]] bool isInitialized() const;
 
 private:
 	void addRules(std::vector<SimplificationRule<Pattern>> const& _rules);
@@ -105,21 +105,21 @@ public:
 	/// Inside one rule, all patterns in the same match group have to match expressions from the
 	/// same expression equivalence class.
 	void setMatchGroup(unsigned _group, std::map<unsigned, Expression const*>& _matchGroups);
-	unsigned matchGroup() const { return m_matchGroup; }
-	bool matches(Expression const& _expr, ExpressionClasses const& _classes) const;
+	[[nodiscard]] unsigned matchGroup() const { return m_matchGroup; }
+	[[nodiscard]] bool matches(Expression const& _expr, ExpressionClasses const& _classes) const;
 
-	AssemblyItem toAssemblyItem(langutil::SourceLocation const& _location) const;
-	std::vector<Pattern> arguments() const { return m_arguments; }
+	[[nodiscard]] AssemblyItem toAssemblyItem(langutil::SourceLocation const& _location) const;
+	[[nodiscard]] std::vector<Pattern> arguments() const { return m_arguments; }
 
 	/// @returns the id of the matched expression if this pattern is part of a match group.
-	Id id() const { return matchGroupValue().id; }
+	[[nodiscard]] Id id() const { return matchGroupValue().id; }
 	/// @returns the data of the matched expression if this pattern is part of a match group.
-	u256 const& d() const { return matchGroupValue().item->data(); }
+	[[nodiscard]] u256 const& d() const { return matchGroupValue().item->data(); }
 
-	std::string toString() const;
+	[[nodiscard]] std::string toString() const;
 
-	AssemblyItemType type() const { return m_type; }
-	Instruction instruction() const
+	[[nodiscard]] AssemblyItemType type() const { return m_type; }
+	[[nodiscard]] Instruction instruction() const
 	{
 		assertThrow(type() == Operation, OptimizerException, "");
 		return m_instruction;
@@ -127,8 +127,8 @@ public:
 
 private:
 	bool matchesBaseItem(AssemblyItem const* _item) const;
-	Expression const& matchGroupValue() const;
-	u256 const& data() const;
+	[[nodiscard]] Expression const& matchGroupValue() const;
+	[[nodiscard]] u256 const& data() const;
 
 	AssemblyItemType m_type;
 	bool m_requireDataMatch = false;

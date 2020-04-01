@@ -61,7 +61,7 @@ protected:
 	using ElementaryOperation = std::variant<Literal, Identifier, FunctionCall>;
 
 	/// Creates an inline assembly node with the current source location.
-	template <class T> T createWithLocation() const
+	template <class T> [[nodiscard]] T createWithLocation() const
 	{
 		T r;
 		r.location = currentLocation();

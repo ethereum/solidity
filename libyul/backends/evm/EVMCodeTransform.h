@@ -139,7 +139,7 @@ public:
 	{
 	}
 
-	std::vector<StackTooDeepError> const& stackErrors() const { return m_stackErrors; }
+	[[nodiscard]] std::vector<StackTooDeepError> const& stackErrors() const { return m_stackErrors; }
 
 protected:
 	using Context = CodeTransformContext;
@@ -158,7 +158,7 @@ protected:
 	);
 
 	void decreaseReference(YulString _name, Scope::Variable const& _var);
-	bool unreferenced(Scope::Variable const& _var) const;
+	[[nodiscard]] bool unreferenced(Scope::Variable const& _var) const;
 	/// Marks slots of variables that are not used anymore
 	/// and were defined in the current scope for reuse.
 	/// Also POPs unused topmost stack slots.

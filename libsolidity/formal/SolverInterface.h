@@ -74,7 +74,7 @@ public:
 	Expression& operator=(Expression const&) = default;
 	Expression& operator=(Expression&&) = default;
 
-	bool hasCorrectArity() const
+	[[nodiscard]] bool hasCorrectArity() const
 	{
 		static std::map<std::string, unsigned> const operatorsArity{
 			{"ite", 3},

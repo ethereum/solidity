@@ -62,7 +62,7 @@ public:
 
 	/// Overloaded version that passes an error reporter which is never used outside
 	/// of this function.
-	std::string format(
+	[[nodiscard]] std::string format(
 		std::string const& _linePrefix = "",
 		bool const _renderResult = false,
 		bool const _highlight = false
@@ -76,7 +76,7 @@ public:
 	/// stored already (e.g. if test case was updated via isoltest).
 	void reset();
 
-	FunctionCall const& call() const { return m_call; }
+	[[nodiscard]] FunctionCall const& call() const { return m_call; }
 	void calledNonExistingFunction() { m_calledNonExistingFunction = true; }
 	void setFailure(const bool _failure) { m_failure = _failure; }
 	void setRawBytes(const bytes _rawBytes) { m_rawBytes = _rawBytes; }
@@ -97,7 +97,7 @@ private:
 	) const;
 
 	/// Formats a given _bytes applying the _abiType.
-	std::string formatBytesRange(
+	[[nodiscard]] std::string formatBytesRange(
 		bytes const& _bytes,
 		ABIType const& _abiType
 	) const;
@@ -112,14 +112,14 @@ private:
 	) const;
 
 	/// Formats the given parameters using their raw string representation.
-	std::string formatRawParameters(
+	[[nodiscard]] std::string formatRawParameters(
 		ParameterList const& _params,
 		std::string const& _linePrefix = ""
 	) const;
 
 	/// Compares raw expectations (which are converted to a byte representation before),
 	/// and also the expected transaction status of the function call to the actual test results.
-	bool matchesExpectation() const;
+	[[nodiscard]] bool matchesExpectation() const;
 
 	/// Function call that has been parsed and which holds all parameters / expectations.
 	FunctionCall m_call;

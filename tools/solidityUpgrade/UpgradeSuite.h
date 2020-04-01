@@ -81,7 +81,7 @@ public:
 	void reset() { m_changes.clear(); }
 
 	std::vector<UpgradeChange>& changes() { return m_changes; }
-	std::vector<UpgradeChange> const& changes() const { return m_changes; }
+	[[nodiscard]] std::vector<UpgradeChange> const& changes() const { return m_changes; }
 
 protected:
 	std::vector<UpgradeChange> m_changes;

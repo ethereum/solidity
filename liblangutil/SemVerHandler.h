@@ -42,20 +42,20 @@ struct SemVerVersion
 	std::string prerelease;
 	std::string build;
 
-	unsigned major() const { return numbers[0]; }
-	unsigned minor() const { return numbers[1]; }
-	unsigned patch() const { return numbers[2]; }
+	[[nodiscard]] unsigned major() const { return numbers[0]; }
+	[[nodiscard]] unsigned minor() const { return numbers[1]; }
+	[[nodiscard]] unsigned patch() const { return numbers[2]; }
 
-	bool isPrerelease() const { return !prerelease.empty(); }
+	[[nodiscard]] bool isPrerelease() const { return !prerelease.empty(); }
 
 	explicit SemVerVersion(std::string const& _versionString = "0.0.0");
 };
 
 struct SemVerMatchExpression
 {
-	bool matches(SemVerVersion const& _version) const;
+	[[nodiscard]] bool matches(SemVerVersion const& _version) const;
 
-	bool isValid() const { return !m_disjunction.empty(); }
+	[[nodiscard]] bool isValid() const { return !m_disjunction.empty(); }
 
 	struct MatchComponent
 	{
@@ -65,13 +65,13 @@ struct SemVerMatchExpression
 		SemVerVersion version;
 		/// Whether we have 1, 1.2 or 1.2.4
 		unsigned levelsPresent = 1;
-		bool matches(SemVerVersion const& _version) const;
+		[[nodiscard]] bool matches(SemVerVersion const& _version) const;
 	};
 
 	struct Conjunction
 	{
 		std::vector<MatchComponent> components;
-		bool matches(SemVerVersion const& _version) const;
+		[[nodiscard]] bool matches(SemVerVersion const& _version) const;
 	};
 
 	std::vector<Conjunction> m_disjunction;
@@ -92,9 +92,9 @@ private:
 	SemVerMatchExpression::MatchComponent parseMatchComponent();
 	unsigned parseVersionPart();
 
-	char currentChar() const;
+	[[nodiscard]] char currentChar() const;
 	char nextChar();
-	Token currentToken() const;
+	[[nodiscard]] Token currentToken() const;
 	void nextToken();
 
 	std::vector<Token> m_tokens;

@@ -78,11 +78,11 @@ public:
 	static std::variant<Program, langutil::ErrorList> load(langutil::CharStream& _sourceCode);
 	void optimise(std::vector<std::string> const& _optimisationSteps);
 
-	size_t codeSize() const { return computeCodeSize(*m_ast); }
-	yul::Block const& ast() const { return *m_ast; }
+	[[nodiscard]] size_t codeSize() const { return computeCodeSize(*m_ast); }
+	[[nodiscard]] yul::Block const& ast() const { return *m_ast; }
 
 	friend std::ostream& operator<<(std::ostream& _stream, Program const& _program);
-	std::string toJson() const;
+	[[nodiscard]] std::string toJson() const;
 
 private:
 	Program(

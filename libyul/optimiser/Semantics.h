@@ -57,17 +57,17 @@ public:
 	using ASTWalker::operator();
 	void operator()(FunctionCall const& _functionCall) override;
 
-	bool movable() const { return m_sideEffects.movable; }
-	bool sideEffectFree(bool _allowMSizeModification = false) const
+	[[nodiscard]] bool movable() const { return m_sideEffects.movable; }
+	[[nodiscard]] bool sideEffectFree(bool _allowMSizeModification = false) const
 	{
 		if (_allowMSizeModification)
 			return sideEffectFreeIfNoMSize();
 		else
 			return m_sideEffects.sideEffectFree;
 	}
-	bool sideEffectFreeIfNoMSize() const { return m_sideEffects.sideEffectFreeIfNoMSize; }
-	bool invalidatesStorage() const { return m_sideEffects.invalidatesStorage; }
-	bool invalidatesMemory() const { return m_sideEffects.invalidatesMemory; }
+	[[nodiscard]] bool sideEffectFreeIfNoMSize() const { return m_sideEffects.sideEffectFreeIfNoMSize; }
+	[[nodiscard]] bool invalidatesStorage() const { return m_sideEffects.invalidatesStorage; }
+	[[nodiscard]] bool invalidatesMemory() const { return m_sideEffects.invalidatesMemory; }
 
 private:
 	Dialect const& m_dialect;
@@ -157,7 +157,7 @@ public:
 	void visit(Statement const&) override;
 	using ASTWalker::visit;
 
-	std::set<YulString> const& referencedVariables() const { return m_variableReferences; }
+	[[nodiscard]] std::set<YulString> const& referencedVariables() const { return m_variableReferences; }
 
 private:
 	/// Which variables the current expression references.

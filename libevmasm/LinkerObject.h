@@ -52,7 +52,7 @@ struct LinkerObject
 
 	/// @returns a hex representation of the bytecode of the given object, replacing unlinked
 	/// addresses by placeholders. This output is lowercase.
-	std::string toHex() const;
+	[[nodiscard]] std::string toHex() const;
 
 	/// @returns a 36 character string that is used as a placeholder for the library
 	/// address (enclosed by `__` on both sides). The placeholder is the hex representation

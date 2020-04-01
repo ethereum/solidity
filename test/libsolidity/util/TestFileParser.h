@@ -101,7 +101,7 @@ private:
 		}
 
 		/// Returns the current character or '\0' if at end of input.
-		char current() const noexcept
+		[[nodiscard]] char current() const noexcept
 		{
 			if (m_char == m_line.end())
 				return '\0';
@@ -111,10 +111,10 @@ private:
 
 		/// Retrieves the next character ('\0' if that would be at (or beyond) the end of input)
 		/// without advancing the input stream iterator.
-		char peek() const noexcept;
+		[[nodiscard]] char peek() const noexcept;
 
 		/// Returns true if the end of a line is reached, false otherwise.
-		bool isEndOfLine() const { return m_char == m_line.end(); }
+		[[nodiscard]] bool isEndOfLine() const { return m_char == m_line.end(); }
 
 		std::string m_line;
 		std::string::const_iterator m_char;

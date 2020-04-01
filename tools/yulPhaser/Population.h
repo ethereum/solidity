@@ -94,14 +94,14 @@ public:
 		size_t _maxChromosomeLength
 	);
 
-	Population select(Selection const& _selection) const;
+	[[nodiscard]] Population select(Selection const& _selection) const;
 	Population mutate(Selection const& _selection, std::function<Mutation> _mutation) const;
 	Population crossover(PairSelection const& _selection, std::function<Crossover> _crossover) const;
 
 	friend Population operator+(Population _a, Population _b);
 
 	std::shared_ptr<FitnessMetric> fitnessMetric() { return m_fitnessMetric; }
-	std::vector<Individual> const& individuals() const { return m_individuals; }
+	[[nodiscard]] std::vector<Individual> const& individuals() const { return m_individuals; }
 
 	static size_t uniformChromosomeLength(size_t _min, size_t _max) { return SimulationRNG::uniformInt(_min, _max); }
 	static size_t binomialChromosomeLength(size_t _max) { return SimulationRNG::binomialInt(_max, 0.5); }

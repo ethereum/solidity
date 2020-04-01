@@ -54,23 +54,23 @@ struct SourceLocation
 			return std::make_tuple(source->name(), start, end) < std::make_tuple(_other.source->name(), _other.start, _other.end);
 	}
 
-	inline bool contains(SourceLocation const& _other) const
+	[[nodiscard]] inline bool contains(SourceLocation const& _other) const
 	{
 		if (!hasText() || !_other.hasText() || source.get() != _other.source.get())
 			return false;
 		return start <= _other.start && _other.end <= end;
 	}
 
-	inline bool intersects(SourceLocation const& _other) const
+	[[nodiscard]] inline bool intersects(SourceLocation const& _other) const
 	{
 		if (!hasText() || !_other.hasText() || source.get() != _other.source.get())
 			return false;
 		return _other.start < end && start < _other.end;
 	}
 
-	bool isValid() const { return source || start != -1 || end != -1; }
+	[[nodiscard]] bool isValid() const { return source || start != -1 || end != -1; }
 
-	bool hasText() const
+	[[nodiscard]] bool hasText() const
 	{
 		return
 			source &&
@@ -79,7 +79,7 @@ struct SourceLocation
 			end <= int(source->source().length());
 	}
 
-	std::string text() const
+	[[nodiscard]] std::string text() const
 	{
 		assertThrow(source, SourceLocationError, "Requested text from null source.");
 		assertThrow(0 <= start, SourceLocationError, "Invalid source location.");

@@ -109,18 +109,18 @@ public:
 	void docstringParsingError(std::string const& _description);
 	void docstringParsingError(SourceLocation const& _location, std::string const& _description);
 
-	ErrorList const& errors() const;
+	[[nodiscard]] ErrorList const& errors() const;
 
 	void clear();
 
 	/// @returns true iff there is any error (ignores warnings).
-	bool hasErrors() const
+	[[nodiscard]] bool hasErrors() const
 	{
 		return m_errorCount > 0;
 	}
 
 	// @returns true if the maximum error count has been reached.
-	bool hasExcessiveErrors() const;
+	[[nodiscard]] bool hasExcessiveErrors() const;
 
 private:
 	void error(
