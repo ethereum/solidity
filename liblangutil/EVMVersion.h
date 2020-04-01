@@ -62,7 +62,7 @@ public:
 	bool operator==(EVMVersion const& _other) const { return m_version == _other.m_version; }
 	bool operator<(EVMVersion const& _other) const { return m_version < _other.m_version; }
 
-	std::string name() const
+	[[nodiscard]] std::string name() const
 	{
 		switch (m_version)
 		{
@@ -79,19 +79,19 @@ public:
 	}
 
 	/// Has the RETURNDATACOPY and RETURNDATASIZE opcodes.
-	bool supportsReturndata() const { return *this >= byzantium(); }
-	bool hasStaticCall() const { return *this >= byzantium(); }
-	bool hasBitwiseShifting() const { return *this >= constantinople(); }
-	bool hasCreate2() const { return *this >= constantinople(); }
-	bool hasExtCodeHash() const { return *this >= constantinople(); }
-	bool hasChainID() const { return *this >= istanbul(); }
-	bool hasSelfBalance() const { return *this >= istanbul(); }
+	[[nodiscard]] bool supportsReturndata() const { return *this >= byzantium(); }
+	[[nodiscard]] bool hasStaticCall() const { return *this >= byzantium(); }
+	[[nodiscard]] bool hasBitwiseShifting() const { return *this >= constantinople(); }
+	[[nodiscard]] bool hasCreate2() const { return *this >= constantinople(); }
+	[[nodiscard]] bool hasExtCodeHash() const { return *this >= constantinople(); }
+	[[nodiscard]] bool hasChainID() const { return *this >= istanbul(); }
+	[[nodiscard]] bool hasSelfBalance() const { return *this >= istanbul(); }
 
-	bool hasOpcode(evmasm::Instruction _opcode) const;
+	[[nodiscard]] bool hasOpcode(evmasm::Instruction _opcode) const;
 
 	/// Whether we have to retain the costs for the call opcode itself (false),
 	/// or whether we can just forward easily all remaining gas (true).
-	bool canOverchargeGasForCall() const { return *this >= tangerineWhistle(); }
+	[[nodiscard]] bool canOverchargeGasForCall() const { return *this >= tangerineWhistle(); }
 
 private:
 	enum class Version { Homestead, TangerineWhistle, SpuriousDragon, Byzantium, Constantinople, Petersburg, Istanbul, Berlin };

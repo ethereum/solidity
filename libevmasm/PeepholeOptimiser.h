@@ -33,7 +33,7 @@ class PeepholeOptimisationMethod
 {
 public:
 	virtual ~PeepholeOptimisationMethod() = default;
-	virtual size_t windowSize() const;
+	[[nodiscard]] virtual size_t windowSize() const;
 	virtual bool apply(AssemblyItems::const_iterator _in, std::back_insert_iterator<AssemblyItems> _out);
 };
 

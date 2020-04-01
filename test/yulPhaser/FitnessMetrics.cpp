@@ -60,7 +60,7 @@ protected:
 		"    mstore(foo(), bar())\n"
 		"}\n";
 
-	Program optimisedProgram(Program _program) const
+	[[nodiscard]] Program optimisedProgram(Program _program) const
 	{
 		[[maybe_unused]] size_t originalSize = _program.codeSize();
 		Program result = move(_program);

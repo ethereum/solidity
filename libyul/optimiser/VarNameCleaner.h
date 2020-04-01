@@ -70,15 +70,15 @@ private:
 	void renameVariables(std::vector<TypedName>& _variables);
 
 	/// @returns suffix-stripped name, if a suffix was detected, none otherwise.
-	YulString stripSuffix(YulString const& _name) const;
+	[[nodiscard]] YulString stripSuffix(YulString const& _name) const;
 
 	/// Looks out for a "clean name" the given @p name could be trimmed down to.
 	/// @returns a trimmed down and "clean name" in case it found one, none otherwise.
-	YulString findCleanName(YulString const& name) const;
+	[[nodiscard]] YulString findCleanName(YulString const& name) const;
 
 	/// Tests whether a given name was already used within this pass
 	/// or is on the blacklist.
-	bool isUsedName(YulString const& _name) const;
+	[[nodiscard]] bool isUsedName(YulString const& _name) const;
 
 	Dialect const& m_dialect;
 	std::set<YulString> m_blacklist;

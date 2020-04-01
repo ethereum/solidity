@@ -84,7 +84,7 @@ private:
 		void deactivateModules() { m_modules.clear(); }
 
 	private:
-		bool isActivated(Module _module) const
+		[[nodiscard]] bool isActivated(Module _module) const
 		{
 			return m_modules.find(_module) != m_modules.end();
 		}

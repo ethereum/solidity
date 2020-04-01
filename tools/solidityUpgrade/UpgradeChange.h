@@ -56,9 +56,9 @@ public:
 	~UpgradeChange() {}
 
 	langutil::SourceLocation const& location() { return m_location; }
-	std::string source() const { return m_source; }
+	[[nodiscard]] std::string source() const { return m_source; }
 	std::string patch() { return m_patch; }
-	Level level() const { return m_level; }
+	[[nodiscard]] Level level() const { return m_level; }
 
 	/// Does the actual replacement of code under at current source location.
 	/// The change is applied on the upgrade-specific copy of source code.

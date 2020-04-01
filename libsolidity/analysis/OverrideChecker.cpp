@@ -106,7 +106,7 @@ struct CutVertexFinder
 	{
 		run();
 	}
-	std::set<OverrideProxy> const& cutVertices() const { return m_cutVertices; }
+	[[nodiscard]] std::set<OverrideProxy> const& cutVertices() const { return m_cutVertices; }
 
 private:
 	OverrideGraph const& m_graph;

@@ -65,13 +65,13 @@ public:
 	}
 
 private:
-	util::AnsiColorized normalColored() const;
-	util::AnsiColorized frameColored() const;
-	util::AnsiColorized errorColored() const;
-	util::AnsiColorized messageColored() const;
-	util::AnsiColorized secondaryColored() const;
-	util::AnsiColorized highlightColored() const;
-	util::AnsiColorized diagColored() const;
+	[[nodiscard]] util::AnsiColorized normalColored() const;
+	[[nodiscard]] util::AnsiColorized frameColored() const;
+	[[nodiscard]] util::AnsiColorized errorColored() const;
+	[[nodiscard]] util::AnsiColorized messageColored() const;
+	[[nodiscard]] util::AnsiColorized secondaryColored() const;
+	[[nodiscard]] util::AnsiColorized highlightColored() const;
+	[[nodiscard]] util::AnsiColorized diagColored() const;
 
 private:
 	bool m_colored;

@@ -41,26 +41,26 @@ public:
 	vector_ref(vector_type* _data): m_data(_data->data()), m_count(_data->size()) {}
 	explicit operator bool() const { return m_data && m_count; }
 
-	std::vector<unsigned char> toBytes() const { return std::vector<unsigned char>(reinterpret_cast<unsigned char const*>(m_data), reinterpret_cast<unsigned char const*>(m_data) + m_count * sizeof(T)); }
-	std::string toString() const { return std::string((char const*)m_data, ((char const*)m_data) + m_count * sizeof(T)); }
+	[[nodiscard]] std::vector<unsigned char> toBytes() const { return std::vector<unsigned char>(reinterpret_cast<unsigned char const*>(m_data), reinterpret_cast<unsigned char const*>(m_data) + m_count * sizeof(T)); }
+	[[nodiscard]] std::string toString() const { return std::string((char const*)m_data, ((char const*)m_data) + m_count * sizeof(T)); }
 
 	operator vector_ref<T const>() const { return vector_ref<T const>(m_data, m_count); }
 
-	T* data() const { return m_data; }
+	[[nodiscard]] T* data() const { return m_data; }
 	/// @returns the number of elements referenced (not necessarily number of bytes).
-	size_t size() const { return m_count; }
-	bool empty() const { return !m_count; }
+	[[nodiscard]] size_t size() const { return m_count; }
+	[[nodiscard]] bool empty() const { return !m_count; }
 	/// @returns a new vector_ref which is a shifted and shortened view of the original data.
 	/// If this goes out of bounds in any way, returns an empty vector_ref.
 	/// If @a _count is ~size_t(0), extends the view to the end of the data.
-	vector_ref<T> cropped(size_t _begin, size_t _count) const { if (m_data && _begin <= m_count && _count <= m_count && _begin + _count <= m_count) return vector_ref<T>(m_data + _begin, _count == ~size_t(0) ? m_count - _begin : _count); else return vector_ref<T>(); }
+	[[nodiscard]] vector_ref<T> cropped(size_t _begin, size_t _count) const { if (m_data && _begin <= m_count && _count <= m_count && _begin + _count <= m_count) return vector_ref<T>(m_data + _begin, _count == ~size_t(0) ? m_count - _begin : _count); else return vector_ref<T>(); }
 	/// @returns a new vector_ref which is a shifted view of the original data (not going beyond it).
-	vector_ref<T> cropped(size_t _begin) const { if (m_data && _begin <= m_count) return vector_ref<T>(m_data + _begin, m_count - _begin); else return vector_ref<T>(); }
+	[[nodiscard]] vector_ref<T> cropped(size_t _begin) const { if (m_data && _begin <= m_count) return vector_ref<T>(m_data + _begin, m_count - _begin); else return vector_ref<T>(); }
 
 	T* begin() { return m_data; }
 	T* end() { return m_data + m_count; }
-	T const* begin() const { return m_data; }
-	T const* end() const { return m_data + m_count; }
+	[[nodiscard]] T const* begin() const { return m_data; }
+	[[nodiscard]] T const* end() const { return m_data + m_count; }
 
 	T& operator[](size_t _i) { assert(m_data); assert(_i < m_count); return m_data[_i]; }
 	T const& operator[](size_t _i) const { assert(m_data); assert(_i < m_count); return m_data[_i]; }

@@ -108,7 +108,7 @@ private:
 		Map,
 		SimpleData
 	};
-	MajorType nextType() const
+	[[nodiscard]] MajorType nextType() const
 	{
 		unsigned value = (m_metadata.at(m_pos) >> 5) & 0x7;
 		switch (value)
@@ -120,7 +120,7 @@ private:
 			default: assertThrow(false, CBORException, "Unsupported major type.");
 		}
 	}
-	unsigned nextImmediate() const { return m_metadata.at(m_pos) & 0x1f; }
+	[[nodiscard]] unsigned nextImmediate() const { return m_metadata.at(m_pos) & 0x1f; }
 	unsigned readLength()
 	{
 		unsigned length = m_metadata.at(m_pos++) & 0x1f;

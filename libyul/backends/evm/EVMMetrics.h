@@ -46,13 +46,13 @@ public:
 	{}
 
 	/// @returns the full combined costs of deploying and evaluating the expression.
-	size_t costs(Expression const& _expression) const;
+	[[nodiscard]] size_t costs(Expression const& _expression) const;
 	/// @returns the combined costs of deploying and running the instruction, not including
 	/// the costs for its arguments.
-	size_t instructionCosts(evmasm::Instruction _instruction) const;
+	[[nodiscard]] size_t instructionCosts(evmasm::Instruction _instruction) const;
 
 private:
-	size_t combineCosts(std::pair<size_t, size_t> _costs) const;
+	[[nodiscard]] size_t combineCosts(std::pair<size_t, size_t> _costs) const;
 
 	EVMDialect const& m_dialect;
 	bool m_isCreation = false;
@@ -85,7 +85,7 @@ public:
 	void operator()(Identifier const& _identifier) override;
 
 private:
-	size_t singleByteDataGas() const;
+	[[nodiscard]] size_t singleByteDataGas() const;
 	/// Computes the cost of storing and executing the single instruction (excluding its arguments).
 	/// For EXP, it assumes that the exponent is at most 255.
 	/// Does not work particularly exact for anything apart from arithmetic.

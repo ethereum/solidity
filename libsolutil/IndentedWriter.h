@@ -35,7 +35,7 @@ class IndentedWriter
 {
 public:
 	// Returns the formatted output.
-	std::string format() const;
+	[[nodiscard]] std::string format() const;
 
 	// Go one indentation level in.
 	void indent();

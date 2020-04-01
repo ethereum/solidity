@@ -43,7 +43,7 @@ public:
 	void operator()(VariableDeclaration const& _varDecl) override;
 	void operator()(FunctionDefinition const& _funDef) override;
 
-	std::set<YulString> names() const { return m_names; }
+	[[nodiscard]] std::set<YulString> names() const { return m_names; }
 private:
 	std::set<YulString> m_names;
 };
@@ -68,7 +68,7 @@ public:
 	static std::map<YulString, size_t> countReferences(FunctionDefinition const& _function, CountWhat _countWhat = VariablesAndFunctions);
 	static std::map<YulString, size_t> countReferences(Expression const& _expression, CountWhat _countWhat = VariablesAndFunctions);
 
-	std::map<YulString, size_t> const& references() const { return m_references; }
+	[[nodiscard]] std::map<YulString, size_t> const& references() const { return m_references; }
 private:
 	CountWhat m_countWhat = CountWhat::VariablesAndFunctions;
 	std::map<YulString, size_t> m_references;
@@ -83,7 +83,7 @@ public:
 	using ASTWalker::operator ();
 	void operator()(Assignment const& _assignment) override;
 
-	std::set<YulString> const& names() const { return m_names; }
+	[[nodiscard]] std::set<YulString> const& names() const { return m_names; }
 private:
 	std::set<YulString> m_names;
 };
@@ -104,8 +104,8 @@ public:
 	void operator()(Assignment const& _assignment) override;
 	void operator()(FunctionDefinition const& _funDef) override;
 
-	std::set<YulString> const& names() const { return m_names; }
-	bool empty() const noexcept { return m_names.empty(); }
+	[[nodiscard]] std::set<YulString> const& names() const { return m_names; }
+	[[nodiscard]] bool empty() const noexcept { return m_names.empty(); }
 
 private:
 	size_t m_forLoopDepth = 0;

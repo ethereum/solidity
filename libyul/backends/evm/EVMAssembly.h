@@ -44,7 +44,7 @@ public:
 	void setSourceLocation(langutil::SourceLocation const& _location) override;
 	/// Retrieve the current height of the stack. This does not have to be zero
 	/// at the beginning.
-	int stackHeight() const override { return m_stackHeight; }
+	[[nodiscard]] int stackHeight() const override { return m_stackHeight; }
 	void setStackHeight(int height) override { m_stackHeight = height; }
 	/// Append an EVM instruction.
 	void appendInstruction(evmasm::Instruction _instruction) override;

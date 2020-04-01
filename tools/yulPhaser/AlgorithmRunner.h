@@ -67,8 +67,8 @@ public:
 
 	void run(GeneticAlgorithm& _algorithm);
 
-	Options const& options() const { return m_options; }
-	Population const& population() const { return m_population; }
+	[[nodiscard]] Options const& options() const { return m_options; }
+	[[nodiscard]] Population const& population() const { return m_population; }
 
 private:
 	void printRoundSummary(

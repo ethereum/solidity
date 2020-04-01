@@ -41,8 +41,8 @@ public:
 
 	z3::expr toZ3Expr(Expression const& _expr);
 
-	std::map<std::string, z3::expr> constants() const { return m_constants; }
-	std::map<std::string, z3::func_decl> functions() const { return m_functions; }
+	[[nodiscard]] std::map<std::string, z3::expr> constants() const { return m_constants; }
+	[[nodiscard]] std::map<std::string, z3::func_decl> functions() const { return m_functions; }
 
 	z3::context* context() { return &m_context; }
 

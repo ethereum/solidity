@@ -71,10 +71,10 @@ public:
 	explicit CharStream(std::string const& _source, std::string const& name):
 		m_source(_source), m_name(name) {}
 
-	int position() const { return m_position; }
-	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }
+	[[nodiscard]] int position() const { return m_position; }
+	[[nodiscard]] bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }
 
-	char get(size_t _charsForward = 0) const { return m_source[m_position + _charsForward]; }
+	[[nodiscard]] char get(size_t _charsForward = 0) const { return m_source[m_position + _charsForward]; }
 	char advanceAndGet(size_t _chars = 1);
 	/// Sets scanner position to @ _amount characters backwards in source text.
 	/// @returns The character of the current location after update is returned.
@@ -86,15 +86,15 @@ public:
 
 	void reset() { m_position = 0; }
 
-	std::string const& source() const noexcept { return m_source; }
-	std::string const& name() const noexcept { return m_name; }
+	[[nodiscard]] std::string const& source() const noexcept { return m_source; }
+	[[nodiscard]] std::string const& name() const noexcept { return m_name; }
 
 	///@{
 	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
-	std::string lineAtPosition(int _position) const;
-	std::tuple<int, int> translatePositionToLineColumn(int _position) const;
+	[[nodiscard]] std::string lineAtPosition(int _position) const;
+	[[nodiscard]] std::tuple<int, int> translatePositionToLineColumn(int _position) const;
 	///@}
 
 private:

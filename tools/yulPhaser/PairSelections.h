@@ -48,7 +48,7 @@ public:
 	PairSelection& operator=(PairSelection const&) = delete;
 	virtual ~PairSelection() = default;
 
-	virtual std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const = 0;
+	[[nodiscard]] virtual std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const = 0;
 };
 
 /**
@@ -63,7 +63,7 @@ public:
 	explicit RandomPairSelection(double _selectionSize):
 		m_selectionSize(_selectionSize) {}
 
-	std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const override;
+	[[nodiscard]] std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const override;
 
 private:
 	double m_selectionSize;
@@ -89,7 +89,7 @@ public:
 		assert(m_pattern.size() > 0 || _selectionSize == 0.0);
 	}
 
-	std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const override;
+	[[nodiscard]] std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const override;
 
 private:
 	std::vector<std::tuple<size_t, size_t>> m_pattern;

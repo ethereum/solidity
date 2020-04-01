@@ -52,7 +52,7 @@ struct CommonOptions: boost::noncopyable
 	bool showMessages = false;
 	bool showMetadata = false;
 
-	langutil::EVMVersion evmVersion() const;
+	[[nodiscard]] langutil::EVMVersion evmVersion() const;
 
 	virtual bool parse(int argc, char const* const* argv);
 	// Throws a ConfigException on error

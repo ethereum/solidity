@@ -40,7 +40,7 @@ public:
 	/// @returns false on error and appends the error to @a _errors.
 	bool parse(std::string const& _docString, langutil::ErrorReporter& _errorReporter);
 
-	std::multimap<std::string, DocTag> const& tags() const { return m_docTags; }
+	[[nodiscard]] std::multimap<std::string, DocTag> const& tags() const { return m_docTags; }
 
 private:
 	using iter = std::string::const_iterator;

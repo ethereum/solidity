@@ -73,9 +73,9 @@ public:
 		;
 	}
 
-	VariableDeclaration const& declaration() const { return m_declaration; }
-	Kind kind() const { return m_occurrenceKind; };
-	std::optional<langutil::SourceLocation> const& occurrence() const { return m_occurrence; }
+	[[nodiscard]] VariableDeclaration const& declaration() const { return m_declaration; }
+	[[nodiscard]] Kind kind() const { return m_occurrenceKind; };
+	[[nodiscard]] std::optional<langutil::SourceLocation> const& occurrence() const { return m_occurrence; }
 private:
 	/// Declaration of the occurring variable.
 	VariableDeclaration const& m_declaration;
@@ -135,7 +135,7 @@ public:
 
 	bool visit(FunctionDefinition const& _function) override;
 
-	FunctionFlow const& functionFlow(FunctionDefinition const& _function) const;
+	[[nodiscard]] FunctionFlow const& functionFlow(FunctionDefinition const& _function) const;
 
 	class NodeContainer
 	{

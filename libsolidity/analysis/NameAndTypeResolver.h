@@ -88,12 +88,12 @@ public:
 
 	/// Resolves a name in the "current" scope, but also searches parent scopes.
 	/// Should only be called during the initial resolving phase.
-	std::vector<Declaration const*> nameFromCurrentScope(ASTString const& _name, bool _includeInvisibles = false) const;
+	[[nodiscard]] std::vector<Declaration const*> nameFromCurrentScope(ASTString const& _name, bool _includeInvisibles = false) const;
 
 	/// Resolves a path starting from the "current" scope, but also searches parent scopes.
 	/// Should only be called during the initial resolving phase.
 	/// @note Returns a null pointer if any component in the path was not unique or not found.
-	Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path) const;
+	[[nodiscard]] Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path) const;
 
 	/// returns the vector of declarations without repetitions
 	std::vector<Declaration const*> cleanedDeclarations(
@@ -105,7 +105,7 @@ public:
 	void warnVariablesNamedLikeInstructions();
 
 	/// @returns a list of similar identifiers in the current and enclosing scopes. May return empty string if no suggestions.
-	std::string similarNameSuggestions(ASTString const& _name) const;
+	[[nodiscard]] std::string similarNameSuggestions(ASTString const& _name) const;
 
 	/// Sets the current scope.
 	void setScope(ASTNode const* _node);
@@ -201,7 +201,7 @@ private:
 	static bool isOverloadedFunction(Declaration const& _declaration1, Declaration const& _declaration2);
 
 	/// @returns the canonical name of the current scope.
-	std::string currentCanonicalName() const;
+	[[nodiscard]] std::string currentCanonicalName() const;
 
 	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& m_scopes;
 	ASTNode const* m_currentScope = nullptr;

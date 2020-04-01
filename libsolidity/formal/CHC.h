@@ -54,12 +54,12 @@ public:
 
 	void analyze(SourceUnit const& _sources);
 
-	std::set<Expression const*> const& safeAssertions() const { return m_safeAssertions; }
+	[[nodiscard]] std::set<Expression const*> const& safeAssertions() const { return m_safeAssertions; }
 
 	/// This is used if the Horn solver is not directly linked into this binary.
 	/// @returns a list of inputs to the Horn solver that were not part of the argument to
 	/// the constructor.
-	std::vector<std::string> unhandledQueries() const;
+	[[nodiscard]] std::vector<std::string> unhandledQueries() const;
 
 private:
 	/// Visitor functions.
@@ -94,7 +94,7 @@ private:
 	void resetContractAnalysis();
 	void eraseKnowledge();
 	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr) override;
-	bool shouldVisit(FunctionDefinition const& _function) const;
+	[[nodiscard]] bool shouldVisit(FunctionDefinition const& _function) const;
 	void setCurrentBlock(smt::SymbolicFunctionVariable const& _block, std::vector<smt::Expression> const* _arguments = nullptr);
 	std::set<Expression const*, IdCompare> transactionAssertions(ASTNode const* _txRoot);
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);

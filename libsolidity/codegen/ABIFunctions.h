@@ -120,7 +120,7 @@ private:
 
 		/// @returns a string to uniquely identify the encoding options for the encoding
 		/// function name. Skips everything that has its default value.
-		std::string toFunctionNameSuffix() const;
+		[[nodiscard]] std::string toFunctionNameSuffix() const;
 	};
 
 	/// @returns the name of the ABI encoding function with the given type

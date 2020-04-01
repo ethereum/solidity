@@ -66,18 +66,18 @@ struct EVMDialect: public Dialect
 	EVMDialect(langutil::EVMVersion _evmVersion, bool _objectAccess);
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
-	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
+	[[nodiscard]] BuiltinFunctionForEVM const* builtin(YulString _name) const override;
 
-	BuiltinFunctionForEVM const* discardFunction(YulString /*_type*/) const override { return builtin("pop"_yulstring); }
-	BuiltinFunctionForEVM const* equalityFunction(YulString /*_type*/) const override { return builtin("eq"_yulstring); }
-	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("iszero"_yulstring); }
+	[[nodiscard]] BuiltinFunctionForEVM const* discardFunction(YulString /*_type*/) const override { return builtin("pop"_yulstring); }
+	[[nodiscard]] BuiltinFunctionForEVM const* equalityFunction(YulString /*_type*/) const override { return builtin("eq"_yulstring); }
+	[[nodiscard]] BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("iszero"_yulstring); }
 
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
 	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);
 
-	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
+	[[nodiscard]] langutil::EVMVersion evmVersion() const { return m_evmVersion; }
 
-	bool providesObjectAccess() const { return m_objectAccess; }
+	[[nodiscard]] bool providesObjectAccess() const { return m_objectAccess; }
 
 	static SideEffects sideEffectsOfInstruction(evmasm::Instruction _instruction);
 
@@ -102,9 +102,9 @@ struct EVMDialectTyped: public EVMDialect
 	/// Constructor, should only be used internally. Use the factory function below.
 	EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess);
 
-	BuiltinFunctionForEVM const* discardFunction(YulString _type) const override;
-	BuiltinFunctionForEVM const* equalityFunction(YulString _type) const override;
-	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("not"_yulstring); }
+	[[nodiscard]] BuiltinFunctionForEVM const* discardFunction(YulString _type) const override;
+	[[nodiscard]] BuiltinFunctionForEVM const* equalityFunction(YulString _type) const override;
+	[[nodiscard]] BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("not"_yulstring); }
 
 	static EVMDialectTyped const& instance(langutil::EVMVersion _version);
 };

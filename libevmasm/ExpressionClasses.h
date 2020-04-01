@@ -75,9 +75,9 @@ public:
 		unsigned _sequenceNumber = 0
 	);
 	/// @returns the canonical representative of an expression class.
-	Expression const& representative(Id _id) const { return m_representatives.at(_id); }
+	[[nodiscard]] Expression const& representative(Id _id) const { return m_representatives.at(_id); }
 	/// @returns the number of classes.
-	Id size() const { return m_representatives.size(); }
+	[[nodiscard]] Id size() const { return m_representatives.size(); }
 
 	/// Forces the given @a _item with @a _arguments to the class @a _id. This can be used to
 	/// add prior knowledge e.g. about CALLDATA, but has to be used with caution. Will not work as
@@ -106,7 +106,7 @@ public:
 	/// the lifetime of the ExpressionClasses object.
 	AssemblyItem const* storeItem(AssemblyItem const& _item);
 
-	std::string fullDAGToString(Id _id) const;
+	[[nodiscard]] std::string fullDAGToString(Id _id) const;
 
 private:
 	/// Tries to simplify the given expression.
@@ -116,7 +116,7 @@ private:
 	/// Rebuilds an expression from a (matched) pattern.
 	Id rebuildExpression(ExpressionTemplate const& _template);
 
-	std::vector<std::pair<Pattern, std::function<Pattern()>>> createRules() const;
+	[[nodiscard]] std::vector<std::pair<Pattern, std::function<Pattern()>>> createRules() const;
 
 	/// Expression equivalence class representatives - we only store one item of an equivalence.
 	std::vector<Expression> m_representatives;

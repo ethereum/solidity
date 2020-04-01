@@ -46,8 +46,8 @@ public:
 	void operator()(VariableDeclaration const& _varDecl) override;
 	void operator()(Assignment const& _assignment) override;
 
-	std::map<YulString, Expression const*> const& values() const { return m_values; }
-	Expression const* value(YulString _name) const { return m_values.at(_name); }
+	[[nodiscard]] std::map<YulString, Expression const*> const& values() const { return m_values; }
+	[[nodiscard]] Expression const* value(YulString _name) const { return m_values.at(_name); }
 
 	static std::set<YulString> ssaVariables(Block const& _ast);
 

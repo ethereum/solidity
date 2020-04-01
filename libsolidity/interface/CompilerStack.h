@@ -113,14 +113,14 @@ public:
 	~CompilerStack();
 
 	/// @returns the list of errors that occurred during parsing and type checking.
-	langutil::ErrorList const& errors() const { return m_errorReporter.errors(); }
+	[[nodiscard]] langutil::ErrorList const& errors() const { return m_errorReporter.errors(); }
 
 	/// @returns the current state.
-	State state() const { return m_stackState; }
+	[[nodiscard]] State state() const { return m_stackState; }
 
-	bool hasError() const { return m_hasError; }
+	[[nodiscard]] bool hasError() const { return m_hasError; }
 
-	bool compilationSuccessful() const { return m_stackState >= CompilationSuccessful; }
+	[[nodiscard]] bool compilationSuccessful() const { return m_stackState >= CompilationSuccessful; }
 
 	/// Resets the compiler to an empty state. Unless @a _keepSettings is set to true,
 	/// all settings are reset as well.
@@ -217,102 +217,102 @@ public:
 	bool compile();
 
 	/// @returns the list of sources (paths) used
-	std::vector<std::string> sourceNames() const;
+	[[nodiscard]] std::vector<std::string> sourceNames() const;
 
 	/// @returns a mapping assigning each source name its index inside the vector returned
 	/// by sourceNames().
-	std::map<std::string, unsigned> sourceIndices() const;
+	[[nodiscard]] std::map<std::string, unsigned> sourceIndices() const;
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
-	langutil::Scanner const& scanner(std::string const& _sourceName) const;
+	[[nodiscard]] langutil::Scanner const& scanner(std::string const& _sourceName) const;
 
 	/// @returns the parsed source unit with the supplied name.
-	SourceUnit const& ast(std::string const& _sourceName) const;
+	[[nodiscard]] SourceUnit const& ast(std::string const& _sourceName) const;
 
 	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
 	/// line and columns are numbered starting from 1 with following order:
 	/// start line, start column, end line, end column
-	std::tuple<int, int, int, int> positionFromSourceLocation(langutil::SourceLocation const& _sourceLocation) const;
+	[[nodiscard]] std::tuple<int, int, int, int> positionFromSourceLocation(langutil::SourceLocation const& _sourceLocation) const;
 
 	/// @returns a list of unhandled queries to the SMT solver (has to be supplied in a second run
 	/// by calling @a addSMTLib2Response).
-	std::vector<std::string> const& unhandledSMTLib2Queries() const { return m_unhandledSMTLib2Queries; }
+	[[nodiscard]] std::vector<std::string> const& unhandledSMTLib2Queries() const { return m_unhandledSMTLib2Queries; }
 
 	/// @returns a list of the contract names in the sources.
-	std::vector<std::string> contractNames() const;
+	[[nodiscard]] std::vector<std::string> contractNames() const;
 
 	/// @returns the name of the last contract.
-	std::string const lastContractName() const;
+	[[nodiscard]] std::string const lastContractName() const;
 
 	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
-	std::string const filesystemFriendlyName(std::string const& _contractName) const;
+	[[nodiscard]] std::string const filesystemFriendlyName(std::string const& _contractName) const;
 
 	/// @returns the IR representation of a contract.
-	std::string const& yulIR(std::string const& _contractName) const;
+	[[nodiscard]] std::string const& yulIR(std::string const& _contractName) const;
 
 	/// @returns the optimized IR representation of a contract.
-	std::string const& yulIROptimized(std::string const& _contractName) const;
+	[[nodiscard]] std::string const& yulIROptimized(std::string const& _contractName) const;
 
 	/// @returns the Ewasm text representation of a contract.
-	std::string const& ewasm(std::string const& _contractName) const;
+	[[nodiscard]] std::string const& ewasm(std::string const& _contractName) const;
 
 	/// @returns the Ewasm representation of a contract.
-	evmasm::LinkerObject const& ewasmObject(std::string const& _contractName) const;
+	[[nodiscard]] evmasm::LinkerObject const& ewasmObject(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
-	evmasm::LinkerObject const& object(std::string const& _contractName) const;
+	[[nodiscard]] evmasm::LinkerObject const& object(std::string const& _contractName) const;
 
 	/// @returns the runtime object for the contract.
-	evmasm::LinkerObject const& runtimeObject(std::string const& _contractName) const;
+	[[nodiscard]] evmasm::LinkerObject const& runtimeObject(std::string const& _contractName) const;
 
 	/// @returns normal contract assembly items
-	evmasm::AssemblyItems const* assemblyItems(std::string const& _contractName) const;
+	[[nodiscard]] evmasm::AssemblyItems const* assemblyItems(std::string const& _contractName) const;
 
 	/// @returns runtime contract assembly items
-	evmasm::AssemblyItems const* runtimeAssemblyItems(std::string const& _contractName) const;
+	[[nodiscard]] evmasm::AssemblyItems const* runtimeAssemblyItems(std::string const& _contractName) const;
 
 	/// @returns the string that provides a mapping between bytecode and sourcecode or a nullptr
 	/// if the contract does not (yet) have bytecode.
-	std::string const* sourceMapping(std::string const& _contractName) const;
+	[[nodiscard]] std::string const* sourceMapping(std::string const& _contractName) const;
 
 	/// @returns the string that provides a mapping between runtime bytecode and sourcecode.
 	/// if the contract does not (yet) have bytecode.
-	std::string const* runtimeSourceMapping(std::string const& _contractName) const;
+	[[nodiscard]] std::string const* runtimeSourceMapping(std::string const& _contractName) const;
 
 	/// @return a verbose text representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	std::string assemblyString(std::string const& _contractName, StringMap _sourceCodes = StringMap()) const;
+	[[nodiscard]] std::string assemblyString(std::string const& _contractName, StringMap _sourceCodes = StringMap()) const;
 
 	/// @returns a JSON representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	Json::Value assemblyJSON(std::string const& _contractName) const;
+	[[nodiscard]] Json::Value assemblyJSON(std::string const& _contractName) const;
 
 	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& contractABI(std::string const& _contractName) const;
+	[[nodiscard]] Json::Value const& contractABI(std::string const& _contractName) const;
 
 	/// @returns a JSON representing the storage layout of the contract.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& storageLayout(std::string const& _contractName) const;
+	[[nodiscard]] Json::Value const& storageLayout(std::string const& _contractName) const;
 
 	/// @returns a JSON representing the contract's user documentation.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& natspecUser(std::string const& _contractName) const;
+	[[nodiscard]] Json::Value const& natspecUser(std::string const& _contractName) const;
 
 	/// @returns a JSON representing the contract's developer documentation.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& natspecDev(std::string const& _contractName) const;
+	[[nodiscard]] Json::Value const& natspecDev(std::string const& _contractName) const;
 
 	/// @returns a JSON representing a map of method identifiers (hashes) to function names.
-	Json::Value methodIdentifiers(std::string const& _contractName) const;
+	[[nodiscard]] Json::Value methodIdentifiers(std::string const& _contractName) const;
 
 	/// @returns the Contract Metadata
-	std::string const& metadata(std::string const& _contractName) const;
+	[[nodiscard]] std::string const& metadata(std::string const& _contractName) const;
 
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
-	Json::Value gasEstimates(std::string const& _contractName) const;
+	[[nodiscard]] Json::Value gasEstimates(std::string const& _contractName) const;
 
 	/// Overwrites the release/prerelease flag. Should only be used for testing.
 	void overwriteReleaseFlag(bool release) { m_release = release; }
@@ -359,10 +359,10 @@ private:
 	void resolveImports();
 
 	/// @returns true if the source is requested to be compiled.
-	bool isRequestedSource(std::string const& _sourceName) const;
+	[[nodiscard]] bool isRequestedSource(std::string const& _sourceName) const;
 
 	/// @returns true if the contract is requested to be compiled.
-	bool isRequestedContract(ContractDefinition const& _contract) const;
+	[[nodiscard]] bool isRequestedContract(ContractDefinition const& _contract) const;
 
 	/// Compile a single contract.
 	/// @param _otherCompilers provides access to compilers of other contracts, to get
@@ -385,45 +385,45 @@ private:
 
 	/// @returns the contract object for the given @a _contractName.
 	/// Can only be called after state is CompilationSuccessful.
-	Contract const& contract(std::string const& _contractName) const;
+	[[nodiscard]] Contract const& contract(std::string const& _contractName) const;
 
 	/// @returns the source object for the given @a _sourceName.
 	/// Can only be called after state is SourcesSet.
-	Source const& source(std::string const& _sourceName) const;
+	[[nodiscard]] Source const& source(std::string const& _sourceName) const;
 
 	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
 	/// does not exist.
-	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
+	[[nodiscard]] ContractDefinition const& contractDefinition(std::string const& _contractName) const;
 
 	/// @returns the metadata JSON as a compact string for the given contract.
-	std::string createMetadata(Contract const& _contract) const;
+	[[nodiscard]] std::string createMetadata(Contract const& _contract) const;
 
 	/// @returns the metadata CBOR for the given serialised metadata JSON.
 	bytes createCBORMetadata(std::string const& _metadata, bool _experimentalMode);
 
 	/// @returns the contract ABI as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
-	Json::Value const& contractABI(Contract const&) const;
+	[[nodiscard]] Json::Value const& contractABI(Contract const&) const;
 
 	/// @returns the storage layout of the contract as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
-	Json::Value const& storageLayout(Contract const&) const;
+	[[nodiscard]] Json::Value const& storageLayout(Contract const&) const;
 
 	/// @returns the Natspec User documentation as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
-	Json::Value const& natspecUser(Contract const&) const;
+	[[nodiscard]] Json::Value const& natspecUser(Contract const&) const;
 
 	/// @returns the Natspec Developer documentation as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
-	Json::Value const& natspecDev(Contract const&) const;
+	[[nodiscard]] Json::Value const& natspecDev(Contract const&) const;
 
 	/// @returns the Contract Metadata
 	/// This will generate the metadata and store it in the Contract object if it is not present yet.
-	std::string const& metadata(Contract const&) const;
+	[[nodiscard]] std::string const& metadata(Contract const&) const;
 
 	/// @returns the offset of the entry point of the given function into the list of assembly items
 	/// or zero if it is not found or does not exist.
-	size_t functionEntryPoint(
+	[[nodiscard]] size_t functionEntryPoint(
 		std::string const& _contractName,
 		FunctionDefinition const& _function
 	) const;

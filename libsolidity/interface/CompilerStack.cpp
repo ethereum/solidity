@@ -1308,7 +1308,7 @@ public:
 		pushBool(value);
 	}
 
-	bytes serialise() const
+	[[nodiscard]] bytes serialise() const
 	{
 		unsigned size = m_data.size() + 1;
 		solAssert(size <= 0xffff, "Metadata too large.");

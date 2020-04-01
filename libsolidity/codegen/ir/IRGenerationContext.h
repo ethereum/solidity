@@ -66,16 +66,16 @@ public:
 	{
 		m_mostDerivedContract = &_mostDerivedContract;
 	}
-	ContractDefinition const& mostDerivedContract() const;
+	[[nodiscard]] ContractDefinition const& mostDerivedContract() const;
 
 
 	IRVariable const& addLocalVariable(VariableDeclaration const& _varDecl);
-	bool isLocalVariable(VariableDeclaration const& _varDecl) const { return m_localVariables.count(&_varDecl); }
+	[[nodiscard]] bool isLocalVariable(VariableDeclaration const& _varDecl) const { return m_localVariables.count(&_varDecl); }
 	IRVariable const& localVariable(VariableDeclaration const& _varDecl);
 
 	void addStateVariable(VariableDeclaration const& _varDecl, u256 _storageOffset, unsigned _byteOffset);
-	bool isStateVariable(VariableDeclaration const& _varDecl) const { return m_stateVariables.count(&_varDecl); }
-	std::pair<u256, unsigned> storageLocationOfVariable(VariableDeclaration const& _varDecl) const
+	[[nodiscard]] bool isStateVariable(VariableDeclaration const& _varDecl) const { return m_stateVariables.count(&_varDecl); }
+	[[nodiscard]] std::pair<u256, unsigned> storageLocationOfVariable(VariableDeclaration const& _varDecl) const
 	{
 		return m_stateVariables.at(&_varDecl);
 	}
@@ -91,13 +91,13 @@ public:
 	/// @returns a new copy of the utility function generator (but using the same function set).
 	YulUtilFunctions utils();
 
-	langutil::EVMVersion evmVersion() const { return m_evmVersion; };
+	[[nodiscard]] langutil::EVMVersion evmVersion() const { return m_evmVersion; };
 
 	/// @returns code that stores @param _message for revert reason
 	/// if m_revertStrings is debug.
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
-	RevertStrings revertStrings() const { return m_revertStrings; }
+	[[nodiscard]] RevertStrings revertStrings() const { return m_revertStrings; }
 
 private:
 	langutil::EVMVersion m_evmVersion;

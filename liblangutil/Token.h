@@ -354,12 +354,12 @@ public:
 		assertDetails(_token, _firstNumber, _secondNumber);
 	}
 
-	unsigned int firstNumber() const { return m_firstNumber; }
-	unsigned int secondNumber() const { return m_secondNumber; }
-	Token token() const { return m_token; }
+	[[nodiscard]] unsigned int firstNumber() const { return m_firstNumber; }
+	[[nodiscard]] unsigned int secondNumber() const { return m_secondNumber; }
+	[[nodiscard]] Token token() const { return m_token; }
 
 	///if tokValue is set to true, then returns the actual token type name, otherwise, returns full type
-	std::string toString(bool const& tokenValue = false) const
+	[[nodiscard]] std::string toString(bool const& tokenValue = false) const
 	{
 		std::string name = TokenTraits::toString(m_token);
 		if (tokenValue || (firstNumber() == 0 && secondNumber() == 0))

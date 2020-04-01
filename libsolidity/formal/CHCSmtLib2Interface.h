@@ -46,9 +46,9 @@ public:
 
 	void declareVariable(std::string const& _name, SortPointer const& _sort) override;
 
-	std::vector<std::string> unhandledQueries() const { return m_unhandledQueries; }
+	[[nodiscard]] std::vector<std::string> unhandledQueries() const { return m_unhandledQueries; }
 
-	SMTLib2Interface* smtlib2Interface() const { return m_smtlib2.get(); }
+	[[nodiscard]] SMTLib2Interface* smtlib2Interface() const { return m_smtlib2.get(); }
 
 private:
 	void declareFunction(std::string const& _name, SortPointer const& _sort);

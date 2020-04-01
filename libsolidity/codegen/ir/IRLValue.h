@@ -42,7 +42,7 @@ struct IRLValue
 		///           functions
 		/// string: Used when the offset is determined at run time
 		std::variant<std::string, unsigned> const offset;
-		std::string offsetString() const
+		[[nodiscard]] std::string offsetString() const
 		{
 			if (std::holds_alternative<unsigned>(offset))
 				return std::to_string(std::get<unsigned>(offset));

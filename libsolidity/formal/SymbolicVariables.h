@@ -49,10 +49,10 @@ public:
 
 	virtual ~SymbolicVariable() = default;
 
-	virtual Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const;
-	std::string currentName() const;
-	virtual Expression valueAtIndex(int _index) const;
-	virtual std::string nameAtIndex(int _index) const;
+	[[nodiscard]] virtual Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const;
+	[[nodiscard]] std::string currentName() const;
+	[[nodiscard]] virtual Expression valueAtIndex(int _index) const;
+	[[nodiscard]] virtual std::string nameAtIndex(int _index) const;
 	virtual Expression resetIndex();
 	virtual Expression increaseIndex();
 	virtual Expression operator()(std::vector<Expression> /*_arguments*/) const
@@ -60,15 +60,15 @@ public:
 		solAssert(false, "Function application to non-function.");
 	}
 
-	unsigned index() const { return m_ssa->index(); }
+	[[nodiscard]] unsigned index() const { return m_ssa->index(); }
 	unsigned& index() { return m_ssa->index(); }
 
-	SortPointer const& sort() const { return m_sort; }
-	frontend::TypePointer const& type() const { return m_type; }
-	frontend::TypePointer const& originalType() const { return m_originalType; }
+	[[nodiscard]] SortPointer const& sort() const { return m_sort; }
+	[[nodiscard]] frontend::TypePointer const& type() const { return m_type; }
+	[[nodiscard]] frontend::TypePointer const& originalType() const { return m_originalType; }
 
 protected:
-	std::string uniqueSymbol(unsigned _index) const;
+	[[nodiscard]] std::string uniqueSymbol(unsigned _index) const;
 
 	/// SMT sort.
 	SortPointer m_sort;
@@ -156,15 +156,15 @@ public:
 		EncodingContext& _context
 	);
 
-	Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
+	[[nodiscard]] Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
 
 	// Explicit request the function declaration.
-	Expression currentFunctionValue() const;
+	[[nodiscard]] Expression currentFunctionValue() const;
 
-	Expression valueAtIndex(int _index) const override;
+	[[nodiscard]] Expression valueAtIndex(int _index) const override;
 
 	// Explicit request the function declaration.
-	Expression functionValueAtIndex(int _index) const;
+	[[nodiscard]] Expression functionValueAtIndex(int _index) const;
 
 	Expression resetIndex() override;
 	Expression increaseIndex() override;
@@ -213,7 +213,7 @@ public:
 		EncodingContext& _context
 	);
 
-	Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
+	[[nodiscard]] Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
 };
 
 /**

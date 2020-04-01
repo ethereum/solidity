@@ -32,7 +32,7 @@ public:
 	void resetIndex();
 
 	/// This function returns the current index of this SSA variable.
-	unsigned index() const { return m_currentIndex; }
+	[[nodiscard]] unsigned index() const { return m_currentIndex; }
 	unsigned& index() { return m_currentIndex; }
 
 	unsigned operator++()

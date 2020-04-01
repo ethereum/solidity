@@ -50,7 +50,7 @@ public:
 	/// Estimates the gas consumption for every assembly item in the given assembly and stores
 	/// it by source location.
 	/// @returns a mapping from each AST node to a pair of its particular and syntactically accumulated gas costs.
-	ASTGasConsumptionSelfAccumulated structuralEstimation(
+	[[nodiscard]] ASTGasConsumptionSelfAccumulated structuralEstimation(
 		evmasm::AssemblyItems const& _items,
 		std::vector<ASTNode const*> const& _ast
 	) const;
@@ -65,7 +65,7 @@ public:
 
 	/// @returns the estimated gas consumption by the (public or external) function with the
 	/// given signature. If no signature is given, estimates the maximum gas usage.
-	GasConsumption functionalEstimation(
+	[[nodiscard]] GasConsumption functionalEstimation(
 		evmasm::AssemblyItems const& _items,
 		std::string const& _signature = ""
 	) const;
@@ -73,7 +73,7 @@ public:
 	/// @returns the estimated gas consumption by the given function which starts at the given
 	/// offset into the list of assembly items.
 	/// @note this does not work correctly for recursive functions.
-	GasConsumption functionalEstimation(
+	[[nodiscard]] GasConsumption functionalEstimation(
 		evmasm::AssemblyItems const& _items,
 		size_t const& _offset,
 		FunctionDefinition const& _function

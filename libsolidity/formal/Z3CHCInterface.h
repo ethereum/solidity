@@ -41,7 +41,7 @@ public:
 
 	std::pair<CheckResult, std::vector<std::string>> query(Expression const& _expr) override;
 
-	Z3Interface* z3Interface() const { return m_z3Interface.get(); }
+	[[nodiscard]] Z3Interface* z3Interface() const { return m_z3Interface.get(); }
 
 private:
 	// Used to handle variables.

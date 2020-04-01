@@ -64,7 +64,7 @@ public:
 		return make_shared<NodeType>(m_parser.nextID(), m_location, std::forward<Args>(_args)...);
 	}
 
-	SourceLocation const& location() const noexcept { return m_location; }
+	[[nodiscard]] SourceLocation const& location() const noexcept { return m_location; }
 
 private:
 	Parser& m_parser;

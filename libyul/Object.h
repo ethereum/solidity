@@ -68,7 +68,7 @@ public:
 
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object.
-	std::set<YulString> dataNames() const;
+	[[nodiscard]] std::set<YulString> dataNames() const;
 
 	std::shared_ptr<Block> code;
 	std::vector<std::shared_ptr<ObjectNode>> subObjects;

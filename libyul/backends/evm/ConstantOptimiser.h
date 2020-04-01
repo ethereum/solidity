@@ -91,9 +91,9 @@ private:
 	/// literal if necessary.
 	Representation const& findRepresentation(u256 const& _value);
 
-	Representation represent(u256 const& _value) const;
-	Representation represent(YulString _instruction, Representation const& _arg) const;
-	Representation represent(YulString _instruction, Representation const& _arg1, Representation const& _arg2) const;
+	[[nodiscard]] Representation represent(u256 const& _value) const;
+	[[nodiscard]] Representation represent(YulString _instruction, Representation const& _arg) const;
+	[[nodiscard]] Representation represent(YulString _instruction, Representation const& _arg1, Representation const& _arg2) const;
 
 	Representation min(Representation _a, Representation _b);
 

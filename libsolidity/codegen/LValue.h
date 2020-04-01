@@ -50,7 +50,7 @@ protected:
 public:
 	virtual ~LValue() = default;
 	/// @returns the number of stack slots occupied by the lvalue reference
-	virtual unsigned sizeOnStack() const { return 1; }
+	[[nodiscard]] virtual unsigned sizeOnStack() const { return 1; }
 	/// Copies the value of the current lvalue to the top of the stack and, if @a _remove is true,
 	/// also removes the reference from the stack.
 	/// @a _location source location of the current expression, used for error reporting.
@@ -81,7 +81,7 @@ class StackVariable: public LValue
 public:
 	StackVariable(CompilerContext& _compilerContext, VariableDeclaration const& _declaration);
 
-	unsigned sizeOnStack() const override { return 0; }
+	[[nodiscard]] unsigned sizeOnStack() const override { return 0; }
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	void storeValue(
 		Type const& _sourceType,
@@ -107,7 +107,7 @@ class MemoryItem: public LValue
 {
 public:
 	MemoryItem(CompilerContext& _compilerContext, Type const& _type, bool _padded = true);
-	unsigned sizeOnStack() const override { return 1; }
+	[[nodiscard]] unsigned sizeOnStack() const override { return 1; }
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	void storeValue(
 		Type const& _sourceType,
@@ -132,7 +132,7 @@ class ImmutableItem: public LValue
 {
 public:
 	ImmutableItem(CompilerContext& _compilerContext, VariableDeclaration const& _variable);
-	unsigned sizeOnStack() const override { return 0; }
+	[[nodiscard]] unsigned sizeOnStack() const override { return 0; }
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	void storeValue(
 		Type const& _sourceType,
@@ -159,7 +159,7 @@ public:
 	StorageItem(CompilerContext& _compilerContext, VariableDeclaration const& _declaration);
 	/// Constructs the LValue and assumes that the storage reference is already on the stack.
 	StorageItem(CompilerContext& _compilerContext, Type const& _type);
-	unsigned sizeOnStack() const override { return 2; }
+	[[nodiscard]] unsigned sizeOnStack() const override { return 2; }
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	void storeValue(
 		Type const& _sourceType,
@@ -181,7 +181,7 @@ class StorageByteArrayElement: public LValue
 public:
 	/// Constructs the LValue and assumes that the storage reference is already on the stack.
 	StorageByteArrayElement(CompilerContext& _compilerContext);
-	unsigned sizeOnStack() const override { return 2; }
+	[[nodiscard]] unsigned sizeOnStack() const override { return 2; }
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	void storeValue(
 		Type const& _sourceType,
@@ -203,7 +203,7 @@ public:
 	/// Constructs the LValue assuming that the other LValues are present on the stack.
 	/// Empty unique_ptrs are possible if e.g. some values should be ignored during assignment.
 	TupleObject(CompilerContext& _compilerContext, std::vector<std::unique_ptr<LValue>>&& _lvalues);
-	unsigned sizeOnStack() const override;
+	[[nodiscard]] unsigned sizeOnStack() const override;
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	void storeValue(
 		Type const& _sourceType,

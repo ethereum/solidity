@@ -72,7 +72,7 @@ public:
 	{}
 
 	/// @returns the scanner used during parsing
-	langutil::Scanner const& scanner() const;
+	[[nodiscard]] langutil::Scanner const& scanner() const;
 
 	/// Runs parsing and analysis steps, returns false if input cannot be assembled.
 	/// Multiple calls overwrite the previous state.
@@ -86,16 +86,16 @@ public:
 	void translate(Language _targetLanguage);
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
-	MachineAssemblyObject assemble(Machine _machine) const;
+	[[nodiscard]] MachineAssemblyObject assemble(Machine _machine) const;
 
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
-	langutil::ErrorList const& errors() const { return m_errors; }
+	[[nodiscard]] langutil::ErrorList const& errors() const { return m_errors; }
 
 	/// Pretty-print the input after having parsed it.
-	std::string print() const;
+	[[nodiscard]] std::string print() const;
 
 	/// Return the parsed and analyzed object.
-	std::shared_ptr<Object> parserResult() const;
+	[[nodiscard]] std::shared_ptr<Object> parserResult() const;
 
 private:
 	bool analyzeParsed();

@@ -516,7 +516,7 @@ BOOST_AUTO_TEST_CASE(builtins_parser)
 {
 	struct SimpleDialect: public Dialect
 	{
-		BuiltinFunction const* builtin(YulString _name) const override
+		[[nodiscard]] BuiltinFunction const* builtin(YulString _name) const override
 		{
 			return _name == "builtin"_yulstring ? &f : nullptr;
 		}
@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 {
 	struct SimpleDialect: public Dialect
 	{
-		BuiltinFunction const* builtin(YulString _name) const override
+		[[nodiscard]] BuiltinFunction const* builtin(YulString _name) const override
 		{
 			return _name == "builtin"_yulstring ? &f : nullptr;
 		}

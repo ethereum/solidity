@@ -172,7 +172,7 @@ private:
 		};
 		std::vector<ASTPointer<PrimaryExpression>> path;
 		std::vector<Index> indices;
-		bool empty() const;
+		[[nodiscard]] bool empty() const;
 	};
 
 	/// Returns the next AST node ID
@@ -182,7 +182,7 @@ private:
 	/// Performs limited look-ahead to distinguish between variable declaration and expression statement.
 	/// For source code of the form "a[][8]" ("IndexAccessStructure"), this is not possible to
 	/// decide with constant look-ahead.
-	LookAheadInfo peekStatementType() const;
+	[[nodiscard]] LookAheadInfo peekStatementType() const;
 	/// @returns an IndexAccessedPath as a prestage to parsing a variable declaration (type name)
 	/// or an expression;
 	IndexAccessedPath parseIndexAccessedPath();

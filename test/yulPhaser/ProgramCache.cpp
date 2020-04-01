@@ -47,7 +47,7 @@ protected:
 		"    }\n"
 		"}\n";
 
-	Program optimisedProgram(Program _program, string _abbreviatedOptimisationSteps) const
+	[[nodiscard]] Program optimisedProgram(Program _program, string _abbreviatedOptimisationSteps) const
 	{
 		Program result = move(_program);
 		result.optimise(Chromosome(_abbreviatedOptimisationSteps).optimisationSteps());

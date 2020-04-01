@@ -141,7 +141,7 @@ public:
 	/// @param _inculdeExternalCosts if true, include costs caused by other contracts in calls.
 	GasConsumption estimateMax(AssemblyItem const& _item, bool _includeExternalCosts = true);
 
-	u256 const& largestMemoryAccess() const { return m_largestMemoryAccess; }
+	[[nodiscard]] u256 const& largestMemoryAccess() const { return m_largestMemoryAccess; }
 
 	/// @returns gas costs for simple instructions with constant gas costs (that do not
 	/// change with EVM versions)

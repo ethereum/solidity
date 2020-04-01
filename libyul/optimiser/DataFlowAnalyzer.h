@@ -140,9 +140,9 @@ protected:
 	);
 
 	/// Returns true iff the variable is in scope.
-	bool inScope(YulString _variableName) const;
+	[[nodiscard]] bool inScope(YulString _variableName) const;
 
-	std::optional<std::pair<YulString, YulString>> isSimpleStore(
+	[[nodiscard]] std::optional<std::pair<YulString, YulString>> isSimpleStore(
 		evmasm::Instruction _store,
 		ExpressionStatement const& _statement
 	) const;

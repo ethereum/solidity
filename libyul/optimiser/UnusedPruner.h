@@ -58,7 +58,7 @@ public:
 	void operator()(Block& _block) override;
 
 	// @returns true iff the code changed in the previous run.
-	bool shouldRunAgain() const { return m_shouldRunAgain; }
+	[[nodiscard]] bool shouldRunAgain() const { return m_shouldRunAgain; }
 
 	// Run the pruner until the code does not change anymore.
 	static void runUntilStabilised(
@@ -115,7 +115,7 @@ private:
 		std::set<YulString> const& _externallyUsedFunctions = {}
 	);
 
-	bool used(YulString _name) const;
+	[[nodiscard]] bool used(YulString _name) const;
 	void subtractReferences(std::map<YulString, size_t> const& _subtrahend);
 
 	Dialect const& m_dialect;

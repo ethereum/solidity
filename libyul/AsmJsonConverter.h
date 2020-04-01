@@ -58,7 +58,7 @@ public:
 	Json::Value operator()(Label const& _node) const;
 
 private:
-	Json::Value createAstNode(langutil::SourceLocation const& _location, std::string _nodeType) const;
+	[[nodiscard]] Json::Value createAstNode(langutil::SourceLocation const& _location, std::string _nodeType) const;
 	template <class T>
 	Json::Value vectorOfVariantsToJson(std::vector<T> const& vec) const;
 

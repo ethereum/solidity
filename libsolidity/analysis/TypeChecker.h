@@ -56,10 +56,10 @@ public:
 	bool checkTypeRequirements(ASTNode const& _contract);
 
 	/// @returns the type of an expression and asserts that it is present.
-	TypePointer const& type(Expression const& _expression) const;
+	[[nodiscard]] TypePointer const& type(Expression const& _expression) const;
 	/// @returns the type of the given variable and throws if the type is not present
 	/// (this can happen for variables with non-explicit types before their types are resolved)
-	TypePointer const& type(VariableDeclaration const& _variable) const;
+	[[nodiscard]] TypePointer const& type(VariableDeclaration const& _variable) const;
 
 	static bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall);
 
@@ -144,15 +144,15 @@ private:
 	void endVisit(ElementaryTypeNameExpression const& _expr) override;
 	void endVisit(Literal const& _literal) override;
 
-	bool contractDependenciesAreCyclic(
+	[[nodiscard]] bool contractDependenciesAreCyclic(
 		ContractDefinition const& _contract,
 		std::set<ContractDefinition const*> const& _seenContracts = std::set<ContractDefinition const*>()
 	) const;
 
 	/// @returns the referenced declaration and throws on error.
-	Declaration const& dereference(Identifier const& _identifier) const;
+	[[nodiscard]] Declaration const& dereference(Identifier const& _identifier) const;
 	/// @returns the referenced declaration and throws on error.
-	Declaration const& dereference(UserDefinedTypeName const& _typeName) const;
+	[[nodiscard]] Declaration const& dereference(UserDefinedTypeName const& _typeName) const;
 
 	/// Runs type checks on @a _expression to infer its type and then checks that it is implicitly
 	/// convertible to @a _expectedType.

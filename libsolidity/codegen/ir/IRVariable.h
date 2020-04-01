@@ -50,33 +50,33 @@ public:
 	IRVariable(Expression const& _expression);
 
 	/// @returns the name of the variable, if it occupies a single stack slot (otherwise throws).
-	std::string name() const;
+	[[nodiscard]] std::string name() const;
 
 	/// @returns a comma-separated list of the stack slots of the variable.
-	std::string commaSeparatedList() const;
+	[[nodiscard]] std::string commaSeparatedList() const;
 
 	/// @returns a comma-separated list of the stack slots of the variable that is
 	/// prefixed with a comma, unless it is empty.
-	std::string commaSeparatedListPrefixed() const;
+	[[nodiscard]] std::string commaSeparatedListPrefixed() const;
 
 	/// @returns an IRVariable referring to the tuple component @a _i of a tuple variable.
-	IRVariable tupleComponent(std::size_t _i) const;
+	[[nodiscard]] IRVariable tupleComponent(std::size_t _i) const;
 
 	/// @returns the type of the variable.
-	Type const& type() const { return m_type; }
+	[[nodiscard]] Type const& type() const { return m_type; }
 
 	/// @returns an IRVariable referring to the stack component @a _slot of the variable.
 	/// @a _slot must be among the stack slots in ``m_type.stackItems()``.
 	/// The returned IRVariable is itself typed with the type of the stack slot as defined
 	/// in ``m_type.stackItems()`` and may again occupy multiple stack slots.
-	IRVariable part(std::string const& _slot) const;
+	[[nodiscard]] IRVariable part(std::string const& _slot) const;
 private:
 	/// @returns a vector containing the names of the stack slots of the variable.
-	std::vector<std::string> stackSlots() const;
+	[[nodiscard]] std::vector<std::string> stackSlots() const;
 
 	/// @returns a name consisting of the base name appended with an underscore and @æ _suffix,
 	/// unless @a _suffix is empty, in which case the base name itself is returned.
-	std::string suffixedName(std::string const& _suffix) const;
+	[[nodiscard]] std::string suffixedName(std::string const& _suffix) const;
 	std::string m_baseName;
 	Type const& m_type;
 };
