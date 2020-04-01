@@ -740,6 +740,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			solAssert(!!declaration->type(), "Type of declaration required but not yet determined.");
 			if (dynamic_cast<FunctionDefinition const*>(declaration))
 			{
+				m_errorReporter.declarationError(_identifier.location, "Access to functions is not allowed in inline assembly.");
+				return size_t(-1);
 			}
 			else if (dynamic_cast<VariableDeclaration const*>(declaration))
 			{
