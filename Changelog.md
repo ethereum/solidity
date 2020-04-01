@@ -5,6 +5,7 @@ Language Features:
 
 
 Compiler Features:
+ * Emscripten: Add alias ``Solidity`` next to ``Module``. This is in preparation for 0.7.0, where ``Module`` will not be exported to make it easier for websites to use multiple Emscripten-compiled libraries.
 
 
 
@@ -68,7 +69,6 @@ Language Features:
 Compiler Features:
  * Commandline Interface: Enable output of storage layout with `--storage-layout`.
  * Metadata: Added support for IPFS hashes of large files that need to be split in multiple chunks.
-
 
 Bugfixes:
  * Inheritance: Allow public state variables to override functions with dynamic memory types in their return values.
