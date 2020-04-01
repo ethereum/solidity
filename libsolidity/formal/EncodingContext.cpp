@@ -232,7 +232,7 @@ void EncodingContext::pushSolver()
 	if (m_accumulateAssertions)
 		m_assertions.push_back(assertions());
 	else
-		m_assertions.push_back(smt::Expression(true));
+		m_assertions.emplace_back(true);
 }
 
 void EncodingContext::popSolver()

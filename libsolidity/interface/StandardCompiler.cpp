@@ -200,7 +200,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _fil
 			/// for Contract-level targets try both contract name and wildcard
 			vector<string> contracts{ _contract };
 			if (!_contract.empty())
-				contracts.push_back("*");
+				contracts.emplace_back("*");
 			for (auto const& contract: contracts)
 				if (
 					_outputSelection[file].isMember(contract) &&

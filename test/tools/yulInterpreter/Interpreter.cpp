@@ -308,7 +308,7 @@ pair<
 	for (auto const& scope: m_scopes)
 	{
 		// Copy over all functions.
-		newScopes.push_back({});
+		newScopes.emplace_back();
 		for (auto const& [name, funDef]: scope)
 			if (funDef)
 				newScopes.back().emplace(name, funDef);
