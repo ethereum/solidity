@@ -568,7 +568,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		}
 
 		define(_functionCall) <<
-			m_context.internalDispatch(functionType->parameterTypes().size(), functionType->returnParameterTypes().size()) <<
+			m_context.internalDispatch(
+				TupleType(functionType->parameterTypes()).sizeOnStack(),
+				TupleType(functionType->returnParameterTypes()).sizeOnStack()
+			) <<
 			"(" <<
 			IRVariable(_functionCall.expression()).part("functionIdentifier").name() <<
 			joinHumanReadablePrefixed(args) <<
