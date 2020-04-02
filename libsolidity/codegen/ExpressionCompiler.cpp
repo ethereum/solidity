@@ -73,7 +73,10 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 		utils().convertType(*type, *_varDecl.annotation().type);
 		type = _varDecl.annotation().type;
 	}
-	StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
+	if (_varDecl.immutable())
+		ImmutableItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
+	else
+		StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
 }
 
 void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration const& _varDecl)
