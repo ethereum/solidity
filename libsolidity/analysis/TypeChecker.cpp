@@ -1061,17 +1061,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		if (!varDecl.annotation().type)
 			m_errorReporter.fatalTypeError(_statement.location(), "Use of the \"var\" keyword is disallowed.");
 
-		if (auto ref = dynamic_cast<ReferenceType const*>(type(varDecl)))
-		{
-			if (ref->dataStoredIn(DataLocation::Storage))
-			{
-				string errorText{"Uninitialized storage pointer."};
-				solAssert(varDecl.referenceLocation() != VariableDeclaration::Location::Unspecified, "Expected a specified location at this point");
-				solAssert(m_scope, "");
-				m_errorReporter.declarationError(varDecl.location(), errorText);
-			}
-		}
-		else if (dynamic_cast<MappingType const*>(type(varDecl)))
+		if (dynamic_cast<MappingType const*>(type(varDecl)))
 			m_errorReporter.typeError(
 				varDecl.location(),
 				"Uninitialized mapping. Mappings cannot be created dynamically, you have to assign them from a state variable."

@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError: (52-85): Uninitialized storage pointer.
+// TypeError: (95-96): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
