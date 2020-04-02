@@ -74,6 +74,11 @@ bool ImmutableValidator::visit(MemberAccess const& _memberAccess)
 {
 	_memberAccess.expression().accept(*this);
 
+	if (auto contractType = dynamic_cast<ContractType const*>(_memberAccess.expression().annotation().type))
+		if (!contractType->isSuper())
+			// external access, no analysis needed.
+			return false;
+
 	if (auto varDecl = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
 		analyseVariableReference(*varDecl, _memberAccess);
 	else if (auto funcType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
@@ -187,7 +192,8 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 	else if (m_inConstructionContext)
 		m_errorReporter.typeError(
 			_expression.location(),
-			"Immutable variables cannot be read during contract creation time, which means they cannot be read in the constructor or any function or modifier called from it."
+			"Immutable variables cannot be read during contract creation time, which means "
+			"they cannot be read in the constructor or any function or modifier called from it."
 		);
 }
 
