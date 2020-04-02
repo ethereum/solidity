@@ -530,7 +530,7 @@ LinkerObject const& Assembly::assemble() const
 	LinkerObject& ret = m_assembledObject;
 
 	size_t subTagSize = 1;
-	map<u256, vector<size_t>> immutableReferencesBySub;
+	map<u256, pair<string, vector<size_t>>> immutableReferencesBySub;
 	for (auto const& sub: m_subs)
 	{
 		auto const& linkerObject = sub->assemble();
@@ -554,7 +554,7 @@ LinkerObject const& Assembly::assemble() const
 	for (auto const& i: m_items)
 		if (i.type() == AssignImmutable)
 		{
-			i.setImmutableOccurrences(immutableReferencesBySub[i.data()].size());
+			i.setImmutableOccurrences(immutableReferencesBySub[i.data()].second.size());
 			setsImmutables = true;
 		}
 		else if (i.type() == PushImmutable)
@@ -660,11 +660,12 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case PushImmutable:
 			ret.bytecode.push_back(uint8_t(Instruction::PUSH32));
-			ret.immutableReferences[i.data()].emplace_back(ret.bytecode.size());
+			ret.immutableReferences[i.data()].first = m_immutables.at(i.data());
+			ret.immutableReferences[i.data()].second.emplace_back(ret.bytecode.size());
 			ret.bytecode.resize(ret.bytecode.size() + 32);
 			break;
 		case AssignImmutable:
-			for (auto const& offset: immutableReferencesBySub[i.data()])
+			for (auto const& offset: immutableReferencesBySub[i.data()].second)
 			{
 				ret.bytecode.push_back(uint8_t(Instruction::DUP1));
 				// TODO: should we make use of the constant optimizer methods for pushing the offsets?
