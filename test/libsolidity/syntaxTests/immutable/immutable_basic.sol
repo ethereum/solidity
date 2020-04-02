@@ -1,3 +1,3 @@
 contract C {
-    uint immutable x;
+    uint immutable x = 0;
 }
