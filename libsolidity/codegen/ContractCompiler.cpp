@@ -566,8 +566,6 @@ bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
 	if (_variableDeclaration.isConstant())
 		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals)
 			.appendConstStateVariableAccessor(_variableDeclaration);
-	else if (_variableDeclaration.immutable())
-		solUnimplementedAssert(false, "");
 	else
 		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals)
 			.appendStateVariableAccessor(_variableDeclaration);

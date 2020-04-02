@@ -91,16 +91,22 @@ void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration co
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
-	solAssert(!_varDecl.isConstant() && !_varDecl.immutable(), "");
+	solAssert(!_varDecl.isConstant(), "");
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	FunctionType accessorType(_varDecl);
 
 	TypePointers paramTypes = accessorType.parameterTypes();
+	if (_varDecl.immutable())
+		solAssert(paramTypes.empty(), "");
+
 	m_context.adjustStackOffset(1 + CompilerUtils::sizeOnStack(paramTypes));
 
-	// retrieve the position of the variable
-	auto const& location = m_context.storageLocationOfVariable(_varDecl);
-	m_context << location.first << u256(location.second);
+	if (!_varDecl.immutable())
+	{
+		// retrieve the position of the variable
+		auto const& location = m_context.storageLocationOfVariable(_varDecl);
+		m_context << location.first << u256(location.second);
+	}
 
 	TypePointer returnType = _varDecl.annotation().type;
 
@@ -182,6 +188,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	solAssert(returnTypes.size() >= 1, "");
 	if (StructType const* structType = dynamic_cast<StructType const*>(returnType))
 	{
+		solAssert(!_varDecl.immutable(), "");
 		// remove offset
 		m_context << Instruction::POP;
 		auto const& names = accessorType.returnParameterNames();
@@ -208,7 +215,10 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	{
 		// simple value or array
 		solAssert(returnTypes.size() == 1, "");
-		StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
+		if (_varDecl.immutable())
+			ImmutableItem(m_context, _varDecl).retrieveValue(SourceLocation());
+		else
+			StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		utils().convertType(*returnType, *returnTypes.front());
 		retSizeOnStack = returnTypes.front()->sizeOnStack();
 	}
