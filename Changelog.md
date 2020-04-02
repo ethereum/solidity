@@ -5,6 +5,7 @@ Important Bugfixes:
 
 
 Language Features:
+ * Allow local storage variables to be declared without initialization, as long as they are assigned before they are accessed.
 
 
 Compiler Features:
