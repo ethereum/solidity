@@ -27,6 +27,9 @@ object \"C_10\" {
         }
 
         function fun_f_9()  -> vloc__4 {
+            let zero_value_for_type_t_bytes4_1 := zero_value_for_split_t_bytes4()
+            vloc__4 := zero_value_for_type_t_bytes4_1
+
             let expr_6 := 0x61626364
             vloc__4 := convert_t_rational_1633837924_by_1_to_t_bytes4(expr_6)
             leave
@@ -38,6 +41,10 @@ object \"C_10\" {
 
             shl(224, value)
 
+        }
+
+        function zero_value_for_split_t_bytes4() -> ret {
+            ret := 0
         }
 
     }
@@ -104,6 +111,9 @@ object \"C_10\" {
             }
 
             function fun_f_9()  -> vloc__4 {
+                let zero_value_for_type_t_bytes4_1 := zero_value_for_split_t_bytes4()
+                vloc__4 := zero_value_for_type_t_bytes4_1
+
                 let expr_6 := 0x61626364
                 vloc__4 := convert_t_rational_1633837924_by_1_to_t_bytes4(expr_6)
                 leave
@@ -122,6 +132,10 @@ object \"C_10\" {
 
                 shr(224, value)
 
+            }
+
+            function zero_value_for_split_t_bytes4() -> ret {
+                ret := 0
             }
 
         }

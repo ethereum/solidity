@@ -133,6 +133,7 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		Whiskers t(R"(
 			function <functionName>(<params>) <returns> {
+				<initReturnVariables>
 				<body>
 			}
 		)");
@@ -142,9 +143,14 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 			params += (params.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl).commaSeparatedList();
 		t("params", params);
 		string retParams;
+		string retInit;
 		for (auto const& varDecl: _function.returnParameters())
+		{
 			retParams += (retParams.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl).commaSeparatedList();
+			retInit += generateInitialAssignment(*varDecl);
+		}
 		t("returns", retParams.empty() ? "" : " -> " + retParams);
+		t("initReturnVariables", retInit);
 		t("body", generate(_function.body()));
 		return t.render();
 	});
@@ -224,6 +230,13 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 			.render();
 		});
 	}
+}
+
+string IRGenerator::generateInitialAssignment(VariableDeclaration const& _varDecl)
+{
+	IRGeneratorForStatements generator(m_context, m_utils);
+	generator.initializeLocalVar(_varDecl);
+	return generator.code();
 }
 
 string IRGenerator::constructorCode(ContractDefinition const& _contract)

@@ -22,6 +22,7 @@
 
 #include <libsolidity/codegen/YulUtilFunctions.h>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
@@ -112,9 +113,10 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 		for (auto const& contract: mostDerivedContract().annotation().linearizedBaseContracts)
 			for (FunctionDefinition const* function: contract->definedFunctions())
 				if (
+					FunctionType const* functionType = TypeProvider::function(*function)->asCallableFunction(false);
 					!function->isConstructor() &&
-					function->parameters().size() == _in &&
-					function->returnParameters().size() == _out
+					TupleType(functionType->parameterTypes()).sizeOnStack() == _in &&
+					TupleType(functionType->returnParameterTypes()).sizeOnStack() == _out
 				)
 				{
 					// 0 is reserved for uninitialized function pointers

@@ -23,9 +23,16 @@ object \"C_10\" {
         }
 
         function fun_f_9()  -> vloc__4 {
+            let zero_value_for_type_t_bytes32_1 := zero_value_for_split_t_bytes32()
+            vloc__4 := zero_value_for_type_t_bytes32_1
+
             vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
             leave
 
+        }
+
+        function zero_value_for_split_t_bytes32() -> ret {
+            ret := 0
         }
 
     }
@@ -88,6 +95,9 @@ object \"C_10\" {
             }
 
             function fun_f_9()  -> vloc__4 {
+                let zero_value_for_type_t_bytes32_1 := zero_value_for_split_t_bytes32()
+                vloc__4 := zero_value_for_type_t_bytes32_1
+
                 vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
                 leave
 
@@ -98,6 +108,10 @@ object \"C_10\" {
 
                 shr(224, value)
 
+            }
+
+            function zero_value_for_split_t_bytes32() -> ret {
+                ret := 0
             }
 
         }

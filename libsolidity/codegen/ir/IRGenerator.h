@@ -61,6 +61,9 @@ private:
 	/// Generates a getter for the given declaration and returns its name
 	std::string generateGetter(VariableDeclaration const& _varDecl);
 
+	/// Generates code that assigns the initial value of the respective type.
+	std::string generateInitialAssignment(VariableDeclaration const& _varDecl);
+
 	std::string constructorCode(ContractDefinition const& _contract);
 	std::string deployCode(ContractDefinition const& _contract);
 	std::string callValueCheck();
