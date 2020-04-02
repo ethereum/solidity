@@ -26,6 +26,17 @@ eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
 # Prevent the path of the source directory from ending up in the binary via __FILE__ macros.
 eth_add_cxx_compiler_flag_if_supported("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=/solidity")
 
+# -Wpessimizing-move warns when a call to std::move would prevent copy elision
+# if the argument was not wrapped in a call.  This happens when moving a local
+# variable in a return statement when the variable is the same type as the
+# return type or using a move to create a new object from a temporary object.
+eth_add_cxx_compiler_flag_if_supported(-Wpessimizing-move)
+
+# -Wredundant-move warns when an implicit move would already be made, so the
+# std::move call is not needed, such as when moving a local variable in a return
+# that is different from the return type.
+eth_add_cxx_compiler_flag_if_supported(-Wredundant-move)
+
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	# Enables all the warnings about constructions that some users consider questionable,
 	# and that are easy to avoid.  Also enable some extra warning flags that are not
