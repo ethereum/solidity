@@ -230,16 +230,9 @@ SymbolicArrayVariable::SymbolicArrayVariable(
 
 smt::Expression SymbolicArrayVariable::currentValue(frontend::TypePointer const& _targetType) const
 {
-	if (_targetType)
-	{
-		solAssert(m_originalType, "");
-		// StringLiterals are encoded as SMT arrays in the generic case,
-		// but they can also be compared/assigned to fixed bytes, in which
-		// case they'd need to be encoded as numbers.
-		if (auto strType = dynamic_cast<StringLiteralType const*>(m_originalType))
-			if (_targetType->category() == frontend::Type::Category::FixedBytes)
-				return smt::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
-	}
+	optional<smt::Expression> conversion = symbolicTypeConversion(m_originalType, _targetType);
+	if (conversion)
+		return *conversion;
 
 	return SymbolicVariable::currentValue(_targetType);
 }
@@ -262,16 +255,34 @@ SymbolicTupleVariable::SymbolicTupleVariable(
 	SymbolicVariable(_type, _type, move(_uniqueName), _context)
 {
 	solAssert(isTuple(m_type->category()), "");
-	auto const& tupleType = dynamic_cast<TupleType const&>(*m_type);
-	auto const& componentsTypes = tupleType.components();
-	for (unsigned i = 0; i < componentsTypes.size(); ++i)
-		if (componentsTypes.at(i))
-		{
-			string componentName = m_uniqueName + "_component_" + to_string(i);
-			auto result = smt::newSymbolicVariable(*componentsTypes.at(i), componentName, m_context);
-			solAssert(result.second, "");
-			m_components.emplace_back(move(result.second));
-		}
-		else
-			m_components.emplace_back(nullptr);
+}
+
+SymbolicTupleVariable::SymbolicTupleVariable(
+	SortPointer _sort,
+	string _uniqueName,
+	EncodingContext& _context
+):
+	SymbolicVariable(move(_sort), move(_uniqueName), _context)
+{
+	solAssert(m_sort->kind == Kind::Tuple, "");
+}
+
+vector<SortPointer> const& SymbolicTupleVariable::components()
+{
+	auto tupleSort = dynamic_pointer_cast<TupleSort>(m_sort);
+	solAssert(tupleSort, "");
+	return tupleSort->components;
+}
+
+smt::Expression SymbolicTupleVariable::component(
+	size_t _index,
+	TypePointer _fromType,
+	TypePointer _toType
+)
+{
+	optional<smt::Expression> conversion = symbolicTypeConversion(_fromType, _toType);
+	if (conversion)
+		return *conversion;
+
+	return smt::Expression::tuple_get(currentValue(), _index);
 }

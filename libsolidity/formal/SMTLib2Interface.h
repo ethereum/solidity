@@ -74,6 +74,7 @@ private:
 
 	std::vector<std::string> m_accumulatedOutput;
 	std::map<std::string, SortPointer> m_variables;
+	std::set<std::string> m_userSorts;
 
 	std::map<util::h256, std::string> const& m_queryResponses;
 	std::vector<std::string> m_unhandledQueries;
