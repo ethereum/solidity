@@ -2526,7 +2526,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			!annotation.referencedDeclaration &&
 			(memberName == "value" || memberName == "gas")
 		)
-			m_errorReporter.warning(
+			m_errorReporter.typeError(
 				_memberAccess.location(),
 				"Using \"." + memberName + "(...)\" is deprecated. Use \"{" + memberName + ": ...}\" instead."
 			);
