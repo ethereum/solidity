@@ -481,8 +481,16 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			);
 	}
 	else if (_variable.immutable())
+	{
 		if (!_variable.type()->isValueType())
 			m_errorReporter.typeError(_variable.location(), "Immutable variables cannot have a non-value type.");
+		if (
+			auto const* functionType = dynamic_cast<FunctionType const*>(_variable.type());
+			functionType && functionType->kind() == FunctionType::Kind::External
+		)
+			m_errorReporter.typeError(_variable.location(), "Immutable variables of external function type are not yet supported.");
+		solAssert(_variable.type()->sizeOnStack() == 1 || m_errorReporter.hasErrors(), "");
+	}
 
 	if (!_variable.isStateVariable())
 	{
