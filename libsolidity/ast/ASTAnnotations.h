@@ -47,6 +47,14 @@ using TypePointer = Type const*;
 
 struct ASTAnnotation
 {
+	ASTAnnotation() = default;
+
+	ASTAnnotation(ASTAnnotation const&) = delete;
+	ASTAnnotation(ASTAnnotation&&) = delete;
+
+	ASTAnnotation& operator=(ASTAnnotation const&) = delete;
+	ASTAnnotation& operator=(ASTAnnotation&&) = delete;
+
 	virtual ~ASTAnnotation() = default;
 };
 
@@ -58,7 +66,16 @@ struct DocTag
 
 struct StructurallyDocumentedAnnotation
 {
+	StructurallyDocumentedAnnotation() = default;
+
+	StructurallyDocumentedAnnotation(StructurallyDocumentedAnnotation const&) = delete;
+	StructurallyDocumentedAnnotation(StructurallyDocumentedAnnotation&&) = delete;
+
+	StructurallyDocumentedAnnotation& operator=(StructurallyDocumentedAnnotation const&) = delete;
+	StructurallyDocumentedAnnotation& operator=(StructurallyDocumentedAnnotation&&) = delete;
+
 	virtual ~StructurallyDocumentedAnnotation() = default;
+
 	/// Mapping docstring tag name -> content.
 	std::multimap<std::string, DocTag> docTags;
 };
@@ -75,6 +92,16 @@ struct SourceUnitAnnotation: ASTAnnotation
 
 struct ScopableAnnotation
 {
+	ScopableAnnotation() = default;
+
+	ScopableAnnotation(ScopableAnnotation const&) = delete;
+	ScopableAnnotation(ScopableAnnotation&&) = delete;
+
+	ScopableAnnotation& operator=(ScopableAnnotation const&) = delete;
+	ScopableAnnotation& operator=(ScopableAnnotation&&) = delete;
+
+	virtual ~ScopableAnnotation() = default;
+
 	/// The scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
 	ASTNode const* scope = nullptr;
