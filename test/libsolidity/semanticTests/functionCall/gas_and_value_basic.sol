@@ -23,11 +23,11 @@ contract test {
     }
 
     function sendAmount(uint256 amount) public payable returns (uint256 bal) {
-        return h.getBalance.value(amount)();
+        return h.getBalance{value: amount}();
     }
 
     function outOfGas() public returns (bool ret) {
-        h.setFlag.gas(2)(); // should fail due to OOG
+        h.setFlag{gas: 2}(); // should fail due to OOG
         return true;
     }
 

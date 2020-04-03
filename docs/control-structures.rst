@@ -123,9 +123,9 @@ throws an exception or goes out of gas.
     so your contract is not vulnerable to a reentrancy exploit.
 
 .. note::
-    Before Solidity 0.6.2, the recommended way to specify the value and gas
-    was to use ``f.value(x).gas(g)()``. This is still possible but deprecated
-    and will be removed with Solidity 0.7.0.
+    Before Solidity 0.6.2, the recommended way to specify the value and gas was to
+    use ``f.value(x).gas(g)()``. This was deprecated in Solidity 0.6.2 and is no
+    longer possible since Solidity 0.7.0.
 
 Named Calls and Anonymous Function Parameters
 ---------------------------------------------

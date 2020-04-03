@@ -12,7 +12,7 @@ contract C {
     }
 
     function g() public returns (uint256) {
-        d.g.gas(200)();
+        d.g{gas: 200}();
         return 7;
     }
 

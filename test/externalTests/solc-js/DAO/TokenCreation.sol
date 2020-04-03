@@ -106,7 +106,7 @@ override returns (bool success) {
             && (privateCreation == 0x0000000000000000000000000000000000000000 || privateCreation == msg.sender)) {
 
             uint token = (msg.value * 20) / divisor();
-            address(extraBalance).call.value(msg.value - token)("");
+            address(extraBalance).call{value: msg.value - token}("");
             balances[_tokenHolder] += token;
             totalSupply += token;
             weiGiven[_tokenHolder] += msg.value;
@@ -127,7 +127,7 @@ override returns (bool success) {
                 extraBalance.payOut(address(this), extraBalance.accumulatedInput());
 
             // Execute refund
-            (bool success,) = msg.sender.call.value(weiGiven[msg.sender])("");
+            (bool success,) = msg.sender.call{value: weiGiven[msg.sender]}("");
             if (success) {
                 emit Refund(msg.sender, weiGiven[msg.sender]);
                 totalSupply -= balances[msg.sender];

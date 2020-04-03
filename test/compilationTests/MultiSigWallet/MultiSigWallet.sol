@@ -227,7 +227,7 @@ contract MultiSigWallet {
     {
         if (isConfirmed(transactionId)) {
             Transaction storage tx = transactions[transactionId];
-            (tx.executed,) = tx.destination.call.value(tx.value)(tx.data);
+            (tx.executed,) = tx.destination.call{value: tx.value}(tx.data);
             if (tx.executed)
                 emit Execution(transactionId);
             else

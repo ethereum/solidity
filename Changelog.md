@@ -2,6 +2,7 @@
 
 Breaking changes:
  * Type Checker: Disallow virtual for library functions.
+ * Deprecated dot syntax for `value` and `gas`.
 
 Language Features:
 

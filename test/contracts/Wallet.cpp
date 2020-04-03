@@ -395,7 +395,7 @@ contract Wallet is multisig, multiowned, daylimit {
 		if (underLimit(_value)) {
 			emit SingleTransact(msg.sender, _value, _to, _data);
 			// yes - just execute the call.
-			_to.call.value(_value)(_data);
+			_to.call{value: _value}(_data);
 			return 0;
 		}
 		// determine our operation hash.
@@ -412,7 +412,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	// to determine the body of the transaction from the hash provided.
 	function confirm(bytes32 _h) onlymanyowners(_h) public override returns (bool) {
 		if (m_txs[_h].to != 0x0000000000000000000000000000000000000000) {
-			m_txs[_h].to.call.value(m_txs[_h].value)(m_txs[_h].data);
+			m_txs[_h].to.call{value: m_txs[_h].value}(m_txs[_h].data);
 			emit MultiTransact(msg.sender, _h, m_txs[_h].value, m_txs[_h].to, m_txs[_h].data);
 			delete m_txs[_h];
 			return true;
