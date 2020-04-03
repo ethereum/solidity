@@ -6,6 +6,7 @@ Important Bugfixes:
 
 Language Features:
  * Allow local storage variables to be declared without initialization, as long as they are assigned before they are accessed.
+ * State variables can be marked ``immutable`` which causes them to be read-only, but assignable in the constructor. The value will be stored directly in the code.
 
 
 Compiler Features:
