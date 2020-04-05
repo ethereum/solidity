@@ -1,5 +1,13 @@
 [
     {
+        "name": "TupleAssignmentMultiStackSlotComponents",
+        "summary": "Tuple assignments with components that occupy several stack slots, i.e. nested tuples, pointers to external functions or references to dynamically sized calldata arrays, can result in invalid values.",
+        "description": "Tuple assignments did not correctly account for tuple components that occupy multiple stack slots in case the number of stack slots differs between left-hand-side and right-hand-side. This can either happen in the presence of nested tuples or if the right-hand-side contains external function pointers or references to dynamic calldata arrays, while the left-hand-side contains an omission.",
+        "introduced": "0.1.6",
+        "fixed": "0.6.6",
+        "severity": "very low"
+    },
+    {
         "name": "MemoryArrayCreationOverflow",
         "summary": "The creation of very large memory arrays can result in overlapping memory regions and thus memory corruption.",
         "description": "No runtime overflow checks were performed for the length of memory arrays during creation. In cases for which the memory size of an array in bytes, i.e. the array length times 32, is larger than 2^256-1, the memory allocation will overflow, potentially resulting in overlapping memory areas. The length of the array is still stored correctly, so copying or iterating over such an array will result in out-of-gas.",
