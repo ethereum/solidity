@@ -320,9 +320,9 @@ Json::Value formatImmutableReferences(map<u256, pair<string, vector<size_t>>> co
 		Json::Value array(Json::arrayValue);
 		for (size_t byteOffset: byteOffsets)
 		{
-			Json::Value byteRange(Json::arrayValue);
-			byteRange.append(Json::UInt(byteOffset));
-			byteRange.append(Json::UInt(32)); // immutable references are currently always 32 bytes wide
+			Json::Value byteRange(Json::objectValue);
+			byteRange["start"] = Json::UInt(byteOffset);
+			byteRange["length"] = Json::UInt(32); // immutable references are currently always 32 bytes wide
 			array.append(byteRange);
 		}
 		ret[identifier] = array;
