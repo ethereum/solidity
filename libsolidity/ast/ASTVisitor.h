@@ -41,7 +41,16 @@ namespace solidity::frontend
 class ASTVisitor
 {
 public:
+	ASTVisitor() = default;
+
+	ASTVisitor(ASTVisitor const&) = delete;
+	ASTVisitor(ASTVisitor&&) = delete;
+
+	ASTVisitor& operator=(ASTVisitor const&) = delete;
+	ASTVisitor& operator=(ASTVisitor&&) = delete;
+
 	virtual ~ASTVisitor() = default;
+
 	virtual bool visit(SourceUnit& _node) { return visitNode(_node); }
 	virtual bool visit(PragmaDirective& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective& _node) { return visitNode(_node); }
@@ -158,7 +167,16 @@ protected:
 class ASTConstVisitor
 {
 public:
+	ASTConstVisitor() = default;
+
+	ASTConstVisitor(ASTConstVisitor const&) = delete;
+	ASTConstVisitor(ASTConstVisitor&&) = delete;
+
+	ASTConstVisitor& operator=(ASTConstVisitor const&) = delete;
+	ASTConstVisitor& operator=(ASTConstVisitor&&) = delete;
+
 	virtual ~ASTConstVisitor() = default;
+
 	virtual bool visit(SourceUnit const& _node) { return visitNode(_node); }
 	virtual bool visit(PragmaDirective const& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective const& _node) { return visitNode(_node); }
