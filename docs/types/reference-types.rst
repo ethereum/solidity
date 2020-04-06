@@ -387,7 +387,7 @@ If ``start`` is greater than ``end`` or if ``end`` is greater
 than the length of the array, an exception is thrown.
 
 Both ``start`` and ``end`` are optional: ``start`` defaults
- to ``0`` and ``end`` defaults to the length of the array.
+to ``0`` and ``end`` defaults to the length of the array.
 
 Array slices do not have any members. They are implicitly
 convertible to arrays of their underlying type
@@ -500,7 +500,7 @@ shown in the following example:
 
 The contract does not provide the full functionality of a crowdfunding
 contract, but it contains the basic concepts necessary to understand structs.
-Struct types can be used inside mappings and arrays and they can itself
+Struct types can be used inside mappings and arrays and they can themselves
 contain mappings and arrays.
 
 It is not possible for a struct to contain a member of its own type,
