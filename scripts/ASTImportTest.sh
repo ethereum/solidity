@@ -4,7 +4,7 @@
 # first exporting a .sol file to JSON, then loading it into the compiler
 # and exporting it again. The second JSON should be identical to the first
 
-REPO_ROOT=$(realpath "$(dirname "$0")"/..)
+REPO_ROOT=$(readlink -f "$(dirname "$0")"/..)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-build}
 SOLC=${REPO_ROOT}/${SOLIDITY_BUILD_DIR}/solc/solc
 SPLITSOURCES=${REPO_ROOT}/scripts/splitSources.py
