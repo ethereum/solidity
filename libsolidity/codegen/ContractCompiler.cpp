@@ -159,7 +159,7 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 
 	if (FunctionDefinition const* constructor = _contract.constructor())
 		appendConstructor(*constructor);
-	else if (auto c = m_context.nextConstructor(_contract))
+	else if (auto c = _contract.nextConstructor(m_context.mostDerivedContract()))
 		appendBaseConstructor(*c);
 	else
 		appendCallValueCheck();
@@ -596,7 +596,9 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		appendStackVariableInitialisation(*variable);
 
 	if (_function.isConstructor())
-		if (auto c = m_context.nextConstructor(dynamic_cast<ContractDefinition const&>(*_function.scope())))
+		if (auto c = dynamic_cast<ContractDefinition const&>(*_function.scope()).nextConstructor(
+				m_context.mostDerivedContract()
+		))
 			appendBaseConstructor(*c);
 
 	solAssert(m_returnTags.empty(), "");

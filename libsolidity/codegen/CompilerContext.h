@@ -117,8 +117,6 @@ public:
 	/// @returns the function that overrides the given declaration from the most derived class just
 	/// above _base in the current inheritance hierarchy.
 	FunctionDefinition const& superFunction(FunctionDefinition const& _function, ContractDefinition const& _base);
-	/// @returns the next constructor in the inheritance hierarchy.
-	FunctionDefinition const* nextConstructor(ContractDefinition const& _contract) const;
 	/// Sets the contract currently being compiled - the most derived one.
 	void setMostDerivedContract(ContractDefinition const& _contract) { m_mostDerivedContract = &_contract; }
 	ContractDefinition const& mostDerivedContract() const;
@@ -313,8 +311,6 @@ public:
 	RevertStrings revertStrings() const { return m_revertStrings; }
 
 private:
-	/// @returns a pointer to the contract directly above the given contract.
-	ContractDefinition const* superContract(ContractDefinition const& _contract) const;
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
 

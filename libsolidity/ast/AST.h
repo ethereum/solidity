@@ -518,6 +518,10 @@ public:
 
 	bool abstract() const { return m_abstract; }
 
+	ContractDefinition const* superContract(ContractDefinition const& _mostDerivedContract) const;
+	/// @returns the next constructor in the inheritance hierarchy.
+	FunctionDefinition const* nextConstructor(ContractDefinition const& _mostDerivedContract) const;
+
 private:
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
