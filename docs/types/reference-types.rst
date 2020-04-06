@@ -500,7 +500,7 @@ shown in the following example:
 
 The contract does not provide the full functionality of a crowdfunding
 contract, but it contains the basic concepts necessary to understand structs.
-Struct types can be used inside mappings and arrays and they can itself
+Struct types can be used inside mappings and arrays and they can themselves
 contain mappings and arrays.
 
 It is not possible for a struct to contain a member of its own type,
