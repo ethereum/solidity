@@ -218,15 +218,28 @@ SymbolicArrayVariable::SymbolicArrayVariable(
 	solAssert(isArray(m_type->category()), "");
 }
 
+SymbolicArrayVariable::SymbolicArrayVariable(
+	SortPointer _sort,
+	string _uniqueName,
+	EncodingContext& _context
+):
+	SymbolicVariable(move(_sort), move(_uniqueName), _context)
+{
+	solAssert(m_sort->kind == Kind::Array, "");
+}
+
 smt::Expression SymbolicArrayVariable::currentValue(frontend::TypePointer const& _targetType) const
 {
 	if (_targetType)
+	{
+		solAssert(m_originalType, "");
 		// StringLiterals are encoded as SMT arrays in the generic case,
 		// but they can also be compared/assigned to fixed bytes, in which
 		// case they'd need to be encoded as numbers.
 		if (auto strType = dynamic_cast<StringLiteralType const*>(m_originalType))
 			if (_targetType->category() == frontend::Type::Category::FixedBytes)
 				return smt::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
+	}
 
 	return SymbolicVariable::currentValue(_targetType);
 }
