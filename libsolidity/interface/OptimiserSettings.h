@@ -23,6 +23,8 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
+#include <string>
 
 namespace solidity::frontend
 {
@@ -53,6 +55,7 @@ struct OptimiserSettings
 		s.runCSE = true;
 		s.runConstantOptimiser = true;
 		s.runYulOptimiser = true;
+		s.yulOptimiserSteps = std::nullopt;
 		s.optimizeStackAllocation = true;
 		s.expectedExecutionsPerDeployment = 200;
 		return s;
@@ -74,6 +77,7 @@ struct OptimiserSettings
 			runConstantOptimiser == _other.runConstantOptimiser &&
 			optimizeStackAllocation == _other.optimizeStackAllocation &&
 			runYulOptimiser == _other.runYulOptimiser &&
+			yulOptimiserSteps == _other.yulOptimiserSteps &&
 			expectedExecutionsPerDeployment == _other.expectedExecutionsPerDeployment;
 	}
 
@@ -95,6 +99,10 @@ struct OptimiserSettings
 	bool optimizeStackAllocation = false;
 	/// Yul optimiser with default settings. Will only run on certain parts of the code for now.
 	bool runYulOptimiser = false;
+	/// Sequence of optimisation steps to be performed by Yul optimiser.
+	/// Default steps will be used if not specified. Note that setting this to an empty string
+	/// does not disable all optimisations (set @a runYulOptimiser to false instead).
+	std::optional<std::string> yulOptimiserSteps = std::nullopt;
 	/// This specifies an estimate on how often each opcode in this assembly will be executed,
 	/// i.e. use a small value to optimise for size and a large value to optimise for runtime gas usage.
 	size_t expectedExecutionsPerDeployment = 200;

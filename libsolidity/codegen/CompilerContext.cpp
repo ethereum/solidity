@@ -502,7 +502,8 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 		&meter,
 		_object,
 		_optimiserSettings.optimizeStackAllocation,
-		_externalIdentifiers
+		_externalIdentifiers,
+		_optimiserSettings.yulOptimiserSteps
 	);
 
 #ifdef SOL_OUTPUT_ASM
