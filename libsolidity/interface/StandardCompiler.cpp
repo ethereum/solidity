@@ -402,6 +402,20 @@ std::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std
 	return {};
 }
 
+std::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std::string const& _name, optional<string>& _setting)
+{
+	if (_details.isMember(_name))
+	{
+		if (_details[_name].isString())
+			_setting = _details[_name].asString();
+		else if (_details[_name].isNull())
+			_setting = nullopt;
+		else
+			return formatFatalError("JSONError", "\"settings.optimizer.details." + _name + "\" must be a string or null");
+	}
+	return {};
+}
+
 std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 {
 	if (_input.isObject())
@@ -511,9 +525,11 @@ boost::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Valu
 			if (!settings.runYulOptimiser)
 				return formatFatalError("JSONError", "\"Providing yulDetails requires Yul optimizer to be enabled.");
 
-			if (auto result = checkKeys(details["yulDetails"], {"stackAllocation"}, "settings.optimizer.details.yulDetails"))
+			if (auto result = checkKeys(details["yulDetails"], {"stackAllocation", "optimiserSteps"}, "settings.optimizer.details.yulDetails"))
 				return *result;
 			if (auto error = checkOptimizerDetail(details["yulDetails"], "stackAllocation", settings.optimizeStackAllocation))
+				return *error;
+			if (auto error = checkOptimizerDetail(details["yulDetails"], "optimiserSteps", settings.yulOptimiserSteps))
 				return *error;
 		}
 	}
