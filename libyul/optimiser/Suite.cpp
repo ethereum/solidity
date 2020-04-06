@@ -78,7 +78,8 @@ void OptimiserSuite::run(
 	GasMeter const* _meter,
 	Object& _object,
 	bool _optimizeStackAllocation,
-	set<YulString> const& _externallyUsedIdentifiers
+	set<YulString> const& _externallyUsedIdentifiers,
+	optional<string> const& _customOptimisationSequence
 )
 {
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
@@ -93,25 +94,33 @@ void OptimiserSuite::run(
 
 	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast);
 
-	suite.runSequence(
-		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
-		"("
-			"xarrscLM"                 // Turn into SSA and simplify
-			"cCTUtTOntnfDIul"          // Perform structural simplification
-			"Lcul"                     // Simplify again
-			"Vcul jj"                  // Reverse SSA
+	if (_customOptimisationSequence.has_value())
+	{
+		// Some steps depend on properties ensured by FunctionHoister, FunctionGrouper and
+		// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
+		suite.runSequence("fgo", ast);
+		suite.runSequence(_customOptimisationSequence.value(), ast);
+	}
+	else
+		suite.runSequence(
+			"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
+			"("
+				"xarrscLM"                 // Turn into SSA and simplify
+				"cCTUtTOntnfDIul"          // Perform structural simplification
+				"Lcul"                     // Simplify again
+				"Vcul jj"                  // Reverse SSA
 
-			// should have good "compilability" property here.
+				// should have good "compilability" property here.
 
-			"eul"                      // Run functional expression inliner
-			"xarulrul"                 // Prune a bit more in SSA
-			"xarrcL"                   // Turn into SSA again and simplify
-			"gvif"                     // Run full inliner
-			"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
-		")"
-		"jmuljuljul VcTOcul jmul",     // Make source short and pretty
-		ast
-	);
+				"eul"                      // Run functional expression inliner
+				"xarulrul"                 // Prune a bit more in SSA
+				"xarrcL"                   // Turn into SSA again and simplify
+				"gvif"                     // Run full inliner
+				"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
+			")"
+			"jmuljuljul VcTOcul jmul",     // Make source short and pretty
+			ast
+		);
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
 	size_t stackCompressorMaxIterations = 16;
