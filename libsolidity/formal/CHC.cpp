@@ -961,7 +961,11 @@ smt::Expression CHC::predicate(FunctionCall const& _funCall)
 	for (auto const& var: function->returnParameters())
 		args.push_back(m_context.variable(*var)->currentValue());
 
-	return (*m_summaries.at(contract).at(function))(args);
+	if (contract->isLibrary())
+		return (*m_summaries.at(contract).at(function))(args);
+
+	solAssert(m_currentContract, "");
+	return (*m_summaries.at(m_currentContract).at(function))(args);
 }
 
 void CHC::addRule(smt::Expression const& _rule, string const& _ruleName)

@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix internal error in the CHC engine when calling inherited functions internally.
 
 
 
