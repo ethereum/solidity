@@ -387,7 +387,7 @@ If ``start`` is greater than ``end`` or if ``end`` is greater
 than the length of the array, an exception is thrown.
 
 Both ``start`` and ``end`` are optional: ``start`` defaults
- to ``0`` and ``end`` defaults to the length of the array.
+to ``0`` and ``end`` defaults to the length of the array.
 
 Array slices do not have any members. They are implicitly
 convertible to arrays of their underlying type
