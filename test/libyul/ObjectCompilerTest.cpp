@@ -38,23 +38,12 @@ using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
 
-ObjectCompilerTest::ObjectCompilerTest(string const& _filename)
+ObjectCompilerTest::ObjectCompilerTest(string const& _filename):
+	TestCase(_filename)
 {
-	boost::filesystem::path path(_filename);
-
-	ifstream file(_filename);
-	if (!file)
-		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test case: \"" + _filename + "\"."));
-	file.exceptions(ios::badbit);
-
-	m_source = parseSourceAndSettings(file);
-	if (m_settings.count("optimize"))
-	{
-		m_optimize = true;
-		m_validatedSettings["optimize"] = "true";
-		m_settings.erase("optimize");
-	}
-	m_expectation = parseSimpleExpectations(file);
+	m_source = m_reader.source();
+	m_optimize = m_reader.boolSetting("optimize", false);
+	m_expectation = m_reader.simpleExpectations();
 }
 
 TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)

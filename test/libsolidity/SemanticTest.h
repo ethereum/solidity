@@ -65,6 +65,7 @@ private:
 	bool m_runWithYul = false;
 	bool m_runWithoutYul = true;
 	bool m_runWithABIEncoderV1Only = false;
+	bool m_allowNonExistingFunctions = false;
 };
 
 }

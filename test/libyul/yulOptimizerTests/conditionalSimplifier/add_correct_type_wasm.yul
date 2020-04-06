@@ -6,8 +6,9 @@
 }
 // ====
 // dialect: ewasm
-// step: conditionalSimplifier
 // ----
+// step: conditionalSimplifier
+//
 // {
 //     let y:i32 := 0:i32
 //     for { } true { }

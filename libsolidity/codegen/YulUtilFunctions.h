@@ -37,6 +37,7 @@ class Type;
 class ArrayType;
 class MappingType;
 class IntegerType;
+class StructType;
 
 /**
  * Component that can generate various useful Yul functions.
@@ -154,6 +155,7 @@ public:
 	/// to store an array in memory given its length (internally encoded, not ABI encoded).
 	/// The function reverts for too large lengths.
 	std::string arrayAllocationSizeFunction(ArrayType const& _type);
+
 	/// @returns the name of a function that converts a storage slot number
 	/// a memory pointer or a calldata pointer to the slot number / memory pointer / calldata pointer
 	/// for the data position of an array which is stored in that slot / memory area / calldata area.
@@ -174,6 +176,11 @@ public:
 	/// given array base ref and index.
 	/// signature: (baseRef, index) -> offset[, length]
 	std::string calldataArrayIndexAccessFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that returns offset and length for array slice
+	/// for the given array offset, length and start and end indices for slice
+	/// signature: (arrayOffset, arrayLength, sliceStart, sliceEnd) -> offset, length
+	std::string calldataArrayIndexRangeAccess(ArrayType const& _type);
 
 	/// @returns the name of a function that follows a calldata tail while performing
 	/// bounds checks.
@@ -245,10 +252,27 @@ public:
 	/// Return value: pointer
 	std::string allocationFunction();
 
-	/// @returns the name of a function that allocates a memory array.
+	/// @returns the name of a function that zeroes an array.
+	/// signature: (dataStart, dataSizeInBytes) ->
+	std::string zeroMemoryArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that zeroes a chunk of memory.
+	/// signature: (dataStart, dataSizeInBytes) ->
+	std::string zeroMemoryFunction(Type const& _type);
+
+	/// @returns the name of a function that zeroes an array
+	/// where the base does not have simple zero value in memory.
+	/// signature: (dataStart, dataSizeInBytes) ->
+	std::string zeroComplexMemoryArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that allocates and zeroes a memory array.
 	/// For dynamic arrays it adds space for length and stores it.
 	/// signature: (length) -> memPtr
-	std::string allocateMemoryArrayFunction(ArrayType const& _type);
+	std::string allocateAndInitializeMemoryArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that allocates and zeroes a memory struct.
+	/// signature: (members) -> memPtr
+	std::string allocateAndInitializeMemoryStructFunction(StructType const& _type);
 
 	/// @returns the name of the function that converts a value of type @a _from
 	/// to a value of type @a _to. The resulting vale is guaranteed to be in range
@@ -283,8 +307,9 @@ public:
 	std::string negateNumberCheckedFunction(Type const& _type);
 
 	/// @returns the name of a function that returns the zero value for the
-	/// provided type
-	std::string zeroValueFunction(Type const& _type);
+	/// provided type.
+	/// @param _splitFunctionTypes if false, returns two zeroes
+	std::string zeroValueFunction(Type const& _type, bool _splitFunctionTypes = true);
 
 	/// @returns the name of a function that will set the given storage item to
 	/// zero

@@ -8,10 +8,10 @@ library L
 contract C
 {
 	enum E { Left, Right }
-	function f(E _d) internal pure {
+	function f(E _d) public pure {
 		_d = E.Right;
 		assert(_d == E.Left);
 	}
 }
 // ----
-// Warning: (161-181): Assertion violation happens here
+// Warning: (159-179): Assertion violation happens here

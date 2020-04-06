@@ -1,5 +1,5 @@
 { }
-// ====
-// step: fullSimplify
 // ----
+// step: fullSimplify
+//
 // { }

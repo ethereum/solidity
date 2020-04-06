@@ -6,9 +6,9 @@
         function illegal5(illegal1, illegal2) -> illegal3 { illegal3 := add(illegal1, illegal2) }
     }
 }
-// ====
-// step: nameDisplacer
 // ----
+// step: nameDisplacer
+//
 // {
 //     let x := illegal4_1(1, 2)
 //     function illegal4_1(illegal1_2, illegal2_3) -> illegal3_4

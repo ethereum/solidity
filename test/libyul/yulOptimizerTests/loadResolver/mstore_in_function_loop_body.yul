@@ -11,9 +11,9 @@
     funcWithLoop(42)
     sstore(0, mload(0))
 }
-// ====
-// step: loadResolver
 // ----
+// step: loadResolver
+//
 // {
 //     function userNot(x) -> y
 //     { y := iszero(x) }

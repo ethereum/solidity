@@ -124,7 +124,7 @@ Allowed options)",
 			else if (arguments.count("standard-json"))
 				FuzzerUtil::testStandardCompiler(input, quiet);
 			else
-				FuzzerUtil::testCompiler(input, optimize, quiet);
+				FuzzerUtil::testCompilerJsonInterface(input, optimize, quiet);
 		}
 		catch (...)
 		{

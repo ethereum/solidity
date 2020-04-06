@@ -36,6 +36,7 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 	case UndefinedItem:
 	case Tag:
 	case PushDeployTimeAddress:
+	case AssignImmutable:
 		return true;
 	case Push:
 	case PushString:
@@ -45,6 +46,7 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 	case PushProgramSize:
 	case PushData:
 	case PushLibraryAddress:
+	case PushImmutable:
 		return false;
 	case Operation:
 	{

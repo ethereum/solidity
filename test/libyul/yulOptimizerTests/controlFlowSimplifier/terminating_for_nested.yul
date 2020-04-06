@@ -8,9 +8,9 @@
         break
     }
 }
-// ====
-// step: controlFlowSimplifier
 // ----
+// step: controlFlowSimplifier
+//
 // {
 //     for { } calldatasize() { mstore(8, 9) }
 //     {

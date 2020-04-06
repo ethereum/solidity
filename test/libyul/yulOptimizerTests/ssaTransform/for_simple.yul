@@ -13,9 +13,9 @@
     }
     a := add(a, 8)
 }
-// ====
-// step: ssaTransform
 // ----
+// step: ssaTransform
+//
 // {
 //     let a_1 := mload(0)
 //     let a := a_1

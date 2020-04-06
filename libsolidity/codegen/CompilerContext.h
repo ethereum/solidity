@@ -64,6 +64,7 @@ public:
 		m_asm(std::make_shared<evmasm::Assembly>()),
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
+		m_reservedMemory{0},
 		m_runtimeContext(_runtimeContext),
 		m_abiFunctions(m_evmVersion, m_revertStrings, m_yulFunctionCollector),
 		m_yulUtilFunctions(m_evmVersion, m_revertStrings, m_yulFunctionCollector)
@@ -80,6 +81,16 @@ public:
 	bool experimentalFeatureActive(ExperimentalFeature _feature) const { return m_experimentalFeatures.count(_feature); }
 
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
+	void addImmutable(VariableDeclaration const& _declaration);
+
+	/// @returns the reserved memory for storing the value of the immutable @a _variable during contract creation.
+	size_t immutableMemoryOffset(VariableDeclaration const& _variable) const;
+	/// @returns a list of slot names referring to the stack slots of an immutable variable.
+	static std::vector<std::string> immutableVariableSlotNames(VariableDeclaration const& _variable);
+
+	/// @returns the reserved memory and resets it to mark it as used.
+	size_t reservedMemory();
+
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void removeVariable(Declaration const& _declaration);
 	/// Removes all local variables currently allocated above _stackHeight.
@@ -103,15 +114,14 @@ public:
 	/// @returns the entry label of the given function. Might return an AssemblyItem of type
 	/// UndefinedItem if it does not exist yet.
 	evmasm::AssemblyItem functionEntryLabelIfExists(Declaration const& _declaration) const;
-	/// @returns the entry label of the given function and takes overrides into account.
-	FunctionDefinition const& resolveVirtualFunction(FunctionDefinition const& _function);
 	/// @returns the function that overrides the given declaration from the most derived class just
 	/// above _base in the current inheritance hierarchy.
 	FunctionDefinition const& superFunction(FunctionDefinition const& _function, ContractDefinition const& _base);
 	/// @returns the next constructor in the inheritance hierarchy.
 	FunctionDefinition const* nextConstructor(ContractDefinition const& _contract) const;
-	/// Sets the current inheritance hierarchy from derived to base.
-	void setInheritanceHierarchy(std::vector<ContractDefinition const*> const& _hierarchy) { m_inheritanceHierarchy = _hierarchy; }
+	/// Sets the contract currently being compiled - the most derived one.
+	void setMostDerivedContract(ContractDefinition const& _contract) { m_mostDerivedContract = &_contract; }
+	ContractDefinition const& mostDerivedContract() const;
 
 	/// @returns the next function in the queue of functions that are still to be compiled
 	/// (i.e. that were referenced during compilation but where we did not yet generate code for).
@@ -160,7 +170,6 @@ public:
 	/// empty return value.
 	std::pair<std::string, std::set<std::string>> requestedYulFunctions();
 
-	ModifierDefinition const& resolveVirtualFunctionModifier(ModifierDefinition const& _modifier) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
 	unsigned baseStackOffsetOfVariable(Declaration const& _declaration) const;
 	/// If supplied by a value returned by @ref baseStackOffsetOfVariable(variable), returns
@@ -217,6 +226,10 @@ public:
 	evmasm::AssemblyItem appendData(bytes const& _data) { return m_asm->append(_data); }
 	/// Appends the address (virtual, will be filled in by linker) of a library.
 	void appendLibraryAddress(std::string const& _identifier) { m_asm->appendLibraryAddress(_identifier); }
+	/// Appends an immutable variable. The value will be filled in by the constructor.
+	void appendImmutable(std::string const& _identifier) { m_asm->appendImmutable(_identifier); }
+	/// Appends an assignment to an immutable variable. Only valid in creation code.
+	void appendImmutableAssignment(std::string const& _identifier) { m_asm->appendImmutableAssignment(_identifier); }
 	/// Appends a zero-address that can be replaced by something else at deploy time (if the
 	/// position in bytecode is known).
 	void appendDeployTimeAddress() { m_asm->append(evmasm::PushDeployTimeAddress); }
@@ -282,7 +295,7 @@ public:
 		return m_asm->assemblyJSON(_indicies);
 	}
 
-	evmasm::LinkerObject const& assembledObject() const { return m_asm->assemble(); }
+	evmasm::LinkerObject const& assembledObject() const;
 	evmasm::LinkerObject const& assembledRuntimeObject(size_t _subIndex) const { return m_asm->sub(_subIndex).assemble(); }
 
 	/**
@@ -300,14 +313,8 @@ public:
 	RevertStrings revertStrings() const { return m_revertStrings; }
 
 private:
-	/// Searches the inheritance hierarchy towards the base starting from @a _searchStart and returns
-	/// the first function definition that is overwritten by _function.
-	FunctionDefinition const& resolveVirtualFunction(
-		FunctionDefinition const& _function,
-		std::vector<ContractDefinition const*>::const_iterator _searchStart
-	);
-	/// @returns an iterator to the contract directly above the given contract.
-	std::vector<ContractDefinition const*>::const_iterator superContract(ContractDefinition const& _contract) const;
+	/// @returns a pointer to the contract directly above the given contract.
+	ContractDefinition const* superContract(ContractDefinition const& _contract) const;
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
 
@@ -355,13 +362,19 @@ private:
 	std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> m_otherCompilers;
 	/// Storage offsets of state variables
 	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
+	/// Memory offsets reserved for the values of immutable variables during contract creation.
+	std::map<VariableDeclaration const*, size_t> m_immutableVariables;
+	/// Total amount of reserved memory. Reserved memory is used to store immutable variables during contract creation.
+	/// This has to be finalized before initialiseFreeMemoryPointer() is called. That function
+	/// will reset the optional to verify that.
+	std::optional<size_t> m_reservedMemory = {0};
 	/// Offsets of local variables on the stack (relative to stack base).
 	/// This needs to be a stack because if a modifier contains a local variable and this
 	/// modifier is applied twice, the position of the variable needs to be restored
 	/// after the nested modifier is left.
 	std::map<Declaration const*, std::vector<unsigned>> m_localVariables;
-	/// List of current inheritance hierarchy from derived to base.
-	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
+	/// The contract currently being compiled. Virtual function lookup starts from this contarct.
+	ContractDefinition const* m_mostDerivedContract = nullptr;
 	/// Stack of current visited AST nodes, used for location attachment
 	std::stack<ASTNode const*> m_visitedNodes;
 	/// The runtime context if in Creation mode, this is used for generating tags that would be stored into the storage and then used at runtime.

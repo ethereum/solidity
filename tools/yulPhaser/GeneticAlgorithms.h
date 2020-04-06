@@ -22,45 +22,25 @@
 
 #include <tools/yulPhaser/Population.h>
 
-#include <optional>
-#include <ostream>
-
 namespace solidity::phaser
 {
 
 /**
  * Abstract base class for genetic algorithms.
- *
- * The main feature is the @a run() method that executes the algorithm, updating the internal
- * population during each round and printing the results to the stream provided to the constructor.
- *
- * Derived classes can provide specific methods for updating the population by implementing
- * the @a runNextRound() method.
+ * The main feature is the @a runNextRound() method that executes one round of the algorithm,
+ * on the supplied population.
  */
 class GeneticAlgorithm
 {
 public:
-	GeneticAlgorithm(Population _initialPopulation, std::ostream& _outputStream):
-		m_population(std::move(_initialPopulation)),
-		m_outputStream(_outputStream) {}
-
+	GeneticAlgorithm() {}
 	GeneticAlgorithm(GeneticAlgorithm const&) = delete;
 	GeneticAlgorithm& operator=(GeneticAlgorithm const&) = delete;
 	virtual ~GeneticAlgorithm() = default;
 
-	Population const& population() const { return m_population; }
-
-	void run(std::optional<size_t> _numRounds = std::nullopt);
-
 	/// The method that actually implements the algorithm. Should use @a m_population as input and
 	/// replace it with the updated state after the round.
-	virtual void runNextRound() = 0;
-
-protected:
-	Population m_population;
-
-private:
-	std::ostream& m_outputStream;
+	virtual Population runNextRound(Population _population) = 0;
 };
 
 /**
@@ -95,18 +75,65 @@ public:
 		}
 	};
 
-	explicit RandomAlgorithm(
-		Population _initialPopulation,
-		std::ostream& _outputStream,
-		Options const& _options
-	):
-		GeneticAlgorithm(_initialPopulation, _outputStream),
+	explicit RandomAlgorithm(Options const& _options):
 		m_options(_options)
 	{
 		assert(_options.isValid());
 	}
 
-	void runNextRound() override;
+	Options const& options() const { return m_options; }
+
+	Population runNextRound(Population _population) override;
+
+private:
+	Options m_options;
+};
+
+/**
+ * A generational, elitist genetic algorithm that replaces the population by mutating and crossing
+ * over chromosomes from the elite.
+ *
+ * The elite consists of individuals not included in the crossover and mutation pools.
+ * The crossover operator used is @a randomPointCrossover. The mutation operator is randomly chosen
+ * from three possibilities: @a geneRandomisation, @a geneDeletion or @a geneAddition (with
+ * configurable probabilities). Each mutation also has a parameter determining the chance of a gene
+ * being affected by it.
+ */
+class GenerationalElitistWithExclusivePools: public GeneticAlgorithm
+{
+public:
+	struct Options
+	{
+		double mutationPoolSize;          ///< Percentage of population to regenerate using mutations in each round.
+		double crossoverPoolSize;         ///< Percentage of population to regenerate using crossover in each round.
+		double randomisationChance;       ///< The chance of choosing @a geneRandomisation as the mutation to perform
+		double deletionVsAdditionChance;  ///< The chance of choosing @a geneDeletion as the mutation if randomisation was not chosen.
+		double percentGenesToRandomise;   ///< The chance of any given gene being mutated in gene randomisation.
+		double percentGenesToAddOrDelete; ///< The chance of a gene being added (or deleted) in gene addition (or deletion).
+
+		bool isValid() const
+		{
+			return (
+				0 <= mutationPoolSize && mutationPoolSize <= 1.0 &&
+				0 <= crossoverPoolSize && crossoverPoolSize <= 1.0 &&
+				0 <= randomisationChance && randomisationChance <= 1.0 &&
+				0 <= deletionVsAdditionChance && deletionVsAdditionChance <= 1.0 &&
+				0 <= percentGenesToRandomise && percentGenesToRandomise <= 1.0 &&
+				0 <= percentGenesToAddOrDelete && percentGenesToAddOrDelete <= 1.0 &&
+				mutationPoolSize + crossoverPoolSize <= 1.0
+			);
+		}
+	};
+
+	GenerationalElitistWithExclusivePools(Options const& _options):
+		m_options(_options)
+	{
+		assert(_options.isValid());
+	}
+
+	Options const& options() const { return m_options; }
+
+	Population runNextRound(Population _population) override;
 
 private:
 	Options m_options;

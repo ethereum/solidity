@@ -119,13 +119,9 @@ bytes compileFirstExpression(
 	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), scopes, errorReporter);
 	resolver.registerDeclarations(*sourceUnit);
 
-	vector<ContractDefinition const*> inheritanceHierarchy;
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-		{
 			BOOST_REQUIRE_MESSAGE(resolver.resolveNamesAndTypes(*contract), "Resolving names failed");
-			inheritanceHierarchy = vector<ContractDefinition const*>(1, contract);
-		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -144,7 +140,7 @@ bytes compileFirstExpression(
 				RevertStrings::Default
 			);
 			context.resetVisitedNodes(contract);
-			context.setInheritanceHierarchy(inheritanceHierarchy);
+			context.setMostDerivedContract(*contract);
 			unsigned parametersSize = _localVariables.size(); // assume they are all one slot on the stack
 			context.adjustStackOffset(parametersSize);
 			for (vector<string> const& variable: _localVariables)

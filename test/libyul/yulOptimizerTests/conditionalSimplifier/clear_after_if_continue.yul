@@ -4,9 +4,9 @@
         if y { continue }
     }
 }
-// ====
-// step: conditionalSimplifier
 // ----
+// step: conditionalSimplifier
+//
 // {
 //     let y := mload(0x20)
 //     for { } and(y, 8) { pop(y) }

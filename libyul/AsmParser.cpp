@@ -324,6 +324,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	case Token::Byte:
 	case Token::Bool:
 	case Token::Address:
+	case Token::Var:
 	{
 		YulString literal{currentLiteral()};
 		if (m_dialect.builtin(literal))
@@ -513,6 +514,7 @@ YulString Parser::expectAsmIdentifier()
 	case Token::Address:
 	case Token::Bool:
 	case Token::Identifier:
+	case Token::Var:
 		break;
 	default:
 		expectToken(Token::Identifier);

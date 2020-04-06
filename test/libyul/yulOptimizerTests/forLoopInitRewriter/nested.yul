@@ -13,9 +13,9 @@
     mstore(b,b)
   }
 }
-// ====
-// step: forLoopInitRewriter
 // ----
+// step: forLoopInitRewriter
+//
 // {
 //     let random := 42
 //     let a := 1

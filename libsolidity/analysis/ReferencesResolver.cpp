@@ -204,7 +204,7 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	else
 	{
 		_typeName.annotation().type = TypeProvider::emptyTuple();
-		typeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
+		fatalTypeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
 	}
 }
 
@@ -328,6 +328,8 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 
 	if (_variable.isConstant() && !_variable.isStateVariable())
 		m_errorReporter.declarationError(_variable.location(), "The \"constant\" keyword can only be used for state variables.");
+	if (_variable.immutable() && !_variable.isStateVariable())
+		m_errorReporter.declarationError(_variable.location(), "The \"immutable\" keyword can only be used for state variables.");
 
 	if (!_variable.typeName())
 	{
@@ -394,7 +396,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 	else if (_variable.isStateVariable())
 	{
 		solAssert(varLoc == Location::Unspecified, "");
-		typeLoc = _variable.isConstant() ? DataLocation::Memory : DataLocation::Storage;
+		typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory : DataLocation::Storage;
 	}
 	else if (
 		dynamic_cast<StructDefinition const*>(_variable.scope()) ||

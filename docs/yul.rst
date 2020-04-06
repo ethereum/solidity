@@ -111,7 +111,7 @@ Stand-Alone Usage
 =================
 
 You can use Yul in its stand-alone form in the EVM dialect using the Solidity compiler.
-This will use the `Yul object notation <yul-objects>`_ so that it is possible to refer
+This will use the :ref:`Yul object notation <yul-object>` so that it is possible to refer
 to code as data to deploy contracts. This Yul mode is available for the commandline compiler
 (use ``--strict-assembly``) and for the :ref:`standard-json interface <compiler-api>`:
 
@@ -146,7 +146,7 @@ so you can e.g. use ``//`` and ``/* */`` to denote comments.
 There is one exception: Identifiers in Yul can contain dots: ``.``.
 
 Yul can specify "objects" that consist of code, data and sub-objects.
-Please see `Yul Objects <yul-objects>`_ below for details on that.
+Please see :ref:`Yul Objects <yul-object>` below for details on that.
 In this section, we are only concerned with the code part of such an object.
 This code part always consists of a curly-braces
 delimited block. Most tools support specifying just a code block

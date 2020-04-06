@@ -46,6 +46,8 @@ public:
 
 	/// Generates code to initialize the given state variable.
 	void initializeStateVar(VariableDeclaration const& _varDecl);
+	/// Generates code to initialize the given local variable.
+	void initializeLocalVar(VariableDeclaration const& _varDecl);
 
 	void endVisit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Conditional const& _conditional) override;
@@ -60,6 +62,7 @@ public:
 	void endVisit(UnaryOperation const& _unaryOperation) override;
 	bool visit(BinaryOperation const& _binOp) override;
 	void endVisit(FunctionCall const& _funCall) override;
+	void endVisit(FunctionCallOptions const& _funCallOptions) override;
 	void endVisit(MemberAccess const& _memberAccess) override;
 	bool visit(InlineAssembly const& _inlineAsm) override;
 	void endVisit(IndexAccess const& _indexAccess) override;
@@ -98,6 +101,11 @@ private:
 	void declare(IRVariable const& _var);
 
 	void declareAssign(IRVariable const& _var, IRVariable const& _value, bool _define);
+
+	/// @returns an IRVariable with the zero
+	/// value of @a _type.
+	/// @param _splitFunctionTypes if false, returns two zeroes
+	IRVariable zeroValue(Type const& _type, bool _splitFunctionTypes = true);
 
 	void appendAndOrOperatorCode(BinaryOperation const& _binOp);
 	void appendSimpleUnaryOperation(UnaryOperation const& _operation, Expression const& _expr);

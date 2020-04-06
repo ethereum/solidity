@@ -701,7 +701,9 @@ public:
 	/// pointer type, state variables are bound references. Assignments to pointers or deleting
 	/// them will not modify storage (that will only change the pointer). Assignment from
 	/// non-storage objects to a variable of storage pointer type is not possible.
-	bool isPointer() const { return m_isPointer; }
+	/// For anything other than storage, this always returns true because assignments
+	/// never change the contents of the original value.
+	bool isPointer() const;
 
 	bool operator==(ReferenceType const& _other) const
 	{
@@ -893,6 +895,8 @@ public:
 	/// @returns a list of all state variables (including inherited) of the contract and their
 	/// offsets in storage.
 	std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> stateVariables() const;
+	/// @returns a list of all immutable variables (including inherited) of the contract.
+	std::vector<VariableDeclaration const*> immutableVariables() const;
 protected:
 	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
 private:

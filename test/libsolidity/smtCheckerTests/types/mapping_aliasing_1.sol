@@ -5,8 +5,9 @@ contract C
 	mapping (uint => uint) a;
 	mapping (uint => uint) b;
 
-	function f() public {
-		require(a[1] == b[1]);
+	function f(uint x) public {
+		a[1] = x;
+		b[1] = x;
 		a[1] = 2;
 		mapping (uint => uint) storage c = a;
 		assert(c[1] == 2);
@@ -15,4 +16,4 @@ contract C
 	}
 }
 // ----
-// Warning: (261-281): Assertion violation happens here
+// Warning: (266-286): Assertion violation happens here

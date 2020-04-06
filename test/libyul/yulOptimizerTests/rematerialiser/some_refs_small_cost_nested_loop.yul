@@ -12,9 +12,9 @@
 		}
 	}
 }
-// ====
-// step: rematerialiser
 // ----
+// step: rematerialiser
+//
 // {
 //     let x := 0xff
 //     for { } lt(x, 0x100) { }

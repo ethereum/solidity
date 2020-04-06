@@ -6,7 +6,7 @@
 		case 1 { y := 9 }
 	}
 }
-// ====
-// step: fullSuite
 // ----
+// step: fullSuite
+//
 // { { mstore(9, 0) } }

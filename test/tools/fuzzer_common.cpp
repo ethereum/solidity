@@ -17,10 +17,16 @@
 
 #include <test/tools/fuzzer_common.h>
 
+#include <libsolidity/interface/CompilerStack.h>
+
 #include <libsolutil/JSON.h>
+
 #include <libevmasm/Assembly.h>
 #include <libevmasm/ConstantOptimiser.h>
+
 #include <libsolc/libsolc.h>
+
+#include <liblangutil/Exceptions.h>
 
 #include <sstream>
 
@@ -28,16 +34,69 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::evmasm;
+using namespace solidity::langutil;
 
-static vector<string> s_evmVersions = {
-	"homestead",
-	"tangerineWhistle",
-	"spuriousDragon",
-	"byzantium",
-	"constantinople",
-	"petersburg",
-	"istanbul"
+static vector<EVMVersion> s_evmVersions = {
+	EVMVersion::homestead(),
+	EVMVersion::tangerineWhistle(),
+	EVMVersion::spuriousDragon(),
+	EVMVersion::byzantium(),
+	EVMVersion::constantinople(),
+	EVMVersion::petersburg(),
+	EVMVersion::istanbul(),
+	EVMVersion::berlin()
 };
+
+void FuzzerUtil::testCompilerJsonInterface(string const& _input, bool _optimize, bool _quiet)
+{
+	if (!_quiet)
+		cout << "Testing compiler " << (_optimize ? "with" : "without") << " optimizer." << endl;
+
+	Json::Value config = Json::objectValue;
+	config["language"] = "Solidity";
+	config["sources"] = Json::objectValue;
+	config["sources"][""] = Json::objectValue;
+	config["sources"][""]["content"] = _input;
+	config["settings"] = Json::objectValue;
+	config["settings"]["optimizer"] = Json::objectValue;
+	config["settings"]["optimizer"]["enabled"] = _optimize;
+	config["settings"]["optimizer"]["runs"] = 200;
+	config["settings"]["evmVersion"] = "berlin";
+
+	// Enable all SourceUnit-level outputs.
+	config["settings"]["outputSelection"]["*"][""][0] = "*";
+	// Enable all Contract-level outputs.
+	config["settings"]["outputSelection"]["*"]["*"][0] = "*";
+
+	runCompiler(jsonCompactPrint(config), _quiet);
+}
+
+void FuzzerUtil::testCompiler(string const& _input, bool _optimize)
+{
+	frontend::CompilerStack compiler;
+	EVMVersion evmVersion = s_evmVersions[_input.size() % s_evmVersions.size()];
+	frontend::OptimiserSettings optimiserSettings;
+	if (_optimize)
+		optimiserSettings = frontend::OptimiserSettings::standard();
+	else
+		optimiserSettings = frontend::OptimiserSettings::minimal();
+	compiler.setSources({{"", _input}});
+	compiler.setEVMVersion(evmVersion);
+	compiler.setOptimiserSettings(optimiserSettings);
+	try
+	{
+		compiler.compile();
+	}
+	catch (Error const&)
+	{
+	}
+	catch (FatalError const&)
+	{
+	}
+	catch (UnimplementedFeatureError const&)
+	{
+	}
+}
 
 void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 {
@@ -71,30 +130,6 @@ void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 				throw std::runtime_error(std::move(msg));
 			}
 		}
-}
-
-void FuzzerUtil::testCompiler(string const& _input, bool _optimize, bool _quiet)
-{
-	if (!_quiet)
-		cout << "Testing compiler " << (_optimize ? "with" : "without") << " optimizer." << endl;
-
-	Json::Value config = Json::objectValue;
-	config["language"] = "Solidity";
-	config["sources"] = Json::objectValue;
-	config["sources"][""] = Json::objectValue;
-	config["sources"][""]["content"] = _input;
-	config["settings"] = Json::objectValue;
-	config["settings"]["optimizer"] = Json::objectValue;
-	config["settings"]["optimizer"]["enabled"] = _optimize;
-	config["settings"]["optimizer"]["runs"] = 200;
-	config["settings"]["evmVersion"] = s_evmVersions[_input.size() % s_evmVersions.size()];
-
-	// Enable all SourceUnit-level outputs.
-	config["settings"]["outputSelection"]["*"][""][0] = "*";
-	// Enable all Contract-level outputs.
-	config["settings"]["outputSelection"]["*"]["*"][0] = "*";
-
-	runCompiler(jsonCompactPrint(config), _quiet);
 }
 
 void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)

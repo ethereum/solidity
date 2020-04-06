@@ -18,16 +18,9 @@
 #include <test/Common.h>
 #include <test/TestCase.h>
 
-#include <libsolutil/StringUtils.h>
-
-#include <boost/algorithm/cxx11/none_of.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include <boost/range/adaptor/map.hpp>
 
 #include <stdexcept>
-
 #include <iostream>
 
 using namespace std;
@@ -35,13 +28,14 @@ using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-void TestCase::printUpdatedSettings(ostream& _stream, const string& _linePrefix, const bool)
+void TestCase::printSettings(ostream& _stream, const string& _linePrefix, const bool)
 {
-	if (m_validatedSettings.empty())
+	auto& settings = m_reader.settings();
+	if (settings.empty())
 		return;
 
 	_stream << _linePrefix << "// ====" << endl;
-	for (auto const& setting: m_validatedSettings)
+	for (auto const& setting: settings)
 		_stream << _linePrefix << "// " << setting.first << ": " << setting.second << endl;
 }
 
@@ -53,106 +47,10 @@ bool TestCase::isTestFilename(boost::filesystem::path const& _filename)
 			!boost::starts_with(_filename.string(), ".");
 }
 
-void TestCase::validateSettings()
-{
-	if (!m_settings.empty())
-		throw runtime_error(
-			"Unknown setting(s): " +
-			util::joinHumanReadable(m_settings | boost::adaptors::map_keys)
-		);
-}
-
 bool TestCase::shouldRun()
 {
+	m_reader.ensureAllSettingsRead();
 	return m_shouldRun;
-}
-
-pair<map<string, string>, size_t> TestCase::parseSourcesAndSettingsWithLineNumbers(istream& _stream)
-{
-	map<string, string> sources;
-	string currentSourceName;
-	string currentSource;
-	string line;
-	size_t lineNumber = 1;
-	static string const sourceDelimiterStart("==== Source:");
-	static string const sourceDelimiterEnd("====");
-	static string const comment("// ");
-	static string const settingsDelimiter("// ====");
-	static string const delimiter("// ----");
-	bool sourcePart = true;
-	while (getline(_stream, line))
-	{
-		lineNumber++;
-
-		if (boost::algorithm::starts_with(line, delimiter))
-			break;
-		else if (boost::algorithm::starts_with(line, settingsDelimiter))
-			sourcePart = false;
-		else if (sourcePart)
-		{
-			if (boost::algorithm::starts_with(line, sourceDelimiterStart) && boost::algorithm::ends_with(line, sourceDelimiterEnd))
-			{
-				if (!(currentSourceName.empty() && currentSource.empty()))
-					sources[currentSourceName] = std::move(currentSource);
-				currentSource = {};
-				currentSourceName = boost::trim_copy(line.substr(
-					sourceDelimiterStart.size(),
-					line.size() - sourceDelimiterEnd.size() - sourceDelimiterStart.size()
-				));
-				if (sources.count(currentSourceName))
-					throw runtime_error("Multiple definitions of test source \"" + currentSourceName + "\".");
-			}
-			else
-				currentSource += line + "\n";
-		}
-		else if (boost::algorithm::starts_with(line, comment))
-		{
-			size_t colon = line.find(':');
-			if (colon == string::npos)
-				throw runtime_error(string("Expected \":\" inside setting."));
-			string key = line.substr(comment.size(), colon - comment.size());
-			string value = line.substr(colon + 1);
-			boost::algorithm::trim(key);
-			boost::algorithm::trim(value);
-			m_settings[key] = value;
-		}
-		else
-			throw runtime_error(string("Expected \"//\" or \"// ---\" to terminate settings and source."));
-	}
-	sources[currentSourceName] = currentSource;
-	return {sources, lineNumber};
-}
-
-map<string, string> TestCase::parseSourcesAndSettings(istream& _stream)
-{
-	return get<0>(parseSourcesAndSettingsWithLineNumbers(_stream));
-}
-
-pair<string, size_t> TestCase::parseSourceAndSettingsWithLineNumbers(istream& _stream)
-{
-	auto [sourceMap, lineOffset] = parseSourcesAndSettingsWithLineNumbers(_stream);
-	if (sourceMap.size() != 1)
-		BOOST_THROW_EXCEPTION(runtime_error("Expected single source definition, but got multiple sources."));
-	return {std::move(sourceMap.begin()->second), lineOffset};
-}
-
-string TestCase::parseSourceAndSettings(istream& _stream)
-{
-	return parseSourceAndSettingsWithLineNumbers(_stream).first;
-}
-
-string TestCase::parseSimpleExpectations(std::istream& _file)
-{
-	string result;
-	string line;
-	while (getline(_file, line))
-		if (boost::algorithm::starts_with(line, "// "))
-			result += line.substr(3) + "\n";
-		else if (line == "//")
-			result += "\n";
-		else
-			BOOST_THROW_EXCEPTION(runtime_error("Test expectations must start with \"// \"."));
-	return result;
 }
 
 void TestCase::expect(string::iterator& _it, string::iterator _end, string::value_type _c)
@@ -162,18 +60,11 @@ void TestCase::expect(string::iterator& _it, string::iterator _end, string::valu
 	++_it;
 }
 
-void EVMVersionRestrictedTestCase::validateSettings()
+EVMVersionRestrictedTestCase::EVMVersionRestrictedTestCase(string const& _filename):
+	TestCase(_filename)
 {
-	if (!m_settings.count("EVMVersion"))
-		return;
-
-	string versionString = m_settings["EVMVersion"];
-	m_validatedSettings["EVMVersion"] = versionString;
-	m_settings.erase("EVMVersion");
-
-	TestCase::validateSettings();
-
-	if (versionString.empty())
+	string versionString = m_reader.stringSetting("EVMVersion", "any");
+	if (versionString == "any")
 		return;
 
 	string comparator;

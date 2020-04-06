@@ -35,6 +35,7 @@
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/analysis/ViewPureChecker.h>
+#include <libsolidity/analysis/ImmutableValidator.h>
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -382,6 +383,15 @@ bool CompilerStack::analyze()
 				if (source->ast && !postTypeChecker.check(*source->ast))
 					noErrors = false;
 		}
+
+		// Check that immutable variables are never read in c'tors and assigned
+		// exactly once
+		if (noErrors)
+			for (Source const* source: m_sourceOrder)
+				if (source->ast)
+					for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+						if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+							ImmutableValidator(m_errorReporter, *contract).analyze();
 
 		if (noErrors)
 		{
@@ -899,8 +909,7 @@ h256 const& CompilerStack::Source::swarmHash() const
 string const& CompilerStack::Source::ipfsUrl() const
 {
 	if (ipfsUrlCached.empty())
-		if (scanner->source().size() < 1024 * 256)
-			ipfsUrlCached = "dweb:/ipfs/" + util::ipfsHashBase58(scanner->source());
+		ipfsUrlCached = "dweb:/ipfs/" + util::ipfsHashBase58(scanner->source());
 	return ipfsUrlCached;
 }
 
@@ -1373,10 +1382,7 @@ bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimen
 	MetadataCBOREncoder encoder;
 
 	if (m_metadataHash == MetadataHash::IPFS)
-	{
-		solAssert(_metadata.length() < 1024 * 256, "Metadata too large.");
 		encoder.pushBytes("ipfs", util::ipfsHash(_metadata));
-	}
 	else if (m_metadataHash == MetadataHash::Bzzr1)
 		encoder.pushBytes("bzzr1", util::bzzr1Hash(_metadata).asBytes());
 	else

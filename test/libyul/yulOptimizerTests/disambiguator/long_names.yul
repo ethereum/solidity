@@ -1,8 +1,9 @@
 { { let aanteuhdaoneudbrgkjiuaothduiathudaoeuh:u256 } { let aanteuhdaoneudbrgkjiuaothduiathudaoeuh:u256 } }
 // ====
 // dialect: yul
-// step: disambiguator
 // ----
+// step: disambiguator
+//
 // {
 //     {
 //         let aanteuhdaoneudbrgkjiuaothduiathudaoeuh

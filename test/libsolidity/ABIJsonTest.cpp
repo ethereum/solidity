@@ -36,15 +36,11 @@ using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-ABIJsonTest::ABIJsonTest(string const& _filename)
+ABIJsonTest::ABIJsonTest(string const& _filename):
+	TestCase(_filename)
 {
-	ifstream file(_filename);
-	if (!file)
-		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test contract: \"" + _filename + "\"."));
-	file.exceptions(ios::badbit);
-
-	m_source = parseSourceAndSettings(file);
-	m_expectation = parseSimpleExpectations(file);
+	m_source = m_reader.source();
+	m_expectation = m_reader.simpleExpectations();
 }
 
 TestCase::TestResult ABIJsonTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)

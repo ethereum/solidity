@@ -6,9 +6,9 @@
     }
     mstore(0, a)
 }
-// ====
-// step: ssaTransform
 // ----
+// step: ssaTransform
+//
 // {
 //     let a_1 := mload(0)
 //     let a := a_1

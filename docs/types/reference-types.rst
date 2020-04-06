@@ -57,7 +57,7 @@ Data locations are not only relevant for persistency of data, but also for the s
 
 ::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.7.0;
 
     contract C {
         // The data location of x is storage.
@@ -123,6 +123,12 @@ The numeric index becomes a required parameter for the getter.
 Accessing an array past its end causes a failing assertion. Methods ``.push()`` and ``.push(value)`` can be used
 to append a new element at the end of the array, where ``.push()`` appends a zero-initialized element and returns
 a reference to it.
+
+.. index:: ! string, ! bytes
+
+.. _strings:
+
+.. _bytes:
 
 ``bytes`` and ``strings`` as Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -268,7 +274,7 @@ Array Members
 
 ::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     contract ArrayContract {
         uint[2**20] m_aLotOfIntegers;
@@ -381,7 +387,7 @@ If ``start`` is greater than ``end`` or if ``end`` is greater
 than the length of the array, an exception is thrown.
 
 Both ``start`` and ``end`` are optional: ``start`` defaults
- to ``0`` and ``end`` defaults to the length of the array.
+to ``0`` and ``end`` defaults to the length of the array.
 
 Array slices do not have any members. They are implicitly
 convertible to arrays of their underlying type
@@ -400,7 +406,7 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
 
 ::
 
-    pragma solidity >=0.4.99 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     contract Proxy {
         /// Address of the client contract managed by proxy i.e., this contract
@@ -437,7 +443,7 @@ shown in the following example:
 
 ::
 
-    pragma solidity >=0.4.11 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     // Defines a new type with two fields.
     // Declaring a struct outside of a contract allows
@@ -494,7 +500,7 @@ shown in the following example:
 
 The contract does not provide the full functionality of a crowdfunding
 contract, but it contains the basic concepts necessary to understand structs.
-Struct types can be used inside mappings and arrays and they can itself
+Struct types can be used inside mappings and arrays and they can themselves
 contain mappings and arrays.
 
 It is not possible for a struct to contain a member of its own type,

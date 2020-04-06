@@ -12,9 +12,9 @@
     a := b
     mstore(2, a)
 }
-// ====
-// step: commonSubexpressionEliminator
 // ----
+// step: commonSubexpressionEliminator
+//
 // {
 //     let a := mload(0)
 //     let b := add(a, 7)

@@ -73,7 +73,10 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 		utils().convertType(*type, *_varDecl.annotation().type);
 		type = _varDecl.annotation().type;
 	}
-	StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
+	if (_varDecl.immutable())
+		ImmutableItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
+	else
+		StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
 }
 
 void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration const& _varDecl)
@@ -93,11 +96,17 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	FunctionType accessorType(_varDecl);
 
 	TypePointers paramTypes = accessorType.parameterTypes();
+	if (_varDecl.immutable())
+		solAssert(paramTypes.empty(), "");
+
 	m_context.adjustStackOffset(1 + CompilerUtils::sizeOnStack(paramTypes));
 
-	// retrieve the position of the variable
-	auto const& location = m_context.storageLocationOfVariable(_varDecl);
-	m_context << location.first << u256(location.second);
+	if (!_varDecl.immutable())
+	{
+		// retrieve the position of the variable
+		auto const& location = m_context.storageLocationOfVariable(_varDecl);
+		m_context << location.first << u256(location.second);
+	}
 
 	TypePointer returnType = _varDecl.annotation().type;
 
@@ -179,6 +188,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	solAssert(returnTypes.size() >= 1, "");
 	if (StructType const* structType = dynamic_cast<StructType const*>(returnType))
 	{
+		solAssert(!_varDecl.immutable(), "");
 		// remove offset
 		m_context << Instruction::POP;
 		auto const& names = accessorType.returnParameterNames();
@@ -205,7 +215,10 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	{
 		// simple value or array
 		solAssert(returnTypes.size() == 1, "");
-		StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
+		if (_varDecl.immutable())
+			ImmutableItem(m_context, _varDecl).retrieveValue(SourceLocation());
+		else
+			StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		utils().convertType(*returnType, *returnTypes.front());
 		retSizeOnStack = returnTypes.front()->sizeOnStack();
 	}
@@ -572,7 +585,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 						// Do not directly visit the identifier, because this way, we can avoid
 						// the runtime entry label to be created at the creation time context.
 						CompilerContext::LocationSetter locationSetter2(m_context, *identifier);
-						utils().pushCombinedFunctionEntryLabel(m_context.resolveVirtualFunction(*functionDef), false);
+						utils().pushCombinedFunctionEntryLabel(
+							functionDef->resolveVirtual(m_context.mostDerivedContract()),
+							false
+						);
 						shortcutTaken = true;
 					}
 				}
@@ -991,6 +1007,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			// Fetch requested length.
 			acceptAndConvert(*arguments[0], *TypeProvider::uint256());
+
+			// Make sure we can allocate memory without overflow
+			m_context << u256(0xffffffffffffffff);
+			m_context << Instruction::DUP2;
+			m_context << Instruction::GT;
+			m_context.appendConditionalRevert();
 
 			// Stack: requested_length
 			utils().fetchFreeMemoryPointer();
@@ -1800,6 +1822,7 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _indexAccess);
 	_indexAccess.baseExpression().accept(*this);
+	// stack: offset length
 
 	Type const& baseType = *_indexAccess.baseExpression().annotation().type;
 
@@ -1815,27 +1838,21 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 		acceptAndConvert(*_indexAccess.startExpression(), *TypeProvider::uint256());
 	else
 		m_context << u256(0);
+	// stack: offset length sliceStart
+
+	m_context << Instruction::SWAP1;
+	// stack: offset sliceStart length
+
 	if (_indexAccess.endExpression())
 		acceptAndConvert(*_indexAccess.endExpression(), *TypeProvider::uint256());
 	else
-		m_context << Instruction::DUP2;
+		m_context << Instruction::DUP1;
+	// stack: offset sliceStart length sliceEnd
 
-	m_context.appendInlineAssembly(
-		Whiskers(R"({
-					if gt(sliceStart, sliceEnd) { <revertStringStartEnd> }
-					if gt(sliceEnd, length) { <revertStringEndLength> }
+	m_context << Instruction::SWAP3;
+	// stack: sliceEnd sliceStart length offset
 
-					offset := add(offset, mul(sliceStart, <stride>))
-					length := sub(sliceEnd, sliceStart)
-				})")
-		("stride", toString(arrayType->calldataStride()))
-		("revertStringStartEnd", m_context.revertReasonIfDebug("Slice starts after end"))
-		("revertStringEndLength", m_context.revertReasonIfDebug("Slice is greater than length"))
-		.render(),
-		{"offset", "length", "sliceStart", "sliceEnd"}
-	);
-
-	m_context << Instruction::POP << Instruction::POP;
+	m_context.callYulFunction(m_context.utilFunctions().calldataArrayIndexRangeAccess(*arrayType), 4, 2);
 
 	return false;
 }
@@ -1866,7 +1883,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		// we want to avoid having a reference to the runtime function entry point in the
 		// constructor context, since this would force the compiler to include unreferenced
 		// internal functions in the runtime contex.
-		utils().pushCombinedFunctionEntryLabel(m_context.resolveVirtualFunction(*functionDef));
+		utils().pushCombinedFunctionEntryLabel(functionDef->resolveVirtual(m_context.mostDerivedContract()));
 	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
 		appendVariable(*variable, static_cast<Expression const&>(_identifier));
 	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
@@ -2438,10 +2455,12 @@ void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
 
 void ExpressionCompiler::appendVariable(VariableDeclaration const& _variable, Expression const& _expression)
 {
-	if (!_variable.isConstant())
-		setLValueFromDeclaration(_variable, _expression);
-	else
+	if (_variable.isConstant())
 		acceptAndConvert(*_variable.value(), *_variable.annotation().type);
+	else if (_variable.immutable())
+		setLValue<ImmutableItem>(_expression, _variable);
+	else
+		setLValueFromDeclaration(_variable, _expression);
 }
 
 void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaration, Expression const& _expression)

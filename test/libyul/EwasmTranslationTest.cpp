@@ -48,17 +48,11 @@ using namespace solidity::frontend::test;
 using namespace std;
 
 
-EwasmTranslationTest::EwasmTranslationTest(string const& _filename)
+EwasmTranslationTest::EwasmTranslationTest(string const& _filename):
+	EVMVersionRestrictedTestCase(_filename)
 {
-	boost::filesystem::path path(_filename);
-
-	ifstream file(_filename);
-	if (!file)
-		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test case: \"" + _filename + "\"."));
-	file.exceptions(ios::badbit);
-
-	m_source = parseSourceAndSettings(file);
-	m_expectation = parseSimpleExpectations(file);
+	m_source = m_reader.source();
+	m_expectation = m_reader.simpleExpectations();
 }
 
 TestCase::TestResult EwasmTranslationTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)

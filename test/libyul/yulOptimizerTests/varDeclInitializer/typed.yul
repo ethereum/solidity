@@ -8,8 +8,9 @@
 }
 // ====
 // dialect: evmTyped
-// step: varDeclInitializer
 // ----
+// step: varDeclInitializer
+//
 // {
 //     let a1 := 0
 //     let a2:bool := false

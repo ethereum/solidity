@@ -7,9 +7,9 @@
     // the global context gets too big.
     let x := f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(f(2)))))))))))))))))))
 }
-// ====
-// step: fullInliner
 // ----
+// step: fullInliner
+//
 // {
 //     {
 //         let a_20 := 2

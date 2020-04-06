@@ -22,7 +22,7 @@ Interfaces are denoted by their own keyword:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.6.2 <0.7.0;
 
     interface Token {
         enum TokenType { Fungible, NonFungible }
@@ -42,7 +42,7 @@ inheritance.
 
 ::
 
-    pragma solidity >0.6.1 <0.7.0;
+    pragma solidity >=0.6.2 <0.7.0;
 
     interface ParentA {
         function test() external returns (uint256);

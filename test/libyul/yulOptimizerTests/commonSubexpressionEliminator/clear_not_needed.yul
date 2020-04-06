@@ -7,9 +7,9 @@
     a := 9
     sstore(x, 3)
 }
-// ====
-// step: commonSubexpressionEliminator
 // ----
+// step: commonSubexpressionEliminator
+//
 // {
 //     let a := calldataload(0)
 //     let x := calldataload(0x20)

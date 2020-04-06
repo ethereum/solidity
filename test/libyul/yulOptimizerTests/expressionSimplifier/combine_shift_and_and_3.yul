@@ -8,8 +8,9 @@
 }
 // ====
 // EVMVersion: >byzantium
-// step: expressionSimplifier
 // ----
+// step: expressionSimplifier
+//
 // {
 //     let x := calldataload(0)
 //     let a := and(shl(8, x), 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000)

@@ -68,7 +68,7 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
 
 ::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     contract C {
         uint private data;
@@ -112,7 +112,7 @@ when they are declared.
 
 ::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     contract C {
         uint public data = 42;
@@ -151,7 +151,7 @@ to write a function, for example:
 
 ::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.16 <0.7.0;
 
     contract arrayExample {
         // public state variable

@@ -6,9 +6,9 @@
     case 3 { sstore(3, 1) }
     default { sstore(8, 9) }
 }
-// ====
-// step: wordSizeTransform
 // ----
+// step: wordSizeTransform
+//
 // {
 //     let _1_0 := 0
 //     let _1_1 := 0

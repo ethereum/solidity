@@ -1,3 +1,28 @@
+### 0.6.5 (2020-04-06)
+
+Important Bugfixes:
+ * Code Generator: Restrict the length of dynamic memory arrays to 64 bits during creation at runtime fixing a possible overflow.
+
+
+Language Features:
+ * Allow local storage variables to be declared without initialization, as long as they are assigned before they are accessed.
+ * State variables can be marked ``immutable`` which causes them to be read-only, but assignable in the constructor. The value will be stored directly in the code.
+
+
+Compiler Features:
+ * Commandline Interface: Enable output of storage layout with `--storage-layout`.
+ * Metadata: Added support for IPFS hashes of large files that need to be split in multiple chunks.
+
+
+Bugfixes:
+ * Inheritance: Allow public state variables to override functions with dynamic memory types in their return values.
+ * Inline Assembly: Fix internal error when accessing invalid constant variables.
+ * Inline Assembly: Fix internal error when accessing functions.
+ * JSON AST: Always add pointer suffix for memory reference types.
+ * Reference Resolver: Fix internal error when accessing invalid struct members.
+ * Type Checker: Fix internal errors when assigning nested tuples.
+
+
 ### 0.6.4 (2020-03-10)
 
 Language Features:
@@ -18,7 +43,6 @@ Bugfixes:
  * SMTChecker: Fix internal errors when analysing tuples.
  * Yul AST Import: correctly import blocks as statements, switch statements and string literals.
 
-
 ### 0.6.3 (2020-02-18)
 
 Language Features:
@@ -32,6 +56,7 @@ Compiler Features:
  * Code Generator: Use ``calldatacopy`` instead of ``codecopy`` to zero out memory past input.
  * Debug: Provide reason strings for compiler-generated internal reverts when using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting on ``debug`` mode.
  * Yul Optimizer: Prune functions that call each other but are otherwise unreferenced.
+ * SMTChecker: CHC support to internal function calls.
 
 
 Bugfixes:
@@ -118,6 +143,12 @@ Language Features:
 Compiler Features:
  * Allow revert strings to be stripped from the binary using the ``--revert-strings`` option or the ``settings.debug.revertStrings`` setting.
  * ABIEncoderV2: Do not warn about enabled ABIEncoderV2 anymore (the pragma is still needed, though).
+
+
+### 0.5.17 (2020-03-17)
+
+Bugfixes:
+ * Type Checker: Disallow overriding of private functions.
 
 
 ### 0.5.16 (2020-01-02)

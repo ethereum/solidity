@@ -17,14 +17,18 @@
 
 #include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/Common.h>
+
+#include <libsolidity/formal/ModelChecker.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
+
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -50,6 +54,9 @@ SMTCheckerJSONTest::SMTCheckerJSONTest(string const& _filename, langutil::EVMVer
 		!m_smtResponses.isObject()
 	)
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid JSON file."));
+
+	if (ModelChecker::availableSolvers().none())
+		m_shouldRun = false;
 }
 
 TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
@@ -128,7 +135,7 @@ TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _li
 		}
 	}
 
-	return printExpectationAndError(_stream, _linePrefix, _formatted) ? TestResult::Success : TestResult::Failure;
+	return conclude(_stream, _linePrefix, _formatted);
 }
 
 vector<string> SMTCheckerJSONTest::hashesFromJson(Json::Value const& _jsonObj, string const& _auxInput, string const& _smtlib)

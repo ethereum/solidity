@@ -1,5 +1,13 @@
 [
     {
+        "name": "MemoryArrayCreationOverflow",
+        "summary": "The creation of very large memory arrays can result in overlapping memory regions and thus memory corruption.",
+        "description": "No runtime overflow checks were performed for the length of memory arrays during creation. In cases for which the memory size of an array in bytes, i.e. the array length times 32, is larger than 2^256-1, the memory allocation will overflow, potentially resulting in overlapping memory areas. The length of the array is still stored correctly, so copying or iterating over such an array will result in out-of-gas.",
+        "introduced": "0.2.0",
+        "fixed": "0.6.5",
+        "severity": "low"
+    },
+    {
         "name": "YulOptimizerRedundantAssignmentBreakContinue",
         "summary": "The Yul optimizer can remove essential assignments to variables declared inside for loops when Yul's continue or break statement is used. You are unlikely to be affected if you do not use inline assembly with for loops and continue and break statements.",
         "description": "The Yul optimizer has a stage that removes assignments to variables that are overwritten again or are not used in all following control-flow branches. This logic incorrectly removes such assignments to variables declared inside a for loop if they can be removed in a control-flow branch that ends with ``break`` or ``continue`` even though they cannot be removed in other control-flow branches. Variables declared outside of the respective for loop are not affected.",
@@ -9,6 +17,14 @@
         "conditions": {
             "yulOptimizer": true
         }
+    },
+    {
+        "name": "privateCanBeOverridden",
+        "summary": "Private methods can be overridden by inheriting contracts.",
+        "description": "While private methods of base contracts are not visible and cannot be called directly from the derived contract, it is still possible to declare a function of the same name and type and thus change the behaviour of the base contract's function.",
+        "introduced": "0.3.0",
+        "fixed": "0.5.17",
+        "severity": "low"
     },
     {
         "name": "YulOptimizerRedundantAssignmentBreakContinue0.5",

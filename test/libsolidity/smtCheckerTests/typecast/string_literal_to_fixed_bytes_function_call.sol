@@ -10,5 +10,4 @@ contract B {
 }
 // ----
 // Warning: (162-184): Assertion violation happens here
-// Warning: (136-158): Assertion violation happens here
 // Warning: (162-184): Assertion violation happens here

@@ -122,6 +122,10 @@ defaults:
       name: command line tests
       command: ./test/cmdlineTests.sh
 
+  - run_docs_pragma_min_version: &run_docs_pragma_min_version
+      name: docs pragma version check
+      command: ./scripts/docs_version_pragma_check.sh
+
   - test_ubuntu1604_clang: &test_ubuntu1604_clang
       docker:
         - image: ethereum/solidity-buildpack-deps:ubuntu1604-clang-ossfuzz-<< pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image-rev >>
@@ -303,6 +307,18 @@ jobs:
           name: Linting Python Scripts
           command: ./scripts/pylint_all.py
 
+  chk_antlr_grammar:
+    docker:
+      - image: buildpack-deps:eoan
+    steps:
+      - checkout
+      - run:
+          name: Install Java
+          command: apt -q update && apt install -y openjdk-14-jdk
+      - run:
+          name: Run tests
+          command: ./scripts/test_antlr_grammar.sh
+
   chk_buglist:
     docker:
       - image: circleci/node
@@ -334,6 +350,15 @@ jobs:
             apt-get -qy install python-pip
             pip install --user z3-solver
       - run: *run_proofs
+
+  chk_docs_pragma_min_version:
+    docker:
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-<< pipeline.parameters.ubuntu-1904-docker-image-rev >>
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - run: *run_docs_pragma_min_version
 
   b_ubu_clang: &build_ubuntu1904_clang
     docker:
@@ -768,6 +793,8 @@ workflows:
       - chk_buglist: *workflow_trigger_on_tags
       - chk_proofs: *workflow_trigger_on_tags
       - chk_pylint: *workflow_trigger_on_tags
+      - chk_antlr_grammar: *workflow_trigger_on_tags
+      - chk_docs_pragma_min_version: *workflow_trigger_on_tags
 
       # build-only
       - b_docs: *workflow_trigger_on_tags

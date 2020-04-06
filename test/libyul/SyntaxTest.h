@@ -36,15 +36,13 @@ public:
 	{
 		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion);
 	}
-	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion):
-		CommonSyntaxTest(_filename, _evmVersion) {}
+	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
 	virtual ~SyntaxTest() {}
-
-	/// Validates the settings, i.e. moves them from m_settings to m_validatedSettings.
-	/// Throws a runtime exception if any setting is left at this class (i.e. unknown setting).
-	void validateSettings() override;
 protected:
 	void parseAndAnalyze() override;
+
+private:
+	Dialect const* m_dialect = nullptr;
 };
 
 }

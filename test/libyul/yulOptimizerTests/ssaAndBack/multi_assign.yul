@@ -6,9 +6,9 @@
     a := mload(4)
     mstore(a, 0)
 }
-// ====
-// step: ssaAndBack
 // ----
+// step: ssaAndBack
+//
 // {
 //     let a_5 := mload(4)
 //     mstore(a_5, 0)

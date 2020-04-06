@@ -23,6 +23,8 @@
 
 #include <libyul/AsmData.h>
 
+#include <liblangutil/EVMVersion.h>
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -52,5 +54,7 @@ parse(std::string const& _source, Dialect const& _dialect, langutil::ErrorList& 
 
 Block disambiguate(std::string const& _source, bool _yul = true);
 std::string format(std::string const& _source, bool _yul = true);
+
+solidity::yul::Dialect const& dialect(std::string const& _name, langutil::EVMVersion _evmVersion);
 
 }

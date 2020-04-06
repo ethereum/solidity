@@ -3,9 +3,9 @@
     let b := add(7, sub(f(), 7))
     mstore(b, 0)
 }
-// ====
-// step: fullSimplify
 // ----
+// step: fullSimplify
+//
 // {
 //     function f() -> a
 //     { }

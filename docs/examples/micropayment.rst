@@ -338,7 +338,7 @@ The full contract
 
 ::
 
-    pragma solidity >=0.4.24 <0.7.0;
+    pragma solidity >=0.5.0 <0.7.0;
 
     contract SimplePaymentChannel {
         address payable public sender;      // The account sending payments.

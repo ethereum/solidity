@@ -5,9 +5,9 @@
     default { mstore(0, mload(3)) }
     x := add(mload(3), 4)
 }
-// ====
-// step: expressionSplitter
 // ----
+// step: expressionSplitter
+//
 // {
 //     let x := 8
 //     let _1 := 0

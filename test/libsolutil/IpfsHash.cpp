@@ -60,15 +60,50 @@ BOOST_AUTO_TEST_CASE(test_largest_unchunked)
 	BOOST_CHECK_EQUAL(ipfsHashBase58(data), "QmbNDspMkzkMFKyS3eCJGedG7GWRQHSCzJCZLjxP7wyVAx");
 }
 
-// TODO This needs chunking implemented
-//BOOST_AUTO_TEST_CASE(test_large)
-//{
-//	size_t length = 1310710;
-//	string data;
-//	data.resize(length, 0);
-//	BOOST_REQUIRE_EQUAL(data.size(), length);
-//	BOOST_CHECK_EQUAL(ipfsHashBase58(data), "QmNg7BJo8gEMDK8yGQbHEwPtycesnE6FUULX5iVd5TAL9f");
-//}
+BOOST_AUTO_TEST_CASE(test_smallest_chunked)
+{
+	size_t length = 1024 * 256 + 1;
+	string data;
+	data.resize(length, 0);
+	BOOST_REQUIRE_EQUAL(data.size(), length);
+	BOOST_CHECK_EQUAL(ipfsHashBase58(data), "QmbVuw4C4vcmVKqxoWtgDVobvcHrSn51qsmQmyxjk4sB2Q");
+}
+
+BOOST_AUTO_TEST_CASE(test_large)
+{
+	size_t length = 1310710;
+	string data;
+	data.resize(length, 0);
+	BOOST_REQUIRE_EQUAL(data.size(), length);
+	BOOST_CHECK_EQUAL(ipfsHashBase58(data), "QmNg7BJo8gEMDK8yGQbHEwPtycesnE6FUULX5iVd5TAL9f");
+}
+
+BOOST_AUTO_TEST_CASE(test_largest_one_level)
+{
+	size_t length = 45613056; // 1024 * 256 * 174;
+	string data;
+	data.resize(length, 0);
+	BOOST_REQUIRE_EQUAL(data.size(), length);
+	BOOST_CHECK_EQUAL(ipfsHashBase58(data), "QmY4HSz1oVGdUzb8poVYPLsoqBZjH6LZrtgnme9wWn2Qko");
+}
+
+BOOST_AUTO_TEST_CASE(test_smallest_multi_level)
+{
+	size_t length = 45613057; // 1024 * 256 * 174 + 1;
+	string data;
+	data.resize(length, 0);
+	BOOST_REQUIRE_EQUAL(data.size(), length);
+	BOOST_CHECK_EQUAL(ipfsHashBase58(data), "QmehMASWcBsX7VcEQqs6rpR5AHoBfKyBVEgmkJHjpPg8jq");
+}
+
+BOOST_AUTO_TEST_CASE(test_multi_level_tree)
+{
+	size_t length = 46661632;
+	string data;
+	data.resize(length, 0);
+	BOOST_REQUIRE_EQUAL(data.size(), length);
+	BOOST_CHECK_EQUAL(ipfsHashBase58(data), "QmaTb1sT9hrSXJLmf8bxJ9NuwndiHuMLsgNLgkS2eXu3Xj");
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

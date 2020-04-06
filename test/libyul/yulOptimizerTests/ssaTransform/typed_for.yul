@@ -8,8 +8,9 @@
 }
 // ====
 // dialect: evmTyped
-// step: ssaTransform
 // ----
+// step: ssaTransform
+//
 // {
 //     let b:bool := true
 //     let c_1:bool := false

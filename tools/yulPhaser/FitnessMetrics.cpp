@@ -17,14 +17,102 @@
 
 #include <tools/yulPhaser/FitnessMetrics.h>
 
+#include <libsolutil/CommonIO.h>
+
+#include <cmath>
+
 using namespace std;
+using namespace solidity::util;
 using namespace solidity::phaser;
 
-size_t ProgramSize::evaluate(Chromosome const& _chromosome) const
+Program const& ProgramBasedMetric::program() const
 {
-	Program programCopy = m_program;
+	if (m_programCache == nullptr)
+		return m_program.value();
+	else
+		return m_programCache->program();
+}
+
+Program ProgramBasedMetric::optimisedProgram(Chromosome const& _chromosome)
+{
+	if (m_programCache == nullptr)
+		return optimisedProgramNoCache(_chromosome);
+
+	return m_programCache->optimiseProgram(
+		toString(_chromosome),
+		m_repetitionCount
+	);
+}
+
+Program ProgramBasedMetric::optimisedProgramNoCache(Chromosome const& _chromosome) const
+{
+	Program programCopy = program();
 	for (size_t i = 0; i < m_repetitionCount; ++i)
 		programCopy.optimise(_chromosome.optimisationSteps());
 
-	return programCopy.codeSize();
+	return programCopy;
+}
+
+size_t ProgramSize::evaluate(Chromosome const& _chromosome)
+{
+	return optimisedProgram(_chromosome).codeSize();
+}
+
+size_t RelativeProgramSize::evaluate(Chromosome const& _chromosome)
+{
+	size_t const scalingFactor = pow(10, m_fixedPointPrecision);
+
+	size_t unoptimisedSize = optimisedProgram(Chromosome("")).codeSize();
+	if (unoptimisedSize == 0)
+		return scalingFactor;
+
+	size_t optimisedSize = optimisedProgram(_chromosome).codeSize();
+
+	return static_cast<size_t>(round(
+		static_cast<double>(optimisedSize) / unoptimisedSize * scalingFactor
+	));
+}
+
+size_t FitnessMetricAverage::evaluate(Chromosome const& _chromosome)
+{
+	assert(m_metrics.size() > 0);
+
+	size_t total = m_metrics[0]->evaluate(_chromosome);
+	for (size_t i = 1; i < m_metrics.size(); ++i)
+		total += m_metrics[i]->evaluate(_chromosome);
+
+	return total / m_metrics.size();
+}
+
+size_t FitnessMetricSum::evaluate(Chromosome const& _chromosome)
+{
+	assert(m_metrics.size() > 0);
+
+	size_t total = m_metrics[0]->evaluate(_chromosome);
+	for (size_t i = 1; i < m_metrics.size(); ++i)
+		total += m_metrics[i]->evaluate(_chromosome);
+
+	return total;
+}
+
+size_t FitnessMetricMaximum::evaluate(Chromosome const& _chromosome)
+{
+	assert(m_metrics.size() > 0);
+
+	size_t maximum = m_metrics[0]->evaluate(_chromosome);
+	for (size_t i = 1; i < m_metrics.size(); ++i)
+		maximum = max(maximum, m_metrics[i]->evaluate(_chromosome));
+
+	return maximum;
+}
+
+size_t FitnessMetricMinimum::evaluate(Chromosome const& _chromosome)
+{
+	assert(m_metrics.size() > 0);
+
+	size_t minimum = m_metrics[0]->evaluate(_chromosome);
+	for (size_t i = 1; i < m_metrics.size(); ++i)
+		minimum = min(minimum, m_metrics[i]->evaluate(_chromosome));
+
+	return minimum;
 }

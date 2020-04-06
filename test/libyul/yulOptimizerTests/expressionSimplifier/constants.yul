@@ -1,5 +1,5 @@
 { let a := add(1, mul(3, 4)) }
-// ====
-// step: expressionSimplifier
 // ----
+// step: expressionSimplifier
+//
 // { let a := 13 }

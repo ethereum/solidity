@@ -140,6 +140,7 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 {
 	solAssert(m_context.isStateVariable(_varDecl), "Must be a state variable.");
 	solAssert(!_varDecl.isConstant(), "");
+	solAssert(!_varDecl.immutable(), "");
 	if (_varDecl.value())
 	{
 		_varDecl.value()->accept(*this);
@@ -151,6 +152,19 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 			}
 		}, *_varDecl.value());
 	}
+}
+
+void IRGeneratorForStatements::initializeLocalVar(VariableDeclaration const& _varDecl)
+{
+	solAssert(m_context.isLocalVariable(_varDecl), "Must be a local variable.");
+
+	auto const* type = _varDecl.type();
+	if (auto const* refType = dynamic_cast<ReferenceType const*>(type))
+		if (refType->dataStoredIn(DataLocation::Storage) && refType->isPointer())
+			return;
+
+	IRVariable zero = zeroValue(*type);
+	assign(m_context.localVariable(_varDecl), zero);
 }
 
 void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _varDeclStatement)
@@ -178,7 +192,10 @@ void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _var
 	else
 		for (auto const& decl: _varDeclStatement.declarations())
 			if (decl)
+			{
 				declare(m_context.addLocalVariable(*decl));
+				initializeLocalVar(*decl);
+			}
 }
 
 bool IRGeneratorForStatements::visit(Conditional const& _conditional)
@@ -567,7 +584,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		}
 
 		define(_functionCall) <<
-			m_context.internalDispatch(functionType->parameterTypes().size(), functionType->returnParameterTypes().size()) <<
+			m_context.internalDispatch(
+				TupleType(functionType->parameterTypes()).sizeOnStack(),
+				TupleType(functionType->returnParameterTypes()).sizeOnStack()
+			) <<
 			"(" <<
 			IRVariable(_functionCall.expression()).part("functionIdentifier").name() <<
 			joinHumanReadablePrefixed(args) <<
@@ -666,7 +686,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		IRVariable value = convert(*arguments[0], *TypeProvider::uint256());
 		define(_functionCall) <<
-			m_utils.allocateMemoryArrayFunction(arrayType) <<
+			m_utils.allocateAndInitializeMemoryArrayFunction(arrayType) <<
 			"(" <<
 			value.commaSeparatedList() <<
 			")\n";
@@ -736,6 +756,25 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	}
 	default:
 		solUnimplemented("FunctionKind " + toString(static_cast<int>(functionType->kind())) + " not yet implemented");
+	}
+}
+
+void IRGeneratorForStatements::endVisit(FunctionCallOptions const& _options)
+{
+	FunctionType const& previousType = dynamic_cast<FunctionType const&>(*_options.expression().annotation().type);
+
+	solUnimplementedAssert(!previousType.bound(), "");
+
+	// Copy over existing values.
+	for (auto const& item: previousType.stackItems())
+		define(IRVariable(_options).part(get<0>(item)), IRVariable(_options.expression()).part(get<0>(item)));
+
+	for (size_t i = 0; i < _options.names().size(); ++i)
+	{
+		string const& name = *_options.names()[i];
+		solAssert(name == "salt" || name == "gas" || name == "value", "");
+
+		define(IRVariable(_options).part(name), *_options.options()[i]);
 	}
 }
 
@@ -981,9 +1020,16 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 			}
 		});
 	}
-	else if (baseType.category() == Type::Category::Array)
+	else if (baseType.category() == Type::Category::Array || baseType.category() == Type::Category::ArraySlice)
 	{
-		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
+		ArrayType const& arrayType =
+			baseType.category() == Type::Category::Array ?
+			dynamic_cast<ArrayType const&>(baseType) :
+			dynamic_cast<ArraySliceType const&>(baseType).arrayType();
+
+		if (baseType.category() == Type::Category::ArraySlice)
+			solAssert(arrayType.dataStoredIn(DataLocation::CallData) && arrayType.isDynamicallySized(), "");
+
 		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
 		switch (arrayType.location())
@@ -1066,9 +1112,50 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 		solAssert(false, "Index access only allowed for mappings or arrays.");
 }
 
-void IRGeneratorForStatements::endVisit(IndexRangeAccess const&)
+void IRGeneratorForStatements::endVisit(IndexRangeAccess const& _indexRangeAccess)
 {
-	solUnimplementedAssert(false, "Index range accesses not yet implemented.");
+	Type const& baseType = *_indexRangeAccess.baseExpression().annotation().type;
+	solAssert(
+		baseType.category() == Type::Category::Array || baseType.category() == Type::Category::ArraySlice,
+		"Index range accesses is available only on arrays and array slices."
+	);
+
+	ArrayType const& arrayType =
+		baseType.category() == Type::Category::Array ?
+		dynamic_cast<ArrayType const &>(baseType) :
+		dynamic_cast<ArraySliceType const &>(baseType).arrayType();
+
+	switch (arrayType.location())
+	{
+		case DataLocation::CallData:
+		{
+			solAssert(baseType.isDynamicallySized(), "");
+			IRVariable sliceStart{m_context.newYulVariable(), *TypeProvider::uint256()};
+			if (_indexRangeAccess.startExpression())
+				define(sliceStart, IRVariable{*_indexRangeAccess.startExpression()});
+			else
+				define(sliceStart) << u256(0) << "\n";
+
+			IRVariable sliceEnd{
+				m_context.newYulVariable(),
+				*TypeProvider::uint256()
+			};
+			if (_indexRangeAccess.endExpression())
+				define(sliceEnd, IRVariable{*_indexRangeAccess.endExpression()});
+			else
+				define(sliceEnd, IRVariable{_indexRangeAccess.baseExpression()}.part("length"));
+
+			IRVariable range{_indexRangeAccess};
+			define(range) <<
+				m_utils.calldataArrayIndexRangeAccess(arrayType) << "(" <<
+				IRVariable{_indexRangeAccess.baseExpression()}.commaSeparatedList() << ", " <<
+				sliceStart.name() << ", " <<
+				sliceEnd.name() << ")\n";
+			break;
+		}
+		default:
+			solUnimplementedAssert(false, "Index range accesses is implemented only on calldata arrays.");
+	}
 }
 
 void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
@@ -1097,13 +1184,14 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 		return;
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
-		define(_identifier) << to_string(m_context.virtualFunction(*functionDef).id()) << "\n";
+		define(_identifier) << to_string(functionDef->resolveVirtual(m_context.mostDerivedContract()).id()) << "\n";
 	else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
 		// TODO for the constant case, we have to be careful:
 		// If the value is visited twice, `defineExpression` is called twice on
 		// the same expression.
 		solUnimplementedAssert(!varDecl->isConstant(), "");
+		solUnimplementedAssert(!varDecl->immutable(), "");
 		if (m_context.isLocalVariable(*varDecl))
 			setLValue(_identifier, IRLValue{
 				*varDecl->annotation().type,
@@ -1367,6 +1455,12 @@ std::ostream& IRGeneratorForStatements::define(IRVariable const& _var)
 	return m_code;
 }
 
+void IRGeneratorForStatements::declare(IRVariable const& _var)
+{
+	if (_var.type().sizeOnStack() > 0)
+		m_code << "let " << _var.commaSeparatedList() << "\n";
+}
+
 void IRGeneratorForStatements::declareAssign(IRVariable const& _lhs, IRVariable const& _rhs, bool _declare)
 {
 	string output;
@@ -1386,10 +1480,15 @@ void IRGeneratorForStatements::declareAssign(IRVariable const& _lhs, IRVariable 
 			_rhs.commaSeparatedList() <<
 			")\n";
 }
-void IRGeneratorForStatements::declare(IRVariable const& _var)
+
+IRVariable IRGeneratorForStatements::zeroValue(Type const& _type, bool _splitFunctionTypes)
 {
-	if (_var.type().sizeOnStack() > 0)
-		m_code << "let " << _var.commaSeparatedList() << "\n";
+	IRVariable irVar{
+		"zero_value_for_type_" + _type.identifier() + m_context.newYulVariable(),
+		_type
+	};
+	define(irVar) << m_utils.zeroValueFunction(_type, _splitFunctionTypes) << "()\n";
+	return irVar;
 }
 
 void IRGeneratorForStatements::appendSimpleUnaryOperation(UnaryOperation const& _operation, Expression const& _expr)
@@ -1519,7 +1618,7 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 					solAssert(dynamic_cast<ReferenceType const*>(&_lvalue.type), "");
 					auto const* valueReferenceType = dynamic_cast<ReferenceType const*>(&_value.type());
 					solAssert(valueReferenceType && valueReferenceType->dataStoredIn(DataLocation::Memory), "");
-					m_code << "mstore(" + _memory.address + ", " + _value.name() + ")\n";
+					m_code << "mstore(" + _memory.address + ", " + _value.part("mpos").name() + ")\n";
 				}
 			},
 			[&](IRLValue::Stack const& _stack) { assign(_stack.variable, _value); },

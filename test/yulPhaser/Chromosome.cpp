@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <test/yulPhaser/Common.h>
+#include <test/yulPhaser/TestHelpers.h>
 
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/SimulationRNG.h>

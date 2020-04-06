@@ -15,9 +15,9 @@
     }
     x := 3
 }
-// ====
-// step: redundantAssignEliminator
 // ----
+// step: redundantAssignEliminator
+//
 // {
 //     let x
 //     for { } calldataload(0) { }

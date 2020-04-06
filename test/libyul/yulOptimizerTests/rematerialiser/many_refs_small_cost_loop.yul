@@ -12,9 +12,9 @@
 		let c := sdiv(x, 4)
 	}
 }
-// ====
-// step: rematerialiser
 // ----
+// step: rematerialiser
+//
 // {
 //     let x := 0xff
 //     for { } lt(x, 0x100) { }

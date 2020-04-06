@@ -203,6 +203,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 		EthAssemblyAdapter adapter(assembly);
 		compileEVM(adapter, false, m_optimiserSettings.optimizeStackAllocation);
 		object.bytecode = make_shared<evmasm::LinkerObject>(assembly.assemble());
+		yulAssert(object.bytecode->immutableReferences.empty(), "Leftover immutables.");
 		object.assembly = assembly.assemblyString();
 		object.sourceMappings = make_unique<string>(
 			evmasm::AssemblyItem::computeSourceMapping(

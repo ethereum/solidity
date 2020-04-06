@@ -9,9 +9,9 @@
 		r := a
 	}
 }
-// ====
-// step: fullInliner
 // ----
+// step: fullInliner
+//
 // {
 //     {
 //         let a_3 := 0

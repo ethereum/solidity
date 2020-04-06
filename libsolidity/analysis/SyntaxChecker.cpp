@@ -303,7 +303,9 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 		);
 	}
 
-	if (!_function.isImplemented() && !_function.modifiers().empty())
+	if (m_isInterface && !_function.modifiers().empty())
+		m_errorReporter.syntaxError(_function.location(), "Functions in interfaces cannot have modifiers.");
+	else if (!_function.isImplemented() && !_function.modifiers().empty())
 		m_errorReporter.syntaxError(_function.location(), "Functions without implementation cannot have modifiers.");
 
 	return true;

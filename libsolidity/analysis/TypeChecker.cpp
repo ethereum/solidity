@@ -480,6 +480,18 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 				"Initial value for constant variable has to be compile-time constant."
 			);
 	}
+	else if (_variable.immutable())
+	{
+		if (!_variable.type()->isValueType())
+			m_errorReporter.typeError(_variable.location(), "Immutable variables cannot have a non-value type.");
+		if (
+			auto const* functionType = dynamic_cast<FunctionType const*>(_variable.type());
+			functionType && functionType->kind() == FunctionType::Kind::External
+		)
+			m_errorReporter.typeError(_variable.location(), "Immutable variables of external function type are not yet supported.");
+		solAssert(_variable.type()->sizeOnStack() == 1 || m_errorReporter.hasErrors(), "");
+	}
+
 	if (!_variable.isStateVariable())
 	{
 		if (varType->dataStoredIn(DataLocation::Memory) || varType->dataStoredIn(DataLocation::CallData))
@@ -641,16 +653,21 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
 			solAssert(var->type(), "Expected variable type!");
+			if (var->immutable())
+			{
+				m_errorReporter.typeError(_identifier.location, "Assembly access to immutable variables is not supported.");
+				return size_t(-1);
+			}
 			if (var->isConstant())
 			{
-				var = rootVariableDeclaration(*var);
+				var = rootConstVariableDeclaration(*var);
 
-				if (!var->value())
+				if (var && !var->value())
 				{
 					m_errorReporter.typeError(_identifier.location, "Constant has no value.");
 					return size_t(-1);
 				}
-				else if (!type(*var)->isValueType() || (
+				else if (!var || !type(*var)->isValueType() || (
 					dynamic_cast<Literal const*>(var->value().get()) == nullptr &&
 					type(*var->value())->category() != Type::Category::RationalNumber
 				))
@@ -731,6 +748,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			solAssert(!!declaration->type(), "Type of declaration required but not yet determined.");
 			if (dynamic_cast<FunctionDefinition const*>(declaration))
 			{
+				m_errorReporter.declarationError(_identifier.location, "Access to functions is not allowed in inline assembly.");
+				return size_t(-1);
 			}
 			else if (dynamic_cast<VariableDeclaration const*>(declaration))
 			{
@@ -1052,17 +1071,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		if (!varDecl.annotation().type)
 			m_errorReporter.fatalTypeError(_statement.location(), "Use of the \"var\" keyword is disallowed.");
 
-		if (auto ref = dynamic_cast<ReferenceType const*>(type(varDecl)))
-		{
-			if (ref->dataStoredIn(DataLocation::Storage))
-			{
-				string errorText{"Uninitialized storage pointer."};
-				solAssert(varDecl.referenceLocation() != VariableDeclaration::Location::Unspecified, "Expected a specified location at this point");
-				solAssert(m_scope, "");
-				m_errorReporter.declarationError(varDecl.location(), errorText);
-			}
-		}
-		else if (dynamic_cast<MappingType const*>(type(varDecl)))
+		if (dynamic_cast<MappingType const*>(type(varDecl)))
 			m_errorReporter.typeError(
 				varDecl.location(),
 				"Uninitialized mapping. Mappings cannot be created dynamically, you have to assign them from a state variable."
@@ -1308,11 +1317,11 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 	if (auto const* tupleExpression = dynamic_cast<TupleExpression const*>(&_expression))
 	{
 		auto const* tupleType = dynamic_cast<TupleType const*>(&_type);
-		auto const& types = tupleType ? tupleType->components() : vector<TypePointer> { &_type };
+		auto const& types = tupleType && tupleExpression->components().size() > 1 ? tupleType->components() : vector<TypePointer> { &_type };
 
 		solAssert(
 			tupleExpression->components().size() == types.size() || m_errorReporter.hasErrors(),
-			"Array sizes don't match or no errors generated."
+			"Array sizes don't match and no errors generated."
 		);
 
 		for (size_t i = 0; i < min(tupleExpression->components().size(), types.size()); i++)
@@ -1336,7 +1345,10 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 
 bool TypeChecker::visit(Assignment const& _assignment)
 {
-	requireLValue(_assignment.leftHandSide());
+	requireLValue(
+		_assignment.leftHandSide(),
+		_assignment.assignmentOperator() == Token::Assign
+	);
 	TypePointer t = type(_assignment.leftHandSide());
 	_assignment.annotation().type = t;
 
@@ -1394,7 +1406,10 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		for (auto const& component: components)
 			if (component)
 			{
-				requireLValue(*component);
+				requireLValue(
+					*component,
+					_tuple.annotation().lValueOfOrdinaryAssignment
+				);
 				types.push_back(type(*component));
 			}
 			else
@@ -1479,7 +1494,7 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	Token op = _operation.getOperator();
 	bool const modifying = (op == Token::Inc || op == Token::Dec || op == Token::Delete);
 	if (modifying)
-		requireLValue(_operation.subExpression());
+		requireLValue(_operation.subExpression(), false);
 	else
 		_operation.subExpression().accept(*this);
 	TypePointer const& subExprType = type(_operation.subExpression());
@@ -2987,9 +3002,10 @@ bool TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 	return true;
 }
 
-void TypeChecker::requireLValue(Expression const& _expression)
+void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAssignment)
 {
 	_expression.annotation().lValueRequested = true;
+	_expression.annotation().lValueOfOrdinaryAssignment = _ordinaryAssignment;
 	_expression.accept(*this);
 
 	if (_expression.annotation().isLValue)

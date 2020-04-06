@@ -5,9 +5,9 @@
 		revert(0, x)
 	}
 }
-// ====
-// step: controlFlowSimplifier
 // ----
+// step: controlFlowSimplifier
+//
 // {
 //     if calldatasize()
 //     {

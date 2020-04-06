@@ -5,9 +5,9 @@
 	case 1 { y := 9 }
 	default { }
 }
-// ====
-// step: controlFlowSimplifier
 // ----
+// step: controlFlowSimplifier
+//
 // {
 //     let y := 200
 //     if eq(1, calldataload(0)) { y := 9 }

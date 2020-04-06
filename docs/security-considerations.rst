@@ -81,7 +81,7 @@ as it uses ``call`` which forwards all remaining gas by default:
 
 ::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.6.2 <0.7.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
@@ -277,7 +277,7 @@ field of a ``struct`` that is the base type of a dynamic storage array.  The
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.7.0;
 
     contract Map {
         mapping (uint => uint)[] array;
@@ -547,6 +547,7 @@ not mean loss of proving power.
 
     pragma solidity >=0.5.0;
     pragma experimental SMTChecker;
+    // This may report a warning if no SMT solver available.
 
     contract Recover
     {
@@ -601,6 +602,7 @@ types.
     pragma solidity >=0.5.0;
     pragma experimental SMTChecker;
     // This will report a warning
+
     contract Aliasing
     {
         uint[] array;

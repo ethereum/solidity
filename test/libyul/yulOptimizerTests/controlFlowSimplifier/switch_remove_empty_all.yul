@@ -10,9 +10,9 @@
 	case 1 { }
 	default { }
 }
-// ====
-// step: controlFlowSimplifier
 // ----
+// step: controlFlowSimplifier
+//
 // {
 //     let y := 200
 //     pop(add(y, 4))

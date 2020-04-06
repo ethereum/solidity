@@ -4,9 +4,9 @@
     let a1 := calldataload(0)
     f(a1)
 }
-// ====
-// step: fullInliner
 // ----
+// step: fullInliner
+//
 // {
 //     {
 //         let a_2 := calldataload(0)

@@ -15,6 +15,12 @@ install(TARGETS solidity-upgrade DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 add_executable(yul-phaser
 	yulPhaser/main.cpp
+	yulPhaser/Common.h
+	yulPhaser/Common.cpp
+	yulPhaser/AlgorithmRunner.h
+	yulPhaser/AlgorithmRunner.cpp
+	yulPhaser/Phaser.h
+	yulPhaser/Phaser.cpp
 	yulPhaser/GeneticAlgorithms.h
 	yulPhaser/GeneticAlgorithms.cpp
 	yulPhaser/Population.h
@@ -23,8 +29,14 @@ add_executable(yul-phaser
 	yulPhaser/FitnessMetrics.cpp
 	yulPhaser/Chromosome.h
 	yulPhaser/Chromosome.cpp
+	yulPhaser/Mutations.h
+	yulPhaser/Mutations.cpp
+	yulPhaser/PairSelections.h
+	yulPhaser/PairSelections.cpp
 	yulPhaser/Selections.h
 	yulPhaser/Selections.cpp
+	yulPhaser/ProgramCache.h
+	yulPhaser/ProgramCache.cpp
 	yulPhaser/Program.h
 	yulPhaser/Program.cpp
 	yulPhaser/SimulationRNG.h

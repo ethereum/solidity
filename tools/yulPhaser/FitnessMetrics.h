@@ -22,8 +22,10 @@
 
 #include <tools/yulPhaser/Chromosome.h>
 #include <tools/yulPhaser/Program.h>
+#include <tools/yulPhaser/ProgramCache.h>
 
 #include <cstddef>
+#include <optional>
 
 namespace solidity::phaser
 {
@@ -43,25 +45,139 @@ public:
 	FitnessMetric& operator=(FitnessMetric const&) = delete;
 	virtual ~FitnessMetric() = default;
 
-	virtual size_t evaluate(Chromosome const& _chromosome) const = 0;
+	virtual size_t evaluate(Chromosome const& _chromosome) = 0;
+};
+
+/**
+ * Abstract base class for fitness metrics that return values based on program size.
+ *
+ * The class provides utilities for optimising programs according to the information stored in
+ * chromosomes. Allows using @a ProgramCache.
+ *
+ * It can also store weights for the @a CodeSize metric. It does not do anything with
+ * them because it does not actually compute the code size but they are readily available for use
+ * by derived classes.
+ */
+class ProgramBasedMetric: public FitnessMetric
+{
+public:
+	explicit ProgramBasedMetric(
+		std::optional<Program> _program,
+		std::shared_ptr<ProgramCache> _programCache,
+		size_t _repetitionCount = 1
+	):
+		m_program(std::move(_program)),
+		m_programCache(std::move(_programCache)),
+		m_repetitionCount(_repetitionCount)
+	{
+		assert(m_program.has_value() == (m_programCache == nullptr));
+	}
+
+	Program const& program() const;
+	ProgramCache const* programCache() const { return m_programCache.get(); }
+	size_t repetitionCount() const { return m_repetitionCount; }
+
+	Program optimisedProgram(Chromosome const& _chromosome);
+	Program optimisedProgramNoCache(Chromosome const& _chromosome) const;
+
+private:
+	std::optional<Program> m_program;
+	std::shared_ptr<ProgramCache> m_programCache;
+	size_t m_repetitionCount;
 };
 
 /**
  * Fitness metric based on the size of a specific program after applying the optimisations from the
  * chromosome to it.
  */
-class ProgramSize: public FitnessMetric
+class ProgramSize: public ProgramBasedMetric
 {
 public:
-	explicit ProgramSize(Program _program, size_t _repetitionCount = 1):
-		m_program(std::move(_program)),
-		m_repetitionCount(_repetitionCount) {}
+	using ProgramBasedMetric::ProgramBasedMetric;
+	size_t evaluate(Chromosome const& _chromosome) override;
+};
 
-	size_t evaluate(Chromosome const& _chromosome) const override;
+/**
+ * Fitness metric based on the size of a specific program after applying the optimisations from the
+ * chromosome to it in relation to the original, unoptimised program.
+ *
+ * Since metric values are integers, the class multiplies the ratio by 10^@a _fixedPointPrecision
+ * before rounding it.
+ */
+class RelativeProgramSize: public ProgramBasedMetric
+{
+public:
+	explicit RelativeProgramSize(
+		std::optional<Program> _program,
+		std::shared_ptr<ProgramCache> _programCache,
+		size_t _fixedPointPrecision,
+		size_t _repetitionCount = 1
+	):
+		ProgramBasedMetric(std::move(_program), std::move(_programCache), _repetitionCount),
+		m_fixedPointPrecision(_fixedPointPrecision) {}
+
+	size_t fixedPointPrecision() const { return m_fixedPointPrecision; }
+
+	size_t evaluate(Chromosome const& _chromosome) override;
 
 private:
-	Program m_program;
-	size_t m_repetitionCount;
+	size_t m_fixedPointPrecision;
+};
+
+/**
+ * Abstract base class for fitness metrics that compute their value based on values of multiple
+ * other, nested metrics.
+ */
+class FitnessMetricCombination: public FitnessMetric
+{
+public:
+	explicit FitnessMetricCombination(std::vector<std::shared_ptr<FitnessMetric>> _metrics):
+		m_metrics(std::move(_metrics)) {}
+
+	std::vector<std::shared_ptr<FitnessMetric>> const& metrics() const { return m_metrics; }
+
+protected:
+	std::vector<std::shared_ptr<FitnessMetric>> m_metrics;
+};
+
+/**
+ * Fitness metric that returns the average of values of its nested metrics.
+ */
+class FitnessMetricAverage: public FitnessMetricCombination
+{
+public:
+	using FitnessMetricCombination::FitnessMetricCombination;
+	size_t evaluate(Chromosome const& _chromosome) override;
+};
+
+/**
+ * Fitness metric that returns the sum of values of its nested metrics.
+ */
+class FitnessMetricSum: public FitnessMetricCombination
+{
+public:
+	using FitnessMetricCombination::FitnessMetricCombination;
+	size_t evaluate(Chromosome const& _chromosome) override;
+};
+
+/**
+ * Fitness metric that returns the highest of values of its nested metrics.
+ */
+class FitnessMetricMaximum: public FitnessMetricCombination
+{
+public:
+	using FitnessMetricCombination::FitnessMetricCombination;
+	size_t evaluate(Chromosome const& _chromosome) override;
+};
+
+/**
+ * Fitness metric that returns the lowest of values of its nested metrics.
+ */
+class FitnessMetricMinimum: public FitnessMetricCombination
+{
+public:
+	using FitnessMetricCombination::FitnessMetricCombination;
+	size_t evaluate(Chromosome const& _chromosome) override;
 };
 
 }

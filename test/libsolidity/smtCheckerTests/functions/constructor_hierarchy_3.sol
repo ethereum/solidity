@@ -19,4 +19,6 @@ contract A is B {
 	}
 }
 // ----
+// Warning: (217-222): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning: (265-270): Overflow (resulting value larger than 2**256 - 1) happens here
 // Warning: (253-271): Assertion violation happens here

@@ -57,7 +57,6 @@ public:
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
 	void printSource(std::ostream& _stream, std::string const &_linePrefix = "", bool const _formatted = false) const override;
-	void printUpdatedSettings(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false) override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 
 private:

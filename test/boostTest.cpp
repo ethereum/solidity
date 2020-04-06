@@ -94,7 +94,6 @@ int registerTests(
 					{
 						stringstream errorStream;
 						auto testCase = _testCaseCreator(config);
-						testCase->validateSettings();
 						if (testCase->shouldRun())
 							switch (testCase->run(errorStream))
 							{
@@ -188,7 +187,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 	if (solidity::test::CommonOptions::get().disableSMT)
 		removeTestSuite("SMTChecker");
 
-	return 0;
+	return nullptr;
 }
 
 // BOOST_TEST_DYN_LINK should be defined if user want to link against shared boost test library

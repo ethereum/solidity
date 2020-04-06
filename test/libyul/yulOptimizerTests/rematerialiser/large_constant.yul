@@ -4,9 +4,9 @@
     let a := 0xffffffffffffffffffffff
     mstore(a, a)
 }
-// ====
-// step: rematerialiser
 // ----
+// step: rematerialiser
+//
 // {
 //     let a := 0xffffffffffffffffffffff
 //     mstore(a, a)

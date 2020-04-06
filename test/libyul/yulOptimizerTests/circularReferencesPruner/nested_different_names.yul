@@ -8,7 +8,7 @@
     	function d() -> w { w := c() }
     }
 }
-// ====
-// step: circularReferencesPruner
 // ----
+// step: circularReferencesPruner
+//
 // { }

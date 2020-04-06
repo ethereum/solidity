@@ -110,7 +110,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	t("functions", m_context.functionCollector().requestedFunctions());
 
 	resetContext(_contract);
-	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	m_context.setMostDerivedContract(_contract);
 	t("RuntimeObject", runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
 	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
@@ -133,6 +133,7 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		Whiskers t(R"(
 			function <functionName>(<params>) <returns> {
+				<initReturnVariables>
 				<body>
 			}
 		)");
@@ -142,9 +143,14 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 			params += (params.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl).commaSeparatedList();
 		t("params", params);
 		string retParams;
+		string retInit;
 		for (auto const& varDecl: _function.returnParameters())
+		{
 			retParams += (retParams.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl).commaSeparatedList();
+			retInit += generateInitialAssignment(*varDecl);
+		}
 		t("returns", retParams.empty() ? "" : " -> " + retParams);
+		t("initReturnVariables", retInit);
 		t("body", generate(_function.body()));
 		return t.render();
 	});
@@ -157,6 +163,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 	Type const* type = _varDecl.annotation().type;
 
 	solAssert(!_varDecl.isConstant(), "");
+	solAssert(!_varDecl.immutable(), "");
 	solAssert(_varDecl.isStateVariable(), "");
 
 	if (auto const* mappingType = dynamic_cast<MappingType const*>(type))
@@ -225,6 +232,13 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 	}
 }
 
+string IRGenerator::generateInitialAssignment(VariableDeclaration const& _varDecl)
+{
+	IRGeneratorForStatements generator(m_context, m_utils);
+	generator.initializeLocalVar(_varDecl);
+	return generator.code();
+}
+
 string IRGenerator::constructorCode(ContractDefinition const& _contract)
 {
 	// Initialization of state variables in base-to-derived order.
@@ -249,7 +263,7 @@ string IRGenerator::constructorCode(ContractDefinition const& _contract)
 
 		IRGeneratorForStatements generator{m_context, m_utils};
 		for (VariableDeclaration const* variable: contract->stateVariables())
-			if (!variable->isConstant())
+			if (!variable->isConstant() && !variable->immutable())
 				generator.initializeStateVar(*variable);
 		out << generator.code();
 
@@ -258,11 +272,28 @@ string IRGenerator::constructorCode(ContractDefinition const& _contract)
 
 	if (constructor)
 	{
-		solUnimplementedAssert(constructor->parameters().empty(), "");
+		ABIFunctions abiFunctions(m_evmVersion, m_context.revertStrings(), m_context.functionCollector());
+		unsigned paramVars = make_shared<TupleType>(constructor->functionType(false)->parameterTypes())->sizeOnStack();
 
-		// TODO base constructors
+		Whiskers t(R"X(
+			let programSize := datasize("<object>")
+			let argSize := sub(codesize(), programSize)
 
-		out << m_context.functionName(*constructor) + "()\n";
+			let memoryDataOffset := <allocate>(argSize)
+			codecopy(memoryDataOffset, programSize, argSize)
+
+			<assignToParams> <abiDecode>(memoryDataOffset, add(memoryDataOffset, argSize))
+
+			<constructorName>(<params>)
+		)X");
+		t("object", creationObjectName(_contract));
+		t("allocate", m_utils.allocationFunction());
+		t("assignToParams", paramVars == 0 ? "" : "let " + suffixedVariableNameList("param_", 0, paramVars) + " := ");
+		t("params", suffixedVariableNameList("param_", 0, paramVars));
+		t("abiDecode", abiFunctions.tupleDecoder(constructor->functionType(false)->parameterTypes(), true));
+		t("constructorName", m_context.functionName(*constructor));
+
+		out << t.render();
 	}
 
 	return out.str();
@@ -388,7 +419,7 @@ void IRGenerator::resetContext(ContractDefinition const& _contract)
 	);
 	m_context = IRGenerationContext(m_evmVersion, m_context.revertStrings(), m_optimiserSettings);
 
-	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	m_context.setMostDerivedContract(_contract);
 	for (auto const& var: ContractType(_contract).stateVariables())
 		m_context.addStateVariable(*get<0>(var), get<1>(var), get<2>(var));
 }

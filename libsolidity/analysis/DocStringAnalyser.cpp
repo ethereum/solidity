@@ -153,7 +153,7 @@ void DocStringAnalyser::parseDocStrings(
 						appendError(
 							_node.documentation()->location(),
 							"Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
-							" exceedes the number of return parameters."
+							" exceeds the number of return parameters."
 						);
 					else
 					{

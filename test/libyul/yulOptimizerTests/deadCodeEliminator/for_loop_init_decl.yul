@@ -4,7 +4,7 @@
     let i_1 := i_0
   }
 }
-// ====
-// step: deadCodeEliminator
 // ----
+// step: deadCodeEliminator
+//
 // { stop() }

@@ -4,9 +4,9 @@
 	let x_2 := 3
 	let x_1 := 4
 }
-// ====
-// step: varNameCleaner
 // ----
+// step: varNameCleaner
+//
 // {
 //     let x := 1
 //     let x_1 := 2

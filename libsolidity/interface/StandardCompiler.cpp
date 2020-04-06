@@ -234,6 +234,7 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 		"wast", "wasm", "ewasm.wast", "ewasm.wasm",
 		"evm.deployedBytecode", "evm.deployedBytecode.object", "evm.deployedBytecode.opcodes",
 		"evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences",
+		"evm.deployedBytecode.immutableReferences",
 		"evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap",
 		"evm.bytecode.linkReferences",
 		"evm.gasEstimates", "evm.legacyAssembly", "evm.assembly"
@@ -309,13 +310,36 @@ Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkRefere
 	return ret;
 }
 
-Json::Value collectEVMObject(evmasm::LinkerObject const& _object, string const* _sourceMap)
+Json::Value formatImmutableReferences(map<u256, pair<string, vector<size_t>>> const& _immutableReferences)
+{
+	Json::Value ret(Json::objectValue);
+
+	for (auto const& immutableReference: _immutableReferences)
+	{
+		auto const& [identifier, byteOffsets] = immutableReference.second;
+		Json::Value array(Json::arrayValue);
+		for (size_t byteOffset: byteOffsets)
+		{
+			Json::Value byteRange(Json::objectValue);
+			byteRange["start"] = Json::UInt(byteOffset);
+			byteRange["length"] = Json::UInt(32); // immutable references are currently always 32 bytes wide
+			array.append(byteRange);
+		}
+		ret[identifier] = array;
+	}
+
+	return ret;
+}
+
+Json::Value collectEVMObject(evmasm::LinkerObject const& _object, string const* _sourceMap, bool _runtimeObject)
 {
 	Json::Value output = Json::objectValue;
 	output["object"] = _object.toHex();
 	output["opcodes"] = evmasm::disassemble(_object.bytecode);
 	output["sourceMap"] = _sourceMap ? *_sourceMap : "";
 	output["linkReferences"] = formatLinkReferences(_object.linkReferences);
+	if (_runtimeObject)
+		output["immutableReferences"] = formatImmutableReferences(_object.immutableReferences);
 	return output;
 }
 
@@ -982,19 +1006,21 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		))
 			evmData["bytecode"] = collectEVMObject(
 				compilerStack.object(contractName),
-				compilerStack.sourceMapping(contractName)
+				compilerStack.sourceMapping(contractName),
+				false
 			);
 
 		if (compilationSuccess && isArtifactRequested(
 			_inputsAndSettings.outputSelection,
 			file,
 			name,
-			{ "evm.deployedBytecode", "evm.deployedBytecode.object", "evm.deployedBytecode.opcodes", "evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences" },
+			{ "evm.deployedBytecode", "evm.deployedBytecode.object", "evm.deployedBytecode.opcodes", "evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences", "evm.deployedBytecode.immutableReferences" },
 			wildcardMatchesExperimental
 		))
 			evmData["deployedBytecode"] = collectEVMObject(
 				compilerStack.runtimeObject(contractName),
-				compilerStack.runtimeSourceMapping(contractName)
+				compilerStack.runtimeSourceMapping(contractName),
+				true
 			);
 
 		if (!evmData.empty())
@@ -1081,7 +1107,7 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 		{ "evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap", "evm.bytecode.linkReferences" },
 		wildcardMatchesExperimental
 	))
-		output["contracts"][sourceName][contractName]["evm"]["bytecode"] = collectEVMObject(*object.bytecode, object.sourceMappings.get());
+		output["contracts"][sourceName][contractName]["evm"]["bytecode"] = collectEVMObject(*object.bytecode, object.sourceMappings.get(), false);
 
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized", wildcardMatchesExperimental))
 		output["contracts"][sourceName][contractName]["irOptimized"] = stack.print();

@@ -21,7 +21,7 @@
 namespace solidity::frontend
 {
 
-VariableDeclaration const* rootVariableDeclaration(VariableDeclaration const& _varDecl)
+VariableDeclaration const* rootConstVariableDeclaration(VariableDeclaration const& _varDecl)
 {
 	solAssert(_varDecl.isConstant(), "Constant variable expected");
 
@@ -30,7 +30,8 @@ VariableDeclaration const* rootVariableDeclaration(VariableDeclaration const& _v
 	while ((identifier = dynamic_cast<Identifier const*>(rootDecl->value().get())))
 	{
 		auto referencedVarDecl = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration);
-		solAssert(referencedVarDecl && referencedVarDecl->isConstant(), "Identifier is not referencing a variable declaration");
+		if (!referencedVarDecl || !referencedVarDecl->isConstant())
+			return nullptr;
 		rootDecl = referencedVarDecl;
 	}
 	return rootDecl;

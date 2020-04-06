@@ -18,9 +18,9 @@
 		}
 	}
 }
-// ====
-// step: rematerialiser
 // ----
+// step: rematerialiser
+//
 // {
 //     let a := origin()
 //     let b := calldataload(0)

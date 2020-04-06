@@ -3,9 +3,9 @@
     let b := a
     mstore(0, b)
 }
-// ====
-// step: rematerialiser
 // ----
+// step: rematerialiser
+//
 // {
 //     let a := 1
 //     let b := 1
