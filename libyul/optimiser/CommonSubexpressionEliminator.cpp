@@ -58,12 +58,21 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	// If this is a function call to a function that requires literal arguments,
 	// do not try to simplify there.
 	if (holds_alternative<FunctionCall>(_e))
-		if (BuiltinFunction const* builtin = m_dialect.builtin(std::get<FunctionCall>(_e).functionName.name))
-			if (builtin->literalArguments)
+	{
+		FunctionCall& funCall = std::get<FunctionCall>(_e);
+
+		if (BuiltinFunction const* builtin = m_dialect.builtin(funCall.functionName.name))
+		{
+			for (size_t i = funCall.arguments.size(); i > 0; i--)
 				// We should not modify function arguments that have to be literals
 				// Note that replacing the function call entirely is fine,
 				// if the function call is movable.
-				descend = false;
+				if (!builtin->literalArguments || !builtin->literalArguments.value()[i - 1])
+					visit(funCall.arguments[i - 1]);
+
+			descend = false;
+		}
+	}
 
 	// We visit the inner expression first to first simplify inner expressions,
 	// which hopefully allows more matches.

@@ -136,11 +136,15 @@ wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 			}
 			typeConversionNeeded = true;
 		}
-		else if (builtin->literalArguments)
+		else if (builtin->literalArguments && contains(builtin->literalArguments.value(), true))
 		{
 			vector<wasm::Expression> literals;
-			for (auto const& arg: _call.arguments)
-				literals.emplace_back(wasm::StringLiteral{std::get<Literal>(arg).value.str()});
+			for (size_t i = 0; i < _call.arguments.size(); i++)
+				if (builtin->literalArguments.value()[i])
+					literals.emplace_back(wasm::StringLiteral{std::get<Literal>(_call.arguments[i]).value.str()});
+				else
+					literals.emplace_back(visitReturnByValue(_call.arguments[i]));
+
 			return wasm::BuiltinCall{_call.functionName.name.str(), std::move(literals)};
 		}
 		else
