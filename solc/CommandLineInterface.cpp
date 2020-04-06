@@ -145,6 +145,7 @@ static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
 static string const g_strOptimizeYul = "optimize-yul";
+static string const g_strYulOptimizations = "yul-optimizations";
 static string const g_strOutputDir = "output-dir";
 static string const g_strOverwrite = "overwrite";
 static string const g_strRevertStrings = "revert-strings";
@@ -755,6 +756,11 @@ Allowed options)",
 		)
 		(g_strOptimizeYul.c_str(), "Enable Yul optimizer in Solidity. Legacy option: the yul optimizer is enabled as part of the general --optimize option.")
 		(g_strNoOptimizeYul.c_str(), "Disable Yul optimizer in Solidity.")
+		(
+			g_strYulOptimizations.c_str(),
+			po::value<string>()->value_name("steps"),
+			"Forces yul optimizer to use the specified sequence of optimization steps instead of the built-in one. "
+		)
 		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
 			g_argLibraries.c_str(),
@@ -1165,6 +1171,8 @@ bool CommandLineInterface::processInput()
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
 		if (m_args.count(g_strNoOptimizeYul))
 			settings.runYulOptimiser = false;
+		if (m_args.count(g_strYulOptimizations))
+			settings.yulOptimiserSteps = m_args[g_strYulOptimizations].as<string>();
 		settings.optimizeStackAllocation = settings.runYulOptimiser;
 		m_compiler->setOptimiserSettings(settings);
 
