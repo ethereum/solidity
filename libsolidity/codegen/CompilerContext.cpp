@@ -90,13 +90,7 @@ size_t CompilerContext::immutableMemoryOffset(VariableDeclaration const& _variab
 
 vector<string> CompilerContext::immutableVariableSlotNames(VariableDeclaration const& _variable)
 {
-	string baseName =
-		_variable.annotation().contract->fullyQualifiedName() +
-		"." +
-		_variable.name() +
-		" (" +
-		to_string(_variable.id()) +
-		")";
+	string baseName = to_string(_variable.id());
 	solAssert(_variable.annotation().type->sizeOnStack() > 0, "");
 	if (_variable.annotation().type->sizeOnStack() == 1)
 		return {baseName};
