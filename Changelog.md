@@ -1,7 +1,7 @@
-### 0.6.5 (unreleased)
+### 0.6.5 (2020-04-06)
 
 Important Bugfixes:
- * Code Generator: Restrict the size of dynamic memory arrays to 64 bits during creation at runtime fixing a possible overflow.
+ * Code Generator: Restrict the length of dynamic memory arrays to 64 bits during creation at runtime fixing a possible overflow.
 
 
 Language Features:
@@ -10,17 +10,17 @@ Language Features:
 
 
 Compiler Features:
- * Metadata: Added support for IPFS hashes of large files that need to be split in multiple chunks.
  * Commandline Interface: Enable output of storage layout with `--storage-layout`.
+ * Metadata: Added support for IPFS hashes of large files that need to be split in multiple chunks.
 
 
 Bugfixes:
+ * Inheritance: Allow public state variables to override functions with dynamic memory types in their return values.
  * Inline Assembly: Fix internal error when accessing invalid constant variables.
  * Inline Assembly: Fix internal error when accessing functions.
+ * JSON AST: Always add pointer suffix for memory reference types.
  * Reference Resolver: Fix internal error when accessing invalid struct members.
  * Type Checker: Fix internal errors when assigning nested tuples.
- * Inheritance: Allow public state variables to override functions with dynamic memory types in their return values.
- * JSON AST: Always add pointer suffix for memory reference types.
 
 
 ### 0.6.4 (2020-03-10)
