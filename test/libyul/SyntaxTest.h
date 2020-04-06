@@ -37,7 +37,7 @@ public:
 		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion);
 	}
 	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
-	virtual ~SyntaxTest() {}
+	~SyntaxTest() override {}
 protected:
 	void parseAndAnalyze() override;
 

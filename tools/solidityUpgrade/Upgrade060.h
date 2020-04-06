@@ -35,7 +35,7 @@ public:
 
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
 private:
-	void endVisit(frontend::ContractDefinition const& _contract);
+	void endVisit(frontend::ContractDefinition const& _contract) override;
 };
 
 /**
@@ -49,7 +49,7 @@ public:
 
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
 private:
-	void endVisit(frontend::ContractDefinition const& _contract);
+	void endVisit(frontend::ContractDefinition const& _contract) override;
 };
 
 /**
@@ -63,7 +63,7 @@ public:
 
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
 private:
-	void endVisit(frontend::ContractDefinition const& _function);
+	void endVisit(frontend::ContractDefinition const& _function) override;
 };
 
 }

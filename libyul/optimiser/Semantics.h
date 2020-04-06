@@ -104,7 +104,7 @@ public:
 	static bool containsMSize(Dialect const& _dialect, Block const& _ast);
 
 	using ASTWalker::operator();
-	void operator()(FunctionCall const& _funCall);
+	void operator()(FunctionCall const& _funCall) override;
 
 private:
 	MSizeFinder(Dialect const& _dialect): m_dialect(_dialect) {}
@@ -129,7 +129,7 @@ public:
 	}
 
 	using ASTWalker::operator();
-	void operator()(Leave const&) { m_leaveFound = true; }
+	void operator()(Leave const&) override { m_leaveFound = true; }
 
 private:
 	LeaveFinder() = default;
