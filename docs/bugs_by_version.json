@@ -1013,5 +1013,9 @@
             "MemoryArrayCreationOverflow"
         ],
         "released": "2020-03-10"
+    },
+    "0.6.5": {
+        "bugs": [],
+        "released": "2020-04-06"
     }
 }
