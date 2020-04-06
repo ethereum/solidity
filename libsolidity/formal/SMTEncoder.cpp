@@ -19,6 +19,7 @@
 
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/formal/SMTPortfolio.h>
+#include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <boost/range/adaptors.hpp>
@@ -619,10 +620,10 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		auto const& value = args.front();
 		solAssert(value, "");
 
-		smt::Expression thisBalance = m_context.balance();
+		smt::Expression thisBalance = m_context.state().balance();
 		setSymbolicUnknownValue(thisBalance, TypeProvider::uint256(), m_context);
 
-		m_context.transfer(m_context.thisAddress(), expr(address), expr(*value));
+		m_context.state().transfer(m_context.state().thisAddress(), expr(address), expr(*value));
 		break;
 	}
 	default:
@@ -711,7 +712,7 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 		defineGlobalVariable(_identifier.name(), _identifier);
 	else if (_identifier.name() == "this")
 	{
-		defineExpr(_identifier, m_context.thisAddress());
+		defineExpr(_identifier, m_context.state().thisAddress());
 		m_uninterpretedTerms.insert(&_identifier);
 	}
 	else
@@ -858,7 +859,7 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 		_memberAccess.expression().accept(*this);
 		if (_memberAccess.memberName() == "balance")
 		{
-			defineExpr(_memberAccess, m_context.balance(expr(_memberAccess.expression())));
+			defineExpr(_memberAccess, m_context.state().balance(expr(_memberAccess.expression())));
 			setSymbolicUnknownValue(*m_context.expression(_memberAccess), m_context);
 			m_uninterpretedTerms.insert(&_memberAccess);
 			return false;
