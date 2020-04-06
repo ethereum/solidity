@@ -337,6 +337,13 @@ public:
 	/// If returndatacopy() is not supported by the underlying target, a empty array will be returned instead.
 	std::string extractReturndataFunction();
 
+	/// @returns function name that returns constructor arguments copied to memory
+	/// signature: () -> arguments
+	std::string copyConstructorArgumentsToMemoryFunction(
+		ContractDefinition const& _contract,
+		std::string const& _creationObjectName
+	);
+
 private:
 	/// Special case of conversionFunction - handles everything that does not
 	/// use exactly one variable to hold the value.

@@ -67,12 +67,29 @@ private:
 	/// Generates code that assigns the initial value of the respective type.
 	std::string generateInitialAssignment(VariableDeclaration const& _varDecl);
 
-	std::string constructorCode(ContractDefinition const& _contract);
+	/// Generates implicit constructors for all contracts in the inheritance hierarchy of
+	/// @a _contract
+	/// If there are user defined constructors, their body will be included in implicit constructors body.
+	void generateImplicitConstructors(ContractDefinition const& _contract);
+
+	/// Evaluates constructor's arguments for all base contracts (listed in inheritance specifiers) of
+	/// @a _contract
+	/// @returns Pair of expressions needed to evaluate params and list of parameters in a map contract -> params
+	std::pair<std::string, std::map<ContractDefinition const*, std::string>> evaluateConstructorArguments(
+		ContractDefinition const& _contract
+	);
+
+	/// Initializes state variables of
+	/// @a _contract
+	/// @returns Source code to initialize state variables
+	std::string initStateVariables(ContractDefinition const& _contract);
+
 	std::string deployCode(ContractDefinition const& _contract);
 	std::string callValueCheck();
 
 	std::string creationObjectName(ContractDefinition const& _contract);
 	std::string runtimeObjectName(ContractDefinition const& _contract);
+	std::string implicitConstructorName(ContractDefinition const& _contract);
 
 	std::string dispatchRoutine(ContractDefinition const& _contract);
 
