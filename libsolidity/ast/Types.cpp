@@ -3112,6 +3112,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const* _sco
 
 TypePointer FunctionType::encodingType() const
 {
+	if (m_gasSet || m_valueSet)
+		return nullptr;
 	// Only external functions can be encoded, internal functions cannot leave code boundaries.
 	if (m_kind == Kind::External)
 		return this;
