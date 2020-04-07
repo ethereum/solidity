@@ -45,6 +45,7 @@
                   {
                     "constant": false,
                     "id": 8,
+                    "mutability": "mutable",
                     "name": "rows",
                     "nodeType": "VariableDeclaration",
                     "overrides": null,

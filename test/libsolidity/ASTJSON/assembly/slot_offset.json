@@ -35,6 +35,7 @@
             {
               "constant": false,
               "id": 2,
+              "mutability": "mutable",
               "name": "x",
               "nodeType": "VariableDeclaration",
               "overrides": null,
@@ -72,6 +73,7 @@
         {
           "constant": false,
           "id": 5,
+          "mutability": "mutable",
           "name": "s",
           "nodeType": "VariableDeclaration",
           "overrides": null,

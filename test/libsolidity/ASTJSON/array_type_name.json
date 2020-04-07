@@ -30,6 +30,7 @@
         {
           "constant": false,
           "id": 3,
+          "mutability": "mutable",
           "name": "i",
           "nodeType": "VariableDeclaration",
           "overrides": null,

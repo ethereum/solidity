@@ -854,7 +854,17 @@ class VariableDeclaration: public Declaration
 {
 public:
 	enum Location { Unspecified, Storage, Memory, CallData };
-	enum class Constantness { Mutable, Immutable, Constant };
+	enum class Mutability { Mutable, Immutable, Constant };
+	static std::string mutabilityToString(Mutability _mutability)
+	{
+		switch (_mutability)
+		{
+		case Mutability::Mutable: return "mutable";
+		case Mutability::Immutable: return "immutable";
+		case Mutability::Constant: return "constant";
+		}
+		return {};
+	}
 
 	VariableDeclaration(
 		int64_t _id,
@@ -865,7 +875,7 @@ public:
 		Visibility _visibility,
 		bool _isStateVar = false,
 		bool _isIndexed = false,
-		Constantness _constantness = Constantness::Mutable,
+		Mutability _mutability = Mutability::Mutable,
 		ASTPointer<OverrideSpecifier> const& _overrides = nullptr,
 		Location _referenceLocation = Location::Unspecified
 	):
@@ -874,7 +884,7 @@ public:
 		m_value(_value),
 		m_isStateVariable(_isStateVar),
 		m_isIndexed(_isIndexed),
-		m_constantness(_constantness),
+		m_mutability(_mutability),
 		m_overrides(_overrides),
 		m_location(_referenceLocation) {}
 
@@ -918,8 +928,9 @@ public:
 	bool hasReferenceOrMappingType() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
-	bool isConstant() const { return m_constantness == Constantness::Constant; }
-	bool immutable() const { return m_constantness == Constantness::Immutable; }
+	Mutability mutability() const { return m_mutability; }
+	bool isConstant() const { return m_mutability == Mutability::Constant; }
+	bool immutable() const { return m_mutability == Mutability::Immutable; }
 	ASTPointer<OverrideSpecifier> const& overrides() const { return m_overrides; }
 	Location referenceLocation() const { return m_location; }
 	/// @returns a set of allowed storage locations for the variable.
@@ -947,7 +958,7 @@ private:
 	bool m_isStateVariable = false; ///< Whether or not this is a contract state variable
 	bool m_isIndexed = false; ///< Whether this is an indexed variable (used by events).
 	/// Whether the variable is "constant", "immutable" or non-marked (mutable).
-	Constantness m_constantness = Constantness::Mutable;
+	Mutability m_mutability = Mutability::Mutable;
 	ASTPointer<OverrideSpecifier> m_overrides; ///< Contains the override specifier node
 	Location m_location = Location::Unspecified; ///< Location of the variable if it is of reference type.
 };

@@ -101,6 +101,7 @@
                       "attributes":
                       {
                         "constant": false,
+                        "mutability": "mutable",
                         "name": "rows",
                         "overrides": null,
                         "scope": 10,
