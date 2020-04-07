@@ -204,7 +204,7 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	else
 	{
 		_typeName.annotation().type = TypeProvider::emptyTuple();
-		typeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
+		fatalTypeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
 	}
 }
 

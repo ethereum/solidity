@@ -36,9 +36,9 @@ void NameCollector::operator()(VariableDeclaration const& _varDecl)
 void NameCollector::operator ()(FunctionDefinition const& _funDef)
 {
 	m_names.emplace(_funDef.name);
-	for (auto const arg: _funDef.parameters)
+	for (auto const& arg: _funDef.parameters)
 		m_names.emplace(arg.name);
-	for (auto const ret: _funDef.returnVariables)
+	for (auto const& ret: _funDef.returnVariables)
 		m_names.emplace(ret.name);
 	ASTWalker::operator ()(_funDef);
 }

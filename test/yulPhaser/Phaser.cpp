@@ -55,7 +55,7 @@ protected:
 	};
 };
 
-class FitnessMetricFactoryFixture
+class FixtureWithPrograms
 {
 protected:
 	vector<CharStream> m_sourceStreams = {
@@ -68,6 +68,11 @@ protected:
 		get<Program>(Program::load(m_sourceStreams[1])),
 		get<Program>(Program::load(m_sourceStreams[2])),
 	};
+};
+
+class FitnessMetricFactoryFixture: public FixtureWithPrograms
+{
+protected:
 	FitnessMetricFactory::Options m_options = {
 		/* metric = */ MetricChoice::CodeSize,
 		/* metricAggregator = */ MetricAggregatorChoice::Average,
@@ -154,7 +159,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_create_metric_of_the_right_type, FitnessMet
 {
 	m_options.metric = MetricChoice::RelativeCodeSize;
 	m_options.metricAggregator = MetricAggregatorChoice::Sum;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]});
+	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr});
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto sumMetric = dynamic_cast<FitnessMetricSum*>(metric.get());
@@ -172,7 +177,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_respect_chromosome_repetitions_option, Fitn
 	m_options.metric = MetricChoice::CodeSize;
 	m_options.metricAggregator = MetricAggregatorChoice::Average;
 	m_options.chromosomeRepetitions = 5;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]});
+	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr});
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto averageMetric = dynamic_cast<FitnessMetricAverage*>(metric.get());
@@ -190,7 +195,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_set_relative_metric_scale, FitnessMetricFac
 	m_options.metric = MetricChoice::RelativeCodeSize;
 	m_options.metricAggregator = MetricAggregatorChoice::Average;
 	m_options.relativeMetricScale = 10;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]});
+	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr});
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto averageMetric = dynamic_cast<FitnessMetricAverage*>(metric.get());
@@ -205,12 +210,41 @@ BOOST_FIXTURE_TEST_CASE(build_should_set_relative_metric_scale, FitnessMetricFac
 
 BOOST_FIXTURE_TEST_CASE(build_should_create_metric_for_each_input_program, FitnessMetricFactoryFixture)
 {
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_programs);
+	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(
+		m_options,
+		m_programs,
+		vector<shared_ptr<ProgramCache>>(m_programs.size(), nullptr)
+	);
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto combinedMetric = dynamic_cast<FitnessMetricCombination*>(metric.get());
 	BOOST_REQUIRE(combinedMetric != nullptr);
 	BOOST_REQUIRE(combinedMetric->metrics().size() == m_programs.size());
+}
+
+BOOST_FIXTURE_TEST_CASE(build_should_pass_program_caches_to_metrics, FitnessMetricFactoryFixture)
+{
+	assert(m_programs.size() == 3);
+	vector<shared_ptr<ProgramCache>> caches = {
+		make_shared<ProgramCache>(m_programs[0]),
+		make_shared<ProgramCache>(m_programs[1]),
+		make_shared<ProgramCache>(m_programs[2]),
+	};
+
+	m_options.metric = MetricChoice::RelativeCodeSize;
+	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_programs, caches);
+	BOOST_REQUIRE(metric != nullptr);
+
+	auto combinedMetric = dynamic_cast<FitnessMetricCombination*>(metric.get());
+	BOOST_REQUIRE(combinedMetric != nullptr);
+	BOOST_REQUIRE(combinedMetric->metrics().size() == caches.size());
+
+	for (size_t i = 0; i < caches.size(); ++i)
+	{
+		auto programBasedMetric = dynamic_cast<ProgramBasedMetric*>(combinedMetric->metrics()[i].get());
+		BOOST_REQUIRE(programBasedMetric != nullptr);
+		BOOST_TEST(programBasedMetric->programCache() == caches[i].get());
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -317,6 +351,35 @@ BOOST_FIXTURE_TEST_CASE(build_should_combine_populations_from_all_sources, Poula
 	BOOST_TEST(count(begin, end, Individual(Chromosome("fcL"), *m_fitnessMetric)) >= 2);
 }
 
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE(ProgramCacheFactoryTest)
+
+BOOST_FIXTURE_TEST_CASE(build_should_create_cache_for_each_input_program_if_cache_enabled, FixtureWithPrograms)
+{
+	ProgramCacheFactory::Options options{/* programCacheEnabled = */ true};
+	vector<shared_ptr<ProgramCache>> caches = ProgramCacheFactory::build(options, m_programs);
+	assert(m_programs.size() >= 2 && "There must be at least 2 programs for this test to be meaningful");
+
+	BOOST_TEST(caches.size() == m_programs.size());
+	for (size_t i = 0; i < m_programs.size(); ++i)
+	{
+		BOOST_REQUIRE(caches[i] != nullptr);
+		BOOST_TEST(toString(caches[i]->program()) == toString(m_programs[i]));
+	}
+}
+
+BOOST_FIXTURE_TEST_CASE(build_should_return_nullptr_for_each_input_program_if_cache_disabled, FixtureWithPrograms)
+{
+	ProgramCacheFactory::Options options{/* programCacheEnabled = */ false};
+	vector<shared_ptr<ProgramCache>> caches = ProgramCacheFactory::build(options, m_programs);
+	assert(m_programs.size() >= 2 && "There must be at least 2 programs for this test to be meaningful");
+
+	BOOST_TEST(caches.size() == m_programs.size());
+	for (size_t i = 0; i < m_programs.size(); ++i)
+		BOOST_TEST(caches[i] == nullptr);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(ProgramFactoryTest)
 
@@ -324,11 +387,14 @@ BOOST_AUTO_TEST_CASE(build_should_load_programs_from_files)
 {
 	TemporaryDirectory tempDir;
 	vector<string> sources{"{}", "{{}}", "{{{}}}"};
-	ProgramFactory::Options options{/* inputFiles = */ {
-		tempDir.memberPath("program1.yul"),
-		tempDir.memberPath("program2.yul"),
-		tempDir.memberPath("program3.yul"),
-	}};
+	ProgramFactory::Options options{
+		/* inputFiles = */ {
+			tempDir.memberPath("program1.yul"),
+			tempDir.memberPath("program2.yul"),
+			tempDir.memberPath("program3.yul"),
+		},
+		/* prefix = */ "",
+	};
 
 	for (size_t i = 0; i < sources.size(); ++i)
 	{
@@ -344,6 +410,31 @@ BOOST_AUTO_TEST_CASE(build_should_load_programs_from_files)
 		CharStream sourceStream(sources[i], options.inputFiles[i]);
 		BOOST_TEST(toString(programs[i]) == toString(get<Program>(Program::load(sourceStream))));
 	}
+}
+
+BOOST_AUTO_TEST_CASE(build_should_apply_prefix)
+{
+	TemporaryDirectory tempDir;
+	ProgramFactory::Options options{
+		/* inputFiles = */ {tempDir.memberPath("program1.yul")},
+		/* prefix = */ "f",
+	};
+
+	CharStream nestedSource("{{{let x:= 1}}}", "");
+	Program nestedProgram = get<Program>(Program::load(nestedSource));
+	Program flatProgram = get<Program>(Program::load(nestedSource));
+	flatProgram.optimise(Chromosome("f").optimisationSteps());
+	assert(toString(nestedProgram) != toString(flatProgram));
+
+	{
+		ofstream tmpFile(options.inputFiles[0]);
+		tmpFile << nestedSource.source() << endl;
+	}
+
+	vector<Program> programs = ProgramFactory::build(options);
+
+	BOOST_TEST(programs.size() == 1);
+	BOOST_TEST(toString(programs[0]) == toString(flatProgram));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

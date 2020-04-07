@@ -24,7 +24,8 @@
 struct FuzzerUtil
 {
 	static void runCompiler(std::string const& _input, bool _quiet);
-	static void testCompiler(std::string const& _input, bool _optimize, bool _quiet);
+	static void testCompilerJsonInterface(std::string const& _input, bool _optimize, bool _quiet);
 	static void testConstantOptimizer(std::string const& _input, bool _quiet);
 	static void testStandardCompiler(std::string const& _input, bool _quiet);
+	static void testCompiler(std::string const& _input, bool _optimize);
 };

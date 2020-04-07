@@ -217,6 +217,37 @@ ContractDefinitionAnnotation& ContractDefinition::annotation() const
 	return initAnnotation<ContractDefinitionAnnotation>();
 }
 
+ContractDefinition const* ContractDefinition::superContract(ContractDefinition const& _mostDerivedContract) const
+{
+	auto const& hierarchy = _mostDerivedContract.annotation().linearizedBaseContracts;
+	auto it = find(hierarchy.begin(), hierarchy.end(), this);
+	solAssert(it != hierarchy.end(), "Base not found in inheritance hierarchy.");
+	++it;
+	if (it == hierarchy.end())
+		return nullptr;
+	else
+	{
+		solAssert(*it != this, "");
+		return *it;
+	}
+}
+
+FunctionDefinition const* ContractDefinition::nextConstructor(ContractDefinition const& _mostDerivedContract) const
+{
+	ContractDefinition const* next = superContract(_mostDerivedContract);
+	if (next == nullptr)
+		return nullptr;
+	for (ContractDefinition const* c: _mostDerivedContract.annotation().linearizedBaseContracts)
+		if (c == next || next == nullptr)
+		{
+			if (c->constructor())
+				return c->constructor();
+			next = nullptr;
+		}
+
+	return nullptr;
+}
+
 TypeNameAnnotation& TypeName::annotation() const
 {
 	return initAnnotation<TypeNameAnnotation>();
@@ -319,6 +350,37 @@ FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
 	return initAnnotation<FunctionDefinitionAnnotation>();
 }
 
+FunctionDefinition const& FunctionDefinition::resolveVirtual(
+	ContractDefinition const& _mostDerivedContract,
+	ContractDefinition const* _searchStart
+) const
+{
+	solAssert(!isConstructor(), "");
+	// If we are not doing super-lookup and the function is not virtual, we can stop here.
+	if (_searchStart == nullptr && !virtualSemantics())
+		return *this;
+
+	solAssert(!dynamic_cast<ContractDefinition const&>(*scope()).isLibrary(), "");
+
+	FunctionType const* functionType = TypeProvider::function(*this)->asCallableFunction(false);
+
+	for (ContractDefinition const* c: _mostDerivedContract.annotation().linearizedBaseContracts)
+	{
+		if (_searchStart != nullptr && c != _searchStart)
+			continue;
+		_searchStart = nullptr;
+		for (FunctionDefinition const* function: c->definedFunctions())
+			if (
+				function->name() == name() &&
+				!function->isConstructor() &&
+				FunctionType(*function).asCallableFunction(false)->hasEqualParameterTypes(*functionType)
+			)
+				return *function;
+	}
+	solAssert(false, "Virtual function " + name() + " not found.");
+	return *this; // not reached
+}
+
 TypePointer ModifierDefinition::type() const
 {
 	return TypeProvider::modifier(*this);
@@ -328,6 +390,33 @@ ModifierDefinitionAnnotation& ModifierDefinition::annotation() const
 {
 	return initAnnotation<ModifierDefinitionAnnotation>();
 }
+
+ModifierDefinition const& ModifierDefinition::resolveVirtual(
+	ContractDefinition const& _mostDerivedContract,
+	ContractDefinition const* _searchStart
+) const
+{
+	solAssert(_searchStart == nullptr, "Used super in connection with modifiers.");
+
+	// If we are not doing super-lookup and the modifier is not virtual, we can stop here.
+	if (_searchStart == nullptr && !virtualSemantics())
+		return *this;
+
+	solAssert(!dynamic_cast<ContractDefinition const&>(*scope()).isLibrary(), "");
+
+	for (ContractDefinition const* c: _mostDerivedContract.annotation().linearizedBaseContracts)
+	{
+		if (_searchStart != nullptr && c != _searchStart)
+			continue;
+		_searchStart = nullptr;
+		for (ModifierDefinition const* modifier: c->functionModifiers())
+			if (modifier->name() == name())
+				return *modifier;
+	}
+	solAssert(false, "Virtual modifier " + name() + " not found.");
+	return *this; // not reached
+}
+
 
 TypePointer EventDefinition::type() const
 {

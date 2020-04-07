@@ -46,7 +46,7 @@ public:
 		ExecutionFramework(_evmVersion), m_showMetadata(solidity::test::CommonOptions::get().showMetadata)
 	{}
 
-	virtual bytes const& compileAndRunWithoutCheck(
+	bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,
 		u256 const& _value = 0,
 		std::string const& _contractName = "",

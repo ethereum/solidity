@@ -46,6 +46,14 @@ namespace po = boost::program_options;
 namespace
 {
 
+map<PhaserMode, string> const PhaserModeToStringMap =
+{
+	{PhaserMode::RunAlgorithm, "run-algorithm"},
+	{PhaserMode::PrintOptimisedPrograms, "print-optimised-programs"},
+	{PhaserMode::PrintOptimisedASTs, "print-optimised-asts"},
+};
+map<string, PhaserMode> const StringToPhaserModeMap = invertMap(PhaserModeToStringMap);
+
 map<Algorithm, string> const AlgorithmToStringMap =
 {
 	{Algorithm::Random, "random"},
@@ -71,6 +79,8 @@ map<string, MetricAggregatorChoice> const StringToMetricAggregatorChoiceMap = in
 
 }
 
+istream& phaser::operator>>(istream& _inputStream, PhaserMode& _phaserMode) { return deserializeChoice(_inputStream, _phaserMode, StringToPhaserModeMap); }
+ostream& phaser::operator<<(ostream& _outputStream, PhaserMode _phaserMode) { return serializeChoice(_outputStream, _phaserMode, PhaserModeToStringMap); }
 istream& phaser::operator>>(istream& _inputStream, Algorithm& _algorithm) { return deserializeChoice(_inputStream, _algorithm, StringToAlgorithmMap); }
 ostream& phaser::operator<<(ostream& _outputStream, Algorithm _algorithm) { return serializeChoice(_outputStream, _algorithm, AlgorithmToStringMap); }
 istream& phaser::operator>>(istream& _inputStream, MetricChoice& _metric) { return deserializeChoice(_inputStream, _metric, StringToMetricChoiceMap); }
@@ -158,9 +168,11 @@ FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po:
 
 unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	Options const& _options,
-	vector<Program> _programs
+	vector<Program> _programs,
+	vector<shared_ptr<ProgramCache>> _programCaches
 )
 {
+	assert(_programCaches.size() == _programs.size());
 	assert(_programs.size() > 0 && "Validations should prevent this from being executed with zero files.");
 
 	vector<shared_ptr<FitnessMetric>> metrics;
@@ -168,9 +180,10 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	{
 		case MetricChoice::CodeSize:
 		{
-			for (Program& program: _programs)
+			for (size_t i = 0; i < _programs.size(); ++i)
 				metrics.push_back(make_unique<ProgramSize>(
-					move(program),
+					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
+					move(_programCaches[i]),
 					_options.chromosomeRepetitions
 				));
 
@@ -178,9 +191,10 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 		}
 		case MetricChoice::RelativeCodeSize:
 		{
-			for (Program& program: _programs)
+			for (size_t i = 0; i < _programs.size(); ++i)
 				metrics.push_back(make_unique<RelativeProgramSize>(
-					move(program),
+					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
+					move(_programCaches[i]),
 					_options.relativeMetricScale,
 					_options.chromosomeRepetitions
 				));
@@ -281,10 +295,30 @@ Population PopulationFactory::buildFromFile(
 	return buildFromStrings(readLinesFromFile(_filePath), move(_fitnessMetric));
 }
 
+ProgramCacheFactory::Options ProgramCacheFactory::Options::fromCommandLine(po::variables_map const& _arguments)
+{
+	return {
+		_arguments["program-cache"].as<bool>(),
+	};
+}
+
+vector<shared_ptr<ProgramCache>> ProgramCacheFactory::build(
+	Options const& _options,
+	vector<Program> _programs
+)
+{
+	vector<shared_ptr<ProgramCache>> programCaches;
+	for (Program& program: _programs)
+		programCaches.push_back(_options.programCacheEnabled ? make_shared<ProgramCache>(move(program)) : nullptr);
+
+	return programCaches;
+}
+
 ProgramFactory::Options ProgramFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
 	return {
 		_arguments["input-files"].as<vector<string>>(),
+		_arguments["prefix"].as<string>(),
 	};
 }
 
@@ -300,6 +334,8 @@ vector<Program> ProgramFactory::build(Options const& _options)
 			cerr << get<ErrorList>(programOrErrors) << endl;
 			assertThrow(false, InvalidProgram, "Failed to load program " + path);
 		}
+
+		get<Program>(programOrErrors).optimise(Chromosome(_options.prefix).optimisationSteps());
 		inputPrograms.push_back(move(get<Program>(programOrErrors)));
 	}
 
@@ -322,7 +358,7 @@ void Phaser::main(int _argc, char** _argv)
 
 	initialiseRNG(arguments.value());
 
-	runAlgorithm(arguments.value());
+	runPhaser(arguments.value());
 }
 
 Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
@@ -348,11 +384,29 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	generalDescription.add_options()
 		("help", "Show help message and exit.")
 		("input-files", po::value<vector<string>>()->required()->value_name("<PATH>"), "Input files.")
+		(
+			"prefix",
+			po::value<string>()->value_name("<CHROMOSOME>")->default_value(""),
+			"Initial optimisation steps automatically applied to every input program.\n"
+			"The result is treated as if it was the actual input, i.e. the steps are not considered "
+			"a part of the chromosomes and cannot be mutated. The values of relative metric values "
+			"are also relative to the fitness of a program with these steps applied rather than the "
+			"fitness of the original program.\n"
+			"Note that phaser always adds a 'hgo' prefix to ensure that chromosomes can "
+			"contain arbitrary optimisation steps. This implicit prefix cannot be changed or "
+			"or removed using this option. The value given here is applied after it."
+		)
 		("seed", po::value<uint32_t>()->value_name("<NUM>"), "Seed for the random number generator.")
 		(
 			"rounds",
 			po::value<size_t>()->value_name("<NUM>"),
 			"The number of rounds after which the algorithm should stop. (default=no limit)."
+		)
+		(
+			"mode",
+			po::value<PhaserMode>()->value_name("<NAME>")->default_value(PhaserMode::RunAlgorithm),
+			"Mode of operation. The default is to run the algorithm but you can also tell phaser "
+			"to do something else with its parameters, e.g. just print the optimised programs and exit."
 		)
 	;
 	keywordDescription.add(generalDescription);
@@ -492,6 +546,49 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	;
 	keywordDescription.add(metricsDescription);
 
+	po::options_description cacheDescription("CACHE", lineLength, minDescriptionLength);
+	cacheDescription.add_options()
+		(
+			"program-cache",
+			po::bool_switch(),
+			"Enables caching of intermediate programs corresponding to chromosome prefixes.\n"
+			"This speeds up fitness evaluation by a lot but eats tons of memory if the chromosomes are long. "
+			"Disabled by default since there's currently no way to set an upper limit on memory usage but "
+			"highly recommended if your computer has enough RAM."
+		)
+	;
+	keywordDescription.add(cacheDescription);
+
+	po::options_description outputDescription("OUTPUT", lineLength, minDescriptionLength);
+	outputDescription.add_options()
+		(
+			"show-initial-population",
+			po::bool_switch(),
+			"Print the state of the population before the algorithm starts."
+		)
+		(
+			"show-only-top-chromosome",
+			po::bool_switch(),
+			"Print only the best chromosome found in each round rather than the whole population."
+		)
+		(
+			"hide-round",
+			po::bool_switch(),
+			"Hide information about the current round (round number and elapsed time)."
+		)
+		(
+			"show-cache-stats",
+			po::bool_switch(),
+			"Print information about cache size and effectiveness after each round."
+		)
+		(
+			"show-seed",
+			po::bool_switch(),
+			"Print the selected random seed."
+		)
+	;
+	keywordDescription.add(outputDescription);
+
 	po::positional_options_description positionalDescription;
 	positionalDescription.add("input-files", -1);
 
@@ -530,7 +627,8 @@ void Phaser::initialiseRNG(po::variables_map const& _arguments)
 		seed = SimulationRNG::generateSeed();
 
 	SimulationRNG::reset(seed);
-	cout << "Random seed: " << seed << endl;
+	if (_arguments["show-seed"].as<bool>())
+		cout << "Random seed: " << seed << endl;
 }
 
 AlgorithmRunner::Options Phaser::buildAlgorithmRunnerOptions(po::variables_map const& _arguments)
@@ -541,25 +639,80 @@ AlgorithmRunner::Options Phaser::buildAlgorithmRunnerOptions(po::variables_map c
 		!_arguments["no-randomise-duplicates"].as<bool>(),
 		_arguments["min-chromosome-length"].as<size_t>(),
 		_arguments["max-chromosome-length"].as<size_t>(),
+		_arguments["show-initial-population"].as<bool>(),
+		_arguments["show-only-top-chromosome"].as<bool>(),
+		!_arguments["hide-round"].as<bool>(),
+		_arguments["show-cache-stats"].as<bool>(),
 	};
 }
 
-void Phaser::runAlgorithm(po::variables_map const& _arguments)
+void Phaser::runPhaser(po::variables_map const& _arguments)
 {
 	auto programOptions = ProgramFactory::Options::fromCommandLine(_arguments);
+	auto cacheOptions = ProgramCacheFactory::Options::fromCommandLine(_arguments);
 	auto metricOptions = FitnessMetricFactory::Options::fromCommandLine(_arguments);
 	auto populationOptions = PopulationFactory::Options::fromCommandLine(_arguments);
-	auto algorithmOptions = GeneticAlgorithmFactory::Options::fromCommandLine(_arguments);
 
 	vector<Program> programs = ProgramFactory::build(programOptions);
-	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, move(programs));
+	vector<shared_ptr<ProgramCache>> programCaches = ProgramCacheFactory::build(cacheOptions, programs);
+
+	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, programs, programCaches);
 	Population population = PopulationFactory::build(populationOptions, move(fitnessMetric));
+
+	if (_arguments["mode"].as<PhaserMode>() == PhaserMode::RunAlgorithm)
+		runAlgorithm(_arguments, move(population), move(programCaches));
+	else
+		printOptimisedProgramsOrASTs(_arguments, population, move(programs), _arguments["mode"].as<PhaserMode>());
+}
+
+void Phaser::runAlgorithm(
+	po::variables_map const& _arguments,
+	Population _population,
+	vector<shared_ptr<ProgramCache>> _programCaches
+)
+{
+	auto algorithmOptions = GeneticAlgorithmFactory::Options::fromCommandLine(_arguments);
 
 	unique_ptr<GeneticAlgorithm> geneticAlgorithm = GeneticAlgorithmFactory::build(
 		algorithmOptions,
-		population.individuals().size()
+		_population.individuals().size()
 	);
 
-	AlgorithmRunner algorithmRunner(population, buildAlgorithmRunnerOptions(_arguments), cout);
+	AlgorithmRunner algorithmRunner(move(_population), move(_programCaches), buildAlgorithmRunnerOptions(_arguments), cout);
 	algorithmRunner.run(*geneticAlgorithm);
+}
+
+void Phaser::printOptimisedProgramsOrASTs(
+	po::variables_map const& _arguments,
+	Population const& _population,
+	vector<Program> _programs,
+	PhaserMode phaserMode
+)
+{
+	assert(phaserMode == PhaserMode::PrintOptimisedPrograms || phaserMode == PhaserMode::PrintOptimisedASTs);
+	assert(_programs.size() == _arguments["input-files"].as<vector<string>>().size());
+
+	if (_population.individuals().size() == 0)
+	{
+		cout << "<EMPTY POPULATION>" << endl;
+		return;
+	}
+
+	vector<string> const& paths = _arguments["input-files"].as<vector<string>>();
+	for (auto& individual: _population.individuals())
+	{
+		cout << "Chromosome: " << individual.chromosome << endl;
+
+		for (size_t i = 0; i < _programs.size(); ++i)
+		{
+			for (size_t j = 0; j < _arguments["chromosome-repetitions"].as<size_t>(); ++j)
+				_programs[i].optimise(individual.chromosome.optimisationSteps());
+
+			cout << "Program: " << paths[i] << endl;
+			if (phaserMode == PhaserMode::PrintOptimisedPrograms)
+				cout << _programs[i] << endl;
+			else
+				cout << _programs[i].toJson() << endl;
+		}
+	}
 }

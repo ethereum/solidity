@@ -43,8 +43,7 @@ ostream& operator<<(ostream& _stream, Population const& _population);
 
 ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
 {
-	_stream << "Fitness: " << _individual.fitness;
-	_stream << ", optimisations: " << _individual.chromosome;
+	_stream << _individual.fitness << " " << _individual.chromosome;
 
 	return _stream;
 }
@@ -118,13 +117,19 @@ Population Population::crossover(PairSelection const& _selection, function<Cross
 	return Population(m_fitnessMetric, crossedIndividuals);
 }
 
+namespace solidity::phaser
+{
+
 Population operator+(Population _a, Population _b)
 {
 	// This operator is meant to be used only with populations sharing the same metric (and, to make
 	// things simple, "the same" here means the same exact object in memory).
 	assert(_a.m_fitnessMetric == _b.m_fitnessMetric);
 
+	using ::operator+; // Import the std::vector concat operator from CommonData.h
 	return Population(_a.m_fitnessMetric, move(_a.m_individuals) + move(_b.m_individuals));
+}
+
 }
 
 bool Population::operator==(Population const& _other) const

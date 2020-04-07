@@ -129,7 +129,9 @@ void ContractCompiler::initializeContext(
 {
 	m_context.setExperimentalFeatures(_contract.sourceUnit().annotation().experimentalFeatures);
 	m_context.setOtherCompilers(_otherCompilers);
-	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	m_context.setMostDerivedContract(_contract);
+	if (m_runtimeCompiler)
+		registerImmutableVariables(_contract);
 	CompilerUtils(m_context).initialiseFreeMemoryPointer();
 	registerStateVariables(_contract);
 	m_context.resetVisitedNodes(&_contract);
@@ -157,7 +159,7 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 
 	if (FunctionDefinition const* constructor = _contract.constructor())
 		appendConstructor(*constructor);
-	else if (auto c = m_context.nextConstructor(_contract))
+	else if (auto c = _contract.nextConstructor(m_context.mostDerivedContract()))
 		appendBaseConstructor(*c);
 	else
 		appendCallValueCheck();
@@ -183,10 +185,26 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	m_context << deployRoutine;
 
 	solAssert(m_context.runtimeSub() != size_t(-1), "Runtime sub not registered");
+
+	ContractType contractType(_contract);
+	auto const& immutables = contractType.immutableVariables();
+	// Push all immutable values on the stack.
+	for (auto const& immutable: immutables)
+		CompilerUtils(m_context).loadFromMemory(m_context.immutableMemoryOffset(*immutable), *immutable->annotation().type);
 	m_context.pushSubroutineSize(m_context.runtimeSub());
-	m_context << Instruction::DUP1;
+	if (immutables.empty())
+		m_context << Instruction::DUP1;
 	m_context.pushSubroutineOffset(m_context.runtimeSub());
 	m_context << u256(0) << Instruction::CODECOPY;
+	// Assign immutable values from stack in reversed order.
+	for (auto const& immutable: immutables | boost::adaptors::reversed)
+	{
+		auto slotNames = m_context.immutableVariableSlotNames(*immutable);
+		for (auto&& slotName: slotNames | boost::adaptors::reversed)
+			m_context.appendImmutableAssignment(slotName);
+	}
+	if (!immutables.empty())
+		m_context.pushSubroutineSize(m_context.runtimeSub());
 	m_context << u256(0) << Instruction::RETURN;
 
 	return m_context.runtimeSub();
@@ -521,11 +539,18 @@ void ContractCompiler::registerStateVariables(ContractDefinition const& _contrac
 		m_context.addStateVariable(*get<0>(var), get<1>(var), get<2>(var));
 }
 
+void ContractCompiler::registerImmutableVariables(ContractDefinition const& _contract)
+{
+	solAssert(m_runtimeCompiler, "Attempted to register immutables for runtime code generation.");
+	for (auto const& var: ContractType(_contract).immutableVariables())
+		m_context.addImmutable(*var);
+}
+
 void ContractCompiler::initializeStateVariables(ContractDefinition const& _contract)
 {
 	solAssert(!_contract.isLibrary(), "Tried to initialize state variables of library.");
 	for (VariableDeclaration const* variable: _contract.stateVariables())
-		if (variable->value() && !variable->isConstant() && !variable->immutable())
+		if (variable->value() && !variable->isConstant())
 			ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals).appendStateVariableInitialization(*variable);
 }
 
@@ -541,8 +566,6 @@ bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
 	if (_variableDeclaration.isConstant())
 		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals)
 			.appendConstStateVariableAccessor(_variableDeclaration);
-	else if (_variableDeclaration.immutable())
-		solUnimplementedAssert(false, "");
 	else
 		ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals)
 			.appendStateVariableAccessor(_variableDeclaration);
@@ -573,7 +596,9 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		appendStackVariableInitialisation(*variable);
 
 	if (_function.isConstructor())
-		if (auto c = m_context.nextConstructor(dynamic_cast<ContractDefinition const&>(*_function.scope())))
+		if (auto c = dynamic_cast<ContractDefinition const&>(*_function.scope()).nextConstructor(
+				m_context.mostDerivedContract()
+		))
 			appendBaseConstructor(*c);
 
 	solAssert(m_returnTags.empty(), "");
@@ -664,7 +689,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(decl))
 			{
 				solAssert(!ref->second.isOffset && !ref->second.isSlot, "");
-				functionDef = &m_context.resolveVirtualFunction(*functionDef);
+				functionDef = &functionDef->resolveVirtual(m_context.mostDerivedContract());
 				auto functionEntryLabel = m_context.functionEntryLabel(*functionDef).pushTag();
 				solAssert(functionEntryLabel.data() <= std::numeric_limits<size_t>::max(), "");
 				_assembly.appendLabelReference(size_t(functionEntryLabel.data()));
@@ -1310,10 +1335,9 @@ void ContractCompiler::appendModifierOrFunctionCode()
 			appendModifierOrFunctionCode();
 		else
 		{
-			ModifierDefinition const& nonVirtualModifier = dynamic_cast<ModifierDefinition const&>(
+			ModifierDefinition const& modifier = dynamic_cast<ModifierDefinition const&>(
 				*modifierInvocation->name()->annotation().referencedDeclaration
-			);
-			ModifierDefinition const& modifier = m_context.resolveVirtualFunctionModifier(nonVirtualModifier);
+			).resolveVirtual(m_context.mostDerivedContract());
 			CompilerContext::LocationSetter locationSetter(m_context, modifier);
 			std::vector<ASTPointer<Expression>> const& modifierArguments =
 				modifierInvocation->arguments() ? *modifierInvocation->arguments() : std::vector<ASTPointer<Expression>>();

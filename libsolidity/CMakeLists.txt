@@ -14,6 +14,8 @@ set(sources
 	analysis/DeclarationContainer.h
 	analysis/DocStringAnalyser.cpp
 	analysis/DocStringAnalyser.h
+	analysis/ImmutableValidator.cpp
+	analysis/ImmutableValidator.h
 	analysis/GlobalContext.cpp
 	analysis/GlobalContext.h
 	analysis/NameAndTypeResolver.cpp
@@ -100,8 +102,12 @@ set(sources
 	formal/SMTPortfolio.cpp
 	formal/SMTPortfolio.h
 	formal/SolverInterface.h
+	formal/Sorts.cpp
+	formal/Sorts.h
 	formal/SSAVariable.cpp
 	formal/SSAVariable.h
+	formal/SymbolicState.cpp
+	formal/SymbolicState.h
 	formal/SymbolicTypes.cpp
 	formal/SymbolicTypes.h
 	formal/SymbolicVariables.cpp

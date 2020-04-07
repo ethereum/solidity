@@ -31,16 +31,99 @@ using namespace solidity::phaser;
 void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 {
 	populationAutosave();
+	printInitialPopulation();
+	cacheClear();
 
+	clock_t totalTimeStart = clock();
 	for (size_t round = 0; !m_options.maxRounds.has_value() || round < m_options.maxRounds.value(); ++round)
 	{
+		clock_t roundTimeStart = clock();
+		cacheStartRound(round + 1);
+
 		m_population = _algorithm.runNextRound(m_population);
 		randomiseDuplicates();
 
-		m_outputStream << "---------- ROUND " << round + 1 << " ----------" << endl;
-		m_outputStream << m_population;
-
+		printRoundSummary(round, roundTimeStart, totalTimeStart);
+		printCacheStats();
 		populationAutosave();
+	}
+}
+
+void AlgorithmRunner::printRoundSummary(
+	size_t _round,
+	clock_t _roundTimeStart,
+	clock_t _totalTimeStart
+) const
+{
+	clock_t now = clock();
+	double roundTime = static_cast<double>(now - _roundTimeStart) / CLOCKS_PER_SEC;
+	double totalTime = static_cast<double>(now - _totalTimeStart) / CLOCKS_PER_SEC;
+
+	if (!m_options.showOnlyTopChromosome)
+	{
+		if (m_options.showRoundInfo)
+		{
+			m_outputStream << "---------- ROUND " << _round + 1;
+			m_outputStream << " [round: " << fixed << setprecision(1) << roundTime << " s,";
+			m_outputStream << " total: " << fixed << setprecision(1) << totalTime << " s]";
+			m_outputStream << " ----------" << endl;
+		}
+		else if (m_population.individuals().size() > 0)
+			m_outputStream << endl;
+
+		m_outputStream << m_population;
+	}
+	else if (m_population.individuals().size() > 0)
+	{
+		if (m_options.showRoundInfo)
+		{
+			m_outputStream << setw(5) << _round + 1 << " | ";
+			m_outputStream << setw(5) << fixed << setprecision(1) << totalTime << " | ";
+		}
+
+		m_outputStream << m_population.individuals()[0] << endl;
+	}
+}
+
+void AlgorithmRunner::printInitialPopulation() const
+{
+	if (!m_options.showInitialPopulation)
+		return;
+
+	m_outputStream << "---------- INITIAL POPULATION ----------" << endl;
+	m_outputStream << m_population;
+}
+
+void AlgorithmRunner::printCacheStats() const
+{
+	if (!m_options.showCacheStats)
+		return;
+
+	CacheStats totalStats{};
+	size_t disabledCacheCount = 0;
+	for (size_t i = 0; i < m_programCaches.size(); ++i)
+		if (m_programCaches[i] != nullptr)
+			totalStats += m_programCaches[i]->gatherStats();
+		else
+			++disabledCacheCount;
+
+	m_outputStream << "---------- CACHE STATS ----------" << endl;
+
+	if (disabledCacheCount < m_programCaches.size())
+	{
+		for (auto& [round, count]: totalStats.roundEntryCounts)
+			m_outputStream << "Round " << round << ": " << count << " entries" << endl;
+		m_outputStream << "Total hits: " << totalStats.hits << endl;
+		m_outputStream << "Total misses: " << totalStats.misses << endl;
+		m_outputStream << "Size of cached code: " << totalStats.totalCodeSize << endl;
+	}
+
+	if (disabledCacheCount == m_programCaches.size())
+		m_outputStream << "Program cache disabled" << endl;
+	else if (disabledCacheCount > 0)
+	{
+		m_outputStream << "Program cache disabled for " << disabledCacheCount << " out of ";
+		m_outputStream << m_programCaches.size() << " programs" << endl;
 	}
 }
 
@@ -64,6 +147,20 @@ void AlgorithmRunner::populationAutosave() const
 		FileWriteError,
 		"Error while writing to file '" + m_options.populationAutosaveFile.value() + "': " + strerror(errno)
 	);
+}
+
+void AlgorithmRunner::cacheClear()
+{
+	for (auto& cache: m_programCaches)
+		if (cache != nullptr)
+			cache->clear();
+}
+
+void AlgorithmRunner::cacheStartRound(size_t _roundNumber)
+{
+	for (auto& cache: m_programCaches)
+		if (cache != nullptr)
+			cache->startRound(_roundNumber);
 }
 
 void AlgorithmRunner::randomiseDuplicates()

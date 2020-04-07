@@ -22,7 +22,9 @@
 
 #include <tools/yulPhaser/GeneticAlgorithms.h>
 #include <tools/yulPhaser/Population.h>
+#include <tools/yulPhaser/ProgramCache.h>
 
+#include <ctime>
 #include <optional>
 #include <ostream>
 
@@ -46,14 +48,20 @@ public:
 		bool randomiseDuplicates = false;
 		std::optional<size_t> minChromosomeLength = std::nullopt;
 		std::optional<size_t> maxChromosomeLength = std::nullopt;
+		bool showInitialPopulation = false;
+		bool showOnlyTopChromosome = false;
+		bool showRoundInfo = true;
+		bool showCacheStats = false;
 	};
 
 	AlgorithmRunner(
 		Population _initialPopulation,
+		std::vector<std::shared_ptr<ProgramCache>> _programCaches,
 		Options _options,
 		std::ostream& _outputStream
 	):
 		m_population(std::move(_initialPopulation)),
+		m_programCaches(std::move(_programCaches)),
 		m_options(std::move(_options)),
 		m_outputStream(_outputStream) {}
 
@@ -63,8 +71,18 @@ public:
 	Population const& population() const { return m_population; }
 
 private:
+	void printRoundSummary(
+		size_t _round,
+		clock_t _roundTimeStart,
+		clock_t _totalTimeStart
+	) const;
+	void printInitialPopulation() const;
+	void printCacheStats() const;
 	void populationAutosave() const;
 	void randomiseDuplicates();
+	void cacheClear();
+	void cacheStartRound(size_t _roundNumber);
+
 	static Population randomiseDuplicates(
 		Population _population,
 		size_t _minChromosomeLength,
@@ -72,6 +90,7 @@ private:
 	);
 
 	Population m_population;
+	std::vector<std::shared_ptr<ProgramCache>> m_programCaches;
 	Options m_options;
 	std::ostream& m_outputStream;
 };

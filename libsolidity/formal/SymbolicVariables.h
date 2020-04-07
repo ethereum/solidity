@@ -47,6 +47,8 @@ public:
 		EncodingContext& _context
 	);
 
+	SymbolicVariable(SymbolicVariable&&) = default;
+
 	virtual ~SymbolicVariable() = default;
 
 	virtual Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const;
@@ -212,6 +214,13 @@ public:
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
+	SymbolicArrayVariable(
+		SortPointer _sort,
+		std::string _uniqueName,
+		EncodingContext& _context
+	);
+
+	SymbolicArrayVariable(SymbolicArrayVariable&&) = default;
 
 	Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
 };

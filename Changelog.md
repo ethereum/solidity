@@ -12,7 +12,7 @@ Compiler Features:
 Bugfixes:
 
 
-### 0.6.5 (unreleased)
+### 0.6.6 (unreleased)
 
 Language Features:
 
@@ -21,9 +21,33 @@ Compiler Features:
 
 
 Bugfixes:
- * Inline Assembly: Fix internal error when accessing incorrect constant variables.
+ * SMTChecker: Fix internal error in the CHC engine when calling inherited functions internally.
+
+
+
+### 0.6.5 (2020-04-06)
+
+Important Bugfixes:
+ * Code Generator: Restrict the length of dynamic memory arrays to 64 bits during creation at runtime fixing a possible overflow.
+
+
+Language Features:
+ * Allow local storage variables to be declared without initialization, as long as they are assigned before they are accessed.
+ * State variables can be marked ``immutable`` which causes them to be read-only, but assignable in the constructor. The value will be stored directly in the code.
+
+
+Compiler Features:
+ * Commandline Interface: Enable output of storage layout with `--storage-layout`.
+ * Metadata: Added support for IPFS hashes of large files that need to be split in multiple chunks.
+
+
+Bugfixes:
  * Inheritance: Allow public state variables to override functions with dynamic memory types in their return values.
+ * Inline Assembly: Fix internal error when accessing invalid constant variables.
+ * Inline Assembly: Fix internal error when accessing functions.
  * JSON AST: Always add pointer suffix for memory reference types.
+ * Reference Resolver: Fix internal error when accessing invalid struct members.
+ * Type Checker: Fix internal errors when assigning nested tuples.
 
 
 ### 0.6.4 (2020-03-10)

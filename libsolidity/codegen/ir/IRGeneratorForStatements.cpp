@@ -154,6 +154,19 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 	}
 }
 
+void IRGeneratorForStatements::initializeLocalVar(VariableDeclaration const& _varDecl)
+{
+	solAssert(m_context.isLocalVariable(_varDecl), "Must be a local variable.");
+
+	auto const* type = _varDecl.type();
+	if (auto const* refType = dynamic_cast<ReferenceType const*>(type))
+		if (refType->dataStoredIn(DataLocation::Storage) && refType->isPointer())
+			return;
+
+	IRVariable zero = zeroValue(*type);
+	assign(m_context.localVariable(_varDecl), zero);
+}
+
 void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _varDeclStatement)
 {
 	if (Expression const* expression = _varDeclStatement.initialValue())
@@ -179,7 +192,10 @@ void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _var
 	else
 		for (auto const& decl: _varDeclStatement.declarations())
 			if (decl)
+			{
 				declare(m_context.addLocalVariable(*decl));
+				initializeLocalVar(*decl);
+			}
 }
 
 bool IRGeneratorForStatements::visit(Conditional const& _conditional)
@@ -568,7 +584,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		}
 
 		define(_functionCall) <<
-			m_context.internalDispatch(functionType->parameterTypes().size(), functionType->returnParameterTypes().size()) <<
+			m_context.internalDispatch(
+				TupleType(functionType->parameterTypes()).sizeOnStack(),
+				TupleType(functionType->returnParameterTypes()).sizeOnStack()
+			) <<
 			"(" <<
 			IRVariable(_functionCall.expression()).part("functionIdentifier").name() <<
 			joinHumanReadablePrefixed(args) <<
@@ -667,7 +686,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		IRVariable value = convert(*arguments[0], *TypeProvider::uint256());
 		define(_functionCall) <<
-			m_utils.allocateMemoryArrayFunction(arrayType) <<
+			m_utils.allocateAndInitializeMemoryArrayFunction(arrayType) <<
 			"(" <<
 			value.commaSeparatedList() <<
 			")\n";
@@ -1165,7 +1184,7 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 		return;
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
-		define(_identifier) << to_string(m_context.virtualFunction(*functionDef).id()) << "\n";
+		define(_identifier) << to_string(functionDef->resolveVirtual(m_context.mostDerivedContract()).id()) << "\n";
 	else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
 		// TODO for the constant case, we have to be careful:
@@ -1436,6 +1455,12 @@ std::ostream& IRGeneratorForStatements::define(IRVariable const& _var)
 	return m_code;
 }
 
+void IRGeneratorForStatements::declare(IRVariable const& _var)
+{
+	if (_var.type().sizeOnStack() > 0)
+		m_code << "let " << _var.commaSeparatedList() << "\n";
+}
+
 void IRGeneratorForStatements::declareAssign(IRVariable const& _lhs, IRVariable const& _rhs, bool _declare)
 {
 	string output;
@@ -1455,10 +1480,15 @@ void IRGeneratorForStatements::declareAssign(IRVariable const& _lhs, IRVariable 
 			_rhs.commaSeparatedList() <<
 			")\n";
 }
-void IRGeneratorForStatements::declare(IRVariable const& _var)
+
+IRVariable IRGeneratorForStatements::zeroValue(Type const& _type, bool _splitFunctionTypes)
 {
-	if (_var.type().sizeOnStack() > 0)
-		m_code << "let " << _var.commaSeparatedList() << "\n";
+	IRVariable irVar{
+		"zero_value_for_type_" + _type.identifier() + m_context.newYulVariable(),
+		_type
+	};
+	define(irVar) << m_utils.zeroValueFunction(_type, _splitFunctionTypes) << "()\n";
+	return irVar;
 }
 
 void IRGeneratorForStatements::appendSimpleUnaryOperation(UnaryOperation const& _operation, Expression const& _expr)

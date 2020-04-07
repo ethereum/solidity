@@ -79,10 +79,9 @@ void CHC::analyze(SourceUnit const& _source)
 
 	resetSourceAnalysis();
 
-	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
 	auto genesisSort = make_shared<smt::FunctionSort>(
 		vector<smt::SortPointer>(),
-		boolSort
+		smt::SortProvider::boolSort
 	);
 	m_genesisPredicate = createSymbolicBlock(genesisSort, "genesis");
 	addRule(genesis(), "genesis");
@@ -131,12 +130,9 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 	clearIndices(&_contract);
 
-
-	// TODO create static instances for Bool/Int sorts in SolverInterface.
-	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
 	auto errorFunctionSort = make_shared<smt::FunctionSort>(
 		vector<smt::SortPointer>(),
-		boolSort
+		smt::SortProvider::boolSort
 	);
 
 	string suffix = _contract.name() + "_" + to_string(_contract.id());
@@ -664,29 +660,25 @@ vector<smt::SortPointer> CHC::stateSorts(ContractDefinition const& _contract)
 
 smt::SortPointer CHC::constructorSort()
 {
-	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
-	auto intSort = make_shared<smt::Sort>(smt::Kind::Int);
 	return make_shared<smt::FunctionSort>(
-		vector<smt::SortPointer>{intSort} + m_stateSorts,
-		boolSort
+		vector<smt::SortPointer>{smt::SortProvider::intSort} + m_stateSorts,
+		smt::SortProvider::boolSort
 	);
 }
 
 smt::SortPointer CHC::interfaceSort()
 {
-	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
 	return make_shared<smt::FunctionSort>(
 		m_stateSorts,
-		boolSort
+		smt::SortProvider::boolSort
 	);
 }
 
 smt::SortPointer CHC::interfaceSort(ContractDefinition const& _contract)
 {
-	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
 	return make_shared<smt::FunctionSort>(
 		stateSorts(_contract),
-		boolSort
+		smt::SortProvider::boolSort
 	);
 }
 
@@ -703,8 +695,6 @@ smt::SortPointer CHC::interfaceSort(ContractDefinition const& _contract)
 /// - 1 set of output variables
 smt::SortPointer CHC::sort(FunctionDefinition const& _function)
 {
-	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
-	auto intSort = make_shared<smt::Sort>(smt::Kind::Int);
 	vector<smt::SortPointer> inputSorts;
 	for (auto const& var: _function.parameters())
 		inputSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
@@ -712,8 +702,8 @@ smt::SortPointer CHC::sort(FunctionDefinition const& _function)
 	for (auto const& var: _function.returnParameters())
 		outputSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
 	return make_shared<smt::FunctionSort>(
-		vector<smt::SortPointer>{intSort} + m_stateSorts + inputSorts + m_stateSorts + inputSorts + outputSorts,
-		boolSort
+		vector<smt::SortPointer>{smt::SortProvider::intSort} + m_stateSorts + inputSorts + m_stateSorts + inputSorts + outputSorts,
+		smt::SortProvider::boolSort
 	);
 }
 
@@ -725,13 +715,12 @@ smt::SortPointer CHC::sort(ASTNode const* _node)
 	auto fSort = dynamic_pointer_cast<smt::FunctionSort>(sort(*m_currentFunction));
 	solAssert(fSort, "");
 
-	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
 	vector<smt::SortPointer> varSorts;
 	for (auto const& var: m_currentFunction->localVariables())
 		varSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
 	return make_shared<smt::FunctionSort>(
 		fSort->domain + varSorts,
-		boolSort
+		smt::SortProvider::boolSort
 	);
 }
 
@@ -740,16 +729,14 @@ smt::SortPointer CHC::summarySort(FunctionDefinition const& _function, ContractD
 	auto stateVariables = stateVariablesIncludingInheritedAndPrivate(_contract);
 	auto sorts = stateSorts(_contract);
 
-	auto boolSort = make_shared<smt::Sort>(smt::Kind::Bool);
-	auto intSort = make_shared<smt::Sort>(smt::Kind::Int);
 	vector<smt::SortPointer> inputSorts, outputSorts;
 	for (auto const& var: _function.parameters())
 		inputSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
 	for (auto const& var: _function.returnParameters())
 		outputSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
 	return make_shared<smt::FunctionSort>(
-		vector<smt::SortPointer>{intSort} + sorts + inputSorts + sorts + outputSorts,
-		boolSort
+		vector<smt::SortPointer>{smt::SortProvider::intSort} + sorts + inputSorts + sorts + outputSorts,
+		smt::SortProvider::boolSort
 	);
 }
 
@@ -974,7 +961,11 @@ smt::Expression CHC::predicate(FunctionCall const& _funCall)
 	for (auto const& var: function->returnParameters())
 		args.push_back(m_context.variable(*var)->currentValue());
 
-	return (*m_summaries.at(contract).at(function))(args);
+	if (contract->isLibrary())
+		return (*m_summaries.at(contract).at(function))(args);
+
+	solAssert(m_currentContract, "");
+	return (*m_summaries.at(m_currentContract).at(function))(args);
 }
 
 void CHC::addRule(smt::Expression const& _rule, string const& _ruleName)

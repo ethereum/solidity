@@ -144,9 +144,46 @@ void MemoryItem::setToZero(SourceLocation const&, bool _removeReference) const
 	m_context << Instruction::POP;
 }
 
+
+ImmutableItem::ImmutableItem(CompilerContext& _compilerContext, VariableDeclaration const& _variable):
+	LValue(_compilerContext, _variable.annotation().type), m_variable(_variable)
+{
+	solAssert(_variable.immutable(), "");
+}
+
+void ImmutableItem::retrieveValue(SourceLocation const&, bool) const
+{
+	solUnimplementedAssert(m_dataType->isValueType(), "");
+	solAssert(!m_context.runtimeContext(), "Tried to read immutable at construction time.");
+	for (auto&& slotName: m_context.immutableVariableSlotNames(m_variable))
+		m_context.appendImmutable(slotName);
+}
+
+void ImmutableItem::storeValue(Type const& _sourceType, SourceLocation const&, bool _move) const
+{
+	CompilerUtils utils(m_context);
+	solUnimplementedAssert(m_dataType->isValueType(), "");
+	solAssert(_sourceType.isValueType(), "");
+
+	utils.convertType(_sourceType, *m_dataType, true);
+	m_context << m_context.immutableMemoryOffset(m_variable);
+	if (_move)
+		utils.moveIntoStack(m_dataType->sizeOnStack());
+	else
+		utils.copyToStackTop(m_dataType->sizeOnStack() + 1, m_dataType->sizeOnStack());
+	utils.storeInMemoryDynamic(*m_dataType, false);
+	m_context << Instruction::POP;
+}
+
+void ImmutableItem::setToZero(SourceLocation const&, bool) const
+{
+	solAssert(false, "Attempted to set immutable variable to zero.");
+}
+
 StorageItem::StorageItem(CompilerContext& _compilerContext, VariableDeclaration const& _declaration):
 	StorageItem(_compilerContext, *_declaration.annotation().type)
 {
+	solAssert(!_declaration.immutable(), "");
 	auto const& location = m_context.storageLocationOfVariable(_declaration);
 	m_context << location.first << u256(location.second);
 }

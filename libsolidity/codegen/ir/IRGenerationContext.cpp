@@ -22,6 +22,7 @@
 
 #include <libsolidity/codegen/YulUtilFunctions.h>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
@@ -30,6 +31,12 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
+
+ContractDefinition const& IRGenerationContext::mostDerivedContract() const
+{
+	solAssert(m_mostDerivedContract, "Most derived contract requested but not set.");
+	return *m_mostDerivedContract;
+}
 
 IRVariable const& IRGenerationContext::addLocalVariable(VariableDeclaration const& _varDecl)
 {
@@ -70,26 +77,9 @@ string IRGenerationContext::functionName(VariableDeclaration const& _varDecl)
 	return "getter_fun_" + _varDecl.name() + "_" + to_string(_varDecl.id());
 }
 
-FunctionDefinition const& IRGenerationContext::virtualFunction(FunctionDefinition const& _function)
-{
-	// @TODO previously, we had to distinguish creation context and runtime context,
-	// but since we do not work with jump positions anymore, this should not be a problem, right?
-	string name = _function.name();
-	FunctionType functionType(_function);
-	for (auto const& contract: m_inheritanceHierarchy)
-		for (FunctionDefinition const* function: contract->definedFunctions())
-			if (
-				function->name() == name &&
-				!function->isConstructor() &&
-				FunctionType(*function).asCallableFunction(false)->hasEqualParameterTypes(functionType)
-			)
-				return *function;
-	solAssert(false, "Super function " + name + " not found.");
-}
-
 string IRGenerationContext::virtualFunctionName(FunctionDefinition const& _functionDeclaration)
 {
-	return functionName(virtualFunction(_functionDeclaration));
+	return functionName(_functionDeclaration.resolveVirtual(mostDerivedContract()));
 }
 
 string IRGenerationContext::newYulVariable()
@@ -120,12 +110,13 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 		templ("arrow", _out > 0 ? "->" : "");
 		templ("out", suffixedVariableNameList("out_", 0, _out));
 		vector<map<string, string>> functions;
-		for (auto const& contract: m_inheritanceHierarchy)
+		for (auto const& contract: mostDerivedContract().annotation().linearizedBaseContracts)
 			for (FunctionDefinition const* function: contract->definedFunctions())
 				if (
+					FunctionType const* functionType = TypeProvider::function(*function)->asCallableFunction(false);
 					!function->isConstructor() &&
-					function->parameters().size() == _in &&
-					function->returnParameters().size() == _out
+					TupleType(functionType->parameterTypes()).sizeOnStack() == _in &&
+					TupleType(functionType->returnParameterTypes()).sizeOnStack() == _out
 				)
 				{
 					// 0 is reserved for uninitialized function pointers

@@ -52,15 +52,15 @@ public:
 	FirstExpressionExtractor(ASTNode& _node): m_expression(nullptr) { _node.accept(*this); }
 	Expression* expression() const { return m_expression; }
 private:
-	virtual bool visit(Assignment& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(UnaryOperation& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(BinaryOperation& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(FunctionCall& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(MemberAccess& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(IndexAccess& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Identifier& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(ElementaryTypeNameExpression& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Literal& _expression) override { return checkExpression(_expression); }
+	bool visit(Assignment& _expression) override { return checkExpression(_expression); }
+	bool visit(UnaryOperation& _expression) override { return checkExpression(_expression); }
+	bool visit(BinaryOperation& _expression) override { return checkExpression(_expression); }
+	bool visit(FunctionCall& _expression) override { return checkExpression(_expression); }
+	bool visit(MemberAccess& _expression) override { return checkExpression(_expression); }
+	bool visit(IndexAccess& _expression) override { return checkExpression(_expression); }
+	bool visit(Identifier& _expression) override { return checkExpression(_expression); }
+	bool visit(ElementaryTypeNameExpression& _expression) override { return checkExpression(_expression); }
+	bool visit(Literal& _expression) override { return checkExpression(_expression); }
 	bool checkExpression(Expression& _expression)
 	{
 		if (m_expression == nullptr)
@@ -119,13 +119,9 @@ bytes compileFirstExpression(
 	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), scopes, errorReporter);
 	resolver.registerDeclarations(*sourceUnit);
 
-	vector<ContractDefinition const*> inheritanceHierarchy;
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-		{
 			BOOST_REQUIRE_MESSAGE(resolver.resolveNamesAndTypes(*contract), "Resolving names failed");
-			inheritanceHierarchy = vector<ContractDefinition const*>(1, contract);
-		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -144,7 +140,7 @@ bytes compileFirstExpression(
 				RevertStrings::Default
 			);
 			context.resetVisitedNodes(contract);
-			context.setInheritanceHierarchy(inheritanceHierarchy);
+			context.setMostDerivedContract(*contract);
 			unsigned parametersSize = _localVariables.size(); // assume they are all one slot on the stack
 			context.adjustStackOffset(parametersSize);
 			for (vector<string> const& variable: _localVariables)

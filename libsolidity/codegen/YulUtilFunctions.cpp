@@ -658,6 +658,8 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 	solUnimplementedAssert(!_type.isByteArray(), "Byte Arrays not yet implemented!");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "Base type is not yet implemented.");
 
+	solAssert(_type.baseType()->isValueType(), "");
+
 	string functionName = "array_push_zero_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
@@ -794,6 +796,7 @@ string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
 
 	});
 }
+
 string YulUtilFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 {
 	solAssert(_type.dataStoredIn(DataLocation::Memory), "");
@@ -1178,7 +1181,7 @@ string YulUtilFunctions::writeToMemoryFunction(Type const& _type)
 			return Whiskers(R"(
 				function <functionName>(memPtr, value) {
 					mstore(memPtr, value)
-			}
+				}
 			)")
 			("functionName", functionName)
 			.render();
@@ -1202,7 +1205,7 @@ string YulUtilFunctions::writeToMemoryFunction(Type const& _type)
 			return Whiskers(R"(
 				function <functionName>(memPtr, value) {
 					mstore(memPtr, <cleanup>(value))
-			}
+				}
 			)")
 			("functionName", functionName)
 			("cleanup", cleanupFunction(_type))
@@ -1334,25 +1337,109 @@ string YulUtilFunctions::allocationFunction()
 	});
 }
 
-string YulUtilFunctions::allocateMemoryArrayFunction(ArrayType const& _type)
+string YulUtilFunctions::zeroMemoryArrayFunction(ArrayType const& _type)
 {
-	solUnimplementedAssert(!_type.isByteArray(), "");
+	if (_type.baseType()->hasSimpleZeroValueInMemory())
+		return zeroMemoryFunction(*_type.baseType());
+	return zeroComplexMemoryArrayFunction(_type);
+}
 
-	string functionName = "allocate_memory_array_" + _type.identifier();
+string YulUtilFunctions::zeroMemoryFunction(Type const& _type)
+{
+	solAssert(_type.hasSimpleZeroValueInMemory(), "");
+
+	string functionName = "zero_memory_chunk_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
-			function <functionName>(length) -> memPtr {
-				memPtr := <alloc>(<allocSize>(length))
-				<?dynamic>
-				mstore(memPtr, length)
-				</dynamic>
+			function <functionName>(dataStart, dataSizeInBytes) {
+				calldatacopy(dataStart, calldatasize(), dataSizeInBytes)
 			}
 		)")
 		("functionName", functionName)
-		("alloc", allocationFunction())
-		("allocSize", arrayAllocationSizeFunction(_type))
-		("dynamic", _type.isDynamicallySized())
 		.render();
+	});
+}
+
+string YulUtilFunctions::zeroComplexMemoryArrayFunction(ArrayType const& _type)
+{
+	solAssert(!_type.baseType()->hasSimpleZeroValueInMemory(), "");
+
+	string functionName = "zero_complex_memory_array_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		solAssert(_type.memoryStride() == 32, "");
+		return Whiskers(R"(
+			function <functionName>(dataStart, dataSizeInBytes) {
+				for {let i := 0} lt(i, dataSizeInBytes) { i := add(i, <stride>) } {
+					mstore(add(dataStart, i), <zeroValue>())
+				}
+			}
+		)")
+		("functionName", functionName)
+		("stride", to_string(_type.memoryStride()))
+		("zeroValue", zeroValueFunction(*_type.baseType(), false))
+		.render();
+	});
+}
+
+string YulUtilFunctions::allocateAndInitializeMemoryArrayFunction(ArrayType const& _type)
+{
+	solUnimplementedAssert(!_type.isByteArray(), "");
+
+	string functionName = "allocate_and_zero_memory_array_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+				function <functionName>(length) -> memPtr {
+					let allocSize := <allocSize>(length)
+					memPtr := <alloc>(allocSize)
+					let dataStart := memPtr
+					let dataSize := allocSize
+					<?dynamic>
+					dataStart := add(dataStart, 32)
+					dataSize := sub(dataSize, 32)
+					mstore(memPtr, length)
+					</dynamic>
+					<zeroArrayFunction>(dataStart, dataSize)
+				}
+			)")
+			("functionName", functionName)
+			("alloc", allocationFunction())
+			("allocSize", arrayAllocationSizeFunction(_type))
+			("zeroArrayFunction", zeroMemoryArrayFunction(_type))
+			("dynamic", _type.isDynamicallySized())
+			.render();
+	});
+}
+
+string YulUtilFunctions::allocateAndInitializeMemoryStructFunction(StructType const& _type)
+{
+	string functionName = "allocate_and_initialize_memory_struct_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		Whiskers templ(R"(
+		function <functionName>() -> memPtr {
+			let allocSize := <allocSize>()
+			memPtr := <alloc>(allocSize)
+			let offset := memPtr
+			<#member>
+				mstore(offset, <zeroValue>())
+				offset := add(offset, 32)
+			</member>
+		}
+		)");
+		templ("functionName", functionName);
+		templ("alloc", allocationFunction());
+
+		TypePointers const& members = _type.memoryMemberTypes();
+		templ("allocSize", _type.memoryDataSize().str());
+
+		vector<map<string, string>> memberParams(members.size());
+		for (size_t i = 0; i < members.size(); ++i)
+		{
+			solAssert(members[i]->memoryHeadSize() == 32, "");
+			solAssert(members[i]->dataStoredIn(DataLocation::Memory), "");
+			memberParams[i]["zeroValue"] = zeroValueFunction(*members[i], false);
+		}
+		templ("member", memberParams);
+		return templ.render();
 	});
 }
 
@@ -1884,23 +1971,58 @@ string YulUtilFunctions::negateNumberCheckedFunction(Type const& _type)
 		});
 }
 
-string YulUtilFunctions::zeroValueFunction(Type const& _type)
+string YulUtilFunctions::zeroValueFunction(Type const& _type, bool _splitFunctionTypes)
 {
-	solUnimplementedAssert(_type.sizeOnStack() == 1, "Stacksize not yet implemented!");
-	solUnimplementedAssert(_type.isValueType(), "Zero value for non-value types not yet implemented");
+	solAssert(_type.category() != Type::Category::Mapping, "");
 
-	string const functionName = "zero_value_for_" + _type.identifier();
+	string const functionName = "zero_value_for_" + string(_splitFunctionTypes ? "split_" : "") + _type.identifier();
 
 	return m_functionCollector.createFunction(functionName, [&]() {
-		return Whiskers(R"(
-			function <functionName>() -> ret {
-				<body>
-			}
-		)")
+		FunctionType const* fType = dynamic_cast<FunctionType const*>(&_type);
+		if (fType && fType->kind() == FunctionType::Kind::External && _splitFunctionTypes)
+			return Whiskers(R"(
+				function <functionName>() -> retAddress, retFunction {
+					retAddress := 0
+					retFunction := 0
+				}
+			)")
 			("functionName", functionName)
-			("body", "ret := 0x0")
 			.render();
-		});
+
+		Whiskers templ(R"(
+			function <functionName>() -> ret {
+				ret := <zeroValue>
+			}
+		)");
+		templ("functionName", functionName);
+
+		if (_type.isValueType())
+		{
+			solAssert((
+				_type.hasSimpleZeroValueInMemory() ||
+				(fType && (fType->kind() == FunctionType::Kind::Internal || fType->kind() == FunctionType::Kind::External))
+			), "");
+			templ("zeroValue", "0");
+		}
+		else
+		{
+			solAssert(_type.dataStoredIn(DataLocation::Memory), "");
+			if (auto const* arrayType = dynamic_cast<ArrayType const*>(&_type))
+			{
+				if (_type.isDynamicallySized())
+					templ("zeroValue", to_string(CompilerUtils::zeroPointer));
+				else
+					templ("zeroValue", allocateAndInitializeMemoryArrayFunction(*arrayType) + "(" + to_string(unsigned(arrayType->length())) + ")");
+
+			}
+			else if (auto const* structType = dynamic_cast<StructType const*>(&_type))
+				templ("zeroValue", allocateAndInitializeMemoryStructFunction(*structType) + "()");
+			else
+				solUnimplementedAssert(false, "");
+		}
+
+		return templ.render();
+	});
 }
 
 string YulUtilFunctions::storageSetToZeroFunction(Type const& _type)

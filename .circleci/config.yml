@@ -122,8 +122,8 @@ defaults:
       name: command line tests
       command: ./test/cmdlineTests.sh
 
-  - run_docs_version_pragma_check: &run_docs_version_pragma_check
-      name: docs version pragma check
+  - run_docs_pragma_min_version: &run_docs_pragma_min_version
+      name: docs pragma version check
       command: ./scripts/docs_version_pragma_check.sh
 
   - test_ubuntu1604_clang: &test_ubuntu1604_clang
@@ -350,6 +350,15 @@ jobs:
             apt-get -qy install python-pip
             pip install --user z3-solver
       - run: *run_proofs
+
+  chk_docs_pragma_min_version:
+    docker:
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-<< pipeline.parameters.ubuntu-1904-docker-image-rev >>
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - run: *run_docs_pragma_min_version
 
   b_ubu_clang: &build_ubuntu1904_clang
     docker:
@@ -621,7 +630,6 @@ jobs:
       - attach_workspace:
           at: build
       - run: *run_cmdline_tests
-      - run: *run_docs_version_pragma_check
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -786,6 +794,7 @@ workflows:
       - chk_proofs: *workflow_trigger_on_tags
       - chk_pylint: *workflow_trigger_on_tags
       - chk_antlr_grammar: *workflow_trigger_on_tags
+      - chk_docs_pragma_min_version: *workflow_trigger_on_tags
 
       # build-only
       - b_docs: *workflow_trigger_on_tags

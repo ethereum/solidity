@@ -112,6 +112,44 @@ namespace
 
 BOOST_AUTO_TEST_SUITE(Optimiser)
 
+BOOST_AUTO_TEST_CASE(cse_push_immutable_same)
+{
+	AssemblyItem pushImmutable{PushImmutable, 0x1234};
+	checkCSE({pushImmutable, pushImmutable}, {pushImmutable, Instruction::DUP1});
+}
+
+BOOST_AUTO_TEST_CASE(cse_push_immutable_different)
+{
+	AssemblyItems input{{PushImmutable, 0x1234},{PushImmutable, 0xABCD}};
+	checkCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(cse_assign_immutable)
+{
+	{
+		AssemblyItems input{u256(0x42), {AssignImmutable, 0x1234}};
+		checkCSE(input, input);
+	}
+	{
+		AssemblyItems input{{AssignImmutable, 0x1234}};
+		checkCSE(input, input);
+	}
+}
+
+
+BOOST_AUTO_TEST_CASE(cse_assign_immutable_breaks)
+{
+	AssemblyItems input = addDummyLocations(AssemblyItems{
+		u256(0x42),
+		{AssignImmutable, 0x1234},
+		Instruction::ORIGIN
+	});
+
+	evmasm::CommonSubexpressionEliminator cse{evmasm::KnownState()};
+	// Make sure CSE breaks after AssignImmutable.
+	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), false) == input.begin() + 2);
+}
+
 BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 {
 	evmasm::KnownState state;
@@ -796,6 +834,68 @@ BOOST_AUTO_TEST_CASE(block_deduplicator)
 		if (item.type() == PushTag)
 			pushTags.insert(item.data());
 	BOOST_CHECK_EQUAL(pushTags.size(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_same)
+{
+	AssemblyItems blocks{
+		AssemblyItem(Tag, 1),
+		u256(42),
+		AssemblyItem{AssignImmutable, 0x1234},
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(42),
+		AssemblyItem{AssignImmutable, 0x1234},
+		Instruction::JUMP
+	};
+
+	AssemblyItems input = AssemblyItems{
+		AssemblyItem(PushTag, 2),
+		AssemblyItem(PushTag, 1),
+	} + blocks;
+	AssemblyItems output = AssemblyItems{
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(PushTag, 1),
+	} + blocks;
+	BlockDeduplicator dedup(input);
+	dedup.deduplicate();
+	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
+}
+
+BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_value)
+{
+	AssemblyItems input{
+		AssemblyItem(PushTag, 2),
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(Tag, 1),
+		u256(42),
+		AssemblyItem{AssignImmutable, 0x1234},
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(23),
+		AssemblyItem{AssignImmutable, 0x1234},
+		Instruction::JUMP
+	};
+	BlockDeduplicator dedup(input);
+	BOOST_CHECK(!dedup.deduplicate());
+}
+
+BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_hash)
+{
+	AssemblyItems input{
+		AssemblyItem(PushTag, 2),
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(Tag, 1),
+		u256(42),
+		AssemblyItem{AssignImmutable, 0x1234},
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(42),
+		AssemblyItem{AssignImmutable, 0xABCD},
+		Instruction::JUMP
+	};
+	BlockDeduplicator dedup(input);
+	BOOST_CHECK(!dedup.deduplicate());
 }
 
 BOOST_AUTO_TEST_CASE(block_deduplicator_loops)

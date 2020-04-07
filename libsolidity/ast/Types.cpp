@@ -2012,6 +2012,16 @@ vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVar
 	return variablesAndOffsets;
 }
 
+vector<VariableDeclaration const*> ContractType::immutableVariables() const
+{
+	vector<VariableDeclaration const*> variables;
+	for (ContractDefinition const* contract: boost::adaptors::reverse(m_contract.annotation().linearizedBaseContracts))
+		for (VariableDeclaration const* variable: contract->stateVariables())
+			if (variable->immutable())
+				variables.push_back(variable);
+	return variables;
+}
+
 vector<tuple<string, TypePointer>> ContractType::makeStackItems() const
 {
 	if (m_super)
@@ -2328,7 +2338,7 @@ TypePointers StructType::memoryMemberTypes() const
 	TypePointers types;
 	for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
 		if (variable->annotation().type->canLiveOutsideStorage())
-			types.push_back(variable->annotation().type);
+			types.push_back(TypeProvider::withLocationIfReference(DataLocation::Memory, variable->annotation().type));
 	return types;
 }
 

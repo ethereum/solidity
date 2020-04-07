@@ -40,6 +40,10 @@ struct LinkerObject
 	/// need to be replaced by the actual addresses by the linker.
 	std::map<size_t, std::string> linkReferences;
 
+	/// Map from hashes of the identifiers of immutable variables to the full identifier of the immutable and
+	/// to a list of offsets into the bytecode that refer to their values.
+	std::map<u256, std::pair<std::string, std::vector<size_t>>> immutableReferences;
+
 	/// Appends the bytecode of @a _other and incorporates its link references.
 	void append(LinkerObject const& _other);
 

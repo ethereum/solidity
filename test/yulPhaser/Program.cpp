@@ -189,6 +189,132 @@ BOOST_AUTO_TEST_CASE(load_should_throw_InvalidProgram_if_program_cant_be_analyze
 	BOOST_TEST(holds_alternative<ErrorList>(Program::load(sourceStream)));
 }
 
+BOOST_AUTO_TEST_CASE(load_should_accept_yul_objects_as_input)
+{
+	string sourceCode(
+		"object \"C_178\" {\n"
+		"    code {\n"
+		"        mstore(64, 128)\n"
+		"        if iszero(calldatasize()) {}\n"
+		"            revert(0, 0)\n"
+		"    }\n"
+		"}\n"
+	);
+	CharStream sourceStream(sourceCode, current_test_case().p_name);
+	auto programOrErrors = Program::load(sourceStream);
+
+	BOOST_TEST(holds_alternative<Program>(programOrErrors));
+}
+
+BOOST_AUTO_TEST_CASE(load_should_return_errors_if_analysis_of_object_code_fails)
+{
+	string sourceCode(
+		"object \"C_178\" {\n"
+		"    code {\n"
+		"        return(0, datasize(\"C_178_deployed\"))\n"
+		"    }\n"
+		"}\n"
+	);
+	CharStream sourceStream(sourceCode, current_test_case().p_name);
+	auto programOrErrors = Program::load(sourceStream);
+
+	BOOST_TEST(holds_alternative<ErrorList>(programOrErrors));
+}
+
+BOOST_AUTO_TEST_CASE(load_should_return_errors_if_parsing_of_nested_object_fails)
+{
+	string sourceCode(
+		"object \"C_178\" {\n"
+		"    code {\n"
+		"        return(0, datasize(\"C_178_deployed\"))\n"
+		"    }\n"
+		"    object \"duplicate_name\" {\n"
+		"        code {\n"
+		"            mstore(64, 128)\n"
+		"        }\n"
+		"    }\n"
+		"    object \"duplicate_name\" {\n"
+		"        code {\n"
+		"            mstore(64, 128)\n"
+		"        }\n"
+		"    }\n"
+		"}\n"
+	);
+	CharStream sourceStream(sourceCode, current_test_case().p_name);
+	auto programOrErrors = Program::load(sourceStream);
+
+	BOOST_TEST(holds_alternative<ErrorList>(programOrErrors));
+}
+
+BOOST_AUTO_TEST_CASE(load_should_extract_nested_object_with_deployed_suffix_if_present)
+{
+	string sourceCode(
+		"object \"C_178\" {\n"
+		"    code {\n"
+		"        return(0, datasize(\"C_178_deployed\"))\n"
+		"    }\n"
+		"    object \"C_178_deployed\" {\n"
+		"        code {\n"
+		"            mstore(64, 128)\n"
+		"            if iszero(calldatasize()) {}\n"
+		"                revert(0, 0)\n"
+		"        }\n"
+		"    }\n"
+		"}\n"
+	);
+	CharStream sourceStream(sourceCode, current_test_case().p_name);
+	auto programOrErrors = Program::load(sourceStream);
+
+	BOOST_TEST(holds_alternative<Program>(programOrErrors));
+}
+
+BOOST_AUTO_TEST_CASE(load_should_fall_back_to_parsing_the_whole_object_if_there_is_no_subobject_with_the_right_name)
+{
+	string sourceCode(
+		"object \"C_178\" {\n"
+		"    code {\n"
+		"        mstore(64, 128)\n"
+		"    }\n"
+		"    object \"subobject\" {\n"
+		"        code {\n"
+		"            if iszero(calldatasize()) {}\n"
+		"                revert(0, 0)\n"
+		"        }\n"
+		"    }\n"
+		"    object \"C_177_deployed\" {\n"
+		"        code {\n"
+		"            if iszero(calldatasize()) {}\n"
+		"                revert(0, 0)\n"
+		"        }\n"
+		"    }\n"
+		"}\n"
+	);
+	CharStream sourceStream(sourceCode, current_test_case().p_name);
+	auto programOrErrors = Program::load(sourceStream);
+
+	BOOST_TEST(holds_alternative<Program>(programOrErrors));
+
+	Block const& parentBlock = skipRedundantBlocks(get<Program>(programOrErrors).ast());
+	BOOST_TEST(parentBlock.statements.size() == 1);
+	BOOST_TEST(holds_alternative<ExpressionStatement>(parentBlock.statements[0]));
+}
+
+BOOST_AUTO_TEST_CASE(load_should_ignore_data_in_objects)
+{
+	string sourceCode(
+		"object \"C_178\" {\n"
+		"    code {\n"
+		"        mstore(64, 128)\n"
+		"    }\n"
+		"    data \"C_178_deployed\" hex\"4123\"\n"
+		"}\n"
+	);
+	CharStream sourceStream(sourceCode, current_test_case().p_name);
+	auto programOrErrors = Program::load(sourceStream);
+
+	BOOST_TEST(holds_alternative<Program>(programOrErrors));
+}
+
 BOOST_AUTO_TEST_CASE(optimise)
 {
 	string sourceCode(
