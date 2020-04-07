@@ -8,6 +8,7 @@ Compiler Features:
 
 Bugfixes:
  * SMTChecker: Fix internal error in the CHC engine when calling inherited functions internally.
+ * Type Checker: Error when trying to encode functions with call options gas and value.
 
 
 
