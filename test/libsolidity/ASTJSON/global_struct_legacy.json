@@ -26,6 +26,7 @@
           "attributes":
           {
             "constant": false,
+            "mutability": "mutable",
             "name": "a",
             "overrides": null,
             "scope": 3,

@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * AST export: Export `immutable` property in the field `mutability`.
  * SMTChecker: Fix internal error in the CHC engine when calling inherited functions internally.
 
 

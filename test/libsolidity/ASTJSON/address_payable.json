@@ -31,6 +31,7 @@
           "constant": false,
           "functionSelector": "97682884",
           "id": 4,
+          "mutability": "mutable",
           "name": "m",
           "nodeType": "VariableDeclaration",
           "overrides": null,
@@ -100,6 +101,7 @@
                   {
                     "constant": false,
                     "id": 12,
+                    "mutability": "mutable",
                     "name": "a",
                     "nodeType": "VariableDeclaration",
                     "overrides": null,
@@ -241,6 +243,7 @@
                   {
                     "constant": false,
                     "id": 22,
+                    "mutability": "mutable",
                     "name": "c",
                     "nodeType": "VariableDeclaration",
                     "overrides": null,
@@ -507,6 +510,7 @@
               {
                 "constant": false,
                 "id": 6,
+                "mutability": "mutable",
                 "name": "arg",
                 "nodeType": "VariableDeclaration",
                 "overrides": null,
@@ -547,6 +551,7 @@
               {
                 "constant": false,
                 "id": 9,
+                "mutability": "mutable",
                 "name": "r",
                 "nodeType": "VariableDeclaration",
                 "overrides": null,

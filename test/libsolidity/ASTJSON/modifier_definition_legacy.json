@@ -54,6 +54,7 @@
                   "attributes":
                   {
                     "constant": false,
+                    "mutability": "mutable",
                     "name": "i",
                     "overrides": null,
                     "scope": 6,

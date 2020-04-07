@@ -40,6 +40,7 @@
           "attributes":
           {
             "constant": false,
+            "mutability": "mutable",
             "name": "a",
             "overrides": null,
             "scope": 15,
@@ -143,6 +144,7 @@
                       "attributes":
                       {
                         "constant": false,
+                        "mutability": "mutable",
                         "name": "b",
                         "overrides": null,
                         "scope": 13,

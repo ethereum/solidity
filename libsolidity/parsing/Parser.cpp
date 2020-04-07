@@ -695,7 +695,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		);
 
 	bool isIndexed = false;
-	VariableDeclaration::Constantness constantness = VariableDeclaration::Constantness::Mutable;
+	VariableDeclaration::Mutability mutability = VariableDeclaration::Mutability::Mutable;
 	ASTPointer<OverrideSpecifier> overrides = nullptr;
 	Visibility visibility(Visibility::Default);
 	VariableDeclaration::Location location = VariableDeclaration::Location::Unspecified;
@@ -732,15 +732,15 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 				isIndexed = true;
 			else if (token == Token::Constant || token == Token::Immutable)
 			{
-				if (constantness != VariableDeclaration::Constantness::Mutable)
+				if (mutability != VariableDeclaration::Mutability::Mutable)
 					parserError(
-						string("Constantness already set to ") +
-						(constantness == VariableDeclaration::Constantness::Constant ? "\"constant\"" : "\"immutable\"")
+						string("Mutability already set to ") +
+						(mutability == VariableDeclaration::Mutability::Constant ? "\"constant\"" : "\"immutable\"")
 					);
 				else if (token == Token::Constant)
-					constantness = VariableDeclaration::Constantness::Constant;
+					mutability = VariableDeclaration::Mutability::Constant;
 				else if (token == Token::Immutable)
-					constantness = VariableDeclaration::Constantness::Immutable;
+					mutability = VariableDeclaration::Mutability::Immutable;
 			}
 			else if (_options.allowLocationSpecifier && TokenTraits::isLocationSpecifier(token))
 			{
@@ -800,7 +800,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		visibility,
 		_options.isStateVariable,
 		isIndexed,
-		constantness,
+		mutability,
 		overrides,
 		location
 	);

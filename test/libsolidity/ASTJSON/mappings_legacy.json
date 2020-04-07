@@ -80,6 +80,7 @@
           "attributes":
           {
             "constant": false,
+            "mutability": "mutable",
             "name": "a",
             "overrides": null,
             "scope": 17,
@@ -134,6 +135,7 @@
           "attributes":
           {
             "constant": false,
+            "mutability": "mutable",
             "name": "b",
             "overrides": null,
             "scope": 17,
@@ -186,6 +188,7 @@
           "attributes":
           {
             "constant": false,
+            "mutability": "mutable",
             "name": "c",
             "overrides": null,
             "scope": 17,
