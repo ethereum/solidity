@@ -12,6 +12,8 @@ set(sources
 	analysis/ControlFlowGraph.h
 	analysis/DeclarationContainer.cpp
 	analysis/DeclarationContainer.h
+	analysis/DeclarationTypeChecker.cpp
+	analysis/DeclarationTypeChecker.h
 	analysis/DocStringAnalyser.cpp
 	analysis/DocStringAnalyser.h
 	analysis/ImmutableValidator.cpp

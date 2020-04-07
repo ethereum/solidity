@@ -248,6 +248,8 @@ struct IdentifierAnnotation: ExpressionAnnotation
 {
 	/// Referenced declaration, set at latest during overload resolution stage.
 	Declaration const* referencedDeclaration = nullptr;
+	/// List of possible declarations it could refer to (can contain duplicates).
+	std::vector<Declaration const*> candidateDeclarations;
 	/// List of possible declarations it could refer to.
 	std::vector<Declaration const*> overloadedDeclarations;
 };

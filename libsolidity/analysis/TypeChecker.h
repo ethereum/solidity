@@ -154,6 +154,11 @@ private:
 	/// @returns the referenced declaration and throws on error.
 	Declaration const& dereference(UserDefinedTypeName const& _typeName) const;
 
+	std::vector<Declaration const*> cleanOverloadedDeclarations(
+		Identifier const& _reference,
+		std::vector<Declaration const*> const& _candidates
+	);
+
 	/// Runs type checks on @a _expression to infer its type and then checks that it is implicitly
 	/// convertible to @a _expectedType.
 	bool expectType(Expression const& _expression, Type const& _expectedType);

@@ -27,6 +27,7 @@
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>
 #include <libsolidity/analysis/ContractLevelChecker.h>
+#include <libsolidity/analysis/DeclarationTypeChecker.h>
 #include <libsolidity/analysis/DocStringAnalyser.h>
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
@@ -347,6 +348,11 @@ bool CompilerStack::analyze()
 					}
 
 				}
+
+		DeclarationTypeChecker declarationTypeChecker(m_errorReporter, m_evmVersion);
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !declarationTypeChecker.check(*source->ast))
+				return false;
 
 		// Next, we check inheritance, overrides, function collisions and other things at
 		// contract or function level.

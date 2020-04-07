@@ -1,6 +1,6 @@
 contract n
 {
-	fallback()
+	fallback() external
 	{
 		// Used to cause a segfault
 		var (x,y) = (1);
@@ -12,5 +12,4 @@ contract n
 	}
 }
 // ----
-// SyntaxError: (14-129): No visibility specified. Did you intend to add "external"?
-// TypeError: (60-75): Different number of components on the left hand side (2) than on the right hand side (1).
+// TypeError: (69-84): Different number of components on the left hand side (2) than on the right hand side (1).
