@@ -352,7 +352,7 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 	vector<map<string, string>> functions;
 	for (auto const& function: _contract.interfaceFunctions())
 	{
-		functions.push_back({});
+		functions.emplace_back();
 		map<string, string>& templ = functions.back();
 		templ["functionSelector"] = "0x" + function.first.hex();
 		FunctionTypePointer const& type = function.second;

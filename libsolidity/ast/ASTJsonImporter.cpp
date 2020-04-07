@@ -495,7 +495,7 @@ ASTPointer<UserDefinedTypeName> ASTJsonImporter::createUserDefinedTypeName(Json:
 	string nameString = member(_node, "name").asString();
 	boost::algorithm::split(strs, nameString, boost::is_any_of("."));
 	for (string s: strs)
-		namePath.push_back(ASTString(s));
+		namePath.emplace_back(s);
 	return createASTNode<UserDefinedTypeName>(
 		_node,
 		namePath
