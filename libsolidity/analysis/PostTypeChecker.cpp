@@ -277,7 +277,7 @@ struct EventOutsideEmitChecker: public PostTypeChecker::Checker
 
 	bool visit(FunctionCall const& _functionCall) override
 	{
-		if (_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
+		if (*_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
 			return true;
 
 		if (FunctionTypePointer const functionType = dynamic_cast<FunctionTypePointer const>(_functionCall.expression().annotation().type))

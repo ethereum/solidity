@@ -424,9 +424,9 @@ bool CHC::visit(ForStatement const& _for)
 
 void CHC::endVisit(FunctionCall const& _funCall)
 {
-	solAssert(_funCall.annotation().kind != FunctionCallKind::Unset, "");
+	auto functionCallKind = *_funCall.annotation().kind;
 
-	if (_funCall.annotation().kind != FunctionCallKind::FunctionCall)
+	if (functionCallKind != FunctionCallKind::FunctionCall)
 	{
 		SMTEncoder::endVisit(_funCall);
 		return;

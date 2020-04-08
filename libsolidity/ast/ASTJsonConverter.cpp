@@ -726,13 +726,16 @@ bool ASTJsonConverter::visit(FunctionCall const& _node)
 		make_pair("arguments", toJson(_node.arguments())),
 		make_pair("tryCall", _node.annotation().tryCall)
 	};
+
+	FunctionCallKind nodeKind = *_node.annotation().kind;
+
 	if (m_legacy)
 	{
-		attributes.emplace_back("isStructConstructorCall", _node.annotation().kind == FunctionCallKind::StructConstructorCall);
-		attributes.emplace_back("type_conversion", _node.annotation().kind == FunctionCallKind::TypeConversion);
+		attributes.emplace_back("isStructConstructorCall", nodeKind == FunctionCallKind::StructConstructorCall);
+		attributes.emplace_back("type_conversion", nodeKind == FunctionCallKind::TypeConversion);
 	}
 	else
-		attributes.emplace_back("kind", functionCallKind(_node.annotation().kind));
+		attributes.emplace_back("kind", functionCallKind(nodeKind));
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "FunctionCall", std::move(attributes));
 	return false;

@@ -624,12 +624,9 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 
 void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 {
-	solUnimplementedAssert(
-		_functionCall.annotation().kind != FunctionCallKind::Unset,
-		"This type of function call is not yet implemented"
-	);
+	auto functionCallKind = *_functionCall.annotation().kind;
 
-	if (_functionCall.annotation().kind == FunctionCallKind::TypeConversion)
+	if (functionCallKind == FunctionCallKind::TypeConversion)
 	{
 		solAssert(
 			_functionCall.expression().annotation().type->category() == Type::Category::TypeType,
@@ -641,7 +638,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	}
 
 	FunctionTypePointer functionType = nullptr;
-	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
+	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
 		auto const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
@@ -672,7 +669,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			arguments.push_back(callArguments[static_cast<size_t>(std::distance(callArgumentNames.begin(), it))]);
 		}
 
-	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
+	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());

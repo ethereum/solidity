@@ -492,8 +492,10 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 
 bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 {
+	auto functionCallKind = *_functionCall.annotation().kind;
+
 	CompilerContext::LocationSetter locationSetter(m_context, _functionCall);
-	if (_functionCall.annotation().kind == FunctionCallKind::TypeConversion)
+	if (functionCallKind == FunctionCallKind::TypeConversion)
 	{
 		solAssert(_functionCall.arguments().size() == 1, "");
 		solAssert(_functionCall.names().empty(), "");
@@ -517,7 +519,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	}
 
 	FunctionTypePointer functionType;
-	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
+	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
 		auto const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
@@ -548,7 +550,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			solAssert(found, "");
 		}
 
-	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
+	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());

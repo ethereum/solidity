@@ -581,9 +581,10 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 
 void SMTEncoder::endVisit(FunctionCall const& _funCall)
 {
-	solAssert(_funCall.annotation().kind != FunctionCallKind::Unset, "");
+	auto functionCallKind = *_funCall.annotation().kind;
+
 	createExpr(_funCall);
-	if (_funCall.annotation().kind == FunctionCallKind::StructConstructorCall)
+	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
 		m_errorReporter.warning(
 			4639_error,
@@ -593,7 +594,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		return;
 	}
 
-	if (_funCall.annotation().kind == FunctionCallKind::TypeConversion)
+	if (functionCallKind == FunctionCallKind::TypeConversion)
 	{
 		visitTypeConversion(_funCall);
 		return;
@@ -753,7 +754,7 @@ void SMTEncoder::endVisit(ElementaryTypeNameExpression const& _typeName)
 
 void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 {
-	solAssert(_funCall.annotation().kind == FunctionCallKind::TypeConversion, "");
+	solAssert(*_funCall.annotation().kind == FunctionCallKind::TypeConversion, "");
 	solAssert(_funCall.arguments().size() == 1, "");
 	auto argument = _funCall.arguments().front();
 	unsigned argSize = argument->annotation().type->storageBytes();
@@ -1948,7 +1949,7 @@ string SMTEncoder::extraComment()
 
 FunctionDefinition const* SMTEncoder::functionCallToDefinition(FunctionCall const& _funCall)
 {
-	if (_funCall.annotation().kind != FunctionCallKind::FunctionCall)
+	if (*_funCall.annotation().kind != FunctionCallKind::FunctionCall)
 		return nullptr;
 
 	FunctionDefinition const* funDef = nullptr;

@@ -22,6 +22,7 @@ set(sources
 	LazyInit.h
 	picosha2.h
 	Result.h
+	SetOnce.h
 	StringUtils.cpp
 	StringUtils.h
 	SwarmHash.cpp

@@ -309,7 +309,7 @@ void ViewPureChecker::reportMutability(
 
 void ViewPureChecker::endVisit(FunctionCall const& _functionCall)
 {
-	if (_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
+	if (*_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
 		return;
 
 	StateMutability mutability = dynamic_cast<FunctionType const&>(*_functionCall.expression().annotation().type).stateMutability();
