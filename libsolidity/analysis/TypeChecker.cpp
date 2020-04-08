@@ -2617,6 +2617,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		}
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "name")
 			annotation.isPure = true;
+		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "interfaceId")
+			annotation.isPure = true;
 	}
 
 	return false;

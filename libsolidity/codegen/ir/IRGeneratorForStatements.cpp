@@ -754,6 +754,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		}
 		break;
 	}
+	case FunctionType::Kind::MetaType:
+	{
+		break;
+	}
 	default:
 		solUnimplemented("FunctionKind " + toString(static_cast<int>(functionType->kind())) + " not yet implemented");
 	}
@@ -903,6 +907,15 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		else if (member == "name")
 		{
 			solUnimplementedAssert(false, "");
+		}
+		else if (member == "interfaceId")
+		{
+			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
+			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
+			uint64_t result{0};
+			for (auto const& function: contract.interfaceFunctionList(false))
+				result ^= fromBigEndian<uint64_t>(function.first.ref());
+			define(_memberAccess) << formatNumber(u256{result} << (256 - 32)) << "\n";
 		}
 		else if (set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}.count(member))
 		{

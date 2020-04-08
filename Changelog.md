@@ -4,10 +4,10 @@ Important Bugfixes:
  * Fix tuple assignments with components occupying multiple stack slots and different stack size on left- and right-hand-side.
 
 Language Features:
+ * Add support for EIP 165 interface identifiers with `type(I).interfaceId`.
 
 
 Compiler Features:
-
 
 Bugfixes:
  * AST export: Export `immutable` property in the field `mutability`.
