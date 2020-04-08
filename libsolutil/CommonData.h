@@ -38,7 +38,7 @@
 /// Operators need to stay in the global namespace.
 
 /// Concatenate the contents of a container onto a vector
-template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
+template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U& _b)
 {
 	for (auto const& i: _b)
 		_a.push_back(i);
