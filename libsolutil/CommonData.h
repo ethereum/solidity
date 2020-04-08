@@ -51,7 +51,7 @@ template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U&& _
 	return _a;
 }
 /// Concatenate the contents of a container onto a multiset
-template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U const& _b)
+template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U& _b)
 {
 	_a.insert(_b.begin(), _b.end());
 	return _a;
@@ -64,7 +64,7 @@ template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T..
 	return _a;
 }
 /// Concatenate the contents of a container onto a set
-template <class U, class... T> std::set<T...>& operator+=(std::set<T...>& _a, U const& _b)
+template <class U, class... T> std::set<T...>& operator+=(std::set<T...>& _a, U& _b)
 {
 	_a.insert(_b.begin(), _b.end());
 	return _a;
