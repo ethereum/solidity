@@ -34,12 +34,12 @@ function colony_test
     FORCE_ABIv2=false
     CONFIG="truffle.js"
 
-    truffle_setup https://github.com/erak/colonyNetwork.git develop_060
+    truffle_setup https://github.com/solidity-external-tests/colonyNetwork.git develop_060
     run_install install_fn
 
     cd lib
     rm -Rf dappsys
-    git clone https://github.com/erak/dappsys-monolithic.git -b master_060 dappsys
+    git clone https://github.com/solidity-external-tests/dappsys-monolithic.git -b master_060 dappsys
     cd ..
 
     truffle_run_test compile_fn test_fn
