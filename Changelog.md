@@ -1,5 +1,8 @@
 ### 0.6.6 (unreleased)
 
+Important Bugfixes:
+ * Fix tuple assignments with components occupying multiple stack slots and different stack size on left- and right-hand-side.
+
 Language Features:
 
 
