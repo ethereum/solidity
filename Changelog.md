@@ -1,18 +1,13 @@
-### 0.6.6 (unreleased)
+### 0.6.6 (2020-04-09)
 
 Important Bugfixes:
  * Fix tuple assignments with components occupying multiple stack slots and different stack size on left- and right-hand-side.
-
-Language Features:
-
-
-Compiler Features:
 
 
 Bugfixes:
  * AST export: Export `immutable` property in the field `mutability`.
  * SMTChecker: Fix internal error in the CHC engine when calling inherited functions internally.
- * Type Checker: Error when trying to encode functions with call options gas and value.
+ * Type Checker: Error when trying to encode functions with call options gas and value set.
 
 
 

@@ -1081,5 +1081,9 @@
             "TupleAssignmentMultiStackSlotComponents"
         ],
         "released": "2020-04-06"
+    },
+    "0.6.6": {
+        "bugs": [],
+        "released": "2020-04-09"
     }
 }
