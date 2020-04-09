@@ -61,7 +61,7 @@ private:
 		std::vector<YulString> _params,
 		std::vector<YulString> _returns,
 		bool _movable = true,
-		bool _literalArguments = false
+		std::vector<bool> _literalArguments = std::vector<bool>{}
 	);
 
 	std::map<YulString, BuiltinFunction> m_functions;

@@ -47,13 +47,15 @@ void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
 {
+	vector<bool> const* literalArgs = nullptr;
+
 	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))
 		if (builtin->literalArguments)
-			// We cannot outline function arguments that have to be literals
-			return;
+			literalArgs = &builtin->literalArguments.value();
 
-	for (auto& arg: _funCall.arguments | boost::adaptors::reversed)
-		outlineExpression(arg);
+	for (size_t i = _funCall.arguments.size(); i > 0; i--)
+		if (!literalArgs || !(*literalArgs)[i - 1])
+			outlineExpression(_funCall.arguments[i - 1]);
 }
 
 void ExpressionSplitter::operator()(If& _if)
