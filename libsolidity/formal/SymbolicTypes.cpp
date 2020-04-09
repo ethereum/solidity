@@ -80,14 +80,12 @@ SortPointer smtSort(frontend::Type const& _type)
 		auto tupleType = dynamic_cast<frontend::TupleType const*>(&_type);
 		solAssert(tupleType, "");
 		vector<string> members;
-		static unsigned tupleTypeId = 0;
-		for (auto const& component: tupleType->components())
-			if (component)
-				members.emplace_back(component->identifier() + "_" + to_string(tupleTypeId++));
-			else
-				members.emplace_back("null_type_" + to_string(tupleTypeId++));
+		auto const& tupleName = _type.identifier();
+		auto const& components = tupleType->components();
+		for (unsigned i = 0; i < components.size(); ++i)
+			members.emplace_back(tupleName + "_accessor_" + to_string(i));
 		return make_shared<TupleSort>(
-			_type.identifier() + "_" + to_string(tupleTypeId++),
+			tupleName,
 			members,
 			smtSortAbstractFunction(tupleType->components())
 		);
