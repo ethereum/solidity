@@ -257,14 +257,14 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 		solUnimplementedAssert(false, "");
 	else
 	{
-		bool lValueRequested = _tuple.annotation().lValueRequested;
-		if (lValueRequested)
+		bool willBeWrittenTo = _tuple.annotation().willBeWrittenTo;
+		if (willBeWrittenTo)
 			solAssert(!m_currentLValue, "");
 		if (_tuple.components().size() == 1)
 		{
 			solAssert(_tuple.components().front(), "");
 			_tuple.components().front()->accept(*this);
-			if (lValueRequested)
+			if (willBeWrittenTo)
 				solAssert(!!m_currentLValue, "");
 			else
 				define(_tuple, *_tuple.components().front());
@@ -276,7 +276,7 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 				if (auto const& component = _tuple.components()[i])
 				{
 					component->accept(*this);
-					if (lValueRequested)
+					if (willBeWrittenTo)
 					{
 						solAssert(!!m_currentLValue, "");
 						lvalues.emplace_back(std::move(m_currentLValue));
@@ -285,10 +285,10 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 					else
 						define(IRVariable(_tuple).tupleComponent(i), *component);
 				}
-				else if (lValueRequested)
+				else if (willBeWrittenTo)
 					lvalues.emplace_back();
 
-			if (_tuple.annotation().lValueRequested)
+			if (_tuple.annotation().willBeWrittenTo)
 				m_currentLValue.emplace(IRLValue{
 					*_tuple.annotation().type,
 					IRLValue::Tuple{std::move(lvalues)}
@@ -1694,7 +1694,7 @@ void IRGeneratorForStatements::setLValue(Expression const& _expression, IRLValue
 {
 	solAssert(!m_currentLValue, "");
 
-	if (_expression.annotation().lValueRequested)
+	if (_expression.annotation().willBeWrittenTo)
 	{
 		m_currentLValue.emplace(std::move(_lvalue));
 		solAssert(!_lvalue.type.dataStoredIn(DataLocation::CallData), "");

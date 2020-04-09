@@ -40,15 +40,15 @@ set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _
 
 void VariableUsage::endVisit(Identifier const& _identifier)
 {
-	if (_identifier.annotation().lValueRequested)
+	if (_identifier.annotation().willBeWrittenTo)
 		checkIdentifier(_identifier);
 }
 
 void VariableUsage::endVisit(IndexAccess const& _indexAccess)
 {
-	if (_indexAccess.annotation().lValueRequested)
+	if (_indexAccess.annotation().willBeWrittenTo)
 	{
-		/// identifier.annotation().lValueRequested == false, that's why we
+		/// identifier.annotation().willBeWrittenTo == false, that's why we
 		/// need to check that before.
 		auto identifier = dynamic_cast<Identifier const*>(SMTEncoder::leftmostBase(_indexAccess));
 		if (identifier)

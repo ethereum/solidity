@@ -467,7 +467,7 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	{
 
 		solAssert(smt::isInteger(_op.annotation().type->category()), "");
-		solAssert(_op.subExpression().annotation().lValueRequested, "");
+		solAssert(_op.subExpression().annotation().willBeWrittenTo, "");
 		if (auto identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
 		{
 			auto decl = identifierToVariable(*identifier);
@@ -704,7 +704,7 @@ void SMTEncoder::visitGasLeft(FunctionCall const& _funCall)
 
 void SMTEncoder::endVisit(Identifier const& _identifier)
 {
-	if (_identifier.annotation().lValueRequested)
+	if (_identifier.annotation().willBeWrittenTo)
 	{
 		// Will be translated as part of the node that requested the lvalue.
 	}

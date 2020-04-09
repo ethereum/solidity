@@ -182,7 +182,7 @@ void ASTJsonConverter::appendExpressionAttributes(
 		make_pair("isConstant", _annotation.isConstant),
 		make_pair("isPure", _annotation.isPure),
 		make_pair("isLValue", _annotation.isLValue),
-		make_pair("lValueRequested", _annotation.lValueRequested),
+		make_pair("lValueRequested", _annotation.willBeWrittenTo),
 		make_pair("argumentTypes", typePointerToJson(_annotation.arguments))
 	};
 	_attributes += exprAttributes;

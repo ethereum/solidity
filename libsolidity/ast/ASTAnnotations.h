@@ -234,7 +234,7 @@ struct ExpressionAnnotation: ASTAnnotation
 	/// Whether it is an LValue (i.e. something that can be assigned to).
 	bool isLValue = false;
 	/// Whether the expression is used in a context where the LValue is actually required.
-	bool lValueRequested = false;
+	bool willBeWrittenTo = false;
 	/// Whether the expression is an lvalue that is only assigned.
 	/// Would be false for --, ++, delete, +=, -=, ....
 	bool lValueOfOrdinaryAssignment = false;

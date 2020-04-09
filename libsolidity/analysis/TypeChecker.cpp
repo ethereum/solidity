@@ -1303,7 +1303,7 @@ bool TypeChecker::visit(Conditional const& _conditional)
 		_conditional.trueExpression().annotation().isPure &&
 		_conditional.falseExpression().annotation().isPure;
 
-	if (_conditional.annotation().lValueRequested)
+	if (_conditional.annotation().willBeWrittenTo)
 		m_errorReporter.typeError(
 				_conditional.location(),
 				"Conditional expression as left value is not supported yet."
@@ -1399,7 +1399,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	vector<ASTPointer<Expression>> const& components = _tuple.components();
 	TypePointers types;
 
-	if (_tuple.annotation().lValueRequested)
+	if (_tuple.annotation().willBeWrittenTo)
 	{
 		if (_tuple.isInlineArray())
 			m_errorReporter.fatalTypeError(_tuple.location(), "Inline array type cannot be declared as LValue.");
@@ -3050,7 +3050,7 @@ bool TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 
 void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAssignment)
 {
-	_expression.annotation().lValueRequested = true;
+	_expression.annotation().willBeWrittenTo = true;
 	_expression.annotation().lValueOfOrdinaryAssignment = _ordinaryAssignment;
 	_expression.accept(*this);
 
