@@ -253,6 +253,13 @@ public:
 	/// Return value: pointer
 	std::string allocationFunction();
 
+	/// @returns the name of the function that allocates temporary memory with predefined size
+	/// Return value: pointer
+	std::string allocationTemporaryMemoryFunction();
+
+	/// @returns the name of the function that releases previously allocated temporary memory
+	std::string releaseTemporaryMemoryFunction();
+
 	/// @returns the name of a function that zeroes an array.
 	/// signature: (dataStart, dataSizeInBytes) ->
 	std::string zeroMemoryArrayFunction(ArrayType const& _type);

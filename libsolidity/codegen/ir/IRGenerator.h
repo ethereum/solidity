@@ -50,10 +50,16 @@ public:
 
 	/// Generates and returns the IR code, in unoptimized and optimized form
 	/// (or just pretty-printed, depending on the optimizer settings).
-	std::pair<std::string, std::string> run(ContractDefinition const& _contract);
+	std::pair<std::string, std::string> run(
+		ContractDefinition const& _contract,
+		std::map<ContractDefinition const*, std::string const> const& _otherYulSources
+	);
 
 private:
-	std::string generate(ContractDefinition const& _contract);
+	std::string generate(
+		ContractDefinition const& _contract,
+		std::map<ContractDefinition const*, std::string const> const& _otherYulSources
+	);
 	std::string generate(Block const& _block);
 
 	/// Generates code for all the functions from the function generation queue.
@@ -87,8 +93,6 @@ private:
 	std::string deployCode(ContractDefinition const& _contract);
 	std::string callValueCheck();
 
-	std::string creationObjectName(ContractDefinition const& _contract);
-	std::string runtimeObjectName(ContractDefinition const& _contract);
 	std::string implicitConstructorName(ContractDefinition const& _contract);
 
 	std::string dispatchRoutine(ContractDefinition const& _contract);

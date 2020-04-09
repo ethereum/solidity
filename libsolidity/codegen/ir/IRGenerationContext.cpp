@@ -21,6 +21,7 @@
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 
 #include <libsolidity/codegen/YulUtilFunctions.h>
+#include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 
@@ -96,6 +97,15 @@ string IRGenerationContext::functionName(VariableDeclaration const& _varDecl)
 	return "getter_fun_" + _varDecl.name() + "_" + to_string(_varDecl.id());
 }
 
+string IRGenerationContext::creationObjectName(ContractDefinition const& _contract) const
+{
+	return _contract.name() + "_" + toString(_contract.id());
+}
+string IRGenerationContext::runtimeObjectName(ContractDefinition const& _contract) const
+{
+	return _contract.name() + "_" + toString(_contract.id()) + "_deployed";
+}
+
 string IRGenerationContext::newYulVariable()
 {
 	return "_" + to_string(++m_varCounter);
@@ -168,6 +178,11 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 YulUtilFunctions IRGenerationContext::utils()
 {
 	return YulUtilFunctions(m_evmVersion, m_revertStrings, m_functions);
+}
+
+ABIFunctions IRGenerationContext::abiFunctions()
+{
+	return ABIFunctions(m_evmVersion, m_revertStrings, m_functions);
 }
 
 std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message)
