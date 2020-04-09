@@ -58,6 +58,7 @@
         {
           "constant": false,
           "id": 8,
+          "mutability": "mutable",
           "name": "a",
           "nodeType": "VariableDeclaration",
           "overrides": null,
@@ -113,6 +114,7 @@
         {
           "constant": false,
           "id": 12,
+          "mutability": "mutable",
           "name": "b",
           "nodeType": "VariableDeclaration",
           "overrides": null,
@@ -166,6 +168,7 @@
         {
           "constant": false,
           "id": 16,
+          "mutability": "mutable",
           "name": "c",
           "nodeType": "VariableDeclaration",
           "overrides": null,

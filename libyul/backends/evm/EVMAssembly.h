@@ -38,7 +38,7 @@ class EVMAssembly: public AbstractAssembly
 {
 public:
 	explicit EVMAssembly(bool _evm15 = false): m_evm15(_evm15) { }
-	virtual ~EVMAssembly() = default;
+	~EVMAssembly() override = default;
 
 	/// Set a new source location valid starting from the next instruction.
 	void setSourceLocation(langutil::SourceLocation const& _location) override;

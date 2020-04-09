@@ -100,6 +100,7 @@
                       "attributes":
                       {
                         "constant": false,
+                        "mutability": "mutable",
                         "name": "x",
                         "overrides": null,
                         "scope": 9,

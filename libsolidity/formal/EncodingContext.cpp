@@ -25,13 +25,8 @@ using namespace solidity::util;
 using namespace solidity::frontend::smt;
 
 EncodingContext::EncodingContext():
-	m_thisAddress(make_unique<SymbolicAddressVariable>("this", *this))
+	m_state(*this)
 {
-	auto sort = make_shared<ArraySort>(
-		SortProvider::intSort,
-		SortProvider::intSort
-	);
-	m_balances = make_unique<SymbolicVariable>(sort, "balances", *this);
 }
 
 void EncodingContext::reset()
@@ -39,8 +34,7 @@ void EncodingContext::reset()
 	resetAllVariables();
 	m_expressions.clear();
 	m_globalContext.clear();
-	m_thisAddress->resetIndex();
-	m_balances->resetIndex();
+	m_state.reset();
 	m_assertions.clear();
 }
 
@@ -183,40 +177,6 @@ bool EncodingContext::knownGlobalSymbol(string const& _var) const
 	return m_globalContext.count(_var);
 }
 
-// Blockchain
-
-Expression EncodingContext::thisAddress()
-{
-	return m_thisAddress->currentValue();
-}
-
-Expression EncodingContext::balance()
-{
-	return balance(m_thisAddress->currentValue());
-}
-
-Expression EncodingContext::balance(Expression _address)
-{
-	return Expression::select(m_balances->currentValue(), move(_address));
-}
-
-void EncodingContext::transfer(Expression _from, Expression _to, Expression _value)
-{
-	unsigned indexBefore = m_balances->index();
-	addBalance(_from, 0 - _value);
-	addBalance(_to, move(_value));
-	unsigned indexAfter = m_balances->index();
-	solAssert(indexAfter > indexBefore, "");
-	m_balances->increaseIndex();
-	/// Do not apply the transfer operation if _from == _to.
-	auto newBalances = Expression::ite(
-		move(_from) == move(_to),
-		m_balances->valueAtIndex(indexBefore),
-		m_balances->valueAtIndex(indexAfter)
-	);
-	addAssertion(m_balances->currentValue() == newBalances);
-}
-
 /// Solver.
 
 Expression EncodingContext::assertions()
@@ -232,7 +192,7 @@ void EncodingContext::pushSolver()
 	if (m_accumulateAssertions)
 		m_assertions.push_back(assertions());
 	else
-		m_assertions.push_back(smt::Expression(true));
+		m_assertions.emplace_back(true);
 }
 
 void EncodingContext::popSolver()
@@ -247,17 +207,4 @@ void EncodingContext::addAssertion(Expression const& _expr)
 		m_assertions.push_back(_expr);
 	else
 		m_assertions.back() = _expr && move(m_assertions.back());
-}
-
-/// Private helpers.
-
-void EncodingContext::addBalance(Expression _address, Expression _value)
-{
-	auto newBalances = Expression::store(
-		m_balances->currentValue(),
-		_address,
-		balance(_address) + move(_value)
-	);
-	m_balances->increaseIndex();
-	addAssertion(newBalances == m_balances->currentValue());
 }

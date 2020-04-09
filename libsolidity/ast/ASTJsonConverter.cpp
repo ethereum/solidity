@@ -378,6 +378,7 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 		make_pair("name", _node.name()),
 		make_pair("typeName", toJsonOrNull(_node.typeName())),
 		make_pair("constant", _node.isConstant()),
+		make_pair("mutability", VariableDeclaration::mutabilityToString(_node.mutability())),
 		make_pair("stateVariable", _node.isStateVariable()),
 		make_pair("storageLocation", location(_node.referenceLocation())),
 		make_pair("overrides", _node.overrides() ? toJson(*_node.overrides()) : Json::nullValue),

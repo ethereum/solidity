@@ -50,12 +50,12 @@ public:
 		ASTWalker::operator()(_funDef);
 
 		auto& funType = functionTypes[_funDef.name];
-		for (auto const arg: _funDef.parameters)
+		for (auto const& arg: _funDef.parameters)
 		{
 			funType.parameters.emplace_back(arg.type);
 			variableTypes[arg.name] = arg.type;
 		}
-		for (auto const ret: _funDef.returnVariables)
+		for (auto const& ret: _funDef.returnVariables)
 		{
 			funType.returns.emplace_back(ret.type);
 			variableTypes[ret.name] = ret.type;

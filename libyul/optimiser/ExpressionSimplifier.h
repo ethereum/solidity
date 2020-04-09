@@ -46,7 +46,7 @@ public:
 	static void run(OptimiserStepContext&, Block& _ast);
 
 	using ASTModifier::operator();
-	virtual void visit(Expression& _expression);
+	void visit(Expression& _expression) override;
 
 private:
 	explicit ExpressionSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}

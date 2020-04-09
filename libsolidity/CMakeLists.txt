@@ -106,6 +106,8 @@ set(sources
 	formal/Sorts.h
 	formal/SSAVariable.cpp
 	formal/SSAVariable.h
+	formal/SymbolicState.cpp
+	formal/SymbolicState.h
 	formal/SymbolicTypes.cpp
 	formal/SymbolicTypes.h
 	formal/SymbolicVariables.cpp

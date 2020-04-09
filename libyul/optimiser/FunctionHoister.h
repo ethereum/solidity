@@ -42,7 +42,7 @@ public:
 	static void run(OptimiserStepContext&, Block& _ast) { FunctionHoister{}(_ast); }
 
 	using ASTModifier::operator();
-	virtual void operator()(Block& _block);
+	void operator()(Block& _block) override;
 
 private:
 	FunctionHoister() = default;

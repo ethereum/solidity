@@ -47,15 +47,15 @@ string toString(SideEffects const& _sideEffects)
 {
 	vector<string> ret;
 	if (_sideEffects.movable)
-		ret.push_back("movable");
+		ret.emplace_back("movable");
 	if (_sideEffects.sideEffectFree)
-		ret.push_back("sideEffectFree");
+		ret.emplace_back("sideEffectFree");
 	if (_sideEffects.sideEffectFreeIfNoMSize)
-		ret.push_back("sideEffectFreeIfNoMSize");
+		ret.emplace_back("sideEffectFreeIfNoMSize");
 	if (_sideEffects.invalidatesStorage)
-		ret.push_back("invalidatesStorage");
+		ret.emplace_back("invalidatesStorage");
 	if (_sideEffects.invalidatesMemory)
-		ret.push_back("invalidatesMemory");
+		ret.emplace_back("invalidatesMemory");
 	return joinHumanReadable(ret);
 }
 }

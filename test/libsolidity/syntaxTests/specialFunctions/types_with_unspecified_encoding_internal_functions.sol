@@ -1,12 +1,11 @@
 contract C {
     function f() public pure {
-        bytes32 h = keccak256(abi.encodePacked(keccak256, f, this.f.gas, blockhash));
+        bytes32 h = keccak256(abi.encodePacked(keccak256, f, this.f{gas: 2}, blockhash));
         h;
     }
 }
 // ----
-// Warning: (105-115): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
 // TypeError: (91-100): This type cannot be encoded.
 // TypeError: (102-103): This type cannot be encoded.
-// TypeError: (105-115): This type cannot be encoded.
-// TypeError: (117-126): This type cannot be encoded.
+// TypeError: (105-119): This type cannot be encoded.
+// TypeError: (121-130): This type cannot be encoded.

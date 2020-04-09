@@ -136,7 +136,7 @@ private:
 	/// Evaluates the expression and returns its value.
 	std::vector<u256> evaluateMulti(Expression const& _expression);
 
-	void openScope() { m_scopes.push_back({}); }
+	void openScope() { m_scopes.emplace_back(); }
 	/// Unregisters variables and functions.
 	void closeScope();
 

@@ -843,7 +843,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 			if (dynamicMember)
 				solAssert(dynamic, "");
 
-			members.push_back({});
+			members.emplace_back();
 			members.back()["preprocess"] = "";
 
 			switch (_from.location())
@@ -1336,7 +1336,7 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 			memberTempl("memoryOffset", toCompactHexWithPrefix(_type.memoryOffsetOfMember(member.name)));
 			memberTempl("abiDecode", abiDecodingFunction(*member.type, _fromMemory, false));
 
-			members.push_back({});
+			members.emplace_back();
 			members.back()["decode"] = memberTempl.render();
 			members.back()["memberName"] = member.name;
 			headPos += decodingType->calldataHeadSize();

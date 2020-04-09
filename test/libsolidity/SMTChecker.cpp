@@ -34,14 +34,14 @@ namespace solidity::frontend::test
 class SMTCheckerFramework: public AnalysisFramework
 {
 protected:
-	virtual std::pair<SourceUnit const*, ErrorList>
+	std::pair<SourceUnit const*, ErrorList>
 	parseAnalyseAndReturnError(
 		std::string const& _source,
 		bool _reportWarnings = false,
 		bool _insertVersionPragma = true,
 		bool _allowMultipleErrors = false,
 		bool _allowRecoveryErrors = false
-	)
+	) override
 	{
 		return AnalysisFramework::parseAnalyseAndReturnError(
 			"pragma experimental SMTChecker;\n" + _source,
