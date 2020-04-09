@@ -1430,41 +1430,37 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		{
 			if (!components[i])
 				m_errorReporter.fatalTypeError(_tuple.location(), "Tuple component cannot be empty.");
-			else if (components[i])
-			{
-				components[i]->accept(*this);
-				types.push_back(type(*components[i]));
 
-				if (types[i]->category() == Type::Category::Tuple)
-					if (dynamic_cast<TupleType const&>(*types[i]).components().empty())
-					{
-						if (_tuple.isInlineArray())
-							m_errorReporter.fatalTypeError(components[i]->location(), "Array component cannot be empty.");
-						m_errorReporter.typeError(components[i]->location(), "Tuple component cannot be empty.");
-					}
+			components[i]->accept(*this);
+			types.push_back(type(*components[i]));
 
-				// Note: code generation will visit each of the expression even if they are not assigned from.
-				if (types[i]->category() == Type::Category::RationalNumber && components.size() > 1)
-					if (!dynamic_cast<RationalNumberType const&>(*types[i]).mobileType())
-						m_errorReporter.fatalTypeError(components[i]->location(), "Invalid rational number.");
-
-				if (_tuple.isInlineArray())
+			if (types[i]->category() == Type::Category::Tuple)
+				if (dynamic_cast<TupleType const&>(*types[i]).components().empty())
 				{
-					solAssert(!!types[i], "Inline array cannot have empty components");
-
-					if ((i == 0 || inlineArrayType) && !types[i]->mobileType())
-						m_errorReporter.fatalTypeError(components[i]->location(), "Invalid mobile type.");
-
-					if (i == 0)
-						inlineArrayType = types[i]->mobileType();
-					else if (inlineArrayType)
-						inlineArrayType = Type::commonType(inlineArrayType, types[i]);
+					if (_tuple.isInlineArray())
+						m_errorReporter.fatalTypeError(components[i]->location(), "Array component cannot be empty.");
+					m_errorReporter.typeError(components[i]->location(), "Tuple component cannot be empty.");
 				}
-				if (!components[i]->annotation().isPure)
-					isPure = false;
+
+			// Note: code generation will visit each of the expression even if they are not assigned from.
+			if (types[i]->category() == Type::Category::RationalNumber && components.size() > 1)
+				if (!dynamic_cast<RationalNumberType const&>(*types[i]).mobileType())
+					m_errorReporter.fatalTypeError(components[i]->location(), "Invalid rational number.");
+
+			if (_tuple.isInlineArray())
+			{
+				solAssert(!!types[i], "Inline array cannot have empty components");
+
+				if ((i == 0 || inlineArrayType) && !types[i]->mobileType())
+					m_errorReporter.fatalTypeError(components[i]->location(), "Invalid mobile type.");
+
+				if (i == 0)
+					inlineArrayType = types[i]->mobileType();
+				else if (inlineArrayType)
+					inlineArrayType = Type::commonType(inlineArrayType, types[i]);
 			}
-			else
-				types.push_back(TypePointer());
+			if (!components[i]->annotation().isPure)
+				isPure = false;
 		}
 		_tuple.annotation().isPure = isPure;
 		if (_tuple.isInlineArray())
