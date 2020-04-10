@@ -100,16 +100,18 @@ if (OSSFUZZ)
 
     add_executable(sol_proto_ossfuzz
             solProtoFuzzer.cpp
-            ../fuzzer_common.cpp
             protoToSol.cpp
             solProto.pb.cc
-            abiV2Proto.pb.cc
-            protoToAbiV2.cpp
+            abiV2FuzzerCommon.cpp
+            ../../EVMHost.cpp
+            SolProtoAdaptor.cpp
     )
     target_include_directories(sol_proto_ossfuzz PRIVATE
             /usr/include/libprotobuf-mutator
     )
     target_link_libraries(sol_proto_ossfuzz PRIVATE solidity libsolc
+            evmc
+            evmone-standalone
             protobuf-mutator-libfuzzer.a
             protobuf-mutator.a
             protobuf.a
