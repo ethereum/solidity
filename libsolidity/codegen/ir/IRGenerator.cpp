@@ -101,20 +101,13 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	t("memoryInit", memoryInit());
 	t("constructor", constructorCode(_contract));
 	t("deploy", deployCode(_contract));
-	// We generate code for all functions and rely on the optimizer to remove them again
-	// TODO it would probably be better to only generate functions when internalDispatch or
-	// virtualFunctionName is called - same below.
-	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
-		for (auto const* fun: contract->definedFunctions())
-			generateFunction(*fun);
+	generateQueuedFunctions();
 	t("functions", m_context.functionCollector().requestedFunctions());
 
 	resetContext(_contract);
 	t("RuntimeObject", runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
-	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
-		for (auto const* fun: contract->definedFunctions())
-			generateFunction(*fun);
+	generateQueuedFunctions();
 	t("runtimeFunctions", m_context.functionCollector().requestedFunctions());
 	return t.render();
 }
@@ -124,6 +117,13 @@ string IRGenerator::generate(Block const& _block)
 	IRGeneratorForStatements generator(m_context, m_utils);
 	_block.accept(generator);
 	return generator.code();
+}
+
+void IRGenerator::generateQueuedFunctions()
+{
+	while (!m_context.functionGenerationQueueEmpty())
+		// NOTE: generateFunction() may modify function generation queue
+		generateFunction(*m_context.dequeueFunctionForCodeGeneration());
 }
 
 string IRGenerator::generateFunction(FunctionDefinition const& _function)
@@ -290,7 +290,7 @@ string IRGenerator::constructorCode(ContractDefinition const& _contract)
 		t("assignToParams", paramVars == 0 ? "" : "let " + suffixedVariableNameList("param_", 0, paramVars) + " := ");
 		t("params", suffixedVariableNameList("param_", 0, paramVars));
 		t("abiDecode", abiFunctions.tupleDecoder(constructor->functionType(false)->parameterTypes(), true));
-		t("constructorName", m_context.functionName(*constructor));
+		t("constructorName", m_context.enqueueFunctionForCodeGeneration(*constructor));
 
 		out << t.render();
 	}
@@ -369,7 +369,7 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		templ["retParams"] = suffixedVariableNameList("ret_", retVars, 0);
 
 		if (FunctionDefinition const* funDef = dynamic_cast<FunctionDefinition const*>(&type->declaration()))
-			templ["function"] = generateFunction(*funDef);
+			templ["function"] = m_context.enqueueFunctionForCodeGeneration(*funDef);
 		else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(&type->declaration()))
 			templ["function"] = generateGetter(*varDecl);
 		else
@@ -385,14 +385,14 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		string fallbackCode;
 		if (!fallback->isPayable())
 			fallbackCode += callValueCheck();
-		fallbackCode += generateFunction(*fallback) + "() stop()";
+		fallbackCode += m_context.enqueueFunctionForCodeGeneration(*fallback) + "() stop()";
 
 		t("fallback", fallbackCode);
 	}
 	else
 		t("fallback", "revert(0, 0)");
 	if (FunctionDefinition const* etherReceiver = _contract.receiveFunction())
-		t("receiveEther", generateFunction(*etherReceiver) + "() stop()");
+		t("receiveEther", m_context.enqueueFunctionForCodeGeneration(*etherReceiver) + "() stop()");
 	else
 		t("receiveEther", "");
 	return t.render();
@@ -412,6 +412,10 @@ string IRGenerator::memoryInit()
 
 void IRGenerator::resetContext(ContractDefinition const& _contract)
 {
+	solAssert(
+		m_context.functionGenerationQueueEmpty(),
+		"Reset function generation queue while it still had functions."
+	);
 	solAssert(
 		m_context.functionCollector().requestedFunctions().empty(),
 		"Reset context while it still had functions."

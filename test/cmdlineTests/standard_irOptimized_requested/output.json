@@ -10,8 +10,6 @@ object \"C_6\" {
         mstore(64, 128)
         codecopy(0, dataoffset(\"C_6_deployed\"), datasize(\"C_6_deployed\"))
         return(0, datasize(\"C_6_deployed\"))
-        function fun_f_5()
-        { }
     }
     object \"C_6_deployed\" {
         code {

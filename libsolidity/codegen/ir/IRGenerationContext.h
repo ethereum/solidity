@@ -30,6 +30,7 @@
 
 #include <libsolutil/Common.h>
 
+#include <set>
 #include <string>
 #include <memory>
 #include <vector>
@@ -61,6 +62,15 @@ public:
 
 	MultiUseYulFunctionCollector& functionCollector() { return m_functions; }
 
+	/// Adds a Solidity function to the function generation queue and returns the name of the
+	/// corresponding Yul function.
+	std::string enqueueFunctionForCodeGeneration(FunctionDefinition const& _function);
+
+	/// Pops one item from the function generation queue. Must not be called if the queue is empty.
+	FunctionDefinition const* dequeueFunctionForCodeGeneration();
+
+	bool functionGenerationQueueEmpty() { return m_functionGenerationQueue.empty(); }
+
 	/// Sets the most derived contract (the one currently being compiled)>
 	void setMostDerivedContract(ContractDefinition const& _mostDerivedContract)
 	{
@@ -82,7 +92,6 @@ public:
 
 	std::string functionName(FunctionDefinition const& _function);
 	std::string functionName(VariableDeclaration const& _varDecl);
-	std::string virtualFunctionName(FunctionDefinition const& _functionDeclaration);
 
 	std::string newYulVariable();
 
@@ -113,6 +122,15 @@ private:
 	std::map<VariableDeclaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	MultiUseYulFunctionCollector m_functions;
 	size_t m_varCounter = 0;
+
+	/// Function definitions queued for code generation. They're the Solidity functions whose calls
+	/// were discovered by the IR generator during AST traversal.
+	/// Note that the queue gets filled in a lazy way - new definitions can be added while the
+	/// collected ones get removed and traversed.
+	/// The order and duplicates are irrelevant here (hence std::set rather than std::queue) as
+	/// long as the order of Yul functions in the generated code is deterministic and the same on
+	/// all platforms - which is a property guaranteed by MultiUseYulFunctionCollector.
+	std::set<FunctionDefinition const*> m_functionGenerationQueue;
 };
 
 }

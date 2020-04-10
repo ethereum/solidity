@@ -41,9 +41,14 @@ public:
 	std::string createFunction(std::string const& _name, std::function<std::string()> const& _creator);
 
 	/// @returns concatenation of all generated functions.
+	/// Guarantees that the order of functions in the generated code is deterministic and
+	/// platform-independent.
 	/// Clears the internal list, i.e. calling it again will result in an
 	/// empty return value.
 	std::string requestedFunctions();
+
+	/// @returns true IFF a function with the specified name has already been collected.
+	bool contains(std::string const& _name) const { return m_requestedFunctions.count(_name) > 0; }
 
 private:
 	/// Map from function name to code for a multi-use function.
