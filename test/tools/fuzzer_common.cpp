@@ -85,7 +85,7 @@ void FuzzerUtil::testCompiler(string const& _input, bool _optimize)
 	compiler.setOptimiserSettings(optimiserSettings);
 	try
 	{
-		compiler.compile();
+		solAssert(compiler.compile(), "Compilation failed");
 	}
 	catch (Error const&)
 	{
@@ -94,6 +94,12 @@ void FuzzerUtil::testCompiler(string const& _input, bool _optimize)
 	{
 	}
 	catch (UnimplementedFeatureError const&)
+	{
+	}
+	catch (CompilerError const&)
+	{
+	}
+	catch (StackTooDeepException const&)
 	{
 	}
 }

@@ -15,19 +15,102 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sstream>
-#include "protoToSol.h"
-#include "protoToAbiV2.h"
+#include <test/tools/ossfuzz/protoToSol.h>
+#include <test/tools/ossfuzz/SolProtoAdaptor.h>
+
+#include <liblangutil/Exceptions.h>
 
 #include <libsolutil/Whiskers.h>
 
+#include <sstream>
+
 using namespace solidity::test::solprotofuzzer;
+using namespace solidity::test::solprotofuzzer::adaptor;
 using namespace std;
 using namespace solidity::util;
 
 string ProtoConverter::protoToSolidity(Program const& _p)
 {
+	m_randomGen = make_shared<SolRandomNumGenerator>(_p.seed());
 	return visit(_p);
+}
+
+string ProtoConverter::visit(TestContract const& _testContract)
+{
+	string testCode;
+	string usingLibDecl;
+	m_libraryTest = false;
+
+	switch (_testContract.type())
+	{
+	case TestContract::LIBRARY:
+	{
+		if (emptyLibraryTests())
+		{
+			testCode = Whiskers(R"(
+		return 0;)")
+				.render();
+		}
+		else
+		{
+			m_libraryTest = true;
+			auto testTuple = pseudoRandomLibraryTest(_testContract.programidx());
+			m_libraryName = get<0>(testTuple);
+			usingLibDecl = Whiskers(R"(
+	using <libraryName> for uint;)")
+				("libraryName", get<0>(testTuple))
+				.render();
+			testCode = Whiskers(R"(
+		uint x;
+		if (x.<testFunction>() != <expectedOutput>)
+			return 1;
+		return 0;)")
+				("testFunction", get<1>(testTuple))
+				("expectedOutput", get<2>(testTuple))
+				.render();
+		}
+		break;
+	}
+	case TestContract::CONTRACT:
+#if 0
+		testCode = Whiskers(R"(
+		<contractName> testContract = new <contractName>();
+		if (testContract.<testFunction>() != <expectedOutput>)
+			return 1;
+		return 0;)")
+			("contractName", "")
+			("testFunction", "")
+			("expectedOutput", "")
+			.render();
+#else
+		testCode = Whiskers(R"(
+		return 0;)")
+				.render();
+#endif
+		break;
+	}
+
+	return Whiskers(R"(
+contract C {<?isLibrary><usingDecl></isLibrary>
+	function test() public returns (uint)
+	{<testCode>
+	}
+}
+)")
+		("isLibrary", m_libraryTest)
+		("usingDecl", usingLibDecl)
+		("testCode", testCode)
+		.render();
+}
+
+bool ProtoConverter::libraryTest() const
+{
+	return m_libraryTest;
+}
+
+string ProtoConverter::libraryName() const
+{
+	return m_libraryName;
 }
 
 string ProtoConverter::visit(Program const& _p)
@@ -40,25 +123,32 @@ string ProtoConverter::visit(Program const& _p)
 
 	program << Whiskers(R"(
 pragma solidity >=0.0;
-pragma experimental ABIEncoderV2;
-pragma experimental SMTChecker;
 
 <contracts>
+
+<testContract>
 )")
 	("contracts", contracts.str())
+	("testContract", visit(_p.test()))
 	.render();
 	return program.str();
 }
 
 string ProtoConverter::visit(ContractType const& _contractType)
 {
+	m_mostDerivedAbstractContract = false;
 	switch (_contractType.contract_type_oneof_case())
 	{
 	case ContractType::kC:
-		return visit(_contractType.c());
+		m_mostDerivedAbstractContract = _contractType.c().abstract();
+		m_mostDerivedProgram = MostDerivedProgram::CONTRACT;
+//		return visit(_contractType.c());
+		return "";
 	case ContractType::kL:
+		m_mostDerivedProgram = MostDerivedProgram::LIBRARY;
 		return visit(_contractType.l());
 	case ContractType::kI:
+		m_mostDerivedProgram = MostDerivedProgram::INTERFACE;
 		return visit(_contractType.i());
 	case ContractType::CONTRACT_TYPE_ONEOF_NOT_SET:
 		return "";
@@ -70,734 +160,569 @@ string ProtoConverter::visit(ContractOrInterface const& _contractOrInterface)
 	switch (_contractOrInterface.contract_or_interface_oneof_case())
 	{
 	case ContractOrInterface::kC:
-		return visit(_contractOrInterface.c());
+//		return visit(_contractOrInterface.c());
+		return "";
 	case ContractOrInterface::kI:
-		return visit(_contractOrInterface.i());
+//		return visit(_contractOrInterface.i());
+		return "";
 	case ContractOrInterface::CONTRACT_OR_INTERFACE_ONEOF_NOT_SET:
 		return "";
 	}
 }
 
-string ProtoConverter::traverseOverrides(Interface const& _interface, bool _isOverride, bool _implement, bool _inheritedByContract, bool _isVirtual)
+bool ProtoConverter::contractFunctionImplemented(
+	Contract const* _contract,
+	CIFunc _function
+)
+{
+	auto v = m_contractFunctionMap[_contract];
+	for (auto &e: v)
+		if (get<0>(e) == _function)
+			return get<1>(e);
+	return false;
+}
+
+bool ProtoConverter::contractFunctionVirtual(
+	Contract const* _contract,
+	CIFunc _function
+)
+{
+	auto v = m_contractFunctionMap[_contract];
+	for (auto &e: v)
+		if (get<0>(e) == _function)
+			return get<2>(e);
+	return false;
+}
+
+#if 0
+string ProtoConverter::mostDerivedInterfaceOverrides(Interface const& _interface)
 {
 	ostringstream funcs;
 
-	for (auto ancestor = _interface.ancestors().rbegin(); ancestor != _interface.ancestors().rend(); ancestor++)
+	for (auto base = _interface.bases().rbegin(); base != _interface.bases().rend(); base++)
 	{
-		unsigned index = 0;
-		m_numContracts++;
-
-		m_numStructs = 0;
-
-		for (auto& f: ancestor->funcdef())
+		for (auto& f: base->funcdef())
 		{
+			// An interface may override base interface's function
+			bool override = pseudoRandomCoinFlip();
+			if (!override)
+				continue;
+			funcs << overrideFunction(&f, false, false);
+		}
+		funcs << mostDerivedInterfaceOverrides(*base);
+	}
+	return funcs.str();
+}
+
+string ProtoConverter::mostDerivedContractOverrides(Interface const& _interface)
+{
+	ostringstream funcs;
+
+	for (auto base = _interface.bases().rbegin(); base != _interface.bases().rend(); base++)
+	{
+		for (auto& f: base->funcdef())
+		{
+			bool override = pseudoRandomCoinFlip() || mostDerivedProgramAbstractContract();
+
+			/// We can arrive here from contract through other contracts and interfaces.
+			/// We define most derived contract (MDC) as the most derived contract in
+			/// the inheritence chain to which the visited interface belongs to.
+
+			/// When MDC is not abstract we must implement (with override) all
+			/// interface functions that MDC inherits unless it has been implemented
+			/// by some other contract in the inheritence chain that MDC also derives
+			/// from.
+			/// In other words, if an interface function has never been implemented
+			/// thus far in the inheritence chain, it must be implemented.
+			/// If it has already been implemented, it may be reimplemented provided
+			/// it is virtual.
+			/// When reimplementing, it may be revirtualized.
+
+			/// When MDC is abstract, we may or may not redeclare interface function.
+			/// If interface function has been implemented in the inheritence chain,
+			/// and we redeclare it, we must reimplement it.
+			/// If inheritence function has not been implemented and we redeclare it,
+			/// we may implement it.
+			/// If we implement it, it may be marked virtual.
+			/// If we don't implement it, it must be marked virtual.
+
+			/// . We may virtualize.
+			/// We create a pair <interfaceFunction, virtualized> and add it to list of
+			/// implemented interface functions.
+
+			/// When IAC is abstract:
+			/// - we may redeclare
+			/// - if redeclared, we may implement
+			/// - if we do not implement redeclared function then:
+			///  - we must override and virtualize
+			///  - add to list of unimplemented interface functions
+			/// - if we implement then:
+			///  - we must override
+			///  - we may virtualize
+			///  - create a pair <interfaceFunction, virtualized> and add it to list of
+			/// implemented interface functions.
+
+
+			///   - ancestor contract is not abstract and this interface function
+			/// has been implemented by some other contract in the traversal path
+			///	that also virtualizes the function.
+			/// When we override, we may mark it as virtual.
+
+			/// We may override when ancestor contract is abstract
+			/// If ancestor contract is overriding, we may or may not implement it.
+			/// If we do not implement it, we must mark it virtual since otherwise
+			/// we are left with unimplementable function.
+			/// If we implement it, we may mark it as virtual.
 			string funcStr = visit(
 				f,
 				index++,
-				true,
-				m_interfaceNameMap[&*ancestor],
-				_implement,
-				_inheritedByContract,
-				_isVirtual
+				override,
+				programName(&*base)
 			);
 
-			if (f.override() || _isOverride)
+			if (override)
 				funcs << funcStr;
 		}
-		funcs << traverseOverrides(*ancestor, _isOverride, _implement, _inheritedByContract, _isVirtual);
+		funcs << mostDerivedContractOverrides(*base);
 	}
 	return funcs.str();
 }
 
-string ProtoConverter::traverseOverrides(Contract const& _contract, bool _isAbstract)
+pair<bool, bool> ProtoConverter::contractFunctionParams(
+	Contract const* _contract,
+	ContractFunction const* _function
+)
 {
-	ostringstream funcs;
-	bool isImplemented = m_isImplemented;
-
-	for (auto ancestor = _contract.ancestors().rbegin(); ancestor != _contract.ancestors().rend(); ancestor++)
-	{
-		if (ancestor->contract_or_interface_oneof_case() == ContractOrInterface::CONTRACT_OR_INTERFACE_ONEOF_NOT_SET)
-			continue;
-
-		m_numContracts++;
-		m_numStructs = 0;
-
-		if (ancestor->has_c())
-		{
-			unsigned index = 0;
-			if (_contract.abstract() && !ancestor->c().abstract())
-				m_isImplemented = true;
-
-			for (auto& f: ancestor->c().funcdef())
-			{
-				string funcStr = visit(
-					f,
-					index++,
-					true,
-					_isAbstract,
-					f.virtualfunc() || !f.implemented(),
-					m_isImplemented,
-					m_contractNameMap[&ancestor->c()]
-				);
-				if ((f.virtualfunc() && !f.implemented() && !_isAbstract) ||
-				(f.virtualfunc() && f.override()) ||
-				(ancestor->c().abstract() && !f.implemented()))
-					funcs << funcStr;
-			}
-			funcs << traverseOverrides(ancestor->c(), _isAbstract);
-		}
-		else if (ancestor->has_i())
-		{
-			unsigned index = 0;
-			for (auto& f: ancestor->i().funcdef())
-				funcs << visit(
-					f,
-					index++,
-					true,
-					m_interfaceNameMap[&ancestor->i()],
-					true,
-					true,
-					true
-				);
-			funcs << traverseOverrides(ancestor->i(), true, true, true, true);
-		}
-	}
-	m_isImplemented = isImplemented;
-	return funcs.str();
+	// If contract is abstract, we may implement this function. If contract
+	// is not abstract, we must implement this function.
+	bool implement = !_contract->abstract() || pseudoRandomCoinFlip();
+	// We may mark a non-overridden function as virtual.
+	// We must mark an unimplemented abstract contract function as
+	// virtual.
+	bool virtualFunc = _function->virtualfunc() || (_contract->abstract() && !implement);
+	return pair(implement, virtualFunc);
 }
 
-tuple<string, string, string> ProtoConverter::visitContractHelper(CI _cOrI, string _programName)
+pair<bool, bool> ProtoConverter::contractFunctionOverrideParams(
+	Contract const* _base,
+	Contract const* _derived,
+	CIFunc _f
+)
 {
-	ostringstream ancestors;
-	ostringstream funcs;
-	ostringstream ancestorNames;
+	bool baseAbstract = _base->abstract();
+	bool derivedAbstract = _derived->abstract();
 
-	string separator{};
-	if (holds_alternative<Interface const*>(_cOrI))
+	bool implement = false;
+	bool revirtualize = false;
+
+	// There are four possibilities here:
+	// 1. both base and derived are abstract,
+	// 2. base abstract, derived not
+	// 3. base not abstract, derived is
+	// 4. both base and derived are not abstract
+	if (baseAbstract && derivedAbstract)
 	{
-		auto interface = get<Interface const*>(_cOrI);
-		for (auto &ancestor: interface->ancestors())
-		{
-			string ancestorStr = visit(ancestor);
-			if (ancestorStr.empty())
-				continue;
-			ancestors << ancestorStr;
-			ancestorNames << separator
-						<< m_interfaceNameMap[&ancestor];
-			if (separator.empty())
-				separator = ", ";
-		}
+		// Case 1: Both base and derived are abstract
+		// virtual base functions may be redeclared (with override)
+		// if redeclared virtual base function has been implemented, it must be reimplemented but
+		// may be revirtualized
+		// if revirtualized, there is nothing to be changed in list of <ContractFunction, bool>
+		// if not revirtualized, we changed the boolean to false in the list of implemented contract
+		// functions.
+		// if redeclared virtual base function has not been implemented, it may be implemented.
+		// if it is implemented (with override), it may be revirtualized.
+		// if it is not implemented, it must be marked virtual.
+		// if virtual base function not redeclared, there is no status change
+		bool virtualImplemented = contractFunctionImplemented(_base, _f);
+		implement = virtualImplemented || pseudoRandomCoinFlip();
+		revirtualize = (!implement && !virtualImplemented) || pseudoRandomCoinFlip();
+	}
+	else if (baseAbstract && !derivedAbstract)
+	{
+		// Case 2: Base abstract, derived not
+		// If base function appears in list of unimplemented virtual contract functions, we
+		// must implement it (with override). Remove from unimplemented virtual contract functions. We may
+		// revirtualize. Add to list of implemented contract functions.
 
-		unsigned wasNumContract = m_numContracts;
+		// Unimplemented virtual functions must be implemented (with override)
 
-		// First define overridden functions
-		bool overrides = interface->ancestors_size() > 0 && !ancestorNames.str().empty();
-		if (overrides)
-		{
-			funcs << traverseOverrides(*interface, false, false, false, false);
-		}
+		// Implemented virtual functions may be implemented (with override)
 
-		m_numContracts = wasNumContract;
-		m_numStructs = 0;
-
-		unsigned index = 0;
-		// Define non-overridden functions
-		for (auto &f: interface->funcdef())
-			funcs << visit(f, index++, false, _programName);
+		//
+	}
+	else if (!baseAbstract && derivedAbstract)
+	{
+		// Case 3: Base not abstract, derived is
+		// All base functions are implemented. Base functions marked virtual may be overridden.
+		// If they are overridden they must be reimplemented. They may be revirtualized.
+		// Base functions that are not virtual may not be redeclared.
 	}
 	else
 	{
-		auto contract = get<Contract const*>(_cOrI);
+		// Case 4: Neither base nor derived are abstract
+		// All base functions are implemented. Base functions marked virtual may be overridden.
+		// If they are overridden they must be reimplemented. They may be revirtualized.
+		// Base functions that are not virtual may not be redeclared.
+	}
+	return pair(implement, revirtualize);
+}
 
-		for (auto &ancestor: contract->ancestors())
+string ProtoConverter::traverseOverrides(Contract const& _contract)
+{
+	ostringstream funcs;
+
+	for (auto base = _contract.bases().rbegin(); base != _contract.bases().rend(); base++)
+	{
+		if (base->contract_or_interface_oneof_case() == ContractOrInterface::CONTRACT_OR_INTERFACE_ONEOF_NOT_SET)
+			continue;
+
+		if (base->has_c())
 		{
-			string ancestorStr = visit(ancestor);
-			if (ancestorStr.empty())
+			for (auto& f: base->c().funcdef())
+			{
+				// We may redeclare virtual functions in base contract
+				bool redeclareVirtual = f.virtualfunc() && pseudoRandomCoinFlip();
+				// If base function is not virtual or if we choose to not
+				// redeclare the virtual function, we skip to the next function
+				// after incrementing the function index.
+				if (!f.virtualfunc() || !redeclareVirtual)
+					continue;
+
+				// Check if overridden function may be implemented/revirtualized
+				// by the derived contract.
+				auto [implement, revirtualize] = contractFunctionOverrideParams(
+					&base->c(),
+                    &_contract,
+                    &f
+                );
+				funcs << overrideFunction(&f, revirtualize, implement);
+				// Update contract function map
+				m_contractFunctionMap[&_contract].push_back(CITuple(&f, implement, revirtualize));
+			}
+			// Override revirtualized functions.
+			// TODO: Function that returns all revirtualized functions and their implementation
+			// status.
+			for (auto &tuple: m_contractFunctionMap[&base->c()])
+			{
+				auto function = get<0>(tuple);
+				bool overrideRevirtualized = true;
+				if (holds_alternative<ContractFunction const*>(function))
+				{
+					auto contractFunction = get<ContractFunction const*>(function);
+
+					auto [implementRevirtualized, revirtualizeRevirtualized] = contractFunctionOverrideParams(
+						&base->c(),
+						&_contract,
+						get<0>(tuple)
+					);
+					funcs << visit(
+						*contractFunction,
+						index++,
+						overrideRevirtualized,
+						revirtualizeRevirtualized,
+						implementRevirtualized,
+						programName(&base->c())
+					);
+				}
+			}
+			// Traverse base
+			funcs << traverseOverrides(base->c());
+		}
+		else if (base->has_i())
+		{
+			for (auto& f: base->i().funcdef())
+			{
+				bool implement = pseudoRandomCoinFlip();
+				m_counter += base->i().funcdef_size();
+				bool override = pseudoRandomCoinFlip();
+
+				if (_contract.abstract() && !implement && !override)
+					continue;
+
+				funcs << overrideFunction(
+					&f,
+					!_contract.abstract() || implement,
+					pseudoRandomCoinFlip() || (override && _contract.abstract())
+				);
+			}
+			funcs << mostDerivedContractOverrides(base->i(), !_contract.abstract());
+		}
+	}
+	return funcs.str();
+}
+
+/// This function is called when root is interface.
+tuple<string, string, string> ProtoConverter::visitMostDerivedInterface(Interface const& _interface)
+{
+	ostringstream bases;
+	ostringstream baseNames;
+	ostringstream funcs;
+
+	string separator{};
+	for (auto &base: _interface.bases())
+	{
+		string baseStr = visit(base);
+		if (baseStr.empty())
+			continue;
+		bases << baseStr;
+		baseNames << separator
+		          << programName(&base);
+		if (separator.empty())
+			separator = ", ";
+	}
+
+	// First define overridden functions
+	bool overrides = _interface.bases_size() > 0 && !baseNames.str().empty();
+	if (overrides)
+		funcs << mostDerivedInterfaceOverrides(_interface);
+
+	unsigned index = 0;
+	// Define non-overridden functions
+	for (auto &f: _interface.funcdef())
+		funcs << registerAndVisitFunction(
+			&_interface,
+			&f,
+			index++,
+			false,
+			false,
+			false
+		);
+
+	return make_tuple(bases.str(), baseNames.str(), funcs.str());
+}
+
+void ProtoConverter::registerFunctionName(CIL _program, CILFunc _function, unsigned _index)
+{
+	string pName = programName(_program);
+	string fName = createFunctionName(_program, _index);
+	solAssert(!m_functionNameMap.count(_function), "Sol proto fuzzer: Duplicate function registration");
+	m_functionNameMap.insert(pair(_function, fName));
+}
+
+string ProtoConverter::registerAndVisitFunction(
+	CIL _program,
+	CILFunc _function,
+	unsigned _index,
+	bool _override,
+	bool _virtual,
+	bool _implement
+)
+{
+	registerFunctionName(_program, _function, _index);
+	return visit(_function, _override, _virtual, _implement);
+}
+
+tuple<string, string, string> ProtoConverter::visitProgramHelper(CIL _program)
+{
+	ostringstream bases;
+	ostringstream funcs;
+	ostringstream baseNames;
+
+	string pName = programName(_program);
+
+	string separator{};
+	if (holds_alternative<Contract const*>(_program))
+	{
+		Contract const* contract = get<Contract const*>(_program);
+
+		for (auto &base: contract->bases())
+		{
+			string baseStr = visit(base);
+			if (baseStr.empty())
 				continue;
-			ancestors << ancestorStr;
-			ancestorNames << separator
-			              << (ancestor.has_c() ? m_contractNameMap[&ancestor.c()] : m_interfaceNameMap[&ancestor.i()]);
+			bases << baseStr;
+			baseNames << separator
+			            << (base.has_c() ? programName(&base.c()) : programName(&base.i()));
 			if (separator.empty())
 				separator = ", ";
 		}
 
-		unsigned wasNumContract = m_numContracts;
-
 		// First define overridden functions
-		bool overrides = contract->ancestors_size() > 0 && !ancestorNames.str().empty();
+		bool overrides = contract->bases_size() > 0 && !baseNames.str().empty();
 		if (overrides)
 		{
-			funcs << traverseOverrides(*contract, contract->abstract());
+			funcs << traverseOverrides(*contract);
 		}
 
-		m_numContracts = wasNumContract;
-		m_numStructs = 0;
-
-		// Define non-overridden functions
+		// Declare/define non-overridden functions
 		unsigned index = 0;
 		for (auto &f: contract->funcdef())
-			funcs << visit(
-				f,
+		{
+			auto [implement, virtualize] = contractFunctionParams(contract, &f);
+
+			funcs << registerAndVisitFunction(
+				_program,
+				&f,
 				index++,
 				false,
-				contract->abstract(),
-				(f.virtualfunc() || (contract->abstract() && !f.implemented())),
+				virtualize,
+				implement
+			);
+
+			// Update contract function map
+			m_contractFunctionMap[contract].push_back(CITuple(&f, implement, virtualize));
+		}
+	}
+	else if (holds_alternative<Interface const*>(_program))
+	{
+		// If we are here, it means most derived program is a contract.
+
+		auto interface = get<Interface const*>(_program);
+		for (auto &base: interface->bases())
+		{
+			string baseStr = visit(base);
+			if (baseStr.empty())
+				continue;
+			bases << baseStr;
+			baseNames << separator
+			          << programName(&base);
+			if (separator.empty())
+				separator = ", ";
+		}
+
+		// First define overridden functions
+		bool overrides = interface->bases_size() > 0 && !baseNames.str().empty();
+		if (overrides)
+		{
+			funcs << mostDerivedContractOverrides(*interface, false);
+		}
+
+		unsigned index = 0;
+		// Declare non-overridden functions
+		for (auto &f: interface->funcdef())
+			funcs << registerAndVisitFunction(
+				_program,
+				&f,
+				index++,
 				false,
-				_programName
+				false,
+				false
 			);
 	}
-	return make_tuple(ancestors.str(), ancestorNames.str(), funcs.str());
-}
-
-string ProtoConverter::visit(Interface const& _interface)
-{
-	string programName{"I" + to_string(m_numContracts++)};
-	m_interfaceNameMap.insert(pair(&_interface, programName));
-	m_numStructs = 0;
-	auto [ancestors, ancestorNames, funcs] = visitContractHelper(&_interface, programName);
-	return Whiskers(R"(
-<ancestors>
-<programType> <programName><?inheritance> is <ancestorNames></inheritance> {
-<functionDefs>
-})")
-		("ancestors", ancestors)
-		("programType", "interface")
-		("programName", programName)
-		("inheritance", _interface.ancestors_size() > 0 && !ancestorNames.empty())
-		("ancestorNames", ancestorNames)
-		("functionDefs", funcs)
-		.render();
-}
-
-string ProtoConverter::visit(Library const& _library)
-{
-	ostringstream funcs;
-	string programName{"L" + to_string(m_numContracts++)};
-
-	unsigned index = 0;
-	m_numStructs = 0;
-	for (auto &f: _library.funcdef())
-		funcs << visit(f, index++, programName);
-
-	return Whiskers(R"(
-library <programName> {
-<functionDefs>
-})")
-		("programName", programName)
-		("functionDefs", funcs.str())
-		.render();
+	else
+	{
+		auto library = get<Library const*>(_program);
+		unsigned index = 0;
+		for (auto &f: library->funcdef())
+			funcs << registerAndVisitFunction(
+				_program,
+				&f,
+				index++,
+				false,
+				false,
+				false
+			);
+	}
+	return make_tuple(bases.str(), baseNames.str(), funcs.str());
 }
 
 string ProtoConverter::visit(Contract const& _contract)
 {
-	string programName{"C" + to_string(m_numContracts++)};
-	m_contractNameMap.insert(pair(&_contract, programName));
-	m_numStructs = 0;
-	auto [ancestors, ancestorNames, funcs] = visitContractHelper(&_contract, programName);
+	openProgramScope(&_contract);
+	auto [bases, baseNames, funcs] = visitProgramHelper(&_contract);
 	return Whiskers(R"(
-<ancestors>
-<?isAbstract>abstract </isAbstract><programType> <programName><?inheritance> is <ancestorNames></inheritance> {
+<bases>
+<?isAbstract>abstract </isAbstract>contract <programName><?inheritance> is <baseNames></inheritance> {
 <functionDefs>
 })")
-		("ancestors", ancestors)
+		("bases", bases)
 		("isAbstract", _contract.abstract())
-		("programType", "contract")
-		("programName", programName)
-		("inheritance", _contract.ancestors_size() > 0 && !ancestorNames.empty())
-		("ancestorNames", ancestorNames)
+		("programName", programName(&_contract))
+		("inheritance", _contract.bases_size() > 0 && !baseNames.empty())
+		("baseNames", baseNames)
 		("functionDefs", funcs)
 		.render();
 }
+#endif
 
-string ProtoConverter::visit(Modifier const& _mod)
+string ProtoConverter::visit(Interface const& _interface)
 {
-	return Whiskers(R"(
-	modifier m<i>(<?isParams><params></isParams>) {
-		<body>
-		_;
-	})")
-		("i", to_string(m_numMods++))
-		("isParams", _mod.params_size() > 0)
-		("params", "")
-		("body", "")
-		.render();
+	if (_interface.funcdef_size() == 0 && _interface.bases_size() == 0)
+		return "";
+
+	openProgramScope(&_interface);
+	try {
+		auto interface = SolInterface(_interface, programName(&_interface), m_randomGen);
+		return interface.str();
+	}
+	catch (langutil::FuzzerError const&)
+	{
+		// Return empty string if input specification is invalid.
+		return "";
+	}
 }
 
-tuple<string, string, string> ProtoConverter::visit(
-	FunctionParamsAndReturns const& _pr,
-	bool _isExternal,
-	string _programName
-)
+string ProtoConverter::visit(Library const& _library)
 {
-	string paramsString;
-	string typeDefsParamsString;
-	unsigned structsAdded = 0;
-	unsigned index = 0;
-	string separator{};
-	string structPrefix = _programName + "S";
+	if (emptyLibrary(_library))
+		return "";
 
-	for (auto &param: _pr.params())
+	openProgramScope(&_library);
+	auto lib = SolLibrary(_library, programName(&_library));
+	if (lib.validTest())
 	{
-		solidity::test::abiv2fuzzer::TypeVisitor typeVisitor(m_numStructs, 2, structPrefix);
-		typeVisitor.visit(param);
-		if (!typeVisitor.baseType().empty())
-		{
-			paramsString += Whiskers(
-				R"(<sep><type><?isNonValue> <?isExternal>calldata<!isExternal>memory</isExternal></isNonValue> p<i>)")
-				("type", typeVisitor.baseType())
-				("isNonValue", param.type_oneof_case() == param.kNvtype)
-				("isExternal", _isExternal)
-				("i", to_string(index++))
-				("sep", separator)
-				.render();
-			typeDefsParamsString += typeVisitor.structDef();
-			m_numStructs += typeVisitor.numStructs();
-			structsAdded += typeVisitor.numStructs();
-			if (separator.empty())
-				separator = ", ";
-		}
+		auto libTestPair = lib.pseudoRandomTest(_library.random());
+		m_libraryTests.push_back({lib.name(), libTestPair.first, libTestPair.second});
 	}
-
-	separator = "";
-	string returnString;
-	string typeDefsReturnsString;
-	for (auto &ret: _pr.returns())
-	{
-		solidity::test::abiv2fuzzer::TypeVisitor typeVisitor(m_numStructs, 2, structPrefix);
-		typeVisitor.visit(ret);
-		if (!typeVisitor.baseType().empty())
-		{
-			returnString += Whiskers(R"(<sep><type><?isNonValue> memory</isNonValue>)")
-				("type", typeVisitor.baseType())
-				("isNonValue", ret.type_oneof_case() == ret.kNvtype)
-				("sep", separator)
-				.render();
-			typeDefsReturnsString += typeVisitor.structDef();
-			m_numStructs += typeVisitor.numStructs();
-			structsAdded += typeVisitor.numStructs();
-			if (separator.empty())
-				separator = ", ";
-		}
-	}
-	return make_tuple(typeDefsParamsString + typeDefsReturnsString, paramsString, returnString);
+	return lib.str();
 }
 
-bool ProtoConverter::disallowedContractFunction(ContractFunction const& _contractFunction, bool _isVirtual)
+tuple<string, string, string> ProtoConverter::pseudoRandomLibraryTest(unsigned _randomIdx)
 {
+	solAssert(m_libraryTests.size() > 0, "Sol proto fuzzer: No library tests found");
+	unsigned index = _randomIdx % m_libraryTests.size();
+	return m_libraryTests[index];
+}
+
+void ProtoConverter::openProgramScope(CIL _program)
+{
+	string programNamePrefix;
+	if (holds_alternative<Contract const*>(_program))
+		programNamePrefix = "C";
+	else if (holds_alternative<Interface const*>(_program))
+		programNamePrefix = "I";
+	else
+		programNamePrefix = "L";
+	string programName = programNamePrefix + to_string(m_numPrograms++);
+	m_programNameMap.insert(pair(_program, programName));
+
+	if (holds_alternative<Contract const*>(_program))
+		m_contractFunctionMap.insert(pair(get<Contract const*>(_program), vector<CITuple>{}));
+}
+
+string ProtoConverter::programName(CIL _program)
+{
+	solAssert(m_programNameMap.count(_program), "Sol proto fuzzer: Unregistered program");
+	return m_programNameMap[_program];
+}
+
+unsigned ProtoConverter::randomNumber()
+{
+	solAssert(m_randomGen, "Sol proto fuzzer: Uninitialized random number generator");
+	return m_randomGen->operator()();
+}
+
+#if 0
+bool ProtoConverter::disallowedContractFunction(SolContractFunction const& _contractFunction, bool _isVirtual)
+{
+	string visibility = functionVisibility(_contractFunction.m_visibility);
+	string mutability = functionMutability(_contractFunction.m_mutability);
+
 	// Private virtual functions are disallowed
-	if (functionVisibility(_contractFunction.vis()) == "private" && _isVirtual)
+	if (visibility == "private" && _isVirtual)
 		return true;
 	// Private payable functions are disallowed
-	else if (functionVisibility(_contractFunction.vis()) == "private" && stateMutability(_contractFunction.mut()) == "payable")
+	else if (visibility == "private" && mutability == "payable")
 		return true;
 	// Internal payable functions are disallowed
-	else if (functionVisibility(_contractFunction.vis()) == "internal" && stateMutability(_contractFunction.mut()) == "payable")
+	else if (visibility == "internal" && mutability == "payable")
 		return true;
 	return false;
 }
 
-string ProtoConverter::visit(
-	ContractFunction const& _contractFunction,
-	unsigned _index,
-	bool _isOverride,
-	bool _isAbstractContract,
-	bool _isVirtual,
-	bool _isImplemented,
-	string _programName
-)
+string ProtoConverter::functionName(CILFunc _function)
 {
-	if (disallowedContractFunction(_contractFunction, _isVirtual || _contractFunction.virtualfunc()))
-		return "";
-
-	auto [structDefString, paramString, returnString] = visit(
-		_contractFunction.paramandret(),
-		_contractFunction.vis() == ContractFunction_Visibility_EXTERNAL,
-		_programName
-	);
-
-	bool isUnimplemented = _isAbstractContract && !_contractFunction.implemented() && !_isImplemented;
-
-	return Whiskers(R"(
-<?isTypeDefs><typeDefs></isTypeDefs>
-
-	function <functionPrefix><i>(<?isParams><params></isParams>)<?isOverride> override</isOverride><?isVirtual> virtual</isVirtual> <visibility> <stateMutability><?isMod> <modifier></isMod><?isReturn> returns (<types>)</isReturn><?isUnimplemented>;<!isUnimplemented>
-	{
-		<body>
-	}
-	</isUnimplemented>
-<?isMod>
-<modifierDef>
-</isMod>)")
-		("isTypeDefs", !_isOverride)
-		("typeDefs", structDefString)
-		("functionPrefix", boost::algorithm::to_lower_copy(_programName) + s_functionPrefix)
-		("i", to_string(_index))
-		("isParams", _contractFunction.paramandret().params_size() > 0 && !paramString.empty())
-		("params", paramString)
-		("isVirtual", _isVirtual)
-		("isOverride", _isOverride)
-		("visibility", functionVisibility(_contractFunction.vis()))
-		("stateMutability", stateMutability(_contractFunction.mut()))
-		("isMod", _contractFunction.has_m() && !isUnimplemented)
-		("modifier", "m" + to_string(m_numMods))
-		("isReturn", _contractFunction.paramandret().returns_size() > 0 && !returnString.empty())
-		("types", returnString)
-		("body", "")
-		("isUnimplemented", isUnimplemented)
-		("modifierDef", visit(_contractFunction.m()))
-		.render();
+	solAssert(m_functionNameMap.count(_function), "Sol proto fuzzer: Unregistered function");
+	return m_functionNameMap[_function];
 }
-
-string ProtoConverter::visit(LibraryFunction const& _libraryFunction, unsigned _index, string _programName)
-{
-	auto [typeDefs, params, returns] = visit(
-		_libraryFunction.paramandret(),
-		_libraryFunction.vis() == LibraryFunction_Visibility_EXTERNAL,
-		_programName
-	);
-
-	return Whiskers(R"(
-<typeDefs>
-
-	function <functionPrefix><functionSuffix>(<?isParams><params></isParams>) <visibility> <stateMutability><?isMod> <modifier></isMod><?isReturn> returns (<types>)</isReturn>
-	{
-		<body>
-	}
-
-<?isMod>
-<modifierDef>
-</isMod>)")
-		("typeDefs", typeDefs)
-		("functionPrefix", s_libraryFunctionPrefix)
-		("functionSuffix", to_string(_index))
-		("isParams", _libraryFunction.paramandret().params_size() > 0 && !params.empty())
-		("params", params)
-		("visibility", functionVisibility(_libraryFunction.vis()))
-		("stateMutability", stateMutability(_libraryFunction.mut()))
-		("isMod", _libraryFunction.has_m())
-		("modifier", "m" + to_string(m_numMods))
-		("isReturn", _libraryFunction.paramandret().returns_size() > 0 && !returns.empty())
-		("types", returns)
-		("body", "")
-		("modifierDef", visit(_libraryFunction.m()))
-		.render();
-}
-
-string ProtoConverter::visit(
-	InterfaceFunction const& _interfaceFunction,
-	unsigned _index,
-	bool _isOverride,
-	string _programName,
-	bool _implement,
-	bool _inheritedByContract,
-	bool _isVirtual
-)
-{
-	auto [typeDefs, params, returns] = visit(
-		_interfaceFunction.paramandret(),
-		true,
-		_programName
-	);
-
-	return Whiskers(R"(
-<?isTypeDefs><typeDefs></isTypeDefs>
-
-	function <functionPrefix><functionSuffix>(<?isParams><params></isParams>) external <stateMutability><?isOverride> override</isOverride><?isVirtual> virtual</isVirtual><?isReturn> returns (<types>)</isReturn><?isImplemented> <block><!isImplemented><?inheritedByContract> virtual;<!inheritedByContract>;</inheritedByContract></isImplemented>
-		)")
-		("isTypeDefs", !_isOverride)
-		("typeDefs", typeDefs)
-		("functionPrefix", boost::algorithm::to_lower_copy(_programName) + s_functionPrefix)
-		("functionSuffix", to_string(_index))
-		("isParams", _interfaceFunction.paramandret().params_size() > 0 && !params.empty())
-		("params", params)
-		("stateMutability", stateMutability(_interfaceFunction.mut()))
-		("isOverride", _isOverride)
-		("isVirtual", _isVirtual)
-		("isReturn", _interfaceFunction.paramandret().returns_size() > 0 && !returns.empty())
-		("types", returns)
-		("isImplemented", _implement)
-		("inheritedByContract", _inheritedByContract)
-		("block", "{}")
-		.render();
-}
-
-pair<string, string> ProtoConverter::visit(Block const& _block)
-{
-	pair<string, string> block;
-	for (auto &statement: _block.statements())
-	{
-		block.first += visit(statement).first;
-		block.second += visit(statement).second;
-	}
-	return block;
-}
-
-pair<string, string> ProtoConverter::visit(Statement const& _stmt)
-{
-	switch (_stmt.stmt_oneof_case())
-	{
-	case Statement::kVar:
-		return visit(_stmt.var(), false);
-	case Statement::kIfstmt:
-		return visit(_stmt.ifstmt());
-	case Statement::kForstmt:
-		return make_pair("", visit(_stmt.forstmt()));
-	case Statement::kSwitchstmt:
-		return make_pair("", visit(_stmt.switchstmt()));
-	case Statement::kBreakstmt:
-		return make_pair("", visit(_stmt.breakstmt()));
-	case Statement::kContinuestmt:
-		return make_pair("", visit(_stmt.continuestmt()));
-	case Statement::kReturnstmt:
-		return make_pair("", visit(_stmt.returnstmt()));
-	case Statement::kDostmt:
-		return visit(_stmt.dostmt());
-	case Statement::kWhilestmt:
-		return visit(_stmt.whilestmt());
-	case Statement::STMT_ONEOF_NOT_SET:
-		return make_pair("", "");
-	}
-}
-
-pair<string, string> ProtoConverter::visit(solidity::test::abiv2fuzzer::VarDecl const& _varDecl, bool _stateVar)
-{
-	solidity::test::abiv2fuzzer::ProtoConverter converter;
-	converter.m_isStateVar = _stateVar;
-	converter.m_varCounter = m_numVars;
-	converter.m_structCounter = m_numStructs;
-	auto decl = converter.visit(_varDecl);
-	if (!decl.first.empty())
-	{
-		m_numVars++;
-		m_numStructs += converter.m_numStructsAdded;
-		decl.second += "\n" +
-			solidity::test::abiv2fuzzer::AssignCheckVisitor{
-				solidity::test::abiv2fuzzer::ProtoConverter::s_stateVarNamePrefix +
-				to_string(m_numVars - 1),
-				"",
-				0,
-				"true",
-				0,
-				m_numStructs - 1
-			}.visit(_varDecl.type()).second;
-	}
-	return decl;
-}
-
-pair<string, string> ProtoConverter::visit(IfStmt const& _ifstmt)
-{
-	string ifCond = visit(_ifstmt.condition());
-	pair<string, string> buffer = visit(_ifstmt.statements());
-
-	return make_pair(buffer.first, Whiskers(R"(if (<cond>) {
-	<statements>
-	}
-	)")
-	("cond", ifCond)
-	("statements", buffer.second)
-	.render());
-}
-
-string ProtoConverter::visit(ForStmt const&)
-{
-	return "";
-}
-
-string ProtoConverter::visit(SwitchStmt const&)
-{
-	return "";
-}
-
-string ProtoConverter::visit(BreakStmt const&)
-{
-	return "break;\n";
-}
-
-string ProtoConverter::visit(ContinueStmt const&)
-{
-	return "continue;\n";
-}
-
-string ProtoConverter::visit(ReturnStmt const& _returnstmt)
-{
-	return Whiskers(R"(return <expr>;
-)")
-		("expr", visit(_returnstmt.value()))
-		.render();
-}
-
-pair<string, string> ProtoConverter::visit(DoStmt const& _dostmt)
-{
-	string doCond = visit(_dostmt.condition());
-	pair<string, string> buffer = visit(_dostmt.statements());
-
-	return make_pair(buffer.first, Whiskers(R"(do {
-	<statements>
-	} while (<cond>)
-	)")
-		("cond", doCond)
-		("statements", buffer.second)
-		.render());
-}
-
-pair<string, string> ProtoConverter::visit(WhileStmt const& _whilestmt)
-{
-	string whileCond = visit(_whilestmt.condition());
-	pair<string, string> buffer = visit(_whilestmt.statements());
-
-	return make_pair(buffer.first, Whiskers(R"(while (<cond>) {
-	<statements>
-	}
-	)")
-		("cond", whileCond)
-		("statements", buffer.second)
-		.render());
-}
-
-string ProtoConverter::visit(Expression const& _expr)
-{
-	switch (_expr.expr_oneof_case())
-	{
-	case Expression::kLit:
-		return visit(_expr.lit());
-	case Expression::kBop:
-		return visit(_expr.bop());
-	case Expression::kUop:
-		return visit(_expr.uop());
-	case Expression::kRef:
-		return visit(_expr.ref());
-	case Expression::EXPR_ONEOF_NOT_SET:
-		return "\"\"";
-	}
-}
-
-string ProtoConverter::visit(Literal const& _literal)
-{
-	switch (_literal.literal_oneof_case())
-	{
-	case Literal::kBlit:
-		return _literal.blit() ? "true" : "false";
-	case Literal::kSlit:
-		return "\"" + _literal.slit() + "\"";
-	case Literal::LITERAL_ONEOF_NOT_SET:
-		return "\"\"";
-	}
-}
-
-string ProtoConverter::visit(BinaryOp const& _bop)
-{
-	string op;
-	switch (_bop.op())
-	{
-	case BinaryOp_Operation_ADD:
-		op = "+";
-		break;
-	case BinaryOp_Operation_SUB:
-		op = "-";
-		break;
-	case BinaryOp_Operation_MUL:
-		op = "*";
-		break;
-	case BinaryOp_Operation_DIV:
-		op = "/";
-		break;
-	}
-	return Whiskers(R"(<arg1> <op> <arg2>)")
-		("arg1", visit(_bop.arg1()))
-		("op", op)
-		("arg2", visit(_bop.arg2()))
-		.render();
-}
-
-string ProtoConverter::visit(UnaryOp const& _uop)
-{
-	string op;
-	switch (_uop.op())
-	{
-		case UnaryOp_Operation_INC:
-			op = "++";
-			break;
-		case UnaryOp_Operation_DEC:
-			op = "--";
-			break;
-	}
-	return Whiskers(R"(<arg><op>)")
-		("arg", visit(_uop.arg()))
-		("op", op)
-		.render();
-}
-
-string ProtoConverter::visit(VarRef const& _varref)
-{
-	if (m_numVars > 0)
-		return solidity::test::abiv2fuzzer::ProtoConverter::s_stateVarNamePrefix + to_string(_varref.varnum() % m_numVars);
-	else
-		return "\"\"";
-}
-
-string ProtoConverter::functionVisibility(ContractFunction::Visibility _vis)
-{
-	switch (_vis)
-	{
-	case ContractFunction_Visibility_PUBLIC:
-		return "public";
-	case ContractFunction_Visibility_PRIVATE:
-		return "private";
-	case ContractFunction_Visibility_EXTERNAL:
-		return "external";
-	case ContractFunction_Visibility_INTERNAL:
-		return "internal";
-	}
-}
-
-string ProtoConverter::functionVisibility(LibraryFunction::Visibility _vis)
-{
-	switch (_vis)
-	{
-	case LibraryFunction_Visibility_PUBLIC:
-		return "public";
-	case LibraryFunction_Visibility_PRIVATE:
-		return "private";
-	case LibraryFunction_Visibility_EXTERNAL:
-		return "external";
-	case LibraryFunction_Visibility_INTERNAL:
-		return "internal";
-	}
-}
-
-string ProtoConverter::stateMutability(ContractFunction::StateMutability _mut)
-{
-	switch (_mut)
-	{
-	case ContractFunction_StateMutability_PURE:
-		return "pure";
-	case ContractFunction_StateMutability_VIEW:
-		return "view";
-	case ContractFunction_StateMutability_PAYABLE:
-		return "payable";
-	}
-}
-
-string ProtoConverter::stateMutability(LibraryFunction::StateMutability _mut)
-{
-	switch (_mut)
-	{
-	case LibraryFunction_StateMutability_PURE:
-		return "pure";
-	case LibraryFunction_StateMutability_VIEW:
-		return "view";
-	}
-}
-
-string ProtoConverter::stateMutability(InterfaceFunction::StateMutability _mut)
-{
-	switch (_mut)
-	{
-	case InterfaceFunction_StateMutability_PURE:
-		return "pure";
-	case InterfaceFunction_StateMutability_VIEW:
-		return "view";
-	case InterfaceFunction_StateMutability_PAYABLE:
-		return "payable";
-	}
-}
+#endif

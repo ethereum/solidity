@@ -17,22 +17,13 @@
 
 syntax = "proto2";
 
-import "abiV2Proto.proto";
-
-message FunctionParamsAndReturns {
-    repeated solidity.test.abiv2fuzzer.Type params = 1;
-    repeated solidity.test.abiv2fuzzer.Type returns = 2;
-}
-
 message InterfaceFunction {
     enum StateMutability {
         PURE = 0;
         VIEW = 1;
         PAYABLE = 2;
     }
-    required FunctionParamsAndReturns paramandret = 1;
-    required StateMutability mut = 2;
-    required bool override = 3;
+    required StateMutability mut = 1;
 }
 
 message LibraryFunction {
@@ -47,11 +38,8 @@ message LibraryFunction {
         INTERNAL = 2;
         PRIVATE = 3;
     }
-    required FunctionParamsAndReturns paramandret = 1;
-    required Visibility vis = 2;
-    required StateMutability mut = 3;
-    required Block b = 4;
-    optional Modifier m = 5;
+    required Visibility vis = 1;
+    required StateMutability mut = 2;
 }
 
 message ContractFunction {
@@ -66,144 +54,25 @@ message ContractFunction {
         INTERNAL = 2;
         PRIVATE = 3;
     }
-    required FunctionParamsAndReturns paramandret = 1;
-    required Visibility vis = 2;
-    required StateMutability mut = 3;
-    required Block b = 4;
-    optional Modifier m = 5;
-    required bool implemented = 6;
-    required bool virtualfunc = 7;
-    required bool override = 8;
-}
-
-message Modifier {
-    repeated solidity.test.abiv2fuzzer.Type params = 1;
-    required Block b = 2;
-}
-
-/// Expressions
-message Expression {
-    oneof expr_oneof {
-        Literal lit = 1;
-        BinaryOp bop = 2;
-        UnaryOp uop = 3;
-        VarRef ref = 4;
-    }
-}
-
-message VarRef {
-    required int32 varnum = 1;
-}
-
-message Literal {
-    oneof literal_oneof {
-        bool blit = 1;
-        string slit = 2;
-    }
-}
-
-message BinaryOp {
-    enum Operation {
-        ADD = 1;
-        SUB = 2;
-        MUL = 3;
-        DIV = 4;
-    }
-    required Operation op = 1;
-    required Expression arg1 = 2;
-    required Expression arg2 = 3;
-}
-
-message UnaryOp {
-    enum Operation {
-        INC = 1;
-        DEC = 2;
-    }
-    required Operation op = 1;
-    required Expression arg = 2;
-}
-
-/// Statements
-message ElseStmt {
-    required Block statements = 1;
-}
-
-message IfStmt {
-    required Expression condition = 1;
-    required Block statements = 2;
-    optional ElseStmt else = 3;
-}
-
-message ForStmt {
-    required Block pre = 1;
-    required Expression condition = 2;
-    required Block post = 3;
-    required Block body = 4;
-}
-
-message CaseStmt {
-    required Literal lit = 1;
-    required Block block = 2;
-}
-
-message SwitchStmt {
-    required Expression condition = 1;
-    repeated CaseStmt cases = 2;
-    optional Block default = 3;
-}
-
-message BreakStmt {}
-
-message ContinueStmt {}
-
-message ReturnStmt {
-    required Expression value = 1;
-}
-
-message DoStmt {
-    required Expression condition = 1;
-    required Block statements = 2;
-}
-
-message WhileStmt {
-    required Expression condition = 1;
-    required Block statements = 2;
-}
-
-message Statement {
-    oneof stmt_oneof {
-        solidity.test.abiv2fuzzer.VarDecl var = 1;
-        IfStmt ifstmt = 2;
-        ForStmt forstmt = 3;
-        SwitchStmt switchstmt = 4;
-        BreakStmt breakstmt = 5;
-        ContinueStmt continuestmt = 6;
-        ReturnStmt returnstmt = 7;
-        DoStmt dostmt = 8;
-        WhileStmt whilestmt = 9;
-    }
-}
-
-message Block {
-    repeated Statement statements = 1;
+    required Visibility vis = 1;
+    required StateMutability mut = 2;
+    required bool virtualfunc = 3;
 }
 
 message Library {
-    repeated solidity.test.abiv2fuzzer.VarDecl state_vars = 1;
-    repeated LibraryFunction funcdef = 2;
+    repeated LibraryFunction funcdef = 1;
+    required uint64 random = 2;
 }
 
 message Interface {
-    repeated solidity.test.abiv2fuzzer.VarDecl state_vars = 1;
-    repeated InterfaceFunction funcdef = 2;
-    repeated Interface ancestors = 3;
+    repeated InterfaceFunction funcdef = 1;
+    repeated Interface bases = 2;
 }
 
 message Contract {
-    repeated solidity.test.abiv2fuzzer.VarDecl state_vars = 1;
-    repeated ContractFunction funcdef = 2;
-    required bool abstract = 3;
-    repeated ContractOrInterface ancestors = 4;
+    repeated ContractFunction funcdef = 1;
+    required bool abstract = 2;
+    repeated ContractOrInterface bases = 3;
 }
 
 message ContractOrInterface {
@@ -221,8 +90,19 @@ message ContractType {
     }
 }
 
+message TestContract {
+    enum Type {
+        LIBRARY = 0;
+        CONTRACT = 1;
+    }
+    required Type type = 1;
+    required uint64 programidx = 2;
+}
+
 message Program {
     repeated ContractType contracts = 1;
+    required TestContract test = 2;
+    required uint64 seed = 3;
 }
 
 package solidity.test.solprotofuzzer;

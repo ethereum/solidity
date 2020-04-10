@@ -42,6 +42,7 @@ struct InternalCompilerError: virtual util::Exception {};
 struct FatalError: virtual util::Exception {};
 struct UnimplementedFeatureError: virtual util::Exception {};
 struct InvalidAstError: virtual util::Exception {};
+struct FuzzerError: virtual util::Exception {};
 
 /// Assertion that throws an InternalCompilerError containing the given description if it is not met.
 #define solAssert(CONDITION, DESCRIPTION) \
