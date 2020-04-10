@@ -110,7 +110,6 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	t("functions", m_context.functionCollector().requestedFunctions());
 
 	resetContext(_contract);
-	m_context.setMostDerivedContract(_contract);
 	t("RuntimeObject", runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
 	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
