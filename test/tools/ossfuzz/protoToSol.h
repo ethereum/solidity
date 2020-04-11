@@ -121,7 +121,8 @@ private:
 		Contract const* _derived,
 		CIFunc _baseFunc
 	);
-	std::tuple<std::string, std::string, std::string> pseudoRandomLibraryTest(unsigned _randomIdx);
+	std::tuple<std::string, std::string, std::string> pseudoRandomLibraryTest();
+	std::tuple<std::string, std::string, std::string> pseudoRandomContractTest();
 
 	bool emptyLibrary(Library const& _library)
 	{
@@ -130,6 +131,10 @@ private:
 	bool emptyLibraryTests()
 	{
 		return m_libraryTests.size() == 0;
+	}
+	bool emptyContractTests()
+	{
+		return m_contractTests.size() == 0;
 	}
 
 	void openProgramScope(CIL _program);
@@ -155,7 +160,6 @@ private:
 	static bool disallowedContractFunction(SolContractFunction const& _contractFunction, bool _isVirtual);
 #endif
 
-	unsigned m_numMods = 0;
 	unsigned m_numPrograms = 0;
 	unsigned m_counter = 0;
 	bool m_mostDerivedAbstractContract = false;
@@ -194,6 +198,7 @@ private:
 	std::map<CI, std::vector<std::pair<CIFunc, std::string>>> m_programFunctionNameMap;
 
 	std::vector<std::tuple<std::string, std::string, std::string>> m_libraryTests;
+	std::vector<std::tuple<std::string, std::string, std::string>> m_contractTests;
 	std::string m_libraryName;
 
 	static auto constexpr s_interfaceFunctionPrefix = "i";

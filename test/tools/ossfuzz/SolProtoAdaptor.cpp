@@ -186,12 +186,16 @@ SolContractFunction::SolContractFunction(
 
 bool SolContractFunction::operator==(SolContractFunction const& _rhs) const
 {
-	return this->m_visibility == _rhs.m_visibility && this->m_mutability == _rhs.m_mutability;
+	// TODO: Consider function parameters in addition to name once they are
+	// implemented.
+	return name() == _rhs.name();
 }
 
 bool SolContractFunction::operator!=(SolContractFunction const& _rhs) const
 {
-	return this->m_visibility != _rhs.m_visibility || this->m_mutability != _rhs.m_mutability;
+	// TODO: Consider function parameters in addition to name once they are
+	// implemented.
+	return name() != _rhs.name();
 }
 
 string SolContractFunction::str() const
@@ -352,9 +356,6 @@ void SolInterface::addBases(Interface const& _interface)
 	{
 		auto base = make_shared<SolInterface>(SolInterface(b, newBaseName(), m_prng));
 		m_baseInterfaces.push_back(base);
-#if 0
-		cout << "Added " << base->name() << " as base" << endl;
-#endif
 		// Worst case, we override all base functions so we
 		// increment derived contract's function index by
 		// this amount.
@@ -378,9 +379,6 @@ void SolInterface::addFunctions(Interface const& _interface)
 
 SolInterface::SolInterface(Interface const& _interface, string _name, shared_ptr<SolRandomNumGenerator> _prng)
 {
-#if 0
-	cout << "Constructing " << _name << endl;
-#endif
 	m_prng = _prng;
 	m_interfaceName = _name;
 	m_lastBaseName = m_interfaceName;
@@ -430,8 +428,16 @@ string SolInterface::overrideStr() const
 					sep = ", ";
 			}
 		}
-		else if (coinFlip())
-			continue;
+		else
+		{
+			assertThrow(
+				f.second.size() == 1,
+				langutil::FuzzerError,
+				"Inconsistent override map"
+			);
+			if (!f.second[0]->explicitlyInherited())
+				continue;
+		}
 		overriddenFunctions << Whiskers(R"(
 	function <functionName>() external <stateMutability> override<?multiple>(<baseNames>)</multiple> returns (uint);)")
 			("functionName", f.first->name())
@@ -470,11 +476,18 @@ interface <programName><?inheritance> is <baseNames></inheritance> {
 		.render();
 }
 
-SolContract::SolContract(Contract const& _contract, std::string _name, shared_ptr<SolRandomNumGenerator> _prng)
+void SolContract::overrideHelper()
 {
-	m_prng = _prng;
-	m_contractName = _name;
-	m_abstract = _contract.abstract();
+
+}
+
+void SolContract::addOverrides()
+{
+
+}
+
+void SolContract::addFunctions(Contract const& _contract)
+{
 	for (auto &f: _contract.funcdef())
 		m_contractFunctions.push_back(
 			make_unique<SolContractFunction>(
@@ -486,6 +499,10 @@ SolContract::SolContract(Contract const& _contract, std::string _name, shared_pt
 				)
 			)
 		);
+}
+
+void SolContract::addBases(Contract const& _contract)
+{
 	for (auto &b: _contract.bases())
 	{
 		switch (b.contract_or_interface_oneof_case())
@@ -493,14 +510,14 @@ SolContract::SolContract(Contract const& _contract, std::string _name, shared_pt
 		case ContractOrInterface::kC:
 			m_baseContracts.push_back(
 				make_unique<SolBaseContract>(
-					SolBaseContract(&b.c(), newContractBaseName(), m_prng)
+					SolBaseContract(&b.c(), newBaseName(), m_prng)
 				)
 			);
 			break;
 		case ContractOrInterface::kI:
 			m_baseContracts.push_back(
 				make_unique<SolBaseContract>(
-					SolBaseContract(&b.i(), newInterfaceBaseName(), m_prng)
+					SolBaseContract(&b.i(), newBaseName(), m_prng)
 				)
 			);
 			break;
@@ -508,6 +525,25 @@ SolContract::SolContract(Contract const& _contract, std::string _name, shared_pt
 			break;
 		}
 	}
+}
+
+string SolContract::str() const
+{
+	return "";
+}
+
+SolContract::SolContract(
+	Contract const& _contract,
+	std::string _name,
+	shared_ptr<SolRandomNumGenerator> _prng
+)
+{
+	m_prng = _prng;
+	m_contractName = _name;
+	m_abstract = _contract.abstract();
+	addBases(_contract);
+	addOverrides();
+	addFunctions(_contract);
 }
 
 void SolLibrary::addFunction(LibraryFunction const& _function)
@@ -536,9 +572,10 @@ void SolLibrary::addFunction(LibraryFunction const& _function)
 	);
 }
 
-SolLibrary::SolLibrary(Library const& _library, string _name)
+SolLibrary::SolLibrary(Library const& _library, string _name, shared_ptr<SolRandomNumGenerator> _prng)
 {
 	m_libraryName = _name;
+	m_prng = _prng;
 	for (LibraryFunction const& f: _library.funcdef())
 		addFunction(f);
 }
@@ -564,17 +601,20 @@ bool SolLibrary::validTest() const
 	return m_publicFunctionMap.size() > 0;
 }
 
-pair<string, string> SolLibrary::pseudoRandomTest(unsigned _randomIdx)
+pair<string, string> SolLibrary::pseudoRandomTest()
 {
 	solAssert(m_publicFunctionMap.size() > 0, "Sol proto adaptor: Empty library map");
 	string chosenFunction;
 	unsigned numFunctions = m_publicFunctionMap.size();
-	unsigned functionIndex = _randomIdx % numFunctions;
+	unsigned functionIndex = randomNumber() % numFunctions;
 	unsigned mapIdx = 0;
 	for (auto &e: m_publicFunctionMap)
 	{
 		if (functionIndex == mapIdx)
+		{
 			chosenFunction = e.first;
+			break;
+		}
 		mapIdx++;
 	}
 	solAssert(m_publicFunctionMap.count(chosenFunction), "Sol proto adaptor: Invalid library function chosen");

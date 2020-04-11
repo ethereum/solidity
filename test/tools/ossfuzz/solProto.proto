@@ -61,7 +61,6 @@ message ContractFunction {
 
 message Library {
     repeated LibraryFunction funcdef = 1;
-    required uint64 random = 2;
 }
 
 message Interface {
@@ -96,7 +95,6 @@ message TestContract {
         CONTRACT = 1;
     }
     required Type type = 1;
-    required uint64 programidx = 2;
 }
 
 message Program {

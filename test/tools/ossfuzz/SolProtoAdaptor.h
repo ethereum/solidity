@@ -194,7 +194,7 @@ struct SolLibraryFunction
 
 struct SolLibrary
 {
-	SolLibrary(Library const& _library, std::string _name);
+	SolLibrary(Library const& _library, std::string _name, std::shared_ptr<SolRandomNumGenerator> _prng);
 	std::vector<std::unique_ptr<SolLibraryFunction>> m_functions;
 	/// Maps publicly exposed function name to expected output
 	std::map<std::string, std::string> m_publicFunctionMap;
@@ -202,13 +202,15 @@ struct SolLibrary
 	void addFunction(LibraryFunction const& _function);
 
 	bool validTest() const;
+	unsigned randomNumber() const
+	{
+		return m_prng->operator()();
+	}
 
 	/// Returns a pair of function name and expected output
 	/// that is pseudo randomly chosen from the list of all
 	/// library functions.
-	/// @param _randomIdx A pseudo randomly generated number that is
-	/// used to index the list of all library functions.
-	std::pair<std::string, std::string> pseudoRandomTest(unsigned _randomIdx);
+	std::pair<std::string, std::string> pseudoRandomTest();
 
 	std::string str() const;
 
@@ -228,6 +230,7 @@ struct SolLibrary
 	std::string m_libraryName;
 	unsigned m_functionIndex = 0;
 	unsigned m_returnValue = 0;
+	std::shared_ptr<SolRandomNumGenerator> m_prng;
 };
 
 struct SolBaseContract
@@ -244,8 +247,14 @@ struct SolContract
 	SolContract(Contract const& _contract, std::string _name, std::shared_ptr<SolRandomNumGenerator> _prng);
 
 	std::string str() const;
+	void addFunctions(Contract const& _contract);
+	void addBases(Contract const& _contract);
+	void addOverrides();
+	void overrideHelper();
+	bool validTest();
+	std::tuple<std::string, std::string, std::string> pseudoRandomTest();
 
-	unsigned randomNumber()
+	unsigned randomNumber() const
 	{
 		return m_prng->operator()();
 	}
@@ -253,27 +262,27 @@ struct SolContract
 	{
 		return m_contractName;
 	}
-
 	bool abstract() const
 	{
 		return m_abstract;
 	}
-
 	std::string newFunctionName()
 	{
 		return "f" + std::to_string(m_functionIndex++);
 	}
-
-	std::string newContractBaseName()
+	unsigned functionIndex() const
 	{
-		return name() + "B" + std::to_string(m_baseIndex++);
+		return m_functionIndex;
 	}
-
-	std::string newInterfaceBaseName()
+	std::string newBaseName()
 	{
-		return "IB" + std::to_string(m_baseIndex++);
+		m_lastBaseName += "B";
+		return m_lastBaseName;
 	}
-
+	std::string lastBaseName() const
+	{
+		return m_lastBaseName;
+	}
 	std::string newReturnValue()
 	{
 		return std::to_string(m_returnValue++);
@@ -281,12 +290,12 @@ struct SolContract
 
 	std::string m_contractName;
 	bool m_abstract = false;
-	unsigned m_baseIndex = 0;
 	unsigned m_functionIndex = 0;
 	unsigned m_returnValue = 0;
-	std::vector<std::unique_ptr<SolContractFunction>> m_contractFunctions;
-	std::vector<std::unique_ptr<SolBaseContract>> m_baseContracts;
-	std::vector<std::unique_ptr<CFunctionOverride>> m_overriddenFunctions;
+	std::string m_lastBaseName;
+	std::vector<std::shared_ptr<SolContractFunction>> m_contractFunctions;
+	std::vector<std::shared_ptr<SolBaseContract>> m_baseContracts;
+	std::vector<std::shared_ptr<CFunctionOverride>> m_overriddenFunctions;
 	std::shared_ptr<SolRandomNumGenerator> m_prng;
 };
 
@@ -375,6 +384,13 @@ struct SolInterface
 	std::shared_ptr<SolRandomNumGenerator> m_prng;
 };
 
+/* Contract functions may be overridden by other contracts. Base and derived contracts
+ * may either be abstract or non-abstract. That gives us four possibilities:
+ * - both abstract
+ * - both non abstract
+ * - one of them abstract, the other non abstract
+ */
+
 struct CFunctionOverride
 {
 	CFunctionOverride(
@@ -392,6 +408,12 @@ struct CFunctionOverride
 		m_redeclared = _redeclared;
 		m_returnValue = _returnValue;
 	}
+
+	enum class DerivedType
+	{
+		ABSTRACTCONTRACT,
+		CONTRACT
+	};
 
 	enum class CFunctionOverrideType
 	{

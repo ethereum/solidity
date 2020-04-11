@@ -54,7 +54,7 @@ string ProtoConverter::visit(TestContract const& _testContract)
 		else
 		{
 			m_libraryTest = true;
-			auto testTuple = pseudoRandomLibraryTest(_testContract.programidx());
+			auto testTuple = pseudoRandomLibraryTest();
 			m_libraryName = get<0>(testTuple);
 			usingLibDecl = Whiskers(R"(
 	using <libraryName> for uint;)")
@@ -72,20 +72,24 @@ string ProtoConverter::visit(TestContract const& _testContract)
 		break;
 	}
 	case TestContract::CONTRACT:
-#if 0
-		testCode = Whiskers(R"(
-		<contractName> testContract = new <contractName>();
-		if (testContract.<testFunction>() != <expectedOutput>)
-			return 1;
-		return 0;)")
-			("contractName", "")
-			("testFunction", "")
-			("expectedOutput", "")
-			.render();
-#else
-		testCode = Whiskers(R"(
+		if (emptyContractTests())
+			testCode = Whiskers(R"(
 		return 0;)")
 				.render();
+#if 0
+		else
+		{
+			auto testTuple = pseudoRandomContractTest();
+			testCode = Whiskers(R"(
+			<contractName> testContract = new <contractName>();
+			if (testContract.<testFunction>() != <expectedOutput>)
+				return 1;
+			return 0;)")
+				("contractName", get<0>(testTuple))
+				("testFunction", get<1>(testTuple))
+				("expectedOutput", get<2>(testTuple))
+				.render();
+		}
 #endif
 		break;
 	}
@@ -615,25 +619,24 @@ tuple<string, string, string> ProtoConverter::visitProgramHelper(CIL _program)
 	}
 	return make_tuple(bases.str(), baseNames.str(), funcs.str());
 }
+#endif
 
 string ProtoConverter::visit(Contract const& _contract)
 {
+	if (_contract.funcdef_size() == 0 && _contract.bases_size() == 0)
+		return "";
+
 	openProgramScope(&_contract);
-	auto [bases, baseNames, funcs] = visitProgramHelper(&_contract);
-	return Whiskers(R"(
-<bases>
-<?isAbstract>abstract </isAbstract>contract <programName><?inheritance> is <baseNames></inheritance> {
-<functionDefs>
-})")
-		("bases", bases)
-		("isAbstract", _contract.abstract())
-		("programName", programName(&_contract))
-		("inheritance", _contract.bases_size() > 0 && !baseNames.empty())
-		("baseNames", baseNames)
-		("functionDefs", funcs)
-		.render();
+	try {
+		auto contract = SolContract(_contract, programName(&_contract), m_randomGen);
+		return contract.str();
+	}
+	catch (langutil::FuzzerError const&)
+	{
+		// Return empty string if input specification is invalid.
+		return "";
+	}
 }
-#endif
 
 string ProtoConverter::visit(Interface const& _interface)
 {
@@ -658,20 +661,27 @@ string ProtoConverter::visit(Library const& _library)
 		return "";
 
 	openProgramScope(&_library);
-	auto lib = SolLibrary(_library, programName(&_library));
+	auto lib = SolLibrary(_library, programName(&_library), m_randomGen);
 	if (lib.validTest())
 	{
-		auto libTestPair = lib.pseudoRandomTest(_library.random());
+		auto libTestPair = lib.pseudoRandomTest();
 		m_libraryTests.push_back({lib.name(), libTestPair.first, libTestPair.second});
 	}
 	return lib.str();
 }
 
-tuple<string, string, string> ProtoConverter::pseudoRandomLibraryTest(unsigned _randomIdx)
+tuple<string, string, string> ProtoConverter::pseudoRandomLibraryTest()
 {
 	solAssert(m_libraryTests.size() > 0, "Sol proto fuzzer: No library tests found");
-	unsigned index = _randomIdx % m_libraryTests.size();
+	unsigned index = randomNumber() % m_libraryTests.size();
 	return m_libraryTests[index];
+}
+
+tuple<string, string, string> ProtoConverter::pseudoRandomContractTest()
+{
+	solAssert(m_contractTests.size() > 0, "Sol proto fuzzer: No contract tests found");
+	unsigned index = randomNumber() % m_contractTests.size();
+	return m_contractTests[index];
 }
 
 void ProtoConverter::openProgramScope(CIL _program)
