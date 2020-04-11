@@ -629,7 +629,15 @@ string ProtoConverter::visit(Contract const& _contract)
 	openProgramScope(&_contract);
 	try {
 		auto contract = SolContract(_contract, programName(&_contract), m_randomGen);
-		return contract.str();
+		if (contract.validTest())
+		{
+			m_contractTests.push_back(contract.pseudoRandomTest());
+			return contract.str();
+		}
+		// There is no point in generating a contract that can not provide
+		// a valid test case, so we simply bail.
+		else
+			return "";
 	}
 	catch (langutil::FuzzerError const&)
 	{

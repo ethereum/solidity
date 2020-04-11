@@ -476,6 +476,47 @@ interface <programName><?inheritance> is <baseNames></inheritance> {
 		.render();
 }
 
+bool SolContract::validTest() const
+{
+	return m_contractFunctionMap.size() > 0;
+}
+
+tuple<string, string, string> SolContract::pseudoRandomTest()
+{
+	solAssert(m_contractFunctionMap.size() > 0, "Sol proto adaptor: Empty contract map");
+	string chosenContractName{};
+	string chosenFunctionName{};
+	string expectedOutput{};
+	unsigned numFunctions = m_contractFunctionMap.size();
+	unsigned contractIdx = randomNumber() % numFunctions;
+	unsigned functionIdx = 0;
+	unsigned mapIdx = 0;
+	for (auto &e: m_contractFunctionMap)
+	{
+		if (contractIdx == mapIdx)
+		{
+			chosenContractName = e.first;
+			functionIdx = random() % e.second.size();
+			unsigned functionMapIdx = 0;
+			for (auto &f: e.second)
+			{
+				if (functionIdx == functionMapIdx)
+				{
+					chosenFunctionName = f.first;
+					expectedOutput = f.second;
+					break;
+				}
+				functionMapIdx++;
+			}
+			break;
+		}
+		mapIdx++;
+	}
+	solAssert(m_contractFunctionMap.count(chosenContractName), "Sol proto adaptor: Invalid contract chosen");
+	solAssert(m_contractFunctionMap[chosenContractName].count(chosenFunctionName), "Sol proto adaptor: Invalid contract function chosen");
+	return tuple(chosenContractName, chosenFunctionName, expectedOutput);
+}
+
 void SolContract::overrideHelper()
 {
 

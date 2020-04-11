@@ -251,7 +251,7 @@ struct SolContract
 	void addBases(Contract const& _contract);
 	void addOverrides();
 	void overrideHelper();
-	bool validTest();
+	bool validTest() const;
 	std::tuple<std::string, std::string, std::string> pseudoRandomTest();
 
 	unsigned randomNumber() const
@@ -296,6 +296,9 @@ struct SolContract
 	std::vector<std::shared_ptr<SolContractFunction>> m_contractFunctions;
 	std::vector<std::shared_ptr<SolBaseContract>> m_baseContracts;
 	std::vector<std::shared_ptr<CFunctionOverride>> m_overriddenFunctions;
+	/// Maps non abstract contract name to list of publicly exposed function name
+	/// and their expected output
+	std::map<std::string, std::map<std::string, std::string>> m_contractFunctionMap;
 	std::shared_ptr<SolRandomNumGenerator> m_prng;
 };
 
