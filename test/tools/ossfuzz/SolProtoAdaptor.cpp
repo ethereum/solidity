@@ -141,13 +141,11 @@ string libraryFunctionMutability(SolLibraryFunctionStateMutability _mut)
 
 SolInterfaceFunction::SolInterfaceFunction(
 	std::string _functionName,
-	SolFunctionStateMutability _mutability,
-	bool _override
+	SolFunctionStateMutability _mutability
 )
 {
 	m_functionName = _functionName;
 	m_mutability = _mutability;
-	m_override = _override;
 }
 
 bool SolInterfaceFunction::operator==(SolInterfaceFunction const& _rhs) const
@@ -164,23 +162,10 @@ bool SolInterfaceFunction::operator!=(SolInterfaceFunction const& _rhs) const
 
 string SolInterfaceFunction::str() const
 {
-	string bodyStr = Whiskers(R"(
-	{
-		return <uint>;
-	})")
-		("uint", "0")
-		.render();
-
 	return Whiskers(R"(
-	function <functionName>() external <stateMutability><?isOverride> override</isOverride>
-	<?isVirtual> virtual</isVirtual> returns (uint)<?isImplemented><body><!isImplemented>;</isImplemented>
-	)")
+	function <functionName>() external <stateMutability> returns (uint);)")
 		("functionName", name())
 		("stateMutability", functionMutability(mutability()))
-		("isOverride", override())
-		("isVirtual", isVirtual())
-		("isImplemented", implement())
-		("body", bodyStr)
 		.render();
 }
 
@@ -295,7 +280,7 @@ void SolInterface::overrideHelper(
 		{
 			// Report error if state mutability of identically
 			// named functions differ
-			if (m.first->mutability() != _function->mutability())
+			if (m.first->mutability() != mutability)
 				assertThrow(
 					false,
 					langutil::FuzzerError,
@@ -303,23 +288,47 @@ void SolInterface::overrideHelper(
 					" and parameter types but different mutability."
 				);
 			// Add new base to list of overridden bases
-			m_overrideMap[m.first].push_back(_base);
+			m_overrideMap[m.first].push_back(
+				shared_ptr<IFunctionOverride>(
+					make_shared<IFunctionOverride>(
+						IFunctionOverride(
+							_base,
+							_function,
+							this,
+							false,
+							false,
+							true,
+							""
+						)
+					)
+				)
+			);
 			multipleOverride = true;
 			break;
 		}
 	}
-	// If function has not been overridden, add new override
+	// Use a pseudo-random coin flip to decide whether to override explicitly
+	// or not. Implicit override means that the overridden function is not
+	// redeclared with the override keyword.
+	bool explicitOverride = coinFlip();
+	// If function has not been overridden, add new override pseudo-randomly
 	if (!multipleOverride)
 		m_overrideMap.insert(
 			pair(
-				make_shared<SolInterfaceFunction>(
-					SolInterfaceFunction(
-						functionName,
-						mutability,
-						true
+				_function,
+				vector<shared_ptr<IFunctionOverride>>{
+					make_shared<IFunctionOverride>(
+						IFunctionOverride(
+								_base,
+								_function,
+								this,
+								false,
+								false,
+								explicitOverride,
+								""
+						)
 					)
-				),
-				vector<shared_ptr<SolInterface>>{_base}
+				}
 			)
 		);
 }
@@ -343,7 +352,9 @@ void SolInterface::addBases(Interface const& _interface)
 	{
 		auto base = make_shared<SolInterface>(SolInterface(b, newBaseName(), m_prng));
 		m_baseInterfaces.push_back(base);
+#if 0
 		cout << "Added " << base->name() << " as base" << endl;
+#endif
 		// Worst case, we override all base functions so we
 		// increment derived contract's function index by
 		// this amount.
@@ -367,7 +378,9 @@ void SolInterface::addFunctions(Interface const& _interface)
 
 SolInterface::SolInterface(Interface const& _interface, string _name, shared_ptr<SolRandomNumGenerator> _prng)
 {
+#if 0
 	cout << "Constructing " << _name << endl;
+#endif
 	m_prng = _prng;
 	m_interfaceName = _name;
 	m_lastBaseName = m_interfaceName;
@@ -411,12 +424,14 @@ string SolInterface::overrideStr() const
 			{
 				overriddenBaseNames << Whiskers(R"(<sep><name>)")
 					("sep", sep)
-					("name", b->name())
+					("name", b->baseName())
 					.render();
 				if (sep.empty())
 					sep = ", ";
 			}
 		}
+		else if (coinFlip())
+			continue;
 		overriddenFunctions << Whiskers(R"(
 	function <functionName>() external <stateMutability> override<?multiple>(<baseNames>)</multiple> returns (uint);)")
 			("functionName", f.first->name())
@@ -660,3 +675,100 @@ string CFunctionOverride::str() const
 //	solAssert(interfaceFunction(), "Sol proto fuzzer: Invalid override function type");
 //	return get<shared_ptr<SolInterface const>>(base)->name();
 //}
+
+IFunctionOverride::IFunctionOverride(
+	std::shared_ptr<SolInterface const> _baseInterface,
+	std::shared_ptr<SolInterfaceFunction const> _baseFunction,
+	std::variant<SolInterface*, SolContract*> _derivedProgram,
+	bool _implement,
+	bool _virtual,
+	bool _explicitInherit,
+	std::string _returnValue
+)
+{
+	if (std::holds_alternative<SolContract*>(_derivedProgram))
+	{
+		auto derived = std::get<SolContract*>(_derivedProgram);
+		m_derivedType = derived->abstract() ? DerivedType::ABSTRACTCONTRACT : DerivedType::CONTRACT;
+		if (!derived->abstract())
+			assertThrow(
+				_explicitInherit && !_returnValue.empty() && _implement,
+				langutil::FuzzerError,
+				"Contract overrides base interface function either without"
+				" implementing it or implictly overrides."
+			);
+		else
+			if (_explicitInherit)
+				assertThrow(
+					_virtual || (_implement && !_returnValue.empty()),
+					langutil::FuzzerError,
+					"Abstract contract overrides base interface function either"
+					" without implementing it or without marking it virtual."
+				);
+	}
+	else
+	{
+		assertThrow(holds_alternative<SolInterface*>(_derivedProgram),
+			langutil::FuzzerError,
+			"Derived program neither an interface nor a contract"
+		);
+		m_derivedType = DerivedType::INTERFACE;
+		if (_explicitInherit)
+			assertThrow(
+				!_virtual && !_implement && !_returnValue.empty(),
+				langutil::FuzzerError,
+				"Interface overrides base interface function with invalid parameters."
+			);
+	}
+
+	m_baseInterface = _baseInterface;
+	m_baseFunction = _baseFunction;
+	m_derivedProgram = _derivedProgram;
+	m_implemented = _implement;
+	m_virtualized = _virtual;
+	m_explicitlyInherited = _explicitInherit;
+	m_returnValue = _returnValue;
+}
+
+std::string IFunctionOverride::str() const
+{
+	switch (m_derivedType)
+	{
+	case DerivedType::INTERFACE:
+		return interfaceStr();
+	case DerivedType::ABSTRACTCONTRACT:
+	case DerivedType::CONTRACT:
+		return contractStr();
+	}
+}
+
+string IFunctionOverride::interfaceStr() const
+{
+	return Whiskers(R"(
+	function <functionName>() external <mutability> override returns(uint);
+)")
+		("functionName", m_baseFunction->name())
+		("mutability", functionMutability(m_baseFunction->mutability()))
+		.render();
+}
+
+string IFunctionOverride::contractStr() const
+{
+	string bodyStr = Whiskers(R"(
+	{
+		return <uint>;
+	})")
+		("uint", returnValue())
+		.render();
+
+	return Whiskers(R"(
+	function <functionName>() external <mutability> override
+		<?isVirtual> virtual</isVirtual> returns(uint)<?isImplemented><body><!isImplemented>;</isImplemented>
+)")
+		("functionName", m_baseFunction->name())
+		("mutability", functionMutability(m_baseFunction->mutability()))
+		("isVirtual", virtualized())
+		("isImplemented", implemented())
+		("body", bodyStr)
+		.render();
+}

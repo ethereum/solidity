@@ -90,8 +90,7 @@ struct SolInterfaceFunction
 {
 	SolInterfaceFunction(
 		std::string _functionName,
-		SolFunctionStateMutability _mutability,
-		bool _override = false
+		SolFunctionStateMutability _mutability
 	);
 	bool operator==(SolInterfaceFunction const& _rhs) const;
 	bool operator!=(SolInterfaceFunction const& _rhs) const;
@@ -105,24 +104,9 @@ struct SolInterfaceFunction
 	{
 		return m_mutability;
 	}
-	bool override() const
-	{
-		return m_override;
-	}
-	bool isVirtual() const
-	{
-		return false;
-	}
-	bool implement() const
-	{
-		return false;
-	}
 
 	std::string m_functionName;
 	SolFunctionStateMutability m_mutability = SolFunctionStateMutability::PURE;
-	bool m_override = false;
-	bool m_virtual = false;
-	bool m_implement = false;
 };
 
 struct SolContractFunction
@@ -387,7 +371,7 @@ struct SolInterface
 	std::string m_interfaceName;
 	std::vector<std::shared_ptr<SolInterfaceFunction>> m_interfaceFunctions;
 	std::vector<std::shared_ptr<SolInterface>> m_baseInterfaces;
-	InterfaceOverrideMap m_overrideMap;
+	std::map<std::shared_ptr<SolInterfaceFunction>, std::vector<std::shared_ptr<IFunctionOverride>>> m_overrideMap;
 	std::shared_ptr<SolRandomNumGenerator> m_prng;
 };
 
@@ -466,25 +450,48 @@ struct CFunctionOverride
 	}
 };
 
+/* Difference between interface function declaration and interface
+ * function override is that the former can not be implemented and
+ * should not be marked virtual i.e., virtual is implicit.
+ *
+ * Interface function declarations may be implicitly or explicitly
+ * inherited by derived interfaces. To explicitly inherit base
+ * interface's function declaration, derived base must redeclare
+ * the said function and mark it override. If base interface function
+ * does not redeclare base interface function, it implicitly inherits
+ * it from base and exposes it to its derived interfaces.
+ *
+ * Interface functions inherited by contracts may be implicitly or
+ * explicitly inherited. Derived non abstract contracts must explicitly
+ * override and implement inherited interface functions unless they have
+ * already been implemented by one of its bases. Abstract contracts
+ * may implicitly or explicitly inherit base interface functions. If
+ * explicitly inherited, they must be redeclared and marked override.
+ * When a base interface function is explicitly inherited by a contract
+ * it may be marked virtual.
+ */
 struct IFunctionOverride
 {
-IFunctionOverride(
-	std::vector<std::shared_ptr<SolInterface const>> _base,
-	std::unique_ptr<SolInterfaceFunction const> _function,
-	bool _implement,
-	bool _virtual,
-	bool _redeclare,
-	std::string _returnValue = ""
-)
-{
-	m_function = std::make_pair(_base, std::move(_function));
-	m_implemented = _implement;
-	m_virtualized = _virtual;
-	m_redeclared = _redeclare;
-	m_returnValue = _returnValue;
-}
+	enum class DerivedType
+	{
+		INTERFACE,
+		ABSTRACTCONTRACT,
+		CONTRACT
+	};
+
+	IFunctionOverride(
+		std::shared_ptr<SolInterface const> _baseInterface,
+		std::shared_ptr<SolInterfaceFunction const> _baseFunction,
+		std::variant<SolInterface*, SolContract*> _derivedProgram,
+		bool _implement,
+		bool _virtual,
+		bool _explicitInherit,
+		std::string _returnValue
+	);
 
 	std::string str() const;
+	std::string interfaceStr() const;
+	std::string contractStr() const;
 
 	bool implemented() const
 	{
@@ -496,9 +503,9 @@ IFunctionOverride(
 		return m_virtualized;
 	}
 
-	bool redeclared() const
+	bool explicitlyInherited() const
 	{
-		return m_redeclared;
+		return m_explicitlyInherited;
 	}
 
 	std::string returnValue() const
@@ -506,15 +513,24 @@ IFunctionOverride(
 		return m_returnValue;
 	}
 
-	OverrideIFunction m_function;
+	std::string baseName() const
+	{
+		return m_baseInterface->name();
+	}
+
+	std::shared_ptr<SolInterface const> m_baseInterface;
+	std::shared_ptr<SolInterfaceFunction const> m_baseFunction;
+	std::variant<SolInterface*, SolContract*> m_derivedProgram;
+
 	/// Flag that is true if overridden function is implemented in derived contract
 	bool m_implemented = false;
 	/// Flag that is true if overridden function implemented in derived contract is
 	/// marked virtual
 	bool m_virtualized = false;
 	/// Flag that is true if overridden function is redeclared but not implemented
-	bool m_redeclared = false;
+	bool m_explicitlyInherited = false;
 	/// The uint value to be returned if the overridden interface function is implemented
 	std::string m_returnValue;
+	DerivedType m_derivedType;
 };
 }
