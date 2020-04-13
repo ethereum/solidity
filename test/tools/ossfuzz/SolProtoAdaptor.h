@@ -115,10 +115,12 @@ struct SolContractFunction
 		ContractFunction const& _function,
 		std::string _contractName,
 		std::string _functionName,
+		bool _implement,
 		std::string _returnValue
 	);
 	bool operator==(SolContractFunction const& _rhs) const;
 	bool operator!=(SolContractFunction const& _rhs) const;
+	bool disallowed() const;
 	std::string str() const;
 
 	std::string name() const
@@ -132,6 +134,10 @@ struct SolContractFunction
 	bool isVirtual() const
 	{
 		return m_virtual;
+	}
+	bool implemented() const
+	{
+		return m_implemented;
 	}
 	std::string returnValue() const
 	{
@@ -152,6 +158,7 @@ struct SolContractFunction
 	SolFunctionStateMutability m_mutability = SolFunctionStateMutability::PURE;
 	bool m_virtual = false;
 	std::string m_returnValue;
+	bool m_implemented = true;
 };
 
 struct SolLibraryFunction
@@ -235,9 +242,28 @@ struct SolLibrary
 
 struct SolBaseContract
 {
+	enum BaseType
+	{
+		INTERFACE,
+		CONTRACT
+	};
+
 	SolBaseContract(ProtoBaseContract _base, std::string _name, std::shared_ptr<SolRandomNumGenerator> _prng);
 
-	BaseContracts m_base;
+	std::variant<std::vector<std::shared_ptr<SolContractFunction>>, std::vector<std::shared_ptr<SolInterfaceFunction>>>
+	baseFunctions();
+	BaseType type() const;
+	std::string str();
+	std::shared_ptr<SolInterface> interface()
+	{
+		return std::get<std::shared_ptr<SolInterface>>(m_base);
+	}
+	std::shared_ptr<SolContract> contract()
+	{
+		return std::get<std::shared_ptr<SolContract>>(m_base);
+	}
+
+	std::variant<std::shared_ptr<SolInterface>, std::shared_ptr<SolContract>> m_base;
 	std::string m_baseName;
 	std::shared_ptr<SolRandomNumGenerator> m_prng;
 };
@@ -247,17 +273,33 @@ struct SolContract
 	SolContract(Contract const& _contract, std::string _name, std::shared_ptr<SolRandomNumGenerator> _prng);
 
 	std::string str() const;
+	std::string interfaceOverrideStr() const;
+	std::string contractOverrideStr() const;
 	void addFunctions(Contract const& _contract);
 	void addBases(Contract const& _contract);
 	void addOverrides();
-	void overrideHelper();
+	void interfaceFunctionOverride(
+		std::shared_ptr<SolInterface> _base,
+		std::shared_ptr<SolInterfaceFunction> _function
+	);
+	void contractFunctionOverride(
+		std::shared_ptr<SolContract> _base,
+		std::shared_ptr<SolContractFunction> _function
+	);
+
 	bool validTest() const;
+	std::tuple<std::string, std::string, std::string> validContractTest();
 	std::tuple<std::string, std::string, std::string> pseudoRandomTest();
 
 	unsigned randomNumber() const
 	{
 		return m_prng->operator()();
 	}
+	bool coinToss() const
+	{
+		return randomNumber() % 2 == 0;
+	}
+
 	std::string name() const
 	{
 		return m_contractName;
@@ -295,7 +337,8 @@ struct SolContract
 	std::string m_lastBaseName;
 	std::vector<std::shared_ptr<SolContractFunction>> m_contractFunctions;
 	std::vector<std::shared_ptr<SolBaseContract>> m_baseContracts;
-	std::vector<std::shared_ptr<CFunctionOverride>> m_overriddenFunctions;
+	std::map<std::shared_ptr<SolContractFunction>, std::vector<std::shared_ptr<CFunctionOverride>>> m_overriddenContractFunctions;
+	std::map<std::shared_ptr<SolInterfaceFunction>, std::vector<std::shared_ptr<IFunctionOverride>>> m_overriddenInterfaceFunctions;
 	/// Maps non abstract contract name to list of publicly exposed function name
 	/// and their expected output
 	std::map<std::string, std::map<std::string, std::string>> m_contractFunctionMap;
@@ -320,7 +363,7 @@ struct SolInterface
 		return m_prng->operator()();
 	}
 
-	bool coinFlip() const
+	bool coinToss() const
 	{
 		return randomNumber() % 2 == 0;
 	}
@@ -396,41 +439,35 @@ struct SolInterface
 
 struct CFunctionOverride
 {
-	CFunctionOverride(
-		BaseContracts _base,
-		OverrideFunction _function,
-		bool _implemented,
-		bool _virtualized,
-		bool _redeclared,
-		std::string _returnValue
-	)
-	{
-		m_function = std::make_pair(_base, std::move(_function));
-		m_implemented = _implemented;
-		m_virtualized = _virtualized;
-		m_redeclared = _redeclared;
-		m_returnValue = _returnValue;
-	}
-
 	enum class DerivedType
 	{
 		ABSTRACTCONTRACT,
 		CONTRACT
 	};
 
-	enum class CFunctionOverrideType
+	CFunctionOverride(
+		std::shared_ptr<SolContract> _base,
+		std::shared_ptr<SolContractFunction> _function,
+		SolContract* _derived,
+		bool _implemented,
+		bool _virtualized,
+		bool _explicitInheritance,
+		std::string _returnValue
+	)
 	{
-		INTERFACE,
-		CONTRACT
-	};
+		m_baseContract = _base;
+		m_baseFunction = _function;
+		m_derivedProgram = _derived;
+		m_implemented = _implemented;
+		m_virtualized = _virtualized;
+		m_explicitlyInherited = _explicitInheritance;
+		m_returnValue = _returnValue;
+		m_derivedType = _derived->abstract() ? DerivedType::ABSTRACTCONTRACT : DerivedType::CONTRACT;
+	}
 
 	std::string str() const;
 
 	std::string name() const;
-
-	CFunctionOverrideType functionType() const;
-
-	bool interfaceFunction() const;
 
 	bool contractFunction() const;
 
@@ -442,17 +479,30 @@ struct CFunctionOverride
 
 	std::string baseName() const;
 
-	/// Overridden function
-	OverrideCFunction m_function;
-	/// Flag that is true if overridden function is implemented
-	bool m_implemented = true;
-	/// Flag that is true if overridden function is marked virtual
+	std::shared_ptr<SolContract> baseContract() const
+	{
+		return m_baseContract;
+	}
+
+	std::shared_ptr<SolContractFunction> baseFunction() const
+	{
+		return m_baseFunction;
+	}
+
+	std::shared_ptr<SolContract> m_baseContract;
+	std::shared_ptr<SolContractFunction> m_baseFunction;
+	SolContract* m_derivedProgram;
+
+	/// Flag that is true if overridden function is implemented in derived contract
+	bool m_implemented = false;
+	/// Flag that is true if overridden function implemented in derived contract is
+	/// marked virtual
 	bool m_virtualized = false;
 	/// Flag that is true if overridden function is redeclared but not implemented
-	bool m_redeclared = false;
-	/// The uint value to be returned by the overridden function if it is
-	/// implemented
+	bool m_explicitlyInherited = false;
+	/// The uint value to be returned if the overridden interface function is implemented
 	std::string m_returnValue;
+	DerivedType m_derivedType;
 
 	bool implemented() const
 	{
@@ -464,9 +514,9 @@ struct CFunctionOverride
 		return m_virtualized;
 	}
 
-	bool redeclared() const
+	bool explicitlyInherited() const
 	{
-		return m_redeclared;
+		return m_explicitlyInherited;
 	}
 
 	std::string returnValue() const
@@ -517,6 +567,21 @@ struct IFunctionOverride
 	std::string str() const;
 	std::string interfaceStr() const;
 	std::string contractStr() const;
+
+	void setImplement()
+	{
+		m_implemented = true;
+	}
+
+	void setVirtual()
+	{
+		m_virtualized = true;
+	}
+
+	void setExplicitInherit()
+	{
+		m_explicitlyInherited = true;
+	}
 
 	bool implemented() const
 	{

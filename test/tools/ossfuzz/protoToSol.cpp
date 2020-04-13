@@ -76,7 +76,6 @@ string ProtoConverter::visit(TestContract const& _testContract)
 			testCode = Whiskers(R"(
 		return 0;)")
 				.render();
-#if 0
 		else
 		{
 			auto testTuple = pseudoRandomContractTest();
@@ -90,7 +89,6 @@ string ProtoConverter::visit(TestContract const& _testContract)
 				("expectedOutput", get<2>(testTuple))
 				.render();
 		}
-#endif
 		break;
 	}
 
@@ -146,8 +144,7 @@ string ProtoConverter::visit(ContractType const& _contractType)
 	case ContractType::kC:
 		m_mostDerivedAbstractContract = _contractType.c().abstract();
 		m_mostDerivedProgram = MostDerivedProgram::CONTRACT;
-//		return visit(_contractType.c());
-		return "";
+		return visit(_contractType.c());
 	case ContractType::kL:
 		m_mostDerivedProgram = MostDerivedProgram::LIBRARY;
 		return visit(_contractType.l());
@@ -157,45 +154,6 @@ string ProtoConverter::visit(ContractType const& _contractType)
 	case ContractType::CONTRACT_TYPE_ONEOF_NOT_SET:
 		return "";
 	}
-}
-
-string ProtoConverter::visit(ContractOrInterface const& _contractOrInterface)
-{
-	switch (_contractOrInterface.contract_or_interface_oneof_case())
-	{
-	case ContractOrInterface::kC:
-//		return visit(_contractOrInterface.c());
-		return "";
-	case ContractOrInterface::kI:
-//		return visit(_contractOrInterface.i());
-		return "";
-	case ContractOrInterface::CONTRACT_OR_INTERFACE_ONEOF_NOT_SET:
-		return "";
-	}
-}
-
-bool ProtoConverter::contractFunctionImplemented(
-	Contract const* _contract,
-	CIFunc _function
-)
-{
-	auto v = m_contractFunctionMap[_contract];
-	for (auto &e: v)
-		if (get<0>(e) == _function)
-			return get<1>(e);
-	return false;
-}
-
-bool ProtoConverter::contractFunctionVirtual(
-	Contract const* _contract,
-	CIFunc _function
-)
-{
-	auto v = m_contractFunctionMap[_contract];
-	for (auto &e: v)
-		if (get<0>(e) == _function)
-			return get<2>(e);
-	return false;
 }
 
 #if 0
@@ -721,23 +679,6 @@ unsigned ProtoConverter::randomNumber()
 }
 
 #if 0
-bool ProtoConverter::disallowedContractFunction(SolContractFunction const& _contractFunction, bool _isVirtual)
-{
-	string visibility = functionVisibility(_contractFunction.m_visibility);
-	string mutability = functionMutability(_contractFunction.m_mutability);
-
-	// Private virtual functions are disallowed
-	if (visibility == "private" && _isVirtual)
-		return true;
-	// Private payable functions are disallowed
-	else if (visibility == "private" && mutability == "payable")
-		return true;
-	// Internal payable functions are disallowed
-	else if (visibility == "internal" && mutability == "payable")
-		return true;
-	return false;
-}
-
 string ProtoConverter::functionName(CILFunc _function)
 {
 	solAssert(m_functionNameMap.count(_function), "Sol proto fuzzer: Unregistered function");
