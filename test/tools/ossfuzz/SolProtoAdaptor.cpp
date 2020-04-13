@@ -953,64 +953,6 @@ void SolContract::addFunctions(Contract const& _contract)
 	}
 }
 
-void SolContract::disallowedBase(shared_ptr<SolBaseContract> _base1)
-{
-	if (m_baseContracts.size() == 0)
-		return;
-
-	shared_ptr<SolBaseContract> lastBase = m_baseContracts[m_baseContracts.size() - 1];
-	auto baseType = _base1->type();
-	auto lastBaseType = lastBase->type();
-	if (baseType == SolBaseContract::BaseType::INTERFACE && lastBaseType == SolBaseContract::BaseType::INTERFACE)
-	{
-		for (auto &bf: _base1->interface()->m_interfaceFunctions)
-			for (auto &lbf: lastBase->interface()->m_interfaceFunctions)
-				assertThrow(
-					bf != lbf,
-					langutil::FuzzerError,
-					"Sol proto adaptor: New base defines namesake function with different "
-						"visibility and/or state mutability"
-				);
-	}
-	else if (baseType == SolBaseContract::BaseType::INTERFACE && lastBaseType == SolBaseContract::BaseType::CONTRACT)
-	{
-		for (auto &bf: _base1->interface()->m_interfaceFunctions)
-			for (auto &lbf: lastBase->contract()->m_contractFunctions)
-				if (bf->name() == lbf->name() &&
-				((bf->mutability() != lbf->mutability()) || (lbf->visibility() != SolFunctionVisibility::EXTERNAL)))
-					assertThrow(
-						false,
-						langutil::FuzzerError,
-						"Sol proto adaptor: New base defines namesake function with different "
-						"visibility and/or state mutability"
-					);
-	}
-	else if (baseType == SolBaseContract::BaseType::CONTRACT && lastBaseType == SolBaseContract::BaseType::INTERFACE)
-	{
-		for (auto &bf: _base1->contract()->m_contractFunctions)
-			for (auto &lbf: lastBase->interface()->m_interfaceFunctions)
-				if (bf->name() == lbf->name() &&
-				    ((bf->mutability() != lbf->mutability()) || (bf->visibility() != SolFunctionVisibility::EXTERNAL)))
-					assertThrow(
-						false,
-						langutil::FuzzerError,
-						"Sol proto adaptor: New base defines namesake function with different "
-						"visibility and/or state mutability"
-					);
-	}
-	else
-	{
-		for (auto &bf: _base1->contract()->m_contractFunctions)
-			for (auto &lbf: lastBase->contract()->m_contractFunctions)
-				assertThrow(
-					bf != lbf,
-					langutil::FuzzerError,
-					"Sol proto adaptor: New base defines namesake function with different "
-					"visibility and/or state mutability"
-				);
-	}
-}
-
 void SolContract::addBases(Contract const& _contract)
 {
 	shared_ptr<SolBaseContract> base;
@@ -1031,10 +973,6 @@ void SolContract::addBases(Contract const& _contract)
 		case ContractOrInterface::CONTRACT_OR_INTERFACE_ONEOF_NOT_SET:
 			continue;
 		}
-		// Check if new base defines a namesake function with different
-		// visibility and/or state mutability in relation to previous
-		// base
-//		disallowedBase(base);
 		m_baseContracts.push_back(base);
 		// Worst case, we override all base functions so we
 		// increment derived contract's function index by
@@ -1044,16 +982,17 @@ void SolContract::addBases(Contract const& _contract)
 	}
 }
 
-string SolContract::contractOverrideStr() const
+string SolContract::contractOverrideStr()
 {
 	ostringstream overriddenFunctions;
 	for (auto &f: m_overriddenContractFunctions)
 	{
+		string returnValue = f.second[0]->returnValue();
 		string bodyStr = Whiskers(R"(
 	{
 		return <uint>;
 	})")
-			("uint", f.second[0]->returnValue())
+			("uint", returnValue)
 			.render();
 
 		bool implemented = f.second[0]->implemented();
@@ -1079,6 +1018,7 @@ string SolContract::contractOverrideStr() const
 			if (!f.second[0]->explicitlyInherited())
 				continue;
 		}
+		string functionName = f.first->name();
 		overriddenFunctions << Whiskers(R"(
 	function <functionName>() <visibility> <stateMutability><?isVirtual> virtual</isVirtual>
 	override<?multiple>(<baseNames>)</multiple> returns (uint)<?isImplemented><body><!isImplemented>;</isImplemented>)")
@@ -1091,20 +1031,26 @@ string SolContract::contractOverrideStr() const
 			("isImplemented", implemented)
 			("body", bodyStr)
 			.render();
+
+		if (!abstract())
+			m_contractFunctionMap[name()].insert(pair(functionName, returnValue));
 	}
+
 	return overriddenFunctions.str();
 }
 
-string SolContract::interfaceOverrideStr() const
+string SolContract::interfaceOverrideStr()
 {
 	ostringstream overriddenFunctions;
+
 	for (auto &f: m_overriddenInterfaceFunctions)
 	{
+		string returnValue = f.second[0]->returnValue();
 		string bodyStr = Whiskers(R"(
 	{
 		return <uint>;
 	})")
-			("uint", f.second[0]->returnValue())
+			("uint", returnValue)
 			.render();
 
 		// Check override class for implementation and virtualized
@@ -1132,6 +1078,7 @@ string SolContract::interfaceOverrideStr() const
 			if (!f.second[0]->explicitlyInherited())
 				continue;
 		}
+		string functionName = f.first->name();
 		overriddenFunctions << Whiskers(R"(
 	function <functionName>() external <stateMutability><?isVirtual> virtual</isVirtual>
 	override<?multiple>(<baseNames>)</multiple> returns (uint)<?isImplemented><body><!isImplemented>;</isImplemented>)")
@@ -1143,11 +1090,14 @@ string SolContract::interfaceOverrideStr() const
 			("isImplemented", implemented)
 			("body", bodyStr)
 			.render();
+
+		if (!abstract())
+			m_contractFunctionMap[name()].insert(pair(functionName, returnValue));
 	}
 	return overriddenFunctions.str();
 }
 
-string SolContract::str() const
+string SolContract::str()
 {
 	ostringstream bases;
 	for (auto &b: m_baseContracts)

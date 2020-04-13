@@ -285,9 +285,9 @@ struct SolContract
 		std::shared_ptr<SolRandomNumGenerator> _prng
 	);
 
-	std::string str() const;
-	std::string interfaceOverrideStr() const;
-	std::string contractOverrideStr() const;
+	std::string str();
+	std::string interfaceOverrideStr();
+	std::string contractOverrideStr();
 	void addFunctions(Contract const& _contract);
 	void addBases(Contract const& _contract);
 	void addOverrides();
@@ -299,7 +299,6 @@ struct SolContract
 		std::shared_ptr<SolContract> _base,
 		std::shared_ptr<SolContractFunction> _function
 	);
-	void disallowedBase(std::shared_ptr<SolBaseContract> _base1);
 
 	bool validTest() const;
 	std::string baseNames() const;
