@@ -360,6 +360,16 @@ void SolInterface::overrideHelper(
 					"Input specifies multiple function overrides with identical names"
 					" and parameter types but different mutability."
 				);
+#if 0
+			cout << "Overriding function " <<
+				_function->name() <<
+				" explicitly inherited from " <<
+				_base->name() <<
+				" by " <<
+				name() <<
+				endl;
+#endif
+
 			// Add new base to list of overridden bases
 			m_overrideMap[m.first].push_back(
 				shared_ptr<IFunctionOverride>(
@@ -384,6 +394,17 @@ void SolInterface::overrideHelper(
 	// or not. Implicit override means that the overridden function is not
 	// redeclared with the override keyword.
 	bool explicitOverride = coinToss();
+#if 0
+	if (explicitOverride)
+		cout << "Overriding function " <<
+			_function->name() <<
+			" explicitly inherited from " <<
+			_base->name() <<
+			" by " <<
+			name() <<
+			endl;
+#endif
+
 	// If function has not been overridden, add new override pseudo-randomly
 	if (!multipleOverride)
 		m_overrideMap.insert(
@@ -415,8 +436,20 @@ void SolInterface::addOverrides()
 			overrideHelper(f, base);
 		// Override base interface functions that are themselves overrides
 		for (auto &e: base->m_overrideMap)
-			for (auto &b: e.second)
-				overrideHelper(e.first, b->m_baseInterface);
+		{
+			solAssert(e.second.size() >= 1, "Sol proto fuzzer: Inconsistent interface override map");
+			if (e.second.size() == 1)
+			{
+				if (e.second[0]->explicitlyInherited())
+					overrideHelper(e.first, base);
+				else
+					overrideHelper(e.first, e.second[0]->m_baseInterface);
+			}
+			else
+			{
+				overrideHelper(e.first, base);
+			}
+		}
 	}
 }
 
@@ -802,11 +835,21 @@ void SolContract::addOverrides()
 			{
 				interfaceFunctionOverride(base->interface(), f);
 			}
-			// Override interface overrides
+			// Override interface implicit and explicit overrides
 			for (auto &m: base->interface()->m_overrideMap)
 			{
-				for (auto &b: m.second)
-					interfaceFunctionOverride(b->m_baseInterface, m.first);
+				solAssert(m.second.size() >= 1, "Sol proto adaptor: Inconsistent interface override map");
+				if (m.second.size() == 1)
+				{
+					if (m.second[0]->explicitlyInherited())
+						interfaceFunctionOverride(base->interface(), m.first);
+					else
+						interfaceFunctionOverride(m.second[0]->m_baseInterface, m.first);
+				}
+				else
+				{
+					interfaceFunctionOverride(base->interface(), m.first);
+				}
 			}
 		}
 		else
