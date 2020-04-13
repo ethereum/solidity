@@ -289,6 +289,7 @@ struct SolContract
 		std::shared_ptr<SolContract> _base,
 		std::shared_ptr<SolContractFunction> _function
 	);
+	void disallowedBase(std::shared_ptr<SolBaseContract> _base);
 
 	bool validTest() const;
 	std::string baseNames() const;
