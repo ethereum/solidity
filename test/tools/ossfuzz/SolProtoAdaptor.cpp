@@ -415,7 +415,8 @@ void SolInterface::addOverrides()
 			overrideHelper(f, base);
 		// Override base interface functions that are themselves overrides
 		for (auto &e: base->m_overrideMap)
-			overrideHelper(e.first, base);
+			for (auto &b: e.second)
+				overrideHelper(e.first, b->m_baseInterface);
 	}
 }
 
