@@ -268,6 +268,28 @@ string SolLibraryFunction::str() const
 		.render();
 }
 
+unsigned SolBaseContract::functionIndex()
+{
+	if (type() == BaseType::INTERFACE)
+		return interface()->functionIndex();
+	else
+	{
+		solAssert(type() == BaseType::CONTRACT, "Sol proto adaptor: Invalid base contract");
+		return contract()->functionIndex();
+	}
+}
+
+string SolBaseContract::lastBaseName()
+{
+	if (type() == BaseType::INTERFACE)
+		return interface()->lastBaseName();
+	else
+	{
+		solAssert(type() == BaseType::CONTRACT, "Sol proto adaptor: Invalid base contract");
+		return contract()->lastBaseName();
+	}
+}
+
 SolBaseContract::BaseType SolBaseContract::type() const
 {
 	if (holds_alternative<shared_ptr<SolInterface>>(m_base))
@@ -287,6 +309,17 @@ string SolBaseContract::str()
 		return interface()->str();
 	case BaseType::CONTRACT:
 		return contract()->str();
+	}
+}
+
+string SolBaseContract::name()
+{
+	if (type() == BaseType::INTERFACE)
+		return interface()->name();
+	else
+	{
+		solAssert(type() == BaseType::CONTRACT, "Sol proto adaptor: Invalid base contract");
+		return contract()->name();
 	}
 }
 
@@ -510,6 +543,19 @@ interface <programName><?inheritance> is <baseNames></inheritance> {
 		("baseNames", baseNames())
 		("functionDefs", functions.str())
 		.render();
+}
+
+string SolContract::baseNames() const
+{
+	ostringstream bases;
+	string separator{};
+	for (auto &b: m_baseContracts)
+	{
+		bases << separator << b->name();
+		if (separator.empty())
+			separator = ", ";
+	}
+	return bases.str();
 }
 
 bool SolContract::validTest() const
@@ -824,27 +870,27 @@ void SolContract::addFunctions(Contract const& _contract)
 
 void SolContract::addBases(Contract const& _contract)
 {
+	shared_ptr<SolBaseContract> base;
 	for (auto &b: _contract.bases())
 	{
 		switch (b.contract_or_interface_oneof_case())
 		{
 		case ContractOrInterface::kC:
-			m_baseContracts.push_back(
-				make_shared<SolBaseContract>(
-					SolBaseContract(&b.c(), newBaseName(), m_prng)
-				)
-			);
+			base = make_shared<SolBaseContract>(SolBaseContract(&b.c(), newBaseName(), m_prng));
+			m_baseContracts.push_back(base);
 			break;
 		case ContractOrInterface::kI:
-			m_baseContracts.push_back(
-				make_shared<SolBaseContract>(
-					SolBaseContract(&b.i(), newBaseName(), m_prng)
-				)
-			);
+			base = make_shared<SolBaseContract>(SolBaseContract(&b.i(), newBaseName(), m_prng));
+			m_baseContracts.push_back(base);
 			break;
 		case ContractOrInterface::CONTRACT_OR_INTERFACE_ONEOF_NOT_SET:
 			break;
 		}
+		// Worst case, we override all base functions so we
+		// increment derived contract's function index by
+		// this amount.
+		m_functionIndex += base->functionIndex();
+		m_lastBaseName = base->lastBaseName();
 	}
 }
 
@@ -889,7 +935,7 @@ string SolContract::contractOverrideStr() const
 		}
 		overriddenFunctions << Whiskers(R"(
 	function <functionName>() <visibility> <stateMutability><?isVirtual> virtual</isVirtual>
-	override<?multiple>(<baseNames>)</multiple> returns (uint)</isImplemented><body><!isImplemented>;</isImplemented>)")
+	override<?multiple>(<baseNames>)</multiple> returns (uint)<?isImplemented><body><!isImplemented>;</isImplemented>)")
 			("functionName", f.first->name())
 			("visibility", functionVisibility(f.first->visibility()))
 			("stateMutability", functionMutability(f.first->mutability()))
@@ -943,7 +989,7 @@ string SolContract::interfaceOverrideStr() const
 		}
 		overriddenFunctions << Whiskers(R"(
 	function <functionName>() external <stateMutability>
-	override<?multiple>(<baseNames>)</multiple> returns (uint)</isImplemented><body><!isImplemented>;</isImplemented>)")
+	override<?multiple>(<baseNames>)</multiple> returns (uint)<?isImplemented><body><!isImplemented>;</isImplemented>)")
 			("functionName", f.first->name())
 			("stateMutability", functionMutability(f.first->mutability()))
 			("multiple", f.second.size() > 1)
@@ -962,19 +1008,24 @@ string SolContract::str() const
 		bases << b->str();
 
 	ostringstream functions;
+
+	// Print overridden functions
+	functions << interfaceOverrideStr() << contractOverrideStr();
+
+	// Print non-overridden functions
 	for (auto &f: m_contractFunctions)
 		functions << f->str();
 
-	functions << interfaceOverrideStr() << contractOverrideStr();
-
 	return Whiskers(R"(
 <bases>
-<?isAbstract>abstract </isAbstract>contract <contractName> {
+<?isAbstract>abstract </isAbstract>contract <contractName><?inheritance> is <baseNames></inheritance> {
 <functions>
 })")
 		("bases", bases.str())
 		("isAbstract", abstract())
 		("contractName", name())
+		("inheritance", m_baseContracts.size() > 0)
+		("baseNames", baseNames())
 		("functions", functions.str())
 		.render();
 }

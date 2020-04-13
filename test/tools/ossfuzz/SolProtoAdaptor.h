@@ -253,6 +253,7 @@ struct SolBaseContract
 	std::variant<std::vector<std::shared_ptr<SolContractFunction>>, std::vector<std::shared_ptr<SolInterfaceFunction>>>
 	baseFunctions();
 	BaseType type() const;
+	std::string name();
 	std::string str();
 	std::shared_ptr<SolInterface> interface()
 	{
@@ -262,6 +263,8 @@ struct SolBaseContract
 	{
 		return std::get<std::shared_ptr<SolContract>>(m_base);
 	}
+	unsigned functionIndex();
+	std::string lastBaseName();
 
 	std::variant<std::shared_ptr<SolInterface>, std::shared_ptr<SolContract>> m_base;
 	std::string m_baseName;
@@ -288,6 +291,7 @@ struct SolContract
 	);
 
 	bool validTest() const;
+	std::string baseNames() const;
 	std::tuple<std::string, std::string, std::string> validContractTest();
 	std::tuple<std::string, std::string, std::string> pseudoRandomTest();
 
