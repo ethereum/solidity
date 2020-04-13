@@ -559,7 +559,7 @@ struct IFunctionOverride
 	};
 
 	IFunctionOverride(
-		std::shared_ptr<SolInterface const> _baseInterface,
+		std::shared_ptr<SolInterface> _baseInterface,
 		std::shared_ptr<SolInterfaceFunction const> _baseFunction,
 		std::variant<SolInterface*, SolContract*> _derivedProgram,
 		bool _implement,
@@ -612,7 +612,7 @@ struct IFunctionOverride
 		return m_baseInterface->name();
 	}
 
-	std::shared_ptr<SolInterface const> m_baseInterface;
+	std::shared_ptr<SolInterface> m_baseInterface;
 	std::shared_ptr<SolInterfaceFunction const> m_baseFunction;
 	std::variant<SolInterface*, SolContract*> m_derivedProgram;
 

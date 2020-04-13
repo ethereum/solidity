@@ -499,11 +499,7 @@ string SolInterface::overrideStr() const
 		}
 		else
 		{
-			assertThrow(
-				f.second.size() == 1,
-				langutil::FuzzerError,
-				"Inconsistent override map"
-			);
+			solAssert(f.second.size() == 1, "Inconsistent override map");
 			if (!f.second[0]->explicitlyInherited())
 				continue;
 		}
@@ -808,7 +804,8 @@ void SolContract::addOverrides()
 			// Override interface overrides
 			for (auto &m: base->interface()->m_overrideMap)
 			{
-				interfaceFunctionOverride(base->interface(), m.first);
+				for (auto &b: m.second)
+					interfaceFunctionOverride(b->m_baseInterface, m.first);
 			}
 		}
 		else
@@ -822,8 +819,8 @@ void SolContract::addOverrides()
 			// Override contract overrides
 			for (auto &m: base->contract()->m_overriddenContractFunctions)
 			{
-				for (auto &f: m.second)
-					contractFunctionOverride(base->contract(), f->baseFunction());
+				for (auto &b: m.second)
+					contractFunctionOverride(b->m_baseContract, m.first);
 			}
 		}
 	}
@@ -884,7 +881,7 @@ void SolContract::addBases(Contract const& _contract)
 			m_baseContracts.push_back(base);
 			break;
 		case ContractOrInterface::CONTRACT_OR_INTERFACE_ONEOF_NOT_SET:
-			break;
+			continue;
 		}
 		// Worst case, we override all base functions so we
 		// increment derived contract's function index by
@@ -925,11 +922,7 @@ string SolContract::contractOverrideStr() const
 		}
 		else
 		{
-			assertThrow(
-				f.second.size() == 1,
-				langutil::FuzzerError,
-				"Inconsistent override map"
-			);
+			solAssert(f.second.size() == 1, "Inconsistent override map");
 			if (!f.second[0]->explicitlyInherited())
 				continue;
 		}
@@ -979,11 +972,7 @@ string SolContract::interfaceOverrideStr() const
 		}
 		else
 		{
-			assertThrow(
-				f.second.size() == 1,
-				langutil::FuzzerError,
-				"Inconsistent override map"
-			);
+			solAssert(f.second.size() == 1, "Inconsistent override map");
 			if (!f.second[0]->explicitlyInherited())
 				continue;
 		}
@@ -1038,6 +1027,7 @@ SolContract::SolContract(
 {
 	m_prng = _prng;
 	m_contractName = _name;
+	m_lastBaseName = m_contractName;
 	m_abstract = _contract.abstract();
 	addBases(_contract);
 	addOverrides();
@@ -1163,7 +1153,7 @@ string CFunctionOverride::baseName() const
 }
 
 IFunctionOverride::IFunctionOverride(
-	std::shared_ptr<SolInterface const> _baseInterface,
+	std::shared_ptr<SolInterface> _baseInterface,
 	std::shared_ptr<SolInterfaceFunction const> _baseFunction,
 	std::variant<SolInterface*, SolContract*> _derivedProgram,
 	bool _implement,
@@ -1177,32 +1167,29 @@ IFunctionOverride::IFunctionOverride(
 		auto derived = std::get<SolContract*>(_derivedProgram);
 		m_derivedType = derived->abstract() ? DerivedType::ABSTRACTCONTRACT : DerivedType::CONTRACT;
 		if (!derived->abstract())
-			assertThrow(
+			solAssert(
 				_explicitInherit && !_returnValue.empty() && _implement,
-				langutil::FuzzerError,
 				"Contract overrides base interface function either without"
 				" implementing it or implictly overrides."
 			);
 		else
 			if (_explicitInherit)
-				assertThrow(
+				solAssert(
 					_virtual || (_implement && !_returnValue.empty()),
-					langutil::FuzzerError,
 					"Abstract contract overrides base interface function either"
 					" without implementing it or without marking it virtual."
 				);
 	}
 	else
 	{
-		assertThrow(holds_alternative<SolInterface*>(_derivedProgram),
-			langutil::FuzzerError,
+		solAssert(
+			holds_alternative<SolInterface*>(_derivedProgram),
 			"Derived program neither an interface nor a contract"
 		);
 		m_derivedType = DerivedType::INTERFACE;
 		if (_explicitInherit)
-			assertThrow(
-				!_virtual && !_implement && !_returnValue.empty(),
-				langutil::FuzzerError,
+			solAssert(
+				!_virtual && !_implement && _returnValue.empty(),
 				"Interface overrides base interface function with invalid parameters."
 			);
 	}
