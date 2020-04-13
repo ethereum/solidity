@@ -158,7 +158,7 @@ string ProtoConverter::visit(Contract const& _contract)
 
 	openProgramScope(&_contract);
 	try {
-		auto contract = SolContract(_contract, programName(&_contract), m_randomGen);
+		auto contract = SolContract(_contract, programName(&_contract), 0, m_randomGen);
 		if (contract.validTest())
 		{
 			m_contractTests.push_back(contract.pseudoRandomTest());
@@ -169,8 +169,9 @@ string ProtoConverter::visit(Contract const& _contract)
 		else
 			return "";
 	}
-	catch (langutil::FuzzerError const&)
+	catch (langutil::FuzzerError const& error)
 	{
+		cout << error.what() << endl;
 		// Return empty string if input specification is invalid.
 		return "";
 	}
@@ -183,11 +184,12 @@ string ProtoConverter::visit(Interface const& _interface)
 
 	openProgramScope(&_interface);
 	try {
-		auto interface = SolInterface(_interface, programName(&_interface), m_randomGen);
+		auto interface = SolInterface(_interface, programName(&_interface), 0, m_randomGen);
 		return interface.str();
 	}
-	catch (langutil::FuzzerError const&)
+	catch (langutil::FuzzerError const& error)
 	{
+		cout << error.what() << endl;
 		// Return empty string if input specification is invalid.
 		return "";
 	}

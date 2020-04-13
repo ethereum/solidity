@@ -324,14 +324,23 @@ string SolBaseContract::name()
 	}
 }
 
-SolBaseContract::SolBaseContract(ProtoBaseContract _base, string _name, shared_ptr<SolRandomNumGenerator> _prng)
+SolBaseContract::SolBaseContract(
+	ProtoBaseContract _base,
+	string _name,
+	unsigned _startFunctionIndex,
+	shared_ptr<SolRandomNumGenerator> _prng
+)
 {
 	if (holds_alternative<Contract const*>(_base))
-		m_base = make_shared<SolContract>(SolContract(*get<Contract const*>(_base), _name, _prng));
+		m_base = make_shared<SolContract>(
+			SolContract(*get<Contract const*>(_base), _name, _startFunctionIndex, _prng)
+		);
 	else
 	{
 		solAssert(holds_alternative<Interface const*>(_base), "Sol proto adaptor: Invalid base contract");
-		m_base = make_shared<SolInterface>(SolInterface(*get<Interface const*>(_base), _name, _prng));
+		m_base = make_shared<SolInterface>(
+			SolInterface(*get<Interface const*>(_base), _name, _startFunctionIndex, _prng)
+		);
 	}
 }
 
@@ -458,7 +467,7 @@ void SolInterface::addBases(Interface const& _interface)
 {
 	for (auto &b: _interface.bases())
 	{
-		auto base = make_shared<SolInterface>(SolInterface(b, newBaseName(), m_prng));
+		auto base = make_shared<SolInterface>(SolInterface(b, newBaseName(), m_functionIndex, m_prng));
 		m_baseInterfaces.push_back(base);
 		// Worst case, we override all base functions so we
 		// increment derived contract's function index by
@@ -481,11 +490,17 @@ void SolInterface::addFunctions(Interface const& _interface)
 		);
 }
 
-SolInterface::SolInterface(Interface const& _interface, string _name, shared_ptr<SolRandomNumGenerator> _prng)
+SolInterface::SolInterface(
+	Interface const& _interface,
+	string _name,
+	unsigned _startFunctionIndex,
+	shared_ptr<SolRandomNumGenerator> _prng
+)
 {
 	m_prng = _prng;
 	m_interfaceName = _name;
 	m_lastBaseName = m_interfaceName;
+	m_functionIndex = _startFunctionIndex;
 	addBases(_interface);
 	addOverrides();
 	addFunctions(_interface);
@@ -938,17 +953,17 @@ void SolContract::addFunctions(Contract const& _contract)
 	}
 }
 
-void SolContract::disallowedBase(shared_ptr<SolBaseContract> _base)
+void SolContract::disallowedBase(shared_ptr<SolBaseContract> _base1)
 {
 	if (m_baseContracts.size() == 0)
 		return;
 
 	shared_ptr<SolBaseContract> lastBase = m_baseContracts[m_baseContracts.size() - 1];
-	auto baseType = _base->type();
+	auto baseType = _base1->type();
 	auto lastBaseType = lastBase->type();
 	if (baseType == SolBaseContract::BaseType::INTERFACE && lastBaseType == SolBaseContract::BaseType::INTERFACE)
 	{
-		for (auto &bf: _base->interface()->m_interfaceFunctions)
+		for (auto &bf: _base1->interface()->m_interfaceFunctions)
 			for (auto &lbf: lastBase->interface()->m_interfaceFunctions)
 				assertThrow(
 					bf != lbf,
@@ -959,7 +974,7 @@ void SolContract::disallowedBase(shared_ptr<SolBaseContract> _base)
 	}
 	else if (baseType == SolBaseContract::BaseType::INTERFACE && lastBaseType == SolBaseContract::BaseType::CONTRACT)
 	{
-		for (auto &bf: _base->interface()->m_interfaceFunctions)
+		for (auto &bf: _base1->interface()->m_interfaceFunctions)
 			for (auto &lbf: lastBase->contract()->m_contractFunctions)
 				if (bf->name() == lbf->name() &&
 				((bf->mutability() != lbf->mutability()) || (lbf->visibility() != SolFunctionVisibility::EXTERNAL)))
@@ -972,7 +987,7 @@ void SolContract::disallowedBase(shared_ptr<SolBaseContract> _base)
 	}
 	else if (baseType == SolBaseContract::BaseType::CONTRACT && lastBaseType == SolBaseContract::BaseType::INTERFACE)
 	{
-		for (auto &bf: _base->contract()->m_contractFunctions)
+		for (auto &bf: _base1->contract()->m_contractFunctions)
 			for (auto &lbf: lastBase->interface()->m_interfaceFunctions)
 				if (bf->name() == lbf->name() &&
 				    ((bf->mutability() != lbf->mutability()) || (bf->visibility() != SolFunctionVisibility::EXTERNAL)))
@@ -985,7 +1000,7 @@ void SolContract::disallowedBase(shared_ptr<SolBaseContract> _base)
 	}
 	else
 	{
-		for (auto &bf: _base->contract()->m_contractFunctions)
+		for (auto &bf: _base1->contract()->m_contractFunctions)
 			for (auto &lbf: lastBase->contract()->m_contractFunctions)
 				assertThrow(
 					bf != lbf,
@@ -1004,10 +1019,14 @@ void SolContract::addBases(Contract const& _contract)
 		switch (b.contract_or_interface_oneof_case())
 		{
 		case ContractOrInterface::kC:
-			base = make_shared<SolBaseContract>(SolBaseContract(&b.c(), newBaseName(), m_prng));
+			base = make_shared<SolBaseContract>(
+				SolBaseContract(&b.c(), newBaseName(), m_functionIndex, m_prng)
+			);
 			break;
 		case ContractOrInterface::kI:
-			base = make_shared<SolBaseContract>(SolBaseContract(&b.i(), newBaseName(), m_prng));
+			base = make_shared<SolBaseContract>(
+				SolBaseContract(&b.i(), newBaseName(), m_functionIndex, m_prng)
+			);
 			break;
 		case ContractOrInterface::CONTRACT_OR_INTERFACE_ONEOF_NOT_SET:
 			continue;
@@ -1015,7 +1034,7 @@ void SolContract::addBases(Contract const& _contract)
 		// Check if new base defines a namesake function with different
 		// visibility and/or state mutability in relation to previous
 		// base
-		disallowedBase(base);
+//		disallowedBase(base);
 		m_baseContracts.push_back(base);
 		// Worst case, we override all base functions so we
 		// increment derived contract's function index by
@@ -1160,12 +1179,14 @@ string SolContract::str() const
 SolContract::SolContract(
 	Contract const& _contract,
 	std::string _name,
+	unsigned _startFunctionIndex,
 	shared_ptr<SolRandomNumGenerator> _prng
 )
 {
 	m_prng = _prng;
 	m_contractName = _name;
 	m_lastBaseName = m_contractName;
+	m_functionIndex = _startFunctionIndex;
 	m_abstract = _contract.abstract();
 	addBases(_contract);
 	addOverrides();
