@@ -251,7 +251,6 @@ struct SolBaseContract
 	SolBaseContract(
 		ProtoBaseContract _base,
 		std::string _name,
-		unsigned _startFunctionIndex,
 		std::shared_ptr<SolRandomNumGenerator> _prng
 	);
 
@@ -281,13 +280,13 @@ struct SolContract
 	SolContract(
 		Contract const& _contract,
 		std::string _name,
-		unsigned _startFunctionIndex,
 		std::shared_ptr<SolRandomNumGenerator> _prng
 	);
 
 	std::string str();
 	std::string interfaceOverrideStr();
 	std::string contractOverrideStr();
+	void disallowedBase(std::shared_ptr<SolBaseContract> _base1, std::shared_ptr<SolBaseContract> _base2);
 	void addFunctions(Contract const& _contract);
 	void addBases(Contract const& _contract);
 	void addOverrides();
@@ -364,7 +363,6 @@ struct SolInterface
 	SolInterface(
 		Interface const& _interface,
 		std::string _interfaceName,
-		unsigned _startFunctionIndex,
 		std::shared_ptr<SolRandomNumGenerator> _prng
 	);
 
