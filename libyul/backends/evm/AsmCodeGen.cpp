@@ -172,6 +172,16 @@ AbstractAssembly::SubID EthAssemblyAdapter::appendData(bytes const& _data)
 	return subID;
 }
 
+void EthAssemblyAdapter::appendImmutable(std::string const& _identifier)
+{
+	m_assembly.appendImmutable(_identifier);
+}
+
+void EthAssemblyAdapter::appendImmutableAssignment(std::string const& _identifier)
+{
+	m_assembly.appendImmutableAssignment(_identifier);
+}
+
 EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag)
 {
 	u256 id = _tag.data();
