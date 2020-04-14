@@ -71,6 +71,9 @@ public:
 	void appendDataSize(SubID _sub) override;
 	SubID appendData(bytes const& _data) override;
 
+	void appendImmutable(std::string const& _identifier) override;
+	void appendImmutableAssignment(std::string const& _identifier) override;
+
 private:
 	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
 	int m_stackHeight = 0;
