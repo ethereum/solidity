@@ -52,8 +52,8 @@ void ErrorReporter::warning(
 
 void ErrorReporter::warning(
 	SourceLocation const& _location,
-	string const& _description,
-	SecondarySourceLocation const& _secondaryLocation
+	SecondarySourceLocation const& _secondaryLocation,
+	string const& _description
 )
 {
 	error(Error::Type::Warning, _location, _secondaryLocation, _description);

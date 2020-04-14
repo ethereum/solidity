@@ -494,8 +494,8 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 			auto shadowedLocation = shadowedDeclaration->location();
 			_errorReporter.warning(
 				_declaration.location(),
-				"This declaration shadows an existing declaration.",
-				SecondarySourceLocation().append("The shadowed declaration is here:", shadowedLocation)
+				SecondarySourceLocation().append("The shadowed declaration is here:", shadowedLocation),
+				"This declaration shadows an existing declaration."
 			);
 		}
 	}

@@ -56,8 +56,8 @@ public:
 
 	void warning(
 		SourceLocation const& _location,
-		std::string const& _description,
-		SecondarySourceLocation const& _secondaryLocation
+		SecondarySourceLocation const& _secondaryLocation,
+		std::string const& _description
 	);
 
 	void error(

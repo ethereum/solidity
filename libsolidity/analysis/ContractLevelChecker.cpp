@@ -440,7 +440,7 @@ void ContractLevelChecker::checkPayableFallbackWithoutReceive(ContractDefinition
 		if (fallback->isPayable() && !_contract.interfaceFunctionList().empty() && !_contract.receiveFunction())
 			m_errorReporter.warning(
 				_contract.location(),
-				"This contract has a payable fallback function, but no receive ether function. Consider adding a receive ether function.",
-				SecondarySourceLocation{}.append("The payable fallback function is defined here.", fallback->location())
+				SecondarySourceLocation{}.append("The payable fallback function is defined here.", fallback->location()),
+				"This contract has a payable fallback function, but no receive ether function. Consider adding a receive ether function."
 			);
 }

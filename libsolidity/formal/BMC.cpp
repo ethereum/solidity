@@ -758,23 +758,23 @@ void BMC::checkCondition(
 				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
 			m_errorReporter.warning(
 				_location,
-				message.str(),
 				SecondarySourceLocation().append(modelMessage.str(), SourceLocation{})
 				.append(SMTEncoder::callStackMessage(callStack))
-				.append(move(secondaryLocation))
+				.append(move(secondaryLocation)),
+				message.str()
 			);
 		}
 		else
 		{
 			message << ".";
-			m_errorReporter.warning(_location, message.str(), secondaryLocation);
+			m_errorReporter.warning(_location, secondaryLocation, message.str());
 		}
 		break;
 	}
 	case smt::CheckResult::UNSATISFIABLE:
 		break;
 	case smt::CheckResult::UNKNOWN:
-		m_errorReporter.warning(_location, _description + " might happen here.", secondaryLocation);
+		m_errorReporter.warning(_location, secondaryLocation, _description + " might happen here.");
 		break;
 	case smt::CheckResult::CONFLICTING:
 		m_errorReporter.warning(_location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
@@ -822,7 +822,7 @@ void BMC::checkBooleanNotConstant(
 		// can't do anything.
 	}
 	else if (positiveResult == smt::CheckResult::UNSATISFIABLE && negatedResult == smt::CheckResult::UNSATISFIABLE)
-		m_errorReporter.warning(_condition.location(), "Condition unreachable.", SMTEncoder::callStackMessage(_callStack));
+		m_errorReporter.warning(_condition.location(), SMTEncoder::callStackMessage(_callStack), "Condition unreachable.");
 	else
 	{
 		string value;
@@ -839,8 +839,8 @@ void BMC::checkBooleanNotConstant(
 		}
 		m_errorReporter.warning(
 			_condition.location(),
-			boost::algorithm::replace_all_copy(_description, "$VALUE", value),
-			SMTEncoder::callStackMessage(_callStack)
+			SMTEncoder::callStackMessage(_callStack),
+			boost::algorithm::replace_all_copy(_description, "$VALUE", value)
 		);
 	}
 }
