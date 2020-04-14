@@ -12,4 +12,5 @@ contract C
 	}
 }
 // ----
+// Warning: (191-212): Error trying to invoke SMT solver.
 // Warning: (191-212): Assertion violation happens here

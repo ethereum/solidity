@@ -30,6 +30,7 @@ contract C
 	}
 }
 // ----
+// Warning: (670-690): Error trying to invoke SMT solver.
 // Warning: (397-417): Assertion violation happens here
 // Warning: (463-481): Assertion violation happens here
 // Warning: (533-557): Assertion violation happens here
