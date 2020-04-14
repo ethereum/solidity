@@ -28,6 +28,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 using namespace std;
 using namespace solidity;
@@ -50,6 +51,7 @@ void SMTLib2Interface::reset()
 	m_accumulatedOutput.clear();
 	m_accumulatedOutput.emplace_back();
 	m_variables.clear();
+	m_userSorts.clear();
 	write("(set-option :produce-models true)");
 	write("(set-logic ALL)");
 }
@@ -145,6 +147,14 @@ string SMTLib2Interface::toSExpr(smt::Expression const& _expr)
 		sexpr += "(as const " + toSmtLibSort(*arraySort) + ") ";
 		sexpr += toSExpr(_expr.arguments.at(1));
 	}
+	else if (_expr.name == "tuple_get")
+	{
+		solAssert(_expr.arguments.size() == 2, "");
+		auto tupleSort = dynamic_pointer_cast<TupleSort>(_expr.arguments.at(0).sort);
+		unsigned index = std::stoi(_expr.arguments.at(1).name);
+		solAssert(index < tupleSort->members.size(), "");
+		sexpr += tupleSort->members.at(index) + " " + toSExpr(_expr.arguments.at(0));
+	}
 	else
 	{
 		sexpr += _expr.name;
@@ -168,6 +178,22 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
 		solAssert(arraySort.domain && arraySort.range, "");
 		return "(Array " + toSmtLibSort(*arraySort.domain) + ' ' + toSmtLibSort(*arraySort.range) + ')';
+	}
+	case Kind::Tuple:
+	{
+		auto const& tupleSort = dynamic_cast<TupleSort const&>(_sort);
+		if (!m_userSorts.count(tupleSort.name))
+		{
+			m_userSorts.insert(tupleSort.name);
+			string decl("(declare-datatypes ((" + tupleSort.name + " 0)) (((" + tupleSort.name);
+			solAssert(tupleSort.members.size() == tupleSort.components.size(), "");
+			for (unsigned i = 0; i < tupleSort.members.size(); ++i)
+				decl += " (" + tupleSort.members.at(i) + " " + toSmtLibSort(*tupleSort.components.at(i)) + ")";
+			decl += "))))";
+			write(decl);
+		}
+
+		return tupleSort.name;
 	}
 	default:
 		solAssert(false, "Invalid SMT sort");
