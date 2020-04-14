@@ -137,24 +137,25 @@ string libraryFunctionMutability(SolLibraryFunctionStateMutability _mut)
 }
 }
 
-void SolInterfaceFunction::markExplicitOverride(string _newBaseName)
+void SolInterfaceFunction::markExplicitOverride(string _contractName)
 {
 	m_type = Type::EXPLICITOVERRIDE;
-	m_baseNames.clear();
-	m_baseNames.push_back(_newBaseName);
+	m_overriddenFrom.clear();
+	m_contractName = _contractName;
 }
 
 SolInterfaceFunction::SolInterfaceFunction(
 	string _functionName,
 	SolFunctionStateMutability _mutability,
 	Type _type,
-	string _baseName
+	string _contractName
 )
 {
 	m_functionName = _functionName;
 	m_mutability = _mutability;
 	m_type = _type;
-	m_baseNames.push_back(_baseName);
+	m_overriddenFrom = {};
+	m_contractName = _contractName;
 }
 
 bool SolInterfaceFunction::namesake(SolInterfaceFunction const& _rhs) const
@@ -175,7 +176,7 @@ bool SolInterfaceFunction::operator!=(SolInterfaceFunction const& _rhs) const
 	return m_mutability != _rhs.m_mutability;
 }
 
-void SolInterfaceFunction::merge(SolInterfaceFunction const& _rhs)
+void SolInterfaceFunction::merge(SolInterfaceFunction const& _rhs, string _contractName)
 {
 	assertThrow(
 		this->operator==(_rhs),
@@ -183,8 +184,10 @@ void SolInterfaceFunction::merge(SolInterfaceFunction const& _rhs)
 		"Sol proto adaptor: Invalid inheritance hierarchy"
 	);
 	m_type = Type::EXPLICITOVERRIDE;
-	for (auto &b: _rhs.m_baseNames)
-		m_baseNames.push_back(b);
+	m_overriddenFrom.push_back(m_contractName);
+	m_overriddenFrom.push_back(_rhs.m_contractName);
+	// Post merge this function belongs to this contract
+	m_contractName = _contractName;
 }
 
 bool SolInterfaceFunction::operator==(SolContractFunction const& _rhs) const
@@ -199,11 +202,11 @@ bool SolInterfaceFunction::operator!=(SolContractFunction const& _rhs) const
 	return name() != _rhs.name();
 }
 
-string SolInterfaceFunction::baseNames() const
+string SolInterfaceFunction::overriddenFromBaseNames() const
 {
 	ostringstream nameStr;
 	string separator{};
-	for (auto &b: m_baseNames)
+	for (auto &b: m_overriddenFrom)
 	{
 		nameStr << separator << b;
 		if (separator.empty())
@@ -220,7 +223,7 @@ string SolInterfaceFunction::str() const
 	external <stateMutability> returns (uint);)")
 		("functionName", name())
 		("isMultiple", multipleBases())
-		("baseNames", baseNames())
+		("baseNames", overriddenFromBaseNames())
 		("stateMutability", functionMutability(mutability()))
 		.render();
 	else if (memberFunction())
@@ -465,35 +468,24 @@ void SolInterface::merge()
 	 * 4. Iterate list of contract implicit and explicit (2-way) overrides
 	 *   4a. If implicit, pseudo randomly mark it explicit
 	 */
+
+	// Step 1-2
 	vector<shared_ptr<SolInterfaceFunction>> global{};
 	for (auto &base: m_baseInterfaces)
 	{
-		std::cout << "Serializing " << base->name() << " functions" << std::endl;
-
 		vector<shared_ptr<SolInterfaceFunction>> local{};
 		for (auto &bf: base->m_functions)
-		{
-			std::cout << "Adding " << bf->name() << std::endl;
 			local.push_back(make_shared<SolInterfaceFunction>(*bf));
-		}
 		for (auto &l: local)
 		{
+			// Clear overridden from history.
+			l->clearOverriddenFromBases();
 			// Mark all as implicit overrides
 			l->markImplicitOverride();
 			global.push_back(l);
 		}
 	}
-
-	std::cout << "Unmerged global now contains " << global.size() << " functions" << std::endl;
-	/*
-	 * Global has 3
-	 * overrides is empty
-	 * add one implicit
-	 * add two implicit checking if it clashes with one
-	 * add three implicit checking if it clashes with one and two
-	 */
-
-
+	// Step 3
 	for (auto &f: global)
 	{
 		bool merged = false;
@@ -501,25 +493,18 @@ void SolInterface::merge()
 		{
 			if (e->namesake(*f))
 			{
-				std::cout << "Performing 2-way merge of " << f->name() << std::endl;
-				e->merge(*f);
+				e->merge(*f, name());
 				merged = true;
 				break;
 			}
 		}
 		if (!merged)
-		{
-			std::cout << "Implicitly overriding " << f->name() << std::endl;
 			m_functions.push_back(f);
-		}
 	}
-	std::cout << "Contract has " << m_functions.size() << " functions" << std::endl;
+	// Step 4
 	for (auto &e: m_functions)
 		if (e->implicitOverride() && coinToss())
-		{
-			std::cout << "Explicitly overriding " << e->name() << std::endl;
 			e->markExplicitOverride(name());
-		}
 }
 
 void SolInterface::addBases(Interface const& _interface)
@@ -528,9 +513,8 @@ void SolInterface::addBases(Interface const& _interface)
 	{
 		auto base = make_shared<SolInterface>(SolInterface(b, newBaseName(), m_prng));
 		m_baseInterfaces.push_back(base);
-		// Worst case, we override all base functions so we
-		// increment derived contract's function index by
-		// this amount.
+		// Do bookkeeping to keep function and base numbering
+		// consistent
 		m_functionIndex += base->functionIndex();
 		m_lastBaseName = base->lastBaseName();
 	}

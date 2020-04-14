@@ -99,17 +99,25 @@ struct SolInterfaceFunction
 		std::string _functionName,
 		SolFunctionStateMutability _mutability,
 		Type _type,
-		std::string _baseName
+		std::string _contractName
 	);
 	bool operator==(SolInterfaceFunction const& _rhs) const;
 	bool operator!=(SolInterfaceFunction const& _rhs) const;
 	bool operator==(SolContractFunction const& _rhs) const;
 	bool operator!=(SolContractFunction const& _rhs) const;
-	void merge(SolInterfaceFunction const& _rhs);
+	void merge(SolInterfaceFunction const& _rhs, std::string _contractName);
 	bool namesake(SolInterfaceFunction const& _rhs) const;
-	void markExplicitOverride(std::string _newBaseName);
+	void markExplicitOverride(std::string _contractName);
 
-	std::string baseNames() const;
+	std::string overriddenFromBaseNames() const;
+	unsigned numOverriddenFromBases() const
+	{
+		return m_overriddenFrom.size();
+	}
+	void clearOverriddenFromBases()
+	{
+		m_overriddenFrom.clear();
+	}
 
 	std::string str() const;
 
@@ -139,12 +147,13 @@ struct SolInterfaceFunction
 	}
 	bool multipleBases() const
 	{
-		return m_baseNames.size() > 1;
+		return m_overriddenFrom.size() > 1;
 	}
 
 	std::string m_functionName;
 	SolFunctionStateMutability m_mutability = SolFunctionStateMutability::PURE;
-	std::vector<std::string> m_baseNames;
+	std::vector<std::string> m_overriddenFrom;
+	std::string m_contractName;
 	Type m_type;
 };
 
