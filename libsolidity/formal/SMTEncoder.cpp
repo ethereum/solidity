@@ -107,6 +107,9 @@ void SMTEncoder::endVisit(ContractDefinition const& _contract)
 
 	solAssert(m_currentContract == &_contract, "");
 	m_currentContract = nullptr;
+
+	if (m_callStack.empty())
+		m_context.popSolver();
 }
 
 void SMTEncoder::endVisit(VariableDeclaration const& _varDecl)
@@ -662,7 +665,6 @@ void SMTEncoder::initFunction(FunctionDefinition const& _function)
 {
 	solAssert(m_callStack.empty(), "");
 	solAssert(m_currentContract, "");
-	m_context.reset();
 	m_context.pushSolver();
 	m_pathConditions.clear();
 	pushCallStack({&_function, nullptr});
