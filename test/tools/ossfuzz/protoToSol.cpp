@@ -141,7 +141,8 @@ string ProtoConverter::visit(ContractType const& _contractType)
 	switch (_contractType.contract_type_oneof_case())
 	{
 	case ContractType::kC:
-		return visit(_contractType.c());
+//		return visit(_contractType.c());
+		return "";
 	case ContractType::kL:
 		return visit(_contractType.l());
 	case ContractType::kI:
@@ -151,8 +152,9 @@ string ProtoConverter::visit(ContractType const& _contractType)
 	}
 }
 
-string ProtoConverter::visit(Contract const& _contract)
+string ProtoConverter::visit(Contract const&)
 {
+#if 0
 	if (_contract.funcdef_size() == 0 && _contract.bases_size() == 0)
 		return "";
 
@@ -178,6 +180,8 @@ string ProtoConverter::visit(Contract const& _contract)
 		// Return empty string if input specification is invalid.
 		return "";
 	}
+#endif
+	return "";
 }
 
 string ProtoConverter::visit(Interface const& _interface)

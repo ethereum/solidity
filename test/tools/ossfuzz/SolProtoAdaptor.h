@@ -88,12 +88,29 @@ enum class SolLibraryFunctionStateMutability
 
 struct SolInterfaceFunction
 {
+	enum class Type
+	{
+		MEMBERFUNCTION,
+		IMPLICITOVERRIDE,
+		EXPLICITOVERRIDE
+	};
+
 	SolInterfaceFunction(
 		std::string _functionName,
-		SolFunctionStateMutability _mutability
+		SolFunctionStateMutability _mutability,
+		Type _type,
+		std::string _baseName
 	);
 	bool operator==(SolInterfaceFunction const& _rhs) const;
 	bool operator!=(SolInterfaceFunction const& _rhs) const;
+	bool operator==(SolContractFunction const& _rhs) const;
+	bool operator!=(SolContractFunction const& _rhs) const;
+	void merge(SolInterfaceFunction const& _rhs);
+	bool namesake(SolInterfaceFunction const& _rhs) const;
+	void markExplicitOverride(std::string _newBaseName);
+
+	std::string baseNames() const;
+
 	std::string str() const;
 
 	std::string name() const
@@ -104,9 +121,31 @@ struct SolInterfaceFunction
 	{
 		return m_mutability;
 	}
+	bool explicitOverride() const
+	{
+		return m_type == Type::EXPLICITOVERRIDE;
+	}
+	bool implicitOverride() const
+	{
+		return m_type == Type::IMPLICITOVERRIDE;
+	}
+	bool memberFunction() const
+	{
+		return m_type == Type::MEMBERFUNCTION;
+	}
+	void markImplicitOverride()
+	{
+		m_type = Type::IMPLICITOVERRIDE;
+	}
+	bool multipleBases() const
+	{
+		return m_baseNames.size() > 1;
+	}
 
 	std::string m_functionName;
 	SolFunctionStateMutability m_mutability = SolFunctionStateMutability::PURE;
+	std::vector<std::string> m_baseNames;
+	Type m_type;
 };
 
 struct SolContractFunction
@@ -120,6 +159,8 @@ struct SolContractFunction
 	);
 	bool operator==(SolContractFunction const& _rhs) const;
 	bool operator!=(SolContractFunction const& _rhs) const;
+	bool operator==(SolInterfaceFunction const& _rhs) const;
+	bool operator!=(SolInterfaceFunction const& _rhs) const;
 	bool disallowed() const;
 	std::string str() const;
 
@@ -275,6 +316,54 @@ struct SolBaseContract
 	std::shared_ptr<SolRandomNumGenerator> m_prng;
 };
 
+struct SolFunction
+{
+	enum Type
+	{
+		INTERFACE,
+		CONTRACT
+	};
+	using FunctionVariant = std::variant<std::shared_ptr<SolInterfaceFunction>, std::shared_ptr<SolContractFunction>>;
+
+	Type operator()(FunctionVariant _var) const;
+};
+
+struct ContractFunctionAttributes
+{
+	ContractFunctionAttributes(
+		std::variant<std::shared_ptr<SolInterfaceFunction>, std::shared_ptr<SolContractFunction>> _solFunction
+	)
+	{
+		if (SolFunction{}(_solFunction) == SolFunction::INTERFACE)
+		{
+			auto f = std::get<std::shared_ptr<SolInterfaceFunction>>(_solFunction);
+			m_name = f->name();
+			m_mutability = f->mutability();
+			m_visibility = SolFunctionVisibility::EXTERNAL;
+		}
+		else
+		{
+			auto f = std::get<std::shared_ptr<SolContractFunction>>(_solFunction);
+			m_name = f->name();
+			m_mutability = f->mutability();
+			m_visibility = f->visibility();
+		}
+	}
+	bool namesake(ContractFunctionAttributes const& _rhs) const;
+	bool operator==(ContractFunctionAttributes const& _rhs) const;
+	bool operator!=(ContractFunctionAttributes const& _rhs) const;
+	void merge(ContractFunctionAttributes const& _rhs);
+
+	std::string m_name;
+	SolFunctionVisibility m_visibility;
+	SolFunctionStateMutability m_mutability;
+	std::string m_returnValue;
+	bool m_virtual;
+	bool m_override;
+	bool m_implemeted;
+	std::vector<std::string> m_bases;
+};
+
 struct SolContract
 {
 	SolContract(
@@ -282,6 +371,10 @@ struct SolContract
 		std::string _name,
 		std::shared_ptr<SolRandomNumGenerator> _prng
 	);
+
+	void merge(std::shared_ptr<SolBaseContract> _base);
+	void merge(std::shared_ptr<SolInterface> _interface);
+	void merge(std::shared_ptr<SolContract> _contract);
 
 	std::string str();
 	std::string interfaceOverrideStr();
@@ -350,12 +443,41 @@ struct SolContract
 	std::string m_lastBaseName;
 	std::vector<std::shared_ptr<SolContractFunction>> m_contractFunctions;
 	std::vector<std::shared_ptr<SolBaseContract>> m_baseContracts;
-	std::map<std::shared_ptr<SolContractFunction>, std::vector<std::shared_ptr<CFunctionOverride>>> m_overriddenContractFunctions;
-	std::map<std::shared_ptr<SolInterfaceFunction>, std::vector<std::shared_ptr<IFunctionOverride>>> m_overriddenInterfaceFunctions;
+	std::map<std::variant<std::shared_ptr<SolContractFunction>, std::shared_ptr<SolInterfaceFunction>>,
+	std::vector<std::shared_ptr<CFunctionOverride>>> m_overriddenFunctions;
 	/// Maps non abstract contract name to list of publicly exposed function name
 	/// and their expected output
 	std::map<std::string, std::map<std::string, std::string>> m_contractFunctionMap;
 	std::shared_ptr<SolRandomNumGenerator> m_prng;
+	std::vector<ContractFunctionAttributes> m_functions;
+
+
+};
+
+struct InterfaceFunctionAttributes
+{
+	InterfaceFunctionAttributes(
+		std::shared_ptr<SolInterfaceFunction> _function,
+		bool _override,
+		std::string _baseName
+	)
+	{
+		m_name = _function->name();
+		m_mutability = _function->mutability();
+		m_override = _override;
+		m_baseNames.push_back(_baseName);
+	}
+	InterfaceFunctionAttributes(InterfaceFunctionAttributes const& _rhs);
+
+	void merge(InterfaceFunctionAttributes const& _rhs);
+	bool namesake(InterfaceFunctionAttributes const& _rhs) const;
+	bool operator==(InterfaceFunctionAttributes const& _rhs) const;
+	bool operator!=(InterfaceFunctionAttributes const& _rhs) const;
+
+	SolFunctionStateMutability m_mutability;
+	std::string m_name;
+	bool m_override = false;
+	std::vector<std::string> m_baseNames;
 };
 
 struct SolInterface
@@ -365,6 +487,8 @@ struct SolInterface
 		std::string _interfaceName,
 		std::shared_ptr<SolRandomNumGenerator> _prng
 	);
+
+	void merge();
 
 	std::string name() const
 	{
@@ -385,38 +509,50 @@ struct SolInterface
 	{
 		return "f" + std::to_string(m_functionIndex++);
 	}
+
 	void incrementFunctionIndex()
 	{
 		m_functionIndex++;
 	}
+
 	void resetFunctionIndex()
 	{
 		m_functionIndex = 0;
 	}
+
 	void setFunctionIndex(unsigned _index)
 	{
 		m_functionIndex = _index;
 	}
+
 	unsigned functionIndex() const
 	{
 		return m_functionIndex;
 	}
+
 	std::string newBaseName()
 	{
 		m_lastBaseName += "B";
 		return m_lastBaseName;
 	}
+
 	std::string lastBaseName()
 	{
 		return m_lastBaseName;
 	}
 
 	std::string str() const;
+
 	std::string overrideStr() const;
 
 	/// Returns the Solidity code for all base interfaces
 	/// inherited by this interface.
 	std::string baseInterfaceStr() const;
+	std::string functionStr() const;
+	bool bases() const
+	{
+		return m_baseInterfaces.size() > 0;
+	}
 
 	/// Returns comma-space separated names of base interfaces inherited by
 	/// this interface.
@@ -437,7 +573,7 @@ struct SolInterface
 	unsigned m_functionIndex = 0;
 	std::string m_lastBaseName;
 	std::string m_interfaceName;
-	std::vector<std::shared_ptr<SolInterfaceFunction>> m_interfaceFunctions;
+	std::vector<std::shared_ptr<SolInterfaceFunction>> m_functions;
 	std::vector<std::shared_ptr<SolInterface>> m_baseInterfaces;
 	std::map<std::shared_ptr<SolInterfaceFunction>, std::vector<std::shared_ptr<IFunctionOverride>>> m_overrideMap;
 	std::shared_ptr<SolRandomNumGenerator> m_prng;
@@ -459,7 +595,7 @@ struct CFunctionOverride
 	};
 
 	CFunctionOverride(
-		std::shared_ptr<SolContract> _base,
+		std::variant<std::shared_ptr<SolContract>, std::shared_ptr<SolInterface>> _base,
 		std::shared_ptr<SolContractFunction> _function,
 		SolContract* _derived,
 		bool _implemented,
@@ -492,17 +628,17 @@ struct CFunctionOverride
 
 	std::string baseName() const;
 
-	std::shared_ptr<SolContract> baseContract() const
-	{
-		return m_baseContract;
-	}
+//	std::shared_ptr<SolContract> baseContract() const
+//	{
+//		return m_baseContract;
+//	}
 
 	std::shared_ptr<SolContractFunction> baseFunction() const
 	{
 		return m_baseFunction;
 	}
 
-	std::shared_ptr<SolContract> m_baseContract;
+	std::variant<std::shared_ptr<SolContract>, std::shared_ptr<SolInterface>> m_baseContract;
 	std::shared_ptr<SolContractFunction> m_baseFunction;
 	SolContract* m_derivedProgram;
 
