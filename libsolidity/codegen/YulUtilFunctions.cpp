@@ -2252,3 +2252,84 @@ string YulUtilFunctions::revertReasonIfDebug(string const& _message)
 {
 	return revertReasonIfDebug(m_revertStrings, _message);
 }
+
+string YulUtilFunctions::tryDecodeErrorMessageFunction()
+{
+	string const functionName = "try_decode_error_message";
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return util::Whiskers(R"(
+			function <functionName>() -> ret {
+				if lt(returndatasize(), 0x44) { leave }
+
+				returndatacopy(0, 0, 4)
+				let sig := <shr224>(mload(0))
+				if iszero(eq(sig, 0x<ErrorSignature>)) { leave }
+
+				let data := mload(<freeMemoryPointer>)
+				returndatacopy(data, 4, sub(returndatasize(), 4))
+
+				let offset := mload(data)
+				if or(
+					gt(offset, 0xffffffffffffffff),
+					gt(add(offset, 0x24), returndatasize())
+				) {
+					leave
+				}
+
+				let msg := add(data, offset)
+				let length := mload(msg)
+				if gt(length, 0xffffffffffffffff) { leave }
+
+				let end := add(add(msg, 0x20), length)
+				if gt(end, add(data, returndatasize())) { leave }
+
+				mstore(<freeMemoryPointer>, add(add(msg, 0x20), <roundUp>(length)))
+				ret := msg
+			}
+		)")
+		("functionName", functionName)
+		("shr224", shiftRightFunction(224))
+		("ErrorSignature", FixedHash<4>(util::keccak256("Error(string)")).hex())
+		("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer))
+		("roundUp", roundUpFunction())
+		.render();
+	});
+}
+
+string YulUtilFunctions::extractReturndataFunction()
+{
+	string const functionName = "extract_returndata";
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return util::Whiskers(R"(
+			function <functionName>() -> data {
+				<?supportsReturndata>
+					switch returndatasize()
+					case 0 {
+						data := <emptyArray>()
+					}
+					default {
+						// allocate some memory into data of size returndatasize() + PADDING
+						data := <allocate>(<roundUp>(add(returndatasize(), 0x20)))
+
+						// store array length into the front
+						mstore(data, returndatasize())
+
+						// append to data
+						returndatacopy(add(data, 0x20), 0, returndatasize())
+					}
+				<!supportsReturndata>
+					data := <emptyArray>()
+				</supportsReturndata>
+			}
+		)")
+		("functionName", functionName)
+		("supportsReturndata", m_evmVersion.supportsReturndata())
+		("allocate", allocationFunction())
+		("roundUp", roundUpFunction())
+		("emptyArray", zeroValueFunction(*TypeProvider::bytesMemory()))
+		.render();
+	});
+}
+

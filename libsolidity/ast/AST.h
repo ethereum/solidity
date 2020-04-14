@@ -1451,6 +1451,10 @@ public:
 	Expression const& externalCall() const { return *m_externalCall; }
 	std::vector<ASTPointer<TryCatchClause>> const& clauses() const { return m_clauses; }
 
+	TryCatchClause const* successClause() const;
+	TryCatchClause const* structuredClause() const;
+	TryCatchClause const* fallbackClause() const;
+
 private:
 	ASTPointer<Expression> m_externalCall;
 	std::vector<ASTPointer<TryCatchClause>> m_clauses;
