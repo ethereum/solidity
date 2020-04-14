@@ -154,7 +154,7 @@ SolInterfaceFunction::SolInterfaceFunction(
 	m_functionName = _functionName;
 	m_mutability = _mutability;
 	m_type = _type;
-	m_overriddenFrom = {};
+	m_overriddenFrom = {_contractName};
 	m_contractName = _contractName;
 }
 
@@ -176,7 +176,7 @@ bool SolInterfaceFunction::operator!=(SolInterfaceFunction const& _rhs) const
 	return m_mutability != _rhs.m_mutability;
 }
 
-void SolInterfaceFunction::merge(SolInterfaceFunction const& _rhs, string _contractName)
+void SolInterfaceFunction::merge(SolInterfaceFunction const& _rhs)
 {
 	assertThrow(
 		this->operator==(_rhs),
@@ -184,10 +184,8 @@ void SolInterfaceFunction::merge(SolInterfaceFunction const& _rhs, string _contr
 		"Sol proto adaptor: Invalid inheritance hierarchy"
 	);
 	m_type = Type::EXPLICITOVERRIDE;
-	m_overriddenFrom.push_back(m_contractName);
-	m_overriddenFrom.push_back(_rhs.m_contractName);
-	// Post merge this function belongs to this contract
-	m_contractName = _contractName;
+	for (auto &b: _rhs.m_overriddenFrom)
+		m_overriddenFrom.push_back(b);
 }
 
 bool SolInterfaceFunction::operator==(SolContractFunction const& _rhs) const
@@ -463,10 +461,11 @@ void SolInterface::merge()
 	 * 1. Deep copy all base interface functions (local) into a single list (global)
 	 * 2. Mark all of these as implicit overrides
 	 * 3. Iterate list of implicit overrides
-	 *   3a. If 2-way merge is necessary, do so and mark a two-base explicit override and add to contract
-	 *   3b. If 2-way merge is not possible, add as implicit override to contract
-	 * 4. Iterate list of contract implicit and explicit (2-way) overrides
-	 *   4a. If implicit, pseudo randomly mark it explicit
+	 *   3a. If n-way merge is necessary, do so and mark a two-base explicit override and add to contract
+	 *   3b. If n-way merge is not possible, add as implicit override to contract
+	 * 4. Update ownership of n-way merges
+	 * 5. Iterate list of contract implicit and explicit (2-way) overrides
+	 *   5a. If implicit, pseudo randomly mark it explicit
 	 */
 
 	// Step 1-2
@@ -478,14 +477,16 @@ void SolInterface::merge()
 			local.push_back(make_shared<SolInterfaceFunction>(*bf));
 		for (auto &l: local)
 		{
-			// Clear overridden from history.
-			l->clearOverriddenFromBases();
+			// Reset override history for past n-way merge
+			if (l->explicitOverride() && l->numOverriddenFromBases() > 1)
+				l->resetOverriddenBases();
 			// Mark all as implicit overrides
 			l->markImplicitOverride();
 			global.push_back(l);
 		}
 	}
 	// Step 3
+	vector<shared_ptr<SolInterfaceFunction>> updateList;
 	for (auto &f: global)
 	{
 		bool merged = false;
@@ -493,7 +494,8 @@ void SolInterface::merge()
 		{
 			if (e->namesake(*f))
 			{
-				e->merge(*f, name());
+				e->merge(*f);
+				updateList.push_back(e);
 				merged = true;
 				break;
 			}
@@ -502,6 +504,9 @@ void SolInterface::merge()
 			m_functions.push_back(f);
 	}
 	// Step 4
+	for (auto &u: updateList)
+		u->m_contractName = name();
+	// Step 5
 	for (auto &e: m_functions)
 		if (e->implicitOverride() && coinToss())
 			e->markExplicitOverride(name());

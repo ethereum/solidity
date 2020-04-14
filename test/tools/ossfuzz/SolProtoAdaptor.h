@@ -105,7 +105,7 @@ struct SolInterfaceFunction
 	bool operator!=(SolInterfaceFunction const& _rhs) const;
 	bool operator==(SolContractFunction const& _rhs) const;
 	bool operator!=(SolContractFunction const& _rhs) const;
-	void merge(SolInterfaceFunction const& _rhs, std::string _contractName);
+	void merge(SolInterfaceFunction const& _rhs);
 	bool namesake(SolInterfaceFunction const& _rhs) const;
 	void markExplicitOverride(std::string _contractName);
 
@@ -114,9 +114,10 @@ struct SolInterfaceFunction
 	{
 		return m_overriddenFrom.size();
 	}
-	void clearOverriddenFromBases()
+	void resetOverriddenBases()
 	{
 		m_overriddenFrom.clear();
+		m_overriddenFrom.push_back(m_contractName);
 	}
 
 	std::string str() const;
