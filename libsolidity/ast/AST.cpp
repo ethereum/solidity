@@ -617,12 +617,20 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 	else if (isLocalVariable())
 	{
 		solAssert(typeName(), "");
-		solAssert(typeName()->annotation().type, "Can only be called after reference resolution");
-		if (typeName()->annotation().type->category() == Type::Category::Mapping)
-			return set<Location>{ Location::Storage };
-		else
-			//  TODO: add Location::Calldata once implemented for local variables.
-			return set<Location>{ Location::Memory, Location::Storage };
+		auto getDataLocations = [](TypePointer _type, auto&& _recursion) -> set<Location> {
+			solAssert(_type, "Can only be called after reference resolution");
+			switch (_type->category())
+			{
+				case Type::Category::Array:
+					return _recursion(dynamic_cast<ArrayType const*>(_type)->baseType(), _recursion);
+				case Type::Category::Mapping:
+					return set<Location>{ Location::Storage };
+				default:
+					//  TODO: add Location::Calldata once implemented for local variables.
+					return set<Location>{ Location::Memory, Location::Storage };
+			}
+		};
+		return getDataLocations(typeName()->annotation().type, getDataLocations);
 	}
 	else
 		// Struct members etc.

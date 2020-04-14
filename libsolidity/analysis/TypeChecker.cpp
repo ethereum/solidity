@@ -518,19 +518,14 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			m_errorReporter.typeError(_variable.location(), "Internal or recursive type is not allowed for public state variables.");
 	}
 
-	switch (varType->category())
+	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
 	{
-	case Type::Category::Array:
-		if (auto arrayType = dynamic_cast<ArrayType const*>(varType))
-			if (
-				((arrayType->location() == DataLocation::Memory) ||
-				(arrayType->location() == DataLocation::CallData)) &&
-				!arrayType->validForCalldata()
-			)
-				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded.");
-		break;
-	default:
-		break;
+		auto result = referenceType->validForLocation(referenceType->location());
+		if (!result)
+		{
+			solAssert(!result.message().empty(), "Expected detailed error message");
+			m_errorReporter.typeError(_variable.location(), result.message());
+		}
 	}
 
 	return false;

@@ -1649,12 +1649,35 @@ bool ArrayType::operator==(Type const& _other) const
 	return isDynamicallySized() || length() == other.length();
 }
 
-bool ArrayType::validForCalldata() const
+BoolResult ArrayType::validForLocation(DataLocation _loc) const
 {
 	if (auto arrayBaseType = dynamic_cast<ArrayType const*>(baseType()))
-		if (!arrayBaseType->validForCalldata())
-			return false;
-	return isDynamicallySized() || unlimitedStaticCalldataSize(true) <= numeric_limits<unsigned>::max();
+	{
+		BoolResult result = arrayBaseType->validForLocation(_loc);
+		if (!result)
+			return result;
+	}
+	if (isDynamicallySized())
+		return true;
+	switch (_loc)
+	{
+		case DataLocation::Memory:
+		{
+			bigint size = bigint(length()) * m_baseType->memoryHeadSize();
+			if (size >= numeric_limits<unsigned>::max())
+				return BoolResult::err("Type too large for memory.");
+			break;
+		}
+		case DataLocation::CallData:
+		{
+			if (unlimitedStaticCalldataSize(true) >= numeric_limits<unsigned>::max())
+				return BoolResult::err("Type too large for calldata.");
+			break;
+		}
+		case DataLocation::Storage:
+			break;
+	}
+	return true;
 }
 
 bigint ArrayType::unlimitedStaticCalldataSize(bool _padded) const
@@ -2270,6 +2293,18 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 	else
 		m_interfaceType_library = TypeProvider::withLocation(this, DataLocation::Memory, true);
 	return *m_interfaceType_library;
+}
+
+BoolResult StructType::validForLocation(DataLocation _loc) const
+{
+	for (auto const& member: m_struct.members())
+		if (auto referenceType = dynamic_cast<ReferenceType const*>(member->annotation().type))
+		{
+			BoolResult result = referenceType->validForLocation(_loc);
+			if (!result)
+				return result;
+		}
+	return true;
 }
 
 bool StructType::recursive() const
