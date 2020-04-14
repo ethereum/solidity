@@ -2776,11 +2776,57 @@ bool TypeChecker::visit(IndexRangeAccess const& _access)
 	return false;
 }
 
+vector<Declaration const*> TypeChecker::cleanOverloadedDeclarations(
+	Identifier const& _identifier,
+	vector<Declaration const*> const& _candidates
+)
+{
+	solAssert(_candidates.size() > 1, "");
+	vector<Declaration const*> uniqueDeclarations;
+
+	for (Declaration const* declaration: _candidates)
+	{
+		solAssert(declaration, "");
+		// the declaration is functionDefinition, eventDefinition or a VariableDeclaration while declarations > 1
+		solAssert(
+			dynamic_cast<FunctionDefinition const*>(declaration) ||
+			dynamic_cast<EventDefinition const*>(declaration) ||
+			dynamic_cast<VariableDeclaration const*>(declaration) ||
+			dynamic_cast<MagicVariableDeclaration const*>(declaration),
+			"Found overloading involving something not a function, event or a (magic) variable."
+		);
+
+		FunctionTypePointer functionType {declaration->functionType(false)};
+		if (!functionType)
+			functionType = declaration->functionType(true);
+		solAssert(functionType, "Failed to determine the function type of the overloaded.");
+
+		for (TypePointer parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
+			if (!parameter)
+				m_errorReporter.fatalDeclarationError(_identifier.location(), "Function type can not be used in this context.");
+
+		if (uniqueDeclarations.end() == find_if(
+			uniqueDeclarations.begin(),
+			uniqueDeclarations.end(),
+			[&](Declaration const* d)
+			{
+				FunctionType const* newFunctionType = d->functionType(false);
+				if (!newFunctionType)
+					newFunctionType = d->functionType(true);
+				return newFunctionType && functionType->hasEqualParameterTypes(*newFunctionType);
+			}
+		))
+			uniqueDeclarations.push_back(declaration);
+	}
+	return uniqueDeclarations;
+}
+
 bool TypeChecker::visit(Identifier const& _identifier)
 {
 	IdentifierAnnotation& annotation = _identifier.annotation();
 	if (!annotation.referencedDeclaration)
 	{
+		annotation.overloadedDeclarations = cleanOverloadedDeclarations(_identifier, annotation.candidateDeclarations);
 		if (!annotation.arguments)
 		{
 			// The identifier should be a public state variable shadowing other functions

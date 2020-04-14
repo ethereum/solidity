@@ -83,7 +83,7 @@
                     "scope": 7,
                     "stateVariable": false,
                     "storageLocation": "default",
-                    "type": "uint256",
+                    "type": null,
                     "value": null,
                     "visibility": "internal"
                   },
@@ -93,7 +93,7 @@
                       "attributes":
                       {
                         "name": "uint",
-                        "type": "uint256"
+                        "type": null
                       },
                       "id": 2,
                       "name": "ElementaryTypeName",
