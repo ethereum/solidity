@@ -53,10 +53,11 @@ private:
 
 	bool visit(ElementaryTypeName const& _typeName) override;
 	void endVisit(UserDefinedTypeName const& _typeName) override;
-	void endVisit(FunctionTypeName const& _typeName) override;
+	bool visit(FunctionTypeName const& _typeName) override;
 	void endVisit(Mapping const& _mapping) override;
 	void endVisit(ArrayTypeName const& _typeName) override;
 	void endVisit(VariableDeclaration const& _variable) override;
+	bool visit(StructDefinition const& _struct) override;
 
 	/// Adds a new error to the list of errors.
 	void typeError(langutil::SourceLocation const& _location, std::string const& _description);
@@ -67,6 +68,9 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 	bool m_errorOccurred = false;
 	langutil::EVMVersion m_evmVersion;
+	bool m_insideFunctionType = false;
+	bool m_recursiveStructSeen = false;
+	std::set<StructDefinition const*> m_currentStructsSeen;
 };
 
 }

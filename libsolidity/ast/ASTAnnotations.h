@@ -128,6 +128,12 @@ struct TypeDeclarationAnnotation: DeclarationAnnotation
 	std::string canonicalName;
 };
 
+struct StructDeclarationAnnotation: TypeDeclarationAnnotation
+{
+	/// Whether the struct is recursive. Will be filled in by the DeclarationTypeChecker.
+	std::optional<bool> recursive;
+};
+
 struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 	/// List of functions without a body. Can also contain functions from base classes.

@@ -631,7 +631,15 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 {
 	FunctionType const& fun = dynamic_cast<FunctionType const&>(*_funType.annotation().type);
 	if (fun.kind() == FunctionType::Kind::External)
+	{
+		for (auto const& t: _funType.parameterTypes() + _funType.returnParameterTypes())
+		{
+			solAssert(t->annotation().type, "Type not set for parameter.");
+			if (!t->annotation().type->interfaceType(false).get())
+				m_errorReporter.typeError(t->location(), "Internal type cannot be used for external function type.");
+		}
 		solAssert(fun.interfaceType(false), "External function type uses internal types.");
+	}
 }
 
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)

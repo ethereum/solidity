@@ -607,7 +607,7 @@ public:
 	bool isVisibleInDerivedContracts() const override { return true; }
 	bool isVisibleViaContractTypeAccess() const override { return true; }
 
-	TypeDeclarationAnnotation& annotation() const override;
+	StructDeclarationAnnotation& annotation() const override;
 
 private:
 	std::vector<ASTPointer<VariableDeclaration>> m_members;

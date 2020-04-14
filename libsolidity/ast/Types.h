@@ -934,15 +934,7 @@ public:
 	Type const* encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
 
-	bool recursive() const
-	{
-		if (m_recursive.has_value())
-			return m_recursive.value();
-
-		interfaceType(false);
-
-		return m_recursive.value();
-	}
+	bool recursive() const;
 
 	std::unique_ptr<ReferenceType> copyForLocation(DataLocation _location, bool _isPointer) const override;
 
@@ -971,7 +963,6 @@ private:
 	// Caches for interfaceType(bool)
 	mutable std::optional<TypeResult> m_interfaceType;
 	mutable std::optional<TypeResult> m_interfaceType_library;
-	mutable std::optional<bool> m_recursive;
 };
 
 /**

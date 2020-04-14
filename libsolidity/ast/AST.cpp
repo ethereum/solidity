@@ -257,12 +257,13 @@ TypeNameAnnotation& TypeName::annotation() const
 
 TypePointer StructDefinition::type() const
 {
+	solAssert(annotation().recursive.has_value(), "Requested struct type before DeclarationTypeChecker.");
 	return TypeProvider::typeType(TypeProvider::structType(*this, DataLocation::Storage));
 }
 
-TypeDeclarationAnnotation& StructDefinition::annotation() const
+StructDeclarationAnnotation& StructDefinition::annotation() const
 {
-	return initAnnotation<TypeDeclarationAnnotation>();
+	return initAnnotation<StructDeclarationAnnotation>();
 }
 
 TypePointer EnumValue::type() const
