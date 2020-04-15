@@ -897,7 +897,8 @@ void SolContract::merge()
 								SolContractFunction::Type::EXPLICITOVERRIDECONTRACT,
 								abstract() ? coinToss() : true,
 								coinToss(),
-								newReturnValue()
+								newReturnValue(),
+								g->visibility()
 							)
 						);
 						// Erase merged interface function
@@ -940,7 +941,8 @@ void SolContract::merge()
 								SolContractFunction::Type::EXPLICITOVERRIDECONTRACT,
 								abstract() ? coinToss() : true,
 								coinToss(),
-								newReturnValue()
+								newReturnValue(),
+								function->visibility()
 							)
 						);
 						// Erase merged interface function
@@ -976,7 +978,8 @@ void SolContract::merge()
 								SolContractFunction::Type::EXPLICITOVERRIDECONTRACT,
 								abstract() ? coinToss() : true,
 								coinToss(),
-								newReturnValue()
+								newReturnValue(),
+								function->visibility()
 							)
 						);
 						// Erase merged interface function
