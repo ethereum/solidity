@@ -26,6 +26,8 @@
 #include <liblangutil/SourceLocation.h>
 #include <libyul/AsmDataForward.h>
 
+#include <utility>
+
 namespace solidity::frontend
 {
 
@@ -35,7 +37,7 @@ namespace solidity::frontend
 class AsmJsonImporter
 {
 public:
-	explicit AsmJsonImporter(std::string _sourceName) : m_sourceName(_sourceName) {}
+	explicit AsmJsonImporter(std::string _sourceName) : m_sourceName(std::move(_sourceName)) {}
 	yul::Block createBlock(Json::Value const& _node);
 
 private:

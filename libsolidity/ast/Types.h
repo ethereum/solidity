@@ -38,6 +38,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
 
 namespace solidity::frontend
 {
@@ -92,8 +93,8 @@ class MemberList
 public:
 	struct Member
 	{
-		Member(std::string const& _name, Type const* _type, Declaration const* _declaration = nullptr):
-			name(_name),
+		Member(std::string _name, Type const* _type, Declaration const* _declaration = nullptr):
+			name(std::move(_name)),
 			type(_type),
 			declaration(_declaration)
 		{
@@ -106,7 +107,7 @@ public:
 
 	using MemberMap = std::vector<Member>;
 
-	explicit MemberList(MemberMap const& _members): m_memberTypes(_members) {}
+	explicit MemberList(MemberMap _members): m_memberTypes(std::move(_members)) {}
 
 	void combine(MemberList const& _other);
 	TypePointer memberType(std::string const& _name) const
@@ -520,8 +521,8 @@ private:
 class RationalNumberType: public Type
 {
 public:
-	explicit RationalNumberType(rational const& _value, Type const* _compatibleBytesType = nullptr):
-		m_value(_value), m_compatibleBytesType(_compatibleBytesType)
+	explicit RationalNumberType(rational _value, Type const* _compatibleBytesType = nullptr):
+		m_value(std::move(_value)), m_compatibleBytesType(_compatibleBytesType)
 	{}
 
 	Category category() const override { return Category::RationalNumber; }
@@ -543,7 +544,7 @@ public:
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	IntegerType const* integerType() const;
-	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss,
+	/// @returns the smallest fixed type that can hold the value or incurs the least precision loss,
 	/// unless the value was truncated, then a suitable type will be chosen to indicate such event.
 	/// If the integer part does not fit, returns an empty pointer.
 	FixedPointType const* fixedPointType() const;
@@ -582,7 +583,7 @@ class StringLiteralType: public Type
 {
 public:
 	explicit StringLiteralType(Literal const& _literal);
-	explicit StringLiteralType(std::string const& _value);
+	explicit StringLiteralType(std::string _value);
 
 	Category category() const override { return Category::StringLiteral; }
 
@@ -744,11 +745,11 @@ public:
 	}
 
 	/// Constructor for a fixed-size array type ("type[20]")
-	ArrayType(DataLocation _location, Type const* _baseType, u256 const& _length):
+	ArrayType(DataLocation _location, Type const* _baseType, u256 _length):
 		ReferenceType(_location),
 		m_baseType(copyForLocationIfReference(_baseType)),
 		m_hasDynamicLength(false),
-		m_length(_length)
+		m_length(std::move(_length))
 	{}
 
 	Category category() const override { return Category::Array; }
@@ -1131,8 +1132,8 @@ public:
 
 	/// Detailed constructor, use with care.
 	FunctionType(
-		TypePointers const& _parameterTypes,
-		TypePointers const& _returnParameterTypes,
+		TypePointers _parameterTypes,
+		TypePointers _returnParameterTypes,
 		strings _parameterNames = strings(),
 		strings _returnParameterNames = strings(),
 		Kind _kind = Kind::Internal,
@@ -1144,10 +1145,10 @@ public:
 		bool _saltSet = false,
 		bool _bound = false
 	):
-		m_parameterTypes(_parameterTypes),
-		m_returnParameterTypes(_returnParameterTypes),
-		m_parameterNames(_parameterNames),
-		m_returnParameterNames(_returnParameterNames),
+		m_parameterTypes(std::move(_parameterTypes)),
+		m_returnParameterTypes(std::move(_returnParameterTypes)),
+		m_parameterNames(std::move(_parameterNames)),
+		m_returnParameterNames(std::move(_returnParameterNames)),
 		m_kind(_kind),
 		m_stateMutability(_stateMutability),
 		m_arbitraryParameters(_arbitraryParameters),

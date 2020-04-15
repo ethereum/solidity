@@ -43,6 +43,7 @@
 #include <boost/range/algorithm/copy.hpp>
 
 #include <limits>
+#include <utility>
 
 using namespace std;
 using namespace solidity;
@@ -1253,8 +1254,8 @@ StringLiteralType::StringLiteralType(Literal const& _literal):
 {
 }
 
-StringLiteralType::StringLiteralType(string const& _value):
-	m_value{_value}
+StringLiteralType::StringLiteralType(string _value):
+	m_value{std::move(_value)}
 {
 }
 

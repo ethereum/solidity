@@ -24,8 +24,9 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 
-#include <optional>
 #include <boost/variant.hpp>
+#include <optional>
+#include <utility>
 
 namespace solidity::frontend
 {
@@ -40,8 +41,8 @@ public:
 	/// Creates a new StandardCompiler.
 	/// @param _readFile callback used to read files for import statements. Must return
 	/// and must not emit exceptions.
-	explicit StandardCompiler(ReadCallback::Callback const& _readFile = ReadCallback::Callback()):
-		m_readFile(_readFile)
+	explicit StandardCompiler(ReadCallback::Callback _readFile = ReadCallback::Callback()):
+		m_readFile(std::move(_readFile))
 	{
 	}
 

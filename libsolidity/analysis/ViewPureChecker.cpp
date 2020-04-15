@@ -23,6 +23,7 @@
 #include <libevmasm/SemanticInformation.h>
 
 #include <functional>
+#include <utility>
 #include <variant>
 
 using namespace std;
@@ -41,7 +42,7 @@ public:
 		std::function<void(StateMutability, SourceLocation const&)> _reportMutability
 	):
 		m_dialect(_dialect),
-		m_reportMutability(_reportMutability) {}
+		m_reportMutability(std::move(_reportMutability)) {}
 
 	void operator()(yul::Literal const&) {}
 	void operator()(yul::Identifier const&) {}
