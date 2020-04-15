@@ -1182,7 +1182,7 @@ void SolContract::merge()
 			if (holds_alternative<shared_ptr<SolContractFunction>>(f))
 			{
 				auto function = get<shared_ptr<SolContractFunction>>(f);
-				if (function->implemented())
+				if (function->implemented() && (function->visibility() == SolFunctionVisibility::EXTERNAL || function->visibility() == SolFunctionVisibility::PUBLIC))
 					m_contractFunctionMap[name()].insert(pair(function->name(), function->returnValue()));
 			}
 }
