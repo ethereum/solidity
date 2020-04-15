@@ -58,6 +58,7 @@ map<Algorithm, string> const AlgorithmToStringMap =
 {
 	{Algorithm::Random, "random"},
 	{Algorithm::GEWEP, "GEWEP"},
+	{Algorithm::Classic, "classic"},
 };
 map<string, Algorithm> const StringToAlgorithmMap = invertMap(AlgorithmToStringMap);
 
@@ -107,6 +108,11 @@ GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLi
 		_arguments.count("gewep-genes-to-add-or-delete") > 0 ?
 			_arguments["gewep-genes-to-add-or-delete"].as<double>() :
 			optional<double>{},
+		_arguments["classic-elite-pool-size"].as<double>(),
+		_arguments["classic-crossover-chance"].as<double>(),
+		_arguments["classic-mutation-chance"].as<double>(),
+		_arguments["classic-deletion-chance"].as<double>(),
+		_arguments["classic-addition-chance"].as<double>(),
 	};
 }
 
@@ -149,6 +155,16 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 				/* deletionVsAdditionChance = */ _options.gewepDeletionVsAdditionChance,
 				/* percentGenesToRandomise = */ percentGenesToRandomise,
 				/* percentGenesToAddOrDelete = */ percentGenesToAddOrDelete,
+			});
+		}
+		case Algorithm::Classic:
+		{
+			return make_unique<ClassicGeneticAlgorithm>(ClassicGeneticAlgorithm::Options{
+				/* elitePoolSize = */ _options.classicElitePoolSize,
+				/* crossoverChance = */ _options.classicCrossoverChance,
+				/* mutationChance = */ _options.classicMutationChance,
+				/* deletionChance = */ _options.classicDeletionChance,
+				/* additionChance = */ _options.classicAdditionChance,
 			});
 		}
 		default:
@@ -474,6 +490,36 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		)
 	;
 	keywordDescription.add(gewepAlgorithmDescription);
+
+	po::options_description classicGeneticAlgorithmDescription("CLASSIC GENETIC ALGORITHM", lineLength, minDescriptionLength);
+	classicGeneticAlgorithmDescription.add_options()
+		(
+			"classic-elite-pool-size",
+			po::value<double>()->value_name("<FRACTION>")->default_value(0),
+			"Percentage of population to regenerate using mutations in each round."
+		)
+		(
+			"classic-crossover-chance",
+			po::value<double>()->value_name("<FRACTION>")->default_value(0.75),
+			"Chance of a chromosome being selected for crossover."
+		)
+		(
+			"classic-mutation-chance",
+			po::value<double>()->value_name("<FRACTION>")->default_value(0.01),
+			"Chance of a gene being mutated."
+		)
+		(
+			"classic-deletion-chance",
+			po::value<double>()->value_name("<PROBABILITY>")->default_value(0.01),
+			"Chance of a gene being deleted."
+		)
+		(
+			"classic-addition-chance",
+			po::value<double>()->value_name("<PROBABILITY>")->default_value(0.01),
+			"Chance of a random gene being added."
+		)
+	;
+	keywordDescription.add(classicGeneticAlgorithmDescription);
 
 	po::options_description randomAlgorithmDescription("RANDOM ALGORITHM", lineLength, minDescriptionLength);
 	randomAlgorithmDescription.add_options()

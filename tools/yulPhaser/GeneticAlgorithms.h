@@ -139,4 +139,59 @@ private:
 	Options m_options;
 };
 
+/**
+ * A typical genetic algorithm that works in three distinct phases, each resulting in a new,
+ * modified population:
+ * - selection: chromosomes are selected from the population with probability proportional to their
+ *   fitness. A chromosome can be selected more than once. The new population has the same size as
+ *   the old one.
+ * - crossover: first, for each chromosome we decide whether it undergoes crossover or not
+ *   (according to crossover chance parameter). Then each selected chromosome is randomly paired
+ *   with one other selected chromosome. Each pair produces a pair of children and gets replaced by
+ *   it in the population.
+ * - mutation: we go over each gene in the population and independently decide whether to mutate it
+ *   or not (according to mutation chance parameters). This is repeated for every mutation type so
+ *   one gene can undergo mutations of multiple types in a single round.
+ *
+ * This implementation also has the ability to preserve the top chromosomes in each round.
+ */
+class ClassicGeneticAlgorithm: public GeneticAlgorithm
+{
+public:
+	struct Options
+	{
+		double elitePoolSize;      ///< Percentage of the population treated as the elite.
+		double crossoverChance;    ///< The chance of a particular chromosome being selected for crossover.
+		double mutationChance;     ///< The chance of a particular gene being randomised in @a geneRandomisation mutation.
+		double deletionChance;     ///< The chance of a particular gene being deleted in @a geneDeletion mutation.
+		double additionChance;     ///< The chance of a particular gene being added in @a geneAddition mutation.
+
+		bool isValid() const
+		{
+			return (
+				0 <= elitePoolSize && elitePoolSize <= 1.0 &&
+				0 <= crossoverChance && crossoverChance <= 1.0 &&
+				0 <= mutationChance && mutationChance <= 1.0 &&
+				0 <= deletionChance && deletionChance <= 1.0 &&
+				0 <= additionChance && additionChance <= 1.0
+			);
+		}
+	};
+
+	ClassicGeneticAlgorithm(Options const& _options):
+		m_options(_options)
+	{
+		assert(_options.isValid());
+	}
+
+	Options const& options() const { return m_options; }
+
+	Population runNextRound(Population _population) override;
+
+private:
+	static Population select(Population _population, size_t _selectionSize);
+
+	Options m_options;
+};
+
 }
