@@ -1465,14 +1465,17 @@ void IRGeneratorForStatements::declareAssign(IRVariable const& _lhs, IRVariable 
 			else
 				m_code << (_declare ? "let ": "") << _lhs.part(stackItemName).name() << " := " << _rhs.part(stackItemName).name() << "\n";
 	else
-		m_code <<
-			(_declare ? "let ": "") <<
-			_lhs.commaSeparatedList() <<
-			" := " <<
-			m_context.utils().conversionFunction(_rhs.type(), _lhs.type()) <<
+	{
+		if (_lhs.type().sizeOnStack() > 0)
+			m_code <<
+				(_declare ? "let ": "") <<
+				_lhs.commaSeparatedList() <<
+				" := ";
+		m_code << m_context.utils().conversionFunction(_rhs.type(), _lhs.type()) <<
 			"(" <<
 			_rhs.commaSeparatedList() <<
 			")\n";
+	}
 }
 
 IRVariable IRGeneratorForStatements::zeroValue(Type const& _type, bool _splitFunctionTypes)
