@@ -23,6 +23,8 @@
 
 #include <liblangutil/ErrorReporter.h>
 
+#include <libsolutil/Algorithms.h>
+
 #include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;
@@ -79,10 +81,12 @@ bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 
 	m_currentStructsSeen.insert(&_struct);
 
-	for (auto const& _member: _struct.members())
+	for (auto const& member: _struct.members())
 	{
 		m_recursiveStructSeen = false;
-		_member->accept(*this);
+		member->accept(*this);
+		solAssert(member->annotation().type, "");
+		solAssert(member->annotation().type->canBeStored(), "Type cannot be used in struct.");
 		if (m_recursiveStructSeen)
 			hasRecursiveChild = true;
 	}
@@ -93,6 +97,29 @@ bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 	m_currentStructsSeen.erase(&_struct);
 	if (m_currentStructsSeen.empty())
 		m_recursiveStructSeen = false;
+
+	// Check direct recursion, fatal error if detected.
+	auto visitor = [&](StructDefinition const& _struct, auto& _cycleDetector, size_t _depth)
+	{
+		if (_depth >= 256)
+			fatalDeclarationError(_struct.location(), "Struct definition exhausting cyclic dependency validator.");
+
+		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
+		{
+			Type const* memberType = member->annotation().type;
+			while (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
+			{
+				if (arrayType->isDynamicallySized())
+					break;
+				memberType = arrayType->baseType();
+			}
+			if (auto structType = dynamic_cast<StructType const*>(memberType))
+				if (_cycleDetector.run(structType->structDefinition()))
+					return;
+		}
+	};
+	if (util::CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
+		fatalTypeError(_struct.location(), "Recursive struct definition.");
 
 	return false;
 }
@@ -340,6 +367,12 @@ void DeclarationTypeChecker::fatalTypeError(SourceLocation const& _location, str
 {
 	m_errorOccurred = true;
 	m_errorReporter.fatalTypeError(_location, _description);
+}
+
+void DeclarationTypeChecker::fatalDeclarationError(SourceLocation const& _location, string const& _description)
+{
+	m_errorOccurred = true;
+	m_errorReporter.fatalDeclarationError(_location, _description);
 }
 
 bool DeclarationTypeChecker::check(ASTNode const& _node)

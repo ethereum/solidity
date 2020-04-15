@@ -289,39 +289,6 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 		m_errorReporter.fatalTypeError(_usingFor.libraryName().location(), "Library name expected.");
 }
 
-bool TypeChecker::visit(StructDefinition const& _struct)
-{
-	for (ASTPointer<VariableDeclaration> const& member: _struct.members())
-		solAssert(type(*member)->canBeStored(), "Type cannot be used in struct.");
-
-	// Check recursion, fatal error if detected.
-	auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector, size_t _depth)
-	{
-		if (_depth >= 256)
-			m_errorReporter.fatalDeclarationError(_struct.location(), "Struct definition exhausting cyclic dependency validator.");
-
-		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
-		{
-			Type const* memberType = type(*member);
-			while (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
-			{
-				if (arrayType->isDynamicallySized())
-					break;
-				memberType = arrayType->baseType();
-			}
-			if (auto structType = dynamic_cast<StructType const*>(memberType))
-				if (_cycleDetector.run(structType->structDefinition()))
-					return;
-		}
-	};
-	if (CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
-		m_errorReporter.fatalTypeError(_struct.location(), "Recursive struct definition.");
-
-	ASTNode::listAccept(_struct.members(), *this);
-
-	return false;
-}
-
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	bool isLibraryFunction = _function.inContractKind() == ContractKind::Library;

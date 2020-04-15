@@ -65,6 +65,9 @@ private:
 	/// Adds a new error to the list of errors and throws to abort reference resolving.
 	void fatalTypeError(langutil::SourceLocation const& _location, std::string const& _description);
 
+	/// Adds a new error to the list of errors and throws to abort reference resolving.
+	void fatalDeclarationError(langutil::SourceLocation const& _location, std::string const& _description);
+
 	langutil::ErrorReporter& m_errorReporter;
 	bool m_errorOccurred = false;
 	langutil::EVMVersion m_evmVersion;
