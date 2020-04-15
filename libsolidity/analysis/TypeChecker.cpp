@@ -1796,6 +1796,10 @@ void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
 void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 {
 	solAssert(_function.isConstructor(), "");
+	if (_function.markedVirtual())
+		m_errorReporter.typeError(_function.location(), "Constructors cannot be virtual.");
+	if (_function.overrides())
+		m_errorReporter.typeError(_function.location(), "Constructors cannot override.");
 	if (!_function.returnParameters().empty())
 		m_errorReporter.typeError(_function.returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
 	if (_function.stateMutability() != StateMutability::NonPayable && _function.stateMutability() != StateMutability::Payable)

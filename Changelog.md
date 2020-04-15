@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Type Checker: Disallow ``virtual`` and ``override`` for constructors.
 
 
 
