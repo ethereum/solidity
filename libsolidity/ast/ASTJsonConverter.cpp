@@ -272,7 +272,7 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue),
 		make_pair("contractKind", contractKind(_node.contractKind())),
 		make_pair("abstract", _node.abstract()),
-		make_pair("fullyImplemented", _node.annotation().unimplementedFunctions.empty()),
+		make_pair("fullyImplemented", _node.annotation().unimplementedDeclarations.empty()),
 		make_pair("linearizedBaseContracts", getContainerIds(_node.annotation().linearizedBaseContracts)),
 		make_pair("baseContracts", toJson(_node.baseContracts())),
 		make_pair("contractDependencies", getContainerIds(_node.annotation().contractDependencies, true)),
@@ -407,7 +407,7 @@ bool ASTJsonConverter::visit(ModifierDefinition const& _node)
 		make_pair("parameters", toJson(_node.parameterList())),
 		make_pair("virtual", _node.markedVirtual()),
 		make_pair("overrides", _node.overrides() ? toJson(*_node.overrides()) : Json::nullValue),
-		make_pair("body", toJson(_node.body()))
+		make_pair("body", _node.isImplemented() ? toJson(_node.body()) : Json::nullValue)
 	};
 	if (!_node.annotation().baseFunctions.empty())
 		attributes.emplace_back(make_pair("baseModifiers", getContainerIds(_node.annotation().baseFunctions, true)));

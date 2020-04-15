@@ -99,7 +99,7 @@ inline string appendVirtual(FunctionDefinition const& _function)
 
 void AbstractContract::endVisit(ContractDefinition const& _contract)
 {
-	bool isFullyImplemented = _contract.annotation().unimplementedFunctions.empty();
+	bool isFullyImplemented = _contract.annotation().unimplementedDeclarations.empty();
 
 	if (
 		!isFullyImplemented &&

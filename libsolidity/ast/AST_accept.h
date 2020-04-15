@@ -288,7 +288,8 @@ void ModifierDefinition::accept(ASTVisitor& _visitor)
 		m_parameters->accept(_visitor);
 		if (m_overrides)
 			m_overrides->accept(_visitor);
-		m_body->accept(_visitor);
+		if (m_body)
+			m_body->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
 }
@@ -302,7 +303,8 @@ void ModifierDefinition::accept(ASTConstVisitor& _visitor) const
 		m_parameters->accept(_visitor);
 		if (m_overrides)
 			m_overrides->accept(_visitor);
-		m_body->accept(_visitor);
+		if (m_body)
+			m_body->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
 }

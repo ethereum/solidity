@@ -969,7 +969,7 @@ private:
 /**
  * Definition of a function modifier.
  */
-class ModifierDefinition: public CallableDeclaration, public StructurallyDocumented
+class ModifierDefinition: public CallableDeclaration, public StructurallyDocumented, public ImplementationOptional
 {
 public:
 	ModifierDefinition(
@@ -980,18 +980,19 @@ public:
 		ASTPointer<ParameterList> const& _parameters,
 		bool _isVirtual,
 		ASTPointer<OverrideSpecifier> const& _overrides,
-		ASTPointer<Block> _body
+		ASTPointer<Block> const& _body
 	):
 		CallableDeclaration(_id, _location, _name, Visibility::Internal, _parameters, _isVirtual, _overrides),
 		StructurallyDocumented(_documentation),
-		m_body(std::move(_body))
+		ImplementationOptional(_body != nullptr),
+		m_body(_body)
 	{
 	}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	Block const& body() const { return *m_body; }
+	Block const& body() const { solAssert(m_body, ""); return *m_body; }
 
 	TypePointer type() const override;
 
