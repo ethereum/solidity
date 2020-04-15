@@ -1537,6 +1537,15 @@ string IRGeneratorForStatements::binaryOperation(
 			case Token::Mod:
 				fun = m_utils.checkedIntModFunction(*type);
 				break;
+			case Token::BitOr:
+				fun = "or";
+				break;
+			case Token::BitXor:
+				fun = "xor";
+				break;
+			case Token::BitAnd:
+				fun = "and";
+				break;
 			default:
 				break;
 		}
