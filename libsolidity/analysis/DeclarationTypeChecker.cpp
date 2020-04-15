@@ -102,7 +102,7 @@ bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 	auto visitor = [&](StructDefinition const& _struct, auto& _cycleDetector, size_t _depth)
 	{
 		if (_depth >= 256)
-			fatalDeclarationError(_struct.location(), "Struct definition exhausting cyclic dependency validator.");
+			fatalDeclarationError(_struct.location(), "Struct definition exhausts cyclic dependency validator.");
 
 		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
 		{
