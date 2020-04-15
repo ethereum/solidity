@@ -36,9 +36,30 @@ using namespace std;
 
 namespace
 {
+/// Test function returns a uint256 value
+static size_t const expectedOutputLength = 32;
+/// Expected output value is decimal 0
+static uint8_t const expectedOutput[expectedOutputLength] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+/// Compares the contents of the memory address pointed to
+/// by `_result` of `_length` bytes to the expected output.
+/// Returns true if `_result` matches expected output, false
+/// otherwise.
+bool isOutputExpected(evmc::result const& _run)
+{
+	if (_run.output_size != expectedOutputLength)
+		return false;
+
+	return (memcmp(_run.output_data, expectedOutput, expectedOutputLength) == 0);
+}
+
 /// Compares two runs of EVMC returing true if they are
 /// equal and false otherwise.
-bool isOutputExpected(evmc::result const& _run1, evmc::result const& _run2)
+#if 0
+bool isDifferentialOutputExpected(evmc::result const& _run1, evmc::result const& _run2)
 {
 	if (_run1.output_size != _run2.output_size)
 		return false;
@@ -52,6 +73,7 @@ bool isOutputExpected(evmc::result const& _run1, evmc::result const& _run2)
 
 	return (memcmp(_run1.output_data, _run2.output_data, _run1.output_size) == 0);
 }
+#endif
 
 /// Accepts a reference to a user-specified input and returns an
 /// evmc_message with all of its fields zero initialized except
@@ -174,7 +196,7 @@ evmc::result compileDeployAndExecute(
 		_libraryAddressMap[_libraryName] = EVMHost::convertFromEVMC(createResult.create_address);
 	}
 
-	auto [minimalBytecode, ids] = compileContract(
+	auto [bytecode, ids] = compileContract(
 		_sourceCode,
 		_contractName,
 		_libraryAddressMap,
@@ -183,7 +205,7 @@ evmc::result compileDeployAndExecute(
 
 	return deployAndExecute(
 		hostContext,
-		minimalBytecode,
+		bytecode,
 		ids[_methodName].asString()
 	);
 }
@@ -222,26 +244,34 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		frontend::OptimiserSettings::minimal(),
 		converter.libraryTest() ? converter.libraryName() : ""
 	);
-
-	auto optResult = compileDeployAndExecute(
-		sol_source,
-		":C",
-		"test()",
-		frontend::OptimiserSettings::standard(),
-		converter.libraryTest() ? converter.libraryName() : ""
-	);
-
-	// Both executions should either return success or identical evmone status code
-	bool successState = minimalResult.status_code == EVMC_SUCCESS && optResult.status_code == EVMC_SUCCESS;
-	bool identicalState = minimalResult.status_code == optResult.status_code;
-	bool executeState = successState || identicalState;
-	solAssert(executeState, "Proto solc fuzzer: Different execution status");
-
+	bool successState = minimalResult.status_code == EVMC_SUCCESS;
 	if (successState)
 		solAssert(
-			isOutputExpected(minimalResult, optResult),
-			"Proto solc fuzzer: Output mismatch"
+			isOutputExpected(minimalResult),
+			"Proto solc fuzzer: Output incorrect"
 		);
 
 	return;
+
+//	auto optResult = compileDeployAndExecute(
+//		sol_source,
+//		":C",
+//		"test()",
+//		frontend::OptimiserSettings::standard(),
+//		converter.libraryTest() ? converter.libraryName() : ""
+//	);
+
+	// Both executions should either return success or identical evmone status code
+//	bool successState = minimalResult.status_code == EVMC_SUCCESS && optResult.status_code == EVMC_SUCCESS;
+//	bool identicalState = minimalResult.status_code == optResult.status_code;
+//	bool executeState = successState || identicalState;
+//	solAssert(executeState, "Proto solc fuzzer: Different execution status");
+
+//	if (successState)
+//		solAssert(
+//			isDifferentialOutputExpected(minimalResult, optResult),
+//			"Proto solc fuzzer: Output mismatch"
+//		);
+//
+//	return;
 }

@@ -187,7 +187,9 @@ void SolInterfaceFunction::merge(SolInterfaceFunction const& _rhs)
 	m_type = Type::EXPLICITOVERRIDE;
 	for (auto &b: _rhs.m_overriddenFrom)
 		m_overriddenFrom.push_back(b);
+#if 0
 	std::cout << "overridden base names " << overriddenFromBaseNames() << std::endl;
+#endif
 }
 
 bool SolInterfaceFunction::operator==(SolContractFunction const& _rhs) const
@@ -491,13 +493,17 @@ void SolInterface::merge()
 	vector<shared_ptr<SolInterfaceFunction>> updateList;
 	for (auto &f: global)
 	{
+#if 0
 		std::cout << "Processing " << f->name() << " from " << f->m_contractName << std::endl;
+#endif
 		bool merged = false;
 		for (auto &e: m_functions)
 		{
 			if (e->namesake(*f))
 			{
+#if 0
 				std::cout << "n-way merge of " << f->name() << " from " << f->m_contractName << std::endl;
+#endif
 				e->merge(*f);
 				updateList.push_back(e);
 				merged = true;
