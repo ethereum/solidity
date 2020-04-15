@@ -2079,7 +2079,7 @@ string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const
 				{
 					conversions +=
 						suffixedVariableNameList("converted", destStackSize, destStackSize + toComponent->sizeOnStack()) +
-						" := " +
+						(toComponent->sizeOnStack() > 0 ? " := " : "") +
 						conversionFunction(*fromComponent, *toComponent) +
 						"(" +
 						suffixedVariableNameList("value", sourceStackSize, sourceStackSize + fromComponent->sizeOnStack()) +
@@ -2089,12 +2089,13 @@ string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const
 				sourceStackSize += fromComponent->sizeOnStack();
 			}
 			return Whiskers(R"(
-				function <functionName>(<values>) -> <converted> {
+				function <functionName>(<values>) <arrow> <converted> {
 					<conversions>
 				}
 			)")
 			("functionName", functionName)
 			("values", suffixedVariableNameList("value", 0, sourceStackSize))
+			("arrow", destStackSize > 0 ? "->" : "")
 			("converted", suffixedVariableNameList("converted", 0, destStackSize))
 			("conversions", conversions)
 			.render();
