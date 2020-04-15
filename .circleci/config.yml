@@ -338,7 +338,7 @@ jobs:
 
   chk_proofs:
     docker:
-      - image: buildpack-deps:disco
+      - image: buildpack-deps:latest
     environment:
       TERM: xterm
     steps:
@@ -661,7 +661,7 @@ jobs:
 
   t_ems_solcjs:
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      - image: buildpack-deps:latest
     environment:
       TERM: xterm
     steps:
