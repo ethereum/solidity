@@ -887,6 +887,12 @@ void SolContract::merge()
 						);
 						// Merge interface into contract instead of the other way round
 						g->merge(*function);
+						// If abstract contract, we may implement
+						bool implement = abstract() ? coinToss() : true;
+						// If merged function has already been implemented
+						// we must implement.
+						if (g->implemented() && !implement)
+							implement = true;
 						// Create new contract function
 						mergedContract = make_shared<SolContractFunction>(
 							SolContractFunction(
@@ -895,7 +901,7 @@ void SolContract::merge()
 								name(),
 								g->name(),
 								SolContractFunction::Type::EXPLICITOVERRIDECONTRACT,
-								abstract() ? coinToss() : true,
+								implement,
 								coinToss(),
 								newReturnValue(),
 								g->visibility()
@@ -931,6 +937,13 @@ void SolContract::merge()
 #if 0
 						std::cout << "Overridden from " << function->overriddenFromBaseNames() << std::endl;
 #endif
+						// If abstract contract, we may implement
+						bool implement = abstract() ? coinToss() : true;
+						// If merged function has already been implemented
+						// we must implement.
+						if (function->implemented() && !implement)
+							implement = true;
+
 						// Create new contract function
 						mergedContract = make_shared<SolContractFunction>(
 							SolContractFunction(
@@ -939,7 +952,7 @@ void SolContract::merge()
 								name(),
 								function->name(),
 								SolContractFunction::Type::EXPLICITOVERRIDECONTRACT,
-								abstract() ? coinToss() : true,
+								implement,
 								coinToss(),
 								newReturnValue(),
 								function->visibility()
@@ -967,7 +980,20 @@ void SolContract::merge()
 							langutil::FuzzerError,
 							"Sol proto fuzzer: n-way merge of non-virtual contract function is not possible"
 						);
+						// Assert contract functions are both implemented or unimplemented
+						assertThrow(
+							g->implemented() == function->implemented(),
+							langutil::FuzzerError,
+							"Sol proto fuzzer: n-way merge of an implemented contract function with an unimplemented contract function is not possible"
+						);
 						function->merge(*g);
+						// If abstract contract, we may implement
+						bool implement = abstract() ? coinToss() : true;
+						// If merged function has already been implemented
+						// we must implement.
+						if (function->implemented() && !implement)
+							implement = true;
+
 						// Create new contract function
 						mergedContract = make_shared<SolContractFunction>(
 							SolContractFunction(
@@ -976,7 +1002,7 @@ void SolContract::merge()
 								name(),
 								function->name(),
 								SolContractFunction::Type::EXPLICITOVERRIDECONTRACT,
-								abstract() ? coinToss() : true,
+								implement,
 								coinToss(),
 								newReturnValue(),
 								function->visibility()
