@@ -87,6 +87,11 @@ private:
 	/// Generates code to rethrow an exception.
 	void rethrow();
 
+	void handleVariableReference(
+		VariableDeclaration const& _variable,
+		Expression const& _referencingExpression
+	);
+
 	/// Appends code to call an external function with the given arguments.
 	/// All involved expressions have already been visited.
 	void appendExternalFunctionCall(

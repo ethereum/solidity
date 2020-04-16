@@ -985,12 +985,72 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	}
 	case Type::Category::TypeType:
 	{
-		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.expression().annotation().type);
-		solUnimplementedAssert(type.actualType()->category() == Type::Category::Contract, "");
-		FunctionType const* funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
-		solUnimplementedAssert(funType, "");
-		solUnimplementedAssert(funType->kind() == FunctionType::Kind::Declaration, "");
-		// Nothing to do for declaration.
+		Type const& actualType = *dynamic_cast<TypeType const&>(
+			*_memberAccess.expression().annotation().type
+		).actualType();
+
+		if (actualType.category() == Type::Category::Contract)
+		{
+			if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
+				handleVariableReference(*variable, _memberAccess);
+			else if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
+			{
+				switch (funType->kind())
+				{
+				case FunctionType::Kind::Declaration:
+					break;
+				case FunctionType::Kind::Internal:
+					if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+						define(_memberAccess) << to_string(function->id()) << "\n";
+					else
+						solAssert(false, "Function not found in member access");
+					break;
+				case FunctionType::Kind::Event:
+					if (!dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+						solAssert(false, "event not found");
+					// the call will do the resolving
+					break;
+				case FunctionType::Kind::DelegateCall:
+					define(IRVariable(_memberAccess).part("address"), _memberAccess.expression());
+					define(IRVariable(_memberAccess).part("functionIdentifier")) << formatNumber(funType->externalIdentifier()) << "\n";
+					break;
+				case FunctionType::Kind::External:
+				case FunctionType::Kind::Creation:
+				case FunctionType::Kind::Send:
+				case FunctionType::Kind::BareCall:
+				case FunctionType::Kind::BareCallCode:
+				case FunctionType::Kind::BareDelegateCall:
+				case FunctionType::Kind::BareStaticCall:
+				case FunctionType::Kind::Transfer:
+				case FunctionType::Kind::Log0:
+				case FunctionType::Kind::Log1:
+				case FunctionType::Kind::Log2:
+				case FunctionType::Kind::Log3:
+				case FunctionType::Kind::Log4:
+				case FunctionType::Kind::ECRecover:
+				case FunctionType::Kind::SHA256:
+				case FunctionType::Kind::RIPEMD160:
+				default:
+					solAssert(false, "unsupported member function");
+				}
+			}
+			else if (dynamic_cast<TypeType const*>(_memberAccess.annotation().type))
+			{
+				// no-op
+			}
+			else
+				// The old code generator had a generic "else" case here
+				// without any specific code being generated,
+				// but it would still be better to have an exhaustive list.
+				solAssert(false, "");
+		}
+		else if (EnumType const* enumType = dynamic_cast<EnumType const*>(&actualType))
+			define(_memberAccess) << to_string(enumType->memberValue(_memberAccess.memberName())) << "\n";
+		else
+			// The old code generator had a generic "else" case here
+			// without any specific code being generated,
+			// but it would still be better to have an exhaustive list.
+			solAssert(false, "");
 		break;
 	}
 	default:
@@ -1208,28 +1268,7 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
 		define(_identifier) << to_string(functionDef->resolveVirtual(m_context.mostDerivedContract()).id()) << "\n";
 	else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
-	{
-		// TODO for the constant case, we have to be careful:
-		// If the value is visited twice, `defineExpression` is called twice on
-		// the same expression.
-		solUnimplementedAssert(!varDecl->isConstant(), "");
-		solUnimplementedAssert(!varDecl->immutable(), "");
-		if (m_context.isLocalVariable(*varDecl))
-			setLValue(_identifier, IRLValue{
-				*varDecl->annotation().type,
-				IRLValue::Stack{m_context.localVariable(*varDecl)}
-			});
-		else if (m_context.isStateVariable(*varDecl))
-			setLValue(_identifier, IRLValue{
-				*varDecl->annotation().type,
-				IRLValue::Storage{
-					toCompactHexWithPrefix(m_context.storageLocationOfVariable(*varDecl).first),
-					m_context.storageLocationOfVariable(*varDecl).second
-				}
-			});
-		else
-			solAssert(false, "Invalid variable kind.");
-	}
+		handleVariableReference(*varDecl, _identifier);
 	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
 	{
 		solUnimplementedAssert(!contract->isLibrary(), "Libraries not yet supported.");
@@ -1269,6 +1308,33 @@ bool IRGeneratorForStatements::visit(Literal const& _literal)
 		solUnimplemented("Only integer, boolean and string literals implemented for now.");
 	}
 	return false;
+}
+
+void IRGeneratorForStatements::handleVariableReference(
+	VariableDeclaration const& _variable,
+	Expression const& _referencingExpression
+)
+{
+	// TODO for the constant case, we have to be careful:
+	// If the value is visited twice, `defineExpression` is called twice on
+	// the same expression.
+	solUnimplementedAssert(!_variable.isConstant(), "");
+	solUnimplementedAssert(!_variable.immutable(), "");
+	if (m_context.isLocalVariable(_variable))
+		setLValue(_referencingExpression, IRLValue{
+			*_variable.annotation().type,
+			IRLValue::Stack{m_context.localVariable(_variable)}
+		});
+	else if (m_context.isStateVariable(_variable))
+		setLValue(_referencingExpression, IRLValue{
+			*_variable.annotation().type,
+			IRLValue::Storage{
+				toCompactHexWithPrefix(m_context.storageLocationOfVariable(_variable).first),
+				m_context.storageLocationOfVariable(_variable).second
+			}
+		});
+	else
+		solAssert(false, "Invalid variable kind.");
 }
 
 void IRGeneratorForStatements::appendExternalFunctionCall(
