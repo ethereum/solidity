@@ -778,8 +778,8 @@ Allowed options)",
 		)
 		(
 			g_argImportAst.c_str(),
-			"Import ASTs to be compiled, assumes input holds the AST in compact JSON format."
-			" Supported Inputs is the output of the standard-json or the one produced by --combined-json ast,compact-format"
+			"Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
+			"Supported Inputs is the output of the --standard-json or the one produced by --combined-json ast,compact-format"
 		)
 
 		(
@@ -831,7 +831,7 @@ Allowed options)",
 		(
 			g_argOptimizeRuns.c_str(),
 			po::value<unsigned>()->value_name("n")->default_value(200),
-			"Set for how many contract runs to optimize."
+			"Set for how many contract runs to optimize. "
 			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
 		)
 		(g_strOptimizeYul.c_str(), "Legacy option, ignored. Use the general --optimize to enable Yul optimizer.")
