@@ -145,7 +145,7 @@ function<Crossover> phaser::randomPointCrossover()
 		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
 
 		// Don't use position 0 (because this just swaps the values) unless it's the only choice.
-		size_t minPoint = (minLength > 0? 1 : 0);
+		size_t minPoint = (minLength > 0 ? 1 : 0);
 		assert(minPoint <= minLength);
 
 		size_t randomPoint = SimulationRNG::uniformInt(minPoint, minLength);
@@ -160,7 +160,7 @@ function<SymmetricCrossover> phaser::symmetricRandomPointCrossover()
 		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
 
 		// Don't use position 0 (because this just swaps the values) unless it's the only choice.
-		size_t minPoint = (minLength > 0? 1 : 0);
+		size_t minPoint = (minLength > 0 ? 1 : 0);
 		assert(minPoint <= minLength);
 
 		size_t randomPoint = SimulationRNG::uniformInt(minPoint, minLength);
