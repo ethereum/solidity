@@ -1663,7 +1663,22 @@ BoolResult ArrayType::validForLocation(DataLocation _loc) const
 	{
 		case DataLocation::Memory:
 		{
-			bigint size = bigint(length()) * m_baseType->memoryHeadSize();
+			bigint size = bigint(length());
+			auto type = m_baseType;
+			while (auto arrayType = dynamic_cast<ArrayType const*>(type))
+			{
+				if (arrayType->isDynamicallySized())
+					break;
+				else
+				{
+					size *= arrayType->length();
+					type = arrayType->baseType();
+				}
+			}
+			if (type->isDynamicallySized())
+				size *= type->memoryHeadSize();
+			else
+				size *= type->memoryDataSize();
 			if (size >= numeric_limits<unsigned>::max())
 				return BoolResult::err("Type too large for memory.");
 			break;

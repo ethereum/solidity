@@ -8,4 +8,4 @@ contract C {
 // TypeError: (26-66): Type too large for memory.
 // TypeError: (96-116): Type too large for memory.
 // TypeError: (146-173): Type too large for memory.
-// TypeError: (203-230): Type too large for calldata.
+// TypeError: (203-230): Type too large for memory.
