@@ -95,7 +95,7 @@ void OptimiserSuite::run(
 
 	suite.runSequence(
 		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
-		"("
+		"["
 			"xarrscLM"                 // Turn into SSA and simplify
 			"cCTUtTOntnfDIul"          // Perform structural simplification
 			"Lcul"                     // Simplify again
@@ -108,7 +108,7 @@ void OptimiserSuite::run(
 			"xarrcL"                   // Turn into SSA again and simplify
 			"gvif"                     // Run full inliner
 			"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
-		")"
+		"]"
 		"jmuljuljul VcTOcul jmul",     // Make source short and pretty
 		ast
 	);
@@ -256,12 +256,12 @@ void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
 	for (char abbreviation: input)
 		switch (abbreviation)
 		{
-		case '(':
-			assertThrow(!insideLoop, OptimizerException, "Nested parentheses not supported");
+		case '[':
+			assertThrow(!insideLoop, OptimizerException, "Nested brackets not supported");
 			insideLoop = true;
 			break;
-		case ')':
-			assertThrow(insideLoop, OptimizerException, "Unbalanced parenthesis");
+		case ']':
+			assertThrow(insideLoop, OptimizerException, "Unbalanced bracket");
 			insideLoop = false;
 			break;
 		default:
@@ -271,7 +271,7 @@ void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
 				"Invalid optimisation step abbreviation"
 			);
 		}
-	assertThrow(!insideLoop, OptimizerException, "Unbalanced parenthesis");
+	assertThrow(!insideLoop, OptimizerException, "Unbalanced bracket");
 
 	auto abbreviationsToSteps = [](string const& _sequence) -> vector<string>
 	{
@@ -281,21 +281,21 @@ void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
 		return steps;
 	};
 
-	// The sequence has now been validated and must consist of pairs of segments that look like this: `aaa(bbb)`
-	// `aaa` or `(bbb)` can be empty. For example we consider a sequence like `fgo(aaf)Oo` to have
-	// four segments, the last of which is an empty parenthesis.
+	// The sequence has now been validated and must consist of pairs of segments that look like this: `aaa[bbb]`
+	// `aaa` or `[bbb]` can be empty. For example we consider a sequence like `fgo[aaf]Oo` to have
+	// four segments, the last of which is an empty bracket.
 	size_t currentPairStart = 0;
 	while (currentPairStart < input.size())
 	{
-		size_t openingParenthesis = input.find('(', currentPairStart);
-		size_t closingParenthesis = input.find(')', openingParenthesis);
-		size_t firstCharInside = (openingParenthesis == string::npos ? input.size() : openingParenthesis + 1);
-		yulAssert((openingParenthesis == string::npos) == (closingParenthesis == string::npos), "");
+		size_t openingBracket = input.find('[', currentPairStart);
+		size_t closingBracket = input.find(']', openingBracket);
+		size_t firstCharInside = (openingBracket == string::npos ? input.size() : openingBracket + 1);
+		yulAssert((openingBracket == string::npos) == (closingBracket == string::npos), "");
 
-		runSequence(abbreviationsToSteps(input.substr(currentPairStart, openingParenthesis - currentPairStart)), _ast);
-		runSequenceUntilStable(abbreviationsToSteps(input.substr(firstCharInside, closingParenthesis - firstCharInside)), _ast);
+		runSequence(abbreviationsToSteps(input.substr(currentPairStart, openingBracket - currentPairStart)), _ast);
+		runSequenceUntilStable(abbreviationsToSteps(input.substr(firstCharInside, closingBracket - firstCharInside)), _ast);
 
-		currentPairStart = (closingParenthesis == string::npos ? input.size() : closingParenthesis + 1);
+		currentPairStart = (closingBracket == string::npos ? input.size() : closingBracket + 1);
 	}
 }
 
