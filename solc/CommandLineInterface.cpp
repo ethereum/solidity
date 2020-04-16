@@ -953,7 +953,10 @@ bool CommandLineInterface::processInput()
 					"ReadFile callback used as callback kind " +
 					_kind
 				));
-			auto path = boost::filesystem::path(_path);
+			string validPath = _path;
+			if (validPath.find("file://") == 0)
+				validPath.erase(0, 7);
+			auto path = boost::filesystem::path(validPath);
 			auto canonicalPath = boost::filesystem::weakly_canonical(path);
 			bool isAllowed = false;
 			for (auto const& allowedDir: m_allowedDirectories)

@@ -15,6 +15,7 @@ Bugfixes:
  * Type Checker: Fix several internal errors by performing size and recursiveness checks of types before the full type checking.
  * Type Checker: Fix internal error when assigning to empty tuples.
  * Type Checker: Perform recursiveness check on structs declared at the file level.
+ * Standard Json Input: Fix error when using prefix ``file://`` in the field ``urls``.
 
 Build System:
  * soltest.sh: ``SOLIDITY_BUILD_DIR`` is no longer relative to ``REPO_ROOT`` to allow for build directories outside of the source tree.
