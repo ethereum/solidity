@@ -25,8 +25,8 @@
 
 using namespace solidity::test::solprotofuzzer::adaptor;
 using namespace solidity::test::solprotofuzzer;
-using namespace std;
 using namespace solidity::util;
+using namespace std;
 
 namespace
 {
@@ -721,46 +721,31 @@ bool SolContract::validTest()
 }
 
 /// Must be called only when validTest() returns true.
-tuple<string, string, string> SolContract::validContractTest()
+void SolContract::validContractTests(map<string, map<string, string>>& _testSet)
 {
 	string chosenContractName;
 	string chosenFunctionName{};
 	string expectedOutput{};
-	// If we can provide a test case right away, do so.
+	// Add test cases in current contract
 	if (!m_contractFunctionMap.empty())
 	{
 		chosenContractName = name();
-		unsigned functionIdx = random() % m_contractFunctionMap.size();
-		unsigned mapIdx = 0;
+		_testSet[chosenContractName] = map<string, string>{};
 		for (auto &e: m_contractFunctionMap)
-		{
-			if (functionIdx == mapIdx)
-			{
-				chosenFunctionName = e.first;
-				expectedOutput = e.second;
-				break;
-			}
-			mapIdx++;
-		}
-		solAssert(m_contractFunctionMap.count(chosenFunctionName), "Sol proto adaptor: Invalid contract function chosen");
-		return make_tuple(chosenContractName, chosenFunctionName, expectedOutput);
+			_testSet[chosenContractName].insert(make_pair(e.first, e.second));
 	}
-	// Otherwise, continue search in base contracts
-	else
-	{
-		for (auto &b: m_baseContracts)
-			if (b->type() == SolBaseContract::BaseType::CONTRACT)
-				if (b->contract()->validTest())
-					return b->contract()->validContractTest();
-	}
-	solAssert(false, "Sol proto adaptor: No contract test found");
+	// Continue search in base contracts
+	for (auto &b: m_baseContracts)
+		if (b->type() == SolBaseContract::BaseType::CONTRACT)
+			if (b->contract()->validTest())
+				b->contract()->validContractTests(_testSet);
 }
 
-tuple<string, string, string> SolContract::pseudoRandomTest()
-{
-	solAssert(validTest(), "Sol proto adaptor: Please call validTest()");
-	return validContractTest();
-}
+//tuple<string, string, string> SolContract::pseudoRandomTest()
+//{
+//	solAssert(validTest(), "Sol proto adaptor: Please call validTest()");
+//	return validContractTests();
+//}
 
 void SolContract::addFunctions(Contract const& _contract)
 {
@@ -1294,7 +1279,7 @@ string SolContract::str()
 		("bases", bases.str())
 		("isAbstract", abstract())
 		("contractName", name())
-		("inheritance", m_baseContracts.size() > 0)
+		("inheritance", !m_baseContracts.empty())
 		("baseNames", baseNames())
 		("functions", functions.str())
 		.render();
@@ -1369,12 +1354,12 @@ library <name> {
 
 bool SolLibrary::validTest() const
 {
-	return m_publicFunctionMap.size() > 0;
+	return !m_publicFunctionMap.empty();
 }
 
 pair<string, string> SolLibrary::pseudoRandomTest()
 {
-	solAssert(m_publicFunctionMap.size() > 0, "Sol proto adaptor: Empty library map");
+	solAssert(!m_publicFunctionMap.empty(), "Sol proto adaptor: Empty library map");
 	string chosenFunction;
 	unsigned numFunctions = m_publicFunctionMap.size();
 	unsigned functionIndex = randomNumber() % numFunctions;

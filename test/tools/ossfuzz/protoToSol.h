@@ -64,11 +64,11 @@ private:
 	std::string visit(Contract const& _contract);
 	std::string programName(CIL _program);
 	std::tuple<std::string, std::string, std::string> pseudoRandomLibraryTest();
-	std::tuple<std::string, std::string, std::string> pseudoRandomContractTest();
+//	std::tuple<std::string, std::string, std::string> pseudoRandomContractTest();
 	void openProgramScope(CIL _program);
 	unsigned randomNumber();
 
-	bool emptyLibrary(Library const& _library)
+	static bool emptyLibrary(Library const& _library)
 	{
 		return _library.funcdef_size() == 0;
 	}
@@ -86,7 +86,10 @@ private:
 	std::shared_ptr<SolRandomNumGenerator> m_randomGen;
 	std::map<CIL, std::string> m_programNameMap;
 	std::vector<std::tuple<std::string, std::string, std::string>> m_libraryTests;
-	std::vector<std::tuple<std::string, std::string, std::string>> m_contractTests;
+	std::map<std::string, std::map<std::string, std::string>> m_contractTests;
 	std::string m_libraryName;
+
+	/// Maximum number of local variables in test function
+	static unsigned constexpr s_maxVars = 15;
 };
 }

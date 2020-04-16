@@ -37,7 +37,7 @@ string ProtoConverter::protoToSolidity(Program const& _p)
 
 string ProtoConverter::visit(TestContract const& _testContract)
 {
-	string testCode;
+	ostringstream testCode;
 	string usingLibDecl;
 	m_libraryTest = false;
 
@@ -47,7 +47,7 @@ string ProtoConverter::visit(TestContract const& _testContract)
 	{
 		if (emptyLibraryTests())
 		{
-			testCode = Whiskers(R"(
+			testCode << Whiskers(R"(
 		return 0;)")
 				.render();
 		}
@@ -60,7 +60,7 @@ string ProtoConverter::visit(TestContract const& _testContract)
 	using <libraryName> for uint;)")
 				("libraryName", get<0>(testTuple))
 				.render();
-			testCode = Whiskers(R"(
+			testCode << Whiskers(R"(
 		uint x;
 		if (x.<testFunction>() != <expectedOutput>)
 			return 1;
@@ -73,21 +73,45 @@ string ProtoConverter::visit(TestContract const& _testContract)
 	}
 	case TestContract::CONTRACT:
 		if (emptyContractTests())
-			testCode = Whiskers(R"(
+			testCode << Whiskers(R"(
 		return 0;)")
 				.render();
 		else
 		{
-			auto testTuple = pseudoRandomContractTest();
-			testCode = Whiskers(R"(
-			<contractName> testContract = new <contractName>();
-			if (testContract.<testFunction>() != <expectedOutput>)
-				return 1;
-			return 0;)")
-				("contractName", get<0>(testTuple))
-				("testFunction", get<1>(testTuple))
-				("expectedOutput", get<2>(testTuple))
-				.render();
+			unsigned errorCode = 1;
+			unsigned contractVarIndex = 0;
+			for (auto &testTuple: m_contractTests)
+			{
+				// Do this to avoid stack too deep errors
+				// We require uint as a return var, so we
+				// cannot have more than 16 variables without
+				// running into stack too deep errors
+				if (contractVarIndex >= s_maxVars)
+					break;
+				string contractName = testTuple.first;
+				string contractVarName = "tc" + to_string(contractVarIndex);
+				testCode << Whiskers(R"(
+			<contractName> <contractVarName> = new <contractName>();)")
+					("contractName", contractName)
+					("contractVarName", contractVarName)
+					.render();
+				for (auto &t: testTuple.second)
+				{
+					testCode << Whiskers(R"(
+			if (<contractVarName>.<testFunction>() != <expectedOutput>)
+				return <errorCode>;)")
+						("contractVarName", contractVarName)
+						("testFunction", t.first)
+						("expectedOutput", t.second)
+						("errorCode", to_string(errorCode))
+						.render();
+					errorCode++;
+				}
+				contractVarIndex++;
+			}
+			// Expected return value
+			testCode << Whiskers(R"(
+			return 0;)").render();
 		}
 		break;
 	}
@@ -101,7 +125,7 @@ contract C {<?isLibrary><usingDecl></isLibrary>
 )")
 		("isLibrary", m_libraryTest)
 		("usingDecl", usingLibDecl)
-		("testCode", testCode)
+		("testCode", testCode.str())
 		.render();
 }
 
@@ -161,7 +185,16 @@ string ProtoConverter::visit(Contract const& _contract)
 		auto contract = SolContract(_contract, programName(&_contract), m_randomGen);
 		if (contract.validTest())
 		{
-			m_contractTests.push_back(contract.pseudoRandomTest());
+			map<string, map<string, string>> testSet;
+			contract.validContractTests(testSet);
+			for (auto &contractTestSet: testSet)
+			{
+				m_contractTests.insert(pair(contractTestSet.first, map<string, string>{}));
+				for (auto &contractTest: contractTestSet.second)
+					m_contractTests[contractTestSet.first].insert(
+						make_pair(contractTest.first, contractTest.second)
+					);
+			}
 			return contract.str();
 		}
 		// There is no point in generating a contract that can not provide
@@ -220,12 +253,12 @@ tuple<string, string, string> ProtoConverter::pseudoRandomLibraryTest()
 	return m_libraryTests[index];
 }
 
-tuple<string, string, string> ProtoConverter::pseudoRandomContractTest()
-{
-	solAssert(m_contractTests.size() > 0, "Sol proto fuzzer: No contract tests found");
-	unsigned index = randomNumber() % m_contractTests.size();
-	return m_contractTests[index];
-}
+//tuple<string, string, string> ProtoConverter::pseudoRandomContractTest()
+//{
+//	solAssert(m_contractTests.size() > 0, "Sol proto fuzzer: No contract tests found");
+//	unsigned index = randomNumber() % m_contractTests.size();
+//	return m_contractTests[index];
+//}
 
 void ProtoConverter::openProgramScope(CIL _program)
 {

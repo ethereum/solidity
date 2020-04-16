@@ -26,6 +26,8 @@
 
 namespace solidity::test::solprotofuzzer::adaptor
 {
+
+/// Forward declarations
 /// Solidity contract abstraction class
 struct SolContract;
 /// Solidity interface abstraction class
@@ -38,31 +40,6 @@ struct SolInterfaceFunction;
 struct SolContractFunction;
 /// Solidity library function abstraction class
 struct SolLibraryFunction;
-/// Solidity contract function override abstraction class
-struct CFunctionOverride;
-/// Solidity interface function override abstraction class
-struct IFunctionOverride;
-
-/// Type that defines a contract function override as a variant of interface or
-/// contract function types.
-using OverrideFunction = std::variant<std::unique_ptr<SolInterfaceFunction const>, std::unique_ptr<SolContractFunction const>>;
-/// Type that defines a list of base contracts as a list of variants of interface or
-/// contract types.
-using BaseContracts = std::vector<std::variant<std::shared_ptr<SolInterface const>, std::shared_ptr<SolContract const>>>;
-/// Type that defines a contract function override as a pair of base contracts
-/// and its (their) function.
-using OverrideCFunction = std::pair<BaseContracts, OverrideFunction>;
-/// Type that defines an interface function override as a pair of interface
-/// and its function.
-using OverrideIFunction = std::pair<std::vector<std::shared_ptr<SolInterface const>>, std::unique_ptr<SolInterfaceFunction const>>;
-/// Type that defines a map of interface overrides
-using InterfaceOverrideMap = std::map<std::shared_ptr<SolInterfaceFunction>, std::vector<std::shared_ptr<SolInterface>>>;
-/// Type that defines an interface function as either a vanilla interface function
-/// or an override function.
-using IFunction = std::variant<std::unique_ptr<SolInterfaceFunction>, OverrideIFunction>;
-/// Type that defines a contract function as either a vanilla contract function
-/// or an override function.
-using CFunction = std::variant<std::unique_ptr<SolContractFunction>, OverrideCFunction>;
 /// Variant type that points to one of contract, interface protobuf messages
 using ProtoBaseContract = std::variant<Contract const*, Interface const*>;
 
@@ -369,7 +346,7 @@ struct SolLibrary
 	}
 	std::string newReturnValue()
 	{
-		return std::to_string(m_returnValue++);
+		return std::to_string(random());
 	}
 
 	std::string m_libraryName;
@@ -392,8 +369,6 @@ struct SolBaseContract
 		std::shared_ptr<SolRandomNumGenerator> _prng
 	);
 
-	std::variant<std::vector<std::shared_ptr<SolContractFunction>>, std::vector<std::shared_ptr<SolInterfaceFunction>>>
-	baseFunctions();
 	BaseType type() const;
 	std::string name();
 	std::string str();
@@ -409,56 +384,6 @@ struct SolBaseContract
 	std::string lastBaseName();
 
 	std::variant<std::shared_ptr<SolInterface>, std::shared_ptr<SolContract>> m_base;
-	std::string m_baseName;
-	std::shared_ptr<SolRandomNumGenerator> m_prng;
-};
-
-struct SolFunction
-{
-	enum Type
-	{
-		INTERFACE,
-		CONTRACT
-	};
-	using FunctionVariant = std::variant<std::shared_ptr<SolInterfaceFunction>, std::shared_ptr<SolContractFunction>>;
-
-	Type operator()(FunctionVariant _var) const;
-};
-
-struct ContractFunctionAttributes
-{
-	ContractFunctionAttributes(
-		std::variant<std::shared_ptr<SolInterfaceFunction>, std::shared_ptr<SolContractFunction>> _solFunction
-	)
-	{
-		if (SolFunction{}(_solFunction) == SolFunction::INTERFACE)
-		{
-			auto f = std::get<std::shared_ptr<SolInterfaceFunction>>(_solFunction);
-			m_name = f->name();
-			m_mutability = f->mutability();
-			m_visibility = SolFunctionVisibility::EXTERNAL;
-		}
-		else
-		{
-			auto f = std::get<std::shared_ptr<SolContractFunction>>(_solFunction);
-			m_name = f->name();
-			m_mutability = f->mutability();
-			m_visibility = f->visibility();
-		}
-	}
-	bool namesake(ContractFunctionAttributes const& _rhs) const;
-	bool operator==(ContractFunctionAttributes const& _rhs) const;
-	bool operator!=(ContractFunctionAttributes const& _rhs) const;
-	void merge(ContractFunctionAttributes const& _rhs);
-
-	std::string m_name;
-	SolFunctionVisibility m_visibility;
-	SolFunctionStateMutability m_mutability;
-	std::string m_returnValue;
-	bool m_virtual;
-	bool m_override;
-	bool m_implemeted;
-	std::vector<std::string> m_bases;
 };
 
 struct SolContract
@@ -473,25 +398,14 @@ struct SolContract
 
 	void merge();
 	std::string str();
-	std::string interfaceOverrideStr();
-	std::string contractOverrideStr();
-	void disallowedBase(std::shared_ptr<SolBaseContract> _base1, std::shared_ptr<SolBaseContract> _base2);
 	void addFunctions(Contract const& _contract);
 	void addBases(Contract const& _contract);
-	void addOverrides();
-	void interfaceFunctionOverride(
-		std::shared_ptr<SolInterface> _base,
-		std::shared_ptr<SolInterfaceFunction> _function
-	);
-	void contractFunctionOverride(
-		std::shared_ptr<SolContract> _base,
-		std::shared_ptr<SolContractFunction> _function
-	);
 
 	bool validTest();
 	std::string baseNames() const;
-	std::tuple<std::string, std::string, std::string> validContractTest();
-	std::tuple<std::string, std::string, std::string> pseudoRandomTest();
+	void validContractTests(
+		std::map<std::string, std::map<std::string, std::string>>& _testSet
+	);
 
 	unsigned randomNumber() const
 	{
@@ -593,7 +507,6 @@ struct SolInterface
 
 	std::string str() const;
 
-
 	/// Returns the Solidity code for all base interfaces
 	/// inherited by this interface.
 	std::string baseInterfaceStr() const;
@@ -618,199 +531,5 @@ struct SolInterface
 	std::vector<std::shared_ptr<SolInterfaceFunction>> m_functions;
 	std::vector<std::shared_ptr<SolInterface>> m_baseInterfaces;
 	std::shared_ptr<SolRandomNumGenerator> m_prng;
-};
-
-/* Contract functions may be overridden by other contracts. Base and derived contracts
- * may either be abstract or non-abstract. That gives us four possibilities:
- * - both abstract
- * - both non abstract
- * - one of them abstract, the other non abstract
- */
-
-struct CFunctionOverride
-{
-	enum class DerivedType
-	{
-		ABSTRACTCONTRACT,
-		CONTRACT
-	};
-
-	CFunctionOverride(
-		std::variant<std::shared_ptr<SolContract>, std::shared_ptr<SolInterface>> _base,
-		std::shared_ptr<SolContractFunction> _function,
-		SolContract* _derived,
-		bool _implemented,
-		bool _virtualized,
-		bool _explicitInheritance,
-		std::string _returnValue
-	)
-	{
-		m_baseContract = _base;
-		m_baseFunction = _function;
-		m_derivedProgram = _derived;
-		m_implemented = _implemented;
-		m_virtualized = _virtualized;
-		m_explicitlyInherited = _explicitInheritance;
-		m_returnValue = _returnValue;
-		m_derivedType = _derived->abstract() ? DerivedType::ABSTRACTCONTRACT : DerivedType::CONTRACT;
-	}
-
-	std::string str() const;
-
-	std::string name() const;
-
-	bool contractFunction() const;
-
-	SolFunctionVisibility visibility() const;
-
-	SolFunctionStateMutability mutability() const;
-
-	std::string commaSeparatedBaseNames() const;
-
-	std::string baseName() const;
-
-//	std::shared_ptr<SolContract> baseContract() const
-//	{
-//		return m_baseContract;
-//	}
-
-	std::shared_ptr<SolContractFunction> baseFunction() const
-	{
-		return m_baseFunction;
-	}
-
-	std::variant<std::shared_ptr<SolContract>, std::shared_ptr<SolInterface>> m_baseContract;
-	std::shared_ptr<SolContractFunction> m_baseFunction;
-	SolContract* m_derivedProgram;
-
-	/// Flag that is true if overridden function is implemented in derived contract
-	bool m_implemented = false;
-	/// Flag that is true if overridden function implemented in derived contract is
-	/// marked virtual
-	bool m_virtualized = false;
-	/// Flag that is true if overridden function is redeclared but not implemented
-	bool m_explicitlyInherited = false;
-	/// The uint value to be returned if the overridden interface function is implemented
-	std::string m_returnValue;
-	DerivedType m_derivedType;
-
-	bool implemented() const
-	{
-		return m_implemented;
-	}
-
-	bool virtualized() const
-	{
-		return m_virtualized;
-	}
-
-	bool explicitlyInherited() const
-	{
-		return m_explicitlyInherited;
-	}
-
-	std::string returnValue() const
-	{
-		return m_returnValue;
-	}
-};
-
-/* Difference between interface function declaration and interface
- * function override is that the former can not be implemented and
- * should not be marked virtual i.e., virtual is implicit.
- *
- * Interface function declarations may be implicitly or explicitly
- * inherited by derived interfaces. To explicitly inherit base
- * interface's function declaration, derived base must redeclare
- * the said function and mark it override. If base interface function
- * does not redeclare base interface function, it implicitly inherits
- * it from base and exposes it to its derived interfaces.
- *
- * Interface functions inherited by contracts may be implicitly or
- * explicitly inherited. Derived non abstract contracts must explicitly
- * override and implement inherited interface functions unless they have
- * already been implemented by one of its bases. Abstract contracts
- * may implicitly or explicitly inherit base interface functions. If
- * explicitly inherited, they must be redeclared and marked override.
- * When a base interface function is explicitly inherited by a contract
- * it may be marked virtual.
- */
-struct IFunctionOverride
-{
-	enum class DerivedType
-	{
-		INTERFACE,
-		ABSTRACTCONTRACT,
-		CONTRACT
-	};
-
-	IFunctionOverride(
-		std::shared_ptr<SolInterface> _baseInterface,
-		std::shared_ptr<SolInterfaceFunction const> _baseFunction,
-		std::variant<SolInterface*, SolContract*> _derivedProgram,
-		bool _implement,
-		bool _virtual,
-		bool _explicitInherit,
-		std::string _returnValue
-	);
-
-	std::string str() const;
-	std::string interfaceStr() const;
-	std::string contractStr() const;
-
-	void setImplement()
-	{
-		m_implemented = true;
-	}
-
-	void setVirtual()
-	{
-		m_virtualized = true;
-	}
-
-	void setExplicitInherit()
-	{
-		m_explicitlyInherited = true;
-	}
-
-	bool implemented() const
-	{
-		return m_implemented;
-	}
-
-	bool virtualized() const
-	{
-		return m_virtualized;
-	}
-
-	bool explicitlyInherited() const
-	{
-		return m_explicitlyInherited;
-	}
-
-	std::string returnValue() const
-	{
-		return m_returnValue;
-	}
-
-	std::string baseName() const
-	{
-		return m_baseInterface->name();
-	}
-
-	std::shared_ptr<SolInterface> m_baseInterface;
-	std::shared_ptr<SolInterfaceFunction const> m_baseFunction;
-	std::variant<SolInterface*, SolContract*> m_derivedProgram;
-
-	/// Flag that is true if overridden function is implemented in derived contract
-	bool m_implemented = false;
-	/// Flag that is true if overridden function implemented in derived contract is
-	/// marked virtual
-	bool m_virtualized = false;
-	/// Flag that is true if overridden function is redeclared but not implemented
-	bool m_explicitlyInherited = false;
-	/// The uint value to be returned if the overridden interface function is implemented
-	std::string m_returnValue;
-	DerivedType m_derivedType;
 };
 }
