@@ -842,11 +842,18 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::Function:
 		if (member == "selector")
 		{
-			solUnimplementedAssert(
-				dynamic_cast<FunctionType const&>(*_memberAccess.expression().annotation().type).kind() ==
-				FunctionType::Kind::External, ""
+			FunctionType const& functionType = dynamic_cast<FunctionType const&>(
+				*_memberAccess.expression().annotation().type
 			);
-			define(IRVariable{_memberAccess}, IRVariable(_memberAccess.expression()).part("functionIdentifier"));
+			if (functionType.kind() == FunctionType::Kind::External)
+				define(IRVariable{_memberAccess}, IRVariable(_memberAccess.expression()).part("functionIdentifier"));
+			else if (functionType.kind() == FunctionType::Kind::Declaration)
+			{
+				solAssert(functionType.hasDeclaration(), "");
+				define(IRVariable{_memberAccess}) << formatNumber(functionType.externalIdentifier() << 224) << "\n";
+			}
+			else
+				solAssert(false, "Invalid use of .selector");
 		}
 		else if (member == "address")
 		{
@@ -971,6 +978,16 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			define(_memberAccess) << to_string(type.numBytes()) << "\n";
 		else
 			solAssert(false, "Illegal fixed bytes member.");
+		break;
+	}
+	case Type::Category::TypeType:
+	{
+		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.expression().annotation().type);
+		solUnimplementedAssert(type.actualType()->category() == Type::Category::Contract, "");
+		FunctionType const* funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
+		solUnimplementedAssert(funType, "");
+		solUnimplementedAssert(funType->kind() == FunctionType::Kind::Declaration, "");
+		// Nothing to do for declaration.
 		break;
 	}
 	default:
