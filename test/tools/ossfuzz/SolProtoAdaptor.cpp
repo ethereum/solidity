@@ -700,34 +700,65 @@ string SolContract::baseNames() const
 
 bool SolContract::validTest()
 {
-	return m_contractFunctionMap[name()].size() > 0;
+	// If we have at least one function-expectation pair in this contract
+	// we have a valid test
+	if (!m_contractFunctionMap.empty())
+		return true;
+	else
+	{
+		// If this contract does not offer a valid test, we check if its
+		// base contracts offer one.
+		for (auto &b: m_baseContracts)
+		{
+			if (b->type() == SolBaseContract::BaseType::CONTRACT)
+			{
+				if (b->contract()->validTest())
+					return true;
+			}
+		}
+		return false;
+	}
 }
 
+/// Must be called only when validTest() returns true.
 tuple<string, string, string> SolContract::validContractTest()
 {
-	string chosenContractName = name();
+	string chosenContractName;
 	string chosenFunctionName{};
 	string expectedOutput{};
-	unsigned functionIdx = random() % m_contractFunctionMap[name()].size();
-	unsigned mapIdx = 0;
-	for (auto &e: m_contractFunctionMap[name()])
+	// If we can provide a test case right away, do so.
+	if (!m_contractFunctionMap.empty())
 	{
-		if (functionIdx == mapIdx)
+		chosenContractName = name();
+		unsigned functionIdx = random() % m_contractFunctionMap.size();
+		unsigned mapIdx = 0;
+		for (auto &e: m_contractFunctionMap)
 		{
-			chosenFunctionName = e.first;
-			expectedOutput = e.second;
-			break;
+			if (functionIdx == mapIdx)
+			{
+				chosenFunctionName = e.first;
+				expectedOutput = e.second;
+				break;
+			}
+			mapIdx++;
 		}
-		mapIdx++;
+		solAssert(m_contractFunctionMap.count(chosenFunctionName), "Sol proto adaptor: Invalid contract function chosen");
+		return make_tuple(chosenContractName, chosenFunctionName, expectedOutput);
 	}
-	solAssert(m_contractFunctionMap.count(chosenContractName), "Sol proto adaptor: Invalid contract chosen");
-	solAssert(m_contractFunctionMap[chosenContractName].count(chosenFunctionName), "Sol proto adaptor: Invalid contract function chosen");
-	return tuple(chosenContractName, chosenFunctionName, expectedOutput);
+	// Otherwise, continue search in base contracts
+	else
+	{
+		for (auto &b: m_baseContracts)
+			if (b->type() == SolBaseContract::BaseType::CONTRACT)
+				if (b->contract()->validTest())
+					return b->contract()->validContractTest();
+	}
+	solAssert(false, "Sol proto adaptor: No contract test found");
 }
 
 tuple<string, string, string> SolContract::pseudoRandomTest()
 {
-	solAssert(validTest(), "Sol proto adaptor: No valid contract test cases");
+	solAssert(validTest(), "Sol proto adaptor: Please call validTest()");
 	return validContractTest();
 }
 
@@ -760,8 +791,8 @@ void SolContract::addFunctions(Contract const& _contract)
 			// be called from a different contract.
 			if (visibility == SolFunctionVisibility::PUBLIC || visibility == SolFunctionVisibility::EXTERNAL)
 			{
-				solAssert(!m_contractFunctionMap[contractName].count(functionName), "Sol proto adaptor: Duplicate contract function");
-				m_contractFunctionMap[contractName].insert(pair(functionName, expectedOutput));
+				solAssert(!m_contractFunctionMap.count(functionName), "Sol proto adaptor: Duplicate contract function");
+				m_contractFunctionMap.insert(pair(functionName, expectedOutput));
 			}
 		}
 	}
@@ -1208,7 +1239,7 @@ void SolContract::merge()
 			{
 				auto function = get<shared_ptr<SolContractFunction>>(f);
 				if (function->implemented() && (function->visibility() == SolFunctionVisibility::EXTERNAL || function->visibility() == SolFunctionVisibility::PUBLIC))
-					m_contractFunctionMap[name()].insert(pair(function->name(), function->returnValue()));
+					m_contractFunctionMap.insert(pair(function->name(), function->returnValue()));
 			}
 }
 
@@ -1279,10 +1310,8 @@ SolContract::SolContract(
 	m_contractName = _name;
 	m_lastBaseName = m_contractName;
 	m_abstract = _contract.abstract();
-	// Add contract to contract function map only if the contract
-	// is not abstract.
-	if (!m_abstract)
-		m_contractFunctionMap.insert(pair(m_contractName, map<string, string>{}));
+	// Initialize function map.
+	m_contractFunctionMap = map<string, string>{};
 	addBases(_contract);
 	addFunctions(_contract);
 }

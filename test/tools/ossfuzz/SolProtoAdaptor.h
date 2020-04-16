@@ -541,7 +541,7 @@ struct SolContract
 	std::vector<std::shared_ptr<SolBaseContract>> m_baseContracts;
 	/// Maps non abstract contract name to list of publicly exposed function name
 	/// and their expected output
-	std::map<std::string, std::map<std::string, std::string>> m_contractFunctionMap;
+	std::map<std::string, std::string> m_contractFunctionMap;
 	std::shared_ptr<SolRandomNumGenerator> m_prng;
 };
 
