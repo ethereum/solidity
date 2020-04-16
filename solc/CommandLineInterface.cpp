@@ -746,15 +746,6 @@ Allowed options)",
 			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
 			"byzantium, constantinople, petersburg, istanbul (default) or berlin."
 		)
-		(g_argOptimize.c_str(), "Enable bytecode optimizer.")
-		(
-			g_argOptimizeRuns.c_str(),
-			po::value<unsigned>()->value_name("n")->default_value(200),
-			"Set for how many contract runs to optimize."
-			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
-		)
-		(g_strOptimizeYul.c_str(), "Legacy option, ignored. Use the general --optimize to enable Yul optimizer.")
-		(g_strNoOptimizeYul.c_str(), "Disable Yul optimizer in Solidity.")
 		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
 			g_argLibraries.c_str(),
@@ -834,6 +825,18 @@ Allowed options)",
 		(g_argOldReporter.c_str(), "Enables old diagnostics reporter.")
 		(g_argErrorRecovery.c_str(), "Enables additional parser error recovery.")
 		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
+	po::options_description optimizerOptions("Optimizer options");
+	optimizerOptions.add_options()
+		(g_argOptimize.c_str(), "Enable bytecode optimizer.")
+		(
+			g_argOptimizeRuns.c_str(),
+			po::value<unsigned>()->value_name("n")->default_value(200),
+			"Set for how many contract runs to optimize."
+			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
+		)
+		(g_strOptimizeYul.c_str(), "Legacy option, ignored. Use the general --optimize to enable Yul optimizer.")
+		(g_strNoOptimizeYul.c_str(), "Disable Yul optimizer in Solidity.");
+	desc.add(optimizerOptions);
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
