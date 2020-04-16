@@ -488,6 +488,8 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
 	{
 		auto result = referenceType->validForLocation(referenceType->location());
+		if (result && _variable.isPublicCallableParameter())
+			result = referenceType->validForLocation(DataLocation::CallData);
 		if (!result)
 		{
 			solAssert(!result.message().empty(), "Expected detailed error message");

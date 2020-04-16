@@ -559,6 +559,18 @@ bool VariableDeclaration::isExternalCallableParameter() const
 	return false;
 }
 
+bool VariableDeclaration::isPublicCallableParameter() const
+{
+	if (!isCallableOrCatchParameter())
+		return false;
+
+	if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
+		if (callable->visibility() == Visibility::Public)
+			return !isReturnParameter();
+
+	return false;
+}
+
 bool VariableDeclaration::isInternalCallableParameter() const
 {
 	if (!isCallableOrCatchParameter())

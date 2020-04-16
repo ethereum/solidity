@@ -36,7 +36,7 @@ namespace solidity::util
 ///
 
 template <class ResultType>
-class Result
+class [[nodiscard]] Result
 {
 public:
 	/// Constructs a result with _value and an empty message.
