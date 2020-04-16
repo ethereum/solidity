@@ -980,9 +980,8 @@ void SolContract::merge()
 							langutil::FuzzerError,
 							"Sol proto fuzzer: n-way merge of non-virtual contract function is not possible"
 						);
-						// Assert contract functions are both implemented or unimplemented
-						bool atleastOneImplements = (g->implemented() && !function->implemented()) ||
-						                            (!g->implemented() && function->implemented());
+						// Check if at least one base implements function
+						bool atleastOneImplements = g->implemented() || function->implemented();
 						function->merge(*g);
 						// If abstract contract, we may implement
 						bool implement = abstract() ? coinToss() : true;
