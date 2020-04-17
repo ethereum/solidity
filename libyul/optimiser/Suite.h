@@ -45,6 +45,8 @@ struct Object;
 class OptimiserSuite
 {
 public:
+	static constexpr size_t MaxRounds = 12;
+
 	enum class Debug
 	{
 		None,
@@ -60,6 +62,12 @@ public:
 	);
 
 	void runSequence(std::vector<std::string> const& _steps, Block& _ast);
+	void runSequence(std::string const& _stepAbbreviations, Block& _ast);
+	void runSequenceUntilStable(
+		std::vector<std::string> const& _steps,
+		Block& _ast,
+		size_t maxRounds = MaxRounds
+	);
 
 	static std::map<std::string, std::unique_ptr<OptimiserStep>> const& allSteps();
 	static std::map<std::string, char> const& stepNameToAbbreviationMap();
