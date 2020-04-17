@@ -86,16 +86,16 @@ else
     if [ $distribution = focal ]
     then
         SMTDEPENDENCY="libz3-dev,
-               libcvc4-dev,
-               "
+            libcvc4-dev,
+            "
     elif [ $distribution = disco ]
     then
         SMTDEPENDENCY="libz3-static-dev,
-               libcvc4-dev,
-               "
+            libcvc4-dev,
+            "
     else
         SMTDEPENDENCY="libz3-static-dev,
-               "
+            "
     fi
     CMAKE_OPTIONS=""
 fi

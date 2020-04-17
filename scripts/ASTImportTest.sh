@@ -21,8 +21,8 @@ UNCOMPILABLE=0
 TESTED=0
 
 if [ $(ls | wc -l) -ne 0 ]; then
-	echo "Test directory not empty. Skipping!"
-	exit -1
+    echo "Test directory not empty. Skipping!"
+    exit -1
 fi
 
 # function tests whether exporting and importing again leaves the JSON ast unchanged
@@ -40,11 +40,11 @@ function testImportExportEquivalence {
         $SOLC --import-ast --combined-json ast,compact-format --pretty-json expected.json > obtained.json 2> /dev/null
         if [ $? -ne 0 ]
         then
-               # For investigating, use exit 1 here so the script stops at the
-               # first failing test
-               # exit 1
-               FAILED=$((FAILED + 1))
-               return 1
+            # For investigating, use exit 1 here so the script stops at the
+            # first failing test
+            # exit 1
+            FAILED=$((FAILED + 1))
+            return 1
         fi
         DIFF="$(diff expected.json obtained.json)"
         if [ "$DIFF" != "" ]

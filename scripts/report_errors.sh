@@ -39,11 +39,11 @@ function post_error_to_github
     FORMATTED_ERROR_MSG=$(echo $ESCAPED_ERROR_MSG | sed 's/\$/\\n/g' | tr -d '\n')
 
     curl --request POST \
-      --url $GITHUB_API_URL \
-      --header 'accept: application/vnd.github.v3+json' \
-      --header 'content-type: application/json' \
-      -u stackenbotten:$GITHUB_ACCESS_TOKEN \
-      --data "{\"body\": \"There was an error when running \`$CIRCLE_JOB\` for commit \`$CIRCLE_SHA1\`:\n\`\`\`\n$FORMATTED_ERROR_MSG\n\`\`\`\nPlease check that your changes are working as intended.\"}"
+        --url $GITHUB_API_URL \
+        --header 'accept: application/vnd.github.v3+json' \
+        --header 'content-type: application/json' \
+        -u stackenbotten:$GITHUB_ACCESS_TOKEN \
+        --data "{\"body\": \"There was an error when running \`$CIRCLE_JOB\` for commit \`$CIRCLE_SHA1\`:\n\`\`\`\n$FORMATTED_ERROR_MSG\n\`\`\`\nPlease check that your changes are working as intended.\"}"
 
     post_review_comment_to_github
 }
@@ -60,11 +60,11 @@ function post_review_comment_to_github
         ERROR_LINE=$(echo $line | grep -oE "[0-9]*")
 
         curl --request POST \
-          --url $GITHUB_API_URL \
-          --header 'accept: application/vnd.github.v3+json, application/vnd.github.comfort-fade-preview+json' \
-          --header 'content-type: application/json' \
-          -u stackenbotten:$GITHUB_ACCESS_TOKEN \
-          --data "{\"commit_id\": \"$CIRCLE_SHA1\", \"path\": \"$ERROR_PATH\", \"line\": $ERROR_LINE, \"side\": \"RIGHT\", \"body\": \"Coding style error\"}"
+            --url $GITHUB_API_URL \
+            --header 'accept: application/vnd.github.v3+json, application/vnd.github.comfort-fade-preview+json' \
+            --header 'content-type: application/json' \
+            -u stackenbotten:$GITHUB_ACCESS_TOKEN \
+            --data "{\"commit_id\": \"$CIRCLE_SHA1\", \"path\": \"$ERROR_PATH\", \"line\": $ERROR_LINE, \"side\": \"RIGHT\", \"body\": \"Coding style error\"}"
     done < $ERROR_LOG
 }
 
