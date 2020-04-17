@@ -9,6 +9,9 @@ Compiler Features:
 Bugfixes:
  * Type Checker: Disallow ``virtual`` and ``override`` for constructors.
 
+Build System:
+ * soltest.sh: ``SOLIDITY_BUILD_DIR`` is no longer relative to ``REPO_ROOT`` to allow for build directories outside of the source tree.
+
 
 
 ### 0.6.6 (2020-04-09)
