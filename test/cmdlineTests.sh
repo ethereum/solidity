@@ -214,7 +214,7 @@ printTask "Testing unknown options..."
     then
         echo "Passed"
     else
-        printError "Incorrect response to unknown options: $STDERR"
+        printError "Incorrect response to unknown options: $output"
         exit 1
     fi
 )
@@ -385,7 +385,7 @@ SOLTMPDIR=$(mktemp -d)
     # This should fail
     if [[ !("$output" =~ "No input files given") || ($result == 0) ]]
     then
-        printError "Incorrect response to empty input arg list: $STDERR"
+        printError "Incorrect response to empty input arg list: $output"
         exit 1
     fi
 
