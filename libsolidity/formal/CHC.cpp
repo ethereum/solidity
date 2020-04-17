@@ -31,6 +31,7 @@
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
@@ -643,19 +644,19 @@ set<Expression const*, CHC::IdCompare> CHC::transactionAssertions(ASTNode const*
 
 vector<VariableDeclaration const*> CHC::stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract)
 {
-	vector<VariableDeclaration const*> stateVars;
-	for (auto const& contract: _contract.annotation().linearizedBaseContracts)
-		for (auto var: contract->stateVariables())
-			stateVars.push_back(var);
-	return stateVars;
+	return fold(
+		_contract.annotation().linearizedBaseContracts,
+		vector<VariableDeclaration const*>{},
+		[](auto&& _acc, auto _contract) { return _acc + _contract->stateVariables(); }
+	);
 }
 
 vector<smt::SortPointer> CHC::stateSorts(ContractDefinition const& _contract)
 {
-	vector<smt::SortPointer> stateSorts;
-	for (auto const& var: stateVariablesIncludingInheritedAndPrivate(_contract))
-		stateSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
-	return stateSorts;
+	return applyMap(
+		stateVariablesIncludingInheritedAndPrivate(_contract),
+		[](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); }
+	);
 }
 
 smt::SortPointer CHC::constructorSort()
@@ -695,12 +696,9 @@ smt::SortPointer CHC::interfaceSort(ContractDefinition const& _contract)
 /// - 1 set of output variables
 smt::SortPointer CHC::sort(FunctionDefinition const& _function)
 {
-	vector<smt::SortPointer> inputSorts;
-	for (auto const& var: _function.parameters())
-		inputSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
-	vector<smt::SortPointer> outputSorts;
-	for (auto const& var: _function.returnParameters())
-		outputSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
+	auto smtSort = [](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); };
+	auto inputSorts = applyMap(_function.parameters(), smtSort);
+	auto outputSorts = applyMap(_function.returnParameters(), smtSort);
 	return make_shared<smt::FunctionSort>(
 		vector<smt::SortPointer>{smt::SortProvider::intSort} + m_stateSorts + inputSorts + m_stateSorts + inputSorts + outputSorts,
 		smt::SortProvider::boolSort
@@ -715,11 +713,9 @@ smt::SortPointer CHC::sort(ASTNode const* _node)
 	auto fSort = dynamic_pointer_cast<smt::FunctionSort>(sort(*m_currentFunction));
 	solAssert(fSort, "");
 
-	vector<smt::SortPointer> varSorts;
-	for (auto const& var: m_currentFunction->localVariables())
-		varSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
+	auto smtSort = [](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); };
 	return make_shared<smt::FunctionSort>(
-		fSort->domain + varSorts,
+		fSort->domain + applyMap(m_currentFunction->localVariables(), smtSort),
 		smt::SortProvider::boolSort
 	);
 }
@@ -729,11 +725,9 @@ smt::SortPointer CHC::summarySort(FunctionDefinition const& _function, ContractD
 	auto stateVariables = stateVariablesIncludingInheritedAndPrivate(_contract);
 	auto sorts = stateSorts(_contract);
 
-	vector<smt::SortPointer> inputSorts, outputSorts;
-	for (auto const& var: _function.parameters())
-		inputSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
-	for (auto const& var: _function.returnParameters())
-		outputSorts.push_back(smt::smtSortAbstractFunction(*var->type()));
+	auto smtSort = [](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); };
+	auto inputSorts = applyMap(_function.parameters(), smtSort);
+	auto outputSorts = applyMap(_function.returnParameters(), smtSort);
 	return make_shared<smt::FunctionSort>(
 		vector<smt::SortPointer>{smt::SortProvider::intSort} + sorts + inputSorts + sorts + outputSorts,
 		smt::SortProvider::boolSort
@@ -769,9 +763,10 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 
 smt::Expression CHC::interface()
 {
-	vector<smt::Expression> paramExprs;
-	for (auto const& var: m_stateVariables)
-		paramExprs.push_back(m_context.variable(*var)->currentValue());
+	auto paramExprs = applyMap(
+		m_stateVariables,
+		[this](auto _var) { return m_context.variable(*_var)->currentValue(); }
+	);
 	return (*m_interfaces.at(m_currentContract))(paramExprs);
 }
 
@@ -803,11 +798,9 @@ smt::Expression CHC::summary(FunctionDefinition const& _function)
 	vector<smt::Expression> args{m_error.currentValue()};
 	auto contract = _function.annotation().contract;
 	args += contract->isLibrary() ? stateVariablesAtIndex(0, *contract) : initialStateVariables();
-	for (auto const& var: _function.parameters())
-		args.push_back(m_context.variable(*var)->valueAtIndex(0));
+	args += applyMap(_function.parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); });
 	args += contract->isLibrary() ? stateVariablesAtIndex(1, *contract) : currentStateVariables();
-	for (auto const& var: _function.returnParameters())
-		args.push_back(m_context.variable(*var)->currentValue());
+	args += applyMap(_function.returnParameters(), [this](auto _var) { return currentValue(*_var); });
 	return (*m_summaries.at(m_currentContract).at(&_function))(args);
 }
 
@@ -854,27 +847,21 @@ vector<smt::Expression> CHC::initialStateVariables()
 vector<smt::Expression> CHC::stateVariablesAtIndex(int _index)
 {
 	solAssert(m_currentContract, "");
-	vector<smt::Expression> exprs;
-	for (auto const& var: m_stateVariables)
-		exprs.push_back(m_context.variable(*var)->valueAtIndex(_index));
-	return exprs;
+	return applyMap(m_stateVariables, [&](auto _var) { return valueAtIndex(*_var, _index); });
 }
 
 vector<smt::Expression> CHC::stateVariablesAtIndex(int _index, ContractDefinition const& _contract)
 {
-	vector<smt::Expression> exprs;
-	for (auto const& var: stateVariablesIncludingInheritedAndPrivate(_contract))
-		exprs.push_back(m_context.variable(*var)->valueAtIndex(_index));
-	return exprs;
+	return applyMap(
+		stateVariablesIncludingInheritedAndPrivate(_contract),
+		[&](auto _var) { return valueAtIndex(*_var, _index); }
+	);
 }
 
 vector<smt::Expression> CHC::currentStateVariables()
 {
 	solAssert(m_currentContract, "");
-	vector<smt::Expression> exprs;
-	for (auto const& var: m_stateVariables)
-		exprs.push_back(m_context.variable(*var)->currentValue());
-	return exprs;
+	return applyMap(m_stateVariables, [this](auto _var) { return currentValue(*_var); });
 }
 
 vector<smt::Expression> CHC::currentFunctionVariables()
@@ -886,9 +873,7 @@ vector<smt::Expression> CHC::currentFunctionVariables()
 		initInputExprs.push_back(m_context.variable(*var)->valueAtIndex(0));
 		mutableInputExprs.push_back(m_context.variable(*var)->currentValue());
 	}
-	vector<smt::Expression> returnExprs;
-	for (auto const& var: m_currentFunction->returnParameters())
-		returnExprs.push_back(m_context.variable(*var)->currentValue());
+	auto returnExprs = applyMap(m_currentFunction->returnParameters(), [this](auto _var) { return currentValue(*_var); });
 	return vector<smt::Expression>{m_error.currentValue()} +
 		initialStateVariables() +
 		initInputExprs +
@@ -899,11 +884,10 @@ vector<smt::Expression> CHC::currentFunctionVariables()
 
 vector<smt::Expression> CHC::currentBlockVariables()
 {
-	vector<smt::Expression> paramExprs;
 	if (m_currentFunction)
-		for (auto const& var: m_currentFunction->localVariables())
-			paramExprs.push_back(m_context.variable(*var)->currentValue());
-	return currentFunctionVariables() + paramExprs;
+		return currentFunctionVariables() + applyMap(m_currentFunction->localVariables(), [this](auto _var) { return currentValue(*_var); });
+
+	return currentFunctionVariables();
 }
 
 string CHC::predicateName(ASTNode const* _node, ContractDefinition const* _contract)
@@ -958,8 +942,7 @@ smt::Expression CHC::predicate(FunctionCall const& _funCall)
 			m_context.variable(*param)->increaseIndex();
 		else
 			createVariable(*param);
-	for (auto const& var: function->returnParameters())
-		args.push_back(m_context.variable(*var)->currentValue());
+	args += applyMap(function->returnParameters(), [this](auto _var) { return currentValue(*_var); });
 
 	if (contract->isLibrary())
 		return (*m_summaries.at(contract).at(function))(args);
