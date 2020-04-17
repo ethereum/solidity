@@ -47,6 +47,7 @@ struct CommonOptions: boost::noncopyable
 	boost::filesystem::path testPath;
 	bool optimize = false;
 	bool optimizeYul = false;
+	bool enforceViaYul = false;
 	bool disableSMT = false;
 	bool useABIEncoderV2 = false;
 	bool showMessages = false;

@@ -9,6 +9,5 @@ contract c {
         return true;
     }
 }
-
 // ----
 // test() -> FAILURE
