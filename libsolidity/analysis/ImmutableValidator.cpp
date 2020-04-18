@@ -22,6 +22,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace solidity::frontend;
+using namespace solidity::langutil;
 
 void ImmutableValidator::analyze()
 {

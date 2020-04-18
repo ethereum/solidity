@@ -130,7 +130,7 @@ void Parser::parsePragmaVersion(SourceLocation const& _location, vector<Token> c
 			m_errorReporter.fatalParserError(
 				_location,
 				"Source file requires different compiler version (current compiler is " +
-				string(VersionString) + " - note that nightly builds are considered to be "
+				string(VersionString) + ") - note that nightly builds are considered to be "
 				"strictly less than the released version"
 			);
 }

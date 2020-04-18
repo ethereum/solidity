@@ -29,6 +29,7 @@
 using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
+using namespace solidity::langutil;
 
 void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 {

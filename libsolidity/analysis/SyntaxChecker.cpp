@@ -123,7 +123,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 			m_errorReporter.syntaxError(
 				_pragma.location(),
 				"Source file requires different compiler version (current compiler is " +
-				string(VersionString) + " - note that nightly builds are considered to be "
+				string(VersionString) + ") - note that nightly builds are considered to be "
 				"strictly less than the released version"
 			);
 		m_versionPragmaFound = true;
