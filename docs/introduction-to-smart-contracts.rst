@@ -362,18 +362,21 @@ returns that code when executed.
 Gas
 ===
 
-Upon creation, each transaction is charged with a certain amount of **gas**,
-whose purpose is to limit the amount of work that is needed to execute
-the transaction and to pay for this execution at the same time. While the EVM executes the
-transaction, the gas is gradually depleted according to specific rules.
+"Gas" is the name for a special unit used in Ethereum. It measures how much "work" an action or set of actions takes to perform: for example, to calculate one Keccak256 cryptographic hash it will take 30 gas each time a hash is calculated, plus a cost of 6 more gas for every 256 bits of data being hashed. Every operation that can be performed by a transaction or contract on the Ethereum platform costs a certain number of gas, with operations that require more computational resources costing more gas than operations that require few computational resources.
 
-The **gas price** is a value set by the creator of the transaction, who
-has to pay ``gas_price * gas`` up front from the sending account.
-If some gas is left after the execution, it is refunded to the creator in the same way.
+The reason gas is important is that it helps to ensure an appropriate fee is being paid by transactions submitted to the network. By requiring that a transaction pay for each operation it performs (or causes a contract to perform), we ensure that network doesn't become bogged down with performing a lot of intensive work that isn't valuable to anyone. This is a different strategy than the Bitcoin transaction fee, which is based only on the size in kilobytes of a transaction. Since Ethereum allows arbitrarily complex computer code to be run, a short length of code can actually result in a lot of computational work being done. So it's important to measure the work done directly instead of just choosing a fee based on the length of a transaction or contract.
 
-If the gas is used up at any point (i.e. it would be negative),
-an out-of-gas exception is triggered, which reverts all modifications
-made to the state in the current call frame.
+So if gas is basically a transaction fee, how do you pay it? This is where it gets a little tricky. Although gas is a unit that things can be measured in, there isn't any actual token for gas. That is, you can't own 1000 gas. Instead, gas exists only inside of the Ethereum virtual machine as a count of how much work is being performed. When it comes to actually paying for the gas, the transaction fee is charged as a certain number of ether, the built-in token on the Ethereum network and the token with which miners are rewarded for producing blocks.
+
+This might seem odd at first. Why don't operations just have a cost measured in ether directly? The answer is that ether, like bitcoins, have a market price that can change rapidly! But the cost of computation doesn't go up or down just because the price of ether changes. So it's helpful to separate out the price of computation from the price of the ether token, so that the cost of an operation doesn't have to be changed every time the market moves.
+
+The terminology here gets a little messy. Operations in the EVM have gas cost, but gas itself also has a gas price measured in terms of ether. Every transaction specifies the gas price it is willing to pay in ether for each unit of gas, allowing the market to decide the relationship between the price of ether and the cost of computing operations (as measured in gas). It's the combination of the two, total gas used multiplied by gas price paid, that results in the total fee paid by a transaction.
+
+As tricky as it is, it's important to understand this distinction, because it results in one of the most confusing things about Ethereum transactions to the initial learner: there is a difference between your transaction running out of gas and your transaction not having a high enough fee. If the gas price I set in my transaction is too low, no one will even bother to run my transaction in the first place. It will simply not be included in the blockchain by miners. But if I provide an acceptable gas price, and then my transaction results in so much computational work that the combined gas costs go past the amount I attached as a fee, that gas counts as "spent" and I don't get it back. The miner will stop processing the transaction, revert any changes it made, but still include it in the blockchain as a "failed transaction", collecting the fees for it. This may seem harsh, but when you realise that the real work for the miner was in performing the computation, you can see that they will never get those resources back either. So it's only fair that you pay them for the work they did, even though your badly designed transaction ran out of gas.
+
+Providing too big of a fee is also different than providing too much ether. If you set a very high gas price, you will end up paying lots of ether for only a few operations, just like setting a super high transaction fee in bitcoin. You'll definitely be prioritised to the front of the line, but your money is gone. If you provided a normal gas price, however, and just attached more ether than was needed to pay for the gas that your transaction consumed, the excess amount will be refunded back to you. Miners only charge you for the work that they actually do. You can think of the gas price as the hourly wage for the miner, and the gas cost as their timesheet of work performed.
+
+There are a lot of other subtleties to gas, but that should give you the basics! Gas is the key mechanism that makes the complex computations in Ethereum "safe" for the network to work on, because any programs that run out of control will only last as long as the money provided by the people who requested they be run. When the money stops, the miners stop working on it. And the mistakes you make in your program will only affect the people who pay to use it--the rest of the network can't suffer performance issues due to your error. They will simply get a big payday when the performance issues consume all of your ether! Without this critical technique, the idea of a general-purpose blockchain would have been completely impossible.
 
 .. index:: ! storage, ! memory, ! stack
 
