@@ -18,11 +18,6 @@ object \"C_6\" {
         return(0, datasize(\"C_6_deployed\"))
 
 
-        function fun_f_5()  {
-
-
-        }
-
     }
     object \"C_6_deployed\" {
         code {

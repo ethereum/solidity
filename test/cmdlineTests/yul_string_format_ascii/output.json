@@ -18,35 +18,6 @@ object \"C_10\" {
         return(0, datasize(\"C_10_deployed\"))
 
 
-        function allocateMemory(size) -> memPtr {
-            memPtr := mload(64)
-            let newFreePtr := add(memPtr, size)
-            // protect against overflow
-            if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
-            mstore(64, newFreePtr)
-        }
-
-        function convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr() -> converted {
-            converted := allocateMemory(64)
-            mstore(converted, 6)
-
-            mstore(add(converted, 32), \"abcabc\")
-
-        }
-
-        function fun_f_9()  -> vloc__4_mpos {
-            let zero_value_for_type_t_string_memory_ptr_1_mpos := zero_value_for_split_t_string_memory_ptr()
-            vloc__4_mpos := zero_value_for_type_t_string_memory_ptr_1_mpos
-
-            vloc__4_mpos := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr()
-            leave
-
-        }
-
-        function zero_value_for_split_t_string_memory_ptr() -> ret {
-            ret := 96
-        }
-
     }
     object \"C_10_deployed\" {
         code {

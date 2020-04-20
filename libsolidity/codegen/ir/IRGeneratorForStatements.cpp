@@ -577,7 +577,9 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
 			{
 				define(_functionCall) <<
-					m_context.virtualFunctionName(*functionDef) <<
+					m_context.enqueueFunctionForCodeGeneration(
+						functionDef->resolveVirtual(m_context.mostDerivedContract())
+					) <<
 					"(" <<
 					joinHumanReadable(args) <<
 					")\n";
@@ -586,6 +588,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		}
 
 		define(_functionCall) <<
+			// NOTE: internalDispatch() takes care of adding the function to function generation queue
 			m_context.internalDispatch(
 				TupleType(functionType->parameterTypes()).sizeOnStack(),
 				TupleType(functionType->returnParameterTypes()).sizeOnStack()
