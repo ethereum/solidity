@@ -75,15 +75,15 @@ pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 
 string IRGenerator::generate(ContractDefinition const& _contract)
 {
-	solUnimplementedAssert(!_contract.isLibrary(), "Libraries not yet implemented.");
-
 	Whiskers t(R"(
 		object "<CreationObject>" {
 			code {
 				<memoryInit>
 				<callValueCheck>
+				<?notLibrary>
 				<?constructorHasParams> let <constructorParams> := <copyConstructorArguments>() </constructorHasParams>
 				<implicitConstructor>(<constructorParams>)
+				</notLibrary>
 				<deploy>
 				<functions>
 			}
@@ -101,6 +101,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 
 	t("CreationObject", creationObjectName(_contract));
 	t("memoryInit", memoryInit());
+	t("notLibrary", !_contract.isLibrary());
 
 	FunctionDefinition const* constructor = _contract.constructor();
 	t("callValueCheck", !constructor || !constructor->isPayable() ? callValueCheck() : "");
