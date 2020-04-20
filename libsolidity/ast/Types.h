@@ -706,6 +706,9 @@ public:
 	/// never change the contents of the original value.
 	bool isPointer() const;
 
+	/// @returns true if this is valid to be stored in data location _loc
+	virtual BoolResult validForLocation(DataLocation _loc) const = 0;
+
 	bool operator==(ReferenceType const& _other) const
 	{
 		return location() == _other.location() && isPointer() == _other.isPointer();
@@ -772,8 +775,7 @@ public:
 	TypePointer decodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
 
-	/// @returns true if this is valid to be stored in calldata
-	bool validForCalldata() const;
+	BoolResult validForLocation(DataLocation _loc) const override;
 
 	/// @returns true if this is a byte array or a string
 	bool isByteArray() const { return m_arrayKind != ArrayKind::Ordinary; }
@@ -827,8 +829,7 @@ public:
 	bool canLiveOutsideStorage() const override { return m_arrayType.canLiveOutsideStorage(); }
 	std::string toString(bool _short) const override;
 
-	/// @returns true if this is valid to be stored in calldata
-	bool validForCalldata() const { return m_arrayType.validForCalldata(); }
+	BoolResult validForLocation(DataLocation _loc) const override { return m_arrayType.validForLocation(_loc); }
 
 	ArrayType const& arrayType() const { return m_arrayType; }
 	u256 memoryDataSize() const override { solAssert(false, ""); }
@@ -934,15 +935,9 @@ public:
 	Type const* encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
 
-	bool recursive() const
-	{
-		if (m_recursive.has_value())
-			return m_recursive.value();
+	BoolResult validForLocation(DataLocation _loc) const override;
 
-		interfaceType(false);
-
-		return m_recursive.value();
-	}
+	bool recursive() const;
 
 	std::unique_ptr<ReferenceType> copyForLocation(DataLocation _location, bool _isPointer) const override;
 
@@ -971,7 +966,6 @@ private:
 	// Caches for interfaceType(bool)
 	mutable std::optional<TypeResult> m_interfaceType;
 	mutable std::optional<TypeResult> m_interfaceType_library;
-	mutable std::optional<bool> m_recursive;
 };
 
 /**

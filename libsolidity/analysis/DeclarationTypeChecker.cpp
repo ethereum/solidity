@@ -23,6 +23,8 @@
 
 #include <liblangutil/ErrorReporter.h>
 
+#include <libsolutil/Algorithms.h>
+
 #include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;
@@ -31,40 +33,111 @@ using namespace solidity::frontend;
 
 bool DeclarationTypeChecker::visit(ElementaryTypeName const& _typeName)
 {
-	if (!_typeName.annotation().type)
+	if (_typeName.annotation().type)
+		return false;
+
+	_typeName.annotation().type = TypeProvider::fromElementaryTypeName(_typeName.typeName());
+	if (_typeName.stateMutability().has_value())
 	{
-		_typeName.annotation().type = TypeProvider::fromElementaryTypeName(_typeName.typeName());
-		if (_typeName.stateMutability().has_value())
+		// for non-address types this was already caught by the parser
+		solAssert(_typeName.annotation().type->category() == Type::Category::Address, "");
+		switch (*_typeName.stateMutability())
 		{
-			// for non-address types this was already caught by the parser
-			solAssert(_typeName.annotation().type->category() == Type::Category::Address, "");
-			switch (*_typeName.stateMutability())
-			{
-				case StateMutability::Payable:
-					_typeName.annotation().type = TypeProvider::payableAddress();
-					break;
-				case StateMutability::NonPayable:
-					_typeName.annotation().type = TypeProvider::address();
-					break;
-				default:
-					typeError(
-						_typeName.location(),
-						"Address types can only be payable or non-payable."
-					);
-					break;
-			}
+			case StateMutability::Payable:
+				_typeName.annotation().type = TypeProvider::payableAddress();
+				break;
+			case StateMutability::NonPayable:
+				_typeName.annotation().type = TypeProvider::address();
+				break;
+			default:
+				typeError(
+					_typeName.location(),
+					"Address types can only be payable or non-payable."
+				);
+				break;
 		}
 	}
 	return true;
 }
 
+bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
+{
+	if (_struct.annotation().recursive.has_value())
+	{
+		if (!m_currentStructsSeen.empty() && *_struct.annotation().recursive)
+			m_recursiveStructSeen = true;
+		return false;
+	}
+
+	if (m_currentStructsSeen.count(&_struct))
+	{
+		_struct.annotation().recursive = true;
+		m_recursiveStructSeen = true;
+		return false;
+	}
+
+	bool previousRecursiveStructSeen = m_recursiveStructSeen;
+	bool hasRecursiveChild = false;
+
+	m_currentStructsSeen.insert(&_struct);
+
+	for (auto const& member: _struct.members())
+	{
+		m_recursiveStructSeen = false;
+		member->accept(*this);
+		solAssert(member->annotation().type, "");
+		solAssert(member->annotation().type->canBeStored(), "Type cannot be used in struct.");
+		if (m_recursiveStructSeen)
+			hasRecursiveChild = true;
+	}
+
+	if (!_struct.annotation().recursive.has_value())
+		_struct.annotation().recursive = hasRecursiveChild;
+	m_recursiveStructSeen = previousRecursiveStructSeen || *_struct.annotation().recursive;
+	m_currentStructsSeen.erase(&_struct);
+	if (m_currentStructsSeen.empty())
+		m_recursiveStructSeen = false;
+
+	// Check direct recursion, fatal error if detected.
+	auto visitor = [&](StructDefinition const& _struct, auto& _cycleDetector, size_t _depth)
+	{
+		if (_depth >= 256)
+			fatalDeclarationError(_struct.location(), "Struct definition exhausts cyclic dependency validator.");
+
+		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
+		{
+			Type const* memberType = member->annotation().type;
+			while (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
+			{
+				if (arrayType->isDynamicallySized())
+					break;
+				memberType = arrayType->baseType();
+			}
+			if (auto structType = dynamic_cast<StructType const*>(memberType))
+				if (_cycleDetector.run(structType->structDefinition()))
+					return;
+		}
+	};
+	if (util::CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
+		fatalTypeError(_struct.location(), "Recursive struct definition.");
+
+	return false;
+}
+
 void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 {
+	if (_typeName.annotation().type)
+		return;
+
 	Declaration const* declaration = _typeName.annotation().referencedDeclaration;
 	solAssert(declaration, "");
 
 	if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
+	{
+		if (!m_insideFunctionType && !m_currentStructsSeen.empty())
+			structDef->accept(*this);
 		_typeName.annotation().type = TypeProvider::structType(*structDef, DataLocation::Storage);
+	}
 	else if (EnumDefinition const* enumDef = dynamic_cast<EnumDefinition const*>(declaration))
 		_typeName.annotation().type = TypeProvider::enumType(*enumDef);
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
@@ -75,8 +148,17 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 		fatalTypeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
 	}
 }
-void DeclarationTypeChecker::endVisit(FunctionTypeName const& _typeName)
+bool DeclarationTypeChecker::visit(FunctionTypeName const& _typeName)
 {
+	if (_typeName.annotation().type)
+		return false;
+
+	bool previousInsideFunctionType = m_insideFunctionType;
+	m_insideFunctionType = true;
+	_typeName.parameterTypeList()->accept(*this);
+	_typeName.returnParameterTypeList()->accept(*this);
+	m_insideFunctionType = previousInsideFunctionType;
+
 	switch (_typeName.visibility())
 	{
 		case Visibility::Internal:
@@ -84,30 +166,22 @@ void DeclarationTypeChecker::endVisit(FunctionTypeName const& _typeName)
 			break;
 		default:
 			fatalTypeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
-			return;
+			return false;
 	}
 
 	if (_typeName.isPayable() && _typeName.visibility() != Visibility::External)
 	{
 		fatalTypeError(_typeName.location(), "Only external function types can be payable.");
-		return;
+		return false;
 	}
-
-	if (_typeName.visibility() == Visibility::External)
-		for (auto const& t: _typeName.parameterTypes() + _typeName.returnParameterTypes())
-		{
-			solAssert(t->annotation().type, "Type not set for parameter.");
-			if (!t->annotation().type->interfaceType(false).get())
-			{
-				fatalTypeError(t->location(), "Internal type cannot be used for external function type.");
-				return;
-			}
-		}
-
 	_typeName.annotation().type = TypeProvider::function(_typeName);
+	return false;
 }
 void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 {
+	if (_mapping.annotation().type)
+		return;
+
 	if (auto const* typeName = dynamic_cast<UserDefinedTypeName const*>(&_mapping.keyType()))
 	{
 		if (auto const* contractType = dynamic_cast<ContractType const*>(typeName->annotation().type))
@@ -140,6 +214,9 @@ void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 
 void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 {
+	if (_typeName.annotation().type)
+		return;
+
 	TypePointer baseType = _typeName.baseType().annotation().type;
 	if (!baseType)
 	{
@@ -290,6 +367,12 @@ void DeclarationTypeChecker::fatalTypeError(SourceLocation const& _location, str
 {
 	m_errorOccurred = true;
 	m_errorReporter.fatalTypeError(_location, _description);
+}
+
+void DeclarationTypeChecker::fatalDeclarationError(SourceLocation const& _location, string const& _description)
+{
+	m_errorOccurred = true;
+	m_errorReporter.fatalDeclarationError(_location, _description);
 }
 
 bool DeclarationTypeChecker::check(ASTNode const& _node)

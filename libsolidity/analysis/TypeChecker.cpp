@@ -289,39 +289,6 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 		m_errorReporter.fatalTypeError(_usingFor.libraryName().location(), "Library name expected.");
 }
 
-bool TypeChecker::visit(StructDefinition const& _struct)
-{
-	for (ASTPointer<VariableDeclaration> const& member: _struct.members())
-		solAssert(type(*member)->canBeStored(), "Type cannot be used in struct.");
-
-	// Check recursion, fatal error if detected.
-	auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector, size_t _depth)
-	{
-		if (_depth >= 256)
-			m_errorReporter.fatalDeclarationError(_struct.location(), "Struct definition exhausting cyclic dependency validator.");
-
-		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
-		{
-			Type const* memberType = type(*member);
-			while (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
-			{
-				if (arrayType->isDynamicallySized())
-					break;
-				memberType = arrayType->baseType();
-			}
-			if (auto structType = dynamic_cast<StructType const*>(memberType))
-				if (_cycleDetector.run(structType->structDefinition()))
-					return;
-		}
-	};
-	if (CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
-		m_errorReporter.fatalTypeError(_struct.location(), "Recursive struct definition.");
-
-	ASTNode::listAccept(_struct.members(), *this);
-
-	return false;
-}
-
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	bool isLibraryFunction = _function.inContractKind() == ContractKind::Library;
@@ -518,19 +485,16 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			m_errorReporter.typeError(_variable.location(), "Internal or recursive type is not allowed for public state variables.");
 	}
 
-	switch (varType->category())
+	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
 	{
-	case Type::Category::Array:
-		if (auto arrayType = dynamic_cast<ArrayType const*>(varType))
-			if (
-				((arrayType->location() == DataLocation::Memory) ||
-				(arrayType->location() == DataLocation::CallData)) &&
-				!arrayType->validForCalldata()
-			)
-				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded.");
-		break;
-	default:
-		break;
+		auto result = referenceType->validForLocation(referenceType->location());
+		if (result && _variable.isPublicCallableParameter())
+			result = referenceType->validForLocation(DataLocation::CallData);
+		if (!result)
+		{
+			solAssert(!result.message().empty(), "Expected detailed error message");
+			m_errorReporter.typeError(_variable.location(), result.message());
+		}
 	}
 
 	return false;
@@ -631,7 +595,15 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 {
 	FunctionType const& fun = dynamic_cast<FunctionType const&>(*_funType.annotation().type);
 	if (fun.kind() == FunctionType::Kind::External)
+	{
+		for (auto const& t: _funType.parameterTypes() + _funType.returnParameterTypes())
+		{
+			solAssert(t->annotation().type, "Type not set for parameter.");
+			if (!t->annotation().type->interfaceType(false).get())
+				m_errorReporter.typeError(t->location(), "Internal type cannot be used for external function type.");
+		}
 		solAssert(fun.interfaceType(false), "External function type uses internal types.");
+	}
 }
 
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)

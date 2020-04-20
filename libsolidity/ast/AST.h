@@ -607,7 +607,7 @@ public:
 	bool isVisibleInDerivedContracts() const override { return true; }
 	bool isVisibleViaContractTypeAccess() const override { return true; }
 
-	TypeDeclarationAnnotation& annotation() const override;
+	StructDeclarationAnnotation& annotation() const override;
 
 private:
 	std::vector<ASTPointer<VariableDeclaration>> m_members;
@@ -914,6 +914,8 @@ public:
 	/// @returns true if this variable is a parameter (not return parameter) of an external function.
 	/// This excludes parameters of external function type names.
 	bool isExternalCallableParameter() const;
+	/// @returns true if this variable is a parameter (not return parameter) of a public function.
+	bool isPublicCallableParameter() const;
 	/// @returns true if this variable is a parameter or return parameter of an internal function
 	/// or a function type of internal visibility.
 	bool isInternalCallableParameter() const;

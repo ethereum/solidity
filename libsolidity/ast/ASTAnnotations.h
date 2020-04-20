@@ -128,6 +128,16 @@ struct TypeDeclarationAnnotation: DeclarationAnnotation
 	std::string canonicalName;
 };
 
+struct StructDeclarationAnnotation: TypeDeclarationAnnotation
+{
+	/// Whether the struct is recursive, i.e. if the struct (recursively) contains a member that involves a struct of the same
+	/// type, either in a dynamic array, as member of another struct or inside a mapping.
+	/// Only cases in which the recursive occurrence is within a dynamic array or a mapping are valid, while direct
+	/// recursion immediately raises an error.
+	/// Will be filled in by the DeclarationTypeChecker.
+	std::optional<bool> recursive;
+};
+
 struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 	/// List of functions without a body. Can also contain functions from base classes.

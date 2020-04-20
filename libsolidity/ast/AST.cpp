@@ -257,12 +257,13 @@ TypeNameAnnotation& TypeName::annotation() const
 
 TypePointer StructDefinition::type() const
 {
+	solAssert(annotation().recursive.has_value(), "Requested struct type before DeclarationTypeChecker.");
 	return TypeProvider::typeType(TypeProvider::structType(*this, DataLocation::Storage));
 }
 
-TypeDeclarationAnnotation& StructDefinition::annotation() const
+StructDeclarationAnnotation& StructDefinition::annotation() const
 {
-	return initAnnotation<TypeDeclarationAnnotation>();
+	return initAnnotation<StructDeclarationAnnotation>();
 }
 
 TypePointer EnumValue::type() const
@@ -558,6 +559,18 @@ bool VariableDeclaration::isExternalCallableParameter() const
 	return false;
 }
 
+bool VariableDeclaration::isPublicCallableParameter() const
+{
+	if (!isCallableOrCatchParameter())
+		return false;
+
+	if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
+		if (callable->visibility() == Visibility::Public)
+			return !isReturnParameter();
+
+	return false;
+}
+
 bool VariableDeclaration::isInternalCallableParameter() const
 {
 	if (!isCallableOrCatchParameter())
@@ -616,12 +629,20 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 	else if (isLocalVariable())
 	{
 		solAssert(typeName(), "");
-		solAssert(typeName()->annotation().type, "Can only be called after reference resolution");
-		if (typeName()->annotation().type->category() == Type::Category::Mapping)
-			return set<Location>{ Location::Storage };
-		else
-			//  TODO: add Location::Calldata once implemented for local variables.
-			return set<Location>{ Location::Memory, Location::Storage };
+		auto dataLocations = [](TypePointer _type, auto&& _recursion) -> set<Location> {
+			solAssert(_type, "Can only be called after reference resolution");
+			switch (_type->category())
+			{
+				case Type::Category::Array:
+					return _recursion(dynamic_cast<ArrayType const*>(_type)->baseType(), _recursion);
+				case Type::Category::Mapping:
+					return set<Location>{ Location::Storage };
+				default:
+					//  TODO: add Location::Calldata once implemented for local variables.
+					return set<Location>{ Location::Memory, Location::Storage };
+			}
+		};
+		return dataLocations(typeName()->annotation().type, dataLocations);
 	}
 	else
 		// Struct members etc.
