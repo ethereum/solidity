@@ -106,6 +106,7 @@ private:
 	smt::SortPointer constructorSort();
 	smt::SortPointer interfaceSort();
 	static smt::SortPointer interfaceSort(ContractDefinition const& _const);
+	smt::SortPointer arity0FunctionSort();
 	smt::SortPointer sort(FunctionDefinition const& _function);
 	smt::SortPointer sort(ASTNode const* _block);
 	/// @returns the sort of a predicate that represents the summary of _function in the scope of _contract.

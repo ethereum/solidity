@@ -18,5 +18,4 @@ contract C {
 // Warning: (212-219): Assertion checker does not yet implement this type of function call.
 // Warning: (255-257): Internal error: Expression undefined for SMT solver.
 // Warning: (255-257): Assertion checker does not yet implement type function (function (uint256))
-// Warning: (212-214): Assertion checker does not yet implement type function (function (uint256))
 // Warning: (212-219): Assertion checker does not yet implement this type of function call.

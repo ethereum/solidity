@@ -131,15 +131,10 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 	clearIndices(&_contract);
 
-	auto errorFunctionSort = make_shared<smt::FunctionSort>(
-		vector<smt::SortPointer>(),
-		smt::SortProvider::boolSort
-	);
-
 	string suffix = _contract.name() + "_" + to_string(_contract.id());
-	m_errorPredicate = createSymbolicBlock(errorFunctionSort, "error_" + suffix);
+	m_errorPredicate = createSymbolicBlock(arity0FunctionSort(), "error_" + suffix);
 	m_constructorSummaryPredicate = createSymbolicBlock(constructorSort(), "summary_constructor_" + suffix);
-	m_implicitConstructorPredicate = createSymbolicBlock(interfaceSort(), "implicit_constructor_" + suffix);
+	m_implicitConstructorPredicate = createSymbolicBlock(arity0FunctionSort(), "implicit_constructor_" + suffix);
 	auto stateExprs = currentStateVariables();
 	setCurrentBlock(*m_interfaces.at(m_currentContract), &stateExprs);
 
@@ -149,15 +144,7 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 void CHC::endVisit(ContractDefinition const& _contract)
 {
-	for (auto const& var: m_stateVariables)
-	{
-		solAssert(m_context.knownVariable(*var), "");
-		auto const& symbVar = m_context.variable(*var);
-		symbVar->resetIndex();
-		m_context.setZeroValue(*var);
-		symbVar->increaseIndex();
-	}
-	auto implicitConstructor = (*m_implicitConstructorPredicate)(initialStateVariables());
+	auto implicitConstructor = (*m_implicitConstructorPredicate)({});
 	connectBlocks(genesis(), implicitConstructor);
 	m_currentBlock = implicitConstructor;
 	m_context.addAssertion(m_error.currentValue() == 0);
@@ -679,6 +666,14 @@ smt::SortPointer CHC::interfaceSort(ContractDefinition const& _contract)
 {
 	return make_shared<smt::FunctionSort>(
 		stateSorts(_contract),
+		smt::SortProvider::boolSort
+	);
+}
+
+smt::SortPointer CHC::arity0FunctionSort()
+{
+	return make_shared<smt::FunctionSort>(
+		vector<smt::SortPointer>(),
 		smt::SortProvider::boolSort
 	);
 }
