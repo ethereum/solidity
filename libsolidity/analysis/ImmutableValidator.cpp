@@ -160,7 +160,7 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 	if (!_variableReference.isStateVariable() || !_variableReference.immutable())
 		return;
 
-	if (_expression.annotation().lValueRequested && _expression.annotation().lValueOfOrdinaryAssignment)
+	if (_expression.annotation().willBeWrittenTo && _expression.annotation().lValueOfOrdinaryAssignment)
 	{
 		if (!m_currentConstructor)
 			m_errorReporter.typeError(

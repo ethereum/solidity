@@ -591,7 +591,7 @@ bool ControlFlowBuilder::visit(Identifier const& _identifier)
 	if (auto const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
 		m_currentNode->variableOccurrences.emplace_back(
 			*variableDeclaration,
-			static_cast<Expression const&>(_identifier).annotation().lValueRequested ?
+			static_cast<Expression const&>(_identifier).annotation().willBeWrittenTo ?
 			VariableOccurrence::Kind::Assignment :
 			VariableOccurrence::Kind::Access,
 			_identifier.location()

@@ -348,15 +348,15 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 			if (component)
 			{
 				component->accept(*this);
-				if (_tuple.annotation().lValueRequested)
+				if (_tuple.annotation().willBeWrittenTo)
 				{
 					solAssert(!!m_currentLValue, "");
 					lvalues.push_back(move(m_currentLValue));
 				}
 			}
-			else if (_tuple.annotation().lValueRequested)
+			else if (_tuple.annotation().willBeWrittenTo)
 				lvalues.push_back(unique_ptr<LValue>());
-		if (_tuple.annotation().lValueRequested)
+		if (_tuple.annotation().willBeWrittenTo)
 		{
 			if (_tuple.components().size() == 1)
 				m_currentLValue = move(lvalues[0]);
