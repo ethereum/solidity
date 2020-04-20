@@ -46,17 +46,22 @@ pair<string, string> ProtoConverter::generateTestCase(TestContract const& _testC
 		m_libraryTest = true;
 		auto testTuple = pseudoRandomLibraryTest();
 		m_libraryName = get<0>(testTuple);
-		usingLibDecl = Whiskers(R"(
-	using <libraryName> for uint;)")
-			("libraryName", get<0>(testTuple))
-			.render();
-		testCode << Whiskers(R"(
-		uint x;
-		if (x.<testFunction>() != <expectedOutput>)
-			return 1;)")
-			("testFunction", get<1>(testTuple))
-			("expectedOutput", get<2>(testTuple))
-			.render();
+		Whiskers u(R"(<ind>using <libraryName> for uint;)");
+		u("ind", "\t");
+		u("libraryName", get<0>(testTuple));
+		usingLibDecl = u.render();
+		Whiskers test(R"(<endl><ind><varDecl><endl><ind><ifStmt>)");
+		test("endl", "\n");
+		test("ind", "\t\t");
+		test("varDecl", "uint x;");
+		Whiskers ifStmt(R"(if (<cond>)<endl><ind>return 1;)");
+		Whiskers ifCond(R"(x.<testFunction>() != <expectedOutput>)");
+		ifCond("testFunction", get<1>(testTuple));
+		ifCond("expectedOutput", get<2>(testTuple));
+		ifStmt("cond", ifCond.render());
+		ifStmt("endl", "\n");
+		ifStmt("ind", "\t\t\t");
+		test("ifStmt", ifStmt.render());
 		break;
 	}
 	case TestContract::CONTRACT:
@@ -73,21 +78,28 @@ pair<string, string> ProtoConverter::generateTestCase(TestContract const& _testC
 				break;
 			string contractName = testTuple.first;
 			string contractVarName = "tc" + to_string(contractVarIndex);
-			testCode << Whiskers(R"(
-		<contractName> <contractVarName> = new <contractName>();)")
-				("contractName", contractName)
-				("contractVarName", contractVarName)
-				.render();
+			Whiskers init(R"(<endl><ind><contractName> <contractVarName> = new <contractName>();)");
+			init("endl", "\n");
+			init("ind", "\t\t");
+			init("contractName", contractName);
+			init("contractVarName", contractVarName);
+			testCode << init.render();
 			for (auto const& t: testTuple.second)
 			{
-				testCode << Whiskers(R"(
-		if (<contractVarName>.<testFunction>() != <expectedOutput>)
-			return <errorCode>;)")
-					("contractVarName", contractVarName)
-					("testFunction", t.first)
-					("expectedOutput", t.second)
-					("errorCode", to_string(errorCode))
-					.render();
+				Whiskers tc(R"(<endl><ind><ifStmt>)");
+				tc("endl", "\n");
+				tc("ind", "\t\t");
+				Whiskers ifStmt(R"(if (<cond>)<endl><ind>return <errorCode>;)");
+				Whiskers ifCond(R"(<contractVarName>.<testFunction>() != <expectedOutput>)");
+				ifCond("contractVarName", contractVarName);
+				ifCond("testFunction", t.first);
+				ifCond("expectedOutput", t.second);
+				ifStmt("endl", "\n");
+				ifStmt("cond", ifCond.render());
+				ifStmt("ind", "\t\t\t");
+				ifStmt("errorCode", to_string(errorCode));
+				tc("ifStmt", ifStmt.render());
+				testCode << tc.render();
 				errorCode++;
 			}
 			contractVarIndex++;
@@ -96,10 +108,8 @@ pair<string, string> ProtoConverter::generateTestCase(TestContract const& _testC
 	}
 	}
 	// Expected return value when all tests pass
-	testCode << Whiskers(R"(
-		return 0;)")
-		.render();
-	return pair(usingLibDecl, testCode.str());
+	testCode << Whiskers(R"(<endl><ind>return 0;)")("endl", "\n")("ind", "\t\t").render();
+	return {usingLibDecl, testCode.str()};
 }
 
 string ProtoConverter::visit(TestContract const& _testContract)
@@ -111,23 +121,20 @@ string ProtoConverter::visit(TestContract const& _testContract)
 	// Simply return valid uint (zero) if there are
 	// no tests.
 	if (emptyLibraryTests() || emptyContractTests())
-		testCode = Whiskers(R"(
-		return 0;)")
-			.render();
+		testCode = Whiskers(R"(<endl><ind>return 0;)")("endl", "\n")("ind", "\t\t").render();
 	else
 		tie(usingLibDecl, testCode) = generateTestCase(_testContract);
 
-	return Whiskers(R"(
-contract C {<?isLibrary><usingDecl></isLibrary>
-	function test() public returns (uint)
-	{<testCode>
-	}
-}
-)")
-		("isLibrary", m_libraryTest)
-		("usingDecl", usingLibDecl)
-		("testCode", testCode)
-		.render();
+	Whiskers c(R"(<endl>contract C {<?isLibrary><usingDecl></isLibrary><endl><function><endl>})");
+	c("endl", "\n");
+	c("isLibrary", m_libraryTest);
+	c("usingDecl", usingLibDecl);
+	Whiskers f("<ind>function test() public returns (uint)<endl><ind>{<testCode><endl><ind>}");
+	f("ind", "\t");
+	f("endl", "\n");
+	f("testCode", testCode);
+	c("function", f.render());
+	return c.render();
 }
 
 bool ProtoConverter::libraryTest() const
@@ -148,17 +155,11 @@ string ProtoConverter::visit(Program const& _p)
 	for (auto &contract: _p.contracts())
 		contracts << visit(contract);
 
-	program << Whiskers(R"(
-pragma solidity >=0.0;
-
-<contracts>
-
-<testContract>
-)")
-	("contracts", contracts.str())
-	("testContract", visit(_p.test()))
-	.render();
-	return program.str();
+	Whiskers p(R"(<endl>pragma solidity >=0.0;<endl><contracts><endl><test>)");
+	p("endl", "\n");
+	p("contracts", contracts.str());
+	p("test", visit(_p.test()));
+	return p.render();
 }
 
 string ProtoConverter::visit(ContractType const& _contractType)

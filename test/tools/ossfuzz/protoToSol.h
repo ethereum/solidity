@@ -156,13 +156,13 @@ private:
 	/// otherwise.
 	bool emptyLibraryTests()
 	{
-		return m_libraryTests.size() == 0;
+		return m_libraryTests.empty();
 	}
 	/// @returns true if there are no valid contract test cases, false
 	/// otherwise.
 	bool emptyContractTests()
 	{
-		return m_contractTests.size() == 0;
+		return m_contractTests.empty();
 	}
 	/// Numeric suffix that is part of program names e.g., "0" in "C0"
 	unsigned m_programNumericSuffix = 0;
