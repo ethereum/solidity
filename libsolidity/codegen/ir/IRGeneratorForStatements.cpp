@@ -178,6 +178,28 @@ IRVariable IRGeneratorForStatements::evaluateExpression(Expression const& _expre
 	return variable;
 }
 
+string IRGeneratorForStatements::constantValueFunction(VariableDeclaration const& _constant)
+{
+	string functionName = "constant_" + _constant.name() + "_" + to_string(_constant.id());
+	return m_context.functionCollector().createFunction(functionName, [&] {
+		Whiskers templ(R"(
+			function <functionName>() -> <ret> {
+				<code>
+				<ret> := <value>
+			}
+		)");
+		templ("functionName", functionName);
+		IRGeneratorForStatements generator(m_context, m_utils);
+		solAssert(_constant.value(), "");
+		Type const& constantType = *_constant.type();
+		templ("value", generator.evaluateExpression(*_constant.value(), constantType).commaSeparatedList());
+		templ("code", generator.code());
+		templ("ret", IRVariable("ret", constantType).commaSeparatedList());
+
+		return templ.render();
+	});
+}
+
 void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _varDeclStatement)
 {
 	if (Expression const* expression = _varDeclStatement.initialValue())
@@ -1576,11 +1598,9 @@ void IRGeneratorForStatements::handleVariableReference(
 	Expression const& _referencingExpression
 )
 {
-	// TODO for the constant case, we have to be careful:
-	// If the value is visited twice, `defineExpression` is called twice on
-	// the same expression.
-	solUnimplementedAssert(!_variable.isConstant(), "");
-	if (_variable.isStateVariable() && _variable.immutable())
+	if (_variable.isStateVariable() && _variable.isConstant())
+		define(_referencingExpression) << constantValueFunction(_variable) << "()\n";
+	else if (_variable.isStateVariable() && _variable.immutable())
 		setLValue(_referencingExpression, IRLValue{
 			*_variable.annotation().type,
 			IRLValue::Immutable{&_variable}
