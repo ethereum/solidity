@@ -254,29 +254,53 @@ bool IRGeneratorForStatements::visit(Conditional const& _conditional)
 bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 {
 	_assignment.rightHandSide().accept(*this);
-	Type const* intermediateType = type(_assignment.rightHandSide()).closestTemporaryType(
-		&type(_assignment.leftHandSide())
-	);
-	IRVariable value = convert(_assignment.rightHandSide(), *intermediateType);
 
+	Token assignmentOperator = _assignment.assignmentOperator();
+	Token binaryOperator =
+		assignmentOperator == Token::Assign ?
+		assignmentOperator :
+		TokenTraits::AssignmentToBinaryOp(assignmentOperator);
+
+	Type const* rightIntermediateType =
+		TokenTraits::isShiftOp(binaryOperator) ?
+		type(_assignment.rightHandSide()).mobileType() :
+		type(_assignment.rightHandSide()).closestTemporaryType(
+			&type(_assignment.leftHandSide())
+		);
+	solAssert(rightIntermediateType, "");
+	IRVariable value = convert(_assignment.rightHandSide(), *rightIntermediateType);
 	_assignment.leftHandSide().accept(*this);
 	solAssert(!!m_currentLValue, "LValue not retrieved.");
 
-	if (_assignment.assignmentOperator() != Token::Assign)
+	if (assignmentOperator != Token::Assign)
 	{
-		solAssert(type(_assignment.leftHandSide()) == *intermediateType, "");
-		solAssert(intermediateType->isValueType(), "Compound operators only available for value types.");
-
+		solAssert(type(_assignment.leftHandSide()).isValueType(), "Compound operators only available for value types.");
+		solAssert(rightIntermediateType->isValueType(), "Compound operators only available for value types.");
 		IRVariable leftIntermediate = readFromLValue(*m_currentLValue);
-		m_code << value.name() << " := " << binaryOperation(
-			TokenTraits::AssignmentToBinaryOp(_assignment.assignmentOperator()),
-			*intermediateType,
-			leftIntermediate.name(),
-			value.name()
-		);
+		if (TokenTraits::isShiftOp(binaryOperator))
+		{
+			solAssert(type(_assignment) == leftIntermediate.type(), "");
+			solAssert(type(_assignment) == type(_assignment.leftHandSide()), "");
+			define(_assignment) << shiftOperation(binaryOperator, leftIntermediate, value);
+
+			writeToLValue(*m_currentLValue, IRVariable(_assignment));
+			m_currentLValue.reset();
+			return false;
+		}
+		else
+		{
+			solAssert(type(_assignment.leftHandSide()) == *rightIntermediateType, "");
+			m_code << value.name() << " := " << binaryOperation(
+				binaryOperator,
+				*rightIntermediateType,
+				leftIntermediate.name(),
+				value.name()
+			);
+		}
 	}
 
 	writeToLValue(*m_currentLValue, value);
+
 	m_currentLValue.reset();
 	if (*_assignment.annotation().type != *TypeProvider::emptyTuple())
 		define(_assignment, value);
@@ -540,6 +564,12 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 		else
 			solAssert(false, "Unknown comparison operator.");
 		define(_binOp) << expr << "\n";
+	}
+	else if (TokenTraits::isShiftOp(op))
+	{
+		IRVariable left = convert(_binOp.leftExpression(), *commonType);
+		IRVariable right = convert(_binOp.rightExpression(), *type(_binOp.rightExpression()).mobileType());
+		define(_binOp) << shiftOperation(_binOp.getOperator(), left, right) << "\n";
 	}
 	else
 	{
@@ -1921,6 +1951,10 @@ string IRGeneratorForStatements::binaryOperation(
 	string const& _right
 )
 {
+	solAssert(
+		!TokenTraits::isShiftOp(_operator),
+		"Have to use specific shift operation function for shifts."
+	);
 	if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
 	{
 		string fun;
@@ -1962,6 +1996,31 @@ string IRGeneratorForStatements::binaryOperation(
 		solUnimplementedAssert(false, "");
 
 	return {};
+}
+
+std::string IRGeneratorForStatements::shiftOperation(
+	langutil::Token _operator,
+	IRVariable const& _value,
+	IRVariable const& _amountToShift
+)
+{
+	IntegerType const* amountType = dynamic_cast<IntegerType const*>(&_amountToShift.type());
+	solAssert(amountType, "");
+
+	solAssert(_operator == Token::SHL || _operator == Token::SAR, "");
+
+	return
+		Whiskers(R"(
+			<shift>(<value>, <amount>)
+		)")
+		("shift",
+			_operator == Token::SHL ?
+			m_utils.typedShiftLeftFunction(_value.type(), *amountType) :
+			m_utils.typedShiftRightFunction(_value.type(), *amountType)
+		)
+		("value", _value.name())
+		("amount", _amountToShift.name())
+		.render();
 }
 
 void IRGeneratorForStatements::appendAndOrOperatorCode(BinaryOperation const& _binOp)

@@ -81,6 +81,14 @@ public:
 	std::string shiftLeftFunctionDynamic();
 	std::string shiftRightFunction(size_t _numBits);
 	std::string shiftRightFunctionDynamic();
+	std::string shiftRightSignedFunctionDynamic();
+
+	/// @returns the name of a function that performs a left shift and subsequent cleanup
+	/// and, if needed, prior cleanup.
+	/// If the amount to shift by is signed, a check for negativeness is performed.
+	/// signature: (value, amountToShift) -> result
+	std::string typedShiftLeftFunction(Type const& _type, Type const& _amountType);
+	std::string typedShiftRightFunction(Type const& _type, Type const& _amountType);
 
 	/// @returns the name of a function which replaces the
 	/// _numBytes bytes starting at byte position _shiftBytes (counted from the least significant
