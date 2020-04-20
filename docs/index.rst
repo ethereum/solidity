@@ -36,7 +36,7 @@ If you are new to the concept of smart contracts we recommend you start with
 :ref:`an example smart contract <simple-smart-contract>` written
 in Solidity. When you are ready for more detail, we recommend you read the
 :doc:`"Solidity by Example" <solidity-by-example>` and
-:doc:`"Solidity in Depth" <solidity-in-depth>` sections to learn the core concepts of the language.
+"Language Description" sections to learn the core concepts of the language.
 
 For further reading, try :ref:`the basics of blockchains <blockchain-basics>`
 and details of the :ref:`Ethereum Virtual Machine <the-ethereum-virtual-machine>`.
@@ -88,17 +88,49 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+   :caption: Basics
 
    introduction-to-smart-contracts.rst
    installing-solidity.rst
    solidity-by-example.rst
-   solidity-in-depth.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Language Description
+
+   layout-of-source-files.rst
+   structure-of-a-contract.rst
+   types.rst
+   units-and-global-variables.rst
+   control-structures.rst
+   contracts.rst
+   assembly.rst
+   cheatsheet.rst
+   grammar.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Internals
+
+   internals/layout_in_storage.rst
+   internals/layout_in_memory.rst
+   internals/layout_in_calldata.rst
+   internals/variable_cleanup.rst
+   internals/source_mappings.rst
+   internals/optimiser.rst
+   metadata.rst
+   abi-spec.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Additional Material
+
+   050-breaking-changes.rst
+   060-breaking-changes.rst
    natspec-format.rst
    security-considerations.rst
    resources.rst
    using-the-compiler.rst
-   metadata.rst
-   abi-spec.rst
    yul.rst
    style-guide.rst
    common-patterns.rst
