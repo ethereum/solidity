@@ -34,6 +34,8 @@ contract Child is Base {
 		BaseBase.init(c, d);
 	}
 }
+// ====
+// compileViaYul: also
 // ----
 // x() -> 0
 // y() -> 0

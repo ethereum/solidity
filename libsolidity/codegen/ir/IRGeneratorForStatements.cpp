@@ -579,32 +579,60 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			else
 				args.emplace_back(convert(*arguments[i], *parameterTypes[i]).commaSeparatedList());
 
-		if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+		optional<FunctionDefinition const*> functionDef;
+		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
 		{
 			solAssert(!functionType->bound(), "");
-			if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
+
+			functionDef = dynamic_cast<FunctionDefinition const*>(memberAccess->annotation().referencedDeclaration);
+			if (functionDef.value() != nullptr)
+				solAssert(functionType->declaration() == *memberAccess->annotation().referencedDeclaration, "");
+			else
 			{
-				define(_functionCall) <<
-					m_context.enqueueFunctionForCodeGeneration(
-						functionDef->resolveVirtual(m_context.mostDerivedContract())
-					) <<
-					"(" <<
-					joinHumanReadable(args) <<
-					")\n";
-				return;
+				solAssert(dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration), "");
+				solAssert(!functionType->hasDeclaration(), "");
 			}
 		}
+		else if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+		{
+			solAssert(!functionType->bound(), "");
 
-		define(_functionCall) <<
-			// NOTE: internalDispatch() takes care of adding the function to function generation queue
-			m_context.internalDispatch(
-				TupleType(functionType->parameterTypes()).sizeOnStack(),
-				TupleType(functionType->returnParameterTypes()).sizeOnStack()
-			) <<
-			"(" <<
-			IRVariable(_functionCall.expression()).part("functionIdentifier").name() <<
-			joinHumanReadablePrefixed(args) <<
-			")\n";
+			if (auto unresolvedFunctionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
+			{
+				functionDef = &unresolvedFunctionDef->resolveVirtual(m_context.mostDerivedContract());
+				solAssert(functionType->declaration() == *identifier->annotation().referencedDeclaration, "");
+			}
+			else
+			{
+				functionDef = nullptr;
+				solAssert(dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration), "");
+				solAssert(!functionType->hasDeclaration(), "");
+			}
+		}
+		else
+			// Not a simple expression like x or A.x
+			functionDef = nullptr;
+
+		solAssert(functionDef.has_value(), "");
+		solAssert(functionDef.value() == nullptr || functionDef.value()->isImplemented(), "");
+
+		if (functionDef.value() != nullptr)
+			define(_functionCall) <<
+				m_context.enqueueFunctionForCodeGeneration(*functionDef.value()) <<
+				"(" <<
+				joinHumanReadable(args) <<
+				")\n";
+		else
+			define(_functionCall) <<
+				// NOTE: internalDispatch() takes care of adding the function to function generation queue
+				m_context.internalDispatch(
+					TupleType(functionType->parameterTypes()).sizeOnStack(),
+					TupleType(functionType->returnParameterTypes()).sizeOnStack()
+				) <<
+				"(" <<
+				IRVariable(_functionCall.expression()).part("functionIdentifier").name() <<
+				joinHumanReadablePrefixed(args) <<
+				")\n";
 		break;
 	}
 	case FunctionType::Kind::External:
