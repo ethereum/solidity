@@ -29,7 +29,7 @@
 set -e
 
 REPO_ROOT="$(dirname "$0")/.."
-SOLIDITY_BUILD_DIR="${SOLIDITY_BUILD_DIR:-build}"
+SOLIDITY_BUILD_DIR="${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}"
 
 source "${REPO_ROOT}/scripts/common.sh"
 
@@ -116,7 +116,7 @@ do
             fi
 
             set +e
-            "$REPO_ROOT"/${SOLIDITY_BUILD_DIR}/test/soltest --show-progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $force_abiv2_flag
+            "${SOLIDITY_BUILD_DIR}"/test/soltest --show-progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $force_abiv2_flag
 
             if test "0" -ne "$?"; then
                 exit 1

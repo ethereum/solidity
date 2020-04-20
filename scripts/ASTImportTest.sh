@@ -5,8 +5,8 @@
 # and exporting it again. The second JSON should be identical to the first
 
 REPO_ROOT=$(readlink -f "$(dirname "$0")"/..)
-SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-build}
-SOLC=${REPO_ROOT}/${SOLIDITY_BUILD_DIR}/solc/solc
+SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
+SOLC=${SOLIDITY_BUILD_DIR}/solc/solc
 SPLITSOURCES=${REPO_ROOT}/scripts/splitSources.py
 
 SYNTAXTESTS_DIR="${REPO_ROOT}/test/libsolidity/syntaxTests"
