@@ -332,7 +332,7 @@ the :ref:`address type<address>`.
     Before version 0.5.0, contracts directly derived from the address type
     and there was no distinction between ``address`` and ``address payable``.
 
-If you declare a local variable of contract type (`MyContract c`), you can call
+If you declare a local variable of contract type (``MyContract c``), you can call
 functions on that contract. Take care to assign it from somewhere that is the
 same contract type.
 
