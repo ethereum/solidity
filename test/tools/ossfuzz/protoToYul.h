@@ -77,6 +77,7 @@ private:
 	void visit(VarRef const&);
 	void visit(Expression const&);
 	void visit(VarDecl const&);
+	void visit(MultiVarDecl const&);
 	void visit(TypedVarDecl const&);
 	void visit(UnaryOp const&);
 	void visit(AssignmentStatement const&);

@@ -400,6 +400,80 @@ void ProtoConverter::visit(VarDecl const& _x)
 	}
 }
 
+void ProtoConverter::visit(MultiVarDecl const& _x)
+{
+	m_output << "let ";
+	vector<string> varNames;
+	// We support up to 4 variables in a single
+	// declaration statement.
+	unsigned numVars = _x.num_vars() % 3 + 2;
+	string delimiter = "";
+	for (unsigned i = 0; i < numVars; i++)
+	{
+		string varName = newVarName();
+		varNames.push_back(varName);
+		m_output << delimiter << varName;
+		if (i == 0)
+			delimiter = ", ";
+	}
+	m_output << "\n";
+
+	// If we are inside a for-init block, there are two places
+	// where the visited vardecl may have been defined:
+	// - directly inside the for-init block
+	// - inside a block within the for-init block
+	// In the latter case, we don't scope extend.
+	if (m_inFunctionDef)
+	{
+		// Variables declared directly in for-init block
+		// are tracked separately because their scope
+		// extends beyond the block they are defined in
+		// to the rest of the for-loop statement.
+		if (m_inForInitScope && m_forInitScopeExtEnabled)
+		{
+			yulAssert(
+				!m_funcForLoopInitVars.empty() && !m_funcForLoopInitVars.back().empty(),
+				"Proto fuzzer: Invalid operation"
+			);
+			for (auto const& varName: varNames)
+				m_funcForLoopInitVars.back().back().push_back(varName);
+		}
+		else
+		{
+			yulAssert(
+				!m_funcVars.empty() && !m_funcVars.back().empty(),
+				"Proto fuzzer: Invalid operation"
+			);
+			for (auto const& varName: varNames)
+				m_funcVars.back().back().push_back(varName);
+		}
+
+	}
+	else
+	{
+		if (m_inForInitScope && m_forInitScopeExtEnabled)
+		{
+			yulAssert(
+				!m_globalForLoopInitVars.empty(),
+				"Proto fuzzer: Invalid operation"
+			);
+
+			for (auto const& varName: varNames)
+				m_globalForLoopInitVars.back().push_back(varName);
+		}
+		else
+		{
+			yulAssert(
+				!m_globalVars.empty(),
+				"Proto fuzzer: Invalid operation"
+			);
+
+			for (auto const& varName: varNames)
+				m_globalVars.back().push_back(varName);
+		}
+	}
+}
+
 void ProtoConverter::visit(TypedVarDecl const& _x)
 {
 	string varName = newVarName();
@@ -1360,6 +1434,9 @@ void ProtoConverter::visit(Statement const& _x)
 	case Statement::kLeave:
 		if (m_inFunctionDef)
 			visit(_x.leave());
+		break;
+	case Statement::kMultidecl:
+		visit(_x.multidecl());
 		break;
 	case Statement::STMT_ONEOF_NOT_SET:
 		break;
