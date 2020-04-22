@@ -347,8 +347,8 @@ jobs:
           name: Z3 python deps
           command: |
             apt-get -qq update
-            apt-get -qy install python-pip
-            pip install --user z3-solver
+            apt-get -qy install python3-pip
+            pip3 install --user z3-solver
       - run: *run_proofs
 
   chk_docs_pragma_min_version:
