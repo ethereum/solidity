@@ -304,7 +304,10 @@ void BMC::endVisit(UnaryOperation const& _op)
 {
 	SMTEncoder::endVisit(_op);
 
-	if (_op.annotation().type->category() == Type::Category::RationalNumber)
+	if (
+		_op.annotation().type->category() == Type::Category::RationalNumber ||
+		_op.annotation().type->category() == Type::Category::FixedPoint
+	)
 		return;
 
 	switch (_op.getOperator())
