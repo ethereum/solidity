@@ -19,10 +19,31 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <sstream>
 #include <regex>
 
 namespace solidity::tools
 {
+
+/**
+ * Helper for displaying location during asserts
+ */
+class LocationHelper
+{
+	std::stringstream m_stream;
+
+public:
+
+	template <typename T>
+	LocationHelper& operator<<(T const& data)
+	{
+		m_stream << data;
+		return *this;
+	}
+
+	operator std::string() { return m_stream.str(); }
+};
+
 
 /**
  * Helper that provides functions which analyze certain source locations
@@ -153,6 +174,59 @@ public:
 			std::regex{"(\\bfunction\\s*" + _name + "\\b)"},
 			_expression
 		);
+	}
+
+	static std::string gasUpdate(langutil::SourceLocation const& _location)
+	{
+		// dot, "gas", any number of whitespaces, left bracket
+		std::regex gasReg{"\\.gas\\s*\\("};
+
+		if (regex_search(_location.text(), gasReg))
+		{
+			std::string out = regex_replace(
+				_location.text(),
+				gasReg,
+				"{gas: ",
+				std::regex_constants::format_first_only
+			);
+			return regex_replace(out, std::regex{"\\)$"}, "}");
+		}
+		else
+			solAssert(
+				false,
+				LocationHelper()
+				<< "Regex count not match: " << _location.text() << " at " << _location
+				<< "\nNeeds to be fixed manually."
+			);
+
+
+		return "";
+	}
+
+	static std::string valueUpdate(langutil::SourceLocation const& _location)
+	{
+		// dot, "value", any number of whitespaces, left bracket
+		std::regex valueReg{"\\.value\\s*\\("};
+
+		if (regex_search(_location.text(), valueReg))
+		{
+			std::string out = regex_replace(
+					_location.text(),
+					valueReg,
+					"{value: ",
+					std::regex_constants::format_first_only
+			);
+			return regex_replace(out, std::regex{"\\)$"}, "}");
+		}
+		else
+			solAssert(
+				false,
+				LocationHelper()
+				<< "Regex count not match: " << _location.text() << " at " << _location
+				<< "\nNeeds to be fixed manually"
+			);
+
+		return "";
 	}
 };
 
