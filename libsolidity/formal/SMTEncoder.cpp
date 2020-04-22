@@ -457,6 +457,9 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 
 	createExpr(_op);
 
+	if (_op.annotation().type->category() == Type::Category::FixedPoint)
+		return;
+
 	switch (_op.getOperator())
 	{
 	case Token::Not: // !
