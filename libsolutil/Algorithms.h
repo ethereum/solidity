@@ -114,6 +114,10 @@ struct BreadthFirstSearch
 		}
 		return *this;
 	}
+	void abort()
+	{
+		verticesToTraverse.clear();
+	}
 
 	std::set<V> verticesToTraverse;
 	std::set<V> visited{};

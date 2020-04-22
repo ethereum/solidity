@@ -12,7 +12,7 @@ Compiler Features:
 Bugfixes:
 
 
-### 0.6.6 (unreleased)
+### 0.6.7 (unreleased)
 
 Language Features:
 
@@ -21,7 +21,25 @@ Compiler Features:
 
 
 Bugfixes:
+ * Type Checker: Disallow ``virtual`` and ``override`` for constructors.
+ * Type Checker: Fix several internal errors by performing size and recursiveness checks of types before the full type checking.
+ * Type Checker: Perform recursiveness check on structs declared at the file level.
+
+Build System:
+ * soltest.sh: ``SOLIDITY_BUILD_DIR`` is no longer relative to ``REPO_ROOT`` to allow for build directories outside of the source tree.
+
+
+
+### 0.6.6 (2020-04-09)
+
+Important Bugfixes:
+ * Fix tuple assignments with components occupying multiple stack slots and different stack size on left- and right-hand-side.
+
+
+Bugfixes:
+ * AST export: Export `immutable` property in the field `mutability`.
  * SMTChecker: Fix internal error in the CHC engine when calling inherited functions internally.
+ * Type Checker: Error when trying to encode functions with call options gas and value set.
 
 
 

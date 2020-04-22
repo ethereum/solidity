@@ -34,11 +34,12 @@
 #include <set>
 #include <functional>
 #include <utility>
+#include <type_traits>
 
 /// Operators need to stay in the global namespace.
 
 /// Concatenate the contents of a container onto a vector
-template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
+template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U& _b)
 {
 	for (auto const& i: _b)
 		_a.push_back(i);
@@ -51,7 +52,7 @@ template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U&& _
 	return _a;
 }
 /// Concatenate the contents of a container onto a multiset
-template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U const& _b)
+template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U& _b)
 {
 	_a.insert(_b.begin(), _b.end());
 	return _a;
@@ -64,7 +65,7 @@ template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T..
 	return _a;
 }
 /// Concatenate the contents of a container onto a set
-template <class U, class... T> std::set<T...>& operator+=(std::set<T...>& _a, U const& _b)
+template <class U, class... T> std::set<T...>& operator+=(std::set<T...>& _a, U& _b)
 {
 	_a.insert(_b.begin(), _b.end());
 	return _a;
@@ -140,6 +141,36 @@ inline std::multiset<T...>& operator-=(std::multiset<T...>& _a, C const& _b)
 
 namespace solidity::util
 {
+
+/// Functional map.
+/// Returns a container _oc applying @param _op to each element in @param _c.
+/// By default _oc is a vector.
+/// If another return type is desired, an empty contained of that type
+/// is given as @param _oc.
+template<class Container, class Callable, class OutputContainer =
+	std::vector<std::invoke_result_t<
+		Callable,
+		decltype(*std::begin(std::declval<Container>()))
+>>>
+auto applyMap(Container const& _c, Callable&& _op, OutputContainer _oc = OutputContainer{})
+{
+	std::transform(std::begin(_c), std::end(_c), std::inserter(_oc, std::end(_oc)), _op);
+	return _oc;
+}
+
+/// Functional fold.
+/// Given a container @param _c, an initial value @param _acc,
+/// and a binary operator @param _binaryOp(T, U), accumulate
+/// the elements of _c over _acc.
+/// Note that <numeric> has a similar function `accumulate` which
+/// until C++20 does *not* std::move the partial accumulated.
+template<class C, class T, class Callable>
+auto fold(C const& _c, T _acc, Callable&& _binaryOp)
+{
+	for (auto const& e: _c)
+		_acc = _binaryOp(std::move(_acc), e);
+	return _acc;
+}
 
 template <class T, class U>
 T convertContainer(U const& _from)

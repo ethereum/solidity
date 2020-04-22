@@ -56,6 +56,9 @@ private:
 	std::string generate(ContractDefinition const& _contract);
 	std::string generate(Block const& _block);
 
+	/// Generates code for all the functions from the function generation queue.
+	/// The resulting code is stored in the function collector in IRGenerationContext.
+	void generateQueuedFunctions();
 	/// Generates code for and returns the name of the function.
 	std::string generateFunction(FunctionDefinition const& _function);
 	/// Generates a getter for the given declaration and returns its name

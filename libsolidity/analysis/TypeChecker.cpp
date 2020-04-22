@@ -289,39 +289,6 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 		m_errorReporter.fatalTypeError(_usingFor.libraryName().location(), "Library name expected.");
 }
 
-bool TypeChecker::visit(StructDefinition const& _struct)
-{
-	for (ASTPointer<VariableDeclaration> const& member: _struct.members())
-		solAssert(type(*member)->canBeStored(), "Type cannot be used in struct.");
-
-	// Check recursion, fatal error if detected.
-	auto visitor = [&](StructDefinition const& _struct, CycleDetector<StructDefinition>& _cycleDetector, size_t _depth)
-	{
-		if (_depth >= 256)
-			m_errorReporter.fatalDeclarationError(_struct.location(), "Struct definition exhausting cyclic dependency validator.");
-
-		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
-		{
-			Type const* memberType = type(*member);
-			while (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
-			{
-				if (arrayType->isDynamicallySized())
-					break;
-				memberType = arrayType->baseType();
-			}
-			if (auto structType = dynamic_cast<StructType const*>(memberType))
-				if (_cycleDetector.run(structType->structDefinition()))
-					return;
-		}
-	};
-	if (CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
-		m_errorReporter.fatalTypeError(_struct.location(), "Recursive struct definition.");
-
-	ASTNode::listAccept(_struct.members(), *this);
-
-	return false;
-}
-
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	bool isLibraryFunction = _function.inContractKind() == ContractKind::Library;
@@ -520,19 +487,16 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			m_errorReporter.typeError(_variable.location(), "Internal or recursive type is not allowed for public state variables.");
 	}
 
-	switch (varType->category())
+	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
 	{
-	case Type::Category::Array:
-		if (auto arrayType = dynamic_cast<ArrayType const*>(varType))
-			if (
-				((arrayType->location() == DataLocation::Memory) ||
-				(arrayType->location() == DataLocation::CallData)) &&
-				!arrayType->validForCalldata()
-			)
-				m_errorReporter.typeError(_variable.location(), "Array is too large to be encoded.");
-		break;
-	default:
-		break;
+		auto result = referenceType->validForLocation(referenceType->location());
+		if (result && _variable.isPublicCallableParameter())
+			result = referenceType->validForLocation(DataLocation::CallData);
+		if (!result)
+		{
+			solAssert(!result.message().empty(), "Expected detailed error message");
+			m_errorReporter.typeError(_variable.location(), result.message());
+		}
 	}
 
 	return false;
@@ -633,7 +597,15 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 {
 	FunctionType const& fun = dynamic_cast<FunctionType const&>(*_funType.annotation().type);
 	if (fun.kind() == FunctionType::Kind::External)
+	{
+		for (auto const& t: _funType.parameterTypes() + _funType.returnParameterTypes())
+		{
+			solAssert(t->annotation().type, "Type not set for parameter.");
+			if (!t->annotation().type->interfaceType(false).get())
+				m_errorReporter.typeError(t->location(), "Internal type cannot be used for external function type.");
+		}
 		solAssert(fun.interfaceType(false), "External function type uses internal types.");
+	}
 }
 
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
@@ -1305,7 +1277,7 @@ bool TypeChecker::visit(Conditional const& _conditional)
 		_conditional.trueExpression().annotation().isPure &&
 		_conditional.falseExpression().annotation().isPure;
 
-	if (_conditional.annotation().lValueRequested)
+	if (_conditional.annotation().willBeWrittenTo)
 		m_errorReporter.typeError(
 				_conditional.location(),
 				"Conditional expression as left value is not supported yet."
@@ -1401,7 +1373,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	vector<ASTPointer<Expression>> const& components = _tuple.components();
 	TypePointers types;
 
-	if (_tuple.annotation().lValueRequested)
+	if (_tuple.annotation().willBeWrittenTo)
 	{
 		if (_tuple.isInlineArray())
 			m_errorReporter.fatalTypeError(_tuple.location(), "Inline array type cannot be declared as LValue.");
@@ -1432,41 +1404,37 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		{
 			if (!components[i])
 				m_errorReporter.fatalTypeError(_tuple.location(), "Tuple component cannot be empty.");
-			else if (components[i])
-			{
-				components[i]->accept(*this);
-				types.push_back(type(*components[i]));
 
-				if (types[i]->category() == Type::Category::Tuple)
-					if (dynamic_cast<TupleType const&>(*types[i]).components().empty())
-					{
-						if (_tuple.isInlineArray())
-							m_errorReporter.fatalTypeError(components[i]->location(), "Array component cannot be empty.");
-						m_errorReporter.typeError(components[i]->location(), "Tuple component cannot be empty.");
-					}
+			components[i]->accept(*this);
+			types.push_back(type(*components[i]));
 
-				// Note: code generation will visit each of the expression even if they are not assigned from.
-				if (types[i]->category() == Type::Category::RationalNumber && components.size() > 1)
-					if (!dynamic_cast<RationalNumberType const&>(*types[i]).mobileType())
-						m_errorReporter.fatalTypeError(components[i]->location(), "Invalid rational number.");
-
-				if (_tuple.isInlineArray())
+			if (types[i]->category() == Type::Category::Tuple)
+				if (dynamic_cast<TupleType const&>(*types[i]).components().empty())
 				{
-					solAssert(!!types[i], "Inline array cannot have empty components");
-
-					if ((i == 0 || inlineArrayType) && !types[i]->mobileType())
-						m_errorReporter.fatalTypeError(components[i]->location(), "Invalid mobile type.");
-
-					if (i == 0)
-						inlineArrayType = types[i]->mobileType();
-					else if (inlineArrayType)
-						inlineArrayType = Type::commonType(inlineArrayType, types[i]);
+					if (_tuple.isInlineArray())
+						m_errorReporter.fatalTypeError(components[i]->location(), "Array component cannot be empty.");
+					m_errorReporter.typeError(components[i]->location(), "Tuple component cannot be empty.");
 				}
-				if (!components[i]->annotation().isPure)
-					isPure = false;
+
+			// Note: code generation will visit each of the expression even if they are not assigned from.
+			if (types[i]->category() == Type::Category::RationalNumber && components.size() > 1)
+				if (!dynamic_cast<RationalNumberType const&>(*types[i]).mobileType())
+					m_errorReporter.fatalTypeError(components[i]->location(), "Invalid rational number.");
+
+			if (_tuple.isInlineArray())
+			{
+				solAssert(!!types[i], "Inline array cannot have empty components");
+
+				if ((i == 0 || inlineArrayType) && !types[i]->mobileType())
+					m_errorReporter.fatalTypeError(components[i]->location(), "Invalid mobile type.");
+
+				if (i == 0)
+					inlineArrayType = types[i]->mobileType();
+				else if (inlineArrayType)
+					inlineArrayType = Type::commonType(inlineArrayType, types[i]);
 			}
-			else
-				types.push_back(TypePointer());
+			if (!components[i]->annotation().isPure)
+				isPure = false;
 		}
 		_tuple.annotation().isPure = isPure;
 		if (_tuple.isInlineArray())
@@ -1802,6 +1770,10 @@ void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
 void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 {
 	solAssert(_function.isConstructor(), "");
+	if (_function.markedVirtual())
+		m_errorReporter.typeError(_function.location(), "Constructors cannot be virtual.");
+	if (_function.overrides())
+		m_errorReporter.typeError(_function.location(), "Constructors cannot override.");
 	if (!_function.returnParameters().empty())
 		m_errorReporter.typeError(_function.returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
 	if (_function.stateMutability() != StateMutability::NonPayable && _function.stateMutability() != StateMutability::Payable)
@@ -2782,11 +2754,57 @@ bool TypeChecker::visit(IndexRangeAccess const& _access)
 	return false;
 }
 
+vector<Declaration const*> TypeChecker::cleanOverloadedDeclarations(
+	Identifier const& _identifier,
+	vector<Declaration const*> const& _candidates
+)
+{
+	solAssert(_candidates.size() > 1, "");
+	vector<Declaration const*> uniqueDeclarations;
+
+	for (Declaration const* declaration: _candidates)
+	{
+		solAssert(declaration, "");
+		// the declaration is functionDefinition, eventDefinition or a VariableDeclaration while declarations > 1
+		solAssert(
+			dynamic_cast<FunctionDefinition const*>(declaration) ||
+			dynamic_cast<EventDefinition const*>(declaration) ||
+			dynamic_cast<VariableDeclaration const*>(declaration) ||
+			dynamic_cast<MagicVariableDeclaration const*>(declaration),
+			"Found overloading involving something not a function, event or a (magic) variable."
+		);
+
+		FunctionTypePointer functionType {declaration->functionType(false)};
+		if (!functionType)
+			functionType = declaration->functionType(true);
+		solAssert(functionType, "Failed to determine the function type of the overloaded.");
+
+		for (TypePointer parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
+			if (!parameter)
+				m_errorReporter.fatalDeclarationError(_identifier.location(), "Function type can not be used in this context.");
+
+		if (uniqueDeclarations.end() == find_if(
+			uniqueDeclarations.begin(),
+			uniqueDeclarations.end(),
+			[&](Declaration const* d)
+			{
+				FunctionType const* newFunctionType = d->functionType(false);
+				if (!newFunctionType)
+					newFunctionType = d->functionType(true);
+				return newFunctionType && functionType->hasEqualParameterTypes(*newFunctionType);
+			}
+		))
+			uniqueDeclarations.push_back(declaration);
+	}
+	return uniqueDeclarations;
+}
+
 bool TypeChecker::visit(Identifier const& _identifier)
 {
 	IdentifierAnnotation& annotation = _identifier.annotation();
 	if (!annotation.referencedDeclaration)
 	{
+		annotation.overloadedDeclarations = cleanOverloadedDeclarations(_identifier, annotation.candidateDeclarations);
 		if (!annotation.arguments)
 		{
 			// The identifier should be a public state variable shadowing other functions
@@ -3006,7 +3024,7 @@ bool TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 
 void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAssignment)
 {
-	_expression.annotation().lValueRequested = true;
+	_expression.annotation().willBeWrittenTo = true;
 	_expression.annotation().lValueOfOrdinaryAssignment = _ordinaryAssignment;
 	_expression.accept(*this);
 

@@ -257,4 +257,4 @@ contract Main {
     struct JW { int i; }
 }
 // ----
-// DeclarationError: (6091-6111): Struct definition exhausting cyclic dependency validator.
+// DeclarationError: (6091-6111): Struct definition exhausts cyclic dependency validator.

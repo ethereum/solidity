@@ -52,6 +52,11 @@ protected:
 		/* gewepDeletionVsAdditionChance = */ 0.3,
 		/* gewepGenesToRandomise = */ 0.4,
 		/* gewepGenesToAddOrDelete = */ 0.2,
+		/* classicElitePoolSize = */ 0.0,
+		/* classicCrossoverChance = */ 0.75,
+		/* classicMutationChance = */ 0.2,
+		/* classicDeletionChance = */ 0.2,
+		/* classicAdditionChance = */ 0.2,
 	};
 };
 
@@ -122,6 +127,18 @@ BOOST_FIXTURE_TEST_CASE(build_should_select_the_right_algorithm_and_pass_the_opt
 	BOOST_TEST(gewepAlgorithm->options().deletionVsAdditionChance == m_options.gewepDeletionVsAdditionChance);
 	BOOST_TEST(gewepAlgorithm->options().percentGenesToRandomise == m_options.gewepGenesToRandomise.value());
 	BOOST_TEST(gewepAlgorithm->options().percentGenesToAddOrDelete == m_options.gewepGenesToAddOrDelete.value());
+
+	m_options.algorithm = Algorithm::Classic;
+	unique_ptr<GeneticAlgorithm> algorithm3 = GeneticAlgorithmFactory::build(m_options, 100);
+	BOOST_REQUIRE(algorithm3 != nullptr);
+
+	auto classicAlgorithm = dynamic_cast<ClassicGeneticAlgorithm*>(algorithm3.get());
+	BOOST_REQUIRE(classicAlgorithm != nullptr);
+	BOOST_TEST(classicAlgorithm->options().elitePoolSize == m_options.classicElitePoolSize);
+	BOOST_TEST(classicAlgorithm->options().crossoverChance == m_options.classicCrossoverChance);
+	BOOST_TEST(classicAlgorithm->options().mutationChance == m_options.classicMutationChance);
+	BOOST_TEST(classicAlgorithm->options().deletionChance == m_options.classicDeletionChance);
+	BOOST_TEST(classicAlgorithm->options().additionChance == m_options.classicAdditionChance);
 }
 
 BOOST_FIXTURE_TEST_CASE(build_should_set_random_algorithm_elite_pool_size_based_on_population_size_if_not_specified, GeneticAlgorithmFactoryFixture)

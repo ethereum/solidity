@@ -29,6 +29,7 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 
+#include <utility>
 #include <variant>
 
 using namespace std;
@@ -100,7 +101,7 @@ CodeTransform::CodeTransform(
 	EVMDialect const& _dialect,
 	BuiltinContext& _builtinContext,
 	bool _evm15,
-	ExternalIdentifierAccess const& _identifierAccess,
+	ExternalIdentifierAccess _identifierAccess,
 	bool _useNamedLabelsForFunctions,
 	shared_ptr<Context> _context
 ):
@@ -111,8 +112,8 @@ CodeTransform::CodeTransform(
 	m_allowStackOpt(_allowStackOpt),
 	m_evm15(_evm15),
 	m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
-	m_identifierAccess(_identifierAccess),
-	m_context(_context)
+	m_identifierAccess(std::move(_identifierAccess)),
+	m_context(std::move(_context))
 {
 	if (!m_context)
 	{

@@ -152,7 +152,7 @@ protected:
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
 		bool _evm15,
-		ExternalIdentifierAccess const& _identifierAccess,
+		ExternalIdentifierAccess _identifierAccess,
 		bool _useNamedLabelsForFunctions,
 		std::shared_ptr<Context> _context
 	);

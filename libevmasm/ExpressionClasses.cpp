@@ -22,14 +22,16 @@
  */
 
 #include <libevmasm/ExpressionClasses.h>
-#include <utility>
-#include <tuple>
-#include <functional>
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/noncopyable.hpp>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/SimplificationRules.h>
+
+#include <boost/range/adaptor/reversed.hpp>
+#include <boost/noncopyable.hpp>
+
+#include <functional>
+#include <tuple>
+#include <utility>
 
 using namespace std;
 using namespace solidity;

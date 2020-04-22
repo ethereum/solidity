@@ -32,6 +32,25 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 
+string IRGenerationContext::enqueueFunctionForCodeGeneration(FunctionDefinition const& _function)
+{
+	string name = functionName(_function);
+
+	if (!m_functions.contains(name))
+		m_functionGenerationQueue.insert(&_function);
+
+	return name;
+}
+
+FunctionDefinition const* IRGenerationContext::dequeueFunctionForCodeGeneration()
+{
+	solAssert(!m_functionGenerationQueue.empty(), "");
+
+	FunctionDefinition const* result = *m_functionGenerationQueue.begin();
+	m_functionGenerationQueue.erase(m_functionGenerationQueue.begin());
+	return result;
+}
+
 ContractDefinition const& IRGenerationContext::mostDerivedContract() const
 {
 	solAssert(m_mostDerivedContract, "Most derived contract requested but not set.");
@@ -77,14 +96,20 @@ string IRGenerationContext::functionName(VariableDeclaration const& _varDecl)
 	return "getter_fun_" + _varDecl.name() + "_" + to_string(_varDecl.id());
 }
 
-string IRGenerationContext::virtualFunctionName(FunctionDefinition const& _functionDeclaration)
-{
-	return functionName(_functionDeclaration.resolveVirtual(mostDerivedContract()));
-}
-
 string IRGenerationContext::newYulVariable()
 {
 	return "_" + to_string(++m_varCounter);
+}
+
+string IRGenerationContext::trySuccessConditionVariable(Expression const& _expression) const
+{
+	// NB: The TypeChecker already ensured that the Expression is of type FunctionCall.
+	solAssert(
+		static_cast<FunctionCallAnnotation const&>(_expression.annotation()).tryCall,
+		"Parameter must be a FunctionCall with tryCall-annotation set."
+	);
+
+	return "trySuccessCondition_" + to_string(_expression.id());
 }
 
 string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
@@ -126,6 +151,8 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 						{ "funID", to_string(function->id()) },
 						{ "name", functionName(*function)}
 					});
+
+					enqueueFunctionForCodeGeneration(*function);
 				}
 		templ("cases", move(functions));
 		return templ.render();
@@ -141,3 +168,4 @@ std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message
 {
 	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
 }
+

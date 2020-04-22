@@ -33,7 +33,8 @@ enum class Kind
 	Bool,
 	Function,
 	Array,
-	Sort
+	Sort,
+	Tuple
 };
 
 struct Sort
@@ -113,6 +114,46 @@ struct SortSort: public Sort
 	}
 
 	SortPointer inner;
+};
+
+struct TupleSort: public Sort
+{
+	TupleSort(
+		std::string _name,
+		std::vector<std::string> _members,
+		std::vector<SortPointer> _components
+	):
+		Sort(Kind::Tuple),
+		name(std::move(_name)),
+		members(std::move(_members)),
+		components(std::move(_components))
+	{}
+
+	bool operator==(Sort const& _other) const override
+	{
+		if (!Sort::operator==(_other))
+			return false;
+		auto _otherTuple = dynamic_cast<TupleSort const*>(&_other);
+		solAssert(_otherTuple, "");
+		if (name != _otherTuple->name)
+			return false;
+		if (members != _otherTuple->members)
+			return false;
+		if (components.size() != _otherTuple->components.size())
+			return false;
+		if (!std::equal(
+			components.begin(),
+			components.end(),
+			_otherTuple->components.begin(),
+			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
+		))
+			return false;
+		return true;
+	}
+
+	std::string const name;
+	std::vector<std::string> const members;
+	std::vector<SortPointer> const components;
 };
 
 /** Frequently used sorts.*/

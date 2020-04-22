@@ -1108,12 +1108,12 @@ void CompilerUtils::convertType(
 					// Value shrank
 					for (unsigned j = targetSize; j < sourceSize; ++j)
 					{
-						moveToStackTop(depth - 1, 1);
+						moveToStackTop(depth + targetSize - sourceSize, 1);
 						m_context << Instruction::POP;
 					}
 					// Value grew
 					if (targetSize > sourceSize)
-						moveIntoStack(depth + targetSize - sourceSize - 1, targetSize - sourceSize);
+						moveIntoStack(depth - sourceSize, targetSize - sourceSize);
 				}
 			}
 			depth -= sourceSize;

@@ -22,11 +22,13 @@
 
 #include <libsolidity/codegen/ExpressionCompiler.h>
 
-#include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/codegen/ReturnInfo.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/LValue.h>
+
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 #include <libevmasm/GasMeter.h>
 #include <libsolutil/Common.h>
@@ -346,15 +348,15 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 			if (component)
 			{
 				component->accept(*this);
-				if (_tuple.annotation().lValueRequested)
+				if (_tuple.annotation().willBeWrittenTo)
 				{
 					solAssert(!!m_currentLValue, "");
 					lvalues.push_back(move(m_currentLValue));
 				}
 			}
-			else if (_tuple.annotation().lValueRequested)
+			else if (_tuple.annotation().willBeWrittenTo)
 				lvalues.push_back(unique_ptr<LValue>());
-		if (_tuple.annotation().lValueRequested)
+		if (_tuple.annotation().willBeWrittenTo)
 		{
 			if (_tuple.components().size() == 1)
 				m_currentLValue = move(lvalues[0]);
@@ -2185,30 +2187,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		solAssert(!_functionType.isBareCall(), "");
 	}
 
-	bool haveReturndatacopy = m_context.evmVersion().supportsReturndata();
-	unsigned retSize = 0;
-	bool dynamicReturnSize = false;
-	TypePointers returnTypes;
-	if (!returnSuccessConditionAndReturndata)
-	{
-		if (haveReturndatacopy)
-			returnTypes = _functionType.returnParameterTypes();
-		else
-			returnTypes = _functionType.returnParameterTypesWithoutDynamicTypes();
-
-		for (auto const& retType: returnTypes)
-			if (retType->isDynamicallyEncoded())
-			{
-				solAssert(haveReturndatacopy, "");
-				dynamicReturnSize = true;
-				retSize = 0;
-				break;
-			}
-			else if (retType->decodingType())
-				retSize += retType->decodingType()->calldataEncodedSize();
-			else
-				retSize += retType->calldataEncodedSize();
-	}
+	ReturnInfo const returnInfo{m_context.evmVersion(), _functionType};
+	bool const haveReturndatacopy = m_context.evmVersion().supportsReturndata();
+	unsigned const retSize = returnInfo.estimatedReturnSize;
+	bool const dynamicReturnSize = returnInfo.dynamicReturnSize;
+	TypePointers const& returnTypes = returnInfo.returnTypes;
 
 	// Evaluate arguments.
 	TypePointers argumentTypes;

@@ -34,6 +34,7 @@
 #include <list>
 #include <memory>
 #include <optional>
+#include <utility>
 
 namespace solidity::langutil
 {
@@ -58,14 +59,14 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
-		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver(),
-		std::set<YulString> const& _dataNames = {}
+		ExternalIdentifierAccess::Resolver _resolver = ExternalIdentifierAccess::Resolver(),
+		std::set<YulString> _dataNames = {}
 	):
-		m_resolver(_resolver),
+		m_resolver(std::move(_resolver)),
 		m_info(_analysisInfo),
 		m_errorReporter(_errorReporter),
 		m_dialect(_dialect),
-		m_dataNames(_dataNames)
+		m_dataNames(std::move(_dataNames))
 	{
 		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 			m_evmVersion = evmDialect->evmVersion();

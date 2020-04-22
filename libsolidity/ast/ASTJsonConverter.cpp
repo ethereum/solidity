@@ -34,6 +34,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/algorithm/sort.hpp>
 
+#include <utility>
 #include <vector>
 #include <algorithm>
 
@@ -45,7 +46,7 @@ namespace solidity::frontend
 
 ASTJsonConverter::ASTJsonConverter(bool _legacy, map<string, unsigned> _sourceIndices):
 	m_legacy(_legacy),
-	m_sourceIndices(_sourceIndices)
+	m_sourceIndices(std::move(_sourceIndices))
 {
 }
 
@@ -181,7 +182,7 @@ void ASTJsonConverter::appendExpressionAttributes(
 		make_pair("isConstant", _annotation.isConstant),
 		make_pair("isPure", _annotation.isPure),
 		make_pair("isLValue", _annotation.isLValue),
-		make_pair("lValueRequested", _annotation.lValueRequested),
+		make_pair("lValueRequested", _annotation.willBeWrittenTo),
 		make_pair("argumentTypes", typePointerToJson(_annotation.arguments))
 	};
 	_attributes += exprAttributes;
@@ -378,6 +379,7 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 		make_pair("name", _node.name()),
 		make_pair("typeName", toJsonOrNull(_node.typeName())),
 		make_pair("constant", _node.isConstant()),
+		make_pair("mutability", VariableDeclaration::mutabilityToString(_node.mutability())),
 		make_pair("stateVariable", _node.isStateVariable()),
 		make_pair("storageLocation", location(_node.referenceLocation())),
 		make_pair("overrides", _node.overrides() ? toJson(*_node.overrides()) : Json::nullValue),

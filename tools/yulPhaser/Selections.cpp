@@ -20,6 +20,7 @@
 #include <tools/yulPhaser/SimulationRNG.h>
 
 #include <cmath>
+#include <numeric>
 
 using namespace std;
 using namespace solidity::phaser;
@@ -58,3 +59,12 @@ vector<size_t> RandomSelection::materialise(size_t _poolSize) const
 	return selection;
 }
 
+vector<size_t> RandomSubset::materialise(size_t _poolSize) const
+{
+	vector<size_t> selection;
+	for (size_t index = 0; index < _poolSize; ++index)
+		if (SimulationRNG::bernoulliTrial(m_selectionChance))
+			selection.push_back(index);
+
+	return selection;
+}

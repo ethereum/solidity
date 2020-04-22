@@ -433,7 +433,7 @@ The full contract
 .. note::
   The function ``splitSignature`` does not use all security
   checks. A real implementation should use a more rigorously tested library,
-  such as openzepplin's `version  <https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/ECRecovery.sol>`_ of this code.
+  such as openzepplin's `version  <https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/cryptography/ECDSA.sol>`_ of this code.
 
 Verifying Payments
 ------------------
@@ -454,7 +454,7 @@ The recipient should verify each message using the following process:
 
 We'll use the `ethereumjs-util <https://github.com/ethereumjs/ethereumjs-util>`_
 library to write this verification. The final step can be done a number of ways,
-and we use JavaScript. The following code borrows the `constructMessage` function from the signing **JavaScript code** above:
+and we use JavaScript. The following code borrows the ``constructMessage`` function from the signing **JavaScript code** above:
 
 ::
 

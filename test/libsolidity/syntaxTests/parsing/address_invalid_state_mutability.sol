@@ -18,9 +18,9 @@ contract C {
 // TypeError: (33-45): Address types can only be payable or non-payable.
 // TypeError: (52-64): Address types can only be payable or non-payable.
 // TypeError: (89-101): Address types can only be payable or non-payable.
+// TypeError: (138-150): Address types can only be payable or non-payable.
+// TypeError: (156-168): Address types can only be payable or non-payable.
 // TypeError: (195-207): Address types can only be payable or non-payable.
 // TypeError: (236-248): Address types can only be payable or non-payable.
 // TypeError: (300-312): Address types can only be payable or non-payable.
 // TypeError: (352-364): Address types can only be payable or non-payable.
-// TypeError: (138-150): Address types can only be payable or non-payable.
-// TypeError: (156-168): Address types can only be payable or non-payable.

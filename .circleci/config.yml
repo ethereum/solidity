@@ -338,7 +338,7 @@ jobs:
 
   chk_proofs:
     docker:
-      - image: buildpack-deps:disco
+      - image: buildpack-deps:latest
     environment:
       TERM: xterm
     steps:
@@ -347,8 +347,8 @@ jobs:
           name: Z3 python deps
           command: |
             apt-get -qq update
-            apt-get -qy install python-pip
-            pip install --user z3-solver
+            apt-get -qy install python3-pip
+            pip3 install --user z3-solver
       - run: *run_proofs
 
   chk_docs_pragma_min_version:
@@ -661,7 +661,7 @@ jobs:
 
   t_ems_solcjs:
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      - image: buildpack-deps:latest
     environment:
       TERM: xterm
     steps:

@@ -411,11 +411,24 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 {
 	astAssert(_node["name"].isString(), "Expected 'name' to be a string!");
 
-	VariableDeclaration::Constantness constantness{};
-	if (memberAsBool(_node, "constant"))
-		constantness = VariableDeclaration::Constantness::Constant;
+	VariableDeclaration::Mutability mutability{};
+	astAssert(member(_node, "mutability").isString(), "'mutability' expected to be string.");
+	string const mutabilityStr = member(_node, "mutability").asString();
+	if (mutabilityStr == "constant")
+	{
+		mutability = VariableDeclaration::Mutability::Constant;
+		astAssert(memberAsBool(_node, "constant"), "");
+	}
 	else
-		constantness = VariableDeclaration::Constantness::Mutable;
+	{
+		astAssert(!memberAsBool(_node, "constant"), "");
+		if (mutabilityStr == "mutable")
+			mutability = VariableDeclaration::Mutability::Mutable;
+		else if (mutabilityStr == "immutable")
+			mutability = VariableDeclaration::Mutability::Immutable;
+		else
+			astAssert(false, "");
+	}
 
 	return createASTNode<VariableDeclaration>(
 		_node,
@@ -425,7 +438,7 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 		visibility(_node),
 		memberAsBool(_node, "stateVariable"),
 		_node.isMember("indexed") ? memberAsBool(_node, "indexed") : false,
-		constantness,
+		mutability,
 		_node["overrides"].isNull() ? nullptr : createOverrideSpecifier(member(_node, "overrides")),
 		location(_node)
 	);
@@ -495,7 +508,7 @@ ASTPointer<UserDefinedTypeName> ASTJsonImporter::createUserDefinedTypeName(Json:
 	string nameString = member(_node, "name").asString();
 	boost::algorithm::split(strs, nameString, boost::is_any_of("."));
 	for (string s: strs)
-		namePath.push_back(ASTString(s));
+		namePath.emplace_back(s);
 	return createASTNode<UserDefinedTypeName>(
 		_node,
 		namePath

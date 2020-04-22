@@ -45,7 +45,7 @@ struct BuiltinContext
 	std::map<YulString, AbstractAssembly::SubID> subIDs;
 };
 
-struct BuiltinFunctionForEVM: BuiltinFunction
+struct BuiltinFunctionForEVM: public BuiltinFunction
 {
 	std::optional<evmasm::Instruction> instruction;
 	/// Function to generate code for the given function call and append it to the abstract

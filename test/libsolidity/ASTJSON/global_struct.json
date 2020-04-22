@@ -19,6 +19,7 @@
         {
           "constant": false,
           "id": 2,
+          "mutability": "mutable",
           "name": "a",
           "nodeType": "VariableDeclaration",
           "overrides": null,

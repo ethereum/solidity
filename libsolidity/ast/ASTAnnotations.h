@@ -128,6 +128,16 @@ struct TypeDeclarationAnnotation: DeclarationAnnotation
 	std::string canonicalName;
 };
 
+struct StructDeclarationAnnotation: TypeDeclarationAnnotation
+{
+	/// Whether the struct is recursive, i.e. if the struct (recursively) contains a member that involves a struct of the same
+	/// type, either in a dynamic array, as member of another struct or inside a mapping.
+	/// Only cases in which the recursive occurrence is within a dynamic array or a mapping are valid, while direct
+	/// recursion immediately raises an error.
+	/// Will be filled in by the DeclarationTypeChecker.
+	std::optional<bool> recursive;
+};
+
 struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 	/// List of functions without a body. Can also contain functions from base classes.
@@ -234,7 +244,7 @@ struct ExpressionAnnotation: ASTAnnotation
 	/// Whether it is an LValue (i.e. something that can be assigned to).
 	bool isLValue = false;
 	/// Whether the expression is used in a context where the LValue is actually required.
-	bool lValueRequested = false;
+	bool willBeWrittenTo = false;
 	/// Whether the expression is an lvalue that is only assigned.
 	/// Would be false for --, ++, delete, +=, -=, ....
 	bool lValueOfOrdinaryAssignment = false;
@@ -248,6 +258,8 @@ struct IdentifierAnnotation: ExpressionAnnotation
 {
 	/// Referenced declaration, set at latest during overload resolution stage.
 	Declaration const* referencedDeclaration = nullptr;
+	/// List of possible declarations it could refer to (can contain duplicates).
+	std::vector<Declaration const*> candidateDeclarations;
 	/// List of possible declarations it could refer to.
 	std::vector<Declaration const*> overloadedDeclarations;
 };

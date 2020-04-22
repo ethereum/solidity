@@ -16,7 +16,7 @@ Functions have to be specified as being ``external``,
 ``public``, ``internal`` or ``private``.
 For state variables, ``external`` is not possible.
 
-``external``:
+``external``
     External functions are part of the contract interface,
     which means they can be called from other contracts and
     via transactions. An external function ``f`` cannot be called
@@ -25,18 +25,18 @@ For state variables, ``external`` is not possible.
     they receive large arrays of data, because the data
     is not copied from calldata to memory.
 
-``public``:
+``public``
     Public functions are part of the contract interface
     and can be either called internally or via
     messages. For public state variables, an automatic getter
     function (see below) is generated.
 
-``internal``:
+``internal``
     Those functions and state variables can only be
     accessed internally (i.e. from within the current contract
     or contracts deriving from it), without using ``this``.
 
-``private``:
+``private``
     Private functions and state variables are only
     visible for the contract they are defined in and not in
     derived contracts.

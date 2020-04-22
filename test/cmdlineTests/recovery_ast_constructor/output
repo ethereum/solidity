@@ -160,6 +160,7 @@ JSON AST:
                   "attributes":
                   {
                     "constant": false,
+                    "mutability": "mutable",
                     "name": "",
                     "overrides": null,
                     "scope": 17,

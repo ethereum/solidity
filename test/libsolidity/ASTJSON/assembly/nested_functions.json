@@ -121,6 +121,7 @@
               {
                 "constant": false,
                 "id": 3,
+                "mutability": "mutable",
                 "name": "x",
                 "nodeType": "VariableDeclaration",
                 "overrides": null,
@@ -130,8 +131,8 @@
                 "storageLocation": "default",
                 "typeDescriptions":
                 {
-                  "typeIdentifier": "t_uint256",
-                  "typeString": "uint256"
+                  "typeIdentifier": null,
+                  "typeString": null
                 },
                 "typeName":
                 {
@@ -141,8 +142,8 @@
                   "src": "49:4:1",
                   "typeDescriptions":
                   {
-                    "typeIdentifier": "t_uint256",
-                    "typeString": "uint256"
+                    "typeIdentifier": null,
+                    "typeString": null
                   }
                 },
                 "value": null,

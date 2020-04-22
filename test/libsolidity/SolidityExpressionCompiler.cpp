@@ -25,6 +25,7 @@
 #include <liblangutil/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
+#include <libsolidity/analysis/DeclarationTypeChecker.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/ast/AST.h>
@@ -118,10 +119,12 @@ bytes compileFirstExpression(
 	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
 	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), scopes, errorReporter);
 	resolver.registerDeclarations(*sourceUnit);
-
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			BOOST_REQUIRE_MESSAGE(resolver.resolveNamesAndTypes(*contract), "Resolving names failed");
+	DeclarationTypeChecker declarationTypeChecker(errorReporter, solidity::test::CommonOptions::get().evmVersion());
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
+		BOOST_REQUIRE(declarationTypeChecker.check(*node));
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{

@@ -67,6 +67,8 @@
 
 #include <libsolutil/CommonData.h>
 
+#include <boost/range/algorithm_ext/erase.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -91,206 +93,30 @@ void OptimiserSuite::run(
 
 	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast);
 
-	suite.runSequence({
-		VarDeclInitializer::name,
-		FunctionHoister::name,
-		BlockFlattener::name,
-		ForLoopInitRewriter::name,
-		DeadCodeEliminator::name,
-		FunctionGrouper::name,
-		EquivalentFunctionCombiner::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-		BlockFlattener::name,
-		ControlFlowSimplifier::name,
-		LiteralRematerialiser::name,
-		ConditionalUnsimplifier::name,
-		StructuralSimplifier::name,
-		ControlFlowSimplifier::name,
-		ForLoopConditionIntoBody::name,
-		BlockFlattener::name
-	}, ast);
+	suite.runSequence(
+		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
+		"("
+			"xarrscLM"                 // Turn into SSA and simplify
+			"cCTUtTOntnfDIul"          // Perform structural simplification
+			"Lcul"                     // Simplify again
+			"Vcul jj"                  // Reverse SSA
 
-	// None of the above can make stack problems worse.
+			// should have good "compilability" property here.
 
-	size_t codeSize = 0;
-	for (size_t rounds = 0; rounds < 12; ++rounds)
-	{
-		{
-			size_t newSize = CodeSize::codeSizeIncludingFunctions(ast);
-			if (newSize == codeSize)
-				break;
-			codeSize = newSize;
-		}
-
-		{
-			// Turn into SSA and simplify
-			suite.runSequence({
-				ExpressionSplitter::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				ExpressionSimplifier::name,
-				CommonSubexpressionEliminator::name,
-				LoadResolver::name,
-				LoopInvariantCodeMotion::name
-			}, ast);
-		}
-
-		{
-			// perform structural simplification
-			suite.runSequence({
-				CommonSubexpressionEliminator::name,
-				ConditionalSimplifier::name,
-				LiteralRematerialiser::name,
-				ConditionalUnsimplifier::name,
-				StructuralSimplifier::name,
-				LiteralRematerialiser::name,
-				ForLoopConditionOutOfBody::name,
-				ControlFlowSimplifier::name,
-				StructuralSimplifier::name,
-				ControlFlowSimplifier::name,
-				BlockFlattener::name,
-				DeadCodeEliminator::name,
-				ForLoopConditionIntoBody::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name
-			}, ast);
-		}
-
-		{
-			// simplify again
-			suite.runSequence({
-				LoadResolver::name,
-				CommonSubexpressionEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-			}, ast);
-		}
-
-		{
-			// reverse SSA
-			suite.runSequence({
-				SSAReverser::name,
-				CommonSubexpressionEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-
-				ExpressionJoiner::name,
-				ExpressionJoiner::name,
-			}, ast);
-		}
-
-		// should have good "compilability" property here.
-
-		{
-			// run functional expression inliner
-			suite.runSequence({
-				ExpressionInliner::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-			}, ast);
-		}
-
-		{
-			// Prune a bit more in SSA
-			suite.runSequence({
-				ExpressionSplitter::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-				RedundantAssignEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-			}, ast);
-		}
-
-		{
-			// Turn into SSA again and simplify
-			suite.runSequence({
-				ExpressionSplitter::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				CommonSubexpressionEliminator::name,
-				LoadResolver::name,
-			}, ast);
-		}
-
-		{
-			// run full inliner
-			suite.runSequence({
-				FunctionGrouper::name,
-				EquivalentFunctionCombiner::name,
-				FullInliner::name,
-				BlockFlattener::name
-			}, ast);
-		}
-
-		{
-			// SSA plus simplify
-			suite.runSequence({
-				ConditionalSimplifier::name,
-				LiteralRematerialiser::name,
-				ConditionalUnsimplifier::name,
-				CommonSubexpressionEliminator::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				LoadResolver::name,
-				ExpressionSimplifier::name,
-				LiteralRematerialiser::name,
-				ForLoopConditionOutOfBody::name,
-				StructuralSimplifier::name,
-				BlockFlattener::name,
-				DeadCodeEliminator::name,
-				ControlFlowSimplifier::name,
-				CommonSubexpressionEliminator::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				ForLoopConditionIntoBody::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-				CommonSubexpressionEliminator::name,
-			}, ast);
-		}
-	}
-
-	// Make source short and pretty.
-
-	suite.runSequence({
-		ExpressionJoiner::name,
-		Rematerialiser::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-		ExpressionJoiner::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-		ExpressionJoiner::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-
-		SSAReverser::name,
-		CommonSubexpressionEliminator::name,
-		LiteralRematerialiser::name,
-		ForLoopConditionOutOfBody::name,
-		CommonSubexpressionEliminator::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-
-		ExpressionJoiner::name,
-		Rematerialiser::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-	}, ast);
+			"eul"                      // Run functional expression inliner
+			"xarulrul"                 // Prune a bit more in SSA
+			"xarrcL"                   // Turn into SSA again and simplify
+			"gvif"                     // Run full inliner
+			"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
+		")"
+		"jmuljuljul VcTOcul jmul",     // Make source short and pretty
+		ast
+	);
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
 	size_t stackCompressorMaxIterations = 16;
-	suite.runSequence({
-		FunctionGrouper::name
-	}, ast);
+	suite.runSequence("g", ast);
+
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
 	StackCompressor::run(
@@ -299,16 +125,7 @@ void OptimiserSuite::run(
 		_optimizeStackAllocation,
 		stackCompressorMaxIterations
 	);
-	suite.runSequence({
-		BlockFlattener::name,
-		DeadCodeEliminator::name,
-		ControlFlowSimplifier::name,
-		LiteralRematerialiser::name,
-		ForLoopConditionOutOfBody::name,
-		CommonSubexpressionEliminator::name,
-
-		FunctionGrouper::name,
-	}, ast);
+	suite.runSequence("fDnTOc g", ast);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{
@@ -429,6 +246,59 @@ map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
 	return lookupTable;
 }
 
+void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
+{
+	string input = _stepAbbreviations;
+	boost::remove_erase(input, ' ');
+	boost::remove_erase(input, '\n');
+
+	bool insideLoop = false;
+	for (char abbreviation: input)
+		switch (abbreviation)
+		{
+		case '(':
+			assertThrow(!insideLoop, OptimizerException, "Nested parentheses not supported");
+			insideLoop = true;
+			break;
+		case ')':
+			assertThrow(insideLoop, OptimizerException, "Unbalanced parenthesis");
+			insideLoop = false;
+			break;
+		default:
+			assertThrow(
+				stepAbbreviationToNameMap().find(abbreviation) != stepAbbreviationToNameMap().end(),
+				OptimizerException,
+				"Invalid optimisation step abbreviation"
+			);
+		}
+	assertThrow(!insideLoop, OptimizerException, "Unbalanced parenthesis");
+
+	auto abbreviationsToSteps = [](string const& _sequence) -> vector<string>
+	{
+		vector<string> steps;
+		for (char abbreviation: _sequence)
+			steps.emplace_back(stepAbbreviationToNameMap().at(abbreviation));
+		return steps;
+	};
+
+	// The sequence has now been validated and must consist of pairs of segments that look like this: `aaa(bbb)`
+	// `aaa` or `(bbb)` can be empty. For example we consider a sequence like `fgo(aaf)Oo` to have
+	// four segments, the last of which is an empty parenthesis.
+	size_t currentPairStart = 0;
+	while (currentPairStart < input.size())
+	{
+		size_t openingParenthesis = input.find('(', currentPairStart);
+		size_t closingParenthesis = input.find(')', openingParenthesis);
+		size_t firstCharInside = (openingParenthesis == string::npos ? input.size() : openingParenthesis + 1);
+		yulAssert((openingParenthesis == string::npos) == (closingParenthesis == string::npos), "");
+
+		runSequence(abbreviationsToSteps(input.substr(currentPairStart, openingParenthesis - currentPairStart)), _ast);
+		runSequenceUntilStable(abbreviationsToSteps(input.substr(firstCharInside, closingParenthesis - firstCharInside)), _ast);
+
+		currentPairStart = (closingParenthesis == string::npos ? input.size() : closingParenthesis + 1);
+	}
+}
+
 void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 {
 	unique_ptr<Block> copy;
@@ -451,5 +321,23 @@ void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 				copy = make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
 			}
 		}
+	}
+}
+
+void OptimiserSuite::runSequenceUntilStable(
+	std::vector<string> const& _steps,
+	Block& _ast,
+	size_t maxRounds
+)
+{
+	size_t codeSize = 0;
+	for (size_t rounds = 0; rounds < maxRounds; ++rounds)
+	{
+		size_t newSize = CodeSize::codeSizeIncludingFunctions(_ast);
+		if (newSize == codeSize)
+			break;
+		codeSize = newSize;
+
+		runSequence(_steps, _ast);
 	}
 }

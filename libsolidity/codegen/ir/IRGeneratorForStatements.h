@@ -24,6 +24,8 @@
 #include <libsolidity/codegen/ir/IRLValue.h>
 #include <libsolidity/codegen/ir/IRVariable.h>
 
+#include <functional>
+
 namespace solidity::frontend
 {
 
@@ -70,7 +72,26 @@ public:
 	void endVisit(Identifier const& _identifier) override;
 	bool visit(Literal const& _literal) override;
 
+	bool visit(TryStatement const& _tryStatement) override;
+	bool visit(TryCatchClause const& _tryCatchClause) override;
+
 private:
+	/// Handles all catch cases of a try statement, except the success-case.
+	void handleCatch(TryStatement const& _tryStatement);
+	void handleCatchStructuredAndFallback(
+		TryCatchClause const& _structured,
+		TryCatchClause const* _fallback
+	);
+	void handleCatchFallback(TryCatchClause const& _fallback);
+
+	/// Generates code to rethrow an exception.
+	void rethrow();
+
+	void handleVariableReference(
+		VariableDeclaration const& _variable,
+		Expression const& _referencingExpression
+	);
+
 	/// Appends code to call an external function with the given arguments.
 	/// All involved expressions have already been visited.
 	void appendExternalFunctionCall(
@@ -123,7 +144,7 @@ private:
 	/// @returns a fresh IR variable containing the value of the lvalue @a _lvalue.
 	IRVariable readFromLValue(IRLValue const& _lvalue);
 
-	/// Stores the given @a _lvalue in m_currentLValue, if it will be written to (lValueRequested). Otherwise
+	/// Stores the given @a _lvalue in m_currentLValue, if it will be written to (willBeWrittenTo). Otherwise
 	/// defines the expression @a _expression by reading the value from @a _lvalue.
 	void setLValue(Expression const& _expression, IRLValue _lvalue);
 	void generateLoop(

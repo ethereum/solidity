@@ -22,14 +22,15 @@
 
 #pragma once
 
-#include <string>
-#include <utility>
-#include <vector>
-#include <memory>
 #include <libsolutil/Exceptions.h>
 #include <libsolutil/Assertions.h>
 #include <libsolutil/CommonData.h>
 #include <liblangutil/SourceLocation.h>
+
+#include <string>
+#include <utility>
+#include <vector>
+#include <memory>
 
 namespace solidity::langutil
 {

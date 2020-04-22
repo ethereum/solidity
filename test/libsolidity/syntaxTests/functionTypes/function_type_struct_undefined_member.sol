@@ -8,4 +8,3 @@ library L
 }
 // ----
 // DeclarationError: (32-35): Identifier not found or not unique.
-// TypeError: (63-76): Internal type cannot be used for external function type.

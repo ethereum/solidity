@@ -43,6 +43,7 @@
 #include <boost/range/algorithm/copy.hpp>
 
 #include <limits>
+#include <utility>
 
 using namespace std;
 using namespace solidity;
@@ -1253,8 +1254,8 @@ StringLiteralType::StringLiteralType(Literal const& _literal):
 {
 }
 
-StringLiteralType::StringLiteralType(string const& _value):
-	m_value{_value}
+StringLiteralType::StringLiteralType(string _value):
+	m_value{std::move(_value)}
 {
 }
 
@@ -1648,12 +1649,50 @@ bool ArrayType::operator==(Type const& _other) const
 	return isDynamicallySized() || length() == other.length();
 }
 
-bool ArrayType::validForCalldata() const
+BoolResult ArrayType::validForLocation(DataLocation _loc) const
 {
 	if (auto arrayBaseType = dynamic_cast<ArrayType const*>(baseType()))
-		if (!arrayBaseType->validForCalldata())
-			return false;
-	return isDynamicallySized() || unlimitedStaticCalldataSize(true) <= numeric_limits<unsigned>::max();
+	{
+		BoolResult result = arrayBaseType->validForLocation(_loc);
+		if (!result)
+			return result;
+	}
+	if (isDynamicallySized())
+		return true;
+	switch (_loc)
+	{
+		case DataLocation::Memory:
+		{
+			bigint size = bigint(length());
+			auto type = m_baseType;
+			while (auto arrayType = dynamic_cast<ArrayType const*>(type))
+			{
+				if (arrayType->isDynamicallySized())
+					break;
+				else
+				{
+					size *= arrayType->length();
+					type = arrayType->baseType();
+				}
+			}
+			if (type->isDynamicallySized())
+				size *= type->memoryHeadSize();
+			else
+				size *= type->memoryDataSize();
+			if (size >= numeric_limits<unsigned>::max())
+				return BoolResult::err("Type too large for memory.");
+			break;
+		}
+		case DataLocation::CallData:
+		{
+			if (unlimitedStaticCalldataSize(true) >= numeric_limits<unsigned>::max())
+				return BoolResult::err("Type too large for calldata.");
+			break;
+		}
+		case DataLocation::Storage:
+			break;
+	}
+	return true;
 }
 
 bigint ArrayType::unlimitedStaticCalldataSize(bool _padded) const
@@ -2174,93 +2213,119 @@ MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
 
 TypeResult StructType::interfaceType(bool _inLibrary) const
 {
-	if (_inLibrary && m_interfaceType_library.has_value())
-		return *m_interfaceType_library;
-
-	if (!_inLibrary && m_interfaceType.has_value())
+	if (!_inLibrary)
+	{
+		if (!m_interfaceType.has_value())
+		{
+			if (recursive())
+				m_interfaceType = TypeResult::err("Recursive type not allowed for public or external contract functions.");
+			else
+			{
+				TypeResult result{TypePointer{}};
+				for (ASTPointer<VariableDeclaration> const& member: m_struct.members())
+				{
+					if (!member->annotation().type)
+					{
+						result = TypeResult::err("Invalid type!");
+						break;
+					}
+					auto interfaceType = member->annotation().type->interfaceType(false);
+					if (!interfaceType.get())
+					{
+						solAssert(!interfaceType.message().empty(), "Expected detailed error message!");
+						result = interfaceType;
+						break;
+					}
+				}
+				if (result.message().empty())
+					m_interfaceType = TypeProvider::withLocation(this, DataLocation::Memory, true);
+				else
+					m_interfaceType = result;
+			}
+		}
 		return *m_interfaceType;
+	}
+	else if (m_interfaceType_library.has_value())
+		return *m_interfaceType_library;
 
 	TypeResult result{TypePointer{}};
 
-	m_recursive = false;
-
-	auto visitor = [&](
-		StructDefinition const& _struct,
-		util::CycleDetector<StructDefinition>& _cycleDetector,
-		size_t /*_depth*/
-	)
-	{
-		// Check that all members have interface types.
-		// Return an error if at least one struct member does not have a type.
-		// This might happen, for example, if the type of the member does not exist.
-		for (ASTPointer<VariableDeclaration> const& variable: _struct.members())
-		{
-			// If the struct member does not have a type return false.
-			// A TypeError is expected in this case.
-			if (!variable->annotation().type)
-			{
-				result = TypeResult::err("Invalid type!");
-				return;
-			}
-
-			Type const* memberType = variable->annotation().type;
-
-			while (dynamic_cast<ArrayType const*>(memberType))
-				memberType = dynamic_cast<ArrayType const*>(memberType)->baseType();
-
-			if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
-				if (
-					innerStruct->m_recursive == true ||
-					_cycleDetector.run(innerStruct->structDefinition())
-				)
+	util::BreadthFirstSearch<StructDefinition const*> breadthFirstSearch{{&m_struct}};
+	breadthFirstSearch.run(
+		[&](StructDefinition const* _struct, auto&& _addChild) {
+				// Check that all members have interface types.
+				// Return an error if at least one struct member does not have a type.
+				// This might happen, for example, if the type of the member does not exist.
+				for (ASTPointer<VariableDeclaration> const& variable: _struct->members())
 				{
-					m_recursive = true;
-					if (_inLibrary && location() == DataLocation::Storage)
-						continue;
-					else
+					// If the struct member does not have a type return false.
+					// A TypeError is expected in this case.
+					if (!variable->annotation().type)
 					{
-						result = TypeResult::err("Recursive structs can only be passed as storage pointers to libraries, not as memory objects to contract functions.");
+						result = TypeResult::err("Invalid type!");
+						breadthFirstSearch.abort();
 						return;
 					}
-				}
 
-			auto iType = memberType->interfaceType(_inLibrary);
-			if (!iType.get())
-			{
-				solAssert(!iType.message().empty(), "Expected detailed error message!");
-				result = iType;
-				return;
+					Type const* memberType = variable->annotation().type;
+
+					while (dynamic_cast<ArrayType const*>(memberType))
+						memberType = dynamic_cast<ArrayType const*>(memberType)->baseType();
+
+					if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
+					{
+						if (innerStruct->recursive() && !(_inLibrary && location() == DataLocation::Storage))
+						{
+							result = TypeResult::err(
+								"Recursive structs can only be passed as storage pointers to libraries, not as memory objects to contract functions."
+							);
+							breadthFirstSearch.abort();
+							return;
+						}
+						else
+							_addChild(&innerStruct->structDefinition());
+					}
+					else
+					{
+						auto iType = memberType->interfaceType(_inLibrary);
+						if (!iType.get())
+						{
+							solAssert(!iType.message().empty(), "Expected detailed error message!");
+							result = iType;
+							breadthFirstSearch.abort();
+							return;
+						}
+					}
 			}
 		}
-	};
+	);
 
-	m_recursive = m_recursive.value() || (util::CycleDetector<StructDefinition>(visitor).run(structDefinition()) != nullptr);
+	if (!result.message().empty())
+		return result;
 
-	std::string const recursiveErrMsg = "Recursive type not allowed for public or external contract functions.";
-
-	if (_inLibrary)
-	{
-		if (!result.message().empty())
-			m_interfaceType_library = result;
-		else if (location() == DataLocation::Storage)
-			m_interfaceType_library = this;
-		else
-			m_interfaceType_library = TypeProvider::withLocation(this, DataLocation::Memory, true);
-
-		if (m_recursive.value())
-			m_interfaceType = TypeResult::err(recursiveErrMsg);
-
-		return *m_interfaceType_library;
-	}
-
-	if (m_recursive.value())
-		m_interfaceType = TypeResult::err(recursiveErrMsg);
-	else if (!result.message().empty())
-		m_interfaceType = result;
+	if (location() == DataLocation::Storage)
+		m_interfaceType_library = this;
 	else
-		m_interfaceType = TypeProvider::withLocation(this, DataLocation::Memory, true);
+		m_interfaceType_library = TypeProvider::withLocation(this, DataLocation::Memory, true);
+	return *m_interfaceType_library;
+}
 
-	return *m_interfaceType;
+BoolResult StructType::validForLocation(DataLocation _loc) const
+{
+	for (auto const& member: m_struct.members())
+		if (auto referenceType = dynamic_cast<ReferenceType const*>(member->annotation().type))
+		{
+			BoolResult result = referenceType->validForLocation(_loc);
+			if (!result)
+				return result;
+		}
+	return true;
+}
+
+bool StructType::recursive() const
+{
+	solAssert(m_struct.annotation().recursive.has_value(), "Called StructType::recursive() before DeclarationTypeChecker.");
+	return *m_struct.annotation().recursive;
 }
 
 std::unique_ptr<ReferenceType> StructType::copyForLocation(DataLocation _location, bool _isPointer) const
@@ -2643,21 +2708,11 @@ FunctionType::FunctionType(FunctionTypeName const& _typeName):
 	for (auto const& t: _typeName.parameterTypes())
 	{
 		solAssert(t->annotation().type, "Type not set for parameter.");
-		if (m_kind == Kind::External)
-			solAssert(
-				t->annotation().type->interfaceType(false).get(),
-				"Internal type used as parameter for external function."
-			);
 		m_parameterTypes.push_back(t->annotation().type);
 	}
 	for (auto const& t: _typeName.returnParameterTypes())
 	{
 		solAssert(t->annotation().type, "Type not set for return parameter.");
-		if (m_kind == Kind::External)
-			solAssert(
-				t->annotation().type->interfaceType(false).get(),
-				"Internal type used as return parameter for external function."
-			);
 		m_returnParameterTypes.push_back(t->annotation().type);
 	}
 
@@ -3112,6 +3167,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const* _sco
 
 TypePointer FunctionType::encodingType() const
 {
+	if (m_gasSet || m_valueSet)
+		return nullptr;
 	// Only external functions can be encoded, internal functions cannot leave code boundaries.
 	if (m_kind == Kind::External)
 		return this;
