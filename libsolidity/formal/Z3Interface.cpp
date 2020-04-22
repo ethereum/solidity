@@ -237,8 +237,8 @@ z3::sort Z3Interface::z3Sort(Sort const& _sort)
 		z3::func_decl tupleConstructor = m_context.tuple_sort(
 			tupleSort.name.c_str(),
 			tupleSort.members.size(),
-			&cMembers[0],
-			&sorts[0],
+			cMembers.data(),
+			sorts.data(),
 			projs
 		);
 		return tupleConstructor.range();
