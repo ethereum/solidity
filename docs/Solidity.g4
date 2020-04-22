@@ -8,7 +8,8 @@
 grammar Solidity;
 
 sourceUnit
-  : (pragmaDirective | importDirective | structDefinition | enumDefinition | contractDefinition)* EOF ;
+  : (pragmaDirective | importDirective | structDefinition | enumDefinition | contractDefinition |
+     errorDefinition)* EOF ;
 
 pragmaDirective
   : 'pragma' pragmaName pragmaValue ';' ;
@@ -51,6 +52,7 @@ contractPart
   | modifierDefinition
   | functionDefinition
   | eventDefinition
+  | errorDefinition
   | enumDefinition ;
 
 stateVariableDeclaration
@@ -91,6 +93,10 @@ modifierInvocation
 
 eventDefinition
   : 'event' identifier eventParameterList AnonymousKeyword? ';' ;
+
+errorDefinition    : 'error' identifier errorParameterList ';' ;
+errorParameterList : '(' (errorParameter (',' errorParameter)*)? ')' ;
+errorParameter     : typeName identifier? ;
 
 enumDefinition
   : 'enum' identifier '{' enumValue? (',' enumValue)* '}' ;
@@ -166,6 +172,9 @@ tryStatement : 'try' expression returnParameters? block catchClause+ ;
 // of the Solidity team include possible expansion so we'll
 // leave this as is, befitting with the Solidity docs.
 catchClause : 'catch' ( identifier? parameterList )? block ;
+
+catchClauseNEW : 'catch' errorTypeName parameterList block ;
+errorTypeName : identifier ;
 
 whileStatement
   : 'while' '(' expression ')' statement ;
