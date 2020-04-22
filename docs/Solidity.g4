@@ -51,6 +51,7 @@ contractPart
   | modifierDefinition
   | functionDefinition
   | eventDefinition
+  | errorDefinition
   | enumDefinition ;
 
 stateVariableDeclaration
@@ -91,6 +92,9 @@ modifierInvocation
 
 eventDefinition
   : 'event' identifier eventParameterList AnonymousKeyword? ';' ;
+
+errorDefinition
+  : 'error' identifier eventParameterList AnonymousKeyword? ';' ;
 
 enumDefinition
   : 'enum' identifier '{' enumValue? (',' enumValue)* '}' ;
@@ -166,6 +170,10 @@ tryStatement : 'try' expression returnParameters? block catchClause+ ;
 // of the Solidity team include possible expansion so we'll
 // leave this as is, befitting with the Solidity docs.
 catchClause : 'catch' ( identifier? parameterList )? block ;
+
+// ^^FIXME^^: Hey, why is the identifier here meant to be optional? I'd suggest something more like that:
+catchClauseNEW : 'catch' errorTypeName parameterList block ;
+errorTypeName : userDefinedTypeName
 
 whileStatement
   : 'while' '(' expression ')' statement ;
