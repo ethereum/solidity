@@ -491,7 +491,8 @@ Horn clauses, where the lifecycle of the contract is represented by a loop
 that can visit every public/external function non-deterministically. This way,
 the behavior of the entire contract over an unbounded number of transactions
 is taken into account when analyzing any function. Loops are fully supported
-by this engine. Function calls are currently unsupported.
+by this engine. Internal function calls are supported, but external function
+calls are currently unsupported.
 
 The CHC engine is much more powerful than BMC in terms of what it can prove,
 and might require more computing resources.
@@ -505,10 +506,16 @@ erasing knowledge or using a non-precise type). If it determines that a
 verification target is safe, it is indeed safe, that is, there are no false
 negatives (unless there is a bug in the SMTChecker).
 
-Function calls to the same contract (or base contracts) are inlined when
-possible, that is, when their implementation is available.
-Calls to functions in other contracts are not inlined even if their code is
+In the BMC engine, function calls to the same contract (or base contracts) are
+inlined when possible, that is, when their implementation is available.  Calls
+to functions in other contracts are not inlined even if their code is
 available, since we cannot guarantee that the actual deployed code is the same.
+
+The CHC engine creates nonlinear Horn clauses that use summaries of the called
+functions to support internal function calls. The same approach can and will be
+used for external function calls, but the latter requires more work regarding
+the entire state of the blockchain and is still unimplemented.
+
 Complex pure functions are abstracted by an uninterpreted function (UF) over
 the arguments.
 
@@ -519,11 +526,14 @@ the arguments.
 +-----------------------------------+--------------------------------------+
 |``require``                        |Assumption                            |
 +-----------------------------------+--------------------------------------+
-|internal                           |Inline function call                  |
+|internal                           |BMC: Inline function call             |
+|                                   |CHC: Function summaries               |
 +-----------------------------------+--------------------------------------+
-|external                           |Inline function call                  |
-|                                   |Erase knowledge about state variables |
-|                                   |and local storage references          |
+|external                           |BMC: Inline function call or          |
+|                                   |erase knowledge about state variables |
+|                                   |and local storage references.         |
+|                                   |CHC: Function summaries and erase     |
+|                                   |state knowledge.                      |
 +-----------------------------------+--------------------------------------+
 |``gasleft``, ``blockhash``,        |Abstracted with UF                    |
 |``keccak256``, ``ecrecover``       |                                      |
@@ -534,8 +544,8 @@ the arguments.
 |implementation (external or        |                                      |
 |complex)                           |                                      |
 +-----------------------------------+--------------------------------------+
-|external functions without         |Unsupported                           |
-|implementation                     |                                      |
+|external functions without         |BMC: Unsupported                      |
+|implementation                     |CHC: Nondeterministic summary         |
 +-----------------------------------+--------------------------------------+
 |others                             |Currently unsupported                 |
 +-----------------------------------+--------------------------------------+
