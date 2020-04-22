@@ -344,60 +344,78 @@ void ProtoConverter::visit(BinaryOp const& _x)
 	m_output << ")";
 }
 
-void ProtoConverter::visit(VarDecl const& _x)
+void ProtoConverter::scopeVariables(vector<string> const& _varNames)
 {
-	string varName = newVarName();
-	m_output << "let " << varName << " := ";
-	visit(_x.expr());
-	m_output << "\n";
 	// If we are inside a for-init block, there are two places
 	// where the visited vardecl may have been defined:
 	// - directly inside the for-init block
 	// - inside a block within the for-init block
-	// In the latter case, we don't scope extend.
+	// In the latter case, we don't scope extend. The flag
+	// m_forInitScopeExtEnabled (= true) indicates whether we are directly
+	// inside a for-init block e.g., for { let x } or (= false) inside a
+	// nested for-init block e.g., for { { let x } }
+	bool forInitScopeExtendVariable = m_inForInitScope && m_forInitScopeExtEnabled;
+
+	// There are four cases that are tackled here
+	// Case 1. We are inside a function definition and the variable declaration's
+	// scope needs to be extended.
+	// Case 2. We are inside a function definition but scope extension is disabled
+	// Case 3. We are inside global scope and scope extension is required
+	// Case 4. We are inside global scope but scope extension is disabled
 	if (m_inFunctionDef)
 	{
 		// Variables declared directly in for-init block
 		// are tracked separately because their scope
 		// extends beyond the block they are defined in
 		// to the rest of the for-loop statement.
-		if (m_inForInitScope && m_forInitScopeExtEnabled)
+		// Case 1
+		if (forInitScopeExtendVariable)
 		{
 			yulAssert(
-				!m_funcForLoopInitVars.empty() && !m_funcForLoopInitVars.back().empty(),
-				"Proto fuzzer: Invalid operation"
-			);
-			m_funcForLoopInitVars.back().back().push_back(varName);
+				!m_funcForLoopInitVars.empty() && !m_funcForLoopInitVars.back().empty(), "Proto fuzzer: Invalid operation");
+			for (auto const& varName: _varNames)
+				m_funcForLoopInitVars.back().back().push_back(varName);
 		}
+		// Case 2
 		else
 		{
 			yulAssert(
 				!m_funcVars.empty() && !m_funcVars.back().empty(),
 				"Proto fuzzer: Invalid operation"
 			);
-			m_funcVars.back().back().push_back(varName);
+			for (auto const& varName: _varNames)
+				m_funcVars.back().back().push_back(varName);
 		}
-
 	}
+	// If m_inFunctionDef is false, we are in global scope
 	else
 	{
-		if (m_inForInitScope && m_forInitScopeExtEnabled)
+		// Case 3
+		if (forInitScopeExtendVariable)
 		{
-			yulAssert(
-				!m_globalForLoopInitVars.empty(),
-				"Proto fuzzer: Invalid operation"
-			);
-			m_globalForLoopInitVars.back().push_back(varName);
+			yulAssert(!m_globalForLoopInitVars.empty(), "Proto fuzzer: Invalid operation");
+
+			for (auto const& varName: _varNames)
+				m_globalForLoopInitVars.back().push_back(varName);
 		}
+		// Case 4
 		else
 		{
-			yulAssert(
-				!m_globalVars.empty(),
-				"Proto fuzzer: Invalid operation"
-			);
-			m_globalVars.back().push_back(varName);
+			yulAssert(!m_globalVars.empty(), "Proto fuzzer: Invalid operation");
+
+			for (auto const& varName: _varNames)
+				m_globalVars.back().push_back(varName);
 		}
 	}
+}
+
+void ProtoConverter::visit(VarDecl const& _x)
+{
+	string varName = newVarName();
+	m_output << "let " << varName << " := ";
+	visit(_x.expr());
+	m_output << "\n";
+	scopeVariables({varName});
 }
 
 void ProtoConverter::visit(MultiVarDecl const& _x)
@@ -417,61 +435,7 @@ void ProtoConverter::visit(MultiVarDecl const& _x)
 			delimiter = ", ";
 	}
 	m_output << "\n";
-
-	// If we are inside a for-init block, there are two places
-	// where the visited vardecl may have been defined:
-	// - directly inside the for-init block
-	// - inside a block within the for-init block
-	// In the latter case, we don't scope extend.
-	if (m_inFunctionDef)
-	{
-		// Variables declared directly in for-init block
-		// are tracked separately because their scope
-		// extends beyond the block they are defined in
-		// to the rest of the for-loop statement.
-		if (m_inForInitScope && m_forInitScopeExtEnabled)
-		{
-			yulAssert(
-				!m_funcForLoopInitVars.empty() && !m_funcForLoopInitVars.back().empty(),
-				"Proto fuzzer: Invalid operation"
-			);
-			for (auto const& varName: varNames)
-				m_funcForLoopInitVars.back().back().push_back(varName);
-		}
-		else
-		{
-			yulAssert(
-				!m_funcVars.empty() && !m_funcVars.back().empty(),
-				"Proto fuzzer: Invalid operation"
-			);
-			for (auto const& varName: varNames)
-				m_funcVars.back().back().push_back(varName);
-		}
-
-	}
-	else
-	{
-		if (m_inForInitScope && m_forInitScopeExtEnabled)
-		{
-			yulAssert(
-				!m_globalForLoopInitVars.empty(),
-				"Proto fuzzer: Invalid operation"
-			);
-
-			for (auto const& varName: varNames)
-				m_globalForLoopInitVars.back().push_back(varName);
-		}
-		else
-		{
-			yulAssert(
-				!m_globalVars.empty(),
-				"Proto fuzzer: Invalid operation"
-			);
-
-			for (auto const& varName: varNames)
-				m_globalVars.back().push_back(varName);
-		}
-	}
+	scopeVariables(varNames);
 }
 
 void ProtoConverter::visit(TypedVarDecl const& _x)
@@ -1824,7 +1788,7 @@ void ProtoConverter::createFunctionDefAndCall(
 
 	yulAssert(
 		!m_inForInitScope,
-		"Proto fuzzer: Trying to create function call inside for-init block"
+		"Proto fuzzer: Trying to create function call inside a for-init block"
 	);
 	if (_x.force_call())
 		createFunctionCall(funcName, _numInParams, _numOutParams);

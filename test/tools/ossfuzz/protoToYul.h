@@ -236,6 +236,11 @@ private:
 	/// @return A vector of strings containing the printed variable names.
 	std::vector<std::string> createVars(unsigned _startIdx, unsigned _endIdx);
 
+	/// Manages scope of yul variables
+	/// @param _varNames is a list of yul variable names whose scope needs
+	/// to be tracked according to yul scoping rules.
+	void scopeVariables(std::vector<std::string> const& _varNames);
+
 	/// Print the yul syntax to make a call to a function named @a _funcName to
 	/// the output stream.
 	/// @param _funcName Name of the function to be called
