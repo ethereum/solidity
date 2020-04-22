@@ -59,6 +59,13 @@ string solidity::yul::reindent(string const& _code)
 	for (string& line: lines)
 		boost::trim(line);
 
+	// Reduce multiple consecutive empty lines.
+	lines = fold(lines, vector<string>{}, [](auto&& _lines, auto&& _line) {
+		if (!(_line.empty() && !_lines.empty() && _lines.back().empty()))
+			_lines.emplace_back(std::move(_line));
+		return std::move(_lines);
+	});
+
 	stringstream out;
 	int depth = 0;
 
