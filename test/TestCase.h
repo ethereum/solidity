@@ -93,6 +93,8 @@ protected:
 			++_it;
 	}
 
+	void printIndented(std::ostream& _stream, std::string const& _output, std::string const& _linePrefix = "") const;
+
 	TestCaseReader m_reader;
 	bool m_shouldRun = true;
 };

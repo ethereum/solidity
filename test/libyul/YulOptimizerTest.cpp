@@ -375,14 +375,6 @@ void YulOptimizerTest::printUpdatedExpectations(ostream& _stream, string const& 
 	printIndented(_stream, m_obtainedResult, _linePrefix);
 }
 
-void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
-{
-	stringstream output(_output);
-	string line;
-	while (getline(output, line))
-		_stream << _linePrefix << line << endl;
-}
-
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	ErrorList errors;
