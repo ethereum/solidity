@@ -17,7 +17,7 @@ Not all types for constants and immutables are implemented at this time. The onl
 
 ::
 
-    pragma solidity >0.6.4 <0.7.0;
+    pragma solidity >0.6.4 <0.8.0;
 
     contract C {
         uint constant X = 32**22 + 8;
