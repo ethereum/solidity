@@ -771,6 +771,11 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	{
 		break;
 	}
+	case FunctionType::Kind::GasLeft:
+	{
+		define(_functionCall) << "gas()\n";
+		break;
+	}
 	default:
 		solUnimplemented("FunctionKind " + toString(static_cast<int>(functionType->kind())) + " not yet implemented");
 	}
