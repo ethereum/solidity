@@ -63,7 +63,7 @@ pair<string, string> ProtoConverter::generateTestCase(TestContract const& _testC
 	{
 		unsigned errorCode = 1;
 		unsigned contractVarIndex = 0;
-		for (auto& testTuple: m_contractTests)
+		for (auto const& testTuple: m_contractTests)
 		{
 			// Do this to avoid stack too deep errors
 			// We require uint as a return var, so we
@@ -78,7 +78,7 @@ pair<string, string> ProtoConverter::generateTestCase(TestContract const& _testC
 				("contractName", contractName)
 				("contractVarName", contractVarName)
 				.render();
-			for (auto& t: testTuple.second)
+			for (auto const& t: testTuple.second)
 			{
 				testCode << Whiskers(R"(
 		if (<contractVarName>.<testFunction>() != <expectedOutput>)
@@ -211,7 +211,7 @@ void ProtoConverter::openProgramScope(CIL _program)
 	else
 		programNamePrefix = "L";
 	string programName = programNamePrefix + to_string(m_programNumericSuffix++);
-	m_programNameMap.insert(pair(_program, programName));
+	m_programNameMap.emplace(_program, programName);
 }
 
 string ProtoConverter::programName(CIL _program)

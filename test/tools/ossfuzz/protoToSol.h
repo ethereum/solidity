@@ -170,7 +170,7 @@ private:
 	bool m_libraryTest = false;
 	/// A smart pointer to fuzzer driven random number generator
 	std::shared_ptr<SolRandomNumGenerator> m_randomGen;
-	/// Maps const pointer to protobuf program to its string name
+	/// Maps protobuf program to its string name
 	std::map<CIL, std::string> m_programNameMap;
 	/// List of tuples containing library name, function and its expected output
 	std::vector<std::tuple<std::string, std::string, std::string>> m_libraryTests;
