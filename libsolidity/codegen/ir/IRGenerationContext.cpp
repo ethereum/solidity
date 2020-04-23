@@ -122,7 +122,7 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 				<#cases>
 				case <funID>
 				{
-					<out> := <name>(<in>)
+					<out> <assignment_op> <name>(<in>)
 				}
 				</cases>
 				default { invalid() }
@@ -133,6 +133,7 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 		YulUtilFunctions utils(m_evmVersion, m_revertStrings, m_functions);
 		templ("in", suffixedVariableNameList("in_", 0, _in));
 		templ("arrow", _out > 0 ? "->" : "");
+		templ("assignment_op", _out > 0 ? ":=" : "");
 		templ("out", suffixedVariableNameList("out_", 0, _out));
 		vector<map<string, string>> functions;
 		for (auto const& contract: mostDerivedContract().annotation().linearizedBaseContracts)
