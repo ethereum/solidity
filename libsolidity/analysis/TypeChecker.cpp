@@ -1288,6 +1288,9 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 {
 	if (auto const* tupleExpression = dynamic_cast<TupleExpression const*>(&_expression))
 	{
+		if (tupleExpression->components().empty())
+			m_errorReporter.typeError(_expression.location(), "Empty tuple on the left hand side.");
+
 		auto const* tupleType = dynamic_cast<TupleType const*>(&_type);
 		auto const& types = tupleType && tupleExpression->components().size() != 1 ? tupleType->components() : vector<TypePointer> { &_type };
 
