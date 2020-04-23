@@ -567,6 +567,14 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			arguments.push_back(callArguments[std::distance(callArgumentNames.begin(), it)]);
 		}
 
+	if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
+		if (auto expressionType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type))
+			if (auto contractType = dynamic_cast<ContractType const*>(expressionType->actualType()))
+				solUnimplementedAssert(
+					!contractType->contractDefinition().isLibrary() || functionType->kind() == FunctionType::Kind::Internal,
+					"Only internal function calls implemented for libraries"
+				);
+
 	solUnimplementedAssert(!functionType->bound(), "");
 	switch (functionType->kind())
 	{
@@ -582,7 +590,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		optional<FunctionDefinition const*> functionDef;
 		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
 		{
-			solAssert(!functionType->bound(), "");
+			solUnimplementedAssert(!functionType->bound(), "Internal calls to bound functions are not yet implemented for libraries and not allowed for contracts");
 
 			functionDef = dynamic_cast<FunctionDefinition const*>(memberAccess->annotation().referencedDeclaration);
 			if (functionDef.value() != nullptr)
@@ -1325,9 +1333,9 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 		define(_identifier) << to_string(functionDef->resolveVirtual(m_context.mostDerivedContract()).id()) << "\n";
 	else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 		handleVariableReference(*varDecl, _identifier);
-	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
+	else if (dynamic_cast<ContractDefinition const*>(declaration))
 	{
-		solUnimplementedAssert(!contract->isLibrary(), "Libraries not yet supported.");
+		// no-op
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))
 	{
