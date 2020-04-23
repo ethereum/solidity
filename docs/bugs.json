@@ -11,6 +11,7 @@
         "name": "MemoryArrayCreationOverflow",
         "summary": "The creation of very large memory arrays can result in overlapping memory regions and thus memory corruption.",
         "description": "No runtime overflow checks were performed for the length of memory arrays during creation. In cases for which the memory size of an array in bytes, i.e. the array length times 32, is larger than 2^256-1, the memory allocation will overflow, potentially resulting in overlapping memory areas. The length of the array is still stored correctly, so copying or iterating over such an array will result in out-of-gas.",
+        "link": "https://solidity.ethereum.org/2020/04/06/memory-creation-overflow-bug/",
         "introduced": "0.2.0",
         "fixed": "0.6.5",
         "severity": "low"
@@ -73,6 +74,7 @@
         "name": "SignedArrayStorageCopy",
         "summary": "Assigning an array of signed integers to a storage array of different type can lead to data corruption in that array.",
         "description": "In two's complement, negative integers have their higher order bits set. In order to fit into a shared storage slot, these have to be set to zero. When a conversion is done at the same time, the bits to set to zero were incorrectly determined from the source and not the target type. This means that such copy operations can lead to incorrect values being stored.",
+        "link": "https://blog.ethereum.org/2019/06/25/solidity-storage-array-bugs/",
         "introduced": "0.4.7",
         "fixed": "0.5.10",
         "severity": "low/medium"
@@ -81,6 +83,7 @@
         "name": "ABIEncoderV2StorageArrayWithMultiSlotElement",
         "summary": "Storage arrays containing structs or other statically-sized arrays are not read properly when directly encoded in external function calls or in abi.encode*.",
         "description": "When storage arrays whose elements occupy more than a single storage slot are directly encoded in external function calls or using abi.encode*, their elements are read in an overlapping manner, i.e. the element pointer is not properly advanced between reads. This is not a problem when the storage data is first copied to a memory variable or if the storage array only contains value types or dynamically-sized arrays.",
+        "link": "https://blog.ethereum.org/2019/06/25/solidity-storage-array-bugs/",
         "introduced": "0.4.16",
         "fixed": "0.5.10",
         "severity": "low",
