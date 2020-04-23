@@ -10,6 +10,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when fixed points are used.
  * Type Checker: Disallow ``virtual`` and ``override`` for constructors.
  * Type Checker: Fix several internal errors by performing size and recursiveness checks of types before the full type checking.
+ * Type Checker: Fix internal error when assigning to empty tuples.
  * Type Checker: Perform recursiveness check on structs declared at the file level.
 
 Build System:

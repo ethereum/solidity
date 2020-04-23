@@ -1289,7 +1289,7 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 	if (auto const* tupleExpression = dynamic_cast<TupleExpression const*>(&_expression))
 	{
 		auto const* tupleType = dynamic_cast<TupleType const*>(&_type);
-		auto const& types = tupleType && tupleExpression->components().size() > 1 ? tupleType->components() : vector<TypePointer> { &_type };
+		auto const& types = tupleType && tupleExpression->components().size() != 1 ? tupleType->components() : vector<TypePointer> { &_type };
 
 		solAssert(
 			tupleExpression->components().size() == types.size() || m_errorReporter.hasErrors(),
