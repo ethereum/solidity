@@ -16,4 +16,5 @@ contract C
 // ====
 // SMTSolvers: z3
 // ----
+// Warning: (174-194): Error trying to invoke SMT solver.
 // Warning: (174-194): Assertion violation happens here
