@@ -80,4 +80,22 @@ std::function<SymmetricCrossover> symmetricRandomPointCrossover();
 /// unless there is no other choice (i.e. one of the chromosomes is empty).
 std::function<Crossover> fixedPointCrossover(double _crossoverPoint);
 
+/// Creates a crossover operator that randomly selects two points between 0 and 1 and swaps genes
+/// from the resulting interval. The interval may be empty in which case no genes are swapped.
+std::function<Crossover> randomTwoPointCrossover();
+
+/// Symmetric version of @a randomTwoPointCrossover(). Creates an operator that returns a pair
+/// containing both possible results for the same crossover points.
+std::function<SymmetricCrossover> symmetricRandomTwoPointCrossover();
+
+/// Creates a crossover operator that goes over the length of the shorter chromosomes and for
+/// each gene independently decides whether to swap it or not (with probability given by
+/// @a _swapChance). The tail of the longer chromosome (the part that's past the length of the
+/// shorter one) is treated as a single gene and can potentially be swapped too.
+std::function<Crossover> uniformCrossover(double _swapChance);
+
+/// Symmetric version of @a uniformCrossover(). Creates an operator that returns a pair
+/// containing both possible results for the same set or swap decisions.
+std::function<SymmetricCrossover> symmetricUniformCrossover(double _swapChance);
+
 }

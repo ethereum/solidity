@@ -51,6 +51,8 @@ protected:
 		/* mutationChance = */ 0.0,
 		/* deletionChance = */ 0.0,
 		/* additionChance = */ 0.0,
+		/* CrossoverChoice = */ CrossoverChoice::SinglePoint,
+		/* uniformCrossoverSwapChance= */ 0.5,
 	};
 };
 
@@ -113,6 +115,8 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_preserve_elite_and_regenerate_rest_o
 		/* deletionVsAdditionChance = */ 1.0,
 		/* percentGenesToRandomise = */ 0.0,
 		/* percentGenesToAddOrDelete = */ 1.0,
+		/* CrossoverChoice = */ CrossoverChoice::SinglePoint,
+		/* uniformCrossoverSwapChance= */ 0.5,
 	};
 	GenerationalElitistWithExclusivePools algorithm(options);
 
@@ -133,6 +137,8 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_not_replace_elite_with_worse_individ
 		/* deletionVsAdditionChance = */ 0.0,
 		/* percentGenesToRandomise = */ 0.0,
 		/* percentGenesToAddOrDelete = */ 1.0,
+		/* CrossoverChoice = */ CrossoverChoice::SinglePoint,
+		/* uniformCrossoverSwapChance= */ 0.5,
 	};
 	GenerationalElitistWithExclusivePools algorithm(options);
 
@@ -152,6 +158,8 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_generate_individuals_in_the_crossove
 		/* deletionVsAdditionChance = */ 0.5,
 		/* percentGenesToRandomise = */ 1.0,
 		/* percentGenesToAddOrDelete = */ 1.0,
+		/* CrossoverChoice = */ CrossoverChoice::SinglePoint,
+		/* uniformCrossoverSwapChance= */ 0.5,
 	};
 	GenerationalElitistWithExclusivePools algorithm(options);
 
@@ -179,6 +187,8 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_generate_individuals_in_the_crossove
 		/* deletionVsAdditionChance = */ 0.0,
 		/* percentGenesToRandomise = */ 0.0,
 		/* percentGenesToAddOrDelete = */ 0.0,
+		/* CrossoverChoice = */ CrossoverChoice::SinglePoint,
+		/* uniformCrossoverSwapChance= */ 0.5,
 	};
 	GenerationalElitistWithExclusivePools algorithm(options);
 

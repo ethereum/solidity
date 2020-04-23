@@ -45,6 +45,8 @@ protected:
 		/* algorithm = */ Algorithm::Random,
 		/* minChromosomeLength = */ 50,
 		/* maxChromosomeLength = */ 100,
+		/* CrossoverChoice = */ CrossoverChoice::Uniform,
+		/* uniformCrossoverSwapChance = */ 0.5,
 		/* randomElitePoolSize = */ 0.5,
 		/* gewepMutationPoolSize = */ 0.1,
 		/* gewepCrossoverPoolSize = */ 0.1,
@@ -121,6 +123,9 @@ BOOST_FIXTURE_TEST_CASE(build_should_select_the_right_algorithm_and_pass_the_opt
 
 	auto gewepAlgorithm = dynamic_cast<GenerationalElitistWithExclusivePools*>(algorithm2.get());
 	BOOST_REQUIRE(gewepAlgorithm != nullptr);
+	BOOST_TEST(gewepAlgorithm->options().crossover == m_options.crossover);
+	BOOST_TEST(gewepAlgorithm->options().uniformCrossoverSwapChance.has_value());
+	BOOST_TEST(gewepAlgorithm->options().uniformCrossoverSwapChance.value() == m_options.uniformCrossoverSwapChance);
 	BOOST_TEST(gewepAlgorithm->options().mutationPoolSize == m_options.gewepMutationPoolSize);
 	BOOST_TEST(gewepAlgorithm->options().crossoverPoolSize == m_options.gewepCrossoverPoolSize);
 	BOOST_TEST(gewepAlgorithm->options().randomisationChance == m_options.gewepRandomisationChance);
@@ -134,6 +139,8 @@ BOOST_FIXTURE_TEST_CASE(build_should_select_the_right_algorithm_and_pass_the_opt
 
 	auto classicAlgorithm = dynamic_cast<ClassicGeneticAlgorithm*>(algorithm3.get());
 	BOOST_REQUIRE(classicAlgorithm != nullptr);
+	BOOST_TEST(classicAlgorithm->options().uniformCrossoverSwapChance.has_value());
+	BOOST_TEST(classicAlgorithm->options().uniformCrossoverSwapChance.value() == m_options.uniformCrossoverSwapChance);
 	BOOST_TEST(classicAlgorithm->options().elitePoolSize == m_options.classicElitePoolSize);
 	BOOST_TEST(classicAlgorithm->options().crossoverChance == m_options.classicCrossoverChance);
 	BOOST_TEST(classicAlgorithm->options().mutationChance == m_options.classicMutationChance);

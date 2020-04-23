@@ -78,6 +78,14 @@ map<MetricAggregatorChoice, string> const MetricAggregatorChoiceToStringMap =
 };
 map<string, MetricAggregatorChoice> const StringToMetricAggregatorChoiceMap = invertMap(MetricAggregatorChoiceToStringMap);
 
+map<CrossoverChoice, string> const CrossoverChoiceToStringMap =
+{
+	{CrossoverChoice::SinglePoint, "single-point"},
+	{CrossoverChoice::TwoPoint, "two-point"},
+	{CrossoverChoice::Uniform, "uniform"},
+};
+map<string, CrossoverChoice> const StringToCrossoverChoiceMap = invertMap(CrossoverChoiceToStringMap);
+
 }
 
 istream& phaser::operator>>(istream& _inputStream, PhaserMode& _phaserMode) { return deserializeChoice(_inputStream, _phaserMode, StringToPhaserModeMap); }
@@ -88,6 +96,8 @@ istream& phaser::operator>>(istream& _inputStream, MetricChoice& _metric) { retu
 ostream& phaser::operator<<(ostream& _outputStream, MetricChoice _metric) { return serializeChoice(_outputStream, _metric, MetricChoiceToStringMap); }
 istream& phaser::operator>>(istream& _inputStream, MetricAggregatorChoice& _aggregator) { return deserializeChoice(_inputStream, _aggregator, StringToMetricAggregatorChoiceMap); }
 ostream& phaser::operator<<(ostream& _outputStream, MetricAggregatorChoice _aggregator) { return serializeChoice(_outputStream, _aggregator, MetricAggregatorChoiceToStringMap); }
+istream& phaser::operator>>(istream& _inputStream, CrossoverChoice& _crossover) { return deserializeChoice(_inputStream, _crossover, StringToCrossoverChoiceMap); }
+ostream& phaser::operator<<(ostream& _outputStream, CrossoverChoice _crossover) { return serializeChoice(_outputStream, _crossover, CrossoverChoiceToStringMap); }
 
 GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
@@ -95,6 +105,8 @@ GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLi
 		_arguments["algorithm"].as<Algorithm>(),
 		_arguments["min-chromosome-length"].as<size_t>(),
 		_arguments["max-chromosome-length"].as<size_t>(),
+		_arguments["crossover"].as<CrossoverChoice>(),
+		_arguments["uniform-crossover-swap-chance"].as<double>(),
 		_arguments.count("random-elite-pool-size") > 0 ?
 			_arguments["random-elite-pool-size"].as<double>() :
 			optional<double>{},
@@ -155,6 +167,8 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 				/* deletionVsAdditionChance = */ _options.gewepDeletionVsAdditionChance,
 				/* percentGenesToRandomise = */ percentGenesToRandomise,
 				/* percentGenesToAddOrDelete = */ percentGenesToAddOrDelete,
+				/* crossover = */ _options.crossover,
+				/* uniformCrossoverSwapChance = */ _options.uniformCrossoverSwapChance,
 			});
 		}
 		case Algorithm::Classic:
@@ -165,6 +179,8 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 				/* mutationChance = */ _options.classicMutationChance,
 				/* deletionChance = */ _options.classicDeletionChance,
 				/* additionChance = */ _options.classicAdditionChance,
+				/* crossover = */ _options.crossover,
+				/* uniformCrossoverSwapChance = */ _options.uniformCrossoverSwapChance,
 			});
 		}
 		default:
@@ -450,6 +466,16 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 			"max-chromosome-length",
 			po::value<size_t>()->value_name("<NUM>")->default_value(30),
 			"Maximum length of randomly generated chromosomes."
+		)
+		(
+			"crossover",
+			po::value<CrossoverChoice>()->value_name("<NAME>")->default_value(CrossoverChoice::SinglePoint),
+			"Type of the crossover operator to use."
+		)
+		(
+			"uniform-crossover-swap-chance",
+			po::value<double>()->value_name("<PROBABILITY>")->default_value(0.5),
+			"Chance of two genes being swapped between chromosomes in uniform crossover."
 		)
 	;
 	keywordDescription.add(algorithmDescription);
