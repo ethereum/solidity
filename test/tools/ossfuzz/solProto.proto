@@ -22,6 +22,7 @@ message InterfaceFunction {
         PURE = 0;
         VIEW = 1;
         PAYABLE = 2;
+        NONPAYABLE = 3;
     }
     required StateMutability mut = 1;
 }
@@ -31,6 +32,7 @@ message LibraryFunction {
     enum StateMutability {
         PURE = 0;
         VIEW = 1;
+        NONPAYABLE = 2;
     }
     enum Visibility {
         PUBLIC = 0;
@@ -47,6 +49,7 @@ message ContractFunction {
         PURE = 0;
         VIEW = 1;
         PAYABLE = 2;
+        NONPAYABLE = 3;
     }
     enum Visibility {
         PUBLIC = 0;
