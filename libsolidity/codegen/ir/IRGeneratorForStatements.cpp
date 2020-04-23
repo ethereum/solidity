@@ -169,6 +169,14 @@ void IRGeneratorForStatements::initializeLocalVar(VariableDeclaration const& _va
 	assign(m_context.localVariable(_varDecl), zero);
 }
 
+IRVariable IRGeneratorForStatements::evaluateExpression(Expression const& _expression, Type const& _targetType)
+{
+	_expression.accept(*this);
+	IRVariable variable{m_context.newYulVariable(), _targetType};
+	define(variable, _expression);
+	return variable;
+}
+
 void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _varDeclStatement)
 {
 	if (Expression const* expression = _varDeclStatement.initialValue())

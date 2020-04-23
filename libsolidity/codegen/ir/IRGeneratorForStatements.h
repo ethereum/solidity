@@ -51,6 +51,9 @@ public:
 	/// Generates code to initialize the given local variable.
 	void initializeLocalVar(VariableDeclaration const& _varDecl);
 
+	/// Calculates expression's value and returns variable where it was stored
+	IRVariable evaluateExpression(Expression const& _expression, Type const& _to);
+
 	void endVisit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Conditional const& _conditional) override;
 	bool visit(Assignment const& _assignment) override;
