@@ -289,6 +289,12 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 		m_errorReporter.fatalTypeError(_usingFor.libraryName().location(), "Library name expected.");
 }
 
+void TypeChecker::endVisit(ModifierDefinition const& _modifier)
+{
+	if (!_modifier.isImplemented() && !_modifier.virtualSemantics())
+		m_errorReporter.typeError(_modifier.location(), "Modifiers without implementation must be marked virtual.");
+}
+
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	bool isLibraryFunction = _function.inContractKind() == ContractKind::Library;

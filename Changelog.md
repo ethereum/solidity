@@ -2,6 +2,7 @@
 
 Language Features:
  * Add support for EIP 165 interface identifiers with `type(I).interfaceId`.
+ * Allow virtual modifiers inside abstract contracts to have empty body.
 
 
 Compiler Features:

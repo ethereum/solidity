@@ -55,7 +55,7 @@ bool ContractLevelChecker::check(ContractDefinition const& _contract)
 	checkDuplicateEvents(_contract);
 	m_overrideChecker.check(_contract);
 	checkBaseConstructorArguments(_contract);
-	checkAbstractFunctions(_contract);
+	checkAbstractDefinitions(_contract);
 	checkExternalTypeClashes(_contract);
 	checkHashCollisions(_contract);
 	checkLibraryRequirements(_contract);
@@ -156,55 +156,43 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 	}
 }
 
-void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _contract)
+void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _contract)
 {
-	// Mapping from name to function definition (exactly one per argument type equality class) and
-	// flag to indicate whether it is fully implemented.
-	using FunTypeAndFlag = std::pair<FunctionTypePointer, bool>;
-	map<string, vector<FunTypeAndFlag>> functions;
+	// Collects functions, static variable getters and modifiers. If they
+	// override (unimplemented) base class ones, they are replaced.
+	set<OverrideProxy, OverrideProxy::CompareBySignature> proxies;
 
-	auto registerFunction = [&](Declaration const& _declaration, FunctionTypePointer const& _type, bool _implemented)
+	auto registerProxy = [&proxies](OverrideProxy const& _overrideProxy)
 	{
-		auto& overloads = functions[_declaration.name()];
-		auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
-		{
-			return _type->hasEqualParameterTypes(*_funAndFlag.first);
-		});
-		if (it == overloads.end())
-			overloads.emplace_back(_type, _implemented);
-		else if (_implemented)
-			it->second = true;
+		// Overwrite an existing proxy, if it exists.
+		if (!_overrideProxy.unimplemented())
+			proxies.erase(_overrideProxy);
+
+		proxies.insert(_overrideProxy);
 	};
 
-	// Search from base to derived, collect all functions and update
-	// the 'implemented' flag.
+	// Search from base to derived, collect all functions and modifiers and
+	// update proxies.
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
 	{
 		for (VariableDeclaration const* v: contract->stateVariables())
 			if (v->isPartOfExternalInterface())
-				registerFunction(*v, TypeProvider::function(*v), true);
+				registerProxy(OverrideProxy(v));
 
 		for (FunctionDefinition const* function: contract->definedFunctions())
 			if (!function->isConstructor())
-				registerFunction(
-					*function,
-					TypeProvider::function(*function)->asCallableFunction(false),
-					function->isImplemented()
-				);
+				registerProxy(OverrideProxy(function));
+
+		for (ModifierDefinition const* modifier: contract->functionModifiers())
+			registerProxy(OverrideProxy(modifier));
 	}
 
 	// Set to not fully implemented if at least one flag is false.
-	// Note that `_contract.annotation().unimplementedFunctions` has already been
+	// Note that `_contract.annotation().unimplementedDeclarations` has already been
 	// pre-filled by `checkBaseConstructorArguments`.
-	for (auto const& it: functions)
-		for (auto const& funAndFlag: it.second)
-			if (!funAndFlag.second)
-			{
-				FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(&funAndFlag.first->declaration());
-				solAssert(function, "");
-				_contract.annotation().unimplementedFunctions.push_back(function);
-				break;
-			}
+	for (auto const& proxy: proxies)
+		if (proxy.unimplemented())
+			_contract.annotation().unimplementedDeclarations.push_back(proxy.declaration());
 
 	if (_contract.abstract())
 	{
@@ -221,15 +209,16 @@ void ContractLevelChecker::checkAbstractFunctions(ContractDefinition const& _con
 	if (
 		_contract.contractKind() == ContractKind::Contract &&
 		!_contract.abstract() &&
-		!_contract.annotation().unimplementedFunctions.empty()
+		!_contract.annotation().unimplementedDeclarations.empty()
 	)
 	{
 		SecondarySourceLocation ssl;
-		for (auto function: _contract.annotation().unimplementedFunctions)
-			ssl.append("Missing implementation:", function->location());
+		for (auto declaration: _contract.annotation().unimplementedDeclarations)
+			ssl.append("Missing implementation: ", declaration->location());
 		m_errorReporter.typeError(_contract.location(), ssl,
 			"Contract \"" + _contract.annotation().canonicalName
 			+ "\" should be marked as abstract.");
+
 	}
 }
 
@@ -277,7 +266,7 @@ void ContractLevelChecker::checkBaseConstructorArguments(ContractDefinition cons
 		if (FunctionDefinition const* constructor = contract->constructor())
 			if (contract != &_contract && !constructor->parameters().empty())
 				if (!_contract.annotation().baseConstructorArguments.count(constructor))
-					_contract.annotation().unimplementedFunctions.push_back(constructor);
+					_contract.annotation().unimplementedDeclarations.push_back(constructor);
 }
 
 void ContractLevelChecker::annotateBaseConstructorArguments(

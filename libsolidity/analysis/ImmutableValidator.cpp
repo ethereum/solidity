@@ -148,7 +148,8 @@ bool ImmutableValidator::analyseCallable(CallableDeclaration const& _callableDec
 			funcDef->body().accept(*this);
 	}
 	else if (ModifierDefinition const* modDef = dynamic_cast<decltype(modDef)>(&_callableDeclaration))
-		modDef->body().accept(*this);
+		if (modDef->isImplemented())
+			modDef->body().accept(*this);
 
 	m_currentConstructor = prevConstructor;
 
