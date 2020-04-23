@@ -114,6 +114,19 @@ BOOST_AUTO_TEST_CASE(conditional_plus_list)
 	BOOST_CHECK_EQUAL(m.render(), " - ab - ");
 }
 
+BOOST_AUTO_TEST_CASE(string_as_conditional)
+{
+	string templ = "<?+b>+<b><!+b>-</+b>";
+	BOOST_CHECK_EQUAL(Whiskers(templ)("b", "abc").render(), "+abc");
+	BOOST_CHECK_EQUAL(Whiskers(templ)("b", "").render(), "-");
+}
+
+BOOST_AUTO_TEST_CASE(string_as_conditional_wrong)
+{
+	string templ = "<?+b>+<b></b>";
+	BOOST_CHECK_EQUAL(Whiskers(templ)("b", "abc").render(), "<?+b>+abc</b>");
+}
+
 BOOST_AUTO_TEST_CASE(complicated_replacement)
 {
 	string templ = "a <b> x <complicated> \n <nested>>.";
