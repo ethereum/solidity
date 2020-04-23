@@ -1,10 +1,10 @@
 ### 0.6.7 (unreleased)
 
 Language Features:
+ * Add support for EIP 165 interface identifiers with `type(I).interfaceId`.
 
 
 Compiler Features:
-
 
 Bugfixes:
  * SMTChecker: Fix internal error when fixed points are used.
