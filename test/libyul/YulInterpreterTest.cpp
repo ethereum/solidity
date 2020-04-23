@@ -82,14 +82,6 @@ void YulInterpreterTest::printUpdatedExpectations(ostream& _stream, string const
 	printIndented(_stream, m_obtainedResult, _linePrefix);
 }
 
-void YulInterpreterTest::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
-{
-	stringstream output(_output);
-	string line;
-	while (getline(output, line))
-		_stream << _linePrefix << line << endl;
-}
-
 bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
 	AssemblyStack stack(

@@ -19,6 +19,7 @@
 #include <test/TestCase.h>
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <stdexcept>
 #include <iostream>
@@ -58,6 +59,18 @@ void TestCase::expect(string::iterator& _it, string::iterator _end, string::valu
 	if (_it == _end || *_it != _c)
 		throw runtime_error(string("Invalid test expectation. Expected: \"") + _c + "\".");
 	++_it;
+}
+
+void TestCase::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
+{
+	stringstream output(_output);
+	string line;
+	while (getline(output, line))
+		if (line.empty())
+			// Avoid trailing spaces.
+			_stream << boost::trim_right_copy(_linePrefix) << endl;
+		else
+			_stream << _linePrefix << line << endl;
 }
 
 EVMVersionRestrictedTestCase::EVMVersionRestrictedTestCase(string const& _filename):
