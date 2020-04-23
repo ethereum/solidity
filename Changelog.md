@@ -6,6 +6,7 @@ Language Features:
 
 
 Compiler Features:
+ * Optimizer: Simplify repeated AND and OR operations.
 
 Bugfixes:
  * SMTChecker: Fix internal error when fixed points are used.

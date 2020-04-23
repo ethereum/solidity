@@ -232,6 +232,28 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4(
 	};
 }
 
+template <class Pattern>
+std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4_5(
+	Pattern,
+	Pattern,
+	Pattern,
+	Pattern X,
+	Pattern Y
+)
+{
+	using Builtins = typename Pattern::Builtins;
+	return std::vector<SimplificationRule<Pattern>>{
+		// idempotent operations
+		{Builtins::AND(Builtins::AND(X, Y), Y), [=]{ return Builtins::AND(X, Y); }, true},
+		{Builtins::AND(Y, Builtins::AND(X, Y)), [=]{ return Builtins::AND(X, Y); }, true},
+		{Builtins::AND(Builtins::AND(Y, X), Y), [=]{ return Builtins::AND(Y, X); }, true},
+		{Builtins::AND(Y, Builtins::AND(Y, X)), [=]{ return Builtins::AND(Y, X); }, true},
+		{Builtins::OR(Builtins::OR(X, Y), Y), [=]{ return Builtins::OR(X, Y); }, true},
+		{Builtins::OR(Y, Builtins::OR(X, Y)), [=]{ return Builtins::OR(X, Y); }, true},
+		{Builtins::OR(Builtins::OR(Y, X), Y), [=]{ return Builtins::OR(Y, X); }, true},
+		{Builtins::OR(Y, Builtins::OR(Y, X)), [=]{ return Builtins::OR(Y, X); }, true},
+	};
+}
 
 template <class Pattern>
 std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
@@ -663,6 +685,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 	rules += simplificationRuleListPart2(A, B, C, W, X);
 	rules += simplificationRuleListPart3(A, B, C, W, X);
 	rules += simplificationRuleListPart4(A, B, C, W, X);
+	rules += simplificationRuleListPart4_5(A, B, C, W, X);
 	rules += simplificationRuleListPart5(A, B, C, W, X);
 	rules += simplificationRuleListPart6(A, B, C, W, X);
 	rules += simplificationRuleListPart7(A, B, C, W, X);
