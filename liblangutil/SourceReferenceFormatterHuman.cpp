@@ -70,35 +70,36 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 	if (_ref.sourceName.empty())
 		return; // Nothing we can print here
 
-	int const leftpad = static_cast<int>(log10(max(_ref.position.line, 1))) + 1;
-
-	// line 0: source name
-	frameColored() << string(leftpad, ' ') << "--> ";
-
 	if (_ref.position.line < 0)
 	{
+		frameColored() << "--> ";
 		m_stream << _ref.sourceName << "\n";
 		return; // No line available, nothing else to print
 	}
 
-	m_stream << _ref.sourceName << ":" << (_ref.position.line + 1) << ":" << (_ref.position.column + 1) << ":" << '\n';
+	string line = std::to_string(_ref.position.line + 1); // one-based line number as string
+	string leftpad = string(line.size(), ' ');
+
+	// line 0: source name
+	frameColored() << leftpad << "--> ";
+	m_stream << _ref.sourceName << ":" << line << ":" << (_ref.position.column + 1) << ":" << '\n';
 
 	if (!_ref.multiline)
 	{
 		int const locationLength = _ref.endColumn - _ref.startColumn;
 
 		// line 1:
-		m_stream << string(leftpad, ' ');
+		m_stream << leftpad;
 		frameColored() << " |" << '\n';
 
 		// line 2:
-		frameColored() << (_ref.position.line + 1) << " | ";
+		frameColored() << line << " | ";
 		m_stream << _ref.text.substr(0, _ref.startColumn);
 		highlightColored() << _ref.text.substr(_ref.startColumn, locationLength);
 		m_stream << _ref.text.substr(_ref.endColumn) << '\n';
 
 		// line 3:
-		m_stream << string(leftpad, ' ');
+		m_stream << leftpad;
 		frameColored() << " | ";
 		for_each(
 			_ref.text.cbegin(),
@@ -110,16 +111,16 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 	else
 	{
 		// line 1:
-		m_stream << string(leftpad, ' ');
+		m_stream << leftpad;
 		frameColored() << " |" << '\n';
 
 		// line 2:
-		frameColored() << (_ref.position.line + 1) << " | ";
+		frameColored() << line << " | ";
 		m_stream << _ref.text.substr(0, _ref.startColumn);
 		highlightColored() << _ref.text.substr(_ref.startColumn) << '\n';
 
 		// line 3:
-		frameColored() << string(leftpad, ' ') << " | ";
+		frameColored() << leftpad << " | ";
 		m_stream << string(_ref.startColumn, ' ');
 		diagColored() << "^ (Relevant source part starts here and spans across multiple lines).\n";
 	}
