@@ -507,12 +507,16 @@ A function description is a JSON object with the fields:
 - ``outputs``: an array of objects similar to ``inputs``.
 - ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read
   blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain
-  state <view-functions>`), ``nonpayable`` (function does not accept Ether) and ``payable`` (function accepts Ether).
+  state <view-functions>`), ``nonpayable`` (function does not accept Ether - the default) and ``payable`` (function accepts Ether).
 
 Constructor and fallback function never have ``name`` or ``outputs``. Fallback function doesn't have ``inputs`` either.
 
 .. note::
     Sending non-zero Ether to non-payable function will revert the transaction.
+
+.. note::
+    The state mutability ``nonpayable`` is reflected in Solidity by not specifying
+    a state mutability modifier at all.
 
 An event description is a JSON object with fairly similar fields:
 
