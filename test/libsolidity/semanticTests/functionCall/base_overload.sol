@@ -18,6 +18,8 @@ contract Child is Base {
 		Base.init(c, d);
 	}
 }
+// ====
+// compileViaYul: also
 // ----
 // x() -> 0
 // y() -> 0
