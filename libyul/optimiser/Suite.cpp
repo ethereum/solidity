@@ -79,6 +79,7 @@ void OptimiserSuite::run(
 	GasMeter const* _meter,
 	Object& _object,
 	bool _optimizeStackAllocation,
+	string const& _optimisationSequence,
 	set<YulString> const& _externallyUsedIdentifiers
 )
 {
@@ -94,25 +95,12 @@ void OptimiserSuite::run(
 
 	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast);
 
-	suite.runSequence(
-		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
-		"["
-			"xarrscLM"                 // Turn into SSA and simplify
-			"cCTUtTOntnfDIul"          // Perform structural simplification
-			"Lcul"                     // Simplify again
-			"Vcul jj"                  // Reverse SSA
+	// Some steps depend on properties ensured by FunctionHoister, FunctionGrouper and
+	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
+	suite.runSequence("fgo", ast);
 
-			// should have good "compilability" property here.
-
-			"eul"                      // Run functional expression inliner
-			"xarulrul"                 // Prune a bit more in SSA
-			"xarrcL"                   // Turn into SSA again and simplify
-			"gvif"                     // Run full inliner
-			"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
-		"]"
-		"jmuljuljul VcTOcul jmul",     // Make source short and pretty
-		ast
-	);
+	// Now the user-supplied part
+	suite.runSequence(_optimisationSequence, ast);
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
 	size_t stackCompressorMaxIterations = 16;

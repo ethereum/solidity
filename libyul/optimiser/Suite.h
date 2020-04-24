@@ -62,6 +62,7 @@ public:
 		GasMeter const* _meter,
 		Object& _object,
 		bool _optimizeStackAllocation,
+		std::string const& _optimisationSequence,
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	);
 

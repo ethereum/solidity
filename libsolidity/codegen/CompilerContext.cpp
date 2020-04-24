@@ -502,6 +502,7 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 		&meter,
 		_object,
 		_optimiserSettings.optimizeStackAllocation,
+		_optimiserSettings.yulOptimiserSteps,
 		_externalIdentifiers
 	);
 
