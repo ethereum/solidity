@@ -43,8 +43,6 @@ Z3CHCInterface::Z3CHCInterface():
 	p.set("fp.spacer.mbqi", false);
 	// Ground pobs by using values from a model.
 	p.set("fp.spacer.ground_pobs", false);
-	// Limits array reasoning, good for constant arrays.
-	p.set("fp.spacer.weak_abs", false);
 	m_solver.set(p);
 }
 
