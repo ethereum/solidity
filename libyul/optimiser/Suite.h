@@ -65,6 +65,10 @@ public:
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	);
 
+	/// Ensures that specified sequence of step abbreviations is well-formed and can be executed.
+	/// @throw OptimizerException if the sequence is invalid
+	static void validateSequence(std::string const& _stepAbbreviations);
+
 	void runSequence(std::vector<std::string> const& _steps, Block& _ast);
 	void runSequence(std::string const& _stepAbbreviations, Block& _ast);
 	void runSequenceUntilStable(

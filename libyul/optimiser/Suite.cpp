@@ -253,22 +253,21 @@ map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
 	return lookupTable;
 }
 
-void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
+void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 {
-	string input = _stepAbbreviations;
-	boost::remove_erase(input, ' ');
-	boost::remove_erase(input, '\n');
-
 	bool insideLoop = false;
-	for (char abbreviation: input)
+	for (char abbreviation: _stepAbbreviations)
 		switch (abbreviation)
 		{
+		case ' ':
+		case '\n':
+			break;
 		case '[':
-			assertThrow(!insideLoop, OptimizerException, "Nested brackets not supported");
+			assertThrow(!insideLoop, OptimizerException, "Nested brackets are not supported");
 			insideLoop = true;
 			break;
 		case ']':
-			assertThrow(insideLoop, OptimizerException, "Unbalanced bracket");
+			assertThrow(insideLoop, OptimizerException, "Unbalanced brackets");
 			insideLoop = false;
 			break;
 		default:
@@ -279,10 +278,19 @@ void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
 			assertThrow(
 				stepAbbreviationToNameMap().find(abbreviation) != stepAbbreviationToNameMap().end(),
 				OptimizerException,
-				"Invalid optimisation step abbreviation"
+				"'"s + abbreviation + "' is not a valid step abbreviation"
 			);
 		}
-	assertThrow(!insideLoop, OptimizerException, "Unbalanced bracket");
+	assertThrow(!insideLoop, OptimizerException, "Unbalanced brackets");
+}
+
+void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
+{
+	validateSequence(_stepAbbreviations);
+
+	string input = _stepAbbreviations;
+	boost::remove_erase(input, ' ');
+	boost::remove_erase(input, '\n');
 
 	auto abbreviationsToSteps = [](string const& _sequence) -> vector<string>
 	{
