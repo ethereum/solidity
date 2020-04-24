@@ -67,6 +67,7 @@
 
 #include <libsolutil/CommonData.h>
 
+#include <boost/range/adaptor/map.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace std;
@@ -235,6 +236,12 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{VarDeclInitializer::name,            'd'},
 	};
 	yulAssert(lookupTable.size() == allSteps().size(), "");
+	yulAssert((
+			util::convertContainer<set<char>>(string(NonStepAbbreviations)) -
+			util::convertContainer<set<char>>(lookupTable | boost::adaptors::map_values)
+		).size() == string(NonStepAbbreviations).size(),
+		"Step abbreviation conflicts with a character reserved for another syntactic element"
+	);
 
 	return lookupTable;
 }
@@ -265,6 +272,10 @@ void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
 			insideLoop = false;
 			break;
 		default:
+			yulAssert(
+				string(NonStepAbbreviations).find(abbreviation) == string::npos,
+				"Unhandled syntactic element in the abbreviation sequence"
+			);
 			assertThrow(
 				stepAbbreviationToNameMap().find(abbreviation) != stepAbbreviationToNameMap().end(),
 				OptimizerException,
