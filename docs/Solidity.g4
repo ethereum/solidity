@@ -8,7 +8,8 @@
 grammar Solidity;
 
 sourceUnit
-  : (pragmaDirective | importDirective | structDefinition | enumDefinition | contractDefinition)* EOF ;
+  : (pragmaDirective | importDirective | structDefinition | enumDefinition | contractDefinition |
+     errorDefinition)* EOF ;
 
 pragmaDirective
   : 'pragma' pragmaName pragmaValue ';' ;
@@ -94,7 +95,7 @@ eventDefinition
   : 'event' identifier eventParameterList AnonymousKeyword? ';' ;
 
 errorDefinition
-  : 'error' identifier eventParameterList AnonymousKeyword? ';' ;
+  : 'error' identifier eventParameterList ';' ;
 
 enumDefinition
   : 'enum' identifier '{' enumValue? (',' enumValue)* '}' ;
@@ -171,9 +172,8 @@ tryStatement : 'try' expression returnParameters? block catchClause+ ;
 // leave this as is, befitting with the Solidity docs.
 catchClause : 'catch' ( identifier? parameterList )? block ;
 
-// ^^FIXME^^: Hey, why is the identifier here meant to be optional? I'd suggest something more like that:
 catchClauseNEW : 'catch' errorTypeName parameterList block ;
-errorTypeName : userDefinedTypeName
+errorTypeName : identifier
 
 whileStatement
   : 'while' '(' expression ')' statement ;

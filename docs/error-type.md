@@ -21,9 +21,8 @@ contract C {
     }
 
 	function attemptBid() {
-		// assert() should now support a custom secondary parameter to throw custom errors upon
-		failed expectations.
-		assert(middingPossible, BiddingFailed("Bidding impossible"));
+		// require() should now support a custom secondary parameter to throw custom errors upon failed expectations.
+		require(biddingPossible, BiddingFailed("Bidding impossible"));
 	}
 }
 ```
@@ -38,13 +37,12 @@ errorDefinition
 ## Semantic
 
 Errors can be instanciated whereever a variable of a type can be declared.
+Errors can NOT be instanciated like any arbitrary type, but instead only be used
+within `require` and `revert`.
 
-These errors can be passed around like any other arbitrary value (e.g. function parameters).
+Error types are ALWAYS publically visible, i.e. they can not be made private.
 
-What changes is, that those error typed variables can be used as argument in revert() and
-as a newly added parameter to assert (that's my proposal).
-
-## catching errors
+## Catching Errors
 
 With the try-catch statement, you can already catch `Error(string)`. This will be extended
 to catch errors by other structured types that were declared via the `error` keyword.
@@ -84,7 +82,7 @@ by providing the default error type `Error`.
 ## Code Generation
 
 Whatever ABI encoder is selected, this one will be used to encode/decode the error in
-assert/revert/catch.
+require/revert/catch.
 
 
 
