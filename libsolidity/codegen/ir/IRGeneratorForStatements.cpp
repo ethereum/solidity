@@ -812,6 +812,12 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		define(_functionCall) << "gas()\n";
 		break;
 	}
+	case FunctionType::Kind::Selfdestruct:
+	{
+		solAssert(arguments.size() == 1, "");
+		define(_functionCall) << "selfdestruct(" << expressionAsType(*arguments.front(), *parameterTypes.front()) << ")\n";
+		break;
+	}
 	default:
 		solUnimplemented("FunctionKind " + toString(static_cast<int>(functionType->kind())) + " not yet implemented");
 	}

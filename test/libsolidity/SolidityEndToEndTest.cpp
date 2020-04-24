@@ -1238,11 +1238,13 @@ BOOST_AUTO_TEST_CASE(selfdestruct)
 		}
 	)";
 	u256 amount(130);
-	compileAndRun(sourceCode, amount);
 	u160 address(23);
-	ABI_CHECK(callContractFunction("a(address)", address), bytes());
-	BOOST_CHECK(!addressHasCode(m_contractAddress));
-	BOOST_CHECK_EQUAL(balanceAt(address), amount);
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode, amount);
+		ABI_CHECK(callContractFunction("a(address)", address), bytes());
+		BOOST_CHECK(!addressHasCode(m_contractAddress));
+		BOOST_CHECK_EQUAL(balanceAt(address), amount);
+	)
 }
 
 BOOST_AUTO_TEST_CASE(keccak256)
