@@ -818,6 +818,33 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		define(_functionCall) << "selfdestruct(" << expressionAsType(*arguments.front(), *parameterTypes.front()) << ")\n";
 		break;
 	}
+	case FunctionType::Kind::Log0:
+	case FunctionType::Kind::Log1:
+	case FunctionType::Kind::Log2:
+	case FunctionType::Kind::Log3:
+	case FunctionType::Kind::Log4:
+	{
+		unsigned logNumber = int(functionType->kind()) - int(FunctionType::Kind::Log0);
+		solAssert(arguments.size() == logNumber + 1, "");
+		ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
+		string indexedArgs;
+		for (unsigned arg = 0; arg < logNumber; ++arg)
+			indexedArgs += ", " + expressionAsType(*arguments[arg + 1], *(parameterTypes[arg + 1]));
+		Whiskers templ(R"({
+			let <pos> := <freeMemory>
+			let <end> := <encode>(<pos>, <nonIndexedArgs>)
+			<log>(<pos>, sub(<end>, <pos>) <indexedArgs>)
+		})");
+		templ("pos", m_context.newYulVariable());
+		templ("end", m_context.newYulVariable());
+		templ("freeMemory", freeMemory());
+		templ("encode", abi.tupleEncoder({arguments.front()->annotation().type},{parameterTypes.front()}));
+		templ("nonIndexedArgs", IRVariable(*arguments.front()).commaSeparatedList());
+		templ("log", "log" + to_string(logNumber));
+		templ("indexedArgs", indexedArgs);
+		m_code << templ.render();
+		break;
+	}
 	default:
 		solUnimplemented("FunctionKind " + toString(static_cast<int>(functionType->kind())) + " not yet implemented");
 	}
