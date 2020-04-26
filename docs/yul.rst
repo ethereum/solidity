@@ -70,7 +70,7 @@ The following example program is written in the EVM dialect and computes exponen
 It can be compiled using ``solc --strict-assembly``. The builtin functions
 ``mul`` and ``div`` compute product and division, respectively.
 
-.. code::
+.. code-block:: yul
 
     {
         function power(base, exponent) -> result
@@ -91,7 +91,7 @@ It is also possible to implement the same function using a for-loop
 instead of with recursion. Here, ``lt(a, b)`` computes whether ``a`` is less than ``b``.
 less-than comparison.
 
-.. code::
+.. code-block:: yul
 
     {
         function power(base, exponent) -> result
@@ -115,7 +115,7 @@ This will use the :ref:`Yul object notation <yul-object>` so that it is possible
 to code as data to deploy contracts. This Yul mode is available for the commandline compiler
 (use ``--strict-assembly``) and for the :ref:`standard-json interface <compiler-api>`:
 
-::
+.. code-block:: json
 
     {
         "language": "Yul",
@@ -180,14 +180,14 @@ bitwise ``and`` with the string "abc" is computed.
 The final value is assigned to a local variable called ``x``.
 Strings are stored left-aligned and cannot be longer than 32 bytes.
 
-.. code::
+.. code-block:: yul
 
     let x := and("abc", add(3, 2))
 
 Unless it is the default type, the type of a literal
 has to be specified after a colon:
 
-.. code::
+.. code-block:: yul
 
     let x := and("abc":uint32, add(3:uint256, 2:uint256))
 
@@ -201,7 +201,7 @@ If the function returns a single value, it can be directly used
 inside an expression again. If it returns multiple values,
 they have to be assigned to local variables.
 
-.. code::
+.. code-block:: yul
 
     mstore(0x80, add(mload(0x80), 3))
     // Here, the user-defined function `f` returns
@@ -242,7 +242,7 @@ Future dialects migh introduce specific types for such pointers.
 When a variable is referenced, its current value is copied.
 For the EVM, this translates to a ``DUP`` instruction.
 
-.. code::
+.. code-block:: yul
 
     {
         let zero := 0
@@ -260,7 +260,7 @@ you denote that following a colon. You can also declare multiple
 variables in one statement when you assign from a function call
 that returns multiple values.
 
-.. code::
+.. code-block:: yul
 
     {
         let zero:uint32 := 0:uint32
@@ -283,7 +283,7 @@ values have to match.
 If you want to assign the values returned from a function that has
 multiple return parameters, you have to provide multiple variables.
 
-.. code::
+.. code-block:: yul
 
     let v := 0
     // re-assign v
@@ -301,7 +301,7 @@ The if statement can be used for conditionally executing code.
 No "else" block can be defined. Consider using "switch" instead (see below) if
 you need multiple alternatives.
 
-.. code::
+.. code-block:: yul
 
     if eq(value, 0) { revert(0, 0) }
 
@@ -317,7 +317,7 @@ Contrary to other programming languages, for safety reasons, control flow does
 not continue from one case to the next. There can be a fallback or default
 case called ``default`` which is taken if none of the literal constants matches.
 
-.. code::
+.. code-block:: yul
 
     {
         let x := 0
@@ -349,7 +349,7 @@ or skip to the post-part, respectively.
 
 The following example computes the sum of an area in memory.
 
-.. code::
+.. code-block:: yul
 
     {
         let x := 0
@@ -361,7 +361,7 @@ The following example computes the sum of an area in memory.
 For loops can also be used as a replacement for while loops:
 Simply leave the initialization and post-iteration parts empty.
 
-.. code::
+.. code-block:: yul
 
     {
         let x := 0
@@ -404,7 +404,7 @@ the current yul function.
 
 The following example implements the power function by square-and-multiply.
 
-.. code::
+.. code-block:: yul
 
     {
         function power(base, exponent) -> result {
@@ -425,7 +425,7 @@ Specification of Yul
 This chapter describes Yul code formally. Yul code is usually placed inside Yul objects,
 which are explained in their own chapter.
 
-Grammar::
+.. code-block:: none
 
     Block = '{' Statement* '}'
     Statement =
@@ -588,7 +588,7 @@ For an identifier ``v``, let ``$v`` be the name of the identifier.
 
 We will use a destructuring notation for the AST nodes.
 
-.. code::
+.. code-block:: none
 
     E(G, L, <{St1, ..., Stn}>: Block) =
         let G1, L1, mode = E(G, L, St1, ..., Stn)
@@ -915,7 +915,7 @@ Hex strings can be used to specify data in hex encoding,
 regular strings in native encoding. For code,
 ``datacopy`` will access its assembled binary representation.
 
-Grammar::
+.. code-block:: none
 
     Object = 'object' StringLiteral '{' Code ( Object | Data )* '}'
     Code = 'code' Block
@@ -927,7 +927,7 @@ Above, ``Block`` refers to ``Block`` in the Yul code grammar explained in the pr
 
 An example Yul Object is shown below:
 
-.. code::
+.. code-block:: yul
 
     // A contract consists of a single object with sub-objects representing
     // the code to be deployed or other contracts it can create.
@@ -1010,7 +1010,7 @@ for more details about its internals.
 
 If you want to use Solidity in stand-alone Yul mode, you activate the optimizer using ``--optimize``:
 
-::
+.. code-block:: sh
 
     solc --strict-assembly --optimize
 

@@ -17,7 +17,7 @@ import sys
 import os
 import re
 
-from pygments_lexer_solidity import SolidityLexer
+from pygments_lexer_solidity import SolidityLexer, YulLexer
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -27,6 +27,7 @@ def setup(sphinx):
     thisdir = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, thisdir + '/utils')
     sphinx.add_lexer('Solidity', SolidityLexer())
+    sphinx.add_lexer('Yul', YulLexer())
 
     sphinx.add_stylesheet('css/custom.css')
 
