@@ -584,7 +584,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	case FunctionType::Kind::Internal:
 	{
 		vector<string> args;
-		for (unsigned i = 0; i < arguments.size(); ++i)
+		for (size_t i = 0; i < arguments.size(); ++i)
 			if (functionType->takesArbitraryParameters())
 				args.emplace_back(IRVariable(*arguments[i]).commaSeparatedList());
 			else
@@ -818,15 +818,43 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	{
 		break;
 	}
-	case FunctionType::Kind::GasLeft:
+	case FunctionType::Kind::AddMod:
+	case FunctionType::Kind::MulMod:
 	{
-		define(_functionCall) << "gas()\n";
+		static map<FunctionType::Kind, string> functions = {
+			{FunctionType::Kind::AddMod, "addmod"},
+			{FunctionType::Kind::MulMod, "mulmod"},
+		};
+		solAssert(functions.find(functionType->kind()) != functions.end(), "");
+		solAssert(arguments.size() == 3 && parameterTypes.size() == 3, "");
+
+		IRVariable modulus(m_context.newYulVariable(), *(parameterTypes[2]));
+		define(modulus, *arguments[2]);
+		Whiskers templ("if iszero(<modulus>) { invalid() }\n");
+		m_code << templ("modulus", modulus.name()).render();
+
+		string args;
+		for (size_t i = 0; i < 2; ++i)
+			args += expressionAsType(*arguments[i], *(parameterTypes[i])) + ", ";
+		args += modulus.name();
+		define(_functionCall) << functions[functionType->kind()] << "(" << args << ")\n";
 		break;
 	}
+	case FunctionType::Kind::GasLeft:
 	case FunctionType::Kind::Selfdestruct:
+	case FunctionType::Kind::BlockHash:
 	{
-		solAssert(arguments.size() == 1, "");
-		define(_functionCall) << "selfdestruct(" << expressionAsType(*arguments.front(), *parameterTypes.front()) << ")\n";
+		static map<FunctionType::Kind, string> functions = {
+			{FunctionType::Kind::GasLeft, "gas"},
+			{FunctionType::Kind::Selfdestruct, "selfdestruct"},
+			{FunctionType::Kind::BlockHash, "blockhash"},
+		};
+		solAssert(functions.find(functionType->kind()) != functions.end(), "");
+
+		string args;
+		for (size_t i = 0; i < arguments.size(); ++i)
+			args += (args.empty() ? "" : ", ") + expressionAsType(*arguments[i], *(parameterTypes[i]));
+		define(_functionCall) << functions[functionType->kind()] << "(" << args << ")\n";
 		break;
 	}
 	case FunctionType::Kind::Log0:
