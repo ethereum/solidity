@@ -372,7 +372,9 @@ void ProtoConverter::scopeVariables(vector<string> const& _varNames)
 		if (forInitScopeExtendVariable)
 		{
 			yulAssert(
-				!m_funcForLoopInitVars.empty() && !m_funcForLoopInitVars.back().empty(), "Proto fuzzer: Invalid operation");
+				!m_funcForLoopInitVars.empty() && !m_funcForLoopInitVars.back().empty(),
+				"Proto fuzzer: Invalid operation"
+			);
 			for (auto const& varName: _varNames)
 				m_funcForLoopInitVars.back().back().push_back(varName);
 		}
@@ -697,7 +699,7 @@ void ProtoConverter::visit(CopyFunc const& _x)
 	CopyFunc_CopyType type = _x.ct();
 
 	// datacopy() is valid only if we are inside
-	// a yul object.
+	// a Yul object.
 	if (type == CopyFunc::DATA && !m_isObject)
 		return;
 
@@ -1131,7 +1133,8 @@ void ProtoConverter::visit(ForStmt const& _x)
 	{
 		yulAssert(
 			!m_funcForLoopInitVars.empty() && !m_funcForLoopInitVars.back().empty(),
-			"Proto fuzzer: Invalid data structure");
+			"Proto fuzzer: Invalid data structure"
+		);
 		// Remove variables in for-init
 		m_funcForLoopInitVars.back().pop_back();
 	}
@@ -1647,7 +1650,7 @@ void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
 	{
 		// Throw a 4-sided dice to choose whether to populate function input
 		// argument from a pseudo-randomly chosen slot in one of the following
-		// locations: calldata, memory, storage, or yul optimizer dictionary.
+		// locations: calldata, memory, storage, or Yul optimizer dictionary.
 		unsigned diceValue = counter() % 4;
 		// Pseudo-randomly choose one of the first ten 32-byte
 		// aligned slots.
@@ -1878,7 +1881,7 @@ void ProtoConverter::visit(Program const& _x)
 	// Record EVM Version
 	m_evmVersion = evmVersionMapping(_x.ver());
 
-	// Program is either a yul object or a block of
+	// Program is either a Yul object or a block of
 	// statements.
 	switch (_x.program_oneof_case())
 	{
@@ -1895,7 +1898,7 @@ void ProtoConverter::visit(Program const& _x)
 		visit(_x.obj());
 		break;
 	case Program::PROGRAM_ONEOF_NOT_SET:
-		// {} is a trivial yul program
+		// {} is a trivial Yul program
 		m_output << "{}";
 		break;
 	}
