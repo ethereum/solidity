@@ -1,0 +1,1 @@
+{"errors":[{"component":"general","formattedMessage":"Invalid optimizer step sequence in \"settings.optimizer.details.optimizerSteps\": Nested brackets are not supported","message":"Invalid optimizer step sequence in \"settings.optimizer.details.optimizerSteps\": Nested brackets are not supported","severity":"error","type":"JSONError"}]}

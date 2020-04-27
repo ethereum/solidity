@@ -21,10 +21,14 @@
 
 #include <string>
 #include <boost/test/unit_test.hpp>
+#include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolutil/JSON.h>
+#include <libsolutil/CommonData.h>
 #include <test/Metadata.h>
+
+#include <set>
 
 using namespace std;
 using namespace solidity::evmasm;
@@ -1058,8 +1062,12 @@ BOOST_AUTO_TEST_CASE(optimizer_settings_details_different)
 	BOOST_CHECK(optimizer["details"]["peephole"].asBool() == true);
 	BOOST_CHECK(optimizer["details"]["yul"].asBool() == true);
 	BOOST_CHECK(optimizer["details"]["yulDetails"].isObject());
-	BOOST_CHECK(optimizer["details"]["yulDetails"].getMemberNames() == vector<string>{"stackAllocation"});
+	BOOST_CHECK(
+		util::convertContainer<set<string>>(optimizer["details"]["yulDetails"].getMemberNames()) ==
+		(set<string>{"stackAllocation", "optimizerSteps"})
+	);
 	BOOST_CHECK(optimizer["details"]["yulDetails"]["stackAllocation"].asBool() == true);
+	BOOST_CHECK(optimizer["details"]["yulDetails"]["optimizerSteps"].asString() == OptimiserSettings::DefaultYulOptimiserSteps);
 	BOOST_CHECK_EQUAL(optimizer["details"].getMemberNames().size(), 8);
 	BOOST_CHECK(optimizer["runs"].asUInt() == 600);
 }

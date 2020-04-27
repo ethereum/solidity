@@ -23,12 +23,31 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 
 namespace solidity::frontend
 {
 
 struct OptimiserSettings
 {
+	static char constexpr DefaultYulOptimiserSteps[] =
+		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
+		"["
+			"xarrscLM"                 // Turn into SSA and simplify
+			"cCTUtTOntnfDIul"          // Perform structural simplification
+			"Lcul"                     // Simplify again
+			"Vcul jj"                  // Reverse SSA
+
+			// should have good "compilability" property here.
+
+			"eul"                      // Run functional expression inliner
+			"xarulrul"                 // Prune a bit more in SSA
+			"xarrcL"                   // Turn into SSA again and simplify
+			"gvif"                     // Run full inliner
+			"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
+		"]"
+		"jmuljuljul VcTOcul jmul";     // Make source short and pretty
+
 	/// No optimisations at all - not recommended.
 	static OptimiserSettings none()
 	{
@@ -74,6 +93,7 @@ struct OptimiserSettings
 			runConstantOptimiser == _other.runConstantOptimiser &&
 			optimizeStackAllocation == _other.optimizeStackAllocation &&
 			runYulOptimiser == _other.runYulOptimiser &&
+			yulOptimiserSteps == _other.yulOptimiserSteps &&
 			expectedExecutionsPerDeployment == _other.expectedExecutionsPerDeployment;
 	}
 
@@ -95,6 +115,11 @@ struct OptimiserSettings
 	bool optimizeStackAllocation = false;
 	/// Yul optimiser with default settings. Will only run on certain parts of the code for now.
 	bool runYulOptimiser = false;
+	/// Sequence of optimisation steps to be performed by Yul optimiser.
+	/// Note that there are some hard-coded steps in the optimiser and you cannot disable
+	/// them just by setting this to an empty string. Set @a runYulOptimiser to false if you want
+	/// no optimisations.
+	std::string yulOptimiserSteps = DefaultYulOptimiserSteps;
 	/// This specifies an estimate on how often each opcode in this assembly will be executed,
 	/// i.e. use a small value to optimise for size and a large value to optimise for runtime gas usage.
 	size_t expectedExecutionsPerDeployment = 200;
