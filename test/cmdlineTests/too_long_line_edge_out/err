@@ -1,5 +1,5 @@
 Warning: Source file does not specify required compiler version!
- --> too_long_line_edge_out/input.sol
+--> too_long_line_edge_out/input.sol
 
 Error: Identifier not found or not unique.
  --> too_long_line_edge_out/input.sol:2:37:
