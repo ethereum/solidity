@@ -578,6 +578,9 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	solUnimplementedAssert(!functionType->bound(), "");
 	switch (functionType->kind())
 	{
+	case FunctionType::Kind::Declaration:
+		solAssert(false, "Attempted to generate code for calling a function definition.");
+		break;
 	case FunctionType::Kind::Internal:
 	{
 		vector<string> args;
