@@ -4,6 +4,7 @@ Breaking changes:
  * Type Checker: Disallow virtual for library functions.
  * Deprecated dot syntax for `value` and `gas`.
  * Deprecated the identifier `now`.
+ * JSON AST: Removes members with ``null`` value from JSON output.
 
 Language Features:
 

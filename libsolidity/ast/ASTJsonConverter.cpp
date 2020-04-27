@@ -201,7 +201,7 @@ Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<yul::Identifie
 
 void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node)
 {
-	_stream << util::jsonPrettyPrint(toJson(_node));
+	_stream << util::jsonPrettyPrint(util::removeNullMembers(toJson(_node)));
 }
 
 Json::Value&& ASTJsonConverter::toJson(ASTNode const& _node)

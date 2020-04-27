@@ -16,7 +16,6 @@
     ]
   },
   "id": 23,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -25,7 +24,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 5,
       "linearizedBaseContracts":
@@ -44,7 +42,6 @@
             "src": "45:2:1",
             "statements": []
           },
-          "documentation": null,
           "functionSelector": "26121ff0",
           "id": 4,
           "implemented": true,
@@ -52,7 +49,6 @@
           "modifiers": [],
           "name": "f",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -82,7 +78,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 10,
       "linearizedBaseContracts":
@@ -101,7 +96,6 @@
             "src": "95:2:1",
             "statements": []
           },
-          "documentation": null,
           "functionSelector": "26121ff0",
           "id": 9,
           "implemented": true,
@@ -109,7 +103,6 @@
           "modifiers": [],
           "name": "f",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 6,
@@ -139,10 +132,8 @@
       "baseContracts":
       [
         {
-          "arguments": null,
           "baseName":
           {
-            "contractScope": null,
             "id": 11,
             "name": "A",
             "nodeType": "UserDefinedTypeName",
@@ -159,10 +150,8 @@
           "src": "114:1:1"
         },
         {
-          "arguments": null,
           "baseName":
           {
-            "contractScope": null,
             "id": 13,
             "name": "B",
             "nodeType": "UserDefinedTypeName",
@@ -185,7 +174,6 @@
         10
       ],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 22,
       "linearizedBaseContracts":
@@ -211,7 +199,6 @@
             "src": "160:2:1",
             "statements": []
           },
-          "documentation": null,
           "functionSelector": "26121ff0",
           "id": 21,
           "implemented": true,
@@ -226,7 +213,6 @@
             "overrides":
             [
               {
-                "contractScope": null,
                 "id": 16,
                 "name": "A",
                 "nodeType": "UserDefinedTypeName",
@@ -239,7 +225,6 @@
                 }
               },
               {
-                "contractScope": null,
                 "id": 17,
                 "name": "B",
                 "nodeType": "UserDefinedTypeName",

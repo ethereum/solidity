@@ -8,8 +8,7 @@
       [
         8
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -40,7 +38,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
@@ -50,7 +47,6 @@
               null
             ],
             "name": "f",
-            "overrides": null,
             "scope": 8,
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -103,13 +99,10 @@
                         "constant": false,
                         "mutability": "mutable",
                         "name": "x",
-                        "overrides": null,
                         "scope": 6,
                         "stateVariable": false,
                         "storageLocation": "default",
                         "type": "string",
-                        "typeName": null,
-                        "value": null,
                         "visibility": "internal"
                       },
                       "children": [],
@@ -120,16 +113,13 @@
                     {
                       "attributes":
                       {
-                        "argumentTypes": null,
                         "hexvalue": "ff",
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "lValueRequested": false,
-                        "subdenomination": null,
                         "token": "string",
-                        "type": "literal_string (contains invalid UTF-8 sequence at position 0)",
-                        "value": null
+                        "type": "literal_string (contains invalid UTF-8 sequence at position 0)"
                       },
                       "id": 4,
                       "name": "Literal",

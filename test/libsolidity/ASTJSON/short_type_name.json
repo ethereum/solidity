@@ -8,7 +8,6 @@
     ]
   },
   "id": 12,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -17,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 11,
       "linearizedBaseContracts":
@@ -49,7 +47,6 @@
                     "mutability": "mutable",
                     "name": "x",
                     "nodeType": "VariableDeclaration",
-                    "overrides": null,
                     "scope": 9,
                     "src": "35:15:1",
                     "stateVariable": false,
@@ -74,7 +71,6 @@
                         }
                       },
                       "id": 6,
-                      "length": null,
                       "nodeType": "ArrayTypeName",
                       "src": "35:6:1",
                       "typeDescriptions":
@@ -83,18 +79,15 @@
                         "typeString": "uint256[]"
                       }
                     },
-                    "value": null,
                     "visibility": "internal"
                   }
                 ],
                 "id": 8,
-                "initialValue": null,
                 "nodeType": "VariableDeclarationStatement",
                 "src": "35:15:1"
               }
             ]
           },
-          "documentation": null,
           "functionSelector": "26121ff0",
           "id": 10,
           "implemented": true,
@@ -102,7 +95,6 @@
           "modifiers": [],
           "name": "f",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,

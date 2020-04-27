@@ -9,7 +9,6 @@
     ]
   },
   "id": 3,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -50,7 +49,6 @@
     ]
   },
   "id": 6,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -91,7 +89,6 @@
     ]
   },
   "id": 21,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -100,7 +97,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 20,
       "linearizedBaseContracts":
@@ -157,7 +153,6 @@
           "id": 14,
           "name": "mod",
           "nodeType": "ModifierDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 11,
@@ -191,7 +186,6 @@
           "modifiers": [],
           "name": "fn",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 16,

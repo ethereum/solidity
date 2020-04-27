@@ -8,8 +8,7 @@
       [
         3
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -29,12 +28,10 @@
             "constant": false,
             "mutability": "mutable",
             "name": "a",
-            "overrides": null,
             "scope": 3,
             "stateVariable": false,
             "storageLocation": "default",
             "type": "uint256",
-            "value": null,
             "visibility": "internal"
           },
           "children":

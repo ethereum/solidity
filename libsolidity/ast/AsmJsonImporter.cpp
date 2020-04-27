@@ -63,7 +63,8 @@ T AsmJsonImporter::createAsmNode(Json::Value const& _node)
 
 Json::Value AsmJsonImporter::member(Json::Value const& _node, string const& _name)
 {
-	astAssert(_node.isMember(_name), "Node is missing field '" + _name + "'.");
+	if (!_node.isMember(_name))
+		return Json::nullValue;
 	return _node[_name];
 }
 

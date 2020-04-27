@@ -8,8 +8,7 @@
       [
         39
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -44,12 +42,10 @@
             "functionSelector": "97682884",
             "mutability": "mutable",
             "name": "m",
-            "overrides": null,
             "scope": 39,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "mapping(address => address payable)",
-            "value": null,
             "visibility": "public"
           },
           "children":
@@ -95,7 +91,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "fc68521a",
             "implemented": true,
             "isConstructor": false,
@@ -105,7 +100,6 @@
               null
             ],
             "name": "f",
-            "overrides": null,
             "scope": 39,
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -122,12 +116,10 @@
                     "constant": false,
                     "mutability": "mutable",
                     "name": "arg",
-                    "overrides": null,
                     "scope": 38,
                     "stateVariable": false,
                     "storageLocation": "default",
                     "type": "address payable",
-                    "value": null,
                     "visibility": "internal"
                   },
                   "children":
@@ -162,12 +154,10 @@
                     "constant": false,
                     "mutability": "mutable",
                     "name": "r",
-                    "overrides": null,
                     "scope": 38,
                     "stateVariable": false,
                     "storageLocation": "default",
                     "type": "address payable",
-                    "value": null,
                     "visibility": "internal"
                   },
                   "children":
@@ -212,12 +202,10 @@
                         "constant": false,
                         "mutability": "mutable",
                         "name": "a",
-                        "overrides": null,
                         "scope": 37,
                         "stateVariable": false,
                         "storageLocation": "default",
                         "type": "address payable",
-                        "value": null,
                         "visibility": "internal"
                       },
                       "children":
@@ -241,7 +229,6 @@
                     {
                       "attributes":
                       {
-                        "argumentTypes": null,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
@@ -253,7 +240,6 @@
                         {
                           "attributes":
                           {
-                            "argumentTypes": null,
                             "overloadedDeclarations":
                             [
                               null
@@ -269,7 +255,6 @@
                         {
                           "attributes":
                           {
-                            "argumentTypes": null,
                             "overloadedDeclarations":
                             [
                               null
@@ -298,7 +283,6 @@
                     {
                       "attributes":
                       {
-                        "argumentTypes": null,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -311,7 +295,6 @@
                         {
                           "attributes":
                           {
-                            "argumentTypes": null,
                             "overloadedDeclarations":
                             [
                               null
@@ -327,7 +310,6 @@
                         {
                           "attributes":
                           {
-                            "argumentTypes": null,
                             "overloadedDeclarations":
                             [
                               null
@@ -366,12 +348,10 @@
                         "constant": false,
                         "mutability": "mutable",
                         "name": "c",
-                        "overrides": null,
                         "scope": 37,
                         "stateVariable": false,
                         "storageLocation": "default",
                         "type": "address",
-                        "value": null,
                         "visibility": "internal"
                       },
                       "children":
@@ -395,7 +375,6 @@
                     {
                       "attributes":
                       {
-                        "argumentTypes": null,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -432,8 +411,7 @@
                             {
                               "attributes":
                               {
-                                "name": "address",
-                                "type": null
+                                "name": "address"
                               },
                               "id": 23,
                               "name": "ElementaryTypeName",
@@ -447,7 +425,6 @@
                         {
                           "attributes":
                           {
-                            "argumentTypes": null,
                             "overloadedDeclarations":
                             [
                               null
@@ -476,7 +453,6 @@
                     {
                       "attributes":
                       {
-                        "argumentTypes": null,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -489,7 +465,6 @@
                         {
                           "attributes":
                           {
-                            "argumentTypes": null,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
@@ -501,7 +476,6 @@
                             {
                               "attributes":
                               {
-                                "argumentTypes": null,
                                 "overloadedDeclarations":
                                 [
                                   null
@@ -517,7 +491,6 @@
                             {
                               "attributes":
                               {
-                                "argumentTypes": null,
                                 "overloadedDeclarations":
                                 [
                                   null
@@ -538,7 +511,6 @@
                         {
                           "attributes":
                           {
-                            "argumentTypes": null,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -575,8 +547,7 @@
                                 {
                                   "attributes":
                                   {
-                                    "name": "address",
-                                    "type": null
+                                    "name": "address"
                                   },
                                   "id": 31,
                                   "name": "ElementaryTypeName",
@@ -590,13 +561,11 @@
                             {
                               "attributes":
                               {
-                                "argumentTypes": null,
                                 "hexvalue": "30",
                                 "isConstant": false,
                                 "isLValue": false,
                                 "isPure": true,
                                 "lValueRequested": false,
-                                "subdenomination": null,
                                 "token": "number",
                                 "type": "int_const 0",
                                 "value": "0"

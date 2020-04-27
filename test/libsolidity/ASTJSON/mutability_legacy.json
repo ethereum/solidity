@@ -8,8 +8,7 @@
       [
         10
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -44,7 +42,6 @@
             "functionSelector": "0dbe671f",
             "mutability": "immutable",
             "name": "a",
-            "overrides": null,
             "scope": 10,
             "stateVariable": true,
             "storageLocation": "default",
@@ -66,13 +63,11 @@
             {
               "attributes":
               {
-                "argumentTypes": null,
                 "hexvalue": "34",
                 "isConstant": false,
                 "isLValue": false,
                 "isPure": true,
                 "lValueRequested": false,
-                "subdenomination": null,
                 "token": "number",
                 "type": "int_const 4",
                 "value": "4"
@@ -93,7 +88,6 @@
             "functionSelector": "4df7e3d0",
             "mutability": "constant",
             "name": "b",
-            "overrides": null,
             "scope": 10,
             "stateVariable": true,
             "storageLocation": "default",
@@ -115,13 +109,11 @@
             {
               "attributes":
               {
-                "argumentTypes": null,
                 "hexvalue": "32",
                 "isConstant": false,
                 "isLValue": false,
                 "isPure": true,
                 "lValueRequested": false,
-                "subdenomination": null,
                 "token": "number",
                 "type": "int_const 2",
                 "value": "2"
@@ -142,7 +134,6 @@
             "functionSelector": "c3da42b8",
             "mutability": "mutable",
             "name": "c",
-            "overrides": null,
             "scope": 10,
             "stateVariable": true,
             "storageLocation": "default",
@@ -164,13 +155,11 @@
             {
               "attributes":
               {
-                "argumentTypes": null,
                 "hexvalue": "33",
                 "isConstant": false,
                 "isLValue": false,
                 "isPure": true,
                 "lValueRequested": false,
-                "subdenomination": null,
                 "token": "number",
                 "type": "int_const 3",
                 "value": "3"
