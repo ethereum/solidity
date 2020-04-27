@@ -763,6 +763,14 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			"))\n";
 		break;
 	}
+	case FunctionType::Kind::ECRecover:
+	case FunctionType::Kind::SHA256:
+	case FunctionType::Kind::RIPEMD160:
+	{
+		solAssert(!_functionCall.annotation().tryCall, "");
+		appendExternalFunctionCall(_functionCall, arguments);
+		break;
+	}
 	case FunctionType::Kind::ArrayPop:
 	{
 		auto const& memberAccessExpression = dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression();
@@ -1463,7 +1471,8 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	for (auto const& arg: _arguments)
 	{
 		argumentTypes.emplace_back(&type(*arg));
-		argumentStrings.emplace_back(IRVariable(*arg).commaSeparatedList());
+		if (IRVariable(*arg).type().sizeOnStack() > 0)
+			argumentStrings.emplace_back(IRVariable(*arg).commaSeparatedList());
 	}
 	string argumentString = argumentStrings.empty() ? ""s : (", " + joinHumanReadable(argumentStrings));
 
@@ -1481,7 +1490,6 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 
 	ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
 
-	solUnimplementedAssert(!funType.isBareCall(), "");
 	Whiskers templ(R"(
 		<?checkExistence>
 			if iszero(extcodesize(<address>)) { revert(0, 0) }
@@ -1489,8 +1497,18 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 
 		// storage for arguments and returned data
 		let <pos> := <freeMemory>
-		mstore(<pos>, <shl28>(<funId>))
-		let <end> := <encodeArgs>(add(<pos>, 4) <argumentString>)
+		<?bareCall>
+		<!bareCall>
+			mstore(<pos>, <shl28>(<funId>))
+		</bareCall>
+		let <end> := <encodeArgs>(
+			<?bareCall>
+				<pos>
+			<!bareCall>
+				add(<pos>, 4)
+			</bareCall>
+			<argumentString>
+		)
 
 		let <success> := <call>(<gas>, <address>, <?hasValue> <value>, </hasValue> <pos>, sub(<end>, <pos>), <pos>, <reservedReturnSize>)
 		<?noTryCall>
@@ -1512,14 +1530,25 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	)");
 	templ("pos", m_context.newYulVariable());
 	templ("end", m_context.newYulVariable());
+	templ("bareCall", funType.isBareCall());
 	if (_functionCall.annotation().tryCall)
 		templ("success", m_context.trySuccessConditionVariable(_functionCall));
 	else
 		templ("success", m_context.newYulVariable());
 	templ("freeMemory", freeMemory());
 	templ("shl28", m_utils.shiftLeftFunction(8 * (32 - 4)));
-	templ("funId", IRVariable(_functionCall.expression()).part("functionIdentifier").name());
-	templ("address", IRVariable(_functionCall.expression()).part("address").name());
+
+	if (!funType.isBareCall())
+		templ("funId", IRVariable(_functionCall.expression()).part("functionIdentifier").name());
+
+	if (funKind == FunctionType::Kind::ECRecover)
+		templ("address", "1");
+	else if (funKind == FunctionType::Kind::SHA256)
+		templ("address", "2");
+	else if (funKind == FunctionType::Kind::RIPEMD160)
+		templ("address", "3");
+	else
+		templ("address", IRVariable(_functionCall.expression()).part("address").name());
 
 	// Always use the actual return length, and not our calculated expected length, if returndatacopy is supported.
 	// This ensures it can catch badly formatted input from external calls.
@@ -1551,9 +1580,15 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 		// but all parameters of ecrecover are value types anyway.
 		encodeInPlace = false;
 	bool encodeForLibraryCall = funKind == FunctionType::Kind::DelegateCall;
-	solUnimplementedAssert(!encodeInPlace, "");
-	solUnimplementedAssert(funType.padArguments(), "");
-	templ("encodeArgs", abi.tupleEncoder(argumentTypes, funType.parameterTypes(), encodeForLibraryCall));
+
+	solUnimplementedAssert(encodeInPlace == !funType.padArguments(), "");
+	if (encodeInPlace)
+	{
+		solUnimplementedAssert(!encodeForLibraryCall, "");
+		templ("encodeArgs", abi.tupleEncoderPacked(argumentTypes, funType.parameterTypes()));
+	}
+	else
+		templ("encodeArgs", abi.tupleEncoder(argumentTypes, funType.parameterTypes(), encodeForLibraryCall));
 	templ("argumentString", argumentString);
 
 	// Output data will replace input data, unless we have ECRecover (then, output
