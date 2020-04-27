@@ -288,8 +288,14 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install shellcheck
+          command: apt -q update && apt install -y shellcheck
+      - run:
           name: Check for C++ coding style
           command: ./scripts/check_style.sh
+      - run:
+          name: checking shell scripts
+          command: ./scripts/chk_shellscripts/chk_shellscripts.sh
 
   chk_pylint:
     docker:
