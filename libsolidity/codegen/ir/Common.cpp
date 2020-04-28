@@ -16,6 +16,7 @@
 */
 
 #include <libsolidity/codegen/ir/Common.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 #include <libsolutil/CommonIO.h>
 
@@ -23,6 +24,21 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
+
+Arity frontend::getFunctionArity(FunctionDefinition const& _function)
+{
+	FunctionType const* functionType = TypeProvider::function(_function)->asCallableFunction(false);
+	solAssert(functionType, "");
+	return getFunctionArity(*functionType);
+}
+
+Arity frontend::getFunctionArity(FunctionType const& _functionType)
+{
+	return {
+		TupleType(_functionType.parameterTypes()).sizeOnStack(),
+		TupleType(_functionType.returnParameterTypes()).sizeOnStack()
+	};
+}
 
 string frontend::buildFunctionName(FunctionDefinition const& _function)
 {
@@ -44,4 +60,11 @@ string frontend::buildCreationObjectName(ContractDefinition const& _contract)
 string frontend::buildRuntimeObjectName(ContractDefinition const& _contract)
 {
 	return _contract.name() + "_" + toString(_contract.id()) + "_deployed";
+}
+
+string frontend::buildInternalDispatchFunctionName(Arity const& _arity)
+{
+	return "dispatch_internal"
+		"_in_" + to_string(_arity.in) +
+		"_out_" + to_string(_arity.out);
 }

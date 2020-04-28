@@ -103,6 +103,7 @@ public:
 	std::string newYulVariable();
 
 	std::string internalDispatch(Arity const& _arity);
+	std::string internalDispatch(Arity const& _arity, std::set<FunctionDefinition const*> const& _functions);
 
 	/// @returns a new copy of the utility function generator (but using the same function set).
 	YulUtilFunctions utils();

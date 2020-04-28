@@ -37,10 +37,14 @@ struct Arity
 	bool operator!=(Arity const& _other) const { return !(*this == _other); }
 };
 
+Arity getFunctionArity(FunctionDefinition const& _function);
+Arity getFunctionArity(FunctionType const& _functionType);
+
 std::string buildFunctionName(FunctionDefinition const& _function);
 std::string buildFunctionName(VariableDeclaration const& _varDecl);
 std::string buildCreationObjectName(ContractDefinition const& _contract);
 std::string buildRuntimeObjectName(ContractDefinition const& _contract);
+std::string buildInternalDispatchFunctionName(Arity const& _arity);
 
 }
 
