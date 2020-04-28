@@ -21,6 +21,10 @@ message VarDecl {
   required Expression expr = 1;
 }
 
+message MultiVarDecl {
+  required uint32 num_vars = 1;
+}
+
 message LowLevelCall {
   enum Type {
     CALL = 0;
@@ -373,6 +377,7 @@ message Statement {
     FunctionDef         funcdef         = 16;
     PopStmt             pop             = 17;
     LeaveStmt           leave           = 18;
+    MultiVarDecl        multidecl       = 19;
   }
 }
 
