@@ -331,6 +331,11 @@ int Scanner::scanSingleLineDocComment()
 			{
 				addCommentLiteralChar('\n');
 				m_char = m_source->advanceAndGet(3);
+				if (tryScanEndOfLine())
+				{
+					addCommentLiteralChar('\n');
+					break;
+				}
 			}
 			else
 				break; // next line is not a documentation comment, we are done
