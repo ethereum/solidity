@@ -284,7 +284,7 @@ jobs:
 
   chk_coding_style:
     docker:
-      - image: buildpack-deps:disco
+      - image: buildpack-deps:focal
     steps:
       - checkout
       - run:
