@@ -1337,6 +1337,34 @@ string YulUtilFunctions::allocationFunction()
 	});
 }
 
+string YulUtilFunctions::allocationTemporaryMemoryFunction()
+{
+	string functionName = "allocateTemporaryMemory";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>() -> memPtr {
+				memPtr := mload(<freeMemoryPointer>)
+			}
+		)")
+		("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer))
+		("functionName", functionName)
+		.render();
+	});
+}
+
+string YulUtilFunctions::releaseTemporaryMemoryFunction()
+{
+	string functionName = "releaseTemporaryMemory";
+	return m_functionCollector.createFunction(functionName, [&](){
+		return Whiskers(R"(
+			function <functionName>() {
+			}
+		)")
+		("functionName", functionName)
+		.render();
+	});
+}
+
 string YulUtilFunctions::zeroMemoryArrayFunction(ArrayType const& _type)
 {
 	if (_type.baseType()->hasSimpleZeroValueInMemory())

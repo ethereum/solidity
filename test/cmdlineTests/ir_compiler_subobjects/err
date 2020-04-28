@@ -1,0 +1,5 @@
+Warning: Unused local variable.
+ --> ir_compiler_subobjects/input.sol:6:9:
+  |
+6 |         C c = new C();
+  |         ^^^

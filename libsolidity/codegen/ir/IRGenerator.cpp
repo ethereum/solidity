@@ -48,9 +48,12 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 
-pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
+pair<string, string> IRGenerator::run(
+	ContractDefinition const& _contract,
+	map<ContractDefinition const*, string const> const& _otherYulSources
+)
 {
-	string const ir = yul::reindent(generate(_contract));
+	string const ir = yul::reindent(generate(_contract, _otherYulSources));
 
 	yul::AssemblyStack asmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
 	if (!asmStack.parseAndAnalyze("", ir))
@@ -73,8 +76,19 @@ pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 	return {warning + ir, warning + asmStack.print()};
 }
 
-string IRGenerator::generate(ContractDefinition const& _contract)
+string IRGenerator::generate(
+	ContractDefinition const& _contract,
+	map<ContractDefinition const*, string const> const& _otherYulSources
+)
 {
+	auto subObjectSources = [&_otherYulSources](std::set<ContractDefinition const*, ASTNode::CompareByID> const& subObjects) -> string
+	{
+		std::string subObjectsSources;
+		for (ContractDefinition const* subObject: subObjects)
+			subObjectsSources += _otherYulSources.at(subObject);
+		return subObjectsSources;
+	};
+
 	Whiskers t(R"(
 		object "<CreationObject>" {
 			code {
@@ -93,13 +107,15 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 					<dispatch>
 					<runtimeFunctions>
 				}
+				<runtimeSubObjects>
 			}
+			<subObjects>
 		}
 	)");
 
 	resetContext(_contract);
 
-	t("CreationObject", creationObjectName(_contract));
+	t("CreationObject", m_context.creationObjectName(_contract));
 	t("memoryInit", memoryInit());
 	t("notLibrary", !_contract.isLibrary());
 
@@ -112,7 +128,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 			constructorParams.emplace_back(m_context.newYulVariable());
 		t(
 			"copyConstructorArguments",
-			m_utils.copyConstructorArgumentsToMemoryFunction(_contract, creationObjectName(_contract))
+			m_utils.copyConstructorArgumentsToMemoryFunction(_contract, m_context.creationObjectName(_contract))
 		);
 	}
 	t("constructorParams", joinHumanReadable(constructorParams));
@@ -123,12 +139,14 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	generateImplicitConstructors(_contract);
 	generateQueuedFunctions();
 	t("functions", m_context.functionCollector().requestedFunctions());
+	t("subObjects", subObjectSources(m_context.subObjectsCreated()));
 
 	resetContext(_contract);
-	t("RuntimeObject", runtimeObjectName(_contract));
+	t("RuntimeObject", m_context.runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
 	generateQueuedFunctions();
 	t("runtimeFunctions", m_context.functionCollector().requestedFunctions());
+	t("runtimeSubObjects", subObjectSources(m_context.subObjectsCreated()));
 	return t.render();
 }
 
@@ -313,6 +331,7 @@ string IRGenerator::initStateVariables(ContractDefinition const& _contract)
 	return generator.code();
 }
 
+
 void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contract)
 {
 	auto listAllParams = [&](
@@ -375,23 +394,13 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 		codecopy(0, dataoffset("<object>"), datasize("<object>"))
 		return(0, datasize("<object>"))
 	)X");
-	t("object", runtimeObjectName(_contract));
+	t("object", m_context.runtimeObjectName(_contract));
 	return t.render();
 }
 
 string IRGenerator::callValueCheck()
 {
 	return "if callvalue() { revert(0, 0) }";
-}
-
-string IRGenerator::creationObjectName(ContractDefinition const& _contract)
-{
-	return _contract.name() + "_" + to_string(_contract.id());
-}
-
-string IRGenerator::runtimeObjectName(ContractDefinition const& _contract)
-{
-	return _contract.name() + "_" + to_string(_contract.id()) + "_deployed";
 }
 
 string IRGenerator::implicitConstructorName(ContractDefinition const& _contract)

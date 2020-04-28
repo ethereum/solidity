@@ -849,11 +849,63 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		templ("pos", m_context.newYulVariable());
 		templ("end", m_context.newYulVariable());
 		templ("freeMemory", freeMemory());
-		templ("encode", abi.tupleEncoder({arguments.front()->annotation().type},{parameterTypes.front()}));
+		templ("encode", abi.tupleEncoder({arguments.front()->annotation().type}, {parameterTypes.front()}));
 		templ("nonIndexedArgs", IRVariable(*arguments.front()).commaSeparatedList());
 		templ("log", "log" + to_string(logNumber));
 		templ("indexedArgs", indexedArgs);
 		m_code << templ.render();
+
+		break;
+	}
+	case FunctionType::Kind::Creation:
+	{
+		solAssert(!functionType->gasSet(), "Gas limit set for contract creation.");
+		solAssert(
+			functionType->returnParameterTypes().size() == 1,
+			"Constructor should return only one type"
+		);
+
+		TypePointers argumentTypes;
+		string constructorParams;
+		for (ASTPointer<Expression const> const& arg: arguments)
+		{
+			argumentTypes.push_back(arg->annotation().type);
+			constructorParams += ", " + IRVariable{*arg}.commaSeparatedList();
+		}
+
+		ContractDefinition const* contract =
+			&dynamic_cast<ContractType const&>(*functionType->returnParameterTypes().front()).contractDefinition();
+		m_context.subObjectsCreated().insert(contract);
+
+		Whiskers t(R"(
+			let <memPos> := <allocateTemporaryMemory>()
+			let <memEnd> := add(<memPos>, datasize("<object>"))
+			if or(gt(<memEnd>, 0xffffffffffffffff), lt(<memEnd>, <memPos>)) { revert(0, 0) }
+			datacopy(<memPos>, dataoffset("<object>"), datasize("<object>"))
+			<memEnd> := <abiEncode>(<memEnd><constructorParams>)
+			<?saltSet>
+				let <retVars> := create2(<value>, <memPos>, sub(<memEnd>, <memPos>), <salt>)
+			<!saltSet>
+				let <retVars> := create(<value>, <memPos>, sub(<memEnd>, <memPos>))
+			</saltSet>
+			<releaseTemporaryMemory>()
+		)");
+		t("memPos", m_context.newYulVariable());
+		t("memEnd", m_context.newYulVariable());
+		t("allocateTemporaryMemory", m_utils.allocationTemporaryMemoryFunction());
+		t("releaseTemporaryMemory", m_utils.releaseTemporaryMemoryFunction());
+		t("object", m_context.creationObjectName(*contract));
+		t("abiEncode",
+			m_context.abiFunctions().tupleEncoder(argumentTypes, functionType->parameterTypes(),false)
+		);
+		t("constructorParams", constructorParams);
+		t("value", functionType->valueSet() ? IRVariable(_functionCall.expression()).part("value").name() : "0");
+		t("saltSet", functionType->saltSet());
+		if (functionType->saltSet())
+			t("salt", IRVariable(_functionCall.expression()).part("salt").name());
+		t("retVars", IRVariable(_functionCall).commaSeparatedList());
+		m_code << t.render();
+
 		break;
 	}
 	default:

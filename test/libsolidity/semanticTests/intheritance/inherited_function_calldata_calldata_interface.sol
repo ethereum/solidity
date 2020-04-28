@@ -21,5 +21,7 @@ contract B {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // g() -> 42
