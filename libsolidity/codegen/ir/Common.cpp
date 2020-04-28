@@ -53,6 +53,13 @@ string IRNames::runtimeObject(ContractDefinition const& _contract)
 	return _contract.name() + "_" + toString(_contract.id()) + "_deployed";
 }
 
+string IRNames::internalDispatch(YulArity const& _arity)
+{
+	return "dispatch_internal"
+		"_in_" + to_string(_arity.in) +
+		"_out_" + to_string(_arity.out);
+}
+
 string IRNames::implicitConstructor(ContractDefinition const& _contract)
 {
 	return "constructor_" + _contract.name() + "_" + to_string(_contract.id());

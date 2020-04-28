@@ -123,7 +123,7 @@ string IRGenerationContext::newYulVariable()
 
 string IRGenerationContext::generateInternalDispatchFunction(YulArity const& _arity)
 {
-	string funName = "dispatch_internal_in_" + to_string(_arity.in) + "_out_" + to_string(_arity.out);
+	string funName = IRNames::internalDispatch(_arity);
 	return m_functions.createFunction(funName, [&]() {
 		Whiskers templ(R"(
 			function <functionName>(fun <comma> <in>) <arrow> <out> {
