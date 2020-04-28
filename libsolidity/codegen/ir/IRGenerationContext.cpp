@@ -132,9 +132,9 @@ string IRGenerationContext::trySuccessConditionVariable(Expression const& _expre
 	return "trySuccessCondition_" + to_string(_expression.id());
 }
 
-string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
+string IRGenerationContext::internalDispatch(Arity const& _arity)
 {
-	string funName = "dispatch_internal_in_" + to_string(_in) + "_out_" + to_string(_out);
+	string funName = "dispatch_internal_in_" + to_string(_arity.in) + "_out_" + to_string(_arity.out);
 	return m_functions.createFunction(funName, [&]() {
 		Whiskers templ(R"(
 			function <functionName>(fun <comma> <in>) <arrow> <out> {
@@ -149,11 +149,11 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 			}
 		)");
 		templ("functionName", funName);
-		templ("comma", _in > 0 ? "," : "");
-		templ("in", suffixedVariableNameList("in_", 0, _in));
-		templ("arrow", _out > 0 ? "->" : "");
-		templ("assignment_op", _out > 0 ? ":=" : "");
-		templ("out", suffixedVariableNameList("out_", 0, _out));
+		templ("comma", _arity.in > 0 ? "," : "");
+		templ("in", suffixedVariableNameList("in_", 0, _arity.in));
+		templ("arrow", _arity.out > 0 ? "->" : "");
+		templ("assignment_op", _arity.out > 0 ? ":=" : "");
+		templ("out", suffixedVariableNameList("out_", 0, _arity.out));
 
 		// UNIMPLEMENTED: Internal library calls via pointers are not implemented yet.
 		// We're not generating code for internal library functions here even though it's possible
@@ -165,8 +165,8 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 				if (
 					FunctionType const* functionType = TypeProvider::function(*function)->asCallableFunction(false);
 					!function->isConstructor() &&
-					TupleType(functionType->parameterTypes()).sizeOnStack() == _in &&
-					TupleType(functionType->returnParameterTypes()).sizeOnStack() == _out
+					TupleType(functionType->parameterTypes()).sizeOnStack() == _arity.in &&
+					TupleType(functionType->returnParameterTypes()).sizeOnStack() == _arity.out
 				)
 				{
 					// 0 is reserved for uninitialized function pointers

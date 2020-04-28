@@ -694,10 +694,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		else
 			define(_functionCall) <<
 				// NOTE: internalDispatch() takes care of adding the function to function generation queue
-				m_context.internalDispatch(
+				m_context.internalDispatch(Arity{
 					TupleType(functionType->parameterTypes()).sizeOnStack(),
 					TupleType(functionType->returnParameterTypes()).sizeOnStack()
-				) <<
+				}) <<
 				"(" <<
 				IRVariable(_functionCall.expression()).part("functionIdentifier").name() <<
 				joinHumanReadablePrefixed(args) <<
