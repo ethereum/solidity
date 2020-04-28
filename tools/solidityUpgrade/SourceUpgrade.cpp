@@ -194,6 +194,8 @@ Allowed options)",
 				m_suite.activateModule(Module::OverridingFunction);
 			else if (module == "virtual")
 				m_suite.activateModule(Module::VirtualFunction);
+			else if (module == "dotsyntax")
+				m_suite.activateModule(Module::DotSyntax);
 			else
 			{
 				error() << "Unknown upgrade module \"" + module + "\"" << endl;

@@ -19,17 +19,39 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <sstream>
 #include <regex>
 
 namespace solidity::tools
 {
 
 /**
+ * Helper for displaying location during asserts
+ */
+class LocationHelper
+{
+	std::stringstream m_stream;
+
+public:
+
+	template <typename T>
+	LocationHelper& operator<<(T const& data)
+	{
+		m_stream << data;
+		return *this;
+	}
+
+	operator std::string() { return m_stream.str(); }
+};
+
+
+/**
  * Helper that provides functions which analyze certain source locations
  * on a textual base. They utilize regular expression to search for
  * keywords or to determine formatting.
  */
-class SourceAnalysis {
+class SourceAnalysis
+{
 public:
 	static bool isMultilineKeyword(
 		langutil::SourceLocation const& _location,
@@ -82,6 +104,7 @@ public:
 		for (auto inheritedContract: _contracts)
 			overrideList += inheritedContract->name() + ",";
 
+		// Note: Can create incorrect replacements
 		return "override(" + overrideList.substr(0, overrideList.size() - 1) + ")";
 	}
 };
@@ -102,11 +125,21 @@ public:
 		std::string const& _expression
 	)
 	{
-		return regex_replace(
-			_location.text(),
-			std::regex{"(\\b" + _keyword + "\\b)"},
-			_expression + " " + _keyword
-		);
+		auto _regex = std::regex{"(\\b" + _keyword + "\\b)"};
+		if (regex_search(_location.text(), _regex))
+			return regex_replace(
+				_location.text(),
+				_regex,
+				_expression + " " + _keyword
+			);
+		else
+			solAssert(
+				false,
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				"\nNeeds to be fixed manually."
+			);
+
+		return "";
 	}
 
 	/// Searches for the keyword given and appends the expression.
@@ -121,7 +154,17 @@ public:
 		std::string toAppend = isMultiline ? ("\n        " + _expression) : (" " + _expression);
 		std::regex keyword{"(\\b" + _keyword + "\\b)"};
 
-		return regex_replace(_location.text(), keyword, _keyword + toAppend);
+		if (regex_search(_location.text(), keyword))
+			return regex_replace(_location.text(), keyword, _keyword + toAppend);
+		else
+			solAssert(
+				false,
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				"\nNeeds to be fixed manually."
+			);
+
+		return "";
+
 	}
 
 	/// Searches for the first right parenthesis and appends the expression
@@ -132,11 +175,21 @@ public:
 		std::string const& _expression
 	)
 	{
-		return regex_replace(
-			_location.text(),
-			std::regex{"(\\))"},
-			") " + _expression
-		);
+		auto _regex = std::regex{"(\\))"};
+		if (regex_search(_location.text(), _regex))
+			return regex_replace(
+				_location.text(),
+				std::regex{"(\\))"},
+				") " + _expression
+			);
+		else
+			solAssert(
+				false,
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				"\nNeeds to be fixed manually."
+			);
+
+		return "";
 	}
 
 	/// Searches for the `function` keyword and its identifier and replaces
@@ -148,11 +201,71 @@ public:
 		std::string const& _expression
 	)
 	{
-		return regex_replace(
-			_location.text(),
-			std::regex{"(\\bfunction\\s*" + _name + "\\b)"},
-			_expression
-		);
+		auto _regex = std::regex{ "(\\bfunction\\s*" + _name + "\\b)"};
+		if (regex_search(_location.text(), _regex))
+			return regex_replace(
+				_location.text(),
+				_regex,
+				_expression
+			);
+		else
+			solAssert(
+				false,
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				"\nNeeds to be fixed manually."
+			);
+
+		return "";
+	}
+
+	static std::string gasUpdate(langutil::SourceLocation const& _location)
+	{
+		// dot, "gas", any number of whitespaces, left bracket
+		std::regex gasReg{"\\.gas\\s*\\("};
+
+		if (regex_search(_location.text(), gasReg))
+		{
+			std::string out = regex_replace(
+				_location.text(),
+				gasReg,
+				"{gas: ",
+				std::regex_constants::format_first_only
+			);
+			return regex_replace(out, std::regex{"\\)$"}, "}");
+		}
+		else
+			solAssert(
+				false,
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				"\nNeeds to be fixed manually."
+			);
+
+		return "";
+	}
+
+	static std::string valueUpdate(langutil::SourceLocation const& _location)
+	{
+		// dot, "value", any number of whitespaces, left bracket
+		std::regex valueReg{"\\.value\\s*\\("};
+
+		if (regex_search(_location.text(), valueReg))
+		{
+			std::string out = regex_replace(
+					_location.text(),
+					valueReg,
+					"{value: ",
+					std::regex_constants::format_first_only
+			);
+			return regex_replace(out, std::regex{"\\)$"}, "}");
+		}
+		else
+			solAssert(
+				false,
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				"\nNeeds to be fixed manually."
+			);
+
+		return "";
 	}
 };
 
