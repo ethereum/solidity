@@ -19,10 +19,23 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <algorithm>
 #include <string>
 
 namespace solidity::frontend
 {
+
+/**
+ * Structure that describes arity and co-arity of a function, i.e. the number of its inputs and outputs.
+ */
+struct Arity
+{
+	size_t in;  /// Number of input parameters
+	size_t out; /// Number of output parameters
+
+	bool operator==(Arity const& _other) const { return in == _other.in && out == _other.out; }
+	bool operator!=(Arity const& _other) const { return !(*this == _other); }
+};
 
 std::string buildFunctionName(FunctionDefinition const& _function);
 std::string buildFunctionName(VariableDeclaration const& _varDecl);
@@ -30,3 +43,14 @@ std::string buildCreationObjectName(ContractDefinition const& _contract);
 std::string buildRuntimeObjectName(ContractDefinition const& _contract);
 
 }
+
+// Overloading std::less() makes it possible to use Arity as a map key. We could define operator<
+// instead but that would be confusing since e.g. Arity{2, 2} would be greater than Arity{1, 10}.
+template<>
+struct std::less<solidity::frontend::Arity>
+{
+	bool operator() (solidity::frontend::Arity const& _lhs, solidity::frontend::Arity const& _rhs) const
+	{
+		return _lhs.in < _rhs.in || (_lhs.in == _rhs.in && _lhs.out < _rhs.out);
+	}
+};
