@@ -1,5 +1,5 @@
 Warning: Source file does not specify required compiler version!
- --> too_long_line_both_sides_short/input.sol
+--> too_long_line_both_sides_short/input.sol
 
 Error: Identifier not found or not unique.
  --> too_long_line_both_sides_short/input.sol:2:15:

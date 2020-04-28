@@ -69,8 +69,14 @@ SortPointer smtSort(frontend::Type const& _type)
 		}
 		else
 		{
-			solAssert(isArray(_type.category()), "");
-			auto arrayType = dynamic_cast<frontend::ArrayType const*>(&_type);
+			frontend::ArrayType const* arrayType = nullptr;
+			if (auto const* arr = dynamic_cast<frontend::ArrayType const*>(&_type))
+				arrayType = arr;
+			else if (auto const* slice = dynamic_cast<frontend::ArraySliceType const*>(&_type))
+				arrayType = &slice->arrayType();
+			else
+				solAssert(false, "");
+
 			solAssert(arrayType, "");
 			return make_shared<ArraySort>(SortProvider::intSort, smtSortAbstractFunction(*arrayType->baseType()));
 		}
@@ -297,7 +303,8 @@ bool isMapping(frontend::Type::Category _category)
 bool isArray(frontend::Type::Category _category)
 {
 	return _category == frontend::Type::Category::Array ||
-		_category == frontend::Type::Category::StringLiteral;
+		_category == frontend::Type::Category::StringLiteral ||
+		_category == frontend::Type::Category::ArraySlice;
 }
 
 bool isTuple(frontend::Type::Category _category)

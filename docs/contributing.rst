@@ -356,6 +356,11 @@ by as many concatenations of its contents as there were sets of variables suppli
 each time replacing any ``<inner>`` items by their respective value. Top-level variables can also be used
 inside such areas.
 
+There are also conditionals of the form ``<?name>...<!name>...</name>``, where template replacements
+continue recursively either in the first or the second segment depending on the value of the boolean
+parameter ``name``. If ``<?+name>...<!+name>...</+name>`` is used, then the check is whether
+the string parameter ``name`` is non-empty.
+
 .. _documentation-style:
 
 Documentation Style Guide

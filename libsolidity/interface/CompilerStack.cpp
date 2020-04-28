@@ -1129,15 +1129,21 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	if (!_contract.canBeDeployed())
 		return;
 
+	map<ContractDefinition const*, string const> otherYulSources;
+
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	if (!compiledContract.yulIR.empty())
 		return;
 
+	string dependenciesSource;
 	for (auto const* dependency: _contract.annotation().contractDependencies)
+	{
 		generateIR(*dependency);
+		otherYulSources.emplace(dependency, m_contracts.at(dependency->fullyQualifiedName()).yulIR);
+	}
 
 	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings);
-	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract);
+	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract, otherYulSources);
 }
 
 void CompilerStack::generateEwasm(ContractDefinition const& _contract)
@@ -1265,6 +1271,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		{
 			details["yulDetails"] = Json::objectValue;
 			details["yulDetails"]["stackAllocation"] = m_optimiserSettings.optimizeStackAllocation;
+			details["yulDetails"]["optimizerSteps"] = m_optimiserSettings.yulOptimiserSteps;
 		}
 
 		meta["settings"]["optimizer"]["details"] = std::move(details);

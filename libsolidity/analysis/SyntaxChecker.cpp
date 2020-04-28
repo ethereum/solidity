@@ -141,7 +141,7 @@ bool SyntaxChecker::visit(ModifierDefinition const&)
 
 void SyntaxChecker::endVisit(ModifierDefinition const& _modifier)
 {
-	if (!m_placeholderFound)
+	if (_modifier.isImplemented() && !m_placeholderFound)
 		m_errorReporter.syntaxError(_modifier.body().location(), "Modifier body does not contain '_'.");
 	m_placeholderFound = false;
 }

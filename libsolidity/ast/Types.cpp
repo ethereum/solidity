@@ -3774,7 +3774,9 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 				{"name", TypeProvider::stringMemory()},
 			});
 		else
-			return {};
+			return MemberList::MemberMap({
+				{"interfaceId", TypeProvider::fixedBytes(4)},
+			});
 	}
 	}
 	solAssert(false, "Unknown kind of magic.");

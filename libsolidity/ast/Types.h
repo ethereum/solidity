@@ -1390,7 +1390,6 @@ public:
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 	std::string toString(bool _short) const override;
-
 protected:
 	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override { return {}; }
 private:

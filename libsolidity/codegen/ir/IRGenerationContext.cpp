@@ -21,6 +21,7 @@
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 
 #include <libsolidity/codegen/YulUtilFunctions.h>
+#include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 
@@ -96,6 +97,15 @@ string IRGenerationContext::functionName(VariableDeclaration const& _varDecl)
 	return "getter_fun_" + _varDecl.name() + "_" + to_string(_varDecl.id());
 }
 
+string IRGenerationContext::creationObjectName(ContractDefinition const& _contract) const
+{
+	return _contract.name() + "_" + toString(_contract.id());
+}
+string IRGenerationContext::runtimeObjectName(ContractDefinition const& _contract) const
+{
+	return _contract.name() + "_" + toString(_contract.id()) + "_deployed";
+}
+
 string IRGenerationContext::newYulVariable()
 {
 	return "_" + to_string(++m_varCounter);
@@ -122,7 +132,7 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 				<#cases>
 				case <funID>
 				{
-					<out> := <name>(<in>)
+					<out> <assignment_op> <name>(<in>)
 				}
 				</cases>
 				default { invalid() }
@@ -133,7 +143,13 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 		YulUtilFunctions utils(m_evmVersion, m_revertStrings, m_functions);
 		templ("in", suffixedVariableNameList("in_", 0, _in));
 		templ("arrow", _out > 0 ? "->" : "");
+		templ("assignment_op", _out > 0 ? ":=" : "");
 		templ("out", suffixedVariableNameList("out_", 0, _out));
+
+		// UNIMPLEMENTED: Internal library calls via pointers are not implemented yet.
+		// We're not generating code for internal library functions here even though it's possible
+		// to call them via pointers. Right now such calls end up triggering the `default` case in
+		// the switch above.
 		vector<map<string, string>> functions;
 		for (auto const& contract: mostDerivedContract().annotation().linearizedBaseContracts)
 			for (FunctionDefinition const* function: contract->definedFunctions())
@@ -162,6 +178,11 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 YulUtilFunctions IRGenerationContext::utils()
 {
 	return YulUtilFunctions(m_evmVersion, m_revertStrings, m_functions);
+}
+
+ABIFunctions IRGenerationContext::abiFunctions()
+{
+	return ABIFunctions(m_evmVersion, m_revertStrings, m_functions);
 }
 
 std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message)

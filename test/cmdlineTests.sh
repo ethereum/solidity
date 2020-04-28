@@ -126,7 +126,7 @@ function test_solc_behaviour()
         # Remove trailing empty lines. Needs a line break to make OSX sed happy.
         sed -i.bak -e '1{/^$/d
 }' "$stderr_path"
-       rm "$stderr_path.bak"
+        rm "$stderr_path.bak" "$stdout_path.bak"
     fi
     # Remove path to cpp file
     sed -i.bak -e 's/^\(Exception while assembling:\).*/\1/' "$stderr_path"
@@ -175,6 +175,8 @@ function test_solc_behaviour()
             exit 1
         fi
     fi
+
+    rm -f "$stdout_path" "$stderr_path"
 }
 
 

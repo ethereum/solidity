@@ -41,8 +41,6 @@ public:
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 
 private:
-	void printIndented(std::ostream& _stream, std::string const& _output, std::string const& _linePrefix = "") const;
-
 	std::string m_source;
 	std::string m_expectation;
 	std::string m_obtainedResult;

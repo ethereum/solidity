@@ -21,7 +21,6 @@
 #include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
-#include <cmath>
 #include <iomanip>
 
 using namespace std;
@@ -70,58 +69,66 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 	if (_ref.sourceName.empty())
 		return; // Nothing we can print here
 
-	int const leftpad = static_cast<int>(log10(max(_ref.position.line, 1))) + 1;
-
-	// line 0: source name
-	frameColored() << string(leftpad, ' ') << "--> ";
-
 	if (_ref.position.line < 0)
 	{
-		m_stream << _ref.sourceName << "\n";
+		frameColored() << "-->";
+		m_stream << ' ' << _ref.sourceName << '\n';
 		return; // No line available, nothing else to print
 	}
 
-	m_stream << _ref.sourceName << ":" << (_ref.position.line + 1) << ":" << (_ref.position.column + 1) << ":" << '\n';
+	string line = std::to_string(_ref.position.line + 1); // one-based line number as string
+	string leftpad = string(line.size(), ' ');
+
+	// line 0: source name
+	m_stream << leftpad;
+	frameColored() << "-->";
+	m_stream << ' ' << _ref.sourceName << ':' << line << ':' << (_ref.position.column + 1) << ":\n";
 
 	if (!_ref.multiline)
 	{
 		int const locationLength = _ref.endColumn - _ref.startColumn;
 
 		// line 1:
-		m_stream << string(leftpad, ' ');
-		frameColored() << " |" << '\n';
+		m_stream << leftpad << ' ';
+		frameColored() << '|';
+		m_stream << '\n';
 
 		// line 2:
-		frameColored() << (_ref.position.line + 1) << " | ";
-		m_stream << _ref.text.substr(0, _ref.startColumn);
+		frameColored() << line << " |";
+		m_stream << ' ' << _ref.text.substr(0, _ref.startColumn);
 		highlightColored() << _ref.text.substr(_ref.startColumn, locationLength);
 		m_stream << _ref.text.substr(_ref.endColumn) << '\n';
 
 		// line 3:
-		m_stream << string(leftpad, ' ');
-		frameColored() << " | ";
+		m_stream << leftpad << ' ';
+		frameColored() << '|';
+		m_stream << ' ';
 		for_each(
 			_ref.text.cbegin(),
 			_ref.text.cbegin() + _ref.startColumn,
 			[this](char ch) { m_stream << (ch == '\t' ? '\t' : ' '); }
 		);
-		diagColored() << string(locationLength, '^') << '\n';
+		diagColored() << string(locationLength, '^');
+		m_stream << '\n';
 	}
 	else
 	{
 		// line 1:
-		m_stream << string(leftpad, ' ');
-		frameColored() << " |" << '\n';
+		m_stream << leftpad << ' ';
+		frameColored() << '|';
+		m_stream << '\n';
 
 		// line 2:
-		frameColored() << (_ref.position.line + 1) << " | ";
-		m_stream << _ref.text.substr(0, _ref.startColumn);
+		frameColored() << line << " |";
+		m_stream << ' ' << _ref.text.substr(0, _ref.startColumn);
 		highlightColored() << _ref.text.substr(_ref.startColumn) << '\n';
 
 		// line 3:
-		frameColored() << string(leftpad, ' ') << " | ";
-		m_stream << string(_ref.startColumn, ' ');
-		diagColored() << "^ (Relevant source part starts here and spans across multiple lines).\n";
+		m_stream << leftpad << ' ';
+		frameColored() << '|';
+		m_stream << ' ' << string(_ref.startColumn, ' ');
+		diagColored() << "^ (Relevant source part starts here and spans across multiple lines).";
+		m_stream << '\n';
 	}
 }
 

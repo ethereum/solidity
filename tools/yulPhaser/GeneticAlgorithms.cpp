@@ -21,7 +21,46 @@
 #include <tools/yulPhaser/PairSelections.h>
 
 using namespace std;
+using namespace solidity;
 using namespace solidity::phaser;
+
+function<Crossover> phaser::buildCrossoverOperator(
+	CrossoverChoice _choice,
+	optional<double> _uniformCrossoverSwapChance
+)
+{
+	switch (_choice)
+	{
+		case CrossoverChoice::SinglePoint:
+			return randomPointCrossover();
+		case CrossoverChoice::TwoPoint:
+			return randomTwoPointCrossover();
+		case CrossoverChoice::Uniform:
+			assert(_uniformCrossoverSwapChance.has_value());
+			return uniformCrossover(_uniformCrossoverSwapChance.value());
+		default:
+			assertThrow(false, solidity::util::Exception, "Invalid CrossoverChoice value.");
+	};
+}
+
+function<SymmetricCrossover> phaser::buildSymmetricCrossoverOperator(
+	CrossoverChoice _choice,
+	optional<double> _uniformCrossoverSwapChance
+)
+{
+	switch (_choice)
+	{
+		case CrossoverChoice::SinglePoint:
+			return symmetricRandomPointCrossover();
+		case CrossoverChoice::TwoPoint:
+			return symmetricRandomTwoPointCrossover();
+		case CrossoverChoice::Uniform:
+			assert(_uniformCrossoverSwapChance.has_value());
+			return symmetricUniformCrossover(_uniformCrossoverSwapChance.value());
+		default:
+			assertThrow(false, solidity::util::Exception, "Invalid CrossoverChoice value.");
+	};
+}
 
 Population RandomAlgorithm::runNextRound(Population _population)
 {
@@ -57,7 +96,10 @@ Population GenerationalElitistWithExclusivePools::runNextRound(Population _popul
 			geneAddition(m_options.percentGenesToAddOrDelete)
 		)
 	);
-	std::function<Crossover> crossoverOperator = randomPointCrossover();
+	std::function<Crossover> crossoverOperator = buildCrossoverOperator(
+		m_options.crossover,
+		m_options.uniformCrossoverSwapChance
+	);
 
 	return
 		_population.select(elitePool) +
@@ -72,10 +114,15 @@ Population ClassicGeneticAlgorithm::runNextRound(Population _population)
 
 	Population selectedPopulation = select(_population, rest.individuals().size());
 
+	std::function<SymmetricCrossover> crossoverOperator = buildSymmetricCrossoverOperator(
+		m_options.crossover,
+		m_options.uniformCrossoverSwapChance
+	);
+
 	Population crossedPopulation = Population::combine(
 		selectedPopulation.symmetricCrossoverWithRemainder(
 			PairsFromRandomSubset(m_options.crossoverChance),
-			symmetricRandomPointCrossover()
+			crossoverOperator
 		)
 	);
 

@@ -74,6 +74,8 @@
 
 #include <libsolutil/AnsiColorized.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -342,7 +344,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		yul::Object obj;
 		obj.code = m_ast;
 		obj.analysisInfo = m_analysisInfo;
-		OptimiserSuite::run(*m_dialect, &meter, obj, true);
+		OptimiserSuite::run(*m_dialect, &meter, obj, true, solidity::frontend::OptimiserSettings::DefaultYulOptimiserSteps);
 	}
 	else
 	{
@@ -373,14 +375,6 @@ void YulOptimizerTest::printSource(ostream& _stream, string const& _linePrefix, 
 void YulOptimizerTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
 {
 	printIndented(_stream, m_obtainedResult, _linePrefix);
-}
-
-void YulOptimizerTest::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
-{
-	stringstream output(_output);
-	string line;
-	while (getline(output, line))
-		_stream << _linePrefix << line << endl;
 }
 
 bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)

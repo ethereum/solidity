@@ -194,7 +194,8 @@ void SMTEncoder::inlineModifierInvocation(ModifierInvocation const* _invocation,
 	pushCallStack({_definition, _invocation});
 	if (auto modifier = dynamic_cast<ModifierDefinition const*>(_definition))
 	{
-		modifier->body().accept(*this);
+		if (modifier->isImplemented())
+			modifier->body().accept(*this);
 		popCallStack();
 	}
 	else if (auto function = dynamic_cast<FunctionDefinition const*>(_definition))
@@ -456,6 +457,9 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 		return;
 
 	createExpr(_op);
+
+	if (_op.annotation().type->category() == Type::Category::FixedPoint)
+		return;
 
 	switch (_op.getOperator())
 	{

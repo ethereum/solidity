@@ -1302,19 +1302,23 @@ void ProtoConverter::visit(Statement const& _x)
 			visit(_x.assignment());
 		break;
 	case Statement::kIfstmt:
-		visit(_x.ifstmt());
+		if (_x.ifstmt().if_body().statements_size() > 0)
+			visit(_x.ifstmt());
 		break;
 	case Statement::kStorageFunc:
 		visit(_x.storage_func());
 		break;
 	case Statement::kBlockstmt:
-		visit(_x.blockstmt());
+		if (_x.blockstmt().statements_size() > 0)
+			visit(_x.blockstmt());
 		break;
 	case Statement::kForstmt:
-		visit(_x.forstmt());
+		if (_x.forstmt().for_body().statements_size() > 0)
+			visit(_x.forstmt());
 		break;
 	case Statement::kBoundedforstmt:
-		visit(_x.boundedforstmt());
+		if (_x.boundedforstmt().for_body().statements_size() > 0)
+			visit(_x.boundedforstmt());
 		break;
 	case Statement::kSwitchstmt:
 		visit(_x.switchstmt());
@@ -1346,8 +1350,9 @@ void ProtoConverter::visit(Statement const& _x)
 		visit(_x.functioncall());
 		break;
 	case Statement::kFuncdef:
-		if (!m_inForInitScope)
-			visit(_x.funcdef());
+		if (_x.funcdef().block().statements_size() > 0)
+			if (!m_inForInitScope)
+				visit(_x.funcdef());
 		break;
 	case Statement::kPop:
 		visit(_x.pop());
@@ -1524,7 +1529,7 @@ void ProtoConverter::visit(Block const& _x)
 	// scope belongs to for-init (in which function declarations
 	// are forbidden).
 	for (auto const& statement: _x.statements())
-		if (statement.has_funcdef() && !m_inForInitScope)
+		if (statement.has_funcdef() && statement.funcdef().block().statements_size() > 0 && !m_inForInitScope)
 			registerFunction(&statement.funcdef());
 
 	if (_x.statements_size() > 0)

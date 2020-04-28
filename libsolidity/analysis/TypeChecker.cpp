@@ -289,6 +289,12 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 		m_errorReporter.fatalTypeError(_usingFor.libraryName().location(), "Library name expected.");
 }
 
+void TypeChecker::endVisit(ModifierDefinition const& _modifier)
+{
+	if (!_modifier.isImplemented() && !_modifier.virtualSemantics())
+		m_errorReporter.typeError(_modifier.location(), "Modifiers without implementation must be marked virtual.");
+}
+
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	bool isLibraryFunction = _function.inContractKind() == ContractKind::Library;
@@ -1290,8 +1296,11 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 {
 	if (auto const* tupleExpression = dynamic_cast<TupleExpression const*>(&_expression))
 	{
+		if (tupleExpression->components().empty())
+			m_errorReporter.typeError(_expression.location(), "Empty tuple on the left hand side.");
+
 		auto const* tupleType = dynamic_cast<TupleType const*>(&_type);
-		auto const& types = tupleType && tupleExpression->components().size() > 1 ? tupleType->components() : vector<TypePointer> { &_type };
+		auto const& types = tupleType && tupleExpression->components().size() != 1 ? tupleType->components() : vector<TypePointer> { &_type };
 
 		solAssert(
 			tupleExpression->components().size() == types.size() || m_errorReporter.hasErrors(),
@@ -2590,6 +2599,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				);
 		}
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "name")
+			annotation.isPure = true;
+		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "interfaceId")
 			annotation.isPure = true;
 	}
 

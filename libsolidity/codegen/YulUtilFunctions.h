@@ -253,6 +253,13 @@ public:
 	/// Return value: pointer
 	std::string allocationFunction();
 
+	/// @returns the name of the function that allocates temporary memory with predefined size
+	/// Return value: pointer
+	std::string allocationTemporaryMemoryFunction();
+
+	/// @returns the name of the function that releases previously allocated temporary memory
+	std::string releaseTemporaryMemoryFunction();
+
 	/// @returns the name of a function that zeroes an array.
 	/// signature: (dataStart, dataSizeInBytes) ->
 	std::string zeroMemoryArrayFunction(ArrayType const& _type);
@@ -336,6 +343,13 @@ public:
 	///
 	/// If returndatacopy() is not supported by the underlying target, a empty array will be returned instead.
 	std::string extractReturndataFunction();
+
+	/// @returns function name that returns constructor arguments copied to memory
+	/// signature: () -> arguments
+	std::string copyConstructorArgumentsToMemoryFunction(
+		ContractDefinition const& _contract,
+		std::string const& _creationObjectName
+	);
 
 private:
 	/// Special case of conversionFunction - handles everything that does not

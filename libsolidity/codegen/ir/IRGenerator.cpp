@@ -48,9 +48,12 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 
-pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
+pair<string, string> IRGenerator::run(
+	ContractDefinition const& _contract,
+	map<ContractDefinition const*, string const> const& _otherYulSources
+)
 {
-	string const ir = yul::reindent(generate(_contract));
+	string const ir = yul::reindent(generate(_contract, _otherYulSources));
 
 	yul::AssemblyStack asmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
 	if (!asmStack.parseAndAnalyze("", ir))
@@ -73,15 +76,28 @@ pair<string, string> IRGenerator::run(ContractDefinition const& _contract)
 	return {warning + ir, warning + asmStack.print()};
 }
 
-string IRGenerator::generate(ContractDefinition const& _contract)
+string IRGenerator::generate(
+	ContractDefinition const& _contract,
+	map<ContractDefinition const*, string const> const& _otherYulSources
+)
 {
-	solUnimplementedAssert(!_contract.isLibrary(), "Libraries not yet implemented.");
+	auto subObjectSources = [&_otherYulSources](std::set<ContractDefinition const*, ASTNode::CompareByID> const& subObjects) -> string
+	{
+		std::string subObjectsSources;
+		for (ContractDefinition const* subObject: subObjects)
+			subObjectsSources += _otherYulSources.at(subObject);
+		return subObjectsSources;
+	};
 
 	Whiskers t(R"(
 		object "<CreationObject>" {
 			code {
 				<memoryInit>
-				<constructor>
+				<callValueCheck>
+				<?notLibrary>
+				<?constructorHasParams> let <constructorParams> := <copyConstructorArguments>() </constructorHasParams>
+				<implicitConstructor>(<constructorParams>)
+				</notLibrary>
 				<deploy>
 				<functions>
 			}
@@ -91,24 +107,46 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 					<dispatch>
 					<runtimeFunctions>
 				}
+				<runtimeSubObjects>
 			}
+			<subObjects>
 		}
 	)");
 
 	resetContext(_contract);
 
-	t("CreationObject", creationObjectName(_contract));
+	t("CreationObject", m_context.creationObjectName(_contract));
 	t("memoryInit", memoryInit());
-	t("constructor", constructorCode(_contract));
+	t("notLibrary", !_contract.isLibrary());
+
+	FunctionDefinition const* constructor = _contract.constructor();
+	t("callValueCheck", !constructor || !constructor->isPayable() ? callValueCheck() : "");
+	vector<string> constructorParams;
+	if (constructor && !constructor->parameters().empty())
+	{
+		for (size_t i = 0; i < constructor->parameters().size(); ++i)
+			constructorParams.emplace_back(m_context.newYulVariable());
+		t(
+			"copyConstructorArguments",
+			m_utils.copyConstructorArgumentsToMemoryFunction(_contract, m_context.creationObjectName(_contract))
+		);
+	}
+	t("constructorParams", joinHumanReadable(constructorParams));
+	t("constructorHasParams", !constructorParams.empty());
+	t("implicitConstructor", implicitConstructorName(_contract));
+
 	t("deploy", deployCode(_contract));
+	generateImplicitConstructors(_contract);
 	generateQueuedFunctions();
 	t("functions", m_context.functionCollector().requestedFunctions());
+	t("subObjects", subObjectSources(m_context.subObjectsCreated()));
 
 	resetContext(_contract);
-	t("RuntimeObject", runtimeObjectName(_contract));
+	t("RuntimeObject", m_context.runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
 	generateQueuedFunctions();
 	t("runtimeFunctions", m_context.functionCollector().requestedFunctions());
+	t("runtimeSubObjects", subObjectSources(m_context.subObjectsCreated()));
 	return t.render();
 }
 
@@ -238,64 +276,116 @@ string IRGenerator::generateInitialAssignment(VariableDeclaration const& _varDec
 	return generator.code();
 }
 
-string IRGenerator::constructorCode(ContractDefinition const& _contract)
+pair<string, map<ContractDefinition const*, string>> IRGenerator::evaluateConstructorArguments(
+	ContractDefinition const& _contract
+)
 {
-	// Initialization of state variables in base-to-derived order.
-	solAssert(!_contract.isLibrary(), "Tried to initialize state variables of library.");
+	map<ContractDefinition const*, string> constructorParams;
+	vector<pair<ContractDefinition const*, std::vector<ASTPointer<Expression>>const *>> baseConstructorArguments;
 
-	using boost::adaptors::reverse;
+	for (ASTPointer<InheritanceSpecifier> const& base: _contract.baseContracts())
+		if (FunctionDefinition const* baseConstructor = dynamic_cast<ContractDefinition const*>(
+					base->name().annotation().referencedDeclaration
+			)->constructor(); baseConstructor && base->arguments())
+			baseConstructorArguments.emplace_back(
+					dynamic_cast<ContractDefinition const*>(baseConstructor->scope()),
+					base->arguments()
+			);
 
-	ostringstream out;
+	if (FunctionDefinition const* constructor = _contract.constructor())
+		for (auto const& modifier: constructor->modifiers())
+			if (FunctionDefinition const* baseConstructor = dynamic_cast<ContractDefinition const*>(
+				modifier->name()->annotation().referencedDeclaration
+			)->constructor(); baseConstructor && modifier->arguments())
+				baseConstructorArguments.emplace_back(
+					dynamic_cast<ContractDefinition const*>(baseConstructor->scope()),
+					modifier->arguments()
+				);
 
-	FunctionDefinition const* constructor = _contract.constructor();
-	if (constructor && !constructor->isPayable())
-		out << callValueCheck();
-
-	for (ContractDefinition const* contract: reverse(_contract.annotation().linearizedBaseContracts))
+	IRGeneratorForStatements generator{m_context, m_utils};
+	for (auto&& [baseContract, arguments]: baseConstructorArguments)
 	{
-		out <<
-			"\n// Begin state variable initialization for contract \"" <<
-			contract->name() <<
-			"\" (" <<
-			contract->stateVariables().size() <<
-			" variables)\n";
-
-		IRGeneratorForStatements generator{m_context, m_utils};
-		for (VariableDeclaration const* variable: contract->stateVariables())
-			if (!variable->isConstant() && !variable->immutable())
-				generator.initializeStateVar(*variable);
-		out << generator.code();
-
-		out << "// End state variable initialization for contract \"" << contract->name() << "\".\n";
+		solAssert(baseContract && arguments, "");
+		if (baseContract->constructor() && !arguments->empty())
+		{
+			vector<string> params;
+			for (size_t i = 0; i < arguments->size(); ++i)
+				params.emplace_back(generator.evaluateExpression(
+						*(arguments->at(i)),
+						*(baseContract->constructor()->parameters()[i]->type())
+				).commaSeparatedList());
+			constructorParams[baseContract] = joinHumanReadable(params);
+		}
 	}
 
-	if (constructor)
+	return {generator.code(), constructorParams};
+}
+
+string IRGenerator::initStateVariables(ContractDefinition const& _contract)
+{
+	IRGeneratorForStatements generator{m_context, m_utils};
+	for (VariableDeclaration const* variable: _contract.stateVariables())
+		if (!variable->isConstant() && !variable->immutable())
+			generator.initializeStateVar(*variable);
+
+	return generator.code();
+}
+
+
+void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contract)
+{
+	auto listAllParams = [&](
+		map<ContractDefinition const*, string> const& baseParams) -> string
 	{
-		ABIFunctions abiFunctions(m_evmVersion, m_context.revertStrings(), m_context.functionCollector());
-		unsigned paramVars = make_shared<TupleType>(constructor->functionType(false)->parameterTypes())->sizeOnStack();
+		vector<string> params;
+		for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
+			if (baseParams.count(contract))
+				params.emplace_back(baseParams.at(contract));
+		return joinHumanReadable(params);
+	};
 
-		Whiskers t(R"X(
-			let programSize := datasize("<object>")
-			let argSize := sub(codesize(), programSize)
+	map<ContractDefinition const*, string> baseConstructorParams;
+	for (size_t i = 0; i < _contract.annotation().linearizedBaseContracts.size(); ++i)
+	{
+		ContractDefinition const* contract = _contract.annotation().linearizedBaseContracts[i];
+		baseConstructorParams.erase(contract);
 
-			let memoryDataOffset := <allocate>(argSize)
-			codecopy(memoryDataOffset, programSize, argSize)
+		m_context.functionCollector().createFunction(implicitConstructorName(*contract), [&]() {
+			Whiskers t(R"(
+				function <functionName>(<params><comma><baseParams>) {
+					<evalBaseArguments>
+					<?hasNextConstructor> <nextConstructor>(<nextParams>) </hasNextConstructor>
+					<initStateVariables>
+					<userDefinedConstructorBody>
+				}
+			)");
+			string params;
+			if (contract->constructor())
+				for (ASTPointer<VariableDeclaration> const& varDecl: contract->constructor()->parameters())
+					params += (params.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl).commaSeparatedList();
+			t("params", params);
+			string baseParamsString = listAllParams(baseConstructorParams);
+			t("baseParams", baseParamsString);
+			t("comma", !params.empty() && !baseParamsString.empty() ? ", " : "");
+			t("functionName", implicitConstructorName(*contract));
+			pair<string, map<ContractDefinition const*, string>> evaluatedArgs = evaluateConstructorArguments(*contract);
+			baseConstructorParams.insert(evaluatedArgs.second.begin(), evaluatedArgs.second.end());
+			t("evalBaseArguments", evaluatedArgs.first);
+			if (i < _contract.annotation().linearizedBaseContracts.size() - 1)
+			{
+				t("hasNextConstructor", true);
+				ContractDefinition const* nextContract = _contract.annotation().linearizedBaseContracts[i + 1];
+				t("nextConstructor", implicitConstructorName(*nextContract));
+				t("nextParams", listAllParams(baseConstructorParams));
+			}
+			else
+				t("hasNextConstructor", false);
+			t("initStateVariables", initStateVariables(*contract));
+			t("userDefinedConstructorBody", contract->constructor() ? generate(contract->constructor()->body()) : "");
 
-			<assignToParams> <abiDecode>(memoryDataOffset, add(memoryDataOffset, argSize))
-
-			<constructorName>(<params>)
-		)X");
-		t("object", creationObjectName(_contract));
-		t("allocate", m_utils.allocationFunction());
-		t("assignToParams", paramVars == 0 ? "" : "let " + suffixedVariableNameList("param_", 0, paramVars) + " := ");
-		t("params", suffixedVariableNameList("param_", 0, paramVars));
-		t("abiDecode", abiFunctions.tupleDecoder(constructor->functionType(false)->parameterTypes(), true));
-		t("constructorName", m_context.enqueueFunctionForCodeGeneration(*constructor));
-
-		out << t.render();
+			return t.render();
+		});
 	}
-
-	return out.str();
 }
 
 string IRGenerator::deployCode(ContractDefinition const& _contract)
@@ -304,7 +394,7 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 		codecopy(0, dataoffset("<object>"), datasize("<object>"))
 		return(0, datasize("<object>"))
 	)X");
-	t("object", runtimeObjectName(_contract));
+	t("object", m_context.runtimeObjectName(_contract));
 	return t.render();
 }
 
@@ -313,14 +403,9 @@ string IRGenerator::callValueCheck()
 	return "if callvalue() { revert(0, 0) }";
 }
 
-string IRGenerator::creationObjectName(ContractDefinition const& _contract)
+string IRGenerator::implicitConstructorName(ContractDefinition const& _contract)
 {
-	return _contract.name() + "_" + to_string(_contract.id());
-}
-
-string IRGenerator::runtimeObjectName(ContractDefinition const& _contract)
-{
-	return _contract.name() + "_" + to_string(_contract.id()) + "_deployed";
+	return "constructor_" + _contract.name() + "_" + to_string(_contract.id());
 }
 
 string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)

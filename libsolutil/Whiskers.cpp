@@ -132,7 +132,11 @@ string Whiskers::replace(
 	map<string, vector<StringMap>> const& _listParameters
 )
 {
-	static regex listOrTag("<(" + paramRegex() + ")>|<#(" + paramRegex() + ")>((?:.|\\r|\\n)*?)</\\2>|<\\?(" + paramRegex() + ")>((?:.|\\r|\\n)*?)(<!\\4>((?:.|\\r|\\n)*?))?</\\4>");
+	static regex listOrTag(
+		"<(" + paramRegex() + ")>|"
+		"<#(" + paramRegex() + ")>((?:.|\\r|\\n)*?)</\\2>|"
+		"<\\?(\\+?" + paramRegex() + ")>((?:.|\\r|\\n)*?)(<!\\4>((?:.|\\r|\\n)*?))?</\\4>"
+	);
 	return regex_replace(_template, listOrTag, [&](match_results<string::const_iterator> _match) -> string
 	{
 		string tagName(_match[1]);
@@ -164,12 +168,26 @@ string Whiskers::replace(
 		else
 		{
 			assertThrow(!conditionName.empty(), WhiskersError, "");
-			assertThrow(
-				_conditions.count(conditionName),
-				WhiskersError, "Condition parameter " + conditionName + " not set."
-			);
+			bool conditionValue = false;
+			if (conditionName[0] == '+')
+			{
+				string tag = conditionName.substr(1);
+				assertThrow(
+					_parameters.count(tag),
+					WhiskersError, "Tag " + tag + " used as condition but was not set."
+				);
+				conditionValue = !_parameters.at(tag).empty();
+			}
+			else
+			{
+				assertThrow(
+					_conditions.count(conditionName),
+					WhiskersError, "Condition parameter " + conditionName + " not set."
+				);
+				conditionValue = _conditions.at(conditionName);
+			}
 			return replace(
-				_conditions.at(conditionName) ? _match[5] : _match[7],
+				conditionValue ? _match[5] : _match[7],
 				_parameters,
 				_conditions,
 				_listParameters

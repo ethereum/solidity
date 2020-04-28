@@ -112,6 +112,7 @@ private:
 
 	void endVisit(InheritanceSpecifier const& _inheritance) override;
 	void endVisit(UsingForDirective const& _usingFor) override;
+	void endVisit(ModifierDefinition const& _modifier) override;
 	bool visit(FunctionDefinition const& _function) override;
 	bool visit(VariableDeclaration const& _variable) override;
 	/// We need to do this manually because we want to pass the bases of the current contract in

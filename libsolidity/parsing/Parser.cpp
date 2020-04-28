@@ -595,13 +595,13 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition()
 
 	ASTPointer<Block> block;
 	nodeFactory.markEndPosition();
-	if (m_scanner->currentToken() != Token::Semicolon)
+	if (m_scanner->currentToken() == Token::Semicolon)
+		m_scanner->next();
+	else
 	{
 		block = parseBlock();
 		nodeFactory.setEndPositionFromNode(block);
 	}
-	else
-		m_scanner->next(); // just consume the ';'
 	return nodeFactory.createNode<FunctionDefinition>(
 		name,
 		header.visibility,
@@ -851,9 +851,16 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 			break;
 	}
 
+	ASTPointer<Block> block;
+	nodeFactory.markEndPosition();
+	if (m_scanner->currentToken() != Token::Semicolon)
+	{
+		block = parseBlock();
+		nodeFactory.setEndPositionFromNode(block);
+	}
+	else
+		m_scanner->next(); // just consume the ';'
 
-	ASTPointer<Block> block = parseBlock();
-	nodeFactory.setEndPositionFromNode(block);
 	return nodeFactory.createNode<ModifierDefinition>(name, documentation, parameters, isVirtual, overrides, block);
 }
 

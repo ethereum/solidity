@@ -145,7 +145,7 @@ function<Crossover> phaser::randomPointCrossover()
 		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
 
 		// Don't use position 0 (because this just swaps the values) unless it's the only choice.
-		size_t minPoint = (minLength > 0? 1 : 0);
+		size_t minPoint = (minLength > 0 ? 1 : 0);
 		assert(minPoint <= minLength);
 
 		size_t randomPoint = SimulationRNG::uniformInt(minPoint, minLength);
@@ -160,7 +160,7 @@ function<SymmetricCrossover> phaser::symmetricRandomPointCrossover()
 		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
 
 		// Don't use position 0 (because this just swaps the values) unless it's the only choice.
-		size_t minPoint = (minLength > 0? 1 : 0);
+		size_t minPoint = (minLength > 0 ? 1 : 0);
 		assert(minPoint <= minLength);
 
 		size_t randomPoint = SimulationRNG::uniformInt(minPoint, minLength);
@@ -178,5 +178,140 @@ function<Crossover> phaser::fixedPointCrossover(double _crossoverPoint)
 		size_t concretePoint = static_cast<size_t>(round(minLength * _crossoverPoint));
 
 		return get<0>(fixedPointSwap(_chromosome1, _chromosome2, concretePoint));
+	};
+}
+
+namespace
+{
+
+ChromosomePair fixedTwoPointSwap(
+	Chromosome const& _chromosome1,
+	Chromosome const& _chromosome2,
+	size_t _crossoverPoint1,
+	size_t _crossoverPoint2
+)
+{
+	assert(_crossoverPoint1 <= _chromosome1.length());
+	assert(_crossoverPoint1 <= _chromosome2.length());
+	assert(_crossoverPoint2 <= _chromosome1.length());
+	assert(_crossoverPoint2 <= _chromosome2.length());
+
+	size_t lowPoint = min(_crossoverPoint1, _crossoverPoint2);
+	size_t highPoint = max(_crossoverPoint1, _crossoverPoint2);
+
+	auto begin1 = _chromosome1.optimisationSteps().begin();
+	auto begin2 = _chromosome2.optimisationSteps().begin();
+	auto end1 = _chromosome1.optimisationSteps().end();
+	auto end2 = _chromosome2.optimisationSteps().end();
+
+	return {
+		Chromosome(
+			vector<string>(begin1, begin1 + lowPoint) +
+			vector<string>(begin2 + lowPoint, begin2 + highPoint) +
+			vector<string>(begin1 + highPoint, end1)
+		),
+		Chromosome(
+			vector<string>(begin2, begin2 + lowPoint) +
+			vector<string>(begin1 + lowPoint, begin1 + highPoint) +
+			vector<string>(begin2 + highPoint, end2)
+		),
+	};
+}
+
+}
+
+function<Crossover> phaser::randomTwoPointCrossover()
+{
+	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+	{
+		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
+
+		// Don't use position 0 (because this just swaps the values) unless it's the only choice.
+		size_t minPoint = (minLength > 0 ? 1 : 0);
+		assert(minPoint <= minLength);
+
+		size_t randomPoint1 = SimulationRNG::uniformInt(minPoint, minLength);
+		size_t randomPoint2 = SimulationRNG::uniformInt(randomPoint1, minLength);
+		return get<0>(fixedTwoPointSwap(_chromosome1, _chromosome2, randomPoint1, randomPoint2));
+	};
+}
+
+function<SymmetricCrossover> phaser::symmetricRandomTwoPointCrossover()
+{
+	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+	{
+		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
+
+		// Don't use position 0 (because this just swaps the values) unless it's the only choice.
+		size_t minPoint = (minLength > 0 ? 1 : 0);
+		assert(minPoint <= minLength);
+
+		size_t randomPoint1 = SimulationRNG::uniformInt(minPoint, minLength);
+		size_t randomPoint2 = SimulationRNG::uniformInt(randomPoint1, minLength);
+		return fixedTwoPointSwap(_chromosome1, _chromosome2, randomPoint1, randomPoint2);
+	};
+}
+
+namespace
+{
+
+ChromosomePair uniformSwap(Chromosome const& _chromosome1, Chromosome const& _chromosome2, double _swapChance)
+{
+	vector<string> steps1;
+	vector<string> steps2;
+
+	size_t minLength = min(_chromosome1.length(), _chromosome2.length());
+	for (size_t i = 0; i < minLength; ++i)
+		if (SimulationRNG::bernoulliTrial(_swapChance))
+		{
+			steps1.push_back(_chromosome2.optimisationSteps()[i]);
+			steps2.push_back(_chromosome1.optimisationSteps()[i]);
+		}
+		else
+		{
+			steps1.push_back(_chromosome1.optimisationSteps()[i]);
+			steps2.push_back(_chromosome2.optimisationSteps()[i]);
+		}
+
+	auto begin1 = _chromosome1.optimisationSteps().begin();
+	auto begin2 = _chromosome2.optimisationSteps().begin();
+	auto end1 = _chromosome1.optimisationSteps().end();
+	auto end2 = _chromosome2.optimisationSteps().end();
+
+	bool swapTail = SimulationRNG::bernoulliTrial(_swapChance);
+	if (_chromosome1.length() > minLength)
+	{
+		if (swapTail)
+			steps2.insert(steps2.end(), begin1 + minLength, end1);
+		else
+			steps1.insert(steps1.end(), begin1 + minLength, end1);
+	}
+
+	if (_chromosome2.length() > minLength)
+	{
+		if (swapTail)
+			steps1.insert(steps1.end(), begin2 + minLength, end2);
+		else
+			steps2.insert(steps2.end(), begin2 + minLength, end2);
+	}
+
+	return {Chromosome(steps1), Chromosome(steps2)};
+}
+
+}
+
+function<Crossover> phaser::uniformCrossover(double _swapChance)
+{
+	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+	{
+		return get<0>(uniformSwap(_chromosome1, _chromosome2, _swapChance));
+	};
+}
+
+function<SymmetricCrossover> phaser::symmetricUniformCrossover(double _swapChance)
+{
+	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+	{
+		return uniformSwap(_chromosome1, _chromosome2, _swapChance);
 	};
 }

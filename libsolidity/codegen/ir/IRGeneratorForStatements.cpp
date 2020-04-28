@@ -169,6 +169,14 @@ void IRGeneratorForStatements::initializeLocalVar(VariableDeclaration const& _va
 	assign(m_context.localVariable(_varDecl), zero);
 }
 
+IRVariable IRGeneratorForStatements::evaluateExpression(Expression const& _expression, Type const& _targetType)
+{
+	_expression.accept(*this);
+	IRVariable variable{m_context.newYulVariable(), _targetType};
+	define(variable, _expression);
+	return variable;
+}
+
 void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _varDeclStatement)
 {
 	if (Expression const* expression = _varDeclStatement.initialValue())
@@ -559,9 +567,20 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			arguments.push_back(callArguments[std::distance(callArgumentNames.begin(), it)]);
 		}
 
+	if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
+		if (auto expressionType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type))
+			if (auto contractType = dynamic_cast<ContractType const*>(expressionType->actualType()))
+				solUnimplementedAssert(
+					!contractType->contractDefinition().isLibrary() || functionType->kind() == FunctionType::Kind::Internal,
+					"Only internal function calls implemented for libraries"
+				);
+
 	solUnimplementedAssert(!functionType->bound(), "");
 	switch (functionType->kind())
 	{
+	case FunctionType::Kind::Declaration:
+		solAssert(false, "Attempted to generate code for calling a function definition.");
+		break;
 	case FunctionType::Kind::Internal:
 	{
 		vector<string> args;
@@ -571,32 +590,60 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			else
 				args.emplace_back(convert(*arguments[i], *parameterTypes[i]).commaSeparatedList());
 
-		if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+		optional<FunctionDefinition const*> functionDef;
+		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
 		{
-			solAssert(!functionType->bound(), "");
-			if (auto functionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
+			solUnimplementedAssert(!functionType->bound(), "Internal calls to bound functions are not yet implemented for libraries and not allowed for contracts");
+
+			functionDef = dynamic_cast<FunctionDefinition const*>(memberAccess->annotation().referencedDeclaration);
+			if (functionDef.value() != nullptr)
+				solAssert(functionType->declaration() == *memberAccess->annotation().referencedDeclaration, "");
+			else
 			{
-				define(_functionCall) <<
-					m_context.enqueueFunctionForCodeGeneration(
-						functionDef->resolveVirtual(m_context.mostDerivedContract())
-					) <<
-					"(" <<
-					joinHumanReadable(args) <<
-					")\n";
-				return;
+				solAssert(dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration), "");
+				solAssert(!functionType->hasDeclaration(), "");
 			}
 		}
+		else if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+		{
+			solAssert(!functionType->bound(), "");
 
-		define(_functionCall) <<
-			// NOTE: internalDispatch() takes care of adding the function to function generation queue
-			m_context.internalDispatch(
-				TupleType(functionType->parameterTypes()).sizeOnStack(),
-				TupleType(functionType->returnParameterTypes()).sizeOnStack()
-			) <<
-			"(" <<
-			IRVariable(_functionCall.expression()).part("functionIdentifier").name() <<
-			joinHumanReadablePrefixed(args) <<
-			")\n";
+			if (auto unresolvedFunctionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
+			{
+				functionDef = &unresolvedFunctionDef->resolveVirtual(m_context.mostDerivedContract());
+				solAssert(functionType->declaration() == *identifier->annotation().referencedDeclaration, "");
+			}
+			else
+			{
+				functionDef = nullptr;
+				solAssert(dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration), "");
+				solAssert(!functionType->hasDeclaration(), "");
+			}
+		}
+		else
+			// Not a simple expression like x or A.x
+			functionDef = nullptr;
+
+		solAssert(functionDef.has_value(), "");
+		solAssert(functionDef.value() == nullptr || functionDef.value()->isImplemented(), "");
+
+		if (functionDef.value() != nullptr)
+			define(_functionCall) <<
+				m_context.enqueueFunctionForCodeGeneration(*functionDef.value()) <<
+				"(" <<
+				joinHumanReadable(args) <<
+				")\n";
+		else
+			define(_functionCall) <<
+				// NOTE: internalDispatch() takes care of adding the function to function generation queue
+				m_context.internalDispatch(
+					TupleType(functionType->parameterTypes()).sizeOnStack(),
+					TupleType(functionType->returnParameterTypes()).sizeOnStack()
+				) <<
+				"(" <<
+				IRVariable(_functionCall.expression()).part("functionIdentifier").name() <<
+				joinHumanReadablePrefixed(args) <<
+				")\n";
 		break;
 	}
 	case FunctionType::Kind::External:
@@ -716,6 +763,14 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			"))\n";
 		break;
 	}
+	case FunctionType::Kind::ECRecover:
+	case FunctionType::Kind::SHA256:
+	case FunctionType::Kind::RIPEMD160:
+	{
+		solAssert(!_functionCall.annotation().tryCall, "");
+		appendExternalFunctionCall(_functionCall, arguments);
+		break;
+	}
 	case FunctionType::Kind::ArrayPop:
 	{
 		auto const& memberAccessExpression = dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression();
@@ -757,6 +812,100 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 				argument.commaSeparatedList() <<
 				")\n";
 		}
+		break;
+	}
+	case FunctionType::Kind::MetaType:
+	{
+		break;
+	}
+	case FunctionType::Kind::GasLeft:
+	{
+		define(_functionCall) << "gas()\n";
+		break;
+	}
+	case FunctionType::Kind::Selfdestruct:
+	{
+		solAssert(arguments.size() == 1, "");
+		define(_functionCall) << "selfdestruct(" << expressionAsType(*arguments.front(), *parameterTypes.front()) << ")\n";
+		break;
+	}
+	case FunctionType::Kind::Log0:
+	case FunctionType::Kind::Log1:
+	case FunctionType::Kind::Log2:
+	case FunctionType::Kind::Log3:
+	case FunctionType::Kind::Log4:
+	{
+		unsigned logNumber = int(functionType->kind()) - int(FunctionType::Kind::Log0);
+		solAssert(arguments.size() == logNumber + 1, "");
+		ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
+		string indexedArgs;
+		for (unsigned arg = 0; arg < logNumber; ++arg)
+			indexedArgs += ", " + expressionAsType(*arguments[arg + 1], *(parameterTypes[arg + 1]));
+		Whiskers templ(R"({
+			let <pos> := <freeMemory>
+			let <end> := <encode>(<pos>, <nonIndexedArgs>)
+			<log>(<pos>, sub(<end>, <pos>) <indexedArgs>)
+		})");
+		templ("pos", m_context.newYulVariable());
+		templ("end", m_context.newYulVariable());
+		templ("freeMemory", freeMemory());
+		templ("encode", abi.tupleEncoder({arguments.front()->annotation().type}, {parameterTypes.front()}));
+		templ("nonIndexedArgs", IRVariable(*arguments.front()).commaSeparatedList());
+		templ("log", "log" + to_string(logNumber));
+		templ("indexedArgs", indexedArgs);
+		m_code << templ.render();
+
+		break;
+	}
+	case FunctionType::Kind::Creation:
+	{
+		solAssert(!functionType->gasSet(), "Gas limit set for contract creation.");
+		solAssert(
+			functionType->returnParameterTypes().size() == 1,
+			"Constructor should return only one type"
+		);
+
+		TypePointers argumentTypes;
+		string constructorParams;
+		for (ASTPointer<Expression const> const& arg: arguments)
+		{
+			argumentTypes.push_back(arg->annotation().type);
+			constructorParams += ", " + IRVariable{*arg}.commaSeparatedList();
+		}
+
+		ContractDefinition const* contract =
+			&dynamic_cast<ContractType const&>(*functionType->returnParameterTypes().front()).contractDefinition();
+		m_context.subObjectsCreated().insert(contract);
+
+		Whiskers t(R"(
+			let <memPos> := <allocateTemporaryMemory>()
+			let <memEnd> := add(<memPos>, datasize("<object>"))
+			if or(gt(<memEnd>, 0xffffffffffffffff), lt(<memEnd>, <memPos>)) { revert(0, 0) }
+			datacopy(<memPos>, dataoffset("<object>"), datasize("<object>"))
+			<memEnd> := <abiEncode>(<memEnd><constructorParams>)
+			<?saltSet>
+				let <retVars> := create2(<value>, <memPos>, sub(<memEnd>, <memPos>), <salt>)
+			<!saltSet>
+				let <retVars> := create(<value>, <memPos>, sub(<memEnd>, <memPos>))
+			</saltSet>
+			<releaseTemporaryMemory>()
+		)");
+		t("memPos", m_context.newYulVariable());
+		t("memEnd", m_context.newYulVariable());
+		t("allocateTemporaryMemory", m_utils.allocationTemporaryMemoryFunction());
+		t("releaseTemporaryMemory", m_utils.releaseTemporaryMemoryFunction());
+		t("object", m_context.creationObjectName(*contract));
+		t("abiEncode",
+			m_context.abiFunctions().tupleEncoder(argumentTypes, functionType->parameterTypes(),false)
+		);
+		t("constructorParams", constructorParams);
+		t("value", functionType->valueSet() ? IRVariable(_functionCall.expression()).part("value").name() : "0");
+		t("saltSet", functionType->saltSet());
+		if (functionType->saltSet())
+			t("salt", IRVariable(_functionCall.expression()).part("salt").name());
+		t("retVars", IRVariable(_functionCall).commaSeparatedList());
+		m_code << t.render();
+
 		break;
 	}
 	default:
@@ -916,6 +1065,15 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		{
 			solUnimplementedAssert(false, "");
 		}
+		else if (member == "interfaceId")
+		{
+			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
+			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
+			uint64_t result{0};
+			for (auto const& function: contract.interfaceFunctionList(false))
+				result ^= fromBigEndian<uint64_t>(function.first.ref());
+			define(_memberAccess) << formatNumber(u256{result} << (256 - 32)) << "\n";
+		}
 		else if (set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}.count(member))
 		{
 			// no-op
@@ -1069,7 +1227,7 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 	solAssert(holds_alternative<yul::Block>(modified), "");
 
 	// Do not provide dialect so that we get the full type information.
-	m_code << yul::AsmPrinter()(std::get<yul::Block>(std::move(modified))) << "\n";
+	m_code << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
 
@@ -1271,9 +1429,9 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 		define(_identifier) << to_string(functionDef->resolveVirtual(m_context.mostDerivedContract()).id()) << "\n";
 	else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 		handleVariableReference(*varDecl, _identifier);
-	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
+	else if (dynamic_cast<ContractDefinition const*>(declaration))
 	{
-		solUnimplementedAssert(!contract->isLibrary(), "Libraries not yet supported.");
+		// no-op
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))
 	{
@@ -1365,7 +1523,8 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	for (auto const& arg: _arguments)
 	{
 		argumentTypes.emplace_back(&type(*arg));
-		argumentStrings.emplace_back(IRVariable(*arg).commaSeparatedList());
+		if (IRVariable(*arg).type().sizeOnStack() > 0)
+			argumentStrings.emplace_back(IRVariable(*arg).commaSeparatedList());
 	}
 	string argumentString = argumentStrings.empty() ? ""s : (", " + joinHumanReadable(argumentStrings));
 
@@ -1383,7 +1542,6 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 
 	ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
 
-	solUnimplementedAssert(!funType.isBareCall(), "");
 	Whiskers templ(R"(
 		<?checkExistence>
 			if iszero(extcodesize(<address>)) { revert(0, 0) }
@@ -1391,8 +1549,18 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 
 		// storage for arguments and returned data
 		let <pos> := <freeMemory>
-		mstore(<pos>, <shl28>(<funId>))
-		let <end> := <encodeArgs>(add(<pos>, 4) <argumentString>)
+		<?bareCall>
+		<!bareCall>
+			mstore(<pos>, <shl28>(<funId>))
+		</bareCall>
+		let <end> := <encodeArgs>(
+			<?bareCall>
+				<pos>
+			<!bareCall>
+				add(<pos>, 4)
+			</bareCall>
+			<argumentString>
+		)
 
 		let <success> := <call>(<gas>, <address>, <?hasValue> <value>, </hasValue> <pos>, sub(<end>, <pos>), <pos>, <reservedReturnSize>)
 		<?noTryCall>
@@ -1414,14 +1582,25 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	)");
 	templ("pos", m_context.newYulVariable());
 	templ("end", m_context.newYulVariable());
+	templ("bareCall", funType.isBareCall());
 	if (_functionCall.annotation().tryCall)
 		templ("success", m_context.trySuccessConditionVariable(_functionCall));
 	else
 		templ("success", m_context.newYulVariable());
 	templ("freeMemory", freeMemory());
 	templ("shl28", m_utils.shiftLeftFunction(8 * (32 - 4)));
-	templ("funId", IRVariable(_functionCall.expression()).part("functionIdentifier").name());
-	templ("address", IRVariable(_functionCall.expression()).part("address").name());
+
+	if (!funType.isBareCall())
+		templ("funId", IRVariable(_functionCall.expression()).part("functionIdentifier").name());
+
+	if (funKind == FunctionType::Kind::ECRecover)
+		templ("address", "1");
+	else if (funKind == FunctionType::Kind::SHA256)
+		templ("address", "2");
+	else if (funKind == FunctionType::Kind::RIPEMD160)
+		templ("address", "3");
+	else
+		templ("address", IRVariable(_functionCall.expression()).part("address").name());
 
 	// Always use the actual return length, and not our calculated expected length, if returndatacopy is supported.
 	// This ensures it can catch badly formatted input from external calls.
@@ -1453,9 +1632,15 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 		// but all parameters of ecrecover are value types anyway.
 		encodeInPlace = false;
 	bool encodeForLibraryCall = funKind == FunctionType::Kind::DelegateCall;
-	solUnimplementedAssert(!encodeInPlace, "");
-	solUnimplementedAssert(funType.padArguments(), "");
-	templ("encodeArgs", abi.tupleEncoder(argumentTypes, funType.parameterTypes(), encodeForLibraryCall));
+
+	solUnimplementedAssert(encodeInPlace == !funType.padArguments(), "");
+	if (encodeInPlace)
+	{
+		solUnimplementedAssert(!encodeForLibraryCall, "");
+		templ("encodeArgs", abi.tupleEncoderPacked(argumentTypes, funType.parameterTypes()));
+	}
+	else
+		templ("encodeArgs", abi.tupleEncoder(argumentTypes, funType.parameterTypes(), encodeForLibraryCall));
 	templ("argumentString", argumentString);
 
 	// Output data will replace input data, unless we have ECRecover (then, output

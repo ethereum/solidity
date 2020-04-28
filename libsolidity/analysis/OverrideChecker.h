@@ -85,6 +85,8 @@ public:
 	FunctionType const* functionType() const;
 	ModifierType const* modifierType() const;
 
+	Declaration const* declaration() const;
+
 	langutil::SourceLocation const& location() const;
 
 	std::string astNodeName() const;

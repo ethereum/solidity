@@ -16,15 +16,21 @@ Bugfixes:
 ### 0.6.7 (unreleased)
 
 Language Features:
+ * Add support for EIP 165 interface identifiers with `type(I).interfaceId`.
+ * Allow virtual modifiers inside abstract contracts to have empty body.
 
 
 Compiler Features:
-
+ * Optimizer: Simplify repeated AND and OR operations.
 
 Bugfixes:
+ * SMTChecker: Fix internal error when fixed points are used.
+ * SMTChecker: Fix internal error when using array slices.
  * Type Checker: Disallow ``virtual`` and ``override`` for constructors.
  * Type Checker: Fix several internal errors by performing size and recursiveness checks of types before the full type checking.
+ * Type Checker: Fix internal error when assigning to empty tuples.
  * Type Checker: Perform recursiveness check on structs declared at the file level.
+ * Standard Json Input: Fix error when using prefix ``file://`` in the field ``urls``.
 
 Build System:
  * soltest.sh: ``SOLIDITY_BUILD_DIR`` is no longer relative to ``REPO_ROOT`` to allow for build directories outside of the source tree.

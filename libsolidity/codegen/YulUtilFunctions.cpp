@@ -1337,6 +1337,34 @@ string YulUtilFunctions::allocationFunction()
 	});
 }
 
+string YulUtilFunctions::allocationTemporaryMemoryFunction()
+{
+	string functionName = "allocateTemporaryMemory";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>() -> memPtr {
+				memPtr := mload(<freeMemoryPointer>)
+			}
+		)")
+		("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer))
+		("functionName", functionName)
+		.render();
+	});
+}
+
+string YulUtilFunctions::releaseTemporaryMemoryFunction()
+{
+	string functionName = "releaseTemporaryMemory";
+	return m_functionCollector.createFunction(functionName, [&](){
+		return Whiskers(R"(
+			function <functionName>() {
+			}
+		)")
+		("functionName", functionName)
+		.render();
+	});
+}
+
 string YulUtilFunctions::zeroMemoryArrayFunction(ArrayType const& _type)
 {
 	if (_type.baseType()->hasSimpleZeroValueInMemory())
@@ -2330,6 +2358,42 @@ string YulUtilFunctions::extractReturndataFunction()
 		("allocate", allocationFunction())
 		("roundUp", roundUpFunction())
 		("emptyArray", zeroValueFunction(*TypeProvider::bytesMemory()))
+		.render();
+	});
+}
+
+string YulUtilFunctions::copyConstructorArgumentsToMemoryFunction(
+	ContractDefinition const& _contract,
+	string const& _creationObjectName
+)
+{
+	string functionName = "copy_arguments_for_constructor_" +
+		toString(_contract.constructor()->id()) +
+		"_object_" +
+		_contract.name() +
+		"_" +
+		toString(_contract.id());
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		string returnParams = suffixedVariableNameList("ret_param_",0, _contract.constructor()->parameters().size());
+		ABIFunctions abiFunctions(m_evmVersion, m_revertStrings, m_functionCollector);
+
+		return util::Whiskers(R"(
+			function <functionName>() -> <retParams> {
+				let programSize := datasize("<object>")
+				let argSize := sub(codesize(), programSize)
+
+				let memoryDataOffset := <allocate>(argSize)
+				codecopy(memoryDataOffset, programSize, argSize)
+
+				<retParams> := <abiDecode>(memoryDataOffset, add(memoryDataOffset, argSize))
+			}
+		)")
+		("functionName", functionName)
+		("retParams", returnParams)
+		("object", _creationObjectName)
+		("allocate", allocationFunction())
+		("abiDecode", abiFunctions.tupleDecoder(FunctionType(*_contract.constructor()).parameterTypes(), true))
 		.render();
 	});
 }

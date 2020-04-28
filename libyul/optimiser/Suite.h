@@ -47,6 +47,10 @@ class OptimiserSuite
 public:
 	static constexpr size_t MaxRounds = 12;
 
+	/// Special characters that do not represent optimiser steps but are allowed in abbreviation sequences.
+	/// Some of them (like whitespace) are ignored, others (like brackets) are a part of the syntax.
+	static constexpr char NonStepAbbreviations[] = " \n[]";
+
 	enum class Debug
 	{
 		None,
@@ -58,8 +62,13 @@ public:
 		GasMeter const* _meter,
 		Object& _object,
 		bool _optimizeStackAllocation,
+		std::string const& _optimisationSequence,
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	);
+
+	/// Ensures that specified sequence of step abbreviations is well-formed and can be executed.
+	/// @throw OptimizerException if the sequence is invalid
+	static void validateSequence(std::string const& _stepAbbreviations);
 
 	void runSequence(std::vector<std::string> const& _steps, Block& _ast);
 	void runSequence(std::string const& _stepAbbreviations, Block& _ast);

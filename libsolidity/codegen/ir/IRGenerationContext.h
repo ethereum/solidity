@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ir/IRVariable.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/DebugSettings.h>
@@ -38,11 +39,8 @@
 namespace solidity::frontend
 {
 
-class ContractDefinition;
-class VariableDeclaration;
-class FunctionDefinition;
-class Expression;
 class YulUtilFunctions;
+class ABIFunctions;
 
 /**
  * Class that contains contextual information during IR generation.
@@ -93,6 +91,9 @@ public:
 	std::string functionName(FunctionDefinition const& _function);
 	std::string functionName(VariableDeclaration const& _varDecl);
 
+	std::string creationObjectName(ContractDefinition const& _contract) const;
+	std::string runtimeObjectName(ContractDefinition const& _contract) const;
+
 	std::string newYulVariable();
 
 	std::string internalDispatch(size_t _in, size_t _out);
@@ -101,6 +102,8 @@ public:
 	YulUtilFunctions utils();
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; };
+
+	ABIFunctions abiFunctions();
 
 	/// @returns code that stores @param _message for revert reason
 	/// if m_revertStrings is debug.
@@ -111,6 +114,8 @@ public:
 	/// @returns the variable name that can be used to inspect the success or failure of an external
 	/// function call that was invoked as part of the try statement.
 	std::string trySuccessConditionVariable(Expression const& _expression) const;
+
+	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated() { return m_subObjects; }
 
 private:
 	langutil::EVMVersion m_evmVersion;
@@ -131,6 +136,8 @@ private:
 	/// long as the order of Yul functions in the generated code is deterministic and the same on
 	/// all platforms - which is a property guaranteed by MultiUseYulFunctionCollector.
 	std::set<FunctionDefinition const*> m_functionGenerationQueue;
+
+	std::set<ContractDefinition const*, ASTNode::CompareByID> m_subObjects;
 };
 
 }
