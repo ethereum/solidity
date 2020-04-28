@@ -21,7 +21,7 @@ contract Main {
     Helper h;
 
     constructor() public payable {
-        h = (new Helper).value(10)("abc", true);
+        h = (new Helper){value: 10}("abc", true);
     }
 
     function getFlag() public returns (bool ret) {

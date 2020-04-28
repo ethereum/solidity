@@ -641,17 +641,18 @@ External (or public) functions have the following members:
 
 * ``.address`` returns the address of the contract of the function.
 * ``.selector`` returns the :ref:`ABI function selector <abi_function_selector>`
-* ``.gas(uint)`` returns a callable function object which, when called, will send
-  the specified amount of gas to the target function. Deprecated - use ``{gas: ...}`` instead.
-  See :ref:`External Function Calls <external-function-calls>` for more information.
-* ``.value(uint)`` returns a callable function object which, when called, will
-  send the specified amount of wei to the target function. Deprecated - use ``{value: ...}`` instead.
-  See :ref:`External Function Calls <external-function-calls>` for more information.
+
+.. note::
+  External (or public) functions used to have the additional members
+  ``.gas(uint)`` and ``.value(uint)``. These were deprecated in Solidity 0.6.2
+  and removed in Solidity 0.7.0. Instead use ``{gas: ...}`` and ``{value: ...}``
+  to specify the amount of gas or the amount of wei sent to a function,
+  respectively. See :ref:`External Function Calls <external-function-calls>` for
+  more information.
 
 Example that shows how to use the members::
 
-    pragma solidity >=0.6.0 <0.8.0;
-    // This will report a warning
+    pragma solidity >=0.6.4 <0.8.0;
 
     contract Example {
         function f() public payable returns (bytes4) {
@@ -660,9 +661,7 @@ Example that shows how to use the members::
         }
 
         function g() public {
-            this.f.gas(10).value(800)();
-            // New syntax:
-            // this.f{gas: 10, value: 800}()
+            this.f{gas: 10, value: 800}();
         }
     }
 

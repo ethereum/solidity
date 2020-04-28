@@ -360,7 +360,7 @@ contract MilestoneTracker {
         // Recheck again to not pay twice
         if (milestone.status == MilestoneStatus.AuthorizedForPayment) revert();
         milestone.status = MilestoneStatus.AuthorizedForPayment;
-        (bool success,) = milestone.paymentSource.call.value(0)(milestone.payData);
+        (bool success,) = milestone.paymentSource.call{value: 0}(milestone.payData);
         require(success);
         emit ProposalStatusChanged(_idMilestone, milestone.status);
     }

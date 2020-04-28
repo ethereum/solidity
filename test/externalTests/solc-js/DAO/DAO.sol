@@ -587,7 +587,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
             // multiple times out of the DAO
             p.proposalPassed = true;
 
-            (bool success,) = p.recipient.call.value(p.amount)(_transactionData);
+            (bool success,) = p.recipient.call{value: p.amount}(_transactionData);
             if (!success)
                 revert();
 
@@ -663,7 +663,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
         uint fundsToBeMoved =
             (balances[msg.sender] * p.splitData[0].splitBalance) /
             p.splitData[0].totalSupply;
-        if (p.splitData[0].newDAO.createTokenProxy.value(fundsToBeMoved)(msg.sender) == false)
+        if (p.splitData[0].newDAO.createTokenProxy{value: fundsToBeMoved}(msg.sender) == false)
             revert();
 
 
@@ -697,7 +697,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
     function newContract(address payable _newContract) public override {
         if (msg.sender != address(this) || !allowedRecipients[_newContract]) return;
         // move all ether
-        (bool success,) = _newContract.call.value(address(this).balance)("");
+        (bool success,) = _newContract.call{value: address(this).balance}("");
         if (!success) {
             revert();
         }

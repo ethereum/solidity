@@ -2382,7 +2382,7 @@ BOOST_AUTO_TEST_CASE(generic_call)
 				function doSend(address rec) public returns (uint d)
 				{
 					bytes4 signature = bytes4(bytes32(keccak256("recv(uint256)")));
-					rec.call.value(2)(abi.encodeWithSelector(signature, 23));
+					rec.call{value: 2}(abi.encodeWithSelector(signature, 23));
 					return receiver(rec).received();
 				}
 			}
@@ -5210,7 +5210,7 @@ BOOST_AUTO_TEST_CASE(failed_create)
 			constructor() public payable {}
 			function f(uint amount) public returns (D) {
 				x++;
-				return (new D).value(amount)();
+				return (new D){value: amount}();
 			}
 			function stack(uint depth) public returns (address) {
 				if (depth < 1024)
@@ -5278,7 +5278,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 				// NOTE: It is very bad practice to write this function this way.
 				// Please refer to the documentation of how to do this properly.
 				if (amount > shares) revert();
-				(bool success,) = msg.sender.call.value(amount)("");
+				(bool success,) = msg.sender.call{value: amount}("");
 				require(success);
 				shares -= amount;
 				return shares;
@@ -5287,7 +5287,7 @@ BOOST_AUTO_TEST_CASE(mutex)
 				// NOTE: It is very bad practice to write this function this way.
 				// Please refer to the documentation of how to do this properly.
 				if (amount > shares) revert();
-				(bool success,) = msg.sender.call.value(amount)("");
+				(bool success,) = msg.sender.call{value: amount}("");
 				require(success);
 				shares -= amount;
 				return shares;
