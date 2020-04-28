@@ -733,7 +733,10 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 						{
 						case Type::Category::Bool:
 						case Type::Category::Address:
-							solAssert(*type == *variable->annotation().type, "");
+							// Either both the literal and the variable are bools, or they are both addresses.
+							// If they are both bools, comparing category is the same as comparing the types.
+							// If they are both addresses, compare category so that payable/nonpayable is not compared.
+							solAssert(type->category() == variable->annotation().type->category(), "");
 							value = type->literalValue(literal);
 							break;
 						case Type::Category::StringLiteral:
