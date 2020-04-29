@@ -25,7 +25,7 @@ contract SimpleWallet {
    - Fist 
    
 ## 2. Deploying Our Contract With the Remix Tool
-1. Create the Contract that you would like to deploy.Documentation on how to create a contract can be found here[[Contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html#)]
+1. Create the Contract that you would like to deploy.Further documentation on creating contracts[[Contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html#)]
 2. Using the left hand navigation bar navigate to the Deploy & Run Transactions tab.
 
        
