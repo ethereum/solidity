@@ -20,4 +20,12 @@ contract SimpleWallet {
 ## 1. Remix Compiler
 1. Introduction to Remix:
     - The Remix IDE is a powerful open source tool that helps you write Solidity contracts straight from a browser. Remix supports the            usage of JavaScript and both local and browser usage.The latest documentation about the remix tool can be found at:
-       https://remix-ide.readthedocs.io/en/latest/
+       [Remix documentation](https://remix-ide.readthedocs.io/en/latest/).
+2. Remix Deploy Location:
+   - Fist 
+   
+## 2. Step by Step using Remix how to deploy a Contract
+0. Create the Contract that you would like to deploy. Documentation on how to create a contracts can be found here ([Contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html#))
+1. Using the left hand navigation bar navigate to the Deploy & Run Transactions tab.
+
+       
