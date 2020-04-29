@@ -24,12 +24,13 @@ contract SimpleWallet {
 2. Choosing a Deploy Location:
    -  There are three options Remix Provides Users with:
         1. JavaScript VM - JavaScript Virtual Machine module that allows compiling and running with the V8 Virtual Machines contexts.
-            This method is most useful when running an isolated Ethereum node.Very useful when conducting testing on contracts.  
+            This method is most useful when running an isolated Ethereum node and conducting tests on contracts.  
          
         2. Injected Web3 - This method will try to use the WEB3 provider embedded in the browser. This can be configured to connect to the          MainNet or TestNet. This method allows for interaction using a real network. ([TestNet](https://docs.ethhub.io/using-ethereum/test-networks/))
         
         3. Web3 Provider - This method provides the largest amount of control and allows the user to connect to their own node.([Web3 Provider](https://web3js.readthedocs.io/en/v1.2.0/web3-eth.html))
-3. Account: (More on the [Account](https://en.wikipedia.org/wiki/Public-key_cryptography)).
+  
+3. Account:This is the identification method remix uses to identify users. The address that is generated in the account field is most similar to a public key(More on the [Account](https://en.wikipedia.org/wiki/Public-key_cryptography)).
    
 ## 2. Deploying Our Contract With the Remix Tool
 1. Create the Contract that you would like to deploy.(Extra documentation on building [Contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html#)).
