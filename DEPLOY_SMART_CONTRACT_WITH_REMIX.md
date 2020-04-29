@@ -18,5 +18,6 @@ contract SimpleWallet {
 {
 ```
 ## 1. Remix Compiler
-1.Intro
-    -The Remix IDE is a powerful open source tool that helps you write Solidity contracts straight from a browser. Remix supports the            usage of JavaScript and both local and browser usage.
+1. Introduction to Remix:
+    - The Remix IDE is a powerful open source tool that helps you write Solidity contracts straight from a browser. Remix supports the            usage of JavaScript and both local and browser usage.The latest documentation about the remix tool can be found at:
+       https://remix-ide.readthedocs.io/en/latest/
