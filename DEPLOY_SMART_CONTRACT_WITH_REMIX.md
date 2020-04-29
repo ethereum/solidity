@@ -22,9 +22,10 @@ contract SimpleWallet {
     - The Remix IDE is a powerful open source tool that helps you write Solidity contracts straight from a browser. Remix supports the          usage of JavaScript and both local and browser usage.The latest documentation about the remix tool can be found at:
        [Remix documentation](https://remix-ide.readthedocs.io/en/latest/).
 2. Remix Deploy Location:
-   - JavaScript VM 
-   - Injected Web3
-   - Web3 Provider
+   - JavaScript VM - JavaScript Virtual Machine module that allows compiling and running with the V8 Virtual Machines contexts.
+     This method is most useful when running an isolated Ethereum node.Very useful when conducting testing on contracts.
+   - Injected Web3 - This method will try to use the WEB3 provider embedded in the browser. This can be configured to connect to the          MainNet or TestNet. This method allows for interaction using a real network. ([TestNet](https://docs.ethhub.io/using-ethereum/test-networks/))
+   - Web3 Provider - This method provides the largest amount of control and allows the user to connect to their own node.([Web3(https://web3js.readthedocs.io/en/v1.2.0/web3-eth.html)]
 3. Account: (More on the [Account](https://en.wikipedia.org/wiki/Public-key_cryptography)).
    
 ## 2. Deploying Our Contract With the Remix Tool
@@ -32,8 +33,9 @@ contract SimpleWallet {
 2. Using the left hand navigation bar navigate to the Deploy & Run Transactions tab.
 3. Define the location you would like to deploy your smart contract to using the environment field.
 4. Select an Eth address using the account field.
-5. Select the contract file you would like to depoly using the settings you have selected.
+5. Select the contract file you would like to deploy using the settings you have selected.
 6. Hit the deploy button.
-7. The Created smart contracts will then appear in gray boxs at the bottom of the remix tool.
+7. The Created smart contracts will then appear in generated gray boxes at the bottom of the remix tool.
+
 
 
