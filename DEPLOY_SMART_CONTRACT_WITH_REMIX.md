@@ -21,11 +21,14 @@ contract SimpleWallet {
 1. Introduction to Remix:
     - The Remix IDE is a powerful open source tool that helps you write Solidity contracts straight from a browser. Remix supports the          usage of JavaScript and both local and browser usage.The latest documentation about the remix tool can be found at:
        [Remix documentation](https://remix-ide.readthedocs.io/en/latest/).
-2. Remix Deploy Location:
-   - JavaScript VM - JavaScript Virtual Machine module that allows compiling and running with the V8 Virtual Machines contexts.
-     This method is most useful when running an isolated Ethereum node.Very useful when conducting testing on contracts.
-   - Injected Web3 - This method will try to use the WEB3 provider embedded in the browser. This can be configured to connect to the          MainNet or TestNet. This method allows for interaction using a real network. ([TestNet](https://docs.ethhub.io/using-ethereum/test-networks/))
-   - Web3 Provider - This method provides the largest amount of control and allows the user to connect to their own node.([Web3(https://web3js.readthedocs.io/en/v1.2.0/web3-eth.html)]
+2. Choosing a Deploy Location:
+   -  There are three options Remix Provides Users with:
+        1. JavaScript VM - JavaScript Virtual Machine module that allows compiling and running with the V8 Virtual Machines contexts.
+            This method is most useful when running an isolated Ethereum node.Very useful when conducting testing on contracts.  
+         
+        2. Injected Web3 - This method will try to use the WEB3 provider embedded in the browser. This can be configured to connect to the          MainNet or TestNet. This method allows for interaction using a real network. ([TestNet](https://docs.ethhub.io/using-ethereum/test-networks/))
+        
+        3. Web3 Provider - This method provides the largest amount of control and allows the user to connect to their own node.([Web3 Provider](https://web3js.readthedocs.io/en/v1.2.0/web3-eth.html))
 3. Account: (More on the [Account](https://en.wikipedia.org/wiki/Public-key_cryptography)).
    
 ## 2. Deploying Our Contract With the Remix Tool
