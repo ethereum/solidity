@@ -1,6 +1,13 @@
 ## 0. Smart Contract
 1. The Smart Contract:
     - A smart contract in the sense of Solidity is a collection of code (its functions) and data (its state) that resides at a specific       address on the Ethereum blockchain.These Contracts are responsible for storing all of the programing logic that executes on top of       the blockchain.
+2. Key Criteria of a Smart Contract:
+    - It must have open-source code.
+    - Code is stored in a blockchain.
+    - Code cannot be changed once its deployed.
+    - Eexecution of the code is automated.
+    - Results are Visable in a decentralized blockchain.
+    - Execution resulst are unalterable.
 ### Example Contract
 ```cpp
 pragma solidity >=0.4.22 <0.7.0;
@@ -32,7 +39,7 @@ contract SimpleWallet {
   
 3. Account:This is the identification method remix uses to identify users. The address that is generated in the account field is most similar to a public key(More on the [Account](https://en.wikipedia.org/wiki/Public-key_cryptography)).
    
-## 2. Deploying Our Contract With the Remix Tool
+## 2. Deploying a Smart Contract With the Remix Tool
 1. Create a Solidity Smart Contract that you would like to deploy (this should be in the form of a .sol file).(Extra documentation on building [Contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html#)).
 2. Using the left hand navigation bar navigate to the Deploy & Run Transactions tab.
 3. Define the location you would like to deploy your smart contract to using the environment field.
@@ -40,6 +47,9 @@ contract SimpleWallet {
 5. Select the contract file you would like to deploy using the settings you have selected.
 6. Hit the deploy button.
 7. The Created smart contracts will then appear in generated gray boxes at the bottom of the remix tool.
+
+## 2. Deploying a Smart Contract With the Remix Tool Using MetaMask and Ropsten TestNet.
+1.
 
 
 
