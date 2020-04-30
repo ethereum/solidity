@@ -48,8 +48,11 @@ contract SimpleWallet {
 6. Hit the deploy button.
 7. The Created smart contracts will then appear in generated gray boxes at the bottom of the remix tool.
 
-## 2. Deploying a Smart Contract With the Remix Tool Using MetaMask and Ropsten TestNet.
-1.
+## 3. Deploying a Smart Contract With the Remix Tool Using MetaMask and Ropsten TestNet.
+1. Install the MetaMask tool [MetaMask](https://metamask.io/) (Allows for communication with the blockchain through a smart contract).
+2. Connect to the [Ropsten](https://ropsten.etherscan.io/) TestNet(MetaMask will connect you to the MainNet but for testing purposes we want use the TestNet).
+3. Create A Smart Contract using the Remix IDE (this should be in the form of a .sol file).(Extra documentation on building [Contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html#)).
+4.
 
 
 
