@@ -571,9 +571,16 @@ Available upgrade modules
 | ``override``    | 0.6.0   | When overriding a function or modifier, the new  |
 |                 |         | keyword ``override`` must be used.               |
 +-----------------+---------+--------------------------------------------------+
+| ``dotsyntax``   | 0.7.0   | The following syntax is deprecated:              |
+|                 |         | ``f.gas(...)()``, ``f.value(...)()`` and         |
+|                 |         | ``(new C).value(...)()``. Replace these calls by |
+|                 |         | ``f{gas: ..., value: ...}()`` and                |
+|                 |         | ``(new C){value: ...}()``.                       |
++-----------------+---------+--------------------------------------------------+
 
-Please read :doc:`0.5.0 release notes <050-breaking-changes>` and
-:doc:`0.6.0 release notes <060-breaking-changes>` for further details.
+Please read :doc:`0.5.0 release notes <050-breaking-changes>`,
+:doc:`0.6.0 release notes <060-breaking-changes>` and
+:doc:`0.7.0 release notes <070-breaking-changes>` for further details.
 
 Synopsis
 ~~~~~~~~
@@ -668,8 +675,9 @@ do not need to specify the ``--modules`` option.
     Found 0 errors.
     Found 0 upgrades.
 
-The above performs a dry-ran upgrade on the given file and logs statistics after all.
-In this case, the upgrade was successful and no further adjustments are needed.
+The above performs a dry-run upgrade on the given file and logs statistics at
+the end. In this case, the upgrade was successful and no further adjustments are
+needed.
 
 Finally, you can run the upgrade and also write to the source file.
 
