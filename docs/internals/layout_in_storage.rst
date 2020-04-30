@@ -71,7 +71,7 @@ So for the following contract snippet
 the position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1``::
 
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
 
     contract C {
@@ -171,7 +171,7 @@ value and reference types, types that are encoded packed, and nested types.
 
 .. code::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
     contract A {
         struct S {
             uint128 a;
