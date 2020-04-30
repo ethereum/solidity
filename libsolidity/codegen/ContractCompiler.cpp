@@ -505,6 +505,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 			m_context << Instruction::DUP1 << Instruction::CALLDATASIZE << Instruction::SUB;
 			CompilerUtils(m_context).abiDecode(functionType->parameterTypes());
 		}
+		// TODO could use JUMPSUB?
 		m_context.appendJumpTo(
 			m_context.functionEntryLabel(functionType->declaration()),
 			evmasm::AssemblyItem::JumpType::IntoFunction

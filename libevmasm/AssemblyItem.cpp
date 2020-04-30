@@ -33,7 +33,7 @@ static_assert(sizeof(size_t) <= 8, "size_t must be at most 64-bits wide");
 AssemblyItem AssemblyItem::toSubAssemblyTag(size_t _subId) const
 {
 	assertThrow(data() < (u256(1) << 64), util::Exception, "Tag already has subassembly set.");
-	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
+	assertThrow(m_type == PushTag || m_type == Tag || m_type == Subtag, util::Exception, "");
 	auto tag = static_cast<size_t>(u256(data()) & 0xffffffffffffffffULL);
 	AssemblyItem r = *this;
 	r.m_type = PushTag;
@@ -43,7 +43,7 @@ AssemblyItem AssemblyItem::toSubAssemblyTag(size_t _subId) const
 
 pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 {
-	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
+	assertThrow(m_type == PushTag || m_type == Tag || m_type == Subtag, util::Exception, "");
 	u256 combined = u256(data());
 	size_t subId = static_cast<size_t>((combined >> 64) - 1);
 	size_t tag = static_cast<size_t>(combined & 0xffffffffffffffffULL);
@@ -52,7 +52,7 @@ pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 
 void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 {
-	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
+	assertThrow(m_type == PushTag || m_type == Tag || m_type == Subtag, util::Exception, "");
 	u256 data = _tag;
 	if (_subId != numeric_limits<size_t>::max())
 		data |= (u256(_subId) + 1) << 64;
@@ -64,7 +64,8 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 	switch (m_type)
 	{
 	case Operation:
-	case Tag: // 1 byte for the JUMPDEST
+	case Subtag:
+	case Tag: // 1 byte for the JUMPDEST / BEGINSUB
 		return 1;
 	case PushString:
 		return 1 + 32;
@@ -121,6 +122,7 @@ size_t AssemblyItem::returnValues() const
 	case PushDeployTimeAddress:
 		return 1;
 	case Tag:
+	case Subtag:
 		return 0;
 	default:
 		break;
@@ -148,6 +150,7 @@ bool AssemblyItem::canBeFunctional() const
 	case PushImmutable:
 		return true;
 	case Tag:
+	case Subtag:
 		return false;
 	default:
 		break;
@@ -202,6 +205,10 @@ string AssemblyItem::toAssemblyText() const
 	case Tag:
 		assertThrow(data() < 0x10000, AssemblyException, "Declaration of sub-assembly tag.");
 		text = string("tag_") + to_string(static_cast<size_t>(data())) + ":";
+		break;
+	case Subtag:
+		assertThrow(data() < 0x10000, AssemblyException, "Declaration of sub-assembly tag.");
+		text = string("beginsubtag_") + to_string(size_t(data())) + ":";
 		break;
 	case PushData:
 		text = string("data_") + util::toHex(data());
@@ -270,6 +277,9 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 	}
 	case Tag:
 		_out << " Tag " << _item.data();
+		break;
+	case Subtag:
+		_out << " Beginsub " << _item.data();
 		break;
 	case PushData:
 		_out << " PushData " << hex << static_cast<unsigned>(_item.data()) << dec;

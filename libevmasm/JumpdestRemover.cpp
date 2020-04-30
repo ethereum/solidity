@@ -40,7 +40,7 @@ bool JumpdestRemover::optimise(set<size_t> const& _tagsReferencedFromOutside)
 		m_items.end(),
 		[&](AssemblyItem const& _item)
 		{
-			if (_item.type() != Tag)
+			if (_item.type() != Tag && _item.type() != Subtag)
 				return false;
 			auto asmIdAndTag = _item.splitForeignPushTag();
 			assertThrow(asmIdAndTag.first == numeric_limits<size_t>::max(), OptimizerException, "Sub-assembly tag used as label.");

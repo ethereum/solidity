@@ -55,6 +55,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 		gas = runGas(Instruction::PUSH1);
 		break;
 	case Tag:
+	// TODO Subtag
 		gas = runGas(Instruction::JUMPDEST);
 		break;
 	case Operation:

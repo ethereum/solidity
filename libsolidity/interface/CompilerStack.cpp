@@ -1060,25 +1060,25 @@ void CompilerStack::compileContract(
 		solAssert(false, "Optimizer exception during compilation");
 	}
 
-	try
-	{
+//	try
+//	{
 		// Assemble deployment (incl. runtime)  object.
 		compiledContract.object = compiler->assembledObject();
-	}
-	catch(evmasm::AssemblyException const&)
-	{
-		solAssert(false, "Assembly exception for bytecode");
-	}
+//	}
+//	catch(evmasm::AssemblyException const&)
+//	{
+//		solAssert(false, "Assembly exception for bytecode");
+//	}
 
-	try
-	{
+//	try
+//	{
 		// Assemble runtime object.
 		compiledContract.runtimeObject = compiler->runtimeObject();
-	}
-	catch(evmasm::AssemblyException const&)
-	{
-		solAssert(false, "Assembly exception for deployed bytecode");
-	}
+//	}
+//	catch(evmasm::AssemblyException const&)
+//	{
+//		solAssert(false, "Assembly exception for deployed bytecode");
+//	}
 
 	// Throw a warning if EIP-170 limits are exceeded:
 	//   If contract creation initialization returns data with length of more than 0x6000 (214 + 213) bytes,

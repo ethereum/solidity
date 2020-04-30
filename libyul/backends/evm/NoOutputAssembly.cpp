@@ -101,21 +101,17 @@ void NoOutputAssembly::appendJumpToIf(LabelID _labelId, JumpType)
 
 void NoOutputAssembly::appendBeginsub(LabelID, int _arguments)
 {
-	yulAssert(m_evm15, "BEGINSUB used for EVM 1.0");
 	yulAssert(_arguments >= 0, "");
-	m_stackHeight += _arguments;
 }
 
 void NoOutputAssembly::appendJumpsub(LabelID, int _arguments, int _returns)
 {
-	yulAssert(m_evm15, "JUMPSUB used for EVM 1.0");
 	yulAssert(_arguments >= 0 && _returns >= 0, "");
 	m_stackHeight += _returns - _arguments;
 }
 
 void NoOutputAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 {
-	yulAssert(m_evm15, "RETURNSUB used for EVM 1.0");
 	yulAssert(_returns >= 0, "");
 	m_stackHeight += _stackDiffAfter - _returns;
 }

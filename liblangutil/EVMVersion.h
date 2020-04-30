@@ -86,6 +86,7 @@ public:
 	bool hasExtCodeHash() const { return *this >= constantinople(); }
 	bool hasChainID() const { return *this >= istanbul(); }
 	bool hasSelfBalance() const { return *this >= istanbul(); }
+	bool supportsSubroutines() const { return *this >= berlin(); }
 
 	bool hasOpcode(evmasm::Instruction _opcode) const;
 

@@ -614,6 +614,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// Extract the runtime part.
 				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
 
+			// TODO could use jumpsub
 			m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
 			m_context << returnLabel;
 

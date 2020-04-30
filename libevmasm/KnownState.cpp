@@ -87,7 +87,7 @@ ostream& KnownState::stream(ostream& _out) const
 KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool _copyItem)
 {
 	StoreOperation op;
-	if (_item.type() == Tag)
+	if (_item.type() == Tag || _item.type() == Subtag)
 	{
 		// can be ignored
 	}

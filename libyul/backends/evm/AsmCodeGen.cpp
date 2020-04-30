@@ -116,22 +116,22 @@ void EthAssemblyAdapter::appendJumpToIf(LabelID _labelId, JumpType _jumpType)
 	appendJumpInstruction(evmasm::Instruction::JUMPI, _jumpType);
 }
 
-void EthAssemblyAdapter::appendBeginsub(LabelID, int)
+void EthAssemblyAdapter::appendBeginsub(LabelID _labelId, int)
 {
-	// TODO we could emulate that, though
-	yulAssert(false, "BEGINSUB not implemented for EVM 1.0");
+	m_assembly.append(evmasm::AssemblyItem(evmasm::Subtag, _labelId));
 }
 
-void EthAssemblyAdapter::appendJumpsub(LabelID, int, int)
+void EthAssemblyAdapter::appendJumpsub(LabelID _labelId, int _args, int _returns)
 {
-	// TODO we could emulate that, though
-	yulAssert(false, "JUMPSUB not implemented for EVM 1.0");
+	appendLabelReference(_labelId);
+	appendInstruction(evmasm::Instruction::JUMPSUB);
+	m_assembly.adjustDeposit(-_args + _returns);
 }
 
-void EthAssemblyAdapter::appendReturnsub(int, int)
+void EthAssemblyAdapter::appendReturnsub(int _returns, int _stackDiffAfter)
 {
-	// TODO we could emulate that, though
-	yulAssert(false, "RETURNSUB not implemented for EVM 1.0");
+	appendInstruction(evmasm::Instruction::RETURNSUB);
+	m_assembly.adjustDeposit(_stackDiffAfter - _returns);
 }
 
 void EthAssemblyAdapter::appendAssemblySize()

@@ -70,6 +70,9 @@ std::map<string, evmasm::Instruction> const& Parser::instructions()
 		{
 			if (
 				instruction.second == evmasm::Instruction::JUMPDEST ||
+				instruction.second == evmasm::Instruction::BEGINSUB ||
+				instruction.second == evmasm::Instruction::JUMPSUB ||
+				instruction.second == evmasm::Instruction::RETURNSUB ||
 				evmasm::isPushInstruction(instruction.second)
 			)
 				continue;

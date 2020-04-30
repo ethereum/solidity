@@ -35,6 +35,7 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 	default:
 	case UndefinedItem:
 	case Tag:
+	case Subtag:
 	case PushDeployTimeAddress:
 	case AssignImmutable:
 		return true;
@@ -110,7 +111,12 @@ bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 
 bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
 {
-	return _item == Instruction::JUMP || _item == Instruction::JUMPI;
+	// TODO check the usages of this function
+	return
+		_item == Instruction::JUMP ||
+		_item == Instruction::JUMPI ||
+		_item == Instruction::JUMPSUB ||
+		_item == Instruction::RETURNSUB;
 }
 
 bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
@@ -124,6 +130,8 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
 	case Instruction::RETURN:
+	case Instruction::JUMPSUB:
+	case Instruction::RETURNSUB:
 	case Instruction::SELFDESTRUCT:
 	case Instruction::STOP:
 	case Instruction::INVALID:

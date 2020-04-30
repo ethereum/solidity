@@ -573,7 +573,10 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 	yulAssert(
 		_instr != evmasm::Instruction::JUMP &&
 		_instr != evmasm::Instruction::JUMPI &&
-		_instr != evmasm::Instruction::JUMPDEST,
+		_instr != evmasm::Instruction::JUMPDEST &&
+		_instr != evmasm::Instruction::JUMPSUB &&
+		_instr != evmasm::Instruction::RETURNSUB &&
+		_instr != evmasm::Instruction::BEGINSUB
 	"");
 
 	auto errorForVM = [&](ErrorId _errorId, string const& vmKindMessage) {

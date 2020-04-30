@@ -185,6 +185,10 @@ enum class Instruction: uint8_t
 	EIP615_PUTLOCAL,           ///< pop top of stack to local variable -- not part of Instructions.cpp
 	EIP615_GETLOCAL,           ///< push local variable to top of stack -- not part of Instructions.cpp
 
+	BEGINSUB = 0x5c,		///< set a potential jumpsub destination
+	RETURNSUB = 0x5d,		///< return to subroutine jumped from
+	JUMPSUB = 0x5e,			///< alter the program counter to a beginsub
+
 	CREATE = 0xf0,		///< create a new account with associated code
 	CALL,				///< message-call into an account
 	CALLCODE,			///< message-call with another account's code only

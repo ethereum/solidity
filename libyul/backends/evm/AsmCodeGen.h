@@ -53,8 +53,8 @@ public:
 	void appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType) override;
 	void appendJumpToIf(LabelID _labelId, JumpType _jumpType) override;
 	void appendBeginsub(LabelID, int) override;
-	void appendJumpsub(LabelID, int, int) override;
-	void appendReturnsub(int, int) override;
+	void appendJumpsub(LabelID, int _args, int _returns) override;
+	void appendReturnsub(int _returns, int _stackDiffAfter) override;
 	void appendAssemblySize() override;
 	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() override;
 	void appendDataOffset(SubID _sub) override;

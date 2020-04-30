@@ -104,6 +104,7 @@ bool BlockDeduplicator::applyTagReplacement(
 	size_t _subId
 )
 {
+	// TODO this might be problematic for jumpsub
 	bool changed = false;
 	for (AssemblyItem& item: _items)
 		if (item.type() == PushTag)
