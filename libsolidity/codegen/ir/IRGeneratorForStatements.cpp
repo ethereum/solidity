@@ -730,6 +730,16 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		break;
 	}
+	case FunctionType::Kind::Revert:
+	{
+		solAssert(arguments.size() == parameterTypes.size(), "");
+		if (arguments.empty())
+			m_code << "revert(0, 0)\n";
+		else
+			solUnimplementedAssert(false, "");
+
+		break;
+	}
 	// Array creation using new
 	case FunctionType::Kind::ObjectCreation:
 	{
@@ -905,6 +915,34 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			t("salt", IRVariable(_functionCall.expression()).part("salt").name());
 		t("retVars", IRVariable(_functionCall).commaSeparatedList());
 		m_code << t.render();
+
+		break;
+	}
+	case FunctionType::Kind::Send:
+	case FunctionType::Kind::Transfer:
+	{
+		solAssert(arguments.size() == 1 && parameterTypes.size() == 1, "");
+		string address{IRVariable(_functionCall.expression()).part("address").name()};
+		string value{expressionAsType(*arguments[0], *(parameterTypes[0]))};
+		Whiskers templ(R"(
+			let <gas> := 0
+			if iszero(<value>) { <gas> := <callStipend> }
+			let <success> := call(<gas>, <address>, <value>, 0, 0, 0, 0)
+			<?isTransfer>
+				if iszero(<success>) { <forwardingRevert>() }
+			</isTransfer>
+		)");
+		templ("gas", m_context.newYulVariable());
+		templ("callStipend", toString(evmasm::GasCosts::callStipend));
+		templ("address", address);
+		templ("value", value);
+		if (functionType->kind() == FunctionType::Kind::Transfer)
+			templ("success", m_context.newYulVariable());
+		else
+			templ("success", IRVariable(_functionCall).commaSeparatedList());
+		templ("isTransfer", functionType->kind() == FunctionType::Kind::Transfer);
+		templ("forwardingRevert", m_utils.forwardingRevertFunction());
+		m_code << templ.render();
 
 		break;
 	}
