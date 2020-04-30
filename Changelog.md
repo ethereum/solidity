@@ -11,7 +11,7 @@ Compiler Features:
 
 
 Bugfixes:
-
+ * NatSpec: Constructors and functions have consistent userdoc output.
 
 ### 0.6.7 (unreleased)
 
