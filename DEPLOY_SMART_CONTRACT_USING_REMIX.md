@@ -55,5 +55,12 @@ contract SimpleWallet {
 4.Request Ether from MetaMask [Request](https://faucet.metamask.io/) (You will need atleast 1 ether to run on the TestNet).
 5.Using the Remix IDE hit the + sign at the top left of the browser (Create and Deploy). Click deploy to Ropsten and then Confirm the transaction using MetaMask.
 
+## 4. Deploying a Smart Contract using the Solidity Compiler.
+1. Install the Solidity Compiler (Solc) Using the following Node Command ```npm install -g solc ```.
+2. Intall Geth (A command line interface that is used to run a full Eth Node) Installation guide for Windows can be found [Here](https://geth.ethereum.org/downloads/).
+3. Create a Solidity Smart conract in your local development tool.
+4. Compile your ABI and bin and display the contents of the compiled files.
+5. Create your Geth Node [Follow](https://medium.com/mercuryprotocol/dev-highlights-of-this-week-cb33e58c745f).
+6. Deploy The Smart Contract using Geth.
 
 
