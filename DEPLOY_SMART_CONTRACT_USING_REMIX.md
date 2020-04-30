@@ -33,7 +33,7 @@ contract SimpleWallet {
 3. Account:This is the identification method remix uses to identify users. The address that is generated in the account field is most similar to a public key(More on the [Account](https://en.wikipedia.org/wiki/Public-key_cryptography)).
    
 ## 2. Deploying Our Contract With the Remix Tool
-1. Create the Contract that you would like to deploy.(Extra documentation on building [Contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html#)).
+1. Create a Solidity Smart Contract that you would like to deploy (this should be in the form of a .sol file).(Extra documentation on building [Contracts](https://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html#)).
 2. Using the left hand navigation bar navigate to the Deploy & Run Transactions tab.
 3. Define the location you would like to deploy your smart contract to using the environment field.
 4. Select an Eth address using the account field.
