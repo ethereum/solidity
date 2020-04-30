@@ -60,7 +60,7 @@ contract SimpleWallet {
 2. Intall Geth (A command line interface that is used to run a full Eth Node) Installation guide for Windows can be found [Here](https://geth.ethereum.org/downloads/).
 3. Create a Solidity Smart conract in your local development tool.
 4. Compile your ABI and bin and display the contents of the compiled files.
-5. Create your Geth Node [Follow](https://medium.com/mercuryprotocol/dev-highlights-of-this-week-cb33e58c745f).
+5. Create your Geth Node ([Online Instructions])(https://medium.com/mercuryprotocol/dev-highlights-of-this-week-cb33e58c745f).
 6. Deploy The Smart Contract using Geth.
 
 
