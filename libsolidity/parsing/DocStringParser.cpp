@@ -164,7 +164,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 
 DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, string const& _tag)
 {
-	// LTODO: need to check for @(start of a tag) between here and the end of line
+	// TODO: need to check for @(start of a tag) between here and the end of line
 	// for all cases.
 	if (!m_lastTag || _tag != "")
 	{
