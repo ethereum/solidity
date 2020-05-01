@@ -1,0 +1,116 @@
+/*
+	This file is part of solidity.
+
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+syntax = "proto2";
+
+message Type {
+    enum Sign {
+        SIGNED = 0;
+        UNSIGNED = 1;
+    }
+    required Sign s = 1;
+    required uint32 bytewidth = 2;
+}
+
+message UnaryOpStmt {
+    enum Op {
+        POSTINC = 1;
+        POSTDEC = 2;
+        PREINC = 3;
+        PREDEC = 4;
+    }
+    required Op op = 1;
+    required VarRef v = 2;
+}
+
+message BinaryOpStmt {
+    enum Op {
+        ADDSELF = 0;
+        SUBSELF = 1;
+        MULSELF = 2;
+        DIVSELF = 3;
+        MODSELF = 4;
+        SHLSELF = 5;
+        SHRSELF = 6;
+    }
+    required Op op = 1;
+    required VarRef left = 2;
+    required Expression right = 3;
+}
+
+message BinaryOp {
+    enum Op {
+        ADD = 0;
+        SUB = 1;
+        MUL = 2;
+        DIV = 3;
+        MOD = 4;
+        EXP = 10;
+        SHL = 11;
+        SHR = 12;
+    }
+    required Op op = 1;
+    required Expression left = 2;
+    required Expression right = 3;
+}
+
+message VarDecl {
+    required Type t = 1;
+    required Expression value = 2;
+}
+
+message Assignment {
+    required VarRef id = 1;
+    required Expression value = 2;
+}
+
+message VarRef {
+    required uint32 id = 1;
+}
+
+message Expression {
+    oneof expr_oneof {
+        VarRef v = 1;
+        BinaryOp bop = 2;
+    }
+}
+
+message Return {
+    required Expression e = 1;
+}
+
+message Statement {
+    oneof stmt_oneof {
+        VarDecl vd = 1;
+        Assignment a = 2;
+        UnaryOpStmt u = 3;
+    }
+}
+
+message Block {
+    required VarDecl v = 1;
+    repeated Statement s = 2;
+    required Return r = 3;
+}
+
+message Program {
+    required Block b = 1;
+    required Type.Sign s = 2;
+    required uint64 seed = 3;
+}
+
+package solidity.test.solarithfuzzer;
