@@ -168,10 +168,18 @@ string ProtoConverter::visit(Expression const& _expr)
 	switch (_expr.expr_oneof_case())
 	{
 	case Expression::kV:
+	{
 		solAssert(varAvailable(), "Sol arith fuzzer: Varref unavaileble");
-		return visit(_expr.v());
+		string v = visit(_expr.v());
+		if (!m_exprSignMap.count(&_expr))
+			m_exprSignMap.emplace(&_expr, m_varTypeMap[v].first);
+	}
 	case Expression::kBop:
-		return visit(_expr.bop());
+	{
+		string b = visit(_expr.bop());
+		if (!m_exprSignMap.count(&_expr))
+			m_exprSignMap.emplace(&_expr, m_varTypeMap[v].first);
+	}
 	case Expression::EXPR_ONEOF_NOT_SET:
 		return "v0";
 	}

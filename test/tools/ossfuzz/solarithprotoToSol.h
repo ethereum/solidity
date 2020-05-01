@@ -108,7 +108,8 @@ private:
 
 	unsigned m_varCounter = 0;
 	std::shared_ptr<SolRandomNumGenerator> m_rand;
-	std::map<std::string, std::string> m_varTypeMap;
+	std::map<std::string, std::pair<Sign, std::string>> m_varTypeMap;
+	std::map<Expression const*, Sign> m_exprSignMap;
 	std::string m_returnType;
 };
 }
