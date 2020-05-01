@@ -165,6 +165,9 @@ std::map<std::string, Instruction> const solidity::evmasm::c_instructions =
 	{ "LOG2", Instruction::LOG2 },
 	{ "LOG3", Instruction::LOG3 },
 	{ "LOG4", Instruction::LOG4 },
+	{ "ADDMOD384", Instruction::ADDMOD384 },
+	{ "SUBMOD384", Instruction::SUBMOD384 },
+	{ "MULMODMONT384", Instruction::MULMODMONT384 },
 	{ "CREATE", Instruction::CREATE },
 	{ "CALL", Instruction::CALL },
 	{ "CALLCODE", Instruction::CALLCODE },
@@ -311,6 +314,11 @@ static std::map<Instruction, InstructionInfo> const c_instructionInfo =
 	{ Instruction::LOG2,		{ "LOG2",			0, 4, 0, true, Tier::Special } },
 	{ Instruction::LOG3,		{ "LOG3",			0, 5, 0, true, Tier::Special } },
 	{ Instruction::LOG4,		{ "LOG4",			0, 6, 0, true, Tier::Special } },
+
+	{ Instruction::ADDMOD384,	{ "ADDMOD384",			0, 3, 0, true, Tier::Low } },
+	{ Instruction::SUBMOD384,	{ "SUBMOD384",			0, 3, 0, true, Tier::Low } },
+	{ Instruction::MULMODMONT384,	{ "MULMODMONT384",		0, 4, 0, true, Tier::Low } },
+
 	{ Instruction::CREATE,		{ "CREATE",			0, 3, 1, true, Tier::Special } },
 	{ Instruction::CALL,		{ "CALL",			0, 7, 1, true, Tier::Special } },
 	{ Instruction::CALLCODE,	{ "CALLCODE",		0, 7, 1, true, Tier::Special } },
