@@ -71,6 +71,7 @@ private:
 	std::string visit(Type const& _type);
 	std::string visit(UnaryOpStmt const& _uop);
 	std::string visit(BinaryOpStmt const& _bop);
+	std::string visit(Assembly const& _a);
 	std::string visit(BinaryOp const& _bop);
 	std::string visit(VarDecl const& _decl);
 	std::string visit(Assignment const& _assignment);

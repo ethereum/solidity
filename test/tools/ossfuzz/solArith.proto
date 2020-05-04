@@ -17,6 +17,8 @@
 
 syntax = "proto2";
 
+import "yulProto.proto";
+
 message Type {
     enum Sign {
         SIGNED = 0;
@@ -93,12 +95,17 @@ message Return {
     required Expression e = 1;
 }
 
+message Assembly {
+    required solidity.yul.test.yul_fuzzer.Program p = 1;
+}
+
 message Statement {
     oneof stmt_oneof {
         VarDecl vd = 1;
         Assignment a = 2;
         UnaryOpStmt u = 3;
         BinaryOpStmt b = 4;
+        Assembly as = 5;
     }
 }
 

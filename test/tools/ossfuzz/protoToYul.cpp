@@ -626,7 +626,7 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		m_output << "pc()";
 		break;
 	case NullaryOp::MSIZE:
-		m_output << "msize()";
+		m_output << "pc()";
 		break;
 	case NullaryOp::GAS:
 		m_output << "gas()";
@@ -1268,22 +1268,22 @@ void ProtoConverter::visit(StopInvalidStmt const& _x)
 	}
 }
 
-void ProtoConverter::visit(RetRevStmt const& _x)
+void ProtoConverter::visit(RetRevStmt const&)
 {
-	switch (_x.stmt())
-	{
-	case RetRevStmt::RETURN:
-		m_output << "return";
-		break;
-	case RetRevStmt::REVERT:
-		m_output << "revert";
-		break;
-	}
-	m_output << "(";
-	visit(_x.pos());
-	m_output << ", ";
-	visit(_x.size());
-	m_output << ")\n";
+//	switch (_x.stmt())
+//	{
+//	case RetRevStmt::RETURN:
+//		m_output << "return";
+//		break;
+//	case RetRevStmt::REVERT:
+//		m_output << "revert";
+//		break;
+//	}
+//	m_output << "(";
+//	visit(_x.pos());
+//	m_output << ", ";
+//	visit(_x.size());
+//	m_output << ")\n";
 }
 
 void ProtoConverter::visit(SelfDestructStmt const& _x)
@@ -1299,10 +1299,10 @@ void ProtoConverter::visit(TerminatingStmt const& _x)
 	switch (_x.term_oneof_case())
 	{
 	case TerminatingStmt::kStopInvalid:
-		visit(_x.stop_invalid());
+//		visit(_x.stop_invalid());
 		break;
 	case TerminatingStmt::kRetRev:
-		visit(_x.ret_rev());
+//		visit(_x.ret_rev());
 		break;
 	case TerminatingStmt::kSelfDes:
 		visit(_x.self_des());

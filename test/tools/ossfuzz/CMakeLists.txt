@@ -85,6 +85,8 @@ if (OSSFUZZ)
             solArith.pb.cc
             abiV2FuzzerCommon.cpp
             ../../EVMHost.cpp
+            protoToYul.cpp
+            yulProto.pb.cc
     )
     target_include_directories(sol_arith_proto_ossfuzz PRIVATE
             /usr/include/libprotobuf-mutator

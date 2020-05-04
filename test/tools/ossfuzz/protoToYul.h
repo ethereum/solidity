@@ -38,10 +38,14 @@ namespace solidity::yul::test::yul_fuzzer
 class ProtoConverter
 {
 public:
-	ProtoConverter()
+	ProtoConverter(unsigned _numGlobalVars)
 	{
 		m_funcVars = std::vector<std::vector<std::vector<std::string>>>{};
 		m_globalVars = std::vector<std::vector<std::string>>{};
+		if (_numGlobalVars > 0)
+			m_globalVars.push_back({});
+		for (unsigned i = 0; i < _numGlobalVars; i++)
+			m_globalVars.back().push_back("v" + std::to_string(i));
 		m_inForBodyScope = false;
 		m_inForInitScope = false;
 		m_inForCond = false;

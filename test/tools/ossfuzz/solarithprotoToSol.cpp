@@ -1,4 +1,5 @@
 #include <test/tools/ossfuzz/solarithprotoToSol.h>
+#include <test/tools/ossfuzz/protoToYul.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -59,6 +60,18 @@ string ProtoConverter::visit(Block const& _block)
 	return blockStr.str();
 }
 
+string ProtoConverter::visit(Assembly const& _as)
+{
+	using namespace solidity::yul::test;
+	if (_as.p().program_oneof_case() == yul_fuzzer::Program::kObj)
+		return "";
+	ostringstream assemblyStr;
+	assemblyStr << "\t\t" << "assembly {\n";
+	assemblyStr << yul_fuzzer::ProtoConverter{m_varCounter}.programToString(_as.p());
+	assemblyStr << "\t\t}\n";
+	return assemblyStr.str();
+}
+
 string ProtoConverter::visit(Statement const& _stmt)
 {
 	switch (_stmt.stmt_oneof_case())
@@ -80,6 +93,8 @@ string ProtoConverter::visit(Statement const& _stmt)
 			return visit(_stmt.b());
 		else
 			return "";
+	case Statement::kAs:
+		return visit(_stmt.as());
 	case Statement::STMT_ONEOF_NOT_SET:
 		return "";
 	}
