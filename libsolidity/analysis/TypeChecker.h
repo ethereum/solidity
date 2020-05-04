@@ -167,6 +167,16 @@ private:
 
 	bool experimentalFeatureActive(ExperimentalFeature _feature) const;
 
+	/// @returns the current scope that can have function or type definitions.
+	/// This is either a contract or a source unit.
+	ASTNode const* currentDefinitionScope() const
+	{
+		if (m_currentContract)
+			return m_currentContract;
+		else
+			return m_currentSourceUnit;
+	}
+
 	SourceUnit const* m_currentSourceUnit = nullptr;
 	ContractDefinition const* m_currentContract = nullptr;
 

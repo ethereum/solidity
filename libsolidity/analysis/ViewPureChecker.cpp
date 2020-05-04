@@ -128,30 +128,23 @@ private:
 
 bool ViewPureChecker::check()
 {
-	vector<ContractDefinition const*> contracts;
+	// Process modifiers first to infer their state mutability.
+	m_checkModifiers = true;
+	for (auto const& source: m_ast)
+		source->accept(*this);
 
-	for (auto const& node: m_ast)
-	{
-		SourceUnit const* source = dynamic_cast<SourceUnit const*>(node.get());
-		solAssert(source, "");
-		contracts += source->filteredNodes<ContractDefinition>(source->nodes());
-	}
-
-	// Check modifiers first to infer their state mutability.
-	for (auto const& contract: contracts)
-		for (ModifierDefinition const* mod: contract->functionModifiers())
-			mod->accept(*this);
-
-	for (auto const& contract: contracts)
-		contract->accept(*this);
+	m_checkModifiers = false;
+	for (auto const& source: m_ast)
+		source->accept(*this);
 
 	return !m_errors;
 }
 
-
-
 bool ViewPureChecker::visit(FunctionDefinition const& _funDef)
 {
+	if (m_checkModifiers)
+		return false;
+
 	solAssert(!m_currentFunction, "");
 	m_currentFunction = &_funDef;
 	m_bestMutabilityAndLocation = {StateMutability::Pure, _funDef.location()};
@@ -160,6 +153,9 @@ bool ViewPureChecker::visit(FunctionDefinition const& _funDef)
 
 void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 {
+	if (m_checkModifiers)
+		return;
+
 	solAssert(m_currentFunction == &_funDef, "");
 	if (
 		m_bestMutabilityAndLocation.mutability < _funDef.stateMutability() &&
@@ -181,6 +177,9 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 
 bool ViewPureChecker::visit(ModifierDefinition const& _modifier)
 {
+	if (!m_checkModifiers)
+		return false;
+
 	solAssert(m_currentFunction == nullptr, "");
 	m_bestMutabilityAndLocation = {StateMutability::Pure, _modifier.location()};
 	return true;
@@ -188,6 +187,9 @@ bool ViewPureChecker::visit(ModifierDefinition const& _modifier)
 
 void ViewPureChecker::endVisit(ModifierDefinition const& _modifierDef)
 {
+	if (!m_checkModifiers)
+		return;
+
 	solAssert(m_currentFunction == nullptr, "");
 	m_inferredMutability[&_modifierDef] = std::move(m_bestMutabilityAndLocation);
 }

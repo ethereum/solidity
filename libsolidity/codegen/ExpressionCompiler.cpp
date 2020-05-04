@@ -1736,9 +1736,17 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		Type::Category category = _memberAccess.annotation().type->category();
 		solAssert(
 			category == Type::Category::TypeType ||
-			category == Type::Category::Module,
+			category == Type::Category::Module ||
+			category == Type::Category::Function,
 			""
 		);
+		if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
+		{
+			auto const* funDef = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
+			solAssert(funDef && funDef->isFree(), "");
+			solAssert(funType->kind() == FunctionType::Kind::Internal, "");
+			utils().pushCombinedFunctionEntryLabel(*funDef);
+		}
 		break;
 	}
 	default:

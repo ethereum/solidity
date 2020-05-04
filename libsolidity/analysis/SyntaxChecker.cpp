@@ -295,7 +295,7 @@ bool SyntaxChecker::visit(PlaceholderStatement const&)
 
 bool SyntaxChecker::visit(ContractDefinition const& _contract)
 {
-	m_isInterface = _contract.isInterface();
+	m_currentContractKind = _contract.contractKind();
 
 	ASTString const& contractName = _contract.name();
 	for (FunctionDefinition const* function: _contract.definedFunctions())
@@ -309,19 +309,41 @@ bool SyntaxChecker::visit(ContractDefinition const& _contract)
 	return true;
 }
 
+void SyntaxChecker::endVisit(ContractDefinition const&)
+{
+	m_currentContractKind = std::nullopt;
+}
+
 bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
-	if (!_function.isConstructor() && _function.noVisibilitySpecified())
+	solAssert(_function.isFree() == (m_currentContractKind == std::nullopt), "");
+
+	if (!_function.isFree() && !_function.isConstructor() && _function.noVisibilitySpecified())
 	{
-		string suggestedVisibility = _function.isFallback() || _function.isReceive() || m_isInterface ? "external" : "public";
+		string suggestedVisibility =
+			_function.isFallback() ||
+			_function.isReceive() ||
+			m_currentContractKind == ContractKind::Interface
+		? "external" : "public";
 		m_errorReporter.syntaxError(
 			4937_error,
 			_function.location(),
 			"No visibility specified. Did you intend to add \"" + suggestedVisibility + "\"?"
 		);
 	}
+	else if (_function.isFree())
+	{
+		if (!_function.noVisibilitySpecified())
+			m_errorReporter.syntaxError(
+				4126_error,
+				_function.location(),
+				"Free functions cannot have visibility."
+			);
+		if (!_function.isImplemented())
+			m_errorReporter.typeError(4668_error, _function.location(), "Free functions must be implemented.");
+	}
 
-	if (m_isInterface && !_function.modifiers().empty())
+	if (m_currentContractKind == ContractKind::Interface && !_function.modifiers().empty())
 		m_errorReporter.syntaxError(5842_error, _function.location(), "Functions in interfaces cannot have modifiers.");
 	else if (!_function.isImplemented() && !_function.modifiers().empty())
 		m_errorReporter.syntaxError(2668_error, _function.location(), "Functions without implementation cannot have modifiers.");

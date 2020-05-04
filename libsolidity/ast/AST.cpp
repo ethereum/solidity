@@ -338,7 +338,7 @@ TypePointer FunctionDefinition::type() const
 
 TypePointer FunctionDefinition::typeViaContractName() const
 {
-	if (annotation().contract->isLibrary())
+	if (libraryFunction())
 	{
 		if (isPublic())
 			return FunctionType(*this).asExternallyCallableFunction(true);
@@ -374,7 +374,9 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 	if (_searchStart == nullptr && !virtualSemantics())
 		return *this;
 
-	solAssert(!dynamic_cast<ContractDefinition const&>(*scope()).isLibrary(), "");
+	solAssert(!isFree(), "");
+	solAssert(isOrdinary(), "");
+	solAssert(!libraryFunction(), "");
 
 	FunctionType const* functionType = TypeProvider::function(*this)->asExternallyCallableFunction(false);
 
@@ -603,9 +605,8 @@ bool VariableDeclaration::isLibraryFunctionParameter() const
 	if (!isCallableOrCatchParameter())
 		return false;
 	if (auto const* funDef = dynamic_cast<FunctionDefinition const*>(scope()))
-		return dynamic_cast<ContractDefinition const&>(*funDef->scope()).isLibrary();
-	else
-		return false;
+		return funDef->libraryFunction();
+	return false;
 }
 
 bool VariableDeclaration::isEventParameter() const

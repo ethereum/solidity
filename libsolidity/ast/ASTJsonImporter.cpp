@@ -397,11 +397,25 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 	std::vector<ASTPointer<ModifierInvocation>> modifiers;
 	for (auto& mod: member(_node, "modifiers"))
 		modifiers.push_back(createModifierInvocation(mod));
+
+	Visibility vis = Visibility::Default;
+	bool const freeFunction = _node.isMember("freeFunction") ? _node["freeFunction"].asBool() : false;
+	if (kind == Token::Constructor)
+	{
+	}
+	else if (freeFunction)
+		astAssert(
+			vis == Visibility::Internal || vis == Visibility::Default,
+			"Expected internal or default visibility for free function."
+		);
+	else
+		vis = visibility(_node);
 	return createASTNode<FunctionDefinition>(
 		_node,
 		memberAsASTString(_node, "name"),
-		kind == Token::Constructor ? Visibility::Default : visibility(_node),
+		vis,
 		stateMutability(_node),
+		freeFunction,
 		kind,
 		memberAsBool(_node, "virtual"),
 		_node["overrides"].isNull() ? nullptr : createOverrideSpecifier(member(_node, "overrides")),

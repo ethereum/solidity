@@ -361,6 +361,7 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 		make_pair("name", _node.name()),
 		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue),
 		make_pair("kind", TokenTraits::toString(_node.kind())),
+		make_pair("freeFunction", _node.isFree()),
 		make_pair("stateMutability", stateMutabilityToString(_node.stateMutability())),
 		make_pair("visibility", Declaration::visibilityToString(visibility)),
 		make_pair("virtual", _node.markedVirtual()),
@@ -467,7 +468,6 @@ bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 	setJsonNode(_node, "UserDefinedTypeName", {
 		make_pair("name", namePathToString(_node.namePath())),
 		make_pair("referencedDeclaration", idOrNull(_node.annotation().referencedDeclaration)),
-		make_pair("contractScope", idOrNull(_node.annotation().contractScope)),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type, true))
 	});
 	return false;
