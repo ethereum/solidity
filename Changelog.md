@@ -1,4 +1,4 @@
-### 0.6.7 (unreleased)
+### 0.6.7 (2020-05-04)
 
 Language Features:
  * Add support for EIP 165 interface identifiers with `type(I).interfaceId`.
@@ -7,6 +7,7 @@ Language Features:
 
 Compiler Features:
  * Optimizer: Simplify repeated AND and OR operations.
+ * Standard Json Input: Support the prefix ``file://`` in the field ``urls``.
 
 Bugfixes:
  * SMTChecker: Fix internal error when fixed points are used.
@@ -16,7 +17,6 @@ Bugfixes:
  * Type Checker: Fix internal error when assigning to empty tuples.
  * Type Checker: Fix internal error when applying unary operators to tuples with empty components.
  * Type Checker: Perform recursiveness check on structs declared at the file level.
- * Standard Json Input: Fix error when using prefix ``file://`` in the field ``urls``.
 
 Build System:
  * soltest.sh: ``SOLIDITY_BUILD_DIR`` is no longer relative to ``REPO_ROOT`` to allow for build directories outside of the source tree.
