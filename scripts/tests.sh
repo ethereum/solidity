@@ -100,7 +100,7 @@ do
             force_abiv2_flag=""
             if [[ "$abiv2" == "yes" ]]
             then
-                force_abiv2_flag="--abiencoderv2 --optimize-yul"
+                force_abiv2_flag="--abiencoderv2"
             fi
             printTask "--> Running tests using "$optimize" --evm-version "$vm" $force_abiv2_flag..."
 
