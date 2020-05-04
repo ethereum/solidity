@@ -14,6 +14,7 @@ object \"C_6\" {
         constructor_C_6()
 
         codecopy(0, dataoffset(\"C_6_deployed\"), datasize(\"C_6_deployed\"))
+
         return(0, datasize(\"C_6_deployed\"))
 
         function constructor_C_6() {

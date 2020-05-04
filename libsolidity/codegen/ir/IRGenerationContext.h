@@ -81,6 +81,17 @@ public:
 	bool isLocalVariable(VariableDeclaration const& _varDecl) const { return m_localVariables.count(&_varDecl); }
 	IRVariable const& localVariable(VariableDeclaration const& _varDecl);
 
+	/// Registers an immutable variable of the contract.
+	/// Should only be called at construction time.
+	void registerImmutableVariable(VariableDeclaration const& _varDecl);
+	/// @returns the reserved memory for storing the value of the
+	/// immutable @a _variable during contract creation.
+	size_t immutableMemoryOffset(VariableDeclaration const& _variable) const;
+	/// @returns the reserved memory and resets it to mark it as used.
+	/// Intended to be used only once for initializing the free memory pointer
+	/// to after the area used for immutables.
+	size_t reservedMemory();
+
 	void addStateVariable(VariableDeclaration const& _varDecl, u256 _storageOffset, unsigned _byteOffset);
 	bool isStateVariable(VariableDeclaration const& _varDecl) const { return m_stateVariables.count(&_varDecl); }
 	std::pair<u256, unsigned> storageLocationOfVariable(VariableDeclaration const& _varDecl) const
@@ -123,6 +134,12 @@ private:
 	OptimiserSettings m_optimiserSettings;
 	ContractDefinition const* m_mostDerivedContract = nullptr;
 	std::map<VariableDeclaration const*, IRVariable> m_localVariables;
+	/// Memory offsets reserved for the values of immutable variables during contract creation.
+	/// This map is empty in the runtime context.
+	std::map<VariableDeclaration const*, size_t> m_immutableVariables;
+	/// Total amount of reserved memory. Reserved memory is used to store
+	/// immutable variables during contract creation.
+	std::optional<size_t> m_reservedMemory = {0};
 	/// Storage offsets of state variables
 	std::map<VariableDeclaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	MultiUseYulFunctionCollector m_functions;

@@ -105,6 +105,11 @@ public:
 	virtual void appendDataSize(SubID _sub) = 0;
 	/// Appends the given data to the assembly and returns its ID.
 	virtual SubID appendData(bytes const& _data) = 0;
+
+	/// Appends loading an immutable variable.
+	virtual void appendImmutable(std::string const& _identifier) = 0;
+	/// Appends an assignment to an immutable variable.
+	virtual void appendImmutableAssignment(std::string const& _identifier) = 0;
 };
 
 enum class IdentifierContext { LValue, RValue, VariableDeclaration };
