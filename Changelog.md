@@ -18,6 +18,7 @@ Bugfixes:
  * Type Checker: Disallow accessing ``runtimeCode`` for contract types that contain immutable state variables.
  * Fixed an "Assembly Exception in Bytecode" error where requested functions were generated twice.
  * Natspec: Fixed a bug that ignored ``@return`` tag when no other developer-documentation tags were present.
+ * Yul assembler: Fix source location of variable declarations without value.
 
 
 ### 0.6.7 (2020-05-04)

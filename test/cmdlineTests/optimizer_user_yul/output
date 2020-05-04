@@ -5,7 +5,7 @@ EVM assembly:
   mstore(0x40, 0x80)
     /* "optimizer_user_yul/input.sol":72:77  int a */
   0x00
-    /* "optimizer_user_yul/input.sol":38:487  constructor() public payable... */
+    /* "optimizer_user_yul/input.sol":152:161  let x,y,z */
   dup1
   0x00
   dup1
