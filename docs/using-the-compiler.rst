@@ -231,7 +231,10 @@ Input Description
             "yulDetails": {
               // Improve allocation of stack slots for variables, can free up stack slots early.
               // Activated by default if the Yul optimizer is activated.
-              "stackAllocation": true
+              "stackAllocation": true,
+              // Select optimization steps to be applied.
+              // Optional, the optimizer will use the default sequence if omitted.
+              "optimizerSteps": "dhfoDgvulfnTUtnIf..."
             }
           }
         },
