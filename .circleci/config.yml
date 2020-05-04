@@ -617,6 +617,23 @@ jobs:
   t_ubu_soltest: &t_ubu_soltest
     <<: *test_ubuntu1904
 
+  t_ubu_soltest_enforce_yul: &t_ubu_soltest_enforce_yul
+    docker:
+      - image: ethereum/solidity-buildpack-deps:ubuntu1904-<< pipeline.parameters.ubuntu-1904-docker-image-rev >>
+    environment:
+      EVM: constantinople
+      SOLTEST_FLAGS: --enforce-via-yul
+      OPTIMIZE: 0
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run: *run_soltest
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
+
+
   t_ubu_clang_soltest: &t_ubu_clang_soltest
     <<: *test_ubuntu1904_clang
     environment:
@@ -818,6 +835,7 @@ workflows:
       - b_ubu18: *workflow_trigger_on_tags
       - t_ubu_cli: *workflow_ubuntu1904
       - t_ubu_soltest: *workflow_ubuntu1904
+      - t_ubu_soltest_enforce_yul: *workflow_ubuntu1904
       - b_ubu_clang: *workflow_trigger_on_tags
       - t_ubu_clang_soltest: *workflow_ubuntu1904_clang
 

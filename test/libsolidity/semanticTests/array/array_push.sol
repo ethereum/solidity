@@ -14,6 +14,7 @@ contract c {
         z = data[2];
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // test() -> 5, 4, 3, 3

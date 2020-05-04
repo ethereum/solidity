@@ -40,6 +40,11 @@ void TestCase::printSettings(ostream& _stream, const string& _linePrefix, const 
 		_stream << _linePrefix << "// " << setting.first << ": " << setting.second << endl;
 }
 
+void TestCase::printUpdatedSettings(std::ostream& _stream, std::string const& _linePrefix)
+{
+	printSettings(_stream, _linePrefix);
+}
+
 bool TestCase::isTestFilename(boost::filesystem::path const& _filename)
 {
 	string extension = _filename.extension().string();

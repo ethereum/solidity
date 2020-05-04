@@ -14,6 +14,7 @@ contract test {
         c = m_c;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // get() -> 5, 6, 8

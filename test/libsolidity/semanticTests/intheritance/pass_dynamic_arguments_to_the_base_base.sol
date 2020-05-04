@@ -19,5 +19,7 @@ contract Derived is Base, Base1 {
 
 contract Final is Derived(4) {}
 
+// ====
+// compileViaYul: also
 // ----
 // m_i() -> 4

@@ -14,6 +14,8 @@ contract Main {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // constructor(), 20 wei ->
 // s() -> true

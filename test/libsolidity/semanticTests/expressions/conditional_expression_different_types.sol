@@ -5,6 +5,8 @@ contract test {
         return cond ? x : y;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f(bool): true -> 0xcd
 // f(bool): false -> 0xabab
