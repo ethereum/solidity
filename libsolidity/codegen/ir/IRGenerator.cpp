@@ -302,22 +302,26 @@ pair<string, map<ContractDefinition const*, string>> IRGenerator::evaluateConstr
 
 	for (ASTPointer<InheritanceSpecifier> const& base: _contract.baseContracts())
 		if (FunctionDefinition const* baseConstructor = dynamic_cast<ContractDefinition const*>(
-					base->name().annotation().referencedDeclaration
+				base->name().annotation().referencedDeclaration
 			)->constructor(); baseConstructor && base->arguments())
 			baseConstructorArguments.emplace_back(
-					dynamic_cast<ContractDefinition const*>(baseConstructor->scope()),
-					base->arguments()
+				dynamic_cast<ContractDefinition const*>(baseConstructor->scope()),
+				base->arguments()
 			);
 
 	if (FunctionDefinition const* constructor = _contract.constructor())
-		for (auto const& modifier: constructor->modifiers())
-			if (FunctionDefinition const* baseConstructor = dynamic_cast<ContractDefinition const*>(
+		for (ASTPointer<ModifierInvocation> const& modifier: constructor->modifiers())
+			if (auto const* baseContract = dynamic_cast<ContractDefinition const*>(
 				modifier->name()->annotation().referencedDeclaration
-			)->constructor(); baseConstructor && modifier->arguments())
-				baseConstructorArguments.emplace_back(
-					dynamic_cast<ContractDefinition const*>(baseConstructor->scope()),
-					modifier->arguments()
-				);
+			))
+				if (
+					FunctionDefinition const* baseConstructor = baseContract->constructor();
+					baseConstructor && modifier->arguments()
+				)
+					baseConstructorArguments.emplace_back(
+						dynamic_cast<ContractDefinition const*>(baseConstructor->scope()),
+						modifier->arguments()
+					);
 
 	IRGeneratorForStatements generator{m_context, m_utils};
 	for (auto&& [baseContract, arguments]: baseConstructorArguments)
