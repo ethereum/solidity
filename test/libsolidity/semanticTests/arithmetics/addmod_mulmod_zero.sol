@@ -18,6 +18,8 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // f(uint256): 0 -> FAILURE
 // g(uint256): 0 -> FAILURE
