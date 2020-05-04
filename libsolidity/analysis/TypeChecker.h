@@ -112,7 +112,7 @@ private:
 
 	void endVisit(InheritanceSpecifier const& _inheritance) override;
 	void endVisit(UsingForDirective const& _usingFor) override;
-	bool visit(StructDefinition const& _struct) override;
+	void endVisit(ModifierDefinition const& _modifier) override;
 	bool visit(FunctionDefinition const& _function) override;
 	bool visit(VariableDeclaration const& _variable) override;
 	/// We need to do this manually because we want to pass the bases of the current contract in
@@ -153,6 +153,11 @@ private:
 	Declaration const& dereference(Identifier const& _identifier) const;
 	/// @returns the referenced declaration and throws on error.
 	Declaration const& dereference(UserDefinedTypeName const& _typeName) const;
+
+	std::vector<Declaration const*> cleanOverloadedDeclarations(
+		Identifier const& _reference,
+		std::vector<Declaration const*> const& _candidates
+	);
 
 	/// Runs type checks on @a _expression to infer its type and then checks that it is implicitly
 	/// convertible to @a _expectedType.

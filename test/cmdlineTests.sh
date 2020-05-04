@@ -31,19 +31,19 @@ set -e
 ## GLOBAL VARIABLES
 
 REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
-SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-build}
+SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 source "${REPO_ROOT}/scripts/common.sh"
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
 case "$OSTYPE" in
     msys)
-        SOLC="$REPO_ROOT/${SOLIDITY_BUILD_DIR}/solc/Release/solc.exe"
+        SOLC="${SOLIDITY_BUILD_DIR}/solc/Release/solc.exe"
 
         # prevents msys2 path translation for a remapping test
         export MSYS2_ARG_CONV_EXCL="="
         ;;
     *)
-        SOLC="$REPO_ROOT/${SOLIDITY_BUILD_DIR}/solc/solc"
+        SOLC="${SOLIDITY_BUILD_DIR}/solc/solc"
         ;;
 esac
 echo "${SOLC}"
@@ -126,7 +126,7 @@ function test_solc_behaviour()
         # Remove trailing empty lines. Needs a line break to make OSX sed happy.
         sed -i.bak -e '1{/^$/d
 }' "$stderr_path"
-       rm "$stderr_path.bak"
+        rm "$stderr_path.bak" "$stdout_path.bak"
     fi
     # Remove path to cpp file
     sed -i.bak -e 's/^\(Exception while assembling:\).*/\1/' "$stderr_path"
@@ -175,6 +175,8 @@ function test_solc_behaviour()
             exit 1
         fi
     fi
+
+    rm -f "$stdout_path" "$stderr_path"
 }
 
 
@@ -214,7 +216,7 @@ printTask "Testing unknown options..."
     then
         echo "Passed"
     else
-        printError "Incorrect response to unknown options: $STDERR"
+        printError "Incorrect response to unknown options: $output"
         exit 1
     fi
 )
@@ -385,7 +387,7 @@ SOLTMPDIR=$(mktemp -d)
     # This should fail
     if [[ !("$output" =~ "No input files given") || ($result == 0) ]]
     then
-        printError "Incorrect response to empty input arg list: $STDERR"
+        printError "Incorrect response to empty input arg list: $output"
         exit 1
     fi
 
@@ -431,8 +433,8 @@ SOLTMPDIR=$(mktemp -d)
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
 
-    echo *.sol | xargs -P 4 -n 50 "$REPO_ROOT"/${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer --quiet --input-files
-    echo *.sol | xargs -P 4 -n 50 "$REPO_ROOT"/${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer --without-optimizer --quiet --input-files
+    echo *.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --quiet --input-files
+    echo *.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --without-optimizer --quiet --input-files
 )
 rm -rf "$SOLTMPDIR"
 

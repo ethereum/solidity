@@ -28,16 +28,18 @@
 #include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
+
 #include <algorithm>
 #include <functional>
+#include <utility>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
-ASTNode::ASTNode(int64_t _id, SourceLocation const& _location):
+ASTNode::ASTNode(int64_t _id, SourceLocation _location):
 	m_id(_id),
-	m_location(_location)
+	m_location(std::move(_location))
 {
 }
 
@@ -96,9 +98,9 @@ bool ContractDefinition::derivesFrom(ContractDefinition const& _base) const
 	return util::contains(annotation().linearizedBaseContracts, &_base);
 }
 
-map<util::FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() const
+map<util::FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions(bool _includeInheritedFunctions) const
 {
-	auto exportedFunctionList = interfaceFunctionList();
+	auto exportedFunctionList = interfaceFunctionList(_includeInheritedFunctions);
 
 	map<util::FixedHash<4>, FunctionTypePointer> exportedFunctions;
 	for (auto const& it: exportedFunctionList)
@@ -174,14 +176,16 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 	return *m_interfaceEvents;
 }
 
-vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList() const
+vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList(bool _includeInheritedFunctions) const
 {
-	if (!m_interfaceFunctionList)
+	if (!m_interfaceFunctionList[_includeInheritedFunctions])
 	{
 		set<string> signaturesSeen;
-		m_interfaceFunctionList = make_unique<vector<pair<util::FixedHash<4>, FunctionTypePointer>>>();
+		m_interfaceFunctionList[_includeInheritedFunctions] = make_unique<vector<pair<util::FixedHash<4>, FunctionTypePointer>>>();
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		{
+			if (_includeInheritedFunctions == false && contract != this)
+				continue;
 			vector<FunctionTypePointer> functions;
 			for (FunctionDefinition const* f: contract->definedFunctions())
 				if (f->isPartOfExternalInterface())
@@ -199,12 +203,12 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 				{
 					signaturesSeen.insert(functionSignature);
 					util::FixedHash<4> hash(util::keccak256(functionSignature));
-					m_interfaceFunctionList->emplace_back(hash, fun);
+					m_interfaceFunctionList[_includeInheritedFunctions]->emplace_back(hash, fun);
 				}
 			}
 		}
 	}
-	return *m_interfaceFunctionList;
+	return *m_interfaceFunctionList[_includeInheritedFunctions];
 }
 
 TypePointer ContractDefinition::type() const
@@ -255,12 +259,13 @@ TypeNameAnnotation& TypeName::annotation() const
 
 TypePointer StructDefinition::type() const
 {
+	solAssert(annotation().recursive.has_value(), "Requested struct type before DeclarationTypeChecker.");
 	return TypeProvider::typeType(TypeProvider::structType(*this, DataLocation::Storage));
 }
 
-TypeDeclarationAnnotation& StructDefinition::annotation() const
+StructDeclarationAnnotation& StructDefinition::annotation() const
 {
-	return initAnnotation<TypeDeclarationAnnotation>();
+	return initAnnotation<StructDeclarationAnnotation>();
 }
 
 TypePointer EnumValue::type() const
@@ -556,6 +561,18 @@ bool VariableDeclaration::isExternalCallableParameter() const
 	return false;
 }
 
+bool VariableDeclaration::isPublicCallableParameter() const
+{
+	if (!isCallableOrCatchParameter())
+		return false;
+
+	if (auto const* callable = dynamic_cast<CallableDeclaration const*>(scope()))
+		if (callable->visibility() == Visibility::Public)
+			return !isReturnParameter();
+
+	return false;
+}
+
 bool VariableDeclaration::isInternalCallableParameter() const
 {
 	if (!isCallableOrCatchParameter())
@@ -614,12 +631,20 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 	else if (isLocalVariable())
 	{
 		solAssert(typeName(), "");
-		solAssert(typeName()->annotation().type, "Can only be called after reference resolution");
-		if (typeName()->annotation().type->category() == Type::Category::Mapping)
-			return set<Location>{ Location::Storage };
-		else
-			//  TODO: add Location::Calldata once implemented for local variables.
-			return set<Location>{ Location::Memory, Location::Storage };
+		auto dataLocations = [](TypePointer _type, auto&& _recursion) -> set<Location> {
+			solAssert(_type, "Can only be called after reference resolution");
+			switch (_type->category())
+			{
+				case Type::Category::Array:
+					return _recursion(dynamic_cast<ArrayType const*>(_type)->baseType(), _recursion);
+				case Type::Category::Mapping:
+					return set<Location>{ Location::Storage };
+				default:
+					//  TODO: add Location::Calldata once implemented for local variables.
+					return set<Location>{ Location::Memory, Location::Storage };
+			}
+		};
+		return dataLocations(typeName()->annotation().type, dataLocations);
 	}
 	else
 		// Struct members etc.
@@ -755,4 +780,26 @@ string Literal::getChecksummedAddress() const
 		return string();
 	address.insert(address.begin(), 40 - address.size(), '0');
 	return util::getChecksummedAddress(address);
+}
+
+TryCatchClause const* TryStatement::successClause() const
+{
+	solAssert(m_clauses.size() > 0, "");
+	return m_clauses[0].get();
+}
+
+TryCatchClause const* TryStatement::structuredClause() const
+{
+	for (size_t i = 1; i < m_clauses.size(); ++i)
+		if (m_clauses[i]->errorName() == "Error")
+			return m_clauses[i].get();
+	return nullptr;
+}
+
+TryCatchClause const* TryStatement::fallbackClause() const
+{
+	for (size_t i = 1; i < m_clauses.size(); ++i)
+		if (m_clauses[i]->errorName().empty())
+			return m_clauses[i].get();
+	return nullptr;
 }

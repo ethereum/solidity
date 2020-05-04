@@ -9,42 +9,15 @@
 object \"C_10\" {
     code {
         mstore(64, 128)
+        if callvalue() { revert(0, 0) }
 
-        // Begin state variable initialization for contract \"C\" (0 variables)
-        // End state variable initialization for contract \"C\".
-
+        constructor_C_10()
 
         codecopy(0, dataoffset(\"C_10_deployed\"), datasize(\"C_10_deployed\"))
         return(0, datasize(\"C_10_deployed\"))
 
+        function constructor_C_10() {
 
-        function allocateMemory(size) -> memPtr {
-            memPtr := mload(64)
-            let newFreePtr := add(memPtr, size)
-            // protect against overflow
-            if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
-            mstore(64, newFreePtr)
-        }
-
-        function convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr() -> converted {
-            converted := allocateMemory(64)
-            mstore(converted, 6)
-
-            mstore(add(converted, 32), \"abcabc\")
-
-        }
-
-        function fun_f_9()  -> vloc__4_mpos {
-            let zero_value_for_type_t_string_memory_ptr_1_mpos := zero_value_for_split_t_string_memory_ptr()
-            vloc__4_mpos := zero_value_for_type_t_string_memory_ptr_1_mpos
-
-            vloc__4_mpos := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr()
-            leave
-
-        }
-
-        function zero_value_for_split_t_string_memory_ptr() -> ret {
-            ret := 96
         }
 
     }
@@ -72,7 +45,6 @@ object \"C_10\" {
             }
             if iszero(calldatasize()) {  }
             revert(0, 0)
-
 
             function abi_decode_tuple_(headStart, dataEnd)   {
                 if slt(sub(dataEnd, headStart), 0) { revert(0, 0) }
@@ -104,10 +76,7 @@ object \"C_10\" {
 
             function array_length_t_string_memory_ptr(value) -> length {
 
-
                 length := mload(value)
-
-
 
             }
 
@@ -162,7 +131,9 @@ object \"C_10\" {
             }
 
         }
+
     }
+
 }
 
 "}}},"sources":{"A":{"id":0}}}

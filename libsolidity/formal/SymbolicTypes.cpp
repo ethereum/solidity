@@ -69,11 +69,32 @@ SortPointer smtSort(frontend::Type const& _type)
 		}
 		else
 		{
-			solAssert(isArray(_type.category()), "");
-			auto arrayType = dynamic_cast<frontend::ArrayType const*>(&_type);
+			frontend::ArrayType const* arrayType = nullptr;
+			if (auto const* arr = dynamic_cast<frontend::ArrayType const*>(&_type))
+				arrayType = arr;
+			else if (auto const* slice = dynamic_cast<frontend::ArraySliceType const*>(&_type))
+				arrayType = &slice->arrayType();
+			else
+				solAssert(false, "");
+
 			solAssert(arrayType, "");
 			return make_shared<ArraySort>(SortProvider::intSort, smtSortAbstractFunction(*arrayType->baseType()));
 		}
+	}
+	case Kind::Tuple:
+	{
+		auto tupleType = dynamic_cast<frontend::TupleType const*>(&_type);
+		solAssert(tupleType, "");
+		vector<string> members;
+		auto const& tupleName = _type.identifier();
+		auto const& components = tupleType->components();
+		for (unsigned i = 0; i < components.size(); ++i)
+			members.emplace_back(tupleName + "_accessor_" + to_string(i));
+		return make_shared<TupleSort>(
+			tupleName,
+			members,
+			smtSortAbstractFunction(tupleType->components())
+		);
 	}
 	default:
 		// Abstract case.
@@ -96,6 +117,17 @@ SortPointer smtSortAbstractFunction(frontend::Type const& _type)
 	return smtSort(_type);
 }
 
+vector<SortPointer> smtSortAbstractFunction(vector<frontend::TypePointer> const& _types)
+{
+	vector<SortPointer> sorts;
+	for (auto const& type: _types)
+		if (type)
+			sorts.push_back(smtSortAbstractFunction(*type));
+		else
+			sorts.push_back(SortProvider::intSort);
+	return sorts;
+}
+
 Kind smtKind(frontend::Type::Category _category)
 {
 	if (isNumber(_category))
@@ -106,6 +138,8 @@ Kind smtKind(frontend::Type::Category _category)
 		return Kind::Function;
 	else if (isMapping(_category) || isArray(_category))
 		return Kind::Array;
+	else if (isTuple(_category))
+		return Kind::Tuple;
 	// Abstract case.
 	return Kind::Int;
 }
@@ -269,7 +303,8 @@ bool isMapping(frontend::Type::Category _category)
 bool isArray(frontend::Type::Category _category)
 {
 	return _category == frontend::Type::Category::Array ||
-		_category == frontend::Type::Category::StringLiteral;
+		_category == frontend::Type::Category::StringLiteral ||
+		_category == frontend::Type::Category::ArraySlice;
 }
 
 bool isTuple(frontend::Type::Category _category)
@@ -348,6 +383,19 @@ void setSymbolicUnknownValue(Expression _expr, frontend::TypePointer const& _typ
 		_context.addAssertion(_expr >= minValue(*intType));
 		_context.addAssertion(_expr <= maxValue(*intType));
 	}
+}
+
+optional<Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to)
+{
+	if (_to && _from)
+		// StringLiterals are encoded as SMT arrays in the generic case,
+		// but they can also be compared/assigned to fixed bytes, in which
+		// case they'd need to be encoded as numbers.
+		if (auto strType = dynamic_cast<StringLiteralType const*>(_from))
+			if (_to->category() == frontend::Type::Category::FixedBytes)
+				return smt::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
+
+	return std::nullopt;
 }
 
 }

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ir/IRVariable.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/DebugSettings.h>
@@ -30,6 +31,7 @@
 
 #include <libsolutil/Common.h>
 
+#include <set>
 #include <string>
 #include <memory>
 #include <vector>
@@ -37,11 +39,8 @@
 namespace solidity::frontend
 {
 
-class ContractDefinition;
-class VariableDeclaration;
-class FunctionDefinition;
-class Expression;
 class YulUtilFunctions;
+class ABIFunctions;
 
 /**
  * Class that contains contextual information during IR generation.
@@ -60,6 +59,15 @@ public:
 	{}
 
 	MultiUseYulFunctionCollector& functionCollector() { return m_functions; }
+
+	/// Adds a Solidity function to the function generation queue and returns the name of the
+	/// corresponding Yul function.
+	std::string enqueueFunctionForCodeGeneration(FunctionDefinition const& _function);
+
+	/// Pops one item from the function generation queue. Must not be called if the queue is empty.
+	FunctionDefinition const* dequeueFunctionForCodeGeneration();
+
+	bool functionGenerationQueueEmpty() { return m_functionGenerationQueue.empty(); }
 
 	/// Sets the most derived contract (the one currently being compiled)>
 	void setMostDerivedContract(ContractDefinition const& _mostDerivedContract)
@@ -82,7 +90,9 @@ public:
 
 	std::string functionName(FunctionDefinition const& _function);
 	std::string functionName(VariableDeclaration const& _varDecl);
-	std::string virtualFunctionName(FunctionDefinition const& _functionDeclaration);
+
+	std::string creationObjectName(ContractDefinition const& _contract) const;
+	std::string runtimeObjectName(ContractDefinition const& _contract) const;
 
 	std::string newYulVariable();
 
@@ -93,11 +103,19 @@ public:
 
 	langutil::EVMVersion evmVersion() const { return m_evmVersion; };
 
+	ABIFunctions abiFunctions();
+
 	/// @returns code that stores @param _message for revert reason
 	/// if m_revertStrings is debug.
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
 	RevertStrings revertStrings() const { return m_revertStrings; }
+
+	/// @returns the variable name that can be used to inspect the success or failure of an external
+	/// function call that was invoked as part of the try statement.
+	std::string trySuccessConditionVariable(Expression const& _expression) const;
+
+	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated() { return m_subObjects; }
 
 private:
 	langutil::EVMVersion m_evmVersion;
@@ -109,6 +127,17 @@ private:
 	std::map<VariableDeclaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	MultiUseYulFunctionCollector m_functions;
 	size_t m_varCounter = 0;
+
+	/// Function definitions queued for code generation. They're the Solidity functions whose calls
+	/// were discovered by the IR generator during AST traversal.
+	/// Note that the queue gets filled in a lazy way - new definitions can be added while the
+	/// collected ones get removed and traversed.
+	/// The order and duplicates are irrelevant here (hence std::set rather than std::queue) as
+	/// long as the order of Yul functions in the generated code is deterministic and the same on
+	/// all platforms - which is a property guaranteed by MultiUseYulFunctionCollector.
+	std::set<FunctionDefinition const*> m_functionGenerationQueue;
+
+	std::set<ContractDefinition const*, ASTNode::CompareByID> m_subObjects;
 };
 
 }

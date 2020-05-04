@@ -196,6 +196,16 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			solAssert(sortSort, "");
 			return m_context.mkConst(CVC4::ArrayStoreAll(cvc4Sort(*sortSort->inner), arguments[1]));
 		}
+		else if (n == "tuple_get")
+		{
+			shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.arguments[0].sort);
+			solAssert(tupleSort, "");
+			CVC4::DatatypeType tt = m_context.mkTupleType(cvc4Sort(tupleSort->components));
+			CVC4::Datatype const& dt = tt.getDatatype();
+			size_t index = std::stoi(_expr.arguments[1].name);
+			CVC4::Expr s = dt[0][index].getSelector();
+			return m_context.mkExpr(CVC4::kind::APPLY_SELECTOR, s, arguments[0]);
+		}
 
 		solAssert(false, "");
 	}
@@ -228,6 +238,11 @@ CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
 	{
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
 		return m_context.mkArrayType(cvc4Sort(*arraySort.domain), cvc4Sort(*arraySort.range));
+	}
+	case Kind::Tuple:
+	{
+		auto const& tupleSort = dynamic_cast<TupleSort const&>(_sort);
+		return m_context.mkTupleType(cvc4Sort(tupleSort.components));
 	}
 	default:
 		break;

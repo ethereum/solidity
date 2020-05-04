@@ -25,6 +25,7 @@
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libyul/AssemblyStack.h>
 #include <libyul/Exceptions.h>
+#include <libyul/optimiser/Suite.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <libevmasm/Instruction.h>
 #include <libsolutil/JSON.h>
@@ -402,6 +403,33 @@ std::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std
 	return {};
 }
 
+std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details, std::string const& _name, string& _setting)
+{
+	if (_details.isMember(_name))
+	{
+		if (_details[_name].isString())
+		{
+			try
+			{
+				yul::OptimiserSuite::validateSequence(_details[_name].asString());
+			}
+			catch (yul::OptimizerException const& _exception)
+			{
+				return formatFatalError(
+					"JSONError",
+					"Invalid optimizer step sequence in \"settings.optimizer.details." + _name + "\": " + _exception.what()
+				);
+			}
+
+			_setting = _details[_name].asString();
+		}
+		else
+			return formatFatalError("JSONError", "\"settings.optimizer.details." + _name + "\" must be a string");
+
+	}
+	return {};
+}
+
 std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 {
 	if (_input.isObject())
@@ -511,9 +539,11 @@ boost::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Valu
 			if (!settings.runYulOptimiser)
 				return formatFatalError("JSONError", "\"Providing yulDetails requires Yul optimizer to be enabled.");
 
-			if (auto result = checkKeys(details["yulDetails"], {"stackAllocation"}, "settings.optimizer.details.yulDetails"))
+			if (auto result = checkKeys(details["yulDetails"], {"stackAllocation", "optimizerSteps"}, "settings.optimizer.details.yulDetails"))
 				return *result;
 			if (auto error = checkOptimizerDetail(details["yulDetails"], "stackAllocation", settings.optimizeStackAllocation))
+				return *error;
+			if (auto error = checkOptimizerDetailSteps(details["yulDetails"], "optimizerSteps", settings.yulOptimiserSteps))
 				return *error;
 		}
 	}
@@ -591,7 +621,7 @@ boost::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompile
 						));
 					else
 					{
-						ret.sources[sourceName] =  result.responseOrErrorMessage;
+						ret.sources[sourceName] = result.responseOrErrorMessage;
 						found = true;
 						break;
 					}

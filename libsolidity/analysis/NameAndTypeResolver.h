@@ -95,12 +95,6 @@ public:
 	/// @note Returns a null pointer if any component in the path was not unique or not found.
 	Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path) const;
 
-	/// returns the vector of declarations without repetitions
-	std::vector<Declaration const*> cleanedDeclarations(
-		Identifier const& _identifier,
-		std::vector<Declaration const*> const& _declarations
-	);
-
 	/// Generate and store warnings about variables that are named like instructions.
 	void warnVariablesNamedLikeInstructions();
 

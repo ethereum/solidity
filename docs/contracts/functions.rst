@@ -195,7 +195,7 @@ In addition to the list of state modifying statements explained above, the follo
         }
     }
 
-Pure functions are able to use the `revert()` and `require()` functions to revert
+Pure functions are able to use the ``revert()`` and ``require()`` functions to revert
 potential state changes when an :ref:`error occurs <assert-and-require>`.
 
 Reverting a state change is not considered a "state modification", as only changes to the
@@ -235,9 +235,9 @@ A contract can have at most one ``receive`` function, declared using
 ``receive() external payable { ... }``
 (without the ``function`` keyword).
 This function cannot have arguments, cannot return anything and must have
-``external`` visibility and ``payable`` state mutability.  It is executed on a
+``external`` visibility and ``payable`` state mutability. It is executed on a
 call to the contract with empty calldata. This is the function that is executed
-on plain Ether transfers (e.g. via `.send()` or `.transfer()`).  If no such
+on plain Ether transfers (e.g. via ``.send()`` or ``.transfer()``). If no such
 function exists, but a payable :ref:`fallback function <fallback-function>`
 exists, the fallback function will be called on a plain Ether transfer. If
 neither a receive Ether nor a payable fallback function is present, the
@@ -245,7 +245,7 @@ contract cannot receive Ether through regular transactions and throws an
 exception.
 
 In the worst case, the fallback function can only rely on 2300 gas being
-available (for example when `send` or `transfer` is used), leaving little
+available (for example when ``send`` or ``transfer`` is used), leaving little
 room to perform other operations except basic logging. The following operations
 will consume more gas than the 2300 gas stipend:
 
@@ -265,7 +265,7 @@ will consume more gas than the 2300 gas stipend:
 
 .. warning::
     A contract without a receive Ether function can receive Ether as a
-    recipient of a `coinbase transaction` (aka `miner block reward`)
+    recipient of a *coinbase transaction* (aka *miner block reward*)
     or as a destination of a ``selfdestruct``.
 
     A contract cannot react to such Ether transfers and thus also

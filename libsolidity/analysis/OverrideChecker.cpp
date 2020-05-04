@@ -327,6 +327,16 @@ ModifierType const* OverrideProxy::modifierType() const
 	}, m_item);
 }
 
+
+Declaration const* OverrideProxy::declaration() const
+{
+	return std::visit(GenericVisitor{
+		[&](FunctionDefinition const* _function) -> Declaration const* { return _function; },
+		[&](VariableDeclaration const* _variable) -> Declaration const* { return _variable; },
+		[&](ModifierDefinition const* _modifier) -> Declaration const* { return _modifier; }
+	}, m_item);
+}
+
 SourceLocation const& OverrideProxy::location() const
 {
 	return std::visit(GenericVisitor{
@@ -365,7 +375,7 @@ bool OverrideProxy::unimplemented() const
 {
 	return std::visit(GenericVisitor{
 		[&](FunctionDefinition const* _item) { return !_item->isImplemented(); },
-		[&](ModifierDefinition const*) { return false; },
+		[&](ModifierDefinition const* _item) { return !_item->isImplemented(); },
 		[&](VariableDeclaration const*) { return false; }
 	}, m_item);
 }

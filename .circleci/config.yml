@@ -284,12 +284,18 @@ jobs:
 
   chk_coding_style:
     docker:
-      - image: buildpack-deps:disco
+      - image: buildpack-deps:focal
     steps:
       - checkout
       - run:
+          name: Install shellcheck
+          command: apt -q update && apt install -y shellcheck
+      - run:
           name: Check for C++ coding style
           command: ./scripts/check_style.sh
+      - run:
+          name: checking shell scripts
+          command: ./scripts/chk_shellscripts/chk_shellscripts.sh
 
   chk_pylint:
     docker:
@@ -338,7 +344,7 @@ jobs:
 
   chk_proofs:
     docker:
-      - image: buildpack-deps:disco
+      - image: buildpack-deps:latest
     environment:
       TERM: xterm
     steps:
@@ -347,8 +353,8 @@ jobs:
           name: Z3 python deps
           command: |
             apt-get -qq update
-            apt-get -qy install python-pip
-            pip install --user z3-solver
+            apt-get -qy install python3-pip
+            pip3 install --user z3-solver
       - run: *run_proofs
 
   chk_docs_pragma_min_version:
@@ -661,7 +667,7 @@ jobs:
 
   t_ems_solcjs:
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1904
+      - image: buildpack-deps:latest
     environment:
       TERM: xterm
     steps:

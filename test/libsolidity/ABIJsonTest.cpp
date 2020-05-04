@@ -26,8 +26,6 @@
 #include <libsolutil/JSON.h>
 #include <libsolutil/AnsiColorized.h>
 
-#include <boost/algorithm/string.hpp>
-
 #include <fstream>
 
 using namespace std;
@@ -85,16 +83,3 @@ void ABIJsonTest::printUpdatedExpectations(ostream& _stream, string const& _line
 {
 	printIndented(_stream, m_obtainedResult, _linePrefix);
 }
-
-void ABIJsonTest::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
-{
-	stringstream output(_output);
-	string line;
-	while (getline(output, line))
-		if (line.empty())
-			// Avoid trailing spaces.
-			_stream << boost::trim_right_copy(_linePrefix) << endl;
-		else
-			_stream << _linePrefix << line << endl;
-}
-

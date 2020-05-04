@@ -106,7 +106,8 @@ Target options
 Below is a list of target EVM versions and the compiler-relevant changes introduced
 at each version. Backward compatibility is not guaranteed between each version.
 
-- ``homestead`` (oldest version)
+- ``homestead``
+   - (oldest version)
 - ``tangerineWhistle``
    - Gas cost for access to other accounts increased, relevant for gas estimation and the optimizer.
    - All gas sent by default for external calls, previously a certain amount had to be retained.
@@ -692,7 +693,7 @@ Review changes
 
 The command above applies all changes as shown below. Please review them carefully.
 
-.. code-block:: none
+.. code-block:: solidity
 
     pragma solidity >=0.6.0 <0.7.0;
 

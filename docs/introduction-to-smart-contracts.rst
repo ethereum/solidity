@@ -323,7 +323,7 @@ Every account has a persistent key-value store mapping 256-bit words to 256-bit
 words called **storage**.
 
 Furthermore, every account has a **balance** in
-Ether (in "Wei" to be exact, `1 ether` is `10**18 wei`) which can be modified by sending transactions that
+Ether (in "Wei" to be exact, ``1 ether`` is ``10**18 wei``) which can be modified by sending transactions that
 include Ether.
 
 .. index:: ! transaction
@@ -520,9 +520,9 @@ idea, but it is potentially dangerous, as if someone sends Ether to removed
 contracts, the Ether is forever lost.
 
 .. warning::
-    Even if a contract is removed by "selfdestruct", it is still part of the
+    Even if a contract is removed by ``selfdestruct``, it is still part of the
     history of the blockchain and probably retained by most Ethereum nodes.
-    So using "selfdestruct" is not the same as deleting data from a hard disk.
+    So using ``selfdestruct`` is not the same as deleting data from a hard disk.
 
 .. note::
     Even if a contract's code does not contain a call to ``selfdestruct``,

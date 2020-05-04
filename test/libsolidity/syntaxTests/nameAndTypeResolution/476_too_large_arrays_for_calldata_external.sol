@@ -3,4 +3,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (28-56): Array is too large to be encoded.
+// TypeError: (28-56): Type too large for calldata.

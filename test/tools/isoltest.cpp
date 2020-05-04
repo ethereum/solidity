@@ -31,10 +31,11 @@
 #include <boost/program_options.hpp>
 
 #include <cstdlib>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <queue>
 #include <regex>
+#include <utility>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -71,7 +72,7 @@ struct TestStats
 class TestFilter
 {
 public:
-	explicit TestFilter(string const& _filter): m_filter(_filter)
+	explicit TestFilter(string _filter): m_filter(std::move(_filter))
 	{
 		string filter{m_filter};
 
@@ -97,14 +98,14 @@ public:
 	TestTool(
 		TestCreator _testCaseCreator,
 		TestOptions const& _options,
-		fs::path const& _path,
-		string const& _name
+		fs::path _path,
+		string _name
 	):
 		m_testCaseCreator(_testCaseCreator),
 		m_options(_options),
 		m_filter(TestFilter{_options.testFilter}),
-		m_path(_path),
-		m_name(_name)
+		m_path(std::move(_path)),
+		m_name(std::move(_name))
 	{}
 
 	enum class Result

@@ -37,6 +37,7 @@
 #include <libsolidity/interface/StorageLayout.h>
 
 #include <libyul/AssemblyStack.h>
+#include <libyul/optimiser/Suite.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
@@ -145,6 +146,7 @@ static string const g_strOpcodes = "opcodes";
 static string const g_strOptimize = "optimize";
 static string const g_strOptimizeRuns = "optimize-runs";
 static string const g_strOptimizeYul = "optimize-yul";
+static string const g_strYulOptimizations = "yul-optimizations";
 static string const g_strOutputDir = "output-dir";
 static string const g_strOverwrite = "overwrite";
 static string const g_strRevertStrings = "revert-strings";
@@ -746,15 +748,6 @@ Allowed options)",
 			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
 			"byzantium, constantinople, petersburg, istanbul (default) or berlin."
 		)
-		(g_argOptimize.c_str(), "Enable bytecode optimizer.")
-		(
-			g_argOptimizeRuns.c_str(),
-			po::value<unsigned>()->value_name("n")->default_value(200),
-			"Set for how many contract runs to optimize."
-			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
-		)
-		(g_strOptimizeYul.c_str(), "Enable Yul optimizer in Solidity. Legacy option: the yul optimizer is enabled as part of the general --optimize option.")
-		(g_strNoOptimizeYul.c_str(), "Disable Yul optimizer in Solidity.")
 		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
 		(
 			g_argLibraries.c_str(),
@@ -787,10 +780,9 @@ Allowed options)",
 		)
 		(
 			g_argImportAst.c_str(),
-			"Import ASTs to be compiled, assumes input holds the AST in compact JSON format."
-			" Supported Inputs is the output of the standard-json or the one produced by --combined-json ast,compact-format"
+			"Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
+			"Supported Inputs is the output of the --standard-json or the one produced by --combined-json ast,compact-format"
 		)
-
 		(
 			g_argAssemble.c_str(),
 			"Switch to assembly mode, ignoring all options except --machine, --yul-dialect and --optimize and assumes input is assembly."
@@ -834,6 +826,23 @@ Allowed options)",
 		(g_argOldReporter.c_str(), "Enables old diagnostics reporter.")
 		(g_argErrorRecovery.c_str(), "Enables additional parser error recovery.")
 		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
+	po::options_description optimizerOptions("Optimizer options");
+	optimizerOptions.add_options()
+		(g_argOptimize.c_str(), "Enable bytecode optimizer.")
+		(
+			g_argOptimizeRuns.c_str(),
+			po::value<unsigned>()->value_name("n")->default_value(200),
+			"Set for how many contract runs to optimize. "
+			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
+		)
+		(g_strOptimizeYul.c_str(), "Legacy option, ignored. Use the general --optimize to enable Yul optimizer.")
+		(g_strNoOptimizeYul.c_str(), "Disable Yul optimizer in Solidity.")
+		(
+			g_strYulOptimizations.c_str(),
+			po::value<string>()->value_name("steps"),
+			"Forces yul optimizer to use the specified sequence of optimization steps instead of the built-in one."
+		);
+	desc.add(optimizerOptions);
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
@@ -944,7 +953,10 @@ bool CommandLineInterface::processInput()
 					"ReadFile callback used as callback kind " +
 					_kind
 				));
-			auto path = boost::filesystem::path(_path);
+			string validPath = _path;
+			if (validPath.find("file://") == 0)
+				validPath.erase(0, 7);
+			auto path = boost::filesystem::path(validPath);
 			auto canonicalPath = boost::filesystem::weakly_canonical(path);
 			bool isAllowed = false;
 			for (auto const& allowedDir: m_allowedDirectories)
@@ -1165,6 +1177,26 @@ bool CommandLineInterface::processInput()
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
 		if (m_args.count(g_strNoOptimizeYul))
 			settings.runYulOptimiser = false;
+		if (m_args.count(g_strYulOptimizations))
+		{
+			if (!settings.runYulOptimiser)
+			{
+				serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
+				return false;
+			}
+
+			try
+			{
+				yul::OptimiserSuite::validateSequence(m_args[g_strYulOptimizations].as<string>());
+			}
+			catch (yul::OptimizerException const& _exception)
+			{
+				serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": " << _exception.what() << endl;
+				return false;
+			}
+
+			settings.yulOptimiserSteps = m_args[g_strYulOptimizations].as<string>();
+		}
 		settings.optimizeStackAllocation = settings.runYulOptimiser;
 		m_compiler->setOptimiserSettings(settings);
 

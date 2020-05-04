@@ -25,9 +25,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <set>
 #include <vector>
 
 using namespace std;
+using namespace solidity::util;
 
 namespace solidity::phaser::test
 {
@@ -197,6 +199,60 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_no_indices_if_collection_is_empty
 	BOOST_TEST(RandomSelection(0.5).materialise(0).empty());
 	BOOST_TEST(RandomSelection(1.0).materialise(0).empty());
 	BOOST_TEST(RandomSelection(2.0).materialise(0).empty());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE(RandomSubsetTest)
+
+BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabilities)
+{
+	constexpr int collectionSize = 1000;
+	constexpr double selectionChance = 0.7;
+	constexpr double relativeTolerance = 0.001;
+	constexpr double expectedValue = selectionChance;
+	constexpr double variance = selectionChance * (1 - selectionChance);
+
+	SimulationRNG::reset(1);
+	auto indices = convertContainer<set<size_t>>(RandomSubset(selectionChance).materialise(collectionSize));
+
+	vector<double> bernoulliTrials(collectionSize);
+	for (size_t i = 0; i < collectionSize; ++i)
+		bernoulliTrials[i] = indices.count(i);
+
+	BOOST_TEST(abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
+}
+
+BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_collection_indices)
+{
+	const size_t collectionSize = 200;
+	vector<size_t> indices = RandomSubset(0.5).materialise(collectionSize);
+
+	BOOST_TEST(all_of(indices.begin(), indices.end(), [&](auto const& index){ return index <= collectionSize; }));
+}
+
+BOOST_AUTO_TEST_CASE(materialise_should_return_indices_in_the_same_order_they_are_in_the_container)
+{
+	const size_t collectionSize = 200;
+	vector<size_t> indices = RandomSubset(0.5).materialise(collectionSize);
+
+	for (size_t i = 1; i < indices.size(); ++i)
+		BOOST_TEST(indices[i - 1] < indices[i]);
+}
+
+BOOST_AUTO_TEST_CASE(materialise_should_return_no_indices_if_collection_is_empty)
+{
+	BOOST_TEST(RandomSubset(0.5).materialise(0).empty());
+}
+
+BOOST_AUTO_TEST_CASE(materialise_should_return_no_indices_if_selection_chance_is_zero)
+{
+	BOOST_TEST(RandomSubset(0.0).materialise(10).empty());
+}
+
+BOOST_AUTO_TEST_CASE(materialise_should_return_all_indices_if_selection_chance_is_one)
+{
+	BOOST_TEST(RandomSubset(1.0).materialise(10).size() == 10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

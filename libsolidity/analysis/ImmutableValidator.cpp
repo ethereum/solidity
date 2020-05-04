@@ -148,7 +148,8 @@ bool ImmutableValidator::analyseCallable(CallableDeclaration const& _callableDec
 			funcDef->body().accept(*this);
 	}
 	else if (ModifierDefinition const* modDef = dynamic_cast<decltype(modDef)>(&_callableDeclaration))
-		modDef->body().accept(*this);
+		if (modDef->isImplemented())
+			modDef->body().accept(*this);
 
 	m_currentConstructor = prevConstructor;
 
@@ -160,7 +161,7 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 	if (!_variableReference.isStateVariable() || !_variableReference.immutable())
 		return;
 
-	if (_expression.annotation().lValueRequested && _expression.annotation().lValueOfOrdinaryAssignment)
+	if (_expression.annotation().willBeWrittenTo && _expression.annotation().lValueOfOrdinaryAssignment)
 	{
 		if (!m_currentConstructor)
 			m_errorReporter.typeError(

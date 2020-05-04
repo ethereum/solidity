@@ -81,26 +81,55 @@ Thank you for your help!
 Running the compiler tests
 ==========================
 
-The ``./scripts/tests.sh`` script executes most Solidity tests automatically,
-but for quicker feedback, you might want to run specific tests.
+Prerequisites
+-------------
+
+Some tests require the `evmone <https://github.com/ethereum/evmone/releases>`_
+library, others require `libz3 <https://github.com/Z3Prover/z3>`_. The test script
+tries to discover the location of the ``evmone`` library, which can be located
+in the current directory, installed on the system level, or the ``deps`` folder
+in the project top level. The required file is called ``libevmone.so`` on Linux
+systems, ``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS.
+
+Running the tests
+-----------------
 
 Solidity includes different types of tests, most of them bundled into the
 `Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest``.
 Running ``build/test/soltest`` or its wrapper ``scripts/soltest.sh`` is sufficient for most changes.
 
-Some tests require the ``evmone`` library, others require ``libz3``.
+The ``./scripts/tests.sh`` script executes most Solidity tests automatically,
+including those bundled into the `Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest`` (or its wrapper ``scripts/soltest.sh``),
+as well as command line tests and compilation tests.
 
-The test system will automatically try to discover the location of the ``evmone`` library
+The test system automatically tries try to discover the location of the ``evmone`` library
 starting from the current directory. The required file is called ``libevmone.so`` on Linux systems,
-``evmone.dll`` on Windows systems and ``libevmone.dylib`` on MacOS. If it is not found, the relevant tests
-are skipped. To run all tests, download the library from
-`Github <https://github.com/ethereum/evmone/releases/tag/v0.3.0>`_
-and either place it in the project root path or inside the ``deps`` folder.
+``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS. If it is not found, tests that
+use it are skipped. These tests are ``libsolididty/semanticTests``, ``libsolidity/GasCosts``,
+``libsolidity/SolidityEndToEndTest``, part of the soltest suite. To run all tests, download the library from
+`GitHub <https://github.com/ethereum/evmone/releases/tag/v0.4.1>`_
+and place it in the project root path or inside the ``deps`` folder.
 
-If you do not have libz3 installed on your system, you should disable the SMT tests:
-``./scripts/soltest.sh --no-smt``.
+If the ``libz3`` library is not installed on your system, you should disable the
+SMT tests by exporting ``SMT_FLAGS=--no-smt`` before running ``./scripts/tests.sh`` or
+running ``./scripts/soltest.sh --no-smt``.
+These tests are ``libsolidity/smtCheckerTests`` and ``libsolidity/smtCheckerTestsJSON``.
+
+.. note ::
+
+    To get a list of all unit tests run by Soltest, run ``./build/test/soltest --list_content=HRF``.
+
+For quicker results you can run a subset of, or specific tests.
+
+To run a subset of tests, you can use filters:
+``./scripts/soltest.sh -t TestSuite/TestName``,
+where ``TestName`` can be a wildcard ``*``.
+
+Or, for example, to run all the tests for the yul disambiguator:
+``./scripts/soltest.sh -t "yulOptimizerTests/disambiguator/*" --no-smt``.
 
 ``./build/test/soltest --help`` has extensive help on all of the options available.
+
 See especially:
 
 - `show_progress (-p) <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/show_progress.html>`_ to show test completion,
@@ -109,19 +138,9 @@ See especially:
 
 .. note ::
 
-    Those working in a Windows environment wanting to run the above basic sets without libz3 in Git Bash, you would have to do: ``./build/test/Release/soltest.exe -- --no-smt``.
+    Those working in a Windows environment wanting to run the above basic sets
+    without libz3. Using Git Bash, you use: ``./build/test/Release/soltest.exe -- --no-smt``.
     If you are running this in plain Command Prompt, use ``.\build\test\Release\soltest.exe -- --no-smt``.
-
-To run a subset of tests, you can use filters:
-``./scripts/soltest.sh -t TestSuite/TestName``,
-where ``TestName`` can be a wildcard ``*``.
-
-For example, here is an example test you might run;
-``./scripts/soltest.sh -t "yulOptimizerTests/disambiguator/*" --no-smt``.
-This will test all the tests for the disambiguator.
-
-To get a list of all tests, use
-``./build/test/soltest --list_content=HRF``.
 
 If you want to debug using GDB, make sure you build differently than the "usual".
 For example, you could run the following command in your ``build`` folder:
@@ -130,14 +149,11 @@ For example, you could run the following command in your ``build`` folder:
    cmake -DCMAKE_BUILD_TYPE=Debug ..
    make
 
-This will create symbols such that when you debug a test using the ``--debug`` flag, you will have access to functions and variables in which you can break or print with.
+This creates symbols so that when you debug a test using the ``--debug`` flag,
+you have access to functions and variables in which you can break or print with.
 
-
-The script ``./scripts/tests.sh`` also runs commandline tests and compilation tests
-in addition to those found in ``soltest``.
-
-The CI runs additional tests (including ``solc-js`` and testing third party Solidity frameworks) that require compiling the Emscripten target.
-
+The CI runs additional tests (including ``solc-js`` and testing third party Solidity
+frameworks) that require compiling the Emscripten target.
 
 Writing and running syntax tests
 --------------------------------
@@ -339,6 +355,11 @@ escaping and without iterated replacements. An area can be delimited by ``<#name
 by as many concatenations of its contents as there were sets of variables supplied to the template system,
 each time replacing any ``<inner>`` items by their respective value. Top-level variables can also be used
 inside such areas.
+
+There are also conditionals of the form ``<?name>...<!name>...</name>``, where template replacements
+continue recursively either in the first or the second segment depending on the value of the boolean
+parameter ``name``. If ``<?+name>...<!+name>...</+name>`` is used, then the check is whether
+the string parameter ``name`` is non-empty.
 
 .. _documentation-style:
 

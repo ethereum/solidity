@@ -102,8 +102,8 @@ WasmDialect::WasmDialect()
 	m_functions["unreachable"_yulstring].controlFlowSideEffects.terminates = true;
 	m_functions["unreachable"_yulstring].controlFlowSideEffects.reverts = true;
 
-	addFunction("datasize", {i64}, {i64}, true, true);
-	addFunction("dataoffset", {i64}, {i64}, true, true);
+	addFunction("datasize", {i64}, {i64}, true, {true});
+	addFunction("dataoffset", {i64}, {i64}, true, {true});
 
 	addEthereumExternals();
 }
@@ -204,7 +204,7 @@ void WasmDialect::addEthereumExternals()
 		f.controlFlowSideEffects = ext.controlFlowSideEffects;
 		f.isMSize = false;
 		f.sideEffects.invalidatesStorage = (ext.name == "storageStore");
-		f.literalArguments = false;
+		f.literalArguments.reset();
 	}
 }
 
@@ -213,7 +213,7 @@ void WasmDialect::addFunction(
 	vector<YulString> _params,
 	vector<YulString> _returns,
 	bool _movable,
-	bool _literalArguments
+	std::vector<bool> _literalArguments
 )
 {
 	YulString name{move(_name)};
@@ -224,5 +224,8 @@ void WasmDialect::addFunction(
 	f.returns = std::move(_returns);
 	f.sideEffects = _movable ? SideEffects{} : SideEffects::worst();
 	f.isMSize = false;
-	f.literalArguments = _literalArguments;
+	if (!_literalArguments.empty())
+		f.literalArguments = std::move(_literalArguments);
+	else
+		f.literalArguments.reset();
 }

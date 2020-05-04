@@ -120,6 +120,78 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_no_pairs_if_collection_has_one_el
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE(PairsFromRandomSubsetTest)
+
+BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabilities)
+{
+	constexpr int collectionSize = 1000;
+	constexpr double selectionChance = 0.7;
+	constexpr double relativeTolerance = 0.001;
+	constexpr double expectedValue = selectionChance;
+	constexpr double variance = selectionChance * (1 - selectionChance);
+
+	SimulationRNG::reset(1);
+	vector<tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
+	vector<double> bernoulliTrials(collectionSize, 0);
+	for (auto& pair: pairs)
+	{
+		BOOST_REQUIRE(get<1>(pair) < collectionSize);
+		BOOST_REQUIRE(get<1>(pair) < collectionSize);
+		bernoulliTrials[get<0>(pair)] = 1.0;
+		bernoulliTrials[get<1>(pair)] = 1.0;
+	}
+
+	BOOST_TEST(abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
+}
+
+BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_collection_indices)
+{
+	const size_t collectionSize = 200;
+	constexpr double selectionChance = 0.5;
+
+	vector<tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
+
+	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return get<0>(pair) <= collectionSize; }));
+	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return get<1>(pair) <= collectionSize; }));
+}
+
+BOOST_AUTO_TEST_CASE(materialise_should_use_unique_indices)
+{
+	constexpr size_t collectionSize = 200;
+	constexpr double selectionChance = 0.5;
+
+	vector<tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
+	set<size_t> indices;
+	for (auto& pair: pairs)
+	{
+		indices.insert(get<0>(pair));
+		indices.insert(get<1>(pair));
+	}
+
+	BOOST_TEST(indices.size() == 2 * pairs.size());
+}
+
+BOOST_AUTO_TEST_CASE(materialise_should_return_no_indices_if_collection_is_empty)
+{
+	BOOST_TEST(PairsFromRandomSubset(0.0).materialise(0).empty());
+	BOOST_TEST(PairsFromRandomSubset(0.5).materialise(0).empty());
+	BOOST_TEST(PairsFromRandomSubset(1.0).materialise(0).empty());
+}
+
+BOOST_AUTO_TEST_CASE(materialise_should_return_no_pairs_if_selection_chance_is_zero)
+{
+	BOOST_TEST(PairsFromRandomSubset(0.0).materialise(0).empty());
+	BOOST_TEST(PairsFromRandomSubset(0.0).materialise(100).empty());
+}
+
+BOOST_AUTO_TEST_CASE(materialise_should_return_all_pairs_if_selection_chance_is_one)
+{
+	BOOST_TEST(PairsFromRandomSubset(1.0).materialise(0).empty());
+	BOOST_TEST(PairsFromRandomSubset(1.0).materialise(100).size() == 50);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(PairMosaicSelectionTest)
 
 using IndexPairs = vector<tuple<size_t, size_t>>;

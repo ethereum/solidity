@@ -195,51 +195,6 @@ Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> c
 		return nullptr;
 }
 
-vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
-		Identifier const& _identifier,
-		vector<Declaration const*> const& _declarations
-)
-{
-	solAssert(_declarations.size() > 1, "");
-	vector<Declaration const*> uniqueFunctions;
-
-	for (Declaration const* declaration: _declarations)
-	{
-		solAssert(declaration, "");
-		// the declaration is functionDefinition, eventDefinition or a VariableDeclaration while declarations > 1
-		solAssert(
-			dynamic_cast<FunctionDefinition const*>(declaration) ||
-			dynamic_cast<EventDefinition const*>(declaration) ||
-			dynamic_cast<VariableDeclaration const*>(declaration) ||
-			dynamic_cast<MagicVariableDeclaration const*>(declaration),
-			"Found overloading involving something not a function, event or a (magic) variable."
-		);
-
-		FunctionTypePointer functionType { declaration->functionType(false) };
-		if (!functionType)
-			functionType = declaration->functionType(true);
-		solAssert(functionType, "Failed to determine the function type of the overloaded.");
-
-		for (auto parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
-			if (!parameter)
-				m_errorReporter.fatalDeclarationError(_identifier.location(), "Function type can not be used in this context.");
-
-		if (uniqueFunctions.end() == find_if(
-			uniqueFunctions.begin(),
-			uniqueFunctions.end(),
-			[&](Declaration const* d)
-			{
-				FunctionType const* newFunctionType = d->functionType(false);
-				if (!newFunctionType)
-					newFunctionType = d->functionType(true);
-				return newFunctionType && functionType->hasEqualParameterTypes(*newFunctionType);
-			}
-		))
-			uniqueFunctions.push_back(declaration);
-	}
-	return uniqueFunctions;
-}
-
 void NameAndTypeResolver::warnVariablesNamedLikeInstructions()
 {
 	for (auto const& instruction: evmasm::c_instructions)

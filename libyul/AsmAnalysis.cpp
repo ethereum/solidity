@@ -255,14 +255,14 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	yulAssert(!_funCall.functionName.name.empty(), "");
 	vector<YulString> const* parameterTypes = nullptr;
 	vector<YulString> const* returnTypes = nullptr;
-	bool needsLiteralArguments = false;
+	vector<bool> const* needsLiteralArguments = nullptr;
 
 	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
 	{
 		parameterTypes = &f->parameters;
 		returnTypes = &f->returns;
 		if (f->literalArguments)
-			needsLiteralArguments = true;
+			needsLiteralArguments = &f->literalArguments.value();
 	}
 	else if (!m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
 		[&](Scope::Variable const&)
@@ -293,11 +293,13 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		);
 
 	vector<YulString> argTypes;
-	for (auto const& arg: _funCall.arguments | boost::adaptors::reversed)
+	for (size_t i = _funCall.arguments.size(); i > 0; i--)
 	{
+		Expression const& arg = _funCall.arguments[i - 1];
+
 		argTypes.emplace_back(expectExpression(arg));
 
-		if (needsLiteralArguments)
+		if (needsLiteralArguments && (*needsLiteralArguments)[i - 1])
 		{
 			if (!holds_alternative<Literal>(arg))
 				typeError(

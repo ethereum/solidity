@@ -94,7 +94,8 @@ public:
 			{"mod", 2},
 			{"select", 2},
 			{"store", 3},
-			{"const_array", 2}
+			{"const_array", 2},
+			{"tuple_get", 2}
 		};
 		return operatorsArity.count(name) && operatorsArity.at(name) == arguments.size();
 	}
@@ -163,6 +164,19 @@ public:
 			"const_array",
 			std::vector<Expression>{std::move(_sort), std::move(_value)},
 			arraySort
+		);
+	}
+
+	static Expression tuple_get(Expression _tuple, size_t _index)
+	{
+		solAssert(_tuple.sort->kind == Kind::Tuple, "");
+		std::shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_tuple.sort);
+		solAssert(tupleSort, "");
+		solAssert(_index < tupleSort->components.size(), "");
+		return Expression(
+			"tuple_get",
+			std::vector<Expression>{std::move(_tuple), Expression(_index)},
+			tupleSort->components.at(_index)
 		);
 	}
 

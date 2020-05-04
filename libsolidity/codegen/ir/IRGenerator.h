@@ -50,12 +50,21 @@ public:
 
 	/// Generates and returns the IR code, in unoptimized and optimized form
 	/// (or just pretty-printed, depending on the optimizer settings).
-	std::pair<std::string, std::string> run(ContractDefinition const& _contract);
+	std::pair<std::string, std::string> run(
+		ContractDefinition const& _contract,
+		std::map<ContractDefinition const*, std::string const> const& _otherYulSources
+	);
 
 private:
-	std::string generate(ContractDefinition const& _contract);
+	std::string generate(
+		ContractDefinition const& _contract,
+		std::map<ContractDefinition const*, std::string const> const& _otherYulSources
+	);
 	std::string generate(Block const& _block);
 
+	/// Generates code for all the functions from the function generation queue.
+	/// The resulting code is stored in the function collector in IRGenerationContext.
+	void generateQueuedFunctions();
 	/// Generates code for and returns the name of the function.
 	std::string generateFunction(FunctionDefinition const& _function);
 	/// Generates a getter for the given declaration and returns its name
@@ -64,12 +73,27 @@ private:
 	/// Generates code that assigns the initial value of the respective type.
 	std::string generateInitialAssignment(VariableDeclaration const& _varDecl);
 
-	std::string constructorCode(ContractDefinition const& _contract);
+	/// Generates implicit constructors for all contracts in the inheritance hierarchy of
+	/// @a _contract
+	/// If there are user defined constructors, their body will be included in implicit constructors body.
+	void generateImplicitConstructors(ContractDefinition const& _contract);
+
+	/// Evaluates constructor's arguments for all base contracts (listed in inheritance specifiers) of
+	/// @a _contract
+	/// @returns Pair of expressions needed to evaluate params and list of parameters in a map contract -> params
+	std::pair<std::string, std::map<ContractDefinition const*, std::string>> evaluateConstructorArguments(
+		ContractDefinition const& _contract
+	);
+
+	/// Initializes state variables of
+	/// @a _contract
+	/// @returns Source code to initialize state variables
+	std::string initStateVariables(ContractDefinition const& _contract);
+
 	std::string deployCode(ContractDefinition const& _contract);
 	std::string callValueCheck();
 
-	std::string creationObjectName(ContractDefinition const& _contract);
-	std::string runtimeObjectName(ContractDefinition const& _contract);
+	std::string implicitConstructorName(ContractDefinition const& _contract);
 
 	std::string dispatchRoutine(ContractDefinition const& _contract);
 

@@ -23,9 +23,11 @@
 #pragma once
 
 #include <libsolidity/ast/AST.h>
+
 #include <functional>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace solidity::frontend
 {
@@ -299,7 +301,7 @@ public:
 	SimpleASTVisitor(
 		std::function<bool(ASTNode const&)> _onVisit,
 		std::function<void(ASTNode const&)> _onEndVisit
-	): m_onVisit(_onVisit), m_onEndVisit(_onEndVisit) {}
+	): m_onVisit(std::move(_onVisit)), m_onEndVisit(std::move(_onEndVisit)) {}
 
 protected:
 	bool visitNode(ASTNode const& _n) override { return m_onVisit ? m_onVisit(_n) : true; }
@@ -329,7 +331,7 @@ public:
 	ASTReduce(
 		std::function<bool(ASTNode const&)> _onNode,
 		std::function<void(ASTNode const&, ASTNode const&)> _onEdge
-	): m_onNode(_onNode), m_onEdge(_onEdge)
+	): m_onNode(std::move(_onNode)), m_onEdge(std::move(_onEdge))
 	{
 	}
 

@@ -59,6 +59,9 @@ DEV_SIMPLE_EXCEPTION(WhiskersError);
  *  - Condition parameter: <?name>...<!name>...</name>, where "<!name>" is optional
  *    replaced (and recursively expanded) by the first part if the condition is true
  *    and by the second (or empty string if missing) if the condition is false
+ *  - Conditional string parameter: <?+name>...<!+name>...</+name>
+ *    Works similar to a conditional parameter where the checked condition is
+ *    that the regular (string) parameter called "name" is non-empty.
  *  - List parameter: <#list>...</list>
  *    The part between the tags is repeated as often as values are provided
  *    in the mapping. Each list element can have its own parameter -> value mapping.

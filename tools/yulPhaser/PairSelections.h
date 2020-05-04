@@ -69,6 +69,28 @@ private:
 	double m_selectionSize;
 };
 
+
+/**
+ * A selection that goes over all elements in a container, for each one independently decides
+ * whether to select it or not and then randomly combines those elements into pairs. If the number
+ * of elements is odd, randomly decides whether to take one more or exclude one.
+ *
+ * Each element has the same chance of being selected and can be selected at most once.
+ * The number of selected elements is random and can be different with each call to
+ * @a materialise().
+ */
+class PairsFromRandomSubset: public PairSelection
+{
+public:
+	explicit PairsFromRandomSubset(double _selectionChance):
+		m_selectionChance(_selectionChance) {}
+
+	std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const override;
+
+private:
+	double m_selectionChance;
+};
+
 /**
  * A selection that selects pairs of elements at specific, fixed positions indicated by a repeating
  * "pattern". If the positions in the pattern exceed the size of the container, they are capped at

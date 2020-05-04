@@ -193,6 +193,11 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			solAssert(arraySort && arraySort->domain, "");
 			return z3::const_array(z3Sort(*arraySort->domain), arguments[1]);
 		}
+		else if (n == "tuple_get")
+		{
+			size_t index = std::stoi(_expr.arguments[1].name);
+			return z3::func_decl(m_context, Z3_get_tuple_sort_field_decl(m_context, z3Sort(*_expr.arguments[0].sort), index))(arguments[0]);
+		}
 
 		solAssert(false, "");
 	}
@@ -217,6 +222,28 @@ z3::sort Z3Interface::z3Sort(Sort const& _sort)
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
 		return m_context.array_sort(z3Sort(*arraySort.domain), z3Sort(*arraySort.range));
 	}
+	case Kind::Tuple:
+	{
+		auto const& tupleSort = dynamic_cast<TupleSort const&>(_sort);
+		vector<char const*> cMembers;
+		for (auto const& member: tupleSort.members)
+			cMembers.emplace_back(member.c_str());
+		/// Using this instead of the function below because with that one
+		/// we can't use `&sorts[0]` here.
+		vector<z3::sort> sorts;
+		for (auto const& sort: tupleSort.components)
+			sorts.push_back(z3Sort(*sort));
+		z3::func_decl_vector projs(m_context);
+		z3::func_decl tupleConstructor = m_context.tuple_sort(
+			tupleSort.name.c_str(),
+			tupleSort.members.size(),
+			cMembers.data(),
+			sorts.data(),
+			projs
+		);
+		return tupleConstructor.range();
+	}
+
 	default:
 		break;
 	}

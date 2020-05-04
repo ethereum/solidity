@@ -20,10 +20,30 @@
 
 #pragma once
 
+#include <tools/yulPhaser/Mutations.h>
 #include <tools/yulPhaser/Population.h>
+
+#include <optional>
 
 namespace solidity::phaser
 {
+
+enum class CrossoverChoice
+{
+	SinglePoint,
+	TwoPoint,
+	Uniform,
+};
+
+std::function<Crossover> buildCrossoverOperator(
+	CrossoverChoice _choice,
+	std::optional<double> _uniformCrossoverSwapChance
+);
+
+std::function<SymmetricCrossover> buildSymmetricCrossoverOperator(
+	CrossoverChoice _choice,
+	std::optional<double> _uniformCrossoverSwapChance
+);
 
 /**
  * Abstract base class for genetic algorithms.
@@ -38,8 +58,8 @@ public:
 	GeneticAlgorithm& operator=(GeneticAlgorithm const&) = delete;
 	virtual ~GeneticAlgorithm() = default;
 
-	/// The method that actually implements the algorithm. Should use @a m_population as input and
-	/// replace it with the updated state after the round.
+	/// The method that actually implements the algorithm. Should accept the current population in
+	/// @a _population and return the updated one after the round.
 	virtual Population runNextRound(Population _population) = 0;
 };
 
@@ -110,6 +130,8 @@ public:
 		double deletionVsAdditionChance;  ///< The chance of choosing @a geneDeletion as the mutation if randomisation was not chosen.
 		double percentGenesToRandomise;   ///< The chance of any given gene being mutated in gene randomisation.
 		double percentGenesToAddOrDelete; ///< The chance of a gene being added (or deleted) in gene addition (or deletion).
+		CrossoverChoice crossover;        ///< The crossover operator to use.
+		std::optional<double> uniformCrossoverSwapChance; ///< Chance of a pair of genes being swapped in uniform crossover.
 
 		bool isValid() const
 		{
@@ -120,6 +142,7 @@ public:
 				0 <= deletionVsAdditionChance && deletionVsAdditionChance <= 1.0 &&
 				0 <= percentGenesToRandomise && percentGenesToRandomise <= 1.0 &&
 				0 <= percentGenesToAddOrDelete && percentGenesToAddOrDelete <= 1.0 &&
+				0 <= uniformCrossoverSwapChance && uniformCrossoverSwapChance <= 1.0 &&
 				mutationPoolSize + crossoverPoolSize <= 1.0
 			);
 		}
@@ -136,6 +159,64 @@ public:
 	Population runNextRound(Population _population) override;
 
 private:
+	Options m_options;
+};
+
+/**
+ * A typical genetic algorithm that works in three distinct phases, each resulting in a new,
+ * modified population:
+ * - selection: chromosomes are selected from the population with probability proportional to their
+ *   fitness. A chromosome can be selected more than once. The new population has the same size as
+ *   the old one.
+ * - crossover: first, for each chromosome we decide whether it undergoes crossover or not
+ *   (according to crossover chance parameter). Then each selected chromosome is randomly paired
+ *   with one other selected chromosome. Each pair produces a pair of children and gets replaced by
+ *   it in the population.
+ * - mutation: we go over each gene in the population and independently decide whether to mutate it
+ *   or not (according to mutation chance parameters). This is repeated for every mutation type so
+ *   one gene can undergo mutations of multiple types in a single round.
+ *
+ * This implementation also has the ability to preserve the top chromosomes in each round.
+ */
+class ClassicGeneticAlgorithm: public GeneticAlgorithm
+{
+public:
+	struct Options
+	{
+		double elitePoolSize;      ///< Percentage of the population treated as the elite.
+		double crossoverChance;    ///< The chance of a particular chromosome being selected for crossover.
+		double mutationChance;     ///< The chance of a particular gene being randomised in @a geneRandomisation mutation.
+		double deletionChance;     ///< The chance of a particular gene being deleted in @a geneDeletion mutation.
+		double additionChance;     ///< The chance of a particular gene being added in @a geneAddition mutation.
+		CrossoverChoice crossover; ///< The crossover operator to use
+		std::optional<double> uniformCrossoverSwapChance; ///< Chance of a pair of genes being swapped in uniform crossover.
+
+		bool isValid() const
+		{
+			return (
+				0 <= elitePoolSize && elitePoolSize <= 1.0 &&
+				0 <= crossoverChance && crossoverChance <= 1.0 &&
+				0 <= mutationChance && mutationChance <= 1.0 &&
+				0 <= deletionChance && deletionChance <= 1.0 &&
+				0 <= additionChance && additionChance <= 1.0 &&
+				0 <= uniformCrossoverSwapChance && uniformCrossoverSwapChance <= 1.0
+			);
+		}
+	};
+
+	ClassicGeneticAlgorithm(Options const& _options):
+		m_options(_options)
+	{
+		assert(_options.isValid());
+	}
+
+	Options const& options() const { return m_options; }
+
+	Population runNextRound(Population _population) override;
+
+private:
+	static Population select(Population _population, size_t _selectionSize);
+
 	Options m_options;
 };
 

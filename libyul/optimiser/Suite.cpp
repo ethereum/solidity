@@ -67,6 +67,9 @@
 
 #include <libsolutil/CommonData.h>
 
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/algorithm_ext/erase.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -76,6 +79,7 @@ void OptimiserSuite::run(
 	GasMeter const* _meter,
 	Object& _object,
 	bool _optimizeStackAllocation,
+	string const& _optimisationSequence,
 	set<YulString> const& _externallyUsedIdentifiers
 )
 {
@@ -91,206 +95,17 @@ void OptimiserSuite::run(
 
 	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast);
 
-	suite.runSequence({
-		VarDeclInitializer::name,
-		FunctionHoister::name,
-		BlockFlattener::name,
-		ForLoopInitRewriter::name,
-		DeadCodeEliminator::name,
-		FunctionGrouper::name,
-		EquivalentFunctionCombiner::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-		BlockFlattener::name,
-		ControlFlowSimplifier::name,
-		LiteralRematerialiser::name,
-		ConditionalUnsimplifier::name,
-		StructuralSimplifier::name,
-		ControlFlowSimplifier::name,
-		ForLoopConditionIntoBody::name,
-		BlockFlattener::name
-	}, ast);
+	// Some steps depend on properties ensured by FunctionHoister, FunctionGrouper and
+	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
+	suite.runSequence("fgo", ast);
 
-	// None of the above can make stack problems worse.
-
-	size_t codeSize = 0;
-	for (size_t rounds = 0; rounds < 12; ++rounds)
-	{
-		{
-			size_t newSize = CodeSize::codeSizeIncludingFunctions(ast);
-			if (newSize == codeSize)
-				break;
-			codeSize = newSize;
-		}
-
-		{
-			// Turn into SSA and simplify
-			suite.runSequence({
-				ExpressionSplitter::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				ExpressionSimplifier::name,
-				CommonSubexpressionEliminator::name,
-				LoadResolver::name,
-				LoopInvariantCodeMotion::name
-			}, ast);
-		}
-
-		{
-			// perform structural simplification
-			suite.runSequence({
-				CommonSubexpressionEliminator::name,
-				ConditionalSimplifier::name,
-				LiteralRematerialiser::name,
-				ConditionalUnsimplifier::name,
-				StructuralSimplifier::name,
-				LiteralRematerialiser::name,
-				ForLoopConditionOutOfBody::name,
-				ControlFlowSimplifier::name,
-				StructuralSimplifier::name,
-				ControlFlowSimplifier::name,
-				BlockFlattener::name,
-				DeadCodeEliminator::name,
-				ForLoopConditionIntoBody::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name
-			}, ast);
-		}
-
-		{
-			// simplify again
-			suite.runSequence({
-				LoadResolver::name,
-				CommonSubexpressionEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-			}, ast);
-		}
-
-		{
-			// reverse SSA
-			suite.runSequence({
-				SSAReverser::name,
-				CommonSubexpressionEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-
-				ExpressionJoiner::name,
-				ExpressionJoiner::name,
-			}, ast);
-		}
-
-		// should have good "compilability" property here.
-
-		{
-			// run functional expression inliner
-			suite.runSequence({
-				ExpressionInliner::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-			}, ast);
-		}
-
-		{
-			// Prune a bit more in SSA
-			suite.runSequence({
-				ExpressionSplitter::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-				RedundantAssignEliminator::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-			}, ast);
-		}
-
-		{
-			// Turn into SSA again and simplify
-			suite.runSequence({
-				ExpressionSplitter::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				CommonSubexpressionEliminator::name,
-				LoadResolver::name,
-			}, ast);
-		}
-
-		{
-			// run full inliner
-			suite.runSequence({
-				FunctionGrouper::name,
-				EquivalentFunctionCombiner::name,
-				FullInliner::name,
-				BlockFlattener::name
-			}, ast);
-		}
-
-		{
-			// SSA plus simplify
-			suite.runSequence({
-				ConditionalSimplifier::name,
-				LiteralRematerialiser::name,
-				ConditionalUnsimplifier::name,
-				CommonSubexpressionEliminator::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				LoadResolver::name,
-				ExpressionSimplifier::name,
-				LiteralRematerialiser::name,
-				ForLoopConditionOutOfBody::name,
-				StructuralSimplifier::name,
-				BlockFlattener::name,
-				DeadCodeEliminator::name,
-				ControlFlowSimplifier::name,
-				CommonSubexpressionEliminator::name,
-				SSATransform::name,
-				RedundantAssignEliminator::name,
-				RedundantAssignEliminator::name,
-				ForLoopConditionIntoBody::name,
-				UnusedPruner::name,
-				CircularReferencesPruner::name,
-				CommonSubexpressionEliminator::name,
-			}, ast);
-		}
-	}
-
-	// Make source short and pretty.
-
-	suite.runSequence({
-		ExpressionJoiner::name,
-		Rematerialiser::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-		ExpressionJoiner::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-		ExpressionJoiner::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-
-		SSAReverser::name,
-		CommonSubexpressionEliminator::name,
-		LiteralRematerialiser::name,
-		ForLoopConditionOutOfBody::name,
-		CommonSubexpressionEliminator::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-
-		ExpressionJoiner::name,
-		Rematerialiser::name,
-		UnusedPruner::name,
-		CircularReferencesPruner::name,
-	}, ast);
+	// Now the user-supplied part
+	suite.runSequence(_optimisationSequence, ast);
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
 	size_t stackCompressorMaxIterations = 16;
-	suite.runSequence({
-		FunctionGrouper::name
-	}, ast);
+	suite.runSequence("g", ast);
+
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
 	StackCompressor::run(
@@ -299,16 +114,7 @@ void OptimiserSuite::run(
 		_optimizeStackAllocation,
 		stackCompressorMaxIterations
 	);
-	suite.runSequence({
-		BlockFlattener::name,
-		DeadCodeEliminator::name,
-		ControlFlowSimplifier::name,
-		LiteralRematerialiser::name,
-		ForLoopConditionOutOfBody::name,
-		CommonSubexpressionEliminator::name,
-
-		FunctionGrouper::name,
-	}, ast);
+	suite.runSequence("fDnTOc g", ast);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{
@@ -418,6 +224,12 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{VarDeclInitializer::name,            'd'},
 	};
 	yulAssert(lookupTable.size() == allSteps().size(), "");
+	yulAssert((
+			util::convertContainer<set<char>>(string(NonStepAbbreviations)) -
+			util::convertContainer<set<char>>(lookupTable | boost::adaptors::map_values)
+		).size() == string(NonStepAbbreviations).size(),
+		"Step abbreviation conflicts with a character reserved for another syntactic element"
+	);
 
 	return lookupTable;
 }
@@ -427,6 +239,71 @@ map<char, string> const& OptimiserSuite::stepAbbreviationToNameMap()
 	static map<char, string> lookupTable = util::invertMap(stepNameToAbbreviationMap());
 
 	return lookupTable;
+}
+
+void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
+{
+	bool insideLoop = false;
+	for (char abbreviation: _stepAbbreviations)
+		switch (abbreviation)
+		{
+		case ' ':
+		case '\n':
+			break;
+		case '[':
+			assertThrow(!insideLoop, OptimizerException, "Nested brackets are not supported");
+			insideLoop = true;
+			break;
+		case ']':
+			assertThrow(insideLoop, OptimizerException, "Unbalanced brackets");
+			insideLoop = false;
+			break;
+		default:
+			yulAssert(
+				string(NonStepAbbreviations).find(abbreviation) == string::npos,
+				"Unhandled syntactic element in the abbreviation sequence"
+			);
+			assertThrow(
+				stepAbbreviationToNameMap().find(abbreviation) != stepAbbreviationToNameMap().end(),
+				OptimizerException,
+				"'"s + abbreviation + "' is not a valid step abbreviation"
+			);
+		}
+	assertThrow(!insideLoop, OptimizerException, "Unbalanced brackets");
+}
+
+void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
+{
+	validateSequence(_stepAbbreviations);
+
+	string input = _stepAbbreviations;
+	boost::remove_erase(input, ' ');
+	boost::remove_erase(input, '\n');
+
+	auto abbreviationsToSteps = [](string const& _sequence) -> vector<string>
+	{
+		vector<string> steps;
+		for (char abbreviation: _sequence)
+			steps.emplace_back(stepAbbreviationToNameMap().at(abbreviation));
+		return steps;
+	};
+
+	// The sequence has now been validated and must consist of pairs of segments that look like this: `aaa[bbb]`
+	// `aaa` or `[bbb]` can be empty. For example we consider a sequence like `fgo[aaf]Oo` to have
+	// four segments, the last of which is an empty bracket.
+	size_t currentPairStart = 0;
+	while (currentPairStart < input.size())
+	{
+		size_t openingBracket = input.find('[', currentPairStart);
+		size_t closingBracket = input.find(']', openingBracket);
+		size_t firstCharInside = (openingBracket == string::npos ? input.size() : openingBracket + 1);
+		yulAssert((openingBracket == string::npos) == (closingBracket == string::npos), "");
+
+		runSequence(abbreviationsToSteps(input.substr(currentPairStart, openingBracket - currentPairStart)), _ast);
+		runSequenceUntilStable(abbreviationsToSteps(input.substr(firstCharInside, closingBracket - firstCharInside)), _ast);
+
+		currentPairStart = (closingBracket == string::npos ? input.size() : closingBracket + 1);
+	}
 }
 
 void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
@@ -451,5 +328,23 @@ void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 				copy = make_unique<Block>(std::get<Block>(ASTCopier{}(_ast)));
 			}
 		}
+	}
+}
+
+void OptimiserSuite::runSequenceUntilStable(
+	std::vector<string> const& _steps,
+	Block& _ast,
+	size_t maxRounds
+)
+{
+	size_t codeSize = 0;
+	for (size_t rounds = 0; rounds < maxRounds; ++rounds)
+	{
+		size_t newSize = CodeSize::codeSizeIncludingFunctions(_ast);
+		if (newSize == codeSize)
+			break;
+		codeSize = newSize;
+
+		runSequence(_steps, _ast);
 	}
 }

@@ -183,7 +183,8 @@ void AssemblyStack::optimize(Object& _object, bool _isCreation)
 		dialect,
 		meter.get(),
 		_object,
-		m_optimiserSettings.optimizeStackAllocation
+		m_optimiserSettings.optimizeStackAllocation,
+		m_optimiserSettings.yulOptimiserSteps
 	);
 }
 

@@ -23,7 +23,9 @@
 #pragma once
 
 #include <liblangutil/Token.h>
+
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace solidity::langutil
@@ -80,8 +82,8 @@ struct SemVerMatchExpression
 class SemVerMatchExpressionParser
 {
 public:
-	SemVerMatchExpressionParser(std::vector<Token> const& _tokens, std::vector<std::string> const& _literals):
-		m_tokens(_tokens), m_literals(_literals)
+	SemVerMatchExpressionParser(std::vector<Token>  _tokens, std::vector<std::string>  _literals):
+		m_tokens(std::move(_tokens)), m_literals(std::move(_literals))
 	{}
 	SemVerMatchExpression parse();
 

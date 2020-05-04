@@ -15,6 +15,16 @@ contract test {
         (((, a),)) = ((1, 2), 3);
         return a;
     }
+    function f3() public returns(int) {
+        int a = 3;
+        ((, ), ) = ((7, 8), 9);
+        return a;
+    }
+    function f4() public returns(int) {
+        int a;
+        (a, ) = (4, (8, 16, 32));
+        return a;
+    }
 }
 // ====
 // compileViaYul: also
@@ -22,3 +32,5 @@ contract test {
 // f0() -> 2, true
 // f1() -> 1
 // f2() -> 2
+// f3() -> 3
+// f4() -> 4

@@ -107,6 +107,9 @@ void SMTEncoder::endVisit(ContractDefinition const& _contract)
 
 	solAssert(m_currentContract == &_contract, "");
 	m_currentContract = nullptr;
+
+	if (m_callStack.empty())
+		m_context.popSolver();
 }
 
 void SMTEncoder::endVisit(VariableDeclaration const& _varDecl)
@@ -191,7 +194,8 @@ void SMTEncoder::inlineModifierInvocation(ModifierInvocation const* _invocation,
 	pushCallStack({_definition, _invocation});
 	if (auto modifier = dynamic_cast<ModifierDefinition const*>(_definition))
 	{
-		modifier->body().accept(*this);
+		if (modifier->isImplemented())
+			modifier->body().accept(*this);
 		popCallStack();
 	}
 	else if (auto function = dynamic_cast<FunctionDefinition const*>(_definition))
@@ -296,16 +300,22 @@ void SMTEncoder::endVisit(VariableDeclarationStatement const& _varDecl)
 		{
 			auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(*init));
 			solAssert(symbTuple, "");
-			auto const& components = symbTuple->components();
+			auto const& symbComponents = symbTuple->components();
+
+			auto tupleType = dynamic_cast<TupleType const*>(init->annotation().type);
+			solAssert(tupleType, "");
+			solAssert(tupleType->components().size() == symbTuple->components().size(), "");
+			auto const& components = tupleType->components();
+
 			auto const& declarations = _varDecl.declarations();
-			solAssert(components.size() == declarations.size(), "");
+			solAssert(symbComponents.size() == declarations.size(), "");
 			for (unsigned i = 0; i < declarations.size(); ++i)
 				if (
 					components.at(i) &&
 					declarations.at(i) &&
 					m_context.knownVariable(*declarations.at(i))
 				)
-					assignment(*declarations.at(i), components.at(i)->currentValue(declarations.at(i)->type()));
+					assignment(*declarations.at(i), symbTuple->component(i, components.at(i), declarations.at(i)->type()));
 		}
 	}
 	else if (m_context.knownVariable(*_varDecl.declarations().front()))
@@ -354,7 +364,7 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 	{
 		auto const& type = _assignment.annotation().type;
 		vector<smt::Expression> rightArguments;
-		if (_assignment.rightHandSide().annotation().type->category() == Type::Category::Tuple)
+		if (auto const* tupleTypeRight = dynamic_cast<TupleType const*>(_assignment.rightHandSide().annotation().type))
 		{
 			auto symbTupleLeft = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_assignment.leftHandSide()));
 			solAssert(symbTupleLeft, "");
@@ -365,17 +375,16 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 			auto const& rightComponents = symbTupleRight->components();
 			solAssert(leftComponents.size() == rightComponents.size(), "");
 
-			for (unsigned i = 0; i < leftComponents.size(); ++i)
-			{
-				auto const& left = leftComponents.at(i);
-				auto const& right = rightComponents.at(i);
-				/// Right hand side tuple component cannot be empty.
-				solAssert(right, "");
-				if (left)
-					rightArguments.push_back(right->currentValue(left->originalType()));
-				else
-					rightArguments.push_back(right->currentValue());
-			}
+			auto tupleTypeLeft = dynamic_cast<TupleType const*>(_assignment.leftHandSide().annotation().type);
+			solAssert(tupleTypeLeft, "");
+			solAssert(tupleTypeLeft->components().size() == leftComponents.size(), "");
+			auto const& typesLeft = tupleTypeLeft->components();
+
+			solAssert(tupleTypeRight->components().size() == rightComponents.size(), "");
+			auto const& typesRight = tupleTypeRight->components();
+
+			for (unsigned i = 0; i < rightComponents.size(); ++i)
+				rightArguments.push_back(symbTupleRight->component(i, typesRight.at(i), typesLeft.at(i)));
 		}
 		else
 		{
@@ -418,17 +427,16 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 		solAssert(symbComponents.size() == tupleComponents->size(), "");
 		for (unsigned i = 0; i < symbComponents.size(); ++i)
 		{
-			auto sComponent = symbComponents.at(i);
 			auto tComponent = tupleComponents->at(i);
-			if (sComponent && tComponent)
+			if (tComponent)
 			{
 				if (auto varDecl = identifierToVariable(*tComponent))
-					m_context.addAssertion(sComponent->currentValue() == currentValue(*varDecl));
+					m_context.addAssertion(symbTuple->component(i) == currentValue(*varDecl));
 				else
 				{
 					if (!m_context.knownExpression(*tComponent))
 						createExpr(*tComponent);
-					m_context.addAssertion(sComponent->currentValue() == expr(*tComponent));
+					m_context.addAssertion(symbTuple->component(i) == expr(*tComponent));
 				}
 			}
 		}
@@ -450,6 +458,9 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 
 	createExpr(_op);
 
+	if (_op.annotation().type->category() == Type::Category::FixedPoint)
+		return;
+
 	switch (_op.getOperator())
 	{
 	case Token::Not: // !
@@ -463,7 +474,7 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	{
 
 		solAssert(smt::isInteger(_op.annotation().type->category()), "");
-		solAssert(_op.subExpression().annotation().lValueRequested, "");
+		solAssert(_op.subExpression().annotation().willBeWrittenTo, "");
 		if (auto identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
 		{
 			auto decl = identifierToVariable(*identifier);
@@ -658,7 +669,6 @@ void SMTEncoder::initFunction(FunctionDefinition const& _function)
 {
 	solAssert(m_callStack.empty(), "");
 	solAssert(m_currentContract, "");
-	m_context.reset();
 	m_context.pushSolver();
 	m_pathConditions.clear();
 	pushCallStack({&_function, nullptr});
@@ -700,7 +710,7 @@ void SMTEncoder::visitGasLeft(FunctionCall const& _funCall)
 
 void SMTEncoder::endVisit(Identifier const& _identifier)
 {
-	if (_identifier.annotation().lValueRequested)
+	if (_identifier.annotation().willBeWrittenTo)
 	{
 		// Will be translated as part of the node that requested the lvalue.
 	}
@@ -807,13 +817,15 @@ void SMTEncoder::endVisit(Return const& _return)
 		{
 			auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(*_return.expression()));
 			solAssert(symbTuple, "");
-			auto const& components = symbTuple->components();
-			solAssert(components.size() == returnParams.size(), "");
+			solAssert(symbTuple->components().size() == returnParams.size(), "");
+
+			auto const* tupleType = dynamic_cast<TupleType const*>(_return.expression()->annotation().type);
+			solAssert(tupleType, "");
+			auto const& types = tupleType->components();
+			solAssert(types.size() == returnParams.size(), "");
+
 			for (unsigned i = 0; i < returnParams.size(); ++i)
-			{
-				solAssert(components.at(i), "");
-				m_context.addAssertion(components.at(i)->currentValue(returnParams.at(i)->type()) == m_context.newValue(*returnParams.at(i)));
-			}
+				m_context.addAssertion(symbTuple->component(i, types.at(i), returnParams.at(i)->type()) == m_context.newValue(*returnParams.at(i)));
 		}
 		else if (returnParams.size() == 1)
 			m_context.addAssertion(expr(*_return.expression(), returnParams.front()->type()) == m_context.newValue(*returnParams.front()));
@@ -1676,14 +1688,10 @@ void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)
 		solAssert(symbComponents.size() == returnParams.size(), "");
 		for (unsigned i = 0; i < symbComponents.size(); ++i)
 		{
-			auto sComponent = symbComponents.at(i);
 			auto param = returnParams.at(i);
 			solAssert(param, "");
-			if (sComponent)
-			{
-				solAssert(m_context.knownVariable(*param), "");
-				m_context.addAssertion(sComponent->currentValue() == currentValue(*param));
-			}
+			solAssert(m_context.knownVariable(*param), "");
+			m_context.addAssertion(symbTuple->component(i) == currentValue(*param));
 		}
 	}
 	else if (returnParams.size() == 1)

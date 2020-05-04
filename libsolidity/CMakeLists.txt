@@ -12,6 +12,8 @@ set(sources
 	analysis/ControlFlowGraph.h
 	analysis/DeclarationContainer.cpp
 	analysis/DeclarationContainer.h
+	analysis/DeclarationTypeChecker.cpp
+	analysis/DeclarationTypeChecker.h
 	analysis/DocStringAnalyser.cpp
 	analysis/DocStringAnalyser.h
 	analysis/ImmutableValidator.cpp
@@ -73,6 +75,8 @@ set(sources
 	codegen/LValue.h
 	codegen/MultiUseYulFunctionCollector.h
 	codegen/MultiUseYulFunctionCollector.cpp
+	codegen/ReturnInfo.h
+	codegen/ReturnInfo.cpp
 	codegen/YulUtilFunctions.h
 	codegen/YulUtilFunctions.cpp
 	codegen/ir/IRGenerator.cpp

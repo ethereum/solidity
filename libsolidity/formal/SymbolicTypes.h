@@ -31,6 +31,7 @@ std::vector<SortPointer> smtSort(std::vector<frontend::TypePointer> const& _type
 /// If _type has type Function, abstract it to Integer.
 /// Otherwise return smtSort(_type).
 SortPointer smtSortAbstractFunction(frontend::Type const& _type);
+std::vector<SortPointer> smtSortAbstractFunction(std::vector<frontend::TypePointer> const& _types);
 /// Returns the SMT kind that models the Solidity type type category _category.
 Kind smtKind(frontend::Type::Category _category);
 
@@ -69,4 +70,5 @@ void setSymbolicZeroValue(Expression _expr, frontend::TypePointer const& _type, 
 void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext& _context);
 void setSymbolicUnknownValue(Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context);
 
+std::optional<Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to);
 }
