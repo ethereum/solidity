@@ -123,7 +123,7 @@ std::pair<bytes, Json::Value> compileContract(
 		);
 	}
 	// Ignore stack too deep errors during compilation
-	catch (Exception const&)
+	catch (langutil::StackTooDeepError const&)
 	{
 		throw langutil::FuzzerError();
 	}

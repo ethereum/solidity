@@ -50,7 +50,6 @@ string ProtoConverter::visit(Block const& _block)
 		<< '\t'
 		<< '{'
 		<< '\n';
-	blockStr << visit(_block.v());
 	for (auto const& s: _block.s())
 		blockStr << visit(s);
 	blockStr << visit(_block.r());
@@ -67,9 +66,20 @@ string ProtoConverter::visit(Statement const& _stmt)
 	case Statement::kVd:
 		return visit(_stmt.vd());
 	case Statement::kA:
-		return visit(_stmt.a());
+		if (varAvailable())
+			return visit(_stmt.a());
+		else
+			return "";
 	case Statement::kU:
-		return visit(_stmt.u());
+		if (varAvailable())
+			return visit(_stmt.u());
+		else
+			return "";
+	case Statement::kB:
+		if (varAvailable())
+			return visit(_stmt.b());
+		else
+			return "";
 	case Statement::STMT_ONEOF_NOT_SET:
 		return "";
 	}
@@ -77,14 +87,13 @@ string ProtoConverter::visit(Statement const& _stmt)
 
 string ProtoConverter::visit(VarDecl const& _vardecl)
 {
-	bool varExists = varAvailable();
 	Whiskers v(R"(<type> <varName> = <type>(<value>);)");
 	string type = visit(_vardecl.t());
 	string varName = newVarName();
 	m_varTypeMap.emplace(varName, pair(typeSign(_vardecl.t()), type));
 	v("type", type);
 	v("varName", varName);
-	v("value", varExists ? visit(_vardecl.value()) : maskUnsignedToHex(64));
+	v("value", visit(_vardecl.value()));
 	incrementVarCounter();
 	return "\t\t" + v.render() + '\n';
 }
@@ -107,6 +116,43 @@ string ProtoConverter::visit(UnaryOpStmt const& _uop)
 	case UnaryOpStmt_Op_PREDEC:
 		return "\t\t--" + visit(_uop.v()) + ";\n";
 	}
+}
+
+string ProtoConverter::visit(BinaryOpStmt const& _bopstmt)
+{
+	string op{};
+	switch (_bopstmt.op())
+	{
+	case BinaryOpStmt::ADDSELF:
+		op = " += ";
+		break;
+	case BinaryOpStmt::SUBSELF:
+		op = " -= ";
+		break;
+	case BinaryOpStmt::MULSELF:
+		op = " *= ";
+		break;
+	case BinaryOpStmt::DIVSELF:
+		op = " /= ";
+		break;
+	case BinaryOpStmt::MODSELF:
+		op = " %= ";
+		break;
+	case BinaryOpStmt::SHLSELF:
+		op = " <<= ";
+		break;
+	case BinaryOpStmt::SHRSELF:
+		op = " >>= ";
+		break;
+	}
+	string left = visit(_bopstmt.left());
+	string right = visit(_bopstmt.right());
+
+	string leftSignString = m_varTypeMap[left].second;
+	string rightSignString = m_exprSignMap[&_bopstmt.right()].second;
+	if (leftSignString != rightSignString)
+		right = leftSignString + '(' + right + ')';
+	return "\t\t" + left + op + right + ";\n";
 }
 
 string ProtoConverter::visit(BinaryOp const& _bop)
@@ -163,11 +209,19 @@ string ProtoConverter::visit(Expression const& _expr)
 	{
 	case Expression::kV:
 	{
-		solAssert(varAvailable(), "Sol arith fuzzer: Varref unavaileble");
-		string v = visit(_expr.v());
-		if (!m_exprSignMap.count(&_expr))
-			m_exprSignMap.emplace(&_expr, m_varTypeMap[v]);
-		return v;
+		if (varAvailable())
+		{
+			string v = visit(_expr.v());
+			if (!m_exprSignMap.count(&_expr))
+				m_exprSignMap.emplace(&_expr, m_varTypeMap[v]);
+			return v;
+		}
+		else
+		{
+			if (!m_exprSignMap.count(&_expr))
+				m_exprSignMap.emplace(&_expr, pair(Sign::Unsigned, "uint"));
+			return maskUnsignedToHex(64);
+		}
 	}
 	case Expression::kBop:
 	{
@@ -193,16 +247,11 @@ string ProtoConverter::visit(VarRef const& _v)
 
 string ProtoConverter::visit(Assignment const& _assignment)
 {
-	if (varAvailable())
-	{
-		string varName = visit(_assignment.id());
-		solAssert(m_varTypeMap.count(varName), "Sol arith fuzzer: Invalid varname");
-		Whiskers a(R"(<varName> = <type>(<expr>);)");
-		a("varName", varName);
-		a("type", m_varTypeMap[varName].second);
-		a("expr", visit(_assignment.value()));
-		return "\t\t" + a.render() + '\n';
-	}
-	else
-		return "";
+	string varName = visit(_assignment.id());
+	solAssert(m_varTypeMap.count(varName), "Sol arith fuzzer: Invalid varname");
+	Whiskers a(R"(<varName> = <type>(<expr>);)");
+	a("varName", varName);
+	a("type", m_varTypeMap[varName].second);
+	a("expr", visit(_assignment.value()));
+	return "\t\t" + a.render() + '\n';
 }

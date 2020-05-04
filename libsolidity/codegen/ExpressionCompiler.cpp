@@ -227,7 +227,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	solAssert(retSizeOnStack == utils().sizeOnStack(returnTypes), "");
 	if (retSizeOnStack > 15)
 		BOOST_THROW_EXCEPTION(
-			CompilerError() <<
+			StackTooDeepError() <<
 			errinfo_sourceLocation(_varDecl.location()) <<
 			errinfo_comment("Stack too deep.")
 		);
@@ -309,7 +309,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		{
 			if (itemSize + lvalueSize > 16)
 				BOOST_THROW_EXCEPTION(
-					CompilerError() <<
+					StackTooDeepError() <<
 					errinfo_sourceLocation(_assignment.location()) <<
 					errinfo_comment("Stack too deep, try removing local variables.")
 				);

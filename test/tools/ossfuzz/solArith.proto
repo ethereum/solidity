@@ -98,13 +98,13 @@ message Statement {
         VarDecl vd = 1;
         Assignment a = 2;
         UnaryOpStmt u = 3;
+        BinaryOpStmt b = 4;
     }
 }
 
 message Block {
-    required VarDecl v = 1;
-    repeated Statement s = 2;
-    required Return r = 3;
+    repeated Statement s = 1;
+    required Return r = 2;
 }
 
 message Program {
