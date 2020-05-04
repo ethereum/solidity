@@ -84,7 +84,7 @@ string ProtoConverter::visit(VarDecl const& _vardecl)
 	m_varTypeMap.emplace(varName, pair(typeSign(_vardecl.t()), type));
 	v("type", type);
 	v("varName", varName);
-	v("value", varExists ? visit(_vardecl.value()) : to_string((*m_rand)()));
+	v("value", varExists ? visit(_vardecl.value()) : maskUnsignedToHex(64));
 	incrementVarCounter();
 	return "\t\t" + v.render() + '\n';
 }
@@ -142,19 +142,19 @@ string ProtoConverter::visit(BinaryOp const& _bop)
 	auto left = visit(_bop.left());
 	auto right = visit(_bop.right());
 
-	Sign leftSign = m_exprSignMap[&_bop.left()];
-	Sign rightSign = m_exprSignMap[&_bop.right()];
+	Sign leftSign = m_exprSignMap[&_bop.left()].first;
+	string leftSignString = m_exprSignMap[&_bop.left()].second;
+	Sign rightSign = m_exprSignMap[&_bop.right()].first;
+	string rightSignString = m_exprSignMap[&_bop.right()].second;
 
-	bool expSignChange = _bop.op() == BinaryOp_Op_EXP && rightSign == Sign::Signed;
+	bool expOrMod = binaryOperandExp(_bop.op());
+	bool expSignChange = expOrMod && rightSign == Sign::Signed;
 	if (expSignChange)
-	{
 		right = Whiskers(R"(uint(<expr>))")("expr", right).render();
-		rightSign = Sign::Unsigned;
-	}
-	if (leftSign != rightSign && _bop.op() != BinaryOp_Op_EXP)
-			right = signString(leftSign) + "(" + right + ")";
+	else if (!expOrMod || leftSign == Sign::Unsigned)
+		right = leftSignString + "(" + right + ")";
 
-	return left + op + right;
+	return '(' + left + op + right + ')';
 }
 
 string ProtoConverter::visit(Expression const& _expr)
@@ -166,7 +166,7 @@ string ProtoConverter::visit(Expression const& _expr)
 		solAssert(varAvailable(), "Sol arith fuzzer: Varref unavaileble");
 		string v = visit(_expr.v());
 		if (!m_exprSignMap.count(&_expr))
-			m_exprSignMap.emplace(&_expr, m_varTypeMap[v].first);
+			m_exprSignMap.emplace(&_expr, m_varTypeMap[v]);
 		return v;
 	}
 	case Expression::kBop:
@@ -179,8 +179,9 @@ string ProtoConverter::visit(Expression const& _expr)
 	}
 	case Expression::EXPR_ONEOF_NOT_SET:
 	{
-		m_exprSignMap.emplace(&_expr, m_varTypeMap["v0"].first);
-		return "v0";
+		if (!m_exprSignMap.count(&_expr))
+			m_exprSignMap.emplace(&_expr, pair(Sign::Unsigned, "uint"));
+		return maskUnsignedToHex(64);
 	}
 	}
 }

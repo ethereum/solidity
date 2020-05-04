@@ -1,5 +1,8 @@
 #include <test/tools/ossfuzz/solArith.pb.h>
 
+#include <libsolutil/Common.h>
+#include <libsolutil/FixedHash.h>
+#include <libsolutil/Keccak256.h>
 #include <random>
 
 namespace solidity::test::solarithfuzzer
@@ -109,11 +112,29 @@ private:
 	{
 		return _ts.s() == Type::SIGNED ? Sign::Signed : Sign::Unsigned;
 	}
+	std::string maskUnsignedToHex(unsigned _numMaskNibbles)
+	{
+		return toHex(maskUnsignedInt(_numMaskNibbles), util::HexPrefix::Add);
+	}
+	bool binaryOperandExp(BinaryOp::Op _op)
+	{
+		return _op == BinaryOp_Op_EXP;
+	}
+
+	// Convert _counter to string and return its keccak256 hash
+	solidity::u256 hashUnsignedInt()
+	{
+		return util::keccak256(util::h256((*m_rand)()));
+	}
+	u256 maskUnsignedInt(unsigned _numMaskNibbles)
+	{
+		return hashUnsignedInt() & u256("0x" + std::string(_numMaskNibbles, 'f'));
+	}
 
 	unsigned m_varCounter = 0;
 	std::shared_ptr<SolRandomNumGenerator> m_rand;
 	std::map<std::string, std::pair<Sign, std::string>> m_varTypeMap;
-	std::map<Expression const*, Sign> m_exprSignMap;
+	std::map<Expression const*, std::pair<Sign, std::string>> m_exprSignMap;
 	std::string m_returnType;
 };
 }

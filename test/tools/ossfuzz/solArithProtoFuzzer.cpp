@@ -123,9 +123,9 @@ std::pair<bytes, Json::Value> compileContract(
 		);
 	}
 	// Ignore stack too deep errors during compilation
-	catch (evmasm::StackTooDeepException const&)
+	catch (Exception const&)
 	{
-		return std::make_pair(bytes{}, Json::Value(0));
+		throw langutil::FuzzerError();
 	}
 }
 
@@ -225,31 +225,37 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		std::cout << sol_source << std::endl;
 	}
 
-	auto minimalResult = compileDeployAndExecute(
-		sol_source,
-		":C",
-		"test()",
-		frontend::OptimiserSettings::minimal(),
-		""
-	);
-	bool successState = minimalResult.status_code == EVMC_SUCCESS;
+	try {
+		auto minimalResult = compileDeployAndExecute(
+			sol_source,
+			":C",
+			"test()",
+			frontend::OptimiserSettings::minimal(),
+			""
+		);
+		bool successState = minimalResult.status_code == EVMC_SUCCESS;
 
-	auto optResult = compileDeployAndExecute(
-		sol_source,
-		":C",
-		"test()",
-		frontend::OptimiserSettings::standard(),
-		""
-	);
-	if (successState)
-	{
-		solAssert(
-			optResult.status_code == EVMC_SUCCESS,
-			"Sol arith fuzzer: Optimal code failed"
+		auto optResult = compileDeployAndExecute(
+			sol_source,
+			":C",
+			"test()",
+			frontend::OptimiserSettings::standard(),
+			""
 		);
-		solAssert(
-			compareRuns(minimalResult, optResult),
-			"Sol arith fuzzer: Runs produced different result"
-		);
+		if (successState)
+		{
+			solAssert(
+				optResult.status_code == EVMC_SUCCESS,
+				"Sol arith fuzzer: Optimal code failed"
+			);
+			solAssert(
+				compareRuns(minimalResult, optResult),
+				"Sol arith fuzzer: Runs produced different result"
+			);
+		}
 	}
+	catch (langutil::FuzzerError const&)
+	{
+	}
+
 }

@@ -37,6 +37,7 @@ namespace solidity::langutil
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 
+struct FuzzerError: virtual util::Exception {};
 struct CompilerError: virtual util::Exception {};
 struct InternalCompilerError: virtual util::Exception {};
 struct FatalError: virtual util::Exception {};
