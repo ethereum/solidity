@@ -13,7 +13,22 @@ Compiler Features:
 Bugfixes:
 
 
-### 0.6.7 (unreleased)
+### 0.6.8 (unreleased)
+
+Language Features:
+
+
+
+Compiler Features:
+
+
+
+Bugfixes:
+
+
+
+
+### 0.6.7 (2020-05-04)
 
 Language Features:
  * Add support for EIP 165 interface identifiers with `type(I).interfaceId`.
@@ -22,6 +37,8 @@ Language Features:
 
 Compiler Features:
  * Optimizer: Simplify repeated AND and OR operations.
+ * Standard Json Input: Support the prefix ``file://`` in the field ``urls``.
+ * Add option to specify optimization steps to be performed by Yul optimizer with `--yul-optimizations` in the commandline interface or `optimizer.details.yulDetails.optimizerSteps` in standard-json.
 
 Bugfixes:
  * SMTChecker: Fix internal error when fixed points are used.
@@ -29,8 +46,8 @@ Bugfixes:
  * Type Checker: Disallow ``virtual`` and ``override`` for constructors.
  * Type Checker: Fix several internal errors by performing size and recursiveness checks of types before the full type checking.
  * Type Checker: Fix internal error when assigning to empty tuples.
+ * Type Checker: Fix internal error when applying unary operators to tuples with empty components.
  * Type Checker: Perform recursiveness check on structs declared at the file level.
- * Standard Json Input: Fix error when using prefix ``file://`` in the field ``urls``.
 
 Build System:
  * soltest.sh: ``SOLIDITY_BUILD_DIR`` is no longer relative to ``REPO_ROOT`` to allow for build directories outside of the source tree.

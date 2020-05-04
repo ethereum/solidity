@@ -50,6 +50,7 @@ using namespace solidity::langutil;
 #define ALSO_VIA_YUL(CODE) \
 { \
 	{ CODE } \
+	reset(); \
 	m_compileViaYul = true; \
 	{ CODE } \
 }
@@ -1058,11 +1059,13 @@ BOOST_AUTO_TEST_CASE(send_ether)
 			}
 		}
 	)";
-	u256 amount(130);
-	compileAndRun(sourceCode, amount + 1);
-	u160 address(23);
-	ABI_CHECK(callContractFunction("a(address,uint256)", address, amount), encodeArgs(1));
-	BOOST_CHECK_EQUAL(balanceAt(address), amount);
+	ALSO_VIA_YUL(
+		u256 amount(250);
+		compileAndRun(sourceCode, amount + 1);
+		u160 address(23);
+		ABI_CHECK(callContractFunction("a(address,uint256)", address, amount), encodeArgs(1));
+		BOOST_CHECK_EQUAL(balanceAt(address), amount);
+	)
 }
 
 BOOST_AUTO_TEST_CASE(transfer_ether)
@@ -1088,17 +1091,19 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 			}
 		}
 	)";
-	compileAndRun(sourceCode, 0, "B");
-	u160 const nonPayableRecipient = m_contractAddress;
-	compileAndRun(sourceCode, 0, "C");
-	u160 const oogRecipient = m_contractAddress;
-	compileAndRun(sourceCode, 20, "A");
-	u160 payableRecipient(23);
-	ABI_CHECK(callContractFunction("a(address,uint256)", payableRecipient, 10), encodeArgs(10));
-	BOOST_CHECK_EQUAL(balanceAt(payableRecipient), 10);
-	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 10);
-	ABI_CHECK(callContractFunction("b(address,uint256)", nonPayableRecipient, 10), encodeArgs());
-	ABI_CHECK(callContractFunction("b(address,uint256)", oogRecipient, 10), encodeArgs());
+	ALSO_VIA_YUL(
+		compileAndRun(sourceCode, 0, "B");
+		u160 const nonPayableRecipient = m_contractAddress;
+		compileAndRun(sourceCode, 0, "C");
+		u160 const oogRecipient = m_contractAddress;
+		compileAndRun(sourceCode, 20, "A");
+		u160 payableRecipient(23);
+		ABI_CHECK(callContractFunction("a(address,uint256)", payableRecipient, 10), encodeArgs(10));
+		BOOST_CHECK_EQUAL(balanceAt(payableRecipient), 10);
+		BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 10);
+		ABI_CHECK(callContractFunction("b(address,uint256)", nonPayableRecipient, 10), encodeArgs());
+		ABI_CHECK(callContractFunction("b(address,uint256)", oogRecipient, 10), encodeArgs());
+	)
 }
 
 BOOST_AUTO_TEST_CASE(uncalled_blockhash)

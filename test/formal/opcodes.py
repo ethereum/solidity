@@ -45,6 +45,9 @@ def AND(x, y):
 def OR(x, y):
 	return x | y
 
+def NOT(x):
+	return ~(x)
+
 def SHL(x, y):
 	return y << x
 

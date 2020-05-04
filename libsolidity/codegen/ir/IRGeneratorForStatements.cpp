@@ -140,20 +140,21 @@ string IRGeneratorForStatements::code() const
 
 void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _varDecl)
 {
-	solAssert(m_context.isStateVariable(_varDecl), "Must be a state variable.");
+	solAssert(_varDecl.immutable() || m_context.isStateVariable(_varDecl), "Must be immutable or a state variable.");
 	solAssert(!_varDecl.isConstant(), "");
-	solAssert(!_varDecl.immutable(), "");
-	if (_varDecl.value())
-	{
-		_varDecl.value()->accept(*this);
-		writeToLValue(IRLValue{
-			*_varDecl.annotation().type,
-			IRLValue::Storage{
-				util::toCompactHexWithPrefix(m_context.storageLocationOfVariable(_varDecl).first),
-				m_context.storageLocationOfVariable(_varDecl).second
-			}
-		}, *_varDecl.value());
-	}
+	if (!_varDecl.value())
+		return;
+
+	_varDecl.value()->accept(*this);
+	writeToLValue(
+		_varDecl.immutable() ?
+		IRLValue{*_varDecl.annotation().type, IRLValue::Immutable{&_varDecl}} :
+		IRLValue{*_varDecl.annotation().type, IRLValue::Storage{
+			util::toCompactHexWithPrefix(m_context.storageLocationOfVariable(_varDecl).first),
+			m_context.storageLocationOfVariable(_varDecl).second
+		}},
+		*_varDecl.value()
+	);
 }
 
 void IRGeneratorForStatements::initializeLocalVar(VariableDeclaration const& _varDecl)
@@ -584,7 +585,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	case FunctionType::Kind::Internal:
 	{
 		vector<string> args;
-		for (unsigned i = 0; i < arguments.size(); ++i)
+		for (size_t i = 0; i < arguments.size(); ++i)
 			if (functionType->takesArbitraryParameters())
 				args.emplace_back(IRVariable(*arguments[i]).commaSeparatedList());
 			else
@@ -730,6 +731,16 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		break;
 	}
+	case FunctionType::Kind::Revert:
+	{
+		solAssert(arguments.size() == parameterTypes.size(), "");
+		if (arguments.empty())
+			m_code << "revert(0, 0)\n";
+		else
+			solUnimplementedAssert(false, "");
+
+		break;
+	}
 	// Array creation using new
 	case FunctionType::Kind::ObjectCreation:
 	{
@@ -818,15 +829,43 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	{
 		break;
 	}
-	case FunctionType::Kind::GasLeft:
+	case FunctionType::Kind::AddMod:
+	case FunctionType::Kind::MulMod:
 	{
-		define(_functionCall) << "gas()\n";
+		static map<FunctionType::Kind, string> functions = {
+			{FunctionType::Kind::AddMod, "addmod"},
+			{FunctionType::Kind::MulMod, "mulmod"},
+		};
+		solAssert(functions.find(functionType->kind()) != functions.end(), "");
+		solAssert(arguments.size() == 3 && parameterTypes.size() == 3, "");
+
+		IRVariable modulus(m_context.newYulVariable(), *(parameterTypes[2]));
+		define(modulus, *arguments[2]);
+		Whiskers templ("if iszero(<modulus>) { invalid() }\n");
+		m_code << templ("modulus", modulus.name()).render();
+
+		string args;
+		for (size_t i = 0; i < 2; ++i)
+			args += expressionAsType(*arguments[i], *(parameterTypes[i])) + ", ";
+		args += modulus.name();
+		define(_functionCall) << functions[functionType->kind()] << "(" << args << ")\n";
 		break;
 	}
+	case FunctionType::Kind::GasLeft:
 	case FunctionType::Kind::Selfdestruct:
+	case FunctionType::Kind::BlockHash:
 	{
-		solAssert(arguments.size() == 1, "");
-		define(_functionCall) << "selfdestruct(" << expressionAsType(*arguments.front(), *parameterTypes.front()) << ")\n";
+		static map<FunctionType::Kind, string> functions = {
+			{FunctionType::Kind::GasLeft, "gas"},
+			{FunctionType::Kind::Selfdestruct, "selfdestruct"},
+			{FunctionType::Kind::BlockHash, "blockhash"},
+		};
+		solAssert(functions.find(functionType->kind()) != functions.end(), "");
+
+		string args;
+		for (size_t i = 0; i < arguments.size(); ++i)
+			args += (args.empty() ? "" : ", ") + expressionAsType(*arguments[i], *(parameterTypes[i]));
+		define(_functionCall) << functions[functionType->kind()] << "(" << args << ")\n";
 		break;
 	}
 	case FunctionType::Kind::Log0:
@@ -905,6 +944,34 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			t("salt", IRVariable(_functionCall.expression()).part("salt").name());
 		t("retVars", IRVariable(_functionCall).commaSeparatedList());
 		m_code << t.render();
+
+		break;
+	}
+	case FunctionType::Kind::Send:
+	case FunctionType::Kind::Transfer:
+	{
+		solAssert(arguments.size() == 1 && parameterTypes.size() == 1, "");
+		string address{IRVariable(_functionCall.expression()).part("address").name()};
+		string value{expressionAsType(*arguments[0], *(parameterTypes[0]))};
+		Whiskers templ(R"(
+			let <gas> := 0
+			if iszero(<value>) { <gas> := <callStipend> }
+			let <success> := call(<gas>, <address>, <value>, 0, 0, 0, 0)
+			<?isTransfer>
+				if iszero(<success>) { <forwardingRevert>() }
+			</isTransfer>
+		)");
+		templ("gas", m_context.newYulVariable());
+		templ("callStipend", toString(evmasm::GasCosts::callStipend));
+		templ("address", address);
+		templ("value", value);
+		if (functionType->kind() == FunctionType::Kind::Transfer)
+			templ("success", m_context.newYulVariable());
+		else
+			templ("success", IRVariable(_functionCall).commaSeparatedList());
+		templ("isTransfer", functionType->kind() == FunctionType::Kind::Transfer);
+		templ("forwardingRevert", m_utils.forwardingRevertFunction());
+		m_code << templ.render();
 
 		break;
 	}
@@ -1479,8 +1546,12 @@ void IRGeneratorForStatements::handleVariableReference(
 	// If the value is visited twice, `defineExpression` is called twice on
 	// the same expression.
 	solUnimplementedAssert(!_variable.isConstant(), "");
-	solUnimplementedAssert(!_variable.immutable(), "");
-	if (m_context.isLocalVariable(_variable))
+	if (_variable.isStateVariable() && _variable.immutable())
+		setLValue(_referencingExpression, IRLValue{
+			*_variable.annotation().type,
+			IRLValue::Immutable{&_variable}
+		});
+	else if (m_context.isLocalVariable(_variable))
 		setLValue(_referencingExpression, IRLValue{
 			*_variable.annotation().type,
 			IRLValue::Stack{m_context.localVariable(_variable)}
@@ -1901,6 +1972,18 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 				}
 			},
 			[&](IRLValue::Stack const& _stack) { assign(_stack.variable, _value); },
+			[&](IRLValue::Immutable const& _immutable)
+			{
+				solUnimplementedAssert(_lvalue.type.isValueType(), "");
+				solUnimplementedAssert(_lvalue.type.sizeOnStack() == 1, "");
+				solAssert(_lvalue.type == *_immutable.variable->type(), "");
+				size_t memOffset = m_context.immutableMemoryOffset(*_immutable.variable);
+
+				IRVariable prepared(m_context.newYulVariable(), _lvalue.type);
+				define(prepared, _value);
+
+				m_code << "mstore(" << to_string(memOffset) << ", " << prepared.commaSeparatedList() << ")\n";
+			},
 			[&](IRLValue::Tuple const& _tuple) {
 				auto components = std::move(_tuple.components);
 				for (size_t i = 0; i < components.size(); i++)
@@ -1955,6 +2038,12 @@ IRVariable IRGeneratorForStatements::readFromLValue(IRLValue const& _lvalue)
 		},
 		[&](IRLValue::Stack const& _stack) {
 			define(result, _stack.variable);
+		},
+		[&](IRLValue::Immutable const& _immutable) {
+			solUnimplementedAssert(_lvalue.type.isValueType(), "");
+			solUnimplementedAssert(_lvalue.type.sizeOnStack() == 1, "");
+			solAssert(_lvalue.type == *_immutable.variable->type(), "");
+			define(result) << "loadimmutable(\"" << to_string(_immutable.variable->id()) << "\")\n";
 		},
 		[&](IRLValue::Tuple const&) {
 			solAssert(false, "Attempted to read from tuple lvalue.");

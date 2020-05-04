@@ -82,8 +82,12 @@ explanatory purposes.
             deduplicate: false,
             cse: false,
             constantOptimizer: false,
-            yul: false,
-            yulDetails: {}
+            yul: true,
+            // Optional: Only present if "yul" is "true"
+            yulDetails: {
+              stackAllocation: false,
+              optimizerSteps: "dhfoDgvulfnTUtnIf..."
+            }
           }
         },
         metadata: {

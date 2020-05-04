@@ -68,7 +68,7 @@ private:
 	void visit(BinaryOp const&);
 
 	/// Visits a basic block optionally adding @a _funcParams to scope.
-	/// @param _block Reference to a basic block of yul statements.
+	/// @param _block Reference to a basic block of Yul statements.
 	/// @param _funcParams List of function parameter names, defaults to
 	/// an empty vector.
 	void visit(Block const& _block);
@@ -77,6 +77,7 @@ private:
 	void visit(VarRef const&);
 	void visit(Expression const&);
 	void visit(VarDecl const&);
+	void visit(MultiVarDecl const&);
 	void visit(TypedVarDecl const&);
 	void visit(UnaryOp const&);
 	void visit(AssignmentStatement const&);
@@ -196,7 +197,7 @@ private:
 	/// false otherwise
 	bool functionValid(FunctionCall_Returns _type, unsigned _numOutParams);
 
-	/// Converts protobuf function call to a yul function call and appends
+	/// Converts protobuf function call to a Yul function call and appends
 	/// it to output stream.
 	/// @param _x Protobuf function call
 	/// @param _name Function name
@@ -210,7 +211,7 @@ private:
 		bool _newLine = true
 	);
 
-	/// Prints a yul formatted variable declaration statement to the output
+	/// Prints a Yul formatted variable declaration statement to the output
 	/// stream.
 	/// Example 1: createVarDecls(0, 1, true) returns {"x_0"} and prints
 	///		let x_0 :=
@@ -235,21 +236,26 @@ private:
 	/// @return A vector of strings containing the printed variable names.
 	std::vector<std::string> createVars(unsigned _startIdx, unsigned _endIdx);
 
-	/// Print the yul syntax to make a call to a function named @a _funcName to
+	/// Manages scope of Yul variables
+	/// @param _varNames is a list of Yul variable names whose scope needs
+	/// to be tracked according to Yul scoping rules.
+	void scopeVariables(std::vector<std::string> const& _varNames);
+
+	/// Print the Yul syntax to make a call to a function named @a _funcName to
 	/// the output stream.
 	/// @param _funcName Name of the function to be called
 	/// @param _numInParams Number of input parameters in function signature
 	/// @param _numOutParams Number of output parameters in function signature
 	void createFunctionCall(std::string _funcName, unsigned _numInParams, unsigned _numOutParams);
 
-	/// Print the yul syntax to pass input arguments to a function that has
+	/// Print the Yul syntax to pass input arguments to a function that has
 	/// @a _numInParams number of input parameters to the output stream.
 	/// The input arguments are pseudo-randomly chosen from calldata, memory,
-	/// storage, or the yul optimizer hex dictionary.
+	/// storage, or the Yul optimizer hex dictionary.
 	/// @param _numInParams Number of input arguments to fill
 	void fillFunctionCallInput(unsigned _numInParams);
 
-	/// Print the yul syntax to save values returned by a function call
+	/// Print the Yul syntax to save values returned by a function call
 	/// to the output stream. The values are either stored to memory or
 	/// storage based on a simulated coin flip. The saved location is
 	/// decided pseudo-randomly.
@@ -266,7 +272,7 @@ private:
 
 	/// Build a tree of objects that contains the object/data
 	/// identifiers that are in scope in a given object.
-	/// @param _x root object of the yul protobuf specification.
+	/// @param _x root object of the Yul protobuf specification.
 	void buildObjectScopeTree(Object const& _x);
 
 	/// Returns a pseudo-random dictionary token.

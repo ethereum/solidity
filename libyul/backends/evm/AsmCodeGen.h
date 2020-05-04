@@ -61,6 +61,9 @@ public:
 	void appendDataSize(SubID _sub) override;
 	SubID appendData(bytes const& _data) override;
 
+	void appendImmutable(std::string const& _identifier) override;
+	void appendImmutableAssignment(std::string const& _identifier) override;
+
 private:
 	static LabelID assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag);
 

@@ -114,6 +114,8 @@ string IRGenerator::generate(
 	)");
 
 	resetContext(_contract);
+	for (VariableDeclaration const* var: ContractType(_contract).immutableVariables())
+		m_context.registerImmutableVariable(*var);
 
 	t("CreationObject", m_context.creationObjectName(_contract));
 	t("memoryInit", memoryInit());
@@ -142,6 +144,7 @@ string IRGenerator::generate(
 	t("subObjects", subObjectSources(m_context.subObjectsCreated()));
 
 	resetContext(_contract);
+	// Do not register immutables to avoid assignment.
 	t("RuntimeObject", m_context.runtimeObjectName(_contract));
 	t("dispatch", dispatchRoutine(_contract));
 	generateQueuedFunctions();
@@ -200,7 +203,6 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 	Type const* type = _varDecl.annotation().type;
 
 	solAssert(!_varDecl.isConstant(), "");
-	solAssert(!_varDecl.immutable(), "");
 	solAssert(_varDecl.isStateVariable(), "");
 
 	if (auto const* mappingType = dynamic_cast<MappingType const*>(type))
@@ -254,17 +256,32 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		solUnimplementedAssert(type->isValueType(), "");
 
 		return m_context.functionCollector().createFunction(functionName, [&]() {
-			pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
+			if (_varDecl.immutable())
+			{
+				solUnimplementedAssert(type->sizeOnStack() == 1, "");
+				return Whiskers(R"(
+					function <functionName>() -> rval {
+						rval := loadimmutable("<id>")
+					}
+				)")
+				("functionName", functionName)
+				("id", to_string(_varDecl.id()))
+				.render();
+			}
+			else
+			{
+				pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
 
-			return Whiskers(R"(
-				function <functionName>() -> rval {
-					rval := <readStorage>(<slot>)
-				}
-			)")
-			("functionName", functionName)
-			("readStorage", m_utils.readFromStorage(*type, slot_offset.second, false))
-			("slot", slot_offset.first.str())
-			.render();
+				return Whiskers(R"(
+					function <functionName>() -> rval {
+						rval := <readStorage>(<slot>)
+					}
+				)")
+				("functionName", functionName)
+				("readStorage", m_utils.readFromStorage(*type, slot_offset.second, false))
+				("slot", slot_offset.first.str())
+				.render();
+			}
 		});
 	}
 }
@@ -325,7 +342,7 @@ string IRGenerator::initStateVariables(ContractDefinition const& _contract)
 {
 	IRGeneratorForStatements generator{m_context, m_utils};
 	for (VariableDeclaration const* variable: _contract.stateVariables())
-		if (!variable->isConstant() && !variable->immutable())
+		if (!variable->isConstant())
 			generator.initializeStateVar(*variable);
 
 	return generator.code();
@@ -391,10 +408,41 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 string IRGenerator::deployCode(ContractDefinition const& _contract)
 {
 	Whiskers t(R"X(
+		<#loadImmutables>
+			let <var> := mload(<memoryOffset>)
+		</loadImmutables>
+
 		codecopy(0, dataoffset("<object>"), datasize("<object>"))
+
+		<#storeImmutables>
+			setimmutable("<immutableName>", <var>)
+		</storeImmutables>
+
 		return(0, datasize("<object>"))
 	)X");
 	t("object", m_context.runtimeObjectName(_contract));
+
+	vector<map<string, string>> loadImmutables;
+	vector<map<string, string>> storeImmutables;
+
+	for (VariableDeclaration const* immutable: ContractType(_contract).immutableVariables())
+	{
+		solUnimplementedAssert(immutable->type()->isValueType(), "");
+		solUnimplementedAssert(immutable->type()->sizeOnStack() == 1, "");
+		string yulVar = m_context.newYulVariable();
+		loadImmutables.emplace_back(map<string, string>{
+			{"var"s, yulVar},
+			{"memoryOffset"s, to_string(m_context.immutableMemoryOffset(*immutable))}
+		});
+		storeImmutables.emplace_back(map<string, string>{
+			{"var"s, yulVar},
+			{"immutableName"s, to_string(immutable->id())}
+		});
+	}
+	t("loadImmutables", std::move(loadImmutables));
+	// reverse order to ease stack strain
+	reverse(storeImmutables.begin(), storeImmutables.end());
+	t("storeImmutables", std::move(storeImmutables));
 	return t.render();
 }
 
@@ -489,9 +537,9 @@ string IRGenerator::memoryInit()
 	// and thus can assume all memory to be zero, including the contents of
 	// the "zero memory area" (the position CompilerUtils::zeroPointer points to).
 	return
-		Whiskers{"mstore(<memPtr>, <generalPurposeStart>)"}
+		Whiskers{"mstore(<memPtr>, <freeMemoryStart>)"}
 		("memPtr", to_string(CompilerUtils::freeMemoryPointer))
-		("generalPurposeStart", to_string(CompilerUtils::generalPurposeMemoryStart))
+		("freeMemoryStart", to_string(CompilerUtils::generalPurposeMemoryStart + m_context.reservedMemory()))
 		.render();
 }
 

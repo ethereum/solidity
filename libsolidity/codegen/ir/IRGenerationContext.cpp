@@ -22,6 +22,7 @@
 
 #include <libsolidity/codegen/YulUtilFunctions.h>
 #include <libsolidity/codegen/ABIFunctions.h>
+#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 
@@ -74,6 +75,36 @@ IRVariable const& IRGenerationContext::localVariable(VariableDeclaration const& 
 		"Unknown variable: " + _varDecl.name()
 	);
 	return m_localVariables.at(&_varDecl);
+}
+
+void IRGenerationContext::registerImmutableVariable(VariableDeclaration const& _variable)
+{
+	solAssert(_variable.immutable(), "Attempted to register a non-immutable variable as immutable.");
+	solUnimplementedAssert(
+		_variable.annotation().type->isValueType(),
+		"Only immutable variables of value type are supported."
+	);
+	solAssert(m_reservedMemory.has_value(), "Reserved memory has already been reset.");
+	m_immutableVariables[&_variable] = CompilerUtils::generalPurposeMemoryStart + *m_reservedMemory;
+	solAssert(_variable.annotation().type->memoryHeadSize() == 32, "Memory writes might overlap.");
+	*m_reservedMemory += _variable.annotation().type->memoryHeadSize();
+}
+
+size_t IRGenerationContext::immutableMemoryOffset(VariableDeclaration const& _variable) const
+{
+	solAssert(
+		m_immutableVariables.count(&_variable),
+		"Unknown immutable variable: " + _variable.name()
+	);
+	return m_immutableVariables.at(&_variable);
+}
+
+size_t IRGenerationContext::reservedMemory()
+{
+	solAssert(m_reservedMemory.has_value(), "Reserved memory was used before.");
+	size_t reservedMemory = *m_reservedMemory;
+	m_reservedMemory = std::nullopt;
+	return reservedMemory;
 }
 
 void IRGenerationContext::addStateVariable(

@@ -885,13 +885,6 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 | gaslimit()              |     | F | block gas limit of the current block                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 
-There are three additional functions, ``datasize(x)``, ``dataoffset(x)`` and ``datacopy(t, f, l)``,
-which are used to access other parts of a Yul object.
-
-``datasize`` and ``dataoffset`` can only take string literals (the names of other objects)
-as arguments and return the size and offset in the data area, respectively.
-For the EVM, the ``datacopy`` function is equivalent to ``codecopy``.
-
 .. _yul-call-return-area:
 
 .. note::
@@ -902,6 +895,32 @@ For the EVM, the ``datacopy`` function is equivalent to ``codecopy``.
   You need to use the ``returndatasize`` opcode to check which part of this memory area contains the return data.
   The remaining bytes will retain their values as of before the call. If the call fails (it returns ``0``),
   nothing is written to that area, but you can still retrieve the failure data using ``returndatacopy``.
+
+
+In some internal dialects, there are additional functions:
+
+datasize, dataoffset, datacopy
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The functions ``datasize(x)``, ``dataoffset(x)`` and ``datacopy(t, f, l)``,
+are used to access other parts of a Yul object.
+
+``datasize`` and ``dataoffset`` can only take string literals (the names of other objects)
+as arguments and return the size and offset in the data area, respectively.
+For the EVM, the ``datacopy`` function is equivalent to ``codecopy``.
+
+
+setimmutable, loadimmutable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The functions ``setimmutable("name", value)`` and ``loadimmutable("name")`` are
+used for the immutable mechanism in Solidity and do not nicely map to pur Yul.
+The function ``setimmutable`` assumes that the runtime code of a contract
+is currently copied to memory at offsot zero. The call to ``setimmutable("name", value)``
+will store ``value`` at all points in memory that contain a call to
+``loadimmutable("name")``.
+
+
 
 .. _yul-object:
 
@@ -1015,3 +1034,56 @@ If you want to use Solidity in stand-alone Yul mode, you activate the optimizer 
     solc --strict-assembly --optimize
 
 In Solidity mode, the Yul optimizer is activated together with the regular optimizer.
+
+Optimization step sequence
+--------------------------
+
+By default the Yul optimizer applies its predefined sequence of optimization steps to the generated assembly.
+You can override this sequence and supply your own using the `--yul-optimizations` option when compiling
+in Solidity mode:
+
+.. code-block:: sh
+
+    solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul'
+
+By enclosing part of the sequence in square brackets (`[]`) you tell the optimizer to repeatedly
+apply that part until it no longer improves the size of the resulting assembly.
+You can use brackets multiple times in a single sequence but they cannot be nested.
+
+The following optimization steps are available:
+
+============ ===============================
+Abbreviation Full name
+============ ===============================
+f            `BlockFlattener`
+l            `CircularReferencesPruner`
+c            `CommonSubexpressionEliminator`
+C            `ConditionalSimplifier`
+U            `ConditionalUnsimplifier`
+n            `ControlFlowSimplifier`
+D            `DeadCodeEliminator`
+v            `EquivalentFunctionCombiner`
+e            `ExpressionInliner`
+j            `ExpressionJoiner`
+s            `ExpressionSimplifier`
+x            `ExpressionSplitter`
+I            `ForLoopConditionIntoBody`
+O            `ForLoopConditionOutOfBody`
+o            `ForLoopInitRewriter`
+i            `FullInliner`
+g            `FunctionGrouper`
+h            `FunctionHoister`
+T            `LiteralRematerialiser`
+L            `LoadResolver`
+M            `LoopInvariantCodeMotion`
+r            `RedundantAssignEliminator`
+m            `Rematerialiser`
+V            `SSAReverser`
+a            `SSATransform`
+t            `StructuralSimplifier`
+u            `UnusedPruner`
+d            `VarDeclInitializer`
+============ ===============================
+
+Some steps depend on properties ensured by `BlockFlattener`, `FunctionGrouper`, `ForLoopInitRewriter`.
+For this reason the Yul optimizer always applies them before applying any steps supplied by the user.
