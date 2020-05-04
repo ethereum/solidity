@@ -31,7 +31,7 @@ REPODIR="$(realpath $(dirname $0)/..)"
 EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V2=1 ${REPODIR}/.circleci/soltest.sh
 
 for OPTIMIZE in 0 1; do
-    for EVM in homestead byzantium constantinople petersburg istanbul; do
+    for EVM in homestead byzantium constantinople petersburg istanbul berlin; do
         EVM=$EVM OPTIMIZE=$OPTIMIZE BOOST_TEST_ARGS="-t !@nooptions" ${REPODIR}/.circleci/soltest.sh
     done
 done
