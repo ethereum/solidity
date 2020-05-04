@@ -91,7 +91,11 @@ private:
 	}
 	static std::string signString(Type::Sign _sign)
 	{
-		return _sign == Type::Sign::Type_Sign_SIGNED ? "uint" : "uint";
+		return _sign == Type::Sign::Type_Sign_SIGNED ? "int" : "uint";
+	}
+	static std::string signString(Sign _sign)
+	{
+		return _sign == Sign::Signed ? "int" : "uint";
 	}
 	static std::string widthString(unsigned _width)
 	{

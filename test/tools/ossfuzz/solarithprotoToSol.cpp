@@ -81,7 +81,7 @@ string ProtoConverter::visit(VarDecl const& _vardecl)
 	Whiskers v(R"(<type> <varName> = <type>(<value>);)");
 	string type = visit(_vardecl.t());
 	string varName = newVarName();
-	m_varTypeMap.emplace(varName, type);
+	m_varTypeMap.emplace(varName, pair(typeSign(_vardecl.t()), type));
 	v("type", type);
 	v("varName", varName);
 	v("value", varExists ? visit(_vardecl.value()) : to_string((*m_rand)()));
@@ -129,21 +129,6 @@ string ProtoConverter::visit(BinaryOp const& _bop)
 	case BinaryOp_Op_MOD:
 		op = " % ";
 		break;
-//	case BinaryOp_Op_ADDSELF:
-//		op = " += ";
-//		break;
-//	case BinaryOp_Op_SUBSELF:
-//		op = " -= ";
-//		break;
-//	case BinaryOp_Op_MULSELF:
-//		op = " *= ";
-//		break;
-//	case BinaryOp_Op_DIVSELF:
-//		op = " /= ";
-//		break;
-//	case BinaryOp_Op_MODSELF:
-//		op = " %= ";
-//		break;
 	case BinaryOp_Op_EXP:
 		op = " ** ";
 		break;
@@ -153,14 +138,23 @@ string ProtoConverter::visit(BinaryOp const& _bop)
 	case BinaryOp_Op_SHR:
 		op = " >> ";
 		break;
-//	case BinaryOp_Op_SHLSELF:
-//		op = " <<= ";
-//		break;
-//	case BinaryOp_Op_SHRSELF:
-//		op = " >>= ";
-//		break;
 	}
-	return visit(_bop.left()) + op + visit(_bop.right());
+	auto left = visit(_bop.left());
+	auto right = visit(_bop.right());
+
+	Sign leftSign = m_exprSignMap[&_bop.left()];
+	Sign rightSign = m_exprSignMap[&_bop.right()];
+
+	bool expSignChange = _bop.op() == BinaryOp_Op_EXP && rightSign == Sign::Signed;
+	if (expSignChange)
+	{
+		right = Whiskers(R"(uint(<expr>))")("expr", right).render();
+		rightSign = Sign::Unsigned;
+	}
+	if (leftSign != rightSign && _bop.op() != BinaryOp_Op_EXP)
+			right = signString(leftSign) + "(" + right + ")";
+
+	return left + op + right;
 }
 
 string ProtoConverter::visit(Expression const& _expr)
@@ -173,21 +167,27 @@ string ProtoConverter::visit(Expression const& _expr)
 		string v = visit(_expr.v());
 		if (!m_exprSignMap.count(&_expr))
 			m_exprSignMap.emplace(&_expr, m_varTypeMap[v].first);
+		return v;
 	}
 	case Expression::kBop:
 	{
 		string b = visit(_expr.bop());
+		solAssert(m_exprSignMap.count(&_expr.bop().left()), "Sol arith fuzzer: Invalid binop visit");
 		if (!m_exprSignMap.count(&_expr))
-			m_exprSignMap.emplace(&_expr, m_varTypeMap[v].first);
+			m_exprSignMap.emplace(&_expr, m_exprSignMap[&_expr.bop().left()]);
+		return b;
 	}
 	case Expression::EXPR_ONEOF_NOT_SET:
+	{
+		m_exprSignMap.emplace(&_expr, m_varTypeMap["v0"].first);
 		return "v0";
+	}
 	}
 }
 
-string ProtoConverter::visit(VarRef const&)
+string ProtoConverter::visit(VarRef const& _v)
 {
-	return randomVarName();
+	return "v" + std::to_string(_v.id() % m_varCounter);
 }
 
 string ProtoConverter::visit(Assignment const& _assignment)
@@ -198,7 +198,7 @@ string ProtoConverter::visit(Assignment const& _assignment)
 		solAssert(m_varTypeMap.count(varName), "Sol arith fuzzer: Invalid varname");
 		Whiskers a(R"(<varName> = <type>(<expr>);)");
 		a("varName", varName);
-		a("type", m_varTypeMap[varName]);
+		a("type", m_varTypeMap[varName].second);
 		a("expr", visit(_assignment.value()));
 		return "\t\t" + a.render() + '\n';
 	}
