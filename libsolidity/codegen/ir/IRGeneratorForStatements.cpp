@@ -117,10 +117,12 @@ struct CopyTranslate: public yul::ASTCopier
 			reference.isOffset == false && reference.isSlot == false,
 			"Should not be called for offset/slot"
 		);
+		auto const& var = m_context.localVariable(*varDecl);
+		solAssert(var.type().sizeOnStack() == 1, "");
 
 		return yul::Identifier{
 			_identifier.location,
-			yul::YulString{m_context.localVariable(*varDecl).name()}
+			yul::YulString{var.commaSeparatedList()}
 		};
 	}
 
@@ -2060,13 +2062,7 @@ IRVariable IRGeneratorForStatements::readFromLValue(IRLValue const& _lvalue)
 					")\n";
 		},
 		[&](IRLValue::Memory const& _memory) {
-			if (_memory.byteArrayElement)
-				define(result) <<
-					m_utils.cleanupFunction(_lvalue.type) <<
-					"(mload(" <<
-					_memory.address <<
-					"))\n";
-			else if (_lvalue.type.isValueType())
+			if (_lvalue.type.isValueType())
 				define(result) <<
 					m_utils.readFromMemory(_lvalue.type) <<
 					"(" <<
