@@ -8,6 +8,7 @@ Language Features:
 Compiler Features:
  * Optimizer: Simplify repeated AND and OR operations.
  * Standard Json Input: Support the prefix ``file://`` in the field ``urls``.
+ * Add option to specify optimization steps to be performed by Yul optimizer with `--yul-optimizations` in the commandline interface or `optimizer.details.yulDetails.optimizerSteps` in standard-json.
 
 Bugfixes:
  * SMTChecker: Fix internal error when fixed points are used.
