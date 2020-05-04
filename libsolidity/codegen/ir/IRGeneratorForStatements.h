@@ -124,6 +124,9 @@ private:
 	/// Declares variable @a _var.
 	void declare(IRVariable const& _var);
 
+	/// Force cleanup of variable @a _var.
+	void cleanup(IRVariable const& _var);
+
 	void declareAssign(IRVariable const& _var, IRVariable const& _value, bool _define);
 
 	/// @returns an IRVariable with the zero

@@ -1295,6 +1295,18 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 
 	// Do not provide dialect so that we get the full type information.
 	m_code << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
+
+	for (auto const& reference: _inlineAsm.annotation().externalReferences)
+	{
+		auto const& info = reference.second;
+		solAssert(info.identifierContext, "");
+		if (*info.identifierContext == yul::IdentifierContext::LValue)
+		{
+			auto const* varDecl = dynamic_cast<VariableDeclaration const*>(info.declaration);
+			solAssert(varDecl && varDecl->isLocalVariable() && m_context.isLocalVariable(*varDecl), "");
+			cleanup(m_context.localVariable(*varDecl));
+		}
+	}
 	return false;
 }
 
@@ -1797,6 +1809,17 @@ void IRGeneratorForStatements::declare(IRVariable const& _var)
 {
 	if (_var.type().sizeOnStack() > 0)
 		m_code << "let " << _var.commaSeparatedList() << "\n";
+}
+
+void IRGeneratorForStatements::cleanup(IRVariable const& _var)
+{
+	if (_var.type().sizeOnStack() > 0)
+		m_code << _var.commaSeparatedList() <<
+			" := " <<
+			m_context.utils().cleanupFunction(_var.type()) <<
+			"(" <<
+			_var.commaSeparatedList() <<
+			")\n";
 }
 
 void IRGeneratorForStatements::declareAssign(IRVariable const& _lhs, IRVariable const& _rhs, bool _declare)

@@ -628,6 +628,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		Declaration const* declaration = ref->second.declaration;
 		solAssert(!!declaration, "");
 		bool requiresStorage = ref->second.isSlot || ref->second.isOffset;
+		solAssert(!ref->second.identifierContext, "");
+		ref->second.identifierContext = _context;
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
 			solAssert(var->type(), "Expected variable type!");

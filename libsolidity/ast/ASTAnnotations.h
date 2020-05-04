@@ -26,6 +26,8 @@
 #include <libsolidity/ast/ASTEnums.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
 
+#include <libyul/backends/evm/AbstractAssembly.h>
+
 #include <map>
 #include <memory>
 #include <optional>
@@ -191,6 +193,7 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 		bool isSlot = false; ///< Whether the storage slot of a variable is queried.
 		bool isOffset = false; ///< Whether the intra-slot offset of a storage variable is queried.
 		size_t valueSize = size_t(-1);
+		std::optional<yul::IdentifierContext> identifierContext; ///< Context in which the identifier occurs. Filled in by type checker.
 	};
 
 	/// Mapping containing resolved references to external identifiers and their value size
