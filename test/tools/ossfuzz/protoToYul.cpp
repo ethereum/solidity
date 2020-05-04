@@ -237,7 +237,7 @@ void ProtoConverter::visit(Expression const& _x)
 			m_output << dictionaryToken();
 		break;
 	case Expression::kLowcall:
-		visit(_x.lowcall());
+//		visit(_x.lowcall());
 		break;
 	case Expression::kCreate:
 		visit(_x.create());
@@ -1373,7 +1373,7 @@ void ProtoConverter::visit(Statement const& _x)
 			m_output << "continue\n";
 		break;
 	case Statement::kLogFunc:
-		visit(_x.log_func());
+//		visit(_x.log_func());
 		break;
 	case Statement::kCopyFunc:
 		visit(_x.copy_func());
