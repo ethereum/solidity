@@ -963,10 +963,12 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			")\n";
 		break;
 	}
+	case FunctionType::Kind::ByteArrayPush:
 	case FunctionType::Kind::ArrayPush:
 	{
 		auto const& memberAccessExpression = dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression();
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*memberAccessExpression.annotation().type);
+
 		if (arguments.empty())
 		{
 			auto slotName = m_context.newYulVariable();
