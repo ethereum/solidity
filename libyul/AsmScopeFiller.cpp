@@ -141,6 +141,7 @@ bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const&
 	{
 		//@TODO secondary location
 		m_errorReporter.declarationError(
+			1395_error,
 			_location,
 			"Variable name " + _name.name.str() + " already taken in this scope."
 		);
@@ -161,6 +162,7 @@ bool ScopeFiller::registerFunction(FunctionDefinition const& _funDef)
 	{
 		//@TODO secondary location
 		m_errorReporter.declarationError(
+			6052_error,
 			_funDef.location,
 			"Function name " + _funDef.name.str() + " already taken in this scope."
 		);

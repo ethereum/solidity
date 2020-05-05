@@ -239,7 +239,7 @@ bool CompilerStack::parse()
 	m_errorReporter.clear();
 
 	if (SemVerVersion{string(VersionString)}.isPrerelease())
-		m_errorReporter.warning("This is a pre-release compiler version, please do not use it in production.");
+		m_errorReporter.warning(3805_error, "This is a pre-release compiler version, please do not use it in production.");
 
 	Parser parser{m_errorReporter, m_evmVersion, m_parserErrorRecovery};
 
@@ -949,6 +949,7 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 				else
 				{
 					m_errorReporter.parserError(
+						6275_error,
 						import->location(),
 						string("Source \"" + importPath + "\" not found: " + result.responseOrErrorMessage)
 					);
@@ -1110,6 +1111,7 @@ void CompilerStack::compileContract(
 		compiledContract.runtimeObject.bytecode.size() > 0x6000
 	)
 		m_errorReporter.warning(
+			5574_error,
 			_contract.location(),
 			"Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
 			"This contract may not be deployable on mainnet. "

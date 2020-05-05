@@ -128,6 +128,7 @@ void Parser::parsePragmaVersion(SourceLocation const& _location, vector<Token> c
 		// so we don't need to report anything here.
 		if (!m_parserErrorRecovery)
 			m_errorReporter.fatalParserError(
+				5333_error,
 				_location,
 				"Source file requires different compiler version (current compiler is " +
 				string(VersionString) + ") - note that nightly builds are considered to be "

@@ -173,5 +173,5 @@ void DocStringAnalyser::parseDocStrings(
 void DocStringAnalyser::appendError(SourceLocation const& _location, string const& _description)
 {
 	m_errorOccured = true;
-	m_errorReporter.docstringParsingError(_location, _description);
+	m_errorReporter.docstringParsingError(7816_error, _location, _description);
 }

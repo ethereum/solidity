@@ -965,10 +965,10 @@ pair<smt::CheckResult, vector<string>> CHC::query(smt::Expression const& _query,
 	case smt::CheckResult::UNKNOWN:
 		break;
 	case smt::CheckResult::CONFLICTING:
-		m_outerErrorReporter.warning(_location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
+		m_outerErrorReporter.warning(1988_error, _location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;
 	case smt::CheckResult::ERROR:
-		m_outerErrorReporter.warning(_location, "Error trying to invoke SMT solver.");
+		m_outerErrorReporter.warning(1218_error, _location, "Error trying to invoke SMT solver.");
 		break;
 	}
 	return {result, values};
