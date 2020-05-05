@@ -582,9 +582,6 @@ Available upgrade modules
 +-----------------+---------+--------------------------------------------------+
 | ``now``         | 0.7.0   | The ``now`` keyword is deprecated. Use           |
 |                 |         | ``block.timestamp`` instead.                     |
-|                 |         |                                                  |
-|                 |         |                                                  |
-|                 |         |                                                  |
 +-----------------+---------+--------------------------------------------------+
 
 Please read :doc:`0.5.0 release notes <050-breaking-changes>`,

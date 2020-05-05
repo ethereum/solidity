@@ -111,6 +111,9 @@ Block and Transaction Properties
     The function ``gasleft`` was previously known as ``msg.gas``, which was deprecated in
     version 0.4.21 and removed in version 0.5.0.
 
+.. note::
+    In version 0.7.0, the alias ``now`` (for ``block.timestamp``) was removed.
+
 .. index:: abi, encoding, packed
 
 ABI Encoding and Decoding Functions

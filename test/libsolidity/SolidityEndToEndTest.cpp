@@ -1025,29 +1025,6 @@ BOOST_AUTO_TEST_CASE(blockchain)
 	ABI_CHECK(callContractFunctionWithValue("someInfo()", 28), encodeArgs(28, u256("0x1212121212121212121212121212121212121212"), 7));
 }
 
-BOOST_AUTO_TEST_CASE(now)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function someInfo() public returns (bool equal, uint val) {
-				equal = block.timestamp == now;
-				val = now;
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		compileAndRun(sourceCode);
-		u256 startBlock = blockNumber();
-		size_t startTime = blockTimestamp(startBlock);
-		auto ret = callContractFunction("someInfo()");
-		u256 endBlock = blockNumber();
-		size_t endTime = blockTimestamp(endBlock);
-		BOOST_CHECK(startBlock != endBlock);
-		BOOST_CHECK(startTime != endTime);
-		ABI_CHECK(ret, encodeArgs(true, endTime));
-	)
-}
-
 BOOST_AUTO_TEST_CASE(send_ether)
 {
 	char const* sourceCode = R"(

@@ -45,9 +45,10 @@ void NowKeyword::endVisit(Identifier const& _identifier)
 {
 	IdentifierAnnotation& annotation = _identifier.annotation();
 
-	if (MagicVariableDeclaration const* magicVar
-		= dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
-	{
+	if (
+		MagicVariableDeclaration const* magicVar =
+		dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration)
+	)
 		if (magicVar->type()->category() == Type::Category::Integer)
 		{
 			solAssert(_identifier.name() == "now", "");
@@ -57,5 +58,4 @@ void NowKeyword::endVisit(Identifier const& _identifier)
 				SourceTransform::nowUpdate(_identifier.location())
 			);
 		}
-	}
 }
