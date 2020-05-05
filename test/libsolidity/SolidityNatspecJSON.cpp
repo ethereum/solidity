@@ -849,16 +849,18 @@ BOOST_AUTO_TEST_CASE(dev_documenting_no_param_description)
 
 BOOST_AUTO_TEST_CASE(user_constructor)
 {
-	char const *sourceCode = R"(
+	char const* sourceCode = R"(
 		contract test {
 			/// @notice this is a really nice constructor
 			constructor(uint a, uint second) public { }
 		}
 	)";
 
-	char const *natspec = R"ABCDEF({
-	"methods" : {
-		"constructor" : "this is a really nice constructor"
+	char const* natspec = R"ABCDEF({
+	"methods": {
+		"constructor" : {
+			"notice": "this is a really nice constructor"
+		}
 	}
 	})ABCDEF";
 
@@ -867,7 +869,7 @@ BOOST_AUTO_TEST_CASE(user_constructor)
 
 BOOST_AUTO_TEST_CASE(user_constructor_and_function)
 {
-	char const *sourceCode = R"(
+	char const* sourceCode = R"(
 		contract test {
 			/// @notice this is a really nice constructor
 			constructor(uint a, uint second) public { }
@@ -876,12 +878,14 @@ BOOST_AUTO_TEST_CASE(user_constructor_and_function)
 		}
 	)";
 
-	char const *natspec = R"ABCDEF({
+	char const* natspec = R"ABCDEF({
 	"methods" : {
 		"mul(uint256,uint256)" : {
 			"notice" : "another multiplier"
 		},
-		"constructor" : "this is a really nice constructor"
+		"constructor" : {
+			"notice" : "this is a really nice constructor"
+		}
 	}
 	})ABCDEF";
 

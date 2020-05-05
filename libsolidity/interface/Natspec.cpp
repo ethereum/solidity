@@ -42,8 +42,12 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 	{
 		string value = extractDoc(constructorDefinition->annotation().docTags, "notice");
 		if (!value.empty())
+		{
 			// add the constructor, only if we have any documentation to add
-			methods["constructor"] = Json::Value(value);
+			Json::Value user;
+			user["notice"] = Json::Value(value);
+			methods["constructor"] = user;
+		}
 	}
 
 	string notice = extractDoc(_contractDef.annotation().docTags, "notice");
