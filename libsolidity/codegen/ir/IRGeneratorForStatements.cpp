@@ -737,7 +737,41 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		if (arguments.empty())
 			m_code << "revert(0, 0)\n";
 		else
-			solUnimplementedAssert(false, "");
+		{
+			solAssert(arguments.size() == 1, "");
+
+			if (m_context.revertStrings() == RevertStrings::Strip)
+				m_code << "revert(0, 0)\n";
+			else
+			{
+				solAssert(type(*arguments.front()).isImplicitlyConvertibleTo(*TypeProvider::stringMemory()),"");
+
+				Whiskers templ(R"({
+					let <pos> := <allocateTemporary>()
+					mstore(<pos>, <hash>)
+					let <end> := <encode>(add(<pos>, 4) <argumentVars>)
+					revert(<pos>, sub(<end>, <pos>))
+				})");
+				templ("pos", m_context.newYulVariable());
+				templ("end", m_context.newYulVariable());
+				templ(
+					"hash",
+					(u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)")))) << (256 - 32)).str()
+				);
+				templ("allocateTemporary", m_utils.allocationTemporaryMemoryFunction());
+				templ(
+					"argumentVars",
+					(type(*arguments.front()).sizeOnStack() > 0 ? ", " : "") +
+					IRVariable{*arguments.front()}.commaSeparatedList()
+				);
+				templ("encode", m_context.abiFunctions().tupleEncoder(
+					{&type(*arguments.front())},
+					{TypeProvider::stringMemory()}
+				));
+
+				m_code << templ.render();
+			}
+		}
 
 		break;
 	}
