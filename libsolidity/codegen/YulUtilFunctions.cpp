@@ -393,6 +393,8 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> sum {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
 				<?signed>
 					// overflow, if x >= 0 and y > (maxValue - x)
 					if and(iszero(slt(x, 0)), sgt(y, sub(<maxValue>, x))) { revert(0, 0) }
@@ -409,6 +411,7 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 			("signed", _type.isSigned())
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
+			("cleanupFunction", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -421,6 +424,8 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			// Multiplication by zero could be treated separately and directly return zero.
 			Whiskers(R"(
 			function <functionName>(x, y) -> product {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
 				<?signed>
 					// overflow, if x > 0, y > 0 and x > (maxValue / y)
 					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { revert(0, 0) }
@@ -441,6 +446,7 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			("signed", _type.isSigned())
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
+			("cleanupFunction", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -452,6 +458,8 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> r {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
 				if iszero(y) { revert(0, 0) }
 				<?signed>
 				// overflow for minVal / -1
@@ -466,6 +474,7 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 			("functionName", functionName)
 			("signed", _type.isSigned())
 			("minVal", toCompactHexWithPrefix(u256(_type.minValue())))
+			("cleanupFunction", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -477,12 +486,15 @@ string YulUtilFunctions::checkedIntModFunction(IntegerType const& _type)
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> r {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
 				if iszero(y) { revert(0, 0) }
 				r := <?signed>s</signed>mod(x, y)
 			}
 			)")
 			("functionName", functionName)
 			("signed", _type.isSigned())
+			("cleanupFunction", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -494,6 +506,8 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> diff {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
 				<?signed>
 					// underflow, if y >= 0 and x < (minValue + y)
 					if and(iszero(slt(y, 0)), slt(x, add(<minValue>, y))) { revert(0, 0) }
@@ -509,6 +523,7 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 			("signed", _type.isSigned())
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
+			("cleanupFunction", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -1938,14 +1953,16 @@ std::string YulUtilFunctions::decrementCheckedFunction(Type const& _type)
 
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
+				value := <cleanupFunction>(value)
 				if <lt>(value, <minval>) { revert(0,0) }
 				ret := sub(value, 1)
 			}
 		)")
-			("functionName", functionName)
-			("minval", toCompactHexWithPrefix(minintval))
-			("lt", type.isSigned() ? "slt" : "lt")
-			.render();
+		("functionName", functionName)
+		("minval", toCompactHexWithPrefix(minintval))
+		("lt", type.isSigned() ? "slt" : "lt")
+		("cleanupFunction", cleanupFunction(_type))
+		.render();
 	});
 }
 
@@ -1966,14 +1983,16 @@ std::string YulUtilFunctions::incrementCheckedFunction(Type const& _type)
 
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
+				value := <cleanupFunction>(value)
 				if <gt>(value, <maxval>) { revert(0,0) }
 				ret := add(value, 1)
 			}
 		)")
-			("functionName", functionName)
-			("maxval", toCompactHexWithPrefix(maxintval))
-			("gt", type.isSigned() ? "sgt" : "gt")
-			.render();
+		("functionName", functionName)
+		("maxval", toCompactHexWithPrefix(maxintval))
+		("gt", type.isSigned() ? "sgt" : "gt")
+		("cleanupFunction", cleanupFunction(_type))
+		.render();
 	});
 }
 
@@ -1988,15 +2007,17 @@ string YulUtilFunctions::negateNumberCheckedFunction(Type const& _type)
 
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
-			function <functionName>(_value) -> ret {
-				if slt(_value, <minval>) { revert(0,0) }
-				ret := sub(0, _value)
+			function <functionName>(value) -> ret {
+				value := <cleanupFunction>(value)
+				if slt(value, <minval>) { revert(0,0) }
+				ret := sub(0, value)
 			}
 		)")
-			("functionName", functionName)
-			("minval", toCompactHexWithPrefix(minintval))
-			.render();
-		});
+		("functionName", functionName)
+		("minval", toCompactHexWithPrefix(minintval))
+		("cleanupFunction", cleanupFunction(_type))
+		.render();
+	});
 }
 
 string YulUtilFunctions::zeroValueFunction(Type const& _type, bool _splitFunctionTypes)

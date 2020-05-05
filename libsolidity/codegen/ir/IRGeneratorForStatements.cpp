@@ -496,9 +496,9 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 			isSigned = type->isSigned();
 
 		string args =
-			expressionAsType(_binOp.leftExpression(), *commonType) +
+			expressionAsType(_binOp.leftExpression(), *commonType, true) +
 			", " +
-			expressionAsType(_binOp.rightExpression(), *commonType);
+			expressionAsType(_binOp.rightExpression(), *commonType, true);
 
 		string expr;
 		if (op == Token::Equal)
@@ -1811,11 +1811,16 @@ IRVariable IRGeneratorForStatements::convert(IRVariable const& _from, Type const
 	}
 }
 
-std::string IRGeneratorForStatements::expressionAsType(Expression const& _expression, Type const& _to)
+std::string IRGeneratorForStatements::expressionAsType(Expression const& _expression, Type const& _to, bool _forceCleanup)
 {
 	IRVariable from(_expression);
 	if (from.type() == _to)
-		return from.commaSeparatedList();
+	{
+		if (_forceCleanup)
+			return m_utils.cleanupFunction(_to) + "(" + from.commaSeparatedList() + ")";
+		else
+			return from.commaSeparatedList();
+	}
 	else
 		return m_utils.conversionFunction(from.type(), _to) + "(" + from.commaSeparatedList() + ")";
 }
