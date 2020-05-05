@@ -112,7 +112,8 @@ private:
 
 	/// @returns a Yul expression representing the current value of @a _expression,
 	/// converted to type @a _to if it does not yet have that type.
-	std::string expressionAsType(Expression const& _expression, Type const& _to);
+	/// If @a _forceCleanup is set to true, it also cleans the value, in case it already has type @a _to.
+	std::string expressionAsType(Expression const& _expression, Type const& _to, bool _forceCleanup = false);
 
 	/// @returns an output stream that can be used to define @a _var using a function call or
 	/// single stack slot expression.
