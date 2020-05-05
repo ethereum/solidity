@@ -1779,8 +1779,18 @@ string YulUtilFunctions::cleanupFunction(Type const& _type)
 			solUnimplemented("Fixed point types not implemented.");
 			break;
 		case Type::Category::Function:
-			solAssert(dynamic_cast<FunctionType const&>(_type).kind() == FunctionType::Kind::External, "");
-			templ("body", "cleaned := " + cleanupFunction(FixedBytesType(24)) + "(value)");
+			switch (dynamic_cast<FunctionType const&>(_type).kind())
+			{
+				case FunctionType::Kind::External:
+					templ("body", "cleaned := " + cleanupFunction(FixedBytesType(24)) + "(value)");
+					break;
+				case FunctionType::Kind::Internal:
+					templ("body", "cleaned := value");
+					break;
+				default:
+					solAssert(false, "");
+					break;
+			}
 			break;
 		case Type::Category::Array:
 		case Type::Category::Struct:
