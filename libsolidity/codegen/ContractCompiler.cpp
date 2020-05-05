@@ -103,8 +103,6 @@ void ContractCompiler::compileContract(
 	// and adds the function to the compilation queue. Additionally internal functions,
 	// which are referenced directly or indirectly will be added.
 	appendFunctionSelector(_contract);
-	// This processes the above populated queue until it is empty.
-	appendMissingFunctions();
 }
 
 size_t ContractCompiler::compileConstructor(
@@ -215,6 +213,7 @@ size_t ContractCompiler::deployLibrary(ContractDefinition const& _contract)
 	solAssert(!!m_runtimeCompiler, "");
 	solAssert(_contract.isLibrary(), "Tried to deploy contract as library.");
 
+	appendMissingFunctions();
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
 
 	solAssert(m_context.runtimeSub() != size_t(-1), "Runtime sub not registered");
