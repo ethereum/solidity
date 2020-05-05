@@ -69,8 +69,8 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
         internal
         returns (bool)
     {
-        if (now > lastDay + 24 hours) {
-            lastDay = now;
+        if (block.timestamp > lastDay + 24 hours) {
+            lastDay = block.timestamp;
             spentToday = 0;
         }
         if (spentToday + amount > dailyLimit || spentToday + amount < spentToday)
@@ -88,7 +88,7 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
         view
         returns (uint)
     {
-        if (now > lastDay + 24 hours)
+        if (block.timestamp > lastDay + 24 hours)
             return dailyLimit;
         if (dailyLimit < spentToday)
             return 0;

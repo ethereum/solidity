@@ -44,7 +44,7 @@ Constant
 
 For ``constant`` variables, the value has to be a constant at compile time and it has to be
 assigned where the variable is declared. Any expression
-that accesses storage, blockchain data (e.g. ``now``, ``address(this).balance`` or
+that accesses storage, blockchain data (e.g. ``block.timestamp``, ``address(this).balance`` or
 ``block.number``) or
 execution data (``msg.value`` or ``gasleft()``) or makes calls to external contracts is disallowed. Expressions
 that might have a side-effect on memory allocation are allowed, but those that
