@@ -196,6 +196,8 @@ Allowed options)",
 				m_suite.activateModule(Module::VirtualFunction);
 			else if (module == "dotsyntax")
 				m_suite.activateModule(Module::DotSyntax);
+			else if (module == "now")
+				m_suite.activateModule(Module::NowKeyword);
 			else
 			{
 				error() << "Unknown upgrade module \"" + module + "\"" << endl;

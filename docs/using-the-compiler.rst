@@ -580,6 +580,12 @@ Available upgrade modules
 |                 |         | ``f{gas: ..., value: ...}()`` and                |
 |                 |         | ``(new C){value: ...}()``.                       |
 +-----------------+---------+--------------------------------------------------+
+| ``now``         | 0.7.0   | The ``now`` keyword is deprecated. Use           |
+|                 |         | ``block.timestamp`` instead.                     |
+|                 |         |                                                  |
+|                 |         |                                                  |
+|                 |         |                                                  |
++-----------------+---------+--------------------------------------------------+
 
 Please read :doc:`0.5.0 release notes <050-breaking-changes>`,
 :doc:`0.6.0 release notes <060-breaking-changes>` and

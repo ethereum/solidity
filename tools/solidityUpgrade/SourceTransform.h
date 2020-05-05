@@ -267,6 +267,24 @@ public:
 
 		return "";
 	}
+
+	static std::string nowUpdate(langutil::SourceLocation const& _location)
+	{
+		std::regex nowRegex{"now"};
+
+		if (regex_search(_location.text(), nowRegex))
+		{
+			return regex_replace(_location.text(), nowRegex, "block.timestamp");
+		}
+		else
+			solAssert(
+				false,
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
+				"\nNeeds to be fixed manually."
+			);
+
+		return "";
+	}
 };
 
 }

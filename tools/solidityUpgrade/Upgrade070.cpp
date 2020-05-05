@@ -40,3 +40,22 @@ void DotSyntax::endVisit(FunctionCall const& _functionCall)
 			);
 	}
 }
+
+void NowKeyword::endVisit(Identifier const& _identifier)
+{
+	IdentifierAnnotation& annotation = _identifier.annotation();
+
+	if (MagicVariableDeclaration const* magicVar
+		= dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
+	{
+		if (magicVar->type()->category() == Type::Category::Integer)
+		{
+			solAssert(_identifier.name() == "now", "");
+			m_changes.emplace_back(
+				UpgradeChange::Level::Safe,
+				_identifier.location(),
+				SourceTransform::nowUpdate(_identifier.location())
+			);
+		}
+	}
+}

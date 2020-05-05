@@ -58,7 +58,8 @@ private:
 		AbstractContract,
 		OverridingFunction,
 		VirtualFunction,
-		DotSyntax
+		DotSyntax,
+		NowKeyword
 	};
 
 	/// Upgrade suite that hosts all available modules.
@@ -84,6 +85,8 @@ private:
 			/// Solidity 0.7.0
 			if (isActivated(Module::DotSyntax))
 				DotSyntax{m_changes}.analyze(_sourceUnit);
+			if (isActivated(Module::NowKeyword))
+				NowKeyword{m_changes}.analyze(_sourceUnit);
 		}
 
 		void activateModule(Module _module) { m_modules.insert(_module); }
@@ -103,7 +106,8 @@ private:
 			Module::AbstractContract,
 			Module::OverridingFunction,
 			Module::VirtualFunction,
-			Module::DotSyntax
+			Module::DotSyntax,
+			Module::NowKeyword
 		};
 	};
 
