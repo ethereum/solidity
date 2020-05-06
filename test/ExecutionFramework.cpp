@@ -49,9 +49,7 @@ ExecutionFramework::ExecutionFramework(langutil::EVMVersion _evmVersion):
 	m_showMessages(solidity::test::CommonOptions::get().showMessages),
 	m_evmHost(make_shared<EVMHost>(m_evmVersion))
 {
-	if (solidity::test::CommonOptions::get().optimizeYul)
-		m_optimiserSettings = solidity::frontend::OptimiserSettings::full();
-	else if (solidity::test::CommonOptions::get().optimize)
+	if (solidity::test::CommonOptions::get().optimize)
 		m_optimiserSettings = solidity::frontend::OptimiserSettings::standard();
 
 	reset();
