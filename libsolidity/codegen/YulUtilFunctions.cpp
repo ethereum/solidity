@@ -2245,7 +2245,6 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 		}
 
 		solAssert(_type.isValueType(), "");
-
 		if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
 			if (funType->kind() == FunctionType::Kind::External)
 				return Whiskers(R"(
@@ -2259,18 +2258,23 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 				("splitFunction", splitExternalFunctionIdFunction())
 				.render();
 
+
 		return Whiskers(R"(
-			function <functionName>(memPtr) -> value {
-				value := <load>(memPtr)
-				<?needsValidation>
+			function <functionName>(ptr) -> value {
+				<?fromCalldata>
+					value := calldataload(ptr)
 					<validate>(value)
-				</needsValidation>
+				<!fromCalldata>
+					value := <cleanup>(mload(ptr))
+				</fromCalldata>
 			}
 		)")
 		("functionName", functionName)
-		("load", _fromCalldata ? "calldataload" : "mload")
-		("needsValidation", _fromCalldata)
-		("validate", _fromCalldata ? validatorFunction(_type) : "")
+		("fromCalldata", _fromCalldata)
+		("validate", validatorFunction(_type))
+		// Byte array elements generally need cleanup.
+		// Other types are cleaned as well to account for dirty memory e.g. due to inline assembly.
+		("cleanup", cleanupFunction(_type))
 		.render();
 	});
 }

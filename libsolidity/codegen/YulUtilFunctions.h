@@ -204,7 +204,7 @@ public:
 	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
 	std::string readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes);
 
-	/// @returns a function that reads a value type from memory.
+	/// @returns a function that reads a value type from memory. Performs cleanup.
 	/// signature: (addr) -> value
 	std::string readFromMemory(Type const& _type);
 	/// @returns a function that reads a value type from calldata.
