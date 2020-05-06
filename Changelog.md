@@ -10,7 +10,7 @@ Compiler Features:
 
 Bugfixes:
  * ABI: Skip ``private`` or ``internal`` constructors.
-
+ * Type Checker: Disallow accessing ``runtimeCode`` for contract types that contain immutable state variables.
 
 
 
