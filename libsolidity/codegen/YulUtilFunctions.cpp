@@ -1125,13 +1125,12 @@ string YulUtilFunctions::mappingIndexAccessFunction(MappingType const& _mappingT
 	return m_functionCollector.createFunction(functionName, [&]() {
 		if (_mappingType.keyType()->isDynamicallySized())
 			return Whiskers(R"(
-				function <functionName>(slot <comma> <key>) -> dataSlot {
-					dataSlot := <hash>(slot <comma> <key>)
+				function <functionName>(slot <?+key>,</+key> <key>) -> dataSlot {
+					dataSlot := <hash>(<key> <?+key>,</+key> slot)
 				}
 			)")
 			("functionName", functionName)
 			("key", _keyType.sizeOnStack() > 0 ? "key" : "")
-			("comma", _keyType.sizeOnStack() > 0 ? "," : "")
 			("hash", packedHashFunction(
 				{&_keyType, TypeProvider::uint256()},
 				{_mappingType.keyType(), TypeProvider::uint256()}

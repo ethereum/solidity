@@ -559,8 +559,8 @@ void CompilerUtils::abiEncodeV2(
 
 	string encoderName =
 		_padToWordBoundaries ?
-		m_context.abiFunctions().tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes) :
-		m_context.abiFunctions().tupleEncoderPacked(_givenTypes, _targetTypes);
+		m_context.abiFunctions().tupleEncoderReversed(_givenTypes, _targetTypes, _encodeAsLibraryTypes) :
+		m_context.abiFunctions().tupleEncoderPackedReversed(_givenTypes, _targetTypes);
 	m_context.callYulFunction(encoderName, sizeOnStack(_givenTypes) + 1, 1);
 }
 
