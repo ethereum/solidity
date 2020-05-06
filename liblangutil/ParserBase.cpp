@@ -145,12 +145,12 @@ void ParserBase::decreaseRecursionDepth()
 
 void ParserBase::parserWarning(string const& _description)
 {
-	m_errorReporter.warning(currentLocation(), _description);
+	m_errorReporter.warning(6635_error, currentLocation(), _description);
 }
 
 void ParserBase::parserError(SourceLocation const& _location, string const& _description)
 {
-	m_errorReporter.parserError(_location, _description);
+	m_errorReporter.parserError(2314_error, _location, _description);
 }
 
 void ParserBase::parserError(string const& _description)
@@ -165,5 +165,5 @@ void ParserBase::fatalParserError(string const& _description)
 
 void ParserBase::fatalParserError(SourceLocation const& _location, string const& _description)
 {
-	m_errorReporter.fatalParserError(_location, _description);
+	m_errorReporter.fatalParserError(1957_error, _location, _description);
 }

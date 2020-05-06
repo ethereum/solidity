@@ -33,6 +33,17 @@
 namespace solidity::langutil
 {
 
+/**
+ * Unique identifiers are used to tag and track individual error cases.
+ * They are passed as the first parameter of error reporting functions.
+ * Suffix _error helps to find them in the sources.
+ * The struct ErrorId prevents incidental calls like typeError(3141) instead of typeError(3141_error).
+ * To create a new ID, one can add 0000_error and then run "python ./scripts/correct_error_ids.py"
+ * from the root of the repo.
+ */
+struct ErrorId { unsigned long long error = 0; };
+ErrorId operator"" _error(unsigned long long error);
+
 class ErrorReporter
 {
 public:
@@ -50,64 +61,68 @@ public:
 		m_errorList += _errorList;
 	}
 
-	void warning(std::string const& _description);
+	void warning(ErrorId _error, std::string const& _description);
 
-	void warning(SourceLocation const& _location, std::string const& _description);
+	void warning(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	void warning(
+		ErrorId _error,
 		SourceLocation const& _location,
 		std::string const& _description,
 		SecondarySourceLocation const& _secondaryLocation
 	);
 
 	void error(
+		ErrorId _error,
 		Error::Type _type,
 		SourceLocation const& _location,
 		std::string const& _description
 	);
 
 	void declarationError(
+		ErrorId _error,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation,
 		std::string const& _description
 	);
 
-	void declarationError(SourceLocation const& _location, std::string const& _description);
+	void declarationError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
-	void fatalDeclarationError(SourceLocation const& _location, std::string const& _description);
+	void fatalDeclarationError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
-	void parserError(SourceLocation const& _location, std::string const& _description);
+	void parserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
-	void fatalParserError(SourceLocation const& _location, std::string const& _description);
+	void fatalParserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
-	void syntaxError(SourceLocation const& _location, std::string const& _description);
+	void syntaxError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	void typeError(
+		ErrorId _error,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation = SecondarySourceLocation(),
 		std::string const& _description = std::string()
 	);
 
-	void typeError(SourceLocation const& _location, std::string const& _description);
+	void typeError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	template <typename... Strings>
-	void typeErrorConcatenateDescriptions(SourceLocation const& _location, Strings const&... _descriptions)
+	void typeErrorConcatenateDescriptions(ErrorId _error, SourceLocation const& _location, Strings const&... _descriptions)
 	{
-		std::initializer_list<std::string> const descs = {_descriptions...};
+		std::initializer_list<std::string> const descs = { _descriptions... };
 		solAssert(descs.size() > 0, "Need error descriptions!");
 
 		auto filterEmpty = boost::adaptors::filtered([](std::string const& _s) { return !_s.empty(); });
 
 		std::string errorStr = util::joinHumanReadable(descs | filterEmpty, " ");
 
-		error(Error::Type::TypeError, _location, errorStr);
+		error(_error, Error::Type::TypeError, _location, errorStr);
 	}
 
-	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
-	void fatalTypeError(SourceLocation const& _location, SecondarySourceLocation const& _secondLocation, std::string const& _description);
+	void fatalTypeError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void fatalTypeError(ErrorId _error, SourceLocation const& _location, SecondarySourceLocation const& _secondLocation, std::string const& _description);
 
-	void docstringParsingError(std::string const& _description);
-	void docstringParsingError(SourceLocation const& _location, std::string const& _description);
+	void docstringParsingError(ErrorId _error, std::string const& _description);
+	void docstringParsingError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	ErrorList const& errors() const;
 
@@ -124,18 +139,21 @@ public:
 
 private:
 	void error(
+		ErrorId _error,
 		Error::Type _type,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation,
 		std::string const& _description = std::string());
 
 	void fatalError(
+		ErrorId _error,
 		Error::Type _type,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation,
 		std::string const& _description = std::string());
 
 	void fatalError(
+		ErrorId _error,
 		Error::Type _type,
 		SourceLocation const& _location = SourceLocation(),
 		std::string const& _description = std::string());

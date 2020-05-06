@@ -44,6 +44,7 @@ BMC::BMC(
 	if (_enabledSolvers.some())
 		if (!_smtlib2Responses.empty())
 			m_errorReporter.warning(
+				5622_error,
 				"SMT-LIB2 query responses were given in the auxiliary input, "
 				"but this Solidity binary uses an SMT solver (Z3/CVC4) directly."
 				"These responses will be ignored."
@@ -74,6 +75,7 @@ void BMC::analyze(SourceUnit const& _source, set<Expression const*> _safeAsserti
 		{
 			m_noSolverWarning = true;
 			m_outerErrorReporter.warning(
+				8084_error,
 				SourceLocation(),
 				"BMC analysis was not possible since no integrated SMT solver (Z3 or CVC4) was found."
 			);
@@ -467,6 +469,7 @@ void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 		inlineFunctionCall(_funCall);
 	else if (funType.kind() == FunctionType::Kind::Internal)
 		m_errorReporter.warning(
+			5729_error,
 			_funCall.location(),
 			"Assertion checker does not yet implement this type of function call."
 		);
@@ -760,6 +763,7 @@ void BMC::checkCondition(
 			for (auto const& eval: sortedModel)
 				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
 			m_errorReporter.warning(
+				4334_error,
 				_location,
 				message.str(),
 				SecondarySourceLocation().append(modelMessage.str(), SourceLocation{})
@@ -770,20 +774,20 @@ void BMC::checkCondition(
 		else
 		{
 			message << ".";
-			m_errorReporter.warning(_location, message.str(), secondaryLocation);
+			m_errorReporter.warning(6084_error, _location, message.str(), secondaryLocation);
 		}
 		break;
 	}
 	case smt::CheckResult::UNSATISFIABLE:
 		break;
 	case smt::CheckResult::UNKNOWN:
-		m_errorReporter.warning(_location, _description + " might happen here.", secondaryLocation);
+		m_errorReporter.warning(5225_error, _location, _description + " might happen here.", secondaryLocation);
 		break;
 	case smt::CheckResult::CONFLICTING:
-		m_errorReporter.warning(_location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
+		m_errorReporter.warning(1584_error, _location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;
 	case smt::CheckResult::ERROR:
-		m_errorReporter.warning(_location, "Error trying to invoke SMT solver.");
+		m_errorReporter.warning(1823_error, _location, "Error trying to invoke SMT solver.");
 		break;
 	}
 
@@ -813,9 +817,9 @@ void BMC::checkBooleanNotConstant(
 	m_interface->pop();
 
 	if (positiveResult == smt::CheckResult::ERROR || negatedResult == smt::CheckResult::ERROR)
-		m_errorReporter.warning(_condition.location(), "Error trying to invoke SMT solver.");
+		m_errorReporter.warning(8592_error, _condition.location(), "Error trying to invoke SMT solver.");
 	else if (positiveResult == smt::CheckResult::CONFLICTING || negatedResult == smt::CheckResult::CONFLICTING)
-		m_errorReporter.warning(_condition.location(), "At least two SMT solvers provided conflicting answers. Results might not be sound.");
+		m_errorReporter.warning(3356_error, _condition.location(), "At least two SMT solvers provided conflicting answers. Results might not be sound.");
 	else if (positiveResult == smt::CheckResult::SATISFIABLE && negatedResult == smt::CheckResult::SATISFIABLE)
 	{
 		// everything fine.
@@ -825,7 +829,7 @@ void BMC::checkBooleanNotConstant(
 		// can't do anything.
 	}
 	else if (positiveResult == smt::CheckResult::UNSATISFIABLE && negatedResult == smt::CheckResult::UNSATISFIABLE)
-		m_errorReporter.warning(_condition.location(), "Condition unreachable.", SMTEncoder::callStackMessage(_callStack));
+		m_errorReporter.warning(2512_error, _condition.location(), "Condition unreachable.", SMTEncoder::callStackMessage(_callStack));
 	else
 	{
 		string value;
@@ -841,6 +845,7 @@ void BMC::checkBooleanNotConstant(
 			value = "false";
 		}
 		m_errorReporter.warning(
+			6838_error,
 			_condition.location(),
 			boost::algorithm::replace_all_copy(_description, "$VALUE", value),
 			SMTEncoder::callStackMessage(_callStack)
@@ -862,7 +867,7 @@ BMC::checkSatisfiableAndGenerateModel(vector<smt::Expression> const& _expression
 		string description("Error querying SMT solver");
 		if (_e.comment())
 			description += ": " + *_e.comment();
-		m_errorReporter.warning(description);
+		m_errorReporter.warning(8140_error, description);
 		result = smt::CheckResult::ERROR;
 	}
 

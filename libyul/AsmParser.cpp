@@ -151,7 +151,7 @@ Statement Parser::parseStatement()
 		{
 			Statement stmt{createWithLocation<Leave>()};
 			if (!m_insideFunction)
-				m_errorReporter.syntaxError(currentLocation(), "Keyword \"leave\" can only be used inside a function.");
+				m_errorReporter.syntaxError(8149_error, currentLocation(), "Keyword \"leave\" can only be used inside a function.");
 			m_scanner->next();
 			return stmt;
 		}
@@ -417,6 +417,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 
 	if (m_currentForLoopComponent == ForLoopComponent::ForLoopPre)
 		m_errorReporter.syntaxError(
+			3441_error,
 			currentLocation(),
 			"Functions cannot be defined inside a for-loop init block."
 		);
@@ -534,13 +535,13 @@ void Parser::checkBreakContinuePosition(string const& _which)
 	switch (m_currentForLoopComponent)
 	{
 	case ForLoopComponent::None:
-		m_errorReporter.syntaxError(currentLocation(), "Keyword \"" + _which + "\" needs to be inside a for-loop body.");
+		m_errorReporter.syntaxError(2592_error, currentLocation(), "Keyword \"" + _which + "\" needs to be inside a for-loop body.");
 		break;
 	case ForLoopComponent::ForLoopPre:
-		m_errorReporter.syntaxError(currentLocation(), "Keyword \"" + _which + "\" in for-loop init block is not allowed.");
+		m_errorReporter.syntaxError(9615_error, currentLocation(), "Keyword \"" + _which + "\" in for-loop init block is not allowed.");
 		break;
 	case ForLoopComponent::ForLoopPost:
-		m_errorReporter.syntaxError(currentLocation(), "Keyword \"" + _which + "\" in for-loop post block is not allowed.");
+		m_errorReporter.syntaxError(2461_error, currentLocation(), "Keyword \"" + _which + "\" in for-loop post block is not allowed.");
 		break;
 	case ForLoopComponent::ForLoopBody:
 		break;

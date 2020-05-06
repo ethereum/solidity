@@ -78,6 +78,7 @@ void ContractLevelChecker::checkDuplicateFunctions(ContractDefinition const& _co
 		{
 			if (constructor)
 				m_errorReporter.declarationError(
+					7997_error,
 					function->location(),
 					SecondarySourceLocation().append("Another declaration is here:", constructor->location()),
 					"More than one constructor defined."
@@ -88,6 +89,7 @@ void ContractLevelChecker::checkDuplicateFunctions(ContractDefinition const& _co
 		{
 			if (fallback)
 				m_errorReporter.declarationError(
+					7301_error,
 					function->location(),
 					SecondarySourceLocation().append("Another declaration is here:", fallback->location()),
 					"Only one fallback function is allowed."
@@ -98,6 +100,7 @@ void ContractLevelChecker::checkDuplicateFunctions(ContractDefinition const& _co
 		{
 			if (receive)
 				m_errorReporter.declarationError(
+					4046_error,
 					function->location(),
 					SecondarySourceLocation().append("Another declaration is here:", receive->location()),
 					"Only one receive function is allowed."
@@ -147,6 +150,7 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 				ssl.limitSize(_message);
 
 				m_errorReporter.declarationError(
+					1686_error,
 					overloads[i]->location(),
 					ssl,
 					_message
@@ -197,9 +201,9 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 	if (_contract.abstract())
 	{
 		if (_contract.contractKind() == ContractKind::Interface)
-			m_errorReporter.typeError(_contract.location(), "Interfaces do not need the \"abstract\" keyword, they are abstract implicitly.");
+			m_errorReporter.typeError(9348_error, _contract.location(), "Interfaces do not need the \"abstract\" keyword, they are abstract implicitly.");
 		else if (_contract.contractKind() == ContractKind::Library)
-			m_errorReporter.typeError(_contract.location(), "Libraries cannot be abstract.");
+			m_errorReporter.typeError(9571_error, _contract.location(), "Libraries cannot be abstract.");
 		else
 			solAssert(_contract.contractKind() == ContractKind::Contract, "");
 	}
@@ -215,7 +219,8 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 		SecondarySourceLocation ssl;
 		for (auto declaration: _contract.annotation().unimplementedDeclarations)
 			ssl.append("Missing implementation: ", declaration->location());
-		m_errorReporter.typeError(_contract.location(), ssl,
+		m_errorReporter.typeError(
+			3656_error,_contract.location(), ssl,
 			"Contract \"" + _contract.annotation().canonicalName
 			+ "\" should be marked as abstract.");
 
@@ -243,6 +248,7 @@ void ContractLevelChecker::checkBaseConstructorArguments(ContractDefinition cons
 					}
 					else
 						m_errorReporter.declarationError(
+							1563_error,
 							modifier->location(),
 							"Modifier-style base constructor call without arguments."
 						);
@@ -304,6 +310,7 @@ void ContractLevelChecker::annotateBaseConstructorArguments(
 		}
 
 		m_errorReporter.declarationError(
+			3364_error,
 			*mainLocation,
 			ssl,
 			"Base constructor arguments given twice."
@@ -343,6 +350,7 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 			for (size_t j = i + 1; j < it.second.size(); ++j)
 				if (!it.second[i].second->hasEqualParameterTypes(*it.second[j].second))
 					m_errorReporter.typeError(
+						9914_error,
 						it.second[j].first->location(),
 						"Function overload clash during conversion to external types for arguments."
 					);
@@ -356,6 +364,7 @@ void ContractLevelChecker::checkHashCollisions(ContractDefinition const& _contra
 		util::FixedHash<4> const& hash = it.first;
 		if (hashes.count(hash))
 			m_errorReporter.typeError(
+				1860_error,
 				_contract.location(),
 				string("Function signature hash collision for ") + it.second->externalSignature()
 			);
@@ -369,11 +378,11 @@ void ContractLevelChecker::checkLibraryRequirements(ContractDefinition const& _c
 		return;
 
 	if (!_contract.baseContracts().empty())
-		m_errorReporter.typeError(_contract.location(), "Library is not allowed to inherit.");
+		m_errorReporter.typeError(9469_error, _contract.location(), "Library is not allowed to inherit.");
 
 	for (auto const& var: _contract.stateVariables())
 		if (!var->isConstant())
-			m_errorReporter.typeError(var->location(), "Library cannot have non-constant state variables");
+			m_errorReporter.typeError(9957_error, var->location(), "Library cannot have non-constant state variables");
 }
 
 void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _contract)
@@ -412,6 +421,7 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 
 	if (!errors.infos.empty())
 		m_errorReporter.fatalTypeError(
+			6594_error,
 			_contract.location(),
 			errors,
 			std::string("Contract \"") +
@@ -428,6 +438,7 @@ void ContractLevelChecker::checkPayableFallbackWithoutReceive(ContractDefinition
 	if (auto const* fallback = _contract.fallbackFunction())
 		if (fallback->isPayable() && !_contract.interfaceFunctionList().empty() && !_contract.receiveFunction())
 			m_errorReporter.warning(
+				3628_error,
 				_contract.location(),
 				"This contract has a payable fallback function, but no receive ether function. Consider adding a receive ether function.",
 				SecondarySourceLocation{}.append("The payable fallback function is defined here.", fallback->location())

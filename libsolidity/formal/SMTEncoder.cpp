@@ -266,6 +266,7 @@ void SMTEncoder::endVisit(FunctionDefinition const&)
 bool SMTEncoder::visit(InlineAssembly const& _inlineAsm)
 {
 	m_errorReporter.warning(
+		7737_error,
 		_inlineAsm.location(),
 		"Assertion checker does not support inline assembly."
 	);
@@ -325,6 +326,7 @@ void SMTEncoder::endVisit(VariableDeclarationStatement const& _varDecl)
 	}
 	else
 		m_errorReporter.warning(
+			7186_error,
 			_varDecl.location(),
 			"Assertion checker does not yet implement such variable declarations."
 		);
@@ -350,6 +352,7 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 			m_context.newValue(*varDecl);
 
 		m_errorReporter.warning(
+			9149_error,
 			_assignment.location(),
 			"Assertion checker does not yet implement this assignment operator."
 		);
@@ -409,6 +412,7 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 
 	if (_tuple.isInlineArray())
 		m_errorReporter.warning(
+			2177_error,
 			_tuple.location(),
 			"Assertion checker does not yet implement inline arrays."
 		);
@@ -493,6 +497,7 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 		}
 		else
 			m_errorReporter.warning(
+				1950_error,
 				_op.location(),
 				"Assertion checker does not yet implement such increments / decrements."
 			);
@@ -522,6 +527,7 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 				arrayIndexAssignment(_op.subExpression(), symbVar->currentValue());
 			else
 				m_errorReporter.warning(
+					2683_error,
 					_op.location(),
 					"Assertion checker does not yet implement \"delete\" for this expression."
 				);
@@ -530,6 +536,7 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	}
 	default:
 		m_errorReporter.warning(
+			3682_error,
 			_op.location(),
 			"Assertion checker does not yet implement this operator."
 		);
@@ -568,6 +575,7 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 		compareOperation(_op);
 	else
 		m_errorReporter.warning(
+			3876_error,
 			_op.location(),
 			"Assertion checker does not yet implement this operator."
 		);
@@ -580,6 +588,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	if (_funCall.annotation().kind == FunctionCallKind::StructConstructorCall)
 	{
 		m_errorReporter.warning(
+			4639_error,
 			_funCall.location(),
 			"Assertion checker does not yet implement this expression."
 		);
@@ -639,6 +648,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	}
 	default:
 		m_errorReporter.warning(
+			4588_error,
 			_funCall.location(),
 			"Assertion checker does not yet implement this type of function call."
 		);
@@ -771,6 +781,7 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 		}
 
 		m_errorReporter.warning(
+			5084_error,
 			_funCall.location(),
 			"Type conversion is not yet fully supported and might yield false positives."
 		);
@@ -800,6 +811,7 @@ void SMTEncoder::endVisit(Literal const& _literal)
 	else
 	{
 		m_errorReporter.warning(
+			7885_error,
 			_literal.location(),
 			"Assertion checker does not yet support the type of this literal (" +
 			_literal.annotation().type->toString() +
@@ -850,6 +862,7 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 			accessedName = identifier->name();
 		else
 			m_errorReporter.warning(
+				9551_error,
 				_memberAccess.location(),
 				"Assertion checker does not yet support this expression."
 			);
@@ -879,6 +892,7 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 	}
 	else
 		m_errorReporter.warning(
+			7650_error,
 			_memberAccess.location(),
 			"Assertion checker does not yet support this expression."
 		);
@@ -903,6 +917,7 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 		if (varDecl->type()->category() == Type::Category::FixedBytes)
 		{
 			m_errorReporter.warning(
+				7989_error,
 				_indexAccess.location(),
 				"Assertion checker does not yet support index accessing fixed bytes."
 			);
@@ -917,6 +932,7 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 	else
 	{
 		m_errorReporter.warning(
+			9118_error,
 			_indexAccess.location(),
 			"Assertion checker does not yet implement this expression."
 		);
@@ -940,6 +956,7 @@ void SMTEncoder::endVisit(IndexRangeAccess const& _indexRangeAccess)
 {
 	createExpr(_indexRangeAccess);
 	m_errorReporter.warning(
+		2923_error,
 		_indexRangeAccess.location(),
 		"Assertion checker does not yet implement this expression."
 	);
@@ -1019,6 +1036,7 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 		else
 		{
 			m_errorReporter.warning(
+				9056_error,
 				_expr.location(),
 				"Assertion checker does not yet implement this expression."
 			);
@@ -1034,6 +1052,7 @@ void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _ex
 		bool abstract = m_context.createGlobalSymbol(_name, _expr);
 		if (abstract)
 			m_errorReporter.warning(
+				1695_error,
 				_expr.location(),
 				"Assertion checker does not yet support this global variable."
 			);
@@ -1087,6 +1106,7 @@ void SMTEncoder::arithmeticOperation(BinaryOperation const& _op)
 		}
 		default:
 			m_errorReporter.warning(
+				5188_error,
 				_op.location(),
 				"Assertion checker does not yet implement this operator."
 			);
@@ -1094,6 +1114,7 @@ void SMTEncoder::arithmeticOperation(BinaryOperation const& _op)
 	}
 	else
 		m_errorReporter.warning(
+			9011_error,
 			_op.location(),
 			"Assertion checker does not yet implement this operator for type " + type->richIdentifier() + "."
 		);
@@ -1185,6 +1206,7 @@ void SMTEncoder::compareOperation(BinaryOperation const& _op)
 	}
 	else
 		m_errorReporter.warning(
+			7229_error,
 			_op.location(),
 			"Assertion checker does not yet implement the type " + _op.annotation().commonType->toString() + " for comparisons"
 		);
@@ -1213,6 +1235,7 @@ void SMTEncoder::booleanOperation(BinaryOperation const& _op)
 	}
 	else
 		m_errorReporter.warning(
+			3263_error,
 			_op.location(),
 			"Assertion checker does not yet implement the type " + _op.annotation().commonType->toString() + " for boolean operations"
 		);
@@ -1245,6 +1268,7 @@ void SMTEncoder::assignment(
 			m_context.newValue(*varDecl);
 
 		m_errorReporter.warning(
+			6191_error,
 			_location,
 			"Assertion checker does not yet implement type " + _type->toString()
 		);
@@ -1272,6 +1296,7 @@ void SMTEncoder::assignment(
 	}
 	else
 		m_errorReporter.warning(
+			8182_error,
 			_location,
 			"Assertion checker does not yet implement such assignments."
 		);
@@ -1482,6 +1507,7 @@ bool SMTEncoder::createVariable(VariableDeclaration const& _varDecl)
 	if (abstract)
 	{
 		m_errorReporter.warning(
+			8115_error,
 			_varDecl.location(),
 			"Assertion checker does not yet support the type of this variable."
 		);
@@ -1494,7 +1520,7 @@ smt::Expression SMTEncoder::expr(Expression const& _e, TypePointer _targetType)
 {
 	if (!m_context.knownExpression(_e))
 	{
-		m_errorReporter.warning(_e.location(), "Internal error: Expression undefined for SMT solver." );
+		m_errorReporter.warning(6031_error, _e.location(), "Internal error: Expression undefined for SMT solver." );
 		createExpr(_e);
 	}
 
@@ -1506,6 +1532,7 @@ void SMTEncoder::createExpr(Expression const& _e)
 	bool abstract = m_context.createExpression(_e);
 	if (abstract)
 		m_errorReporter.warning(
+			8364_error,
 			_e.location(),
 			"Assertion checker does not yet implement type " + _e.annotation().type->toString()
 		);
