@@ -415,6 +415,7 @@
     },
     "0.4.10": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -433,6 +434,7 @@
     },
     "0.4.11": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -450,6 +452,7 @@
     },
     "0.4.12": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -466,6 +469,7 @@
     },
     "0.4.13": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -482,6 +486,7 @@
     },
     "0.4.14": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -497,6 +502,7 @@
     },
     "0.4.15": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -511,6 +517,7 @@
     },
     "0.4.16": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -527,6 +534,7 @@
     },
     "0.4.17": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -544,6 +552,7 @@
     },
     "0.4.18": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -560,6 +569,7 @@
     },
     "0.4.19": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -596,6 +606,7 @@
     },
     "0.4.20": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -613,6 +624,7 @@
     },
     "0.4.21": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -630,6 +642,7 @@
     },
     "0.4.22": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -647,6 +660,7 @@
     },
     "0.4.23": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -663,6 +677,7 @@
     },
     "0.4.24": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -679,6 +694,7 @@
     },
     "0.4.25": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -693,6 +709,7 @@
     },
     "0.4.26": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -739,6 +756,7 @@
     },
     "0.4.5": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -758,6 +776,7 @@
     },
     "0.4.6": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -776,6 +795,7 @@
     },
     "0.4.7": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -794,6 +814,7 @@
     },
     "0.4.8": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -812,6 +833,7 @@
     },
     "0.4.9": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -830,6 +852,7 @@
     },
     "0.5.0": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -844,6 +867,7 @@
     },
     "0.5.1": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -858,6 +882,7 @@
     },
     "0.5.10": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -868,6 +893,7 @@
     },
     "0.5.11": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -877,6 +903,7 @@
     },
     "0.5.12": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -886,6 +913,7 @@
     },
     "0.5.13": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -895,6 +923,7 @@
     },
     "0.5.14": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -905,6 +934,7 @@
     },
     "0.5.15": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -914,6 +944,7 @@
     },
     "0.5.16": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden"
@@ -922,6 +953,7 @@
     },
     "0.5.17": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
         ],
@@ -929,6 +961,7 @@
     },
     "0.5.2": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -943,6 +976,7 @@
     },
     "0.5.3": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -957,6 +991,7 @@
     },
     "0.5.4": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -971,6 +1006,7 @@
     },
     "0.5.5": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -987,6 +1023,7 @@
     },
     "0.5.6": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -1003,6 +1040,7 @@
     },
     "0.5.7": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -1017,6 +1055,7 @@
     },
     "0.5.8": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -1030,6 +1069,7 @@
     },
     "0.5.9": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -1042,6 +1082,7 @@
     },
     "0.6.0": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "YulOptimizerRedundantAssignmentBreakContinue"
@@ -1050,6 +1091,7 @@
     },
     "0.6.1": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
         ],
@@ -1057,6 +1099,7 @@
     },
     "0.6.2": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
         ],
@@ -1064,6 +1107,7 @@
     },
     "0.6.3": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
         ],
@@ -1071,6 +1115,7 @@
     },
     "0.6.4": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
         ],
@@ -1078,16 +1123,21 @@
     },
     "0.6.5": {
         "bugs": [
+            "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents"
         ],
         "released": "2020-04-06"
     },
     "0.6.6": {
-        "bugs": [],
+        "bugs": [
+            "ImplicitConstructorCallvalueCheck"
+        ],
         "released": "2020-04-09"
     },
     "0.6.7": {
-        "bugs": [],
+        "bugs": [
+            "ImplicitConstructorCallvalueCheck"
+        ],
         "released": "2020-05-04"
     }
 }

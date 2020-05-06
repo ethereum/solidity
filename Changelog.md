@@ -1,5 +1,9 @@
 ### 0.6.8 (unreleased)
 
+Important Bugfixes:
+ * Add missing callvalue check to the creation code of a contract that does not define a constructor but has a base that does define a constructor.
+
+
 Language Features:
 
 
