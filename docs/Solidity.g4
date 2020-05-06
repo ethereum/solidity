@@ -173,7 +173,7 @@ tryStatement : 'try' expression returnParameters? block catchClause+ ;
 catchClause : 'catch' ( identifier? parameterList )? block ;
 
 catchClauseNEW : 'catch' errorTypeName parameterList block ;
-errorTypeName : identifier
+errorTypeName : identifier ;
 
 whileStatement
   : 'while' '(' expression ')' statement ;
