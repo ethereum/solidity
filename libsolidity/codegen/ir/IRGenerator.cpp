@@ -38,9 +38,6 @@
 
 #include <liblangutil/SourceReferenceFormatter.h>
 
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/range/adaptor/reversed.hpp>
-
 #include <sstream>
 
 using namespace std;

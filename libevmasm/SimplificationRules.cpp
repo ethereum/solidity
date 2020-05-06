@@ -29,9 +29,6 @@
 #include <libevmasm/RuleList.h>
 #include <libsolutil/Assertions.h>
 
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/noncopyable.hpp>
-
 #include <utility>
 #include <functional>
 

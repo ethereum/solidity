@@ -31,8 +31,6 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
 
-#include <boost/range/adaptor/reversed.hpp>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;

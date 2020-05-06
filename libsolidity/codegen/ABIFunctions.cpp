@@ -28,7 +28,6 @@
 #include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
 using namespace solidity;

@@ -29,9 +29,6 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/adaptor/transformed.hpp>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
