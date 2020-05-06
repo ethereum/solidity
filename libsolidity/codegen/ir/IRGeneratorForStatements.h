@@ -54,6 +54,10 @@ public:
 	/// Calculates expression's value and returns variable where it was stored
 	IRVariable evaluateExpression(Expression const& _expression, Type const& _to);
 
+	/// @returns the name of a function that computes the value of the given constant
+	/// and also generates the function.
+	std::string constantValueFunction(VariableDeclaration const& _constant);
+
 	void endVisit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Conditional const& _conditional) override;
 	bool visit(Assignment const& _assignment) override;

@@ -202,11 +202,11 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 
 	Type const* type = _varDecl.annotation().type;
 
-	solAssert(!_varDecl.isConstant(), "");
 	solAssert(_varDecl.isStateVariable(), "");
 
 	if (auto const* mappingType = dynamic_cast<MappingType const*>(type))
 		return m_context.functionCollector().createFunction(functionName, [&]() {
+			solAssert(!_varDecl.isConstant(), "");
 			pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
 			solAssert(slot_offset.second == 0, "");
 			FunctionType funType(_varDecl);
@@ -268,6 +268,16 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 				("id", to_string(_varDecl.id()))
 				.render();
 			}
+			else if (_varDecl.isConstant())
+				return Whiskers(R"(
+					function <functionName>() -> <ret> {
+						<ret> := <constantValueFunction>()
+					}
+				)")
+				("functionName", functionName)
+				("constantValueFunction", IRGeneratorForStatements(m_context, m_utils).constantValueFunction(_varDecl))
+				("ret", suffixedVariableNameList("ret_", 0, _varDecl.type()->sizeOnStack()))
+				.render();
 			else
 			{
 				pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
