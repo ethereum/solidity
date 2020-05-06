@@ -147,6 +147,11 @@ private:
 		std::string const& _right
 	);
 
+	/// @returns code to perform the given shift operation.
+	/// The operation itself will be performed in the type of the value,
+	/// while the amount to shift can have its own type.
+	std::string shiftOperation(langutil::Token _op, IRVariable const& _value, IRVariable const& _shiftAmount);
+
 	/// Assigns the value of @a _value to the lvalue @a _lvalue.
 	void writeToLValue(IRLValue const& _lvalue, IRVariable const& _value);
 	/// @returns a fresh IR variable containing the value of the lvalue @a _lvalue.

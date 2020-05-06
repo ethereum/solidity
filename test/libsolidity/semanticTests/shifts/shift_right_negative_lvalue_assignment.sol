@@ -5,6 +5,8 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // f(int256,int256): -4266, 0 -> -4266
 // f(int256,int256): -4266, 1 -> -2133
