@@ -36,11 +36,11 @@ errorDefinition
 
 ## Semantic
 
-Errors can be instanciated whereever a variable of a type can be declared.
-Errors can NOT be instanciated like any arbitrary type, but instead only be used
+Errors can be instantiated wherever a variable of a type can be declared.
+Errors can NOT be instantiated like any arbitrary type, but instead only be used
 within `require` and `revert`.
 
-Error types are ALWAYS publically visible, i.e. they can not be made private.
+Error types are ALWAYS publicly visible, i.e. they can not be made private.
 
 ## Catching Errors
 
