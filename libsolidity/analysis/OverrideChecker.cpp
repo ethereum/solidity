@@ -27,7 +27,6 @@
 #include <liblangutil/ErrorReporter.h>
 #include <libsolutil/Visitor.h>
 
-#include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
 

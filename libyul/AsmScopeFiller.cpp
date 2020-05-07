@@ -29,8 +29,6 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/adaptor/reversed.hpp>
-
 #include <memory>
 #include <functional>
 

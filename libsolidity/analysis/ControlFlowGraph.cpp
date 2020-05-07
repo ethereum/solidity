@@ -18,7 +18,6 @@
 #include <libsolidity/analysis/ControlFlowGraph.h>
 
 #include <libsolidity/analysis/ControlFlowBuilder.h>
-#include <boost/range/adaptor/reversed.hpp>
 #include <algorithm>
 
 using namespace std;

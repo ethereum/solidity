@@ -26,7 +26,6 @@
 #include <libsolidity/analysis/TypeChecker.h>
 #include <liblangutil/ErrorReporter.h>
 #include <boost/range/adaptor/reversed.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 
 using namespace std;

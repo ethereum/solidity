@@ -42,7 +42,6 @@
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/Visitor.h>
 
-#include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;

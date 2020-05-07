@@ -36,7 +36,6 @@
 #include <libsolutil/Whiskers.h>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/range/adaptor/reversed.hpp>
 #include <numeric>
 #include <utility>
 
