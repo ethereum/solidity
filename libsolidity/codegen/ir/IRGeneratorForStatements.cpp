@@ -781,6 +781,94 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		break;
 	}
+	case FunctionType::Kind::ABIEncode:
+	case FunctionType::Kind::ABIEncodePacked:
+	case FunctionType::Kind::ABIEncodeWithSelector:
+	case FunctionType::Kind::ABIEncodeWithSignature:
+	{
+		bool const isPacked = functionType->kind() == FunctionType::Kind::ABIEncodePacked;
+		solAssert(functionType->padArguments() != isPacked, "");
+		bool const hasSelectorOrSignature =
+			functionType->kind() == FunctionType::Kind::ABIEncodeWithSelector ||
+			functionType->kind() == FunctionType::Kind::ABIEncodeWithSignature;
+
+		TypePointers argumentTypes;
+		TypePointers targetTypes;
+		vector<string> argumentVars;
+		for (size_t i = 0; i < arguments.size(); ++i)
+		{
+			// ignore selector
+			if (hasSelectorOrSignature && i == 0)
+				continue;
+			argumentTypes.emplace_back(&type(*arguments[i]));
+			targetTypes.emplace_back(type(*arguments[i]).fullEncodingType(false, true, isPacked));
+			argumentVars += IRVariable(*arguments[i]).stackSlots();
+		}
+
+		string selector;
+		if (functionType->kind() == FunctionType::Kind::ABIEncodeWithSignature)
+		{
+			// hash the signature
+			Type const& selectorType = type(*arguments.front());
+			if (auto const* stringType = dynamic_cast<StringLiteralType const*>(&selectorType))
+			{
+				FixedHash<4> hash(keccak256(stringType->value()));
+				selector = formatNumber(u256(FixedHash<4>::Arith(hash)) << (256 - 32));
+			}
+			else
+			{
+				// Used to reset the free memory pointer later.
+				string freeMemoryPre = m_context.newYulVariable();
+				m_code << "let " << freeMemoryPre << " := " << freeMemory() << "\n";
+				IRVariable array = convert(*arguments[0], *TypeProvider::bytesMemory());
+				IRVariable hashVariable(m_context.newYulVariable(), *TypeProvider::fixedBytes(32));
+
+				define(hashVariable) <<
+					"keccak256(" <<
+					m_utils.arrayDataAreaFunction(*TypeProvider::bytesMemory()) <<
+					"(" <<
+					array.commaSeparatedList() <<
+					"), " <<
+					m_utils.arrayLengthFunction(*TypeProvider::bytesMemory()) <<
+					"(" <<
+					array.commaSeparatedList() <<
+					"))\n";
+				IRVariable selectorVariable(m_context.newYulVariable(), *TypeProvider::fixedBytes(4));
+				define(selectorVariable, hashVariable);
+				m_code << "mstore(" << to_string(CompilerUtils::freeMemoryPointer) << ", " << freeMemoryPre << ")\n";
+			}
+		}
+		else if (functionType->kind() == FunctionType::Kind::ABIEncodeWithSelector)
+			selector = convert(*arguments.front(), *TypeProvider::fixedBytes(4)).name();
+
+		Whiskers templ(R"(
+			let <data> := <allocateTemporary>()
+			let <mpos> := add(<data>, 0x20)
+			<?+selector>
+				mstore(<mpos>, <selector>)
+				<mpos> := add(<mpos>, 4)
+			</+selector>
+			let <mend> := <encode>(<mpos><arguments>)
+			mstore(<data>, sub(<mend>, add(<data>, 0x20)))
+			mstore(<freeMemPtr>, <roundUp>(<mend>))
+		)");
+		templ("data", IRVariable(_functionCall).part("mpos").name());
+		templ("allocateTemporary", m_utils.allocationTemporaryMemoryFunction());
+		templ("mpos", m_context.newYulVariable());
+		templ("mend", m_context.newYulVariable());
+		templ("selector", selector);
+		templ("encode",
+			isPacked ?
+			m_context.abiFunctions().tupleEncoderPacked(argumentTypes, targetTypes) :
+			m_context.abiFunctions().tupleEncoder(argumentTypes, targetTypes, false)
+		);
+		templ("arguments", joinHumanReadablePrefixed(argumentVars));
+		templ("freeMemPtr", to_string(CompilerUtils::freeMemoryPointer));
+		templ("roundUp", m_utils.roundUpFunction());
+
+		m_code << templ.render();
+		break;
+	}
 	case FunctionType::Kind::Revert:
 	{
 		solAssert(arguments.size() == parameterTypes.size(), "");
@@ -843,6 +931,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		solAssert(arguments.size() == 1, "");
 
 		ArrayType const* arrayType = TypeProvider::bytesMemory();
+
 		auto array = convert(*arguments[0], *arrayType);
 
 		define(_functionCall) <<
