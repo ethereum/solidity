@@ -56,7 +56,7 @@ public:
 	void appendLabel(LabelID _labelId) override;
 	void appendLabelReference(LabelID _labelId) override;
 	LabelID newLabelId() override;
-	LabelID namedLabel(std::string const& _name) override;
+	LabelID namedLabel(std::string const& _name, size_t _params, size_t _returns, std::optional<size_t> _sourceID) override;
 	void appendLinkerSymbol(std::string const& _name) override;
 	void appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables) override;
 

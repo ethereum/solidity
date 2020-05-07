@@ -189,6 +189,8 @@ static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
 static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
+static string const g_strFunDebug = "function-debug";
+static string const g_strFunDebugRuntime = "function-debug-runtime";
 static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strSwarm = "swarm";
@@ -257,6 +259,8 @@ static set<string> const g_combinedJsonArgs
 	g_strBinary,
 	g_strBinaryRuntime,
 	g_strCompactJSON,
+	g_strFunDebug,
+	g_strFunDebugRuntime,
 	g_strGeneratedSources,
 	g_strGeneratedSourcesRuntime,
 	g_strInterface,
@@ -1672,6 +1676,14 @@ void CommandLineInterface::handleCombinedJSON()
 			auto map = m_compiler->runtimeSourceMapping(contractName);
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
 		}
+		if (requests.count(g_strFunDebug) && m_compiler->compilationSuccessful())
+			contractData[g_strFunDebug] = StandardCompiler::formatFunctionDebugData(
+				m_compiler->object(contractName).functionDebugData
+			);
+		if (requests.count(g_strFunDebugRuntime) && m_compiler->compilationSuccessful())
+			contractData[g_strFunDebugRuntime] = StandardCompiler::formatFunctionDebugData(
+				m_compiler->runtimeObject(contractName).functionDebugData
+			);
 		if (requests.count(g_strSignatureHashes))
 			contractData[g_strSignatureHashes] = m_compiler->methodIdentifiers(contractName);
 		if (requests.count(g_strNatspecDev))

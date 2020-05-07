@@ -578,7 +578,7 @@ AbstractAssembly::LabelID CodeTransform::functionEntryID(YulString _name, Scope:
 	{
 		AbstractAssembly::LabelID id =
 			m_useNamedLabelsForFunctions ?
-			m_assembly.namedLabel(_name.str()) :
+			m_assembly.namedLabel(_name.str(), _function.arguments.size(), _function.returns.size(), {}) :
 			m_assembly.newLabelId();
 		m_context->functionEntryIDs[&_function] = id;
 	}
