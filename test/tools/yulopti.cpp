@@ -61,7 +61,7 @@ class YulOpti
 public:
 	void printErrors()
 	{
-		SourceReferenceFormatter formatter(cout);
+		SourceReferenceFormatter formatter(cerr);
 
 		for (auto const& error: m_errors)
 			formatter.printErrorInformation(*error);
@@ -74,7 +74,7 @@ public:
 		m_ast = yul::Parser(errorReporter, m_dialect).parse(scanner, false);
 		if (!m_ast || !errorReporter.errors().empty())
 		{
-			cout << "Error parsing source." << endl;
+			cerr << "Error parsing source." << endl;
 			printErrors();
 			return false;
 		}
@@ -86,7 +86,7 @@ public:
 		);
 		if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
 		{
-			cout << "Error analyzing source." << endl;
+			cerr << "Error analyzing source." << endl;
 			printErrors();
 			return false;
 		}
@@ -182,7 +182,7 @@ public:
 				break;
 			}
 			default:
-				cout << "Unknown option." << endl;
+				cerr << "Unknown option." << endl;
 			}
 			source = AsmPrinter{m_dialect}(*m_ast);
 		}
