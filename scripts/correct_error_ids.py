@@ -126,9 +126,9 @@ def main():
         f"Please commit current changes first, and review the results when the script finishes.\n\n"
         f"Do you want to start [Y/N]? "
     )
-    while len(answer) == 0 or answer not in "YN":
+    while len(answer) == 0 or answer not in "YNyn":
         answer = input("[Y/N]? ")
-    if answer != "Y":
+    if answer not in "yY":
         return
 
     source_file_names = find_source_files(cwd)
