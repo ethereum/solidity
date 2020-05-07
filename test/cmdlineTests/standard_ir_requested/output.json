@@ -65,7 +65,7 @@ object \"C_6\" {
                 mstore(64, newFreePtr)
             }
 
-            function fun_f_5()  {
+            function fun_f_5() {
 
             }
 

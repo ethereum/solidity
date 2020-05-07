@@ -169,24 +169,24 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 	string functionName = m_context.functionName(_function);
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		Whiskers t(R"(
-			function <functionName>(<params>) <returns> {
+			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
 				<initReturnVariables>
 				<body>
 			}
 		)");
 		t("functionName", functionName);
-		string params;
+		vector<string> params;
 		for (auto const& varDecl: _function.parameters())
-			params += (params.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl).commaSeparatedList();
-		t("params", params);
-		string retParams;
+			params += m_context.addLocalVariable(*varDecl).stackSlots();
+		t("params", joinHumanReadable(params));
+		vector<string> retParams;
 		string retInit;
 		for (auto const& varDecl: _function.returnParameters())
 		{
-			retParams += (retParams.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl).commaSeparatedList();
+			retParams += m_context.addLocalVariable(*varDecl).stackSlots();
 			retInit += generateInitialAssignment(*varDecl);
 		}
-		t("returns", retParams.empty() ? "" : " -> " + retParams);
+		t("retParams", joinHumanReadable(retParams));
 		t("initReturnVariables", retInit);
 		t("body", generate(_function.body()));
 		return t.render();
@@ -300,17 +300,17 @@ string IRGenerator::generateInitialAssignment(VariableDeclaration const& _varDec
 	return generator.code();
 }
 
-pair<string, map<ContractDefinition const*, string>> IRGenerator::evaluateConstructorArguments(
+pair<string, map<ContractDefinition const*, vector<string>>> IRGenerator::evaluateConstructorArguments(
 	ContractDefinition const& _contract
 )
 {
-	map<ContractDefinition const*, string> constructorParams;
+	map<ContractDefinition const*, vector<string>> constructorParams;
 	vector<pair<ContractDefinition const*, std::vector<ASTPointer<Expression>>const *>> baseConstructorArguments;
 
 	for (ASTPointer<InheritanceSpecifier> const& base: _contract.baseContracts())
 		if (FunctionDefinition const* baseConstructor = dynamic_cast<ContractDefinition const*>(
 				base->name().annotation().referencedDeclaration
-			)->constructor(); baseConstructor && base->arguments())
+		)->constructor(); baseConstructor && base->arguments())
 			baseConstructorArguments.emplace_back(
 				dynamic_cast<ContractDefinition const*>(baseConstructor->scope()),
 				base->arguments()
@@ -338,11 +338,11 @@ pair<string, map<ContractDefinition const*, string>> IRGenerator::evaluateConstr
 		{
 			vector<string> params;
 			for (size_t i = 0; i < arguments->size(); ++i)
-				params.emplace_back(generator.evaluateExpression(
-						*(arguments->at(i)),
-						*(baseContract->constructor()->parameters()[i]->type())
-				).commaSeparatedList());
-			constructorParams[baseContract] = joinHumanReadable(params);
+				params += generator.evaluateExpression(
+					*(arguments->at(i)),
+					*(baseContract->constructor()->parameters()[i]->type())
+				).stackSlots();
+			constructorParams[baseContract] = std::move(params);
 		}
 	}
 
@@ -363,16 +363,16 @@ string IRGenerator::initStateVariables(ContractDefinition const& _contract)
 void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contract)
 {
 	auto listAllParams = [&](
-		map<ContractDefinition const*, string> const& baseParams) -> string
+		map<ContractDefinition const*, vector<string>> const& baseParams) -> vector<string>
 	{
 		vector<string> params;
 		for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
 			if (baseParams.count(contract))
-				params.emplace_back(baseParams.at(contract));
-		return joinHumanReadable(params);
+				params += baseParams.at(contract);
+		return params;
 	};
 
-	map<ContractDefinition const*, string> baseConstructorParams;
+	map<ContractDefinition const*, vector<string>> baseConstructorParams;
 	for (size_t i = 0; i < _contract.annotation().linearizedBaseContracts.size(); ++i)
 	{
 		ContractDefinition const* contract = _contract.annotation().linearizedBaseContracts[i];
@@ -387,16 +387,16 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 					<userDefinedConstructorBody>
 				}
 			)");
-			string params;
+			vector<string> params;
 			if (contract->constructor())
 				for (ASTPointer<VariableDeclaration> const& varDecl: contract->constructor()->parameters())
-					params += (params.empty() ? "" : ", ") + m_context.addLocalVariable(*varDecl).commaSeparatedList();
-			t("params", params);
-			string baseParamsString = listAllParams(baseConstructorParams);
-			t("baseParams", baseParamsString);
-			t("comma", !params.empty() && !baseParamsString.empty() ? ", " : "");
+					params += m_context.addLocalVariable(*varDecl).stackSlots();
+			t("params", joinHumanReadable(params));
+			vector<string> baseParams = listAllParams(baseConstructorParams);
+			t("baseParams", joinHumanReadable(baseParams));
+			t("comma", !params.empty() && !baseParams.empty() ? ", " : "");
 			t("functionName", implicitConstructorName(*contract));
-			pair<string, map<ContractDefinition const*, string>> evaluatedArgs = evaluateConstructorArguments(*contract);
+			pair<string, map<ContractDefinition const*, vector<string>>> evaluatedArgs = evaluateConstructorArguments(*contract);
 			baseConstructorParams.insert(evaluatedArgs.second.begin(), evaluatedArgs.second.end());
 			t("evalBaseArguments", evaluatedArgs.first);
 			if (i < _contract.annotation().linearizedBaseContracts.size() - 1)
@@ -404,7 +404,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 				t("hasNextConstructor", true);
 				ContractDefinition const* nextContract = _contract.annotation().linearizedBaseContracts[i + 1];
 				t("nextConstructor", implicitConstructorName(*nextContract));
-				t("nextParams", listAllParams(baseConstructorParams));
+				t("nextParams", joinHumanReadable(listAllParams(baseConstructorParams)));
 			}
 			else
 				t("hasNextConstructor", false);

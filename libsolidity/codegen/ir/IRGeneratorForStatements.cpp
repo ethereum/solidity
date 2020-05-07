@@ -637,13 +637,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		break;
 	case FunctionType::Kind::Internal:
 	{
-		vector<string> args;
-		for (size_t i = 0; i < arguments.size(); ++i)
-			if (functionType->takesArbitraryParameters())
-				args.emplace_back(IRVariable(*arguments[i]).commaSeparatedList());
-			else
-				args.emplace_back(convert(*arguments[i], *parameterTypes[i]).commaSeparatedList());
-
 		optional<FunctionDefinition const*> functionDef;
 		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
 		{
@@ -681,6 +674,13 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		solAssert(functionDef.has_value(), "");
 		solAssert(functionDef.value() == nullptr || functionDef.value()->isImplemented(), "");
 
+		vector<string> args;
+		for (size_t i = 0; i < arguments.size(); ++i)
+			if (functionType->takesArbitraryParameters())
+				args += IRVariable(*arguments[i]).stackSlots();
+			else
+				args += convert(*arguments[i], *parameterTypes[i]).stackSlots();
+
 		if (functionDef.value() != nullptr)
 			define(_functionCall) <<
 				m_context.enqueueFunctionForCodeGeneration(*functionDef.value()) <<
@@ -716,7 +716,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
 
 		vector<IRVariable> indexedArgs;
-		string nonIndexedArgs;
+		vector<string> nonIndexedArgs;
 		TypePointers nonIndexedArgTypes;
 		TypePointers nonIndexedParamTypes;
 		if (!event.isAnonymous())
@@ -739,9 +739,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			}
 			else
 			{
-				string vars = IRVariable(arg).commaSeparatedList();
-				if (!vars.empty())
-					nonIndexedArgs += ", " + move(vars);
+				nonIndexedArgs += IRVariable(arg).stackSlots();
 				nonIndexedArgTypes.push_back(arg.annotation().type);
 				nonIndexedParamTypes.push_back(paramTypes[i]);
 			}
@@ -756,7 +754,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		templ("end", m_context.newYulVariable());
 		templ("freeMemory", freeMemory());
 		templ("encode", abi.tupleEncoder(nonIndexedArgTypes, nonIndexedParamTypes));
-		templ("nonIndexedArgs", nonIndexedArgs);
+		templ("nonIndexedArgs", joinHumanReadablePrefixed(nonIndexedArgs));
 		templ("log", "log" + to_string(indexedArgs.size()));
 		templ("indexedArgs", joinHumanReadablePrefixed(indexedArgs | boost::adaptors::transformed([&](auto const& _arg) {
 			return _arg.commaSeparatedList();
@@ -813,8 +811,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 				templ("allocateTemporary", m_utils.allocationTemporaryMemoryFunction());
 				templ(
 					"argumentVars",
-					(type(*arguments.front()).sizeOnStack() > 0 ? ", " : "") +
-					IRVariable{*arguments.front()}.commaSeparatedList()
+					joinHumanReadablePrefixed(IRVariable{*arguments.front()}.stackSlots())
 				);
 				templ("encode", m_context.abiFunctions().tupleEncoder(
 					{&type(*arguments.front())},
@@ -991,11 +988,11 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		);
 
 		TypePointers argumentTypes;
-		string constructorParams;
+		vector<string> constructorParams;
 		for (ASTPointer<Expression const> const& arg: arguments)
 		{
 			argumentTypes.push_back(arg->annotation().type);
-			constructorParams += ", " + IRVariable{*arg}.commaSeparatedList();
+			constructorParams += IRVariable{*arg}.stackSlots();
 		}
 
 		ContractDefinition const* contract =
@@ -1023,7 +1020,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		t("abiEncode",
 			m_context.abiFunctions().tupleEncoder(argumentTypes, functionType->parameterTypes(), false)
 		);
-		t("constructorParams", constructorParams);
+		t("constructorParams", joinHumanReadablePrefixed(constructorParams));
 		t("value", functionType->valueSet() ? IRVariable(_functionCall.expression()).part("value").name() : "0");
 		t("saltSet", functionType->saltSet());
 		if (functionType->saltSet())
@@ -1398,14 +1395,11 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 		solAssert(keyType.sizeOnStack() <= 1, "");
 
 		string slot = m_context.newYulVariable();
-		Whiskers templ("let <slot> := <indexAccess>(<base> <key>)\n");
+		Whiskers templ("let <slot> := <indexAccess>(<base><?+key>,<key></+key>)\n");
 		templ("slot", slot);
 		templ("indexAccess", m_utils.mappingIndexAccessFunction(mappingType, keyType));
 		templ("base", IRVariable(_indexAccess.baseExpression()).commaSeparatedList());
-		if (keyType.sizeOnStack() == 0)
-			templ("key", "");
-		else
-			templ("key", ", " + IRVariable(*_indexAccess.indexExpression()).commaSeparatedList());
+		templ("key", IRVariable(*_indexAccess.indexExpression()).commaSeparatedList());
 		m_code << templ.render();
 		setLValue(_indexAccess, IRLValue{
 			*_indexAccess.annotation().type,
@@ -1678,10 +1672,8 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	for (auto const& arg: _arguments)
 	{
 		argumentTypes.emplace_back(&type(*arg));
-		if (IRVariable(*arg).type().sizeOnStack() > 0)
-			argumentStrings.emplace_back(IRVariable(*arg).commaSeparatedList());
+		argumentStrings += IRVariable(*arg).stackSlots();
 	}
-	string argumentString = argumentStrings.empty() ? ""s : (", " + joinHumanReadable(argumentStrings));
 
 	solUnimplementedAssert(funKind != FunctionType::Kind::ECRecover, "");
 
@@ -1796,7 +1788,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	}
 	else
 		templ("encodeArgs", abi.tupleEncoder(argumentTypes, funType.parameterTypes(), encodeForLibraryCall));
-	templ("argumentString", argumentString);
+	templ("argumentString", joinHumanReadablePrefixed(argumentStrings));
 
 	// Output data will replace input data, unless we have ECRecover (then, output
 	// area will be 32 bytes just before input area).
