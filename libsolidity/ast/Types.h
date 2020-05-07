@@ -452,6 +452,9 @@ public:
 	unsigned numBits() const { return m_bits; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 
+	u256 min() const;
+	u256 max() const;
+
 	bigint minValue() const;
 	bigint maxValue() const;
 

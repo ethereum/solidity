@@ -477,12 +477,16 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 		return false;
 	}
 
+	if (commonType->category() == Type::Category::RationalNumber)
+	{
+		define(_binOp) << toCompactHexWithPrefix(commonType->literalValue(nullptr)) << "\n";
+		return false; // skip sub-expressions
+	}
+
 	_binOp.leftExpression().accept(*this);
 	_binOp.rightExpression().accept(*this);
 
-	if (commonType->category() == Type::Category::RationalNumber)
-		define(_binOp) << toCompactHexWithPrefix(commonType->literalValue(nullptr)) << "\n";
-	else if (TokenTraits::isCompareOp(op))
+	if (TokenTraits::isCompareOp(op))
 	{
 		if (auto type = dynamic_cast<FunctionType const*>(commonType))
 		{
@@ -1174,6 +1178,16 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			for (auto const& function: contract.interfaceFunctionList(false))
 				result ^= fromBigEndian<uint64_t>(function.first.ref());
 			define(_memberAccess) << formatNumber(u256{result} << (256 - 32)) << "\n";
+		}
+		else if (member == "min" || member == "max")
+		{
+			MagicType const* arg = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type);
+			IntegerType const* integerType = dynamic_cast<IntegerType const*>(arg->typeArgument());
+
+			if (member == "min")
+				define(_memberAccess) << formatNumber(integerType->min()) << "\n";
+			else
+				define(_memberAccess) << formatNumber(integerType->max()) << "\n";
 		}
 		else if (set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}.count(member))
 		{

@@ -214,17 +214,28 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 		return {};
 	}
 	TypePointer firstArgType = type(*arguments.front());
-	if (
-		firstArgType->category() != Type::Category::TypeType ||
-		dynamic_cast<TypeType const&>(*firstArgType).actualType()->category() != TypeType::Category::Contract
-	)
+
+	bool wrongType = false;
+	if (firstArgType->category() == Type::Category::TypeType)
+	{
+		TypeType const* typeTypePtr = dynamic_cast<TypeType const*>(firstArgType);
+		Type::Category typeCategory = typeTypePtr->actualType()->category();
+		if (
+			typeCategory != Type::Category::Contract &&
+			typeCategory != Type::Category::Integer
+		)
+			wrongType = true;
+	}
+	else
+		wrongType = true;
+
+	if (wrongType)
 	{
 		m_errorReporter.typeError(
 			arguments.front()->location(),
-			"Invalid type for argument in function call. "
-			"Contract type required, but " +
-			type(*arguments.front())->toString(true) +
-			" provided."
+			"Invalid type for argument in the function call. "
+			"A contract type or an integer type is required, but " +
+			type(*arguments.front())->toString(true) + " provided."
 		);
 		return {};
 	}
@@ -2599,6 +2610,11 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "name")
 			annotation.isPure = true;
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "interfaceId")
+			annotation.isPure = true;
+		else if (
+			magicType->kind() == MagicType::Kind::MetaType &&
+			(memberName == "min" ||	memberName == "max")
+		)
 			annotation.isPure = true;
 	}
 
