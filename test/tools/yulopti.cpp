@@ -119,7 +119,15 @@ public:
 
 		for (auto const& optionAndDescription: _extraOptions)
 		{
-			yulAssert(_optimizationSteps.count(optionAndDescription.first) == 0, "");
+			yulAssert(
+				_optimizationSteps.count(optionAndDescription.first) == 0,
+				"ERROR: Conflict between yulopti controls and Yul optimizer step abbreviations.\n"
+				"Character '" + string(1, optionAndDescription.first) + "' is assigned to both " +
+				optionAndDescription.second + " and " + _optimizationSteps.at(optionAndDescription.first) + " step.\n"
+				"This is most likely caused by someone adding a new step abbreviation to "
+				"OptimiserSuite::stepNameToAbbreviationMap() and not realizing that it's used by yulopti.\n"
+				"Please update the code to use a different character and recompile yulopti."
+			);
 			printPair(optionAndDescription);
 		}
 
