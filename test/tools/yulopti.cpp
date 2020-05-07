@@ -154,9 +154,9 @@ public:
 			}
 			map<char, string> const& abbreviationMap = OptimiserSuite::stepAbbreviationToNameMap();
 			map<char, string> const& extraOptions = {
-				{'q', "quit"},
-				{'l', "VarNameCleaner"},
-				{'p', "StackCompressor"},
+				{'#', "quit"},
+				{',', "VarNameCleaner"},
+				{';', "StackCompressor"},
 			};
 
 			printUsageBanner(abbreviationMap, extraOptions, 4);
@@ -175,14 +175,14 @@ public:
 			}
 			else switch (option)
 			{
-			case 'q':
+			case '#':
 				return;
-			case 'l':
+			case ',':
 				VarNameCleaner::run(context, *m_ast);
 				// VarNameCleaner destroys the unique names guarantee of the disambiguator.
 				disambiguated = false;
 				break;
-			case 'p':
+			case ';':
 			{
 				Object obj;
 				obj.code = m_ast;
