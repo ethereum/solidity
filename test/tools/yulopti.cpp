@@ -61,7 +61,7 @@ class YulOpti
 public:
 	void printErrors()
 	{
-		SourceReferenceFormatter formatter(cout);
+		SourceReferenceFormatter formatter(cerr);
 
 		for (auto const& error: m_errors)
 			formatter.printErrorInformation(*error);
@@ -74,7 +74,7 @@ public:
 		m_ast = yul::Parser(errorReporter, m_dialect).parse(scanner, false);
 		if (!m_ast || !errorReporter.errors().empty())
 		{
-			cout << "Error parsing source." << endl;
+			cerr << "Error parsing source." << endl;
 			printErrors();
 			return false;
 		}
@@ -86,7 +86,7 @@ public:
 		);
 		if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
 		{
-			cout << "Error analyzing source." << endl;
+			cerr << "Error analyzing source." << endl;
 			printErrors();
 			return false;
 		}
@@ -119,7 +119,15 @@ public:
 
 		for (auto const& optionAndDescription: _extraOptions)
 		{
-			yulAssert(_optimizationSteps.count(optionAndDescription.first) == 0, "");
+			yulAssert(
+				_optimizationSteps.count(optionAndDescription.first) == 0,
+				"ERROR: Conflict between yulopti controls and Yul optimizer step abbreviations.\n"
+				"Character '" + string(1, optionAndDescription.first) + "' is assigned to both " +
+				optionAndDescription.second + " and " + _optimizationSteps.at(optionAndDescription.first) + " step.\n"
+				"This is most likely caused by someone adding a new step abbreviation to "
+				"OptimiserSuite::stepNameToAbbreviationMap() and not realizing that it's used by yulopti.\n"
+				"Please update the code to use a different character and recompile yulopti."
+			);
 			printPair(optionAndDescription);
 		}
 
@@ -146,9 +154,9 @@ public:
 			}
 			map<char, string> const& abbreviationMap = OptimiserSuite::stepAbbreviationToNameMap();
 			map<char, string> const& extraOptions = {
-				{'q', "quit"},
-				{'l', "VarNameCleaner"},
-				{'p', "StackCompressor"},
+				{'#', "quit"},
+				{',', "VarNameCleaner"},
+				{';', "StackCompressor"},
 			};
 
 			printUsageBanner(abbreviationMap, extraOptions, 4);
@@ -167,14 +175,14 @@ public:
 			}
 			else switch (option)
 			{
-			case 'q':
+			case '#':
 				return;
-			case 'l':
+			case ',':
 				VarNameCleaner::run(context, *m_ast);
 				// VarNameCleaner destroys the unique names guarantee of the disambiguator.
 				disambiguated = false;
 				break;
-			case 'p':
+			case ';':
 			{
 				Object obj;
 				obj.code = m_ast;
@@ -182,7 +190,7 @@ public:
 				break;
 			}
 			default:
-				cout << "Unknown option." << endl;
+				cerr << "Unknown option." << endl;
 			}
 			source = AsmPrinter{m_dialect}(*m_ast);
 		}
