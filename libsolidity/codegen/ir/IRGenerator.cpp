@@ -479,10 +479,10 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 			{
 				// <functionName>
 				<callValueCheck>
-				<assignToParams> <abiDecode>(4, calldatasize())
-				<assignToRetParams> <function>(<params>)
+				<?+params>let <params> := </+params> <abiDecode>(4, calldatasize())
+				<?+retParams>let <retParams> := </+retParams> <function>(<params>)
 				let memPos := <allocate>(0)
-				let memEnd := <abiEncode>(memPos <comma> <retParams>)
+				let memEnd := <abiEncode>(memPos <?+retParams>,</+retParams> <retParams>)
 				return(memPos, sub(memEnd, memPos))
 			}
 			</cases>
@@ -504,13 +504,11 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 
 		unsigned paramVars = make_shared<TupleType>(type->parameterTypes())->sizeOnStack();
 		unsigned retVars = make_shared<TupleType>(type->returnParameterTypes())->sizeOnStack();
-		templ["assignToParams"] = paramVars == 0 ? "" : "let " + suffixedVariableNameList("param_", 0, paramVars) + " := ";
-		templ["assignToRetParams"] = retVars == 0 ? "" : "let " + suffixedVariableNameList("ret_", 0, retVars) + " := ";
 
 		ABIFunctions abiFunctions(m_evmVersion, m_context.revertStrings(), m_context.functionCollector());
 		templ["abiDecode"] = abiFunctions.tupleDecoder(type->parameterTypes());
 		templ["params"] = suffixedVariableNameList("param_", 0, paramVars);
-		templ["retParams"] = suffixedVariableNameList("ret_", retVars, 0);
+		templ["retParams"] = suffixedVariableNameList("ret_", 0, retVars);
 
 		if (FunctionDefinition const* funDef = dynamic_cast<FunctionDefinition const*>(&type->declaration()))
 			templ["function"] = m_context.enqueueFunctionForCodeGeneration(*funDef);
@@ -521,7 +519,6 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 
 		templ["allocate"] = m_utils.allocationFunction();
 		templ["abiEncode"] = abiFunctions.tupleEncoder(type->returnParameterTypes(), type->returnParameterTypes(), false);
-		templ["comma"] = retVars == 0 ? "" : ", ";
 	}
 	t("cases", functions);
 	if (FunctionDefinition const* fallback = _contract.fallbackFunction())

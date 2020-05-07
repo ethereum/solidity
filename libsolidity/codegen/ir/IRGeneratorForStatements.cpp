@@ -741,8 +741,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			{
 				string vars = IRVariable(arg).commaSeparatedList();
 				if (!vars.empty())
-					// In reverse because abi_encode expects it like that.
-					nonIndexedArgs = ", " + move(vars) + nonIndexedArgs;
+					nonIndexedArgs += ", " + move(vars);
 				nonIndexedArgTypes.push_back(arg.annotation().type);
 				nonIndexedParamTypes.push_back(paramTypes[i]);
 			}
@@ -1022,7 +1021,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		t("releaseTemporaryMemory", m_utils.releaseTemporaryMemoryFunction());
 		t("object", m_context.creationObjectName(*contract));
 		t("abiEncode",
-			m_context.abiFunctions().tupleEncoder(argumentTypes, functionType->parameterTypes(),false)
+			m_context.abiFunctions().tupleEncoder(argumentTypes, functionType->parameterTypes(), false)
 		);
 		t("constructorParams", constructorParams);
 		t("value", functionType->valueSet() ? IRVariable(_functionCall.expression()).part("value").name() : "0");
