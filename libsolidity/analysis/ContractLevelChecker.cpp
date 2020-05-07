@@ -219,7 +219,9 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 		for (auto declaration: _contract.annotation().unimplementedDeclarations)
 			ssl.append("Missing implementation: ", declaration->location());
 		m_errorReporter.typeError(
-			3656_error,_contract.location(), ssl,
+			3656_error,
+			_contract.location(),
+			ssl,
 			"Contract \"" + _contract.annotation().canonicalName
 			+ "\" should be marked as abstract.");
 

@@ -291,7 +291,8 @@ bool SyntaxChecker::visit(ContractDefinition const& _contract)
 	for (FunctionDefinition const* function: _contract.definedFunctions())
 		if (function->name() == contractName)
 			m_errorReporter.syntaxError(
-				5796_error,function->location(),
+				5796_error,
+				function->location(),
 				"Functions are not allowed to have the same name as the contract. "
 				"If you intend this to be a constructor, use \"constructor(...) { ... }\" to define it."
 			);

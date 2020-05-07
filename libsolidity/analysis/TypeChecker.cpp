@@ -493,7 +493,8 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 					unsupportedTypes.emplace_back(param->toString());
 			if (!unsupportedTypes.empty())
 				m_errorReporter.typeError(
-					2763_error,_variable.location(),
+					2763_error,
+					_variable.location(),
 					"The following types are only supported for getters in ABIEncoderV2: " +
 					joinHumanReadable(unsupportedTypes) +
 					". Either remove \"public\" or use \"pragma experimental ABIEncoderV2;\" to enable the feature."
@@ -3135,8 +3136,7 @@ void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAss
 	if (_expression.annotation().isLValue)
 		return;
 
-	return m_errorReporter.typeError(
-		1123_error,_expression.location(), [&]() {
+	return m_errorReporter.typeError(1123_error, _expression.location(), [&]() {
 		if (_expression.annotation().isConstant)
 			return "Cannot assign to a constant variable.";
 
