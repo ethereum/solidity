@@ -203,7 +203,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 
 	if (auto const* mappingType = dynamic_cast<MappingType const*>(type))
 		return m_context.functionCollector().createFunction(functionName, [&]() {
-			solAssert(!_varDecl.isConstant(), "");
+			solAssert(!_varDecl.isConstant() && !_varDecl.immutable(), "");
 			pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
 			solAssert(slot_offset.second == 0, "");
 			FunctionType funType(_varDecl);
