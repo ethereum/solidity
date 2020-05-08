@@ -66,14 +66,11 @@ tools/yul-phaser *.yul                    \
 `yul-phaser` can process the intermediate representation produced by `solc`:
 
 ``` bash
-solc/solc <sol file>  \
-    --ir              \
-    --no-optimize-yul \
-    --output-dir <output directory>
+solc/solc <sol file> --ir --output-dir <output directory>
 ```
 
 After running this command you'll find one or more .yul files in the output directory.
-These files contain whole Yul objects rather than just raw Yul programs but `yul-phaser` is prepared to handle them.
+These files contain whole Yul objects rather than just raw Yul programs but `yul-phaser` is prepared to handle them too.
 
 ### How to choose good parameters
 Choosing good parameters for a genetic algorithm is not a trivial task but phaser's defaults are generally enough to find a sequence that gives results comparable or better than one hand-crafted by an experienced developer for a given set of programs.
