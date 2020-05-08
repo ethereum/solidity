@@ -122,11 +122,11 @@ Statement Parser::parseStatement()
 		if (currentToken() == Token::Default)
 			_switch.cases.emplace_back(parseCase());
 		if (currentToken() == Token::Default)
-			fatalParserError("Only one default case allowed.");
+			fatalParserError(6931_error, "Only one default case allowed.");
 		else if (currentToken() == Token::Case)
-			fatalParserError("Case not allowed after default case.");
+			fatalParserError(4904_error, "Case not allowed after default case.");
 		if (_switch.cases.empty())
-			fatalParserError("Switch statement without any cases.");
+			fatalParserError(2418_error, "Switch statement without any cases.");
 		_switch.location.end = _switch.cases.back().body.location.end;
 		return Statement{move(_switch)};
 	}
@@ -184,6 +184,7 @@ Statement Parser::parseStatement()
 				auto const token = currentToken() == Token::Comma ? "," : ":=";
 
 				fatalParserError(
+					2856_error,
 					std::string("Variable name must precede \"") +
 					token +
 					"\"" +
@@ -194,7 +195,7 @@ Statement Parser::parseStatement()
 			auto const& identifier = std::get<Identifier>(elementary);
 
 			if (m_dialect.builtin(identifier.name))
-				fatalParserError("Cannot assign to builtin function \"" + identifier.name.str() + "\".");
+				fatalParserError(6272_error, "Cannot assign to builtin function \"" + identifier.name.str() + "\".");
 
 			variableNames.emplace_back(identifier);
 
@@ -218,7 +219,7 @@ Statement Parser::parseStatement()
 		return Statement{std::move(assignment)};
 	}
 	default:
-		fatalParserError("Call or assignment expected.");
+		fatalParserError(6913_error, "Call or assignment expected.");
 		break;
 	}
 
@@ -250,7 +251,7 @@ Case Parser::parseCase()
 		advance();
 		ElementaryOperation literal = parseElementaryOperation();
 		if (!holds_alternative<Literal>(literal))
-			fatalParserError("Literal expected.");
+			fatalParserError(4805_error, "Literal expected.");
 		_case.value = make_unique<Literal>(std::get<Literal>(std::move(literal)));
 	}
 	else
@@ -353,7 +354,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 			break;
 		case Token::Number:
 			if (!isValidNumberLiteral(currentLiteral()))
-				fatalParserError("Invalid number literal.");
+				fatalParserError(4828_error, "Invalid number literal.");
 			kind = LiteralKind::Number;
 			break;
 		case Token::TrueLiteral:
@@ -382,7 +383,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		break;
 	}
 	default:
-		fatalParserError("Literal or identifier expected.");
+		fatalParserError(1856_error, "Literal or identifier expected.");
 	}
 	return ret;
 }
@@ -472,7 +473,7 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 	else if (holds_alternative<FunctionCall>(_initialOp))
 		ret = std::move(std::get<FunctionCall>(_initialOp));
 	else
-		fatalParserError("Function name expected.");
+		fatalParserError(9980_error, "Function name expected.");
 
 	expectToken(Token::LParen);
 	if (currentToken() != Token::RParen)
@@ -525,7 +526,7 @@ YulString Parser::expectAsmIdentifier()
 	}
 
 	if (m_dialect.builtin(name))
-		fatalParserError("Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
+		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
 	advance();
 	return name;
 }
