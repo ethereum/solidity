@@ -1041,8 +1041,7 @@ Optimization step sequence
 --------------------------
 
 By default the Yul optimizer applies its predefined sequence of optimization steps to the generated assembly.
-You can override this sequence and supply your own using the `--yul-optimizations` option when compiling
-in Solidity mode:
+You can override this sequence and supply your own using the `--yul-optimizations` option:
 
 .. code-block:: sh
 

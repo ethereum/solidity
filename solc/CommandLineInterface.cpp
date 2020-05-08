@@ -787,19 +787,19 @@ Allowed options)").c_str(),
 		(
 			g_argAssemble.c_str(),
 			("Switch to assembly mode, ignoring all options except "
-			"--" + g_argMachine + ", --" + g_strYulDialect + " and --" + g_argOptimize + " "
+			"--" + g_argMachine + ", --" + g_strYulDialect + ", --" + g_argOptimize + " and --" + g_strYulOptimizations + " "
 			"and assumes input is assembly.").c_str()
 		)
 		(
 			g_argYul.c_str(),
 			("Switch to Yul mode, ignoring all options except "
-			"--" + g_argMachine + ", --" + g_strYulDialect + " and --" + g_argOptimize + " "
+			"--" + g_argMachine + ", --" + g_strYulDialect + ", --" + g_argOptimize + " and --" + g_strYulOptimizations + " "
 			"and assumes input is Yul.").c_str()
 		)
 		(
 			g_argStrictAssembly.c_str(),
 			("Switch to strict assembly mode, ignoring all options except "
-			"--" + g_argMachine + ", --" + g_strYulDialect + " and --" + g_argOptimize + " "
+			"--" + g_argMachine + ", --" + g_strYulDialect + ", --" + g_argOptimize + " and --" + g_strYulOptimizations + " "
 			"and assumes input is strict assembly.").c_str()
 		)
 		(
@@ -1079,6 +1079,29 @@ bool CommandLineInterface::processInput()
 			serr() << "--" << g_strNoOptimizeYul << " is invalid in assembly mode. Optimization is disabled by default and can be enabled with --" << g_argOptimize << "." << endl;
 			return false;
 		}
+
+		optional<string> yulOptimiserSteps;
+		if (m_args.count(g_strYulOptimizations))
+		{
+			if (!optimize)
+			{
+				serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
+				return false;
+			}
+
+			try
+			{
+				yul::OptimiserSuite::validateSequence(m_args[g_strYulOptimizations].as<string>());
+			}
+			catch (yul::OptimizerException const& _exception)
+			{
+				serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": " << _exception.what() << endl;
+				return false;
+			}
+
+			yulOptimiserSteps = m_args[g_strYulOptimizations].as<string>();
+		}
+
 		if (m_args.count(g_argMachine))
 		{
 			string machine = m_args[g_argMachine].as<string>();
@@ -1130,7 +1153,7 @@ bool CommandLineInterface::processInput()
 			"Warning: Yul is still experimental. Please use the output with care." <<
 			endl;
 
-		return assemble(inputLanguage, targetMachine, optimize);
+		return assemble(inputLanguage, targetMachine, optimize, yulOptimiserSteps);
 	}
 	if (m_args.count(g_argLink))
 	{
@@ -1542,18 +1565,21 @@ string CommandLineInterface::objectWithLinkRefsHex(evmasm::LinkerObject const& _
 bool CommandLineInterface::assemble(
 	yul::AssemblyStack::Language _language,
 	yul::AssemblyStack::Machine _targetMachine,
-	bool _optimize
+	bool _optimize,
+	optional<string> _yulOptimiserSteps
 )
 {
+	solAssert(_optimize || !_yulOptimiserSteps.has_value(), "");
+
 	bool successful = true;
 	map<string, yul::AssemblyStack> assemblyStacks;
 	for (auto const& src: m_sourceCodes)
 	{
-		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(
-			m_evmVersion,
-			_language,
-			_optimize ? OptimiserSettings::full() : OptimiserSettings::minimal()
-		);
+		OptimiserSettings settings = _optimize ? OptimiserSettings::full() : OptimiserSettings::minimal();
+		if (_yulOptimiserSteps.has_value())
+			settings.yulOptimiserSteps = _yulOptimiserSteps.value();
+
+		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(m_evmVersion, _language, settings);
 		try
 		{
 			if (!stack.parseAndAnalyze(src.first, src.second))
