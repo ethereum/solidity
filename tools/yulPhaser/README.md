@@ -9,7 +9,7 @@ The input is a set of one or more [Yul](/docs/yul.rst) programs and each sequenc
 Optimised programs are given numeric scores according to the selected metric.
 
 Optimisation step sequences are presented in an abbreviated form - as strings of letters where each character represents one step.
-The abbreviations are defined in [`OptimiserSuite::stepNameToAbbreviationMap()`](/libyul/optimiser/Suite.cpp#L388-L423).
+There's a [table listing available abbreviations in the optimiser docs](/docs/yul.rst#optimization-step-sequence).
 
 ### How to use it
 The application has sensible defaults for most parameters.
@@ -71,6 +71,13 @@ solc/solc <sol file> --ir --output-dir <output directory>
 
 After running this command you'll find one or more .yul files in the output directory.
 These files contain whole Yul objects rather than just raw Yul programs but `yul-phaser` is prepared to handle them too.
+
+#### Using optimisation step sequences with the compiler
+You can tell Yul optimiser to use a specific sequence for your code by passing `--yul-optimizations` option to `solc`:
+
+``` bash
+solc/solc <sol file> --optimize --ir-optimized --yul-optimizations <sequence>
+```
 
 ### How to choose good parameters
 Choosing good parameters for a genetic algorithm is not a trivial task but phaser's defaults are generally enough to find a sequence that gives results comparable or better than one hand-crafted by an experienced developer for a given set of programs.
