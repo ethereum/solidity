@@ -143,27 +143,27 @@ void ParserBase::decreaseRecursionDepth()
 	m_recursionDepth--;
 }
 
-void ParserBase::parserWarning(string const& _description)
+void ParserBase::parserWarning(ErrorId _error, string const& _description)
 {
-	m_errorReporter.warning(6635_error, currentLocation(), _description);
+	m_errorReporter.warning(_error, currentLocation(), _description);
 }
 
-void ParserBase::parserError(SourceLocation const& _location, string const& _description)
+void ParserBase::parserError(ErrorId _error, SourceLocation const& _location, string const& _description)
 {
-	m_errorReporter.parserError(2314_error, _location, _description);
+	m_errorReporter.parserError(_error, _location, _description);
 }
 
-void ParserBase::parserError(string const& _description)
+void ParserBase::parserError(ErrorId _error, string const& _description)
 {
-	parserError(currentLocation(), _description);
+	parserError(_error, currentLocation(), _description);
 }
 
-void ParserBase::fatalParserError(string const& _description)
+void ParserBase::fatalParserError(ErrorId _error, string const& _description)
 {
-	fatalParserError(currentLocation(), _description);
+	fatalParserError(_error, currentLocation(), _description);
 }
 
-void ParserBase::fatalParserError(SourceLocation const& _location, string const& _description)
+void ParserBase::fatalParserError(ErrorId _error, SourceLocation const& _location, string const& _description)
 {
-	m_errorReporter.fatalParserError(1957_error, _location, _description);
+	m_errorReporter.fatalParserError(_error, _location, _description);
 }
