@@ -103,7 +103,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 				nodes.push_back(parseEnumDefinition());
 				break;
 			default:
-				fatalParserError(7858_error, string("Expected pragma, import directive or contract/interface/library/struct/enum definition."));
+				fatalParserError(7858_error, "Expected pragma, import directive or contract/interface/library/struct/enum definition.");
 			}
 		}
 		solAssert(m_recursionDepth == 0, "");
@@ -344,7 +344,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			else if (currentTokenValue == Token::Using)
 				subNodes.push_back(parseUsingDirective());
 			else
-				fatalParserError(9182_error, string("Function, variable, struct or modifier declaration expected."));
+				fatalParserError(9182_error, "Function, variable, struct or modifier declaration expected.");
 		}
 	}
 	catch (FatalError const&)
@@ -497,11 +497,11 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 				if (_isStateVariable && (result.visibility == Visibility::External || result.visibility == Visibility::Internal))
 					break;
 				parserError(
-					9439_error,string(
+					9439_error,
 					"Visibility already specified as \"" +
 					Declaration::visibilityToString(result.visibility) +
 					"\"."
-				));
+				);
 				m_scanner->next();
 			}
 			else
@@ -512,11 +512,11 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 			if (result.stateMutability != StateMutability::NonPayable)
 			{
 				parserError(
-					9680_error,string(
+					9680_error,
 					"State mutability already specified as \"" +
 					stateMutabilityToString(result.stateMutability) +
 					"\"."
-				));
+				);
 				m_scanner->next();
 			}
 			else
@@ -663,10 +663,10 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 			break;
 		expectToken(Token::Comma);
 		if (m_scanner->currentToken() != Token::Identifier)
-			fatalParserError(1612_error, string("Expected identifier after ','"));
+			fatalParserError(1612_error, "Expected identifier after ','");
 	}
 	if (members.empty())
-		parserError(3147_error, {"enum with no members is not allowed."});
+		parserError(3147_error, "enum with no members is not allowed.");
 
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
@@ -715,11 +715,11 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			if (visibility != Visibility::Default)
 			{
 				parserError(
-					4110_error,string(
+					4110_error,
 					"Visibility already specified as \"" +
 					Declaration::visibilityToString(visibility) +
 					"\"."
-				));
+				);
 				m_scanner->next();
 			}
 			else
@@ -752,9 +752,9 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			else if (_options.allowLocationSpecifier && TokenTraits::isLocationSpecifier(token))
 			{
 				if (location != VariableDeclaration::Location::Unspecified)
-					parserError(3548_error, string("Location already specified."));
+					parserError(3548_error, "Location already specified.");
 				else if (!type)
-					parserError(7439_error, string("Location specifier needs explicit type name."));
+					parserError(7439_error, "Location specifier needs explicit type name.");
 				else
 				{
 					switch (token)
@@ -1006,7 +1006,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else if (token == Token::Var)
 	{
 		if (!_allowVar)
-			parserError(7059_error, string("Expected explicit type name."));
+			parserError(7059_error, "Expected explicit type name.");
 		m_scanner->next();
 	}
 	else if (token == Token::Function)
@@ -1016,7 +1016,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else if (token == Token::Identifier)
 		type = parseUserDefinedTypeName();
 	else
-		fatalParserError(3546_error, string("Expected type name"));
+		fatalParserError(3546_error, "Expected type name");
 
 	if (type)
 		// Parse "[...]" postfixes for arrays.
@@ -1059,7 +1059,7 @@ ASTPointer<Mapping> Parser::parseMapping()
 		m_scanner->next();
 	}
 	else
-		fatalParserError(1005_error, string("Expected elementary type name or identifier for mapping key type"));
+		fatalParserError(1005_error, "Expected elementary type name or identifier for mapping key type");
 	expectToken(Token::Arrow);
 	bool const allowVar = false;
 	ASTPointer<TypeName> valueType = parseTypeName(allowVar);
@@ -1913,7 +1913,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 			m_scanner->next();
 		}
 		else
-			fatalParserError(6933_error, string("Expected primary expression."));
+			fatalParserError(6933_error, "Expected primary expression.");
 		break;
 	}
 	return expression;
