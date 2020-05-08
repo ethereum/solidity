@@ -699,7 +699,7 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	string pathName = (p / _fileName).string();
 	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
 	{
-		serr() << "Refusing to overwrite existing file \"" << pathName << "\" (use --overwrite to force)." << endl;
+		serr() << "Refusing to overwrite existing file \"" << pathName << "\" (use --" << g_strOverwrite << " to force)." << endl;
 		m_error = true;
 		return;
 	}
@@ -719,10 +719,10 @@ bool CommandLineInterface::parseArguments(int _argc, char** _argv)
 	g_hasOutput = false;
 
 	// Declare the supported options.
-	po::options_description desc(R"(solc, the Solidity commandline compiler.
+	po::options_description desc((R"(solc, the Solidity commandline compiler.
 
 This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you
-are welcome to redistribute it under certain conditions. See 'solc --license'
+are welcome to redistribute it under certain conditions. See 'solc --)" + g_strLicense + R"('
 for details.
 
 Usage: solc [options] [input_file...]
@@ -732,9 +732,9 @@ at standard output or in files in the output directory, if specified.
 Imports are automatically read from the filesystem, but it is also possible to
 remap paths using the context:prefix=path syntax.
 Example:
-solc --bin -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
+solc --)" + g_argBinary + R"( -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
 
-Allowed options)",
+Allowed options)").c_str(),
 		po::options_description::m_default_line_length,
 		po::options_description::m_default_line_length - 23
 	);
@@ -780,20 +780,27 @@ Allowed options)",
 		)
 		(
 			g_argImportAst.c_str(),
-			"Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
-			"Supported Inputs is the output of the --standard-json or the one produced by --combined-json ast,compact-format"
+			("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
+			"Supported Inputs is the output of the --" + g_argStandardJSON + " or the one produced by "
+			"--" + g_argCombinedJson + " " + g_strAst + "," + g_strCompactJSON).c_str()
 		)
 		(
 			g_argAssemble.c_str(),
-			"Switch to assembly mode, ignoring all options except --machine, --yul-dialect and --optimize and assumes input is assembly."
+			("Switch to assembly mode, ignoring all options except "
+			"--" + g_argMachine + ", --" + g_strYulDialect + " and --" + g_argOptimize + " "
+			"and assumes input is assembly.").c_str()
 		)
 		(
 			g_argYul.c_str(),
-			"Switch to Yul mode, ignoring all options except --machine, --yul-dialect and --optimize and assumes input is Yul."
+			("Switch to Yul mode, ignoring all options except "
+			"--" + g_argMachine + ", --" + g_strYulDialect + " and --" + g_argOptimize + " "
+			"and assumes input is Yul.").c_str()
 		)
 		(
 			g_argStrictAssembly.c_str(),
-			"Switch to strict assembly mode, ignoring all options except --machine, --yul-dialect and --optimize and assumes input is strict assembly."
+			("Switch to strict assembly mode, ignoring all options except "
+			"--" + g_argMachine + ", --" + g_strYulDialect + " and --" + g_argOptimize + " "
+			"and assumes input is strict assembly.").c_str()
 		)
 		(
 			g_strYulDialect.c_str(),
@@ -807,8 +814,8 @@ Allowed options)",
 		)
 		(
 			g_argLink.c_str(),
-			"Switch to linker mode, ignoring all options apart from --libraries "
-			"and modify binaries in place."
+			("Switch to linker mode, ignoring all options apart from --" + g_argLibraries + " "
+			"and modify binaries in place.").c_str()
 		)
 		(
 			g_argMetadataHash.c_str(),
@@ -835,7 +842,7 @@ Allowed options)",
 			"Set for how many contract runs to optimize. "
 			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
 		)
-		(g_strOptimizeYul.c_str(), "Legacy option, ignored. Use the general --optimize to enable Yul optimizer.")
+		(g_strOptimizeYul.c_str(), ("Legacy option, ignored. Use the general --" + g_argOptimize + " to enable Yul optimizer.").c_str())
 		(g_strNoOptimizeYul.c_str(), "Disable Yul optimizer in Solidity.")
 		(
 			g_strYulOptimizations.c_str(),
@@ -933,7 +940,7 @@ Allowed options)",
 		for (string const& item: boost::split(requests, m_args[g_argCombinedJson].as<string>(), boost::is_any_of(",")))
 			if (!g_combinedJsonArgs.count(item))
 			{
-				serr() << "Invalid option to --combined-json: " << item << endl;
+				serr() << "Invalid option to --" << g_argCombinedJson << ": " << item << endl;
 				return false;
 			}
 	}
@@ -1047,7 +1054,7 @@ bool CommandLineInterface::processInput()
 		std::optional<langutil::EVMVersion> versionOption = langutil::EVMVersion::fromString(versionOptionStr);
 		if (!versionOption)
 		{
-			serr() << "Invalid option for --evm-version: " << versionOptionStr << endl;
+			serr() << "Invalid option for --" << g_strEVMVersion << ": " << versionOptionStr << endl;
 			return false;
 		}
 		m_evmVersion = *versionOption;
@@ -1064,12 +1071,12 @@ bool CommandLineInterface::processInput()
 		bool optimize = m_args.count(g_argOptimize);
 		if (m_args.count(g_strOptimizeYul))
 		{
-			serr() << "--optimize-yul is invalid in assembly mode. Use --optimize instead." << endl;
+			serr() << "--" << g_strOptimizeYul << " is invalid in assembly mode. Use --" << g_argOptimize << " instead." << endl;
 			return false;
 		}
 		if (m_args.count(g_strNoOptimizeYul))
 		{
-			serr() << "--no-optimize-yul is invalid in assembly mode. Optimization is disabled by default and can be enabled with --optimize." << endl;
+			serr() << "--" << g_strNoOptimizeYul << " is invalid in assembly mode. Optimization is disabled by default and can be enabled with --" << g_argOptimize << "." << endl;
 			return false;
 		}
 		if (m_args.count(g_argMachine))
@@ -1083,7 +1090,7 @@ bool CommandLineInterface::processInput()
 				targetMachine = Machine::Ewasm;
 			else
 			{
-				serr() << "Invalid option for --machine: " << machine << endl;
+				serr() << "Invalid option for --" << g_argMachine << ": " << machine << endl;
 				return false;
 			}
 		}
@@ -1099,13 +1106,14 @@ bool CommandLineInterface::processInput()
 				inputLanguage = Input::Ewasm;
 				if (targetMachine != Machine::Ewasm)
 				{
-					serr() << "If you select Ewasm as --yul-dialect, --machine has to be Ewasm as well." << endl;
+					serr() << "If you select Ewasm as --" << g_strYulDialect << ", ";
+					serr() << "--" << g_argMachine << " has to be Ewasm as well." << endl;
 					return false;
 				}
 			}
 			else
 			{
-				serr() << "Invalid option for --yul-dialect: " << dialect << endl;
+				serr() << "Invalid option for --" << g_strYulDialect << ": " << dialect << endl;
 				return false;
 			}
 		}
@@ -1142,7 +1150,7 @@ bool CommandLineInterface::processInput()
 			m_metadataHash = CompilerStack::MetadataHash::None;
 		else
 		{
-			serr() << "Invalid option for --metadata-hash: " << hashStr << endl;
+			serr() << "Invalid option for --" << g_argMetadataHash << ": " << hashStr << endl;
 			return false;
 		}
 	}
