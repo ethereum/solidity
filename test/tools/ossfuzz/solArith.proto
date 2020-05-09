@@ -14,33 +14,36 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <test/tools/yulInterpreter/Interpreter.h>
-#include <libyul/backends/evm/EVMDialect.h>
 
-namespace solidity::yul::test::yul_fuzzer
-{
+syntax = "proto2";
 
-struct yulFuzzerUtil
-{
-	enum class TerminationReason
-	{
-		ExplicitlyTerminated,
-		StepLimitReached,
-		TraceLimitReached,
-		None
-	};
+import "yulProto.proto";
 
-	TerminationReason interpret(
-		std::ostream& _os,
-		std::shared_ptr<yul::Block> _ast,
-		Dialect const& _dialect,
-		size_t _maxSteps = maxSteps,
-		size_t _maxTraceSize = maxTraceSize
-	);
-	std::map<u256, std::string> memoryDump();
-	InterpreterState m_state;
-	static size_t constexpr maxSteps = 100;
-	static size_t constexpr maxTraceSize = 75;
-};
-
+message Type {
+    enum Sign {
+        SIGNED = 0;
+        UNSIGNED = 1;
+    }
+    required Sign s = 1;
+    required uint32 bytewidth = 2;
 }
+
+message VarDecl {
+    required Type t = 1;
+}
+
+message Assembly {
+    required solidity.yul.test.yul_fuzzer.Program p = 1;
+}
+
+message Block {
+    repeated VarDecl v = 1;
+    required Assembly a = 2;
+}
+
+message Program {
+    required Block b = 1;
+    required uint64 seed = 2;
+}
+
+package solidity.test.solarithfuzzer;

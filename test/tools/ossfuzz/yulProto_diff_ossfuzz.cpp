@@ -96,7 +96,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		return;
 
 	stack.optimize();
-	termReason = yulFuzzerUtil::interpret(
+	yulFuzzerUtil::interpret(
 		os2,
 		stack.parserResult()->code,
 		EVMDialect::strictAssemblyForEVMObjects(version),

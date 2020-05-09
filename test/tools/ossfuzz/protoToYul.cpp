@@ -34,20 +34,78 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity;
 
+vector<string> ProtoConverter::createVars(unsigned _startIdx, unsigned _endIdx)
+{
+	yulAssert(_endIdx > _startIdx, "Proto fuzzer: Variable indices not in range");
+	string varsStr = suffixedVariableNameList("x_", _startIdx, _endIdx);
+	m_output << varsStr;
+	vector<string> varsVec;
+	boost::split(
+		varsVec,
+		varsStr,
+		boost::algorithm::is_any_of(", "),
+		boost::algorithm::token_compress_on
+	);
+
+	yulAssert(
+		varsVec.size() == (_endIdx - _startIdx),
+		"Proto fuzzer: Variable count mismatch during function definition"
+	);
+	m_counter += varsVec.size();
+	return varsVec;
+}
+
+
+string ProtoConverter::dummyExpression()
+{
+	string expression{};
+	string location{};
+	unsigned pseudoRandomNum = m_inputSize / 13;
+	if (varDeclAvailable())
+		location = varRef(pseudoRandomNum);
+	switch (pseudoRandomNum % 4)
+	{
+	case 0:
+		if (location.empty())
+			expression = "mload(0)";
+		else
+			expression = Whiskers(R"(mload(mod(<loc>, 256)))")("loc", location).render();
+		break;
+	case 1:
+		if (location.empty())
+			expression = "sload(0)";
+		else
+			expression = Whiskers(R"(sload(mod(<loc>, 256)))")("loc", location).render();
+		break;
+	case 2:
+		if (location.empty())
+			expression = "calldataload(0)";
+		else
+			expression = Whiskers(R"(calldataload(mod(<loc>, 32)))")("loc", location).render();
+		break;
+	case 3:
+		expression = dictionaryToken();
+		break;
+	}
+	yulAssert(!expression.empty(), "Proto fuzzer: Invalid dummy expression");
+	return expression;
+}
+
 string ProtoConverter::dictionaryToken(HexPrefix _p)
 {
 	std::string token;
-	// If dictionary constant is requested while converting
-	// for loop condition, then return zero so that we don't
-	// generate infinite for loops.
-	if (m_inForCond)
-		token = "0";
-	else
-	{
-		unsigned indexVar = m_inputSize * m_inputSize + counter();
-		token = hexDictionary[indexVar % hexDictionary.size()];
-		yulAssert(token.size() <= 64, "Proto Fuzzer: Dictionary token too large");
-	}
+
+       // If dictionary constant is requested while converting
+       // for loop condition, then return zero so that we don't
+       // generate infinite for loops.
+       if (m_inForCond)
+               token = "0";
+       else
+       {
+               unsigned indexVar = m_inputSize * m_inputSize + counter();
+               token = hexDictionary[indexVar % hexDictionary.size()];
+               yulAssert(token.size() <= 64, "Proto Fuzzer: Dictionary token too large");
+       }
 
 	return _p == HexPrefix::Add ? "0x" + token : token;
 }
@@ -85,29 +143,6 @@ string ProtoConverter::createAlphaNum(string const& _strBytes)
 		tmp = tmp.substr(0, 32);
 	}
 	return tmp;
-}
-
-EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
-{
-	switch (_ver)
-	{
-	case Program::HOMESTEAD:
-		return EVMVersion::homestead();
-	case Program::TANGERINE:
-		return EVMVersion::tangerineWhistle();
-	case Program::SPURIOUS:
-		return EVMVersion::spuriousDragon();
-	case Program::BYZANTIUM:
-		return EVMVersion::byzantium();
-	case Program::CONSTANTINOPLE:
-		return EVMVersion::constantinople();
-	case Program::PETERSBURG:
-		return EVMVersion::petersburg();
-	case Program::ISTANBUL:
-		return EVMVersion::istanbul();
-	case Program::BERLIN:
-		return EVMVersion::berlin();
-	}
 }
 
 string ProtoConverter::visit(Literal const& _x)
@@ -172,25 +207,41 @@ bool ProtoConverter::varDeclAvailable()
 	}
 }
 
-bool ProtoConverter::functionCallNotPossible(FunctionCall_Returns _type)
-{
-	return _type == FunctionCall::SINGLE ||
-		(_type == FunctionCall::MULTIASSIGN && !varDeclAvailable());
-}
-
-void ProtoConverter::visit(VarRef const& _x)
+string ProtoConverter::varRef(unsigned _index)
 {
 	if (m_inFunctionDef)
 	{
 		// Ensure that there is at least one variable declaration to reference in function scope.
 		yulAssert(m_currentFuncVars.size() > 0, "Proto fuzzer: No variables to reference.");
-		m_output << *m_currentFuncVars[_x.varnum() % m_currentFuncVars.size()];
+		return *m_currentFuncVars[_index % m_currentFuncVars.size()];
 	}
 	else
 	{
 		// Ensure that there is at least one variable declaration to reference in nested scopes.
 		yulAssert(m_currentGlobalVars.size() > 0, "Proto fuzzer: No global variables to reference.");
-		m_output << *m_currentGlobalVars[_x.varnum() % m_currentGlobalVars.size()];
+		return *m_currentGlobalVars[_index % m_currentGlobalVars.size()];
+	}
+}
+
+void ProtoConverter::visit(VarRef const& _x)
+{
+	m_output << varRef(_x.varnum());
+}
+
+void ProtoConverter::visit(FunctionExpr const& _x)
+{
+	vector<pair<string, unsigned>> functionSet;
+	for (auto const& f: m_functionSigMap)
+		if (f.second.second == 1)
+			functionSet.emplace_back(f.first, f.second.first);
+	if (functionSet.size() > 0)
+	{
+		pair<string, unsigned> chosenFunction = functionSet[_x.index() % functionSet.size()];
+		convertFunctionCall(_x, chosenFunction.first, chosenFunction.second);
+	}
+	else
+	{
+		m_output << dummyExpression();
 	}
 }
 
@@ -203,18 +254,18 @@ void ProtoConverter::visit(Expression const& _x)
 		// (because there are no variables in scope), we silently output a literal
 		// expression from the optimizer dictionary.
 		if (!varDeclAvailable())
-			m_output << dictionaryToken();
+			m_output << dummyExpression();
 		else
 			visit(_x.varref());
 		break;
 	case Expression::kCons:
-		// If literal expression describes for-loop condition
-		// then force it to zero, so we don't generate infinite
-		// for loops
-		if (m_inForCond)
-			m_output << "0";
-		else
-			m_output << visit(_x.cons());
+               // If literal expression describes for-loop condition
+               // then force it to zero, so we don't generate infinite
+               // for loops
+               if (m_inForCond)
+                       m_output << "0";
+               else
+                       m_output << visit(_x.cons());
 		break;
 	case Expression::kBinop:
 		visit(_x.binop());
@@ -228,28 +279,11 @@ void ProtoConverter::visit(Expression const& _x)
 	case Expression::kNop:
 		visit(_x.nop());
 		break;
-	case Expression::kFuncExpr:
-		// FunctionCall must return a single value, otherwise
-		// we output a trivial expression "1".
-		if (_x.func_expr().ret() == FunctionCall::SINGLE)
-			visit(_x.func_expr());
-		else
-			m_output << dictionaryToken();
-		break;
-	case Expression::kLowcall:
-		visit(_x.lowcall());
-		break;
-	case Expression::kCreate:
-		visit(_x.create());
-		break;
-	case Expression::kUnopdata:
-		if (m_isObject)
-			visit(_x.unopdata());
-		else
-			m_output << dictionaryToken();
+	case Expression::kFuncexpr:
+		visit(_x.funcexpr());
 		break;
 	case Expression::EXPR_ONEOF_NOT_SET:
-		m_output << dictionaryToken();
+		m_output << dummyExpression();
 		break;
 	}
 }
@@ -257,13 +291,6 @@ void ProtoConverter::visit(Expression const& _x)
 void ProtoConverter::visit(BinaryOp const& _x)
 {
 	BinaryOp_BOp op = _x.op();
-
-	if ((op == BinaryOp::SHL || op == BinaryOp::SHR || op == BinaryOp::SAR) &&
-		!m_evmVersion.hasBitwiseShifting())
-	{
-		m_output << dictionaryToken();
-		return;
-	}
 
 	switch (op)
 	{
@@ -301,15 +328,12 @@ void ProtoConverter::visit(BinaryOp const& _x)
 		m_output << "gt";
 		break;
 	case BinaryOp::SHR:
-		yulAssert(m_evmVersion.hasBitwiseShifting(), "Proto fuzzer: Invalid evm version");
 		m_output << "shr";
 		break;
 	case BinaryOp::SHL:
-		yulAssert(m_evmVersion.hasBitwiseShifting(), "Proto fuzzer: Invalid evm version");
 		m_output << "shl";
 		break;
 	case BinaryOp::SAR:
-		yulAssert(m_evmVersion.hasBitwiseShifting(), "Proto fuzzer: Invalid evm version");
 		m_output << "sar";
 		break;
 	case BinaryOp::SDIV:
@@ -411,157 +435,9 @@ void ProtoConverter::scopeVariables(vector<string> const& _varNames)
 	}
 }
 
-void ProtoConverter::visit(VarDecl const& _x)
-{
-	string varName = newVarName();
-	m_output << "let " << varName << " := ";
-	visit(_x.expr());
-	m_output << "\n";
-	scopeVariables({varName});
-}
-
-void ProtoConverter::visit(MultiVarDecl const& _x)
-{
-	m_output << "let ";
-	vector<string> varNames;
-	// We support up to 4 variables in a single
-	// declaration statement.
-	unsigned numVars = _x.num_vars() % 3 + 2;
-	string delimiter = "";
-	for (unsigned i = 0; i < numVars; i++)
-	{
-		string varName = newVarName();
-		varNames.push_back(varName);
-		m_output << delimiter << varName;
-		if (i == 0)
-			delimiter = ", ";
-	}
-	m_output << "\n";
-	scopeVariables(varNames);
-}
-
-void ProtoConverter::visit(TypedVarDecl const& _x)
-{
-	string varName = newVarName();
-	m_output << "let " << varName;
-	switch (_x.type())
-	{
-	case TypedVarDecl::BOOL:
-		m_output << ": bool := ";
-		visit(_x.expr());
-		m_output << " : bool\n";
-		break;
-	case TypedVarDecl::S8:
-		m_output << ": s8 := ";
-		visit(_x.expr());
-		m_output << " : s8\n";
-		break;
-	case TypedVarDecl::S32:
-		m_output << ": s32 := ";
-		visit(_x.expr());
-		m_output << " : s32\n";
-		break;
-	case TypedVarDecl::S64:
-		m_output << ": s64 := ";
-		visit(_x.expr());
-		m_output << " : s64\n";
-		break;
-	case TypedVarDecl::S128:
-		m_output << ": s128 := ";
-		visit(_x.expr());
-		m_output << " : s128\n";
-		break;
-	case TypedVarDecl::S256:
-		m_output << ": s256 := ";
-		visit(_x.expr());
-		m_output << " : s256\n";
-		break;
-	case TypedVarDecl::U8:
-		m_output << ": u8 := ";
-		visit(_x.expr());
-		m_output << " : u8\n";
-		break;
-	case TypedVarDecl::U32:
-		m_output << ": u32 := ";
-		visit(_x.expr());
-		m_output << " : u32\n";
-		break;
-	case TypedVarDecl::U64:
-		m_output << ": u64 := ";
-		visit(_x.expr());
-		m_output << " : u64\n";
-		break;
-	case TypedVarDecl::U128:
-		m_output << ": u128 := ";
-		visit(_x.expr());
-		m_output << " : u128\n";
-		break;
-	case TypedVarDecl::U256:
-		m_output << ": u256 := ";
-		visit(_x.expr());
-		m_output << " : u256\n";
-		break;
-	}
-	// If we are inside a for-init block, there are two places
-	// where the visited vardecl may have been defined:
-	// - directly inside the for-init block
-	// - inside a block within the for-init block
-	// In the latter case, we don't scope extend.
-	if (m_inFunctionDef)
-	{
-		// Variables declared directly in for-init block
-		// are tracked separately because their scope
-		// extends beyond the block they are defined in
-		// to the rest of the for-loop statement.
-		if (m_inForInitScope && m_forInitScopeExtEnabled)
-		{
-			yulAssert(
-				!m_funcForLoopInitVars.empty() && !m_funcForLoopInitVars.back().empty(),
-				"Proto fuzzer: Invalid operation"
-			);
-			m_funcForLoopInitVars.back().back().push_back(varName);
-		}
-		else
-		{
-			yulAssert(
-				!m_funcVars.empty() && !m_funcVars.back().empty(),
-				"Proto fuzzer: Invalid operation"
-			);
-			m_funcVars.back().back().push_back(varName);
-		}
-	}
-	else
-	{
-		if (m_inForInitScope && m_forInitScopeExtEnabled)
-		{
-			yulAssert(
-				!m_globalForLoopInitVars.empty(),
-				"Proto fuzzer: Invalid operation"
-			);
-			m_globalForLoopInitVars.back().push_back(varName);
-		}
-		else
-		{
-			yulAssert(
-				!m_globalVars.empty(),
-				"Proto fuzzer: Invalid operation"
-			);
-			m_globalVars.back().push_back(varName);
-		}
-	}
-}
-
 void ProtoConverter::visit(UnaryOp const& _x)
 {
 	UnaryOp_UOp op = _x.op();
-
-	// Replace calls to extcodehash on unsupported EVMs with a dictionary
-	// token.
-	if (op == UnaryOp::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
-	{
-		m_output << dictionaryToken();
-		return;
-	}
 
 	switch (op)
 	{
@@ -569,32 +445,22 @@ void ProtoConverter::visit(UnaryOp const& _x)
 		m_output << "not";
 		break;
 	case UnaryOp::MLOAD:
-		m_output << "mload";
+		m_output << "mload(mod";
 		break;
 	case UnaryOp::SLOAD:
-		m_output << "sload";
+		m_output << "sload(mod";
 		break;
 	case UnaryOp::ISZERO:
 		m_output << "iszero";
 		break;
 	case UnaryOp::CALLDATALOAD:
-		m_output << "calldataload";
-		break;
-	case UnaryOp::EXTCODESIZE:
-		m_output << "extcodesize";
-		break;
-	case UnaryOp::EXTCODEHASH:
-		m_output << "extcodehash";
-		break;
-	case UnaryOp::BALANCE:
-		m_output << "balance";
-		break;
-	case UnaryOp::BLOCKHASH:
-		m_output << "blockhash";
+		m_output << "calldataload(mod";
 		break;
 	}
 	m_output << "(";
 	visit(_x.operand());
+	if (op == UnaryOp::MLOAD || op == UnaryOp::SLOAD || op == UnaryOp::CALLDATALOAD)
+		m_output << ", 256)";
 	m_output << ")";
 }
 
@@ -622,28 +488,11 @@ void ProtoConverter::visit(NullaryOp const& _x)
 {
 	switch (_x.op())
 	{
-	case NullaryOp::PC:
-		m_output << "pc()";
-		break;
-	case NullaryOp::MSIZE:
-		m_output << "msize()";
-		break;
-	case NullaryOp::GAS:
-		m_output << "gas()";
-		break;
 	case NullaryOp::CALLDATASIZE:
 		m_output << "calldatasize()";
 		break;
-	case NullaryOp::CODESIZE:
-		m_output << "codesize()";
-		break;
 	case NullaryOp::RETURNDATASIZE:
-		// If evm supports returndatasize, we generate it. Otherwise,
-		// we output a dictionary token.
-		if (m_evmVersion.supportsReturndata())
-			m_output << "returndatasize()";
-		else
-			m_output << dictionaryToken();
+		m_output << "returndatasize()";
 		break;
 	case NullaryOp::ADDRESS:
 		m_output << "address()";
@@ -663,9 +512,6 @@ void ProtoConverter::visit(NullaryOp const& _x)
 	case NullaryOp::COINBASE:
 		m_output << "coinbase()";
 		break;
-	case NullaryOp::TIMESTAMP:
-		m_output << "timestamp()";
-		break;
 	case NullaryOp::NUMBER:
 		m_output << "number()";
 		break;
@@ -676,140 +522,10 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		m_output << "gaslimit()";
 		break;
 	case NullaryOp::SELFBALANCE:
-		// Replace calls to selfbalance() on unsupported EVMs with a dictionary
-		// token.
-		if (m_evmVersion.hasSelfBalance())
-			m_output << "selfbalance()";
-		else
-			m_output << dictionaryToken();
+		m_output << "selfbalance()";
 		break;
 	case NullaryOp::CHAINID:
-		// Replace calls to chainid() on unsupported EVMs with a dictionary
-		// token.
-		if (m_evmVersion.hasChainID())
-			m_output << "chainid()";
-		else
-			m_output << dictionaryToken();
-		break;
-	}
-}
-
-void ProtoConverter::visit(CopyFunc const& _x)
-{
-	CopyFunc_CopyType type = _x.ct();
-
-	// datacopy() is valid only if we are inside
-	// a Yul object.
-	if (type == CopyFunc::DATA && !m_isObject)
-		return;
-
-	// We don't generate code if the copy function is returndatacopy
-	// and the underlying evm does not support it.
-	if (type == CopyFunc::RETURNDATA && !m_evmVersion.supportsReturndata())
-		return;
-
-	switch (type)
-	{
-	case CopyFunc::CALLDATA:
-		m_output << "calldatacopy";
-		break;
-	case CopyFunc::CODE:
-		m_output << "codecopy";
-		break;
-	case CopyFunc::RETURNDATA:
-		yulAssert(m_evmVersion.supportsReturndata(), "Proto fuzzer: Invalid evm version");
-		m_output << "returndatacopy";
-		break;
-	case CopyFunc::DATA:
-		m_output << "datacopy";
-		break;
-	}
-	m_output << "(";
-	visit(_x.target());
-	m_output << ", ";
-	visit(_x.source());
-	m_output << ", ";
-	visit(_x.size());
-	m_output << ")\n";
-}
-
-void ProtoConverter::visit(ExtCodeCopy const& _x)
-{
-	m_output << "extcodecopy";
-	m_output << "(";
-	visit(_x.addr());
-	m_output << ", ";
-	visit(_x.target());
-	m_output << ", ";
-	visit(_x.source());
-	m_output << ", ";
-	visit(_x.size());
-	m_output << ")\n";
-}
-
-void ProtoConverter::visit(LogFunc const& _x)
-{
-	switch (_x.num_topics())
-	{
-	case LogFunc::ZERO:
-		m_output << "log0";
-		m_output << "(";
-		visit(_x.pos());
-		m_output << ", ";
-		visit(_x.size());
-		m_output << ")\n";
-		break;
-	case LogFunc::ONE:
-		m_output << "log1";
-		m_output << "(";
-		visit(_x.pos());
-		m_output << ", ";
-		visit(_x.size());
-		m_output << ", ";
-		visit(_x.t1());
-		m_output << ")\n";
-		break;
-	case LogFunc::TWO:
-		m_output << "log2";
-		m_output << "(";
-		visit(_x.pos());
-		m_output << ", ";
-		visit(_x.size());
-		m_output << ", ";
-		visit(_x.t1());
-		m_output << ", ";
-		visit(_x.t2());
-		m_output << ")\n";
-		break;
-	case LogFunc::THREE:
-		m_output << "log3";
-		m_output << "(";
-		visit(_x.pos());
-		m_output << ", ";
-		visit(_x.size());
-		m_output << ", ";
-		visit(_x.t1());
-		m_output << ", ";
-		visit(_x.t2());
-		m_output << ", ";
-		visit(_x.t3());
-		m_output << ")\n";
-		break;
-	case LogFunc::FOUR:
-		m_output << "log4";
-		m_output << "(";
-		visit(_x.pos());
-		m_output << ", ";
-		visit(_x.size());
-		m_output << ", ";
-		visit(_x.t1());
-		m_output << ", ";
-		visit(_x.t2());
-		m_output << ", ";
-		visit(_x.t3());
-		m_output << ", ";
-		visit(_x.t4());
-		m_output << ")\n";
+		m_output << "chainid()";
 		break;
 	}
 }
@@ -822,7 +538,8 @@ void ProtoConverter::visit(AssignmentStatement const& _x)
 	m_output << "\n";
 }
 
-void ProtoConverter::visitFunctionInputParams(FunctionCall const& _x, unsigned _numInputParams)
+template <typename T>
+void ProtoConverter::visitFunctionInputParams(T const& _x, unsigned _numInputParams)
 {
 	// We reverse the order of function input visits since it helps keep this switch case concise.
 	switch (_numInputParams)
@@ -830,18 +547,18 @@ void ProtoConverter::visitFunctionInputParams(FunctionCall const& _x, unsigned _
 	case 4:
 		visit(_x.in_param4());
 		m_output << ", ";
-		BOOST_FALLTHROUGH;
+		[[fallthrough]];;
 	case 3:
 		visit(_x.in_param3());
 		m_output << ", ";
-		BOOST_FALLTHROUGH;
+		[[fallthrough]];;
 	case 2:
 		visit(_x.in_param2());
 		m_output << ", ";
-		BOOST_FALLTHROUGH;
+		[[fallthrough]];;
 	case 1:
 		visit(_x.in_param1());
-		BOOST_FALLTHROUGH;
+		[[fallthrough]];;
 	case 0:
 		break;
 	default:
@@ -850,43 +567,19 @@ void ProtoConverter::visitFunctionInputParams(FunctionCall const& _x, unsigned _
 	}
 }
 
-bool ProtoConverter::functionValid(FunctionCall_Returns _type, unsigned _numOutParams)
-{
-	switch (_type)
-	{
-	case FunctionCall::ZERO:
-		return _numOutParams == 0;
-	case FunctionCall::SINGLE:
-		return _numOutParams == 1;
-	case FunctionCall::MULTIDECL:
-	case FunctionCall::MULTIASSIGN:
-		return _numOutParams > 1;
-	}
-}
-
+template <typename T>
 void ProtoConverter::convertFunctionCall(
-	FunctionCall const& _x,
+	T const& _x,
 	std::string _name,
 	unsigned _numInParams,
-	bool _newLine
+	bool _newline
 )
 {
 	m_output << _name << "(";
 	visitFunctionInputParams(_x, _numInParams);
 	m_output << ")";
-	if (_newLine)
+	if (_newline)
 		m_output << "\n";
-}
-
-vector<string> ProtoConverter::createVarDecls(unsigned _start, unsigned _end, bool _isAssignment)
-{
-	m_output << "let ";
-	vector<string> varsVec = createVars(_start, _end);
-	if (_isAssignment)
-		m_output << " := ";
-	else
-		m_output << "\n";
-	return varsVec;
 }
 
 void ProtoConverter::visit(FunctionCall const& _x)
@@ -894,7 +587,6 @@ void ProtoConverter::visit(FunctionCall const& _x)
 	bool functionAvailable = m_functionSigMap.size() > 0;
 	unsigned numInParams, numOutParams;
 	string funcName;
-	FunctionCall_Returns funcType = _x.ret();
 	if (functionAvailable)
 	{
 		yulAssert(m_functions.size() > 0, "Proto fuzzer: No function in scope");
@@ -905,177 +597,71 @@ void ProtoConverter::visit(FunctionCall const& _x)
 	}
 	else
 	{
-		// If there are no functions available, calls to functions that
-		// return a single value may be replaced by a dictionary token.
-		if (funcType == FunctionCall::SINGLE)
-			m_output << dictionaryToken();
-		return;
-	}
-
-	// If function selected for function call does not meet interface
-	// requirements (num output values) for the function type
-	// specified, then we return early unless it is a function call
-	// that returns a single value (which may be replaced by a
-	// dictionary token.
-	if (!functionValid(funcType, numOutParams))
-	{
-		if (funcType == FunctionCall::SINGLE)
-			m_output << dictionaryToken();
 		return;
 	}
 
 	// If we are here, it means that we have at least one valid
 	// function for making the function call
-	switch (funcType)
+	switch (numOutParams)
 	{
-	case FunctionCall::ZERO:
-		convertFunctionCall(_x, funcName, numInParams);
+	case 0:
+		convertFunctionCall(_x, funcName, numInParams, /*newline=*/true);
 		break;
-	case FunctionCall::SINGLE:
-		// Since functions that return a single value are used as expressions
-		// we do not print a newline because it is done by the expression
-		// visitor.
-		convertFunctionCall(_x, funcName, numInParams, /*newLine=*/false);
-		break;
-	case FunctionCall::MULTIDECL:
-	{
-		// Ensure that the chosen function returns at most 4 values
-		yulAssert(
-			numOutParams <= 4,
-			"Proto fuzzer: Function call with too many output params encountered."
-		);
-
-		// Obtain variable name suffix
-		unsigned startIdx = counter();
-		vector<string> varsVec = createVarDecls(
-			startIdx,
-			startIdx + numOutParams,
-			/*isAssignment=*/true
-		);
-
-		// Create RHS of multi var decl
-		convertFunctionCall(_x, funcName, numInParams);
-		// Add newly minted vars in the multidecl statement to current scope
-		addVarsToScope(varsVec);
-		break;
-	}
-	case FunctionCall::MULTIASSIGN:
-		// Ensure that the chosen function returns at most 4 values
-		yulAssert(
-			numOutParams <= 4,
-			"Proto fuzzer: Function call with too many output params encountered."
-		);
-
-		// Convert LHS of multi assignment
-		// We reverse the order of out param visits since the order does not matter.
-		// This helps reduce the size of this switch statement.
-		switch (numOutParams)
+	case 1:
+		// assignment
+		if (varDeclAvailable())
 		{
-		case 4:
-			visit(_x.out_param4());
-			m_output << ", ";
-			BOOST_FALLTHROUGH;
-		case 3:
-			visit(_x.out_param3());
-			m_output << ", ";
-			BOOST_FALLTHROUGH;
-		case 2:
-			visit(_x.out_param2());
-			m_output << ", ";
 			visit(_x.out_param1());
-			break;
-		default:
-			yulAssert(false, "Proto fuzzer: Function call with too many or too few input parameters.");
-			break;
+			m_output << " := ";
+			convertFunctionCall(_x, funcName, numInParams, /*newline=*/true);
 		}
-		m_output << " := ";
-
-		// Convert RHS of multi assignment
-		convertFunctionCall(_x, funcName, numInParams);
 		break;
-	}
-}
-
-void ProtoConverter::visit(LowLevelCall const& _x)
-{
-	LowLevelCall_Type type = _x.callty();
-
-	// Generate staticcall if it is supported by the underlying evm
-	if (type == LowLevelCall::STATICCALL && !m_evmVersion.hasStaticCall())
+	case 2:
+	[[fallthrough]];
+	case 3:
+	[[fallthrough]];
+	case 4:
 	{
-		// Since staticcall is supposed to return 0 on success and 1 on
-		// failure, we can use counter value to emulate it
-		m_output << ((counter() % 2) ? "0" : "1");
-		return;
-	}
+		// Ensure that the chosen function returns at most 4 values
+		yulAssert(
+			numOutParams <= 4,
+			"Proto fuzzer: Function call with too many output params encountered."
+		);
+		{
+			// If we do not have variables to assign to, bail out
+			if (!varDeclAvailable())
+				return;
 
-	switch (type)
-	{
-	case LowLevelCall::CALL:
-		m_output << "call(";
-		break;
-	case LowLevelCall::CALLCODE:
-		m_output << "callcode(";
-		break;
-	case LowLevelCall::DELEGATECALL:
-		m_output << "delegatecall(";
-		break;
-	case LowLevelCall::STATICCALL:
-		yulAssert(m_evmVersion.hasStaticCall(), "Proto fuzzer: Invalid evm version");
-		m_output << "staticcall(";
-		break;
-	}
-	visit(_x.gas());
-	m_output << ", ";
-	visit(_x.addr());
-	m_output << ", ";
-	if (type == LowLevelCall::CALL || type == LowLevelCall::CALLCODE)
-	{
-		visit(_x.wei());
-		m_output << ", ";
-	}
-	visit(_x.in());
-	m_output << ", ";
-	visit(_x.insize());
-	m_output << ", ";
-	visit(_x.out());
-	m_output << ", ";
-	visit(_x.outsize());
-	m_output << ")";
-}
+			// Convert LHS of multi assignment
+			// We reverse the order of out param visits since the order does not matter.
+			// This helps reduce the size of this switch statement.
+			switch (numOutParams)
+			{
+			case 4:
+				visit(_x.out_param4());
+				m_output << ", ";
+				[[fallthrough]];
+			case 3:
+				visit(_x.out_param3());
+				m_output << ", ";
+				[[fallthrough]];
+			case 2:
+				visit(_x.out_param2());
+				m_output << ", ";
+				visit(_x.out_param1());
+				break;
+			default:
+				yulAssert(false, "Proto fuzzer: Function call with too many or too few input parameters.");
+				break;
+			}
+			m_output << " := ";
 
-void ProtoConverter::visit(Create const& _x)
-{
-	Create_Type type = _x.createty();
-
-	// Replace a call to create2 on unsupported EVMs with a dictionary
-	// token.
-	if (type == Create::CREATE2 && !m_evmVersion.hasCreate2())
-	{
-		m_output << dictionaryToken();
-		return;
-	}
-
-	switch (type)
-	{
-	case Create::CREATE:
-		m_output << "create(";
-		break;
-	case Create::CREATE2:
-		m_output << "create2(";
+			// Convert RHS of multi assignment
+			convertFunctionCall(_x, funcName, numInParams, /*newline=*/true);
+		}
 		break;
 	}
-	visit(_x.wei());
-	m_output << ", ";
-	visit(_x.position());
-	m_output << ", ";
-	visit(_x.size());
-	if (type == Create::CREATE2)
-	{
-		m_output << ", ";
-		visit(_x.value());
 	}
-	m_output << ")";
 }
 
 void ProtoConverter::visit(IfStmt const& _x)
@@ -1083,7 +669,7 @@ void ProtoConverter::visit(IfStmt const& _x)
 	m_output << "if ";
 	visit(_x.cond());
 	m_output << " ";
-	visit(_x.if_body());
+	visit(_x.block());
 }
 
 void ProtoConverter::visit(StoreFunc const& _x)
@@ -1091,17 +677,17 @@ void ProtoConverter::visit(StoreFunc const& _x)
 	switch (_x.st())
 	{
 	case StoreFunc::MSTORE:
-		m_output << "mstore(";
+		m_output << "mstore(mod(";
 		break;
 	case StoreFunc::SSTORE:
-		m_output << "sstore(";
+		m_output << "sstore(mod(";
 		break;
 	case StoreFunc::MSTORE8:
-		m_output << "mstore8(";
+		m_output << "mstore8(mod(";
 		break;
 	}
 	visit(_x.loc());
-	m_output << ", ";
+	m_output << ", 256), ";
 	visit(_x.val());
 	m_output << ")\n";
 }
@@ -1126,7 +712,7 @@ void ProtoConverter::visit(ForStmt const& _x)
 	m_inForCond = false;
 	visit(_x.for_post());
 	m_inForBodyScope = true;
-	visit(_x.for_body());
+	visit(_x.block());
 	m_inForBodyScope = wasInForBody;
 	m_inForInitScope = wasInForInit;
 	if (m_inFunctionDef)
@@ -1160,7 +746,7 @@ void ProtoConverter::visit(BoundedForStmt const& _x)
 	bool wasInForInit = m_inForInitScope;
 	m_inForBodyScope = true;
 	m_inForInitScope = false;
-	visit(_x.for_body());
+	visit(_x.block());
 	// Restore previous for body scope and init
 	m_inForBodyScope = wasInForBody;
 	m_inForInitScope = wasInForInit;
@@ -1228,13 +814,13 @@ void ProtoConverter::visit(CaseStmt const& _x)
 	if (isUnique)
 	{
 		m_output << "case " << literal << " ";
-		visit(_x.case_block());
+		visit(_x.block());
 	}
 }
 
 void ProtoConverter::visit(SwitchStmt const& _x)
 {
-	if (_x.case_stmt_size() > 0 || _x.has_default_block())
+	if (_x.case_stmt_size() > 0 || _x.has_block())
 	{
 		std::set<u256> s;
 		m_switchLiteralSetPerScope.push(s);
@@ -1247,85 +833,11 @@ void ProtoConverter::visit(SwitchStmt const& _x)
 
 		m_switchLiteralSetPerScope.pop();
 
-		if (_x.has_default_block())
+		if (_x.has_block())
 		{
 			m_output << "default ";
-			visit(_x.default_block());
+			visit(_x.block());
 		}
-	}
-}
-
-void ProtoConverter::visit(StopInvalidStmt const& _x)
-{
-	switch (_x.stmt())
-	{
-	case StopInvalidStmt::STOP:
-		m_output << "stop()\n";
-		break;
-	case StopInvalidStmt::INVALID:
-		m_output << "invalid()\n";
-		break;
-	}
-}
-
-void ProtoConverter::visit(RetRevStmt const& _x)
-{
-	switch (_x.stmt())
-	{
-	case RetRevStmt::RETURN:
-		m_output << "return";
-		break;
-	case RetRevStmt::REVERT:
-		m_output << "revert";
-		break;
-	}
-	m_output << "(";
-	visit(_x.pos());
-	m_output << ", ";
-	visit(_x.size());
-	m_output << ")\n";
-}
-
-void ProtoConverter::visit(SelfDestructStmt const& _x)
-{
-	m_output << "selfdestruct";
-	m_output << "(";
-	visit(_x.addr());
-	m_output << ")\n";
-}
-
-void ProtoConverter::visit(TerminatingStmt const& _x)
-{
-	switch (_x.term_oneof_case())
-	{
-	case TerminatingStmt::kStopInvalid:
-		visit(_x.stop_invalid());
-		break;
-	case TerminatingStmt::kRetRev:
-		visit(_x.ret_rev());
-		break;
-	case TerminatingStmt::kSelfDes:
-		visit(_x.self_des());
-		break;
-	case TerminatingStmt::TERM_ONEOF_NOT_SET:
-		break;
-	}
-}
-
-void ProtoConverter::visit(UnaryOpData const& _x)
-{
-	switch (_x.op())
-	{
-	case UnaryOpData::SIZE:
-		m_output << Whiskers(R"(datasize("<id>"))")
-			("id", getObjectIdentifier(_x.identifier()))
-			.render();
-		break;
-	case UnaryOpData::OFFSET:
-		m_output << Whiskers(R"(dataoffset("<id>"))")
-			("id", getObjectIdentifier(_x.identifier()))
-			.render();
-		break;
 	}
 }
 
@@ -1333,9 +845,6 @@ void ProtoConverter::visit(Statement const& _x)
 {
 	switch (_x.stmt_oneof_case())
 	{
-	case Statement::kDecl:
-		visit(_x.decl());
-		break;
 	case Statement::kAssignment:
 		// Create an assignment statement only if there is at least one variable
 		// declaration that is in scope.
@@ -1343,7 +852,7 @@ void ProtoConverter::visit(Statement const& _x)
 			visit(_x.assignment());
 		break;
 	case Statement::kIfstmt:
-		if (_x.ifstmt().if_body().statements_size() > 0)
+		if (_x.ifstmt().block().statements_size() > 0)
 			visit(_x.ifstmt());
 		break;
 	case Statement::kStorageFunc:
@@ -1354,11 +863,11 @@ void ProtoConverter::visit(Statement const& _x)
 			visit(_x.blockstmt());
 		break;
 	case Statement::kForstmt:
-		if (_x.forstmt().for_body().statements_size() > 0)
+		if (_x.forstmt().block().statements_size() > 0)
 			visit(_x.forstmt());
 		break;
 	case Statement::kBoundedforstmt:
-		if (_x.boundedforstmt().for_body().statements_size() > 0)
+		if (_x.boundedforstmt().block().statements_size() > 0)
 			visit(_x.boundedforstmt());
 		break;
 	case Statement::kSwitchstmt:
@@ -1372,22 +881,7 @@ void ProtoConverter::visit(Statement const& _x)
 		if (m_inForBodyScope)
 			m_output << "continue\n";
 		break;
-	case Statement::kLogFunc:
-		visit(_x.log_func());
-		break;
-	case Statement::kCopyFunc:
-		visit(_x.copy_func());
-		break;
-	case Statement::kExtcodeCopy:
-		visit(_x.extcode_copy());
-		break;
-	case Statement::kTerminatestmt:
-		visit(_x.terminatestmt());
-		break;
 	case Statement::kFunctioncall:
-		// Return early if a function call cannot be created
-		if (functionCallNotPossible(_x.functioncall().ret()))
-			return;
 		visit(_x.functioncall());
 		break;
 	case Statement::kFuncdef:
@@ -1401,9 +895,6 @@ void ProtoConverter::visit(Statement const& _x)
 	case Statement::kLeave:
 		if (m_inFunctionDef)
 			visit(_x.leave());
-		break;
-	case Statement::kMultidecl:
-		visit(_x.multidecl());
 		break;
 	case Statement::STMT_ONEOF_NOT_SET:
 		break;
@@ -1565,6 +1056,24 @@ void ProtoConverter::addVarsToScope(vector<string> const& _vars)
 	}
 }
 
+void ProtoConverter::storeGlobals()
+{
+	if (m_globalVars.size() == 1)
+	{
+		unsigned i = 0;
+		for (auto const& v: m_globalVars.back())
+		{
+			string loc = to_string(i * 32);
+			m_output << Whiskers(R"(mstore(<loc>, <var>)<endl>)")
+				("loc", loc)
+				("var", v)
+				("endl", "\n")
+				.render();
+			i++;
+		}
+	}
+}
+
 void ProtoConverter::visit(Block const& _x)
 {
 	openBlockScope();
@@ -1600,27 +1109,6 @@ void ProtoConverter::visit(Block const& _x)
 	closeBlockScope();
 }
 
-vector<string> ProtoConverter::createVars(unsigned _startIdx, unsigned _endIdx)
-{
-	yulAssert(_endIdx > _startIdx, "Proto fuzzer: Variable indices not in range");
-	string varsStr = suffixedVariableNameList("x_", _startIdx, _endIdx);
-	m_output << varsStr;
-	vector<string> varsVec;
-	boost::split(
-		varsVec,
-		varsStr,
-		boost::algorithm::is_any_of(", "),
-		boost::algorithm::token_compress_on
-	);
-
-	yulAssert(
-		varsVec.size() == (_endIdx - _startIdx),
-		"Proto fuzzer: Variable count mismatch during function definition"
-	);
-	m_counter += varsVec.size();
-	return varsVec;
-}
-
 void ProtoConverter::registerFunction(FunctionDef const* _x)
 {
 	unsigned numInParams = _x->num_input_params() % s_modInputParams;
@@ -1654,7 +1142,7 @@ void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
 		unsigned diceValue = counter() % 4;
 		// Pseudo-randomly choose one of the first ten 32-byte
 		// aligned slots.
-		string slot = to_string((counter() % 10) * 32);
+		string slot = to_string((counter() % 8) * 32);
 		switch (diceValue)
 		{
 		case 0:
@@ -1667,9 +1155,9 @@ void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
 			m_output << "sload(" << slot << ")";
 			break;
 		case 3:
-			// Call to dictionaryToken() automatically picks a token
+			// Call to dummyExpression() automatically picks a token
 			// at a pseudo-random location.
-			m_output << dictionaryToken();
+			m_output << dummyExpression();
 			break;
 		}
 		if (i < _numInParams - 1)
@@ -1692,42 +1180,6 @@ void ProtoConverter::saveFunctionCallOutput(vector<string> const& _varsVec)
 		else
 			m_output << "mstore(" << slot << ", " << var << ")\n";
 	}
-}
-
-void ProtoConverter::createFunctionCall(
-	string _funcName,
-	unsigned _numInParams,
-	unsigned _numOutParams
-)
-{
-	vector<string> varsVec{};
-	if (_numOutParams > 0)
-	{
-		unsigned startIdx = counter();
-		// Prints the following to output stream "let x_i,...,x_n := "
-		varsVec = createVarDecls(
-			startIdx,
-			startIdx + _numOutParams,
-			/*isAssignment=*/true
-		);
-	}
-
-	// Call the function with the correct number of input parameters
-	m_output << _funcName << "(";
-	if (_numInParams > 0)
-		fillFunctionCallInput(_numInParams);
-	m_output << ")\n";
-
-	if (!varsVec.empty())
-	{
-		// Save values returned by function so that they are reflected
-		// in the interpreter trace.
-		saveFunctionCallOutput(varsVec);
-		// Add newly minted vars to current scope
-		addVarsToScope(varsVec);
-	}
-	else
-		yulAssert(_numOutParams == 0, "Proto fuzzer: Function return value not saved");
 }
 
 void ProtoConverter::createFunctionDefAndCall(
@@ -1793,8 +1245,6 @@ void ProtoConverter::createFunctionDefAndCall(
 		!m_inForInitScope,
 		"Proto fuzzer: Trying to create function call inside a for-init block"
 	);
-	if (_x.force_call())
-		createFunctionCall(funcName, _numInParams, _numOutParams);
 }
 
 void ProtoConverter::visit(FunctionDef const& _x)
@@ -1816,92 +1266,15 @@ void ProtoConverter::visit(LeaveStmt const&)
 	m_output << "leave\n";
 }
 
-string ProtoConverter::getObjectIdentifier(unsigned _x)
-{
-	unsigned currentId = currentObjectId();
-	yulAssert(m_objectScopeTree.size() > currentId, "Proto fuzzer: Error referencing object");
-	std::vector<std::string> objectIdsInScope = m_objectScopeTree[currentId];
-	return objectIdsInScope[_x % objectIdsInScope.size()];
-}
-
-void ProtoConverter::visit(Code const& _x)
-{
-	m_output << "code {\n";
-	visit(_x.block());
-	m_output << "}\n";
-}
-
-void ProtoConverter::visit(Data const& _x)
-{
-	// TODO: Generate random data block identifier
-	m_output << "data \"" << s_dataIdentifier << "\" hex\"" << createHex(_x.hex()) << "\"\n";
-}
-
-void ProtoConverter::visit(Object const& _x)
-{
-	// object "object<n>" {
-	// ...
-	// }
-	m_output << "object " << newObjectId() << " {\n";
-	visit(_x.code());
-	if (_x.has_data())
-		visit(_x.data());
-	if (_x.has_sub_obj())
-		visit(_x.sub_obj());
-	m_output << "}\n";
-}
-
-void ProtoConverter::buildObjectScopeTree(Object const& _x)
-{
-	// Identifies object being visited
-	string objectId = newObjectId(false);
-	vector<string> node{objectId};
-	if (_x.has_data())
-		node.push_back(s_dataIdentifier);
-	if (_x.has_sub_obj())
-	{
-		// Identifies sub object whose numeric suffix is
-		// m_objectId
-		string subObjectId = "object" + to_string(m_objectId);
-		node.push_back(subObjectId);
-		// TODO: Add sub-object to object's ancestors once
-		// nested access is implemented.
-		m_objectScopeTree.push_back(node);
-		buildObjectScopeTree(_x.sub_obj());
-	}
-	else
-		m_objectScopeTree.push_back(node);
-}
-
 void ProtoConverter::visit(Program const& _x)
 {
 	// Initialize input size
 	m_inputSize = _x.ByteSizeLong();
-
-	// Record EVM Version
-	m_evmVersion = evmVersionMapping(_x.ver());
-
-	// Program is either a Yul object or a block of
-	// statements.
-	switch (_x.program_oneof_case())
-	{
-	case Program::kBlock:
-		m_output << "{\n";
-		visit(_x.block());
-		m_output << "}\n";
-		break;
-	case Program::kObj:
-		m_isObject = true;
-		buildObjectScopeTree(_x.obj());
-		// Reset object id counter
-		m_objectId = 0;
-		visit(_x.obj());
-		break;
-	case Program::PROGRAM_ONEOF_NOT_SET:
-		// {} is a trivial Yul program
-		m_output << "{}";
-		break;
-	}
+	m_output << "{\n";
+	visit(_x.block());
+	yulAssert(m_globalVars.size() <= 1, "Yul proto converter: Invalid global scope size");
+	storeGlobals();
+	m_output << "}\n";
 }
 
 string ProtoConverter::programToString(Program const& _input)

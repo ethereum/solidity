@@ -94,6 +94,7 @@ struct InterpreterState
 	ControlFlowState controlFlowState = ControlFlowState::Default;
 
 	void dumpTraceAndState(std::ostream& _out) const;
+	std::map<u256, std::string> dumpMemory() const;
 };
 
 /**

@@ -38,10 +38,14 @@ namespace solidity::yul::test::yul_fuzzer
 class ProtoConverter
 {
 public:
-	ProtoConverter()
+	ProtoConverter(unsigned _numGlobalVars)
 	{
 		m_funcVars = std::vector<std::vector<std::vector<std::string>>>{};
 		m_globalVars = std::vector<std::vector<std::string>>{};
+		if (_numGlobalVars > 0)
+			m_globalVars.push_back({});
+		for (unsigned i = 0; i < _numGlobalVars; i++)
+			m_globalVars.back().push_back("v" + std::to_string(i));
 		m_inForBodyScope = false;
 		m_inForInitScope = false;
 		m_inForCond = false;
@@ -50,19 +54,11 @@ public:
 		m_counter = 0;
 		m_inputSize = 0;
 		m_inFunctionDef = false;
-		m_objectId = 0;
-		m_isObject = false;
 		m_forInitScopeExtEnabled = true;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
 	std::string programToString(Program const& _input);
-
-	/// Returns evm version
-	solidity::langutil::EVMVersion version()
-	{
-		return m_evmVersion;
-	}
 
 private:
 	void visit(BinaryOp const&);
@@ -75,10 +71,8 @@ private:
 
 	std::string visit(Literal const&);
 	void visit(VarRef const&);
+	void visit(FunctionExpr const& _x);
 	void visit(Expression const&);
-	void visit(VarDecl const&);
-	void visit(MultiVarDecl const&);
-	void visit(TypedVarDecl const&);
 	void visit(UnaryOp const&);
 	void visit(AssignmentStatement const&);
 	void visit(IfStmt const&);
@@ -90,23 +84,10 @@ private:
 	void visit(SwitchStmt const&);
 	void visit(TernaryOp const&);
 	void visit(NullaryOp const&);
-	void visit(LogFunc const&);
-	void visit(CopyFunc const&);
-	void visit(ExtCodeCopy const&);
-	void visit(StopInvalidStmt const&);
-	void visit(RetRevStmt const&);
-	void visit(SelfDestructStmt const&);
-	void visit(TerminatingStmt const&);
 	void visit(FunctionCall const&);
 	void visit(FunctionDef const&);
 	void visit(PopStmt const&);
 	void visit(LeaveStmt const&);
-	void visit(LowLevelCall const&);
-	void visit(Create const&);
-	void visit(UnaryOpData const&);
-	void visit(Object const&);
-	void visit(Data const&);
-	void visit(Code const&);
 	void visit(Program const&);
 
 	/// Creates a new block scope.
@@ -140,8 +121,10 @@ private:
 		Multiple
 	};
 
-	void visitFunctionInputParams(FunctionCall const&, unsigned);
+	template <typename T>
+	void visitFunctionInputParams(T const&, unsigned);
 	void createFunctionDefAndCall(FunctionDef const&, unsigned, unsigned);
+	void storeGlobals();
 
 	/// Convert function type to a string to be used while naming a
 	/// function that is created by a function declaration statement.
@@ -169,46 +152,19 @@ private:
 	/// in scope
 	bool varDeclAvailable();
 
-	/// Return true if a function call cannot be made, false otherwise.
-	/// @param _type is an enum denoting the type of function call. It
-	/// can be one of NONE, SINGLE, MULTIDECL, MULTIASSIGN.
-	///		NONE -> Function call does not return a value
-	///		SINGLE -> Function call returns a single value
-	///		MULTIDECL -> Function call returns more than one value
-	///		and it is used to create a multi declaration
-	///		statement
-	///		MULTIASSIGN -> Function call returns more than one value
-	///		and it is used to create a multi assignment
-	///		statement
-	/// @return True if the function call cannot be created for one of the
-	/// following reasons
-	//   - It is a SINGLE function call (we reserve SINGLE functions for
-	//   expressions)
-	//   - It is a MULTIASSIGN function call and we do not have any
-	//   variables available for assignment.
-	bool functionCallNotPossible(FunctionCall_Returns _type);
-
-	/// Checks if function call of type @a _type returns the correct number
-	/// of values.
-	/// @param _type Function call type of the function being checked
-	/// @param _numOutParams Number of values returned by the function
-	/// being checked
-	/// @return true if the function returns the correct number of values,
-	/// false otherwise
-	bool functionValid(FunctionCall_Returns _type, unsigned _numOutParams);
-
-	/// Converts protobuf function call to a Yul function call and appends
+	/// Converts protobuf function call to a yul function call and appends
 	/// it to output stream.
 	/// @param _x Protobuf function call
 	/// @param _name Function name
 	/// @param _numInParams Number of input arguments accepted by function
-	/// @param _newLine Flag that prints a new line to the output stream if
-	/// true. Default value for the flag is true.
+	/// @param _newline Boolean flag that  is true if new line to be printed after
+	/// function call, false otherwise
+	template <typename T>
 	void convertFunctionCall(
-		FunctionCall const& _x,
+		T const& _x,
 		std::string _name,
 		unsigned _numInParams,
-		bool _newLine = true
+		bool _newline = false
 	);
 
 	/// Prints a Yul formatted variable declaration statement to the output
@@ -270,11 +226,6 @@ private:
 	/// Removes entry from m_functionMap and m_functionName
 	void updateFunctionMaps(std::string const& _x);
 
-	/// Build a tree of objects that contains the object/data
-	/// identifiers that are in scope in a given object.
-	/// @param _x root object of the Yul protobuf specification.
-	void buildObjectScopeTree(Object const& _x);
-
 	/// Returns a pseudo-random dictionary token.
 	/// @param _p Enum that decides if the returned token is hex prefixed ("0x") or not
 	/// @return Dictionary token at the index computed using a
@@ -284,9 +235,9 @@ private:
 	/// dictionarySize is the total number of entries in the dictionary.
 	std::string dictionaryToken(util::HexPrefix _p = util::HexPrefix::Add);
 
-	/// Returns an EVMVersion object corresponding to the protobuf
-	/// enum of type Program_Version
-	solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
+	/// Return variable reference.
+	/// @param _index: Index of variable to be referenced
+	std::string varRef(unsigned _index);
 
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
@@ -302,29 +253,7 @@ private:
 		return "foo_" + functionTypeToString(_type) + "_" + std::to_string(counter());
 	}
 
-	/// Returns a pseudo-randomly chosen object identifier that is in the
-	/// scope of the Yul object being visited.
-	std::string getObjectIdentifier(unsigned _x);
-
-	/// Return new object identifier as string. Identifier string
-	/// is a template of the form "\"object<n>\"" where <n> is
-	/// a monotonically increasing object ID counter.
-	/// @param _decorate If true (default value), object ID is
-	/// enclosed within double quotes.
-	std::string newObjectId(bool _decorate = true)
-	{
-		return util::Whiskers(R"(<?decorate>"</decorate>object<id><?decorate>"</decorate>)")
-			("decorate", _decorate)
-			("id", std::to_string(m_objectId++))
-			.render();
-	}
-
-	/// Returns the object counter value corresponding to the object
-	/// being visited.
-	unsigned currentObjectId()
-	{
-		return m_objectId - 1;
-	}
+	std::string dummyExpression();
 
 	std::ostringstream m_output;
 	/// Variables in all function definitions
@@ -349,13 +278,9 @@ private:
 	std::stack<std::set<u256>> m_switchLiteralSetPerScope;
 	// Look-up table per function type that holds the number of input (output) function parameters
 	std::map<std::string, std::pair<unsigned, unsigned>> m_functionSigMap;
-	/// Tree of objects and their scopes
-	std::vector<std::vector<std::string>> m_objectScopeTree;
 	// mod input/output parameters impose an upper bound on the number of input/output parameters a function may have.
 	static unsigned constexpr s_modInputParams = 5;
 	static unsigned constexpr s_modOutputParams = 5;
-	/// Hard-coded identifier for a Yul object's data block
-	static auto constexpr s_dataIdentifier = "datablock";
 	/// Predicate to keep track of for body scope. If false, break/continue
 	/// statements can not be created.
 	bool m_inForBodyScope;
@@ -368,24 +293,15 @@ private:
 	/// Predicate to keep track of for loop init scope. If true, variable
 	/// or function declarations can not be created.
 	bool m_inForInitScope;
-	/// Flag that is true while converting for loop condition,
-	/// false otherwise.
-	bool m_inForCond;
 	/// Monotonically increasing counter
 	unsigned m_counter;
 	/// Size of protobuf input
 	unsigned m_inputSize;
 	/// Predicate that is true if inside function definition, false otherwise
 	bool m_inFunctionDef;
-	/// Index used for naming objects
-	unsigned m_objectId;
-	/// Flag to track whether program is an object (true) or a statement block
-	/// (false: default value)
-	bool m_isObject;
 	/// Flag to track whether scope extension of variables defined in for-init
 	/// block is enabled.
 	bool m_forInitScopeExtEnabled;
-	/// Object that holds the targeted evm version specified by protobuf input
-	solidity::langutil::EVMVersion m_evmVersion;
+	bool m_inForCond;
 };
 }

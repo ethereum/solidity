@@ -46,6 +46,18 @@ using namespace solidity::yul::test;
 
 using solidity::util::h256;
 
+std::map<u256, std::string> InterpreterState::dumpMemory() const
+{
+	std::map<u256, std::string> out;
+	map<u256, u256> words;
+	for (auto const& [offset, value]: memory)
+		words[(offset / 0x20) * 0x20] |= u256(uint32_t(value)) << (256 - 8 - 8 * size_t(offset % 0x20));
+	for (auto const& [offset, value]: words)
+		if (value != 0)
+			out.emplace(offset, h256(value).hex());
+	return out;
+}
+
 void InterpreterState::dumpTraceAndState(ostream& _out) const
 {
 	_out << "Trace:" << endl;
