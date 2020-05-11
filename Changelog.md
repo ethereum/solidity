@@ -1,7 +1,7 @@
 ### 0.6.8 (unreleased)
 
 Language Features:
-
+ * Implemented ``type(X).min`` and ``type(X).max`` for every integer type ``X`` that returns the smallest and largest value representable by the type.
 
 
 Compiler Features:
