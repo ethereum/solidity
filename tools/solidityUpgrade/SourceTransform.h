@@ -267,6 +267,11 @@ public:
 
 		return "";
 	}
+
+	static std::string nowUpdate(langutil::SourceLocation const& _location)
+	{
+		return regex_replace(_location.text(), std::regex{"now"}, "block.timestamp");
+	}
 };
 
 }

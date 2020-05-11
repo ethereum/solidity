@@ -38,7 +38,6 @@ namespace solidity::frontend::test
 
 namespace
 {
-
 static char const* registrarCode = R"DELIMITER(
 pragma solidity >=0.4.0 <0.8.0;
 
@@ -68,7 +67,7 @@ abstract contract AuctionSystem {
 
 	function bid(string memory _name, address payable _bidder, uint _value) internal {
 		Auction storage auction = m_auctions[_name];
-		if (auction.endDate > 0 && now > auction.endDate)
+		if (auction.endDate > 0 && block.timestamp > auction.endDate)
 		{
 			emit AuctionEnded(_name, auction.highestBidder);
 			onAuctionEnd(_name);
@@ -82,7 +81,7 @@ abstract contract AuctionSystem {
 			auction.sumOfBids += _value;
 			auction.highestBid = _value;
 			auction.highestBidder = _bidder;
-			auction.endDate = now + c_biddingTime;
+			auction.endDate = block.timestamp + c_biddingTime;
 
 			emit NewBid(_name, _bidder, _value);
 		}
@@ -120,7 +119,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		Auction storage auction = m_auctions[_name];
 		Record storage record = m_toRecord[_name];
 		address previousOwner = record.owner;
-		record.renewalDate = now + c_renewalInterval;
+		record.renewalDate = block.timestamp + c_renewalInterval;
 		record.owner = auction.highestBidder;
 		emit Changed(_name);
 		if (previousOwner != 0x0000000000000000000000000000000000000000) {
@@ -138,7 +137,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		bool needAuction = requiresAuction(_name);
 		if (needAuction)
 		{
-			if (now < m_toRecord[_name].renewalDate)
+			if (block.timestamp < m_toRecord[_name].renewalDate)
 				revert();
 			bid(_name, msg.sender, msg.value);
 		} else {

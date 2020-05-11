@@ -15,3 +15,4 @@ This section gives detailed instructions on how to update prior code for every b
 
 * Change ``f.value(...)()`` to ``f{value: ...}()``. Similarly ``(new C).value(...)()`` to
   ``(new C){value: ...}()`` and ``f.gas(...)()`` to ``f{gas: ...}()``.
+* Change ``now`` to ``block.timestamp``.

@@ -2908,6 +2908,20 @@ bool TypeChecker::visit(Identifier const& _identifier)
 			);
 	}
 
+	if (
+		MagicVariableDeclaration const* magicVar =
+		dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration)
+	)
+		if (magicVar->type()->category() == Type::Category::Integer)
+		{
+			solAssert(_identifier.name() == "now", "");
+			m_errorReporter
+				.typeError(
+					_identifier.location(),
+					"\"now\" has been deprecated. Use \"block.timestamp\" instead."
+				);
+		}
+
 	return false;
 }
 

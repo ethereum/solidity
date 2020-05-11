@@ -351,7 +351,7 @@ The full contract
         {
             sender = msg.sender;
             recipient = _recipient;
-            expiration = now + duration;
+            expiration = block.timestamp + duration;
         }
 
         /// the recipient can close the channel at any time by presenting a
@@ -376,7 +376,7 @@ The full contract
         /// if the timeout is reached without the recipient closing the channel,
         /// then the Ether is released back to the sender.
         function claimTimeout() public {
-            require(now >= expiration);
+            require(block.timestamp >= expiration);
             selfdestruct(sender);
         }
 

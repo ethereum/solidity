@@ -40,7 +40,6 @@ using namespace solidity::util;
 
 namespace solidity::frontend::test
 {
-
 static char const* walletCode = R"DELIMITER(
 //sol Wallet
 // Multi-sig, daily-limited account proxy/wallet.
@@ -317,7 +316,7 @@ abstract contract daylimit is multiowned {
 		return false;
 	}
 	// determines today's index.
-	function today() private view returns (uint) { return now / 1 days; }
+	function today() private view returns (uint) { return block.timestamp / 1 days; }
 
 	// FIELDS
 

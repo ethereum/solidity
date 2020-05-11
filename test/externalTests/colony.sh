@@ -34,7 +34,7 @@ function colony_test
     FORCE_ABIv2=false
     CONFIG="truffle.js"
 
-    truffle_setup https://github.com/solidity-external-tests/colonyNetwork.git develop_060
+    truffle_setup https://github.com/solidity-external-tests/colonyNetwork.git develop_070
     run_install install_fn
 
     cd lib

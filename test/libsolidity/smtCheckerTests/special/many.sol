@@ -10,7 +10,7 @@ contract C
 		assert(tx.origin == msg.sender);
 		uint x = block.number;
 		assert(x + 2 > block.number);
-		assert(now > 10);
+		assert(block.timestamp > 10);
 		assert(gasleft() > 100);
 	}
 }
@@ -22,5 +22,5 @@ contract C
 // Warning: (244-275): Assertion violation happens here
 // Warning: (311-316): Overflow (resulting value larger than 2**256 - 1) happens here
 // Warning: (304-332): Assertion violation happens here
-// Warning: (336-352): Assertion violation happens here
-// Warning: (356-379): Assertion violation happens here
+// Warning: (336-364): Assertion violation happens here
+// Warning: (368-391): Assertion violation happens here

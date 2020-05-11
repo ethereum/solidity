@@ -61,7 +61,7 @@ to receive their money - contracts cannot activate themselves.
             address payable _beneficiary
         ) public {
             beneficiary = _beneficiary;
-            auctionEndTime = now + _biddingTime;
+            auctionEndTime = block.timestamp + _biddingTime;
         }
 
         /// Bid on the auction with the value sent
@@ -78,7 +78,7 @@ to receive their money - contracts cannot activate themselves.
             // Revert the call if the bidding
             // period is over.
             require(
-                now <= auctionEndTime,
+                block.timestamp <= auctionEndTime,
                 "Auction already ended."
             );
 
@@ -140,7 +140,7 @@ to receive their money - contracts cannot activate themselves.
             // external contracts.
 
             // 1. Conditions
-            require(now >= auctionEndTime, "Auction not yet ended.");
+            require(block.timestamp >= auctionEndTime, "Auction not yet ended.");
             require(!ended, "auctionEnd has already been called.");
 
             // 2. Effects
@@ -211,8 +211,8 @@ invalid bids.
         /// functions. `onlyBefore` is applied to `bid` below:
         /// The new function body is the modifier's body where
         /// `_` is replaced by the old function body.
-        modifier onlyBefore(uint _time) { require(now < _time); _; }
-        modifier onlyAfter(uint _time) { require(now > _time); _; }
+        modifier onlyBefore(uint _time) { require(block.timestamp < _time); _; }
+        modifier onlyAfter(uint _time) { require(block.timestamp > _time); _; }
 
         constructor(
             uint _biddingTime,
@@ -220,7 +220,7 @@ invalid bids.
             address payable _beneficiary
         ) public {
             beneficiary = _beneficiary;
-            biddingEnd = now + _biddingTime;
+            biddingEnd = block.timestamp + _biddingTime;
             revealEnd = biddingEnd + _revealTime;
         }
 

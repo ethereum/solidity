@@ -128,7 +128,7 @@ restrictions highly readable.
         // phase, where `msg.sender` is the account
         // creating this contract.
         address public owner = msg.sender;
-        uint public creationTime = now;
+        uint public creationTime = block.timestamp;
 
         // Modifiers can be used to change
         // the body of a function.
@@ -159,7 +159,7 @@ restrictions highly readable.
 
         modifier onlyAfter(uint _time) {
             require(
-                now >= _time,
+                block.timestamp >= _time,
                 "Function called too early."
             );
             _;
@@ -287,7 +287,7 @@ function finishes.
         // This is the current stage.
         Stages public stage = Stages.AcceptingBlindedBids;
 
-        uint public creationTime = now;
+        uint public creationTime = block.timestamp;
 
         modifier atStage(Stages _stage) {
             require(
@@ -306,10 +306,10 @@ function finishes.
         // will not take the new stage into account.
         modifier timedTransitions() {
             if (stage == Stages.AcceptingBlindedBids &&
-                        now >= creationTime + 10 days)
+                        block.timestamp >= creationTime + 10 days)
                 nextStage();
             if (stage == Stages.RevealBids &&
-                    now >= creationTime + 12 days)
+                    block.timestamp >= creationTime + 12 days)
                 nextStage();
             // The other stages transition by transaction
             _;
