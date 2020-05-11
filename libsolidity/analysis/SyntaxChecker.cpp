@@ -27,7 +27,6 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SemVerHandler.h>
 
-#include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <memory>
@@ -335,7 +334,11 @@ bool SyntaxChecker::visit(FunctionTypeName const& _node)
 bool SyntaxChecker::visit(VariableDeclarationStatement const& _statement)
 {
 	// Report if none of the variable components in the tuple have a name (only possible via deprecated "var")
-	if (boost::algorithm::all_of_equal(_statement.declarations(), nullptr))
+	if (std::all_of(
+		_statement.declarations().begin(),
+		_statement.declarations().end(),
+		[](ASTPointer<VariableDeclaration> const& declaration) { return declaration == nullptr; }
+	))
 		m_errorReporter.syntaxError(
 			3299_error,
 			_statement.location(),

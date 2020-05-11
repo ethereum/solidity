@@ -34,7 +34,6 @@
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/StringUtils.h>
 
-#include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -1069,7 +1068,11 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		// No initial value is only permitted for single variables with specified type.
 		if (_statement.declarations().size() != 1 || !_statement.declarations().front())
 		{
-			if (boost::algorithm::all_of_equal(_statement.declarations(), nullptr))
+			if (std::all_of(
+				_statement.declarations().begin(),
+				_statement.declarations().end(),
+				[](ASTPointer<VariableDeclaration> const& declaration) { return declaration == nullptr; }
+			))
 			{
 				// The syntax checker has already generated an error for this case (empty LHS tuple).
 				solAssert(m_errorReporter.hasErrors(), "");
