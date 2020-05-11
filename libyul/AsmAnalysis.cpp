@@ -527,7 +527,7 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 	// Similarly we assume bitwise shifting and create2 go together.
 	yulAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
 
-	auto errorForVM = [=](string const& vmKindMessage) {
+	auto errorForVM = [&](string const& vmKindMessage) {
 		typeError(
 			_location,
 			"The \"" +

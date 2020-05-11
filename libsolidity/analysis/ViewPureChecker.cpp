@@ -230,7 +230,7 @@ void ViewPureChecker::endVisit(InlineAssembly const& _inlineAssembly)
 {
 	AssemblyViewPureChecker{
 		_inlineAssembly.dialect(),
-		[=](StateMutability _mutability, SourceLocation const& _location) { reportMutability(_mutability, _location); }
+		[&](StateMutability _mutability, SourceLocation const& _location) { reportMutability(_mutability, _location); }
 	}(_inlineAssembly.operations());
 }
 

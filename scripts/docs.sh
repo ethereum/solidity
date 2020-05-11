@@ -28,6 +28,6 @@
 
 set -e
 cd docs
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 sphinx-build -nW -b html -d _build/doctrees . _build/html
 cd ..
