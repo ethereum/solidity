@@ -157,10 +157,13 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 
 	if (FunctionDefinition const* constructor = _contract.constructor())
 		appendConstructor(*constructor);
-	else if (auto c = _contract.nextConstructor(m_context.mostDerivedContract()))
-		appendBaseConstructor(*c);
 	else
+	{
+		// Implicit constructors are always non-payable.
 		appendCallValueCheck();
+		if (auto c = _contract.nextConstructor(m_context.mostDerivedContract()))
+			appendBaseConstructor(*c);
+	}
 }
 
 size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _contract)
