@@ -43,7 +43,7 @@ void ImmutableValidator::analyze()
 			visitCallableIfNew(*contract->constructor());
 
 	for (ContractDefinition const* contract: linearizedContracts)
-		for (std::shared_ptr<InheritanceSpecifier> const inheritSpec: contract->baseContracts())
+		for (std::shared_ptr<InheritanceSpecifier> const& inheritSpec: contract->baseContracts())
 			if (auto args = inheritSpec->arguments())
 				ASTNode::listAccept(*args, *this);
 
