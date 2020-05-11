@@ -587,13 +587,13 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	if (!_function.isConstructor())
 		// adding 1 for return address.
 		m_context.adjustStackOffset(parametersSize + 1);
-	for (ASTPointer<VariableDeclaration const> const& variable: _function.parameters())
+	for (ASTPointer<VariableDeclaration> const& variable: _function.parameters())
 	{
 		m_context.addVariable(*variable, parametersSize);
 		parametersSize -= variable->annotation().type->sizeOnStack();
 	}
 
-	for (ASTPointer<VariableDeclaration const> const& variable: _function.returnParameters())
+	for (ASTPointer<VariableDeclaration> const& variable: _function.returnParameters())
 		appendStackVariableInitialisation(*variable);
 
 	if (_function.isConstructor())
@@ -650,7 +650,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		if (stackLayout[i] != i)
 			solAssert(false, "Invalid stack layout on cleanup.");
 
-	for (ASTPointer<VariableDeclaration const> const& variable: _function.parameters() + _function.returnParameters())
+	for (ASTPointer<VariableDeclaration> const& variable: _function.parameters() + _function.returnParameters())
 		m_context.removeVariable(*variable);
 
 	m_context.adjustStackOffset(-(int)c_returnValuesSize);
