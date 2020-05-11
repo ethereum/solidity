@@ -36,6 +36,7 @@
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/Suite.h>
+#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -158,6 +159,7 @@ public:
 				{'#', "quit"},
 				{',', "VarNameCleaner"},
 				{';', "StackCompressor"},
+				{'R', "ReasoningBasedSimplifier"}
 			};
 
 			printUsageBanner(abbreviationMap, extraOptions, 4);
@@ -190,6 +192,12 @@ public:
 				StackCompressor::run(m_dialect, obj, true, 16);
 				break;
 			}
+			case 'R':
+			{
+				ReasoningBasedSimplifier::run(context, *m_ast);
+				break;
+			}
+
 			default:
 				cerr << "Unknown option." << endl;
 			}

@@ -77,6 +77,7 @@ struct Dialect: boost::noncopyable
 	virtual bool validTypeForLiteral(LiteralKind _kind, YulString _value, YulString _type) const;
 
 	virtual Literal zeroLiteralForType(YulString _type) const;
+	virtual Literal trueLiteral() const;
 
 	virtual std::set<YulString> fixedFunctionNames() const { return {}; }
 
