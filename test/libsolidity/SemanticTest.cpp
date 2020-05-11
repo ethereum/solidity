@@ -13,6 +13,8 @@
 */
 
 #include <test/libsolidity/SemanticTest.h>
+#include <libsolutil/Whiskers.h>
+#include <libyul/Exceptions.h>
 #include <test/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -27,6 +29,7 @@
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::util::formatting;
 using namespace solidity::frontend::test;
@@ -200,6 +203,16 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 						<< "Note that the test also has to pass via Yul." << endl;
 				return TestResult::Failure;
 			}
+		}
+		catch (WhiskersError const&)
+		{
+			// this is an error in Whiskers template, so should be thrown anyway
+			throw;
+		}
+		catch (YulException const&)
+		{
+			// this should be an error in yul compilation or translation
+			throw;
 		}
 		catch (boost::exception const&)
 		{
