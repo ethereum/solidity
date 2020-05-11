@@ -706,10 +706,12 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	}
 	case FunctionType::Kind::External:
 	case FunctionType::Kind::DelegateCall:
+		appendExternalFunctionCall(_functionCall, arguments);
+		break;
 	case FunctionType::Kind::BareCall:
 	case FunctionType::Kind::BareDelegateCall:
 	case FunctionType::Kind::BareStaticCall:
-		appendExternalFunctionCall(_functionCall, arguments);
+		appendBareCall(_functionCall, arguments);
 		break;
 	case FunctionType::Kind::BareCallCode:
 		solAssert(false, "Callcode has been removed.");
@@ -1755,18 +1757,20 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 )
 {
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(type(_functionCall.expression()));
-	solAssert(
-		funType.takesArbitraryParameters() ||
-		_arguments.size() == funType.parameterTypes().size(), ""
-	);
-	solUnimplementedAssert(!funType.bound(), "");
+	solAssert(!funType.takesArbitraryParameters(), "");
+	solAssert(_arguments.size() == funType.parameterTypes().size(), "");
+	solAssert(!funType.isBareCall(), "");
 	FunctionType::Kind const funKind = funType.kind();
 
-	solAssert(funKind != FunctionType::Kind::BareStaticCall || m_context.evmVersion().hasStaticCall(), "");
-	solAssert(funKind != FunctionType::Kind::BareCallCode, "Callcode has been removed.");
+	solAssert(
+		funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::DelegateCall,
+		"Can only be used for regular external calls."
+	);
 
-	bool const isDelegateCall = funKind == FunctionType::Kind::BareDelegateCall || funKind == FunctionType::Kind::DelegateCall;
-	bool const useStaticCall = funKind == FunctionType::Kind::BareStaticCall || (funType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall());
+	solUnimplementedAssert(!funType.bound(), "");
+
+	bool const isDelegateCall = funKind == FunctionType::Kind::DelegateCall;
+	bool const useStaticCall = funType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall();
 
 	ReturnInfo const returnInfo{m_context.evmVersion(), funType};
 
@@ -1778,7 +1782,6 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 		argumentStrings += IRVariable(*arg).stackSlots();
 	}
 
-	solUnimplementedAssert(funKind != FunctionType::Kind::ECRecover, "");
 
 	if (!m_context.evmVersion().canOverchargeGasForCall())
 	{
@@ -1790,33 +1793,19 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 			m_code << "mstore(add(" << freeMemory() << ", " << to_string(returnInfo.estimatedReturnSize) << "), 0)\n";
 	}
 
-	ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
-
 	Whiskers templ(R"(
-		<?checkExistence>
-			if iszero(extcodesize(<address>)) { revert(0, 0) }
-		</checkExistence>
+		if iszero(extcodesize(<address>)) { revert(0, 0) }
 
 		// storage for arguments and returned data
 		let <pos> := <freeMemory>
-		<?bareCall>
-		<!bareCall>
-			mstore(<pos>, <shl28>(<funId>))
-		</bareCall>
-		let <end> := <encodeArgs>(
-			<?bareCall>
-				<pos>
-			<!bareCall>
-				add(<pos>, 4)
-			</bareCall>
-			<argumentString>
-		)
+		mstore(<pos>, <shl28>(<funId>))
+		let <end> := <encodeArgs>(add(<pos>, 4) <argumentString>)
 
 		let <success> := <call>(<gas>, <address>, <?hasValue> <value>, </hasValue> <pos>, sub(<end>, <pos>), <pos>, <reservedReturnSize>)
 		<?noTryCall>
 			if iszero(<success>) { <forwardingRevert>() }
 		</noTryCall>
-		<?hasRetVars> let <retVars> </hasRetVars>
+		<?+retVars> let <retVars> </+retVars>
 		if <success> {
 			<?dynamicReturnSize>
 				// copy dynamic return data out
@@ -1827,12 +1816,11 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 			mstore(<freeMemoryPointer>, add(<pos>, <roundUp>(<returnSize>)))
 
 			// decode return parameters from external try-call into retVars
-			<?hasRetVars> <retVars> := </hasRetVars> <abiDecode>(<pos>, add(<pos>, <returnSize>))
+			<?+retVars> <retVars> := </+retVars> <abiDecode>(<pos>, add(<pos>, <returnSize>))
 		}
 	)");
 	templ("pos", m_context.newYulVariable());
 	templ("end", m_context.newYulVariable());
-	templ("bareCall", funType.isBareCall());
 	if (_functionCall.annotation().tryCall)
 		templ("success", m_context.trySuccessConditionVariable(_functionCall));
 	else
@@ -1840,17 +1828,8 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	templ("freeMemory", freeMemory());
 	templ("shl28", m_utils.shiftLeftFunction(8 * (32 - 4)));
 
-	if (!funType.isBareCall())
-		templ("funId", IRVariable(_functionCall.expression()).part("functionIdentifier").name());
-
-	if (funKind == FunctionType::Kind::ECRecover)
-		templ("address", "1");
-	else if (funKind == FunctionType::Kind::SHA256)
-		templ("address", "2");
-	else if (funKind == FunctionType::Kind::RIPEMD160)
-		templ("address", "3");
-	else
-		templ("address", IRVariable(_functionCall.expression()).part("address").name());
+	templ("funId", IRVariable(_functionCall.expression()).part("functionIdentifier").name());
+	templ("address", IRVariable(_functionCall.expression()).part("address").name());
 
 	// Always use the actual return length, and not our calculated expected length, if returndatacopy is supported.
 	// This ensures it can catch badly formatted input from external calls.
@@ -1863,49 +1842,26 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 
 	string const retVars = IRVariable(_functionCall).commaSeparatedList();
 	templ("retVars", retVars);
-	templ("hasRetVars", !retVars.empty());
 	solAssert(retVars.empty() == returnInfo.returnTypes.empty(), "");
 
 	templ("roundUp", m_utils.roundUpFunction());
-	templ("abiDecode", abi.tupleDecoder(returnInfo.returnTypes, true));
+	templ("abiDecode", m_context.abiFunctions().tupleDecoder(returnInfo.returnTypes, true));
 	templ("dynamicReturnSize", returnInfo.dynamicReturnSize);
 	templ("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer));
 
 	templ("noTryCall", !_functionCall.annotation().tryCall);
 
-	// If the function takes arbitrary parameters or is a bare call, copy dynamic length data in place.
-	// Move arguments to memory, will not update the free memory pointer (but will update the memory
-	// pointer on the stack).
-	bool encodeInPlace = funType.takesArbitraryParameters() || funType.isBareCall();
-	if (funType.kind() == FunctionType::Kind::ECRecover)
-		// This would be the only combination of padding and in-place encoding,
-		// but all parameters of ecrecover are value types anyway.
-		encodeInPlace = false;
 	bool encodeForLibraryCall = funKind == FunctionType::Kind::DelegateCall;
 
-	solUnimplementedAssert(encodeInPlace == !funType.padArguments(), "");
-	if (encodeInPlace)
-	{
-		solUnimplementedAssert(!encodeForLibraryCall, "");
-		templ("encodeArgs", abi.tupleEncoderPacked(argumentTypes, funType.parameterTypes()));
-	}
-	else
-		templ("encodeArgs", abi.tupleEncoder(argumentTypes, funType.parameterTypes(), encodeForLibraryCall));
+	solAssert(funType.padArguments(), "");
+	templ("encodeArgs", m_context.abiFunctions().tupleEncoder(argumentTypes, funType.parameterTypes(), encodeForLibraryCall));
 	templ("argumentString", joinHumanReadablePrefixed(argumentStrings));
-
-	// Output data will replace input data, unless we have ECRecover (then, output
-	// area will be 32 bytes just before input area).
-	solUnimplementedAssert(funKind != FunctionType::Kind::ECRecover, "");
 
 	solAssert(!isDelegateCall || !funType.valueSet(), "Value set for delegatecall");
 	solAssert(!useStaticCall || !funType.valueSet(), "Value set for staticcall");
 
 	templ("hasValue", !isDelegateCall && !useStaticCall);
 	templ("value", funType.valueSet() ? IRVariable(_functionCall.expression()).part("value").name() : "0");
-
-	// Check that the target contract exists (has code) for non-low-level calls.
-	bool checkExistence = (funKind == FunctionType::Kind::External || funKind == FunctionType::Kind::DelegateCall);
-	templ("checkExistence", checkExistence);
 
 	if (funType.gasSet())
 		templ("gas", IRVariable(_functionCall.expression()).part("gas").name());
@@ -1919,8 +1875,6 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 		u256 gasNeededByCaller = evmasm::GasCosts::callGas(m_context.evmVersion()) + 10;
 		if (funType.valueSet())
 			gasNeededByCaller += evmasm::GasCosts::callValueTransferGas;
-		if (!checkExistence)
-			gasNeededByCaller += evmasm::GasCosts::callNewAccountGas; // we never know
 		templ("gas", "sub(gas(), " + formatNumber(gasNeededByCaller) + ")");
 	}
 	// Order is important here, STATICCALL might overlap with DELEGATECALL.
@@ -1933,8 +1887,103 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 
 	templ("forwardingRevert", m_utils.forwardingRevertFunction());
 
-	solUnimplementedAssert(funKind != FunctionType::Kind::RIPEMD160, "");
-	solUnimplementedAssert(funKind != FunctionType::Kind::ECRecover, "");
+	m_code << templ.render();
+}
+
+void IRGeneratorForStatements::appendBareCall(
+	FunctionCall const& _functionCall,
+	vector<ASTPointer<Expression const>> const& _arguments
+)
+{
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(type(_functionCall.expression()));
+	solAssert(
+		!funType.bound() &&
+		!funType.takesArbitraryParameters() &&
+		_arguments.size() == 1 &&
+		funType.parameterTypes().size() == 1, ""
+	);
+	FunctionType::Kind const funKind = funType.kind();
+
+	solAssert(funKind != FunctionType::Kind::BareStaticCall || m_context.evmVersion().hasStaticCall(), "");
+	solAssert(funKind != FunctionType::Kind::BareCallCode, "Callcode has been removed.");
+	solAssert(
+		funKind == FunctionType::Kind::BareCall ||
+		funKind == FunctionType::Kind::BareDelegateCall ||
+		funKind == FunctionType::Kind::BareStaticCall, ""
+	);
+
+	solAssert(!_functionCall.annotation().tryCall, "");
+	Whiskers templ(R"(
+		<?needsEncoding>
+			let <pos> := mload(<freeMemoryPointer>)
+			let <length> := sub(<encode>(<pos> <?+arg>,</+arg> <arg>), <pos>)
+		<!needsEncoding>
+			let <pos> := add(<arg>, 0x20)
+			let <length> := mload(<arg>)
+		</needsEncoding>
+
+		let <success> := <call>(<gas>, <address>, <?+value> <value>, </+value> <pos>, <length>, 0, 0)
+		<?+returndataVar>
+			let <returndataVar> := <extractReturndataFunction>()
+		</+returndataVar>
+	)");
+
+	templ("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer));
+	templ("pos", m_context.newYulVariable());
+	templ("length", m_context.newYulVariable());
+
+	templ("arg", IRVariable(*_arguments.front()).commaSeparatedList());
+	Type const& argType = type(*_arguments.front());
+	if (argType == *TypeProvider::bytesMemory() || argType == *TypeProvider::stringMemory())
+		templ("needsEncoding", false);
+	else
+	{
+		templ("needsEncoding", true);
+		ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
+		templ("encode", abi.tupleEncoderPacked({&argType}, {TypeProvider::bytesMemory()}));
+	}
+
+	templ("success", IRVariable(_functionCall).tupleComponent(0).name());
+	if (IRVariable(_functionCall).tupleComponent(1).type().category() == Type::Category::InaccessibleDynamic)
+		templ("returndataVar", "");
+	else
+	{
+		templ("returndataVar", IRVariable(_functionCall).tupleComponent(1).part("mpos").name());
+		templ("extractReturndataFunction", m_utils.extractReturndataFunction());
+	}
+
+	templ("address", IRVariable(_functionCall.expression()).part("address").name());
+
+	if (funKind == FunctionType::Kind::BareCall)
+	{
+		templ("value", funType.valueSet() ? IRVariable(_functionCall.expression()).part("value").name() : "0");
+		templ("call", "call");
+	}
+	else
+	{
+		solAssert(!funType.valueSet(), "Value set for delegatecall or staticcall.");
+		templ("value", "");
+		if (funKind == FunctionType::Kind::BareStaticCall)
+			templ("call", "staticcall");
+		else
+			templ("call", "delegatecall");
+	}
+
+	if (funType.gasSet())
+		templ("gas", IRVariable(_functionCall.expression()).part("gas").name());
+	else if (m_context.evmVersion().canOverchargeGasForCall())
+		// Send all gas (requires tangerine whistle EVM)
+		templ("gas", "gas()");
+	else
+	{
+		// send all gas except the amount needed to execute "SUB" and "CALL"
+		// @todo this retains too much gas for now, needs to be fine-tuned.
+		u256 gasNeededByCaller = evmasm::GasCosts::callGas(m_context.evmVersion()) + 10;
+		if (funType.valueSet())
+			gasNeededByCaller += evmasm::GasCosts::callValueTransferGas;
+		gasNeededByCaller += evmasm::GasCosts::callNewAccountGas; // we never know
+		templ("gas", "sub(gas(), " + formatNumber(gasNeededByCaller) + ")");
+	}
 
 	m_code << templ.render();
 }

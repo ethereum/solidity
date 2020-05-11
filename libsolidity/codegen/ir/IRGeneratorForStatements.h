@@ -106,6 +106,13 @@ private:
 		std::vector<ASTPointer<Expression const>> const& _arguments
 	);
 
+	/// Appends code for .call / .delegatecall / .staticcall.
+	/// All involved expressions have already been visited.
+	void appendBareCall(
+		FunctionCall const& _functionCall,
+		std::vector<ASTPointer<Expression const>> const& _arguments
+	);
+
 	/// @returns code that evaluates to the first unused memory slot (which does not have to
 	/// be empty).
 	static std::string freeMemory();
