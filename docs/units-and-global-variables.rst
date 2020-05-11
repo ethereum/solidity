@@ -329,10 +329,10 @@ for an interface type ``I``:
     interface identifier of the given interface ``I``. This identifier is defined as the ``XOR`` of all
     function selectors defined within the interface itself - excluding all inherited functions.
 
-The following properties are available for an integer type ``I``:
+The following properties are available for an integer type ``T``:
 
-``type(I).min``
-    The smallest value representable by type ``I``.
+``type(T).min``
+    The smallest value representable by type ``T``.
 
-``type(I).max``
-    The largest value representable by type ``I``.
+``type(T).max``
+    The largest value representable by type ``T``.
