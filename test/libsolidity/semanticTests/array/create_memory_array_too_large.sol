@@ -19,6 +19,8 @@ contract C {
         y[0] = 23;
         return x[2];
     }}
+// ====
+// compileViaYul: also
 // ----
 // f() -> FAILURE
 // g() -> FAILURE
