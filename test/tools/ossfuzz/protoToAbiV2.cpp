@@ -704,7 +704,7 @@ void TypeVisitor::structDefinition(StructType const& _type)
 	// Commence struct declaration
 	string structDef = lineString(
 		"struct " +
-		string(s_structNamePrefix) +
+		m_structPrefix +
 		to_string(m_structCounter) +
 		" {"
 	);
@@ -718,7 +718,7 @@ void TypeVisitor::structDefinition(StructType const& _type)
 		if (!ValidityVisitor().visit(t))
 			continue;
 
-		TypeVisitor tVisitor(m_structCounter + 1);
+		TypeVisitor tVisitor(m_structCounter + 1, m_indentation - 1, m_structPrefix);
 		type = tVisitor.visit(t);
 		m_structCounter += tVisitor.numStructs();
 		m_structDef << tVisitor.structDef();
@@ -749,7 +749,7 @@ string TypeVisitor::visit(StructType const& _type)
 		// Set last dyn param if struct contains a dyn param e.g., bytes, array etc.
 		m_isLastDynParamRightPadded = DynParamVisitor().visit(_type);
 		// If top-level struct is a non-emtpy struct, assign the name S<suffix>
-		m_baseType = s_structTypeName + to_string(m_structStartCounter);
+		m_baseType = m_structPrefix + to_string(m_structStartCounter);
 	}
 	else
 		m_baseType = {};

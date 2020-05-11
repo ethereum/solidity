@@ -16,6 +16,7 @@
 */
 
 #include <test/tools/ossfuzz/protoToSol.h>
+#include <test/tools/ossfuzz/SolProtoAdaptor.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -24,8 +25,9 @@
 #include <sstream>
 
 using namespace solidity::test::solprotofuzzer;
-using namespace solidity::util;
+using namespace solidity::test::solprotofuzzer::adaptor;
 using namespace std;
+using namespace solidity::util;
 
 string ProtoConverter::protoToSolidity(Program const& _p)
 {
@@ -78,6 +80,7 @@ pair<string, string> ProtoConverter::generateTestCase(TestContract const& _testC
 				break;
 			string contractName = testTuple.first;
 			string contractVarName = "tc" + to_string(contractVarIndex);
+
 			Whiskers init(R"(<endl><ind><contractName> <contractVarName> = new <contractName>();)");
 			init("endl", "\n");
 			init("ind", "\t\t");
@@ -179,20 +182,72 @@ string ProtoConverter::visit(ContractType const& _contractType)
 
 string ProtoConverter::visit(Contract const& _contract)
 {
+	if (_contract.funcdef_size() == 0 && _contract.bases_size() == 0)
+		return "";
+
 	openProgramScope(&_contract);
-	return "";
+	try {
+		auto contract = SolContract(_contract, programName(&_contract), nullptr, m_randomGen);
+		if (contract.validTest())
+		{
+			map<string, map<string, string>> testSet;
+			contract.validContractTests(testSet);
+			for (auto &contractTestSet: testSet)
+			{
+				m_contractTests.insert(pair(contractTestSet.first, map<string, string>{}));
+				for (auto &contractTest: contractTestSet.second)
+					m_contractTests[contractTestSet.first].insert(
+						make_pair(contractTest.first, contractTest.second)
+					);
+			}
+			return contract.str();
+		}
+		// There is no point in generating a contract that can not provide
+		// a valid test case, so we simply bail.
+		else
+		{
+			return "";
+		}
+	}
+	// Catch exception thrown when input specification is invalid e.g.
+	// invalid inheritance hierarchy
+	catch (langutil::FuzzerError const& error)
+	{
+		// Return empty string if input specification is invalid.
+		return "";
+	}
 }
 
 string ProtoConverter::visit(Interface const& _interface)
 {
+	if (_interface.funcdef_size() == 0 && _interface.bases_size() == 0)
+		return "";
+
 	openProgramScope(&_interface);
-	return "";
+	try {
+		auto interface = SolInterface(_interface, programName(&_interface), nullptr, m_randomGen);
+		return interface.str();
+	}
+	catch (langutil::FuzzerError const& error)
+	{
+		// Return empty string if input specification is invalid.
+		return "";
+	}
 }
 
 string ProtoConverter::visit(Library const& _library)
 {
+	if (emptyLibrary(_library))
+		return "";
+
 	openProgramScope(&_library);
-	return "";
+	auto lib = SolLibrary(_library, programName(&_library), m_randomGen);
+	if (lib.validTest())
+	{
+		auto libTestPair = lib.pseudoRandomTest();
+		m_libraryTests.push_back({lib.name(), libTestPair.first, libTestPair.second});
+	}
+	return lib.str();
 }
 
 tuple<string, string, string> ProtoConverter::pseudoRandomLibraryTest()

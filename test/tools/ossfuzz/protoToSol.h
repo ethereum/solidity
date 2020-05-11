@@ -111,6 +111,7 @@ struct SolRandomNumGenerator
  *      }
  * }
  */
+
 class ProtoConverter
 {
 public:
