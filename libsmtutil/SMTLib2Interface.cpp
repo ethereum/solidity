@@ -38,11 +38,11 @@ using namespace solidity::frontend;
 using namespace solidity::smtutil;
 
 SMTLib2Interface::SMTLib2Interface(
-	map<h256, string> const& _queryResponses,
+	map<h256, string> _queryResponses,
 	ReadCallback::Callback _smtCallback
 ):
-	m_queryResponses(_queryResponses),
-	m_smtCallback(std::move(_smtCallback))
+	m_queryResponses(move(_queryResponses)),
+	m_smtCallback(move(_smtCallback))
 {
 	reset();
 }
@@ -215,6 +215,8 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 		return "Int";
 	case Kind::Bool:
 		return "Bool";
+	case Kind::BitVector:
+		return "(_ BitVec " + to_string(dynamic_cast<BitVectorSort const&>(_sort).size) + ")";
 	case Kind::Array:
 	{
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);

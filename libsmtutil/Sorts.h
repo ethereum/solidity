@@ -195,6 +195,7 @@ struct SortProvider
 	static std::shared_ptr<IntSort> const uintSort;
 	static std::shared_ptr<IntSort> const sintSort;
 	static std::shared_ptr<IntSort> intSort(bool _signed = false);
+	static std::shared_ptr<BitVectorSort> const bitVectorSort;
 };
 
 }

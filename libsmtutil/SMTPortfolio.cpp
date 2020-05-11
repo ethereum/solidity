@@ -33,12 +33,12 @@ using namespace solidity::frontend;
 using namespace solidity::smtutil;
 
 SMTPortfolio::SMTPortfolio(
-	map<h256, string> const& _smtlib2Responses,
-	frontend::ReadCallback::Callback const& _smtCallback,
+	map<h256, string> _smtlib2Responses,
+	frontend::ReadCallback::Callback _smtCallback,
 	[[maybe_unused]] SMTSolverChoice _enabledSolvers
 )
 {
-	m_solvers.emplace_back(make_unique<SMTLib2Interface>(_smtlib2Responses, _smtCallback));
+	m_solvers.emplace_back(make_unique<SMTLib2Interface>(move(_smtlib2Responses), move(_smtCallback)));
 #ifdef HAVE_Z3
 	if (_enabledSolvers.z3)
 		m_solvers.emplace_back(make_unique<Z3Interface>());
