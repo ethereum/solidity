@@ -1304,7 +1304,20 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			solAssert(false, "Blockhash has been removed.");
 		else if (member == "creationCode" || member == "runtimeCode")
 		{
-			solUnimplementedAssert(false, "");
+			solUnimplementedAssert(member != "runtimeCode", "");
+			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
+			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
+			m_context.subObjectsCreated().insert(&contract);
+			m_code << Whiskers(R"(
+				let <size> := datasize("<objectName>")
+				let <result> := <allocationFunction>(add(<size>, 32))
+				mstore(<result>, <size>)
+				datacopy(add(<result>, 32), dataoffset("<objectName>"), <size>)
+			)")
+			("allocationFunction", m_utils.allocationFunction())
+			("size", m_context.newYulVariable())
+			("objectName", m_context.creationObjectName(contract))
+			("result", IRVariable(_memberAccess).commaSeparatedList()).render();
 		}
 		else if (member == "name")
 		{
