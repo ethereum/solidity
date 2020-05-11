@@ -66,7 +66,7 @@ shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 	RecursionGuard guard(*this);
 
 	if (currentToken() != Token::Identifier || currentLiteral() != "object")
-		fatalParserError("Expected keyword \"object\".");
+		fatalParserError(4294_error, "Expected keyword \"object\".");
 	advance();
 
 	shared_ptr<Object> ret = make_shared<Object>();
@@ -83,7 +83,7 @@ shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 		else if (currentToken() == Token::Identifier && currentLiteral() == "data")
 			parseData(*ret);
 		else
-			fatalParserError("Expected keyword \"data\" or \"object\" or \"}\".");
+			fatalParserError(8143_error, "Expected keyword \"data\" or \"object\" or \"}\".");
 	}
 	if (_containingObject)
 		addNamedSubObject(*_containingObject, ret->name, ret);
@@ -96,7 +96,7 @@ shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 shared_ptr<Block> ObjectParser::parseCode()
 {
 	if (currentToken() != Token::Identifier || currentLiteral() != "code")
-		fatalParserError("Expected keyword \"code\".");
+		fatalParserError(4846_error, "Expected keyword \"code\".");
 	advance();
 
 	return parseBlock();
@@ -133,11 +133,11 @@ YulString ObjectParser::parseUniqueName(Object const* _containingObject)
 	expectToken(Token::StringLiteral, false);
 	YulString name{currentLiteral()};
 	if (name.empty())
-		parserError("Object name cannot be empty.");
+		parserError(3287_error, "Object name cannot be empty.");
 	else if (_containingObject && _containingObject->name == name)
-		parserError("Object name cannot be the same as the name of the containing object.");
+		parserError(8311_error, "Object name cannot be the same as the name of the containing object.");
 	else if (_containingObject && _containingObject->subIndexByName.count(name))
-		parserError("Object name \"" + name.str() + "\" already exists inside the containing object.");
+		parserError(8794_error, "Object name \"" + name.str() + "\" already exists inside the containing object.");
 	advance();
 	return name;
 }
