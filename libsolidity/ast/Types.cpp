@@ -480,7 +480,7 @@ bool isValidShiftAndAmountType(Token _operator, Type const& _shiftAmountType)
 	if (_operator == Token::SHR)
 		return false;
 	else if (IntegerType const* otherInt = dynamic_cast<decltype(otherInt)>(&_shiftAmountType))
-		return true;
+		return !otherInt->isSigned();
 	else if (RationalNumberType const* otherRat = dynamic_cast<decltype(otherRat)>(&_shiftAmountType))
 		return !otherRat->isFractional() && otherRat->integerType() && !otherRat->integerType()->isSigned();
 	else

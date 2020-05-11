@@ -5,6 +5,7 @@ Breaking changes:
  * Deprecated dot syntax for `value` and `gas`.
  * Deprecated the identifier `now`.
  * JSON AST: Removes members with ``null`` value from JSON output.
+ * Type Checker: Disallow shifts by signed types.
 
 Language Features:
 
