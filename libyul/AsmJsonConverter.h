@@ -20,6 +20,8 @@
  * Converts inline assembly AST to JSON format
  */
 
+#pragma once
+
 #include <libyul/AsmDataForward.h>
 #include <liblangutil/SourceLocation.h>
 #include <json/json.h>
