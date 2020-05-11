@@ -130,6 +130,8 @@ add_library(yul
 	optimiser/OptimiserStep.h
 	optimiser/OptimizerUtilities.cpp
 	optimiser/OptimizerUtilities.h
+	optimiser/ReasoningBasedSimplifier.cpp
+	optimiser/ReasoningBasedSimplifier.h
 	optimiser/RedundantAssignEliminator.cpp
 	optimiser/RedundantAssignEliminator.h
 	optimiser/Rematerialiser.cpp
@@ -163,4 +165,5 @@ add_library(yul
 	optimiser/VarNameCleaner.cpp
 	optimiser/VarNameCleaner.h
 )
-target_link_libraries(yul PUBLIC evmasm solutil langutil)
+
+target_link_libraries(yul PUBLIC evmasm solutil langutil smtutil)

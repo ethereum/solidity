@@ -51,6 +51,7 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/Semantics.h>
@@ -299,6 +300,11 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		ForLoopInitRewriter::run(*m_context, *m_ast);
 		LiteralRematerialiser::run(*m_context, *m_ast);
 		StructuralSimplifier::run(*m_context, *m_ast);
+	}
+	else if (m_optimizerStep == "reasoningBasedSimplifier")
+	{
+		disambiguate();
+		ReasoningBasedSimplifier::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "equivalentFunctionCombiner")
 	{
