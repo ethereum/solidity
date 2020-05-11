@@ -67,7 +67,7 @@
 
 #include <json/json.h>
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <utility>
 
 using namespace std;

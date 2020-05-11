@@ -29,8 +29,6 @@
 #include <libyul/Dialect.h>
 #include <libyul/SideEffects.h>
 
-#include <boost/algorithm/cxx11/none_of.hpp>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -85,8 +83,9 @@ void UnusedPruner::operator()(Block& _block)
 			// movable or it returns a single value. In the latter case, we
 			// replace `let a := f()` by `pop(f())` (in pure Yul, this will be
 			// `drop(f())`).
-			if (boost::algorithm::none_of(
-				varDecl.variables,
+			if (std::none_of(
+				varDecl.variables.begin(),
+				varDecl.variables.end(),
 				[=](TypedName const& _typedName) { return used(_typedName.name); }
 			))
 			{
