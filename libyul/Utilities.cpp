@@ -38,9 +38,6 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
-using boost::split;
-using boost::is_any_of;
-
 string solidity::yul::reindent(string const& _code)
 {
 	int constexpr indentationWidth = 4;
@@ -55,7 +52,7 @@ string solidity::yul::reindent(string const& _code)
 	};
 
 	vector<string> lines;
-	split(lines, _code, is_any_of("\n"));
+	boost::split(lines, _code, boost::is_any_of("\n"));
 	for (string& line: lines)
 		boost::trim(line);
 
