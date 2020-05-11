@@ -245,7 +245,18 @@ printTask "Running general commandline tests..."
             stdoutExpectationFile="${tdir}/output.json"
             args="--standard-json "$(cat ${tdir}/args 2>/dev/null || true)
         else
-            inputFile="${tdir}input.sol"
+            if [[ -e "${tdir}input.yul" && -e "${tdir}input.sol" ]]
+            then
+                printError "Ambiguous input. Found both input.sol and input.yul."
+                exit 1
+            fi
+
+            if [ -e "${tdir}input.yul" ]
+            then
+                inputFile="${tdir}input.yul"
+            else
+                inputFile="${tdir}input.sol"
+            fi
             stdin=""
             stdout="$(cat ${tdir}/output 2>/dev/null || true)"
             stdoutExpectationFile="${tdir}/output"

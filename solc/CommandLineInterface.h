@@ -56,7 +56,12 @@ private:
 	/// @returns the full object with library placeholder hints in hex.
 	static std::string objectWithLinkRefsHex(evmasm::LinkerObject const& _obj);
 
-	bool assemble(yul::AssemblyStack::Language _language, yul::AssemblyStack::Machine _targetMachine, bool _optimize);
+	bool assemble(
+		yul::AssemblyStack::Language _language,
+		yul::AssemblyStack::Machine _targetMachine,
+		bool _optimize,
+		std::optional<std::string> _yulOptimiserSteps = std::nullopt
+	);
 
 	void outputCompilationResults();
 
