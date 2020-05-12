@@ -275,11 +275,13 @@ wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 
 wasm::Expression WasmCodeTransform::operator()(Break const&)
 {
+	yulAssert(m_breakContinueLabelNames.size() > 0, "");
 	return wasm::Branch{wasm::Label{m_breakContinueLabelNames.top().first}};
 }
 
 wasm::Expression WasmCodeTransform::operator()(Continue const&)
 {
+	yulAssert(m_breakContinueLabelNames.size() > 0, "");
 	return wasm::Branch{wasm::Label{m_breakContinueLabelNames.top().second}};
 }
 
