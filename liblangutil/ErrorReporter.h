@@ -134,6 +134,12 @@ public:
 		return m_errorCount > 0;
 	}
 
+	/// @returns the number of errors (ignores warnings).
+	unsigned errorCount() const
+	{
+		return m_errorCount;
+	}
+
 	// @returns true if the maximum error count has been reached.
 	bool hasExcessiveErrors() const;
 
