@@ -192,6 +192,9 @@ void CompilerContext::appendMissingLowLevelFunctions()
 
 pair<string, set<string>> CompilerContext::requestedYulFunctions()
 {
+	solAssert(!m_requestedYulFunctionsRan, "requestedYulFunctions called more than once.");
+	m_requestedYulFunctionsRan = true;
+
 	set<string> empty;
 	swap(empty, m_externallyUsedYulFunctions);
 	return {m_yulFunctionCollector.requestedFunctions(), std::move(empty)};

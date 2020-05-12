@@ -81,9 +81,8 @@ private:
 	/// Evaluates constructor's arguments for all base contracts (listed in inheritance specifiers) of
 	/// @a _contract
 	/// @returns Pair of expressions needed to evaluate params and list of parameters in a map contract -> params
-	std::pair<std::string, std::map<ContractDefinition const*, std::string>> evaluateConstructorArguments(
-		ContractDefinition const& _contract
-	);
+	std::pair<std::string, std::map<ContractDefinition const*, std::vector<std::string>>>
+	evaluateConstructorArguments(ContractDefinition const& _contract);
 
 	/// Initializes state variables of
 	/// @a _contract

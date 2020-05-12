@@ -16,17 +16,25 @@ Bugfixes:
 
 ### 0.6.8 (unreleased)
 
-Language Features:
+Important Bugfixes:
+ * Add missing callvalue check to the creation code of a contract that does not define a constructor but has a base that does define a constructor.
 
+
+Language Features:
+ * Implemented ``type(X).min`` and ``type(X).max`` for every integer type ``X`` that returns the smallest and largest value representable by the type.
 
 
 Compiler Features:
+ * Commandline Interface: Don't ignore `--yul-optimizations` in assembly mode.
 
 
 
 Bugfixes:
-
-
+ * ABI: Skip ``private`` or ``internal`` constructors.
+ * Type Checker: Disallow accessing ``runtimeCode`` for contract types that contain immutable state variables.
+ * Fixed an "Assembly Exception in Bytecode" error where requested functions were generated twice.
+ * Natspec: Fixed a bug that ignored ``@return`` tag when no other developer-documentation tags were present.
+ * Yul assembler: Fix source location of variable declarations without value.
 
 
 ### 0.6.7 (2020-05-04)

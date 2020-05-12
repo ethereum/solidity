@@ -15,6 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#pragma once
+
 #include <libsolidity/analysis/OverrideChecker.h>
 
 #include <libsolidity/ast/AST.h>

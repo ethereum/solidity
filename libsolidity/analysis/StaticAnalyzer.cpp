@@ -120,13 +120,14 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 			{
 				if (var.first.second->isCallableOrCatchParameter())
 					m_errorReporter.warning(
+						5667_error,
 						var.first.second->location(),
 						"Unused " +
 						string(var.first.second->isTryCatchParameter() ? "try/catch" : "function") +
 						" parameter. Remove or comment out the variable name to silence this warning."
 					);
 				else
-					m_errorReporter.warning(var.first.second->location(), "Unused local variable.");
+					m_errorReporter.warning(2072_error, var.first.second->location(), "Unused local variable.");
 			}
 	m_localVarUseCount.clear();
 	m_constructor = false;
@@ -159,6 +160,7 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 		set<StructDefinition const*> structsSeen;
 		if (structureSizeEstimate(*_variable.type(), structsSeen) >= bigint(1) << 64)
 			m_errorReporter.warning(
+				3408_error,
 				_variable.location(),
 				"Variable covers a large part of storage and thus makes collisions likely. "
 				"Either use mappings or dynamic arrays and allow their size to be increased only "
@@ -183,6 +185,7 @@ bool StaticAnalyzer::visit(ExpressionStatement const& _statement)
 {
 	if (_statement.expression().annotation().isPure)
 		m_errorReporter.warning(
+			6133_error,
 			_statement.location(),
 			"Statement has no effect."
 		);
@@ -196,11 +199,13 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 	{
 		if (type->kind() == MagicType::Kind::Message && _memberAccess.memberName() == "gas")
 			m_errorReporter.typeError(
+				1400_error,
 				_memberAccess.location(),
 				"\"msg.gas\" has been deprecated in favor of \"gasleft()\""
 			);
 		else if (type->kind() == MagicType::Kind::Block && _memberAccess.memberName() == "blockhash")
 			m_errorReporter.typeError(
+				8113_error,
 				_memberAccess.location(),
 				"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
 			);
@@ -211,6 +216,7 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 			ContractType const& contract = dynamic_cast<ContractType const&>(*type->typeArgument());
 			if (m_constructorUsesAssembly->check(contract.contractDefinition()))
 				m_errorReporter.warning(
+					6417_error,
 					_memberAccess.location(),
 					"The constructor of the contract (or its base) uses inline assembly. "
 					"Because of that, it might be that the deployed bytecode is different from type(...).runtimeCode."
@@ -222,6 +228,7 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 		if (auto const* type = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
 			if (type->kind() == FunctionType::Kind::BareCallCode)
 				m_errorReporter.typeError(
+					2256_error,
 					_memberAccess.location(),
 					"\"callcode\" has been deprecated in favour of \"delegatecall\"."
 				);
@@ -235,6 +242,7 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 			{
 				if (id->name() == "this")
 					m_errorReporter.warning(
+						5805_error,
 						id->location(),
 						"\"this\" used in constructor. "
 						"Note that external functions of a contract "
@@ -285,6 +293,7 @@ bool StaticAnalyzer::visit(BinaryOperation const& _operation)
 		))
 			if (rhs->isZero())
 				m_errorReporter.typeError(
+					1211_error,
 					_operation.location(),
 					(_operation.getOperator() == Token::Div) ? "Division by zero." : "Modulo zero."
 				);
@@ -307,6 +316,7 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 				))
 					if (lastArg->isZero())
 						m_errorReporter.typeError(
+							4195_error,
 							_functionCall.location(),
 							"Arithmetic modulo zero."
 						);
@@ -317,6 +327,7 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 			functionType->declaration().scope() == m_currentContract
 		)
 			m_errorReporter.typeError(
+				6700_error,
 				_functionCall.location(),
 				SecondarySourceLocation().append(
 					"The function declaration is here:",

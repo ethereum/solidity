@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	// This is only correct on >=Constantinople.
 	else if (CommonOptions::get().useABIEncoderV2)
 	{
-		if (CommonOptions::get().optimizeYul)
+		if (CommonOptions::get().optimize)
 		{
 			// Costs with 0 are cases which cannot be triggered in tests.
 			if (evmVersion < EVMVersion::istanbul())
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		// This is only correct on >=Constantinople.
 		else if (CommonOptions::get().useABIEncoderV2)
 		{
-			if (CommonOptions::get().optimizeYul)
+			if (CommonOptions::get().optimize)
 			{
 				if (evmVersion < EVMVersion::istanbul())
 					CHECK_GAS(0, 21567, 20);

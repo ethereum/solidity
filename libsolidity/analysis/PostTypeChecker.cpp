@@ -122,6 +122,7 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 		for (auto declaration: m_constVariables)
 			if (auto identifier = findCycle(*declaration))
 				m_errorReporter.typeError(
+					6161_error,
 					declaration->location(),
 					"The value of the constant " + declaration->name() +
 					" has a cyclic dependency via " + identifier->name() + "."
@@ -165,7 +166,7 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 		auto visitor = [&](VariableDeclaration const& _variable, util::CycleDetector<VariableDeclaration>& _cycleDetector, size_t _depth)
 		{
 			if (_depth >= 256)
-				m_errorReporter.fatalDeclarationError(_variable.location(), "Variable definition exhausting cyclic dependency validator.");
+				m_errorReporter.fatalDeclarationError(7380_error, _variable.location(), "Variable definition exhausting cyclic dependency validator.");
 
 			// Iterating through the dependencies needs to be deterministic and thus cannot
 			// depend on the memory layout.
@@ -209,6 +210,7 @@ struct OverrideSpecifierChecker: public PostTypeChecker::Checker
 			TypeType const* actualTypeType = dynamic_cast<TypeType const*>(decl->type());
 
 			m_errorReporter.typeError(
+				9301_error,
 				override->location(),
 				"Expected contract but got " +
 				actualTypeType->actualType()->toString(true) +
@@ -243,6 +245,7 @@ struct ModifierContextChecker: public PostTypeChecker::Checker
 		if (ModifierType const* type = dynamic_cast<decltype(type)>(_identifier.annotation().type))
 		{
 			m_errorReporter.typeError(
+				3112_error,
 				_identifier.location(),
 				"Modifier can only be referenced in function headers."
 			);
@@ -280,6 +283,7 @@ struct EventOutsideEmitChecker: public PostTypeChecker::Checker
 			// Check for event outside of emit statement
 			if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
 				m_errorReporter.typeError(
+					3132_error,
 					_functionCall.location(),
 					"Event invocations have to be prefixed by \"emit\"."
 				);
@@ -308,7 +312,7 @@ struct NoVariablesInInterfaceChecker: public PostTypeChecker::Checker
 			&& !_variable.isCallableOrCatchParameter()
 			&& !m_insideStruct
 		)
-			m_errorReporter.typeError(_variable.location(), "Variables cannot be declared in interfaces.");
+			m_errorReporter.typeError(8274_error, _variable.location(), "Variables cannot be declared in interfaces.");
 
 		return true;
 	}

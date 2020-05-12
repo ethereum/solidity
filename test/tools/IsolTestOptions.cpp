@@ -69,6 +69,7 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 		std::cout << options << std::endl;
 		return false;
 	}
+	enforceViaYul = true;
 
 	return res;
 }

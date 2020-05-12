@@ -69,10 +69,11 @@ public:
 	/// The returned IRVariable is itself typed with the type of the stack slot as defined
 	/// in ``m_type.stackItems()`` and may again occupy multiple stack slots.
 	IRVariable part(std::string const& _slot) const;
-private:
+
 	/// @returns a vector containing the names of the stack slots of the variable.
 	std::vector<std::string> stackSlots() const;
 
+private:
 	/// @returns a name consisting of the base name appended with an underscore and @æ _suffix,
 	/// unless @a _suffix is empty, in which case the base name itself is returned.
 	std::string suffixedName(std::string const& _suffix) const;

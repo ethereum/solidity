@@ -1232,7 +1232,7 @@ Object EVMToEwasmTranslator::run(Object const& _object)
 
 	FunctionHoister::run(context, ast);
 	FunctionGrouper::run(context, ast);
-	MainFunction{}(ast);
+	MainFunction::run(context, ast);
 	ForLoopConditionIntoBody::run(context, ast);
 	ExpressionSplitter::run(context, ast);
 	WordSizeTransform::run(m_dialect, WasmDialect::instance(), ast, nameDispenser);

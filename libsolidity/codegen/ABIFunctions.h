@@ -67,31 +67,53 @@ public:
 
 	/// @returns name of an assembly function to ABI-encode values of @a _givenTypes
 	/// into memory, converting the types to @a _targetTypes on the fly.
-	/// Parameters are: <headStart> <value_n> ... <value_1>, i.e.
-	/// the layout on the stack is <value_1> ... <value_n> <headStart> with
+	/// Parameters are: <headStart> <value_1> ... <value_n>, i.e.
+	/// the layout on the stack is <value_n> ... <value_1> <headStart> with
 	/// the top of the stack on the right.
 	/// The values represent stack slots. If a type occupies more or less than one
 	/// stack slot, it takes exactly that number of values.
 	/// Returns a pointer to the end of the area written in memory.
 	/// Does not allocate memory (does not change the free memory pointer), but writes
 	/// to memory starting at $headStart and an unrestricted amount after that.
+	/// If @reversed is true, the order of the variables after <headStart> is reversed.
 	std::string tupleEncoder(
 		TypePointers const& _givenTypes,
 		TypePointers const& _targetTypes,
-		bool _encodeAsLibraryTypes = false
+		bool _encodeAsLibraryTypes = false,
+		bool _reversed = false
 	);
+
+	/// Specialization of tupleEncoder to _reversed = true
+	std::string tupleEncoderReversed(
+		TypePointers const& _givenTypes,
+		TypePointers const& _targetTypes,
+		bool _encodeAsLibraryTypes = false
+	) {
+		return tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes, true);
+	}
 
 	/// @returns name of an assembly function to encode values of @a _givenTypes
 	/// with packed encoding into memory, converting the types to @a _targetTypes on the fly.
-	/// Parameters are: <memPos> <value_n> ... <value_1>, i.e.
-	/// the layout on the stack is <value_1> ... <value_n> <memPos> with
+	/// Parameters are: <memPos> <value_1> ... <value_n>, i.e.
+	/// the layout on the stack is <value_n> ... <value_1> <memPos> with
 	/// the top of the stack on the right.
 	/// The values represent stack slots. If a type occupies more or less than one
 	/// stack slot, it takes exactly that number of values.
 	/// Returns a pointer to the end of the area written in memory.
 	/// Does not allocate memory (does not change the free memory pointer), but writes
 	/// to memory starting at memPos and an unrestricted amount after that.
-	std::string tupleEncoderPacked(TypePointers const& _givenTypes, TypePointers const& _targetTypes);
+	/// If @reversed is true, the order of the variables after <headStart> is reversed.
+	std::string tupleEncoderPacked(
+		TypePointers const& _givenTypes,
+		TypePointers const& _targetTypes,
+		bool _reversed = false
+	);
+
+	/// Specialization of tupleEncoderPacked to _reversed = true
+	std::string tupleEncoderPackedReversed(TypePointers const& _givenTypes, TypePointers const& _targetTypes)
+	{
+		return tupleEncoderPacked(_givenTypes, _targetTypes, true);
+	}
 
 	/// @returns name of an assembly function to ABI-decode values of @a _types
 	/// into memory. If @a _fromMemory is true, decodes from memory instead of

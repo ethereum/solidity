@@ -10,6 +10,8 @@ contract test {
         to_multiple_map[42][23] = 31;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // to_string_map(uint256): 42 -> "24"
 // to_bool_map(uint256): 42 -> false

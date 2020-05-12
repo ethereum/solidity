@@ -167,6 +167,7 @@ public:
 	/// Clears the internal list, i.e. calling it again will result in an
 	/// empty return value.
 	std::pair<std::string, std::set<std::string>> requestedYulFunctions();
+	bool requestedYulFunctionsRan() const { return m_requestedYulFunctionsRan; }
 
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
 	unsigned baseStackOffsetOfVariable(Declaration const& _declaration) const;
@@ -389,6 +390,8 @@ private:
 	YulUtilFunctions m_yulUtilFunctions;
 	/// The queue of low-level functions to generate.
 	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
+	/// Flag to check that requestedYulFunctions() was called exactly once
+	bool m_requestedYulFunctionsRan = false;
 };
 
 }

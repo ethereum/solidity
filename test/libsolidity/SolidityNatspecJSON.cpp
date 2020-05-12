@@ -355,6 +355,27 @@ BOOST_AUTO_TEST_CASE(dev_multiple_functions)
 	checkNatspec(sourceCode, "test", natspec, false);
 }
 
+BOOST_AUTO_TEST_CASE(dev_return_no_params)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @return d The result of the multiplication
+			function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }
+		}
+	)";
+
+	char const* natspec = R"ABCDEF(
+	{
+		"methods": {
+			"mul(uint256,uint256)": {
+				"returns": { "d": "The result of the multiplication"
+			}
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, false);
+}
+
 BOOST_AUTO_TEST_CASE(dev_return)
 {
 	char const* sourceCode = R"(

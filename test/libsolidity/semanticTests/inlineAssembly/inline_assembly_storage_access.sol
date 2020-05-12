@@ -16,7 +16,8 @@ contract C {
         return true;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // f() -> true
 // z() -> 7

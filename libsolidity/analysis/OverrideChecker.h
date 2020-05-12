@@ -32,6 +32,7 @@
 namespace solidity::langutil
 {
 class ErrorReporter;
+struct ErrorId;
 struct SourceLocation;
 }
 
@@ -160,18 +161,21 @@ private:
 	void overrideListError(
 		OverrideProxy const& _item,
 		std::set<ContractDefinition const*, CompareByID> _secondary,
+		langutil::ErrorId _error,
 		std::string const& _message1,
 		std::string const& _message2
 	);
 	void overrideError(
 		Declaration const& _overriding,
 		Declaration const& _super,
+		langutil::ErrorId _error,
 		std::string const& _message,
 		std::string const& _secondaryMsg = "Overridden function is here:"
 	);
 	void overrideError(
 		OverrideProxy const& _overriding,
 		OverrideProxy const& _super,
+		langutil::ErrorId _error,
 		std::string const& _message,
 		std::string const& _secondaryMsg = "Overridden function is here:"
 	);

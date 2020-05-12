@@ -3,6 +3,8 @@ contract test {
         return cond ? (1, 2) : (3, 4);
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f(bool): true -> 1, 2
 // f(bool): false -> 3, 4

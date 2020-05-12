@@ -38,6 +38,7 @@ public:
 	{
 		std::string filename;
 		langutil::EVMVersion evmVersion;
+		bool enforceCompileViaYul;
 	};
 
 	enum class TestResult { Success, Failure, FatalError };
@@ -59,6 +60,8 @@ public:
 	virtual void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false) const = 0;
 	/// Outputs settings.
 	virtual void printSettings(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false);
+	/// Outputs updated settings
+	virtual void printUpdatedSettings(std::ostream& _stream, std::string const& _linePrefix = "");
 	/// Outputs test expectations to @arg _stream that match the actual results of the test.
 	/// Each line of output is prefixed with @arg _linePrefix.
 	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const = 0;

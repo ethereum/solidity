@@ -161,7 +161,11 @@ TestTool::Result TestTool::process()
 		{
 			(AnsiColorized(cout, formatted, {BOLD}) << m_name << ": ").flush();
 
-			m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_options.evmVersion()});
+			m_test = m_testCaseCreator(TestCase::Config{
+				m_path.string(),
+				m_options.evmVersion(),
+				m_options.enforceViaYul
+			});
 			if (m_test->shouldRun())
 				switch (TestCase::TestResult result = m_test->run(outputMessages, "  ", formatted))
 				{
@@ -232,7 +236,7 @@ TestTool::Request TestTool::handleResponse(bool _exception)
 				cout << endl;
 				ofstream file(m_path.string(), ios::trunc);
 				m_test->printSource(file);
-				m_test->printSettings(file);
+				m_test->printUpdatedSettings(file);
 				file << "// ----" << endl;
 				m_test->printUpdatedExpectations(file, "// ");
 				return Request::Rerun;

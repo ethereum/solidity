@@ -24,6 +24,7 @@ contract C {
     }
 }
 // ====
+// compileViaYul: also
 // EVMVersion: <byzantium
 // ----
 // get() -> 0x00

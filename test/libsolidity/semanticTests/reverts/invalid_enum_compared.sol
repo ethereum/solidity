@@ -22,7 +22,8 @@ contract C {
         return garbled != garbled;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // test_eq_ok() -> 1
 // test_eq() -> FAILURE # both should throw #

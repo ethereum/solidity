@@ -36,7 +36,6 @@
 #include <libsolutil/Whiskers.h>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/range/adaptor/reversed.hpp>
 #include <numeric>
 #include <utility>
 
@@ -1590,6 +1589,16 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			for (auto const& function: contract.interfaceFunctionList(false))
 				result ^= fromBigEndian<uint64_t>(function.first.ref());
 			m_context << (u256{result} << (256 - 32));
+		}
+		else if (member == "min" || member == "max")
+		{
+			MagicType const* arg = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type);
+			IntegerType const* integerType = dynamic_cast<IntegerType const*>(arg->typeArgument());
+
+			if (member == "min")
+				m_context << integerType->min();
+			else
+				m_context << integerType->max();
 		}
 		else if ((set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}).count(member))
 		{

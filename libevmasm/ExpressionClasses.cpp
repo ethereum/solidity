@@ -26,9 +26,6 @@
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/SimplificationRules.h>
 
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/noncopyable.hpp>
-
 #include <functional>
 #include <tuple>
 #include <utility>

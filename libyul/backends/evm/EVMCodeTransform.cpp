@@ -85,11 +85,11 @@ void VariableReferenceCounter::operator()(Block const& _block)
 void VariableReferenceCounter::increaseRefIfFound(YulString _variableName)
 {
 	m_scope->lookup(_variableName, GenericVisitor{
-		[=](Scope::Variable const& _var)
+		[&](Scope::Variable const& _var)
 		{
 			++m_context.variableReferences[&_var];
 		},
-		[=](Scope::Function const&) { }
+		[](Scope::Function const&) { }
 	});
 }
 
@@ -184,11 +184,13 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	}
 	else
 	{
+		m_assembly.setSourceLocation(_varDecl.location);
 		int variablesLeft = numVariables;
 		while (variablesLeft--)
 			m_assembly.appendConstant(u256(0));
 	}
 
+	m_assembly.setSourceLocation(_varDecl.location);
 	bool atTopOfStack = true;
 	for (int varIndex = numVariables - 1; varIndex >= 0; --varIndex)
 	{
@@ -203,7 +205,6 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 			if (atTopOfStack)
 			{
 				m_context->variableStackHeights.erase(&var);
-				m_assembly.setSourceLocation(_varDecl.location);
 				m_assembly.appendInstruction(evmasm::Instruction::POP);
 			}
 			else
@@ -216,7 +217,6 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 			int slot = *m_unusedStackSlots.begin();
 			m_unusedStackSlots.erase(m_unusedStackSlots.begin());
 			m_context->variableStackHeights[&var] = slot;
-			m_assembly.setSourceLocation(_varDecl.location);
 			if (int heightDiff = variableHeightDiff(var, varName, true))
 				m_assembly.appendInstruction(evmasm::swapInstruction(heightDiff - 1));
 			m_assembly.appendInstruction(evmasm::Instruction::POP);
@@ -272,7 +272,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 
 		Scope::Function* function = nullptr;
 		yulAssert(m_scope->lookup(_call.functionName.name, GenericVisitor{
-			[=](Scope::Variable&) { yulAssert(false, "Expected function name."); },
+			[](Scope::Variable&) { yulAssert(false, "Expected function name."); },
 			[&](Scope::Function& _function) { function = &_function; }
 		}), "Function name not found.");
 		yulAssert(function, "");
@@ -296,7 +296,7 @@ void CodeTransform::operator()(Identifier const& _identifier)
 	// First search internals, then externals.
 	yulAssert(m_scope, "");
 	if (m_scope->lookup(_identifier.name, GenericVisitor{
-		[=](Scope::Variable& _var)
+		[&](Scope::Variable& _var)
 		{
 			// TODO: opportunity for optimization: Do not DUP if this is the last reference
 			// to the top most element of the stack
@@ -307,7 +307,7 @@ void CodeTransform::operator()(Identifier const& _identifier)
 				m_assembly.appendConstant(u256(0));
 			decreaseReference(_identifier.name, _var);
 		},
-		[=](Scope::Function&)
+		[](Scope::Function&)
 		{
 			yulAssert(false, "Function not removed during desugaring.");
 		}

@@ -306,7 +306,7 @@ void RedundantAssignEliminator::finalize(YulString _variable, RedundantAssignEli
 
 void AssignmentRemover::operator()(Block& _block)
 {
-	boost::range::remove_erase_if(_block.statements, [=](Statement const& _statement) -> bool {
+	boost::range::remove_erase_if(_block.statements, [&](Statement const& _statement) -> bool {
 		return holds_alternative<Assignment>(_statement) && m_toRemove.count(&std::get<Assignment>(_statement));
 	});
 
