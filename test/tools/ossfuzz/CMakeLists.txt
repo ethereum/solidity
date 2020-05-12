@@ -10,7 +10,7 @@ add_dependencies(ossfuzz
 
 if (OSSFUZZ)
     add_custom_target(ossfuzz_proto)
-    add_dependencies(ossfuzz_proto yul_proto_ossfuzz yul_proto_diff_ossfuzz)
+    add_dependencies(ossfuzz_proto yul_proto_ossfuzz yul_proto_diff_ossfuzz sol_proto_ossfuzz)
 
     add_custom_target(ossfuzz_abiv2)
     add_dependencies(ossfuzz_abiv2 abiv2_proto_ossfuzz)
@@ -78,6 +78,25 @@ if (OSSFUZZ)
             protobuf.a
     )
     set_target_properties(abiv2_proto_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+
+    add_executable(sol_proto_ossfuzz
+            solProtoFuzzer.cpp
+            protoToSol.cpp
+            solProto.pb.cc
+            abiV2FuzzerCommon.cpp
+            ../../EVMHost.cpp
+    )
+    target_include_directories(sol_proto_ossfuzz PRIVATE
+            /usr/include/libprotobuf-mutator
+    )
+    target_link_libraries(sol_proto_ossfuzz PRIVATE solidity libsolc
+            evmc
+            evmone-standalone
+            protobuf-mutator-libfuzzer.a
+            protobuf-mutator.a
+            protobuf.a
+    )
+    set_target_properties(sol_proto_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 else()
     add_library(solc_opt_ossfuzz
             solc_opt_ossfuzz.cpp
