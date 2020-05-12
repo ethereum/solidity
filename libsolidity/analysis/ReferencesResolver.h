@@ -103,7 +103,6 @@ private:
 	/// Stack of return parameters.
 	std::vector<ParameterList const*> m_returnParameters;
 	bool const m_resolveInsideCode;
-	bool m_errorOccurred = false;
 
 	InlineAssemblyAnnotation* m_yulAnnotation = nullptr;
 	bool m_yulInsideFunction = false;
