@@ -6,7 +6,6 @@
 	pop(extcodehash(0))
 	pop(returndatasize())
 	pop(sload(0))
-	pop(pc())
 	pop(msize())
 	pop(mload(0))
 	pop(sload(0))

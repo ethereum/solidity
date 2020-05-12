@@ -273,6 +273,7 @@ bool SyntaxChecker::visit(InlineAssembly const& _inlineAssembly)
 			"The msize instruction cannot be used when the Yul optimizer is activated because "
 			"it can change its semantics. Either disable the Yul optimizer or do not use the instruction."
 		);
+
 	return false;
 }
 
