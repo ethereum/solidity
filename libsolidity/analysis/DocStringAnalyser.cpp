@@ -34,10 +34,9 @@ using namespace solidity::frontend;
 
 bool DocStringAnalyser::analyseDocStrings(SourceUnit const& _sourceUnit)
 {
-	m_errorOccured = false;
+	auto errorWatcher = m_errorReporter.errorWatcher();
 	_sourceUnit.accept(*this);
-
-	return !m_errorOccured;
+	return errorWatcher.ok();
 }
 
 bool DocStringAnalyser::visit(ContractDefinition const& _contract)
@@ -152,8 +151,7 @@ void DocStringAnalyser::parseDocStrings(
 	DocStringParser parser;
 	if (_node.documentation() && !_node.documentation()->text()->empty())
 	{
-		if (!parser.parse(*_node.documentation()->text(), m_errorReporter))
-			m_errorOccured = true;
+		parser.parse(*_node.documentation()->text(), m_errorReporter);
 		_annotation.docTags = parser.tags();
 	}
 
@@ -210,6 +208,5 @@ void DocStringAnalyser::parseDocStrings(
 
 void DocStringAnalyser::appendError(SourceLocation const& _location, string const& _description)
 {
-	m_errorOccured = true;
 	m_errorReporter.docstringParsingError(7816_error, _location, _description);
 }
