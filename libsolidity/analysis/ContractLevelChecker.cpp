@@ -112,7 +112,7 @@ void ContractLevelChecker::checkDuplicateFunctions(ContractDefinition const& _co
 			functions[function->name()].push_back(function);
 		}
 
-	findDuplicateDefinitions(functions, "Function with same name and arguments defined twice.");
+	findDuplicateDefinitions(functions);
 }
 
 void ContractLevelChecker::checkDuplicateEvents(ContractDefinition const& _contract)
@@ -123,11 +123,11 @@ void ContractLevelChecker::checkDuplicateEvents(ContractDefinition const& _contr
 	for (EventDefinition const* event: _contract.events())
 		events[event->name()].push_back(event);
 
-	findDuplicateDefinitions(events, "Event with same name and arguments defined twice.");
+	findDuplicateDefinitions(events);
 }
 
 template <class T>
-void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const& _definitions, string _message)
+void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const& _definitions)
 {
 	for (auto const& it: _definitions)
 	{
@@ -146,13 +146,27 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 
 			if (ssl.infos.size() > 0)
 			{
-				ssl.limitSize(_message);
+				ErrorId error;
+				string message;
+				if constexpr (is_same_v<T, FunctionDefinition const*>)
+				{
+					error = 1686_error;
+					message = "Function with same name and arguments defined twice.";
+				}
+				else
+				{
+					static_assert(is_same_v<T, EventDefinition const*>, "Expected \"FunctionDefinition const*\" or \"EventDefinition const*\"");
+					error = 5883_error;
+					message = "Event with same name and arguments defined twice.";
+				}
+
+				ssl.limitSize(message);
 
 				m_errorReporter.declarationError(
-					1686_error,
+					error,
 					overloads[i]->location(),
 					ssl,
-					_message
+					message
 				);
 			}
 		}
@@ -222,9 +236,8 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 			3656_error,
 			_contract.location(),
 			ssl,
-			"Contract \"" + _contract.annotation().canonicalName
-			+ "\" should be marked as abstract.");
-
+			"Contract \"" + _contract.annotation().canonicalName + "\" should be marked as abstract."
+		);
 	}
 }
 
