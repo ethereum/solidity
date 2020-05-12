@@ -558,27 +558,15 @@ jobs:
 
   b_ems:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.39.3-64bit
+      - image: ethereum/solidity-buildpack-deps:emsdk-1.39.15-1
     environment:
       TERM: xterm
     steps:
       - checkout
-      - restore_cache:
-          name: Restore Boost build
-          key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/build_emscripten.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
-      - run:
-          name: Bootstrap Boost
-          command: |
-            scripts/travis-emscripten/install_deps.sh
       - run:
           name: Build
           command: |
             scripts/travis-emscripten/build_emscripten.sh
-      - save_cache:
-          name: Save Boost build
-          key: *boost-cache-key
-          paths:
-            - boost_1_70_0_install
       - store_artifacts:
           path: emscripten_build/libsolc/soljson.js
           destination: soljson.js
