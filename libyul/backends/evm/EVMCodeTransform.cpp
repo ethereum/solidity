@@ -184,11 +184,13 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	}
 	else
 	{
+		m_assembly.setSourceLocation(_varDecl.location);
 		int variablesLeft = numVariables;
 		while (variablesLeft--)
 			m_assembly.appendConstant(u256(0));
 	}
 
+	m_assembly.setSourceLocation(_varDecl.location);
 	bool atTopOfStack = true;
 	for (int varIndex = numVariables - 1; varIndex >= 0; --varIndex)
 	{
@@ -203,7 +205,6 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 			if (atTopOfStack)
 			{
 				m_context->variableStackHeights.erase(&var);
-				m_assembly.setSourceLocation(_varDecl.location);
 				m_assembly.appendInstruction(evmasm::Instruction::POP);
 			}
 			else
@@ -216,7 +217,6 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 			int slot = *m_unusedStackSlots.begin();
 			m_unusedStackSlots.erase(m_unusedStackSlots.begin());
 			m_context->variableStackHeights[&var] = slot;
-			m_assembly.setSourceLocation(_varDecl.location);
 			if (int heightDiff = variableHeightDiff(var, varName, true))
 				m_assembly.appendInstruction(evmasm::swapInstruction(heightDiff - 1));
 			m_assembly.appendInstruction(evmasm::Instruction::POP);
