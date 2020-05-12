@@ -38,7 +38,7 @@ protected:
 	parseAnalyseAndReturnError(
 		std::string const& _source,
 		bool _reportWarnings = false,
-		bool _insertVersionPragma = true,
+		bool _insertLicenseAndVersionPragma = true,
 		bool _allowMultipleErrors = false,
 		bool _allowRecoveryErrors = false
 	) override
@@ -46,7 +46,7 @@ protected:
 		return AnalysisFramework::parseAnalyseAndReturnError(
 			"pragma experimental SMTChecker;\n" + _source,
 			_reportWarnings,
-			_insertVersionPragma,
+			_insertLicenseAndVersionPragma,
 			_allowMultipleErrors,
 			_allowRecoveryErrors
 		);

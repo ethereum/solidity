@@ -225,6 +225,7 @@ bool ASTJsonConverter::visit(SourceUnit const& _node)
 		{
 			make_pair("absolutePath", _node.annotation().path),
 			make_pair("exportedSymbols", move(exportedSymbols)),
+			make_pair("license", _node.licenseString() ? Json::Value(*_node.licenseString()) : Json::nullValue),
 			make_pair("nodes", toJson(_node.nodes()))
 		}
 	);

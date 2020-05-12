@@ -52,11 +52,11 @@ TestCase::TestResult SyntaxTest::run(ostream& _stream, string const& _linePrefix
 
 void SyntaxTest::setupCompiler()
 {
-	string const versionPragma = "pragma solidity >=0.0;\n";
+	string const preamble = "pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n";
 	compiler().reset();
 	auto sourcesWithPragma = m_sources;
 	for (auto& source: sourcesWithPragma)
-		source.second = versionPragma + source.second;
+		source.second = preamble + source.second;
 	compiler().setSources(sourcesWithPragma);
 	compiler().setEVMVersion(m_evmVersion);
 	compiler().setParserErrorRecovery(m_parserErrorRecovery);
@@ -89,18 +89,18 @@ void SyntaxTest::parseAndAnalyze()
 
 void SyntaxTest::filterObtainedErrors()
 {
-	string const versionPragma = "pragma solidity >=0.0;\n";
+	string const preamble = "pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n";
 	for (auto const& currentError: filterErrors(compiler().errors(), true))
 	{
 		int locationStart = -1, locationEnd = -1;
 		string sourceName;
 		if (auto location = boost::get_error_info<errinfo_sourceLocation>(*currentError))
 		{
-			// ignore the version pragma inserted by the testing tool when calculating locations.
-			if (location->start >= static_cast<int>(versionPragma.size()))
-				locationStart = location->start - versionPragma.size();
-			if (location->end >= static_cast<int>(versionPragma.size()))
-				locationEnd = location->end - versionPragma.size();
+			// ignore the version & license pragma inserted by the testing tool when calculating locations.
+			if (location->start >= static_cast<int>(preamble.size()))
+				locationStart = location->start - (preamble.size());
+			if (location->end >= static_cast<int>(preamble.size()))
+				locationEnd = location->end - (preamble.size());
 			if (location->source)
 				sourceName = location->source->name();
 		}

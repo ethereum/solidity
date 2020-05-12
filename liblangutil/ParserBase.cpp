@@ -148,6 +148,11 @@ void ParserBase::parserWarning(ErrorId _error, string const& _description)
 	m_errorReporter.warning(_error, currentLocation(), _description);
 }
 
+void ParserBase::parserWarning(ErrorId _error, SourceLocation const& _location, string const& _description)
+{
+	m_errorReporter.warning(_error, _location, _description);
+}
+
 void ParserBase::parserError(ErrorId _error, SourceLocation const& _location, string const& _description)
 {
 	m_errorReporter.parserError(_error, _location, _description);
