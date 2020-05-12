@@ -104,16 +104,14 @@ def find_source_files(top_dir):
     """Builds the list of .h and .cpp files in top_dir directory"""
 
     source_file_names = []
-    black_set = { ".circleci", ".git", ".github", "build", "cmake", "CMakeFiles", "deps", "docs" }
+    dirs = ['libevmasm', 'liblangutil', 'libsolc', 'libsolidity', 'libsolutil', 'libyul', 'solc']
 
-    for root, _, file_names in os.walk(top_dir, onerror=lambda e: exit(f"Walk error: {e}")):
-        path_elements = set(root.split(os.sep))
-        if not black_set.isdisjoint(path_elements):
-            continue
-        for file_name in file_names:
-            _, ext = path.splitext(file_name)
-            if ext in [".h", ".cpp"]:
-                source_file_names.append(path.join(root, file_name))
+    for dir in dirs:
+        for root, _, file_names in os.walk(os.path.join(top_dir, dir), onerror=lambda e: exit(f"Walk error: {e}")):
+            for file_name in file_names:
+                _, ext = path.splitext(file_name)
+                if ext in [".h", ".cpp"]:
+                    source_file_names.append(path.join(root, file_name))
 
     return source_file_names
 
