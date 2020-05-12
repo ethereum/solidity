@@ -99,16 +99,14 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		if (auto fun = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
 		{
 			Json::Value method(devDocumentation(fun->annotation().docTags));
+			// add the function, only if we have any documentation to add
+			Json::Value jsonReturn = extractReturnParameterDocs(fun->annotation().docTags, *fun);
+
+			if (!jsonReturn.empty())
+				method["returns"] = jsonReturn;
+
 			if (!method.empty())
-			{
-				// add the function, only if we have any documentation to add
-				Json::Value jsonReturn = extractReturnParameterDocs(fun->annotation().docTags, *fun);
-
-				if (!jsonReturn.empty())
-					method["returns"] = jsonReturn;
-
 				methods[it.second->externalSignature()] = method;
-			}
 		}
 	}
 
