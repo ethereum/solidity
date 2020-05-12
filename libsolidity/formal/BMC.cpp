@@ -21,8 +21,6 @@
 #include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
-#include <boost/algorithm/string/replace.hpp>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -594,8 +592,7 @@ void BMC::checkConstantCondition(BMCVerificationTarget& _target)
 		*_target.expression,
 		_target.constraints,
 		_target.value,
-		_target.callStack,
-		"Condition is always $VALUE."
+		_target.callStack
 	);
 }
 
@@ -613,6 +610,8 @@ void BMC::checkUnderflow(BMCVerificationTarget& _target, smt::Expression const& 
 		_target.callStack,
 		_target.modelExpressions,
 		_target.expression->location(),
+		4144_error,
+		8312_error,
 		"Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")",
 		"<result>",
 		&_target.value
@@ -633,6 +632,8 @@ void BMC::checkOverflow(BMCVerificationTarget& _target, smt::Expression const& _
 		_target.callStack,
 		_target.modelExpressions,
 		_target.expression->location(),
+		2661_error,
+		8065_error,
 		"Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")",
 		"<result>",
 		&_target.value
@@ -647,6 +648,8 @@ void BMC::checkDivByZero(BMCVerificationTarget& _target)
 		_target.callStack,
 		_target.modelExpressions,
 		_target.expression->location(),
+		3046_error,
+		5272_error,
 		"Division by zero",
 		"<result>",
 		&_target.value
@@ -661,6 +664,8 @@ void BMC::checkBalance(BMCVerificationTarget& _target)
 		_target.callStack,
 		_target.modelExpressions,
 		_target.expression->location(),
+		1236_error,
+		4010_error,
 		"Insufficient funds",
 		"address(this).balance"
 	);
@@ -675,6 +680,8 @@ void BMC::checkAssert(BMCVerificationTarget& _target)
 			_target.callStack,
 			_target.modelExpressions,
 			_target.expression->location(),
+			4661_error,
+			7812_error,
 			"Assertion violation"
 		);
 }
@@ -705,9 +712,11 @@ void BMC::addVerificationTarget(
 
 void BMC::checkCondition(
 	smt::Expression _condition,
-	vector<SMTEncoder::CallStackEntry> const& callStack,
+	vector<SMTEncoder::CallStackEntry> const& _callStack,
 	pair<vector<smt::Expression>, vector<string>> const& _modelExpressions,
 	SourceLocation const& _location,
+	ErrorId _errorHappens,
+	ErrorId _errorMightHappen,
 	string const& _description,
 	string const& _additionalValueName,
 	smt::Expression const* _additionalValue
@@ -719,7 +728,7 @@ void BMC::checkCondition(
 	vector<smt::Expression> expressionsToEvaluate;
 	vector<string> expressionNames;
 	tie(expressionsToEvaluate, expressionNames) = _modelExpressions;
-	if (callStack.size())
+	if (_callStack.size())
 		if (_additionalValue)
 		{
 			expressionsToEvaluate.emplace_back(*_additionalValue);
@@ -750,7 +759,7 @@ void BMC::checkCondition(
 	{
 		std::ostringstream message;
 		message << _description << " happens here";
-		if (callStack.size())
+		if (_callStack.size())
 		{
 			std::ostringstream modelMessage;
 			modelMessage << "  for:\n";
@@ -763,11 +772,11 @@ void BMC::checkCondition(
 			for (auto const& eval: sortedModel)
 				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
 			m_errorReporter.warning(
-				4334_error,
+				_errorHappens,
 				_location,
 				message.str(),
 				SecondarySourceLocation().append(modelMessage.str(), SourceLocation{})
-				.append(SMTEncoder::callStackMessage(callStack))
+				.append(SMTEncoder::callStackMessage(_callStack))
 				.append(move(secondaryLocation))
 			);
 		}
@@ -781,7 +790,7 @@ void BMC::checkCondition(
 	case smt::CheckResult::UNSATISFIABLE:
 		break;
 	case smt::CheckResult::UNKNOWN:
-		m_errorReporter.warning(5225_error, _location, _description + " might happen here.", secondaryLocation);
+		m_errorReporter.warning(_errorMightHappen, _location, _description + " might happen here.", secondaryLocation);
 		break;
 	case smt::CheckResult::CONFLICTING:
 		m_errorReporter.warning(1584_error, _location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
@@ -798,8 +807,7 @@ void BMC::checkBooleanNotConstant(
 	Expression const& _condition,
 	smt::Expression const& _constraints,
 	smt::Expression const& _value,
-	vector<SMTEncoder::CallStackEntry> const& _callStack,
-	string const& _description
+	vector<SMTEncoder::CallStackEntry> const& _callStack
 )
 {
 	// Do not check for const-ness if this is a constant.
@@ -832,22 +840,22 @@ void BMC::checkBooleanNotConstant(
 		m_errorReporter.warning(2512_error, _condition.location(), "Condition unreachable.", SMTEncoder::callStackMessage(_callStack));
 	else
 	{
-		string value;
+		string description;
 		if (positiveResult == smt::CheckResult::SATISFIABLE)
 		{
 			solAssert(negatedResult == smt::CheckResult::UNSATISFIABLE, "");
-			value = "true";
+			description = "Condition is always true.";
 		}
 		else
 		{
 			solAssert(positiveResult == smt::CheckResult::UNSATISFIABLE, "");
 			solAssert(negatedResult == smt::CheckResult::SATISFIABLE, "");
-			value = "false";
+			description = "Condition is always false.";
 		}
 		m_errorReporter.warning(
 			6838_error,
 			_condition.location(),
-			boost::algorithm::replace_all_copy(_description, "$VALUE", value),
+			description,
 			SMTEncoder::callStackMessage(_callStack)
 		);
 	}
