@@ -77,13 +77,15 @@ private:
 	bytes visit(std::vector<wasm::Expression> const& _expressions);
 	bytes visitReversed(std::vector<wasm::Expression> const& _expressions);
 
+	bytes encodeLabelIdx(std::string const& _label) const;
+
 	static bytes encodeName(std::string const& _name);
 
 	std::map<std::string, size_t> m_locals;
 	std::map<std::string, size_t> m_globals;
 	std::map<std::string, size_t> m_functions;
 	std::map<std::string, size_t> m_functionTypes;
-	std::stack<std::string> m_labels;
+	std::vector<std::string> m_labels;
 	std::map<std::string, std::pair<size_t, size_t>> m_subModulePosAndSize;
 };
 
