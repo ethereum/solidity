@@ -1,3 +1,5 @@
+.. _metadata:
+
 #################
 Contract Metadata
 #################
@@ -54,7 +56,9 @@ explanatory purposes.
           // Required (unless "content" is used, see below): Sorted URL(s)
           // to the source file, protocol is more or less arbitrary, but a
           // Swarm URL is recommended
-          "urls": [ "bzzr://56ab..." ]
+          "urls": [ "bzzr://56ab..." ],
+          // Optional: SPDX license identifier as given in the source file
+          "license": "MIT"
         },
         "destructible": {
           // Required: keccak256 hash of the source file
