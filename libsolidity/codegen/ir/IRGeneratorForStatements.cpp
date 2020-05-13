@@ -625,7 +625,8 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			arguments.push_back(callArguments[std::distance(callArgumentNames.begin(), it)]);
 		}
 
-	if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
+	auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression());
+	if (memberAccess)
 		if (auto expressionType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type))
 			if (auto contractType = dynamic_cast<ContractType const*>(expressionType->actualType()))
 				solUnimplementedAssert(
@@ -641,42 +642,26 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		break;
 	case FunctionType::Kind::Internal:
 	{
-		optional<FunctionDefinition const*> functionDef;
-		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
-		{
-			solUnimplementedAssert(!functionType->bound(), "Internal calls to bound functions are not yet implemented for libraries and not allowed for contracts");
+		auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression());
+		FunctionDefinition const* functionDef = IRHelpers::referencedFunctionDeclaration(_functionCall.expression());
 
-			functionDef = dynamic_cast<FunctionDefinition const*>(memberAccess->annotation().referencedDeclaration);
-			if (functionDef.value() != nullptr)
-				solAssert(functionType->declaration() == *memberAccess->annotation().referencedDeclaration, "");
-			else
-			{
-				solAssert(dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration), "");
-				solAssert(!functionType->hasDeclaration(), "");
-			}
-		}
-		else if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+		if (functionDef)
 		{
-			solAssert(!functionType->bound(), "");
+			solAssert(memberAccess || identifier, "");
+			solAssert(functionType->declaration() == *functionDef, "");
 
-			if (auto unresolvedFunctionDef = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
-			{
-				functionDef = &unresolvedFunctionDef->resolveVirtual(m_context.mostDerivedContract());
-				solAssert(functionType->declaration() == *identifier->annotation().referencedDeclaration, "");
-			}
-			else
-			{
-				functionDef = nullptr;
-				solAssert(dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration), "");
-				solAssert(!functionType->hasDeclaration(), "");
-			}
+			if (identifier)
+				functionDef = &functionDef->resolveVirtual(m_context.mostDerivedContract());
+
+			solAssert(functionDef->isImplemented(), "");
 		}
 		else
-			// Not a simple expression like x or A.x
-			functionDef = nullptr;
+			solAssert(!functionType->hasDeclaration(), "");
 
-		solAssert(functionDef.has_value(), "");
-		solAssert(functionDef.value() == nullptr || functionDef.value()->isImplemented(), "");
+		if (memberAccess)
+			solUnimplementedAssert(!functionType->bound(), "");
+		else
+			solAssert(!functionType->bound(), "");
 
 		vector<string> args;
 		for (size_t i = 0; i < arguments.size(); ++i)
@@ -685,9 +670,9 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			else
 				args += convert(*arguments[i], *parameterTypes[i]).stackSlots();
 
-		if (functionDef.value() != nullptr)
+		if (functionDef)
 			define(_functionCall) <<
-				m_context.enqueueFunctionForCodeGeneration(*functionDef.value()) <<
+				m_context.enqueueFunctionForCodeGeneration(*functionDef) <<
 				"(" <<
 				joinHumanReadable(args) <<
 				")\n";
