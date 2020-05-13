@@ -1,5 +1,16 @@
 [
     {
+        "name": "ArraySliceDynamicallyEncodedBaseType",
+        "summary": "Accessing array slices of arrays with dynamically encoded base types (e.g. multi-dimensional arrays) can result in invalid data being read.",
+        "description": "For arrays with dynamically sized base types, index range accesses that use a start expression that is non-zero will result in invalid array slices. Any index access to such array slices will result in data being read from incorrect calldata offsets. Array slices are only supported for dynamic calldata types and all problematic type require ABIEncoderV2 to be enabled.",
+        "introduced": "0.6.0",
+        "fixed": "0.6.8",
+        "severity": "very low",
+        "conditions": {
+            "ABIEncoderV2": true
+        }
+    },
+    {
         "name": "ImplicitConstructorCallvalueCheck",
         "summary": "The creation code of a contract that does not define a constructor but has a base that does define a constructor did not revert for calls with non-zero value.",
         "description": "Starting from Solidity 0.4.5 the creation code of contracts without explicit payable constructor is supposed to contain a callvalue check that results in contract creation reverting, if non-zero value is passed. However, this check was missing in case no explicit constructor was defined in a contract at all, but the contract has a base that does define a constructor. In these cases it is possible to send value in a contract creation transaction or using inline assembly without revert, even though the creation code is supposed to be non-payable.",

@@ -1599,6 +1599,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		ArraySliceType const& fromType = dynamic_cast<ArraySliceType const&>(_from);
 		ArrayType const& targetType = dynamic_cast<ArrayType const&>(_to);
 
+		solAssert(!fromType.arrayType().baseType()->isDynamicallyEncoded(), "");
 		solAssert(
 			*fromType.arrayType().baseType() == *targetType.baseType(),
 			"Converting arrays of different type is not possible"

@@ -1769,7 +1769,12 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		case Type::Category::ArraySlice:
 		{
 			auto const& arrayType = dynamic_cast<ArraySliceType const&>(baseType).arrayType();
-			solAssert(arrayType.location() == DataLocation::CallData && arrayType.isDynamicallySized(), "");
+			solAssert(
+				arrayType.location() == DataLocation::CallData &&
+				arrayType.isDynamicallySized() &&
+				!arrayType.baseType()->isDynamicallyEncoded(),
+				""
+			);
 			solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
 			acceptAndConvert(*_indexAccess.indexExpression(), *TypeProvider::uint256(), true);
@@ -1852,7 +1857,12 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 			arrayType = &sliceType->arrayType();
 
 	solAssert(arrayType, "");
-	solUnimplementedAssert(arrayType->location() == DataLocation::CallData && arrayType->isDynamicallySized(), "");
+	solUnimplementedAssert(
+		arrayType->location() == DataLocation::CallData &&
+		arrayType->isDynamicallySized() &&
+		!arrayType->baseType()->isDynamicallyEncoded(),
+		""
+	);
 
 	if (_indexAccess.startExpression())
 		acceptAndConvert(*_indexAccess.startExpression(), *TypeProvider::uint256());
