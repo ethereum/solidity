@@ -46,6 +46,8 @@ std::string buildCreationObjectName(ContractDefinition const& _contract);
 std::string buildRuntimeObjectName(ContractDefinition const& _contract);
 std::string buildInternalDispatchFunctionName(Arity const& _arity);
 
+FunctionDefinition const* getReferencedFunctionDeclaration(Expression const& _expression);
+
 }
 
 // Overloading std::less() makes it possible to use Arity as a map key. We could define operator<

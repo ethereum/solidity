@@ -68,3 +68,13 @@ string frontend::buildInternalDispatchFunctionName(Arity const& _arity)
 		"_in_" + to_string(_arity.in) +
 		"_out_" + to_string(_arity.out);
 }
+
+FunctionDefinition const* frontend::getReferencedFunctionDeclaration(Expression const& _expression)
+{
+	if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
+		return dynamic_cast<FunctionDefinition const*>(memberAccess->annotation().referencedDeclaration);
+	else if (auto identifier = dynamic_cast<Identifier const*>(&_expression))
+		return dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration);
+	else
+		return nullptr;
+}
