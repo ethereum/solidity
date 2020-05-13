@@ -81,12 +81,14 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		m_evmRevision = EVMC_BYZANTIUM;
 	else if (_evmVersion == langutil::EVMVersion::constantinople())
 		m_evmRevision = EVMC_CONSTANTINOPLE;
+	else if (_evmVersion == langutil::EVMVersion::petersburg())
+		m_evmRevision = EVMC_PETERSBURG;
 	else if (_evmVersion == langutil::EVMVersion::istanbul())
 		m_evmRevision = EVMC_ISTANBUL;
 	else if (_evmVersion == langutil::EVMVersion::berlin())
-		assertThrow(false, Exception, "Berlin is not supported yet.");
-	else //if (_evmVersion == langutil::EVMVersion::petersburg())
-		m_evmRevision = EVMC_PETERSBURG;
+		m_evmRevision = EVMC_BERLIN;
+	else
+		assertThrow(false, Exception, "Unsupported EVM version");
 
 	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
 	// NOTE: keep this in sync with `EVMHost::call` below.
