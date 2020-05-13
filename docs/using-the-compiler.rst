@@ -44,7 +44,14 @@ An empty remapping prefix is not allowed.
 
 If there are multiple matches due to remappings, the one with the longest common prefix is selected.
 
+When accessing the filesystem to search for imports, all paths are treated as if they were fully qualified paths.
+This behaviour can be customized by adding the command line option ``--base-path`` with a path to be prepended
+before each filesystem access for imports is performed. Furthermore, the part added via ``--base-path``
+will not appear in the contract metadata.
+
 For security reasons the compiler has restrictions what directories it can access. Paths (and their subdirectories) of source files specified on the commandline and paths defined by remappings are allowed for import statements, but everything else is rejected. Additional paths (and their subdirectories) can be allowed via the ``--allow-paths /sample/path,/another/sample/path`` switch.
+
+Everything inside the path specified via ``--base-path`` is always allowed.
 
 If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__$53aea86b7d70b31448b230b20ae141a537$__``. These are placeholders for the actual library addresses.
 The placeholder is a 34 character prefix of the hex encoding of the keccak256 hash of the fully qualified library name.
@@ -58,6 +65,7 @@ Either add ``--libraries "file.sol:Math:0x12345678901234567890123456789012345678
 If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__$53aea86b7d70b31448b230b20ae141a537$__``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
 
 If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output. This is the recommended interface for more complex and especially automated uses. The process will always terminate in a "success" state and report any errors via the JSON output.
+The option ``--base-path`` is also processed in standard-json mode.
 
 .. note::
     The library placeholder used to be the fully qualified name of the library itself
