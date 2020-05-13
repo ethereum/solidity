@@ -218,10 +218,15 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 
 ASTPointer<SourceUnit> ASTJsonImporter::createSourceUnit(Json::Value const& _node, string const& _srcName)
 {
+	optional<string> license;
+	if (_node.isMember("license") && !_node["license"].isNull())
+		license = _node["license"].asString();
+
 	vector<ASTPointer<ASTNode>> nodes;
 	for (auto& child: member(_node, "nodes"))
 		nodes.emplace_back(convertJsonToASTNode(child));
-	ASTPointer<SourceUnit> tmp = createASTNode<SourceUnit>(_node, nodes);
+
+	ASTPointer<SourceUnit> tmp = createASTNode<SourceUnit>(_node, license, nodes);
 	tmp->annotation().path = _srcName;
 	return tmp;
 }

@@ -1,5 +1,5 @@
 // checks that error messages around power-or-10 lines are formatted correctly
-
+// SPDX-License-Identifier: GPL-3.0
 
 
 

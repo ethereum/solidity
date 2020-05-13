@@ -30,8 +30,11 @@
 #include <liblangutil/SemVerHandler.h>
 #include <liblangutil/SourceLocation.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <cctype>
 #include <vector>
+#include <regex>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -79,6 +82,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 		m_recursionDepth = 0;
 		m_scanner = _scanner;
 		ASTNodeFactory nodeFactory(*this);
+
 		vector<ASTPointer<ASTNode>> nodes;
 		while (m_scanner->currentToken() != Token::EOS)
 		{
@@ -107,7 +111,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 			}
 		}
 		solAssert(m_recursionDepth == 0, "");
-		return nodeFactory.createNode<SourceUnit>(nodes);
+		return nodeFactory.createNode<SourceUnit>(findLicenseString(nodes), nodes);
 	}
 	catch (FatalError const&)
 	{
@@ -1979,6 +1983,60 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 	}
 
 	return ret;
+}
+
+optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> const& _nodes)
+{
+	// We circumvent the scanner here, because it skips non-docstring comments.
+	static regex const licenseRegex("SPDX-License-Identifier:\\s*([a-zA-Z0-9 ()+.-]+)");
+
+	// Search inside all parts of the source not covered by parsed nodes.
+	// This will leave e.g. "global comments".
+	string const& source = m_scanner->source();
+	using iter = decltype(source.begin());
+	vector<pair<iter, iter>> sequencesToSearch;
+	sequencesToSearch.emplace_back(source.begin(), source.end());
+	for (ASTPointer<ASTNode> const& node: _nodes)
+		if (node->location().hasText())
+		{
+			sequencesToSearch.back().second = source.begin() + node->location().start;
+			sequencesToSearch.emplace_back(source.begin() + node->location().end, source.end());
+		}
+
+	vector<string> matches;
+	for (auto const& [start, end]: sequencesToSearch)
+	{
+		smatch match;
+		if (regex_search(start, end, match, licenseRegex))
+		{
+			string license{boost::trim_copy(string(match[1]))};
+			if (!license.empty())
+				matches.emplace_back(std::move(license));
+		}
+	}
+
+	if (matches.size() == 1)
+		return matches.front();
+	else if (matches.empty())
+		parserWarning(
+			1878_error,
+			{-1, -1, m_scanner->charStream()},
+			"SPDX license identifier not provided in source file. "
+			"Before publishing, consider adding a comment containing "
+			"\"SPDX-License-Identifier: <SPDX-License>\" to each source file. "
+			"Use \"SPDX-License-Identifier: UNLICENSED\" for non-open-source code. "
+			"Please see https://spdx.org for more information."
+		);
+	else
+		parserError(
+			3716_error,
+			{-1, -1, m_scanner->charStream()},
+			"Multiple SPDX license identifiers found in source file. "
+			"Use \"AND\" or \"OR\" to combine multiple licenses. "
+			"Please see https://spdx.org for more information."
+		);
+
+	return {};
 }
 
 Parser::LookAheadInfo Parser::peekStatementType() const

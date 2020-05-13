@@ -47,7 +47,7 @@ protected:
 	parseAnalyseAndReturnError(
 		std::string const& _source,
 		bool _reportWarnings = false,
-		bool _insertVersionPragma = true,
+		bool _insertLicenseAndVersionPragma = true,
 		bool _allowMultipleErrors = false,
 		bool _allowRecoveryErrors = false
 	);

@@ -27,6 +27,7 @@ you receive the funds of the person who is now the richest.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.7.0;
 
     contract WithdrawalContract {
@@ -60,6 +61,7 @@ This is as opposed to the more intuitive sending pattern:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.7.0;
 
     contract SendContract {
@@ -121,6 +123,7 @@ restrictions highly readable.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
 
     contract AccessRestriction {
@@ -273,6 +276,7 @@ function finishes.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
 
     contract StateMachine {

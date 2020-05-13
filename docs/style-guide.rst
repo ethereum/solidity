@@ -55,6 +55,7 @@ Surround top level declarations in solidity source with two blank lines.
 
 Yes::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.7.0;
 
     contract A {
@@ -73,6 +74,7 @@ Yes::
 
 No::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.7.0;
 
     contract A {
@@ -92,6 +94,7 @@ Blank lines may be omitted between groups of related one-liners (such as stub fu
 
 Yes::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.6.0;
 
     abstract contract A {
@@ -112,6 +115,7 @@ Yes::
 
 No::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
 
     abstract contract A {
@@ -246,6 +250,7 @@ Import statements should always be placed at the top of the file.
 
 Yes::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.7.0;
 
     import "./Owned.sol";
@@ -260,6 +265,7 @@ Yes::
 
 No::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.7.0;
 
     contract A {
@@ -293,6 +299,7 @@ Within a grouping, place the ``view`` and ``pure`` functions last.
 
 Yes::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.6.0;
 
     contract A {
@@ -329,6 +336,7 @@ Yes::
 
 No::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.6.0;
 
     contract A {
@@ -436,6 +444,7 @@ should:
 
 Yes::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.7.0;
 
     contract Coin {
@@ -447,6 +456,7 @@ Yes::
 
 No::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.7.0;
 
     contract Coin
@@ -747,6 +757,7 @@ manner as modifiers if the function declaration is long or hard to read.
 
 Yes::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
 
     // Base contracts just to make this compile
@@ -779,6 +790,7 @@ Yes::
 
 No::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
 
 
@@ -1002,6 +1014,7 @@ As shown in the example below, if the contract name is ``Congress`` and the libr
 
 Yes::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
 
 
@@ -1025,6 +1038,7 @@ Yes::
 
 and in ``Congress.sol``::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.7.0;
 
     import "./Owned.sol";
@@ -1036,6 +1050,7 @@ and in ``Congress.sol``::
 
 No::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
 
 
@@ -1140,6 +1155,7 @@ multiline comment starting with ``/**`` and ending with ``*/``.
 For example, the contract from `a simple smart contract <simple-smart-contract>`_ with the comments
 added looks like the one below::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
 
 

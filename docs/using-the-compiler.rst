@@ -617,6 +617,7 @@ Assume you have the following contracts you want to update declared in ``Source.
 .. code-block:: none
 
     // This will not compile after 0.5.0
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.4.23 <0.5.0;
 
     contract Updateable {
@@ -698,6 +699,7 @@ The command above applies all changes as shown below. Please review them careful
 
 .. code-block:: solidity
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
 
     abstract contract Updateable {

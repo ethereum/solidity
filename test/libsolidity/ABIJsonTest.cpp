@@ -45,7 +45,10 @@ TestCase::TestResult ABIJsonTest::run(ostream& _stream, string const& _linePrefi
 {
 	CompilerStack compiler;
 
-	compiler.setSources({{"", "pragma solidity >=0.0;\n" + m_source}});
+	compiler.setSources({{
+		"",
+		"pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n" + m_source
+	}});
 	compiler.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	compiler.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	if (!compiler.parseAndAnalyze())
