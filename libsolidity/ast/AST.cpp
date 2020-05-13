@@ -153,10 +153,10 @@ FunctionDefinition const* ContractDefinition::receiveFunction() const
 
 vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() const
 {
-	if (!m_interfaceEvents)
-	{
+	return m_interfaceEvents.init([&]{
 		set<string> eventsSeen;
-		m_interfaceEvents = make_unique<vector<EventDefinition const*>>();
+		vector<EventDefinition const*> interfaceEvents;
+
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 			for (EventDefinition const* e: contract->events())
 			{
@@ -169,11 +169,12 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 				if (eventsSeen.count(eventSignature) == 0)
 				{
 					eventsSeen.insert(eventSignature);
-					m_interfaceEvents->push_back(e);
+					interfaceEvents.push_back(e);
 				}
 			}
-	}
-	return *m_interfaceEvents;
+
+		return interfaceEvents;
+	});
 }
 
 vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList(bool _includeInheritedFunctions) const

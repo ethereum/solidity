@@ -31,6 +31,7 @@
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 #include <libsolutil/FixedHash.h>
+#include <libsolutil/LazyInit.h>
 
 #include <boost/noncopyable.hpp>
 #include <json/json.h>
@@ -530,7 +531,7 @@ private:
 	bool m_abstract{false};
 
 	mutable std::unique_ptr<std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList[2];
-	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents;
+	util::LazyInit<std::vector<EventDefinition const*>> m_interfaceEvents;
 };
 
 class InheritanceSpecifier: public ASTNode
