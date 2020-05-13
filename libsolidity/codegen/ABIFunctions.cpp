@@ -279,31 +279,47 @@ string ABIFunctions::abiEncodingFunction(
 		return abiEncodingFunctionStringLiteral(_from, to, _options);
 	else if (auto toArray = dynamic_cast<ArrayType const*>(&to))
 	{
-		solAssert(_from.category() == Type::Category::Array, "");
-		solAssert(to.dataStoredIn(DataLocation::Memory), "");
-		ArrayType const& fromArray = dynamic_cast<ArrayType const&>(_from);
+		ArrayType const* fromArray = nullptr;
+		switch (_from.category())
+		{
+			case Type::Category::Array:
+				fromArray = dynamic_cast<ArrayType const*>(&_from);
+				break;
+			case Type::Category::ArraySlice:
+				fromArray = &dynamic_cast<ArraySliceType const*>(&_from)->arrayType();
+				solAssert(
+					fromArray->dataStoredIn(DataLocation::CallData) &&
+					fromArray->isDynamicallySized() &&
+					!fromArray->baseType()->isDynamicallyEncoded(),
+					""
+				);
+				break;
+			default:
+				solAssert(false, "");
+				break;
+		}
 
-		switch (fromArray.location())
+		switch (fromArray->location())
 		{
 			case DataLocation::CallData:
 				if (
-					fromArray.isByteArray() ||
-					*fromArray.baseType() == *TypeProvider::uint256() ||
-					*fromArray.baseType() == FixedBytesType(32)
+					fromArray->isByteArray() ||
+					*fromArray->baseType() == *TypeProvider::uint256() ||
+					*fromArray->baseType() == FixedBytesType(32)
 				)
-					return abiEncodingFunctionCalldataArrayWithoutCleanup(fromArray, *toArray, _options);
+					return abiEncodingFunctionCalldataArrayWithoutCleanup(*fromArray, *toArray, _options);
 				else
-					return abiEncodingFunctionSimpleArray(fromArray, *toArray, _options);
+					return abiEncodingFunctionSimpleArray(*fromArray, *toArray, _options);
 			case DataLocation::Memory:
-				if (fromArray.isByteArray())
-					return abiEncodingFunctionMemoryByteArray(fromArray, *toArray, _options);
+				if (fromArray->isByteArray())
+					return abiEncodingFunctionMemoryByteArray(*fromArray, *toArray, _options);
 				else
-					return abiEncodingFunctionSimpleArray(fromArray, *toArray, _options);
+					return abiEncodingFunctionSimpleArray(*fromArray, *toArray, _options);
 			case DataLocation::Storage:
-				if (fromArray.baseType()->storageBytes() <= 16)
-					return abiEncodingFunctionCompactStorageArray(fromArray, *toArray, _options);
+				if (fromArray->baseType()->storageBytes() <= 16)
+					return abiEncodingFunctionCompactStorageArray(*fromArray, *toArray, _options);
 				else
-					return abiEncodingFunctionSimpleArray(fromArray, *toArray, _options);
+					return abiEncodingFunctionSimpleArray(*fromArray, *toArray, _options);
 			default:
 				solAssert(false, "");
 		}
