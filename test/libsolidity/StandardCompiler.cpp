@@ -1105,6 +1105,46 @@ BOOST_AUTO_TEST_CASE(metadata_without_compilation)
 	BOOST_CHECK(solidity::test::isValidMetadata(contract["metadata"].asString()));
 }
 
+
+BOOST_AUTO_TEST_CASE(license_in_metadata)
+{
+	string const input = R"(
+			{
+				"language": "Solidity",
+				"sources": {
+					"fileA": { "content": "import \"fileB\"; contract A { } // SPDX-License-Identifier: GPL-3.0 \n" },
+					"fileB": { "content": "import \"fileC\"; /* SPDX-License-Identifier: MIT */ contract B { }" },
+					"fileC": { "content": "import \"fileD\"; /* SPDX-License-Identifier: MIT AND GPL-3.0 */ contract C { }" },
+					"fileD": { "content": "// SPDX-License-Identifier: (GPL-3.0+ OR MIT) AND MIT \n import \"fileE\"; contract D { }" },
+					"fileE": { "content": "import \"fileF\"; /// SPDX-License-Identifier: MIT   \n contract E { }" },
+					"fileF": { "content": "/*\n * SPDX-License-Identifier: MIT\n */ contract F { }" }
+				},
+				"settings": {
+					"outputSelection": {
+						"fileA": {
+							"*": [ "metadata" ]
+						}
+					}
+				}
+			}
+		)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsAtMostWarnings(result));
+	Json::Value contract = getContractResult(result, "fileA", "A");
+	BOOST_CHECK(contract.isObject());
+	BOOST_CHECK(contract["metadata"].isString());
+	Json::Value metadata;
+	BOOST_REQUIRE(util::jsonParseStrict(contract["metadata"].asString(), metadata));
+	BOOST_CHECK_EQUAL(metadata["sources"]["fileA"]["license"], "GPL-3.0");
+	BOOST_CHECK_EQUAL(metadata["sources"]["fileB"]["license"], "MIT");
+	BOOST_CHECK_EQUAL(metadata["sources"]["fileC"]["license"], "MIT AND GPL-3.0");
+	BOOST_CHECK_EQUAL(metadata["sources"]["fileD"]["license"], "(GPL-3.0+ OR MIT) AND MIT");
+	// This is actually part of the docstring, but still picked up
+	// because the source location of the contract does not cover the docstring.
+	BOOST_CHECK_EQUAL(metadata["sources"]["fileE"]["license"], "MIT");
+	BOOST_CHECK_EQUAL(metadata["sources"]["fileF"]["license"], "MIT");
+}
+
 BOOST_AUTO_TEST_CASE(common_pattern)
 {
 	char const* input = R"(
