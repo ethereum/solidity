@@ -19,6 +19,7 @@ Bugfixes:
  * Fixed an "Assembly Exception in Bytecode" error where requested functions were generated twice.
  * Natspec: Fixed a bug that ignored ``@return`` tag when no other developer-documentation tags were present.
  * Yul assembler: Fix source location of variable declarations without value.
+ * Type checker: Checks if a literal exponent in the ``**`` operation is too large or fractional.
 
 
 ### 0.6.7 (2020-05-04)
