@@ -2,6 +2,7 @@
 
 Important Bugfixes:
  * Add missing callvalue check to the creation code of a contract that does not define a constructor but has a base that does define a constructor.
+ * Disallow index range accesses for arrays with dynamically encoded base types.
 
 
 Language Features:

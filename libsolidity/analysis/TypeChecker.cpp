@@ -2864,6 +2864,8 @@ bool TypeChecker::visit(IndexRangeAccess const& _access)
 
 	if (arrayType->location() != DataLocation::CallData || !arrayType->isDynamicallySized())
 		m_errorReporter.typeError(1227_error, _access.location(), "Index range access is only supported for dynamic calldata arrays.");
+	else if (arrayType->baseType()->isDynamicallyEncoded())
+		m_errorReporter.typeError(1878_error, _access.location(), "Index range access is not supported for arrays with dynamically encoded base types.");
 	_access.annotation().type = TypeProvider::arraySlice(*arrayType);
 	_access.annotation().isLValue = isLValue;
 	_access.annotation().isPure = isPure;

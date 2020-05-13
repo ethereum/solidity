@@ -990,7 +990,8 @@ void CompilerUtils::convertType(
 		solAssert(_targetType == typeOnStack.arrayType(), "");
 		solUnimplementedAssert(
 			typeOnStack.arrayType().location() == DataLocation::CallData &&
-			typeOnStack.arrayType().isDynamicallySized(),
+			typeOnStack.arrayType().isDynamicallySized() &&
+			!typeOnStack.arrayType().baseType()->isDynamicallyEncoded(),
 			""
 		);
 		break;

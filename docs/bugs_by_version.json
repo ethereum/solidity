@@ -1082,6 +1082,7 @@
     },
     "0.6.0": {
         "bugs": [
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -1091,6 +1092,7 @@
     },
     "0.6.1": {
         "bugs": [
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
@@ -1099,6 +1101,7 @@
     },
     "0.6.2": {
         "bugs": [
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
@@ -1107,6 +1110,7 @@
     },
     "0.6.3": {
         "bugs": [
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
@@ -1115,6 +1119,7 @@
     },
     "0.6.4": {
         "bugs": [
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
@@ -1123,6 +1128,7 @@
     },
     "0.6.5": {
         "bugs": [
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents"
         ],
@@ -1130,12 +1136,14 @@
     },
     "0.6.6": {
         "bugs": [
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck"
         ],
         "released": "2020-04-09"
     },
     "0.6.7": {
         "bugs": [
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck"
         ],
         "released": "2020-05-04"
