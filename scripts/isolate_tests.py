@@ -52,7 +52,7 @@ def extract_docs_cases(path):
         if inside:
             extractedLines[-1] += l + '\n'
 
-    codeStart = "(pragma solidity|contract.*{|library.*{|interface.*{)"
+    codeStart = "(// SPDX-License-Identifier:|pragma solidity|contract.*{|library.*{|interface.*{)"
 
     # Filter all tests that do not contain Solidity or are intended incorrectly.
     for lines in extractedLines:
