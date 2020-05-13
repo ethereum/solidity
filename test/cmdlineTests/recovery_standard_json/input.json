@@ -4,7 +4,7 @@
 	{
 		"A":
 		{
-			"content": "pragma solidity >=0.0; contract Errort6 { using foo for  ; /* missing type name */ }"
+			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0; contract Errort6 { using foo for  ; /* missing type name */ }"
 		}
 	},
 	"settings":
