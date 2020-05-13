@@ -179,10 +179,10 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 
 vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList(bool _includeInheritedFunctions) const
 {
-	if (!m_interfaceFunctionList[_includeInheritedFunctions])
-	{
+	return m_interfaceFunctionList[_includeInheritedFunctions].init([&]{
 		set<string> signaturesSeen;
-		m_interfaceFunctionList[_includeInheritedFunctions] = make_unique<vector<pair<util::FixedHash<4>, FunctionTypePointer>>>();
+		vector<pair<util::FixedHash<4>, FunctionTypePointer>> interfaceFunctionList;
+
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		{
 			if (_includeInheritedFunctions == false && contract != this)
@@ -204,12 +204,13 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 				{
 					signaturesSeen.insert(functionSignature);
 					util::FixedHash<4> hash(util::keccak256(functionSignature));
-					m_interfaceFunctionList[_includeInheritedFunctions]->emplace_back(hash, fun);
+					interfaceFunctionList.emplace_back(hash, fun);
 				}
 			}
 		}
-	}
-	return *m_interfaceFunctionList[_includeInheritedFunctions];
+
+		return interfaceFunctionList;
+	});
 }
 
 TypePointer ContractDefinition::type() const

@@ -530,7 +530,7 @@ private:
 	ContractKind m_contractKind;
 	bool m_abstract{false};
 
-	mutable std::unique_ptr<std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList[2];
+	util::LazyInit<std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList[2];
 	util::LazyInit<std::vector<EventDefinition const*>> m_interfaceEvents;
 };
 
