@@ -19,6 +19,8 @@
 
 #include <libsolutil/CommonIO.h>
 
+#include <cvc4/util/bitvector.h>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -185,6 +187,49 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			return m_context.mkExpr(CVC4::kind::INTS_DIVISION_TOTAL, arguments[0], arguments[1]);
 		else if (n == "mod")
 			return m_context.mkExpr(CVC4::kind::INTS_MODULUS, arguments[0], arguments[1]);
+		else if (n == "bvand")
+			return m_context.mkExpr(CVC4::kind::BITVECTOR_AND, arguments[0], arguments[1]);
+		else if (n == "int2bv")
+		{
+			size_t size = std::stoi(_expr.arguments[1].name);
+			auto i2bvOp = m_context.mkConst(CVC4::IntToBitVector(size));
+			// CVC4 treats all BVs as unsigned, so we need to manually apply 2's complement if needed.
+			return m_context.mkExpr(
+				CVC4::kind::ITE,
+				m_context.mkExpr(CVC4::kind::GEQ, arguments[0], m_context.mkConst(CVC4::Rational(0))),
+				m_context.mkExpr(CVC4::kind::INT_TO_BITVECTOR, i2bvOp, arguments[0]),
+				m_context.mkExpr(
+					CVC4::kind::BITVECTOR_NEG,
+					m_context.mkExpr(CVC4::kind::INT_TO_BITVECTOR, i2bvOp, m_context.mkExpr(CVC4::kind::UMINUS, arguments[0]))
+				)
+			);
+		}
+		else if (n == "bv2int")
+		{
+			auto intSort = dynamic_pointer_cast<IntSort>(_expr.sort);
+			smtAssert(intSort, "");
+			auto nat = m_context.mkExpr(CVC4::kind::BITVECTOR_TO_NAT, arguments[0]);
+			if (!intSort->isSigned)
+				return nat;
+
+			auto type = arguments[0].getType();
+			smtAssert(type.isBitVector(), "");
+			auto size = CVC4::BitVectorType(type).getSize();
+			// CVC4 treats all BVs as unsigned, so we need to manually apply 2's complement if needed.
+			auto extractOp = m_context.mkConst(CVC4::BitVectorExtract(size - 1, size - 1));
+			return m_context.mkExpr(CVC4::kind::ITE,
+				m_context.mkExpr(
+					CVC4::kind::EQUAL,
+					m_context.mkExpr(CVC4::kind::BITVECTOR_EXTRACT, extractOp, arguments[0]),
+					m_context.mkConst(CVC4::BitVector(1, size_t(0)))
+				),
+				nat,
+				m_context.mkExpr(
+					CVC4::kind::UMINUS,
+					m_context.mkExpr(CVC4::kind::BITVECTOR_TO_NAT, m_context.mkExpr(CVC4::kind::BITVECTOR_NEG, arguments[0]))
+				)
+			);
+		}
 		else if (n == "select")
 			return m_context.mkExpr(CVC4::kind::SELECT, arguments[0], arguments[1]);
 		else if (n == "store")

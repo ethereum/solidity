@@ -701,7 +701,7 @@ vector<smtutil::SortPointer> CHC::stateSorts(ContractDefinition const& _contract
 smtutil::SortPointer CHC::constructorSort()
 {
 	return make_shared<smtutil::FunctionSort>(
-		vector<smtutil::SortPointer>{smtutil::SortProvider::intSort} + m_stateSorts,
+		vector<smtutil::SortPointer>{smtutil::SortProvider::uintSort} + m_stateSorts,
 		smtutil::SortProvider::boolSort
 	);
 }
@@ -747,7 +747,7 @@ smtutil::SortPointer CHC::sort(FunctionDefinition const& _function)
 	auto inputSorts = applyMap(_function.parameters(), smtSort);
 	auto outputSorts = applyMap(_function.returnParameters(), smtSort);
 	return make_shared<smtutil::FunctionSort>(
-		vector<smtutil::SortPointer>{smtutil::SortProvider::intSort} + m_stateSorts + inputSorts + m_stateSorts + inputSorts + outputSorts,
+		vector<smtutil::SortPointer>{smtutil::SortProvider::uintSort} + m_stateSorts + inputSorts + m_stateSorts + inputSorts + outputSorts,
 		smtutil::SortProvider::boolSort
 	);
 }
@@ -776,7 +776,7 @@ smtutil::SortPointer CHC::summarySort(FunctionDefinition const& _function, Contr
 	auto inputSorts = applyMap(_function.parameters(), smtSort);
 	auto outputSorts = applyMap(_function.returnParameters(), smtSort);
 	return make_shared<smtutil::FunctionSort>(
-		vector<smtutil::SortPointer>{smtutil::SortProvider::intSort} + sorts + inputSorts + sorts + outputSorts,
+		vector<smtutil::SortPointer>{smtutil::SortProvider::uintSort} + sorts + inputSorts + sorts + outputSorts,
 		smtutil::SortProvider::boolSort
 	);
 }
