@@ -17,6 +17,7 @@ Storage Example
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
 
     contract SimpleStorage {
@@ -81,6 +82,7 @@ registering with a username and password, all you need is an Ethereum keypair.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.7.0;
 
     contract Coin {

@@ -38,6 +38,7 @@ Details are given in the following example.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.6.0;
 
 
@@ -125,6 +126,7 @@ Note that above, we call ``Destructible.destroy()`` to "forward" the
 destruction request. The way this is done is problematic, as
 seen in the following example::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.6.0;
 
     contract owned {
@@ -154,6 +156,7 @@ A call to ``Final.destroy()`` will call ``Base2.destroy`` because we specify it
 explicitly in the final override, but this function will bypass
 ``Base1.destroy``. The way around this is to use ``super``::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
 
     contract owned {
@@ -204,6 +207,7 @@ use the ``override`` keyword in the function header as shown in this example:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
 
     contract Base
@@ -227,6 +231,7 @@ bases, it has to explicitly override it:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
 
     contract Base1
@@ -253,6 +258,7 @@ that already overrides all other functions.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
 
     contract A { function f() public pure{} }
@@ -293,6 +299,7 @@ of the variable:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
 
     contract A
@@ -324,6 +331,7 @@ and the ``override`` keyword must be used in the overriding modifier:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
 
     contract Base
@@ -342,6 +350,7 @@ explicitly:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
 
     contract Base1
@@ -389,6 +398,7 @@ equivalent to ``constructor() public {}``. For example:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.7.0;
 
     contract A {
@@ -419,6 +429,7 @@ The constructors of all the base contracts will be called following the
 linearization rules explained below. If the base constructors have arguments,
 derived contracts need to specify all of them. This can be done in two ways::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
 
     contract Base {
@@ -478,6 +489,7 @@ error "Linearization of inheritance graph impossible".
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.7.0;
 
     contract X {}
@@ -498,6 +510,7 @@ One area where inheritance linearization is especially important and perhaps not
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
 
     contract Base1 {

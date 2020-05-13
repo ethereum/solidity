@@ -65,6 +65,7 @@ is that they are cheaper to deploy and call.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.21 <0.7.0;
 
     contract ClientReceipt {
@@ -138,6 +139,7 @@ as topics. The event call above can be performed in the same way as
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.10 <0.7.0;
 
     contract C {

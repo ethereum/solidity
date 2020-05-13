@@ -316,6 +316,7 @@ for the two function parameters and two return variables.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.21 <0.7.0;
 
     /** @title Shape calculator. */

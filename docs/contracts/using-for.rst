@@ -29,6 +29,7 @@ may only be used inside a contract, not inside any of its functions.
 Let us rewrite the set example from the
 :ref:`libraries` in this way::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
 
 
@@ -81,6 +82,7 @@ Let us rewrite the set example from the
 
 It is also possible to extend elementary types in that way::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
 
     library Search {

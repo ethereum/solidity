@@ -25,6 +25,7 @@ you can use state machine-like constructs inside a contract.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.7.0;
 
     contract Purchase {

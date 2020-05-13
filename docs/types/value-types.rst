@@ -543,6 +543,7 @@ subsequent unsigned integer values starting from ``0``.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
 
     contract test {
@@ -653,6 +654,7 @@ External (or public) functions have the following members:
 
 Example that shows how to use the members::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
     // This will report a warning
 
@@ -671,6 +673,7 @@ Example that shows how to use the members::
 
 Example that shows how to use internal function types::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
 
     library ArrayUtils {
@@ -728,6 +731,7 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
 
 
