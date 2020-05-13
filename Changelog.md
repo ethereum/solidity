@@ -11,6 +11,7 @@ Language Features:
 
 Compiler Features:
  * Commandline Interface: Don't ignore `--yul-optimizations` in assembly mode.
+ * Allow using abi encoding functions for calldata array slices without explicit casts.
 
 
 

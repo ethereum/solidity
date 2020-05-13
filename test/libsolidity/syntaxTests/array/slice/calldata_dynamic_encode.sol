@@ -4,4 +4,3 @@ contract C {
     }
 }
 // ----
-// TypeError: (85-91): This type cannot be encoded.
