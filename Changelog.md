@@ -3,6 +3,7 @@
 Important Bugfixes:
  * Add missing callvalue check to the creation code of a contract that does not define a constructor but has a base that does define a constructor.
  * Disallow index range accesses for arrays with dynamically encoded base types.
+ * Code Generator: Fixed that string literals containing backslash characters could cause incorrect code to be generated when passed directly to function calls or encoding functions when ABIEncoderV2 is active.
 
 
 Language Features:
