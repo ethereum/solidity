@@ -56,7 +56,6 @@ public:
 		_other.m_value.reset();
 	}
 
-	// Copy and swap idiom.
 	LazyInit& operator=(LazyInit&& _other) noexcept
 	{
 		this->m_value.swap(_other.m_value);
