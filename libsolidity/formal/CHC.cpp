@@ -197,8 +197,11 @@ void CHC::endVisit(ContractDefinition const& _contract)
 
 bool CHC::visit(FunctionDefinition const& _function)
 {
-	if (!shouldVisit(_function))
+	if (!_function.isImplemented())
+	{
+		connectBlocks(genesis(), summary(_function));
 		return false;
+	}
 
 	// This is the case for base constructor inlining.
 	if (m_currentFunction)
@@ -243,7 +246,7 @@ bool CHC::visit(FunctionDefinition const& _function)
 
 void CHC::endVisit(FunctionDefinition const& _function)
 {
-	if (!shouldVisit(_function))
+	if (!_function.isImplemented())
 		return;
 
 	// This is the case for base constructor inlining.
@@ -474,11 +477,14 @@ void CHC::endVisit(FunctionCall const& _funCall)
 		internalFunctionCall(_funCall);
 		break;
 	case FunctionType::Kind::External:
+	case FunctionType::Kind::BareStaticCall:
+		externalFunctionCall(_funCall);
+		SMTEncoder::endVisit(_funCall);
+		break;
 	case FunctionType::Kind::DelegateCall:
 	case FunctionType::Kind::BareCall:
 	case FunctionType::Kind::BareCallCode:
 	case FunctionType::Kind::BareDelegateCall:
-	case FunctionType::Kind::BareStaticCall:
 	case FunctionType::Kind::Creation:
 	case FunctionType::Kind::KECCAK256:
 	case FunctionType::Kind::ECRecover:
@@ -574,6 +580,33 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 	m_context.addAssertion(m_error.currentValue() == previousError);
 }
 
+void CHC::externalFunctionCall(FunctionCall const& _funCall)
+{
+	solAssert(m_currentContract, "");
+
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	auto kind = funType.kind();
+	solAssert(kind == FunctionType::Kind::External || kind == FunctionType::Kind::BareStaticCall, "");
+
+	auto const* function = functionCallToDefinition(_funCall);
+	if (!function)
+		return;
+
+	auto preCallState = currentStateVariables();
+	bool noStateChanges = kind == FunctionType::Kind::BareStaticCall ||
+		function->stateMutability() == StateMutability::Pure ||
+		function->stateMutability() == StateMutability::View;
+	if (!noStateChanges)
+		for (auto const* var: m_stateVariables)
+			m_context.variable(*var)->increaseIndex();
+
+	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(preCallState + currentStateVariables());
+	m_context.addAssertion(nondet);
+	m_context.addAssertion(predicate(_funCall));
+
+	m_context.addAssertion(m_error.currentValue() == 0);
+}
+
 void CHC::unknownFunctionCall(FunctionCall const&)
 {
 	/// Function calls are not handled at the moment,
@@ -651,11 +684,6 @@ void CHC::clearIndices(ContractDefinition const* _contract, FunctionDefinition c
 	}
 }
 
-bool CHC::shouldVisit(FunctionDefinition const& _function) const
-{
-	return _function.isImplemented();
-}
-
 void CHC::setCurrentBlock(
 	smt::SymbolicFunctionVariable const& _block,
 	vector<smtutil::Expression> const* _arguments
@@ -710,16 +738,29 @@ smtutil::SortPointer CHC::constructorSort()
 
 smtutil::SortPointer CHC::interfaceSort()
 {
-	return make_shared<smtutil::FunctionSort>(
-		m_stateSorts,
-		smtutil::SortProvider::boolSort
-	);
+	solAssert(m_currentContract, "");
+	return interfaceSort(*m_currentContract);
+}
+
+smtutil::SortPointer CHC::nondetInterfaceSort()
+{
+	solAssert(m_currentContract, "");
+	return nondetInterfaceSort(*m_currentContract);
 }
 
 smtutil::SortPointer CHC::interfaceSort(ContractDefinition const& _contract)
 {
 	return make_shared<smtutil::FunctionSort>(
 		stateSorts(_contract),
+		smtutil::SortProvider::boolSort
+	);
+}
+
+smtutil::SortPointer CHC::nondetInterfaceSort(ContractDefinition const& _contract)
+{
+	auto sorts = stateSorts(_contract);
+	return make_shared<smtutil::FunctionSort>(
+		sorts + sorts,
 		smtutil::SortProvider::boolSort
 	);
 }
@@ -802,11 +843,47 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 			{
 				string suffix = base->name() + "_" + to_string(base->id());
 				m_interfaces[base] = createSymbolicBlock(interfaceSort(*base), "interface_" + suffix);
+				m_nondetInterfaces[base] = createSymbolicBlock(nondetInterfaceSort(*base), "nondet_interface_" + suffix);
+
 				for (auto const* var: stateVariablesIncludingInheritedAndPrivate(*base))
 					if (!m_context.knownVariable(*var))
 						createVariable(*var);
+
+				/// Base nondeterministic interface that allows
+				/// 0 steps to be taken, used as base for the inductive
+				/// rule for each function.
+				auto const& iface = *m_nondetInterfaces.at(base);
+				auto state0 = stateVariablesAtIndex(0, *base);
+				addRule(iface(state0 + state0), "base_nondet");
+
 				for (auto const* function: base->definedFunctions())
+				{
+					for (auto var: function->parameters())
+						createVariable(*var);
+					for (auto var: function->returnParameters())
+						createVariable(*var);
+					for (auto const* var: function->localVariables())
+						createVariable(*var);
+
 					m_summaries[contract].emplace(function, createSummaryBlock(*function, *contract));
+
+					if (!base->isLibrary() && !base->isInterface() && !function->isConstructor())
+					{
+						auto state1 = stateVariablesAtIndex(1, *base);
+						auto state2 = stateVariablesAtIndex(2, *base);
+
+						auto nondetPre = iface(state0 + state1);
+						auto nondetPost = iface(state0 + state2);
+
+						vector<smtutil::Expression> args{m_error.currentValue()};
+						args += state1 +
+							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
+							state2 +
+							applyMap(function->returnParameters(), [this](auto _var) { return valueAtIndex(*_var, 1); });
+
+						connectBlocks(nondetPre, nondetPost, (*m_summaries.at(base).at(function))(args));
+					}
+				}
 			}
 }
 
@@ -842,15 +919,21 @@ smtutil::Expression CHC::summary(ContractDefinition const&)
 	);
 }
 
-smtutil::Expression CHC::summary(FunctionDefinition const& _function)
+smtutil::Expression CHC::summary(FunctionDefinition const& _function, ContractDefinition const& _contract)
 {
 	vector<smtutil::Expression> args{m_error.currentValue()};
 	auto contract = _function.annotation().contract;
-	args += contract->isLibrary() ? stateVariablesAtIndex(0, *contract) : initialStateVariables();
+	args += contract->isLibrary() ? stateVariablesAtIndex(0, *contract) : initialStateVariables(_contract);
 	args += applyMap(_function.parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); });
-	args += contract->isLibrary() ? stateVariablesAtIndex(1, *contract) : currentStateVariables();
+	args += contract->isLibrary() ? stateVariablesAtIndex(1, *contract) : currentStateVariables(_contract);
 	args += applyMap(_function.returnParameters(), [this](auto _var) { return currentValue(*_var); });
-	return (*m_summaries.at(m_currentContract).at(&_function))(args);
+	return (*m_summaries.at(&_contract).at(&_function))(args);
+}
+
+smtutil::Expression CHC::summary(FunctionDefinition const& _function)
+{
+	solAssert(m_currentContract, "");
+	return summary(_function, *m_currentContract);
 }
 
 unique_ptr<smt::SymbolicFunctionVariable> CHC::createBlock(ASTNode const* _node, string const& _prefix)
@@ -893,13 +976,18 @@ vector<smtutil::Expression> CHC::initialStateVariables()
 	return stateVariablesAtIndex(0);
 }
 
-vector<smtutil::Expression> CHC::stateVariablesAtIndex(unsigned _index)
+vector<smtutil::Expression> CHC::initialStateVariables(ContractDefinition const& _contract)
 {
-	solAssert(m_currentContract, "");
-	return applyMap(m_stateVariables, [&](auto _var) { return valueAtIndex(*_var, _index); });
+	return stateVariablesAtIndex(0, _contract);
 }
 
-vector<smtutil::Expression> CHC::stateVariablesAtIndex(unsigned _index, ContractDefinition const& _contract)
+vector<smtutil::Expression> CHC::stateVariablesAtIndex(int _index)
+{
+	solAssert(m_currentContract, "");
+	return stateVariablesAtIndex(_index, *m_currentContract);
+}
+
+vector<smtutil::Expression> CHC::stateVariablesAtIndex(int _index, ContractDefinition const& _contract)
 {
 	return applyMap(
 		stateVariablesIncludingInheritedAndPrivate(_contract),
@@ -910,7 +998,12 @@ vector<smtutil::Expression> CHC::stateVariablesAtIndex(unsigned _index, Contract
 vector<smtutil::Expression> CHC::currentStateVariables()
 {
 	solAssert(m_currentContract, "");
-	return applyMap(m_stateVariables, [this](auto _var) { return currentValue(*_var); });
+	return currentStateVariables(*m_currentContract);
+}
+
+vector<smtutil::Expression> CHC::currentStateVariables(ContractDefinition const& _contract)
+{
+	return applyMap(stateVariablesIncludingInheritedAndPrivate(_contract), [this](auto _var) { return currentValue(*_var); });
 }
 
 vector<smtutil::Expression> CHC::currentFunctionVariables()
@@ -978,12 +1071,17 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 	m_error.increaseIndex();
 	vector<smtutil::Expression> args{m_error.currentValue()};
 	auto const* contract = function->annotation().contract;
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	bool otherContract = contract->isLibrary() ||
+		funType.kind() == FunctionType::Kind::External ||
+		funType.kind() == FunctionType::Kind::BareStaticCall;
 
-	args += contract->isLibrary() ? stateVariablesAtIndex(0, *contract) : currentStateVariables();
+	args += otherContract ? stateVariablesAtIndex(0, *contract) : currentStateVariables();
 	args += symbolicArguments(_funCall);
-	for (auto const& var: m_stateVariables)
-		m_context.variable(*var)->increaseIndex();
-	args += contract->isLibrary() ? stateVariablesAtIndex(1, *contract) : currentStateVariables();
+	if (!otherContract)
+		for (auto const& var: m_stateVariables)
+			m_context.variable(*var)->increaseIndex();
+	args += otherContract ? stateVariablesAtIndex(1, *contract) : currentStateVariables();
 
 	auto const& returnParams = function->returnParameters();
 	for (auto param: returnParams)
@@ -993,7 +1091,7 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 			createVariable(*param);
 	args += applyMap(function->returnParameters(), [this](auto _var) { return currentValue(*_var); });
 
-	if (contract->isLibrary())
+	if (otherContract)
 		return (*m_summaries.at(contract).at(function))(args);
 
 	solAssert(m_currentContract, "");

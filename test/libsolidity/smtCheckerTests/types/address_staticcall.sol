@@ -20,6 +20,3 @@ contract C
 // ----
 // Warning 2072: (224-240): Unused local variable.
 // Warning 4661: (266-281): Assertion violation happens here
-// Warning 4661: (285-299): Assertion violation happens here
-// Warning 4661: (303-322): Assertion violation happens here
-// Warning 4661: (326-350): Assertion violation happens here
