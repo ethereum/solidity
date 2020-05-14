@@ -121,7 +121,7 @@ string IRGenerationContext::newYulVariable()
 	return "_" + to_string(++m_varCounter);
 }
 
-string IRGenerationContext::internalDispatch(YulArity const& _arity)
+string IRGenerationContext::generateInternalDispatchFunction(YulArity const& _arity)
 {
 	string funName = "dispatch_internal_in_" + to_string(_arity.in) + "_out_" + to_string(_arity.out);
 	return m_functions.createFunction(funName, [&]() {
