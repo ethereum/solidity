@@ -14,16 +14,16 @@ Compiler Features:
 Bugfixes:
  * NatSpec: Constructors and functions have consistent userdoc output.
 
-### 0.6.8 (unreleased)
+### 0.6.8 (2020-05-14)
 
 Important Bugfixes:
  * Add missing callvalue check to the creation code of a contract that does not define a constructor but has a base that does define a constructor.
- * Disallow index range accesses for arrays with dynamically encoded base types.
- * Code Generator: Fixed that string literals containing backslash characters could cause incorrect code to be generated when passed directly to function calls or encoding functions when ABIEncoderV2 is active.
+ * Disallow array slices of arrays with dynamically encoded base types.
+ * String literals containing backslash characters can no longer cause incorrect code to be generated when passed directly to function calls or encoding functions when ABIEncoderV2 is active.
 
 
 Language Features:
- * Implemented ``type(X).min`` and ``type(X).max`` for every integer type ``X`` that returns the smallest and largest value representable by the type.
+ * Implemented ``type(T).min`` and ``type(T).max`` for every integer type ``T`` that returns the smallest and largest value representable by the type.
 
 
 Compiler Features:
@@ -32,14 +32,13 @@ Compiler Features:
  * Wasm binary output: Implement ``br`` and ``br_if``.
 
 
-
 Bugfixes:
  * ABI: Skip ``private`` or ``internal`` constructors.
- * Type Checker: Disallow accessing ``runtimeCode`` for contract types that contain immutable state variables.
  * Fixed an "Assembly Exception in Bytecode" error where requested functions were generated twice.
  * Natspec: Fixed a bug that ignored ``@return`` tag when no other developer-documentation tags were present.
- * Yul assembler: Fix source location of variable declarations without value.
- * Type checker: Checks if a literal exponent in the ``**`` operation is too large or fractional.
+ * Type Checker: Checks if a literal exponent in the ``**`` operation is too large or fractional.
+ * Type Checker: Disallow accessing ``runtimeCode`` for contract types that contain immutable state variables.
+ * Yul Assembler: Fix source location of variable declarations without value.
 
 
 ### 0.6.7 (2020-05-04)

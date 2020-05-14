@@ -1159,5 +1159,9 @@
             "ImplicitConstructorCallvalueCheck"
         ],
         "released": "2020-05-04"
+    },
+    "0.6.8": {
+        "bugs": [],
+        "released": "2020-05-14"
     }
 }
