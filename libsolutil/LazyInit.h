@@ -31,8 +31,10 @@ namespace solidity::util
 DEV_SIMPLE_EXCEPTION(BadLazyInitAccess);
 
 /**
- * Represents a lazy-initialized value.
- * @tparam T the type of the lazy-initialized object; may not be a function, reference, array, or void type; may be const-qualified.
+ * A value that is initialized at some point after construction of the LazyInit. The stored value can only be accessed
+ * while calling "init", which initializes the stored value (if it has not already been initialized).
+ *
+ * @tparam T the type of the stored value; may not be a function, reference, array, or void type; may be const-qualified.
  */
 template<typename T>
 class LazyInit
