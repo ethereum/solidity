@@ -56,6 +56,7 @@ contract C {
 	}
 }
 // ====
+// compileViaYul: also
 // EVMVersion: >homestead
 // ----
 // test_bytes() ->
