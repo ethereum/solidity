@@ -1236,6 +1236,8 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 
 		solAssert(s.second.scanner, "Scanner not available");
 		meta["sources"][s.first]["keccak256"] = "0x" + toHex(s.second.keccak256().asBytes());
+		if (optional<string> licenseString = s.second.ast->licenseString())
+			meta["sources"][s.first]["license"] = *licenseString;
 		if (m_metadataLiteralSources)
 			meta["sources"][s.first]["content"] = s.second.scanner->source();
 		else

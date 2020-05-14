@@ -480,6 +480,16 @@ void CompilerUtils::encodeToMemory(
 				convertType(*_givenTypes[i], *targetType, true);
 			if (auto arrayType = dynamic_cast<ArrayType const*>(type))
 				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries);
+			else if (auto arraySliceType = dynamic_cast<ArraySliceType const*>(type))
+			{
+				solAssert(
+					arraySliceType->dataStoredIn(DataLocation::CallData) &&
+					arraySliceType->isDynamicallySized() &&
+					!arraySliceType->arrayType().baseType()->isDynamicallyEncoded(),
+					""
+				);
+				ArrayUtils(m_context).copyArrayToMemory(arraySliceType->arrayType(), _padToWordBoundaries);
+			}
 			else
 				storeInMemoryDynamic(*type, _padToWordBoundaries);
 		}
@@ -516,22 +526,39 @@ void CompilerUtils::encodeToMemory(
 			}
 			else
 			{
-				solAssert(_givenTypes[i]->category() == Type::Category::Array, "Unknown dynamic type.");
-				auto const& arrayType = dynamic_cast<ArrayType const&>(*_givenTypes[i]);
+				ArrayType const* arrayType = nullptr;
+				switch (_givenTypes[i]->category())
+				{
+					case Type::Category::Array:
+						arrayType = dynamic_cast<ArrayType const*>(_givenTypes[i]);
+						break;
+					case Type::Category::ArraySlice:
+						arrayType = &dynamic_cast<ArraySliceType const*>(_givenTypes[i])->arrayType();
+						solAssert(
+							arrayType->isDynamicallySized() &&
+							arrayType->dataStoredIn(DataLocation::CallData) &&
+							!arrayType->baseType()->isDynamicallyEncoded(),
+							""
+						);
+						break;
+					default:
+						solAssert(false, "Unknown dynamic type.");
+						break;
+				}
 				// now copy the array
-				copyToStackTop(argSize - stackPos + dynPointers + 2, arrayType.sizeOnStack());
+				copyToStackTop(argSize - stackPos + dynPointers + 2, arrayType->sizeOnStack());
 				// stack: ... <end_of_mem> <value...>
 				// copy length to memory
-				m_context << dupInstruction(1 + arrayType.sizeOnStack());
-				ArrayUtils(m_context).retrieveLength(arrayType, 1);
+				m_context << dupInstruction(1 + arrayType->sizeOnStack());
+				ArrayUtils(m_context).retrieveLength(*arrayType, 1);
 				// stack: ... <end_of_mem> <value...> <end_of_mem'> <length>
 				storeInMemoryDynamic(*TypeProvider::uint256(), true);
 				// stack: ... <end_of_mem> <value...> <end_of_mem''>
 				// copy the new memory pointer
-				m_context << swapInstruction(arrayType.sizeOnStack() + 1) << Instruction::POP;
+				m_context << swapInstruction(arrayType->sizeOnStack() + 1) << Instruction::POP;
 				// stack: ... <end_of_mem''> <value...>
 				// copy data part
-				ArrayUtils(m_context).copyArrayToMemory(arrayType, _padToWordBoundaries);
+				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries);
 				// stack: ... <end_of_mem'''>
 			}
 
@@ -990,7 +1017,8 @@ void CompilerUtils::convertType(
 		solAssert(_targetType == typeOnStack.arrayType(), "");
 		solUnimplementedAssert(
 			typeOnStack.arrayType().location() == DataLocation::CallData &&
-			typeOnStack.arrayType().isDynamicallySized(),
+			typeOnStack.arrayType().isDynamicallySized() &&
+			!typeOnStack.arrayType().baseType()->isDynamicallyEncoded(),
 			""
 		);
 		break;

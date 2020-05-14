@@ -47,6 +47,7 @@ more advanced example to implement a set).
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.8.0;
 
 
@@ -125,6 +126,7 @@ custom types without the overhead of external function calls:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.8.0;
 
     struct bigint {
@@ -239,6 +241,7 @@ Its value can be obtained from Solidity using the ``.selector`` member as follow
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.14 <0.8.0;
 
     library L {

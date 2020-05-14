@@ -923,6 +923,7 @@
     },
     "0.5.14": {
         "bugs": [
+            "MissingEscapingInFormatting",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -934,6 +935,7 @@
     },
     "0.5.15": {
         "bugs": [
+            "MissingEscapingInFormatting",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -944,6 +946,7 @@
     },
     "0.5.16": {
         "bugs": [
+            "MissingEscapingInFormatting",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -953,6 +956,7 @@
     },
     "0.5.17": {
         "bugs": [
+            "MissingEscapingInFormatting",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
@@ -1082,6 +1086,8 @@
     },
     "0.6.0": {
         "bugs": [
+            "MissingEscapingInFormatting",
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -1091,6 +1097,8 @@
     },
     "0.6.1": {
         "bugs": [
+            "MissingEscapingInFormatting",
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
@@ -1099,6 +1107,8 @@
     },
     "0.6.2": {
         "bugs": [
+            "MissingEscapingInFormatting",
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
@@ -1107,6 +1117,8 @@
     },
     "0.6.3": {
         "bugs": [
+            "MissingEscapingInFormatting",
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
@@ -1115,6 +1127,8 @@
     },
     "0.6.4": {
         "bugs": [
+            "MissingEscapingInFormatting",
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow"
@@ -1123,6 +1137,8 @@
     },
     "0.6.5": {
         "bugs": [
+            "MissingEscapingInFormatting",
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents"
         ],
@@ -1130,12 +1146,16 @@
     },
     "0.6.6": {
         "bugs": [
+            "MissingEscapingInFormatting",
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck"
         ],
         "released": "2020-04-09"
     },
     "0.6.7": {
         "bugs": [
+            "MissingEscapingInFormatting",
+            "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck"
         ],
         "released": "2020-05-04"

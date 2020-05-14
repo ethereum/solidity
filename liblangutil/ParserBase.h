@@ -95,6 +95,7 @@ protected:
 	/// Creates a @ref ParserWarning and annotates it with the current position and the
 	/// given @a _description.
 	void parserWarning(ErrorId _error, std::string const& _description);
+	void parserWarning(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	/// Creates a @ref ParserError and annotates it with the current position and the
 	/// given @a _description. Throws the FatalError.

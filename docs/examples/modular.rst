@@ -19,6 +19,7 @@ and the sum of all balances is an invariant across the lifetime of the contract.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.8.0;
 
     library Balances {

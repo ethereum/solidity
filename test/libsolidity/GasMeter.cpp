@@ -43,7 +43,8 @@ public:
 	void compile(string const& _sourceCode)
 	{
 		m_compiler.reset();
-		m_compiler.setSources({{"", "pragma solidity >=0.0;\n" + _sourceCode}});
+		m_compiler.setSources({{"", "pragma solidity >=0.0;\n"
+				"// SPDX-License-Identifier: GPL-3.0\n" + _sourceCode}});
 		m_compiler.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 		m_compiler.setEVMVersion(m_evmVersion);
 		BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");

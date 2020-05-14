@@ -57,6 +57,7 @@ Data locations are not only relevant for persistency of data, but also for the s
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.8.0;
 
     contract C {
@@ -167,6 +168,7 @@ or create a new memory array and copy every element.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.8.0;
 
     contract C {
@@ -198,6 +200,7 @@ the first element to ``uint``.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.8.0;
 
     contract C {
@@ -214,6 +217,7 @@ memory arrays, i.e. the following is not possible:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.8.0;
 
     // This will not compile.
@@ -274,6 +278,7 @@ Array Members
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.8.0;
 
     contract ArrayContract {
@@ -406,6 +411,7 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.8.0;
 
     contract Proxy {
@@ -443,6 +449,7 @@ shown in the following example:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.8.0;
 
     // Defines a new type with two fields.

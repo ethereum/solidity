@@ -4,7 +4,7 @@
 	{
 		"A":
 		{
-			"content": "pragma solidity >=0.0; contract A { constructor(uint) public {} } contract B is A(2) { } contract C is A(3) {} contract D is B, C {}"
+			"content": "//SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0; contract A { constructor(uint) public {} } contract B is A(2) { } contract C is A(3) {} contract D is B, C {}"
 		}
 	}
 }

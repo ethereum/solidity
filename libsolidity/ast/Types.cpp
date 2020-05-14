@@ -330,7 +330,7 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 	// Structs are fine in the following circumstances:
 	// - ABIv2 or,
 	// - storage struct for a library
-	if (_inLibraryCall && encodingType->dataStoredIn(DataLocation::Storage))
+	if (_inLibraryCall && encodingType && encodingType->dataStoredIn(DataLocation::Storage))
 		return encodingType;
 	TypePointer baseType = encodingType;
 	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType))
@@ -613,6 +613,13 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, Type const* _other
 		}
 		else if (dynamic_cast<FixedPointType const*>(_other))
 			return nullptr;
+		else if (auto rationalNumberType = dynamic_cast<RationalNumberType const*>(_other))
+		{
+			if (rationalNumberType->isFractional())
+				return TypeResult::err("Exponent is fractional.");
+			if (!rationalNumberType->integerType())
+				return TypeResult::err("Exponent too large.");
+		}
 		return this;
 	}
 
@@ -1963,6 +1970,19 @@ string ArraySliceType::toString(bool _short) const
 {
 	return m_arrayType.toString(_short) + " slice";
 }
+
+TypePointer ArraySliceType::mobileType() const
+{
+	if (
+		m_arrayType.dataStoredIn(DataLocation::CallData) &&
+		m_arrayType.isDynamicallySized() &&
+		!m_arrayType.baseType()->isDynamicallyEncoded()
+	)
+		return &m_arrayType;
+	else
+		return this;
+}
+
 
 std::vector<std::tuple<std::string, TypePointer>> ArraySliceType::makeStackItems() const
 {

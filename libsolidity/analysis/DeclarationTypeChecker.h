@@ -69,7 +69,6 @@ private:
 	void fatalDeclarationError(langutil::SourceLocation const& _location, std::string const& _description);
 
 	langutil::ErrorReporter& m_errorReporter;
-	bool m_errorOccurred = false;
 	langutil::EVMVersion m_evmVersion;
 	bool m_insideFunctionType = false;
 	bool m_recursiveStructSeen = false;

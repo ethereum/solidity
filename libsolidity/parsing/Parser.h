@@ -175,6 +175,8 @@ private:
 		bool empty() const;
 	};
 
+	std::optional<std::string> findLicenseString(std::vector<ASTPointer<ASTNode>> const& _nodes);
+
 	/// Returns the next AST node ID
 	int64_t nextID() { return ++m_currentNodeID; }
 

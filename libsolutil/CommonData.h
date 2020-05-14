@@ -460,6 +460,10 @@ bool isValidDecimal(std::string const& _string);
 /// _value cannot be longer than 32 bytes.
 std::string formatAsStringOrNumber(std::string const& _value);
 
+/// @returns a string with the usual backslash-escapes for non-ASCII
+/// characters and surrounded by '"'-characters.
+std::string escapeAndQuoteString(std::string const& _input);
+
 template<typename Container, typename Compare>
 bool containerEqual(Container const& _lhs, Container const& _rhs, Compare&& _compare)
 {

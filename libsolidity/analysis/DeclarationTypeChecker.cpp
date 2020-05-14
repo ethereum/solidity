@@ -361,24 +361,22 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 
 void DeclarationTypeChecker::typeError(SourceLocation const& _location, string const& _description)
 {
-	m_errorOccurred = true;
 	m_errorReporter.typeError(2311_error, _location, _description);
 }
 
 void DeclarationTypeChecker::fatalTypeError(SourceLocation const& _location, string const& _description)
 {
-	m_errorOccurred = true;
 	m_errorReporter.fatalTypeError(5651_error, _location, _description);
 }
 
 void DeclarationTypeChecker::fatalDeclarationError(SourceLocation const& _location, string const& _description)
 {
-	m_errorOccurred = true;
 	m_errorReporter.fatalDeclarationError(2046_error, _location, _description);
 }
 
 bool DeclarationTypeChecker::check(ASTNode const& _node)
 {
+	unsigned errorCount = m_errorReporter.errorCount();
 	_node.accept(*this);
-	return !m_errorOccurred;
+	return m_errorReporter.errorCount() == errorCount;
 }

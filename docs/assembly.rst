@@ -41,6 +41,7 @@ without a compiler change.
 
 .. code::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.8.0;
 
     library GetCode {
@@ -66,6 +67,7 @@ efficient code, for example:
 
 .. code::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.8.0;
 
 
@@ -136,6 +138,7 @@ Local Solidity variables are available for assignments, for example:
 
 .. code::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.8.0;
 
     contract C {

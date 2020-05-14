@@ -23,6 +23,7 @@ unused parameters can be omitted.
 For example, if you want your contract to accept one kind of external call
 with two integers, you would use something like the following::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.8.0;
 
     contract Simple {
@@ -55,6 +56,7 @@ Function return variables are declared with the same syntax after the
 For example, suppose you want to return two results: the sum and the product of
 two integers passed as function parameters, then you use something like::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.8.0;
 
     contract Simple {
@@ -79,6 +81,7 @@ or you can provide return values
 (either a single or :ref:`multiple ones<multi-return>`) directly with the ``return``
 statement::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.8.0;
 
     contract Simple {
@@ -142,6 +145,7 @@ The following statements are considered modifying the state:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.8.0;
 
     contract C {
@@ -187,6 +191,7 @@ In addition to the list of state modifying statements explained above, the follo
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.8.0;
 
     contract C {
@@ -280,6 +285,7 @@ Below you can see an example of a Sink contract that uses function ``receive``.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.8.0;
 
     // This contract keeps all Ether sent to it with no way
@@ -335,6 +341,7 @@ operations as long as there is enough gas passed on to it.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.2 <0.8.0;
 
     contract Test {
@@ -407,6 +414,7 @@ The following example shows overloading of the function
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.8.0;
 
     contract A {
@@ -425,6 +433,7 @@ externally visible functions differ by their Solidity types but not by their ext
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.8.0;
 
     // This will not compile
@@ -458,6 +467,7 @@ candidate, resolution fails.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.8.0;
 
     contract A {

@@ -4,7 +4,7 @@
 	{
 		"A":
 		{
-			"content": "pragma solidity >=0.0; contract C { function f() external pure returns (string memory) { return \"abcdabcdcafecafeabcdabcdcafecafeffffzzzzoooo0123456789,.<,>.?:;'[{]}|`~!@#$%^&*()-_=+\"; } }"
+			"content": "//SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0; contract C { function f() external pure returns (string memory) { return \"abcdabcdcafecafeabcdabcdcafecafeffffzzzzoooo0123456789,.<,>.?:;'[{]}|`~!@#$%^&*()-_=+\"; } }"
 		}
 	},
 	"settings":
