@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Build system: Update the soljson.js build to emscripten 1.39.15 and boost 1.73.0 and include Z3 for integrated SMTChecker support without the callback mechanism.
 
 
 Bugfixes:
