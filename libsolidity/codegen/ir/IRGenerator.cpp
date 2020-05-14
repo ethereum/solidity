@@ -132,7 +132,7 @@ string IRGenerator::generate(
 	}
 	t("constructorParams", joinHumanReadable(constructorParams));
 	t("constructorHasParams", !constructorParams.empty());
-	t("implicitConstructor", implicitConstructorName(_contract));
+	t("implicitConstructor", IRNames::implicitConstructor(_contract));
 
 	t("deploy", deployCode(_contract));
 	generateImplicitConstructors(_contract);
@@ -378,7 +378,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 		ContractDefinition const* contract = _contract.annotation().linearizedBaseContracts[i];
 		baseConstructorParams.erase(contract);
 
-		m_context.functionCollector().createFunction(implicitConstructorName(*contract), [&]() {
+		m_context.functionCollector().createFunction(IRNames::implicitConstructor(*contract), [&]() {
 			Whiskers t(R"(
 				function <functionName>(<params><comma><baseParams>) {
 					<evalBaseArguments>
@@ -395,7 +395,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 			vector<string> baseParams = listAllParams(baseConstructorParams);
 			t("baseParams", joinHumanReadable(baseParams));
 			t("comma", !params.empty() && !baseParams.empty() ? ", " : "");
-			t("functionName", implicitConstructorName(*contract));
+			t("functionName", IRNames::implicitConstructor(*contract));
 			pair<string, map<ContractDefinition const*, vector<string>>> evaluatedArgs = evaluateConstructorArguments(*contract);
 			baseConstructorParams.insert(evaluatedArgs.second.begin(), evaluatedArgs.second.end());
 			t("evalBaseArguments", evaluatedArgs.first);
@@ -403,7 +403,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 			{
 				t("hasNextConstructor", true);
 				ContractDefinition const* nextContract = _contract.annotation().linearizedBaseContracts[i + 1];
-				t("nextConstructor", implicitConstructorName(*nextContract));
+				t("nextConstructor", IRNames::implicitConstructor(*nextContract));
 				t("nextParams", joinHumanReadable(listAllParams(baseConstructorParams)));
 			}
 			else
@@ -460,11 +460,6 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 string IRGenerator::callValueCheck()
 {
 	return "if callvalue() { revert(0, 0) }";
-}
-
-string IRGenerator::implicitConstructorName(ContractDefinition const& _contract)
-{
-	return "constructor_" + _contract.name() + "_" + to_string(_contract.id());
 }
 
 string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
