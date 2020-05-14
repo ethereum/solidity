@@ -139,7 +139,6 @@ string IRGenerationContext::generateInternalDispatchFunction(YulArity const& _ar
 		)");
 		templ("functionName", funName);
 		templ("comma", _arity.in > 0 ? "," : "");
-		YulUtilFunctions utils(m_evmVersion, m_revertStrings, m_functions);
 		templ("in", suffixedVariableNameList("in_", 0, _arity.in));
 		templ("arrow", _arity.out > 0 ? "->" : "");
 		templ("assignment_op", _arity.out > 0 ? ":=" : "");
