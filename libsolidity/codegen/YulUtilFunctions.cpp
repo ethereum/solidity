@@ -1499,8 +1499,6 @@ string YulUtilFunctions::zeroComplexMemoryArrayFunction(ArrayType const& _type)
 
 string YulUtilFunctions::allocateAndInitializeMemoryArrayFunction(ArrayType const& _type)
 {
-	solUnimplementedAssert(!_type.isByteArray(), "");
-
 	string functionName = "allocate_and_zero_memory_array_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
