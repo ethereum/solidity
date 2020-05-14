@@ -114,7 +114,7 @@ string IRGenerator::generate(
 	for (VariableDeclaration const* var: ContractType(_contract).immutableVariables())
 		m_context.registerImmutableVariable(*var);
 
-	t("CreationObject", m_context.creationObjectName(_contract));
+	t("CreationObject", IRNames::creationObject(_contract));
 	t("memoryInit", memoryInit());
 	t("notLibrary", !_contract.isLibrary());
 
@@ -127,7 +127,7 @@ string IRGenerator::generate(
 			constructorParams.emplace_back(m_context.newYulVariable());
 		t(
 			"copyConstructorArguments",
-			m_utils.copyConstructorArgumentsToMemoryFunction(_contract, m_context.creationObjectName(_contract))
+			m_utils.copyConstructorArgumentsToMemoryFunction(_contract, IRNames::creationObject(_contract))
 		);
 	}
 	t("constructorParams", joinHumanReadable(constructorParams));
@@ -142,7 +142,7 @@ string IRGenerator::generate(
 
 	resetContext(_contract);
 	// Do not register immutables to avoid assignment.
-	t("RuntimeObject", m_context.runtimeObjectName(_contract));
+	t("RuntimeObject", IRNames::runtimeObject(_contract));
 	t("dispatch", dispatchRoutine(_contract));
 	generateQueuedFunctions();
 	t("runtimeFunctions", m_context.functionCollector().requestedFunctions());
@@ -166,7 +166,7 @@ void IRGenerator::generateQueuedFunctions()
 
 string IRGenerator::generateFunction(FunctionDefinition const& _function)
 {
-	string functionName = m_context.functionName(_function);
+	string functionName = IRNames::function(_function);
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		Whiskers t(R"(
 			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
@@ -195,7 +195,7 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 
 string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 {
-	string functionName = m_context.functionName(_varDecl);
+	string functionName = IRNames::function(_varDecl);
 
 	Type const* type = _varDecl.annotation().type;
 
@@ -431,7 +431,7 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 
 		return(0, datasize("<object>"))
 	)X");
-	t("object", m_context.runtimeObjectName(_contract));
+	t("object", IRNames::runtimeObject(_contract));
 
 	vector<map<string, string>> loadImmutables;
 	vector<map<string, string>> storeImmutables;

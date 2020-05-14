@@ -26,6 +26,7 @@
 #include <libsolidity/interface/DebugSettings.h>
 
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
+#include <libsolidity/codegen/ir/Common.h>
 
 #include <liblangutil/EVMVersion.h>
 
@@ -98,12 +99,6 @@ public:
 	{
 		return m_stateVariables.at(&_varDecl);
 	}
-
-	std::string functionName(FunctionDefinition const& _function);
-	std::string functionName(VariableDeclaration const& _varDecl);
-
-	std::string creationObjectName(ContractDefinition const& _contract) const;
-	std::string runtimeObjectName(ContractDefinition const& _contract) const;
 
 	std::string newYulVariable();
 

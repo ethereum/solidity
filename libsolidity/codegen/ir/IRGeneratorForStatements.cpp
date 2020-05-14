@@ -1103,7 +1103,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		t("memEnd", m_context.newYulVariable());
 		t("allocateTemporaryMemory", m_utils.allocationTemporaryMemoryFunction());
 		t("releaseTemporaryMemory", m_utils.releaseTemporaryMemoryFunction());
-		t("object", m_context.creationObjectName(*contract));
+		t("object", IRNames::creationObject(*contract));
 		t("abiEncode",
 			m_context.abiFunctions().tupleEncoder(argumentTypes, functionType->parameterTypes(), false)
 		);
@@ -1371,7 +1371,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			)")
 			("allocationFunction", m_utils.allocationFunction())
 			("size", m_context.newYulVariable())
-			("objectName", m_context.creationObjectName(contract))
+			("objectName", IRNames::creationObject(contract))
 			("result", IRVariable(_memberAccess).commaSeparatedList()).render();
 		}
 		else if (member == "name")
