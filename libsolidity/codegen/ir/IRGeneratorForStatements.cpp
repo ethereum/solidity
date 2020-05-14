@@ -952,14 +952,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			"))\n";
 		break;
 	}
-	case FunctionType::Kind::ECRecover:
-	case FunctionType::Kind::SHA256:
-	case FunctionType::Kind::RIPEMD160:
-	{
-		solAssert(!_functionCall.annotation().tryCall, "");
-		appendExternalFunctionCall(_functionCall, arguments);
-		break;
-	}
 	case FunctionType::Kind::ArrayPop:
 	{
 		auto const& memberAccessExpression = dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression();
@@ -1149,6 +1141,69 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			templ("success", IRVariable(_functionCall).commaSeparatedList());
 		templ("isTransfer", functionType->kind() == FunctionType::Kind::Transfer);
 		templ("forwardingRevert", m_utils.forwardingRevertFunction());
+		m_code << templ.render();
+
+		break;
+	}
+	case FunctionType::Kind::ECRecover:
+	case FunctionType::Kind::RIPEMD160:
+	case FunctionType::Kind::SHA256:
+	{
+		solAssert(!_functionCall.annotation().tryCall, "");
+		solAssert(!functionType->valueSet(), "");
+		solAssert(!functionType->gasSet(), "");
+		solAssert(!functionType->bound(), "");
+
+		static map<FunctionType::Kind, std::tuple<u160, size_t>> precompiles = {
+			{FunctionType::Kind::ECRecover, std::make_tuple(1, 0)},
+			{FunctionType::Kind::SHA256, std::make_tuple(2, 0)},
+			{FunctionType::Kind::RIPEMD160, std::make_tuple(3, 12)},
+		};
+		auto [ address, offset ] = precompiles[functionType->kind()];
+		TypePointers argumentTypes;
+		vector<string> argumentStrings;
+		for (auto const& arg: arguments)
+		{
+			argumentTypes.emplace_back(&type(*arg));
+			argumentStrings += IRVariable(*arg).stackSlots();
+		}
+		Whiskers templ(R"(
+			let <pos> := <allocateTemporary>()
+			let <end> := <encodeArgs>(<pos> <argumentString>)
+			<?isECRecover>
+				mstore(0, 0)
+			</isECRecover>
+			let <success> := <call>(<gas>, <address> <?isCall>, 0</isCall>, <pos>, sub(<end>, <pos>), 0, 32)
+			if iszero(<success>) { <forwardingRevert>() }
+			let <retVars> := <shl>(mload(0))
+		)");
+		templ("call", m_context.evmVersion().hasStaticCall() ? "staticcall" : "call");
+		templ("isCall", !m_context.evmVersion().hasStaticCall());
+		templ("shl", m_utils.shiftLeftFunction(offset * 8));
+		templ("allocateTemporary", m_utils.allocationTemporaryMemoryFunction());
+		templ("pos", m_context.newYulVariable());
+		templ("end", m_context.newYulVariable());
+		templ("isECRecover", FunctionType::Kind::ECRecover == functionType->kind());
+		if (FunctionType::Kind::ECRecover == functionType->kind())
+			templ("encodeArgs", m_context.abiFunctions().tupleEncoder(argumentTypes, parameterTypes));
+		else
+			templ("encodeArgs", m_context.abiFunctions().tupleEncoderPacked(argumentTypes, parameterTypes));
+		templ("argumentString", joinHumanReadablePrefixed(argumentStrings));
+		templ("address", toString(address));
+		templ("success", m_context.newYulVariable());
+		templ("retVars", IRVariable(_functionCall).commaSeparatedList());
+		templ("forwardingRevert", m_utils.forwardingRevertFunction());
+		if (m_context.evmVersion().canOverchargeGasForCall())
+			// Send all gas (requires tangerine whistle EVM)
+			templ("gas", "gas()");
+		else
+		{
+			// @todo The value 10 is not exact and this could be fine-tuned,
+			// but this has worked for years in the old code generator.
+			u256 gasNeededByCaller = evmasm::GasCosts::callGas(m_context.evmVersion()) + 10 + evmasm::GasCosts::callNewAccountGas;
+			templ("gas", "sub(gas(), " + formatNumber(gasNeededByCaller) + ")");
+		}
+
 		m_code << templ.render();
 
 		break;
