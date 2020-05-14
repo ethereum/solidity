@@ -678,8 +678,8 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		{
 			Arity arity = getFunctionArity(*functionType);
 			define(_functionCall) <<
-				// NOTE: internalDispatch() takes care of adding the function to function generation queue
-				m_context.internalDispatch(arity) <<
+				// NOTE: generateInternalDispatchFunction() takes care of adding the function to function generation queue
+				m_context.generateInternalDispatchFunction(arity) <<
 				"(" <<
 				IRVariable(_functionCall.expression()).part("functionIdentifier").name() <<
 				joinHumanReadablePrefixed(args) <<

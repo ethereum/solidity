@@ -132,7 +132,7 @@ string IRGenerationContext::trySuccessConditionVariable(Expression const& _expre
 	return "trySuccessCondition_" + to_string(_expression.id());
 }
 
-string IRGenerationContext::internalDispatch(Arity const& _arity)
+string IRGenerationContext::generateInternalDispatchFunction(Arity const& _arity)
 {
 	// UNIMPLEMENTED: Internal library calls via pointers are not implemented yet.
 	// We're not generating code for internal library functions here even though it's possible
@@ -152,10 +152,10 @@ string IRGenerationContext::internalDispatch(Arity const& _arity)
 				enqueueFunctionForCodeGeneration(*function);
 			}
 
-	return internalDispatch(_arity, functions);
+	return generateInternalDispatchFunction(_arity, functions);
 }
 
-string IRGenerationContext::internalDispatch(Arity const& _arity, set<FunctionDefinition const*> const& _functions)
+string IRGenerationContext::generateInternalDispatchFunction(Arity const& _arity, set<FunctionDefinition const*> const& _functions)
 {
 	vector<map<string, string>> cases;
 	for (auto const* function: _functions)
