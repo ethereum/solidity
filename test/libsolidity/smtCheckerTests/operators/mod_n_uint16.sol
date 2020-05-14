@@ -8,3 +8,5 @@ contract C
 		assert(z < 100_000);
 	}
 }
+// ----
+// Warning: (130-149): Error trying to invoke SMT solver.

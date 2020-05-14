@@ -447,8 +447,6 @@ private:
 	std::map<util::h256, std::string> m_smtlib2Responses;
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::vector<Source const*> m_sourceOrder;
-	/// This is updated during compilation.
-	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
 	std::map<std::string const, Contract> m_contracts;
 	langutil::ErrorList m_errorList;
 	langutil::ErrorReporter m_errorReporter;

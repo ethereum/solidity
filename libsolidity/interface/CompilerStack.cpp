@@ -214,7 +214,6 @@ void CompilerStack::reset(bool _keepSettings)
 		m_metadataHash = MetadataHash::IPFS;
 	}
 	m_globalContext.reset();
-	m_scopes.clear();
 	m_sourceOrder.clear();
 	m_contracts.clear();
 	m_errorReporter.clear();
@@ -314,7 +313,8 @@ bool CompilerStack::analyze()
 				noErrors = false;
 
 		m_globalContext = make_shared<GlobalContext>();
-		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_scopes, m_errorReporter);
+		// We need to keep the same resolver during the whole process.
+		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter);
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !resolver.registerDeclarations(*source->ast))
 				return false;

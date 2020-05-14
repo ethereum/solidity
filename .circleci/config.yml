@@ -12,10 +12,10 @@ parameters:
     default: "4"
   ubuntu-2004-docker-image-rev:
     type: string
-    default: "1"
+    default: "2"
   ubuntu-2004-clang-docker-image-rev:
     type: string
-    default: "1"
+    default: "2"
   ubuntu-1604-clang-ossfuzz-docker-image-rev:
     type: string
     default: "2"
