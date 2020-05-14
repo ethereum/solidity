@@ -123,7 +123,7 @@ string TextTransform::operator()(wasm::Loop const& _loop)
 
 string TextTransform::operator()(wasm::Break const& _break)
 {
-	return "(break $" + _break.label.name + ")\n";
+	return "(br $" + _break.label.name + ")\n";
 }
 
 string TextTransform::operator()(wasm::BreakIf const& _break)
