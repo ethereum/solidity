@@ -58,9 +58,8 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(_sourceCode)));
 	BOOST_CHECK(!!sourceUnit);
 
-	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
 	GlobalContext globalContext;
-	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), scopes, errorReporter);
+	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), errorReporter);
 	DeclarationTypeChecker declarationTypeChecker(errorReporter, solidity::test::CommonOptions::get().evmVersion());
 	solAssert(Error::containsOnlyWarnings(errorReporter.errors()), "");
 	resolver.registerDeclarations(*sourceUnit);
