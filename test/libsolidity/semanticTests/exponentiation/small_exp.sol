@@ -9,5 +9,7 @@ contract test {
         return x**y;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f() -> 4

@@ -2140,6 +2140,9 @@ string IRGeneratorForStatements::binaryOperation(
 			case Token::BitAnd:
 				fun = "and";
 				break;
+			case Token::Exp:
+				fun = "exp";
+				break;
 			default:
 				break;
 		}
