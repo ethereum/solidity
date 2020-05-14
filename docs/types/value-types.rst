@@ -40,6 +40,9 @@ Operators:
 * Shift operators: ``<<`` (left shift), ``>>`` (right shift)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (modulo), ``**`` (exponentiation)
 
+For an integer type ``X``, you can use ``type(X).min`` and ``type(X).max`` to
+access the minimum and maximum value representable by the type.
+
 .. warning::
 
   Integers in Solidity are restricted to a certain range. For example, with ``uint32``, this is ``0`` up to ``2**32 - 1``.
@@ -540,6 +543,7 @@ subsequent unsigned integer values starting from ``0``.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
 
     contract test {
@@ -650,6 +654,7 @@ External (or public) functions have the following members:
 
 Example that shows how to use the members::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
     // This will report a warning
 
@@ -668,6 +673,7 @@ Example that shows how to use the members::
 
 Example that shows how to use internal function types::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
 
     library ArrayUtils {
@@ -725,6 +731,7 @@ Example that shows how to use internal function types::
 
 Another example that uses external function types::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
 
 

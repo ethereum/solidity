@@ -232,6 +232,7 @@ Given the contract:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
 
     contract Foo {
@@ -535,6 +536,7 @@ For example,
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.7.0;
 
 
@@ -583,6 +585,7 @@ As an example, the code
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.19 <0.7.0;
     pragma experimental ABIEncoderV2;
 

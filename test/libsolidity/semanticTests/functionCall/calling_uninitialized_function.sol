@@ -11,7 +11,8 @@ contract C {
         return 7;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // intern() -> FAILURE # This should throw exceptions #
 // extern() -> FAILURE

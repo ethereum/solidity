@@ -1,3 +1,30 @@
+### 0.6.8 (2020-05-14)
+
+Important Bugfixes:
+ * Add missing callvalue check to the creation code of a contract that does not define a constructor but has a base that does define a constructor.
+ * Disallow array slices of arrays with dynamically encoded base types.
+ * String literals containing backslash characters can no longer cause incorrect code to be generated when passed directly to function calls or encoding functions when ABIEncoderV2 is active.
+
+
+Language Features:
+ * Implemented ``type(T).min`` and ``type(T).max`` for every integer type ``T`` that returns the smallest and largest value representable by the type.
+
+
+Compiler Features:
+ * Commandline Interface: Don't ignore `--yul-optimizations` in assembly mode.
+ * Allow using abi encoding functions for calldata array slices without explicit casts.
+ * Wasm binary output: Implement ``br`` and ``br_if``.
+
+
+Bugfixes:
+ * ABI: Skip ``private`` or ``internal`` constructors.
+ * Fixed an "Assembly Exception in Bytecode" error where requested functions were generated twice.
+ * Natspec: Fixed a bug that ignored ``@return`` tag when no other developer-documentation tags were present.
+ * Type Checker: Checks if a literal exponent in the ``**`` operation is too large or fractional.
+ * Type Checker: Disallow accessing ``runtimeCode`` for contract types that contain immutable state variables.
+ * Yul Assembler: Fix source location of variable declarations without value.
+
+
 ### 0.6.7 (2020-05-04)
 
 Language Features:

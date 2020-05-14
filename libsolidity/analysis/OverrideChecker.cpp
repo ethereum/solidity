@@ -27,7 +27,6 @@
 #include <liblangutil/ErrorReporter.h>
 #include <libsolutil/Visitor.h>
 
-#include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
 
@@ -461,6 +460,7 @@ void OverrideChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 	{
 		if (contains_if(inheritedFuncs, MatchByName{modifier->name()}))
 			m_errorReporter.typeError(
+				5631_error,
 				modifier->location(),
 				"Override changes function or public state variable to modifier."
 			);
@@ -474,7 +474,7 @@ void OverrideChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 			continue;
 
 		if (contains_if(inheritedMods, MatchByName{function->name()}))
-			m_errorReporter.typeError(function->location(), "Override changes modifier to function.");
+			m_errorReporter.typeError(1469_error, function->location(), "Override changes modifier to function.");
 
 		checkOverrideList(OverrideProxy{function}, inheritedFuncs);
 	}
@@ -484,7 +484,7 @@ void OverrideChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 			continue;
 
 		if (contains_if(inheritedMods, MatchByName{stateVar->name()}))
-			m_errorReporter.typeError(stateVar->location(), "Override changes modifier to public state variable.");
+			m_errorReporter.typeError(1456_error, stateVar->location(), "Override changes modifier to public state variable.");
 
 		checkOverrideList(OverrideProxy{stateVar}, inheritedFuncs);
 	}
@@ -500,17 +500,19 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 
 	if (_overriding.isModifier() && *_overriding.modifierType() != *_super.modifierType())
 		m_errorReporter.typeError(
+			1078_error,
 			_overriding.location(),
 			"Override changes modifier signature."
 		);
 
 	if (!_overriding.overrides())
-		overrideError(_overriding, _super, "Overriding " + _overriding.astNodeName() + " is missing \"override\" specifier.");
+		overrideError(_overriding, _super, 9456_error, "Overriding " + _overriding.astNodeName() + " is missing \"override\" specifier.");
 
 	if (_super.isVariable())
 		overrideError(
 			_super,
 			_overriding,
+			1452_error,
 			"Cannot override public state variable.",
 			"Overriding " + _overriding.astNodeName() + " is here:"
 		);
@@ -518,6 +520,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 		overrideError(
 			_super,
 			_overriding,
+			4334_error,
 			"Trying to override non-virtual " + _super.astNodeName() + ". Did you forget to add \"virtual\"?",
 			"Overriding " + _overriding.astNodeName() + " is here:"
 		);
@@ -525,7 +528,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 	if (_overriding.isVariable())
 	{
 		if (_super.visibility() != Visibility::External)
-			overrideError(_overriding, _super, "Public state variables can only override functions with external visibility.");
+			overrideError(_overriding, _super, 5225_error, "Public state variables can only override functions with external visibility.");
 		solAssert(_overriding.visibility() == Visibility::External, "");
 	}
 	else if (_overriding.visibility() != _super.visibility())
@@ -536,7 +539,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 			_super.visibility() == Visibility::External &&
 			_overriding.visibility() == Visibility::Public
 		))
-			overrideError(_overriding, _super, "Overriding " + _overriding.astNodeName() + " visibility differs.");
+			overrideError(_overriding, _super, 9098_error, "Overriding " + _overriding.astNodeName() + " visibility differs.");
 	}
 
 	if (_super.isFunction())
@@ -547,7 +550,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 		solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
 
 		if (!functionType->hasEqualReturnTypes(*superType))
-			overrideError(_overriding, _super, "Overriding " + _overriding.astNodeName() + " return types differ.");
+			overrideError(_overriding, _super, 4822_error, "Overriding " + _overriding.astNodeName() + " return types differ.");
 
 		// This is only relevant for a function overriding a function.
 		if (_overriding.isFunction())
@@ -556,6 +559,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 				overrideError(
 					_overriding,
 					_super,
+					2837_error,
 					"Overriding function changes state mutability from \"" +
 					stateMutabilityToString(_super.stateMutability()) +
 					"\" to \"" +
@@ -567,6 +571,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 				overrideError(
 					_overriding,
 					_super,
+					4593_error,
 					"Overriding an implemented function with an unimplemented function is not allowed."
 				);
 		}
@@ -576,6 +581,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 void OverrideChecker::overrideListError(
 	OverrideProxy const& _item,
 	set<ContractDefinition const*, CompareByID> _secondary,
+	ErrorId _error,
 	string const& _message1,
 	string const& _message2
 )
@@ -593,6 +599,7 @@ void OverrideChecker::overrideListError(
 		contractSingularPlural = "contracts ";
 
 	m_errorReporter.typeError(
+		_error,
 		_item.overrides() ? _item.overrides()->location() : _item.location(),
 		ssl,
 		_message1 +
@@ -603,9 +610,10 @@ void OverrideChecker::overrideListError(
 	);
 }
 
-void OverrideChecker::overrideError(Declaration const& _overriding, Declaration const& _super, string const& _message, string const& _secondaryMsg)
+void OverrideChecker::overrideError(Declaration const& _overriding, Declaration const& _super, ErrorId _error, string const& _message, string const& _secondaryMsg)
 {
 	m_errorReporter.typeError(
+		_error,
 		_overriding.location(),
 		SecondarySourceLocation().append(_secondaryMsg, _super.location()),
 		_message
@@ -613,9 +621,10 @@ void OverrideChecker::overrideError(Declaration const& _overriding, Declaration 
 }
 
 
-void OverrideChecker::overrideError(OverrideProxy const& _overriding, OverrideProxy const& _super, string const& _message, string const& _secondaryMsg)
+void OverrideChecker::overrideError(OverrideProxy const& _overriding, OverrideProxy const& _super, ErrorId _error, string const& _message, string const& _secondaryMsg)
 {
 	m_errorReporter.typeError(
+		_error,
 		_overriding.location(),
 		SecondarySourceLocation().append(_secondaryMsg, _super.location()),
 		_message
@@ -718,7 +727,7 @@ void OverrideChecker::checkAmbiguousOverridesInternal(set<OverrideProxy> _baseCa
 			" Since one of the bases defines a public state variable which cannot be overridden, "
 			"you have to change the inheritance layout or the names of the functions.";
 
-	m_errorReporter.typeError(_location, ssl, message);
+	m_errorReporter.typeError(6480_error, _location, ssl, message);
 }
 
 set<ContractDefinition const*, OverrideChecker::CompareByID> OverrideChecker::resolveOverrideList(OverrideSpecifier const& _overrides) const
@@ -766,13 +775,14 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 				SecondarySourceLocation ssl;
 				ssl.append("First occurrence here: ", list[i-1]->location());
 				m_errorReporter.typeError(
+					4520_error,
 					list[i]->location(),
 					ssl,
-						"Duplicate contract \"" +
-						joinHumanReadable(list[i]->namePath(), ".") +
-						"\" found in override list of \"" +
-						_item.name() +
-						"\"."
+					"Duplicate contract \"" +
+					joinHumanReadable(list[i]->namePath(), ".") +
+					"\" found in override list of \"" +
+					_item.name() +
+					"\"."
 				);
 			}
 		}
@@ -791,6 +801,7 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 
 	if (_item.overrides() && expectedContracts.empty())
 		m_errorReporter.typeError(
+			7792_error,
 			_item.overrides()->location(),
 			_item.astNodeNameCapitalized() + " has override specified but does not override anything."
 		);
@@ -804,6 +815,7 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 		overrideListError(
 			_item,
 			missingContracts,
+			4327_error,
 			_item.astNodeNameCapitalized() + " needs to specify overridden ",
 			""
 		);
@@ -813,6 +825,7 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 		overrideListError(
 			_item,
 			surplusContracts,
+			2353_error,
 			"Invalid ",
 			"specified in override list: "
 		);

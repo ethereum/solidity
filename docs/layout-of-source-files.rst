@@ -7,6 +7,38 @@ Source files can contain an arbitrary number of
 :ref:`pragma directives<pragma>` and
 :ref:`struct<structs>` and :ref:`enum<enums>` definitions.
 
+.. index:: ! license, spdx
+
+SPDX License Identifier
+=======================
+
+Trust in smart contract can be better established if their source code
+is available. Since making source code available always touches on legal problems
+with regards to copyright, the Solidity compiler encouranges the use
+of machine-readable `SPDX license identifiers <https://spdx.org>`_.
+Every source file should start with a comment indicating its license:
+
+``// SPDX-License-Identifier: MIT``
+
+The compiler does not validate that the license is part of the
+`list allowed by SPDX <https://spdx.org/licenses/>`_, but
+it does include the supplied string in the `bytecode metadata <metadata>`_.
+
+If you do not want to specify a license or if the source code is
+not open-source, please use the special value ``UNLICENSED``.
+
+Supplying this comment of course does not free you from other
+obligations related to licensing like having to mention
+a specific license header in each source file or the
+original copyright holder.
+
+The comment is recognized by the compiler anywhere in the file at the
+file level, but it is recommended to put it at the top of the file.
+
+More information about how to use SPDX license identifiers
+can be found at the `SPDX website <https://spdx.org/ids-how>`_.
+
+
 .. index:: ! pragma
 
 .. _pragma:
@@ -284,6 +316,7 @@ for the two function parameters and two return variables.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.21 <0.7.0;
 
     /** @title Shape calculator. */

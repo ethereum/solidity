@@ -13,6 +13,8 @@ contract C {
 		return (x+x,y);
 	}
 }
+// ====
+// compileViaYul: also
 // ----
 // constructor(): 3 ->
 // f() -> 84, 23

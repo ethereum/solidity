@@ -10,6 +10,8 @@ contract C {
 		return z();
 	}
 }
+// ====
+// compileViaYul: also
 // ----
 // f() -> 7
 // callZ() -> 7

@@ -171,6 +171,7 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 		!_funDef.overrides()
 	)
 		m_errorReporter.warning(
+			2018_error,
 			_funDef.location(),
 			"Function state mutability can be restricted to " + stateMutabilityToString(m_bestMutabilityAndLocation.mutability)
 		);
@@ -229,7 +230,7 @@ void ViewPureChecker::endVisit(InlineAssembly const& _inlineAssembly)
 {
 	AssemblyViewPureChecker{
 		_inlineAssembly.dialect(),
-		[=](StateMutability _mutability, SourceLocation const& _location) { reportMutability(_mutability, _location); }
+		[&](StateMutability _mutability, SourceLocation const& _location) { reportMutability(_mutability, _location); }
 	}(_inlineAssembly.operations());
 }
 
@@ -252,6 +253,7 @@ void ViewPureChecker::reportMutability(
 	))
 	{
 		m_errorReporter.typeError(
+			2527_error,
 			_location,
 			"Function declared as pure, but this expression (potentially) reads from the "
 			"environment or state and thus requires \"view\"."
@@ -261,6 +263,7 @@ void ViewPureChecker::reportMutability(
 	else if (_mutability == StateMutability::NonPayable)
 	{
 		m_errorReporter.typeError(
+			8961_error,
 			_location,
 			"Function declared as " +
 			stateMutabilityToString(m_currentFunction->stateMutability()) +
@@ -277,12 +280,14 @@ void ViewPureChecker::reportMutability(
 		{
 			if (_nestedLocation)
 				m_errorReporter.typeError(
+					4006_error,
 					_location,
 					SecondarySourceLocation().append("\"msg.value\" or \"callvalue()\" appear here inside the modifier.", *_nestedLocation),
 					"This modifier uses \"msg.value\" or \"callvalue()\" and thus the function has to be payable or internal."
 				);
 			else
 				m_errorReporter.typeError(
+					5887_error,
 					_location,
 					"\"msg.value\" and \"callvalue()\" can only be used in payable public functions. Make the function "
 					"\"payable\" or use an internal function to avoid this error."
@@ -357,6 +362,8 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 			{MagicType::Kind::MetaType, "runtimeCode"},
 			{MagicType::Kind::MetaType, "name"},
 			{MagicType::Kind::MetaType, "interfaceId"},
+			{MagicType::Kind::MetaType, "min"},
+			{MagicType::Kind::MetaType, "max"},
 		};
 		set<MagicMember> static const payableMembers{
 			{MagicType::Kind::Message, "value"}

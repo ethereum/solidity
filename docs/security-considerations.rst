@@ -58,6 +58,7 @@ complete contract):
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.7.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
@@ -81,6 +82,7 @@ as it uses ``call`` which forwards all remaining gas by default:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.2 <0.7.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
@@ -100,6 +102,7 @@ outlined further below:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.11 <0.7.0;
 
     contract Fund {
@@ -197,6 +200,7 @@ Never use tx.origin for authorization. Let's say you have a wallet contract like
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.7.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
@@ -217,6 +221,7 @@ Now someone tricks you into sending Ether to the address of this attack wallet:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.6.0;
 
     interface TxUserWallet {
@@ -277,6 +282,7 @@ field of a ``struct`` that is the base type of a dynamic storage array.  The
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
 
     contract Map {
@@ -555,6 +561,7 @@ not mean loss of proving power.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0;
     pragma experimental SMTChecker;
     // This may report a warning if no SMT solver available.
@@ -609,6 +616,7 @@ types.
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0;
     pragma experimental SMTChecker;
     // This will report a warning

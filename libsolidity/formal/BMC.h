@@ -44,6 +44,7 @@ using solidity::util::h256;
 namespace solidity::langutil
 {
 class ErrorReporter;
+struct ErrorId;
 struct SourceLocation;
 }
 
@@ -144,22 +145,22 @@ private:
 	/// Check that a condition can be satisfied.
 	void checkCondition(
 		smt::Expression _condition,
-		std::vector<CallStackEntry> const& callStack,
+		std::vector<CallStackEntry> const& _callStack,
 		std::pair<std::vector<smt::Expression>, std::vector<std::string>> const& _modelExpressions,
 		langutil::SourceLocation const& _location,
+		langutil::ErrorId _errorHappens,
+		langutil::ErrorId _errorMightHappen,
 		std::string const& _description,
 		std::string const& _additionalValueName = "",
 		smt::Expression const* _additionalValue = nullptr
 	);
 	/// Checks that a boolean condition is not constant. Do not warn if the expression
 	/// is a literal constant.
-	/// @param _description the warning string, $VALUE will be replaced by the constant value.
 	void checkBooleanNotConstant(
 		Expression const& _condition,
 		smt::Expression const& _constraints,
 		smt::Expression const& _value,
-		std::vector<CallStackEntry> const& _callStack,
-		std::string const& _description
+		std::vector<CallStackEntry> const& _callStack
 	);
 	std::pair<smt::CheckResult, std::vector<std::string>>
 	checkSatisfiableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);

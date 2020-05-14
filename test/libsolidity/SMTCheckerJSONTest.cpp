@@ -64,8 +64,8 @@ TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _li
 	StandardCompiler compiler;
 
 	// Run the compiler and retrieve the smtlib2queries (1st run)
-	string versionPragma = "pragma solidity >=0.0;\n";
-	Json::Value input = buildJson(versionPragma);
+	string preamble = "pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n";
+	Json::Value input = buildJson(preamble);
 	Json::Value result = compiler.compile(input);
 
 	// This is the list of query hashes requested by the 1st run
@@ -121,10 +121,10 @@ TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _li
 			std::string sourceName;
 			if (location.isMember("source") && location["source"].isString())
 				sourceName = location["source"].asString();
-			if (start >= static_cast<int>(versionPragma.size()))
-				start -= versionPragma.size();
-			if (end >= static_cast<int>(versionPragma.size()))
-				end -= versionPragma.size();
+			if (start >= static_cast<int>(preamble.size()))
+				start -= preamble.size();
+			if (end >= static_cast<int>(preamble.size()))
+				end -= preamble.size();
 			m_errorList.emplace_back(SyntaxTestError{
 				error["type"].asString(),
 				error["message"].asString(),

@@ -21,8 +21,6 @@
 #include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
-#include <boost/algorithm/string/replace.hpp>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -44,6 +42,7 @@ BMC::BMC(
 	if (_enabledSolvers.some())
 		if (!_smtlib2Responses.empty())
 			m_errorReporter.warning(
+				5622_error,
 				"SMT-LIB2 query responses were given in the auxiliary input, "
 				"but this Solidity binary uses an SMT solver (Z3/CVC4) directly."
 				"These responses will be ignored."
@@ -74,6 +73,7 @@ void BMC::analyze(SourceUnit const& _source, set<Expression const*> _safeAsserti
 		{
 			m_noSolverWarning = true;
 			m_outerErrorReporter.warning(
+				8084_error,
 				SourceLocation(),
 				"BMC analysis was not possible since no integrated SMT solver (Z3 or CVC4) was found."
 			);
@@ -467,6 +467,7 @@ void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 		inlineFunctionCall(_funCall);
 	else if (funType.kind() == FunctionType::Kind::Internal)
 		m_errorReporter.warning(
+			5729_error,
 			_funCall.location(),
 			"Assertion checker does not yet implement this type of function call."
 		);
@@ -591,8 +592,7 @@ void BMC::checkConstantCondition(BMCVerificationTarget& _target)
 		*_target.expression,
 		_target.constraints,
 		_target.value,
-		_target.callStack,
-		"Condition is always $VALUE."
+		_target.callStack
 	);
 }
 
@@ -610,6 +610,8 @@ void BMC::checkUnderflow(BMCVerificationTarget& _target, smt::Expression const& 
 		_target.callStack,
 		_target.modelExpressions,
 		_target.expression->location(),
+		4144_error,
+		8312_error,
 		"Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")",
 		"<result>",
 		&_target.value
@@ -630,6 +632,8 @@ void BMC::checkOverflow(BMCVerificationTarget& _target, smt::Expression const& _
 		_target.callStack,
 		_target.modelExpressions,
 		_target.expression->location(),
+		2661_error,
+		8065_error,
 		"Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")",
 		"<result>",
 		&_target.value
@@ -644,6 +648,8 @@ void BMC::checkDivByZero(BMCVerificationTarget& _target)
 		_target.callStack,
 		_target.modelExpressions,
 		_target.expression->location(),
+		3046_error,
+		5272_error,
 		"Division by zero",
 		"<result>",
 		&_target.value
@@ -658,6 +664,8 @@ void BMC::checkBalance(BMCVerificationTarget& _target)
 		_target.callStack,
 		_target.modelExpressions,
 		_target.expression->location(),
+		1236_error,
+		4010_error,
 		"Insufficient funds",
 		"address(this).balance"
 	);
@@ -672,6 +680,8 @@ void BMC::checkAssert(BMCVerificationTarget& _target)
 			_target.callStack,
 			_target.modelExpressions,
 			_target.expression->location(),
+			4661_error,
+			7812_error,
 			"Assertion violation"
 		);
 }
@@ -702,9 +712,11 @@ void BMC::addVerificationTarget(
 
 void BMC::checkCondition(
 	smt::Expression _condition,
-	vector<SMTEncoder::CallStackEntry> const& callStack,
+	vector<SMTEncoder::CallStackEntry> const& _callStack,
 	pair<vector<smt::Expression>, vector<string>> const& _modelExpressions,
 	SourceLocation const& _location,
+	ErrorId _errorHappens,
+	ErrorId _errorMightHappen,
 	string const& _description,
 	string const& _additionalValueName,
 	smt::Expression const* _additionalValue
@@ -716,7 +728,7 @@ void BMC::checkCondition(
 	vector<smt::Expression> expressionsToEvaluate;
 	vector<string> expressionNames;
 	tie(expressionsToEvaluate, expressionNames) = _modelExpressions;
-	if (callStack.size())
+	if (_callStack.size())
 		if (_additionalValue)
 		{
 			expressionsToEvaluate.emplace_back(*_additionalValue);
@@ -747,7 +759,7 @@ void BMC::checkCondition(
 	{
 		std::ostringstream message;
 		message << _description << " happens here";
-		if (callStack.size())
+		if (_callStack.size())
 		{
 			std::ostringstream modelMessage;
 			modelMessage << "  for:\n";
@@ -760,30 +772,31 @@ void BMC::checkCondition(
 			for (auto const& eval: sortedModel)
 				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
 			m_errorReporter.warning(
+				_errorHappens,
 				_location,
 				message.str(),
 				SecondarySourceLocation().append(modelMessage.str(), SourceLocation{})
-				.append(SMTEncoder::callStackMessage(callStack))
+				.append(SMTEncoder::callStackMessage(_callStack))
 				.append(move(secondaryLocation))
 			);
 		}
 		else
 		{
 			message << ".";
-			m_errorReporter.warning(_location, message.str(), secondaryLocation);
+			m_errorReporter.warning(6084_error, _location, message.str(), secondaryLocation);
 		}
 		break;
 	}
 	case smt::CheckResult::UNSATISFIABLE:
 		break;
 	case smt::CheckResult::UNKNOWN:
-		m_errorReporter.warning(_location, _description + " might happen here.", secondaryLocation);
+		m_errorReporter.warning(_errorMightHappen, _location, _description + " might happen here.", secondaryLocation);
 		break;
 	case smt::CheckResult::CONFLICTING:
-		m_errorReporter.warning(_location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
+		m_errorReporter.warning(1584_error, _location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;
 	case smt::CheckResult::ERROR:
-		m_errorReporter.warning(_location, "Error trying to invoke SMT solver.");
+		m_errorReporter.warning(1823_error, _location, "Error trying to invoke SMT solver.");
 		break;
 	}
 
@@ -794,8 +807,7 @@ void BMC::checkBooleanNotConstant(
 	Expression const& _condition,
 	smt::Expression const& _constraints,
 	smt::Expression const& _value,
-	vector<SMTEncoder::CallStackEntry> const& _callStack,
-	string const& _description
+	vector<SMTEncoder::CallStackEntry> const& _callStack
 )
 {
 	// Do not check for const-ness if this is a constant.
@@ -813,9 +825,9 @@ void BMC::checkBooleanNotConstant(
 	m_interface->pop();
 
 	if (positiveResult == smt::CheckResult::ERROR || negatedResult == smt::CheckResult::ERROR)
-		m_errorReporter.warning(_condition.location(), "Error trying to invoke SMT solver.");
+		m_errorReporter.warning(8592_error, _condition.location(), "Error trying to invoke SMT solver.");
 	else if (positiveResult == smt::CheckResult::CONFLICTING || negatedResult == smt::CheckResult::CONFLICTING)
-		m_errorReporter.warning(_condition.location(), "At least two SMT solvers provided conflicting answers. Results might not be sound.");
+		m_errorReporter.warning(3356_error, _condition.location(), "At least two SMT solvers provided conflicting answers. Results might not be sound.");
 	else if (positiveResult == smt::CheckResult::SATISFIABLE && negatedResult == smt::CheckResult::SATISFIABLE)
 	{
 		// everything fine.
@@ -825,24 +837,25 @@ void BMC::checkBooleanNotConstant(
 		// can't do anything.
 	}
 	else if (positiveResult == smt::CheckResult::UNSATISFIABLE && negatedResult == smt::CheckResult::UNSATISFIABLE)
-		m_errorReporter.warning(_condition.location(), "Condition unreachable.", SMTEncoder::callStackMessage(_callStack));
+		m_errorReporter.warning(2512_error, _condition.location(), "Condition unreachable.", SMTEncoder::callStackMessage(_callStack));
 	else
 	{
-		string value;
+		string description;
 		if (positiveResult == smt::CheckResult::SATISFIABLE)
 		{
 			solAssert(negatedResult == smt::CheckResult::UNSATISFIABLE, "");
-			value = "true";
+			description = "Condition is always true.";
 		}
 		else
 		{
 			solAssert(positiveResult == smt::CheckResult::UNSATISFIABLE, "");
 			solAssert(negatedResult == smt::CheckResult::SATISFIABLE, "");
-			value = "false";
+			description = "Condition is always false.";
 		}
 		m_errorReporter.warning(
+			6838_error,
 			_condition.location(),
-			boost::algorithm::replace_all_copy(_description, "$VALUE", value),
+			description,
 			SMTEncoder::callStackMessage(_callStack)
 		);
 	}
@@ -862,7 +875,7 @@ BMC::checkSatisfiableAndGenerateModel(vector<smt::Expression> const& _expression
 		string description("Error querying SMT solver");
 		if (_e.comment())
 			description += ": " + *_e.comment();
-		m_errorReporter.warning(description);
+		m_errorReporter.warning(8140_error, description);
 		result = smt::CheckResult::ERROR;
 	}
 

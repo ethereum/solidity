@@ -55,33 +55,7 @@ string AsmPrinter::operator()(Literal const& _literal) const
 		break;
 	}
 
-	string out;
-	for (char c: _literal.value.str())
-		if (c == '\\')
-			out += "\\\\";
-		else if (c == '"')
-			out += "\\\"";
-		else if (c == '\b')
-			out += "\\b";
-		else if (c == '\f')
-			out += "\\f";
-		else if (c == '\n')
-			out += "\\n";
-		else if (c == '\r')
-			out += "\\r";
-		else if (c == '\t')
-			out += "\\t";
-		else if (c == '\v')
-			out += "\\v";
-		else if (!isprint(c, locale::classic()))
-		{
-			ostringstream o;
-			o << std::hex << setfill('0') << setw(2) << (unsigned)(unsigned char)(c);
-			out += "\\x" + o.str();
-		}
-		else
-			out += c;
-	return "\"" + out + "\"" + appendTypeName(_literal.type);
+	return escapeAndQuoteString(_literal.value.str()) + appendTypeName(_literal.type);
 }
 
 string AsmPrinter::operator()(Identifier const& _identifier) const

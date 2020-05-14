@@ -9,5 +9,7 @@ contract C {
 		return (x+x,y);
 	}
 }
+// ====
+// compileViaYul: also
 // ----
 // f() -> 84, 23

@@ -22,6 +22,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace solidity::frontend;
+using namespace solidity::langutil;
 
 void ImmutableValidator::analyze()
 {
@@ -42,7 +43,7 @@ void ImmutableValidator::analyze()
 			visitCallableIfNew(*contract->constructor());
 
 	for (ContractDefinition const* contract: linearizedContracts)
-		for (std::shared_ptr<InheritanceSpecifier> const inheritSpec: contract->baseContracts())
+		for (std::shared_ptr<InheritanceSpecifier> const& inheritSpec: contract->baseContracts())
 			if (auto args = inheritSpec->arguments())
 				ASTNode::listAccept(*args, *this);
 
@@ -165,33 +166,39 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 	{
 		if (!m_currentConstructor)
 			m_errorReporter.typeError(
+				1581_error,
 				_expression.location(),
 				"Immutable variables can only be initialized inline or assigned directly in the constructor."
 			);
 		else if (m_currentConstructor->annotation().contract->id() != _variableReference.annotation().contract->id())
 			m_errorReporter.typeError(
+				7484_error,
 				_expression.location(),
 				"Immutable variables must be initialized in the constructor of the contract they are defined in."
 			);
 		else if (m_inLoop)
 			m_errorReporter.typeError(
+				6672_error,
 				_expression.location(),
 				"Immutable variables can only be initialized once, not in a while statement."
 			);
 		else if (m_inBranch)
 			m_errorReporter.typeError(
+				4599_error,
 				_expression.location(),
 				"Immutable variables must be initialized unconditionally, not in an if statement."
 			);
 
 		if (!m_initializedStateVariables.emplace(&_variableReference).second)
 			m_errorReporter.typeError(
+				1574_error,
 				_expression.location(),
 				"Immutable state variable already initialized."
 			);
 	}
 	else if (m_inConstructionContext)
 		m_errorReporter.typeError(
+			7733_error,
 			_expression.location(),
 			"Immutable variables cannot be read during contract creation time, which means "
 			"they cannot be read in the constructor or any function or modifier called from it."
@@ -205,6 +212,7 @@ void ImmutableValidator::checkAllVariablesInitialized(solidity::langutil::Source
 			if (varDecl->immutable())
 				if (!util::contains(m_initializedStateVariables, varDecl))
 					m_errorReporter.typeError(
+						2658_error,
 						_location,
 						solidity::langutil::SecondarySourceLocation().append("Not initialized: ", varDecl->location()),
 						"Construction control flow ends without initializing all immutable state variables."

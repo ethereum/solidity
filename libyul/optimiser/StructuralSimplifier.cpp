@@ -22,7 +22,6 @@
 #include <libsolutil/Visitor.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>
-#include <boost/algorithm/cxx11/any_of.hpp>
 
 using namespace std;
 using namespace solidity;

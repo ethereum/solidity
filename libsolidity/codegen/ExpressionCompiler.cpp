@@ -36,7 +36,6 @@
 #include <libsolutil/Whiskers.h>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/range/adaptor/reversed.hpp>
 #include <numeric>
 #include <utility>
 
@@ -1591,6 +1590,16 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				result ^= fromBigEndian<uint64_t>(function.first.ref());
 			m_context << (u256{result} << (256 - 32));
 		}
+		else if (member == "min" || member == "max")
+		{
+			MagicType const* arg = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type);
+			IntegerType const* integerType = dynamic_cast<IntegerType const*>(arg->typeArgument());
+
+			if (member == "min")
+				m_context << integerType->min();
+			else
+				m_context << integerType->max();
+		}
 		else if ((set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}).count(member))
 		{
 			// no-op
@@ -1760,7 +1769,12 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		case Type::Category::ArraySlice:
 		{
 			auto const& arrayType = dynamic_cast<ArraySliceType const&>(baseType).arrayType();
-			solAssert(arrayType.location() == DataLocation::CallData && arrayType.isDynamicallySized(), "");
+			solAssert(
+				arrayType.location() == DataLocation::CallData &&
+				arrayType.isDynamicallySized() &&
+				!arrayType.baseType()->isDynamicallyEncoded(),
+				""
+			);
 			solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
 			acceptAndConvert(*_indexAccess.indexExpression(), *TypeProvider::uint256(), true);
@@ -1843,7 +1857,12 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 			arrayType = &sliceType->arrayType();
 
 	solAssert(arrayType, "");
-	solUnimplementedAssert(arrayType->location() == DataLocation::CallData && arrayType->isDynamicallySized(), "");
+	solUnimplementedAssert(
+		arrayType->location() == DataLocation::CallData &&
+		arrayType->isDynamicallySized() &&
+		!arrayType->baseType()->isDynamicallyEncoded(),
+		""
+	);
 
 	if (_indexAccess.startExpression())
 		acceptAndConvert(*_indexAccess.startExpression(), *TypeProvider::uint256());

@@ -195,5 +195,5 @@ void DocStringParser::newTag(string const& _tagName)
 void DocStringParser::appendError(string const& _description)
 {
 	m_errorsOccurred = true;
-	m_errorReporter->docstringParsingError(_description);
+	m_errorReporter->docstringParsingError(9440_error, _description);
 }

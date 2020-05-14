@@ -24,7 +24,6 @@
 #pragma once
 
 #include <libsolutil/Common.h>
-#include <boost/filesystem.hpp>
 #include <sstream>
 #include <string>
 

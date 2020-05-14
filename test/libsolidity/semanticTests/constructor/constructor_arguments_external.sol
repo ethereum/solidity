@@ -15,7 +15,8 @@ contract Main {
         return flag;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // constructor(): "abc", true
 // getFlag() -> true

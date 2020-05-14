@@ -156,19 +156,26 @@ std::vector<T const*> ASTNode::filteredNodes(std::vector<ASTPointer<ASTNode>> co
 class SourceUnit: public ASTNode
 {
 public:
-	SourceUnit(int64_t _id, SourceLocation const& _location, std::vector<ASTPointer<ASTNode>> _nodes):
-		ASTNode(_id, _location), m_nodes(std::move(_nodes)) {}
+	SourceUnit(
+		int64_t _id,
+		SourceLocation const& _location,
+		std::optional<std::string> _licenseString,
+		std::vector<ASTPointer<ASTNode>> _nodes
+	):
+		ASTNode(_id, _location), m_licenseString(std::move(_licenseString)), m_nodes(std::move(_nodes)) {}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 	SourceUnitAnnotation& annotation() const override;
 
+	std::optional<std::string> const& licenseString() const { return m_licenseString; }
 	std::vector<ASTPointer<ASTNode>> nodes() const { return m_nodes; }
 
 	/// @returns a set of referenced SourceUnits. Recursively if @a _recurse is true.
 	std::set<SourceUnit const*> referencedSourceUnits(bool _recurse = false, std::set<SourceUnit const*> _skipList = std::set<SourceUnit const*>()) const;
 
 private:
+	std::optional<std::string> m_licenseString;
 	std::vector<ASTPointer<ASTNode>> m_nodes;
 };
 

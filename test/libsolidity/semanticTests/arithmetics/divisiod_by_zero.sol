@@ -7,7 +7,8 @@ contract C {
         return a % b;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // div(uint256,uint256): 7, 2 -> 3
 // div(uint256,uint256): 7, 0 -> FAILURE # throws #

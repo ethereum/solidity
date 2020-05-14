@@ -54,6 +54,10 @@ public:
 	/// Calculates expression's value and returns variable where it was stored
 	IRVariable evaluateExpression(Expression const& _expression, Type const& _to);
 
+	/// @returns the name of a function that computes the value of the given constant
+	/// and also generates the function.
+	std::string constantValueFunction(VariableDeclaration const& _constant);
+
 	void endVisit(VariableDeclarationStatement const& _variableDeclaration) override;
 	bool visit(Conditional const& _conditional) override;
 	bool visit(Assignment const& _assignment) override;
@@ -102,6 +106,13 @@ private:
 		std::vector<ASTPointer<Expression const>> const& _arguments
 	);
 
+	/// Appends code for .call / .delegatecall / .staticcall.
+	/// All involved expressions have already been visited.
+	void appendBareCall(
+		FunctionCall const& _functionCall,
+		std::vector<ASTPointer<Expression const>> const& _arguments
+	);
+
 	/// @returns code that evaluates to the first unused memory slot (which does not have to
 	/// be empty).
 	static std::string freeMemory();
@@ -112,7 +123,8 @@ private:
 
 	/// @returns a Yul expression representing the current value of @a _expression,
 	/// converted to type @a _to if it does not yet have that type.
-	std::string expressionAsType(Expression const& _expression, Type const& _to);
+	/// If @a _forceCleanup is set to true, it also cleans the value, in case it already has type @a _to.
+	std::string expressionAsType(Expression const& _expression, Type const& _to, bool _forceCleanup = false);
 
 	/// @returns an output stream that can be used to define @a _var using a function call or
 	/// single stack slot expression.
@@ -141,6 +153,11 @@ private:
 		std::string const& _left,
 		std::string const& _right
 	);
+
+	/// @returns code to perform the given shift operation.
+	/// The operation itself will be performed in the type of the value,
+	/// while the amount to shift can have its own type.
+	std::string shiftOperation(langutil::Token _op, IRVariable const& _value, IRVariable const& _shiftAmount);
 
 	/// Assigns the value of @a _value to the lvalue @a _lvalue.
 	void writeToLValue(IRLValue const& _lvalue, IRVariable const& _value);

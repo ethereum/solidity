@@ -330,7 +330,7 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 	// Structs are fine in the following circumstances:
 	// - ABIv2 or,
 	// - storage struct for a library
-	if (_inLibraryCall && encodingType->dataStoredIn(DataLocation::Storage))
+	if (_inLibraryCall && encodingType && encodingType->dataStoredIn(DataLocation::Storage))
 		return encodingType;
 	TypePointer baseType = encodingType;
 	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType))
@@ -556,6 +556,22 @@ string IntegerType::toString(bool) const
 	return prefix + util::toString(m_bits);
 }
 
+u256 IntegerType::min() const
+{
+	if (isSigned())
+		return s2u(s256(minValue()));
+	else
+		return u256(minValue());
+}
+
+u256 IntegerType::max() const
+{
+	if (isSigned())
+		return s2u(s256(maxValue()));
+	else
+		return u256(maxValue());
+}
+
 bigint IntegerType::minValue() const
 {
 	if (isSigned())
@@ -597,6 +613,13 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, Type const* _other
 		}
 		else if (dynamic_cast<FixedPointType const*>(_other))
 			return nullptr;
+		else if (auto rationalNumberType = dynamic_cast<RationalNumberType const*>(_other))
+		{
+			if (rationalNumberType->isFractional())
+				return TypeResult::err("Exponent is fractional.");
+			if (!rationalNumberType->integerType())
+				return TypeResult::err("Exponent too large.");
+		}
 		return this;
 	}
 
@@ -1947,6 +1970,19 @@ string ArraySliceType::toString(bool _short) const
 {
 	return m_arrayType.toString(_short) + " slice";
 }
+
+TypePointer ArraySliceType::mobileType() const
+{
+	if (
+		m_arrayType.dataStoredIn(DataLocation::CallData) &&
+		m_arrayType.isDynamicallySized() &&
+		!m_arrayType.baseType()->isDynamicallyEncoded()
+	)
+		return &m_arrayType;
+	else
+		return this;
+}
+
 
 std::vector<std::tuple<std::string, TypePointer>> ArraySliceType::makeStackItems() const
 {
@@ -3763,20 +3799,35 @@ MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
 	case Kind::MetaType:
 	{
 		solAssert(
-			m_typeArgument && m_typeArgument->category() == Type::Category::Contract,
-			"Only contracts supported for now"
+			m_typeArgument && (
+					m_typeArgument->category() == Type::Category::Contract ||
+					m_typeArgument->category() == Type::Category::Integer
+			),
+			"Only contracts or integer types supported for now"
 		);
-		ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_typeArgument).contractDefinition();
-		if (contract.canBeDeployed())
+
+		if (m_typeArgument->category() == Type::Category::Contract)
+		{
+			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_typeArgument).contractDefinition();
+			if (contract.canBeDeployed())
+				return MemberList::MemberMap({
+					{"creationCode", TypeProvider::array(DataLocation::Memory)},
+					{"runtimeCode", TypeProvider::array(DataLocation::Memory)},
+					{"name", TypeProvider::stringMemory()},
+				});
+			else
+				return MemberList::MemberMap({
+					{"interfaceId", TypeProvider::fixedBytes(4)},
+				});
+		}
+		else if (m_typeArgument->category() == Type::Category::Integer)
+		{
+			IntegerType const* integerTypePointer = dynamic_cast<IntegerType const*>(m_typeArgument);
 			return MemberList::MemberMap({
-				{"creationCode", TypeProvider::array(DataLocation::Memory)},
-				{"runtimeCode", TypeProvider::array(DataLocation::Memory)},
-				{"name", TypeProvider::stringMemory()},
+				{"min", integerTypePointer},
+				{"max", integerTypePointer},
 			});
-		else
-			return MemberList::MemberMap({
-				{"interfaceId", TypeProvider::fixedBytes(4)},
-			});
+		}
 	}
 	}
 	solAssert(false, "Unknown kind of magic.");

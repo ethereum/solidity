@@ -60,7 +60,7 @@ private:
 	void checkDuplicateFunctions(ContractDefinition const& _contract);
 	void checkDuplicateEvents(ContractDefinition const& _contract);
 	template <class T>
-	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions, std::string _message);
+	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions);
 	/// Checks for unimplemented functions and modifiers.
 	void checkAbstractDefinitions(ContractDefinition const& _contract);
 	/// Checks that the base constructor arguments are properly provided.

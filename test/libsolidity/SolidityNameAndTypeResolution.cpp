@@ -370,6 +370,7 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
 {
 	char const* text = R"(
+		// SPDX-License-Identifier: GPL-3.0
 		contract C {}
 	)";
 	auto sourceAndError = parseAnalyseAndReturnError(text, true, false);

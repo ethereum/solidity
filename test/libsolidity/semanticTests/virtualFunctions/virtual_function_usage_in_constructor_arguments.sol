@@ -28,5 +28,7 @@ contract Derived is Base {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // getA() -> 2

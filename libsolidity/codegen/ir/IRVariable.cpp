@@ -54,7 +54,7 @@ IRVariable IRVariable::part(string const& _name) const
 			solAssert(itemName.empty() || itemType, "");
 			return IRVariable{suffixedName(itemName), itemType ? *itemType : m_type};
 		}
-	solAssert(false, "Invalid stack item name.");
+	solAssert(false, "Invalid stack item name: " + _name);
 }
 
 vector<string> IRVariable::stackSlots() const
@@ -89,7 +89,7 @@ string IRVariable::name() const
 {
 	solAssert(m_type.sizeOnStack() == 1, "");
 	auto const& [itemName, type] = m_type.stackItems().front();
-	solAssert(!type, "");
+	solAssert(!type, "Expected null type for name " + itemName);
 	return suffixedName(itemName);
 }
 

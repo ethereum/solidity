@@ -188,12 +188,14 @@ void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 		{
 			if (contractType->contractDefinition().isLibrary())
 				m_errorReporter.fatalTypeError(
+					1665_error,
 					typeName->location(),
 					"Library types cannot be used as mapping keys."
 				);
 		}
 		else if (typeName->annotation().type->category() != Type::Category::Enum)
 			m_errorReporter.fatalTypeError(
+				7804_error,
 				typeName->location(),
 				"Only elementary types, contract types or enums are allowed as mapping keys."
 			);
@@ -253,9 +255,9 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 		return;
 
 	if (_variable.isConstant() && !_variable.isStateVariable())
-		m_errorReporter.declarationError(_variable.location(), "The \"constant\" keyword can only be used for state variables.");
+		m_errorReporter.declarationError(1788_error, _variable.location(), "The \"constant\" keyword can only be used for state variables.");
 	if (_variable.immutable() && !_variable.isStateVariable())
-		m_errorReporter.declarationError(_variable.location(), "The \"immutable\" keyword can only be used for state variables.");
+		m_errorReporter.declarationError(8297_error, _variable.location(), "The \"immutable\" keyword can only be used for state variables.");
 
 	if (!_variable.typeName())
 	{
@@ -359,24 +361,22 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 
 void DeclarationTypeChecker::typeError(SourceLocation const& _location, string const& _description)
 {
-	m_errorOccurred = true;
-	m_errorReporter.typeError(_location, _description);
+	m_errorReporter.typeError(2311_error, _location, _description);
 }
 
 void DeclarationTypeChecker::fatalTypeError(SourceLocation const& _location, string const& _description)
 {
-	m_errorOccurred = true;
-	m_errorReporter.fatalTypeError(_location, _description);
+	m_errorReporter.fatalTypeError(5651_error, _location, _description);
 }
 
 void DeclarationTypeChecker::fatalDeclarationError(SourceLocation const& _location, string const& _description)
 {
-	m_errorOccurred = true;
-	m_errorReporter.fatalDeclarationError(_location, _description);
+	m_errorReporter.fatalDeclarationError(2046_error, _location, _description);
 }
 
 bool DeclarationTypeChecker::check(ASTNode const& _node)
 {
+	unsigned errorCount = m_errorReporter.errorCount();
 	_node.accept(*this);
-	return !m_errorOccurred;
+	return m_errorReporter.errorCount() == errorCount;
 }

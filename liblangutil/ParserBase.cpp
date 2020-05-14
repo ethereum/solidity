@@ -77,9 +77,9 @@ void ParserBase::expectToken(Token _value, bool _advance)
 	{
 		string const expectedToken = ParserBase::tokenName(_value);
 		if (m_parserErrorRecovery)
-			parserError("Expected " + expectedToken + " but got " + tokenName(tok));
+			parserError(6635_error, "Expected " + expectedToken + " but got " + tokenName(tok));
 		else
-			fatalParserError("Expected " + expectedToken + " but got " + tokenName(tok));
+			fatalParserError(2314_error, "Expected " + expectedToken + " but got " + tokenName(tok));
 		// Do not advance so that recovery can sync or make use of the current token.
 		// This is especially useful if the expected token
 		// is the only one that is missing and is at the end of a construct.
@@ -108,21 +108,21 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 			// rollback to where the token started, and raise exception to be caught at a higher level.
 			m_scanner->setPosition(startPosition);
 			m_inParserRecovery = true;
-			fatalParserError(errorLoc, msg);
+			fatalParserError(1957_error, errorLoc, msg);
 		}
 		else
 		{
 			if (m_inParserRecovery)
-				parserWarning("Recovered in " + _currentNodeName + " at " + expectedToken + ".");
+				parserWarning(3796_error, "Recovered in " + _currentNodeName + " at " + expectedToken + ".");
 			else
-				parserError(errorLoc, msg + "Recovered at next " + expectedToken);
+				parserError(1054_error, errorLoc, msg + "Recovered at next " + expectedToken);
 			m_inParserRecovery = false;
 		}
 	}
 	else if (m_inParserRecovery)
 	{
 		string expectedToken = ParserBase::tokenName(_value);
-		parserWarning("Recovered in " + _currentNodeName + " at " + expectedToken + ".");
+		parserWarning(3347_error, "Recovered in " + _currentNodeName + " at " + expectedToken + ".");
 		m_inParserRecovery = false;
 	}
 
@@ -134,7 +134,7 @@ void ParserBase::increaseRecursionDepth()
 {
 	m_recursionDepth++;
 	if (m_recursionDepth >= 1200)
-		fatalParserError("Maximum recursion depth reached during parsing.");
+		fatalParserError(7319_error, "Maximum recursion depth reached during parsing.");
 }
 
 void ParserBase::decreaseRecursionDepth()
@@ -143,27 +143,32 @@ void ParserBase::decreaseRecursionDepth()
 	m_recursionDepth--;
 }
 
-void ParserBase::parserWarning(string const& _description)
+void ParserBase::parserWarning(ErrorId _error, string const& _description)
 {
-	m_errorReporter.warning(currentLocation(), _description);
+	m_errorReporter.warning(_error, currentLocation(), _description);
 }
 
-void ParserBase::parserError(SourceLocation const& _location, string const& _description)
+void ParserBase::parserWarning(ErrorId _error, SourceLocation const& _location, string const& _description)
 {
-	m_errorReporter.parserError(_location, _description);
+	m_errorReporter.warning(_error, _location, _description);
 }
 
-void ParserBase::parserError(string const& _description)
+void ParserBase::parserError(ErrorId _error, SourceLocation const& _location, string const& _description)
 {
-	parserError(currentLocation(), _description);
+	m_errorReporter.parserError(_error, _location, _description);
 }
 
-void ParserBase::fatalParserError(string const& _description)
+void ParserBase::parserError(ErrorId _error, string const& _description)
 {
-	fatalParserError(currentLocation(), _description);
+	parserError(_error, currentLocation(), _description);
 }
 
-void ParserBase::fatalParserError(SourceLocation const& _location, string const& _description)
+void ParserBase::fatalParserError(ErrorId _error, string const& _description)
 {
-	m_errorReporter.fatalParserError(_location, _description);
+	fatalParserError(_error, currentLocation(), _description);
+}
+
+void ParserBase::fatalParserError(ErrorId _error, SourceLocation const& _location, string const& _description)
+{
+	m_errorReporter.fatalParserError(_error, _location, _description);
 }

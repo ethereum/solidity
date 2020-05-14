@@ -10,6 +10,8 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // f(int256,int256): 1, -1 -> FAILURE
 // g(int256,int256): 1, -1 -> FAILURE

@@ -10,6 +10,7 @@ contract C {
         require(y == bytes2(0xffff));
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // f() -> "\xff\xff\xff\xff"

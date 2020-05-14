@@ -19,9 +19,13 @@
  */
 
 #include <libyul/backends/evm/NoOutputAssembly.h>
+
 #include <libyul/Exceptions.h>
 
 #include <libevmasm/Instruction.h>
+
+#include <boost/range/adaptor/reversed.hpp>
+
 
 using namespace std;
 using namespace solidity;
@@ -142,6 +146,17 @@ AbstractAssembly::SubID NoOutputAssembly::appendData(bytes const&)
 	return 1;
 }
 
+
+void NoOutputAssembly::appendImmutable(std::string const&)
+{
+	yulAssert(false, "loadimmutable not implemented.");
+}
+
+void NoOutputAssembly::appendImmutableAssignment(std::string const&)
+{
+	yulAssert(false, "setimmutable not implemented.");
+}
+
 NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 	EVMDialect(_copyFrom.evmVersion(), _copyFrom.providesObjectAccess())
 {
@@ -149,9 +164,11 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 	{
 		size_t parameters = fun.second.parameters.size();
 		size_t returns = fun.second.returns.size();
-		fun.second.generateCode = [=](FunctionCall const&, AbstractAssembly& _assembly, BuiltinContext&, std::function<void()> _visitArguments)
+		fun.second.generateCode = [=](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&, std::function<void(Expression const&)> _visitExpression)
 		{
-			_visitArguments();
+			for (auto const& arg: _call.arguments | boost::adaptors::reversed)
+				_visitExpression(arg);
+
 			for (size_t i = 0; i < parameters; i++)
 				_assembly.appendInstruction(evmasm::Instruction::POP);
 

@@ -30,8 +30,11 @@
 #include <liblangutil/SemVerHandler.h>
 #include <liblangutil/SourceLocation.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <cctype>
 #include <vector>
+#include <regex>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -79,6 +82,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 		m_recursionDepth = 0;
 		m_scanner = _scanner;
 		ASTNodeFactory nodeFactory(*this);
+
 		vector<ASTPointer<ASTNode>> nodes;
 		while (m_scanner->currentToken() != Token::EOS)
 		{
@@ -103,11 +107,11 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 				nodes.push_back(parseEnumDefinition());
 				break;
 			default:
-				fatalParserError(string("Expected pragma, import directive or contract/interface/library/struct/enum definition."));
+				fatalParserError(7858_error, "Expected pragma, import directive or contract/interface/library/struct/enum definition.");
 			}
 		}
 		solAssert(m_recursionDepth == 0, "");
-		return nodeFactory.createNode<SourceUnit>(nodes);
+		return nodeFactory.createNode<SourceUnit>(findLicenseString(nodes), nodes);
 	}
 	catch (FatalError const&)
 	{
@@ -128,9 +132,10 @@ void Parser::parsePragmaVersion(SourceLocation const& _location, vector<Token> c
 		// so we don't need to report anything here.
 		if (!m_parserErrorRecovery)
 			m_errorReporter.fatalParserError(
+				5333_error,
 				_location,
 				"Source file requires different compiler version (current compiler is " +
-				string(VersionString) + " - note that nightly builds are considered to be "
+				string(VersionString) + ") - note that nightly builds are considered to be "
 				"strictly less than the released version"
 			);
 }
@@ -162,7 +167,7 @@ ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 	{
 		Token token = m_scanner->currentToken();
 		if (token == Token::Illegal)
-			parserError("Token incompatible with Solidity parser as part of pragma directive.");
+			parserError(6281_error, "Token incompatible with Solidity parser as part of pragma directive.");
 		else
 		{
 			string literal = m_scanner->currentLiteral();
@@ -240,18 +245,18 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 			unitAlias = expectIdentifierToken();
 		}
 		else
-			fatalParserError("Expected string literal (path), \"*\" or alias list.");
+			fatalParserError(9478_error, "Expected string literal (path), \"*\" or alias list.");
 		// "from" is not a keyword but parsed as an identifier because of backwards
 		// compatibility and because it is a really common word.
 		if (m_scanner->currentToken() != Token::Identifier || m_scanner->currentLiteral() != "from")
-			fatalParserError("Expected \"from\".");
+			fatalParserError(8208_error, "Expected \"from\".");
 		m_scanner->next();
 		if (m_scanner->currentToken() != Token::StringLiteral)
-			fatalParserError("Expected import path.");
+			fatalParserError(6845_error, "Expected import path.");
 		path = getLiteralAndAdvance();
 	}
 	if (path->empty())
-		fatalParserError("Import path cannot be empty.");
+		fatalParserError(6326_error, "Import path cannot be empty.");
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<ImportDirective>(path, unitAlias, move(symbolAliases));
@@ -278,7 +283,7 @@ std::pair<ContractKind, bool> Parser::parseContractKind()
 		kind = ContractKind::Library;
 		break;
 	default:
-		parserError("Expected keyword \"contract\", \"interface\" or \"library\".");
+		parserError(3515_error, "Expected keyword \"contract\", \"interface\" or \"library\".");
 		return std::make_pair(ContractKind::Contract, abstract);
 	}
 	m_scanner->next();
@@ -343,7 +348,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			else if (currentTokenValue == Token::Using)
 				subNodes.push_back(parseUsingDirective());
 			else
-				fatalParserError(string("Function, variable, struct or modifier declaration expected."));
+				fatalParserError(9182_error, "Function, variable, struct or modifier declaration expected.");
 		}
 	}
 	catch (FatalError const&)
@@ -462,6 +467,7 @@ StateMutability Parser::parseStateMutability()
 		case Token::Constant:
 			stateMutability = StateMutability::View;
 			parserError(
+				7698_error,
 				"The state mutability modifier \"constant\" was removed in version 0.5.0. "
 				"Use \"view\" or \"pure\" instead."
 			);
@@ -494,11 +500,12 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 				// Detect this and return early.
 				if (_isStateVariable && (result.visibility == Visibility::External || result.visibility == Visibility::Internal))
 					break;
-				parserError(string(
+				parserError(
+					9439_error,
 					"Visibility already specified as \"" +
 					Declaration::visibilityToString(result.visibility) +
 					"\"."
-				));
+				);
 				m_scanner->next();
 			}
 			else
@@ -508,11 +515,12 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 		{
 			if (result.stateMutability != StateMutability::NonPayable)
 			{
-				parserError(string(
+				parserError(
+					9680_error,
 					"State mutability already specified as \"" +
 					stateMutabilityToString(result.stateMutability) +
 					"\"."
-				));
+				);
 				m_scanner->next();
 			}
 			else
@@ -521,14 +529,14 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 		else if (!_isStateVariable && token == Token::Override)
 		{
 			if (result.overrides)
-				parserError("Override already specified.");
+				parserError(1827_error, "Override already specified.");
 
 			result.overrides = parseOverrideSpecifier();
 		}
 		else if (!_isStateVariable && token == Token::Virtual)
 		{
 			if (result.isVirtual)
-				parserError("Virtual already specified.");
+				parserError(6879_error, "Virtual already specified.");
 
 			result.isVirtual = true;
 			m_scanner->next();
@@ -576,9 +584,9 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition()
 				"the \"function\" keyword to define it."
 			};
 			if (m_scanner->currentToken() == Token::Constructor)
-				parserError(message);
+				parserError(3323_error, message);
 			else
-				parserWarning(message);
+				parserWarning(3445_error, message);
 			m_scanner->next();
 		}
 		else
@@ -659,10 +667,10 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 			break;
 		expectToken(Token::Comma);
 		if (m_scanner->currentToken() != Token::Identifier)
-			fatalParserError(string("Expected identifier after ','"));
+			fatalParserError(1612_error, "Expected identifier after ','");
 	}
 	if (members.empty())
-		parserError({"enum with no members is not allowed."});
+		parserError(3147_error, "enum with no members is not allowed.");
 
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
@@ -689,6 +697,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 
 	if (dynamic_cast<FunctionTypeName*>(type.get()) && _options.isStateVariable && m_scanner->currentToken() == Token::LBrace)
 		fatalParserError(
+			2915_error,
 			"Expected a state variable declaration. If you intended this as a fallback function "
 			"or a function to handle plain ether transactions, use the \"fallback\" keyword "
 			"or the \"receive\" keyword instead."
@@ -709,11 +718,12 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			nodeFactory.markEndPosition();
 			if (visibility != Visibility::Default)
 			{
-				parserError(string(
+				parserError(
+					4110_error,
 					"Visibility already specified as \"" +
 					Declaration::visibilityToString(visibility) +
 					"\"."
-				));
+				);
 				m_scanner->next();
 			}
 			else
@@ -722,7 +732,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		else if (_options.isStateVariable && token == Token::Override)
 		{
 			if (overrides)
-				parserError("Override already specified.");
+				parserError(9125_error, "Override already specified.");
 
 			overrides = parseOverrideSpecifier();
 		}
@@ -734,6 +744,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			{
 				if (mutability != VariableDeclaration::Mutability::Mutable)
 					parserError(
+						3109_error,
 						string("Mutability already set to ") +
 						(mutability == VariableDeclaration::Mutability::Constant ? "\"constant\"" : "\"immutable\"")
 					);
@@ -745,9 +756,9 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			else if (_options.allowLocationSpecifier && TokenTraits::isLocationSpecifier(token))
 			{
 				if (location != VariableDeclaration::Location::Unspecified)
-					parserError(string("Location already specified."));
+					parserError(3548_error, "Location already specified.");
 				else if (!type)
-					parserError(string("Location specifier needs explicit type name."));
+					parserError(7439_error, "Location specifier needs explicit type name.");
 				else
 				{
 					switch (token)
@@ -836,13 +847,13 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 		if (m_scanner->currentToken() == Token::Override)
 		{
 			if (overrides)
-				parserError("Override already specified.");
+				parserError(9102_error, "Override already specified.");
 			overrides = parseOverrideSpecifier();
 		}
 		else if (m_scanner->currentToken() == Token::Virtual)
 		{
 			if (isVirtual)
-				parserError("Virtual already specified.");
+				parserError(2662_error, "Virtual already specified.");
 
 			isVirtual = true;
 			m_scanner->next();
@@ -990,7 +1001,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 			}
 			else
 			{
-				parserError("State mutability can only be specified for address types.");
+				parserError(9106_error, "State mutability can only be specified for address types.");
 				m_scanner->next();
 			}
 		}
@@ -999,7 +1010,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else if (token == Token::Var)
 	{
 		if (!_allowVar)
-			parserError(string("Expected explicit type name."));
+			parserError(7059_error, "Expected explicit type name.");
 		m_scanner->next();
 	}
 	else if (token == Token::Function)
@@ -1009,7 +1020,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else if (token == Token::Identifier)
 		type = parseUserDefinedTypeName();
 	else
-		fatalParserError(string("Expected type name"));
+		fatalParserError(3546_error, "Expected type name");
 
 	if (type)
 		// Parse "[...]" postfixes for arrays.
@@ -1052,7 +1063,7 @@ ASTPointer<Mapping> Parser::parseMapping()
 		m_scanner->next();
 	}
 	else
-		fatalParserError(string("Expected elementary type name or identifier for mapping key type"));
+		fatalParserError(1005_error, "Expected elementary type name or identifier for mapping key type");
 	expectToken(Token::Arrow);
 	bool const allowVar = false;
 	ASTPointer<TypeName> valueType = parseTypeName(allowVar);
@@ -1078,7 +1089,7 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 		while (m_scanner->currentToken() != Token::RParen)
 		{
 			if (m_scanner->currentToken() == Token::Comma && m_scanner->peekNextToken() == Token::RParen)
-				fatalParserError("Unexpected trailing comma in parameter list.");
+				fatalParserError(7591_error, "Unexpected trailing comma in parameter list.");
 			expectToken(Token::Comma);
 			parameters.push_back(parseVariableDeclaration(options));
 		}
@@ -1213,7 +1224,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 	if (m_scanner->currentToken() == Token::StringLiteral)
 	{
 		if (m_scanner->currentLiteral() != "evmasm")
-			fatalParserError("Only \"evmasm\" supported.");
+			fatalParserError(4531_error, "Only \"evmasm\" supported.");
 		// This can be used in the future to set the dialect.
 		m_scanner->next();
 	}
@@ -1376,7 +1387,7 @@ ASTPointer<EmitStatement> Parser::parseEmitStatement(ASTPointer<ASTString> const
 	ASTNodeFactory eventCallNodeFactory(*this);
 
 	if (m_scanner->currentToken() != Token::Identifier)
-		fatalParserError("Expected event name or path.");
+		fatalParserError(5620_error, "Expected event name or path.");
 
 	IndexAccessedPath iap;
 	while (true)
@@ -1844,7 +1855,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		nodeFactory.markEndPosition();
 		m_scanner->next();
 		if (m_scanner->currentToken() == Token::Illegal)
-			fatalParserError(to_string(m_scanner->currentError()));
+			fatalParserError(5428_error, to_string(m_scanner->currentError()));
 		expression = nodeFactory.createNode<Literal>(token, make_shared<ASTString>(literal));
 		break;
 	}
@@ -1875,7 +1886,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != oppositeToken)
 					components.push_back(parseExpression());
 				else if (isArray)
-					parserError("Expected expression (inline array elements cannot be omitted).");
+					parserError(4799_error, "Expected expression (inline array elements cannot be omitted).");
 				else
 					components.push_back(ASTPointer<Expression>());
 
@@ -1890,7 +1901,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		break;
 	}
 	case Token::Illegal:
-		fatalParserError(to_string(m_scanner->currentError()));
+		fatalParserError(8936_error, to_string(m_scanner->currentError()));
 		break;
 	default:
 		if (TokenTraits::isElementaryTypeName(token))
@@ -1906,7 +1917,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 			m_scanner->next();
 		}
 		else
-			fatalParserError(string("Expected primary expression."));
+			fatalParserError(6933_error, "Expected primary expression.");
 		break;
 	}
 	return expression;
@@ -1964,7 +1975,7 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 			m_scanner->peekNextToken() == Token::RBrace
 		)
 		{
-			parserError("Unexpected trailing comma.");
+			parserError(2074_error, "Unexpected trailing comma.");
 			m_scanner->next();
 		}
 
@@ -1972,6 +1983,60 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 	}
 
 	return ret;
+}
+
+optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> const& _nodes)
+{
+	// We circumvent the scanner here, because it skips non-docstring comments.
+	static regex const licenseRegex("SPDX-License-Identifier:\\s*([a-zA-Z0-9 ()+.-]+)");
+
+	// Search inside all parts of the source not covered by parsed nodes.
+	// This will leave e.g. "global comments".
+	string const& source = m_scanner->source();
+	using iter = decltype(source.begin());
+	vector<pair<iter, iter>> sequencesToSearch;
+	sequencesToSearch.emplace_back(source.begin(), source.end());
+	for (ASTPointer<ASTNode> const& node: _nodes)
+		if (node->location().hasText())
+		{
+			sequencesToSearch.back().second = source.begin() + node->location().start;
+			sequencesToSearch.emplace_back(source.begin() + node->location().end, source.end());
+		}
+
+	vector<string> matches;
+	for (auto const& [start, end]: sequencesToSearch)
+	{
+		smatch match;
+		if (regex_search(start, end, match, licenseRegex))
+		{
+			string license{boost::trim_copy(string(match[1]))};
+			if (!license.empty())
+				matches.emplace_back(std::move(license));
+		}
+	}
+
+	if (matches.size() == 1)
+		return matches.front();
+	else if (matches.empty())
+		parserWarning(
+			1878_error,
+			{-1, -1, m_scanner->charStream()},
+			"SPDX license identifier not provided in source file. "
+			"Before publishing, consider adding a comment containing "
+			"\"SPDX-License-Identifier: <SPDX-License>\" to each source file. "
+			"Use \"SPDX-License-Identifier: UNLICENSED\" for non-open-source code. "
+			"Please see https://spdx.org for more information."
+		);
+	else
+		parserError(
+			3716_error,
+			{-1, -1, m_scanner->charStream()},
+			"Multiple SPDX license identifiers found in source file. "
+			"Use \"AND\" or \"OR\" to combine multiple licenses. "
+			"Please see https://spdx.org for more information."
+		);
+
+	return {};
 }
 
 Parser::LookAheadInfo Parser::peekStatementType() const
@@ -2083,7 +2148,7 @@ ASTPointer<TypeName> Parser::typeNameFromIndexAccessStructure(Parser::IndexAcces
 	for (auto const& lengthExpression: _iap.indices)
 	{
 		if (lengthExpression.end)
-			parserError(lengthExpression.location, "Expected array length expression.");
+			parserError(5464_error, lengthExpression.location, "Expected array length expression.");
 		nodeFactory.setLocation(lengthExpression.location);
 		type = nodeFactory.createNode<ArrayTypeName>(type, lengthExpression.start);
 	}

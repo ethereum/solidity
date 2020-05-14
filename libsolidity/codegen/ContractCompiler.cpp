@@ -103,8 +103,6 @@ void ContractCompiler::compileContract(
 	// and adds the function to the compilation queue. Additionally internal functions,
 	// which are referenced directly or indirectly will be added.
 	appendFunctionSelector(_contract);
-	// This processes the above populated queue until it is empty.
-	appendMissingFunctions();
 }
 
 size_t ContractCompiler::compileConstructor(
@@ -159,10 +157,13 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 
 	if (FunctionDefinition const* constructor = _contract.constructor())
 		appendConstructor(*constructor);
-	else if (auto c = _contract.nextConstructor(m_context.mostDerivedContract()))
-		appendBaseConstructor(*c);
 	else
+	{
+		// Implicit constructors are always non-payable.
 		appendCallValueCheck();
+		if (auto c = _contract.nextConstructor(m_context.mostDerivedContract()))
+			appendBaseConstructor(*c);
+	}
 }
 
 size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _contract)
@@ -214,6 +215,9 @@ size_t ContractCompiler::deployLibrary(ContractDefinition const& _contract)
 {
 	solAssert(!!m_runtimeCompiler, "");
 	solAssert(_contract.isLibrary(), "Tried to deploy contract as library.");
+
+	appendMissingFunctions();
+	m_runtimeCompiler->appendMissingFunctions();
 
 	CompilerContext::LocationSetter locationSetter(m_context, _contract);
 
@@ -586,13 +590,13 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	if (!_function.isConstructor())
 		// adding 1 for return address.
 		m_context.adjustStackOffset(parametersSize + 1);
-	for (ASTPointer<VariableDeclaration const> const& variable: _function.parameters())
+	for (ASTPointer<VariableDeclaration> const& variable: _function.parameters())
 	{
 		m_context.addVariable(*variable, parametersSize);
 		parametersSize -= variable->annotation().type->sizeOnStack();
 	}
 
-	for (ASTPointer<VariableDeclaration const> const& variable: _function.returnParameters())
+	for (ASTPointer<VariableDeclaration> const& variable: _function.returnParameters())
 		appendStackVariableInitialisation(*variable);
 
 	if (_function.isConstructor())
@@ -649,7 +653,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		if (stackLayout[i] != i)
 			solAssert(false, "Invalid stack layout on cleanup.");
 
-	for (ASTPointer<VariableDeclaration const> const& variable: _function.parameters() + _function.returnParameters())
+	for (ASTPointer<VariableDeclaration> const& variable: _function.parameters() + _function.returnParameters())
 		m_context.removeVariable(*variable);
 
 	m_context.adjustStackOffset(-(int)c_returnValuesSize);

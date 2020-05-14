@@ -452,6 +452,9 @@ public:
 	unsigned numBits() const { return m_bits; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 
+	u256 min() const;
+	u256 max() const;
+
 	bigint minValue() const;
 	bigint maxValue() const;
 
@@ -828,6 +831,7 @@ public:
 	bool isDynamicallyEncoded() const override { return true; }
 	bool canLiveOutsideStorage() const override { return m_arrayType.canLiveOutsideStorage(); }
 	std::string toString(bool _short) const override;
+	TypePointer mobileType() const override;
 
 	BoolResult validForLocation(DataLocation _loc) const override { return m_arrayType.validForLocation(_loc); }
 

@@ -136,6 +136,7 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 				ssl.append("The variable was declared here.", variableOccurrence->declaration().location());
 
 			m_errorReporter.typeError(
+				3464_error,
 				variableOccurrence->occurrence() ?
 					*variableOccurrence->occurrence() :
 					variableOccurrence->declaration().location(),
@@ -176,6 +177,6 @@ void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const*
 		// Extend the location, as long as the next location overlaps (unreachable is sorted).
 		for (; it != unreachable.end() && it->start <= location.end; ++it)
 			location.end = std::max(location.end, it->end);
-		m_errorReporter.warning(location, "Unreachable code.");
+		m_errorReporter.warning(5740_error, location, "Unreachable code.");
 	}
 }

@@ -28,9 +28,6 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 
-#include <boost/algorithm/string/join.hpp>
-#include <boost/range/adaptor/reversed.hpp>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -299,9 +296,6 @@ string YulUtilFunctions::shiftRightFunction(size_t _numBits)
 
 string YulUtilFunctions::shiftRightFunctionDynamic()
 {
-	// Note that if this is extended with signed shifts,
-	// the opcodes SAR and SDIV behave differently with regards to rounding!
-
 	string const functionName = "shift_right_unsigned_dynamic";
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return
@@ -317,6 +311,86 @@ string YulUtilFunctions::shiftRightFunctionDynamic()
 			)")
 			("functionName", functionName)
 			("hasShifts", m_evmVersion.hasBitwiseShifting())
+			.render();
+	});
+}
+
+string YulUtilFunctions::shiftRightSignedFunctionDynamic()
+{
+	string const functionName = "shift_right_signed_dynamic";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(bits, value) -> result {
+				<?hasShifts>
+					result := sar(bits, value)
+				<!hasShifts>
+					let divisor := exp(2, bits)
+					let xor_mask := sub(0, slt(value, 0))
+					result := xor(div(xor(value, xor_mask), divisor), xor_mask)
+					// combined version of
+					//   switch slt(value, 0)
+					//   case 0 { result := div(value, divisor) }
+					//   default { result := not(div(not(value), divisor)) }
+				</hasShifts>
+			}
+			)")
+			("functionName", functionName)
+			("hasShifts", m_evmVersion.hasBitwiseShifting())
+			.render();
+	});
+}
+
+
+string YulUtilFunctions::typedShiftLeftFunction(Type const& _type, Type const& _amountType)
+{
+	solAssert(_type.category() == Type::Category::FixedBytes || _type.category() == Type::Category::Integer, "");
+	solAssert(_amountType.category() == Type::Category::Integer, "");
+	string const functionName = "shift_left_" + _type.identifier() + "_" + _amountType.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(value, bits) -> result {
+				bits := <cleanAmount>(bits)
+				<?amountSigned>
+					if slt(bits, 0) { invalid() }
+				</amountSigned>
+				result := <cleanup>(<shift>(bits, value))
+			}
+			)")
+			("functionName", functionName)
+			("amountSigned", dynamic_cast<IntegerType const&>(_amountType).isSigned())
+			("cleanAmount", cleanupFunction(_amountType))
+			("shift", shiftLeftFunctionDynamic())
+			("cleanup", cleanupFunction(_type))
+			.render();
+	});
+}
+
+string YulUtilFunctions::typedShiftRightFunction(Type const& _type, Type const& _amountType)
+{
+	solAssert(_type.category() == Type::Category::FixedBytes || _type.category() == Type::Category::Integer, "");
+	solAssert(_amountType.category() == Type::Category::Integer, "");
+	IntegerType const* integerType = dynamic_cast<IntegerType const*>(&_type);
+	bool valueSigned = integerType && integerType->isSigned();
+
+	string const functionName = "shift_right_" + _type.identifier() + "_" + _amountType.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(value, bits) -> result {
+				bits := <cleanAmount>(bits)
+				<?amountSigned>
+					if slt(bits, 0) { invalid() }
+				</amountSigned>
+				result := <cleanup>(<shift>(bits, <cleanup>(value)))
+			}
+			)")
+			("functionName", functionName)
+			("amountSigned", dynamic_cast<IntegerType const&>(_amountType).isSigned())
+			("cleanAmount", cleanupFunction(_amountType))
+			("shift", valueSigned ? shiftRightSignedFunctionDynamic() : shiftRightFunctionDynamic())
+			("cleanup", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -393,6 +467,8 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> sum {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
 				<?signed>
 					// overflow, if x >= 0 and y > (maxValue - x)
 					if and(iszero(slt(x, 0)), sgt(y, sub(<maxValue>, x))) { revert(0, 0) }
@@ -409,6 +485,7 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 			("signed", _type.isSigned())
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
+			("cleanupFunction", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -421,6 +498,8 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			// Multiplication by zero could be treated separately and directly return zero.
 			Whiskers(R"(
 			function <functionName>(x, y) -> product {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
 				<?signed>
 					// overflow, if x > 0, y > 0 and x > (maxValue / y)
 					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { revert(0, 0) }
@@ -441,6 +520,7 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			("signed", _type.isSigned())
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
+			("cleanupFunction", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -452,6 +532,8 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> r {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
 				if iszero(y) { revert(0, 0) }
 				<?signed>
 				// overflow for minVal / -1
@@ -466,6 +548,7 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 			("functionName", functionName)
 			("signed", _type.isSigned())
 			("minVal", toCompactHexWithPrefix(u256(_type.minValue())))
+			("cleanupFunction", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -477,12 +560,15 @@ string YulUtilFunctions::checkedIntModFunction(IntegerType const& _type)
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> r {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
 				if iszero(y) { revert(0, 0) }
 				r := <?signed>s</signed>mod(x, y)
 			}
 			)")
 			("functionName", functionName)
 			("signed", _type.isSigned())
+			("cleanupFunction", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -494,6 +580,8 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 		return
 			Whiskers(R"(
 			function <functionName>(x, y) -> diff {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
 				<?signed>
 					// underflow, if y >= 0 and x < (minValue + y)
 					if and(iszero(slt(y, 0)), slt(x, add(<minValue>, y))) { revert(0, 0) }
@@ -509,6 +597,7 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 			("signed", _type.isSigned())
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
+			("cleanupFunction", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -1033,13 +1122,12 @@ string YulUtilFunctions::mappingIndexAccessFunction(MappingType const& _mappingT
 	return m_functionCollector.createFunction(functionName, [&]() {
 		if (_mappingType.keyType()->isDynamicallySized())
 			return Whiskers(R"(
-				function <functionName>(slot <comma> <key>) -> dataSlot {
-					dataSlot := <hash>(slot <comma> <key>)
+				function <functionName>(slot <?+key>,</+key> <key>) -> dataSlot {
+					dataSlot := <hash>(<key> <?+key>,</+key> slot)
 				}
 			)")
 			("functionName", functionName)
 			("key", _keyType.sizeOnStack() > 0 ? "key" : "")
-			("comma", _keyType.sizeOnStack() > 0 ? "," : "")
 			("hash", packedHashFunction(
 				{&_keyType, TypeProvider::uint256()},
 				{_mappingType.keyType(), TypeProvider::uint256()}
@@ -1511,6 +1599,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		ArraySliceType const& fromType = dynamic_cast<ArraySliceType const&>(_from);
 		ArrayType const& targetType = dynamic_cast<ArrayType const&>(_to);
 
+		solAssert(!fromType.arrayType().baseType()->isDynamicallyEncoded(), "");
 		solAssert(
 			*fromType.arrayType().baseType() == *targetType.baseType(),
 			"Converting arrays of different type is not possible"
@@ -1764,8 +1853,18 @@ string YulUtilFunctions::cleanupFunction(Type const& _type)
 			solUnimplemented("Fixed point types not implemented.");
 			break;
 		case Type::Category::Function:
-			solAssert(dynamic_cast<FunctionType const&>(_type).kind() == FunctionType::Kind::External, "");
-			templ("body", "cleaned := " + cleanupFunction(FixedBytesType(24)) + "(value)");
+			switch (dynamic_cast<FunctionType const&>(_type).kind())
+			{
+				case FunctionType::Kind::External:
+					templ("body", "cleaned := " + cleanupFunction(FixedBytesType(24)) + "(value)");
+					break;
+				case FunctionType::Kind::Internal:
+					templ("body", "cleaned := value");
+					break;
+				default:
+					solAssert(false, "");
+					break;
+			}
 			break;
 		case Type::Category::Array:
 		case Type::Category::Struct:
@@ -1938,14 +2037,16 @@ std::string YulUtilFunctions::decrementCheckedFunction(Type const& _type)
 
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
+				value := <cleanupFunction>(value)
 				if <lt>(value, <minval>) { revert(0,0) }
 				ret := sub(value, 1)
 			}
 		)")
-			("functionName", functionName)
-			("minval", toCompactHexWithPrefix(minintval))
-			("lt", type.isSigned() ? "slt" : "lt")
-			.render();
+		("functionName", functionName)
+		("minval", toCompactHexWithPrefix(minintval))
+		("lt", type.isSigned() ? "slt" : "lt")
+		("cleanupFunction", cleanupFunction(_type))
+		.render();
 	});
 }
 
@@ -1966,14 +2067,16 @@ std::string YulUtilFunctions::incrementCheckedFunction(Type const& _type)
 
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
+				value := <cleanupFunction>(value)
 				if <gt>(value, <maxval>) { revert(0,0) }
 				ret := add(value, 1)
 			}
 		)")
-			("functionName", functionName)
-			("maxval", toCompactHexWithPrefix(maxintval))
-			("gt", type.isSigned() ? "sgt" : "gt")
-			.render();
+		("functionName", functionName)
+		("maxval", toCompactHexWithPrefix(maxintval))
+		("gt", type.isSigned() ? "sgt" : "gt")
+		("cleanupFunction", cleanupFunction(_type))
+		.render();
 	});
 }
 
@@ -1988,15 +2091,17 @@ string YulUtilFunctions::negateNumberCheckedFunction(Type const& _type)
 
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
-			function <functionName>(_value) -> ret {
-				if slt(_value, <minval>) { revert(0,0) }
-				ret := sub(0, _value)
+			function <functionName>(value) -> ret {
+				value := <cleanupFunction>(value)
+				if slt(value, <minval>) { revert(0,0) }
+				ret := sub(0, value)
 			}
 		)")
-			("functionName", functionName)
-			("minval", toCompactHexWithPrefix(minintval))
-			.render();
-		});
+		("functionName", functionName)
+		("minval", toCompactHexWithPrefix(minintval))
+		("cleanupFunction", cleanupFunction(_type))
+		.render();
+	});
 }
 
 string YulUtilFunctions::zeroValueFunction(Type const& _type, bool _splitFunctionTypes)
@@ -2214,7 +2319,6 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 		}
 
 		solAssert(_type.isValueType(), "");
-
 		if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
 			if (funType->kind() == FunctionType::Kind::External)
 				return Whiskers(R"(
@@ -2228,18 +2332,23 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 				("splitFunction", splitExternalFunctionIdFunction())
 				.render();
 
+
 		return Whiskers(R"(
-			function <functionName>(memPtr) -> value {
-				value := <load>(memPtr)
-				<?needsValidation>
+			function <functionName>(ptr) -> value {
+				<?fromCalldata>
+					value := calldataload(ptr)
 					<validate>(value)
-				</needsValidation>
+				<!fromCalldata>
+					value := <cleanup>(mload(ptr))
+				</fromCalldata>
 			}
 		)")
 		("functionName", functionName)
-		("load", _fromCalldata ? "calldataload" : "mload")
-		("needsValidation", _fromCalldata)
-		("validate", _fromCalldata ? validatorFunction(_type) : "")
+		("fromCalldata", _fromCalldata)
+		("validate", validatorFunction(_type))
+		// Byte array elements generally need cleanup.
+		// Other types are cleaned as well to account for dirty memory e.g. due to inline assembly.
+		("cleanup", cleanupFunction(_type))
 		.render();
 	});
 }

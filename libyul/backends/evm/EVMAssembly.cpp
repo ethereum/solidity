@@ -215,6 +215,16 @@ AbstractAssembly::SubID EVMAssembly::appendData(bytes const&)
 	yulAssert(false, "Data not implemented.");
 }
 
+void EVMAssembly::appendImmutable(std::string const&)
+{
+	yulAssert(false, "loadimmutable not implemented.");
+}
+
+void EVMAssembly::appendImmutableAssignment(std::string const&)
+{
+	yulAssert(false, "setimmutable not implemented.");
+}
+
 void EVMAssembly::updateReference(size_t pos, size_t size, u256 value)
 {
 	yulAssert(m_bytecode.size() >= size && pos <= m_bytecode.size() - size, "");
