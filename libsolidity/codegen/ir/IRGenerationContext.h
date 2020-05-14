@@ -120,6 +120,8 @@ public:
 	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated() { return m_subObjects; }
 
 private:
+	std::set<FunctionDefinition const*> collectFunctionsOfArity(YulArity const& _arity);
+
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
 	OptimiserSettings m_optimiserSettings;
