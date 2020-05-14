@@ -171,7 +171,6 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 		)");
 		templ("functionName", funName);
 		templ("comma", _in > 0 ? "," : "");
-		YulUtilFunctions utils(m_evmVersion, m_revertStrings, m_functions);
 		templ("in", suffixedVariableNameList("in_", 0, _in));
 		templ("arrow", _out > 0 ? "->" : "");
 		templ("assignment_op", _out > 0 ? ":=" : "");
