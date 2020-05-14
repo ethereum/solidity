@@ -37,6 +37,7 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/FixedHash.h>
+#include <libsolutil/LazyInit.h>
 
 #include <boost/noncopyable.hpp>
 #include <json/json.h>
@@ -342,11 +343,11 @@ private:
 		std::string yulIROptimized; ///< Optimized experimental Yul IR code.
 		std::string ewasm; ///< Experimental Ewasm text representation
 		evmasm::LinkerObject ewasmObject; ///< Experimental Ewasm code
-		mutable std::unique_ptr<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
-		mutable std::unique_ptr<Json::Value const> abi;
-		mutable std::unique_ptr<Json::Value const> storageLayout;
-		mutable std::unique_ptr<Json::Value const> userDocumentation;
-		mutable std::unique_ptr<Json::Value const> devDocumentation;
+		util::LazyInit<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
+		util::LazyInit<Json::Value const> abi;
+		util::LazyInit<Json::Value const> storageLayout;
+		util::LazyInit<Json::Value const> userDocumentation;
+		util::LazyInit<Json::Value const> devDocumentation;
 		mutable std::unique_ptr<std::string const> sourceMapping;
 		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
 	};
