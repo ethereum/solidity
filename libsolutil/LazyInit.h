@@ -77,15 +77,6 @@ public:
 	}
 
 private:
-	constexpr void assertInitialized() const
-	{
-		assertThrow(
-			m_value.has_value(),
-			BadLazyInitAccess,
-			"Attempt to access an uninitialized LazyInit"
-		);
-	}
-
 	/// Although not quite logically const, this is marked const for pragmatic reasons. It doesn't change the platonic
 	/// value of the object (which is something that is initialized to some computed value on first use).
 	template<typename F>
