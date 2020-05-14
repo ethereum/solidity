@@ -26,6 +26,9 @@ FROM buildpack-deps:focal AS base
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN set -ex; \
+	dist=$(grep DISTRIB_CODENAME /etc/lsb-release | cut -d= -f2); \
+	echo "deb http://ppa.launchpad.net/ethereum/cpp-build-deps/ubuntu $dist main" >> /etc/apt/sources.list ; \
+	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1c52189c923f6ca9 ; \
 	apt-get update; \
 	apt-get install -qqy --no-install-recommends \
 		build-essential \
@@ -33,8 +36,8 @@ RUN set -ex; \
 		cmake ninja-build \
 		libboost-filesystem-dev libboost-test-dev libboost-system-dev \
 		libboost-program-options-dev \
-		clang llvm-dev \
-		z3 libz3-dev \
+		clang \
+		libz3-static-dev \
 		; \
 	rm -rf /var/lib/apt/lists/*
 
