@@ -56,7 +56,6 @@ public:
 	NameAndTypeResolver(
 		GlobalContext& _globalContext,
 		langutil::EVMVersion _evmVersion,
-		std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& _scopes,
 		langutil::ErrorReporter& _errorReporter
 	);
 	/// Registers all declarations found in the AST node, usually a source unit.
@@ -123,7 +122,7 @@ private:
 	/// where nullptr denotes the global scope. Note that structs are not scope since they do
 	/// not contain code.
 	/// Aliases (for example `import "x" as y;`) create multiple pointers to the same scope.
-	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& m_scopes;
+	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
 
 	langutil::EVMVersion m_evmVersion;
 	DeclarationContainer* m_currentScope = nullptr;
