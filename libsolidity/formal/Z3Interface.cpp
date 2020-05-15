@@ -198,6 +198,15 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			size_t index = std::stoi(_expr.arguments[1].name);
 			return z3::func_decl(m_context, Z3_get_tuple_sort_field_decl(m_context, z3Sort(*_expr.arguments[0].sort), index))(arguments[0]);
 		}
+		else if (n == "tuple_constructor")
+		{
+			auto constructor = z3::func_decl(m_context, Z3_get_tuple_sort_mk_decl(m_context, z3Sort(*_expr.sort)));
+			solAssert(constructor.arity() == arguments.size(), "");
+			z3::expr_vector args(m_context);
+			for (auto const& arg: arguments)
+				args.push_back(arg);
+			return constructor(args);
+		}
 
 		solAssert(false, "");
 	}

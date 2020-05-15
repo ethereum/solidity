@@ -28,6 +28,7 @@
 #include <boost/noncopyable.hpp>
 #include <cstdio>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -63,7 +64,8 @@ class Expression
 	friend class SolverInterface;
 public:
 	explicit Expression(bool _v): Expression(_v ? "true" : "false", Kind::Bool) {}
-	explicit Expression(frontend::TypePointer _type): Expression(_type->toString(), {}, std::make_shared<SortSort>(smtSort(*_type))) {}
+	explicit Expression(frontend::TypePointer _type): Expression(_type->toString(true), {}, std::make_shared<SortSort>(smtSort(*_type))) {}
+	explicit Expression(std::shared_ptr<SortSort> _sort): Expression("", {}, _sort) {}
 	Expression(size_t _number): Expression(std::to_string(_number), Kind::Int) {}
 	Expression(u256 const& _number): Expression(_number.str(), Kind::Int) {}
 	Expression(s256 const& _number): Expression(_number.str(), Kind::Int) {}
@@ -76,6 +78,13 @@ public:
 
 	bool hasCorrectArity() const
 	{
+		if (name == "tuple_constructor")
+		{
+			auto tupleSort = std::dynamic_pointer_cast<TupleSort>(sort);
+			solAssert(tupleSort, "");
+			return arguments.size() == tupleSort->components.size();
+		}
+
 		static std::map<std::string, unsigned> const operatorsArity{
 			{"ite", 3},
 			{"not", 1},
@@ -138,8 +147,7 @@ public:
 	/// The function is pure and returns the modified array.
 	static Expression store(Expression _array, Expression _index, Expression _element)
 	{
-		solAssert(_array.sort->kind == Kind::Array, "");
-		std::shared_ptr<ArraySort> arraySort = std::dynamic_pointer_cast<ArraySort>(_array.sort);
+		auto arraySort = std::dynamic_pointer_cast<ArraySort>(_array.sort);
 		solAssert(arraySort, "");
 		solAssert(_index.sort, "");
 		solAssert(_element.sort, "");
@@ -177,6 +185,20 @@ public:
 			"tuple_get",
 			std::vector<Expression>{std::move(_tuple), Expression(_index)},
 			tupleSort->components.at(_index)
+		);
+	}
+
+	static Expression tuple_constructor(Expression _tuple, std::vector<Expression> _arguments)
+	{
+		solAssert(_tuple.sort->kind == Kind::Sort, "");
+		auto sortSort = std::dynamic_pointer_cast<SortSort>(_tuple.sort);
+		auto tupleSort = std::dynamic_pointer_cast<TupleSort>(sortSort->inner);
+		solAssert(tupleSort, "");
+		solAssert(_arguments.size() == tupleSort->components.size(), "");
+		return Expression(
+			"tuple_constructor",
+			std::move(_arguments),
+			tupleSort
 		);
 	}
 
