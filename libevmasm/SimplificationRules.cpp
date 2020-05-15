@@ -92,7 +92,7 @@ Rules::Rules()
 	Y.setMatchGroup(6, m_matchGroups);
 	Z.setMatchGroup(7, m_matchGroups);
 
-	addRules(simplificationRuleList(A, B, C, W, X, Y, Z));
+	addRules(simplificationRuleList(nullopt, A, B, C, W, X, Y, Z));
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 

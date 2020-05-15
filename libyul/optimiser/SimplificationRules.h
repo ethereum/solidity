@@ -27,6 +27,8 @@
 
 #include <libsolutil/CommonData.h>
 
+#include <liblangutil/EVMVersion.h>
+
 #include <boost/noncopyable.hpp>
 
 #include <functional>
@@ -45,12 +47,14 @@ class Pattern;
 class SimplificationRules: public boost::noncopyable
 {
 public:
-	SimplificationRules();
+	using Rule = evmasm::SimplificationRule<Pattern>;
+
+	explicit SimplificationRules(std::optional<langutil::EVMVersion> _evmVersion = std::nullopt);
 
 	/// @returns a pointer to the first matching pattern and sets the match
 	/// groups accordingly.
 	/// @param _ssaValues values of variables that are assigned exactly once.
-	static evmasm::SimplificationRule<Pattern> const* findFirstMatch(
+	static Rule const* findFirstMatch(
 		Expression const& _expr,
 		Dialect const& _dialect,
 		std::map<YulString, AssignedValue> const& _ssaValues
@@ -64,8 +68,8 @@ public:
 	instructionAndArguments(Dialect const& _dialect, Expression const& _expr);
 
 private:
-	void addRules(std::vector<evmasm::SimplificationRule<Pattern>> const& _rules);
-	void addRule(evmasm::SimplificationRule<Pattern> const& _rule);
+	void addRules(std::vector<Rule> const& _rules);
+	void addRule(Rule const& _rule);
 
 	void resetMatchGroups() { m_matchGroups.clear(); }
 
