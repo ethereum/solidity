@@ -1115,8 +1115,13 @@ void SMTEncoder::arrayPop(FunctionCall const& _funCall)
 	solAssert(memberAccess, "");
 	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
 	solAssert(symbArray, "");
+
+	makeArrayPopVerificationTarget(_funCall);
+
 	auto oldElements = symbArray->elements();
 	auto oldLength = symbArray->length();
+	m_context.addAssertion(oldLength > 0);
+
 	symbArray->increaseIndex();
 	m_context.addAssertion(symbArray->elements() == oldElements);
 	auto newLength = smt::Expression::ite(
@@ -1124,7 +1129,7 @@ void SMTEncoder::arrayPop(FunctionCall const& _funCall)
 		smt::maxValue(*TypeProvider::uint256()),
 		oldLength - 1
 	);
-	m_context.addAssertion(symbArray->length() == newLength);
+	m_context.addAssertion(symbArray->length() == oldLength - 1);
 
 	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
 }

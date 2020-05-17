@@ -78,6 +78,7 @@ private:
 	void visitAssert(FunctionCall const& _funCall);
 	void internalFunctionCall(FunctionCall const& _funCall);
 	void unknownFunctionCall(FunctionCall const& _funCall);
+	void makeArrayPopVerificationTarget(FunctionCall const& _arrayPop) override;
 	//@}
 
 	struct IdCompare
@@ -182,7 +183,9 @@ private:
 	/// @returns <false, model> otherwise.
 	std::pair<smt::CheckResult, std::vector<std::string>> query(smt::Expression const& _query, langutil::SourceLocation const& _location);
 
-	void addVerificationTarget(ASTNode const* _scope, smt::Expression _from, smt::Expression _constraints, smt::Expression _errorId);
+	void addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smt::Expression _from, smt::Expression _constraints, smt::Expression _errorId);
+	void addAssertVerificationTarget(ASTNode const* _scope, smt::Expression _from, smt::Expression _constraints, smt::Expression _errorId);
+	void addArrayPopVerificationTarget(ASTNode const* _scope, smt::Expression _errorId);
 	//@}
 
 	/// Misc.
@@ -245,6 +248,8 @@ private:
 
 	/// Assertions proven safe.
 	std::set<Expression const*> m_safeAssertions;
+	/// Targets proven unsafe.
+	std::set<ASTNode const*> m_unsafeTargets;
 	//@}
 
 	/// Control-flow.

@@ -8,4 +8,3 @@ contract C {
 		assert(x[0] == 42);
 	}
 }
-// ----

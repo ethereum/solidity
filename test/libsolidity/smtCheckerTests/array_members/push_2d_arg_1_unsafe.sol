@@ -3,11 +3,9 @@ pragma experimental SMTChecker;
 contract C {
 	uint[][] a;
 	function f(uint[] memory x, uint y) public {
-		require(a.length < 100000);
 		a.push(x);
-		assert(a[a.length - 1][0] == x[0]);
-		require(a[0].length < 100000);
 		a[0].push(y);
+		a[0].pop();
 		assert(a[0][a[0].length - 1] == y);
 	}
 }
