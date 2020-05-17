@@ -1085,6 +1085,11 @@ void SMTEncoder::arrayPush(FunctionCall const& _funCall)
 	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
 	solAssert(symbArray, "");
 	auto oldLength = symbArray->length();
+	m_context.addAssertion(oldLength >= 0);
+	// Real world assumption: the array length is assumed to not overflow.
+	// This assertion guarantees that both the current and updated lengths have the above property.
+	m_context.addAssertion(oldLength + 1 < (smt::maxValue(*TypeProvider::uint256()) - 1));
+
 	auto const& arguments = _funCall.arguments();
 	smt::Expression element = arguments.empty() ?
 		smt::zeroValue(_funCall.annotation().type) :
@@ -1096,12 +1101,7 @@ void SMTEncoder::arrayPush(FunctionCall const& _funCall)
 	);
 	symbArray->increaseIndex();
 	m_context.addAssertion(symbArray->elements() == store);
-	auto newLength = smt::Expression::ite(
-		oldLength == smt::maxValue(*TypeProvider::uint256()),
-		0,
-		oldLength + 1
-	);
-	m_context.addAssertion(symbArray->length() == newLength);
+	m_context.addAssertion(symbArray->length() == oldLength + 1);
 
 	if (arguments.empty())
 		defineExpr(_funCall, element);

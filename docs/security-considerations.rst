@@ -657,3 +657,14 @@ Notice that we do not clear knowledge about ``array`` and ``d`` because they
 are located in storage, even though they also have type ``uint[]``.  However,
 if ``d`` was assigned, we would need to clear knowledge about ``array`` and
 vice-versa.
+
+Real World Assumptions
+======================
+
+Some scenarios are expressive in Solidity and the EVM, but are expected to
+never occur in practice.
+One of such cases is the length of a dynamic storage array overflowing after a
+push: If the ``push`` operation is applied to such array 2^256 times, its
+length silently overflows.
+However, this is unlikely to happen in practice, since the Earth, the sun and
+the universe might not be around anymore at the end of the 2^256 operations.
