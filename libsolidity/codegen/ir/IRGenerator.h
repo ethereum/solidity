@@ -92,8 +92,6 @@ private:
 	std::string deployCode(ContractDefinition const& _contract);
 	std::string callValueCheck();
 
-	std::string implicitConstructorName(ContractDefinition const& _contract);
-
 	std::string dispatchRoutine(ContractDefinition const& _contract);
 
 	std::string memoryInit();

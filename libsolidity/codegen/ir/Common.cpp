@@ -44,3 +44,43 @@ string IRNames::runtimeObject(ContractDefinition const& _contract)
 {
 	return _contract.name() + "_" + toString(_contract.id()) + "_deployed";
 }
+
+string IRNames::implicitConstructor(ContractDefinition const& _contract)
+{
+	return "constructor_" + _contract.name() + "_" + to_string(_contract.id());
+}
+
+string IRNames::constantValueFunction(VariableDeclaration const& _constant)
+{
+	solAssert(_constant.isConstant(), "");
+	return "constant_" + _constant.name() + "_" + to_string(_constant.id());
+}
+
+string IRNames::localVariable(VariableDeclaration const& _declaration)
+{
+	return "vloc_" + _declaration.name() + '_' + std::to_string(_declaration.id());
+}
+
+string IRNames::localVariable(Expression const& _expression)
+{
+	return "expr_" + to_string(_expression.id());
+}
+
+string IRNames::trySuccessConditionVariable(Expression const& _expression)
+{
+	auto annotation = dynamic_cast<FunctionCallAnnotation const*>(&_expression.annotation());
+	solAssert(annotation, "");
+	solAssert(annotation->tryCall, "Parameter must be a FunctionCall with tryCall-annotation set.");
+
+	return "trySuccessCondition_" + to_string(_expression.id());
+}
+
+string IRNames::tupleComponent(size_t _i)
+{
+	return "component_" + to_string(_i + 1);
+}
+
+string IRNames::zeroValue(Type const& _type, string const& _variableName)
+{
+	return "zero_value_for_type_" + _type.identifier() + _variableName;
+}

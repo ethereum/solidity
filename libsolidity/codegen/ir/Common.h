@@ -33,6 +33,15 @@ struct IRNames
 	static std::string function(VariableDeclaration const& _varDecl);
 	static std::string creationObject(ContractDefinition const& _contract);
 	static std::string runtimeObject(ContractDefinition const& _contract);
+	static std::string implicitConstructor(ContractDefinition const& _contract);
+	static std::string constantValueFunction(VariableDeclaration const& _constant);
+	static std::string localVariable(VariableDeclaration const& _declaration);
+	static std::string localVariable(Expression const& _expression);
+	/// @returns the variable name that can be used to inspect the success or failure of an external
+	/// function call that was invoked as part of the try statement.
+	static std::string trySuccessConditionVariable(Expression const& _expression);
+	static std::string tupleComponent(size_t _i);
+	static std::string zeroValue(Type const& _type, std::string const& _variableName);
 };
 
 }

@@ -181,7 +181,7 @@ IRVariable IRGeneratorForStatements::evaluateExpression(Expression const& _expre
 
 string IRGeneratorForStatements::constantValueFunction(VariableDeclaration const& _constant)
 {
-	string functionName = "constant_" + _constant.name() + "_" + to_string(_constant.id());
+	string functionName = IRNames::constantValueFunction(_constant);
 	return m_context.functionCollector().createFunction(functionName, [&] {
 		Whiskers templ(R"(
 			function <functionName>() -> <ret> {
@@ -1890,7 +1890,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	templ("pos", m_context.newYulVariable());
 	templ("end", m_context.newYulVariable());
 	if (_functionCall.annotation().tryCall)
-		templ("success", m_context.trySuccessConditionVariable(_functionCall));
+		templ("success", IRNames::trySuccessConditionVariable(_functionCall));
 	else
 		templ("success", m_context.newYulVariable());
 	templ("freeMemory", freeMemory());
@@ -2125,10 +2125,7 @@ void IRGeneratorForStatements::declareAssign(IRVariable const& _lhs, IRVariable 
 
 IRVariable IRGeneratorForStatements::zeroValue(Type const& _type, bool _splitFunctionTypes)
 {
-	IRVariable irVar{
-		"zero_value_for_type_" + _type.identifier() + m_context.newYulVariable(),
-		_type
-	};
+	IRVariable irVar{IRNames::zeroValue(_type, m_context.newYulVariable()), _type};
 	define(irVar) << m_utils.zeroValueFunction(_type, _splitFunctionTypes) << "()\n";
 	return irVar;
 }
@@ -2447,7 +2444,7 @@ bool IRGeneratorForStatements::visit(TryStatement const& _tryStatement)
 	Expression const& externalCall = _tryStatement.externalCall();
 	externalCall.accept(*this);
 
-	m_code << "switch iszero(" << m_context.trySuccessConditionVariable(externalCall) << ")\n";
+	m_code << "switch iszero(" << IRNames::trySuccessConditionVariable(externalCall) << ")\n";
 
 	m_code << "case 0 { // success case\n";
 	TryCatchClause const& successClause = *_tryStatement.clauses().front();
