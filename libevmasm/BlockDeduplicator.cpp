@@ -113,6 +113,10 @@ bool BlockDeduplicator::applyTagReplacement(
 			if (subId != _subId)
 				continue;
 			auto it = _replacements.find(tagId);
+			// Recursively look for the element replaced by tagId
+			for (auto _it = it; _it != _replacements.end(); _it = _replacements.find(_it->second))
+				it = _it;
+
 			if (it != _replacements.end())
 			{
 				changed = true;
