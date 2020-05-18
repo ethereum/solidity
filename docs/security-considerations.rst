@@ -661,10 +661,10 @@ vice-versa.
 Real World Assumptions
 ======================
 
-Some scenarios are expressive in Solidity and the EVM, but are expected to
+Some scenarios can be expressed in Solidity and the EVM, but are expected to
 never occur in practice.
-One of such cases is the length of a dynamic storage array overflowing after a
-push: If the ``push`` operation is applied to such array 2^256 times, its
+One of such cases is the length of a dynamic storage array overflowing during a
+push: If the ``push`` operation is applied to an array of length 2^256 - 1, its
 length silently overflows.
-However, this is unlikely to happen in practice, since the Earth, the sun and
-the universe might not be around anymore at the end of the 2^256 operations.
+However, this is unlikely to happen in practice, since the operations required
+to grow the array to that point would take billions of years to execute.
