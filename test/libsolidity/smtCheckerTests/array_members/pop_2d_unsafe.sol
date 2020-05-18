@@ -8,3 +8,5 @@ contract C {
 		a[1].pop();
 	}
 }
+// ----
+// Warning: (111-121): Empty array "pop" detected here.

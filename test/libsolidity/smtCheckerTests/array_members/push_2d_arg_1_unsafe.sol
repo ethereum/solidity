@@ -9,3 +9,6 @@ contract C {
 		assert(a[0][a[0].length - 1] == y);
 	}
 }
+// ----
+// Warning: (162-177): Underflow (resulting value less than 0) happens here
+// Warning: (150-184): Assertion violation happens here

@@ -10,3 +10,5 @@ contract C {
 		a.pop();
 	}
 }
+// ----
+// Warning: (150-157): Empty array "pop" detected here.
