@@ -149,7 +149,7 @@ def main():
         print("No incorrect IDs found")
     else:
         fix_ids(used_ids, source_file_names)
-        print("Fixing compteted")
+        print("Fixing completed")
 
 
 if __name__ == "__main__":
