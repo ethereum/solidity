@@ -87,6 +87,9 @@ private:
 	/// result.second is set to true, if an abstract contract was parsed, false otherwise.
 	std::pair<ContractKind, bool> parseContractKind();
 	ASTPointer<ContractDefinition> parseContractDefinition();
+	ASTPointer<ContractDefinition> parseInterfaceDefinition();
+	//std::vector<ASTPointer<ASTNode>> parseContractBody();
+	void parseContractBody(std::vector<ASTPointer<ASTNode>>& _result);
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	Visibility parseVisibilitySpecifier();
 	ASTPointer<OverrideSpecifier> parseOverrideSpecifier();

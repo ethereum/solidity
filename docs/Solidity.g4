@@ -8,7 +8,17 @@
 grammar Solidity;
 
 sourceUnit
-  : (pragmaDirective | importDirective | structDefinition | enumDefinition | contractDefinition)* EOF ;
+  : globalDefinition* EOF ;
+
+globalDefinition
+  : pragmaDirective
+  | contractDefinition
+  | enumDefinition
+  | importDirective
+  | interfaceDefinition
+  | libraryDefinition
+  | structDefinition
+  ;
 
 pragmaDirective
   : 'pragma' pragmaName pragmaValue ';' ;
@@ -36,10 +46,25 @@ importDirective
 importDeclaration
   : identifier ('as' identifier)? ;
 
+interfaceDefinition
+  : 'interface' identifier 'from' StringLiteralFragment
+  | 'interface' identifier 'as' AbiString
+  | 'interface' identifier contractInheritanceDefinition? contractBody ;
+
+AbiString
+  : StringLiteral ;
+
+libraryDefinition
+  : 'abstract'? 'library' identifier contractInheritanceDefinition? contractBody ;
+
 contractDefinition
-  : 'abstract'? ( 'contract' | 'interface' | 'library' ) identifier
-    ( 'is' inheritanceSpecifier (',' inheritanceSpecifier )* )?
-    '{' contractPart* '}' ;
+  : 'abstract'? 'contract' identifier contractInheritanceDefinition? contractBody ;
+
+contractInheritanceDefinition
+  : ( 'is' inheritanceSpecifier (',' inheritanceSpecifier )* ) ;
+
+contractBody
+  : '{' contractPart* '}' ;
 
 inheritanceSpecifier
   : userDefinedTypeName ( '(' expressionList? ')' )? ;

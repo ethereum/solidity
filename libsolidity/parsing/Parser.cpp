@@ -94,8 +94,10 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 			case Token::Import:
 				nodes.push_back(parseImportDirective());
 				break;
-			case Token::Abstract:
 			case Token::Interface:
+				// nodes.push_back(parseInterfaceDefinition());
+				// break;
+			case Token::Abstract:
 			case Token::Contract:
 			case Token::Library:
 				nodes.push_back(parseContractDefinition());
@@ -290,6 +292,35 @@ std::pair<ContractKind, bool> Parser::parseContractKind()
 	return std::make_pair(kind, abstract);
 }
 
+ASTPointer<ContractDefinition> Parser::parseInterfaceDefinition()
+{
+	// interfaceDefinition
+	//   : 'interface' identifier 'from' StringLiteralFragment
+	//   | 'interface' identifier 'as' AbiString
+	//   | 'interface' identifier contractInheritanceDefinition? contractBody ;
+
+	m_scanner->next();
+
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+
+	ASTPointer<ASTString> name = expectIdentifierToken();
+
+	ASTPointer<StructuredDocumentation> documentation = parseStructuredDocumentation();
+
+	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
+	vector<ASTPointer<ASTNode>> subNodes;//TODO = parseContractBody();
+
+	return nodeFactory.createNode<ContractDefinition>(
+		name,
+		documentation,
+		baseContracts,
+		subNodes,
+		ContractKind::Interface,
+		false
+	);
+}
+
 ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 {
 	RecursionGuard recursionGuard(*this);
@@ -311,6 +342,84 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 				baseContracts.push_back(parseInheritanceSpecifier());
 			}
 			while (m_scanner->currentToken() == Token::Comma);
+#if 0
+		parseContractBody(subNodes);
+		//subNodes = parseContractBody();
+#else
+		expectToken(Token::LBrace);
+		while (true)
+		{
+			Token currentTokenValue = m_scanner->currentToken();
+			if (currentTokenValue == Token::RBrace)
+				break;
+			else if (
+				(currentTokenValue == Token::Function && m_scanner->peekNextToken() != Token::LParen) ||
+				currentTokenValue == Token::Constructor ||
+				currentTokenValue == Token::Receive ||
+				currentTokenValue == Token::Fallback
+			)
+				subNodes.push_back(parseFunctionDefinition());
+			else if (currentTokenValue == Token::Struct)
+				subNodes.push_back(parseStructDefinition());
+			else if (currentTokenValue == Token::Enum)
+				subNodes.push_back(parseEnumDefinition());
+			else if (
+				currentTokenValue == Token::Identifier ||
+				currentTokenValue == Token::Mapping ||
+				TokenTraits::isElementaryTypeName(currentTokenValue) ||
+				(currentTokenValue == Token::Function && m_scanner->peekNextToken() == Token::LParen)
+			)
+			{
+				VarDeclParserOptions options;
+				options.isStateVariable = true;
+				options.allowInitialValue = true;
+				subNodes.push_back(parseVariableDeclaration(options));
+				expectToken(Token::Semicolon);
+			}
+			else if (currentTokenValue == Token::Modifier)
+				subNodes.push_back(parseModifierDefinition());
+			else if (currentTokenValue == Token::Event)
+				subNodes.push_back(parseEventDefinition());
+			else if (currentTokenValue == Token::Using)
+				subNodes.push_back(parseUsingDirective());
+			else
+				fatalParserError(9182_error, "Function, variable, struct or modifier declaration expected.");
+		}
+#endif
+	}
+	catch (FatalError const&)
+	{
+		if (
+			!m_errorReporter.hasErrors() ||
+			!m_parserErrorRecovery ||
+			m_errorReporter.hasExcessiveErrors()
+		)
+			BOOST_THROW_EXCEPTION(FatalError()); /* Don't try to recover here. */
+		nodeFactory.markEndPosition();
+		expectTokenOrConsumeUntil(Token::RBrace, "ContractDefinition");
+		m_inParserRecovery = true;
+	}
+	nodeFactory.markEndPosition();
+	if (m_inParserRecovery)
+		expectTokenOrConsumeUntil(Token::RBrace, "ContractDefinition");
+	else
+		expectToken(Token::RBrace);
+	return nodeFactory.createNode<ContractDefinition>(
+		name,
+		documentation,
+		baseContracts,
+		subNodes,
+		contractKind.first,
+		contractKind.second
+	);
+}
+
+void Parser::parseContractBody(vector<ASTPointer<ASTNode>>& subNodes)
+{
+	//vector<ASTPointer<ASTNode>> subNodes;
+
+	try
+	{
 		expectToken(Token::LBrace);
 		while (true)
 		{
@@ -353,6 +462,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	}
 	catch (FatalError const&)
 	{
+		printf("FatalError: in parser recovery\n");
 		if (
 			!m_errorReporter.hasErrors() ||
 			!m_parserErrorRecovery ||
@@ -361,19 +471,13 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			BOOST_THROW_EXCEPTION(FatalError()); /* Don't try to recover here. */
 		m_inParserRecovery = true;
 	}
-	nodeFactory.markEndPosition();
+
 	if (m_inParserRecovery)
 		expectTokenOrConsumeUntil(Token::RBrace, "ContractDefinition");
 	else
 		expectToken(Token::RBrace);
-	return nodeFactory.createNode<ContractDefinition>(
-		name,
-		documentation,
-		baseContracts,
-		subNodes,
-		contractKind.first,
-		contractKind.second
-	);
+
+	//return subNodes;
 }
 
 ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
