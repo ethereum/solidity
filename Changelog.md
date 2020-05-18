@@ -9,7 +9,7 @@ Compiler Features:
 
 
 Bugfixes:
-
+ * Optimizer: Fixed a bug in BlockDeDuplicator.
 
 
 ### 0.6.8 (2020-05-14)
