@@ -360,6 +360,8 @@ private:
 	std::string applyRemapping(std::string const& _path, std::string const& _context);
 	void resolveImports();
 
+	void loadMissingInterfaces();
+
 	/// @returns true if the source is requested to be compiled.
 	bool isRequestedSource(std::string const& _sourceName) const;
 

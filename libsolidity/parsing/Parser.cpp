@@ -95,8 +95,8 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 				nodes.push_back(parseImportDirective());
 				break;
 			case Token::Interface:
-				// nodes.push_back(parseInterfaceDefinition());
-				// break;
+				nodes.push_back(parseInterfaceDefinition());
+				break;
 			case Token::Abstract:
 			case Token::Contract:
 			case Token::Library:
@@ -296,20 +296,35 @@ ASTPointer<ContractDefinition> Parser::parseInterfaceDefinition()
 {
 	// interfaceDefinition
 	//   : 'interface' identifier 'from' StringLiteralFragment
-	//   | 'interface' identifier 'as' AbiString
 	//   | 'interface' identifier contractInheritanceDefinition? contractBody ;
-
-	m_scanner->next();
 
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 
+	m_scanner->next();
+
 	ASTPointer<ASTString> name = expectIdentifierToken();
-
 	ASTPointer<StructuredDocumentation> documentation = parseStructuredDocumentation();
-
 	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
-	vector<ASTPointer<ASTNode>> subNodes;//TODO = parseContractBody();
+
+	if (m_scanner->currentToken() == Token::From)
+	{
+		m_scanner->next();
+		if (m_scanner->currentToken() != Token::StringLiteral)
+			fatalParserError(6845_error, "Expected string literal fragment.");
+		boost::filesystem::path const jsonSourceFileName {*getLiteralAndAdvance()};
+		nodeFactory.markEndPosition();
+		expectToken(Token::Semicolon);
+
+		return nodeFactory.createNode<ContractDefinition>(jsonSourceFileName);
+	}
+
+	baseContracts = parseContractInheritanceList();
+
+	expectToken(Token::LBrace);
+	vector<ASTPointer<ASTNode>> subNodes = parseContractBody();
+	nodeFactory.markEndPosition();
+	expectToken(Token::RBrace);
 
 	return nodeFactory.createNode<ContractDefinition>(
 		name,
@@ -319,6 +334,21 @@ ASTPointer<ContractDefinition> Parser::parseInterfaceDefinition()
 		ContractKind::Interface,
 		false
 	);
+}
+
+vector<ASTPointer<InheritanceSpecifier>> Parser::parseContractInheritanceList()
+{
+	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
+
+	if (m_scanner->currentToken() == Token::Is)
+		do
+		{
+			m_scanner->next();
+			baseContracts.push_back(parseInheritanceSpecifier());
+		}
+		while (m_scanner->currentToken() == Token::Comma);
+
+	return baseContracts;
 }
 
 ASTPointer<ContractDefinition> Parser::parseContractDefinition()
@@ -335,57 +365,10 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		documentation = parseStructuredDocumentation();
 		contractKind = parseContractKind();
 		name = expectIdentifierToken();
-		if (m_scanner->currentToken() == Token::Is)
-			do
-			{
-				m_scanner->next();
-				baseContracts.push_back(parseInheritanceSpecifier());
-			}
-			while (m_scanner->currentToken() == Token::Comma);
-#if 0
-		parseContractBody(subNodes);
-		//subNodes = parseContractBody();
-#else
+		baseContracts = parseContractInheritanceList();
+
 		expectToken(Token::LBrace);
-		while (true)
-		{
-			Token currentTokenValue = m_scanner->currentToken();
-			if (currentTokenValue == Token::RBrace)
-				break;
-			else if (
-				(currentTokenValue == Token::Function && m_scanner->peekNextToken() != Token::LParen) ||
-				currentTokenValue == Token::Constructor ||
-				currentTokenValue == Token::Receive ||
-				currentTokenValue == Token::Fallback
-			)
-				subNodes.push_back(parseFunctionDefinition());
-			else if (currentTokenValue == Token::Struct)
-				subNodes.push_back(parseStructDefinition());
-			else if (currentTokenValue == Token::Enum)
-				subNodes.push_back(parseEnumDefinition());
-			else if (
-				currentTokenValue == Token::Identifier ||
-				currentTokenValue == Token::Mapping ||
-				TokenTraits::isElementaryTypeName(currentTokenValue) ||
-				(currentTokenValue == Token::Function && m_scanner->peekNextToken() == Token::LParen)
-			)
-			{
-				VarDeclParserOptions options;
-				options.isStateVariable = true;
-				options.allowInitialValue = true;
-				subNodes.push_back(parseVariableDeclaration(options));
-				expectToken(Token::Semicolon);
-			}
-			else if (currentTokenValue == Token::Modifier)
-				subNodes.push_back(parseModifierDefinition());
-			else if (currentTokenValue == Token::Event)
-				subNodes.push_back(parseEventDefinition());
-			else if (currentTokenValue == Token::Using)
-				subNodes.push_back(parseUsingDirective());
-			else
-				fatalParserError(9182_error, "Function, variable, struct or modifier declaration expected.");
-		}
-#endif
+		subNodes = parseContractBody();
 	}
 	catch (FatalError const&)
 	{
@@ -395,8 +378,6 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			m_errorReporter.hasExcessiveErrors()
 		)
 			BOOST_THROW_EXCEPTION(FatalError()); /* Don't try to recover here. */
-		nodeFactory.markEndPosition();
-		expectTokenOrConsumeUntil(Token::RBrace, "ContractDefinition");
 		m_inParserRecovery = true;
 	}
 	nodeFactory.markEndPosition();
@@ -414,70 +395,52 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	);
 }
 
-void Parser::parseContractBody(vector<ASTPointer<ASTNode>>& subNodes)
+/// parses the contract body but (due to error recovery strategies) *without* surrounding
+/// curly braces.
+vector<ASTPointer<ASTNode>> Parser::parseContractBody()
 {
-	//vector<ASTPointer<ASTNode>> subNodes;
+	vector<ASTPointer<ASTNode>> subNodes;
 
-	try
+	while (true)
 	{
-		expectToken(Token::LBrace);
-		while (true)
-		{
-			Token currentTokenValue = m_scanner->currentToken();
-			if (currentTokenValue == Token::RBrace)
-				break;
-			else if (
-				(currentTokenValue == Token::Function && m_scanner->peekNextToken() != Token::LParen) ||
-				currentTokenValue == Token::Constructor ||
-				currentTokenValue == Token::Receive ||
-				currentTokenValue == Token::Fallback
-			)
-				subNodes.push_back(parseFunctionDefinition());
-			else if (currentTokenValue == Token::Struct)
-				subNodes.push_back(parseStructDefinition());
-			else if (currentTokenValue == Token::Enum)
-				subNodes.push_back(parseEnumDefinition());
-			else if (
-				currentTokenValue == Token::Identifier ||
-				currentTokenValue == Token::Mapping ||
-				TokenTraits::isElementaryTypeName(currentTokenValue) ||
-				(currentTokenValue == Token::Function && m_scanner->peekNextToken() == Token::LParen)
-			)
-			{
-				VarDeclParserOptions options;
-				options.isStateVariable = true;
-				options.allowInitialValue = true;
-				subNodes.push_back(parseVariableDeclaration(options));
-				expectToken(Token::Semicolon);
-			}
-			else if (currentTokenValue == Token::Modifier)
-				subNodes.push_back(parseModifierDefinition());
-			else if (currentTokenValue == Token::Event)
-				subNodes.push_back(parseEventDefinition());
-			else if (currentTokenValue == Token::Using)
-				subNodes.push_back(parseUsingDirective());
-			else
-				fatalParserError(9182_error, "Function, variable, struct or modifier declaration expected.");
-		}
-	}
-	catch (FatalError const&)
-	{
-		printf("FatalError: in parser recovery\n");
-		if (
-			!m_errorReporter.hasErrors() ||
-			!m_parserErrorRecovery ||
-			m_errorReporter.hasExcessiveErrors()
+		Token currentTokenValue = m_scanner->currentToken();
+		if (currentTokenValue == Token::RBrace)
+			break;
+		else if (
+			(currentTokenValue == Token::Function && m_scanner->peekNextToken() != Token::LParen) ||
+			currentTokenValue == Token::Constructor ||
+			currentTokenValue == Token::Receive ||
+			currentTokenValue == Token::Fallback
 		)
-			BOOST_THROW_EXCEPTION(FatalError()); /* Don't try to recover here. */
-		m_inParserRecovery = true;
+			subNodes.push_back(parseFunctionDefinition());
+		else if (currentTokenValue == Token::Struct)
+			subNodes.push_back(parseStructDefinition());
+		else if (currentTokenValue == Token::Enum)
+			subNodes.push_back(parseEnumDefinition());
+		else if (
+			currentTokenValue == Token::Identifier ||
+			currentTokenValue == Token::Mapping ||
+			TokenTraits::isElementaryTypeName(currentTokenValue) ||
+			(currentTokenValue == Token::Function && m_scanner->peekNextToken() == Token::LParen)
+		)
+		{
+			VarDeclParserOptions options;
+			options.isStateVariable = true;
+			options.allowInitialValue = true;
+			subNodes.push_back(parseVariableDeclaration(options));
+			expectToken(Token::Semicolon);
+		}
+		else if (currentTokenValue == Token::Modifier)
+			subNodes.push_back(parseModifierDefinition());
+		else if (currentTokenValue == Token::Event)
+			subNodes.push_back(parseEventDefinition());
+		else if (currentTokenValue == Token::Using)
+			subNodes.push_back(parseUsingDirective());
+		else
+			fatalParserError(9182_error, "Function, variable, struct or modifier declaration expected.");
 	}
 
-	if (m_inParserRecovery)
-		expectTokenOrConsumeUntil(Token::RBrace, "ContractDefinition");
-	else
-		expectToken(Token::RBrace);
-
-	//return subNodes;
+	return subNodes;
 }
 
 ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()

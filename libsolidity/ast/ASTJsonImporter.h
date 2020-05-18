@@ -48,6 +48,8 @@ public:
 	/// @returns map of sourcenames to their respective ASTs
 	std::map<std::string, ASTPointer<SourceUnit>> jsonToSourceUnit(std::map<std::string, Json::Value> const& _sourceList);
 
+	ASTPointer<ContractDefinition> jsonToContract(Json::Value const& _sourceList);
+
 private:
 
 	// =========== general creation functions ==============

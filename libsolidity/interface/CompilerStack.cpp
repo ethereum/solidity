@@ -263,6 +263,8 @@ bool CompilerStack::parse()
 				m_sources[newPath].scanner = make_shared<Scanner>(CharStream(newContents, newPath));
 				sourcesToParse.push_back(newPath);
 			}
+
+			loadMissingInterfaces();
 		}
 	}
 
@@ -270,6 +272,46 @@ bool CompilerStack::parse()
 	if (!Error::containsOnlyWarnings(m_errorReporter.errors()))
 		m_hasError = true;
 	return !m_hasError;
+}
+
+void CompilerStack::loadMissingInterfaces()
+{
+	for (auto const& sourcePair: m_sources)
+	{
+		ASTPointer<SourceUnit> const& source = sourcePair.second.ast;;
+
+		for (auto const& astNode: source->nodes())
+		{
+			if (auto* contract = dynamic_cast<ContractDefinition*>(astNode.get()))
+			{
+				if (auto const fileName = contract->jsonSourceFile(); fileName.has_value())
+				{
+					printf("%s needs replacement\n", fileName->string().c_str());
+
+					ReadCallback::Result result{false, string("File not supplied initially.")};
+					if (m_readFile)
+						result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), fileName.value().string());
+					if (result.success)
+					{
+						string const& jsonString = result.responseOrErrorMessage;
+						printf("jsonString: %s\n", jsonString.c_str());
+						Json::Value json;
+						util::jsonParseStrict(jsonString, json, nullptr);
+						ASTPointer<ContractDefinition> jsonContract = ASTJsonImporter{m_evmVersion}.jsonToContract(json);
+						//TODO: contract = *jsonContract;
+					}
+					else
+					{
+						m_errorReporter.fatalParserError(
+							31415_error, // TODO
+							contract->location(),
+							"Cannot load JSON source."
+						);
+					}
+				}
+			}
+		}
+	}
 }
 
 void CompilerStack::importASTs(map<string, Json::Value> const& _sources)

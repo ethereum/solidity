@@ -34,6 +34,7 @@
 #include <libsolutil/LazyInit.h>
 
 #include <boost/noncopyable.hpp>
+#include <boost/filesystem/path.hpp>
 #include <json/json.h>
 
 #include <memory>
@@ -475,6 +476,23 @@ public:
 		m_abstract(_abstract)
 	{}
 
+	ContractDefinition(
+		int64_t _id,
+		SourceLocation const& _location,
+		boost::filesystem::path const& _jsonSourceFile
+	):
+		ContractDefinition{
+			_id,
+			_location,
+			{},			// name
+			{},			// StructuredDocumentation
+			{},			// InheritanceSpecifier[]
+			{}			// body
+		}
+	{
+		m_jsonSourceFile = _jsonSourceFile;
+	}
+
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
@@ -531,11 +549,14 @@ public:
 	/// @returns the next constructor in the inheritance hierarchy.
 	FunctionDefinition const* nextConstructor(ContractDefinition const& _mostDerivedContract) const;
 
+	std::optional<boost::filesystem::path> jsonSourceFile() const noexcept { return m_jsonSourceFile; }
+
 private:
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
 	ContractKind m_contractKind;
 	bool m_abstract{false};
+	std::optional<boost::filesystem::path> m_jsonSourceFile {std::nullopt};
 
 	util::LazyInit<std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList[2];
 	util::LazyInit<std::vector<EventDefinition const*>> m_interfaceEvents;

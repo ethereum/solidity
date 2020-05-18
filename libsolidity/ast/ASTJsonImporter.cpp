@@ -68,6 +68,11 @@ map<string, ASTPointer<SourceUnit>> ASTJsonImporter::jsonToSourceUnit(map<string
 	return m_sourceUnits;
 }
 
+ASTPointer<ContractDefinition> ASTJsonImporter::jsonToContract(Json::Value const& _source)
+{
+	return createContractDefinition(_source);
+}
+
 // ============ private ===========================
 
 // =========== general creation functions ==============
