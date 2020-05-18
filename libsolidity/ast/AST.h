@@ -173,6 +173,9 @@ public:
 	std::optional<std::string> const& licenseString() const { return m_licenseString; }
 	std::vector<ASTPointer<ASTNode>> nodes() const { return m_nodes; }
 
+	/// Replaces given top-level AST node with a new AST node.
+	void replaceNode(ASTPointer<ASTNode> _oldNode, ASTPointer<ASTNode> _newNode);
+
 	/// @returns a set of referenced SourceUnits. Recursively if @a _recurse is true.
 	std::set<SourceUnit const*> referencedSourceUnits(bool _recurse = false, std::set<SourceUnit const*> _skipList = std::set<SourceUnit const*>()) const;
 

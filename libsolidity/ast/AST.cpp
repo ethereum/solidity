@@ -27,6 +27,8 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolutil/Keccak256.h>
 
+#include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/replace_if.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <algorithm>
@@ -70,6 +72,22 @@ set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<Sour
 		}
 	}
 	return sourceUnits;
+}
+
+void SourceUnit::replaceNode(ASTPointer<ASTNode> _oldNode, ASTPointer<ASTNode> _newNode)
+{
+	solAssert(
+		boost::range::find_if(
+			m_nodes,
+			[&](auto const& node) { return node->id() == _oldNode->id(); }
+		) != m_nodes.end(),
+		""
+	);
+	boost::range::replace_if(
+		m_nodes,
+		[&](auto const& node) { return node->id() == _oldNode->id(); },
+		_newNode
+	);
 }
 
 ImportAnnotation& ImportDirective::annotation() const
