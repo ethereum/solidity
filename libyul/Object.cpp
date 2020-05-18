@@ -65,9 +65,45 @@ set<YulString> Object::dataNames() const
 {
 	set<YulString> names;
 	names.insert(name);
-	for (auto const& subObject: subIndexByName)
-		names.insert(subObject.first);
-	// The empty name is not valid
+	for (shared_ptr<ObjectNode> const& subObjectNode: subObjects)
+	{
+		names.insert(subObjectNode->name);
+		if (auto const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
+			for (YulString const& subSubObj: subObject->dataNames())
+				names.insert(YulString{subObject->name.str() + "." + subSubObj.str()});
+	}
+
 	names.erase(YulString{});
 	return names;
+}
+
+map<YulString, shared_ptr<ObjectNode>> Object::subObjectsByDataName() const
+{
+	map<YulString, shared_ptr<ObjectNode>> objectsByDataName;
+	for (shared_ptr<ObjectNode> const& subObjectNode: subObjects)
+		if (auto const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
+		{
+			set<YulString> subObjDataNames = subObject->dataNames();
+			for (YulString const& subObjDataName: subObjDataNames)
+				if (subObjDataName == subObject->name)
+					objectsByDataName[subObject->name] = subObjectNode;
+				else
+				{
+					map<YulString, shared_ptr<ObjectNode>> subSubObjects = subObject->subObjectsByDataName();
+					if (subSubObjects.count(subObjDataName))
+						objectsByDataName[YulString{subObject->name.str() + "." + subObjDataName.str()}] =
+							subObject->subObjectsByDataName().at(subObjDataName);
+				}
+		}
+
+	return objectsByDataName;
+}
+
+void Object::addNamedSubObject(YulString _name, shared_ptr<ObjectNode> _subObject)
+{
+	if (subIndexByName.count(_name) == 0)
+	{
+		subIndexByName[_name] = subObjects.size();
+		subObjects.emplace_back(std::move(_subObject));
+	}
 }

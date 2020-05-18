@@ -44,6 +44,7 @@ struct BuiltinContext
 	Object const* currentObject = nullptr;
 	/// Mapping from named objects to abstract assembly sub IDs.
 	std::map<YulString, AbstractAssembly::SubID> subIDs;
+	std::optional<AbstractAssembly::SubID> findSubIDForDataName(YulString const& _dataName);
 };
 
 struct BuiltinFunctionForEVM: public BuiltinFunction

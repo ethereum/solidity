@@ -27,6 +27,7 @@
 #include <libyul/AsmScope.h>
 #include <libyul/AsmDataForward.h>
 
+#include <libyul/Object.h>
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -60,13 +61,15 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
 		ExternalIdentifierAccess::Resolver _resolver = ExternalIdentifierAccess::Resolver(),
-		std::set<YulString> _dataNames = {}
+		std::set<YulString> _dataNames = {},
+		std::map<YulString, std::shared_ptr<ObjectNode>> _objectsByDataName = {}
 	):
 		m_resolver(std::move(_resolver)),
 		m_info(_analysisInfo),
 		m_errorReporter(_errorReporter),
 		m_dialect(_dialect),
-		m_dataNames(std::move(_dataNames))
+		m_dataNames(std::move(_dataNames)),
+		m_objectsByDataName(std::move(_objectsByDataName))
 	{
 		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 			m_evmVersion = evmDialect->evmVersion();
@@ -93,6 +96,10 @@ public:
 	void operator()(Leave const&) { }
 	void operator()(Block const& _block);
 
+	/// returns sub-objects for object itself, it contains all direct sub-objects and additional sub-objects
+	/// like for example nested objects that are accessed via sub-objects with `.`
+	std::vector<std::shared_ptr<ObjectNode>> const& allSubObjectsNeeded() const { return m_allSubObjects; }
+
 private:
 	/// Visits the expression, expects that it evaluates to exactly one value and
 	/// returns the type. Reports errors on errors and returns the default type.
@@ -100,7 +107,6 @@ private:
 	/// Vists the expression and expects it to return a single boolean value.
 	/// Reports an error otherwise.
 	void expectBoolExpression(Expression const& _expr);
-	bool expectDeposit(int _deposit, int _oldHeight, langutil::SourceLocation const& _location);
 
 	/// Verifies that a variable to be assigned to exists, can be assigned to
 	/// and has the same type as the value.
@@ -126,8 +132,13 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 	langutil::EVMVersion m_evmVersion;
 	Dialect const& m_dialect;
+
 	/// Names of data objects to be referenced by builtin functions with literal arguments.
 	std::set<YulString> m_dataNames;
+	/// map between object data name in current context and object itself
+	std::map<YulString, std::shared_ptr<ObjectNode>> m_objectsByDataName;
+	std::vector<std::shared_ptr<ObjectNode>> m_allSubObjects;
+
 	ForLoop const* m_currentForLoop = nullptr;
 };
 

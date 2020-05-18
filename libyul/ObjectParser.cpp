@@ -86,7 +86,7 @@ shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 			fatalParserError(8143_error, "Expected keyword \"data\" or \"object\" or \"}\".");
 	}
 	if (_containingObject)
-		addNamedSubObject(*_containingObject, ret->name, ret);
+		_containingObject->addNamedSubObject(ret->name, ret);
 
 	expectToken(Token::RBrace);
 
@@ -124,7 +124,7 @@ void ObjectParser::parseData(Object& _containingObject)
 		expectToken(Token::HexStringLiteral, false);
 	else
 		expectToken(Token::StringLiteral, false);
-	addNamedSubObject(_containingObject, name, make_shared<Data>(name, asBytes(currentLiteral())));
+	_containingObject.addNamedSubObject(name, make_shared<Data>(name, asBytes(currentLiteral())));
 	advance();
 }
 
@@ -140,10 +140,4 @@ YulString ObjectParser::parseUniqueName(Object const* _containingObject)
 		parserError(8794_error, "Object name \"" + name.str() + "\" already exists inside the containing object.");
 	advance();
 	return name;
-}
-
-void ObjectParser::addNamedSubObject(Object& _container, YulString _name, shared_ptr<ObjectNode> _subObject)
-{
-	_container.subIndexByName[_name] = _container.subObjects.size();
-	_container.subObjects.emplace_back(std::move(_subObject));
 }

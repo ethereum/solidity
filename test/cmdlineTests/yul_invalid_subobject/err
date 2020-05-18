@@ -1,0 +1,12 @@
+Warning: Yul is still experimental. Please use the output with care.
+Error: Unknown data object "B.D".
+ --> yul_invalid_subobject/input.sol:7:9:
+  |
+7 |     pop(dataoffset("B.D"))    // invalid
+  |         ^^^^^^^^^^
+
+Error: Unknown data object "C.D".
+ --> yul_invalid_subobject/input.sol:8:9:
+  |
+8 |     pop(dataoffset("C.D"))    // invalid
+  |         ^^^^^^^^^^

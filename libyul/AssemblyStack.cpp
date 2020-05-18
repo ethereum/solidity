@@ -137,9 +137,13 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 		m_errorReporter,
 		languageToDialect(m_language, m_evmVersion),
 		{},
-		_object.dataNames()
+		_object.dataNames(),
+		_object.subObjectsByDataName()
 	);
 	bool success = analyzer.analyze(*_object.code);
+
+	for (shared_ptr<ObjectNode> const& subObject: analyzer.allSubObjectsNeeded())
+		_object.addNamedSubObject(subObject->name, subObject);
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 			if (!analyzeParsed(*subObject))

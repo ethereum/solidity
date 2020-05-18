@@ -66,9 +66,12 @@ public:
 	/// @returns a (parseable) string representation. Includes types if @a _yul is set.
 	std::string toString(Dialect const* _dialect) const override;
 
+	void addNamedSubObject(YulString _name, std::shared_ptr<ObjectNode> _subObject);
+
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object.
 	std::set<YulString> dataNames() const;
+	std::map<YulString, std::shared_ptr<ObjectNode>> subObjectsByDataName() const;
 
 	std::shared_ptr<Block> code;
 	std::vector<std::shared_ptr<ObjectNode>> subObjects;
