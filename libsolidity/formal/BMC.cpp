@@ -17,9 +17,10 @@
 
 #include <libsolidity/formal/BMC.h>
 
-#include <libsolidity/formal/SMTPortfolio.h>
 #include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicTypes.h>
+
+#include <libsmtutil/SMTPortfolio.h>
 
 using namespace std;
 using namespace solidity;

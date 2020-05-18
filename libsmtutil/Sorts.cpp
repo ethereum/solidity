@@ -16,7 +16,7 @@
 */
 
 
-#include <libsolidity/formal/Sorts.h>
+#include <libsmtutil/Sorts.h>
 
 using namespace std;
 

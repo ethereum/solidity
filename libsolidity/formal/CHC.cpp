@@ -17,16 +17,15 @@
 
 #include <libsolidity/formal/CHC.h>
 
-#include <libsolidity/formal/CHCSmtLib2Interface.h>
-
 #ifdef HAVE_Z3
-#include <libsolidity/formal/Z3CHCInterface.h>
+#include <libsmtutil/Z3CHCInterface.h>
 #endif
 
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <libsolidity/ast/TypeProvider.h>
 
+#include <libsmtutil/CHCSmtLib2Interface.h>
 #include <libsolutil/Algorithms.h>
 
 using namespace std;

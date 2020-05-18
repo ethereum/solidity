@@ -19,7 +19,7 @@
 
 #include <test/libsolidity/SyntaxTest.h>
 
-#include <libsolidity/formal/SolverInterface.h>
+#include <libsmtutil/SolverInterface.h>
 
 #include <string>
 

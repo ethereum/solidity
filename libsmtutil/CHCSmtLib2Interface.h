@@ -21,9 +21,9 @@
 
 #pragma once
 
-#include <libsolidity/formal/CHCSolverInterface.h>
+#include <libsmtutil/CHCSolverInterface.h>
 
-#include <libsolidity/formal/SMTLib2Interface.h>
+#include <libsmtutil/SMTLib2Interface.h>
 
 namespace solidity::frontend::smt
 {

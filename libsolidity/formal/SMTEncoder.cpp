@@ -18,9 +18,10 @@
 #include <libsolidity/formal/SMTEncoder.h>
 
 #include <libsolidity/ast/TypeProvider.h>
-#include <libsolidity/formal/SMTPortfolio.h>
 #include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicTypes.h>
+
+#include <libsmtutil/SMTPortfolio.h>
 
 #include <boost/range/adaptors.hpp>
 #include <boost/range/adaptor/reversed.hpp>

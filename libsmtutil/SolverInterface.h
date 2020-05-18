@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <libsolidity/formal/Sorts.h>
+#include <libsmtutil/Sorts.h>
 
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/ReadFile.h>

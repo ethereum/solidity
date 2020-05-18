@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libsolidity/formal/CHCSmtLib2Interface.h>
+#include <libsmtutil/CHCSmtLib2Interface.h>
 
 #include <libsolutil/Keccak256.h>
 

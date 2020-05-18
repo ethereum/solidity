@@ -25,9 +25,10 @@
 #include <libsolidity/formal/BMC.h>
 #include <libsolidity/formal/CHC.h>
 #include <libsolidity/formal/EncodingContext.h>
-#include <libsolidity/formal/SolverInterface.h>
 
 #include <libsolidity/interface/ReadFile.h>
+
+#include <libsmtutil/SolverInterface.h>
 #include <liblangutil/ErrorReporter.h>
 
 namespace solidity::langutil

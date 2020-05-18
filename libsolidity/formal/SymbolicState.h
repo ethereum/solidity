@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include <libsolidity/formal/Sorts.h>
-#include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/formal/SymbolicVariables.h>
+
+#include <libsmtutil/Sorts.h>
+#include <libsmtutil/SolverInterface.h>
 
 namespace solidity::frontend::smt
 {

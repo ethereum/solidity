@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libsolidity/formal/SolverInterface.h>
+#include <libsmtutil/SolverInterface.h>
 
 namespace solidity::frontend::smt
 {

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <libsolidity/formal/SolverInterface.h>
+#include <libsmtutil/SolverInterface.h>
 
 #include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/Exceptions.h>

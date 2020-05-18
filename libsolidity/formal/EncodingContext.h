@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicVariables.h>
+
+#include <libsmtutil/SolverInterface.h>
 
 #include <unordered_map>
 #include <set>

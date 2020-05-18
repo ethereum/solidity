@@ -17,10 +17,11 @@
 
 #pragma once
 
-#include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/formal/SSAVariable.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/TypeProvider.h>
+
+#include <libsmtutil/SolverInterface.h>
 #include <memory>
 
 namespace solidity::frontend::smt

@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libsolidity/formal/CVC4Interface.h>
+#include <libsmtutil/CVC4Interface.h>
 
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/CommonIO.h>

@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libsolidity/formal/Z3Interface.h>
+#include <libsmtutil/Z3Interface.h>
 
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/CommonIO.h>

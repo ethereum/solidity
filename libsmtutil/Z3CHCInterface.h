@@ -21,8 +21,8 @@
 
 #pragma once
 
-#include <libsolidity/formal/CHCSolverInterface.h>
-#include <libsolidity/formal/Z3Interface.h>
+#include <libsmtutil/CHCSolverInterface.h>
+#include <libsmtutil/Z3Interface.h>
 
 namespace solidity::frontend::smt
 {

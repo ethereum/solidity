@@ -32,9 +32,9 @@
 
 #include <libsolidity/formal/SMTEncoder.h>
 
-#include <libsolidity/formal/CHCSolverInterface.h>
-
 #include <libsolidity/interface/ReadFile.h>
+
+#include <libsmtutil/CHCSolverInterface.h>
 
 #include <set>
 

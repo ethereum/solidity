@@ -30,9 +30,10 @@
 
 #include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/SMTEncoder.h>
-#include <libsolidity/formal/SolverInterface.h>
 
 #include <libsolidity/interface/ReadFile.h>
+
+#include <libsmtutil/SolverInterface.h>
 #include <liblangutil/ErrorReporter.h>
 
 #include <set>

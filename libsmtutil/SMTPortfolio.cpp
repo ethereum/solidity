@@ -15,15 +15,15 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libsolidity/formal/SMTPortfolio.h>
+#include <libsmtutil/SMTPortfolio.h>
 
 #ifdef HAVE_Z3
-#include <libsolidity/formal/Z3Interface.h>
+#include <libsmtutil/Z3Interface.h>
 #endif
 #ifdef HAVE_CVC4
-#include <libsolidity/formal/CVC4Interface.h>
+#include <libsmtutil/CVC4Interface.h>
 #endif
-#include <libsolidity/formal/SMTLib2Interface.h>
+#include <libsmtutil/SMTLib2Interface.h>
 
 using namespace std;
 using namespace solidity;
