@@ -23,7 +23,7 @@ else()
 endif()
 
 add_library(smtutil ${sources} ${z3_SRCS} ${cvc4_SRCS})
-target_link_libraries(smtutil PUBLIC langutil solutil Boost::boost)
+target_link_libraries(smtutil PUBLIC solutil Boost::boost)
 
 if (${Z3_FOUND})
   target_link_libraries(smtutil PUBLIC z3::libz3)
