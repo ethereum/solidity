@@ -1,5 +1,3 @@
-pragma solidity ^0.6.0;
-
 pragma experimental ABIEncoderV2;
 
 contract Ownable {
@@ -25,4 +23,4 @@ contract Voting is Ownable {
     }
 }
 // ----
-// Warning: (324-340): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning: (299-315): Unused function parameter. Remove or comment out the variable name to silence this warning.

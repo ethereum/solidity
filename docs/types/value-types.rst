@@ -656,13 +656,8 @@ External (or public) functions have the following members:
 
 Example that shows how to use the members::
 
-<<<<<<< HEAD
-    pragma solidity >=0.6.4 <0.8.0;
-=======
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.7.0;
-    // This will report a warning
->>>>>>> origin/develop
+    pragma solidity >=0.6.4 <0.8.0;
 
     contract Example {
         function f() public payable returns (bytes4) {
