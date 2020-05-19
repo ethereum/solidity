@@ -29,6 +29,8 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 
+#include <boost/range/adaptor/map.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -121,49 +123,55 @@ string IRGenerationContext::newYulVariable()
 	return "_" + to_string(++m_varCounter);
 }
 
-string IRGenerationContext::generateInternalDispatchFunction(YulArity const& _arity)
+void IRGenerationContext::initializeInternalDispatch(InternalDispatchMap _internalDispatch)
 {
-	string funName = IRNames::internalDispatch(_arity);
-	return m_functions.createFunction(funName, [&]() {
-		Whiskers templ(R"(
-			function <functionName>(fun<?+in>, <in></+in>) <?+out>-> <out></+out> {
-				switch fun
-				<#cases>
-				case <funID>
-				{
-					<?+out> <out> :=</+out> <name>(<in>)
-				}
-				</cases>
-				default { invalid() }
-			}
-		)");
-		templ("functionName", funName);
-		templ("in", suffixedVariableNameList("in_", 0, _arity.in));
-		templ("out", suffixedVariableNameList("out_", 0, _arity.out));
+	solAssert(internalDispatchClean(), "");
 
-		vector<map<string, string>> cases;
-		for (FunctionDefinition const* function: collectFunctionsOfArity(_arity))
-		{
-			solAssert(function, "");
-			solAssert(
-				YulArity::fromType(*TypeProvider::function(*function, FunctionType::Kind::Internal)) == _arity,
-				"A single dispatch function can only handle functions of one arity"
-			);
-			solAssert(!function->isConstructor(), "");
-			// 0 is reserved for uninitialized function pointers
-			solAssert(function->id() != 0, "Unexpected function ID: 0");
-
-			cases.emplace_back(map<string, string>{
-				{"funID", to_string(function->id())},
-				{"name", IRNames::function(*function)}
-			});
-
+	for (set<FunctionDefinition const*> const& functions: _internalDispatch | boost::adaptors::map_values)
+		for (auto function: functions)
 			enqueueFunctionForCodeGeneration(*function);
-		}
 
-		templ("cases", move(cases));
-		return templ.render();
-	});
+	m_internalDispatchMap = move(_internalDispatch);
+}
+
+InternalDispatchMap IRGenerationContext::consumeInternalDispatchMap()
+{
+	m_directInternalFunctionCalls.clear();
+
+	InternalDispatchMap internalDispatch = move(m_internalDispatchMap);
+	m_internalDispatchMap.clear();
+	return internalDispatch;
+}
+
+void IRGenerationContext::internalFunctionCalledDirectly(Expression const& _expression)
+{
+	solAssert(m_directInternalFunctionCalls.count(&_expression) == 0, "");
+
+	m_directInternalFunctionCalls.insert(&_expression);
+}
+
+void IRGenerationContext::internalFunctionAccessed(Expression const& _expression, FunctionDefinition const& _function)
+{
+	solAssert(
+		IRHelpers::referencedFunctionDeclaration(_expression) &&
+		_function.resolveVirtual(mostDerivedContract()) ==
+		IRHelpers::referencedFunctionDeclaration(_expression)->resolveVirtual(mostDerivedContract()),
+		"Function definition does not match the expression"
+	);
+
+	if (m_directInternalFunctionCalls.count(&_expression) == 0)
+	{
+		FunctionType const* functionType = TypeProvider::function(_function, FunctionType::Kind::Internal);
+		solAssert(functionType, "");
+
+		m_internalDispatchMap[YulArity::fromType(*functionType)].insert(&_function);
+		enqueueFunctionForCodeGeneration(_function);
+	}
+}
+
+void IRGenerationContext::internalFunctionCalledThroughDispatch(YulArity const& _arity)
+{
+	m_internalDispatchMap.try_emplace(_arity);
 }
 
 YulUtilFunctions IRGenerationContext::utils()
@@ -179,22 +187,4 @@ ABIFunctions IRGenerationContext::abiFunctions()
 std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message)
 {
 	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
-}
-
-set<FunctionDefinition const*> IRGenerationContext::collectFunctionsOfArity(YulArity const& _arity)
-{
-	// UNIMPLEMENTED: Internal library calls via pointers are not implemented yet.
-	// We're not returning any internal library functions here even though it's possible
-	// to call them via pointers. Right now such calls end will up triggering the `default` case in
-	// the switch in the generated dispatch function.
-	set<FunctionDefinition const*> functions;
-	for (auto const& contract: mostDerivedContract().annotation().linearizedBaseContracts)
-		for (FunctionDefinition const* function: contract->definedFunctions())
-			if (
-				!function->isConstructor() &&
-				YulArity::fromType(*TypeProvider::function(*function, FunctionType::Kind::Internal)) == _arity
-			)
-				functions.insert(function);
-
-	return functions;
 }

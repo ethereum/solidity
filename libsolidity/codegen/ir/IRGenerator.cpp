@@ -38,6 +38,8 @@
 
 #include <liblangutil/SourceReferenceFormatter.h>
 
+#include <boost/range/adaptor/map.hpp>
+
 #include <sstream>
 
 using namespace std;
@@ -137,14 +139,22 @@ string IRGenerator::generate(
 	t("deploy", deployCode(_contract));
 	generateImplicitConstructors(_contract);
 	generateQueuedFunctions();
+	InternalDispatchMap internalDispatchMap = generateInternalDispatchFunctions();
 	t("functions", m_context.functionCollector().requestedFunctions());
 	t("subObjects", subObjectSources(m_context.subObjectsCreated()));
 
 	resetContext(_contract);
+
+	// NOTE: Function pointers can be passed from creation code via storage variables. We need to
+	// get all the functions they could point to into the dispatch functions even if they're never
+	// referenced by name in the runtime code.
+	m_context.initializeInternalDispatch(move(internalDispatchMap));
+
 	// Do not register immutables to avoid assignment.
 	t("RuntimeObject", IRNames::runtimeObject(_contract));
 	t("dispatch", dispatchRoutine(_contract));
 	generateQueuedFunctions();
+	generateInternalDispatchFunctions();
 	t("runtimeFunctions", m_context.functionCollector().requestedFunctions());
 	t("runtimeSubObjects", subObjectSources(m_context.subObjectsCreated()));
 	return t.render();
@@ -162,6 +172,68 @@ void IRGenerator::generateQueuedFunctions()
 	while (!m_context.functionGenerationQueueEmpty())
 		// NOTE: generateFunction() may modify function generation queue
 		generateFunction(*m_context.dequeueFunctionForCodeGeneration());
+}
+
+InternalDispatchMap IRGenerator::generateInternalDispatchFunctions()
+{
+	solAssert(
+		m_context.functionGenerationQueueEmpty(),
+		"At this point all the enqueued functions should have been generated. "
+		"Otherwise the dispatch may be incomplete."
+	);
+
+	InternalDispatchMap internalDispatchMap = m_context.consumeInternalDispatchMap();
+	for (YulArity const& arity: internalDispatchMap | boost::adaptors::map_keys)
+	{
+		string funName = IRNames::internalDispatch(arity);
+		m_context.functionCollector().createFunction(funName, [&]() {
+			Whiskers templ(R"(
+				function <functionName>(fun<?+in>, <in></+in>) <?+out>-> <out></+out> {
+					switch fun
+					<#cases>
+					case <funID>
+					{
+						<?+out> <out> :=</+out> <name>(<in>)
+					}
+					</cases>
+					default { invalid() }
+				}
+			)");
+			templ("functionName", funName);
+			templ("in", suffixedVariableNameList("in_", 0, arity.in));
+			templ("out", suffixedVariableNameList("out_", 0, arity.out));
+
+			vector<map<string, string>> cases;
+			for (FunctionDefinition const* function: internalDispatchMap.at(arity))
+			{
+				solAssert(function, "");
+				solAssert(
+					YulArity::fromType(*TypeProvider::function(*function, FunctionType::Kind::Internal)) == arity,
+					"A single dispatch function can only handle functions of one arity"
+				);
+				solAssert(!function->isConstructor(), "");
+				// 0 is reserved for uninitialized function pointers
+				solAssert(function->id() != 0, "Unexpected function ID: 0");
+				solAssert(m_context.functionCollector().contains(IRNames::function(*function)), "");
+
+				cases.emplace_back(map<string, string>{
+					{"funID", to_string(function->id())},
+					{"name", IRNames::function(*function)}
+				});
+			}
+
+			templ("cases", move(cases));
+			return templ.render();
+		});
+	}
+
+	solAssert(m_context.internalDispatchClean(), "");
+	solAssert(
+		m_context.functionGenerationQueueEmpty(),
+		"Internal dispatch generation must not add new functions to generation queue because they won't be proeessed."
+	);
+
+	return internalDispatchMap;
 }
 
 string IRGenerator::generateFunction(FunctionDefinition const& _function)
@@ -555,6 +627,10 @@ void IRGenerator::resetContext(ContractDefinition const& _contract)
 	solAssert(
 		m_context.functionCollector().requestedFunctions().empty(),
 		"Reset context while it still had functions."
+	);
+	solAssert(
+		m_context.internalDispatchClean(),
+		"Reset internal dispatch map without consuming it."
 	);
 	m_context = IRGenerationContext(m_evmVersion, m_context.revertStrings(), m_optimiserSettings);
 

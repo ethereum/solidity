@@ -65,6 +65,11 @@ private:
 	/// Generates code for all the functions from the function generation queue.
 	/// The resulting code is stored in the function collector in IRGenerationContext.
 	void generateQueuedFunctions();
+	/// Generates  all the internal dispatch functions necessary to handle any function that could
+	/// possibly be called via a pointer.
+	/// @return The content of the dispatch for reuse in runtime code. Reuse is necessary because
+	/// pointers to functions can be passed from the creation code in storage variables.
+	InternalDispatchMap generateInternalDispatchFunctions();
 	/// Generates code for and returns the name of the function.
 	std::string generateFunction(FunctionDefinition const& _function);
 	/// Generates a getter for the given declaration and returns its name
