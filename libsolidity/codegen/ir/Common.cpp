@@ -16,6 +16,7 @@
 */
 
 #include <libsolidity/codegen/ir/Common.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 #include <libsolutil/CommonIO.h>
 
@@ -23,6 +24,13 @@ using namespace std;
 using namespace solidity::util;
 using namespace solidity::frontend;
 
+YulArity YulArity::fromType(FunctionType const& _functionType)
+{
+	return YulArity{
+		TupleType(_functionType.parameterTypes()).sizeOnStack(),
+		TupleType(_functionType.returnParameterTypes()).sizeOnStack()
+	};
+}
 string IRNames::function(FunctionDefinition const& _function)
 {
 	// @TODO previously, we had to distinguish creation context and runtime context,
