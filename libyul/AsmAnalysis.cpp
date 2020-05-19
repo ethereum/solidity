@@ -45,22 +45,20 @@ using namespace solidity::langutil;
 
 bool AsmAnalyzer::analyze(Block const& _block)
 {
-	m_success = true;
+	auto watcher = m_errorReporter.errorWatcher();
 	try
 	{
 		if (!(ScopeFiller(m_info, m_errorReporter))(_block))
 			return false;
 
 		(*this)(_block);
-		if (!m_success)
-			yulAssert(m_errorReporter.hasErrors(), "No success but no error.");
 	}
 	catch (FatalError const&)
 	{
 		// This FatalError con occur if the errorReporter has too many errors.
-		yulAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
+		yulAssert(!watcher.ok(), "Fatal error detected, but no error is reported.");
 	}
-	return m_success && !m_errorReporter.hasErrors();
+	return watcher.ok();
 }
 
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object)
@@ -105,7 +103,7 @@ vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
 vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 {
 	yulAssert(!_identifier.name.empty(), "");
-	size_t numErrorsBefore = m_errorReporter.errors().size();
+	auto watcher = m_errorReporter.errorWatcher();
 	YulString type = m_dialect.defaultType;
 
 	if (m_currentScope->lookup(_identifier.name, GenericVisitor{
@@ -141,13 +139,9 @@ vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 				yulAssert(stackSize == 1, "Invalid stack size of external reference.");
 			}
 		}
-		if (!found)
-		{
+		if (!found && watcher.ok())
 			// Only add an error message if the callback did not do it.
-			if (numErrorsBefore == m_errorReporter.errors().size())
-				declarationError(_identifier.location, "Identifier not found.");
-			m_success = false;
-		}
+			declarationError(_identifier.location, "Identifier not found.");
 	}
 
 	return {type};
@@ -155,8 +149,9 @@ vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 
 void AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
+	auto watcher = m_errorReporter.errorWatcher();
 	vector<YulString> types = std::visit(*this, _statement.expression);
-	if (m_success && !types.empty())
+	if (watcher.ok() && !types.empty())
 		typeError(_statement.location,
 			"Top-level expressions are not supposed to return values (this expression returns " +
 			to_string(types.size()) +
@@ -253,6 +248,7 @@ void AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 {
 	yulAssert(!_funCall.functionName.name.empty(), "");
+	auto watcher = m_errorReporter.errorWatcher();
 	vector<YulString> const* parameterTypes = nullptr;
 	vector<YulString> const* returnTypes = nullptr;
 	vector<bool> const* needsLiteralArguments = nullptr;
@@ -281,7 +277,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	{
 		if (!warnOnInstructions(_funCall.functionName.name.str(), _funCall.functionName.location))
 			declarationError(_funCall.functionName.location, "Function not found.");
-		m_success = false;
+		yulAssert(!watcher.ok(), "Expected a reported error.");
 	}
 	if (parameterTypes && _funCall.arguments.size() != parameterTypes->size())
 		typeError(
@@ -323,7 +319,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		for (size_t i = 0; i < parameterTypes->size(); ++i)
 			expectType((*parameterTypes)[i], argTypes[i], locationOf(_funCall.arguments[i]));
 
-	if (m_success)
+	if (watcher.ok())
 	{
 		yulAssert(parameterTypes && parameterTypes->size() == argTypes.size(), "");
 		yulAssert(returnTypes, "");
@@ -353,6 +349,8 @@ void AsmAnalyzer::operator()(Switch const& _switch)
 	{
 		if (_case.value)
 		{
+			auto watcher = m_errorReporter.errorWatcher();
+
 			expectType(valueType, _case.value->type, _case.value->location);
 
 			// We cannot use "expectExpression" here because *_case.value is not an
@@ -360,7 +358,7 @@ void AsmAnalyzer::operator()(Switch const& _switch)
 			(*this)(*_case.value);
 
 			/// Note: the parser ensures there is only one default case
-			if (m_success && !cases.insert(valueOfLiteral(*_case.value)).second)
+			if (watcher.ok() && !cases.insert(valueOfLiteral(*_case.value)).second)
 				declarationError(_case.location, "Duplicate case defined.");
 		}
 
@@ -432,7 +430,7 @@ void AsmAnalyzer::expectBoolExpression(Expression const& _expr)
 void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulString _valueType)
 {
 	yulAssert(!_variable.name.empty(), "");
-	size_t numErrorsBefore = m_errorReporter.errors().size();
+	auto watcher = m_errorReporter.errorWatcher();
 	YulString const* variableType = nullptr;
 	bool found = false;
 	if (Scope::Identifier const* var = m_currentScope->lookup(_variable.name))
@@ -461,13 +459,9 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulString _valueT
 		}
 	}
 
-	if (!found)
-	{
-		m_success = false;
+	if (!found && watcher.ok())
 		// Only add message if the callback did not.
-		if (numErrorsBefore == m_errorReporter.errors().size())
-			declarationError(_variable.location, "Variable not found or variable not lvalue.");
-	}
+		declarationError(_variable.location, "Variable not found or variable not lvalue.");
 	if (variableType && *variableType != _valueType)
 		typeError(_variable.location,
 			"Assigning a value of type \"" +
@@ -477,8 +471,7 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulString _valueT
 			"\"."
 		);
 
-	if (m_success)
-		yulAssert(variableType, "");
+	yulAssert(!watcher.ok() || variableType, "");
 }
 
 Scope& AsmAnalyzer::scope(Block const* _block)
@@ -545,43 +538,28 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 		_instr == evmasm::Instruction::RETURNDATACOPY ||
 		_instr == evmasm::Instruction::RETURNDATASIZE
 	) && !m_evmVersion.supportsReturndata())
-	{
 		errorForVM("only available for Byzantium-compatible");
-	}
 	else if (_instr == evmasm::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
-	{
 		errorForVM("only available for Byzantium-compatible");
-	}
 	else if ((
 		_instr == evmasm::Instruction::SHL ||
 		_instr == evmasm::Instruction::SHR ||
 		_instr == evmasm::Instruction::SAR
 	) && !m_evmVersion.hasBitwiseShifting())
-	{
 		errorForVM("only available for Constantinople-compatible");
-	}
 	else if (_instr == evmasm::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
-	{
 		errorForVM("only available for Constantinople-compatible");
-	}
 	else if (_instr == evmasm::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
-	{
 		errorForVM("only available for Constantinople-compatible");
-	}
 	else if (_instr == evmasm::Instruction::CHAINID && !m_evmVersion.hasChainID())
-	{
 		errorForVM("only available for Istanbul-compatible");
-	}
 	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
-	{
 		errorForVM("only available for Istanbul-compatible");
-	}
 	else if (
 		_instr == evmasm::Instruction::JUMP ||
 		_instr == evmasm::Instruction::JUMPI ||
 		_instr == evmasm::Instruction::JUMPDEST
 	)
-	{
 		m_errorReporter.error(
 			4316_error,
 			Error::Type::SyntaxError,
@@ -590,8 +568,6 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 			"incorrect stack access. Because of that they are disallowed in strict assembly. "
 			"Use functions, \"switch\", \"if\" or \"for\" statements instead."
 		);
-		m_success = false;
-	}
 	else
 		return false;
 
@@ -601,12 +577,9 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 void AsmAnalyzer::typeError(SourceLocation const& _location, string const& _description)
 {
 	m_errorReporter.typeError(7569_error, _location, _description);
-	m_success = false;
 }
 
 void AsmAnalyzer::declarationError(SourceLocation const& _location, string const& _description)
 {
 	m_errorReporter.declarationError(9595_error, _location, _description);
-	m_success = false;
 }
-
