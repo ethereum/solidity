@@ -1061,8 +1061,9 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smtutil::Expressi
 		{
 			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(*base));
 			solAssert(symbArray, "");
+			auto baseType = base->annotation().type;
 			toStore = smtutil::Expression::tuple_constructor(
-				smtutil::Expression(base->annotation().type),
+				smtutil::Expression(make_shared<smtutil::SortSort>(smt::smtSort(*baseType)), baseType->toString(true)),
 				{smtutil::Expression::store(symbArray->elements(), expr(*indexAccess->indexExpression()), toStore), symbArray->length()}
 			);
 			indexAccess = base;

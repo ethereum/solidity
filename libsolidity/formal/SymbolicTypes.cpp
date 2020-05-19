@@ -385,7 +385,10 @@ smtutil::Expression zeroValue(frontend::TypePointer const& _type)
 				solAssert(false, "");
 
 			solAssert(zeroArray, "");
-			return smtutil::Expression::tuple_constructor(smtutil::Expression(_type), vector<smtutil::Expression>{*zeroArray, length});
+			return smtutil::Expression::tuple_constructor(
+				smtutil::Expression(std::make_shared<SortSort>(smtSort(*_type)), _type->toString(true)),
+				vector<smtutil::Expression>{*zeroArray, length}
+			);
 
 		}
 		solAssert(false, "");

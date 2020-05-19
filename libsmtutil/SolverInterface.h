@@ -19,7 +19,6 @@
 
 #include <libsmtutil/Sorts.h>
 
-#include <libsolidity/ast/Types.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/Exceptions.h>
@@ -54,17 +53,13 @@ enum class CheckResult
 	SATISFIABLE, UNSATISFIABLE, UNKNOWN, CONFLICTING, ERROR
 };
 
-// Forward declaration.
-SortPointer smtSort(frontend::Type const& _type);
-
 /// C++ representation of an SMTLIB2 expression.
 class Expression
 {
 	friend class SolverInterface;
 public:
 	explicit Expression(bool _v): Expression(_v ? "true" : "false", Kind::Bool) {}
-	explicit Expression(frontend::TypePointer _type): Expression(_type->toString(true), {}, std::make_shared<SortSort>(smtSort(*_type))) {}
-	explicit Expression(std::shared_ptr<SortSort> _sort): Expression("", {}, _sort) {}
+	explicit Expression(std::shared_ptr<SortSort> _sort, std::string _name = ""): Expression(std::move(_name), {}, _sort) {}
 	Expression(size_t _number): Expression(std::to_string(_number), Kind::Int) {}
 	Expression(u256 const& _number): Expression(_number.str(), Kind::Int) {}
 	Expression(s256 const& _number): Expression(_number.str(), Kind::Int) {}
