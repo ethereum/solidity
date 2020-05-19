@@ -9,5 +9,7 @@ contract c {
         return true;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // test() -> FAILURE
