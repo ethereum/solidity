@@ -41,7 +41,7 @@ protected:
 	/// This is set via option SMTSolvers in the test.
 	/// The possible options are `all`, `z3`, `cvc4`, `none`,
 	/// where if none is given the default used option is `all`.
-	smt::SMTSolverChoice m_enabledSolvers;
+	smtutil::SMTSolverChoice m_enabledSolvers;
 };
 
 }

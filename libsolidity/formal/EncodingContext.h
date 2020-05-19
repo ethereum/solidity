@@ -46,7 +46,7 @@ public:
 
 	/// Sets the current solver used by the current engine for
 	/// SMT variable declaration.
-	void setSolver(SolverInterface* _solver)
+	void setSolver(smtutil::SolverInterface* _solver)
 	{
 		solAssert(_solver, "");
 		m_solver = _solver;
@@ -56,7 +56,7 @@ public:
 	void setAssertionAccumulation(bool _acc) { m_accumulateAssertions = _acc; }
 
 	/// Forwards variable creation to the solver.
-	Expression newVariable(std::string _name, SortPointer _sort)
+	smtutil::Expression newVariable(std::string _name, smtutil::SortPointer _sort)
 	{
 		solAssert(m_solver, "");
 		return m_solver->newVariable(move(_name), move(_sort));
@@ -86,7 +86,7 @@ public:
 
 	/// Allocates a new index for the declaration, updates the current
 	/// index to this value and returns the expression.
-	Expression newValue(frontend::VariableDeclaration const& _decl);
+	smtutil::Expression newValue(frontend::VariableDeclaration const& _decl);
 	/// Sets the value of the declaration to zero.
 	void setZeroValue(frontend::VariableDeclaration const& _decl);
 	void setZeroValue(SymbolicVariable& _variable);
@@ -126,12 +126,12 @@ public:
 	/// Solver.
 	//@{
 	/// @returns conjunction of all added assertions.
-	Expression assertions();
+	smtutil::Expression assertions();
 	void pushSolver();
 	void popSolver();
-	void addAssertion(Expression const& _e);
+	void addAssertion(smtutil::Expression const& _e);
 	unsigned solverStackHeigh() { return m_assertions.size(); } const
-	SolverInterface* solver()
+	smtutil::SolverInterface* solver()
 	{
 		solAssert(m_solver, "");
 		return m_solver;
@@ -160,10 +160,10 @@ private:
 	/// Solver related.
 	//@{
 	/// Solver can be SMT solver or Horn solver in the future.
-	SolverInterface* m_solver = nullptr;
+	smtutil::SolverInterface* m_solver = nullptr;
 
 	/// Assertion stack.
-	std::vector<Expression> m_assertions;
+	std::vector<smtutil::Expression> m_assertions;
 
 	/// Whether to conjoin assertions in the assertion stack.
 	bool m_accumulateAssertions = true;

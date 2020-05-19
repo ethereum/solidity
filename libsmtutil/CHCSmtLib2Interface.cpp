@@ -32,7 +32,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
-using namespace solidity::frontend::smt;
+using namespace solidity::smtutil;
 
 CHCSmtLib2Interface::CHCSmtLib2Interface(
 	map<h256, string> const& _queryResponses,
@@ -51,10 +51,10 @@ void CHCSmtLib2Interface::reset()
 	m_variables.clear();
 }
 
-void CHCSmtLib2Interface::registerRelation(smt::Expression const& _expr)
+void CHCSmtLib2Interface::registerRelation(Expression const& _expr)
 {
 	solAssert(_expr.sort, "");
-	solAssert(_expr.sort->kind == smt::Kind::Function, "");
+	solAssert(_expr.sort->kind == Kind::Function, "");
 	if (!m_variables.count(_expr.name))
 	{
 		auto fSort = dynamic_pointer_cast<FunctionSort>(_expr.sort);
@@ -71,7 +71,7 @@ void CHCSmtLib2Interface::registerRelation(smt::Expression const& _expr)
 	}
 }
 
-void CHCSmtLib2Interface::addRule(smt::Expression const& _expr, std::string const& _name)
+void CHCSmtLib2Interface::addRule(Expression const& _expr, std::string const& _name)
 {
 	write(
 		"(rule (! " +
@@ -82,7 +82,7 @@ void CHCSmtLib2Interface::addRule(smt::Expression const& _expr, std::string cons
 	);
 }
 
-pair<CheckResult, vector<string>> CHCSmtLib2Interface::query(smt::Expression const& _block)
+pair<CheckResult, vector<string>> CHCSmtLib2Interface::query(Expression const& _block)
 {
 	string accumulated{};
 	swap(m_accumulatedOutput, accumulated);
@@ -125,7 +125,7 @@ void CHCSmtLib2Interface::declareVariable(string const& _name, SortPointer const
 void CHCSmtLib2Interface::declareFunction(string const& _name, SortPointer const& _sort)
 {
 	solAssert(_sort, "");
-	solAssert(_sort->kind == smt::Kind::Function, "");
+	solAssert(_sort->kind == Kind::Function, "");
 	// TODO Use domain and codomain as key as well
 	if (!m_variables.count(_name))
 	{

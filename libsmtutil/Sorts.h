@@ -24,7 +24,7 @@
 #include <memory>
 #include <vector>
 
-namespace solidity::frontend::smt
+namespace solidity::smtutil
 {
 
 enum class Kind

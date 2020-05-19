@@ -29,22 +29,22 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
-using namespace solidity::frontend::smt;
+using namespace solidity::smtutil;
 
 SMTPortfolio::SMTPortfolio(
 	map<h256, string> const& _smtlib2Responses,
-	ReadCallback::Callback const& _smtCallback,
+	frontend::ReadCallback::Callback const& _smtCallback,
 	[[maybe_unused]] SMTSolverChoice _enabledSolvers
 )
 {
-	m_solvers.emplace_back(make_unique<smt::SMTLib2Interface>(_smtlib2Responses, _smtCallback));
+	m_solvers.emplace_back(make_unique<SMTLib2Interface>(_smtlib2Responses, _smtCallback));
 #ifdef HAVE_Z3
 	if (_enabledSolvers.z3)
-		m_solvers.emplace_back(make_unique<smt::Z3Interface>());
+		m_solvers.emplace_back(make_unique<Z3Interface>());
 #endif
 #ifdef HAVE_CVC4
 	if (_enabledSolvers.cvc4)
-		m_solvers.emplace_back(make_unique<smt::CVC4Interface>());
+		m_solvers.emplace_back(make_unique<CVC4Interface>());
 #endif
 }
 
@@ -73,7 +73,7 @@ void SMTPortfolio::declareVariable(string const& _name, SortPointer const& _sort
 		s->declareVariable(_name, _sort);
 }
 
-void SMTPortfolio::addAssertion(smt::Expression const& _expr)
+void SMTPortfolio::addAssertion(Expression const& _expr)
 {
 	for (auto const& s: m_solvers)
 		s->addAssertion(_expr);
@@ -109,7 +109,7 @@ void SMTPortfolio::addAssertion(smt::Expression const& _expr)
  *
  *   If all solvers return ERROR, the result is ERROR.
 */
-pair<CheckResult, vector<string>> SMTPortfolio::check(vector<smt::Expression> const& _expressionsToEvaluate)
+pair<CheckResult, vector<string>> SMTPortfolio::check(vector<Expression> const& _expressionsToEvaluate)
 {
 	CheckResult lastResult = CheckResult::ERROR;
 	vector<string> finalValues;
@@ -142,7 +142,7 @@ vector<string> SMTPortfolio::unhandledQueries()
 	// This code assumes that the constructor guarantees that
 	// SmtLib2Interface is in position 0.
 	solAssert(!m_solvers.empty(), "");
-	solAssert(dynamic_cast<smt::SMTLib2Interface*>(m_solvers.front().get()), "");
+	solAssert(dynamic_cast<SMTLib2Interface*>(m_solvers.front().get()), "");
 	return m_solvers.front()->unhandledQueries();
 }
 

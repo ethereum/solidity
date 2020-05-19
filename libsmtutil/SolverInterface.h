@@ -20,7 +20,6 @@
 #include <libsmtutil/Sorts.h>
 
 #include <libsolidity/ast/Types.h>
-#include <libsolidity/interface/ReadFile.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/Exceptions.h>
@@ -32,7 +31,7 @@
 #include <string>
 #include <vector>
 
-namespace solidity::frontend::smt
+namespace solidity::smtutil
 {
 
 struct SMTSolverChoice
@@ -56,7 +55,7 @@ enum class CheckResult
 };
 
 // Forward declaration.
-SortPointer smtSort(Type const& _type);
+SortPointer smtSort(frontend::Type const& _type);
 
 /// C++ representation of an SMTLIB2 expression.
 class Expression

@@ -24,7 +24,7 @@
 #include <libsmtutil/CHCSolverInterface.h>
 #include <libsmtutil/Z3Interface.h>
 
-namespace solidity::frontend::smt
+namespace solidity::smtutil
 {
 
 class Z3CHCInterface: public CHCSolverInterface

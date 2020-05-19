@@ -23,7 +23,7 @@
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
-using namespace solidity::frontend::smt;
+using namespace solidity::smtutil;
 
 CVC4Interface::CVC4Interface():
 	m_solver(&m_context)

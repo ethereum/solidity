@@ -20,7 +20,7 @@
 
 using namespace std;
 
-namespace solidity::frontend::smt
+namespace solidity::smtutil
 {
 
 shared_ptr<Sort> const SortProvider::boolSort{make_shared<Sort>(Kind::Bool)};

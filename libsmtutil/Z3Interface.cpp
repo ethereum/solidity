@@ -21,7 +21,7 @@
 #include <libsolutil/CommonIO.h>
 
 using namespace std;
-using namespace solidity::frontend::smt;
+using namespace solidity::smtutil;
 
 Z3Interface::Z3Interface():
 	m_solver(m_context)
@@ -61,7 +61,7 @@ void Z3Interface::declareVariable(string const& _name, SortPointer const& _sort)
 
 void Z3Interface::declareFunction(string const& _name, Sort const& _sort)
 {
-	solAssert(_sort.kind == smt::Kind::Function, "");
+	solAssert(_sort.kind == Kind::Function, "");
 	FunctionSort fSort = dynamic_cast<FunctionSort const&>(_sort);
 	if (m_functions.count(_name))
 		m_functions.at(_name) = m_context.function(_name.c_str(), z3Sort(fSort.domain), z3Sort(*fSort.codomain));

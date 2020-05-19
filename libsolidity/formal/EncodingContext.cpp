@@ -92,7 +92,7 @@ void EncodingContext::resetAllVariables()
 	resetVariables([&](frontend::VariableDeclaration const&) { return true; });
 }
 
-Expression EncodingContext::newValue(frontend::VariableDeclaration const& _decl)
+smtutil::Expression EncodingContext::newValue(frontend::VariableDeclaration const& _decl)
 {
 	solAssert(knownVariable(_decl), "");
 	return m_variables.at(&_decl)->increaseIndex();
@@ -179,10 +179,10 @@ bool EncodingContext::knownGlobalSymbol(string const& _var) const
 
 /// Solver.
 
-Expression EncodingContext::assertions()
+smtutil::Expression EncodingContext::assertions()
 {
 	if (m_assertions.empty())
-		return Expression(true);
+		return smtutil::Expression(true);
 
 	return m_assertions.back();
 }
@@ -201,7 +201,7 @@ void EncodingContext::popSolver()
 	m_assertions.pop_back();
 }
 
-void EncodingContext::addAssertion(Expression const& _expr)
+void EncodingContext::addAssertion(smtutil::Expression const& _expr)
 {
 	if (m_assertions.empty())
 		m_assertions.push_back(_expr);

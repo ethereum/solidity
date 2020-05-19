@@ -49,7 +49,7 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		std::map<solidity::util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback(),
-		smt::SMTSolverChoice _enabledSolvers = smt::SMTSolverChoice::All()
+		smtutil::SMTSolverChoice _enabledSolvers = smtutil::SMTSolverChoice::All()
 	);
 
 	void analyze(SourceUnit const& _sources);
@@ -60,7 +60,7 @@ public:
 	std::vector<std::string> unhandledQueries();
 
 	/// @returns SMT solvers that are available via the C++ API.
-	static smt::SMTSolverChoice availableSolvers();
+	static smtutil::SMTSolverChoice availableSolvers();
 
 private:
 	/// Stores the context of the encoding.

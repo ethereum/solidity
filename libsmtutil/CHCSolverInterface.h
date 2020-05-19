@@ -23,7 +23,7 @@
 
 #include <libsmtutil/SolverInterface.h>
 
-namespace solidity::frontend::smt
+namespace solidity::smtutil
 {
 
 class CHCSolverInterface

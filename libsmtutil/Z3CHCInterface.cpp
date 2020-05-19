@@ -22,7 +22,7 @@
 
 using namespace std;
 using namespace solidity;
-using namespace solidity::frontend::smt;
+using namespace solidity::smtutil;
 
 Z3CHCInterface::Z3CHCInterface():
 	m_z3Interface(make_unique<Z3Interface>()),

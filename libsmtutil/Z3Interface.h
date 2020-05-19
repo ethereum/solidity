@@ -21,7 +21,7 @@
 #include <boost/noncopyable.hpp>
 #include <z3++.h>
 
-namespace solidity::frontend::smt
+namespace solidity::smtutil
 {
 
 class Z3Interface: public SolverInterface, public boost::noncopyable
@@ -55,8 +55,8 @@ public:
 private:
 	void declareFunction(std::string const& _name, Sort const& _sort);
 
-	z3::sort z3Sort(smt::Sort const& _sort);
-	z3::sort_vector z3Sort(std::vector<smt::SortPointer> const& _sorts);
+	z3::sort z3Sort(Sort const& _sort);
+	z3::sort_vector z3Sort(std::vector<SortPointer> const& _sorts);
 
 	z3::context m_context;
 	z3::solver m_solver;

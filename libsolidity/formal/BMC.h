@@ -60,7 +60,7 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		std::map<h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
-		smt::SMTSolverChoice _enabledSolvers
+		smtutil::SMTSolverChoice _enabledSolvers
 	);
 
 	void analyze(SourceUnit const& _sources, std::set<Expression const*> _safeAssertions);
@@ -103,10 +103,10 @@ private:
 	void internalOrExternalFunctionCall(FunctionCall const& _funCall);
 
 	/// Creates underflow/overflow verification targets.
-	std::pair<smt::Expression, smt::Expression> arithmeticOperation(
+	std::pair<smtutil::Expression, smtutil::Expression> arithmeticOperation(
 		Token _op,
-		smt::Expression const& _left,
-		smt::Expression const& _right,
+		smtutil::Expression const& _left,
+		smtutil::Expression const& _right,
 		TypePointer const& _commonType,
 		Expression const& _expression
 	) override;
@@ -114,7 +114,7 @@ private:
 	void resetStorageReferences();
 	void reset();
 
-	std::pair<std::vector<smt::Expression>, std::vector<std::string>> modelExpressions();
+	std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> modelExpressions();
 	//@}
 
 	/// Verification targets.
@@ -123,20 +123,20 @@ private:
 	{
 		Expression const* expression;
 		std::vector<CallStackEntry> callStack;
-		std::pair<std::vector<smt::Expression>, std::vector<std::string>> modelExpressions;
+		std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> modelExpressions;
 	};
 
-	void checkVerificationTargets(smt::Expression const& _constraints);
-	void checkVerificationTarget(BMCVerificationTarget& _target, smt::Expression const& _constraints = smt::Expression(true));
+	void checkVerificationTargets(smtutil::Expression const& _constraints);
+	void checkVerificationTarget(BMCVerificationTarget& _target, smtutil::Expression const& _constraints = smtutil::Expression(true));
 	void checkConstantCondition(BMCVerificationTarget& _target);
-	void checkUnderflow(BMCVerificationTarget& _target, smt::Expression const& _constraints);
-	void checkOverflow(BMCVerificationTarget& _target, smt::Expression const& _constraints);
+	void checkUnderflow(BMCVerificationTarget& _target, smtutil::Expression const& _constraints);
+	void checkOverflow(BMCVerificationTarget& _target, smtutil::Expression const& _constraints);
 	void checkDivByZero(BMCVerificationTarget& _target);
 	void checkBalance(BMCVerificationTarget& _target);
 	void checkAssert(BMCVerificationTarget& _target);
 	void addVerificationTarget(
 		VerificationTarget::Type _type,
-		smt::Expression const& _value,
+		smtutil::Expression const& _value,
 		Expression const* _expression
 	);
 	//@}
@@ -145,31 +145,31 @@ private:
 	//@{
 	/// Check that a condition can be satisfied.
 	void checkCondition(
-		smt::Expression _condition,
+		smtutil::Expression _condition,
 		std::vector<CallStackEntry> const& _callStack,
-		std::pair<std::vector<smt::Expression>, std::vector<std::string>> const& _modelExpressions,
+		std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> const& _modelExpressions,
 		langutil::SourceLocation const& _location,
 		langutil::ErrorId _errorHappens,
 		langutil::ErrorId _errorMightHappen,
 		std::string const& _description,
 		std::string const& _additionalValueName = "",
-		smt::Expression const* _additionalValue = nullptr
+		smtutil::Expression const* _additionalValue = nullptr
 	);
 	/// Checks that a boolean condition is not constant. Do not warn if the expression
 	/// is a literal constant.
 	void checkBooleanNotConstant(
 		Expression const& _condition,
-		smt::Expression const& _constraints,
-		smt::Expression const& _value,
+		smtutil::Expression const& _constraints,
+		smtutil::Expression const& _value,
 		std::vector<CallStackEntry> const& _callStack
 	);
-	std::pair<smt::CheckResult, std::vector<std::string>>
-	checkSatisfiableAndGenerateModel(std::vector<smt::Expression> const& _expressionsToEvaluate);
+	std::pair<smtutil::CheckResult, std::vector<std::string>>
+	checkSatisfiableAndGenerateModel(std::vector<smtutil::Expression> const& _expressionsToEvaluate);
 
-	smt::CheckResult checkSatisfiable();
+	smtutil::CheckResult checkSatisfiable();
 	//@}
 
-	std::unique_ptr<smt::SolverInterface> m_interface;
+	std::unique_ptr<smtutil::SolverInterface> m_interface;
 
 	/// Flags used for better warning messages.
 	bool m_loopExecutionHappened = false;

@@ -34,7 +34,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
-using namespace solidity::frontend::smt;
+using namespace solidity::smtutil;
 
 SMTLib2Interface::SMTLib2Interface(
 	map<h256, string> const& _queryResponses,
@@ -82,7 +82,7 @@ void SMTLib2Interface::declareVariable(string const& _name, SortPointer const& _
 void SMTLib2Interface::declareFunction(string const& _name, SortPointer const& _sort)
 {
 	solAssert(_sort, "");
-	solAssert(_sort->kind == smt::Kind::Function, "");
+	solAssert(_sort->kind == Kind::Function, "");
 	// TODO Use domain and codomain as key as well
 	if (!m_variables.count(_name))
 	{
@@ -102,12 +102,12 @@ void SMTLib2Interface::declareFunction(string const& _name, SortPointer const& _
 	}
 }
 
-void SMTLib2Interface::addAssertion(smt::Expression const& _expr)
+void SMTLib2Interface::addAssertion(Expression const& _expr)
 {
 	write("(assert " + toSExpr(_expr) + ")");
 }
 
-pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<smt::Expression> const& _expressionsToEvaluate)
+pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> const& _expressionsToEvaluate)
 {
 	string response = querySolver(
 		boost::algorithm::join(m_accumulatedOutput, "\n") +
@@ -131,7 +131,7 @@ pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<smt::Expression
 	return make_pair(result, values);
 }
 
-string SMTLib2Interface::toSExpr(smt::Expression const& _expr)
+string SMTLib2Interface::toSExpr(Expression const& _expr)
 {
 	if (_expr.arguments.empty())
 		return _expr.name;
@@ -224,7 +224,7 @@ void SMTLib2Interface::write(string _data)
 	m_accumulatedOutput.back() += move(_data) + "\n";
 }
 
-string SMTLib2Interface::checkSatAndGetValuesCommand(vector<smt::Expression> const& _expressionsToEvaluate)
+string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _expressionsToEvaluate)
 {
 	string command;
 	if (_expressionsToEvaluate.empty())

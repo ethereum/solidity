@@ -25,7 +25,7 @@
 
 #include <libsmtutil/SMTLib2Interface.h>
 
-namespace solidity::frontend::smt
+namespace solidity::smtutil
 {
 
 class CHCSmtLib2Interface: public CHCSolverInterface
@@ -33,7 +33,7 @@ class CHCSmtLib2Interface: public CHCSolverInterface
 public:
 	explicit CHCSmtLib2Interface(
 		std::map<util::h256, std::string> const& _queryResponses,
-		ReadCallback::Callback const& _smtCallback
+		frontend::ReadCallback::Callback const& _smtCallback
 	);
 
 	void reset();
@@ -67,7 +67,7 @@ private:
 	std::map<util::h256, std::string> const& m_queryResponses;
 	std::vector<std::string> m_unhandledQueries;
 
-	ReadCallback::Callback m_smtCallback;
+	frontend::ReadCallback::Callback m_smtCallback;
 };
 
 }

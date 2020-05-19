@@ -24,6 +24,7 @@
 #include <vector>
 
 using namespace std;
+using namespace solidity::smtutil;
 
 namespace solidity::frontend::smt
 {
@@ -334,14 +335,14 @@ bool isStringLiteral(frontend::Type::Category _category)
 	return _category == frontend::Type::Category::StringLiteral;
 }
 
-Expression minValue(frontend::IntegerType const& _type)
+smtutil::Expression minValue(frontend::IntegerType const& _type)
 {
-	return Expression(_type.minValue());
+	return smtutil::Expression(_type.minValue());
 }
 
-Expression maxValue(frontend::IntegerType const& _type)
+smtutil::Expression maxValue(frontend::IntegerType const& _type)
 {
-	return Expression(_type.maxValue());
+	return smtutil::Expression(_type.maxValue());
 }
 
 void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _context)
@@ -349,13 +350,13 @@ void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _c
 	setSymbolicZeroValue(_variable.currentValue(), _variable.type(), _context);
 }
 
-void setSymbolicZeroValue(Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
+void setSymbolicZeroValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
 {
 	solAssert(_type, "");
 	_context.addAssertion(_expr == zeroValue(_type));
 }
 
-Expression zeroValue(frontend::TypePointer const& _type)
+smtutil::Expression zeroValue(frontend::TypePointer const& _type)
 {
 	solAssert(_type, "");
 	if (isSupportedType(_type->category()))
@@ -363,28 +364,28 @@ Expression zeroValue(frontend::TypePointer const& _type)
 		if (isNumber(_type->category()))
 			return 0;
 		if (isBool(_type->category()))
-			return Expression(false);
+			return smtutil::Expression(false);
 		if (isArray(_type->category()) || isMapping(_type->category()))
 		{
 			auto tupleSort = dynamic_pointer_cast<TupleSort>(smtSort(*_type));
 			solAssert(tupleSort, "");
 			auto sortSort = make_shared<SortSort>(tupleSort->components.front());
 
-			std::optional<Expression> zeroArray;
+			std::optional<smtutil::Expression> zeroArray;
 			auto length = bigint(0);
 			if (auto arrayType = dynamic_cast<ArrayType const*>(_type))
 			{
-				zeroArray = Expression::const_array(Expression(sortSort), zeroValue(arrayType->baseType()));
+				zeroArray = smtutil::Expression::const_array(smtutil::Expression(sortSort), zeroValue(arrayType->baseType()));
 				if (!arrayType->isDynamicallySized())
 					length = bigint(arrayType->length());
 			}
 			else if (auto mappingType = dynamic_cast<MappingType const*>(_type))
-				zeroArray = Expression::const_array(Expression(sortSort), zeroValue(mappingType->valueType()));
+				zeroArray = smtutil::Expression::const_array(smtutil::Expression(sortSort), zeroValue(mappingType->valueType()));
 			else
 				solAssert(false, "");
 
 			solAssert(zeroArray, "");
-			return Expression::tuple_constructor(Expression(_type), vector<Expression>{*zeroArray, length});
+			return smtutil::Expression::tuple_constructor(smtutil::Expression(_type), vector<smtutil::Expression>{*zeroArray, length});
 
 		}
 		solAssert(false, "");
@@ -398,7 +399,7 @@ void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext&
 	setSymbolicUnknownValue(_variable.currentValue(), _variable.type(), _context);
 }
 
-void setSymbolicUnknownValue(Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
+void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
 {
 	solAssert(_type, "");
 	if (isEnum(_type->category()))
@@ -417,7 +418,7 @@ void setSymbolicUnknownValue(Expression _expr, frontend::TypePointer const& _typ
 	}
 }
 
-optional<Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to)
+optional<smtutil::Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to)
 {
 	if (_to && _from)
 		// StringLiterals are encoded as SMT arrays in the generic case,
@@ -425,7 +426,7 @@ optional<Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to)
 		// case they'd need to be encoded as numbers.
 		if (auto strType = dynamic_cast<StringLiteralType const*>(_from))
 			if (_to->category() == frontend::Type::Category::FixedBytes)
-				return smt::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
+				return smtutil::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
 
 	return std::nullopt;
 }

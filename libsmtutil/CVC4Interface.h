@@ -33,7 +33,7 @@
 #undef _GLIBCXX_PERMIT_BACKWARD_HASH
 #endif
 
-namespace solidity::frontend::smt
+namespace solidity::smtutil
 {
 
 class CVC4Interface: public SolverInterface, public boost::noncopyable
@@ -53,8 +53,8 @@ public:
 
 private:
 	CVC4::Expr toCVC4Expr(Expression const& _expr);
-	CVC4::Type cvc4Sort(smt::Sort const& _sort);
-	std::vector<CVC4::Type> cvc4Sort(std::vector<smt::SortPointer> const& _sorts);
+	CVC4::Type cvc4Sort(Sort const& _sort);
+	std::vector<CVC4::Type> cvc4Sort(std::vector<SortPointer> const& _sorts);
 
 	CVC4::ExprManager m_context;
 	CVC4::SmtEngine m_solver;
