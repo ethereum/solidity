@@ -38,6 +38,8 @@ contract Main {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // constructor(), 22 wei ->
 // getFlag() -> true
