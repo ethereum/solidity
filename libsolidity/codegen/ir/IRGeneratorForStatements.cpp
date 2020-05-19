@@ -627,14 +627,20 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 	auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression());
 	if (memberAccess)
+	{
 		if (auto expressionType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type))
+		{
+			solAssert(!functionType->bound(), "");
 			if (auto contractType = dynamic_cast<ContractType const*>(expressionType->actualType()))
 				solUnimplementedAssert(
 					!contractType->contractDefinition().isLibrary() || functionType->kind() == FunctionType::Kind::Internal,
 					"Only internal function calls implemented for libraries"
 				);
+		}
+	}
+	else
+		solAssert(!functionType->bound(), "");
 
-	solUnimplementedAssert(!functionType->bound(), "");
 	switch (functionType->kind())
 	{
 	case FunctionType::Kind::Declaration:
@@ -658,14 +664,18 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		else
 			solAssert(!functionType->hasDeclaration(), "");
 
-		if (memberAccess)
-			solUnimplementedAssert(!functionType->bound(), "");
-		else
-			solAssert(!functionType->bound(), "");
-
 		solAssert(!functionType->takesArbitraryParameters(), "");
 
 		vector<string> args;
+		if (functionType->bound())
+		{
+			solAssert(memberAccess && functionDef, "");
+			solAssert(functionDef->parameters().size() == arguments.size() + 1, "");
+			args += convert(memberAccess->expression(), *functionDef->parameters()[0]->type()).stackSlots();
+		}
+		else
+			solAssert(!functionDef || functionDef->parameters().size() == arguments.size(), "");
+
 		for (size_t i = 0; i < arguments.size(); ++i)
 			args += convert(*arguments[i], *parameterTypes[i]).stackSlots();
 
@@ -1225,7 +1235,21 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	Type::Category objectCategory = _memberAccess.expression().annotation().type->category();
 
 	if (memberFunctionType && memberFunctionType->bound())
-		solUnimplementedAssert(false, "");
+	{
+		solAssert((set<Type::Category>{
+			Type::Category::Contract,
+			Type::Category::Bool,
+			Type::Category::Integer,
+			Type::Category::Address,
+			Type::Category::Function,
+			Type::Category::Struct,
+			Type::Category::Enum,
+			Type::Category::Mapping,
+			Type::Category::Array,
+			Type::Category::FixedBytes,
+		}).count(objectCategory) > 0, "");
+		return;
+	}
 
 	switch (objectCategory)
 	{
