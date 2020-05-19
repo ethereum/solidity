@@ -444,6 +444,11 @@ long as the operands are integers. If any of the two is fractional, bit operatio
 and exponentiation is disallowed if the exponent is fractional (because that might result in
 a non-rational number).
 
+Shifts and exponentiation with literal numbers as left (or base) operand and integer types
+as the right (exponent) operand are always performed
+in the ``uint256`` (for non-negative literals) or ``int256`` (for a negative literals) type,
+regardless of the type of the right (exponent) operand.
+
 .. warning::
     Division on integer literals used to truncate in Solidity prior to version 0.4.0, but it now converts into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
 
