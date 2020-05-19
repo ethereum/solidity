@@ -137,6 +137,13 @@ protected:
 	/// Handles assignment to SMT array index.
 	void arrayIndexAssignment(Expression const& _expr, smt::Expression const& _rightHandSide);
 
+	void arrayPush(FunctionCall const& _funCall);
+	void arrayPop(FunctionCall const& _funCall);
+	void arrayPushPopAssign(Expression const& _expr, smt::Expression const& _array);
+	/// Allows BMC and CHC to create verification targets for popping
+	/// an empty array.
+	virtual void makeArrayPopVerificationTarget(FunctionCall const&) {}
+
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
 	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
@@ -240,7 +247,7 @@ protected:
 
 	struct VerificationTarget
 	{
-		enum class Type { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert } type;
+		enum class Type { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert, PopEmptyArray } type;
 		smt::Expression value;
 		smt::Expression constraints;
 	};

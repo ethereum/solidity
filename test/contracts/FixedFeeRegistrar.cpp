@@ -20,8 +20,11 @@
  * Tests for a fixed fee registrar contract.
  */
 
+#include <libsolutil/LazyInit.h>
+
 #include <string>
 #include <tuple>
+#include <optional>
 
 #if defined(_MSC_VER)
 #pragma warning(push)
@@ -122,17 +125,18 @@ contract FixedFeeRegistrar is Registrar {
 }
 )DELIMITER";
 
-static unique_ptr<bytes> s_compiledRegistrar;
+static LazyInit<bytes> s_compiledRegistrar;
 
 class RegistrarTestFramework: public SolidityExecutionFramework
 {
 protected:
 	void deployRegistrar()
 	{
-		if (!s_compiledRegistrar)
-			s_compiledRegistrar = make_unique<bytes>(compileContract(registrarCode, "FixedFeeRegistrar"));
+		bytes const& compiled = s_compiledRegistrar.init([&]{
+			return compileContract(registrarCode, "FixedFeeRegistrar");
+		});
 
-		sendMessage(*s_compiledRegistrar, true);
+		sendMessage(compiled, true);
 		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}

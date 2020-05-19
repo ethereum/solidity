@@ -207,26 +207,31 @@ void MemberList::combine(MemberList const & _other)
 
 pair<u256, unsigned> const* MemberList::memberStorageOffset(string const& _name) const
 {
-	if (!m_storageOffsets)
-	{
-		TypePointers memberTypes;
-		memberTypes.reserve(m_memberTypes.size());
-		for (auto const& member: m_memberTypes)
-			memberTypes.push_back(member.type);
-		m_storageOffsets = std::make_unique<StorageOffsets>();
-		m_storageOffsets->computeOffsets(memberTypes);
-	}
+	StorageOffsets const& offsets = storageOffsets();
+
 	for (size_t index = 0; index < m_memberTypes.size(); ++index)
 		if (m_memberTypes[index].name == _name)
-			return m_storageOffsets->offset(index);
+			return offsets.offset(index);
 	return nullptr;
 }
 
 u256 const& MemberList::storageSize() const
 {
-	// trigger lazy computation
-	memberStorageOffset("");
-	return m_storageOffsets->storageSize();
+	return storageOffsets().storageSize();
+}
+
+StorageOffsets const& MemberList::storageOffsets() const {
+	return m_storageOffsets.init([&]{
+		TypePointers memberTypes;
+		memberTypes.reserve(m_memberTypes.size());
+		for (auto const& member: m_memberTypes)
+			memberTypes.push_back(member.type);
+
+		StorageOffsets storageOffsets;
+		storageOffsets.computeOffsets(memberTypes);
+
+		return storageOffsets;
+	});
 }
 
 /// Helper functions for type identifier

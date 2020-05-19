@@ -36,7 +36,7 @@ using namespace solidity::frontend;
 
 string IRGenerationContext::enqueueFunctionForCodeGeneration(FunctionDefinition const& _function)
 {
-	string name = functionName(_function);
+	string name = IRNames::function(_function);
 
 	if (!m_functions.contains(name))
 		m_functionGenerationQueue.insert(&_function);
@@ -116,41 +116,9 @@ void IRGenerationContext::addStateVariable(
 	m_stateVariables[&_declaration] = make_pair(move(_storageOffset), _byteOffset);
 }
 
-string IRGenerationContext::functionName(FunctionDefinition const& _function)
-{
-	// @TODO previously, we had to distinguish creation context and runtime context,
-	// but since we do not work with jump positions anymore, this should not be a problem, right?
-	return "fun_" + _function.name() + "_" + to_string(_function.id());
-}
-
-string IRGenerationContext::functionName(VariableDeclaration const& _varDecl)
-{
-	return "getter_fun_" + _varDecl.name() + "_" + to_string(_varDecl.id());
-}
-
-string IRGenerationContext::creationObjectName(ContractDefinition const& _contract) const
-{
-	return _contract.name() + "_" + toString(_contract.id());
-}
-string IRGenerationContext::runtimeObjectName(ContractDefinition const& _contract) const
-{
-	return _contract.name() + "_" + toString(_contract.id()) + "_deployed";
-}
-
 string IRGenerationContext::newYulVariable()
 {
 	return "_" + to_string(++m_varCounter);
-}
-
-string IRGenerationContext::trySuccessConditionVariable(Expression const& _expression) const
-{
-	// NB: The TypeChecker already ensured that the Expression is of type FunctionCall.
-	solAssert(
-		static_cast<FunctionCallAnnotation const&>(_expression.annotation()).tryCall,
-		"Parameter must be a FunctionCall with tryCall-annotation set."
-	);
-
-	return "trySuccessCondition_" + to_string(_expression.id());
 }
 
 string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
@@ -196,7 +164,7 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 
 					functions.emplace_back(map<string, string> {
 						{ "funID", to_string(function->id()) },
-						{ "name", functionName(*function)}
+						{ "name", IRNames::function(*function)}
 					});
 
 					enqueueFunctionForCodeGeneration(*function);

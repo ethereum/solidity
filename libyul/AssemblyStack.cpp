@@ -198,22 +198,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	switch (_machine)
 	{
 	case Machine::EVM:
-	{
-		MachineAssemblyObject object;
-		evmasm::Assembly assembly;
-		EthAssemblyAdapter adapter(assembly);
-		compileEVM(adapter, false, m_optimiserSettings.optimizeStackAllocation);
-		object.bytecode = make_shared<evmasm::LinkerObject>(assembly.assemble());
-		yulAssert(object.bytecode->immutableReferences.empty(), "Leftover immutables.");
-		object.assembly = assembly.assemblyString();
-		object.sourceMappings = make_unique<string>(
-			evmasm::AssemblyItem::computeSourceMapping(
-				assembly.items(),
-				{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
-			)
-		);
-		return object;
-	}
+		return assembleAndGuessRuntime().first;
 	case Machine::EVM15:
 	{
 		MachineAssemblyObject object;
@@ -238,6 +223,46 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	}
 	// unreachable
 	return MachineAssemblyObject();
+}
+
+pair<MachineAssemblyObject, MachineAssemblyObject> AssemblyStack::assembleAndGuessRuntime() const
+{
+	yulAssert(m_analysisSuccessful, "");
+	yulAssert(m_parserResult, "");
+	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->analysisInfo, "");
+
+	evmasm::Assembly assembly;
+	EthAssemblyAdapter adapter(assembly);
+	compileEVM(adapter, false, m_optimiserSettings.optimizeStackAllocation);
+
+	MachineAssemblyObject creationObject;
+	creationObject.bytecode = make_shared<evmasm::LinkerObject>(assembly.assemble());
+	yulAssert(creationObject.bytecode->immutableReferences.empty(), "Leftover immutables.");
+	creationObject.assembly = assembly.assemblyString();
+	creationObject.sourceMappings = make_unique<string>(
+		evmasm::AssemblyItem::computeSourceMapping(
+			assembly.items(),
+			{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
+		)
+	);
+
+	MachineAssemblyObject runtimeObject;
+	// Heuristic: If there is a single sub-assembly, this is likely the runtime object.
+	if (assembly.numSubs() == 1)
+	{
+		evmasm::Assembly& runtimeAssembly = assembly.sub(0);
+		runtimeObject.bytecode = make_shared<evmasm::LinkerObject>(runtimeAssembly.assemble());
+		runtimeObject.assembly = runtimeAssembly.assemblyString();
+		runtimeObject.sourceMappings = make_unique<string>(
+			evmasm::AssemblyItem::computeSourceMapping(
+				runtimeAssembly.items(),
+				{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
+			)
+		);
+	}
+	return {std::move(creationObject), std::move(runtimeObject)};
+
 }
 
 string AssemblyStack::print() const

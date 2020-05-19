@@ -21,6 +21,7 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/CommonData.h>
 #include <memory>
+#include <vector>
 
 using namespace std;
 
@@ -55,17 +56,18 @@ SortPointer smtSort(frontend::Type const& _type)
 	}
 	case Kind::Array:
 	{
+		shared_ptr<ArraySort> array;
 		if (isMapping(_type.category()))
 		{
 			auto mapType = dynamic_cast<frontend::MappingType const*>(&_type);
 			solAssert(mapType, "");
-			return make_shared<ArraySort>(smtSortAbstractFunction(*mapType->keyType()), smtSortAbstractFunction(*mapType->valueType()));
+			array = make_shared<ArraySort>(smtSortAbstractFunction(*mapType->keyType()), smtSortAbstractFunction(*mapType->valueType()));
 		}
 		else if (isStringLiteral(_type.category()))
 		{
 			auto stringLitType = dynamic_cast<frontend::StringLiteralType const*>(&_type);
 			solAssert(stringLitType, "");
-			return make_shared<ArraySort>(SortProvider::intSort, SortProvider::intSort);
+			array = make_shared<ArraySort>(SortProvider::intSort, SortProvider::intSort);
 		}
 		else
 		{
@@ -78,8 +80,25 @@ SortPointer smtSort(frontend::Type const& _type)
 				solAssert(false, "");
 
 			solAssert(arrayType, "");
-			return make_shared<ArraySort>(SortProvider::intSort, smtSortAbstractFunction(*arrayType->baseType()));
+			array = make_shared<ArraySort>(SortProvider::intSort, smtSortAbstractFunction(*arrayType->baseType()));
 		}
+
+		string tupleName;
+		if (
+			auto arrayType = dynamic_cast<ArrayType const*>(&_type);
+			(arrayType && arrayType->isString()) ||
+			_type.category() == frontend::Type::Category::ArraySlice ||
+			_type.category() == frontend::Type::Category::StringLiteral
+		)
+			tupleName = "bytes_tuple";
+		else
+			tupleName = _type.toString(true) + "_tuple";
+
+		return make_shared<TupleSort>(
+			tupleName,
+			vector<string>{tupleName + "_accessor_array", tupleName + "_accessor_length"},
+			vector<SortPointer>{array, SortProvider::intSort}
+		);
 	}
 	case Kind::Tuple:
 	{
@@ -219,9 +238,7 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 		else
 			var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
 	}
-	else if (isMapping(_type.category()))
-		var = make_shared<SymbolicMappingVariable>(type, _uniqueName, _context);
-	else if (isArray(_type.category()))
+	else if (isMapping(_type.category()) || isArray(_type.category()))
 		var = make_shared<SymbolicArrayVariable>(type, type, _uniqueName, _context);
 	else if (isTuple(_type.category()))
 		var = make_shared<SymbolicTupleVariable>(type, _uniqueName, _context);
@@ -349,11 +366,26 @@ Expression zeroValue(frontend::TypePointer const& _type)
 			return Expression(false);
 		if (isArray(_type->category()) || isMapping(_type->category()))
 		{
+			auto tupleSort = dynamic_pointer_cast<TupleSort>(smtSort(*_type));
+			solAssert(tupleSort, "");
+			auto sortSort = make_shared<SortSort>(tupleSort->components.front());
+
+			std::optional<Expression> zeroArray;
+			auto length = bigint(0);
 			if (auto arrayType = dynamic_cast<ArrayType const*>(_type))
-				return Expression::const_array(Expression(arrayType), zeroValue(arrayType->baseType()));
-			auto mappingType = dynamic_cast<MappingType const*>(_type);
-			solAssert(mappingType, "");
-			return Expression::const_array(Expression(mappingType), zeroValue(mappingType->valueType()));
+			{
+				zeroArray = Expression::const_array(Expression(sortSort), zeroValue(arrayType->baseType()));
+				if (!arrayType->isDynamicallySized())
+					length = bigint(arrayType->length());
+			}
+			else if (auto mappingType = dynamic_cast<MappingType const*>(_type))
+				zeroArray = Expression::const_array(Expression(sortSort), zeroValue(mappingType->valueType()));
+			else
+				solAssert(false, "");
+
+			solAssert(zeroArray, "");
+			return Expression::tuple_constructor(Expression(_type), vector<Expression>{*zeroArray, length});
+
 		}
 		solAssert(false, "");
 	}

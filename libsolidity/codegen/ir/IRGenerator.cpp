@@ -114,7 +114,7 @@ string IRGenerator::generate(
 	for (VariableDeclaration const* var: ContractType(_contract).immutableVariables())
 		m_context.registerImmutableVariable(*var);
 
-	t("CreationObject", m_context.creationObjectName(_contract));
+	t("CreationObject", IRNames::creationObject(_contract));
 	t("memoryInit", memoryInit());
 	t("notLibrary", !_contract.isLibrary());
 
@@ -127,12 +127,12 @@ string IRGenerator::generate(
 			constructorParams.emplace_back(m_context.newYulVariable());
 		t(
 			"copyConstructorArguments",
-			m_utils.copyConstructorArgumentsToMemoryFunction(_contract, m_context.creationObjectName(_contract))
+			m_utils.copyConstructorArgumentsToMemoryFunction(_contract, IRNames::creationObject(_contract))
 		);
 	}
 	t("constructorParams", joinHumanReadable(constructorParams));
 	t("constructorHasParams", !constructorParams.empty());
-	t("implicitConstructor", implicitConstructorName(_contract));
+	t("implicitConstructor", IRNames::implicitConstructor(_contract));
 
 	t("deploy", deployCode(_contract));
 	generateImplicitConstructors(_contract);
@@ -142,7 +142,7 @@ string IRGenerator::generate(
 
 	resetContext(_contract);
 	// Do not register immutables to avoid assignment.
-	t("RuntimeObject", m_context.runtimeObjectName(_contract));
+	t("RuntimeObject", IRNames::runtimeObject(_contract));
 	t("dispatch", dispatchRoutine(_contract));
 	generateQueuedFunctions();
 	t("runtimeFunctions", m_context.functionCollector().requestedFunctions());
@@ -166,7 +166,7 @@ void IRGenerator::generateQueuedFunctions()
 
 string IRGenerator::generateFunction(FunctionDefinition const& _function)
 {
-	string functionName = m_context.functionName(_function);
+	string functionName = IRNames::function(_function);
 	return m_context.functionCollector().createFunction(functionName, [&]() {
 		Whiskers t(R"(
 			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
@@ -195,7 +195,7 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 
 string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 {
-	string functionName = m_context.functionName(_varDecl);
+	string functionName = IRNames::function(_varDecl);
 
 	Type const* type = _varDecl.annotation().type;
 
@@ -378,7 +378,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 		ContractDefinition const* contract = _contract.annotation().linearizedBaseContracts[i];
 		baseConstructorParams.erase(contract);
 
-		m_context.functionCollector().createFunction(implicitConstructorName(*contract), [&]() {
+		m_context.functionCollector().createFunction(IRNames::implicitConstructor(*contract), [&]() {
 			Whiskers t(R"(
 				function <functionName>(<params><comma><baseParams>) {
 					<evalBaseArguments>
@@ -395,7 +395,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 			vector<string> baseParams = listAllParams(baseConstructorParams);
 			t("baseParams", joinHumanReadable(baseParams));
 			t("comma", !params.empty() && !baseParams.empty() ? ", " : "");
-			t("functionName", implicitConstructorName(*contract));
+			t("functionName", IRNames::implicitConstructor(*contract));
 			pair<string, map<ContractDefinition const*, vector<string>>> evaluatedArgs = evaluateConstructorArguments(*contract);
 			baseConstructorParams.insert(evaluatedArgs.second.begin(), evaluatedArgs.second.end());
 			t("evalBaseArguments", evaluatedArgs.first);
@@ -403,7 +403,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 			{
 				t("hasNextConstructor", true);
 				ContractDefinition const* nextContract = _contract.annotation().linearizedBaseContracts[i + 1];
-				t("nextConstructor", implicitConstructorName(*nextContract));
+				t("nextConstructor", IRNames::implicitConstructor(*nextContract));
 				t("nextParams", joinHumanReadable(listAllParams(baseConstructorParams)));
 			}
 			else
@@ -431,7 +431,7 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 
 		return(0, datasize("<object>"))
 	)X");
-	t("object", m_context.runtimeObjectName(_contract));
+	t("object", IRNames::runtimeObject(_contract));
 
 	vector<map<string, string>> loadImmutables;
 	vector<map<string, string>> storeImmutables;
@@ -460,11 +460,6 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 string IRGenerator::callValueCheck()
 {
 	return "if callvalue() { revert(0, 0) }";
-}
-
-string IRGenerator::implicitConstructorName(ContractDefinition const& _contract)
-{
-	return "constructor_" + _contract.name() + "_" + to_string(_contract.id());
 }
 
 string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)

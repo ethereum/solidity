@@ -455,7 +455,15 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		if (contractType->contractDefinition().isLibrary())
 			m_errorReporter.typeError(1273_error, _variable.location(), "The type of a variable cannot be a library.");
 	if (_variable.value())
-		expectType(*_variable.value(), *varType);
+	{
+		if (_variable.isStateVariable() && dynamic_cast<MappingType const*>(varType))
+		{
+			m_errorReporter.typeError(6280_error, _variable.location(), "Mappings cannot be assigned to.");
+			_variable.value()->accept(*this);
+		}
+		else
+			expectType(*_variable.value(), *varType);
+	}
 	if (_variable.isConstant())
 	{
 		if (!_variable.type()->isValueType())

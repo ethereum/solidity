@@ -115,8 +115,6 @@ private:
 	void typeError(langutil::SourceLocation const& _location, std::string const& _description);
 	void declarationError(langutil::SourceLocation const& _location, std::string const& _description);
 
-	/// Success-flag, can be set to false at any time.
-	bool m_success = true;
 	yul::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
 	/// Variables that are active at the current point in assembly (as opposed to

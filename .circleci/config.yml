@@ -173,6 +173,18 @@ defaults:
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
+  - test_asan_clang: &test_asan_clang
+      <<: *test_ubuntu2004_clang
+      steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          <<: *run_soltest
+          no_output_timeout: 30m
+      - store_test_results: *store_test_results
+      - store_artifacts: *artifacts_test_results
+
   # --------------------------------------------------------------------------
   # Workflow Templates
 
@@ -215,6 +227,11 @@ defaults:
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_asan
+
+  - workflow_ubuntu2004_asan_clang: &workflow_ubuntu2004_asan_clang
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_ubu_asan_clang
 
   - workflow_emscripten: &workflow_emscripten
       <<: *workflow_trigger_on_tags
@@ -374,6 +391,20 @@ jobs:
     environment:
       CC: clang
       CXX: clang++
+    steps:
+      - checkout
+      - run: *run_build
+      - store_artifacts: *artifacts_solc
+      - persist_to_workspace: *artifacts_executables
+
+
+  b_ubu_asan_clang: &build_ubuntu2004_clang
+    docker:
+      - image: ethereum/solidity-buildpack-deps:ubuntu2004-clang-<< pipeline.parameters.ubuntu-2004-clang-docker-image-rev >>
+    environment:
+      CC: clang
+      CXX: clang++
+      CMAKE_OPTIONS: -DSANITIZE=address
     steps:
       - checkout
       - run: *run_build
@@ -558,27 +589,15 @@ jobs:
 
   b_ems:
     docker:
-      - image: trzeci/emscripten:sdk-tag-1.39.3-64bit
+      - image: ethereum/solidity-buildpack-deps:emsdk-1.39.15-1
     environment:
       TERM: xterm
     steps:
       - checkout
-      - restore_cache:
-          name: Restore Boost build
-          key: &boost-cache-key emscripten-boost-{{ checksum "scripts/travis-emscripten/install_deps.sh" }}{{ checksum "scripts/build_emscripten.sh" }}{{ checksum "scripts/travis-emscripten/build_emscripten.sh" }}
-      - run:
-          name: Bootstrap Boost
-          command: |
-            scripts/travis-emscripten/install_deps.sh
       - run:
           name: Build
           command: |
             scripts/travis-emscripten/build_emscripten.sh
-      - save_cache:
-          name: Save Boost build
-          key: *boost-cache-key
-          paths:
-            - boost_1_70_0_install
       - store_artifacts:
           path: emscripten_build/libsolc/soljson.js
           destination: soljson.js
@@ -678,6 +697,14 @@ jobs:
 
   t_ubu_asan_constantinople:
     <<: *test_asan
+    environment:
+      EVM: constantinople
+      OPTIMIZE: 0
+      SOLTEST_FLAGS: --no-smt
+      ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
+
+  t_ubu_asan_constantinople_clang:
+    <<: *test_asan_clang
     environment:
       EVM: constantinople
       OPTIMIZE: 0
@@ -848,7 +875,9 @@ workflows:
 
       # ASan build and tests
       - b_ubu_asan: *workflow_trigger_on_tags
+      - b_ubu_asan_clang: *workflow_trigger_on_tags
       - t_ubu_asan_constantinople: *workflow_ubuntu2004_asan
+      - t_ubu_asan_constantinople_clang: *workflow_ubuntu2004_asan_clang
       - t_ubu_asan_cli: *workflow_ubuntu2004_asan
 
       # Emscripten build and selected tests

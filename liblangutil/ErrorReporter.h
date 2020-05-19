@@ -143,6 +143,28 @@ public:
 	// @returns true if the maximum error count has been reached.
 	bool hasExcessiveErrors() const;
 
+	class ErrorWatcher
+	{
+	public:
+		ErrorWatcher(ErrorReporter const& _errorReporter):
+			m_errorReporter(_errorReporter),
+			m_initialErrorCount(_errorReporter.errorCount())
+		{}
+		bool ok() const
+		{
+			solAssert(m_initialErrorCount <= m_errorReporter.errorCount(), "Unexpected error count.");
+			return m_initialErrorCount == m_errorReporter.errorCount();
+		}
+	private:
+		ErrorReporter const& m_errorReporter;
+		unsigned const m_initialErrorCount;
+	};
+
+	ErrorWatcher errorWatcher() const
+	{
+		return ErrorWatcher(*this);
+	}
+
 private:
 	void error(
 		ErrorId _error,

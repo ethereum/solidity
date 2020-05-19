@@ -34,6 +34,7 @@ set(libsolutil_sources
     libsolutil/IterateReplacing.cpp
     libsolutil/JSON.cpp
     libsolutil/Keccak256.cpp
+    libsolutil/LazyInit.cpp
     libsolutil/StringUtils.cpp
     libsolutil/SwarmHash.cpp
     libsolutil/UTF8.cpp

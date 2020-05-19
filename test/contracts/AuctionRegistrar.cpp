@@ -24,9 +24,12 @@
 #include <test/contracts/ContractInterface.h>
 #include <test/EVMHost.h>
 
+#include <libsolutil/LazyInit.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+#include <optional>
 
 using namespace std;
 using namespace solidity;
@@ -211,17 +214,18 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 }
 )DELIMITER";
 
-static unique_ptr<bytes> s_compiledRegistrar;
+static LazyInit<bytes> s_compiledRegistrar;
 
 class AuctionRegistrarTestFramework: public SolidityExecutionFramework
 {
 protected:
 	void deployRegistrar()
 	{
-		if (!s_compiledRegistrar)
-			s_compiledRegistrar = make_unique<bytes>(compileContract(registrarCode, "GlobalRegistrar"));
+		bytes const& compiled = s_compiledRegistrar.init([&]{
+			return compileContract(registrarCode, "GlobalRegistrar");
+		});
 
-		sendMessage(*s_compiledRegistrar, true);
+		sendMessage(compiled, true);
 		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}

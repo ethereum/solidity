@@ -56,6 +56,7 @@ public:
 	virtual Expression valueAtIndex(int _index) const;
 	virtual std::string nameAtIndex(int _index) const;
 	virtual Expression resetIndex();
+	virtual Expression setIndex(unsigned _index);
 	virtual Expression increaseIndex();
 	virtual Expression operator()(std::vector<Expression> /*_arguments*/) const
 	{
@@ -169,6 +170,7 @@ public:
 	Expression functionValueAtIndex(int _index) const;
 
 	Expression resetIndex() override;
+	Expression setIndex(unsigned _index) override;
 	Expression increaseIndex() override;
 
 	Expression operator()(std::vector<Expression> _arguments) const override;
@@ -187,42 +189,6 @@ private:
 		m_uniqueName + "_abstract",
 		m_context
 	};
-};
-
-/**
- * Specialization of SymbolicVariable for Mapping
- */
-class SymbolicMappingVariable: public SymbolicVariable
-{
-public:
-	SymbolicMappingVariable(
-		frontend::TypePointer _type,
-		std::string _uniqueName,
-		EncodingContext& _context
-	);
-};
-
-/**
- * Specialization of SymbolicVariable for Array
- */
-class SymbolicArrayVariable: public SymbolicVariable
-{
-public:
-	SymbolicArrayVariable(
-		frontend::TypePointer _type,
-		frontend::TypePointer _originalTtype,
-		std::string _uniqueName,
-		EncodingContext& _context
-	);
-	SymbolicArrayVariable(
-		SortPointer _sort,
-		std::string _uniqueName,
-		EncodingContext& _context
-	);
-
-	SymbolicArrayVariable(SymbolicArrayVariable&&) = default;
-
-	Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
 };
 
 /**
@@ -261,6 +227,40 @@ public:
 		TypePointer _fromType = nullptr,
 		TypePointer _toType = nullptr
 	);
+};
+
+/**
+ * Specialization of SymbolicVariable for Array
+ */
+class SymbolicArrayVariable: public SymbolicVariable
+{
+public:
+	SymbolicArrayVariable(
+		frontend::TypePointer _type,
+		frontend::TypePointer _originalTtype,
+		std::string _uniqueName,
+		EncodingContext& _context
+	);
+	SymbolicArrayVariable(
+		SortPointer _sort,
+		std::string _uniqueName,
+		EncodingContext& _context
+	);
+
+	SymbolicArrayVariable(SymbolicArrayVariable&&) = default;
+
+	Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
+	Expression valueAtIndex(int _index) const override;
+	Expression resetIndex() override { SymbolicVariable::resetIndex(); return m_pair.resetIndex(); }
+	Expression setIndex(unsigned _index) override { SymbolicVariable::setIndex(_index); return m_pair.setIndex(_index); }
+	Expression increaseIndex() override { SymbolicVariable::increaseIndex(); return m_pair.increaseIndex(); }
+	Expression elements();
+	Expression length();
+
+	SortPointer tupleSort() { return m_pair.sort(); }
+
+private:
+	SymbolicTupleVariable m_pair;
 };
 
 }

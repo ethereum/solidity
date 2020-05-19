@@ -646,6 +646,12 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		m_context.state().transfer(m_context.state().thisAddress(), expr(address), expr(*value));
 		break;
 	}
+	case FunctionType::Kind::ArrayPush:
+		arrayPush(_funCall);
+		break;
+	case FunctionType::Kind::ArrayPop:
+		arrayPop(_funCall);
+		break;
 	default:
 		m_errorReporter.warning(
 			4588_error,
@@ -890,6 +896,23 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 			return false;
 		}
 	}
+	else if (exprType->category() == Type::Category::Array)
+	{
+		_memberAccess.expression().accept(*this);
+		if (_memberAccess.memberName() == "length")
+		{
+			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(_memberAccess.expression()));
+			solAssert(symbArray, "");
+			defineExpr(_memberAccess, symbArray->length());
+			m_uninterpretedTerms.insert(&_memberAccess);
+			setSymbolicUnknownValue(
+				expr(_memberAccess),
+				_memberAccess.annotation().type,
+				m_context
+			);
+		}
+		return false;
+	}
 	else
 		m_errorReporter.warning(
 			7650_error,
@@ -939,9 +962,10 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 		return;
 	}
 
-	solAssert(array, "");
+	auto arrayVar = dynamic_pointer_cast<smt::SymbolicArrayVariable>(array);
+	solAssert(arrayVar, "");
 	defineExpr(_indexAccess, smt::Expression::select(
-		array->currentValue(),
+		arrayVar->elements(),
 		expr(*_indexAccess.indexExpression())
 	));
 	setSymbolicUnknownValue(
@@ -1013,16 +1037,20 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 					return false;
 				});
 
+			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.variable(*varDecl));
 			smt::Expression store = smt::Expression::store(
-				m_context.variable(*varDecl)->currentValue(),
+				symbArray->elements(),
 				expr(*indexAccess->indexExpression()),
 				toStore
 			);
-			m_context.addAssertion(m_context.newValue(*varDecl) == store);
+			auto oldLength = symbArray->length();
+			symbArray->increaseIndex();
+			m_context.addAssertion(symbArray->elements() == store);
+			m_context.addAssertion(symbArray->length() == oldLength);
 			// Update the SMT select value after the assignment,
 			// necessary for sound models.
 			defineExpr(*indexAccess, smt::Expression::select(
-				m_context.variable(*varDecl)->currentValue(),
+				symbArray->elements(),
 				expr(*indexAccess->indexExpression())
 			));
 
@@ -1030,7 +1058,12 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 		}
 		else if (auto base = dynamic_cast<IndexAccess const*>(&indexAccess->baseExpression()))
 		{
-			toStore = smt::Expression::store(expr(*base), expr(*indexAccess->indexExpression()), toStore);
+			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(*base));
+			solAssert(symbArray, "");
+			toStore = smt::Expression::tuple_constructor(
+				smt::Expression(base->annotation().type),
+				{smt::Expression::store(symbArray->elements(), expr(*indexAccess->indexExpression()), toStore), symbArray->length()}
+			);
 			indexAccess = base;
 		}
 		else
@@ -1043,6 +1076,76 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 			break;
 		}
 	}
+}
+
+void SMTEncoder::arrayPush(FunctionCall const& _funCall)
+{
+	auto memberAccess = dynamic_cast<MemberAccess const*>(&_funCall.expression());
+	solAssert(memberAccess, "");
+	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+	solAssert(symbArray, "");
+	auto oldLength = symbArray->length();
+	m_context.addAssertion(oldLength >= 0);
+	// Real world assumption: the array length is assumed to not overflow.
+	// This assertion guarantees that both the current and updated lengths have the above property.
+	m_context.addAssertion(oldLength + 1 < (smt::maxValue(*TypeProvider::uint256()) - 1));
+
+	auto const& arguments = _funCall.arguments();
+	smt::Expression element = arguments.empty() ?
+		smt::zeroValue(_funCall.annotation().type) :
+		expr(*arguments.front());
+	smt::Expression store = smt::Expression::store(
+		symbArray->elements(),
+		oldLength,
+		element
+	);
+	symbArray->increaseIndex();
+	m_context.addAssertion(symbArray->elements() == store);
+	m_context.addAssertion(symbArray->length() == oldLength + 1);
+
+	if (arguments.empty())
+		defineExpr(_funCall, element);
+
+	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
+}
+
+void SMTEncoder::arrayPop(FunctionCall const& _funCall)
+{
+	auto memberAccess = dynamic_cast<MemberAccess const*>(&_funCall.expression());
+	solAssert(memberAccess, "");
+	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+	solAssert(symbArray, "");
+
+	makeArrayPopVerificationTarget(_funCall);
+
+	auto oldElements = symbArray->elements();
+	auto oldLength = symbArray->length();
+	m_context.addAssertion(oldLength > 0);
+
+	symbArray->increaseIndex();
+	m_context.addAssertion(symbArray->elements() == oldElements);
+	auto newLength = smt::Expression::ite(
+		oldLength == 0,
+		smt::maxValue(*TypeProvider::uint256()),
+		oldLength - 1
+	);
+	m_context.addAssertion(symbArray->length() == oldLength - 1);
+
+	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
+}
+
+void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smt::Expression const& _array)
+{
+	if (auto const* id = dynamic_cast<Identifier const*>(&_expr))
+	{
+		auto varDecl = identifierToVariable(*id);
+		solAssert(varDecl, "");
+		m_context.addAssertion(m_context.newValue(*varDecl) == _array);
+	}
+	else if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(&_expr))
+		arrayIndexAssignment(*indexAccess, _array);
+	else
+		solAssert(false, "");
 }
 
 void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _expr, bool _increaseIndex)
@@ -1326,7 +1429,14 @@ smt::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment)
 
 void SMTEncoder::assignment(VariableDeclaration const& _variable, Expression const& _value)
 {
-	assignment(_variable, expr(_value, _variable.type()));
+	// In general, at this point, the SMT sorts of _variable and _value are the same,
+	// even if there is implicit conversion.
+	// This is a special case where the SMT sorts are different.
+	// For now we are unaware of other cases where this happens, but if they do appear
+	// we should extract this into an `implicitConversion` function.
+	if (_variable.type()->category() != Type::Category::Array || _value.annotation().type->category() != Type::Category::StringLiteral)
+		assignment(_variable, expr(_value, _variable.type()));
+	// TODO else { store each string literal byte into the array }
 }
 
 void SMTEncoder::assignment(VariableDeclaration const& _variable, smt::Expression const& _value)
@@ -1616,7 +1726,7 @@ SMTEncoder::VariableIndices SMTEncoder::copyVariableIndices()
 void SMTEncoder::resetVariableIndices(VariableIndices const& _indices)
 {
 	for (auto const& var: _indices)
-		m_context.variable(*var.first)->index() = var.second;
+		m_context.variable(*var.first)->setIndex(var.second);
 }
 
 void SMTEncoder::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)

@@ -30,6 +30,7 @@
 #include <libevmasm/Instruction.h>
 #include <libsolutil/JSON.h>
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -1127,16 +1128,29 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 
 	stack.optimize();
 
-	MachineAssemblyObject object = stack.assemble(AssemblyStack::Machine::EVM);
+	MachineAssemblyObject object;
+	MachineAssemblyObject runtimeObject;
+	tie(object, runtimeObject) = stack.assembleAndGuessRuntime();
 
-	if (isArtifactRequested(
-		_inputsAndSettings.outputSelection,
-		sourceName,
-		contractName,
-		{ "evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap", "evm.bytecode.linkReferences" },
-		wildcardMatchesExperimental
-	))
-		output["contracts"][sourceName][contractName]["evm"]["bytecode"] = collectEVMObject(*object.bytecode, object.sourceMappings.get(), false);
+	for (string const& objectKind: vector<string>{"bytecode", "deployedBytecode"})
+	{
+		auto artifacts = util::applyMap(
+			vector<string>{"", ".object", ".opcodes", ".sourceMap", ".linkReferences"},
+			[&](auto const& _s) { return "evm." + objectKind + _s; }
+		);
+		if (isArtifactRequested(
+			_inputsAndSettings.outputSelection,
+			sourceName,
+			contractName,
+			artifacts,
+			wildcardMatchesExperimental
+		))
+		{
+			MachineAssemblyObject const& o = objectKind == "bytecode" ? object : runtimeObject;
+			if (o.bytecode)
+				output["contracts"][sourceName][contractName]["evm"][objectKind] = collectEVMObject(*o.bytecode, o.sourceMappings.get(), false);
+		}
+	}
 
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized", wildcardMatchesExperimental))
 		output["contracts"][sourceName][contractName]["irOptimized"] = stack.print();

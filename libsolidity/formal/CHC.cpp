@@ -98,17 +98,45 @@ void CHC::analyze(SourceUnit const& _source)
 
 	for (auto const& [scope, target]: m_verificationTargets)
 	{
-		auto assertions = transactionAssertions(scope);
-		for (auto const* assertion: assertions)
+		if (target.type == VerificationTarget::Type::Assert)
 		{
+			auto assertions = transactionAssertions(scope);
+			for (auto const* assertion: assertions)
+			{
+				createErrorBlock();
+				connectBlocks(target.value, error(), target.constraints && (target.errorId == assertion->id()));
+				auto [result, model] = query(error(), assertion->location());
+				// This should be fine but it's a bug in the old compiler
+				(void)model;
+				if (result == smt::CheckResult::UNSATISFIABLE)
+					m_safeAssertions.insert(assertion);
+			}
+		}
+		else if (target.type == VerificationTarget::Type::PopEmptyArray)
+		{
+			solAssert(dynamic_cast<FunctionCall const*>(scope), "");
 			createErrorBlock();
-			connectBlocks(target.value, error(), target.constraints && (target.errorId == assertion->id()));
-			auto [result, model] = query(error(), assertion->location());
+			connectBlocks(target.value, error(), target.constraints && (target.errorId == scope->id()));
+			auto [result, model] = query(error(), scope->location());
 			// This should be fine but it's a bug in the old compiler
 			(void)model;
-			if (result == smt::CheckResult::UNSATISFIABLE)
-				m_safeAssertions.insert(assertion);
+			if (result != smt::CheckResult::UNSATISFIABLE)
+			{
+				string msg = "Empty array \"pop\" ";
+				if (result == smt::CheckResult::SATISFIABLE)
+					msg += "detected here.";
+				else
+					msg += "might happen here.";
+				m_unsafeTargets.insert(scope);
+				m_outerErrorReporter.warning(
+					2529_error,
+					scope->location(),
+					msg
+				);
+			}
 		}
+		else
+			solAssert(false, "");
 	}
 }
 
@@ -161,7 +189,7 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	auto stateExprs = vector<smt::Expression>{m_error.currentValue()} + currentStateVariables();
 	setCurrentBlock(*m_constructorSummaryPredicate, &stateExprs);
 
-	addVerificationTarget(m_currentContract, m_currentBlock, smt::Expression(true), m_error.currentValue());
+	addAssertVerificationTarget(m_currentContract, m_currentBlock, smt::Expression(true), m_error.currentValue());
 	connectBlocks(m_currentBlock, interface(), m_error.currentValue() == 0);
 
 	SMTEncoder::endVisit(_contract);
@@ -256,7 +284,7 @@ void CHC::endVisit(FunctionDefinition const& _function)
 
 			if (_function.isPublic())
 			{
-				addVerificationTarget(&_function, m_currentBlock, sum, assertionError);
+				addAssertVerificationTarget(&_function, m_currentBlock, sum, assertionError);
 				connectBlocks(m_currentBlock, iface, sum && (assertionError == 0));
 			}
 		}
@@ -556,10 +584,34 @@ void CHC::unknownFunctionCall(FunctionCall const&)
 	m_unknownFunctionCallSeen = true;
 }
 
+void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
+{
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_arrayPop.expression().annotation().type);
+	solAssert(funType.kind() == FunctionType::Kind::ArrayPop, "");
+
+	auto memberAccess = dynamic_cast<MemberAccess const*>(&_arrayPop.expression());
+	solAssert(memberAccess, "");
+	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+	solAssert(symbArray, "");
+
+	auto previousError = m_error.currentValue();
+	m_error.increaseIndex();
+
+	addArrayPopVerificationTarget(&_arrayPop, m_error.currentValue());
+	connectBlocks(
+		m_currentBlock,
+		m_currentFunction->isConstructor() ? summary(*m_currentContract) : summary(*m_currentFunction),
+		currentPathConditions() && symbArray->length() <= 0 && m_error.currentValue() == _arrayPop.id()
+	);
+
+	m_context.addAssertion(m_error.currentValue() == previousError);
+}
+
 void CHC::resetSourceAnalysis()
 {
 	m_verificationTargets.clear();
 	m_safeAssertions.clear();
+	m_unsafeTargets.clear();
 	m_functionAssertions.clear();
 	m_callGraph.clear();
 	m_summaries.clear();
@@ -974,9 +1026,35 @@ pair<smt::CheckResult, vector<string>> CHC::query(smt::Expression const& _query,
 	return {result, values};
 }
 
-void CHC::addVerificationTarget(ASTNode const* _scope, smt::Expression _from, smt::Expression _constraints, smt::Expression _errorId)
+void CHC::addVerificationTarget(
+	ASTNode const* _scope,
+	VerificationTarget::Type _type,
+	smt::Expression _from,
+	smt::Expression _constraints,
+	smt::Expression _errorId
+)
 {
-	m_verificationTargets.emplace(_scope, CHCVerificationTarget{{VerificationTarget::Type::Assert, _from, _constraints}, _errorId});
+	m_verificationTargets.emplace(_scope, CHCVerificationTarget{{_type, _from, _constraints}, _errorId});
+}
+
+void CHC::addAssertVerificationTarget(ASTNode const* _scope, smt::Expression _from, smt::Expression _constraints, smt::Expression _errorId)
+{
+	addVerificationTarget(_scope, VerificationTarget::Type::Assert, _from, _constraints, _errorId);
+}
+
+void CHC::addArrayPopVerificationTarget(ASTNode const* _scope, smt::Expression _errorId)
+{
+	solAssert(m_currentContract, "");
+	solAssert(m_currentFunction, "");
+
+	if (m_currentFunction->isConstructor())
+		addVerificationTarget(_scope, VerificationTarget::Type::PopEmptyArray, summary(*m_currentContract), smt::Expression(true), _errorId);
+	else
+	{
+		auto iface = (*m_interfaces.at(m_currentContract))(initialStateVariables());
+		auto sum = summary(*m_currentFunction);
+		addVerificationTarget(_scope, VerificationTarget::Type::PopEmptyArray, iface, sum, _errorId);
+	}
 }
 
 string CHC::uniquePrefix()

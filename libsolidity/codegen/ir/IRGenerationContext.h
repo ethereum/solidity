@@ -26,6 +26,7 @@
 #include <libsolidity/interface/DebugSettings.h>
 
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
+#include <libsolidity/codegen/ir/Common.h>
 
 #include <liblangutil/EVMVersion.h>
 
@@ -99,12 +100,6 @@ public:
 		return m_stateVariables.at(&_varDecl);
 	}
 
-	std::string functionName(FunctionDefinition const& _function);
-	std::string functionName(VariableDeclaration const& _varDecl);
-
-	std::string creationObjectName(ContractDefinition const& _contract) const;
-	std::string runtimeObjectName(ContractDefinition const& _contract) const;
-
 	std::string newYulVariable();
 
 	std::string internalDispatch(size_t _in, size_t _out);
@@ -121,10 +116,6 @@ public:
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
 	RevertStrings revertStrings() const { return m_revertStrings; }
-
-	/// @returns the variable name that can be used to inspect the success or failure of an external
-	/// function call that was invoked as part of the try statement.
-	std::string trySuccessConditionVariable(Expression const& _expression) const;
 
 	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated() { return m_subObjects; }
 

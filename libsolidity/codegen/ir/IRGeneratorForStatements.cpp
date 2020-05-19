@@ -181,7 +181,7 @@ IRVariable IRGeneratorForStatements::evaluateExpression(Expression const& _expre
 
 string IRGeneratorForStatements::constantValueFunction(VariableDeclaration const& _constant)
 {
-	string functionName = "constant_" + _constant.name() + "_" + to_string(_constant.id());
+	string functionName = IRNames::constantValueFunction(_constant);
 	return m_context.functionCollector().createFunction(functionName, [&] {
 		Whiskers templ(R"(
 			function <functionName>() -> <ret> {
@@ -952,14 +952,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			"))\n";
 		break;
 	}
-	case FunctionType::Kind::ECRecover:
-	case FunctionType::Kind::SHA256:
-	case FunctionType::Kind::RIPEMD160:
-	{
-		solAssert(!_functionCall.annotation().tryCall, "");
-		appendExternalFunctionCall(_functionCall, arguments);
-		break;
-	}
 	case FunctionType::Kind::ArrayPop:
 	{
 		auto const& memberAccessExpression = dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression();
@@ -971,10 +963,12 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			")\n";
 		break;
 	}
+	case FunctionType::Kind::ByteArrayPush:
 	case FunctionType::Kind::ArrayPush:
 	{
 		auto const& memberAccessExpression = dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression();
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*memberAccessExpression.annotation().type);
+
 		if (arguments.empty())
 		{
 			auto slotName = m_context.newYulVariable();
@@ -1111,7 +1105,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		t("memEnd", m_context.newYulVariable());
 		t("allocateTemporaryMemory", m_utils.allocationTemporaryMemoryFunction());
 		t("releaseTemporaryMemory", m_utils.releaseTemporaryMemoryFunction());
-		t("object", m_context.creationObjectName(*contract));
+		t("object", IRNames::creationObject(*contract));
 		t("abiEncode",
 			m_context.abiFunctions().tupleEncoder(argumentTypes, functionType->parameterTypes(), false)
 		);
@@ -1149,6 +1143,69 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			templ("success", IRVariable(_functionCall).commaSeparatedList());
 		templ("isTransfer", functionType->kind() == FunctionType::Kind::Transfer);
 		templ("forwardingRevert", m_utils.forwardingRevertFunction());
+		m_code << templ.render();
+
+		break;
+	}
+	case FunctionType::Kind::ECRecover:
+	case FunctionType::Kind::RIPEMD160:
+	case FunctionType::Kind::SHA256:
+	{
+		solAssert(!_functionCall.annotation().tryCall, "");
+		solAssert(!functionType->valueSet(), "");
+		solAssert(!functionType->gasSet(), "");
+		solAssert(!functionType->bound(), "");
+
+		static map<FunctionType::Kind, std::tuple<u160, size_t>> precompiles = {
+			{FunctionType::Kind::ECRecover, std::make_tuple(1, 0)},
+			{FunctionType::Kind::SHA256, std::make_tuple(2, 0)},
+			{FunctionType::Kind::RIPEMD160, std::make_tuple(3, 12)},
+		};
+		auto [ address, offset ] = precompiles[functionType->kind()];
+		TypePointers argumentTypes;
+		vector<string> argumentStrings;
+		for (auto const& arg: arguments)
+		{
+			argumentTypes.emplace_back(&type(*arg));
+			argumentStrings += IRVariable(*arg).stackSlots();
+		}
+		Whiskers templ(R"(
+			let <pos> := <allocateTemporary>()
+			let <end> := <encodeArgs>(<pos> <argumentString>)
+			<?isECRecover>
+				mstore(0, 0)
+			</isECRecover>
+			let <success> := <call>(<gas>, <address> <?isCall>, 0</isCall>, <pos>, sub(<end>, <pos>), 0, 32)
+			if iszero(<success>) { <forwardingRevert>() }
+			let <retVars> := <shl>(mload(0))
+		)");
+		templ("call", m_context.evmVersion().hasStaticCall() ? "staticcall" : "call");
+		templ("isCall", !m_context.evmVersion().hasStaticCall());
+		templ("shl", m_utils.shiftLeftFunction(offset * 8));
+		templ("allocateTemporary", m_utils.allocationTemporaryMemoryFunction());
+		templ("pos", m_context.newYulVariable());
+		templ("end", m_context.newYulVariable());
+		templ("isECRecover", FunctionType::Kind::ECRecover == functionType->kind());
+		if (FunctionType::Kind::ECRecover == functionType->kind())
+			templ("encodeArgs", m_context.abiFunctions().tupleEncoder(argumentTypes, parameterTypes));
+		else
+			templ("encodeArgs", m_context.abiFunctions().tupleEncoderPacked(argumentTypes, parameterTypes));
+		templ("argumentString", joinHumanReadablePrefixed(argumentStrings));
+		templ("address", toString(address));
+		templ("success", m_context.newYulVariable());
+		templ("retVars", IRVariable(_functionCall).commaSeparatedList());
+		templ("forwardingRevert", m_utils.forwardingRevertFunction());
+		if (m_context.evmVersion().canOverchargeGasForCall())
+			// Send all gas (requires tangerine whistle EVM)
+			templ("gas", "gas()");
+		else
+		{
+			// @todo The value 10 is not exact and this could be fine-tuned,
+			// but this has worked for years in the old code generator.
+			u256 gasNeededByCaller = evmasm::GasCosts::callGas(m_context.evmVersion()) + 10 + evmasm::GasCosts::callNewAccountGas;
+			templ("gas", "sub(gas(), " + formatNumber(gasNeededByCaller) + ")");
+		}
+
 		m_code << templ.render();
 
 		break;
@@ -1316,7 +1373,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			)")
 			("allocationFunction", m_utils.allocationFunction())
 			("size", m_context.newYulVariable())
-			("objectName", m_context.creationObjectName(contract))
+			("objectName", IRNames::creationObject(contract))
 			("result", IRVariable(_memberAccess).commaSeparatedList()).render();
 		}
 		else if (member == "name")
@@ -1835,7 +1892,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	templ("pos", m_context.newYulVariable());
 	templ("end", m_context.newYulVariable());
 	if (_functionCall.annotation().tryCall)
-		templ("success", m_context.trySuccessConditionVariable(_functionCall));
+		templ("success", IRNames::trySuccessConditionVariable(_functionCall));
 	else
 		templ("success", m_context.newYulVariable());
 	templ("freeMemory", freeMemory());
@@ -2070,10 +2127,7 @@ void IRGeneratorForStatements::declareAssign(IRVariable const& _lhs, IRVariable 
 
 IRVariable IRGeneratorForStatements::zeroValue(Type const& _type, bool _splitFunctionTypes)
 {
-	IRVariable irVar{
-		"zero_value_for_type_" + _type.identifier() + m_context.newYulVariable(),
-		_type
-	};
+	IRVariable irVar{IRNames::zeroValue(_type, m_context.newYulVariable()), _type};
 	define(irVar) << m_utils.zeroValueFunction(_type, _splitFunctionTypes) << "()\n";
 	return irVar;
 }
@@ -2392,7 +2446,7 @@ bool IRGeneratorForStatements::visit(TryStatement const& _tryStatement)
 	Expression const& externalCall = _tryStatement.externalCall();
 	externalCall.accept(*this);
 
-	m_code << "switch iszero(" << m_context.trySuccessConditionVariable(externalCall) << ")\n";
+	m_code << "switch iszero(" << IRNames::trySuccessConditionVariable(externalCall) << ")\n";
 
 	m_code << "case 0 { // success case\n";
 	TryCatchClause const& successClause = *_tryStatement.clauses().front();

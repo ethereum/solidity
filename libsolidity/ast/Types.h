@@ -29,6 +29,7 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/LazyInit.h>
 #include <libsolutil/Result.h>
 
 #include <boost/rational.hpp>
@@ -139,8 +140,10 @@ public:
 	MemberMap::const_iterator end() const { return m_memberTypes.end(); }
 
 private:
+	StorageOffsets const& storageOffsets() const;
+
 	MemberMap m_memberTypes;
-	mutable std::unique_ptr<StorageOffsets> m_storageOffsets;
+	util::LazyInit<StorageOffsets> m_storageOffsets;
 };
 
 static_assert(std::is_nothrow_move_constructible<MemberList>::value, "MemberList should be noexcept move constructible");
