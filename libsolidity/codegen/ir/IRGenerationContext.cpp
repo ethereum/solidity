@@ -153,7 +153,7 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 		for (auto const& contract: mostDerivedContract().annotation().linearizedBaseContracts)
 			for (FunctionDefinition const* function: contract->definedFunctions())
 				if (
-					FunctionType const* functionType = TypeProvider::function(*function)->asCallableFunction(false);
+					FunctionType const* functionType = TypeProvider::function(*function, FunctionType::Kind::Internal);
 					!function->isConstructor() &&
 					TupleType(functionType->parameterTypes()).sizeOnStack() == _in &&
 					TupleType(functionType->returnParameterTypes()).sizeOnStack() == _out
