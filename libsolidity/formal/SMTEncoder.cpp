@@ -646,6 +646,12 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		m_context.state().transfer(m_context.state().thisAddress(), expr(address), expr(*value));
 		break;
 	}
+	case FunctionType::Kind::ArrayPush:
+		arrayPush(_funCall);
+		break;
+	case FunctionType::Kind::ArrayPop:
+		arrayPop(_funCall);
+		break;
 	default:
 		m_errorReporter.warning(
 			4588_error,
@@ -905,16 +911,6 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 				m_context
 			);
 		}
-		else
-		{
-			auto const& name = _memberAccess.memberName();
-			solAssert(name == "push" || name == "pop", "");
-			m_errorReporter.warning(
-				9098_error,
-				_memberAccess.location(),
-				"Assertion checker does not yet support array member \"" + name + "\"."
-			);
-		}
 		return false;
 	}
 	else
@@ -1080,6 +1076,76 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 			break;
 		}
 	}
+}
+
+void SMTEncoder::arrayPush(FunctionCall const& _funCall)
+{
+	auto memberAccess = dynamic_cast<MemberAccess const*>(&_funCall.expression());
+	solAssert(memberAccess, "");
+	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+	solAssert(symbArray, "");
+	auto oldLength = symbArray->length();
+	m_context.addAssertion(oldLength >= 0);
+	// Real world assumption: the array length is assumed to not overflow.
+	// This assertion guarantees that both the current and updated lengths have the above property.
+	m_context.addAssertion(oldLength + 1 < (smt::maxValue(*TypeProvider::uint256()) - 1));
+
+	auto const& arguments = _funCall.arguments();
+	smt::Expression element = arguments.empty() ?
+		smt::zeroValue(_funCall.annotation().type) :
+		expr(*arguments.front());
+	smt::Expression store = smt::Expression::store(
+		symbArray->elements(),
+		oldLength,
+		element
+	);
+	symbArray->increaseIndex();
+	m_context.addAssertion(symbArray->elements() == store);
+	m_context.addAssertion(symbArray->length() == oldLength + 1);
+
+	if (arguments.empty())
+		defineExpr(_funCall, element);
+
+	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
+}
+
+void SMTEncoder::arrayPop(FunctionCall const& _funCall)
+{
+	auto memberAccess = dynamic_cast<MemberAccess const*>(&_funCall.expression());
+	solAssert(memberAccess, "");
+	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+	solAssert(symbArray, "");
+
+	makeArrayPopVerificationTarget(_funCall);
+
+	auto oldElements = symbArray->elements();
+	auto oldLength = symbArray->length();
+	m_context.addAssertion(oldLength > 0);
+
+	symbArray->increaseIndex();
+	m_context.addAssertion(symbArray->elements() == oldElements);
+	auto newLength = smt::Expression::ite(
+		oldLength == 0,
+		smt::maxValue(*TypeProvider::uint256()),
+		oldLength - 1
+	);
+	m_context.addAssertion(symbArray->length() == oldLength - 1);
+
+	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
+}
+
+void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smt::Expression const& _array)
+{
+	if (auto const* id = dynamic_cast<Identifier const*>(&_expr))
+	{
+		auto varDecl = identifierToVariable(*id);
+		solAssert(varDecl, "");
+		m_context.addAssertion(m_context.newValue(*varDecl) == _array);
+	}
+	else if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(&_expr))
+		arrayIndexAssignment(*indexAccess, _array);
+	else
+		solAssert(false, "");
 }
 
 void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _expr, bool _increaseIndex)
