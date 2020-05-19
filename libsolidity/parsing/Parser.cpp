@@ -686,6 +686,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	ASTNodeFactory nodeFactory = _lookAheadArrayType ?
 		ASTNodeFactory(*this, _lookAheadArrayType) : ASTNodeFactory(*this);
 	ASTPointer<TypeName> type;
+	ASTPointer<StructuredDocumentation> const documentation = parseStructuredDocumentation();
 	if (_lookAheadArrayType)
 		type = _lookAheadArrayType;
 	else
@@ -694,6 +695,9 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		if (type != nullptr)
 			nodeFactory.setEndPositionFromNode(type);
 	}
+
+	if (!_options.isStateVariable && documentation != nullptr)
+		parserWarning(2837_error, "Only state variables can have a docstring. This will be disallowed in 0.7.0.");
 
 	if (dynamic_cast<FunctionTypeName*>(type.get()) && _options.isStateVariable && m_scanner->currentToken() == Token::LBrace)
 		fatalParserError(
@@ -809,6 +813,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		identifier,
 		value,
 		visibility,
+		documentation,
 		_options.isStateVariable,
 		isIndexed,
 		mutability,

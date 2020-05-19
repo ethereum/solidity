@@ -46,6 +46,7 @@ public:
 private:
 	bool visit(ContractDefinition const& _contract) override;
 	bool visit(FunctionDefinition const& _function) override;
+	bool visit(VariableDeclaration const& _variable) override;
 	bool visit(ModifierDefinition const& _modifier) override;
 	bool visit(EventDefinition const& _event) override;
 
@@ -63,6 +64,12 @@ private:
 
 	void handleCallable(
 		CallableDeclaration const& _callable,
+		StructurallyDocumented const& _node,
+		StructurallyDocumentedAnnotation& _annotation
+	);
+
+	void handleDeclaration(
+		Declaration const& _declaration,
 		StructurallyDocumented const& _node,
 		StructurallyDocumentedAnnotation& _annotation
 	);
