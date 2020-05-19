@@ -1221,13 +1221,13 @@ void IRGeneratorForStatements::endVisit(FunctionCallOptions const& _options)
 void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 {
 	ASTString const& member = _memberAccess.memberName();
-	if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
-		if (funType->bound())
-		{
-			solUnimplementedAssert(false, "");
-		}
+	auto memberFunctionType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
+	Type::Category objectCategory = _memberAccess.expression().annotation().type->category();
 
-	switch (_memberAccess.expression().annotation().type->category())
+	if (memberFunctionType && memberFunctionType->bound())
+		solUnimplementedAssert(false, "");
+
+	switch (objectCategory)
 	{
 	case Type::Category::Contract:
 	{
@@ -1460,9 +1460,9 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		{
 			if (auto const* variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
 				handleVariableReference(*variable, _memberAccess);
-			else if (auto const* funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
+			else if (memberFunctionType)
 			{
-				switch (funType->kind())
+				switch (memberFunctionType->kind())
 				{
 				case FunctionType::Kind::Declaration:
 					break;
@@ -1481,7 +1481,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 					break;
 				case FunctionType::Kind::DelegateCall:
 					define(IRVariable(_memberAccess).part("address"), _memberAccess.expression());
-					define(IRVariable(_memberAccess).part("functionIdentifier")) << formatNumber(funType->externalIdentifier()) << "\n";
+					define(IRVariable(_memberAccess).part("functionIdentifier")) << formatNumber(memberFunctionType->externalIdentifier()) << "\n";
 					break;
 				case FunctionType::Kind::External:
 				case FunctionType::Kind::Creation:
