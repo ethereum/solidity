@@ -63,13 +63,13 @@ void SMTLib2Interface::push()
 
 void SMTLib2Interface::pop()
 {
-	solAssert(!m_accumulatedOutput.empty(), "");
+	smtAssert(!m_accumulatedOutput.empty(), "");
 	m_accumulatedOutput.pop_back();
 }
 
 void SMTLib2Interface::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	solAssert(_sort, "");
+	smtAssert(_sort, "");
 	if (_sort->kind == Kind::Function)
 		declareFunction(_name, _sort);
 	else if (!m_variables.count(_name))
@@ -81,8 +81,8 @@ void SMTLib2Interface::declareVariable(string const& _name, SortPointer const& _
 
 void SMTLib2Interface::declareFunction(string const& _name, SortPointer const& _sort)
 {
-	solAssert(_sort, "");
-	solAssert(_sort->kind == Kind::Function, "");
+	smtAssert(_sort, "");
+	smtAssert(_sort->kind == Kind::Function, "");
 	// TODO Use domain and codomain as key as well
 	if (!m_variables.count(_name))
 	{
@@ -139,26 +139,26 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 	std::string sexpr = "(";
 	if (_expr.name == "const_array")
 	{
-		solAssert(_expr.arguments.size() == 2, "");
+		smtAssert(_expr.arguments.size() == 2, "");
 		auto sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments.at(0).sort);
-		solAssert(sortSort, "");
+		smtAssert(sortSort, "");
 		auto arraySort = dynamic_pointer_cast<ArraySort>(sortSort->inner);
-		solAssert(arraySort, "");
+		smtAssert(arraySort, "");
 		sexpr += "(as const " + toSmtLibSort(*arraySort) + ") ";
 		sexpr += toSExpr(_expr.arguments.at(1));
 	}
 	else if (_expr.name == "tuple_get")
 	{
-		solAssert(_expr.arguments.size() == 2, "");
+		smtAssert(_expr.arguments.size() == 2, "");
 		auto tupleSort = dynamic_pointer_cast<TupleSort>(_expr.arguments.at(0).sort);
 		unsigned index = std::stoi(_expr.arguments.at(1).name);
-		solAssert(index < tupleSort->members.size(), "");
+		smtAssert(index < tupleSort->members.size(), "");
 		sexpr += "|" + tupleSort->members.at(index) + "| " + toSExpr(_expr.arguments.at(0));
 	}
 	else if (_expr.name == "tuple_constructor")
 	{
 		auto tupleSort = dynamic_pointer_cast<TupleSort>(_expr.sort);
-		solAssert(tupleSort, "");
+		smtAssert(tupleSort, "");
 		sexpr += "|" + tupleSort->name + "|";
 		for (auto const& arg: _expr.arguments)
 			sexpr += " " + toSExpr(arg);
@@ -184,7 +184,7 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 	case Kind::Array:
 	{
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
-		solAssert(arraySort.domain && arraySort.range, "");
+		smtAssert(arraySort.domain && arraySort.range, "");
 		return "(Array " + toSmtLibSort(*arraySort.domain) + ' ' + toSmtLibSort(*arraySort.range) + ')';
 	}
 	case Kind::Tuple:
@@ -195,7 +195,7 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 		{
 			m_userSorts.insert(tupleName);
 			string decl("(declare-datatypes ((" + tupleName + " 0)) (((" + tupleName);
-			solAssert(tupleSort.members.size() == tupleSort.components.size(), "");
+			smtAssert(tupleSort.members.size() == tupleSort.components.size(), "");
 			for (unsigned i = 0; i < tupleSort.members.size(); ++i)
 				decl += " (|" + tupleSort.members.at(i) + "| " + toSmtLibSort(*tupleSort.components.at(i)) + ")";
 			decl += "))))";
@@ -205,7 +205,7 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 		return tupleName;
 	}
 	default:
-		solAssert(false, "Invalid SMT sort");
+		smtAssert(false, "Invalid SMT sort");
 	}
 }
 
@@ -220,7 +220,7 @@ string SMTLib2Interface::toSmtLibSort(vector<SortPointer> const& _sorts)
 
 void SMTLib2Interface::write(string _data)
 {
-	solAssert(!m_accumulatedOutput.empty(), "");
+	smtAssert(!m_accumulatedOutput.empty(), "");
 	m_accumulatedOutput.back() += move(_data) + "\n";
 }
 
@@ -235,7 +235,7 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
 		{
 			auto const& e = _expressionsToEvaluate.at(i);
-			solAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool, "Invalid sort for expression to evaluate.");
+			smtAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool, "Invalid sort for expression to evaluate.");
 			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n";
 			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
 		}

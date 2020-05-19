@@ -17,11 +17,10 @@
 
 #pragma once
 
+#include <libsmtutil/Exceptions.h>
 #include <libsmtutil/Sorts.h>
 
-#include <liblangutil/Exceptions.h>
 #include <libsolutil/Common.h>
-#include <libsolutil/Exceptions.h>
 
 #include <boost/noncopyable.hpp>
 #include <cstdio>
@@ -75,7 +74,7 @@ public:
 		if (name == "tuple_constructor")
 		{
 			auto tupleSort = std::dynamic_pointer_cast<TupleSort>(sort);
-			solAssert(tupleSort, "");
+			smtAssert(tupleSort, "");
 			return arguments.size() == tupleSort->components.size();
 		}
 
@@ -105,7 +104,7 @@ public:
 
 	static Expression ite(Expression _condition, Expression _trueValue, Expression _falseValue)
 	{
-		solAssert(*_trueValue.sort == *_falseValue.sort, "");
+		smtAssert(*_trueValue.sort == *_falseValue.sort, "");
 		SortPointer sort = _trueValue.sort;
 		return Expression("ite", std::vector<Expression>{
 			std::move(_condition), std::move(_trueValue), std::move(_falseValue)
@@ -125,11 +124,11 @@ public:
 	/// select is the SMT representation of an array index access.
 	static Expression select(Expression _array, Expression _index)
 	{
-		solAssert(_array.sort->kind == Kind::Array, "");
+		smtAssert(_array.sort->kind == Kind::Array, "");
 		std::shared_ptr<ArraySort> arraySort = std::dynamic_pointer_cast<ArraySort>(_array.sort);
-		solAssert(arraySort, "");
-		solAssert(_index.sort, "");
-		solAssert(*arraySort->domain == *_index.sort, "");
+		smtAssert(arraySort, "");
+		smtAssert(_index.sort, "");
+		smtAssert(*arraySort->domain == *_index.sort, "");
 		return Expression(
 			"select",
 			std::vector<Expression>{std::move(_array), std::move(_index)},
@@ -142,11 +141,11 @@ public:
 	static Expression store(Expression _array, Expression _index, Expression _element)
 	{
 		auto arraySort = std::dynamic_pointer_cast<ArraySort>(_array.sort);
-		solAssert(arraySort, "");
-		solAssert(_index.sort, "");
-		solAssert(_element.sort, "");
-		solAssert(*arraySort->domain == *_index.sort, "");
-		solAssert(*arraySort->range == *_element.sort, "");
+		smtAssert(arraySort, "");
+		smtAssert(_index.sort, "");
+		smtAssert(_element.sort, "");
+		smtAssert(*arraySort->domain == *_index.sort, "");
+		smtAssert(*arraySort->range == *_element.sort, "");
 		return Expression(
 			"store",
 			std::vector<Expression>{std::move(_array), std::move(_index), std::move(_element)},
@@ -156,12 +155,12 @@ public:
 
 	static Expression const_array(Expression _sort, Expression _value)
 	{
-		solAssert(_sort.sort->kind == Kind::Sort, "");
+		smtAssert(_sort.sort->kind == Kind::Sort, "");
 		auto sortSort = std::dynamic_pointer_cast<SortSort>(_sort.sort);
 		auto arraySort = std::dynamic_pointer_cast<ArraySort>(sortSort->inner);
-		solAssert(sortSort && arraySort, "");
-		solAssert(_value.sort, "");
-		solAssert(*arraySort->range == *_value.sort, "");
+		smtAssert(sortSort && arraySort, "");
+		smtAssert(_value.sort, "");
+		smtAssert(*arraySort->range == *_value.sort, "");
 		return Expression(
 			"const_array",
 			std::vector<Expression>{std::move(_sort), std::move(_value)},
@@ -171,10 +170,10 @@ public:
 
 	static Expression tuple_get(Expression _tuple, size_t _index)
 	{
-		solAssert(_tuple.sort->kind == Kind::Tuple, "");
+		smtAssert(_tuple.sort->kind == Kind::Tuple, "");
 		std::shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_tuple.sort);
-		solAssert(tupleSort, "");
-		solAssert(_index < tupleSort->components.size(), "");
+		smtAssert(tupleSort, "");
+		smtAssert(_index < tupleSort->components.size(), "");
 		return Expression(
 			"tuple_get",
 			std::vector<Expression>{std::move(_tuple), Expression(_index)},
@@ -184,11 +183,11 @@ public:
 
 	static Expression tuple_constructor(Expression _tuple, std::vector<Expression> _arguments)
 	{
-		solAssert(_tuple.sort->kind == Kind::Sort, "");
+		smtAssert(_tuple.sort->kind == Kind::Sort, "");
 		auto sortSort = std::dynamic_pointer_cast<SortSort>(_tuple.sort);
 		auto tupleSort = std::dynamic_pointer_cast<TupleSort>(sortSort->inner);
-		solAssert(tupleSort, "");
-		solAssert(_arguments.size() == tupleSort->components.size(), "");
+		smtAssert(tupleSort, "");
+		smtAssert(_arguments.size() == tupleSort->components.size(), "");
 		return Expression(
 			"tuple_constructor",
 			std::move(_arguments),
@@ -254,12 +253,12 @@ public:
 	}
 	Expression operator()(std::vector<Expression> _arguments) const
 	{
-		solAssert(
+		smtAssert(
 			sort->kind == Kind::Function,
 			"Attempted function application to non-function."
 		);
 		auto fSort = dynamic_cast<FunctionSort const*>(sort.get());
-		solAssert(fSort, "");
+		smtAssert(fSort, "");
 		return Expression(name, std::move(_arguments), fSort->codomain);
 	}
 
@@ -297,7 +296,7 @@ public:
 	Expression newVariable(std::string _name, SortPointer const& _sort)
 	{
 		// Subclasses should do something here
-		solAssert(_sort, "");
+		smtAssert(_sort, "");
 		declareVariable(_name, _sort);
 		return Expression(std::move(_name), {}, _sort);
 	}

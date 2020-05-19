@@ -17,7 +17,6 @@
 
 #include <libsmtutil/Z3CHCInterface.h>
 
-#include <liblangutil/Exceptions.h>
 #include <libsolutil/CommonIO.h>
 
 using namespace std;
@@ -48,7 +47,7 @@ Z3CHCInterface::Z3CHCInterface():
 
 void Z3CHCInterface::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	solAssert(_sort, "");
+	smtAssert(_sort, "");
 	m_z3Interface->declareVariable(_name, _sort);
 }
 

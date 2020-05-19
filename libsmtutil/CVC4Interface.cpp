@@ -17,7 +17,6 @@
 
 #include <libsmtutil/CVC4Interface.h>
 
-#include <liblangutil/Exceptions.h>
 #include <libsolutil/CommonIO.h>
 
 using namespace std;
@@ -51,7 +50,7 @@ void CVC4Interface::pop()
 
 void CVC4Interface::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	solAssert(_sort, "");
+	smtAssert(_sort, "");
 	m_variables[_name] = m_context.mkVar(_name.c_str(), cvc4Sort(*_sort));
 }
 
@@ -63,19 +62,19 @@ void CVC4Interface::addAssertion(Expression const& _expr)
 	}
 	catch (CVC4::TypeCheckingException const& _e)
 	{
-		solAssert(false, _e.what());
+		smtAssert(false, _e.what());
 	}
 	catch (CVC4::LogicException const& _e)
 	{
-		solAssert(false, _e.what());
+		smtAssert(false, _e.what());
 	}
 	catch (CVC4::UnsafeInterruptException const& _e)
 	{
-		solAssert(false, _e.what());
+		smtAssert(false, _e.what());
 	}
 	catch (CVC4::Exception const& _e)
 	{
-		solAssert(false, _e.what());
+		smtAssert(false, _e.what());
 	}
 }
 
@@ -97,7 +96,7 @@ pair<CheckResult, vector<string>> CVC4Interface::check(vector<Expression> const&
 			result = CheckResult::UNKNOWN;
 			break;
 		default:
-			solAssert(false, "");
+			smtAssert(false, "");
 		}
 
 		if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
@@ -147,15 +146,15 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 				}
 				catch (CVC4::TypeCheckingException const& _e)
 				{
-					solAssert(false, _e.what());
+					smtAssert(false, _e.what());
 				}
 				catch (CVC4::Exception const& _e)
 				{
-					solAssert(false, _e.what());
+					smtAssert(false, _e.what());
 				}
 		}
 
-		solAssert(_expr.hasCorrectArity(), "");
+		smtAssert(_expr.hasCorrectArity(), "");
 		if (n == "ite")
 			return arguments[0].iteExpr(arguments[1], arguments[2]);
 		else if (n == "not")
@@ -193,13 +192,13 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		else if (n == "const_array")
 		{
 			shared_ptr<SortSort> sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments[0].sort);
-			solAssert(sortSort, "");
+			smtAssert(sortSort, "");
 			return m_context.mkConst(CVC4::ArrayStoreAll(cvc4Sort(*sortSort->inner), arguments[1]));
 		}
 		else if (n == "tuple_get")
 		{
 			shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.arguments[0].sort);
-			solAssert(tupleSort, "");
+			smtAssert(tupleSort, "");
 			CVC4::DatatypeType tt = m_context.mkTupleType(cvc4Sort(tupleSort->components));
 			CVC4::Datatype const& dt = tt.getDatatype();
 			size_t index = std::stoi(_expr.arguments[1].name);
@@ -209,25 +208,25 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		else if (n == "tuple_constructor")
 		{
 			shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.sort);
-			solAssert(tupleSort, "");
+			smtAssert(tupleSort, "");
 			CVC4::DatatypeType tt = m_context.mkTupleType(cvc4Sort(tupleSort->components));
 			CVC4::Datatype const& dt = tt.getDatatype();
 			CVC4::Expr c = dt[0].getConstructor();
 			return m_context.mkExpr(CVC4::kind::APPLY_CONSTRUCTOR, c, arguments);
 		}
 
-		solAssert(false, "");
+		smtAssert(false, "");
 	}
 	catch (CVC4::TypeCheckingException const& _e)
 	{
-		solAssert(false, _e.what());
+		smtAssert(false, _e.what());
 	}
 	catch (CVC4::Exception const& _e)
 	{
-		solAssert(false, _e.what());
+		smtAssert(false, _e.what());
 	}
 
-	solAssert(false, "");
+	smtAssert(false, "");
 }
 
 CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
@@ -256,7 +255,7 @@ CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
 	default:
 		break;
 	}
-	solAssert(false, "");
+	smtAssert(false, "");
 	// Cannot be reached.
 	return m_context.integerType();
 }

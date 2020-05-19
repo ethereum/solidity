@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include <liblangutil/Exceptions.h>
+#include <libsmtutil/Exceptions.h>
+
 #include <libsolutil/Common.h>
-#include <libsolutil/Exceptions.h>
 
 #include <memory>
 #include <vector>
@@ -57,7 +57,7 @@ struct FunctionSort: public Sort
 		if (!Sort::operator==(_other))
 			return false;
 		auto _otherFunction = dynamic_cast<FunctionSort const*>(&_other);
-		solAssert(_otherFunction, "");
+		smtAssert(_otherFunction, "");
 		if (domain.size() != _otherFunction->domain.size())
 			return false;
 		if (!std::equal(
@@ -67,8 +67,8 @@ struct FunctionSort: public Sort
 			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
 		))
 			return false;
-		solAssert(codomain, "");
-		solAssert(_otherFunction->codomain, "");
+		smtAssert(codomain, "");
+		smtAssert(_otherFunction->codomain, "");
 		return *codomain == *_otherFunction->codomain;
 	}
 
@@ -87,11 +87,11 @@ struct ArraySort: public Sort
 		if (!Sort::operator==(_other))
 			return false;
 		auto _otherArray = dynamic_cast<ArraySort const*>(&_other);
-		solAssert(_otherArray, "");
-		solAssert(_otherArray->domain, "");
-		solAssert(_otherArray->range, "");
-		solAssert(domain, "");
-		solAssert(range, "");
+		smtAssert(_otherArray, "");
+		smtAssert(_otherArray->domain, "");
+		smtAssert(_otherArray->range, "");
+		smtAssert(domain, "");
+		smtAssert(range, "");
 		return *domain == *_otherArray->domain && *range == *_otherArray->range;
 	}
 
@@ -107,9 +107,9 @@ struct SortSort: public Sort
 		if (!Sort::operator==(_other))
 			return false;
 		auto _otherSort = dynamic_cast<SortSort const*>(&_other);
-		solAssert(_otherSort, "");
-		solAssert(_otherSort->inner, "");
-		solAssert(inner, "");
+		smtAssert(_otherSort, "");
+		smtAssert(_otherSort->inner, "");
+		smtAssert(inner, "");
 		return *inner == *_otherSort->inner;
 	}
 
@@ -134,7 +134,7 @@ struct TupleSort: public Sort
 		if (!Sort::operator==(_other))
 			return false;
 		auto _otherTuple = dynamic_cast<TupleSort const*>(&_other);
-		solAssert(_otherTuple, "");
+		smtAssert(_otherTuple, "");
 		if (name != _otherTuple->name)
 			return false;
 		if (members != _otherTuple->members)

@@ -53,8 +53,8 @@ void CHCSmtLib2Interface::reset()
 
 void CHCSmtLib2Interface::registerRelation(Expression const& _expr)
 {
-	solAssert(_expr.sort, "");
-	solAssert(_expr.sort->kind == Kind::Function, "");
+	smtAssert(_expr.sort, "");
+	smtAssert(_expr.sort->kind == Kind::Function, "");
 	if (!m_variables.count(_expr.name))
 	{
 		auto fSort = dynamic_pointer_cast<FunctionSort>(_expr.sort);
@@ -112,7 +112,7 @@ pair<CheckResult, vector<string>> CHCSmtLib2Interface::query(Expression const& _
 
 void CHCSmtLib2Interface::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	solAssert(_sort, "");
+	smtAssert(_sort, "");
 	if (_sort->kind == Kind::Function)
 		declareFunction(_name, _sort);
 	else if (!m_variables.count(_name))
@@ -124,13 +124,13 @@ void CHCSmtLib2Interface::declareVariable(string const& _name, SortPointer const
 
 void CHCSmtLib2Interface::declareFunction(string const& _name, SortPointer const& _sort)
 {
-	solAssert(_sort, "");
-	solAssert(_sort->kind == Kind::Function, "");
+	smtAssert(_sort, "");
+	smtAssert(_sort->kind == Kind::Function, "");
 	// TODO Use domain and codomain as key as well
 	if (!m_variables.count(_name))
 	{
 		auto fSort = dynamic_pointer_cast<FunctionSort>(_sort);
-		solAssert(fSort->codomain, "");
+		smtAssert(fSort->codomain, "");
 		string domain = m_smtlib2->toSmtLibSort(fSort->domain);
 		string codomain = m_smtlib2->toSmtLibSort(*fSort->codomain);
 		m_variables.insert(_name);
