@@ -4,6 +4,8 @@ Breaking changes:
  * Type Checker: Disallow virtual for library functions.
  * Deprecated dot syntax for `value` and `gas`.
  * Deprecated the identifier `now`.
+ * Type Checker: Disallow integer literals for the base of the `**` operator.
+ * Type Checker: Disallow integer literals for the left operand of shift operators.
 
 Language Features:
 

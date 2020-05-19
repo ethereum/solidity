@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// Warning: (99-106): Result of shift has type uint8 and thus might overflow. Silence this warning by converting the literal to the expected type.
+// TypeError: (99-106): Operator << not compatible with types int_const 10 and uint8. Shift operators need an explicit type for the base.

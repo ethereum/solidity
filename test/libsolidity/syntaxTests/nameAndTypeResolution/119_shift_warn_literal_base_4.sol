@@ -4,3 +4,5 @@ contract test {
          return 10 >> x;
     }
 }
+// ----
+// TypeError: (101-108): Operator >> not compatible with types int_const 10 and uint8. Shift operators need an explicit type for the base.

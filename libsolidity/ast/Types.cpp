@@ -959,6 +959,16 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 {
 	if (_other->category() == Category::Integer || _other->category() == Category::FixedPoint)
 	{
+		// Shift and exp are not symmetric and thus need explicit types, unless
+		// we already have the full uint256 range.
+		if (Token::Exp == _operator && *_other != *TypeProvider::uint256())
+			return TypeResult::err("Exponentiation needs an explicit type for the base.");
+		else if (TokenTraits::isShiftOp(_operator) && *_other != *TypeProvider::uint256())
+			return TypeResult::err("Shift operators need an explicit type for the base.");
+
+		if (isFractional() && (TokenTraits::isShiftOp(_operator) || Token::Exp == _operator))
+			return nullptr;
+
 		auto commonType = Type::commonType(this, _other);
 		if (!commonType)
 			return nullptr;

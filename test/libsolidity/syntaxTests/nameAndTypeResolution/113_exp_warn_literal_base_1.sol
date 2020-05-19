@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// Warning: (99-104): Result of exponentiation has type uint8 and thus might overflow. Silence this warning by converting the literal to the expected type.
+// TypeError: (99-104): Operator ** not compatible with types int_const 10 and uint8. Exponentiation needs an explicit type for the base.
