@@ -81,8 +81,6 @@ private:
 		std::string const& _nodeName
 	);
 
-	void appendError(langutil::SourceLocation const& _location, std::string const& _description);
-
 	langutil::ErrorReporter& m_errorReporter;
 };
 

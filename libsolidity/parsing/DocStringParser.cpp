@@ -96,7 +96,7 @@ void DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 			auto tagNameEndPos = firstWhitespaceOrNewline(tagPos, end);
 			if (tagNameEndPos == end)
 			{
-				appendError("End of tag " + string(tagPos, tagNameEndPos) + " not found");
+				m_errorReporter->docstringParsingError(9222_error, "End of tag " + string(tagPos, tagNameEndPos) + " not found");
 				break;
 			}
 
@@ -138,7 +138,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 	auto nameStartPos = skipWhitespace(_pos, _end);
 	if (nameStartPos == _end)
 	{
-		appendError("No param name given");
+		m_errorReporter->docstringParsingError(3335_error, "No param name given");
 		return _end;
 	}
 	auto nameEndPos = firstNonIdentifier(nameStartPos, _end);
@@ -149,7 +149,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 
 	if (descStartPos == nlPos)
 	{
-		appendError("No description given for param " + paramName);
+		m_errorReporter->docstringParsingError(9942_error, "No description given for param " + paramName);
 		return _end;
 	}
 
@@ -188,9 +188,4 @@ DocStringParser::iter DocStringParser::appendDocTag(iter _pos, iter _end)
 void DocStringParser::newTag(string const& _tagName)
 {
 	m_lastTag = &m_docTags.insert(make_pair(_tagName, DocTag()))->second;
-}
-
-void DocStringParser::appendError(string const& _description)
-{
-	m_errorReporter->docstringParsingError(9440_error, _description);
 }
