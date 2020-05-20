@@ -77,10 +77,9 @@ string::const_iterator skipWhitespace(
 
 }
 
-bool DocStringParser::parse(string const& _docString, ErrorReporter& _errorReporter)
+void DocStringParser::parse(string const& _docString, ErrorReporter& _errorReporter)
 {
 	m_errorReporter = &_errorReporter;
-	m_errorsOccurred = false;
 	m_lastTag = nullptr;
 
 	auto currPos = _docString.begin();
@@ -119,7 +118,6 @@ bool DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 			currPos = nlPos + 1;
 		}
 	}
-	return !m_errorsOccurred;
 }
 
 DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, bool _appending)
@@ -194,6 +192,5 @@ void DocStringParser::newTag(string const& _tagName)
 
 void DocStringParser::appendError(string const& _description)
 {
-	m_errorsOccurred = true;
 	m_errorReporter->docstringParsingError(9440_error, _description);
 }

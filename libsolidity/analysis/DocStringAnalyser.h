@@ -83,7 +83,6 @@ private:
 
 	void appendError(langutil::SourceLocation const& _location, std::string const& _description);
 
-	bool m_errorOccured = false;
 	langutil::ErrorReporter& m_errorReporter;
 };
 

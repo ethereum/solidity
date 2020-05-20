@@ -44,8 +44,9 @@ namespace solidity::frontend
 
 bool ReferencesResolver::resolve(ASTNode const& _root)
 {
+	auto errorWatcher = m_errorReporter.errorWatcher();
 	_root.accept(*this);
-	return !m_errorOccurred;
+	return errorWatcher.ok();
 }
 
 bool ReferencesResolver::visit(Block const& _block)
@@ -267,19 +268,16 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 
 void ReferencesResolver::declarationError(SourceLocation const& _location, string const& _description)
 {
-	m_errorOccurred = true;
 	m_errorReporter.declarationError(8532_error, _location, _description);
 }
 
 void ReferencesResolver::declarationError(SourceLocation const& _location, SecondarySourceLocation const& _ssl, string const& _description)
 {
-	m_errorOccurred = true;
 	m_errorReporter.declarationError(3881_error, _location, _ssl, _description);
 }
 
 void ReferencesResolver::fatalDeclarationError(SourceLocation const& _location, string const& _description)
 {
-	m_errorOccurred = true;
 	m_errorReporter.fatalDeclarationError(6546_error, _location, _description);
 }
 
