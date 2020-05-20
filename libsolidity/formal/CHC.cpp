@@ -55,6 +55,7 @@ CHC::CHC(
 
 void CHC::analyze(SourceUnit const& _source)
 {
+	/// This chekcs that the spellchecker works.
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
 
 	bool usesZ3 = false;
