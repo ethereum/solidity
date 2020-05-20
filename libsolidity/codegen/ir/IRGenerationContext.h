@@ -102,7 +102,7 @@ public:
 
 	std::string newYulVariable();
 
-	std::string internalDispatch(YulArity const& _arity);
+	std::string generateInternalDispatchFunction(YulArity const& _arity);
 
 	/// @returns a new copy of the utility function generator (but using the same function set).
 	YulUtilFunctions utils();
@@ -120,6 +120,8 @@ public:
 	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated() { return m_subObjects; }
 
 private:
+	std::set<FunctionDefinition const*> collectFunctionsOfArity(YulArity const& _arity);
+
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
 	OptimiserSettings m_optimiserSettings;
