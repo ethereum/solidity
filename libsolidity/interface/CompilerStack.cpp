@@ -582,9 +582,9 @@ string const* CompilerStack::sourceMapping(string const& _contractName) const
 	if (!c.sourceMapping)
 	{
 		if (auto items = assemblyItems(_contractName))
-			c.sourceMapping = make_unique<string>(evmasm::AssemblyItem::computeSourceMapping(*items, sourceIndices()));
+			c.sourceMapping.emplace(evmasm::AssemblyItem::computeSourceMapping(*items, sourceIndices()));
 	}
-	return c.sourceMapping.get();
+	return c.sourceMapping ? &*c.sourceMapping : nullptr;
 }
 
 string const* CompilerStack::runtimeSourceMapping(string const& _contractName) const
@@ -596,11 +596,11 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 	if (!c.runtimeSourceMapping)
 	{
 		if (auto items = runtimeAssemblyItems(_contractName))
-			c.runtimeSourceMapping = make_unique<string>(
+			c.runtimeSourceMapping.emplace(
 				evmasm::AssemblyItem::computeSourceMapping(*items, sourceIndices())
 			);
 	}
-	return c.runtimeSourceMapping.get();
+	return c.runtimeSourceMapping ? &*c.runtimeSourceMapping : nullptr;
 }
 
 std::string const CompilerStack::filesystemFriendlyName(string const& _contractName) const

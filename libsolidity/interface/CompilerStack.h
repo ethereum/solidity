@@ -348,8 +348,8 @@ private:
 		util::LazyInit<Json::Value const> storageLayout;
 		util::LazyInit<Json::Value const> userDocumentation;
 		util::LazyInit<Json::Value const> devDocumentation;
-		mutable std::unique_ptr<std::string const> sourceMapping;
-		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
+		mutable std::optional<std::string const> sourceMapping;
+		mutable std::optional<std::string const> runtimeSourceMapping;
 	};
 
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback

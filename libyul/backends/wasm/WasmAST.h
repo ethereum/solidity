@@ -25,6 +25,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <optional>
 
 namespace solidity::yul::wasm
 {
@@ -76,7 +77,7 @@ struct FunctionImport {
 	std::string externalName;
 	std::string internalName;
 	std::vector<std::string> paramTypes;
-	std::unique_ptr<std::string> returnType;
+	std::optional<std::string> returnType;
 };
 
 struct FunctionDefinition
