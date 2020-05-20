@@ -42,7 +42,6 @@ CHC::CHC(
 	ReadCallback::Callback const& _smtCallback,
 	[[maybe_unused]] smt::SMTSolverChoice _enabledSolvers
 ):
-	SMTEncoder(_context),
 	m_outerErrorReporter(_errorReporter),
 	m_enabledSolvers(_enabledSolvers)
 {
