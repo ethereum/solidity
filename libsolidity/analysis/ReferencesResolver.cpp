@@ -119,7 +119,7 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 			else
 				errorMessage += " Did you mean " + std::move(suggestions) + "?";
 		}
-		declarationError(_identifier.location(), errorMessage);
+		m_errorReporter.declarationError(8051_error, _identifier.location(), errorMessage);
 	}
 	else if (declarations.size() == 1)
 		_identifier.annotation().referencedDeclaration = declarations.front();
@@ -157,7 +157,7 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
 	if (!declaration)
 	{
-		fatalDeclarationError(_typeName.location(), "Identifier not found or not unique.");
+		m_errorReporter.fatalDeclarationError(7556_error, _typeName.location(), "Identifier not found or not unique.");
 		return;
 	}
 
@@ -209,14 +209,14 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		));
 		if (realName.empty())
 		{
-			declarationError(_identifier.location, "In variable names _slot and _offset can only be used as a suffix.");
+			m_errorReporter.declarationError(9553_error, _identifier.location, "In variable names _slot and _offset can only be used as a suffix.");
 			return;
 		}
 		declarations = m_resolver.nameFromCurrentScope(realName);
 	}
 	if (declarations.size() > 1)
 	{
-		declarationError(_identifier.location, "Multiple matching identifiers. Resolving overloaded identifiers is not supported.");
+		m_errorReporter.declarationError(8827_error, _identifier.location, "Multiple matching identifiers. Resolving overloaded identifiers is not supported.");
 		return;
 	}
 	else if (declarations.size() == 0)
@@ -224,7 +224,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 	if (auto var = dynamic_cast<VariableDeclaration const*>(declarations.front()))
 		if (var->isLocalVariable() && m_yulInsideFunction)
 		{
-			declarationError(_identifier.location, "Cannot access local Solidity variables from inside an inline assembly function.");
+			m_errorReporter.declarationError(8477_error, _identifier.location, "Cannot access local Solidity variables from inside an inline assembly function.");
 			return;
 		}
 
@@ -242,7 +242,7 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 
 		string namePrefix = identifier.name.str().substr(0, identifier.name.str().find('.'));
 		if (isSlot || isOffset)
-			declarationError(identifier.location, "In variable declarations _slot and _offset can not be used as a suffix.");
+			m_errorReporter.declarationError(8820_error, identifier.location, "In variable declarations _slot and _offset can not be used as a suffix.");
 		else if (
 			auto declarations = m_resolver.nameFromCurrentScope(namePrefix);
 			!declarations.empty()
@@ -252,7 +252,8 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 			for (auto const* decl: declarations)
 				ssl.append("The shadowed declaration is here:", decl->location());
 			if (!ssl.infos.empty())
-				declarationError(
+				m_errorReporter.declarationError(
+					6005_error,
 					identifier.location,
 					ssl,
 					namePrefix.size() < identifier.name.str().size() ?
@@ -264,21 +265,6 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 
 	if (_varDecl.value)
 		visit(*_varDecl.value);
-}
-
-void ReferencesResolver::declarationError(SourceLocation const& _location, string const& _description)
-{
-	m_errorReporter.declarationError(8532_error, _location, _description);
-}
-
-void ReferencesResolver::declarationError(SourceLocation const& _location, SecondarySourceLocation const& _ssl, string const& _description)
-{
-	m_errorReporter.declarationError(3881_error, _location, _ssl, _description);
-}
-
-void ReferencesResolver::fatalDeclarationError(SourceLocation const& _location, string const& _description)
-{
-	m_errorReporter.fatalDeclarationError(6546_error, _location, _description);
 }
 
 }
