@@ -108,7 +108,7 @@ void AssemblyStack::translate(AssemblyStack::Language _targetLanguage)
 	if (m_language == _targetLanguage)
 		return;
 
-	solAssert(
+	yulAssert(
 		m_language == Language::StrictAssembly && _targetLanguage == Language::Ewasm,
 		"Invalid language combination"
 	);
@@ -160,7 +160,7 @@ void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _o
 			dialect = &EVMDialectTyped::instance(m_evmVersion);
 			break;
 		default:
-			solAssert(false, "Invalid language.");
+			yulAssert(false, "Invalid language.");
 			break;
 	}
 

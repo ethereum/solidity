@@ -93,7 +93,7 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void(Expression const&)>)> _generateCode
 )
 {
-	solAssert(_literalArguments.size() == _params || _literalArguments.empty(), "");
+	yulAssert(_literalArguments.size() == _params || _literalArguments.empty(), "");
 
 	YulString name{std::move(_name)};
 	BuiltinFunctionForEVM f;
@@ -207,7 +207,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				BuiltinContext&,
 				std::function<void(Expression const&)> _visitExpression
 			) {
-				solAssert(_call.arguments.size() == 2, "");
+				yulAssert(_call.arguments.size() == 2, "");
 
 				_visitExpression(_call.arguments[1]);
 				_assembly.setSourceLocation(_call.location);
@@ -227,7 +227,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				BuiltinContext&,
 				std::function<void(Expression const&)>
 			) {
-				solAssert(_call.arguments.size() == 1, "");
+				yulAssert(_call.arguments.size() == 1, "");
 				_assembly.appendImmutable(std::get<Literal>(_call.arguments.front()).value.str());
 			}
 		));
