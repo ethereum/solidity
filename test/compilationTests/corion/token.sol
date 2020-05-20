@@ -11,6 +11,12 @@ contract thirdPartyContractAbstract {
     function approvedCorionToken(address, uint256, bytes calldata) external returns (bool) {}
 }
 
+/**
+ *
+ * @title Corion Platform Token
+ * @author iFA @ Corion Platform
+ *
+ */
 contract token is safeMath, module, announcementTypes {
     /*
         module callbacks
@@ -26,12 +32,7 @@ contract token is safeMath, module, announcementTypes {
         require( _success && _active );
         _;
     }
-    /**
-    *
-    * @title Corion Platform Token
-    * @author iFA @ Corion Platform
-    *
-    */
+
     string public name = "Corion";
     string public symbol = "COR";
     uint8 public decimals = 6;

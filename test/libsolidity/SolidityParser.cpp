@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 			/// fun1 description
 			function fun1(uint256 a) {
 				var b;
-				/// I should not interfere with actual natspec comments
+				// I should not interfere with actual natspec comments (natspec comments on local variables not allowed anymore)
 				uint256 c;
 				mapping(address=>bytes32) d;
 				bytes7 name = "Solidity";
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 			function ///I am in the wrong place
 			fun1(uint256 a) {
 				var b;
-				/// I should not interfere with actual natspec comments
+				// I should not interfere with actual natspec comments (natspec comments on local variables not allowed anymore)
 				uint256 c;
 				mapping(address=>bytes32) d;
 				bytes7 name = "Solidity";
@@ -310,9 +310,9 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 		contract test {
 			uint256 stateVar;
 			function fun1(uint256 a) {
-				/// I should have been above the function signature
+				// I should have been above the function signature (natspec comments on local variables not allowed anymore)
 				var b;
-				/// I should not interfere with actual natspec comments
+				// I should not interfere with actual natspec comments (natspec comments on local variables not allowed anymore)
 				uint256 c;
 				mapping(address=>bytes32) d;
 				bytes7 name = "Solidity";

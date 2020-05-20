@@ -11,6 +11,12 @@ contract thirdPartyPContractAbstract {
 
 contract ptokenDB is tokenDB {}
 
+/**
+ *
+ * @title Corion Platform Premium Token
+ * @author iFA @ Corion Platform
+ *
+ */
 contract premium is module, safeMath {
     function replaceModule(address payable addr) external override returns (bool success) {
         require( super.isModuleHandler(msg.sender) );
@@ -23,12 +29,6 @@ contract premium is module, safeMath {
         require( _success && _active );
         _;
     }
-    /**
-    *
-    * @title Corion Platform Premium Token
-    * @author iFA @ Corion Platform
-    *
-    */
 
     string public name = "Corion Premium";
     string public symbol = "CORP";

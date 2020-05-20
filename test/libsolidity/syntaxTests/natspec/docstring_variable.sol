@@ -11,4 +11,4 @@ contract C {
     }
 }
 // ----
-// Warning: (290-295): Only state variables can have a docstring. This will be disallowed in 0.7.0.
+// ParserError: (290-295): Only state variables can have a docstring.
