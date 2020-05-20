@@ -415,7 +415,7 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
     pragma solidity >=0.6.0 <0.8.0;
 
     contract Proxy {
-        /// Address of the client contract managed by proxy i.e., this contract
+        /// @dev Address of the client contract managed by proxy i.e., this contract
         address client;
 
         constructor(address _client) public {

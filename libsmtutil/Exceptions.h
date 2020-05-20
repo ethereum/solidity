@@ -15,15 +15,17 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#pragma once
 
-#include <libsolidity/formal/Sorts.h>
+#include <libsolutil/Assertions.h>
+#include <libsolutil/Exceptions.h>
 
-using namespace std;
-
-namespace solidity::frontend::smt
+namespace solidity::smtutil
 {
 
-shared_ptr<Sort> const SortProvider::boolSort{make_shared<Sort>(Kind::Bool)};
-shared_ptr<Sort> const SortProvider::intSort{make_shared<Sort>(Kind::Int)};
+struct SMTLogicError: virtual util::Exception {};
+
+#define smtAssert(CONDITION, DESCRIPTION) \
+	assertThrow(CONDITION, SMTLogicError, DESCRIPTION)
 
 }

@@ -40,7 +40,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 	auto constructorDefinition(_contractDef.constructor());
 	if (constructorDefinition)
 	{
-		string value = extractDoc(constructorDefinition->annotation().docTags, "notice");
+		string const value = extractDoc(constructorDefinition->annotation().docTags, "notice");
 		if (!value.empty())
 		{
 			// add the constructor, only if we have any documentation to add
@@ -56,6 +56,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 
 	for (auto const& it: _contractDef.interfaceFunctions())
 		if (it.second->hasDeclaration())
+		{
 			if (auto const* f = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
 			{
 				string value = extractDoc(f->annotation().docTags, "notice");
@@ -67,6 +68,19 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 					methods[it.second->externalSignature()] = user;
 				}
 			}
+			else if (auto var = dynamic_cast<VariableDeclaration const*>(&it.second->declaration()))
+			{
+				solAssert(var->isStateVariable() && var->isPublic(), "");
+				string value = extractDoc(var->annotation().docTags, "notice");
+				if (!value.empty())
+				{
+					Json::Value user;
+					// since @notice is the only user tag if missing function should not appear
+					user["notice"] = Json::Value(value);
+					methods[it.second->externalSignature()] = user;
+				}
+			}
+		}
 	doc["methods"] = methods;
 
 	return doc;
@@ -114,7 +128,20 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		}
 	}
 
+	Json::Value stateVariables(Json::objectValue);
+	for (VariableDeclaration const* varDecl: _contractDef.stateVariables())
+	{
+		if (auto devDoc = devDocumentation(varDecl->annotation().docTags); !devDoc.empty())
+			stateVariables[varDecl->name()] = devDoc;
+
+		solAssert(varDecl->annotation().docTags.count("return") <= 1, "");
+		if (varDecl->annotation().docTags.count("return") == 1)
+			stateVariables[varDecl->name()]["return"] = extractDoc(varDecl->annotation().docTags, "return");
+	}
+
 	doc["methods"] = methods;
+	if (!stateVariables.empty())
+		doc["stateVariables"] = stateVariables;
 
 	return doc;
 }

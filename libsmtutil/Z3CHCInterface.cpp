@@ -15,14 +15,13 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libsolidity/formal/Z3CHCInterface.h>
+#include <libsmtutil/Z3CHCInterface.h>
 
-#include <liblangutil/Exceptions.h>
 #include <libsolutil/CommonIO.h>
 
 using namespace std;
 using namespace solidity;
-using namespace solidity::frontend::smt;
+using namespace solidity::smtutil;
 
 Z3CHCInterface::Z3CHCInterface():
 	m_z3Interface(make_unique<Z3Interface>()),
@@ -48,7 +47,7 @@ Z3CHCInterface::Z3CHCInterface():
 
 void Z3CHCInterface::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	solAssert(_sort, "");
+	smtAssert(_sort, "");
 	m_z3Interface->declareVariable(_name, _sort);
 }
 

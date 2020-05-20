@@ -121,9 +121,9 @@ string IRGenerationContext::newYulVariable()
 	return "_" + to_string(++m_varCounter);
 }
 
-string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
+string IRGenerationContext::generateInternalDispatchFunction(YulArity const& _arity)
 {
-	string funName = "dispatch_internal_in_" + to_string(_in) + "_out_" + to_string(_out);
+	string funName = IRNames::internalDispatch(_arity);
 	return m_functions.createFunction(funName, [&]() {
 		Whiskers templ(R"(
 			function <functionName>(fun <comma> <in>) <arrow> <out> {
@@ -138,38 +138,33 @@ string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
 			}
 		)");
 		templ("functionName", funName);
-		templ("comma", _in > 0 ? "," : "");
-		YulUtilFunctions utils(m_evmVersion, m_revertStrings, m_functions);
-		templ("in", suffixedVariableNameList("in_", 0, _in));
-		templ("arrow", _out > 0 ? "->" : "");
-		templ("assignment_op", _out > 0 ? ":=" : "");
-		templ("out", suffixedVariableNameList("out_", 0, _out));
+		templ("comma", _arity.in > 0 ? "," : "");
+		templ("in", suffixedVariableNameList("in_", 0, _arity.in));
+		templ("arrow", _arity.out > 0 ? "->" : "");
+		templ("assignment_op", _arity.out > 0 ? ":=" : "");
+		templ("out", suffixedVariableNameList("out_", 0, _arity.out));
 
-		// UNIMPLEMENTED: Internal library calls via pointers are not implemented yet.
-		// We're not generating code for internal library functions here even though it's possible
-		// to call them via pointers. Right now such calls end up triggering the `default` case in
-		// the switch above.
-		vector<map<string, string>> functions;
-		for (auto const& contract: mostDerivedContract().annotation().linearizedBaseContracts)
-			for (FunctionDefinition const* function: contract->definedFunctions())
-				if (
-					FunctionType const* functionType = TypeProvider::function(*function)->asCallableFunction(false);
-					!function->isConstructor() &&
-					TupleType(functionType->parameterTypes()).sizeOnStack() == _in &&
-					TupleType(functionType->returnParameterTypes()).sizeOnStack() == _out
-				)
-				{
-					// 0 is reserved for uninitialized function pointers
-					solAssert(function->id() != 0, "Unexpected function ID: 0");
+		vector<map<string, string>> cases;
+		for (FunctionDefinition const* function: collectFunctionsOfArity(_arity))
+		{
+			solAssert(function, "");
+			solAssert(
+				YulArity::fromType(*TypeProvider::function(*function, FunctionType::Kind::Internal)) == _arity,
+				"A single dispatch function can only handle functions of one arity"
+			);
+			solAssert(!function->isConstructor(), "");
+			// 0 is reserved for uninitialized function pointers
+			solAssert(function->id() != 0, "Unexpected function ID: 0");
 
-					functions.emplace_back(map<string, string> {
-						{ "funID", to_string(function->id()) },
-						{ "name", IRNames::function(*function)}
-					});
+			cases.emplace_back(map<string, string>{
+				{"funID", to_string(function->id())},
+				{"name", IRNames::function(*function)}
+			});
 
-					enqueueFunctionForCodeGeneration(*function);
-				}
-		templ("cases", move(functions));
+			enqueueFunctionForCodeGeneration(*function);
+		}
+
+		templ("cases", move(cases));
 		return templ.render();
 	});
 }
@@ -189,3 +184,20 @@ std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message
 	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
 }
 
+set<FunctionDefinition const*> IRGenerationContext::collectFunctionsOfArity(YulArity const& _arity)
+{
+	// UNIMPLEMENTED: Internal library calls via pointers are not implemented yet.
+	// We're not returning any internal library functions here even though it's possible
+	// to call them via pointers. Right now such calls end will up triggering the `default` case in
+	// the switch in the generated dispatch function.
+	set<FunctionDefinition const*> functions;
+	for (auto const& contract: mostDerivedContract().annotation().linearizedBaseContracts)
+		for (FunctionDefinition const* function: contract->definedFunctions())
+			if (
+				!function->isConstructor() &&
+				YulArity::fromType(*TypeProvider::function(*function, FunctionType::Kind::Internal)) == _arity
+			)
+				functions.insert(function);
+
+	return functions;
+}

@@ -25,7 +25,7 @@ Compiler Features:
  * Build system: Update the soljson.js build to emscripten 1.39.15 and boost 1.73.0 and include Z3 for integrated SMTChecker support without the callback mechanism.
  * SMTChecker: Support array ``length``.
  * SMTChecker: Support array ``push`` and ``pop``.
-
+ * Add support for natspec comments on state variables.
 
 Bugfixes:
  * Optimizer: Fixed a bug in BlockDeDuplicator.

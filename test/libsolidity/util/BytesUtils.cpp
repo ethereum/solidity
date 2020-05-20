@@ -252,7 +252,35 @@ string BytesUtils::formatBytes(
 		if (*_bytes.begin() & 0x80)
 			os << formatSigned(_bytes);
 		else
-			os << formatUnsigned(_bytes);
+		{
+			std::string decimal(formatUnsigned(_bytes));
+			std::string hexadecimal(formatHex(_bytes));
+			unsigned int value = u256(_bytes).convert_to<unsigned int>();
+			if (value < 0x10)
+				os << decimal;
+			else if (value >= 0x10 && value <= 0xff) {
+				os << hexadecimal;
+			}
+			else
+			{
+				auto entropy = [](std::string const& str) -> double {
+					double result = 0;
+					map<char, int> frequencies;
+					for (char c: str)
+						frequencies[c]++;
+					for (auto p: frequencies)
+					{
+						double freq = static_cast<double>(p.second) / str.length();
+						result -= freq * (log(freq) / log(2));
+					}
+					return result;
+				};
+				if (entropy(decimal) < entropy(hexadecimal.substr(2, hexadecimal.length())))
+					os << decimal;
+				else
+					os << hexadecimal;
+			}
+		}
 		break;
 	case ABIType::SignedDec:
 		os << formatSigned(_bytes);

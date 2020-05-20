@@ -28,6 +28,9 @@ Documentation Example
 Documentation is inserted above each ``class``, ``interface`` and
 ``function`` using the doxygen notation format.
 
+Note: a ``public`` state variable is equivalent to a ``function``
+for the purposes of NatSpec.
+
 -  For Solidity you may choose ``///`` for single or multi-line
    comments, or ``/**`` and ending with ``*/``.
 
@@ -82,10 +85,10 @@ Tag                                                                             
 =========== =============================================================================== =============================
 ``@title``  A title that should describe the contract/interface                             contract, interface
 ``@author`` The name of the author                                                          contract, interface, function
-``@notice`` Explain to an end user what this does                                           contract, interface, function
-``@dev``    Explain to a developer any extra details                                        contract, interface, function
+``@notice`` Explain to an end user what this does                                           contract, interface, function, public state variable
+``@dev``    Explain to a developer any extra details                                        contract, interface, function, state variable
 ``@param``  Documents a parameter just like in doxygen (must be followed by parameter name) function
-``@return`` Documents the return variables of a contract's function                         function
+``@return`` Documents the return variables of a contract's function                         function, public state variable
 =========== =============================================================================== =============================
 
 If your function returns multiple values, like ``(int quotient, int remainder)``

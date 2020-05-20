@@ -171,7 +171,7 @@ struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, Structurally
 {
 };
 
-struct VariableDeclarationAnnotation: DeclarationAnnotation
+struct VariableDeclarationAnnotation: DeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 	/// Type of variable (type of identifier referencing this variable).
 	TypePointer type = nullptr;

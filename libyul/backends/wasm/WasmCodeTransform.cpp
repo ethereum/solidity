@@ -29,6 +29,8 @@
 
 #include <liblangutil/Exceptions.h>
 
+#include <optional>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -125,7 +127,7 @@ wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 					builtin->name.str().substr(4),
 					builtin->name.str(),
 					{},
-					builtin->returns.empty() ? nullptr : make_unique<string>(builtin->returns.front().str())
+					builtin->returns.empty() ? nullopt : make_optional<string>(builtin->returns.front().str())
 				};
 				for (auto const& param: builtin->parameters)
 					imp.paramTypes.emplace_back(param.str());
@@ -252,6 +254,7 @@ wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 	m_breakContinueLabelNames.push({breakLabel, continueLabel});
 
 	wasm::Loop loop;
+	loop.labelName = newLabel();
 	loop.statements = visit(_for.pre.statements);
 	loop.statements.emplace_back(wasm::BreakIf{wasm::Label{breakLabel}, make_unique<wasm::Expression>(
 		wasm::BuiltinCall{"i64.eqz", make_vector<wasm::Expression>(
@@ -260,6 +263,7 @@ wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 	)});
 	loop.statements.emplace_back(wasm::Block{continueLabel, visit(_for.body.statements)});
 	loop.statements += visit(_for.post.statements);
+	loop.statements.emplace_back(wasm::Break{wasm::Label{loop.labelName}});
 
 	return { wasm::Block{breakLabel, make_vector<wasm::Expression>(move(loop))} };
 }
