@@ -28,6 +28,7 @@
 #include <libyul/optimiser/Suite.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <libevmasm/Instruction.h>
+#include <libsmtutil/Exceptions.h>
 #include <libsolutil/JSON.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/CommonData.h>
@@ -919,6 +920,16 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			"YulException",
 			"general",
 			"Yul exception"
+		));
+	}
+	catch (smtutil::SMTLogicError const& _exception)
+	{
+		errors.append(formatErrorWithException(
+			_exception,
+			false,
+			"SMTLogicException",
+			"general",
+			"SMT logic exception"
 		));
 	}
 	catch (util::Exception const& _exception)
