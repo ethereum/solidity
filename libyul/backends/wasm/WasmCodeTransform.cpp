@@ -252,6 +252,7 @@ wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 	m_breakContinueLabelNames.push({breakLabel, continueLabel});
 
 	wasm::Loop loop;
+	loop.labelName = newLabel();
 	loop.statements = visit(_for.pre.statements);
 	loop.statements.emplace_back(wasm::BreakIf{wasm::Label{breakLabel}, make_unique<wasm::Expression>(
 		wasm::BuiltinCall{"i64.eqz", make_vector<wasm::Expression>(
@@ -260,6 +261,7 @@ wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 	)});
 	loop.statements.emplace_back(wasm::Block{continueLabel, visit(_for.body.statements)});
 	loop.statements += visit(_for.post.statements);
+	loop.statements.emplace_back(wasm::Break{wasm::Label{loop.labelName}});
 
 	return { wasm::Block{breakLabel, make_vector<wasm::Expression>(move(loop))} };
 }
