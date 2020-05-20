@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(multiline_documentation_comments_parsed)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
-	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "Send $(value / 1000) chocolates to the user");
+	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), " Send $(value / 1000) chocolates to the user");
 }
 
 BOOST_AUTO_TEST_CASE(multiline_documentation_no_stars)
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(multiline_documentation_whitespace_hell)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
-	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "Send $(value / 1000) chocolates to the user");
+	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), " Send $(value / 1000) chocolates to the user");
 }
 
 BOOST_AUTO_TEST_CASE(comment_before_eos)
