@@ -16,8 +16,7 @@
       [
         31
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -34,7 +33,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -48,7 +46,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "a399b6a2",
             "implemented": true,
             "isConstructor": false,
@@ -58,7 +55,6 @@
               null
             ],
             "name": "faa",
-            "overrides": null,
             "scope": 5,
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -124,7 +120,6 @@
           5
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": false,
         "linearizedBaseContracts":
         [
@@ -137,16 +132,12 @@
       "children":
       [
         {
-          "attributes":
-          {
-            "arguments": null
-          },
+          "attributes": {},
           "children":
           [
             {
               "attributes":
               {
-                "contractScope": null,
                 "name": "A",
                 "referencedDeclaration": 5,
                 "type": "contract A"
@@ -163,8 +154,6 @@
         {
           "attributes":
           {
-            "body": null,
-            "documentation": null,
             "functionSelector": "c2985578",
             "implemented": false,
             "isConstructor": false,
@@ -174,7 +163,6 @@
               null
             ],
             "name": "foo",
-            "overrides": null,
             "scope": 16,
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -220,7 +208,6 @@
             [
               4
             ],
-            "documentation": null,
             "functionSelector": "a399b6a2",
             "implemented": true,
             "isConstructor": false,
@@ -308,7 +295,6 @@
           16
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -322,16 +308,12 @@
       "children":
       [
         {
-          "attributes":
-          {
-            "arguments": null
-          },
+          "attributes": {},
           "children":
           [
             {
               "attributes":
               {
-                "contractScope": null,
                 "name": "B",
                 "referencedDeclaration": 16,
                 "type": "contract B"
@@ -352,7 +334,6 @@
             [
               10
             ],
-            "documentation": null,
             "functionSelector": "c2985578",
             "implemented": true,
             "isConstructor": false,
@@ -432,7 +413,6 @@
             [
               15
             ],
-            "documentation": null,
             "functionSelector": "a399b6a2",
             "implemented": true,
             "isConstructor": false,
@@ -455,7 +435,6 @@
                 {
                   "attributes":
                   {
-                    "contractScope": null,
                     "name": "A",
                     "referencedDeclaration": 5,
                     "type": "contract A"
@@ -467,7 +446,6 @@
                 {
                   "attributes":
                   {
-                    "contractScope": null,
                     "name": "B",
                     "referencedDeclaration": 16,
                     "type": "contract B"

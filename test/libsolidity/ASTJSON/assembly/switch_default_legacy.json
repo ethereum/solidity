@@ -8,8 +8,7 @@
       [
         6
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -40,7 +38,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "e2179b8e",
             "implemented": true,
             "isConstructor": false,
@@ -50,7 +47,6 @@
               null
             ],
             "name": "g",
-            "overrides": null,
             "scope": 6,
             "stateMutability": "view",
             "virtual": false,

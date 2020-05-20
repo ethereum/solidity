@@ -8,8 +8,7 @@
       [
         20
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -76,7 +74,6 @@
           "attributes":
           {
             "name": "mod",
-            "overrides": null,
             "virtual": false,
             "visibility": "internal"
           },
@@ -134,7 +131,6 @@
               null
             ],
             "name": "fn",
-            "overrides": null,
             "scope": 20,
             "stateMutability": "nonpayable",
             "virtual": false,

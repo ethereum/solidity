@@ -884,7 +884,8 @@ ASTPointer<StructuredDocumentation> ASTJsonImporter::createDocumentation(Json::V
 
 Json::Value ASTJsonImporter::member(Json::Value const& _node, string const& _name)
 {
-	astAssert(_node.isMember(_name), "Node '" + _node["nodeType"].asString() + "' (id " + _node["id"].asString() + ") is missing field '" + _name + "'.");
+	if (!_node.isMember(_name))
+		return Json::nullValue;
 	return _node[_name];
 }
 

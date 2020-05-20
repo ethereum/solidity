@@ -87,7 +87,30 @@ bool parse(Json::CharReaderBuilder& _builder, string const& _input, Json::Value&
 	return reader->parse(_input.c_str(), _input.c_str() + _input.length(), &_json, _errs);
 }
 
+/// Takes a JSON value (@ _json) and removes all its members with value 'null' recursively.
+void removeNullMembersHelper(Json::Value& _json)
+{
+	if (_json.type() == Json::ValueType::arrayValue)
+		for (auto& child: _json)
+			removeNullMembersHelper(child);
+	else if (_json.type() == Json::ValueType::objectValue)
+		for (auto const& key: _json.getMemberNames())
+		{
+			Json::Value& value = _json[key];
+			if (value.isNull())
+				_json.removeMember(key);
+			else
+				removeNullMembersHelper(value);
+		}
+}
+
 } // end anonymous namespace
+
+Json::Value removeNullMembers(Json::Value _json)
+{
+	removeNullMembersHelper(_json);
+	return _json;
+}
 
 string jsonPrettyPrint(Json::Value const& _input)
 {

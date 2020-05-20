@@ -8,8 +8,7 @@
       [
         3
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -41,7 +39,6 @@
           "attributes":
           {
             "anonymous": false,
-            "documentation": null,
             "name": "E"
           },
           "children":

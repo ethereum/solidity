@@ -8,7 +8,6 @@
     ]
   },
   "id": 16,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -17,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 15,
       "linearizedBaseContracts":
@@ -34,7 +32,6 @@
           "mutability": "mutable",
           "name": "a",
           "nodeType": "VariableDeclaration",
-          "overrides": null,
           "scope": 15,
           "src": "13:8:1",
           "stateVariable": true,
@@ -59,7 +56,6 @@
               }
             },
             "id": 2,
-            "length": null,
             "nodeType": "ArrayTypeName",
             "src": "13:6:1",
             "typeDescriptions":
@@ -68,7 +64,6 @@
               "typeString": "uint256[]"
             }
           },
-          "value": null,
           "visibility": "internal"
         },
         {
@@ -92,7 +87,6 @@
                     "mutability": "mutable",
                     "name": "b",
                     "nodeType": "VariableDeclaration",
-                    "overrides": null,
                     "scope": 13,
                     "src": "45:16:1",
                     "stateVariable": false,
@@ -117,7 +111,6 @@
                         }
                       },
                       "id": 9,
-                      "length": null,
                       "nodeType": "ArrayTypeName",
                       "src": "45:6:1",
                       "typeDescriptions":
@@ -126,14 +119,12 @@
                         "typeString": "uint256[]"
                       }
                     },
-                    "value": null,
                     "visibility": "internal"
                   }
                 ],
                 "id": 12,
                 "initialValue":
                 {
-                  "argumentTypes": null,
                   "id": 11,
                   "name": "a",
                   "nodeType": "Identifier",
@@ -151,7 +142,6 @@
               }
             ]
           },
-          "documentation": null,
           "functionSelector": "26121ff0",
           "id": 14,
           "implemented": true,
@@ -159,7 +149,6 @@
           "modifiers": [],
           "name": "f",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 4,

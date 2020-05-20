@@ -28,6 +28,9 @@
 
 namespace solidity::util {
 
+/// Removes members with null value recursively from (@a _json).
+Json::Value removeNullMembers(Json::Value _json);
+
 /// Serialise the JSON object (@a _input) with indentation
 std::string jsonPrettyPrint(Json::Value const& _input);
 

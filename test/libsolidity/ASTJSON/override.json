@@ -16,7 +16,6 @@
     ]
   },
   "id": 32,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -25,7 +24,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 5,
       "linearizedBaseContracts":
@@ -44,7 +42,6 @@
             "src": "36:2:1",
             "statements": []
           },
-          "documentation": null,
           "functionSelector": "a399b6a2",
           "id": 4,
           "implemented": true,
@@ -52,7 +49,6 @@
           "modifiers": [],
           "name": "faa",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -82,10 +78,8 @@
       "baseContracts":
       [
         {
-          "arguments": null,
           "baseName":
           {
-            "contractScope": null,
             "id": 6,
             "name": "A",
             "nodeType": "UserDefinedTypeName",
@@ -107,7 +101,6 @@
         5
       ],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": false,
       "id": 16,
       "linearizedBaseContracts":
@@ -120,8 +113,6 @@
       "nodes":
       [
         {
-          "body": null,
-          "documentation": null,
           "functionSelector": "c2985578",
           "id": 10,
           "implemented": false,
@@ -129,7 +120,6 @@
           "modifiers": [],
           "name": "foo",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 8,
@@ -162,7 +152,6 @@
             "src": "115:2:1",
             "statements": []
           },
-          "documentation": null,
           "functionSelector": "a399b6a2",
           "id": 15,
           "implemented": true,
@@ -206,10 +195,8 @@
       "baseContracts":
       [
         {
-          "arguments": null,
           "baseName":
           {
-            "contractScope": null,
             "id": 17,
             "name": "B",
             "nodeType": "UserDefinedTypeName",
@@ -232,7 +219,6 @@
         16
       ],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 31,
       "linearizedBaseContracts":
@@ -257,7 +243,6 @@
             "src": "170:3:1",
             "statements": []
           },
-          "documentation": null,
           "functionSelector": "c2985578",
           "id": 23,
           "implemented": true,
@@ -304,7 +289,6 @@
             "src": "212:2:1",
             "statements": []
           },
-          "documentation": null,
           "functionSelector": "a399b6a2",
           "id": 30,
           "implemented": true,
@@ -319,7 +303,6 @@
             "overrides":
             [
               {
-                "contractScope": null,
                 "id": 25,
                 "name": "A",
                 "nodeType": "UserDefinedTypeName",
@@ -332,7 +315,6 @@
                 }
               },
               {
-                "contractScope": null,
                 "id": 26,
                 "name": "B",
                 "nodeType": "UserDefinedTypeName",
