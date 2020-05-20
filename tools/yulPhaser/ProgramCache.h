@@ -19,6 +19,8 @@
 
 #include <tools/yulPhaser/Program.h>
 
+#include <libyul/optimiser/Metrics.h>
+
 #include <map>
 #include <string>
 
@@ -44,6 +46,29 @@ struct CacheEntry
  */
 struct CacheStats
 {
+	/// Weights used to compute totalCodeSize.
+	/// The goal here is to get a result proportional to the amount of memory taken by the AST.
+	/// Each statement/expression gets 1 just for existing. We add more if it contains any extra
+	/// data that won't be visited separately by ASTWalker.
+	static yul::CodeWeights constexpr StorageWeights = {
+		/* expressionStatementCost = */ 1,
+		/* assignmentCost = */ 1,
+		/* variableDeclarationCost = */ 1,
+		/* functionDefinitionCost = */ 1,
+		/* ifCost = */ 1,
+		/* switchCost = */ 1,
+		/* caseCost = */ 1,
+		/* forLoopCost = */ 1,
+		/* breakCost = */ 1,
+		/* continueCost = */ 1,
+		/* leaveCost = */ 1,
+		/* blockCost = */ 1,
+
+		/* functionCallCost = */ 1,
+		/* identifierCost = */ 1,
+		/* literalCost = */ 1,
+	};
+
 	size_t hits;
 	size_t misses;
 	size_t totalCodeSize;
