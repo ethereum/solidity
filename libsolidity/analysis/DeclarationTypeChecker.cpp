@@ -50,7 +50,8 @@ bool DeclarationTypeChecker::visit(ElementaryTypeName const& _typeName)
 				_typeName.annotation().type = TypeProvider::address();
 				break;
 			default:
-				typeError(
+				m_errorReporter.typeError(
+					2311_error,
 					_typeName.location(),
 					"Address types can only be payable or non-payable."
 				);
@@ -102,7 +103,7 @@ bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 	auto visitor = [&](StructDefinition const& _struct, auto& _cycleDetector, size_t _depth)
 	{
 		if (_depth >= 256)
-			fatalDeclarationError(_struct.location(), "Struct definition exhausts cyclic dependency validator.");
+			m_errorReporter.fatalDeclarationError(5651_error, _struct.location(), "Struct definition exhausts cyclic dependency validator.");
 
 		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
 		{
@@ -119,7 +120,7 @@ bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 		}
 	};
 	if (util::CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
-		fatalTypeError(_struct.location(), "Recursive struct definition.");
+		m_errorReporter.fatalTypeError(2046_error, _struct.location(), "Recursive struct definition.");
 
 	return false;
 }
@@ -145,7 +146,7 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 	else
 	{
 		_typeName.annotation().type = TypeProvider::emptyTuple();
-		fatalTypeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
+		m_errorReporter.fatalTypeError(9755_error, _typeName.location(), "Name has to refer to a struct, enum or contract.");
 	}
 }
 bool DeclarationTypeChecker::visit(FunctionTypeName const& _typeName)
@@ -165,13 +166,13 @@ bool DeclarationTypeChecker::visit(FunctionTypeName const& _typeName)
 		case Visibility::External:
 			break;
 		default:
-			fatalTypeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
+			m_errorReporter.fatalTypeError(7653_error, _typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
 			return false;
 	}
 
 	if (_typeName.isPayable() && _typeName.visibility() != Visibility::External)
 	{
-		fatalTypeError(_typeName.location(), "Only external function types can be payable.");
+		m_errorReporter.fatalTypeError(6138_error, _typeName.location(), "Only external function types can be payable.");
 		return false;
 	}
 	_typeName.annotation().type = TypeProvider::function(_typeName);
@@ -226,7 +227,7 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 		return;
 	}
 	if (baseType->storageBytes() == 0)
-		fatalTypeError(_typeName.baseType().location(), "Illegal base type of storage size zero for array.");
+		m_errorReporter.fatalTypeError(9390_error, _typeName.baseType().location(), "Illegal base type of storage size zero for array.");
 	if (Expression const* length = _typeName.length())
 	{
 		TypePointer& lengthTypeGeneric = length->annotation().type;
@@ -235,13 +236,13 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric);
 		u256 lengthValue = 0;
 		if (!lengthType || !lengthType->mobileType())
-			typeError(length->location(), "Invalid array length, expected integer literal or constant expression.");
+			m_errorReporter.typeError(8922_error, length->location(), "Invalid array length, expected integer literal or constant expression.");
 		else if (lengthType->isZero())
-			typeError(length->location(), "Array with zero length specified.");
+			m_errorReporter.typeError(1220_error, length->location(), "Array with zero length specified.");
 		else if (lengthType->isFractional())
-			typeError(length->location(), "Array with fractional length specified.");
+			m_errorReporter.typeError(4323_error, length->location(), "Array with fractional length specified.");
 		else if (lengthType->isNegative())
-			typeError(length->location(), "Array with negative length specified.");
+			m_errorReporter.typeError(9308_error, length->location(), "Array with negative length specified.");
 		else
 			lengthValue = lengthType->literalValue(nullptr);
 		_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType, lengthValue);
@@ -309,7 +310,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 				errorString += " for variable";
 		}
 		errorString += ", but " + locationToString(varLoc) + " was given.";
-		typeError(_variable.location(), errorString);
+		m_errorReporter.typeError(6160_error, _variable.location(), errorString);
 
 		solAssert(!allowedDataLocations.empty(), "");
 		varLoc = *allowedDataLocations.begin();
@@ -359,24 +360,9 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 
 }
 
-void DeclarationTypeChecker::typeError(SourceLocation const& _location, string const& _description)
-{
-	m_errorReporter.typeError(2311_error, _location, _description);
-}
-
-void DeclarationTypeChecker::fatalTypeError(SourceLocation const& _location, string const& _description)
-{
-	m_errorReporter.fatalTypeError(5651_error, _location, _description);
-}
-
-void DeclarationTypeChecker::fatalDeclarationError(SourceLocation const& _location, string const& _description)
-{
-	m_errorReporter.fatalDeclarationError(2046_error, _location, _description);
-}
-
 bool DeclarationTypeChecker::check(ASTNode const& _node)
 {
-	unsigned errorCount = m_errorReporter.errorCount();
+	auto watcher = m_errorReporter.errorWatcher();
 	_node.accept(*this);
-	return m_errorReporter.errorCount() == errorCount;
+	return watcher.ok();
 }
