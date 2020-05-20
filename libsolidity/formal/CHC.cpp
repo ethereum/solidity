@@ -17,22 +17,22 @@
 
 #include <libsolidity/formal/CHC.h>
 
-#include <libsolidity/formal/CHCSmtLib2Interface.h>
-
 #ifdef HAVE_Z3
-#include <libsolidity/formal/Z3CHCInterface.h>
+#include <libsmtutil/Z3CHCInterface.h>
 #endif
 
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <libsolidity/ast/TypeProvider.h>
 
+#include <libsmtutil/CHCSmtLib2Interface.h>
 #include <libsolutil/Algorithms.h>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
+using namespace solidity::smtutil;
 using namespace solidity::frontend;
 
 CHC::CHC(
@@ -40,7 +40,7 @@ CHC::CHC(
 	ErrorReporter& _errorReporter,
 	map<util::h256, string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
-	[[maybe_unused]] smt::SMTSolverChoice _enabledSolvers
+	[[maybe_unused]] smtutil::SMTSolverChoice _enabledSolvers
 ):
 	SMTEncoder(_context),
 	m_outerErrorReporter(_errorReporter),
@@ -48,10 +48,10 @@ CHC::CHC(
 {
 #ifdef HAVE_Z3
 	if (_enabledSolvers.z3)
-		m_interface = make_unique<smt::Z3CHCInterface>();
+		m_interface = make_unique<smtutil::Z3CHCInterface>();
 #endif
 	if (!m_interface)
-		m_interface = make_unique<smt::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback);
+		m_interface = make_unique<smtutil::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback);
 }
 
 void CHC::analyze(SourceUnit const& _source)
@@ -63,14 +63,14 @@ void CHC::analyze(SourceUnit const& _source)
 	usesZ3 = m_enabledSolvers.z3;
 	if (usesZ3)
 	{
-		auto z3Interface = dynamic_cast<smt::Z3CHCInterface const*>(m_interface.get());
+		auto z3Interface = dynamic_cast<smtutil::Z3CHCInterface const*>(m_interface.get());
 		solAssert(z3Interface, "");
 		m_context.setSolver(z3Interface->z3Interface());
 	}
 #endif
 	if (!usesZ3)
 	{
-		auto smtlib2Interface = dynamic_cast<smt::CHCSmtLib2Interface const*>(m_interface.get());
+		auto smtlib2Interface = dynamic_cast<smtutil::CHCSmtLib2Interface const*>(m_interface.get());
 		solAssert(smtlib2Interface, "");
 		m_context.setSolver(smtlib2Interface->smtlib2Interface());
 	}
@@ -80,9 +80,9 @@ void CHC::analyze(SourceUnit const& _source)
 
 	resetSourceAnalysis();
 
-	auto genesisSort = make_shared<smt::FunctionSort>(
-		vector<smt::SortPointer>(),
-		smt::SortProvider::boolSort
+	auto genesisSort = make_shared<smtutil::FunctionSort>(
+		vector<smtutil::SortPointer>(),
+		smtutil::SortProvider::boolSort
 	);
 	m_genesisPredicate = createSymbolicBlock(genesisSort, "genesis");
 	addRule(genesis(), "genesis");
@@ -108,7 +108,7 @@ void CHC::analyze(SourceUnit const& _source)
 				auto [result, model] = query(error(), assertion->location());
 				// This should be fine but it's a bug in the old compiler
 				(void)model;
-				if (result == smt::CheckResult::UNSATISFIABLE)
+				if (result == smtutil::CheckResult::UNSATISFIABLE)
 					m_safeAssertions.insert(assertion);
 			}
 		}
@@ -120,10 +120,10 @@ void CHC::analyze(SourceUnit const& _source)
 			auto [result, model] = query(error(), scope->location());
 			// This should be fine but it's a bug in the old compiler
 			(void)model;
-			if (result != smt::CheckResult::UNSATISFIABLE)
+			if (result != smtutil::CheckResult::UNSATISFIABLE)
 			{
 				string msg = "Empty array \"pop\" ";
-				if (result == smt::CheckResult::SATISFIABLE)
+				if (result == smtutil::CheckResult::SATISFIABLE)
 					msg += "detected here.";
 				else
 					msg += "might happen here.";
@@ -142,7 +142,7 @@ void CHC::analyze(SourceUnit const& _source)
 
 vector<string> CHC::unhandledQueries() const
 {
-	if (auto smtlib2 = dynamic_cast<smt::CHCSmtLib2Interface const*>(m_interface.get()))
+	if (auto smtlib2 = dynamic_cast<smtutil::CHCSmtLib2Interface const*>(m_interface.get()))
 		return smtlib2->unhandledQueries();
 
 	return {};
@@ -182,14 +182,14 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	else
 		inlineConstructorHierarchy(_contract);
 
-	auto summary = predicate(*m_constructorSummaryPredicate, vector<smt::Expression>{m_error.currentValue()} + currentStateVariables());
+	auto summary = predicate(*m_constructorSummaryPredicate, vector<smtutil::Expression>{m_error.currentValue()} + currentStateVariables());
 	connectBlocks(m_currentBlock, summary);
 
 	clearIndices(m_currentContract, nullptr);
-	auto stateExprs = vector<smt::Expression>{m_error.currentValue()} + currentStateVariables();
+	auto stateExprs = vector<smtutil::Expression>{m_error.currentValue()} + currentStateVariables();
 	setCurrentBlock(*m_constructorSummaryPredicate, &stateExprs);
 
-	addAssertVerificationTarget(m_currentContract, m_currentBlock, smt::Expression(true), m_error.currentValue());
+	addAssertVerificationTarget(m_currentContract, m_currentBlock, smtutil::Expression(true), m_error.currentValue());
 	connectBlocks(m_currentBlock, interface(), m_error.currentValue() == 0);
 
 	SMTEncoder::endVisit(_contract);
@@ -265,10 +265,10 @@ void CHC::endVisit(FunctionDefinition const& _function)
 		{
 			string suffix = m_currentContract->name() + "_" + to_string(m_currentContract->id());
 			auto constructorExit = createSymbolicBlock(constructorSort(), "constructor_exit_" + suffix);
-			connectBlocks(m_currentBlock, predicate(*constructorExit, vector<smt::Expression>{m_error.currentValue()} + currentStateVariables()));
+			connectBlocks(m_currentBlock, predicate(*constructorExit, vector<smtutil::Expression>{m_error.currentValue()} + currentStateVariables()));
 
 			clearIndices(m_currentContract, m_currentFunction);
-			auto stateExprs = vector<smt::Expression>{m_error.currentValue()} + currentStateVariables();
+			auto stateExprs = vector<smtutil::Expression>{m_error.currentValue()} + currentStateVariables();
 			setCurrentBlock(*constructorExit, &stateExprs);
 		}
 		else
@@ -417,7 +417,7 @@ bool CHC::visit(ForStatement const& _for)
 	connectBlocks(m_currentBlock, predicate(*loopHeaderBlock));
 	setCurrentBlock(*loopHeaderBlock);
 
-	auto condition = smt::Expression(true);
+	auto condition = smtutil::Expression(true);
 	if (auto forCondition = _for.condition())
 	{
 		forCondition->accept(*this);
@@ -656,7 +656,7 @@ bool CHC::shouldVisit(FunctionDefinition const& _function) const
 
 void CHC::setCurrentBlock(
 	smt::SymbolicFunctionVariable const& _block,
-	vector<smt::Expression> const* _arguments
+	vector<smtutil::Expression> const* _arguments
 )
 {
 	if (m_context.solverStackHeigh() > 0)
@@ -670,7 +670,7 @@ void CHC::setCurrentBlock(
 		m_currentBlock = predicate(_block);
 }
 
-set<Expression const*, CHC::IdCompare> CHC::transactionAssertions(ASTNode const* _txRoot)
+set<frontend::Expression const*, CHC::IdCompare> CHC::transactionAssertions(ASTNode const* _txRoot)
 {
 	set<Expression const*, IdCompare> assertions;
 	solidity::util::BreadthFirstSearch<ASTNode const*>{{_txRoot}}.run([&](auto const* function, auto&& _addChild) {
@@ -690,7 +690,7 @@ vector<VariableDeclaration const*> CHC::stateVariablesIncludingInheritedAndPriva
 	);
 }
 
-vector<smt::SortPointer> CHC::stateSorts(ContractDefinition const& _contract)
+vector<smtutil::SortPointer> CHC::stateSorts(ContractDefinition const& _contract)
 {
 	return applyMap(
 		stateVariablesIncludingInheritedAndPrivate(_contract),
@@ -698,35 +698,35 @@ vector<smt::SortPointer> CHC::stateSorts(ContractDefinition const& _contract)
 	);
 }
 
-smt::SortPointer CHC::constructorSort()
+smtutil::SortPointer CHC::constructorSort()
 {
-	return make_shared<smt::FunctionSort>(
-		vector<smt::SortPointer>{smt::SortProvider::intSort} + m_stateSorts,
-		smt::SortProvider::boolSort
+	return make_shared<smtutil::FunctionSort>(
+		vector<smtutil::SortPointer>{smtutil::SortProvider::intSort} + m_stateSorts,
+		smtutil::SortProvider::boolSort
 	);
 }
 
-smt::SortPointer CHC::interfaceSort()
+smtutil::SortPointer CHC::interfaceSort()
 {
-	return make_shared<smt::FunctionSort>(
+	return make_shared<smtutil::FunctionSort>(
 		m_stateSorts,
-		smt::SortProvider::boolSort
+		smtutil::SortProvider::boolSort
 	);
 }
 
-smt::SortPointer CHC::interfaceSort(ContractDefinition const& _contract)
+smtutil::SortPointer CHC::interfaceSort(ContractDefinition const& _contract)
 {
-	return make_shared<smt::FunctionSort>(
+	return make_shared<smtutil::FunctionSort>(
 		stateSorts(_contract),
-		smt::SortProvider::boolSort
+		smtutil::SortProvider::boolSort
 	);
 }
 
-smt::SortPointer CHC::arity0FunctionSort()
+smtutil::SortPointer CHC::arity0FunctionSort()
 {
-	return make_shared<smt::FunctionSort>(
-		vector<smt::SortPointer>(),
-		smt::SortProvider::boolSort
+	return make_shared<smtutil::FunctionSort>(
+		vector<smtutil::SortPointer>(),
+		smtutil::SortProvider::boolSort
 	);
 }
 
@@ -741,33 +741,33 @@ smt::SortPointer CHC::arity0FunctionSort()
 ///   - Current input variables
 ///    At the beginning of the function these must equal set 1
 /// - 1 set of output variables
-smt::SortPointer CHC::sort(FunctionDefinition const& _function)
+smtutil::SortPointer CHC::sort(FunctionDefinition const& _function)
 {
 	auto smtSort = [](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); };
 	auto inputSorts = applyMap(_function.parameters(), smtSort);
 	auto outputSorts = applyMap(_function.returnParameters(), smtSort);
-	return make_shared<smt::FunctionSort>(
-		vector<smt::SortPointer>{smt::SortProvider::intSort} + m_stateSorts + inputSorts + m_stateSorts + inputSorts + outputSorts,
-		smt::SortProvider::boolSort
+	return make_shared<smtutil::FunctionSort>(
+		vector<smtutil::SortPointer>{smtutil::SortProvider::intSort} + m_stateSorts + inputSorts + m_stateSorts + inputSorts + outputSorts,
+		smtutil::SortProvider::boolSort
 	);
 }
 
-smt::SortPointer CHC::sort(ASTNode const* _node)
+smtutil::SortPointer CHC::sort(ASTNode const* _node)
 {
 	if (auto funDef = dynamic_cast<FunctionDefinition const*>(_node))
 		return sort(*funDef);
 
-	auto fSort = dynamic_pointer_cast<smt::FunctionSort>(sort(*m_currentFunction));
+	auto fSort = dynamic_pointer_cast<smtutil::FunctionSort>(sort(*m_currentFunction));
 	solAssert(fSort, "");
 
 	auto smtSort = [](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); };
-	return make_shared<smt::FunctionSort>(
+	return make_shared<smtutil::FunctionSort>(
 		fSort->domain + applyMap(m_currentFunction->localVariables(), smtSort),
-		smt::SortProvider::boolSort
+		smtutil::SortProvider::boolSort
 	);
 }
 
-smt::SortPointer CHC::summarySort(FunctionDefinition const& _function, ContractDefinition const& _contract)
+smtutil::SortPointer CHC::summarySort(FunctionDefinition const& _function, ContractDefinition const& _contract)
 {
 	auto stateVariables = stateVariablesIncludingInheritedAndPrivate(_contract);
 	auto sorts = stateSorts(_contract);
@@ -775,13 +775,13 @@ smt::SortPointer CHC::summarySort(FunctionDefinition const& _function, ContractD
 	auto smtSort = [](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); };
 	auto inputSorts = applyMap(_function.parameters(), smtSort);
 	auto outputSorts = applyMap(_function.returnParameters(), smtSort);
-	return make_shared<smt::FunctionSort>(
-		vector<smt::SortPointer>{smt::SortProvider::intSort} + sorts + inputSorts + sorts + outputSorts,
-		smt::SortProvider::boolSort
+	return make_shared<smtutil::FunctionSort>(
+		vector<smtutil::SortPointer>{smtutil::SortProvider::intSort} + sorts + inputSorts + sorts + outputSorts,
+		smtutil::SortProvider::boolSort
 	);
 }
 
-unique_ptr<smt::SymbolicFunctionVariable> CHC::createSymbolicBlock(smt::SortPointer _sort, string const& _name)
+unique_ptr<smt::SymbolicFunctionVariable> CHC::createSymbolicBlock(smtutil::SortPointer _sort, string const& _name)
 {
 	auto block = make_unique<smt::SymbolicFunctionVariable>(
 		_sort,
@@ -808,7 +808,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 			}
 }
 
-smt::Expression CHC::interface()
+smtutil::Expression CHC::interface()
 {
 	auto paramExprs = applyMap(
 		m_stateVariables,
@@ -817,32 +817,32 @@ smt::Expression CHC::interface()
 	return (*m_interfaces.at(m_currentContract))(paramExprs);
 }
 
-smt::Expression CHC::interface(ContractDefinition const& _contract)
+smtutil::Expression CHC::interface(ContractDefinition const& _contract)
 {
 	return (*m_interfaces.at(&_contract))(stateVariablesAtIndex(0, _contract));
 }
 
-smt::Expression CHC::error()
+smtutil::Expression CHC::error()
 {
 	return (*m_errorPredicate)({});
 }
 
-smt::Expression CHC::error(unsigned _idx)
+smtutil::Expression CHC::error(unsigned _idx)
 {
 	return m_errorPredicate->functionValueAtIndex(_idx)({});
 }
 
-smt::Expression CHC::summary(ContractDefinition const&)
+smtutil::Expression CHC::summary(ContractDefinition const&)
 {
 	return (*m_constructorSummaryPredicate)(
-		vector<smt::Expression>{m_error.currentValue()} +
+		vector<smtutil::Expression>{m_error.currentValue()} +
 		currentStateVariables()
 	);
 }
 
-smt::Expression CHC::summary(FunctionDefinition const& _function)
+smtutil::Expression CHC::summary(FunctionDefinition const& _function)
 {
-	vector<smt::Expression> args{m_error.currentValue()};
+	vector<smtutil::Expression> args{m_error.currentValue()};
 	auto contract = _function.annotation().contract;
 	args += contract->isLibrary() ? stateVariablesAtIndex(0, *contract) : initialStateVariables();
 	args += applyMap(_function.parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); });
@@ -877,27 +877,27 @@ void CHC::createErrorBlock()
 	m_interface->registerRelation(m_errorPredicate->currentFunctionValue());
 }
 
-void CHC::connectBlocks(smt::Expression const& _from, smt::Expression const& _to, smt::Expression const& _constraints)
+void CHC::connectBlocks(smtutil::Expression const& _from, smtutil::Expression const& _to, smtutil::Expression const& _constraints)
 {
-	smt::Expression edge = smt::Expression::implies(
+	smtutil::Expression edge = smtutil::Expression::implies(
 		_from && m_context.assertions() && _constraints,
 		_to
 	);
 	addRule(edge, _from.name + "_to_" + _to.name);
 }
 
-vector<smt::Expression> CHC::initialStateVariables()
+vector<smtutil::Expression> CHC::initialStateVariables()
 {
 	return stateVariablesAtIndex(0);
 }
 
-vector<smt::Expression> CHC::stateVariablesAtIndex(int _index)
+vector<smtutil::Expression> CHC::stateVariablesAtIndex(int _index)
 {
 	solAssert(m_currentContract, "");
 	return applyMap(m_stateVariables, [&](auto _var) { return valueAtIndex(*_var, _index); });
 }
 
-vector<smt::Expression> CHC::stateVariablesAtIndex(int _index, ContractDefinition const& _contract)
+vector<smtutil::Expression> CHC::stateVariablesAtIndex(int _index, ContractDefinition const& _contract)
 {
 	return applyMap(
 		stateVariablesIncludingInheritedAndPrivate(_contract),
@@ -905,23 +905,23 @@ vector<smt::Expression> CHC::stateVariablesAtIndex(int _index, ContractDefinitio
 	);
 }
 
-vector<smt::Expression> CHC::currentStateVariables()
+vector<smtutil::Expression> CHC::currentStateVariables()
 {
 	solAssert(m_currentContract, "");
 	return applyMap(m_stateVariables, [this](auto _var) { return currentValue(*_var); });
 }
 
-vector<smt::Expression> CHC::currentFunctionVariables()
+vector<smtutil::Expression> CHC::currentFunctionVariables()
 {
-	vector<smt::Expression> initInputExprs;
-	vector<smt::Expression> mutableInputExprs;
+	vector<smtutil::Expression> initInputExprs;
+	vector<smtutil::Expression> mutableInputExprs;
 	for (auto const& var: m_currentFunction->parameters())
 	{
 		initInputExprs.push_back(m_context.variable(*var)->valueAtIndex(0));
 		mutableInputExprs.push_back(m_context.variable(*var)->currentValue());
 	}
 	auto returnExprs = applyMap(m_currentFunction->returnParameters(), [this](auto _var) { return currentValue(*_var); });
-	return vector<smt::Expression>{m_error.currentValue()} +
+	return vector<smtutil::Expression>{m_error.currentValue()} +
 		initialStateVariables() +
 		initInputExprs +
 		currentStateVariables() +
@@ -929,7 +929,7 @@ vector<smt::Expression> CHC::currentFunctionVariables()
 		returnExprs;
 }
 
-vector<smt::Expression> CHC::currentBlockVariables()
+vector<smtutil::Expression> CHC::currentBlockVariables()
 {
 	if (m_currentFunction)
 		return currentFunctionVariables() + applyMap(m_currentFunction->localVariables(), [this](auto _var) { return currentValue(*_var); });
@@ -954,27 +954,27 @@ string CHC::predicateName(ASTNode const* _node, ContractDefinition const* _contr
 	return prefix + "_" + to_string(_node->id()) + "_" + to_string(contract->id());
 }
 
-smt::Expression CHC::predicate(smt::SymbolicFunctionVariable const& _block)
+smtutil::Expression CHC::predicate(smt::SymbolicFunctionVariable const& _block)
 {
 	return _block(currentBlockVariables());
 }
 
-smt::Expression CHC::predicate(
+smtutil::Expression CHC::predicate(
 	smt::SymbolicFunctionVariable const& _block,
-	vector<smt::Expression> const& _arguments
+	vector<smtutil::Expression> const& _arguments
 )
 {
 	return _block(_arguments);
 }
 
-smt::Expression CHC::predicate(FunctionCall const& _funCall)
+smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 {
 	auto const* function = functionCallToDefinition(_funCall);
 	if (!function)
-		return smt::Expression(true);
+		return smtutil::Expression(true);
 
 	m_error.increaseIndex();
-	vector<smt::Expression> args{m_error.currentValue()};
+	vector<smtutil::Expression> args{m_error.currentValue()};
 	auto const* contract = function->annotation().contract;
 
 	args += contract->isLibrary() ? stateVariablesAtIndex(0, *contract) : currentStateVariables();
@@ -998,28 +998,28 @@ smt::Expression CHC::predicate(FunctionCall const& _funCall)
 	return (*m_summaries.at(m_currentContract).at(function))(args);
 }
 
-void CHC::addRule(smt::Expression const& _rule, string const& _ruleName)
+void CHC::addRule(smtutil::Expression const& _rule, string const& _ruleName)
 {
 	m_interface->addRule(_rule, _ruleName);
 }
 
-pair<smt::CheckResult, vector<string>> CHC::query(smt::Expression const& _query, langutil::SourceLocation const& _location)
+pair<smtutil::CheckResult, vector<string>> CHC::query(smtutil::Expression const& _query, langutil::SourceLocation const& _location)
 {
-	smt::CheckResult result;
+	smtutil::CheckResult result;
 	vector<string> values;
 	tie(result, values) = m_interface->query(_query);
 	switch (result)
 	{
-	case smt::CheckResult::SATISFIABLE:
+	case smtutil::CheckResult::SATISFIABLE:
 		break;
-	case smt::CheckResult::UNSATISFIABLE:
+	case smtutil::CheckResult::UNSATISFIABLE:
 		break;
-	case smt::CheckResult::UNKNOWN:
+	case smtutil::CheckResult::UNKNOWN:
 		break;
-	case smt::CheckResult::CONFLICTING:
+	case smtutil::CheckResult::CONFLICTING:
 		m_outerErrorReporter.warning(1988_error, _location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;
-	case smt::CheckResult::ERROR:
+	case smtutil::CheckResult::ERROR:
 		m_outerErrorReporter.warning(1218_error, _location, "Error trying to invoke SMT solver.");
 		break;
 	}
@@ -1029,26 +1029,26 @@ pair<smt::CheckResult, vector<string>> CHC::query(smt::Expression const& _query,
 void CHC::addVerificationTarget(
 	ASTNode const* _scope,
 	VerificationTarget::Type _type,
-	smt::Expression _from,
-	smt::Expression _constraints,
-	smt::Expression _errorId
+	smtutil::Expression _from,
+	smtutil::Expression _constraints,
+	smtutil::Expression _errorId
 )
 {
 	m_verificationTargets.emplace(_scope, CHCVerificationTarget{{_type, _from, _constraints}, _errorId});
 }
 
-void CHC::addAssertVerificationTarget(ASTNode const* _scope, smt::Expression _from, smt::Expression _constraints, smt::Expression _errorId)
+void CHC::addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId)
 {
 	addVerificationTarget(_scope, VerificationTarget::Type::Assert, _from, _constraints, _errorId);
 }
 
-void CHC::addArrayPopVerificationTarget(ASTNode const* _scope, smt::Expression _errorId)
+void CHC::addArrayPopVerificationTarget(ASTNode const* _scope, smtutil::Expression _errorId)
 {
 	solAssert(m_currentContract, "");
 	solAssert(m_currentFunction, "");
 
 	if (m_currentFunction->isConstructor())
-		addVerificationTarget(_scope, VerificationTarget::Type::PopEmptyArray, summary(*m_currentContract), smt::Expression(true), _errorId);
+		addVerificationTarget(_scope, VerificationTarget::Type::PopEmptyArray, summary(*m_currentContract), smtutil::Expression(true), _errorId);
 	else
 	{
 		auto iface = (*m_interfaces.at(m_currentContract))(initialStateVariables());

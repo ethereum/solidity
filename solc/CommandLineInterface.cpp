@@ -47,6 +47,8 @@
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <liblangutil/SourceReferenceFormatterHuman.h>
 
+#include <libsmtutil/Exceptions.h>
+
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
@@ -1291,6 +1293,14 @@ bool CommandLineInterface::processInput()
 	{
 		serr() <<
 			"Unimplemented feature:" <<
+			endl <<
+			boost::diagnostic_information(_exception);
+		return false;
+	}
+	catch (smtutil::SMTLogicError const& _exception)
+	{
+		serr() <<
+			"SMT logic error during analysis:" <<
 			endl <<
 			boost::diagnostic_information(_exception);
 		return false;

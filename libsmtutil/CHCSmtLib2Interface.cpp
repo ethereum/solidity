@@ -15,7 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libsolidity/formal/CHCSmtLib2Interface.h>
+#include <libsmtutil/CHCSmtLib2Interface.h>
 
 #include <libsolutil/Keccak256.h>
 
@@ -32,7 +32,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
-using namespace solidity::frontend::smt;
+using namespace solidity::smtutil;
 
 CHCSmtLib2Interface::CHCSmtLib2Interface(
 	map<h256, string> const& _queryResponses,
@@ -51,10 +51,10 @@ void CHCSmtLib2Interface::reset()
 	m_variables.clear();
 }
 
-void CHCSmtLib2Interface::registerRelation(smt::Expression const& _expr)
+void CHCSmtLib2Interface::registerRelation(Expression const& _expr)
 {
-	solAssert(_expr.sort, "");
-	solAssert(_expr.sort->kind == smt::Kind::Function, "");
+	smtAssert(_expr.sort, "");
+	smtAssert(_expr.sort->kind == Kind::Function, "");
 	if (!m_variables.count(_expr.name))
 	{
 		auto fSort = dynamic_pointer_cast<FunctionSort>(_expr.sort);
@@ -71,7 +71,7 @@ void CHCSmtLib2Interface::registerRelation(smt::Expression const& _expr)
 	}
 }
 
-void CHCSmtLib2Interface::addRule(smt::Expression const& _expr, std::string const& _name)
+void CHCSmtLib2Interface::addRule(Expression const& _expr, std::string const& _name)
 {
 	write(
 		"(rule (! " +
@@ -82,7 +82,7 @@ void CHCSmtLib2Interface::addRule(smt::Expression const& _expr, std::string cons
 	);
 }
 
-pair<CheckResult, vector<string>> CHCSmtLib2Interface::query(smt::Expression const& _block)
+pair<CheckResult, vector<string>> CHCSmtLib2Interface::query(Expression const& _block)
 {
 	string accumulated{};
 	swap(m_accumulatedOutput, accumulated);
@@ -112,7 +112,7 @@ pair<CheckResult, vector<string>> CHCSmtLib2Interface::query(smt::Expression con
 
 void CHCSmtLib2Interface::declareVariable(string const& _name, SortPointer const& _sort)
 {
-	solAssert(_sort, "");
+	smtAssert(_sort, "");
 	if (_sort->kind == Kind::Function)
 		declareFunction(_name, _sort);
 	else if (!m_variables.count(_name))
@@ -124,13 +124,13 @@ void CHCSmtLib2Interface::declareVariable(string const& _name, SortPointer const
 
 void CHCSmtLib2Interface::declareFunction(string const& _name, SortPointer const& _sort)
 {
-	solAssert(_sort, "");
-	solAssert(_sort->kind == smt::Kind::Function, "");
+	smtAssert(_sort, "");
+	smtAssert(_sort->kind == Kind::Function, "");
 	// TODO Use domain and codomain as key as well
 	if (!m_variables.count(_name))
 	{
 		auto fSort = dynamic_pointer_cast<FunctionSort>(_sort);
-		solAssert(fSort->codomain, "");
+		smtAssert(fSort->codomain, "");
 		string domain = m_smtlib2->toSmtLibSort(fSort->domain);
 		string codomain = m_smtlib2->toSmtLibSort(*fSort->codomain);
 		m_variables.insert(_name);
