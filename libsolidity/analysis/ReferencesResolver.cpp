@@ -209,14 +209,22 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		));
 		if (realName.empty())
 		{
-			m_errorReporter.declarationError(9553_error, _identifier.location, "In variable names _slot and _offset can only be used as a suffix.");
+			m_errorReporter.declarationError(
+				9553_error,
+				_identifier.location,
+				"In variable names _slot and _offset can only be used as a suffix."
+			);
 			return;
 		}
 		declarations = m_resolver.nameFromCurrentScope(realName);
 	}
 	if (declarations.size() > 1)
 	{
-		m_errorReporter.declarationError(8827_error, _identifier.location, "Multiple matching identifiers. Resolving overloaded identifiers is not supported.");
+		m_errorReporter.declarationError(
+			8827_error,
+			_identifier.location,
+			"Multiple matching identifiers. Resolving overloaded identifiers is not supported."
+		);
 		return;
 	}
 	else if (declarations.size() == 0)
@@ -224,7 +232,11 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 	if (auto var = dynamic_cast<VariableDeclaration const*>(declarations.front()))
 		if (var->isLocalVariable() && m_yulInsideFunction)
 		{
-			m_errorReporter.declarationError(8477_error, _identifier.location, "Cannot access local Solidity variables from inside an inline assembly function.");
+			m_errorReporter.declarationError(
+				8477_error,
+				_identifier.location,
+				"Cannot access local Solidity variables from inside an inline assembly function."
+			);
 			return;
 		}
 
@@ -242,7 +254,11 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 
 		string namePrefix = identifier.name.str().substr(0, identifier.name.str().find('.'));
 		if (isSlot || isOffset)
-			m_errorReporter.declarationError(8820_error, identifier.location, "In variable declarations _slot and _offset can not be used as a suffix.");
+			m_errorReporter.declarationError(
+				8820_error,
+				identifier.location,
+				"In variable declarations _slot and _offset can not be used as a suffix."
+			);
 		else if (
 			auto declarations = m_resolver.nameFromCurrentScope(namePrefix);
 			!declarations.empty()

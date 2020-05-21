@@ -96,7 +96,10 @@ void DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 			auto tagNameEndPos = firstWhitespaceOrNewline(tagPos, end);
 			if (tagNameEndPos == end)
 			{
-				m_errorReporter->docstringParsingError(9222_error, "End of tag " + string(tagPos, tagNameEndPos) + " not found");
+				m_errorReporter->docstringParsingError(
+					9222_error,
+					"End of tag " + string(tagPos, tagNameEndPos) + " not found"
+				);
 				break;
 			}
 

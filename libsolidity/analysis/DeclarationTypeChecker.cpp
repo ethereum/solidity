@@ -103,7 +103,11 @@ bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 	auto visitor = [&](StructDefinition const& _struct, auto& _cycleDetector, size_t _depth)
 	{
 		if (_depth >= 256)
-			m_errorReporter.fatalDeclarationError(5651_error, _struct.location(), "Struct definition exhausts cyclic dependency validator.");
+			m_errorReporter.fatalDeclarationError(
+				5651_error,
+				_struct.location(),
+				"Struct definition exhausts cyclic dependency validator."
+			);
 
 		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
 		{
@@ -146,9 +150,14 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 	else
 	{
 		_typeName.annotation().type = TypeProvider::emptyTuple();
-		m_errorReporter.fatalTypeError(9755_error, _typeName.location(), "Name has to refer to a struct, enum or contract.");
+		m_errorReporter.fatalTypeError(
+			9755_error,
+			_typeName.location(),
+			"Name has to refer to a struct, enum or contract."
+		);
 	}
 }
+
 bool DeclarationTypeChecker::visit(FunctionTypeName const& _typeName)
 {
 	if (_typeName.annotation().type)
@@ -166,18 +175,27 @@ bool DeclarationTypeChecker::visit(FunctionTypeName const& _typeName)
 		case Visibility::External:
 			break;
 		default:
-			m_errorReporter.fatalTypeError(7653_error, _typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
+			m_errorReporter.fatalTypeError(
+				7653_error,
+				_typeName.location(),
+				"Invalid visibility, can only be \"external\" or \"internal\"."
+			);
 			return false;
 	}
 
 	if (_typeName.isPayable() && _typeName.visibility() != Visibility::External)
 	{
-		m_errorReporter.fatalTypeError(6138_error, _typeName.location(), "Only external function types can be payable.");
+		m_errorReporter.fatalTypeError(
+			6138_error,
+			_typeName.location(),
+			"Only external function types can be payable."
+		);
 		return false;
 	}
 	_typeName.annotation().type = TypeProvider::function(_typeName);
 	return false;
 }
+
 void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 {
 	if (_mapping.annotation().type)
@@ -227,7 +245,11 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 		return;
 	}
 	if (baseType->storageBytes() == 0)
-		m_errorReporter.fatalTypeError(9390_error, _typeName.baseType().location(), "Illegal base type of storage size zero for array.");
+		m_errorReporter.fatalTypeError(
+			9390_error,
+			_typeName.baseType().location(),
+			"Illegal base type of storage size zero for array."
+		);
 	if (Expression const* length = _typeName.length())
 	{
 		TypePointer& lengthTypeGeneric = length->annotation().type;
@@ -236,7 +258,11 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric);
 		u256 lengthValue = 0;
 		if (!lengthType || !lengthType->mobileType())
-			m_errorReporter.typeError(8922_error, length->location(), "Invalid array length, expected integer literal or constant expression.");
+			m_errorReporter.typeError(
+				8922_error,
+				length->location(),
+				"Invalid array length, expected integer literal or constant expression."
+			);
 		else if (lengthType->isZero())
 			m_errorReporter.typeError(1220_error, length->location(), "Array with zero length specified.");
 		else if (lengthType->isFractional())
@@ -250,15 +276,24 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 	else
 		_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType);
 }
+
 void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 {
 	if (_variable.annotation().type)
 		return;
 
 	if (_variable.isConstant() && !_variable.isStateVariable())
-		m_errorReporter.declarationError(1788_error, _variable.location(), "The \"constant\" keyword can only be used for state variables.");
+		m_errorReporter.declarationError(
+			1788_error,
+			_variable.location(),
+			"The \"constant\" keyword can only be used for state variables."
+		);
 	if (_variable.immutable() && !_variable.isStateVariable())
-		m_errorReporter.declarationError(8297_error, _variable.location(), "The \"immutable\" keyword can only be used for state variables.");
+		m_errorReporter.declarationError(
+			8297_error,
+			_variable.location(),
+			"The \"immutable\" keyword can only be used for state variables."
+		);
 
 	if (!_variable.typeName())
 	{
