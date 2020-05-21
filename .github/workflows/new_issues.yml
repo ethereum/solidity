@@ -1,0 +1,16 @@
+name: Move new issues into "Solidity" project board
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  add_to_project:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: skeet70/default-project-board-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          issue: ${{ github.event.issue.number }}
+          project: 43
