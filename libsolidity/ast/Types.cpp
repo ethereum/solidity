@@ -2224,12 +2224,11 @@ u256 StructType::storageSize() const
 	return max<u256>(1, members(nullptr).storageSize());
 }
 
-BoolResult StructType::canLiveOutsideStorage() const
+bool StructType::canLiveOutsideStorage() const
 {
-	BoolResult result{true};
+	bool result = true;
 	for (auto const& member: m_struct.members())
-		if (!recursive())
-			result.merge(member->type()->canLiveOutsideStorage(), logical_and<BoolResult>());
+		result &= member->type()->canLiveOutsideStorage();
 	return result;
 }
 
