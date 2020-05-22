@@ -7,4 +7,4 @@ contract Test {
 	}
 }
 // ----
-// TypeError: (104-114): Type struct Test.S memory is only valid in storage.
+// TypeError: (104-114): Type struct Test.S is only valid in storage.

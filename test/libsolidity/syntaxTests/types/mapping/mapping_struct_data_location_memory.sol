@@ -4,5 +4,5 @@ contract C {
     function f(S memory) public {}
 }
 // ----
-// TypeError: (104-112): Type is required to live outside storage.
-// TypeError: (104-112): Only libraries are allowed to use the mapping type in public or external functions.
+// TypeError: (104-112): Types containing (nested) mappings can only be used in storage.
+// TypeError: (104-112): Only libraries are allowed to use a (nested) mapping type in public or external functions.

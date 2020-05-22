@@ -973,6 +973,7 @@ private:
 	// Caches for interfaceType(bool)
 	mutable std::optional<TypeResult> m_interfaceType;
 	mutable std::optional<TypeResult> m_interfaceType_library;
+	mutable bool recursionGuard = false;
 };
 
 /**
@@ -1332,10 +1333,7 @@ public:
 	bool operator==(Type const& _other) const override;
 	std::string toString(bool _short) const override;
 	std::string canonicalName() const override;
-	bool canLiveOutsideStorage() const override
-	{
-		return false;
-	}
+	bool canLiveOutsideStorage() const override { return false; }
 	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
 	Type const* encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;

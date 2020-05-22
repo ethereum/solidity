@@ -2226,9 +2226,16 @@ u256 StructType::storageSize() const
 
 bool StructType::canLiveOutsideStorage() const
 {
+	// Avoids infinite loops of `canLiveOutsideStorage()` calls.
+	if (recursionGuard)
+		return true;
+	recursionGuard = true;
+
 	bool result = true;
 	for (auto const& member: m_struct.members())
-		result &= member->type()->canLiveOutsideStorage();
+		result = result && member->type()->canLiveOutsideStorage();
+
+	recursionGuard = false;
 	return result;
 }
 
@@ -3555,7 +3562,7 @@ TypeResult MappingType::interfaceType(bool _inLibrary) const
 		}
 	}
 	else
-		return TypeResult::err("Only libraries are allowed to use the mapping type in public or external functions.");
+		return TypeResult::err("Only libraries are allowed to use a (nested) mapping type in public or external functions.");
 
 	return this;
 }

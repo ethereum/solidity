@@ -11,4 +11,4 @@ contract Test {
 }
 // ----
 // DeclarationError: (157-198): Identifier already declared.
-// TypeError: (268-300): Type struct Test.RecursiveStruct memory[1] memory is only valid in storage.
+// TypeError: (268-300): Type struct Test.RecursiveStruct[1] is only valid in storage.

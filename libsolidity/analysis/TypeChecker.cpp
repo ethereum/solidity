@@ -357,7 +357,11 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 				_function.isPublic() &&
 				!isLibraryFunction
 			)
-				m_errorReporter.typeError(3312_error, var.location(), "Type is required to live outside storage.");
+				m_errorReporter.typeError(
+					3312_error,
+					var.location(),
+					"Types containing (nested) mappings can only be used in storage."
+				);
 
 			if (_function.isPublic())
 			{
@@ -505,7 +509,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	{
 		if (varType->dataStoredIn(DataLocation::Memory) || varType->dataStoredIn(DataLocation::CallData))
 			if (!varType->canLiveOutsideStorage())
-				m_errorReporter.typeError(4061_error, _variable.location(), "Type " + varType->toString() + " is only valid in storage.");
+				m_errorReporter.fatalTypeError(4061_error, _variable.location(), "Type " + varType->toString(true) + " is only valid in storage.");
 	}
 	else if (_variable.visibility() >= Visibility::Public)
 	{
@@ -1517,7 +1521,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			if (!inlineArrayType)
 				m_errorReporter.fatalTypeError(6378_error, _tuple.location(), "Unable to deduce common type for array elements.");
 			else if (!inlineArrayType->canLiveOutsideStorage())
-				m_errorReporter.fatalTypeError(1545_error, _tuple.location(), "Type " + inlineArrayType->toString() + " is only valid in storage.");
+				m_errorReporter.fatalTypeError(1545_error, _tuple.location(), "Type " + inlineArrayType->toString(true) + " is only valid in storage.");
 
 			_tuple.annotation().type = TypeProvider::array(DataLocation::Memory, inlineArrayType, types.size());
 		}
