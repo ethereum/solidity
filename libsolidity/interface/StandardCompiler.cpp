@@ -178,7 +178,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _art
 }
 
 ///
-/// @a _outputSelection is a JSON object containining a two-level hashmap, where the first level is the filename,
+/// @a _outputSelection is a JSON object containing a two-level hashmap, where the first level is the filename,
 /// the second level is the contract name and the value is an array of artifact names to be requested for that contract.
 /// @a _file is the current file
 /// @a _contract is the current contract
@@ -229,7 +229,7 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 	if (!_outputSelection.isObject())
 		return false;
 
-	// This does not inculde "evm.methodIdentifiers" on purpose!
+	// This does not include "evm.methodIdentifiers" on purpose!
 	static vector<string> const outputsThatRequireBinaries{
 		"*",
 		"ir", "irOptimized",

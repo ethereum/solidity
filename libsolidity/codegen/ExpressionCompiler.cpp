@@ -1912,7 +1912,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		// If the identifier is called right away, this code is executed in visit(FunctionCall...), because
 		// we want to avoid having a reference to the runtime function entry point in the
 		// constructor context, since this would force the compiler to include unreferenced
-		// internal functions in the runtime contex.
+		// internal functions in the runtime context.
 		utils().pushCombinedFunctionEntryLabel(functionDef->resolveVirtual(m_context.mostDerivedContract()));
 	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
 		appendVariable(*variable, static_cast<Expression const&>(_identifier));

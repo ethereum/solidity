@@ -250,7 +250,7 @@ struct ExpressionAnnotation: ASTAnnotation
 	bool lValueOfOrdinaryAssignment = false;
 
 	/// Types and - if given - names of arguments if the expr. is a function
-	/// that is called, used for overload resoultion
+	/// that is called, used for overload resolution
 	std::optional<FuncCallArguments> arguments;
 };
 

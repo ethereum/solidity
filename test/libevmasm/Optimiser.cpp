@@ -826,8 +826,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator)
 		Instruction::JUMP,
 		AssemblyItem(Tag, 3)
 	};
-	BlockDeduplicator dedup(input);
-	dedup.deduplicate();
+	BlockDeduplicator deduplicator(input);
+	deduplicator.deduplicate();
 
 	set<u256> pushTags;
 	for (AssemblyItem const& item: input)
@@ -857,8 +857,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_same)
 		AssemblyItem(PushTag, 1),
 		AssemblyItem(PushTag, 1),
 	} + blocks;
-	BlockDeduplicator dedup(input);
-	dedup.deduplicate();
+	BlockDeduplicator deduplicator(input);
+	deduplicator.deduplicate();
 	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
 }
 
@@ -876,8 +876,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_value)
 		AssemblyItem{AssignImmutable, 0x1234},
 		Instruction::JUMP
 	};
-	BlockDeduplicator dedup(input);
-	BOOST_CHECK(!dedup.deduplicate());
+	BlockDeduplicator deduplicator(input);
+	BOOST_CHECK(!deduplicator.deduplicate());
 }
 
 BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_hash)
@@ -894,8 +894,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_hash)
 		AssemblyItem{AssignImmutable, 0xABCD},
 		Instruction::JUMP
 	};
-	BlockDeduplicator dedup(input);
-	BOOST_CHECK(!dedup.deduplicate());
+	BlockDeduplicator deduplicator(input);
+	BOOST_CHECK(!deduplicator.deduplicate());
 }
 
 BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
@@ -920,8 +920,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
 		AssemblyItem(PushTag, 2),
 		Instruction::JUMP,
 	};
-	BlockDeduplicator dedup(input);
-	dedup.deduplicate();
+	BlockDeduplicator deduplicator(input);
+	deduplicator.deduplicate();
 
 	set<u256> pushTags;
 	for (AssemblyItem const& item: input)
