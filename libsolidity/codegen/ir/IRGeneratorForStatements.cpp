@@ -884,6 +884,45 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		m_code << templ.render();
 		break;
 	}
+	case FunctionType::Kind::ABIDecode:
+	{
+		Whiskers templ(R"(
+			<?+retVars>let <retVars> := </+retVars> <abiDecode>(<offset>, add(<offset>, <length>))
+		)");
+
+		TypePointer firstArgType = arguments.front()->annotation().type;
+		TypePointers targetTypes;
+
+		if (TupleType const* targetTupleType = dynamic_cast<TupleType const*>(_functionCall.annotation().type))
+			targetTypes = targetTupleType->components();
+		else
+			targetTypes = TypePointers{_functionCall.annotation().type};
+
+		if (
+			auto referenceType = dynamic_cast<ReferenceType const*>(firstArgType);
+			referenceType && referenceType->dataStoredIn(DataLocation::CallData)
+			)
+		{
+			solAssert(referenceType->isImplicitlyConvertibleTo(*TypeProvider::bytesCalldata()), "");
+			IRVariable var = convert(*arguments[0], *TypeProvider::bytesCalldata());
+			templ("abiDecode", m_context.abiFunctions().tupleDecoder(targetTypes, false));
+			templ("offset", var.part("offset").name());
+			templ("length", var.part("length").name());
+		}
+		else
+		{
+			IRVariable var = convert(*arguments[0], *TypeProvider::bytesMemory());
+			templ("abiDecode", m_context.abiFunctions().tupleDecoder(targetTypes, true));
+			templ("offset", "add(" + var.part("mpos").name() + ", 32)");
+			templ("length",
+				m_utils.arrayLengthFunction(*TypeProvider::bytesMemory()) + "(" + var.part("mpos").name() + ")"
+			);
+		}
+		templ("retVars", IRVariable(_functionCall).commaSeparatedList());
+
+		m_code << templ.render();
+		break;
+	}
 	case FunctionType::Kind::Revert:
 	{
 		solAssert(arguments.size() == parameterTypes.size(), "");
@@ -1369,7 +1408,6 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		else if (member == "data")
 		{
 			IRVariable var(_memberAccess);
-			declare(var);
 			define(var.part("offset")) << "0\n";
 			define(var.part("length")) << "calldatasize()\n";
 		}
