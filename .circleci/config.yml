@@ -531,7 +531,7 @@ jobs:
       xcode: "11.0.0"
     environment:
       TERM: xterm
-      CMAKE_BUILD_TYPE: Debug
+      CMAKE_BUILD_TYPE: Release
     steps:
       - checkout
       - restore_cache:
