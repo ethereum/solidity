@@ -280,7 +280,8 @@ wasm::Expression WasmCodeTransform::operator()(Continue const&)
 
 wasm::Expression WasmCodeTransform::operator()(Leave const&)
 {
-	return wasm::Return{};
+	yulAssert(!m_functionBodyLabel.empty(), "");
+	return wasm::Branch{wasm::Label{m_functionBodyLabel}};
 }
 
 wasm::Expression WasmCodeTransform::operator()(Block const& _block)
@@ -330,10 +331,16 @@ wasm::FunctionDefinition WasmCodeTransform::translateFunction(yul::FunctionDefin
 	fun.returns = !_fun.returnVariables.empty();
 
 	yulAssert(m_localVariables.empty(), "");
-	fun.body = visit(_fun.body.statements);
+	yulAssert(m_functionBodyLabel.empty(), "");
+	m_functionBodyLabel = newLabel();
+	fun.body.emplace_back(wasm::Expression(wasm::Block{
+		m_functionBodyLabel,
+		visit(_fun.body.statements)
+	}));
 	fun.locals += m_localVariables;
 
 	m_localVariables.clear();
+	m_functionBodyLabel = {};
 
 	if (!_fun.returnVariables.empty())
 	{

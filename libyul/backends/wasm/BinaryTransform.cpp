@@ -396,6 +396,7 @@ bytes BinaryTransform::operator()(BranchIf const& _branchIf)
 
 bytes BinaryTransform::operator()(Return const&)
 {
+	// Note that this does not work if the function returns a value.
 	return toBytes(Opcode::Return);
 }
 
