@@ -663,12 +663,11 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		else
 			solAssert(!functionType->bound(), "");
 
+		solAssert(!functionType->takesArbitraryParameters(), "");
+
 		vector<string> args;
 		for (size_t i = 0; i < arguments.size(); ++i)
-			if (functionType->takesArbitraryParameters())
-				args += IRVariable(*arguments[i]).stackSlots();
-			else
-				args += convert(*arguments[i], *parameterTypes[i]).stackSlots();
+			args += convert(*arguments[i], *parameterTypes[i]).stackSlots();
 
 		if (functionDef)
 			define(_functionCall) <<
