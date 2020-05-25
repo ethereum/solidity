@@ -286,7 +286,7 @@ public:
 	/// Appends code that computes the Keccak-256 hash of the topmost stack element of 32 byte type.
 	void computeHashStatic();
 
-	/// Apppends code that copies the code of the given contract to memory.
+	/// Appends code that copies the code of the given contract to memory.
 	/// Stack pre: Memory position
 	/// Stack post: Updated memory position
 	/// @param creation if true, copies creation code, if false copies runtime code.
