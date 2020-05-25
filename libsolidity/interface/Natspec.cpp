@@ -36,6 +36,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
+	Json::Value events(Json::objectValue);
 
 	doc["version"] = Json::Value(c_natspecVersion);
 	doc["kind"]    = Json::Value("user");
@@ -80,7 +81,17 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 				}
 			}
 		}
+
+	for (auto const& event: _contractDef.events())
+	{
+		string value = extractDoc(event->annotation().docTags, "notice");
+		if (!value.empty())
+			events[event->functionType(true)->externalSignature()]["notice"] = value;
+	}
+
 	doc["methods"] = methods;
+	if (!events.empty())
+		doc["events"] = events;
 
 	return doc;
 }
@@ -141,9 +152,16 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 			stateVariables[varDecl->name()]["return"] = extractDoc(varDecl->annotation().docTags, "return");
 	}
 
+	Json::Value events(Json::objectValue);
+	for (auto const& event: _contractDef.events())
+		if (auto devDoc = devDocumentation(event->annotation().docTags); !devDoc.empty())
+			events[event->functionType(true)->externalSignature()] = devDoc;
+
 	doc["methods"] = methods;
 	if (!stateVariables.empty())
 		doc["stateVariables"] = stateVariables;
+	if (!events.empty())
+		doc["events"] = events;
 
 	return doc;
 }

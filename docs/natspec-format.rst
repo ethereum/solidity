@@ -85,9 +85,9 @@ Tag                                                                             
 =========== =============================================================================== =============================
 ``@title``  A title that should describe the contract/interface                             contract, interface
 ``@author`` The name of the author                                                          contract, interface, function
-``@notice`` Explain to an end user what this does                                           contract, interface, function, public state variable
-``@dev``    Explain to a developer any extra details                                        contract, interface, function, state variable
-``@param``  Documents a parameter just like in doxygen (must be followed by parameter name) function
+``@notice`` Explain to an end user what this does                                           contract, interface, function, public state variable, event
+``@dev``    Explain to a developer any extra details                                        contract, interface, function, state variable, event
+``@param``  Documents a parameter just like in doxygen (must be followed by parameter name) function, event
 ``@return`` Documents the return variables of a contract's function                         function, public state variable
 =========== =============================================================================== =============================
 

@@ -355,6 +355,52 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	checkNatspec(sourceCode, "test", userDoc, true);
 }
 
+BOOST_AUTO_TEST_CASE(event)
+{
+	char const* sourceCode = R"(
+		contract ERC20 {
+			/// @notice This event is emitted when a transfer occurs.
+			/// @param from The source account.
+			/// @param to The destination account.
+			/// @param amount The amount.
+			/// @dev A test case!
+			event Transfer(address indexed from, address indexed to, uint amount);
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"Transfer(address,address,uint256)":
+			{
+				"details": "A test case!",
+				"params":
+				{
+					"amount": "The amount.", "from": "The source account.", "to": "The destination account."
+				}
+			}
+		},
+		"methods": {}
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "ERC20", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"Transfer(address,address,uint256)":
+			{
+				"notice": "This event is emitted when a transfer occurs."
+			}
+		},
+		"methods": {}
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "ERC20", userDoc, true);
+}
+
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
 {
 	char const* sourceCode = R"(
