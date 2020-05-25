@@ -88,15 +88,6 @@ private:
 	void operator()(yul::Identifier const& _identifier) override;
 	void operator()(yul::VariableDeclaration const& _varDecl) override;
 
-	/// Adds a new error to the list of errors.
-	void declarationError(langutil::SourceLocation const& _location, std::string const& _description);
-
-	/// Adds a new error to the list of errors.
-	void declarationError(langutil::SourceLocation const& _location, langutil::SecondarySourceLocation const& _ssl, std::string const& _description);
-
-	/// Adds a new error to the list of errors and throws to abort reference resolving.
-	void fatalDeclarationError(langutil::SourceLocation const& _location, std::string const& _description);
-
 	langutil::ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
 	langutil::EVMVersion m_evmVersion;
