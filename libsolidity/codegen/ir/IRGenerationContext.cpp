@@ -186,5 +186,5 @@ ABIFunctions IRGenerationContext::abiFunctions()
 
 std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message)
 {
-	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
+	return utils().revertReasonIfDebugFunction(m_revertStrings, _message) + "()";
 }

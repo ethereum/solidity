@@ -1159,8 +1159,8 @@ string YulUtilFunctions::calldataArrayIndexRangeAccess(ArrayType const& _type)
 		)")
 		("functionName", functionName)
 		("stride", to_string(_type.calldataStride()))
-		("revertSliceStartAfterEnd", revertReasonIfDebug("Slice starts after end"))
-		("revertSliceGreaterThanLength", revertReasonIfDebug("Slice is greater than length"))
+		("revertSliceStartAfterEnd", revertReasonIfDebugAssembly(m_revertStrings, "Slice starts after end"))
+		("revertSliceGreaterThanLength", revertReasonIfDebugAssembly(m_revertStrings, "Slice is greater than length"))
 		.render();
 	});
 }
@@ -1188,9 +1188,9 @@ string YulUtilFunctions::accessCalldataTailFunction(Type const& _type)
 		("dynamicallySized", _type.isDynamicallySized())
 		("neededLength", toCompactHexWithPrefix(_type.calldataEncodedTailSize()))
 		("calldataStride", toCompactHexWithPrefix(_type.isDynamicallySized() ? dynamic_cast<ArrayType const&>(_type).calldataStride() : 0))
-		("invalidCalldataTailOffset", revertReasonIfDebug("Invalid calldata tail offset"))
-		("invalidCalldataTailLength", revertReasonIfDebug("Invalid calldata tail length"))
-		("shortCalldataTail", revertReasonIfDebug("Calldata tail too short"))
+		("invalidCalldataTailOffset", revertReasonIfDebugAssembly(m_revertStrings, "Invalid calldata tail offset"))
+		("invalidCalldataTailLength", revertReasonIfDebugAssembly(m_revertStrings, "Invalid calldata tail length"))
+		("shortCalldataTail", revertReasonIfDebugAssembly(m_revertStrings, "Calldata tail too short"))
 		.render();
 	});
 }
@@ -2495,11 +2495,10 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 	});
 }
 
-string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string const& _message)
+string YulUtilFunctions::revertReasonIfDebugAssembly(RevertStrings _revertStrings, std::string const& _message)
 {
-	if (revertStrings >= RevertStrings::Debug && !_message.empty())
-	{
-		Whiskers templ(R"({
+	Whiskers templ(R"({
+		<?debugAndMessage>
 			mstore(0, <sig>)
 			mstore(4, 0x20)
 			mstore(add(4, 0x20), <length>)
@@ -2508,29 +2507,56 @@ string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string
 				mstore(add(reasonPos, <offset>), <wordValue>)
 			</word>
 			revert(0, add(reasonPos, <end>))
-		})");
-		templ("sig", (u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)")))) << (256 - 32)).str());
+		<!debugAndMessage>
+			revert(0, 0)
+		</debugAndMessage>
+	})");
+	bool debugAndMessage = _revertStrings >= RevertStrings::Debug && !_message.empty();
+	templ("debugAndMessage", debugAndMessage);
+	if (debugAndMessage)
+	{
+		templ("sig", (u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)"))))
+				<< (256 - 32)).str());
 		templ("length", to_string(_message.length()));
 
 		size_t words = (_message.length() + 31) / 32;
 		vector<map<string, string>> wordParams(words);
-		for (size_t i = 0; i < words; ++i)
-		{
+		for (size_t i = 0; i < words; ++i) {
 			wordParams[i]["offset"] = to_string(i * 32);
 			wordParams[i]["wordValue"] = formatAsStringOrNumber(_message.substr(32 * i, 32));
 		}
 		templ("word", wordParams);
 		templ("end", to_string(words * 32));
-
-		return templ.render();
 	}
-	else
-		return "revert(0, 0)";
+
+	return templ.render();
 }
 
-string YulUtilFunctions::revertReasonIfDebug(string const& _message)
+string YulUtilFunctions::revertReasonIfDebugFunction(RevertStrings _revertStrings, string const& _message)
 {
-	return revertReasonIfDebug(m_revertStrings, _message);
+	string functionName = "revert_reason_" + revertStringsToString(_revertStrings) + "_";
+	for (char c: _message)
+		if (isalnum(c))
+			functionName += tolower(c);
+		else if (isspace(c))
+			functionName += "_";
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		Whiskers templ(R"({
+			function <functionName>() {
+				<revertReasonAssembly>
+			}
+		})");
+		templ("functionName", functionName);
+		templ("revertReasonAssembly", revertReasonIfDebugAssembly(_revertStrings, _message));
+
+		return templ.render();
+	});
+}
+
+string YulUtilFunctions::revertReasonIfDebugFunction(string const& _message)
+{
+	return revertReasonIfDebugFunction(m_revertStrings, _message);
 }
 
 string YulUtilFunctions::tryDecodeErrorMessageFunction()

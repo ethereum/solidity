@@ -529,7 +529,7 @@ LinkerObject const& CompilerContext::assembledObject() const
 
 string CompilerContext::revertReasonIfDebug(string const& _message)
 {
-	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
+	return m_yulUtilFunctions.revertReasonIfDebugAssembly(m_revertStrings, _message);
 }
 
 void CompilerContext::updateSourceLocation()

@@ -36,7 +36,7 @@ object \"C_6\" {
             revert(0, 0)
             function abi_decode_tuple_(headStart, dataEnd)
             {
-                if slt(sub(dataEnd, headStart), 0) { revert(0, 0) }
+                if slt(sub(dataEnd, headStart), 0) { { revert(0, 0) } }
             }
             function abi_encode_tuple__to__fromStack(headStart) -> tail
             { tail := add(headStart, 0) }

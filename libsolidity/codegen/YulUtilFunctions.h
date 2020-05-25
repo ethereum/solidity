@@ -335,9 +335,11 @@ public:
 	/// If revertStrings is debug, @returns inline assembly code that
 	/// stores @param _message in memory position 0 and reverts.
 	/// Otherwise returns "revert(0, 0)".
-	static std::string revertReasonIfDebug(RevertStrings revertStrings, std::string const& _message = "");
+	std::string revertReasonIfDebugAssembly(RevertStrings revertStrings, std::string const& _message = "");
 
-	std::string revertReasonIfDebug(std::string const& _message = "");
+	std::string revertReasonIfDebugFunction(RevertStrings revertStrings, std::string const& _message = "");
+
+	std::string revertReasonIfDebugFunction(std::string const& _message = "");
 
 	/// Returns the name of a function that decodes an error message.
 	/// signature: () -> arrayPtr

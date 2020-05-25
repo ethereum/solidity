@@ -48,7 +48,11 @@ object \"C_6\" {
             revert(0, 0)
 
             function abi_decode_tuple_(headStart, dataEnd)   {
-                if slt(sub(dataEnd, headStart), 0) { revert(0, 0) }
+                if slt(sub(dataEnd, headStart), 0) { {
+
+                        revert(0, 0)
+
+                } }
 
             }
 
