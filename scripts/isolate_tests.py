@@ -13,7 +13,7 @@ import hashlib
 from os.path import join, isfile
 
 def extract_test_cases(path):
-    lines = open(path, mode='r', encoding='utf8').read().splitlines()
+    lines = open(path, encoding="utf8", errors='ignore', mode='r').read().splitlines()
 
     inside = False
     delimiter = ''
