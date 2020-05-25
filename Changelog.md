@@ -1,6 +1,7 @@
 ### 0.6.9 (unreleased)
 
 Language Features:
+ * Permit calldata location for all variables.
 
 
 Compiler Features:
