@@ -41,7 +41,6 @@ public:
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 private:
 	std::vector<std::pair<std::string, std::string>> m_sources;
-	std::string m_expectation;
 	std::string m_expectationLegacy;
 	std::string m_astFilename;
 	std::string m_legacyAstFilename;
