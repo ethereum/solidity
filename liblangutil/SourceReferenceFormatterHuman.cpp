@@ -21,6 +21,7 @@
 #include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
+#include <libsolutil/UTF8.h>
 #include <iomanip>
 
 using namespace std;
@@ -103,12 +104,13 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 		m_stream << leftpad << ' ';
 		frameColored() << '|';
 		m_stream << ' ';
+
 		for_each(
 			_ref.text.cbegin(),
-			_ref.text.cbegin() + _ref.startColumn,
+			_ref.text.cbegin() + numCodepoints(_ref.text.substr(0, _ref.startColumn)),
 			[this](char ch) { m_stream << (ch == '\t' ? '\t' : ' '); }
 		);
-		diagColored() << string(locationLength, '^');
+		diagColored() << string(numCodepoints(_ref.text.substr(_ref.startColumn, locationLength)), '^');
 		m_stream << '\n';
 	}
 	else
