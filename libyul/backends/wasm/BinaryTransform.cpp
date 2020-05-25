@@ -382,15 +382,15 @@ bytes BinaryTransform::operator()(Loop const& _loop)
 	return result;
 }
 
-bytes BinaryTransform::operator()(Break const& _break)
+bytes BinaryTransform::operator()(Branch const& _branch)
 {
-	return toBytes(Opcode::Br) + encodeLabelIdx(_break.label.name);
+	return toBytes(Opcode::Br) + encodeLabelIdx(_branch.label.name);
 }
 
-bytes BinaryTransform::operator()(BreakIf const& _breakIf)
+bytes BinaryTransform::operator()(BranchIf const& _branchIf)
 {
-	bytes result = std::visit(*this, *_breakIf.condition);
-	result += toBytes(Opcode::BrIf) + encodeLabelIdx(_breakIf.label.name);
+	bytes result = std::visit(*this, *_branchIf.condition);
+	result += toBytes(Opcode::BrIf) + encodeLabelIdx(_branchIf.label.name);
 	return result;
 }
 
