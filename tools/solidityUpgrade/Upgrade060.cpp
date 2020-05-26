@@ -139,8 +139,8 @@ void OverridingFunction::endVisit(ContractDefinition const& _contract)
 			for (auto [begin, end] = inheritedFunctions.equal_range(proxy); begin != end; begin++)
 			{
 				auto& super = (*begin);
-				auto functionType = FunctionType(*function).asCallableFunction(false);
-				auto superType = super.functionType()->asCallableFunction(false);
+				auto functionType = FunctionType(*function).asExternallyCallableFunction(false);
+				auto superType = super.functionType()->asExternallyCallableFunction(false);
 
 				if (functionType && functionType->hasEqualParameterTypes(*superType))
 				{

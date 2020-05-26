@@ -370,7 +370,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 				seenFunctions.insert(function);
 				if (function->parameters().empty())
 					continue;
-				FunctionTypePointer fun = FunctionType(*function, FunctionType::Kind::External).asCallableFunction(true, true);
+				FunctionTypePointer fun = FunctionType(*function, FunctionType::Kind::External).asExternallyCallableFunction(true, true);
 				if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
 					members.emplace_back(function->name(), fun, function);
 			}
@@ -2058,7 +2058,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 		for (auto const& it: m_contract.interfaceFunctions())
 			members.emplace_back(
 				it.second->declaration().name(),
-				it.second->asCallableFunction(m_contract.isLibrary()),
+				it.second->asExternallyCallableFunction(m_contract.isLibrary()),
 				&it.second->declaration()
 			);
 	}
@@ -3427,7 +3427,7 @@ TypePointer FunctionType::copyAndSetCallOptions(bool _setGas, bool _setValue, bo
 	);
 }
 
-FunctionTypePointer FunctionType::asCallableFunction(bool _inLibrary, bool _bound) const
+FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary, bool _bound) const
 {
 	if (_bound)
 		solAssert(!m_parameterTypes.empty(), "");

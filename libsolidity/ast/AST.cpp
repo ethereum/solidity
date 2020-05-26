@@ -340,7 +340,7 @@ TypePointer FunctionDefinition::typeViaContractName() const
 	if (annotation().contract->isLibrary())
 	{
 		if (isPublic())
-			return FunctionType(*this).asCallableFunction(true);
+			return FunctionType(*this).asExternallyCallableFunction(true);
 		else
 			return TypeProvider::function(*this, FunctionType::Kind::Internal);
 	}
@@ -375,7 +375,7 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 
 	solAssert(!dynamic_cast<ContractDefinition const&>(*scope()).isLibrary(), "");
 
-	FunctionType const* functionType = TypeProvider::function(*this)->asCallableFunction(false);
+	FunctionType const* functionType = TypeProvider::function(*this)->asExternallyCallableFunction(false);
 
 	for (ContractDefinition const* c: _mostDerivedContract.annotation().linearizedBaseContracts)
 	{
@@ -386,7 +386,7 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 			if (
 				function->name() == name() &&
 				!function->isConstructor() &&
-				FunctionType(*function).asCallableFunction(false)->hasEqualParameterTypes(*functionType)
+				FunctionType(*function).asExternallyCallableFunction(false)->hasEqualParameterTypes(*functionType)
 			)
 				return *function;
 	}
