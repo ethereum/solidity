@@ -559,7 +559,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 				overrideError(
 					_overriding,
 					_super,
-					2837_error,
+					6959_error,
 					"Overriding function changes state mutability from \"" +
 					stateMutabilityToString(_super.stateMutability()) +
 					"\" to \"" +

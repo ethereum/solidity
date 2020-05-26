@@ -119,7 +119,7 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 			else
 				errorMessage += " Did you mean " + std::move(suggestions) + "?";
 		}
-		m_errorReporter.declarationError(8051_error, _identifier.location(), errorMessage);
+		m_errorReporter.declarationError(7576_error, _identifier.location(), errorMessage);
 	}
 	else if (declarations.size() == 1)
 		_identifier.annotation().referencedDeclaration = declarations.front();
@@ -157,7 +157,7 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
 	if (!declaration)
 	{
-		m_errorReporter.fatalDeclarationError(7556_error, _typeName.location(), "Identifier not found or not unique.");
+		m_errorReporter.fatalDeclarationError(7920_error, _typeName.location(), "Identifier not found or not unique.");
 		return;
 	}
 
@@ -210,7 +210,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		if (realName.empty())
 		{
 			m_errorReporter.declarationError(
-				9553_error,
+				4794_error,
 				_identifier.location,
 				"In variable names _slot and _offset can only be used as a suffix."
 			);
@@ -221,7 +221,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 	if (declarations.size() > 1)
 	{
 		m_errorReporter.declarationError(
-			8827_error,
+			4718_error,
 			_identifier.location,
 			"Multiple matching identifiers. Resolving overloaded identifiers is not supported."
 		);
@@ -233,7 +233,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		if (var->isLocalVariable() && m_yulInsideFunction)
 		{
 			m_errorReporter.declarationError(
-				8477_error,
+				6578_error,
 				_identifier.location,
 				"Cannot access local Solidity variables from inside an inline assembly function."
 			);
@@ -255,7 +255,7 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 		string namePrefix = identifier.name.str().substr(0, identifier.name.str().find('.'));
 		if (isSlot || isOffset)
 			m_errorReporter.declarationError(
-				8820_error,
+				9155_error,
 				identifier.location,
 				"In variable declarations _slot and _offset can not be used as a suffix."
 			);
@@ -269,7 +269,7 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 				ssl.append("The shadowed declaration is here:", decl->location());
 			if (!ssl.infos.empty())
 				m_errorReporter.declarationError(
-					6005_error,
+					3859_error,
 					identifier.location,
 					ssl,
 					namePrefix.size() < identifier.name.str().size() ?
