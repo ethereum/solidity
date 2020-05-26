@@ -349,14 +349,17 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition const& _scope)
 {
 	// Normalise data location of type.
-	TypePointer type = TypeProvider::withLocationIfReference(DataLocation::Storage, &_type);
+	DataLocation typeLocation = DataLocation::Storage;
+	if (auto refType = dynamic_cast<ReferenceType const*>(&_type))
+		typeLocation = refType->location();
+
 	set<Declaration const*> seenFunctions;
 	MemberList::MemberMap members;
 	for (ContractDefinition const* contract: _scope.annotation().linearizedBaseContracts)
 		for (UsingForDirective const* ufd: contract->usingForDirectives())
 		{
-			if (ufd->typeName() && *type != *TypeProvider::withLocationIfReference(
-				DataLocation::Storage,
+			if (ufd->typeName() && _type != *TypeProvider::withLocationIfReference(
+				typeLocation,
 				ufd->typeName()->annotation().type
 			))
 				continue;

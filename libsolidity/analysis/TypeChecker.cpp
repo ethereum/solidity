@@ -2555,7 +2555,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 	if (possibleMembers.empty())
 	{
-		if (initialMemberCount == 0)
+		if (initialMemberCount == 0 && !dynamic_cast<ArraySliceType const*>(exprType))
 		{
 			// Try to see if the member was removed because it is only available for storage types.
 			auto storageType = TypeProvider::withLocationIfReference(
