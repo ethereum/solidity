@@ -311,8 +311,8 @@ Token OverrideProxy::functionKind() const
 FunctionType const* OverrideProxy::functionType() const
 {
 	return std::visit(GenericVisitor{
-		[&](FunctionDefinition const* _item) { return FunctionType(*_item).asCallableFunction(false); },
-		[&](VariableDeclaration const* _item) { return FunctionType(*_item).asCallableFunction(false); },
+		[&](FunctionDefinition const* _item) { return FunctionType(*_item).asExternallyCallableFunction(false); },
+		[&](VariableDeclaration const* _item) { return FunctionType(*_item).asExternallyCallableFunction(false); },
 		[&](ModifierDefinition const*) -> FunctionType const* { solAssert(false, "Requested function type of modifier."); return nullptr; }
 	}, m_item);
 }
