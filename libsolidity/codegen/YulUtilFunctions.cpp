@@ -1667,8 +1667,10 @@ string YulUtilFunctions::allocateAndInitializeMemoryStructFunction(StructType co
 		for (size_t i = 0; i < members.size(); ++i)
 		{
 			solAssert(members[i]->memoryHeadSize() == 32, "");
-			solAssert(members[i]->dataStoredIn(DataLocation::Memory), "");
-			memberParams[i]["zeroValue"] = zeroValueFunction(*members[i], false);
+			memberParams[i]["zeroValue"] = zeroValueFunction(
+				*TypeProvider::withLocationIfReference(DataLocation::Memory, members[i]),
+				false
+			);
 		}
 		templ("member", memberParams);
 		return templ.render();
