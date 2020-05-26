@@ -1509,6 +1509,12 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		{
 			if (!inlineArrayType)
 				m_errorReporter.fatalTypeError(6378_error, _tuple.location(), "Unable to deduce common type for array elements.");
+			else if (!inlineArrayType->nameable())
+				m_errorReporter.fatalTypeError(
+					9656_error,
+					_tuple.location(),
+					"Unable to deduce nameable type for array elements. Try adding explicit type conversion for the first element."
+				);
 			else if (!inlineArrayType->canLiveOutsideStorage())
 				m_errorReporter.fatalTypeError(1545_error, _tuple.location(), "Type " + inlineArrayType->toString() + " is only valid in storage.");
 
