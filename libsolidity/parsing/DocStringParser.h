@@ -58,8 +58,6 @@ private:
 	/// Creates and inserts a new tag and adjusts m_lastTag.
 	void newTag(std::string const& _tagName);
 
-	void appendError(std::string const& _description);
-
 	/// Mapping tag name -> content.
 	std::multimap<std::string, DocTag> m_docTags;
 	DocTag* m_lastTag = nullptr;

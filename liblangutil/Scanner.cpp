@@ -267,10 +267,13 @@ bool Scanner::skipWhitespace()
 	return sourcePos() != startPosition;
 }
 
-void Scanner::skipWhitespaceExceptUnicodeLinebreak()
+bool Scanner::skipWhitespaceExceptUnicodeLinebreak()
 {
+	int const startPosition = sourcePos();
 	while (isWhiteSpace(m_char) && !isUnicodeLinebreak())
 		advance();
+	// Return whether or not we skipped any characters.
+	return sourcePos() != startPosition;
 }
 
 Token Scanner::skipSingleLineComment()
@@ -321,7 +324,7 @@ int Scanner::scanSingleLineDocComment()
 		{
 			// Check if next line is also a single-line comment.
 			// If any whitespaces were skipped, use source position before.
-			if (!skipWhitespace())
+			if (!skipWhitespaceExceptUnicodeLinebreak())
 				endPosition = m_source->position();
 
 			if (!m_source->isPastEndOfInput(3) &&
@@ -329,8 +332,10 @@ int Scanner::scanSingleLineDocComment()
 				m_source->get(1) == '/' &&
 				m_source->get(2) == '/')
 			{
-				addCommentLiteralChar('\n');
 				m_char = m_source->advanceAndGet(3);
+				if (atEndOfLine())
+					continue;
+				addCommentLiteralChar('\n');
 			}
 			else
 				break; // next line is not a documentation comment, we are done
@@ -389,9 +394,11 @@ Token Scanner::scanMultiLineDocComment()
 			}
 			else if (!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' && m_source->get(1) != '/')
 			{ // skip first '*' in subsequent lines
+				m_char = m_source->advanceAndGet(1);
+				if (atEndOfLine()) // ignores empty lines
+					continue;
 				if (charsAdded)
-					addCommentLiteralChar('\n');
-				m_char = m_source->advanceAndGet(2);
+					addCommentLiteralChar('\n'); // corresponds to the end of previous line
 			}
 			else if (!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' && m_source->get(1) == '/')
 			{ // if after newline the comment ends, don't insert the newline

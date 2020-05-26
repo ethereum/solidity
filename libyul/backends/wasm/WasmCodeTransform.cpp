@@ -256,26 +256,26 @@ wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 	wasm::Loop loop;
 	loop.labelName = newLabel();
 	loop.statements = visit(_for.pre.statements);
-	loop.statements.emplace_back(wasm::BreakIf{wasm::Label{breakLabel}, make_unique<wasm::Expression>(
+	loop.statements.emplace_back(wasm::BranchIf{wasm::Label{breakLabel}, make_unique<wasm::Expression>(
 		wasm::BuiltinCall{"i64.eqz", make_vector<wasm::Expression>(
 			visitReturnByValue(*_for.condition)
 		)}
 	)});
 	loop.statements.emplace_back(wasm::Block{continueLabel, visit(_for.body.statements)});
 	loop.statements += visit(_for.post.statements);
-	loop.statements.emplace_back(wasm::Break{wasm::Label{loop.labelName}});
+	loop.statements.emplace_back(wasm::Branch{wasm::Label{loop.labelName}});
 
 	return { wasm::Block{breakLabel, make_vector<wasm::Expression>(move(loop))} };
 }
 
 wasm::Expression WasmCodeTransform::operator()(Break const&)
 {
-	return wasm::Break{wasm::Label{m_breakContinueLabelNames.top().first}};
+	return wasm::Branch{wasm::Label{m_breakContinueLabelNames.top().first}};
 }
 
 wasm::Expression WasmCodeTransform::operator()(Continue const&)
 {
-	return wasm::Break{wasm::Label{m_breakContinueLabelNames.top().second}};
+	return wasm::Branch{wasm::Label{m_breakContinueLabelNames.top().second}};
 }
 
 wasm::Expression WasmCodeTransform::operator()(Leave const&)

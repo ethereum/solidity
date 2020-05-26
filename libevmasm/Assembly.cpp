@@ -435,10 +435,10 @@ map<u256, u256> Assembly::optimiseInternal(
 		// This only modifies PushTags, we have to run again to actually remove code.
 		if (_settings.runDeduplicate)
 		{
-			BlockDeduplicator dedup{m_items};
-			if (dedup.deduplicate())
+			BlockDeduplicator deduplicator{m_items};
+			if (deduplicator.deduplicate())
 			{
-				for (auto const& replacement: dedup.replacedTags())
+				for (auto const& replacement: deduplicator.replacedTags())
 				{
 					assertThrow(
 						replacement.first <= size_t(-1) && replacement.second <= size_t(-1),

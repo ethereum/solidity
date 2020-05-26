@@ -78,6 +78,81 @@ private:
 
 BOOST_FIXTURE_TEST_SUITE(SolidityNatspecJSON, DocumentationChecker)
 
+BOOST_AUTO_TEST_CASE(user_empty_natspec_test)
+{
+	char const* sourceCode = R"(
+		contract test {
+			///
+			///
+			function f() public {
+			}
+		}
+	)";
+
+	char const* natspec = R"(
+	{
+		"methods": {}
+	}
+	)";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(user_newline_break)
+{
+	char const* sourceCode = R"(
+		contract test {
+			///
+			/// @notice hello
+
+			/// @notice world
+			function f() public {
+			}
+		}
+	)";
+
+	char const* natspec = R"ABCDEF(
+	{
+		"methods": {
+			"f()":
+			{
+			"notice": "world"
+			}
+		}
+	}
+	)ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(user_multiline_empty_lines)
+{
+	char const* sourceCode = R"(
+	contract test {
+		/**
+		 *
+		 *
+		 * @notice hello world
+		 */
+		function f() public {
+		}
+	}
+	)";
+
+	char const* natspec = R"ABCDEF(
+	{
+		"methods": {
+			"f()": {
+				"notice": "hello world"
+			}
+		}
+	}
+	)ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+
 BOOST_AUTO_TEST_CASE(user_basic_test)
 {
 	char const* sourceCode = R"(

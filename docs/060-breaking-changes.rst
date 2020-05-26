@@ -166,7 +166,7 @@ This section gives detailed instructions on how to update prior code for every b
   documentation so long as the notices are in the order they appear in the tuple return type.
 
 * Choose unique identifiers for variable declarations in inline assembly that do not conflict
-  with declartions outside the inline assembly block.
+  with declarations outside the inline assembly block.
 
 * Add ``virtual`` to every non-interface function you intend to override. Add ``virtual``
   to all functions without implementation outside interfaces. For single inheritance, add

@@ -48,9 +48,9 @@ public:
 	std::string operator()(wasm::GlobalAssignment const& _assignment);
 	std::string operator()(wasm::If const& _if);
 	std::string operator()(wasm::Loop const& _loop);
-	std::string operator()(wasm::Break const& _break);
+	std::string operator()(wasm::Branch const& _branch);
+	std::string operator()(wasm::BranchIf const& _branchIf);
 	std::string operator()(wasm::Return const& _return);
-	std::string operator()(wasm::BreakIf const& _break);
 	std::string operator()(wasm::Block const& _block);
 
 private:

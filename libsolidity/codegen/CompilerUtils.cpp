@@ -974,6 +974,14 @@ void CompilerUtils::convertType(
 				}
 				else
 				{
+					if (auto baseType = dynamic_cast<ArrayType const*>(typeOnStack.baseType()))
+						solUnimplementedAssert(
+							typeOnStack.location() != DataLocation::CallData ||
+							!typeOnStack.isDynamicallyEncoded() ||
+							!baseType->isDynamicallySized(),
+							"Copying nested dynamic calldata arrays to memory is not implemented in the old code generator."
+						);
+
 					m_context << u256(0) << Instruction::SWAP1;
 					// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos>
 					auto repeat = m_context.newTag();

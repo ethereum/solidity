@@ -214,7 +214,7 @@ private:
 	/// Skips all whitespace and @returns true if something was skipped.
 	bool skipWhitespace();
 	/// Skips all whitespace that are neither '\r' nor '\n'.
-	void skipWhitespaceExceptUnicodeLinebreak();
+	bool skipWhitespaceExceptUnicodeLinebreak();
 	Token skipSingleLineComment();
 	Token skipMultiLineComment();
 

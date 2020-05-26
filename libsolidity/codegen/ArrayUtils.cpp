@@ -185,6 +185,13 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 			{
 				solAssert(byteOffsetSize == 0, "Byte offset for array as base type.");
 				auto const& sourceBaseArrayType = dynamic_cast<ArrayType const&>(*sourceBaseType);
+
+				solUnimplementedAssert(
+					_sourceType.location() != DataLocation::CallData ||
+					!_sourceType.isDynamicallyEncoded() ||
+					!sourceBaseArrayType.isDynamicallySized(),
+					"Copying nested calldata dynamic arrays to storage is not implemented in the old code generator."
+				);
 				_context << Instruction::DUP3;
 				if (sourceBaseArrayType.location() == DataLocation::Memory)
 					_context << Instruction::MLOAD;

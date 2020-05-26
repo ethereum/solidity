@@ -6,7 +6,7 @@
 ## You can pass a branch name as argument to this script (which, if no argument is given,
 ## will default to "develop").
 ##
-## If the gien branch is "release", the resulting package will be uplaoded to
+## If the given branch is "release", the resulting package will be uploaded to
 ## ethereum/ethereum PPA, or ethereum/ethereum-dev PPA otherwise.
 ##
 ## The gnupg key for "builds@ethereum.org" has to be present in order to sign
