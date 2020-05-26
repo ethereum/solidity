@@ -126,22 +126,19 @@ string IRGenerationContext::generateInternalDispatchFunction(YulArity const& _ar
 	string funName = IRNames::internalDispatch(_arity);
 	return m_functions.createFunction(funName, [&]() {
 		Whiskers templ(R"(
-			function <functionName>(fun <comma> <in>) <arrow> <out> {
+			function <functionName>(fun<?+in>, <in></+in>) <?+out>-> <out></+out> {
 				switch fun
 				<#cases>
 				case <funID>
 				{
-					<out> <assignment_op> <name>(<in>)
+					<?+out> <out> :=</+out> <name>(<in>)
 				}
 				</cases>
 				default { invalid() }
 			}
 		)");
 		templ("functionName", funName);
-		templ("comma", _arity.in > 0 ? "," : "");
 		templ("in", suffixedVariableNameList("in_", 0, _arity.in));
-		templ("arrow", _arity.out > 0 ? "->" : "");
-		templ("assignment_op", _arity.out > 0 ? ":=" : "");
 		templ("out", suffixedVariableNameList("out_", 0, _arity.out));
 
 		vector<map<string, string>> cases;
