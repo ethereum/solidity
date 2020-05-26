@@ -64,11 +64,11 @@ Shifts
 ^^^^^^
 
 The result of a shift operation has the type of the left operand, truncating the result to match the type.
+Right operand must be unsigned type. Trying to shift by signed type will produce a compilation error.
 
 - For positive and negative ``x`` values, ``x << y`` is equivalent to ``x * 2**y``.
 - For positive ``x`` values,  ``x >> y`` is equivalent to ``x / 2**y``.
 - For negative ``x`` values, ``x >> y`` is equivalent to ``(x + 1) / 2**y - 1`` (which is the same as dividing ``x`` by ``2**y`` while rounding down towards negative infinity).
-- In all cases, shifting by a negative ``y`` throws a runtime exception.
 
 .. warning::
     Before version ``0.5.0`` a right shift ``x >> y`` for negative ``x`` was equivalent to ``x / 2**y``,
@@ -370,9 +370,9 @@ Operators:
 * Shift operators: ``<<`` (left shift), ``>>`` (right shift)
 * Index access: If ``x`` is of type ``bytesI``, then ``x[k]`` for ``0 <= k < I`` returns the ``k`` th byte (read-only).
 
-The shifting operator works with any integer type as right operand (but
+The shifting operator works with unsigned integer type as right operand (but
 returns the type of the left operand), which denotes the number of bits to shift by.
-Shifting by a negative amount causes a runtime exception.
+Shifting by a signed type will produce a compilation error.
 
 Members:
 

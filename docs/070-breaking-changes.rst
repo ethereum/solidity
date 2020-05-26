@@ -16,3 +16,5 @@ This section gives detailed instructions on how to update prior code for every b
 * Change ``f.value(...)()`` to ``f{value: ...}()``. Similarly ``(new C).value(...)()`` to
   ``(new C){value: ...}()`` and ``f.gas(...)()`` to ``f{gas: ...}()``.
 * Change ``now`` to ``block.timestamp``.
+* Change types of right operand in shift operators to unsigned types. For example change ``x >> (256 - y)`` to
+  ``x >> uint(256 - y)``.
