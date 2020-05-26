@@ -2611,7 +2611,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 						auto const* var = dynamic_cast<Identifier const*>(&_memberAccess.expression());
 						string varName = var ? var->name() : "...";
 						errorMsg += " Use \"address(" + varName + ")." + memberName + "\" to access this address member.";
-						return { 5256_error, errorMsg };
+						return { 3125_error, errorMsg };
 					}
 			}
 			else if (auto const* addressType = dynamic_cast<AddressType const*>(exprType))
@@ -2624,11 +2624,11 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 						"Expected address not-payable as members were not found"
 					);
 
-					return { 2604_error, "\"send\" and \"transfer\" are only available for objects of type \"address payable\", not \"" + exprType->toString() + "\"." };
+					return { 9862_error, "\"send\" and \"transfer\" are only available for objects of type \"address payable\", not \"" + exprType->toString() + "\"." };
 				}
 			}
 
-			return { 5856_error, errorMsg };
+			return { 9582_error, errorMsg };
 		}();
 
 		m_errorReporter.fatalTypeError(
@@ -2904,7 +2904,7 @@ bool TypeChecker::visit(IndexRangeAccess const& _access)
 	if (arrayType->location() != DataLocation::CallData || !arrayType->isDynamicallySized())
 		m_errorReporter.typeError(1227_error, _access.location(), "Index range access is only supported for dynamic calldata arrays.");
 	else if (arrayType->baseType()->isDynamicallyEncoded())
-		m_errorReporter.typeError(1878_error, _access.location(), "Index range access is not supported for arrays with dynamically encoded base types.");
+		m_errorReporter.typeError(2148_error, _access.location(), "Index range access is not supported for arrays with dynamically encoded base types.");
 	_access.annotation().type = TypeProvider::arraySlice(*arrayType);
 	_access.annotation().isLValue = isLValue;
 	_access.annotation().isPure = isPure;
@@ -3203,10 +3203,10 @@ void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAss
 		if (auto indexAccess = dynamic_cast<IndexAccess const*>(&_expression))
 		{
 			if (type(indexAccess->baseExpression())->category() == Type::Category::FixedBytes)
-				return { 9222_error, "Single bytes in fixed bytes arrays cannot be modified." };
+				return { 4360_error, "Single bytes in fixed bytes arrays cannot be modified." };
 			else if (auto arrayType = dynamic_cast<ArrayType const*>(type(indexAccess->baseExpression())))
 				if (arrayType->dataStoredIn(DataLocation::CallData))
-					return { 3335_error, "Calldata arrays are read-only." };
+					return { 6182_error, "Calldata arrays are read-only." };
 		}
 
 		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
@@ -3214,7 +3214,7 @@ void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAss
 			if (auto structType = dynamic_cast<StructType const*>(type(memberAccess->expression())))
 			{
 				if (structType->dataStoredIn(DataLocation::CallData))
-					return { 9942_error, "Calldata structs are read-only." };
+					return { 4156_error, "Calldata structs are read-only." };
 			}
 			else if (dynamic_cast<ArrayType const*>(type(memberAccess->expression())))
 				if (memberAccess->memberName() == "length")

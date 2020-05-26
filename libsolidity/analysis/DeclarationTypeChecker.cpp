@@ -151,7 +151,7 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 	{
 		_typeName.annotation().type = TypeProvider::emptyTuple();
 		m_errorReporter.fatalTypeError(
-			9755_error,
+			5172_error,
 			_typeName.location(),
 			"Name has to refer to a struct, enum or contract."
 		);
@@ -176,7 +176,7 @@ bool DeclarationTypeChecker::visit(FunctionTypeName const& _typeName)
 			break;
 		default:
 			m_errorReporter.fatalTypeError(
-				7653_error,
+				6012_error,
 				_typeName.location(),
 				"Invalid visibility, can only be \"external\" or \"internal\"."
 			);
@@ -186,7 +186,7 @@ bool DeclarationTypeChecker::visit(FunctionTypeName const& _typeName)
 	if (_typeName.isPayable() && _typeName.visibility() != Visibility::External)
 	{
 		m_errorReporter.fatalTypeError(
-			6138_error,
+			7415_error,
 			_typeName.location(),
 			"Only external function types can be payable."
 		);
@@ -246,7 +246,7 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 	}
 	if (baseType->storageBytes() == 0)
 		m_errorReporter.fatalTypeError(
-			9390_error,
+			6493_error,
 			_typeName.baseType().location(),
 			"Illegal base type of storage size zero for array."
 		);
@@ -259,16 +259,16 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 		u256 lengthValue = 0;
 		if (!lengthType || !lengthType->mobileType())
 			m_errorReporter.typeError(
-				8922_error,
+				5462_error,
 				length->location(),
 				"Invalid array length, expected integer literal or constant expression."
 			);
 		else if (lengthType->isZero())
-			m_errorReporter.typeError(1220_error, length->location(), "Array with zero length specified.");
+			m_errorReporter.typeError(1406_error, length->location(), "Array with zero length specified.");
 		else if (lengthType->isFractional())
-			m_errorReporter.typeError(4323_error, length->location(), "Array with fractional length specified.");
+			m_errorReporter.typeError(3208_error, length->location(), "Array with fractional length specified.");
 		else if (lengthType->isNegative())
-			m_errorReporter.typeError(9308_error, length->location(), "Array with negative length specified.");
+			m_errorReporter.typeError(3658_error, length->location(), "Array with negative length specified.");
 		else
 			lengthValue = lengthType->literalValue(nullptr);
 		_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType, lengthValue);
@@ -345,7 +345,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 				errorString += " for variable";
 		}
 		errorString += ", but " + locationToString(varLoc) + " was given.";
-		m_errorReporter.typeError(6160_error, _variable.location(), errorString);
+		m_errorReporter.typeError(6651_error, _variable.location(), errorString);
 
 		solAssert(!allowedDataLocations.empty(), "");
 		varLoc = *allowedDataLocations.begin();
