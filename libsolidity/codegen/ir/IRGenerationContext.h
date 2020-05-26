@@ -43,6 +43,8 @@ namespace solidity::frontend
 class YulUtilFunctions;
 class ABIFunctions;
 
+using InternalDispatchMap = std::map<YulArity, std::set<FunctionDefinition const*>>;
+
 /**
  * Class that contains contextual information during IR generation.
  */
@@ -102,7 +104,26 @@ public:
 
 	std::string newYulVariable();
 
-	std::string generateInternalDispatchFunction(YulArity const& _arity);
+	void initializeInternalDispatch(InternalDispatchMap _internalDispatchMap);
+	InternalDispatchMap consumeInternalDispatchMap();
+	bool internalDispatchClean() const { return m_internalDispatchMap.empty() && m_directInternalFunctionCalls.empty(); }
+
+	/// Notifies the context that a function call that needs to go through internal dispatch was
+	/// encountered while visiting the AST. This ensures that the corresponding dispatch function
+	/// gets added to the dispatch map even if there are no entries in it (which may happen if
+	/// the code contains a call to an uninitialized function variable).
+	void internalFunctionCalledThroughDispatch(YulArity const& _arity);
+
+	/// Notifies the context that a direct function call (i.e. not through internal dispatch) was
+	/// encountered while visiting the AST. This lets the context know that the function should
+	/// not be added to the dispatch (unless there are also indirect calls to it elsewhere else).
+	void internalFunctionCalledDirectly(Expression const& _expression);
+
+	/// Notifies the context that a name representing an internal function has been found while
+	/// visiting the AST. If the name has not been reported as a direct call using
+	/// @a internalFunctionCalledDirectly(), it's assumed to represent function variable access
+	/// and the function gets added to internal dispatch.
+	void internalFunctionAccessed(Expression const& _expression, FunctionDefinition const& _function);
 
 	/// @returns a new copy of the utility function generator (but using the same function set).
 	YulUtilFunctions utils();
@@ -120,8 +141,6 @@ public:
 	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated() { return m_subObjects; }
 
 private:
-	std::set<FunctionDefinition const*> collectFunctionsOfArity(YulArity const& _arity);
-
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
 	OptimiserSettings m_optimiserSettings;
@@ -146,6 +165,13 @@ private:
 	/// long as the order of Yul functions in the generated code is deterministic and the same on
 	/// all platforms - which is a property guaranteed by MultiUseYulFunctionCollector.
 	std::set<FunctionDefinition const*> m_functionGenerationQueue;
+
+	/// Collection of functions that need to be callable via internal dispatch.
+	/// Note that having a key with an empty set of functions is a valid situation. It means that
+	/// the code contains a call via a pointer even though a specific function is never assigned to it.
+	/// It will fail at runtime but the code must still compile.
+	InternalDispatchMap m_internalDispatchMap;
+	std::set<Expression const*> m_directInternalFunctionCalls;
 
 	std::set<ContractDefinition const*, ASTNode::CompareByID> m_subObjects;
 };

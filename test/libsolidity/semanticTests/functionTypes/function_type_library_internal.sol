@@ -22,5 +22,7 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // f(uint256[]): 0x20, 0x3, 0x1, 0x7, 0x3 -> 11
