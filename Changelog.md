@@ -14,6 +14,7 @@ Bugfixes:
  * Optimizer: Fixed a bug in BlockDeDuplicator.
  * Type Checker: Disallow assignments to storage variables of type ``mapping``.
  * Type Checker: Fix internal compiler error when accessing members of array slices.
+ * Type Checker: Fix internal compiler error when trying to decode too large static arrays.
  * NatSpec: DocString block is terminated when encountering an empty line.
  * Scanner: Fix bug when two empty NatSpec comments lead to scanning past EOL.
  * Code Generator: Trigger proper unimplemented errors on certain array copy operations.

@@ -193,6 +193,18 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 					typeArgument->location(),
 					"Decoding type " + actualType->toString(false) + " not supported."
 				);
+
+			if (auto referenceType = dynamic_cast<ReferenceType const*>(actualType))
+			{
+				auto result = referenceType->validForLocation(referenceType->location());
+				if (!result)
+					m_errorReporter.typeError(
+						6118_error,
+						typeArgument->location(),
+						result.message()
+					);
+			}
+
 			components.push_back(actualType);
 		}
 		else
