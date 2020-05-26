@@ -97,6 +97,7 @@ public:
 
 	/// Changes the source location used for each appended item.
 	void setSourceLocation(langutil::SourceLocation const& _location) { m_currentSourceLocation = _location; }
+	langutil::SourceLocation const& currentSourceLocation() const { return m_currentSourceLocation; }
 
 	/// Assembles the assembly into bytecode. The assembly should not be modified after this call, since the assembled version is cached.
 	LinkerObject const& assemble() const;
