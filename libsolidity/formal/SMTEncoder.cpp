@@ -385,44 +385,22 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 	}
 	else
 	{
-		auto const& type = _assignment.annotation().type;
-		vector<smtutil::Expression> rightArguments;
-		if (auto const* tupleTypeRight = dynamic_cast<TupleType const*>(_assignment.rightHandSide().annotation().type))
-		{
-			auto symbTupleLeft = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_assignment.leftHandSide()));
-			solAssert(symbTupleLeft, "");
-			auto symbTupleRight = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_assignment.rightHandSide()));
-			solAssert(symbTupleRight, "");
-
-			auto const& leftComponents = symbTupleLeft->components();
-			auto const& rightComponents = symbTupleRight->components();
-			solAssert(leftComponents.size() == rightComponents.size(), "");
-
-			auto tupleTypeLeft = dynamic_cast<TupleType const*>(_assignment.leftHandSide().annotation().type);
-			solAssert(tupleTypeLeft, "");
-			solAssert(tupleTypeLeft->components().size() == leftComponents.size(), "");
-			auto const& typesLeft = tupleTypeLeft->components();
-
-			solAssert(tupleTypeRight->components().size() == rightComponents.size(), "");
-			auto const& typesRight = tupleTypeRight->components();
-
-			for (unsigned i = 0; i < rightComponents.size(); ++i)
-				rightArguments.push_back(symbTupleRight->component(i, typesRight.at(i), typesLeft.at(i)));
-		}
+		if (dynamic_cast<TupleType const*>(_assignment.rightHandSide().annotation().type))
+			tupleAssignment(_assignment.leftHandSide(), _assignment.rightHandSide());
 		else
 		{
+			auto const& type = _assignment.annotation().type;
 			auto rightHandSide = compoundOps.count(op) ?
 				compoundAssignment(_assignment) :
 				expr(_assignment.rightHandSide(), type);
 			defineExpr(_assignment, rightHandSide);
-			rightArguments.push_back(expr(_assignment, type));
+			assignment(
+				_assignment.leftHandSide(),
+				expr(_assignment, type),
+				type,
+				_assignment.location()
+			);
 		}
-		assignment(
-			_assignment.leftHandSide(),
-			rightArguments,
-			type,
-			_assignment.location()
-		);
 	}
 }
 
@@ -1422,11 +1400,16 @@ smtutil::Expression SMTEncoder::division(smtutil::Expression _left, smtutil::Exp
 
 void SMTEncoder::assignment(
 	Expression const& _left,
-	vector<smtutil::Expression> const& _right,
+	smtutil::Expression const& _right,
 	TypePointer const& _type,
 	langutil::SourceLocation const& _location
 )
 {
+	solAssert(
+		_left.annotation().type->category() != Type::Category::Tuple,
+		"Tuple assignments should be handled by tupleAssignment."
+	);
+
 	if (!smt::isSupportedType(_type->category()))
 	{
 		// Give it a new index anyway to keep the SSA scheme sound.
@@ -1440,32 +1423,61 @@ void SMTEncoder::assignment(
 		);
 	}
 	else if (auto varDecl = identifierToVariable(_left))
-	{
-		solAssert(_right.size() == 1, "");
-		assignment(*varDecl, _right.front());
-	}
+		assignment(*varDecl, _right);
 	else if (dynamic_cast<IndexAccess const*>(&_left))
-	{
-		solAssert(_right.size() == 1, "");
-		arrayIndexAssignment(_left, _right.front());
-	}
-	else if (auto tuple = dynamic_cast<TupleExpression const*>(&_left))
-	{
-		auto const& components = tuple->components();
-		if (!_right.empty())
-		{
-			solAssert(_right.size() == components.size(), "");
-			for (unsigned i = 0; i < _right.size(); ++i)
-				if (auto component = components.at(i))
-					assignment(*component, {_right.at(i)}, component->annotation().type, component->location());
-		}
-	}
+		arrayIndexAssignment(_left, _right);
 	else
 		m_errorReporter.warning(
 			8182_error,
 			_location,
 			"Assertion checker does not yet implement such assignments."
 		);
+}
+
+void SMTEncoder::tupleAssignment(Expression const& _left, Expression const& _right)
+{
+	auto lTuple = dynamic_cast<TupleExpression const*>(&_left);
+	solAssert(lTuple, "");
+
+	auto const& lComponents = lTuple->components();
+
+	// If both sides are tuple expressions, we individually and potentially
+	// recursively assign each pair of components.
+	// This is because of potential type conversion.
+	if (auto rTuple = dynamic_cast<TupleExpression const*>(&_right))
+	{
+		auto const& rComponents = rTuple->components();
+		solAssert(lComponents.size() == rComponents.size(), "");
+		for (unsigned i = 0; i < lComponents.size(); ++i)
+		{
+			if (!lComponents.at(i) || !rComponents.at(i))
+				continue;
+			auto const& lExpr = *lComponents.at(i);
+			auto const& rExpr = *rComponents.at(i);
+			if (lExpr.annotation().type->category() == Type::Category::Tuple)
+				tupleAssignment(lExpr, rExpr);
+			else
+			{
+				auto type = lExpr.annotation().type;
+				assignment(lExpr, expr(rExpr, type), type, lExpr.location());
+			}
+		}
+	}
+	else
+	{
+		auto rType = dynamic_cast<TupleType const*>(_right.annotation().type);
+		solAssert(rType, "");
+
+		auto const& rComponents = rType->components();
+		solAssert(lComponents.size() == rComponents.size(), "");
+
+		auto symbRight = expr(_right);
+		solAssert(symbRight.sort->kind == smtutil::Kind::Tuple, "");
+
+		for (unsigned i = 0; i < lComponents.size(); ++i)
+			if (auto component = lComponents.at(i); component && rComponents.at(i))
+				assignment(*component, smtutil::Expression::tuple_get(symbRight, i), component->annotation().type, component->location());
+	}
 }
 
 smtutil::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment)
