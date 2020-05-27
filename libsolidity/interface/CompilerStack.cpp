@@ -264,7 +264,7 @@ bool CompilerStack::parse()
 				sourcesToParse.push_back(newPath);
 			}
 
-			loadMissingInterfaces();
+			loadMissingInterfaces(parser.nextID());
 		}
 	}
 
@@ -274,8 +274,17 @@ bool CompilerStack::parse()
 	return !m_hasError;
 }
 
-void CompilerStack::loadMissingInterfaces()
+void CompilerStack::loadMissingInterfaces(int64_t _baseNodeID)
 {
+	vector<ASTPointer<SourceUnit>> importedSources;
+	for (ASTPointer<SourceUnit> importedSourceUnit: importedSources)
+	{
+		Source source;
+		source.ast = importedSourceUnit;
+		auto const name = "__imported_interface_" + to_string(importedSourceUnit->id());
+		// TODO: maybe we want to make sure this isn't used already
+		m_sources[name] = move(source);
+	}
 	for (auto const& sourcePair: m_sources)
 	{
 		ASTPointer<SourceUnit> const& source = sourcePair.second.ast;
@@ -285,32 +294,34 @@ void CompilerStack::loadMissingInterfaces()
 
 		for (ASTPointer<ASTNode> const& astNode: source->nodes())
 		{
-			if (auto* contract = dynamic_cast<ContractDefinition*>(astNode.get()))
+			if (auto const* importedContract = dynamic_cast<ImportedContractDefinition const*>(astNode.get()))
 			{
-				if (auto const fileName = contract->jsonSourceFile(); fileName.has_value())
+				string const fileName = *importedContract->path();
+				ReadCallback::Result result{false, string("File not supplied initially.")};
+				if (m_readFile)
+					result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), fileName);
+				if (result.success)
 				{
-					printf("%s needs replacement\n", fileName->string().c_str());
+					string const& jsonString = result.responseOrErrorMessage;
+					Json::Value json;
+					util::jsonParseStrict(jsonString, json, nullptr);
+					ASTPointer<ContractDefinition> jsonContract = ASTJsonImporter{m_evmVersion}.jsonToContract(json);
 
-					ReadCallback::Result result{false, string("File not supplied initially.")};
-					if (m_readFile)
-						result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), fileName.value().string());
-					if (result.success)
-					{
-						string const& jsonString = result.responseOrErrorMessage;
-						printf("jsonString: %s\n", jsonString.c_str());
-						Json::Value json;
-						util::jsonParseStrict(jsonString, json, nullptr);
-						ASTPointer<ContractDefinition> jsonContract = ASTJsonImporter{m_evmVersion}.jsonToContract(json);
-						//TODO: contract = *jsonContract;
-					}
-					else
-					{
-						m_errorReporter.fatalParserError(
-							31415_error, // TODO
-							contract->location(),
-							"Cannot load JSON source."
-						);
-					}
+					auto importedSource = make_shared<SourceUnit>(
+						_baseNodeID++,
+						SourceLocation{},
+						source->licenseString(),
+						vector{ jsonContract }
+					);
+					importedSources.push_back(importedSource);
+				}
+				else
+				{
+					m_errorReporter.fatalParserError(
+						31415_error, // TODO: ensure this number is unique (we should have a CI for that)
+						astNode->location(),
+						"Cannot load JSON source."
+					);
 				}
 			}
 		}

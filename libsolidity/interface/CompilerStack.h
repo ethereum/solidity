@@ -27,6 +27,7 @@
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/interface/DebugSettings.h>
+#include <libsolidity/ast/AST.h>
 
 #include <libsmtutil/SolverInterface.h>
 
@@ -360,7 +361,7 @@ private:
 	std::string applyRemapping(std::string const& _path, std::string const& _context);
 	void resolveImports();
 
-	void loadMissingInterfaces();
+	void loadMissingInterfaces(int64_t _baseNodeID);
 
 	/// @returns true if the source is requested to be compiled.
 	bool isRequestedSource(std::string const& _sourceName) const;

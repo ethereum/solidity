@@ -56,6 +56,7 @@ public:
 	virtual bool visit(SourceUnit& _node) { return visitNode(_node); }
 	virtual bool visit(PragmaDirective& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective& _node) { return visitNode(_node); }
+	virtual bool visit(ImportedContractDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(ContractDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(InheritanceSpecifier& _node) { return visitNode(_node); }
 	virtual bool visit(UsingForDirective& _node) { return visitNode(_node); }
@@ -108,6 +109,7 @@ public:
 	virtual void endVisit(SourceUnit& _node) { endVisitNode(_node); }
 	virtual void endVisit(PragmaDirective& _node) { endVisitNode(_node); }
 	virtual void endVisit(ImportDirective& _node) { endVisitNode(_node); }
+	virtual void endVisit(ImportedContractDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(ContractDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(InheritanceSpecifier& _node) { endVisitNode(_node); }
 	virtual void endVisit(UsingForDirective& _node) { endVisitNode(_node); }
@@ -182,6 +184,7 @@ public:
 	virtual bool visit(SourceUnit const& _node) { return visitNode(_node); }
 	virtual bool visit(PragmaDirective const& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective const& _node) { return visitNode(_node); }
+	virtual bool visit(ImportedContractDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(ContractDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(InheritanceSpecifier const& _node) { return visitNode(_node); }
 	virtual bool visit(StructDefinition const& _node) { return visitNode(_node); }
@@ -234,6 +237,7 @@ public:
 	virtual void endVisit(SourceUnit const& _node) { endVisitNode(_node); }
 	virtual void endVisit(PragmaDirective const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ImportDirective const& _node) { endVisitNode(_node); }
+	virtual void endVisit(ImportedContractDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ContractDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(InheritanceSpecifier const& _node) { endVisitNode(_node); }
 	virtual void endVisit(UsingForDirective const& _node) { endVisitNode(_node); }

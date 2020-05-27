@@ -43,6 +43,7 @@ class ImportDirective;
 class Declaration;
 class CallableDeclaration;
 class OverrideSpecifier;
+class ImportedContractDefinition;
 class ContractDefinition;
 class InheritanceSpecifier;
 class UsingForDirective;

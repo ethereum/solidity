@@ -453,21 +453,28 @@ protected:
 
 /// @}
 
-class ImportedContractDefinition: public Declaration
+/**
+ * TODO: docstring
+ */
+class ImportedContractDefinition: public Declaration // TODO(needed?), public StructurallyDocumented
 {
 public:
 	ImportedContractDefinition(
 		int64_t _id,
 		SourceLocation const& _location,
-		ASTPointer<ASTString> const& _name,
-		ASTPointer<ASTString> const& _path
-	);
+		ASTPointer<ASTString> _name,
+		ASTPointer<ASTString> _path
+	):
+		Declaration(_id, _location, _name),
+		m_path{ std::move(_path) }
+	{}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
+	ASTPointer<ASTString> const& path() const noexcept { return m_path; }
+
 private:
-	ASTPointer<ASTString> m_name;
 	ASTPointer<ASTString> m_path;
 };
 
