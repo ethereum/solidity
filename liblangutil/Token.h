@@ -160,7 +160,6 @@ namespace solidity::langutil
 	K(External, "external", 0)                                         \
 	K(Fallback, "fallback", 0)                                         \
 	K(For, "for", 0)                                                   \
-	K(From, "from", 0)                                                 \
 	K(Function, "function", 0)                                         \
 	K(Hex, "hex", 0)                                                   \
 	K(If, "if", 0)                                                     \

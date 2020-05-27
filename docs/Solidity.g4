@@ -48,7 +48,6 @@ importDeclaration
 
 interfaceDefinition
   : 'interface' identifier 'from' StringLiteralFragment
-  | 'interface' identifier 'as' AbiString
   | 'interface' identifier contractInheritanceDefinition? contractBody ;
 
 AbiString

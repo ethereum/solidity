@@ -278,9 +278,12 @@ void CompilerStack::loadMissingInterfaces()
 {
 	for (auto const& sourcePair: m_sources)
 	{
-		ASTPointer<SourceUnit> const& source = sourcePair.second.ast;;
+		ASTPointer<SourceUnit> const& source = sourcePair.second.ast;
+		if (!source)
+			// This can happen if the input source code contained invalid source code.
+			continue;
 
-		for (auto const& astNode: source->nodes())
+		for (ASTPointer<ASTNode> const& astNode: source->nodes())
 		{
 			if (auto* contract = dynamic_cast<ContractDefinition*>(astNode.get()))
 			{

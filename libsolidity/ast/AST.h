@@ -171,7 +171,7 @@ public:
 	SourceUnitAnnotation& annotation() const override;
 
 	std::optional<std::string> const& licenseString() const { return m_licenseString; }
-	std::vector<ASTPointer<ASTNode>> nodes() const { return m_nodes; }
+	std::vector<ASTPointer<ASTNode>> const& nodes() const { return m_nodes; }
 
 	/// Replaces given top-level AST node with a new AST node.
 	void replaceNode(ASTPointer<ASTNode> _oldNode, ASTPointer<ASTNode> _newNode);
@@ -452,6 +452,24 @@ protected:
 };
 
 /// @}
+
+class ImportedContractDefinition: public Declaration
+{
+public:
+	ImportedContractDefinition(
+		int64_t _id,
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		ASTPointer<ASTString> const& _path
+	);
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+private:
+	ASTPointer<ASTString> m_name;
+	ASTPointer<ASTString> m_path;
+};
 
 /**
  * Definition of a contract or library. This is the only AST nodes where child nodes are not visited in

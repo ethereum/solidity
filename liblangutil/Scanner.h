@@ -132,6 +132,15 @@ public:
 		return ElementaryTypeNameToken(m_tokens[Current].token, firstSize, secondSize);
 	}
 
+	/// Tests if current keyword is an identifier and matches the given value @p _name.
+	///
+	/// This is best used for directives that cannot be reserved as keywords but
+	/// in some context should be treated like one.
+	bool isIdentifier(std::string const& _name) const
+	{
+		return currentToken() == Token::Identifier && currentLiteral() == _name;
+	}
+
 	SourceLocation currentLocation() const { return m_tokens[Current].location; }
 	std::string const& currentLiteral() const { return m_tokens[Current].literal; }
 	std::tuple<unsigned, unsigned> const& currentTokenInfo() const { return m_tokens[Current].extendedTokenInfo; }

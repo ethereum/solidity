@@ -250,7 +250,7 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 			fatalParserError(9478_error, "Expected string literal (path), \"*\" or alias list.");
 		// "from" is not a keyword but parsed as an identifier because of backwards
 		// compatibility and because it is a really common word.
-		if (m_scanner->currentToken() != Token::Identifier || m_scanner->currentLiteral() != "from")
+		if (!m_scanner->isIdentifier("from"))
 			fatalParserError(8208_error, "Expected \"from\".");
 		m_scanner->next();
 		if (m_scanner->currentToken() != Token::StringLiteral)
@@ -307,7 +307,7 @@ ASTPointer<ContractDefinition> Parser::parseInterfaceDefinition()
 	ASTPointer<StructuredDocumentation> documentation = parseStructuredDocumentation();
 	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
 
-	if (m_scanner->currentToken() == Token::From)
+	if (m_scanner->isIdentifier("from"))
 	{
 		m_scanner->next();
 		if (m_scanner->currentToken() != Token::StringLiteral)
