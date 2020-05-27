@@ -8,6 +8,7 @@ Breaking changes:
  * Type Checker: Disallow shifts by signed types.
 
 Language Features:
+ * Yul: Disallow EVM instruction `pc()`.
 
 
 Compiler Features:
