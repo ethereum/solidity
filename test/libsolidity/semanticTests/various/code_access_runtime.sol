@@ -23,5 +23,6 @@ contract C {
 
 // ====
 // EVMVersion: >=constantinople
+// compileViaYul: also
 // ----
 // test() -> 42
