@@ -112,6 +112,11 @@ private:
 	bool warnOnInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
 	bool warnOnInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
 
+	bool warnOnInstructions(FunctionCall const& _functionCall)
+	{
+		return warnOnInstructions(_functionCall.functionName.name.str(), _functionCall.functionName.location);
+	}
+
 	void typeError(langutil::SourceLocation const& _location, std::string const& _description);
 	void declarationError(langutil::SourceLocation const& _location, std::string const& _description);
 

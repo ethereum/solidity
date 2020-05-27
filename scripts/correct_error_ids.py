@@ -55,7 +55,6 @@ def get_used_ids(file_names):
 
 def get_id(available_ids, used_ids):
     while len(available_ids) > 0:
-        random.seed(len(available_ids))
         k = random.randrange(len(available_ids))
         id = list(available_ids.keys())[k]
         del available_ids[id]
@@ -117,6 +116,7 @@ def find_source_files(top_dir):
 
 
 def main():
+    random.seed()
     cwd = os.getcwd()
     answer = input(
         f"This script checks and corrects *_error literals in .h and .cpp files\n"

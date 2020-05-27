@@ -583,6 +583,20 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 	return false;
 }
 
+bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
+{
+	FunctionTypePointer functionType = dynamic_cast<FunctionType const*>(&type(_functionCall.expression()));
+	if (
+		functionType &&
+		functionType->kind() == FunctionType::Kind::Internal &&
+		!functionType->bound() &&
+		IRHelpers::referencedFunctionDeclaration(_functionCall.expression())
+	)
+		m_context.internalFunctionCalledDirectly(_functionCall.expression());
+
+	return true;
+}
+
 void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 {
 	solUnimplementedAssert(
@@ -661,8 +675,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 			solAssert(functionDef->isImplemented(), "");
 		}
-		else
-			solAssert(!functionType->hasDeclaration(), "");
 
 		solAssert(!functionType->takesArbitraryParameters(), "");
 
@@ -688,9 +700,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		else
 		{
 			YulArity arity = YulArity::fromType(*functionType);
+			m_context.internalFunctionCalledThroughDispatch(arity);
+
 			define(_functionCall) <<
-				// NOTE: generateInternalDispatchFunction() takes care of adding the function to function generation queue
-				m_context.generateInternalDispatchFunction(arity) <<
+				IRNames::internalDispatch(arity) <<
 				"(" <<
 				IRVariable(_functionCall.expression()).part("functionIdentifier").name() <<
 				joinHumanReadablePrefixed(args) <<
@@ -865,6 +878,45 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		templ("arguments", joinHumanReadablePrefixed(argumentVars));
 		templ("freeMemPtr", to_string(CompilerUtils::freeMemoryPointer));
 		templ("roundUp", m_utils.roundUpFunction());
+
+		m_code << templ.render();
+		break;
+	}
+	case FunctionType::Kind::ABIDecode:
+	{
+		Whiskers templ(R"(
+			<?+retVars>let <retVars> := </+retVars> <abiDecode>(<offset>, add(<offset>, <length>))
+		)");
+
+		TypePointer firstArgType = arguments.front()->annotation().type;
+		TypePointers targetTypes;
+
+		if (TupleType const* targetTupleType = dynamic_cast<TupleType const*>(_functionCall.annotation().type))
+			targetTypes = targetTupleType->components();
+		else
+			targetTypes = TypePointers{_functionCall.annotation().type};
+
+		if (
+			auto referenceType = dynamic_cast<ReferenceType const*>(firstArgType);
+			referenceType && referenceType->dataStoredIn(DataLocation::CallData)
+			)
+		{
+			solAssert(referenceType->isImplicitlyConvertibleTo(*TypeProvider::bytesCalldata()), "");
+			IRVariable var = convert(*arguments[0], *TypeProvider::bytesCalldata());
+			templ("abiDecode", m_context.abiFunctions().tupleDecoder(targetTypes, false));
+			templ("offset", var.part("offset").name());
+			templ("length", var.part("length").name());
+		}
+		else
+		{
+			IRVariable var = convert(*arguments[0], *TypeProvider::bytesMemory());
+			templ("abiDecode", m_context.abiFunctions().tupleDecoder(targetTypes, true));
+			templ("offset", "add(" + var.part("mpos").name() + ", 32)");
+			templ("length",
+				m_utils.arrayLengthFunction(*TypeProvider::bytesMemory()) + "(" + var.part("mpos").name() + ")"
+			);
+		}
+		templ("retVars", IRVariable(_functionCall).commaSeparatedList());
 
 		m_code << templ.render();
 		break;
@@ -1354,7 +1406,6 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		else if (member == "data")
 		{
 			IRVariable var(_memberAccess);
-			declare(var);
 			define(var.part("offset")) << "0\n";
 			define(var.part("length")) << "calldatasize()\n";
 		}
@@ -1492,7 +1543,10 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 					break;
 				case FunctionType::Kind::Internal:
 					if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+					{
 						define(_memberAccess) << to_string(function->id()) << "\n";
+						m_context.internalFunctionAccessed(_memberAccess, *function);
+					}
 					else
 						solAssert(false, "Function not found in member access");
 					break;
@@ -1756,7 +1810,14 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 		return;
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
-		define(_identifier) << to_string(functionDef->resolveVirtual(m_context.mostDerivedContract()).id()) << "\n";
+	{
+		FunctionDefinition const& resolvedFunctionDef = functionDef->resolveVirtual(m_context.mostDerivedContract());
+		define(_identifier) << to_string(resolvedFunctionDef.id()) << "\n";
+
+		solAssert(resolvedFunctionDef.functionType(true), "");
+		solAssert(resolvedFunctionDef.functionType(true)->kind() == FunctionType::Kind::Internal, "");
+		m_context.internalFunctionAccessed(_identifier, resolvedFunctionDef);
+	}
 	else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 		handleVariableReference(*varDecl, _identifier);
 	else if (dynamic_cast<ContractDefinition const*>(declaration))

@@ -349,14 +349,17 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition const& _scope)
 {
 	// Normalise data location of type.
-	TypePointer type = TypeProvider::withLocationIfReference(DataLocation::Storage, &_type);
+	DataLocation typeLocation = DataLocation::Storage;
+	if (auto refType = dynamic_cast<ReferenceType const*>(&_type))
+		typeLocation = refType->location();
+
 	set<Declaration const*> seenFunctions;
 	MemberList::MemberMap members;
 	for (ContractDefinition const* contract: _scope.annotation().linearizedBaseContracts)
 		for (UsingForDirective const* ufd: contract->usingForDirectives())
 		{
-			if (ufd->typeName() && *type != *TypeProvider::withLocationIfReference(
-				DataLocation::Storage,
+			if (ufd->typeName() && _type != *TypeProvider::withLocationIfReference(
+				typeLocation,
 				ufd->typeName()->annotation().type
 			))
 				continue;
@@ -370,7 +373,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 				seenFunctions.insert(function);
 				if (function->parameters().empty())
 					continue;
-				FunctionTypePointer fun = FunctionType(*function, FunctionType::Kind::External).asCallableFunction(true, true);
+				FunctionTypePointer fun = FunctionType(*function, FunctionType::Kind::External).asExternallyCallableFunction(true, true);
 				if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
 					members.emplace_back(function->name(), fun, function);
 			}
@@ -2058,7 +2061,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 		for (auto const& it: m_contract.interfaceFunctions())
 			members.emplace_back(
 				it.second->declaration().name(),
-				it.second->asCallableFunction(m_contract.isLibrary()),
+				it.second->asExternallyCallableFunction(m_contract.isLibrary()),
 				&it.second->declaration()
 			);
 	}
@@ -3026,6 +3029,17 @@ unsigned FunctionType::storageBytes() const
 		solAssert(false, "Storage size of non-storable function type requested.");
 }
 
+bool FunctionType::nameable() const
+{
+	return
+		(m_kind == Kind::Internal || m_kind == Kind::External) &&
+		!m_bound &&
+		!m_arbitraryParameters &&
+		!m_gasSet &&
+		!m_valueSet &&
+		!m_saltSet;
+}
+
 vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 {
 	vector<tuple<string, TypePointer>> slots;
@@ -3427,7 +3441,7 @@ TypePointer FunctionType::copyAndSetCallOptions(bool _setGas, bool _setValue, bo
 	);
 }
 
-FunctionTypePointer FunctionType::asCallableFunction(bool _inLibrary, bool _bound) const
+FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary, bool _bound) const
 {
 	if (_bound)
 		solAssert(!m_parameterTypes.empty(), "");

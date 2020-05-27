@@ -1667,8 +1667,10 @@ string YulUtilFunctions::allocateAndInitializeMemoryStructFunction(StructType co
 		for (size_t i = 0; i < members.size(); ++i)
 		{
 			solAssert(members[i]->memoryHeadSize() == 32, "");
-			solAssert(members[i]->dataStoredIn(DataLocation::Memory), "");
-			memberParams[i]["zeroValue"] = zeroValueFunction(*members[i], false);
+			memberParams[i]["zeroValue"] = zeroValueFunction(
+				*TypeProvider::withLocationIfReference(DataLocation::Memory, members[i]),
+				false
+			);
 		}
 		templ("member", memberParams);
 		return templ.render();
@@ -2238,6 +2240,27 @@ string YulUtilFunctions::zeroValueFunction(Type const& _type, bool _splitFunctio
 			("functionName", functionName)
 			.render();
 
+		if (_type.dataStoredIn(DataLocation::CallData))
+		{
+			solAssert(
+				_type.category() == Type::Category::Struct ||
+				_type.category() == Type::Category::Array,
+			"");
+			Whiskers templ(R"(
+				function <functionName>() -> offset<?hasLength>, length</hasLength> {
+					offset := calldatasize()
+					<?hasLength> length := 0 </hasLength>
+				}
+			)");
+			templ("functionName", functionName);
+			templ("hasLength",
+				_type.category() == Type::Category::Array &&
+				dynamic_cast<ArrayType const&>(_type).isDynamicallySized()
+			);
+
+			return templ.render();
+		}
+
 		Whiskers templ(R"(
 			function <functionName>() -> ret {
 				ret := <zeroValue>
@@ -2622,4 +2645,3 @@ string YulUtilFunctions::copyConstructorArgumentsToMemoryFunction(
 		.render();
 	});
 }
-

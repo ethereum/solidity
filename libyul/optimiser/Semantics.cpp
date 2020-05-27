@@ -90,7 +90,6 @@ void MSizeFinder::operator()(FunctionCall const& _functionCall)
 			m_msizeFound = true;
 }
 
-
 map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 	Dialect const& _dialect,
 	CallGraph const& _directCallGraph

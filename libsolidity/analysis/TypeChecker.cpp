@@ -193,6 +193,18 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 					typeArgument->location(),
 					"Decoding type " + actualType->toString(false) + " not supported."
 				);
+
+			if (auto referenceType = dynamic_cast<ReferenceType const*>(actualType))
+			{
+				auto result = referenceType->validForLocation(referenceType->location());
+				if (!result)
+					m_errorReporter.typeError(
+						6118_error,
+						typeArgument->location(),
+						result.message()
+					);
+			}
+
 			components.push_back(actualType);
 		}
 		else
@@ -1511,6 +1523,12 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		{
 			if (!inlineArrayType)
 				m_errorReporter.fatalTypeError(6378_error, _tuple.location(), "Unable to deduce common type for array elements.");
+			else if (!inlineArrayType->nameable())
+				m_errorReporter.fatalTypeError(
+					9656_error,
+					_tuple.location(),
+					"Unable to deduce nameable type for array elements. Try adding explicit type conversion for the first element."
+				);
 			else if (!inlineArrayType->canLiveOutsideStorage())
 				m_errorReporter.fatalTypeError(1545_error, _tuple.location(), "Type " + inlineArrayType->toString() + " is only valid in storage.");
 
@@ -1996,19 +2014,16 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 		bool const isStructConstructorCall =
 			_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall;
 
-		string msg;
-
-		if (isVariadic)
-			msg +=
+		auto [errorId, description] = [&]() -> tuple<ErrorId, string> {
+			string msg = isVariadic ?
 				"Need at least " +
 				toString(parameterTypes.size()) +
 				" arguments for " +
 				string(isStructConstructorCall ? "struct constructor" : "function call") +
 				", but provided only " +
 				toString(arguments.size()) +
-				".";
-		else
-			msg +=
+				"."
+				:
 				"Wrong argument count for " +
 				string(isStructConstructorCall ? "struct constructor" : "function call") +
 				": " +
@@ -2018,49 +2033,64 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				toString(parameterTypes.size()) +
 				".";
 
-		// Extend error message in case we try to construct a struct with mapping member.
-		if (isStructConstructorCall)
-		{
-			/// For error message: Struct members that were removed during conversion to memory.
-			TypePointer const expressionType = type(_functionCall.expression());
-			TypeType const& t = dynamic_cast<TypeType const&>(*expressionType);
-			auto const& structType = dynamic_cast<StructType const&>(*t.actualType());
-			set<string> membersRemovedForStructConstructor = structType.membersMissingInMemory();
-
-			if (!membersRemovedForStructConstructor.empty())
+			// Extend error message in case we try to construct a struct with mapping member.
+			if (isStructConstructorCall)
 			{
-				msg += " Members that have to be skipped in memory:";
-				for (auto const& member: membersRemovedForStructConstructor)
-					msg += " " + member;
+				/// For error message: Struct members that were removed during conversion to memory.
+				TypePointer const expressionType = type(_functionCall.expression());
+				auto const& t = dynamic_cast<TypeType const&>(*expressionType);
+				auto const& structType = dynamic_cast<StructType const&>(*t.actualType());
+				set<string> membersRemovedForStructConstructor = structType.membersMissingInMemory();
+
+				if (!membersRemovedForStructConstructor.empty())
+				{
+					msg += " Members that have to be skipped in memory:";
+					for (auto const& member: membersRemovedForStructConstructor)
+						msg += " " + member;
+				}
+
+				return { isVariadic ? 1123_error : 9755_error, msg };
 			}
-		}
-		else if (
-			_functionType->kind() == FunctionType::Kind::BareCall ||
-			_functionType->kind() == FunctionType::Kind::BareCallCode ||
-			_functionType->kind() == FunctionType::Kind::BareDelegateCall ||
-			_functionType->kind() == FunctionType::Kind::BareStaticCall
-		)
-		{
-			if (arguments.empty())
-				msg +=
+			else if (
+				_functionType->kind() == FunctionType::Kind::BareCall ||
+				_functionType->kind() == FunctionType::Kind::BareCallCode ||
+				_functionType->kind() == FunctionType::Kind::BareDelegateCall ||
+				_functionType->kind() == FunctionType::Kind::BareStaticCall
+			)
+			{
+				if (arguments.empty())
+					return {
+						isVariadic ? 7653_error : 6138_error,
+						msg +
+						" This function requires a single bytes argument."
+						" Use \"\" as argument to provide empty calldata."
+					};
+				else
+					return {
+						isVariadic ? 9390_error : 8922_error,
+						msg +
+						" This function requires a single bytes argument."
+						" If all your arguments are value types, you can use"
+						" abi.encode(...) to properly generate it."
+					};
+			}
+			else if (
+				_functionType->kind() == FunctionType::Kind::KECCAK256 ||
+				_functionType->kind() == FunctionType::Kind::SHA256 ||
+				_functionType->kind() == FunctionType::Kind::RIPEMD160
+			)
+				return {
+					isVariadic ? 1220_error : 4323_error,
+					msg +
 					" This function requires a single bytes argument."
-					" Use \"\" as argument to provide empty calldata.";
+					" Use abi.encodePacked(...) to obtain the pre-0.5.0"
+					" behaviour or abi.encode(...) to use ABI encoding."
+				};
 			else
-				msg +=
-					" This function requires a single bytes argument."
-					" If all your arguments are value types, you can use"
-					" abi.encode(...) to properly generate it.";
-		}
-		else if (
-			_functionType->kind() == FunctionType::Kind::KECCAK256 ||
-			_functionType->kind() == FunctionType::Kind::SHA256 ||
-			_functionType->kind() == FunctionType::Kind::RIPEMD160
-		)
-			msg +=
-				" This function requires a single bytes argument."
-				" Use abi.encodePacked(...) to obtain the pre-0.5.0"
-				" behaviour or abi.encode(...) to use ABI encoding.";
-		m_errorReporter.typeError(1093_error, _functionCall.location(), msg);
+				return { isVariadic ? 9308_error : 6160_error, msg };
+		}();
+
+		m_errorReporter.typeError(errorId, _functionCall.location(), description);
 		return;
 	}
 
@@ -2136,33 +2166,43 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 		solAssert(!!paramArgMap[i], "unmapped parameter");
 		if (!type(*paramArgMap[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 		{
-			string msg =
-				"Invalid type for argument in function call. "
-				"Invalid implicit conversion from " +
-				type(*paramArgMap[i])->toString() +
-				" to " +
-				parameterTypes[i]->toString() +
-				" requested.";
-			if (
-				_functionType->kind() == FunctionType::Kind::BareCall ||
-				_functionType->kind() == FunctionType::Kind::BareCallCode ||
-				_functionType->kind() == FunctionType::Kind::BareDelegateCall ||
-				_functionType->kind() == FunctionType::Kind::BareStaticCall
-			)
-				msg +=
-					" This function requires a single bytes argument."
-					" If all your arguments are value types, you can"
-					" use abi.encode(...) to properly generate it.";
-			else if (
-				_functionType->kind() == FunctionType::Kind::KECCAK256 ||
-				_functionType->kind() == FunctionType::Kind::SHA256 ||
-				_functionType->kind() == FunctionType::Kind::RIPEMD160
-			)
-				msg +=
-					" This function requires a single bytes argument."
-					" Use abi.encodePacked(...) to obtain the pre-0.5.0"
-					" behaviour or abi.encode(...) to use ABI encoding.";
-			m_errorReporter.typeError(6706_error, paramArgMap[i]->location(), msg);
+			auto [errorId, description] = [&]() -> tuple<ErrorId, string> {
+				string msg =
+					"Invalid type for argument in function call. "
+					"Invalid implicit conversion from " +
+					type(*paramArgMap[i])->toString() +
+					" to " +
+					parameterTypes[i]->toString() +
+					" requested.";
+				if (
+					_functionType->kind() == FunctionType::Kind::BareCall ||
+					_functionType->kind() == FunctionType::Kind::BareCallCode ||
+					_functionType->kind() == FunctionType::Kind::BareDelegateCall ||
+					_functionType->kind() == FunctionType::Kind::BareStaticCall
+				)
+					return {
+						8051_error,
+						msg +
+						" This function requires a single bytes argument."
+						" If all your arguments are value types, you can"
+						" use abi.encode(...) to properly generate it."
+					};
+				else if (
+					_functionType->kind() == FunctionType::Kind::KECCAK256 ||
+					_functionType->kind() == FunctionType::Kind::SHA256 ||
+					_functionType->kind() == FunctionType::Kind::RIPEMD160
+				)
+					return {
+						7556_error,
+						msg +
+						" This function requires a single bytes argument."
+						" Use abi.encodePacked(...) to obtain the pre-0.5.0"
+						" behaviour or abi.encode(...) to use ABI encoding."
+					};
+				else
+					return { 9553_error, msg };
+			}();
+			m_errorReporter.typeError(errorId, paramArgMap[i]->location(), description);
 		}
 	}
 }
@@ -2535,7 +2575,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 	if (possibleMembers.empty())
 	{
-		if (initialMemberCount == 0)
+		if (initialMemberCount == 0 && !dynamic_cast<ArraySliceType const*>(exprType))
 		{
 			// Try to see if the member was removed because it is only available for storage types.
 			auto storageType = TypeProvider::withLocationIfReference(
@@ -2551,61 +2591,70 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					" outside of storage."
 				);
 		}
-		string errorMsg = "Member \"" + memberName + "\" not found or not visible "
+
+		auto [errorId, description] = [&]() -> tuple<ErrorId, string> {
+			string errorMsg = "Member \"" + memberName + "\" not found or not visible "
 				"after argument-dependent lookup in " + exprType->toString() + ".";
 
-		if (auto const& funType = dynamic_cast<FunctionType const*>(exprType))
-		{
-			auto const& t = funType->returnParameterTypes();
-
-			if (memberName == "value")
+			if (auto const* funType = dynamic_cast<FunctionType const*>(exprType))
 			{
-				if (funType->kind() == FunctionType::Kind::Creation)
-					errorMsg = "Constructor for " + t.front()->toString() + " must be payable for member \"value\" to be available.";
-				else if (
-					funType->kind() == FunctionType::Kind::DelegateCall ||
-					funType->kind() == FunctionType::Kind::BareDelegateCall
-				)
-					errorMsg = "Member \"value\" is not allowed in delegated calls due to \"msg.value\" persisting.";
-				else
-					errorMsg = "Member \"value\" is only available for payable functions.";
-			}
-			else if (
-				t.size() == 1 &&
-				(t.front()->category() == Type::Category::Struct ||
-				t.front()->category() == Type::Category::Contract)
-			)
-				errorMsg += " Did you intend to call the function?";
-		}
-		else if (exprType->category() == Type::Category::Contract)
-		{
-			for (auto const& addressMember: TypeProvider::payableAddress()->nativeMembers(nullptr))
-				if (addressMember.name == memberName)
+				TypePointers const& t = funType->returnParameterTypes();
+
+				if (memberName == "value")
 				{
-					Identifier const* var = dynamic_cast<Identifier const*>(&_memberAccess.expression());
-					string varName = var ? var->name() : "...";
-					errorMsg += " Use \"address(" + varName + ")." + memberName + "\" to access this address member.";
-					break;
+					if (funType->kind() == FunctionType::Kind::Creation)
+						return {
+							8827_error,
+							"Constructor for " + t.front()->toString() + " must be payable for member \"value\" to be available."
+						};
+					else if (
+						funType->kind() == FunctionType::Kind::DelegateCall ||
+						funType->kind() == FunctionType::Kind::BareDelegateCall
+					)
+						return { 8477_error, "Member \"value\" is not allowed in delegated calls due to \"msg.value\" persisting." };
+					else
+						return { 8820_error, "Member \"value\" is only available for payable functions." };
 				}
-		}
-		else if (auto addressType = dynamic_cast<AddressType const*>(exprType))
-		{
-			// Trigger error when using send or transfer with a non-payable fallback function.
-			if (memberName == "send" || memberName == "transfer")
-			{
-				solAssert(
-					addressType->stateMutability() != StateMutability::Payable,
-					"Expected address not-payable as members were not found"
-				);
-
-				errorMsg = "\"send\" and \"transfer\" are only available for objects of type \"address payable\", not \"" + exprType->toString() + "\".";
+				else if (
+					t.size() == 1 && (
+						t.front()->category() == Type::Category::Struct ||
+						t.front()->category() == Type::Category::Contract
+					)
+				)
+					return { 6005_error, errorMsg + " Did you intend to call the function?" };
 			}
-		}
+			else if (exprType->category() == Type::Category::Contract)
+			{
+				for (MemberList::Member const& addressMember: TypeProvider::payableAddress()->nativeMembers(nullptr))
+					if (addressMember.name == memberName)
+					{
+						auto const* var = dynamic_cast<Identifier const*>(&_memberAccess.expression());
+						string varName = var ? var->name() : "...";
+						errorMsg += " Use \"address(" + varName + ")." + memberName + "\" to access this address member.";
+						return { 3125_error, errorMsg };
+					}
+			}
+			else if (auto const* addressType = dynamic_cast<AddressType const*>(exprType))
+			{
+				// Trigger error when using send or transfer with a non-payable fallback function.
+				if (memberName == "send" || memberName == "transfer")
+				{
+					solAssert(
+						addressType->stateMutability() != StateMutability::Payable,
+						"Expected address not-payable as members were not found"
+					);
+
+					return { 9862_error, "\"send\" and \"transfer\" are only available for objects of type \"address payable\", not \"" + exprType->toString() + "\"." };
+				}
+			}
+
+			return { 9582_error, errorMsg };
+		}();
 
 		m_errorReporter.fatalTypeError(
-			4035_error,
+			errorId,
 			_memberAccess.location(),
-			errorMsg
+			description
 		);
 	}
 	else if (possibleMembers.size() > 1)
@@ -2875,7 +2924,7 @@ bool TypeChecker::visit(IndexRangeAccess const& _access)
 	if (arrayType->location() != DataLocation::CallData || !arrayType->isDynamicallySized())
 		m_errorReporter.typeError(1227_error, _access.location(), "Index range access is only supported for dynamic calldata arrays.");
 	else if (arrayType->baseType()->isDynamicallyEncoded())
-		m_errorReporter.typeError(1878_error, _access.location(), "Index range access is not supported for arrays with dynamically encoded base types.");
+		m_errorReporter.typeError(2148_error, _access.location(), "Index range access is not supported for arrays with dynamically encoded base types.");
 	_access.annotation().type = TypeProvider::arraySlice(*arrayType);
 	_access.annotation().isLValue = isLValue;
 	_access.annotation().isPure = isPure;
@@ -3181,17 +3230,17 @@ void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAss
 	if (_expression.annotation().isLValue)
 		return;
 
-	return m_errorReporter.typeError(1123_error, _expression.location(), [&]() {
+	auto [errorId, description] = [&]() -> tuple<ErrorId, string> {
 		if (_expression.annotation().isConstant)
-			return "Cannot assign to a constant variable.";
+			return { 6520_error, "Cannot assign to a constant variable." };
 
 		if (auto indexAccess = dynamic_cast<IndexAccess const*>(&_expression))
 		{
 			if (type(indexAccess->baseExpression())->category() == Type::Category::FixedBytes)
-				return "Single bytes in fixed bytes arrays cannot be modified.";
+				return { 4360_error, "Single bytes in fixed bytes arrays cannot be modified." };
 			else if (auto arrayType = dynamic_cast<ArrayType const*>(type(indexAccess->baseExpression())))
 				if (arrayType->dataStoredIn(DataLocation::CallData))
-					return "Calldata arrays are read-only.";
+					return { 6182_error, "Calldata arrays are read-only." };
 		}
 
 		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
@@ -3199,18 +3248,20 @@ void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAss
 			if (auto structType = dynamic_cast<StructType const*>(type(memberAccess->expression())))
 			{
 				if (structType->dataStoredIn(DataLocation::CallData))
-					return "Calldata structs are read-only.";
+					return { 4156_error, "Calldata structs are read-only." };
 			}
 			else if (dynamic_cast<ArrayType const*>(type(memberAccess->expression())))
 				if (memberAccess->memberName() == "length")
-					return "Member \"length\" is read-only and cannot be used to resize arrays.";
+					return { 7567_error, "Member \"length\" is read-only and cannot be used to resize arrays." };
 		}
 
 		if (auto identifier = dynamic_cast<Identifier const*>(&_expression))
 			if (auto varDecl = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
 				if (varDecl->isExternalCallableParameter() && dynamic_cast<ReferenceType const*>(identifier->annotation().type))
-					return "External function arguments of reference type are read-only.";
+					return { 7128_error, "External function arguments of reference type are read-only." };
 
-		return "Expression has to be an lvalue.";
-	}());
+		return { 4247_error, "Expression has to be an lvalue." };
+	}();
+
+	m_errorReporter.typeError(errorId, _expression.location(), description);
 }

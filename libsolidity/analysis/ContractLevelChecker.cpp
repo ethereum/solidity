@@ -41,8 +41,8 @@ bool hasEqualNameAndParameters(T const& _a, B const& _b)
 {
 	return
 		_a.name() == _b.name() &&
-		FunctionType(_a).asCallableFunction(false)->hasEqualParameterTypes(
-			*FunctionType(_b).asCallableFunction(false)
+		FunctionType(_a).asExternallyCallableFunction(false)->hasEqualParameterTypes(
+			*FunctionType(_b).asExternallyCallableFunction(false)
 		);
 }
 
@@ -345,7 +345,7 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].emplace_back(
-						f, functionType->asCallableFunction(false)
+						f, functionType->asExternallyCallableFunction(false)
 					);
 			}
 		for (VariableDeclaration const* v: contract->stateVariables())
@@ -355,7 +355,7 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].emplace_back(
-						v, functionType->asCallableFunction(false)
+						v, functionType->asExternallyCallableFunction(false)
 					);
 			}
 	}

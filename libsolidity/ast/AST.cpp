@@ -338,8 +338,14 @@ TypePointer FunctionDefinition::type() const
 TypePointer FunctionDefinition::typeViaContractName() const
 {
 	if (annotation().contract->isLibrary())
-		return FunctionType(*this).asCallableFunction(true);
-	return TypeProvider::function(*this, FunctionType::Kind::Declaration);
+	{
+		if (isPublic())
+			return FunctionType(*this).asExternallyCallableFunction(true);
+		else
+			return TypeProvider::function(*this, FunctionType::Kind::Internal);
+	}
+	else
+		return TypeProvider::function(*this, FunctionType::Kind::Declaration);
 }
 
 string FunctionDefinition::externalSignature() const
@@ -369,7 +375,7 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 
 	solAssert(!dynamic_cast<ContractDefinition const&>(*scope()).isLibrary(), "");
 
-	FunctionType const* functionType = TypeProvider::function(*this)->asCallableFunction(false);
+	FunctionType const* functionType = TypeProvider::function(*this)->asExternallyCallableFunction(false);
 
 	for (ContractDefinition const* c: _mostDerivedContract.annotation().linearizedBaseContracts)
 	{
@@ -380,7 +386,7 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 			if (
 				function->name() == name() &&
 				!function->isConstructor() &&
-				FunctionType(*function).asCallableFunction(false)->hasEqualParameterTypes(*functionType)
+				FunctionType(*function).asExternallyCallableFunction(false)->hasEqualParameterTypes(*functionType)
 			)
 				return *function;
 	}
@@ -616,18 +622,14 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 
 	if (!hasReferenceOrMappingType() || isStateVariable() || isEventParameter())
 		return set<Location>{ Location::Unspecified };
-	else if (isExternalCallableParameter())
-	{
-		set<Location> locations{ Location::CallData };
-		if (isLibraryFunctionParameter())
-			locations.insert(Location::Storage);
-		return locations;
-	}
 	else if (isCallableOrCatchParameter())
 	{
 		set<Location> locations{ Location::Memory };
 		if (isInternalCallableParameter() || isLibraryFunctionParameter() || isTryCatchParameter())
 			locations.insert(Location::Storage);
+		if (!isTryCatchParameter())
+			locations.insert(Location::CallData);
+
 		return locations;
 	}
 	else if (isLocalVariable())
@@ -642,8 +644,7 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 				case Type::Category::Mapping:
 					return set<Location>{ Location::Storage };
 				default:
-					//  TODO: add Location::Calldata once implemented for local variables.
-					return set<Location>{ Location::Memory, Location::Storage };
+					return set<Location>{ Location::Memory, Location::Storage, Location::CallData };
 			}
 		};
 		return dataLocations(typeName()->annotation().type, dataLocations);

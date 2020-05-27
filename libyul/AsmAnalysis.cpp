@@ -73,7 +73,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 		{},
 		_object.dataNames()
 	).analyze(*_object.code);
-	yulAssert(success && errorList.empty(), "Invalid assembly/yul code.");
+	yulAssert(success && !errors.hasErrors(), "Invalid assembly/yul code.");
 	return analysisInfo;
 }
 
@@ -259,6 +259,8 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		returnTypes = &f->returns;
 		if (f->literalArguments)
 			needsLiteralArguments = &f->literalArguments.value();
+
+		warnOnInstructions(_funCall);
 	}
 	else if (!m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
 		[&](Scope::Variable const&)
@@ -275,10 +277,11 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		}
 	}))
 	{
-		if (!warnOnInstructions(_funCall.functionName.name.str(), _funCall.functionName.location))
+		if (!warnOnInstructions(_funCall))
 			declarationError(_funCall.functionName.location, "Function not found.");
 		yulAssert(!watcher.ok(), "Expected a reported error.");
 	}
+
 	if (parameterTypes && _funCall.arguments.size() != parameterTypes->size())
 		typeError(
 			_funCall.functionName.location,
@@ -553,6 +556,14 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 		errorForVM("only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::CHAINID && !m_evmVersion.hasChainID())
 		errorForVM("only available for Istanbul-compatible");
+	else if (_instr == evmasm::Instruction::PC)
+		m_errorReporter.warning(
+			2450_error,
+			_location,
+			"The \"" +
+			boost::to_lower_copy(instructionInfo(_instr).name) +
+			"\" instruction is deprecated and will be removed in the next breaking release."
+		);
 	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
 		errorForVM("only available for Istanbul-compatible");
 	else if (
