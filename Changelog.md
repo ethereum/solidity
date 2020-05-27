@@ -2,6 +2,7 @@
 
 Language Features:
  * Permit calldata location for all variables.
+ * Yul: EVM instruction `pc()` is marked deprecated and will be removed in the next breaking release.
 
 
 Compiler Features:
