@@ -51,7 +51,7 @@ void ReasoningBasedSimplifier::operator()(VariableDeclaration& _varDecl)
 	YulString varName = _varDecl.variables.front().name;
 	if (!m_ssaVariables.count(varName))
 		return;
-	m_variables.insert({varName, m_solver->newVariable("yul_" + varName.str(), SortProvider::intSort)});
+	m_variables.insert({varName, m_solver->newVariable("yul_" + varName.str(), SortProvider::uintSort)});
 	m_solver->addAssertion(m_variables.at(varName) == encodeExpression(*_varDecl.value));
 }
 
@@ -158,15 +158,34 @@ smtutil::Expression ReasoningBasedSimplifier::encodeBuiltin(
 		return smtutil::Expression::ite(arguments.at(0) == arguments.at(1), 1, 0);
 	case evmasm::Instruction::ISZERO:
 		return smtutil::Expression::ite(arguments.at(0) == 0, 1, 0);
+	case evmasm::Instruction::AND:
+		return bv2int(int2bv(arguments.at(0)) & int2bv(arguments.at(1)));
+	case evmasm::Instruction::OR:
+		return bv2int(int2bv(arguments.at(0)) | int2bv(arguments.at(1)));
+	case evmasm::Instruction::NOT:
+		return bv2int(~int2bv(arguments.at(0)));
+	case evmasm::Instruction::SHL:
+		// TODO Second conversion needed?
+		return bv2int(int2bv(arguments.at(0)) << int2bv(arguments.at(1)));
 	default:
 		break;
 	}
 	return newVariable();
 }
 
+smtutil::Expression ReasoningBasedSimplifier::int2bv(smtutil::Expression _arg)
+{
+	return smtutil::Expression::int2bv(std::move(_arg), 256);
+}
+
+smtutil::Expression ReasoningBasedSimplifier::bv2int(smtutil::Expression _arg)
+{
+	return smtutil::Expression::bv2int(std::move(_arg));
+}
+
 smtutil::Expression ReasoningBasedSimplifier::newVariable()
 {
-	return m_solver->newVariable(uniqueName(), SortProvider::intSort);
+	return m_solver->newVariable(uniqueName(), SortProvider::uintSort);
 }
 
 string ReasoningBasedSimplifier::uniqueName()

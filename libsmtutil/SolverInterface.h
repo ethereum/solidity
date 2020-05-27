@@ -95,6 +95,9 @@ public:
 			{"/", 2},
 			{"mod", 2},
 			{"bvand", 2},
+			{"bvor", 2},
+			{"bvnot", 1},
+			{"bvshl", 2},
 			{"int2bv", 2},
 			{"bv2int", 1},
 			{"select", 2},
@@ -285,6 +288,21 @@ public:
 		auto bvSort = _a.sort;
 		return Expression("bvand", {std::move(_a), std::move(_b)}, bvSort);
 	}
+	friend Expression operator|(Expression _a, Expression _b)
+	{
+		auto bvSort = _a.sort;
+		return Expression("bvor", {std::move(_a), std::move(_b)}, bvSort);
+	}
+	friend Expression operator~(Expression _a)
+	{
+		auto bvSort = _a.sort;
+		return Expression("bvnot", {std::move(_a)}, bvSort);
+	}
+	friend Expression operator<<(Expression _a, Expression _b)
+	{
+		auto bvSort = _a.sort;
+		return Expression("bvshl", {std::move(_a), std::move(_b)}, bvSort);
+	}
 	Expression operator()(std::vector<Expression> _arguments) const
 	{
 		smtAssert(
@@ -305,7 +323,7 @@ private:
 	Expression(std::string _name, std::vector<Expression> _arguments, SortPointer _sort):
 		name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort)) {}
 	Expression(std::string _name, std::vector<Expression> _arguments, Kind _kind):
-		Expression(std::move(_name), std::move(_arguments), std::make_shared<Sort>(_kind)) {}
+		Expression(std::move(_name), std::move(_arguments), SortProvider::sortFromKind(_kind)) {}
 
 	explicit Expression(std::string _name, Kind _kind):
 		Expression(std::move(_name), std::vector<Expression>{}, _kind) {}

@@ -194,6 +194,22 @@ struct SortProvider
 	static std::shared_ptr<IntSort> const uintSort;
 	static std::shared_ptr<IntSort> const sintSort;
 	static std::shared_ptr<IntSort> intSort(bool _signed = false);
+	static std::shared_ptr<BitVectorSort> const bitVectorSort;
+
+	static std::shared_ptr<Sort> sortFromKind(Kind _kind)
+	{
+		switch (_kind)
+		{
+		case Kind::Int:
+			return uintSort;
+		case Kind::Bool:
+			return boolSort;
+		case Kind::BitVector:
+			return SortProvider::bitVectorSort;
+		default:
+			return std::make_shared<Sort>(_kind);
+		}
+	}
 };
 
 }

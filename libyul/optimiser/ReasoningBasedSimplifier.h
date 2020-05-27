@@ -63,6 +63,9 @@ private:
 		std::vector<Expression> const& _arguments
 	);
 
+	smtutil::Expression int2bv(smtutil::Expression _arg);
+	smtutil::Expression bv2int(smtutil::Expression _arg);
+
 	smtutil::Expression newVariable();
 	std::string uniqueName();
 
