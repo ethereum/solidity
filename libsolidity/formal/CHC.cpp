@@ -821,7 +821,12 @@ smtutil::SortPointer CHC::summarySort(FunctionDefinition const& _function, Contr
 	auto inputSorts = applyMap(_function.parameters(), smtSort);
 	auto outputSorts = applyMap(_function.returnParameters(), smtSort);
 	return make_shared<smtutil::FunctionSort>(
-		vector<smtutil::SortPointer>{smtutil::SortProvider::uintSort} + sorts + inputSorts + sorts + outputSorts,
+		vector<smtutil::SortPointer>{smtutil::SortProvider::uintSort} +
+			sorts +
+			inputSorts +
+			sorts +
+			inputSorts +
+			outputSorts,
 		smtutil::SortProvider::boolSort
 	);
 }
@@ -881,6 +886,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 						args += state1 +
 							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
 							state2 +
+							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 1); }) +
 							applyMap(function->returnParameters(), [this](auto _var) { return valueAtIndex(*_var, 1); });
 
 						connectBlocks(nondetPre, nondetPost, (*m_summaries.at(base).at(function))(args));
@@ -928,6 +934,7 @@ smtutil::Expression CHC::summary(FunctionDefinition const& _function, ContractDe
 	args += contract->isLibrary() ? stateVariablesAtIndex(0, *contract) : initialStateVariables(_contract);
 	args += applyMap(_function.parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); });
 	args += contract->isLibrary() ? stateVariablesAtIndex(1, *contract) : currentStateVariables(_contract);
+	args += applyMap(_function.parameters(), [this](auto _var) { return currentValue(*_var); });
 	args += applyMap(_function.returnParameters(), [this](auto _var) { return currentValue(*_var); });
 	return (*m_summaries.at(&_contract).at(&_function))(args);
 }
@@ -1085,13 +1092,14 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 			m_context.variable(*var)->increaseIndex();
 	args += otherContract ? stateVariablesAtIndex(1, *contract) : currentStateVariables();
 
-	auto const& returnParams = function->returnParameters();
-	for (auto param: returnParams)
-		if (m_context.knownVariable(*param))
-			m_context.variable(*param)->increaseIndex();
+	for (auto var: function->parameters() + function->returnParameters())
+	{
+		if (m_context.knownVariable(*var))
+			m_context.variable(*var)->increaseIndex();
 		else
-			createVariable(*param);
-	args += applyMap(function->returnParameters(), [this](auto _var) { return currentValue(*_var); });
+			createVariable(*var);
+		args.push_back(currentValue(*var));
+	}
 
 	if (otherContract)
 		return (*m_summaries.at(contract).at(function))(args);
