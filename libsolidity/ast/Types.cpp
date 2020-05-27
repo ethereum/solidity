@@ -3029,6 +3029,17 @@ unsigned FunctionType::storageBytes() const
 		solAssert(false, "Storage size of non-storable function type requested.");
 }
 
+bool FunctionType::nameable() const
+{
+	return
+		(m_kind == Kind::Internal || m_kind == Kind::External) &&
+		!m_bound &&
+		!m_arbitraryParameters &&
+		!m_gasSet &&
+		!m_valueSet &&
+		!m_saltSet;
+}
+
 vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 {
 	vector<tuple<string, TypePointer>> slots;

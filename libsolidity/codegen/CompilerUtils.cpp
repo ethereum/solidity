@@ -1022,6 +1022,10 @@ void CompilerUtils::convertType(
 	case Type::Category::ArraySlice:
 	{
 		auto& typeOnStack = dynamic_cast<ArraySliceType const&>(_typeOnStack);
+		solUnimplementedAssert(
+			_targetType.dataStoredIn(DataLocation::CallData),
+			"Conversion from calldata slices to memory not yet implemented."
+		);
 		solAssert(_targetType == typeOnStack.arrayType(), "");
 		solUnimplementedAssert(
 			typeOnStack.arrayType().location() == DataLocation::CallData &&
