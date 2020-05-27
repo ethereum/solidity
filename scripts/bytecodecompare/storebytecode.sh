@@ -107,8 +107,10 @@ for (var optimize of [false, true])
     }
 }
 EOF
+        echo "Running the compiler..."
         chmod +x solc
         ./solc *.sol > report.txt
+        echo "Finished running the compiler."
     else
         $REPO_ROOT/scripts/bytecodecompare/prepare_report.py $REPO_ROOT/$BUILD_DIR/solc/solc
     fi
@@ -138,6 +140,9 @@ EOF
         else
             echo "Adding report failed, it might already exist in the repository."
         fi
+    else
+        echo "Not storing bytecode because the keys are not available."
     fi
 )
 rm -rf "$TMPDIR"
+echo "Storebytecode finished."
