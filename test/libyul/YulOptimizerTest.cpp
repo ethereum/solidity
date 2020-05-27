@@ -362,7 +362,7 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 	ErrorList errors;
 	soltestAssert(m_dialect, "");
 	std::tie(m_ast, m_analysisInfo) = yul::test::parse(m_source, *m_dialect, errors);
-	if (!m_ast || !m_analysisInfo || !errors.empty())
+	if (!m_ast || !m_analysisInfo || !Error::containsOnlyWarnings(errors))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, errors);

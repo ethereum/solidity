@@ -33,14 +33,14 @@
           {
             "id": 4,
             "nodeType": "Block",
-            "src": "42:48:1",
+            "src": "42:58:1",
             "statements":
             [
               {
                 "AST":
                 {
                   "nodeType": "YulBlock",
-                  "src": "61:23:1",
+                  "src": "61:33:1",
                   "statements":
                   [
                     {
@@ -50,11 +50,29 @@
                           "body":
                           {
                             "nodeType": "YulBlock",
-                            "src": "80:2:1",
+                            "src": "79:2:1",
                             "statements": []
                           },
                           "nodeType": "YulCase",
-                          "src": "72:10:1",
+                          "src": "72:9:1",
+                          "value":
+                          {
+                            "kind": "number",
+                            "nodeType": "YulLiteral",
+                            "src": "77:1:1",
+                            "type": "",
+                            "value": "0"
+                          }
+                        },
+                        {
+                          "body":
+                          {
+                            "nodeType": "YulBlock",
+                            "src": "90:2:1",
+                            "statements": []
+                          },
+                          "nodeType": "YulCase",
+                          "src": "82:10:1",
                           "value": "default"
                         }
                       ],
@@ -67,7 +85,7 @@
                         "value": "0"
                       },
                       "nodeType": "YulSwitch",
-                      "src": "63:19:1"
+                      "src": "63:29:1"
                     }
                   ]
                 },
@@ -75,7 +93,7 @@
                 "externalReferences": [],
                 "id": 3,
                 "nodeType": "InlineAssembly",
-                "src": "52:32:1"
+                "src": "52:42:1"
               }
             ]
           },
@@ -103,15 +121,15 @@
             "src": "42:0:1"
           },
           "scope": 6,
-          "src": "17:73:1",
+          "src": "17:83:1",
           "stateMutability": "view",
           "virtual": false,
           "visibility": "public"
         }
       ],
       "scope": 7,
-      "src": "0:92:1"
+      "src": "0:102:1"
     }
   ],
-  "src": "0:93:1"
+  "src": "0:103:1"
 }

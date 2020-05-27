@@ -361,7 +361,7 @@ void AsmAnalyzer::operator()(Switch const& _switch)
 
 	if (_switch.cases.size() == 1 && !_switch.cases[0].value)
 		m_errorReporter.warning(
-			1878_error,
+			9592_error,
 			_switch.location,
 			"\"switch\" statement with only a default case."
 		);

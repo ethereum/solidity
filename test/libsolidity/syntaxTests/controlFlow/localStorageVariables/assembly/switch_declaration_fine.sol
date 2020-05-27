@@ -1,15 +1,7 @@
 contract C {
     struct S { bool f; }
     S s;
-    function f(uint256 a) internal pure {
-        S storage c;
-        assembly {
-            switch a
-            default { c_slot := s_slot }
-        }
-        c;
-    }
-    function g(bool flag) internal pure {
+    function f(bool flag) internal pure {
         S storage c;
         assembly {
             switch flag
@@ -18,7 +10,7 @@ contract C {
         }
         c;
     }
-    function h(uint256 a) internal pure {
+    function g(uint256 a) internal pure {
         S storage c;
         assembly {
             switch a
@@ -29,4 +21,3 @@ contract C {
     }
 }
 // ----
-// Warning: (141-190): "switch" statement with only a default case.
