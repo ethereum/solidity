@@ -675,8 +675,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 			solAssert(functionDef->isImplemented(), "");
 		}
-		else
-			solAssert(!functionType->hasDeclaration(), "");
 
 		solAssert(!functionType->takesArbitraryParameters(), "");
 
