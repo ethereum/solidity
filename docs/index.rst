@@ -131,6 +131,7 @@ Contents
    security-considerations.rst
    resources.rst
    using-the-compiler.rst
+   standard-json-format.rst
    yul.rst
    style-guide.rst
    common-patterns.rst
