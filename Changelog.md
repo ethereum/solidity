@@ -17,6 +17,7 @@ Bugfixes:
  * Type Checker: Disallow inline arrays of non-nameable types.
  * Type Checker: Fix internal compiler error when accessing members of array slices.
  * Type Checker: Fix internal compiler error when trying to decode too large static arrays.
+ * Type Checker: Fix wrong compiler error when referencing an overridden function without calling it.
  * NatSpec: DocString block is terminated when encountering an empty line.
  * Scanner: Fix bug when two empty NatSpec comments lead to scanning past EOL.
  * Code Generator: Trigger proper unimplemented errors on certain array copy operations.
