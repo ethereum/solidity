@@ -463,9 +463,6 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 
 	createExpr(_op);
 
-	if (_op.annotation().type->category() == Type::Category::FixedPoint)
-		return;
-
 	switch (_op.getOperator())
 	{
 	case Token::Not: // !
@@ -477,8 +474,8 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	case Token::Inc: // ++ (pre- or postfix)
 	case Token::Dec: // -- (pre- or postfix)
 	{
-
-		solAssert(smt::isInteger(_op.annotation().type->category()), "");
+		auto cat = _op.annotation().type->category();
+		solAssert(smt::isInteger(cat) || smt::isFixedPoint(cat), "");
 		solAssert(_op.subExpression().annotation().willBeWrittenTo, "");
 		if (auto identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
 		{

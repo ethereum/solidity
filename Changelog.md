@@ -24,6 +24,7 @@ Bugfixes:
  * NatSpec: DocString block is terminated when encountering an empty line.
  * Scanner: Fix bug when two empty NatSpec comments lead to scanning past EOL.
  * Code Generator: Trigger proper unimplemented errors on certain array copy operations.
+ * SMTChecker: Fix internal error when applying arithmetic operators to fixed point variables.
 
 ### 0.6.8 (2020-05-14)
 
