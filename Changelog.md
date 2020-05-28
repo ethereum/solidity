@@ -27,6 +27,7 @@ Bugfixes:
  * Code Generator: Trigger proper unimplemented errors on certain array copy operations.
  * SMTChecker: Fix internal error when applying arithmetic operators to fixed point variables.
  * SMTChecker: Fix internal error when short circuiting Boolean expressions with function calls in state variable initialization.
+ * SMTChecker: Fix internal error when assigning to index access inside branches.
 
 ### 0.6.8 (2020-05-14)
 
