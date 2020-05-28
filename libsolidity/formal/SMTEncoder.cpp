@@ -361,7 +361,12 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 	else if (!smt::isSupportedType(_assignment.annotation().type->category()))
 	{
 		// Give it a new index anyway to keep the SSA scheme sound.
-		if (auto varDecl = identifierToVariable(_assignment.leftHandSide()))
+
+		Expression const* base = &_assignment.leftHandSide();
+		if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(base))
+			base = leftmostBase(*indexAccess);
+
+		if (auto varDecl = identifierToVariable(*base))
 			m_context.newValue(*varDecl);
 	}
 	else
