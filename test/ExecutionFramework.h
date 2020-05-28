@@ -23,6 +23,7 @@
 #pragma once
 
 #include <test/Common.h>
+#include <test/ContractBytecode.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/DebugSettings.h>
@@ -39,6 +40,7 @@
 namespace solidity::test
 {
 class EVMHost;
+class EVMHosts;
 
 using rational = boost::rational<bigint>;
 /// An Ethereum address: 20 bytes.
@@ -57,7 +59,7 @@ class ExecutionFramework
 
 public:
 	ExecutionFramework();
-	explicit ExecutionFramework(langutil::EVMVersion _evmVersion);
+	explicit ExecutionFramework(langutil::EVMVersion _evmVersion, std::vector<boost::filesystem::path> const& _evmPaths = {});
 	virtual ~ExecutionFramework() = default;
 
 	virtual bytes const& compileAndRunWithoutCheck(
@@ -84,7 +86,7 @@ public:
 
 	bytes const& callFallbackWithValue(u256 const& _value)
 	{
-		sendMessage(bytes(), false, _value);
+		sendMessage(bytes(), _value);
 		return m_output;
 	}
 
@@ -95,14 +97,14 @@ public:
 
 	bytes const& callLowLevel(bytes const& _data, u256 const& _value)
 	{
-		sendMessage(_data, false, _value);
+		sendMessage(_data, _value);
 		return m_output;
 	}
 
 	bytes const& callContractFunctionWithValueNoEncoding(std::string _sig, u256 const& _value, bytes const& _arguments)
 	{
 		util::FixedHash<4> hash(util::keccak256(_sig));
-		sendMessage(hash.asBytes() + _arguments, false, _value);
+		sendMessage(hash.asBytes() + _arguments, _value);
 		return m_output;
 	}
 
@@ -253,7 +255,8 @@ private:
 protected:
 	void reset();
 
-	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
+	void sendCreationMessage(ContractBytecode const& _contractBytecode, bytes const& _arguments, u256 const& _value = 0);
+	void sendMessage(bytes const& _data, u256 const& _value = 0);
 	void sendEther(Address const& _to, u256 const& _value);
 	size_t currentTimestamp();
 	size_t blockTimestamp(u256 _number);
@@ -275,7 +278,7 @@ protected:
 	solidity::frontend::RevertStrings m_revertStrings = solidity::frontend::RevertStrings::Default;
 	solidity::frontend::OptimiserSettings m_optimiserSettings = solidity::frontend::OptimiserSettings::minimal();
 	bool m_showMessages = false;
-	std::shared_ptr<EVMHost> m_evmHost;
+	std::shared_ptr<EVMHosts> m_evmHost;
 
 	bool m_transactionSuccessful = true;
 	Address m_sender = account(0);
@@ -283,6 +286,7 @@ protected:
 	u256 const m_gasPrice = 100 * szabo;
 	u256 const m_gas = 100000000;
 	bytes m_output;
+	ContractBytecode m_contractBytecode;
 	u256 m_gasUsed;
 };
 

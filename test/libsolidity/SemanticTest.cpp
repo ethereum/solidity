@@ -39,8 +39,8 @@ using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 
-SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVersion, bool enforceViaYul):
-	SolidityExecutionFramework(_evmVersion),
+SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVersion, std::vector<boost::filesystem::path> const& _evmPaths, bool enforceViaYul):
+	SolidityExecutionFramework(_evmVersion, _evmPaths),
 	EVMVersionRestrictedTestCase(_filename),
 	m_enforceViaYul(enforceViaYul)
 {

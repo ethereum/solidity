@@ -24,18 +24,28 @@
 #include <boost/noncopyable.hpp>
 #include <boost/program_options.hpp>
 
+#include <vector>
+
 namespace solidity::test
 {
+
+class EVMHost;
 
 #ifdef _WIN32
 static constexpr auto evmoneFilename = "evmone.dll";
 static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-windows-amd64.zip";
+static constexpr auto heraFilename = "hera.dll";
+static constexpr auto heraDownloadLink = "https://github.com/ewasm/hera/releases";
 #elif defined(__APPLE__)
 static constexpr auto evmoneFilename = "libevmone.dylib";
 static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-darwin-x86_64.tar.gz";
+static constexpr auto heraFilename = "libhera.dylib";
+static constexpr auto heraDownloadLink = "https://github.com/ewasm/hera/releases/download/v0.2.5/hera-0.2.5-darwin-x86_64.tar.gz";
 #else
 static constexpr auto evmoneFilename = "libevmone.so";
 static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-linux-x86_64.tar.gz";
+static constexpr auto heraFilename = "libhera.so";
+static constexpr auto heraDownloadLink = "https://github.com/ewasm/hera/releases/download/v0.2.5/hera-0.2.5-linux-x86_64.tar.gz";
 #endif
 
 
@@ -44,6 +54,8 @@ struct ConfigException : public util::Exception {};
 struct CommonOptions: boost::noncopyable
 {
 	boost::filesystem::path evmonePath;
+	boost::filesystem::path heraPath;
+	std::vector<boost::filesystem::path> evmcPaths;
 	boost::filesystem::path testPath;
 	bool optimize = false;
 	bool enforceViaYul = false;

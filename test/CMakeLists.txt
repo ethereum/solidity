@@ -2,6 +2,7 @@ set(sources
     boostTest.cpp
     Common.cpp
     Common.h
+    ContractBytecode.h
     CommonSyntaxTest.cpp
     CommonSyntaxTest.h
     EVMHost.cpp

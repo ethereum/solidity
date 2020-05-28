@@ -89,7 +89,7 @@ public:
 		util::FixedHash<4> hash(util::keccak256(_sig));
 		for (bytes const& arguments: _argumentVariants)
 		{
-			sendMessage(hash.asBytes() + arguments, false, 0);
+			sendMessage(hash.asBytes() + arguments, 0);
 			BOOST_CHECK(m_transactionSuccessful);
 			gasUsed = max(gasUsed, m_gasUsed);
 			gas = max(gas, gasForTransaction(hash.asBytes() + arguments, false));

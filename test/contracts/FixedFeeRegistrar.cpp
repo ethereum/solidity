@@ -125,18 +125,18 @@ contract FixedFeeRegistrar is Registrar {
 }
 )DELIMITER";
 
-static LazyInit<bytes> s_compiledRegistrar;
+static LazyInit<solidity::test::ContractBytecode> s_compiledRegistrar;
 
 class RegistrarTestFramework: public SolidityExecutionFramework
 {
 protected:
 	void deployRegistrar()
 	{
-		bytes const& compiled = s_compiledRegistrar.init([&]{
+		solidity::test::ContractBytecode compiled = s_compiledRegistrar.init([&]{
 			return compileContract(registrarCode, "FixedFeeRegistrar");
 		});
 
-		sendMessage(compiled, true);
+		sendCreationMessage(compiled, {});
 		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}

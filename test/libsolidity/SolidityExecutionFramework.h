@@ -25,6 +25,7 @@
 #include <functional>
 
 #include <test/ExecutionFramework.h>
+#include <test/ContractBytecode.h>
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
@@ -41,9 +42,9 @@ class SolidityExecutionFramework: public solidity::test::ExecutionFramework
 {
 
 public:
-	SolidityExecutionFramework(): m_showMetadata(solidity::test::CommonOptions::get().showMetadata) {}
-	explicit SolidityExecutionFramework(langutil::EVMVersion _evmVersion):
-		ExecutionFramework(_evmVersion), m_showMetadata(solidity::test::CommonOptions::get().showMetadata)
+	SolidityExecutionFramework(): ExecutionFramework(solidity::test::CommonOptions::get().evmVersion(), solidity::test::CommonOptions::get().evmcPaths), m_showMetadata(solidity::test::CommonOptions::get().showMetadata) {}
+	explicit SolidityExecutionFramework(langutil::EVMVersion _evmVersion, std::vector<boost::filesystem::path> const& _evmPaths = {}):
+		ExecutionFramework(_evmVersion, _evmPaths), m_showMetadata(solidity::test::CommonOptions::get().showMetadata)
 	{}
 
 	bytes const& compileAndRunWithoutCheck(
@@ -54,12 +55,17 @@ public:
 		std::map<std::string, solidity::test::Address> const& _libraryAddresses = std::map<std::string, solidity::test::Address>()
 	) override
 	{
-		bytes bytecode = compileContract(_sourceCode, _contractName, _libraryAddresses);
-		sendMessage(bytecode + _arguments, true, _value);
+		m_contractBytecode = compileContract(_sourceCode, _contractName, _libraryAddresses);
+		sendCreationMessage(m_contractBytecode, _arguments, _value);
 		return m_output;
+//		m_contractBytecode = compileContract(_sourceCode, _contractName, _libraryAddresses);
+//		sendCreationMessage(m_contractBytecode, _arguments, _value);
+//		if (!m_transactionSuccessful)
+//			m_contractBytecode = solidity::test::ContractBytecode();
+//		return m_contractBytecode;
 	}
 
-	bytes compileContract(
+	solidity::test::ContractBytecode compileContract(
 		std::string const& _sourceCode,
 		std::string const& _contractName = "",
 		std::map<std::string, solidity::test::Address> const& _libraryAddresses = std::map<std::string, solidity::test::Address>()

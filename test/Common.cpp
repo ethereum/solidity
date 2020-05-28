@@ -21,6 +21,7 @@
 #include <libsolutil/Assertions.h>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <boost/assign/list_of.hpp>
 
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
@@ -56,30 +57,40 @@ boost::filesystem::path testPath()
 	return {};
 }
 
-std::string EVMOneEnvOrDefaultPath()
+std::string EnvOrDefaultPath(std::string const& _env, fs::path _filename)
 {
-	if (auto path = getenv("ETH_EVMONE"))
+	if (auto path = getenv(_env.c_str()))
 		return path;
 
 	auto const searchPath =
-	{
-		fs::path("/usr/local/lib"),
-		fs::path("/usr/lib"),
-		fs::current_path() / "deps",
-		fs::current_path() / "deps" / "lib",
-		fs::current_path() / ".." / "deps",
-		fs::current_path() / ".." / "deps" / "lib",
-		fs::current_path() / ".." / ".." / "deps",
-		fs::current_path() / ".." / ".." / "deps" / "lib",
-		fs::current_path()
-	};
+		{
+			fs::path("/usr/local/lib"),
+			fs::path("/usr/lib"),
+			fs::current_path() / "deps",
+			fs::current_path() / "deps" / "lib",
+			fs::current_path() / ".." / "deps",
+			fs::current_path() / ".." / "deps" / "lib",
+			fs::current_path() / ".." / ".." / "deps",
+			fs::current_path() / ".." / ".." / "deps" / "lib",
+			fs::current_path()
+		};
 	for (auto const& basePath: searchPath)
 	{
-		fs::path p = basePath / evmoneFilename;
+		fs::path p = basePath / _filename;
 		if (fs::exists(p))
 			return p.string();
 	}
 	return {};
+}
+
+std::string EVMOneEnvOrDefaultPath()
+{
+	return EnvOrDefaultPath("ETH_EVMONE", evmoneFilename);
+}
+
+std::string HeraEnvOrDefaultPath()
+{
+	return EnvOrDefaultPath("ETH_HERA", heraFilename);
 }
 
 CommonOptions::CommonOptions(std::string _caption):
@@ -92,6 +103,8 @@ CommonOptions::CommonOptions(std::string _caption):
 		("evm-version", po::value(&evmVersionString), "which evm version to use")
 		("testpath", po::value<fs::path>(&this->testPath)->default_value(solidity::test::testPath()), "path to test files")
 		("evmonepath", po::value<fs::path>(&evmonePath)->default_value(EVMOneEnvOrDefaultPath()), "path to evmone library")
+		("herapath", po::value<fs::path>(&heraPath)->default_value(HeraEnvOrDefaultPath()), "path to hera library")
+		("evmc", po::value<std::vector<fs::path>>(&evmcPaths), "path to different evmc library. can be defined multiple times.")
 		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker")
 		("optimize", po::bool_switch(&optimize), "enables optimization")
 		("enforce-via-yul", po::bool_switch(&enforceViaYul), "Enforce compiling all tests via yul to see if additional tests can be activated.")
@@ -140,9 +153,15 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 			throw std::runtime_error(errorMessage.str());
 		}
 
+	if (evmcPaths.empty()) {
+		if (!evmonePath.empty())
+			evmcPaths.emplace_back(evmonePath);
+		if (!heraPath.empty())
+			evmcPaths.emplace_back(heraPath);
+	}
+
 	return true;
 }
-
 
 langutil::EVMVersion CommonOptions::evmVersion() const
 {

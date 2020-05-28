@@ -438,7 +438,7 @@ contract Wallet is multisig, multiowned, daylimit {
 }
 )DELIMITER";
 
-static LazyInit<bytes> s_compiledWallet;
+static LazyInit<solidity::test::ContractBytecode> s_compiledWallet;
 
 class WalletTestFramework: public SolidityExecutionFramework
 {
@@ -450,12 +450,12 @@ protected:
 		u256 _dailyLimit = 0
 	)
 	{
-		bytes const& compiled = s_compiledWallet.init([&]{
+		solidity::test::ContractBytecode compiled = s_compiledWallet.init([&]{
 			return compileContract(walletCode, "Wallet");
 		});
 
 		bytes args = encodeArgs(u256(0x60), _required, _dailyLimit, u256(_owners.size()), _owners);
-		sendMessage(compiled + args, true, _value);
+		sendCreationMessage(compiled, args, _value);
 		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}

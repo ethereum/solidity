@@ -31,7 +31,7 @@ using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
 
-bytes SolidityExecutionFramework::compileContract(
+ContractBytecode SolidityExecutionFramework::compileContract(
 	string const& _sourceCode,
 	string const& _contractName,
 	map<string, Address> const& _libraryAddresses
@@ -62,16 +62,16 @@ bytes SolidityExecutionFramework::compileContract(
 		BOOST_ERROR("Compiling contract failed");
 	}
 	std::string contractName(_contractName.empty() ? m_compiler.lastContractName() : _contractName);
-	evmasm::LinkerObject obj;
+	evmasm::LinkerObject evmObj;
 	if (m_compileViaYul)
 	{
 		yul::AssemblyStack asmStack(
-					m_evmVersion,
-					yul::AssemblyStack::Language::StrictAssembly,
-					// Ignore optimiser settings here because we need Yul optimisation to
-					// get code that does not exhaust the stack.
-					OptimiserSettings::full()
-					);
+			m_evmVersion,
+			yul::AssemblyStack::Language::StrictAssembly,
+			// Ignore optimiser settings here because we need Yul optimisation to
+			// get code that does not exhaust the stack.
+			OptimiserSettings::full()
+		);
 		if (!asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName)))
 		{
 			langutil::SourceReferenceFormatter formatter(std::cerr);
@@ -81,12 +81,16 @@ bytes SolidityExecutionFramework::compileContract(
 			BOOST_ERROR("Assembly contract failed. IR: " + m_compiler.yulIROptimized({}));
 		}
 		asmStack.optimize();
-		obj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
+		evmObj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
 	}
 	else
-		obj = m_compiler.object(contractName);
-	BOOST_REQUIRE(obj.linkReferences.empty());
+		evmObj = m_compiler.object(contractName);
+	BOOST_REQUIRE(evmObj.linkReferences.empty());
 	if (m_showMetadata)
 		cout << "metadata: " << m_compiler.metadata(contractName) << endl;
-	return obj.bytecode;
+
+	ContractBytecode result;
+	result.ewasmBytecode = evmObj.bytecode;
+	result.evmBytecode = evmObj.bytecode;
+	return result;
 }
