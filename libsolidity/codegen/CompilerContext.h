@@ -163,12 +163,14 @@ public:
 	void appendMissingLowLevelFunctions();
 	ABIFunctions& abiFunctions() { return m_abiFunctions; }
 	YulUtilFunctions& utilFunctions() { return m_yulUtilFunctions; }
-	/// @returns concatenation of all generated functions and a set of the
-	/// externally used functions.
-	/// Clears the internal list, i.e. calling it again will result in an
-	/// empty return value.
-	std::pair<std::string, std::set<std::string>> requestedYulFunctions();
-	bool requestedYulFunctionsRan() const { return m_requestedYulFunctionsRan; }
+
+	/// Appends concatenation of all generated Yul functions to the bytecode
+	/// and stores the Yul source code to be returned by @a generatedYulUtilityCode.
+	/// Should be called exactly once on each context.
+	void appendYulUtilityFunctions(OptimiserSettings const& _optimiserSettings);
+	bool appendYulUtilityFunctionsRan() const { return m_appendYulUtilityFunctionsRan; }
+	std::string const& generatedYulUtilityCode() const { return m_generatedYulUtilityCode; }
+	static std::string yulUtilityFileName() { return "#utility.yul"; }
 
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
 	unsigned baseStackOffsetOfVariable(Declaration const& _declaration) const;
@@ -246,17 +248,21 @@ public:
 	CompilerContext& operator<<(u256 const& _value) { m_asm->append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm->append(_data); return *this; }
 
-	/// Appends inline assembly (strict mode).
-	/// @a _replacements are string-matching replacements that are performed prior to parsing the inline assembly.
+	/// Appends inline assembly (strict-EVM dialect for the current version).
+	/// @param _assembly the assembly text, should be a block.
 	/// @param _localVariables assigns stack positions to variables with the last one being the stack top
 	/// @param _externallyUsedFunctions a set of function names that are not to be renamed or removed.
-	/// @param _system if true, this is a "system-level" assembly where all functions use named labels.
+	/// @param _system if true, this is a "system-level" assembly where all functions use named labels
+	///                and the code is marked to be exported as "compiler-generated assembly utility file".
+	/// @param _optimiserSettings settings for the Yul optimiser, which is run in this function already.
+	/// @param _sourceName the name of the assembly file to be used for source locations
 	void appendInlineAssembly(
 		std::string const& _assembly,
 		std::vector<std::string> const& _localVariables = std::vector<std::string>(),
 		std::set<std::string> const& _externallyUsedFunctions = std::set<std::string>(),
 		bool _system = false,
-		OptimiserSettings const& _optimiserSettings = OptimiserSettings::none()
+		OptimiserSettings const& _optimiserSettings = OptimiserSettings::none(),
+		std::string _sourceName = "--CODEGEN--"
 	);
 
 	/// If m_revertStrings is debug, @returns inline assembly code that
@@ -385,14 +391,17 @@ private:
 	MultiUseYulFunctionCollector m_yulFunctionCollector;
 	/// Set of externally used yul functions.
 	std::set<std::string> m_externallyUsedYulFunctions;
+	/// Generated Yul code used as utility. Source references from the bytecode can point here.
+	/// Produced from @a m_yulFunctionCollector.
+	std::string m_generatedYulUtilityCode;
 	/// Container for ABI functions to be generated.
 	ABIFunctions m_abiFunctions;
 	/// Container for Yul Util functions to be generated.
 	YulUtilFunctions m_yulUtilFunctions;
 	/// The queue of low-level functions to generate.
 	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
-	/// Flag to check that requestedYulFunctions() was called exactly once
-	bool m_requestedYulFunctionsRan = false;
+	/// Flag to check that appendYulUtilityFunctions() was called exactly once
+	bool m_appendYulUtilityFunctionsRan = false;
 };
 
 }

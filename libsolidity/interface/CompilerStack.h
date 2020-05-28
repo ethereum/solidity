@@ -277,6 +277,10 @@ public:
 	/// @returns runtime contract assembly items
 	evmasm::AssemblyItems const* runtimeAssemblyItems(std::string const& _contractName) const;
 
+	/// @returns an array containing all utility sources generated during compilation.
+	/// Format: [ { name: string, id: number, language: "Yul", contents: string }, ... ]
+	Json::Value generatedSources(std::string const& _contractName, bool _runtime = false) const;
+
 	/// @returns the string that provides a mapping between bytecode and sourcecode or a nullptr
 	/// if the contract does not (yet) have bytecode.
 	std::string const* sourceMapping(std::string const& _contractName) const;
@@ -356,6 +360,8 @@ private:
 		util::LazyInit<Json::Value const> storageLayout;
 		util::LazyInit<Json::Value const> userDocumentation;
 		util::LazyInit<Json::Value const> devDocumentation;
+		util::LazyInit<Json::Value const> generatedSources;
+		util::LazyInit<Json::Value const> runtimeGeneratedSources;
 		mutable std::optional<std::string const> sourceMapping;
 		mutable std::optional<std::string const> runtimeSourceMapping;
 	};
