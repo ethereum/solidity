@@ -76,11 +76,8 @@ stop
 sub_0: assembly {
         /* "optimizer_user_yul/input.sol":60:525  contract C... */
       mstore(0x40, 0x80)
-        /* "--CODEGEN--":12:13   */
       0x00
-        /* "--CODEGEN--":9:10   */
       dup1
-        /* "--CODEGEN--":2:14   */
       revert
 
     auxdata: AUXDATA REMOVED

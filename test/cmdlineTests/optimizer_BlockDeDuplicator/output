@@ -19,20 +19,14 @@ EVM assembly:
   sstore
     /* "optimizer_BlockDeDuplicator/input.sol":60:213  contract C {... */
   callvalue
-    /* "--CODEGEN--":2:4   */
   dup1
   iszero
   tag_5
   jumpi
-    /* "--CODEGEN--":27:28   */
   0x00
-    /* "--CODEGEN--":24:25   */
   dup1
-    /* "--CODEGEN--":17:29   */
   revert
-    /* "--CODEGEN--":2:4   */
 tag_5:
-    /* "optimizer_BlockDeDuplicator/input.sol":60:213  contract C {... */
   pop
   jump(tag_6)
     /* "optimizer_BlockDeDuplicator/input.sol":77:103  function fun_x() public {} */
@@ -53,21 +47,14 @@ sub_0: assembly {
         /* "optimizer_BlockDeDuplicator/input.sol":60:213  contract C {... */
       mstore(0x40, 0x80)
       callvalue
-        /* "--CODEGEN--":5:14   */
       dup1
-        /* "--CODEGEN--":2:4   */
       iszero
       tag_1
       jumpi
-        /* "--CODEGEN--":27:28   */
       0x00
-        /* "--CODEGEN--":24:25   */
       dup1
-        /* "--CODEGEN--":17:29   */
       revert
-        /* "--CODEGEN--":2:4   */
     tag_1:
-        /* "optimizer_BlockDeDuplicator/input.sol":60:213  contract C {... */
       pop
       jumpi(tag_2, lt(calldatasize, 0x04))
       shr(0xe0, calldataload(0x00))
@@ -87,11 +74,8 @@ sub_0: assembly {
       tag_3
       jumpi
     tag_2:
-        /* "--CODEGEN--":12:13   */
       0x00
-        /* "--CODEGEN--":9:10   */
       dup1
-        /* "--CODEGEN--":2:14   */
       revert
         /* "optimizer_BlockDeDuplicator/input.sol":138:174  function f() public { true ? 1 : 3;} */
     tag_3:
