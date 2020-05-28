@@ -117,9 +117,6 @@ private:
 		return warnOnInstructions(_functionCall.functionName.name.str(), _functionCall.functionName.location);
 	}
 
-	void typeError(langutil::SourceLocation const& _location, std::string const& _description);
-	void declarationError(langutil::SourceLocation const& _location, std::string const& _description);
-
 	yul::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
 	/// Variables that are active at the current point in assembly (as opposed to

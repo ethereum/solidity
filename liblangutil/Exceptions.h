@@ -56,6 +56,17 @@ struct InvalidAstError: virtual util::Exception {};
 #define astAssert(CONDITION, DESCRIPTION) \
 	assertThrow(CONDITION, ::solidity::langutil::InvalidAstError, DESCRIPTION)
 
+/**
+ * Unique identifiers are used to tag and track individual error cases.
+ * They are passed as the first parameter of error reporting functions.
+ * Suffix _error helps to find them in the sources.
+ * The struct ErrorId prevents incidental calls like typeError(3141) instead of typeError(3141_error).
+ * To create a new ID, one can add 0000_error and then run "python ./scripts/correct_error_ids.py"
+ * from the root of the repo.
+ */
+struct ErrorId { unsigned long long error = 0; };
+constexpr ErrorId operator"" _error(unsigned long long _error) { return ErrorId{ _error }; }
+
 class Error: virtual public util::Exception
 {
 public:
@@ -69,14 +80,16 @@ public:
 		Warning
 	};
 
-	explicit Error(
+	Error(
+		ErrorId _errorId,
 		Type _type,
 		SourceLocation const& _location = SourceLocation(),
 		std::string const& _description = std::string()
 	);
 
-	Error(Type _type, std::string const& _description, SourceLocation const& _location = SourceLocation());
+	Error(ErrorId _errorId, Type _type, std::string const& _description, SourceLocation const& _location = SourceLocation());
 
+	ErrorId errorId() const { return m_errorId; }
 	Type type() const { return m_type; }
 	std::string const& typeName() const { return m_typeName; }
 
@@ -100,6 +113,7 @@ public:
 		return true;
 	}
 private:
+	ErrorId m_errorId;
 	Type m_type;
 	std::string m_typeName;
 };
