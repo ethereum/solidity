@@ -67,7 +67,8 @@ string TextTransform::run(wasm::Module const& _module)
 
 string TextTransform::operator()(wasm::Literal const& _literal)
 {
-	return "(i64.const " + to_string(_literal.value) + ")";
+	yulAssert(holds_alternative<uint64_t>(_literal.value), "");
+	return "(i64.const " + to_string(get<uint64_t>(_literal.value)) + ")";
 }
 
 string TextTransform::operator()(wasm::StringLiteral const& _literal)
@@ -164,9 +165,9 @@ string TextTransform::indented(string const& _in)
 string TextTransform::transform(wasm::FunctionDefinition const& _function)
 {
 	string ret = "(func $" + _function.name + "\n";
-	for (auto const& param: _function.parameterNames)
-		ret += "    (param $" + param + " i64)\n";
-	if (_function.returns)
+	for (auto const& param: _function.parameters)
+		ret += "    (param $" + param.name + " i64)\n";
+	if (_function.returnType.has_value())
 		ret += "    (result i64)\n";
 	for (auto const& local: _function.locals)
 		ret += "    (local $" + local.variableName + " i64)\n";

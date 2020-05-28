@@ -298,7 +298,8 @@ bytes BinaryTransform::run(Module const& _module)
 
 bytes BinaryTransform::operator()(Literal const& _literal)
 {
-	return toBytes(Opcode::I64Const) + lebEncodeSigned(_literal.value);
+	yulAssert(holds_alternative<uint64_t>(_literal.value), "");
+	return toBytes(Opcode::I64Const) + lebEncodeSigned(get<uint64_t>(_literal.value));
 }
 
 bytes BinaryTransform::operator()(StringLiteral const&)
@@ -457,8 +458,8 @@ bytes BinaryTransform::operator()(FunctionDefinition const& _function)
 
 	m_locals.clear();
 	size_t varIdx = 0;
-	for (size_t i = 0; i < _function.parameterNames.size(); ++i)
-		m_locals[_function.parameterNames[i]] = varIdx++;
+	for (size_t i = 0; i < _function.parameters.size(); ++i)
+		m_locals[_function.parameters[i].name] = varIdx++;
 	for (size_t i = 0; i < _function.locals.size(); ++i)
 		m_locals[_function.locals[i].variableName] = varIdx++;
 
@@ -484,8 +485,8 @@ BinaryTransform::Type BinaryTransform::typeOf(FunctionDefinition const& _funDef)
 {
 
 	return {
-		encodeTypes(vector<wasm::Type>(_funDef.parameterNames.size(), wasm::Type::i64)),
-		encodeTypes(vector<wasm::Type>(_funDef.returns ? 1 : 0, wasm::Type::i64))
+		encodeTypes(vector<wasm::Type>(_funDef.parameters.size(), wasm::Type::i64)),
+		encodeTypes(vector<wasm::Type>(_funDef.returnType.has_value() ? 1 : 0, wasm::Type::i64))
 	};
 }
 
