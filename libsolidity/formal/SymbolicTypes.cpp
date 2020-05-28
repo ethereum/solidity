@@ -224,6 +224,8 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 	}
 	else if (isInteger(_type.category()))
 		var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
+	else if (isFixedPoint(_type.category()))
+		var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
 	else if (isFixedBytes(_type.category()))
 	{
 		auto fixedBytesType = dynamic_cast<frontend::FixedBytesType const*>(type);
@@ -272,6 +274,11 @@ bool isInteger(frontend::Type::Category _category)
 	return _category == frontend::Type::Category::Integer;
 }
 
+bool isFixedPoint(frontend::Type::Category _category)
+{
+	return _category == frontend::Type::Category::FixedPoint;
+}
+
 bool isRational(frontend::Type::Category _category)
 {
 	return _category == frontend::Type::Category::RationalNumber;
@@ -300,6 +307,7 @@ bool isEnum(frontend::Type::Category _category)
 bool isNumber(frontend::Type::Category _category)
 {
 	return isInteger(_category) ||
+		isFixedPoint(_category) ||
 		isRational(_category) ||
 		isFixedBytes(_category) ||
 		isAddress(_category) ||

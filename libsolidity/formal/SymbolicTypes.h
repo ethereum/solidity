@@ -43,6 +43,7 @@ bool isSupportedTypeDeclaration(frontend::Type::Category _category);
 bool isSupportedTypeDeclaration(frontend::Type const& _type);
 
 bool isInteger(frontend::Type::Category _category);
+bool isFixedPoint(frontend::Type::Category _category);
 bool isRational(frontend::Type::Category _category);
 bool isFixedBytes(frontend::Type::Category _category);
 bool isAddress(frontend::Type::Category _category);
