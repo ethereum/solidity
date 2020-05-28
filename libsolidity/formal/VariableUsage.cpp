@@ -33,7 +33,8 @@ set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _
 	m_touchedVariables.clear();
 	m_callStack.clear();
 	m_callStack += _outerCallstack;
-	m_lastCall = m_callStack.back();
+	if (!m_callStack.empty())
+		m_lastCall = m_callStack.back();
 	_node.accept(*this);
 	return m_touchedVariables;
 }

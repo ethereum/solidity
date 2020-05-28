@@ -1791,7 +1791,6 @@ Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)
 
 set<VariableDeclaration const*> SMTEncoder::touchedVariables(ASTNode const& _node)
 {
-	solAssert(!m_callStack.empty(), "");
 	vector<CallableDeclaration const*> callStack;
 	for (auto const& call: m_callStack)
 		callStack.push_back(call.first);
