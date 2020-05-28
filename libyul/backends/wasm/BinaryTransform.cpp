@@ -22,6 +22,7 @@
 
 #include <libyul/Exceptions.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/map.hpp>
@@ -83,6 +84,16 @@ bytes toBytes(ValueType _vt)
 	return toBytes(uint8_t(_vt));
 }
 
+ValueType toValueType(wasm::Type _type)
+{
+	if (_type == wasm::Type::i32)
+		return ValueType::I32;
+	else if (_type == wasm::Type::i64)
+		return ValueType::I64;
+	else
+		yulAssert(false, "Invalid wasm variable type");
+}
+
 enum class Export: uint8_t
 {
 	Function = 0x0,
@@ -130,6 +141,16 @@ enum class Opcode: uint8_t
 bytes toBytes(Opcode _o)
 {
 	return toBytes(uint8_t(_o));
+}
+
+Opcode constOpcodeFor(ValueType _type)
+{
+	if (_type == ValueType::I32)
+		return Opcode::I32Const;
+	else if (_type == ValueType::I64)
+		return Opcode::I64Const;
+	else
+		yulAssert(false, "Values of this type cannot be used with const opcode");
 }
 
 static map<string, uint8_t> const builtins = {
@@ -250,6 +271,34 @@ bytes makeSection(Section _section, bytes _data)
 	return toBytes(_section) + prefixSize(move(_data));
 }
 
+/// This is a kind of run-length-encoding of local types.
+vector<pair<size_t, ValueType>> groupLocalVariables(vector<VariableDeclaration> _localVariables)
+{
+	vector<pair<size_t, ValueType>> localEntries;
+
+	size_t entrySize = 0;
+	ValueType entryType = ValueType::I32; // Any type would work here
+	for (VariableDeclaration const& localVariable: _localVariables)
+	{
+		ValueType variableType = toValueType(localVariable.type);
+
+		if (variableType != entryType)
+		{
+			if (entrySize > 0)
+				localEntries.emplace_back(entrySize, entryType);
+
+			entryType = variableType;
+			entrySize = 0;
+		}
+
+		++entrySize;
+	}
+	if (entrySize > 0)
+		localEntries.emplace_back(entrySize, entryType);
+
+	return localEntries;
+}
+
 }
 
 bytes BinaryTransform::run(Module const& _module)
@@ -298,8 +347,10 @@ bytes BinaryTransform::run(Module const& _module)
 
 bytes BinaryTransform::operator()(Literal const& _literal)
 {
-	yulAssert(holds_alternative<uint64_t>(_literal.value), "");
-	return toBytes(Opcode::I64Const) + lebEncodeSigned(get<uint64_t>(_literal.value));
+	return std::visit(GenericVisitor{
+		[&](uint32_t _value) -> bytes { return toBytes(Opcode::I32Const) + lebEncodeSigned(static_cast<int32_t>(_value)); },
+		[&](uint64_t _value) -> bytes { return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(_value)); },
+	}, _literal.value);
 }
 
 bytes BinaryTransform::operator()(StringLiteral const&)
@@ -445,15 +496,12 @@ bytes BinaryTransform::operator()(FunctionDefinition const& _function)
 {
 	bytes ret;
 
-	// This is a kind of run-length-encoding of local types. Has to be adapted once
-	// we have locals of different types.
-	if (_function.locals.size() == 0)
-		ret += lebEncode(0); // number of locals groups
-	else
+	vector<pair<size_t, ValueType>> localEntries = groupLocalVariables(_function.locals);
+	ret += lebEncode(localEntries.size());
+	for (pair<size_t, ValueType> const& entry: localEntries)
 	{
-		ret += lebEncode(1); // number of locals groups
-		ret += lebEncode(_function.locals.size());
-		ret += toBytes(ValueType::I64);
+		ret += lebEncode(entry.first);
+		ret += toBytes(entry.second);
 	}
 
 	m_locals.clear();
@@ -483,22 +531,15 @@ BinaryTransform::Type BinaryTransform::typeOf(FunctionImport const& _import)
 
 BinaryTransform::Type BinaryTransform::typeOf(FunctionDefinition const& _funDef)
 {
-
 	return {
-		encodeTypes(vector<wasm::Type>(_funDef.parameters.size(), wasm::Type::i64)),
-		encodeTypes(vector<wasm::Type>(_funDef.returnType.has_value() ? 1 : 0, wasm::Type::i64))
+		encodeTypes(_funDef.parameters),
+		encodeTypes(_funDef.returnType ? vector<wasm::Type>(1, *_funDef.returnType) : vector<wasm::Type>())
 	};
 }
 
 uint8_t BinaryTransform::encodeType(wasm::Type _type)
 {
-	if (_type == wasm::Type::i32)
-		return uint8_t(ValueType::I32);
-	else if (_type == wasm::Type::i64)
-		return uint8_t(ValueType::I64);
-	else
-		yulAssert(false, "");
-	return 0;
+	return uint8_t(toValueType(_type));
 }
 
 vector<uint8_t> BinaryTransform::encodeTypes(vector<wasm::Type> const& _types)
@@ -506,6 +547,14 @@ vector<uint8_t> BinaryTransform::encodeTypes(vector<wasm::Type> const& _types)
 	vector<uint8_t> result;
 	for (wasm::Type t: _types)
 		result.emplace_back(encodeType(t));
+	return result;
+}
+
+vector<uint8_t> BinaryTransform::encodeTypes(wasm::TypedNameList const& _typedNameList)
+{
+	vector<uint8_t> result;
+	for (TypedName const& typedName: _typedNameList)
+		result.emplace_back(encodeType(typedName.type));
 	return result;
 }
 
@@ -614,13 +663,16 @@ bytes BinaryTransform::memorySection()
 bytes BinaryTransform::globalSection(vector<wasm::GlobalVariableDeclaration> const& _globals)
 {
 	bytes result = lebEncode(_globals.size());
-	for (size_t i = 0; i < _globals.size(); ++i)
+	for (wasm::GlobalVariableDeclaration const& global: _globals)
+	{
+		ValueType globalType = toValueType(global.type);
 		result +=
-			toBytes(ValueType::I64) +
+			toBytes(globalType) +
 			lebEncode(static_cast<uint8_t>(Mutability::Var)) +
-			toBytes(Opcode::I64Const) +
+			toBytes(constOpcodeFor(globalType)) +
 			lebEncodeSigned(0) +
 			toBytes(Opcode::End);
+	}
 
 	return makeSection(Section::GLOBAL, move(result));
 }

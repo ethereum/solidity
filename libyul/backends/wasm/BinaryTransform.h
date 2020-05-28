@@ -73,6 +73,7 @@ private:
 
 	static uint8_t encodeType(wasm::Type _type);
 	static std::vector<uint8_t> encodeTypes(std::vector<wasm::Type> const& _types);
+	static std::vector<uint8_t> encodeTypes(wasm::TypedNameList const& _typedNameList);
 
 	static std::map<Type, std::vector<std::string>> typeToFunctionMap(
 		std::vector<wasm::FunctionImport> const& _imports,
