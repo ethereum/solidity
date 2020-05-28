@@ -2981,7 +2981,11 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	if (!annotation.referencedDeclaration)
 	{
 		annotation.overloadedDeclarations = cleanOverloadedDeclarations(_identifier, annotation.candidateDeclarations);
-		if (!annotation.arguments)
+		if (annotation.overloadedDeclarations.empty())
+			m_errorReporter.fatalTypeError(7593_error, _identifier.location(), "No candidates for overload resolution found.");
+		else if (annotation.overloadedDeclarations.size() == 1)
+			annotation.referencedDeclaration = *annotation.overloadedDeclarations.begin();
+		else if (!annotation.arguments)
 		{
 			// The identifier should be a public state variable shadowing other functions
 			vector<Declaration const*> candidates;
@@ -2998,10 +3002,6 @@ bool TypeChecker::visit(Identifier const& _identifier)
 			else
 				m_errorReporter.fatalTypeError(7589_error, _identifier.location(), "No unique declaration found after variable lookup.");
 		}
-		else if (annotation.overloadedDeclarations.empty())
-			m_errorReporter.fatalTypeError(7593_error, _identifier.location(), "No candidates for overload resolution found.");
-		else if (annotation.overloadedDeclarations.size() == 1)
-			annotation.referencedDeclaration = *annotation.overloadedDeclarations.begin();
 		else
 		{
 			vector<Declaration const*> candidates;
