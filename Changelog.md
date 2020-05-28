@@ -25,6 +25,7 @@ Bugfixes:
  * Scanner: Fix bug when two empty NatSpec comments lead to scanning past EOL.
  * Code Generator: Trigger proper unimplemented errors on certain array copy operations.
  * SMTChecker: Fix internal error when applying arithmetic operators to fixed point variables.
+ * SMTChecker: Fix internal error when short circuiting Boolean expressions with function calls in state variable initialization.
 
 ### 0.6.8 (2020-05-14)
 
