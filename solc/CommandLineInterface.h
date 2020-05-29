@@ -103,6 +103,9 @@ private:
 	/// @arg _json json string to be written
 	void createJson(std::string const& _fileName, std::string const& _json);
 
+	size_t countEnabledOptions(std::vector<std::string> const& _optionNames) const;
+	static std::string joinOptionNames(std::vector<std::string> const& _optionNames, std::string _separator = ", ");
+
 	bool m_error = false; ///< If true, some error occurred.
 
 	bool m_onlyAssemble = false;

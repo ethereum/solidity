@@ -58,6 +58,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 #include <boost/algorithm/string.hpp>
 
 #ifdef _WIN32 // windows
@@ -1877,6 +1878,23 @@ void CommandLineInterface::outputCompilationResults()
 		else
 			serr() << "Compiler run successful, no output requested." << endl;
 	}
+}
+
+size_t CommandLineInterface::countEnabledOptions(vector<string> const& _optionNames) const
+{
+	size_t count = 0;
+	for (string const& _option: _optionNames)
+		count += m_args.count(_option);
+
+	return count;
+}
+
+string CommandLineInterface::joinOptionNames(vector<string> const& _optionNames, string _separator)
+{
+	return boost::algorithm::join(
+		_optionNames | boost::adaptors::transformed([](string const& _option){ return "--" + _option; }),
+		_separator
+	);
 }
 
 }
