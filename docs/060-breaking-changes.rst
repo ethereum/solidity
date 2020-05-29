@@ -16,8 +16,8 @@ This section lists changes where the behaviour of your code might
 change without the compiler telling you about it.
 
 * The resulting type of an exponentiation is the type of the base. It used to be the smallest type
-  that can hold both the type of the base and the type of the exponent, as with symmentric
-  operations. Additionally, signed types are allowed for the base of the exponetation.
+  that can hold both the type of the base and the type of the exponent, as with symmetric
+  operations. Additionally, signed types are allowed for the base of the exponentiation.
 
 
 Explicitness Requirements
