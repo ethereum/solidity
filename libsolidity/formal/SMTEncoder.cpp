@@ -274,6 +274,20 @@ bool SMTEncoder::visit(InlineAssembly const& _inlineAsm)
 	return false;
 }
 
+bool SMTEncoder::visit(TryCatchClause const& _clause)
+{
+	if (auto params = _clause.parameters())
+		for (auto const& var: params->parameters())
+			createVariable(*var);
+
+	m_errorReporter.warning(
+		7645_error,
+		_clause.location(),
+		"Assertion checker does not support try/catch clauses."
+	);
+	return false;
+}
+
 bool SMTEncoder::visit(IfStatement const& _node)
 {
 	_node.condition().accept(*this);

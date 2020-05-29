@@ -91,6 +91,7 @@ protected:
 	bool visit(InlineAssembly const& _node) override;
 	void endVisit(Break const&) override {}
 	void endVisit(Continue const&) override {}
+	bool visit(TryCatchClause const& _node) override;
 
 	/// Do not visit subtree if node is a RationalNumber.
 	/// Symbolic _expr is the rational literal.
