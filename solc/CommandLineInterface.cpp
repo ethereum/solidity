@@ -1130,6 +1130,21 @@ bool CommandLineInterface::processInput()
 		}
 	}
 
+	vector<string> const exclusiveModes = {
+		g_argStandardJSON,
+		g_argLink,
+		g_argAssemble,
+		g_argStrictAssembly,
+		g_argYul,
+		g_argImportAst,
+	};
+	if (countEnabledOptions(exclusiveModes) > 1)
+	{
+		serr() << "The following options are mutually exclusive: " << joinOptionNames(exclusiveModes) << ". ";
+		serr() << "Select at most one." << endl;
+		return false;
+	}
+
 	if (m_args.count(g_argStandardJSON))
 	{
 		vector<string> inputFiles;
