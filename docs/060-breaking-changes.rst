@@ -36,9 +36,9 @@ For most of the topics the compiler will provide suggestions.
   like so: ``override(Base1, Base2)``.
 
 * Member-access to ``length`` of arrays is now always read-only, even for storage arrays. It is no
-  longer possible to resize storage arrays assigning a new value to their length. Use ``push()``,
-  ``push(value)`` or ``pop()`` instead, or assign a full array, which will of course overwrite existing content.
-  The reason behind this is to prevent storage collisions by gigantic
+  longer possible to resize storage arrays by assigning a new value to their length. Use ``push()``,
+  ``push(value)`` or ``pop()`` instead, or assign a full array, which will of course overwrite the existing content.
+  The reason behind this is to prevent storage collisions of gigantic
   storage arrays.
 
 * The new keyword ``abstract`` can be used to mark contracts as abstract. It has to be used
@@ -86,7 +86,7 @@ New Features
 ============
 
 This section lists things that were not possible prior to Solidity 0.6.0
-or at least were more difficult to achieve prior to Solidity 0.6.0.
+or were more difficult to achieve.
 
  * The :ref:`try/catch statement <try-catch>` allows you to react on failed external calls.
  * ``struct`` and ``enum`` types can be declared at file level.
@@ -103,7 +103,7 @@ Interface Changes
 
 This section lists changes that are unrelated to the language itself, but that have an effect on the interfaces of
 the compiler. These may change the way how you use the compiler on the command line, how you use its programmable
-interface or how you analyze the output produced by it.
+interface, or how you analyze the output produced by it.
 
 New Error Reporter
 ~~~~~~~~~~~~~~~~~~
