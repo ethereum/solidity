@@ -1289,6 +1289,13 @@ bool CommandLineInterface::processInput()
 
 		return assemble(inputLanguage, targetMachine, optimize, yulOptimiserSteps);
 	}
+	else if (countEnabledOptions({g_strYulDialect, g_argMachine}) >= 1)
+	{
+		serr() << "--" << g_strYulDialect << " and --" << g_argMachine << " ";
+		serr() << "are only valid in assembly mode." << endl;
+		return false;
+	}
+
 	if (m_args.count(g_argLink))
 	{
 		// switch to linker mode
