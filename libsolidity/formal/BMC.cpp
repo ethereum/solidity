@@ -604,7 +604,11 @@ void BMC::checkUnderflow(BMCVerificationTarget& _target, smtutil::Expression con
 			_target.type == VerificationTarget::Type::UnderOverflow,
 		""
 	);
-	auto intType = dynamic_cast<IntegerType const*>(_target.expression->annotation().type);
+	IntegerType const* intType = nullptr;
+	if (auto const* type = dynamic_cast<IntegerType const*>(_target.expression->annotation().type))
+		intType = type;
+	else
+		intType = TypeProvider::uint256();
 	solAssert(intType, "");
 	checkCondition(
 		_target.constraints && _constraints && _target.value < smt::minValue(*intType),
@@ -626,7 +630,12 @@ void BMC::checkOverflow(BMCVerificationTarget& _target, smtutil::Expression cons
 			_target.type == VerificationTarget::Type::UnderOverflow,
 		""
 	);
-	auto intType = dynamic_cast<IntegerType const*>(_target.expression->annotation().type);
+	IntegerType const* intType = nullptr;
+	if (auto const* type = dynamic_cast<IntegerType const*>(_target.expression->annotation().type))
+		intType = type;
+	else
+		intType = TypeProvider::uint256();
+
 	solAssert(intType, "");
 	checkCondition(
 		_target.constraints && _constraints && _target.value > smt::maxValue(*intType),
