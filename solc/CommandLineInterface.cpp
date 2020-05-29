@@ -1190,6 +1190,22 @@ bool CommandLineInterface::processInput()
 
 	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argYul))
 	{
+		vector<string> const nonAssemblyModeOptions = {
+			// TODO: The list is not complete. Add more.
+			g_argOutputDir,
+			g_argGas,
+			g_argCombinedJson,
+			g_strOptimizeYul,
+			g_strNoOptimizeYul,
+		};
+		if (countEnabledOptions(nonAssemblyModeOptions) >= 1)
+		{
+			serr() << "The following options are invalid in assembly mode: ";
+			serr() << joinOptionNames(nonAssemblyModeOptions) << ". ";
+			serr() << "Optimization is disabled by default and can be enabled with --" << g_argOptimize << "." << endl;
+			return false;
+		}
+
 		// switch to assembly mode
 		m_onlyAssemble = true;
 		using Input = yul::AssemblyStack::Language;
@@ -1197,16 +1213,6 @@ bool CommandLineInterface::processInput()
 		Input inputLanguage = m_args.count(g_argYul) ? Input::Yul : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
 		bool optimize = m_args.count(g_argOptimize);
-		if (m_args.count(g_strOptimizeYul))
-		{
-			serr() << "--" << g_strOptimizeYul << " is invalid in assembly mode. Use --" << g_argOptimize << " instead." << endl;
-			return false;
-		}
-		if (m_args.count(g_strNoOptimizeYul))
-		{
-			serr() << "--" << g_strNoOptimizeYul << " is invalid in assembly mode. Optimization is disabled by default and can be enabled with --" << g_argOptimize << "." << endl;
-			return false;
-		}
 
 		optional<string> yulOptimiserSteps;
 		if (m_args.count(g_strYulOptimizations))
