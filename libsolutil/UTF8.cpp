@@ -138,13 +138,4 @@ bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
 	return validateUTF8(reinterpret_cast<unsigned char const*>(_input.c_str()), _input.length(), _invalidPosition);
 }
 
-size_t numCodepoints(std::string const& _utf8EncodedInput)
-{
-	size_t codepoint = 0;
-	for (char c: _utf8EncodedInput)
-		codepoint += (c & 0xc0) != 0x80;
-
-	return codepoint;
-}
-
 }
