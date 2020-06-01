@@ -1,11 +1,5 @@
 .. index:: ! contract;creation, constructor
 
-##########
-Contrats
-##########
-
-Les contrats en Solidity sont similaires à des classes dans les langages orientés objets. Ils contiennent des données persistentes dans des variables et des fonctions peuvent les modifier. Appeler la fonction d'un autre contrat (une autre instance) executera un appel de fonction auprès de l'EVM et changera alors le contexte, rendant inaccessibles ces variables.
-
 ******************
 Créer des contrats
 ******************
