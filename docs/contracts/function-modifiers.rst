@@ -2,17 +2,13 @@
 
 .. _modifiers:
 
-******************
-Function Modifiers
-******************
+**************************
+Modificateurs de fonctions
+**************************
 
-Modifiers can be used to change the behaviour of functions in a declarative way.
-For example,
-you can use a modifier to automatically check a condition prior to executing the function.
+Les modificateurs peuvent être utilisés pour modifier facilement le comportement des fonctions.  Par exemple, ils peuvent vérifier automatiquement une condition avant d'exécuter la fonction.
 
-Modifiers are
-inheritable properties of contracts and may be overridden by derived contracts, but only
-if they are marked ``virtual``. For details, please see
+Les modificateurs sont des propriétés héritables des contrats et peuvent être redéfinis dans les contrats dérivés, mais seulement s'ils sont indiqués ``virtual``. Pour plus de détails, voir
 :ref:`Modifier Overriding <modifier-overriding>`.
 
 ::
@@ -24,13 +20,13 @@ if they are marked ``virtual``. For details, please see
         constructor() public { owner = msg.sender; }
         address payable owner;
 
-        // This contract only defines a modifier but does not use
-        // it: it will be used in derived contracts.
-        // The function body is inserted where the special symbol
-        // `_;` in the definition of a modifier appears.
-        // This means that if the owner calls this function, the
-        // function is executed and otherwise, an exception is
-        // thrown.
+        // Ce contrat ne définit qu'un modificateur mais ne l'utilise pas:
+        // il sera utilisé dans les contrats dérivés.
+        // Le corps de la fonction est inséré à l'endroit où le symbole spécial
+        // `_;` apparaît dans la définition d'un modificateur.
+        // Cela signifie que si le propriétaire appelle cette fonction, la fonction
+        // est exécutée et dans le cas contraire, une exception est
+        // levée.
         modifier onlyOwner {
             require(
                 msg.sender == owner,
@@ -40,18 +36,18 @@ if they are marked ``virtual``. For details, please see
         }
     }
 
-    contract destructible is owned {
-        // This contract inherits the `onlyOwner` modifier from
-        // `owned` and applies it to the `destroy` function, which
-        // causes that calls to `destroy` only have an effect if
-        // they are made by the stored owner.
-        function destroy() public onlyOwner {
+    contract mortal is owned {
+        // Ce contrat hérite du modificateur `onlyOwner` de `owned`
+        // et l'applique à la fonction `close`, qui
+        // cause que les appels à `close` n'ont un effet que s'il
+        // sont passés par le propriétaire enregistré.
+        function close() public onlyOwner {
             selfdestruct(owner);
         }
     }
 
     contract priced {
-        // Modifiers can receive arguments:
+        // Les modificateurs peuvent prendre des arguments:
         modifier costs(uint price) {
             if (msg.value >= price) {
                 _;
@@ -59,15 +55,15 @@ if they are marked ``virtual``. For details, please see
         }
     }
 
-    contract Register is priced, destructible {
+    contract Register is priced, owned {
         mapping (address => bool) registeredAddresses;
         uint price;
 
         constructor(uint initialPrice) public { price = initialPrice; }
 
-        // It is important to also provide the
-        // `payable` keyword here, otherwise the function will
-        // automatically reject all Ether sent to it.
+        // Il est important de fournir également le
+        // mot-clé `payable` ici, sinon la fonction
+        // rejettera automatiquement tous les Ethers qui lui sont envoyés.
         function register() public payable costs(price) {
             registeredAddresses[msg.sender] = true;
         }
@@ -89,10 +85,10 @@ if they are marked ``virtual``. For details, please see
             locked = false;
         }
 
-        /// This function is protected by a mutex, which means that
-        /// reentrant calls from within `msg.sender.call` cannot call `f` again.
-        /// The `return 7` statement assigns 7 to the return value but still
-        /// executes the statement `locked = false` in the modifier.
+        /// Cette fonction est protégée par un mutex, ce qui signifie que
+        /// les appels entrants à partir de `msg.sender.call` ne peuvent pas rappeler `f`.
+        /// L'instruction `return 7` assigne 7 à la valeur de retour, mais en même temps
+        /// exécute l'instruction `locked = false` dans le modificateur.
         function f() public noReentrancy returns (uint) {
             (bool success,) = msg.sender.call("");
             require(success);
@@ -100,18 +96,11 @@ if they are marked ``virtual``. For details, please see
         }
     }
 
-Multiple modifiers are applied to a function by specifying them in a
-whitespace-separated list and are evaluated in the order presented.
+Plusieurs modificateurs sont appliqués à une fonction en les spécifiant dans une liste séparée par des espaces et sont évalués dans l'ordre présenté.
 
 .. warning::
-    In an earlier version of Solidity, ``return`` statements in functions
-    having modifiers behaved differently.
+    Dans une version antérieure de Solidity, les instructions ``return`` des fonctions ayant des modificateurs se comportaient différemment.
 
-Explicit returns from a modifier or function body only leave the current
-modifier or function body. Return variables are assigned and
-control flow continues after the "_" in the preceding modifier.
+Les retours explicites d'un modificateur ou d'un corps de fonction ne laissent que le modificateur ou le corps de fonction courant. Les variables de retour sont affectées et le flow de contrôle continue après le "_" dans le modificateur précédent.
 
-Arbitrary expressions are allowed for modifier arguments and in this context,
-all symbols visible from the function are visible in the modifier. Symbols
-introduced in the modifier are not visible in the function (as they might
-change by overriding).
+Des expressions arbitraires sont autorisées pour les arguments du modificateur et dans ce contexte, tous les symboles visibles depuis la fonction sont visibles dans le modificateur. Les symboles introduits dans le modificateur ne sont pas visibles dans la fonction (car ils peuvent changer en cas de redéfinition).
