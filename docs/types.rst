@@ -6,12 +6,10 @@
 Types
 *****
 
-Solidity is a statically typed language, which means that the type of each
-variable (state and local) needs to be specified.
-Solidity provides several elementary types which can be combined to form complex types.
+Solidity est un langage à typage statique, ce qui signifie que le type de chaque variable (état et locale) doit être spécifié.
+Solidity propose plusieurs types élémentaires qui peuvent être combinés pour former des types complexes.
 
-In addition, types can interact with each other in expressions containing
-operators. For a quick reference of the various operators, see :ref:`order`.
+De plus, les types peuvent interagir entre eux dans des expressions contenant des opérateurs. Pour une liste synthétique des différents opérateurs, voir :ref:`order`.
 
 The concept of "undefined" or "null" values does not exist in Solidity, but newly
 declared variables always have a :ref:`default value<default-value>` dependent
