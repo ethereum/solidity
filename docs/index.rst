@@ -6,18 +6,16 @@ Solidity
     :alt: Solidity logo
     :align: center
 
-Solidity is an object-oriented, high-level language for implementing smart
-contracts. Smart contracts are programs which govern the behaviour of accounts
-within the Ethereum state.
+Solidity est un langage haut-niveau, orienté objet dédié à l'implémentation de smart contracts. Les smart contracts (littéralement contrats intelligents) sont des programes qui régissent le comportement de comptes dans l'état d'Ethereum.
 
-Solidity was influenced by C++, Python and JavaScript and is designed to target
-the Ethereum Virtual Machine (EVM).
+Solidity a été influencé par C++, Python et JavaScript et est conçu pour cibler
+la machine virtuelle Ethereum (EVM).
 
-Solidity is statically typed, supports inheritance, libraries and complex
-user-defined types among other features.
+Solidity est statiquement typé, supporte l'héritage, les librairies et les bibliothèques, ainsi
+que les types complexes définis par l'utilisateur parmi d'autres caractéristiques.
 
-With Solidity you can create contracts for uses such as voting, crowdfunding, blind auctions,
-and multi-signature wallets.
+Avec Solidity, vous pouvez créer des contrats pour des usages tels que le vote, le crowdfunding, les enchères à l'aveugle,
+et portefeuilles multi-signature.
 
 When deploying contracts, you should use the latest released
 version of Solidity. This is because breaking changes as well as
@@ -65,21 +63,19 @@ read our :doc:`contributors guide <contributing>` for more details.
 
 .. _translations:
 
-Translations
-------------
+Traductions
+-----------
 
-Community volunteers help translate this documentation into several languages.
-They have varying degrees of completeness and up-to-dateness. The English
-version stands as a reference.
+Cette documentation est traduite en plusieurs langues par des bénévoles de la communauté avec divers degrés d'exhaustivité et d'actualité. La version anglaise reste la référence.
 
-* `French <http://solidity-fr.readthedocs.io>`_ (in progress)
-* `Italian <https://github.com/damianoazzolini/solidity>`_ (in progress)
+* `French <http://solidity-fr.readthedocs.io>`_ (en cours)
+* `Italian <https://github.com/damianoazzolini/solidity>`_ (en cours)
 * `Japanese <https://solidity-jp.readthedocs.io>`_
-* `Korean <http://solidity-kr.readthedocs.io>`_ (in progress)
-* `Russian <https://github.com/ethereum/wiki/wiki/%5BRussian%5D-%D0%A0%D1%83%D0%BA%D0%BE%D0%B2%D0%BE%D0%B4%D1%81%D1%82%D0%B2%D0%BE-%D0%BF%D0%BE-Solidity>`_ (rather outdated)
-* `Simplified Chinese <http://solidity-cn.readthedocs.io>`_ (in progress)
+* `Korean <http://solidity-kr.readthedocs.io>`_ (en cours)
+* `Russian <https://github.com/ethereum/wiki/wiki/%5BRussian%5D-%D0%A0%D1%83%D0%BA%D0%BE%D0%B2%D0%BE%D0%B4%D1%81%D1%82%D0%B2%D0%BE-%D0%BF%D0%BE-Solidity>`_ (plutôt dépassée)
+* `Simplified Chinese <http://solidity-cn.readthedocs.io>`_ (en cours)
 * `Spanish <https://solidity-es.readthedocs.io>`_
-* `Turkish <https://github.com/denizozzgur/Solidity_TR/blob/master/README.md>`_ (partial)
+* `Turkish <https://github.com/denizozzgur/Solidity_TR/blob/master/README.md>`_ (partielle)
 
 Contents
 ========
