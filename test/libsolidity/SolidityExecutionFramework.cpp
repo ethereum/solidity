@@ -76,7 +76,7 @@ bytes SolidityExecutionFramework::compileContract(
 		{
 			langutil::SourceReferenceFormatter formatter(std::cerr);
 
-			for (auto const& error: m_compiler.errors())
+			for (auto const& error: asmStack.errors())
 				formatter.printErrorInformation(*error);
 			BOOST_ERROR("Assembly contract failed. IR: " + m_compiler.yulIROptimized({}));
 		}
