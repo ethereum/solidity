@@ -1,8 +1,8 @@
 .. index:: purchase, remote purchase, escrow
 
-********************
-Safe Remote Purchase
-********************
+**********************
+Achat distant sécurisé
+**********************
 
 Purchasing goods remotely currently requires multiple parties that need to trust each other.
 The simplest configuration involves a seller and a buyer. The buyer would like to receive
@@ -80,9 +80,9 @@ you can use state machine-like constructs inside a contract.
             require((2 * value) == msg.value, "Value has to be even.");
         }
 
-        /// Abort the purchase and reclaim the ether.
-        /// Can only be called by the seller before
-        /// the contract is locked.
+        /// Annule l'achat et rembourse l'ether du dépot.
+        /// Peut seulement être appelé par le vendeur
+        /// avant le verrouillage du contrat
         function abort()
             public
             onlySeller
