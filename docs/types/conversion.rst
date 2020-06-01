@@ -2,23 +2,19 @@
 
 .. _types-conversion-elementary-types:
 
-Conversions between Elementary Types
-====================================
+Conversions entre les types élémentaires
+========================================
 
-Implicit Conversions
---------------------
+Conversions implicites
+----------------------
 
 An implicit type conversion is automatically applied by the compiler in some cases
 during assignments, when passing arguments to functions and when applying operators.
-In general, an implicit conversion between value-types is possible if it makes
-sense semantically and no information is lost.
+En général, une conversion implicite entre les types valeur est possible si elle a un sens sémantique et qu'aucune information n'est perdue.
 
-For example, ``uint8`` is convertible to
-``uint16`` and ``int128`` to ``int256``, but ``int8`` is not convertible to ``uint256``,
-because ``uint256`` cannot hold values such as ``-1``.
+Par exemple, ``uint8`` est convertible en ``uint16`` et ``int128`` en ``int256``, mais ``uint8`` n'est pas convertible en ``uint256`` (car ``uint256`` ne peut contenir, par exemple, ``-1``)
 
-If an operator is applied to different types, the compiler tries to implicitly
-convert one of the operands to the type of the other (the same is true for assignments).
+Si un opérateur est appliqué à différents types, le compilateur essaie de convertir implicitement l'un des opérandes au type de l'autre (c'est la même chose pour les assignations).
 This means that operations are always performed in the type of one of the operands.
 
 For more details about which implicit conversions are possible,
@@ -39,113 +35,92 @@ is performed after the addition.
     uint32 x = y + z;
 
 
-Explicit Conversions
---------------------
+Conversions explicites
+----------------------
 
-If the compiler does not allow implicit conversion but you are confident a conversion will work,
-an explicit type conversion is sometimes possible. This may
-result in unexpected behaviour and allows you to bypass some security
-features of the compiler, so be sure to test that the
-result is what you want and expect!
+Si le compilateur ne permet pas la conversion implicite mais que vous savez ce que vous faites, une conversion de type explicite est parfois possible. Notez que cela peut vous donner un comportement inattendu et vous permet de contourner certaines fonctions de sécurité du compilateur, donc assurez-vous de tester que le résultat est ce que vous voulez !
 
-Take the following example that converts a negative ``int`` to a ``uint``:
+Prenons l'exemple suivant où l'on convertit un ``int8`` négatif en un ``uint`` :
 
 ::
 
     int  y = -3;
     uint x = uint(y);
 
-At the end of this code snippet, ``x`` will have the value ``0xfffff..fd`` (64 hex
-characters), which is -3 in the two's complement representation of 256 bits.
+A la fin de cet extrait de code, ``x`` aura la valeur ``0xfffffff...fd`` (64 caractères hexadécimaux), qui est -3 dans la représentation en 256 bits du complément à deux.
 
-If an integer is explicitly converted to a smaller type, higher-order bits are
-cut off::
+Si un entier est explicitement converti en un type plus petit, les bits d'ordre supérieur sont coupés::
 
     uint32 a = 0x12345678;
-    uint16 b = uint16(a); // b will be 0x5678 now
+    uint16 b = uint16(a); // b sera désormais 0x5678
 
-If an integer is explicitly converted to a larger type, it is padded on the left (i.e., at the higher order end).
-The result of the conversion will compare equal to the original integer::
+Si un entier est explicitement converti en un type plus grand, il est rembourré par la gauche (c'est-à-dire à l'extrémité supérieure de l'ordre).
+Le résultat de la conversion sera comparé à l'entier original::
 
     uint16 a = 0x1234;
     uint32 b = uint32(a); // b will be 0x00001234 now
     assert(a == b);
 
-Fixed-size bytes types behave differently during conversions. They can be thought of as
-sequences of individual bytes and converting to a smaller type will cut off the
-sequence::
+Les types à taille fixe se comportent différemment lors des conversions. Ils peuvent être considérés comme des séquences d'octets individuels et la conversion à un type plus petit coupera la séquence::
 
     bytes2 a = 0x1234;
-    bytes1 b = bytes1(a); // b will be 0x12
+    bytes1 b = bytes1(a); // b sera désormais 0x12
 
-If a fixed-size bytes type is explicitly converted to a larger type, it is padded on
-the right. Accessing the byte at a fixed index will result in the same value before and
-after the conversion (if the index is still in range)::
+Si un type à taille fixe est explicitement converti en un type plus grand, il est rembourré à droite. L'accès à l'octet par un index fixe donnera la même valeur avant et après la conversion (si l'index est toujours dans la plage)::
 
     bytes2 a = 0x1234;
-    bytes4 b = bytes4(a); // b will be 0x12340000
+    bytes4 b = bytes4(a); // b sera désormais 0x12340000
     assert(a[0] == b[0]);
     assert(a[1] == b[1]);
 
-Since integers and fixed-size byte arrays behave differently when truncating or
-padding, explicit conversions between integers and fixed-size byte arrays are only allowed,
-if both have the same size. If you want to convert between integers and fixed-size byte arrays of
-different size, you have to use intermediate conversions that make the desired truncation and padding
-rules explicit::
+Puisque les entiers et les tableaux d'octets de taille fixe se comportent différemment lorsqu'ils sont tronqués ou rembourrés, les conversions explicites entre entiers et tableaux d'octets de taille fixe ne sont autorisées que si les deux ont la même taille. Si vous voulez convertir entre des entiers et des tableaux d'octets de taille fixe de tailles différentes, vous devez utiliser des conversions intermédiaires qui font la troncature et le remplissage désirés.
+règles explicites::
 
     bytes2 a = 0x1234;
-    uint32 b = uint16(a); // b will be 0x00001234
-    uint32 c = uint32(bytes4(a)); // c will be 0x12340000
-    uint8 d = uint8(uint16(a)); // d will be 0x34
-    uint8 e = uint8(bytes1(a)); // e will be 0x12
+    uint32 b = uint16(a); // b sera désormais 0x00001234
+    uint32 c = uint32(bytes4(a)); // c sera désormais 0x12340000
+    uint8 d = uint8(uint16(a)); // d sera désormais 0x34
+    uint8 e = uint8(bytes1(a)); // d sera désormais 0x12
 
 .. _types-conversion-literals:
 
-Conversions between Literals and Elementary Types
-=================================================
+Conversions entre les types littéraux et élémentaires
+=====================================================
 
-Integer Types
--------------
+Types nombres entiers
+---------------------
 
-Decimal and hexadecimal number literals can be implicitly converted to any integer type
-that is large enough to represent it without truncation::
+Les nombres décimaux et hexadécimaux peuvent être implicitement convertis en n'importe quel type entier suffisamment grand pour le représenter sans troncature::
 
-    uint8 a = 12; // fine
-    uint32 b = 1234; // fine
-    uint16 c = 0x123456; // fails, since it would have to truncate to 0x3456
+    uint8 a = 12; // Bon
+    uint32 b = 1234; // Bon
+    uint16 c = 0x123456; // échoue, car devrait tronquer en 0x3456
 
-Fixed-Size Byte Arrays
-----------------------
+Tableaux d'octets de taille fixe
+--------------------------------
 
-Decimal number literals cannot be implicitly converted to fixed-size byte arrays. Hexadecimal
-number literals can be, but only if the number of hex digits exactly fits the size of the bytes
-type. As an exception both decimal and hexadecimal literals which have a value of zero can be
-converted to any fixed-size bytes type::
+Les nombres décimaux ne peuvent pas être implicitement convertis en tableaux d'octets de taille fixe. Les nombres hexadécimaux peuvent être littéraux, mais seulement si le nombre de chiffres hexadécimaux correspond exactement à la taille du type de ``bytes``. Par exception, les nombres décimaux et hexadécimaux ayant une valeur de zéro peuvent être convertis en n'importe quel type à taille fixe::
 
-    bytes2 a = 54321; // not allowed
-    bytes2 b = 0x12; // not allowed
-    bytes2 c = 0x123; // not allowed
-    bytes2 d = 0x1234; // fine
-    bytes2 e = 0x0012; // fine
-    bytes4 f = 0; // fine
-    bytes4 g = 0x0; // fine
+    bytes2 a = 54321; // pas autorisé
+    bytes2 b = 0x12; // pas autorisé
+    bytes2 c = 0x123; // pas autorisé
+    bytes2 d = 0x1234; // bon
+    bytes2 e = 0x0012; // bon
+    bytes4 f = 0; // bon
+    bytes4 g = 0x0; // bon
 
-String literals and hex string literals can be implicitly converted to fixed-size byte arrays,
-if their number of characters matches the size of the bytes type::
+Les littéraux de chaînes de caractères et les littéraux de chaînes hexadécimales peuvent être implicitement convertis en tableaux d'octets de taille fixe, si leur nombre de caractères correspond à la taille du type ``bytes``::
 
-    bytes2 a = hex"1234"; // fine
-    bytes2 b = "xy"; // fine
-    bytes2 c = hex"12"; // not allowed
-    bytes2 d = hex"123"; // not allowed
-    bytes2 e = "x"; // not allowed
-    bytes2 f = "xyz"; // not allowed
+    bytes2 a = hex"1234"; // bon
+    bytes2 b = "xy"; // bon
+    bytes2 c = hex"12"; // pas autorisé
+    bytes2 d = hex"123"; // pas autorisé
+    bytes2 e = "x"; // pas autorisé
+    bytes2 f = "xyz"; // débile
 
-Addresses
----------
+Adresses
+--------
 
-As described in :ref:`address_literals`, hex literals of the correct size that pass the checksum
-test are of ``address`` type. No other literals can be implicitly converted to the ``address`` type.
+Comme décrit dans :ref:`address_literals`, les chaines de caractères hexadécimaux de la bonne taille qui passent le test de somme de contrôle sont de type ``address``. Aucun autre littéral ne peut être implicitement converti au type ``address``.
 
-Explicit conversions from ``bytes20`` or any integer type to ``address`` result in ``address payable``.
-
-An ``address a`` can be converted to ``address payable`` via ``payable(a)``.
+Les conversions explicites de ``bytes20`` ou de tout type entier en ``address`` aboutissent en une ``address payable```.
