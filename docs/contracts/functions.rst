@@ -3,7 +3,7 @@
 .. _functions:
 
 *********
-Functions
+Fonctions
 *********
 
 .. _function-parameters-return-variables:
@@ -118,30 +118,25 @@ and their types have to match, potentially after an :ref:`implicit conversion <t
 
 .. _view-functions:
 
-View Functions
+Fonctions View
 ==============
 
-Functions can be declared ``view`` in which case they promise not to modify the state.
+Les fonctions peuvent être déclarées ``view``, auquel cas elles promettent de ne pas modifier l'état.
 
 .. note::
-  If the compiler's EVM target is Byzantium or newer (default) the opcode
-  ``STATICCALL`` is used when ``view`` functions are called, which enforces the state
-  to stay unmodified as part of the EVM execution. For library ``view`` functions
-  ``DELEGATECALL`` is used, because there is no combined ``DELEGATECALL`` and ``STATICCALL``.
-  This means library ``view`` functions do not have run-time checks that prevent state
-  modifications. This should not impact security negatively because library code is
-  usually known at compile-time and the static checker performs compile-time checks.
+  Si la cible EVM du compilateur est Byzantium ou plus récent (par défaut), l'opcode ``STATICCALL`` est utilisé pour les fonctions ``view`` qui imposent à l'état de rester non modifié lors de l'exécution EVM. Pour les librairies, on utilise les fonctions ``view`` et ``DELEGATECALL`` parce qu'il n'y a pas de ``DELEGATECALL`` et ``STATICCALL`` combinés.
+  Cela signifie que les fonctions ``view`` de librairies n'ont pas de contrôles d'exécution qui empêchent les modifications d'état. Cela ne devrait pas avoir d'impact négatif sur la sécurité car le code de librairies est généralement connu au moment de la compilation et le vérificateur statique effectue les vérifications au moment de la compilation.
 
-The following statements are considered modifying the state:
+Les déclarations suivantes sont considérées comme une modification de l'état :
 
-#. Writing to state variables.
-#. :ref:`Emitting events <events>`.
-#. :ref:`Creating other contracts <creating-contracts>`.
-#. Using ``selfdestruct``.
-#. Sending Ether via calls.
-#. Calling any function not marked ``view`` or ``pure``.
-#. Using low-level calls.
-#. Using inline assembly that contains certain opcodes.
+#. Ecrire dans les variables d'état.
+#. :ref:`Emettre des événements <events>`.
+#. :ref:`Création d'autres contrats <creating-contracts>`.
+#. Utiliser ``selfdestruct``.
+#. Envoyer des Ethers par des appels.
+#. Appeler une fonction qui n'est pas marquée ``view`` ou ``pure``.
+#. Utilisation d'appels bas niveau.
+#. Utilisation d'assembleur inline qui contient certains opcodes.
 
 ::
 
@@ -155,39 +150,38 @@ The following statements are considered modifying the state:
     }
 
 .. note::
-  ``constant`` on functions used to be an alias to ``view``, but this was dropped in version 0.5.0.
+  ``constant`` sur les fonctions était un alias de ``view``, mais cela a été abandonné dans la version 0.5.0.
 
 .. note::
-  Getter methods are automatically marked ``view``.
+  Les méthodes Getter sont automatiquement marquées ``view``.
 
 .. note::
-  Prior to version 0.5.0, the compiler did not use the ``STATICCALL`` opcode
-  for ``view`` functions.
-  This enabled state modifications in ``view`` functions through the use of
-  invalid explicit type conversions.
-  By using  ``STATICCALL`` for ``view`` functions, modifications to the
-  state are prevented on the level of the EVM.
+  Avant la version 0.5.0, le compilateur n'utilisait pas l'opcode ``STATICCALL``.
+  pour les fonctions ``view``.
+  Cela permettait de modifier l'état des fonctions ``view`` grâce à l'utilisation de
+  conversions de type explicites non valides.
+  En utilisant ``STATICCALL`` pour les fonctions ``view``, les modifications de la fonction
+  sont évités au niveau de l'EVM.
 
 .. index:: ! pure function, function;pure
 
 .. _pure-functions:
 
-Pure Functions
+Fonctions Pure
 ==============
 
-Functions can be declared ``pure`` in which case they promise not to read from or modify the state.
+Les fonctions peuvent être déclarées ``pures``, auquel cas elles promettent de ne pas lire ou modifier l'état.
 
 .. note::
-  If the compiler's EVM target is Byzantium or newer (default) the opcode ``STATICCALL`` is used,
-  which does not guarantee that the state is not read, but at least that it is not modified.
+  Si la cible EVM du compilateur est Byzantium ou plus récente (par défaut), on utilise l'opcode ``STATICCALL``, ce qui ne garantit pas que l'état ne soit pas lu, mais au moins qu'il ne soit pas modifié.
 
-In addition to the list of state modifying statements explained above, the following are considered reading from the state:
+En plus de la liste des modificateurs d'état expliqués ci-dessus, sont considérés comme des lectures de l'état :
 
-#. Reading from state variables.
-#. Accessing ``address(this).balance`` or ``<address>.balance``.
-#. Accessing any of the members of ``block``, ``tx``, ``msg`` (with the exception of ``msg.sig`` and ``msg.data``).
-#. Calling any function not marked ``pure``.
-#. Using inline assembly that contains certain opcodes.
+#. Lecture des variables d'état.
+#. Accéder à ``address(this).balance`` ou ``<address>.balance``.
+#. Accéder à l'un des membres de ``block``, ``tx``, ``msg`` (à l'exception de ``msg.sig`` et ``msg.data``).
+#. Appeler une fonction qui n'est pas marquée ``pure``.
+#. Utilisation d'assembleur inline qui contient certains opcodes.
 
 ::
 
@@ -200,34 +194,17 @@ In addition to the list of state modifying statements explained above, the follo
         }
     }
 
-Pure functions are able to use the ``revert()`` and ``require()`` functions to revert
-potential state changes when an :ref:`error occurs <assert-and-require>`.
-
-Reverting a state change is not considered a "state modification", as only changes to the
-state made previously in code that did not have the ``view`` or ``pure`` restriction
-are reverted and that code has the option to catch the ``revert`` and not pass it on.
-
-This behaviour is also in line with the ``STATICCALL`` opcode.
-
-.. warning::
-  It is not possible to prevent functions from reading the state at the level
-  of the EVM, it is only possible to prevent them from writing to the state
-  (i.e. only ``view`` can be enforced at the EVM level, ``pure`` can not).
-
 .. note::
-  Prior to version 0.5.0, the compiler did not use the ``STATICCALL`` opcode
-  for ``pure`` functions.
-  This enabled state modifications in ``pure`` functions through the use of
-  invalid explicit type conversions.
-  By using  ``STATICCALL`` for ``pure`` functions, modifications to the
-  state are prevented on the level of the EVM.
+  Avant la version 0.5.0, le compilateur n'utilisait pas l'opcode ``STATICCALL`` pour les fonctions ``pure``.
+  Cela permettait de modifier l'état des fonctions ``pures`` en utilisant des conversions de type explicites invalides.
+  En utilisant ``STATICCALL`` pour des fonctions ``pures``, les modifications de l'état sont empêchées au niveau de l'EVM.
 
-.. note::
-  Prior to version 0.4.17 the compiler did not enforce that ``pure`` is not reading the state.
-  It is a compile-time type check, which can be circumvented doing invalid explicit conversions
-  between contract types, because the compiler can verify that the type of the contract does
-  not do state-changing operations, but it cannot check that the contract that will be called
-  at runtime is actually of that type.
+.. avertissement::
+  Il n'est pas possible d'empêcher les fonctions de lire l'état au niveau de l'EVM, il est seulement possible de les empêcher d'écrire dans l'état (c'est-à-dire que seul "view" peut être exécuté au niveau de l'EVM, ``pure`` ne peut pas).
+
+.. avertissement::
+  Avant la version 0.4.17, le compilateur n'appliquait pas le fait que ``pure`` ne lisait pas l'état.
+  Il s'agit d'un contrôle de type à la compilation, qui peut être contourné en effectuant des conversions explicites invalides entre les types de contrats, parce que le compilateur peut vérifier que le type de contrat ne fait pas d'opérations de changement d'état, mais il ne peut pas vérifier que le contrat qui sera appelé à l'exécution est effectivement de ce type.
 
 .. index:: ! receive ether function, function;receive ! receive
 
@@ -301,42 +278,41 @@ Below you can see an example of a Sink contract that uses function ``receive``.
 
 .. _fallback-function:
 
-Fallback Function
+Fonction de repli
 =================
 
-A contract can have at most one ``fallback`` function, declared using ``fallback () external [payable]``
-(without the ``function`` keyword).
-This function cannot have arguments, cannot return anything and must have ``external`` visibility.
-It is executed on a call to the contract if none of the other
-functions match the given function signature, or if no data was supplied at
-all and there is no :ref:`receive Ether function <receive-ether-function>`.
-The fallback function always receives data, but in order to also receive Ether
-it must be marked ``payable``.
+Un contrat peut avoir exactement une fonction sans nom. Cette fonction ne peut pas avoir d'arguments, ne peut rien retourner et doit avoir une visibilité ``external``.
+Elle est exécutée lors d'un appel au contrat si aucune des autres fonctions ne correspond à l'identificateur de fonction donné (ou si aucune donnée n'a été fournie).
 
-In the worst case, if a payable fallback function is also used in
-place of a receive function, it can only rely on 2300 gas being
-available (see :ref:`receive Ether function <receive-ether-function>`
-for a brief description of the implications of this).
+En outre, cette fonction est exécutée chaque fois que le contrat reçoit des Ethers bruts (sans données). De plus, pour recevoir des Ethers, la fonction de fallback doit être marquée ``payable``. En l'absence d'une telle fonction, le contrat ne peut recevoir
+d'Ether par des transactions traditionnelles.
 
-Like any function, the fallback function can execute complex
-operations as long as there is enough gas passed on to it.
+Dans le pire des cas, la fonction de fallback ne peut compter que sur la disponibilité de 2 300 gas (par exemple lorsque l'on utilise `send` ou `transfer`), ce qui laisse peu de place pour effectuer d'autres opérations que du log basique. Les opérations suivantes
+consommeront plus de gaz que le forfait de 2 300 gas alloué :
 
-.. warning::
-    A ``payable`` fallback function is also executed for
-    plain Ether transfers, if no :ref:`receive Ether function <receive-ether-function>`
-    is present. It is recommended to always define a receive Ether
-    function as well, if you define a payable fallback function
-    to distinguish Ether transfers from interface confusions.
+- Ecrire dans le stockage
+- Création d'un contrat
+- Appel d'une fonction externe qui consomme une grande quantité de gas
+- Envoi d'Ether
+
+Comme toute fonction, la fonction de fallback peut exécuter des opérations complexes tant que suffisamment de gas lui est transmis.
 
 .. note::
-    Even though the fallback function cannot have arguments, one can still use ``msg.data`` to retrieve
-    any payload supplied with the call.
-    After having checked the first four bytes of ``msg.data``,
-    you can use ``abi.decode`` together with the array slice syntax to
-    decode ABI-encoded data:
-    ``(c, d) = abi.decode(msg.data[4:], (uint256, uint256));``
-    Note that this should only be used as a last resort and
-    proper functions should be used instead.
+    Même si la fonction de fallback ne peut pas avoir d'arguments, on peut toujours utiliser ``msg.data`` pour récupérer toute charge utile fournie avec l'appel.
+
+.. avertissement::
+    La fonction de fallback est également exécutée si l'appelant a l'intention d'appeler une fonction qui n'est pas disponible. Si vous voulez implémenter la fonction de fallback uniquement pour recevoir de l'Ether, vous devez ajouter une vérification comme ``require(msg.data.length == 0)`` pour éviter les appels invalides.
+
+.. avertissement::
+    Les contrats qui reçoivent directement l'Ether (sans appel de fonction, c'est-à-dire en utilisant ``send`` ou `` transfer``) mais ne définissent pas de fonction de fallback lèvent une exception, renvoyant l'Ether (c'était différent avant Solidity v0.4.0). Donc si vous voulez que votre contrat reçoive de l'Ether, vous devez implémenter une fonction de fallback ``payable``.
+
+.. avertissement::
+    Un contrat sans fonction de fallback payable peut recevoir de l'Ether en tant que destinataire d'une `coinbase transaction` (alias `récompense de mineur de bloc`) ou en tant que destination d'un ``selfdestruct``.
+
+    Un contrat ne peut pas réagir à de tels transferts d'Ether et ne peut donc pas non plus les rejeter. C'est un choix de conception de l'EVM et Solidity ne peut le contourner.
+
+    Cela signifie également que ``address(this).balance`` peut être plus élevé que la somme de certaines comptabilités manuelles implémentées dans un contrat (i.e. avoir un compteur mis à jour dans la fonction fallback).
+
 
 
 ::
@@ -403,14 +379,12 @@ operations as long as there is enough gas passed on to it.
 
 .. _overload-function:
 
-Function Overloading
+Surcharge de fonctions
 ====================
 
-A contract can have multiple functions of the same name but with different parameter
-types.
-This process is called "overloading" and also applies to inherited functions.
-The following example shows overloading of the function
-``f`` in the scope of contract ``A``.
+Un contrat peut avoir plusieurs fonctions du même nom, mais avec des types de paramètres différents.
+Ce processus est appelé "surcharge" et s'applique également aux fonctions héritées.
+L'exemple suivant montre la surcharge de la fonction ``f`` dans le champ d'application du contrat ``A``.
 
 ::
 
@@ -422,28 +396,27 @@ The following example shows overloading of the function
             out = _in;
         }
 
-        function f(uint _in, bool _really) public pure returns (uint out) {
+        function f(uint _in, bool _really) public pure returns (int out) {
             if (_really)
-                out = _in;
+                out = int(_in);
         }
     }
 
-Overloaded functions are also present in the external interface. It is an error if two
-externally visible functions differ by their Solidity types but not by their external types.
+Des fonctions surchargées sont également présentes dans l'interface externe. C'est une erreur si deux fonctions visibles de l'extérieur diffèrent par leur type Solidity (ici `A` et `B`) mais pas par leur type extérieur (ici ``address``).
 
 ::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
 
-    // This will not compile
+    // Ceci ne compile pas
     contract A {
         function f(B _in) public pure returns (B out) {
             out = _in;
         }
 
-        function f(address _in) public pure returns (address out) {
-            out = _in;
+        function f(A _in) public pure returns (B out) {
+            out = B(address(_in));
         }
     }
 
@@ -451,19 +424,15 @@ externally visible functions differ by their Solidity types but not by their ext
     }
 
 
-Both ``f`` function overloads above end up accepting the address type for the ABI although
-they are considered different inside Solidity.
+Les deux fonctions ``f`` surchargées ci-dessus acceptent des addresses du point de vue de l'ABI, mais ces adresses sont considérées comme différents types en Solidity.
 
-Overload resolution and Argument matching
+Résolution des surcharges et concordance des arguments
 -----------------------------------------
 
-Overloaded functions are selected by matching the function declarations in the current scope
-to the arguments supplied in the function call. Functions are selected as overload candidates
-if all arguments can be implicitly converted to the expected types. If there is not exactly one
-candidate, resolution fails.
+Les fonctions surchargées sont sélectionnées en faisant correspondre les déclarations de fonction dans le scope actuel aux arguments fournis dans l'appel de fonction. La fonction évaluée est choisie si tous les arguments peuvent être implicitement convertis en types attendus. S'il y a plusieurs fonctions correspondantes, la résolution échoue.
 
 .. note::
-    Return parameters are not taken into account for overload resolution.
+    Le type des valeurs retournées par la fonction n'est pas pris en compte dans la résolution des surcharges.
 
 ::
 
@@ -480,6 +449,4 @@ candidate, resolution fails.
         }
     }
 
-Calling ``f(50)`` would create a type error since ``50`` can be implicitly converted both to ``uint8``
-and ``uint256`` types. On another hand ``f(256)`` would resolve to ``f(uint256)`` overload as ``256`` cannot be implicitly
-converted to ``uint8``.
+L'appel de ``f(50)`` créerait une erreur de type puisque ``50`` peut être implicitement converti à la fois en type ``uint8`` et ``uint256``. D'un autre côté, ``f(256)`` se résoudrait à ``f(uint256)`` car ``256`` ne peut pas être implicitement converti en ``uint8``.
