@@ -1,10 +1,10 @@
 .. index:: ! inheritance, ! base class, ! contract;base, ! deriving
 
 ***********
-Inheritance
+Héritage
 ***********
 
-Solidity supports multiple inheritance including polymorphism.
+Solidity supporte l'héritage multiple en copiant du code, incluant le polymorphisme.
 
 Polymorphism means that a function call (internal and external)
 always executes the function of the same name (and parameter types)
@@ -19,9 +19,10 @@ using ``ContractName.functionName()`` or using ``super.functionName()``
 if you want to call the function one level higher up in
 the flattened inheritance hierarchy (see below).
 
-When a contract inherits from other contracts, only a single
-contract is created on the blockchain, and the code from all the base contracts
-is compiled into the created contract. This means that all internal calls
+
+Lorsqu'un contrat hérite d'autres contrats, un seul contrat
+est créé dans la blockchain et le code de tous les contrats de base
+est copié dans le contrat créé. This means that all internal calls
 to functions of base contracts also just use internal function calls
 (``super.f(..)`` will use JUMP and not a message call).
 
@@ -29,12 +30,10 @@ State variable shadowing is considered as an error.  A derived contract can
 only declare a state variable ``x``, if there is no visible state variable
 with the same name in any of its bases.
 
-The general inheritance system is very similar to
-`Python's <https://docs.python.org/3/tutorial/classes.html#inheritance>`_,
-especially concerning multiple inheritance, but there are also
-some :ref:`differences <multi-inheritance>`.
+Le système général d'héritage est très similaire à celui de `Python <https://docs.python.org/3/tutorial/classes.html#inheritance>`_,
+surtout en ce qui concerne l'héritage multiple, mais il y a aussi quelques :ref:`differences <multi-inheritance>`.
 
-Details are given in the following example.
+Les détails sont donnés dans l'exemple suivant.
 
 ::
 
@@ -48,10 +47,7 @@ Details are given in the following example.
     }
 
 
-    // Use `is` to derive from another contract. Derived
-    // contracts can access all non-private members including
-    // internal functions and state variables. These cannot be
-    // accessed externally via `this`, though.
+    // Utilisez `is` pour dériver d'un autre contrat. Les contrats dérivés peuvent accéder à tous les membres non privés, y compris les fonctions internes et les variables d'état. Il n'est cependant pas possible d'y accéder de l'extérieur via `this`.
     contract Destructible is Owned {
         // The keyword `virtual` means that the function can change
         // its behaviour in derived classes ("overriding").
@@ -61,10 +57,7 @@ Details are given in the following example.
     }
 
 
-    // These abstract contracts are only provided to make the
-    // interface known to the compiler. Note the function
-    // without body. If a contract does not implement all
-    // functions it can only be used as an interface.
+    // Ces contrats abstraits ne sont fournis que pour faire connaître l'interface au compilateur. Notez la fonction sans corps. Si un contrat n'implémente pas toutes les fonctions, il ne peut être utilisé que comme interface.
     abstract contract Config {
         function lookup(uint id) public virtual returns (address adr);
     }
@@ -76,20 +69,15 @@ Details are given in the following example.
     }
 
 
-    // Multiple inheritance is possible. Note that `owned` is
-    // also a base class of `Destructible`, yet there is only a single
-    // instance of `owned` (as for virtual inheritance in C++).
+    // L'héritage multiple est possible. Notez que `owned` est aussi une classe de base de `mortal`, pourtant il n'y a qu'une seule instance de `owned` (comme pour l'héritage virtuel en C++).
     contract Named is Owned, Destructible {
         constructor(bytes32 name) public {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
             NameReg(config.lookup(1)).register(name);
         }
 
-        // Functions can be overridden by another function with the same name and
-        // the same number/types of inputs.  If the overriding function has different
-        // types of output parameters, that causes an error.
-        // Both local and message-based function calls take these overrides
-        // into account.
+        // Les fonctions peuvent être remplacées par une autre fonction ayant le même nom et le même nombre/type d'entrées.  Si la fonction de surcharge a différents types de paramètres de sortie, cela provoque une erreur.
+        // Les appels de fonction locaux et les appels de fonction basés sur la messagerie tiennent compte de ces dérogations.
         // If you want the function to override, you need to use the
         // `override` keyword. You need to specify the `virtual` keyword again
         // if you want this function to be overridden again.
@@ -105,9 +93,7 @@ Details are given in the following example.
     }
 
 
-    // If a constructor takes an argument, it needs to be
-    // provided in the header (or modifier-invocation-style at
-    // the constructor of the derived contract (see below)).
+    // Si un constructeur prend un argument, il doit être fourni dans l'en-tête (ou dans le constructeur du contrat dérivé (voir ci-dessous)).
     contract PriceFeed is Owned, Destructible, Named("GoldFeed") {
         function updateInfo(uint newInfo) public {
             if (msg.sender == owner) info = newInfo;
@@ -122,9 +108,7 @@ Details are given in the following example.
         uint info;
     }
 
-Note that above, we call ``Destructible.destroy()`` to "forward" the
-destruction request. The way this is done is problematic, as
-seen in the following example::
+Notez que ci-dessus, nous appelons ``Destructible.destroy()`` pour "transmettre" la demande de destruction. La façon dont cela est fait est problématique, comme vu dans l'exemple suivant::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.6.0;
@@ -152,9 +136,8 @@ seen in the following example::
         function destroy() public override(Base1, Base2) { Base2.destroy(); }
     }
 
-A call to ``Final.destroy()`` will call ``Base2.destroy`` because we specify it
-explicitly in the final override, but this function will bypass
-``Base1.destroy``. The way around this is to use ``super``::
+Un appel à ``Final.destroy()`` appellera ``Base2.destroy`` puisque nous le demandons explicitement dans l'override, mais cet appel évitera
+``Base1.destroy``. La solution à ce problème est d'utiliser ``super``::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.7.0;
@@ -183,16 +166,8 @@ explicitly in the final override, but this function will bypass
         function destroy() public override(Base1, Base2) { super.destroy(); }
     }
 
-If ``Base2`` calls a function of ``super``, it does not simply
-call this function on one of its base contracts.  Rather, it
-calls this function on the next base contract in the final
-inheritance graph, so it will call ``Base1.destroy()`` (note that
-the final inheritance sequence is -- starting with the most
-derived contract: Final, Base2, Base1, Destructible, owned).
-The actual function that is called when using super is
-not known in the context of the class where it is used,
-although its type is known. This is similar for ordinary
-virtual method lookup.
+Si ``Base2`` appelle une fonction de ``super``, elle n'appelle pas simplement cette fonction sur un de ses contrats de base.  Elle appelle plutôt cette fonction sur le prochain contrat de base dans le graph d'héritage final, donc elle appellera ``Base1.destroy()`` (notez que la séquence d'héritage finale est -- en commençant par le contrat le plus dérivé : Final, Base2, Base1, Destructible, owned).
+La fonction réelle qui est appelée lors de l'utilisation de super n'est pas connue dans le contexte de la classe où elle est utilisée, bien que son type soit connu. Il en va de même pour la recherche de méthodes virtuelles ordinaires.
 
 .. _function-overriding:
 
@@ -374,27 +349,18 @@ explicitly:
 
 .. _constructor:
 
-Constructors
+Constructeurs
 ============
 
-A constructor is an optional function declared with the ``constructor`` keyword
-which is executed upon contract creation, and where you can run contract
-initialisation code.
+Un constructeur est une fonction optionnelle déclarée avec le mot-clé ``constructeur`` qui est exécuté lors de la création du contrat, et où vous pouvez exécuter le code d'initialisation du contrat.
 
-Before the constructor code is executed, state variables are initialised to
-their specified value if you initialise them inline, or zero if you do not.
+Avant l'exécution du code constructeur, les variables d'état sont initialisées à leur valeur spécifiée si vous les initialisez en ligne, ou à zéro si vous ne le faites pas.
 
-After the constructor has run, the final code of the contract is deployed
-to the blockchain. The deployment of
-the code costs additional gas linear to the length of the code.
-This code includes all functions that are part of the public interface
-and all functions that are reachable from there through function calls.
-It does not include the constructor code or internal functions that are
-only called from the constructor.
+Après l'exécution du constructeur, le code final du contrat est déployé dans la chaîne de blocs. Le déploiement du code coûte du gas supplémentaire linéairement à la longueur du code.
+Ce code inclut toutes les fonctions qui font partie de l'interface publique et toutes les fonctions qui sont accessibles à partir de là par des appels de fonctions.
+Il n'inclut pas le code constructeur ni les fonctions internes qui ne sont appelées que par le constructeur.
 
-Constructor functions can be either ``public`` or ``internal``. If there is no
-constructor, the contract will assume the default constructor, which is
-equivalent to ``constructor() public {}``. For example:
+Les fonctions du constructeur peuvent être ``public`` ou ``internal``. S'il n'y a pas de constructeur, le contrat assumera le constructeur par défaut, ce qui est équivalent à ``constructor() public {}``. Par exemple :
 
 ::
 
@@ -413,21 +379,19 @@ equivalent to ``constructor() public {}``. For example:
         constructor() public {}
     }
 
-A constructor set as ``internal`` causes the contract to be marked as :ref:`abstract <abstract-contract>`.
+Un constructeur déclaré ``internal`` rend le contrat :ref:`abstract <abstract-contract>`.
 
-.. warning ::
-    Prior to version 0.4.22, constructors were defined as functions with the same name as the contract.
-    This syntax was deprecated and is not allowed anymore in version 0.5.0.
+.. attention ::
+    Avant 0.4.22, ont été définis comme des fonctions portant le même nom que le contrat.
+    Cette syntaxe a été dépréciée et n'est plus autorisée dans la version 0.5.0.
 
 
 .. index:: ! base;constructor
 
-Arguments for Base Constructors
+Arguments des Constructeurs de Base
 ===============================
 
-The constructors of all the base contracts will be called following the
-linearization rules explained below. If the base constructors have arguments,
-derived contracts need to specify all of them. This can be done in two ways::
+Les constructeurs de tous les contrats de base seront appelés selon les règles de linéarisation expliquées ci-dessous. Si les constructeurs de base ont des arguments, les contrats dérivés doivent les spécifier tous. Cela peut se faire de deux façons::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
