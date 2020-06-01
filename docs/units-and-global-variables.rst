@@ -1,13 +1,13 @@
-**************************************
-Units and Globally Available Variables
-**************************************
+****************************
+Unités et variables globales
+****************************
 
 .. index:: wei, finney, szabo, ether
 
-Ether Units
-===========
+Unités d'Ether
+==============
 
-A literal number can take a suffix of ``wei``, ``finney``, ``szabo`` or ``ether`` to specify a subdenomination of Ether, where Ether numbers without a postfix are assumed to be Wei.
+Un nombre littéral peut prendre un suffixe de "wei", "finney", "szabo" ou "ether" pour spécifier une sous-dénomination d'éther, où les nombres d'éther sans postfix sont supposés être Wei.
 
 ::
 
@@ -16,17 +16,15 @@ A literal number can take a suffix of ``wei``, ``finney``, ``szabo`` or ``ether`
     assert(1 finney == 1e15);
     assert(1 ether == 1e18);
 
-The only effect of the subdenomination suffix is a multiplication by a power of ten.
+Le seul effet du suffixe de sous-dénomination est une multiplication par une puissance de dix..
 
 
 .. index:: time, seconds, minutes, hours, days, weeks, years
 
-Time Units
-==========
+Unités de temps
+===============
 
-Suffixes like ``seconds``, ``minutes``, ``hours``, ``days`` and ``weeks``
-after literal numbers can be used to specify units of time where seconds are the base
-unit and units are considered naively in the following way:
+Des suffixes comme ``seconds``, ``minutes``, ``hours``, ``days`` et ``weeks`` peuvent être utilisés après les nombres littéraux pour spécifier les unités de temps où les secondes sont l'unité de base et les unités sont considérées naïvement de la façon suivante :
 
  * ``1 == 1 seconds``
  * ``1 minutes == 60 seconds``
@@ -34,17 +32,13 @@ unit and units are considered naively in the following way:
  * ``1 days == 24 hours``
  * ``1 weeks == 7 days``
 
-Take care if you perform calendar calculations using these units, because
-not every year equals 365 days and not even every day has 24 hours
-because of `leap seconds <https://en.wikipedia.org/wiki/Leap_second>`_.
-Due to the fact that leap seconds cannot be predicted, an exact calendar
-library has to be updated by an external oracle.
+Faites attention si vous effectuez des calculs calendaires en utilisant ces unités, parce que chaque année n'est pas égale à 365 jours ni même chaque jour n'a 24 heures à cause des `secondes bissextiles <https://en.wikipedia.org/wiki/Leap_second>`_.
+Les secondes intercalaires étant imprévisibles, une bibliothèque de calendrier exacte doit être mise à jour par un oracle externe.
 
 .. note::
-    The suffix ``years`` has been removed in version 0.5.0 due to the reasons above.
+    Le suffixe ``years`` a été supprimé dans la version 0.5.0 pour les raisons ci-dessus.
 
-These suffixes cannot be applied to variables. For example, if you want to
-interpret a function parameter in days, you can in the following way::
+Ces suffixes ne peuvent pas être appliqués aux variables. Si vous voulez interpréter une variable d'entrée en jours, par exemple, vous pouvez le faire de la manière suivante::
 
     function f(uint start, uint daysAfter) public {
         if (now >= start + daysAfter * 1 days) {
@@ -52,143 +46,122 @@ interpret a function parameter in days, you can in the following way::
         }
     }
 
-.. _special-variables-functions:
+Variables spéciales et fonctions
+================================
 
-Special Variables and Functions
-===============================
-
-There are special variables and functions which always exist in the global
-namespace and are mainly used to provide information about the blockchain
-or are general-use utility functions.
+Il y a des variables et des fonctions spéciales qui existent toujours dans l'espace de nommage global et qui sont principalement utilisées pour fournir des informations sur la chaîne de blocs ou sont des fonctions utilitaires générales.
 
 .. index:: abi, block, coinbase, difficulty, encode, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin
 
 
-Block and Transaction Properties
---------------------------------
 
-- ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks
-- ``block.coinbase`` (``address payable``): current block miner's address
-- ``block.difficulty`` (``uint``): current block difficulty
-- ``block.gaslimit`` (``uint``): current block gaslimit
-- ``block.number`` (``uint``): current block number
-- ``block.timestamp`` (``uint``): current block timestamp as seconds since unix epoch
-- ``gasleft() returns (uint256)``: remaining gas
-- ``msg.data`` (``bytes calldata``): complete calldata
-- ``msg.sender`` (``address payable``): sender of the message (current call)
-- ``msg.sig`` (``bytes4``): first four bytes of the calldata (i.e. function identifier)
-- ``msg.value`` (``uint``): number of wei sent with the message
-- ``now`` (``uint``): current block timestamp (alias for ``block.timestamp``)
-- ``tx.gasprice`` (``uint``): gas price of the transaction
-- ``tx.origin`` (``address payable``): sender of the transaction (full call chain)
+Propriétés du bloc et des transactions
+--------------------------------------
 
-.. note::
-    The values of all members of ``msg``, including ``msg.sender`` and
-    ``msg.value`` can change for every **external** function call.
-    This includes calls to library functions.
+- ``blockhash(uint blockNumber) returns (bytes32)``: hash du numéro de bloc passé - mnarche seulement pour les 256 plus récents, excluant le bloc courant
+- ``block.coinbase`` (``address payable``): addresse du mineur du bloc courant
+- ``block.difficulty`` (``uint``): difficulté du bloc courant
+- ``block.gaslimit`` (``uint``): limite de gas actuelle
+- ``block.number`` (``uint``): numéro du bloc courant
+- ``block.timestamp`` (``uint``): timestamp du bloc en temps unix (secondes)
+- ``gasleft() returns (uint256)``: gas restant
+- ``msg.data`` (``bytes calldata``): calldata complet
+- ``msg.sender`` (``address payable``): expéditeur du message (appel courant)
+- ``msg.sig`` (``bytes4``): 4 premiers octets calldata (i.e. identifiant de function)
+- ``msg.value`` (``uint``): nombre de wei envoyés avec le message
+- ``now`` (``uint``): alias pour ``block.timestamp``
+- ``tx.gasprice`` (``uint``): prix de la transaction en gas
+- ``tx.origin`` (``address payable``): expéditeur de la transaction (appel global complet)
 
 .. note::
-    Do not rely on ``block.timestamp``, ``now`` and ``blockhash`` as a source of randomness,
-    unless you know what you are doing.
-
-    Both the timestamp and the block hash can be influenced by miners to some degree.
-    Bad actors in the mining community can for example run a casino payout function on a chosen hash
-    and just retry a different hash if they did not receive any money.
-
-    The current block timestamp must be strictly larger than the timestamp of the last block,
-    but the only guarantee is that it will be somewhere between the timestamps of two
-    consecutive blocks in the canonical chain.
+    Les valeurs de tous les membres de ``msg``, y compris ``msg.sender``et ``msg.value`` peuvent changer pour chaque appel de fonction **external**.
+    Ceci inclut les appels aux fonctions de librairies.
 
 .. note::
-    The block hashes are not available for all blocks for scalability reasons.
-    You can only access the hashes of the most recent 256 blocks, all other
-    values will be zero.
+    Ne vous basez pas sur ``block.timestamp``, ``now`` ou ``blockhash`` comme source de hasard, à moins de savoir ce que vous faites.
+
+    L'horodatage et le hashage du bloc peuvent tous deux être influencés dans une certaine mesure par les mineurs.
+    Les mauvais acteurs de la communauté minière peuvent par exemple exécuter une fonction de casino sur un hash choisi et simplement réessayer un hash différent s'ils n'ont pas reçu d'argent.
+
+    L'horodatage du bloc courant doit être strictement supérieur à celui du dernier bloc, mais la seule garantie est qu'il se situera entre les horodatages de deux blocs consécutifs dans la chaîne canonique.
 
 .. note::
-    The function ``blockhash`` was previously known as ``block.blockhash``, which was deprecated in
-    version 0.4.22 and removed in version 0.5.0.
+    Les hashs de blocs ne sont pas disponibles pour tous les blocs pour des raisons d'évolutivité/place.
+    Vous ne pouvez accéder qu'aux hachages des 256 blocs les plus récents, toutes les autres valeurs seront nulles.
 
 .. note::
-    The function ``gasleft`` was previously known as ``msg.gas``, which was deprecated in
-    version 0.4.21 and removed in version 0.5.0.
+    La fonction ``blockhash`` était auparavant connue sous le nom ``block.blockhash``. Elle a été dépréciée dans la version 0.4.22 et supprimée dans la version 0.5.0.
+
+.. note::
+    La fonction ``gasleft`` était auparavant connue sous le nom de ``msg.gas``. Elle a été dépréciée dans la version 0.4.21 et supprimée dans la version 0.5.0.
 
 .. index:: abi, encoding, packed
 
-ABI Encoding and Decoding Functions
------------------------------------
+Fonctions d'encodage et de décodage de l'ABI
+--------------------------------------------
 
-- ``abi.decode(bytes memory encodedData, (...)) returns (...)``: ABI-decodes the given data, while the types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
-- ``abi.encode(...) returns (bytes memory)``: ABI-encodes the given arguments
-- ``abi.encodePacked(...) returns (bytes memory)``: Performs :ref:`packed encoding <abi_packed_mode>` of the given arguments. Note that packed encoding can be ambiguous!
-- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``: ABI-encodes the given arguments starting from the second and prepends the given four-byte selector
-- ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)```
+- ``abi.decode(bytes memory encodedData, (...)) returns (...)``: l'ABI décode les données données, tandis que les types sont donnés entre parenthèses comme second argument. Exemple : ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
+- ``abi.encode(...) returns (bytes memory)``: l'ABI encode les arguments passés.
+- ``abi.encodePacked(...) returns (bytes memory)``: exécute l':ref:`encodage structuré <abi_packed_mode>` des arguments donnés
+- ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``: l'ABI-encode les arguments donnés à partir du second et précède le sélecteur des quatre octets donnés.
+- ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: équivalent à ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)```
 
 .. note::
-    These encoding functions can be used to craft data for external function calls without actually
-    calling an external function. Furthermore, ``keccak256(abi.encodePacked(a, b))`` is a way
-    to compute the hash of structured data (although be aware that it is possible to
-    craft a "hash collision" using different function parameter types).
+    Ces fonctions d'encodage peuvent être utilisées pour créer des données pour des appels de fonctions externes sans réellement appeler une fonction externe. De plus, ``keccak256(abi.encododePacked(a, b))`` est un moyen de calculer le hash des données structurées (bien qu'il soit possible de créer une ``collision de hachage`` en utilisant différents types d'entrées).
 
 See the documentation about the :ref:`ABI <ABI>` and the
 :ref:`tightly packed encoding <abi_packed_mode>` for details about the encoding.
 
 .. index:: assert, revert, require
 
-Error Handling
---------------
+Gestion des erreurs
+-------------------
 
-See the dedicated section on :ref:`assert and require<assert-and-require>` for
-more details on error handling and when to use which function.
+Voir la section dédiée sur :ref:`assert and require<assert-and-require>` pour plus de détails sur la gestion des erreurs et quand utiliser quelle fonction.
 
-``assert(bool condition)``
-    causes an invalid opcode and thus state change reversion if the condition is not met - to be used for internal errors.
-
-``require(bool condition)``
-    reverts if the condition is not met - to be used for errors in inputs or external components.
-
-``require(bool condition, string memory message)``
-    reverts if the condition is not met - to be used for errors in inputs or external components. Also provides an error message.
-
-``revert()``
-    abort execution and revert state changes
-
-``revert(string memory reason)``
-    abort execution and revert state changes, providing an explanatory string
+``assert(bool condition)``:
+    entraîne l'utilisation d'un opcode invalide et donc la réversion du changement d'état si la condition n'est pas remplie - à utiliser pour les erreurs internes.
+``require(bool condition)``:
+    ``revert`` si la condition n'est pas remplie - à utiliser en cas d'erreurs dans les entrées ou les composants externes.
+``require(bool condition, string memory message)``:
+    ``revert`` si la condition n'est pas remplie - à utiliser en cas d'erreurs dans les entrées ou les composants externes. Fournit également un message d'erreur.
+``revert()``:
+    annuler l'exécution et annuler les changements d'état
+``revert(string memory reason)``:
+    annuler l'exécution et annuler les changements d'état, fournissant une phrase explicative
 
 .. index:: keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography,
 
-Mathematical and Cryptographic Functions
-----------------------------------------
+Fonctions mathématiques et cryptographiques
+-------------------------------------------
 
-``addmod(uint x, uint y, uint k) returns (uint)``
-    compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
+``addmod(uint x, uint y, uint k) returns (uint)``:
+    calcule ``(x + y) % k`` où l'addition est effectuée avec une précision arbitraire et n'overflow pas à ``2**256``. ``assert`` que ``k != 0`` à partir de la version 0.5.0.
 
-``mulmod(uint x, uint y, uint k) returns (uint)``
-    compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
+``mulmod(uint x, uint y, uint k) returns (uint)``:
+    calcule ``(x * y) % k`` où la multiplication est effectuée avec une précision arbitraire et n'overflow pas à ``2**256``. ``assert`` que ``k != 0`` à partir de la version 0.5.0.
 
-``keccak256(bytes memory) returns (bytes32)``
-    compute the Keccak-256 hash of the input
+``keccak256(bytes memory) returns (bytes32)``:
+    calcule le hash Keccak-256 du paramètre
 
 .. note::
+    Il y avait un alias pour ``keccak256`` appelé ``sha3``, qui a été supprimé dans la version 0.5.0. pour éviter la confusion
 
-    There used to be an alias for ``keccak256`` called ``sha3``, which was removed in version 0.5.0.
+``sha256(bytes memory) returns (bytes32)``:
+    calcule le hash SHA-256 du paramètre
 
-``sha256(bytes memory) returns (bytes32)``
-    compute the SHA-256 hash of the input
+``ripemd160(bytes memory) returns (bytes20)``:
+    calcule le hash RIPEMD-160 du paramètre
 
-``ripemd160(bytes memory) returns (bytes20)``
-    compute RIPEMD-160 hash of the input
-
-``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``
-    recover the address associated with the public key from elliptic curve signature or return zero on error.
+``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
+    récupérer l'adresse associée à la clé publique à partir de la signature de la courbe elliptique ou retourner zéro sur erreur.
     The function parameters correspond to ECDSA values of the signature:
 
     * ``r`` = first 32 bytes of signature
     * ``s`` = second 32 bytes of signature
     * ``v`` = final 1 byte of signature
 
-    ``ecrecover`` returns an ``address``, and not an ``address payable``. See :ref:`address payable<address>` for
-    conversion, in case you need to transfer funds to the recovered address.
+   La fonction ``ecrecover`` renvoie une ``address``, et non une ``address payable``. Voir :ref:`adresse payable<address>` pour la conversion, au cas où vous auriez besoin de transférer des fonds à l'adresse récupérée.
 
     For further details, read `example usage <https://ethereum.stackexchange.com/q/1777/222>`_.
 
@@ -204,62 +177,56 @@ Mathematical and Cryptographic Functions
 
 .. note::
 
-    When running ``sha256``, ``ripemd160`` or ``ecrecover`` on a *private blockchain*, you might encounter Out-of-Gas. This is because these functions are implemented as "precompiled contracts" and only really exist after they receive the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution might run into an Out-of-Gas error. A workaround for this problem is to first send Wei (1 for example) to each of the contracts before you use them in your actual contracts. This is not an issue on the main or test net.
+    Il se peut que vous rencontriez ``out-of-gas`` pour ``sha256``, ``ripemd160`` ou ``erecover`` sur une *blockchain privée*. La raison en est que ces contrats sont mis en œuvre sous la forme de contrats dits précompilés et que ces contrats n'existent réellement qu'après avoir reçu le premier message (bien que leur code contrat soit codé en dur). Les messages à des contrats inexistants sont plus coûteux et l'exécution se heurte donc à une erreur out-of-gas. Une solution de contournement pour ce problème est d'envoyer d'abord, par exemple, 1 Wei à chacun des contrats avant de les utiliser dans vos contrats réels. Le problème n'existe pas sur la cha^ine publique Ethereum ni sur les différents testnets officiels.
 
 .. index:: balance, send, transfer, call, callcode, delegatecall, staticcall
 
 .. _address_related:
 
-Members of Address Types
-------------------------
+Membres du type address
+-----------------------
 
-``<address>.balance`` (``uint256``)
-    balance of the :ref:`address` in Wei
+``<address>.balance`` (``uint256``):
+    balance de l':ref:`address` en Wei
 
-``<address payable>.transfer(uint256 amount)``
-    send given amount of Wei to :ref:`address`, reverts on failure, forwards 2300 gas stipend, not adjustable
+``<address payable>.transfer(uint256 amount)``:
+    envoie la quantité donnée de Wei à :ref:`adress`, ``revert`` en cas d'échec, envoie 2300 gas (non réglable)
 
-``<address payable>.send(uint256 amount) returns (bool)``
-    send given amount of Wei to :ref:`address`, returns ``false`` on failure, forwards 2300 gas stipend, not adjustable
+``<address payable>.send(uint256 amount) returns (bool)``:
+    envoie la quantité donnée de Wei à :ref:`adress`, retourne ``false`` en cas d'échec, envoie 2300 gas (non réglable)
 
-``<address>.call(bytes memory) returns (bool, bytes memory)``
-    issue low-level ``CALL`` with the given payload, returns success condition and return data, forwards all available gas, adjustable
+``<address>.call(bytes memory) returns (bool, bytes memory)``:
+    émett un appel de bas niveau ``CALL`` avec la charge utile donnée, renvoie l'état de réussite et les données de retour, achemine tout le gas disponible ou un montant spécifié
 
-``<address>.delegatecall(bytes memory) returns (bool, bytes memory)``
-    issue low-level ``DELEGATECALL`` with the given payload, returns success condition and return data, forwards all available gas, adjustable
+``<address>.delegatecall(bytes memory) returns (bool, bytes memory)``:
+    émet un appel de bas niveau ``DELEGATECALL`` avec la charge utile donnée, retourne les données de succès et de retour, achemine tout le gas disponible ou un montant spécifié
 
-``<address>.staticcall(bytes memory) returns (bool, bytes memory)``
-    issue low-level ``STATICCALL`` with the given payload, returns success condition and return data, forwards all available gas, adjustable
+``<address>.staticcall(bytes memory) returns (bool, bytes memory)``:
+    émettre un appel de bas niveau ``STATICCALL`` avec la charge utile donnée, retourne les conditions de succès et les données de retour, achemine tout le gas disponible ou un montant spécifié
 
-For more information, see the section on :ref:`address`.
+Pour plus d'informations, voir la section sur :ref:`adress`.
 
 .. warning::
     You should avoid using ``.call()`` whenever possible when executing another contract function as it bypasses type checking,
     function existence check, and argument packing.
 
 .. warning::
-    There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
-    (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
-    to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
-    Use a pattern where the recipient withdraws the money.
+    Il y a certains dangers à utiliser l'option ``send`` : Le transfert échoue si la profondeur de la pile d'appels est à 1024 (cela peut toujours être forcé par l'appelant) et il échoue également si le destinataire manque de gas. Donc, afin d'effectuer des transferts d'éther en toute sécurité, vérifiez toujours la valeur de retour de ``send``, utilisez  ``transfer`` ou mieux encore :
+    Utilisez un modèle où le bénéficiaire retire l'argent.
 
 .. note::
-   Prior to version 0.5.0, Solidity allowed address members to be accessed by a contract instance, for example ``this.balance``.
-   This is now forbidden and an explicit conversion to address must be done: ``address(this).balance``.
+   Avant la version 0.5.0, Solidity permettait aux membres d'adresses d'être accessibles par une instance de contrat, par exemple ``this.balance``.
+   Ceci est maintenant interdit et une conversion explicite en adresse doit être faite : ``address(this).balance``.
 
 .. note::
-   If state variables are accessed via a low-level delegatecall, the storage layout of the two contracts
-   must align in order for the called contract to correctly access the storage variables of the calling contract by name.
-   This is of course not the case if storage pointers are passed as function arguments as in the case for
-   the high-level libraries.
+   Si l'accès aux variables d'état s'effectue via un appel de délégation de bas niveau, le plan de stockage des deux contrats doit être alignée pour que le contrat appelé puisse accéder correctement aux variables de stockage du contrat appelant par leur nom.
+    Ce n'est bien sûr pas le cas si les pointeurs de stockage sont passés comme arguments de fonction comme dans le cas des fonctions de librairies (bibliothèques) de haut niveau.
 
 .. note::
-    Prior to version 0.5.0, ``.call``, ``.delegatecall`` and ``.staticcall`` only returned the
-    success condition and not the return data.
+    Avant la version 0.5.0, ``.call``, ``.delegatecall`` et ``staticcall`` ne renvoyaient que la condition de succès et non les données de retour.
 
 .. note::
-    Prior to version 0.5.0, there was a member called ``callcode`` with similar but slightly different
-    semantics than ``delegatecall``.
+    Avant la version 0.5.0, il y avait un membre appelé ``callcode`` avec une sémantique similaire mais légèrement différente de celle de ``delegatecall``.
 
 
 .. index:: this, selfdestruct
@@ -267,25 +234,21 @@ For more information, see the section on :ref:`address`.
 Contract Related
 ----------------
 
-``this`` (current contract's type)
-    the current contract, explicitly convertible to :ref:`address`
+``this`` (type du contrat courant):
+     le contrat en cours, explicitement convertible en :ref:`address`.
 
-``selfdestruct(address payable recipient)``
-    Destroy the current contract, sending its funds to the given :ref:`address`
-    and end execution.
-    Note that ``selfdestruct`` has some peculiarities inherited from the EVM:
+``selfdestruct(address payable destinataire_des_fonds)`` :
+     détruire le contrat en cours, en envoyant ses fonds à l'adresse :ref:`address` indiquée
+    
+Note that ``selfdestruct`` has some peculiarities inherited from the EVM:
 
     - the receiving contract's receive function is not executed.
     - the contract is only really destroyed at the end of the transaction and ``revert`` s might "undo" the destruction.
 
-
-
-
-Furthermore, all functions of the current contract are callable directly including the current function.
+En outre, toutes les fonctions du contrat en cours peuvent être appelées directement, y compris la fonction en cours.
 
 .. note::
-    Prior to version 0.5.0, there was a function called ``suicide`` with the same
-    semantics as ``selfdestruct``.
+     Avant la version 0.5.0, il existait une fonction appelée ``suicide`` avec la même sémantique que ``selfdestruct``.
 
 .. index:: type, creationCode, runtimeCode
 
