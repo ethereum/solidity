@@ -17,7 +17,6 @@ que les types complexes définis par l'utilisateur parmi d'autres caractéristiq
 Avec Solidity, vous pouvez créer des contrats pour des usages tels que le vote, le crowdfunding, les enchères à l'aveugle,
 et portefeuilles multi-signature.
 
-<<<<<<< HEAD
 When deploying contracts, you should use the latest released
 version of Solidity. This is because breaking changes as well as
 new features and bug fixes are introduced regularly. We currently use
