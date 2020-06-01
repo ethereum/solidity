@@ -1,37 +1,22 @@
 .. index:: !mapping
 .. _mapping-types:
 
-Mapping Types
-=============
+Mappages
+--------
 
-Mapping types use the syntax ``mapping(_KeyType => _ValueType)`` and variables
-of mapping type are declared using the syntax ``mapping(_KeyType => _ValueType) _VariableName``.
-The ``_KeyType`` can be any
-built-in value type, ``bytes``, ``string``, or any contract or enum type. Other user-defined
-or complex types, such as mappings, structs or array types are not allowed.
-``_ValueType`` can be any type, including mappings, arrays and structs.
+Vous déclarez le objets de type ``mapping`` avec la syntaxe ``mapping(_KeyType => _ValueType)``.
+``_KeyType`` peut être n'importe quel type élémentaire. Cela signifie qu'il peut s'agir de n'importe lequel des types de valeurs intégrés plus les octets et les chaînes de caractères. Les types définis par l'utilisateur ou les types complexes tels que les types de contrat, les énuménations, les mappages, les structs et tout type de tableau, à l'exception des ``bytes`` et des ``string`` qui ne sont pas autorisés.
+``_ValueType`` peut être n'importe quel type, y compris les mappages.
 
-You can think of mappings as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_, which are virtually initialised
-such that every possible key exists and is mapped to a value whose
-byte-representation is all zeros, a type's :ref:`default value <default-value>`.
-The similarity ends there, the key data is not stored in a
-mapping, only its ``keccak256`` hash is used to look up the value.
+Vous pouvez considérer les mappings comme des `tables de hashage <https://fr.wikipedia.org/wiki/Table_de_hachage>`_, qui sont virtuellement initialisées de telle sorte que chaque clé possible existe et est mappée à une valeur dont la représentation binaire est constituée de zéros, de type :ref:`valeur par défaut <default-value>`. La similitude s'arrête là, les données "clés" ne sont pas stockées dans un mappage, seul son hachage ``keccak256`` est utilisé pour rechercher la valeur.
 
-Because of this, mappings do not have a length or a concept of a key or
-value being set, and therefore cannot be erased without extra information
-regarding the assigned keys (see :ref:`clearing-mappings`).
+Pour cette raison, les mappages n'ont pas de longueur ou de concept de clé ou de valeur définie.
 
-Mappings can only have a data location of ``storage`` and thus
-are allowed for state variables, as storage reference types
-in functions, or as parameters for library functions.
-They cannot be used as parameters or return parameters
-of contract functions that are publicly visible.
+Les mappages ne peuvent avoir qu'un emplacement de données en ``storage`` et sont donc autorisés pour les variables d'état, comme types référence en storage dans les fonctions ou comme paramètres pour les fonctions de librairies.
+Ils ne peuvent pas être utilisés comme paramètres ou paramètres de retour de fonctions de contrat publiques.
 
-You can mark state variables of mapping type as ``public`` and Solidity creates a
-:ref:`getter <visibility-and-getters>` for you. The ``_KeyType`` becomes a parameter for the getter.
-If ``_ValueType`` is a value type or a struct, the getter returns ``_ValueType``.
-If ``_ValueType`` is an array or a mapping, the getter has one parameter for
-each ``_KeyType``, recursively.
+Vous pouvez marquer les variables de type mapping comme ``public`` et Solidity crée un :ref:`getter <visibility-and-getters>` pour vous. Le ```_KeyType`` devient un paramètre pour le getter. Si ``_ValueType`` est un type de valeur ou une structure, le getter retourne ``_ValueType``.
+Si ``_ValueType`` est un tableau ou un mappage, le getter a un paramètre pour chaque ``_KeyType``, de manière récursive.
 
 In the example below, the ``MappingExample`` contract defines a public ``balances``
 mapping, with the key type an ``address``, and a value type a ``uint``, mapping
