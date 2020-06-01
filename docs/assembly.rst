@@ -17,23 +17,19 @@ et est documenté dans sa propre section. Cette section montre comment le code a
     L'assembleur en ligne est un moyen d'accéder à la machine virtuelle Ethereum en bas niveau. Ceci permet de contourner plusieurs normes de sécurité importantes et contrôles de Solidity. Vous ne devriez l'utiliser que pour les tâches qui en ont besoin, et seulement si vous êtes sûr de pourquoi/comment l'utiliser.
 
 
-An inline assembly block is marked by ``assembly { ... }``, where the code inside
-the curly braces is code in the :ref:`Yul <yul>` language.
+Le bloc de code d'assembleur en ligne est indiqué par ``assembly { ... }``, où le code entre les accolades est écrit en langage :ref:`Yul <yul>`.
 
-The inline assembly code can access local Solidity variables as explained below.
+Le bloc de code assembleur en ligne peut accéder aux variables locales de Solidity comme expliqué ci-dessous.
 
-Different inline assembly blocks share no namespace, i.e. it is not possible
-to call a Yul function or access a Yul variable defined in a different inline assembly block.
+Différents bloc de coe assembleur ne partagent pas le même espace de noms, c'est à dire qu'il n'est pas possible d'appeler une fonction Yul où d'accéder à une variable Yul variable definie dans un autre bloc.
 
-Example
+Exemple
 -------
 
-The following example provides library code to access the code of another contract and
-load it into a ``bytes`` variable. This is not possible with "plain Solidity" and the
-idea is that reusable assembly libraries can enhance the Solidity language
-without a compiler change.
+L'exemple suivant fournit le code de bibliothèque pour accéder au code d'un autre contrat et le charger dans une variable ``bytes``. Ce n'est pas possible de base avec Solidity et l'idée est que les bibliothèques assembleur seront utilisées pour améliorer le langage Solidity.
 
 .. code::
+
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
@@ -41,71 +37,69 @@ without a compiler change.
     library GetCode {
         function at(address _addr) public view returns (bytes memory o_code) {
             assembly {
-                // retrieve the size of the code, this needs assembly
+                // récupère la taille du code, a besoin d'assembleur
                 let size := extcodesize(_addr)
-                // allocate output byte array - this could also be done without assembly
-                // by using o_code = new bytes(size)
+                // allouer le tableau de bytes de sortie - ceci serait fait en Solidity via o_code = new bytes(size)
                 o_code := mload(0x40)
-                // new "memory end" including padding
+                // nouvelle "fin de mémoire" en incluant le padding
                 mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
-                // store length in memory
+                // stocke la taille en mémoire
                 mstore(o_code, size)
-                // actually retrieve the code, this needs assembly
+                // récupère le code lui-même, nécessite de l'assembleur
                 extcodecopy(_addr, add(o_code, 0x20), 0, size)
             }
         }
     }
 
-Inline assembly is also beneficial in cases where the optimizer fails to produce
-efficient code, for example:
+L'assembleur en ligne est également utile dans les cas où l'optimiseur ne parvient pas à produire un code efficace, par exemple :
 
 .. code::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
 
-
     library VectorSum {
-        // This function is less efficient because the optimizer currently fails to
-        // remove the bounds checks in array access.
-        function sumSolidity(uint[] memory _data) public pure returns (uint sum) {
+        // Cette fonction est moins efficace car l'optimiseur ne parvient
+        // pas à supprimer les contrôles de limites dans l'accès aux tableaux.
+        function sumSolidity(uint[] memory _data) public pure returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i)
-                sum += _data[i];
+                o_sum += _data[i];
         }
 
-        // We know that we only access the array in bounds, so we can avoid the check.
-        // 0x20 needs to be added to an array because the first slot contains the
-        // array length.
-        function sumAsm(uint[] memory _data) public pure returns (uint sum) {
+        // Nous savons que nous n'accédons au tableau que dans ses
+        // limites, ce qui nous permet d'éviter la vérification. 0x20
+        // doit être ajouté à un tableau car le premier emplacement
+        // contient la longueur du tableau.
+        function sumAsm(uint[] memory _data) public pure returns (uint o_sum) {
             for (uint i = 0; i < _data.length; ++i) {
                 assembly {
-                    sum := add(sum, mload(add(add(_data, 0x20), mul(i, 0x20))))
+                    o_sum := add(o_sum, mload(add(add(_data, 0x20), mul(i, 0x20))))
                 }
             }
         }
 
-        // Same as above, but accomplish the entire code within inline assembly.
-        function sumPureAsm(uint[] memory _data) public pure returns (uint sum) {
+        // Même chose que ci-dessus, mais exécute le code entier en assembleur en ligne.
+        function sumPureAsm(uint[] memory _data) public pure returns (uint o_sum) {
             assembly {
-                // Load the length (first 32 bytes)
-                let len := mload(_data)
+               // Charge la taille (premiers 32 bytes)
+               let len := mload(_data)
 
-                // Skip over the length field.
-                //
-                // Keep temporary variable so it can be incremented in place.
-                //
-                // NOTE: incrementing _data would result in an unusable
-                //       _data variable after this assembly block
-                let data := add(_data, 0x20)
+               // Saute le champ de taille.
+               //
+               // Garde une variable temporaire pour pouvoir l'incrémenter.
+               //
+               // NOTE: incrémenter _data resulterait en une
+               // variable _data inutilisable après ce bloc d'assembleur
+               let data := add(_data, 0x20)
 
-                // Iterate until the bound is not met.
-                for
-                    { let end := add(data, mul(len, 0x20)) }
-                    lt(data, end)
-                    { data := add(data, 0x20) }
-                {
-                    sum := add(sum, mload(data))
-                }
+               // Itère jusqu'à la limite.
+               for
+                   { let end := add(data, mul(len, 0x20)) }
+                   lt(data, end)
+                   { data := add(data, 0x20) }
+               {
+                   o_sum := add(o_sum, mload(data))
+               }
             }
         }
     }
