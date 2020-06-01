@@ -121,7 +121,6 @@ virtuellement initialisées de sorte que toutes les clés possibles existent dè
 dont la représentation octale n'est que de zéros. Cette analogie ne va pas
 trop loin, car il n'est pas non plus possible d'obtenir une liste de toutes les clés d'un mapping, ni une liste de toutes les valeurs. Il faut donc garder à l'esprit (ou bien
 mieux, gardez une liste ou utilisez un type de données plus avancé) ce que vous avez ajouté à la cartographie ou l'utiliser dans un contexte où cela n'est pas nécessaire.
-
 La :ref:`fonction getter<fonctiongetter-fonctions>` créé par le mot-clé ``public`` est un peu plus complexe dans ce cas. Ça ressemble grossièrement à ça::
 
     function balances(address _account) external view returns (uint) {
@@ -227,16 +226,6 @@ Les Smart Contracts ont même un accès limité à d'autres Smart Contracts.
 .. _accounts:
 
 Comptes
-=======
-
-Il y a deux types de comptes dans Ethereum qui partagent le même espace d'adresses : **Comptes externes** qui sont contrôlés par des paires de clés public-privé (c'est-à-dire des humains) et **comptes contrats** qui sont contrôlés par le code stocké avec le compte.
-
-L'adresse d'un compte externe est déterminée à partir de la clé publique tandis que l'adresse d'un contrat est déterminée au moment de la création du contrat (elle est dérivée de l'adresse du créateur et du nombre de transactions envoyées à partir de cette adresse, ce qu'on appelle le "nonce").
-
-Indépendamment du fait que le compte stocke ou non du code, les deux types sont traités de la même manière par l'EVM.
-
-Chaque compte dispose d'une base de données persistante de clés-valeurs qui associe des mots de 256 bits à des mots de 256 bits appelée **storage**.
-
 De plus, chaque compte a une **balance** en Ether (dans "Wei" pour être exact, `1 ether` est `10**18 wei`) qui peut être modifié en envoyant des transactions qui incluent des Ether.
 
 .. index:: ! transaction
@@ -257,7 +246,6 @@ Cela signifie que pour créer un contrat, vous n'envoyez pas le code réel du co
 .. note::
   Pendant la création d'un contrat, son code est toujours vide.
   Pour cette raison, vous ne devez pas rappeler le contrat en cours de construction tant que son constructeur n'a pas terminé son exécution.
-
 
 .. index:: ! gas, ! gas price
 

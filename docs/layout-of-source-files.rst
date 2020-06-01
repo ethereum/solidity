@@ -8,34 +8,6 @@ Les fichiers sources peuvent contenir un nombre arbitraire de :ref:`définitions
 .. index:: ! license, spdx
 
 SPDX License Identifier
-=======================
-
-Trust in smart contract can be better established if their source code
-is available. Since making source code available always touches on legal problems
-with regards to copyright, the Solidity compiler encouranges the use
-of machine-readable `SPDX license identifiers <https://spdx.org>`_.
-Every source file should start with a comment indicating its license:
-
-``// SPDX-License-Identifier: MIT``
-
-The compiler does not validate that the license is part of the
-`list allowed by SPDX <https://spdx.org/licenses/>`_, but
-it does include the supplied string in the `bytecode metadata <metadata>`_.
-
-If you do not want to specify a license or if the source code is
-not open-source, please use the special value ``UNLICENSED``.
-
-Supplying this comment of course does not free you from other
-obligations related to licensing like having to mention
-a specific license header in each source file or the
-original copyright holder.
-
-The comment is recognized by the compiler anywhere in the file at the
-file level, but it is recommended to put it at the top of the file.
-
-More information about how to use SPDX license identifiers
-can be found at the `SPDX website <https://spdx.org/ids-how>`_.
-
 
 .. index:: ! pragma
 
@@ -72,12 +44,11 @@ Il est possible de spécifier des règles beaucoup plus complexes pour la versio
 
 .. _experimental_pragma:
 
-Experimental Pragma
+Pragma Expérimental
 -------------------
 
-The second pragma is the experimental pragma. It can be used to enable
-features of the compiler or language that are not yet enabled by default.
-The following experimental pragmas are currently supported:
+Le deuxième pragma est le ``experimental pragma``. Il peut être utilisé pour activer des fonctions du compilateur ou de la langue qui ne sont pas encore activées par défaut.
+Les pragmas expérimentaux suivants sont actuellement pris en charge :
 
 
 ABIEncoderV2

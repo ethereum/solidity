@@ -86,8 +86,6 @@ When using this interface it is not necessary to mount any directories.
     docker run ethereum/solc:stable --standard-json < input.json > output.json
 
 Paquets binaires
-================
-
 Les binaires de Solidity sont disponibles à
 `solidity/releases <https://github.com/ethereum/solidity/releases>`_.
 
@@ -319,7 +317,7 @@ ou même sous Linux et macOS, vous pouvez:
 
 .. code-block:: bash
 
-    #note: this will install binaries solc and soltest at usr/local/bin
+    #note: les binaires de solc et les tests seront installés dans usr/local/bin
     ./scripts/build.sh
 
 .. warning::
