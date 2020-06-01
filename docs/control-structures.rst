@@ -1,45 +1,40 @@
-##################################
-Expressions and Control Structures
-##################################
+#####################################
+Expressions et structures de contrôle
+#####################################
 
 .. index:: ! parameter, parameter;input, parameter;output, function parameter, parameter;function, return variable, variable;return, return
 
 
 .. index:: if, else, while, do/while, for, break, continue, return, switch, goto
 
-Control Structures
-===================
+Structures de controle
+======================
 
-Most of the control structures known from curly-braces languages are available in Solidity:
+La plupart des structures de contrôle connues des langages à accolades sont disponibles dans Solidity :
 
-There is: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, with
-the usual semantics known from C or JavaScript.
+Nous disposons de: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, avec la syntaxe famillière du C ou du JavaScript.
 
 Solidity also supports exception handling in the form of ``try``/``catch``-statements,
 but only for :ref:`external function calls <external-function-calls>` and
 contract creation calls.
 
-Parentheses can *not* be omitted for conditionals, but curly brances can be omitted
-around single-statement bodies.
+Les parenthèses ne peuvent *pas* être omises pour les conditions, mais les accolades peuvent être omises autour des déclaration en une opération.
 
-Note that there is no type conversion from non-boolean to boolean types as
-there is in C and JavaScript, so ``if (1) { ... }`` is *not* valid
-Solidity.
+Notez qu'il n'y a pas de conversion de types non booléens vers types booléens comme en C et JavaScript, donc ``if (1) {...}`` n'est pas valable en Solidity.
 
 .. index:: ! function;call, function;internal, function;external
 
 .. _function-calls:
 
-Function Calls
-==============
+Appels de fonction
+==================
 
 .. _internal-function-calls:
 
-Internal Function Calls
------------------------
+Appels de fonction internes
+---------------------------
 
-Functions of the current contract can be called directly ("internally"), also recursively, as seen in
-this nonsensical example::
+Les fonctions du contrat en cours peuvent être appelées directement (``internal``), également de manière récursive, comme le montre cet exemple absurde::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
@@ -49,34 +44,25 @@ this nonsensical example::
         function f() internal pure returns (uint ret) { return g(7) + f(); }
     }
 
-These function calls are translated into simple jumps inside the EVM. This has
-the effect that the current memory is not cleared, i.e. passing memory references
-to internally-called functions is very efficient. Only functions of the same
-contract instance can be called internally.
+Ces appels de fonction sont traduits en simples sauts ( ``JUMP``) à l'intérieur de l'EVM. Cela a pour effet que la mémoire actuelle n'est pas effacée, c'est-à-dire qu'il est très efficace de passer des références de mémoire aux fonctions appelées en interne. Seules les fonctions du même contrat peuvent être appelées en interne.
 
-You should still avoid excessive recursion, as every internal function call
-uses up at least one stack slot and there are only 1024 slots available.
+Vous devriez toujours éviter une récursivité excessive, car chaque appel de fonction interne utilise au moins un emplacement de pile et il y a au maximum un peu moins de 1024 emplacements disponibles.
 
 .. _external-function-calls:
 
-External Function Calls
------------------------
+Appels de fonction externes
+---------------------------
 
-The expressions ``this.g(8);`` and ``c.g(2);`` (where ``c`` is a contract
-instance) are also valid function calls, but this time, the function
-will be called "externally", via a message call and not directly via jumps.
-Please note that function calls on ``this`` cannot be used in the constructor,
-as the actual contract has not been created yet.
+Les expressions ``this.g(8);`` et ``c.g(2);`` (où ``c`` est une instance de contrat) sont aussi des appels de fonction valides, mais cette fois-ci, la fonction sera appelée ``external``, via un appel de message et non directement via des sauts.
+Veuillez noter que les appels de fonction sur ``this`` ne peuvent pas être utilisés dans le constructeur, car le contrat actuel n'a pas encore été créé.
 
-Functions of other contracts have to be called externally. For an external call,
-all function arguments have to be copied to memory.
+Les fonctions d'autres contrats doivent être appelées en externe. Pour un appel externe, tous les arguments de fonction doivent être copiés en mémoire.
 
 .. note::
     A function call from one contract to another does not create its own transaction,
     it is a message call as part of the overall transaction.
 
-When calling functions of other contracts, you can specify the amount of Wei or
-gas sent with the call with the special options ``{value: 10, gas: 10000}``.
+Lors de l'appel de fonctions d'autres contrats, le montant de Wei envoyé avec l'appel et le gas peut être spécifié avec les options spéciales ``.value()`` et ``.gas()``: ``{value: 10, gas: 10000}``.
 Note that it is discouraged to specify gas values explicitly, since the gas costs
 of opcodes can change in the future. Any Wei you send to the contract is added
 to the total balance of that contract:
@@ -96,46 +82,26 @@ to the total balance of that contract:
         function callFeed() public { feed.info{value: 10, gas: 800}(); }
     }
 
-You need to use the modifier ``payable`` with the ``info`` function because
-otherwise, the ``value`` option would not be available.
+Vous devez utiliser le modificateur ``payable`` avec la fonction ``info`` pour pouvoir appeler ``.value()`` .
 
 .. warning::
-  Be careful that ``feed.info{value: 10, gas: 800}`` only locally sets the
-  ``value`` and amount of ``gas`` sent with the function call, and the
-  parentheses at the end perform the actual call. So in this case, the
-  function is not called and the ``value`` and ``gas`` settings are lost.
+  Veillez à ce que ``feed.info.value(10).gas(800)`` ne définisse que localement la ``value`` et la quantité de ``gas`` envoyés avec l'appel de fonction, et que les parenthèses à la fin sont bien présentes pour effectuer l'appel. Ainsi, dans cet exemple, la fonction n'est pas appelée.
 
-Function calls cause exceptions if the called contract does not exist (in the
-sense that the account does not contain code) or if the called contract itself
-throws an exception or goes out of gas.
+Les appels de fonction provoquent des exceptions si le contrat appelé n'existe pas (dans le sens où le compte ne contient pas de code) ou si le contrat appelé lui-même lève une exception ou manque de gas.
 
 .. warning::
-    Any interaction with another contract imposes a potential danger, especially
-    if the source code of the contract is not known in advance. The
-    current contract hands over control to the called contract and that may potentially
-    do just about anything. Even if the called contract inherits from a known parent contract,
-    the inheriting contract is only required to have a correct interface. The
-    implementation of the contract, however, can be completely arbitrary and thus,
-    pose a danger. In addition, be prepared in case it calls into other contracts of
-    your system or even back into the calling contract before the first
-    call returns. This means
-    that the called contract can change state variables of the calling contract
-    via its functions. Write your functions in a way that, for example, calls to
-    external functions happen after any changes to state variables in your contract
-    so your contract is not vulnerable to a reentrancy exploit.
+ Toute interaction avec un autre contrat présente un danger potentiel, surtout si le code source du contrat n'est pas connu à l'avance. Le contrat actuel cède le contrôle au contrat appelé et cela peut potentiellement faire à peu près n'importe quoi. Même si le contrat appelé hérite d'un contrat parent connu, le contrat d'héritage doit seulement avoir une interface correcte. L'exécution du contrat peut cependant être totalement arbitraire et donc représentent un danger. En outre, soyez prêt au cas où il appelle d'autres fonctions de votre contrat ou même de retour dans le contrat d'appel avant le retour du premier appel. Cela signifie que le contrat appelé peut modifier les variables d'état du contrat appelant via ses fonctions. Écrivez vos fonctions de manière à ce que, par exemple, les appels à
+ les fonctions externes se produisent après tout changement de variables d'état dans votre contrat, de sorte que votre contrat n'est pas vulnérable à un exploit de réentrée.
 
 .. note::
     Before Solidity 0.6.2, the recommended way to specify the value and gas
     was to use ``f.value(x).gas(g)()``. This is still possible but deprecated
     and will be removed with Solidity 0.7.0.
 
-Named Calls and Anonymous Function Parameters
----------------------------------------------
+Appels nommés et paramètres de fonction anonymes
+------------------------------------------------
 
-Function call arguments can be given by name, in any order,
-if they are enclosed in ``{ }`` as can be seen in the following
-example. The argument list has to coincide by name with the list of
-parameters from the function declaration, but can be in arbitrary order.
+Les arguments d'appel de fonction peuvent être donnés par leur nom, dans n'importe quel ordre, s'ils sont inclus dans ``{ }`` comme on peut le voir dans l'exemple qui suit. La liste d'arguments doit coïncider par son nom avec la liste des paramètres de la déclaration de fonction, mais peut être dans un ordre arbitraire.
 
 ::
 
@@ -155,11 +121,11 @@ parameters from the function declaration, but can be in arbitrary order.
 
     }
 
-Omitted Function Parameter Names
---------------------------------
+Noms des paramètres de fonction omis
+------------------------------------
 
-The names of unused parameters (especially return parameters) can be omitted.
-Those parameters will still be present on the stack, but they are inaccessible.
+Les noms des paramètres inutilisés (en particulier les paramètres de retour) peuvent être omis.
+Ces paramètres seront toujours présents sur la pile, mais ils sont inaccessibles.
 
 ::
 
@@ -178,12 +144,10 @@ Those parameters will still be present on the stack, but they are inaccessible.
 
 .. _creating-contracts:
 
-Creating Contracts via ``new``
-==============================
+Création de contrats via ``new``
+================================
 
-A contract can create other contracts using the ``new`` keyword. The full
-code of the contract being created has to be known when the creating contract
-is compiled so recursive creation-dependencies are not possible.
+Un contrat peut créer d'autres contrats en utilisant le mot-clé ``new``. Le code complet du contrat en cours de création doit être connu lors de la compilation afin d'éviter les dépendances récursives liées à la création.
 
 ::
 
@@ -198,7 +162,7 @@ is compiled so recursive creation-dependencies are not possible.
     }
 
     contract C {
-        D d = new D(4); // will be executed as part of C's constructor
+        D d = new D(4); // sera exécuté dans le constructor de C
 
         function createD(uint arg) public {
             D newD = new D(arg);
@@ -212,11 +176,8 @@ is compiled so recursive creation-dependencies are not possible.
         }
     }
 
-As seen in the example, it is possible to send Ether while creating
-an instance of ``D`` using the ``value`` option, but it is not possible
-to limit the amount of gas.
-If the creation fails (due to out-of-stack, not enough balance or other problems),
-an exception is thrown.
+Comme dans l'exemple, il est possible d'envoyer des Ether en créant une instance de ``D`` en utilisant l'option ``.value()``, mais il n'est pas possible de limiter la quantité de gas.
+Si la création échoue (à cause d'une rupture de pile, d'un manque de gas ou d'autres problèmes), une exception est levée.
 
 Salted contract creations / create2
 -----------------------------------
@@ -283,33 +244,25 @@ which only need to be created if there is a dispute.
     and incorporate that into the deployed bytecode before it is stored.
 
 
-Order of Evaluation of Expressions
+Ordre d'évaluation des expressions
 ==================================
 
-The evaluation order of expressions is not specified (more formally, the order
-in which the children of one node in the expression tree are evaluated is not
-specified, but they are of course evaluated before the node itself). It is only
-guaranteed that statements are executed in order and short-circuiting for
-boolean expressions is done.
+L'ordre d'évaluation des expressions est non spécifié (plus formellement, l'ordre dans lequel les enfants d'un noeud de l'arbre des expressions sont évalués n'est pas spécifié, mais ils sont bien sûr évalués avant le noeud lui-même). La seule garantie est que les instructions sont exécutées dans l'ordre et que les expressions booléennes sont court-circuitées correctement.
 
 .. index:: ! assignment
 
-Assignment
-==========
+Assignation
+===========
 
 .. index:: ! assignment;destructuring
 
-Destructuring Assignments and Returning Multiple Values
--------------------------------------------------------
+Déstructuration d'assignations et retour de valeurs multiples
+-------------------------------------------------------------
 
-Solidity internally allows tuple types, i.e. a list of objects
-of potentially different types whose number is a constant at
-compile-time. Those tuples can be used to return multiple values at the same time.
-These can then either be assigned to newly declared variables
-or to pre-existing variables (or LValues in general).
+Solidity permet en interne les tuples, c'est-à-dire une liste d'objets de types potentiellement différents dont le nombre est une constante au moment de la compilation. Ces tuples peuvent être utilisés pour retourner plusieurs valeurs en même temps.
+Ceux-ci peuvent ensuite être affectés soit à des variables nouvellement déclarées, soit à des variables préexistantes (ou à des LValues en général).
 
-Tuples are not proper types in Solidity, they can only be used to form syntactic
-groupings of expressions.
+Les tuples ne sont pas des types propres à Solidity, ils ne peuvent être utilisés que pour former des groupes syntaxiques d'expressions.
 
 ::
 
@@ -347,11 +300,10 @@ i.e. the following is not valid: ``(x, uint y) = (1, 2);``
     reference types are involved, because it could lead to unexpected
     copying behaviour.
 
-Complications for Arrays and Structs
-------------------------------------
+Complications pour les tableaux et les structures
+-------------------------------------------------
 
-The semantics of assignments are more complicated for non-value types like arrays and structs,
-including ``bytes`` and ``string``, see :ref:`Data location and assignment behaviour <data-location-assignment>` for details.
+La sémantique des affectations est un peu plus compliquée pour les types autres que valeurs comme les tableaux et les structs, y compris ``bytes`` et ``string``, voir :ref:`Emplacement des donnés et comportements à l'assignation <data-location-assignment>` pour plus de détails.
 
 In the example below the call to ``g(x)`` has no effect on ``x`` because it creates
 an independent copy of the storage value in memory. However, ``h(x)`` successfully modifies ``x``
@@ -383,38 +335,17 @@ because only a reference and not a copy is passed.
 
 .. _default-value:
 
-Scoping and Declarations
-========================
+Portée et déclarations
+======================
 
-A variable which is declared will have an initial default
-value whose byte-representation is all zeros.
-The "default values" of variables are the typical "zero-state"
-of whatever the type is. For example, the default value for a ``bool``
-is ``false``. The default value for the ``uint`` or ``int``
-types is ``0``. For statically-sized arrays and ``bytes1`` to
-``bytes32``, each individual
-element will be initialized to the default value corresponding
-to its type. For dynamically-sized arrays, ``bytes``
-and ``string``, the default value is an empty array or string.
-For the ``enum`` type, the default value is its first member.
+Une variable qui est déclarée aura une valeur par défaut initiale dont la représentation octale est égale à une suite de zéros.
+Les "valeurs par défaut" des variables sont les "états zéro" typiques quel que soit le type. Par exemple, la valeur par défaut d'un ``bool`` est ``false``. La valeur par défaut pour les types ``uint`` ou ``int`` est ``0``. Pour les tableaux de taille statique et les ``bytes1`` à ``bytes32``, chaque élément individuel sera initialisé à la valeur par défaut correspondant à son type. Enfin, pour les tableaux de taille dynamique, les octets et les chaînes de caractères, la valeur par défaut est un tableau ou une chaîne vide.
 
-Scoping in Solidity follows the widespread scoping rules of C99
-(and many other languages): Variables are visible from the point right after their declaration
-until the end of the smallest ``{ }``-block that contains the declaration.
-As an exception to this rule, variables declared in the
-initialization part of a for-loop are only visible until the end of the for-loop.
+La portée en Solidity suit les règles de portée très répandues du C99 (et de nombreux autres languages): Les variables sont visibles du point situé juste après leur déclaration jusqu'à la fin du plus petit bloc ``{ }`` qui contient la déclaration. Par exception à cette règle, les variables déclarées dans la partie initialisation d'une boucle ``for`` ne sont visibles que jusqu'à la fin de la boucle for.
 
-Variables that are parameter-like (function parameters, modifier parameters,
-catch parameters, ...) are visible inside the code block that follows -
-the body of the function/modifier for a function and modifier parameter and the catch block
-for a catch parameter.
+Les variables et autres éléments déclarés en dehors d'un bloc de code, par exemple les fonctions, les contrats, les types définis par l'utilisateur, etc. sont visibles avant même leur déclaration. Cela signifie que vous pouvez utiliser les variables d'état avant qu'elles ne soient déclarées et appeler les fonctions de manière récursive.
 
-Variables and other items declared outside of a code block, for example functions, contracts,
-user-defined types, etc., are visible even before they were declared. This means you can
-use state variables before they are declared and call functions recursively.
-
-As a consequence, the following examples will compile without warnings, since
-the two variables have the same name but disjoint scopes.
+Par conséquent, les exemples suivants seront compilés sans avertissement, puisque les deux variables ont le même nom mais des portées disjointes.
 
 ::
 
@@ -434,9 +365,7 @@ the two variables have the same name but disjoint scopes.
         }
     }
 
-As a special example of the C99 scoping rules, note that in the following,
-the first assignment to ``x`` will actually assign the outer and not the inner variable.
-In any case, you will get a warning about the outer variable being shadowed.
+À titre d'exemple particulier des règles de détermination de la portée héritées du C99, notons que, dans ce qui suit, la première affectation à ``x`` affectera en fait la variable externe et non la variable interne. Dans tous les cas, vous obtiendrez un avertissement concernant cette double déclaration.
 
 ::
 
@@ -455,10 +384,7 @@ In any case, you will get a warning about the outer variable being shadowed.
     }
 
 .. warning::
-    Before version 0.5.0 Solidity followed the same scoping rules as
-    JavaScript, that is, a variable declared anywhere within a function would be in scope
-    for the entire function, regardless where it was declared. The following example shows a code snippet that used
-    to compile but leads to an error starting from version 0.5.0.
+    Avant la version 0.5.0, Solidity suivait les mêmes règles de scoping que JavaScript, c'est-à-dire qu'une variable déclarée n'importe où dans une fonction était dans le champ d'application pour l'ensemble de la fonction, peu importe où elle était déclarée. L'exemple suivant montre un extrait de code qui compilait, mais conduit aujourd'hui à une erreur à partir de la version 0.5.0.
 
 ::
 
@@ -477,77 +403,54 @@ In any case, you will get a warning about the outer variable being shadowed.
 
 .. _assert-and-require:
 
-Error handling: Assert, Require, Revert and Exceptions
-======================================================
+Gestion d'erreurs: Assert, Require, Revert et Exceptions
+========================================================
 
-Solidity uses state-reverting exceptions to handle errors.
-Such an exception undoes all changes made to the
-state in the current call (and all its sub-calls) and
-flags an error to the caller.
+Solidity utilise des exceptions qui restaurent l'état pour gérer les erreurs. Une telle exception annule toutes les modifications apportées à l'état de l'appel en cours (et de tous ses sous-appels) et signale également une erreur à l'appelant.
 
-When exceptions happen in a sub-call, they "bubble up" (i.e.,
-exceptions are rethrown) automatically. Exceptions to this rule are ``send``
-and the low-level functions ``call``, ``delegatecall`` and
-``staticcall``: they return ``false`` as their first return value in case
-of an exception instead of "bubbling up".
+Lorsque des exceptions se produisent dans un sous-appel, elles "remontent à la surface" automatiquement (c'est-à-dire que les exceptions sont déclenchées en casacade). Les exceptions à cette règle sont ``send`` et les fonctions de bas niveau ``call``, ``delegatecall`` et ``staticcall``, qui retournent ``false`` comme première valeur de retour en cas d'exception au lieu de lancer une chaine d'exceptions.
 
 .. warning::
-    The low-level functions ``call``, ``delegatecall`` and
-    ``staticcall`` return ``true`` as their first return value
-    if the account called is non-existent, as part of the design
-    of the EVM. Account existence must be checked prior to calling if needed.
+    Les fonctions de bas niveau ``call``, ``delegatecall`` et ``staticcall`` renvoient ``true`` comme première valeur de retour si le compte appelé est inexistant, dû à la conception de l'EVM. L'existence doit être vérifiée avant l'appel si désiré.
 
 Exceptions can be caught with the ``try``/``catch`` statement.
 
 ``assert`` and ``require``
 --------------------------
 
-The convenience functions ``assert`` and ``require`` can be used to check for conditions and throw an exception
-if the condition is not met.
+Les fonctions utilitaires ``assert`` et ``require`` peuvent être utilisées pour vérifier les conditions et lancer une exception si la condition n'est pas remplie.
 
-The ``assert`` function should only be used to test for internal
-errors, and to check invariants. Properly functioning code should
-never reach a failing ``assert`` statement; if this happens there
-is a bug in your contract which you should fix. Language analysis
-tools can evaluate your contract to identify the conditions and
-function calls which will reach a failing ``assert``.
+La fonction ``require`` doit être utilisée pour s'assurer que les conditions valides, telles que les entrées ou les variables d'état du contrat, sont remplies, ou pour valider les valeurs de retour des appels aux contrats externes.
+S'ils sont utilisés correctement, les outils d'analyse peuvent évaluer votre contrat afin d'identifier les conditions et les appels de fonction qui parviendront à un échec d'``assert``. Un code fonctionnant correctement ne devrait jamais échouer un ``assert`` ; si cela se produit, il y a un bogue dans votre contrat que vous devriez corriger.
 
-An ``assert``-style exception is generated in the following situations:
+Une exception de type ``assert`` est générée dans les situations suivantes:
 
-#. If you access an array or an array slice at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
-#. If you access a fixed-length ``bytesN`` at a too large or negative index.
-#. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-#. If you shift by a negative amount.
-#. If you convert a value too big or negative into an enum type.
-#. If you call a zero-initialized variable of internal function type.
-#. If you call ``assert`` with an argument that evaluates to false.
+#. Si vous accédez à un tableau avec un index trop grand ou négatif (par ex. ``x[i]`` où ``i >= x.length`` ou ``i < 0``).
+#. Si vous accédez à une variable de longueur fixe ``bytesN`` à un indice trop grand ou négatif.
+#. Si vous divisez ou modulez par zéro (par ex. ``5 / 0`` ou ``23 % 0``).
+#. Si vous décalez d'un montant négatif.
+#. Si vous convertissez une valeur trop grande ou négative en un type enum.
+#. Si vous appelez une variable initialisée nulle de type fonction interne.
+#. Si vous appelez ``assert`` avec un argument qui s'évalue à ``false``.
 
 The ``require`` function should be used to ensure valid conditions
 that cannot be detected until execution time.
 This includes conditions on inputs
 or return values from calls to external contracts.
 
-A ``require``-style exception is generated in the following situations:
+Une exception de type ``require`` est générée dans les situations suivantes:
 
-#. Calling ``require`` with an argument that evaluates to ``false``.
-#. If you call a function via a message call but it does not finish
-   properly (i.e., it runs out of gas, has no matching function, or
-   throws an exception itself), except when a low level operation
-   ``call``, ``send``, ``delegatecall``, ``callcode`` or ``staticcall``
-   is used. The low level operations never throw exceptions but
-   indicate failures by returning ``false``.
-#. If you create a contract using the ``new`` keyword but the contract
-   creation :ref:`does not finish properly<creating-contracts>`.
-#. If you perform an external function call targeting a contract that contains no code.
-#. If your contract receives Ether via a public function without
-   ``payable`` modifier (including the constructor and the fallback function).
-#. If your contract receives Ether via a public getter function.
-#. If a ``.transfer()`` fails.
+#. Appeler ``require`` avec un argument qui s'évalue à ``false``.
+#. Si vous appelez une fonction via un appel de message mais qu'elle ne se termine pas correctement (c'est-à-dire qu'elle n'a plus de gas, qu'elle n'a pas de fonction correspondante ou qu'elle lance une exception elle-même), sauf lorsqu'une opération de bas niveau ``call``, ``send``, ``staticcall``, ``delegatecall`` ou ``callcode`` est utilisée. Les opérations de bas niveau ne lancent jamais d'exceptions mais indiquent les échecs en retournant ``false``.
+#. Si vous créez un contrat en utilisant le mot-clé ``new`` mais que la création du contrat ne se termine pas correctement (voir ci-dessus pour la définition de "ne pas terminer correctement").
+#. Si vous effectuez un appel de fonction externe ciblant un contrat qui ne contient aucun code.
+#. Si votre contrat reçoit des Ether via une fonction publique sans modificateur ``payable`` (y compris le constructeur et la fonction par defaut).
+#. Si votre contrat reçoit des Ether via une fonction de getter public.
+#. Si un ``.transfer()`` échoue.
 
-You can optionally provide a message string for ``require``, but not for ``assert``.
+Vous pouvez facultativement fournir une chaîne de message pour ``require``, mais pas pour ``assert``.
 
-The following example shows how you can use ``require`` to check conditions on inputs
-and ``assert`` for internal error checking.
+Dans l'exemple suivant, vous pouvez voir comment ``require`` peut être utilisé pour vérifier facilement les conditions sur les entrées et comment ``assert`` peut être utilisé pour vérifier les erreurs internes.
 
 ::
 
@@ -567,23 +470,14 @@ and ``assert`` for internal error checking.
         }
     }
 
-Internally, Solidity performs a revert operation (instruction
-``0xfd``) for a ``require``-style exception and executes an invalid operation
-(instruction ``0xfe``) to throw an ``assert``-style exception. In both cases, this causes
-the EVM to revert all changes made to the state. The reason for reverting
-is that there is no safe way to continue execution, because an expected effect
-did not occur. Because we want to keep the atomicity of transactions, the
-safest action is to revert all changes and make the whole transaction
-(or at least call) without effect.
+En interne, Solidity exécute une opération de retour en arrière (instruction ``0xfd``) pour une exception de type ``require`` et exécute une opération invalide (instruction ``0xfe``) pour lancer une exception de type ``assert``. Dans les deux cas, cela provoque lánnulation toutes les modifications apportées à l'état de l'EVM dans l'appel courant. La raison du retour en arrière est qu'il n'y a pas de moyen sûr de continuer l'exécution, parce qu'un effet attendu ne s'est pas produit. Parce que nous voulons conserver l'atomicité des transactions, la chose la plus sûre à faire est d'annuler tous les changements et de faire toute la transaction (ou au moins l'appel) sans effet. 
 
 In both cases, the caller can react on such failures using ``try``/``catch``
 (in the failing ``assert``-style exception only if enough gas is left), but
 the changes in the caller will always be reverted.
 
 .. note::
-
-    ``assert``-style exceptions consume all gas available to the call,
-    while ``require``-style exceptions do not consume any gas starting from the Metropolis release.
+    Les exceptions de type ``assert`` consomment tout le gas disponible pour l'appel, alors que les exceptions de type ``require`` ne consommeront pas de gaz à partir du lancement de Metropolis.
 
 ``revert``
 ----------
@@ -592,7 +486,7 @@ The ``revert`` function is another way to trigger exceptions from within other c
 revert the current call. The function takes an optional string
 message containing details about the error that is passed back to the caller.
 
-The following example shows how to use an error string together with ``revert`` and the equivalent ``require``:
+L'exemple suivant montre comment une chaîne d'erreurs peut être utilisée avec ``revert`` et ``require`` :
 
 ::
 
@@ -614,15 +508,16 @@ The following example shows how to use an error string together with ``revert`` 
 
 The two syntax options are equivalent, it's developer preference which to use.
 
-The provided string is :ref:`abi-encoded <ABI>` as if it were a call to a function ``Error(string)``.
-In the above example, ``revert("Not enough Ether provided.");`` returns the following hexadecimal as error return data:
+La chaîne fournie sera :ref:`abi-encoded <ABI>` comme si c'était un appel à une fonction ``Error(string)``.
+Dans l'exemple ci-dessus, ``revert("Not enough Ether provided.");``` fera en sorte que les données hexadécimales suivantes soient définies comme données de retour d'erreur :
 
 .. code::
 
-    0x08c379a0                                                         // Function selector for Error(string)
-    0x0000000000000000000000000000000000000000000000000000000000000020 // Data offset
-    0x000000000000000000000000000000000000000000000000000000000000001a // String length
-    0x4e6f7420656e6f7567682045746865722070726f76696465642e000000000000 // String data
+    0x08c379a0                                                         // Selecteur de fonction pour Error(string)
+    0x0000000000000000000000000000000000000000000000000000000000000020 // Décalage des données
+    0x000000000000000000000000000000000000000000000000000000000000001a // Taille de la string
+    0x4e6f7420656e6f7567682045746865722070726f76696465642e000000000000 // Données de la string
+
 
 The provided message can be retrieved by the caller using ``try``/``catch`` as shown below.
 
