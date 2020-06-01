@@ -28,17 +28,18 @@ The operators ``||`` and ``&&`` apply the common short-circuiting rules. This me
 .. index:: ! uint, ! int, ! integer
 .. _integers:
 
-Integers
---------
+Entiers
+-------
 
-``int`` / ``uint``: Signed and unsigned integers of various sizes. Keywords ``uint8`` to ``uint256`` in steps of ``8`` (unsigned of 8 up to 256 bits) and ``int8`` to ``int256``. ``uint`` and ``int`` are aliases for ``uint256`` and ``int256``, respectively.
+``int`` / ``uint``: Entiers signés et non-signés de différentes tailles. Les mots-clé ``uint8`` à ``uint256`` par pas de ``8`` (entier non signé de 8 à 256 bits) et ``int8`` à ``int256``. ``uint`` et ``int`` sont des alias de ``uint256`` et ``int256``, respectivement.
 
-Operators:
+Opérateurs:
 
-* Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
-* Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
-* Shift operators: ``<<`` (left shift), ``>>`` (right shift)
-* Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (modulo), ``**`` (exponentiation)
+* Comparaisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (retournent un ``bool``)
+* Opérateurs binaires: ``&``, ``|``, ``^`` (ou exclusif binaire), ``~`` (négation binaire)
+* Opérateurs de décalage: ``<<`` (décalage vers la gauche), ``>>`` (décalage vers la droite)
+* Opérateurs arithmétiques: ``+``, ``-``, l' opérateur unaire ``-``, ``*``, ``/``, ``%`` (modulo), ``**`` (exponentiation)
+
 
 For an integer type ``X``, you can use ``type(X).min`` and ``type(X).max`` to
 access the minimum and maximum value representable by the type.
@@ -49,71 +50,60 @@ access the minimum and maximum value representable by the type.
   If the result of some operation on those numbers does not fit inside this range, it is truncated. These truncations can have
   serious consequences that you should :ref:`be aware of and mitigate against<underflow-overflow>`.
 
-Comparisons
-^^^^^^^^^^^
+Comparaisons
+^^^^^^^^^^^^
 
-The value of a comparison is the one obtained by comparing the integer value.
+La valeur d'une comparaison est celle obtenue en comparant la valeur entière.
 
-Bit operations
-^^^^^^^^^^^^^^
+Opérations binaires
+^^^^^^^^^^^^^^^^^^^
 
-Bit operations are performed on the two's complement representation of the number.
-This means that, for example ``~int256(0) == int256(-1)``.
+Les opérations binaires sont effectuées sur la représentation du nombre par `complément à deux<https://fr.wikipedia.org/wiki/Compl%C3%A9ment_%C3%A0_deux>`.
+Cela signifie que, par exemple, ``~int256(0) == int256(-1)``.
 
-Shifts
-^^^^^^
-
-The result of a shift operation has the type of the left operand, truncating the result to match the type.
+Décalages
+^^^^^^^^^
 
 - For positive and negative ``x`` values, ``x << y`` is equivalent to ``x * 2**y``.
 - For positive ``x`` values,  ``x >> y`` is equivalent to ``x / 2**y``.
 - For negative ``x`` values, ``x >> y`` is equivalent to ``(x + 1) / 2**y - 1`` (which is the same as dividing ``x`` by ``2**y`` while rounding down towards negative infinity).
 - In all cases, shifting by a negative ``y`` throws a runtime exception.
 
-.. warning::
-    Before version ``0.5.0`` a right shift ``x >> y`` for negative ``x`` was equivalent to ``x / 2**y``,
-    i.e., right shifts used rounding up (towards zero) instead of rounding down (towards negative infinity).
+Décaler d'un nombre négatif de bits déclenche une exception.
 
-Addition, Subtraction and Multiplication
+
+.. warning::
+    Avant la version ``0.5.0.0``, un décalage vers la droite ``x >> y`` pour un ``x`` négatif était équivalent à ``x / 2**y``, c'est-à-dire que les décalages vers la droite étaient arrondis vers zéro plutôt que vers l'infini négatif.
+
+Addition, Soustraction et Multiplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Addition, subtraction and multiplication have the usual semantics.
-They wrap in two's complement representation, meaning that
-for example ``uint256(0) - uint256(1) == 2**256 - 1``. You have to take these overflows
-into account when designing safe smart contracts.
+L'addition, la soustraction et la multiplication ont la sémantique habituelle.
+Ils utilisent également la représentation du complément de deux, ce qui signifie, par exemple, que ``uint256(0) - uint256(1) == 2**256 - 1``. Vous devez tenir compte de ces débordements ("overflows") pour la conception de contrats sûrs.
 
-The expression ``-x`` is equivalent to ``(T(0) - x)`` where
-``T`` is the type of ``x``. This means that ``-x`` will not be negative
-if the type of ``x`` is an unsigned integer type. Also, ``-x`` can be
-positive if ``x`` is negative. There is another caveat also resulting
-from two's complement representation::
+L'expression ``x`` équivaut à ``(T(0) - x)`` où ``T`` est le type de ``x``. Cela signifie que ``-x`` ne sera pas négatif si le type de ``x`` est un type entier non signé. De plus, ``x`` peut être positif si ``x`` est négatif. Il y a une autre mise en garde qui découle également de la représentation en compléments de deux::
 
     int x = -2**255;
     assert(-x == x);
 
-This means that even if a number is negative, you cannot assume that
-its negation will be positive.
+Cela signifie que même si un nombre est négatif, vous ne pouvez pas supposer que sa négation sera positive.
 
 
 Division
 ^^^^^^^^
 
-Since the type of the result of an operation is always the type of one of
-the operands, division on integers always results in an integer.
-In Solidity, division rounds towards zero. This mean that ``int256(-5) / int256(2) == int256(-2)``.
+Puisque le type du résultat d'une opération est toujours le type d'un des opérandes, la division sur les entiers donne toujours un entier.
+Dans Solidity, la division s'arrondit vers zéro. Cela signifie que ``int256(-5) / int256(2) == int256(-2)``.
 
-Note that in contrast, division on :ref:`literals<rational_literals>` results in fractional values
-of arbitrary precision.
+Notez qu'en revanche, la division sur les :ref:`littéraux<literals<rational_literals>` donne des valeurs fractionnaires de précision arbitraire.
 
 .. note::
-  Division by zero causes a failing assert.
+  La division par zéra cause un échec d'``assert``.
 
 Modulo
 ^^^^^^
 
-The modulo operation ``a % n`` yields the remainder ``r`` after the division of the operand ``a``
-by the operand ``n``, where ``q = int(a / n)`` and ``r = a - (n * q)``. This means that modulo
-results in the same sign as its left operand (or zero) and ``a % n == -(-a % n)`` holds for negative ``a``:
+L'opération modulo ``a % n`` donne le reste ``r`` après la division de l'opérande ``a`` par l'opérande ``n``, où ``q = int(a / n)`` et ``r = a - (n * q)``. Cela signifie que modulo donne le même signe que son opérande gauche (ou zéro) et ``a % n == -(abs(a) % n)`` est valable pour un ``a`` négatif:
 
  * ``int256(5) % int256(2) == int256(1)``
  * ``int256(5) % int256(-2) == int256(1)``
@@ -121,110 +111,95 @@ results in the same sign as its left operand (or zero) and ``a % n == -(-a % n)`
  * ``int256(-5) % int256(-2) == int256(-1)``
 
 .. note::
-  Modulo with zero causes a failing assert.
+  La division par zéra cause un échec d'``assert``.
 
 Exponentiation
 ^^^^^^^^^^^^^^
 
-Exponentiation is only available for unsigned types in the exponent. The resulting type
-of an exponentiation is always equal to the type of the base. Please take care that it is
-large enough to hold the result and prepare for potential wrapping behaviour.
+l'exponentiation n'est disponible que p[our les types signés. Veillez à ce que les types que vous utilisez soient suffisamment grands pour conserver le résultat et vous préparer à un éventuel effet d'enroulage (wrapping/int overflow).
 
 .. note::
-  Note that ``0**0`` is defined by the EVM as ``1``.
+  ``0**0`` est défini par l'EVM comme étant ``1``.
 
 .. index:: ! ufixed, ! fixed, ! fixed point number
 
-Fixed Point Numbers
--------------------
+Nombre à virgule fixe
+---------------------
 
 .. warning::
-    Fixed point numbers are not fully supported by Solidity yet. They can be declared, but
-    cannot be assigned to or from.
+    Les numéros à point fixe ne sont pas encore entièrement pris en charge par Solidity. Ils peuvent être déclarés, mais ne peuvent pas être affectés à ou de.
 
-``fixed`` / ``ufixed``: Signed and unsigned fixed point number of various sizes. Keywords ``ufixedMxN`` and ``fixedMxN``, where ``M`` represents the number of bits taken by
-the type and ``N`` represents how many decimal points are available. ``M`` must be divisible by 8 and goes from 8 to 256 bits. ``N`` must be between 0 and 80, inclusive.
-``ufixed`` and ``fixed`` are aliases for ``ufixed128x18`` and ``fixed128x18``, respectively.
+``fixed`` / ``ufixed``: Nombre à virgule fixe signés et non-signés de taille variable. Les mots-clés ``ufixedMxN`` et ``fixedMxN``, où ``M`` représente le nombre de bits pris par le type et ``N`` représente combien de décimales sont disponibles. ``M`` doit être divisible par 8 et peut aller de 8 à 256 bits. ``N`` doit être compris entre 0 et 80, inclusivement.
+``ufixed`` et ``fixed`` sont des alias pour ``ufixed128x18`` et ``fixed128x18``, respectivement.
 
-Operators:
+Opérateurs:
 
-* Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
-* Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (modulo)
+* Comparaisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (évalue à ``bool``)
+* Operateurs arithmétiques: ``+``, ``-``, l'opérateur unaire ``-``, ``*``, ``/``, ``%`` (modulo)
 
 .. note::
-    The main difference between floating point (``float`` and ``double`` in many languages, more precisely IEEE 754 numbers) and fixed point numbers is
-    that the number of bits used for the integer and the fractional part (the part after the decimal dot) is flexible in the former, while it is strictly
-    defined in the latter. Generally, in floating point almost the entire space is used to represent the number, while only a small number of bits define
-    where the decimal point is.
+    La principale différence entre les nombres à virgule flottante (``float``et ``double`` dans de nombreux langages, plus précisément les nombres IEEE 754) et les nombres à virgule fixe est que le nombre de bits utilisés pour l'entier et la partie fractionnaire (la partie après le point décimal) est flexible dans le premier, alors qu'il est strictement défini dans le second. Généralement, en virgule flottante, presque tout l'espace est utilisé pour représenter le nombre, alors que seul un petit nombre de bits définit où se trouve le point décimal.
 
-.. index:: address, balance, send, call, delegatecall, staticcall, transfer
+.. index:: address, balance, send, call, callcode, delegatecall, staticcall, transfer
 
 .. _address:
 
-Address
--------
+Adresses
+--------
 
-The address type comes in two flavours, which are largely identical:
+Le type d'adresse se décline en deux versions, qui sont en grande partie identiques :
 
- - ``address``: Holds a 20 byte value (size of an Ethereum address).
- - ``address payable``: Same as ``address``, but with the additional members ``transfer`` and ``send``.
+ - ``address`` : Contient une valeur de 20 octets (taille d'une adresse Ethereum).
+ - ``address payable`` : Même chose que "adresse", mais avec les membres additionnels ``transfert`` et ``envoi``.
 
-The idea behind this distinction is that ``address payable`` is an address you can send Ether to,
-while a plain ``address`` cannot be sent Ether.
+L'idée derrière cette distinction est que l'``address payable`` est une adresse à laquelle vous pouvez envoyer de l'éther, alors qu'une simple ``address`` ne peut être envoyée de l'éther.
 
-Type conversions:
+Conversions de type :
 
-Implicit conversions from ``address payable`` to ``address`` are allowed, whereas conversions from ``address`` to ``address payable``
-must be explicit via ``payable(<address>)``.
-
-:ref:`Address literals<address_literals>` can be implicitly converted to ``address payable``.
-
-Explicit conversions to and from ``address`` are allowed for integers, integer literals, ``bytes20`` and contract types with the following
-caveat:
-The result of a conversion of the form ``address(x)``
-has the type ``address payable``, if ``x`` is of integer or fixed bytes type,
-a literal or a contract with a receive or payable fallback function.
-If ``x`` is a contract without a receive or payable fallback function,
-then ``address(x)`` will be of type ``address``.
-In external function signatures ``address`` is used for both the ``address`` and the ``address payable`` type.
-
-Only expressions of type ``address`` can be converted to type ``address payable`` via ``payable(<address>)``.
+Les conversions implicites de ``address payable`` à ``address`` sont autorisées, tandis que les conversions de ``address`` à ``address payable`` ne sont pas possibles.
 
 .. note::
-    It might very well be that you do not need to care about the distinction between ``address``
-    and ``address payable`` and just use ``address`` everywhere. For example,
-    if you are using the :ref:`withdrawal pattern<withdrawal_pattern>`, you can (and should) store the
-    address itself as ``address``, because you invoke the ``transfer`` function on
-    ``msg.sender``, which is an ``address payable``.
+    La seule façon d'effectuer une telle conversion est d'utiliser une conversion intermédiaire en ``uint160``.
 
-Operators:
+Les :ref:`adresses littérales<address_literals<address_literals>` peuvent être implicitement converties en ``address payable``.
+
+Les conversions explicites vers et à partir de ``address`` sont autorisées pour les entiers, les entiers littéraux, les ``bytes20`` et les types de contrats avec les réserves suivantes :
+Les conversions sous la forme ``address payable(x)`` ne sont pas permises. Au lieu de cela, le résultat d'une conversion sous forme ``adresse(x)`` donne une ``address payable`` si ``x`` est un contrat disposant d'une fonction par défaut (``fallback``) ``payable``, ou si ``x`` est de type entier, bytes fixes, ou littéral.
+Sinon, l'adresse obtenue sera de type ``address``.
+Dans les fonctions de signature externes, ``address`` est utilisé à la fois pour le type ``address``et ``address payable``.
+
+.. note::
+    Il se peut fort bien que vous n'ayez pas à vous soucier de la distinction entre ``address`` et ``address payable`` et que vous utilisiez simplement ``address`` partout. Par exemple, si vous utilisez la fonction :ref:`withdrawal pattern<withdrawal_pattern>`, vous pouvez (et devriez) stocker l'adresse elle-même comme ``address``, parce que vous invoquez la fonction ``transfer`` sur
+     ``msg.sender``, qui est une ``address payable``.
+
+Opérateurs :
 
 * ``<=``, ``<``, ``==``, ``!=``, ``>=`` and ``>``
 
 .. warning::
-    If you convert a type that uses a larger byte size to an ``address``, for example ``bytes32``, then the ``address`` is truncated.
-    To reduce conversion ambiguity version 0.4.24 and higher of the compiler force you make the truncation explicit in the conversion.
-    Take for example the 32-byte value ``0x111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFFCCCC``.
+    Si vous convertissez un type qui utilise une taille d'octet plus grande en ``address``, par exemple ``bytes32``, alors l'adresse est tronquée.
+     Pour réduire l'ambiguïté de conversion à partir de la version 0.4.24 du compilateur vous force à rendre la troncature explicite dans la conversion.
+     Prenons par exemple l'adresse ``0x1111222222323333434444545555666666777777778888999999AAAABBBBBBCCDDDDEEFEFFFFFFCC``.
 
-    You can use ``address(uint160(bytes20(b)))``, which results in ``0x111122223333444455556666777788889999aAaa``,
-    or you can use ``address(uint160(uint256(b)))``, which results in ``0x777788889999AaAAbBbbCcccddDdeeeEfFFfCcCc``.
+     Vous pouvez utiliser ``address(uint160(octets20(b)))``, ce qui donne ``0x1111212222323333434444545555666677778888889999aAaaa``,
+     ou vous pouvez utiliser ``address(uint160(uint256(b)))``, ce qui donne ``0x777777888888999999AaAAbBbbCcccddDdeeeEfFFfCcCcCc``.
 
 .. note::
-    The distinction between ``address`` and ``address payable`` was introduced with version 0.5.0.
-    Also starting from that version, contracts do not derive from the address type, but can still be explicitly converted to
-    ``address`` or to ``address payable``, if they have a receive or payable fallback function.
+    La distinction entre ``address``et ``address payable`` a été introduite avec la version 0.5.0.
+     À partir de cette version également, les contrats ne dérivent pas du type d'adresse, mais peuvent toujours être convertis explicitement en
+     adresse " ou à " adresse payable ", s'ils ont une fonction par défaut payable.
 
 .. _members-of-addresses:
 
-Members of Addresses
-^^^^^^^^^^^^^^^^^^^^
+Membres de Address
+^^^^^^^^^^^^^^^^^^
 
-For a quick reference of all members of address, see :ref:`address_related`.
+Pour une liste des membres de address, voir :ref:`address_related`.
 
-* ``balance`` and ``transfer``
+* ``balance`` et ``transfer``.
 
-It is possible to query the balance of an address using the property ``balance``
-and to send Ether (in units of wei) to a payable address using the ``transfer`` function:
+Il est possible d'interroger le solde d'une adresse en utilisant la propriété ``balance``
+et d'envoyer des Ether (en unités de wei) à une adresse payable à l'aide de la fonction ``transfert`` :
 
 ::
 
@@ -232,237 +207,178 @@ and to send Ether (in units of wei) to a payable address using the ``transfer`` 
     address myAddress = address(this);
     if (x.balance < 10 && myAddress.balance >= 10) x.transfer(10);
 
-The ``transfer`` function fails if the balance of the current contract is not large enough
-or if the Ether transfer is rejected by the receiving account. The ``transfer`` function
-reverts on failure.
+La fonction ``transfer`` échoue si le solde du contrat en cours n'est pas suffisant ou si le transfert d'Ether est rejeté par le compte destinataire. La fonction ``transfert`` s'inverse en cas d'échec.
 
 .. note::
-    If ``x`` is a contract address, its code (more specifically: its :ref:`receive-ether-function`, if present, or otherwise its :ref:`fallback-function`, if present) will be executed together with the ``transfer`` call (this is a feature of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted and the current contract will stop with an exception.
+    Si ``x`` est une adresse de contrat, son code (plus précisément : sa :ref:`fallback-function`, si présente) sera exécutée avec l'appel ``transfer`` (c'est une caractéristique de l'EVM et ne peut être empêché). Si cette exécution échoue ou s'il n'y a plus de gas, le transfert d'Ether sera annulé et le contrat en cours s'arrêtera avec une exception.
 
 * ``send``
 
-Send is the low-level counterpart of ``transfer``. If the execution fails, the current contract will not stop with an exception, but ``send`` will return ``false``.
+``send`` est la contrepartie de bas niveau du ``transfer``. Si l'exécution échoue, le contrat en cours ne s'arrêtera pas avec une exception, mais ``send`` retournera ``false``.
 
 .. warning::
-    There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
-    (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
-    to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
-    use a pattern where the recipient withdraws the money.
+    Il y a certains dangers à utiliser la fonction ``send`` : Le transfert échoue si la profondeur de la stack atteint 1024 (cela peut toujours être forcé par l'appelant) et il échoue également si le destinataire manque de gas. Donc, afin d'effectuer des transferts d'Ether en toute sécurité, vérifiez toujours la valeur de retour de ``send``, utilisez ``transfer`` ou mieux encore  : utilisez un modèle où le destinataire retire l'argent.
 
-* ``call``, ``delegatecall`` and ``staticcall``
+* ``call``, ``delegatecall`` et ``staticcall``
 
-In order to interface with contracts that do not adhere to the ABI,
-or to get more direct control over the encoding,
-the functions ``call``, ``delegatecall`` and ``staticcall`` are provided.
-They all take a single ``bytes memory`` parameter and
-return the success condition (as a ``bool``) and the returned data
-(``bytes memory``).
-The functions ``abi.encode``, ``abi.encodePacked``, ``abi.encodeWithSelector``
-and ``abi.encodeWithSignature`` can be used to encode structured data.
+Afin de s'interfacer avec des contrats qui ne respectent pas l'ABI, ou d'obtenir un contrôle plus direct sur l'encodage,
+les fonctions ``call``, ``delegatecall`` et ``staticcall`` sont disponibles.
+Elles prennent tous pour argument un seul ``bytes memory`` comme entrée et retournent la condition de succès (en tant que ``bool``) et les données (``bytes memory``).
+Les fonctions ``abi.encoder``, ``abi.encoderPacked``, ``abi.encoderWithSelector`` et ``abi.encoderWithSignature`` peuvent être utilisées pour coder des données structurées.
 
-Example::
+Exemple::
 
     bytes memory payload = abi.encodeWithSignature("register(string)", "MyName");
     (bool success, bytes memory returnData) = address(nameReg).call(payload);
     require(success);
 
 .. warning::
-    All these functions are low-level functions and should be used with care.
-    Specifically, any unknown contract might be malicious and if you call it, you
-    hand over control to that contract which could in turn call back into
-    your contract, so be prepared for changes to your state variables
-    when the call returns. The regular way to interact with other contracts
-    is to call a function on a contract object (``x.f()``).
+    Toutes ces fonctions sont des fonctions de bas niveau et doivent être utilisées avec précaution.
+     Plus précisément, tout contrat inconnu peut être malveillant et si vous l'appelez, vous transférez le contrôle à ce contrat qui, à son tour, peut revenir dans votre contrat, donc soyez prêt à modifier les variables de votre état.
+     quand l'appel revient. La façon habituelle d'interagir avec d'autres contrats est d'appeler une fonction sur un objet ``contract`` (``x.f()``)..
+
+:: note::
+    Les versions précédentes de Solidity permettaient à ces fonctions de recevoir des arguments arbitraires et de traiter différemment un premier argument de type ``bytes4``. Ces cas rares ont été supprimés dans la version 0.5.0.
+
+Il est possible de régler le gas fourni avec le modificateur ``.gas()``::
+
+    namReg.call.gas(1000000)(abi.encodeWithSignature("register(string)", "MyName"));
+
+De même, la valeur en Ether fournie peut également être contrôlée: :::
+
+    nameReg.call.value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
+
+Enfin, ces modificateurs peuvent être combinés. Leur ordre n'a pas d'importance::
+
+    nameReg.call.gas(1000000).value(1 ether)(abi.encodeWithSignature("register(string)", "MyName"));
+
+De la même manière, la fonction ``delegatecall`` peut être utilisée: la différence est que seul le code de l'adresse donnée est utilisé, tous les autres aspects (stockage, balance,...) sont repris du contrat actuel. Le but de ``delegatecall`` est d'utiliser du code de bibliothèque qui est stocké dans un autre contrat. L'utilisateur doit s'assurer que la disposition du stockage dans les deux contrats est adaptée à l'utilisation de ``delegatecall``.
 
 .. note::
-    Previous versions of Solidity allowed these functions to receive
-    arbitrary arguments and would also handle a first argument of type
-    ``bytes4`` differently. These edge cases were removed in version 0.5.0.
+    Avant Homestead, il n'existait qu'une variante limitée appelée ``callcode`` qui ne donnait pas accès aux valeurs originales ``msg.sender`` et ``msg.value``. Cette fonction a été supprimée dans la version 0.5.0.
 
-It is possible to adjust the supplied gas with the ``gas`` modifier::
+Depuis Byzantium, ``staticcall`` peut aussi être utilisé. C'est fondamentalement la même chose que ``call``, mais reviendra en arrière si la fonction appelée modifie l'état d'une manière ou d'une autre.
 
-    address(nameReg).call{gas: 1000000}(abi.encodeWithSignature("register(string)", "MyName"));
+Les trois fonctions ``call``, ``delegatecall``et ``staticcall`` sont des fonctions de très bas niveau et ne devraient être utilisées qu'en *dernier recours* car elles brisent la sécurité de type de Solidity.
 
-Similarly, the supplied Ether value can be controlled too::
-
-    address(nameReg).call{value: 1 ether}(abi.encodeWithSignature("register(string)", "MyName"));
-
-Lastly, these modifiers can be combined. Their order does not matter::
-
-    address(nameReg).call{gas: 1000000, value: 1 ether}(abi.encodeWithSignature("register(string)", "MyName"));
-
-In a similar way, the function ``delegatecall`` can be used: the difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used.
+L'option ``.gas()`` est disponible sur les trois méthodes, tandis que l'option ``.value()`` n'est pas supportée pour ``delegatecall``.
 
 .. note::
-    Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values. This function was removed in version 0.5.0.
-
-Since byzantium ``staticcall`` can be used as well. This is basically the same as ``call``, but will revert if the called function modifies the state in any way.
-
-All three functions ``call``, ``delegatecall`` and ``staticcall`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
-
-The ``gas`` option is available on all three methods, while the ``value`` option is not
-supported for ``delegatecall``.
-
-.. note::
-    It is best to avoid relying on hardcoded gas values in your smart contract code,
-    regardless of whether state is read from or written to, as this can have many pitfalls.
-    Also, access to gas might change in the future.
-
-.. note::
-    All contracts can be converted to ``address`` type, so it is possible to query the balance of the
-    current contract using ``address(this).balance``.
+    Tous les contrats pouvant être convertis en type ``address``, il est possible d'interroger le solde du contrat en cours en utilisant ``address(this).balance``.
 
 .. index:: ! contract type, ! type; contract
 
 .. _contract_types:
 
-Contract Types
---------------
+Types Contrat
+-------------
 
-Every :ref:`contract<contracts>` defines its own type.
-You can implicitly convert contracts to contracts they inherit from.
-Contracts can be explicitly converted to and from the ``address`` type.
+Chaque :ref:`contrat<contracts>` définit son propre type.
+Vous pouvez implicitement convertir des contrats en contrats dont ils héritent.
+Les contrats peuvent être explicitement convertis de et vers tous les autres types de contrats et le type ``address``.
 
-Explicit conversion to and from the ``address payable`` type is only possible
-if the contract type has a receive or payable fallback function.  The conversion is still
-performed using ``address(x)``. If the contract type does not have a receive or payable
-fallback function, the conversion to ``address payable`` can be done using
-``payable(address(x))``.
-You can find more information in the section about
-the :ref:`address type<address>`.
+La conversion explicite vers et depuis le type ``address payable`` n'est possible que si le type de contrat dispose d'une fonction de repli payante.
+La conversion est toujours effectuée en utilisant ``address(x)`` et non ``address payable(x)``. Vous trouverez plus d'informations dans la section sur le :ref:`type address<address>`.
 
 .. note::
-    Before version 0.5.0, contracts directly derived from the address type
-    and there was no distinction between ``address`` and ``address payable``.
+     Avant la version 0.5.0, les contrats dérivaient directement du type address et il n'y avait aucune distinction entre ``address`` et ``address payable``.
 
-If you declare a local variable of contract type (``MyContract c``), you can call
-functions on that contract. Take care to assign it from somewhere that is the
-same contract type.
+Si vous déclarez une variable locale de type contrat (`MonContrat c`), vous pouvez appeler des fonctions sur ce contrat. Prenez bien soin de l'assigner à un contrat d'un type correspondant.
 
-You can also instantiate contracts (which means they are newly created). You
-can find more details in the :ref:`'Contracts via new'<creating-contracts>`
-section.
+Vous pouvez également instancier les contrats (ce qui signifie qu'ils sont nouvellement créés). Vous trouverez plus de détails dans la section :ref:`'contrats de création'<contrats de création>`.
 
-The data representation of a contract is identical to that of the ``address``
-type and this type is also used in the :ref:`ABI<ABI>`.
+La représentation des données d'un contrat est identique à celle du type ``address`` et ce type est également utilisé dans l':ref:`ABI<ABI>`.
 
-Contracts do not support any operators.
+Les contrats ne supportent aucun opérateur.
 
-The members of contract types are the external functions of the contract
-including any state variables marked as ``public``.
+Les membres du type contrat sont les fonctions externes du contrat, y compris les variables d'état publiques.
 
 For a contract ``C`` you can use ``type(C)`` to access
 :ref:`type information<meta-type>` about the contract.
 
 .. index:: byte array, bytes32
 
-Fixed-size byte arrays
-----------------------
+Tableaux d'octets de taille fixe
+--------------------------------
 
-The value types ``bytes1``, ``bytes2``, ``bytes3``, ..., ``bytes32``
-hold a sequence of bytes from one to up to 32.
-``byte`` is an alias for ``bytes1``.
+Les types valeur ``bytes1``, ``bytes2``, ``bytes3``, ..., ``bytes32`` contiennent une séquence de 1 à 32 octets.
+``byte`` est un alias de ``bytes1``.
 
-Operators:
+Opérateurs:
 
-* Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
-* Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
-* Shift operators: ``<<`` (left shift), ``>>`` (right shift)
-* Index access: If ``x`` is of type ``bytesI``, then ``x[k]`` for ``0 <= k < I`` returns the ``k`` th byte (read-only).
+* Comparaisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (retournent un ``bool``)
+* Opérateurs binaires: ``&``, ``|``, ``^`` (ou exclusif binaire), ``~`` (négation binaire)
+* Opérateurs de décalage: ``<<`` (décalage vers la gauche), ``>>`` (décalage vers la droite)
+* Accès par indexage: Si ``x`` estd e type ``bytesI``, alors ``x[k]`` pour ``0 <= k < I`` retourne le ``k`` ème byte (lecture seule).
 
-The shifting operator works with any integer type as right operand (but
-returns the type of the left operand), which denotes the number of bits to shift by.
-Shifting by a negative amount causes a runtime exception.
+L'opérateur de décalage travaille avec n'importe quel type d'entier comme opérande droite (mais retourne le type de l'opérande gauche), qui indique le nombre de bits à décaler.
+Le décalage d'un montant négatif entraîne une exception d'exécution.
 
-Members:
+Membres :
 
-* ``.length`` yields the fixed length of the byte array (read-only).
+*``.length``` donne la longueur fixe du tableau d'octets (lecture seule).
 
 .. note::
-    The type ``byte[]`` is an array of bytes, but due to padding rules, it wastes
-    31 bytes of space for each element (except in storage). It is better to use the ``bytes``
-    type instead.
+    Le type ``byte[]`` est un tableau d'octets, mais en raison des règles de bourrage, il gaspille 31 octets d'espace pour chaque élément (sauf en storage). Il est préférable d'utiliser le type "bytes" à la place.
 
-Dynamically-sized byte array
+Tableaux dynamiques d'octets
 ----------------------------
 
 ``bytes``:
-    Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!
+    Tableau d'octets de taille dynamique, voir :ref:`arrays`. Ce n'est pas un type valeur !
 ``string``:
-    Dynamically-sized UTF-8-encoded string, see :ref:`arrays`. Not a value-type!
-
+    Chaîne codée UTF-8 de taille dynamique, voir :ref:`arrays`. Ce n'est pas un type valeur !
 .. index:: address, literal;address
 
 .. _address_literals:
 
-Address Literals
-----------------
+Adresses Littérales
+-------------------
 
-Hexadecimal literals that pass the address checksum test, for example
-``0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF`` are of ``address payable`` type.
-Hexadecimal literals that are between 39 and 41 digits
-long and do not pass the checksum test produce
-an error. You can prepend (for integer types) or append (for bytesNN types) zeros to remove the error.
+Les caractères hexadécimaux qui réussissent un test de somme de contrôle d'adresse ("address checksum"), par exemple ``0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF`` sont de type ``address payable``.
+Les nombres hexadécimaux qui ont entre 39 et 41 chiffres et qui ne passent pas le test de somme de contrôle produisent un avertissement et sont traités comme des nombres rationnels littéraux réguliers.
 
 .. note::
-    The mixed-case address checksum format is defined in `EIP-55 <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md>`_.
+    Le format de some de contrôle multi-casse est décrit dans `EIP-55 <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md>`_.
+
 
 .. index:: literal, literal;rational
 
 .. _rational_literals:
 
-Rational and Integer Literals
------------------------------
+Rationels et entiers littéraux
+------------------------------
 
-Integer literals are formed from a sequence of numbers in the range 0-9.
-They are interpreted as decimals. For example, ``69`` means sixty nine.
-Octal literals do not exist in Solidity and leading zeros are invalid.
+Les nombres entiers littéraux sont formés à partir d'une séquence de nombres compris entre 0 et 9 interprétés en décimal. Par exemple, ``69`` signifie soixante-neuf.
+Les littéraux octaux n'existent pas dans Solidity et les zéros précédant un nombre sont invalides.
 
-Decimal fraction literals are formed by a ``.`` with at least one number on
-one side.  Examples include ``1.``, ``.1`` and ``1.3``.
+Les fractions décimales sont formées par un ``.`` avec au moins un chiffre sur un côté. Exemples : ``1.1``, ``.1 `` et ``1.3``.
 
-Scientific notation is also supported, where the base can have fractions and the exponent cannot.
-Examples include ``2e10``, ``-2e10``, ``2e-10``, ``2.5e1``.
+La notation scientifique est également supportée, où la base peut avoir des fractions, alors que l'exposant ne le peut pas.
+Exemples : ``2e10``, ``-2e10``, ``2e-10``, ``2e-10``, ``2.5e1``.
 
-Underscores can be used to separate the digits of a numeric literal to aid readability.
-For example, decimal ``123_000``, hexadecimal ``0x2eff_abde``, scientific decimal notation ``1_2e345_678`` are all valid.
-Underscores are only allowed between two digits and only one consecutive underscore is allowed.
-There is no additional semantic meaning added to a number literal containing underscores,
-the underscores are ignored.
+Les soulignements (underscore) peuvent être utilisés pour séparer les chiffres d'un nombre littéral numérique afin d'en faciliter la lecture.
+Par exemple, la décimale ``123_000``, l'hexadécimale ``0x2eff_abde``, la notation décimale scientifique ``1_2e345_678`` sont toutes valables.
+Les tirets de soulignement ne sont autorisés qu'entre deux chiffres et un seul tiret de soulignement consécutif est autorisé.
+Il n'y a pas de signification sémantique supplémentaire ajoutée à un nombre contenant des tirets de soulignement, les tirets de soulignement sont ignorés.
 
-Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
-using them together with a non-literal expression or by explicit conversion).
-This means that computations do not overflow and divisions do not truncate
-in number literal expressions.
+Les expressions littérales numériques conservent une précision arbitraire jusqu'à ce qu'elles soient converties en un type non littéral (c'est-à-dire en les utilisant avec une expression non littérale ou par une conversion explicite).
+Cela signifie que les calculs ne débordent pas (overflow) et que les divisions ne tronquent pas les expressions littérales des nombres.
 
-For example, ``(2**800 + 1) - 2**800`` results in the constant ``1`` (of type ``uint8``)
-although intermediate results would not even fit the machine word size. Furthermore, ``.5 * 8`` results
-in the integer ``4`` (although non-integers were used in between).
+Par exemple, ``(2**800 + 1) - 2**800`` produit la constante ``1`` (de type ``uint8``) bien que les résultats intermédiaires ne rentrent même pas dans la taille d'un mot machine. De plus, ``.5 * 8`` donne l'entier ``4`` (bien que des nombres non entiers aient été utilisés entre les deux).
 
-Any operator that can be applied to integers can also be applied to number literal expressions as
-long as the operands are integers. If any of the two is fractional, bit operations are disallowed
-and exponentiation is disallowed if the exponent is fractional (because that might result in
-a non-rational number).
+N'importe quel opérateur qui peut être appliqué aux nombres entiers peut également être appliqué aux expressions littérales des nombres tant que les opérandes sont des nombres entiers. Si l'un des deux est fractionnaire, les opérations sur bits sont interdites et l'exponentiation est interdite si l'exposant est fractionnaire (parce que cela pourrait résulter en un nombre non rationnel).
 
 .. warning::
-    Division on integer literals used to truncate in Solidity prior to version 0.4.0, but it now converts into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
+    La dvision d'entiers littéraux tronquait dans les versions de Solidity avant la version 0.4.0, mais elle donne maintenant en un nombre rationnel, c'est-à-dire que ``5 / 2`` n'est pas égal à ``2``, mais à ``2.5``.
 
 .. note::
-    Solidity has a number literal type for each rational number.
-    Integer literals and rational number literals belong to number literal types.
-    Moreover, all number literal expressions (i.e. the expressions that
-    contain only number literals and operators) belong to number literal
-    types.  So the number literal expressions ``1 + 2`` and ``2 + 1`` both
-    belong to the same number literal type for the rational number three.
-
+    Solidity a un type de nombre littéral pour chaque nombre rationnel.
+     Les nombres entiers littéraux et les nombres rationnels appartiennent à des types de nombres littéraux.
+     De plus, toutes les expressions numériques littérales (c'est-à-dire les expressions qui ne contiennent que des nombres et des opérateurs) appartiennent à des types littéraux de nombres. Ainsi, les expressions littérales ``1 + 2`` et ``2 + 1`` appartiennent toutes deux au même type littéral de nombre pour le nombre rationnel numéro trois.
 
 .. note::
-    Number literal expressions are converted into a non-literal type as soon as they are used with non-literal
-    expressions. Disregarding types, the value of the expression assigned to ``b``
-    below evaluates to an integer. Because ``a`` is of type ``uint128``, the
-    expression ``2.5 + a`` has to have a proper type, though. Since there is no common type
-    for the type of ``2.5`` and ``uint128``, the Solidity compiler does not accept
-    this code.
+    Les expressions littérales numériques sont converties en caractères non littéraux dès qu'elles sont utilisées avec des expressions non littérales. Indépendamment des types, la valeur de l'expression assignée à ``b`` ci-dessous est évaluée en entier. Comme ``a`` est de type ``uint128``, l'expression ``2,5 + a`` doit cependant avoir un type. Puisqu'il n'y a pas de type commun pour les types ``2.5`` et ``uint128``, le compilateur Solidity n'accepte pas ce code.
 
 ::
 
@@ -472,79 +388,63 @@ a non-rational number).
 .. index:: literal, literal;string, string
 .. _string_literals:
 
-String Literals and Types
--------------------------
+Chaines de caractères littérales
+--------------------------------
 
-String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``), and they can also be split into multiple consecutive parts (``"foo" "bar"`` is equivalent to ``"foobar"``) which can be helpful when dealing with long strings.  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes, not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
+Les chaînes de caractères littérales sont écrites avec des guillemets simples ou doubles (``"foo"`` ou ``'bar'``). Elles n'impliquent pas de zéro final comme en C ; ``foo`` représente trois octets, pas quatre. Comme pour les entiers littéraux, leur type peut varier, mais ils sont implicitement convertibles en ``bytes1``, ..., ``bytes32``, ou s'ils conviennent, en ``bytes`` et en ``string``.
 
-For example, with ``bytes32 samevar = "stringliteral"`` the string literal is interpreted in its raw byte form when assigned to a ``bytes32`` type.
+Les chaînes de caractères littérales supportent les caractères d'échappement suivants :
 
-String literals support the following escape characters:
-
- - ``\<newline>`` (escapes an actual newline)
- - ``\\`` (backslash)
- - ``\'`` (single quote)
- - ``\"`` (double quote)
+ - ``\<newline>`` (échappe un réel caractère newline)
+ - ``\\`` (barre oblique)
+ - ``\'`` (guillemet simple)
+ - ``\"`` (guillemet double)
  - ``\b`` (backspace)
  - ``\f`` (form feed)
  - ``\n`` (newline)
  - ``\r`` (carriage return)
- - ``\t`` (tab)
- - ``\v`` (vertical tab)
+ - ``\t`` (tabulation horizontale)
+ - ``\v`` (tabulation verticale)
  - ``\xNN`` (hex escape, see below)
- - ``\uNNNN`` (unicode escape, see below)
+ - ``\uNNNN`` (echapement d'unicode, voir ci-dessous)
 
-``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
+``\xNN`` prend une valeur hexadécimale et insère l'octet approprié, tandis que ``\uNNNNN`` prend un codepoint Unicode et insère une séquence UTF-8.
 
-The string in the following example has a length of ten bytes.
-It starts with a newline byte, followed by a double quote, a single
-quote a backslash character and then (without separator) the
-character sequence ``abcdef``.
+La chaîne de caractères de l'exemple suivant a une longueur de dix octets.
+Elle commence par un octet de newline, suivi d'une guillemet double, d'une guillemet simple, d'un caractère barre oblique inversée et ensuite (sans séparateur) de la séquence de caractères ``abcdef``.
 
 ::
 
     "\n\"\'\\abc\
     def"
 
-Any unicode line terminator which is not a newline (i.e. LF, VF, FF, CR, NEL, LS, PS) is considered to
-terminate the string literal. Newline only terminates the string literal if it is not preceded by a ``\``.
+Tout terminateur de ligne unicode qui n'est pas une nouvelle ligne (i.e. LF, VF, FF, CR, NEL, LS, PS) est considéré comme terminant la chaîne littérale. Newline ne termine la chaîne littérale que si elle n'est pas précédée d'un ``\``.
 
 .. index:: literal, bytes
 
-Hexadecimal Literals
---------------------
+Hexadécimaux littéraux
+----------------------
 
-Hexadecimal literals are prefixed with the keyword ``hex`` and are enclosed in double
-or single-quotes (``hex"001122FF"``, ``hex'0011_22_FF'``). Their content must be
-hexadecimal digits which can optionally use a single underscore as separator between
-byte boundaries. The value of the literal will be the binary representation
-of the hexadecimal sequence.
+Les caractères hexadécimaux sont précédées du mot-clé ``hex`` et sont entourées de guillemets simples ou doubles (``hex"001122FF"``). Leur contenu doit être une chaîne hexadécimale et leur valeur sera la représentation binaire de ces valeurs.
 
-Multiple hexadecimal literals separated by whitespace are concatenated into a single literal:
-``hex"00112233" hex"44556677"`` is equivalent to ``hex"0011223344556677"``
-
-Hexadecimal literals behave like :ref:`string literals <string_literals>` and have the same convertibility restrictions.
+Les littéraux hexadécimaux se comportent comme :ref:`chaînes de caractères littérales<string_literals>` et ont les mêmes restrictions de convertibilité.
 
 .. index:: enum
 
 .. _enums:
 
-Enums
------
+Énumérateurs
+------------
 
-Enums are one way to create a user-defined type in Solidity. They are explicitly convertible
-to and from all integer types but implicit conversion is not allowed.  The explicit conversion
-from integer checks at runtime that the value lies inside the range of the enum and causes a failing assert otherwise.
-Enums require at least one member, and its default value when declared is the first member.
+Les ``enum`` sont une façon de créer un type défini par l'utilisateur en Solidity. Ils sont explicitement convertibles de et vers tous les types d'entiers mais la conversion implicite n'est pas autorisée. La conversion explicite à partir d'un nombre entier vérifie au moment de l'exécution que la valeur se trouve à l'intérieur de la plage de l'enum et provoque une affirmation d'échec autrement.
+Un enum a besoin d'au moins un membre.
 
-The data representation is the same as for enums in C: The options are represented by
-subsequent unsigned integer values starting from ``0``.
+La représentation des données est la même que pour les énumérations en C : Les options sont représentées par des valeurs entières non signées à partir de ``0``.
 
 
 ::
 
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.6.0;
 
     contract test {
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
@@ -555,11 +455,11 @@ subsequent unsigned integer values starting from ``0``.
             choice = ActionChoices.GoStraight;
         }
 
-        // Since enum types are not part of the ABI, the signature of "getChoice"
-        // will automatically be changed to "getChoice() returns (uint8)"
-        // for all matters external to Solidity. The integer type used is just
-        // large enough to hold all enum values, i.e. if you have more than 256 values,
-        // `uint16` will be used and so on.
+        // Comme le type enum ne fait pas partie de l' ABI, la signature de "getChoice"
+        // sera automatoquement changée en "getChoice() returns (uint8)"
+        // pour ce qui sort de Solidity. Le type entier utilisé est
+        // assez grand pour contenir toutes valeurs, par exemple si vous en avez
+        // plus de 256, ``uint16`` sera utilisé etc...
         function getChoice() public view returns (ActionChoices) {
             return choice;
         }
@@ -569,75 +469,48 @@ subsequent unsigned integer values starting from ``0``.
         }
     }
 
-.. note::
-    Enums can also be declared on the file level, outside of contract or library definitions.
-
-
 .. index:: ! function type, ! type; function
 
 .. _function_types:
 
-Function Types
+Types Fonction
 --------------
 
-Function types are the types of functions. Variables of function type
-can be assigned from functions and function parameters of function type
-can be used to pass functions to and return functions from function calls.
-Function types come in two flavours - *internal* and *external* functions:
+Les types fonction sont les types des fonctions. Les variables du type fonction peuvent être passés et retournés pour transférer les fonctions vers et renvoyer les fonctions des appels de fonction.
+Les types de fonctions se déclinent en deux versions : les fonctions *internes* ``internal`` et les fonctions *externes* ``external`` :
 
-Internal functions can only be called inside the current contract (more specifically,
-inside the current code unit, which also includes internal library functions
-and inherited functions) because they cannot be executed outside of the
-context of the current contract. Calling an internal function is realized
-by jumping to its entry label, just like when calling a function of the current
-contract internally.
+Les fonctions internes ne peuvent être appelées qu'à l'intérieur du contrat en cours (plus précisément, à l'intérieur de l'unité de code en cours, qui comprend également les fonctions de bibliothèque internes et les fonctions héritées) car elles ne peuvent pas être exécutées en dehors du contexte du contrat actuel. L'appel d'une fonction interne est réalisé en sautant à son label d'entrée, tout comme lors de l'appel interne d'une fonction du contrat en cours.
 
-External functions consist of an address and a function signature and they can
-be passed via and returned from external function calls.
+Les fonctions externes se composent d'une adresse et d'une signature de fonction et peuvent être transférées et renvoyées à partir des appels de fonction externes.
 
-Function types are notated as follows::
+Les types de fonctions sont notés comme suit: :
 
-    function (<parameter types>) {internal|external} [pure|view|payable] [returns (<return types>)]
+     fonction (<types de paramètres>) {internal|external} {pure|view|payable][returns (<types de retour>)]
 
-In contrast to the parameter types, the return types cannot be empty - if the
-function type should not return anything, the whole ``returns (<return types>)``
-part has to be omitted.
+En contraste avec types de paramètres, les types de retour ne peuvent pas être vides - si le type de fonction ne retourne rien, toute la partie ``returns (<types de retour>)``doit être omise.
 
-By default, function types are internal, so the ``internal`` keyword can be
-omitted. Note that this only applies to function types. Visibility has
-to be specified explicitly for functions defined in contracts, they
-do not have a default.
+Par défaut, les fonctions sont de type ``internal``, donc le mot-clé ``internal`` peut être omis. Notez que ceci ne s'applique qu'aux types de fonctions. La visibilité doit être spécifiée explicitement car les fonctions définies dans les contrats n'ont pas de valeur par défaut.
 
-Conversions:
+Conversions :
 
-A function type ``A`` is implicitly convertible to a function type ``B`` if and only if
-their parameter types are identical, their return types are identical,
-their internal/external property is identical and the state mutability of ``A``
-is not more restrictive than the state mutability of ``B``. In particular:
+Une fonction de type ``external`` peut être explicitement convertie en ``address`` résultant en l'adresse du contrat de la fonction.
 
- - ``pure`` functions can be converted to ``view`` and ``non-payable`` functions
- - ``view`` functions can be converted to ``non-payable`` functions
- - ``payable`` functions can be converted to ``non-payable`` functions
+Un type de fonction ``A`` est implicitement convertible en un type de fonction ``B`` si et seulement si leurs types de paramètres sont identiques, leurs types de retour sont identiques, leurs propriétés internal/external sont identiques et la mutabilité d'état de ``A`` n'est pas plus restrictive que la mutabilité de l'état de ``B``. En particulier :
 
-No other conversions between function types are possible.
+ - Les fonctions ``pure`` peuvent être converties en fonctions ``view`` et ``non-payable``.
+ - Les fonctions ``view`` peuvent être converties en fonctions ``non-payable``.
+ - les fonctions ``payable`` peuvent être converties en fonctions ``non-payable``.
 
-The rule about ``payable`` and ``non-payable`` might be a little
-confusing, but in essence, if a function is ``payable``, this means that it
-also accepts a payment of zero Ether, so it also is ``non-payable``.
-On the other hand, a ``non-payable`` function will reject Ether sent to it,
-so ``non-payable`` functions cannot be converted to ``payable`` functions.
+Aucune autre conversion entre les types de fonction n'est possible.
 
-If a function type variable is not initialised, calling it results
-in a failed assertion. The same happens if you call a function after using ``delete``
-on it.
+La règle concernant les fonctions ``payable`` et ``non-payable`` peut prêter à confusion, mais essentiellement, si une fonction est ``payable``, cela signifie qu'elle accepte aussi un paiement de zéro Ether, donc elle est également ``non-payable``.
+D'autre part, une fonction ``non-payable`` rejettera l'Ether qui lui est envoyé, de sorte que les fonctions ``non-payable`` ne peuvent pas être converties en fonctions ``payable``.
 
-If external function types are used outside of the context of Solidity,
-they are treated as the ``function`` type, which encodes the address
-followed by the function identifier together in a single ``bytes24`` type.
+Si une variable de type fonction n'est pas initialisée, l'appel de celle-ci entraîne l'échec d'une assertion. Il en va de même si vous appelez une fonction après avoir utilisé ``delete`` dessus.
 
-Note that public functions of the current contract can be used both as an
-internal and as an external function. To use ``f`` as an internal function,
-just use ``f``, if you want to use its external form, use ``this.f``.
+Si des fonctions de type ``external`` sont appelées d'en dehors du contexte de Solidity, ils sont traités comme le type ``function``, qui code l'adresse suivie de l'identificateur de fonction ensemble dans un seul type ``bytes24``.
+
+Notez que les fonctions publiques du contrat actuel peuvent être utilisées à la fois comme une fonction interne et comme une fonction externe. Pour utiliser ``f`` comme fonction interne, utilisez simplement ``f``, si vous voulez utiliser sa forme externe, utilisez ``this.f```.
 
 Members:
 
@@ -671,14 +544,14 @@ Example that shows how to use the members::
         }
     }
 
-Example that shows how to use internal function types::
+Exemple d'utilisation des fonctions de type ``internal``::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.7.0;
 
     library ArrayUtils {
-        // internal functions can be used in internal library functions because
-        // they will be part of the same code context
+      // les fonctions internes peuvent être utilisées dams des fonctions
+      // de librairies internes car elles partagent le même contexte
         function map(uint[] memory self, function (uint) pure returns (uint) f)
             internal
             pure
@@ -729,7 +602,7 @@ Example that shows how to use internal function types::
         }
     }
 
-Another example that uses external function types::
+Exemple d' usage de fonction ``external``::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
@@ -772,6 +645,6 @@ Another example that uses external function types::
             exchangeRate = response;
         }
     }
-
+    
 .. note::
-    Lambda or inline functions are planned but not yet supported.
+    Les fonctions lambda ou en in-line sont prévues mais pas encore prises en charge.
