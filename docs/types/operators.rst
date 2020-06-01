@@ -1,44 +1,26 @@
 .. index:: assignment, ! delete, lvalue
 
-Operators Involving LValues
-===========================
+Opérateurs impliquant des LValues
+=================================
 
-If ``a`` is an LValue (i.e. a variable or something that can be assigned to), the
-following operators are available as shorthands:
+Si ``a`` est une LValue (c.-à-d. une variable ou quelque chose qui peut être assigné à), les opérateurs suivants sont disponibles en version raccourcie::
 
-``a += e`` is equivalent to ``a = a + e``. The operators ``-=``, ``*=``, ``/=``, ``%=``,
-``|=``, ``&=`` and ``^=`` are defined accordingly. ``a++`` and ``a--`` are equivalent
-to ``a += 1`` / ``a -= 1`` but the expression itself still has the previous value
-of ``a``. In contrast, ``--a`` and ``++a`` have the same effect on ``a`` but
-return the value after the change.
-
+``a += e`` équivaut à ``a = a + e``. Les opérateurs ``-=``, ``*=``, ``/=``, ``%=``, ``|=``, ``&=`` et ``^=`` sont définis de la même manière. ``a++`` et ``a--`` sont équivalents à ``a += 1`` / ``a -= 1`` mais l'expression elle-même a toujours la valeur précédente ``a``. Par contraste, ``--a`` et ``++a`` changent également ``a`` de ``1`` , mais retournent la valeur après le changement.
 .. _delete:
 
 delete
 ------
 
-``delete a`` assigns the initial value for the type to ``a``. I.e. for integers it is
-equivalent to ``a = 0``, but it can also be used on arrays, where it assigns a dynamic
-array of length zero or a static array of the same length with all elements set to their
-initial value. ``delete a[x]`` deletes the item at index ``x`` of the array and leaves
+``delete a`` affecte la valeur initiale du type à ``a``. C'est-à-dire que pour les entiers, il est équivalent à ``a = 0``, mais il peut aussi être utilisé sur les tableaux, où il assigne un tableau dynamique de longueur zéro ou un tableau statique de la même longueur avec tous les éléments initialisés à leur valeur par défaut. ``delete a[x]`` deletes the item at index ``x`` of the array and leaves
 all other elements and the length of the array untouched. This especially means that it leaves
 a gap in the array. If you plan to remove items, a :ref:`mapping <mapping-types>` is probably a better choice.
 
-For structs, it assigns a struct with all members reset. In other words,
-the value of ``a`` after ``delete a`` is the same as if ``a`` would be declared
-without assignment, with the following caveat:
+Pour les structs, il assigne une structure avec tous les membres réinitialisés. En d'autres termes, la valeur de ``a`` après ``delete a`` est la même que si ``a`` était déclaré sans attribution, avec la réserve suivante :
 
-``delete`` has no effect on mappings (as the keys of mappings may be arbitrary and
-are generally unknown). So if you delete a struct, it will reset all members that
-are not mappings and also recurse into the members unless they are mappings.
-However, individual keys and what they map to can be deleted: If ``a`` is a
-mapping, then ``delete a[x]`` will delete the value stored at ``x``.
+``delete`` n'a aucun effet sur les mappages (car les clés des mappages peuvent être arbitraires et sont généralement inconnues). Ainsi, si vous supprimez une structure, elle réinitialisera tous les membres qui ne sont pas des ``mappings`` et se propagera récursivement dans les membres à moins qu'ils ne soient des mappings. Toutefois, il est possible de supprimer des clés individuelles et ce à quoi elles correspondent : Si ``a`` est un mappage, alors ``delete a[x]`` supprimera la valeur stockée à ``x``.
 
-It is important to note that ``delete a`` really behaves like an
-assignment to ``a``, i.e. it stores a new object in ``a``.
-This distinction is visible when ``a`` is reference variable: It
-will only reset ``a`` itself, not the
-value it referred to previously.
+Il est important de noter que ``delete a`` se comporte vraiment comme une affectation à ``a``, c'est-à-dire qu'il stocke un nouvel objet dans ``a``.
+Cette distinction est visible lorsque ``a`` est une variable par référence : Il ne réinitialisera que ``a`` lui-même, et non la valeur à laquelle il se référait précédemment.
 
 ::
 
@@ -51,13 +33,15 @@ value it referred to previously.
 
         function f() public {
             uint x = data;
-            delete x; // sets x to 0, does not affect data
-            delete data; // sets data to 0, does not affect x
+            delete x; // met x à 0, n' affecte pas data
+            delete data; // met data à 0, n'affecte pas x
             uint[] storage y = dataArray;
-            delete dataArray; // this sets dataArray.length to zero, but as uint[] is a complex object, also
-            // y is affected which is an alias to the storage object
-            // On the other hand: "delete y" is not valid, as assignments to local variables
-            // referencing storage objects can only be made from existing storage objects.
+            delete dataArray; // ceci met dataArray.length à zéro, mais un uint[]
+            // est un objet complexe, donc y est affecté est un alias
+            // vers l' objet en storage.
+            // D' un autre côté: "delete y" est invalid, car l' assignement à
+            // une variable locale pointant vers un objet en storage n' est
+            // autorisée que depuis un objet en storage.
             assert(y.length == 0);
         }
     }
