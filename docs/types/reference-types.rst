@@ -2,58 +2,37 @@
 
 .. _reference-types:
 
-Reference Types
+Types Référence
 ===============
 
-Values of reference type can be modified through multiple different names.
-Contrast this with value types where you get an independent copy whenever
-a variable of value type is used. Because of that, reference types have to be handled
-more carefully than value types. Currently, reference types comprise structs,
-arrays and mappings. If you use a reference type, you always have to explicitly
-provide the data area where the type is stored: ``memory`` (whose lifetime is limited
-to an external function call), ``storage`` (the location where the state variables
-are stored, where the lifetime is limited to the lifetime of a contract)
-or ``calldata`` (special data location that contains the function arguments,
-only available for external function call parameters).
+Les valeurs du type référence peuvent être modifiées par plusieurs noms différents.
+Comparez ceci avec les catégories de valeurs où vous obtenez une copie indépendante chaque fois qu'une variable de valeur est utilisée. Pour cette raison, les types référence doivent être traités avec plus d'attention que les types de valeur. Actuellement, les types référence comprennent les structures, les tableaux et les mappages. Si vous utilisez un type référence, vous devez toujours indiquer explicitement la zone de données où le type est enregistré : (dont la durée de vie est limitée à un appel de fonction), ``storage`` (l'emplacement où les variables d'état sont stockées) ou ``calldata`` (emplacement de données spécial qui contient les arguments de fonction, disponible uniquement pour les paramètres d'appel de fonction externe).
 
-An assignment or type conversion that changes the data location will always incur an automatic copy operation,
-while assignments inside the same data location only copy in some cases for storage types.
+Une affectation ou une conversion de type qui modifie l'emplacement des données entraîne toujours une opération de copie automatique, alors que les affectations à l'intérieur du même emplacement de données ne copient que dans certains cas selon le type de stockage.
 
 .. _data-location:
 
-Data location
--------------
+Emplacement des données
+-----------------------
 
-Every reference type has an additional
-annotation, the "data location", about where it is stored. There are three data locations:
-``memory``, ``storage`` and ``calldata``. Calldata is only valid for parameters of external contract
-functions and is required for this type of parameter. Calldata is a non-modifiable,
-non-persistent area where function arguments are stored, and behaves mostly like memory.
+Chaque type référence, c'est-à-dire *arrays* (tableaux) et *structs*, comporte une annotation supplémentaire, la ``localisation des données``, indiquant où elles sont stockées. Il y a trois emplacements de données :
+``Memory``, ``Storage`` et ``Calldata``. Calldata n'est valable que pour les paramètres des fonctions de contrat externes et n'est nécessaire que pour ce type de paramètre. Calldata est une zone non modifiable, non persistante où les arguments de fonction sont stockés, et se comporte principalement comme memory.
 
 
 .. note::
-    Prior to version 0.5.0 the data location could be omitted, and would default to different locations
-    depending on the kind of variable, function type, etc., but all complex types must now give an explicit
-    data location.
+    Avant la version 0.5.0, l'emplacement des données pouvait être omis, et était par défaut à des emplacements différents selon le type de variable, le type de fonction, etc.
 
 .. _data-location-assignment:
 
 Data location and assignment behaviour
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Data locations are not only relevant for persistency of data, but also for the semantics of assignments:
+La localisation des données n'est sont pas seulement pertinente pour la persistance des données, mais aussi pour la sémantique des affectations :
 
-* Assignments between ``storage`` and ``memory`` (or from ``calldata``)
-  always create an independent copy.
-* Assignments from ``memory`` to ``memory`` only create references. This means
-  that changes to one memory variable are also visible in all other memory
-  variables that refer to the same data.
-* Assignments from ``storage`` to a **local** storage variable also only
-  assign a reference.
-* All other assignments to ``storage`` always copy. Examples for this
-  case are assignments to state variables or to members of local
-  variables of storage struct type, even if the local variable
-  itself is just a reference.
+* Les affectations entre le stockage et la mémoire (ou à partir des données de la calldata) créent toujours une copie indépendante.
+* Les affectations de mémoire à mémoire ne créent que des références. Cela signifie que les modifications d'une variable mémoire sont également visibles dans toutes les autres variables mémoire qui se réfèrent aux mêmes données.
+* Les affectations du stockage à une variable de stockage local n'affectent également qu'une référence.
+* En revanche, toutes les autres affectations au stockage sont toujours copiées. Les affectations à des variables d'état ou à des membres de variables locales de type structure de stockage, même si la variable locale elle-même n'est qu'une référence, constituent des exemples dans ce cas.
 
 ::
 
@@ -91,35 +70,34 @@ Data locations are not only relevant for persistency of data, but also for the s
 
 .. _arrays:
 
-Arrays
-------
+Tableaux
+--------
 
-Arrays can have a compile-time fixed size, or they can have a dynamic size.
+Les tableaux peuvent avoir une taille fixe à la compilation ou peuvent être dynamiques.
 
 The type of an array of fixed size ``k`` and element type ``T`` is written as ``T[k]``,
 and an array of dynamic size as ``T[]``.
 
-For example, an array of 5 dynamic arrays of ``uint`` is written as
-``uint[][5]``. The notation is reversed compared to some other languages. In
-Solidity, ``X[3]`` is always an array containing three elements of type ``X``,
-even if ``X`` is itself an array. This is not the case in other languages such
-as C.
+Un tableau de taille fixe ``k`` et de type d'élément ``T`` est écrit ``T[k]``, un tableau de taille dynamique ``T[]``.
+
+Par exemple, un tableau de 5 tableaux dynamiques de ``uint`` est ``uint[][5]`` (notez que la notation est inversée par rapport à certains autres langages). Pour accéder au deuxième uint du troisième tableau dynamique, vous utilisez ``x[2][1]`` (les indexs commencent à zéro et
+l'accès fonctionne dans le sens inverse de la déclaration, c'est-à-dire que ``x[2]`` supprime un niveau dans le type de déclaration à partir de la droite).
 
 Indices are zero-based, and access is in the opposite direction of the
 declaration.
 
-For example, if you have a variable ``uint[][5] memory x``, you access the
-second ``uint`` in the third dynamic array using ``x[2][1]``, and to access the
-third dynamic array, use ``x[2]``. Again,
-if you have an array ``T[5] a`` for a type ``T`` that can also be an array,
-then ``a[2]`` always has type ``T``.
+Il y a peu de restrictions concernant l'élément contenu, il peut aussi être un autre tableau, un mappage ou une structure. Les restrictions générales
+s'appliquent, cependant, en ce sens que les mappages ne peuvent être utilisés que dans le ``storage`` et que les fonctions visibles au public nécessitent des paramètres qui sont des types reconnus par l':ref:`ABI types <ABI>`.
 
-Array elements can be of any type, including mapping or struct. The general
-restrictions for types apply, in that mappings can only be stored in the
-``storage`` data location and publicly-visible functions need parameters that are :ref:`ABI types <ABI>`.
+Il est possible de marquer les tableaux ``public`` et de demander à Solidity de créer un :ref:`getter <visibility-and-getters>`.
+L'index numérique deviendra un paramètre obligatoire pour le getter.
 
-It is possible to mark state variable arrays ``public`` and have Solidity create a :ref:`getter <visibility-and-getters>`.
-The numeric index becomes a required parameter for the getter.
+.. old start
+
+
+L'accès à un tableau après sa fin provoque un ``revert``. Si vous voulez ajouter de nouveaux éléments, vous devez utiliser ``.push()`` ou augmenter le membre ``.length`` (voir ci-dessous).
+
+.. old end
 
 Accessing an array past its end causes a failing assertion. Methods ``.push()`` and ``.push(value)`` can be used
 to append a new element at the end of the array, where ``.push()`` appends a zero-initialized element and returns
@@ -134,37 +112,26 @@ a reference to it.
 ``bytes`` and ``strings`` as Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Variables of type ``bytes`` and ``string`` are special arrays. A ``bytes`` is similar to ``byte[]``,
-but it is packed tightly in calldata and memory. ``string`` is equal to ``bytes`` but does not allow
-length or index access.
+Les variables de type ``bytes`` et ``string`` sont des tableaux spéciaux. Un ``byte`` est semblable à un ``byte[]``, mais il est condensé en calldata et en mémoire. ``string`` est égal à ``bytes``, mais ne permet pas l'accès à la longueur ou à l'index.
 
 Solidity does not have string manipulation functions, but there are
 third-party string libraries. You can also compare two strings by their keccak256-hash using
 ``keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))`` and
 concatenate two strings using ``abi.encodePacked(s1, s2)``.
 
-You should use ``bytes`` over ``byte[]`` because it is cheaper,
-since ``byte[]`` adds 31 padding bytes between the elements. As a general rule,
-use ``bytes`` for arbitrary-length raw byte data and ``string`` for arbitrary-length
-string (UTF-8) data. If you can limit the length to a certain number of bytes,
-always use one of the value types ``bytes1`` to ``bytes32`` because they are much cheaper.
+Il faut donc généralement préférer les ``bytes`` aux ``bytes[]`` car c'est moins cher à l'usage.
+En règle générale, utilisez ``bytes`` pour les données en octets bruts de longueur arbitraire et ``string`` pour les données de chaîne de caractères de longueur arbitraire (UTF-8). Si vous pouvez limiter la longueur à un certain nombre d'octets, utilisez toujours un des ``bytes1`` à ``bytes32``, car ils sont beaucoup moins chers également.
 
 .. note::
-    If you want to access the byte-representation of a string ``s``, use
-    ``bytes(s).length`` / ``bytes(s)[7] = 'x';``. Keep in mind
-    that you are accessing the low-level bytes of the UTF-8 representation,
-    and not the individual characters.
+    Si vous voulez accéder à la représentation en octets d'une chaîne de caractères ``s``, utilisez ``bytes(s).length`` / ``bytes(s)[7] ='x';``. Gardez à l'esprit que vous accédez aux octets de bas niveau de la représentation UTF-8, et non aux caractères individuels !
 
 .. index:: ! array;allocating, new
 
-Allocating Memory Arrays
-^^^^^^^^^^^^^^^^^^^^^^^^
+Allouer des tableaux en mémoire
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Memory arrays with dynamic length can be created using the ``new`` operator.
-As opposed to storage arrays, it is **not** possible to resize memory arrays (e.g.
-the ``.push`` member functions are not available).
-You either have to calculate the required size in advance
-or create a new memory array and copy every element.
+Vous pouvez utiliser le mot-clé ``new`` pour créer des tableaux dont la longueur dépend de la durée d'exécution en mémoire.
+Contrairement aux tableaux de stockage, il n'est **pas** possible de redimensionner les tableaux de mémoire (par exemple en les assignant au membre ``.length``). Vous devez soit calculer la taille requise à l'avance, soit créer un nouveau tableau de mémoire et copier chaque élément.
 
 ::
 
@@ -181,10 +148,10 @@ or create a new memory array and copy every element.
         }
     }
 
-.. index:: ! array;literals, ! inline;arrays
+.. index:: ! array;literals, !inline;arrays
 
-Array Literals
-^^^^^^^^^^^^^^
+Tableaux littéraux / Inline Arrays
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 An array literal is a comma-separated list of one or more expressions, enclosed
 in square brackets (``[...]``). For example ``[1, a, f(3)]``. There must be a
@@ -193,10 +160,8 @@ type of the array.
 
 Array literals are always statically-sized memory arrays.
 
-In the example below, the type of ``[1, 2, 3]`` is
-``uint8[3] memory``. Because the type of each of these constants is ``uint8``, if
-you want the result to be a ``uint[3] memory`` type, you need to convert
-the first element to ``uint``.
+Le type d'un tableau littéral est un tableau mémoire de taille fixe dont le type de base est le type commun des éléments donnés. Le type de ``[1, 2, 3]`` est ``uint8[3] memory```, car le type de chacune de ces constantes est ``uint8``.
+Pour cette raison, il est nécessaire de convertir le premier élément de l'exemple ci-dessus en ``uint``. 
 
 ::
 
@@ -212,25 +177,23 @@ the first element to ``uint``.
         }
     }
 
-Fixed size memory arrays cannot be assigned to dynamically-sized
-memory arrays, i.e. the following is not possible:
+Les tableaux de taille fixe ne peuvent pas être assignées à des tableaux de taille dynamique, c'est-à-dire que ce qui suit n'est pas possible :
 
 ::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.7.0;
 
-    // This will not compile.
+    // Ceci ne compile pas.
     contract C {
         function f() public {
-            // The next line creates a type error because uint[3] memory
-            // cannot be converted to uint[] memory.
+            // La ligne suivant provoque une erreur car uint[3] memory
+            // ne peut pas être convertit en uint[] memory.
             uint[] memory x = [uint(1), 3, 4];
         }
     }
 
-It is planned to remove this restriction in the future, but it creates some
-complications because of how arrays are passed in the ABI.
+Il est prévu de supprimer cette restriction à l'avenir, mais crée actuellement certaines complications en raison de la façon dont les tableaux sont transmis dans l'ABI.
 
 .. index:: ! array;length, length, push, pop, !array;push, !array;pop
 
@@ -240,41 +203,26 @@ Array Members
 ^^^^^^^^^^^^^
 
 **length**:
-    Arrays have a ``length`` member that contains their number of elements.
-    The length of memory arrays is fixed (but dynamic, i.e. it can depend on
-    runtime parameters) once they are created.
+    Les tableaux ont un membre ``length`` qui contient leur nombre d'éléments.
+     La longueur des tableaux memory est fixe (mais dynamique, c'est-à-dire qu'elle peut dépendre des paramètres d'exécution) une fois qu'ils sont créés.
 **push()**:
-     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function
-     called ``push()`` that you can use to append a zero-initialised element at the end of the array.
-     It returns a reference to the element, so that it can be used like
-     ``x.push().t = 2`` or ``x.push() = b``.
+     Les tableaux de stockage dynamique et les ``bytes`` (et non ``string``) ont une fonction membre appelée ``push`` que vous pouvez utiliser pour ajouter un élément à la fin du tableau. L'élément sera mis à zéro à l'initialisation. La fonction renvoie la nouvelle longueur.
 **push(x)**:
      Dynamic storage arrays and ``bytes`` (not ``string``) have a member function
      called ``push(x)`` that you can use to append a given element at the end of the array.
      The function returns nothing.
 **pop**:
-     Dynamic storage arrays and ``bytes`` (not ``string``) have a member
-     function called ``pop`` that you can use to remove an element from the
-     end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element.
+     Les tableaux de stockage dynamique et les ``bytes`` (et non ``string``) ont une fonction membre appelée ``pop`` que vous pouvez utiliser pour supprimer un élément à la fin du tableau. Ceci appelle aussi implicitement :ref:``delete`` sur l'élément supprimé.
 
 .. note::
-    Increasing the length of a storage array by calling ``push()``
-    has constant gas costs because storage is zero-initialised,
-    while decreasing the length by calling ``pop()`` has a
-    cost that depends on the "size" of the element being removed.
-    If that element is an array, it can be very costly, because
-    it includes explicitly clearing the removed
-    elements similar to calling :ref:`delete<delete>` on them.
+    L'augmentation de la longueur d'un tableau en storage a des coûts en gas constants parce qu'on suppose que le stockage est nul, alors que la diminution de la longueur a au moins un coût linéaire (mais dans la plupart des cas pire que linéaire), parce qu'elle inclut explicitement l'élimination des éléments supprimés comme si on appelait :ref:``delete``.
 
 .. note::
     To use arrays of arrays in external (instead of public) functions, you need to
     activate ABIEncoderV2.
 
 .. note::
-    In EVM versions before Byzantium, it was not possible to access
-    dynamic arrays return from function calls. If you call functions
-    that return dynamic arrays, make sure to use an EVM that is set to
-    Byzantium mode.
+    Dans les versions EVM antérieures à Byzantium, il n'était pas possible d'accéder au retour de tableaux dynamique à partir des appels de fonctions. Si vous appelez des fonctions qui retournent des tableaux dynamiques, assurez-vous d'utiliser un EVM qui est configuré en mode Byzantium.
 
 ::
 
@@ -283,18 +231,20 @@ Array Members
 
     contract ArrayContract {
         uint[2**20] m_aLotOfIntegers;
-        // Note that the following is not a pair of dynamic arrays but a
-        // dynamic array of pairs (i.e. of fixed size arrays of length two).
-        // Because of that, T[] is always a dynamic array of T, even if T
-        // itself is an array.
-        // Data location for all state variables is storage.
+        // Notez que ce qui suit n'est pas une paire de tableaux dynamiques
+        // mais un tableau tableau dynamique de paires (c'est-à-dire de
+        // tableaux de taille fixe de longueur deux).
+        // Pour cette raison, T[] est toujours un tableau dynamique
+        // de T, même si T lui-même est un tableau.
+        // L'emplacement des données pour toutes les variables d'état
+        // est storage.
         bool[2][] m_pairsOfFlags;
 
-        // newPairs is stored in memory - the only possibility
-        // for public contract function arguments
+        // newPairs est stocké en memory - seule possibilité
+        // pour les arguments de fonction publique
         function setAllFlagPairs(bool[2][] memory newPairs) public {
-            // assignment to a storage array performs a copy of ``newPairs`` and
-            // replaces the complete array ``m_pairsOfFlags``.
+            // l'assignation d' un tableau en storage implique la copie
+            // de  ``newPairs`` et remplace l'array ``m_pairsOfFlags``.
             m_pairsOfFlags = newPairs;
         }
 
@@ -305,18 +255,18 @@ Array Members
         StructType s;
 
         function f(uint[] memory c) public {
-            // stores a reference to ``s`` in ``g``
+            // stocke un pointeur sur ``s`` dans ``g``
             StructType storage g = s;
-            // also changes ``s.moreInfo``.
+            // change aussi ``s.moreInfo``.
             g.moreInfo = 2;
-            // assigns a copy because ``g.contents``
-            // is not a local variable, but a member of
-            // a local variable.
+            // assigne une copie car ``g.contents`` n'est
+            // pas une variable locale mais un membre
+            // d'une variable locale
             g.contents = c;
         }
 
         function setFlagPair(uint index, bool flagA, bool flagB) public {
-            // access to a non-existing index will throw an exception
+            // accès à un index inexistant, déclenche une exception
             m_pairsOfFlags[index][0] = flagA;
             m_pairsOfFlags[index][1] = flagB;
         }
@@ -344,8 +294,8 @@ Array Members
         bytes m_byteData;
 
         function byteArrays(bytes memory data) public {
-            // byte arrays ("bytes") are different as they are stored without padding,
-            // but can be treated identical to "uint8[]"
+            // le tableau de byte ("bytes") sont différents car stockés sans
+            // padding mais peuvent être traités comme des ``uint8[]``
             m_byteData = data;
             for (uint i = 0; i < 7; i++)
                 m_byteData.push();
@@ -359,14 +309,15 @@ Array Members
         }
 
         function createMemoryArray(uint size) public pure returns (bytes memory) {
-            // Dynamic memory arrays are created using `new`:
+            // Un tableau dynamique est créé via `new`:
             uint[2][] memory arrayOfPairs = new uint[2][](size);
 
-            // Inline arrays are always statically-sized and if you only
-            // use literals, you have to provide at least one type.
+            // Les tableaux littéraux sont toujours de taille statique
+            // et en cas d' utilisation de littéraux uniquement, au moins
+            // un type doit être spécifié.
             arrayOfPairs[0] = [uint(1), 2];
 
-            // Create a dynamic byte array:
+            // Créée un tableau dynamique de bytes:
             bytes memory b = new bytes(200);
             for (uint i = 0; i < b.length; i++)
                 b[i] = byte(uint8(i));
@@ -444,8 +395,8 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
 Structs
 -------
 
-Solidity provides a way to define new types in the form of structs, which is
-shown in the following example:
+Solidity permet de définir de nouveaux types sous forme de structs, comme le montre l'exemple suivant :
+
 
 ::
 
@@ -505,21 +456,13 @@ shown in the following example:
         }
     }
 
-The contract does not provide the full functionality of a crowdfunding
-contract, but it contains the basic concepts necessary to understand structs.
-Struct types can be used inside mappings and arrays and they can themselves
-contain mappings and arrays.
+Le contrat ne fournit pas toutes les fonctionnalités d'un contrat de crowdfunding, mais il contient les concepts de base nécessaires pour comprendre les ``struct``.
+Les types structs peuvent être utilisés à l'intérieur des ``mapping`` et des ``array`` et peuvent eux-mêmes contenir des mappages et des tableaux.
 
-It is not possible for a struct to contain a member of its own type,
-although the struct itself can be the value type of a mapping member
-or it can contain a dynamically-sized array of its type.
-This restriction is necessary, as the size of the struct has to be finite.
+Il n'est pas possible pour une structure de contenir un membre de son propre type, bien que la structure elle-même puisse être le type de valeur d'un membre de mappage ou peut contenir un tableau de taille dynamique de son type.
+Cette restriction est nécessaire, car la taille de la structure doit être finie.
 
-Note how in all the functions, a struct type is assigned to a local variable
-with data location ``storage``.
-This does not copy the struct but only stores a reference so that assignments to
-members of the local variable actually write to the state.
+Notez que dans toutes les fonctions, un type structure est affecté à une variable locale avec l'emplacement de données ``storage``.
+Ceci ne copie pas la structure mais stocke seulement une référence pour que les affectations aux membres de la variable locale écrivent réellement dans l'état.
 
-Of course, you can also directly access the members of the struct without
-assigning it to a local variable, as in
-``campaigns[campaignID].amount = 0``.
+Bien sûr, vous pouvez aussi accéder directement aux membres de la structure sans l'affecter à une variable locale, comme dans ``campaigns[campaignID].amount = 0``.
