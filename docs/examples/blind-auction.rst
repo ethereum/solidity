@@ -1,26 +1,17 @@
 .. index:: auction;blind, auction;open, blind auction, open auction
 
-*************
-Blind Auction
-*************
+********************
+Enchères à l'aveugle
+********************
 
-In this section, we will show how easy it is to create a completely blind
-auction contract on Ethereum.  We will start with an open auction where
-everyone can see the bids that are made and then extend this contract into a
-blind auction where it is not possible to see the actual bid until the bidding
-period ends.
+Dans cette section, nous allons montrer à quel point il est facile de créer un contrat d'enchères à l'aveugle sur Ethereum. Nous commencerons par une enchère ouverte où tout le monde pourra voir les offres qui sont faites, puis nous prolongerons ce contrat dans une enchère aveugle où il n'est pas possible de voir l'offre réelle avant la fin de la période de soumission.
 
 .. _simple_auction:
 
-Simple Open Auction
-===================
+Enchère ouverte simple
+======================
 
-The general idea of the following simple auction contract is that everyone can
-send their bids during a bidding period. The bids already include sending money
-/ Ether in order to bind the bidders to their bid. If the highest bid is
-raised, the previously highest bidder gets their money back.  After the end of
-the bidding period, the contract has to be called manually for the beneficiary
-to receive their money - contracts cannot activate themselves.
+L'idée générale du contrat d'enchère simple suivant est que chacun peut envoyer ses offres pendant une période d'enchère. Les ordres incluent l'envoi d'argent / éther afin de lier les soumissionnaires à leur offre. Si l'enchère est la plus haute, l'enchérisseur qui avait fait l'offre la plus élevée auparavant récupère son argent. Après la fin de la période de soumission, le contrat doit être appelé manuellement pour que le bénéficiaire reçoive son argent - les contrats ne peuvent pas s'activer eux-mêmes.
 
 ::
 
@@ -28,35 +19,35 @@ to receive their money - contracts cannot activate themselves.
     pragma solidity >=0.5.0 <0.7.0;
 
     contract SimpleAuction {
-        // Parameters of the auction. Times are either
-        // absolute unix timestamps (seconds since 1970-01-01)
-        // or time periods in seconds.
+        // Paramètres de l'enchère
+        // temps unix absolus (secondes depuis 01-01-1970)
+        // ou des durées en secondes.
         address payable public beneficiary;
         uint public auctionEndTime;
 
-        // Current state of the auction.
+        // État actuel de l'enchère.
         address public highestBidder;
         uint public highestBid;
 
-        // Allowed withdrawals of previous bids
+        // Remboursements autorisés d'enchères précédentes
         mapping(address => uint) pendingReturns;
 
-        // Set to true at the end, disallows any change.
-        // By default initialized to `false`.
+        // Mis à true à la fin, interdit tout changement.
+        // Par defaut à `false`, comme un grand.
         bool ended;
 
-        // Events that will be emitted on changes.
+        // Évènements déclenchés aux changements.
         event HighestBidIncreased(address bidder, uint amount);
         event AuctionEnded(address winner, uint amount);
 
-        // The following is a so-called natspec comment,
-        // recognizable by the three slashes.
-        // It will be shown when the user is asked to
-        // confirm a transaction.
+        // Ce qui suit est appelé commentaire natspec,
+        // reconaissable à ses 3 slashes.
+        // Ce message sera affiché quand l'utilisateur
+        // devra confirmer une transaction.
 
-        /// Create a simple auction with `_biddingTime`
-        /// seconds bidding time on behalf of the
-        /// beneficiary address `_beneficiary`.
+        /// Créée une enchère simple de `_biddingTime`
+        /// secondes au profit de l'addresse
+        /// beneficaire address `_beneficiary`.
         constructor(
             uint _biddingTime,
             address payable _beneficiary
@@ -65,40 +56,35 @@ to receive their money - contracts cannot activate themselves.
             auctionEndTime = now + _biddingTime;
         }
 
-        /// Bid on the auction with the value sent
-        /// together with this transaction.
-        /// The value will only be refunded if the
-        /// auction is not won.
+        /// Faire une offre avec la valeur envoyée
+        /// avec cette transaction.
+        /// La valeur ne sera remboursée que si 
+        // l'enchère est perdue.
         function bid() public payable {
-            // No arguments are necessary, all
-            // information is already part of
-            // the transaction. The keyword payable
-            // is required for the function to
-            // be able to receive Ether.
+            // Aucun argument n'est nécessaire, toute
+            // l'information fait déjà partie
+            // de la transaction. Le mot-clé payable
+            // est requis pour autoriser la fonction
+            // à recevoir de l'Ether.
 
-            // Revert the call if the bidding
-            // period is over.
+            // Annule l'appel si l'enchère est termminée
             require(
                 now <= auctionEndTime,
                 "Auction already ended."
             );
 
-            // If the bid is not higher, send the
-            // money back (the failing require
-            // will revert all changes in this
-            // function execution including
-            // it having received the money).
+            // Rembourse si l'enchère est trop basse
             require(
                 msg.value > highestBid,
                 "There already is a higher bid."
             );
 
             if (highestBid != 0) {
-                // Sending back the money by simply using
-                // highestBidder.send(highestBid) is a security risk
-                // because it could execute an untrusted contract.
-                // It is always safer to let the recipients
-                // withdraw their money themselves.
+                // Renvoyer l'argent avec un simple
+                // highestBidder.send(highestBid) est un risque de sécurité
+                // car ça pourrait déclencher un appel à un contrat.
+                // Il est toujours plus sûr de laisser les utilisateurs
+                // retirer leur argent eux-mêmes.
                 pendingReturns[highestBidder] += highestBid;
             }
             highestBidder = msg.sender;
@@ -106,17 +92,16 @@ to receive their money - contracts cannot activate themselves.
             emit HighestBidIncreased(msg.sender, msg.value);
         }
 
-        /// Withdraw a bid that was overbid.
+        /// Retirer l'argent d'une enchère dépassée
         function withdraw() public returns (bool) {
             uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
-                // It is important to set this to zero because the recipient
-                // can call this function again as part of the receiving call
-                // before `send` returns.
+                // Il est important de mettre cette valeur à zéro car l'utilisateur
+                // pourrait rappeler cette fonction avant le retour de `send`.
                 pendingReturns[msg.sender] = 0;
 
                 if (!msg.sender.send(amount)) {
-                    // No need to call throw here, just reset the amount owing
+                    // Pas besoin d'avorter avec un throw ici, juste restaurer le montant
                     pendingReturns[msg.sender] = amount;
                     return false;
                 }
@@ -124,27 +109,27 @@ to receive their money - contracts cannot activate themselves.
             return true;
         }
 
-        /// End the auction and send the highest bid
-        /// to the beneficiary.
+        /// Met fin à l'enchère et envoie
+        /// le montant de l'enchère la plus haute au bénéficiaire.
         function auctionEnd() public {
-            // It is a good guideline to structure functions that interact
-            // with other contracts (i.e. they call functions or send Ether)
-            // into three phases:
-            // 1. checking conditions
-            // 2. performing actions (potentially changing conditions)
-            // 3. interacting with other contracts
-            // If these phases are mixed up, the other contract could call
-            // back into the current contract and modify the state or cause
-            // effects (ether payout) to be performed multiple times.
-            // If functions called internally include interaction with external
-            // contracts, they also have to be considered interaction with
-            // external contracts.
+            // C'est une bonne pratique de structurer les fonctions qui
+            // intéragissent avec d'autres contrats (appellent des
+            // fonctions ou envoient de l'Ether) en trois phases:
+            // 1. Vérifier les conditions
+            // 2. éffectuer les actions (potentiellement changeant les conditions)
+            // 3. interagir avec les autres contrats
+            // Si ces phases sont mélangées, l'autre contrat pourrait rappeler
+            // le contrat courant et modifier l'état ou causer des effets
+            // (paiements en Ether par ex) qui se produiraient plusieurs fois.
+            // Si des fonctions appelées en interne effectuent des appels 
+            // à des contrats externes, elles doivent aussi êtres considérées
+            // comme concernées par cette norme.
 
             // 1. Conditions
             require(now >= auctionEndTime, "Auction not yet ended.");
             require(!ended, "auctionEnd has already been called.");
 
-            // 2. Effects
+            // 2. Éffets
             ended = true;
             emit AuctionEnded(highestBidder, highestBid);
 
@@ -153,34 +138,16 @@ to receive their money - contracts cannot activate themselves.
         }
     }
 
-Blind Auction
-=============
+Enchère aveugle
+===============
 
-The previous open auction is extended to a blind auction in the following. The
-advantage of a blind auction is that there is no time pressure towards the end
-of the bidding period. Creating a blind auction on a transparent computing
-platform might sound like a contradiction, but cryptography comes to the
-rescue.
+L'enchère ouverte précédente est étendue en une enchère aveugle dans ce qui suit. L'avantage d'une enchère aveugle est qu'il n'y a pas de pression temporelle vers la fin de la période de soumission. La création d'une enchère aveugle sur une plate-forme informatique transparente peut sembler une contradiction, mais la cryptographie vient à la rescousse.
 
-During the **bidding period**, a bidder does not actually send their bid, but
-only a hashed version of it.  Since it is currently considered practically
-impossible to find two (sufficiently long) values whose hash values are equal,
-the bidder commits to the bid by that.  After the end of the bidding period,
-the bidders have to reveal their bids: They send their values unencrypted and
-the contract checks that the hash value is the same as the one provided during
-the bidding period.
+Pendant la **période de soumission**, un soumissionnaire n'envoie pas son offre, mais seulement une version hachée de celle-ci. Puisqu'il est actuellement considéré comme pratiquement impossible de trouver deux valeurs (suffisamment longues) dont les valeurs de hachage sont égales, le soumissionnaire s'engage à l'offre par cela. Après la fin de la période de soumission, les soumissionnaires doivent révéler leurs offres : Ils envoient leurs valeurs en clair et le contrat vérifie que la valeur de hachage est la même que celle fournie pendant la période de soumission.
 
-Another challenge is how to make the auction **binding and blind** at the same
-time: The only way to prevent the bidder from just not sending the money after
-they won the auction is to make them send it together with the bid. Since value
-transfers cannot be blinded in Ethereum, anyone can see the value.
+Un autre défi est de savoir comment rendre l'enchère **contraignante et aveugle** en même temps : La seule façon d'éviter que l'enchérisseur n'envoie pas l'argent après avoir gagné l'enchère est de le lui faire envoyer avec l'enchère. Puisque les transferts de valeur ne peuvent pas être aveuglés dans Ethereum, tout le monde peut voir la valeur.
 
-The following contract solves this problem by accepting any value that is
-larger than the highest bid. Since this can of course only be checked during
-the reveal phase, some bids might be **invalid**, and this is on purpose (it
-even provides an explicit flag to place invalid bids with high value
-transfers): Bidders can confuse competition by placing several high or low
-invalid bids.
+Le contrat suivant résout ce problème en acceptant toute valeur supérieure à l'offre la plus élevée. Comme cela ne peut bien sûr être vérifié que pendant la phase de révélation, certaines offres peuvent être **invalides**, et c'est fait exprès (il fournit même un marqueur explicite pour placer des offres invalides avec des transferts de grande valeur) : Les soumissionnaires peuvent brouiller la concurrence en plaçant plusieurs offres invalides hautes ou basses.
 
 
 ::
@@ -204,15 +171,15 @@ invalid bids.
         address public highestBidder;
         uint public highestBid;
 
-        // Allowed withdrawals of previous bids
+        // Remboursements autorisés d'enchères précédentes
         mapping(address => uint) pendingReturns;
 
         event AuctionEnded(address winner, uint highestBid);
 
-        /// Modifiers are a convenient way to validate inputs to
-        /// functions. `onlyBefore` is applied to `bid` below:
-        /// The new function body is the modifier's body where
-        /// `_` is replaced by the old function body.
+        /// Les Modifiers sont une façon pratique de valider des entrées.
+        /// `onlyBefore` est appliqué à `bid` ci-dessous:
+        /// Le corps de la fonction sera placé dans le modifier
+        /// où `_` est placé.
         modifier onlyBefore(uint _time) { require(now < _time); _; }
         modifier onlyAfter(uint _time) { require(now > _time); _; }
 
@@ -226,15 +193,15 @@ invalid bids.
             revealEnd = biddingEnd + _revealTime;
         }
 
-        /// Place a blinded bid with `_blindedBid` =
+        /// Placer une enchère à l'aveugle avec `_blindedBid` =
         /// keccak256(abi.encodePacked(value, fake, secret)).
-        /// The sent ether is only refunded if the bid is correctly
-        /// revealed in the revealing phase. The bid is valid if the
-        /// ether sent together with the bid is at least "value" and
-        /// "fake" is not true. Setting "fake" to true and sending
-        /// not the exact amount are ways to hide the real bid but
-        /// still make the required deposit. The same address can
-        /// place multiple bids.
+        ///  L'éther envoyé n'est remboursé que si l'enchère est correctement
+        /// révélée dans la phase de révélation. L'offre est valide si
+        /// l'éther envoyé avec l'offre est d'au moins "valeur" et
+        /// "fake" n'est pas true. Régler "fake" à true et envoyer
+        /// envoyer un montant erroné sont des façons de masquer l'enchère
+        /// mais font toujours le dépot requis. La même addresse peut placer
+        /// plusieurs ordres
         function bid(bytes32 _blindedBid)
             public
             payable
@@ -246,9 +213,9 @@ invalid bids.
             }));
         }
 
-        /// Reveal your blinded bids. You will get a refund for all
-        /// correctly blinded invalid bids and for all bids except for
-        /// the totally highest.
+        /// Révèle vos ench1eres aveugles. Vous serez remboursé pour toutes
+        /// les enchères invalides et toutes les autres exceptée la plus haute
+        /// le cas échéant.
         function reveal(
             uint[] memory _values,
             bool[] memory _fake,
@@ -269,8 +236,8 @@ invalid bids.
                 (uint value, bool fake, bytes32 secret) =
                         (_values[i], _fake[i], _secret[i]);
                 if (bidToCheck.blindedBid != keccak256(abi.encodePacked(value, fake, secret))) {
-                    // Bid was not actually revealed.
-                    // Do not refund deposit.
+                    // L'enchère n'a pas été révélée.
+                    // Ne pas rembourser.
                     continue;
                 }
                 refund += bidToCheck.deposit;
@@ -278,29 +245,44 @@ invalid bids.
                     if (placeBid(msg.sender, value))
                         refund -= value;
                 }
-                // Make it impossible for the sender to re-claim
-                // the same deposit.
+                // Rendre impossible un double remboursement
                 bidToCheck.blindedBid = bytes32(0);
             }
             msg.sender.transfer(refund);
         }
 
-        /// Withdraw a bid that was overbid.
+        // Cette fonction interne ("internal") ne peut être appelée que
+        // que depuis l'intérieur du contrat (ou ses contrats dérivés).
+        function placeBid(address bidder, uint value) internal
+                returns (bool success)
+        {
+            if (value <= highestBid) {
+                return false;
+            }
+            if (highestBidder != address(0)) {
+                // Rembourse la précédent leader.
+                pendingReturns[highestBidder] += highestBid;
+            }
+            highestBid = value;
+            highestBidder = bidder;
+            return true;
+        }
+
+        /// Se faire rembourser une enchère battue.
         function withdraw() public {
             uint amount = pendingReturns[msg.sender];
             if (amount > 0) {
-                // It is important to set this to zero because the recipient
-                // can call this function again as part of the receiving call
-                // before `transfer` returns (see the remark above about
-                // conditions -> effects -> interaction).
+                // Il est important de mettre cette valeur à zéro car l'utilisateur
+                // pourrait rappeler cette fonction avant le retour de `send`.
+                // (voir remarque sur conditions -> effets -> interaction).
                 pendingReturns[msg.sender] = 0;
 
                 msg.sender.transfer(amount);
             }
         }
 
-        /// End the auction and send the highest bid
-        /// to the beneficiary.
+        /// Met fin à l'enchère et envoie
+        /// le montant de l'enchère la plus haute au bénéficiaire.
         function auctionEnd()
             public
             onlyAfter(revealEnd)
@@ -309,23 +291,5 @@ invalid bids.
             emit AuctionEnded(highestBidder, highestBid);
             ended = true;
             beneficiary.transfer(highestBid);
-        }
-
-        // This is an "internal" function which means that it
-        // can only be called from the contract itself (or from
-        // derived contracts).
-        function placeBid(address bidder, uint value) internal
-                returns (bool success)
-        {
-            if (value <= highestBid) {
-                return false;
-            }
-            if (highestBidder != address(0)) {
-                // Refund the previously highest bidder.
-                pendingReturns[highestBidder] += highestBid;
-            }
-            highestBid = value;
-            highestBidder = bidder;
-            return true;
         }
     }
