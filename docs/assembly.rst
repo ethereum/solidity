@@ -1,26 +1,20 @@
 .. _inline-assembly:
 
-###############
-Inline Assembly
-###############
+###################
+Assembleur en ligne
+###################
 
 .. index:: ! assembly, ! asm, ! evmasm
 
 
-You can interleave Solidity statements with inline assembly in a language close
-to the one of the Ethereum virtual machine. This gives you more fine-grained control,
-which is especially useful when you are enhancing the language by writing libraries.
+Vous pouvez entrelacer les instructions en Solidity avec de l'assembleur en ligne, dans un langage proche de celui de la machine virtuelle. Cela vous donne un contrôle plus fin, en particulier lorsque vous améliorez le langage en écrivant des bibliothèques.
 
-The language used for inline assembly in Solidity is called :ref:`Yul <yul>`
-and it is documented in its own section. This section will only cover
-how the inline assembly code can interface with the surrounding Solidity code.
+Le langage utilisé pour l'assembleur en ligne en Solidity s'appelle :ref:`Yul <yul>`
+et est documenté dans sa propre section. Cette section montre comment le code assembleur en ligne peut s'interfacer au code Solidity l'entourant.
 
 
 .. warning::
-    Inline assembly is a way to access the Ethereum Virtual Machine
-    at a low level. This bypasses several important safety
-    features and checks of Solidity. You should only use it for
-    tasks that need it, and only if you are confident with using it.
+    L'assembleur en ligne est un moyen d'accéder à la machine virtuelle Ethereum en bas niveau. Ceci permet de contourner plusieurs normes de sécurité importantes et contrôles de Solidity. Vous ne devriez l'utiliser que pour les tâches qui en ont besoin, et seulement si vous êtes sûr de pourquoi/comment l'utiliser.
 
 
 An inline assembly block is marked by ``assembly { ... }``, where the code inside
