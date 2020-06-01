@@ -1,19 +1,18 @@
 .. index:: ! constant
 
-**************************************
-Constant and Immutable State Variables
-**************************************
+************************
+Variables d'état constantes
+************************
 
-State variables can be declared as ``constant`` or ``immutable``.
-In both cases, the variables cannot be modified after the contract has been constructed.
-For ``constant`` variables, the value has to be fixed at compile-time, while
-for ``immutable``, it can still be assigned at construction time.
+Les variables d'état peuvent être déclarées comme ``constantes`` ou ``immutable``. Dans les deux cas, ces variables ne peuvent être modifiées après la construction du contrat.
+Dans ce cas, elles doivent être assignées à partir d'une expression constante au moment de la compilation.
+Pour les variables ``constant``, la valeur doit être connue à la compilation.
+Pour les variables ``immutable``, les variables peuvent être assognées jusqu'à la construction.
 
-The compiler does not reserve a storage slot for these variables, and every occurrence is
-replaced by the respective value.
+Le compilateur ne réserve pas d'emplacement de stockage pour ces variables, et chaque occurrence est remplacée par l'expression constante correspondante.
 
-Not all types for constants and immutables are implemented at this time. The only supported types are
-`strings <strings>`_ (only for constants) and `value types <value-types>`_.
+Tous les types de constantes ne sont pas implémentés pour le moment. Les seuls types pris en charge sont
+`chaines de caractères <strings>`_ (uniquement pour les constantes) et `types valeur <value-types>`_.
 
 ::
 
@@ -30,7 +29,7 @@ Not all types for constants and immutables are implemented at this time. The onl
 
         constructor(uint _decimals, address _reference) public {
             decimals = _decimals;
-            // Assignments to immutables can even access the environment.
+            // L'assignement à des immutables peut même accéder à l'environnement
             maxBalance = _reference.balance;
         }
 
@@ -43,19 +42,11 @@ Not all types for constants and immutables are implemented at this time. The onl
 Constant
 ========
 
-For ``constant`` variables, the value has to be a constant at compile time and it has to be
-assigned where the variable is declared. Any expression
-that accesses storage, blockchain data (e.g. ``now``, ``address(this).balance`` or
-``block.number``) or
-execution data (``msg.value`` or ``gasleft()``) or makes calls to external contracts is disallowed. Expressions
-that might have a side-effect on memory allocation are allowed, but those that
-might have a side-effect on other memory objects are not. The built-in functions
-``keccak256``, ``sha256``, ``ripemd160``, ``ecrecover``, ``addmod`` and ``mulmod``
-are allowed (even though, with the exception of ``keccak256``, they do call external contracts).
+Pour les variables ``constant``, doivent être assignées à partir d'une expression constante au moment de la compilation et doit 6etre assignée à la déclaration. Toute expression qui accède au stockage, aux données de la blockchain (par exemple ``now``, ``address(this).balance`` ou ``block.number``) ou
+les données d'exécution (``msg.value`` ou ``gasleft()``) ou les appels vers des contrats externes sont interdits. Les expressions qui peuvent avoir un effet secondaire sur l'allocation de mémoire sont autorisées, mais celles qui peuvent avoir un effet secondaire sur d'autres objets mémoire ne le sont pas. Les fonctions intégrées ``keccak256``, ``sha256``, ``ripemd160``, ``ecrecover``, ``addmod`` et ``mulmod`` sont autorisées (même si des contrats externes sont appelés).
 
-The reason behind allowing side-effects on the memory allocator is that it
-should be possible to construct complex objects like e.g. lookup-tables.
-This feature is not yet fully usable.
+La raison pour laquelle on autorise les effets secondaires sur l'allocateur de mémoire est qu'il devrait être possible de construire des objets complexes comme par exemple des tables de consultation.
+Cette fonctionnalité n'est pas encore entièrement utilisable.
 
 Immutable
 =========
