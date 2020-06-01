@@ -66,12 +66,12 @@ bytes SolidityExecutionFramework::compileContract(
 	if (m_compileViaYul)
 	{
 		yul::AssemblyStack asmStack(
-					m_evmVersion,
-					yul::AssemblyStack::Language::StrictAssembly,
-					// Ignore optimiser settings here because we need Yul optimisation to
-					// get code that does not exhaust the stack.
-					OptimiserSettings::full()
-					);
+			m_evmVersion,
+			yul::AssemblyStack::Language::StrictAssembly,
+			// Ignore optimiser settings here because we need Yul optimisation to
+			// get code that does not exhaust the stack.
+			OptimiserSettings::full()
+		);
 		bool analysisSuccessful = asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName));
 		solAssert(analysisSuccessful, "Code that passed analysis in CompilerStack can't have errors");
 
