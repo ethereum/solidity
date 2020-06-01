@@ -2,78 +2,63 @@
 
 .. _voting:
 
-******
-Voting
-******
+****
+Vote
+****
 
-The following contract is quite complex, but showcases
-a lot of Solidity's features. It implements a voting
-contract. Of course, the main problems of electronic
-voting is how to assign voting rights to the correct
-persons and how to prevent manipulation. We will not
-solve all problems here, but at least we will show
-how delegated voting can be done so that vote counting
-is **automatic and completely transparent** at the
-same time.
+Le contrat suivant est assez complexe, mais il présente de nombreuses caractéristiques de Solidity. Il implémente un contrat de vote. Bien entendu, le principal problème du vote électronique est de savoir comment attribuer les droits de vote aux bonnes personnes et éviter les manipulations. Nous ne résoudrons pas tous les problèmes ici, mais nous montrerons au moins comment le vote délégué peut être effectué de manière à ce que le dépouillement soit à la fois **automatique et totalement transparent**.
 
-The idea is to create one contract per ballot,
-providing a short name for each option.
-Then the creator of the contract who serves as
-chairperson will give the right to vote to each
-address individually.
+L'idée est de créer un contrat par bulletin de vote, en donnant un nom court à chaque option.
+Ensuite, le créateur du contrat qui agit à titre de président donnera le droit de vote à chaque adresse individuellement.
 
-The persons behind the addresses can then choose
-to either vote themselves or to delegate their
-vote to a person they trust.
+Les personnes derrière les adresses peuvent alors choisir de voter elles-mêmes ou de déléguer leur vote à une personne en qui elles ont confiance.
 
-At the end of the voting time, ``winningProposal()``
-will return the proposal with the largest number
-of votes.
+A la fin du temps de vote, la ``winningProposal()`` (proposition gagnante) retournera la proposition avec le plus grand nombre de votes.
 
 ::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.7.0;
 
-    /// @title Voting with delegation.
+    /// @title Vote par délegation.
     contract Ballot {
-        // This declares a new complex type which will
-        // be used for variables later.
-        // It will represent a single voter.
+        // Ceci déclare un type complexe, représentant
+        // un votant, qui sera utilisé
+        // pour les variables plus tard.
         struct Voter {
-            uint weight; // weight is accumulated by delegation
-            bool voted;  // if true, that person already voted
-            address delegate; // person delegated to
-            uint vote;   // index of the voted proposal
+            uint weight; // weight (poids), qui s'accumule avec les délégations
+            bool voted;  // si true, cette personne a déjà voté
+            address delegate; // Cette personne a délégué son vote à
+            uint vote;   // index la la proposition choisie
         }
 
-        // This is a type for a single proposal.
+        // Type pour une proposition.
         struct Proposal {
-            bytes32 name;   // short name (up to 32 bytes)
-            uint voteCount; // number of accumulated votes
+            bytes32 name;   // nom court (jusqu'à 32 octets)
+            uint voteCount; // nombre de votes cumulés
         }
 
         address public chairperson;
 
-        // This declares a state variable that
-        // stores a `Voter` struct for each possible address.
+        // Ceci déclare une variable d'état qui stocke
+        // un élément de structure 'Voters' pour  chaque votant.
         mapping(address => Voter) public voters;
 
-        // A dynamically-sized array of `Proposal` structs.
+        // Un tableau dynamique de structs `Proposal`.
         Proposal[] public proposals;
 
-        /// Create a new ballot to choose one of `proposalNames`.
+        /// Créé un nouveau bulletin pour choisir l'un des `proposalNames`.
         constructor(bytes32[] memory proposalNames) public {
             chairperson = msg.sender;
             voters[chairperson].weight = 1;
 
-            // For each of the provided proposal names,
-            // create a new proposal object and add it
-            // to the end of the array.
+            // Pour chacun des noms proposés,
+            // crée un nouvel objet proposal
+            // à la fin du tableau.
             for (uint i = 0; i < proposalNames.length; i++) {
-                // `Proposal({...})` creates a temporary
-                // Proposal object and `proposals.push(...)`
-                // appends it to the end of `proposals`.
+                // `Proposal({...})` créé un objet temporaire
+                // Proposal et `proposals.push(...)`
+                // l'ajoute à la fin du tableau `proposals`.
                 proposals.push(Proposal({
                     name: proposalNames[i],
                     voteCount: 0
@@ -81,19 +66,19 @@ of votes.
             }
         }
 
-        // Give `voter` the right to vote on this ballot.
-        // May only be called by `chairperson`.
+        // Donne à un `voter` un droit de vote pour ce scrutin.
+        // Peut seulement être appelé par `chairperson`.
         function giveRightToVote(address voter) public {
-            // If the first argument of `require` evaluates
-            // to `false`, execution terminates and all
-            // changes to the state and to Ether balances
-            // are reverted.
-            // This used to consume all gas in old EVM versions, but
-            // not anymore.
-            // It is often a good idea to use `require` to check if
-            // functions are called correctly.
-            // As a second argument, you can also provide an
-            // explanation about what went wrong.
+            // Si le premier argument passé à `require` s'évalue
+            // à `false`, l'exécution s'arrete et tous les changements
+            // à l'état et aux soldes sont annulés.
+            // Cette opération consommait tout le gas dans
+            // d'anciennes versions de l'EVM, plus maintenant.
+            // Il est souvent une bonne idée d'appeler `require` 
+            // pour vérifier si les appels de fonctions
+            // s'effectuent correctement.
+            // Comme second argument, vous pouvez fournir une
+            // phrase explicative de ce qui est allé de travers.
             require(
                 msg.sender == chairperson,
                 "Only chairperson can give right to vote."
@@ -106,62 +91,61 @@ of votes.
             voters[voter].weight = 1;
         }
 
-        /// Delegate your vote to the voter `to`.
+        /// Delegue son vote au votant `to`.
         function delegate(address to) public {
-            // assigns reference
+            // assigne les références
             Voter storage sender = voters[msg.sender];
             require(!sender.voted, "You already voted.");
 
             require(to != msg.sender, "Self-delegation is disallowed.");
 
-            // Forward the delegation as long as
-            // `to` also delegated.
-            // In general, such loops are very dangerous,
-            // because if they run too long, they might
-            // need more gas than is available in a block.
-            // In this case, the delegation will not be executed,
-            // but in other situations, such loops might
-            // cause a contract to get "stuck" completely.
+            // Relaie la délégation tant que `to`
+            // est également en délégation de vote.
+            // En général, ce type de boucles est très dangereux,
+            // puisque s'il tourne trop longtemps, l'opération
+            // pourrait demander plus de gas qu'il n'est possible
+            // d'en avoir dans un bloc.
+            // Dans ce cas, la délégation ne se ferait pas,
+            // mais dans d'autres circonstances, ces boucles
+            // peuvent complètement paraliser un contrat.
             while (voters[to].delegate != address(0)) {
                 to = voters[to].delegate;
 
-                // We found a loop in the delegation, not allowed.
+                // On a trouvé une boucle dans la chaine
+                // de délégations => interdit.
                 require(to != msg.sender, "Found loop in delegation.");
             }
 
-            // Since `sender` is a reference, this
-            // modifies `voters[msg.sender].voted`
+            // Comme `sender` est une référence, ceci
+            // modifie `voters[msg.sender].voted`
             sender.voted = true;
             sender.delegate = to;
             Voter storage delegate_ = voters[to];
             if (delegate_.voted) {
-                // If the delegate already voted,
-                // directly add to the number of votes
+                // Si le délégué a déjà voté,
+                // on ajoute directement le vote aux autres
                 proposals[delegate_.vote].voteCount += sender.weight;
             } else {
-                // If the delegate did not vote yet,
-                // add to her weight.
+                // Sinon, on l'ajoute au poids de son vote.
                 delegate_.weight += sender.weight;
             }
         }
 
-        /// Give your vote (including votes delegated to you)
-        /// to proposal `proposals[proposal].name`.
+        /// Voter (incluant les procurations par délégation)
+        /// pour la proposition `proposals[proposal].name`.
         function vote(uint proposal) public {
             Voter storage sender = voters[msg.sender];
-            require(sender.weight != 0, "Has no right to vote");
             require(!sender.voted, "Already voted.");
             sender.voted = true;
             sender.vote = proposal;
 
-            // If `proposal` is out of the range of the array,
-            // this will throw automatically and revert all
-            // changes.
+            // Si `proposal` n'est pas un index valide,
+            // une erreur sera levée et l'exécution annulée
             proposals[proposal].voteCount += sender.weight;
         }
 
-        /// @dev Computes the winning proposal taking all
-        /// previous votes into account.
+        /// @dev Calcule la proposition gagnante
+        /// en prenant tous les votes précédents en compte.
         function winningProposal() public view
                 returns (uint winningProposal_)
         {
@@ -174,9 +158,9 @@ of votes.
             }
         }
 
-        // Calls winningProposal() function to get the index
-        // of the winner contained in the proposals array and then
-        // returns the name of the winner
+        // Appelle la fonction winningProposal() pour avoir
+        // l'index du gagnant dans le tableau de propositions
+        // et retourne le nom de la proposition gagnante.
         function winnerName() public view
                 returns (bytes32 winnerName_)
         {
@@ -185,8 +169,7 @@ of votes.
     }
 
 
-Possible Improvements
-=====================
+Améliorations possibles
+=======================
 
-Currently, many transactions are needed to assign the rights
-to vote to all participants. Can you think of a better way?
+À l'heure actuelle, de nombreuses opérations sont nécessaires pour attribuer les droits de vote à tous les participants. Pouvez-vous trouver un meilleur moyen ?
