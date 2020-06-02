@@ -773,7 +773,7 @@ tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
 			denominator = bigint(string(fractionalBegin, _value.end()));
 			denominator /= boost::multiprecision::pow(
 				bigint(10),
-				distance(radixPoint + 1, _value.end())
+				static_cast<size_t>(distance(radixPoint + 1, _value.end()))
 			);
 			numerator = bigint(string(_value.begin(), radixPoint));
 			value = numerator + denominator;
@@ -1065,7 +1065,7 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 					if (_base == 1)
 						return 1;
 					else if (_base == -1)
-						return 1 - 2 * int(_exponent & 1);
+						return 1 - 2 * static_cast<int>(_exponent & 1);
 					else
 						return boost::multiprecision::pow(_base, _exponent);
 				};
@@ -1171,7 +1171,7 @@ string RationalNumberType::bigintToReadableString(bigint const& _num)
 	string str = _num.str();
 	if (str.size() > 32)
 	{
-		int omitted = str.size() - 8;
+		size_t omitted = str.size() - 8;
 		str = str.substr(0, 4) + "...(" + to_string(omitted) + " digits omitted)..." + str.substr(str.size() - 4, 4);
 	}
 	return str;
@@ -1201,7 +1201,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	{
 		auto fixed = fixedPointType();
 		solAssert(fixed, "Rational number cannot be represented as fixed point type.");
-		int fractionalDigits = fixed->fractionalDigits();
+		unsigned fractionalDigits = fixed->fractionalDigits();
 		shiftedValue = m_value.numerator() * boost::multiprecision::pow(bigint(10), fractionalDigits) / m_value.denominator();
 	}
 
@@ -1291,7 +1291,7 @@ StringLiteralType::StringLiteralType(string _value):
 BoolResult StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (auto fixedBytes = dynamic_cast<FixedBytesType const*>(&_convertTo))
-		return size_t(fixedBytes->numBytes()) >= m_value.size();
+		return static_cast<size_t>(fixedBytes->numBytes()) >= m_value.size();
 	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_convertTo))
 		return
 			arrayType->isByteArray() &&

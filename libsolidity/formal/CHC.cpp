@@ -104,7 +104,7 @@ void CHC::analyze(SourceUnit const& _source)
 			for (auto const* assertion: assertions)
 			{
 				createErrorBlock();
-				connectBlocks(target.value, error(), target.constraints && (target.errorId == assertion->id()));
+				connectBlocks(target.value, error(), target.constraints && (target.errorId == static_cast<size_t>(assertion->id())));
 				auto [result, model] = query(error(), assertion->location());
 				// This should be fine but it's a bug in the old compiler
 				(void)model;
@@ -116,7 +116,7 @@ void CHC::analyze(SourceUnit const& _source)
 		{
 			solAssert(dynamic_cast<FunctionCall const*>(scope), "");
 			createErrorBlock();
-			connectBlocks(target.value, error(), target.constraints && (target.errorId == scope->id()));
+			connectBlocks(target.value, error(), target.constraints && (target.errorId == static_cast<size_t>(scope->id())));
 			auto [result, model] = query(error(), scope->location());
 			// This should be fine but it's a bug in the old compiler
 			(void)model;
@@ -533,7 +533,9 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 	connectBlocks(
 		m_currentBlock,
 		m_currentFunction->isConstructor() ? summary(*m_currentContract) : summary(*m_currentFunction),
-		currentPathConditions() && !m_context.expression(*args.front())->currentValue() && (m_error.currentValue() == _funCall.id())
+		currentPathConditions() && !m_context.expression(*args.front())->currentValue() && (
+			m_error.currentValue() == static_cast<size_t>(_funCall.id())
+		)
 	);
 
 	m_context.addAssertion(m_error.currentValue() == previousError);
@@ -601,7 +603,7 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 	connectBlocks(
 		m_currentBlock,
 		m_currentFunction->isConstructor() ? summary(*m_currentContract) : summary(*m_currentFunction),
-		currentPathConditions() && symbArray->length() <= 0 && m_error.currentValue() == _arrayPop.id()
+		currentPathConditions() && symbArray->length() <= 0 && m_error.currentValue() == static_cast<size_t>(_arrayPop.id())
 	);
 
 	m_context.addAssertion(m_error.currentValue() == previousError);
@@ -891,13 +893,13 @@ vector<smtutil::Expression> CHC::initialStateVariables()
 	return stateVariablesAtIndex(0);
 }
 
-vector<smtutil::Expression> CHC::stateVariablesAtIndex(int _index)
+vector<smtutil::Expression> CHC::stateVariablesAtIndex(unsigned _index)
 {
 	solAssert(m_currentContract, "");
 	return applyMap(m_stateVariables, [&](auto _var) { return valueAtIndex(*_var, _index); });
 }
 
-vector<smtutil::Expression> CHC::stateVariablesAtIndex(int _index, ContractDefinition const& _contract)
+vector<smtutil::Expression> CHC::stateVariablesAtIndex(unsigned _index, ContractDefinition const& _contract)
 {
 	return applyMap(
 		stateVariablesIncludingInheritedAndPrivate(_contract),

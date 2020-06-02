@@ -348,10 +348,10 @@ string BytesUtils::formatBytesRange(
 
 size_t BytesUtils::countRightPaddedZeros(bytes const& _bytes)
 {
-	return find_if(
+	return static_cast<size_t>(find_if(
 		_bytes.rbegin(),
 		_bytes.rend(),
 		[](uint8_t b) { return b != '\0'; }
-	) - _bytes.rbegin();
+	) - _bytes.rbegin());
 }
 

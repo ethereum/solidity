@@ -54,8 +54,8 @@ GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimatio
 	{
 		solAssert(!!block.startState, "");
 		GasMeter meter(block.startState->copy(), m_evmVersion);
-		auto const end = _items.begin() + block.end;
-		for (auto iter = _items.begin() + block.begin; iter != end; ++iter)
+		auto const end = _items.begin() + static_cast<ptrdiff_t>(block.end);
+		for (auto iter = _items.begin() + static_cast<ptrdiff_t>(block.begin); iter != end; ++iter)
 			particularCosts[iter->location()] += meter.estimateMax(*iter);
 	}
 

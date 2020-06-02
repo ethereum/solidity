@@ -143,8 +143,8 @@ bytes compileFirstExpression(
 			);
 			context.resetVisitedNodes(contract);
 			context.setMostDerivedContract(*contract);
-			unsigned parametersSize = _localVariables.size(); // assume they are all one slot on the stack
-			context.adjustStackOffset(parametersSize);
+			size_t parametersSize = _localVariables.size(); // assume they are all one slot on the stack
+			context.adjustStackOffset(static_cast<int>(parametersSize));
 			for (vector<string> const& variable: _localVariables)
 				context.addVariable(
 					dynamic_cast<VariableDeclaration const&>(resolveDeclaration(*sourceUnit, variable, resolver)),

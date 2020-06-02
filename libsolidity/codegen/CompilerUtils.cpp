@@ -1351,7 +1351,7 @@ void CompilerUtils::popAndJump(unsigned _toHeight, evmasm::AssemblyItem const& _
 	unsigned amount = m_context.stackHeight() - _toHeight;
 	popStackSlots(amount);
 	m_context.appendJumpTo(_jumpTo);
-	m_context.adjustStackOffset(amount);
+	m_context.adjustStackOffset(static_cast<int>(amount));
 }
 
 unsigned CompilerUtils::sizeOnStack(vector<Type const*> const& _variableTypes)
@@ -1436,7 +1436,7 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 	{
 		bool leftAligned = _type.category() == Type::Category::FixedBytes;
 		// add leading or trailing zeros by dividing/multiplying depending on alignment
-		int shiftFactor = (32 - numBytes) * 8;
+		unsigned shiftFactor = (32 - numBytes) * 8;
 		rightShiftNumberOnStack(shiftFactor);
 		if (leftAligned)
 		{

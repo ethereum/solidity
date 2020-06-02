@@ -92,7 +92,7 @@ SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _n
 {
 	astAssert(member(_node, "src").isString(), "'src' must be a string");
 
-	return solidity::langutil::parseSourceLocation(_node["src"].asString(), m_currentSourceName, int(m_sourceLocations.size()));
+	return solidity::langutil::parseSourceLocation(_node["src"].asString(), m_currentSourceName, m_sourceLocations.size());
 }
 
 template<class T>

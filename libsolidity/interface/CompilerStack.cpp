@@ -982,7 +982,7 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 		bestMatchTarget = util::sanitizePath(redir.target);
 	}
 	string path = bestMatchTarget;
-	path.append(_path.begin() + longestPrefix, _path.end());
+	path.append(_path.begin() + static_cast<string::difference_type>(longestPrefix), _path.end());
 	return path;
 }
 

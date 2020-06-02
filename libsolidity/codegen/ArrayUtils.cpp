@@ -56,7 +56,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	bool directCopy = sourceIsStorage && sourceBaseType->isValueType() && *sourceBaseType == *targetBaseType;
 	bool haveByteOffsetSource = !directCopy && sourceIsStorage && sourceBaseType->storageBytes() <= 16;
 	bool haveByteOffsetTarget = !directCopy && targetBaseType->storageBytes() <= 16;
-	unsigned byteOffsetSize = (haveByteOffsetSource ? 1 : 0) + (haveByteOffsetTarget ? 1 : 0);
+	unsigned byteOffsetSize = (haveByteOffsetSource ? 1u : 0u) + (haveByteOffsetTarget ? 1u : 0u);
 
 	// stack: source_ref [source_length] target_ref
 	// store target_ref

@@ -725,7 +725,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			size_t itemsPerSlot = 32 / storageBytes;
 			solAssert(itemsPerSlot > 0, "");
 			// The number of elements we need to handle manually after the loop.
-			size_t spill = size_t(_from.length() % itemsPerSlot);
+			size_t spill = static_cast<size_t>(_from.length() % itemsPerSlot);
 			Whiskers templ(
 				R"(
 					// <readableTypeNameFrom> -> <readableTypeNameTo>

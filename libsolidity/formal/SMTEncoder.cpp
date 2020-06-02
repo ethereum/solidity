@@ -154,15 +154,16 @@ void SMTEncoder::visitFunctionOrModifier()
 	++m_modifierDepthStack.back();
 	FunctionDefinition const& function = dynamic_cast<FunctionDefinition const&>(*m_callStack.back().first);
 
-	if (m_modifierDepthStack.back() == int(function.modifiers().size()))
+	if (m_modifierDepthStack.back() == static_cast<int>(function.modifiers().size()))
 	{
 		if (function.isImplemented())
 			function.body().accept(*this);
 	}
 	else
 	{
-		solAssert(m_modifierDepthStack.back() < int(function.modifiers().size()), "");
-		ASTPointer<ModifierInvocation> const& modifierInvocation = function.modifiers()[m_modifierDepthStack.back()];
+		solAssert(m_modifierDepthStack.back() < static_cast<int>(function.modifiers().size()), "");
+		ASTPointer<ModifierInvocation> const& modifierInvocation =
+			function.modifiers()[static_cast<size_t>(m_modifierDepthStack.back())];
 		solAssert(modifierInvocation, "");
 		auto refDecl = modifierInvocation->name()->annotation().referencedDeclaration;
 		if (dynamic_cast<ContractDefinition const*>(refDecl))
@@ -1679,8 +1680,8 @@ void SMTEncoder::mergeVariables(set<VariableDeclaration const*> const& _variable
 	for (auto const* decl: sortedVars)
 	{
 		solAssert(_indicesEndTrue.count(decl) && _indicesEndFalse.count(decl), "");
-		int trueIndex = _indicesEndTrue.at(decl);
-		int falseIndex = _indicesEndFalse.at(decl);
+		auto trueIndex = static_cast<unsigned>(_indicesEndTrue.at(decl));
+		auto falseIndex = static_cast<unsigned>(_indicesEndFalse.at(decl));
 		solAssert(trueIndex != falseIndex, "");
 		m_context.addAssertion(m_context.newValue(*decl) == smtutil::Expression::ite(
 			_condition,
@@ -1696,7 +1697,7 @@ smtutil::Expression SMTEncoder::currentValue(VariableDeclaration const& _decl)
 	return m_context.variable(_decl)->currentValue();
 }
 
-smtutil::Expression SMTEncoder::valueAtIndex(VariableDeclaration const& _decl, int _index)
+smtutil::Expression SMTEncoder::valueAtIndex(VariableDeclaration const& _decl, unsigned _index)
 {
 	solAssert(m_context.knownVariable(_decl), "");
 	return m_context.variable(_decl)->valueAtIndex(_index);
@@ -1819,7 +1820,7 @@ SMTEncoder::VariableIndices SMTEncoder::copyVariableIndices()
 void SMTEncoder::resetVariableIndices(VariableIndices const& _indices)
 {
 	for (auto const& var: _indices)
-		m_context.variable(*var.first)->setIndex(var.second);
+		m_context.variable(*var.first)->setIndex(static_cast<unsigned>(var.second));
 }
 
 void SMTEncoder::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)
