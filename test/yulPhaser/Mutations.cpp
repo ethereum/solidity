@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(geneAddition_should_be_able_to_insert_before_first_position
 	BOOST_TEST(mutatedChromosome.length() > chromosome.length());
 
 	vector<string> suffix(
-		mutatedChromosome.optimisationSteps().end() - chromosome.length(),
+		mutatedChromosome.optimisationSteps().end() - static_cast<ptrdiff_t>(chromosome.length()),
 		mutatedChromosome.optimisationSteps().end()
 	);
 	BOOST_TEST(suffix == chromosome.optimisationSteps());
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(geneAddition_should_be_able_to_insert_after_last_position)
 
 	vector<string> prefix(
 		mutatedChromosome.optimisationSteps().begin(),
-		mutatedChromosome.optimisationSteps().begin() + chromosome.length()
+		mutatedChromosome.optimisationSteps().begin() + static_cast<ptrdiff_t>(chromosome.length())
 	);
 	BOOST_TEST(prefix == chromosome.optimisationSteps());
 }
