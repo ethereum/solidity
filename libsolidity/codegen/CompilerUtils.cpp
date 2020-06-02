@@ -1069,6 +1069,7 @@ void CompilerUtils::convertType(
 					// stack: <memory ptr> <source ref> <memory ptr>
 					for (auto const& member: typeOnStack->members(nullptr))
 					{
+						// TODO do not skip anymore. assert !containsMapping and nameable type
 						if (!member.type->canLiveOutsideStorage())
 							continue;
 						pair<u256, unsigned> const& offsets = typeOnStack->storageOffsetsOfMember(member.name);

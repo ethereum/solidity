@@ -2160,6 +2160,8 @@ unsigned StructType::calldataEncodedSize(bool) const
 	unsigned size = 0;
 	for (auto const& member: members(nullptr))
 	{
+		// TODO assert nameable and assert that the struct itself
+		// does not contain mapping
 		solAssert(member.type->canLiveOutsideStorage(), "");
 		// Struct members are always padded.
 		size += member.type->calldataEncodedSize();
@@ -2175,6 +2177,8 @@ unsigned StructType::calldataEncodedTailSize() const
 	unsigned size = 0;
 	for (auto const& member: members(nullptr))
 	{
+		// TODO assert nameable and assert that the struct itself
+		// does not contain mapping
 		solAssert(member.type->canLiveOutsideStorage(), "");
 		// Struct members are always padded.
 		size += member.type->calldataHeadSize();
@@ -2187,6 +2191,8 @@ unsigned StructType::calldataOffsetOfMember(std::string const& _member) const
 	unsigned offset = 0;
 	for (auto const& member: members(nullptr))
 	{
+		// TODO assert nameable and assert that the struct itself
+		// does not contain mapping
 		solAssert(member.type->canLiveOutsideStorage(), "");
 		if (member.name == _member)
 			return offset;
@@ -2241,6 +2247,7 @@ MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
 		solAssert(type, "");
 		// If we are not in storage, skip all members that cannot live outside of storage,
 		// ex. mappings and array of mappings
+		// TODO do not skip anymore. Replace by assert "!containsMapping" if outside storage.
 		if (location() != DataLocation::Storage && !type->canLiveOutsideStorage())
 			continue;
 		members.emplace_back(
@@ -2406,6 +2413,9 @@ FunctionTypePointer StructType::constructorType() const
 	strings paramNames;
 	for (auto const& member: members(nullptr))
 	{
+		// TODO do not skip anymore. Replace by assert "!containsMapping"
+		// TODO if we assert here instead, we might need another check for the typechecker
+		// to disallow `new S` if `S` is a struct that contains a mapping.
 		if (!member.type->canLiveOutsideStorage())
 			continue;
 		paramNames.push_back(member.name);
@@ -2443,6 +2453,7 @@ TypePointers StructType::memoryMemberTypes() const
 {
 	TypePointers types;
 	for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
+		// TODO this whole function should not be needed anymore.
 		if (variable->annotation().type->canLiveOutsideStorage())
 			types.push_back(TypeProvider::withLocationIfReference(DataLocation::Memory, variable->annotation().type));
 	return types;
@@ -2452,6 +2463,7 @@ set<string> StructType::membersMissingInMemory() const
 {
 	set<string> missing;
 	for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
+		// TODO this whole function should not be needed anymore.
 		if (!variable->annotation().type->canLiveOutsideStorage())
 			missing.insert(variable->name());
 	return missing;

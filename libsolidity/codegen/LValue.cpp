@@ -360,6 +360,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			{
 				// assign each member that can live outside of storage
 				TypePointer const& memberType = member.type;
+				// TODO do not skip anymore. assert !containsMapping and nameable type
 				if (!memberType->canLiveOutsideStorage())
 					continue;
 				TypePointer sourceMemberType = sourceType.memberType(member.name);

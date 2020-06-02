@@ -860,6 +860,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 		for (auto const& member: _to.members(nullptr))
 		{
 			solAssert(member.type, "");
+			// TODO assert !containsMapping and nameable type
 			if (!member.type->canLiveOutsideStorage())
 				continue;
 			TypePointer memberTypeTo = member.type->fullEncodingType(_options.encodeAsLibraryTypes, true, false);
@@ -1340,6 +1341,7 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 		for (auto const& member: _type.members(nullptr))
 		{
 			solAssert(member.type, "");
+			// TODO assert !containsMapping and nameable type
 			solAssert(member.type->canLiveOutsideStorage(), "");
 			auto decodingType = member.type->decodingType();
 			solAssert(decodingType, "");

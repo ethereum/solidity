@@ -346,6 +346,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			m_errorReporter.typeError(5587_error, _function.location(), "Internal functions cannot be payable.");
 	}
 	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& var) {
+		// TODO should be changed to 'containsMapping'
 		if (type(var)->category() == Type::Category::Mapping)
 		{
 			if (var.referenceLocation() != VariableDeclaration::Location::Storage)
@@ -362,6 +363,9 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		}
 		else
 		{
+			// TOOD This check should be covered by `interfaceType` below.
+			// Should be replaced by
+			solAssert(type(var)->nameable(), "");
 			if (!type(var)->canLiveOutsideStorage() && _function.isPublic())
 				m_errorReporter.typeError(3312_error, var.location(), "Type is required to live outside storage.");
 			if (_function.isPublic())
@@ -466,6 +470,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			m_errorReporter.typeError(1273_error, _variable.location(), "The type of a variable cannot be a library.");
 	if (_variable.value())
 	{
+		// TODO change to 'containsMapping'
 		if (_variable.isStateVariable() && dynamic_cast<MappingType const*>(varType))
 		{
 			m_errorReporter.typeError(6280_error, _variable.location(), "Mappings cannot be assigned to.");
@@ -509,6 +514,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	if (!_variable.isStateVariable())
 	{
 		if (varType->dataStoredIn(DataLocation::Memory) || varType->dataStoredIn(DataLocation::CallData))
+			// change to containsMapping and assert nameable at the beginning of this function
 			if (!varType->canLiveOutsideStorage())
 				m_errorReporter.typeError(4061_error, _variable.location(), "Type " + varType->toString() + " is only valid in storage.");
 	}
@@ -621,6 +627,7 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 	{
 		if (var->isIndexed())
 			numIndexed++;
+		// assert nameable and replace this by containsMapping
 		if (!type(*var)->canLiveOutsideStorage())
 			m_errorReporter.typeError(3448_error, var->location(), "Type is required to live outside storage.");
 		if (!type(*var)->interfaceType(false))
@@ -1527,6 +1534,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 					_tuple.location(),
 					"Unable to deduce nameable type for array elements. Try adding explicit type conversion for the first element."
 				);
+			// Should be replaceable by 'containsMapping'
 			else if (!inlineArrayType->canLiveOutsideStorage())
 				m_errorReporter.fatalTypeError(1545_error, _tuple.location(), "Type " + inlineArrayType->toString() + " is only valid in storage.");
 
@@ -2518,6 +2526,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 	}
 	else if (type->category() == Type::Category::Array)
 	{
+		// TODO !containsMapping plus assert nameable
 		if (!type->canLiveOutsideStorage())
 			m_errorReporter.fatalTypeError(
 				1164_error,
