@@ -711,6 +711,8 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				}
 			}
 
+			solAssert(!dynamic_cast<FixedPointType const*>(var->type()), "FixedPointType not implemented.");
+
 			if (requiresStorage)
 			{
 				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
