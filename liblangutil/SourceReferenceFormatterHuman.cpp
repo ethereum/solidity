@@ -104,7 +104,7 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 
 	if (!_ref.multiline)
 	{
-		int const locationLength = _ref.endColumn - _ref.startColumn;
+		auto const locationLength = static_cast<size_t>(_ref.endColumn - _ref.startColumn);
 
 		// line 1:
 		m_stream << leftpad << ' ';
@@ -113,15 +113,17 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 
 		// line 2:
 		frameColored() << line << " |";
-		m_stream << ' ' << text.substr(0, _ref.startColumn);
-		highlightColored() << text.substr(_ref.startColumn, locationLength);
-		m_stream << text.substr(_ref.endColumn) << '\n';
+
+		m_stream << ' ' << text.substr(0, static_cast<size_t>(_ref.startColumn));
+		highlightColored() << text.substr(static_cast<size_t>(_ref.startColumn), locationLength);
+		m_stream << text.substr(static_cast<size_t>(_ref.endColumn)) << '\n';
 
 		// line 3:
 		m_stream << leftpad << ' ';
 		frameColored() << '|';
-		m_stream << ' ' << replaceNonTabs(text.substr(0, _ref.startColumn), ' ');
-		diagColored() << replaceNonTabs(text.substr(_ref.startColumn, locationLength), '^');
+
+		m_stream << ' ' << replaceNonTabs(text.substr(0, static_cast<size_t>(_ref.startColumn)), ' ');
+		diagColored() << replaceNonTabs(text.substr(static_cast<size_t>(_ref.startColumn), locationLength), '^');
 		m_stream << '\n';
 	}
 	else
@@ -133,13 +135,13 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 
 		// line 2:
 		frameColored() << line << " |";
-		m_stream << ' ' << text.substr(0, _ref.startColumn);
-		highlightColored() << text.substr(_ref.startColumn) << '\n';
+		m_stream << ' ' << text.substr(0, static_cast<size_t>(_ref.startColumn));
+		highlightColored() << text.substr(static_cast<size_t>(_ref.startColumn)) << '\n';
 
 		// line 3:
 		m_stream << leftpad << ' ';
 		frameColored() << '|';
-		m_stream << ' ' << replaceNonTabs(text.substr(0, _ref.startColumn), ' ');
+		m_stream << ' ' << replaceNonTabs(text.substr(0, static_cast<size_t>(_ref.startColumn)), ' ');
 		diagColored() << "^ (Relevant source part starts here and spans across multiple lines).";
 		m_stream << '\n';
 	}
