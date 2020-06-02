@@ -376,12 +376,12 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 	if (_call.functionName == "dataoffset")
 	{
 		string name = get<StringLiteral>(_call.arguments.at(0)).value;
-		return toBytes(Opcode::I64Const) + lebEncodeSigned(m_subModulePosAndSize.at(name).first);
+		return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(m_subModulePosAndSize.at(name).first));
 	}
 	else if (_call.functionName == "datasize")
 	{
 		string name = get<StringLiteral>(_call.arguments.at(0)).value;
-		return toBytes(Opcode::I64Const) + lebEncodeSigned(m_subModulePosAndSize.at(name).second);
+		return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(m_subModulePosAndSize.at(name).second));
 	}
 
 	bytes args = visit(_call.arguments);

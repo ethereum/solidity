@@ -119,7 +119,7 @@ void ExpressionJoiner::decrementLatestStatementPointer()
 void ExpressionJoiner::resetLatestStatementPointer()
 {
 	m_currentBlock = nullptr;
-	m_latestStatementInBlock = size_t(-1);
+	m_latestStatementInBlock = numeric_limits<size_t>::max();
 }
 
 Statement* ExpressionJoiner::latestStatement()

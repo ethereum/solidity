@@ -54,7 +54,7 @@ struct StackTooDeepError: virtual YulException
 struct CodeTransformContext
 {
 	std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
-	std::map<Scope::Variable const*, int> variableStackHeights;
+	std::map<Scope::Variable const*, size_t> variableStackHeights;
 	std::map<Scope::Variable const*, unsigned> variableReferences;
 
 	struct JumpInfo
@@ -200,7 +200,7 @@ private:
 	/// Determines the stack height difference to the given variables. Throws
 	/// if it is not yet in scope or the height difference is too large. Returns
 	/// the (positive) stack height difference otherwise.
-	int variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap);
+	size_t variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap);
 
 	void expectDeposit(int _deposit, int _oldHeight) const;
 
