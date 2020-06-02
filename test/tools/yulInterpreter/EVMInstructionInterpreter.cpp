@@ -48,10 +48,10 @@ u256 readZeroExtended(bytes const& _data, u256 const& _offset)
 	if (_offset >= _data.size())
 		return 0;
 	else if (_offset + 32 <= _data.size())
-		return *reinterpret_cast<h256 const*>(_data.data() + size_t(_offset));
+		return *reinterpret_cast<h256 const*>(_data.data() + static_cast<size_t>(_offset));
 	else
 	{
-		size_t off = size_t(_offset);
+		size_t off = static_cast<size_t>(_offset);
 		u256 val;
 		for (size_t i = 0; i < 32; ++i)
 		{
@@ -88,7 +88,7 @@ u256 EVMInstructionInterpreter::eval(
 	using evmasm::Instruction;
 
 	auto info = instructionInfo(_instruction);
-	yulAssert(size_t(info.args) == _arguments.size(), "");
+	yulAssert(static_cast<size_t>(info.args) == _arguments.size(), "");
 
 	auto const& arg = _arguments;
 	switch (_instruction)
@@ -442,7 +442,7 @@ u256 EVMInstructionInterpreter::evalBuiltin(BuiltinFunctionForEVM const& _fun, c
 				m_state.memory,
 				m_state.code,
 				size_t(_arguments.at(0)),
-				size_t(_arguments.at(1) & size_t(-1)),
+				size_t(_arguments.at(1) & numeric_limits<size_t>::max()),
 				size_t(_arguments.at(2))
 			);
 	}
