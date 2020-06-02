@@ -66,20 +66,15 @@ bytes SolidityExecutionFramework::compileContract(
 	if (m_compileViaYul)
 	{
 		yul::AssemblyStack asmStack(
-					m_evmVersion,
-					yul::AssemblyStack::Language::StrictAssembly,
-					// Ignore optimiser settings here because we need Yul optimisation to
-					// get code that does not exhaust the stack.
-					OptimiserSettings::full()
-					);
-		if (!asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName)))
-		{
-			langutil::SourceReferenceFormatter formatter(std::cerr);
+			m_evmVersion,
+			yul::AssemblyStack::Language::StrictAssembly,
+			// Ignore optimiser settings here because we need Yul optimisation to
+			// get code that does not exhaust the stack.
+			OptimiserSettings::full()
+		);
+		bool analysisSuccessful = asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName));
+		solAssert(analysisSuccessful, "Code that passed analysis in CompilerStack can't have errors");
 
-			for (auto const& error: m_compiler.errors())
-				formatter.printErrorInformation(*error);
-			BOOST_ERROR("Assembly contract failed. IR: " + m_compiler.yulIROptimized({}));
-		}
 		asmStack.optimize();
 		obj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
 	}
