@@ -18,11 +18,13 @@
 #include <test/Common.h>
 #include <test/TestCase.h>
 
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string.hpp>
+#include <libsolutil/AnsiColorized.h>
 
-#include <stdexcept>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
 #include <iostream>
+#include <stdexcept>
 
 using namespace std;
 using namespace solidity;
@@ -76,6 +78,33 @@ void TestCase::printIndented(ostream& _stream, string const& _output, string con
 			_stream << boost::trim_right_copy(_linePrefix) << endl;
 		else
 			_stream << _linePrefix << line << endl;
+}
+
+void TestCase::printSource(ostream& _stream, string const& _linePrefix, bool const) const
+{
+	printIndented(_stream, m_source, _linePrefix);
+}
+
+void TestCase::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
+{
+	printIndented(_stream, m_obtainedResult, _linePrefix);
+}
+
+TestCase::TestResult TestCase::checkResult(std::ostream& _stream, const std::string& _linePrefix, bool const _formatted)
+{
+	if (m_expectation != m_obtainedResult)
+	{
+		string nextIndentLevel = _linePrefix + "  ";
+		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::CYAN})
+			<< _linePrefix << "Expected result:" << endl;
+		// TODO could compute a simple diff with highlighted lines
+		printIndented(_stream, m_expectation, nextIndentLevel);
+		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::CYAN})
+			<< _linePrefix << "Obtained result:" << endl;
+		printIndented(_stream, m_obtainedResult, nextIndentLevel);
+		return TestResult::Failure;
+	}
+	return TestResult::Success;
 }
 
 EVMVersionRestrictedTestCase::EVMVersionRestrictedTestCase(string const& _filename):
