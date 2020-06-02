@@ -179,8 +179,8 @@ BOOST_AUTO_TEST_CASE(alternativeMutations_should_choose_between_mutations_with_g
 	for (size_t i = 0; i < 10; ++i)
 	{
 		Chromosome mutatedChromosome = mutation(chromosome);
-		cCount += static_cast<int>(mutatedChromosome == Chromosome("c"));
-		fCount += static_cast<int>(mutatedChromosome == Chromosome("f"));
+		cCount += (mutatedChromosome == Chromosome("c") ? 1 : 0);
+		fCount += (mutatedChromosome == Chromosome("f") ? 1 : 0);
 	}
 
 	// This particular seed results in 7 "c"s out of 10 which looks plausible given the 80% chance.
