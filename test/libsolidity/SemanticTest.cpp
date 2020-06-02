@@ -62,6 +62,8 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	{
 		m_runWithYul = false;
 		m_runWithoutYul = true;
+		// Do not try to run via yul if explicitly denied.
+		m_enforceViaYul = false;
 	}
 	else
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid compileViaYul value: " + choice + "."));
