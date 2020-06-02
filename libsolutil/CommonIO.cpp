@@ -56,7 +56,7 @@ inline T readFile(std::string const& _file)
 		return ret; // do not read empty file (MSVC does not like it)
 	is.seekg(0, is.beg);
 
-	ret.resize((length + c_elementSize - 1) / c_elementSize);
+	ret.resize((static_cast<size_t>(length) + c_elementSize - 1) / c_elementSize);
 	is.read(const_cast<char*>(reinterpret_cast<char const*>(ret.data())), length);
 	return ret;
 }
@@ -107,8 +107,8 @@ public:
 	DisableConsoleBuffering()
 	{
 		tcgetattr(0, &m_termios);
-		m_termios.c_lflag &= ~ICANON;
-		m_termios.c_lflag &= ~ECHO;
+		m_termios.c_lflag &= ~tcflag_t(ICANON);
+		m_termios.c_lflag &= ~tcflag_t(ECHO);
 		m_termios.c_cc[VMIN] = 1;
 		m_termios.c_cc[VTIME] = 0;
 		tcsetattr(0, TCSANOW, &m_termios);
