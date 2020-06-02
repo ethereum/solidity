@@ -1150,6 +1150,12 @@ void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression
 	}
 	else if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(&_expr))
 		arrayIndexAssignment(*indexAccess, _array);
+	else if (dynamic_cast<MemberAccess const*>(&_expr))
+		m_errorReporter.warning(
+			9599_error,
+			_expr.location(),
+			"Assertion checker does not yet implement this expression."
+		);
 	else
 		solAssert(false, "");
 }
