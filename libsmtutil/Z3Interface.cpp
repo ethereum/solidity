@@ -194,7 +194,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		}
 		else if (n == "tuple_get")
 		{
-			size_t index = std::stoi(_expr.arguments[1].name);
+			size_t index = stoul(_expr.arguments[1].name);
 			return z3::func_decl(m_context, Z3_get_tuple_sort_field_decl(m_context, z3Sort(*_expr.arguments[0].sort), index))(arguments[0]);
 		}
 		else if (n == "tuple_constructor")
