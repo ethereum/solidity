@@ -246,7 +246,7 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			smtAssert(tupleSort, "");
 			CVC4::DatatypeType tt = m_context.mkTupleType(cvc4Sort(tupleSort->components));
 			CVC4::Datatype const& dt = tt.getDatatype();
-			size_t index = std::stoi(_expr.arguments[1].name);
+			size_t index = std::stoul(_expr.arguments[1].name);
 			CVC4::Expr s = dt[0][index].getSelector();
 			return m_context.mkExpr(CVC4::kind::APPLY_SELECTOR, s, arguments[0]);
 		}

@@ -184,7 +184,7 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 	{
 		smtAssert(_expr.arguments.size() == 2, "");
 		auto tupleSort = dynamic_pointer_cast<TupleSort>(_expr.arguments.at(0).sort);
-		unsigned index = std::stoi(_expr.arguments.at(1).name);
+		size_t index = std::stoul(_expr.arguments.at(1).name);
 		smtAssert(index < tupleSort->members.size(), "");
 		sexpr += "|" + tupleSort->members.at(index) + "| " + toSExpr(_expr.arguments.at(0));
 	}
