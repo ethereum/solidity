@@ -104,8 +104,7 @@ void VariableUsage::checkIdentifier(Identifier const& _identifier)
 	solAssert(declaration, "");
 	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
-		solAssert(m_lastCall, "");
-		if (!varDecl->isLocalVariable() || varDecl->functionOrModifierDefinition() == m_lastCall)
+		if (!varDecl->isLocalVariable() || (m_lastCall && varDecl->functionOrModifierDefinition() == m_lastCall))
 			m_touchedVariables.insert(varDecl);
 	}
 }
