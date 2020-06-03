@@ -580,16 +580,18 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 		errorForVM("only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::CHAINID && !m_evmVersion.hasChainID())
 		errorForVM("only available for Istanbul-compatible");
-	else if (_instr == evmasm::Instruction::PC)
-		m_errorReporter.warning(
-			2450_error,
-			_location,
-			"The \"" +
-			boost::to_lower_copy(instructionInfo(_instr).name) +
-			"\" instruction is deprecated and will be removed in the next breaking release."
-		);
 	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
 		errorForVM("only available for Istanbul-compatible");
+	else if (_instr == evmasm::Instruction::PC)
+	{
+		m_errorReporter.error(
+			4316_error,
+			Error::Type::SyntaxError,
+			_location,
+			"PC instruction is a low-level EVM feature. "
+			"Because of that PC is disallowed in strict assembly."
+		);
+	}
 	else if (
 		_instr == evmasm::Instruction::JUMP ||
 		_instr == evmasm::Instruction::JUMPI ||
