@@ -277,14 +277,6 @@ bool CompilerStack::parse()
 void CompilerStack::loadMissingInterfaces(int64_t _baseNodeID)
 {
 	vector<ASTPointer<SourceUnit>> importedSources;
-	for (ASTPointer<SourceUnit> importedSourceUnit: importedSources)
-	{
-		Source source;
-		source.ast = importedSourceUnit;
-		auto const name = "__imported_interface_" + to_string(importedSourceUnit->id());
-		// TODO: maybe we want to make sure this isn't used already
-		m_sources[name] = move(source);
-	}
 	for (auto const& sourcePair: m_sources)
 	{
 		ASTPointer<SourceUnit> const& source = sourcePair.second.ast;
@@ -311,7 +303,7 @@ void CompilerStack::loadMissingInterfaces(int64_t _baseNodeID)
 						_baseNodeID++,
 						SourceLocation{},
 						source->licenseString(),
-						vector{ jsonContract }
+						vector<ASTPointer<ASTNode>>{ jsonContract }
 					);
 					importedSources.push_back(importedSource);
 				}
@@ -325,6 +317,15 @@ void CompilerStack::loadMissingInterfaces(int64_t _baseNodeID)
 				}
 			}
 		}
+	}
+
+	for (ASTPointer<SourceUnit> importedSourceUnit: importedSources)
+	{
+		Source source;
+		source.ast = importedSourceUnit;
+		auto const name = "__imported_interface_" + to_string(importedSourceUnit->id());
+		solAssert(m_sources.count(name) == 0, "");
+		m_sources[name] = move(source);
 	}
 }
 

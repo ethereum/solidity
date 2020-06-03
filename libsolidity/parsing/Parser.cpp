@@ -316,7 +316,8 @@ ASTPointer<ContractDefinition> Parser::parseInterfaceDefinition()
 		nodeFactory.markEndPosition();
 		expectToken(Token::Semicolon);
 
-		return nodeFactory.createNode<ContractDefinition>(jsonSourceFileName);
+		auto fileName = make_shared<ASTString>(jsonSourceFileName.string());
+		return nodeFactory.createNode<ImportedContractDefinition>(name, fileName);
 	}
 
 	baseContracts = parseContractInheritanceList();
