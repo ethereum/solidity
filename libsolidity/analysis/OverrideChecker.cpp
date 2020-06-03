@@ -481,7 +481,12 @@ void OverrideChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 	for (auto const* stateVar: _contract.stateVariables())
 	{
 		if (!stateVar->isPublic())
+		{
+			if (stateVar->overrides())
+				m_errorReporter.typeError(8022_error, stateVar->location(), "Override can only be used with public state variables.");
+
 			continue;
+		}
 
 		if (contains_if(inheritedMods, MatchByName{stateVar->name()}))
 			m_errorReporter.typeError(1456_error, stateVar->location(), "Override changes modifier to public state variable.");
