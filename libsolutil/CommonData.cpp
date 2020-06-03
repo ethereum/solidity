@@ -74,8 +74,8 @@ string solidity::util::toHex(bytes const& _data, HexPrefix _prefix, HexCase _cas
 		if (_case == HexCase::Mixed)
 			chars = (rix-- & 2) == 0 ? lowerHexChars : upperHexChars;
 
-		ret[i++] = chars[(unsigned(c) / 16) & 0xf];
-		ret[i++] = chars[unsigned(c) & 0xf];
+		ret[i++] = chars[(static_cast<size_t>(c) >> 4ul) & 0xfu];
+		ret[i++] = chars[c & 0xfu];
 	}
 	assertThrow(i == ret.size(), Exception, "");
 
