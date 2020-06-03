@@ -268,101 +268,145 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 {
 	string functionName = IRNames::function(_varDecl);
+	return m_context.functionCollector().createFunction(functionName, [&]() {
+		Type const* type = _varDecl.annotation().type;
 
-	Type const* type = _varDecl.annotation().type;
+		solAssert(_varDecl.isStateVariable(), "");
 
-	solAssert(_varDecl.isStateVariable(), "");
-
-	if (auto const* mappingType = dynamic_cast<MappingType const*>(type))
-		return m_context.functionCollector().createFunction(functionName, [&]() {
-			solAssert(!_varDecl.isConstant() && !_varDecl.immutable(), "");
-			pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
-			solAssert(slot_offset.second == 0, "");
-			FunctionType funType(_varDecl);
-			solUnimplementedAssert(funType.returnParameterTypes().size() == 1, "");
-			TypePointer returnType = funType.returnParameterTypes().front();
-			unsigned num_keys = 0;
-			stringstream indexAccesses;
-			string slot = m_context.newYulVariable();
-			do
-			{
-				solUnimplementedAssert(
-					mappingType->keyType()->sizeOnStack() == 1,
-					"Multi-slot mapping key unimplemented - might not be a problem"
-				);
-				indexAccesses <<
-					slot <<
-					" := " <<
-					m_utils.mappingIndexAccessFunction(*mappingType, *mappingType->keyType()) <<
-					"(" <<
-					slot;
-				if (mappingType->keyType()->sizeOnStack() > 0)
-					indexAccesses <<
-						", " <<
-						suffixedVariableNameList("key", num_keys, num_keys + mappingType->keyType()->sizeOnStack());
-				indexAccesses << ")\n";
-				num_keys += mappingType->keyType()->sizeOnStack();
-			}
-			while ((mappingType = dynamic_cast<MappingType const*>(mappingType->valueType())));
-
+		FunctionType accessorType(_varDecl);
+		TypePointers paramTypes = accessorType.parameterTypes();
+		if (_varDecl.immutable())
+		{
+			solAssert(paramTypes.empty(), "");
+			solUnimplementedAssert(type->sizeOnStack() == 1, "");
 			return Whiskers(R"(
-				function <functionName>(<keys>) -> rval {
-					let <slot> := <base>
-					<indexAccesses>
-					rval := <readStorage>(<slot>)
+				function <functionName>() -> rval {
+					rval := loadimmutable("<id>")
 				}
 			)")
 			("functionName", functionName)
-			("keys", suffixedVariableNameList("key", 0, num_keys))
-			("readStorage", m_utils.readFromStorage(*returnType, 0, false))
-			("indexAccesses", indexAccesses.str())
-			("slot", slot)
-			("base", slot_offset.first.str())
+			("id", to_string(_varDecl.id()))
 			.render();
-		});
-	else
-	{
-		solUnimplementedAssert(type->isValueType(), "");
+		}
+		else if (_varDecl.isConstant())
+		{
+			solAssert(paramTypes.empty(), "");
+			return Whiskers(R"(
+				function <functionName>() -> <ret> {
+					<ret> := <constantValueFunction>()
+				}
+			)")
+			("functionName", functionName)
+			("constantValueFunction", IRGeneratorForStatements(m_context, m_utils).constantValueFunction(_varDecl))
+			("ret", suffixedVariableNameList("ret_", 0, _varDecl.type()->sizeOnStack()))
+			.render();
+		}
 
-		return m_context.functionCollector().createFunction(functionName, [&]() {
-			if (_varDecl.immutable())
+		string code;
+
+		auto const& location = m_context.storageLocationOfVariable(_varDecl);
+		code += Whiskers(R"(
+			let slot := <slot>
+			let offset := <offset>
+		)")
+		("slot", location.first.str())
+		("offset", to_string(location.second))
+		.render();
+
+		if (!paramTypes.empty())
+			solAssert(
+				location.second == 0,
+				"If there are parameters, we are dealing with structs or mappings and thus should have offset zero."
+			);
+
+		// The code of an accessor is of the form `x[a][b][c]` (it is slightly more complicated
+		// if the final type is a struct).
+		// In each iteration of the loop below, we consume one parameter, perform an
+		// index access, reassign the yul variable `slot` and move @a currentType further "down".
+		// The initial value of @a currentType is only used if we skip the loop completely.
+		TypePointer currentType = _varDecl.annotation().type;
+
+		vector<string> parameters;
+		vector<string> returnVariables;
+
+		for (size_t i = 0; i < paramTypes.size(); ++i)
+		{
+			MappingType const* mappingType = dynamic_cast<MappingType const*>(currentType);
+			ArrayType const* arrayType = dynamic_cast<ArrayType const*>(currentType);
+			solAssert(mappingType || arrayType, "");
+
+			vector<string> keys = IRVariable("key_" + to_string(i),
+				mappingType ? *mappingType->keyType() : *TypeProvider::uint256()
+			).stackSlots();
+			parameters += keys;
+			code += Whiskers(R"(
+				slot<?array>, offset</array> := <indexAccess>(slot<?+keys>, <keys></+keys>)
+			)")
+			(
+				"indexAccess",
+				mappingType ?
+				m_utils.mappingIndexAccessFunction(*mappingType, *mappingType->keyType()) :
+				m_utils.storageArrayIndexAccessFunction(*arrayType)
+			)
+			("array", arrayType != nullptr)
+			("keys", joinHumanReadable(keys))
+			.render();
+
+			currentType = mappingType ? mappingType->valueType() : arrayType->baseType();
+		}
+
+		auto returnTypes = accessorType.returnParameterTypes();
+		solAssert(returnTypes.size() >= 1, "");
+		if (StructType const* structType = dynamic_cast<StructType const*>(currentType))
+		{
+			solAssert(location.second == 0, "");
+			auto const& names = accessorType.returnParameterNames();
+			for (size_t i = 0; i < names.size(); ++i)
 			{
-				solUnimplementedAssert(type->sizeOnStack() == 1, "");
-				return Whiskers(R"(
-					function <functionName>() -> rval {
-						rval := loadimmutable("<id>")
-					}
+				if (returnTypes[i]->category() == Type::Category::Mapping)
+					continue;
+				if (auto arrayType = dynamic_cast<ArrayType const*>(returnTypes[i]))
+					if (!arrayType->isByteArray())
+						continue;
+
+				// TODO conversion from storage byte arrays is not yet implemented.
+				pair<u256, unsigned> const& offsets = structType->storageOffsetsOfMember(names[i]);
+				vector<string> retVars = IRVariable("ret_" + to_string(returnVariables.size()), *returnTypes[i]).stackSlots();
+				returnVariables += retVars;
+				code += Whiskers(R"(
+					<ret> := <readStorage>(add(slot, <slotOffset>))
 				)")
-				("functionName", functionName)
-				("id", to_string(_varDecl.id()))
+				("ret", joinHumanReadable(retVars))
+				("readStorage", m_utils.readFromStorage(*returnTypes[i], offsets.second, true))
+				("slotOffset", offsets.first.str())
 				.render();
 			}
-			else if (_varDecl.isConstant())
-				return Whiskers(R"(
-					function <functionName>() -> <ret> {
-						<ret> := <constantValueFunction>()
-					}
-				)")
-				("functionName", functionName)
-				("constantValueFunction", IRGeneratorForStatements(m_context, m_utils).constantValueFunction(_varDecl))
-				("ret", suffixedVariableNameList("ret_", 0, _varDecl.type()->sizeOnStack()))
-				.render();
-			else
-			{
-				pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(_varDecl);
+		}
+		else
+		{
+			solAssert(returnTypes.size() == 1, "");
+			vector<string> retVars = IRVariable("ret", *returnTypes.front()).stackSlots();
+			returnVariables += retVars;
+			// TODO conversion from storage byte arrays is not yet implemented.
+			code += Whiskers(R"(
+				<ret> := <readStorage>(slot, offset)
+			)")
+			("ret", joinHumanReadable(retVars))
+			("readStorage", m_utils.readFromStorageDynamic(*returnTypes.front(), true))
+			.render();
+		}
 
-				return Whiskers(R"(
-					function <functionName>() -> rval {
-						rval := <readStorage>(<slot>)
-					}
-				)")
-				("functionName", functionName)
-				("readStorage", m_utils.readFromStorage(*type, slot_offset.second, false))
-				("slot", slot_offset.first.str())
-				.render();
+		return Whiskers(R"(
+			function <functionName>(<params>) -> <retVariables> {
+				<code>
 			}
-		});
-	}
+		)")
+		("functionName", functionName)
+		("params", joinHumanReadable(parameters))
+		("retVariables", joinHumanReadable(returnVariables))
+		("code", std::move(code))
+		.render();
+	});
 }
 
 string IRGenerator::generateInitialAssignment(VariableDeclaration const& _varDecl)
