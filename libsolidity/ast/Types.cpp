@@ -965,10 +965,38 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 {
 	if (_other->category() == Category::Integer || _other->category() == Category::FixedPoint)
 	{
-		auto commonType = Type::commonType(this, _other);
-		if (!commonType)
-			return nullptr;
-		return commonType->binaryOperatorResult(_operator, _other);
+		if (isFractional())
+			return TypeResult::err("Fractional literals not supported.");
+		else if (!integerType())
+			return TypeResult::err("Literal too large.");
+
+		// Shift and exp are not symmetric, so it does not make sense to swap
+		// the types as below. As an exception, we always use uint here.
+		if (TokenTraits::isShiftOp(_operator))
+		{
+			if (!isValidShiftAndAmountType(_operator, *_other))
+				return nullptr;
+			return isNegative() ? TypeProvider::int256() : TypeProvider::uint256();
+		}
+		else if (Token::Exp == _operator)
+		{
+			if (auto const* otherIntType = dynamic_cast<IntegerType const*>(_other))
+			{
+				if (otherIntType->isSigned())
+					return TypeResult::err("Exponentiation power is not allowed to be a signed integer type.");
+			}
+			else if (dynamic_cast<FixedPointType const*>(_other))
+				return TypeResult::err("Exponent is fractional.");
+
+			return isNegative() ? TypeProvider::int256() : TypeProvider::uint256();
+		}
+		else
+		{
+			auto commonType = Type::commonType(this, _other);
+			if (!commonType)
+				return nullptr;
+			return commonType->binaryOperatorResult(_operator, _other);
+		}
 	}
 	else if (_other->category() != category())
 		return nullptr;
