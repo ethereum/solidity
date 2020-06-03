@@ -116,11 +116,11 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 					for (int i = error.locationStart; i < error.locationEnd; i++)
 						if (isWarning)
 						{
-							if (sourceFormatting[i] == formatting::RESET)
-								sourceFormatting[i] = formatting::ORANGE_BACKGROUND_256;
+							if (sourceFormatting[static_cast<size_t>(i)] == formatting::RESET)
+								sourceFormatting[static_cast<size_t>(i)] = formatting::ORANGE_BACKGROUND_256;
 						}
 						else
-							sourceFormatting[i] = formatting::RED_BACKGROUND;
+							sourceFormatting[static_cast<size_t>(i)] = formatting::RED_BACKGROUND;
 				}
 
 			_stream << _linePrefix << sourceFormatting.front() << source.front();

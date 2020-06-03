@@ -629,8 +629,8 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 				serr() << "Colon separator missing in library address specifier \"" << lib << "\"" << endl;
 				return false;
 			}
-			string libName(lib.begin(), lib.begin() + colon);
-			string addrString(lib.begin() + colon + 1, lib.end());
+			string libName(lib.begin(), lib.begin() + static_cast<ptrdiff_t>(colon));
+			string addrString(lib.begin() + static_cast<ptrdiff_t>(colon) + 1, lib.end());
 			boost::trim(libName);
 			boost::trim(addrString);
 			if (addrString.substr(0, 2) == "0x")
