@@ -8,6 +8,7 @@ Language Features:
 
 Compiler Features:
  * Build system: Update the soljson.js build to emscripten 1.39.15 and boost 1.73.0 and include Z3 for integrated SMTChecker support without the callback mechanism.
+ * Build system: Switch the emscripten build from the fastcomp backend to the upstream backend.
  * Code Generator: Do not introduce new internal source references for small compiler routines.
  * Commandline Interface: Adds new option ``--base-path PATH`` to use the given path as the root of the source tree (defaults to the root of the filesystem).
  * SMTChecker: Support array ``length``.
