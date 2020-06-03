@@ -1172,6 +1172,12 @@ bool CommandLineInterface::processInput()
 				endl;
 			return false;
 		}
+		if (targetMachine == Machine::Ewasm && inputLanguage != Input::StrictAssembly && inputLanguage != Input::Ewasm)
+		{
+			serr() << "The selected input language is not directly supported when targeting the Ewasm machine ";
+			serr() << "and automatic translation is not available." << endl;
+			return false;
+		}
 		serr() <<
 			"Warning: Yul is still experimental. Please use the output with care." <<
 			endl;
