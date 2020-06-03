@@ -106,7 +106,7 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 		if (m_scanner->currentToken() == Token::EOS)
 		{
 			// rollback to where the token started, and raise exception to be caught at a higher level.
-			m_scanner->setPosition(startPosition);
+			m_scanner->setPosition(static_cast<size_t>(startPosition));
 			m_inParserRecovery = true;
 			fatalParserError(1957_error, errorLoc, msg);
 		}
