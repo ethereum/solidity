@@ -555,7 +555,7 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 			+ "\" instruction is " +
 			vmKindMessage +
 			" VMs " +
-			" (you are currently compiling for \"" +
+			"(you are currently compiling for \"" +
 			m_evmVersion.name() +
 			"\")."
 		);
