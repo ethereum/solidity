@@ -274,6 +274,20 @@ bool SMTEncoder::visit(InlineAssembly const& _inlineAsm)
 	return false;
 }
 
+bool SMTEncoder::visit(TryCatchClause const& _clause)
+{
+	if (auto params = _clause.parameters())
+		for (auto const& var: params->parameters())
+			createVariable(*var);
+
+	m_errorReporter.warning(
+		7645_error,
+		_clause.location(),
+		"Assertion checker does not support try/catch clauses."
+	);
+	return false;
+}
+
 bool SMTEncoder::visit(IfStatement const& _node)
 {
 	_node.condition().accept(*this);
@@ -361,7 +375,12 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 	else if (!smt::isSupportedType(_assignment.annotation().type->category()))
 	{
 		// Give it a new index anyway to keep the SSA scheme sound.
-		if (auto varDecl = identifierToVariable(_assignment.leftHandSide()))
+
+		Expression const* base = &_assignment.leftHandSide();
+		if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(base))
+			base = leftmostBase(*indexAccess);
+
+		if (auto varDecl = identifierToVariable(*base))
 			m_context.newValue(*varDecl);
 	}
 	else
@@ -463,9 +482,6 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 
 	createExpr(_op);
 
-	if (_op.annotation().type->category() == Type::Category::FixedPoint)
-		return;
-
 	switch (_op.getOperator())
 	{
 	case Token::Not: // !
@@ -477,8 +493,8 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	case Token::Inc: // ++ (pre- or postfix)
 	case Token::Dec: // -- (pre- or postfix)
 	{
-
-		solAssert(smt::isInteger(_op.annotation().type->category()), "");
+		auto cat = _op.annotation().type->category();
+		solAssert(smt::isInteger(cat) || smt::isFixedPoint(cat), "");
 		solAssert(_op.subExpression().annotation().willBeWrittenTo, "");
 		if (auto identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
 		{
@@ -574,6 +590,8 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 		arithmeticOperation(_op);
 	else if (TokenTraits::isCompareOp(_op.getOperator()))
 		compareOperation(_op);
+	else if (TokenTraits::isBitOp(_op.getOperator()))
+		bitwiseOperation(_op);
 	else
 		m_errorReporter.warning(
 			3876_error,
@@ -1146,6 +1164,12 @@ void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression
 	}
 	else if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(&_expr))
 		arrayIndexAssignment(*indexAccess, _array);
+	else if (dynamic_cast<MemberAccess const*>(&_expr))
+		m_errorReporter.warning(
+			9599_error,
+			_expr.location(),
+			"Assertion checker does not yet implement this expression."
+		);
 	else
 		solAssert(false, "");
 }
@@ -1344,6 +1368,43 @@ void SMTEncoder::booleanOperation(BinaryOperation const& _op)
 			_op.location(),
 			"Assertion checker does not yet implement the type " + _op.annotation().commonType->toString() + " for boolean operations"
 		);
+}
+
+void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
+{
+	solAssert(TokenTraits::isBitOp(_op.getOperator()), "");
+	auto commonType = _op.annotation().commonType;
+	solAssert(commonType, "");
+
+	unsigned bvSize = 256;
+	bool isSigned = false;
+	if (auto const* intType = dynamic_cast<IntegerType const*>(commonType))
+	{
+		bvSize = intType->numBits();
+		isSigned = intType->isSigned();
+	}
+	else if (auto const* fixedType = dynamic_cast<FixedPointType const*>(commonType))
+	{
+		bvSize = fixedType->numBits();
+		isSigned = fixedType->isSigned();
+	}
+
+	auto bvLeft = smtutil::Expression::int2bv(expr(_op.leftExpression()), bvSize);
+	auto bvRight = smtutil::Expression::int2bv(expr(_op.rightExpression()), bvSize);
+
+	optional<smtutil::Expression> result;
+	if (_op.getOperator() == Token::BitAnd)
+		result = bvLeft & bvRight;
+	// TODO implement the other operators
+	else
+		m_errorReporter.warning(
+			1093_error,
+			_op.location(),
+			"Assertion checker does not yet implement this bitwise operator."
+		);
+
+	if (result)
+		defineExpr(_op, smtutil::Expression::bv2int(*result, isSigned));
 }
 
 smtutil::Expression SMTEncoder::division(smtutil::Expression _left, smtutil::Expression _right, IntegerType const& _type)
@@ -1755,7 +1816,6 @@ Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)
 
 set<VariableDeclaration const*> SMTEncoder::touchedVariables(ASTNode const& _node)
 {
-	solAssert(!m_callStack.empty(), "");
 	vector<CallableDeclaration const*> callStack;
 	for (auto const& call: m_callStack)
 		callStack.push_back(call.first);

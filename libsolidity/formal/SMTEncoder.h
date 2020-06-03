@@ -91,6 +91,7 @@ protected:
 	bool visit(InlineAssembly const& _node) override;
 	void endVisit(Break const&) override {}
 	void endVisit(Continue const&) override {}
+	bool visit(TryCatchClause const& _node) override;
 
 	/// Do not visit subtree if node is a RationalNumber.
 	/// Symbolic _expr is the rational literal.
@@ -108,6 +109,7 @@ protected:
 	);
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
+	void bitwiseOperation(BinaryOperation const& _op);
 
 	void initContract(ContractDefinition const& _contract);
 	void initFunction(FunctionDefinition const& _function);

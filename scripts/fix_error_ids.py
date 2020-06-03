@@ -1,6 +1,9 @@
+#! /usr/bin/env python3
 import random
 import re
 import os
+import getopt
+import sys
 from os import path
 
 ENCODING = "utf-8"
@@ -115,19 +118,19 @@ def find_source_files(top_dir):
     return source_file_names
 
 
-def main():
+def main(argv):
+    check_only = False
+    noconfirm = False
+    opts, args = getopt.getopt(argv, "", ["check-only", "noconfirm"])
+
+    for opt, arg in opts:
+        if opt == '--check-only':
+            check_only = True
+        elif opt == '--noconfirm':
+            noconfirm = True
+
     random.seed()
     cwd = os.getcwd()
-    answer = input(
-        f"This script checks and corrects *_error literals in .h and .cpp files\n"
-        f"in {cwd}, recursively.\n\n"
-        f"Please commit current changes first, and review the results when the script finishes.\n\n"
-        f"Do you want to start [Y/N]? "
-    )
-    while len(answer) == 0 or answer not in "YNyn":
-        answer = input("[Y/N]? ")
-    if answer not in "yY":
-        return
 
     source_file_names = find_source_files(cwd)
 
@@ -147,10 +150,26 @@ def main():
 
     if ok:
         print("No incorrect IDs found")
-    else:
-        fix_ids(used_ids, source_file_names)
-        print("Fixing completed")
+        exit(0)
+
+    if check_only:
+        exit(1)
+
+    if not noconfirm:
+        answer = input(
+            "\nDo you want to fix incorrect IDs?\n"
+            "Please commit current changes first, and review the results when the script finishes.\n"
+            "[Y/N]? "
+        )
+        while len(answer) == 0 or answer not in "YNyn":
+            answer = input("[Y/N]? ")
+        if answer not in "yY":
+            exit(1)
+
+    fix_ids(used_ids, source_file_names)
+    print("Fixing completed")
+    exit(2)
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])

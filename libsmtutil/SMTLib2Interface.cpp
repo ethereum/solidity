@@ -126,7 +126,7 @@ pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> con
 		result = CheckResult::ERROR;
 
 	vector<string> values;
-	if (result == CheckResult::SATISFIABLE && result != CheckResult::ERROR)
+	if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
 		values = parseValues(find(response.cbegin(), response.cend(), '\n'), response.cend());
 	return make_pair(result, values);
 }
@@ -137,7 +137,40 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 		return _expr.name;
 
 	std::string sexpr = "(";
-	if (_expr.name == "const_array")
+	if (_expr.name == "int2bv")
+	{
+		size_t size = std::stoi(_expr.arguments[1].name);
+		auto arg = toSExpr(_expr.arguments.front());
+		auto int2bv = "(_ int2bv " + to_string(size) + ")";
+		// Some solvers treat all BVs as unsigned, so we need to manually apply 2's complement if needed.
+		sexpr += string("ite ") +
+			"(>= " + arg + " 0) " +
+			"(" + int2bv + " " + arg + ") " +
+			"(bvneg (" + int2bv + " (- " + arg + ")))";
+	}
+	else if (_expr.name == "bv2int")
+	{
+		auto intSort = dynamic_pointer_cast<IntSort>(_expr.sort);
+		smtAssert(intSort, "");
+
+		auto arg = toSExpr(_expr.arguments.front());
+		auto nat = "(bv2nat " + arg + ")";
+
+		if (!intSort->isSigned)
+			return nat;
+
+		auto bvSort = dynamic_pointer_cast<BitVectorSort>(_expr.arguments.front().sort);
+		smtAssert(bvSort, "");
+		auto size = to_string(bvSort->size);
+		auto pos = to_string(bvSort->size - 1);
+
+		// Some solvers treat all BVs as unsigned, so we need to manually apply 2's complement if needed.
+		sexpr += string("ite ") +
+			"(= ((_ extract " + pos + " " + pos + ")" + arg + ") #b0) " +
+			nat + " " +
+			"(- (bvneg " + arg + "))";
+	}
+	else if (_expr.name == "const_array")
 	{
 		smtAssert(_expr.arguments.size() == 2, "");
 		auto sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments.at(0).sort);
@@ -151,7 +184,7 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 	{
 		smtAssert(_expr.arguments.size() == 2, "");
 		auto tupleSort = dynamic_pointer_cast<TupleSort>(_expr.arguments.at(0).sort);
-		unsigned index = std::stoi(_expr.arguments.at(1).name);
+		size_t index = std::stoul(_expr.arguments.at(1).name);
 		smtAssert(index < tupleSort->members.size(), "");
 		sexpr += "|" + tupleSort->members.at(index) + "| " + toSExpr(_expr.arguments.at(0));
 	}

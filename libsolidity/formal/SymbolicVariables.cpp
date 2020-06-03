@@ -286,7 +286,7 @@ SymbolicArrayVariable::SymbolicArrayVariable(
 		std::make_shared<TupleSort>(
 			"array_length_pair",
 			std::vector<std::string>{"array", "length"},
-			std::vector<SortPointer>{m_sort, SortProvider::intSort}
+			std::vector<SortPointer>{m_sort, SortProvider::uintSort}
 		),
 		m_uniqueName + "_array_length_pair",
 		m_context

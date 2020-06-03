@@ -31,6 +31,7 @@ enum class Kind
 {
 	Int,
 	Bool,
+	BitVector,
 	Function,
 	Array,
 	Sort,
@@ -47,6 +48,36 @@ struct Sort
 	Kind const kind;
 };
 using SortPointer = std::shared_ptr<Sort>;
+
+struct IntSort: public Sort
+{
+	IntSort(bool _signed):
+		Sort(Kind::Int),
+		isSigned(_signed)
+	{}
+
+	bool operator==(IntSort const& _other) const
+	{
+		return Sort::operator==(_other) && isSigned == _other.isSigned;
+	}
+
+	bool isSigned;
+};
+
+struct BitVectorSort: public Sort
+{
+	BitVectorSort(unsigned _size):
+		Sort(Kind::BitVector),
+		size(_size)
+	{}
+
+	bool operator==(BitVectorSort const& _other) const
+	{
+		return Sort::operator==(_other) && size == _other.size;
+	}
+
+	unsigned size;
+};
 
 struct FunctionSort: public Sort
 {
@@ -160,7 +191,9 @@ struct TupleSort: public Sort
 struct SortProvider
 {
 	static std::shared_ptr<Sort> const boolSort;
-	static std::shared_ptr<Sort> const intSort;
+	static std::shared_ptr<IntSort> const uintSort;
+	static std::shared_ptr<IntSort> const sintSort;
+	static std::shared_ptr<IntSort> intSort(bool _signed = false);
 };
 
 }

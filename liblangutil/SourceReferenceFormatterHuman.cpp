@@ -23,12 +23,27 @@
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/UTF8.h>
 #include <iomanip>
+#include <string_view>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::util::formatting;
+
+namespace
+{
+
+std::string replaceNonTabs(std::string_view _utf8Input, char _filler)
+{
+	std::string output;
+	for (char const c: _utf8Input)
+		if ((c & 0xc0) != 0x80)
+			output.push_back(c == '\t' ? '\t' : _filler);
+	return output;
+}
+
+}
 
 AnsiColorized SourceReferenceFormatterHuman::normalColored() const
 {
@@ -85,6 +100,8 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 	frameColored() << "-->";
 	m_stream << ' ' << _ref.sourceName << ':' << line << ':' << (_ref.position.column + 1) << ":\n";
 
+	string_view text = _ref.text;
+
 	if (!_ref.multiline)
 	{
 		int const locationLength = _ref.endColumn - _ref.startColumn;
@@ -96,21 +113,15 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 
 		// line 2:
 		frameColored() << line << " |";
-		m_stream << ' ' << _ref.text.substr(0, _ref.startColumn);
-		highlightColored() << _ref.text.substr(_ref.startColumn, locationLength);
-		m_stream << _ref.text.substr(_ref.endColumn) << '\n';
+		m_stream << ' ' << text.substr(0, _ref.startColumn);
+		highlightColored() << text.substr(_ref.startColumn, locationLength);
+		m_stream << text.substr(_ref.endColumn) << '\n';
 
 		// line 3:
 		m_stream << leftpad << ' ';
 		frameColored() << '|';
-		m_stream << ' ';
-
-		for_each(
-			_ref.text.cbegin(),
-			_ref.text.cbegin() + numCodepoints(_ref.text.substr(0, _ref.startColumn)),
-			[this](char ch) { m_stream << (ch == '\t' ? '\t' : ' '); }
-		);
-		diagColored() << string(numCodepoints(_ref.text.substr(_ref.startColumn, locationLength)), '^');
+		m_stream << ' ' << replaceNonTabs(text.substr(0, _ref.startColumn), ' ');
+		diagColored() << replaceNonTabs(text.substr(_ref.startColumn, locationLength), '^');
 		m_stream << '\n';
 	}
 	else
@@ -122,13 +133,13 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 
 		// line 2:
 		frameColored() << line << " |";
-		m_stream << ' ' << _ref.text.substr(0, _ref.startColumn);
-		highlightColored() << _ref.text.substr(_ref.startColumn) << '\n';
+		m_stream << ' ' << text.substr(0, _ref.startColumn);
+		highlightColored() << text.substr(_ref.startColumn) << '\n';
 
 		// line 3:
 		m_stream << leftpad << ' ';
 		frameColored() << '|';
-		m_stream << ' ' << string(_ref.startColumn, ' ');
+		m_stream << ' ' << replaceNonTabs(text.substr(0, _ref.startColumn), ' ');
 		diagColored() << "^ (Relevant source part starts here and spans across multiple lines).";
 		m_stream << '\n';
 	}

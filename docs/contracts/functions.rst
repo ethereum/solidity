@@ -76,7 +76,7 @@ are initialized with their :ref:`default value <default-value>` and have that
 value until they are (re-)assigned.
 
 You can either explicitly assign to return variables and
-then leave the function using ``return;``,
+then leave the function as above,
 or you can provide return values
 (either a single or :ref:`multiple ones<multi-return>`) directly with the ``return``
 statement::
@@ -94,8 +94,8 @@ statement::
         }
     }
 
-This form is equivalent to first assigning values to the
-return variables and then using ``return;`` to leave the function.
+If you use an early ``return`` to leave a function that has return variables,
+you must provide return values together with the return statement.
 
 .. note::
     You cannot return some types from non-internal functions, notably

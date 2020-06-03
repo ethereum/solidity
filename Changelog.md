@@ -25,10 +25,14 @@ Language Features:
 
 
 Compiler Features:
+ * Code Generator: Do not introduce new source references for small internal routines.
  * Build system: Update the soljson.js build to emscripten 1.39.15 and boost 1.73.0 and include Z3 for integrated SMTChecker support without the callback mechanism.
+ * Commandline Interface: Adds new option ``--base-path PATH`` to use the given path as the root of the source tree instead of the root of the filesystem.
  * SMTChecker: Support array ``length``.
  * SMTChecker: Support array ``push`` and ``pop``.
+ * SMTChecker: General support to BitVectors and the bitwise ``and`` operator.
  * Add support for natspec comments on state variables.
+
 
 Bugfixes:
  * Optimizer: Fixed a bug in BlockDeDuplicator.
@@ -36,9 +40,15 @@ Bugfixes:
  * Type Checker: Disallow inline arrays of non-nameable types.
  * Type Checker: Fix internal compiler error when accessing members of array slices.
  * Type Checker: Fix internal compiler error when trying to decode too large static arrays.
+ * Type Checker: Fix wrong compiler error when referencing an overridden function without calling it.
+ * Type Checker: Fix internal compiler error when forward referencing non-literal constants from inline assembly.
  * NatSpec: DocString block is terminated when encountering an empty line.
  * Scanner: Fix bug when two empty NatSpec comments lead to scanning past EOL.
  * Code Generator: Trigger proper unimplemented errors on certain array copy operations.
+ * SMTChecker: Fix internal error when applying arithmetic operators to fixed point variables.
+ * SMTChecker: Fix internal error when short circuiting Boolean expressions with function calls in state variable initialization.
+ * SMTChecker: Fix internal error when assigning to index access inside branches.
+ * SMTChecker: Fix internal error on try/catch clauses with parameters.
 
 ### 0.6.8 (2020-05-14)
 

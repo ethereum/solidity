@@ -42,7 +42,7 @@
 template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U& _b)
 {
 	for (auto const& i: _b)
-		_a.push_back(i);
+		_a.push_back(T(i));
 	return _a;
 }
 /// Concatenate the contents of a container onto a vector, move variant.
@@ -299,7 +299,7 @@ template <class T>
 inline bytes toCompactBigEndian(T _val, unsigned _min = 0)
 {
 	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
-	int i = 0;
+	unsigned i = 0;
 	for (T v = _val; v; ++i, v >>= 8) {}
 	bytes ret(std::max<unsigned>(_min, i), 0);
 	toBigEndian(_val, ret);
@@ -379,7 +379,7 @@ void iterateReplacing(std::vector<T>& _vector, F const& _f)
 		{
 			if (!useModified)
 			{
-				std::move(_vector.begin(), _vector.begin() + i, back_inserter(modifiedVector));
+				std::move(_vector.begin(), _vector.begin() + ptrdiff_t(i), back_inserter(modifiedVector));
 				useModified = true;
 			}
 			modifiedVector += std::move(*r);
@@ -406,7 +406,7 @@ void iterateReplacingWindow(std::vector<T>& _vector, F const& _f, std::index_seq
 		{
 			if (!useModified)
 			{
-				std::move(_vector.begin(), _vector.begin() + i, back_inserter(modifiedVector));
+				std::move(_vector.begin(), _vector.begin() + ptrdiff_t(i), back_inserter(modifiedVector));
 				useModified = true;
 			}
 			modifiedVector += std::move(*r);

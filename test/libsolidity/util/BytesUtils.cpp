@@ -81,7 +81,7 @@ bytes BytesUtils::convertBoolean(string const& _literal)
 	else if (_literal == "false")
 		return bytes{false};
 	else
-		throw Error(Error::Type::ParserError, "Boolean literal invalid.");
+		throw TestParserError("Boolean literal invalid.");
 }
 
 bytes BytesUtils::convertNumber(string const& _literal)
@@ -92,7 +92,7 @@ bytes BytesUtils::convertNumber(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "Number encoding invalid.");
+		throw TestParserError("Number encoding invalid.");
 	}
 }
 
@@ -104,7 +104,7 @@ bytes BytesUtils::convertHexNumber(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
+		throw TestParserError("Hex number encoding invalid.");
 	}
 }
 
@@ -116,7 +116,7 @@ bytes BytesUtils::convertString(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "String encoding invalid.");
+		throw TestParserError("String encoding invalid.");
 	}
 }
 

@@ -693,14 +693,6 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					m_errorReporter.typeError(3224_error, _identifier.location, "Constant has no value.");
 					return size_t(-1);
 				}
-				else if (!var || !type(*var)->isValueType() || (
-					dynamic_cast<Literal const*>(var->value().get()) == nullptr &&
-					type(*var->value())->category() != Type::Category::RationalNumber
-				))
-				{
-					m_errorReporter.typeError(7615_error, _identifier.location, "Only direct number constants and references to such constants are supported by inline assembly.");
-					return size_t(-1);
-				}
 				else if (_context == yul::IdentifierContext::LValue)
 				{
 					m_errorReporter.typeError(6252_error, _identifier.location, "Constant variables cannot be assigned to.");
@@ -711,7 +703,26 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					m_errorReporter.typeError(6617_error, _identifier.location, "The suffixes _offset and _slot can only be used on non-constant storage variables.");
 					return size_t(-1);
 				}
+				else if (var && var->value() && !var->value()->annotation().type && !dynamic_cast<Literal const*>(var->value().get()))
+				{
+					m_errorReporter.typeError(
+						2249_error,
+						_identifier.location,
+						"Constant variables with non-literal values cannot be forward referenced from inline assembly."
+					);
+					return size_t(-1);
+				}
+				else if (!var || !type(*var)->isValueType() || (
+					!dynamic_cast<Literal const*>(var->value().get()) &&
+					type(*var->value())->category() != Type::Category::RationalNumber
+				))
+				{
+					m_errorReporter.typeError(7615_error, _identifier.location, "Only direct number constants and references to such constants are supported by inline assembly.");
+					return size_t(-1);
+				}
 			}
+
+			solAssert(!dynamic_cast<FixedPointType const*>(var->type()), "FixedPointType not implemented.");
 
 			if (requiresStorage)
 			{
@@ -2983,7 +2994,11 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	if (!annotation.referencedDeclaration)
 	{
 		annotation.overloadedDeclarations = cleanOverloadedDeclarations(_identifier, annotation.candidateDeclarations);
-		if (!annotation.arguments)
+		if (annotation.overloadedDeclarations.empty())
+			m_errorReporter.fatalTypeError(7593_error, _identifier.location(), "No candidates for overload resolution found.");
+		else if (annotation.overloadedDeclarations.size() == 1)
+			annotation.referencedDeclaration = *annotation.overloadedDeclarations.begin();
+		else if (!annotation.arguments)
 		{
 			// The identifier should be a public state variable shadowing other functions
 			vector<Declaration const*> candidates;
@@ -3000,10 +3015,6 @@ bool TypeChecker::visit(Identifier const& _identifier)
 			else
 				m_errorReporter.fatalTypeError(7589_error, _identifier.location(), "No unique declaration found after variable lookup.");
 		}
-		else if (annotation.overloadedDeclarations.empty())
-			m_errorReporter.fatalTypeError(7593_error, _identifier.location(), "No candidates for overload resolution found.");
-		else if (annotation.overloadedDeclarations.size() == 1)
-			annotation.referencedDeclaration = *annotation.overloadedDeclarations.begin();
 		else
 		{
 			vector<Declaration const*> candidates;

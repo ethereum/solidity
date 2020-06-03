@@ -87,9 +87,9 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 			copyZeroExtended(
 				m_state.memory,
 				m_state.code,
-				size_t(_arguments.at(0)),
-				size_t(_arguments.at(1) & size_t(-1)),
-				size_t(_arguments.at(2))
+				static_cast<size_t>(_arguments.at(0)),
+				static_cast<size_t>(_arguments.at(1) & numeric_limits<size_t>::max()),
+				static_cast<size_t>(_arguments.at(2))
 			);
 		return 0;
 	}

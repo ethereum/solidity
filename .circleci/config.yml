@@ -316,6 +316,15 @@ jobs:
           name: checking shell scripts
           command: ./scripts/chk_shellscripts/chk_shellscripts.sh
 
+  chk_errorcodes:
+    docker:
+      - image: circleci/python:3.6
+    steps:
+      - checkout
+      - run:
+          name: Check for error codes
+          command: ./scripts/fix_error_ids.py --check-only
+
   chk_pylint:
     docker:
       - image: buildpack-deps:eoan
@@ -845,6 +854,7 @@ workflows:
       - chk_buglist: *workflow_trigger_on_tags
       - chk_proofs: *workflow_trigger_on_tags
       - chk_pylint: *workflow_trigger_on_tags
+      - chk_errorcodes: *workflow_trigger_on_tags
       - chk_antlr_grammar: *workflow_trigger_on_tags
       - chk_docs_pragma_min_version: *workflow_trigger_on_tags
 

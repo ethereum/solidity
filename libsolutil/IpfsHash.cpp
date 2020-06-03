@@ -62,7 +62,7 @@ string base58Encode(bytes const& _data)
 	string output;
 	while (data)
 	{
-		output += alphabet[size_t(data % alphabet.size())];
+		output += alphabet[static_cast<size_t>(data % alphabet.size())];
 		data /= alphabet.size();
 	}
 	reverse(output.begin(), output.end());

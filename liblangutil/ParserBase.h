@@ -64,7 +64,7 @@ protected:
 	};
 
 	/// Location of the current token
-	SourceLocation currentLocation() const;
+	virtual SourceLocation currentLocation() const;
 
 	///@{
 	///@name Helper functions
