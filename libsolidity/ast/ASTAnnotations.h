@@ -136,6 +136,9 @@ struct StructDeclarationAnnotation: TypeDeclarationAnnotation
 	/// recursion immediately raises an error.
 	/// Will be filled in by the DeclarationTypeChecker.
 	std::optional<bool> recursive;
+	/// Whether the struct contains a mapping type, either directly or, indirectly inside another
+	/// struct or an array.
+	std::optional<bool> containsNestedMapping;
 };
 
 struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation

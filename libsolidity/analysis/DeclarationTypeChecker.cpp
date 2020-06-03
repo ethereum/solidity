@@ -112,18 +112,16 @@ bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
 		{
 			Type const* memberType = member->annotation().type;
-			while (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
-			{
-				if (arrayType->isDynamicallySized())
-					break;
-				memberType = arrayType->baseType();
-			}
+
+			if (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
+				memberType = arrayType->finalBaseType(true);
+
 			if (auto structType = dynamic_cast<StructType const*>(memberType))
 				if (_cycleDetector.run(structType->structDefinition()))
 					return;
 		}
 	};
-	if (util::CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
+	if (util::CycleDetector<StructDefinition>(visitor).run(_struct))
 		m_errorReporter.fatalTypeError(2046_error, _struct.location(), "Recursive struct definition.");
 
 	return false;
