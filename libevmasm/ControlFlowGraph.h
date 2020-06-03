@@ -45,8 +45,8 @@ public:
 	BlockId() { *this = invalid(); }
 	explicit BlockId(unsigned _id): m_id(_id) {}
 	explicit BlockId(u256 const& _id);
-	static BlockId initial() { return BlockId(-2); }
-	static BlockId invalid() { return BlockId(-1); }
+	static BlockId initial() { return BlockId(std::numeric_limits<unsigned>::max() - 1); }
+	static BlockId invalid() { return BlockId(std::numeric_limits<unsigned>::max()); }
 
 	bool operator==(BlockId const& _other) const { return m_id == _other.m_id; }
 	bool operator!=(BlockId const& _other) const { return m_id != _other.m_id; }

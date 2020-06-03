@@ -1227,7 +1227,7 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	sub->append(t4.pushTag());
 	sub->append(Instruction::JUMP);
 
-	size_t subId = size_t(main.appendSubroutine(sub).data());
+	size_t subId = static_cast<size_t>(main.appendSubroutine(sub).data());
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(u256(8));
@@ -1281,10 +1281,10 @@ BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
 
-	for (int i = 1; i < 256; i++)
+	for (size_t i = 1; i < 256; i++)
 	{
 		checkCSE({
-			u256(boost::multiprecision::pow(u256(2), i)-1),
+			u256(boost::multiprecision::pow(u256(2), i) - 1),
 			Instruction::CALLVALUE,
 			u256(256-i),
 			Instruction::SHR,
@@ -1309,10 +1309,10 @@ BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 	}
 
 	// Check that opt. does NOT trigger
-	for (int i = 1; i < 255; i++)
+	for (size_t i = 1; i < 255; i++)
 	{
 		checkCSE({
-			u256(boost::multiprecision::pow(u256(2), i)-1),
+			u256(boost::multiprecision::pow(u256(2), i) - 1),
 			Instruction::CALLVALUE,
 			u256(255-i),
 			Instruction::SHR,
