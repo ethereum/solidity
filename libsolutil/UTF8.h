@@ -38,6 +38,4 @@ inline bool validateUTF8(std::string const& _input)
 	return validateUTF8(_input, invalidPos);
 }
 
-size_t numCodepoints(std::string const& _utf8EncodedInput);
-
 }
