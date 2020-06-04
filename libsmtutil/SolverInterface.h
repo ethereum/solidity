@@ -98,6 +98,8 @@ public:
 			{"bvor", 2},
 			{"bvnot", 1},
 			{"bvshl", 2},
+			{"bvult", 2},
+			{"bvugt", 2},
 			{"int2bv", 2},
 			{"bv2int", 1},
 			{"select", 2},
@@ -115,6 +117,24 @@ public:
 		return Expression("ite", std::vector<Expression>{
 			std::move(_condition), std::move(_trueValue), std::move(_falseValue)
 		}, std::move(sort));
+	}
+
+	static Expression bvult(Expression _left, Expression _right)
+	{
+		smtAssert(*_left.sort == *_right.sort, "");
+		smtAssert(*_left.sort == *SortProvider::bitVectorSort, "");
+		return Expression("bvult", std::vector<Expression>{
+			std::move(_left), std::move(_right)
+		}, SortProvider::boolSort);
+	}
+
+	static Expression bvugt(Expression _left, Expression _right)
+	{
+		smtAssert(*_left.sort == *_right.sort, "");
+		smtAssert(*_left.sort == *SortProvider::bitVectorSort, "");
+		return Expression("bvugt", std::vector<Expression>{
+			std::move(_left), std::move(_right)
+		}, SortProvider::boolSort);
 	}
 
 	static Expression implies(Expression _a, Expression _b)
@@ -265,23 +285,23 @@ public:
 	}
 	friend Expression operator+(Expression _a, Expression _b)
 	{
-		return Expression("+", std::move(_a), std::move(_b), Kind::Int);
+		return Expression("+", {std::move(_a), std::move(_b)}, _a.sort);
 	}
 	friend Expression operator-(Expression _a, Expression _b)
 	{
-		return Expression("-", std::move(_a), std::move(_b), Kind::Int);
+		return Expression("-", {std::move(_a), std::move(_b)}, _a.sort);
 	}
 	friend Expression operator*(Expression _a, Expression _b)
 	{
-		return Expression("*", std::move(_a), std::move(_b), Kind::Int);
+		return Expression("*", {std::move(_a), std::move(_b)}, _a.sort);
 	}
 	friend Expression operator/(Expression _a, Expression _b)
 	{
-		return Expression("/", std::move(_a), std::move(_b), Kind::Int);
+		return Expression("/", {std::move(_a), std::move(_b)}, _a.sort);
 	}
 	friend Expression operator%(Expression _a, Expression _b)
 	{
-		return Expression("mod", std::move(_a), std::move(_b), Kind::Int);
+		return Expression("mod", {std::move(_a), std::move(_b)}, _a.sort);
 	}
 	friend Expression operator&(Expression _a, Expression _b)
 	{
