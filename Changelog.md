@@ -1,3 +1,9 @@
+### 0.6.10 (unreleased)
+
+Bugfixes:
+ * Type Checker: Fix internal compiler errors when using too large storage arrays.
+
+
 ### 0.6.9 (2020-06-04)
 
 Language Features:

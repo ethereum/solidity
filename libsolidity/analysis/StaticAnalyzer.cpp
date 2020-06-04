@@ -158,7 +158,14 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 	else if (_variable.isStateVariable())
 	{
 		set<StructDefinition const*> structsSeen;
-		if (structureSizeEstimate(*_variable.type(), structsSeen) >= bigint(1) << 64)
+		bigint sizeEstimate = structureSizeEstimate(*_variable.type(), structsSeen);
+		if (sizeEstimate >= bigint(1) << 256)
+			m_errorReporter.typeError(
+				1928_error,
+				_variable.location(),
+				"Array too large for storage."
+			);
+		else if (sizeEstimate >= bigint(1) << 64)
 			m_errorReporter.warning(
 				3408_error,
 				_variable.location(),
