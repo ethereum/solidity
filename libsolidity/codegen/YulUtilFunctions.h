@@ -364,6 +364,14 @@ private:
 	/// use exactly one variable to hold the value.
 	std::string conversionFunctionSpecial(Type const& _from, Type const& _to);
 
+	/// @returns function name that extracts and returns byte array length
+	/// signature: (data) -> length
+	std::string extractByteArrayLengthFunction();
+
+	/// @returns the name of a function that reduces the size of a storage byte array by one element
+	/// signature: (byteArray)
+	std::string storageByteArrayPopFunction(ArrayType const& _type);
+
 	std::string readFromMemoryOrCalldata(Type const& _type, bool _fromCalldata);
 
 	langutil::EVMVersion m_evmVersion;

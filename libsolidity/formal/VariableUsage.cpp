@@ -33,7 +33,8 @@ set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _
 	m_touchedVariables.clear();
 	m_callStack.clear();
 	m_callStack += _outerCallstack;
-	m_lastCall = m_callStack.back();
+	if (!m_callStack.empty())
+		m_lastCall = m_callStack.back();
 	_node.accept(*this);
 	return m_touchedVariables;
 }
@@ -103,8 +104,7 @@ void VariableUsage::checkIdentifier(Identifier const& _identifier)
 	solAssert(declaration, "");
 	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
-		solAssert(m_lastCall, "");
-		if (!varDecl->isLocalVariable() || varDecl->functionOrModifierDefinition() == m_lastCall)
+		if (!varDecl->isLocalVariable() || (m_lastCall && varDecl->functionOrModifierDefinition() == m_lastCall))
 			m_touchedVariables.insert(varDecl);
 	}
 }

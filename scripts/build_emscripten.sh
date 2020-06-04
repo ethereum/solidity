@@ -34,7 +34,5 @@ else
     BUILD_DIR="$1"
 fi
 
-docker run -v $(pwd):/root/project -w /root/project trzeci/emscripten:sdk-tag-1.39.3-64bit \
-    ./scripts/travis-emscripten/install_deps.sh
-docker run -v $(pwd):/root/project -w /root/project trzeci/emscripten:sdk-tag-1.39.3-64bit \
+docker run -v $(pwd):/root/project -w /root/project ethereum/solidity-buildpack-deps:emsdk-1.39.15-1 \
     ./scripts/travis-emscripten/build_emscripten.sh $BUILD_DIR

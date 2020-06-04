@@ -56,9 +56,6 @@ public:
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
-	void printSource(std::ostream& _stream, std::string const &_linePrefix = "", bool const _formatted = false) const override;
-	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
-
 private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
 	void disambiguate();
@@ -66,9 +63,7 @@ private:
 
 	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
 
-	std::string m_source;
 	std::string m_optimizerStep;
-	std::string m_expectation;
 
 	Dialect const* m_dialect = nullptr;
 	std::set<YulString> m_reservedIdentifiers;
@@ -77,7 +72,6 @@ private:
 
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
-	std::string m_obtainedResult;
 };
 
 }

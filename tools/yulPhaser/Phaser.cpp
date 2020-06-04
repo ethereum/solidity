@@ -39,6 +39,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
+using namespace solidity::yul;
 using namespace solidity::phaser;
 
 namespace po = boost::program_options;
@@ -188,6 +189,27 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 	}
 }
 
+CodeWeights CodeWeightFactory::buildFromCommandLine(po::variables_map const& _arguments)
+{
+	return {
+		_arguments["expression-statement-cost"].as<size_t>(),
+		_arguments["assignment-cost"].as<size_t>(),
+		_arguments["variable-declaration-cost"].as<size_t>(),
+		_arguments["function-definition-cost"].as<size_t>(),
+		_arguments["if-cost"].as<size_t>(),
+		_arguments["switch-cost"].as<size_t>(),
+		_arguments["case-cost"].as<size_t>(),
+		_arguments["for-loop-cost"].as<size_t>(),
+		_arguments["break-cost"].as<size_t>(),
+		_arguments["continue-cost"].as<size_t>(),
+		_arguments["leave-cost"].as<size_t>(),
+		_arguments["block-cost"].as<size_t>(),
+		_arguments["function-call-cost"].as<size_t>(),
+		_arguments["identifier-cost"].as<size_t>(),
+		_arguments["literal-cost"].as<size_t>(),
+	};
+}
+
 FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
 	return {
@@ -201,7 +223,8 @@ FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po:
 unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	Options const& _options,
 	vector<Program> _programs,
-	vector<shared_ptr<ProgramCache>> _programCaches
+	vector<shared_ptr<ProgramCache>> _programCaches,
+	CodeWeights const& _weights
 )
 {
 	assert(_programCaches.size() == _programs.size());
@@ -216,6 +239,7 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 				metrics.push_back(make_unique<ProgramSize>(
 					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
 					move(_programCaches[i]),
+					_weights,
 					_options.chromosomeRepetitions
 				));
 
@@ -228,6 +252,7 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
 					move(_programCaches[i]),
 					_options.relativeMetricScale,
+					_weights,
 					_options.chromosomeRepetitions
 				));
 			break;
@@ -653,6 +678,28 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 	;
 	keywordDescription.add(metricsDescription);
 
+	po::options_description metricWeightDescription("METRIC WEIGHTS", lineLength, minDescriptionLength);
+	metricWeightDescription.add_options()
+		// TODO: We need to figure out the best set of weights for the phaser.
+		// This one is just a stopgap to make sure no statement or expression has zero cost.
+		("expression-statement-cost", po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("assignment-cost",           po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("variable-declaration-cost", po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("function-definition-cost",  po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("if-cost",                   po::value<size_t>()->value_name("<COST>")->default_value(2))
+		("switch-cost",               po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("case-cost",                 po::value<size_t>()->value_name("<COST>")->default_value(2))
+		("for-loop-cost",             po::value<size_t>()->value_name("<COST>")->default_value(3))
+		("break-cost",                po::value<size_t>()->value_name("<COST>")->default_value(2))
+		("continue-cost",             po::value<size_t>()->value_name("<COST>")->default_value(2))
+		("leave-cost",                po::value<size_t>()->value_name("<COST>")->default_value(2))
+		("block-cost",                po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("function-call-cost",        po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("identifier-cost",           po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("literal-cost",              po::value<size_t>()->value_name("<COST>")->default_value(1))
+	;
+	keywordDescription.add(metricWeightDescription);
+
 	po::options_description cacheDescription("CACHE", lineLength, minDescriptionLength);
 	cacheDescription.add_options()
 		(
@@ -762,8 +809,13 @@ void Phaser::runPhaser(po::variables_map const& _arguments)
 
 	vector<Program> programs = ProgramFactory::build(programOptions);
 	vector<shared_ptr<ProgramCache>> programCaches = ProgramCacheFactory::build(cacheOptions, programs);
-
-	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, programs, programCaches);
+	CodeWeights codeWeights = CodeWeightFactory::buildFromCommandLine(_arguments);
+	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(
+		metricOptions,
+		programs,
+		programCaches,
+		codeWeights
+	);
 	Population population = PopulationFactory::build(populationOptions, move(fitnessMetric));
 
 	if (_arguments["mode"].as<PhaserMode>() == PhaserMode::RunAlgorithm)

@@ -63,7 +63,7 @@ complete contract):
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// @dev Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
@@ -87,7 +87,7 @@ as it uses ``call`` which forwards all remaining gas by default:
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// @dev Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
@@ -106,7 +106,7 @@ outlined further below:
     pragma solidity >=0.4.11 <0.7.0;
 
     contract Fund {
-        /// Mapping of ether shares of the contract.
+        /// @dev Mapping of ether shares of the contract.
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
@@ -657,3 +657,14 @@ Notice that we do not clear knowledge about ``array`` and ``d`` because they
 are located in storage, even though they also have type ``uint[]``.  However,
 if ``d`` was assigned, we would need to clear knowledge about ``array`` and
 vice-versa.
+
+Real World Assumptions
+======================
+
+Some scenarios can be expressed in Solidity and the EVM, but are expected to
+never occur in practice.
+One of such cases is the length of a dynamic storage array overflowing during a
+push: If the ``push`` operation is applied to an array of length 2^256 - 1, its
+length silently overflows.
+However, this is unlikely to happen in practice, since the operations required
+to grow the array to that point would take billions of years to execute.

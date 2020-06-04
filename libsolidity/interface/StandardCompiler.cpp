@@ -28,8 +28,10 @@
 #include <libyul/optimiser/Suite.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <libevmasm/Instruction.h>
+#include <libsmtutil/Exceptions.h>
 #include <libsolutil/JSON.h>
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -176,7 +178,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _art
 }
 
 ///
-/// @a _outputSelection is a JSON object containining a two-level hashmap, where the first level is the filename,
+/// @a _outputSelection is a JSON object containing a two-level hashmap, where the first level is the filename,
 /// the second level is the contract name and the value is an array of artifact names to be requested for that contract.
 /// @a _file is the current file
 /// @a _contract is the current contract
@@ -227,7 +229,7 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 	if (!_outputSelection.isObject())
 		return false;
 
-	// This does not inculde "evm.methodIdentifiers" on purpose!
+	// This does not include "evm.methodIdentifiers" on purpose!
 	static vector<string> const outputsThatRequireBinaries{
 		"*",
 		"ir", "irOptimized",
@@ -920,6 +922,16 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			"Yul exception"
 		));
 	}
+	catch (smtutil::SMTLogicError const& _exception)
+	{
+		errors.append(formatErrorWithException(
+			_exception,
+			false,
+			"SMTLogicException",
+			"general",
+			"SMT logic exception"
+		));
+	}
 	catch (util::Exception const& _exception)
 	{
 		errors.append(formatError(
@@ -1127,16 +1139,29 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 
 	stack.optimize();
 
-	MachineAssemblyObject object = stack.assemble(AssemblyStack::Machine::EVM);
+	MachineAssemblyObject object;
+	MachineAssemblyObject runtimeObject;
+	tie(object, runtimeObject) = stack.assembleAndGuessRuntime();
 
-	if (isArtifactRequested(
-		_inputsAndSettings.outputSelection,
-		sourceName,
-		contractName,
-		{ "evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap", "evm.bytecode.linkReferences" },
-		wildcardMatchesExperimental
-	))
-		output["contracts"][sourceName][contractName]["evm"]["bytecode"] = collectEVMObject(*object.bytecode, object.sourceMappings.get(), false);
+	for (string const& objectKind: vector<string>{"bytecode", "deployedBytecode"})
+	{
+		auto artifacts = util::applyMap(
+			vector<string>{"", ".object", ".opcodes", ".sourceMap", ".linkReferences"},
+			[&](auto const& _s) { return "evm." + objectKind + _s; }
+		);
+		if (isArtifactRequested(
+			_inputsAndSettings.outputSelection,
+			sourceName,
+			contractName,
+			artifacts,
+			wildcardMatchesExperimental
+		))
+		{
+			MachineAssemblyObject const& o = objectKind == "bytecode" ? object : runtimeObject;
+			if (o.bytecode)
+				output["contracts"][sourceName][contractName]["evm"][objectKind] = collectEVMObject(*o.bytecode, o.sourceMappings.get(), false);
+		}
+	}
 
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized", wildcardMatchesExperimental))
 		output["contracts"][sourceName][contractName]["irOptimized"] = stack.print();

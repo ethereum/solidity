@@ -39,6 +39,18 @@ bytes toBytes(uint8_t _b)
 	return bytes(1, _b);
 }
 
+enum class LimitsKind: uint8_t
+{
+	Min = 0x00,
+	MinMax = 0x01,
+};
+
+enum class Mutability: uint8_t
+{
+	Const = 0x00,
+	Var = 0x01,
+};
+
 enum class Section: uint8_t
 {
 	CUSTOM = 0x00,
@@ -382,20 +394,21 @@ bytes BinaryTransform::operator()(Loop const& _loop)
 	return result;
 }
 
-bytes BinaryTransform::operator()(Break const& _break)
+bytes BinaryTransform::operator()(Branch const& _branch)
 {
-	return toBytes(Opcode::Br) + encodeLabelIdx(_break.label.name);
+	return toBytes(Opcode::Br) + encodeLabelIdx(_branch.label.name);
 }
 
-bytes BinaryTransform::operator()(BreakIf const& _breakIf)
+bytes BinaryTransform::operator()(BranchIf const& _branchIf)
 {
-	bytes result = std::visit(*this, *_breakIf.condition);
-	result += toBytes(Opcode::BrIf) + encodeLabelIdx(_breakIf.label.name);
+	bytes result = std::visit(*this, *_branchIf.condition);
+	result += toBytes(Opcode::BrIf) + encodeLabelIdx(_branchIf.label.name);
 	return result;
 }
 
 bytes BinaryTransform::operator()(Return const&)
 {
+	// Note that this does not work if the function returns a value.
 	return toBytes(Opcode::Return);
 }
 
@@ -529,8 +542,8 @@ bytes BinaryTransform::functionSection(vector<FunctionDefinition> const& _functi
 bytes BinaryTransform::memorySection()
 {
 	bytes result = lebEncode(1);
-	result.push_back(0); // flags
-	result.push_back(1); // initial
+	result.push_back(static_cast<uint8_t>(LimitsKind::Min));
+	result.push_back(1); // initial length
 	return makeSection(Section::MEMORY, std::move(result));
 }
 
@@ -539,8 +552,8 @@ bytes BinaryTransform::globalSection()
 	bytes result = lebEncode(m_globals.size());
 	for (size_t i = 0; i < m_globals.size(); ++i)
 		result +=
-			// mutable i64
-			bytes{uint8_t(ValueType::I64), 1} +
+			toBytes(ValueType::I64) +
+			lebEncode(static_cast<uint8_t>(Mutability::Var)) +
 			toBytes(Opcode::I64Const) +
 			lebEncodeSigned(0) +
 			toBytes(Opcode::End);

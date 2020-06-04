@@ -34,6 +34,7 @@ set(libsolutil_sources
     libsolutil/IterateReplacing.cpp
     libsolutil/JSON.cpp
     libsolutil/Keccak256.cpp
+    libsolutil/LazyInit.cpp
     libsolutil/StringUtils.cpp
     libsolutil/SwarmHash.cpp
     libsolutil/UTF8.cpp
@@ -187,7 +188,7 @@ add_executable(soltest ${sources}
     ${libsolidity_util_sources}
     ${yul_phaser_sources}
 )
-target_link_libraries(soltest PRIVATE libsolc yul solidity yulInterpreter evmasm solutil Boost::boost Boost::filesystem Boost::program_options Boost::unit_test_framework evmc)
+target_link_libraries(soltest PRIVATE libsolc yul solidity smtutil solutil Boost::boost yulInterpreter evmasm Boost::filesystem Boost::program_options Boost::unit_test_framework evmc)
 
 
 # Special compilation flag for Visual Studio (version 2019 at least affected)

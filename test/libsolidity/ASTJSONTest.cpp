@@ -140,6 +140,9 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 		return TestResult::FatalError;
 	}
 
+	if (m_sources.size() > 1)
+		m_result += "[\n";
+
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
 		ostringstream result;
@@ -149,6 +152,9 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 			m_result += ",";
 		m_result += "\n";
 	}
+
+	if (m_sources.size() > 1)
+		m_result += "]\n";
 
 	bool resultsMatch = true;
 

@@ -19,5 +19,4 @@ contract LoopFor2 {
 	}
 }
 // ----
-// Warning: (316-336): Assertion violation happens here
 // Warning: (363-382): Assertion violation happens here

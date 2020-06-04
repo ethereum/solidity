@@ -116,8 +116,7 @@ bytes compileFirstExpression(
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	GlobalContext globalContext;
-	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
-	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), scopes, errorReporter);
+	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), errorReporter);
 	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))

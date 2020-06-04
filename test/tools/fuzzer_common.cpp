@@ -156,7 +156,7 @@ void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
 		assembly.append(n);
 	}
 	for (bool isCreation: {false, true})
-		for (unsigned runs: {1, 2, 3, 20, 40, 100, 200, 400, 1000})
+		for (unsigned runs: {1u, 2u, 3u, 20u, 40u, 100u, 200u, 400u, 1000u})
 		{
 			// Make a copy here so that each time we start with the original state.
 			Assembly tmp = assembly;

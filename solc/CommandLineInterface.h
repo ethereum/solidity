@@ -117,6 +117,8 @@ private:
 	std::vector<frontend::CompilerStack::Remapping> m_remappings;
 	/// list of allowed directories to read files from
 	std::vector<boost::filesystem::path> m_allowedDirectories;
+	/// Base path, used for resolving relative paths in imports.
+	boost::filesystem::path m_basePath;
 	/// map of library names to addresses
 	std::map<std::string, util::h160> m_libraries;
 	/// Solidity compiler stack

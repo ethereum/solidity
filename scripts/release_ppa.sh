@@ -6,7 +6,7 @@
 ## You can pass a branch name as argument to this script (which, if no argument is given,
 ## will default to "develop").
 ##
-## If the gien branch is "release", the resulting package will be uplaoded to
+## If the given branch is "release", the resulting package will be uploaded to
 ## ethereum/ethereum PPA, or ethereum/ethereum-dev PPA otherwise.
 ##
 ## The gnupg key for "builds@ethereum.org" has to be present in order to sign
@@ -55,9 +55,9 @@ keyid=70D110489D66E2F6
 email=builds@ethereum.org
 packagename=solc
 
-static_build_distribution=disco
+static_build_distribution=focal
 
-DISTRIBUTIONS="bionic disco eoan focal"
+DISTRIBUTIONS="bionic eoan focal"
 
 if is_release
 then
@@ -85,7 +85,7 @@ else
     fi
     if [ $distribution = focal ]
     then
-        SMTDEPENDENCY="libz3-dev,
+        SMTDEPENDENCY="libz3-static-dev,
             libcvc4-dev,
             "
     elif [ $distribution = disco ]

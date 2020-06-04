@@ -46,6 +46,7 @@ public:
 private:
 	bool visit(ContractDefinition const& _contract) override;
 	bool visit(FunctionDefinition const& _function) override;
+	bool visit(VariableDeclaration const& _variable) override;
 	bool visit(ModifierDefinition const& _modifier) override;
 	bool visit(EventDefinition const& _event) override;
 
@@ -67,6 +68,12 @@ private:
 		StructurallyDocumentedAnnotation& _annotation
 	);
 
+	void handleDeclaration(
+		Declaration const& _declaration,
+		StructurallyDocumented const& _node,
+		StructurallyDocumentedAnnotation& _annotation
+	);
+
 	void parseDocStrings(
 		StructurallyDocumented const& _node,
 		StructurallyDocumentedAnnotation& _annotation,
@@ -74,9 +81,6 @@ private:
 		std::string const& _nodeName
 	);
 
-	void appendError(langutil::SourceLocation const& _location, std::string const& _description);
-
-	bool m_errorOccured = false;
 	langutil::ErrorReporter& m_errorReporter;
 };
 

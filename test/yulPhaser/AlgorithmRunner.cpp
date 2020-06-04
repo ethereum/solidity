@@ -37,6 +37,7 @@ using namespace boost::unit_test::framework;
 using namespace boost::test_tools;
 using namespace solidity::langutil;
 using namespace solidity::util;
+using namespace solidity::yul;
 
 namespace fs = boost::filesystem;
 
@@ -299,8 +300,8 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_cache_stats_if_requested, AlgorithmRunn
 		make_shared<ProgramCache>(programs[1]),
 	};
 	shared_ptr<FitnessMetric> fitnessMetric = make_shared<FitnessMetricAverage>(vector<shared_ptr<FitnessMetric>>{
-		make_shared<ProgramSize>(nullopt, caches[0]),
-		make_shared<ProgramSize>(nullopt, caches[1]),
+		make_shared<ProgramSize>(nullopt, caches[0], CodeWeights{}),
+		make_shared<ProgramSize>(nullopt, caches[1], CodeWeights{}),
 	});
 	Population population = Population::makeRandom(fitnessMetric, 2, 0, 5);
 

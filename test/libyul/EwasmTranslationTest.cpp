@@ -71,27 +71,7 @@ TestCase::TestResult EwasmTranslationTest::run(ostream& _stream, string const& _
 
 	m_obtainedResult = interpret();
 
-	if (m_expectation != m_obtainedResult)
-	{
-		string nextIndentLevel = _linePrefix + "  ";
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Expected result:" << endl;
-		// TODO could compute a simple diff with highlighted lines
-		printIndented(_stream, m_expectation, nextIndentLevel);
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
-		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		return TestResult::Failure;
-	}
-	return TestResult::Success;
-}
-
-void EwasmTranslationTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
-{
-	printIndented(_stream, m_source, _linePrefix);
-}
-
-void EwasmTranslationTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
-{
-	printIndented(_stream, m_obtainedResult, _linePrefix);
+	return checkResult(_stream, _linePrefix, _formatted);
 }
 
 bool EwasmTranslationTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)

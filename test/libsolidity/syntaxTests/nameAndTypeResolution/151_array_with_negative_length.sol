@@ -3,4 +3,4 @@ contract c {
 }
 // ----
 // TypeError: (51-53): Array with negative length specified.
-// TypeError: (45-56): Data location must be "storage" or "memory" for variable, but none was given.
+// TypeError: (45-56): Data location must be "storage", "memory" or "calldata" for variable, but none was given.

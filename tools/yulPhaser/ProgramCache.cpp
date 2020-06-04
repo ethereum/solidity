@@ -17,6 +17,8 @@
 
 #include <tools/yulPhaser/ProgramCache.h>
 
+#include <libyul/optimiser/Metrics.h>
+
 #include <libyul/optimiser/Suite.h>
 
 using namespace std;
@@ -133,7 +135,7 @@ size_t ProgramCache::calculateTotalCachedCodeSize() const
 {
 	size_t size = 0;
 	for (auto const& pair: m_entries)
-		size += pair.second.program.codeSize();
+		size += pair.second.program.codeSize(CacheStats::StorageWeights);
 
 	return size;
 }

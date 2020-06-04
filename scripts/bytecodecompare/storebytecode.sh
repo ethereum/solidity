@@ -64,6 +64,11 @@ var fs = require('fs')
 
 var compiler = require('./solc-js/wrapper.js')(require('./solc-js/soljson.js'))
 
+function removeSMT(source)
+{
+    return source.replace('pragma experimental SMTChecker;', '');
+}
+
 for (var optimize of [false, true])
 {
     for (var filename of process.argv.slice(2))
@@ -71,7 +76,7 @@ for (var optimize of [false, true])
         if (filename !== undefined)
         {
             var inputs = {}
-            inputs[filename] = { content: fs.readFileSync(filename).toString() }
+            inputs[filename] = { content: removeSMT(fs.readFileSync(filename).toString()) }
             var input = {
                 language: 'Solidity',
                 sources: inputs,
@@ -107,8 +112,10 @@ for (var optimize of [false, true])
     }
 }
 EOF
+        echo "Running the compiler..."
         chmod +x solc
         ./solc *.sol > report.txt
+        echo "Finished running the compiler."
     else
         $REPO_ROOT/scripts/bytecodecompare/prepare_report.py $REPO_ROOT/$BUILD_DIR/solc/solc
     fi
@@ -138,6 +145,9 @@ EOF
         else
             echo "Adding report failed, it might already exist in the repository."
         fi
+    else
+        echo "Not storing bytecode because the keys are not available."
     fi
 )
 rm -rf "$TMPDIR"
+echo "Storebytecode finished."

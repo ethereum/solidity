@@ -36,14 +36,14 @@ bytes onlyMetadata(bytes const& _bytecode)
 	unsigned size = _bytecode.size();
 	if (size < 5)
 		return bytes{};
-	size_t metadataSize = (_bytecode[size - 2] << 8) + _bytecode[size - 1];
+	size_t metadataSize = (static_cast<size_t>(_bytecode[size - 2]) << 8ul) + static_cast<size_t>(_bytecode[size - 1]);
 	if (size < (metadataSize + 2))
 		return bytes{};
 	// Sanity check: assume the first byte is a fixed-size CBOR array with 1, 2 or 3 entries
 	unsigned char firstByte = _bytecode[size - metadataSize - 2];
 	if (firstByte != 0xa1 && firstByte != 0xa2 && firstByte != 0xa3)
 		return bytes{};
-	return bytes(_bytecode.end() - metadataSize - 2, _bytecode.end() - 2);
+	return bytes(_bytecode.end() - static_cast<ptrdiff_t>(metadataSize) - 2, _bytecode.end() - 2);
 }
 
 bytes bytecodeSansMetadata(bytes const& _bytecode)

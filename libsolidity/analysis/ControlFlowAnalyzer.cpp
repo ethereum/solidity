@@ -94,7 +94,10 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 				case VariableOccurrence::Kind::Return:
 					if (unassignedVariables.count(&variableOccurrence.declaration()))
 					{
-						if (variableOccurrence.declaration().type()->dataStoredIn(DataLocation::Storage))
+						if (
+							variableOccurrence.declaration().type()->dataStoredIn(DataLocation::Storage) ||
+							variableOccurrence.declaration().type()->dataStoredIn(DataLocation::CallData)
+						)
 							// Merely store the unassigned access. We do not generate an error right away, since this
 							// path might still always revert. It is only an error if this is propagated to the exit
 							// node of the function (i.e. there is a path with an uninitialized access).
@@ -135,13 +138,16 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 			if (variableOccurrence->occurrence())
 				ssl.append("The variable was declared here.", variableOccurrence->declaration().location());
 
+			bool isStorage = variableOccurrence->declaration().type()->dataStoredIn(DataLocation::Storage);
 			m_errorReporter.typeError(
 				3464_error,
 				variableOccurrence->occurrence() ?
 					*variableOccurrence->occurrence() :
 					variableOccurrence->declaration().location(),
 				ssl,
-				string("This variable is of storage pointer type and can be ") +
+				"This variable is of " +
+				string(isStorage ? "storage" : "calldata") +
+				" pointer type and can be " +
 				(variableOccurrence->kind() == VariableOccurrence::Kind::Return ? "returned" : "accessed") +
 				" without prior assignment, which would lead to undefined behaviour."
 			);

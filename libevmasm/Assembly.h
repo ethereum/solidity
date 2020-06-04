@@ -52,6 +52,7 @@ public:
 	AssemblyItem newSub(AssemblyPointer const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
 	Assembly const& sub(size_t _sub) const { return *m_subs.at(_sub); }
 	Assembly& sub(size_t _sub) { return *m_subs.at(_sub); }
+	size_t numSubs() const { return m_subs.size(); }
 	AssemblyItem newPushSubSize(u256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
 	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
 	AssemblyItem newPushImmutable(std::string const& _identifier);
@@ -96,6 +97,7 @@ public:
 
 	/// Changes the source location used for each appended item.
 	void setSourceLocation(langutil::SourceLocation const& _location) { m_currentSourceLocation = _location; }
+	langutil::SourceLocation const& currentSourceLocation() const { return m_currentSourceLocation; }
 
 	/// Assembles the assembly into bytecode. The assembly should not be modified after this call, since the assembled version is cached.
 	LinkerObject const& assemble() const;

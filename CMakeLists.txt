@@ -10,7 +10,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-set(PROJECT_VERSION "0.6.8")
+set(PROJECT_VERSION "0.6.9")
 # OSX target needed in order to support std::visit
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14")
 project(solidity VERSION ${PROJECT_VERSION} LANGUAGES C CXX)
@@ -51,8 +51,26 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" include/licens
 include(EthOptions)
 configure_project(TESTS)
 
+find_package(Z3 4.6.0)
+if (${Z3_FOUND})
+  add_definitions(-DHAVE_Z3)
+  message("Z3 SMT solver found. This enables optional SMT checking with Z3.")
+endif()
+
+find_package(CVC4 QUIET)
+if (${CVC4_FOUND})
+  add_definitions(-DHAVE_CVC4)
+  message("CVC4 SMT solver found. This enables optional SMT checking with CVC4.")
+endif()
+
+if (NOT (${Z3_FOUND} OR ${CVC4_FOUND}))
+  message("No SMT solver found (or it has been forcefully disabled). Optional SMT checking will not be available.\
+  \nPlease install Z3 or CVC4 or remove the option disabling them (USE_Z3, USE_CVC4).")
+endif()
+
 add_subdirectory(libsolutil)
 add_subdirectory(liblangutil)
+add_subdirectory(libsmtutil)
 add_subdirectory(libevmasm)
 add_subdirectory(libyul)
 add_subdirectory(libsolidity)

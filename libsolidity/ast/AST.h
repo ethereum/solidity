@@ -31,6 +31,7 @@
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/Instruction.h>
 #include <libsolutil/FixedHash.h>
+#include <libsolutil/LazyInit.h>
 
 #include <boost/noncopyable.hpp>
 #include <json/json.h>
@@ -536,8 +537,8 @@ private:
 	ContractKind m_contractKind;
 	bool m_abstract{false};
 
-	mutable std::unique_ptr<std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList[2];
-	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents;
+	util::LazyInit<std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList[2];
+	util::LazyInit<std::vector<EventDefinition const*>> m_interfaceEvents;
 };
 
 class InheritanceSpecifier: public ASTNode
@@ -858,7 +859,7 @@ private:
  * Declaration of a variable. This can be used in various places, e.g. in function parameter
  * lists, struct definitions and even function bodies.
  */
-class VariableDeclaration: public Declaration
+class VariableDeclaration: public Declaration, public StructurallyDocumented
 {
 public:
 	enum Location { Unspecified, Storage, Memory, CallData };
@@ -881,6 +882,7 @@ public:
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<Expression> _value,
 		Visibility _visibility,
+		ASTPointer<StructuredDocumentation> const _documentation = nullptr,
 		bool _isStateVar = false,
 		bool _isIndexed = false,
 		Mutability _mutability = Mutability::Mutable,
@@ -888,6 +890,7 @@ public:
 		Location _referenceLocation = Location::Unspecified
 	):
 		Declaration(_id, _location, _name, _visibility),
+		StructurallyDocumented(std::move(_documentation)),
 		m_typeName(std::move(_type)),
 		m_value(std::move(_value)),
 		m_isStateVariable(_isStateVar),

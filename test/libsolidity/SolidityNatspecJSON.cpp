@@ -78,6 +78,81 @@ private:
 
 BOOST_FIXTURE_TEST_SUITE(SolidityNatspecJSON, DocumentationChecker)
 
+BOOST_AUTO_TEST_CASE(user_empty_natspec_test)
+{
+	char const* sourceCode = R"(
+		contract test {
+			///
+			///
+			function f() public {
+			}
+		}
+	)";
+
+	char const* natspec = R"(
+	{
+		"methods": {}
+	}
+	)";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(user_newline_break)
+{
+	char const* sourceCode = R"(
+		contract test {
+			///
+			/// @notice hello
+
+			/// @notice world
+			function f() public {
+			}
+		}
+	)";
+
+	char const* natspec = R"ABCDEF(
+	{
+		"methods": {
+			"f()":
+			{
+			"notice": "world"
+			}
+		}
+	}
+	)ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(user_multiline_empty_lines)
+{
+	char const* sourceCode = R"(
+	contract test {
+		/**
+		 *
+		 *
+		 * @notice hello world
+		 */
+		function f() public {
+		}
+	}
+	)";
+
+	char const* natspec = R"ABCDEF(
+	{
+		"methods": {
+			"f()": {
+				"notice": "hello world"
+			}
+		}
+	}
+	)ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+
 BOOST_AUTO_TEST_CASE(user_basic_test)
 {
 	char const* sourceCode = R"(
@@ -202,6 +277,77 @@ BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 
 	checkNatspec(sourceCode, "test", devNatspec, false);
 	checkNatspec(sourceCode, "test", userNatspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(public_state_variable)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @notice example of notice
+			/// @dev example of dev
+			/// @return returns state
+			uint public state;
+		}
+	)";
+
+	char const* devDoc = R"R(
+	{
+		"methods" : {},
+		"stateVariables" :
+		{
+			"state" :
+			{
+				"details" : "example of dev",
+				"return" : "returns state"
+			}
+		}
+	}
+	)R";
+	checkNatspec(sourceCode, "test", devDoc, false);
+
+	char const* userDoc = R"R(
+	{
+		"methods" :
+		{
+			"state()" :
+			{
+				"notice": "example of notice"
+			}
+		}
+	}
+	)R";
+	checkNatspec(sourceCode, "test", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(private_state_variable)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @dev example of dev
+			uint private state;
+		}
+	)";
+
+	char const* devDoc = R"(
+	{
+		"methods" : {},
+		"stateVariables" :
+		{
+			"state" :
+			{
+				"details" : "example of dev"
+			}
+		}
+	}
+	)";
+	checkNatspec(sourceCode, "test", devDoc, false);
+
+	char const* userDoc = R"(
+	{
+		"methods":{}
+	}
+	)";
+	checkNatspec(sourceCode, "test", userDoc, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)

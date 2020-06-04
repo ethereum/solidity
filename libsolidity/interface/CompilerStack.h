@@ -27,7 +27,8 @@
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/interface/DebugSettings.h>
-#include <libsolidity/formal/SolverInterface.h>
+
+#include <libsmtutil/SolverInterface.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
@@ -37,6 +38,7 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/FixedHash.h>
+#include <libsolutil/LazyInit.h>
 
 #include <boost/noncopyable.hpp>
 #include <json/json.h>
@@ -162,7 +164,7 @@ public:
 	void setEVMVersion(langutil::EVMVersion _version = langutil::EVMVersion{});
 
 	/// Set which SMT solvers should be enabled.
-	void setSMTSolverChoice(smt::SMTSolverChoice _enabledSolvers);
+	void setSMTSolverChoice(smtutil::SMTSolverChoice _enabledSolvers);
 
 	/// Sets the requested contract names by source.
 	/// If empty, no filtering is performed and every contract
@@ -342,13 +344,13 @@ private:
 		std::string yulIROptimized; ///< Optimized experimental Yul IR code.
 		std::string ewasm; ///< Experimental Ewasm text representation
 		evmasm::LinkerObject ewasmObject; ///< Experimental Ewasm code
-		mutable std::unique_ptr<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
-		mutable std::unique_ptr<Json::Value const> abi;
-		mutable std::unique_ptr<Json::Value const> storageLayout;
-		mutable std::unique_ptr<Json::Value const> userDocumentation;
-		mutable std::unique_ptr<Json::Value const> devDocumentation;
-		mutable std::unique_ptr<std::string const> sourceMapping;
-		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
+		util::LazyInit<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
+		util::LazyInit<Json::Value const> abi;
+		util::LazyInit<Json::Value const> storageLayout;
+		util::LazyInit<Json::Value const> userDocumentation;
+		util::LazyInit<Json::Value const> devDocumentation;
+		mutable std::optional<std::string const> sourceMapping;
+		mutable std::optional<std::string const> runtimeSourceMapping;
 	};
 
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
@@ -432,7 +434,7 @@ private:
 	OptimiserSettings m_optimiserSettings;
 	RevertStrings m_revertStrings = RevertStrings::Default;
 	langutil::EVMVersion m_evmVersion;
-	smt::SMTSolverChoice m_enabledSMTSolvers;
+	smtutil::SMTSolverChoice m_enabledSMTSolvers;
 	std::map<std::string, std::set<std::string>> m_requestedContractNames;
 	bool m_generateIR;
 	bool m_generateEwasm;
@@ -447,8 +449,6 @@ private:
 	std::map<util::h256, std::string> m_smtlib2Responses;
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::vector<Source const*> m_sourceOrder;
-	/// This is updated during compilation.
-	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>> m_scopes;
 	std::map<std::string const, Contract> m_contracts;
 	langutil::ErrorList m_errorList;
 	langutil::ErrorReporter m_errorReporter;

@@ -88,6 +88,12 @@ public:
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	MachineAssemblyObject assemble(Machine _machine) const;
 
+	/// Run the assembly step (should only be called after parseAndAnalyze).
+	/// In addition to the value returned by @a assemble, returns
+	/// a second object that is guessed to be the runtime code.
+	/// Only available for EVM.
+	std::pair<MachineAssemblyObject, MachineAssemblyObject> assembleAndGuessRuntime() const;
+
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
 	langutil::ErrorList const& errors() const { return m_errors; }
 

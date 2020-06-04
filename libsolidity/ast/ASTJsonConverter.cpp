@@ -391,6 +391,8 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 	};
 	if (_node.isStateVariable() && _node.isPublic())
 		attributes.emplace_back("functionSelector", _node.externalIdentifierHex());
+	if (_node.isStateVariable() && _node.documentation())
+		attributes.emplace_back("documentation", toJson(*_node.documentation()));
 	if (m_inEvent)
 		attributes.emplace_back("indexed", _node.isIndexed());
 	if (!_node.annotation().baseFunctions.empty())

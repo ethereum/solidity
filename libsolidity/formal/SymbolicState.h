@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include <libsolidity/formal/Sorts.h>
-#include <libsolidity/formal/SolverInterface.h>
 #include <libsolidity/formal/SymbolicVariables.h>
+
+#include <libsmtutil/Sorts.h>
+#include <libsmtutil/SolverInterface.h>
 
 namespace solidity::frontend::smt
 {
@@ -39,18 +40,18 @@ public:
 	/// Blockchain.
 	//@{
 	/// Value of `this` address.
-	Expression thisAddress();
+	smtutil::Expression thisAddress();
 	/// @returns the symbolic balance of address `this`.
-	Expression balance();
+	smtutil::Expression balance();
 	/// @returns the symbolic balance of an address.
-	Expression balance(Expression _address);
+	smtutil::Expression balance(smtutil::Expression _address);
 	/// Transfer _value from _from to _to.
-	void transfer(Expression _from, Expression _to, Expression _value);
+	void transfer(smtutil::Expression _from, smtutil::Expression _to, smtutil::Expression _value);
 	//@}
 
 private:
 	/// Adds _value to _account's balance.
-	void addBalance(Expression _account, Expression _value);
+	void addBalance(smtutil::Expression _account, smtutil::Expression _value);
 
 	EncodingContext& m_context;
 
@@ -62,7 +63,7 @@ private:
 
 	/// Symbolic balances.
 	SymbolicArrayVariable m_balances{
-		std::make_shared<ArraySort>(SortProvider::intSort, SortProvider::intSort),
+		std::make_shared<smtutil::ArraySort>(smtutil::SortProvider::uintSort, smtutil::SortProvider::uintSort),
 		"balances",
 		m_context
 	};

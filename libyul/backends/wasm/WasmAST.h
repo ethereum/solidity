@@ -25,6 +25,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <optional>
 
 namespace solidity::yul::wasm
 {
@@ -40,13 +41,13 @@ struct GlobalAssignment;
 struct Block;
 struct If;
 struct Loop;
-struct Break;
-struct BreakIf;
+struct Branch;
+struct BranchIf;
 struct Return;
 using Expression = std::variant<
 	Literal, StringLiteral, LocalVariable, GlobalVariable,
 	FunctionCall, BuiltinCall, LocalAssignment, GlobalAssignment,
-	Block, If, Loop, Break, BreakIf, Return
+	Block, If, Loop, Branch, BranchIf, Return
 >;
 
 struct Literal { uint64_t value; };
@@ -65,9 +66,9 @@ struct If {
 	std::unique_ptr<std::vector<Expression>> elseStatements;
 };
 struct Loop { std::string labelName; std::vector<Expression> statements; };
-struct Break { Label label; };
+struct Branch { Label label; };
 struct Return {};
-struct BreakIf { Label label; std::unique_ptr<Expression> condition; };
+struct BranchIf { Label label; std::unique_ptr<Expression> condition; };
 
 struct VariableDeclaration { std::string variableName; };
 struct GlobalVariableDeclaration { std::string variableName; };
@@ -76,7 +77,7 @@ struct FunctionImport {
 	std::string externalName;
 	std::string internalName;
 	std::vector<std::string> paramTypes;
-	std::unique_ptr<std::string> returnType;
+	std::optional<std::string> returnType;
 };
 
 struct FunctionDefinition

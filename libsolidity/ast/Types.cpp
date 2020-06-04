@@ -172,8 +172,7 @@ void StorageOffsets::computeOffsets(TypePointers const& _types)
 			++slotOffset;
 			byteOffset = 0;
 		}
-		if (slotOffset >= bigint(1) << 256)
-			BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << util::errinfo_comment("Object too large for storage."));
+		solAssert(slotOffset < bigint(1) << 256 ,"Object too large for storage.");
 		offsets[i] = make_pair(u256(slotOffset), byteOffset);
 		solAssert(type->storageSize() >= 1, "Invalid storage size.");
 		if (type->storageSize() == 1 && byteOffset + type->storageBytes() <= 32)
@@ -186,8 +185,7 @@ void StorageOffsets::computeOffsets(TypePointers const& _types)
 	}
 	if (byteOffset > 0)
 		++slotOffset;
-	if (slotOffset >= bigint(1) << 256)
-		BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << util::errinfo_comment("Object too large for storage."));
+	solAssert(slotOffset < bigint(1) << 256, "Object too large for storage.");
 	m_storageSize = u256(slotOffset);
 	swap(m_offsets, offsets);
 }
@@ -207,26 +205,31 @@ void MemberList::combine(MemberList const & _other)
 
 pair<u256, unsigned> const* MemberList::memberStorageOffset(string const& _name) const
 {
-	if (!m_storageOffsets)
-	{
-		TypePointers memberTypes;
-		memberTypes.reserve(m_memberTypes.size());
-		for (auto const& member: m_memberTypes)
-			memberTypes.push_back(member.type);
-		m_storageOffsets = std::make_unique<StorageOffsets>();
-		m_storageOffsets->computeOffsets(memberTypes);
-	}
+	StorageOffsets const& offsets = storageOffsets();
+
 	for (size_t index = 0; index < m_memberTypes.size(); ++index)
 		if (m_memberTypes[index].name == _name)
-			return m_storageOffsets->offset(index);
+			return offsets.offset(index);
 	return nullptr;
 }
 
 u256 const& MemberList::storageSize() const
 {
-	// trigger lazy computation
-	memberStorageOffset("");
-	return m_storageOffsets->storageSize();
+	return storageOffsets().storageSize();
+}
+
+StorageOffsets const& MemberList::storageOffsets() const {
+	return m_storageOffsets.init([&]{
+		TypePointers memberTypes;
+		memberTypes.reserve(m_memberTypes.size());
+		for (auto const& member: m_memberTypes)
+			memberTypes.push_back(member.type);
+
+		StorageOffsets storageOffsets;
+		storageOffsets.computeOffsets(memberTypes);
+
+		return storageOffsets;
+	});
 }
 
 /// Helper functions for type identifier
@@ -344,14 +347,17 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition const& _scope)
 {
 	// Normalise data location of type.
-	TypePointer type = TypeProvider::withLocationIfReference(DataLocation::Storage, &_type);
+	DataLocation typeLocation = DataLocation::Storage;
+	if (auto refType = dynamic_cast<ReferenceType const*>(&_type))
+		typeLocation = refType->location();
+
 	set<Declaration const*> seenFunctions;
 	MemberList::MemberMap members;
 	for (ContractDefinition const* contract: _scope.annotation().linearizedBaseContracts)
 		for (UsingForDirective const* ufd: contract->usingForDirectives())
 		{
-			if (ufd->typeName() && *type != *TypeProvider::withLocationIfReference(
-				DataLocation::Storage,
+			if (ufd->typeName() && _type != *TypeProvider::withLocationIfReference(
+				typeLocation,
 				ufd->typeName()->annotation().type
 			))
 				continue;
@@ -365,7 +371,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 				seenFunctions.insert(function);
 				if (function->parameters().empty())
 					continue;
-				FunctionTypePointer fun = FunctionType(*function, FunctionType::Kind::External).asCallableFunction(true, true);
+				FunctionTypePointer fun = FunctionType(*function, FunctionType::Kind::External).asExternallyCallableFunction(true, true);
 				if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
 					members.emplace_back(function->name(), fun, function);
 			}
@@ -1768,8 +1774,7 @@ u256 ArrayType::storageSize() const
 	}
 	else
 		size = bigint(length()) * baseType()->storageSize();
-	if (size >= bigint(1) << 256)
-		BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << util::errinfo_comment("Array too large for storage."));
+	solAssert(size < bigint(1) << 256, "Array too large for storage.");
 	return max<u256>(1, u256(size));
 }
 
@@ -2053,7 +2058,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 		for (auto const& it: m_contract.interfaceFunctions())
 			members.emplace_back(
 				it.second->declaration().name(),
-				it.second->asCallableFunction(m_contract.isLibrary()),
+				it.second->asExternallyCallableFunction(m_contract.isLibrary()),
 				&it.second->declaration()
 			);
 	}
@@ -3021,6 +3026,17 @@ unsigned FunctionType::storageBytes() const
 		solAssert(false, "Storage size of non-storable function type requested.");
 }
 
+bool FunctionType::nameable() const
+{
+	return
+		(m_kind == Kind::Internal || m_kind == Kind::External) &&
+		!m_bound &&
+		!m_arbitraryParameters &&
+		!m_gasSet &&
+		!m_valueSet &&
+		!m_saltSet;
+}
+
 vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 {
 	vector<tuple<string, TypePointer>> slots;
@@ -3422,7 +3438,7 @@ TypePointer FunctionType::copyAndSetCallOptions(bool _setGas, bool _setValue, bo
 	);
 }
 
-FunctionTypePointer FunctionType::asCallableFunction(bool _inLibrary, bool _bound) const
+FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary, bool _bound) const
 {
 	if (_bound)
 		solAssert(!m_parameterTypes.empty(), "");

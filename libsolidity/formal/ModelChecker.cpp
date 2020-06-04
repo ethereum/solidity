@@ -27,7 +27,7 @@ ModelChecker::ModelChecker(
 	ErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
-	smt::SMTSolverChoice _enabledSolvers
+	smtutil::SMTSolverChoice _enabledSolvers
 ):
 	m_context(),
 	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers),
@@ -49,9 +49,9 @@ vector<string> ModelChecker::unhandledQueries()
 	return m_bmc.unhandledQueries() + m_chc.unhandledQueries();
 }
 
-smt::SMTSolverChoice ModelChecker::availableSolvers()
+solidity::smtutil::SMTSolverChoice ModelChecker::availableSolvers()
 {
-	smt::SMTSolverChoice available = smt::SMTSolverChoice::None();
+	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::None();
 #ifdef HAVE_Z3
 	available.z3 = true;
 #endif

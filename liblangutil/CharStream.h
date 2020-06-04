@@ -72,7 +72,7 @@ public:
 	explicit CharStream(std::string  _source, std::string  name):
 		m_source(std::move(_source)), m_name(std::move(name)) {}
 
-	int position() const { return m_position; }
+	size_t position() const { return m_position; }
 	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }
 
 	char get(size_t _charsForward = 0) const { return m_source[m_position + _charsForward]; }

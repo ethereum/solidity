@@ -34,10 +34,9 @@ using namespace solidity::frontend;
 
 bool DocStringAnalyser::analyseDocStrings(SourceUnit const& _sourceUnit)
 {
-	m_errorOccured = false;
+	auto errorWatcher = m_errorReporter.errorWatcher();
 	_sourceUnit.accept(*this);
-
-	return !m_errorOccured;
+	return errorWatcher.ok();
 }
 
 bool DocStringAnalyser::visit(ContractDefinition const& _contract)
@@ -55,6 +54,33 @@ bool DocStringAnalyser::visit(FunctionDefinition const& _function)
 	else
 		handleCallable(_function, _function, _function.annotation());
 	return true;
+}
+
+bool DocStringAnalyser::visit(VariableDeclaration const& _variable)
+{
+	if (_variable.isStateVariable())
+	{
+		static set<string> const validPublicTags = set<string>{"dev", "notice", "return", "title", "author"};
+		if (_variable.isPublic())
+			parseDocStrings(_variable, _variable.annotation(), validPublicTags, "public state variables");
+		else
+		{
+			parseDocStrings(_variable, _variable.annotation(), validPublicTags, "non-public state variables");
+			if (_variable.annotation().docTags.count("notice") > 0)
+				m_errorReporter.warning(
+					7816_error, _variable.documentation()->location(),
+					"Documentation tag on non-public state variables will be disallowed in 0.7.0. "
+					"You will need to use the @dev tag explicitly."
+				);
+		}
+		if (_variable.annotation().docTags.count("title") > 0 || _variable.annotation().docTags.count("author") > 0)
+			m_errorReporter.warning(
+				8532_error, _variable.documentation()->location(),
+				"Documentation tag @title and @author is only allowed on contract definitions. "
+				"It will be disallowed in 0.7.0."
+			);
+	}
+	return false;
 }
 
 bool DocStringAnalyser::visit(ModifierDefinition const& _modifier)
@@ -86,7 +112,8 @@ void DocStringAnalyser::checkParameters(
 	auto paramRange = _annotation.docTags.equal_range("param");
 	for (auto i = paramRange.first; i != paramRange.second; ++i)
 		if (!validParams.count(i->second.paramName))
-			appendError(
+			m_errorReporter.docstringParsingError(
+				3881_error,
 				_node.documentation()->location(),
 				"Documented parameter \"" +
 				i->second.paramName +
@@ -127,8 +154,7 @@ void DocStringAnalyser::parseDocStrings(
 	DocStringParser parser;
 	if (_node.documentation() && !_node.documentation()->text()->empty())
 	{
-		if (!parser.parse(*_node.documentation()->text(), m_errorReporter))
-			m_errorOccured = true;
+		parser.parse(*_node.documentation()->text(), m_errorReporter);
 		_annotation.docTags = parser.tags();
 	}
 
@@ -136,7 +162,8 @@ void DocStringAnalyser::parseDocStrings(
 	for (auto const& docTag: _annotation.docTags)
 	{
 		if (!_validTags.count(docTag.first))
-			appendError(
+			m_errorReporter.docstringParsingError(
+				6546_error,
 				_node.documentation()->location(),
 				"Documentation tag @" + docTag.first + " not valid for " + _nodeName + "."
 			);
@@ -144,13 +171,29 @@ void DocStringAnalyser::parseDocStrings(
 			if (docTag.first == "return")
 			{
 				returnTagsVisited++;
-				if (auto* function = dynamic_cast<FunctionDefinition const*>(&_node))
+				if (auto* varDecl = dynamic_cast<VariableDeclaration const*>(&_node))
+				{
+					if (!varDecl->isPublic())
+						m_errorReporter.docstringParsingError(
+							9440_error,
+							_node.documentation()->location(),
+							"Documentation tag \"@" + docTag.first + "\" is only allowed on public state-variables."
+						);
+					if (returnTagsVisited > 1)
+						m_errorReporter.docstringParsingError(
+							5256_error,
+							_node.documentation()->location(),
+							"Documentation tag \"@" + docTag.first + "\" is only allowed once on state-variables."
+						);
+				}
+				else if (auto* function = dynamic_cast<FunctionDefinition const*>(&_node))
 				{
 					string content = docTag.second.content;
 					string firstWord = content.substr(0, content.find_first_of(" \t"));
 
 					if (returnTagsVisited > function->returnParameters().size())
-						appendError(
+						m_errorReporter.docstringParsingError(
+							2604_error,
 							_node.documentation()->location(),
 							"Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
 							" exceeds the number of return parameters."
@@ -159,7 +202,8 @@ void DocStringAnalyser::parseDocStrings(
 					{
 						auto parameter = function->returnParameters().at(returnTagsVisited - 1);
 						if (!parameter->name().empty() && parameter->name() != firstWord)
-							appendError(
+							m_errorReporter.docstringParsingError(
+								5856_error,
 								_node.documentation()->location(),
 								"Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
 								" does not contain the name of its return parameter."
@@ -168,10 +212,4 @@ void DocStringAnalyser::parseDocStrings(
 				}
 			}
 	}
-}
-
-void DocStringAnalyser::appendError(SourceLocation const& _location, string const& _description)
-{
-	m_errorOccured = true;
-	m_errorReporter.docstringParsingError(7816_error, _location, _description);
 }

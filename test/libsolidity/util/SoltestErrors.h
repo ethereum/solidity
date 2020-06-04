@@ -30,6 +30,15 @@ namespace solidity::frontend::test
 	while (false)
 
 
+class TestParserError: virtual public util::Exception
+{
+public:
+	explicit TestParserError(std::string const& _description)
+	{
+		*this << util::errinfo_comment(_description);
+	}
+};
+
 /**
  * Representation of a notice, warning or error that can occur while
  * formatting and therefore updating an interactive function call test.

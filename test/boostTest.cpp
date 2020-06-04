@@ -89,7 +89,10 @@ int registerTests(
 	}
 	else
 	{
-		static vector<unique_ptr<string>> filenames;
+		// This must be a vector of unique_ptrs because Boost.Test keeps the equivalent of a string_view to the filename
+		// that is passed in. If the strings were stored directly in the vector, pointers/references to them would be
+		// invalidated on reallocation.
+		static vector<unique_ptr<string const>> filenames;
 
 		filenames.emplace_back(make_unique<string>(_path.string()));
 		_suite.add(make_test_case(

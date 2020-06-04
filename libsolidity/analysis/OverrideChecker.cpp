@@ -311,8 +311,8 @@ Token OverrideProxy::functionKind() const
 FunctionType const* OverrideProxy::functionType() const
 {
 	return std::visit(GenericVisitor{
-		[&](FunctionDefinition const* _item) { return FunctionType(*_item).asCallableFunction(false); },
-		[&](VariableDeclaration const* _item) { return FunctionType(*_item).asCallableFunction(false); },
+		[&](FunctionDefinition const* _item) { return FunctionType(*_item).asExternallyCallableFunction(false); },
+		[&](VariableDeclaration const* _item) { return FunctionType(*_item).asExternallyCallableFunction(false); },
 		[&](ModifierDefinition const*) -> FunctionType const* { solAssert(false, "Requested function type of modifier."); return nullptr; }
 	}, m_item);
 }
@@ -481,7 +481,12 @@ void OverrideChecker::checkIllegalOverrides(ContractDefinition const& _contract)
 	for (auto const* stateVar: _contract.stateVariables())
 	{
 		if (!stateVar->isPublic())
+		{
+			if (stateVar->overrides())
+				m_errorReporter.typeError(8022_error, stateVar->location(), "Override can only be used with public state variables.");
+
 			continue;
+		}
 
 		if (contains_if(inheritedMods, MatchByName{stateVar->name()}))
 			m_errorReporter.typeError(1456_error, stateVar->location(), "Override changes modifier to public state variable.");
@@ -559,7 +564,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 				overrideError(
 					_overriding,
 					_super,
-					2837_error,
+					6959_error,
 					"Overriding function changes state mutability from \"" +
 					stateMutabilityToString(_super.stateMutability()) +
 					"\" to \"" +

@@ -29,6 +29,8 @@
 
 #include <liblangutil/Exceptions.h>
 
+#include <optional>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -125,7 +127,7 @@ wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 					builtin->name.str().substr(4),
 					builtin->name.str(),
 					{},
-					builtin->returns.empty() ? nullptr : make_unique<string>(builtin->returns.front().str())
+					builtin->returns.empty() ? nullopt : make_optional<string>(builtin->returns.front().str())
 				};
 				for (auto const& param: builtin->parameters)
 					imp.paramTypes.emplace_back(param.str());
@@ -252,31 +254,34 @@ wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 	m_breakContinueLabelNames.push({breakLabel, continueLabel});
 
 	wasm::Loop loop;
+	loop.labelName = newLabel();
 	loop.statements = visit(_for.pre.statements);
-	loop.statements.emplace_back(wasm::BreakIf{wasm::Label{breakLabel}, make_unique<wasm::Expression>(
+	loop.statements.emplace_back(wasm::BranchIf{wasm::Label{breakLabel}, make_unique<wasm::Expression>(
 		wasm::BuiltinCall{"i64.eqz", make_vector<wasm::Expression>(
 			visitReturnByValue(*_for.condition)
 		)}
 	)});
 	loop.statements.emplace_back(wasm::Block{continueLabel, visit(_for.body.statements)});
 	loop.statements += visit(_for.post.statements);
+	loop.statements.emplace_back(wasm::Branch{wasm::Label{loop.labelName}});
 
 	return { wasm::Block{breakLabel, make_vector<wasm::Expression>(move(loop))} };
 }
 
 wasm::Expression WasmCodeTransform::operator()(Break const&)
 {
-	return wasm::Break{wasm::Label{m_breakContinueLabelNames.top().first}};
+	return wasm::Branch{wasm::Label{m_breakContinueLabelNames.top().first}};
 }
 
 wasm::Expression WasmCodeTransform::operator()(Continue const&)
 {
-	return wasm::Break{wasm::Label{m_breakContinueLabelNames.top().second}};
+	return wasm::Branch{wasm::Label{m_breakContinueLabelNames.top().second}};
 }
 
 wasm::Expression WasmCodeTransform::operator()(Leave const&)
 {
-	return wasm::Return{};
+	yulAssert(!m_functionBodyLabel.empty(), "");
+	return wasm::Branch{wasm::Label{m_functionBodyLabel}};
 }
 
 wasm::Expression WasmCodeTransform::operator()(Block const& _block)
@@ -326,10 +331,16 @@ wasm::FunctionDefinition WasmCodeTransform::translateFunction(yul::FunctionDefin
 	fun.returns = !_fun.returnVariables.empty();
 
 	yulAssert(m_localVariables.empty(), "");
-	fun.body = visit(_fun.body.statements);
+	yulAssert(m_functionBodyLabel.empty(), "");
+	m_functionBodyLabel = newLabel();
+	fun.body.emplace_back(wasm::Expression(wasm::Block{
+		m_functionBodyLabel,
+		visit(_fun.body.statements)
+	}));
 	fun.locals += m_localVariables;
 
 	m_localVariables.clear();
+	m_functionBodyLabel = {};
 
 	if (!_fun.returnVariables.empty())
 	{

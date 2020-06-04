@@ -82,7 +82,7 @@ static int g_compilerStackCounts = 0;
 
 CompilerStack::CompilerStack(ReadCallback::Callback _readFile):
 	m_readFile{std::move(_readFile)},
-	m_enabledSMTSolvers{smt::SMTSolverChoice::All()},
+	m_enabledSMTSolvers{smtutil::SMTSolverChoice::All()},
 	m_generateIR{false},
 	m_generateEwasm{false},
 	m_errorList{},
@@ -136,7 +136,7 @@ void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 	m_evmVersion = _version;
 }
 
-void CompilerStack::setSMTSolverChoice(smt::SMTSolverChoice _enabledSMTSolvers)
+void CompilerStack::setSMTSolverChoice(smtutil::SMTSolverChoice _enabledSMTSolvers)
 {
 	if (m_stackState >= ParsingPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set enabled SMT solvers before parsing."));
@@ -205,7 +205,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_remappings.clear();
 		m_libraries.clear();
 		m_evmVersion = langutil::EVMVersion();
-		m_enabledSMTSolvers = smt::SMTSolverChoice::All();
+		m_enabledSMTSolvers = smtutil::SMTSolverChoice::All();
 		m_generateIR = false;
 		m_generateEwasm = false;
 		m_revertStrings = RevertStrings::Default;
@@ -214,7 +214,6 @@ void CompilerStack::reset(bool _keepSettings)
 		m_metadataHash = MetadataHash::IPFS;
 	}
 	m_globalContext.reset();
-	m_scopes.clear();
 	m_sourceOrder.clear();
 	m_contracts.clear();
 	m_errorReporter.clear();
@@ -314,7 +313,8 @@ bool CompilerStack::analyze()
 				noErrors = false;
 
 		m_globalContext = make_shared<GlobalContext>();
-		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_scopes, m_errorReporter);
+		// We need to keep the same resolver during the whole process.
+		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter);
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !resolver.registerDeclarations(*source->ast))
 				return false;
@@ -582,9 +582,9 @@ string const* CompilerStack::sourceMapping(string const& _contractName) const
 	if (!c.sourceMapping)
 	{
 		if (auto items = assemblyItems(_contractName))
-			c.sourceMapping = make_unique<string>(evmasm::AssemblyItem::computeSourceMapping(*items, sourceIndices()));
+			c.sourceMapping.emplace(evmasm::AssemblyItem::computeSourceMapping(*items, sourceIndices()));
 	}
-	return c.sourceMapping.get();
+	return c.sourceMapping ? &*c.sourceMapping : nullptr;
 }
 
 string const* CompilerStack::runtimeSourceMapping(string const& _contractName) const
@@ -596,11 +596,11 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 	if (!c.runtimeSourceMapping)
 	{
 		if (auto items = runtimeAssemblyItems(_contractName))
-			c.runtimeSourceMapping = make_unique<string>(
+			c.runtimeSourceMapping.emplace(
 				evmasm::AssemblyItem::computeSourceMapping(*items, sourceIndices())
 			);
 	}
-	return c.runtimeSourceMapping.get();
+	return c.runtimeSourceMapping ? &*c.runtimeSourceMapping : nullptr;
 }
 
 std::string const CompilerStack::filesystemFriendlyName(string const& _contractName) const
@@ -733,11 +733,7 @@ Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 
 	solAssert(_contract.contract, "");
 
-	// caches the result
-	if (!_contract.abi)
-		_contract.abi = make_unique<Json::Value>(ABI::generate(*_contract.contract));
-
-	return *_contract.abi;
+	return _contract.abi.init([&]{ return ABI::generate(*_contract.contract); });
 }
 
 Json::Value const& CompilerStack::storageLayout(string const& _contractName) const
@@ -755,11 +751,7 @@ Json::Value const& CompilerStack::storageLayout(Contract const& _contract) const
 
 	solAssert(_contract.contract, "");
 
-	// caches the result
-	if (!_contract.storageLayout)
-		_contract.storageLayout = make_unique<Json::Value>(StorageLayout().generate(*_contract.contract));
-
-	return *_contract.storageLayout;
+	return _contract.storageLayout.init([&]{ return StorageLayout().generate(*_contract.contract); });
 }
 
 Json::Value const& CompilerStack::natspecUser(string const& _contractName) const
@@ -777,11 +769,7 @@ Json::Value const& CompilerStack::natspecUser(Contract const& _contract) const
 
 	solAssert(_contract.contract, "");
 
-	// caches the result
-	if (!_contract.userDocumentation)
-		_contract.userDocumentation = make_unique<Json::Value>(Natspec::userDocumentation(*_contract.contract));
-
-	return *_contract.userDocumentation;
+	return _contract.userDocumentation.init([&]{ return Natspec::userDocumentation(*_contract.contract); });
 }
 
 Json::Value const& CompilerStack::natspecDev(string const& _contractName) const
@@ -799,11 +787,7 @@ Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
 
 	solAssert(_contract.contract, "");
 
-	// caches the result
-	if (!_contract.devDocumentation)
-		_contract.devDocumentation = make_unique<Json::Value>(Natspec::devDocumentation(*_contract.contract));
-
-	return *_contract.devDocumentation;
+	return _contract.devDocumentation.init([&]{ return Natspec::devDocumentation(*_contract.contract); });
 }
 
 Json::Value CompilerStack::methodIdentifiers(string const& _contractName) const
@@ -832,11 +816,7 @@ string const& CompilerStack::metadata(Contract const& _contract) const
 
 	solAssert(_contract.contract, "");
 
-	// cache the result
-	if (!_contract.metadata)
-		_contract.metadata = make_unique<string>(createMetadata(_contract));
-
-	return *_contract.metadata;
+	return _contract.metadata.init([&]{ return createMetadata(_contract); });
 }
 
 Scanner const& CompilerStack::scanner(string const& _sourceName) const

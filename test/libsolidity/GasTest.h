@@ -47,7 +47,6 @@ private:
 	bool m_optimise = false;
 	bool m_optimiseYul = false;
 	size_t m_optimiseRuns = 200;
-	std::string m_source;
 	std::map<std::string, std::map<std::string, std::string>> m_expectations;
 };
 

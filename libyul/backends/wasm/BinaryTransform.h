@@ -48,8 +48,8 @@ public:
 	bytes operator()(wasm::GlobalAssignment const& _assignment);
 	bytes operator()(wasm::If const& _if);
 	bytes operator()(wasm::Loop const& _loop);
-	bytes operator()(wasm::Break const& _break);
-	bytes operator()(wasm::BreakIf const& _break);
+	bytes operator()(wasm::Branch const& _branch);
+	bytes operator()(wasm::BranchIf const& _branchIf);
 	bytes operator()(wasm::Return const& _return);
 	bytes operator()(wasm::Block const& _block);
 	bytes operator()(wasm::FunctionDefinition const& _function);

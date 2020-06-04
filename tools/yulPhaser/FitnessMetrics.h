@@ -24,6 +24,8 @@
 #include <tools/yulPhaser/Program.h>
 #include <tools/yulPhaser/ProgramCache.h>
 
+#include <libyul/optimiser/Metrics.h>
+
 #include <cstddef>
 #include <optional>
 
@@ -64,10 +66,12 @@ public:
 	explicit ProgramBasedMetric(
 		std::optional<Program> _program,
 		std::shared_ptr<ProgramCache> _programCache,
+		yul::CodeWeights const& _codeWeights,
 		size_t _repetitionCount = 1
 	):
 		m_program(std::move(_program)),
 		m_programCache(std::move(_programCache)),
+		m_codeWeights(_codeWeights),
 		m_repetitionCount(_repetitionCount)
 	{
 		assert(m_program.has_value() == (m_programCache == nullptr));
@@ -75,6 +79,7 @@ public:
 
 	Program const& program() const;
 	ProgramCache const* programCache() const { return m_programCache.get(); }
+	yul::CodeWeights const& codeWeights() const { return m_codeWeights; }
 	size_t repetitionCount() const { return m_repetitionCount; }
 
 	Program optimisedProgram(Chromosome const& _chromosome);
@@ -83,6 +88,7 @@ public:
 private:
 	std::optional<Program> m_program;
 	std::shared_ptr<ProgramCache> m_programCache;
+	yul::CodeWeights m_codeWeights;
 	size_t m_repetitionCount;
 };
 
@@ -111,9 +117,10 @@ public:
 		std::optional<Program> _program,
 		std::shared_ptr<ProgramCache> _programCache,
 		size_t _fixedPointPrecision,
+		yul::CodeWeights const& _weights,
 		size_t _repetitionCount = 1
 	):
-		ProgramBasedMetric(std::move(_program), std::move(_programCache), _repetitionCount),
+		ProgramBasedMetric(std::move(_program), std::move(_programCache), _weights, _repetitionCount),
 		m_fixedPointPrecision(_fixedPointPrecision) {}
 
 	size_t fixedPointPrecision() const { return m_fixedPointPrecision; }

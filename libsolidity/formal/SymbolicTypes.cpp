@@ -21,8 +21,10 @@
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/CommonData.h>
 #include <memory>
+#include <vector>
 
 using namespace std;
+using namespace solidity::smtutil;
 
 namespace solidity::frontend::smt
 {
@@ -32,7 +34,11 @@ SortPointer smtSort(frontend::Type const& _type)
 	switch (smtKind(_type.category()))
 	{
 	case Kind::Int:
-		return SortProvider::intSort;
+		if (auto const* intType = dynamic_cast<IntegerType const*>(&_type))
+			return SortProvider::intSort(intType->isSigned());
+		if (auto const* fixedType = dynamic_cast<FixedPointType const*>(&_type))
+			return SortProvider::intSort(fixedType->isSigned());
+		return SortProvider::uintSort;
 	case Kind::Bool:
 		return SortProvider::boolSort;
 	case Kind::Function:
@@ -48,24 +54,25 @@ SortPointer smtSort(frontend::Type const& _type)
 			returnSort = SortProvider::boolSort;
 		else if (returnTypes.size() > 1)
 			// Abstract sort.
-			returnSort = SortProvider::intSort;
+			returnSort = SortProvider::uintSort;
 		else
 			returnSort = smtSort(*returnTypes.front());
 		return make_shared<FunctionSort>(parameterSorts, returnSort);
 	}
 	case Kind::Array:
 	{
+		shared_ptr<ArraySort> array;
 		if (isMapping(_type.category()))
 		{
 			auto mapType = dynamic_cast<frontend::MappingType const*>(&_type);
 			solAssert(mapType, "");
-			return make_shared<ArraySort>(smtSortAbstractFunction(*mapType->keyType()), smtSortAbstractFunction(*mapType->valueType()));
+			array = make_shared<ArraySort>(smtSortAbstractFunction(*mapType->keyType()), smtSortAbstractFunction(*mapType->valueType()));
 		}
 		else if (isStringLiteral(_type.category()))
 		{
 			auto stringLitType = dynamic_cast<frontend::StringLiteralType const*>(&_type);
 			solAssert(stringLitType, "");
-			return make_shared<ArraySort>(SortProvider::intSort, SortProvider::intSort);
+			array = make_shared<ArraySort>(SortProvider::uintSort, SortProvider::uintSort);
 		}
 		else
 		{
@@ -78,8 +85,25 @@ SortPointer smtSort(frontend::Type const& _type)
 				solAssert(false, "");
 
 			solAssert(arrayType, "");
-			return make_shared<ArraySort>(SortProvider::intSort, smtSortAbstractFunction(*arrayType->baseType()));
+			array = make_shared<ArraySort>(SortProvider::uintSort, smtSortAbstractFunction(*arrayType->baseType()));
 		}
+
+		string tupleName;
+		if (
+			auto arrayType = dynamic_cast<ArrayType const*>(&_type);
+			(arrayType && arrayType->isString()) ||
+			_type.category() == frontend::Type::Category::ArraySlice ||
+			_type.category() == frontend::Type::Category::StringLiteral
+		)
+			tupleName = "bytes_tuple";
+		else
+			tupleName = _type.toString(true) + "_tuple";
+
+		return make_shared<TupleSort>(
+			tupleName,
+			vector<string>{tupleName + "_accessor_array", tupleName + "_accessor_length"},
+			vector<SortPointer>{array, SortProvider::uintSort}
+		);
 	}
 	case Kind::Tuple:
 	{
@@ -98,7 +122,7 @@ SortPointer smtSort(frontend::Type const& _type)
 	}
 	default:
 		// Abstract case.
-		return SortProvider::intSort;
+		return SortProvider::uintSort;
 	}
 }
 
@@ -113,7 +137,7 @@ vector<SortPointer> smtSort(vector<frontend::TypePointer> const& _types)
 SortPointer smtSortAbstractFunction(frontend::Type const& _type)
 {
 	if (isFunction(_type.category()))
-		return SortProvider::intSort;
+		return SortProvider::uintSort;
 	return smtSort(_type);
 }
 
@@ -124,7 +148,7 @@ vector<SortPointer> smtSortAbstractFunction(vector<frontend::TypePointer> const&
 		if (type)
 			sorts.push_back(smtSortAbstractFunction(*type));
 		else
-			sorts.push_back(SortProvider::intSort);
+			sorts.push_back(SortProvider::uintSort);
 	return sorts;
 }
 
@@ -200,6 +224,8 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 	}
 	else if (isInteger(_type.category()))
 		var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
+	else if (isFixedPoint(_type.category()))
+		var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
 	else if (isFixedBytes(_type.category()))
 	{
 		auto fixedBytesType = dynamic_cast<frontend::FixedBytesType const*>(type);
@@ -219,9 +245,7 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 		else
 			var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
 	}
-	else if (isMapping(_type.category()))
-		var = make_shared<SymbolicMappingVariable>(type, _uniqueName, _context);
-	else if (isArray(_type.category()))
+	else if (isMapping(_type.category()) || isArray(_type.category()))
 		var = make_shared<SymbolicArrayVariable>(type, type, _uniqueName, _context);
 	else if (isTuple(_type.category()))
 		var = make_shared<SymbolicTupleVariable>(type, _uniqueName, _context);
@@ -248,6 +272,11 @@ bool isSupportedTypeDeclaration(frontend::Type const& _type)
 bool isInteger(frontend::Type::Category _category)
 {
 	return _category == frontend::Type::Category::Integer;
+}
+
+bool isFixedPoint(frontend::Type::Category _category)
+{
+	return _category == frontend::Type::Category::FixedPoint;
 }
 
 bool isRational(frontend::Type::Category _category)
@@ -278,6 +307,7 @@ bool isEnum(frontend::Type::Category _category)
 bool isNumber(frontend::Type::Category _category)
 {
 	return isInteger(_category) ||
+		isFixedPoint(_category) ||
 		isRational(_category) ||
 		isFixedBytes(_category) ||
 		isAddress(_category) ||
@@ -317,14 +347,14 @@ bool isStringLiteral(frontend::Type::Category _category)
 	return _category == frontend::Type::Category::StringLiteral;
 }
 
-Expression minValue(frontend::IntegerType const& _type)
+smtutil::Expression minValue(frontend::IntegerType const& _type)
 {
-	return Expression(_type.minValue());
+	return smtutil::Expression(_type.minValue());
 }
 
-Expression maxValue(frontend::IntegerType const& _type)
+smtutil::Expression maxValue(frontend::IntegerType const& _type)
 {
-	return Expression(_type.maxValue());
+	return smtutil::Expression(_type.maxValue());
 }
 
 void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _context)
@@ -332,13 +362,13 @@ void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _c
 	setSymbolicZeroValue(_variable.currentValue(), _variable.type(), _context);
 }
 
-void setSymbolicZeroValue(Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
+void setSymbolicZeroValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
 {
 	solAssert(_type, "");
 	_context.addAssertion(_expr == zeroValue(_type));
 }
 
-Expression zeroValue(frontend::TypePointer const& _type)
+smtutil::Expression zeroValue(frontend::TypePointer const& _type)
 {
 	solAssert(_type, "");
 	if (isSupportedType(_type->category()))
@@ -346,14 +376,32 @@ Expression zeroValue(frontend::TypePointer const& _type)
 		if (isNumber(_type->category()))
 			return 0;
 		if (isBool(_type->category()))
-			return Expression(false);
+			return smtutil::Expression(false);
 		if (isArray(_type->category()) || isMapping(_type->category()))
 		{
+			auto tupleSort = dynamic_pointer_cast<TupleSort>(smtSort(*_type));
+			solAssert(tupleSort, "");
+			auto sortSort = make_shared<SortSort>(tupleSort->components.front());
+
+			std::optional<smtutil::Expression> zeroArray;
+			auto length = bigint(0);
 			if (auto arrayType = dynamic_cast<ArrayType const*>(_type))
-				return Expression::const_array(Expression(arrayType), zeroValue(arrayType->baseType()));
-			auto mappingType = dynamic_cast<MappingType const*>(_type);
-			solAssert(mappingType, "");
-			return Expression::const_array(Expression(mappingType), zeroValue(mappingType->valueType()));
+			{
+				zeroArray = smtutil::Expression::const_array(smtutil::Expression(sortSort), zeroValue(arrayType->baseType()));
+				if (!arrayType->isDynamicallySized())
+					length = bigint(arrayType->length());
+			}
+			else if (auto mappingType = dynamic_cast<MappingType const*>(_type))
+				zeroArray = smtutil::Expression::const_array(smtutil::Expression(sortSort), zeroValue(mappingType->valueType()));
+			else
+				solAssert(false, "");
+
+			solAssert(zeroArray, "");
+			return smtutil::Expression::tuple_constructor(
+				smtutil::Expression(std::make_shared<SortSort>(smtSort(*_type)), _type->toString(true)),
+				vector<smtutil::Expression>{*zeroArray, length}
+			);
+
 		}
 		solAssert(false, "");
 	}
@@ -366,7 +414,7 @@ void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext&
 	setSymbolicUnknownValue(_variable.currentValue(), _variable.type(), _context);
 }
 
-void setSymbolicUnknownValue(Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
+void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
 {
 	solAssert(_type, "");
 	if (isEnum(_type->category()))
@@ -385,7 +433,7 @@ void setSymbolicUnknownValue(Expression _expr, frontend::TypePointer const& _typ
 	}
 }
 
-optional<Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to)
+optional<smtutil::Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to)
 {
 	if (_to && _from)
 		// StringLiterals are encoded as SMT arrays in the generic case,
@@ -393,7 +441,7 @@ optional<Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to)
 		// case they'd need to be encoded as numbers.
 		if (auto strType = dynamic_cast<StringLiteralType const*>(_from))
 			if (_to->category() == frontend::Type::Category::FixedBytes)
-				return smt::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
+				return smtutil::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
 
 	return std::nullopt;
 }

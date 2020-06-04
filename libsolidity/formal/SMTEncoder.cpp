@@ -18,9 +18,10 @@
 #include <libsolidity/formal/SMTEncoder.h>
 
 #include <libsolidity/ast/TypeProvider.h>
-#include <libsolidity/formal/SMTPortfolio.h>
 #include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicTypes.h>
+
+#include <libsmtutil/SMTPortfolio.h>
 
 #include <boost/range/adaptors.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -73,8 +74,8 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 				if (
 					function->name() == baseFunction->name() &&
 					function->kind() == baseFunction->kind() &&
-					FunctionType(*function).asCallableFunction(false)->
-						hasEqualParameterTypes(*FunctionType(*baseFunction).asCallableFunction(false))
+					FunctionType(*function).asExternallyCallableFunction(false)->
+						hasEqualParameterTypes(*FunctionType(*baseFunction).asExternallyCallableFunction(false))
 				)
 				{
 					overridden = true;
@@ -180,7 +181,7 @@ void SMTEncoder::inlineModifierInvocation(ModifierInvocation const* _invocation,
 	solAssert(_invocation, "");
 	_invocation->accept(*this);
 
-	vector<smt::Expression> args;
+	vector<smtutil::Expression> args;
 	if (auto const* arguments = _invocation->arguments())
 	{
 		auto const& modifierParams = _definition->parameters();
@@ -273,6 +274,20 @@ bool SMTEncoder::visit(InlineAssembly const& _inlineAsm)
 	return false;
 }
 
+bool SMTEncoder::visit(TryCatchClause const& _clause)
+{
+	if (auto params = _clause.parameters())
+		for (auto const& var: params->parameters())
+			createVariable(*var);
+
+	m_errorReporter.warning(
+		7645_error,
+		_clause.location(),
+		"Assertion checker does not support try/catch clauses."
+	);
+	return false;
+}
+
 bool SMTEncoder::visit(IfStatement const& _node)
 {
 	_node.condition().accept(*this);
@@ -360,13 +375,18 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 	else if (!smt::isSupportedType(_assignment.annotation().type->category()))
 	{
 		// Give it a new index anyway to keep the SSA scheme sound.
-		if (auto varDecl = identifierToVariable(_assignment.leftHandSide()))
+
+		Expression const* base = &_assignment.leftHandSide();
+		if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(base))
+			base = leftmostBase(*indexAccess);
+
+		if (auto varDecl = identifierToVariable(*base))
 			m_context.newValue(*varDecl);
 	}
 	else
 	{
 		auto const& type = _assignment.annotation().type;
-		vector<smt::Expression> rightArguments;
+		vector<smtutil::Expression> rightArguments;
 		if (auto const* tupleTypeRight = dynamic_cast<TupleType const*>(_assignment.rightHandSide().annotation().type))
 		{
 			auto symbTupleLeft = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_assignment.leftHandSide()));
@@ -462,9 +482,6 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 
 	createExpr(_op);
 
-	if (_op.annotation().type->category() == Type::Category::FixedPoint)
-		return;
-
 	switch (_op.getOperator())
 	{
 	case Token::Not: // !
@@ -476,8 +493,8 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	case Token::Inc: // ++ (pre- or postfix)
 	case Token::Dec: // -- (pre- or postfix)
 	{
-
-		solAssert(smt::isInteger(_op.annotation().type->category()), "");
+		auto cat = _op.annotation().type->category();
+		solAssert(smt::isInteger(cat) || smt::isFixedPoint(cat), "");
 		solAssert(_op.subExpression().annotation().willBeWrittenTo, "");
 		if (auto identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
 		{
@@ -573,6 +590,8 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 		arithmeticOperation(_op);
 	else if (TokenTraits::isCompareOp(_op.getOperator()))
 		compareOperation(_op);
+	else if (TokenTraits::isBitOp(_op.getOperator()))
+		bitwiseOperation(_op);
 	else
 		m_errorReporter.warning(
 			3876_error,
@@ -640,12 +659,18 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		auto const& value = args.front();
 		solAssert(value, "");
 
-		smt::Expression thisBalance = m_context.state().balance();
+		smtutil::Expression thisBalance = m_context.state().balance();
 		setSymbolicUnknownValue(thisBalance, TypeProvider::uint256(), m_context);
 
 		m_context.state().transfer(m_context.state().thisAddress(), expr(address), expr(*value));
 		break;
 	}
+	case FunctionType::Kind::ArrayPush:
+		arrayPush(_funCall);
+		break;
+	case FunctionType::Kind::ArrayPop:
+		arrayPop(_funCall);
+		break;
 	default:
 		m_errorReporter.warning(
 			4588_error,
@@ -772,7 +797,7 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 			else
 			{
 				auto const& intType = dynamic_cast<IntegerType const&>(*m_context.expression(_funCall)->type());
-				defineExpr(_funCall, smt::Expression::ite(
+				defineExpr(_funCall, smtutil::Expression::ite(
 					expr(*argument) >= smt::minValue(intType) && expr(*argument) <= smt::maxValue(intType),
 					expr(*argument),
 					expr(_funCall)
@@ -803,9 +828,9 @@ void SMTEncoder::endVisit(Literal const& _literal)
 	solAssert(_literal.annotation().type, "Expected type for AST node");
 	Type const& type = *_literal.annotation().type;
 	if (smt::isNumber(type.category()))
-		defineExpr(_literal, smt::Expression(type.literalValue(&_literal)));
+		defineExpr(_literal, smtutil::Expression(type.literalValue(&_literal)));
 	else if (smt::isBool(type.category()))
-		defineExpr(_literal, smt::Expression(_literal.token() == Token::TrueLiteral ? true : false));
+		defineExpr(_literal, smtutil::Expression(_literal.token() == Token::TrueLiteral ? true : false));
 	else if (smt::isStringLiteral(type.category()))
 		createExpr(_literal);
 	else
@@ -890,6 +915,23 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 			return false;
 		}
 	}
+	else if (exprType->category() == Type::Category::Array)
+	{
+		_memberAccess.expression().accept(*this);
+		if (_memberAccess.memberName() == "length")
+		{
+			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(_memberAccess.expression()));
+			solAssert(symbArray, "");
+			defineExpr(_memberAccess, symbArray->length());
+			m_uninterpretedTerms.insert(&_memberAccess);
+			setSymbolicUnknownValue(
+				expr(_memberAccess),
+				_memberAccess.annotation().type,
+				m_context
+			);
+		}
+		return false;
+	}
 	else
 		m_errorReporter.warning(
 			7650_error,
@@ -939,9 +981,10 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 		return;
 	}
 
-	solAssert(array, "");
-	defineExpr(_indexAccess, smt::Expression::select(
-		array->currentValue(),
+	auto arrayVar = dynamic_pointer_cast<smt::SymbolicArrayVariable>(array);
+	solAssert(arrayVar, "");
+	defineExpr(_indexAccess, smtutil::Expression::select(
+		arrayVar->elements(),
 		expr(*_indexAccess.indexExpression())
 	));
 	setSymbolicUnknownValue(
@@ -967,7 +1010,7 @@ void SMTEncoder::arrayAssignment()
 	m_arrayAssignmentHappened = true;
 }
 
-void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression const& _rightHandSide)
+void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smtutil::Expression const& _rightHandSide)
 {
 	auto toStore = _rightHandSide;
 	auto indexAccess = dynamic_cast<IndexAccess const*>(&_expr);
@@ -1013,16 +1056,20 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 					return false;
 				});
 
-			smt::Expression store = smt::Expression::store(
-				m_context.variable(*varDecl)->currentValue(),
+			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.variable(*varDecl));
+			smtutil::Expression store = smtutil::Expression::store(
+				symbArray->elements(),
 				expr(*indexAccess->indexExpression()),
 				toStore
 			);
-			m_context.addAssertion(m_context.newValue(*varDecl) == store);
+			auto oldLength = symbArray->length();
+			symbArray->increaseIndex();
+			m_context.addAssertion(symbArray->elements() == store);
+			m_context.addAssertion(symbArray->length() == oldLength);
 			// Update the SMT select value after the assignment,
 			// necessary for sound models.
-			defineExpr(*indexAccess, smt::Expression::select(
-				m_context.variable(*varDecl)->currentValue(),
+			defineExpr(*indexAccess, smtutil::Expression::select(
+				symbArray->elements(),
 				expr(*indexAccess->indexExpression())
 			));
 
@@ -1030,7 +1077,13 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 		}
 		else if (auto base = dynamic_cast<IndexAccess const*>(&indexAccess->baseExpression()))
 		{
-			toStore = smt::Expression::store(expr(*base), expr(*indexAccess->indexExpression()), toStore);
+			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(*base));
+			solAssert(symbArray, "");
+			auto baseType = base->annotation().type;
+			toStore = smtutil::Expression::tuple_constructor(
+				smtutil::Expression(make_shared<smtutil::SortSort>(smt::smtSort(*baseType)), baseType->toString(true)),
+				{smtutil::Expression::store(symbArray->elements(), expr(*indexAccess->indexExpression()), toStore), symbArray->length()}
+			);
 			indexAccess = base;
 		}
 		else
@@ -1043,6 +1096,82 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smt::Expression c
 			break;
 		}
 	}
+}
+
+void SMTEncoder::arrayPush(FunctionCall const& _funCall)
+{
+	auto memberAccess = dynamic_cast<MemberAccess const*>(&_funCall.expression());
+	solAssert(memberAccess, "");
+	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+	solAssert(symbArray, "");
+	auto oldLength = symbArray->length();
+	m_context.addAssertion(oldLength >= 0);
+	// Real world assumption: the array length is assumed to not overflow.
+	// This assertion guarantees that both the current and updated lengths have the above property.
+	m_context.addAssertion(oldLength + 1 < (smt::maxValue(*TypeProvider::uint256()) - 1));
+
+	auto const& arguments = _funCall.arguments();
+	smtutil::Expression element = arguments.empty() ?
+		smt::zeroValue(_funCall.annotation().type) :
+		expr(*arguments.front());
+	smtutil::Expression store = smtutil::Expression::store(
+		symbArray->elements(),
+		oldLength,
+		element
+	);
+	symbArray->increaseIndex();
+	m_context.addAssertion(symbArray->elements() == store);
+	m_context.addAssertion(symbArray->length() == oldLength + 1);
+
+	if (arguments.empty())
+		defineExpr(_funCall, element);
+
+	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
+}
+
+void SMTEncoder::arrayPop(FunctionCall const& _funCall)
+{
+	auto memberAccess = dynamic_cast<MemberAccess const*>(&_funCall.expression());
+	solAssert(memberAccess, "");
+	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+	solAssert(symbArray, "");
+
+	makeArrayPopVerificationTarget(_funCall);
+
+	auto oldElements = symbArray->elements();
+	auto oldLength = symbArray->length();
+	m_context.addAssertion(oldLength > 0);
+
+	symbArray->increaseIndex();
+	m_context.addAssertion(symbArray->elements() == oldElements);
+	auto newLength = smtutil::Expression::ite(
+		oldLength == 0,
+		smt::maxValue(*TypeProvider::uint256()),
+		oldLength - 1
+	);
+	m_context.addAssertion(symbArray->length() == oldLength - 1);
+
+	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
+}
+
+void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression const& _array)
+{
+	if (auto const* id = dynamic_cast<Identifier const*>(&_expr))
+	{
+		auto varDecl = identifierToVariable(*id);
+		solAssert(varDecl, "");
+		m_context.addAssertion(m_context.newValue(*varDecl) == _array);
+	}
+	else if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(&_expr))
+		arrayIndexAssignment(*indexAccess, _array);
+	else if (dynamic_cast<MemberAccess const*>(&_expr))
+		m_errorReporter.warning(
+			9599_error,
+			_expr.location(),
+			"Assertion checker does not yet implement this expression."
+		);
+	else
+		solAssert(false, "");
 }
 
 void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _expr, bool _increaseIndex)
@@ -1072,9 +1201,9 @@ bool SMTEncoder::shortcutRationalNumber(Expression const& _expr)
 		auto rationalType = dynamic_cast<RationalNumberType const*>(_expr.annotation().type);
 		solAssert(rationalType, "");
 		if (rationalType->isNegative())
-			defineExpr(_expr, smt::Expression(u2s(rationalType->literalValue(nullptr))));
+			defineExpr(_expr, smtutil::Expression(u2s(rationalType->literalValue(nullptr))));
 		else
-			defineExpr(_expr, smt::Expression(rationalType->literalValue(nullptr)));
+			defineExpr(_expr, smtutil::Expression(rationalType->literalValue(nullptr)));
 		return true;
 	}
 	return false;
@@ -1120,10 +1249,10 @@ void SMTEncoder::arithmeticOperation(BinaryOperation const& _op)
 		);
 }
 
-pair<smt::Expression, smt::Expression> SMTEncoder::arithmeticOperation(
+pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 	Token _op,
-	smt::Expression const& _left,
-	smt::Expression const& _right,
+	smtutil::Expression const& _left,
+	smtutil::Expression const& _right,
 	TypePointer const& _commonType,
 	Expression const&
 )
@@ -1140,7 +1269,7 @@ pair<smt::Expression, smt::Expression> SMTEncoder::arithmeticOperation(
 	solAssert(_commonType->category() == Type::Category::Integer, "");
 
 	auto const& intType = dynamic_cast<IntegerType const&>(*_commonType);
-	smt::Expression valueNoMod(
+	smtutil::Expression valueNoMod(
 		_op == Token::Add ? _left + _right :
 		_op == Token::Sub ? _left - _right :
 		_op == Token::Div ? division(_left, _right, intType) :
@@ -1151,11 +1280,11 @@ pair<smt::Expression, smt::Expression> SMTEncoder::arithmeticOperation(
 	if (_op == Token::Div || _op == Token::Mod)
 		m_context.addAssertion(_right != 0);
 
-	smt::Expression intValueRange = (0 - smt::minValue(intType)) + smt::maxValue(intType) + 1;
-	auto value = smt::Expression::ite(
+	smtutil::Expression intValueRange = (0 - smt::minValue(intType)) + smt::maxValue(intType) + 1;
+	auto value = smtutil::Expression::ite(
 		valueNoMod > smt::maxValue(intType),
 		valueNoMod % intValueRange,
-		smt::Expression::ite(
+		smtutil::Expression::ite(
 			valueNoMod < smt::minValue(intType),
 			valueNoMod % intValueRange,
 			valueNoMod
@@ -1163,7 +1292,7 @@ pair<smt::Expression, smt::Expression> SMTEncoder::arithmeticOperation(
 	);
 
 	if (intType.isSigned())
-		value = smt::Expression::ite(
+		value = smtutil::Expression::ite(
 			value > smt::maxValue(intType),
 			value - intValueRange,
 			value
@@ -1178,13 +1307,13 @@ void SMTEncoder::compareOperation(BinaryOperation const& _op)
 	solAssert(commonType, "");
 	if (smt::isSupportedType(commonType->category()))
 	{
-		smt::Expression left(expr(_op.leftExpression(), commonType));
-		smt::Expression right(expr(_op.rightExpression(), commonType));
+		smtutil::Expression left(expr(_op.leftExpression(), commonType));
+		smtutil::Expression right(expr(_op.rightExpression(), commonType));
 		Token op = _op.getOperator();
-		shared_ptr<smt::Expression> value;
+		shared_ptr<smtutil::Expression> value;
 		if (smt::isNumber(commonType->category()))
 		{
-			value = make_shared<smt::Expression>(
+			value = make_shared<smtutil::Expression>(
 				op == Token::Equal ? (left == right) :
 				op == Token::NotEqual ? (left != right) :
 				op == Token::LessThan ? (left < right) :
@@ -1196,7 +1325,7 @@ void SMTEncoder::compareOperation(BinaryOperation const& _op)
 		else // Bool
 		{
 			solUnimplementedAssert(smt::isBool(commonType->category()), "Operation not yet supported");
-			value = make_shared<smt::Expression>(
+			value = make_shared<smtutil::Expression>(
 				op == Token::Equal ? (left == right) :
 				/*op == Token::NotEqual*/ (left != right)
 			);
@@ -1241,14 +1370,51 @@ void SMTEncoder::booleanOperation(BinaryOperation const& _op)
 		);
 }
 
-smt::Expression SMTEncoder::division(smt::Expression _left, smt::Expression _right, IntegerType const& _type)
+void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
+{
+	solAssert(TokenTraits::isBitOp(_op.getOperator()), "");
+	auto commonType = _op.annotation().commonType;
+	solAssert(commonType, "");
+
+	unsigned bvSize = 256;
+	bool isSigned = false;
+	if (auto const* intType = dynamic_cast<IntegerType const*>(commonType))
+	{
+		bvSize = intType->numBits();
+		isSigned = intType->isSigned();
+	}
+	else if (auto const* fixedType = dynamic_cast<FixedPointType const*>(commonType))
+	{
+		bvSize = fixedType->numBits();
+		isSigned = fixedType->isSigned();
+	}
+
+	auto bvLeft = smtutil::Expression::int2bv(expr(_op.leftExpression()), bvSize);
+	auto bvRight = smtutil::Expression::int2bv(expr(_op.rightExpression()), bvSize);
+
+	optional<smtutil::Expression> result;
+	if (_op.getOperator() == Token::BitAnd)
+		result = bvLeft & bvRight;
+	// TODO implement the other operators
+	else
+		m_errorReporter.warning(
+			1093_error,
+			_op.location(),
+			"Assertion checker does not yet implement this bitwise operator."
+		);
+
+	if (result)
+		defineExpr(_op, smtutil::Expression::bv2int(*result, isSigned));
+}
+
+smtutil::Expression SMTEncoder::division(smtutil::Expression _left, smtutil::Expression _right, IntegerType const& _type)
 {
 	// Signed division in SMTLIB2 rounds differently for negative division.
 	if (_type.isSigned())
-		return (smt::Expression::ite(
+		return (smtutil::Expression::ite(
 			_left >= 0,
-			smt::Expression::ite(_right >= 0, _left / _right, 0 - (_left / (0 - _right))),
-			smt::Expression::ite(_right >= 0, 0 - ((0 - _left) / _right), (0 - _left) / (0 - _right))
+			smtutil::Expression::ite(_right >= 0, _left / _right, 0 - (_left / (0 - _right))),
+			smtutil::Expression::ite(_right >= 0, 0 - ((0 - _left) / _right), (0 - _left) / (0 - _right))
 		));
 	else
 		return _left / _right;
@@ -1256,7 +1422,7 @@ smt::Expression SMTEncoder::division(smt::Expression _left, smt::Expression _rig
 
 void SMTEncoder::assignment(
 	Expression const& _left,
-	vector<smt::Expression> const& _right,
+	vector<smtutil::Expression> const& _right,
 	TypePointer const& _type,
 	langutil::SourceLocation const& _location
 )
@@ -1302,7 +1468,7 @@ void SMTEncoder::assignment(
 		);
 }
 
-smt::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment)
+smtutil::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment)
 {
 	static map<Token, Token> const compoundToArithmetic{
 		{Token::AssignAdd, Token::Add},
@@ -1326,10 +1492,17 @@ smt::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment)
 
 void SMTEncoder::assignment(VariableDeclaration const& _variable, Expression const& _value)
 {
-	assignment(_variable, expr(_value, _variable.type()));
+	// In general, at this point, the SMT sorts of _variable and _value are the same,
+	// even if there is implicit conversion.
+	// This is a special case where the SMT sorts are different.
+	// For now we are unaware of other cases where this happens, but if they do appear
+	// we should extract this into an `implicitConversion` function.
+	if (_variable.type()->category() != Type::Category::Array || _value.annotation().type->category() != Type::Category::StringLiteral)
+		assignment(_variable, expr(_value, _variable.type()));
+	// TODO else { store each string literal byte into the array }
 }
 
-void SMTEncoder::assignment(VariableDeclaration const& _variable, smt::Expression const& _value)
+void SMTEncoder::assignment(VariableDeclaration const& _variable, smtutil::Expression const& _value)
 {
 	TypePointer type = _variable.type();
 	if (type->category() == Type::Category::Mapping)
@@ -1337,12 +1510,12 @@ void SMTEncoder::assignment(VariableDeclaration const& _variable, smt::Expressio
 	m_context.addAssertion(m_context.newValue(_variable) == _value);
 }
 
-SMTEncoder::VariableIndices SMTEncoder::visitBranch(ASTNode const* _statement, smt::Expression _condition)
+SMTEncoder::VariableIndices SMTEncoder::visitBranch(ASTNode const* _statement, smtutil::Expression _condition)
 {
 	return visitBranch(_statement, &_condition);
 }
 
-SMTEncoder::VariableIndices SMTEncoder::visitBranch(ASTNode const* _statement, smt::Expression const* _condition)
+SMTEncoder::VariableIndices SMTEncoder::visitBranch(ASTNode const* _statement, smtutil::Expression const* _condition)
 {
 	auto indicesBeforeBranch = copyVariableIndices();
 	if (_condition)
@@ -1355,7 +1528,7 @@ SMTEncoder::VariableIndices SMTEncoder::visitBranch(ASTNode const* _statement, s
 	return indicesAfterBranch;
 }
 
-void SMTEncoder::initializeFunctionCallParameters(CallableDeclaration const& _function, vector<smt::Expression> const& _callArgs)
+void SMTEncoder::initializeFunctionCallParameters(CallableDeclaration const& _function, vector<smtutil::Expression> const& _callArgs)
 {
 	auto const& funParams = _function.parameters();
 	solAssert(funParams.size() == _callArgs.size(), "");
@@ -1452,7 +1625,7 @@ TypePointer SMTEncoder::typeWithoutPointer(TypePointer const& _type)
 	return _type;
 }
 
-void SMTEncoder::mergeVariables(set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
+void SMTEncoder::mergeVariables(set<VariableDeclaration const*> const& _variables, smtutil::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
 {
 	auto cmp = [] (VariableDeclaration const* var1, VariableDeclaration const* var2) {
 		return var1->id() < var2->id();
@@ -1479,7 +1652,7 @@ void SMTEncoder::mergeVariables(set<VariableDeclaration const*> const& _variable
 		int trueIndex = _indicesEndTrue.at(decl);
 		int falseIndex = _indicesEndFalse.at(decl);
 		solAssert(trueIndex != falseIndex, "");
-		m_context.addAssertion(m_context.newValue(*decl) == smt::Expression::ite(
+		m_context.addAssertion(m_context.newValue(*decl) == smtutil::Expression::ite(
 			_condition,
 			valueAtIndex(*decl, trueIndex),
 			valueAtIndex(*decl, falseIndex))
@@ -1487,13 +1660,13 @@ void SMTEncoder::mergeVariables(set<VariableDeclaration const*> const& _variable
 	}
 }
 
-smt::Expression SMTEncoder::currentValue(VariableDeclaration const& _decl)
+smtutil::Expression SMTEncoder::currentValue(VariableDeclaration const& _decl)
 {
 	solAssert(m_context.knownVariable(_decl), "");
 	return m_context.variable(_decl)->currentValue();
 }
 
-smt::Expression SMTEncoder::valueAtIndex(VariableDeclaration const& _decl, int _index)
+smtutil::Expression SMTEncoder::valueAtIndex(VariableDeclaration const& _decl, int _index)
 {
 	solAssert(m_context.knownVariable(_decl), "");
 	return m_context.variable(_decl)->valueAtIndex(_index);
@@ -1516,7 +1689,7 @@ bool SMTEncoder::createVariable(VariableDeclaration const& _varDecl)
 	return true;
 }
 
-smt::Expression SMTEncoder::expr(Expression const& _e, TypePointer _targetType)
+smtutil::Expression SMTEncoder::expr(Expression const& _e, TypePointer _targetType)
 {
 	if (!m_context.knownExpression(_e))
 	{
@@ -1538,10 +1711,10 @@ void SMTEncoder::createExpr(Expression const& _e)
 		);
 }
 
-void SMTEncoder::defineExpr(Expression const& _e, smt::Expression _value)
+void SMTEncoder::defineExpr(Expression const& _e, smtutil::Expression _value)
 {
 	createExpr(_e);
-	solAssert(_value.sort->kind != smt::Kind::Function, "Equality operator applied to type that is not fully supported");
+	solAssert(_value.sort->kind != smtutil::Kind::Function, "Equality operator applied to type that is not fully supported");
 	m_context.addAssertion(expr(_e) == _value);
 }
 
@@ -1551,15 +1724,15 @@ void SMTEncoder::popPathCondition()
 	m_pathConditions.pop_back();
 }
 
-void SMTEncoder::pushPathCondition(smt::Expression const& _e)
+void SMTEncoder::pushPathCondition(smtutil::Expression const& _e)
 {
 	m_pathConditions.push_back(currentPathConditions() && _e);
 }
 
-smt::Expression SMTEncoder::currentPathConditions()
+smtutil::Expression SMTEncoder::currentPathConditions()
 {
 	if (m_pathConditions.empty())
-		return smt::Expression(true);
+		return smtutil::Expression(true);
 	return m_pathConditions.back();
 }
 
@@ -1587,9 +1760,9 @@ void SMTEncoder::pushCallStack(CallStackEntry _entry)
 	m_callStack.push_back(_entry);
 }
 
-void SMTEncoder::addPathImpliedExpression(smt::Expression const& _e)
+void SMTEncoder::addPathImpliedExpression(smtutil::Expression const& _e)
 {
-	m_context.addAssertion(smt::Expression::implies(currentPathConditions(), _e));
+	m_context.addAssertion(smtutil::Expression::implies(currentPathConditions(), _e));
 }
 
 bool SMTEncoder::isRootFunction()
@@ -1616,7 +1789,7 @@ SMTEncoder::VariableIndices SMTEncoder::copyVariableIndices()
 void SMTEncoder::resetVariableIndices(VariableIndices const& _indices)
 {
 	for (auto const& var: _indices)
-		m_context.variable(*var.first)->index() = var.second;
+		m_context.variable(*var.first)->setIndex(var.second);
 }
 
 void SMTEncoder::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)
@@ -1643,7 +1816,6 @@ Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)
 
 set<VariableDeclaration const*> SMTEncoder::touchedVariables(ASTNode const& _node)
 {
-	solAssert(!m_callStack.empty(), "");
 	vector<CallableDeclaration const*> callStack;
 	for (auto const& call: m_callStack)
 		callStack.push_back(call.first);
@@ -1725,12 +1897,12 @@ void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)
 		defineExpr(_funCall, currentValue(*returnParams.front()));
 }
 
-vector<smt::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _funCall)
+vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _funCall)
 {
 	auto const* function = functionCallToDefinition(_funCall);
 	solAssert(function, "");
 
-	vector<smt::Expression> args;
+	vector<smtutil::Expression> args;
 	Expression const* calledExpr = &_funCall.expression();
 	auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
 	solAssert(funType, "");

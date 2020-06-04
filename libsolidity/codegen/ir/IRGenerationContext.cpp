@@ -29,6 +29,8 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 
+#include <boost/range/adaptor/map.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -36,7 +38,7 @@ using namespace solidity::frontend;
 
 string IRGenerationContext::enqueueFunctionForCodeGeneration(FunctionDefinition const& _function)
 {
-	string name = functionName(_function);
+	string name = IRNames::function(_function);
 
 	if (!m_functions.contains(name))
 		m_functionGenerationQueue.insert(&_function);
@@ -116,94 +118,60 @@ void IRGenerationContext::addStateVariable(
 	m_stateVariables[&_declaration] = make_pair(move(_storageOffset), _byteOffset);
 }
 
-string IRGenerationContext::functionName(FunctionDefinition const& _function)
-{
-	// @TODO previously, we had to distinguish creation context and runtime context,
-	// but since we do not work with jump positions anymore, this should not be a problem, right?
-	return "fun_" + _function.name() + "_" + to_string(_function.id());
-}
-
-string IRGenerationContext::functionName(VariableDeclaration const& _varDecl)
-{
-	return "getter_fun_" + _varDecl.name() + "_" + to_string(_varDecl.id());
-}
-
-string IRGenerationContext::creationObjectName(ContractDefinition const& _contract) const
-{
-	return _contract.name() + "_" + toString(_contract.id());
-}
-string IRGenerationContext::runtimeObjectName(ContractDefinition const& _contract) const
-{
-	return _contract.name() + "_" + toString(_contract.id()) + "_deployed";
-}
-
 string IRGenerationContext::newYulVariable()
 {
 	return "_" + to_string(++m_varCounter);
 }
 
-string IRGenerationContext::trySuccessConditionVariable(Expression const& _expression) const
+void IRGenerationContext::initializeInternalDispatch(InternalDispatchMap _internalDispatch)
 {
-	// NB: The TypeChecker already ensured that the Expression is of type FunctionCall.
-	solAssert(
-		static_cast<FunctionCallAnnotation const&>(_expression.annotation()).tryCall,
-		"Parameter must be a FunctionCall with tryCall-annotation set."
-	);
+	solAssert(internalDispatchClean(), "");
 
-	return "trySuccessCondition_" + to_string(_expression.id());
+	for (set<FunctionDefinition const*> const& functions: _internalDispatch | boost::adaptors::map_values)
+		for (auto function: functions)
+			enqueueFunctionForCodeGeneration(*function);
+
+	m_internalDispatchMap = move(_internalDispatch);
 }
 
-string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
+InternalDispatchMap IRGenerationContext::consumeInternalDispatchMap()
 {
-	string funName = "dispatch_internal_in_" + to_string(_in) + "_out_" + to_string(_out);
-	return m_functions.createFunction(funName, [&]() {
-		Whiskers templ(R"(
-			function <functionName>(fun <comma> <in>) <arrow> <out> {
-				switch fun
-				<#cases>
-				case <funID>
-				{
-					<out> <assignment_op> <name>(<in>)
-				}
-				</cases>
-				default { invalid() }
-			}
-		)");
-		templ("functionName", funName);
-		templ("comma", _in > 0 ? "," : "");
-		YulUtilFunctions utils(m_evmVersion, m_revertStrings, m_functions);
-		templ("in", suffixedVariableNameList("in_", 0, _in));
-		templ("arrow", _out > 0 ? "->" : "");
-		templ("assignment_op", _out > 0 ? ":=" : "");
-		templ("out", suffixedVariableNameList("out_", 0, _out));
+	m_directInternalFunctionCalls.clear();
 
-		// UNIMPLEMENTED: Internal library calls via pointers are not implemented yet.
-		// We're not generating code for internal library functions here even though it's possible
-		// to call them via pointers. Right now such calls end up triggering the `default` case in
-		// the switch above.
-		vector<map<string, string>> functions;
-		for (auto const& contract: mostDerivedContract().annotation().linearizedBaseContracts)
-			for (FunctionDefinition const* function: contract->definedFunctions())
-				if (
-					FunctionType const* functionType = TypeProvider::function(*function)->asCallableFunction(false);
-					!function->isConstructor() &&
-					TupleType(functionType->parameterTypes()).sizeOnStack() == _in &&
-					TupleType(functionType->returnParameterTypes()).sizeOnStack() == _out
-				)
-				{
-					// 0 is reserved for uninitialized function pointers
-					solAssert(function->id() != 0, "Unexpected function ID: 0");
+	InternalDispatchMap internalDispatch = move(m_internalDispatchMap);
+	m_internalDispatchMap.clear();
+	return internalDispatch;
+}
 
-					functions.emplace_back(map<string, string> {
-						{ "funID", to_string(function->id()) },
-						{ "name", functionName(*function)}
-					});
+void IRGenerationContext::internalFunctionCalledDirectly(Expression const& _expression)
+{
+	solAssert(m_directInternalFunctionCalls.count(&_expression) == 0, "");
 
-					enqueueFunctionForCodeGeneration(*function);
-				}
-		templ("cases", move(functions));
-		return templ.render();
-	});
+	m_directInternalFunctionCalls.insert(&_expression);
+}
+
+void IRGenerationContext::internalFunctionAccessed(Expression const& _expression, FunctionDefinition const& _function)
+{
+	solAssert(
+		IRHelpers::referencedFunctionDeclaration(_expression) &&
+		_function.resolveVirtual(mostDerivedContract()) ==
+		IRHelpers::referencedFunctionDeclaration(_expression)->resolveVirtual(mostDerivedContract()),
+		"Function definition does not match the expression"
+	);
+
+	if (m_directInternalFunctionCalls.count(&_expression) == 0)
+	{
+		FunctionType const* functionType = TypeProvider::function(_function, FunctionType::Kind::Internal);
+		solAssert(functionType, "");
+
+		m_internalDispatchMap[YulArity::fromType(*functionType)].insert(&_function);
+		enqueueFunctionForCodeGeneration(_function);
+	}
+}
+
+void IRGenerationContext::internalFunctionCalledThroughDispatch(YulArity const& _arity)
+{
+	m_internalDispatchMap.try_emplace(_arity);
 }
 
 YulUtilFunctions IRGenerationContext::utils()
@@ -220,4 +188,3 @@ std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message
 {
 	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
 }
-

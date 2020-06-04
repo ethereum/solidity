@@ -13,8 +13,7 @@ arrays and mappings. If you use a reference type, you always have to explicitly
 provide the data area where the type is stored: ``memory`` (whose lifetime is limited
 to an external function call), ``storage`` (the location where the state variables
 are stored, where the lifetime is limited to the lifetime of a contract)
-or ``calldata`` (special data location that contains the function arguments,
-only available for external function call parameters).
+or ``calldata`` (special data location that contains the function arguments).
 
 An assignment or type conversion that changes the data location will always incur an automatic copy operation,
 while assignments inside the same data location only copy in some cases for storage types.
@@ -26,15 +25,21 @@ Data location
 
 Every reference type has an additional
 annotation, the "data location", about where it is stored. There are three data locations:
-``memory``, ``storage`` and ``calldata``. Calldata is only valid for parameters of external contract
-functions and is required for this type of parameter. Calldata is a non-modifiable,
+``memory``, ``storage`` and ``calldata``. Calldata is a non-modifiable,
 non-persistent area where function arguments are stored, and behaves mostly like memory.
+It is required for parameters of external functions but can also be used for other variables.
 
 
 .. note::
     Prior to version 0.5.0 the data location could be omitted, and would default to different locations
     depending on the kind of variable, function type, etc., but all complex types must now give an explicit
     data location.
+
+.. note::
+    If you can, try to use ``calldata`` as data location because it will avoid copies and
+    also makes sure that the data cannot be modified. Arrays and structs with ``calldata``
+    data location can also be returned from functions, but it is not possible to
+    allocate such types.
 
 .. _data-location-assignment:
 
@@ -415,7 +420,7 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
     pragma solidity >=0.6.0 <0.7.0;
 
     contract Proxy {
-        /// Address of the client contract managed by proxy i.e., this contract
+        /// @dev Address of the client contract managed by proxy i.e., this contract
         address client;
 
         constructor(address _client) public {

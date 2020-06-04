@@ -37,8 +37,7 @@ class DocStringParser
 {
 public:
 	/// Parse the given @a _docString and stores the parsed components internally.
-	/// @returns false on error and appends the error to @a _errors.
-	bool parse(std::string const& _docString, langutil::ErrorReporter& _errorReporter);
+	void parse(std::string const& _docString, langutil::ErrorReporter& _errorReporter);
 
 	std::multimap<std::string, DocTag> const& tags() const { return m_docTags; }
 
@@ -59,13 +58,10 @@ private:
 	/// Creates and inserts a new tag and adjusts m_lastTag.
 	void newTag(std::string const& _tagName);
 
-	void appendError(std::string const& _description);
-
 	/// Mapping tag name -> content.
 	std::multimap<std::string, DocTag> m_docTags;
 	DocTag* m_lastTag = nullptr;
 	langutil::ErrorReporter* m_errorReporter = nullptr;
-	bool m_errorsOccurred = false;
 };
 
 }

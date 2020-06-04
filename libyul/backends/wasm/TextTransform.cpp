@@ -121,14 +121,14 @@ string TextTransform::operator()(wasm::Loop const& _loop)
 	return "(loop" + move(label) + "\n" + indented(joinTransformed(_loop.statements, '\n')) + ")\n";
 }
 
-string TextTransform::operator()(wasm::Break const& _break)
+string TextTransform::operator()(wasm::Branch const& _branch)
 {
-	return "(br $" + _break.label.name + ")\n";
+	return "(br $" + _branch.label.name + ")\n";
 }
 
-string TextTransform::operator()(wasm::BreakIf const& _break)
+string TextTransform::operator()(wasm::BranchIf const& _branchIf)
 {
-	return "(br_if $" + _break.label.name + " " + visit(*_break.condition) + ")\n";
+	return "(br_if $" + _branchIf.label.name + " " + visit(*_branchIf.condition) + ")\n";
 }
 
 string TextTransform::operator()(wasm::Return const&)
