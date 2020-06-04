@@ -31,6 +31,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when short circuiting Boolean expressions with function calls in state variable initialization.
  * SMTChecker: Fix internal error when assigning to index access inside branches.
  * SMTChecker: Fix internal error on try/catch clauses with parameters.
+ * Commandline Interface: Fix internal error when using ``--assemble`` or ``--yul`` options with ``--machine ewasm`` but without specifying ``--yul-dialect``.
 
 ### 0.6.8 (2020-05-14)
 
