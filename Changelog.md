@@ -1,37 +1,38 @@
-### 0.6.9 (unreleased)
+### 0.6.9 (2020-06-04)
 
 Language Features:
  * Permit calldata location for all variables.
+ * NatSpec: Support NatSpec comments on state variables.
  * Yul: EVM instruction `pc()` is marked deprecated and will be removed in the next breaking release.
 
 
 Compiler Features:
- * Code Generator: Do not introduce new source references for small internal routines.
  * Build system: Update the soljson.js build to emscripten 1.39.15 and boost 1.73.0 and include Z3 for integrated SMTChecker support without the callback mechanism.
- * Commandline Interface: Adds new option ``--base-path PATH`` to use the given path as the root of the source tree instead of the root of the filesystem.
+ * Code Generator: Do not introduce new internal source references for small compiler routines.
+ * Commandline Interface: Adds new option ``--base-path PATH`` to use the given path as the root of the source tree (defaults to the root of the filesystem).
  * SMTChecker: Support array ``length``.
  * SMTChecker: Support array ``push`` and ``pop``.
  * SMTChecker: General support to BitVectors and the bitwise ``and`` operator.
- * Add support for natspec comments on state variables.
 
 
 Bugfixes:
+ * Code Generator: Trigger proper unimplemented errors on certain array copy operations.
+ * Commandline Interface: Fix internal error when using ``--assemble`` or ``--yul`` options with ``--machine ewasm`` but without specifying ``--yul-dialect``.
+ * NatSpec: DocString block is terminated when encountering an empty line.
  * Optimizer: Fixed a bug in BlockDeDuplicator.
+ * Scanner: Fix bug when two empty NatSpec comments lead to scanning past EOL.
+ * SMTChecker: Fix internal error on try/catch clauses with parameters.
+ * SMTChecker: Fix internal error when applying arithmetic operators to fixed point variables.
+ * SMTChecker: Fix internal error when assigning to index access inside branches.
+ * SMTChecker: Fix internal error when short circuiting Boolean expressions with function calls in state variable initialization.
  * Type Checker: Disallow assignments to storage variables of type ``mapping``.
  * Type Checker: Disallow inline arrays of non-nameable types.
+ * Type Checker: Disallow usage of override with non-public state variables.
  * Type Checker: Fix internal compiler error when accessing members of array slices.
+ * Type Checker: Fix internal compiler error when forward referencing non-literal constants from inline assembly.
  * Type Checker: Fix internal compiler error when trying to decode too large static arrays.
  * Type Checker: Fix wrong compiler error when referencing an overridden function without calling it.
- * Type Checker: Fix internal compiler error when forward referencing non-literal constants from inline assembly.
- * Type Checker: Disallow usage of override with non-public state variables.
- * NatSpec: DocString block is terminated when encountering an empty line.
- * Scanner: Fix bug when two empty NatSpec comments lead to scanning past EOL.
- * Code Generator: Trigger proper unimplemented errors on certain array copy operations.
- * SMTChecker: Fix internal error when applying arithmetic operators to fixed point variables.
- * SMTChecker: Fix internal error when short circuiting Boolean expressions with function calls in state variable initialization.
- * SMTChecker: Fix internal error when assigning to index access inside branches.
- * SMTChecker: Fix internal error on try/catch clauses with parameters.
- * Commandline Interface: Fix internal error when using ``--assemble`` or ``--yul`` options with ``--machine ewasm`` but without specifying ``--yul-dialect``.
+
 
 ### 0.6.8 (2020-05-14)
 
