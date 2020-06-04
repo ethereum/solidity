@@ -1730,7 +1730,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 
 				setLValue(_indexAccess, IRLValue{
 					*arrayType.baseType(),
-					IRLValue::Memory{memAddress}
+					IRLValue::Memory{memAddress, arrayType.isByteArray()}
 				});
 				break;
 			}
@@ -1763,7 +1763,23 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 		}
 	}
 	else if (baseType.category() == Type::Category::FixedBytes)
-		solUnimplementedAssert(false, "");
+	{
+		auto const& fixedBytesType = dynamic_cast<FixedBytesType const&>(baseType);
+		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
+
+		IRVariable index{m_context.newYulVariable(), *TypeProvider::uint256()};
+		define(index, *_indexAccess.indexExpression());
+		m_code << Whiskers(R"(
+			if iszero(lt(<index>, <length>)) { invalid() }
+			let <result> := <shl248>(byte(<index>, <array>))
+		)")
+		("index", index.name())
+		("length", to_string(fixedBytesType.numBytes()))
+		("array", IRVariable(_indexAccess.baseExpression()).name())
+		("shl248", m_utils.shiftLeftFunction(256 - 8))
+		("result", IRVariable(_indexAccess).name())
+		.render();
+	}
 	else if (baseType.category() == Type::Category::TypeType)
 	{
 		solAssert(baseType.sizeOnStack() == 0, "");
