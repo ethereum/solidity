@@ -41,7 +41,7 @@ using namespace solidity::util;
 AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 {
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
-	m_deposit += _i.deposit();
+	m_deposit += static_cast<int>(_i.deposit());
 	m_items.emplace_back(_i);
 	if (!m_items.back().location().isValid() && m_currentSourceLocation.isValid())
 		m_items.back().setLocation(m_currentSourceLocation);
@@ -77,10 +77,10 @@ string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& 
 		return "";
 
 	string const& source = it->second;
-	if (size_t(_location.start) >= source.size())
+	if (static_cast<size_t>(_location.start) >= source.size())
 		return "";
 
-	string cut = source.substr(_location.start, _location.end - _location.start);
+	string cut = source.substr(static_cast<size_t>(_location.start), static_cast<size_t>(_location.end - _location.start));
 	auto newLinePos = cut.find_first_of("\n");
 	if (newLinePos != string::npos)
 		cut = cut.substr(0, newLinePos) + "...";
@@ -106,7 +106,7 @@ public:
 		if (!(
 			_item.canBeFunctional() &&
 			_item.returnValues() <= 1 &&
-			_item.arguments() <= int(m_pending.size())
+			_item.arguments() <= m_pending.size()
 		))
 		{
 			flush();
@@ -117,7 +117,7 @@ public:
 		if (_item.arguments() > 0)
 		{
 			expression += "(";
-			for (int i = 0; i < _item.arguments(); ++i)
+			for (size_t i = 0; i < _item.arguments(); ++i)
 			{
 				expression += m_pending.back();
 				m_pending.pop_back();
@@ -225,12 +225,12 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 	Json::Value& collection = root[".code"] = Json::arrayValue;
 	for (AssemblyItem const& i: m_items)
 	{
-		unsigned sourceIndex = unsigned(-1);
+		int sourceIndex = -1;
 		if (i.location().source)
 		{
 			auto iter = _sourceIndices.find(i.location().source->name());
 			if (iter != _sourceIndices.end())
-				sourceIndex = iter->second;
+				sourceIndex = static_cast<int>(iter->second);
 		}
 
 		switch (i.type())
@@ -340,7 +340,7 @@ AssemblyItem Assembly::namedTag(string const& _name)
 {
 	assertThrow(!_name.empty(), AssemblyException, "Empty named tag.");
 	if (!m_namedTags.count(_name))
-		m_namedTags[_name] = size_t(newTag().data());
+		m_namedTags[_name] = static_cast<size_t>(newTag().data());
 	return AssemblyItem{Tag, m_namedTags.at(_name)};
 }
 
@@ -441,7 +441,7 @@ map<u256, u256> Assembly::optimiseInternal(
 				for (auto const& replacement: deduplicator.replacedTags())
 				{
 					assertThrow(
-						replacement.first <= size_t(-1) && replacement.second <= size_t(-1),
+						replacement.first <= numeric_limits<size_t>::max() && replacement.second <= numeric_limits<size_t>::max(),
 						OptimizerException,
 						"Invalid tag replacement."
 					);
@@ -451,8 +451,8 @@ map<u256, u256> Assembly::optimiseInternal(
 						"Replacement already known."
 					);
 					tagReplacements[replacement.first] = replacement.second;
-					if (_tagsReferencedFromOutside.erase(size_t(replacement.first)))
-						_tagsReferencedFromOutside.insert(size_t(replacement.second));
+					if (_tagsReferencedFromOutside.erase(static_cast<size_t>(replacement.first)))
+						_tagsReferencedFromOutside.insert(static_cast<size_t>(replacement.second));
 				}
 				count++;
 			}
@@ -479,7 +479,7 @@ map<u256, u256> Assembly::optimiseInternal(
 				try
 				{
 					optimisedChunk = eliminator.getOptimizedItems();
-					shouldReplace = (optimisedChunk.size() < size_t(iter - orig));
+					shouldReplace = (optimisedChunk.size() < static_cast<size_t>(iter - orig));
 				}
 				catch (StackTooDeepException const&)
 				{
@@ -544,7 +544,7 @@ LinkerObject const& Assembly::assemble() const
 			immutableReferencesBySub = linkerObject.immutableReferences;
 		}
 		for (size_t tagPos: sub->m_tagPositionsInBytecode)
-			if (tagPos != size_t(-1) && tagPos > subTagSize)
+			if (tagPos != numeric_limits<size_t>::max() && tagPos > subTagSize)
 				subTagSize = tagPos;
 	}
 
@@ -567,7 +567,7 @@ LinkerObject const& Assembly::assemble() const
 		);
 
 	size_t bytesRequiredForCode = bytesRequired(subTagSize);
-	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, -1);
+	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, numeric_limits<size_t>::max());
 	map<size_t, pair<size_t, size_t>> tagRef;
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
@@ -586,7 +586,7 @@ LinkerObject const& Assembly::assemble() const
 	for (AssemblyItem const& i: m_items)
 	{
 		// store position of the invalid jump destination
-		if (i.type() != Tag && m_tagPositionsInBytecode[0] == size_t(-1))
+		if (i.type() != Tag && m_tagPositionsInBytecode[0] == numeric_limits<size_t>::max())
 			m_tagPositionsInBytecode[0] = ret.bytecode.size();
 
 		switch (i.type())
@@ -629,15 +629,15 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		case PushSub:
-			assertThrow(i.data() <= size_t(-1), AssemblyException, "");
+			assertThrow(i.data() <= numeric_limits<size_t>::max(), AssemblyException, "");
 			ret.bytecode.push_back(dataRefPush);
-			subRef.insert(make_pair(size_t(i.data()), ret.bytecode.size()));
+			subRef.insert(make_pair(static_cast<size_t>(i.data()), ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		case PushSubSize:
 		{
-			assertThrow(i.data() <= size_t(-1), AssemblyException, "");
-			auto s = m_subs.at(size_t(i.data()))->assemble().bytecode.size();
+			assertThrow(i.data() <= numeric_limits<size_t>::max(), AssemblyException, "");
+			auto s = m_subs.at(static_cast<size_t>(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
 			uint8_t b = max<unsigned>(1, util::bytesRequired(s));
 			ret.bytecode.push_back((uint8_t)Instruction::PUSH1 - 1 + b);
@@ -683,10 +683,10 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case Tag:
 			assertThrow(i.data() != 0, AssemblyException, "Invalid tag position.");
-			assertThrow(i.splitForeignPushTag().first == size_t(-1), AssemblyException, "Foreign tag.");
+			assertThrow(i.splitForeignPushTag().first == numeric_limits<size_t>::max(), AssemblyException, "Foreign tag.");
 			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
-			assertThrow(m_tagPositionsInBytecode[size_t(i.data())] == size_t(-1), AssemblyException, "Duplicate tag position.");
-			m_tagPositionsInBytecode[size_t(i.data())] = ret.bytecode.size();
+			assertThrow(m_tagPositionsInBytecode[static_cast<size_t>(i.data())] == numeric_limits<size_t>::max(), AssemblyException, "Duplicate tag position.");
+			m_tagPositionsInBytecode[static_cast<size_t>(i.data())] = ret.bytecode.size();
 			ret.bytecode.push_back((uint8_t)Instruction::JUMPDEST);
 			break;
 		default:
@@ -722,14 +722,14 @@ LinkerObject const& Assembly::assemble() const
 		size_t subId;
 		size_t tagId;
 		tie(subId, tagId) = i.second;
-		assertThrow(subId == size_t(-1) || subId < m_subs.size(), AssemblyException, "Invalid sub id");
+		assertThrow(subId == numeric_limits<size_t>::max() || subId < m_subs.size(), AssemblyException, "Invalid sub id");
 		std::vector<size_t> const& tagPositions =
-			subId == size_t(-1) ?
+			subId == numeric_limits<size_t>::max() ?
 			m_tagPositionsInBytecode :
 			m_subs[subId]->m_tagPositionsInBytecode;
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		size_t pos = tagPositions[tagId];
-		assertThrow(pos != size_t(-1), AssemblyException, "Reference to tag without position.");
+		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
 		assertThrow(util::bytesRequired(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
 		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
 		toBigEndian(pos, r);

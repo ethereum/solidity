@@ -1276,7 +1276,8 @@ string YulUtilFunctions::mappingIndexAccessFunction(MappingType const& _mappingT
 
 string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes)
 {
-	solUnimplementedAssert(!_splitFunctionTypes, "");
+	if (_type.category() == Type::Category::Function)
+		solUnimplementedAssert(!_splitFunctionTypes, "");
 	string functionName =
 		"read_from_storage_" +
 		string(_splitFunctionTypes ? "split_" : "") +
@@ -1299,7 +1300,8 @@ string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool
 
 string YulUtilFunctions::readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes)
 {
-	solUnimplementedAssert(!_splitFunctionTypes, "");
+	if (_type.category() == Type::Category::Function)
+		solUnimplementedAssert(!_splitFunctionTypes, "");
 	string functionName =
 		"read_from_storage_dynamic" +
 		string(_splitFunctionTypes ? "split_" : "") +
@@ -1429,7 +1431,8 @@ string YulUtilFunctions::writeToMemoryFunction(Type const& _type)
 
 string YulUtilFunctions::extractFromStorageValueDynamic(Type const& _type, bool _splitFunctionTypes)
 {
-	solUnimplementedAssert(!_splitFunctionTypes, "");
+	if (_type.category() == Type::Category::Function)
+		solUnimplementedAssert(!_splitFunctionTypes, "");
 
 	string functionName =
 		"extract_from_storage_value_dynamic" +
@@ -1474,7 +1477,8 @@ string YulUtilFunctions::extractFromStorageValue(Type const& _type, size_t _offs
 string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes)
 {
 	solAssert(_type.isValueType(), "");
-	solUnimplementedAssert(!_splitFunctionTypes, "");
+	if (_type.category() == Type::Category::Function)
+		solUnimplementedAssert(!_splitFunctionTypes, "");
 
 	string functionName = string("cleanup_from_storage_") + (_splitFunctionTypes ? "split_" : "") + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&] {

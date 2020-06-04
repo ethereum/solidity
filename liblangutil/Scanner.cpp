@@ -171,7 +171,7 @@ void Scanner::supportPeriodInIdentifier(bool _value)
 bool Scanner::scanHexByte(char& o_scannedByte)
 {
 	char x = 0;
-	for (int i = 0; i < 2; i++)
+	for (size_t i = 0; i < 2; i++)
 	{
 		int d = hexValue(m_char);
 		if (d < 0)
@@ -189,7 +189,7 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 std::optional<unsigned> Scanner::scanUnicode()
 {
 	unsigned x = 0;
-	for (int i = 0; i < 4; i++)
+	for (size_t i = 0; i < 4; i++)
 	{
 		int d = hexValue(m_char);
 		if (d < 0)
@@ -197,7 +197,7 @@ std::optional<unsigned> Scanner::scanUnicode()
 			rollback(i);
 			return {};
 		}
-		x = x * 16 + d;
+		x = x * 16 + static_cast<size_t>(d);
 		advance();
 	}
 	return x;
@@ -207,17 +207,17 @@ std::optional<unsigned> Scanner::scanUnicode()
 void Scanner::addUnicodeAsUTF8(unsigned codepoint)
 {
 	if (codepoint <= 0x7f)
-		addLiteralChar(codepoint);
+		addLiteralChar(char(codepoint));
 	else if (codepoint <= 0x7ff)
 	{
-		addLiteralChar(0xc0 | (codepoint >> 6));
-		addLiteralChar(0x80 | (codepoint & 0x3f));
+		addLiteralChar(char(0xc0u | (codepoint >> 6u)));
+		addLiteralChar(char(0x80u | (codepoint & 0x3fu)));
 	}
 	else
 	{
-		addLiteralChar(0xe0 | (codepoint >> 12));
-		addLiteralChar(0x80 | ((codepoint >> 6) & 0x3f));
-		addLiteralChar(0x80 | (codepoint & 0x3f));
+		addLiteralChar(char(0xe0u | (codepoint >> 12u)));
+		addLiteralChar(char(0x80u | ((codepoint >> 6u) & 0x3fu)));
+		addLiteralChar(char(0x80u | (codepoint & 0x3fu)));
 	}
 }
 
@@ -225,10 +225,10 @@ void Scanner::rescan()
 {
 	size_t rollbackTo = 0;
 	if (m_skippedComments[Current].literal.empty())
-		rollbackTo = m_tokens[Current].location.start;
+		rollbackTo = static_cast<size_t>(m_tokens[Current].location.start);
 	else
-		rollbackTo = m_skippedComments[Current].location.start;
-	m_char = m_source->rollback(size_t(m_source->position()) - rollbackTo);
+		rollbackTo = static_cast<size_t>(m_skippedComments[Current].location.start);
+	m_char = m_source->rollback(m_source->position() - rollbackTo);
 	next();
 	next();
 	next();
@@ -260,7 +260,7 @@ Token Scanner::selectToken(char _next, Token _then, Token _else)
 
 bool Scanner::skipWhitespace()
 {
-	int const startPosition = sourcePos();
+	size_t const startPosition = sourcePos();
 	while (isWhiteSpace(m_char))
 		advance();
 	// Return whether or not we skipped any characters.
@@ -269,7 +269,7 @@ bool Scanner::skipWhitespace()
 
 bool Scanner::skipWhitespaceExceptUnicodeLinebreak()
 {
-	int const startPosition = sourcePos();
+	size_t const startPosition = sourcePos();
 	while (isWhiteSpace(m_char) && !isUnicodeLinebreak())
 		advance();
 	// Return whether or not we skipped any characters.
@@ -309,10 +309,10 @@ bool Scanner::tryScanEndOfLine()
 	return false;
 }
 
-int Scanner::scanSingleLineDocComment()
+size_t Scanner::scanSingleLineDocComment()
 {
 	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
-	int endPosition = m_source->position();
+	size_t endPosition = m_source->position();
 	advance(); //consume the last '/' at ///
 
 	skipWhitespaceExceptUnicodeLinebreak();
@@ -429,7 +429,7 @@ Token Scanner::scanMultiLineDocComment()
 
 Token Scanner::scanSlash()
 {
-	int firstSlashPosition = sourcePos();
+	int firstSlashPosition = static_cast<int>(sourcePos());
 	advance();
 	if (m_char == '/')
 	{
@@ -441,7 +441,7 @@ Token Scanner::scanSlash()
 			m_skippedComments[NextNext].location.start = firstSlashPosition;
 			m_skippedComments[NextNext].location.source = m_source;
 			m_skippedComments[NextNext].token = Token::CommentLiteral;
-			m_skippedComments[NextNext].location.end = scanSingleLineDocComment();
+			m_skippedComments[NextNext].location.end = static_cast<int>(scanSingleLineDocComment());
 			return Token::Whitespace;
 		}
 		else
@@ -467,7 +467,7 @@ Token Scanner::scanSlash()
 			m_skippedComments[NextNext].location.start = firstSlashPosition;
 			m_skippedComments[NextNext].location.source = m_source;
 			comment = scanMultiLineDocComment();
-			m_skippedComments[NextNext].location.end = sourcePos();
+			m_skippedComments[NextNext].location.end = static_cast<int>(sourcePos());
 			m_skippedComments[NextNext].token = comment;
 			if (comment == Token::Illegal)
 				return Token::Illegal; // error already set
@@ -495,7 +495,7 @@ void Scanner::scanToken()
 	do
 	{
 		// Remember the position of the next token
-		m_tokens[NextNext].location.start = sourcePos();
+		m_tokens[NextNext].location.start = static_cast<int>(sourcePos());
 		switch (m_char)
 		{
 		case '"':
@@ -690,7 +690,7 @@ void Scanner::scanToken()
 		// whitespace.
 	}
 	while (token == Token::Whitespace);
-	m_tokens[NextNext].location.end = sourcePos();
+	m_tokens[NextNext].location.end = static_cast<int>(sourcePos());
 	m_tokens[NextNext].location.source = m_source;
 	m_tokens[NextNext].token = token;
 	m_tokens[NextNext].extendedTokenInfo = make_tuple(m, n);

@@ -37,7 +37,7 @@ SemVerVersion::SemVerVersion(string const& _versionString)
 	{
 		unsigned v = 0;
 		for (; i != end && '0' <= *i && *i <= '9'; ++i)
-			v = v * 10 + (*i - '0');
+			v = v * 10 + unsigned(*i - '0');
 		numbers[level] = v;
 		if (level < 2)
 		{
@@ -100,10 +100,10 @@ bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _versio
 		int cmp = 0;
 		bool didCompare = false;
 		for (unsigned i = 0; i < levelsPresent && cmp == 0; i++)
-			if (version.numbers[i] != unsigned(-1))
+			if (version.numbers[i] != std::numeric_limits<unsigned>::max())
 			{
 				didCompare = true;
-				cmp = _version.numbers[i] - version.numbers[i];
+				cmp = static_cast<int>(_version.numbers[i] - version.numbers[i]);
 			}
 
 		if (cmp == 0 && !_version.prerelease.empty() && didCompare)
@@ -245,14 +245,14 @@ unsigned SemVerMatchExpressionParser::parseVersionPart()
 		return 0;
 	else if ('1' <= c && c <= '9')
 	{
-		unsigned v = c - '0';
+		unsigned v(c - '0');
 		// If we skip to the next token, the current number is terminated.
 		while (m_pos == startPos && '0' <= currentChar() && currentChar() <= '9')
 		{
 			c = currentChar();
-			if (v * 10 < v || v * 10 + (c - '0') < v * 10)
+			if (v * 10 < v || v * 10 + unsigned(c - '0') < v * 10)
 				throw SemVerError();
-			v = v * 10 + c - '0';
+			v = v * 10 + unsigned(c - '0');
 			nextChar();
 		}
 		return v;

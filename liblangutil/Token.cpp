@@ -130,7 +130,7 @@ int parseSize(string::const_iterator _begin, string::const_iterator _end)
 {
 	try
 	{
-		unsigned int m = boost::lexical_cast<int>(boost::make_iterator_range(_begin, _end));
+		int m = boost::lexical_cast<int>(boost::make_iterator_range(_begin, _end));
 		return m;
 	}
 	catch(boost::bad_lexical_cast const&)

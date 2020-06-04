@@ -44,6 +44,7 @@ Bugfixes:
  * Type Checker: Fix internal compiler error when trying to decode too large static arrays.
  * Type Checker: Fix wrong compiler error when referencing an overridden function without calling it.
  * Type Checker: Fix internal compiler error when forward referencing non-literal constants from inline assembly.
+ * Type Checker: Disallow usage of override with non-public state variables.
  * NatSpec: DocString block is terminated when encountering an empty line.
  * Scanner: Fix bug when two empty NatSpec comments lead to scanning past EOL.
  * Code Generator: Trigger proper unimplemented errors on certain array copy operations.

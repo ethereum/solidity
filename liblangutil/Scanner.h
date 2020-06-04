@@ -196,7 +196,7 @@ private:
 	///@}
 
 	bool advance() { m_char = m_source->advanceAndGet(); return !m_source->isPastEndOfInput(); }
-	void rollback(int _amount) { m_char = m_source->rollback(_amount); }
+	void rollback(size_t _amount) { m_char = m_source->rollback(_amount); }
 	/// Rolls back to the start of the current token and re-runs the scanner.
 	void rescan();
 
@@ -231,7 +231,7 @@ private:
 	Token scanString();
 	Token scanHexString();
 	/// Scans a single line comment and returns its corrected end position.
-	int scanSingleLineDocComment();
+	size_t scanSingleLineDocComment();
 	Token scanMultiLineDocComment();
 	/// Scans a slash '/' and depending on the characters returns the appropriate token
 	Token scanSlash();
@@ -245,7 +245,7 @@ private:
 	bool isUnicodeLinebreak();
 
 	/// Return the current source position.
-	int sourcePos() const { return m_source->position(); }
+	size_t sourcePos() const { return m_source->position(); }
 	bool isSourcePastEndOfInput() const { return m_source->isPastEndOfInput(); }
 
 	bool m_supportPeriodInIdentifier = false;

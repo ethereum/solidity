@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	// PushSubSize
 	auto sub = _assembly.appendSubroutine(_subAsmPtr);
 	// PushSub
-	_assembly.pushSubroutineOffset(size_t(sub.data()));
+	_assembly.pushSubroutineOffset(static_cast<size_t>(sub.data()));
 	// PushDeployTimeAddress
 	_assembly.append(PushDeployTimeAddress);
 	// AssignImmutable.
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(immutable)
 	_assembly.appendImmutableAssignment("someOtherImmutable");
 
 	auto sub = _assembly.appendSubroutine(_subAsmPtr);
-	_assembly.pushSubroutineOffset(size_t(sub.data()));
+	_assembly.pushSubroutineOffset(static_cast<size_t>(sub.data()));
 
 	checkCompilation(_assembly);
 

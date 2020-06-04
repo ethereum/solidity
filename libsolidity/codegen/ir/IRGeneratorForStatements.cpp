@@ -1467,7 +1467,43 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		break;
 	case Type::Category::Struct:
 	{
-		solUnimplementedAssert(false, "");
+		auto const& structType = dynamic_cast<StructType const&>(*_memberAccess.expression().annotation().type);
+
+		IRVariable expression(_memberAccess.expression());
+		switch (structType.location())
+		{
+		case DataLocation::Storage:
+		{
+			pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member);
+			string slot = m_context.newYulVariable();
+			m_code << "let " << slot << " := " <<
+				("add(" + expression.name() + ", " + offsets.first.str() + ")\n");
+			setLValue(_memberAccess, IRLValue{
+				type(_memberAccess),
+				IRLValue::Storage{slot, offsets.second}
+			});
+			break;
+		}
+		case DataLocation::Memory:
+		{
+			string pos = m_context.newYulVariable();
+			m_code << "let " << pos << " := " <<
+				("add(" + expression.part("mpos").name() + ", " + structType.memoryOffsetOfMember(member).str() + ")\n");
+			setLValue(_memberAccess, IRLValue{
+				type(_memberAccess),
+				IRLValue::Memory{pos}
+			});
+			break;
+		}
+		case DataLocation::CallData:
+		{
+			solUnimplementedAssert(false, "");
+			break;
+		}
+		default:
+			solAssert(false, "Illegal data location for struct.");
+		}
+		break;
 	}
 	case Type::Category::Enum:
 	{
