@@ -36,7 +36,7 @@ void UpgradeChange::apply()
 void UpgradeChange::log(bool const _shorten) const
 {
 	stringstream os;
-	SourceReferenceFormatterHuman formatter{os, true};
+	SourceReferenceFormatterHuman formatter{os, true, false};
 
 	string start = to_string(m_location.start);
 	string end = to_string(m_location.end);

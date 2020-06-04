@@ -80,10 +80,7 @@ void SourceReferenceFormatter::printExceptionInformation(util::Exception const& 
 
 void SourceReferenceFormatter::printErrorInformation(Error const& _error)
 {
-	printExceptionInformation(
-		_error,
-		(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
-	);
+	printExceptionInformation(SourceReferenceExtractor::extract(_error));
 }
 
 void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)

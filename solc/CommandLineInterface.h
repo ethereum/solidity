@@ -131,6 +131,8 @@ private:
 	CompilerStack::MetadataHash m_metadataHash = CompilerStack::MetadataHash::IPFS;
 	/// Whether or not to colorize diagnostics output.
 	bool m_coloredOutput = true;
+	/// Whether or not to output error IDs.
+	bool m_withErrorIds = false;
 };
 
 }
