@@ -183,6 +183,9 @@ protected:
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smtutil::Expression> const& _callArgs);
 	void resetStateVariables();
+	/// Resets all references/pointers that have the same type or have
+	/// a subexpression of the same type as _varDecl.
+	void resetReferences(VariableDeclaration const& _varDecl);
 	/// @returns the type without storage pointer information if it has it.
 	TypePointer typeWithoutPointer(TypePointer const& _type);
 

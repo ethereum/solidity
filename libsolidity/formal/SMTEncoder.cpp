@@ -1001,38 +1001,7 @@ void SMTEncoder::arrayIndexAssignment(Expression const& _expr, smtutil::Expressi
 			solAssert(varDecl, "");
 
 			if (varDecl->hasReferenceOrMappingType())
-				m_context.resetVariables([&](VariableDeclaration const& _var) {
-					if (_var == *varDecl)
-						return false;
-
-					// If both are state variables no need to clear knowledge.
-					if (_var.isStateVariable() && varDecl->isStateVariable())
-						return false;
-
-					TypePointer prefix = _var.type();
-					TypePointer originalType = typeWithoutPointer(varDecl->type());
-					while (
-						prefix->category() == Type::Category::Mapping ||
-						prefix->category() == Type::Category::Array
-					)
-					{
-						if (*originalType == *typeWithoutPointer(prefix))
-							return true;
-						if (prefix->category() == Type::Category::Mapping)
-						{
-							auto mapPrefix = dynamic_cast<MappingType const*>(prefix);
-							solAssert(mapPrefix, "");
-							prefix = mapPrefix->valueType();
-						}
-						else
-						{
-							auto arrayPrefix = dynamic_cast<ArrayType const*>(prefix);
-							solAssert(arrayPrefix, "");
-							prefix = arrayPrefix->baseType();
-						}
-					}
-					return false;
-				});
+				resetReferences(*varDecl);
 
 			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.variable(*varDecl));
 			smtutil::Expression store = smtutil::Expression::store(
@@ -1138,6 +1107,8 @@ void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression
 	{
 		auto varDecl = identifierToVariable(*id);
 		solAssert(varDecl, "");
+		if (varDecl->hasReferenceOrMappingType())
+			resetReferences(*varDecl);
 		m_context.addAssertion(m_context.newValue(*varDecl) == _array);
 	}
 	else if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(&_expr))
@@ -1639,6 +1610,42 @@ void SMTEncoder::initializeLocalVariables(FunctionDefinition const& _function)
 void SMTEncoder::resetStateVariables()
 {
 	m_context.resetVariables([&](VariableDeclaration const& _variable) { return _variable.isStateVariable(); });
+}
+
+void SMTEncoder::resetReferences(VariableDeclaration const& _varDecl)
+{
+	m_context.resetVariables([&](VariableDeclaration const& _var) {
+		if (_var == _varDecl)
+			return false;
+
+		// If both are state variables no need to clear knowledge.
+		if (_var.isStateVariable() && _varDecl.isStateVariable())
+			return false;
+
+		TypePointer prefix = _var.type();
+		TypePointer originalType = typeWithoutPointer(_varDecl.type());
+		while (
+			prefix->category() == Type::Category::Mapping ||
+			prefix->category() == Type::Category::Array
+		)
+		{
+			if (*originalType == *typeWithoutPointer(prefix))
+				return true;
+			if (prefix->category() == Type::Category::Mapping)
+			{
+				auto mapPrefix = dynamic_cast<MappingType const*>(prefix);
+				solAssert(mapPrefix, "");
+				prefix = mapPrefix->valueType();
+			}
+			else
+			{
+				auto arrayPrefix = dynamic_cast<ArrayType const*>(prefix);
+				solAssert(arrayPrefix, "");
+				prefix = arrayPrefix->baseType();
+			}
+		}
+		return false;
+	});
 }
 
 TypePointer SMTEncoder::typeWithoutPointer(TypePointer const& _type)
