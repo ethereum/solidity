@@ -41,6 +41,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/ASTJsonImporter.h>
+#include <libsolidity/ast/JsonInterfaceImporter.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/formal/ModelChecker.h>
 #include <libsolidity/interface/ABI.h>
@@ -276,7 +277,9 @@ bool CompilerStack::parse()
 
 void CompilerStack::loadMissingInterfaces(int64_t _baseNodeID)
 {
+	JsonInterfaceImporter interfaceImporter{_baseNodeID};
 	vector<ASTPointer<SourceUnit>> importedSources;
+
 	for (auto const& sourcePair: m_sources)
 	{
 		ASTPointer<SourceUnit> const& source = sourcePair.second.ast;
@@ -297,15 +300,17 @@ void CompilerStack::loadMissingInterfaces(int64_t _baseNodeID)
 					string const& jsonString = result.responseOrErrorMessage;
 					Json::Value json;
 					util::jsonParseStrict(jsonString, json, nullptr);
-					ASTPointer<ContractDefinition> jsonContract = ASTJsonImporter{m_evmVersion}.jsonToContract(json);
 
-					auto importedSource = make_shared<SourceUnit>(
-						_baseNodeID++,
-						SourceLocation{},
-						source->licenseString(),
-						vector<ASTPointer<ASTNode>>{ jsonContract }
-					);
-					importedSources.push_back(importedSource);
+					ASTPointer<SourceUnit> importedSource =
+						interfaceImporter.importInterfaceAsSourceUnit(
+							importedContract->location(),
+							source->licenseString(),
+							importedContract->name(),
+							json
+						);
+
+					if (importedSource != nullptr)
+						importedSources.push_back(importedSource);
 				}
 				else
 				{

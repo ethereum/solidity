@@ -91,7 +91,7 @@ private:
 	std::pair<ContractKind, bool> parseContractKind();
 	ASTPointer<ContractDefinition> parseContractDefinition();
 	std::vector<ASTPointer<InheritanceSpecifier>> parseContractInheritanceList();
-	ASTPointer<ContractDefinition> parseInterfaceDefinition();
+	ASTPointer<ASTNode> parseInterfaceDefinition();
 	std::vector<ASTPointer<ASTNode>> parseContractBody();
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	Visibility parseVisibilitySpecifier();

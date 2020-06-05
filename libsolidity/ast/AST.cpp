@@ -231,6 +231,12 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 	});
 }
 
+TypePointer ImportedContractDefinition::type() const
+{
+	return {};
+	// TODO: Think about whether this type needs to be specified or returning {} is sufficient.
+}
+
 TypePointer ContractDefinition::type() const
 {
 	return TypeProvider::typeType(TypeProvider::contract(*this));

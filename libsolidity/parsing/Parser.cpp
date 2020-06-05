@@ -292,7 +292,7 @@ std::pair<ContractKind, bool> Parser::parseContractKind()
 	return std::make_pair(kind, abstract);
 }
 
-ASTPointer<ContractDefinition> Parser::parseInterfaceDefinition()
+ASTPointer<ASTNode> Parser::parseInterfaceDefinition()
 {
 	// interfaceDefinition
 	//   : 'interface' identifier 'from' StringLiteralFragment

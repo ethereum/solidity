@@ -50,7 +50,23 @@ public:
 
 	ASTPointer<ContractDefinition> jsonToContract(Json::Value const& _sourceList);
 
+	ASTPointer<ContractDefinition> jsonToInterface(
+		int64_t _nodeId,
+		langutil::SourceLocation const& _location,
+		std::string const& _name,
+		Json::Value const& _source
+	);
+
 private:
+	ASTPointer<ASTNode> createInterfaceMember(
+		langutil::SourceLocation const& _location,
+		Json::Value const& _node
+	);
+
+	ASTPointer<ParameterList> createInterfaceParameters(
+		langutil::SourceLocation const& _location,
+		Json::Value const& _array
+	);
 
 	// =========== general creation functions ==============
 

@@ -53,6 +53,8 @@ set(sources
 	ast/ASTJsonImporter.h
 	ast/ASTVisitor.h
 	ast/ExperimentalFeatures.h
+	ast/JsonInterfaceImporter.cpp
+	ast/JsonInterfaceImporter.h
 	ast/Types.cpp
 	ast/Types.h
 	ast/TypeProvider.cpp

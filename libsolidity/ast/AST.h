@@ -454,7 +454,12 @@ protected:
 /// @}
 
 /**
- * TODO: docstring
+ * Definition of an imported interface declaration.
+ *
+ * This is not the actually imported interface but the reference to it.
+ * It will be resolved by CompilerStack to add any missing interface definitions
+ * by looking for any ImportedContractDefinition in the ASTs and append them - embeded into
+ * SourceUnit's - to its collection of sources.
  */
 class ImportedContractDefinition: public Declaration // TODO(needed?), public StructurallyDocumented
 {
@@ -471,6 +476,7 @@ public:
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
+	TypePointer type() const override;
 
 	ASTPointer<ASTString> const& path() const noexcept { return m_path; }
 
