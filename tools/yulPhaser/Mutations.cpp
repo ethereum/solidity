@@ -126,12 +126,12 @@ ChromosomePair fixedPointSwap(
 
 	return {
 		Chromosome(
-			vector<string>(begin1, begin1 + _crossoverPoint) +
-			vector<string>(begin2 + _crossoverPoint, end2)
+			vector<string>(begin1, begin1 + static_cast<ptrdiff_t>(_crossoverPoint)) +
+			vector<string>(begin2 + static_cast<ptrdiff_t>(_crossoverPoint), end2)
 		),
 		Chromosome(
-			vector<string>(begin2, begin2 + _crossoverPoint) +
-			vector<string>(begin1 + _crossoverPoint, end1)
+			vector<string>(begin2, begin2 + static_cast<ptrdiff_t>(_crossoverPoint)) +
+			vector<string>(begin1 + static_cast<ptrdiff_t>(_crossoverPoint), end1)
 		),
 	};
 }
@@ -196,8 +196,8 @@ ChromosomePair fixedTwoPointSwap(
 	assert(_crossoverPoint2 <= _chromosome1.length());
 	assert(_crossoverPoint2 <= _chromosome2.length());
 
-	size_t lowPoint = min(_crossoverPoint1, _crossoverPoint2);
-	size_t highPoint = max(_crossoverPoint1, _crossoverPoint2);
+	auto lowPoint = static_cast<ptrdiff_t>(min(_crossoverPoint1, _crossoverPoint2));
+	auto highPoint = static_cast<ptrdiff_t>(max(_crossoverPoint1, _crossoverPoint2));
 
 	auto begin1 = _chromosome1.optimisationSteps().begin();
 	auto begin2 = _chromosome2.optimisationSteps().begin();
@@ -282,17 +282,17 @@ ChromosomePair uniformSwap(Chromosome const& _chromosome1, Chromosome const& _ch
 	if (_chromosome1.length() > minLength)
 	{
 		if (swapTail)
-			steps2.insert(steps2.end(), begin1 + minLength, end1);
+			steps2.insert(steps2.end(), begin1 + static_cast<ptrdiff_t>(minLength), end1);
 		else
-			steps1.insert(steps1.end(), begin1 + minLength, end1);
+			steps1.insert(steps1.end(), begin1 + static_cast<ptrdiff_t>(minLength), end1);
 	}
 
 	if (_chromosome2.length() > minLength)
 	{
 		if (swapTail)
-			steps1.insert(steps1.end(), begin2 + minLength, end2);
+			steps1.insert(steps1.end(), begin2 + static_cast<ptrdiff_t>(minLength), end2);
 		else
-			steps2.insert(steps2.end(), begin2 + minLength, end2);
+			steps2.insert(steps2.end(), begin2 + static_cast<ptrdiff_t>(minLength), end2);
 	}
 
 	return {Chromosome(steps1), Chromosome(steps2)};

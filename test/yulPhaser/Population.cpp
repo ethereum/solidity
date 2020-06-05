@@ -135,7 +135,7 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_
 	size_t maxLength = 5;
 	assert(chromosomeCount % maxLength == 0);
 
-	auto nextLength = [counter = 0, maxLength]() mutable { return counter++ % maxLength; };
+	auto nextLength = [counter = 0ul, maxLength]() mutable { return counter++ % maxLength; };
 	auto population = Population::makeRandom(m_fitnessMetric, chromosomeCount, nextLength);
 
 	// We can't rely on the order since the population sorts its chromosomes immediately but
