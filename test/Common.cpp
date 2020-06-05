@@ -92,6 +92,7 @@ CommonOptions::CommonOptions(std::string _caption):
 		("evm-version", po::value(&evmVersionString), "which evm version to use")
 		("testpath", po::value<fs::path>(&this->testPath)->default_value(solidity::test::testPath()), "path to test files")
 		("evmonepath", po::value<fs::path>(&evmonePath)->default_value(EVMOneEnvOrDefaultPath()), "path to evmone library")
+		("vm", po::value<std::vector<fs::path>>(&vmPaths), "path to evmc library. can be defined multiple times.")
 		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker")
 		("optimize", po::bool_switch(&optimize), "enables optimization")
 		("enforce-via-yul", po::bool_switch(&enforceViaYul), "Enforce compiling all tests via yul to see if additional tests can be activated.")
@@ -139,6 +140,9 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 				errorMessage << token;
 			throw std::runtime_error(errorMessage.str());
 		}
+
+	if (!evmonePath.empty())
+		vmPaths.emplace_back(evmonePath);
 
 	return true;
 }

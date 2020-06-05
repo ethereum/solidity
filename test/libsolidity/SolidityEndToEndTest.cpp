@@ -53,6 +53,13 @@ using namespace solidity::langutil;
 	reset(); \
 	m_compileViaYul = true; \
 	{ CODE } \
+	if (supportsEwasm()) \
+	{ \
+		reset(true); \
+		m_compileViaYul = true; \
+		m_compileToEwasm = true; \
+		{ CODE } \
+	} \
 }
 
 namespace solidity::frontend::test
@@ -1015,12 +1022,12 @@ BOOST_AUTO_TEST_CASE(blockchain)
 			}
 		}
 	)";
-	m_evmHost->tx_context.block_coinbase = EVMHost::convertToEVMC(Address("0x1212121212121212121212121212121212121212"));
-	m_evmHost->newBlock();
-	m_evmHost->newBlock();
-	m_evmHost->newBlock();
-	m_evmHost->newBlock();
-	m_evmHost->newBlock();
+	m_evmcHost->tx_context.block_coinbase = EVMHost::convertToEVMC(Address("0x1212121212121212121212121212121212121212"));
+	m_evmcHost->newBlock();
+	m_evmcHost->newBlock();
+	m_evmcHost->newBlock();
+	m_evmcHost->newBlock();
+	m_evmcHost->newBlock();
 	compileAndRun(sourceCode, 27);
 	ABI_CHECK(callContractFunctionWithValue("someInfo()", 28), encodeArgs(28, u256("0x1212121212121212121212121212121212121212"), 7));
 }

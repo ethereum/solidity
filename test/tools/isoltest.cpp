@@ -164,6 +164,7 @@ TestTool::Result TestTool::process()
 			m_test = m_testCaseCreator(TestCase::Config{
 				m_path.string(),
 				m_options.evmVersion(),
+				m_options.vmPaths,
 				m_options.enforceViaYul
 			});
 			if (m_test->shouldRun())
@@ -427,7 +428,7 @@ int main(int argc, char const *argv[])
 
 	auto& options = dynamic_cast<solidity::test::IsolTestOptions const&>(solidity::test::CommonOptions::get());
 
-	bool disableSemantics = !solidity::test::EVMHost::getVM(options.evmonePath.string());
+	bool disableSemantics = !solidity::test::EVMHost::checkVmPaths(options.vmPaths);
 	if (disableSemantics)
 	{
 		cout << "Unable to find " << solidity::test::evmoneFilename << ". Please provide the path using --evmonepath <path>." << endl;

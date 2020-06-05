@@ -38,6 +38,7 @@ public:
 	{
 		std::string filename;
 		langutil::EVMVersion evmVersion;
+		std::vector<boost::filesystem::path> vmPaths;
 		bool enforceCompileViaYul;
 	};
 

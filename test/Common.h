@@ -44,6 +44,7 @@ struct ConfigException : public util::Exception {};
 struct CommonOptions: boost::noncopyable
 {
 	boost::filesystem::path evmonePath;
+	std::vector<boost::filesystem::path> vmPaths;
 	boost::filesystem::path testPath;
 	bool optimize = false;
 	bool enforceViaYul = false;

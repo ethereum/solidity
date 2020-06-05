@@ -38,17 +38,17 @@ using namespace evmc::literals;
 
 evmc::VM& EVMHost::getVM(string const& _path)
 {
-	static evmc::VM theVM;
-	if (!theVM && !_path.empty())
+	static std::map<string, std::unique_ptr<evmc::VM>> vms;
+	if (vms.count(_path) == 0)
 	{
 		evmc_loader_error_code errorCode = {};
 		auto vm = evmc::VM{evmc_load_and_configure(_path.c_str(), &errorCode)};
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 		{
-			if (vm.get_capabilities() & EVMC_CAPABILITY_EVM1)
-				theVM = std::move(vm);
+			if (vm.get_capabilities() & (EVMC_CAPABILITY_EVM1 | EVMC_CAPABILITY_EWASM))
+				vms[_path] = std::make_unique<evmc::VM>(std::move(vm));
 			else
-				cerr << "VM loaded does not support EVM1" << endl;
+				cerr << "VM loaded does not support EVM1 or EWASM" << endl;
 		}
 		else
 		{
@@ -58,7 +58,45 @@ evmc::VM& EVMHost::getVM(string const& _path)
 			cerr << endl;
 		}
 	}
-	return theVM;
+
+	if (vms.count(_path) > 0)
+		return *vms[_path];
+
+	static evmc::VM NullVM(nullptr);
+	return NullVM;
+}
+
+bool EVMHost::checkVmPaths(std::vector<boost::filesystem::path> const& _vmPaths)
+{
+	bool evmVmFound = false;
+	bool ewasmVmFound = false;
+	for (auto const& path: _vmPaths)
+	{
+		evmc::VM& vm = EVMHost::getVM(path.string());
+		if (!vm)
+			return false;
+
+		if (vm.has_capability(EVMC_CAPABILITY_EVM1))
+		{
+			if (evmVmFound)
+			{
+				cerr << "Multiple evm1 evmc vms where defined. Please only define one evm1 evmc vm." << endl;
+				assertThrow(false, Exception, "");
+			}
+			evmVmFound = true;
+		}
+
+		if (vm.has_capability(EVMC_CAPABILITY_EWASM))
+		{
+			if (ewasmVmFound)
+			{
+				cerr << "Multiple ewasm evmc vms where defined. Please only define one ewasm evmc vm." << endl;
+				assertThrow(false, Exception, "");
+			}
+			ewasmVmFound = true;
+		}
+	}
+	return evmVmFound;
 }
 
 EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):

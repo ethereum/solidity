@@ -29,6 +29,8 @@
 
 #include <libsolutil/FixedHash.h>
 
+#include <boost/filesystem.hpp>
+
 namespace solidity::test
 {
 using Address = util::h160;
@@ -43,6 +45,8 @@ public:
 	/// The path has to be provided for the first successful run and will be ignored
 	/// afterwards.
 	static evmc::VM& getVM(std::string const& _path = {});
+
+	static bool checkVmPaths(std::vector<boost::filesystem::path> const& _vmPaths);
 
 	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm = getVM());
 
@@ -69,6 +73,12 @@ public:
 	static evmc::address convertToEVMC(Address const& _addr);
 	static util::h256 convertFromEVMC(evmc::bytes32 const& _data);
 	static evmc::bytes32 convertToEVMC(util::h256 const& _data);
+
+	/// Checks if the VM has the given capability.
+	bool hasCapability(evmc_capabilities capability) const noexcept
+	{
+		return m_vm.has_capability(capability);
+	}
 
 private:
 	evmc::address m_currentAddress = {};

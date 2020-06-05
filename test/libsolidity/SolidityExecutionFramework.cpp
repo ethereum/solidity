@@ -46,6 +46,7 @@ bytes SolidityExecutionFramework::compileContract(
 		sourceCode += "pragma experimental ABIEncoderV2;\n";
 	sourceCode += _sourceCode;
 	m_compiler.reset();
+	m_compiler.enableEwasmGeneration(m_compileToEwasm);
 	m_compiler.setSources({{"", sourceCode}});
 	m_compiler.setLibraries(_libraryAddresses);
 	m_compiler.setRevertStringBehaviour(m_revertStrings);
@@ -65,18 +66,21 @@ bytes SolidityExecutionFramework::compileContract(
 	evmasm::LinkerObject obj;
 	if (m_compileViaYul)
 	{
-		yul::AssemblyStack asmStack(
-			m_evmVersion,
-			yul::AssemblyStack::Language::StrictAssembly,
-			// Ignore optimiser settings here because we need Yul optimisation to
-			// get code that does not exhaust the stack.
-			OptimiserSettings::full()
-		);
-		bool analysisSuccessful = asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName));
-		solAssert(analysisSuccessful, "Code that passed analysis in CompilerStack can't have errors");
-
-		asmStack.optimize();
-		obj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
+		if (m_compileToEwasm)
+			obj = m_compiler.ewasmObject(contractName);
+		else
+		{
+			yul::AssemblyStack asmStack(
+				m_evmVersion,
+				yul::AssemblyStack::Language::StrictAssembly,
+				// Ignore optimiser settings here because we need Yul optimisation to
+				// get code that does not exhaust the stack.
+				OptimiserSettings::full());
+			bool analysisSuccessful = asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName));
+			solAssert(analysisSuccessful, "Code that passed analysis in CompilerStack can't have errors");
+			asmStack.optimize();
+			obj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
+		}
 	}
 	else
 		obj = m_compiler.object(contractName);
