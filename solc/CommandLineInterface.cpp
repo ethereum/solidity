@@ -752,7 +752,10 @@ Allowed options)").c_str(),
 			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
 			"byzantium, constantinople, petersburg, istanbul (default) or berlin."
 		)
-		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
+		(
+			g_argPrettyJson.c_str(),
+			"Output JSON in pretty format. Currently it only works with the combined JSON output."
+		)
 		(
 			g_argLibraries.c_str(),
 			po::value<vector<string>>()->value_name("libs"),
@@ -770,13 +773,19 @@ Allowed options)").c_str(),
 			po::value<string>()->value_name("path"),
 			"If given, creates one file per component and contract/file at the specified directory."
 		)
-		(g_strOverwrite.c_str(), "Overwrite existing files (used together with -o).")
+		(
+			g_strOverwrite.c_str(),
+			"Overwrite existing files (used together with -o)."
+		)
 		(
 			g_argCombinedJson.c_str(),
 			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
 			"Output a single json document containing the specified information."
 		)
-		(g_argGas.c_str(), "Print an estimate of the maximal gas usage for each function.")
+		(
+			g_argGas.c_str(),
+			"Print an estimate of the maximal gas usage for each function."
+		)
 		(
 			g_argStandardJSON.c_str(),
 			"Switch to Standard JSON input / output mode, ignoring all options. "
@@ -826,7 +835,10 @@ Allowed options)").c_str(),
 			po::value<string>()->value_name(boost::join(g_metadataHashArgs, ",")),
 			"Choose hash method for the bytecode metadata or disable it."
 		)
-		(g_argMetadataLiteral.c_str(), "Store referenced sources as literal data in the metadata output.")
+		(
+			g_argMetadataLiteral.c_str(),
+			"Store referenced sources as literal data in the metadata output."
+		)
 		(
 			g_argAllowPaths.c_str(),
 			po::value<string>()->value_name("path(s)"),
@@ -837,12 +849,29 @@ Allowed options)").c_str(),
 			po::value<string>()->value_name("path"),
 			"Use the given path as the root of the source tree instead of the root of the filesystem."
 		)
-		(g_argColor.c_str(), "Force colored output.")
-		(g_argNoColor.c_str(), "Explicitly disable colored output, disabling terminal auto-detection.")
-		(g_argOldReporter.c_str(), "Enables old diagnostics reporter.")
-		(g_argErrorRecovery.c_str(), "Enables additional parser error recovery.")
-		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
+		(
+			g_argColor.c_str(),
+			"Force colored output."
+		)
+		(
+			g_argNoColor.c_str(),
+			"Explicitly disable colored output, disabling terminal auto-detection."
+		)
+		(
+			g_argOldReporter.c_str(),
+			"Enables old diagnostics reporter."
+		)
+		(
+			g_argErrorRecovery.c_str(),
+			"Enables additional parser error recovery."
+		)
+		(
+			g_argIgnoreMissingFiles.c_str(),
+			"Ignore missing files."
+		)
+	;
 	po::options_description optimizerOptions("Optimizer options");
+
 	optimizerOptions.add_options()
 		(g_argOptimize.c_str(), "Enable bytecode optimizer.")
 		(
@@ -851,14 +880,22 @@ Allowed options)").c_str(),
 			"Set for how many contract runs to optimize. "
 			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
 		)
-		(g_strOptimizeYul.c_str(), ("Legacy option, ignored. Use the general --" + g_argOptimize + " to enable Yul optimizer.").c_str())
-		(g_strNoOptimizeYul.c_str(), "Disable Yul optimizer in Solidity.")
+		(
+			g_strOptimizeYul.c_str(),
+			("Legacy option, ignored. Use the general --" + g_argOptimize + " to enable Yul optimizer.").c_str()
+		)
+		(
+			g_strNoOptimizeYul.c_str(),
+			"Disable Yul optimizer in Solidity."
+		)
 		(
 			g_strYulOptimizations.c_str(),
 			po::value<string>()->value_name("steps"),
 			"Forces yul optimizer to use the specified sequence of optimization steps instead of the built-in one."
-		);
+		)
+	;
 	desc.add(optimizerOptions);
+
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
@@ -876,7 +913,8 @@ Allowed options)").c_str(),
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
 		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
-		(g_argStorageLayout.c_str(), "Slots, offsets and types of the contract's state variables.");
+		(g_argStorageLayout.c_str(), "Slots, offsets and types of the contract's state variables.")
+	;
 	desc.add(outputComponents);
 
 	po::options_description allOptions = desc;
