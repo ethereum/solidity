@@ -878,7 +878,7 @@ General Information)").c_str(),
 		)
 		(
 			g_argOldReporter.c_str(),
-			"Enables old diagnostics reporter."
+			"Enables old diagnostics reporter (legacy option, will be removed)."
 		)
 	;
 	desc.add(outputFormatting);
