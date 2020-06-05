@@ -3445,13 +3445,21 @@ FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary, 
 
 	TypePointers parameterTypes;
 	for (auto const& t: m_parameterTypes)
-	{
-		auto refType = dynamic_cast<ReferenceType const*>(t);
-		if (refType && refType->location() == DataLocation::CallData)
-			parameterTypes.push_back(TypeProvider::withLocation(refType, DataLocation::Memory, true));
+		if (TypeProvider::isReferenceWithLocation(t, DataLocation::CallData))
+			parameterTypes.push_back(
+				TypeProvider::withLocationIfReference(DataLocation::Memory, t, true)
+			);
 		else
 			parameterTypes.push_back(t);
-	}
+
+	TypePointers returnParameterTypes;
+	for (auto const& returnParamType: m_returnParameterTypes)
+		if (TypeProvider::isReferenceWithLocation(returnParamType, DataLocation::CallData))
+			returnParameterTypes.push_back(
+				TypeProvider::withLocationIfReference(DataLocation::Memory, returnParamType, true)
+			);
+		else
+			returnParameterTypes.push_back(returnParamType);
 
 	Kind kind = m_kind;
 	if (_inLibrary)
@@ -3465,7 +3473,7 @@ FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary, 
 
 	return TypeProvider::function(
 		parameterTypes,
-		m_returnParameterTypes,
+		returnParameterTypes,
 		m_parameterNames,
 		m_returnParameterNames,
 		kind,
