@@ -157,10 +157,12 @@ protected:
 	/// Will also be used for assignments of tuple components.
 	void assignment(
 		Expression const& _left,
-		std::vector<smtutil::Expression> const& _right,
+		smtutil::Expression const& _right,
 		TypePointer const& _type,
 		langutil::SourceLocation const& _location
 	);
+	/// Handle assignments between tuples.
+	void tupleAssignment(Expression const& _left, Expression const& _right);
 	/// Computes the right hand side of a compound assignment.
 	smtutil::Expression compoundAssignment(Assignment const& _assignment);
 

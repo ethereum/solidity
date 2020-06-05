@@ -1,5 +1,13 @@
 ### 0.6.10 (unreleased)
 
+Language Features:
+
+
+Compiler Features:
+
+
+Bugfixes:
+ * SMTChecker: Fix internal error when encoding tuples of tuples.
 
 
 ### 0.6.9 (2020-06-04)
