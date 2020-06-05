@@ -336,8 +336,12 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 			_call.functionName.find(".load") != string::npos ||
 			_call.functionName.find(".store") != string::npos
 		)
-			// alignment and offset
-			ret += bytes{{3, 0}};
+			// Alignment hint and offset. Interpreters ignore the alignment. JITs/AOTs can take it
+			// into account to generate more efficient code but if the hint is invalid it could
+			// actually be more expensive. It's best to hint at 1-byte alignment if we don't plan
+			// to control the memory layout accordingly.
+			ret += bytes{{0, 0}}; // 2^0 == 1-byte alignment
+
 		return ret;
 	}
 }
