@@ -20,24 +20,24 @@ object "object" {
 
 
 Binary representation:
-0061736d01000000010c0260000060047e7e7e7e017e020100030302000105030100010610037e0142000b7e0142000b7e0142000b071102066d656d6f72790200046d61696e00000a4a022201047e024002404201420242034204100121002300210123012102230221030b0b0b2501047e0240200121042002210720002105200321060b20052400200624012007240220040b
+0061736d01000000010c0260000060047f7e7e7f017e020100030302000105030100010610037f0141000b7f0141000b7e0142000b071102066d656d6f72790200046d61696e00000a52022603017e027f017e024002404101420242034104100121002300210123012102230221030b0b0b2903017e027f017e0240200121042002210720002105200321060b20052400200624012007240220040b
 
 Text representation:
 (module
     (memory $memory (export "memory") 1)
     (export "main" (func $main))
-    (global $global_ (mut i64) (i64.const 0))
-    (global $global__1 (mut i64) (i64.const 0))
+    (global $global_ (mut i32) (i32.const 0))
+    (global $global__1 (mut i32) (i32.const 0))
     (global $global__2 (mut i64) (i64.const 0))
 
 (func $main
     (local $m i64)
-    (local $n i64)
-    (local $p i64)
+    (local $n i32)
+    (local $p i32)
     (local $q i64)
     (block $label_
         (block
-            (local.set $m (call $multireturn (i64.const 1) (i64.const 2) (i64.const 3) (i64.const 4)))
+            (local.set $m (call $multireturn (i32.const 1) (i64.const 2) (i64.const 3) (i32.const 4)))
             (local.set $n (global.get $global_))
             (local.set $p (global.get $global__1))
             (local.set $q (global.get $global__2))
@@ -48,14 +48,14 @@ Text representation:
 )
 
 (func $multireturn
-    (param $a i64)
+    (param $a i32)
     (param $b i64)
     (param $c i64)
-    (param $d i64)
+    (param $d i32)
     (result i64)
     (local $x i64)
-    (local $y i64)
-    (local $z i64)
+    (local $y i32)
+    (local $z i32)
     (local $w i64)
     (block $label__3
         (local.set $x (local.get $b))

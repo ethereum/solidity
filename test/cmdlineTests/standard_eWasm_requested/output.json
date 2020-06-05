@@ -9,8 +9,8 @@
 
 (func $main
     (local $_1 i64)
-    (local $p i64)
-    (local $r i64)
+    (local $p i32)
+    (local $r i32)
     (local $_2 i64)
     (local $z1 i64)
     (local $z2 i64)
@@ -19,19 +19,19 @@
     (block $label_
         (local.set $_1 (i64.const 0))
         (local.set $p (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 64)))
-        (local.set $r (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $p)) (i32.wrap_i64 (i64.const 64)))))
-        (if (i64.ne (i64.extend_i32_u (i32.lt_u (i32.wrap_i64 (local.get $r)) (i32.wrap_i64 (local.get $p)))) (i64.const 0)) (then
+        (local.set $r (i32.add (local.get $p) (i32.const 64)))
+        (if (i32.lt_u (local.get $r) (local.get $p)) (then
             (unreachable)))
         (local.set $_2 (call $endian_swap (local.get $_1)))
-        (i64.store (i32.wrap_i64 (local.get $r)) (local.get $_2))
-        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $r)) (i32.wrap_i64 (i64.const 8))))) (local.get $_2))
-        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $r)) (i32.wrap_i64 (i64.const 16))))) (local.get $_2))
-        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $r)) (i32.wrap_i64 (i64.const 24))))) (call $endian_swap (i64.const 128)))
-        (call $eth.getCallValue (i32.wrap_i64 (i64.const 0)))
-        (local.set $z1 (call $endian_swap (i64.load (i32.wrap_i64 (i64.const 0)))))
-        (local.set $z2 (call $endian_swap (i64.load (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.const 8))))))))
-        (local.set $z3 (call $endian_swap (i64.load (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.const 16))))))))
-        (if (i64.ne (i64.extend_i32_u (i32.eqz (i32.wrap_i64 (i64.extend_i32_u (i64.eqz (i64.or (i64.or (local.get $z1) (local.get $z2)) (i64.or (local.get $z3) (call $endian_swap (i64.load (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.const 24)))))))))))))) (i64.const 0)) (then
+        (i64.store (local.get $r) (local.get $_2))
+        (i64.store (i32.add (local.get $r) (i32.const 8)) (local.get $_2))
+        (i64.store (i32.add (local.get $r) (i32.const 16)) (local.get $_2))
+        (i64.store (i32.add (local.get $r) (i32.const 24)) (call $endian_swap (i64.const 128)))
+        (call $eth.getCallValue (i32.const 0))
+        (local.set $z1 (call $endian_swap (i64.load (i32.const 0))))
+        (local.set $z2 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 8)))))
+        (local.set $z3 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 16)))))
+        (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $z1) (local.get $z2)) (i64.or (local.get $z3) (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 24)))))))) (then
             (call $revert (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1))))
         (local.set $_3 (datasize \"C_2_deployed\"))
         (call $codecopy (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (dataoffset \"C_2_deployed\") (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3))
@@ -44,14 +44,14 @@
     (param $x2 i64)
     (param $x3 i64)
     (param $x4 i64)
-    (result i64)
-    (local $v i64)
+    (result i32)
+    (local $v i32)
     (block $label__1
-        (if (i64.ne (i64.extend_i32_u (i64.ne (i64.const 0) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3)))) (i64.const 0)) (then
+        (if (i64.ne (i64.const 0) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (then
             (unreachable)))
-        (if (i64.ne (i64.extend_i32_u (i64.ne (i64.const 0) (i64.shr_u (local.get $x4) (i64.const 32)))) (i64.const 0)) (then
+        (if (i64.ne (i64.const 0) (i64.shr_u (local.get $x4) (i64.const 32))) (then
             (unreachable)))
-        (local.set $v (i64.extend_i32_u (i32.wrap_i64 (local.get $x4))))
+        (local.set $v (i32.wrap_i64 (local.get $x4)))
 
     )
     (local.get $v)
@@ -62,13 +62,13 @@
     (param $x2 i64)
     (param $x3 i64)
     (param $x4 i64)
-    (result i64)
-    (local $r i64)
-    (local $p i64)
+    (result i32)
+    (local $r i32)
+    (local $p i32)
     (block $label__2
         (local.set $p (call $u256_to_i32 (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)))
-        (local.set $r (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $p)) (i32.wrap_i64 (i64.const 64)))))
-        (if (i64.ne (i64.extend_i32_u (i32.lt_u (i32.wrap_i64 (local.get $r)) (i32.wrap_i64 (local.get $p)))) (i64.const 0)) (then
+        (local.set $r (i32.add (local.get $p) (i32.const 64)))
+        (if (i32.lt_u (local.get $r) (local.get $p)) (then
             (unreachable)))
 
     )
@@ -89,7 +89,7 @@
     (param $z3 i64)
     (param $z4 i64)
     (block $label__3
-        (call $eth.codeCopy (i32.wrap_i64 (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4))) (i32.wrap_i64 (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4))) (i32.wrap_i64 (call $u256_to_i32 (local.get $z1) (local.get $z2) (local.get $z3) (local.get $z4))))
+        (call $eth.codeCopy (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)) (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4)) (call $u256_to_i32 (local.get $z1) (local.get $z2) (local.get $z3) (local.get $z4)))
     )
 )
 
@@ -140,7 +140,7 @@
     (param $y3 i64)
     (param $y4 i64)
     (block $label__7
-        (call $eth.finish (i32.wrap_i64 (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4))) (i32.wrap_i64 (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4))))
+        (call $eth.finish (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)) (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4)))
     )
 )
 
@@ -154,7 +154,7 @@
     (param $y3 i64)
     (param $y4 i64)
     (block $label__8
-        (call $eth.revert (i32.wrap_i64 (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4))) (i32.wrap_i64 (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4))))
+        (call $eth.revert (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)) (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4)))
     )
 )
 
