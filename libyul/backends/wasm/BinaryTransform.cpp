@@ -430,9 +430,14 @@ bytes BinaryTransform::operator()(FunctionDefinition const& _function)
 
 	// This is a kind of run-length-encoding of local types. Has to be adapted once
 	// we have locals of different types.
-	ret += lebEncode(1); // number of locals groups
-	ret += lebEncode(_function.locals.size());
-	ret += toBytes(ValueType::I64);
+	if (_function.locals.size() == 0)
+		ret += lebEncode(0); // number of locals groups
+	else
+	{
+		ret += lebEncode(1); // number of locals groups
+		ret += lebEncode(_function.locals.size());
+		ret += toBytes(ValueType::I64);
+	}
 
 	m_locals.clear();
 	size_t varIdx = 0;
