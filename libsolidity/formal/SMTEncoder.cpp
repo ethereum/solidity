@@ -1213,7 +1213,7 @@ void SMTEncoder::arithmeticOperation(BinaryOperation const& _op)
 {
 	auto type = _op.annotation().commonType;
 	solAssert(type, "");
-	if (type->category() == Type::Category::Integer)
+	if (type->category() == Type::Category::Integer || type->category() == Type::Category::FixedPoint)
 	{
 		switch (_op.getOperator())
 		{
@@ -1266,13 +1266,21 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 	};
 	solAssert(validOperators.count(_op), "");
 	solAssert(_commonType, "");
-	solAssert(_commonType->category() == Type::Category::Integer, "");
+	solAssert(
+		_commonType->category() == Type::Category::Integer || _commonType->category() == Type::Category::FixedPoint,
+		""
+	);
 
-	auto const& intType = dynamic_cast<IntegerType const&>(*_commonType);
+	IntegerType const* intType = nullptr;
+	if (auto type = dynamic_cast<IntegerType const*>(_commonType))
+		intType = type;
+	else
+		intType = TypeProvider::uint256();
+
 	smtutil::Expression valueNoMod(
 		_op == Token::Add ? _left + _right :
 		_op == Token::Sub ? _left - _right :
-		_op == Token::Div ? division(_left, _right, intType) :
+		_op == Token::Div ? division(_left, _right, *intType) :
 		_op == Token::Mul ? _left * _right :
 		/*_op == Token::Mod*/ _left % _right
 	);
@@ -1280,20 +1288,23 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 	if (_op == Token::Div || _op == Token::Mod)
 		m_context.addAssertion(_right != 0);
 
-	smtutil::Expression intValueRange = (0 - smt::minValue(intType)) + smt::maxValue(intType) + 1;
+	auto symbMin = smt::minValue(*intType);
+	auto symbMax = smt::maxValue(*intType);
+
+	smtutil::Expression intValueRange = (0 - symbMin) + symbMax + 1;
 	auto value = smtutil::Expression::ite(
-		valueNoMod > smt::maxValue(intType),
+		valueNoMod > symbMax,
 		valueNoMod % intValueRange,
 		smtutil::Expression::ite(
-			valueNoMod < smt::minValue(intType),
+			valueNoMod < symbMin,
 			valueNoMod % intValueRange,
 			valueNoMod
 		)
 	);
 
-	if (intType.isSigned())
+	if (intType->isSigned())
 		value = smtutil::Expression::ite(
-			value > smt::maxValue(intType),
+			value > symbMax,
 			value - intValueRange,
 			value
 		);
