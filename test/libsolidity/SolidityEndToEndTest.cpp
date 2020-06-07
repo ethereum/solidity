@@ -3465,12 +3465,12 @@ BOOST_AUTO_TEST_CASE(array_copy_calldata_storage)
 	ABI_CHECK(callContractFunction("retrieve()"), encodeArgs(9, 28, 9, 28, 4, 3, 32));
 }
 
-BOOST_AUTO_TEST_CASE(array_copy_including_mapping)
+BOOST_AUTO_TEST_CASE(array_copy_including_array)
 {
 	char const* sourceCode = R"(
 		contract c {
-			mapping(uint=>uint)[90][] large;
-			mapping(uint=>uint)[3][] small;
+			uint[3][90][] large;
+			uint[3][3][] small;
 			function test() public returns (uint r) {
 				for (uint i = 0; i < 7; i++) {
 					large.push();
@@ -3505,9 +3505,8 @@ BOOST_AUTO_TEST_CASE(array_copy_including_mapping)
 		}
 	)";
 	compileAndRun(sourceCode);
-	ABI_CHECK(callContractFunction("test()"), encodeArgs(0x02000200));
-	// storage is not empty because we cannot delete the mappings
-	BOOST_CHECK(!storageEmpty(m_contractAddress));
+	ABI_CHECK(callContractFunction("test()"), encodeArgs(0x02000202));
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 	ABI_CHECK(callContractFunction("clear()"), encodeArgs(0, 0));
 	BOOST_CHECK(storageEmpty(m_contractAddress));
 }

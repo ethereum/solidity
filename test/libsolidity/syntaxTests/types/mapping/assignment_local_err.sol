@@ -7,4 +7,4 @@ contract D {
     }
 }
 // ----
-// TypeError 9214: (160-161): Mappings cannot be assigned to.
+// TypeError 9214: (160-161): Types in storage containing (nested) mappings cannot be assigned to.
