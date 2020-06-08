@@ -253,13 +253,13 @@ bytes makeSection(Section _section, bytes _data)
 
 bytes BinaryTransform::run(Module const& _module)
 {
-	BinaryTransform bt;
-
 	map<Type, vector<string>> const types = typeToFunctionMap(_module.imports, _module.functions);
 
-	bt.m_globals = enumerateGlobals(_module);
-	bt.m_functions = enumerateFunctions(_module);
-	bt.m_functionTypes = enumerateFunctionTypes(types);
+	BinaryTransform bt(
+		enumerateGlobals(_module),
+		enumerateFunctions(_module),
+		enumerateFunctionTypes(types)
+	);
 
 	yulAssert(bt.m_globals.size() == _module.globals.size(), "");
 	yulAssert(bt.m_functions.size() == _module.imports.size() + _module.functions.size(), "");
@@ -576,7 +576,7 @@ bytes BinaryTransform::importSection(
 			encodeName(import.module) +
 			encodeName(import.externalName) +
 			toBytes(importKind) +
-			lebEncode(m_functionTypes[import.internalName]);
+			lebEncode(m_functionTypes.at(import.internalName));
 	}
 	return makeSection(Section::IMPORT, std::move(result));
 }

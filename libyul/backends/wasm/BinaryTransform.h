@@ -55,6 +55,16 @@ public:
 	bytes operator()(wasm::FunctionDefinition const& _function);
 
 private:
+	BinaryTransform(
+		std::map<std::string, size_t> _globals,
+		std::map<std::string, size_t> _functions,
+		std::map<std::string, size_t> _functionTypes
+	):
+		m_globals(std::move(_globals)),
+		m_functions(std::move(_functions)),
+		m_functionTypes(std::move(_functionTypes))
+	{}
+
 	using Type = std::pair<std::vector<std::uint8_t>, std::vector<std::uint8_t>>;
 	static Type typeOf(wasm::FunctionImport const& _import);
 	static Type typeOf(wasm::FunctionDefinition const& _funDef);
@@ -89,10 +99,11 @@ private:
 
 	static bytes encodeName(std::string const& _name);
 
+	std::map<std::string, size_t> const m_globals;
+	std::map<std::string, size_t> const m_functions;
+	std::map<std::string, size_t> const m_functionTypes;
+
 	std::map<std::string, size_t> m_locals;
-	std::map<std::string, size_t> m_globals;
-	std::map<std::string, size_t> m_functions;
-	std::map<std::string, size_t> m_functionTypes;
 	std::vector<std::string> m_labels;
 	std::map<std::string, std::pair<size_t, size_t>> m_subModulePosAndSize;
 };
