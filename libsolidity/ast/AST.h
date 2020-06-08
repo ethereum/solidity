@@ -1048,6 +1048,28 @@ private:
 	std::unique_ptr<std::vector<ASTPointer<Expression>>> m_arguments;
 };
 
+class ErrorDefinition: public Declaration, public StructurallyDocumented
+{
+public:
+	ErrorDefinition(
+		int64_t _id,
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		ASTPointer<StructuredDocumentation> const& _documentation,
+		ASTPointer<ParameterList> const& _parameters
+	):
+		Declaration(_id, _location, _name),
+		StructurallyDocumented(_documentation),
+		m_parameters(std::move(_parameters))
+	{
+	}
+
+	TypePointer type() const override;
+
+private:
+	ASTPointer<ParameterList> m_parameters;
+};
+
 /**
  * Definition of a (loggable) event.
  */
