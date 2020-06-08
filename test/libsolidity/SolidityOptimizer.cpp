@@ -718,7 +718,8 @@ BOOST_AUTO_TEST_CASE(avoid_double_cleanup)
 		}
 	)";
 	compileBothVersions(sourceCode, 0, "C", 50);
-	BOOST_CHECK_EQUAL(numInstructions(m_nonOptimizedBytecode, Instruction::AND), 2);
+	// Check that there is no double AND instruction in the resulting code
+	BOOST_CHECK_EQUAL(numInstructions(m_nonOptimizedBytecode, Instruction::AND), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
