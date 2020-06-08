@@ -58,11 +58,13 @@ private:
 	BinaryTransform(
 		std::map<std::string, size_t> _globals,
 		std::map<std::string, size_t> _functions,
-		std::map<std::string, size_t> _functionTypes
+		std::map<std::string, size_t> _functionTypes,
+		std::map<std::string, std::pair<size_t, size_t>> _subModulePosAndSize
 	):
 		m_globals(std::move(_globals)),
 		m_functions(std::move(_functions)),
-		m_functionTypes(std::move(_functionTypes))
+		m_functionTypes(std::move(_functionTypes)),
+		m_subModulePosAndSize(std::move(_subModulePosAndSize))
 	{}
 
 	using Type = std::pair<std::vector<std::uint8_t>, std::vector<std::uint8_t>>;
@@ -83,13 +85,19 @@ private:
 		std::map<Type, std::vector<std::string>> const& _typeToFunctionMap
 	);
 
-	bytes typeSection(std::map<Type, std::vector<std::string>> const& _typeToFunctionMap);
-	bytes importSection(std::vector<wasm::FunctionImport> const& _imports);
-	bytes functionSection(std::vector<wasm::FunctionDefinition> const& _functions);
-	bytes memorySection();
-	bytes globalSection();
-	bytes exportSection();
-	bytes customSection(std::string const& _name, bytes _data);
+	static bytes typeSection(std::map<Type, std::vector<std::string>> const& _typeToFunctionMap);
+	static bytes importSection(
+		std::vector<wasm::FunctionImport> const& _imports,
+		std::map<std::string, size_t> const& _functionTypes
+	);
+	static bytes functionSection(
+		std::vector<wasm::FunctionDefinition> const& _functions,
+		std::map<std::string, size_t> const& _functionTypes
+	);
+	static bytes memorySection();
+	static bytes globalSection(std::vector<wasm::GlobalVariableDeclaration> const& _globals);
+	static bytes exportSection(std::map<std::string, size_t> const& _functions);
+	static bytes customSection(std::string const& _name, bytes _data);
 	bytes codeSection(std::vector<wasm::FunctionDefinition> const& _functions);
 
 	bytes visit(std::vector<wasm::Expression> const& _expressions);
@@ -102,10 +110,10 @@ private:
 	std::map<std::string, size_t> const m_globals;
 	std::map<std::string, size_t> const m_functions;
 	std::map<std::string, size_t> const m_functionTypes;
+	std::map<std::string, std::pair<size_t, size_t>> const m_subModulePosAndSize;
 
 	std::map<std::string, size_t> m_locals;
 	std::vector<std::string> m_labels;
-	std::map<std::string, std::pair<size_t, size_t>> m_subModulePosAndSize;
 };
 
 }

@@ -255,34 +255,42 @@ bytes BinaryTransform::run(Module const& _module)
 {
 	map<Type, vector<string>> const types = typeToFunctionMap(_module.imports, _module.functions);
 
-	BinaryTransform bt(
-		enumerateGlobals(_module),
-		enumerateFunctions(_module),
-		enumerateFunctionTypes(types)
-	);
+	map<string, size_t> const globals = enumerateGlobals(_module);
+	map<string, size_t> const functions = enumerateFunctions(_module);
+	map<string, size_t> const functionTypes = enumerateFunctionTypes(types);
 
-	yulAssert(bt.m_globals.size() == _module.globals.size(), "");
-	yulAssert(bt.m_functions.size() == _module.imports.size() + _module.functions.size(), "");
-	yulAssert(bt.m_functionTypes.size() == bt.m_functions.size(), "");
-	yulAssert(bt.m_functionTypes.size() >= types.size(), "");
+	yulAssert(globals.size() == _module.globals.size(), "");
+	yulAssert(functions.size() == _module.imports.size() + _module.functions.size(), "");
+	yulAssert(functionTypes.size() == functions.size(), "");
+	yulAssert(functionTypes.size() >= types.size(), "");
 
 	bytes ret{0, 'a', 's', 'm'};
 	// version
 	ret += bytes{1, 0, 0, 0};
-	ret += bt.typeSection(types);
-	ret += bt.importSection(_module.imports);
-	ret += bt.functionSection(_module.functions);
-	ret += bt.memorySection();
-	ret += bt.globalSection();
-	ret += bt.exportSection();
+	ret += typeSection(types);
+	ret += importSection(_module.imports, functionTypes);
+	ret += functionSection(_module.functions, functionTypes);
+	ret += memorySection();
+	ret += globalSection(_module.globals);
+	ret += exportSection(functions);
+
+	map<string, pair<size_t, size_t>> subModulePosAndSize;
 	for (auto const& sub: _module.subModules)
 	{
 		// TODO should we prefix and / or shorten the name?
 		bytes data = BinaryTransform::run(sub.second);
 		size_t length = data.size();
-		ret += bt.customSection(sub.first, std::move(data));
-		bt.m_subModulePosAndSize[sub.first] = {ret.size() - length, length};
+		ret += customSection(sub.first, std::move(data));
+		subModulePosAndSize[sub.first] = {ret.size() - length, length};
 	}
+
+	BinaryTransform bt(
+		move(globals),
+		move(functions),
+		move(functionTypes),
+		move(subModulePosAndSize)
+	);
+
 	ret += bt.codeSection(_module.functions);
 	return ret;
 }
@@ -565,7 +573,8 @@ bytes BinaryTransform::typeSection(map<BinaryTransform::Type, vector<string>> co
 }
 
 bytes BinaryTransform::importSection(
-	vector<FunctionImport> const& _imports
+	vector<FunctionImport> const& _imports,
+	map<string, size_t> const& _functionTypes
 )
 {
 	bytes result = lebEncode(_imports.size());
@@ -576,16 +585,19 @@ bytes BinaryTransform::importSection(
 			encodeName(import.module) +
 			encodeName(import.externalName) +
 			toBytes(importKind) +
-			lebEncode(m_functionTypes.at(import.internalName));
+			lebEncode(_functionTypes.at(import.internalName));
 	}
 	return makeSection(Section::IMPORT, std::move(result));
 }
 
-bytes BinaryTransform::functionSection(vector<FunctionDefinition> const& _functions)
+bytes BinaryTransform::functionSection(
+	vector<FunctionDefinition> const& _functions,
+	map<string, size_t> const& _functionTypes
+)
 {
 	bytes result = lebEncode(_functions.size());
 	for (auto const& fun: _functions)
-		result += lebEncode(m_functionTypes.at(fun.name));
+		result += lebEncode(_functionTypes.at(fun.name));
 	return makeSection(Section::FUNCTION, std::move(result));
 }
 
@@ -597,10 +609,10 @@ bytes BinaryTransform::memorySection()
 	return makeSection(Section::MEMORY, std::move(result));
 }
 
-bytes BinaryTransform::globalSection()
+bytes BinaryTransform::globalSection(vector<wasm::GlobalVariableDeclaration> const& _globals)
 {
-	bytes result = lebEncode(m_globals.size());
-	for (size_t i = 0; i < m_globals.size(); ++i)
+	bytes result = lebEncode(_globals.size());
+	for (size_t i = 0; i < _globals.size(); ++i)
 		result +=
 			toBytes(ValueType::I64) +
 			lebEncode(static_cast<uint8_t>(Mutability::Var)) +
@@ -611,11 +623,11 @@ bytes BinaryTransform::globalSection()
 	return makeSection(Section::GLOBAL, std::move(result));
 }
 
-bytes BinaryTransform::exportSection()
+bytes BinaryTransform::exportSection(map<string, size_t> const& _functions)
 {
 	bytes result = lebEncode(2);
 	result += encodeName("memory") + toBytes(Export::Memory) + lebEncode(0);
-	result += encodeName("main") + toBytes(Export::Function) + lebEncode(m_functions.at("main"));
+	result += encodeName("main") + toBytes(Export::Function) + lebEncode(_functions.at("main"));
 	return makeSection(Section::EXPORT, std::move(result));
 }
 
