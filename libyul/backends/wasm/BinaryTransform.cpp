@@ -24,6 +24,7 @@
 #include <libsolutil/CommonData.h>
 
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/adaptor/map.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -254,19 +255,21 @@ bytes BinaryTransform::run(Module const& _module)
 {
 	BinaryTransform bt;
 
-	for (size_t i = 0; i < _module.globals.size(); ++i)
-		bt.m_globals[_module.globals[i].variableName] = i;
+	map<Type, vector<string>> const types = typeToFunctionMap(_module.imports, _module.functions);
 
-	size_t funID = 0;
-	for (FunctionImport const& fun: _module.imports)
-		bt.m_functions[fun.internalName] = funID++;
-	for (FunctionDefinition const& fun: _module.functions)
-		bt.m_functions[fun.name] = funID++;
+	bt.m_globals = enumerateGlobals(_module);
+	bt.m_functions = enumerateFunctions(_module);
+	bt.m_functionTypes = enumerateFunctionTypes(types);
+
+	yulAssert(bt.m_globals.size() == _module.globals.size(), "");
+	yulAssert(bt.m_functions.size() == _module.imports.size() + _module.functions.size(), "");
+	yulAssert(bt.m_functionTypes.size() == bt.m_functions.size(), "");
+	yulAssert(bt.m_functionTypes.size() >= types.size(), "");
 
 	bytes ret{0, 'a', 's', 'm'};
 	// version
 	ret += bytes{1, 0, 0, 0};
-	ret += bt.typeSection(_module.imports, _module.functions);
+	ret += bt.typeSection(types);
 	ret += bt.importSection(_module.imports);
 	ret += bt.functionSection(_module.functions);
 	ret += bt.memorySection();
@@ -496,9 +499,9 @@ vector<uint8_t> BinaryTransform::encodeTypes(vector<string> const& _typeNames)
 	return result;
 }
 
-bytes BinaryTransform::typeSection(
-	vector<FunctionImport> const& _imports,
-	vector<FunctionDefinition> const& _functions
+map<BinaryTransform::Type, vector<string>> BinaryTransform::typeToFunctionMap(
+	vector<wasm::FunctionImport> const& _imports,
+	vector<wasm::FunctionDefinition> const& _functions
 )
 {
 	map<Type, vector<string>> types;
@@ -507,12 +510,50 @@ bytes BinaryTransform::typeSection(
 	for (auto const& fun: _functions)
 		types[typeOf(fun)].emplace_back(fun.name);
 
-	bytes result;
-	size_t index = 0;
-	for (auto const& [type, funNames]: types)
+	return types;
+}
+
+map<string, size_t> BinaryTransform::enumerateGlobals(Module const& _module)
+{
+	map<string, size_t> globals;
+	for (size_t i = 0; i < _module.globals.size(); ++i)
+		globals[_module.globals[i].variableName] = i;
+
+	return globals;
+}
+
+map<string, size_t> BinaryTransform::enumerateFunctions(Module const& _module)
+{
+	map<string, size_t> functions;
+	size_t funID = 0;
+	for (FunctionImport const& fun: _module.imports)
+		functions[fun.internalName] = funID++;
+	for (FunctionDefinition const& fun: _module.functions)
+		functions[fun.name] = funID++;
+
+	return functions;
+}
+
+map<string, size_t> BinaryTransform::enumerateFunctionTypes(map<Type, vector<string>> const& _typeToFunctionMap)
+{
+	map<string, size_t> functionTypes;
+	size_t typeID = 0;
+	for (vector<string> const& funNames: _typeToFunctionMap | boost::adaptors::map_values)
 	{
 		for (string const& name: funNames)
-			m_functionTypes[name] = index;
+			functionTypes[name] = typeID;
+		++typeID;
+	}
+
+	return functionTypes;
+}
+
+bytes BinaryTransform::typeSection(map<BinaryTransform::Type, vector<string>> const& _typeToFunctionMap)
+{
+	bytes result;
+	size_t index = 0;
+	for (Type const& type: _typeToFunctionMap | boost::adaptors::map_keys)
+	{
 		result += toBytes(ValueType::Function);
 		result += lebEncode(type.first.size()) + type.first;
 		result += lebEncode(type.second.size()) + type.second;

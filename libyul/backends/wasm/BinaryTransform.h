@@ -61,11 +61,19 @@ private:
 
 	static uint8_t encodeType(std::string const& _typeName);
 	static std::vector<uint8_t> encodeTypes(std::vector<std::string> const& _typeNames);
-	bytes typeSection(
+
+	static std::map<Type, std::vector<std::string>> typeToFunctionMap(
 		std::vector<wasm::FunctionImport> const& _imports,
 		std::vector<wasm::FunctionDefinition> const& _functions
 	);
 
+	static std::map<std::string, size_t> enumerateGlobals(Module const& _module);
+	static std::map<std::string, size_t> enumerateFunctions(Module const& _module);
+	static std::map<std::string, size_t> enumerateFunctionTypes(
+		std::map<Type, std::vector<std::string>> const& _typeToFunctionMap
+	);
+
+	bytes typeSection(std::map<Type, std::vector<std::string>> const& _typeToFunctionMap);
 	bytes importSection(std::vector<wasm::FunctionImport> const& _imports);
 	bytes functionSection(std::vector<wasm::FunctionDefinition> const& _functions);
 	bytes memorySection();
