@@ -74,22 +74,6 @@ set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<Sour
 	return sourceUnits;
 }
 
-void SourceUnit::replaceNode(ASTPointer<ASTNode> _oldNode, ASTPointer<ASTNode> _newNode)
-{
-	solAssert(
-		boost::range::find_if(
-			m_nodes,
-			[&](auto const& node) { return node->id() == _oldNode->id(); }
-		) != m_nodes.end(),
-		""
-	);
-	boost::range::replace_if(
-		m_nodes,
-		[&](auto const& node) { return node->id() == _oldNode->id(); },
-		_newNode
-	);
-}
-
 ImportAnnotation& ImportDirective::annotation() const
 {
 	return initAnnotation<ImportAnnotation>();
@@ -231,7 +215,7 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 	});
 }
 
-TypePointer ImportedContractDefinition::type() const
+TypePointer ImportedInterfaceDefinition::type() const
 {
 	return {};
 	// TODO: Think about whether this type needs to be specified or returning {} is sufficient.

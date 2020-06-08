@@ -173,9 +173,6 @@ public:
 	std::optional<std::string> const& licenseString() const { return m_licenseString; }
 	std::vector<ASTPointer<ASTNode>> const& nodes() const { return m_nodes; }
 
-	/// Replaces given top-level AST node with a new AST node.
-	void replaceNode(ASTPointer<ASTNode> _oldNode, ASTPointer<ASTNode> _newNode);
-
 	/// @returns a set of referenced SourceUnits. Recursively if @a _recurse is true.
 	std::set<SourceUnit const*> referencedSourceUnits(bool _recurse = false, std::set<SourceUnit const*> _skipList = std::set<SourceUnit const*>()) const;
 
@@ -458,13 +455,13 @@ protected:
  *
  * This is not the actually imported interface but the reference to it.
  * It will be resolved by CompilerStack to add any missing interface definitions
- * by looking for any ImportedContractDefinition in the ASTs and append them - embeded into
+ * by looking for any ImportedInterfaceDefinition in the ASTs and append them - embeded into
  * SourceUnit's - to its collection of sources.
  */
-class ImportedContractDefinition: public Declaration // TODO(needed?), public StructurallyDocumented
+class ImportedInterfaceDefinition: public Declaration // TODO(needed?), public StructurallyDocumented
 {
 public:
-	ImportedContractDefinition(
+	ImportedInterfaceDefinition(
 		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> _name,

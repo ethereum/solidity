@@ -289,9 +289,9 @@ void CompilerStack::loadMissingInterfaces(int64_t _baseNodeID)
 
 		for (ASTPointer<ASTNode> const& astNode: source->nodes())
 		{
-			if (auto const* importedContract = dynamic_cast<ImportedContractDefinition const*>(astNode.get()))
+			if (auto const* importedInterface = dynamic_cast<ImportedInterfaceDefinition const*>(astNode.get()))
 			{
-				string const fileName = *importedContract->path();
+				string const fileName = *importedInterface->path();
 				ReadCallback::Result result{false, string("File not supplied initially.")};
 				if (m_readFile)
 					result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), fileName);
@@ -303,9 +303,9 @@ void CompilerStack::loadMissingInterfaces(int64_t _baseNodeID)
 
 					ASTPointer<SourceUnit> importedSource =
 						interfaceImporter.importInterfaceAsSourceUnit(
-							importedContract->location(),
+							importedInterface->location(),
 							source->licenseString(),
-							importedContract->name(),
+							importedInterface->name(),
 							json
 						);
 
@@ -317,7 +317,7 @@ void CompilerStack::loadMissingInterfaces(int64_t _baseNodeID)
 					m_errorReporter.fatalParserError(
 						31415_error, // TODO: ensure this number is unique (we should have a CI for that)
 						astNode->location(),
-						"Cannot load JSON source."
+						"Cannot load JSON source. " + result.responseOrErrorMessage
 					);
 				}
 			}

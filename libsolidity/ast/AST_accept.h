@@ -79,13 +79,13 @@ void StructuredDocumentation::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
-void ImportedContractDefinition::accept(ASTVisitor& _visitor)
+void ImportedInterfaceDefinition::accept(ASTVisitor& _visitor)
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
 }
 
-void ImportedContractDefinition::accept(ASTConstVisitor& _visitor) const
+void ImportedInterfaceDefinition::accept(ASTConstVisitor& _visitor) const
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
