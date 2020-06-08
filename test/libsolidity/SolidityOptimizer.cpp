@@ -708,6 +708,18 @@ BOOST_AUTO_TEST_CASE(shift_optimizer_bug)
 	compareVersions("g(uint256)", u256(-1));
 }
 
+BOOST_AUTO_TEST_CASE(avoid_double_cleanup)
+{
+	char const* sourceCode = R"(
+		contract C {
+			receive() external payable {
+				abi.encodePacked(uint200(0));
+			}
+		}
+	)";
+	compileBothVersions(sourceCode, 0, "C", 50);
+	BOOST_CHECK_EQUAL(numInstructions(m_nonOptimizedBytecode, Instruction::AND), 2);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
