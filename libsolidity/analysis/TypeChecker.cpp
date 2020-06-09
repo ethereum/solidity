@@ -82,7 +82,7 @@ TypePointer const& TypeChecker::type(VariableDeclaration const& _variable) const
 
 bool TypeChecker::visit(ContractDefinition const& _contract)
 {
-	m_scope = &_contract;
+	m_currentContract = &_contract;
 
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
@@ -266,7 +266,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
 	solAssert(base, "Base contract not available.");
 
-	if (m_scope->isInterface() && !base->isInterface())
+	if (m_currentContract->isInterface() && !base->isInterface())
 		m_errorReporter.typeError(6536_error, _inheritance.location(), "Interfaces can only inherit from other interfaces.");
 
 	if (base->isLibrary())
@@ -413,7 +413,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		else
 			modifiers.insert(decl);
 	}
-	if (m_scope->isInterface())
+	if (m_currentContract->isInterface())
 	{
 		if (_function.isImplemented())
 			m_errorReporter.typeError(4726_error, _function.location(), "Functions in interfaces cannot have an implementation.");
@@ -424,7 +424,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.isConstructor())
 			m_errorReporter.typeError(6482_error, _function.location(), "Constructor cannot be defined in interfaces.");
 	}
-	else if (m_scope->contractKind() == ContractKind::Library)
+	else if (m_currentContract->contractKind() == ContractKind::Library)
 		if (_function.isConstructor())
 			m_errorReporter.typeError(7634_error, _function.location(), "Constructor cannot be defined in libraries.");
 	if (_function.isImplemented())
@@ -1790,7 +1790,7 @@ void TypeChecker::typeCheckFunctionCall(
 	if (_functionType->kind() == FunctionType::Kind::Declaration)
 	{
 		if (
-			m_scope->derivesFrom(*_functionType->declaration().annotation().contract) &&
+			m_currentContract->derivesFrom(*_functionType->declaration().annotation().contract) &&
 			!dynamic_cast<FunctionDefinition const&>(_functionType->declaration()).isImplemented()
 		)
 			m_errorReporter.typeError(
@@ -1912,7 +1912,7 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 	bool const isPacked = _functionType->kind() == FunctionType::Kind::ABIEncodePacked;
 	solAssert(_functionType->padArguments() != isPacked, "ABI function with unexpected padding");
 
-	bool const abiEncoderV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(
+	bool const abiEncoderV2 = m_currentContract->sourceUnit().annotation().experimentalFeatures.count(
 		ExperimentalFeature::ABIEncoderV2
 	);
 
@@ -2312,7 +2312,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::ABIDecode:
 		{
 			bool const abiEncoderV2 =
-				m_scope->sourceUnit().annotation().experimentalFeatures.count(
+				m_currentContract->sourceUnit().annotation().experimentalFeatures.count(
 					ExperimentalFeature::ABIEncoderV2
 				);
 			returnTypes = typeCheckABIDecodeAndRetrieveReturnType(_functionCall, abiEncoderV2);
@@ -2508,13 +2508,13 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (contract->abstract())
 			m_errorReporter.typeError(4614_error, _newExpression.location(), "Cannot instantiate an abstract contract.");
 
-		solAssert(!!m_scope, "");
-		m_scope->annotation().contractDependencies.insert(contract);
+		solAssert(!!m_currentContract, "");
+		m_currentContract->annotation().contractDependencies.insert(contract);
 		solAssert(
 			!contract->annotation().linearizedBaseContracts.empty(),
 			"Linearized base contracts not yet available."
 		);
-		if (contractDependenciesAreCyclic(*m_scope))
+		if (contractDependenciesAreCyclic(*m_currentContract))
 			m_errorReporter.typeError(
 				4579_error,
 				_newExpression.location(),
@@ -2561,7 +2561,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 	// Retrieve the types of the arguments if this is used to call a function.
 	auto const& arguments = _memberAccess.annotation().arguments;
-	MemberList::MemberMap possibleMembers = exprType->members(m_scope).membersByName(memberName);
+	MemberList::MemberMap possibleMembers = exprType->members(m_currentContract).membersByName(memberName);
 	size_t const initialMemberCount = possibleMembers.size();
 	if (initialMemberCount > 1 && arguments)
 	{
@@ -2587,7 +2587,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				DataLocation::Storage,
 				exprType
 			);
-			if (!storageType->members(m_scope).membersByName(memberName).empty())
+			if (!storageType->members(m_currentContract).membersByName(memberName).empty())
 				m_errorReporter.fatalTypeError(
 					4994_error,
 					_memberAccess.location(),
@@ -2743,7 +2743,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		{
 			annotation.isPure = true;
 			ContractType const& accessedContractType = dynamic_cast<ContractType const&>(*magicType->typeArgument());
-			m_scope->annotation().contractDependencies.insert(&accessedContractType.contractDefinition());
+			m_currentContract->annotation().contractDependencies.insert(&accessedContractType.contractDefinition());
 
 			if (
 				memberName == "runtimeCode" &&
@@ -2755,7 +2755,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					"\"runtimeCode\" is not available for contracts containing immutable variables."
 				);
 
-			if (contractDependenciesAreCyclic(*m_scope))
+			if (contractDependenciesAreCyclic(*m_currentContract))
 				m_errorReporter.typeError(
 					4224_error,
 					_memberAccess.location(),
