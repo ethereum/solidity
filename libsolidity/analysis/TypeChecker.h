@@ -165,7 +165,7 @@ private:
 	/// Runs type checks on @a _expression to infer its type and then checks that it is an LValue.
 	void requireLValue(Expression const& _expression, bool _ordinaryAssignment);
 
-	ContractDefinition const* m_scope = nullptr;
+	ContractDefinition const* m_currentContract = nullptr;
 
 	langutil::EVMVersion m_evmVersion;
 
