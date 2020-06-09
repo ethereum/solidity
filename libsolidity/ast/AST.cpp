@@ -287,11 +287,11 @@ TypeDeclarationAnnotation& EnumDefinition::annotation() const
 	return initAnnotation<TypeDeclarationAnnotation>();
 }
 
-ContractKind FunctionDefinition::inContractKind() const
+bool FunctionDefinition::libraryFunction() const
 {
-	auto contractDef = dynamic_cast<ContractDefinition const*>(scope());
-	solAssert(contractDef, "Enclosing Scope of FunctionDefinition was not set.");
-	return contractDef->contractKind();
+	if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(scope()))
+		return contractDef->isLibrary();
+	return false;
 }
 
 FunctionTypePointer FunctionDefinition::functionType(bool _internal) const

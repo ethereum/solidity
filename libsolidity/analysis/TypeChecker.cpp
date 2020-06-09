@@ -328,8 +328,6 @@ void TypeChecker::endVisit(ModifierDefinition const& _modifier)
 
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
-	bool isLibraryFunction = _function.inContractKind() == ContractKind::Library;
-
 	if (_function.markedVirtual())
 	{
 		if (_function.annotation().contract->isInterface())
@@ -340,7 +338,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 	if (_function.isPayable())
 	{
-		if (isLibraryFunction)
+		if (_function.libraryFunction())
 			m_errorReporter.typeError(7708_error, _function.location(), "Library functions cannot be payable.");
 		if (_function.isOrdinary() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(5587_error, _function.location(), "Internal functions cannot be payable.");
@@ -350,15 +348,13 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		{
 			if (var.referenceLocation() != VariableDeclaration::Location::Storage)
 			{
-				if (!isLibraryFunction && _function.isPublic())
+				if (!_function.libraryFunction() && _function.isPublic())
 					m_errorReporter.typeError(3442_error, var.location(), "Mapping types can only have a data location of \"storage\" and thus only be parameters or return variables for internal or library functions.");
 				else
 					m_errorReporter.typeError(5380_error, var.location(), "Mapping types can only have a data location of \"storage\"." );
 			}
 			else
-			{
-				solAssert(isLibraryFunction || !_function.isPublic(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
-			}
+				solAssert(_function.libraryFunction() || !_function.isPublic(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
 		}
 		else
 		{
@@ -366,7 +362,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 				m_errorReporter.typeError(3312_error, var.location(), "Type is required to live outside storage.");
 			if (_function.isPublic())
 			{
-				auto iType = type(var)->interfaceType(isLibraryFunction);
+				auto iType = type(var)->interfaceType(_function.libraryFunction());
 
 				if (!iType)
 				{
@@ -378,7 +374,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (
 			_function.isPublic() &&
 			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
-			!typeSupportedByOldABIEncoder(*type(var), isLibraryFunction)
+			!typeSupportedByOldABIEncoder(*type(var), _function.libraryFunction())
 		)
 			m_errorReporter.typeError(
 				4957_error,
@@ -435,7 +431,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		_function.body().accept(*this);
 	else if (_function.isConstructor())
 		m_errorReporter.typeError(5700_error, _function.location(), "Constructor must be implemented if declared.");
-	else if (isLibraryFunction)
+	else if (_function.libraryFunction())
 		m_errorReporter.typeError(9231_error, _function.location(), "Library functions must be implemented if declared.");
 	else if (!_function.virtualSemantics())
 		m_errorReporter.typeError(5424_error, _function.location(), "Functions without implementation must be marked virtual.");
@@ -1830,7 +1826,7 @@ void TypeChecker::typeCheckFallbackFunction(FunctionDefinition const& _function)
 {
 	solAssert(_function.isFallback(), "");
 
-	if (_function.inContractKind() == ContractKind::Library)
+	if (_function.libraryFunction())
 		m_errorReporter.typeError(5982_error, _function.location(), "Libraries cannot have fallback functions.");
 	if (_function.stateMutability() != StateMutability::NonPayable && _function.stateMutability() != StateMutability::Payable)
 		m_errorReporter.typeError(
@@ -1857,7 +1853,7 @@ void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
 {
 	solAssert(_function.isReceive(), "");
 
-	if (_function.inContractKind() == ContractKind::Library)
+	if (_function.libraryFunction())
 		m_errorReporter.typeError(4549_error, _function.location(), "Libraries cannot have receive ether functions.");
 
 	if (_function.stateMutability() != StateMutability::Payable)
