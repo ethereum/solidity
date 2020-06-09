@@ -799,6 +799,7 @@ public:
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	StateMutability stateMutability() const { return m_stateMutability; }
+	bool libraryFunction() const;
 	bool isOrdinary() const { return m_kind == Token::Function; }
 	bool isConstructor() const { return m_kind == Token::Constructor; }
 	bool isFallback() const { return m_kind == Token::Fallback; }
@@ -824,8 +825,6 @@ public:
 
 	/// @returns the external identifier of this function (the hash of the signature) as a hex string.
 	std::string externalIdentifierHex() const;
-
-	ContractKind inContractKind() const;
 
 	TypePointer type() const override;
 	TypePointer typeViaContractName() const override;
