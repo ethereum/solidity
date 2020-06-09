@@ -7,7 +7,7 @@
  - [ ] Write access to https://github.com/ethereum/homebrew-ethereum
 
 ### Blog Post
- - [ ] Create a post on https://github.com/ethereum/solidity-blog and exlpain some of the new features or concepts.
+ - [ ] Create a post on https://github.com/ethereum/solidity-blog and explain some of the new features or concepts.
 
 ### Changelog
  - [ ] Sort the changelog entries alphabetically and correct any errors you notice.
