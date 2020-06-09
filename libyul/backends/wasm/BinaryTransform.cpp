@@ -131,7 +131,7 @@ bytes toBytes(Opcode _o)
 	return toBytes(uint8_t(_o));
 }
 
-static std::map<string, uint8_t> const builtins = {
+static map<string, uint8_t> const builtins = {
 	{"i32.load", 0x28},
 	{"i64.load", 0x29},
 	{"i32.load8_s", 0x2c},
@@ -241,12 +241,12 @@ bytes lebEncodeSigned(int64_t _n)
 bytes prefixSize(bytes _data)
 {
 	size_t size = _data.size();
-	return lebEncode(size) + std::move(_data);
+	return lebEncode(size) + move(_data);
 }
 
 bytes makeSection(Section _section, bytes _data)
 {
-	return toBytes(_section) + prefixSize(std::move(_data));
+	return toBytes(_section) + prefixSize(move(_data));
 }
 
 }
@@ -280,7 +280,7 @@ bytes BinaryTransform::run(Module const& _module)
 		// TODO should we prefix and / or shorten the name?
 		bytes data = BinaryTransform::run(sub.second);
 		size_t length = data.size();
-		ret += customSection(sub.first, std::move(data));
+		ret += customSection(sub.first, move(data));
 		subModulePosAndSize[sub.first] = {ret.size() - length, length};
 	}
 
@@ -322,12 +322,12 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 	// they are references to object names that should not end up in the code.
 	if (_call.functionName == "dataoffset")
 	{
-		string name = std::get<StringLiteral>(_call.arguments.at(0)).value;
+		string name = get<StringLiteral>(_call.arguments.at(0)).value;
 		return toBytes(Opcode::I64Const) + lebEncodeSigned(m_subModulePosAndSize.at(name).first);
 	}
 	else if (_call.functionName == "datasize")
 	{
-		string name = std::get<StringLiteral>(_call.arguments.at(0)).value;
+		string name = get<StringLiteral>(_call.arguments.at(0)).value;
 		return toBytes(Opcode::I64Const) + lebEncodeSigned(m_subModulePosAndSize.at(name).second);
 	}
 
@@ -342,7 +342,7 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 	else
 	{
 		yulAssert(builtins.count(_call.functionName), "Builtin " + _call.functionName + " not found");
-		bytes ret = std::move(args) + toBytes(builtins.at(_call.functionName));
+		bytes ret = move(args) + toBytes(builtins.at(_call.functionName));
 		if (
 			_call.functionName.find(".load") != string::npos ||
 			_call.functionName.find(".store") != string::npos
@@ -468,7 +468,7 @@ bytes BinaryTransform::operator()(FunctionDefinition const& _function)
 
 	yulAssert(m_labels.empty(), "Stray labels.");
 
-	return prefixSize(std::move(ret));
+	return prefixSize(move(ret));
 }
 
 BinaryTransform::Type BinaryTransform::typeOf(FunctionImport const& _import)
@@ -569,7 +569,7 @@ bytes BinaryTransform::typeSection(map<BinaryTransform::Type, vector<string>> co
 		index++;
 	}
 
-	return makeSection(Section::TYPE, lebEncode(index) + std::move(result));
+	return makeSection(Section::TYPE, lebEncode(index) + move(result));
 }
 
 bytes BinaryTransform::importSection(
@@ -587,7 +587,7 @@ bytes BinaryTransform::importSection(
 			toBytes(importKind) +
 			lebEncode(_functionTypes.at(import.internalName));
 	}
-	return makeSection(Section::IMPORT, std::move(result));
+	return makeSection(Section::IMPORT, move(result));
 }
 
 bytes BinaryTransform::functionSection(
@@ -598,7 +598,7 @@ bytes BinaryTransform::functionSection(
 	bytes result = lebEncode(_functions.size());
 	for (auto const& fun: _functions)
 		result += lebEncode(_functionTypes.at(fun.name));
-	return makeSection(Section::FUNCTION, std::move(result));
+	return makeSection(Section::FUNCTION, move(result));
 }
 
 bytes BinaryTransform::memorySection()
@@ -606,7 +606,7 @@ bytes BinaryTransform::memorySection()
 	bytes result = lebEncode(1);
 	result.push_back(static_cast<uint8_t>(LimitsKind::Min));
 	result.push_back(1); // initial length
-	return makeSection(Section::MEMORY, std::move(result));
+	return makeSection(Section::MEMORY, move(result));
 }
 
 bytes BinaryTransform::globalSection(vector<wasm::GlobalVariableDeclaration> const& _globals)
@@ -620,7 +620,7 @@ bytes BinaryTransform::globalSection(vector<wasm::GlobalVariableDeclaration> con
 			lebEncodeSigned(0) +
 			toBytes(Opcode::End);
 
-	return makeSection(Section::GLOBAL, std::move(result));
+	return makeSection(Section::GLOBAL, move(result));
 }
 
 bytes BinaryTransform::exportSection(map<string, size_t> const& _functionIDs)
@@ -628,13 +628,13 @@ bytes BinaryTransform::exportSection(map<string, size_t> const& _functionIDs)
 	bytes result = lebEncode(2);
 	result += encodeName("memory") + toBytes(Export::Memory) + lebEncode(0);
 	result += encodeName("main") + toBytes(Export::Function) + lebEncode(_functionIDs.at("main"));
-	return makeSection(Section::EXPORT, std::move(result));
+	return makeSection(Section::EXPORT, move(result));
 }
 
 bytes BinaryTransform::customSection(string const& _name, bytes _data)
 {
-	bytes result = encodeName(_name) + std::move(_data);
-	return makeSection(Section::CUSTOM, std::move(result));
+	bytes result = encodeName(_name) + move(_data);
+	return makeSection(Section::CUSTOM, move(result));
 }
 
 bytes BinaryTransform::codeSection(vector<wasm::FunctionDefinition> const& _functions)
@@ -642,7 +642,7 @@ bytes BinaryTransform::codeSection(vector<wasm::FunctionDefinition> const& _func
 	bytes result = lebEncode(_functions.size());
 	for (FunctionDefinition const& fun: _functions)
 		result += (*this)(fun);
-	return makeSection(Section::CODE, std::move(result));
+	return makeSection(Section::CODE, move(result));
 }
 
 bytes BinaryTransform::visit(vector<Expression> const& _expressions)
@@ -673,7 +673,7 @@ bytes BinaryTransform::encodeLabelIdx(string const& _label) const
 	yulAssert(false, "Label not found.");
 }
 
-bytes BinaryTransform::encodeName(std::string const& _name)
+bytes BinaryTransform::encodeName(string const& _name)
 {
 	// UTF-8 is allowed here by the Wasm spec, but since all names here should stem from
 	// Solidity or Yul identifiers or similar, non-ascii characters ending up here
