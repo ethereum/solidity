@@ -95,30 +95,30 @@
                     [
                       null
                     ],
-                    "operations": "{\n    switch 0\n    default { }\n}"
+                    "operations": "{\n    switch 0\n    case 0 { }\n    default { }\n}"
                   },
                   "children": [],
                   "id": 3,
                   "name": "InlineAssembly",
-                  "src": "52:32:1"
+                  "src": "52:42:1"
                 }
               ],
               "id": 4,
               "name": "Block",
-              "src": "42:48:1"
+              "src": "42:58:1"
             }
           ],
           "id": 5,
           "name": "FunctionDefinition",
-          "src": "17:73:1"
+          "src": "17:83:1"
         }
       ],
       "id": 6,
       "name": "ContractDefinition",
-      "src": "0:92:1"
+      "src": "0:102:1"
     }
   ],
   "id": 7,
   "name": "SourceUnit",
-  "src": "0:93:1"
+  "src": "0:103:1"
 }
