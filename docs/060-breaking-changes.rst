@@ -42,8 +42,8 @@ For most of the topics the compiler will provide suggestions.
   storage arrays.
 
 * The new keyword ``abstract`` can be used to mark contracts as abstract. It has to be used
-  if a contract does not implement all its functions. Abstract contracts cannot be initialised and solidity outputs no
-  no bytecode when compiling them.
+  if a contract does not implement all its functions. Abstract contracts cannot be created using the ``new`` operator,
+  and it is not possible to generate bytecode for them during compilation.
 
 * Libraries have to implement all their functions, not only the internal ones.
 
