@@ -255,13 +255,13 @@ bytes BinaryTransform::run(Module const& _module)
 {
 	map<Type, vector<string>> const types = typeToFunctionMap(_module.imports, _module.functions);
 
-	map<string, size_t> const globals = enumerateGlobals(_module);
-	map<string, size_t> const functions = enumerateFunctions(_module);
+	map<string, size_t> const globalIDs = enumerateGlobals(_module);
+	map<string, size_t> const functionIDs = enumerateFunctions(_module);
 	map<string, size_t> const functionTypes = enumerateFunctionTypes(types);
 
-	yulAssert(globals.size() == _module.globals.size(), "");
-	yulAssert(functions.size() == _module.imports.size() + _module.functions.size(), "");
-	yulAssert(functionTypes.size() == functions.size(), "");
+	yulAssert(globalIDs.size() == _module.globals.size(), "");
+	yulAssert(functionIDs.size() == _module.imports.size() + _module.functions.size(), "");
+	yulAssert(functionTypes.size() == functionIDs.size(), "");
 	yulAssert(functionTypes.size() >= types.size(), "");
 
 	bytes ret{0, 'a', 's', 'm'};
@@ -272,7 +272,7 @@ bytes BinaryTransform::run(Module const& _module)
 	ret += functionSection(_module.functions, functionTypes);
 	ret += memorySection();
 	ret += globalSection(_module.globals);
-	ret += exportSection(functions);
+	ret += exportSection(functionIDs);
 
 	map<string, pair<size_t, size_t>> subModulePosAndSize;
 	for (auto const& sub: _module.subModules)
@@ -285,8 +285,8 @@ bytes BinaryTransform::run(Module const& _module)
 	}
 
 	BinaryTransform bt(
-		move(globals),
-		move(functions),
+		move(globalIDs),
+		move(functionIDs),
 		move(functionTypes),
 		move(subModulePosAndSize)
 	);
@@ -313,7 +313,7 @@ bytes BinaryTransform::operator()(LocalVariable const& _variable)
 
 bytes BinaryTransform::operator()(GlobalVariable const& _variable)
 {
-	return toBytes(Opcode::GlobalGet) + lebEncode(m_globals.at(_variable.name));
+	return toBytes(Opcode::GlobalGet) + lebEncode(m_globalIDs.at(_variable.name));
 }
 
 bytes BinaryTransform::operator()(BuiltinCall const& _call)
@@ -359,7 +359,7 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 
 bytes BinaryTransform::operator()(FunctionCall const& _call)
 {
-	return visit(_call.arguments) + toBytes(Opcode::Call) + lebEncode(m_functions.at(_call.functionName));
+	return visit(_call.arguments) + toBytes(Opcode::Call) + lebEncode(m_functionIDs.at(_call.functionName));
 }
 
 bytes BinaryTransform::operator()(LocalAssignment const& _assignment)
@@ -375,7 +375,7 @@ bytes BinaryTransform::operator()(GlobalAssignment const& _assignment)
 	return
 		std::visit(*this, *_assignment.value) +
 		toBytes(Opcode::GlobalSet) +
-		lebEncode(m_globals.at(_assignment.variableName));
+		lebEncode(m_globalIDs.at(_assignment.variableName));
 }
 
 bytes BinaryTransform::operator()(If const& _if)
@@ -623,11 +623,11 @@ bytes BinaryTransform::globalSection(vector<wasm::GlobalVariableDeclaration> con
 	return makeSection(Section::GLOBAL, std::move(result));
 }
 
-bytes BinaryTransform::exportSection(map<string, size_t> const& _functions)
+bytes BinaryTransform::exportSection(map<string, size_t> const& _functionIDs)
 {
 	bytes result = lebEncode(2);
 	result += encodeName("memory") + toBytes(Export::Memory) + lebEncode(0);
-	result += encodeName("main") + toBytes(Export::Function) + lebEncode(_functions.at("main"));
+	result += encodeName("main") + toBytes(Export::Function) + lebEncode(_functionIDs.at("main"));
 	return makeSection(Section::EXPORT, std::move(result));
 }
 

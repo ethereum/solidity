@@ -56,13 +56,13 @@ public:
 
 private:
 	BinaryTransform(
-		std::map<std::string, size_t> _globals,
-		std::map<std::string, size_t> _functions,
+		std::map<std::string, size_t> _globalIDs,
+		std::map<std::string, size_t> _functionIDs,
 		std::map<std::string, size_t> _functionTypes,
 		std::map<std::string, std::pair<size_t, size_t>> _subModulePosAndSize
 	):
-		m_globals(std::move(_globals)),
-		m_functions(std::move(_functions)),
+		m_globalIDs(std::move(_globalIDs)),
+		m_functionIDs(std::move(_functionIDs)),
 		m_functionTypes(std::move(_functionTypes)),
 		m_subModulePosAndSize(std::move(_subModulePosAndSize))
 	{}
@@ -96,7 +96,7 @@ private:
 	);
 	static bytes memorySection();
 	static bytes globalSection(std::vector<wasm::GlobalVariableDeclaration> const& _globals);
-	static bytes exportSection(std::map<std::string, size_t> const& _functions);
+	static bytes exportSection(std::map<std::string, size_t> const& _functionIDs);
 	static bytes customSection(std::string const& _name, bytes _data);
 	bytes codeSection(std::vector<wasm::FunctionDefinition> const& _functions);
 
@@ -107,8 +107,8 @@ private:
 
 	static bytes encodeName(std::string const& _name);
 
-	std::map<std::string, size_t> const m_globals;
-	std::map<std::string, size_t> const m_functions;
+	std::map<std::string, size_t> const m_globalIDs;
+	std::map<std::string, size_t> const m_functionIDs;
 	std::map<std::string, size_t> const m_functionTypes;
 	std::map<std::string, std::pair<size_t, size_t>> const m_subModulePosAndSize;
 
