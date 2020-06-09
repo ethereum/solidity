@@ -26,6 +26,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/Exceptions.h>
+#include <libsolidity/interface/Natspec.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -56,6 +57,10 @@ public:
 			generatedDocumentation = m_compilerStack.natspecDev(_contractName);
 		Json::Value expectedDocumentation;
 		util::jsonParseStrict(_expectedDocumentationString, expectedDocumentation);
+
+		expectedDocumentation["version"] = Json::Value(Natspec::c_natspecVersion);
+		expectedDocumentation["kind"] = Json::Value(_userDocumentation ? "user" : "dev");
+
 		BOOST_CHECK_MESSAGE(
 			expectedDocumentation == generatedDocumentation,
 			"Expected:\n" << expectedDocumentation.toStyledString() <<

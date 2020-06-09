@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * NatSpec: Add fields "kind" and "version" to the JSON output.
 
 
 Bugfixes:
