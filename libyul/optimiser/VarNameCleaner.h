@@ -63,7 +63,7 @@ private:
 	VarNameCleaner(
 		Block const& _ast,
 		Dialect const& _dialect,
-		std::set<YulString> _blacklist = {}
+		std::set<YulString> _namesToKeep = {}
 	);
 
 	/// Tries to rename a list of variables.
@@ -77,11 +77,13 @@ private:
 	YulString findCleanName(YulString const& name) const;
 
 	/// Tests whether a given name was already used within this pass
-	/// or is on the blacklist.
+	/// or was set to be kept.
 	bool isUsedName(YulString const& _name) const;
 
 	Dialect const& m_dialect;
-	std::set<YulString> m_blacklist;
+
+	/// These names will not be modified.
+	std::set<YulString> m_namesToKeep;
 
 	/// Set of names that are in use.
 	std::set<YulString> m_usedNames;
