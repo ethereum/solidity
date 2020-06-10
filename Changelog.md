@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * Yul: Raise warning for switch statements that only have a default and no other cases.
+ * Output compilation error codes.
 
 
 Bugfixes:

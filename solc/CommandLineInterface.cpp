@@ -177,6 +177,7 @@ static string const g_strVersion = "version";
 static string const g_strIgnoreMissingFiles = "ignore-missing";
 static string const g_strColor = "color";
 static string const g_strNoColor = "no-color";
+static string const g_strErrorIds = "error-codes";
 static string const g_strOldReporter = "old-reporter";
 
 static string const g_argAbi = g_strAbi;
@@ -222,6 +223,7 @@ static string const g_stdinFileName = g_stdinFileNameStr;
 static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
 static string const g_argColor = g_strColor;
 static string const g_argNoColor = g_strNoColor;
+static string const g_argErrorIds = g_strErrorIds;
 static string const g_argOldReporter = g_strOldReporter;
 
 /// Possible arguments to for --combined-json
@@ -877,6 +879,10 @@ General Information)").c_str(),
 			"Explicitly disable colored output, disabling terminal auto-detection."
 		)
 		(
+			g_argErrorIds.c_str(),
+			"Output error codes."
+		)
+		(
 			g_argOldReporter.c_str(),
 			"Enables old diagnostics reporter (legacy option, will be removed)."
 		)
@@ -988,6 +994,8 @@ General Information)").c_str(),
 	}
 
 	m_coloredOutput = !m_args.count(g_argNoColor) && (isatty(STDERR_FILENO) || m_args.count(g_argColor));
+
+	m_withErrorIds = m_args.count(g_argErrorIds);
 
 	if (m_args.count(g_argHelp) || (isatty(fileno(stdin)) && _argc == 1))
 	{
@@ -1294,7 +1302,7 @@ bool CommandLineInterface::processInput()
 	if (m_args.count(g_argOldReporter))
 		formatter = make_unique<SourceReferenceFormatter>(serr(false));
 	else
-		formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
+		formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput, m_withErrorIds);
 
 	try
 	{
@@ -1732,7 +1740,7 @@ bool CommandLineInterface::assemble(
 		if (m_args.count(g_argOldReporter))
 			formatter = make_unique<SourceReferenceFormatter>(serr(false));
 		else
-			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput);
+			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput, m_withErrorIds);
 
 		for (auto const& error: stack.errors())
 		{
