@@ -606,7 +606,7 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays)
 	BOTH_ENCODERS(
 		for (size_t size = 1; size < 15; size++)
 		{
-			for (size_t width: {1, 2, 4, 5, 7, 15, 16, 17, 31, 32})
+			for (size_t width: {1u, 2u, 4u, 5u, 7u, 15u, 16u, 17u, 31u, 32u})
 			{
 				string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
 				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));
@@ -651,7 +651,7 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays_dyn)
 	BOTH_ENCODERS(
 		for (size_t size = 0; size < 15; size++)
 		{
-			for (size_t width: {1, 2, 4, 5, 7, 15, 16, 17, 31, 32})
+			for (size_t width: {1u, 2u, 4u, 5u, 7u, 15u, 16u, 17u, 31u, 32u})
 			{
 				string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
 				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));

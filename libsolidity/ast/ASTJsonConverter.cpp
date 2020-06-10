@@ -37,6 +37,7 @@
 #include <utility>
 #include <vector>
 #include <algorithm>
+#include <limits>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -134,7 +135,7 @@ size_t ASTJsonConverter::sourceIndexFromLocation(SourceLocation const& _location
 	if (_location.source && m_sourceIndices.count(_location.source->name()))
 		return m_sourceIndices.at(_location.source->name());
 	else
-		return size_t(-1);
+		return numeric_limits<size_t>::max();
 }
 
 string ASTJsonConverter::sourceLocationToString(SourceLocation const& _location) const

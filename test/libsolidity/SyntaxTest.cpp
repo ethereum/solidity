@@ -98,9 +98,9 @@ void SyntaxTest::filterObtainedErrors()
 		{
 			// ignore the version & license pragma inserted by the testing tool when calculating locations.
 			if (location->start >= static_cast<int>(preamble.size()))
-				locationStart = location->start - (preamble.size());
+				locationStart = location->start - static_cast<int>(preamble.size());
 			if (location->end >= static_cast<int>(preamble.size()))
-				locationEnd = location->end - (preamble.size());
+				locationEnd = location->end - static_cast<int>(preamble.size());
 			if (location->source)
 				sourceName = location->source->name();
 		}
