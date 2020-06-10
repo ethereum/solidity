@@ -1477,7 +1477,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member);
 			string slot = m_context.newYulVariable();
 			m_code << "let " << slot << " := " <<
-				("add(" + expression.name() + ", " + offsets.first.str() + ")\n");
+				("add(" + expression.part("slot").name() + ", " + offsets.first.str() + ")\n");
 			setLValue(_memberAccess, IRLValue{
 				type(_memberAccess),
 				IRLValue::Storage{slot, offsets.second}
@@ -1497,7 +1497,25 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		}
 		case DataLocation::CallData:
 		{
-			solUnimplementedAssert(false, "");
+			string baseRef = expression.part("offset").name();
+			string offset = m_context.newYulVariable();
+			m_code << "let " << offset << " := " << "add(" << baseRef << ", " << to_string(structType.calldataOffsetOfMember(member)) << ")\n";
+			if (_memberAccess.annotation().type->isDynamicallyEncoded())
+				define(_memberAccess) <<
+					m_utils.accessCalldataTailFunction(*_memberAccess.annotation().type) <<
+					"(" <<
+					baseRef <<
+					", " <<
+					offset <<
+					")" <<
+					std::endl;
+			else
+				define(_memberAccess) <<
+					m_utils.readFromCalldata(*_memberAccess.annotation().type) <<
+					"(" <<
+					offset <<
+					")" <<
+					std::endl;
 			break;
 		}
 		default:

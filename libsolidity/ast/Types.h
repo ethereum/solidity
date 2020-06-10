@@ -980,6 +980,8 @@ public:
 
 	void clearCache() const override;
 
+protected:
+	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
 private:
 	StructDefinition const& m_struct;
 	// Caches for interfaceType(bool)
