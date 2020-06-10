@@ -592,7 +592,7 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 	else if (_instr == evmasm::Instruction::PC)
 	{
 		m_errorReporter.error(
-			4316_error,
+			2450_error,
 			Error::Type::SyntaxError,
 			_location,
 			"PC instruction is a low-level EVM feature. "
