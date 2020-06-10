@@ -1302,13 +1302,16 @@ public:
 	/// of the parameters to false.
 	TypePointer copyAndSetCallOptions(bool _setGas, bool _setValue, bool _setSalt) const;
 
+	/// @returns a copy of this function type with the `bound` flag set to true.
+	/// Should only be called on library functions.
+	FunctionTypePointer asBoundFunction() const;
+
 	/// @returns a copy of this function type where the location of reference types is changed
 	/// from CallData to Memory. This is the type that would be used when the function is
 	/// called externally, as opposed to the parameter types that are available inside the function body.
 	/// Also supports variants to be used for library or bound calls.
 	/// @param _inLibrary if true, uses DelegateCall as location.
-	/// @param _bound if true, the function type is set to be bound.
-	FunctionTypePointer asExternallyCallableFunction(bool _inLibrary, bool _bound = false) const;
+	FunctionTypePointer asExternallyCallableFunction(bool _inLibrary) const;
 
 protected:
 	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;

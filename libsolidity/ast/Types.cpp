@@ -371,7 +371,8 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 				seenFunctions.insert(function);
 				if (function->parameters().empty())
 					continue;
-				FunctionTypePointer fun = FunctionType(*function, FunctionType::Kind::External).asExternallyCallableFunction(true, true);
+				FunctionTypePointer fun =
+					dynamic_cast<FunctionType const&>(*function->typeViaContractName()).asBoundFunction();
 				if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
 					members.emplace_back(function->name(), fun, function);
 			}
@@ -3438,11 +3439,32 @@ TypePointer FunctionType::copyAndSetCallOptions(bool _setGas, bool _setValue, bo
 	);
 }
 
-FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary, bool _bound) const
+FunctionTypePointer FunctionType::asBoundFunction() const
 {
-	if (_bound)
-		solAssert(!m_parameterTypes.empty(), "");
+	solAssert(!m_parameterTypes.empty(), "");
+	FunctionDefinition const* fun = dynamic_cast<FunctionDefinition const*>(m_declaration);
+	solAssert(fun && fun->libraryFunction(), "");
+	solAssert(!m_gasSet, "");
+	solAssert(!m_valueSet, "");
+	solAssert(!m_saltSet, "");
+	return TypeProvider::function(
+		m_parameterTypes,
+		m_returnParameterTypes,
+		m_parameterNames,
+		m_returnParameterNames,
+		m_kind,
+		m_arbitraryParameters,
+		m_stateMutability,
+		m_declaration,
+		m_gasSet,
+		m_valueSet,
+		m_saltSet,
+		true
+	);
+}
 
+FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary) const
+{
 	TypePointers parameterTypes;
 	for (auto const& t: m_parameterTypes)
 		if (TypeProvider::isReferenceWithLocation(t, DataLocation::CallData))
@@ -3465,10 +3487,8 @@ FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary, 
 	if (_inLibrary)
 	{
 		solAssert(!!m_declaration, "Declaration has to be available.");
-		if (!m_declaration->isPublic())
-			kind = Kind::Internal; // will be inlined
-		else
-			kind = Kind::DelegateCall;
+		solAssert(m_declaration->isPublic(), "");
+		kind = Kind::DelegateCall;
 	}
 
 	return TypeProvider::function(
@@ -3483,7 +3503,7 @@ FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary, 
 		m_gasSet,
 		m_valueSet,
 		m_saltSet,
-		_bound
+		m_bound
 	);
 }
 
