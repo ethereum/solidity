@@ -24,7 +24,7 @@ Function Selector
 =================
 
 The first four bytes of the call data for a function call specifies the function to be called. It is the
-first (left, high-order in big-endian) four bytes of the Keccak-256 (SHA-3) hash of the signature of
+first (left, high-order in big-endian) four bytes of the Keccak-256 hash of the signature of
 the function. The signature is defined as the canonical expression of the basic prototype without data
 location specifier, i.e.
 the function name with the parenthesised list of parameter types. Parameter types are split by a single

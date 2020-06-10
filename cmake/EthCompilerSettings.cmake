@@ -16,9 +16,11 @@
 
 include(EthCheckCXXCompilerFlag)
 
-eth_add_cxx_compiler_flag_if_supported(-fstack-protector-strong have_stack_protector_strong_support)
-if(NOT have_stack_protector_strong_support)
-	eth_add_cxx_compiler_flag_if_supported(-fstack-protector)
+if(NOT EMSCRIPTEN)
+	eth_add_cxx_compiler_flag_if_supported(-fstack-protector-strong have_stack_protector_strong_support)
+	if(NOT have_stack_protector_strong_support)
+		eth_add_cxx_compiler_flag_if_supported(-fstack-protector)
+	endif()
 endif()
 
 eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
@@ -109,15 +111,13 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			# Re-enable exception catching (optimisations above -O1 disable it)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s DISABLE_EXCEPTION_CATCHING=0")
 			# Remove any code related to exit (such as atexit)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_EXIT_RUNTIME=1")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXIT_RUNTIME=0")
 			# Remove any code related to filesystem access
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_FILESYSTEM=1")
-			# Remove variables even if it needs to be duplicated (can improve speed at the cost of size)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s AGGRESSIVE_VARIABLE_ELIMINATION=1")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s FILESYSTEM=0")
 			# Allow memory growth, but disable some optimisations
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1")
 			# Disable eval()
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_DYNAMIC_EXECUTION=1")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s DYNAMIC_EXECUTION=0")
 			# Disable greedy exception catcher
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NODEJS_CATCH_EXIT=0")
 			# Abort if linking results in any undefined symbols

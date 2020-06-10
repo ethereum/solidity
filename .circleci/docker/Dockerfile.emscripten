@@ -26,11 +26,9 @@
 # contains a Makefile in the docker/ subdirectory that can be used to create the
 # required base image using:
 #
-#   make version=1.39.15-fastcomp build
+#   make version=1.39.15 build
 #
-# TODO: switch to the upstream backend by removing "-fastcomp".
-#
-FROM emscripten/emsdk:1.39.15-fastcomp AS base
+FROM emscripten/emsdk:1.39.15 AS base
 
 ADD emscripten.jam /usr/src
 RUN set -ex; \
@@ -47,6 +45,7 @@ RUN set -ex; \
 		-DZ3_BUILD_TEST_EXECUTABLES=OFF \
 		-DZ3_BUILD_EXECUTABLE=OFF \
 		-DZ3_SINGLE_THREADED=ON \
+		-DCMAKE_CXX_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0" \
 		..; \
 	make; make install; \
 	rm -r /usr/src/z3; \
@@ -61,6 +60,6 @@ RUN set -ex; \
 	echo "using emscripten : : em++ ;" >> project-config.jam ; \
 	./b2 toolset=emscripten link=static variant=release threading=single runtime-link=static \
 		--with-system --with-filesystem --with-test --with-program_options \
-		cxxflags="-Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
+		cxxflags="-s DISABLE_EXCEPTION_CATCHING=0 -Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
 	       --prefix=/emsdk/emscripten/sdk/system install; \
 	rm -r /usr/src/boost_1_73_0

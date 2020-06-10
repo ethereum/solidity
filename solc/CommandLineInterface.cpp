@@ -740,7 +740,7 @@ remap paths using the context:prefix=path syntax.
 Example:
 solc --)" + g_argBinary + R"( -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
 
-Allowed options)").c_str(),
+General Information)").c_str(),
 		po::options_description::m_default_line_length,
 		po::options_description::m_default_line_length - 23
 	);
@@ -748,47 +748,67 @@ Allowed options)").c_str(),
 		(g_argHelp.c_str(), "Show help message and exit.")
 		(g_argVersion.c_str(), "Show version and exit.")
 		(g_strLicense.c_str(), "Show licensing information and exit.")
+	;
+
+	po::options_description inputOptions("Input Options");
+	inputOptions.add_options()
+		(
+			g_argBasePath.c_str(),
+			po::value<string>()->value_name("path"),
+			"Use the given path as the root of the source tree instead of the root of the filesystem."
+		)
+		(
+			g_argAllowPaths.c_str(),
+			po::value<string>()->value_name("path(s)"),
+			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
+		)
+		(
+			g_argIgnoreMissingFiles.c_str(),
+			"Ignore missing files."
+		)
+		(
+			g_argErrorRecovery.c_str(),
+			"Enables additional parser error recovery."
+		)
+	;
+	desc.add(inputOptions);
+
+	po::options_description outputOptions("Output Options");
+	outputOptions.add_options()
+		(
+			(g_argOutputDir + ",o").c_str(),
+			po::value<string>()->value_name("path"),
+			"If given, creates one file per component and contract/file at the specified directory."
+		)
+		(
+			g_strOverwrite.c_str(),
+			"Overwrite existing files (used together with -o)."
+		)
 		(
 			g_strEVMVersion.c_str(),
 			po::value<string>()->value_name("version"),
 			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
 			"byzantium, constantinople, petersburg, istanbul (default) or berlin."
 		)
-		(g_argPrettyJson.c_str(), "Output JSON in pretty format. Currently it only works with the combined JSON output.")
-		(
-			g_argLibraries.c_str(),
-			po::value<vector<string>>()->value_name("libs"),
-			"Direct string or file containing library addresses. Syntax: "
-			"<libraryName>:<address> [, or whitespace] ...\n"
-			"Address is interpreted as a hex string optionally prefixed by 0x."
-		)
 		(
 			g_strRevertStrings.c_str(),
 			po::value<string>()->value_name(boost::join(g_revertStringsArgs, ",")),
 			"Strip revert (and require) reason strings or add additional debugging information."
 		)
-		(
-			(g_argOutputDir + ",o").c_str(),
-			po::value<string>()->value_name("path"),
-			"If given, creates one file per component and contract/file at the specified directory."
-		)
-		(g_strOverwrite.c_str(), "Overwrite existing files (used together with -o).")
-		(
-			g_argCombinedJson.c_str(),
-			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
-			"Output a single json document containing the specified information."
-		)
-		(g_argGas.c_str(), "Print an estimate of the maximal gas usage for each function.")
+	;
+	desc.add(outputOptions);
+
+	po::options_description alternativeInputModes("Alternative Input Modes");
+	alternativeInputModes.add_options()
 		(
 			g_argStandardJSON.c_str(),
 			"Switch to Standard JSON input / output mode, ignoring all options. "
 			"It reads from standard input, if no input file was given, otherwise it reads from the provided input file. The result will be written to standard output."
 		)
 		(
-			g_argImportAst.c_str(),
-			("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
-			"Supported Inputs is the output of the --" + g_argStandardJSON + " or the one produced by "
-			"--" + g_argCombinedJson + " " + g_strAst + "," + g_strCompactJSON).c_str()
+			g_argLink.c_str(),
+			("Switch to linker mode, ignoring all options apart from --" + g_argLibraries + " "
+			"and modify binaries in place.").c_str()
 		)
 		(
 			g_argAssemble.c_str(),
@@ -809,58 +829,62 @@ Allowed options)").c_str(),
 			"and assumes input is strict assembly.").c_str()
 		)
 		(
-			g_strYulDialect.c_str(),
-			po::value<string>()->value_name(boost::join(g_yulDialectArgs, ",")),
-			"Input dialect to use in assembly or yul mode."
+			g_argImportAst.c_str(),
+			("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
+			"Supported Inputs is the output of the --" + g_argStandardJSON + " or the one produced by "
+			"--" + g_argCombinedJson + " " + g_strAst + "," + g_strCompactJSON).c_str()
 		)
+	;
+	desc.add(alternativeInputModes);
+
+	po::options_description assemblyModeOptions("Assembly Mode Options");
+	assemblyModeOptions.add_options()
 		(
 			g_argMachine.c_str(),
 			po::value<string>()->value_name(boost::join(g_machineArgs, ",")),
 			"Target machine in assembly or Yul mode."
 		)
 		(
-			g_argLink.c_str(),
-			("Switch to linker mode, ignoring all options apart from --" + g_argLibraries + " "
-			"and modify binaries in place.").c_str()
+			g_strYulDialect.c_str(),
+			po::value<string>()->value_name(boost::join(g_yulDialectArgs, ",")),
+			"Input dialect to use in assembly or yul mode."
+		)
+	;
+	desc.add(assemblyModeOptions);
+
+	po::options_description linkerModeOptions("Linker Mode Options");
+	linkerModeOptions.add_options()
+		(
+			g_argLibraries.c_str(),
+			po::value<vector<string>>()->value_name("libs"),
+			"Direct string or file containing library addresses. Syntax: "
+			"<libraryName>:<address> [, or whitespace] ...\n"
+			"Address is interpreted as a hex string optionally prefixed by 0x."
+		)
+	;
+	desc.add(linkerModeOptions);
+
+	po::options_description outputFormatting("Output Formatting");
+	outputFormatting.add_options()
+		(
+			g_argPrettyJson.c_str(),
+			"Output JSON in pretty format. Currently it only works with the combined JSON output."
 		)
 		(
-			g_argMetadataHash.c_str(),
-			po::value<string>()->value_name(boost::join(g_metadataHashArgs, ",")),
-			"Choose hash method for the bytecode metadata or disable it."
-		)
-		(g_argMetadataLiteral.c_str(), "Store referenced sources as literal data in the metadata output.")
-		(
-			g_argAllowPaths.c_str(),
-			po::value<string>()->value_name("path(s)"),
-			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
+			g_argColor.c_str(),
+			"Force colored output."
 		)
 		(
-			g_argBasePath.c_str(),
-			po::value<string>()->value_name("path"),
-			"Use the given path as the root of the source tree instead of the root of the filesystem."
+			g_argNoColor.c_str(),
+			"Explicitly disable colored output, disabling terminal auto-detection."
 		)
-		(g_argColor.c_str(), "Force colored output.")
-		(g_argNoColor.c_str(), "Explicitly disable colored output, disabling terminal auto-detection.")
-		(g_argOldReporter.c_str(), "Enables old diagnostics reporter.")
-		(g_argErrorRecovery.c_str(), "Enables additional parser error recovery.")
-		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.");
-	po::options_description optimizerOptions("Optimizer options");
-	optimizerOptions.add_options()
-		(g_argOptimize.c_str(), "Enable bytecode optimizer.")
 		(
-			g_argOptimizeRuns.c_str(),
-			po::value<unsigned>()->value_name("n")->default_value(200),
-			"Set for how many contract runs to optimize. "
-			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
+			g_argOldReporter.c_str(),
+			"Enables old diagnostics reporter (legacy option, will be removed)."
 		)
-		(g_strOptimizeYul.c_str(), ("Legacy option, ignored. Use the general --" + g_argOptimize + " to enable Yul optimizer.").c_str())
-		(g_strNoOptimizeYul.c_str(), "Disable Yul optimizer in Solidity.")
-		(
-			g_strYulOptimizations.c_str(),
-			po::value<string>()->value_name("steps"),
-			"Forces yul optimizer to use the specified sequence of optimization steps instead of the built-in one."
-		);
-	desc.add(optimizerOptions);
+	;
+	desc.add(outputFormatting);
+
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
@@ -878,8 +902,65 @@ Allowed options)").c_str(),
 		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
 		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
-		(g_argStorageLayout.c_str(), "Slots, offsets and types of the contract's state variables.");
+		(g_argStorageLayout.c_str(), "Slots, offsets and types of the contract's state variables.")
+	;
 	desc.add(outputComponents);
+
+	po::options_description extraOutput("Extra Output");
+	extraOutput.add_options()
+		(
+			g_argGas.c_str(),
+			"Print an estimate of the maximal gas usage for each function."
+		)
+		(
+			g_argCombinedJson.c_str(),
+			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
+			"Output a single json document containing the specified information."
+		)
+	;
+	desc.add(extraOutput);
+
+	po::options_description metadataOptions("Metadata Options");
+	metadataOptions.add_options()
+		(
+			g_argMetadataHash.c_str(),
+			po::value<string>()->value_name(boost::join(g_metadataHashArgs, ",")),
+			"Choose hash method for the bytecode metadata or disable it."
+		)
+		(
+			g_argMetadataLiteral.c_str(),
+			"Store referenced sources as literal data in the metadata output."
+		)
+	;
+	desc.add(metadataOptions);
+
+	po::options_description optimizerOptions("Optimizer Options");
+	optimizerOptions.add_options()
+		(
+			g_argOptimize.c_str(),
+			"Enable bytecode optimizer."
+		)
+		(
+			g_argOptimizeRuns.c_str(),
+			po::value<unsigned>()->value_name("n")->default_value(200),
+			"Set for how many contract runs to optimize. "
+			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
+		)
+		(
+			g_strOptimizeYul.c_str(),
+			("Legacy option, ignored. Use the general --" + g_argOptimize + " to enable Yul optimizer.").c_str()
+		)
+		(
+			g_strNoOptimizeYul.c_str(),
+			"Disable Yul optimizer in Solidity."
+		)
+		(
+			g_strYulOptimizations.c_str(),
+			po::value<string>()->value_name("steps"),
+			"Forces yul optimizer to use the specified sequence of optimization steps instead of the built-in one."
+		)
+	;
+	desc.add(optimizerOptions);
 
 	po::options_description allOptions = desc;
 	allOptions.add_options()(g_argInputFile.c_str(), po::value<vector<string>>(), "input file");

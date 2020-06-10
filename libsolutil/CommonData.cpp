@@ -53,9 +53,6 @@ string solidity::util::toHex(uint8_t _data, HexCase _case)
 
 string solidity::util::toHex(bytes const& _data, HexPrefix _prefix, HexCase _case)
 {
-	if (_data.empty())
-		return {};
-
 	std::string ret(_data.size() * 2 + (_prefix == HexPrefix::Add ? 2 : 0), 0);
 
 	size_t i = 0;

@@ -33,16 +33,16 @@ using namespace solidity::yul;
 VarNameCleaner::VarNameCleaner(
 	Block const& _ast,
 	Dialect const& _dialect,
-	set<YulString> _blacklist
+	set<YulString> _namesToKeep
 ):
 	m_dialect{_dialect},
-	m_blacklist{std::move(_blacklist)},
+	m_namesToKeep{std::move(_namesToKeep)},
 	m_translatedNames{}
 {
 	for (auto const& statement: _ast.statements)
 		if (holds_alternative<FunctionDefinition>(statement))
-			m_blacklist.insert(std::get<FunctionDefinition>(statement).name);
-	m_usedNames = m_blacklist;
+			m_namesToKeep.insert(std::get<FunctionDefinition>(statement).name);
+	m_usedNames = m_namesToKeep;
 }
 
 void VarNameCleaner::operator()(FunctionDefinition& _funDef)
@@ -51,7 +51,7 @@ void VarNameCleaner::operator()(FunctionDefinition& _funDef)
 	m_insideFunction = true;
 
 	set<YulString> globalUsedNames = std::move(m_usedNames);
-	m_usedNames = m_blacklist;
+	m_usedNames = m_namesToKeep;
 	map<YulString, YulString> globalTranslatedNames;
 	swap(globalTranslatedNames, m_translatedNames);
 

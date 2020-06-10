@@ -598,7 +598,7 @@ jobs:
 
   b_ems:
     docker:
-      - image: ethereum/solidity-buildpack-deps:emsdk-1.39.15-1
+      - image: ethereum/solidity-buildpack-deps:emsdk-1.39.15-2
     environment:
       TERM: xterm
     steps:

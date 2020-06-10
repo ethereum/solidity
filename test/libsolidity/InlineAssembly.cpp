@@ -314,9 +314,17 @@ BOOST_AUTO_TEST_CASE(switch_duplicate_case)
 
 BOOST_AUTO_TEST_CASE(switch_invalid_expression)
 {
-	CHECK_PARSE_ERROR("{ switch {} default {} }", ParserError, "Literal or identifier expected.");
-	CHECK_PARSE_ERROR("{ switch mload default {} }", ParserError, "Expected '(' but got reserved keyword 'default'");
-	CHECK_PARSE_ERROR("{ switch mstore(1, 1) default {} }", TypeError, "Expected expression to evaluate to one value, but got 0 values instead.");
+	CHECK_PARSE_ERROR("{ switch {} case 1 {} default {} }", ParserError, "Literal or identifier expected.");
+	CHECK_PARSE_ERROR(
+		"{ switch mload case 1 {} default {} }",
+		ParserError,
+		"Expected '(' but got reserved keyword 'case'"
+	);
+	CHECK_PARSE_ERROR(
+		"{ switch mstore(1, 1) case 1 {} default {} }",
+		TypeError,
+		"Expected expression to evaluate to one value, but got 0 values instead."
+	);
 }
 
 BOOST_AUTO_TEST_CASE(switch_default_before_case)

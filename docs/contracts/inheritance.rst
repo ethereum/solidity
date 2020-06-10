@@ -194,9 +194,9 @@ not known in the context of the class where it is used,
 although its type is known. This is similar for ordinary
 virtual method lookup.
 
-.. _function-overriding:
-
 .. index:: ! overriding;function
+
+.. _function-overriding:
 
 Function Overriding
 ===================
@@ -317,9 +317,9 @@ of the variable:
   While public state variables can override external functions, they themselves cannot
   be overridden.
 
-.. _modifier-overriding:
-
 .. index:: ! overriding;modifier
+
+.. _modifier-overriding:
 
 Modifier Overriding
 ===================

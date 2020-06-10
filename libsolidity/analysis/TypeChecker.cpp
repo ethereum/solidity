@@ -82,7 +82,7 @@ TypePointer const& TypeChecker::type(VariableDeclaration const& _variable) const
 
 bool TypeChecker::visit(ContractDefinition const& _contract)
 {
-	m_scope = &_contract;
+	m_currentContract = &_contract;
 
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
@@ -266,7 +266,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
 	solAssert(base, "Base contract not available.");
 
-	if (m_scope->isInterface() && !base->isInterface())
+	if (m_currentContract->isInterface() && !base->isInterface())
 		m_errorReporter.typeError(6536_error, _inheritance.location(), "Interfaces can only inherit from other interfaces.");
 
 	if (base->isLibrary())
@@ -328,8 +328,6 @@ void TypeChecker::endVisit(ModifierDefinition const& _modifier)
 
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
-	bool isLibraryFunction = _function.inContractKind() == ContractKind::Library;
-
 	if (_function.markedVirtual())
 	{
 		if (_function.annotation().contract->isInterface())
@@ -342,7 +340,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 	if (_function.isPayable())
 	{
-		if (isLibraryFunction)
+		if (_function.libraryFunction())
 			m_errorReporter.typeError(7708_error, _function.location(), "Library functions cannot be payable.");
 		if (_function.isOrdinary() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(5587_error, _function.location(), "Internal functions cannot be payable.");
@@ -352,15 +350,13 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		{
 			if (var.referenceLocation() != VariableDeclaration::Location::Storage)
 			{
-				if (!isLibraryFunction && _function.isPublic())
+				if (!_function.libraryFunction() && _function.isPublic())
 					m_errorReporter.typeError(3442_error, var.location(), "Mapping types can only have a data location of \"storage\" and thus only be parameters or return variables for internal or library functions.");
 				else
 					m_errorReporter.typeError(5380_error, var.location(), "Mapping types can only have a data location of \"storage\"." );
 			}
 			else
-			{
-				solAssert(isLibraryFunction || !_function.isPublic(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
-			}
+				solAssert(_function.libraryFunction() || !_function.isPublic(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
 		}
 		else
 		{
@@ -368,7 +364,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 				m_errorReporter.typeError(3312_error, var.location(), "Type is required to live outside storage.");
 			if (_function.isPublic())
 			{
-				auto iType = type(var)->interfaceType(isLibraryFunction);
+				auto iType = type(var)->interfaceType(_function.libraryFunction());
 
 				if (!iType)
 				{
@@ -380,7 +376,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (
 			_function.isPublic() &&
 			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
-			!typeSupportedByOldABIEncoder(*type(var), isLibraryFunction)
+			!typeSupportedByOldABIEncoder(*type(var), _function.libraryFunction())
 		)
 			m_errorReporter.typeError(
 				4957_error,
@@ -419,7 +415,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		else
 			modifiers.insert(decl);
 	}
-	if (m_scope->isInterface())
+	if (m_currentContract->isInterface())
 	{
 		if (_function.isImplemented())
 			m_errorReporter.typeError(4726_error, _function.location(), "Functions in interfaces cannot have an implementation.");
@@ -430,14 +426,14 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.isConstructor())
 			m_errorReporter.typeError(6482_error, _function.location(), "Constructor cannot be defined in interfaces.");
 	}
-	else if (m_scope->contractKind() == ContractKind::Library)
+	else if (m_currentContract->contractKind() == ContractKind::Library)
 		if (_function.isConstructor())
 			m_errorReporter.typeError(7634_error, _function.location(), "Constructor cannot be defined in libraries.");
 	if (_function.isImplemented())
 		_function.body().accept(*this);
 	else if (_function.isConstructor())
 		m_errorReporter.typeError(5700_error, _function.location(), "Constructor must be implemented if declared.");
-	else if (isLibraryFunction)
+	else if (_function.libraryFunction())
 		m_errorReporter.typeError(9231_error, _function.location(), "Library functions must be implemented if declared.");
 	else if (!_function.virtualSemantics())
 		m_errorReporter.typeError(5424_error, _function.location(), "Functions without implementation must be marked virtual.");
@@ -1796,7 +1792,7 @@ void TypeChecker::typeCheckFunctionCall(
 	if (_functionType->kind() == FunctionType::Kind::Declaration)
 	{
 		if (
-			m_scope->derivesFrom(*_functionType->declaration().annotation().contract) &&
+			m_currentContract->derivesFrom(*_functionType->declaration().annotation().contract) &&
 			!dynamic_cast<FunctionDefinition const&>(_functionType->declaration()).isImplemented()
 		)
 			m_errorReporter.typeError(
@@ -1832,7 +1828,7 @@ void TypeChecker::typeCheckFallbackFunction(FunctionDefinition const& _function)
 {
 	solAssert(_function.isFallback(), "");
 
-	if (_function.inContractKind() == ContractKind::Library)
+	if (_function.libraryFunction())
 		m_errorReporter.typeError(5982_error, _function.location(), "Libraries cannot have fallback functions.");
 	if (_function.stateMutability() != StateMutability::NonPayable && _function.stateMutability() != StateMutability::Payable)
 		m_errorReporter.typeError(
@@ -1859,7 +1855,7 @@ void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
 {
 	solAssert(_function.isReceive(), "");
 
-	if (_function.inContractKind() == ContractKind::Library)
+	if (_function.libraryFunction())
 		m_errorReporter.typeError(4549_error, _function.location(), "Libraries cannot have receive ether functions.");
 
 	if (_function.stateMutability() != StateMutability::Payable)
@@ -1918,7 +1914,7 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 	bool const isPacked = _functionType->kind() == FunctionType::Kind::ABIEncodePacked;
 	solAssert(_functionType->padArguments() != isPacked, "ABI function with unexpected padding");
 
-	bool const abiEncoderV2 = m_scope->sourceUnit().annotation().experimentalFeatures.count(
+	bool const abiEncoderV2 = m_currentContract->sourceUnit().annotation().experimentalFeatures.count(
 		ExperimentalFeature::ABIEncoderV2
 	);
 
@@ -2318,7 +2314,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::ABIDecode:
 		{
 			bool const abiEncoderV2 =
-				m_scope->sourceUnit().annotation().experimentalFeatures.count(
+				m_currentContract->sourceUnit().annotation().experimentalFeatures.count(
 					ExperimentalFeature::ABIEncoderV2
 				);
 			returnTypes = typeCheckABIDecodeAndRetrieveReturnType(_functionCall, abiEncoderV2);
@@ -2514,13 +2510,13 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (contract->abstract())
 			m_errorReporter.typeError(4614_error, _newExpression.location(), "Cannot instantiate an abstract contract.");
 
-		solAssert(!!m_scope, "");
-		m_scope->annotation().contractDependencies.insert(contract);
+		solAssert(!!m_currentContract, "");
+		m_currentContract->annotation().contractDependencies.insert(contract);
 		solAssert(
 			!contract->annotation().linearizedBaseContracts.empty(),
 			"Linearized base contracts not yet available."
 		);
-		if (contractDependenciesAreCyclic(*m_scope))
+		if (contractDependenciesAreCyclic(*m_currentContract))
 			m_errorReporter.typeError(
 				4579_error,
 				_newExpression.location(),
@@ -2567,7 +2563,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 	// Retrieve the types of the arguments if this is used to call a function.
 	auto const& arguments = _memberAccess.annotation().arguments;
-	MemberList::MemberMap possibleMembers = exprType->members(m_scope).membersByName(memberName);
+	MemberList::MemberMap possibleMembers = exprType->members(m_currentContract).membersByName(memberName);
 	size_t const initialMemberCount = possibleMembers.size();
 	if (initialMemberCount > 1 && arguments)
 	{
@@ -2593,7 +2589,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				DataLocation::Storage,
 				exprType
 			);
-			if (!storageType->members(m_scope).membersByName(memberName).empty())
+			if (!storageType->members(m_currentContract).membersByName(memberName).empty())
 				m_errorReporter.fatalTypeError(
 					4994_error,
 					_memberAccess.location(),
@@ -2749,7 +2745,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		{
 			annotation.isPure = true;
 			ContractType const& accessedContractType = dynamic_cast<ContractType const&>(*magicType->typeArgument());
-			m_scope->annotation().contractDependencies.insert(&accessedContractType.contractDefinition());
+			m_currentContract->annotation().contractDependencies.insert(&accessedContractType.contractDefinition());
 
 			if (
 				memberName == "runtimeCode" &&
@@ -2761,7 +2757,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					"\"runtimeCode\" is not available for contracts containing immutable variables."
 				);
 
-			if (contractDependenciesAreCyclic(*m_scope))
+			if (contractDependenciesAreCyclic(*m_currentContract))
 				m_errorReporter.typeError(
 					4224_error,
 					_memberAccess.location(),
