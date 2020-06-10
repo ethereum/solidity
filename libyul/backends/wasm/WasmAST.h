@@ -30,6 +30,12 @@
 namespace solidity::yul::wasm
 {
 
+enum class Type
+{
+	i32,
+	i64,
+};
+
 struct Literal;
 struct StringLiteral;
 struct LocalVariable;
@@ -76,8 +82,8 @@ struct FunctionImport {
 	std::string module;
 	std::string externalName;
 	std::string internalName;
-	std::vector<std::string> paramTypes;
-	std::optional<std::string> returnType;
+	std::vector<Type> paramTypes;
+	std::optional<Type> returnType;
 };
 
 struct FunctionDefinition

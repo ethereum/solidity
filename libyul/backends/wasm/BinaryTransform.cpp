@@ -25,6 +25,7 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/map.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -475,7 +476,7 @@ BinaryTransform::Type BinaryTransform::typeOf(FunctionImport const& _import)
 {
 	return {
 		encodeTypes(_import.paramTypes),
-		encodeTypes(_import.returnType ? vector<string>(1, *_import.returnType) : vector<string>())
+		encodeTypes(_import.returnType ? vector<wasm::Type>(1, *_import.returnType) : vector<wasm::Type>())
 	};
 }
 
@@ -483,26 +484,26 @@ BinaryTransform::Type BinaryTransform::typeOf(FunctionDefinition const& _funDef)
 {
 
 	return {
-		encodeTypes(vector<string>(_funDef.parameterNames.size(), "i64")),
-		encodeTypes(vector<string>(_funDef.returns ? 1 : 0, "i64"))
+		encodeTypes(vector<wasm::Type>(_funDef.parameterNames.size(), wasm::Type::i64)),
+		encodeTypes(vector<wasm::Type>(_funDef.returns ? 1 : 0, wasm::Type::i64))
 	};
 }
 
-uint8_t BinaryTransform::encodeType(string const& _typeName)
+uint8_t BinaryTransform::encodeType(wasm::Type _type)
 {
-	if (_typeName == "i32")
+	if (_type == wasm::Type::i32)
 		return uint8_t(ValueType::I32);
-	else if (_typeName == "i64")
+	else if (_type == wasm::Type::i64)
 		return uint8_t(ValueType::I64);
 	else
 		yulAssert(false, "");
 	return 0;
 }
 
-vector<uint8_t> BinaryTransform::encodeTypes(vector<string> const& _typeNames)
+vector<uint8_t> BinaryTransform::encodeTypes(vector<wasm::Type> const& _types)
 {
 	vector<uint8_t> result;
-	for (auto const& t: _typeNames)
+	for (wasm::Type t: _types)
 		result.emplace_back(encodeType(t));
 	return result;
 }

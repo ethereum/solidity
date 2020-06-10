@@ -20,6 +20,8 @@
 
 #include <libyul/backends/wasm/TextTransform.h>
 
+#include <libyul/Exceptions.h>
+
 #include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string/join.hpp>
@@ -44,9 +46,9 @@ string TextTransform::run(wasm::Module const& _module)
 	{
 		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" + imp.internalName;
 		if (!imp.paramTypes.empty())
-			ret += " (param" + joinHumanReadablePrefixed(imp.paramTypes, " ", " ") + ")";
+			ret += " (param" + joinHumanReadablePrefixed(imp.paramTypes | boost::adaptors::transformed(encodeType), " ", " ") + ")";
 		if (imp.returnType)
-			ret += " (result " + *imp.returnType + ")";
+			ret += " (result " + encodeType(*imp.returnType) + ")";
 		ret += "))\n";
 	}
 
@@ -192,4 +194,14 @@ string TextTransform::joinTransformed(vector<wasm::Expression> const& _expressio
 		ret += move(t);
 	}
 	return ret;
+}
+
+string TextTransform::encodeType(wasm::Type _type)
+{
+	if (_type == wasm::Type::i32)
+		return "i32";
+	else if (_type == wasm::Type::i64)
+		return "i64";
+	else
+		yulAssert(false, "Invalid wasm type");
 }

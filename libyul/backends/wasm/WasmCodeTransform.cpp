@@ -127,10 +127,10 @@ wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 					builtin->name.str().substr(4),
 					builtin->name.str(),
 					{},
-					builtin->returns.empty() ? nullopt : make_optional<string>(builtin->returns.front().str())
+					builtin->returns.empty() ? nullopt : make_optional<wasm::Type>(translatedType(builtin->returns.front()))
 				};
 				for (auto const& param: builtin->parameters)
-					imp.paramTypes.emplace_back(param.str());
+					imp.paramTypes.emplace_back(translatedType(param));
 				m_functionsToImport[builtin->name] = std::move(imp);
 			}
 			typeConversionNeeded = true;
@@ -361,14 +361,14 @@ wasm::Expression WasmCodeTransform::injectTypeConversionIfNeeded(wasm::FunctionC
 {
 	wasm::FunctionImport const& import = m_functionsToImport.at(YulString{_call.functionName});
 	for (size_t i = 0; i < _call.arguments.size(); ++i)
-		if (import.paramTypes.at(i) == "i32")
+		if (import.paramTypes.at(i) == wasm::Type::i32)
 			_call.arguments[i] = wasm::BuiltinCall{"i32.wrap_i64", make_vector<wasm::Expression>(std::move(_call.arguments[i]))};
 		else
-			yulAssert(import.paramTypes.at(i) == "i64", "Unknown type " + import.paramTypes.at(i));
+			yulAssert(import.paramTypes.at(i) == wasm::Type::i64, "Invalid Wasm type");
 
-	if (import.returnType && *import.returnType != "i64")
+	if (import.returnType && *import.returnType != wasm::Type::i64)
 	{
-		yulAssert(*import.returnType == "i32", "Invalid type " + *import.returnType);
+		yulAssert(*import.returnType == wasm::Type::i32, "Invalid Wasm type");
 		return wasm::BuiltinCall{"i64.extend_i32_u", make_vector<wasm::Expression>(std::move(_call))};
 	}
 	return {std::move(_call)};
@@ -402,4 +402,14 @@ void WasmCodeTransform::allocateGlobals(size_t _amount)
 		m_globalVariables.emplace_back(wasm::GlobalVariableDeclaration{
 			m_nameDispenser.newName("global_"_yulstring).str()
 		});
+}
+
+wasm::Type WasmCodeTransform::translatedType(yul::Type _yulType)
+{
+	if (_yulType == "i32"_yulstring)
+		return wasm::Type::i32;
+	else if (_yulType == "i64"_yulstring)
+		return wasm::Type::i64;
+	else
+		yulAssert(false, "This Yul type does not have a corresponding type in Wasm.");
 }

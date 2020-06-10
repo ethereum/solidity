@@ -89,6 +89,8 @@ private:
 	/// Makes sure that there are at least @a _amount global variables.
 	void allocateGlobals(size_t _amount);
 
+	static wasm::Type translatedType(yul::Type _yulType);
+
 	Dialect const& m_dialect;
 	NameDispenser m_nameDispenser;
 
