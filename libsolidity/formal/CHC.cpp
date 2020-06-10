@@ -530,6 +530,7 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 	auto previousError = m_error.currentValue();
 	m_error.increaseIndex();
 
+	addVariablesTypeConstraints(*m_currentFunction, *m_currentContract);
 	connectBlocks(
 		m_currentBlock,
 		m_currentFunction->isConstructor() ? summary(*m_currentContract) : summary(*m_currentFunction),
@@ -596,6 +597,8 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 
 	auto previousError = m_error.currentValue();
 	m_error.increaseIndex();
+
+	addVariablesTypeConstraints(*m_currentFunction, *m_currentContract);
 
 	addArrayPopVerificationTarget(&_arrayPop, m_error.currentValue());
 	connectBlocks(
@@ -935,6 +938,24 @@ vector<smtutil::Expression> CHC::currentBlockVariables()
 		return currentFunctionVariables() + applyMap(m_currentFunction->localVariables(), [this](auto _var) { return currentValue(*_var); });
 
 	return currentFunctionVariables();
+}
+
+void CHC::addVariablesTypeConstraints(FunctionDefinition const& _function)
+{
+	for (auto var: _function.parameters() + _function.returnParameters())
+		m_context.setUnknownValue(*var);
+}
+
+void CHC::addVariablesTypeConstraints(ContractDefinition const& _contract)
+{
+	for (auto var: stateVariablesIncludingInheritedAndPrivate(_contract))
+		m_context.setUnknownValue(*var);
+}
+
+void CHC::addVariablesTypeConstraints(FunctionDefinition const& _function, ContractDefinition const& _contract)
+{
+	addVariablesTypeConstraints(_function);
+	addVariablesTypeConstraints(_contract);
 }
 
 string CHC::predicateName(ASTNode const* _node, ContractDefinition const* _contract)

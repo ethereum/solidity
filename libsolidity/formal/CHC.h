@@ -161,6 +161,12 @@ private:
 	/// local variables.
 	std::vector<smtutil::Expression> currentBlockVariables();
 
+	/// Adds the type constraints for _function's input, output and local variables.
+	void addVariablesTypeConstraints(FunctionDefinition const& _function);
+	/// Adds the type constraints for _contract's state variables.
+	void addVariablesTypeConstraints(ContractDefinition const& _contract);
+	void addVariablesTypeConstraints(FunctionDefinition const& _function, ContractDefinition const& _contract);
+
 	/// @returns the predicate name for a given node.
 	std::string predicateName(ASTNode const* _node, ContractDefinition const* _contract = nullptr);
 	/// @returns a predicate application over the current scoped variables.

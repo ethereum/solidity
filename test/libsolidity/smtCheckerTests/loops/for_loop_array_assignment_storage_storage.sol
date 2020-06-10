@@ -19,7 +19,5 @@ contract LoopFor2 {
 	}
 }
 // ----
-// Warning: (317-337): Error trying to invoke SMT solver.
-// Warning: (317-337): Assertion violation happens here
 // Warning: (341-360): Assertion violation happens here
 // Warning: (364-383): Assertion violation happens here
