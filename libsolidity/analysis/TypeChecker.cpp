@@ -334,7 +334,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			m_errorReporter.warning(5815_error, _function.location(), "Interface functions are implicitly \"virtual\"");
 		if (_function.visibility() == Visibility::Private)
 			m_errorReporter.typeError(3942_error, _function.location(), "\"virtual\" and \"private\" cannot be used together.");
-		if (isLibraryFunction)
+		if (_function.libraryFunction())
 			m_errorReporter.typeError(1878_error, _function.location(), "Library functions cannot be \"virtual\".");
 	}
 
