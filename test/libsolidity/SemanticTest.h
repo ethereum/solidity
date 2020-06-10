@@ -60,10 +60,13 @@ public:
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
 
 private:
+	TestResult run(bool _compileViaYul, bool _compileToEwasm, std::ostream& _stream, std::string const& _linePrefix, bool _formatted);
+
 	std::string m_source;
 	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;
 	bool m_runWithYul = false;
+	bool runWithEwasm = false;
 	bool m_runWithoutYul = true;
 	bool m_enforceViaYul = false;
 	bool m_runWithABIEncoderV1Only = false;
