@@ -505,8 +505,6 @@ public:
 
 	/// Returns the constructor or nullptr if no constructor was specified.
 	FunctionDefinition const* constructor() const;
-	/// @returns true iff the constructor of this contract is public (or non-existing).
-	bool constructorIsPublic() const;
 	/// @returns true iff the contract can be deployed, i.e. is not abstract and has a
 	/// public constructor.
 	/// Should only be called after the type checker has run.
@@ -814,7 +812,7 @@ public:
 	}
 	bool isVisibleViaContractTypeAccess() const override
 	{
-		return visibility() >= Visibility::Public;
+		return isOrdinary() && visibility() >= Visibility::Public;
 	}
 	bool isPartOfExternalInterface() const override { return isPublic() && isOrdinary(); }
 

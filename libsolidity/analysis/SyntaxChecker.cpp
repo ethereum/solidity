@@ -301,7 +301,13 @@ bool SyntaxChecker::visit(ContractDefinition const& _contract)
 
 bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
-	if (_function.noVisibilitySpecified())
+	if (_function.isConstructor() && !_function.noVisibilitySpecified())
+		m_errorReporter.syntaxError(
+			2462_error,
+			_function.location(),
+			"Visibility specified for constructor. If you want the contract to be non-deployable, make it \"abstract\"."
+		);
+	else if (!_function.isConstructor() && _function.noVisibilitySpecified())
 	{
 		string suggestedVisibility = _function.isFallback() || _function.isReceive() || m_isInterface ? "external" : "public";
 		m_errorReporter.syntaxError(

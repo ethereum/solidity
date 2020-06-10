@@ -323,11 +323,13 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	if (_function.markedVirtual())
 	{
-		if (_function.annotation().contract->isInterface())
+		if (_function.isConstructor())
+			m_errorReporter.typeError(7001_error, _function.location(), "Constructors cannot be virtual.");
+		else if (_function.annotation().contract->isInterface())
 			m_errorReporter.warning(5815_error, _function.location(), "Interface functions are implicitly \"virtual\"");
-		if (_function.visibility() == Visibility::Private)
+		else if (_function.visibility() == Visibility::Private)
 			m_errorReporter.typeError(3942_error, _function.location(), "\"virtual\" and \"private\" cannot be used together.");
-		if (_function.libraryFunction())
+		else if (_function.libraryFunction())
 			m_errorReporter.typeError(7801_error, _function.location(), "Library functions cannot be \"virtual\".");
 	}
 
@@ -403,11 +405,10 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.isImplemented())
 			m_errorReporter.typeError(4726_error, _function.location(), "Functions in interfaces cannot have an implementation.");
 
-		if (_function.visibility() != Visibility::External)
-			m_errorReporter.typeError(1560_error, _function.location(), "Functions in interfaces must be declared external.");
-
 		if (_function.isConstructor())
 			m_errorReporter.typeError(6482_error, _function.location(), "Constructor cannot be defined in interfaces.");
+		else if (_function.visibility() != Visibility::External)
+			m_errorReporter.typeError(1560_error, _function.location(), "Functions in interfaces must be declared external.");
 	}
 	else if (m_currentContract->contractKind() == ContractKind::Library)
 		if (_function.isConstructor())
@@ -1881,8 +1882,6 @@ void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
 void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 {
 	solAssert(_function.isConstructor(), "");
-	if (_function.markedVirtual())
-		m_errorReporter.typeError(7001_error, _function.location(), "Constructors cannot be virtual.");
 	if (_function.overrides())
 		m_errorReporter.typeError(1209_error, _function.location(), "Constructors cannot override.");
 	if (!_function.returnParameters().empty())
@@ -1895,8 +1894,6 @@ void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
-	if (_function.visibility() != Visibility::Public && _function.visibility() != Visibility::Internal)
-		m_errorReporter.typeError(9239_error, _function.location(), "Constructor must be public or internal.");
 }
 
 void TypeChecker::typeCheckABIEncodeFunctions(
@@ -2495,8 +2492,6 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			m_errorReporter.fatalTypeError(5540_error, _newExpression.location(), "Identifier is not a contract.");
 		if (contract->isInterface())
 			m_errorReporter.fatalTypeError(2971_error, _newExpression.location(), "Cannot instantiate an interface.");
-		if (!contract->constructorIsPublic())
-			m_errorReporter.typeError(9054_error, _newExpression.location(), "Contract with internal constructor cannot be created directly.");
 		if (contract->abstract())
 			m_errorReporter.typeError(4614_error, _newExpression.location(), "Cannot instantiate an abstract contract.");
 

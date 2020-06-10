@@ -122,15 +122,9 @@ FunctionDefinition const* ContractDefinition::constructor() const
 	return nullptr;
 }
 
-bool ContractDefinition::constructorIsPublic() const
-{
-	FunctionDefinition const* f = constructor();
-	return !f || f->isPublic();
-}
-
 bool ContractDefinition::canBeDeployed() const
 {
-	return constructorIsPublic() && !abstract() && !isInterface();
+	return !abstract() && !isInterface();
 }
 
 FunctionDefinition const* ContractDefinition::fallbackFunction() const
