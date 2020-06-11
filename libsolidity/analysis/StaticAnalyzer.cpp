@@ -346,23 +346,20 @@ bigint StaticAnalyzer::structureSizeEstimate(Type const& _type, set<StructDefini
 	case Type::Category::Array:
 	{
 		auto const& t = dynamic_cast<ArrayType const&>(_type);
-		return structureSizeEstimate(*t.baseType(), _structsSeen) * (t.isDynamicallySized() ? 1 : t.length());
+		if (!t.isDynamicallySized())
+			return structureSizeEstimate(*t.baseType(), _structsSeen) * t.length();
+		break;
 	}
 	case Type::Category::Struct:
 	{
 		auto const& t = dynamic_cast<StructType const&>(_type);
+		solAssert(!_structsSeen.count(&t.structDefinition()), "Recursive struct.");
 		bigint size = 1;
-		if (!_structsSeen.count(&t.structDefinition()))
-		{
-			_structsSeen.insert(&t.structDefinition());
-			for (auto const& m: t.members(nullptr))
-				size += structureSizeEstimate(*m.type, _structsSeen);
-		}
+		_structsSeen.insert(&t.structDefinition());
+		for (auto const& m: t.members(nullptr))
+			size += structureSizeEstimate(*m.type, _structsSeen);
+		_structsSeen.erase(&t.structDefinition());
 		return size;
-	}
-	case Type::Category::Mapping:
-	{
-		return structureSizeEstimate(*dynamic_cast<MappingType const&>(_type).valueType(), _structsSeen);
 	}
 	default:
 		break;
