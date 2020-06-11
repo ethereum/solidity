@@ -356,10 +356,18 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 	for (ContractDefinition const* contract: _scope.annotation().linearizedBaseContracts)
 		for (UsingForDirective const* ufd: contract->usingForDirectives())
 		{
-			if (ufd->typeName() && _type != *TypeProvider::withLocationIfReference(
-				typeLocation,
-				ufd->typeName()->annotation().type
-			))
+			// Convert both types to pointers for comparison to see if the `using for`
+			// directive applies.
+			// Further down, we check more detailed for each function if `_type` is
+			// convertible to the function parameter type.
+			if (ufd->typeName() &&
+				*TypeProvider::withLocationIfReference(typeLocation, &_type, true) !=
+				*TypeProvider::withLocationIfReference(
+					typeLocation,
+					ufd->typeName()->annotation().type,
+					true
+				)
+			)
 				continue;
 			auto const& library = dynamic_cast<ContractDefinition const&>(
 				*ufd->libraryName().annotation().referencedDeclaration
@@ -371,7 +379,8 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 				seenFunctions.insert(function);
 				if (function->parameters().empty())
 					continue;
-				FunctionTypePointer fun = FunctionType(*function, FunctionType::Kind::External).asExternallyCallableFunction(true, true);
+				FunctionTypePointer fun =
+					dynamic_cast<FunctionType const&>(*function->typeViaContractName()).asBoundFunction();
 				if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
 					members.emplace_back(function->name(), fun, function);
 			}
@@ -773,7 +782,7 @@ tuple<bool, rational> RationalNumberType::parseRational(string const& _value)
 			denominator = bigint(string(fractionalBegin, _value.end()));
 			denominator /= boost::multiprecision::pow(
 				bigint(10),
-				distance(radixPoint + 1, _value.end())
+				static_cast<size_t>(distance(radixPoint + 1, _value.end()))
 			);
 			numerator = bigint(string(_value.begin(), radixPoint));
 			value = numerator + denominator;
@@ -1065,7 +1074,7 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 					if (_base == 1)
 						return 1;
 					else if (_base == -1)
-						return 1 - 2 * int(_exponent & 1);
+						return 1 - 2 * static_cast<int>(_exponent & 1);
 					else
 						return boost::multiprecision::pow(_base, _exponent);
 				};
@@ -1171,7 +1180,7 @@ string RationalNumberType::bigintToReadableString(bigint const& _num)
 	string str = _num.str();
 	if (str.size() > 32)
 	{
-		int omitted = str.size() - 8;
+		size_t omitted = str.size() - 8;
 		str = str.substr(0, 4) + "...(" + to_string(omitted) + " digits omitted)..." + str.substr(str.size() - 4, 4);
 	}
 	return str;
@@ -1201,7 +1210,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	{
 		auto fixed = fixedPointType();
 		solAssert(fixed, "Rational number cannot be represented as fixed point type.");
-		int fractionalDigits = fixed->fractionalDigits();
+		unsigned fractionalDigits = fixed->fractionalDigits();
 		shiftedValue = m_value.numerator() * boost::multiprecision::pow(bigint(10), fractionalDigits) / m_value.denominator();
 	}
 
@@ -1291,7 +1300,7 @@ StringLiteralType::StringLiteralType(string _value):
 BoolResult StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (auto fixedBytes = dynamic_cast<FixedBytesType const*>(&_convertTo))
-		return size_t(fixedBytes->numBytes()) >= m_value.size();
+		return static_cast<size_t>(fixedBytes->numBytes()) >= m_value.size();
 	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_convertTo))
 		return
 			arrayType->isByteArray() &&
@@ -2457,6 +2466,21 @@ set<string> StructType::membersMissingInMemory() const
 	return missing;
 }
 
+vector<tuple<string, TypePointer>> StructType::makeStackItems() const
+{
+	switch (m_location)
+	{
+		case DataLocation::CallData:
+			return {std::make_tuple("offset", TypeProvider::uint256())};
+		case DataLocation::Memory:
+			return {std::make_tuple("mpos", TypeProvider::uint256())};
+		case DataLocation::Storage:
+			return {std::make_tuple("slot", TypeProvider::uint256())};
+	}
+	solAssert(false, "");
+}
+
+
 TypePointer EnumType::encodingType() const
 {
 	return TypeProvider::uint(8 * storageBytes());
@@ -3438,34 +3462,61 @@ TypePointer FunctionType::copyAndSetCallOptions(bool _setGas, bool _setValue, bo
 	);
 }
 
-FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary, bool _bound) const
+FunctionTypePointer FunctionType::asBoundFunction() const
 {
-	if (_bound)
-		solAssert(!m_parameterTypes.empty(), "");
+	solAssert(!m_parameterTypes.empty(), "");
+	FunctionDefinition const* fun = dynamic_cast<FunctionDefinition const*>(m_declaration);
+	solAssert(fun && fun->libraryFunction(), "");
+	solAssert(!m_gasSet, "");
+	solAssert(!m_valueSet, "");
+	solAssert(!m_saltSet, "");
+	return TypeProvider::function(
+		m_parameterTypes,
+		m_returnParameterTypes,
+		m_parameterNames,
+		m_returnParameterNames,
+		m_kind,
+		m_arbitraryParameters,
+		m_stateMutability,
+		m_declaration,
+		m_gasSet,
+		m_valueSet,
+		m_saltSet,
+		true
+	);
+}
 
+FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary) const
+{
 	TypePointers parameterTypes;
 	for (auto const& t: m_parameterTypes)
-	{
-		auto refType = dynamic_cast<ReferenceType const*>(t);
-		if (refType && refType->location() == DataLocation::CallData)
-			parameterTypes.push_back(TypeProvider::withLocation(refType, DataLocation::Memory, true));
+		if (TypeProvider::isReferenceWithLocation(t, DataLocation::CallData))
+			parameterTypes.push_back(
+				TypeProvider::withLocationIfReference(DataLocation::Memory, t, true)
+			);
 		else
 			parameterTypes.push_back(t);
-	}
+
+	TypePointers returnParameterTypes;
+	for (auto const& returnParamType: m_returnParameterTypes)
+		if (TypeProvider::isReferenceWithLocation(returnParamType, DataLocation::CallData))
+			returnParameterTypes.push_back(
+				TypeProvider::withLocationIfReference(DataLocation::Memory, returnParamType, true)
+			);
+		else
+			returnParameterTypes.push_back(returnParamType);
 
 	Kind kind = m_kind;
 	if (_inLibrary)
 	{
 		solAssert(!!m_declaration, "Declaration has to be available.");
-		if (!m_declaration->isPublic())
-			kind = Kind::Internal; // will be inlined
-		else
-			kind = Kind::DelegateCall;
+		solAssert(m_declaration->isPublic(), "");
+		kind = Kind::DelegateCall;
 	}
 
 	return TypeProvider::function(
 		parameterTypes,
-		m_returnParameterTypes,
+		returnParameterTypes,
 		m_parameterNames,
 		m_returnParameterNames,
 		kind,
@@ -3475,7 +3526,7 @@ FunctionTypePointer FunctionType::asExternallyCallableFunction(bool _inLibrary, 
 		m_gasSet,
 		m_valueSet,
 		m_saltSet,
-		_bound
+		m_bound
 	);
 }
 

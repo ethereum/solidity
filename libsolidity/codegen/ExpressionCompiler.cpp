@@ -100,7 +100,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	if (_varDecl.immutable())
 		solAssert(paramTypes.empty(), "");
 
-	m_context.adjustStackOffset(1 + CompilerUtils::sizeOnStack(paramTypes));
+	m_context.adjustStackOffset(static_cast<int>(1 + CompilerUtils::sizeOnStack(paramTypes)));
 
 	if (!_varDecl.immutable())
 	{
@@ -242,7 +242,7 @@ bool ExpressionCompiler::visit(Conditional const& _condition)
 	acceptAndConvert(_condition.falseExpression(), *_condition.annotation().type);
 	evmasm::AssemblyItem endTag = m_context.appendJumpToNew();
 	m_context << trueTag;
-	int offset = _condition.annotation().type->sizeOnStack();
+	int offset = static_cast<int>(_condition.annotation().type->sizeOnStack());
 	m_context.adjustStackOffset(-offset);
 	acceptAndConvert(_condition.trueExpression(), *_condition.annotation().type);
 	m_context << endTag;
@@ -619,7 +619,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			unsigned returnParametersSize = CompilerUtils::sizeOnStack(function.returnParameterTypes());
 			// callee adds return parameters, but removes arguments and return label
-			m_context.adjustStackOffset(returnParametersSize - parameterSize - 1);
+			m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
 			break;
 		}
 		case FunctionType::Kind::BareCall:
@@ -705,7 +705,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			acceptAndConvert(*arguments.front(), *TypeProvider::uint256(), true);
 			// Note that function is not the original function, but the ".gas" function.
 			// Its values of gasSet and valueSet is equal to the original function's though.
-			unsigned stackDepth = (function.gasSet() ? 1 : 0) + (function.valueSet() ? 1 : 0);
+			unsigned stackDepth = (function.gasSet() ? 1u : 0u) + (function.valueSet() ? 1u : 0u);
 			if (stackDepth > 0)
 				m_context << swapInstruction(stackDepth);
 			if (function.gasSet())
@@ -814,7 +814,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::Log3:
 		case FunctionType::Kind::Log4:
 		{
-			unsigned logNumber = int(function.kind()) - int(FunctionType::Kind::Log0);
+			unsigned logNumber = static_cast<unsigned>(function.kind()) - static_cast<unsigned>(FunctionType::Kind::Log0);
 			for (unsigned arg = logNumber; arg > 0; --arg)
 				acceptAndConvert(*arguments[arg], *function.parameterTypes()[arg], true);
 			arguments.front()->accept(*this);
@@ -1088,7 +1088,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			{
 				utils().revertWithStringData(*arguments.at(1)->annotation().type);
 				// Here, the argument is consumed, but in the other branch, it is still there.
-				m_context.adjustStackOffset(arguments.at(1)->annotation().type->sizeOnStack());
+				m_context.adjustStackOffset(static_cast<int>(arguments.at(1)->annotation().type->sizeOnStack()));
 			}
 			else
 				m_context.appendRevert();
@@ -1271,9 +1271,9 @@ bool ExpressionCompiler::visit(FunctionCallOptions const& _functionCallOptions)
 		acceptAndConvert(*_functionCallOptions.options()[i], *requiredType);
 
 		solAssert(!contains(presentOptions, newOption), "");
-		size_t insertPos = presentOptions.end() - lower_bound(presentOptions.begin(), presentOptions.end(), newOption);
+		ptrdiff_t insertPos = presentOptions.end() - lower_bound(presentOptions.begin(), presentOptions.end(), newOption);
 
-		utils().moveIntoStack(insertPos, 1);
+		utils().moveIntoStack(static_cast<size_t>(insertPos), 1);
 		presentOptions.insert(presentOptions.end() - insertPos, newOption);
 	}
 
@@ -2190,7 +2190,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// contract address
 
 	unsigned selfSize = _functionType.bound() ? _functionType.selfType()->sizeOnStack() : 0;
-	unsigned gasValueSize = (_functionType.gasSet() ? 1 : 0) + (_functionType.valueSet() ? 1 : 0);
+	unsigned gasValueSize = (_functionType.gasSet() ? 1u : 0u) + (_functionType.valueSet() ? 1u : 0u);
 	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + selfSize + (_functionType.isBareCall() ? 0 : 1));
 	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
 	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
@@ -2361,7 +2361,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << Instruction::CALL;
 
 	unsigned remainsSize =
-		2 + // contract address, input_memory_end
+		2u + // contract address, input_memory_end
 		(_functionType.valueSet() ? 1 : 0) +
 		(_functionType.gasSet() ? 1 : 0) +
 		(!_functionType.isBareCall() ? 1 : 0);

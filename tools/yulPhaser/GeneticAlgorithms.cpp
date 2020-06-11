@@ -155,7 +155,7 @@ Population ClassicGeneticAlgorithm::select(Population _population, size_t _selec
 	vector<Individual> selectedIndividuals;
 	for (size_t i = 0; i < _selectionSize; ++i)
 	{
-		uint32_t ball = SimulationRNG::uniformInt(0, rouletteRange - 1);
+		size_t ball = SimulationRNG::uniformInt(0, rouletteRange - 1);
 
 		size_t cumulativeFitness = 0;
 		for (auto const& individual: _population.individuals())

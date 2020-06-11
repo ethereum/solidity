@@ -1,0 +1,73 @@
+
+======= wasm_to_wasm_function_returning_multiple_values/input.yul (Ewasm) =======
+
+Pretty printed source:
+object "object" {
+    code {
+        function main()
+        {
+            let m, n:i32, p:i32, q := multireturn(1:i32, 2, 3, 4:i32)
+        }
+        function multireturn(a:i32, b, c, d:i32) -> x, y:i32, z:i32, w
+        {
+            x := b
+            w := c
+            y := a
+            z := d
+        }
+    }
+}
+
+
+Binary representation:
+0061736d01000000010c0260000060047e7e7e7e017e020100030302000105030100010610037e0142000b7e0142000b7e0142000b071102066d656d6f72790200046d61696e00000a4a022201047e024002404201420242034204100121002300210123012102230221030b0b0b2501047e0240200121042002210720002105200321060b20052400200624012007240220040b
+
+Text representation:
+(module
+    (memory $memory (export "memory") 1)
+    (export "main" (func $main))
+    (global $global_ (mut i64) (i64.const 0))
+    (global $global__1 (mut i64) (i64.const 0))
+    (global $global__2 (mut i64) (i64.const 0))
+
+(func $main
+    (local $m i64)
+    (local $n i64)
+    (local $p i64)
+    (local $q i64)
+    (block $label_
+        (block
+            (local.set $m (call $multireturn (i64.const 1) (i64.const 2) (i64.const 3) (i64.const 4)))
+            (local.set $n (global.get $global_))
+            (local.set $p (global.get $global__1))
+            (local.set $q (global.get $global__2))
+
+        )
+
+    )
+)
+
+(func $multireturn
+    (param $a i64)
+    (param $b i64)
+    (param $c i64)
+    (param $d i64)
+    (result i64)
+    (local $x i64)
+    (local $y i64)
+    (local $z i64)
+    (local $w i64)
+    (block $label__3
+        (local.set $x (local.get $b))
+        (local.set $w (local.get $c))
+        (local.set $y (local.get $a))
+        (local.set $z (local.get $d))
+
+    )
+    (global.set $global_ (local.get $y))
+    (global.set $global__1 (local.get $z))
+    (global.set $global__2 (local.get $w))
+    (local.get $x)
+)
+
+)

@@ -63,6 +63,8 @@ private:
 		std::vector<wasm::Expression> const& _expressions,
 		char _separator = ' '
 	);
+
+	static std::string encodeType(wasm::Type _type);
 };
 
 }

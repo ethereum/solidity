@@ -6,9 +6,8 @@
  - [ ] Readthedocs account, access to the Solidity project
  - [ ] Write access to https://github.com/ethereum/homebrew-ethereum
 
-### Pre-release
- - [ ] Ensure that a Github project exists for the release.
- - [ ] Check that all issues and pull requests from the Github project to be released are merged to ``develop``.
+### Blog Post
+ - [ ] Create a post on https://github.com/ethereum/solidity-blog and explain some of the new features or concepts.
 
 ### Changelog
  - [ ] Sort the changelog entries alphabetically and correct any errors you notice.
@@ -33,8 +32,9 @@
  - [ ] Wait for the ``~ethereum/ubuntu/ethereum-static`` PPA build to be finished and published for *all platforms*. SERIOUSLY: DO NOT PROCEED EARLIER!!! *After* the static builds are *published*, copy the static package to the ``~ethereum/ubuntu/ethereum`` PPA for the destination series ``Trusty`` and ``Xenial`` while selecting ``Copy existing binaries``.
  - [ ] Check that the Docker release was pushed to Docker Hub (this still seems to have problems, run ``./scripts/docker_deploy_manual.sh v0.x.x``).
 
-### Homebrew
+### Homebrew and MacOS
  - [ ] Update the version and the hash (``sha256sum solidity_x.x.x.tar.gz``) in https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb
+ - [ ] Take the binary from the ``b_osx`` run of the released commit in circle-ci and add it to the release page as ``solc-macos``.
 
 ### Documentation
  - [ ] Build the new version on https://readthedocs.org/projects/solidity/ (select `latest` on the bottom of the page and click `BUILD`)

@@ -359,6 +359,13 @@ void AsmAnalyzer::operator()(Switch const& _switch)
 {
 	yulAssert(_switch.expression, "");
 
+	if (_switch.cases.size() == 1 && !_switch.cases[0].value)
+		m_errorReporter.warning(
+			9592_error,
+			_switch.location,
+			"\"switch\" statement with only a default case."
+		);
+
 	YulString valueType = expectExpression(*_switch.expression);
 
 	set<u256> cases;

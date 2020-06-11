@@ -20,7 +20,10 @@
 
 #include <libyul/backends/wasm/TextTransform.h>
 
+#include <libyul/Exceptions.h>
+
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -44,9 +47,9 @@ string TextTransform::run(wasm::Module const& _module)
 	{
 		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" + imp.internalName;
 		if (!imp.paramTypes.empty())
-			ret += " (param" + joinHumanReadablePrefixed(imp.paramTypes, " ", " ") + ")";
+			ret += " (param" + joinHumanReadablePrefixed(imp.paramTypes | boost::adaptors::transformed(encodeType), " ", " ") + ")";
 		if (imp.returnType)
-			ret += " (result " + *imp.returnType + ")";
+			ret += " (result " + encodeType(*imp.returnType) + ")";
 		ret += "))\n";
 	}
 
@@ -56,7 +59,7 @@ string TextTransform::run(wasm::Module const& _module)
 	ret += "    (export \"main\" (func $main))\n";
 
 	for (auto const& g: _module.globals)
-		ret += "    (global $" + g.variableName + " (mut i64) (i64.const 0))\n";
+		ret += "    (global $" + g.variableName + " (mut " + encodeType(g.type) + ") (" + encodeType(g.type) + ".const 0))\n";
 	ret += "\n";
 	for (auto const& f: _module.functions)
 		ret += transform(f) + "\n";
@@ -65,7 +68,10 @@ string TextTransform::run(wasm::Module const& _module)
 
 string TextTransform::operator()(wasm::Literal const& _literal)
 {
-	return "(i64.const " + to_string(_literal.value) + ")";
+	return std::visit(GenericVisitor{
+		[&](uint32_t _value) -> string { return "(i32.const " + to_string(_value) + ")"; },
+		[&](uint64_t _value) -> string { return "(i64.const " + to_string(_value) + ")"; },
+	}, _literal.value);
 }
 
 string TextTransform::operator()(wasm::StringLiteral const& _literal)
@@ -162,12 +168,12 @@ string TextTransform::indented(string const& _in)
 string TextTransform::transform(wasm::FunctionDefinition const& _function)
 {
 	string ret = "(func $" + _function.name + "\n";
-	for (auto const& param: _function.parameterNames)
-		ret += "    (param $" + param + " i64)\n";
-	if (_function.returns)
-		ret += "    (result i64)\n";
+	for (auto const& param: _function.parameters)
+		ret += "    (param $" + param.name + " " + encodeType(param.type) + ")\n";
+	if (_function.returnType.has_value())
+		ret += "    (result " + encodeType(_function.returnType.value()) + ")\n";
 	for (auto const& local: _function.locals)
-		ret += "    (local $" + local.variableName + " i64)\n";
+		ret += "    (local $" + local.variableName + " " + encodeType(local.type) + ")\n";
 	ret += indented(joinTransformed(_function.body, '\n'));
 	if (ret.back() != '\n')
 		ret += '\n';
@@ -192,4 +198,14 @@ string TextTransform::joinTransformed(vector<wasm::Expression> const& _expressio
 		ret += move(t);
 	}
 	return ret;
+}
+
+string TextTransform::encodeType(wasm::Type _type)
+{
+	if (_type == wasm::Type::i32)
+		return "i32";
+	else if (_type == wasm::Type::i64)
+		return "i64";
+	else
+		yulAssert(false, "Invalid wasm type");
 }

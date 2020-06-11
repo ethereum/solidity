@@ -66,7 +66,7 @@ void testFunctionCall(
 	ABI_CHECK(_call.expectations.rawBytes(), _expectations);
 	BOOST_REQUIRE_EQUAL(_call.displayMode, _mode);
 	BOOST_REQUIRE_EQUAL(_call.value.value, _value.value);
-	BOOST_REQUIRE_EQUAL(size_t(_call.value.unit), size_t(_value.unit));
+	BOOST_REQUIRE_EQUAL(static_cast<size_t>(_call.value.unit), static_cast<size_t>(_value.unit));
 	BOOST_REQUIRE_EQUAL(_call.arguments.comment, _argumentComment);
 	BOOST_REQUIRE_EQUAL(_call.expectations.comment, _expectationComment);
 

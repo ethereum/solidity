@@ -1652,8 +1652,7 @@ string YulUtilFunctions::allocateAndInitializeMemoryStructFunction(StructType co
 	return m_functionCollector.createFunction(functionName, [&]() {
 		Whiskers templ(R"(
 		function <functionName>() -> memPtr {
-			let allocSize := <allocSize>()
-			memPtr := <alloc>(allocSize)
+			memPtr := <alloc>(<allocSize>)
 			let offset := memPtr
 			<#member>
 				mstore(offset, <zeroValue>())

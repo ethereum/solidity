@@ -38,7 +38,7 @@ using namespace solidity;
 using namespace solidity::frontend;
 
 ASTNode::ASTNode(int64_t _id, SourceLocation _location):
-	m_id(_id),
+	m_id(static_cast<size_t>(_id)),
 	m_location(std::move(_location))
 {
 }
@@ -287,11 +287,11 @@ TypeDeclarationAnnotation& EnumDefinition::annotation() const
 	return initAnnotation<TypeDeclarationAnnotation>();
 }
 
-ContractKind FunctionDefinition::inContractKind() const
+bool FunctionDefinition::libraryFunction() const
 {
-	auto contractDef = dynamic_cast<ContractDefinition const*>(scope());
-	solAssert(contractDef, "Enclosing Scope of FunctionDefinition was not set.");
-	return contractDef->contractKind();
+	if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(scope()))
+		return contractDef->isLibrary();
+	return false;
 }
 
 FunctionTypePointer FunctionDefinition::functionType(bool _internal) const

@@ -124,7 +124,11 @@ userDefinedTypeName
   : identifier ( '.' identifier )* ;
 
 mapping
-  : 'mapping' '(' (elementaryTypeName | userDefinedTypeName) '=>' typeName ')' ;
+  : 'mapping' '(' mappingKey '=>' typeName ')' ;
+
+mappingKey
+  : elementaryTypeName
+  | userDefinedTypeName ;
 
 functionTypeName
   : 'function' parameterList modifierList returnParameters? ;
@@ -470,7 +474,7 @@ SingleQuotedStringCharacter
   : ~['\r\n\\] | ('\\' .) ;
 
 VersionLiteral
-  : [0-9]+ '.' [0-9]+ ('.' [0-9]+)? ;
+  : [0-9]+ ( '.' [0-9]+ ('.' [0-9]+)? )? ;
 
 WS
   : [ \t\r\n\u000C]+ -> skip ;

@@ -157,10 +157,12 @@ protected:
 	/// Will also be used for assignments of tuple components.
 	void assignment(
 		Expression const& _left,
-		std::vector<smtutil::Expression> const& _right,
+		smtutil::Expression const& _right,
 		TypePointer const& _type,
 		langutil::SourceLocation const& _location
 	);
+	/// Handle assignments between tuples.
+	void tupleAssignment(Expression const& _left, Expression const& _right);
 	/// Computes the right hand side of a compound assignment.
 	smtutil::Expression compoundAssignment(Assignment const& _assignment);
 
@@ -181,6 +183,9 @@ protected:
 	void initializeLocalVariables(FunctionDefinition const& _function);
 	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smtutil::Expression> const& _callArgs);
 	void resetStateVariables();
+	/// Resets all references/pointers that have the same type or have
+	/// a subexpression of the same type as _varDecl.
+	void resetReferences(VariableDeclaration const& _varDecl);
 	/// @returns the type without storage pointer information if it has it.
 	TypePointer typeWithoutPointer(TypePointer const& _type);
 
@@ -196,7 +201,7 @@ protected:
 	smtutil::Expression currentValue(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the given index. Does not ensure that this index exists.
-	smtutil::Expression valueAtIndex(VariableDeclaration const& _decl, int _index);
+	smtutil::Expression valueAtIndex(VariableDeclaration const& _decl, unsigned _index);
 	/// Returns the expression corresponding to the AST node.
 	/// If _targetType is not null apply conversion.
 	/// Throws if the expression does not exist.

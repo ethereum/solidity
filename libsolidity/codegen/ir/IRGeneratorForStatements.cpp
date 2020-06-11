@@ -636,7 +636,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			});
 
 			solAssert(it != callArgumentNames.cend(), "");
-			arguments.push_back(callArguments[std::distance(callArgumentNames.begin(), it)]);
+			arguments.push_back(callArguments[static_cast<size_t>(std::distance(callArgumentNames.begin(), it))]);
 		}
 
 	auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression());
@@ -1092,7 +1092,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	case FunctionType::Kind::Log3:
 	case FunctionType::Kind::Log4:
 	{
-		unsigned logNumber = int(functionType->kind()) - int(FunctionType::Kind::Log0);
+		unsigned logNumber = static_cast<unsigned>(functionType->kind()) - static_cast<unsigned>(FunctionType::Kind::Log0);
 		solAssert(arguments.size() == logNumber + 1, "");
 		ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
 		string indexedArgs;
@@ -1477,7 +1477,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member);
 			string slot = m_context.newYulVariable();
 			m_code << "let " << slot << " := " <<
-				("add(" + expression.name() + ", " + offsets.first.str() + ")\n");
+				("add(" + expression.part("slot").name() + ", " + offsets.first.str() + ")\n");
 			setLValue(_memberAccess, IRLValue{
 				type(_memberAccess),
 				IRLValue::Storage{slot, offsets.second}
@@ -1497,7 +1497,25 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		}
 		case DataLocation::CallData:
 		{
-			solUnimplementedAssert(false, "");
+			string baseRef = expression.part("offset").name();
+			string offset = m_context.newYulVariable();
+			m_code << "let " << offset << " := " << "add(" << baseRef << ", " << to_string(structType.calldataOffsetOfMember(member)) << ")\n";
+			if (_memberAccess.annotation().type->isDynamicallyEncoded())
+				define(_memberAccess) <<
+					m_utils.accessCalldataTailFunction(*_memberAccess.annotation().type) <<
+					"(" <<
+					baseRef <<
+					", " <<
+					offset <<
+					")" <<
+					std::endl;
+			else
+				define(_memberAccess) <<
+					m_utils.readFromCalldata(*_memberAccess.annotation().type) <<
+					"(" <<
+					offset <<
+					")" <<
+					std::endl;
 			break;
 		}
 		default:
@@ -1730,7 +1748,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 
 				setLValue(_indexAccess, IRLValue{
 					*arrayType.baseType(),
-					IRLValue::Memory{memAddress}
+					IRLValue::Memory{memAddress, arrayType.isByteArray()}
 				});
 				break;
 			}
@@ -1763,7 +1781,23 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 		}
 	}
 	else if (baseType.category() == Type::Category::FixedBytes)
-		solUnimplementedAssert(false, "");
+	{
+		auto const& fixedBytesType = dynamic_cast<FixedBytesType const&>(baseType);
+		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
+
+		IRVariable index{m_context.newYulVariable(), *TypeProvider::uint256()};
+		define(index, *_indexAccess.indexExpression());
+		m_code << Whiskers(R"(
+			if iszero(lt(<index>, <length>)) { invalid() }
+			let <result> := <shl248>(byte(<index>, <array>))
+		)")
+		("index", index.name())
+		("length", to_string(fixedBytesType.numBytes()))
+		("array", IRVariable(_indexAccess.baseExpression()).name())
+		("shl248", m_utils.shiftLeftFunction(256 - 8))
+		("result", IRVariable(_indexAccess).name())
+		.render();
+	}
 	else if (baseType.category() == Type::Category::TypeType)
 	{
 		solAssert(baseType.sizeOnStack() == 0, "");
