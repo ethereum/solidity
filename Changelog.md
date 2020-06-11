@@ -1,19 +1,21 @@
-### 0.6.10 (unreleased)
+### 0.6.10 (2020-06-11)
 
 Important Bugfixes:
  * Fixed a bug related to internal library functions with ``calldata`` parameters called via ``using for``.
 
-Language Features:
 
 Compiler Features:
+ * Commandline Interface: Re-group help screen.
+ * Output compilation error codes in standard-json and when using ``--error-codes``.
  * Yul: Raise warning for switch statements that only have a default and no other cases.
- * Output compilation error codes.
+
 
 Bugfixes:
  * SMTChecker: Fix internal error when encoding tuples of tuples.
  * SMTChecker: Fix aliasing soundness after pushing to an array pointer.
  * Type system: Fix internal compiler error on calling externally a function that returns variables with calldata location.
  * Type system: Fix bug where a bound function was not found if ``using for`` is applied to explicit reference types.
+
 
 ### 0.6.9 (2020-06-04)
 
