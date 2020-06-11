@@ -62,9 +62,9 @@ bool TypeChecker::typeSupportedByOldABIEncoder(Type const& _type, bool _isLibrar
 	return true;
 }
 
-bool TypeChecker::checkTypeRequirements(ASTNode const& _contract)
+bool TypeChecker::checkTypeRequirements(SourceUnit const& _source)
 {
-	_contract.accept(*this);
+	_source.accept(*this);
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 
