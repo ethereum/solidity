@@ -1,5 +1,13 @@
 [
     {
+        "name": "UsingForCalldata",
+        "summary": "Function calls to internal library functions with calldata parameters called via ``using for`` can result in invalid data being read.",
+        "description": "Function calls to internal library functions using the ``using for`` mechanism copied all calldata parameters to memory first and passed them on like that, regardless of whether it was an internal or an external call. Due to that, the called function would receive a memory pointer that is interpreted as a calldata pointer. Since dynamically sized arrays are passed using two stack slots for calldata, but only one for memory, this can lead to stack corruption. An affected library call will consider the JUMPDEST to which it is supposed to return as part of its arguments and will instead jump out to whatever was on the stack before the call.",
+        "introduced": "0.6.9",
+        "fixed": "0.6.10",
+        "severity": "very low"
+    },
+    {
         "name": "MissingEscapingInFormatting",
         "summary": "String literals containing double backslash characters passed directly to external or encoding function calls can lead to a different string being used when ABIEncoderV2 is enabled.",
         "description": "When ABIEncoderV2 is enabled, string literals passed directly to encoding functions or external function calls are stored as strings in the intemediate code. Characters outside the printable range are handled correctly, but backslashes are not escaped in this procedure. This leads to double backslashes being reduced to single backslashes and consequently re-interpreted as escapes potentially resulting in a different string being encoded.",

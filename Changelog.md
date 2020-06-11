@@ -1,5 +1,8 @@
 ### 0.6.10 (unreleased)
 
+Important Bugfixes:
+ * Fixed a bug related to internal library functions with ``calldata`` parameters called via ``using for``.
+
 Language Features:
 
 Compiler Features:
