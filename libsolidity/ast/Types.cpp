@@ -2457,6 +2457,21 @@ set<string> StructType::membersMissingInMemory() const
 	return missing;
 }
 
+vector<tuple<string, TypePointer>> StructType::makeStackItems() const
+{
+	switch (m_location)
+	{
+		case DataLocation::CallData:
+			return {std::make_tuple("offset", TypeProvider::uint256())};
+		case DataLocation::Memory:
+			return {std::make_tuple("mpos", TypeProvider::uint256())};
+		case DataLocation::Storage:
+			return {std::make_tuple("slot", TypeProvider::uint256())};
+	}
+	solAssert(false, "");
+}
+
+
 TypePointer EnumType::encodingType() const
 {
 	return TypeProvider::uint(8 * storageBytes());
