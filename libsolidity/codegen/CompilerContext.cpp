@@ -384,12 +384,11 @@ void CompilerContext::appendInlineAssembly(
 		yul::Identifier const& _identifier,
 		yul::IdentifierContext,
 		bool _insideFunction
-	) -> size_t
+	) -> bool
 	{
 		if (_insideFunction)
-			return numeric_limits<size_t>::max();
-		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
-		return it == _localVariables.end() ? numeric_limits<size_t>::max() : 1;
+			return false;
+		return contains(_localVariables, _identifier.name.str());
 	};
 	identifierAccess.generateCode = [&](
 		yul::Identifier const& _identifier,
