@@ -2,7 +2,7 @@
     {
         "name": "UsingForCalldata",
         "summary": "Function calls to internal library functions with calldata parameters called via ``using for`` can result in invalid data being read.",
-        "description": "Function calls to internal library functions using the ``using for`` mechanism copied all calldata parameters to memory first and passed them on like that, regardless of whether it was an internal or an external call. Due to that, the called function would receive a memory pointer that is interpreted as a calldata pointer.",
+        "description": "Function calls to internal library functions using the ``using for`` mechanism copied all calldata parameters to memory first and passed them on like that, regardless of whether it was an internal or an external call. Due to that, the called function would receive a memory pointer that is interpreted as a calldata pointer. Since dynamically sized arrays are passed using two stack slots for calldata, but only one for memory, this can lead to stack corruption. An affected library call will consider the JUMPDEST to which it is supposed to return as part of its arguments and will instead jump out to whatever was on the stack before the call.",
         "introduced": "0.6.9",
         "fixed": "0.6.10",
         "severity": "very low"
