@@ -13,6 +13,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when encoding tuples of tuples.
  * SMTChecker: Fix aliasing soundness after pushing to an array pointer.
  * Type system: Fix internal compiler error on calling externally a function that returns variables with calldata location.
+ * Type system: Fix bug where a bound function was not found if ``using for`` is applied to explicit reference types.
 
 ### 0.6.9 (2020-06-04)
 

@@ -356,10 +356,18 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 	for (ContractDefinition const* contract: _scope.annotation().linearizedBaseContracts)
 		for (UsingForDirective const* ufd: contract->usingForDirectives())
 		{
-			if (ufd->typeName() && _type != *TypeProvider::withLocationIfReference(
-				typeLocation,
-				ufd->typeName()->annotation().type
-			))
+			// Convert both types to pointers for comparison to see if the `using for`
+			// directive applies.
+			// Further down, we check more detailed for each function if `_type` is
+			// convertible to the function parameter type.
+			if (ufd->typeName() &&
+				*TypeProvider::withLocationIfReference(typeLocation, &_type, true) !=
+				*TypeProvider::withLocationIfReference(
+					typeLocation,
+					ufd->typeName()->annotation().type,
+					true
+				)
+			)
 				continue;
 			auto const& library = dynamic_cast<ContractDefinition const&>(
 				*ufd->libraryName().annotation().referencedDeclaration
