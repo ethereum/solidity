@@ -112,6 +112,10 @@ defaults:
   - store_test_results: &store_test_results
       path: test_results/
 
+  - install_hera: &install_hera
+      name: install_hera
+      command: ./.circleci/install_hera.sh
+
   - run_soltest: &run_soltest
       name: soltest
       command: ./.circleci/soltest.sh
@@ -157,6 +161,7 @@ defaults:
         - checkout
         - attach_workspace:
             at: build
+        - run: *install_hera
         - run: *run_soltest_all
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results

@@ -87,6 +87,19 @@ RUN set -ex; \
 	tar xzpf $TGZFILE -C /usr; \
 	rm -f $TGZFILE;
 
+# HERA
+ARG HERA_HASH="622663cb3bc1fa07213c6e1fe8070c5c259096e75039a46d014b2a3448b5cf44"
+ARG HERA_MAJOR="0"
+ARG HERA_MINOR="3"
+ARG HERA_MICRO="0"
+RUN set -ex; \
+	HERA_VERSION="$HERA_MAJOR.$HERA_MINOR.$HERA_MICRO"; \
+	TGZFILE="hera-$HERA_VERSION-linux-x86_64.tar.gz"; \
+	wget https://github.com/ewasm/hera/releases/download/v$HERA_VERSION/$TGZFILE; \
+	sha256sum $TGZFILE; \
+	tar xzpf $TGZFILE -C /usr; \
+	rm -f $TGZFILE;
+
 FROM base
 COPY --from=libraries /usr/lib /usr/lib
 COPY --from=libraries /usr/bin /usr/bin

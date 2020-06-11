@@ -56,6 +56,18 @@ RUN set -ex; \
 	ninja install/strip; \
 	rm -rf /usr/src/evmone
 
+# hera
+RUN set -ex; \
+	cd /usr/src; \
+	git clone --branch="v0.3.0" --recurse-submodules https://github.com/ewasm/hera.git; \
+	cd hera; \
+	mkdir build; \
+	cd build; \
+	cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="/usr" ..; \
+	ninja; \
+	ninja install/strip; \
+	rm -rf /usr/src/hera
+
 FROM base
 COPY --from=libraries /usr/lib /usr/lib
 COPY --from=libraries /usr/bin /usr/bin

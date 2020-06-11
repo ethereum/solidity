@@ -56,6 +56,17 @@ get_logfile_basename() {
 
 BOOST_TEST_ARGS="--color_output=no --show_progress=yes --logger=JUNIT,error,test_results/`get_logfile_basename`.xml"
 SOLTEST_ARGS="--evm-version=$EVM $SOLTEST_FLAGS"
+
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+  LIBHERA=/usr/local/lib/libhera.dylib
+else
+  LIBHERA=/usr/lib/libhera.so
+fi
+
+# run tests against hera ewasm evmc vm for versions == byzantium
+test "${EVM}" = "byzantium" && SOLTEST_ARGS="${SOLTEST_ARGS} --vm ${LIBHERA}"
+
 test "${OPTIMIZE}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --optimize"
 test "${ABI_ENCODER_V2}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --abiencoderv2"
 
