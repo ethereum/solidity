@@ -32,10 +32,21 @@ EncodingContext::EncodingContext():
 void EncodingContext::reset()
 {
 	resetAllVariables();
+	resetSlackId();
 	m_expressions.clear();
 	m_globalContext.clear();
 	m_state.reset();
 	m_assertions.clear();
+}
+
+void EncodingContext::resetSlackId()
+{
+	m_nextSlackId = 0;
+}
+
+unsigned EncodingContext::newSlackId()
+{
+	return m_nextSlackId++;
 }
 
 void EncodingContext::clear()
