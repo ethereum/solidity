@@ -71,10 +71,10 @@ public:
 	{
 		// FNV hash - can be replaced by a better one, e.g. xxhash64
 		std::uint64_t hash = emptyHash();
-		for (auto c: v)
+		for (char c: v)
 		{
 			hash *= 1099511628211u;
-			hash ^= c;
+			hash ^= static_cast<uint64_t>(c);
 		}
 
 		return hash;

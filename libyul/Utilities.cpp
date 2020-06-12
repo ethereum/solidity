@@ -45,7 +45,7 @@ string solidity::yul::reindent(string const& _code)
 	auto const static countBraces = [](string const& _s) noexcept -> int
 	{
 		auto const i = _s.find("//");
-		auto const e = i == _s.npos ? end(_s) : next(begin(_s), i);
+		auto const e = i == _s.npos ? end(_s) : next(begin(_s), static_cast<ptrdiff_t>(i));
 		auto const opening = count_if(begin(_s), e, [](auto ch) { return ch == '{' || ch == '('; });
 		auto const closing = count_if(begin(_s), e, [](auto ch) { return ch == '}' || ch == ')'; });
 		return opening - closing;

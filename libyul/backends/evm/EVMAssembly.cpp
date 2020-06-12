@@ -74,7 +74,7 @@ void EVMAssembly::appendLabelReference(LabelID _labelId)
 
 EVMAssembly::LabelID EVMAssembly::newLabelId()
 {
-	m_labelPositions[m_nextLabelId] = size_t(-1);
+	m_labelPositions[m_nextLabelId] = numeric_limits<size_t>::max();
 	return m_nextLabelId++;
 }
 
@@ -165,7 +165,7 @@ evmasm::LinkerObject EVMAssembly::finalize()
 		size_t referencePos = ref.first;
 		yulAssert(m_labelPositions.count(ref.second), "");
 		size_t labelPos = m_labelPositions.at(ref.second);
-		yulAssert(labelPos != size_t(-1), "Undefined but allocated label used.");
+		yulAssert(labelPos != numeric_limits<size_t>::max(), "Undefined but allocated label used.");
 		updateReference(referencePos, labelReferenceSize, u256(labelPos));
 	}
 
@@ -177,7 +177,7 @@ evmasm::LinkerObject EVMAssembly::finalize()
 void EVMAssembly::setLabelToCurrentPosition(LabelID _labelId)
 {
 	yulAssert(m_labelPositions.count(_labelId), "Label not found.");
-	yulAssert(m_labelPositions[_labelId] == size_t(-1), "Label already set.");
+	yulAssert(m_labelPositions[_labelId] == numeric_limits<size_t>::max(), "Label already set.");
 	m_labelPositions[_labelId] = m_bytecode.size();
 }
 

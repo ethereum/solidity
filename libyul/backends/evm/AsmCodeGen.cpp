@@ -143,14 +143,14 @@ pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EthAssemblyAdapter::
 {
 	shared_ptr<evmasm::Assembly> assembly{make_shared<evmasm::Assembly>()};
 	auto sub = m_assembly.newSub(assembly);
-	return {make_shared<EthAssemblyAdapter>(*assembly), size_t(sub.data())};
+	return {make_shared<EthAssemblyAdapter>(*assembly), static_cast<size_t>(sub.data())};
 }
 
 void EthAssemblyAdapter::appendDataOffset(AbstractAssembly::SubID _sub)
 {
 	auto it = m_dataHashBySubId.find(_sub);
 	if (it == m_dataHashBySubId.end())
-		m_assembly.pushSubroutineOffset(size_t(_sub));
+		m_assembly.pushSubroutineOffset(_sub);
 	else
 		m_assembly << evmasm::AssemblyItem(evmasm::PushData, it->second);
 }
@@ -159,7 +159,7 @@ void EthAssemblyAdapter::appendDataSize(AbstractAssembly::SubID _sub)
 {
 	auto it = m_dataHashBySubId.find(_sub);
 	if (it == m_dataHashBySubId.end())
-		m_assembly.pushSubroutineSize(size_t(_sub));
+		m_assembly.pushSubroutineSize(static_cast<size_t>(_sub));
 	else
 		m_assembly << u256(m_assembly.data(h256(it->second)).size());
 }
