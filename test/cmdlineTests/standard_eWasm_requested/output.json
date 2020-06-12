@@ -1,146 +1,42 @@
 {"contracts":{"A":{"C":{"ewasm":{"wast":"(module
+    ;; sub-module \"C_2_deployed\" will be encoded as custom section in binary here, but is skipped in text mode.
+    (import \"ethereum\" \"codeCopy\" (func $eth.codeCopy (param i32 i32 i32)))
     (import \"ethereum\" \"revert\" (func $eth.revert (param i32 i32)))
-    (import \"ethereum\" \"getCallDataSize\" (func $eth.getCallDataSize (result i32)))
-    (import \"ethereum\" \"callDataCopy\" (func $eth.callDataCopy (param i32 i32 i32)))
+    (import \"ethereum\" \"getCallValue\" (func $eth.getCallValue (param i32)))
+    (import \"ethereum\" \"finish\" (func $eth.finish (param i32 i32)))
     (memory $memory (export \"memory\") 1)
     (export \"main\" (func $main))
-    (global $global_ (mut i64) (i64.const 0))
-    (global $global__4 (mut i64) (i64.const 0))
-    (global $global__5 (mut i64) (i64.const 0))
 
 (func $main
     (local $_1 i64)
-    (local $z4 i64)
-    (local $z4_1 i64)
+    (local $p i64)
+    (local $r i64)
     (local $_2 i64)
-    (local $condition i64)
-    (local $condition_1 i64)
-    (local $condition_2 i64)
-    (local $condition_3 i64)
+    (local $z1 i64)
+    (local $z2 i64)
+    (local $z3 i64)
     (local $_3 i64)
-    (local $_4 i64)
-    (local $_5 i64)
-    (local $_6 i64)
-    (local.set $_1 (i64.const 0))
-    (call $mstore (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 64) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 128))
-    (local.set $z4 (call $eth.getCallDataSize))
-    (local.set $z4_1 (i64.const 0))
-    (local.set $_2 (call $cmp (local.get $z4_1) (local.get $_1)))
-    (block
-        (local.set $condition (local.get $_2))
-        (if (i64.eq (local.get $condition) (i64.const 0)) (then
-            (block
-                (local.set $condition_1 (local.get $_2))
-                (if (i64.eq (local.get $condition_1) (i64.const 0)) (then
-                    (block
-                        (local.set $condition_2 (local.get $_2))
-                        (if (i64.eq (local.get $condition_2) (i64.const 0)) (then
-                            (block
-                                (local.set $condition_3 (call $cmp (local.get $z4) (i64.const 4)))
-                                (if (i64.eq (local.get $condition_3) (i64.const 0)) (then
-                                    (local.set $z4_1 (local.get $z4_1))
-                                )(else
-                                    (if (i64.eq (local.get $condition_3) (i64.const 1)) (then
-                                        (local.set $z4_1 (i64.const 0))
-                                    )(else
-                                        (local.set $z4_1 (i64.const 1))
-                                    ))
-                                ))
-
-                            )
-                        )(else
-                            (if (i64.eq (local.get $condition_2) (i64.const 1)) (then
-                                (local.set $z4_1 (i64.const 0))
-                            )(else
-                                (local.set $z4_1 (i64.const 1))
-                            ))
-                        ))
-
-                    )
-                )(else
-                    (if (i64.eq (local.get $condition_1) (i64.const 1)) (then
-                        (local.set $z4_1 (i64.const 0))
-                    )(else
-                        (local.set $z4_1 (i64.const 1))
-                    ))
-                ))
-
-            )
-        )(else
-            (if (i64.eq (local.get $condition) (i64.const 1)) (then
-                (local.set $z4_1 (i64.const 0))
-            )(else
-                (local.set $z4_1 (i64.const 1))
-            ))
-        ))
-
+    (block $label_
+        (local.set $_1 (i64.const 0))
+        (local.set $p (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 64)))
+        (local.set $r (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $p)) (i32.wrap_i64 (i64.const 64)))))
+        (if (i64.ne (i64.extend_i32_u (i32.lt_u (i32.wrap_i64 (local.get $r)) (i32.wrap_i64 (local.get $p)))) (i64.const 0)) (then
+            (unreachable)))
+        (local.set $_2 (call $endian_swap (local.get $_1)))
+        (i64.store (i32.wrap_i64 (local.get $r)) (local.get $_2))
+        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $r)) (i32.wrap_i64 (i64.const 8))))) (local.get $_2))
+        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $r)) (i32.wrap_i64 (i64.const 16))))) (local.get $_2))
+        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $r)) (i32.wrap_i64 (i64.const 24))))) (call $endian_swap (i64.const 128)))
+        (call $eth.getCallValue (i32.wrap_i64 (i64.const 0)))
+        (local.set $z1 (call $endian_swap (i64.load (i32.wrap_i64 (i64.const 0)))))
+        (local.set $z2 (call $endian_swap (i64.load (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.const 8))))))))
+        (local.set $z3 (call $endian_swap (i64.load (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.const 16))))))))
+        (if (i64.ne (i64.extend_i32_u (i32.eqz (i32.wrap_i64 (i64.extend_i32_u (i64.eqz (i64.or (i64.or (local.get $z1) (local.get $z2)) (i64.or (local.get $z3) (call $endian_swap (i64.load (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.const 24)))))))))))))) (i64.const 0)) (then
+            (call $revert (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1))))
+        (local.set $_3 (datasize \"C_2_deployed\"))
+        (call $codecopy (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (dataoffset \"C_2_deployed\") (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3))
+        (call $return (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3))
     )
-    (block
-        (local.set $_3 (call $iszero (i64.const 0) (i64.const 0) (i64.const 0) (local.get $z4_1)))
-        (local.set $_4 (global.get $global_))
-        (local.set $_5 (global.get $global__4))
-        (local.set $_6 (global.get $global__5))
-
-    )
-    (if (call $or_bool (local.get $_3) (local.get $_4) (local.get $_5) (local.get $_6)) (then
-        (call $mstore (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1))
-        (call $calldatacopy (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 28) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 4))))
-    (call $revert (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1))
-)
-
-(func $or_bool
-    (param $a i64)
-    (param $b i64)
-    (param $c i64)
-    (param $d i64)
-    (result i64)
-    (local $r i64)
-    (local.set $r (i64.ne (local.get $r) (i64.or (i64.or (local.get $a) (local.get $b)) (i64.or (local.get $c) (local.get $d)))))
-    (local.get $r)
-)
-
-(func $iszero
-    (param $x1 i64)
-    (param $x2 i64)
-    (param $x3 i64)
-    (param $x4 i64)
-    (result i64)
-    (local $r1 i64)
-    (local $r2 i64)
-    (local $r3 i64)
-    (local $r4 i64)
-    (local.set $r4 (i64.eqz (i64.or (i64.or (local.get $x1) (local.get $x2)) (i64.or (local.get $x3) (local.get $x4)))))
-    (global.set $global_ (local.get $r2))
-    (global.set $global__4 (local.get $r3))
-    (global.set $global__5 (local.get $r4))
-    (local.get $r1)
-)
-
-(func $cmp
-    (param $a i64)
-    (param $b i64)
-    (result i64)
-    (local $r i64)
-    (local $condition_6 i64)
-    (local $condition_7 i64)
-    (block
-        (local.set $condition_6 (i64.lt_u (local.get $a) (local.get $b)))
-        (if (i64.eq (local.get $condition_6) (i64.const 1)) (then
-            (local.set $r (i64.const 18446744073709551615))
-        )(else
-            (block
-                (local.set $condition_7 (i64.gt_u (local.get $a) (local.get $b)))
-                (if (i64.eq (local.get $condition_7) (i64.const 1)) (then
-                    (local.set $r (i64.const 1))
-                )(else
-                    (local.set $r (i64.const 0))
-                ))
-
-            )
-        ))
-
-    )
-    (local.get $r)
 )
 
 (func $u256_to_i32
@@ -150,15 +46,36 @@
     (param $x4 i64)
     (result i64)
     (local $v i64)
-    (if (i64.ne (local.get $v) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (then
-        (unreachable)))
-    (if (i64.ne (local.get $v) (i64.shr_u (local.get $x4) (i64.const 32))) (then
-        (unreachable)))
-    (local.set $v (local.get $x4))
+    (block $label__1
+        (if (i64.ne (i64.extend_i32_u (i64.ne (i64.const 0) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3)))) (i64.const 0)) (then
+            (unreachable)))
+        (if (i64.ne (i64.extend_i32_u (i64.ne (i64.const 0) (i64.shr_u (local.get $x4) (i64.const 32)))) (i64.const 0)) (then
+            (unreachable)))
+        (local.set $v (i64.extend_i32_u (i32.wrap_i64 (local.get $x4))))
+
+    )
     (local.get $v)
 )
 
-(func $calldatacopy
+(func $to_internal_i32ptr
+    (param $x1 i64)
+    (param $x2 i64)
+    (param $x3 i64)
+    (param $x4 i64)
+    (result i64)
+    (local $r i64)
+    (local $p i64)
+    (block $label__2
+        (local.set $p (call $u256_to_i32 (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)))
+        (local.set $r (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $p)) (i32.wrap_i64 (i64.const 64)))))
+        (if (i64.ne (i64.extend_i32_u (i32.lt_u (i32.wrap_i64 (local.get $r)) (i32.wrap_i64 (local.get $p)))) (i64.const 0)) (then
+            (unreachable)))
+
+    )
+    (local.get $r)
+)
+
+(func $codecopy
     (param $x1 i64)
     (param $x2 i64)
     (param $x3 i64)
@@ -171,14 +88,19 @@
     (param $z2 i64)
     (param $z3 i64)
     (param $z4 i64)
-    (call $eth.callDataCopy (call $u256_to_i32 (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)) (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4)) (call $u256_to_i32 (local.get $z1) (local.get $z2) (local.get $z3) (local.get $z4)))
+    (block $label__3
+        (call $eth.codeCopy (i32.wrap_i64 (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4))) (i32.wrap_i64 (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4))) (i32.wrap_i64 (call $u256_to_i32 (local.get $z1) (local.get $z2) (local.get $z3) (local.get $z4))))
+    )
 )
 
 (func $endian_swap_16
     (param $x i64)
     (result i64)
     (local $y i64)
-    (local.set $y (i64.or (i64.and (i64.shl (local.get $x) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (local.get $x) (i64.const 8)) (i64.const 255))))
+    (block $label__4
+        (local.set $y (i64.or (i64.and (i64.shl (local.get $x) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (local.get $x) (i64.const 8)) (i64.const 255))))
+
+    )
     (local.get $y)
 )
 
@@ -187,8 +109,11 @@
     (result i64)
     (local $y i64)
     (local $hi i64)
-    (local.set $hi (i64.shl (call $endian_swap_16 (local.get $x)) (i64.const 16)))
-    (local.set $y (i64.or (local.get $hi) (call $endian_swap_16 (i64.shr_u (local.get $x) (i64.const 16)))))
+    (block $label__5
+        (local.set $hi (i64.shl (call $endian_swap_16 (local.get $x)) (i64.const 16)))
+        (local.set $y (i64.or (local.get $hi) (call $endian_swap_16 (i64.shr_u (local.get $x) (i64.const 16)))))
+
+    )
     (local.get $y)
 )
 
@@ -197,12 +122,15 @@
     (result i64)
     (local $y i64)
     (local $hi i64)
-    (local.set $hi (i64.shl (call $endian_swap_32 (local.get $x)) (i64.const 32)))
-    (local.set $y (i64.or (local.get $hi) (call $endian_swap_32 (i64.shr_u (local.get $x) (i64.const 32)))))
+    (block $label__6
+        (local.set $hi (i64.shl (call $endian_swap_32 (local.get $x)) (i64.const 32)))
+        (local.set $y (i64.or (local.get $hi) (call $endian_swap_32 (i64.shr_u (local.get $x) (i64.const 32)))))
+
+    )
     (local.get $y)
 )
 
-(func $mstore
+(func $return
     (param $x1 i64)
     (param $x2 i64)
     (param $x3 i64)
@@ -211,12 +139,9 @@
     (param $y2 i64)
     (param $y3 i64)
     (param $y4 i64)
-    (local $pos i64)
-    (local.set $pos (call $u256_to_i32 (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)))
-    (i64.store (local.get $pos) (call $endian_swap (local.get $x1)))
-    (i64.store (i64.add (local.get $pos) (i64.const 8)) (call $endian_swap (local.get $x2)))
-    (i64.store (i64.add (local.get $pos) (i64.const 16)) (call $endian_swap (local.get $x3)))
-    (i64.store (i64.add (local.get $pos) (i64.const 24)) (call $endian_swap (local.get $x4)))
+    (block $label__7
+        (call $eth.finish (i32.wrap_i64 (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4))) (i32.wrap_i64 (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4))))
+    )
 )
 
 (func $revert
@@ -228,95 +153,10 @@
     (param $y2 i64)
     (param $y3 i64)
     (param $y4 i64)
-    (call $eth.revert (call $u256_to_i32 (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)) (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4)))
-)
-
-)
-(module
-    (import \"ethereum\" \"codeCopy\" (func $eth.codeCopy (param i32 i32 i32)))
-    (import \"ethereum\" \"finish\" (func $eth.finish (param i32 i32)))
-    (memory $memory (export \"memory\") 1)
-    (export \"main\" (func $main))
-    (global $global_ (mut i64) (i64.const 0))
-    (global $global__1 (mut i64) (i64.const 0))
-    (global $global__2 (mut i64) (i64.const 0))
-
-(func $main
-    (local $_1 i64)
-    (local $pos i64)
-    (local $hi i64)
-    (local $y i64)
-    (local $hi_1 i64)
-    (local $hi_2 i64)
-    (local $_2 i64)
-    (local $_3 i64)
-    (local $_4 i64)
-    (local $_5 i64)
-    (local $_6 i64)
-    (local $_7 i64)
-    (local $_8 i64)
-    (local $_9 i64)
-    (local.set $_1 (i64.const 0))
-    (local.set $pos (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 64)))
-    (local.set $hi (i64.shl (i64.or (i64.shl (i64.or (i64.and (i64.shl (local.get $_1) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (local.get $_1) (i64.const 8)) (i64.const 255))) (i64.const 16)) (call $endian_swap_16 (i64.shr_u (local.get $_1) (i64.const 16)))) (i64.const 32)))
-    (local.set $y (i64.or (local.get $hi) (call $endian_swap_32 (i64.shr_u (local.get $_1) (i64.const 32)))))
-    (i64.store (local.get $pos) (local.get $y))
-    (i64.store (i64.add (local.get $pos) (i64.const 8)) (local.get $y))
-    (i64.store (i64.add (local.get $pos) (i64.const 16)) (local.get $y))
-    (local.set $hi_1 (i64.shl (call $endian_swap_16 (i64.const 64)) (i64.const 16)))
-    (local.set $hi_2 (i64.shl (i64.or (local.get $hi_1) (call $endian_swap_16 (i64.shr_u (i64.const 64) (i64.const 16)))) (i64.const 32)))
-    (i64.store (i64.add (local.get $pos) (i64.const 24)) (i64.or (local.get $hi_2) (call $endian_swap_32 (i64.shr_u (i64.const 64) (i64.const 32)))))
-    (block
-        (local.set $_2 (datasize \"C_2_deployed\"))
-        (local.set $_3 (global.get $global_))
-        (local.set $_4 (global.get $global__1))
-        (local.set $_5 (global.get $global__2))
-
+    (block $label__8
+        (call $eth.revert (i32.wrap_i64 (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4))) (i32.wrap_i64 (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4))))
     )
-    (block
-        (local.set $_6 (dataoffset \"C_2_deployed\"))
-        (local.set $_7 (global.get $global_))
-        (local.set $_8 (global.get $global__1))
-        (local.set $_9 (global.get $global__2))
-
-    )
-    (call $eth.codeCopy (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (call $u256_to_i32 (local.get $_6) (local.get $_7) (local.get $_8) (local.get $_9)) (call $u256_to_i32 (local.get $_2) (local.get $_3) (local.get $_4) (local.get $_5)))
-    (call $eth.finish (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (call $u256_to_i32 (local.get $_2) (local.get $_3) (local.get $_4) (local.get $_5)))
-)
-
-(func $u256_to_i32
-    (param $x1 i64)
-    (param $x2 i64)
-    (param $x3 i64)
-    (param $x4 i64)
-    (result i64)
-    (local $v i64)
-    (if (i64.ne (local.get $v) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (then
-        (unreachable)))
-    (if (i64.ne (local.get $v) (i64.shr_u (local.get $x4) (i64.const 32))) (then
-        (unreachable)))
-    (local.set $v (local.get $x4))
-    (local.get $v)
-)
-
-(func $endian_swap_16
-    (param $x i64)
-    (result i64)
-    (local $y i64)
-    (local.set $y (i64.or (i64.and (i64.shl (local.get $x) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (local.get $x) (i64.const 8)) (i64.const 255))))
-    (local.get $y)
-)
-
-(func $endian_swap_32
-    (param $x i64)
-    (result i64)
-    (local $y i64)
-    (local $hi i64)
-    (local.set $hi (i64.shl (call $endian_swap_16 (local.get $x)) (i64.const 16)))
-    (local.set $y (i64.or (local.get $hi) (call $endian_swap_16 (i64.shr_u (local.get $x) (i64.const 16)))))
-    (local.get $y)
 )
 
 )
-"}}}},"errors":[{"component":"general","formattedMessage":"Warning: The Yul optimiser is still experimental. Do not use it in production unless correctness of generated code is verified with extensive tests.
-","message":"The Yul optimiser is still experimental. Do not use it in production unless correctness of generated code is verified with extensive tests.","severity":"warning","type":"Warning"}],"sources":{"A":{"id":0}}}
+"}}}},"sources":{"A":{"id":0}}}

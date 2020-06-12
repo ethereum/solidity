@@ -20,6 +20,11 @@ object "C_6" {
         code {
             {
                 mstore(64, 128)
+                if iszero(lt(calldatasize(), 4))
+                {
+                    mstore(0, 0)
+                    calldatacopy(28, 0, 4)
+                }
                 revert(0, 0)
             }
         }
@@ -48,6 +53,11 @@ object "D_9" {
         code {
             {
                 mstore(64, 128)
+                if iszero(lt(calldatasize(), 4))
+                {
+                    mstore(0, 0)
+                    calldatacopy(28, 0, 4)
+                }
                 revert(0, 0)
             }
         }

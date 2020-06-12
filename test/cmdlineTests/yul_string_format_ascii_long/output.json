@@ -28,7 +28,9 @@ object \"C_10\" {
 
             if iszero(lt(calldatasize(), 4))
             {
-                let selector := shift_right_224_unsigned(calldataload(0))
+                mstore(0, 0)
+                calldatacopy(28, 0, 4)
+                let selector := mload(0)
                 switch selector
 
                 case 0x26121ff0
