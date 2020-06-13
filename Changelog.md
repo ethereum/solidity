@@ -9,8 +9,7 @@ Compiler Features:
 
 
 Bugfixes:
-
-
+ * NatSpec: Do not consider ``////`` and ``/***`` as NatSpec comments.
 
 
 ### 0.6.10 (2020-06-11)
