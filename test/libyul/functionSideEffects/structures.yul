@@ -36,5 +36,5 @@
 // g: invalidatesStorage, invalidatesMemory
 // h: invalidatesStorage, invalidatesMemory
 // i: invalidatesStorage
-// r: movable, sideEffectFree, sideEffectFreeIfNoMSize
+// r: movable, movableIfStateInvariant, sideEffectFree, sideEffectFreeIfNoMSize
 // t: invalidatesMemory

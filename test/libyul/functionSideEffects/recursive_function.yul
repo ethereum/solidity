@@ -2,5 +2,5 @@
     function a() { a() }
 }
 // ----
-// : movable, sideEffectFree, sideEffectFreeIfNoMSize
+// : movable, movableIfStateInvariant, sideEffectFree, sideEffectFreeIfNoMSize
 // a:

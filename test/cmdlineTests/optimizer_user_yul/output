@@ -48,19 +48,22 @@ tag_5:
   0x02
     /* "optimizer_user_yul/input.sol":366:378  sstore(2, 3) */
   sstore
-    /* "optimizer_user_yul/input.sol":383:516  for { } sload(5) { } {... */
-tag_6:
     /* "optimizer_user_yul/input.sol":397:398  5 */
   0x05
     /* "optimizer_user_yul/input.sol":391:399  sload(5) */
   sload
-  tag_9
-  jumpi
-  jump(tag_8)
-tag_9:
+  iszero
     /* "optimizer_user_yul/input.sol":383:516  for { } sload(5) { } {... */
+tag_6:
+    /* "optimizer_user_yul/input.sol":391:399  sload(5) */
+  dup1
+    /* "optimizer_user_yul/input.sol":383:516  for { } sload(5) { } {... */
+  tag_8
+  jumpi
   jump(tag_6)
 tag_8:
+    /* "optimizer_user_yul/input.sol":387:390  { } */
+  pop
     /* "optimizer_user_yul/input.sol":347:520  {... */
   pop
     /* "optimizer_user_yul/input.sol":60:525  contract C... */

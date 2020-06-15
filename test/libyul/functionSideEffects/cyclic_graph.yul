@@ -4,7 +4,7 @@
     function c() { b() }
 }
 // ----
-// : movable, sideEffectFree, sideEffectFreeIfNoMSize
+// : movable, movableIfStateInvariant, sideEffectFree, sideEffectFreeIfNoMSize
 // a:
 // b:
 // c:
