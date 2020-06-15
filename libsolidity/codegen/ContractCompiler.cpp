@@ -646,7 +646,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		}
 		else
 		{
-			m_context << swapInstruction(stackLayout.size() - static_cast<size_t>(stackLayout.back()) - 1);
+			m_context << swapInstruction(stackLayout.size() - static_cast<unsigned>(stackLayout.back()) - 1u);
 			swap(stackLayout[static_cast<size_t>(stackLayout.back())], stackLayout.back());
 		}
 	for (size_t i = 0; i < stackLayout.size(); ++i)

@@ -184,13 +184,13 @@ void ProtoConverter::visit(VarRef const& _x)
 	{
 		// Ensure that there is at least one variable declaration to reference in function scope.
 		yulAssert(m_currentFuncVars.size() > 0, "Proto fuzzer: No variables to reference.");
-		m_output << *m_currentFuncVars[_x.varnum() % m_currentFuncVars.size()];
+		m_output << *m_currentFuncVars[static_cast<size_t>(_x.varnum()) % m_currentFuncVars.size()];
 	}
 	else
 	{
 		// Ensure that there is at least one variable declaration to reference in nested scopes.
 		yulAssert(m_currentGlobalVars.size() > 0, "Proto fuzzer: No global variables to reference.");
-		m_output << *m_currentGlobalVars[_x.varnum() % m_currentGlobalVars.size()];
+		m_output << *m_currentGlobalVars[static_cast<size_t>(_x.varnum()) % m_currentGlobalVars.size()];
 	}
 }
 
