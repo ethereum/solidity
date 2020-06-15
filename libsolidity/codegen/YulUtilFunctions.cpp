@@ -2515,8 +2515,13 @@ string YulUtilFunctions::revertReasonIfDebugAssembly(RevertStrings _revertString
 	templ("debugAndMessage", debugAndMessage);
 	if (debugAndMessage)
 	{
-		templ("sig", (u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)"))))
-				<< (256 - 32)).str());
+		templ(
+			"sig",
+			(
+				u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)")))) <<
+				(256 - 32)
+			).str()
+		);
 		templ("length", to_string(_message.length()));
 
 		size_t words = (_message.length() + 31) / 32;
