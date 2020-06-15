@@ -116,21 +116,21 @@ TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _li
 				!location["end"].isInt()
 			)
 				BOOST_THROW_EXCEPTION(runtime_error("Error must have a SourceLocation with start and end."));
-			int start = location["start"].asInt();
-			int end = location["end"].asInt();
+			size_t start = location["start"].asUInt();
+			size_t end = location["end"].asUInt();
 			std::string sourceName;
 			if (location.isMember("source") && location["source"].isString())
 				sourceName = location["source"].asString();
-			if (start >= static_cast<int>(preamble.size()))
+			if (start >= preamble.size())
 				start -= preamble.size();
-			if (end >= static_cast<int>(preamble.size()))
+			if (end >= preamble.size())
 				end -= preamble.size();
 			m_errorList.emplace_back(SyntaxTestError{
 				error["type"].asString(),
 				error["message"].asString(),
 				sourceName,
-				start,
-				end
+				static_cast<int>(start),
+				static_cast<int>(end)
 			});
 		}
 	}

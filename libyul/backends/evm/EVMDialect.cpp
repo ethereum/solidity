@@ -63,8 +63,8 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	evmasm::InstructionInfo info = evmasm::instructionInfo(_instruction);
 	BuiltinFunctionForEVM f;
 	f.name = YulString{_name};
-	f.parameters.resize(info.args);
-	f.returns.resize(info.ret);
+	f.parameters.resize(static_cast<size_t>(info.args));
+	f.returns.resize(static_cast<size_t>(info.ret));
 	f.sideEffects = EVMDialect::sideEffectsOfInstruction(_instruction);
 	f.controlFlowSideEffects.terminates = evmasm::SemanticInformation::terminatesControlFlow(_instruction);
 	f.controlFlowSideEffects.reverts = evmasm::SemanticInformation::reverts(_instruction);

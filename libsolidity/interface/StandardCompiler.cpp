@@ -111,7 +111,8 @@ Json::Value formatErrorWithException(
 	bool const& _warning,
 	string const& _type,
 	string const& _component,
-	string const& _message
+	string const& _message,
+	optional<ErrorId> _errorId = nullopt
 )
 {
 	string message;
@@ -122,7 +123,7 @@ Json::Value formatErrorWithException(
 	else
 		message = _message;
 
-	return formatError(
+	Json::Value error = formatError(
 		_warning,
 		_type,
 		_component,
@@ -131,6 +132,11 @@ Json::Value formatErrorWithException(
 		formatSourceLocation(boost::get_error_info<errinfo_sourceLocation>(_exception)),
 		formatSecondarySourceLocation(boost::get_error_info<errinfo_secondarySourceLocation>(_exception))
 	);
+
+	if (_errorId)
+		error["errorCode"] = to_string(_errorId.value().error);
+
+	return error;
 }
 
 map<string, set<string>> requestedContractNames(Json::Value const& _outputSelection)
@@ -857,7 +863,8 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 				err.type() == Error::Type::Warning,
 				err.typeName(),
 				"general",
-				""
+				"",
+				err.errorId()
 			));
 		}
 	}

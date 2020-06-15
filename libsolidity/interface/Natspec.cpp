@@ -37,6 +37,9 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
 
+	doc["version"] = Json::Value(c_natspecVersion);
+	doc["kind"]    = Json::Value("user");
+
 	auto constructorDefinition(_contractDef.constructor());
 	if (constructorDefinition)
 	{
@@ -90,6 +93,9 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
+
+	doc["version"] = Json::Value(c_natspecVersion);
+	doc["kind"] = Json::Value("dev");
 
 	auto author = extractDoc(_contractDef.annotation().docTags, "author");
 	if (!author.empty())

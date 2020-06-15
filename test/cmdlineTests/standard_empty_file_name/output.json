@@ -1,4 +1,4 @@
-{"errors":[{"component":"general","formattedMessage":":2:24: DeclarationError: Declaration \"A\" not found in \"\" (referenced as \".\").
+{"errors":[{"component":"general","errorCode":"2904","formattedMessage":":2:24: DeclarationError: Declaration \"A\" not found in \"\" (referenced as \".\").
 pragma solidity >=0.0; import {A} from \".\";
                        ^------------------^
 ","message":"Declaration \"A\" not found in \"\" (referenced as \".\").","severity":"error","type":"DeclarationError"}],"sources":{}}

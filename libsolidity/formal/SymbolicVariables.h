@@ -54,8 +54,8 @@ public:
 
 	virtual smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const;
 	std::string currentName() const;
-	virtual smtutil::Expression valueAtIndex(int _index) const;
-	virtual std::string nameAtIndex(int _index) const;
+	virtual smtutil::Expression valueAtIndex(unsigned _index) const;
+	virtual std::string nameAtIndex(unsigned _index) const;
 	virtual smtutil::Expression resetIndex();
 	virtual smtutil::Expression setIndex(unsigned _index);
 	virtual smtutil::Expression increaseIndex();
@@ -165,10 +165,10 @@ public:
 	// Explicit request the function declaration.
 	smtutil::Expression currentFunctionValue() const;
 
-	smtutil::Expression valueAtIndex(int _index) const override;
+	smtutil::Expression valueAtIndex(unsigned _index) const override;
 
 	// Explicit request the function declaration.
-	smtutil::Expression functionValueAtIndex(int _index) const;
+	smtutil::Expression functionValueAtIndex(unsigned _index) const;
 
 	smtutil::Expression resetIndex() override;
 	smtutil::Expression setIndex(unsigned _index) override;
@@ -251,7 +251,7 @@ public:
 	SymbolicArrayVariable(SymbolicArrayVariable&&) = default;
 
 	smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
-	smtutil::Expression valueAtIndex(int _index) const override;
+	smtutil::Expression valueAtIndex(unsigned _index) const override;
 	smtutil::Expression resetIndex() override { SymbolicVariable::resetIndex(); return m_pair.resetIndex(); }
 	smtutil::Expression setIndex(unsigned _index) override { SymbolicVariable::setIndex(_index); return m_pair.setIndex(_index); }
 	smtutil::Expression increaseIndex() override { SymbolicVariable::increaseIndex(); return m_pair.increaseIndex(); }

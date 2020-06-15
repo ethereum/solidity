@@ -38,7 +38,15 @@ SourceReferenceExtractor::Message SourceReferenceExtractor::extract(util::Except
 		for (auto const& info: secondaryLocation->infos)
 			secondary.emplace_back(extract(&info.second, info.first));
 
-	return Message{std::move(primary), _category, std::move(secondary)};
+	return Message{std::move(primary), _category, std::move(secondary), nullopt};
+}
+
+SourceReferenceExtractor::Message SourceReferenceExtractor::extract(Error const& _error)
+{
+	string category = (_error.type() == Error::Type::Warning) ? "Warning" : "Error";
+	Message message = extract(_error, category);
+	message.errorId = _error.errorId();
+	return message;
 }
 
 SourceReference SourceReferenceExtractor::extract(SourceLocation const* _location, std::string message)

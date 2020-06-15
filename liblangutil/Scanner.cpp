@@ -179,7 +179,7 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 			rollback(i);
 			return false;
 		}
-		x = x * 16 + d;
+		x = static_cast<char>(x * 16 + d);
 		advance();
 	}
 	o_scannedByte = x;
@@ -197,7 +197,7 @@ std::optional<unsigned> Scanner::scanUnicode()
 			rollback(i);
 			return {};
 		}
-		x = x * 16 + static_cast<size_t>(d);
+		x = x * 16 + static_cast<unsigned>(d);
 		advance();
 	}
 	return x;

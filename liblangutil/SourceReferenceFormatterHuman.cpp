@@ -151,6 +151,8 @@ void SourceReferenceFormatterHuman::printExceptionInformation(SourceReferenceExt
 {
 	// exception header line
 	errorColored() << _msg.category;
+	if (m_withErrorIds && _msg.errorId.has_value())
+		errorColored() << " (" << _msg.errorId.value().error << ")";
 	messageColored() << ": " << _msg.primary.message << '\n';
 
 	printSourceLocation(_msg.primary);

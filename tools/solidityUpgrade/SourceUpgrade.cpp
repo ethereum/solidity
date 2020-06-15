@@ -394,7 +394,7 @@ void SourceUpgrade::applyChange(
 
 void SourceUpgrade::printErrors() const
 {
-	auto formatter = make_unique<langutil::SourceReferenceFormatterHuman>(cout, true);
+	auto formatter = make_unique<langutil::SourceReferenceFormatterHuman>(cout, true, false);
 
 	for (auto const& error: m_compiler->errors())
 		if (error->type() != langutil::Error::Type::Warning)

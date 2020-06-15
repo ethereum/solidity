@@ -66,12 +66,12 @@ string SymbolicVariable::currentName() const
 	return uniqueSymbol(m_ssa->index());
 }
 
-smtutil::Expression SymbolicVariable::valueAtIndex(int _index) const
+smtutil::Expression SymbolicVariable::valueAtIndex(unsigned _index) const
 {
 	return m_context.newVariable(uniqueSymbol(_index), m_sort);
 }
 
-string SymbolicVariable::nameAtIndex(int _index) const
+string SymbolicVariable::nameAtIndex(unsigned _index) const
 {
 	return uniqueSymbol(_index);
 }
@@ -170,12 +170,12 @@ smtutil::Expression SymbolicFunctionVariable::currentFunctionValue() const
 	return m_declaration;
 }
 
-smtutil::Expression SymbolicFunctionVariable::valueAtIndex(int _index) const
+smtutil::Expression SymbolicFunctionVariable::valueAtIndex(unsigned _index) const
 {
 	return m_abstract.valueAtIndex(_index);
 }
 
-smtutil::Expression SymbolicFunctionVariable::functionValueAtIndex(int _index) const
+smtutil::Expression SymbolicFunctionVariable::functionValueAtIndex(unsigned _index) const
 {
 	return SymbolicVariable::valueAtIndex(_index);
 }
@@ -304,7 +304,7 @@ smtutil::Expression SymbolicArrayVariable::currentValue(frontend::TypePointer co
 	return m_pair.currentValue();
 }
 
-smtutil::Expression SymbolicArrayVariable::valueAtIndex(int _index) const
+smtutil::Expression SymbolicArrayVariable::valueAtIndex(unsigned _index) const
 {
 	return m_pair.valueAtIndex(_index);
 }

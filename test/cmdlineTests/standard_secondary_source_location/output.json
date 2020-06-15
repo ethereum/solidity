@@ -1,4 +1,4 @@
-{"errors":[{"component":"general","formattedMessage":"A:2:112: DeclarationError: Base constructor arguments given twice.
+{"errors":[{"component":"general","errorCode":"3364","formattedMessage":"A:2:112: DeclarationError: Base constructor arguments given twice.
 pragma solidity >=0.0; contract A { constructor(uint) public {} } contract B is A(2) { } contract C is A(3) {} contract D is B, C {}
                                                                                                                ^-------------------^
 A:2:81: First constructor call is here:

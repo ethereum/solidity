@@ -137,7 +137,7 @@ vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 		{
 			bool insideFunction = m_currentScope->insideFunction();
 			size_t stackSize = m_resolver(_identifier, yul::IdentifierContext::RValue, insideFunction);
-			if (stackSize != size_t(-1))
+			if (stackSize != numeric_limits<size_t>::max())
 			{
 				found = true;
 				yulAssert(stackSize == 1, "Invalid stack size of external reference.");
@@ -479,7 +479,7 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulString _valueT
 	{
 		bool insideFunction = m_currentScope->insideFunction();
 		size_t variableSize = m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction);
-		if (variableSize != size_t(-1))
+		if (variableSize != numeric_limits<size_t>::max())
 		{
 			found = true;
 			variableType = &m_dialect.defaultType;

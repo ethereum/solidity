@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE(inline_asm_end_location)
 		bool visit(InlineAssembly const& _inlineAsm) override
 		{
 			auto loc = _inlineAsm.location();
-			auto asmStr = loc.source->source().substr(loc.start, loc.end - loc.start);
+			auto asmStr = loc.source->source().substr(static_cast<size_t>(loc.start), static_cast<size_t>(loc.end - loc.start));
 			BOOST_CHECK_EQUAL(asmStr, "assembly { a := 0x12345678 }");
 			visited = true;
 

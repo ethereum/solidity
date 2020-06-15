@@ -374,8 +374,10 @@ Output Description
           "component": "general",
           // Mandatory ("error" or "warning")
           "severity": "error",
+          // Optional: unique code for the cause of the error
+          "errorCode": "3141",
           // Mandatory
-          "message": "Invalid keyword"
+          "message": "Invalid keyword",
           // Optional: the message formatted with source location
           "formattedMessage": "sourceFile.sol:100: Invalid keyword"
         }

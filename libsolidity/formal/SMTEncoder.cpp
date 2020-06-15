@@ -154,15 +154,16 @@ void SMTEncoder::visitFunctionOrModifier()
 	++m_modifierDepthStack.back();
 	FunctionDefinition const& function = dynamic_cast<FunctionDefinition const&>(*m_callStack.back().first);
 
-	if (m_modifierDepthStack.back() == int(function.modifiers().size()))
+	if (m_modifierDepthStack.back() == static_cast<int>(function.modifiers().size()))
 	{
 		if (function.isImplemented())
 			function.body().accept(*this);
 	}
 	else
 	{
-		solAssert(m_modifierDepthStack.back() < int(function.modifiers().size()), "");
-		ASTPointer<ModifierInvocation> const& modifierInvocation = function.modifiers()[m_modifierDepthStack.back()];
+		solAssert(m_modifierDepthStack.back() < static_cast<int>(function.modifiers().size()), "");
+		ASTPointer<ModifierInvocation> const& modifierInvocation =
+			function.modifiers()[static_cast<size_t>(m_modifierDepthStack.back())];
 		solAssert(modifierInvocation, "");
 		auto refDecl = modifierInvocation->name()->annotation().referencedDeclaration;
 		if (dynamic_cast<ContractDefinition const*>(refDecl))
@@ -1203,7 +1204,7 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 	smtutil::Expression const& _left,
 	smtutil::Expression const& _right,
 	TypePointer const& _commonType,
-	Expression const&
+	Expression const& _operation
 )
 {
 	static set<Token> validOperators{
@@ -1226,39 +1227,66 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 	else
 		intType = TypeProvider::uint256();
 
-	smtutil::Expression valueNoMod(
-		_op == Token::Add ? _left + _right :
-		_op == Token::Sub ? _left - _right :
-		_op == Token::Div ? division(_left, _right, *intType) :
-		_op == Token::Mul ? _left * _right :
-		/*_op == Token::Mod*/ _left % _right
-	);
+	auto valueUnbounded = [&]() -> smtutil::Expression {
+		switch (_op)
+		{
+		case Token::Add: return _left + _right;
+		case Token::Sub: return _left - _right;
+		case Token::Mul: return _left * _right;
+		case Token::Div: return division(_left, _right, *intType);
+		case Token::Mod: return _left % _right;
+		default: solAssert(false, "");
+		}
+	}();
 
 	if (_op == Token::Div || _op == Token::Mod)
+	{
 		m_context.addAssertion(_right != 0);
+
+		// mod and unsigned division never underflow/overflow
+		if (_op == Token::Mod || !intType->isSigned())
+			return {valueUnbounded, valueUnbounded};
+
+		// The only case where division overflows is
+		// - type is signed
+		// - LHS is type.min
+		// - RHS is -1
+		// the result is then -(type.min), which wraps back to type.min
+		smtutil::Expression maxLeft = _left == smt::minValue(*intType);
+		smtutil::Expression minusOneRight = _right == -1;
+		smtutil::Expression wrap = smtutil::Expression::ite(maxLeft && minusOneRight, smt::minValue(*intType), valueUnbounded);
+		return {wrap, valueUnbounded};
+	}
 
 	auto symbMin = smt::minValue(*intType);
 	auto symbMax = smt::maxValue(*intType);
 
 	smtutil::Expression intValueRange = (0 - symbMin) + symbMax + 1;
+	string suffix = to_string(_operation.id()) + "_" + to_string(m_context.newSlackId());
+	smt::SymbolicIntVariable k(intType, intType, "k_" + suffix, m_context);
+	smt::SymbolicIntVariable m(intType, intType, "m_" + suffix, m_context);
+
+	// To wrap around valueUnbounded in case of overflow or underflow, we replace it with a k, given:
+	// 1. k + m * intValueRange = valueUnbounded
+	// 2. k is in range of the desired integer type
+	auto wrap = k.currentValue();
+	m_context.addAssertion(valueUnbounded == (k.currentValue() + intValueRange * m.currentValue()));
+	m_context.addAssertion(k.currentValue() >= symbMin);
+	m_context.addAssertion(k.currentValue() <= symbMax);
+
+	// TODO this could be refined:
+	// for unsigned types it's enough to check only the upper bound.
 	auto value = smtutil::Expression::ite(
-		valueNoMod > symbMax,
-		valueNoMod % intValueRange,
+		valueUnbounded > symbMax,
+		wrap,
 		smtutil::Expression::ite(
-			valueNoMod < symbMin,
-			valueNoMod % intValueRange,
-			valueNoMod
+			valueUnbounded < symbMin,
+			wrap,
+			valueUnbounded
 		)
 	);
 
-	if (intType->isSigned())
-		value = smtutil::Expression::ite(
-			value > symbMax,
-			value - intValueRange,
-			value
-		);
-
-	return {value, valueNoMod};
+	return {value, valueUnbounded};
 }
 
 void SMTEncoder::compareOperation(BinaryOperation const& _op)
@@ -1679,8 +1707,8 @@ void SMTEncoder::mergeVariables(set<VariableDeclaration const*> const& _variable
 	for (auto const* decl: sortedVars)
 	{
 		solAssert(_indicesEndTrue.count(decl) && _indicesEndFalse.count(decl), "");
-		int trueIndex = _indicesEndTrue.at(decl);
-		int falseIndex = _indicesEndFalse.at(decl);
+		auto trueIndex = static_cast<unsigned>(_indicesEndTrue.at(decl));
+		auto falseIndex = static_cast<unsigned>(_indicesEndFalse.at(decl));
 		solAssert(trueIndex != falseIndex, "");
 		m_context.addAssertion(m_context.newValue(*decl) == smtutil::Expression::ite(
 			_condition,
@@ -1696,7 +1724,7 @@ smtutil::Expression SMTEncoder::currentValue(VariableDeclaration const& _decl)
 	return m_context.variable(_decl)->currentValue();
 }
 
-smtutil::Expression SMTEncoder::valueAtIndex(VariableDeclaration const& _decl, int _index)
+smtutil::Expression SMTEncoder::valueAtIndex(VariableDeclaration const& _decl, unsigned _index)
 {
 	solAssert(m_context.knownVariable(_decl), "");
 	return m_context.variable(_decl)->valueAtIndex(_index);
@@ -1819,7 +1847,7 @@ SMTEncoder::VariableIndices SMTEncoder::copyVariableIndices()
 void SMTEncoder::resetVariableIndices(VariableIndices const& _indices)
 {
 	for (auto const& var: _indices)
-		m_context.variable(*var.first)->setIndex(var.second);
+		m_context.variable(*var.first)->setIndex(static_cast<unsigned>(var.second));
 }
 
 void SMTEncoder::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)

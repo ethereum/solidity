@@ -51,10 +51,10 @@ void DeadCodeEliminator::operator()(Block& _block)
 	tie(controlFlowChange, index) = TerminationFinder{m_dialect}.firstUnconditionalControlFlowChange(_block.statements);
 
 	// Erase everything after the terminating statement that is not a function definition.
-	if (controlFlowChange != TerminationFinder::ControlFlow::FlowOut && index != size_t(-1))
+	if (controlFlowChange != TerminationFinder::ControlFlow::FlowOut && index != std::numeric_limits<size_t>::max())
 		_block.statements.erase(
 			remove_if(
-				_block.statements.begin() + index + 1,
+				_block.statements.begin() + static_cast<ptrdiff_t>(index) + 1,
 				_block.statements.end(),
 				[] (Statement const& _s) { return !holds_alternative<yul::FunctionDefinition>(_s); }
 			),
@@ -63,4 +63,3 @@ void DeadCodeEliminator::operator()(Block& _block)
 
 	ASTModifier::operator()(_block);
 }
-

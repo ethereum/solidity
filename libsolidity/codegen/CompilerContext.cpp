@@ -133,7 +133,7 @@ void CompilerContext::callLowLevelFunction(
 	*this << lowLevelFunctionTag(_name, _inArgs, _outArgs, _generator);
 
 	appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
-	adjustStackOffset(int(_outArgs) - 1 - _inArgs);
+	adjustStackOffset(static_cast<int>(_outArgs) - 1 - static_cast<int>(_inArgs));
 	*this << retTag.tag();
 }
 
@@ -147,7 +147,7 @@ void CompilerContext::callYulFunction(
 	auto const retTag = pushNewTag();
 	CompilerUtils(*this).moveIntoStack(_inArgs);
 	appendJumpTo(namedTag(_name));
-	adjustStackOffset(int(_outArgs) - 1 - _inArgs);
+	adjustStackOffset(static_cast<int>(_outArgs) - 1 - static_cast<int>(_inArgs));
 	*this << retTag.tag();
 }
 
@@ -181,7 +181,7 @@ void CompilerContext::appendMissingLowLevelFunctions()
 		tie(name, inArgs, outArgs, generator) = m_lowLevelFunctionGenerationQueue.front();
 		m_lowLevelFunctionGenerationQueue.pop();
 
-		setStackOffset(inArgs + 1);
+		setStackOffset(static_cast<int>(inArgs) + 1);
 		*this << m_lowLevelFunctions.at(name).tag();
 		generator(*this);
 		CompilerUtils(*this).moveToStackTop(outArgs);
@@ -298,12 +298,12 @@ unsigned CompilerContext::baseStackOffsetOfVariable(Declaration const& _declarat
 
 unsigned CompilerContext::baseToCurrentStackOffset(unsigned _baseOffset) const
 {
-	return m_asm->deposit() - _baseOffset - 1;
+	return static_cast<unsigned>(m_asm->deposit()) - _baseOffset - 1;
 }
 
 unsigned CompilerContext::currentToBaseStackOffset(unsigned _offset) const
 {
-	return m_asm->deposit() - _offset - 1;
+	return static_cast<unsigned>(m_asm->deposit()) - _offset - 1;
 }
 
 pair<u256, unsigned> CompilerContext::storageLocationOfVariable(Declaration const& _declaration) const
@@ -371,7 +371,7 @@ void CompilerContext::appendInlineAssembly(
 	OptimiserSettings const& _optimiserSettings
 )
 {
-	int startStackHeight = stackHeight();
+	unsigned startStackHeight = stackHeight();
 
 	set<yul::YulString> externallyUsedIdentifiers;
 	for (auto const& fun: _externallyUsedFunctions)
@@ -387,9 +387,9 @@ void CompilerContext::appendInlineAssembly(
 	) -> size_t
 	{
 		if (_insideFunction)
-			return size_t(-1);
+			return numeric_limits<size_t>::max();
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
-		return it == _localVariables.end() ? size_t(-1) : 1;
+		return it == _localVariables.end() ? numeric_limits<size_t>::max() : 1;
 	};
 	identifierAccess.generateCode = [&](
 		yul::Identifier const& _identifier,
@@ -399,8 +399,8 @@ void CompilerContext::appendInlineAssembly(
 	{
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
 		solAssert(it != _localVariables.end(), "");
-		int stackDepth = _localVariables.end() - it;
-		int stackDiff = _assembly.stackHeight() - startStackHeight + stackDepth;
+		auto stackDepth = static_cast<size_t>(distance(it, _localVariables.end()));
+		size_t stackDiff = static_cast<size_t>(_assembly.stackHeight()) - startStackHeight + stackDepth;
 		if (_context == yul::IdentifierContext::LValue)
 			stackDiff -= 1;
 		if (stackDiff < 1 || stackDiff > 16)

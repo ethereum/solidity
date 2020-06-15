@@ -133,7 +133,7 @@ public:
 
 	/// @returns an upper bound for the number of bytes required by this item, assuming that
 	/// the value of a jump tag takes @a _addressLength bytes.
-	unsigned bytesRequired(unsigned _addressLength) const;
+	size_t bytesRequired(size_t _addressLength) const;
 	size_t arguments() const;
 	size_t returnValues() const;
 	size_t deposit() const { return returnValues() - arguments(); }

@@ -1105,6 +1105,10 @@
         ],
         "released": "2020-01-02"
     },
+    "0.6.10": {
+        "bugs": [],
+        "released": "2020-06-11"
+    },
     "0.6.2": {
         "bugs": [
             "MissingEscapingInFormatting",
@@ -1165,7 +1169,9 @@
         "released": "2020-05-14"
     },
     "0.6.9": {
-        "bugs": [],
+        "bugs": [
+            "UsingForCalldata"
+        ],
         "released": "2020-06-04"
     }
 }
