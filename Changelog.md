@@ -5,6 +5,7 @@ Breaking changes:
  * Deprecated dot syntax for `value` and `gas`.
  * Deprecated the identifier `now`.
  * JSON AST: Removes members with ``null`` value from JSON output.
+ * Parser: NatSpec comments on variables are only allowed for public state variables.
  * Type Checker: Disallow shifts by signed types.
  * Type Checker: Exponentiation and shifts of literals by non-literals will always use ``uint256`` or ``int256`` as a type.
 
