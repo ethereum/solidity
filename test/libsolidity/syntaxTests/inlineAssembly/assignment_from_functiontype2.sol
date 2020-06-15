@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError: (112-113): Access to functions is not allowed in inline assembly.
+// TypeError: (112-113): Access to functions is not allowed in inline assembly.
