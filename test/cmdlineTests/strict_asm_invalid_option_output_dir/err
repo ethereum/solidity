@@ -1,0 +1,1 @@
+The following options are invalid in assembly mode: --output-dir, --gas, --combined-json, --optimize-yul, --no-optimize-yul. Optimization is disabled by default and can be enabled with --optimize.
