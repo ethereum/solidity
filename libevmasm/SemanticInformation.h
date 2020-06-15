@@ -56,6 +56,10 @@ struct SemanticInformation
 	/// without altering the semantics. This means it cannot depend on storage or memory,
 	/// cannot have any side-effects, but it can depend on a call-constant state of the blockchain.
 	static bool movable(Instruction _instruction);
+	/// @returns true for instructions EXTCODEHASH, EXTCODESIZE and SLOAD. For the rest, same as
+	/// movable(). This means that the call can be moved out of a block, provided that the block
+	/// doesn't contain an expression that invalidates state.
+	static bool movableIfStateInvariant(Instruction _instruction);
 	/// @returns true if the instruction can be removed without changing the semantics.
 	/// This does not mean that it has to be deterministic or retrieve information from
 	/// somewhere else than purely the values of its arguments.

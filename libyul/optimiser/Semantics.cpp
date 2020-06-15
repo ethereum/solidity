@@ -105,6 +105,7 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 	for (auto const& function: _directCallGraph.functionsWithLoops)
 	{
 		ret[function].movable = false;
+		ret[function].movableIfStateInvariant = false;
 		ret[function].sideEffectFree = false;
 		ret[function].sideEffectFreeIfNoMSize = false;
 	}
@@ -124,6 +125,7 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 		if (util::CycleDetector<YulString>(search).run(call.first))
 		{
 			ret[call.first].movable = false;
+			ret[call.first].movableIfStateInvariant = false;
 			ret[call.first].sideEffectFree = false;
 			ret[call.first].sideEffectFreeIfNoMSize = false;
 		}

@@ -232,6 +232,34 @@ bool SemanticInformation::movable(Instruction _instruction)
 	return true;
 }
 
+bool SemanticInformation::movableIfStateInvariant(Instruction _instruction)
+{
+	switch (_instruction)
+	{
+	case Instruction::EXTCODESIZE:
+	case Instruction::EXTCODEHASH:
+	case Instruction::SLOAD:
+	case Instruction::BALANCE:
+	case Instruction::SELFBALANCE:
+	case Instruction::RETURNDATASIZE:
+		return true;
+	default:
+		return movable(_instruction);
+	}
+}
+
+bool SemanticInformation::movableIfMemoryInvariant(Instruction _instruction)
+{
+	switch (_instruction)
+	{
+	case Instruction::KECCAK256:
+	case Instruction::MLOAD:
+		return true;
+	default:
+		return movable(_instruction);
+	}
+}
+
 bool SemanticInformation::sideEffectFree(Instruction _instruction)
 {
 	// These are not really functional.

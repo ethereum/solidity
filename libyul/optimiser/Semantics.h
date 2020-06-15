@@ -58,6 +58,22 @@ public:
 	void operator()(FunctionCall const& _functionCall) override;
 
 	bool movable() const { return m_sideEffects.movable; }
+	bool movable(SideEffectsCollector const& _blockSideEffects)
+	{
+		if (movable())
+			return true;
+		else if (movableIfStateInvariant() && !_blockSideEffects.invalidatesStorage())
+			return true;
+		// else if (
+		// 	movableIfMemoryInvariant() &&
+		// 	!_blockSideEffects.invalidatesMemory() &&
+		// 	!_blockSideEffects.containsMSize()
+		// )
+		// 	return true;
+
+		return false;
+	}
+	bool movableIfStateInvariant() const { return m_sideEffects.movableIfStateInvariant; }
 	bool sideEffectFree(bool _allowMSizeModification = false) const
 	{
 		if (_allowMSizeModification)

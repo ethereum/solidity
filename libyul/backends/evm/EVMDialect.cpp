@@ -276,6 +276,7 @@ SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instructio
 {
 	return SideEffects{
 		evmasm::SemanticInformation::movable(_instruction),
+		evmasm::SemanticInformation::movableIfStateInvariant(_instruction),
 		evmasm::SemanticInformation::sideEffectFree(_instruction),
 		evmasm::SemanticInformation::sideEffectFreeIfNoMSize(_instruction),
 		evmasm::SemanticInformation::invalidatesStorage(_instruction),

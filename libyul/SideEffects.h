@@ -37,6 +37,9 @@ struct SideEffects
 	/// This means it cannot depend on storage or memory, cannot have any side-effects,
 	/// but it can depend on state that is constant across an EVM-call.
 	bool movable = true;
+	/// If true, the expression in this code can be freely moved out of a block, that does not
+	/// invalidates the storage.
+	bool movableIfStateInvariant = true;
 	/// If true, the code can be removed without changing the semantics.
 	bool sideEffectFree = true;
 	/// If true, the code can be removed without changing the semantics as long as
@@ -52,7 +55,7 @@ struct SideEffects
 	/// @returns the worst-case side effects.
 	static SideEffects worst()
 	{
-		return SideEffects{false, false, false, true, true};
+		return SideEffects{false, false, false, false, true, true};
 	}
 
 	/// @returns the combined side effects of two pieces of code.
@@ -60,6 +63,7 @@ struct SideEffects
 	{
 		return SideEffects{
 			movable && _other.movable,
+			movableIfStateInvariant && _other.movableIfStateInvariant,
 			sideEffectFree && _other.sideEffectFree,
 			sideEffectFreeIfNoMSize && _other.sideEffectFreeIfNoMSize,
 			invalidatesStorage || _other.invalidatesStorage,
@@ -78,6 +82,7 @@ struct SideEffects
 	{
 		return
 			movable == _other.movable &&
+			movableIfStateInvariant == _other.movableIfStateInvariant &&
 			sideEffectFree == _other.sideEffectFree &&
 			sideEffectFreeIfNoMSize == _other.sideEffectFreeIfNoMSize &&
 			invalidatesStorage == _other.invalidatesStorage &&
