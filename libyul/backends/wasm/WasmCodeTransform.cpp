@@ -178,18 +178,23 @@ wasm::Expression WasmCodeTransform::operator()(Literal const& _literal)
 wasm::Expression WasmCodeTransform::operator()(If const& _if)
 {
 	yul::Type conditionType = m_typeInfo.typeOf(*_if.condition);
-	YulString ne_instruction = YulString(conditionType.str() + ".ne");
-	yulAssert(WasmDialect::instance().builtin(ne_instruction), "");
 
-	// TODO converting i64 to i32 might not always be needed.
-	vector<wasm::Expression> args;
-	args.emplace_back(visitReturnByValue(*_if.condition));
-	args.emplace_back(makeLiteral(translatedType(conditionType), 0));
-	return wasm::If{
-		make_unique<wasm::Expression>(wasm::BuiltinCall{ne_instruction.str(), std::move(args)}),
-		visit(_if.body.statements),
-		{}
-	};
+	wasm::Expression condition;
+	if (conditionType == "i32"_yulstring)
+		condition = visitReturnByValue(*_if.condition);
+	else if (conditionType == "i64"_yulstring)
+	{
+		vector<wasm::Expression> args;
+		args.emplace_back(visitReturnByValue(*_if.condition));
+		args.emplace_back(makeLiteral(translatedType("i64"_yulstring), 0));
+
+		// NOTE: `if` in wasm requires an i32 argument
+		condition = wasm::BuiltinCall{"i64.ne", std::move(args)};
+	}
+	else
+		yulAssert(false, "Invalid condition type");
+
+	return wasm::If{make_unique<wasm::Expression>(move(condition)), visit(_if.body.statements), {}};
 }
 
 wasm::Expression WasmCodeTransform::operator()(Switch const& _switch)
