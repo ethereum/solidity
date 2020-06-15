@@ -2495,7 +2495,7 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 	});
 }
 
-string YulUtilFunctions::revertReasonIfDebugAssembly(RevertStrings _revertStrings, std::string const& _message)
+string YulUtilFunctions::revertReasonIfDebugAssembly(RevertStrings _revertStrings, string const& _message)
 {
 	Whiskers templ(R"({
 		<?debugAndMessage>
