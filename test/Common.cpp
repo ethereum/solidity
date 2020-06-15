@@ -141,7 +141,7 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 			throw std::runtime_error(errorMessage.str());
 		}
 
-	if (!evmonePath.empty())
+	if (!evmonePath.empty() && vmPaths.empty())
 		vmPaths.emplace_back(evmonePath);
 
 	return true;
