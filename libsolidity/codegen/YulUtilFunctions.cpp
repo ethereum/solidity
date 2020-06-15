@@ -2511,7 +2511,7 @@ string YulUtilFunctions::revertReasonIfDebugAssembly(RevertStrings _revertString
 			revert(0, 0)
 		</debugAndMessage>
 	})");
-	bool debugAndMessage = _revertStrings >= RevertStrings::Debug && !_message.empty();
+	bool debugAndMessage = (_revertStrings >= RevertStrings::Debug && !_message.empty());
 	templ("debugAndMessage", debugAndMessage);
 	if (debugAndMessage)
 	{
