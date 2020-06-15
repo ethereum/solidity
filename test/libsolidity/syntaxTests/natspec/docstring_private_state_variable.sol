@@ -4,4 +4,4 @@ contract C {
     uint private state;
 }
 // ----
-// Warning: (17-74): Documentation tag on non-public state variables will be disallowed in 0.7.0. You will need to use the @dev tag explicitly.
+// DocstringParsingError: (17-74): Documentation tag @notice not valid for non-public state variables.

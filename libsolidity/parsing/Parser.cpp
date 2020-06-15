@@ -697,7 +697,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	}
 
 	if (!_options.isStateVariable && documentation != nullptr)
-		parserWarning(2837_error, "Only state variables can have a docstring. This will be disallowed in 0.7.0.");
+		parserError(2837_error, "Only state variables can have a docstring.");
 
 	if (dynamic_cast<FunctionTypeName*>(type.get()) && _options.isStateVariable && m_scanner->currentToken() == Token::LBrace)
 		fatalParserError(
