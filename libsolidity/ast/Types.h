@@ -315,9 +315,9 @@ public:
 
 	/// Returns the list of all members of this type. Default implementation: no members apart from bound.
 	/// @param _currentScope scope in which the members are accessed.
-	MemberList const& members(ContractDefinition const* _currentScope) const;
+	MemberList const& members(ASTNode const* _currentScope) const;
 	/// Convenience method, returns the type of the given named member or an empty pointer if no such member exists.
-	TypePointer memberType(std::string const& _name, ContractDefinition const* _currentScope = nullptr) const
+	TypePointer memberType(std::string const& _name, ASTNode const* _currentScope = nullptr) const
 	{
 		return members(_currentScope).memberType(_name);
 	}
@@ -361,12 +361,12 @@ public:
 
 private:
 	/// @returns a member list containing all members added to this type by `using for` directives.
-	static MemberList::MemberMap boundFunctions(Type const& _type, ContractDefinition const& _scope);
+	static MemberList::MemberMap boundFunctions(Type const& _type, ASTNode const& _scope);
 
 protected:
 	/// @returns the members native to this type depending on the given context. This function
 	/// is used (in conjunction with boundFunctions to fill m_members below.
-	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* /*_currentScope*/) const
+	virtual MemberList::MemberMap nativeMembers(ASTNode const* /*_currentScope*/) const
 	{
 		return MemberList::MemberMap();
 	}
@@ -379,7 +379,7 @@ protected:
 
 
 	/// List of member types (parameterised by scape), will be lazy-initialized.
-	mutable std::map<ContractDefinition const*, std::unique_ptr<MemberList>> m_members;
+	mutable std::map<ASTNode const*, std::unique_ptr<MemberList>> m_members;
 	mutable std::optional<std::vector<std::tuple<std::string, TypePointer>>> m_stackItems;
 	mutable std::optional<size_t> m_stackSize;
 };
@@ -408,7 +408,7 @@ public:
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
 
-	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
+	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
 
 	std::string toString(bool _short) const override;
 	std::string canonicalName() const override;
@@ -649,7 +649,7 @@ public:
 	bool nameable() const override { return true; }
 
 	std::string toString(bool) const override { return "bytes" + util::toString(m_bytes); }
-	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
+	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
 	TypePointer encodingType() const override { return this; }
 	TypeResult interfaceType(bool) const override { return this; }
 
@@ -786,7 +786,7 @@ public:
 	std::string toString(bool _short) const override;
 	std::string canonicalName() const override;
 	std::string signatureInExternalFunction(bool _structsByName) const override;
-	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
+	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
 	TypePointer encodingType() const override;
 	TypePointer decodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
@@ -889,7 +889,7 @@ public:
 	std::string toString(bool _short) const override;
 	std::string canonicalName() const override;
 
-	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
+	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
 
 	Type const* encodingType() const override;
 
@@ -949,7 +949,7 @@ public:
 	bool nameable() const override { return true; }
 	std::string toString(bool _short) const override;
 
-	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
+	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
 
 	Type const* encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
@@ -1220,7 +1220,7 @@ public:
 	bool nameable() const override;
 	bool canLiveOutsideStorage() const override { return m_kind == Kind::Internal || m_kind == Kind::External; }
 	bool hasSimpleZeroValueInMemory() const override { return false; }
-	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
+	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
 	TypePointer encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
 
@@ -1389,7 +1389,7 @@ public:
 	bool canLiveOutsideStorage() const override { return false; }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string toString(bool _short) const override { return "type(" + m_actualType->toString(_short) + ")"; }
-	MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
+	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
 
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 protected:
@@ -1441,7 +1441,7 @@ public:
 	bool canBeStored() const override { return false; }
 	bool canLiveOutsideStorage() const override { return true; }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
-	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
+	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
 
 	std::string toString(bool _short) const override;
 
@@ -1481,7 +1481,7 @@ public:
 	bool canBeStored() const override { return false; }
 	bool canLiveOutsideStorage() const override { return true; }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
-	MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
+	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
 
 	std::string toString(bool _short) const override;
 
