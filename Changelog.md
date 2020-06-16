@@ -28,11 +28,11 @@ Language Features:
 
 Compiler Features:
  * NatSpec: Add fields "kind" and "version" to the JSON output.
+ * Commandline Interface: Prevent some incompatible commandline options from being used together.
 
 
 Bugfixes:
-
-
+ * NatSpec: Do not consider ``////`` and ``/***`` as NatSpec comments.
 
 
 ### 0.6.10 (2020-06-11)

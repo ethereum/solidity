@@ -154,7 +154,7 @@ object "object" {
 
 
 Binary representation:
-0061736d0100000001480a60000060017e017e60027e7e017e60037e7e7e017e60047e7e7e7e017e60057e7e7e7e7e0060087e7e7e7e7e7e7e7e0060087e7e7e7e7e7e7e7e017e60027f7f0060037f7f7f0002310208657468657265756d0c73746f7261676553746f7265000808657468657265756d0c63616c6c44617461436f70790009030e0d0003070407020704010101050605030100010610037e0142000b7e0142000b7e0142000b071102066d656d6f72790200046d61696e00020aa5090df302011f7e02404200210002402000200020002000100921012300210223012103230221040b2001210520022106200321072004210842012109200020008420002009848450ada745ada745ad210a02400340200aa745ad500d01024002402005200620072008200020002000420a1008210b2300210c2301210d2302210e0b0240200b200c200d200e1005210f2300211023012111230221120b200f20108420112012848450ada745ad42005204400c030b024020052006200720082000200020004202100621132300211423012115230221160b201320148420152016848450ada745ad42005204400c030b0240200520062007200820002000200042041006211723002118230121192302211a0b20172018842019201a848450ada745ad42005204400c010b0b0240200520062007200820002000200020091004211b2300211c2301211d2302211e0b201b2105201c2106201d2107201e21080c000b0b20002000200020002005200620072008100e0b0b2f01037e0240200020017c2105200520027c21032005200054ada72003200554ada772ada7ad21040b2004240020030b72010b7e0240200320077c210c200c42007c210b024020022006200c200354ada7200b200c54ada772ada7ad1003210d2300210e0b200d210a024020012005200e1003210f230021100b200f2109024020002004201010032111230021120b201121080b20092400200a2401200b240220080b2601047e0240200020018420022003848450ada7ad21070b20052400200624012007240220040b4901047e02402000200451ad42005204402001200551ad42005204402002200651ad42005204402003200751ad42005204404201210b0b0b0b0b0b20092400200a2401200b240220080b2d01027e024002402000200154ad21032003420151044042ffffffff0f2102052000200152ad21020b0b0b20020b960101087e02404200210c0240200020041007210d200d42005104400240200120051007210e200e42005104400240200220061007210f200f42005104402003200754ad210c05200f42015104404200210c054201210c0b0b0b05200e42015104404200210c054201210c0b0b0b05200d42015104404200210c054201210c0b0b0b200ca7ad210b0b20092400200a2401200b240220080b8f0101087e02404200200020018420028452ad4200520440000b4200200342208852ad4200520440000b4200a72003a7ada74220a710014200a7290000100c21084200a74208a76aada7290000100c21094200a74210a76aada7290000100c210a4200a74218a76aada7290000100c210b2008210420092105200a2106200b21070b20052400200624012007240220040b1f01017e024020004208864280fe0383200042088842ff01838421010b20010b1e01027e02402000100a421086210220022000421088100a8421010b20010b1e01027e02402000100b422086210220022000422088100b8421010b20010b3f0002402000a72001100c3700002000a74208a76aada72002100c3700002000a74210a76aada72003100c3700002000a74218a76aada72004100c3700000b0b2500024042002000200120022003100d42202004200520062007100d4200a74220a710000b0b
+0061736d0100000001480a60000060017e017e60027e7e017f60037e7e7e017e60047e7e7e7e017e60087e7e7e7e7e7e7e7e0060087e7e7e7e7e7e7e7e017e60057f7e7e7e7e0060027f7f0060037f7f7f0002310208657468657265756d0c73746f7261676553746f7265000808657468657265756d0c63616c6c44617461436f70790009030e0d0003060406020604010101070505030100010610037e0142000b7e0142000b7e0142000b071102066d656d6f72790200046d61696e00020ac3080dde02030a7e017f147e02404200210002402000200020002000100921012300210223012103230221040b20012105200221062003210720042108420121092000200084200020098484504545210a02400340200a45450d01024002402005200620072008200020002000420a1008210b2300210c2301210d2302210e0b0240200b200c200d200e1005210f2300211023012111230221120b200f201084201120128484504504400c030b024020052006200720082000200020004202100621132300211423012115230221160b2013201484201520168484504504400c030b0240200520062007200820002000200042041006211723002118230121192302211a0b20172018842019201a8484504504400c010b0b0240200520062007200820002000200020091004211b2300211c2301211d2302211e0b201b2105201c2106201d2107201e21080c000b0b20002000200020002005200620072008100e0b0b2901037e0240200020017c2105200520027c21032005200054200320055472ad21040b2004240020030b6c010b7e0240200320077c210c200c42007c210b024020022006200c200354200b200c5472ad1003210d2300210e0b200d210a024020012005200e1003210f230021100b200f2109024020002004201010032111230021120b201121080b20092400200a2401200b240220080b2401047e0240200020018420022003848450ad21070b20052400200624012007240220040b3901047e0240200020045104402001200551044020022006510440200320075104404201210b0b0b0b0b0b20092400200a2401200b240220080b2701027f024002402000200154210320034101460440417f210205200020015221020b0b0b20020b960102047e047f02404100210c0240200020041007210d200d41004604400240200120051007210e200e41004604400240200220061007210f200f41004604402003200754210c05200f41014604404100210c054101210c0b0b0b05200e41014604404100210c054101210c0b0b0b05200d41014604404100210c054101210c0b0b0b200cad210b0b20092400200a2401200b240220080b7601087e024042002000200184200284520440000b42002003422088520440000b41002003a7412010014100290000100c2108410041086a290000100c2109410041106a290000100c210a410041186a290000100c210b2008210420092105200a2106200b21070b20052400200624012007240220040b1f01017e024020004208864280fe0383200042088842ff01838421010b20010b1e01027e02402000100a421086210220022000421088100a8421010b20010b1e01027e02402000100b422086210220022000422088100b8421010b20010b3200024020002001100c370000200041086a2002100c370000200041106a2003100c370000200041186a2004100c3700000b0b2300024041002000200120022003100d41202004200520062007100d4100412010000b0b
 
 Text representation:
 (module
@@ -177,7 +177,7 @@ Text representation:
     (local $x_6 i64)
     (local $x_7 i64)
     (local $_2 i64)
-    (local $_3 i64)
+    (local $_3 i32)
     (local $_4 i64)
     (local $_5 i64)
     (local $_6 i64)
@@ -212,10 +212,10 @@ Text representation:
         (local.set $x_6 (local.get $x_2))
         (local.set $x_7 (local.get $x_3))
         (local.set $_2 (i64.const 1))
-        (local.set $_3 (i64.extend_i32_u (i32.eqz (i32.wrap_i64 (i64.extend_i32_u (i32.eqz (i32.wrap_i64 (i64.extend_i32_u (i64.eqz (i64.or (i64.or (local.get $_1) (local.get $_1)) (i64.or (local.get $_1) (local.get $_2))))))))))))
+        (local.set $_3 (i32.eqz (i32.eqz (i64.eqz (i64.or (i64.or (local.get $_1) (local.get $_1)) (i64.or (local.get $_1) (local.get $_2)))))))
         (block $label__3
             (loop $label__5
-                (br_if $label__3 (i64.eqz (i64.extend_i32_u (i32.eqz (i32.wrap_i64 (local.get $_3))))))
+                (br_if $label__3 (i32.eqz (i32.eqz (local.get $_3))))
                 (block $label__4
                     (block
                         (local.set $_4 (call $lt (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 10)))
@@ -231,7 +231,7 @@ Text representation:
                         (local.set $_11 (global.get $global__2))
 
                     )
-                    (if (i64.ne (i64.extend_i32_u (i32.eqz (i32.wrap_i64 (i64.extend_i32_u (i64.eqz (i64.or (i64.or (local.get $_8) (local.get $_9)) (i64.or (local.get $_10) (local.get $_11)))))))) (i64.const 0)) (then
+                    (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $_8) (local.get $_9)) (i64.or (local.get $_10) (local.get $_11))))) (then
                         (br $label__3)
                     ))
                     (block
@@ -241,7 +241,7 @@ Text representation:
                         (local.set $_15 (global.get $global__2))
 
                     )
-                    (if (i64.ne (i64.extend_i32_u (i32.eqz (i32.wrap_i64 (i64.extend_i32_u (i64.eqz (i64.or (i64.or (local.get $_12) (local.get $_13)) (i64.or (local.get $_14) (local.get $_15)))))))) (i64.const 0)) (then
+                    (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $_12) (local.get $_13)) (i64.or (local.get $_14) (local.get $_15))))) (then
                         (br $label__3)
                     ))
                     (block
@@ -251,7 +251,7 @@ Text representation:
                         (local.set $_19 (global.get $global__2))
 
                     )
-                    (if (i64.ne (i64.extend_i32_u (i32.eqz (i32.wrap_i64 (i64.extend_i32_u (i64.eqz (i64.or (i64.or (local.get $_16) (local.get $_17)) (i64.or (local.get $_18) (local.get $_19)))))))) (i64.const 0)) (then
+                    (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $_16) (local.get $_17)) (i64.or (local.get $_18) (local.get $_19))))) (then
                         (br $label__4)
                     ))
 
@@ -286,7 +286,7 @@ Text representation:
     (block $label__6
         (local.set $t (i64.add (local.get $x) (local.get $y)))
         (local.set $r (i64.add (local.get $t) (local.get $c)))
-        (local.set $r_c (i64.extend_i32_u (i32.wrap_i64 (i64.extend_i32_u (i32.or (i32.wrap_i64 (i64.extend_i32_u (i64.lt_u (local.get $t) (local.get $x)))) (i32.wrap_i64 (i64.extend_i32_u (i64.lt_u (local.get $r) (local.get $t)))))))))
+        (local.set $r_c (i64.extend_i32_u (i32.or (i64.lt_u (local.get $t) (local.get $x)) (i64.lt_u (local.get $r) (local.get $t)))))
 
     )
     (global.set $global_ (local.get $r_c))
@@ -318,7 +318,7 @@ Text representation:
         (local.set $t (i64.add (local.get $x4) (local.get $y4)))
         (local.set $r4 (i64.add (local.get $t) (i64.const 0)))
         (block
-            (local.set $r3_1 (call $add_carry (local.get $x3) (local.get $y3) (i64.extend_i32_u (i32.wrap_i64 (i64.extend_i32_u (i32.or (i32.wrap_i64 (i64.extend_i32_u (i64.lt_u (local.get $t) (local.get $x4)))) (i32.wrap_i64 (i64.extend_i32_u (i64.lt_u (local.get $r4) (local.get $t))))))))))
+            (local.set $r3_1 (call $add_carry (local.get $x3) (local.get $y3) (i64.extend_i32_u (i32.or (i64.lt_u (local.get $t) (local.get $x4)) (i64.lt_u (local.get $r4) (local.get $t))))))
             (local.set $carry (global.get $global_))
 
         )
@@ -354,7 +354,7 @@ Text representation:
     (local $r3 i64)
     (local $r4 i64)
     (block $label__8
-        (local.set $r4 (i64.extend_i32_u (i32.wrap_i64 (i64.extend_i32_u (i64.eqz (i64.or (i64.or (local.get $x1) (local.get $x2)) (i64.or (local.get $x3) (local.get $x4))))))))
+        (local.set $r4 (i64.extend_i32_u (i64.eqz (i64.or (i64.or (local.get $x1) (local.get $x2)) (i64.or (local.get $x3) (local.get $x4))))))
 
     )
     (global.set $global_ (local.get $r2))
@@ -378,10 +378,10 @@ Text representation:
     (local $r3 i64)
     (local $r4 i64)
     (block $label__9
-        (if (i64.ne (i64.extend_i32_u (i64.eq (local.get $x1) (local.get $y1))) (i64.const 0)) (then
-            (if (i64.ne (i64.extend_i32_u (i64.eq (local.get $x2) (local.get $y2))) (i64.const 0)) (then
-                (if (i64.ne (i64.extend_i32_u (i64.eq (local.get $x3) (local.get $y3))) (i64.const 0)) (then
-                    (if (i64.ne (i64.extend_i32_u (i64.eq (local.get $x4) (local.get $y4))) (i64.const 0)) (then
+        (if (i64.eq (local.get $x1) (local.get $y1)) (then
+            (if (i64.eq (local.get $x2) (local.get $y2)) (then
+                (if (i64.eq (local.get $x3) (local.get $y3)) (then
+                    (if (i64.eq (local.get $x4) (local.get $y4)) (then
                         (local.set $r4 (i64.const 1))
                     ))
                 ))
@@ -398,16 +398,16 @@ Text representation:
 (func $cmp
     (param $a i64)
     (param $b i64)
-    (result i64)
-    (local $r i64)
-    (local $condition i64)
+    (result i32)
+    (local $r i32)
+    (local $condition i32)
     (block $label__10
         (block
-            (local.set $condition (i64.extend_i32_u (i64.lt_u (local.get $a) (local.get $b))))
-            (if (i64.eq (local.get $condition) (i64.const 1)) (then
-                (local.set $r (i64.const 4294967295))
+            (local.set $condition (i64.lt_u (local.get $a) (local.get $b)))
+            (if (i32.eq (local.get $condition) (i32.const 1)) (then
+                (local.set $r (i32.const 4294967295))
             )(else
-                (local.set $r (i64.extend_i32_u (i64.ne (local.get $a) (local.get $b))))
+                (local.set $r (i64.ne (local.get $a) (local.get $b)))
             ))
 
         )
@@ -430,50 +430,50 @@ Text representation:
     (local $z2 i64)
     (local $z3 i64)
     (local $z4 i64)
-    (local $z i64)
-    (local $condition_12 i64)
-    (local $condition_13 i64)
-    (local $condition_14 i64)
+    (local $z i32)
+    (local $condition_12 i32)
+    (local $condition_13 i32)
+    (local $condition_14 i32)
     (block $label__11
-        (local.set $z (i64.const 0))
+        (local.set $z (i32.const 0))
         (block
             (local.set $condition_12 (call $cmp (local.get $x1) (local.get $y1)))
-            (if (i64.eq (local.get $condition_12) (i64.const 0)) (then
+            (if (i32.eq (local.get $condition_12) (i32.const 0)) (then
                 (block
                     (local.set $condition_13 (call $cmp (local.get $x2) (local.get $y2)))
-                    (if (i64.eq (local.get $condition_13) (i64.const 0)) (then
+                    (if (i32.eq (local.get $condition_13) (i32.const 0)) (then
                         (block
                             (local.set $condition_14 (call $cmp (local.get $x3) (local.get $y3)))
-                            (if (i64.eq (local.get $condition_14) (i64.const 0)) (then
-                                (local.set $z (i64.extend_i32_u (i64.lt_u (local.get $x4) (local.get $y4))))
+                            (if (i32.eq (local.get $condition_14) (i32.const 0)) (then
+                                (local.set $z (i64.lt_u (local.get $x4) (local.get $y4)))
                             )(else
-                                (if (i64.eq (local.get $condition_14) (i64.const 1)) (then
-                                    (local.set $z (i64.const 0))
+                                (if (i32.eq (local.get $condition_14) (i32.const 1)) (then
+                                    (local.set $z (i32.const 0))
                                 )(else
-                                    (local.set $z (i64.const 1))
+                                    (local.set $z (i32.const 1))
                                 ))
                             ))
 
                         )
                     )(else
-                        (if (i64.eq (local.get $condition_13) (i64.const 1)) (then
-                            (local.set $z (i64.const 0))
+                        (if (i32.eq (local.get $condition_13) (i32.const 1)) (then
+                            (local.set $z (i32.const 0))
                         )(else
-                            (local.set $z (i64.const 1))
+                            (local.set $z (i32.const 1))
                         ))
                     ))
 
                 )
             )(else
-                (if (i64.eq (local.get $condition_12) (i64.const 1)) (then
-                    (local.set $z (i64.const 0))
+                (if (i32.eq (local.get $condition_12) (i32.const 1)) (then
+                    (local.set $z (i32.const 0))
                 )(else
-                    (local.set $z (i64.const 1))
+                    (local.set $z (i32.const 1))
                 ))
             ))
 
         )
-        (local.set $z4 (i64.extend_i32_u (i32.wrap_i64 (local.get $z))))
+        (local.set $z4 (i64.extend_i32_u (local.get $z)))
 
     )
     (global.set $global_ (local.get $z2))
@@ -497,15 +497,15 @@ Text representation:
     (local $z3_1 i64)
     (local $z4_1 i64)
     (block $label__15
-        (if (i64.ne (i64.extend_i32_u (i64.ne (i64.const 0) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3)))) (i64.const 0)) (then
+        (if (i64.ne (i64.const 0) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (then
             (unreachable)))
-        (if (i64.ne (i64.extend_i32_u (i64.ne (i64.const 0) (i64.shr_u (local.get $x4) (i64.const 32)))) (i64.const 0)) (then
+        (if (i64.ne (i64.const 0) (i64.shr_u (local.get $x4) (i64.const 32))) (then
             (unreachable)))
-        (call $eth.callDataCopy (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.extend_i32_u (i32.wrap_i64 (local.get $x4)))) (i32.wrap_i64 (i64.const 32)))
-        (local.set $z1_1 (call $endian_swap (i64.load (i32.wrap_i64 (i64.const 0)))))
-        (local.set $z2_1 (call $endian_swap (i64.load (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.const 8))))))))
-        (local.set $z3_1 (call $endian_swap (i64.load (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.const 16))))))))
-        (local.set $z4_1 (call $endian_swap (i64.load (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.const 24))))))))
+        (call $eth.callDataCopy (i32.const 0) (i32.wrap_i64 (local.get $x4)) (i32.const 32))
+        (local.set $z1_1 (call $endian_swap (i64.load (i32.const 0))))
+        (local.set $z2_1 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 8)))))
+        (local.set $z3_1 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 16)))))
+        (local.set $z4_1 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 24)))))
         (local.set $z1 (local.get $z1_1))
         (local.set $z2 (local.get $z2_1))
         (local.set $z3 (local.get $z3_1))
@@ -556,16 +556,16 @@ Text representation:
 )
 
 (func $mstore_internal
-    (param $pos i64)
+    (param $pos i32)
     (param $y1 i64)
     (param $y2 i64)
     (param $y3 i64)
     (param $y4 i64)
     (block $label__19
-        (i64.store (i32.wrap_i64 (local.get $pos)) (call $endian_swap (local.get $y1)))
-        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $pos)) (i32.wrap_i64 (i64.const 8))))) (call $endian_swap (local.get $y2)))
-        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $pos)) (i32.wrap_i64 (i64.const 16))))) (call $endian_swap (local.get $y3)))
-        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $pos)) (i32.wrap_i64 (i64.const 24))))) (call $endian_swap (local.get $y4)))
+        (i64.store (local.get $pos) (call $endian_swap (local.get $y1)))
+        (i64.store (i32.add (local.get $pos) (i32.const 8)) (call $endian_swap (local.get $y2)))
+        (i64.store (i32.add (local.get $pos) (i32.const 16)) (call $endian_swap (local.get $y3)))
+        (i64.store (i32.add (local.get $pos) (i32.const 24)) (call $endian_swap (local.get $y4)))
     )
 )
 
@@ -579,9 +579,9 @@ Text representation:
     (param $y3 i64)
     (param $y4 i64)
     (block $label__20
-        (call $mstore_internal (i64.const 0) (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4))
-        (call $mstore_internal (i64.const 32) (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4))
-        (call $eth.storageStore (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.const 32)))
+        (call $mstore_internal (i32.const 0) (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4))
+        (call $mstore_internal (i32.const 32) (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4))
+        (call $eth.storageStore (i32.const 0) (i32.const 32))
     )
 )
 

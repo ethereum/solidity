@@ -118,7 +118,7 @@ enum class IdentifierContext { LValue, RValue, VariableDeclaration };
 /// to inline assembly (not used in standalone assembly mode).
 struct ExternalIdentifierAccess
 {
-	using Resolver = std::function<size_t(Identifier const&, IdentifierContext, bool /*_crossesFunctionBoundary*/)>;
+	using Resolver = std::function<bool(Identifier const&, IdentifierContext, bool /*_crossesFunctionBoundary*/)>;
 	/// Resolve an external reference given by the identifier in the given context.
 	/// @returns the size of the value (number of stack slots) or size_t(-1) if not found.
 	Resolver resolve;

@@ -326,28 +326,28 @@ bool CompilerStack::analyze()
 			if (source->ast && !resolver.performImports(*source->ast, sourceUnitsByName))
 				return false;
 
-		// This is the main name and type resolution loop. Needs to be run for every contract, because
-		// the special variables "this" and "super" must be set appropriately.
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !resolver.resolveNamesAndTypes(*source->ast))
+				return false;
+
+		// Store contract definitions.
 		for (Source const* source: m_sourceOrder)
 			if (source->ast)
-				for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+				for (
+					ContractDefinition const* contract:
+					ASTNode::filteredNodes<ContractDefinition>(source->ast->nodes())
+				)
 				{
-					if (!resolver.resolveNamesAndTypes(*node))
-						return false;
-					if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-					{
-						// Note that we now reference contracts by their fully qualified names, and
-						// thus contracts can only conflict if declared in the same source file. This
-						// should already cause a double-declaration error elsewhere.
-						if (m_contracts.find(contract->fullyQualifiedName()) == m_contracts.end())
-							m_contracts[contract->fullyQualifiedName()].contract = contract;
-						else
-							solAssert(
-								m_errorReporter.hasErrors(),
-								"Contract already present (name clash?), but no error was reported."
-							);
-					}
-
+					// Note that we now reference contracts by their fully qualified names, and
+					// thus contracts can only conflict if declared in the same source file. This
+					// should already cause a double-declaration error elsewhere.
+					if (!m_contracts.count(contract->fullyQualifiedName()))
+						m_contracts[contract->fullyQualifiedName()].contract = contract;
+					else
+						solAssert(
+							m_errorReporter.hasErrors(),
+							"Contract already present (name clash?), but no error was reported."
+						);
 				}
 
 		DeclarationTypeChecker declarationTypeChecker(m_errorReporter, m_evmVersion);
@@ -376,11 +376,8 @@ bool CompilerStack::analyze()
 		// which is only done one step later.
 		TypeChecker typeChecker(m_evmVersion, m_errorReporter);
 		for (Source const* source: m_sourceOrder)
-			if (source->ast)
-				for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-					if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-						if (!typeChecker.checkTypeRequirements(*contract))
-							noErrors = false;
+			if (source->ast && !typeChecker.checkTypeRequirements(*source->ast))
+				noErrors = false;
 
 		if (noErrors)
 		{

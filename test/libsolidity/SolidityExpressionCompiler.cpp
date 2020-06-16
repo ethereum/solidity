@@ -118,19 +118,12 @@ bytes compileFirstExpression(
 	GlobalContext globalContext;
 	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), errorReporter);
 	resolver.registerDeclarations(*sourceUnit);
-	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
-		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-			BOOST_REQUIRE_MESSAGE(resolver.resolveNamesAndTypes(*contract), "Resolving names failed");
+	BOOST_REQUIRE_MESSAGE(resolver.resolveNamesAndTypes(*sourceUnit), "Resolving names failed");
 	DeclarationTypeChecker declarationTypeChecker(errorReporter, solidity::test::CommonOptions::get().evmVersion());
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		BOOST_REQUIRE(declarationTypeChecker.check(*node));
-	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
-		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-		{
-			ErrorReporter errorReporter(errors);
-			TypeChecker typeChecker(solidity::test::CommonOptions::get().evmVersion(), errorReporter);
-			BOOST_REQUIRE(typeChecker.checkTypeRequirements(*contract));
-		}
+	TypeChecker typeChecker(solidity::test::CommonOptions::get().evmVersion(), errorReporter);
+	BOOST_REQUIRE(typeChecker.checkTypeRequirements(*sourceUnit));
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{

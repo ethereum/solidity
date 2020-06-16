@@ -123,11 +123,13 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 	return !error;
 }
 
-bool NameAndTypeResolver::resolveNamesAndTypes(ASTNode& _node, bool _resolveInsideCode)
+bool NameAndTypeResolver::resolveNamesAndTypes(SourceUnit& _source)
 {
 	try
 	{
-		return resolveNamesAndTypesInternal(_node, _resolveInsideCode);
+		for (shared_ptr<ASTNode> const& node: _source.nodes())
+			if (!resolveNamesAndTypesInternal(*node, true))
+				return false;
 	}
 	catch (langutil::FatalError const&)
 	{
@@ -135,6 +137,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ASTNode& _node, bool _resolveInsi
 			throw; // Something is weird here, rather throw again.
 		return false;
 	}
+	return true;
 }
 
 bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
@@ -227,13 +230,14 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 		bool success = true;
 		setScope(contract->scope());
 		solAssert(!!m_currentScope, "");
+		solAssert(_resolveInsideCode, "");
 
 		m_globalContext.setCurrentContract(*contract);
 		updateDeclaration(*m_globalContext.currentSuper());
 		updateDeclaration(*m_globalContext.currentThis());
 
 		for (ASTPointer<InheritanceSpecifier> const& baseContract: contract->baseContracts())
-			if (!resolveNamesAndTypes(*baseContract, true))
+			if (!resolveNamesAndTypesInternal(*baseContract, true))
 				success = false;
 
 		setScope(contract);
@@ -254,15 +258,12 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 		for (ASTPointer<ASTNode> const& node: contract->subNodes())
 		{
 			setScope(contract);
-			if (!resolveNamesAndTypes(*node, false))
+			if (!resolveNamesAndTypesInternal(*node, false))
 				success = false;
 		}
 
 		if (!success)
 			return false;
-
-		if (!_resolveInsideCode)
-			return success;
 
 		setScope(contract);
 
@@ -270,7 +271,7 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 		for (ASTPointer<ASTNode> const& node: contract->subNodes())
 		{
 			setScope(contract);
-			if (!resolveNamesAndTypes(*node, true))
+			if (!resolveNamesAndTypesInternal(*node, true))
 				success = false;
 		}
 		return success;

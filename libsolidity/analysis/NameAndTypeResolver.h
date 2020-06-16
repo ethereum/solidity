@@ -65,12 +65,9 @@ public:
 	bool registerDeclarations(SourceUnit& _sourceUnit, ASTNode const* _currentScope = nullptr);
 	/// Applies the effect of import directives.
 	bool performImports(SourceUnit& _sourceUnit, std::map<std::string, SourceUnit const*> const& _sourceUnits);
-	/// Resolves all names and types referenced from the given AST Node.
-	/// This is usually only called at the contract level, but with a bit of care, it can also
-	/// be called at deeper levels.
-	/// @param _resolveInsideCode if false, does not descend into nodes that contain code.
+	/// Resolves all names and types referenced from the given Source Node.
 	/// @returns false in case of error.
-	bool resolveNamesAndTypes(ASTNode& _node, bool _resolveInsideCode = true);
+	bool resolveNamesAndTypes(SourceUnit& _source);
 	/// Updates the given global declaration (used for "this"). Not to be used with declarations
 	/// that create their own scope.
 	/// @returns false in case of error.

@@ -132,17 +132,11 @@ vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 	}
 	else
 	{
-		bool found = false;
-		if (m_resolver)
-		{
-			bool insideFunction = m_currentScope->insideFunction();
-			size_t stackSize = m_resolver(_identifier, yul::IdentifierContext::RValue, insideFunction);
-			if (stackSize != numeric_limits<size_t>::max())
-			{
-				found = true;
-				yulAssert(stackSize == 1, "Invalid stack size of external reference.");
-			}
-		}
+		bool found = m_resolver && m_resolver(
+			_identifier,
+			yul::IdentifierContext::RValue,
+			m_currentScope->insideFunction()
+		);
 		if (!found && watcher.ok())
 			// Only add an error message if the callback did not do it.
 			m_errorReporter.declarationError(8198_error, _identifier.location, "Identifier not found.");
@@ -478,12 +472,10 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulString _valueT
 	else if (m_resolver)
 	{
 		bool insideFunction = m_currentScope->insideFunction();
-		size_t variableSize = m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction);
-		if (variableSize != numeric_limits<size_t>::max())
+		if (m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction))
 		{
 			found = true;
 			variableType = &m_dialect.defaultType;
-			yulAssert(variableSize == 1, "Invalid stack size of external reference.");
 		}
 	}
 

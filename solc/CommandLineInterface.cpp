@@ -58,6 +58,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 #include <boost/algorithm/string.hpp>
 
 #ifdef _WIN32 // windows
@@ -1131,6 +1132,21 @@ bool CommandLineInterface::processInput()
 		}
 	}
 
+	vector<string> const exclusiveModes = {
+		g_argStandardJSON,
+		g_argLink,
+		g_argAssemble,
+		g_argStrictAssembly,
+		g_argYul,
+		g_argImportAst,
+	};
+	if (countEnabledOptions(exclusiveModes) > 1)
+	{
+		serr() << "The following options are mutually exclusive: " << joinOptionNames(exclusiveModes) << ". ";
+		serr() << "Select at most one." << endl;
+		return false;
+	}
+
 	if (m_args.count(g_argStandardJSON))
 	{
 		vector<string> inputFiles;
@@ -1176,6 +1192,22 @@ bool CommandLineInterface::processInput()
 
 	if (m_args.count(g_argAssemble) || m_args.count(g_argStrictAssembly) || m_args.count(g_argYul))
 	{
+		vector<string> const nonAssemblyModeOptions = {
+			// TODO: The list is not complete. Add more.
+			g_argOutputDir,
+			g_argGas,
+			g_argCombinedJson,
+			g_strOptimizeYul,
+			g_strNoOptimizeYul,
+		};
+		if (countEnabledOptions(nonAssemblyModeOptions) >= 1)
+		{
+			serr() << "The following options are invalid in assembly mode: ";
+			serr() << joinOptionNames(nonAssemblyModeOptions) << ". ";
+			serr() << "Optimization is disabled by default and can be enabled with --" << g_argOptimize << "." << endl;
+			return false;
+		}
+
 		// switch to assembly mode
 		m_onlyAssemble = true;
 		using Input = yul::AssemblyStack::Language;
@@ -1183,16 +1215,6 @@ bool CommandLineInterface::processInput()
 		Input inputLanguage = m_args.count(g_argYul) ? Input::Yul : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
 		bool optimize = m_args.count(g_argOptimize);
-		if (m_args.count(g_strOptimizeYul))
-		{
-			serr() << "--" << g_strOptimizeYul << " is invalid in assembly mode. Use --" << g_argOptimize << " instead." << endl;
-			return false;
-		}
-		if (m_args.count(g_strNoOptimizeYul))
-		{
-			serr() << "--" << g_strNoOptimizeYul << " is invalid in assembly mode. Optimization is disabled by default and can be enabled with --" << g_argOptimize << "." << endl;
-			return false;
-		}
 
 		optional<string> yulOptimiserSteps;
 		if (m_args.count(g_strYulOptimizations))
@@ -1275,6 +1297,13 @@ bool CommandLineInterface::processInput()
 
 		return assemble(inputLanguage, targetMachine, optimize, yulOptimiserSteps);
 	}
+	else if (countEnabledOptions({g_strYulDialect, g_argMachine}) >= 1)
+	{
+		serr() << "--" << g_strYulDialect << " and --" << g_argMachine << " ";
+		serr() << "are only valid in assembly mode." << endl;
+		return false;
+	}
+
 	if (m_args.count(g_argLink))
 	{
 		// switch to linker mode
@@ -1880,6 +1909,23 @@ void CommandLineInterface::outputCompilationResults()
 		else
 			serr() << "Compiler run successful, no output requested." << endl;
 	}
+}
+
+size_t CommandLineInterface::countEnabledOptions(vector<string> const& _optionNames) const
+{
+	size_t count = 0;
+	for (string const& _option: _optionNames)
+		count += m_args.count(_option);
+
+	return count;
+}
+
+string CommandLineInterface::joinOptionNames(vector<string> const& _optionNames, string _separator)
+{
+	return boost::algorithm::join(
+		_optionNames | boost::adaptors::transformed([](string const& _option){ return "--" + _option; }),
+		_separator
+	);
 }
 
 }

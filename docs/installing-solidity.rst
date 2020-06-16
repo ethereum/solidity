@@ -314,6 +314,16 @@ you should fork Solidity and add your personal fork as a second remote:
 
     git remote add personal git@github.com:[username]/solidity.git
 
+.. note::
+    This method will result in a prerelease build leading to e.g. a flag
+    being set in each bytecode produced by such a compiler.
+    If you want to re-build a released Solidity compiler, then
+    please use the source tarball on the github release page:
+
+    https://github.com/ethereum/solidity/releases/download/v0.X.Y/solidity_0.X.Y.tar.gz
+
+    (not the "Source code" provided by github).
+
 Command-Line Build
 ------------------
 

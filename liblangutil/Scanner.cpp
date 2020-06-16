@@ -313,7 +313,6 @@ size_t Scanner::scanSingleLineDocComment()
 {
 	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
 	size_t endPosition = m_source->position();
-	advance(); //consume the last '/' at ///
 
 	skipWhitespaceExceptUnicodeLinebreak();
 
@@ -332,6 +331,8 @@ size_t Scanner::scanSingleLineDocComment()
 				m_source->get(1) == '/' &&
 				m_source->get(2) == '/')
 			{
+				if (!m_source->isPastEndOfInput(4) && m_source->get(3) == '/')
+					break; // "////" is not a documentation comment
 				m_char = m_source->advanceAndGet(3);
 				if (atEndOfLine())
 					continue;
@@ -353,7 +354,6 @@ size_t Scanner::scanSingleLineDocComment()
 
 Token Scanner::skipMultiLineComment()
 {
-	advance();
 	while (!isSourcePastEndOfInput())
 	{
 		char ch = m_char;
@@ -437,6 +437,11 @@ Token Scanner::scanSlash()
 			return Token::Whitespace;
 		else if (m_char == '/')
 		{
+			advance(); //consume the last '/' at ///
+
+			// "////"
+			if (m_char == '/')
+				return skipSingleLineComment();
 			// doxygen style /// comment
 			m_skippedComments[NextNext].location.start = firstSlashPosition;
 			m_skippedComments[NextNext].location.source = m_source;
@@ -462,11 +467,14 @@ Token Scanner::scanSlash()
 				advance(); //skip the closing slash
 				return Token::Whitespace;
 			}
+			// "/***"
+			if (m_char == '*')
+				// "/***/" may be interpreted as empty natspec or skipped; skipping is simpler
+				return skipMultiLineComment();
 			// we actually have a multiline documentation comment
-			Token comment;
 			m_skippedComments[NextNext].location.start = firstSlashPosition;
 			m_skippedComments[NextNext].location.source = m_source;
-			comment = scanMultiLineDocComment();
+			Token comment = scanMultiLineDocComment();
 			m_skippedComments[NextNext].location.end = static_cast<int>(sourcePos());
 			m_skippedComments[NextNext].token = comment;
 			if (comment == Token::Illegal)
@@ -754,17 +762,16 @@ bool Scanner::isUnicodeLinebreak()
 	if (0x0a <= m_char && m_char <= 0x0d)
 		// line feed, vertical tab, form feed, carriage return
 		return true;
-	else if (!m_source->isPastEndOfInput(1) && uint8_t(m_source->get(0)) == 0xc2 && uint8_t(m_source->get(1)) == 0x85)
+	if (!m_source->isPastEndOfInput(1) && uint8_t(m_source->get(0)) == 0xc2 && uint8_t(m_source->get(1)) == 0x85)
 		// NEL - U+0085, C2 85 in utf8
 		return true;
-	else if (!m_source->isPastEndOfInput(2) && uint8_t(m_source->get(0)) == 0xe2 && uint8_t(m_source->get(1)) == 0x80 && (
+	if (!m_source->isPastEndOfInput(2) && uint8_t(m_source->get(0)) == 0xe2 && uint8_t(m_source->get(1)) == 0x80 && (
 		uint8_t(m_source->get(2)) == 0xa8 || uint8_t(m_source->get(2)) == 0xa9
 	))
 		// LS - U+2028, E2 80 A8  in utf8
 		// PS - U+2029, E2 80 A9  in utf8
 		return true;
-	else
-		return false;
+	return false;
 }
 
 Token Scanner::scanString()
