@@ -311,10 +311,15 @@ TypePointer Type::commonType(Type const* _a, Type const* _b)
 		return nullptr;
 }
 
-MemberList const& Type::members(ContractDefinition const* _currentScope) const
+MemberList const& Type::members(ASTNode const* _currentScope) const
 {
 	if (!m_members[_currentScope])
 	{
+		solAssert(
+			_currentScope == nullptr ||
+			dynamic_cast<SourceUnit const*>(_currentScope) ||
+			dynamic_cast<ContractDefinition const*>(_currentScope),
+		"");
 		MemberList::MemberMap members = nativeMembers(_currentScope);
 		if (_currentScope)
 			members += boundFunctions(*this, *_currentScope);
@@ -344,8 +349,20 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 	return encodingType;
 }
 
-MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition const& _scope)
+MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _scope)
 {
+	vector<UsingForDirective const*> usingForDirectives;
+	if (auto const* sourceUnit = dynamic_cast<SourceUnit const*>(&_scope))
+		usingForDirectives += ASTNode::filteredNodes<UsingForDirective>(sourceUnit->nodes());
+	else if (auto const* contract = dynamic_cast<ContractDefinition const*>(&_scope))
+	{
+		for (ContractDefinition const* contract: contract->annotation().linearizedBaseContracts)
+			usingForDirectives += contract->usingForDirectives();
+		usingForDirectives += ASTNode::filteredNodes<UsingForDirective>(contract->sourceUnit().nodes());
+	}
+	else
+		solAssert(false, "");
+
 	// Normalise data location of type.
 	DataLocation typeLocation = DataLocation::Storage;
 	if (auto refType = dynamic_cast<ReferenceType const*>(&_type))
@@ -353,38 +370,39 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 
 	set<Declaration const*> seenFunctions;
 	MemberList::MemberMap members;
-	for (ContractDefinition const* contract: _scope.annotation().linearizedBaseContracts)
-		for (UsingForDirective const* ufd: contract->usingForDirectives())
-		{
-			// Convert both types to pointers for comparison to see if the `using for`
-			// directive applies.
-			// Further down, we check more detailed for each function if `_type` is
-			// convertible to the function parameter type.
-			if (ufd->typeName() &&
-				*TypeProvider::withLocationIfReference(typeLocation, &_type, true) !=
-				*TypeProvider::withLocationIfReference(
-					typeLocation,
-					ufd->typeName()->annotation().type,
-					true
-				)
+
+	for (UsingForDirective const* ufd: usingForDirectives)
+	{
+		// Convert both types to pointers for comparison to see if the `using for`
+		// directive applies.
+		// Further down, we check more detailed for each function if `_type` is
+		// convertible to the function parameter type.
+		if (ufd->typeName() &&
+			*TypeProvider::withLocationIfReference(typeLocation, &_type, true) !=
+			*TypeProvider::withLocationIfReference(
+				typeLocation,
+				ufd->typeName()->annotation().type,
+				true
 			)
+		)
+			continue;
+		auto const& library = dynamic_cast<ContractDefinition const&>(
+			*ufd->libraryName().annotation().referencedDeclaration
+		);
+		for (FunctionDefinition const* function: library.definedFunctions())
+		{
+			if (!function->isVisibleAsLibraryMember() || seenFunctions.count(function))
 				continue;
-			auto const& library = dynamic_cast<ContractDefinition const&>(
-				*ufd->libraryName().annotation().referencedDeclaration
-			);
-			for (FunctionDefinition const* function: library.definedFunctions())
-			{
-				if (!function->isVisibleAsLibraryMember() || seenFunctions.count(function))
-					continue;
-				seenFunctions.insert(function);
-				if (function->parameters().empty())
-					continue;
-				FunctionTypePointer fun =
-					dynamic_cast<FunctionType const&>(*function->typeViaContractName()).asBoundFunction();
-				if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
-					members.emplace_back(function->name(), fun, function);
-			}
+			seenFunctions.insert(function);
+			if (function->parameters().empty())
+				continue;
+			FunctionTypePointer fun =
+				dynamic_cast<FunctionType const&>(*function->typeViaContractName()).asBoundFunction();
+			if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
+				members.emplace_back(function->name(), fun, function);
 		}
+	}
+
 	return members;
 }
 
@@ -464,7 +482,7 @@ bool AddressType::operator==(Type const& _other) const
 	return other.m_stateMutability == m_stateMutability;
 }
 
-MemberList::MemberMap AddressType::nativeMembers(ContractDefinition const*) const
+MemberList::MemberMap AddressType::nativeMembers(ASTNode const*) const
 {
 	MemberList::MemberMap members = {
 		{"balance", TypeProvider::uint256()},
@@ -1400,7 +1418,7 @@ TypeResult FixedBytesType::binaryOperatorResult(Token _operator, Type const* _ot
 	return nullptr;
 }
 
-MemberList::MemberMap FixedBytesType::nativeMembers(ContractDefinition const*) const
+MemberList::MemberMap FixedBytesType::nativeMembers(ASTNode const*) const
 {
 	return MemberList::MemberMap{MemberList::Member{"length", TypeProvider::uint(8)}};
 }
@@ -1856,7 +1874,7 @@ string ArrayType::signatureInExternalFunction(bool _structsByName) const
 	}
 }
 
-MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
+MemberList::MemberMap ArrayType::nativeMembers(ASTNode const*) const
 {
 	MemberList::MemberMap members;
 	if (!isString())
@@ -2029,10 +2047,9 @@ string ContractType::canonicalName() const
 	return m_contract.annotation().canonicalName;
 }
 
-MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _contract) const
+MemberList::MemberMap ContractType::nativeMembers(ASTNode const*) const
 {
 	MemberList::MemberMap members;
-	solAssert(_contract, "");
 	if (m_super)
 	{
 		// add the most derived of all functions which are visible in derived contracts
@@ -2063,14 +2080,13 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const* _con
 			}
 	}
 	else if (!m_contract.isLibrary())
-	{
 		for (auto const& it: m_contract.interfaceFunctions())
 			members.emplace_back(
 				it.second->declaration().name(),
 				it.second->asExternallyCallableFunction(m_contract.isLibrary()),
 				&it.second->declaration()
 			);
-	}
+
 	return members;
 }
 
@@ -2241,7 +2257,7 @@ string StructType::toString(bool _short) const
 	return ret;
 }
 
-MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
+MemberList::MemberMap StructType::nativeMembers(ASTNode const*) const
 {
 	MemberList::MemberMap members;
 	for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
@@ -3146,7 +3162,7 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 	);
 }
 
-MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const* _scope) const
+MemberList::MemberMap FunctionType::nativeMembers(ASTNode const* _scope) const
 {
 	switch (m_kind)
 	{
@@ -3165,7 +3181,8 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const* _sco
 			functionDefinition->isPartOfExternalInterface()
 		)
 		{
-			solAssert(_scope->derivesFrom(*functionDefinition->annotation().contract), "");
+			auto const* contractScope = dynamic_cast<ContractDefinition const*>(_scope);
+			solAssert(contractScope && contractScope->derivesFrom(*functionDefinition->annotation().contract), "");
 			return {{"selector", TypeProvider::fixedBytes(4)}};
 		}
 		else
@@ -3640,13 +3657,14 @@ vector<tuple<string, TypePointer>> TypeType::makeStackItems() const
 	return {};
 }
 
-MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _currentScope) const
+MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) const
 {
 	MemberList::MemberMap members;
 	if (m_actualType->category() == Category::Contract)
 	{
+		auto const* contractScope = dynamic_cast<ContractDefinition const*>(_currentScope);
 		ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_actualType).contractDefinition();
-		bool inDerivingScope = _currentScope && _currentScope->derivesFrom(contract);
+		bool inDerivingScope = contractScope && contractScope->derivesFrom(contract);
 
 		for (auto const* declaration: contract.declarations())
 		{
@@ -3748,7 +3766,7 @@ bool ModuleType::operator==(Type const& _other) const
 	return &m_sourceUnit == &dynamic_cast<ModuleType const&>(_other).m_sourceUnit;
 }
 
-MemberList::MemberMap ModuleType::nativeMembers(ContractDefinition const*) const
+MemberList::MemberMap ModuleType::nativeMembers(ASTNode const*) const
 {
 	MemberList::MemberMap symbols;
 	for (auto const& symbolName: m_sourceUnit.annotation().exportedSymbols)
@@ -3789,7 +3807,7 @@ bool MagicType::operator==(Type const& _other) const
 	return other.m_kind == m_kind;
 }
 
-MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
+MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 {
 	switch (m_kind)
 	{
