@@ -8,7 +8,7 @@
 grammar Solidity;
 
 sourceUnit
-  : (pragmaDirective | importDirective | structDefinition | enumDefinition | contractDefinition)* EOF ;
+  : (pragmaDirective | importDirective | structDefinition | enumDefinition | functionDefinition | contractDefinition)* EOF ;
 
 pragmaDirective
   : 'pragma' pragmaName ( ~';' )* ';' ;
