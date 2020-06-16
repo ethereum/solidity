@@ -51,9 +51,9 @@ public:
 		m_errorReporter(_errorReporter)
 	{}
 
-	/// Performs type checking on the given contract and all of its sub-nodes.
+	/// Performs type checking on the given source and all of its sub-nodes.
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
-	bool checkTypeRequirements(ASTNode const& _contract);
+	bool checkTypeRequirements(SourceUnit const& _source);
 
 	/// @returns the type of an expression and asserts that it is present.
 	TypePointer const& type(Expression const& _expression) const;
