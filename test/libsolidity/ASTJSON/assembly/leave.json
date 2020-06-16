@@ -68,6 +68,7 @@
               }
             ]
           },
+          "freeFunction": false,
           "functionSelector": "ece866b9",
           "id": 5,
           "implemented": true,

@@ -38,6 +38,7 @@
         {
           "attributes":
           {
+            "freeFunction": false,
             "functionSelector": "5a2ee019",
             "implemented": true,
             "isConstructor": false,

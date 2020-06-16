@@ -42,6 +42,7 @@
             "src": "45:2:1",
             "statements": []
           },
+          "freeFunction": false,
           "functionSelector": "26121ff0",
           "id": 4,
           "implemented": true,
@@ -96,6 +97,7 @@
             "src": "95:2:1",
             "statements": []
           },
+          "freeFunction": false,
           "functionSelector": "26121ff0",
           "id": 9,
           "implemented": true,
@@ -199,6 +201,7 @@
             "src": "160:2:1",
             "statements": []
           },
+          "freeFunction": false,
           "functionSelector": "26121ff0",
           "id": 21,
           "implemented": true,

@@ -852,9 +852,6 @@ public:
 		ContractDefinition const* _searchStart = nullptr
 	) const override;
 
-protected:
-	Visibility defaultVisibility() const override { return isFree() ? Visibility::Internal : Visibility::Public; }
-
 private:
 	StateMutability m_stateMutability;
 	bool m_free;

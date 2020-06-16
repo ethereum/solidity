@@ -292,7 +292,7 @@ bool FunctionDefinition::libraryFunction() const
 Visibility FunctionDefinition::defaultVisibility() const
 {
 	solAssert(!isConstructor(), "");
-	return Declaration::defaultVisibility();
+	return isFree() ? Visibility::Internal : Declaration::defaultVisibility();
 }
 
 FunctionTypePointer FunctionDefinition::functionType(bool _internal) const

@@ -72,6 +72,7 @@
               }
             ]
           },
+          "freeFunction": false,
           "functionSelector": "5a2ee019",
           "id": 5,
           "implemented": true,

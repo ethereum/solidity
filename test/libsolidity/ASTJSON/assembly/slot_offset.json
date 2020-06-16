@@ -196,6 +196,7 @@
               }
             ]
           },
+          "freeFunction": false,
           "functionSelector": "ffae15ba",
           "id": 10,
           "implemented": true,

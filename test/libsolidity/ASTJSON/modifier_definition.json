@@ -94,6 +94,7 @@
             "src": "64:2:1",
             "statements": []
           },
+          "freeFunction": false,
           "functionSelector": "28811f59",
           "id": 13,
           "implemented": true,

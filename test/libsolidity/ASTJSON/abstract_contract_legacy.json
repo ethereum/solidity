@@ -38,6 +38,7 @@
         {
           "attributes":
           {
+            "freeFunction": false,
             "implemented": true,
             "isConstructor": true,
             "kind": "constructor",

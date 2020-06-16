@@ -34,6 +34,7 @@
             "src": "42:5:1",
             "statements": []
           },
+          "freeFunction": false,
           "id": 4,
           "implemented": true,
           "kind": "receive",
@@ -68,6 +69,7 @@
             "src": "78:5:1",
             "statements": []
           },
+          "freeFunction": false,
           "id": 8,
           "implemented": true,
           "kind": "fallback",

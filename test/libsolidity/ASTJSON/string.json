@@ -95,6 +95,7 @@
               }
             ]
           },
+          "freeFunction": false,
           "functionSelector": "26121ff0",
           "id": 8,
           "implemented": true,

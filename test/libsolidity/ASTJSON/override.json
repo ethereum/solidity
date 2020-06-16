@@ -42,6 +42,7 @@
             "src": "36:2:1",
             "statements": []
           },
+          "freeFunction": false,
           "functionSelector": "a399b6a2",
           "id": 4,
           "implemented": true,
@@ -113,6 +114,7 @@
       "nodes":
       [
         {
+          "freeFunction": false,
           "functionSelector": "c2985578",
           "id": 10,
           "implemented": false,
@@ -152,6 +154,7 @@
             "src": "115:2:1",
             "statements": []
           },
+          "freeFunction": false,
           "functionSelector": "a399b6a2",
           "id": 15,
           "implemented": true,
@@ -243,6 +246,7 @@
             "src": "170:3:1",
             "statements": []
           },
+          "freeFunction": false,
           "functionSelector": "c2985578",
           "id": 23,
           "implemented": true,
@@ -289,6 +293,7 @@
             "src": "212:2:1",
             "statements": []
           },
+          "freeFunction": false,
           "functionSelector": "a399b6a2",
           "id": 30,
           "implemented": true,

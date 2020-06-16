@@ -216,6 +216,7 @@
             "src": "162:25:3",
             "text": "Some comment on fn."
           },
+          "freeFunction": false,
           "functionSelector": "a4a2c40b",
           "id": 22,
           "implemented": true,

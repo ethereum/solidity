@@ -46,6 +46,7 @@
         {
           "attributes":
           {
+            "freeFunction": false,
             "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
@@ -137,6 +138,7 @@
         {
           "attributes":
           {
+            "freeFunction": false,
             "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
@@ -272,6 +274,7 @@
               4,
               9
             ],
+            "freeFunction": false,
             "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
