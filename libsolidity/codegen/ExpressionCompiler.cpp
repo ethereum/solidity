@@ -1718,6 +1718,16 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(false, "Illegal fixed bytes member.");
 		break;
 	}
+	case Type::Category::Module:
+	{
+		Type::Category category = _memberAccess.annotation().type->category();
+		solAssert(
+			category == Type::Category::TypeType ||
+			category == Type::Category::Module,
+			""
+		);
+		break;
+	}
 	default:
 		solAssert(false, "Member access to unknown type.");
 	}
@@ -1930,6 +1940,10 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		// no-op
 	}
 	else if (dynamic_cast<StructDefinition const*>(declaration))
+	{
+		// no-op
+	}
+	else if (dynamic_cast<ImportDirective const*>(declaration))
 	{
 		// no-op
 	}
