@@ -64,7 +64,9 @@ bool TypeChecker::typeSupportedByOldABIEncoder(Type const& _type, bool _isLibrar
 
 bool TypeChecker::checkTypeRequirements(SourceUnit const& _source)
 {
+	m_currentSourceUnit = &_source;
 	_source.accept(*this);
+	m_currentSourceUnit = nullptr;
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 
@@ -373,7 +375,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		}
 		if (
 			_function.isPublic() &&
-			!_function.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
+			!experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2) &&
 			!typeSupportedByOldABIEncoder(*type(var), _function.libraryFunction())
 		)
 			m_errorReporter.typeError(
@@ -511,7 +513,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	else if (_variable.visibility() >= Visibility::Public)
 	{
 		FunctionType getter(_variable);
-		if (!_variable.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
+		if (!experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
 		{
 			vector<string> unsupportedTypes;
 			for (auto const& param: getter.parameterTypes() + getter.returnParameterTypes())
@@ -622,7 +624,7 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 		if (!type(*var)->interfaceType(false))
 			m_errorReporter.typeError(3417_error, var->location(), "Internal or recursive type is not allowed as event parameter type.");
 		if (
-			!_eventDef.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2) &&
+			!experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2) &&
 			!typeSupportedByOldABIEncoder(*type(*var), false /* isLibrary */)
 		)
 			m_errorReporter.typeError(
@@ -1912,9 +1914,7 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 	bool const isPacked = _functionType->kind() == FunctionType::Kind::ABIEncodePacked;
 	solAssert(_functionType->padArguments() != isPacked, "ABI function with unexpected padding");
 
-	bool const abiEncoderV2 = m_currentContract->sourceUnit().annotation().experimentalFeatures.count(
-		ExperimentalFeature::ABIEncoderV2
-	);
+	bool const abiEncoderV2 = experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2);
 
 	// Check for named arguments
 	if (!_functionCall.names().empty())
@@ -2311,11 +2311,10 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		{
 		case FunctionType::Kind::ABIDecode:
 		{
-			bool const abiEncoderV2 =
-				m_currentContract->sourceUnit().annotation().experimentalFeatures.count(
-					ExperimentalFeature::ABIEncoderV2
-				);
-			returnTypes = typeCheckABIDecodeAndRetrieveReturnType(_functionCall, abiEncoderV2);
+			returnTypes = typeCheckABIDecodeAndRetrieveReturnType(
+				_functionCall,
+				experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2)
+			);
 			break;
 		}
 		case FunctionType::Kind::ABIEncode:
@@ -3255,4 +3254,12 @@ void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAss
 	}();
 
 	m_errorReporter.typeError(errorId, _expression.location(), description);
+}
+
+bool TypeChecker::experimentalFeatureActive(ExperimentalFeature _feature) const
+{
+	solAssert(m_currentSourceUnit, "");
+	if (m_currentContract)
+		solAssert(m_currentSourceUnit == &m_currentContract->sourceUnit(), "");
+	return m_currentSourceUnit->annotation().experimentalFeatures.count(_feature);
 }
