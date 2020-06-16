@@ -1146,6 +1146,74 @@ BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
 	checkNatspec(sourceCode, "test", natspec, false);
 }
 
+BOOST_AUTO_TEST_CASE(slash4)
+{
+	char const* sourceCode = R"(
+		contract test {
+			//// @notice lorem ipsum
+			function f() public { }
+		}
+	)";
+
+	char const* natspec = R"( { "methods": {} } )";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(star3)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/***
+			 * @notice lorem ipsum
+			 */
+			function f() public { }
+		}
+	)";
+
+	char const* natspec = R"( { "methods": {} } )";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(slash3_slash3)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @notice lorem
+			/// ipsum
+			function f() public { }
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+		"methods": {
+			"f()": { "notice": "lorem ipsum" }
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(slash3_slash4)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// @notice lorem
+			//// ipsum
+			function f() public { }
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+		"methods": {
+			"f()": { "notice": "lorem" }
+		}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "test", natspec, true);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
