@@ -45,7 +45,7 @@ object "object" {
 
 
 Binary representation:
-0061736d0100000001160460000060017e017e60057e7e7e7e7e0060027f7f0002190108657468657265756d0c73746f7261676553746f7265000303060500010101020503010001060100071102066d656d6f72790200046d61696e00010acb01052b01017e0240420021004200200020002000200010054220200020002000420110054200a74220a710000b0b1f01017e024020004208864280fe0383200042088842ff01838421010b20010b1e01027e02402000100242108621022002200042108810028421010b20010b1e01027e02402000100342208621022002200042208810038421010b20010b3f0002402000a7200110043700002000a74208a76aada7200210043700002000a74210a76aada7200310043700002000a74218a76aada7200410043700000b0b
+0061736d0100000001160460000060017e017e60057f7e7e7e7e0060027f7f0002190108657468657265756d0c73746f7261676553746f7265000303060500010101020503010001060100071102066d656d6f72790200046d61696e00010abc01052901017e0240420021004100200020002000200010054120200020002000420110054100412010000b0b1f01017e024020004208864280fe0383200042088842ff01838421010b20010b1e01027e02402000100242108621022002200042108810028421010b20010b1e01027e02402000100342208621022002200042208810038421010b20010b32000240200020011004370000200041086a20021004370000200041106a20031004370000200041186a200410043700000b0b
 
 Text representation:
 (module
@@ -57,9 +57,9 @@ Text representation:
     (local $_1 i64)
     (block $label_
         (local.set $_1 (i64.const 0))
-        (call $mstore_internal (i64.const 0) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1))
-        (call $mstore_internal (i64.const 32) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 1))
-        (call $eth.storageStore (i32.wrap_i64 (i64.const 0)) (i32.wrap_i64 (i64.const 32)))
+        (call $mstore_internal (i32.const 0) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1))
+        (call $mstore_internal (i32.const 32) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 1))
+        (call $eth.storageStore (i32.const 0) (i32.const 32))
     )
 )
 
@@ -101,16 +101,16 @@ Text representation:
 )
 
 (func $mstore_internal
-    (param $pos i64)
+    (param $pos i32)
     (param $y1 i64)
     (param $y2 i64)
     (param $y3 i64)
     (param $y4 i64)
     (block $label__4
-        (i64.store (i32.wrap_i64 (local.get $pos)) (call $endian_swap (local.get $y1)))
-        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $pos)) (i32.wrap_i64 (i64.const 8))))) (call $endian_swap (local.get $y2)))
-        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $pos)) (i32.wrap_i64 (i64.const 16))))) (call $endian_swap (local.get $y3)))
-        (i64.store (i32.wrap_i64 (i64.extend_i32_u (i32.add (i32.wrap_i64 (local.get $pos)) (i32.wrap_i64 (i64.const 24))))) (call $endian_swap (local.get $y4)))
+        (i64.store (local.get $pos) (call $endian_swap (local.get $y1)))
+        (i64.store (i32.add (local.get $pos) (i32.const 8)) (call $endian_swap (local.get $y2)))
+        (i64.store (i32.add (local.get $pos) (i32.const 16)) (call $endian_swap (local.get $y3)))
+        (i64.store (i32.add (local.get $pos) (i32.const 24)) (call $endian_swap (local.get $y4)))
     )
 )
 
