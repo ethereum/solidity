@@ -41,7 +41,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 	context.currentObject = &_object;
 
 	for (auto& subNode: _object.subObjects)
-		if (Object* subObject = dynamic_cast<Object*>(subNode.get()))
+		if (auto* subObject = dynamic_cast<Object*>(subNode.get()))
 		{
 			auto subAssemblyAndID = m_assembly.createSubAssembly();
 			context.subIDs[subObject->name] = subAssemblyAndID.second;

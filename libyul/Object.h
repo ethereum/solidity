@@ -68,7 +68,15 @@ public:
 
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object.
-	std::set<YulString> dataNames() const;
+	std::set<YulString> qualifiedDataNames() const;
+
+	/// @returns tuple consisting of
+	/// 	bool true if _qualifiedName is referring to data
+	/// 	vector of subIDs if possible to reach subobject with @_qualifiedName, empty vector otherwise
+	/// for "B.C" should return vector of two values if success (subId of B and subId of C in B)
+	/// in object "A" if called for "A.B" will return only one value (subId for B)
+	/// will return empty vector for @_qualifiedName that equals to object name
+	std::tuple<bool, std::vector<size_t>> pathToSubObject(std::string _qualifiedName) const;
 
 	std::shared_ptr<Block> code;
 	std::vector<std::shared_ptr<ObjectNode>> subObjects;

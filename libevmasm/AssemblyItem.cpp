@@ -16,7 +16,9 @@
 */
 
 #include <libevmasm/AssemblyItem.h>
+#include <libevmasm/Assembly.h>
 
+#include <libsolutil/StringUtils.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FixedHash.h>
 #include <liblangutil/SourceLocation.h>
@@ -207,11 +209,21 @@ string AssemblyItem::toAssemblyText() const
 		text = string("data_") + util::toHex(data());
 		break;
 	case PushSub:
-		text = string("dataOffset(sub_") + to_string(static_cast<size_t>(data())) + ")";
+	{
+		vector<string> subIdsString;
+		for (size_t subId: Assembly::decodeSubIds(data()))
+			subIdsString.emplace_back("sub_" + to_string(subId));
+		text = string("dataOffset(") + solidity::util::joinHumanReadable(subIdsString, ".") + ")";
 		break;
+	}
 	case PushSubSize:
-		text = string("dataSize(sub_") + to_string(static_cast<size_t>(data())) + ")";
+	{
+		vector<string> subIdsString;
+		for (size_t subId: Assembly::decodeSubIds(data()))
+			subIdsString.emplace_back("sub_" + to_string(subId));
+		text = string("dataSize(") + solidity::util::joinHumanReadable(subIdsString, ".") + ")";
 		break;
+	}
 	case PushProgramSize:
 		text = string("bytecodeSize");
 		break;

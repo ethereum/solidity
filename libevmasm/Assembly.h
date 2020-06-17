@@ -78,9 +78,9 @@ public:
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.
 	AssemblyItem appendSubroutine(AssemblyPointer const& _assembly) { auto sub = newSub(_assembly); append(newPushSubSize(size_t(sub.data()))); return sub; }
-	void pushSubroutineSize(size_t _subRoutine) { append(newPushSubSize(_subRoutine)); }
+	void pushSubroutineSize(u256 _subRoutine) { append(newPushSubSize(_subRoutine)); }
 	/// Pushes the offset of the subroutine.
-	void pushSubroutineOffset(size_t _subRoutine) { append(AssemblyItem(PushSub, _subRoutine)); }
+	void pushSubroutineOffset(u256 _subRoutine) { append(AssemblyItem(PushSub, _subRoutine)); }
 
 	/// Appends @a _data literally to the very end of the bytecode.
 	void appendAuxiliaryDataToEnd(bytes const& _data) { m_auxiliaryData += _data; }
@@ -141,6 +141,9 @@ public:
 	Json::Value assemblyJSON(
 		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>()
 	) const;
+
+	static std::vector<size_t> decodeSubIds(u256 data);
+	static u256 encodeSubIds(std::vector<size_t> const& subIds);
 
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and

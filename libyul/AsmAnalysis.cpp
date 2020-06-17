@@ -71,7 +71,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 		errors,
 		_dialect,
 		{},
-		_object.dataNames()
+		_object.qualifiedDataNames()
 	).analyze(*_object.code);
 	yulAssert(success && !errors.hasErrors(), "Invalid assembly/yul code.");
 	return analysisInfo;

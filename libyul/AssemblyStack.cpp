@@ -137,7 +137,7 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 		m_errorReporter,
 		languageToDialect(m_language, m_evmVersion),
 		{},
-		_object.dataNames()
+		_object.qualifiedDataNames()
 	);
 	bool success = analyzer.analyze(*_object.code);
 	for (auto& subNode: _object.subObjects)

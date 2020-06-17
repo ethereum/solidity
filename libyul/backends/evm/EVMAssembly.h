@@ -79,8 +79,8 @@ public:
 	/// Append the assembled size as a constant.
 	void appendAssemblySize() override;
 	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() override;
-	void appendDataOffset(SubID _sub) override;
-	void appendDataSize(SubID _sub) override;
+	void appendDataOffset(std::vector<SubID> const& _subIds) override;
+	void appendDataSize(std::vector<SubID> const& _subIds) override;
 	SubID appendData(bytes const& _data) override;
 
 	void appendImmutable(std::string const& _identifier) override;

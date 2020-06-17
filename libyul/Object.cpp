@@ -61,13 +61,48 @@ string Object::toString(Dialect const* _dialect) const
 	return "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }
 
-set<YulString> Object::dataNames() const
+set<YulString> Object::qualifiedDataNames() const
 {
-	set<YulString> names;
-	names.insert(name);
-	for (auto const& subObject: subIndexByName)
-		names.insert(subObject.first);
+	set<YulString> qualifiedNames = {name};
+	for (shared_ptr<ObjectNode> const& subObjectNode: subObjects)
+	{
+		qualifiedNames.insert(subObjectNode->name);
+		if (auto const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
+			for (YulString const& subSubObj: subObject->qualifiedDataNames())
+				qualifiedNames.insert(YulString{subObject->name.str() + "." + subSubObj.str()});
+	}
+
 	// The empty name is not valid
-	names.erase(YulString{});
-	return names;
+	qualifiedNames.erase(YulString{});
+
+	return qualifiedNames;
+}
+
+tuple<bool, vector<size_t>> Object::pathToSubObject(string _qualifiedName) const
+{
+	if (_qualifiedName == name.str())
+		return {};
+	if (_qualifiedName.rfind(name.str() + ".", 0) == 0)
+		_qualifiedName.erase(0, name.str().length() + 1);
+
+	vector<size_t> path;
+
+	Object const* currentObject = this;
+	while (!_qualifiedName.empty())
+	{
+		size_t dotPos = _qualifiedName.find('.');
+		auto subIndexIt = currentObject->subIndexByName.find(YulString{_qualifiedName.substr(0, dotPos)});
+		if (subIndexIt == currentObject->subIndexByName.end())
+			return {};
+		path.push_back({subIndexIt->second});
+		currentObject = dynamic_cast<Object const*>(currentObject->subObjects[subIndexIt->second].get());
+		_qualifiedName.erase(0, dotPos + (dotPos == string::npos ? 0 : 1));
+		if (!currentObject)
+		{
+			yulAssert(_qualifiedName.empty(), "");
+			return {true, {}};
+		}
+	}
+
+	return {false, path};
 }

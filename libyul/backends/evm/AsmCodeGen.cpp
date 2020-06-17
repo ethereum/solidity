@@ -146,22 +146,32 @@ pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EthAssemblyAdapter::
 	return {make_shared<EthAssemblyAdapter>(*assembly), static_cast<size_t>(sub.data())};
 }
 
-void EthAssemblyAdapter::appendDataOffset(AbstractAssembly::SubID _sub)
+void EthAssemblyAdapter::appendDataOffset(std::vector<AbstractAssembly::SubID> const& _subIds)
 {
-	auto it = m_dataHashBySubId.find(_sub);
-	if (it == m_dataHashBySubId.end())
-		m_assembly.pushSubroutineOffset(_sub);
-	else
-		m_assembly << evmasm::AssemblyItem(evmasm::PushData, it->second);
+	yulAssert(_subIds.size() < 32, "");
+	if (_subIds.size() == 1)
+		if (auto it = m_dataHashBySubId.find(_subIds[0]); it != m_dataHashBySubId.end())
+		{
+			m_assembly << evmasm::AssemblyItem(evmasm::PushData, it->second);
+			return;
+		}
+
+	u256 encodedSubId = evmasm::Assembly::encodeSubIds(_subIds);
+	m_assembly.pushSubroutineOffset(encodedSubId);
 }
 
-void EthAssemblyAdapter::appendDataSize(AbstractAssembly::SubID _sub)
+void EthAssemblyAdapter::appendDataSize(std::vector<AbstractAssembly::SubID> const& _subIds)
 {
-	auto it = m_dataHashBySubId.find(_sub);
-	if (it == m_dataHashBySubId.end())
-		m_assembly.pushSubroutineSize(static_cast<size_t>(_sub));
-	else
-		m_assembly << u256(m_assembly.data(h256(it->second)).size());
+	yulAssert(_subIds.size() < 32, "");
+	if (_subIds.size() == 1)
+		if (auto it = m_dataHashBySubId.find(_subIds[0]); it != m_dataHashBySubId.end())
+		{
+			m_assembly << u256(m_assembly.data(h256(it->second)).size());
+			return;
+		}
+
+	u256 encodedSubId = evmasm::Assembly::encodeSubIds(_subIds);
+	m_assembly.pushSubroutineSize(encodedSubId);
 }
 
 AbstractAssembly::SubID EthAssemblyAdapter::appendData(bytes const& _data)

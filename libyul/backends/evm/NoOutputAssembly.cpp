@@ -131,12 +131,12 @@ pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::cr
 	return {};
 }
 
-void NoOutputAssembly::appendDataOffset(AbstractAssembly::SubID)
+void NoOutputAssembly::appendDataOffset(std::vector<AbstractAssembly::SubID> const&)
 {
 	appendInstruction(evmasm::Instruction::PUSH1);
 }
 
-void NoOutputAssembly::appendDataSize(AbstractAssembly::SubID)
+void NoOutputAssembly::appendDataSize(std::vector<AbstractAssembly::SubID> const&)
 {
 	appendInstruction(evmasm::Instruction::PUSH1);
 }

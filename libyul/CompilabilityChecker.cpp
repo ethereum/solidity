@@ -48,7 +48,7 @@ map<YulString, int> CompilabilityChecker::run(
 
 		BuiltinContext builtinContext;
 		builtinContext.currentObject = &_object;
-		for (auto name: _object.dataNames())
+		for (auto name: _object.qualifiedDataNames())
 			builtinContext.subIDs[name] = 1;
 		NoOutputAssembly assembly;
 		CodeTransform transform(

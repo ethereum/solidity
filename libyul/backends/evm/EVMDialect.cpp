@@ -130,7 +130,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
-			std::function<void(Expression const&)>
+			std::function<void(Expression const&)> const&
 		) {
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
@@ -140,18 +140,19 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendAssemblySize();
 			else
 			{
+				auto [isData, subIdPath] = _context.currentObject->pathToSubObject(dataName.str());
 				yulAssert(
-					_context.subIDs.count(dataName) != 0,
+					!subIdPath.empty() | isData,
 					"Could not find assembly object <" + dataName.str() + ">."
 				);
-				_assembly.appendDataSize(_context.subIDs.at(dataName));
+				_assembly.appendDataSize(isData ? std::vector<size_t>{_context.subIDs[dataName]} : subIdPath);
 			}
 		}));
 		builtins.emplace(createFunction("dataoffset", 1, 1, SideEffects{}, {true}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
-			std::function<void(Expression const&)>
+			std::function<void(Expression const&)> const&
 		) {
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
@@ -161,11 +162,12 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendConstant(0);
 			else
 			{
+				auto [isData, subIdPath] = _context.currentObject->pathToSubObject(dataName.str());
 				yulAssert(
-					_context.subIDs.count(dataName) != 0,
+					!subIdPath.empty() | isData,
 					"Could not find assembly object <" + dataName.str() + ">."
 				);
-				_assembly.appendDataOffset(_context.subIDs.at(dataName));
+				_assembly.appendDataOffset(isData ? std::vector<size_t>{_context.subIDs[dataName]} : subIdPath);
 			}
 		}));
 		builtins.emplace(createFunction(

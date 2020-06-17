@@ -1248,7 +1248,7 @@ Object EVMToEwasmTranslator::run(Object const& _object)
 
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	AsmAnalyzer analyzer(*ret.analysisInfo, errorReporter, WasmDialect::instance(), {}, _object.dataNames());
+	AsmAnalyzer analyzer(*ret.analysisInfo, errorReporter, WasmDialect::instance(), {}, _object.qualifiedDataNames());
 	if (!analyzer.analyze(*ret.code))
 	{
 		string message = "Invalid code generated after EVM to wasm translation.\n";
