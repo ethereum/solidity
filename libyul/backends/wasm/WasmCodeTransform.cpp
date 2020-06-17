@@ -257,9 +257,10 @@ wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 	YulString eqz_instruction = YulString(conditionType.str() + ".eqz");
 	yulAssert(WasmDialect::instance().builtin(eqz_instruction), "");
 
+	std::vector<wasm::Expression> statements = visit(_for.pre.statements);
+
 	wasm::Loop loop;
 	loop.labelName = newLabel();
-	loop.statements = visit(_for.pre.statements);
 	loop.statements.emplace_back(wasm::BranchIf{wasm::Label{breakLabel}, make_unique<wasm::Expression>(
 		wasm::BuiltinCall{eqz_instruction.str(), make_vector<wasm::Expression>(
 			visitReturnByValue(*_for.condition)
@@ -269,7 +270,8 @@ wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 	loop.statements += visit(_for.post.statements);
 	loop.statements.emplace_back(wasm::Branch{wasm::Label{loop.labelName}});
 
-	return { wasm::Block{breakLabel, make_vector<wasm::Expression>(move(loop))} };
+	statements += make_vector<wasm::Expression>(move(loop));
+	return wasm::Block{breakLabel, move(statements)};
 }
 
 wasm::Expression WasmCodeTransform::operator()(Break const&)
