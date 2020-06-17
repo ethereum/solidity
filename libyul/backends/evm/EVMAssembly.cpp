@@ -202,12 +202,12 @@ pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EVMAssembly::createS
 	return {};
 }
 
-void EVMAssembly::appendDataOffset(AbstractAssembly::SubID)
+void EVMAssembly::appendDataOffset(vector<AbstractAssembly::SubID> const&)
 {
 	yulAssert(false, "Data not implemented.");
 }
 
-void EVMAssembly::appendDataSize(AbstractAssembly::SubID)
+void EVMAssembly::appendDataSize(vector<AbstractAssembly::SubID> const&)
 {
 	yulAssert(false, "Data not implemented.");
 }

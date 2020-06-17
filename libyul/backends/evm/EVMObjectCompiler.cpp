@@ -26,6 +26,7 @@
 
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
+#include <libevmasm/Assembly.h>
 
 using namespace solidity::yul;
 using namespace std;
@@ -41,11 +42,12 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 	BuiltinContext context;
 	context.currentObject = &_object;
 
-	for (auto& subNode: _object.subObjects)
-		if (Object* subObject = dynamic_cast<Object*>(subNode.get()))
+	for (auto const& subNode: _object.subObjects)
+		if (auto* subObject = dynamic_cast<Object*>(subNode.get()))
 		{
 			auto subAssemblyAndID = m_assembly.createSubAssembly();
 			context.subIDs[subObject->name] = subAssemblyAndID.second;
+			subObject->subId = subAssemblyAndID.second;
 			compile(*subObject, *subAssemblyAndID.first, m_dialect, m_evm15, _optimize);
 		}
 		else

@@ -92,8 +92,8 @@ string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& 
 class Functionalizer
 {
 public:
-	Functionalizer (ostream& _out, string const& _prefix, StringMap const& _sourceCodes):
-		m_out(_out), m_prefix(_prefix), m_sourceCodes(_sourceCodes)
+	Functionalizer (ostream& _out, string const& _prefix, StringMap const& _sourceCodes, Assembly const& _assembly):
+		m_out(_out), m_prefix(_prefix), m_sourceCodes(_sourceCodes), m_assembly(_assembly)
 	{}
 
 	void feed(AssemblyItem const& _item)
@@ -104,6 +104,9 @@ public:
 			m_location = _item.location();
 			printLocation();
 		}
+
+		string expression = _item.toAssemblyText(m_assembly);
+
 		if (!(
 			_item.canBeFunctional() &&
 			_item.returnValues() <= 1 &&
@@ -111,10 +114,9 @@ public:
 		))
 		{
 			flush();
-			m_out << m_prefix << (_item.type() == Tag ? "" : "  ") << _item.toAssemblyText() << endl;
+			m_out << m_prefix << (_item.type() == Tag ? "" : "  ") << expression << endl;
 			return;
 		}
-		string expression = _item.toAssemblyText();
 		if (_item.arguments() > 0)
 		{
 			expression += "(";
@@ -160,13 +162,14 @@ private:
 	ostream& m_out;
 	string const& m_prefix;
 	StringMap const& m_sourceCodes;
+	Assembly const& m_assembly;
 };
 
 }
 
 void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
 {
-	Functionalizer f(_out, _prefix, _sourceCodes);
+	Functionalizer f(_out, _prefix, _sourceCodes, *this);
 
 	for (auto const& i: m_items)
 		f.feed(i);
@@ -639,7 +642,7 @@ LinkerObject const& Assembly::assemble() const
 		case PushSubSize:
 		{
 			assertThrow(i.data() <= numeric_limits<size_t>::max(), AssemblyException, "");
-			auto s = m_subs.at(static_cast<size_t>(i.data()))->assemble().bytecode.size();
+			auto s = subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
 			uint8_t b = max<unsigned>(1, util::bytesRequired(s));
 			ret.bytecode.push_back((uint8_t)Instruction::PUSH1 - 1 + b);
@@ -707,25 +710,20 @@ LinkerObject const& Assembly::assemble() const
 		// Append an INVALID here to help tests find miscompilation.
 		ret.bytecode.push_back(uint8_t(Instruction::INVALID));
 
-	for (size_t i = 0; i < m_subs.size(); ++i)
+	for (auto const& [subIdPath, bytecodeOffset]: subRef)
 	{
-		auto references = subRef.equal_range(i);
-		if (references.first == references.second)
-			continue;
-		for (auto ref = references.first; ref != references.second; ++ref)
-		{
-			bytesRef r(ret.bytecode.data() + ref->second, bytesPerDataRef);
-			toBigEndian(ret.bytecode.size(), r);
-		}
-		ret.append(m_subs[i]->assemble());
+		bytesRef r(ret.bytecode.data() + bytecodeOffset, bytesPerDataRef);
+		toBigEndian(ret.bytecode.size(), r);
+		ret.append(subAssemblyById(subIdPath)->assemble());
 	}
+
 	for (auto const& i: tagRef)
 	{
 		size_t subId;
 		size_t tagId;
 		tie(subId, tagId) = i.second;
 		assertThrow(subId == numeric_limits<size_t>::max() || subId < m_subs.size(), AssemblyException, "Invalid sub id");
-		std::vector<size_t> const& tagPositions =
+		vector<size_t> const& tagPositions =
 			subId == numeric_limits<size_t>::max() ?
 			m_tagPositionsInBytecode :
 			m_subs[subId]->m_tagPositionsInBytecode;
@@ -757,4 +755,52 @@ LinkerObject const& Assembly::assemble() const
 		toBigEndian(ret.bytecode.size(), r);
 	}
 	return ret;
+}
+
+vector<size_t> Assembly::decodeSubPath(size_t _subObjectId) const
+{
+	if (_subObjectId < m_subs.size())
+		return {_subObjectId};
+
+	auto subIdPathIt = find_if(
+		m_subPaths.begin(),
+		m_subPaths.end(),
+		[_subObjectId](auto const& subId) { return subId.second == _subObjectId; }
+	);
+
+	assertThrow(subIdPathIt != m_subPaths.end(), AssemblyException, "");
+	return subIdPathIt->first;
+}
+
+size_t Assembly::encodeSubPath(vector<size_t> const& _subPath)
+{
+	assertThrow(!_subPath.empty(), AssemblyException, "");
+	if (_subPath.size() == 1)
+	{
+		assertThrow(_subPath[0] < m_subs.size(), AssemblyException, "");
+		return _subPath[0];
+	}
+
+	if (m_subPaths.find(_subPath) == m_subPaths.end())
+	{
+		size_t objectId = numeric_limits<size_t>::max() - m_subPaths.size();
+		assertThrow(objectId >= m_subs.size(), AssemblyException, "");
+		m_subPaths[_subPath] = objectId;
+	}
+
+	return m_subPaths[_subPath];
+}
+
+Assembly const* Assembly::subAssemblyById(size_t _subId) const
+{
+	vector<size_t> subIds = decodeSubPath(_subId);
+	Assembly const* currentAssembly = this;
+	for (size_t currentSubId: subIds)
+	{
+		currentAssembly = currentAssembly->m_subs.at(currentSubId).get();
+		assertThrow(currentAssembly, AssemblyException, "");
+	}
+
+	assertThrow(currentAssembly != this, AssemblyException, "");
+	return currentAssembly;
 }

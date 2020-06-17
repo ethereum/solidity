@@ -146,6 +146,9 @@ public:
 	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.
 	void markAsInvalid() { m_invalid = true; }
 
+	std::vector<size_t> decodeSubPath(size_t _subObjectId) const;
+	size_t encodeSubPath(std::vector<size_t> const& _subPath);
+
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
@@ -166,6 +169,9 @@ private:
 	static std::string toStringInHex(u256 _value);
 
 	bool m_invalid = false;
+
+	Assembly const* subAssemblyById(size_t _subId) const;
+
 protected:
 	/// 0 is reserved for exception
 	unsigned m_usedTags = 1;
@@ -178,6 +184,10 @@ protected:
 	std::map<util::h256, std::string> m_strings;
 	std::map<util::h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
 	std::map<util::h256, std::string> m_immutables; ///< Identifiers of immutables.
+
+	/// Map from a vector representing a path to a particular sub assembly to sub assembly id.
+	/// This map is used only for sub-assemblies which are not direct sub-assemblies (where path is having more than one value).
+	std::map<std::vector<size_t>, size_t> m_subPaths;
 
 	mutable LinkerObject m_assembledObject;
 	mutable std::vector<size_t> m_tagPositionsInBytecode;

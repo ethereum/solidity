@@ -144,7 +144,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
-			std::function<void(Expression const&)>
+			std::function<void(Expression const&)> const&
 		) {
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
@@ -154,18 +154,19 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendAssemblySize();
 			else
 			{
-				yulAssert(
-					_context.subIDs.count(dataName) != 0,
-					"Could not find assembly object <" + dataName.str() + ">."
-				);
-				_assembly.appendDataSize(_context.subIDs.at(dataName));
+				vector<size_t> subIdPath =
+					_context.subIDs.count(dataName) == 0 ?
+						_context.currentObject->pathToSubObject(dataName) :
+						vector<size_t>{_context.subIDs.at(dataName)};
+				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName.str() + ">.");
+				_assembly.appendDataSize(subIdPath);
 			}
 		}));
 		builtins.emplace(createFunction("dataoffset", 1, 1, SideEffects{}, {true}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
-			std::function<void(Expression const&)>
+			std::function<void(Expression const&)> const&
 		) {
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
@@ -175,11 +176,12 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendConstant(0);
 			else
 			{
-				yulAssert(
-					_context.subIDs.count(dataName) != 0,
-					"Could not find assembly object <" + dataName.str() + ">."
-				);
-				_assembly.appendDataOffset(_context.subIDs.at(dataName));
+				vector<size_t> subIdPath =
+					_context.subIDs.count(dataName) == 0 ?
+						_context.currentObject->pathToSubObject(dataName) :
+						vector<size_t>{_context.subIDs.at(dataName)};
+				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName.str() + ">.");
+				_assembly.appendDataOffset(subIdPath);
 			}
 		}));
 		builtins.emplace(createFunction(
