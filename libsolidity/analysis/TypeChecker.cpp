@@ -313,15 +313,6 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	}
 }
 
-void TypeChecker::endVisit(UsingForDirective const& _usingFor)
-{
-	ContractDefinition const* library = dynamic_cast<ContractDefinition const*>(
-		_usingFor.libraryName().annotation().referencedDeclaration
-	);
-	if (!library || !library->isLibrary())
-		m_errorReporter.fatalTypeError(4357_error, _usingFor.libraryName().location(), "Library name expected.");
-}
-
 void TypeChecker::endVisit(ModifierDefinition const& _modifier)
 {
 	if (!_modifier.isImplemented() && !_modifier.virtualSemantics())
