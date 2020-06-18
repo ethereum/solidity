@@ -175,7 +175,8 @@ Statement Parser::parseStatement()
 	case Token::Comma:
 	case Token::AssemblyAssign:
 	{
-		std::vector<Identifier> variableNames;
+		Assignment assignment;
+		assignment.location = locationOf(elementary);
 
 		while (true)
 		{
@@ -197,7 +198,7 @@ Statement Parser::parseStatement()
 			if (m_dialect.builtin(identifier.name))
 				fatalParserError(6272_error, "Cannot assign to builtin function \"" + identifier.name.str() + "\".");
 
-			variableNames.emplace_back(identifier);
+			assignment.variableNames.emplace_back(identifier);
 
 			if (currentToken() != Token::Comma)
 				break;
@@ -206,10 +207,6 @@ Statement Parser::parseStatement()
 
 			elementary = parseElementaryOperation();
 		}
-
-		Assignment assignment;
-		assignment.location = std::get<Identifier>(elementary).location;
-		assignment.variableNames = std::move(variableNames);
 
 		expectToken(Token::AssemblyAssign);
 
