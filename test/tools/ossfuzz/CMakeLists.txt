@@ -12,6 +12,7 @@ add_dependencies(ossfuzz
 if (OSSFUZZ)
     add_custom_target(ossfuzz_proto)
     add_dependencies(ossfuzz_proto
+	    sol_import_proto_ossfuzz
 	    sol_proto_ossfuzz
 	    yul_proto_ossfuzz
 	    yul_proto_diff_ossfuzz
@@ -124,6 +125,23 @@ if (OSSFUZZ)
     )
     set_target_properties(sol_proto_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
     target_compile_options(sol_proto_ossfuzz PUBLIC ${COMPILE_OPTIONS} -Wno-sign-conversion)
+
+    add_executable(sol_import_proto_ossfuzz
+            SolImportProtoFuzzer.cpp
+            SolImportProtoConverter.cpp
+            solImportProto.pb.cc
+            ../fuzzer_common.cpp
+            )
+    target_include_directories(sol_import_proto_ossfuzz PRIVATE
+            /usr/include/libprotobuf-mutator
+            )
+    target_link_libraries(sol_import_proto_ossfuzz PRIVATE solidity libsolc
+            protobuf-mutator-libfuzzer.a
+            protobuf-mutator.a
+            protobuf.a
+            )
+    set_target_properties(sol_import_proto_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+    target_compile_options(sol_import_proto_ossfuzz PUBLIC ${COMPILE_OPTIONS} -Wno-sign-conversion)
 else()
     add_library(solc_opt_ossfuzz
             solc_opt_ossfuzz.cpp
