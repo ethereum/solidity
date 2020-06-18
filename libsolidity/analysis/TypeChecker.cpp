@@ -558,7 +558,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
 	{
 		auto result = referenceType->validForLocation(referenceType->location());
-		if (result && _variable.isPublicCallableParameter())
+		if (result && (_variable.isConstructorParameter() || _variable.isPublicCallableParameter()))
 			result = referenceType->validForLocation(DataLocation::CallData);
 		if (!result)
 		{
