@@ -61,22 +61,28 @@ public:
 	virtual ~ExecutionFramework() = default;
 
 	virtual bytes const& compileAndRunWithoutCheck(
-		std::string const& _sourceCode,
+		std::map<std::string, std::string> const& _sourceCode,
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
-		bytes const& _arguments = bytes(),
-		std::map<std::string, Address> const& _libraryAddresses = std::map<std::string, Address>()
+		bytes const& _arguments = {},
+		std::map<std::string, Address> const& _libraryAddresses = {}
 	) = 0;
 
 	bytes const& compileAndRun(
 		std::string const& _sourceCode,
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
-		bytes const& _arguments = bytes(),
-		std::map<std::string, Address> const& _libraryAddresses = std::map<std::string, Address>()
+		bytes const& _arguments = {},
+		std::map<std::string, Address> const& _libraryAddresses = {}
 	)
 	{
-		compileAndRunWithoutCheck(_sourceCode, _value, _contractName, _arguments, _libraryAddresses);
+		compileAndRunWithoutCheck(
+			{{"", _sourceCode}},
+			_value,
+			_contractName,
+			_arguments,
+			_libraryAddresses
+		);
 		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
@@ -293,4 +299,3 @@ protected:
 
 
 } // end namespaces
-

@@ -37,11 +37,11 @@ TestCaseReader::TestCaseReader(string const& _filename):
 	m_unreadSettings = m_settings;
 }
 
-string const& TestCaseReader::source()
+string const& TestCaseReader::source() const
 {
-	if (m_sources.size() != 1)
+	if (m_sources.sources.size() != 1)
 		BOOST_THROW_EXCEPTION(runtime_error("Expected single source definition, but got multiple sources."));
-	return m_sources.begin()->second;
+	return m_sources.sources.at(m_sources.mainSourceFile);
 }
 
 string TestCaseReader::simpleExpectations()
@@ -93,7 +93,7 @@ void TestCaseReader::ensureAllSettingsRead() const
 		);
 }
 
-pair<map<string, string>, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(istream& _stream)
+pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(istream& _stream)
 {
 	map<string, string> sources;
 	string currentSourceName;
@@ -145,8 +145,9 @@ pair<map<string, string>, size_t> TestCaseReader::parseSourcesAndSettingsWithLin
 		else
 			throw runtime_error(string("Expected \"//\" or \"// ---\" to terminate settings and source."));
 	}
+	// Register the last source as the main one
 	sources[currentSourceName] = currentSource;
-	return { sources, lineNumber };
+	return {{move(sources), move(currentSourceName)}, lineNumber};
 }
 
 string TestCaseReader::parseSimpleExpectations(istream& _file)

@@ -58,10 +58,10 @@ int parseUnsignedInteger(string::iterator& _it, string::iterator _end)
 
 CommonSyntaxTest::CommonSyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion):
 	EVMVersionRestrictedTestCase(_filename),
+	m_sources(m_reader.sources().sources),
+	m_expectations(parseExpectations(m_reader.stream())),
 	m_evmVersion(_evmVersion)
 {
-	m_sources = m_reader.sources();
-	m_expectations = parseExpectations(m_reader.stream());
 }
 
 TestCase::TestResult CommonSyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
@@ -94,12 +94,10 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 	if (m_sources.empty())
 		return;
 
-	bool outputSourceNames = true;
-	if (m_sources.size() == 1 && m_sources.begin()->first.empty())
-		outputSourceNames = false;
+	bool outputSourceNames = (m_sources.size() != 1 || !m_sources.begin()->first.empty());
 
-	if (_formatted)
-		for (auto const& [name, source]: m_sources)
+	for (auto const& [name, source]: m_sources)
+		if (_formatted)
 		{
 			if (source.empty())
 				continue;
@@ -139,8 +137,7 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 			}
 			_stream << formatting::RESET;
 		}
-	else
-		for (auto const& [name, source]: m_sources)
+		else
 		{
 			if (outputSourceNames)
 				_stream << _linePrefix << "==== Source: " + name << " ====" << endl;
