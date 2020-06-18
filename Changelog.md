@@ -10,6 +10,7 @@ Compiler Features:
 
 Bugfixes:
  * NatSpec: Do not consider ``////`` and ``/***`` as NatSpec comments.
+ * Type Checker: Fix internal error related to ``using for`` applied to non-libraries.
 
 
 ### 0.6.10 (2020-06-11)

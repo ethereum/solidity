@@ -395,6 +395,15 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 
 }
 
+void DeclarationTypeChecker::endVisit(UsingForDirective const& _usingFor)
+{
+	ContractDefinition const* library = dynamic_cast<ContractDefinition const*>(
+		_usingFor.libraryName().annotation().referencedDeclaration
+	);
+	if (!library || !library->isLibrary())
+		m_errorReporter.fatalTypeError(4357_error, _usingFor.libraryName().location(), "Library name expected.");
+}
+
 bool DeclarationTypeChecker::check(ASTNode const& _node)
 {
 	auto watcher = m_errorReporter.errorWatcher();
