@@ -221,6 +221,21 @@ BOOST_AUTO_TEST_CASE(int_with_wei_ether_subdenomination)
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
+BOOST_AUTO_TEST_CASE(int_with_gwei_ether_subdenomination)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function test () {
+				uint x = 1 gwei;
+			}
+		}
+	)";
+	bytes code = compileFirstExpression(sourceCode);
+
+	bytes expectation({uint8_t(Instruction::PUSH4), 0x3b, 0x9a, 0xca, 0x00});
+	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+}
+
 BOOST_AUTO_TEST_CASE(int_with_szabo_ether_subdenomination)
 {
 	char const* sourceCode = R"(

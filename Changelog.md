@@ -1,6 +1,7 @@
 ### 0.6.11 (unreleased)
 
 Language Features:
+ * General: Add unit denomination ``gwei``
 
 
 Compiler Features:

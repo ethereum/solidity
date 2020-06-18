@@ -359,10 +359,10 @@ subAssembly
   : 'assembly' identifier assemblyBlock ;
 
 numberLiteral
-  : (DecimalNumber | HexNumber) NumberUnit? ;
+  : (DecimalNumber | HexNumber) (NumberUnit | Gwei)?;
 
 identifier
-  : ('from' | 'calldata' | 'address' | Identifier) ;
+  : (Gwei | 'from' | 'calldata' | 'address' | Identifier) ;
 
 BooleanLiteral
   : 'true' | 'false' ;
@@ -384,6 +384,8 @@ HexDigits
 NumberUnit
   : 'wei' | 'szabo' | 'finney' | 'ether'
   | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years' ;
+
+Gwei: 'gwei' ;
 
 HexLiteralFragment
   : 'hex' (('"' HexDigits? '"') | ('\'' HexDigits? '\'')) ;
