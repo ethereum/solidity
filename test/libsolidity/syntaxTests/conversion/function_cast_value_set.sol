@@ -4,4 +4,4 @@ contract C {
 	}
 }
 // ----
-// TypeError: (46-94): Type function () payable external is not implicitly convertible to expected type function () payable external.
+// TypeError 9574: (46-94): Type function () payable external is not implicitly convertible to expected type function () payable external.

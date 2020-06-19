@@ -8,9 +8,9 @@ contract C {
   }
 }
 // ----
-// Warning: (151-159): Assertion checker does not yet support the type of this variable.
-// Warning: (206-209): Assertion checker does not yet implement type abi
-// Warning: (225-226): Assertion checker does not yet implement type type(struct C.S storage pointer)
-// Warning: (235-241): Assertion checker does not yet implement type type(uint256[] memory)
-// Warning: (235-244): Assertion checker does not yet implement type type(uint256[] memory[2] memory)
-// Warning: (206-246): Assertion checker does not yet implement this type of function call.
+// Warning 8115: (151-159): Assertion checker does not yet support the type of this variable.
+// Warning 8364: (206-209): Assertion checker does not yet implement type abi
+// Warning 8364: (225-226): Assertion checker does not yet implement type type(struct C.S storage pointer)
+// Warning 8364: (235-241): Assertion checker does not yet implement type type(uint256[] memory)
+// Warning 8364: (235-244): Assertion checker does not yet implement type type(uint256[] memory[2] memory)
+// Warning 4588: (206-246): Assertion checker does not yet implement this type of function call.

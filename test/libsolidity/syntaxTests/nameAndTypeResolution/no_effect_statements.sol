@@ -9,8 +9,8 @@ contract test {
     }
 }
 // ----
-// Warning: (93-94): Statement has no effect.
-// Warning: (98-104): Statement has no effect.
-// Warning: (108-112): Statement has no effect.
-// Warning: (116-120): Statement has no effect.
-// Warning: (124-131): Statement has no effect.
+// Warning 6133: (93-94): Statement has no effect.
+// Warning 6133: (98-104): Statement has no effect.
+// Warning 6133: (108-112): Statement has no effect.
+// Warning 6133: (116-120): Statement has no effect.
+// Warning 6133: (124-131): Statement has no effect.

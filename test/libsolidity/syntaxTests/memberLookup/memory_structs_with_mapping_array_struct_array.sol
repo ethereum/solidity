@@ -9,4 +9,4 @@ contract Test {
     }
 }
 // ----
-// TypeError: (208-218): Member "b1" is not available in struct Test.S1 memory outside of storage.
+// TypeError 4994: (208-218): Member "b1" is not available in struct Test.S1 memory outside of storage.

@@ -12,11 +12,11 @@ contract C {
 // ====
 // EVMVersion: >=constantinople
 // ----
-// TypeError: (78-110): Option "gas" has already been set.
-// TypeError: (120-154): Option "gas" has already been set.
-// TypeError: (164-198): Option "value" has already been set.
-// Warning: (208-222): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
-// TypeError: (208-242): Option "value" has already been set.
-// TypeError: (252-293): Option "value" has already been set.
-// TypeError: (252-293): Option "gas" has already been set.
-// TypeError: (303-330): Option "salt" has already been set.
+// TypeError 9886: (78-110): Option "gas" has already been set.
+// TypeError 9886: (120-154): Option "gas" has already been set.
+// TypeError 9886: (164-198): Option "value" has already been set.
+// Warning 1621: (208-222): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// TypeError 9886: (208-242): Option "value" has already been set.
+// TypeError 9886: (252-293): Option "value" has already been set.
+// TypeError 9886: (252-293): Option "gas" has already been set.
+// TypeError 9886: (303-330): Option "salt" has already been set.

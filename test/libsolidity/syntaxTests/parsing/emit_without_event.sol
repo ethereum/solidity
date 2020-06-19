@@ -5,4 +5,4 @@ contract C {
 	}
 }
 // ----
-// ParserError: (49-50): Expected '(' but got ';'
+// ParserError 2314: (49-50): Expected '(' but got ';'

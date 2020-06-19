@@ -32,4 +32,4 @@ contract C {
 	}
 }
 // ----
-// Warning: (461-475): Assertion violation happens here
+// Warning 4661: (461-475): Assertion violation happens here

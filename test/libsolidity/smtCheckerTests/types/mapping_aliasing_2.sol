@@ -30,12 +30,12 @@ contract C
 	}
 }
 // ----
-// Warning: (397-417): Assertion violation happens here
-// Warning: (463-481): Assertion violation happens here
-// Warning: (533-557): Assertion violation happens here
-// Warning: (397-417): Assertion violation happens here
-// Warning: (463-481): Assertion violation happens here
-// Warning: (533-557): Assertion violation happens here
-// Warning: (397-417): Assertion violation happens here
-// Warning: (463-481): Assertion violation happens here
-// Warning: (533-557): Assertion violation happens here
+// Warning 4661: (397-417): Assertion violation happens here
+// Warning 4661: (463-481): Assertion violation happens here
+// Warning 4661: (533-557): Assertion violation happens here
+// Warning 4661: (397-417): Assertion violation happens here
+// Warning 4661: (463-481): Assertion violation happens here
+// Warning 4661: (533-557): Assertion violation happens here
+// Warning 4661: (397-417): Assertion violation happens here
+// Warning 4661: (463-481): Assertion violation happens here
+// Warning 4661: (533-557): Assertion violation happens here

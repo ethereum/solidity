@@ -6,4 +6,4 @@ contract test {
     function foo() public {}
 }
 // ----
-// DeclarationError: (90-114): Identifier already declared.
+// DeclarationError 2333: (90-114): Identifier already declared.

@@ -3,4 +3,4 @@ contract C {
     uint public f = 0;
 }
 // ----
-// DeclarationError: (53-70): Identifier already declared.
+// DeclarationError 2333: (53-70): Identifier already declared.

@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (73-93): Unknown call option "random". Valid options are "salt", "value" and "gas".
+// TypeError 9318: (73-93): Unknown call option "random". Valid options are "salt", "value" and "gas".

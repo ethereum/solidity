@@ -4,4 +4,4 @@ contract A {}
 import "a";
 struct A { uint256 a; }
 // ----
-// DeclarationError: (b:12-35): Identifier already declared.
+// DeclarationError 2333: (b:12-35): Identifier already declared.

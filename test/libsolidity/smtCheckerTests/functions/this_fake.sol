@@ -20,5 +20,5 @@ contract C
     }
 }
 // ----
-// Warning: (160-166): This declaration shadows a builtin symbol.
-// Warning: (268-282): Assertion violation happens here
+// Warning 2319: (160-166): This declaration shadows a builtin symbol.
+// Warning 4661: (268-282): Assertion violation happens here

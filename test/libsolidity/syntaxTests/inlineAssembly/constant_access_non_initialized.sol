@@ -7,5 +7,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (17-32): Uninitialized "constant" variable.
-// TypeError: (106-107): Constant has no value.
+// TypeError 4266: (17-32): Uninitialized "constant" variable.
+// TypeError 3224: (106-107): Constant has no value.

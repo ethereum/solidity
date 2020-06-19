@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning: (102-109): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// Warning 1621: (102-109): Using ".value(...)" is deprecated. Use "{value: ...}" instead.

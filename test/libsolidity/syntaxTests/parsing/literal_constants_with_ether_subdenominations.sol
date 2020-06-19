@@ -12,4 +12,4 @@ contract c {
     uint256 d;
 }
 // ----
-// Warning: (170-179): This declaration shadows an existing declaration.
+// Warning 2519: (170-179): This declaration shadows an existing declaration.

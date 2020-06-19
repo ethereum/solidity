@@ -3,4 +3,4 @@ contract c {
     function f5(mapping(uint => uint) memory) pure internal {}
 }
 // ----
-// TypeError: (93-121): Mapping types can only have a data location of "storage".
+// TypeError 5380: (93-121): Mapping types can only have a data location of "storage".

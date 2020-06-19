@@ -1,4 +1,4 @@
 enum E { A }
 enum E { A }
 // ----
-// DeclarationError: (13-25): Identifier already declared.
+// DeclarationError 2333: (13-25): Identifier already declared.

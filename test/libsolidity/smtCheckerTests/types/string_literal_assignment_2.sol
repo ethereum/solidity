@@ -9,4 +9,4 @@ contract C {
 	}
 }
 // ----
-// Warning: (176-191): Assertion violation happens here
+// Warning 4661: (176-191): Assertion violation happens here

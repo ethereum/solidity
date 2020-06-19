@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (148-154): Member "f" not unique after argument-dependent lookup in contract C.
+// TypeError 6675: (148-154): Member "f" not unique after argument-dependent lookup in contract C.

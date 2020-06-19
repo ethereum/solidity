@@ -4,4 +4,4 @@
         }
 }
 // ----
-// TypeError: (91-136): Data location must be "storage" for variable, but "memory" was given.
+// TypeError 6651: (91-136): Data location must be "storage" for variable, but "memory" was given.

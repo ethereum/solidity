@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError: (87-96): Variable count does not match number of values (2 vs. 1)
+// DeclarationError 8678: (87-96): Variable count does not match number of values (2 vs. 1)

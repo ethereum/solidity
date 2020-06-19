@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (66-72): Member "push" is not available in uint256[] calldata outside of storage.
+// TypeError 4994: (66-72): Member "push" is not available in uint256[] calldata outside of storage.

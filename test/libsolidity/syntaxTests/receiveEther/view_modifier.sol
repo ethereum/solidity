@@ -3,4 +3,4 @@ contract C {
     receive() external view { x = 2; }
 }
 // ----
-// TypeError: (29-63): Receive ether function must be payable, but is "view".
+// TypeError 7793: (29-63): Receive ether function must be payable, but is "view".

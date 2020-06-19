@@ -3,5 +3,5 @@ contract Errort6 {
 }
 
 // ----
-// ParserError: (36-37): Expected type name
-// Warning: (59-60): Recovered in ContractDefinition at '}'.
+// ParserError 3546: (36-37): Expected type name
+// Warning 3796: (59-60): Recovered in ContractDefinition at '}'.

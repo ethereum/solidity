@@ -5,4 +5,4 @@ abstract contract X is A {
 	function test() private override returns (uint256) {}
 }
 // ----
-// TypeError: (23-73): "virtual" and "private" cannot be used together.
+// TypeError 3942: (23-73): "virtual" and "private" cannot be used together.

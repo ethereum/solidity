@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (52-57): Use of the "var" keyword is disallowed.
+// TypeError 6983: (52-57): Use of the "var" keyword is disallowed.

@@ -11,4 +11,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (241-242): No matching declaration found after argument-dependent lookup.
+// TypeError 9322: (241-242): No matching declaration found after argument-dependent lookup.

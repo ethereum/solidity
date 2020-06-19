@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (128-129): Type uint256[] memory is not implicitly convertible to expected type uint256[] storage pointer.
+// TypeError 7407: (128-129): Type uint256[] memory is not implicitly convertible to expected type uint256[] storage pointer.

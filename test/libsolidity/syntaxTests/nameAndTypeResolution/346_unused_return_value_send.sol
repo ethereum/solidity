@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// Warning: (50-71): Failure condition of 'send' ignored. Consider using 'transfer' instead.
+// Warning 5878: (50-71): Failure condition of 'send' ignored. Consider using 'transfer' instead.

@@ -12,4 +12,4 @@ contract C{
 }
 
 // ----
-// TypeError: (104-109): Member "f" not found or not visible after argument-dependent lookup in function () view external returns (contract A). Did you intend to call the function?
+// TypeError 6005: (104-109): Member "f" not found or not visible after argument-dependent lookup in function () view external returns (contract A). Did you intend to call the function?

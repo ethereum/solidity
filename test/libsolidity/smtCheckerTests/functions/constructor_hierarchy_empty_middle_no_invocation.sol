@@ -15,5 +15,5 @@ contract A is B {
 	}
 }
 // ----
-// Warning: (145-151): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning: (164-178): Assertion violation happens here
+// Warning 5667: (145-151): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 4661: (164-178): Assertion violation happens here

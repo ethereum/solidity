@@ -17,7 +17,7 @@ contract C {
 	}
 }
 // ----
-// TypeError: (235-252): Cannot set option "value", since the constructor of contract B1 is not payable.
-// TypeError: (258-275): Cannot set option "value", since the constructor of contract B2 is not payable.
-// TypeError: (281-298): Cannot set option "value", since the constructor of contract B3 is not payable.
-// TypeError: (304-321): Cannot set option "value", since the constructor of contract B4 is not payable.
+// TypeError 7006: (235-252): Cannot set option "value", since the constructor of contract B1 is not payable.
+// TypeError 7006: (258-275): Cannot set option "value", since the constructor of contract B2 is not payable.
+// TypeError 7006: (281-298): Cannot set option "value", since the constructor of contract B3 is not payable.
+// TypeError 7006: (304-321): Cannot set option "value", since the constructor of contract B4 is not payable.

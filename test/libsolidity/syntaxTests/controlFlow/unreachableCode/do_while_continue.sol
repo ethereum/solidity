@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// Warning: (119-126): Unreachable code.
+// Warning 5740: (119-126): Unreachable code.

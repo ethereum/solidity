@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// TypeError: (72-73): Expected a library.
+// TypeError 4977: (72-73): Expected a library.

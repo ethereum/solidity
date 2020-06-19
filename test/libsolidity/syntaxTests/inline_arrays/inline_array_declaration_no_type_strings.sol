@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// Warning: (17-112): Function state mutability can be restricted to pure
+// Warning 2018: (17-112): Function state mutability can be restricted to pure

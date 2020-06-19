@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (47-56): Inline array type cannot be declared as LValue.
+// TypeError 3025: (47-56): Inline array type cannot be declared as LValue.

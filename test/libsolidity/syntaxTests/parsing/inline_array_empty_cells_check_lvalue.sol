@@ -6,4 +6,4 @@ contract c {
 	}
 }
 // ----
-// ParserError: (62-63): Expected expression (inline array elements cannot be omitted).
+// ParserError 4799: (62-63): Expected expression (inline array elements cannot be omitted).

@@ -14,4 +14,4 @@ contract C
 	}
 }
 // ----
-// Warning: (119-120): Condition is always false.
+// Warning 6838: (119-120): Condition is always false.

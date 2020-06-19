@@ -26,5 +26,5 @@ contract C
 	}
 }
 // ----
-// Warning: (777-797): Assertion violation happens here
-// Warning: (777-797): Assertion violation happens here
+// Warning 4661: (777-797): Assertion violation happens here
+// Warning 4661: (777-797): Assertion violation happens here

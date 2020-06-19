@@ -9,4 +9,4 @@ contract Test {
     }
 }
 // ----
-// TypeError: (136-137): Invalid type for argument in function call. Invalid implicit conversion from address to contract C requested.
+// TypeError 9553: (136-137): Invalid type for argument in function call. Invalid implicit conversion from address to contract C requested.

@@ -6,4 +6,4 @@ contract test {
     ActionChoices choices;
 }
 // ----
-// DeclarationError: (121-124): Undeclared identifier.
+// DeclarationError 7576: (121-124): Undeclared identifier.

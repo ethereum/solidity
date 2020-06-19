@@ -9,4 +9,4 @@ contract A {
     }
 }
 // ----
-// TypeError: (115-121): Invalid type for argument in function call. Invalid implicit conversion from int_const 1234 to bytes32 requested.
+// TypeError 9553: (115-121): Invalid type for argument in function call. Invalid implicit conversion from int_const 1234 to bytes32 requested.

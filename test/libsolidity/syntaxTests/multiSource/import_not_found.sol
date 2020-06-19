@@ -2,4 +2,4 @@
 import "b";
 contract C {}
 // ----
-// ParserError: (a:0-11): Source "b" not found: File not supplied initially.
+// ParserError 6275: (a:0-11): Source "b" not found: File not supplied initially.

@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (62-136): Invalid rational int_const 3100...(204 digits omitted)...9237 (absolute value too large or division by zero).
+// TypeError 6963: (62-136): Invalid rational int_const 3100...(204 digits omitted)...9237 (absolute value too large or division by zero).

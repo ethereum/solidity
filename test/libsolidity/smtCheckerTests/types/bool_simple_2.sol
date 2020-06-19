@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning: (98-112): Assertion violation happens here
+// Warning 4661: (98-112): Assertion violation happens here

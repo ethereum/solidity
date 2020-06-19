@@ -9,12 +9,12 @@ contract C
     }
 }
 // ----
-// SyntaxError: (59-66): Use of unary + is disallowed.
-// TypeError: (59-66): Unary operator + cannot be applied to type tuple(int_const 0,int_const 0)
-// TypeError: (51-66): Different number of components on the left hand side (1) than on the right hand side (2).
-// TypeError: (84-91): Unary operator - cannot be applied to type tuple(int_const 0,int_const 0)
-// TypeError: (76-91): Different number of components on the left hand side (1) than on the right hand side (2).
-// TypeError: (111-118): Unary operator ~ cannot be applied to type tuple(int_const 0,int_const 0)
-// TypeError: (101-118): Different number of components on the left hand side (1) than on the right hand side (2).
-// TypeError: (138-145): Unary operator ! cannot be applied to type tuple(int_const 0,int_const 0)
-// TypeError: (128-145): Different number of components on the left hand side (1) than on the right hand side (2).
+// SyntaxError 9636: (59-66): Use of unary + is disallowed.
+// TypeError 4907: (59-66): Unary operator + cannot be applied to type tuple(int_const 0,int_const 0)
+// TypeError 7364: (51-66): Different number of components on the left hand side (1) than on the right hand side (2).
+// TypeError 4907: (84-91): Unary operator - cannot be applied to type tuple(int_const 0,int_const 0)
+// TypeError 7364: (76-91): Different number of components on the left hand side (1) than on the right hand side (2).
+// TypeError 4907: (111-118): Unary operator ~ cannot be applied to type tuple(int_const 0,int_const 0)
+// TypeError 7364: (101-118): Different number of components on the left hand side (1) than on the right hand side (2).
+// TypeError 4907: (138-145): Unary operator ! cannot be applied to type tuple(int_const 0,int_const 0)
+// TypeError 7364: (128-145): Different number of components on the left hand side (1) than on the right hand side (2).

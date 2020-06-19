@@ -9,17 +9,17 @@ contract C {
     function f() public pure returns (var storage x, var storage y) {}
 }
 // ----
-// ParserError: (38-41): Expected explicit type name.
-// ParserError: (71-74): Expected explicit type name.
-// ParserError: (106-109): Expected explicit type name.
-// ParserError: (157-160): Expected explicit type name.
-// ParserError: (192-195): Expected explicit type name.
-// ParserError: (199-202): Expected explicit type name.
-// ParserError: (247-250): Expected explicit type name.
-// ParserError: (251-258): Location specifier needs explicit type name.
-// ParserError: (301-304): Expected explicit type name.
-// ParserError: (305-312): Location specifier needs explicit type name.
-// ParserError: (357-360): Expected explicit type name.
-// ParserError: (361-368): Location specifier needs explicit type name.
-// ParserError: (372-375): Expected explicit type name.
-// ParserError: (376-383): Location specifier needs explicit type name.
+// ParserError 7059: (38-41): Expected explicit type name.
+// ParserError 7059: (71-74): Expected explicit type name.
+// ParserError 7059: (106-109): Expected explicit type name.
+// ParserError 7059: (157-160): Expected explicit type name.
+// ParserError 7059: (192-195): Expected explicit type name.
+// ParserError 7059: (199-202): Expected explicit type name.
+// ParserError 7059: (247-250): Expected explicit type name.
+// ParserError 7439: (251-258): Location specifier needs explicit type name.
+// ParserError 7059: (301-304): Expected explicit type name.
+// ParserError 7439: (305-312): Location specifier needs explicit type name.
+// ParserError 7059: (357-360): Expected explicit type name.
+// ParserError 7439: (361-368): Location specifier needs explicit type name.
+// ParserError 7059: (372-375): Expected explicit type name.
+// ParserError 7439: (376-383): Location specifier needs explicit type name.

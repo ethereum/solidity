@@ -9,7 +9,7 @@ contract C {
     }
 }
 // ----
-// DeclarationError: (79-87): In variable declarations _slot and _offset can not be used as a suffix.
-// DeclarationError: (109-115): In variable declarations _slot and _offset can not be used as a suffix.
-// DeclarationError: (137-144): In variable declarations _slot and _offset can not be used as a suffix.
-// DeclarationError: (166-171): In variable declarations _slot and _offset can not be used as a suffix.
+// DeclarationError 9155: (79-87): In variable declarations _slot and _offset can not be used as a suffix.
+// DeclarationError 9155: (109-115): In variable declarations _slot and _offset can not be used as a suffix.
+// DeclarationError 9155: (137-144): In variable declarations _slot and _offset can not be used as a suffix.
+// DeclarationError 9155: (166-171): In variable declarations _slot and _offset can not be used as a suffix.

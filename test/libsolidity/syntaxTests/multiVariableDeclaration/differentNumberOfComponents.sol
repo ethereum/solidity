@@ -15,11 +15,11 @@ contract C {
     }
 }
 // ----
-// TypeError: (47-61): Different number of components on the left hand side (1) than on the right hand side (2).
-// TypeError: (71-87): Different number of components on the left hand side (1) than on the right hand side (3).
-// TypeError: (97-115): Different number of components on the left hand side (1) than on the right hand side (4).
-// TypeError: (157-197): Different number of components on the left hand side (4) than on the right hand side (1).
-// TypeError: (207-238): Different number of components on the left hand side (3) than on the right hand side (1).
-// TypeError: (248-270): Different number of components on the left hand side (2) than on the right hand side (1).
-// TypeError: (312-358): Different number of components on the left hand side (4) than on the right hand side (3).
-// TypeError: (368-407): Different number of components on the left hand side (3) than on the right hand side (4).
+// TypeError 7364: (47-61): Different number of components on the left hand side (1) than on the right hand side (2).
+// TypeError 7364: (71-87): Different number of components on the left hand side (1) than on the right hand side (3).
+// TypeError 7364: (97-115): Different number of components on the left hand side (1) than on the right hand side (4).
+// TypeError 7364: (157-197): Different number of components on the left hand side (4) than on the right hand side (1).
+// TypeError 7364: (207-238): Different number of components on the left hand side (3) than on the right hand side (1).
+// TypeError 7364: (248-270): Different number of components on the left hand side (2) than on the right hand side (1).
+// TypeError 7364: (312-358): Different number of components on the left hand side (4) than on the right hand side (3).
+// TypeError 7364: (368-407): Different number of components on the left hand side (3) than on the right hand side (4).

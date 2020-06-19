@@ -5,4 +5,4 @@ contract D {
     }
 }
 // ----
-// TypeError: (84-119): Type mapping(uint256 => uint256) is not implicitly convertible to expected type mapping(uint256 => int256).
+// TypeError 9574: (84-119): Type mapping(uint256 => uint256) is not implicitly convertible to expected type mapping(uint256 => int256).

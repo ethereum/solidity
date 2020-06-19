@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (94-102): Recursive type not allowed for public or external contract functions.
+// TypeError 4103: (94-102): Recursive type not allowed for public or external contract functions.

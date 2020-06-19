@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// Warning: (103-117): Unreachable code.
-// Warning: (160-171): Unreachable code.
+// Warning 5740: (103-117): Unreachable code.
+// Warning 5740: (160-171): Unreachable code.

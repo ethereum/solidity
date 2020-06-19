@@ -9,4 +9,4 @@ contract c is a,b {
     function f() public override(a, b) { super.f(); }
 }
 // ----
-// TypeError: (118-125): Member "f" not found or not visible after argument-dependent lookup in contract super b.
+// TypeError 9582: (118-125): Member "f" not found or not visible after argument-dependent lookup in contract super b.

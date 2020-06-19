@@ -7,4 +7,4 @@ contract C {
     function f(S2 memory) public pure {}
 }
 // ----
-// TypeError: (143-179): Function overload clash during conversion to external types for arguments.
+// TypeError 9914: (143-179): Function overload clash during conversion to external types for arguments.

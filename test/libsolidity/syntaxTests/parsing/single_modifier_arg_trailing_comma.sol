@@ -3,4 +3,4 @@ contract test {
 	function(uint a) {}
 }
 // ----
-// ParserError: (40-41): Unexpected trailing comma in parameter list.
+// ParserError 7591: (40-41): Unexpected trailing comma in parameter list.

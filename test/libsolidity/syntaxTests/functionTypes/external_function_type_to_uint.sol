@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (69-81): Explicit type conversion not allowed from "function () external returns (uint256)" to "uint256".
+// TypeError 9640: (69-81): Explicit type conversion not allowed from "function () external returns (uint256)" to "uint256".

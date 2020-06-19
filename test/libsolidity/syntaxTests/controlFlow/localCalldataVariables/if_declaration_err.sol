@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (141-142): This variable is of calldata pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (141-142): This variable is of calldata pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

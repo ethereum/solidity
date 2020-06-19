@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (85-86): Immutable state variable already initialized.
+// TypeError 1574: (85-86): Immutable state variable already initialized.

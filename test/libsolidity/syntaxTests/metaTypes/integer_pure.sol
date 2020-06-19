@@ -12,5 +12,5 @@ contract test {
 
 }
 // ----
-// Warning: (21-112): Function state mutability can be restricted to pure
-// Warning: (118-200): Function state mutability can be restricted to pure
+// Warning 2018: (21-112): Function state mutability can be restricted to pure
+// Warning 2018: (118-200): Function state mutability can be restricted to pure

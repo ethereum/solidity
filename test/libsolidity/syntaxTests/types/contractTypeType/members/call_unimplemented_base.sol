@@ -7,4 +7,4 @@ contract C is B {
     }
 }
 // ----
-// TypeError: (118-123): Cannot call unimplemented base function.
+// TypeError 7501: (118-123): Cannot call unimplemented base function.
