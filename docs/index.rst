@@ -8,7 +8,7 @@ Solidity
 
 سوليديتي هي لغة برمجية عالية-المستوى، كائنية التوجه تقوم بتطبيق العقود الذكية. العقود الذكية هي برامج تقوم بالتحكم في تصرفات الحسابات داخل حالة إيثيريم
 
-تأثرت لغة سوليديتي عن طريق سي بلس بلس و بايثون و جافا سكربت، كذلك صممت لتعمل على الآلة الإفتراضية لإيثيريم                                                    
+تأثرت لغة سوليديتي عن طريق سي بلس بلس و بايثون و جافا سكربت، كذلك صممت لتعمل على الآلة الإفتراضية لإيثيريم                                                   ء 
 
 سوليديتي هي مكتوبة بشكل ثابت، تدعم فكرة التوريث -بمعنى - و كذلك المكتبات البرمجية و المتغيرات المعقدة المعرفة من المستخدم بالإضافة للعديد من المميزات الأخرى.
 
@@ -77,6 +77,7 @@ version stands as a reference.
 * `Simplified Chinese <http://solidity-cn.readthedocs.io>`_ (in progress)
 * `Spanish <https://solidity-es.readthedocs.io>`_
 * `Turkish <https://github.com/denizozzgur/Solidity_TR/blob/master/README.md>`_ (partial)
+* `Arabic <https://github.com/Abdullanz/solidity-ar/blob/develop/docs/index.rst>`_ (in progress)
 
 Contents
 ========
