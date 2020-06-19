@@ -6,12 +6,12 @@ Solidity
     :alt: Solidity logo
     :align: center
 
-سوليديتي هي لفة برمجية عالية-المستوى، كائنية التوجه تقوم بتطبيق العقود الذكية. العقود الذكية هي برامج تقوم بالتحكم في تصرفات الحسابات داخل حالة إيثيريم
+سوليديتي هي لغة برمجية عالية-المستوى، كائنية التوجه تقوم بتطبيق العقود الذكية. العقود الذكية هي برامج تقوم بالتحكم في تصرفات الحسابات داخل حالة إيثيريم
 
 تأثرت لغة سوليديتي عن طريق سي بلس بلس و بايثون و جافا سكربت، كذلك صممت لتعمل على الآلة الإفتراضية لإيثيريم
 
-Solidity is statically typed, supports inheritance, libraries and complex
-user-defined types among other features.
+سوليديتي هي مكتوبة بشكل ثابت، تدعم فكرة التوريث -بمعنى - و كذلك المكتبات البرمجية و المتغيرات المعقدة المعرفة من المستخدم بالإضافة للعديد من المميزات الأخرى.
+
 
 With Solidity you can create contracts for uses such as voting, crowdfunding, blind auctions,
 and multi-signature wallets.
