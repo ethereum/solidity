@@ -6,12 +6,9 @@ Solidity
     :alt: Solidity logo
     :align: center
 
-Solidity is an object-oriented, high-level language for implementing smart
-contracts. Smart contracts are programs which govern the behaviour of accounts
-within the Ethereum state.
+سوليديتي هي لفة برمجية عالية-المستوى، كائنية التوجه تقوم بتطبيق العقود الذكية. العقود الذكية هي برامج تقوم بالتحكم في تصرفات الحسابات داخل حالة إيثيريم
 
-Solidity was influenced by C++, Python and JavaScript and is designed to target
-the Ethereum Virtual Machine (EVM).
+تأثرت لغة سوليديتي عن طريق سي بلس بلس و بايثون و جافا سكربت، كذلك صممت لتعمل على الآلة الإفتراضية لإيثيريم
 
 Solidity is statically typed, supports inheritance, libraries and complex
 user-defined types among other features.
