@@ -124,6 +124,17 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 		)
 			builtins.emplace(createEVMFunction(instr.first, instr.second));
 
+	builtins.emplace(createFunction("linkersymbol", 1, 1, SideEffects{}, {true}, [](
+		FunctionCall const& _call,
+		AbstractAssembly& _assembly,
+		BuiltinContext&,
+		function<void(Expression const&)>
+	) {
+		yulAssert(_call.arguments.size() == 1, "");
+		Expression const& arg = _call.arguments.front();
+		_assembly.appendLinkerSymbol(std::get<Literal>(arg).value.str());
+	}));
+
 	if (_objectAccess)
 	{
 		builtins.emplace(createFunction("datasize", 1, 1, SideEffects{}, {true}, [](
