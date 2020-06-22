@@ -22,10 +22,10 @@ contract A is B {
 }
 
 // ----
-// Warning: (171-177): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (231-236): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (171-177): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (261-266): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (283-289): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (306-311): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (294-312): Assertion violation happens here
+// Warning 2661: (171-177): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 2661: (231-236): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 2661: (171-177): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 2661: (261-266): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 2661: (283-289): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 2661: (306-311): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 4661: (294-312): Assertion violation happens here

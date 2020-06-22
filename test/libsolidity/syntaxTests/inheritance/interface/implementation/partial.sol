@@ -16,4 +16,4 @@ contract SubImpl is Sub {
 }
 
 // ----
-// TypeError: (234-407): Contract "SubImpl" should be marked as abstract.
+// TypeError 3656: (234-407): Contract "SubImpl" should be marked as abstract.

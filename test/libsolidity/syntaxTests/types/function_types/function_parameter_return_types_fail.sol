@@ -33,10 +33,10 @@ abstract contract Test
     }
 }
 // ----
-// TypeError: (1229-1322): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (uint256) pure returns (uint256).
-// TypeError: (1330-1436): Type function (uint256) pure returns (string storage pointer) is not implicitly convertible to expected type function (uint256) pure returns (string memory).
-// TypeError: (1444-1542): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (string memory) pure returns (uint256).
-// TypeError: (1550-1657): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (string memory) pure returns (string memory).
-// TypeError: (1666-1777): Type function (uint256) pure returns (uint256) is not implicitly convertible to expected type function (uint256,uint256) pure returns (uint256).
-// TypeError: (1785-1904): Type function (string memory) pure returns (string memory) is not implicitly convertible to expected type function (string memory,uint256) pure returns (string memory).
-// TypeError: (1912-2036): Type function (string memory) pure returns (string memory) is not implicitly convertible to expected type function (string memory,string memory) pure returns (string memory).
+// TypeError 9574: (1229-1322): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (uint256) pure returns (uint256).
+// TypeError 9574: (1330-1436): Type function (uint256) pure returns (string storage pointer) is not implicitly convertible to expected type function (uint256) pure returns (string memory).
+// TypeError 9574: (1444-1542): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (string memory) pure returns (uint256).
+// TypeError 9574: (1550-1657): Type function (uint256) pure returns (string memory) is not implicitly convertible to expected type function (string memory) pure returns (string memory).
+// TypeError 9574: (1666-1777): Type function (uint256) pure returns (uint256) is not implicitly convertible to expected type function (uint256,uint256) pure returns (uint256).
+// TypeError 9574: (1785-1904): Type function (string memory) pure returns (string memory) is not implicitly convertible to expected type function (string memory,uint256) pure returns (string memory).
+// TypeError 9574: (1912-2036): Type function (string memory) pure returns (string memory) is not implicitly convertible to expected type function (string memory,string memory) pure returns (string memory).

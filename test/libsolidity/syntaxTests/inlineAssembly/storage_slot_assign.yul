@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (138-146): Only _slot can be assigned to.
+// TypeError 9739: (138-146): Only _slot can be assigned to.

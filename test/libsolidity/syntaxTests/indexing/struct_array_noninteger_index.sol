@@ -7,4 +7,4 @@ contract test {
 }
 
 // ----
-// TypeError: (101-241): Type int_const 7555...(132 digits omitted)...5555 is not implicitly convertible to expected type uint256.
+// TypeError 7407: (101-241): Type int_const 7555...(132 digits omitted)...5555 is not implicitly convertible to expected type uint256.

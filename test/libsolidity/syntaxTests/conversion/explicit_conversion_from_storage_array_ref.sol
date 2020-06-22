@@ -6,5 +6,5 @@ contract C {
 	}
 }
 // ----
-// TypeError: (55-63): Explicit type conversion not allowed from "int256[10] storage ref" to "int256[] storage pointer".
-// TypeError: (67-73): Explicit type conversion not allowed from "int256[10] storage ref" to "int256".
+// TypeError 9640: (55-63): Explicit type conversion not allowed from "int256[10] storage ref" to "int256[] storage pointer".
+// TypeError 9640: (67-73): Explicit type conversion not allowed from "int256[10] storage ref" to "int256".

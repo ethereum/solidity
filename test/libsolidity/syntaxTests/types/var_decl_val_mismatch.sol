@@ -12,4 +12,4 @@ contract n
 	}
 }
 // ----
-// TypeError: (69-84): Different number of components on the left hand side (2) than on the right hand side (1).
+// TypeError 7364: (69-84): Different number of components on the left hand side (2) than on the right hand side (1).

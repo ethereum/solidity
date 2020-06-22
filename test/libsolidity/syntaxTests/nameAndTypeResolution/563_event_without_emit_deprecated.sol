@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (62-65): Event invocations have to be prefixed by "emit".
+// TypeError 3132: (62-65): Event invocations have to be prefixed by "emit".

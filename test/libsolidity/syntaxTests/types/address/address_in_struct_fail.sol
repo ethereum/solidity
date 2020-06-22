@@ -8,4 +8,4 @@ contract A {
     }
 }
 // ----
-// TypeError: (110-123): Type address is not implicitly convertible to expected type address payable.
+// TypeError 7407: (110-123): Type address is not implicitly convertible to expected type address payable.

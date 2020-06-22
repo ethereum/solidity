@@ -12,4 +12,4 @@ contract C {
 // ====
 // SMTSolvers: z3
 // ----
-// Warning: (138-144): Condition is always true.
+// Warning 6838: (138-144): Condition is always true.

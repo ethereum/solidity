@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (92-100): Member "a" not found or not visible after argument-dependent lookup in uint256[] calldata slice.
+// TypeError 9582: (92-100): Member "a" not found or not visible after argument-dependent lookup in uint256[] calldata slice.

@@ -13,5 +13,5 @@ abstract contract B is I {
 contract C is A, B {
 }
 // ----
-// TypeError: (292-314): Derived contract must override function "f". Two or more base classes define function with same name and parameter types.
-// TypeError: (292-314): Derived contract must override function "g". Two or more base classes define function with same name and parameter types.
+// TypeError 6480: (292-314): Derived contract must override function "f". Two or more base classes define function with same name and parameter types.
+// TypeError 6480: (292-314): Derived contract must override function "g". Two or more base classes define function with same name and parameter types.

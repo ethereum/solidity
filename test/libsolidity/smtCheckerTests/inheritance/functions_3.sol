@@ -36,12 +36,12 @@ contract C is B {
 	}
 }
 // ----
-// Warning: (121-135): Assertion violation happens here
-// Warning: (170-184): Assertion violation happens here
-// Warning: (296-310): Assertion violation happens here
-// Warning: (345-359): Assertion violation happens here
-// Warning: (170-184): Assertion violation happens here
-// Warning: (468-482): Assertion violation happens here
-// Warning: (517-531): Assertion violation happens here
-// Warning: (345-359): Assertion violation happens here
-// Warning: (170-184): Assertion violation happens here
+// Warning 4661: (121-135): Assertion violation happens here
+// Warning 4661: (170-184): Assertion violation happens here
+// Warning 4661: (296-310): Assertion violation happens here
+// Warning 4661: (345-359): Assertion violation happens here
+// Warning 4661: (170-184): Assertion violation happens here
+// Warning 4661: (468-482): Assertion violation happens here
+// Warning 4661: (517-531): Assertion violation happens here
+// Warning 4661: (345-359): Assertion violation happens here
+// Warning 4661: (170-184): Assertion violation happens here

@@ -5,4 +5,4 @@ contract C
     }
 }
 // ----
-// TypeError: (61-68): Type is not callable
+// TypeError 5704: (61-68): Type is not callable

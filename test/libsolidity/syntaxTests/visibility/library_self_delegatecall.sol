@@ -10,4 +10,4 @@ library L2 {
     function g(uint) public pure returns (uint) { return 2; }
 }
 // ----
-// TypeError: (88-93): Libraries cannot call their own functions externally.
+// TypeError 6700: (88-93): Libraries cannot call their own functions externally.

@@ -11,4 +11,4 @@ contract X is B, C {
 	uint public override foo;
 }
 // ----
-// TypeError: (305-313): Public state variable needs to specify overridden contracts "B" and "C".
+// TypeError 4327: (305-313): Public state variable needs to specify overridden contracts "B" and "C".

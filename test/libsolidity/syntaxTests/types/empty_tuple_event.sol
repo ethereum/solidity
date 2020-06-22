@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (71-75): Expected primary expression.
+// ParserError 6933: (71-75): Expected primary expression.

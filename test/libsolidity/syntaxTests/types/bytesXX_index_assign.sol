@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (71-75): Single bytes in fixed bytes arrays cannot be modified.
+// TypeError 4360: (71-75): Single bytes in fixed bytes arrays cannot be modified.

@@ -3,4 +3,4 @@ interface I {
   modifier m() { _; }
 }
 // ----
-// SyntaxError: (16-60): Functions in interfaces cannot have modifiers.
+// SyntaxError 5842: (16-60): Functions in interfaces cannot have modifiers.

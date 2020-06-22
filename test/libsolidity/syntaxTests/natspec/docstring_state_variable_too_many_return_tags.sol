@@ -6,4 +6,4 @@ contract test {
   uint public state;
 }
 // ----
-// DocstringParsingError: (18-137): Documentation tag "@return" is only allowed once on state-variables.
+// DocstringParsingError 5256: (18-137): Documentation tag "@return" is only allowed once on state-variables.

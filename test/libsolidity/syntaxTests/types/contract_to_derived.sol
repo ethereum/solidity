@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// TypeError: (85-95): Explicit type conversion not allowed from "contract B" to "contract A".
+// TypeError 9640: (85-95): Explicit type conversion not allowed from "contract B" to "contract A".

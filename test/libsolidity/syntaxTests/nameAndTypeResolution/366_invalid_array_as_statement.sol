@@ -3,4 +3,4 @@ contract test {
     constructor(uint k) public { S[k]; }
 }
 // ----
-// TypeError: (76-77): Integer constant expected.
+// TypeError 3940: (76-77): Integer constant expected.

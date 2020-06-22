@@ -5,4 +5,4 @@ contract C {
 	}
 }
 // ----
-// TypeError: (63-76): Explicit type conversion not allowed from "contract C" to "address payable".
+// TypeError 9640: (63-76): Explicit type conversion not allowed from "contract C" to "address payable".

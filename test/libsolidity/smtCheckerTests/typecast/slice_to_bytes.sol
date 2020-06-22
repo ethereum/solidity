@@ -8,6 +8,6 @@ contract C {
 	}
 }
 // ----
-// Warning: (100-115): Assertion checker does not yet implement this expression.
-// Warning: (126-141): Assertion checker does not yet implement this expression.
-// Warning: (152-185): Assertion checker does not yet implement this expression.
+// Warning 2923: (100-115): Assertion checker does not yet implement this expression.
+// Warning 2923: (126-141): Assertion checker does not yet implement this expression.
+// Warning 2923: (152-185): Assertion checker does not yet implement this expression.

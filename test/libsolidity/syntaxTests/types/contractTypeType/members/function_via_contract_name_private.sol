@@ -8,4 +8,4 @@ contract B {
     }
 }
 // ----
-// TypeError: (93-96): Member "f" not found or not visible after argument-dependent lookup in type(contract A).
+// TypeError 9582: (93-96): Member "f" not found or not visible after argument-dependent lookup in type(contract A).

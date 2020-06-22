@@ -7,4 +7,4 @@ library L
 	function f(function(Nested memory) external) external pure {}
 }
 // ----
-// DeclarationError: (32-35): Identifier not found or not unique.
+// DeclarationError 7920: (32-35): Identifier not found or not unique.

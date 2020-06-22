@@ -11,4 +11,4 @@ contract C is B {
     constructor() B(y = 3) public { }
 }
 // ----
-// TypeError: (155-156): Immutable variables can only be initialized inline or assigned directly in the constructor.
+// TypeError 1581: (155-156): Immutable variables can only be initialized inline or assigned directly in the constructor.

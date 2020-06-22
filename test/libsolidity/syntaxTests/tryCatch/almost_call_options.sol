@@ -11,4 +11,4 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // ----
-// Warning: (122-134): Unused local variable.
+// Warning 2072: (122-134): Unused local variable.

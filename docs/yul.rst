@@ -904,7 +904,7 @@ In some internal dialects, there are additional functions:
 datasize, dataoffset, datacopy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The functions ``datasize(x)``, ``dataoffset(x)`` and ``datacopy(t, f, l)``,
+The functions ``datasize(x)``, ``dataoffset(x)`` and ``datacopy(t, f, l)``
 are used to access other parts of a Yul object.
 
 ``datasize`` and ``dataoffset`` can only take string literals (the names of other objects)
@@ -916,9 +916,9 @@ setimmutable, loadimmutable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The functions ``setimmutable("name", value)`` and ``loadimmutable("name")`` are
-used for the immutable mechanism in Solidity and do not nicely map to pur Yul.
+used for the immutable mechanism in Solidity and do not nicely map to pure Yul.
 The function ``setimmutable`` assumes that the runtime code of a contract
-is currently copied to memory at offsot zero. The call to ``setimmutable("name", value)``
+is currently copied to memory at offset zero. The call to ``setimmutable("name", value)``
 will store ``value`` at all points in memory that contain a call to
 ``loadimmutable("name")``.
 

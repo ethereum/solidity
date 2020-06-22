@@ -3,4 +3,4 @@ contract B {
     modifier mod(uint a) { if (a > 0) _; }
 }
 // ----
-// DeclarationError: (34-35): Undeclared identifier.
+// DeclarationError 7576: (34-35): Undeclared identifier.

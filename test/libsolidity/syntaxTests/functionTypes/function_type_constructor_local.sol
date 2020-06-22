@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (104-115): Expected primary expression.
+// ParserError 6933: (104-115): Expected primary expression.

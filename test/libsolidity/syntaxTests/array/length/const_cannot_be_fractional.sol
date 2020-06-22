@@ -3,4 +3,4 @@ contract C {
     uint[L] ids;
 }
 // ----
-// TypeError: (51-52): Array with fractional length specified.
+// TypeError 3208: (51-52): Array with fractional length specified.

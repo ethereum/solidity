@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (132-147): Only types that use one stack slot are supported.
+// TypeError 9857: (132-147): Only types that use one stack slot are supported.

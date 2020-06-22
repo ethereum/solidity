@@ -5,4 +5,4 @@ contract c {
 	mapping(S => uint) data;
 }
 // ----
-// TypeError: (47-48): Only elementary types, contract types or enums are allowed as mapping keys.
+// TypeError 7804: (47-48): Only elementary types, contract types or enums are allowed as mapping keys.

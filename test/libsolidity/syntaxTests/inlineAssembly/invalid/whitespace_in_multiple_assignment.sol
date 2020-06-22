@@ -7,4 +7,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (109-110): Expected identifier but got '='
+// ParserError 2314: (109-110): Expected identifier but got '='

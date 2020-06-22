@@ -8,4 +8,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (92-93): Call or assignment expected.
+// ParserError 6913: (92-93): Call or assignment expected.

@@ -23,7 +23,7 @@ contract C
 	}
 }
 // ----
-// Warning: (524-542): Assertion violation happens here
-// Warning: (585-602): Assertion violation happens here
-// Warning: (524-542): Assertion violation happens here
-// Warning: (585-602): Assertion violation happens here
+// Warning 4661: (524-542): Assertion violation happens here
+// Warning 4661: (585-602): Assertion violation happens here
+// Warning 4661: (524-542): Assertion violation happens here
+// Warning 4661: (585-602): Assertion violation happens here

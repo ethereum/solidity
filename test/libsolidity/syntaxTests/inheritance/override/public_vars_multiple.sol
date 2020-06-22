@@ -8,4 +8,4 @@ contract X is A, B {
 	uint public override foo;
 }
 // ----
-// TypeError: (196-204): Public state variable needs to specify overridden contracts "A" and "B".
+// TypeError 4327: (196-204): Public state variable needs to specify overridden contracts "A" and "B".

@@ -15,4 +15,4 @@ contract C is B {
 	}
 }
 // ----
-// Warning: (172-186): Assertion violation happens here
+// Warning 4661: (172-186): Assertion violation happens here

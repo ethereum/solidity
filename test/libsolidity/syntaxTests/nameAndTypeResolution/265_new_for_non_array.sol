@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (65-73): Contract or array type expected.
+// TypeError 8807: (65-73): Contract or array type expected.

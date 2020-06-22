@@ -6,5 +6,5 @@ contract T {
     constructor() public { new Y(); }
 }
 // ----
-// TypeError: (97-130): Public state variables can only override functions with external visibility.
-// TypeError: (22-72): "virtual" and "private" cannot be used together.
+// TypeError 5225: (97-130): Public state variables can only override functions with external visibility.
+// TypeError 3942: (22-72): "virtual" and "private" cannot be used together.

@@ -7,4 +7,4 @@ contract B is A {
     }
 }
 // ----
-// TypeError: (93-98): Member "mod" not found or not visible after argument-dependent lookup in type(contract A).
+// TypeError 9582: (93-98): Member "mod" not found or not visible after argument-dependent lookup in type(contract A).

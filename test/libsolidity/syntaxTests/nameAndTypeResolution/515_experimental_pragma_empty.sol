@@ -1,3 +1,3 @@
 pragma experimental;
 // ----
-// SyntaxError: (0-20): Experimental feature name is missing.
+// SyntaxError 9679: (0-20): Experimental feature name is missing.

@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// Warning: (52-73): Statement has no effect.
+// Warning 6133: (52-73): Statement has no effect.

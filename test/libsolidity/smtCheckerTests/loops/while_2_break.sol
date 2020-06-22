@@ -15,4 +15,4 @@ contract C
 // ====
 // SMTSolvers: z3
 // ----
-// Warning: (128-131): Unreachable code.
+// Warning 5740: (128-131): Unreachable code.

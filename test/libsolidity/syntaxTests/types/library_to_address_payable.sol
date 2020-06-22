@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (99-109): Return argument type address is not implicitly convertible to expected type (type of first return variable) address payable.
+// TypeError 6359: (99-109): Return argument type address is not implicitly convertible to expected type (type of first return variable) address payable.

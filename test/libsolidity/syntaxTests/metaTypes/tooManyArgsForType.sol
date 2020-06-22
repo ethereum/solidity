@@ -4,4 +4,4 @@ contract Test {
     }
 }
 // ----
-// TypeError: (85-95): This function takes one argument, but 2 were provided.
+// TypeError 8885: (85-95): This function takes one argument, but 2 were provided.

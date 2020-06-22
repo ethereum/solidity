@@ -9,4 +9,4 @@ contract Test {
     }
 }
 // ----
-// TypeError: (215-235): Cannot instantiate an abstract contract.
+// TypeError 4614: (215-235): Cannot instantiate an abstract contract.

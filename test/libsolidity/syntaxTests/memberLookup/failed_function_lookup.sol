@@ -4,4 +4,4 @@ contract C {
   function g() public { f(1, 2, 3); }
 }
 // ----
-// TypeError: (101-102): No matching declaration found after argument-dependent lookup.
+// TypeError 9322: (101-102): No matching declaration found after argument-dependent lookup.

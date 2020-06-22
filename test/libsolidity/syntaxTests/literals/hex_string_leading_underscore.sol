@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (52-57): Invalid use of number separator '_'.
+// ParserError 8936: (52-57): Invalid use of number separator '_'.

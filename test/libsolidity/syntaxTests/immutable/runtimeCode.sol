@@ -8,4 +8,4 @@ contract Test {
     }
 }
 // ----
-// TypeError: (153-172): "runtimeCode" is not available for contracts containing immutable variables.
+// TypeError 9274: (153-172): "runtimeCode" is not available for contracts containing immutable variables.

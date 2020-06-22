@@ -7,4 +7,4 @@ contract C {
   }
 }
 // ----
-// ParserError: (102-105): Cannot use builtin function name "sub" as identifier name.
+// ParserError 5568: (102-105): Cannot use builtin function name "sub" as identifier name.

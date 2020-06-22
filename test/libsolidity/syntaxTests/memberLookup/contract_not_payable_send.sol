@@ -5,4 +5,4 @@ contract C {
 }
 
 // ----
-// TypeError: (47-65): "send" and "transfer" are only available for objects of type "address payable", not "address".
+// TypeError 9862: (47-65): "send" and "transfer" are only available for objects of type "address payable", not "address".

@@ -9,5 +9,5 @@ abstract contract C
     function bar() public only_owner virtual;
 }
 // ----
-// SyntaxError: (212-253): Functions without implementation cannot have modifiers.
-// SyntaxError: (258-299): Functions without implementation cannot have modifiers.
+// SyntaxError 2668: (212-253): Functions without implementation cannot have modifiers.
+// SyntaxError 2668: (258-299): Functions without implementation cannot have modifiers.

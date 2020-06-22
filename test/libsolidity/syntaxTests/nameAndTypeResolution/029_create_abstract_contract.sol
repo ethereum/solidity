@@ -4,4 +4,4 @@ contract derived {
     function foo() public { b = new base(); }
 }
 // ----
-// TypeError: (0-48): Contract "base" should be marked as abstract.
+// TypeError 3656: (0-48): Contract "base" should be marked as abstract.

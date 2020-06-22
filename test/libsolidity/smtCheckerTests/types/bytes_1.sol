@@ -8,4 +8,4 @@ contract C
 	}
 }
 // ----
-// Warning: (113-127): Unused local variable.
+// Warning 2072: (113-127): Unused local variable.

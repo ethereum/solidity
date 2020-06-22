@@ -10,4 +10,4 @@ contract C {
 // ====
 // EVMVersion: <byzantium
 // ----
-// TypeError: (73-112): This catch clause type cannot be used on the selected EVM version (homestead). You need at least a Byzantium-compatible EVM or use `catch { ... }`.
+// TypeError 1812: (73-112): This catch clause type cannot be used on the selected EVM version (homestead). You need at least a Byzantium-compatible EVM or use `catch { ... }`.

@@ -16,4 +16,4 @@ contract C
 }
 
 // ----
-// Warning: (229-242): Assertion violation happens here
+// Warning 4661: (229-242): Assertion violation happens here

@@ -11,4 +11,4 @@ interface Sub is Super {
 }
 
 // ----
-// TypeError: (197-241): Overriding function is missing "override" specifier.
+// TypeError 9456: (197-241): Overriding function is missing "override" specifier.

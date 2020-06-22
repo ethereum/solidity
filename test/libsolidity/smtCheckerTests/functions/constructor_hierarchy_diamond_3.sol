@@ -27,11 +27,11 @@ contract A is B2, B1 {
 	}
 }
 // ----
-// Warning: (174-179): Underflow (resulting value less than 0) happens here
-// Warning: (174-179): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (239-244): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (262-267): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (239-244): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (262-267): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (174-179): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning: (362-378): Assertion violation happens here
+// Warning 4144: (174-179): Underflow (resulting value less than 0) happens here
+// Warning 2661: (174-179): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 2661: (239-244): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 2661: (262-267): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 2661: (239-244): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 2661: (262-267): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 2661: (174-179): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 4661: (362-378): Assertion violation happens here
