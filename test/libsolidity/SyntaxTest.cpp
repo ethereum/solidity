@@ -79,6 +79,7 @@ void SyntaxTest::parseAndAnalyze()
 		{
 			m_errorList.emplace_back(SyntaxTestError{
 				"UnimplementedFeatureError",
+				nullopt,
 				errorMessage(_e),
 				"",
 				-1,
@@ -106,6 +107,7 @@ void SyntaxTest::filterObtainedErrors()
 		}
 		m_errorList.emplace_back(SyntaxTestError{
 			currentError->typeName(),
+			currentError->errorId(),
 			errorMessage(*currentError),
 			sourceName,
 			locationStart,

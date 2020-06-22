@@ -127,6 +127,7 @@ TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _li
 				end -= preamble.size();
 			m_errorList.emplace_back(SyntaxTestError{
 				error["type"].asString(),
+				error["errorId"].isNull() ?  nullopt : optional<langutil::ErrorId>(langutil::ErrorId{error["errorId"].asUInt()}),
 				error["message"].asString(),
 				sourceName,
 				static_cast<int>(start),
