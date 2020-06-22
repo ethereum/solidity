@@ -2704,6 +2704,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				annotation.isPure = _memberAccess.expression().annotation().isPure;
 		}
 	}
+	else if (exprType->category() == Type::Category::Module)
+		annotation.isPure = _memberAccess.expression().annotation().isPure;
 
 	// TODO some members might be pure, but for example `address(0x123).balance` is not pure
 	// although every subexpression is, so leaving this limited for now.
@@ -3053,7 +3055,8 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	}
 	else if (dynamic_cast<TypeType const*>(annotation.type))
 		annotation.isPure = true;
-
+	else if (dynamic_cast<ModuleType const*>(annotation.type))
+		annotation.isPure = true;
 
 	// Check for deprecated function names.
 	// The check is done here for the case without an actual function call.
