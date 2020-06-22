@@ -4,4 +4,4 @@ contract First {
     }
 }
 // ----
-// Warning: (21-117): Function state mutability can be restricted to pure
+// Warning 2018: (21-117): Function state mutability can be restricted to pure

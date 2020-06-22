@@ -41,4 +41,4 @@ contract C {
     }
 }
 // ----
-// Warning: (606-611): Unreachable code.
+// Warning 5740: (606-611): Unreachable code.

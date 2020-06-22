@@ -6,4 +6,4 @@ contract T {
     constructor() public { new Y(); }
 }
 // ----
-// TypeError: (98-131): Public state variables can only override functions with external visibility.
+// TypeError 5225: (98-131): Public state variables can only override functions with external visibility.

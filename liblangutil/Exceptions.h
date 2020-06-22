@@ -64,7 +64,11 @@ struct InvalidAstError: virtual util::Exception {};
  * To create a new ID, one can add 0000_error and then run "python ./scripts/fix_error_ids.py"
  * from the root of the repo.
  */
-struct ErrorId { unsigned long long error = 0; };
+struct ErrorId
+{
+	unsigned long long error = 0;
+	bool operator==(ErrorId const& _rhs) const { return error == _rhs.error; }
+};
 constexpr ErrorId operator"" _error(unsigned long long _error) { return ErrorId{ _error }; }
 
 class Error: virtual public util::Exception

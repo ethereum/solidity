@@ -6,5 +6,5 @@
         }
     }
 // ----
-// TypeError: (89-187): Invalid rational number.
-// TypeError: (205-303): Invalid rational number.
+// TypeError 3757: (89-187): Invalid rational number.
+// TypeError 3390: (205-303): Invalid rational number.

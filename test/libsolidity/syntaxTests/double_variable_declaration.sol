@@ -6,4 +6,4 @@ contract test {
 	}
 }
 // ----
-// Warning: (80-89): This declaration shadows an existing declaration.
+// Warning 2519: (80-89): This declaration shadows an existing declaration.

@@ -7,4 +7,4 @@ contract X is A {
 	uint public override foo;
 }
 // ----
-// TypeError: (225-249): Overriding public state variable return types differ.
+// TypeError 4822: (225-249): Overriding public state variable return types differ.

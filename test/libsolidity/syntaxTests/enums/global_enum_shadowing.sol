@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// Warning: (30-42): This declaration shadows an existing declaration.
+// Warning 2519: (30-42): This declaration shadows an existing declaration.

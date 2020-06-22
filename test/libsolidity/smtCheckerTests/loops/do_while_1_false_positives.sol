@@ -16,4 +16,4 @@ contract C
 // ====
 // SMTSolvers: z3
 // ----
-// Warning: (150-155): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 2661: (150-155): Overflow (resulting value larger than 2**256 - 1) happens here

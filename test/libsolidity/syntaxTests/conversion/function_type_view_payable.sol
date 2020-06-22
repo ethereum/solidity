@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (110-149): Type function () view external is not implicitly convertible to expected type function () payable external.
+// TypeError 9574: (110-149): Type function () view external is not implicitly convertible to expected type function () payable external.

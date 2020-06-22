@@ -5,4 +5,4 @@ contract C {
     function f(S memory) public {}
 }
 // ----
-// TypeError: (105-113): Only libraries are allowed to use the mapping type in public or external functions.
+// TypeError 4103: (105-113): Only libraries are allowed to use the mapping type in public or external functions.

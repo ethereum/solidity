@@ -19,4 +19,4 @@ contract D is B, C {
 	}
 }
 // ----
-// Warning: (235-249): Assertion violation happens here
+// Warning 4661: (235-249): Assertion violation happens here

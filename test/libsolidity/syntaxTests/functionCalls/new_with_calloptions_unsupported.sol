@@ -10,6 +10,6 @@ contract C {
 // ====
 // EVMVersion: <constantinople
 // ----
-// TypeError: (97-123): Unsupported call option "salt" (requires Constantinople-compatible VMs).
-// TypeError: (127-144): Unsupported call option "salt" (requires Constantinople-compatible VMs).
-// TypeError: (168-188): Unsupported call option "salt" (requires Constantinople-compatible VMs).
+// TypeError 5189: (97-123): Unsupported call option "salt" (requires Constantinople-compatible VMs).
+// TypeError 5189: (127-144): Unsupported call option "salt" (requires Constantinople-compatible VMs).
+// TypeError 5189: (168-188): Unsupported call option "salt" (requires Constantinople-compatible VMs).

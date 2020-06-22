@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (168-169): Only direct number constants and references to such constants are supported by inline assembly.
+// TypeError 7615: (168-169): Only direct number constants and references to such constants are supported by inline assembly.

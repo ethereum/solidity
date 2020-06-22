@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (214-215): No matching declaration found after argument-dependent lookup.
+// TypeError 9322: (214-215): No matching declaration found after argument-dependent lookup.

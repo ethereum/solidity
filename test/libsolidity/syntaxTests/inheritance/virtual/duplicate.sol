@@ -4,5 +4,5 @@ contract C
 	modifier modi() virtual virtual {_;}
 }
 // ----
-// ParserError: (44-51): Virtual already specified.
-// ParserError: (80-87): Virtual already specified.
+// ParserError 6879: (44-51): Virtual already specified.
+// ParserError 2662: (80-87): Virtual already specified.

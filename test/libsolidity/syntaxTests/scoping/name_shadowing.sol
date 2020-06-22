@@ -3,4 +3,4 @@ contract test {
     function f() pure public { uint32 variable; variable = 2; }
 }
 // ----
-// Warning: (69-84): This declaration shadows an existing declaration.
+// Warning 2519: (69-84): This declaration shadows an existing declaration.

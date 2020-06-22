@@ -4,4 +4,4 @@ contract C {
   }
 }
 // ----
-// TypeError: (46-62): Type address payable is not implicitly convertible to expected type contract C.
+// TypeError 9574: (46-62): Type address payable is not implicitly convertible to expected type contract C.

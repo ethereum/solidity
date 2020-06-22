@@ -6,5 +6,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (146-147): Type uint256 is not implicitly convertible to expected type enum E.
-// TypeError: (152-153): Type uint8 is not implicitly convertible to expected type enum E.
+// TypeError 7407: (146-147): Type uint256 is not implicitly convertible to expected type enum E.
+// TypeError 7407: (152-153): Type uint8 is not implicitly convertible to expected type enum E.

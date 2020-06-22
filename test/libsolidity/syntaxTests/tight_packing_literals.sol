@@ -5,4 +5,4 @@ contract C {
 }
 
 // ----
-// TypeError: (99-100): Cannot perform packed encoding for a literal. Please convert it to an explicit type first.
+// TypeError 7279: (99-100): Cannot perform packed encoding for a literal. Please convert it to an explicit type first.

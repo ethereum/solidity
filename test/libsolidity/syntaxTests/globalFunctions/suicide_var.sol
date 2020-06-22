@@ -6,4 +6,4 @@ contract C
 	}
 }
 // ----
-// Warning: (58-70): This declaration shadows a builtin symbol.
+// Warning 2319: (58-70): This declaration shadows a builtin symbol.

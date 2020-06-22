@@ -14,12 +14,12 @@ contract C {
 	}
 }
 // ----
-// Warning: (90-102): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
-// Warning: (230-242): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
-// Warning: (359-371): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
-// TypeError: (90-110): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError: (127-148): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError: (230-250): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError: (267-288): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError: (359-377): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
-// TypeError: (381-400): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// Warning 1621: (90-102): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// Warning 1621: (230-242): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// Warning 1621: (359-371): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// TypeError 8961: (90-110): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError 8961: (127-148): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError 8961: (230-250): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError 8961: (267-288): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError 8961: (359-377): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+// TypeError 8961: (381-400): Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.

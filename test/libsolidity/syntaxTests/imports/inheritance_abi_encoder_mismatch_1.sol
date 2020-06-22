@@ -16,4 +16,4 @@ contract B is A { }
 import "./B.sol";
 contract C is B { }
 // ----
-// TypeError: (C.sol:18-37): Contract "C" does not use ABIEncoderV2 but wants to inherit from a contract which uses types that require it. Use "pragma experimental ABIEncoderV2;" for the inheriting contract as well to enable the feature.
+// TypeError 6594: (C.sol:18-37): Contract "C" does not use ABIEncoderV2 but wants to inherit from a contract which uses types that require it. Use "pragma experimental ABIEncoderV2;" for the inheriting contract as well to enable the feature.

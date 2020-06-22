@@ -9,4 +9,4 @@ contract A {
 contract C is B, A {
 }
 // ----
-// DeclarationError: (49-111): Identifier already declared.
+// DeclarationError 9097: (49-111): Identifier already declared.

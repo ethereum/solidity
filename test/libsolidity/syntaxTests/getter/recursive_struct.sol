@@ -5,4 +5,4 @@ contract C {
     mapping(uint256 => Y) public m;
 }
 // ----
-// TypeError: (53-83): Internal or recursive type is not allowed for public state variables.
+// TypeError 6744: (53-83): Internal or recursive type is not allowed for public state variables.

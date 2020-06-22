@@ -11,4 +11,4 @@ abstract contract B is I
 }
 abstract contract C is A, B {}
 // ----
-// TypeError: (185-215): Derived contract must override function "f". Two or more base classes define function with same name and parameter types. Since one of the bases defines a public state variable which cannot be overridden, you have to change the inheritance layout or the names of the functions.
+// TypeError 6480: (185-215): Derived contract must override function "f". Two or more base classes define function with same name and parameter types. Since one of the bases defines a public state variable which cannot be overridden, you have to change the inheritance layout or the names of the functions.

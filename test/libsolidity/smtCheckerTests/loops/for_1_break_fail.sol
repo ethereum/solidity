@@ -17,4 +17,4 @@ contract C
 // ====
 // SMTSolvers: z3
 // ----
-// Warning: (201-216): Assertion violation happens here
+// Warning 4661: (201-216): Assertion violation happens here

@@ -4,5 +4,5 @@ contract C {
   }
 }
 // ----
-// TypeError: (57-61): The first argument to "abi.decode" must be implicitly convertible to bytes memory or bytes calldata, but is of type type(uint256).
-// TypeError: (63-67): The second argument to "abi.decode" has to be a tuple of types.
+// TypeError 1956: (57-61): The first argument to "abi.decode" must be implicitly convertible to bytes memory or bytes calldata, but is of type type(uint256).
+// TypeError 6444: (63-67): The second argument to "abi.decode" has to be a tuple of types.

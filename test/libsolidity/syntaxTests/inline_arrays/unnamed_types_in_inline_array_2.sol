@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (47-56): Unable to deduce nameable type for array elements. Try adding explicit type conversion for the first element.
+// TypeError 9656: (47-56): Unable to deduce nameable type for array elements. Try adding explicit type conversion for the first element.

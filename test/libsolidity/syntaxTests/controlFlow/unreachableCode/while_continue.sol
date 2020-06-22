@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// Warning: (100-107): Unreachable code.
+// Warning 5740: (100-107): Unreachable code.

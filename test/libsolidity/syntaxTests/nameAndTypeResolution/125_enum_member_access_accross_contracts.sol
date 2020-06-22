@@ -7,4 +7,4 @@ contract Impl {
     }
 }
 // ----
-// Warning: (72-166): Function state mutability can be restricted to pure
+// Warning 2018: (72-166): Function state mutability can be restricted to pure

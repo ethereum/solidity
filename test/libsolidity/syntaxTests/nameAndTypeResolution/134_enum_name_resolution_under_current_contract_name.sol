@@ -9,4 +9,4 @@ contract A {
     }
 }
 // ----
-// Warning: (69-111): Function state mutability can be restricted to pure
+// Warning 2018: (69-111): Function state mutability can be restricted to pure

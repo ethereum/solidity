@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// DeclarationError: (72-77): Identifier not found.
+// DeclarationError 8198: (72-77): Identifier not found.

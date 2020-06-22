@@ -3,4 +3,4 @@ contract c {
     event E(S indexed);
 }
 // ----
-// TypeError: (51-60): This type is only supported in ABIEncoderV2. Use "pragma experimental ABIEncoderV2;" to enable the feature.
+// TypeError 3061: (51-60): This type is only supported in ABIEncoderV2. Use "pragma experimental ABIEncoderV2;" to enable the feature.

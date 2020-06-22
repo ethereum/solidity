@@ -8,4 +8,4 @@ contract B {
 	}
 }
 // ----
-// Warning: (152-174): Assertion violation happens here
+// Warning 4661: (152-174): Assertion violation happens here

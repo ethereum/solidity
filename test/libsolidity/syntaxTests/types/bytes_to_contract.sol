@@ -4,4 +4,4 @@ contract C {
         }
 }
 // ----
-// TypeError: (64-91): Explicit type conversion not allowed from "bytes20" to "contract C".
+// TypeError 9640: (64-91): Explicit type conversion not allowed from "bytes20" to "contract C".

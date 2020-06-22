@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// DeclarationError: (71-77): Identifier already declared.
+// DeclarationError 2333: (71-77): Identifier already declared.

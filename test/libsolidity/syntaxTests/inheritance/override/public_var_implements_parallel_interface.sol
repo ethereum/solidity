@@ -17,5 +17,5 @@ abstract contract T is A {
 contract Y is X, T {
 }
 // ----
-// TypeError: (484-506): Derived contract must override function "foo". Two or more base classes define function with same name and parameter types. Since one of the bases defines a public state variable which cannot be overridden, you have to change the inheritance layout or the names of the functions.
-// TypeError: (484-506): Derived contract must override function "goo". Two or more base classes define function with same name and parameter types.
+// TypeError 6480: (484-506): Derived contract must override function "foo". Two or more base classes define function with same name and parameter types. Since one of the bases defines a public state variable which cannot be overridden, you have to change the inheritance layout or the names of the functions.
+// TypeError 6480: (484-506): Derived contract must override function "goo". Two or more base classes define function with same name and parameter types.

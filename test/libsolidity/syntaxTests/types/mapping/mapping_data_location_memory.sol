@@ -6,4 +6,4 @@ contract c {
     }
 }
 // ----
-// TypeError: (81-111): Data location must be "storage" for variable, but "memory" was given.
+// TypeError 6651: (81-111): Data location must be "storage" for variable, but "memory" was given.

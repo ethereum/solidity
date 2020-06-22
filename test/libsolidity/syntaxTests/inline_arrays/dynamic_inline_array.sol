@@ -4,5 +4,5 @@ contract C {
     }
 }
 // ----
-// Warning: (47-69): Unused local variable.
-// Warning: (17-135): Function state mutability can be restricted to pure
+// Warning 2072: (47-69): Unused local variable.
+// Warning 2018: (17-135): Function state mutability can be restricted to pure

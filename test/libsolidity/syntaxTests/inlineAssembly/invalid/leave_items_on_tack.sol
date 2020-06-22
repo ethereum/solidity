@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (75-83): Top-level expressions are not supposed to return values (this expression returns 1 value). Use ``pop()`` or assign them.
+// TypeError 3083: (75-83): Top-level expressions are not supposed to return values (this expression returns 1 value). Use ``pop()`` or assign them.

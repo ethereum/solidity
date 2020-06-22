@@ -165,8 +165,10 @@ void CommonSyntaxTest::printErrorList(
 		{
 			{
 				AnsiColorized scope(_stream, _formatted, {BOLD, (error.type == "Warning") ? YELLOW : RED});
-				_stream << _linePrefix;
-				_stream << error.type << ": ";
+				_stream << _linePrefix << error.type;
+				if (error.errorId.has_value())
+					_stream << ' ' << error.errorId->error;
+				_stream << ": ";
 			}
 			if (!error.sourceName.empty() || error.locationStart >= 0 || error.locationEnd >= 0)
 			{
@@ -206,13 +208,17 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		if (it == line.end()) continue;
 
 		auto typeBegin = it;
-		while (it != line.end() && *it != ':')
+		while (it != line.end() && isalpha(*it))
 			++it;
 		string errorType(typeBegin, it);
 
-		// skip colon
-		if (it != line.end()) it++;
+		skipWhitespace(it, line.end());
 
+		optional<ErrorId> errorId;
+		if (it != line.end() && isdigit(*it))
+			errorId = ErrorId{static_cast<unsigned long long>(parseUnsignedInteger(it, line.end()))};
+
+		expect(it, line.end(), ':');
 		skipWhitespace(it, line.end());
 
 		int locationStart = -1;
@@ -242,6 +248,7 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		string errorMessage(it, line.end());
 		expectations.emplace_back(SyntaxTestError{
 			move(errorType),
+			move(errorId),
 			move(errorMessage),
 			move(sourceName),
 			locationStart,

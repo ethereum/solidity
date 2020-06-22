@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// DeclarationError: (72-73): Access to functions is not allowed in inline assembly.
+// DeclarationError 2025: (72-73): Access to functions is not allowed in inline assembly.

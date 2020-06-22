@@ -11,4 +11,4 @@ contract C {
     }
 }
 // ----
-// Warning: (361-410): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (361-410): Assertion checker does not yet implement this type of function call.

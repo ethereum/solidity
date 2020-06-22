@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (125-128): Member "f" not found or not visible after argument-dependent lookup in type(library L).
+// TypeError 9582: (125-128): Member "f" not found or not visible after argument-dependent lookup in type(library L).

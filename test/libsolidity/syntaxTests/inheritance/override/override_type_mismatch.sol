@@ -20,5 +20,5 @@ abstract contract X is A, B, C, D {
 	function foo() internal override(MyStruct, ENUM, A, B, C, D) virtual returns (uint256);
 }
 // ----
-// TypeError: (602-610): Expected contract but got struct X.MyStruct.
-// TypeError: (612-616): Expected contract but got enum X.ENUM.
+// TypeError 9301: (602-610): Expected contract but got struct X.MyStruct.
+// TypeError 9301: (612-616): Expected contract but got enum X.ENUM.

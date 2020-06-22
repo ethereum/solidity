@@ -8,4 +8,4 @@ contract D {
     }
 }
 // ----
-// Warning: (122-135): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// Warning 1621: (122-135): Using ".value(...)" is deprecated. Use "{value: ...}" instead.

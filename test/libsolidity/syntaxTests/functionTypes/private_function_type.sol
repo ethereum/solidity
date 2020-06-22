@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (47-86): Invalid visibility, can only be "external" or "internal".
+// TypeError 6012: (47-86): Invalid visibility, can only be "external" or "internal".

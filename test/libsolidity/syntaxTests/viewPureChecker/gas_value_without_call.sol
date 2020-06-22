@@ -18,9 +18,9 @@ contract C {
 	}
 }
 // ----
-// Warning: (91-103): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
-// Warning: (132-142): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
-// Warning: (169-185): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
-// Warning: (218-236): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
-// Warning: (304-316): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
-// Warning: (345-355): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
+// Warning 1621: (91-103): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// Warning 1621: (132-142): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
+// Warning 1621: (169-185): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
+// Warning 1621: (218-236): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
+// Warning 1621: (304-316): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// Warning 1621: (345-355): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.

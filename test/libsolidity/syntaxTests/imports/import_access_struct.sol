@@ -10,5 +10,5 @@ contract C {
     }
 }
 // ----
-// Warning: (b:90-91): Statement has no effect.
-// Warning: (b:101-104): Statement has no effect.
+// Warning 6133: (b:90-91): Statement has no effect.
+// Warning 6133: (b:101-104): Statement has no effect.

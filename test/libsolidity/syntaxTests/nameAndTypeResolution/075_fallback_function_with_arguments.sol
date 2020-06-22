@@ -3,4 +3,4 @@ contract C {
     fallback(uint a) external { x = 2; }
 }
 // ----
-// TypeError: (37-45): Fallback function cannot take parameters.
+// TypeError 3978: (37-45): Fallback function cannot take parameters.

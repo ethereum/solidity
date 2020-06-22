@@ -3,4 +3,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (28-54): Type too large for memory.
+// TypeError 1534: (28-54): Type too large for memory.

@@ -7,4 +7,4 @@ contract B {
 contract C is A, B {
 }
 // ----
-// TypeError: (94-116): Derived contract must override modifier "f". Two or more base classes define modifier with same name.
+// TypeError 6480: (94-116): Derived contract must override modifier "f". Two or more base classes define modifier with same name.

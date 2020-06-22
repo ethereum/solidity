@@ -2,4 +2,4 @@ contract C {
     constructor() override public {}
 }
 // ----
-// TypeError: (17-49): Constructors cannot override.
+// TypeError 1209: (17-49): Constructors cannot override.

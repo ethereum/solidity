@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError: (84-89): In variable names _slot and _offset can only be used as a suffix.
+// DeclarationError 4794: (84-89): In variable names _slot and _offset can only be used as a suffix.

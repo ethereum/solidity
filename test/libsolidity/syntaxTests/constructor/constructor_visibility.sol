@@ -9,5 +9,5 @@ contract B is A {
   }
 }
 // ----
-// TypeError: (131-301): Contract "B" should be marked as abstract.
-// TypeError: (250-254): Explicit type conversion not allowed from "string memory" to "contract A".
+// TypeError 3656: (131-301): Contract "B" should be marked as abstract.
+// TypeError 9640: (250-254): Explicit type conversion not allowed from "string memory" to "contract A".

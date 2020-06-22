@@ -7,8 +7,8 @@ contract C {
     }
 }
 // ----
-// Warning: (122-127): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
-// Warning: (122-136): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
-// Warning: (108-118): Assertion checker does not yet support this expression.
-// Warning: (122-130): Assertion checker does not yet implement this type of function call.
-// Warning: (122-139): Assertion checker does not yet implement this type of function call.
+// Warning 1621: (122-127): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
+// Warning 1621: (122-136): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// Warning 7650: (108-118): Assertion checker does not yet support this expression.
+// Warning 4588: (122-130): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (122-139): Assertion checker does not yet implement this type of function call.

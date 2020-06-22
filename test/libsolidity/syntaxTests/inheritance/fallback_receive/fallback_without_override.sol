@@ -5,4 +5,4 @@ contract D is C {
 	fallback() external {}
 }
 // ----
-// TypeError: (66-88): Overriding function is missing "override" specifier.
+// TypeError 9456: (66-88): Overriding function is missing "override" specifier.

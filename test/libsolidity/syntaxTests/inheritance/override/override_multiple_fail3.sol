@@ -5,4 +5,4 @@ contract X {
 	function foo() internal override(X, address) returns (uint256);
 }
 // ----
-// ParserError: (109-116): Expected identifier but got 'address'
+// ParserError 2314: (109-116): Expected identifier but got 'address'

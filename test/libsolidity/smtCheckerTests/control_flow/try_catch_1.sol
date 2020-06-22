@@ -8,5 +8,5 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // ----
-// Warning: (98-121): Assertion checker does not support try/catch clauses.
-// Warning: (124-159): Assertion checker does not support try/catch clauses.
+// Warning 7645: (98-121): Assertion checker does not support try/catch clauses.
+// Warning 7645: (124-159): Assertion checker does not support try/catch clauses.

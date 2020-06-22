@@ -5,5 +5,5 @@ contract test {
     }
 }
 // ----
-// TypeError: (50-60): Exactly one argument expected for explicit type conversion.
-// TypeError: (70-83): Type conversion cannot allow named arguments.
+// TypeError 2558: (50-60): Exactly one argument expected for explicit type conversion.
+// TypeError 5153: (70-83): Type conversion cannot allow named arguments.

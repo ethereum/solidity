@@ -11,6 +11,6 @@ contract X is B, C {
 	uint public override foo;
 }
 // ----
-// DeclarationError: (245-269): Identifier already declared.
-// TypeError: (100-124): Cannot override public state variable.
-// TypeError: (257-265): Public state variable needs to specify overridden contracts "B" and "C".
+// DeclarationError 9097: (245-269): Identifier already declared.
+// TypeError 1452: (100-124): Cannot override public state variable.
+// TypeError 4327: (257-265): Public state variable needs to specify overridden contracts "B" and "C".

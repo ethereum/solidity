@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (109-110): Immutable variables can only be initialized inline or assigned directly in the constructor.
+// TypeError 1581: (109-110): Immutable variables can only be initialized inline or assigned directly in the constructor.

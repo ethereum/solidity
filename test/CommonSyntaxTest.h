@@ -33,6 +33,7 @@ namespace solidity::test
 struct SyntaxTestError
 {
 	std::string type;
+	std::optional<langutil::ErrorId> errorId;
 	std::string message;
 	std::string sourceName;
 	int locationStart = -1;
@@ -40,6 +41,7 @@ struct SyntaxTestError
 	bool operator==(SyntaxTestError const& _rhs) const
 	{
 		return type == _rhs.type &&
+			errorId == _rhs.errorId &&
 			message == _rhs.message &&
 			sourceName == _rhs.sourceName &&
 			locationStart == _rhs.locationStart &&

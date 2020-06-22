@@ -4,4 +4,4 @@ contract C {
     fallback() external { x = 3; }
 }
 // ----
-// DeclarationError: (64-94): Only one fallback function is allowed.
+// DeclarationError 7301: (64-94): Only one fallback function is allowed.

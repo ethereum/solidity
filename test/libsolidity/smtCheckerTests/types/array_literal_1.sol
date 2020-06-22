@@ -7,5 +7,5 @@ contract C
 	}
 }
 // ----
-// Warning: (76-96): Unused local variable.
-// Warning: (99-114): Assertion checker does not yet implement inline arrays.
+// Warning 2072: (76-96): Unused local variable.
+// Warning 2177: (99-114): Assertion checker does not yet implement inline arrays.
