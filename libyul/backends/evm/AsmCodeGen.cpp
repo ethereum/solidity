@@ -98,22 +98,22 @@ void EthAssemblyAdapter::appendLinkerSymbol(std::string const& _linkerSymbol)
 	m_assembly.appendLibraryAddress(_linkerSymbol);
 }
 
-void EthAssemblyAdapter::appendJump(int _stackDiffAfter)
+void EthAssemblyAdapter::appendJump(int _stackDiffAfter, JumpType _jumpType)
 {
-	appendInstruction(evmasm::Instruction::JUMP);
+	appendJumpInstruction(evmasm::Instruction::JUMP, _jumpType);
 	m_assembly.adjustDeposit(_stackDiffAfter);
 }
 
-void EthAssemblyAdapter::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
+void EthAssemblyAdapter::appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType)
 {
 	appendLabelReference(_labelId);
-	appendJump(_stackDiffAfter);
+	appendJump(_stackDiffAfter, _jumpType);
 }
 
-void EthAssemblyAdapter::appendJumpToIf(LabelID _labelId)
+void EthAssemblyAdapter::appendJumpToIf(LabelID _labelId, JumpType _jumpType)
 {
 	appendLabelReference(_labelId);
-	appendInstruction(evmasm::Instruction::JUMPI);
+	appendJumpInstruction(evmasm::Instruction::JUMPI, _jumpType);
 }
 
 void EthAssemblyAdapter::appendBeginsub(LabelID, int)
@@ -187,6 +187,25 @@ EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(evmasm::
 	u256 id = _tag.data();
 	yulAssert(id <= std::numeric_limits<LabelID>::max(), "Tag id too large.");
 	return LabelID(id);
+}
+
+void EthAssemblyAdapter::appendJumpInstruction(evmasm::Instruction _instruction, JumpType _jumpType)
+{
+	yulAssert(_instruction == evmasm::Instruction::JUMP || _instruction == evmasm::Instruction::JUMPI, "");
+	evmasm::AssemblyItem jump(_instruction);
+	switch (_jumpType)
+	{
+	case JumpType::Ordinary:
+		yulAssert(jump.getJumpType() == evmasm::AssemblyItem::JumpType::Ordinary, "");
+		break;
+	case JumpType::IntoFunction:
+		jump.setJumpType(evmasm::AssemblyItem::JumpType::IntoFunction);
+		break;
+	case JumpType::OutOfFunction:
+		jump.setJumpType(evmasm::AssemblyItem::JumpType::OutOfFunction);
+		break;
+	}
+	m_assembly.append(std::move(jump));
 }
 
 void CodeGenerator::assemble(

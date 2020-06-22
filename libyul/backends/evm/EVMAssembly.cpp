@@ -91,14 +91,14 @@ void EVMAssembly::appendLinkerSymbol(string const&)
 	yulAssert(false, "Linker symbols not yet implemented.");
 }
 
-void EVMAssembly::appendJump(int _stackDiffAfter)
+void EVMAssembly::appendJump(int _stackDiffAfter, JumpType)
 {
 	yulAssert(!m_evm15, "Plain JUMP used for EVM 1.5");
 	appendInstruction(evmasm::Instruction::JUMP);
 	m_stackHeight += _stackDiffAfter;
 }
 
-void EVMAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
+void EVMAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType)
 {
 	if (m_evm15)
 	{
@@ -109,11 +109,11 @@ void EVMAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
 	else
 	{
 		appendLabelReference(_labelId);
-		appendJump(_stackDiffAfter);
+		appendJump(_stackDiffAfter, _jumpType);
 	}
 }
 
-void EVMAssembly::appendJumpToIf(LabelID _labelId)
+void EVMAssembly::appendJumpToIf(LabelID _labelId, JumpType)
 {
 	if (m_evm15)
 	{

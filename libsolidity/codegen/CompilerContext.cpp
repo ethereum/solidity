@@ -146,7 +146,7 @@ void CompilerContext::callYulFunction(
 	m_externallyUsedYulFunctions.insert(_name);
 	auto const retTag = pushNewTag();
 	CompilerUtils(*this).moveIntoStack(_inArgs);
-	appendJumpTo(namedTag(_name));
+	appendJumpTo(namedTag(_name), evmasm::AssemblyItem::JumpType::IntoFunction);
 	adjustStackOffset(static_cast<int>(_outArgs) - 1 - static_cast<int>(_inArgs));
 	*this << retTag.tag();
 }

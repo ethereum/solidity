@@ -49,9 +49,9 @@ public:
 	size_t newLabelId() override;
 	size_t namedLabel(std::string const& _name) override;
 	void appendLinkerSymbol(std::string const& _linkerSymbol) override;
-	void appendJump(int _stackDiffAfter) override;
-	void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override;
-	void appendJumpToIf(LabelID _labelId) override;
+	void appendJump(int _stackDiffAfter, JumpType _jumpType) override;
+	void appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType) override;
+	void appendJumpToIf(LabelID _labelId, JumpType _jumpType) override;
 	void appendBeginsub(LabelID, int) override;
 	void appendJumpsub(LabelID, int, int) override;
 	void appendReturnsub(int, int) override;
@@ -66,6 +66,7 @@ public:
 
 private:
 	static LabelID assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag);
+	void appendJumpInstruction(evmasm::Instruction _instruction, JumpType _jumpType);
 
 	evmasm::Assembly& m_assembly;
 	std::map<SubID, u256> m_dataHashBySubId;

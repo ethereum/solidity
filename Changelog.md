@@ -10,6 +10,7 @@ Compiler Features:
  * NatSpec: Add fields "kind" and "version" to the JSON output.
  * NatSpec: Inherit tags from unique base if derived function does not provide any.
  * Commandline Interface: Prevent some incompatible commandline options from being used together.
+ * Debug data: Also tag jumps into and out of Yul functions as jumps into and out of functions.
  * NatSpec: Support NatSpec comments on events.
  * Yul Optimizer: Store knowledge about storage / memory after ``a := sload(x)`` / ``a := mload(x)``.
  * SMTChecker: Support external calls to unknown code.
