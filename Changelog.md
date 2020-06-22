@@ -11,6 +11,7 @@ Compiler Features:
 Bugfixes:
  * NatSpec: Do not consider ``////`` and ``/***`` as NatSpec comments.
  * Type Checker: Fix internal error related to ``using for`` applied to non-libraries.
+ * Type Checker: Do not disallow assigning to calldata variables.
  * Yul: Fix source location of variable multi-assignment.
 
 
