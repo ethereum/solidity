@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (102-107): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
+// TypeError 1621: (102-107): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.

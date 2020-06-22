@@ -8,4 +8,4 @@ contract D {
     }
 }
 // ----
-// TypeError: (106-123): Cannot set option "value", since the constructor of contract C is not payable.
+// TypeError 7006: (106-123): Cannot set option "value", since the constructor of contract C is not payable.
