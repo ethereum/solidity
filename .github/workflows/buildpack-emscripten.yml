@@ -1,0 +1,42 @@
+name: buildpack:emscripten
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/buildpack-emscripten.yml'
+      - 'scripts/docker/buildpack/Dockerfile.emscripten'
+
+jobs:
+  build:
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_DOCKER_REPOSITORY: docker.pkg.github.com/${{ github.repository }}
+      IMAGE_NAME: buildpack
+      IMAGE_VARIANT: emscripten
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build image
+        run: |
+          docker build scripts/docker/${IMAGE_NAME} --file scripts/docker/${IMAGE_NAME}/Dockerfile.$IMAGE_VARIANT --tag $IMAGE_NAME
+
+      - name: Test image
+        run: |
+          scripts/build_emscripten.sh emscripten_build $IMAGE_NAME
+
+      - name: Push image
+        run: |
+          echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+
+          EMSDK_VERSION=$(grep "emscripten/emsdk" scripts/docker/buildpack/Dockerfile.emscripten | cut -f 2 -d ' ' | cut -f 2 -d ':')
+          VERSION=$(docker inspect --format={{.Config.Labels.version}} $IMAGE_NAME)
+          docker tag $IMAGE_NAME $GITHUB_DOCKER_REPOSITORY/$IMAGE_NAME-$IMAGE_VARIANT-$EMSDK_VERSION:$VERSION
+          docker push $GITHUB_DOCKER_REPOSITORY/$IMAGE_NAME-$IMAGE_VARIANT-$EMSDK_VERSION:$VERSION
+
+          docker tag $IMAGE_NAME $GITHUB_DOCKER_REPOSITORY/$IMAGE_NAME-$IMAGE_VARIANT-$EMSDK_VERSION:latest
+          docker push $GITHUB_DOCKER_REPOSITORY/$IMAGE_NAME-$IMAGE_VARIANT-$EMSDK_VERSION:latest
+
+          docker logout

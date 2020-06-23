@@ -34,5 +34,11 @@ else
     BUILD_DIR="$1"
 fi
 
-docker run -v $(pwd):/root/project -w /root/project ethereum/solidity-buildpack-deps:emsdk-1.39.15-2 \
+if test -z "$2"; then
+    DOCKER_IMAGE="ethereum/solidity-buildpack-deps:emsdk-1.39.15-2"
+else
+    DOCKER_IMAGE="$2"
+fi
+
+docker run -v $(pwd):/root/project -w /root/project ${DOCKER_IMAGE} \
     ./scripts/travis-emscripten/build_emscripten.sh $BUILD_DIR

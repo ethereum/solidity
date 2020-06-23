@@ -32,7 +32,7 @@ prerelease.txt
 
 # Build directory
 build/
-build*/
+/build*/
 emscripten_build/
 docs/_build
 docs/utils/__pycache__
