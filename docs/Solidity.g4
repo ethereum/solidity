@@ -11,22 +11,10 @@ sourceUnit
   : (pragmaDirective | importDirective | structDefinition | enumDefinition | contractDefinition)* EOF ;
 
 pragmaDirective
-  : 'pragma' pragmaName pragmaValue ';' ;
+  : 'pragma' pragmaName ( ~';' )* ';' ;
 
 pragmaName
   : identifier ;
-
-pragmaValue
-  : version | expression ;
-
-version
-  : versionConstraint versionConstraint? ;
-
-versionConstraint
-  : versionOperator? VersionLiteral ;
-
-versionOperator
-  : '^' | '~' | '>=' | '>' | '<' | '<=' | '=' ;
 
 importDirective
   : 'import' StringLiteralFragment ('as' identifier)? ';'
@@ -472,9 +460,6 @@ DoubleQuotedStringCharacter
 fragment
 SingleQuotedStringCharacter
   : ~['\r\n\\] | ('\\' .) ;
-
-VersionLiteral
-  : [0-9]+ ( '.' [0-9]+ ('.' [0-9]+)? )? ;
 
 WS
   : [ \t\r\n\u000C]+ -> skip ;

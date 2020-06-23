@@ -42,11 +42,10 @@ namespace fs = boost::filesystem;
 SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVersion, bool enforceViaYul):
 	SolidityExecutionFramework(_evmVersion),
 	EVMVersionRestrictedTestCase(_filename),
+	m_sources(m_reader.sources()),
+	m_lineOffset(m_reader.lineNumber()),
 	m_enforceViaYul(enforceViaYul)
 {
-	m_source = m_reader.source();
-	m_lineOffset = m_reader.lineNumber();
-
 	string choice = m_reader.stringSetting("compileViaYul", "false");
 	if (choice == "also")
 	{
@@ -239,12 +238,48 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 	return TestResult::Success;
 }
 
-void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool) const
+void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool _formatted) const
 {
-	stringstream stream(m_source);
-	string line;
-	while (getline(stream, line))
-		_stream << _linePrefix << line << endl;
+	if (m_sources.sources.empty())
+		return;
+
+	bool outputNames = (m_sources.sources.size() != 1 || !m_sources.sources.begin()->first.empty());
+
+	for (auto const& [name, source]: m_sources.sources)
+		if (_formatted)
+		{
+			if (source.empty())
+				continue;
+
+			if (outputNames)
+				_stream << _linePrefix << formatting::CYAN << "==== Source: " << name << " ====" << formatting::RESET << endl;
+			vector<char const*> sourceFormatting(source.length(), formatting::RESET);
+
+			_stream << _linePrefix << sourceFormatting.front() << source.front();
+			for (size_t i = 1; i < source.length(); i++)
+			{
+				if (sourceFormatting[i] != sourceFormatting[i - 1])
+					_stream << sourceFormatting[i];
+				if (source[i] != '\n')
+					_stream << source[i];
+				else
+				{
+					_stream << formatting::RESET << endl;
+					if (i + 1 < source.length())
+						_stream << _linePrefix << sourceFormatting[i];
+				}
+			}
+			_stream << formatting::RESET;
+		}
+		else
+		{
+			if (outputNames)
+				_stream << _linePrefix << "==== Source: " + name << " ====" << endl;
+			stringstream stream(source);
+			string line;
+			while (getline(stream, line))
+				_stream << _linePrefix << line << endl;
+		}
 }
 
 void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) const
@@ -276,6 +311,6 @@ void SemanticTest::parseExpectations(istream& _stream)
 
 bool SemanticTest::deploy(string const& _contractName, u256 const& _value, bytes const& _arguments, map<string, solidity::test::Address> const& _libraries)
 {
-	auto output = compileAndRunWithoutCheck(m_source, _value, _contractName, _arguments, _libraries);
+	auto output = compileAndRunWithoutCheck(m_sources.sources, _value, _contractName, _arguments, _libraries);
 	return !output.empty() && m_transactionSuccessful;
 }
