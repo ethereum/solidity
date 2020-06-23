@@ -4,4 +4,4 @@ contract C {
     uint private state;
 }
 // ----
-// DocstringParsingError: (17-74): Documentation tag @notice not valid for non-public state variables.
+// DocstringParsingError 6546: (17-74): Documentation tag @notice not valid for non-public state variables.

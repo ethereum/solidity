@@ -5,4 +5,4 @@ contract C {
 	}
 }
 // ----
-// Warning: (43-51): This declaration shadows a builtin symbol.
+// Warning 2319: (43-51): This declaration shadows a builtin symbol.

@@ -11,4 +11,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (290-295): Only state variables can have a docstring.
+// ParserError 2837: (290-295): Only state variables can have a docstring.
