@@ -21,17 +21,13 @@
 #include <memory>
 #include <test/Common.h>
 #include <test/tools/IsolTestOptions.h>
-#include <test/libsolidity/AnalysisFramework.h>
 #include <test/InteractiveTests.h>
 #include <test/EVMHost.h>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
 
 #include <cstdlib>
-#include <fstream>
 #include <iostream>
 #include <queue>
 #include <regex>

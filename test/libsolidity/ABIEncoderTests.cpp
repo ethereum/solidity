@@ -777,7 +777,7 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor_data_short)
 
 	NEW_ENCODER(
 		BOOST_CHECK(
-			compileAndRunWithoutCheck(sourceCode, 0, "C", encodeArgs(0x20, 0x60, 0x03, 0x80, 0x00)).empty()
+			compileAndRunWithoutCheck({{"", sourceCode}}, 0, "C", encodeArgs(0x20, 0x60, 0x03, 0x80, 0x00)).empty()
 		);
 	)
 }
