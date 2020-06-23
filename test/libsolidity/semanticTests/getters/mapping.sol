@@ -1,6 +1,6 @@
 contract C {
     mapping(uint => mapping(uint => uint)) public x;
-    constructor() public {
+    constructor() {
         x[1][2] = 3;
     }
 }

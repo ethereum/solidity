@@ -9,7 +9,7 @@ contract A {
 }
 
 contract C is A {
-	constructor() public {
+	constructor() {
 		assert(x == 0);
 		++x;
 		f();

@@ -10,7 +10,7 @@ contract test {
         uint nestedValue;
         mapping (uint => bool) nestedMapping;
     }
-    constructor() public {
+    constructor() {
         toDelete = 5;
         str.topValue = 1;
         str.topMapping[0] = 1;

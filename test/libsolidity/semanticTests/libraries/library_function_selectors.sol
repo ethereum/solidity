@@ -5,7 +5,7 @@ library L {
 }
 contract C {
     uint256[] s;
-    constructor() public { while (s.length < 42) s.push(0); }
+    constructor() { while (s.length < 42) s.push(0); }
     function f() public returns (bool, bool, uint256) {
 		(bool success, bytes memory data) = address(L).delegatecall(abi.encodeWithSelector(L.f.selector, 7));
 		return (L.f.selector == bytes4(keccak256("f(uint256)")), success, abi.decode(data, (uint256)));

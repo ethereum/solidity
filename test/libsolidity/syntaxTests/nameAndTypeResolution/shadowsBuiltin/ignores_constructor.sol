@@ -1,3 +1,3 @@
 contract C {
-    constructor() public {}
+    constructor() {}
 }

@@ -1,6 +1,6 @@
-contract C {
-	constructor() internal {}
+abstract contract C {
+	constructor() {}
 }
 contract D is C {
-	constructor() public { }
+	constructor() { }
 }

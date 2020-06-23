@@ -2,7 +2,7 @@ contract Helper {
     bytes3 name;
     bool flag;
 
-    constructor(bytes3 x, bool f) public payable {
+    constructor(bytes3 x, bool f) payable {
         name = x;
         flag = f;
     }
@@ -20,7 +20,7 @@ contract Helper {
 contract Main {
     Helper h;
 
-    constructor() public payable {
+    constructor() payable {
         h = (new Helper){value: 10}("abc", true);
     }
 

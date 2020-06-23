@@ -2,9 +2,9 @@ pragma experimental SMTChecker;
 
 contract C {
 	uint[] a;
-	constructor() public {
+	constructor() {
 		a.pop();
 	}
 }
 // ----
-// Warning 2529: (83-90): Empty array "pop" detected here.
+// Warning 2529: (76-83): Empty array "pop" detected here.

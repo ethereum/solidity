@@ -31,7 +31,7 @@
           {
             "id": 3,
             "nodeType": "Block",
-            "src": "44:4:1",
+            "src": "37:4:1",
             "statements": []
           },
           "id": 4,
@@ -52,18 +52,18 @@
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "44:0:1"
+            "src": "37:0:1"
           },
           "scope": 5,
-          "src": "23:25:1",
+          "src": "23:18:1",
           "stateMutability": "nonpayable",
           "virtual": false,
-          "visibility": "public"
+          "visibility": "internal"
         }
       ],
       "scope": 6,
-      "src": "0:50:1"
+      "src": "0:43:1"
     }
   ],
-  "src": "0:51:1"
+  "src": "0:44:1"
 }

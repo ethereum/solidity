@@ -112,7 +112,7 @@ contract MilestoneTracker {
         address _arbitrator,
         address _donor,
         address _recipient
-    ) public {
+    ) {
         arbitrator = _arbitrator;
         donor = _donor;
         recipient = _recipient;

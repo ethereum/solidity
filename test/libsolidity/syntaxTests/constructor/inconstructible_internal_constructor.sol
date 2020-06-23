@@ -1,8 +1,8 @@
-contract C {
-	constructor() internal {}
+abstract contract C {
+	constructor() {}
 }
 contract D {
 	function f() public { C c = new C(); c; }
 }
 // ----
-// TypeError 9054: (84-89): Contract with internal constructor cannot be created directly.
+// TypeError 4614: (84-89): Cannot instantiate an abstract contract.

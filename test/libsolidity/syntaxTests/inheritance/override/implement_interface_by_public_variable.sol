@@ -3,5 +3,5 @@ contract Y is X {
     uint256 public override test = 42;
 }
 contract T {
-    constructor() public { new Y(); }
+    constructor() { new Y(); }
 }

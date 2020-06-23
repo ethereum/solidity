@@ -1,5 +1,5 @@
 contract Base {
-    constructor() public {}
+    constructor() {}
 
     uint256 m_base = 5;
 
@@ -10,7 +10,7 @@ contract Base {
 
 
 contract Derived is Base {
-    constructor() public {}
+    constructor() {}
 
     uint256 m_derived = 6;
 

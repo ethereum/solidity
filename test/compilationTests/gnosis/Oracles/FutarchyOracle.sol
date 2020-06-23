@@ -68,7 +68,6 @@ contract FutarchyOracle is Oracle {
         uint24 fee,
         uint _deadline
     )
-        public
     {
         // Deadline is in the future
         require(_deadline > block.timestamp);

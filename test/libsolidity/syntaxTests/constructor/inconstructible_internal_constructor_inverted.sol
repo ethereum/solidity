@@ -2,12 +2,12 @@
 // "new A".
 contract B {
 	A a;
-	constructor() public {
+	constructor() {
 		a = new A(address(this));
 	}
 }
-contract A {
-	constructor(address) internal {}
+abstract contract A {
+	constructor(address) {}
 }
 // ----
-// TypeError 9054: (141-146): Contract with internal constructor cannot be created directly.
+// TypeError 4614: (134-139): Cannot instantiate an abstract contract.

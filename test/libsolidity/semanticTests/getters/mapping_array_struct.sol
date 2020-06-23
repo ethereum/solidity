@@ -5,7 +5,7 @@ contract C {
     }
     mapping(uint256 => Y[]) public m;
     mapping(uint256 => Y[3]) public n;
-    constructor() public {
+    constructor() {
         m[1].push().a = 1;
         m[1][0].b = 2;
         m[1].push().a = 3;

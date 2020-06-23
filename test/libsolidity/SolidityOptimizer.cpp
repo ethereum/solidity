@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(computing_constants)
 			uint m_b;
 			uint m_c;
 			uint m_d;
-			constructor() public {
+			constructor() {
 				set();
 			}
 			function set() public returns (uint) {
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE(dead_code_elimination_across_assemblies)
 	char const* sourceCode = R"(
 		contract DCE {
 			function () internal returns (uint) stored;
-			constructor() public {
+			constructor() {
 				stored = f;
 			}
 			function f() internal returns (uint) { return 7; }

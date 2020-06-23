@@ -1,6 +1,6 @@
 contract C {
     uint public i;
-    constructor() public {
+    constructor() {
         i = 2;
     }
 }

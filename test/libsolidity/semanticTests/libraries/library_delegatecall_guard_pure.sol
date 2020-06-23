@@ -6,7 +6,7 @@ library L {
 contract C {
     uint256[] y;
     string x;
-    constructor() public { y.push(42); }
+    constructor() { y.push(42); }
     function f() public view returns (uint256) {
         return L.f(y);
     }

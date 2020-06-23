@@ -5,7 +5,7 @@ contract InvalidTest {
   function() internal storedFn;
   uint public x;
 
-  constructor() public {
+  constructor() {
     uint _y1;
     uint _y2;
     uint _y3;

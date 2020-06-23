@@ -8,7 +8,7 @@ contract buggystruct {
         string last;
     }
 
-    constructor() public {
+    constructor() {
         bug = Buggy(10, 20, 30, "asdfghjkl");
     }
 

@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
 	SourceUnit const* sourceUnit = nullptr;
 	char const* text = R"(
 		abstract contract base { function foo() public virtual; }
-		abstract contract foo is base { constructor() public {} }
+		abstract contract foo is base { constructor() {} }
 	)";
 	sourceUnit = parseAndAnalyse(text);
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();

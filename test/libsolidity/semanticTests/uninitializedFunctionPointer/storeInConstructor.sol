@@ -4,7 +4,7 @@ contract InvalidTest {
 
   bool flag;
 
-  constructor() public {
+  constructor() {
     function() internal invalid;
     storedFn = invalid;
   }
