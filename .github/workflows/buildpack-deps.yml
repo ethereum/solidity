@@ -1,0 +1,42 @@
+name: buildpack-deps
+
+on:
+  pull_request:
+    branches: [ develop ]
+    paths:
+      - 'scripts/docker/buildpack-deps/Dockerfile.emscripten'
+      - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu1604.clang.ossfuzz'
+      - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu1804'
+      - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu2004.clang'
+      - 'scripts/docker/buildpack-deps/Dockerfile.ubuntu2004'
+
+jobs:
+  buildpack-deps:
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DOCKER_REPOSITORY: docker.pkg.github.com/${{ github.repository }}
+      IMAGE_NAME: buildpack-deps
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        image_variant: [emscripten, ubuntu1604.clang.ossfuzz, ubuntu1804, ubuntu2004.clang, ubuntu2004]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Upgrade ${{ env.IMAGE_NAME }}-${{ matrix.image_variant }}
+        run: |
+          echo "${GITHUB_TOKEN}" | docker login docker.pkg.github.com -u "${GITHUB_ACTOR}" --password-stdin
+          scripts/ci/docker_upgrade.sh ${{ env.IMAGE_NAME }} ${{ matrix.image_variant }} ${{ env.DOCKER_REPOSITORY }}
+          docker logout docker.pkg.github.com
+
+      - name: comment PR
+        if: "env.DOCKER_IMAGE"
+        uses: aarlt/comment-on-pr@v1.2.0
+        with:
+          msg: "`${{ env.DOCKER_IMAGE }} ${{ env.DOCKER_REPO_DIGEST }}`."
