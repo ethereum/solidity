@@ -417,13 +417,13 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract Proxy {
         /// @dev Address of the client contract managed by proxy i.e., this contract
         address client;
 
-        constructor(address _client) public {
+        constructor(address _client) {
             client = _client;
         }
 

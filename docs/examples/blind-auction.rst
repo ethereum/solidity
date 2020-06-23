@@ -25,7 +25,7 @@ to receive their money - contracts cannot activate themselves.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract SimpleAuction {
         // Parameters of the auction. Times are either
@@ -60,7 +60,7 @@ to receive their money - contracts cannot activate themselves.
         constructor(
             uint _biddingTime,
             address payable _beneficiary
-        ) public {
+        ) {
             beneficiary = _beneficiary;
             auctionEndTime = block.timestamp + _biddingTime;
         }
@@ -186,7 +186,7 @@ invalid bids.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract BlindAuction {
         struct Bid {
@@ -220,7 +220,7 @@ invalid bids.
             uint _biddingTime,
             uint _revealTime,
             address payable _beneficiary
-        ) public {
+        ) {
             beneficiary = _beneficiary;
             biddingEnd = block.timestamp + _biddingTime;
             revealEnd = biddingEnd + _revealTime;

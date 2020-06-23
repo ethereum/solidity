@@ -300,10 +300,10 @@ Within a grouping, place the ``view`` and ``pure`` functions last.
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract A {
-        constructor() public {
+        constructor() {
             // ...
         }
 
@@ -337,7 +337,7 @@ Yes::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract A {
 
@@ -357,7 +357,7 @@ No::
         // Public functions
         // ...
 
-        constructor() public {
+        constructor() {
             // ...
         }
 
@@ -758,19 +758,19 @@ manner as modifiers if the function declaration is long or hard to read.
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     // Base contracts just to make this compile
     contract B {
-        constructor(uint) public {
+        constructor(uint) {
         }
     }
     contract C {
-        constructor(uint, uint) public {
+        constructor(uint, uint) {
         }
     }
     contract D {
-        constructor(uint) public {
+        constructor(uint) {
         }
     }
 
@@ -781,7 +781,6 @@ Yes::
             B(param1)
             C(param2, param3)
             D(param4)
-            public
         {
             // do something with param5
             x = param5;
@@ -791,24 +790,24 @@ Yes::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
 
     // Base contracts just to make this compile
     contract B {
-        constructor(uint) public {
+        constructor(uint) {
         }
     }
 
 
     contract C {
-        constructor(uint, uint) public {
+        constructor(uint, uint) {
         }
     }
 
 
     contract D {
-        constructor(uint) public {
+        constructor(uint) {
         }
     }
 
@@ -819,8 +818,7 @@ No::
         constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
         B(param1)
         C(param2, param3)
-        D(param4)
-        public {
+        D(param4) {
             x = param5;
         }
     }
@@ -832,8 +830,7 @@ No::
         constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
             B(param1)
             C(param2, param3)
-            D(param4)
-            public {
+            D(param4) {
                 x = param5;
             }
     }
@@ -1015,14 +1012,14 @@ As shown in the example below, if the contract name is ``Congress`` and the libr
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
 
     // Owned.sol
     contract Owned {
         address public owner;
 
-        constructor() public {
+        constructor() {
             owner = msg.sender;
         }
 
@@ -1051,14 +1048,14 @@ and in ``Congress.sol``::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
 
     // owned.sol
     contract owned {
         address public owner;
 
-        constructor() public {
+        constructor() {
             owner = msg.sender;
         }
 
@@ -1096,7 +1093,7 @@ Events should be named using the CapWords style. Examples: ``Deposit``, ``Transf
 Function Names
 ==============
 
-Functions other than constructors should use mixedCase. Examples: ``getBalance``, ``transfer``, ``verifyOwner``, ``addMember``, ``changeOwner``.
+Functions should use mixedCase. Examples: ``getBalance``, ``transfer``, ``verifyOwner``, ``addMember``, ``changeOwner``.
 
 
 Function Argument Names
