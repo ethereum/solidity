@@ -314,6 +314,10 @@ size_t Scanner::scanSingleLineDocComment()
 	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
 	size_t endPosition = m_source->position();
 
+	m_skippedComments[NextNext].fragments.clear();
+	m_skippedComments[NextNext].fragments.emplace_back(
+			SourceLocation{static_cast<int>(m_source->position()), -1, m_source});
+
 	skipWhitespaceExceptUnicodeLinebreak();
 
 	while (!isSourcePastEndOfInput())
@@ -333,10 +337,14 @@ size_t Scanner::scanSingleLineDocComment()
 			{
 				if (!m_source->isPastEndOfInput(4) && m_source->get(3) == '/')
 					break; // "////" is not a documentation comment
+
+				m_skippedComments[NextNext].fragments.back().location.end = m_source->position();
+
 				m_char = m_source->advanceAndGet(3);
 				if (atEndOfLine())
 					continue;
 				addCommentLiteralChar('\n');
+				m_skippedComments[NextNext].fragments.emplace_back(SourceLocation{static_cast<int>(m_source->position()), -1, m_source});
 			}
 			else
 				break; // next line is not a documentation comment, we are done

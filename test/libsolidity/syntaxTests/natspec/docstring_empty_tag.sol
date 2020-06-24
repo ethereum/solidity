@@ -1,5 +1,5 @@
 abstract contract C {
-    /// @param
+    ///  @param
     function vote(uint id) public {}
 }
 // ----

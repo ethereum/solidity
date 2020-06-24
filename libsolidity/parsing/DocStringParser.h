@@ -28,6 +28,7 @@
 namespace solidity::langutil
 {
 class ErrorReporter;
+struct SourceLocation;
 }
 
 namespace solidity::frontend
@@ -37,7 +38,11 @@ class DocStringParser
 {
 public:
 	/// Parse the given @a _docString and stores the parsed components internally.
-	void parse(std::string const& _docString, langutil::ErrorReporter& _errorReporter);
+	void parse(
+		std::string const& _docString,
+		langutil::SourceLocation const& _location,
+		langutil::ErrorReporter& _errorReporter
+	);
 
 	std::multimap<std::string, DocTag> const& tags() const { return m_docTags; }
 
@@ -55,6 +60,15 @@ private:
 	/// after the tag.
 	iter parseDocTag(iter _pos, iter _end, std::string const& _tag);
 
+	void docstringParsingError(langutil::ErrorId _error, std::string const& _description);
+
+	void docstringParsingError(
+		std::string::const_iterator const& _subRangeBegin,
+		std::string::const_iterator const& _subRangeEnd,
+		langutil::ErrorId _error,
+		std::string const& _description
+	);
+
 	/// Creates and inserts a new tag and adjusts m_lastTag.
 	void newTag(std::string const& _tagName);
 
@@ -62,6 +76,9 @@ private:
 	std::multimap<std::string, DocTag> m_docTags;
 	DocTag* m_lastTag = nullptr;
 	langutil::ErrorReporter* m_errorReporter = nullptr;
+
+	std::string const* m_docString = nullptr;
+	langutil::SourceLocation m_location{};
 };
 
 }

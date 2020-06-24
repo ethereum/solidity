@@ -144,10 +144,33 @@ public:
 	///@{
 	///@name Information about the current comment token
 
-	SourceLocation currentCommentLocation() const { return m_skippedComments[Current].location; }
-	std::string const& currentCommentLiteral() const { return m_skippedComments[Current].literal; }
+	SourceLocation currentCommentLocation() const
+	{
+		solAssert(m_skippedComments[Current].fragments.front().location.source == m_skippedComments[Current].fragments.back().location.source, "");
+		return SourceLocation{
+			m_skippedComments[Current].fragments.front().location.start,
+			m_skippedComments[Current].fragments.back().location.end,
+			m_skippedComments[Current].fragments.front().location.source,
+		};
+	}
+
+	std::string currentCommentLiteral() const
+	{
+		if (m_skippedComments[Current].fragments.empty())
+			return "";
+		else
+		{
+			std::string sum;
+			for (auto const& fragment: m_skippedComments[Current].fragments)
+				sum += fragment.literal;
+			return sum;
+		}
+	}
+
 	/// Called by the parser during FunctionDefinition parsing to clear the current comment
-	void clearCurrentCommentLiteral() { m_skippedComments[Current].literal.clear(); }
+	void clearCurrentCommentLiteral() {
+		m_skippedComments[Current].fragments.clear();
+	}
 
 	///@}
 
@@ -187,10 +210,26 @@ private:
 		std::tuple<unsigned, unsigned> extendedTokenInfo;
 	};
 
+	struct CommentDesc
+	{
+		struct Fragment {
+			// This is because consecutive /// comments are are glued together,
+			// and we must retain the source location for each of them.
+			SourceLocation location;
+			std::string literal;
+		};
+		std::vector<Fragment> fragments;
+		ScannerError error = ScannerError::NoError;
+	};
+
 	///@{
 	///@name Literal buffer support
 	inline void addLiteralChar(char c) { m_tokens[NextNext].literal.push_back(c); }
-	inline void addCommentLiteralChar(char c) { m_skippedComments[NextNext].literal.push_back(c); }
+	inline void addCommentLiteralChar(char c)
+	{
+		solAssert(!m_skippedComments[NextNext].fragments.empty(), "");
+		m_skippedComments[NextNext].fragments.back().literal.push_back(c);
+	}
 	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
 	void addUnicodeAsUTF8(unsigned codepoint);
 	///@}
@@ -252,7 +291,7 @@ private:
 
 	enum TokenIndex { Current, Next, NextNext };
 
-	TokenDesc m_skippedComments[3] = {}; // desc for the current, next and nextnext skipped comment
+	CommentDesc m_skippedComments[3] = {}; // desc for the current, next and nextnext skipped comment
 	TokenDesc m_tokens[3] = {}; // desc for the current, next and nextnext token
 
 	std::shared_ptr<CharStream> m_source;

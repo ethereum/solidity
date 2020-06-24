@@ -24,6 +24,8 @@
 #include <boost/range/algorithm/find_first_of.hpp>
 #include <boost/range/irange.hpp>
 
+#include <algorithm>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
@@ -77,10 +79,14 @@ string::const_iterator skipWhitespace(
 
 }
 
-void DocStringParser::parse(string const& _docString, ErrorReporter& _errorReporter)
+void DocStringParser::parse(string const& _docString, SourceLocation const& _location, ErrorReporter& _errorReporter)
 {
 	m_errorReporter = &_errorReporter;
 	m_lastTag = nullptr;
+	m_location = _location;
+	m_docString = &_docString;
+
+	printf("DocStringParser.parse: \"%s\"\n", _docString.c_str());
 
 	auto currPos = _docString.begin();
 	auto end = _docString.end();
@@ -96,7 +102,9 @@ void DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 			auto tagNameEndPos = firstWhitespaceOrNewline(tagPos, end);
 			if (tagNameEndPos == end)
 			{
-				m_errorReporter->docstringParsingError(
+				docstringParsingError(
+					tagPos,
+					tagNameEndPos,
 					9222_error,
 					"End of tag " + string(tagPos, tagNameEndPos) + " not found"
 				);
@@ -141,7 +149,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 	auto nameStartPos = skipWhitespace(_pos, _end);
 	if (nameStartPos == _end)
 	{
-		m_errorReporter->docstringParsingError(3335_error, "No param name given");
+		docstringParsingError(_pos, _end, 3335_error, "No param name given");
 		return _end;
 	}
 	auto nameEndPos = firstNonIdentifier(nameStartPos, _end);
@@ -152,7 +160,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 
 	if (descStartPos == nlPos)
 	{
-		m_errorReporter->docstringParsingError(9942_error, "No description given for param " + paramName);
+		docstringParsingError(nameStartPos, nameEndPos, 9942_error, "No description given for param " + paramName);
 		return _end;
 	}
 
@@ -192,3 +200,30 @@ void DocStringParser::newTag(string const& _tagName)
 {
 	m_lastTag = &m_docTags.insert(make_pair(_tagName, DocTag()))->second;
 }
+
+void DocStringParser::docstringParsingError(langutil::ErrorId _error, std::string const& _description)
+{
+	SourceLocation const sloc{
+		m_location.start,
+		m_location.end,
+		m_location.source
+	};
+	m_errorReporter->docstringParsingError(_error, sloc, _description);
+}
+
+void DocStringParser::docstringParsingError(
+	[[maybe_unused]] string::const_iterator const& _begin,
+	[[maybe_unused]] string::const_iterator const& _end,
+	langutil::ErrorId _error,
+	std::string const& _description
+)
+{
+	SourceLocation const sloc{
+		//m_location.start + 3,
+		static_cast<int>(m_location.start + 3 + distance(m_docString->cbegin(), _begin)),
+		static_cast<int>(m_location.start + 3 + distance(m_docString->cbegin(), _end)),
+		m_location.source
+	};
+	m_errorReporter->docstringParsingError(_error, sloc, _description);
+}
+
