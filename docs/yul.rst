@@ -927,6 +927,30 @@ will store ``value`` at all points in memory that contain a call to
 ``loadimmutable("name")``.
 
 
+linkersymbol
+^^^^^^^^^^^^
+
+The function ``linkersymbol("fq_library_name")`` is a placeholder for an address literal to be
+substituted by the linker. Its first and only argument must be a string literal and represents the
+fully qualified library name used with the ``--libraries`` option.
+
+For example this code
+
+.. code-block:: yul
+
+    let a := linkersymbol("file.sol:Math")
+
+is equivalent to
+
+.. code-block:: yul
+
+    let a := 0x1234567890123456789012345678901234567890
+
+when the linker is invoked with ``--libraries "file.sol:Math:0x1234567890123456789012345678901234567890``
+option.
+
+See :ref:`Using the Commandline Compiler <commandline-compiler>` for details about the Solidity linker.
+
 
 .. _yul-object:
 

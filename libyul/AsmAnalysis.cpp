@@ -544,7 +544,7 @@ void AsmAnalyzer::expectType(YulString _expectedType, YulString _givenType, Sour
 bool AsmAnalyzer::warnOnInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
 {
 	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
-	if (builtin)
+	if (builtin && builtin->instruction.has_value())
 		return warnOnInstructions(builtin->instruction.value(), _location);
 	else
 		return false;
