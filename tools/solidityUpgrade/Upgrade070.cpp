@@ -59,3 +59,27 @@ void NowKeyword::endVisit(Identifier const& _identifier)
 			);
 		}
 }
+
+void ConstructorVisibility::endVisit(ContractDefinition const& _contract)
+{
+	if (!_contract.abstract())
+		for (FunctionDefinition const* function: _contract.definedFunctions())
+			if (
+				function->isConstructor() &&
+				!function->noVisibilitySpecified() &&
+				function->visibility() == Visibility::Internal
+			)
+				m_changes.emplace_back(
+					UpgradeChange::Level::Safe,
+					_contract.location(),
+					SourceTransform::insertBeforeKeyword(_contract.location(), "contract", "abstract")
+				);
+
+	for (FunctionDefinition const* function: _contract.definedFunctions())
+		if (function->isConstructor() && !function->noVisibilitySpecified())
+			m_changes.emplace_back(
+				UpgradeChange::Level::Safe,
+				function->location(),
+				SourceTransform::removeVisibility(function->location())
+			);
+}

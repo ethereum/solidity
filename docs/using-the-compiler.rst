@@ -566,33 +566,36 @@ the latest version of the compiler.
 Available upgrade modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+-----------------+---------+--------------------------------------------------+
-| Module          | Version | Description                                      |
-+=================+=========+==================================================+
-| ``constructor`` | 0.5.0   | Constructors must now be defined using the       |
-|                 |         | ``constructor`` keyword.                         |
-+-----------------+---------+--------------------------------------------------+
-| ``visibility``  | 0.5.0   | Explicit function visibility is now mandatory,   |
-|                 |         | defaults to ``public``.                          |
-+-----------------+---------+--------------------------------------------------+
-| ``abstract``    | 0.6.0   | The keyword ``abstract`` has to be used if a     |
-|                 |         | contract does not implement all its functions.   |
-+-----------------+---------+--------------------------------------------------+
-| ``virtual``     | 0.6.0   | Functions without implementation outside an      |
-|                 |         | interface have to be marked ``virtual``.         |
-+-----------------+---------+--------------------------------------------------+
-| ``override``    | 0.6.0   | When overriding a function or modifier, the new  |
-|                 |         | keyword ``override`` must be used.               |
-+-----------------+---------+--------------------------------------------------+
-| ``dotsyntax``   | 0.7.0   | The following syntax is deprecated:              |
-|                 |         | ``f.gas(...)()``, ``f.value(...)()`` and         |
-|                 |         | ``(new C).value(...)()``. Replace these calls by |
-|                 |         | ``f{gas: ..., value: ...}()`` and                |
-|                 |         | ``(new C){value: ...}()``.                       |
-+-----------------+---------+--------------------------------------------------+
-| ``now``         | 0.7.0   | The ``now`` keyword is deprecated. Use           |
-|                 |         | ``block.timestamp`` instead.                     |
-+-----------------+---------+--------------------------------------------------+
++----------------------------+---------+--------------------------------------------------+
+| Module                     | Version | Description                                      |
++============================+=========+==================================================+
+| ``constructor``            | 0.5.0   | Constructors must now be defined using the       |
+|                            |         | ``constructor`` keyword.                         |
++----------------------------+---------+--------------------------------------------------+
+| ``visibility``             | 0.5.0   | Explicit function visibility is now mandatory,   |
+|                            |         | defaults to ``public``.                          |
++----------------------------+---------+--------------------------------------------------+
+| ``abstract``               | 0.6.0   | The keyword ``abstract`` has to be used if a     |
+|                            |         | contract does not implement all its functions.   |
++----------------------------+---------+--------------------------------------------------+
+| ``virtual``                | 0.6.0   | Functions without implementation outside an      |
+|                            |         | interface have to be marked ``virtual``.         |
++----------------------------+---------+--------------------------------------------------+
+| ``override``               | 0.6.0   | When overriding a function or modifier, the new  |
+|                            |         | keyword ``override`` must be used.               |
++----------------------------+---------+--------------------------------------------------+
+| ``dotsyntax``              | 0.7.0   | The following syntax is deprecated:              |
+|                            |         | ``f.gas(...)()``, ``f.value(...)()`` and         |
+|                            |         | ``(new C).value(...)()``. Replace these calls by |
+|                            |         | ``f{gas: ..., value: ...}()`` and                |
+|                            |         | ``(new C){value: ...}()``.                       |
++----------------------------+---------+--------------------------------------------------+
+| ``now``                    | 0.7.0   | The ``now`` keyword is deprecated. Use           |
+|                            |         | ``block.timestamp`` instead.                     |
++----------------------------+---------+--------------------------------------------------+
+| ``constructor-visibility`` | 0.7.0   | Removes visibility of constructors.              |
+|                            |         |                                                  |
++----------------------------+---------+--------------------------------------------------+
 
 Please read :doc:`0.5.0 release notes <050-breaking-changes>`,
 :doc:`0.6.0 release notes <060-breaking-changes>` and

@@ -132,7 +132,8 @@ public:
 			return regex_replace(
 				_location.text(),
 				_regex,
-				_expression + " " + _keyword
+				_expression + " " + _keyword,
+				std::regex_constants::format_first_only
 			);
 		else
 			solAssert(
@@ -273,6 +274,14 @@ public:
 	static std::string nowUpdate(langutil::SourceLocation const& _location)
 	{
 		return regex_replace(_location.text(), std::regex{"now"}, "block.timestamp");
+	}
+
+	static std::string removeVisibility(langutil::SourceLocation const& _location)
+	{
+		std::string replacement = _location.text();
+		for (auto const& replace: {"public ", "public", "internal ", "internal", "external ", "external"})
+			replacement = regex_replace(replacement, std::regex{replace}, "");
+		return replacement;
 	}
 };
 
