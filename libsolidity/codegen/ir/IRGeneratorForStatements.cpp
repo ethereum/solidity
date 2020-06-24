@@ -600,22 +600,30 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 {
 	solUnimplementedAssert(
-		_functionCall.annotation().kind == FunctionCallKind::FunctionCall ||
-		_functionCall.annotation().kind == FunctionCallKind::TypeConversion,
+		_functionCall.annotation().kind != FunctionCallKind::Unset,
 		"This type of function call is not yet implemented"
 	);
 
-	Type const& funcType = type(_functionCall.expression());
-
 	if (_functionCall.annotation().kind == FunctionCallKind::TypeConversion)
 	{
-		solAssert(funcType.category() == Type::Category::TypeType, "Expected category to be TypeType");
+		solAssert(
+			_functionCall.expression().annotation().type->category() == Type::Category::TypeType,
+			"Expected category to be TypeType"
+		);
 		solAssert(_functionCall.arguments().size() == 1, "Expected one argument for type conversion");
 		define(_functionCall, *_functionCall.arguments().front());
 		return;
 	}
 
-	FunctionTypePointer functionType = dynamic_cast<FunctionType const*>(&funcType);
+	FunctionTypePointer functionType = nullptr;
+	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
+	{
+		auto const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
+		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
+		functionType = structType.constructorType();
+	}
+	else
+		functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
 
 	TypePointers parameterTypes = functionType->parameterTypes();
 	vector<ASTPointer<Expression const>> const& callArguments = _functionCall.arguments();
@@ -638,6 +646,34 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			solAssert(it != callArgumentNames.cend(), "");
 			arguments.push_back(callArguments[static_cast<size_t>(std::distance(callArgumentNames.begin(), it))]);
 		}
+
+	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
+	{
+		TypeType const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
+		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
+
+		define(_functionCall) << m_utils.allocateMemoryStructFunction(structType) << "()\n";
+
+		MemberList::MemberMap members = structType.nativeMembers(nullptr);
+
+		solAssert(members.size() == arguments.size(), "Struct parameter mismatch.");
+
+		for (size_t i = 0; i < arguments.size(); i++)
+		{
+			IRVariable converted = convert(*arguments[i], *parameterTypes[i]);
+			m_code <<
+				m_utils.writeToMemoryFunction(*functionType->parameterTypes()[i]) <<
+				"(add(" <<
+				IRVariable(_functionCall).part("mpos").name() <<
+				", " <<
+				structType.memoryOffsetOfMember(members[i].name) <<
+				"), " <<
+				converted.commaSeparatedList() <<
+				")\n";
+		}
+
+		return;
+	}
 
 	auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression());
 	if (memberAccess)
