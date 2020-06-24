@@ -417,6 +417,9 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::RETURNSUB:
 	case Instruction::PUTLOCAL:
 	case Instruction::GETLOCAL:
+	case Instruction::ADDMOD384:
+	case Instruction::SUBMOD384:
+	case Instruction::MULMODMONT384:
 	{
 		yulAssert(false, "");
 		return 0;
