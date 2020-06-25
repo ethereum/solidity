@@ -397,8 +397,15 @@ private:
 	/// does not exist.
 	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
 
+	/// @returns the JSON compiler settings object for the metadata.
+	Json::Value settingsForMetadata() const;
+
 	/// @returns the metadata JSON as a compact string for the given contract.
 	std::string createMetadata(Contract const& _contract) const;
+
+	/// @returns the metadata JSON as a compact string in a format compatible with EthPM
+	/// version 3 for the given contract.
+	std::string createEthPMV3Metadata(Contract const& _contract) const;
 
 	/// @returns the metadata CBOR for the given serialised metadata JSON.
 	bytes createCBORMetadata(std::string const& _metadata, bool _experimentalMode);

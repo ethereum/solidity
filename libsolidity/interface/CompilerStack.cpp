@@ -813,7 +813,7 @@ string const& CompilerStack::metadata(Contract const& _contract) const
 
 	solAssert(_contract.contract, "");
 
-	return _contract.metadata.init([&]{ return createMetadata(_contract); });
+	return _contract.metadata.init([&]{ return createEthPMV3Metadata(_contract); });
 }
 
 Scanner const& CompilerStack::scanner(string const& _sourceName) const
@@ -1192,6 +1192,68 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 	return it->second;
 }
 
+Json::Value CompilerStack::settingsForMetadata() const
+{
+	Json::Value settings = Json::objectValue;
+
+	static_assert(sizeof(m_optimiserSettings.expectedExecutionsPerDeployment) <= sizeof(Json::LargestUInt), "Invalid word size.");
+	solAssert(static_cast<Json::LargestUInt>(m_optimiserSettings.expectedExecutionsPerDeployment) < std::numeric_limits<Json::LargestUInt>::max(), "");
+	settings["optimizer"]["runs"] = Json::Value(Json::LargestUInt(m_optimiserSettings.expectedExecutionsPerDeployment));
+
+	/// Backwards compatibility: If set to one of the default settings, do not provide details.
+	OptimiserSettings settingsWithoutRuns = m_optimiserSettings;
+	// reset to default
+	settingsWithoutRuns.expectedExecutionsPerDeployment = OptimiserSettings::minimal().expectedExecutionsPerDeployment;
+	if (settingsWithoutRuns == OptimiserSettings::minimal())
+		settings["optimizer"]["enabled"] = false;
+	else if (settingsWithoutRuns == OptimiserSettings::standard())
+		settings["optimizer"]["enabled"] = true;
+	else
+	{
+		Json::Value details{Json::objectValue};
+
+		details["orderLiterals"] = m_optimiserSettings.runOrderLiterals;
+		details["jumpdestRemover"] = m_optimiserSettings.runJumpdestRemover;
+		details["peephole"] = m_optimiserSettings.runPeephole;
+		details["deduplicate"] = m_optimiserSettings.runDeduplicate;
+		details["cse"] = m_optimiserSettings.runCSE;
+		details["constantOptimizer"] = m_optimiserSettings.runConstantOptimiser;
+		details["yul"] = m_optimiserSettings.runYulOptimiser;
+		if (m_optimiserSettings.runYulOptimiser)
+		{
+			details["yulDetails"] = Json::objectValue;
+			details["yulDetails"]["stackAllocation"] = m_optimiserSettings.optimizeStackAllocation;
+			details["yulDetails"]["optimizerSteps"] = m_optimiserSettings.yulOptimiserSteps;
+		}
+
+		settings["optimizer"]["details"] = std::move(details);
+	}
+
+	if (m_revertStrings != RevertStrings::Default)
+		settings["debug"]["revertStrings"] = revertStringsToString(m_revertStrings);
+
+	if (m_metadataLiteralSources)
+		settings["metadata"]["useLiteralContent"] = true;
+
+	static vector<string> hashes{"ipfs", "bzzr1", "none"};
+	settings["metadata"]["bytecodeHash"] = hashes.at(unsigned(m_metadataHash));
+
+	settings["evmVersion"] = m_evmVersion.name();
+
+	settings["remappings"] = Json::arrayValue;
+	set<string> remappings;
+	for (auto const& r: m_remappings)
+		remappings.insert(r.context + ":" + r.prefix + "=" + r.target);
+	for (auto const& r: remappings)
+		settings["remappings"].append(r);
+
+	settings["libraries"] = Json::objectValue;
+	for (auto const& library: m_libraries)
+		settings["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
+
+	return settings;
+}
+
 string CompilerStack::createMetadata(Contract const& _contract) const
 {
 	Json::Value meta;
@@ -1225,66 +1287,71 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		}
 	}
 
-	static_assert(sizeof(m_optimiserSettings.expectedExecutionsPerDeployment) <= sizeof(Json::LargestUInt), "Invalid word size.");
-	solAssert(static_cast<Json::LargestUInt>(m_optimiserSettings.expectedExecutionsPerDeployment) < std::numeric_limits<Json::LargestUInt>::max(), "");
-	meta["settings"]["optimizer"]["runs"] = Json::Value(Json::LargestUInt(m_optimiserSettings.expectedExecutionsPerDeployment));
-
-	/// Backwards compatibility: If set to one of the default settings, do not provide details.
-	OptimiserSettings settingsWithoutRuns = m_optimiserSettings;
-	// reset to default
-	settingsWithoutRuns.expectedExecutionsPerDeployment = OptimiserSettings::minimal().expectedExecutionsPerDeployment;
-	if (settingsWithoutRuns == OptimiserSettings::minimal())
-		meta["settings"]["optimizer"]["enabled"] = false;
-	else if (settingsWithoutRuns == OptimiserSettings::standard())
-		meta["settings"]["optimizer"]["enabled"] = true;
-	else
-	{
-		Json::Value details{Json::objectValue};
-
-		details["orderLiterals"] = m_optimiserSettings.runOrderLiterals;
-		details["jumpdestRemover"] = m_optimiserSettings.runJumpdestRemover;
-		details["peephole"] = m_optimiserSettings.runPeephole;
-		details["deduplicate"] = m_optimiserSettings.runDeduplicate;
-		details["cse"] = m_optimiserSettings.runCSE;
-		details["constantOptimizer"] = m_optimiserSettings.runConstantOptimiser;
-		details["yul"] = m_optimiserSettings.runYulOptimiser;
-		if (m_optimiserSettings.runYulOptimiser)
-		{
-			details["yulDetails"] = Json::objectValue;
-			details["yulDetails"]["stackAllocation"] = m_optimiserSettings.optimizeStackAllocation;
-			details["yulDetails"]["optimizerSteps"] = m_optimiserSettings.yulOptimiserSteps;
-		}
-
-		meta["settings"]["optimizer"]["details"] = std::move(details);
-	}
-
-	if (m_revertStrings != RevertStrings::Default)
-		meta["settings"]["debug"]["revertStrings"] = revertStringsToString(m_revertStrings);
-
-	if (m_metadataLiteralSources)
-		meta["settings"]["metadata"]["useLiteralContent"] = true;
-
-	static vector<string> hashes{"ipfs", "bzzr1", "none"};
-	meta["settings"]["metadata"]["bytecodeHash"] = hashes.at(unsigned(m_metadataHash));
-
-	meta["settings"]["evmVersion"] = m_evmVersion.name();
+	meta["settings"] = settingsForMetadata();
+	// This is not part of the json-io settings object.
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		_contract.contract->annotation().canonicalName;
-
-	meta["settings"]["remappings"] = Json::arrayValue;
-	set<string> remappings;
-	for (auto const& r: m_remappings)
-		remappings.insert(r.context + ":" + r.prefix + "=" + r.target);
-	for (auto const& r: remappings)
-		meta["settings"]["remappings"].append(r);
-
-	meta["settings"]["libraries"] = Json::objectValue;
-	for (auto const& library: m_libraries)
-		meta["settings"]["libraries"][library.first] = "0x" + toHex(library.second.asBytes());
 
 	meta["output"]["abi"] = contractABI(_contract);
 	meta["output"]["userdoc"] = natspecUser(_contract);
 	meta["output"]["devdoc"] = natspecDev(_contract);
+
+	return util::jsonCompactPrint(meta);
+}
+
+string CompilerStack::createEthPMV3Metadata(Contract const& _contract) const
+{
+	Json::Value meta;
+	meta["manifest"] = "ethpm/3";
+
+	meta["compilers"] = Json::arrayValue;
+	meta["compilers"][0] = Json::objectValue;
+	meta["compilers"][0]["name"] = "solidity";
+	meta["compilers"][0]["version"] = VersionStringStrict;
+	meta["compilers"][0]["settings"] = settingsForMetadata();
+	meta["compilers"][0]["contractTypes"] = Json::arrayValue;
+	meta["compilers"][0]["contractTypes"][0] = _contract.contract->name();
+
+
+// TODO
+//	meta["language"] = m_importedSources ? "SolidityAST" : "Solidity";
+
+	/// All the source files (including self), which should be included in the metadata.
+	set<string> referencedSources;
+	referencedSources.insert(_contract.contract->sourceUnit().annotation().path);
+	for (auto const sourceUnit: _contract.contract->sourceUnit().referencedSourceUnits(true))
+		referencedSources.insert(sourceUnit->annotation().path);
+
+	meta["sources"] = Json::objectValue;
+	for (auto const& s: m_sources)
+	{
+		if (!referencedSources.count(s.first))
+			continue;
+
+		solAssert(s.second.scanner, "Scanner not available");
+		Json::Value& sourceObject = meta["sources"][s.first];
+		sourceObject = Json::objectValue;
+		sourceObject["type"] = "solidity";
+		sourceObject["checksum"]["algorithm"] = "keccak256";
+		sourceObject["checksum"]["hash"] = "0x" + toHex(s.second.keccak256().asBytes());
+		if (optional<string> licenseString = s.second.ast->licenseString())
+			sourceObject["license"] = *licenseString;
+		if (m_metadataLiteralSources)
+			sourceObject["content"] = s.second.scanner->source();
+		else
+		{
+			sourceObject["urls"] = Json::arrayValue;
+			sourceObject["urls"].append("bzz-raw://" + toHex(s.second.swarmHash().asBytes()));
+			sourceObject["urls"].append(s.second.ipfsUrl());
+		}
+	}
+
+	meta["contractTypes"] = Json::objectValue;
+	Json::Value& contractType = meta["contractTypes"][_contract.contract->name()];
+	contractType["sourceId"] = _contract.contract->sourceUnitName();
+	contractType["abi"] = contractABI(_contract);
+	contractType["userdoc"] = natspecUser(_contract);
+	contractType["devdoc"] = natspecDev(_contract);
 
 	return util::jsonCompactPrint(meta);
 }
