@@ -37,9 +37,12 @@ struct SideEffects
 	/// This means it cannot depend on storage or memory, cannot have any side-effects,
 	/// but it can depend on state that is constant across an EVM-call.
 	bool movable = true;
-	/// If true, the expression in this code can be freely moved out of a block, that does not
-	/// invalidates the storage.
+	/// If true, the expressions in this code can be freely moved over other statements, expressions
+	/// or function calls, as long as these do not invalidate storage or blockchain state.
 	bool movableIfStateInvariant = true;
+	/// If true, the expressions in this code can be freely moved over other statements, expressions
+	/// or function calls, as long as these do not invalidate memory or contain a MSIZE.
+	bool movableIfMemoryInvariant = true;
 	/// If true, the code can be removed without changing the semantics.
 	bool sideEffectFree = true;
 	/// If true, the code can be removed without changing the semantics as long as
@@ -51,11 +54,32 @@ struct SideEffects
 	/// If false, memory is guaranteed to be unchanged by the code under all
 	/// circumstances.
 	bool invalidatesMemory = false;
+	bool containsMSize = false;
 
+	SideEffects() {}
+	SideEffects(
+		bool _movable,
+		bool _movableIfStateInvariant,
+		bool _movableIfMemoryInvariant,
+		bool _sideEffectFree,
+		bool _sideEffectFreeIfNoMSize,
+		bool _invalidatesStorage,
+		bool _invalidatesMemory,
+		bool _containsMSize
+	):
+		movable(_movable),
+		movableIfStateInvariant(_movableIfStateInvariant),
+		movableIfMemoryInvariant(_movableIfMemoryInvariant),
+		sideEffectFree(_sideEffectFree),
+		sideEffectFreeIfNoMSize(_sideEffectFreeIfNoMSize),
+		invalidatesStorage(_invalidatesStorage),
+		invalidatesMemory(_invalidatesMemory),
+		containsMSize(_containsMSize)
+	{}
 	/// @returns the worst-case side effects.
 	static SideEffects worst()
 	{
-		return SideEffects{false, false, false, false, true, true};
+		return SideEffects{false, false, false, false, false, true, true, true};
 	}
 
 	/// @returns the combined side effects of two pieces of code.
@@ -64,10 +88,12 @@ struct SideEffects
 		return SideEffects{
 			movable && _other.movable,
 			movableIfStateInvariant && _other.movableIfStateInvariant,
+			movableIfMemoryInvariant && _other.movableIfMemoryInvariant,
 			sideEffectFree && _other.sideEffectFree,
 			sideEffectFreeIfNoMSize && _other.sideEffectFreeIfNoMSize,
 			invalidatesStorage || _other.invalidatesStorage,
-			invalidatesMemory || _other.invalidatesMemory
+			invalidatesMemory || _other.invalidatesMemory,
+			containsMSize || _other.containsMSize,
 		};
 	}
 
@@ -83,10 +109,12 @@ struct SideEffects
 		return
 			movable == _other.movable &&
 			movableIfStateInvariant == _other.movableIfStateInvariant &&
+			movableIfMemoryInvariant == _other.movableIfMemoryInvariant &&
 			sideEffectFree == _other.sideEffectFree &&
 			sideEffectFreeIfNoMSize == _other.sideEffectFreeIfNoMSize &&
 			invalidatesStorage == _other.invalidatesStorage &&
-			invalidatesMemory == _other.invalidatesMemory;
+			invalidatesMemory == _other.invalidatesMemory &&
+			containsMSize == _other.containsMSize;
 	}
 };
 

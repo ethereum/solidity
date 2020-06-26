@@ -50,6 +50,8 @@ string toString(SideEffects const& _sideEffects)
 		ret.emplace_back("movable");
 	if (_sideEffects.movableIfStateInvariant)
 		ret.emplace_back("movableIfStateInvariant");
+	if (_sideEffects.movableIfMemoryInvariant)
+		ret.emplace_back("movableIfMemoryInvariant");
 	if (_sideEffects.sideEffectFree)
 		ret.emplace_back("sideEffectFree");
 	if (_sideEffects.sideEffectFreeIfNoMSize)

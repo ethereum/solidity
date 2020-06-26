@@ -3,6 +3,6 @@
     function b() { a() }
 }
 // ----
-// : movable, movableIfStateInvariant, sideEffectFree, sideEffectFreeIfNoMSize
+// : movable, movableIfStateInvariant, movableIfMemoryInvariant, sideEffectFree, sideEffectFreeIfNoMSize
 // a:
 // b:

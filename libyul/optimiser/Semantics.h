@@ -24,6 +24,7 @@
 #include <libyul/SideEffects.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/AsmData.h>
+#include <iostream>
 
 #include <set>
 
@@ -64,16 +65,17 @@ public:
 			return true;
 		else if (movableIfStateInvariant() && !_blockSideEffects.invalidatesStorage())
 			return true;
-		// else if (
-		// 	movableIfMemoryInvariant() &&
-		// 	!_blockSideEffects.invalidatesMemory() &&
-		// 	!_blockSideEffects.containsMSize()
-		// )
-		// 	return true;
+		else if (
+			movableIfMemoryInvariant() &&
+			!_blockSideEffects.containsMSize() &&
+			!_blockSideEffects.invalidatesMemory()
+		)
+			return true;
 
 		return false;
 	}
 	bool movableIfStateInvariant() const { return m_sideEffects.movableIfStateInvariant; }
+	bool movableIfMemoryInvariant() const { return m_sideEffects.movableIfMemoryInvariant; }
 	bool sideEffectFree(bool _allowMSizeModification = false) const
 	{
 		if (_allowMSizeModification)
@@ -84,6 +86,7 @@ public:
 	bool sideEffectFreeIfNoMSize() const { return m_sideEffects.sideEffectFreeIfNoMSize; }
 	bool invalidatesStorage() const { return m_sideEffects.invalidatesStorage; }
 	bool invalidatesMemory() const { return m_sideEffects.invalidatesMemory; }
+	bool containsMSize() const { return m_sideEffects.containsMSize; }
 
 private:
 	Dialect const& m_dialect;

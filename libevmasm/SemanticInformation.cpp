@@ -260,6 +260,14 @@ bool SemanticInformation::movableIfMemoryInvariant(Instruction _instruction)
 	}
 }
 
+bool SemanticInformation::containsMSize(Instruction _instruction)
+{
+	if (_instruction == Instruction::MSIZE)
+		return true;
+
+	return false;
+}
+
 bool SemanticInformation::sideEffectFree(Instruction _instruction)
 {
 	// These are not really functional.

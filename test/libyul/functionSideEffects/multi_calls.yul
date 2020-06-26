@@ -15,8 +15,8 @@
     }
 }
 // ----
-// : movable, movableIfStateInvariant, sideEffectFree, sideEffectFreeIfNoMSize
+// : movable, movableIfStateInvariant, movableIfMemoryInvariant, sideEffectFree, sideEffectFreeIfNoMSize
 // a: invalidatesStorage
 // b: invalidatesStorage
 // c: invalidatesStorage, invalidatesMemory
-// d: movable, movableIfStateInvariant, sideEffectFree, sideEffectFreeIfNoMSize
+// d: movable, movableIfStateInvariant, movableIfMemoryInvariant, sideEffectFree, sideEffectFreeIfNoMSize
