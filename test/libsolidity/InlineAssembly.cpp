@@ -51,6 +51,13 @@ namespace solidity::frontend::test
 namespace
 {
 
+struct ExpectedErrorId
+{
+	unsigned long long error = 0;
+	bool operator==(ExpectedErrorId const& _rhs) const { return error == _rhs.error; }
+};
+constexpr ExpectedErrorId operator"" _expected(unsigned long long _error) { return ExpectedErrorId{ _error }; }
+
 std::optional<Error> parseAndReturnFirstError(
 	string const& _source,
 	bool _assemble = false,
@@ -146,6 +153,15 @@ do \
 	BOOST_CHECK(searchErrorMessage(err, (substring))); \
 } while(0)
 
+#define CHECK_ERROR_LANG_2(text, assemble, typ, expected, substring, warnings, language) \
+do \
+{ \
+	Error err = expectError((text), (assemble), warnings, (language)); \
+	BOOST_CHECK(err.type() == (Error::Type::typ)); \
+	BOOST_CHECK(err.errorId().error == ExpectedErrorId(expected).error); \
+	BOOST_CHECK(searchErrorMessage(err, (substring))); \
+} while(0)
+
 #define CHECK_ERROR(text, assemble, typ, substring, warnings) \
 CHECK_ERROR_LANG(text, assemble, typ, substring, warnings, AssemblyStack::Language::Assembly)
 
@@ -155,8 +171,8 @@ CHECK_ERROR(text, false, type, substring, false)
 #define CHECK_PARSE_WARNING(text, type, substring) \
 CHECK_ERROR(text, false, type, substring, false)
 
-#define CHECK_ASSEMBLE_ERROR(text, type, substring) \
-CHECK_ERROR(text, true, type, substring, false)
+#define CHECK_ASSEMBLE_ERROR(text, type, error, substring) \
+CHECK_ERROR_LANG_2(text, true, type, error, substring, false, AssemblyStack::Language::Assembly)
 
 #define CHECK_STRICT_ERROR(text, type, substring) \
 CHECK_ERROR_LANG(text, false, type, substring, false, AssemblyStack::Language::StrictAssembly)
@@ -603,13 +619,13 @@ BOOST_AUTO_TEST_CASE(string_literals)
 
 BOOST_AUTO_TEST_CASE(oversize_string_literals)
 {
-	CHECK_ASSEMBLE_ERROR("{ let x := \"123456789012345678901234567890123\" }", TypeError, "String literal too long");
+	CHECK_ASSEMBLE_ERROR("{ let x := \"123456789012345678901234567890123\" }", TypeError, 3069_expected, "String literal too long");
 }
 
 BOOST_AUTO_TEST_CASE(magic_variables)
 {
-	CHECK_ASSEMBLE_ERROR("{ pop(this) }", DeclarationError, "Identifier not found");
-	CHECK_ASSEMBLE_ERROR("{ pop(ecrecover) }", DeclarationError, "Identifier not found");
+	CHECK_ASSEMBLE_ERROR("{ pop(this) }", DeclarationError, 8198_expected, "Identifier not found");
+	CHECK_ASSEMBLE_ERROR("{ pop(ecrecover) }", DeclarationError, 8198_expected, "Identifier not found");
 	BOOST_CHECK(successAssemble("{ let ecrecover := 1 pop(ecrecover) }"));
 }
 
@@ -625,7 +641,7 @@ BOOST_AUTO_TEST_CASE(designated_invalid_instruction)
 
 BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_declaration)
 {
-	CHECK_ASSEMBLE_ERROR("{ let gas := 1 }", ParserError, "Cannot use builtin");
+	CHECK_ASSEMBLE_ERROR("{ let gas := 1 }", ParserError, 5568_expected, "Cannot use builtin");
 }
 
 BOOST_AUTO_TEST_CASE(revert)
