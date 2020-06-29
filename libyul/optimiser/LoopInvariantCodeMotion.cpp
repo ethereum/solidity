@@ -58,7 +58,7 @@ void LoopInvariantCodeMotion::operator()(Block& _block)
 bool LoopInvariantCodeMotion::canBePromoted(
 	VariableDeclaration const& _varDecl,
 	set<YulString> const& _varsDefinedInCurrentScope,
-	SideEffectsCollector const& _blockSideEffects
+	SideEffects const& _blockSideEffects
 ) const
 {
 	// A declaration can be promoted iff
@@ -75,7 +75,7 @@ bool LoopInvariantCodeMotion::canBePromoted(
 			if (_varsDefinedInCurrentScope.count(ref.first) || !m_ssaVariables.count(ref.first))
 				return false;
 		auto sideEffects = SideEffectsCollector{m_dialect, *_varDecl.value, &m_functionSideEffects};
-		if (!sideEffects.movable(_blockSideEffects))
+		if (!sideEffects.movableRelativeTo(_blockSideEffects))
 			return false;
 	}
 	return true;
@@ -86,9 +86,8 @@ optional<vector<Statement>> LoopInvariantCodeMotion::rewriteLoop(ForLoop& _for)
 	assertThrow(_for.pre.statements.empty(), OptimizerException, "");
 	vector<Statement> replacement;
 
-	Block block{_for.location, {}};
-	block.statements.emplace_back(ASTCopier{}(_for));
-	auto blockSideEffects = SideEffectsCollector{m_dialect, block, &m_functionSideEffects};
+	auto blockSideEffects =
+		SideEffectsCollector{m_dialect, _for, &m_functionSideEffects}.sideEffects();
 
 	for (Block* block: {&_for.post, &_for.body})
 	{

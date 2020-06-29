@@ -238,7 +238,6 @@ bool SemanticInformation::movableIfStateInvariant(Instruction _instruction)
 	{
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODEHASH:
-	case Instruction::SLOAD:
 	case Instruction::BALANCE:
 	case Instruction::SELFBALANCE:
 	case Instruction::RETURNDATASIZE:
@@ -246,6 +245,13 @@ bool SemanticInformation::movableIfStateInvariant(Instruction _instruction)
 	default:
 		return movable(_instruction);
 	}
+}
+
+bool SemanticInformation::movableIfStorageInvariant(Instruction _instruction)
+{
+	if (_instruction == Instruction::SLOAD)
+		return true;
+	return movableIfStateInvariant(_instruction);
 }
 
 bool SemanticInformation::movableIfMemoryInvariant(Instruction _instruction)
@@ -264,7 +270,6 @@ bool SemanticInformation::containsMSize(Instruction _instruction)
 {
 	if (_instruction == Instruction::MSIZE)
 		return true;
-
 	return false;
 }
 
@@ -280,8 +285,7 @@ bool SemanticInformation::sideEffectFreeIfNoMSize(Instruction _instruction)
 {
 	if (_instruction == Instruction::KECCAK256 || _instruction == Instruction::MLOAD)
 		return true;
-	else
-		return sideEffectFree(_instruction);
+	return sideEffectFree(_instruction);
 }
 
 bool SemanticInformation::invalidatesMemory(Instruction _instruction)
@@ -306,6 +310,13 @@ bool SemanticInformation::invalidatesMemory(Instruction _instruction)
 
 bool SemanticInformation::invalidatesStorage(Instruction _instruction)
 {
+	if (_instruction == Instruction::SSTORE)
+		return true;
+	return invalidatesState(_instruction);
+}
+
+bool SemanticInformation::invalidatesState(Instruction _instruction)
+{
 	switch (_instruction)
 	{
 	case Instruction::CALL:
@@ -313,7 +324,6 @@ bool SemanticInformation::invalidatesStorage(Instruction _instruction)
 	case Instruction::DELEGATECALL:
 	case Instruction::CREATE:
 	case Instruction::CREATE2:
-	case Instruction::SSTORE:
 		return true;
 	default:
 		return false;

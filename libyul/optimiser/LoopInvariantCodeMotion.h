@@ -56,10 +56,11 @@ private:
 	{ }
 
 	/// @returns true if the given variable declaration can be moved to in front of the loop.
+	/// \param _blockSideEffects: the side-effects of the for loop block.
 	bool canBePromoted(
 		VariableDeclaration const& _varDecl,
 		std::set<YulString> const& _varsDefinedInCurrentScope,
-		SideEffectsCollector const& _blockSideEffects
+		SideEffects const& _blockSideEffects
 	) const;
 	std::optional<std::vector<Statement>> rewriteLoop(ForLoop& _for);
 

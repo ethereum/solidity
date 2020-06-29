@@ -38,8 +38,11 @@ struct SideEffects
 	/// but it can depend on state that is constant across an EVM-call.
 	bool movable = true;
 	/// If true, the expressions in this code can be freely moved over other statements, expressions
-	/// or function calls, as long as these do not invalidate storage or blockchain state.
+	/// or function calls, as long as these do not invalidate the blockchain state.
 	bool movableIfStateInvariant = true;
+	/// If true, the expression in this code can be freely moved over other statements, expressions
+	/// or function calls, as long as these do not invalidate the storage or the blockchain state.
+	bool movableIfStorageInvariant = true;
 	/// If true, the expressions in this code can be freely moved over other statements, expressions
 	/// or function calls, as long as these do not invalidate memory or contain a MSIZE.
 	bool movableIfMemoryInvariant = true;
@@ -48,30 +51,38 @@ struct SideEffects
 	/// If true, the code can be removed without changing the semantics as long as
 	/// the whole program does not contain the msize instruction.
 	bool sideEffectFreeIfNoMSize = true;
-	/// If false, storage is guaranteed to be unchanged by the code under all
+	/// If false, the blockchain state is guaranteed to be unchanged by the code under all
 	/// circumstances.
+	bool invalidatesState = false;
+	/// If false, storage and the blockchain state is guaranteed to be unchanged by the code under
+	/// all circumstances.
 	bool invalidatesStorage = false;
 	/// If false, memory is guaranteed to be unchanged by the code under all
 	/// circumstances.
 	bool invalidatesMemory = false;
+	/// If true, the block will contain a MSIZE
 	bool containsMSize = false;
 
 	SideEffects() {}
 	SideEffects(
 		bool _movable,
 		bool _movableIfStateInvariant,
+		bool _movableIfStorageInvariant,
 		bool _movableIfMemoryInvariant,
 		bool _sideEffectFree,
 		bool _sideEffectFreeIfNoMSize,
+		bool _invalidatesState,
 		bool _invalidatesStorage,
 		bool _invalidatesMemory,
 		bool _containsMSize
 	):
 		movable(_movable),
 		movableIfStateInvariant(_movableIfStateInvariant),
+		movableIfStorageInvariant(_movableIfStorageInvariant),
 		movableIfMemoryInvariant(_movableIfMemoryInvariant),
 		sideEffectFree(_sideEffectFree),
 		sideEffectFreeIfNoMSize(_sideEffectFreeIfNoMSize),
+		invalidatesState(_invalidatesState),
 		invalidatesStorage(_invalidatesStorage),
 		invalidatesMemory(_invalidatesMemory),
 		containsMSize(_containsMSize)
@@ -79,7 +90,18 @@ struct SideEffects
 	/// @returns the worst-case side effects.
 	static SideEffects worst()
 	{
-		return SideEffects{false, false, false, false, false, true, true, true};
+		return SideEffects{
+			false, // movable
+			false, // movableIfStateInvariant
+			false, // movableIfStorageInvariant
+			false, // movableIfMemoryInvariant
+			false, // sideEffectFree
+			false, // sideEffectFreeIfNoMSize
+			true,  // invalidatesState
+			true,  // invalidatesStorage
+			true,  // invalidatesMemory
+			true   // containsMSize
+		};
 	}
 
 	/// @returns the combined side effects of two pieces of code.
@@ -88,9 +110,11 @@ struct SideEffects
 		return SideEffects{
 			movable && _other.movable,
 			movableIfStateInvariant && _other.movableIfStateInvariant,
+			movableIfStorageInvariant && _other.movableIfStorageInvariant,
 			movableIfMemoryInvariant && _other.movableIfMemoryInvariant,
 			sideEffectFree && _other.sideEffectFree,
 			sideEffectFreeIfNoMSize && _other.sideEffectFreeIfNoMSize,
+			invalidatesState || _other.invalidatesState,
 			invalidatesStorage || _other.invalidatesStorage,
 			invalidatesMemory || _other.invalidatesMemory,
 			containsMSize || _other.containsMSize,
@@ -109,9 +133,11 @@ struct SideEffects
 		return
 			movable == _other.movable &&
 			movableIfStateInvariant == _other.movableIfStateInvariant &&
+			movableIfStorageInvariant == _other.movableIfStorageInvariant &&
 			movableIfMemoryInvariant == _other.movableIfMemoryInvariant &&
 			sideEffectFree == _other.sideEffectFree &&
 			sideEffectFreeIfNoMSize == _other.sideEffectFreeIfNoMSize &&
+			invalidatesState == _other.invalidatesState &&
 			invalidatesStorage == _other.invalidatesStorage &&
 			invalidatesMemory == _other.invalidatesMemory &&
 			containsMSize == _other.containsMSize;

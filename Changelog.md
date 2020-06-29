@@ -6,7 +6,8 @@ Language Features:
 Compiler Features:
  * NatSpec: Add fields "kind" and "version" to the JSON output.
  * Commandline Interface: Prevent some incompatible commandline options from being used together.
- * Yul Optimizer: LoopInvariantCodeMotion can move ``EXTCODEHASH``, ``EXTCODESIZE`` and ``SLOAD`` if the loop does not invalidates the storage.
+ * Yul Optimizer: LoopInvariantCodeMotion can move `extcodehash`, `extcodesize`, `sload`, `returndatasize`, `balance` and  `selfbalance`, if the loop does not invalidate the storage.
+ * Yul Optimizer: LoopInvariantCodeMotion can move `keccak256` and `mload`, if the loop does not invalidate the memory and contain `msize`.
 
 
 Bugfixes:

@@ -24,7 +24,6 @@
 #include <libyul/SideEffects.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/AsmData.h>
-#include <iostream>
 
 #include <set>
 
@@ -54,27 +53,35 @@ public:
 		Block const& _ast,
 		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
 	);
+	SideEffectsCollector(
+		Dialect const& _dialect,
+		ForLoop const& _ast,
+		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+	);
 
 	using ASTWalker::operator();
 	void operator()(FunctionCall const& _functionCall) override;
 
 	bool movable() const { return m_sideEffects.movable; }
-	bool movable(SideEffectsCollector const& _blockSideEffects)
+	bool movableRelativeTo(SideEffects const& _blockSideEffects)
 	{
 		if (movable())
 			return true;
-		else if (movableIfStateInvariant() && !_blockSideEffects.invalidatesStorage())
+		else if (movableIfStateInvariant() && !_blockSideEffects.invalidatesState)
+			return true;
+		else if (movableIfStorageInvariant() && !_blockSideEffects.invalidatesStorage)
 			return true;
 		else if (
 			movableIfMemoryInvariant() &&
-			!_blockSideEffects.containsMSize() &&
-			!_blockSideEffects.invalidatesMemory()
+			!_blockSideEffects.containsMSize &&
+			!_blockSideEffects.invalidatesMemory
 		)
 			return true;
 
 		return false;
 	}
 	bool movableIfStateInvariant() const { return m_sideEffects.movableIfStateInvariant; }
+	bool movableIfStorageInvariant() const { return m_sideEffects.movableIfStorageInvariant; }
 	bool movableIfMemoryInvariant() const { return m_sideEffects.movableIfMemoryInvariant; }
 	bool sideEffectFree(bool _allowMSizeModification = false) const
 	{
@@ -84,9 +91,12 @@ public:
 			return m_sideEffects.sideEffectFree;
 	}
 	bool sideEffectFreeIfNoMSize() const { return m_sideEffects.sideEffectFreeIfNoMSize; }
+	bool invalidatesState() const { return m_sideEffects.invalidatesState; }
 	bool invalidatesStorage() const { return m_sideEffects.invalidatesStorage; }
 	bool invalidatesMemory() const { return m_sideEffects.invalidatesMemory; }
 	bool containsMSize() const { return m_sideEffects.containsMSize; }
+
+	SideEffects sideEffects() { return m_sideEffects; }
 
 private:
 	Dialect const& m_dialect;

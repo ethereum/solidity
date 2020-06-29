@@ -61,6 +61,16 @@ SideEffectsCollector::SideEffectsCollector(
 	operator()(_ast);
 }
 
+SideEffectsCollector::SideEffectsCollector(
+	Dialect const& _dialect,
+	ForLoop const& _ast,
+	map<YulString, SideEffects> const* _functionSideEffects
+):
+	SideEffectsCollector(_dialect, _functionSideEffects)
+{
+	operator()(_ast);
+}
+
 void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
@@ -106,6 +116,7 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 	{
 		ret[function].movable = false;
 		ret[function].movableIfStateInvariant = false;
+		ret[function].movableIfStorageInvariant = false;
 		ret[function].movableIfMemoryInvariant = false;
 		ret[function].sideEffectFree = false;
 		ret[function].sideEffectFreeIfNoMSize = false;
@@ -127,6 +138,7 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 		{
 			ret[call.first].movable = false;
 			ret[call.first].movableIfStateInvariant = false;
+			ret[call.first].movableIfStorageInvariant = false;
 			ret[call.first].movableIfMemoryInvariant = false;
 			ret[call.first].sideEffectFree = false;
 			ret[call.first].sideEffectFreeIfNoMSize = false;

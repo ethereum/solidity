@@ -183,7 +183,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			"datacopy",
 			3,
 			0,
-			SideEffects{false, false, false, false, false, false, true, false},
+			SideEffects{false, false, false, false, false, false, false, false, true, false},
 			{},
 			[](
 				FunctionCall const& _call,
@@ -199,7 +199,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			"setimmutable",
 			2,
 			0,
-			SideEffects{false, false, false, false, false, false, true, false},
+			SideEffects{false, false, false, false, false, false, false, false, true, false},
 			{true, false},
 			[](
 				FunctionCall const& _call,
@@ -277,9 +277,11 @@ SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instructio
 	return SideEffects{
 		evmasm::SemanticInformation::movable(_instruction),
 		evmasm::SemanticInformation::movableIfStateInvariant(_instruction),
+		evmasm::SemanticInformation::movableIfStorageInvariant(_instruction),
 		evmasm::SemanticInformation::movableIfMemoryInvariant(_instruction),
 		evmasm::SemanticInformation::sideEffectFree(_instruction),
 		evmasm::SemanticInformation::sideEffectFreeIfNoMSize(_instruction),
+		evmasm::SemanticInformation::invalidatesState(_instruction),
 		evmasm::SemanticInformation::invalidatesStorage(_instruction),
 		evmasm::SemanticInformation::invalidatesMemory(_instruction),
 		evmasm::SemanticInformation::containsMSize(_instruction)

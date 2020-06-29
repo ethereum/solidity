@@ -57,8 +57,11 @@ struct SemanticInformation
 	/// cannot have any side-effects, but it can depend on a call-constant state of the blockchain.
 	static bool movable(Instruction _instruction);
 	/// @returns true if the instruction can be moved or copied (together with its arguments) across
-	/// instructions and control flow branches that do not modify storage or blockchain state.
+	/// instructions and control flow branches that do not modify the blockchain state.
 	static bool movableIfStateInvariant(Instruction _instruction);
+	/// @returns true if the instruction can be moved or copied (together with its arguments) across
+	/// instructions and control flow branches that do not modify storage or the blockchain state.
+	static bool movableIfStorageInvariant(Instruction _instruction);
 	/// @return true if the instruction can be moved or copied (together with its arguments) across
 	/// instructions and control flow branches that do not modify memory or contain the msize
 	/// instruction.
@@ -76,8 +79,10 @@ struct SemanticInformation
 	static bool sideEffectFreeIfNoMSize(Instruction _instruction);
 	/// @returns true if the given instruction modifies memory.
 	static bool invalidatesMemory(Instruction _instruction);
-	/// @returns true if the given instruction modifies storage (even indirectly).
+	/// @returns true if the given instruction modifies the storage or the blockchain state.
 	static bool invalidatesStorage(Instruction _instruction);
+	/// @returns true if the given instruction modifies the blockchain state.
+	static bool invalidatesState(Instruction _instruction);
 	static bool invalidInPureFunctions(Instruction _instruction);
 	static bool invalidInViewFunctions(Instruction _instruction);
 };
