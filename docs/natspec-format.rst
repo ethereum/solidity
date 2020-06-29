@@ -49,7 +49,7 @@ The following example shows a contract and a function using all available tags.
 .. code:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >0.6.10 <0.7.0;
 
     /// @title A simulator for trees
     /// @author Larry A. Gardner
@@ -60,8 +60,32 @@ The following example shows a contract and a function using all available tags.
         /// @dev The Alexandr N. Tetearing algorithm could increase precision
         /// @param rings The number of rings from dendrochronological sample
         /// @return age in years, rounded up for partial years
-        function age(uint256 rings) external pure returns (uint256) {
+        function age(uint256 rings) external virtual pure returns (uint256) {
             return rings + 1;
+        }
+
+        /// @notice Returns the amount of leaves the tree has.
+        /// @dev Returns only a fixed number.
+        function leaves() external virtual pure returns(uint256) {
+            return 2;
+        }
+    }
+
+    contract Plant {
+        function leaves() external virtual pure returns(uint256) {
+            return 3;
+        }
+    }
+
+    contract KumquatTree is Tree, Plant {
+        function age(uint256 rings) external override pure returns (uint256) {
+            return rings + 2;
+        }
+
+        /// Return the amount of leaves that this specific kind of tree has
+        /// @inheritdoc Tree
+        function leaves() external override(Tree, Plant) pure returns(uint256) {
+            return 3;
         }
     }
 
@@ -75,16 +99,17 @@ NatSpec tag and where it may be used. As a special case, if no tags are
 used then the Solidity compiler will interpret a ``///`` or ``/**`` comment
 in the same way as if it were tagged with ``@notice``.
 
-=========== =============================================================================== =============================
-Tag                                                                                         Context
-=========== =============================================================================== =============================
-``@title``  A title that should describe the contract/interface                             contract, interface
-``@author`` The name of the author                                                          contract, interface
-``@notice`` Explain to an end user what this does                                           contract, interface, function, public state variable, event
-``@dev``    Explain to a developer any extra details                                        contract, interface, function, state variable, event
-``@param``  Documents a parameter just like in doxygen (must be followed by parameter name) function, event
-``@return`` Documents the return variables of a contract's function                         function, public state variable
-=========== =============================================================================== =============================
+=============== ====================================================================================== =============================
+Tag                                                                                                    Context
+=============== ====================================================================================== =============================
+``@title``      A title that should describe the contract/interface                                    contract, interface
+``@author``     The name of the author                                                                 contract, interface
+``@notice``     Explain to an end user what this does                                                  contract, interface, function, public state variable, event
+``@dev``        Explain to a developer any extra details                                               contract, interface, function, state variable, event
+``@param``      Documents a parameter just like in doxygen (must be followed by parameter name)        function, event
+``@return``     Documents the return variables of a contract's function                                function, public state variable
+``@inheritdoc`` Copies all missing tags from the base function (must be followed by the contract name) function, public state variable
+=============== ====================================================================================== =============================
 
 If your function returns multiple values, like ``(int quotient, int remainder)``
 then use multiple ``@return`` statements in the same format as the
@@ -127,6 +152,7 @@ base function. Exceptions to this are:
 
  * When the parameter names are different.
  * When there is more than one base function.
+ * When there is an explicit ``@inheritdoc`` tag which specifies which contract should be used to inherit.
 
 .. _header-output:
 

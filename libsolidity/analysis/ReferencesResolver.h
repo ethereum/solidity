@@ -76,6 +76,7 @@ private:
 	bool visit(ForStatement const& _for) override;
 	void endVisit(ForStatement const& _for) override;
 	void endVisit(VariableDeclarationStatement const& _varDeclStatement) override;
+	bool visit(VariableDeclaration const& _varDecl) override;
 	bool visit(Identifier const& _identifier) override;
 	bool visit(FunctionDefinition const& _functionDefinition) override;
 	void endVisit(FunctionDefinition const& _functionDefinition) override;
@@ -88,6 +89,8 @@ private:
 	void operator()(yul::FunctionDefinition const& _function) override;
 	void operator()(yul::Identifier const& _identifier) override;
 	void operator()(yul::VariableDeclaration const& _varDecl) override;
+
+	void resolveInheritDoc(StructuredDocumentation const& _documentation, StructurallyDocumentedAnnotation& _annotation);
 
 	langutil::ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
