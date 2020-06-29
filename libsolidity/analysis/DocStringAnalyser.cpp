@@ -142,6 +142,13 @@ void DocStringAnalyser::handleCallable(
 	static set<string> const validTags = set<string>{"author", "dev", "notice", "return", "param"};
 	parseDocStrings(_node, _annotation, validTags, "functions");
 	checkParameters(_callable, _node, _annotation);
+
+	if (_node.documentation() && _annotation.docTags.count("author") > 0)
+		m_errorReporter.warning(
+			9843_error, _node.documentation()->location(),
+			"Documentation tag @author is only allowed on contract definitions. "
+			"It will be disallowed in 0.7.0."
+		);
 }
 
 void DocStringAnalyser::parseDocStrings(
