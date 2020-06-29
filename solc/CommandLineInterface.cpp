@@ -59,6 +59,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/adaptor/filtered.hpp>
 #include <boost/algorithm/string.hpp>
 
 #ifdef _WIN32 // windows
@@ -1200,9 +1201,14 @@ bool CommandLineInterface::processInput()
 		};
 		if (countEnabledOptions(nonAssemblyModeOptions) >= 1)
 		{
+			auto optionEnabled = [&](string const& name){ return m_args.count(name) > 0; };
+			auto enabledOptions = boost::copy_range<vector<string>>(nonAssemblyModeOptions | boost::adaptors::filtered(optionEnabled));
+
 			serr() << "The following options are invalid in assembly mode: ";
-			serr() << joinOptionNames(nonAssemblyModeOptions) << ". ";
-			serr() << "Optimization is disabled by default and can be enabled with --" << g_argOptimize << "." << endl;
+			serr() << joinOptionNames(enabledOptions) << ".";
+			if (m_args.count(g_strOptimizeYul) || m_args.count(g_strNoOptimizeYul))
+				serr() << " Optimization is disabled by default and can be enabled with --" << g_argOptimize << "." << endl;
+			serr() << endl;
 			return false;
 		}
 
