@@ -122,9 +122,11 @@ documentation and you may read more at
 Inheritance Notes
 -----------------
 
-Currently it is undefined whether a contract with a function having no
-NatSpec will inherit the NatSpec of a parent contract/interface for that
-same function.
+Functions without NatSpec will automatically inherit the documentation of their
+base function. Exceptions to this are:
+
+ * When the parameter names are different.
+ * When there is more than one base function.
 
 .. _header-output:
 

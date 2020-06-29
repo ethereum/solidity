@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * NatSpec: Add fields "kind" and "version" to the JSON output.
+ * NatSpec: Inherit tags from unique base if derived function does not provide any.
  * Commandline Interface: Prevent some incompatible commandline options from being used together.
  * NatSpec: Support NatSpec comments on events.
 
