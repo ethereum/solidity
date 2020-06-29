@@ -178,6 +178,8 @@ static string const g_strVersion = "version";
 static string const g_strIgnoreMissingFiles = "ignore-missing";
 static string const g_strColor = "color";
 static string const g_strNoColor = "no-color";
+static string const g_strHyperlinks = "hyperlinks";
+static string const g_strNoHyperlinks = "no-hyperlinks";
 static string const g_strErrorIds = "error-codes";
 static string const g_strOldReporter = "old-reporter";
 
@@ -224,6 +226,8 @@ static string const g_stdinFileName = g_stdinFileNameStr;
 static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
 static string const g_argColor = g_strColor;
 static string const g_argNoColor = g_strNoColor;
+static string const g_argHyperlinks = g_strHyperlinks;
+static string const g_argNoHyperlinks = g_strNoHyperlinks;
 static string const g_argErrorIds = g_strErrorIds;
 static string const g_argOldReporter = g_strOldReporter;
 
@@ -880,6 +884,14 @@ General Information)").c_str(),
 			"Explicitly disable colored output, disabling terminal auto-detection."
 		)
 		(
+			g_argHyperlinks.c_str(),
+			"Force hyperlink output. This will enable file names to be clickable in error diagnostics."
+		)
+		(
+			g_argNoHyperlinks.c_str(),
+			"Explicitly disable hyperlink output, disabling terminal auto-detection."
+		)
+		(
 			g_argErrorIds.c_str(),
 			"Output error codes."
 		)
@@ -994,7 +1006,15 @@ General Information)").c_str(),
 		return false;
 	}
 
+	if (m_args.count(g_argHyperlinks) && m_args.count(g_argNoHyperlinks))
+	{
+		serr() << "Option " << g_argHyperlinks << " and " << g_argNoHyperlinks << " are mutualy exclusive." << endl;
+		return false;
+	}
+
 	m_coloredOutput = !m_args.count(g_argNoColor) && (isatty(STDERR_FILENO) || m_args.count(g_argColor));
+
+	m_hyperlinks = !m_args.count(g_argNoHyperlinks) && (isatty(STDERR_FILENO) || m_args.count(g_argHyperlinks));
 
 	m_withErrorIds = m_args.count(g_argErrorIds);
 
@@ -1331,7 +1351,7 @@ bool CommandLineInterface::processInput()
 	if (m_args.count(g_argOldReporter))
 		formatter = make_unique<SourceReferenceFormatter>(serr(false));
 	else
-		formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput, m_withErrorIds);
+		formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput, m_withErrorIds, m_hyperlinks);
 
 	try
 	{
@@ -1769,7 +1789,7 @@ bool CommandLineInterface::assemble(
 		if (m_args.count(g_argOldReporter))
 			formatter = make_unique<SourceReferenceFormatter>(serr(false));
 		else
-			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput, m_withErrorIds);
+			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput, m_withErrorIds, m_hyperlinks);
 
 		for (auto const& error: stack.errors())
 		{

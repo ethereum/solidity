@@ -6,6 +6,7 @@ Language Features:
 Compiler Features:
  * NatSpec: Add fields "kind" and "version" to the JSON output.
  * Commandline Interface: Prevent some incompatible commandline options from being used together.
+ * Commandline Interface: Adds new option ``--hyperlinks`` and ``--no-hyperlinks`` for clickable file names in diagnostics.
 
 
 Bugfixes:

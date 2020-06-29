@@ -134,7 +134,7 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 		c.analyze();
 	else
 	{
-		SourceReferenceFormatterHuman formatter(_stream, _formatted, false);
+		SourceReferenceFormatterHuman formatter(_stream, _formatted, false, false);
 		for (auto const& error: c.errors())
 			formatter.printErrorInformation(*error);
 		return TestResult::FatalError;

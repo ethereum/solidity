@@ -136,6 +136,8 @@ private:
 	bool m_coloredOutput = true;
 	/// Whether or not to output error IDs.
 	bool m_withErrorIds = false;
+	/// Whether or not error diagnostics may construct text with hyperlink anchors.
+	bool m_hyperlinks = false;
 };
 
 }

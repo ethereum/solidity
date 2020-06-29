@@ -23,7 +23,9 @@
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/UTF8.h>
 #include <iomanip>
+#include <iostream>
 #include <string_view>
+
 
 using namespace std;
 using namespace solidity;
@@ -88,7 +90,7 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 	if (_ref.position.line < 0)
 	{
 		frameColored() << "-->";
-		m_stream << ' ' << _ref.sourceName << '\n';
+		m_stream << ' ' << m_hyperlink(_ref.sourceName) << '\n';
 		return; // No line available, nothing else to print
 	}
 
@@ -98,7 +100,7 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 	// line 0: source name
 	m_stream << leftpad;
 	frameColored() << "-->";
-	m_stream << ' ' << _ref.sourceName << ':' << line << ':' << (_ref.position.column + 1) << ":\n";
+	m_stream << ' ' << m_hyperlink(_ref.sourceName) << ':' << line << ':' << (_ref.position.column + 1) << ":\n";
 
 	string_view text = _ref.text;
 

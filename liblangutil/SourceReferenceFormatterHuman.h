@@ -24,6 +24,7 @@
 #include <liblangutil/SourceReferenceFormatter.h> // SourceReferenceFormatterBase
 
 #include <libsolutil/AnsiColorized.h>
+#include <libsolutil/hyperlink.h>
 
 #include <ostream>
 #include <sstream>
@@ -35,8 +36,8 @@ namespace solidity::langutil
 class SourceReferenceFormatterHuman: public SourceReferenceFormatter
 {
 public:
-	SourceReferenceFormatterHuman(std::ostream& _stream, bool _colored, bool _withErrorIds):
-		SourceReferenceFormatter{_stream}, m_colored{_colored}, m_withErrorIds(_withErrorIds)
+	SourceReferenceFormatterHuman(std::ostream& _stream, bool _colored, bool _withErrorIds, bool _hyperlinks):
+		SourceReferenceFormatter{_stream}, m_colored{_colored}, m_withErrorIds(_withErrorIds), m_hyperlink{_hyperlinks}
 	{}
 
 	void printSourceLocation(SourceReference const& _ref) override;
@@ -47,12 +48,13 @@ public:
 		util::Exception const& _exception,
 		std::string const& _name,
 		bool _colored = false,
-		bool _withErrorIds = false
+		bool _withErrorIds = false,
+		bool _hyperlinks = false
 	)
 	{
 		std::ostringstream errorOutput;
 
-		SourceReferenceFormatterHuman formatter(errorOutput, _colored, _withErrorIds);
+		SourceReferenceFormatterHuman formatter(errorOutput, _colored, _withErrorIds, _hyperlinks);
 		formatter.printExceptionInformation(_exception, _name);
 		return errorOutput.str();
 	}
@@ -69,6 +71,7 @@ private:
 private:
 	bool m_colored;
 	bool m_withErrorIds;
+	util::Hyperlink m_hyperlink;
 };
 
 }
