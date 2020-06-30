@@ -59,13 +59,13 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	);
 
 	// Parse protobuf mutated YUL code
-	if (!stack.parseAndAnalyze("source", yul_source))
-		return;
-
-	yulAssert(stack.errors().empty(), "Parsed successfully but had errors.");
-
-	if (!stack.parserResult()->code || !stack.parserResult()->analysisInfo)
-		return;
+	if (
+		!stack.parseAndAnalyze("source", yul_source) ||
+		!stack.parserResult()->code ||
+		!stack.parserResult()->analysisInfo ||
+		!Error::containsOnlyWarnings(stack.errors())
+	)
+		yulAssert(false, "Proto fuzzer generated malformed program");
 
 	// Optimize
 	stack.optimize();
