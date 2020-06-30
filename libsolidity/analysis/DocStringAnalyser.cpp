@@ -92,21 +92,7 @@ bool DocStringAnalyser::visit(VariableDeclaration const& _variable)
 		if (_variable.isPublic())
 			parseDocStrings(_variable, _variable.annotation(), validPublicTags, "public state variables");
 		else
-		{
 			parseDocStrings(_variable, _variable.annotation(), validNonPublicTags, "non-public state variables");
-			if (_variable.annotation().docTags.count("notice") > 0)
-				m_errorReporter.warning(
-					7816_error, _variable.documentation()->location(),
-					"Documentation tag on non-public state variables will be disallowed in 0.7.0. "
-					"You will need to use the @dev tag explicitly."
-				);
-		}
-		if (_variable.annotation().docTags.count("title") > 0 || _variable.annotation().docTags.count("author") > 0)
-			m_errorReporter.warning(
-				8532_error, _variable.documentation()->location(),
-				"Documentation tag @title and @author is only allowed on contract definitions. "
-				"It will be disallowed in 0.7.0."
-			);
 
 		if (_variable.annotation().docTags.empty())
 			copyMissingTags(_variable.annotation(), _variable.annotation().baseFunctions);
