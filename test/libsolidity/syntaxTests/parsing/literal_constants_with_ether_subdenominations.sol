@@ -1,15 +1,16 @@
-contract c {
+contract C {
     function f() public
     {
          a = 1 wei;
          b = 2 szabo;
          c = 3 finney;
-         b = 4 ether;
+         d = 4 ether;
+         e = 5 gwei;
     }
     uint256 a;
     uint256 b;
     uint256 c;
     uint256 d;
+    uint256 e;
 }
 // ----
-// Warning 2519: (170-179): This declaration shadows an existing declaration.

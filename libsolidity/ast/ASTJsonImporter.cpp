@@ -1002,6 +1002,8 @@ Literal::SubDenomination ASTJsonImporter::subdenomination(Json::Value const& _no
 
 	if (subDenStr == "wei")
 		return Literal::SubDenomination::Wei;
+	else if (subDenStr == "gwei")
+		return Literal::SubDenomination::Gwei;
 	else if (subDenStr == "szabo")
 		return Literal::SubDenomination::Szabo;
 	else if (subDenStr == "finney")

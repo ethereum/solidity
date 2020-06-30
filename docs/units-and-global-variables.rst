@@ -7,11 +7,12 @@ Units and Globally Available Variables
 Ether Units
 ===========
 
-A literal number can take a suffix of ``wei``, ``finney``, ``szabo`` or ``ether`` to specify a subdenomination of Ether, where Ether numbers without a postfix are assumed to be Wei.
+A literal number can take a suffix of ``wei``, ``gwei``, ``finney``, ``szabo`` or ``ether`` to specify a subdenomination of Ether, where Ether numbers without a postfix are assumed to be Wei.
 
 ::
 
     assert(1 wei == 1);
+    assert(1 gwei == 1e9);
     assert(1 szabo == 1e12);
     assert(1 finney == 1e15);
     assert(1 ether == 1e18);

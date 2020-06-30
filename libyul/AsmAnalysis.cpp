@@ -301,10 +301,15 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
 	{
 		Expression const& arg = _funCall.arguments[i - 1];
+		bool isLiteralArgument = needsLiteralArguments && (*needsLiteralArguments)[i - 1];
+		bool isStringLiteral = holds_alternative<Literal>(arg) && get<Literal>(arg).kind == LiteralKind::String;
 
-		argTypes.emplace_back(expectExpression(arg));
+		if (isLiteralArgument && isStringLiteral)
+			argTypes.emplace_back(expectUnlimitedStringLiteral(get<Literal>(arg)));
+		else
+			argTypes.emplace_back(expectExpression(arg));
 
-		if (needsLiteralArguments && (*needsLiteralArguments)[i - 1])
+		if (isLiteralArgument)
 		{
 			if (!holds_alternative<Literal>(arg))
 				m_errorReporter.typeError(
@@ -433,6 +438,14 @@ YulString AsmAnalyzer::expectExpression(Expression const& _expr)
 	return types.empty() ? m_dialect.defaultType : types.front();
 }
 
+YulString AsmAnalyzer::expectUnlimitedStringLiteral(Literal const& _literal)
+{
+	yulAssert(_literal.kind == LiteralKind::String, "");
+	yulAssert(m_dialect.validTypeForLiteral(LiteralKind::String, _literal.value, _literal.type), "");
+
+	return {_literal.type};
+}
+
 void AsmAnalyzer::expectBoolExpression(Expression const& _expr)
 {
 	YulString type = expectExpression(_expr);
@@ -531,7 +544,7 @@ void AsmAnalyzer::expectType(YulString _expectedType, YulString _givenType, Sour
 bool AsmAnalyzer::warnOnInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
 {
 	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
-	if (builtin)
+	if (builtin && builtin->instruction.has_value())
 		return warnOnInstructions(builtin->instruction.value(), _location);
 	else
 		return false;
