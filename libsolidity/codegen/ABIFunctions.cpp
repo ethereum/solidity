@@ -860,8 +860,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 		for (auto const& member: _to.members(nullptr))
 		{
 			solAssert(member.type, "");
-			if (!member.type->canLiveOutsideStorage())
-				continue;
+			solAssert(!member.type->containsNestedMapping(), "");
 			TypePointer memberTypeTo = member.type->fullEncodingType(_options.encodeAsLibraryTypes, true, false);
 			solUnimplementedAssert(memberTypeTo, "Encoding type \"" + member.type->toString() + "\" not yet implemented.");
 			auto memberTypeFrom = _from.memberType(member.name);
@@ -1340,7 +1339,7 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 		for (auto const& member: _type.members(nullptr))
 		{
 			solAssert(member.type, "");
-			solAssert(member.type->canLiveOutsideStorage(), "");
+			solAssert(!member.type->containsNestedMapping(), "");
 			auto decodingType = member.type->decodingType();
 			solAssert(decodingType, "");
 			bool dynamic = decodingType->isDynamicallyEncoded();

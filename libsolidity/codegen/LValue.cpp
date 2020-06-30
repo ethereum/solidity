@@ -355,13 +355,13 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				structType.structDefinition() == sourceType.structDefinition(),
 				"Struct assignment with conversion."
 			);
+			solAssert(!structType.containsNestedMapping(), "");
 			solAssert(sourceType.location() != DataLocation::CallData, "Structs in calldata not supported.");
 			for (auto const& member: structType.members(nullptr))
 			{
 				// assign each member that can live outside of storage
 				TypePointer const& memberType = member.type;
-				if (!memberType->canLiveOutsideStorage())
-					continue;
+				solAssert(memberType->nameable(), "");
 				TypePointer sourceMemberType = sourceType.memberType(member.name);
 				if (sourceType.location() == DataLocation::Storage)
 				{

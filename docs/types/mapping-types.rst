@@ -26,6 +26,7 @@ are allowed for state variables, as storage reference types
 in functions, or as parameters for library functions.
 They cannot be used as parameters or return parameters
 of contract functions that are publicly visible.
+These restrictions are also true for arrays and structs that contain mappings.
 
 You can mark state variables of mapping type as ``public`` and Solidity creates a
 :ref:`getter <visibility-and-getters>` for you. The ``_KeyType`` becomes a parameter for the getter.
