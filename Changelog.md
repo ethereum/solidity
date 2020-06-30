@@ -2,6 +2,7 @@
 
 Breaking changes:
  * Type Checker: Disallow virtual for library functions.
+ * Constructors should not have visibility.
  * Deprecated dot syntax for `value` and `gas`.
  * Deprecated the identifier `now`.
  * JSON AST: Removes members with ``null`` value from JSON output.

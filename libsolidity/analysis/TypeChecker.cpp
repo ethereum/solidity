@@ -1922,6 +1922,30 @@ void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
+	if (!_function.noVisibilitySpecified())
+	{
+		auto const& contract = dynamic_cast<ContractDefinition const&>(*_function.scope());
+		if (_function.visibility() != Visibility::Public && _function.visibility() != Visibility::Internal)
+			m_errorReporter.typeError(9239_error, _function.location(), "Constructor cannot have visibility.");
+		else if (_function.isPublic() && contract.abstract())
+			m_errorReporter.declarationError(
+				8295_error,
+				_function.location(),
+				"Abstract contracts cannot have public constructors. Remove the \"public\" keyword to fix this."
+			);
+		else if (!_function.isPublic() && !contract.abstract())
+			m_errorReporter.declarationError(
+				1845_error,
+				_function.location(),
+				"Non-abstract contracts cannot have internal constructors. Remove the \"internal\" keyword and make the contract abstract to fix this."
+			);
+		else
+			m_errorReporter.warning(
+				2462_error,
+				_function.location(),
+				"Visibility for constructor is ignored. If you want the contract to be non-deployable, making it \"abstract\" is sufficient."
+			);
+	}
 }
 
 void TypeChecker::typeCheckABIEncodeFunctions(

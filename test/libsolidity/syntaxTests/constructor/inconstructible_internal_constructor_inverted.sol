@@ -6,8 +6,8 @@ contract B {
 		a = new A(address(this));
 	}
 }
-abstract contract A {
-	constructor(address) {}
+contract A {
+	constructor(address) internal {}
 }
 // ----
-// TypeError 4614: (134-139): Cannot instantiate an abstract contract.
+// DeclarationError 1845: (175-207): Non-abstract contracts cannot have internal constructors. Remove the "internal" keyword and make the contract abstract to fix this.
