@@ -42,10 +42,6 @@ The following example shows a contract and a function using all available tags.
 
 .. note::
 
-  NatSpec currently does NOT apply to public state variables (see
-  `solidity#3418 <https://github.com/ethereum/solidity/issues/3418>`__),
-  even if they are declared public and therefore do affect the ABI.
-
   The Solidity compiler only interprets tags if they are external or
   public. You are welcome to use similar comments for your internal and
   private functions, but those will not be parsed.
@@ -60,7 +56,6 @@ The following example shows a contract and a function using all available tags.
     /// @notice You can use this contract for only the most basic simulation
     /// @dev All function calls are currently implemented without side effects
     contract Tree {
-        /// @author Mary A. Botanist
         /// @notice Calculate tree age in years, rounded up, for live trees
         /// @dev The Alexandr N. Tetearing algorithm could increase precision
         /// @param rings The number of rings from dendrochronological sample
@@ -84,7 +79,7 @@ in the same way as if it were tagged with ``@notice``.
 Tag                                                                                         Context
 =========== =============================================================================== =============================
 ``@title``  A title that should describe the contract/interface                             contract, interface
-``@author`` The name of the author                                                          contract, interface, function
+``@author`` The name of the author                                                          contract, interface
 ``@notice`` Explain to an end user what this does                                           contract, interface, function, public state variable, event
 ``@dev``    Explain to a developer any extra details                                        contract, interface, function, state variable, event
 ``@param``  Documents a parameter just like in doxygen (must be followed by parameter name) function, event
@@ -127,9 +122,11 @@ documentation and you may read more at
 Inheritance Notes
 -----------------
 
-Currently it is undefined whether a contract with a function having no
-NatSpec will inherit the NatSpec of a parent contract/interface for that
-same function.
+Functions without NatSpec will automatically inherit the documentation of their
+base function. Exceptions to this are:
+
+ * When the parameter names are different.
+ * When there is more than one base function.
 
 .. _header-output:
 
@@ -193,7 +190,6 @@ file should also be produced and should look like this:
       {
         "age(uint256)" :
         {
-          "author" : "Mary A. Botanist",
           "details" : "The Alexandr N. Tetearing algorithm could increase precision",
           "params" :
           {
