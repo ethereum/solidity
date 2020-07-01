@@ -3,4 +3,4 @@ abstract contract C {
     function vote(uint id) public {}
 }
 // ----
-// DocstringParsingError 9222: End of tag @param not found
+// DocstringParsingError 3335: No param name given
