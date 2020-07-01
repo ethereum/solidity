@@ -404,7 +404,7 @@ void CompilerContext::appendInlineAssembly(
 			stackDiff -= 1;
 		if (stackDiff < 1 || stackDiff > 16)
 			BOOST_THROW_EXCEPTION(
-				CompilerError() <<
+				StackTooDeepError() <<
 				errinfo_sourceLocation(_identifier.location) <<
 				util::errinfo_comment("Stack too deep (" + to_string(stackDiff) + "), try removing local variables.")
 			);
