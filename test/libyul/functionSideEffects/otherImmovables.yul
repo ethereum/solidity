@@ -5,8 +5,8 @@
     function h() { invalid() }
 }
 // ----
-// : movable, sideEffectFree, sideEffectFreeIfNoMSize
-// a: sideEffectFree, sideEffectFreeIfNoMSize
-// f: sideEffectFree, sideEffectFreeIfNoMSize
+// : movable, movable apart from effects, can be removed, can be removed if no msize
+// a: can be removed, can be removed if no msize
+// f: can be removed, can be removed if no msize
 // g:
 // h:

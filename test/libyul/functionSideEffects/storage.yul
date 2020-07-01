@@ -5,8 +5,8 @@
     function h() { pop(sload(0))}
 }
 // ----
-// : movable, sideEffectFree, sideEffectFreeIfNoMSize
-// a: invalidatesStorage
-// f: invalidatesStorage
-// g: invalidatesStorage, invalidatesMemory
-// h: sideEffectFree, sideEffectFreeIfNoMSize
+// : movable, movable apart from effects, can be removed, can be removed if no msize
+// a: writes storage
+// f: writes storage
+// g: writes other state, writes storage, writes memory
+// h: movable apart from effects, can be removed, can be removed if no msize, reads storage

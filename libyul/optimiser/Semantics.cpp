@@ -106,8 +106,9 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 	for (auto const& function: _directCallGraph.functionsWithLoops + _directCallGraph.recursiveFunctions())
 	{
 		ret[function].movable = false;
-		ret[function].sideEffectFree = false;
-		ret[function].sideEffectFreeIfNoMSize = false;
+		ret[function].canBeRemoved = false;
+		ret[function].canBeRemovedIfNoMSize = false;
+		ret[function].cannotLoop = false;
 	}
 
 	for (auto const& call: _directCallGraph.functionCalls)
