@@ -593,10 +593,10 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 		return;
 
 	auto preCallState = currentStateVariables();
-	bool noStateChanges = kind == FunctionType::Kind::BareStaticCall ||
+	bool usesStaticCall = kind == FunctionType::Kind::BareStaticCall ||
 		function->stateMutability() == StateMutability::Pure ||
 		function->stateMutability() == StateMutability::View;
-	if (!noStateChanges)
+	if (!usesStaticCall)
 		for (auto const* var: m_stateVariables)
 			m_context.variable(*var)->increaseIndex();
 
