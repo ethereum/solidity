@@ -96,6 +96,9 @@ void FuzzerUtil::testCompiler(string const& _input, bool _optimize)
 	catch (UnimplementedFeatureError const&)
 	{
 	}
+	catch (StackTooDeepError const&)
+	{
+	}
 }
 
 void FuzzerUtil::runCompiler(string const& _input, bool _quiet)

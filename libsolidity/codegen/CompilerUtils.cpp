@@ -455,7 +455,11 @@ void CompilerUtils::encodeToMemory(
 			// leave end_of_mem as dyn head pointer
 			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
 			dynPointers++;
-			solAssert((argSize + dynPointers) < 16, "Stack too deep, try using fewer variables.");
+			assertThrow(
+				(argSize + dynPointers) < 16,
+				StackTooDeepError,
+				"Stack too deep, try using fewer variables."
+			);
 		}
 		else
 		{
@@ -507,8 +511,9 @@ void CompilerUtils::encodeToMemory(
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
 			// copy tail pointer (=mem_end - mem_start) to memory
-			solAssert(
+			assertThrow(
 				(2 + dynPointers) <= 16,
+				StackTooDeepError,
 				"Stack too deep(" + to_string(2 + dynPointers) + "), try using fewer variables."
 			);
 			m_context << dupInstruction(2 + dynPointers) << Instruction::DUP2;
@@ -1290,7 +1295,7 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 	// move variable starting from its top end in the stack
 	if (stackPosition - size + 1 > 16)
 		BOOST_THROW_EXCEPTION(
-			CompilerError() <<
+			StackTooDeepError() <<
 			errinfo_sourceLocation(_variable.location()) <<
 			util::errinfo_comment("Stack too deep, try removing local variables.")
 		);
@@ -1300,7 +1305,11 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 
 void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
 {
-	solAssert(_stackDepth <= 16, "Stack too deep, try removing local variables.");
+	assertThrow(
+		_stackDepth <= 16,
+		StackTooDeepError,
+		"Stack too deep, try removing local variables."
+	);
 	for (unsigned i = 0; i < _itemSize; ++i)
 		m_context << dupInstruction(_stackDepth);
 }
@@ -1322,14 +1331,22 @@ void CompilerUtils::moveIntoStack(unsigned _stackDepth, unsigned _itemSize)
 
 void CompilerUtils::rotateStackUp(unsigned _items)
 {
-	solAssert(_items - 1 <= 16, "Stack too deep, try removing local variables.");
+	assertThrow(
+		_items - 1 <= 16,
+		StackTooDeepError,
+		"Stack too deep, try removing local variables."
+	);
 	for (unsigned i = 1; i < _items; ++i)
 		m_context << swapInstruction(_items - i);
 }
 
 void CompilerUtils::rotateStackDown(unsigned _items)
 {
-	solAssert(_items - 1 <= 16, "Stack too deep, try removing local variables.");
+	assertThrow(
+		_items - 1 <= 16,
+		StackTooDeepError,
+		"Stack too deep, try removing local variables."
+	);
 	for (unsigned i = 1; i < _items; ++i)
 		m_context << swapInstruction(i);
 }

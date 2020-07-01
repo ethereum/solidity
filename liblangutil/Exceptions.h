@@ -38,6 +38,7 @@ class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 
 struct CompilerError: virtual util::Exception {};
+struct StackTooDeepError: virtual CompilerError {};
 struct InternalCompilerError: virtual util::Exception {};
 struct FatalError: virtual util::Exception {};
 struct UnimplementedFeatureError: virtual util::Exception {};
