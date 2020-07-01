@@ -355,11 +355,9 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 	if (auto const* sourceUnit = dynamic_cast<SourceUnit const*>(&_scope))
 		usingForDirectives += ASTNode::filteredNodes<UsingForDirective>(sourceUnit->nodes());
 	else if (auto const* contract = dynamic_cast<ContractDefinition const*>(&_scope))
-	{
-		for (ContractDefinition const* contract: contract->annotation().linearizedBaseContracts)
-			usingForDirectives += contract->usingForDirectives();
-		usingForDirectives += ASTNode::filteredNodes<UsingForDirective>(contract->sourceUnit().nodes());
-	}
+		usingForDirectives +=
+			contract->usingForDirectives() +
+			ASTNode::filteredNodes<UsingForDirective>(contract->sourceUnit().nodes());
 	else
 		solAssert(false, "");
 

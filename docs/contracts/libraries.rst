@@ -30,9 +30,8 @@ not possible to destroy a library.
 Libraries can be seen as implicit base contracts of the contracts that use them.
 They will not be explicitly visible in the inheritance hierarchy, but calls
 to library functions look just like calls to functions of explicit base
-contracts (``L.f()`` if ``L`` is the name of the library). Furthermore,
-``internal`` functions of libraries are visible in all contracts, just as
-if the library were a base contract. Of course, calls to internal functions
+contracts (using qualified access like ``L.f()``).
+Of course, calls to internal functions
 use the internal calling convention, which means that all internal types
 can be passed and types :ref:`stored in memory <data-location>` will be passed by reference and not copied.
 To realize this in the EVM, code of internal library functions
