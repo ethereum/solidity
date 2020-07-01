@@ -4,7 +4,7 @@ contract C {
     function f(uint256 a) internal pure returns (S storage c) {
         assembly {
             switch a
-                default { c_slot := s_slot }
+                default { c.slot := s.slot }
         }
     }
 }

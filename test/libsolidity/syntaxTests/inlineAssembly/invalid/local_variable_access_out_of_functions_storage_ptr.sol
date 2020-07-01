@@ -3,7 +3,7 @@ contract test {
     function f() public {
         uint[] storage a = r;
         assembly {
-            function g() -> x { x := a_offset }
+            function g() -> x { x := a.offset }
         }
     }
 }

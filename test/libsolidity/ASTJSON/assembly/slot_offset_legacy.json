@@ -178,7 +178,7 @@
                         "valueSize": 1
                       }
                     ],
-                    "operations": "{\n    let x := s_offset\n    let y := mul(s_slot, 2)\n}"
+                    "operations": "{\n    let x := s.offset\n    let y := mul(s.slot, 2)\n}"
                   },
                   "children": [],
                   "id": 8,

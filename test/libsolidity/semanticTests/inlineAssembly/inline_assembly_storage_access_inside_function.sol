@@ -8,8 +8,8 @@ contract C {
         uint256 off2;
         assembly {
             function f() -> o1 {
-                sstore(z_slot, 7)
-                o1 := y_offset
+                sstore(z.slot, 7)
+                o1 := y.offset
             }
             off2 := f()
         }

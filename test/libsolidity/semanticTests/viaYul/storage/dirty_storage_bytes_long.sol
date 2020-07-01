@@ -2,8 +2,8 @@ contract C {
     bytes b;
     function f() public returns (bool correct) {
         assembly {
-            sstore(b_slot, 0x41)
-            mstore(0, b_slot)
+            sstore(b.slot, 0x41)
+            mstore(0, b.slot)
             sstore(keccak256(0, 0x20), "deadbeefdeadbeefdeadbeefdeadbeef")
         }
         byte s = b[31];

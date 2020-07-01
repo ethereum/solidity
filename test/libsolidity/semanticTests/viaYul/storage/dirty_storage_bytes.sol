@@ -2,7 +2,7 @@ contract C {
     bytes b;
     function f() public returns (bool correct) {
         assembly {
-            sstore(b_slot, or("deadbeef", 0x08))
+            sstore(b.slot, or("deadbeef", 0x08))
         }
         byte s = b[3];
         uint r;

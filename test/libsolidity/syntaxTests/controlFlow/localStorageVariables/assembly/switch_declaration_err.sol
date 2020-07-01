@@ -5,7 +5,7 @@ contract C {
         S storage c;
         assembly {
             switch a
-            case 0 { c_slot := s_slot }
+            case 0 { c.slot := s.slot }
         }
         c;
     }
@@ -13,8 +13,8 @@ contract C {
         S storage c;
         assembly {
             switch flag
-            case 0 { c_slot := s_slot }
-            case 1 { c_slot := s_slot }
+            case 0 { c.slot := s.slot }
+            case 1 { c.slot := s.slot }
         }
         c;
     }
@@ -22,7 +22,7 @@ contract C {
         S storage c;
         assembly {
             switch a
-            case 0 { c_slot := s_slot }
+            case 0 { c.slot := s.slot }
             default { return(0,0) }
         }
         c;
