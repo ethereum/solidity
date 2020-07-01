@@ -27,3 +27,5 @@ contract C {
 		assert(sig_1 == sig_2);
 	}
 }
+// ----
+// Warning 4661: (438-460): Assertion violation happens here

@@ -592,6 +592,9 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	if (!function)
 		return;
 
+	for (auto var: function->returnParameters())
+		m_context.variable(*var)->increaseIndex();
+
 	auto preCallState = currentStateVariables();
 	bool usesStaticCall = kind == FunctionType::Kind::BareStaticCall ||
 		function->stateMutability() == StateMutability::Pure ||
@@ -602,7 +605,6 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 
 	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(preCallState + currentStateVariables());
 	m_context.addAssertion(nondet);
-	m_context.addAssertion(predicate(_funCall));
 
 	m_context.addAssertion(m_error.currentValue() == 0);
 }

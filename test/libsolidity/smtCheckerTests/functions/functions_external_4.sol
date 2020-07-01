@@ -16,3 +16,4 @@ contract D
 	}
 }
 // ----
+// Warning 4661: (191-206): Assertion violation happens here
