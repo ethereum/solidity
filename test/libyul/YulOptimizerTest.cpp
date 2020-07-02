@@ -255,6 +255,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "ssaTransform")
 	{
 		disambiguate();
+		ForLoopInitRewriter::run(*m_context, *m_ast);
 		SSATransform::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "redundantAssignEliminator")
