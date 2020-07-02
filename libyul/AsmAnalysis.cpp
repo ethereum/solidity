@@ -264,7 +264,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		if (f->literalArguments)
 			needsLiteralArguments = &f->literalArguments.value();
 
-		warnOnInstructions(_funCall);
+		validateInstructions(_funCall);
 	}
 	else if (!m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
 		[&](Scope::Variable const&)
@@ -282,7 +282,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		}
 	}))
 	{
-		if (!warnOnInstructions(_funCall))
+		if (!validateInstructions(_funCall))
 			m_errorReporter.declarationError(4619_error, _funCall.functionName.location, "Function not found.");
 		yulAssert(!watcher.ok(), "Expected a reported error.");
 	}
@@ -541,16 +541,16 @@ void AsmAnalyzer::expectType(YulString _expectedType, YulString _givenType, Sour
 		);
 }
 
-bool AsmAnalyzer::warnOnInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
+bool AsmAnalyzer::validateInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
 {
 	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
 	if (builtin && builtin->instruction.has_value())
-		return warnOnInstructions(builtin->instruction.value(), _location);
+		return validateInstructions(builtin->instruction.value(), _location);
 	else
 		return false;
 }
 
-bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation const& _location)
+bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocation const& _location)
 {
 	// We assume that returndatacopy, returndatasize and staticcall are either all available
 	// or all not available.

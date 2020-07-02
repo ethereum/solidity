@@ -110,12 +110,12 @@ private:
 	Scope& scope(Block const* _block);
 	void expectValidType(YulString _type, langutil::SourceLocation const& _location);
 	void expectType(YulString _expectedType, YulString _givenType, langutil::SourceLocation const& _location);
-	bool warnOnInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
-	bool warnOnInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
 
-	bool warnOnInstructions(FunctionCall const& _functionCall)
+	bool validateInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
+	bool validateInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
+	bool validateInstructions(FunctionCall const& _functionCall)
 	{
-		return warnOnInstructions(_functionCall.functionName.name.str(), _functionCall.functionName.location);
+		return validateInstructions(_functionCall.functionName.name.str(), _functionCall.functionName.location);
 	}
 
 	yul::ExternalIdentifierAccess::Resolver m_resolver;
