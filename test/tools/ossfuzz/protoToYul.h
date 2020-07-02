@@ -65,6 +65,12 @@ public:
 		return m_evmVersion;
 	}
 
+	/// Returns optimizer step string
+	std::string optStepString()
+	{
+		return m_optimizerStep;
+	}
+
 private:
 	void visit(BinaryOp const&);
 
@@ -291,6 +297,9 @@ private:
 	/// enum of type Program_Version
 	solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
 
+	/// Returns string representation of an optimization step.
+	std::string optStepToString(Program_OptimizerStep const& _x);
+
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
 	{
@@ -390,5 +399,7 @@ private:
 	bool m_forInitScopeExtEnabled;
 	/// Object that holds the targeted evm version specified by protobuf input
 	solidity::langutil::EVMVersion m_evmVersion;
+	/// Optimizer step
+	std::string m_optimizerStep;
 };
 }

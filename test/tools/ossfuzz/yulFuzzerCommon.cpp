@@ -63,7 +63,7 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	}
 	catch (ExpressionNestingLimitReached const&)
 	{
-		reason = TerminationReason::ExpresionNestingLimitReached;
+		reason = TerminationReason::ExpressionNestingLimitReached;
 	}
 	catch (ExplicitlyTerminated const&)
 	{

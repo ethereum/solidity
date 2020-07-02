@@ -19,6 +19,7 @@
 #include <fstream>
 
 #include <test/tools/ossfuzz/yulProto.pb.h>
+#include <test/tools/ossfuzz/YulOptimizerStepTest.h>
 #include <test/tools/fuzzer_common.h>
 #include <test/tools/ossfuzz/protoToYul.h>
 #include <src/libfuzzer/libfuzzer_macro.h>
@@ -59,6 +60,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	ProtoConverter converter;
 	string yul_source = converter.programToString(_input);
 	EVMVersion version = converter.version();
+	string optStep = converter.optStepString();
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
@@ -91,24 +93,29 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	ostringstream os1;
 	ostringstream os2;
+	auto const& evmDialect = EVMDialect::strictAssemblyForEVMObjects(version);
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
 		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(version)
+		evmDialect
 	);
 
 	if (
 		termReason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
-		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached ||
-		termReason == yulFuzzerUtil::TerminationReason::ExpresionNestingLimitReached
+		termReason == yulFuzzerUtil::TerminationReason::ExpressionNestingLimitReached ||
+		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached
 	)
-		return;
+        return;
 
-	stack.optimize();
+	YulOptimizerStepTest optimizerStepTest(
+		stack.parserResult(),
+		evmDialect,
+		optStep
+	);
 	termReason = yulFuzzerUtil::interpret(
 		os2,
-		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(version)
+		optimizerStepTest.run(),
+		evmDialect
 	);
 	if (
 		termReason == yulFuzzerUtil::TerminationReason::StepLimitReached ||

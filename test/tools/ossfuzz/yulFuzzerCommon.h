@@ -28,7 +28,7 @@ struct yulFuzzerUtil
 		ExplicitlyTerminated,
 		StepLimitReached,
 		TraceLimitReached,
-		ExpresionNestingLimitReached,
+		ExpressionNestingLimitReached,
 		None
 	};
 

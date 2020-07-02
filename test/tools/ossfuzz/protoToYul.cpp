@@ -1905,6 +1905,87 @@ void ProtoConverter::buildObjectScopeTree(Object const& _x)
 	m_objectScope.emplace(objectName, node);
 }
 
+string ProtoConverter::optStepToString(Program_OptimizerStep const& _x)
+{
+	switch (_x)
+	{
+	case Program_OptimizerStep_FULLSUITE:
+		return "fullSuite";
+	case Program_OptimizerStep_DISAMBIGUATOR:
+		return "disambiguator";
+	case Program_OptimizerStep_NAMEDISPLACER:
+		return "nameDisplacer";
+	case Program_OptimizerStep_BLOCKFLATTENER:
+		return "blockFlattener";
+	case Program_OptimizerStep_CONSTANTOPTIMISER:
+		return "constantOptimiser";
+	case Program_OptimizerStep_VARDECLINITIALIZER:
+		return "varDeclInitializer";
+	case Program_OptimizerStep_VARNAMECLEANER:
+		return "varNameCleaner";
+	case Program_OptimizerStep_FORLOOPCONDITIONINTOBODY:
+		return "forLoopConditionIntoBody";
+	case Program_OptimizerStep_FORLOOPINITREWRITER:
+		return "forLoopInitRewriter";
+	case Program_OptimizerStep_COMMONSUBEXPRESSIONELIMINATOR:
+		return "commonSubexpressionEliminator";
+	case Program_OptimizerStep_CONDITIONALUNSIMPLIFIER:
+		return "conditionalUnsimplifier";
+	case Program_OptimizerStep_CONDITIONALSIMPLIFIER:
+		return "conditionalSimplifier";
+	case Program_OptimizerStep_EXPRESSIONSPLITTER:
+		return "expressionSplitter";
+	case Program_OptimizerStep_EXPRESSIONJOINER:
+		return "expressionJoiner";
+	case Program_OptimizerStep_SPLITJOIN:
+		return "splitJoin";
+	case Program_OptimizerStep_FUNCTIONGROUPER:
+		return "functionGrouper";
+	case Program_OptimizerStep_FUNCTIONHOISTER:
+		return "functionHoister";
+	case Program_OptimizerStep_EXPRESSIONINLINER:
+		return "expressionInliner";
+	case Program_OptimizerStep_FULLINLINER:
+		return "fullInliner";
+	case Program_OptimizerStep_REMATERIALISER:
+		return "rematerialiser";
+	case Program_OptimizerStep_EXPRESSIONSIMPLIFIER:
+		return "expressionSimplifier";
+	case Program_OptimizerStep_FULLSIMPLIFY:
+		return "fullSimplify";
+	case Program_OptimizerStep_UNUSEDPRUNER:
+		return "unusedPruner";
+	case Program_OptimizerStep_CIRCULARREFERENCESPRUNER:
+		return "circularReferencesPruner";
+	case Program_OptimizerStep_DEADCODEELIMINATOR:
+		return "deadCodeEliminator";
+	case Program_OptimizerStep_SSATRANSFORM:
+		return "ssaTransform";
+	case Program_OptimizerStep_REDUNDANTASSIGNELIMINATOR:
+		return "redundantAssignEliminator";
+	case Program_OptimizerStep_SSAPLUSCLEANUP:
+		return "ssaPlusCleanup";
+	case Program_OptimizerStep_LOADRESOLVER:
+		return "loadResolver";
+	case Program_OptimizerStep_LOOPINVARIANTCODEMOTION:
+		return "loopInvariantCodeMotion";
+	case Program_OptimizerStep_CONTROLFLOWSIMPLIFIER:
+		return "controlFlowSimplifier";
+	case Program_OptimizerStep_STRUCTURALSIMPLIFIER:
+		return "structuralSimplifier";
+	case Program_OptimizerStep_EQUIVALENTFUNCTIONCOMBINER:
+		return "equivalentFunctionCombiner";
+	case Program_OptimizerStep_SSAREVERSER:
+		return "ssaReverser";
+	case Program_OptimizerStep_SSAANDBACK:
+		return "ssaAndBack";
+	case Program_OptimizerStep_STACKCOMPRESSION:
+		return "stackCompressor";
+	default:
+		return "fullSuite";
+	}
+}
+
 void ProtoConverter::visit(Program const& _x)
 {
 	// Initialize input size
@@ -1912,6 +1993,9 @@ void ProtoConverter::visit(Program const& _x)
 
 	// Record EVM Version
 	m_evmVersion = evmVersionMapping(_x.ver());
+
+	// Record optimizer step
+	m_optimizerStep = optStepToString(_x.step());
 
 	// Program is either a Yul object or a block of
 	// statements.
