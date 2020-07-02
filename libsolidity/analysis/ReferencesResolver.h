@@ -88,6 +88,9 @@ private:
 	void operator()(yul::Identifier const& _identifier) override;
 	void operator()(yul::VariableDeclaration const& _varDecl) override;
 
+	/// Checks if the name contains a '.'.
+	void validateYulIdentifierName(yul::YulString _name, langutil::SourceLocation const& _location);
+
 	langutil::ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
 	langutil::EVMVersion m_evmVersion;
