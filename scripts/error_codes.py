@@ -56,14 +56,11 @@ def get_used_ids(file_names):
     return used_ids
 
 
-def get_id(available_ids, used_ids):
-    while len(available_ids) > 0:
-        k = random.randrange(len(available_ids))
-        id = list(available_ids.keys())[k]
-        del available_ids[id]
-        if id not in used_ids:
-            return id
-    assert False, "Out of IDs"
+def get_next_id(available_ids):
+    assert len(available_ids) > 0, "Out of IDs"
+    next_id = random.choice(list(available_ids))
+    available_ids.remove(next_id)
+    return next_id
 
 
 def fix_ids_in_file(file_name, available_ids, used_ids):
@@ -80,7 +77,8 @@ def fix_ids_in_file(file_name, available_ids, used_ids):
         # incorrect id or id has a duplicate somewhere
         if not in_comment(source, m.start()) and (len(id) != 4 or id[0] == "0" or used_ids[id] > 1):
             assert id in used_ids
-            new_id = get_id(available_ids, used_ids)
+            new_id = get_next_id(available_ids)
+            assert new_id not in used_ids
             used_ids[id] -= 1
         else:
             new_id = id
@@ -97,7 +95,7 @@ def fix_ids_in_file(file_name, available_ids, used_ids):
 
 
 def fix_ids(used_ids, file_names):
-    available_ids = {str(id): None for id in range(1000, 10000)}
+    available_ids = {str(id) for id in range(1000, 10000)} - used_ids.keys()
     for file_name in file_names:
         fix_ids_in_file(file_name, available_ids, used_ids)
 
