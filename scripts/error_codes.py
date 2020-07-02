@@ -170,26 +170,29 @@ def examine_id_coverage(top_dir, used_ids):
 
 
 def main(argv):
-    # pylint: disable=too-many-branches, too-many-locals
+    # pylint: disable=too-many-branches, too-many-locals, too-many-statements
 
     check = False
     fix = False
-    noconfirm = False
+    no_confirm = False
     examine_coverage = False
-    opts, args = getopt.getopt(argv, "", ["check", "fix", "noconfirm", "examine-coverage"])
+    next = False
+    opts, args = getopt.getopt(argv, "", ["check", "fix", "no-confirm", "examine-coverage", "next"])
 
     for opt, arg in opts:
         if opt == '--check':
             check = True
         elif opt == "--fix":
             fix = True
-        elif opt == '--noconfirm':
-            noconfirm = True
+        elif opt == '--no-confirm':
+            no_confirm = True
         elif opt == '--examine-coverage':
             examine_coverage = True
+        elif opt == '--next':
+            next = True
 
-    if not check and not fix and not examine_coverage:
-        print("usage: python error_codes.py --check | --fix [--noconfirm] | --examine-coverage")
+    if [check, fix, examine_coverage, next].count(True) != 1:
+        print("usage: python error_codes.py --check | --fix [--no-confirm] | --examine-coverage | --next")
         exit(1)
 
     cwd = os.getcwd()
@@ -215,9 +218,19 @@ def main(argv):
 
     if examine_coverage:
         if not ok:
-            print("Incorrect IDs has to be fixed before applying --examine-coverage")
+            print("Incorrect IDs have to be fixed before applying --examine-coverage")
         res = examine_id_coverage(cwd, used_ids.keys())
         exit(res)
+
+    random.seed()
+
+    if next:
+        if not ok:
+            print("Incorrect IDs have to be fixed before applying --next")
+        available_ids = {str(id) for id in range(1000, 10000)} - used_ids.keys()
+        next_id = get_next_id(available_ids)
+        print(f"Next ID: {next_id}")
+        exit(0)
 
     if ok:
         print("No incorrect IDs found")
@@ -228,7 +241,7 @@ def main(argv):
 
     assert fix, "Unexpected state, should not come here without --fix"
 
-    if not noconfirm:
+    if not no_confirm:
         answer = input(
             "\nDo you want to fix incorrect IDs?\n"
             "Please commit current changes first, and review the results when the script finishes.\n"
@@ -239,7 +252,6 @@ def main(argv):
         if answer not in "yY":
             exit(1)
 
-    random.seed()
     fix_ids(used_ids, source_file_names)
     print("Fixing completed")
     exit(2)
