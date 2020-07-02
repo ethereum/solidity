@@ -10,6 +10,8 @@ Compiler Features:
  * Commandline Interface: Prevent some incompatible commandline options from being used together.
  * NatSpec: Support NatSpec comments on events.
  * Yul Optimizer: Store knowledge about storage / memory after ``a := sload(x)`` / ``a := mload(x)``.
+ * SMTChecker: Support external calls to unknown code.
+
 
 Bugfixes:
  * NatSpec: Do not consider ``////`` and ``/***`` as NatSpec comments.
