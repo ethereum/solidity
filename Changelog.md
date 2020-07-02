@@ -2,6 +2,8 @@
 
 Language Features:
  * General: Add unit denomination ``gwei``
+ * Yul: Support ``linkersymbol`` builtin in standalone assembly mode.
+ * Yul: Support using string literals exceeding 32 bytes as literal arguments for builtins.
 
 
 Compiler Features:
