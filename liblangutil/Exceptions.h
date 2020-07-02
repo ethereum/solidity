@@ -62,7 +62,7 @@ struct InvalidAstError: virtual util::Exception {};
  * They are passed as the first parameter of error reporting functions.
  * Suffix _error helps to find them in the sources.
  * The struct ErrorId prevents incidental calls like typeError(3141) instead of typeError(3141_error).
- * To create a new ID, one can add 0000_error and then run "python ./scripts/fix_error_ids.py"
+ * To create a new ID, one can add 0000_error and then run "python ./scripts/error_codes.py --fix"
  * from the root of the repo.
  */
 struct ErrorId

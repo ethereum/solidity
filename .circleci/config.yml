@@ -323,7 +323,7 @@ jobs:
       - checkout
       - run:
           name: Check for error codes
-          command: ./scripts/fix_error_ids.py --check-only
+          command: ./scripts/error_codes.py --check
 
   chk_pylint:
     docker:
