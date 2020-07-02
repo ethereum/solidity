@@ -349,6 +349,7 @@ TypePointer TypeProvider::forLiteral(Literal const& _literal)
 	case Token::Number:
 		return rationalNumber(_literal);
 	case Token::StringLiteral:
+	case Token::UnicodeStringLiteral:
 	case Token::HexStringLiteral:
 		return stringLiteral(_literal.value());
 	default:

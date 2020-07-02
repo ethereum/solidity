@@ -8,6 +8,7 @@ Breaking changes:
  * Parser: Disallow ``gwei`` as identifier.
  * Parser: Disallow dot syntax for ``value`` and ``gas``.
  * Parser: Disallow non-printable characters in string literals.
+ * Parser: Introduce Unicode string literals: ``unicode"😃"``.
  * Parser: NatSpec comments on variables are only allowed for public state variables.
  * Parser: Remove the ``finney`` and ``szabo`` denominations.
  * Parser: Remove the identifier ``now`` (replaced by ``block.timestamp``).

@@ -920,6 +920,8 @@ string ASTJsonConverter::literalTokenKind(Token _token)
 		return "number";
 	case Token::StringLiteral:
 		return "string";
+	case Token::UnicodeStringLiteral:
+		return "unicodeString";
 	case Token::HexStringLiteral:
 		return "hexString";
 	case Token::TrueLiteral:

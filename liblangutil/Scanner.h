@@ -229,7 +229,7 @@ private:
 	Token scanNumber(char _charSeen = 0);
 	std::tuple<Token, unsigned, unsigned> scanIdentifierOrKeyword();
 
-	Token scanString();
+	Token scanString(bool const _isUnicode);
 	Token scanHexString();
 	/// Scans a single line comment and returns its corrected end position.
 	size_t scanSingleLineDocComment();
