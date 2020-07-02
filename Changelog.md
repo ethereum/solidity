@@ -13,7 +13,7 @@ Breaking changes:
 
 Language Features:
  * Yul: Disallow EVM instruction `pc()`.
-
+ * Yul: Disallow consecutive and trailing dots in identifiers. Leading dots were already disallowed.
 
 Compiler Features:
 
