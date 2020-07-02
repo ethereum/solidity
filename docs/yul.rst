@@ -952,6 +952,20 @@ option.
 
 See :ref:`Using the Commandline Compiler <commandline-compiler>` for details about the Solidity linker.
 
+memoryguard
+^^^^^^^^^^^
+
+This function is available in the EVM dialect with objects. The caller of
+``let ptr := memoryguard(size)`` promises that they only use memory in either
+the range ``[0, size)`` or the unbounded range above ``ptr``. The Yul optimizer
+promises to only use the memory range ``[size, ptr)`` for its purposes.
+If the optimizer does not need to reserve any memory, it holds that ``ptr := size``.
+
+``memoryguard`` can be called multiple times, but needs to have the same literal as argument
+within one Yul subobject. If at least one ``memoryguard`` call is found in a subobject,
+the Yul optimiser will try to perform experimental steps like the stack limit evader,
+which attempts to move stack variables that would otherwise be unreachable
+to memory.
 
 .. _yul-object:
 

@@ -92,7 +92,7 @@ string IRGenerator::generate(
 	Whiskers t(R"(
 		object "<CreationObject>" {
 			code {
-				<memoryInit>
+				<memoryInitCreation>
 				<callValueCheck>
 				<?notLibrary>
 				<?constructorHasParams> let <constructorParams> := <copyConstructorArguments>() </constructorHasParams>
@@ -103,7 +103,7 @@ string IRGenerator::generate(
 			}
 			object "<RuntimeObject>" {
 				code {
-					<memoryInit>
+					<memoryInitRuntime>
 					<dispatch>
 					<runtimeFunctions>
 				}
@@ -118,7 +118,6 @@ string IRGenerator::generate(
 		m_context.registerImmutableVariable(*var);
 
 	t("CreationObject", IRNames::creationObject(_contract));
-	t("memoryInit", memoryInit());
 	t("notLibrary", !_contract.isLibrary());
 
 	FunctionDefinition const* constructor = _contract.constructor();
@@ -143,6 +142,7 @@ string IRGenerator::generate(
 	InternalDispatchMap internalDispatchMap = generateInternalDispatchFunctions();
 	t("functions", m_context.functionCollector().requestedFunctions());
 	t("subObjects", subObjectSources(m_context.subObjectsCreated()));
+	t("memoryInitCreation", memoryInit(!m_context.inlineAssemblySeen()));
 
 	resetContext(_contract);
 
@@ -158,6 +158,7 @@ string IRGenerator::generate(
 	generateInternalDispatchFunctions();
 	t("runtimeFunctions", m_context.functionCollector().requestedFunctions());
 	t("runtimeSubObjects", subObjectSources(m_context.subObjectsCreated()));
+	t("memoryInitRuntime", memoryInit(!m_context.inlineAssemblySeen()));
 	return t.render();
 }
 
@@ -651,16 +652,22 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 	return t.render();
 }
 
-string IRGenerator::memoryInit()
+string IRGenerator::memoryInit(bool _useMemoryGuard)
 {
 	// This function should be called at the beginning of the EVM call frame
 	// and thus can assume all memory to be zero, including the contents of
 	// the "zero memory area" (the position CompilerUtils::zeroPointer points to).
 	return
-		Whiskers{"mstore(<memPtr>, <freeMemoryStart>)"}
+		Whiskers{
+			_useMemoryGuard ?
+			"mstore(<memPtr>, memoryguard(<freeMemoryStart>))" :
+			"mstore(<memPtr>, <freeMemoryStart>)"
+		}
 		("memPtr", to_string(CompilerUtils::freeMemoryPointer))
-		("freeMemoryStart", to_string(CompilerUtils::generalPurposeMemoryStart + m_context.reservedMemory()))
-		.render();
+		(
+			"freeMemoryStart",
+			to_string(CompilerUtils::generalPurposeMemoryStart + m_context.reservedMemory())
+		).render();
 }
 
 void IRGenerator::resetContext(ContractDefinition const& _contract)

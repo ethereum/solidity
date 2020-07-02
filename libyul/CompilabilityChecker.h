@@ -33,22 +33,20 @@ namespace solidity::yul
 
 /**
  * Component that checks whether all variables are reachable on the stack and
- * returns a mapping from function name to the largest stack difference found
- * in that function (no entry present if that function is compilable).
+ * provides a mapping from function name to the largest stack difference found
+ * in that function (no entry present if that function is compilable), as well
+ * as the set of unreachable variables for each function.
  *
  * This only works properly if the outermost block is compilable and
  * functions are not nested. Otherwise, it might miss reporting some functions.
  *
  * Only checks the code of the object itself, does not descend into sub-objects.
  */
-class CompilabilityChecker
+struct CompilabilityChecker
 {
-public:
-	static std::map<YulString, int> run(
-		Dialect const& _dialect,
-		Object const& _object,
-		bool _optimizeStackAllocation
-	);
+	CompilabilityChecker(Dialect const& _dialect, Object const& _object, bool _optimizeStackAllocation);
+	std::map<YulString, std::set<YulString>> unreachableVariables;
+	std::map<YulString, int> stackDeficit;
 };
 
 }
