@@ -163,7 +163,8 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 			m_errorReporter.warning(
 				3408_error,
 				_variable.location(),
-				"Variable covers a large part of storage and thus makes collisions likely. "
+				"Variable " + util::escapeAndQuoteString(_variable.name()) +
+				" covers a large part of storage and thus makes collisions likely. "
 				"Either use mappings or dynamic arrays and allow their size to be increased only "
 				"in small quantities per transaction."
 			);
@@ -171,7 +172,8 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 			m_errorReporter.warning(
 				7325_error,
 				_variable.location(),
-				"Type " + type->canonicalName() + " has large size and thus makes collisions likely. "
+				"Type " + util::escapeAndQuoteString(type->canonicalName()) +
+				" has large size and thus makes collisions likely. "
 				"Either use mappings or dynamic arrays and allow their size to be increased only "
 				"in small quantities per transaction."
 			);
