@@ -187,9 +187,9 @@ smtutil::Expression ReasoningBasedSimplifier::encodeBuiltin(
 			return ~arguments.at(0);
 	case evmasm::Instruction::SHL:
 		if (m_useInt)
-			return bv2int(int2bv(arguments.at(0)) << arguments.at(1));
+			return bv2int(int2bv(arguments.at(1)) << int2bv(arguments.at(0)));
 		else
-			return arguments.at(0) << arguments.at(1);
+			return arguments.at(1) << arguments.at(0);
 	default:
 		break;
 	}
