@@ -101,7 +101,7 @@ smtutil::Expression ReasoningBasedSimplifier::encodeExpression(Expression const&
 				if (auto const* builtin = dialect->builtin(_functionCall.functionName.name))
 					if (builtin->instruction)
 						return encodeBuiltin(*builtin->instruction, _functionCall.arguments);
-			return newVariable();
+			return newRestrictedVariable();
 		},
 		[&](Identifier const& _identifier)
 		{
@@ -111,7 +111,7 @@ smtutil::Expression ReasoningBasedSimplifier::encodeExpression(Expression const&
 			)
 				return m_variables.at(_identifier.name);
 			else
-				return newVariable();
+				return newRestrictedVariable();
 		},
 		[&](Literal const& _literal)
 		{
@@ -204,7 +204,7 @@ smtutil::Expression ReasoningBasedSimplifier::encodeBuiltin(
 	default:
 		break;
 	}
-	return newVariable();
+	return newRestrictedVariable();
 }
 
 smtutil::Expression ReasoningBasedSimplifier::int2bv(smtutil::Expression _arg)
@@ -220,6 +220,14 @@ smtutil::Expression ReasoningBasedSimplifier::bv2int(smtutil::Expression _arg)
 smtutil::Expression ReasoningBasedSimplifier::newVariable()
 {
 	return m_solver->newVariable(uniqueName(), defaultSort());
+}
+
+smtutil::Expression ReasoningBasedSimplifier::newRestrictedVariable()
+{
+	smtutil::Expression var = newVariable();
+	if (m_useInt)
+		m_solver->addAssertion(0 <= var && var < smtutil::Expression(bigint(1) << 256));
+	return var;
 }
 
 string ReasoningBasedSimplifier::uniqueName()
@@ -247,9 +255,8 @@ smtutil::Expression ReasoningBasedSimplifier::wrap(smtutil::Expression _value)
 {
 	if (!m_useInt)
 		return std::move(_value);
-	smtutil::Expression rest = newVariable();
+	smtutil::Expression rest = newRestrictedVariable();
 	smtutil::Expression multiplier = newVariable();
-	m_solver->addAssertion(0 <= rest && rest < smtutil::Expression(bigint(1) << 256));
 	m_solver->addAssertion(_value == multiplier * smtutil::Expression(bigint(1) << 256) + rest);
 	return rest;
 }

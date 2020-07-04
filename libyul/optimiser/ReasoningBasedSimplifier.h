@@ -68,6 +68,7 @@ private:
 	smtutil::Expression bv2int(smtutil::Expression _arg);
 
 	smtutil::Expression newVariable();
+	smtutil::Expression newRestrictedVariable();
 	std::string uniqueName();
 
 	std::shared_ptr<smtutil::Sort> defaultSort() const;
