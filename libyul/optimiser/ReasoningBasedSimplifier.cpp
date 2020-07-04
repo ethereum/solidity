@@ -172,7 +172,18 @@ smtutil::Expression ReasoningBasedSimplifier::encodeBuiltin(
 	case evmasm::Instruction::AND:
 		// TODO we could check if the integer value is either zero or one and optimize for that
 		if (m_useInt)
-			return bv2int(int2bv(arguments.at(0)) & int2bv(arguments.at(1)));
+		{
+			return smtutil::Expression::ite(
+				(arguments.at(0) == 0 || arguments.at(0) == 1) &&
+				(arguments.at(1) == 0 || arguments.at(1) == 1),
+				smtutil::Expression::ite(
+					arguments.at(0) == 1 && arguments.at(1) == 1,
+					constantValue(1),
+					constantValue(0)
+				),
+				bv2int(int2bv(arguments.at(0)) & int2bv(arguments.at(1)))
+			);
+		}
 		else
 			return arguments.at(0) & arguments.at(1);
 	case evmasm::Instruction::OR:
