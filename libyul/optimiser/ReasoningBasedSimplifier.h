@@ -29,6 +29,7 @@ namespace solidity::smtutil
 {
 class SolverInterface;
 class Expression;
+struct Sort;
 }
 
 namespace solidity::yul
@@ -69,11 +70,16 @@ private:
 	smtutil::Expression newVariable();
 	std::string uniqueName();
 
+	std::shared_ptr<smtutil::Sort> defaultSort() const;
+	smtutil::Expression constantValue(size_t _value);
+	smtutil::Expression wrap(smtutil::Expression _value);
+
 	Dialect const& m_dialect;
 	std::set<YulString> const& m_ssaVariables;
 	std::unique_ptr<smtutil::SolverInterface> m_solver;
 	std::map<YulString, smtutil::Expression> m_variables;
 
+	bool m_useInt = true;
 	size_t m_varCounter = 0;
 };
 

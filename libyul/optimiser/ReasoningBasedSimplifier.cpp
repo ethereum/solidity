@@ -52,7 +52,7 @@ void ReasoningBasedSimplifier::operator()(VariableDeclaration& _varDecl)
 	YulString varName = _varDecl.variables.front().name;
 	if (!m_ssaVariables.count(varName))
 		return;
-	m_variables.insert({varName, m_solver->newVariable("yul_" + varName.str(), SortProvider::bitVectorSort)});
+	m_variables.insert({varName, m_solver->newVariable("yul_" + varName.str(), defaultSort())});
 	m_solver->addAssertion(m_variables.at(varName) == encodeExpression(*_varDecl.value));
 }
 
@@ -60,14 +60,14 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 {
 	smtutil::Expression condition = encodeExpression(*_if.condition);
 	m_solver->push();
-	m_solver->addAssertion(condition == int2bv(size_t(0)));
+	m_solver->addAssertion(condition == constantValue(0));
 	CheckResult result = m_solver->check({}).first;
 	m_solver->pop();
 	if (result == CheckResult::UNSATISFIABLE)
 		_if.condition = make_unique<yul::Expression>(Literal{locationOf(*_if.condition), LiteralKind::Number, "1"_yulstring, {}});
 
 	m_solver->push();
-	m_solver->addAssertion(condition != int2bv(size_t(0)));
+	m_solver->addAssertion(condition != constantValue(0));
 	CheckResult result2 = m_solver->check({}).first;
 	m_solver->pop();
 	if (result2 == CheckResult::UNSATISFIABLE)
@@ -75,7 +75,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 		_if.condition = make_unique<yul::Expression>(Literal{locationOf(*_if.condition), LiteralKind::Number, "0"_yulstring, {}});
 
 	m_solver->push();
-	m_solver->addAssertion(condition != int2bv(0));
+	m_solver->addAssertion(condition != constantValue(0));
 
 	ASTModifier::operator()(_if.body);
 
@@ -115,7 +115,10 @@ smtutil::Expression ReasoningBasedSimplifier::encodeExpression(Expression const&
 		},
 		[&](Literal const& _literal)
 		{
-			return int2bv(smtutil::Expression(valueOfLiteral(_literal)));
+			smtutil::Expression v = valueOfLiteral(_literal);
+			if (!m_useInt)
+				v = int2bv(v);
+			return v;
 		}
 	}, _expression);
 }
@@ -132,41 +135,61 @@ smtutil::Expression ReasoningBasedSimplifier::encodeBuiltin(
 	switch (_instruction)
 	{
 	case evmasm::Instruction::ADD:
-		return (arguments.at(0) + arguments.at(1));
+		return wrap(arguments.at(0) + arguments.at(1));
 	case evmasm::Instruction::MUL:
-		return (arguments.at(0) * arguments.at(1));
+		return wrap(arguments.at(0) * arguments.at(1));
 	case evmasm::Instruction::SUB:
-		return (arguments.at(0) - arguments.at(1));
+		return wrap(arguments.at(0) - arguments.at(1));
 	case evmasm::Instruction::DIV:
 		return smtutil::Expression::ite(
-			arguments.at(1) == int2bv(0),
-			int2bv(0),
+			arguments.at(1) == constantValue(0),
+			constantValue(0),
 			arguments.at(0) / arguments.at(1)
 		);
 	// TODO SDIV
 	case evmasm::Instruction::MOD:
 		return smtutil::Expression::ite(
-			arguments.at(1) == int2bv(0),
-			int2bv(0),
-			arguments.at(0) % arguments.at(1)
+			arguments.at(1) == constantValue(0),
+			constantValue(0),
+			// TODO compute mod differently?
+			wrap(arguments.at(0) % arguments.at(1))
 		);
 	// TODO SMOD
 	case evmasm::Instruction::LT:
-		return smtutil::Expression::ite(smtutil::Expression::bvult(arguments.at(0), arguments.at(1)), int2bv(1), int2bv(0));
+		if (m_useInt)
+			return smtutil::Expression::ite(arguments.at(0) < arguments.at(1), constantValue(1), constantValue(0));
+		else
+			return smtutil::Expression::ite(smtutil::Expression::bvult(arguments.at(0), arguments.at(1)), constantValue(1), constantValue(0));
 	case evmasm::Instruction::GT:
-		return smtutil::Expression::ite(smtutil::Expression::bvugt(arguments.at(0), arguments.at(1)), int2bv(1), int2bv(0));
+		if (m_useInt)
+			return smtutil::Expression::ite(arguments.at(0) > arguments.at(1), constantValue(1), constantValue(0));
+		else
+			return smtutil::Expression::ite(smtutil::Expression::bvugt(arguments.at(0), arguments.at(1)), constantValue(1), constantValue(0));
 	case evmasm::Instruction::EQ:
-		return smtutil::Expression::ite(arguments.at(0) == arguments.at(1), int2bv(1), int2bv(0));
+		return smtutil::Expression::ite(arguments.at(0) == arguments.at(1), constantValue(1), constantValue(0));
 	case evmasm::Instruction::ISZERO:
-		return smtutil::Expression::ite(arguments.at(0) == int2bv(0), int2bv(1), int2bv(0));
+		return smtutil::Expression::ite(arguments.at(0) == constantValue(0), constantValue(1), constantValue(0));
 	case evmasm::Instruction::AND:
-		return arguments.at(0) & arguments.at(1);
+		// TODO we could check if the integer value is either zero or one and optimize for that
+		if (m_useInt)
+			return bv2int(int2bv(arguments.at(0)) & int2bv(arguments.at(1)));
+		else
+			return arguments.at(0) & arguments.at(1);
 	case evmasm::Instruction::OR:
-		return arguments.at(0) | arguments.at(1);
+		if (m_useInt)
+			return bv2int(int2bv(arguments.at(0)) | int2bv(arguments.at(1)));
+		else
+			return arguments.at(0) | arguments.at(1);
 	case evmasm::Instruction::NOT:
-		return ~arguments.at(0);
+		if (m_useInt)
+			return bv2int(~int2bv(arguments.at(0)));
+		else
+			return ~arguments.at(0);
 	case evmasm::Instruction::SHL:
-		return arguments.at(0) << arguments.at(1);
+		if (m_useInt)
+			return bv2int(int2bv(arguments.at(0)) << arguments.at(1));
+		else
+			return arguments.at(0) << arguments.at(1);
 	default:
 		break;
 	}
@@ -185,10 +208,37 @@ smtutil::Expression ReasoningBasedSimplifier::bv2int(smtutil::Expression _arg)
 
 smtutil::Expression ReasoningBasedSimplifier::newVariable()
 {
-	return m_solver->newVariable(uniqueName(), SortProvider::bitVectorSort);
+	return m_solver->newVariable(uniqueName(), defaultSort());
 }
 
 string ReasoningBasedSimplifier::uniqueName()
 {
 	return "expr_" + to_string(m_varCounter++);
+}
+
+shared_ptr<Sort> ReasoningBasedSimplifier::defaultSort() const
+{
+	if (m_useInt)
+		return SortProvider::intSort();
+	else
+		return SortProvider::bitVectorSort;
+}
+
+smtutil::Expression ReasoningBasedSimplifier::constantValue(size_t _value)
+{
+	if (m_useInt)
+		return _value;
+	else
+		return int2bv(_value);
+}
+
+smtutil::Expression ReasoningBasedSimplifier::wrap(smtutil::Expression _value)
+{
+	if (!m_useInt)
+		return std::move(_value);
+	smtutil::Expression rest = newVariable();
+	smtutil::Expression multiplier = newVariable();
+	m_solver->addAssertion(0 <= rest && rest < smtutil::Expression(bigint(1) << 256));
+	m_solver->addAssertion(_value == multiplier * smtutil::Expression(bigint(1) << 256) + rest);
+	return rest;
 }
