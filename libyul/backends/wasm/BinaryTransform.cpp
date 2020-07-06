@@ -390,7 +390,7 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 		return toBytes(Opcode::Unreachable);
 	else if (_call.functionName == "nop")
 		return toBytes(Opcode::Nop);
-	else if (_call.functionName == "drop")
+	else if (_call.functionName == "i32.drop" || _call.functionName == "i64.drop")
 		return toBytes(Opcode::Drop);
 	else
 	{
