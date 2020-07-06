@@ -61,27 +61,6 @@ unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	return nullptr;
 }
 
-std::map<string, evmasm::Instruction> const& Parser::instructions()
-{
-	// Allowed instructions, lowercase names.
-	static map<string, evmasm::Instruction> s_instructions;
-	if (s_instructions.empty())
-	{
-		for (auto const& instruction: evmasm::c_instructions)
-		{
-			if (
-				instruction.second == evmasm::Instruction::JUMPDEST ||
-				evmasm::isPushInstruction(instruction.second)
-			)
-				continue;
-			string name = instruction.first;
-			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
-			s_instructions[name] = instruction.second;
-		}
-	}
-	return s_instructions;
-}
-
 Block Parser::parseBlock()
 {
 	RecursionGuard recursionGuard(*this);
