@@ -22,6 +22,7 @@ Bugfixes:
  * SMTChecker: Fix internal error on fixed bytes index access.
  * References Resolver: Fix internal bug when using constructor for library.
  * Yul Optimizer: Make function inlining order more resilient to whether or not unrelated source files are present.
+ * Yul Optimizer: Ensure that Yul keywords are not mistakenly used by the NameDispenser and VarNameCleaners. The bug would manifest as uncompilable code.
  * Type Checker: Disallow signed literals as exponent in exponentiation operator.
  * Allow `type(Contract).name` for abstract contracts and interfaces.
  * Type Checker: Disallow structs containing nested mapping in memory as parameters for library functions.

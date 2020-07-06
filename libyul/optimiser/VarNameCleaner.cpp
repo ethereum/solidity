@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/optimiser/VarNameCleaner.h>
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
 
@@ -110,9 +111,7 @@ YulString VarNameCleaner::findCleanName(YulString const& _name) const
 
 bool VarNameCleaner::isUsedName(YulString const& _name) const
 {
-	if (_name.empty() || m_dialect.builtin(_name) || m_usedNames.count(_name))
-		return true;
-	return false;
+	return isRestrictedIdentifier(m_dialect, _name) || m_usedNames.count(_name);
 }
 
 YulString VarNameCleaner::stripSuffix(YulString const& _name) const
