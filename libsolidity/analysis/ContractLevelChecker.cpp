@@ -151,13 +151,13 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 				if constexpr (is_same_v<T, FunctionDefinition const*>)
 				{
 					error = 1686_error;
-					message = "Function with same name and arguments defined twice.";
+					message = "Function with same name and parameter types defined twice.";
 				}
 				else
 				{
 					static_assert(is_same_v<T, EventDefinition const*>, "Expected \"FunctionDefinition const*\" or \"EventDefinition const*\"");
 					error = 5883_error;
-					message = "Event with same name and arguments defined twice.";
+					message = "Event with same name and parameter types defined twice.";
 				}
 
 				ssl.limitSize(message);
