@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #------------------------------------------------------------------------------
-# Bash script to execute the Solidity tests.
+# Bash script to execute the Solidity tests using the emscripten binary.
 #
 # The documentation for solidity is hosted at:
 #

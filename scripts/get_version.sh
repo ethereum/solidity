@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #------------------------------------------------------------------------------
-# Bash script to execute the Solidity tests.
+# Prints version of the Solidity compiler that the source code corresponds to.
 #
 # The documentation for solidity is hosted at:
 #
