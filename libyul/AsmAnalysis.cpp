@@ -558,6 +558,13 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 	// Similarly we assume bitwise shifting and create2 go together.
 	yulAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
 
+	// These instructions are disabled in the dialect.
+	yulAssert(
+		_instr != evmasm::Instruction::JUMP &&
+		_instr != evmasm::Instruction::JUMPI &&
+		_instr != evmasm::Instruction::JUMPDEST,
+	"");
+
 	auto errorForVM = [&](ErrorId _errorId, string const& vmKindMessage) {
 		m_errorReporter.typeError(
 			_errorId,
@@ -602,19 +609,6 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		);
 	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
 		errorForVM(3672_error, "only available for Istanbul-compatible");
-	else if (
-		_instr == evmasm::Instruction::JUMP ||
-		_instr == evmasm::Instruction::JUMPI ||
-		_instr == evmasm::Instruction::JUMPDEST
-	)
-		m_errorReporter.error(
-			4316_error,
-			Error::Type::SyntaxError,
-			_location,
-			"Jump instructions and labels are low-level EVM features that can lead to "
-			"incorrect stack access. Because of that they are disallowed in strict assembly. "
-			"Use functions, \"switch\", \"if\" or \"for\" statements instead."
-		);
 	else
 		return false;
 
