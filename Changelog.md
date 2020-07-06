@@ -19,6 +19,7 @@ Bugfixes:
  * NatSpec: Do not consider ``////`` and ``/***`` as NatSpec comments.
  * Type Checker: Fix internal error related to ``using for`` applied to non-libraries.
  * Type Checker: Do not disallow assigning to calldata variables.
+ * Type Checker: Disallow constructor parameters with ``calldata`` data location.
  * Wasm backend: Fix code generation for for-loops with pre statements.
  * Yul: Fix source location of variable multi-assignment.
 
