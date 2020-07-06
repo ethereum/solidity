@@ -588,6 +588,15 @@ bool VariableDeclaration::isInternalCallableParameter() const
 	return false;
 }
 
+bool VariableDeclaration::isConstructorParameter() const
+{
+	if (!isCallableOrCatchParameter())
+		return false;
+	if (auto const* function = dynamic_cast<FunctionDefinition const*>(scope()))
+		return function->isConstructor();
+	return false;
+}
+
 bool VariableDeclaration::isLibraryFunctionParameter() const
 {
 	if (!isCallableOrCatchParameter())
@@ -622,7 +631,7 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 		set<Location> locations{ Location::Memory };
 		if (isInternalCallableParameter() || isLibraryFunctionParameter() || isTryCatchParameter())
 			locations.insert(Location::Storage);
-		if (!isTryCatchParameter())
+		if (!isTryCatchParameter() && !isConstructorParameter())
 			locations.insert(Location::CallData);
 
 		return locations;
