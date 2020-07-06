@@ -21,6 +21,7 @@ Breaking changes:
 Language Features:
  * Yul: Disallow EVM instruction `pc()`.
  * Yul: Disallow consecutive and trailing dots in identifiers. Leading dots were already disallowed.
+ * Inheritance: Allow overrides to have stricter state mutability: ``view`` can override ``nonpayable`` and ``pure`` can override ``view``.
 
 Compiler Features:
 
