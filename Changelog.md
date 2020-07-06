@@ -27,6 +27,8 @@ Bugfixes:
 
 Language Features:
  * General: Add unit denomination ``gwei``
+ * Yul: Support ``linkersymbol`` builtin in standalone assembly mode.
+ * Yul: Support using string literals exceeding 32 bytes as literal arguments for builtins.
 
 
 Compiler Features:
@@ -34,6 +36,9 @@ Compiler Features:
  * NatSpec: Inherit tags from unique base if derived function does not provide any.
  * Commandline Interface: Prevent some incompatible commandline options from being used together.
  * NatSpec: Support NatSpec comments on events.
+ * Yul Optimizer: Store knowledge about storage / memory after ``a := sload(x)`` / ``a := mload(x)``.
+ * SMTChecker: Support external calls to unknown code.
+
 
 Bugfixes:
  * NatSpec: Do not consider ``////`` and ``/***`` as NatSpec comments.

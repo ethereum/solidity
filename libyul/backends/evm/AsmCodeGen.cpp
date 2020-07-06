@@ -218,8 +218,9 @@ void CodeGenerator::assemble(
 	}
 	catch (StackTooDeepError const& _e)
 	{
-		yulAssert(
+		assertThrow(
 			false,
+			langutil::StackTooDeepError,
 			"Stack too deep when compiling inline assembly" +
 			(_e.comment() ? ": " + *_e.comment() : ".")
 		);

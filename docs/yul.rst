@@ -30,7 +30,7 @@ The design of Yul tries to achieve several goals:
 In order to achieve the first and second goal, Yul provides high-level constructs
 like ``for`` loops, ``if`` and ``switch`` statements and function calls. These should
 be sufficient for adequately representing the control flow for assembly programs.
-Therefore, no explicit statements for ``SWAP``, ``DUP``, ``JUMP`` and ``JUMPI``
+Therefore, no explicit statements for ``SWAP``, ``DUP``, ``JUMPDEST``, ``JUMP`` and ``JUMPI``
 are provided, because the first two obfuscate the data flow
 and the last two obfuscate control flow. Furthermore, functional statements of
 the form ``mul(add(x, y), 7)`` are preferred over pure opcode statements like

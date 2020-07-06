@@ -1646,13 +1646,30 @@ string YulUtilFunctions::allocateAndInitializeMemoryArrayFunction(ArrayType cons
 	});
 }
 
-string YulUtilFunctions::allocateAndInitializeMemoryStructFunction(StructType const& _type)
+string YulUtilFunctions::allocateMemoryStructFunction(StructType const& _type)
 {
-	string functionName = "allocate_and_initialize_memory_struct_" + _type.identifier();
+	string functionName = "allocate_memory_struct_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		Whiskers templ(R"(
 		function <functionName>() -> memPtr {
 			memPtr := <alloc>(<allocSize>)
+		}
+		)");
+		templ("functionName", functionName);
+		templ("alloc", allocationFunction());
+		templ("allocSize", _type.memoryDataSize().str());
+
+		return templ.render();
+	});
+}
+
+string YulUtilFunctions::allocateAndInitializeMemoryStructFunction(StructType const& _type)
+{
+	string functionName = "allocate_and_zero_memory_struct_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		Whiskers templ(R"(
+		function <functionName>() -> memPtr {
+			memPtr := <allocStruct>()
 			let offset := memPtr
 			<#member>
 				mstore(offset, <zeroValue>())
@@ -1661,10 +1678,9 @@ string YulUtilFunctions::allocateAndInitializeMemoryStructFunction(StructType co
 		}
 		)");
 		templ("functionName", functionName);
-		templ("alloc", allocationFunction());
+		templ("allocStruct", allocateMemoryStructFunction(_type));
 
 		TypePointers const& members = _type.memoryMemberTypes();
-		templ("allocSize", _type.memoryDataSize().str());
 
 		vector<map<string, string>> memberParams(members.size());
 		for (size_t i = 0; i < members.size(); ++i)
