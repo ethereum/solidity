@@ -5,55 +5,55 @@ Pretty printed source:
 object "object" {
     code {
         {
-            let a3, b3, c3, d3, e3, f3, g3, h3, i3, j3, k3, l3, m3, o3, p3 := fun()
-            let a3_1, b3_1, c3_1, d3_1, e3_1, f3_1, g3_1, h3_1, i3_1, j3_1, k3_1, l3_1, m3_1, o3_1, p3_1 := fun()
-            sstore(a3, a3_1)
+            let a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, k1, l1, m1, n1, o1, p1 := fun_66_345()
+            let a2, b2, c2, d2, e2, f2, g2, h2, i2, j2, k2, l2, m2, n2, o2, p2 := fun_66_345()
+            sstore(a1, a2)
         }
-        function fun() -> a3, b3, c3, d3, e3, f3, g3, h3, i3, j3, k3, l3, m3, o3, p3
+        function fun_66_345() -> a3, b3, c3, d3, e3, f3, g3, h3, i3, j3, k3, l3, m3, n3, o3, p3
         {
-            let _1 := 1
-            sstore(_1, _1)
-            sstore(2, _1)
-            sstore(3, _1)
-            sstore(4, _1)
-            sstore(5, _1)
-            sstore(6, _1)
-            sstore(7, _1)
-            sstore(8, _1)
-            sstore(9, _1)
-            sstore(10, _1)
-            sstore(11, _1)
-            sstore(12, _1)
-            sstore(13, _1)
-            a3 := _1
-            b3 := _1
-            c3 := _1
-            d3 := _1
-            e3 := _1
-            f3 := _1
-            g3 := _1
-            h3 := _1
-            i3 := _1
-            j3 := _1
-            k3 := _1
-            l3 := _1
-            m3 := _1
-            o3 := _1
-            p3 := _1
+            sstore(1, 1)
+            sstore(2, 1)
+            sstore(3, 1)
+            sstore(4, 1)
+            sstore(5, 1)
+            sstore(6, 1)
+            sstore(7, 1)
+            sstore(8, 1)
+            sstore(9, 1)
+            sstore(10, 1)
+            sstore(11, 1)
+            sstore(12, 1)
+            sstore(13, 1)
+            a3 := 1
+            b3 := a3
+            c3 := a3
+            d3 := a3
+            e3 := a3
+            f3 := a3
+            g3 := a3
+            h3 := a3
+            i3 := a3
+            j3 := a3
+            k3 := a3
+            l3 := a3
+            m3 := a3
+            o3 := a3
+            p3 := a3
         }
     }
 }
 
 
 Binary representation:
-60056030565b505050505050505050505050505060196030565b5050505050505050505050505050808255505060c3565b6000600060006000600060006000600060006000600060006000600060006001808155806002558060035580600455806005558060065580600755806008558060095580600a5580600b5580600c5580600d55809f50809e50809d50809c50809b50809a50809950809850809750809650809550809450809350809250809150505b909192939495969798999a9b9c9d9e565b
+60056032565b505050505050505050505050505050601a6032565b505050505050505050505050505050808255505060d4565b60006000600060006000600060006000600060006000600060006000600060006001600155600160025560016003556001600455600160055560016006556001600755600160085560016009556001600a556001600b556001600c556001600d5560019f508f9e508f9d508f9c508f9b508f9a508f99508f98508f97508f96508f95508f94508f93508f91508f90505b909192939495969798999a9b9c9d9e9f565b
 
 Text representation:
-    /* "yul_stack_opt/input.sol":3:573   */
+    /* "yul_stack_opt/input.sol":645:650   */
   tag_1
   tag_2
   jump	// in
 tag_1:
+    /* "yul_stack_opt/input.sol":575:650   */
   pop
   pop
   pop
@@ -68,10 +68,14 @@ tag_1:
   pop
   pop
   pop
+  pop
+    /* "yul_stack_opt/input.sol":722:727   */
   tag_3
   tag_2
   jump	// in
 tag_3:
+    /* "yul_stack_opt/input.sol":652:727   */
+  pop
   pop
   pop
   pop
@@ -112,161 +116,159 @@ tag_2:
   0x00
   0x00
   0x00
+  0x00
     /* "yul_stack_opt/input.sol":98:99   */
   0x01
-  dup1
-  dup2
+  0x01
     /* "yul_stack_opt/input.sol":129:141   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":151:160   */
   0x02
     /* "yul_stack_opt/input.sol":144:164   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":174:183   */
   0x03
     /* "yul_stack_opt/input.sol":167:187   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":197:206   */
   0x04
     /* "yul_stack_opt/input.sol":190:210   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":220:229   */
   0x05
     /* "yul_stack_opt/input.sol":213:233   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":243:252   */
   0x06
     /* "yul_stack_opt/input.sol":236:256   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":266:275   */
   0x07
     /* "yul_stack_opt/input.sol":259:279   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":289:298   */
   0x08
     /* "yul_stack_opt/input.sol":282:302   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":312:321   */
   0x09
     /* "yul_stack_opt/input.sol":305:325   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":335:344   */
   0x0a
     /* "yul_stack_opt/input.sol":328:348   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":358:368   */
   0x0b
     /* "yul_stack_opt/input.sol":351:372   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":382:392   */
   0x0c
     /* "yul_stack_opt/input.sol":375:396   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
+  0x01
     /* "yul_stack_opt/input.sol":406:416   */
   0x0d
     /* "yul_stack_opt/input.sol":399:420   */
   sstore
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":423:430   */
+  0x01
+    /* "yul_stack_opt/input.sol":3:573   */
   swap16
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":433:440   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap15
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":443:450   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap14
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":453:460   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap13
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":463:470   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap12
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":473:480   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap11
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":483:490   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap10
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":493:500   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap9
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":503:510   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap8
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":513:520   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap7
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":523:530   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap6
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":533:540   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap5
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":543:550   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap4
   pop
     /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":553:560   */
-  swap3
-  pop
-    /* "yul_stack_opt/input.sol":98:99   */
-  dup1
-    /* "yul_stack_opt/input.sol":563:570   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
   swap2
   pop
+    /* "yul_stack_opt/input.sol":98:99   */
+  dup16
+    /* "yul_stack_opt/input.sol":3:573   */
+  swap1
   pop
-    /* "yul_stack_opt/input.sol":85:573   */
 tag_5:
   swap1
   swap2
@@ -283,5 +285,6 @@ tag_5:
   swap13
   swap14
   swap15
+  swap16
   jump	// out
 tag_4:
