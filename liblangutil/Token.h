@@ -327,6 +327,8 @@ namespace TokenTraits
 			tok == Token::TrueLiteral || tok == Token::FalseLiteral || tok == Token::HexStringLiteral || tok == Token::Hex;
 	}
 
+	bool isYulKeyword(std::string const& _literal);
+
 	inline Token AssignmentToBinaryOp(Token op)
 	{
 		solAssert(isAssignmentOp(op) && op != Token::Assign, "");
