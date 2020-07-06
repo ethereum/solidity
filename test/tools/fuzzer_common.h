@@ -16,6 +16,9 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include <libsolutil/Common.h>
+
+#include <map>
 #include <string>
 
 /**
@@ -28,5 +31,9 @@ struct FuzzerUtil
 	static void testCompilerJsonInterface(std::string const& _input, bool _optimize, bool _quiet);
 	static void testConstantOptimizer(std::string const& _input, bool _quiet);
 	static void testStandardCompiler(std::string const& _input, bool _quiet);
-	static void testCompiler(std::string const& _input, bool _optimize);
+	/// Compiles @param _input which is a map of input file name to source code
+	/// string with optimisation turned on if @param _optimize is true
+	/// (off otherwise) and a pseudo-random @param _rand that selects the EVM
+	/// version to be compiled for.
+	static void testCompiler(solidity::StringMap const& _input, bool _optimize, unsigned _rand);
 };

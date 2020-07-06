@@ -18,14 +18,29 @@
 
 #include <test/tools/fuzzer_common.h>
 
+#include <test/TestCaseReader.h>
+
+#include <sstream>
+
+using namespace solidity::frontend::test;
 using namespace std;
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
 	if (_size <= 600)
 	{
-		string input(reinterpret_cast<char const *>(_data), _size);
-		FuzzerUtil::testCompiler(input, /*optimize=*/true);
+		string input(reinterpret_cast<char const*>(_data), _size);
+		map<string, string> sourceCode;
+		try
+		{
+			TestCaseReader t = TestCaseReader(std::istringstream(input));
+			sourceCode = t.sources().sources;
+		}
+		catch (runtime_error const&)
+		{
+			return 0;
+		}
+		FuzzerUtil::testCompiler(sourceCode, /*optimize=*/true, /*rand=*/_size);
 	}
 	return 0;
 }
