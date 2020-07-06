@@ -94,7 +94,10 @@ string TextTransform::operator()(wasm::GlobalVariable const& _identifier)
 string TextTransform::operator()(wasm::BuiltinCall const& _builtinCall)
 {
 	string args = joinTransformed(_builtinCall.arguments);
-	return "(" + _builtinCall.functionName + (args.empty() ? "" : " " + args) + ")";
+	string funcName = _builtinCall.functionName;
+	if (funcName == "i32.drop" || funcName == "i64.drop")
+		funcName = "drop";
+	return "(" + funcName + (args.empty() ? "" : " " + args) + ")";
 }
 
 string TextTransform::operator()(wasm::FunctionCall const& _functionCall)

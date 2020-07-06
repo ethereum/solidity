@@ -114,12 +114,15 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
 {
 	map<YulString, BuiltinFunctionForEVM> builtins;
+	// NOTE: Parser::instructions() will filter JUMPDEST and PUSHnn too
 	for (auto const& instr: Parser::instructions())
 		if (
 			!evmasm::isDupInstruction(instr.second) &&
 			!evmasm::isSwapInstruction(instr.second) &&
+			!evmasm::isPushInstruction(instr.second) &&
 			instr.second != evmasm::Instruction::JUMP &&
 			instr.second != evmasm::Instruction::JUMPI &&
+			instr.second != evmasm::Instruction::JUMPDEST &&
 			_evmVersion.hasOpcode(instr.second)
 		)
 			builtins.emplace(createEVMFunction(instr.first, instr.second));

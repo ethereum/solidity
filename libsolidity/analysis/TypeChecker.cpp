@@ -1343,7 +1343,7 @@ bool TypeChecker::visit(Conditional const& _conditional)
 					_conditional.location(),
 					"True expression's type " +
 					trueType->toString() +
-					" doesn't match false expression's type " +
+					" does not match false expression's type " +
 					falseType->toString() +
 					"."
 					);

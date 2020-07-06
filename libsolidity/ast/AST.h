@@ -928,6 +928,7 @@ public:
 	/// @returns true if this variable is a parameter or return parameter of an internal function
 	/// or a function type of internal visibility.
 	bool isInternalCallableParameter() const;
+	bool isConstructorParameter() const;
 	/// @returns true iff this variable is a parameter(or return parameter of a library function
 	bool isLibraryFunctionParameter() const;
 	/// @returns true if the type of the variable does not need to be specified, i.e. it is declared
