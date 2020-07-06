@@ -20,6 +20,7 @@ Bugfixes:
  * Type Checker: Fix internal error related to ``using for`` applied to non-libraries.
  * Type Checker: Do not disallow assigning to calldata variables.
  * Wasm backend: Fix code generation for for-loops with pre statements.
+ * Wasm backend: Properly support both ``i32.drop`` and ``i64.drop``, and remove ``drop``.
  * Yul: Fix source location of variable multi-assignment.
 
 
