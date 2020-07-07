@@ -32,26 +32,35 @@ struct InvertibleMap
 
 	void set(K _key, V _value)
 	{
-		if (values.count(_key))
-			references[values[_key]].erase(_key);
-		values[_key] = _value;
+		auto it = values.find(_key);
+		if (it == values.end())
+			values[_key] = _value;
+		else
+		{
+			references[it->second].erase(_key);
+			it->second = _value;
+		}
 		references[_value].insert(_key);
 	}
 
 	void eraseKey(K _key)
 	{
-		if (values.count(_key))
-			references[values[_key]].erase(_key);
-		values.erase(_key);
+		auto it = values.find(_key);
+		if (it != values.end())
+		{
+			references[it->second].erase(_key);
+			values.erase(it);
+		}
 	}
 
 	void eraseValue(V _value)
 	{
-		if (references.count(_value))
+		auto it = references.find(_value);
+		if (it != references.end())
 		{
-			for (V v: references[_value])
+			for (V v: it->second)
 				values.erase(v);
-			references.erase(_value);
+			references.erase(it);
 		}
 	}
 
