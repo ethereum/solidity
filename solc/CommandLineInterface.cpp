@@ -575,8 +575,26 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	}
 }
 
+namespace
+{
+bool isPrefix(std::string_view prefix, std::string_view full)
+{
+	return prefix == full.substr(0, prefix.size());
+}
+
+std::string_view removePrefix(std::string_view prefix, std::string_view full)
+{
+	assert(full.size() >= prefix.size());
+	full.remove_prefix(prefix.size());
+	return full;
+}
+}
+
 bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
+	auto basePath = boost::filesystem::canonical(m_basePath);
+	if (!basePath.empty())
+		m_allowedDirectories.push_back(basePath);
 	bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
 	bool addStdin = false;
 	if (m_args.count(g_argInputFile))
@@ -601,6 +619,13 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 			else
 			{
 				auto infile = boost::filesystem::path(path);
+				if (isPrefix(basePath.string(), boost::filesystem::canonical(infile).string()))
+					path = removePrefix(basePath.string(), boost::filesystem::canonical(infile).string());
+				if (m_basePath.empty())
+					infile = path;
+				else
+					infile = m_basePath / path;
+
 				if (!boost::filesystem::exists(infile))
 				{
 					if (!ignoreMissing)
@@ -628,8 +653,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				}
 
 				// NOTE: we ignore the FileNotFound exception as we manually check above
-				m_sourceCodes[infile.generic_string()] = readFileAsString(infile.string());
-				path = boost::filesystem::canonical(infile).string();
+				m_sourceCodes[path] = readFileAsString(infile.string());
 			}
 			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
 		}
