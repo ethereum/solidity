@@ -197,7 +197,10 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 				m_currentScope->insideFunction()
 			);
 	for (auto const& variable: _varDecl.variables)
+	{
+		expectValidIdentifier(variable.name, variable.location);
 		expectValidType(variable.type, variable.location);
+	}
 
 	if (_varDecl.value)
 	{
@@ -237,11 +240,13 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 void AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 {
 	yulAssert(!_funDef.name.empty(), "");
+	expectValidIdentifier(_funDef.name, _funDef.location);
 	Block const* virtualBlock = m_info.virtualBlocks.at(&_funDef).get();
 	yulAssert(virtualBlock, "");
 	Scope& varScope = scope(virtualBlock);
 	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 	{
+		expectValidIdentifier(var.name, var.location);
 		expectValidType(var.type, var.location);
 		m_activeVariables.insert(&std::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
@@ -515,6 +520,26 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 	auto scopePtr = m_info.scopes.at(_block);
 	yulAssert(scopePtr, "Scope requested but not present.");
 	return *scopePtr;
+}
+
+void AsmAnalyzer::expectValidIdentifier(YulString _identifier, SourceLocation const& _location)
+{
+	// NOTE: the leading dot case is handled by the parser not allowing it.
+
+	if (boost::ends_with(_identifier.str(), "."))
+		m_errorReporter.syntaxError(
+			3384_error,
+			_location,
+			"\"" + _identifier.str() + "\" is not a valid identifier (ends with a dot)."
+		);
+
+	if (_identifier.str().find("..") != std::string::npos)
+		m_errorReporter.syntaxError(
+			7771_error,
+			_location,
+			"\"" + _identifier.str() + "\" is not a valid identifier (contains consecutive dots)."
+		);
+
 }
 
 void AsmAnalyzer::expectValidType(YulString _type, SourceLocation const& _location)
