@@ -23,6 +23,7 @@ Bugfixes:
  * Wasm backend: Fix code generation for for-loops with pre statements.
  * Wasm backend: Properly support both ``i32.drop`` and ``i64.drop``, and remove ``drop``.
  * Yul: Fix source location of variable multi-assignment.
+ * Yul: Disallow the same variable to occur multiple times on the left-hand side of an assignment.
 
 
 ### 0.6.10 (2020-06-11)
