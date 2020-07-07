@@ -1103,11 +1103,11 @@ void CHC::addRule(smtutil::Expression const& _rule, string const& _ruleName)
 	m_interface->addRule(_rule, _ruleName);
 }
 
-pair<smtutil::CheckResult, vector<string>> CHC::query(smtutil::Expression const& _query, langutil::SourceLocation const& _location)
+pair<smtutil::CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression const& _query, langutil::SourceLocation const& _location)
 {
 	smtutil::CheckResult result;
-	vector<string> values;
-	tie(result, values) = m_interface->query(_query);
+	CHCSolverInterface::CexGraph cex;
+	tie(result, cex) = m_interface->query(_query);
 	switch (result)
 	{
 	case smtutil::CheckResult::SATISFIABLE:
@@ -1123,7 +1123,7 @@ pair<smtutil::CheckResult, vector<string>> CHC::query(smtutil::Expression const&
 		m_outerErrorReporter.warning(1218_error, _location, "Error trying to invoke SMT solver.");
 		break;
 	}
-	return {result, values};
+	return {result, cex};
 }
 
 void CHC::addVerificationTarget(

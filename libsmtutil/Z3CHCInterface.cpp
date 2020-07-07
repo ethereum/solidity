@@ -20,6 +20,9 @@
 
 #include <libsolutil/CommonIO.h>
 
+#include <set>
+#include <stack>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::smtutil;
@@ -43,6 +46,7 @@ Z3CHCInterface::Z3CHCInterface():
 	p.set("fp.spacer.mbqi", false);
 	// Ground pobs by using values from a model.
 	p.set("fp.spacer.ground_pobs", false);
+
 	m_solver.set(p);
 }
 
@@ -72,10 +76,10 @@ void Z3CHCInterface::addRule(Expression const& _expr, string const& _name)
 	}
 }
 
-pair<CheckResult, vector<string>> Z3CHCInterface::query(Expression const& _expr)
+pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
 {
 	CheckResult result;
-	vector<string> values;
+	CHCSolverInterface::CexGraph cex;
 	try
 	{
 		z3::expr z3Expr = m_z3Interface->toZ3Expr(_expr);
@@ -84,8 +88,9 @@ pair<CheckResult, vector<string>> Z3CHCInterface::query(Expression const& _expr)
 		case z3::check_result::sat:
 		{
 			result = CheckResult::SATISFIABLE;
-			// TODO retrieve model.
-			break;
+			auto proof = m_solver.get_answer();
+			auto cex = cexGraph(proof);
+			return {result, cex};
 		}
 		case z3::check_result::unsat:
 		{
@@ -104,8 +109,89 @@ pair<CheckResult, vector<string>> Z3CHCInterface::query(Expression const& _expr)
 	catch (z3::exception const&)
 	{
 		result = CheckResult::ERROR;
-		values.clear();
+		cex = {};
 	}
 
-	return make_pair(result, values);
+	return {result, cex};
+}
+
+/**
+Convert a ground refutation into a linear or nonlinear counterexample.
+The counterexample is given as an implication graph of the form
+`premises => conclusion` where `premises` are the predicates
+from the body of nonlinear clauses, representing the proof graph.
+*/
+CHCSolverInterface::CexGraph Z3CHCInterface::cexGraph(z3::expr const& _proof)
+{
+	CexGraph graph;
+
+	/// The root fact of the refutation proof is `false`.
+	/// The node itself is not a hyper resolution, so we need to
+	/// extract the `query` hyper resolution node from the
+	/// `false` node (the first child).
+	smtAssert(_proof.is_app(), "");
+	smtAssert(fact(_proof).decl().decl_kind() == Z3_OP_FALSE, "");
+
+	stack<z3::expr> proofStack;
+	proofStack.push(_proof.arg(0));
+
+	auto const& root = proofStack.top();
+	graph.nodes[root.id()] = {name(fact(root)), arguments(fact(root))};
+
+	set<unsigned> visited;
+	visited.insert(root.id());
+
+	while (!proofStack.empty())
+	{
+		z3::expr proofNode = proofStack.top();
+		smtAssert(graph.nodes.count(proofNode.id()), "");
+		proofStack.pop();
+
+		if (proofNode.is_app() && proofNode.decl().decl_kind() == Z3_OP_PR_HYPER_RESOLVE)
+		{
+			smtAssert(proofNode.num_args() > 0, "");
+			for (unsigned i = 1; i < proofNode.num_args() - 1; ++i)
+			{
+				z3::expr child = proofNode.arg(i);
+				if (!visited.count(child.id()))
+				{
+					visited.insert(child.id());
+					proofStack.push(child);
+				}
+
+				if (!graph.nodes.count(child.id()))
+				{
+					graph.nodes[child.id()] = {name(fact(child)), arguments(fact(child))};
+					graph.edges[child.id()] = {};
+				}
+
+				graph.edges[proofNode.id()].push_back(child.id());
+			}
+		}
+	}
+
+	return graph;
+}
+
+z3::expr Z3CHCInterface::fact(z3::expr const& _node)
+{
+	smtAssert(_node.is_app(), "");
+	if (_node.num_args() == 0)
+		return _node;
+	return _node.arg(_node.num_args() - 1);
+}
+
+string Z3CHCInterface::name(z3::expr const& _predicate)
+{
+	smtAssert(_predicate.is_app(), "");
+	return _predicate.decl().name().str();
+}
+
+vector<string> Z3CHCInterface::arguments(z3::expr const& _predicate)
+{
+	smtAssert(_predicate.is_app(), "");
+	vector<string> args;
+	for (unsigned i = 0; i < _predicate.num_args(); ++i)
+		args.emplace_back(_predicate.arg(i).to_string());
+	return args;
 }

@@ -192,7 +192,7 @@ private:
 	void addRule(smtutil::Expression const& _rule, std::string const& _ruleName);
 	/// @returns <true, empty> if query is unsatisfiable (safe).
 	/// @returns <false, model> otherwise.
-	std::pair<smtutil::CheckResult, std::vector<std::string>> query(smtutil::Expression const& _query, langutil::SourceLocation const& _location);
+	std::pair<smtutil::CheckResult, smtutil::CHCSolverInterface::CexGraph> query(smtutil::Expression const& _query, langutil::SourceLocation const& _location);
 
 	void addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId);
 	void addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId);
