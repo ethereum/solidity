@@ -70,25 +70,25 @@ void NoOutputAssembly::appendLinkerSymbol(string const&)
 	yulAssert(false, "Linker symbols not yet implemented.");
 }
 
-void NoOutputAssembly::appendJump(int _stackDiffAfter)
+void NoOutputAssembly::appendJump(int _stackDiffAfter, JumpType)
 {
 	yulAssert(!m_evm15, "Plain JUMP used for EVM 1.5");
 	appendInstruction(evmasm::Instruction::JUMP);
 	m_stackHeight += _stackDiffAfter;
 }
 
-void NoOutputAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
+void NoOutputAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType)
 {
 	if (m_evm15)
 		m_stackHeight += _stackDiffAfter;
 	else
 	{
 		appendLabelReference(_labelId);
-		appendJump(_stackDiffAfter);
+		appendJump(_stackDiffAfter, _jumpType);
 	}
 }
 
-void NoOutputAssembly::appendJumpToIf(LabelID _labelId)
+void NoOutputAssembly::appendJumpToIf(LabelID _labelId, JumpType)
 {
 	if (m_evm15)
 		m_stackHeight--;
