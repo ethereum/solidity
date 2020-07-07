@@ -79,6 +79,7 @@ void DataFlowAnalyzer::operator()(Assignment& _assignment)
 	set<YulString> names;
 	for (auto const& var: _assignment.variableNames)
 		names.emplace(var.name);
+	assertThrow(names.size() == _assignment.variableNames.size(), OptimizerException, "");
 	assertThrow(_assignment.value, OptimizerException, "");
 	clearKnowledgeIfInvalidated(*_assignment.value);
 	visit(*_assignment.value);
