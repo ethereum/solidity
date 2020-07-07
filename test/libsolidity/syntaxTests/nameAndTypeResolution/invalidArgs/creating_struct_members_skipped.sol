@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (117-126): Wrong argument count for struct constructor: 1 arguments given but expected 2. Members that have to be skipped in memory: c
+// TypeError 9755: (117-126): Wrong argument count for struct constructor: 1 arguments given but expected 2. Members that have to be skipped in memory: c

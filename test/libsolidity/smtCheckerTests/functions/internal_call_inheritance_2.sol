@@ -21,4 +21,4 @@ contract A is B {
 	}
 }
 // ----
-// Warning: (274-288): Assertion violation happens here
+// Warning 4661: (274-288): Assertion violation happens here

@@ -7,5 +7,5 @@ contract test {
     function i() public { r.pay.value(10)(); }
 }
 // ----
-// Warning: (160-186): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
-// Warning: (303-314): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// Warning 1621: (160-186): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// Warning 1621: (303-314): Using ".value(...)" is deprecated. Use "{value: ...}" instead.

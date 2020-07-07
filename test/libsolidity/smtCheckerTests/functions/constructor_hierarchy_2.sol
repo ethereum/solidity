@@ -4,4 +4,4 @@ contract A is C { constructor() C(2) public { assert(a == 2); } }
 contract B is C { constructor() C(3) public { assert(a == 3); } }
 contract J is C { constructor() C(3) public { assert(a == 4); } }
 // ----
-// Warning: (271-285): Assertion violation happens here
+// Warning 4661: (271-285): Assertion violation happens here

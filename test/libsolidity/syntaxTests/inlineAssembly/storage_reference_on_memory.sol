@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (117-123): The suffixes _offset and _slot can only be used on storage variables.
-// TypeError: (141-149): The suffixes _offset and _slot can only be used on storage variables.
+// TypeError 3622: (117-123): The suffixes _offset and _slot can only be used on storage variables.
+// TypeError 3622: (141-149): The suffixes _offset and _slot can only be used on storage variables.

@@ -91,9 +91,9 @@ WasmDialect::WasmDialect()
 	m_functions["i64.load"_yulstring].sideEffects.sideEffectFreeIfNoMSize = true;
 
 	// Drop is actually overloaded for all types, but Yul does not support that.
-	// Because of that, we introduce "i32.drop".
-	addFunction("drop", {i64}, {});
+	// Because of that, we introduce "i32.drop" and "i64.drop".
 	addFunction("i32.drop", {i32}, {});
+	addFunction("i64.drop", {i64}, {});
 
 	addFunction("nop", {}, {});
 	addFunction("unreachable", {}, {}, false);
@@ -122,7 +122,7 @@ BuiltinFunction const* WasmDialect::discardFunction(YulString _type) const
 	if (_type == "i32"_yulstring)
 		return builtin("i32.drop"_yulstring);
 	yulAssert(_type == "i64"_yulstring, "");
-	return builtin("drop"_yulstring);
+	return builtin("i64.drop"_yulstring);
 }
 
 BuiltinFunction const* WasmDialect::equalityFunction(YulString _type) const

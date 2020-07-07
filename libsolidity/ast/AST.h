@@ -928,6 +928,7 @@ public:
 	/// @returns true if this variable is a parameter or return parameter of an internal function
 	/// or a function type of internal visibility.
 	bool isInternalCallableParameter() const;
+	bool isConstructorParameter() const;
 	/// @returns true iff this variable is a parameter(or return parameter of a library function
 	bool isLibraryFunctionParameter() const;
 	/// @returns true if the type of the variable does not need to be specified, i.e. it is declared
@@ -2084,6 +2085,7 @@ public:
 	{
 		None = static_cast<int>(Token::Illegal),
 		Wei = static_cast<int>(Token::SubWei),
+		Gwei = static_cast<int>(Token::SubGwei),
 		Szabo = static_cast<int>(Token::SubSzabo),
 		Finney = static_cast<int>(Token::SubFinney),
 		Ether = static_cast<int>(Token::SubEther),

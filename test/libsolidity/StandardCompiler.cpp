@@ -354,9 +354,9 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["abi"].isArray());
 	BOOST_CHECK_EQUAL(util::jsonCompactPrint(contract["abi"]), "[]");
 	BOOST_CHECK(contract["devdoc"].isObject());
-	BOOST_CHECK_EQUAL(util::jsonCompactPrint(contract["devdoc"]), "{\"methods\":{}}");
+	BOOST_CHECK_EQUAL(util::jsonCompactPrint(contract["devdoc"]), R"({"kind":"dev","methods":{},"version":1})");
 	BOOST_CHECK(contract["userdoc"].isObject());
-	BOOST_CHECK_EQUAL(util::jsonCompactPrint(contract["userdoc"]), "{\"methods\":{}}");
+	BOOST_CHECK_EQUAL(util::jsonCompactPrint(contract["userdoc"]), R"({"kind":"user","methods":{},"version":1})");
 	BOOST_CHECK(contract["evm"].isObject());
 	/// @TODO check evm.methodIdentifiers, legacyAssembly, bytecode, deployedBytecode
 	BOOST_CHECK(contract["evm"]["bytecode"].isObject());
@@ -1242,7 +1242,7 @@ BOOST_AUTO_TEST_CASE(use_stack_optimization)
 	BOOST_CHECK(result["errors"][0]["severity"] == "error");
 	BOOST_REQUIRE(result["errors"][0]["message"].isString());
 	BOOST_CHECK(result["errors"][0]["message"].asString().find("Stack too deep when compiling inline assembly") != std::string::npos);
-	BOOST_CHECK(result["errors"][0]["type"] == "YulException");
+	BOOST_CHECK(result["errors"][0]["type"] == "CompilerError");
 }
 
 BOOST_AUTO_TEST_CASE(standard_output_selection_wildcard)

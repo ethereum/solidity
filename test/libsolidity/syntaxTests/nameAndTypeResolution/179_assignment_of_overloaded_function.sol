@@ -4,4 +4,4 @@ contract test {
     function g() public returns (uint) { function (uint) returns (uint) x = f; return x(7); }
 }
 // ----
-// TypeError: (208-209): No matching declaration found after variable lookup.
+// TypeError 2144: (208-209): No matching declaration found after variable lookup.

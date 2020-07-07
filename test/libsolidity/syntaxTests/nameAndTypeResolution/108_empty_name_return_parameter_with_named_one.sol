@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// TypeError: (77-85): Different number of arguments in return statement than in returns declaration.
+// TypeError 8863: (77-85): Different number of arguments in return statement than in returns declaration.

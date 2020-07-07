@@ -12,12 +12,12 @@ contract C {
    }
 }
 // ----
-// TypeError: (60-69): Explicit type conversion not allowed from "int_const 1" to "bytes1".
-// TypeError: (88-97): Explicit type conversion not allowed from "int_const 1" to "bytes2".
-// TypeError: (116-127): Explicit type conversion not allowed from "int_const 256" to "bytes2".
-// TypeError: (146-155): Explicit type conversion not allowed from "int_const 1" to "bytes3".
-// TypeError: (174-187): Explicit type conversion not allowed from "int_const 65536" to "bytes3".
-// TypeError: (206-215): Explicit type conversion not allowed from "int_const 1" to "bytes4".
-// TypeError: (234-250): Explicit type conversion not allowed from "int_const 16777216" to "bytes4".
-// TypeError: (270-280): Explicit type conversion not allowed from "int_const 1" to "bytes16".
-// TypeError: (300-310): Explicit type conversion not allowed from "int_const 1" to "bytes32".
+// TypeError 9640: (60-69): Explicit type conversion not allowed from "int_const 1" to "bytes1".
+// TypeError 9640: (88-97): Explicit type conversion not allowed from "int_const 1" to "bytes2".
+// TypeError 9640: (116-127): Explicit type conversion not allowed from "int_const 256" to "bytes2".
+// TypeError 9640: (146-155): Explicit type conversion not allowed from "int_const 1" to "bytes3".
+// TypeError 9640: (174-187): Explicit type conversion not allowed from "int_const 65536" to "bytes3".
+// TypeError 9640: (206-215): Explicit type conversion not allowed from "int_const 1" to "bytes4".
+// TypeError 9640: (234-250): Explicit type conversion not allowed from "int_const 16777216" to "bytes4".
+// TypeError 9640: (270-280): Explicit type conversion not allowed from "int_const 1" to "bytes16".
+// TypeError 9640: (300-310): Explicit type conversion not allowed from "int_const 1" to "bytes32".

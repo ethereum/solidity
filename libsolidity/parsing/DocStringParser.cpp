@@ -94,19 +94,12 @@ void DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 		{
 			// we found a tag
 			auto tagNameEndPos = firstWhitespaceOrNewline(tagPos, end);
-			if (tagNameEndPos == end)
-			{
-				m_errorReporter->docstringParsingError(
-					9222_error,
-					"End of tag " + string(tagPos, tagNameEndPos) + " not found"
-				);
-				break;
-			}
-
-			currPos = parseDocTag(tagNameEndPos + 1, end, string(tagPos + 1, tagNameEndPos));
+			auto tagName = string(tagPos + 1, tagNameEndPos);
+			auto tagDataPos = (tagNameEndPos != end) ? tagNameEndPos + 1 : tagNameEndPos;
+			currPos = parseDocTag(tagDataPos, end, tagName);
 		}
 		else if (!!m_lastTag) // continuation of the previous tag
-			currPos = appendDocTag(currPos, end);
+			currPos = parseDocTagLine(currPos, end, true);
 		else if (currPos != end)
 		{
 			// if it begins without a tag then consider it as @notice
@@ -127,7 +120,7 @@ DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, boo
 {
 	solAssert(!!m_lastTag, "");
 	auto nlPos = find(_pos, _end, '\n');
-	if (_appending && _pos < _end && *_pos != ' ' && *_pos != '\t')
+	if (_appending && _pos != _end && *_pos != ' ' && *_pos != '\t')
 		m_lastTag->content += " ";
 	else if (!_appending)
 		_pos = skipWhitespace(_pos, _end);
@@ -179,13 +172,7 @@ DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, string 
 		}
 	}
 	else
-		return appendDocTag(_pos, _end);
-}
-
-DocStringParser::iter DocStringParser::appendDocTag(iter _pos, iter _end)
-{
-	solAssert(!!m_lastTag, "");
-	return parseDocTagLine(_pos, _end, true);
+		return parseDocTagLine(_pos, _end, true);
 }
 
 void DocStringParser::newTag(string const& _tagName)

@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (124-164): Internal type is not allowed for public or external functions.
+// TypeError 4103: (124-164): Internal type is not allowed for public or external functions.

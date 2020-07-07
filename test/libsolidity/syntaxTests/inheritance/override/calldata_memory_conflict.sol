@@ -16,7 +16,7 @@ contract B is A {
     function i(uint[] memory) public override payable {}
 }
 // ----
-// DeclarationError: (300-353): Function with same name and arguments defined twice.
-// DeclarationError: (358-419): Function with same name and arguments defined twice.
-// DeclarationError: (424-485): Function with same name and arguments defined twice.
-// DeclarationError: (490-546): Function with same name and arguments defined twice.
+// DeclarationError 1686: (300-353): Function with same name and parameter types defined twice.
+// DeclarationError 1686: (358-419): Function with same name and parameter types defined twice.
+// DeclarationError 1686: (424-485): Function with same name and parameter types defined twice.
+// DeclarationError 1686: (490-546): Function with same name and parameter types defined twice.

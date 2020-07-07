@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// Warning: (142-195): "switch" statement with only a default case.
+// Warning 9592: (142-195): "switch" statement with only a default case.

@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (52-56): Index access for contracts or libraries is not possible.
+// TypeError 2876: (52-56): Index access for contracts or libraries is not possible.

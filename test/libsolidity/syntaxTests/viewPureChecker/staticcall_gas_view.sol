@@ -11,5 +11,5 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // ----
-// Warning: (207-223): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
-// Warning: (276-286): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
+// Warning 1621: (207-223): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.
+// Warning 1621: (276-286): Using ".gas(...)" is deprecated. Use "{gas: ...}" instead.

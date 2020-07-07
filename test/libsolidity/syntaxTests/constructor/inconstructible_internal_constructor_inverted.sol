@@ -10,4 +10,4 @@ contract A {
 	constructor(address) internal {}
 }
 // ----
-// TypeError: (141-146): Contract with internal constructor cannot be created directly.
+// TypeError 9054: (141-146): Contract with internal constructor cannot be created directly.

@@ -253,6 +253,21 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 		// assignment to slot contents denoted by "name"
 		m_memory.eraseValue(name);
 	}
+
+	if (_value && _variables.size() == 1)
+	{
+		YulString variable = *_variables.begin();
+		if (!movableChecker.referencedVariables().count(variable))
+		{
+			// This might erase additional knowledge about the slot.
+			// On the other hand, if we knew the value in the slot
+			// already, then the sload() / mload() would have been replaced by a variable anyway.
+			if (auto key = isSimpleLoad(evmasm::Instruction::MLOAD, *_value))
+				m_memory.set(*key, variable);
+			else if (auto key = isSimpleLoad(evmasm::Instruction::SLOAD, *_value))
+				m_storage.set(*key, variable);
+		}
+	}
 }
 
 void DataFlowAnalyzer::pushScope(bool _functionScope)
@@ -397,6 +412,28 @@ std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
 						YulString value = std::get<Identifier>(funCall.arguments.at(1)).name;
 						return make_pair(key, value);
 					}
+	}
+	return {};
+}
+
+std::optional<YulString> DataFlowAnalyzer::isSimpleLoad(
+	evmasm::Instruction _load,
+	Expression const& _expression
+) const
+{
+	yulAssert(
+		_load == evmasm::Instruction::MLOAD ||
+		_load == evmasm::Instruction::SLOAD,
+		""
+	);
+	if (holds_alternative<FunctionCall>(_expression))
+	{
+		FunctionCall const& funCall = std::get<FunctionCall>(_expression);
+		if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+			if (auto const* builtin = dialect->builtin(funCall.functionName.name))
+				if (builtin->instruction == _load)
+					if (holds_alternative<Identifier>(funCall.arguments.at(0)))
+						return std::get<Identifier>(funCall.arguments.at(0)).name;
 	}
 	return {};
 }

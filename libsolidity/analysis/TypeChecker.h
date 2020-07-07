@@ -51,9 +51,9 @@ public:
 		m_errorReporter(_errorReporter)
 	{}
 
-	/// Performs type checking on the given contract and all of its sub-nodes.
+	/// Performs type checking on the given source and all of its sub-nodes.
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
-	bool checkTypeRequirements(ASTNode const& _contract);
+	bool checkTypeRequirements(SourceUnit const& _source);
 
 	/// @returns the type of an expression and asserts that it is present.
 	TypePointer const& type(Expression const& _expression) const;
@@ -111,7 +111,6 @@ private:
 	);
 
 	void endVisit(InheritanceSpecifier const& _inheritance) override;
-	void endVisit(UsingForDirective const& _usingFor) override;
 	void endVisit(ModifierDefinition const& _modifier) override;
 	bool visit(FunctionDefinition const& _function) override;
 	bool visit(VariableDeclaration const& _variable) override;
@@ -165,6 +164,9 @@ private:
 	/// Runs type checks on @a _expression to infer its type and then checks that it is an LValue.
 	void requireLValue(Expression const& _expression, bool _ordinaryAssignment);
 
+	bool experimentalFeatureActive(ExperimentalFeature _feature) const;
+
+	SourceUnit const* m_currentSourceUnit = nullptr;
 	ContractDefinition const* m_currentContract = nullptr;
 
 	langutil::EVMVersion m_evmVersion;

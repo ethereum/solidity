@@ -6,5 +6,5 @@ contract test {
     }
 }
 // ----
-// Warning: (33-42): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning: (20-136): Function state mutability can be restricted to pure
+// Warning 5667: (33-42): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 2018: (20-136): Function state mutability can be restricted to pure

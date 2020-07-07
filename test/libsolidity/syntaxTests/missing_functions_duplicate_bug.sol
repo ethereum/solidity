@@ -25,4 +25,4 @@ contract Voting is Ownable {
     }
 }
 // ----
-// Warning: (324-340): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 5667: (324-340): Unused function parameter. Remove or comment out the variable name to silence this warning.

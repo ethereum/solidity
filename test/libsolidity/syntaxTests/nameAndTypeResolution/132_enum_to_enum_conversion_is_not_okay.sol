@@ -6,4 +6,4 @@ contract test {
     }
 }
 // ----
-// TypeError: (137-153): Explicit type conversion not allowed from "enum test.Paper" to "enum test.Ground".
+// TypeError 9640: (137-153): Explicit type conversion not allowed from "enum test.Paper" to "enum test.Ground".

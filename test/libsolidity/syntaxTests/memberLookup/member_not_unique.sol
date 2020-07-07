@@ -10,4 +10,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (282-287): Member "a" not unique after argument-dependent lookup in contract C.
+// TypeError 6675: (282-287): Member "a" not unique after argument-dependent lookup in contract C.

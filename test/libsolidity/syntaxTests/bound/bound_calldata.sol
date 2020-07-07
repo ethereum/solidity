@@ -6,4 +6,4 @@ contract C {
 	}
 }
 // ----
-// TypeError: (136-140): Member "f" not found or not visible after argument-dependent lookup in bytes memory.
+// TypeError 9582: (136-140): Member "f" not found or not visible after argument-dependent lookup in bytes memory.

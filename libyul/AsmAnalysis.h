@@ -97,6 +97,7 @@ private:
 	/// Visits the expression, expects that it evaluates to exactly one value and
 	/// returns the type. Reports errors on errors and returns the default type.
 	YulString expectExpression(Expression const& _expr);
+	YulString expectUnlimitedStringLiteral(Literal const& _literal);
 	/// Vists the expression and expects it to return a single boolean value.
 	/// Reports an error otherwise.
 	void expectBoolExpression(Expression const& _expr);
@@ -109,12 +110,12 @@ private:
 	Scope& scope(Block const* _block);
 	void expectValidType(YulString _type, langutil::SourceLocation const& _location);
 	void expectType(YulString _expectedType, YulString _givenType, langutil::SourceLocation const& _location);
-	bool warnOnInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
-	bool warnOnInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
 
-	bool warnOnInstructions(FunctionCall const& _functionCall)
+	bool validateInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
+	bool validateInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
+	bool validateInstructions(FunctionCall const& _functionCall)
 	{
-		return warnOnInstructions(_functionCall.functionName.name.str(), _functionCall.functionName.location);
+		return validateInstructions(_functionCall.functionName.name.str(), _functionCall.functionName.location);
 	}
 
 	yul::ExternalIdentifierAccess::Resolver m_resolver;

@@ -6,4 +6,4 @@ contract D is C {
     constructor() C(5) public {}
 }
 // ----
-// TypeError: (127-131): Wrong argument count for modifier invocation: 1 arguments given but expected 0.
+// TypeError 2973: (127-131): Wrong argument count for modifier invocation: 1 arguments given but expected 0.

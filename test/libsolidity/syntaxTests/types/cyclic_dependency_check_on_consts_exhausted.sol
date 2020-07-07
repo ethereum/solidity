@@ -259,4 +259,4 @@ contract Main {
     A constant JX = A(0x00);
 }
 // ----
-// DeclarationError: (6105-6123): Variable definition exhausting cyclic dependency validator.
+// DeclarationError 7380: (6105-6123): Variable definition exhausting cyclic dependency validator.

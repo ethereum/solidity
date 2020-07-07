@@ -4,4 +4,4 @@ contract Test {
     }
 }
 // ----
-// Warning: (78-88): Statement has no effect.
+// Warning 6133: (78-88): Statement has no effect.

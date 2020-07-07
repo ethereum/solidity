@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (94-101): Member "value" is only available for payable functions.
+// TypeError 8820: (94-101): Member "value" is only available for payable functions.

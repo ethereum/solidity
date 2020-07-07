@@ -4,4 +4,4 @@ contract C {
 	}
 }
 // ----
-// ParserError: (27-30): Expected explicit type name.
+// ParserError 7059: (27-30): Expected explicit type name.

@@ -8,4 +8,4 @@ contract Apple {
     }
 }
 // ----
-// Warning: (141-156): Statement has no effect.
+// Warning 6133: (141-156): Statement has no effect.

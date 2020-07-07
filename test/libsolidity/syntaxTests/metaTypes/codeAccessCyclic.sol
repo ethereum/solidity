@@ -9,4 +9,4 @@ contract B {
     }
 }
 // ----
-// TypeError: (133-152): Circular reference for contract code access.
+// TypeError 4224: (133-152): Circular reference for contract code access.

@@ -15,4 +15,4 @@ contract C
 	}
 }
 // ----
-// Warning: (118-119): Condition is always true.
+// Warning 6838: (118-119): Condition is always true.

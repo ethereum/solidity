@@ -11,22 +11,10 @@ sourceUnit
   : (pragmaDirective | importDirective | structDefinition | enumDefinition | contractDefinition)* EOF ;
 
 pragmaDirective
-  : 'pragma' pragmaName pragmaValue ';' ;
+  : 'pragma' pragmaName ( ~';' )* ';' ;
 
 pragmaName
   : identifier ;
-
-pragmaValue
-  : version | expression ;
-
-version
-  : versionConstraint versionConstraint? ;
-
-versionConstraint
-  : versionOperator? VersionLiteral ;
-
-versionOperator
-  : '^' | '~' | '>=' | '>' | '<' | '<=' | '=' ;
 
 importDirective
   : 'import' StringLiteralFragment ('as' identifier)? ';'
@@ -371,10 +359,10 @@ subAssembly
   : 'assembly' identifier assemblyBlock ;
 
 numberLiteral
-  : (DecimalNumber | HexNumber) NumberUnit? ;
+  : (DecimalNumber | HexNumber) (NumberUnit | Gwei)?;
 
 identifier
-  : ('from' | 'calldata' | 'address' | Identifier) ;
+  : (Gwei | 'from' | 'calldata' | 'address' | Identifier) ;
 
 BooleanLiteral
   : 'true' | 'false' ;
@@ -396,6 +384,8 @@ HexDigits
 NumberUnit
   : 'wei' | 'szabo' | 'finney' | 'ether'
   | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years' ;
+
+Gwei: 'gwei' ;
 
 HexLiteralFragment
   : 'hex' (('"' HexDigits? '"') | ('\'' HexDigits? '\'')) ;
@@ -472,9 +462,6 @@ DoubleQuotedStringCharacter
 fragment
 SingleQuotedStringCharacter
   : ~['\r\n\\] | ('\\' .) ;
-
-VersionLiteral
-  : [0-9]+ ( '.' [0-9]+ ('.' [0-9]+)? )? ;
 
 WS
   : [ \t\r\n\u000C]+ -> skip ;

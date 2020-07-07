@@ -8,4 +8,4 @@
         }
     }
 // ----
-// Warning: (25-229): Function state mutability can be restricted to pure
+// Warning 2018: (25-229): Function state mutability can be restricted to pure

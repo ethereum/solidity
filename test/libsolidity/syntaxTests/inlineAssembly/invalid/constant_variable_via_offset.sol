@@ -7,4 +7,4 @@ contract test {
     }
 }
 // ----
-// TypeError: (112-120): The suffixes _offset and _slot can only be used on non-constant storage variables.
+// TypeError 6617: (112-120): The suffixes _offset and _slot can only be used on non-constant storage variables.

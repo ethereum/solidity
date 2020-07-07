@@ -158,11 +158,22 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 	else if (_variable.isStateVariable())
 	{
 		set<StructDefinition const*> structsSeen;
-		if (structureSizeEstimate(*_variable.type(), structsSeen) >= bigint(1) << 64)
+		TypeSet oversizedSubTypes;
+		if (structureSizeEstimate(*_variable.type(), structsSeen, oversizedSubTypes) >= bigint(1) << 64)
 			m_errorReporter.warning(
 				3408_error,
 				_variable.location(),
-				"Variable covers a large part of storage and thus makes collisions likely. "
+				"Variable " + util::escapeAndQuoteString(_variable.name()) +
+				" covers a large part of storage and thus makes collisions likely. "
+				"Either use mappings or dynamic arrays and allow their size to be increased only "
+				"in small quantities per transaction."
+			);
+		for (Type const* type: oversizedSubTypes)
+			m_errorReporter.warning(
+				7325_error,
+				_variable.location(),
+				"Type " + util::escapeAndQuoteString(type->canonicalName()) +
+				" has large size and thus makes collisions likely. "
 				"Either use mappings or dynamic arrays and allow their size to be increased only "
 				"in small quantities per transaction."
 			);
@@ -339,30 +350,43 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 	return true;
 }
 
-bigint StaticAnalyzer::structureSizeEstimate(Type const& _type, set<StructDefinition const*>& _structsSeen)
+bigint StaticAnalyzer::structureSizeEstimate(
+	Type const& _type,
+	set<StructDefinition const*>& _structsSeen,
+	TypeSet& _oversizedSubTypes
+)
 {
 	switch (_type.category())
 	{
 	case Type::Category::Array:
 	{
 		auto const& t = dynamic_cast<ArrayType const&>(_type);
-		return structureSizeEstimate(*t.baseType(), _structsSeen) * (t.isDynamicallySized() ? 1 : t.length());
+		bigint baseTypeSize = structureSizeEstimate(*t.baseType(), _structsSeen, _oversizedSubTypes);
+		if (baseTypeSize >= bigint(1) << 64)
+			_oversizedSubTypes.insert(t.baseType());
+		if (!t.isDynamicallySized())
+			return structureSizeEstimate(*t.baseType(), _structsSeen, _oversizedSubTypes) * t.length();
+		break;
 	}
 	case Type::Category::Struct:
 	{
 		auto const& t = dynamic_cast<StructType const&>(_type);
 		bigint size = 1;
-		if (!_structsSeen.count(&t.structDefinition()))
-		{
-			_structsSeen.insert(&t.structDefinition());
-			for (auto const& m: t.members(nullptr))
-				size += structureSizeEstimate(*m.type, _structsSeen);
-		}
+		if (_structsSeen.count(&t.structDefinition()))
+			return size;
+		_structsSeen.insert(&t.structDefinition());
+		for (auto const& m: t.members(nullptr))
+			size += structureSizeEstimate(*m.type, _structsSeen, _oversizedSubTypes);
+		_structsSeen.erase(&t.structDefinition());
 		return size;
 	}
 	case Type::Category::Mapping:
 	{
-		return structureSizeEstimate(*dynamic_cast<MappingType const&>(_type).valueType(), _structsSeen);
+		auto const* valueType = dynamic_cast<MappingType const&>(_type).valueType();
+		bigint valueTypeSize = structureSizeEstimate(*valueType, _structsSeen, _oversizedSubTypes);
+		if (valueTypeSize >= bigint(1) << 64)
+			_oversizedSubTypes.insert(valueType);
+		break;
 	}
 	default:
 		break;

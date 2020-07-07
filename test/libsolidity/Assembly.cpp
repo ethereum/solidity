@@ -63,27 +63,19 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 	DeclarationTypeChecker declarationTypeChecker(errorReporter, solidity::test::CommonOptions::get().evmVersion());
 	solAssert(Error::containsOnlyWarnings(errorReporter.errors()), "");
 	resolver.registerDeclarations(*sourceUnit);
-	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
-		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-		{
-			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
-			if (!Error::containsOnlyWarnings(errorReporter.errors()))
-				return AssemblyItems();
-		}
+	BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*sourceUnit));
+	if (!Error::containsOnlyWarnings(errorReporter.errors()))
+		return AssemblyItems();
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 	{
 		BOOST_REQUIRE_NO_THROW(declarationTypeChecker.check(*node));
 		if (!Error::containsOnlyWarnings(errorReporter.errors()))
 			return AssemblyItems();
 	}
-	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
-		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-		{
-			TypeChecker checker(solidity::test::CommonOptions::get().evmVersion(), errorReporter);
-			BOOST_REQUIRE_NO_THROW(checker.checkTypeRequirements(*contract));
-			if (!Error::containsOnlyWarnings(errorReporter.errors()))
-				return AssemblyItems();
-		}
+	TypeChecker checker(solidity::test::CommonOptions::get().evmVersion(), errorReporter);
+	BOOST_REQUIRE_NO_THROW(checker.checkTypeRequirements(*sourceUnit));
+	if (!Error::containsOnlyWarnings(errorReporter.errors()))
+		return AssemblyItems();
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -189,6 +181,30 @@ BOOST_AUTO_TEST_CASE(location_test)
 			vector<SourceLocation>(2, SourceLocation{20, 79, sourceCode});
 	checkAssemblyLocations(items, locations);
 }
+
+
+BOOST_AUTO_TEST_CASE(jump_type)
+{
+	auto sourceCode = make_shared<CharStream>(R"(
+	contract C {
+		function f(uint a) public pure returns (uint t) {
+			assembly {
+				function g(x) -> y { if x { leave } y := 8 }
+				t := g(a)
+			}
+		}
+	}
+	)", "");
+	AssemblyItems items = compileContract(sourceCode);
+
+	string jumpTypes;
+	for (AssemblyItem const& item: items)
+		if (item.getJumpType() != AssemblyItem::JumpType::Ordinary)
+			jumpTypes += item.getJumpTypeAsString() + "\n";
+
+	BOOST_CHECK_EQUAL(jumpTypes, "[in]\n[out]\n[in]\n[out]\n");
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

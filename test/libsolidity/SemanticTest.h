@@ -58,9 +58,8 @@ public:
 	/// Compiles and deploys currently held source.
 	/// Returns true if deployment was successful, false otherwise.
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
-
 private:
-	std::string m_source;
+	SourceMap m_sources;
 	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;
 	bool m_runWithYul = false;

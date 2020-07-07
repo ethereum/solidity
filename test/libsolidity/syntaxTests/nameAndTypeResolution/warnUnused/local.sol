@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// Warning: (52-58): Unused local variable.
+// Warning 2072: (52-58): Unused local variable.

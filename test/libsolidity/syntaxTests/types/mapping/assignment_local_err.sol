@@ -7,4 +7,4 @@ contract D {
     }
 }
 // ----
-// TypeError: (160-161): Mappings cannot be assigned to.
+// TypeError 9214: (160-161): Mappings cannot be assigned to.

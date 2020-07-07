@@ -31,4 +31,4 @@ contract C {
 // ====
 // SMTSolvers: z3
 // ----
-// Warning: (311-324): Assertion violation happens here
+// Warning 4661: (311-324): Assertion violation happens here

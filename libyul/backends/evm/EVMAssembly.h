@@ -64,11 +64,11 @@ public:
 
 	/// Append a jump instruction.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
-	void appendJump(int _stackDiffAfter) override;
+	void appendJump(int _stackDiffAfter, JumpType _jumpType) override;
 	/// Append a jump-to-immediate operation.
-	void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override;
+	void appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType) override;
 	/// Append a jump-to-if-immediate operation.
-	void appendJumpToIf(LabelID _labelId) override;
+	void appendJumpToIf(LabelID _labelId, JumpType _jumpType) override;
 	/// Start a subroutine.
 	void appendBeginsub(LabelID _labelId, int _arguments) override;
 	/// Call a subroutine.

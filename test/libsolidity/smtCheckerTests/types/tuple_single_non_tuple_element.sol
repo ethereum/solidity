@@ -6,4 +6,4 @@ contract C {
 	}
 }
 // ----
-// Warning: (76-79): Statement has no effect.
+// Warning 6133: (76-79): Statement has no effect.

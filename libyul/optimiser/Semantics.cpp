@@ -180,7 +180,7 @@ pair<TerminationFinder::ControlFlow, size_t> TerminationFinder::firstUncondition
 		if (controlFlow != ControlFlow::FlowOut)
 			return {controlFlow, i};
 	}
-	return {ControlFlow::FlowOut, size_t(-1)};
+	return {ControlFlow::FlowOut, numeric_limits<size_t>::max()};
 }
 
 TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement const& _statement)

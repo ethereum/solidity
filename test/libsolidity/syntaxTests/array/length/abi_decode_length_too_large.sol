@@ -5,4 +5,4 @@ contract C {
 	}
 }
 // ----
-// TypeError: (75-90): Type too large for memory.
+// TypeError 6118: (75-90): Type too large for memory.

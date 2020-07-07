@@ -182,7 +182,10 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::ADDRESS:
 		return m_state.address;
 	case Instruction::BALANCE:
-		return m_state.balance;
+		if (arg[0] == m_state.address)
+			return m_state.selfbalance;
+		else
+			return m_state.balance;
 	case Instruction::SELFBALANCE:
 		return m_state.selfbalance;
 	case Instruction::ORIGIN:

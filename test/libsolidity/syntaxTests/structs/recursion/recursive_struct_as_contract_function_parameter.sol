@@ -7,4 +7,4 @@ contract Test {
     function f(MyStructName memory s) public {}
 }
 // ----
-// TypeError: (112-133): Recursive type not allowed for public or external contract functions.
+// TypeError 4103: (112-133): Recursive type not allowed for public or external contract functions.

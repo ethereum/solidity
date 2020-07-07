@@ -40,6 +40,8 @@ struct DocTag;
 class Natspec
 {
 public:
+	static unsigned int constexpr c_natspecVersion = 1;
+
 	/// Get the User documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A JSON representation of the contract's user documentation

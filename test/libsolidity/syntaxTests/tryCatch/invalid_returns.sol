@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// TypeError: (157-161): Invalid type, expected uint8 but got uint256.
-// TypeError: (163-168): Invalid type, expected uint256 but got int256.
+// TypeError 6509: (157-161): Invalid type, expected uint8 but got uint256.
+// TypeError 6509: (163-168): Invalid type, expected uint256 but got int256.

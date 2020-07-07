@@ -17,5 +17,5 @@ contract C is B {
 
 }
 // ----
-// TypeError: (0-209): Construction control flow ends without initializing all immutable state variables.
-// TypeError: (211-375): Construction control flow ends without initializing all immutable state variables.
+// TypeError 2658: (0-209): Construction control flow ends without initializing all immutable state variables.
+// TypeError 2658: (211-375): Construction control flow ends without initializing all immutable state variables.

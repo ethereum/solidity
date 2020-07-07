@@ -58,9 +58,9 @@ public:
 	LabelID namedLabel(std::string const& _name) override;
 	void appendLinkerSymbol(std::string const& _name) override;
 
-	void appendJump(int _stackDiffAfter) override;
-	void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override;
-	void appendJumpToIf(LabelID _labelId) override;
+	void appendJump(int _stackDiffAfter, JumpType _jumpType) override;
+	void appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType) override;
+	void appendJumpToIf(LabelID _labelId, JumpType _jumpType) override;
 	void appendBeginsub(LabelID _labelId, int _arguments) override;
 	void appendJumpsub(LabelID _labelId, int _arguments, int _returns) override;
 	void appendReturnsub(int _returns, int _stackDiffAfter) override;

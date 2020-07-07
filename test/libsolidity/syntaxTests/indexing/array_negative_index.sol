@@ -5,4 +5,4 @@ contract C {
   }
 }
 // ----
-// TypeError: (67-69): Type int_const -1 is not implicitly convertible to expected type uint256.
+// TypeError 7407: (67-69): Type int_const -1 is not implicitly convertible to expected type uint256.

@@ -175,7 +175,8 @@ Statement Parser::parseStatement()
 	case Token::Comma:
 	case Token::AssemblyAssign:
 	{
-		std::vector<Identifier> variableNames;
+		Assignment assignment;
+		assignment.location = locationOf(elementary);
 
 		while (true)
 		{
@@ -197,7 +198,7 @@ Statement Parser::parseStatement()
 			if (m_dialect.builtin(identifier.name))
 				fatalParserError(6272_error, "Cannot assign to builtin function \"" + identifier.name.str() + "\".");
 
-			variableNames.emplace_back(identifier);
+			assignment.variableNames.emplace_back(identifier);
 
 			if (currentToken() != Token::Comma)
 				break;
@@ -206,10 +207,6 @@ Statement Parser::parseStatement()
 
 			elementary = parseElementaryOperation();
 		}
-
-		Assignment assignment;
-		assignment.location = std::get<Identifier>(elementary).location;
-		assignment.variableNames = std::move(variableNames);
 
 		expectToken(Token::AssemblyAssign);
 
@@ -298,20 +295,6 @@ Expression Parser::parseExpression()
 		yulAssert(holds_alternative<Literal>(operation), "");
 		return std::get<Literal>(operation);
 	}
-}
-
-std::map<evmasm::Instruction, string> const& Parser::instructionNames()
-{
-	static map<evmasm::Instruction, string> s_instructionNames;
-	if (s_instructionNames.empty())
-	{
-		for (auto const& instr: instructions())
-			s_instructionNames[instr.second] = instr.first;
-		// set the ambiguous instructions to a clear default
-		s_instructionNames[evmasm::Instruction::SELFDESTRUCT] = "selfdestruct";
-		s_instructionNames[evmasm::Instruction::KECCAK256] = "keccak256";
-	}
-	return s_instructionNames;
 }
 
 Parser::ElementaryOperation Parser::parseElementaryOperation()

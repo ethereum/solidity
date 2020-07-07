@@ -47,7 +47,7 @@ void StackVariable::retrieveValue(SourceLocation const& _location, bool) const
 	unsigned stackPos = m_context.baseToCurrentStackOffset(m_baseStackOffset);
 	if (stackPos + 1 > 16) //@todo correct this by fetching earlier or moving to memory
 		BOOST_THROW_EXCEPTION(
-			CompilerError() <<
+			StackTooDeepError() <<
 			errinfo_sourceLocation(_location) <<
 			errinfo_comment("Stack too deep, try removing local variables.")
 		);
@@ -61,7 +61,7 @@ void StackVariable::storeValue(Type const&, SourceLocation const& _location, boo
 	unsigned stackDiff = m_context.baseToCurrentStackOffset(m_baseStackOffset) - m_size + 1;
 	if (stackDiff > 16)
 		BOOST_THROW_EXCEPTION(
-			CompilerError() <<
+			StackTooDeepError() <<
 			errinfo_sourceLocation(_location) <<
 			errinfo_comment("Stack too deep, try removing local variables.")
 		);

@@ -19,6 +19,6 @@ contract C {
     }
 }
 // ----
-// TypeError: (137-138): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
-//  TypeError: (235-236): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
-//  TypeError: (398-399): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (137-138): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (235-236): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.
+// TypeError 3464: (398-399): This variable is of storage pointer type and can be accessed without prior assignment, which would lead to undefined behaviour.

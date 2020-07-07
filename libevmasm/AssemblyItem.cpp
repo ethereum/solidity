@@ -59,7 +59,7 @@ void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 	setData(data);
 }
 
-unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
+size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 {
 	switch (m_type)
 	{
@@ -69,7 +69,7 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	case PushString:
 		return 1 + 32;
 	case Push:
-		return 1 + max<unsigned>(1, util::bytesRequired(data()));
+		return 1 + max<size_t>(1, util::bytesRequired(data()));
 	case PushSubSize:
 	case PushProgramSize:
 		return 1 + 4;		// worst case: a 16MB program

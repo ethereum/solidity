@@ -232,6 +232,7 @@ namespace solidity::langutil
 	\
 	/* Identifiers (not keywords or future reserved words). */         \
 	T(Identifier, nullptr, 0)                                          \
+	T(SubGwei, "gwei", 0)                                              \
 	\
 	/* Keywords reserved for future use. */                            \
 	K(After, "after", 0)                                               \

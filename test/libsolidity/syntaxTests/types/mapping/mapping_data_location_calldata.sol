@@ -6,4 +6,4 @@ contract c {
     }
 }
 // ----
-// TypeError: (81-113): Data location must be "storage" for variable, but "calldata" was given.
+// TypeError 6651: (81-113): Data location must be "storage" for variable, but "calldata" was given.

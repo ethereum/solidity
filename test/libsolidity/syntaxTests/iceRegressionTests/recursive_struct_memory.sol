@@ -10,4 +10,4 @@ contract Test {
         }
 }
 // ----
-// DeclarationError: (157-198): Identifier already declared.
+// DeclarationError 2333: (157-198): Identifier already declared.

@@ -1825,11 +1825,16 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::Number:
-		if (TokenTraits::isEtherSubdenomination(m_scanner->peekNextToken()))
+		if (
+			(m_scanner->peekNextToken() == Token::Identifier && m_scanner->peekLiteral() == "gwei") ||
+			TokenTraits::isEtherSubdenomination(m_scanner->peekNextToken())
+		)
 		{
 			ASTPointer<ASTString> literal = getLiteralAndAdvance();
 			nodeFactory.markEndPosition();
-			Literal::SubDenomination subdenomination = static_cast<Literal::SubDenomination>(m_scanner->currentToken());
+			Token actualToken = m_scanner->currentToken() == Token::Identifier ? Token::SubGwei : m_scanner->currentToken();
+
+			Literal::SubDenomination subdenomination = static_cast<Literal::SubDenomination>(actualToken);
 			m_scanner->next();
 			expression = nodeFactory.createNode<Literal>(token, literal, subdenomination);
 		}

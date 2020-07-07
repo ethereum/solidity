@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (74-78): Expression has to be an lvalue.
+// TypeError 4247: (74-78): Expression has to be an lvalue.

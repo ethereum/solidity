@@ -132,17 +132,11 @@ vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 	}
 	else
 	{
-		bool found = false;
-		if (m_resolver)
-		{
-			bool insideFunction = m_currentScope->insideFunction();
-			size_t stackSize = m_resolver(_identifier, yul::IdentifierContext::RValue, insideFunction);
-			if (stackSize != size_t(-1))
-			{
-				found = true;
-				yulAssert(stackSize == 1, "Invalid stack size of external reference.");
-			}
-		}
+		bool found = m_resolver && m_resolver(
+			_identifier,
+			yul::IdentifierContext::RValue,
+			m_currentScope->insideFunction()
+		);
 		if (!found && watcher.ok())
 			// Only add an error message if the callback did not do it.
 			m_errorReporter.declarationError(8198_error, _identifier.location, "Identifier not found.");
@@ -172,6 +166,17 @@ void AsmAnalyzer::operator()(Assignment const& _assignment)
 	yulAssert(_assignment.value, "");
 	size_t const numVariables = _assignment.variableNames.size();
 	yulAssert(numVariables >= 1, "");
+
+	set<YulString> variables;
+	for (auto const& _variableName: _assignment.variableNames)
+		if (!variables.insert(_variableName.name).second)
+			m_errorReporter.declarationError(
+				9005_error,
+				_assignment.location,
+				"Variable " +
+				_variableName.name.str() +
+				" occurs multiple times on the left-hand side of the assignment."
+			);
 
 	vector<YulString> types = std::visit(*this, *_assignment.value);
 
@@ -270,7 +275,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		if (f->literalArguments)
 			needsLiteralArguments = &f->literalArguments.value();
 
-		warnOnInstructions(_funCall);
+		validateInstructions(_funCall);
 	}
 	else if (!m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
 		[&](Scope::Variable const&)
@@ -288,7 +293,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		}
 	}))
 	{
-		if (!warnOnInstructions(_funCall))
+		if (!validateInstructions(_funCall))
 			m_errorReporter.declarationError(4619_error, _funCall.functionName.location, "Function not found.");
 		yulAssert(!watcher.ok(), "Expected a reported error.");
 	}
@@ -307,10 +312,15 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
 	{
 		Expression const& arg = _funCall.arguments[i - 1];
+		bool isLiteralArgument = needsLiteralArguments && (*needsLiteralArguments)[i - 1];
+		bool isStringLiteral = holds_alternative<Literal>(arg) && get<Literal>(arg).kind == LiteralKind::String;
 
-		argTypes.emplace_back(expectExpression(arg));
+		if (isLiteralArgument && isStringLiteral)
+			argTypes.emplace_back(expectUnlimitedStringLiteral(get<Literal>(arg)));
+		else
+			argTypes.emplace_back(expectExpression(arg));
 
-		if (needsLiteralArguments && (*needsLiteralArguments)[i - 1])
+		if (isLiteralArgument)
 		{
 			if (!holds_alternative<Literal>(arg))
 				m_errorReporter.typeError(
@@ -439,6 +449,14 @@ YulString AsmAnalyzer::expectExpression(Expression const& _expr)
 	return types.empty() ? m_dialect.defaultType : types.front();
 }
 
+YulString AsmAnalyzer::expectUnlimitedStringLiteral(Literal const& _literal)
+{
+	yulAssert(_literal.kind == LiteralKind::String, "");
+	yulAssert(m_dialect.validTypeForLiteral(LiteralKind::String, _literal.value, _literal.type), "");
+
+	return {_literal.type};
+}
+
 void AsmAnalyzer::expectBoolExpression(Expression const& _expr)
 {
 	YulString type = expectExpression(_expr);
@@ -478,12 +496,10 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulString _valueT
 	else if (m_resolver)
 	{
 		bool insideFunction = m_currentScope->insideFunction();
-		size_t variableSize = m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction);
-		if (variableSize != size_t(-1))
+		if (m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction))
 		{
 			found = true;
 			variableType = &m_dialect.defaultType;
-			yulAssert(variableSize == 1, "Invalid stack size of external reference.");
 		}
 	}
 
@@ -536,16 +552,16 @@ void AsmAnalyzer::expectType(YulString _expectedType, YulString _givenType, Sour
 		);
 }
 
-bool AsmAnalyzer::warnOnInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
+bool AsmAnalyzer::validateInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
 {
 	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
-	if (builtin)
-		return warnOnInstructions(builtin->instruction.value(), _location);
+	if (builtin && builtin->instruction.has_value())
+		return validateInstructions(builtin->instruction.value(), _location);
 	else
 		return false;
 }
 
-bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation const& _location)
+bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocation const& _location)
 {
 	// We assume that returndatacopy, returndatasize and staticcall are either all available
 	// or all not available.
@@ -553,9 +569,16 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 	// Similarly we assume bitwise shifting and create2 go together.
 	yulAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
 
-	auto errorForVM = [&](string const& vmKindMessage) {
+	// These instructions are disabled in the dialect.
+	yulAssert(
+		_instr != evmasm::Instruction::JUMP &&
+		_instr != evmasm::Instruction::JUMPI &&
+		_instr != evmasm::Instruction::JUMPDEST,
+	"");
+
+	auto errorForVM = [&](ErrorId _errorId, string const& vmKindMessage) {
 		m_errorReporter.typeError(
-			7079_error,
+			_errorId,
 			_location,
 			"The \"" +
 			boost::to_lower_copy(instructionInfo(_instr).name)
@@ -572,21 +595,21 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 		_instr == evmasm::Instruction::RETURNDATACOPY ||
 		_instr == evmasm::Instruction::RETURNDATASIZE
 	) && !m_evmVersion.supportsReturndata())
-		errorForVM("only available for Byzantium-compatible");
+		errorForVM(7756_error, "only available for Byzantium-compatible");
 	else if (_instr == evmasm::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
-		errorForVM("only available for Byzantium-compatible");
+		errorForVM(1503_error, "only available for Byzantium-compatible");
 	else if ((
 		_instr == evmasm::Instruction::SHL ||
 		_instr == evmasm::Instruction::SHR ||
 		_instr == evmasm::Instruction::SAR
 	) && !m_evmVersion.hasBitwiseShifting())
-		errorForVM("only available for Constantinople-compatible");
+		errorForVM(6612_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
-		errorForVM("only available for Constantinople-compatible");
+		errorForVM(6166_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
-		errorForVM("only available for Constantinople-compatible");
+		errorForVM(7110_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::CHAINID && !m_evmVersion.hasChainID())
-		errorForVM("only available for Istanbul-compatible");
+		errorForVM(1561_error, "only available for Istanbul-compatible");
 	else if (_instr == evmasm::Instruction::PC)
 		m_errorReporter.warning(
 			2450_error,
@@ -596,20 +619,7 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 			"\" instruction is deprecated and will be removed in the next breaking release."
 		);
 	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
-		errorForVM("only available for Istanbul-compatible");
-	else if (
-		_instr == evmasm::Instruction::JUMP ||
-		_instr == evmasm::Instruction::JUMPI ||
-		_instr == evmasm::Instruction::JUMPDEST
-	)
-		m_errorReporter.error(
-			4316_error,
-			Error::Type::SyntaxError,
-			_location,
-			"Jump instructions and labels are low-level EVM features that can lead to "
-			"incorrect stack access. Because of that they are disallowed in strict assembly. "
-			"Use functions, \"switch\", \"if\" or \"for\" statements instead."
-		);
+		errorForVM(3672_error, "only available for Istanbul-compatible");
 	else
 		return false;
 

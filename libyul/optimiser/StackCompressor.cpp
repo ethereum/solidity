@@ -178,14 +178,14 @@ bool StackCompressor::run(
 			eliminateVariables(
 				_dialect,
 				std::get<Block>(_object.code->statements.at(0)),
-				stackSurplus.at({}),
+				static_cast<size_t>(stackSurplus.at({})),
 				allowMSizeOptimzation
 			);
 		}
 
 		for (size_t i = 1; i < _object.code->statements.size(); ++i)
 		{
-			FunctionDefinition& fun = std::get<FunctionDefinition>(_object.code->statements[i]);
+			auto& fun = std::get<FunctionDefinition>(_object.code->statements[i]);
 			if (!stackSurplus.count(fun.name))
 				continue;
 
@@ -193,7 +193,7 @@ bool StackCompressor::run(
 			eliminateVariables(
 				_dialect,
 				fun,
-				stackSurplus.at(fun.name),
+				static_cast<size_t>(stackSurplus.at(fun.name)),
 				allowMSizeOptimzation
 			);
 		}

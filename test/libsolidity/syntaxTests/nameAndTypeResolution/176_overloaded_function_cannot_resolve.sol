@@ -4,4 +4,4 @@ contract test {
     function g() public returns (uint) { return f(3, 5); }
 }
 // ----
-// TypeError: (176-177): No matching declaration found after argument-dependent lookup.
+// TypeError 9322: (176-177): No matching declaration found after argument-dependent lookup.

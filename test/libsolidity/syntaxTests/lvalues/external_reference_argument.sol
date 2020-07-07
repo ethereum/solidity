@@ -4,4 +4,3 @@ contract C {
     }
 }
 // ----
-// TypeError: (96-97): External function arguments of reference type are read-only.

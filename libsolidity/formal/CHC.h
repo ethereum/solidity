@@ -77,6 +77,7 @@ private:
 
 	void visitAssert(FunctionCall const& _funCall);
 	void internalFunctionCall(FunctionCall const& _funCall);
+	void externalFunctionCall(FunctionCall const& _funCall);
 	void unknownFunctionCall(FunctionCall const& _funCall);
 	void makeArrayPopVerificationTarget(FunctionCall const& _arrayPop) override;
 	//@}
@@ -95,7 +96,6 @@ private:
 	void resetContractAnalysis();
 	void eraseKnowledge();
 	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr) override;
-	bool shouldVisit(FunctionDefinition const& _function) const;
 	void setCurrentBlock(smt::SymbolicFunctionVariable const& _block, std::vector<smtutil::Expression> const* _arguments = nullptr);
 	std::set<Expression const*, IdCompare> transactionAssertions(ASTNode const* _txRoot);
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
@@ -106,7 +106,9 @@ private:
 	static std::vector<smtutil::SortPointer> stateSorts(ContractDefinition const& _contract);
 	smtutil::SortPointer constructorSort();
 	smtutil::SortPointer interfaceSort();
+	smtutil::SortPointer nondetInterfaceSort();
 	static smtutil::SortPointer interfaceSort(ContractDefinition const& _const);
+	static smtutil::SortPointer nondetInterfaceSort(ContractDefinition const& _const);
 	smtutil::SortPointer arity0FunctionSort();
 	smtutil::SortPointer sort(FunctionDefinition const& _function);
 	smtutil::SortPointer sort(ASTNode const* _block);
@@ -149,10 +151,12 @@ private:
 	/// @returns the symbolic values of the state variables at the beginning
 	/// of the current transaction.
 	std::vector<smtutil::Expression> initialStateVariables();
-	std::vector<smtutil::Expression> stateVariablesAtIndex(unsigned _index);
-	std::vector<smtutil::Expression> stateVariablesAtIndex(unsigned _index, ContractDefinition const& _contract);
+	std::vector<smtutil::Expression> initialStateVariables(ContractDefinition const& _contract);
+	std::vector<smtutil::Expression> stateVariablesAtIndex(int _index);
+	std::vector<smtutil::Expression> stateVariablesAtIndex(int _index, ContractDefinition const& _contract);
 	/// @returns the current symbolic values of the current state variables.
 	std::vector<smtutil::Expression> currentStateVariables();
+	std::vector<smtutil::Expression> currentStateVariables(ContractDefinition const& _contract);
 
 	/// @returns the current symbolic values of the current function's
 	/// input and output parameters.
@@ -173,6 +177,7 @@ private:
 	smtutil::Expression summary(ContractDefinition const& _contract);
 	/// @returns a predicate that defines a function summary.
 	smtutil::Expression summary(FunctionDefinition const& _function);
+	smtutil::Expression summary(FunctionDefinition const& _function, ContractDefinition const& _contract);
 	//@}
 
 	/// Solver related.
@@ -211,6 +216,12 @@ private:
 	/// Artificial Interface predicate.
 	/// Single entry block for all functions.
 	std::map<ContractDefinition const*, std::unique_ptr<smt::SymbolicFunctionVariable>> m_interfaces;
+
+	/// Nondeterministic interfaces.
+	/// These are used when the analyzed contract makes external calls to unknown code,
+	/// which means that the analyzed contract can potentially be called
+	/// nondeterministically.
+	std::map<ContractDefinition const*, std::unique_ptr<smt::SymbolicFunctionVariable>> m_nondetInterfaces;
 
 	/// Artificial Error predicate.
 	/// Single error block for all assertions.

@@ -6,5 +6,7 @@ contract C {
         return (s.a, s.b);
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f((uint256,uint256)): 42, 23 -> 42, 23

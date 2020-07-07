@@ -10,5 +10,5 @@ contract C {
 	}
 }
 // ----
-// Warning: (147-166): Assertion violation happens here
-// Warning: (170-190): Assertion violation happens here
+// Warning 4661: (147-166): Assertion violation happens here
+// Warning 4661: (170-190): Assertion violation happens here

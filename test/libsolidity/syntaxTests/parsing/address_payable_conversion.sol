@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (80-87): Expected ';' but got 'payable'
+// ParserError 2314: (80-87): Expected ';' but got 'payable'

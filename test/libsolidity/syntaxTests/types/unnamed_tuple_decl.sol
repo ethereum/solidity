@@ -11,6 +11,6 @@ contract C {
 }
 
 // ----
-// SyntaxError: (223-235): The use of the "var" keyword is disallowed. The declaration part of the statement can be removed, since it is empty.
-// SyntaxError: (245-257): The use of the "var" keyword is disallowed. The declaration part of the statement can be removed, since it is empty.
-// SyntaxError: (267-280): The use of the "var" keyword is disallowed. The declaration part of the statement can be removed, since it is empty.
+// SyntaxError 3299: (223-235): The use of the "var" keyword is disallowed. The declaration part of the statement can be removed, since it is empty.
+// SyntaxError 3299: (245-257): The use of the "var" keyword is disallowed. The declaration part of the statement can be removed, since it is empty.
+// SyntaxError 3299: (267-280): The use of the "var" keyword is disallowed. The declaration part of the statement can be removed, since it is empty.

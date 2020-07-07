@@ -6,4 +6,4 @@ contract Test {
     }
 }
 // ----
-// TypeError: (147-152): Identifier is not a contract.
+// TypeError 5540: (147-152): Identifier is not a contract.

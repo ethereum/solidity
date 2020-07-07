@@ -1,3 +1,3 @@
 abstract library A { }
 // ----
-// TypeError: (0-22): Libraries cannot be abstract.
+// TypeError 9571: (0-22): Libraries cannot be abstract.

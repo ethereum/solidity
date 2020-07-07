@@ -514,7 +514,13 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 		);
 
 	if (!_overriding.overrides())
-		overrideError(_overriding, _super, 9456_error, "Overriding " + _overriding.astNodeName() + " is missing \"override\" specifier.");
+		overrideError(
+			_overriding,
+			_super,
+			9456_error,
+			"Overriding " + _overriding.astNodeName() + " is missing \"override\" specifier.",
+			"Overridden " + _overriding.astNodeName() + " is here:"
+		);
 
 	if (_super.isVariable())
 		overrideError(
@@ -536,7 +542,13 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 	if (_overriding.isVariable())
 	{
 		if (_super.visibility() != Visibility::External)
-			overrideError(_overriding, _super, 5225_error, "Public state variables can only override functions with external visibility.");
+			overrideError(
+				_overriding,
+				_super,
+				5225_error,
+				"Public state variables can only override functions with external visibility.",
+				"Overridden function is here:"
+			);
 		solAssert(_overriding.visibility() == Visibility::External, "");
 	}
 	else if (_overriding.visibility() != _super.visibility())
@@ -547,7 +559,13 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 			_super.visibility() == Visibility::External &&
 			_overriding.visibility() == Visibility::Public
 		))
-			overrideError(_overriding, _super, 9098_error, "Overriding " + _overriding.astNodeName() + " visibility differs.");
+			overrideError(
+				_overriding,
+				_super,
+				9098_error,
+				"Overriding " + _overriding.astNodeName() + " visibility differs.",
+				"Overridden " + _overriding.astNodeName() + " is here:"
+			);
 	}
 
 	if (_super.isFunction())
@@ -558,7 +576,13 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 		solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
 
 		if (!functionType->hasEqualReturnTypes(*superType))
-			overrideError(_overriding, _super, 4822_error, "Overriding " + _overriding.astNodeName() + " return types differ.");
+			overrideError(
+				_overriding,
+				_super,
+				4822_error,
+				"Overriding " + _overriding.astNodeName() + " return types differ.",
+				"Overridden " + _overriding.astNodeName() + " is here:"
+			);
 
 		// This is only relevant for a function overriding a function.
 		if (_overriding.isFunction())

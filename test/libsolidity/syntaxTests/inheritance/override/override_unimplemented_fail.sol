@@ -11,5 +11,5 @@ abstract contract D is B, A {
     function f() external virtual override(A, B);
 }
 // ----
-// TypeError: (154-199): Overriding an implemented function with an unimplemented function is not allowed.
-// TypeError: (236-281): Overriding an implemented function with an unimplemented function is not allowed.
+// TypeError 4593: (154-199): Overriding an implemented function with an unimplemented function is not allowed.
+// TypeError 4593: (236-281): Overriding an implemented function with an unimplemented function is not allowed.

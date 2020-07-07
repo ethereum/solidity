@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (62-67): Cannot instantiate an interface.
+// TypeError 2971: (62-67): Cannot instantiate an interface.

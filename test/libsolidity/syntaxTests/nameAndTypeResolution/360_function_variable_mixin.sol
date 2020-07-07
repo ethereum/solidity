@@ -9,4 +9,4 @@ contract attr_func is attribute, func {
     function checkOk() public returns (bool) { return ok(); }
 }
 // ----
-// DeclarationError: (121-173): Identifier already declared.
+// DeclarationError 9097: (121-173): Identifier already declared.

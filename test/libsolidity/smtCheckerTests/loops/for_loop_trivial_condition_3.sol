@@ -16,4 +16,4 @@ contract C {
 // ====
 // SMTSolvers: z3
 // ----
-// Warning: (115-121): Unused local variable.
+// Warning 2072: (115-121): Unused local variable.

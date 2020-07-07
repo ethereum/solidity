@@ -4,4 +4,4 @@ library L {
     function f() public;
 }
 // ----
-// TypeError: (112-132): Library functions must be implemented if declared.
+// TypeError 9231: (112-132): Library functions must be implemented if declared.

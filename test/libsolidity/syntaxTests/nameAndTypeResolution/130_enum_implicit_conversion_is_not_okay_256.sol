@@ -6,4 +6,4 @@ contract test {
     uint256 a;
 }
 // ----
-// TypeError: (115-139): Type enum test.ActionChoices is not implicitly convertible to expected type uint256.
+// TypeError 7407: (115-139): Type enum test.ActionChoices is not implicitly convertible to expected type uint256.

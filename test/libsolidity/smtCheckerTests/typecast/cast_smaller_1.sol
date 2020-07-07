@@ -9,4 +9,4 @@ contract C
 	}
 }
 // ----
-// Warning: (94-102): Type conversion is not yet fully supported and might yield false positives.
+// Warning 5084: (94-102): Type conversion is not yet fully supported and might yield false positives.

@@ -146,7 +146,7 @@ void CompilerContext::callYulFunction(
 	m_externallyUsedYulFunctions.insert(_name);
 	auto const retTag = pushNewTag();
 	CompilerUtils(*this).moveIntoStack(_inArgs);
-	appendJumpTo(namedTag(_name));
+	appendJumpTo(namedTag(_name), evmasm::AssemblyItem::JumpType::IntoFunction);
 	adjustStackOffset(static_cast<int>(_outArgs) - 1 - static_cast<int>(_inArgs));
 	*this << retTag.tag();
 }
@@ -384,12 +384,11 @@ void CompilerContext::appendInlineAssembly(
 		yul::Identifier const& _identifier,
 		yul::IdentifierContext,
 		bool _insideFunction
-	) -> size_t
+	) -> bool
 	{
 		if (_insideFunction)
-			return numeric_limits<size_t>::max();
-		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
-		return it == _localVariables.end() ? numeric_limits<size_t>::max() : 1;
+			return false;
+		return contains(_localVariables, _identifier.name.str());
 	};
 	identifierAccess.generateCode = [&](
 		yul::Identifier const& _identifier,
@@ -405,7 +404,7 @@ void CompilerContext::appendInlineAssembly(
 			stackDiff -= 1;
 		if (stackDiff < 1 || stackDiff > 16)
 			BOOST_THROW_EXCEPTION(
-				CompilerError() <<
+				StackTooDeepError() <<
 				errinfo_sourceLocation(_identifier.location) <<
 				util::errinfo_comment("Stack too deep (" + to_string(stackDiff) + "), try removing local variables.")
 			);

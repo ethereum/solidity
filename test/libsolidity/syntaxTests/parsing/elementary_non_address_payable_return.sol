@@ -14,16 +14,16 @@ contract C {
     function m() public pure returns (ufixed80x80 payable) {}
 }
 // ----
-// ParserError: (56-63): State mutability can only be specified for address types.
-// ParserError: (113-120): State mutability can only be specified for address types.
-// ParserError: (167-174): State mutability can only be specified for address types.
-// ParserError: (224-231): State mutability can only be specified for address types.
-// ParserError: (279-286): State mutability can only be specified for address types.
-// ParserError: (337-344): State mutability can only be specified for address types.
-// ParserError: (392-399): State mutability can only be specified for address types.
-// ParserError: (448-455): State mutability can only be specified for address types.
-// ParserError: (506-513): State mutability can only be specified for address types.
-// ParserError: (562-569): State mutability can only be specified for address types.
-// ParserError: (623-630): State mutability can only be specified for address types.
-// ParserError: (680-687): State mutability can only be specified for address types.
-// ParserError: (742-749): State mutability can only be specified for address types.
+// ParserError 9106: (56-63): State mutability can only be specified for address types.
+// ParserError 9106: (113-120): State mutability can only be specified for address types.
+// ParserError 9106: (167-174): State mutability can only be specified for address types.
+// ParserError 9106: (224-231): State mutability can only be specified for address types.
+// ParserError 9106: (279-286): State mutability can only be specified for address types.
+// ParserError 9106: (337-344): State mutability can only be specified for address types.
+// ParserError 9106: (392-399): State mutability can only be specified for address types.
+// ParserError 9106: (448-455): State mutability can only be specified for address types.
+// ParserError 9106: (506-513): State mutability can only be specified for address types.
+// ParserError 9106: (562-569): State mutability can only be specified for address types.
+// ParserError 9106: (623-630): State mutability can only be specified for address types.
+// ParserError 9106: (680-687): State mutability can only be specified for address types.
+// ParserError 9106: (742-749): State mutability can only be specified for address types.
