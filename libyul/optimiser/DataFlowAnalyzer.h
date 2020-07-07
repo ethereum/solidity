@@ -116,7 +116,7 @@ protected:
 
 	/// Clears information about the values assigned to the given variables,
 	/// for example at points where control flow is merged.
-	void clearValues(std::set<YulString> _names);
+	void clearValues(std::set<YulString> const& _names);
 
 	void assignValue(YulString _variable, Expression const* _value);
 

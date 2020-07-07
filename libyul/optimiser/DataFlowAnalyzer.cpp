@@ -277,11 +277,11 @@ void DataFlowAnalyzer::pushScope(bool _functionScope)
 
 void DataFlowAnalyzer::popScope()
 {
-	clearValues(std::move(m_variableScopes.back().variables));
+	clearValues(m_variableScopes.back().variables);
 	m_variableScopes.pop_back();
 }
 
-void DataFlowAnalyzer::clearValues(set<YulString> _variables)
+void DataFlowAnalyzer::clearValues(set<YulString> const& _variables)
 {
 	// All variables that reference variables to be cleared also have to be
 	// cleared, but not recursively, since only the value of the original
@@ -312,14 +312,19 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 	}
 
 	// Also clear variables that reference variables to be cleared.
+	set<YulString> alsoClear;
 	for (auto const& name: _variables)
 		for (auto const& ref: m_references.backward[name])
-			_variables.emplace(ref);
+			alsoClear.emplace(ref);
 
 	// Clear the value and update the reference relation.
 	for (auto const& name: _variables)
 		m_value.erase(name);
 	for (auto const& name: _variables)
+		m_references.eraseKey(name);
+	for (auto const& name: alsoClear)
+		m_value.erase(name);
+	for (auto const& name: alsoClear)
 		m_references.eraseKey(name);
 }
 
