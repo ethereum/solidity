@@ -1,5 +1,5 @@
 contract C {
-    constructor() payable public {}
+    constructor() payable {}
 }
 contract D {
     function createC() public returns (C) {
@@ -8,4 +8,4 @@ contract D {
     }
 }
 // ----
-// TypeError 1621: (122-135): Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+// TypeError 1621: (115-128): Using ".value(...)" is deprecated. Use "{value: ...}" instead.

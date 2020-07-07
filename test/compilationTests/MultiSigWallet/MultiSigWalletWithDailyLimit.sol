@@ -20,7 +20,6 @@ contract MultiSigWalletWithDailyLimit is MultiSigWallet {
     /// @param _required Number of required confirmations.
     /// @param _dailyLimit Amount in wei, which can be withdrawn without confirmations on a daily basis.
     constructor(address[] memory _owners, uint _required, uint _dailyLimit)
-        public
         MultiSigWallet(_owners, _required)
     {
         dailyLimit = _dailyLimit;

@@ -74,7 +74,7 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		abi.emplace(std::move(method));
 	}
 	FunctionDefinition const* constructor = _contractDef.constructor();
-	if (constructor && constructor->visibility() >= Visibility::Public)
+	if (constructor && !_contractDef.abstract())
 	{
 		FunctionType constrType(*constructor);
 		FunctionType const* externalFunctionType = constrType.interfaceFunctionType();

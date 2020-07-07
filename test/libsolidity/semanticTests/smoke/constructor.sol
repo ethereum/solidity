@@ -1,6 +1,6 @@
 contract C {
     uint public state = 0;
-    constructor(uint _state) public payable {
+    constructor(uint _state) payable {
         state = _state;
     }
     function balance() public payable returns (uint256) {

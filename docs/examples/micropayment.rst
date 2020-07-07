@@ -143,14 +143,14 @@ The full contract
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.24 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract ReceiverPays {
         address owner = msg.sender;
 
         mapping(uint256 => bool) usedNonces;
 
-        constructor() public payable {}
+        constructor() payable {}
 
         function claimPayment(uint256 amount, uint256 nonce, bytes memory signature) public {
             require(!usedNonces[nonce]);
@@ -340,7 +340,7 @@ The full contract
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract SimplePaymentChannel {
         address payable public sender;      // The account sending payments.
@@ -348,7 +348,6 @@ The full contract
         uint256 public expiration;  // Timeout in case the recipient never closes.
 
         constructor (address payable _recipient, uint256 duration)
-            public
             payable
         {
             sender = msg.sender;

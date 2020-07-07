@@ -1,14 +1,14 @@
 contract BaseBase {
     uint256 m_a;
 
-    constructor(uint256 a) public {
+    constructor(uint256 a) {
         m_a = a;
     }
 }
 
 
 contract Base is BaseBase(7) {
-    constructor() public {
+    constructor() {
         m_a *= m_a;
     }
 }

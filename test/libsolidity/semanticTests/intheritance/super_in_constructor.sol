@@ -22,7 +22,7 @@ contract C is A {
 contract D is B, C {
     uint256 data;
 
-    constructor() public {
+    constructor() {
         data = super.f() | 8;
     }
 

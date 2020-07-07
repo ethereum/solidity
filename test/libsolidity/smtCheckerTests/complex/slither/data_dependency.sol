@@ -46,7 +46,7 @@ contract SolidityVar{
     address addr_1;
     address addr_2;
 
-    constructor() public{
+    constructor(){
         addr_1 = msg.sender;
     }
 
@@ -117,7 +117,7 @@ contract PropagateThroughReturnValue {
   }
 }
 // ----
-// Warning 2018: (1886-1954): Function state mutability can be restricted to view
+// Warning 2018: (1879-1947): Function state mutability can be restricted to view
 // Warning 8115: (318-332): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (338-347): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (353-378): Assertion checker does not yet support the type of this variable.

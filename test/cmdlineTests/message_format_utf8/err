@@ -5,10 +5,10 @@ Warning: Source file does not specify required compiler version!
 --> message_format_utf8/input.sol
 
 Warning: Statement has no effect.
- --> message_format_utf8/input.sol:2:58:
+ --> message_format_utf8/input.sol:2:51:
   |
-2 | /* ©©©©ﾩ©©©©© 2017 */ constructor () public { "©©©©ﾩ©©©©©" ; }
-  |                                               ^^^^^^^^^^^^
+2 | /* ©©©©ﾩ©©©©© 2017 */ constructor () { "©©©©ﾩ©©©©©" ; }
+  |                                        ^^^^^^^^^^^^
 
 Warning: Statement has no effect.
  --> message_format_utf8/input.sol:6:25:

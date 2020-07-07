@@ -721,7 +721,7 @@ The command above applies all changes as shown below. Please review them careful
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     abstract contract Updateable {
         function run() public view virtual returns (bool);
@@ -734,7 +734,7 @@ The command above applies all changes as shown below. Please review them careful
     }
 
     contract Source is Updateable, Upgradable {
-        constructor() public {}
+        constructor() {}
 
         function run()
             public

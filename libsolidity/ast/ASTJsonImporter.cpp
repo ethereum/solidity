@@ -399,7 +399,7 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 	return createASTNode<FunctionDefinition>(
 		_node,
 		memberAsASTString(_node, "name"),
-		visibility(_node),
+		kind == Token::Constructor ? Visibility::Default : visibility(_node),
 		stateMutability(_node),
 		kind,
 		memberAsBool(_node, "virtual"),

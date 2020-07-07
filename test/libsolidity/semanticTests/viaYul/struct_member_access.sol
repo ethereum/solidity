@@ -8,7 +8,7 @@ contract C {
     }
 
     S s;
-    constructor() public {
+    constructor() {
         s.a = 42;
         s.b.push(1);
         s.b.push(2);

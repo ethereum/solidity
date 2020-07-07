@@ -78,7 +78,6 @@ contract Campaign {
         uint _funding,
         uint _deadline
     )
-        public
     {
         // Validate input
         require(   address(_eventContract) != address(0)

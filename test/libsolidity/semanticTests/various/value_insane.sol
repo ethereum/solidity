@@ -8,7 +8,7 @@ contract helper {
 contract test {
     helper h;
 
-    constructor() public payable {
+    constructor() payable {
         h = new helper();
     }
 

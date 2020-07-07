@@ -1,6 +1,6 @@
 contract A {
     uint x;
-    constructor() public {
+    constructor() {
         x = 42;
     }
     function f() public returns(uint256) {

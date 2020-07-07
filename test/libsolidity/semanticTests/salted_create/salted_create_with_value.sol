@@ -4,7 +4,7 @@ contract B
     function getBalance() public view returns (uint) {
         return address(this).balance * 1000 + x;
     }
-    constructor(uint _x) public payable {
+    constructor(uint _x) payable {
         x = _x;
     }
 }

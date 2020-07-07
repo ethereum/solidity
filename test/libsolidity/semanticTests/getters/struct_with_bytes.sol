@@ -7,7 +7,7 @@ contract C {
     }
     uint shifter;
     S public s;
-    constructor() public {
+    constructor() {
         s.a = 7;
         s.b = "abc";
         s.c[0] = 9;

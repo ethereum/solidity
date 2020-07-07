@@ -18,7 +18,7 @@ library VoteTiming {
 }
 
 contract Voting is Ownable {
-    constructor() public {
+    constructor() {
         VoteTiming.init(1);
     }
 }

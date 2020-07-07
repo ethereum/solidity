@@ -8,7 +8,7 @@ contract ERC20 {
     mapping (address => mapping (address => uint256)) private _allowances;
     uint256 private _totalSupply;
 
-    constructor() public {
+    constructor() {
         _mint(msg.sender, 20);
     }
 

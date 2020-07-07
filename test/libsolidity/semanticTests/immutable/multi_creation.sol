@@ -1,13 +1,13 @@
 contract A {
 	uint immutable a;
-	constructor() public {
+	constructor() {
 		a = 7;
 	}
 	function f() public view returns (uint) { return a; }
 }
 contract B {
 	uint immutable a;
-	constructor() public {
+	constructor() {
 		a = 5;
 	}
 	function f() public view returns (uint) { return a; }
@@ -16,7 +16,7 @@ contract C {
 	uint immutable a;
 	uint public x;
 	uint public y;
-	constructor() public {
+	constructor() {
 		a = 3;
 		x = (new A()).f();
 		y = (new B()).f();

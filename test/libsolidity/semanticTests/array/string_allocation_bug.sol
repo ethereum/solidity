@@ -7,7 +7,7 @@ contract Sample {
     }
     s[2] public p;
 
-    constructor() public {
+    constructor() {
         s memory m;
         m.x = 0xbbbb;
         m.y = 0xcccc;

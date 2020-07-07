@@ -54,7 +54,6 @@ contract UltimateOracle is Oracle {
         uint _challengeAmount,
         uint _frontRunnerPeriod
     )
-        public
     {
         // Validate inputs
         require(   address(_forwardedOracle) != address(0)

@@ -1,7 +1,7 @@
 contract C {
 	uint256 immutable x;
 	uint256 immutable y;
-	constructor() public {
+	constructor() {
 		x = 42;
 		y = 23;
 	}

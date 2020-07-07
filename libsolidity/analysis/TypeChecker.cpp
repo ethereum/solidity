@@ -323,11 +323,13 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	if (_function.markedVirtual())
 	{
-		if (_function.annotation().contract->isInterface())
+		if (_function.isConstructor())
+			m_errorReporter.typeError(7001_error, _function.location(), "Constructors cannot be virtual.");
+		else if (_function.annotation().contract->isInterface())
 			m_errorReporter.warning(5815_error, _function.location(), "Interface functions are implicitly \"virtual\"");
-		if (_function.visibility() == Visibility::Private)
+		else if (_function.visibility() == Visibility::Private)
 			m_errorReporter.typeError(3942_error, _function.location(), "\"virtual\" and \"private\" cannot be used together.");
-		if (_function.libraryFunction())
+		else if (_function.libraryFunction())
 			m_errorReporter.typeError(7801_error, _function.location(), "Library functions cannot be \"virtual\".");
 	}
 
@@ -338,35 +340,62 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.isOrdinary() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(5587_error, _function.location(), "Internal functions cannot be payable.");
 	}
-	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& var) {
-		if (type(var)->containsNestedMapping())
-			if (var.referenceLocation() == VariableDeclaration::Location::Storage)
+
+	vector<VariableDeclaration const*> internalParametersInConstructor;
+
+	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& _var) {
+		if (type(_var)->containsNestedMapping())
+			if (_var.referenceLocation() == VariableDeclaration::Location::Storage)
 				solAssert(
-					_function.libraryFunction() || !_function.isPublic(),
+					_function.libraryFunction() || _function.isConstructor() || !_function.isPublic(),
 					"Mapping types for parameters or return variables "
 					"can only be used in internal or library functions."
 				);
-		if (_function.isPublic())
+		bool functionIsExternallyVisible =
+			(!_function.isConstructor() && _function.isPublic()) ||
+			(_function.isConstructor() && !m_currentContract->abstract());
+		if (
+			_function.isConstructor() &&
+			_var.referenceLocation() == VariableDeclaration::Location::Storage &&
+			!m_currentContract->abstract()
+		)
+			m_errorReporter.typeError(
+				3644_error,
+				_var.location(),
+				"This parameter has a type that can only be used internally. "
+				"You can make the contract abstract to avoid this problem."
+			);
+		else if (functionIsExternallyVisible)
 		{
-			auto iType = type(var)->interfaceType(_function.libraryFunction());
+			auto iType = type(_var)->interfaceType(_function.libraryFunction());
 
 			if (!iType)
 			{
-				solAssert(!iType.message().empty(), "Expected detailed error message!");
-				m_errorReporter.typeError(4103_error, var.location(), iType.message());
+				string message = iType.message();
+				solAssert(!message.empty(), "Expected detailed error message!");
+				if (_function.isConstructor())
+					message += " You can make the contract abstract to avoid this problem.";
+				m_errorReporter.typeError(4103_error, _var.location(), message);
+			}
+			else if (
+				!experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2) &&
+				!typeSupportedByOldABIEncoder(*type(_var), _function.libraryFunction())
+			)
+			{
+				string message =
+					"This type is only supported in ABIEncoderV2. "
+					"Use \"pragma experimental ABIEncoderV2;\" to enable the feature.";
+				if (_function.isConstructor())
+					message +=
+						" Alternatively, make the contract abstract and supply the "
+						"constructor arguments from a derived contract.";
+				m_errorReporter.typeError(
+					4957_error,
+					_var.location(),
+					message
+				);
 			}
 		}
-		if (
-			_function.isPublic() &&
-			!experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2) &&
-			!typeSupportedByOldABIEncoder(*type(var), _function.libraryFunction())
-		)
-			m_errorReporter.typeError(
-				4957_error,
-				var.location(),
-				"This type is only supported in ABIEncoderV2. "
-				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
-			);
 	};
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
 	{
@@ -378,6 +407,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		checkArgumentAndReturnParameter(*var);
 		var->accept(*this);
 	}
+
 	set<Declaration const*> modifiers;
 	for (ASTPointer<ModifierInvocation> const& modifier: _function.modifiers())
 	{
@@ -403,11 +433,10 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.isImplemented())
 			m_errorReporter.typeError(4726_error, _function.location(), "Functions in interfaces cannot have an implementation.");
 
-		if (_function.visibility() != Visibility::External)
-			m_errorReporter.typeError(1560_error, _function.location(), "Functions in interfaces must be declared external.");
-
 		if (_function.isConstructor())
 			m_errorReporter.typeError(6482_error, _function.location(), "Constructor cannot be defined in interfaces.");
+		else if (_function.visibility() != Visibility::External)
+			m_errorReporter.typeError(1560_error, _function.location(), "Functions in interfaces must be declared external.");
 	}
 	else if (m_currentContract->contractKind() == ContractKind::Library)
 		if (_function.isConstructor())
@@ -529,7 +558,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
 	{
 		auto result = referenceType->validForLocation(referenceType->location());
-		if (result && _variable.isPublicCallableParameter())
+		if (result && (_variable.isConstructorParameter() || _variable.isPublicCallableParameter()))
 			result = referenceType->validForLocation(DataLocation::CallData);
 		if (!result)
 		{
@@ -1881,8 +1910,6 @@ void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
 void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 {
 	solAssert(_function.isConstructor(), "");
-	if (_function.markedVirtual())
-		m_errorReporter.typeError(7001_error, _function.location(), "Constructors cannot be virtual.");
 	if (_function.overrides())
 		m_errorReporter.typeError(1209_error, _function.location(), "Constructors cannot override.");
 	if (!_function.returnParameters().empty())
@@ -1895,8 +1922,30 @@ void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
-	if (_function.visibility() != Visibility::Public && _function.visibility() != Visibility::Internal)
-		m_errorReporter.typeError(9239_error, _function.location(), "Constructor must be public or internal.");
+	if (!_function.noVisibilitySpecified())
+	{
+		auto const& contract = dynamic_cast<ContractDefinition const&>(*_function.scope());
+		if (_function.visibility() != Visibility::Public && _function.visibility() != Visibility::Internal)
+			m_errorReporter.typeError(9239_error, _function.location(), "Constructor cannot have visibility.");
+		else if (_function.isPublic() && contract.abstract())
+			m_errorReporter.declarationError(
+				8295_error,
+				_function.location(),
+				"Abstract contracts cannot have public constructors. Remove the \"public\" keyword to fix this."
+			);
+		else if (!_function.isPublic() && !contract.abstract())
+			m_errorReporter.declarationError(
+				1845_error,
+				_function.location(),
+				"Non-abstract contracts cannot have internal constructors. Remove the \"internal\" keyword and make the contract abstract to fix this."
+			);
+		else
+			m_errorReporter.warning(
+				2462_error,
+				_function.location(),
+				"Visibility for constructor is ignored. If you want the contract to be non-deployable, making it \"abstract\" is sufficient."
+			);
+	}
 }
 
 void TypeChecker::typeCheckABIEncodeFunctions(
@@ -2495,8 +2544,6 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			m_errorReporter.fatalTypeError(5540_error, _newExpression.location(), "Identifier is not a contract.");
 		if (contract->isInterface())
 			m_errorReporter.fatalTypeError(2971_error, _newExpression.location(), "Cannot instantiate an interface.");
-		if (!contract->constructorIsPublic())
-			m_errorReporter.typeError(9054_error, _newExpression.location(), "Contract with internal constructor cannot be created directly.");
 		if (contract->abstract())
 			m_errorReporter.typeError(4614_error, _newExpression.location(), "Cannot instantiate an abstract contract.");
 

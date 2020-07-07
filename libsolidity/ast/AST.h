@@ -505,8 +505,6 @@ public:
 
 	/// Returns the constructor or nullptr if no constructor was specified.
 	FunctionDefinition const* constructor() const;
-	/// @returns true iff the constructor of this contract is public (or non-existing).
-	bool constructorIsPublic() const;
 	/// @returns true iff the contract can be deployed, i.e. is not abstract and has a
 	/// public constructor.
 	/// Should only be called after the type checker has run.
@@ -808,15 +806,16 @@ public:
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
+	Visibility defaultVisibility() const override;
 	bool isVisibleInContract() const override
 	{
-		return Declaration::isVisibleInContract() && isOrdinary();
+		return isOrdinary() && Declaration::isVisibleInContract();
 	}
 	bool isVisibleViaContractTypeAccess() const override
 	{
-		return visibility() >= Visibility::Public;
+		return isOrdinary() && visibility() >= Visibility::Public;
 	}
-	bool isPartOfExternalInterface() const override { return isPublic() && isOrdinary(); }
+	bool isPartOfExternalInterface() const override { return isOrdinary() && isPublic(); }
 
 	/// @returns the external signature of the function
 	/// That consists of the name of the function followed by the types of the
@@ -928,6 +927,7 @@ public:
 	/// @returns true if this variable is a parameter or return parameter of an internal function
 	/// or a function type of internal visibility.
 	bool isInternalCallableParameter() const;
+	/// @returns true if this variable is the parameter of a constructor.
 	bool isConstructorParameter() const;
 	/// @returns true iff this variable is a parameter(or return parameter of a library function
 	bool isLibraryFunctionParameter() const;

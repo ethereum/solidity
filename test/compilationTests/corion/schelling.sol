@@ -45,7 +45,7 @@ contract schellingDB is safeMath, schellingVars {
     /*
         Constructor
     */
-    constructor() public {
+    constructor() {
         rounds.push();
         rounds.push();
         rounds[0].blockHeight = block.number;
@@ -249,7 +249,7 @@ contract schelling is module, announcementTypes, schellingVars {
     bytes1 public belowChar = 0x30;
     schellingDB private db;
 
-    constructor(address payable _moduleHandler, address _db, bool _forReplace) public {
+    constructor(address payable _moduleHandler, address _db, bool _forReplace) {
         /*
             Installation function.
 

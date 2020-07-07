@@ -49,7 +49,7 @@ contract token is safeMath, module, announcementTypes {
 
     mapping(address => bool) public genesis;
 
-    constructor(bool forReplace, address payable moduleHandler, address dbAddr, address payable icoContractAddr, address payable exchangeContractAddress, address payable[] memory genesisAddr, uint256[] memory genesisValue) public payable {
+    constructor(bool forReplace, address payable moduleHandler, address dbAddr, address payable icoContractAddr, address payable exchangeContractAddress, address payable[] memory genesisAddr, uint256[] memory genesisValue) payable {
         /*
             Installation function
 

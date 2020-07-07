@@ -6,7 +6,7 @@ library L {
 }
 contract C {
     L.S s;
-    constructor() public { s.a = 42; }
+    constructor() { s.a = 42; }
 
     function f() public returns (bool, bool, uint256) {
 		uint256 s_ptr;

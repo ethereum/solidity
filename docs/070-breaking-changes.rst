@@ -18,3 +18,5 @@ This section gives detailed instructions on how to update prior code for every b
 * Change ``now`` to ``block.timestamp``.
 * Change types of right operand in shift operators to unsigned types. For example change ``x >> (256 - y)`` to
   ``x >> uint(256 - y)``.
+* Remove the ``public`` keyword from every constructor.
+* Remove the ``internal`` keyword from every constructor and add ``abstract`` to the contract (if not already present).

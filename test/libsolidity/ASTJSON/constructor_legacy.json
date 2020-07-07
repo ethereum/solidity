@@ -77,7 +77,7 @@
               "children": [],
               "id": 2,
               "name": "ParameterList",
-              "src": "35:0:1"
+              "src": "28:0:1"
             },
             {
               "attributes":
@@ -90,20 +90,20 @@
               "children": [],
               "id": 3,
               "name": "Block",
-              "src": "35:4:1"
+              "src": "28:4:1"
             }
           ],
           "id": 4,
           "name": "FunctionDefinition",
-          "src": "14:25:1"
+          "src": "14:18:1"
         }
       ],
       "id": 5,
       "name": "ContractDefinition",
-      "src": "0:41:1"
+      "src": "0:34:1"
     }
   ],
   "id": 6,
   "name": "SourceUnit",
-  "src": "0:42:1"
+  "src": "0:35:1"
 }

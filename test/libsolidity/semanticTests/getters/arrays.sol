@@ -1,6 +1,6 @@
 contract C {
     uint8[][2] public a;
-    constructor() public {
+    constructor() {
         a[1].push(3);
         a[1].push(4);
     }

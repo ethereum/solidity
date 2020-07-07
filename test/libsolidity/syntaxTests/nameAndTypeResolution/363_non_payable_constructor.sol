@@ -1,5 +1,5 @@
 contract C {
-    constructor() public { }
+    constructor() { }
 }
 contract D {
     function f() public returns (uint) {
@@ -8,4 +8,4 @@ contract D {
     }
 }
 // ----
-// TypeError 7006: (106-123): Cannot set option "value", since the constructor of contract C is not payable.
+// TypeError 7006: (99-116): Cannot set option "value", since the constructor of contract C is not payable.

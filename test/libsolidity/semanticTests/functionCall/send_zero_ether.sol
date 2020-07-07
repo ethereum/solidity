@@ -6,7 +6,7 @@ contract Receiver {
 
 
 contract Main {
-    constructor() public payable {}
+    constructor() payable {}
 
     function s() public returns (bool) {
         Receiver r = new Receiver();

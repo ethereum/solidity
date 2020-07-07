@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(decode_from_memory_simple)
 		contract C {
 			uint public _a;
 			uint[] public _b;
-			constructor(uint a, uint[] memory b) public {
+			constructor(uint a, uint[] memory b) {
 				_a = a;
 				_b = b;
 			}
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(decode_function_type)
 	string sourceCode = R"(
 		contract D {
 			function () external returns (uint) public _a;
-			constructor(function () external returns (uint) a) public {
+			constructor(function () external returns (uint) a) {
 				_a = a;
 			}
 		}
@@ -377,13 +377,13 @@ BOOST_AUTO_TEST_CASE(decode_function_type_array)
 	string sourceCode = R"(
 		contract D {
 			function () external returns (uint)[] public _a;
-			constructor(function () external returns (uint)[] memory a) public {
+			constructor(function () external returns (uint)[] memory a) {
 				_a = a;
 			}
 		}
 		contract E {
 			function () external returns (uint)[3] public _a;
-			constructor(function () external returns (uint)[3] memory a) public {
+			constructor(function () external returns (uint)[3] memory a) {
 				_a = a;
 			}
 		}
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(decode_from_memory_complex)
 			uint public _a;
 			uint[] public _b;
 			bytes[2] public _c;
-			constructor(uint a, uint[] memory b, bytes[2] memory c) public {
+			constructor(uint a, uint[] memory b, bytes[2] memory c) {
 				_a = a;
 				_b = b;
 				_c = c;

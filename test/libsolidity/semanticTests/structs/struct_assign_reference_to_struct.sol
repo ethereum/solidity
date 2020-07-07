@@ -6,7 +6,7 @@ contract test {
     testStruct data2;
     testStruct data3;
 
-    constructor() public {
+    constructor() {
         data1.m_value = 2;
     }
 
