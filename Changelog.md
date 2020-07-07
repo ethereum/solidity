@@ -1,5 +1,7 @@
 ### 0.6.12 (unreleased)
 
+Compiler Features:
+ * Code Generator: Evaluate ``keccak256`` of string literals at compile-time.
 
 
 
