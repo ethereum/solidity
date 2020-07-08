@@ -61,18 +61,40 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 	evmasm::LinkerObject obj;
 	if (m_compileViaYul)
 	{
-		yul::AssemblyStack asmStack(
-			m_evmVersion,
-			yul::AssemblyStack::Language::StrictAssembly,
-			// Ignore optimiser settings here because we need Yul optimisation to
-			// get code that does not exhaust the stack.
-			OptimiserSettings::full()
-		);
-		bool analysisSuccessful = asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName));
-		solAssert(analysisSuccessful, "Code that passed analysis in CompilerStack can't have errors");
+		// Try compiling twice: If the first run fails due to stack errors, forcefully enable
+		// the optimizer.
+		for (bool forceEnableOptimizer: {false, true})
+		{
+			OptimiserSettings optimiserSettings = m_optimiserSettings;
+			if (!forceEnableOptimizer && !optimiserSettings.runYulOptimiser)
+			{
+				// Enable some optimizations on the first run
+				optimiserSettings.runYulOptimiser = true;
+				optimiserSettings.yulOptimiserSteps = "uljmul jmul";
+			}
+			else if (forceEnableOptimizer)
+				optimiserSettings = OptimiserSettings::full();
 
-		asmStack.optimize();
-		obj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
+			yul::AssemblyStack asmStack(
+				m_evmVersion,
+				yul::AssemblyStack::Language::StrictAssembly,
+				optimiserSettings
+			);
+			bool analysisSuccessful = asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName));
+			solAssert(analysisSuccessful, "Code that passed analysis in CompilerStack can't have errors");
+
+			try
+			{
+				asmStack.optimize();
+				obj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
+				break;
+			}
+			catch (...)
+			{
+				if (forceEnableOptimizer || optimiserSettings == OptimiserSettings::full())
+					throw;
+			}
+		}
 	}
 	else
 		obj = m_compiler.object(contractName);
