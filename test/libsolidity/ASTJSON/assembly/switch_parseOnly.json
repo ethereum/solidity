@@ -1,12 +1,5 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "C":
-    [
-      6
-    ]
-  },
   "id": 7,
   "nodeType": "SourceUnit",
   "nodes":
@@ -17,10 +10,6 @@
       "contractDependencies": [],
       "contractKind": "contract",
       "id": 6,
-      "linearizedBaseContracts":
-      [
-        6
-      ],
       "name": "C",
       "nodeType": "ContractDefinition",
       "nodes":
@@ -156,23 +145,7 @@
                   ]
                 },
                 "evmVersion": %EVMVERSION%,
-                "externalReferences":
-                [
-                  {
-                    "declaration": 5,
-                    "isOffset": false,
-                    "isSlot": false,
-                    "src": "141:1:1",
-                    "valueSize": 18446744073709551615
-                  },
-                  {
-                    "declaration": 5,
-                    "isOffset": false,
-                    "isSlot": false,
-                    "src": "172:1:1",
-                    "valueSize": 18446744073709551615
-                  }
-                ],
+                "externalReferences": [],
                 "id": 3,
                 "nodeType": "InlineAssembly",
                 "src": "52:138:1"
@@ -199,14 +172,12 @@
             "parameters": [],
             "src": "42:0:1"
           },
-          "scope": 6,
           "src": "17:179:1",
           "stateMutability": "pure",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "scope": 7,
       "src": "0:198:1"
     }
   ],

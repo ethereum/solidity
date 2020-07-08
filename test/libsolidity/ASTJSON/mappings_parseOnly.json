@@ -1,0 +1,154 @@
+{
+  "absolutePath": "a",
+  "id": 18,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "id": 17,
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "id": 4,
+          "members":
+          [
+            {
+              "id": 1,
+              "name": "A",
+              "nodeType": "EnumValue",
+              "src": "26:1:1"
+            },
+            {
+              "id": 2,
+              "name": "B",
+              "nodeType": "EnumValue",
+              "src": "29:1:1"
+            },
+            {
+              "id": 3,
+              "name": "C",
+              "nodeType": "EnumValue",
+              "src": "32:1:1"
+            }
+          ],
+          "name": "E",
+          "nodeType": "EnumDefinition",
+          "src": "17:18:1"
+        },
+        {
+          "constant": false,
+          "id": 8,
+          "mutability": "mutable",
+          "name": "a",
+          "nodeType": "VariableDeclaration",
+          "src": "40:20:1",
+          "stateVariable": false,
+          "storageLocation": "default",
+          "typeDescriptions": {},
+          "typeName":
+          {
+            "id": 7,
+            "keyType":
+            {
+              "id": 5,
+              "name": "C",
+              "nodeType": "UserDefinedTypeName",
+              "src": "48:1:1",
+              "typeDescriptions": {}
+            },
+            "nodeType": "Mapping",
+            "src": "40:18:1",
+            "typeDescriptions": {},
+            "valueType":
+            {
+              "id": 6,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "53:4:1",
+              "typeDescriptions": {}
+            }
+          },
+          "visibility": "internal"
+        },
+        {
+          "constant": false,
+          "id": 12,
+          "mutability": "mutable",
+          "name": "b",
+          "nodeType": "VariableDeclaration",
+          "src": "66:26:1",
+          "stateVariable": false,
+          "storageLocation": "default",
+          "typeDescriptions": {},
+          "typeName":
+          {
+            "id": 11,
+            "keyType":
+            {
+              "id": 9,
+              "name": "address",
+              "nodeType": "ElementaryTypeName",
+              "src": "74:7:1",
+              "typeDescriptions": {}
+            },
+            "nodeType": "Mapping",
+            "src": "66:24:1",
+            "typeDescriptions": {},
+            "valueType":
+            {
+              "id": 10,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "85:4:1",
+              "typeDescriptions": {}
+            }
+          },
+          "visibility": "internal"
+        },
+        {
+          "constant": false,
+          "id": 16,
+          "mutability": "mutable",
+          "name": "c",
+          "nodeType": "VariableDeclaration",
+          "src": "98:20:1",
+          "stateVariable": false,
+          "storageLocation": "default",
+          "typeDescriptions": {},
+          "typeName":
+          {
+            "id": 15,
+            "keyType":
+            {
+              "id": 13,
+              "name": "E",
+              "nodeType": "UserDefinedTypeName",
+              "src": "106:1:1",
+              "typeDescriptions": {}
+            },
+            "nodeType": "Mapping",
+            "src": "98:18:1",
+            "typeDescriptions": {},
+            "valueType":
+            {
+              "id": 14,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "111:4:1",
+              "typeDescriptions": {}
+            }
+          },
+          "visibility": "internal"
+        }
+      ],
+      "src": "0:121:1"
+    }
+  ],
+  "src": "0:122:1"
+}

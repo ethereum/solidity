@@ -1,12 +1,5 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "C":
-    [
-      8
-    ]
-  },
   "id": 9,
   "nodeType": "SourceUnit",
   "nodes":
@@ -17,10 +10,6 @@
       "contractDependencies": [],
       "contractKind": "contract",
       "id": 8,
-      "linearizedBaseContracts":
-      [
-        8
-      ],
       "name": "C",
       "nodeType": "ContractDefinition",
       "nodes":
@@ -119,7 +108,6 @@
                 "mutability": "mutable",
                 "name": "x",
                 "nodeType": "VariableDeclaration",
-                "scope": 7,
                 "src": "49:6:1",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -137,14 +125,12 @@
             ],
             "src": "48:8:1"
           },
-          "scope": 8,
           "src": "15:139:1",
           "stateMutability": "pure",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "scope": 9,
       "src": "0:156:1"
     }
   ],

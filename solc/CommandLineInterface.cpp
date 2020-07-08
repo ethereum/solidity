@@ -159,6 +159,8 @@ static string const g_strOutputDir = "output-dir";
 static string const g_strOverwrite = "overwrite";
 static string const g_strRevertStrings = "revert-strings";
 static string const g_strStorageLayout = "storage-layout";
+static string const g_strStopAfter = "stop-after";
+static string const g_strParsing = "parsing";
 
 /// Possible arguments to for --revert-strings
 static set<string> const g_revertStringsArgs
@@ -318,6 +320,17 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		if (_args.count(arg))
 			return true;
 	return false;
+}
+
+bool checkMutuallyExclusive(boost::program_options::variables_map const& args, std::string const& _optionA, std::string const& _optionB)
+{
+	if (args.count(_optionA) && args.count(_optionB))
+	{
+		serr() << "Option " << _optionA << " and " << _optionB << " are mutually exclusive." << endl;
+		return false;
+	}
+
+	return true;
 }
 
 void CommandLineInterface::handleBinary(string const& _contract)
@@ -804,6 +817,11 @@ General Information)").c_str(),
 			po::value<string>()->value_name(boost::join(g_revertStringsArgs, ",")),
 			"Strip revert (and require) reason strings or add additional debugging information."
 		)
+		(
+			g_strStopAfter.c_str(),
+			po::value<string>()->value_name("stage"),
+			"Stop execution after the given compiler stage. Valid options: \"parsing\"."
+		)
 	;
 	desc.add(outputOptions);
 
@@ -996,11 +1014,23 @@ General Information)").c_str(),
 		return false;
 	}
 
-	if (m_args.count(g_argColor) && m_args.count(g_argNoColor))
-	{
-		serr() << "Option " << g_argColor << " and " << g_argNoColor << " are mutualy exclusive." << endl;
+	if (!checkMutuallyExclusive(m_args, g_argColor, g_argNoColor))
 		return false;
-	}
+
+	static vector<string> const conflictingWithStopAfter{
+		g_argBinary,
+		g_argIR,
+		g_argIROptimized,
+		g_argEwasm,
+		g_argGas,
+		g_argAsm,
+		g_argAsmJson,
+		g_argOpcodes
+	};
+
+	for (auto& option: conflictingWithStopAfter)
+		if (!checkMutuallyExclusive(m_args, g_strStopAfter, option))
+			return false;
 
 	m_coloredOutput = !m_args.count(g_argNoColor) && (isatty(STDERR_FILENO) || m_args.count(g_argColor));
 
@@ -1136,6 +1166,17 @@ bool CommandLineInterface::processInput()
 				filesystem_path.remove_filename();
 			m_allowedDirectories.push_back(filesystem_path);
 		}
+	}
+
+	if (m_args.count(g_strStopAfter))
+	{
+		if (m_args[g_strStopAfter].as<string>() != "parsing")
+		{
+			serr() << "Valid options for --" << g_strStopAfter << " are: \"parsing\".\n";
+			return false;
+		}
+		else
+			m_stopAfter = CompilerStack::State::Parsed;
 	}
 
 	vector<string> const exclusiveModes = {
@@ -1417,7 +1458,7 @@ bool CommandLineInterface::processInput()
 				m_compiler->setParserErrorRecovery(true);
 		}
 
-		bool successful = m_compiler->compile();
+		bool successful = m_compiler->compile(m_stopAfter);
 
 		for (auto const& error: m_compiler->errors())
 		{
@@ -1565,7 +1606,7 @@ void CommandLineInterface::handleCombinedJSON()
 		output[g_strSources] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_sourceCodes)
 		{
-			ASTJsonConverter converter(legacyFormat, m_compiler->sourceIndices());
+			ASTJsonConverter converter(legacyFormat, m_compiler->state(), m_compiler->sourceIndices());
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
 			output[g_strSources][sourceCode.first]["AST"] = converter.toJson(m_compiler->ast(sourceCode.first));
 		}
@@ -1617,7 +1658,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 			{
 				stringstream data;
 				string postfix = "";
-				ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
+				ASTJsonConverter(legacyFormat, m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
 				postfix += "_json";
 				boost::filesystem::path path(sourceCode.first);
 				createFile(path.filename().string() + postfix + ".ast", data.str());
@@ -1629,7 +1670,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 			for (auto const& sourceCode: m_sourceCodes)
 			{
 				sout() << endl << "======= " << sourceCode.first << " =======" << endl;
-				ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
+				ASTJsonConverter(legacyFormat, m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
 			}
 		}
 	}
@@ -1871,7 +1912,10 @@ void CommandLineInterface::outputCompilationResults()
 	handleAst(g_argAstJson);
 	handleAst(g_argAstCompactJson);
 
-	if (!m_compiler->compilationSuccessful())
+	if (
+		!m_compiler->compilationSuccessful() &&
+		m_stopAfter == CompilerStack::State::CompilationSuccessful
+	)
 	{
 		serr() << endl << "Compilation halted after AST generation due to errors." << endl;
 		return;

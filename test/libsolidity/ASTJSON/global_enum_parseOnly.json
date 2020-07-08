@@ -1,0 +1,24 @@
+{
+  "absolutePath": "a",
+  "id": 3,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "id": 2,
+      "members":
+      [
+        {
+          "id": 1,
+          "name": "A",
+          "nodeType": "EnumValue",
+          "src": "9:1:1"
+        }
+      ],
+      "name": "E",
+      "nodeType": "EnumDefinition",
+      "src": "0:12:1"
+    }
+  ],
+  "src": "0:13:1"
+}
