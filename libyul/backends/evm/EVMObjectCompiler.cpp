@@ -59,5 +59,6 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 	// which should be native to this part of the code.
 	CodeTransform transform{m_assembly, *_object.analysisInfo, *_object.code, m_dialect, context, _optimize, m_evm15};
 	transform(*_object.code);
-	yulAssert(transform.stackErrors().empty(), "Stack errors present but not thrown.");
+	if (!transform.stackErrors().empty())
+		BOOST_THROW_EXCEPTION(transform.stackErrors().front());
 }
