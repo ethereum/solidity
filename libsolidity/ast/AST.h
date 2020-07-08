@@ -2086,8 +2086,6 @@ public:
 		None = static_cast<int>(Token::Illegal),
 		Wei = static_cast<int>(Token::SubWei),
 		Gwei = static_cast<int>(Token::SubGwei),
-		Szabo = static_cast<int>(Token::SubSzabo),
-		Finney = static_cast<int>(Token::SubFinney),
 		Ether = static_cast<int>(Token::SubEther),
 		Second = static_cast<int>(Token::SubSecond),
 		Minute = static_cast<int>(Token::SubMinute),

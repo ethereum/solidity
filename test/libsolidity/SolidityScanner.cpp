@@ -428,11 +428,9 @@ BOOST_AUTO_TEST_CASE(comments_mixed_in_sequence)
 
 BOOST_AUTO_TEST_CASE(ether_subdenominations)
 {
-	Scanner scanner(CharStream("wei gwei szabo finney ether", ""));
+	Scanner scanner(CharStream("wei gwei ether", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::SubWei);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::SubSzabo);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::SubFinney);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::SubEther);
 }
 

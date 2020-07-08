@@ -2,23 +2,23 @@
 Units and Globally Available Variables
 **************************************
 
-.. index:: wei, finney, szabo, ether
+.. index:: wei, finney, szabo, gwei, ether
 
 Ether Units
 ===========
 
-A literal number can take a suffix of ``wei``, ``gwei``, ``finney``, ``szabo`` or ``ether`` to specify a subdenomination of Ether, where Ether numbers without a postfix are assumed to be Wei.
+A literal number can take a suffix of ``wei``, ``gwei`` or ``ether`` to specify a subdenomination of Ether, where Ether numbers without a postfix are assumed to be Wei.
 
 ::
 
     assert(1 wei == 1);
     assert(1 gwei == 1e9);
-    assert(1 szabo == 1e12);
-    assert(1 finney == 1e15);
     assert(1 ether == 1e18);
 
 The only effect of the subdenomination suffix is a multiplication by a power of ten.
 
+.. note::
+    The denominations ``finney`` and ``szabo`` have been removed in version 0.7.0.
 
 .. index:: time, seconds, minutes, hours, days, weeks, years
 

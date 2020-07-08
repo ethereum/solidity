@@ -361,11 +361,12 @@ assemblyType
 subAssembly
   : 'assembly' identifier assemblyBlock ;
 
+// 'finney' and 'szabo' are no longer supported as denominations by latest Solidity.
 numberLiteral
-  : (DecimalNumber | HexNumber) (NumberUnit | Gwei)?;
+  : (DecimalNumber | HexNumber) (NumberUnit | Gwei | Finney | Szabo)?;
 
 identifier
-  : (Gwei | 'from' | 'calldata' | 'address' | Identifier) ;
+  : (Gwei | Finney | Szabo | 'from' | 'calldata' | 'address' | Identifier) ;
 
 BooleanLiteral
   : 'true' | 'false' ;
@@ -385,10 +386,12 @@ HexDigits
   : HexCharacter ( '_'? HexCharacter )* ;
 
 NumberUnit
-  : 'wei' | 'szabo' | 'finney' | 'ether'
+  : 'wei' | 'ether'
   | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years' ;
 
 Gwei: 'gwei' ;
+Szabo: 'szabo' ;
+Finney: 'finney' ;
 
 HexLiteralFragment
   : 'hex' (('"' HexDigits? '"') | ('\'' HexDigits? '\'')) ;

@@ -15,6 +15,7 @@ Breaking changes:
  * ``using A for B`` only affects the contract it is mentioned in and not all derived contracts
  * Inline Assembly: Disallow `.` in user-defined function and variable names.
  * Inline Assembly: Slot and offset of storage pointer variable ``x`` are accessed via ``x.slot`` and ``x.offset`` instead of ``x_slot`` and ``x_offset``.
+ * Remove the finney and szabo denominations.
 
 Language Features:
  * Yul: Disallow EVM instruction `pc()`.
