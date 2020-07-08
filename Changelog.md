@@ -2,6 +2,7 @@
 
 Compiler Features:
  * Code Generator: Evaluate ``keccak256`` of string literals at compile-time.
+ * Peephole Optimizer: Remove unnecessary masking of tags.
 
 Bugfixes:
  * Type Checker: Fix overload resolution in combination with ``{value: ...}``.

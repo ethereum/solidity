@@ -266,14 +266,25 @@ struct TagConjunctions: SimplePeepholeOptimizerMethod<TagConjunctions, 3>
 		std::back_insert_iterator<AssemblyItems> _out
 	)
 	{
+		if (_and != Instruction::AND)
+			return false;
 		if (
 			_pushTag.type() == PushTag &&
-			_and == Instruction::AND &&
 			_pushConstant.type() == Push &&
 			(_pushConstant.data() & u256(0xFFFFFFFF)) == u256(0xFFFFFFFF)
 		)
 		{
 			*_out = _pushTag;
+			return true;
+		}
+		else if (
+			// tag and constant are swapped
+			_pushConstant.type() == PushTag &&
+			_pushTag.type() == Push &&
+			(_pushTag.data() & u256(0xFFFFFFFF)) == u256(0xFFFFFFFF)
+		)
+		{
+			*_out = _pushConstant;
 			return true;
 		}
 		else
