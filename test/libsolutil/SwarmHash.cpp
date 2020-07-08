@@ -31,7 +31,7 @@ using namespace std;
 namespace solidity::util::test
 {
 
-BOOST_AUTO_TEST_SUITE(SwarmHash)
+BOOST_AUTO_TEST_SUITE(SwarmHash, *boost::unit_test::label("nooptions"))
 
 string bzzr0HashHex(string const& _input)
 {

@@ -70,7 +70,7 @@ protected:
 	ProgramCache m_programCache{m_program};
 };
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(ProgramCacheTest)
 
 BOOST_AUTO_TEST_CASE(CacheStats_operator_plus_should_add_stats_together)

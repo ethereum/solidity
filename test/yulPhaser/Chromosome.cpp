@@ -46,7 +46,7 @@ using namespace solidity::util;
 namespace solidity::phaser::test
 {
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(ChromosomeTest)
 
 BOOST_AUTO_TEST_CASE(constructor_should_convert_from_string_to_optimisation_steps)

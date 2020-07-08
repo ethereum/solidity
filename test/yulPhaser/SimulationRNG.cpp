@@ -28,7 +28,7 @@ using namespace std;
 namespace solidity::phaser::test
 {
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(RandomTest)
 
 BOOST_AUTO_TEST_CASE(bernoulliTrial_should_produce_samples_with_right_expected_value_and_variance)

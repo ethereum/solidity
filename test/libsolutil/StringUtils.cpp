@@ -33,7 +33,7 @@ using namespace std;
 namespace solidity::util::test
 {
 
-BOOST_AUTO_TEST_SUITE(StringUtils)
+BOOST_AUTO_TEST_SUITE(StringUtils, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(test_similarity)
 {
