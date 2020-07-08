@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(ether_subdenominations)
 {
 	Scanner scanner(CharStream("wei gwei ether", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::SubWei);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SubGwei);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::SubEther);
 }
 

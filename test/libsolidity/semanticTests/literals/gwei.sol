@@ -1,7 +1,7 @@
 contract C {
-	uint constant gwei = 1 gwei;
+	uint constant x = 1 gwei;
 
-	function f() public view returns(uint) { return gwei; }
+	function f() public view returns(uint) { return x; }
 }
 // ====
 // compileViaYul: also
