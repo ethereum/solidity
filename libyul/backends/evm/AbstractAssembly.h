@@ -50,6 +50,7 @@ class AbstractAssembly
 public:
 	using LabelID = size_t;
 	using SubID = size_t;
+	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
 
 	virtual ~AbstractAssembly() = default;
 
@@ -78,13 +79,13 @@ public:
 	/// Append a jump instruction.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
 	/// This is helpful to stack height analysis if there is no continuing control flow.
-	virtual void appendJump(int _stackDiffAfter) = 0;
+	virtual void appendJump(int _stackDiffAfter, JumpType _jumpType = JumpType::Ordinary) = 0;
 
 	/// Append a jump-to-immediate operation.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
-	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter = 0) = 0;
+	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter = 0, JumpType _jumpType = JumpType::Ordinary) = 0;
 	/// Append a jump-to-if-immediate operation.
-	virtual void appendJumpToIf(LabelID _labelId) = 0;
+	virtual void appendJumpToIf(LabelID _labelId, JumpType _jumpType = JumpType::Ordinary) = 0;
 	/// Start a subroutine identified by @a _labelId that takes @a _arguments
 	/// stack slots as arguments.
 	virtual void appendBeginsub(LabelID _labelId, int _arguments) = 0;

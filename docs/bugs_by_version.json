@@ -1109,6 +1109,10 @@
         "bugs": [],
         "released": "2020-06-11"
     },
+    "0.6.11": {
+        "bugs": [],
+        "released": "2020-07-07"
+    },
     "0.6.2": {
         "bugs": [
             "MissingEscapingInFormatting",

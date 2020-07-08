@@ -167,6 +167,17 @@ void AsmAnalyzer::operator()(Assignment const& _assignment)
 	size_t const numVariables = _assignment.variableNames.size();
 	yulAssert(numVariables >= 1, "");
 
+	set<YulString> variables;
+	for (auto const& _variableName: _assignment.variableNames)
+		if (!variables.insert(_variableName.name).second)
+			m_errorReporter.declarationError(
+				9005_error,
+				_assignment.location,
+				"Variable " +
+				_variableName.name.str() +
+				" occurs multiple times on the left-hand side of the assignment."
+			);
+
 	vector<YulString> types = std::visit(*this, *_assignment.value);
 
 	if (types.size() != numVariables)

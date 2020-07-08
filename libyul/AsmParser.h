@@ -86,7 +86,6 @@ protected:
 	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
 	Expression parseExpression();
-	static std::map<evmasm::Instruction, std::string> const& instructionNames();
 	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
 	/// builtin functian call (only the name).
 	ElementaryOperation parseElementaryOperation();

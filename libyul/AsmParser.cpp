@@ -297,20 +297,6 @@ Expression Parser::parseExpression()
 	}
 }
 
-std::map<evmasm::Instruction, string> const& Parser::instructionNames()
-{
-	static map<evmasm::Instruction, string> s_instructionNames;
-	if (s_instructionNames.empty())
-	{
-		for (auto const& instr: instructions())
-			s_instructionNames[instr.second] = instr.first;
-		// set the ambiguous instructions to a clear default
-		s_instructionNames[evmasm::Instruction::SELFDESTRUCT] = "selfdestruct";
-		s_instructionNames[evmasm::Instruction::KECCAK256] = "keccak256";
-	}
-	return s_instructionNames;
-}
-
 Parser::ElementaryOperation Parser::parseElementaryOperation()
 {
 	RecursionGuard recursionGuard(*this);

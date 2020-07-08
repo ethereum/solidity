@@ -291,7 +291,8 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		{
 			m_assembly.appendJumpTo(
 				functionEntryID(_call.functionName.name, *function),
-				static_cast<int>(function->returns.size() - function->arguments.size()) - 1
+				static_cast<int>(function->returns.size() - function->arguments.size()) - 1,
+				AbstractAssembly::JumpType::IntoFunction
 			);
 			m_assembly.appendLabel(returnLabel);
 		}
@@ -511,7 +512,10 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	if (m_evm15)
 		m_assembly.appendReturnsub(static_cast<int>(_function.returnVariables.size()), stackHeightBefore);
 	else
-		m_assembly.appendJump(stackHeightBefore - static_cast<int>(_function.returnVariables.size()));
+		m_assembly.appendJump(
+			stackHeightBefore - static_cast<int>(_function.returnVariables.size()),
+			AbstractAssembly::JumpType::OutOfFunction
+		);
 	m_assembly.setStackHeight(stackHeightBefore);
 }
 
