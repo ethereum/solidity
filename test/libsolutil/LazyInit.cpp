@@ -59,7 +59,7 @@ T valueOf(LazyInit<T> _lazyInit)
 
 }
 
-BOOST_AUTO_TEST_SUITE(LazyInitTests)
+BOOST_AUTO_TEST_SUITE(LazyInitTests, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(default_constructed_is_empty)
 {

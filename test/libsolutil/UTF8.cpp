@@ -30,7 +30,7 @@ using namespace std;
 namespace solidity::util::test
 {
 
-BOOST_AUTO_TEST_SUITE(UTF8)
+BOOST_AUTO_TEST_SUITE(UTF8, *boost::unit_test::label("nooptions"))
 
 namespace {
 

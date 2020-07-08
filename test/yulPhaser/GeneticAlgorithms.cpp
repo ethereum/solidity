@@ -56,7 +56,7 @@ protected:
 	};
 };
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(GeneticAlgorithmsTest)
 BOOST_AUTO_TEST_SUITE(RandomAlgorithmTest)
 

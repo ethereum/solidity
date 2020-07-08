@@ -31,7 +31,7 @@ using namespace std;
 namespace solidity::phaser::test
 {
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(PairSelectionsTest)
 BOOST_AUTO_TEST_SUITE(RandomPairSelectionTest)
 
