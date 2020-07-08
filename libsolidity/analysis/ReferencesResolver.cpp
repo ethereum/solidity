@@ -38,9 +38,8 @@
 
 using namespace std;
 using namespace solidity::langutil;
+using namespace solidity::frontend;
 
-namespace solidity::frontend
-{
 
 bool ReferencesResolver::resolve(ASTNode const& _root)
 {
@@ -184,6 +183,10 @@ bool ReferencesResolver::visit(Return const& _return)
 
 void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 {
+	validateYulIdentifierName(_function.name, _function.location);
+	for (yul::TypedName const& varName: _function.parameters + _function.returnVariables)
+		validateYulIdentifierName(varName.name, varName.location);
+
 	bool wasInsideFunction = m_yulInsideFunction;
 	m_yulInsideFunction = true;
 	this->operator()(_function.body);
@@ -249,6 +252,8 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 {
 	for (auto const& identifier: _varDecl.variables)
 	{
+		validateYulIdentifierName(identifier.name, identifier.location);
+
 		bool isSlot = boost::algorithm::ends_with(identifier.name.str(), "_slot");
 		bool isOffset = boost::algorithm::ends_with(identifier.name.str(), "_offset");
 
@@ -283,4 +288,12 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 		visit(*_varDecl.value);
 }
 
+void ReferencesResolver::validateYulIdentifierName(yul::YulString _name, SourceLocation const& _location)
+{
+	if (util::contains(_name.str(), '.'))
+		m_errorReporter.declarationError(
+			3927_error,
+			_location,
+			"User-defined identifiers in inline assembly cannot contain '.'."
+		);
 }
