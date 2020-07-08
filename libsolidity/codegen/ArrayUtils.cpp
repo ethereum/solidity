@@ -935,11 +935,6 @@ void ArrayUtils::clearStorageLoop(TypePointer _type) const
 			}
 			// stack: end_pos pos
 
-			// jump to and return from the loop to allow for duplicate code removal
-			evmasm::AssemblyItem returnTag = _context.pushNewTag();
-			_context << Instruction::SWAP2 << Instruction::SWAP1;
-
-			// stack: <return tag> end_pos pos
 			evmasm::AssemblyItem loopStart = _context.appendJumpToNew();
 			_context << loopStart;
 			// check for loop condition
@@ -959,11 +954,8 @@ void ArrayUtils::clearStorageLoop(TypePointer _type) const
 			_context.appendJumpTo(loopStart);
 			// cleanup
 			_context << zeroLoopEnd;
-			_context << Instruction::POP << Instruction::SWAP1;
-			// "return"
-			_context << Instruction::JUMP;
+			_context << Instruction::POP;
 
-			_context << returnTag;
 			solAssert(_context.stackHeight() == stackHeightStart - 1, "");
 		}
 	);
