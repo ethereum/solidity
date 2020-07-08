@@ -990,13 +990,13 @@ vector<smtutil::Expression> CHC::initialStateVariables(ContractDefinition const&
 	return stateVariablesAtIndex(0, _contract);
 }
 
-vector<smtutil::Expression> CHC::stateVariablesAtIndex(int _index)
+vector<smtutil::Expression> CHC::stateVariablesAtIndex(unsigned _index)
 {
 	solAssert(m_currentContract, "");
 	return stateVariablesAtIndex(_index, *m_currentContract);
 }
 
-vector<smtutil::Expression> CHC::stateVariablesAtIndex(int _index, ContractDefinition const& _contract)
+vector<smtutil::Expression> CHC::stateVariablesAtIndex(unsigned _index, ContractDefinition const& _contract)
 {
 	return applyMap(
 		stateVariablesIncludingInheritedAndPrivate(_contract),
