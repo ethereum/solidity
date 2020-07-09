@@ -88,11 +88,10 @@ void interpret(string const& _source)
 
 	InterpreterState state;
 	state.maxTraceSize = 10000;
-	Dialect const& dialect(EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
-	Interpreter interpreter(state, dialect);
 	try
 	{
-		interpreter(*ast);
+		Dialect const& dialect(EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
+		Interpreter::run(state, dialect, *ast);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{
