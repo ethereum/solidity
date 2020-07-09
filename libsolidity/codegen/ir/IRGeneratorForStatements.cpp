@@ -1020,18 +1020,28 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		ArrayType const* arrayType = TypeProvider::bytesMemory();
 
-		auto array = convert(*arguments[0], *arrayType);
+		if (auto const* stringLiteral = dynamic_cast<StringLiteralType const*>(arguments.front()->annotation().type))
+		{
+			// Optimization: Compute keccak256 on string literals at compile-time.
+			define(_functionCall) <<
+				("0x" + keccak256(stringLiteral->value()).hex()) <<
+				"\n";
+		}
+		else
+		{
+			auto array = convert(*arguments[0], *arrayType);
 
-		define(_functionCall) <<
-			"keccak256(" <<
-			m_utils.arrayDataAreaFunction(*arrayType) <<
-			"(" <<
-			array.commaSeparatedList() <<
-			"), " <<
-			m_utils.arrayLengthFunction(*arrayType) <<
-			"(" <<
-			array.commaSeparatedList() <<
-			"))\n";
+			define(_functionCall) <<
+				"keccak256(" <<
+				m_utils.arrayDataAreaFunction(*arrayType) <<
+				"(" <<
+				array.commaSeparatedList() <<
+				"), " <<
+				m_utils.arrayLengthFunction(*arrayType) <<
+				"(" <<
+				array.commaSeparatedList() <<
+				"))\n";
+		}
 		break;
 	}
 	case FunctionType::Kind::ArrayPop:

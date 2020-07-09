@@ -43,7 +43,7 @@ string assemble(string const& _input)
 }
 }
 
-BOOST_AUTO_TEST_SUITE(StackReuseCodegen)
+BOOST_AUTO_TEST_SUITE(StackReuseCodegen, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {

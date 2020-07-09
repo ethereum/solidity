@@ -120,6 +120,8 @@ private:
 	void closeFunctionScope();
 	/// Adds @a _vars to current scope
 	void addVarsToScope(std::vector<std::string> const& _vars);
+	/// @returns number of variables that are in scope
+	unsigned numVarsInScope();
 
 	std::string createHex(std::string const& _hexBytes);
 

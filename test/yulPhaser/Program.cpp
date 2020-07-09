@@ -57,7 +57,7 @@ namespace
 namespace solidity::phaser::test
 {
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(ProgramTest)
 
 BOOST_AUTO_TEST_CASE(copy_constructor_should_make_deep_copy_of_ast)

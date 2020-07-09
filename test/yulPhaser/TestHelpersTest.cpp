@@ -34,7 +34,7 @@ namespace fs = boost::filesystem;
 namespace solidity::phaser::test
 {
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(TestHelpersTest)
 
 BOOST_AUTO_TEST_CASE(ChromosomeLengthMetric_evaluate_should_return_chromosome_length)

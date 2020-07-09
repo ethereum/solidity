@@ -2404,6 +2404,8 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 {
 	solAssert(_functionCallOptions.options().size() == _functionCallOptions.names().size(), "Lengths of name & value arrays differ!");
 
+	_functionCallOptions.expression().annotation().arguments = _functionCallOptions.annotation().arguments;
+
 	_functionCallOptions.expression().accept(*this);
 
 	auto expressionFunctionType = dynamic_cast<FunctionType const*>(type(_functionCallOptions.expression()));

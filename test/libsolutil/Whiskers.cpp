@@ -29,7 +29,7 @@ using namespace std;
 namespace solidity::util::test
 {
 
-BOOST_AUTO_TEST_SUITE(WhiskersTest)
+BOOST_AUTO_TEST_SUITE(WhiskersTest, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(no_templates)
 {

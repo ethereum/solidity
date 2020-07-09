@@ -56,3 +56,7 @@ def SHR(x, y):
 
 def SAR(x, y):
 	return y >> x
+
+def BYTE(i, x):
+	bit = (i + 1) * 8
+	return If(UGT(bit, x.size()), BitVecVal(0, x.size()), (LShR(x, (x.size() - bit))) & 0xff)

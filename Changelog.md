@@ -26,7 +26,14 @@ Bugfixes:
 
 ### 0.6.12 (unreleased)
 
+Compiler Features:
+ * Code Generator: Evaluate ``keccak256`` of string literals at compile-time.
 
+Bugfixes:
+ * Type Checker: Fix overload resolution in combination with ``{value: ...}``.
+
+Compiler Features:
+ * Optimizer: Add rule to remove shifts inside the byte opcode.
 
 
 ### 0.6.11 (2020-07-07)

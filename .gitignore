@@ -35,7 +35,7 @@ build/
 build*/
 emscripten_build/
 docs/_build
-docs/utils/__pycache__
+__pycache__
 docs/utils/*.pyc
 /deps/downloads/
 deps/install
