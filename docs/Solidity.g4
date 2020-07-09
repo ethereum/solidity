@@ -306,7 +306,7 @@ assemblyBlock
   : '{' assemblyItem* '}' ;
 
 assemblyExpression
-  : assemblyCall | assemblyLiteral ;
+  : assemblyCall | assemblyLiteral | assemblyIdentifier ;
 
 assemblyCall
   : ( 'return' | 'address' | 'byte' | identifier ) ( '(' assemblyExpression? ( ',' assemblyExpression )* ')' )? ;
@@ -318,7 +318,10 @@ assemblyAssignment
   : assemblyIdentifierList ':=' assemblyExpression ;
 
 assemblyIdentifierList
-  : identifier ( ',' identifier )* ;
+  : assemblyIdentifier ( ',' assemblyIdentifier )* ;
+
+assemblyIdentifier
+  : identifier ( '.' identifier )* ;
 
 assemblyStackAssignment
   : '=:' identifier ;
