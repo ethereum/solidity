@@ -46,6 +46,7 @@ struct Testsuite
 	bool smt;
 	bool needsVM;
 	TestCase::TestCaseCreator testCaseCreator;
+	std::vector<std::string> labels{};
 };
 
 
@@ -64,8 +65,8 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"Semantic",            "libsolidity", "semanticTests",       false, true,  &SemanticTest::create},
 	{"JSON AST",            "libsolidity", "ASTJSON",             false, false, &ASTJSONTest::create},
 	{"JSON ABI",            "libsolidity", "ABIJson",             false, false, &ABIJsonTest::create},
-	{"SMT Checker",         "libsolidity", "smtCheckerTests",     true,  false, &SMTCheckerTest::create},
-	{"SMT Checker JSON",    "libsolidity", "smtCheckerTestsJSON", true,  false, &SMTCheckerJSONTest::create},
+	{"SMT Checker",         "libsolidity", "smtCheckerTests",     true,  false, &SMTCheckerTest::create, {"nooptions"}},
+	{"SMT Checker JSON",    "libsolidity", "smtCheckerTestsJSON", true,  false, &SMTCheckerJSONTest::create, {"nooptions"}},
 	{"Gas Estimates",       "libsolidity", "gasTests",            false, false, &GasTest::create}
 };
 

@@ -26,7 +26,7 @@ using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion _evmVersion): SyntaxTest(_filename, _evmVersion)
+SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, EVMVersion{})
 {
 	auto const& choice = m_reader.stringSetting("SMTSolvers", "any");
 	if (choice == "any")
