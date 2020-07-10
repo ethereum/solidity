@@ -156,6 +156,9 @@ add_library(yul
 	optimiser/SyntacticalEquality.h
 	optimiser/TypeInfo.cpp
 	optimiser/TypeInfo.h
+	optimiser/UnusedFunctionParameterPruner.cpp
+	optimiser/UnusedFunctionParameterPruner.h
+	optimiser/UnusedFunctionsCommon.h
 	optimiser/UnusedPruner.cpp
 	optimiser/UnusedPruner.h
 	optimiser/VarDeclInitializer.cpp

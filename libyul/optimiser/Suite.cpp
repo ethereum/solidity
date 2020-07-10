@@ -42,6 +42,7 @@
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/Rematerialiser.h>
+#include <libyul/optimiser/UnusedFunctionParameterPruner.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -185,6 +186,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			SSAReverser,
 			SSATransform,
 			StructuralSimplifier,
+			UnusedFunctionParameterPruner,
 			UnusedPruner,
 			VarDeclInitializer
 		>();
@@ -221,6 +223,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{SSAReverser::name,                   'V'},
 		{SSATransform::name,                  'a'},
 		{StructuralSimplifier::name,          't'},
+		{UnusedFunctionParameterPruner::name, 'p'},
 		{UnusedPruner::name,                  'u'},
 		{VarDeclInitializer::name,            'd'},
 	};
