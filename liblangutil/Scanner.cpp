@@ -146,7 +146,7 @@ void Scanner::reset(shared_ptr<CharStream> _source)
 void Scanner::reset()
 {
 	m_source->reset();
-	m_supportPeriodInIdentifier = false;
+	m_kind = ScannerKind::Solidity;
 	m_char = m_source->get();
 	skipWhitespace();
 	next();
@@ -160,12 +160,6 @@ void Scanner::setPosition(size_t _offset)
 	scanToken();
 	next();
 	next();
-}
-
-void Scanner::supportPeriodInIdentifier(bool _value)
-{
-	m_supportPeriodInIdentifier = _value;
-	rescan();
 }
 
 bool Scanner::scanHexByte(char& o_scannedByte)
@@ -947,7 +941,7 @@ tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
-	while (isIdentifierPart(m_char) || (m_char == '.' && m_supportPeriodInIdentifier))
+	while (isIdentifierPart(m_char) || (m_char == '.' && m_kind == ScannerKind::Yul))
 		addLiteralCharAndAdvance();
 	literal.complete();
 	return TokenTraits::fromIdentifierOrKeyword(m_tokens[NextNext].literal);
