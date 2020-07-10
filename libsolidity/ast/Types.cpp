@@ -53,6 +53,88 @@ using namespace solidity::frontend;
 namespace
 {
 
+struct TypeComp
+{
+	bool operator()(Type const* lhs, Type const* rhs) const
+	{
+		solAssert(lhs && rhs, "");
+		return lhs->richIdentifier() < rhs->richIdentifier();
+	}
+};
+using TypeSet = std::set<Type const*, TypeComp>;
+
+bigint storageSizeUpperBoundInner(
+	Type const& _type,
+	set<StructDefinition const*>& _structsSeen
+)
+{
+	switch (_type.category())
+	{
+	case Type::Category::Array:
+	{
+		auto const& t = dynamic_cast<ArrayType const&>(_type);
+		if (!t.isDynamicallySized())
+			return storageSizeUpperBoundInner(*t.baseType(), _structsSeen) * t.length();
+		break;
+	}
+	case Type::Category::Struct:
+	{
+		auto const& t = dynamic_cast<StructType const&>(_type);
+		solAssert(!_structsSeen.count(&t.structDefinition()), "Recursive struct.");
+		bigint size = 1;
+		_structsSeen.insert(&t.structDefinition());
+		for (auto const& m: t.members(nullptr))
+			size += storageSizeUpperBoundInner(*m.type, _structsSeen);
+		_structsSeen.erase(&t.structDefinition());
+		return size;
+	}
+	default:
+		break;
+	}
+	return bigint(1);
+}
+
+void oversizedSubtypesInner(
+	Type const& _type,
+	bool _includeType,
+	set<StructDefinition const*>& _structsSeen,
+	TypeSet& _oversizedSubtypes
+)
+{
+	switch (_type.category())
+	{
+	case Type::Category::Array:
+	{
+		auto const& t = dynamic_cast<ArrayType const&>(_type);
+		if (_includeType && storageSizeUpperBound(t) >= bigint(1) << 64)
+			_oversizedSubtypes.insert(&t);
+		oversizedSubtypesInner(*t.baseType(), t.isDynamicallySized(), _structsSeen, _oversizedSubtypes);
+		break;
+	}
+	case Type::Category::Struct:
+	{
+		auto const& t = dynamic_cast<StructType const&>(_type);
+		if (_structsSeen.count(&t.structDefinition()))
+			return;
+		if (_includeType && storageSizeUpperBound(t) >= bigint(1) << 64)
+			_oversizedSubtypes.insert(&t);
+		_structsSeen.insert(&t.structDefinition());
+		for (auto const& m: t.members(nullptr))
+			oversizedSubtypesInner(*m.type, false, _structsSeen, _oversizedSubtypes);
+		_structsSeen.erase(&t.structDefinition());
+		break;
+	}
+	case Type::Category::Mapping:
+	{
+		auto const* valueType = dynamic_cast<MappingType const&>(_type).valueType();
+		oversizedSubtypesInner(*valueType, true, _structsSeen, _oversizedSubtypes);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
 /// Check whether (_base ** _exp) fits into 4096 bits.
 bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
 {
@@ -147,6 +229,22 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 	return transformed;
 }
 
+}
+
+bigint solidity::frontend::storageSizeUpperBound(frontend::Type const& _type)
+{
+	set<StructDefinition const*> structsSeen;
+	return storageSizeUpperBoundInner(_type, structsSeen);
+}
+
+vector<frontend::Type const*> solidity::frontend::oversizedSubtypes(frontend::Type const& _type)
+{
+	set<StructDefinition const*> structsSeen;
+	TypeSet oversized;
+	oversizedSubtypesInner(_type, false, structsSeen, oversized);
+	vector<frontend::Type const*> res;
+	copy(oversized.cbegin(), oversized.cend(), back_inserter(res));
+	return res;
 }
 
 void Type::clearCache() const
@@ -1749,6 +1847,8 @@ BoolResult ArrayType::validForLocation(DataLocation _loc) const
 			break;
 		}
 		case DataLocation::Storage:
+			if (storageSizeUpperBound(*this) >= bigint(1) << 256)
+				return BoolResult::err("Type too large for storage.");
 			break;
 	}
 	return true;
@@ -2388,6 +2488,13 @@ BoolResult StructType::validForLocation(DataLocation _loc) const
 			if (!result)
 				return result;
 		}
+
+	if (
+		_loc == DataLocation::Storage &&
+		storageSizeUpperBound(*this) >= bigint(1) << 256
+	)
+		return BoolResult::err("Type too large for storage.");
+
 	return true;
 }
 

@@ -73,23 +73,6 @@ private:
 	bool visit(BinaryOperation const& _operation) override;
 	bool visit(FunctionCall const& _functionCall) override;
 
-	struct TypeComp
-	{
-		bool operator()(Type const* lhs, Type const* rhs) const
-		{
-			solAssert(lhs && rhs, "");
-			return lhs->richIdentifier() < rhs->richIdentifier();
-		}
-	};
-	using TypeSet = std::set<Type const*, TypeComp>;
-
-	/// @returns the size of this type in storage, including all sub-types.
-	static bigint structureSizeEstimate(
-		Type const& _type,
-		std::set<StructDefinition const*>& _structsSeen,
-		TypeSet& _oversizedSubTypes
-	);
-
 	langutil::ErrorReporter& m_errorReporter;
 
 	/// Flag that indicates whether the current contract definition is a library.

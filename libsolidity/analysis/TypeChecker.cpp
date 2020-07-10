@@ -36,6 +36,7 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 
 #include <memory>
 #include <vector>
@@ -90,6 +91,20 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 
 	for (auto const& n: _contract.subNodes())
 		n->accept(*this);
+
+	bigint size = 0;
+	vector<VariableDeclaration const*> variables;
+	for (ContractDefinition const* contract: boost::adaptors::reverse(m_currentContract->annotation().linearizedBaseContracts))
+		for (VariableDeclaration const* variable: contract->stateVariables())
+			if (!(variable->isConstant() || variable->immutable()))
+			{
+				size += storageSizeUpperBound(*(variable->annotation().type));
+				if (size >= bigint(1) << 256)
+				{
+					m_errorReporter.typeError(7676_error, m_currentContract->location(), "Contract too large for storage.");
+					break;
+				}
+			}
 
 	return false;
 }
@@ -523,6 +538,10 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			m_errorReporter.typeError(6744_error, _variable.location(), "Internal or recursive type is not allowed for public state variables.");
 	}
 
+	bool isStructMemberDeclaration = dynamic_cast<StructDefinition const*>(_variable.scope()) != nullptr;
+	if (isStructMemberDeclaration)
+		return false;
+
 	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
 	{
 		auto result = referenceType->validForLocation(referenceType->location());
@@ -532,7 +551,31 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		{
 			solAssert(!result.message().empty(), "Expected detailed error message");
 			m_errorReporter.typeError(1534_error, _variable.location(), result.message());
+			return false;
 		}
+	}
+
+	if (varType->dataStoredIn(DataLocation::Storage))
+	{
+		auto collisionMessage = [&](string const& variableOrType, bool isVariable) -> string {
+			return
+				(isVariable ? "Variable " : "Type ") +
+				util::escapeAndQuoteString(variableOrType) +
+				" covers a large part of storage and thus makes collisions likely."
+				" Either use mappings or dynamic arrays and allow their size to be increased only"
+				" in small quantities per transaction.";
+		};
+
+		if (storageSizeUpperBound(*varType) >= bigint(1) << 64)
+		{
+			if (_variable.isStateVariable())
+				m_errorReporter.warning(3408_error, _variable.location(), collisionMessage(_variable.name(), true));
+			else
+				m_errorReporter.warning(2332_error, _variable.typeName()->location(), collisionMessage(varType->canonicalName(), false));
+		}
+		vector<Type const*> oversizedSubtypes = frontend::oversizedSubtypes(*varType);
+		for (Type const* subtype: oversizedSubtypes)
+			m_errorReporter.warning(7325_error, _variable.typeName()->location(), collisionMessage(subtype->canonicalName(), false));
 	}
 
 	return false;
