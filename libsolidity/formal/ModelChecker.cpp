@@ -41,7 +41,12 @@ void ModelChecker::analyze(SourceUnit const& _source)
 		return;
 
 	m_chc.analyze(_source);
-	m_bmc.analyze(_source, m_chc.safeAssertions());
+
+	auto solvedTargets = m_chc.safeTargets();
+	for (auto const& target: m_chc.unsafeTargets())
+		solvedTargets[target.first] += target.second;
+
+	m_bmc.analyze(_source, solvedTargets);
 }
 
 vector<string> ModelChecker::unhandledQueries()

@@ -96,48 +96,7 @@ void CHC::analyze(SourceUnit const& _source)
 	for (auto const* source: sources)
 		source->accept(*this);
 
-	for (auto const& [scope, target]: m_verificationTargets)
-	{
-		if (target.type == VerificationTarget::Type::Assert)
-		{
-			auto assertions = transactionAssertions(scope);
-			for (auto const* assertion: assertions)
-			{
-				createErrorBlock();
-				connectBlocks(target.value, error(), target.constraints && (target.errorId == static_cast<size_t>(assertion->id())));
-				auto [result, model] = query(error(), assertion->location());
-				// This should be fine but it's a bug in the old compiler
-				(void)model;
-				if (result == smtutil::CheckResult::UNSATISFIABLE)
-					m_safeAssertions.insert(assertion);
-			}
-		}
-		else if (target.type == VerificationTarget::Type::PopEmptyArray)
-		{
-			solAssert(dynamic_cast<FunctionCall const*>(scope), "");
-			createErrorBlock();
-			connectBlocks(target.value, error(), target.constraints && (target.errorId == static_cast<size_t>(scope->id())));
-			auto [result, model] = query(error(), scope->location());
-			// This should be fine but it's a bug in the old compiler
-			(void)model;
-			if (result != smtutil::CheckResult::UNSATISFIABLE)
-			{
-				string msg = "Empty array \"pop\" ";
-				if (result == smtutil::CheckResult::SATISFIABLE)
-					msg += "detected here.";
-				else
-					msg += "might happen here.";
-				m_unsafeTargets.insert(scope);
-				m_outerErrorReporter.warning(
-					2529_error,
-					scope->location(),
-					msg
-				);
-			}
-		}
-		else
-			solAssert(false, "");
-	}
+	checkVerificationTargets();
 }
 
 vector<string> CHC::unhandledQueries() const
@@ -540,7 +499,7 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 		m_currentBlock,
 		m_currentFunction->isConstructor() ? summary(*m_currentContract) : summary(*m_currentFunction),
 		currentPathConditions() && !m_context.expression(*args.front())->currentValue() && (
-			m_error.currentValue() == static_cast<size_t>(_funCall.id())
+			m_error.currentValue() == newErrorId(_funCall)
 		)
 	);
 
@@ -638,7 +597,7 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 	connectBlocks(
 		m_currentBlock,
 		m_currentFunction->isConstructor() ? summary(*m_currentContract) : summary(*m_currentFunction),
-		currentPathConditions() && symbArray->length() <= 0 && m_error.currentValue() == static_cast<size_t>(_arrayPop.id())
+		currentPathConditions() && symbArray->length() <= 0 && m_error.currentValue() == newErrorId(_arrayPop)
 	);
 
 	m_context.addAssertion(m_error.currentValue() == previousError);
@@ -647,9 +606,10 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 void CHC::resetSourceAnalysis()
 {
 	m_verificationTargets.clear();
-	m_safeAssertions.clear();
+	m_safeTargets.clear();
 	m_unsafeTargets.clear();
 	m_functionAssertions.clear();
+	m_errorIds.clear();
 	m_callGraph.clear();
 	m_summaries.clear();
 }
@@ -1167,7 +1127,98 @@ void CHC::addArrayPopVerificationTarget(ASTNode const* _scope, smtutil::Expressi
 	}
 }
 
+void CHC::checkVerificationTargets()
+{
+	for (auto const& [scope, target]: m_verificationTargets)
+	{
+		if (target.type == VerificationTarget::Type::Assert)
+			checkAssertTarget(scope, target);
+		else
+		{
+			string satMsg;
+			string unknownMsg;
+
+			if (target.type == VerificationTarget::Type::PopEmptyArray)
+			{
+				solAssert(dynamic_cast<FunctionCall const*>(scope), "");
+				satMsg = "Empty array \"pop\" detected here.";
+				unknownMsg = "Empty array \"pop\" might happen here.";
+			}
+			else
+				solAssert(false, "");
+
+			auto it = m_errorIds.find(scope->id());
+			solAssert(it != m_errorIds.end(), "");
+			checkAndReportTarget(scope, target, it->second, satMsg, unknownMsg);
+		}
+	}
+}
+
+void CHC::checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& _target)
+{
+	solAssert(_target.type == VerificationTarget::Type::Assert, "");
+	auto assertions = transactionAssertions(_scope);
+	for (auto const* assertion: assertions)
+	{
+		auto it = m_errorIds.find(assertion->id());
+		solAssert(it != m_errorIds.end(), "");
+		unsigned errorId = it->second;
+
+		createErrorBlock();
+		connectBlocks(_target.value, error(), _target.constraints && (_target.errorId == errorId));
+		auto [result, model] = query(error(), assertion->location());
+		// This should be fine but it's a bug in the old compiler
+		(void)model;
+		if (result == smtutil::CheckResult::UNSATISFIABLE)
+			m_safeTargets[assertion].insert(_target.type);
+	}
+}
+
+void CHC::checkAndReportTarget(
+	ASTNode const* _scope,
+	CHCVerificationTarget const& _target,
+	unsigned _errorId,
+	string _satMsg,
+	string _unknownMsg
+)
+{
+	createErrorBlock();
+	connectBlocks(_target.value, error(), _target.constraints && (_target.errorId == _errorId));
+	auto [result, model] = query(error(), _scope->location());
+	// This should be fine but it's a bug in the old compiler
+	(void)model;
+	if (result == smtutil::CheckResult::UNSATISFIABLE)
+		m_safeTargets[_scope].insert(_target.type);
+	else if (result == smtutil::CheckResult::SATISFIABLE)
+	{
+		solAssert(!_satMsg.empty(), "");
+		m_unsafeTargets[_scope].insert(_target.type);
+		m_outerErrorReporter.warning(
+			2529_error,
+			_scope->location(),
+			_satMsg
+		);
+	}
+	else if (!_unknownMsg.empty())
+		m_outerErrorReporter.warning(
+			1147_error,
+			_scope->location(),
+			_unknownMsg
+		);
+}
+
 string CHC::uniquePrefix()
 {
 	return to_string(m_blockCounter++);
+}
+
+unsigned CHC::newErrorId(frontend::Expression const& _expr)
+{
+	unsigned errorId = m_context.newUniqueId();
+	// We need to make sure the error id is not zero,
+	// because error id zero actually means no error in the CHC encoding.
+	if (errorId == 0)
+		errorId = m_context.newUniqueId();
+	m_errorIds.emplace(_expr.id(), errorId);
+	return errorId;
 }
