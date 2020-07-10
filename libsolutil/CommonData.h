@@ -214,6 +214,13 @@ std::map<V, K> invertMap(std::map<K, V> const& originalMap)
 	return inverseMap;
 }
 
+/// Returns a set of keys of a map.
+template <typename K, typename V>
+std::set<K> keys(std::map<K, V> const& _map)
+{
+	return applyMap(_map, [](auto const& _elem) { return _elem.first; }, std::set<K>{});
+}
+
 // String conversion functions, mainly to/from hex/nibble/byte representations.
 
 enum class WhenError
