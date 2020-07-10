@@ -8,6 +8,7 @@ Bugfixes:
  * Type Checker: Fix internal compiler error related to oversized types.
 
 Compiler Features:
+ * Build System: Update internal dependency of jsoncpp to 1.9.3.
  * Optimizer: Add rule to remove shifts inside the byte opcode.
 
 
