@@ -4,4 +4,4 @@
     case hex"1122" {}
 }
 // ----
-// ParserError 1856: (33-40): Literal or identifier expected.
+// ParserError 4805: (36-40): Literal expected.

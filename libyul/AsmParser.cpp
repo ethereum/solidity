@@ -284,12 +284,6 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	switch (currentToken())
 	{
 	case Token::Identifier:
-	case Token::Return:
-	case Token::Byte:
-	case Token::Bool:
-	case Token::Address:
-	case Token::Var:
-	case Token::In:
 	{
 		YulString literal{currentLiteral()};
 		if (m_dialect.builtin(literal))
@@ -472,24 +466,10 @@ TypedName Parser::parseTypedName()
 YulString Parser::expectAsmIdentifier()
 {
 	YulString name{currentLiteral()};
-	switch (currentToken())
-	{
-	case Token::Return:
-	case Token::Byte:
-	case Token::Address:
-	case Token::Bool:
-	case Token::Identifier:
-	case Token::Var:
-	case Token::In:
-		break;
-	default:
-		expectToken(Token::Identifier);
-		break;
-	}
-
-	if (m_dialect.builtin(name))
+	if (currentToken() == Token::Identifier && m_dialect.builtin(name))
 		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
-	advance();
+	// NOTE: We keep the expectation here to ensure the correct source location for the error above.
+	expectToken(Token::Identifier);
 	return name;
 }
 

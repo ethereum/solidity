@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// ParserError 1856: (67-76): Literal or identifier expected.
+// ParserError 2314: (70-76): Expected ',' but got 'StringLiteral'

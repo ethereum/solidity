@@ -2,4 +2,4 @@
     let x := hex"0011"
 }
 // ----
-// ParserError 1856: (15-24): Literal or identifier expected.
+// ParserError 6913: (25-26): Call or assignment expected.

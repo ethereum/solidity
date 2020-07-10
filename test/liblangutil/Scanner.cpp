@@ -595,6 +595,11 @@ BOOST_AUTO_TEST_CASE(unicode_prefix_only)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+	scanner.reset(CharStream("{ unicode", ""));
+	scanner.setScannerMode(ScannerKind::Yul);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "unicode");
 }
 
 BOOST_AUTO_TEST_CASE(unicode_invalid_space)
@@ -611,6 +616,13 @@ BOOST_AUTO_TEST_CASE(unicode_invalid_token)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+	scanner.reset(CharStream("{ unicode test", ""));
+	scanner.setScannerMode(ScannerKind::Yul);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "unicode");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "test");
 }
 
 BOOST_AUTO_TEST_CASE(valid_unicode_literal)
@@ -638,6 +650,11 @@ BOOST_AUTO_TEST_CASE(hex_prefix_only)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+	scanner.reset(CharStream("{ hex", ""));
+	scanner.setScannerMode(ScannerKind::Yul);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "hex");
 }
 
 BOOST_AUTO_TEST_CASE(hex_invalid_space)
@@ -654,6 +671,13 @@ BOOST_AUTO_TEST_CASE(hex_invalid_token)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+	scanner.reset(CharStream("{ hex test", ""));
+	scanner.setScannerMode(ScannerKind::Yul);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "hex");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "test");
 }
 
 BOOST_AUTO_TEST_CASE(valid_hex_literal)
@@ -839,12 +863,12 @@ BOOST_AUTO_TEST_CASE(solidity_keywords)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 	scanner.reset(CharStream(keywords, ""));
 	scanner.setScannerMode(ScannerKind::Yul);
-	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Return);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Byte);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Bool);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Address);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Var);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::In);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::TrueLiteral);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::FalseLiteral);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);

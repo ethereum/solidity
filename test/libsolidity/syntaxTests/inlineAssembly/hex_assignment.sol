@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// ParserError 1856: (72-81): Literal or identifier expected.
+// ParserError 6913: (86-87): Call or assignment expected.

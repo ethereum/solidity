@@ -317,6 +317,13 @@ namespace TokenTraits
 	constexpr bool isTimeSubdenomination(Token op) { return op == Token::SubSecond || op == Token::SubMinute || op == Token::SubHour || op == Token::SubDay || op == Token::SubWeek || op == Token::SubYear; }
 	constexpr bool isReservedKeyword(Token op) { return (Token::After <= op && op <= Token::Unchecked); }
 
+	constexpr bool isYulKeyword(Token tok)
+	{
+		return tok == Token::Function || tok == Token::Let || tok == Token::If || tok == Token::Switch || tok == Token::Case ||
+			tok == Token::Default || tok == Token::For || tok == Token::Break || tok == Token::Continue /* || tok == Token::Leave */ ||
+			tok == Token::TrueLiteral || tok == Token::FalseLiteral;
+	}
+
 	inline Token AssignmentToBinaryOp(Token op)
 	{
 		solAssert(isAssignmentOp(op) && op != Token::Assign, "");
