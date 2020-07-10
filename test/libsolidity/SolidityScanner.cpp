@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(leading_dot_in_identifier)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::LParen);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 	scanner.reset(CharStream("function .a(", ""));
-	scanner.supportPeriodInIdentifier(true);
+	scanner.setScannerMode(ScannerKind::Yul);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Function);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Period);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(middle_dot_in_identifier)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::LParen);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 	scanner.reset(CharStream("function a...a(", ""));
-	scanner.supportPeriodInIdentifier(true);
+	scanner.setScannerMode(ScannerKind::Yul);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Function);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::LParen);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(trailing_dot_in_identifier)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::LParen);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 	scanner.reset(CharStream("function a.(", ""));
-	scanner.supportPeriodInIdentifier(true);
+	scanner.setScannerMode(ScannerKind::Yul);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Function);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::LParen);
