@@ -120,8 +120,9 @@ void ContractLevelChecker::checkDuplicateEvents(ContractDefinition const& _contr
 	/// Checks that two events with the same name defined in this contract have different
 	/// argument types
 	map<string, vector<EventDefinition const*>> events;
-	for (EventDefinition const* event: _contract.events())
-		events[event->name()].push_back(event);
+	for (auto const* contract: _contract.annotation().linearizedBaseContracts)
+		for (EventDefinition const* event: contract->events())
+			events[event->name()].push_back(event);
 
 	findDuplicateDefinitions(events);
 }
