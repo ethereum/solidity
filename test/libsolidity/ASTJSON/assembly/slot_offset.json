@@ -117,7 +117,7 @@
                       "src": "97:17:1",
                       "value":
                       {
-                        "name": "s_offset",
+                        "name": "s.offset",
                         "nodeType": "YulIdentifier",
                         "src": "106:8:1"
                       },
@@ -139,7 +139,7 @@
                         "arguments":
                         [
                           {
-                            "name": "s_slot",
+                            "name": "s.slot",
                             "nodeType": "YulIdentifier",
                             "src": "128:6:1"
                           },

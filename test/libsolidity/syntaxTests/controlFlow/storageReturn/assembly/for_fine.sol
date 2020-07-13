@@ -3,12 +3,12 @@ contract C {
     S s;
     function f() internal pure returns (S storage c) {
         assembly {
-            for { c_slot := s_slot } iszero(0) {} {}
+            for { c.slot := s.slot } iszero(0) {} {}
         }
     }
     function g() internal pure returns (S storage c) {
         assembly {
-            for { c_slot := s_slot } iszero(1) {} {}
+            for { c.slot := s.slot } iszero(1) {} {}
         }
     }
 }

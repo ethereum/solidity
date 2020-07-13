@@ -4,28 +4,28 @@ contract C {
     function f() internal pure {
         S storage c;
         assembly {
-            for {} eq(0,0) { c_slot := s_slot } {}
+            for {} eq(0,0) { c.slot := s.slot } {}
         }
         c;
     }
     function g() internal pure {
         S storage c;
         assembly {
-            for {} eq(0,1) { c_slot := s_slot } {}
+            for {} eq(0,1) { c.slot := s.slot } {}
         }
         c;
     }
     function h() internal pure {
         S storage c;
         assembly {
-            for {} eq(0,0) {} { c_slot := s_slot }
+            for {} eq(0,0) {} { c.slot := s.slot }
         }
         c;
     }
     function i() internal pure {
         S storage c;
         assembly {
-            for {} eq(0,1) {} { c_slot := s_slot }
+            for {} eq(0,1) {} { c.slot := s.slot }
         }
         c;
     }

@@ -14,6 +14,7 @@ Breaking changes:
  * Type checker: Disallow events with same name and parameter types in inheritance hierarchy.
  * ``using A for B`` only affects the contract it is mentioned in and not all derived contracts
  * Inline Assembly: Disallow `.` in user-defined function and variable names.
+ * Inline Assembly: Slot and offset of storage pointer variable ``x`` are accessed via ``x.slot`` and ``x.offset`` instead of ``x_slot`` and ``x_offset``.
 
 Language Features:
  * Yul: Disallow EVM instruction `pc()`.

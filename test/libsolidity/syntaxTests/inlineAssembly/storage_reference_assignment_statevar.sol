@@ -2,8 +2,8 @@ contract C {
     uint[] x;
     fallback() external {
         assembly {
-            x_slot := 1
-            x_offset := 2
+            x.slot := 1
+            x.offset := 2
         }
     }
 }

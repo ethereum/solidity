@@ -12,7 +12,7 @@ contract C {
     }
     function g() public returns (bool, bool, uint256) {
 		uint256 s_ptr;
-		assembly { s_ptr := s_slot }
+		assembly { s_ptr := s.slot }
 		(bool success, bytes memory data) = address(L).delegatecall(abi.encodeWithSelector(L.g.selector, s_ptr));
 		return (L.g.selector == bytes4(keccak256("g(uint256[] storage)")), success, abi.decode(data, (uint256)));
     }

@@ -21,3 +21,4 @@ This section gives detailed instructions on how to update prior code for every b
 * Repeat the ``using A for B`` statements in all derived contracts if needed.
 * Remove the ``public`` keyword from every constructor.
 * Remove the ``internal`` keyword from every constructor and add ``abstract`` to the contract (if not already present).
+* Change ``_slot`` and ``_offset`` suffixes in inline assembly to ``.slot`` and ``.offset``, respectively.

@@ -6,7 +6,7 @@ contract C {
         data.push(123);
         delete data;
         assembly {
-            ret := sload(data_slot)
+            ret := sload(data.slot)
         }
     }
 

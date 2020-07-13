@@ -33,6 +33,7 @@
 #include <liblangutil/Exceptions.h>
 
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -195,9 +196,10 @@ void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 
 void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 {
-	bool isSlot = boost::algorithm::ends_with(_identifier.name.str(), "_slot");
-	bool isOffset = boost::algorithm::ends_with(_identifier.name.str(), "_offset");
+	bool isSlot = boost::algorithm::ends_with(_identifier.name.str(), ".slot");
+	bool isOffset = boost::algorithm::ends_with(_identifier.name.str(), ".offset");
 
+	// Could also use `pathFromCurrentScope`, split by '.'
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
 	if (isSlot || isOffset)
 	{
@@ -207,19 +209,22 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			return;
 		string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - (
 			isSlot ?
-			string("_slot").size() :
-			string("_offset").size()
+			string(".slot").size() :
+			string(".offset").size()
 		));
 		if (realName.empty())
 		{
 			m_errorReporter.declarationError(
 				4794_error,
 				_identifier.location,
-				"In variable names _slot and _offset can only be used as a suffix."
+				"In variable names .slot and .offset can only be used as a suffix."
 			);
 			return;
 		}
 		declarations = m_resolver.nameFromCurrentScope(realName);
+		if (!declarations.empty())
+			// To support proper path resolution, we have to use pathFromCurrentScope.
+			solAssert(!util::contains(realName, '.'), "");
 	}
 	if (declarations.size() > 1)
 	{
@@ -231,7 +236,18 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		return;
 	}
 	else if (declarations.size() == 0)
+	{
+		if (
+			boost::algorithm::ends_with(_identifier.name.str(), "_slot") ||
+			boost::algorithm::ends_with(_identifier.name.str(), "_offset")
+		)
+			m_errorReporter.declarationError(
+				9467_error,
+				_identifier.location,
+				"Identifier not found. Use ``.slot`` and ``.offset`` to access storage variables."
+			);
 		return;
+	}
 	if (auto var = dynamic_cast<VariableDeclaration const*>(declarations.front()))
 		if (var->isLocalVariable() && m_yulInsideFunction)
 		{
@@ -254,18 +270,9 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 	{
 		validateYulIdentifierName(identifier.name, identifier.location);
 
-		bool isSlot = boost::algorithm::ends_with(identifier.name.str(), "_slot");
-		bool isOffset = boost::algorithm::ends_with(identifier.name.str(), "_offset");
 
-		string namePrefix = identifier.name.str().substr(0, identifier.name.str().find('.'));
-		if (isSlot || isOffset)
-			m_errorReporter.declarationError(
-				9155_error,
-				identifier.location,
-				"In variable declarations _slot and _offset can not be used as a suffix."
-			);
-		else if (
-			auto declarations = m_resolver.nameFromCurrentScope(namePrefix);
+		if (
+			auto declarations = m_resolver.nameFromCurrentScope(identifier.name.str());
 			!declarations.empty()
 		)
 		{
@@ -277,8 +284,6 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 					3859_error,
 					identifier.location,
 					ssl,
-					namePrefix.size() < identifier.name.str().size() ?
-					"The prefix of this declaration conflicts with a declaration outside the inline assembly block." :
 					"This declaration shadows a declaration outside the inline assembly block."
 				);
 		}
