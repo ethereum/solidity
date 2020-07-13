@@ -83,6 +83,7 @@ if (OSSFUZZ)
             protobuf.a
 )
     set_target_properties(yul_proto_diff_custom_mutate_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+    target_compile_options(yul_proto_diff_custom_mutate_ossfuzz PUBLIC ${COMPILE_OPTIONS} -Wno-sign-conversion)
 
     add_executable(abiv2_proto_ossfuzz
             ../../EVMHost.cpp
