@@ -137,3 +137,4 @@ Contents
    common-patterns.rst
    bugs.rst
    contributing.rst
+   brand-guide.rst
