@@ -402,7 +402,7 @@ public:
 	virtual std::vector<std::string> unhandledQueries() { return {}; }
 
 	/// @returns how many SMT solvers this interface has.
-	virtual unsigned solvers() { return 1; }
+	virtual size_t solvers() { return 1; }
 
 protected:
 	std::optional<unsigned> m_queryTimeout;

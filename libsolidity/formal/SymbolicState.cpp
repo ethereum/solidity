@@ -41,7 +41,7 @@ BlockchainVariable::BlockchainVariable(
 	{
 		members.emplace_back(component);
 		sorts.emplace_back(sort);
-		m_componentIndices[component] = members.size() - 1;
+		m_componentIndices[component] = static_cast<unsigned>(members.size() - 1);
 	}
 	m_tuple = make_unique<SymbolicTupleVariable>(
 		make_shared<smtutil::TupleSort>(m_name + "_type", members, sorts),
