@@ -494,6 +494,8 @@ BOOST_AUTO_TEST_CASE(empty_comment)
 
 }
 
+// Unicode string escapes
+
 BOOST_AUTO_TEST_CASE(valid_unicode_string_escape)
 {
 	Scanner scanner(CharStream("{ \"\\u00DAnicode\"", ""));
@@ -531,6 +533,25 @@ BOOST_AUTO_TEST_CASE(invalid_short_unicode_string_escape)
 	Scanner scanner(CharStream("{ \"\\uFFnicode\"", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+}
+
+// Unicode string literal
+
+BOOST_AUTO_TEST_CASE(valid_unicode_literal)
+{
+	Scanner scanner(CharStream("{ unicode\"Hello 😃\"", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::UnicodeStringLiteral);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), std::string("Hello \xf0\x9f\x98\x83", 10));
+}
+
+BOOST_AUTO_TEST_CASE(valid_nonprintable_in_unicode_literal)
+{
+	// Non-printable characters are allowed in unicode strings...
+	Scanner scanner(CharStream("{ unicode\"Hello \007😃\"", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::UnicodeStringLiteral);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), std::string("Hello \x07\xf0\x9f\x98\x83", 11));
 }
 
 //  HEX STRING LITERAL

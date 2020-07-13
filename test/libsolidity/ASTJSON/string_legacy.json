@@ -1,0 +1,165 @@
+{
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        9
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "abstract": false,
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          9
+        ],
+        "name": "C",
+        "scope": 10
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "functionSelector": "26121ff0",
+            "implemented": true,
+            "isConstructor": false,
+            "kind": "function",
+            "modifiers":
+            [
+              null
+            ],
+            "name": "f",
+            "scope": 9,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 1,
+              "name": "ParameterList",
+              "src": "23:2:1"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 2,
+              "name": "ParameterList",
+              "src": "33:0:1"
+            },
+            {
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "assignments":
+                    [
+                      4
+                    ]
+                  },
+                  "children":
+                  [
+                    {
+                      "attributes":
+                      {
+                        "constant": false,
+                        "mutability": "mutable",
+                        "name": "x",
+                        "scope": 7,
+                        "stateVariable": false,
+                        "storageLocation": "memory",
+                        "type": "string",
+                        "visibility": "internal"
+                      },
+                      "children":
+                      [
+                        {
+                          "attributes":
+                          {
+                            "name": "string",
+                            "type": "string"
+                          },
+                          "id": 3,
+                          "name": "ElementaryTypeName",
+                          "src": "35:6:1"
+                        }
+                      ],
+                      "id": 4,
+                      "name": "VariableDeclaration",
+                      "src": "35:15:1"
+                    },
+                    {
+                      "attributes":
+                      {
+                        "hexvalue": "48656c6c6f20576f726c64",
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "lValueRequested": false,
+                        "token": "string",
+                        "type": "literal_string \"Hello World\"",
+                        "value": "Hello World"
+                      },
+                      "id": 5,
+                      "name": "Literal",
+                      "src": "53:13:1"
+                    }
+                  ],
+                  "id": 6,
+                  "name": "VariableDeclarationStatement",
+                  "src": "35:31:1"
+                }
+              ],
+              "id": 7,
+              "name": "Block",
+              "src": "33:36:1"
+            }
+          ],
+          "id": 8,
+          "name": "FunctionDefinition",
+          "src": "13:56:1"
+        }
+      ],
+      "id": 9,
+      "name": "ContractDefinition",
+      "src": "0:71:1"
+    }
+  ],
+  "id": 10,
+  "name": "SourceUnit",
+  "src": "0:72:1"
+}
