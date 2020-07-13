@@ -154,8 +154,8 @@ private:
 	/// of the current transaction.
 	std::vector<smtutil::Expression> initialStateVariables();
 	std::vector<smtutil::Expression> initialStateVariables(ContractDefinition const& _contract);
-	std::vector<smtutil::Expression> stateVariablesAtIndex(int _index);
-	std::vector<smtutil::Expression> stateVariablesAtIndex(int _index, ContractDefinition const& _contract);
+	std::vector<smtutil::Expression> stateVariablesAtIndex(unsigned _index);
+	std::vector<smtutil::Expression> stateVariablesAtIndex(unsigned _index, ContractDefinition const& _contract);
 	/// @returns the current symbolic values of the current state variables.
 	std::vector<smtutil::Expression> currentStateVariables();
 	std::vector<smtutil::Expression> currentStateVariables(ContractDefinition const& _contract);

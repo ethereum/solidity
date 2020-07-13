@@ -8,6 +8,7 @@ add_dependencies(ossfuzz
         strictasm_assembly_ossfuzz
         )
 
+
 if (OSSFUZZ)
     add_custom_target(ossfuzz_proto)
     add_dependencies(ossfuzz_proto
@@ -54,6 +55,7 @@ if (OSSFUZZ)
             protobuf.a
     )
     set_target_properties(yul_proto_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+    target_compile_options(yul_proto_ossfuzz PUBLIC ${COMPILE_OPTIONS} -Wno-sign-conversion)
 
     add_executable(yul_proto_diff_ossfuzz yulProto_diff_ossfuzz.cpp yulFuzzerCommon.cpp protoToYul.cpp yulProto.pb.cc)
     target_include_directories(yul_proto_diff_ossfuzz PRIVATE /usr/include/libprotobuf-mutator)
@@ -64,6 +66,7 @@ if (OSSFUZZ)
             protobuf.a
     )
     set_target_properties(yul_proto_diff_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+    target_compile_options(yul_proto_diff_ossfuzz PUBLIC ${COMPILE_OPTIONS} -Wno-sign-conversion)
 
     add_executable(yul_proto_diff_custom_mutate_ossfuzz
             yulProto_diff_ossfuzz.cpp
@@ -99,6 +102,7 @@ if (OSSFUZZ)
             protobuf.a
     )
     set_target_properties(abiv2_proto_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+    target_compile_options(abiv2_proto_ossfuzz PUBLIC ${COMPILE_OPTIONS} -Wno-sign-conversion)
 
     add_executable(sol_proto_ossfuzz
             solProtoFuzzer.cpp
@@ -118,6 +122,7 @@ if (OSSFUZZ)
             protobuf.a
     )
     set_target_properties(sol_proto_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+    target_compile_options(sol_proto_ossfuzz PUBLIC ${COMPILE_OPTIONS} -Wno-sign-conversion)
 else()
     add_library(solc_opt_ossfuzz
             solc_opt_ossfuzz.cpp
