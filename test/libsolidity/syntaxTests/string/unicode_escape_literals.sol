@@ -1,5 +1,4 @@
 contract test {
-
     function oneByteUTF8() public pure returns (bytes32) {
         bytes32 usdollar = "aaa\u0024aaa";
         return usdollar;
@@ -15,17 +14,8 @@ contract test {
         return  eur;
     }
 
-    function together() public pure returns (bytes32) {
+    function combined() public pure returns (bytes32) {
         bytes32 res = "\u0024\u00A2\u20AC";
         return res;
     }
-
-    // this function returns an invalid unicode character
-    function invalidLiteral() public pure returns(bytes32) {
-        bytes32 invalid = "\u00xx";
-        return invalid;
-    }
-
 }
-// ----
-// ParserError 8936: (678-681): Invalid escape sequence.
