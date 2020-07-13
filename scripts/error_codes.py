@@ -127,6 +127,12 @@ def find_ids_in_test_files(file_names):
     return used_ids
 
 
+def find_ids_in_cmdline_test_err(file_name):
+    source = read_file(file_name)
+    pattern = r' \(\d\d\d\d\):'
+    return {m.group(0)[-6:-2] for m in re.finditer(pattern, source, flags=re.MULTILINE)}
+
+
 def print_ids(ids):
     for k, id in enumerate(sorted(ids)):
         if k % 10 > 0:
@@ -148,6 +154,11 @@ def examine_id_coverage(top_dir, used_ids):
         [".sol"]
     )
     covered_ids = find_ids_in_test_files(test_file_names)
+
+    # special case, we are interested in warnings which are ignored by regular tests:
+    # Warning (1878): SPDX license identifier not provided in source file. ....
+    # Warning (3420): Source file does not specify required compiler version!
+    covered_ids |= find_ids_in_cmdline_test_err(path.join(top_dir, "test", "cmdlineTests", "error_codes", "err"))
 
     print(f"IDs in source files: {len(used_ids)}")
     print(f"IDs in test files  : {len(covered_ids)} ({len(covered_ids) - len(used_ids)})")

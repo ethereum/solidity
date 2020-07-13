@@ -55,7 +55,7 @@ protected:
 
 BOOST_FIXTURE_TEST_SUITE(SMTChecker, SMTCheckerFramework)
 
-BOOST_AUTO_TEST_CASE(import_base)
+BOOST_AUTO_TEST_CASE(import_base, *boost::unit_test::label("no_options"))
 {
 	CompilerStack c;
 	c.setSources({
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(import_base)
 	BOOST_CHECK_EQUAL(asserts, 1);
 }
 
-BOOST_AUTO_TEST_CASE(import_library)
+BOOST_AUTO_TEST_CASE(import_library, *boost::unit_test::label("no_options"))
 {
 	CompilerStack c;
 	c.setSources({

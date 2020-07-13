@@ -139,7 +139,7 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 	std::string sexpr = "(";
 	if (_expr.name == "int2bv")
 	{
-		size_t size = std::stoi(_expr.arguments[1].name);
+		size_t size = std::stoul(_expr.arguments[1].name);
 		auto arg = toSExpr(_expr.arguments.front());
 		auto int2bv = "(_ int2bv " + to_string(size) + ")";
 		// Some solvers treat all BVs as unsigned, so we need to manually apply 2's complement if needed.

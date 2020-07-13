@@ -54,6 +54,14 @@ using rational = boost::rational<bigint>;
 using TypeResult = util::Result<TypePointer>;
 using BoolResult = util::Result<bool>;
 
+}
+
+namespace solidity::frontend
+{
+
+bigint storageSizeUpperBound(frontend::Type const& _type);
+std::vector<frontend::Type const*> oversizedSubtypes(frontend::Type const& _type);
+
 inline rational makeRational(bigint const& _numerator, bigint const& _denominator)
 {
 	solAssert(_denominator != 0, "division by zero");

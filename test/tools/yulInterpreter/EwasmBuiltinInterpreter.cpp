@@ -51,8 +51,9 @@ void copyZeroExtended(
 		_target[_targetOffset + i] = _sourceOffset + i < _source.size() ? _source[_sourceOffset + i] : 0;
 }
 
-/// Count leading zeros for uint64
-uint64_t clz(uint64_t _v)
+/// Count leading zeros for uint64. Following WebAssembly rules, it returns 64 for @a _v being zero.
+/// NOTE: the clz builtin of the compiler may or may not do this
+uint64_t clz64(uint64_t _v)
 {
 	if (_v == 0)
 		return 64;
@@ -133,7 +134,11 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		accessMemory(arg[0], 4);
 		return readMemoryHalfWord(arg[0]);
 	}
-
+	else if (_fun == "i32.clz"_yulstring)
+		// NOTE: the clz implementation assumes 64-bit inputs, hence the adjustment
+		return clz64(arg[0] & uint32_t(-1)) - 32;
+	else if (_fun == "i64.clz"_yulstring)
+		return clz64(arg[0]);
 
 	string prefix = _fun.str();
 	string suffix;
@@ -202,8 +207,6 @@ u256 EwasmBuiltinInterpreter::evalWasmBuiltin(string const& _fun, vector<Word> c
 		return arg[0] != arg[1] ? 1 : 0;
 	else if (_fun == "eqz")
 		return arg[0] == 0 ? 1 : 0;
-	else if (_fun == "clz")
-		return clz(arg[0]);
 	else if (_fun == "lt_u")
 		return arg[0] < arg[1] ? 1 : 0;
 	else if (_fun == "gt_u")

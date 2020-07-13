@@ -191,7 +191,7 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			return m_context.mkExpr(CVC4::kind::BITVECTOR_AND, arguments[0], arguments[1]);
 		else if (n == "int2bv")
 		{
-			size_t size = std::stoi(_expr.arguments[1].name);
+			size_t size = std::stoul(_expr.arguments[1].name);
 			auto i2bvOp = m_context.mkConst(CVC4::IntToBitVector(size));
 			// CVC4 treats all BVs as unsigned, so we need to manually apply 2's complement if needed.
 			return m_context.mkExpr(

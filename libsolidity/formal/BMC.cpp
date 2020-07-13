@@ -52,11 +52,11 @@ BMC::BMC(
 #endif
 }
 
-void BMC::analyze(SourceUnit const& _source, set<Expression const*> _safeAssertions)
+void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<VerificationTarget::Type>> _solvedTargets)
 {
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
 
-	m_safeAssertions += move(_safeAssertions);
+	m_solvedTargets = move(_solvedTargets);
 	m_context.setSolver(m_interface.get());
 	m_context.clear();
 	m_context.setAssertionAccumulation(true);
@@ -684,16 +684,22 @@ void BMC::checkBalance(BMCVerificationTarget& _target)
 void BMC::checkAssert(BMCVerificationTarget& _target)
 {
 	solAssert(_target.type == VerificationTarget::Type::Assert, "");
-	if (!m_safeAssertions.count(_target.expression))
-		checkCondition(
-			_target.constraints && !_target.value,
-			_target.callStack,
-			_target.modelExpressions,
-			_target.expression->location(),
-			4661_error,
-			7812_error,
-			"Assertion violation"
-		);
+
+	if (
+		m_solvedTargets.count(_target.expression) &&
+		m_solvedTargets.at(_target.expression).count(_target.type)
+	)
+		return;
+
+	checkCondition(
+		_target.constraints && !_target.value,
+		_target.callStack,
+		_target.modelExpressions,
+		_target.expression->location(),
+		4661_error,
+		7812_error,
+		"Assertion violation"
+	);
 }
 
 void BMC::addVerificationTarget(
