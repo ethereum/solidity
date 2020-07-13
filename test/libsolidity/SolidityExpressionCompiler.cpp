@@ -236,37 +236,6 @@ BOOST_AUTO_TEST_CASE(int_with_gwei_ether_subdenomination)
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
-BOOST_AUTO_TEST_CASE(int_with_szabo_ether_subdenomination)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function test () {
-				uint x = 1 szabo;
-			}
-		}
-	)";
-	bytes code = compileFirstExpression(sourceCode);
-
-	bytes expectation({uint8_t(Instruction::PUSH5), 0xe8, 0xd4, 0xa5, 0x10, 0x00});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
-}
-
-BOOST_AUTO_TEST_CASE(int_with_finney_ether_subdenomination)
-{
-	char const* sourceCode = R"(
-		contract test {
-			constructor()
-			{
-				 uint x = 1 finney;
-			}
-		}
-	)";
-	bytes code = compileFirstExpression(sourceCode);
-
-	bytes expectation({uint8_t(Instruction::PUSH7), 0x3, 0x8d, 0x7e, 0xa4, 0xc6, 0x80, 0x00});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
-}
-
 BOOST_AUTO_TEST_CASE(int_with_ether_ether_subdenomination)
 {
 	char const* sourceCode = R"(

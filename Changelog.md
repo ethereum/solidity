@@ -5,6 +5,7 @@ Breaking changes:
  * Constructors should not have visibility.
  * Deprecated dot syntax for `value` and `gas`.
  * Deprecated the identifier `now`.
+ * Disallow `gwei` as identifier.
  * JSON AST: Removes members with ``null`` value from JSON output.
  * Parser: NatSpec comments on variables are only allowed for public state variables.
  * Type Checker: Disallow shifts by signed types.
@@ -15,6 +16,7 @@ Breaking changes:
  * ``using A for B`` only affects the contract it is mentioned in and not all derived contracts
  * Inline Assembly: Disallow `.` in user-defined function and variable names.
  * Inline Assembly: Slot and offset of storage pointer variable ``x`` are accessed via ``x.slot`` and ``x.offset`` instead of ``x_slot`` and ``x_offset``.
+ * Remove the finney and szabo denominations.
 
 Language Features:
  * Yul: Disallow EVM instruction `pc()`.

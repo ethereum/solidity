@@ -45,13 +45,9 @@ using rational = boost::rational<bigint>;
 /// @NOTE This is not endian-specific; it's just a bunch of bytes.
 using Address = util::h160;
 
-// The various denominations; here for ease of use where needed within code.
-static const u256 wei = 1;
-static const u256 shannon = u256("1000000000");
-static const u256 gwei = shannon;
-static const u256 szabo = shannon * 1000;
-static const u256 finney = szabo * 1000;
-static const u256 ether = finney * 1000;
+// The ether and gwei denominations; here for ease of use where needed within code.
+static const u256 gwei = u256(1) << 9;
+static const u256 ether = u256(1) << 18;
 
 class ExecutionFramework
 {
@@ -287,7 +283,7 @@ protected:
 	bool m_transactionSuccessful = true;
 	Address m_sender = account(0);
 	Address m_contractAddress;
-	u256 const m_gasPrice = 100 * szabo;
+	u256 const m_gasPrice = 10 * gwei;
 	u256 const m_gas = 100000000;
 	bytes m_output;
 	u256 m_gasUsed;
