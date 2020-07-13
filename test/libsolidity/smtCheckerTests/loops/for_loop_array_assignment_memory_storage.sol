@@ -19,5 +19,5 @@ contract LoopFor2 {
 // ====
 // SMTSolvers: z3
 // ----
-// Warning 4661: (274-294): Assertion violation happens here
-// Warning 4661: (321-340): Assertion violation happens here
+// Warning 6328: (274-294): Assertion violation happens here
+// Warning 6328: (321-340): Assertion violation happens here

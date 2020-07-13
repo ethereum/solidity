@@ -17,9 +17,10 @@ contract C is A {
 	}
 }
 // ----
-// Warning 4661: (82-96): Assertion violation happens here
+// Warning 6328: (82-96): Assertion violation happens here
+// Warning 6328: (155-169): Assertion violation happens here
+// Warning 6328: (187-201): Assertion violation happens here
 // Warning 4144: (100-103): Underflow (resulting value less than 0) happens here
-// Warning 4661: (82-96): Assertion violation happens here
 // Warning 4144: (100-103): Underflow (resulting value less than 0) happens here
 // Warning 4661: (148-162): Assertion violation happens here
 // Warning 4661: (82-96): Assertion violation happens here
