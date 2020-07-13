@@ -6,6 +6,7 @@ Language Features:
 Compiler Features:
  * Code Generator: Evaluate ``keccak256`` of string literals at compile-time.
  * Peephole Optimizer: Remove unnecessary masking of tags.
+ * Yul EVM Code Transform: Free stack slots directly after visiting the right-hand-side of variable declarations instead of at the end of the statement only.
 
 Bugfixes:
  * Type Checker: Fix overload resolution in combination with ``{value: ...}``.

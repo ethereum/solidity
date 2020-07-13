@@ -141,7 +141,7 @@ bool CodeTransform::unreferenced(Scope::Variable const& _var) const
 	return !m_context->variableReferences.count(&_var) || m_context->variableReferences[&_var] == 0;
 }
 
-void CodeTransform::freeUnusedVariables()
+void CodeTransform::freeUnusedVariables(bool _popUnusedSlotsAtStackTop)
 {
 	if (!m_allowStackOpt)
 		return;
@@ -154,11 +154,12 @@ void CodeTransform::freeUnusedVariables()
 				deleteVariable(var);
 		}
 
-	while (m_unusedStackSlots.count(m_assembly.stackHeight() - 1))
-	{
-		yulAssert(m_unusedStackSlots.erase(m_assembly.stackHeight() - 1), "");
-		m_assembly.appendInstruction(evmasm::Instruction::POP);
-	}
+	if (_popUnusedSlotsAtStackTop)
+		while (m_unusedStackSlots.count(m_assembly.stackHeight() - 1))
+		{
+			yulAssert(m_unusedStackSlots.erase(m_assembly.stackHeight() - 1), "");
+			m_assembly.appendInstruction(evmasm::Instruction::POP);
+		}
 }
 
 void CodeTransform::deleteVariable(Scope::Variable const& _var)
@@ -181,6 +182,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	{
 		std::visit(*this, *_varDecl.value);
 		expectDeposit(static_cast<int>(numVariables), static_cast<int>(heightAtStart));
+		freeUnusedVariables(false);
 	}
 	else
 	{
