@@ -29,6 +29,9 @@
 #include <libsmtutil/CHCSmtLib2Interface.h>
 #include <libsolutil/Algorithms.h>
 
+#include <boost/algorithm/string/join.hpp>
+#include <boost/range/adaptor/reversed.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -122,6 +125,7 @@ bool CHC::visit(ContractDefinition const& _contract)
 	string suffix = _contract.name() + "_" + to_string(_contract.id());
 	m_errorPredicate = createSymbolicBlock(arity0FunctionSort(), "error_" + suffix);
 	m_constructorSummaryPredicate = createSymbolicBlock(constructorSort(), "summary_constructor_" + suffix);
+	m_symbolFunction[m_constructorSummaryPredicate->currentFunctionValue().name] = &_contract;
 	m_implicitConstructorPredicate = createSymbolicBlock(arity0FunctionSort(), "implicit_constructor_" + suffix);
 	auto stateExprs = currentStateVariables();
 	setCurrentBlock(*m_interfaces.at(m_currentContract), &stateExprs);
@@ -614,6 +618,7 @@ void CHC::resetSourceAnalysis()
 	m_errorIds.clear();
 	m_callGraph.clear();
 	m_summaries.clear();
+	m_symbolFunction.clear();
 }
 
 void CHC::resetContractAnalysis()
@@ -682,6 +687,11 @@ vector<VariableDeclaration const*> CHC::stateVariablesIncludingInheritedAndPriva
 		vector<VariableDeclaration const*>{},
 		[](auto&& _acc, auto _contract) { return _acc + _contract->stateVariables(); }
 	);
+}
+
+vector<VariableDeclaration const*> CHC::stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function)
+{
+	return stateVariablesIncludingInheritedAndPrivate(dynamic_cast<ContractDefinition const&>(*_function.scope()));
 }
 
 vector<smtutil::SortPointer> CHC::stateSorts(ContractDefinition const& _contract)
@@ -841,10 +851,10 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 					m_summaries[contract].emplace(function, createSummaryBlock(*function, *contract));
 
 					if (
+						!function->isConstructor() &&
 						function->isPublic() &&
 						!base->isLibrary() &&
-						!base->isInterface() &&
-						!function->isConstructor()
+						!base->isInterface()
 					)
 					{
 						auto state1 = stateVariablesAtIndex(1, *base);
@@ -923,21 +933,28 @@ smtutil::Expression CHC::summary(FunctionDefinition const& _function)
 
 unique_ptr<smt::SymbolicFunctionVariable> CHC::createBlock(ASTNode const* _node, string const& _prefix)
 {
-	return createSymbolicBlock(sort(_node),
+	auto block = createSymbolicBlock(sort(_node),
 		"block_" +
 		uniquePrefix() +
 		"_" +
 		_prefix +
 		predicateName(_node));
+
+	solAssert(m_currentFunction, "");
+	m_symbolFunction[block->currentFunctionValue().name] = m_currentFunction;
+	return block;
 }
 
 unique_ptr<smt::SymbolicFunctionVariable> CHC::createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract)
 {
-	return createSymbolicBlock(summarySort(_function, _contract),
+	auto block = createSymbolicBlock(summarySort(_function, _contract),
 		"summary_" +
 		uniquePrefix() +
 		"_" +
 		predicateName(&_function, &_contract));
+
+	m_symbolFunction[block->currentFunctionValue().name] = &_function;
+	return block;
 }
 
 void CHC::createErrorBlock()
@@ -1167,19 +1184,21 @@ void CHC::checkVerificationTargets()
 		{
 			string satMsg;
 			string unknownMsg;
+			ErrorId errorReporterId;
 
 			if (target.type == VerificationTarget::Type::PopEmptyArray)
 			{
 				solAssert(dynamic_cast<FunctionCall const*>(scope), "");
-				satMsg = "Empty array \"pop\" detected here.";
+				satMsg = "Empty array \"pop\" detected here";
 				unknownMsg = "Empty array \"pop\" might happen here.";
+				errorReporterId = 2529_error;
 			}
 			else
 				solAssert(false, "");
 
 			auto it = m_errorIds.find(scope->id());
 			solAssert(it != m_errorIds.end(), "");
-			checkAndReportTarget(scope, target, it->second, satMsg, unknownMsg);
+			checkAndReportTarget(scope, target, it->second, errorReporterId, satMsg, unknownMsg);
 		}
 	}
 }
@@ -1194,13 +1213,7 @@ void CHC::checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& 
 		solAssert(it != m_errorIds.end(), "");
 		unsigned errorId = it->second;
 
-		createErrorBlock();
-		connectBlocks(_target.value, error(), _target.constraints && (_target.errorId == errorId));
-		auto [result, model] = query(error(), assertion->location());
-		// This should be fine but it's a bug in the old compiler
-		(void)model;
-		if (result == smtutil::CheckResult::UNSATISFIABLE)
-			m_safeTargets[assertion].insert(_target.type);
+		checkAndReportTarget(assertion, _target, errorId, 6328_error, "Assertion violation happens here");
 	}
 }
 
@@ -1208,33 +1221,226 @@ void CHC::checkAndReportTarget(
 	ASTNode const* _scope,
 	CHCVerificationTarget const& _target,
 	unsigned _errorId,
+	ErrorId _errorReporterId,
 	string _satMsg,
 	string _unknownMsg
 )
 {
+	if (m_unsafeTargets.count(_scope) && m_unsafeTargets.at(_scope).count(_target.type))
+		return;
+
 	createErrorBlock();
 	connectBlocks(_target.value, error(), _target.constraints && (_target.errorId == _errorId));
-	auto [result, model] = query(error(), _scope->location());
-	// This should be fine but it's a bug in the old compiler
-	(void)model;
+	auto const& [result, model] = query(error(), _scope->location());
 	if (result == smtutil::CheckResult::UNSATISFIABLE)
 		m_safeTargets[_scope].insert(_target.type);
 	else if (result == smtutil::CheckResult::SATISFIABLE)
 	{
 		solAssert(!_satMsg.empty(), "");
 		m_unsafeTargets[_scope].insert(_target.type);
-		m_outerErrorReporter.warning(
-			2529_error,
-			_scope->location(),
-			_satMsg
-		);
+		auto cex = generateCounterexample(model, error().name);
+		if (cex)
+			m_outerErrorReporter.warning(
+				_errorReporterId,
+				_scope->location(),
+				_satMsg,
+				SecondarySourceLocation().append(" for:\n" + *cex, SourceLocation{})
+			);
+		else
+			m_outerErrorReporter.warning(
+				_errorReporterId,
+				_scope->location(),
+				_satMsg + "."
+			);
 	}
 	else if (!_unknownMsg.empty())
 		m_outerErrorReporter.warning(
-			1147_error,
+			_errorReporterId,
 			_scope->location(),
 			_unknownMsg
 		);
+}
+
+/**
+The counterexample DAG has the following properties:
+1) The root node represents the reachable error predicate.
+2) The root node has 1 or 2 children:
+	- One of them is the summary of the function that was called and led to that node.
+	If this is the only child, this function must be the constructor.
+	- If it has 2 children, the function is not the constructor and the other child is the interface node,
+	that is, it represents the state of the contract before the function described above was called.
+3) Interface nodes also have property 2.
+
+The following algorithm starts collecting function summaries at the root node and repeats
+for each interface node seen.
+Each function summary collected represents a transaction, and the final order is reversed.
+
+The first function summary seen contains the values for the state, input and output variables at the
+error point.
+*/
+optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const& _graph, string const& _root)
+{
+	optional<unsigned> rootId;
+	for (auto const& [id, node]: _graph.nodes)
+		if (node.first == _root)
+		{
+			rootId = id;
+			break;
+		}
+	if (!rootId)
+		return {};
+
+	vector<string> path;
+	string localState;
+
+	unsigned node = *rootId;
+	optional<string> lastTxSeen;
+	while (_graph.edges.at(node).size() >= 1)
+	{
+		auto const& edges = _graph.edges.at(node);
+		solAssert(edges.size() <= 2, "");
+
+		unsigned summaryId = edges.at(0);
+
+		optional<unsigned> interfaceId;
+		if (edges.size() == 2)
+		{
+			interfaceId = edges.at(1);
+			if (_graph.nodes.at(summaryId).first.rfind("summary", 0) != 0)
+				swap(summaryId, *interfaceId);
+			solAssert(_graph.nodes.at(*interfaceId).first.rfind("interface", 0) == 0, "");
+		}
+
+		solAssert(_graph.nodes.at(summaryId).first.rfind("summary", 0) == 0, "");
+		/// At this point property 2 from the function description is verified for this node.
+
+		auto const& summaryNode = _graph.nodes.at(summaryId);
+		solAssert(m_symbolFunction.count(summaryNode.first), "");
+
+		FunctionDefinition const* calledFun = nullptr;
+		ContractDefinition const* calledContract = nullptr;
+		if (auto const* contract = dynamic_cast<ContractDefinition const*>(m_symbolFunction.at(summaryNode.first)))
+		{
+			if (auto const* constructor = contract->constructor())
+				calledFun = constructor;
+			else
+				calledContract = contract;
+		}
+		else if (auto const* fun = dynamic_cast<FunctionDefinition const*>(m_symbolFunction.at(summaryNode.first)))
+			calledFun = fun;
+		else
+			solAssert(false, "");
+
+		solAssert((calledFun && !calledContract) || (!calledFun && calledContract), "");
+		auto const& stateVars = calledFun ? stateVariablesIncludingInheritedAndPrivate(*calledFun) : stateVariablesIncludingInheritedAndPrivate(*calledContract);
+		/// calledContract != nullptr implies that the constructor of the analyzed contract is implicit and
+		/// therefore takes no parameters.
+
+		/// This summary node is the end of a tx.
+		/// If it is the first summary node seen in this loop, it is the summary
+		/// of the public/external function that was called when the error was reached,
+		/// but not necessarily the summary of the function that contains the error.
+		if (!lastTxSeen)
+		{
+			lastTxSeen = summaryNode.first;
+			/// Generate counterexample message local to the failed target.
+			localState = generatePostStateCounterexample(stateVars, calledFun, summaryNode.second) + "\n";
+			if (calledFun)
+			{
+				/// The signature of a summary predicate is: summary(error, preStateVars, preInputVars, postInputVars, outputVars).
+				auto const& inParams = calledFun->parameters();
+				unsigned initLocals = stateVars.size() * 2 + 1 + inParams.size();
+				/// In this loop we are interested in postInputVars.
+				for (unsigned i = initLocals; i < initLocals + inParams.size(); ++i)
+				{
+					auto param = inParams.at(i - initLocals);
+					if (param->type()->isValueType())
+						localState += param->name() + " = " + summaryNode.second.at(i) + "\n";
+				}
+				auto const& outParams = calledFun->returnParameters();
+				initLocals += inParams.size();
+				/// In this loop we are interested in outputVars.
+				for (unsigned i = initLocals; i < initLocals + outParams.size(); ++i)
+				{
+					auto param = outParams.at(i - initLocals);
+					if (param->type()->isValueType())
+						localState += param->name() + " = " + summaryNode.second.at(i) + "\n";
+				}
+			}
+		}
+		else
+			/// We report the state after every tx in the trace except for the last, which is reported
+			/// first in the code above.
+			path.emplace_back("State: " + generatePostStateCounterexample(stateVars, calledFun, summaryNode.second));
+
+		string txCex = calledContract ? "constructor()" : generatePreTxCounterexample(stateVars, *calledFun, summaryNode.second);
+		path.emplace_back(txCex);
+
+		/// Recurse on the next interface node which represents the previous transaction
+		/// or stop.
+		if (interfaceId)
+			node = *interfaceId;
+		else
+			break;
+	}
+
+	return localState + "\nTransaction trace:\n" + boost::algorithm::join(boost::adaptors::reverse(path), "\n");
+}
+
+string CHC::generatePostStateCounterexample(vector<VariableDeclaration const*> const& _stateVars, FunctionDefinition const* _function, vector<string> const& _summaryValues)
+{
+	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postInputVars, outputVars).
+	/// The signature of an implicit constructor summary predicate is: summary(error, postStateVars).
+	/// Here we are interested in postStateVars.
+	vector<string>::const_iterator stateFirst;
+	vector<string>::const_iterator stateLast;
+	if (_function)
+	{
+		stateFirst = _summaryValues.begin() + 1 + static_cast<int>(_stateVars.size()) + static_cast<int>(_function->parameters().size());
+		stateLast = stateFirst + static_cast<int>(_stateVars.size());
+	}
+	else
+	{
+		stateFirst = _summaryValues.begin() + 1;
+		stateLast = stateFirst + static_cast<int>(_stateVars.size());
+	}
+
+	vector<string> stateArgs(stateFirst, stateLast);
+	solAssert(stateArgs.size() == _stateVars.size(), "");
+
+	vector<string> stateCex;
+	for (unsigned i = 0; i < stateArgs.size(); ++i)
+	{
+		auto var = _stateVars.at(i);
+		if (var->type()->isValueType())
+			stateCex.emplace_back(var->name() + " = " + stateArgs.at(i));
+	}
+
+	return boost::algorithm::join(stateCex, ", ");
+}
+
+string CHC::generatePreTxCounterexample(vector<VariableDeclaration const*> const& _stateVars, FunctionDefinition const& _function, vector<string> const& _summaryValues)
+{
+	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postInputVars, outputVars).
+	/// Here we are interested in preInputVars.
+	vector<string>::const_iterator first = _summaryValues.begin() + static_cast<int>(_stateVars.size()) + 1;
+	vector<string>::const_iterator last = first + static_cast<int>(_function.parameters().size());
+	vector<string> functionArgsCex(first, last);
+	vector<string> functionArgs;
+
+	auto const& params = _function.parameters();
+	solAssert(params.size() == functionArgsCex.size(), "");
+	for (unsigned i = 0; i < params.size(); ++i)
+		if (params[i]->type()->isValueType())
+			functionArgs.emplace_back(functionArgsCex[i]);
+		else
+			functionArgs.emplace_back(params[i]->name());
+
+	string fName = _function.isConstructor() ? "constructor" :
+		_function.isFallback() ? "fallback" :
+		_function.isReceive() ? "receive" :
+		_function.name();
+	return fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")";
 }
 
 string CHC::uniquePrefix()
