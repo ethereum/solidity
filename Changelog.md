@@ -1,5 +1,8 @@
 ### 0.6.12 (unreleased)
 
+Language Features:
+ * Wasm backend: Add ``i32.ctz``, ``i64.ctz``, ``i32.popcnt``, and ``i64.popcnt``.
+
 Compiler Features:
  * Code Generator: Evaluate ``keccak256`` of string literals at compile-time.
 

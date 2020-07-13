@@ -67,6 +67,50 @@ uint64_t clz64(uint64_t _v)
 	return r;
 }
 
+/// Count trailing zeros for uint32. Following WebAssembly rules, it returns 32 for @a _v being zero.
+/// NOTE: the ctz builtin of the compiler may or may not do this
+uint32_t ctz32(uint32_t _v)
+{
+	if (_v == 0)
+		return 32;
+
+	uint32_t r = 0;
+	while (!(_v & 1))
+	{
+		r++;
+		_v >>= 1;
+	}
+	return r;
+}
+
+/// Count trailing zeros for uint64. Following WebAssembly rules, it returns 64 for @a _v being zero.
+/// NOTE: the ctz builtin of the compiler may or may not do this
+uint64_t ctz64(uint64_t _v)
+{
+	if (_v == 0)
+		return 64;
+
+	uint64_t r = 0;
+	while (!(_v & 1))
+	{
+		r++;
+		_v >>= 1;
+	}
+	return r;
+}
+
+/// Count number of bits set for uint64
+uint64_t popcnt(uint64_t _v)
+{
+	uint64_t r = 0;
+	while (_v)
+	{
+		r += (_v & 1);
+		_v >>= 1;
+	}
+	return r;
+}
+
 }
 
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
@@ -139,6 +183,10 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return clz64(arg[0] & uint32_t(-1)) - 32;
 	else if (_fun == "i64.clz"_yulstring)
 		return clz64(arg[0]);
+	else if (_fun == "i32.ctz"_yulstring)
+		return ctz32(uint32_t(arg[0] & uint32_t(-1)));
+	else if (_fun == "i64.ctz"_yulstring)
+		return ctz64(arg[0]);
 
 	string prefix = _fun.str();
 	string suffix;
@@ -207,6 +255,8 @@ u256 EwasmBuiltinInterpreter::evalWasmBuiltin(string const& _fun, vector<Word> c
 		return arg[0] != arg[1] ? 1 : 0;
 	else if (_fun == "eqz")
 		return arg[0] == 0 ? 1 : 0;
+	else if (_fun == "popcnt")
+		return popcnt(arg[0]);
 	else if (_fun == "lt_u")
 		return arg[0] < arg[1] ? 1 : 0;
 	else if (_fun == "gt_u")
