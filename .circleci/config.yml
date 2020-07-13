@@ -142,7 +142,10 @@ defaults:
 
   - test_ubuntu2004_clang: &test_ubuntu2004_clang
       docker:
-        - image: ethereum/solidity-buildpack-deps:ubuntu2004-clang-<< pipeline.parameters.ubuntu-2004-clang-docker-image-rev >>
+        - image: docker.pkg.github.com/aarlt/solidity/buildpack-deps-ubuntu2004:1
+          auth:
+            username: stackenbotten
+            password: $GITHUB_ACCESS_TOKEN
       steps:
         - checkout
         - attach_workspace:
@@ -153,7 +156,10 @@ defaults:
 
   - test_ubuntu2004: &test_ubuntu2004
       docker:
-        - image: ethereum/solidity-buildpack-deps:ubuntu2004-<< pipeline.parameters.ubuntu-2004-docker-image-rev >>
+        - image: docker.pkg.github.com/aarlt/solidity/buildpack-deps-ubuntu2004:1
+          auth:
+            username: stackenbotten
+            password: $GITHUB_ACCESS_TOKEN
       steps:
         - checkout
         - attach_workspace:
@@ -423,7 +429,10 @@ jobs:
 
   b_ubu: &build_ubuntu2004
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu2004-<< pipeline.parameters.ubuntu-2004-docker-image-rev >>
+      - image: docker.pkg.github.com/aarlt/solidity/buildpack-deps-ubuntu2004:1
+        auth:
+          username: stackenbotten
+          password: $GITHUB_ACCESS_TOKEN
     steps:
       - checkout
       - run: *run_build
