@@ -46,6 +46,9 @@ public:
 
 	Z3Interface* z3Interface() const { return m_z3Interface.get(); }
 
+	void enablePreProcessing();
+	void disablePreProcessing();
+
 private:
 	/// Constructs a nonlinear counterexample graph from the refutation.
 	CHCSolverInterface::CexGraph cexGraph(z3::expr const& _proof);

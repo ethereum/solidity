@@ -36,18 +36,7 @@ Z3CHCInterface::Z3CHCInterface():
 	z3::set_param("rewriter.pull_cheap_ite", true);
 	z3::set_param("rlimit", Z3Interface::resourceLimit);
 
-	// Spacer options.
-	// These needs to be set in the solver.
-	// https://github.com/Z3Prover/z3/blob/master/src/muz/base/fp_params.pyg
-	z3::params p(*m_context);
-	// These are useful for solving problems with arrays and loops.
-	// Use quantified lemma generalizer.
-	p.set("fp.spacer.q3.use_qgen", true);
-	p.set("fp.spacer.mbqi", false);
-	// Ground pobs by using values from a model.
-	p.set("fp.spacer.ground_pobs", false);
-
-	m_solver.set(p);
+	enablePreProcessing();
 }
 
 void Z3CHCInterface::declareVariable(string const& _name, SortPointer const& _sort)
@@ -113,6 +102,48 @@ pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression
 	}
 
 	return {result, cex};
+}
+
+void Z3CHCInterface::enablePreProcessing()
+{
+	// Spacer options.
+	// These needs to be set in the solver.
+	// https://github.com/Z3Prover/z3/blob/master/src/muz/base/fp_params.pyg
+	z3::params p(*m_context);
+	// These are useful for solving problems with arrays and loops.
+	// Use quantified lemma generalizer.
+	p.set("fp.spacer.q3.use_qgen", true);
+	p.set("fp.spacer.mbqi", false);
+	// Ground pobs by using values from a model.
+	p.set("fp.spacer.ground_pobs", false);
+
+	// Enable Spacer optimization for better solving.
+	p.set("fp.xform.slice", true);
+	p.set("fp.xform.inline_linear", true);
+	p.set("fp.xform.inline_eager", true);
+
+	m_solver.set(p);
+}
+
+void Z3CHCInterface::disablePreProcessing()
+{
+	// Spacer options.
+	// These needs to be set in the solver.
+	// https://github.com/Z3Prover/z3/blob/master/src/muz/base/fp_params.pyg
+	z3::params p(*m_context);
+	// These are useful for solving problems with arrays and loops.
+	// Use quantified lemma generalizer.
+	p.set("fp.spacer.q3.use_qgen", true);
+	p.set("fp.spacer.mbqi", false);
+	// Ground pobs by using values from a model.
+	p.set("fp.spacer.ground_pobs", false);
+
+	// Disable Spacer optimization for counterexample generation.
+	p.set("fp.xform.slice", false);
+	p.set("fp.xform.inline_linear", false);
+	p.set("fp.xform.inline_eager", false);
+
+	m_solver.set(p);
 }
 
 /**
