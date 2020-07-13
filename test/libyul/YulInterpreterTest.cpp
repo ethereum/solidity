@@ -88,10 +88,9 @@ string YulInterpreterTest::interpret()
 	InterpreterState state;
 	state.maxTraceSize = 10000;
 	state.maxSteps = 10000;
-	Interpreter interpreter(state, EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
 	try
 	{
-		interpreter(*m_ast);
+		Interpreter::run(state, EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}), *m_ast);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{

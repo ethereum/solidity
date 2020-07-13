@@ -121,11 +121,12 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	for (u256 const& a: _arguments)
 		arg.emplace_back(uint64_t(a & uint64_t(-1)));
 
-	if (_fun == "datasize"_yulstring)
+	string fun = _fun.str();
+	if (fun == "datasize")
 		return u256(keccak256(h256(_arguments.at(0)))) & 0xfff;
-	else if (_fun == "dataoffset"_yulstring)
+	else if (fun == "dataoffset")
 		return u256(keccak256(h256(_arguments.at(0) + 2))) & 0xfff;
-	else if (_fun == "datacopy"_yulstring)
+	else if (fun == "datacopy")
 	{
 		// This is identical to codecopy.
 		if (accessMemory(_arguments.at(0), _arguments.at(2)))
@@ -138,42 +139,42 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 			);
 		return 0;
 	}
-	else if (_fun == "i32.drop"_yulstring || _fun == "i64.drop"_yulstring || _fun == "nop"_yulstring)
+	else if (fun == "i32.drop" || fun == "i64.drop" || fun == "nop")
 		return {};
-	else if (_fun == "i32.wrap_i64"_yulstring)
+	else if (fun == "i32.wrap_i64")
 		return arg.at(0) & uint32_t(-1);
-	else if (_fun == "i64.extend_i32_u"_yulstring)
+	else if (fun == "i64.extend_i32_u")
 		// Return the same as above because everything is u256 anyway.
 		return arg.at(0) & uint32_t(-1);
-	else if (_fun == "unreachable"_yulstring)
+	else if (fun == "unreachable")
 	{
 		logTrace(evmasm::Instruction::INVALID, {});
 		throw ExplicitlyTerminated();
 	}
-	else if (_fun == "i64.store"_yulstring)
+	else if (fun == "i64.store")
 	{
 		accessMemory(arg[0], 8);
 		writeMemoryWord(arg[0], arg[1]);
 		return 0;
 	}
-	else if (_fun == "i64.store8"_yulstring || _fun == "i32.store8"_yulstring)
+	else if (fun == "i64.store8" || fun == "i32.store8")
 	{
 		accessMemory(arg[0], 1);
 		writeMemoryByte(arg[0], static_cast<uint8_t>(arg[1] & 0xff));
 		return 0;
 	}
-	else if (_fun == "i64.load"_yulstring)
+	else if (fun == "i64.load")
 	{
 		accessMemory(arg[0], 8);
 		return readMemoryWord(arg[0]);
 	}
-	else if (_fun == "i32.store"_yulstring)
+	else if (fun == "i32.store")
 	{
 		accessMemory(arg[0], 4);
 		writeMemoryHalfWord(arg[0], arg[1]);
 		return 0;
 	}
-	else if (_fun == "i32.load"_yulstring)
+	else if (fun == "i32.load")
 	{
 		accessMemory(arg[0], 4);
 		return readMemoryHalfWord(arg[0]);
@@ -188,7 +189,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	else if (_fun == "i64.ctz"_yulstring)
 		return ctz64(arg[0]);
 
-	string prefix = _fun.str();
+	string prefix = fun;
 	string suffix;
 	auto dot = prefix.find(".");
 	if (dot != string::npos)
