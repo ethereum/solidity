@@ -337,7 +337,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.libraryFunction())
 			m_errorReporter.typeError(7708_error, _function.location(), "Library functions cannot be payable.");
 		if (_function.isOrdinary() && !_function.isPartOfExternalInterface())
-			m_errorReporter.typeError(5587_error, _function.location(), "Internal functions cannot be payable.");
+			m_errorReporter.typeError(5587_error, _function.location(), "\"internal\" and \"private\" functions cannot be payable.");
 	}
 	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& var) {
 		if (type(var)->category() == Type::Category::Mapping)
