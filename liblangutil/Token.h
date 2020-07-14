@@ -305,10 +305,9 @@ namespace TokenTraits
 	constexpr bool isVisibilitySpecifier(Token op) { return isVariableVisibilitySpecifier(op) || op == Token::External; }
 	constexpr bool isLocationSpecifier(Token op) { return op == Token::Memory || op == Token::Storage || op == Token::CallData; }
 
-	constexpr bool isStateMutabilitySpecifier(Token op, bool _allowConstant = true)
+	constexpr bool isStateMutabilitySpecifier(Token op)
 	{
-		return (op == Token::Constant && _allowConstant)
-			|| op == Token::Pure || op == Token::View || op == Token::Payable;
+		return op == Token::Pure || op == Token::View || op == Token::Payable;
 	}
 
 	constexpr bool isEtherSubdenomination(Token op) { return op >= Token::SubWei && op <= Token::SubEther; }
