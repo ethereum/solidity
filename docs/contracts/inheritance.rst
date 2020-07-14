@@ -310,7 +310,7 @@ of the variable:
 
     contract A
     {
-        function f() external pure virtual returns(uint) { return 5; }
+        function f() external view virtual returns(uint) { return 5; }
     }
 
     contract B is A
