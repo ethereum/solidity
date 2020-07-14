@@ -940,6 +940,8 @@ public:
 	/// Can only be called after reference resolution.
 	bool hasReferenceOrMappingType() const;
 	bool isStateVariable() const { return m_isStateVariable; }
+	bool isStructMember() const { solAssert(annotation().scope, ""); return dynamic_cast<StructDefinition const*>(annotation().scope); }
+	bool isEnumMember() const { solAssert(annotation().scope, ""); return dynamic_cast<EnumDefinition const*>(annotation().scope); }
 	bool isIndexed() const { return m_isIndexed; }
 	Mutability mutability() const { return m_mutability; }
 	bool isConstant() const { return m_mutability == Mutability::Constant; }

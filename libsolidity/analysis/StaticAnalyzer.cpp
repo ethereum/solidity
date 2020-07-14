@@ -32,6 +32,60 @@ using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
+namespace
+{
+
+
+struct TypeComp
+{
+	bool operator()(Type const* lhs, Type const* rhs) const
+	{
+		solAssert(lhs && rhs, "");
+		return lhs->richIdentifier() < rhs->richIdentifier();
+	}
+};
+using TypeSet = std::set<Type const*, TypeComp>;
+
+class OversizedTypeChecker
+{
+public:
+	OversizedTypeChecker(Type const& _type)
+	{
+		visit(_type, true);
+	}
+
+	vector<Type const*> oversizedTypes()
+	{
+		return util::convertContainer<vector<Type const*>>(std::move(m_oversizedTypes));
+	}
+
+private:
+	void visit(Type const& _type, bool _needsSizeCheck)
+	{
+		if (_needsSizeCheck && _type.storageSizeUpperBound() >= bigint(1) << 64)
+			m_oversizedTypes.insert(&_type);
+
+		if (ArrayType const* array = dynamic_cast<ArrayType const*>(&_type))
+			visit(*array->baseType(), array->isDynamicallySized());
+		else if (StructType const* structType = dynamic_cast<StructType const*>(&_type))
+		{
+			if (m_structsSeen.insert(&structType->structDefinition()).second)
+			{
+				for (auto const& member: structType->members(nullptr))
+					visit(*member.type, false);
+				m_structsSeen.erase(&structType->structDefinition());
+			}
+		}
+		else if (MappingType const* mappingType = dynamic_cast<MappingType const*>(&_type))
+			visit(*mappingType->valueType(), true);
+	}
+
+	set<StructDefinition const*> m_structsSeen;
+	TypeSet m_oversizedTypes;
+};
+
+
+}
 /**
  * Helper class that determines whether a contract's constructor uses inline assembly.
  */
@@ -72,6 +126,7 @@ private:
 
 	map<ContractDefinition const*, bool> m_usesAssembly;
 };
+
 
 StaticAnalyzer::StaticAnalyzer(ErrorReporter& _errorReporter):
 	m_errorReporter(_errorReporter)
@@ -155,6 +210,19 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 			// This is not a no-op, the entry might pre-exist.
 			m_localVarUseCount[make_pair(_variable.id(), &_variable)] += 0;
 	}
+
+	// This excludes struct members on purpose.
+	if (_variable.isStateVariable() || _variable.referenceLocation() == VariableDeclaration::Location::Storage)
+		for (Type const* subtype: OversizedTypeChecker{*_variable.annotation().type}.oversizedTypes())
+			m_errorReporter.warning(
+				7325_error,
+				_variable.typeName()->location(),
+				"Type " +
+				util::escapeAndQuoteString(subtype->canonicalName()) +
+				" covers a large part of storage and thus makes collisions likely."
+				" Either use mappings or dynamic arrays and allow their size to be increased only"
+				" in small quantities per transaction."
+			);
 	return true;
 }
 

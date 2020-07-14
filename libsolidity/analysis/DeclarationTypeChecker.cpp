@@ -362,10 +362,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 		solAssert(varLoc == Location::Unspecified, "");
 		typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory : DataLocation::Storage;
 	}
-	else if (
-		dynamic_cast<StructDefinition const*>(_variable.scope()) ||
-		dynamic_cast<EnumDefinition const*>(_variable.scope())
-	)
+	else if (_variable.isStructMember() || _variable.isEnumMember())
 		// The actual location will later be changed depending on how the type is used.
 		typeLoc = DataLocation::Storage;
 	else

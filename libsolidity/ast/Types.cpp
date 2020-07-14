@@ -53,57 +53,6 @@ using namespace solidity::frontend;
 namespace
 {
 
-struct TypeComp
-{
-	bool operator()(Type const* lhs, Type const* rhs) const
-	{
-		solAssert(lhs && rhs, "");
-		return lhs->richIdentifier() < rhs->richIdentifier();
-	}
-};
-using TypeSet = std::set<Type const*, TypeComp>;
-
-void oversizedSubtypesInner(
-	Type const& _type,
-	bool _includeType,
-	set<StructDefinition const*>& _structsSeen,
-	TypeSet& _oversizedSubtypes
-)
-{
-	switch (_type.category())
-	{
-	case Type::Category::Array:
-	{
-		auto const& t = dynamic_cast<ArrayType const&>(_type);
-		if (_includeType && t.storageSizeUpperBound() >= bigint(1) << 64)
-			_oversizedSubtypes.insert(&t);
-		oversizedSubtypesInner(*t.baseType(), t.isDynamicallySized(), _structsSeen, _oversizedSubtypes);
-		break;
-	}
-	case Type::Category::Struct:
-	{
-		auto const& t = dynamic_cast<StructType const&>(_type);
-		if (_structsSeen.count(&t.structDefinition()))
-			return;
-		if (_includeType && t.storageSizeUpperBound() >= bigint(1) << 64)
-			_oversizedSubtypes.insert(&t);
-		_structsSeen.insert(&t.structDefinition());
-		for (auto const& m: t.members(nullptr))
-			oversizedSubtypesInner(*m.type, false, _structsSeen, _oversizedSubtypes);
-		_structsSeen.erase(&t.structDefinition());
-		break;
-	}
-	case Type::Category::Mapping:
-	{
-		auto const* valueType = dynamic_cast<MappingType const&>(_type).valueType();
-		oversizedSubtypesInner(*valueType, true, _structsSeen, _oversizedSubtypes);
-		break;
-	}
-	default:
-		break;
-	}
-}
-
 /// Check whether (_base ** _exp) fits into 4096 bits.
 bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
 {
@@ -198,16 +147,6 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 	return transformed;
 }
 
-}
-
-vector<frontend::Type const*> solidity::frontend::oversizedSubtypes(frontend::Type const& _type)
-{
-	set<StructDefinition const*> structsSeen;
-	TypeSet oversized;
-	oversizedSubtypesInner(_type, false, structsSeen, oversized);
-	vector<frontend::Type const*> res;
-	copy(oversized.cbegin(), oversized.cend(), back_inserter(res));
-	return res;
 }
 
 void Type::clearCache() const

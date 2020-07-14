@@ -59,8 +59,6 @@ using BoolResult = util::Result<bool>;
 namespace solidity::frontend
 {
 
-std::vector<frontend::Type const*> oversizedSubtypes(frontend::Type const& _type);
-
 inline rational makeRational(bigint const& _numerator, bigint const& _denominator)
 {
 	solAssert(_denominator != 0, "division by zero");
