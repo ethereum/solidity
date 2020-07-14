@@ -90,9 +90,9 @@ function mul_64x64_128(x, y) -> hi, lo {
 // value split into four 64 bit values.
 function mul_128x128_256(x1, x2, y1, y2) -> r1, r2, r3, r4 {
 	let ah, al := mul_64x64_128(x1, y1)
-	let     bh, bl := mul_64x64_128(x1, y2)
-	let     ch, cl := mul_64x64_128(x2, y1)
-	let         dh, dl := mul_64x64_128(x2, y2)
+	let bh, bl := mul_64x64_128(x1, y2)
+	let ch, cl := mul_64x64_128(x2, y1)
+	let dh, dl := mul_64x64_128(x2, y2)
 	r4 := dl
 	let carry1, carry2
 	let t1, t2
