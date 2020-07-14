@@ -36,7 +36,7 @@ Z3CHCInterface::Z3CHCInterface():
 	z3::set_param("rewriter.pull_cheap_ite", true);
 	z3::set_param("rlimit", Z3Interface::resourceLimit);
 
-	enablePreProcessing();
+	setSpacerOptions();
 }
 
 void Z3CHCInterface::declareVariable(string const& _name, SortPointer const& _sort)
@@ -104,7 +104,7 @@ pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression
 	return {result, cex};
 }
 
-void Z3CHCInterface::enablePreProcessing()
+void Z3CHCInterface::setSpacerOptions(bool _preProcessing)
 {
 	// Spacer options.
 	// These needs to be set in the solver.
@@ -117,31 +117,12 @@ void Z3CHCInterface::enablePreProcessing()
 	// Ground pobs by using values from a model.
 	p.set("fp.spacer.ground_pobs", false);
 
-	// Enable Spacer optimization for better solving.
-	p.set("fp.xform.slice", true);
-	p.set("fp.xform.inline_linear", true);
-	p.set("fp.xform.inline_eager", true);
-
-	m_solver.set(p);
-}
-
-void Z3CHCInterface::disablePreProcessing()
-{
-	// Spacer options.
-	// These needs to be set in the solver.
-	// https://github.com/Z3Prover/z3/blob/master/src/muz/base/fp_params.pyg
-	z3::params p(*m_context);
-	// These are useful for solving problems with arrays and loops.
-	// Use quantified lemma generalizer.
-	p.set("fp.spacer.q3.use_qgen", true);
-	p.set("fp.spacer.mbqi", false);
-	// Ground pobs by using values from a model.
-	p.set("fp.spacer.ground_pobs", false);
-
-	// Disable Spacer optimization for counterexample generation.
-	p.set("fp.xform.slice", false);
-	p.set("fp.xform.inline_linear", false);
-	p.set("fp.xform.inline_eager", false);
+	// Spacer optimization should be
+	// - enabled for better solving (default)
+	// - disable for counterexample generation
+	p.set("fp.xform.slice", _preProcessing);
+	p.set("fp.xform.inline_linear", _preProcessing);
+	p.set("fp.xform.inline_eager", _preProcessing);
 
 	m_solver.set(p);
 }
@@ -151,6 +132,13 @@ Convert a ground refutation into a linear or nonlinear counterexample.
 The counterexample is given as an implication graph of the form
 `premises => conclusion` where `premises` are the predicates
 from the body of nonlinear clauses, representing the proof graph.
+
+This function is based on and similar to
+https://github.com/Z3Prover/z3/blob/z3-4.8.8/src/muz/spacer/spacer_context.cpp#L2919
+(spacer::context::get_ground_sat_answer)
+which generates linear counterexamples.
+It is modified here to accept nonlinear CHCs as well, generating a DAG
+instead of a path.
 */
 CHCSolverInterface::CexGraph Z3CHCInterface::cexGraph(z3::expr const& _proof)
 {

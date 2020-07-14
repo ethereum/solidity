@@ -46,8 +46,7 @@ public:
 
 	Z3Interface* z3Interface() const { return m_z3Interface.get(); }
 
-	void enablePreProcessing();
-	void disablePreProcessing();
+	void setSpacerOptions(bool _preProcessing = true);
 
 private:
 	/// Constructs a nonlinear counterexample graph from the refutation.

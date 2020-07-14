@@ -32,6 +32,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
+#include <queue>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -569,6 +571,7 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 			m_context.variable(*var)->increaseIndex();
 
 	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(preCallState + currentStateVariables());
+	m_symbolFunction[nondet.name] = &_funCall;
 	m_context.addAssertion(nondet);
 
 	m_context.addAssertion(m_error.currentValue() == 0);
@@ -1134,7 +1137,7 @@ pair<smtutil::CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Exp
 		// We now disable those optimizations and check whether we can still solve the problem.
 		auto* spacer = dynamic_cast<Z3CHCInterface*>(m_interface.get());
 		solAssert(spacer, "");
-		spacer->disablePreProcessing();
+		spacer->setSpacerOptions(false);
 
 		smtutil::CheckResult resultNoOpt;
 		CHCSolverInterface::CexGraph cexNoOpt;
@@ -1143,7 +1146,7 @@ pair<smtutil::CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Exp
 		if (resultNoOpt == smtutil::CheckResult::SATISFIABLE)
 			cex = move(cexNoOpt);
 
-		spacer->enablePreProcessing();
+		spacer->setSpacerOptions(true);
 #endif
 		break;
 	}
@@ -1312,7 +1315,8 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 	string localState;
 
 	unsigned node = *rootId;
-	optional<string> lastTxSeen;
+	/// The first summary node seen in this loop represents the last transaction.
+	bool lastTxSeen = false;
 	while (_graph.edges.at(node).size() >= 1)
 	{
 		auto const& edges = _graph.edges.at(node);
@@ -1328,6 +1332,8 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 				swap(summaryId, *interfaceId);
 			solAssert(_graph.nodes.at(*interfaceId).first.rfind("interface", 0) == 0, "");
 		}
+		/// The children are unordered, so we need to check which is the summary and
+		/// which is the interface.
 
 		solAssert(_graph.nodes.at(summaryId).first.rfind("summary", 0) == 0, "");
 		/// At this point property 2 from the function description is verified for this node.
@@ -1360,9 +1366,9 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		/// but not necessarily the summary of the function that contains the error.
 		if (!lastTxSeen)
 		{
-			lastTxSeen = summaryNode.first;
+			lastTxSeen = true;
 			/// Generate counterexample message local to the failed target.
-			localState = generatePostStateCounterexample(stateVars, calledFun, summaryNode.second) + "\n";
+			localState = formatStateCounterexample(stateVars, calledFun, summaryNode.second) + "\n";
 			if (calledFun)
 			{
 				/// The signature of a summary predicate is: summary(error, preStateVars, preInputVars, postInputVars, outputVars).
@@ -1389,9 +1395,9 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		else
 			/// We report the state after every tx in the trace except for the last, which is reported
 			/// first in the code above.
-			path.emplace_back("State: " + generatePostStateCounterexample(stateVars, calledFun, summaryNode.second));
+			path.emplace_back("State: " + formatStateCounterexample(stateVars, calledFun, summaryNode.second));
 
-		string txCex = calledContract ? "constructor()" : generatePreTxCounterexample(stateVars, *calledFun, summaryNode.second);
+		string txCex = calledContract ? "constructor()" : formatFunctionCallCounterexample(stateVars, *calledFun, summaryNode.second);
 		path.emplace_back(txCex);
 
 		/// Recurse on the next interface node which represents the previous transaction
@@ -1405,7 +1411,7 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 	return localState + "\nTransaction trace:\n" + boost::algorithm::join(boost::adaptors::reverse(path), "\n");
 }
 
-string CHC::generatePostStateCounterexample(vector<VariableDeclaration const*> const& _stateVars, FunctionDefinition const* _function, vector<string> const& _summaryValues)
+string CHC::formatStateCounterexample(vector<VariableDeclaration const*> const& _stateVars, FunctionDefinition const* _function, vector<string> const& _summaryValues)
 {
 	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postInputVars, outputVars).
 	/// The signature of an implicit constructor summary predicate is: summary(error, postStateVars).
@@ -1423,6 +1429,8 @@ string CHC::generatePostStateCounterexample(vector<VariableDeclaration const*> c
 		stateLast = stateFirst + static_cast<int>(_stateVars.size());
 	}
 
+	solAssert(stateFirst >= _summaryValues.begin() && stateFirst <= _summaryValues.end(), "");
+	solAssert(stateLast >= _summaryValues.begin() && stateLast <= _summaryValues.end(), "");
 	vector<string> stateArgs(stateFirst, stateLast);
 	solAssert(stateArgs.size() == _stateVars.size(), "");
 
@@ -1437,12 +1445,14 @@ string CHC::generatePostStateCounterexample(vector<VariableDeclaration const*> c
 	return boost::algorithm::join(stateCex, ", ");
 }
 
-string CHC::generatePreTxCounterexample(vector<VariableDeclaration const*> const& _stateVars, FunctionDefinition const& _function, vector<string> const& _summaryValues)
+string CHC::formatFunctionCallCounterexample(vector<VariableDeclaration const*> const& _stateVars, FunctionDefinition const& _function, vector<string> const& _summaryValues)
 {
 	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postInputVars, outputVars).
 	/// Here we are interested in preInputVars.
 	vector<string>::const_iterator first = _summaryValues.begin() + static_cast<int>(_stateVars.size()) + 1;
 	vector<string>::const_iterator last = first + static_cast<int>(_function.parameters().size());
+	solAssert(first >= _summaryValues.begin() && first <= _summaryValues.end(), "");
+	solAssert(last >= _summaryValues.begin() && last <= _summaryValues.end(), "");
 	vector<string> functionArgsCex(first, last);
 	vector<string> functionArgs;
 
