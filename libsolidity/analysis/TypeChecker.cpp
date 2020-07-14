@@ -92,19 +92,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	for (auto const& n: _contract.subNodes())
 		n->accept(*this);
 
-	bigint size = 0;
-	vector<VariableDeclaration const*> variables;
-	for (ContractDefinition const* contract: boost::adaptors::reverse(m_currentContract->annotation().linearizedBaseContracts))
-		for (VariableDeclaration const* variable: contract->stateVariables())
-			if (!(variable->isConstant() || variable->immutable()))
-			{
-				size += storageSizeUpperBound(*(variable->annotation().type));
-				if (size >= bigint(1) << 256)
-				{
-					m_errorReporter.typeError(7676_error, m_currentContract->location(), "Contract too large for storage.");
-					break;
-				}
-			}
+	m_currentContract = nullptr;
 
 	return false;
 }
@@ -566,7 +554,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 				" in small quantities per transaction.";
 		};
 
-		if (storageSizeUpperBound(*varType) >= bigint(1) << 64)
+		if (varType->storageSizeUpperBound() >= bigint(1) << 64)
 		{
 			if (_variable.isStateVariable())
 				m_errorReporter.warning(3408_error, _variable.location(), collisionMessage(_variable.name(), true));

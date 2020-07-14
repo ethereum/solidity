@@ -83,6 +83,8 @@ private:
 
 	/// Warns if the contract has a payable fallback, but no receive ether function.
 	void checkPayableFallbackWithoutReceive(ContractDefinition const& _contract);
+	/// Error if the contract requires too much storage
+	void checkStorageSize(ContractDefinition const& _contract);
 
 	OverrideChecker m_overrideChecker;
 	langutil::ErrorReporter& m_errorReporter;
