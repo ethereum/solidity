@@ -38,6 +38,7 @@
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
+using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
