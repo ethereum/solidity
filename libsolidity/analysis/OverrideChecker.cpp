@@ -289,7 +289,7 @@ StateMutability OverrideProxy::stateMutability() const
 	return std::visit(GenericVisitor{
 		[&](FunctionDefinition const* _item) { return _item->stateMutability(); },
 		[&](ModifierDefinition const*) { solAssert(false, "Requested state mutability from modifier."); return StateMutability{}; },
-		[&](VariableDeclaration const*) { return StateMutability::View; }
+		[&](VariableDeclaration const* _var) { return _var->isConstant() ? StateMutability::Pure : StateMutability::View; }
 	}, m_item);
 }
 
