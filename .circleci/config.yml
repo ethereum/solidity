@@ -20,6 +20,9 @@ parameters:
     type: string
     default: "2"
 
+orbs:
+  win: circleci/windows@2.2.0
+
 defaults:
 
   # --------------------------------------------------------------------------
@@ -597,6 +600,17 @@ jobs:
       - run: *run_cmdline_tests
       - store_artifacts: *artifacts_test_results
 
+  b_win:
+    executor:
+      name: win/default # executor type
+      size: "medium" # resource class, can be "medium", "large", "xlarge", "2xlarge", defaults to "medium" if not specified
+    steps:
+      - checkout
+      - run: choco install cmake -y
+      - run: $env:Path+=";$Env:Program Files\CMake\bin"
+      - run: mkdir build; cd build; cmake -G "Visual Studio 16 2019 Win64" .. -DTESTS=On
+      - run: cd build; cmake --config Release --build ..
+
   b_ems:
     docker:
       - image: ethereum/solidity-buildpack-deps:emsdk-1.39.15-2
@@ -869,6 +883,10 @@ workflows:
       - b_osx: *workflow_trigger_on_tags
       - t_osx_cli: *workflow_osx
       - t_osx_soltest: *workflow_osx
+
+      # windows build and TODO: tests
+      - b_win: *workflow_trigger_on_tags
+
 
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
