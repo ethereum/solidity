@@ -31,6 +31,7 @@ Compiler Features:
 Bugfixes:
  * NatSpec: Constructors and functions have consistent userdoc output.
  * Inheritance: Disallow public state variables overwriting ``pure`` functions.
+ * SMTChecker: Fix internal error when assigning to a 1-tuple.
  * State Mutability: Constant public state variables are considered ``pure`` functions.
 
 

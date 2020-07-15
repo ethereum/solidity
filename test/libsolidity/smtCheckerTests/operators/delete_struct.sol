@@ -22,6 +22,7 @@ contract C
 // Warning 7650: (117-120): Assertion checker does not yet support this expression.
 // Warning 8364: (117-118): Assertion checker does not yet implement type struct C.S memory
 // Warning 8182: (117-124): Assertion checker does not yet implement such assignments.
+// Warning 8364: (145-146): Assertion checker does not yet implement type struct C.S memory
 // Warning 7650: (165-168): Assertion checker does not yet support this expression.
 // Warning 8364: (165-166): Assertion checker does not yet implement type struct C.S memory
 // Warning 2683: (158-168): Assertion checker does not yet implement "delete" for this expression.
