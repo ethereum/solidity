@@ -139,6 +139,7 @@ defaults:
   - test_ubuntu2004: &test_ubuntu2004
       docker:
         - image: ethereum/solidity-buildpack-deps:ubuntu2004-<< pipeline.parameters.ubuntu-2004-docker-image-rev >>
+      parallelism: 6
       steps:
         - checkout
         - attach_workspace:
