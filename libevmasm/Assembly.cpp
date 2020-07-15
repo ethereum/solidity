@@ -521,6 +521,7 @@ map<u256, u256> Assembly::optimiseInternal(
 
 LinkerObject const& Assembly::assemble() const
 {
+	assertThrow(!m_invalid, AssemblyException, "Attempted to assemble invalid Assembly object.");
 	// Return the already assembled object, if present.
 	if (!m_assembledObject.bytecode.empty())
 		return m_assembledObject;

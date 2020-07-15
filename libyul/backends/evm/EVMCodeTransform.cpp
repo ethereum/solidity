@@ -237,6 +237,7 @@ void CodeTransform::stackError(StackTooDeepError _error, int _targetStackHeight)
 		m_assembly.appendConstant(u256(0));
 	// Store error.
 	m_stackErrors.emplace_back(std::move(_error));
+	m_assembly.markAsInvalid();
 }
 
 void CodeTransform::operator()(Assignment const& _assignment)
@@ -448,11 +449,15 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_context
 	);
 	subTransform(_function.body);
-	for (auto& stackError: subTransform.m_stackErrors)
+	if (!subTransform.m_stackErrors.empty())
 	{
-		if (stackError.functionName.empty())
-			stackError.functionName = _function.name;
-		m_stackErrors.emplace_back(std::move(stackError));
+		m_assembly.markAsInvalid();
+		for (StackTooDeepError& stackError: subTransform.m_stackErrors)
+		{
+			if (stackError.functionName.empty())
+				stackError.functionName = _function.name;
+			m_stackErrors.emplace_back(std::move(stackError));
+		}
 	}
 
 	m_assembly.appendLabel(m_context->functionExitPoints.top().label);
@@ -718,7 +723,7 @@ size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString 
 			to_string(heightDiff - limit) +
 			" slot(s) too deep inside the stack."
 		);
-		// TODO: maybe make this return something special that results in producing INVALID instead.
+		m_assembly.markAsInvalid();
 		return _forSwap ? 2 : 1;
 	}
 	return heightDiff;

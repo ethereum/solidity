@@ -182,6 +182,11 @@ void EthAssemblyAdapter::appendImmutableAssignment(std::string const& _identifie
 	m_assembly.appendImmutableAssignment(_identifier);
 }
 
+void EthAssemblyAdapter::markAsInvalid()
+{
+	m_assembly.markAsInvalid();
+}
+
 EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag)
 {
 	u256 id = _tag.data();
