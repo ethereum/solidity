@@ -32,6 +32,7 @@ Bugfixes:
  * NatSpec: Constructors and functions have consistent userdoc output.
  * Inheritance: Disallow public state variables overwriting ``pure`` functions.
  * State Mutability: Constant public state variables are considered ``pure`` functions.
+ * Type Checker: Fixing deduction issues on function types when function call has named arguments.
 
 
 ### 0.6.12 (2020-07-22)

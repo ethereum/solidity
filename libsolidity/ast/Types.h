@@ -1234,6 +1234,7 @@ public:
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
 	TypePointer encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
+	TypePointer mobileType() const override;
 
 	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
 	/// appropriate external types (i.e. the interfaceType()s) of input/return parameters of

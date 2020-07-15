@@ -3425,6 +3425,28 @@ TypeResult FunctionType::interfaceType(bool /*_inLibrary*/) const
 		return TypeResult::err("Internal type is not allowed for public or external functions.");
 }
 
+TypePointer FunctionType::mobileType() const
+{
+	if (m_valueSet || m_gasSet || m_saltSet || m_bound)
+		return nullptr;
+
+	// return function without parameter names
+	return TypeProvider::function(
+		m_parameterTypes,
+		m_returnParameterTypes,
+		strings(m_parameterTypes.size()),
+		strings(m_returnParameterNames.size()),
+		m_kind,
+		m_arbitraryParameters,
+		m_stateMutability,
+		m_declaration,
+		m_gasSet,
+		m_valueSet,
+		m_bound,
+		m_saltSet
+	);
+}
+
 bool FunctionType::canTakeArguments(
 	FuncCallArguments const& _arguments,
 	Type const* _selfType
