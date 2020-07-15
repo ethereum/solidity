@@ -19,6 +19,7 @@ Breaking changes:
  * Remove the finney and szabo denominations.
 
 Language Features:
+ * State mutability: Do not issue recommendation for stricter mutability for virtual functions but do issue it for functions that override.
  * Yul: Disallow EVM instruction `pc()`.
  * Yul: Disallow consecutive and trailing dots in identifiers. Leading dots were already disallowed.
 

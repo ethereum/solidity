@@ -27,11 +27,11 @@ all defined functions. The usage of an abstract contract as a base class is show
     pragma solidity >=0.6.0 <0.8.0;
 
     abstract contract Feline {
-        function utterance() public virtual returns (bytes32);
+        function utterance() public pure virtual returns (bytes32);
     }
 
     contract Cat is Feline {
-        function utterance() public override returns (bytes32) { return "miaow"; }
+        function utterance() public pure override returns (bytes32) { return "miaow"; }
     }
 
 If a contract inherits from an abstract contract and does not implement all non-implemented
