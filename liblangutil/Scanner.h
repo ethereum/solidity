@@ -77,6 +77,7 @@ enum class ScannerError
 	IllegalHexDigit,
 	IllegalCommentTerminator,
 	IllegalEscapeSequence,
+	IllegalCharacterInString,
 	IllegalStringEndQuote,
 	IllegalNumberSeparator,
 	IllegalExponent,
