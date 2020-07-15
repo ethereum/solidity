@@ -9,6 +9,7 @@ Compiler Features:
  * Yul EVM Code Transform: Free stack slots directly after visiting the right-hand-side of variable declarations instead of at the end of the statement only.
 
 Bugfixes:
+ * SMTChecker: Fix internal error when using bitwise operators on fixed bytes type.
  * Type Checker: Fix overload resolution in combination with ``{value: ...}``.
  * Type Checker: Fix internal compiler error related to oversized types.
 
