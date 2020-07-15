@@ -407,8 +407,11 @@ jobs:
       - persist_to_workspace: *artifacts_executables
 
   b_ubu: &build_ubuntu2004
+    resource_class: xlarge
     docker:
       - image: ethereum/solidity-buildpack-deps:ubuntu2004-<< pipeline.parameters.ubuntu-2004-docker-image-rev >>
+    environment:
+      MAKEFLAGS: -j 10
     steps:
       - checkout
       - run: *run_build
@@ -583,9 +586,11 @@ jobs:
       - store_artifacts: *artifacts_test_results
 
   b_ems:
+    resource_class: xlarge
     docker:
       - image: ethereum/solidity-buildpack-deps:emsdk-1.39.15-2
     environment:
+      MAKEFLAGS: -j 10
       TERM: xterm
     steps:
       - checkout
