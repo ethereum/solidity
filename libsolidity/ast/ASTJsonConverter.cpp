@@ -386,7 +386,7 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("name", _node.name()),
-		make_pair("typeName", toJsonOrNull(_node.typeName())),
+		make_pair("typeName", toJson(_node.typeName())),
 		make_pair("constant", _node.isConstant()),
 		make_pair("mutability", VariableDeclaration::mutabilityToString(_node.mutability())),
 		make_pair("stateVariable", _node.isStateVariable()),

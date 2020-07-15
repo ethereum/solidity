@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 		contract test {
 			/// fun1 description
 			function fun1(uint256 a) {
-				var b;
+				uint b;
 				// I should not interfere with actual natspec comments (natspec comments on local variables not allowed anymore)
 				uint256 c;
 				mapping(address=>bytes32) d;
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 			uint256 stateVar;
 			function ///I am in the wrong place
 			fun1(uint256 a) {
-				var b;
+				uint b;
 				// I should not interfere with actual natspec comments (natspec comments on local variables not allowed anymore)
 				uint256 c;
 				mapping(address=>bytes32) d;
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 			uint256 stateVar;
 			function fun1(uint256 a) {
 				// I should have been above the function signature (natspec comments on local variables not allowed anymore)
-				var b;
+				uint b;
 				// I should not interfere with actual natspec comments (natspec comments on local variables not allowed anymore)
 				uint256 c;
 				mapping(address=>bytes32) d;
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(variable_definition)
 	char const* text = R"(
 		contract test {
 			function fun(uint256 a) {
-				var b;
+				uint b;
 				uint256 c;
 				mapping(address=>bytes32) d;
 				customtype varname;
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(variable_definition_with_initialization)
 	char const* text = R"(
 		contract test {
 			function fun(uint256 a) {
-				var b = 2;
+				uint b = 2;
 				uint256 c = 0x87;
 				mapping(address=>bytes32) d;
 				bytes7 name = "Solidity";
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(type_conversion_to_dynamic_array)
 	char const* text = R"(
 		contract test {
 			function fun() {
-				var x = uint64[](3);
+				uint x = uint64[](3);
 			}
 		}
 	)";

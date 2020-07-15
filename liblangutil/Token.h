@@ -189,7 +189,6 @@ namespace solidity::langutil
 	K(Throw, "throw", 0)                                               \
 	K(Type, "type", 0)                                                 \
 	K(Using, "using", 0)                                               \
-	K(Var, "var", 0)                                                   \
 	K(View, "view", 0)                                                 \
 	K(Virtual, "virtual", 0)                                           \
 	K(While, "while", 0)                                               \
@@ -265,6 +264,7 @@ namespace solidity::langutil
 	K(Typedef, "typedef", 0)                                           \
 	K(TypeOf, "typeof", 0)                                             \
 	K(Unchecked, "unchecked", 0)                                       \
+	K(Var, "var", 0)                                                   \
 	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \

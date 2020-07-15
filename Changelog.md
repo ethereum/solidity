@@ -23,6 +23,7 @@ Language Features:
  * Yul: Disallow consecutive and trailing dots in identifiers. Leading dots were already disallowed.
 
 Compiler Features:
+ * Variable declarations using the ``var`` keyword are not recognized anymore.
 
 
 Bugfixes:
