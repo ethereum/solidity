@@ -47,6 +47,7 @@ env:
         - SOLC_TESTS=On
         - SOLC_STOREBYTECODE=Off
         - SOLC_DOCKER=Off
+        - MAKEFLAGS="-j 4"
 
 matrix:
     include:
