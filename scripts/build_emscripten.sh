@@ -34,5 +34,6 @@ else
     BUILD_DIR="$1"
 fi
 
-docker run -v $(pwd):/root/project -w /root/project ethereum/solidity-buildpack-deps:emsdk-1.39.15-2 \
+docker run -v $(pwd):/root/project -w /root/project \
+    solbuildpackpusher/solidity-buildpack-deps@sha256:d557d015918c3cf68b0d22839bab41013f0757b651a7fef21595f89721dbebcc \
     ./scripts/travis-emscripten/build_emscripten.sh $BUILD_DIR
