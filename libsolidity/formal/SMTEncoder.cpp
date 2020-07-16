@@ -363,8 +363,12 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 	Token op = _assignment.assignmentOperator();
 	if (op != Token::Assign && !compoundOps.count(op))
 	{
+		Expression const* identifier = &_assignment.leftHandSide();
+		if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(identifier))
+			identifier = leftmostBase(*indexAccess);
 		// Give it a new index anyway to keep the SSA scheme sound.
-		if (auto varDecl = identifierToVariable(_assignment.leftHandSide()))
+		solAssert(identifier, "");
+		if (auto varDecl = identifierToVariable(*identifier))
 			m_context.newValue(*varDecl);
 
 		m_errorReporter.warning(
