@@ -587,7 +587,13 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 		// This is only relevant for a function overriding a function.
 		if (_overriding.isFunction())
 		{
-			if (_overriding.stateMutability() != _super.stateMutability())
+			// Stricter mutability is always okay except when super is Payable
+			if ((
+				_overriding.stateMutability() > _super.stateMutability() ||
+				_super.stateMutability() == StateMutability::Payable
+				) &&
+				_overriding.stateMutability() != _super.stateMutability()
+			)
 				overrideError(
 					_overriding,
 					_super,
