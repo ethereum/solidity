@@ -54,15 +54,12 @@ docker run --rm --volume "${PWD}:/root/project" "${IMAGE_NAME}" "/root/project/s
 echo "-- push_docker"
 
 VERSION=$(docker inspect --format='{{.Config.Labels.version}}' "${IMAGE_NAME}")
-DOCKER_IMAGE_ID="${DOCKER_REPOSITORY}/${IMAGE_NAME}-${IMAGE_VARIANT}"
+DOCKER_IMAGE_ID="${DOCKER_REPOSITORY}:${IMAGE_VARIANT}"
 
-docker tag "${IMAGE_NAME}" "${DOCKER_IMAGE_ID}:${VERSION}"
-docker push "${DOCKER_IMAGE_ID}:${VERSION}"
+docker tag "${IMAGE_NAME}" "${DOCKER_IMAGE_ID}-${VERSION}"
+docker push "${DOCKER_IMAGE_ID}-${VERSION}"
 
-REPO_DIGEST=$(docker inspect --format='{{.RepoDigests}}' "${DOCKER_IMAGE_ID}:${VERSION}")
+REPO_DIGEST=$(docker inspect --format='{{.RepoDigests}}' "${DOCKER_IMAGE_ID}-${VERSION}")
 
-docker tag "${IMAGE_NAME}" "${DOCKER_IMAGE_ID}:latest"
-docker push "${DOCKER_IMAGE_ID}:latest"
-
-echo "::set-env name=DOCKER_IMAGE::${DOCKER_IMAGE_ID}:${VERSION}"
+echo "::set-env name=DOCKER_IMAGE::${DOCKER_IMAGE_ID}-${VERSION}"
 echo "::set-env name=DOCKER_REPO_DIGEST::${REPO_DIGEST}"

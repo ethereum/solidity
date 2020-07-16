@@ -14,7 +14,8 @@ jobs:
   buildpack-deps:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      DOCKER_REPOSITORY: docker.pkg.github.com/${{ github.repository }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      DOCKER_REPOSITORY: solbuildpackpusher/solidity-buildpack-deps
       IMAGE_NAME: buildpack-deps
 
     runs-on: ubuntu-latest
@@ -31,9 +32,9 @@ jobs:
 
       - name: Upgrade ${{ env.IMAGE_NAME }}-${{ matrix.image_variant }}
         run: |
-          echo "${GITHUB_TOKEN}" | docker login docker.pkg.github.com -u "${GITHUB_ACTOR}" --password-stdin
+          echo ${DOCKERHUB_TOKEN} | docker login -u solbuildpackpusher --password-stdin
           scripts/ci/docker_upgrade.sh ${{ env.IMAGE_NAME }} ${{ matrix.image_variant }} ${{ env.DOCKER_REPOSITORY }}
-          docker logout docker.pkg.github.com
+          docker logout
 
       - name: comment PR
         if: "env.DOCKER_IMAGE"
