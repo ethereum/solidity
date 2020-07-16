@@ -36,24 +36,26 @@ def in_comment(source, pos):
     return slash_star_pos > star_slash_pos
 
 
-def find_ids_in_source_file(file_name, ids):
+def find_ids_in_source_file(file_name, id_to_file_names):
     source = read_file(file_name)
     for m in re.finditer(SOURCE_FILE_PATTERN, source):
         if in_comment(source, m.start()):
             continue
         underscore_pos = m.group(0).index("_")
         id = m.group(0)[0:underscore_pos]
-        if id in ids:
-            ids[id] += 1
+        if id in id_to_file_names:
+            id_to_file_names[id].append(file_name)
         else:
-            ids[id] = 1
+            id_to_file_names[id] = [file_name]
 
 
-def get_used_ids(file_names):
-    used_ids = {}
+def find_ids_in_source_files(file_names):
+    """Returns a dictionary with list of source files for every appearance of every id"""
+
+    id_to_file_names = {}
     for file_name in file_names:
-        find_ids_in_source_file(file_name, used_ids)
-    return used_ids
+        find_ids_in_source_file(file_name, id_to_file_names)
+    return id_to_file_names
 
 
 def get_next_id(available_ids):
@@ -63,7 +65,7 @@ def get_next_id(available_ids):
     return next_id
 
 
-def fix_ids_in_file(file_name, available_ids, used_ids):
+def fix_ids_in_source_file(file_name, id_to_count, available_ids):
     source = read_file(file_name)
 
     k = 0
@@ -75,11 +77,11 @@ def fix_ids_in_file(file_name, available_ids, used_ids):
         id = m.group(0)[0:underscore_pos]
 
         # incorrect id or id has a duplicate somewhere
-        if not in_comment(source, m.start()) and (len(id) != 4 or id[0] == "0" or used_ids[id] > 1):
-            assert id in used_ids
+        if not in_comment(source, m.start()) and (len(id) != 4 or id[0] == "0" or id_to_count[id] > 1):
+            assert id in id_to_count
             new_id = get_next_id(available_ids)
-            assert new_id not in used_ids
-            used_ids[id] -= 1
+            assert new_id not in id_to_count
+            id_to_count[id] -= 1
         else:
             new_id = id
 
@@ -94,10 +96,15 @@ def fix_ids_in_file(file_name, available_ids, used_ids):
         print(f"Fixed file: {file_name}")
 
 
-def fix_ids(used_ids, file_names):
-    available_ids = {str(id) for id in range(1000, 10000)} - used_ids.keys()
+def fix_ids_in_source_files(file_names, id_to_count):
+    """
+    Fixes ids in given source files;
+    id_to_count contains number of appearances of every id in sources
+    """
+
+    available_ids = {str(id) for id in range(1000, 10000)} - id_to_count.keys()
     for file_name in file_names:
-        fix_ids_in_file(file_name, available_ids, used_ids)
+        fix_ids_in_source_file(file_name, id_to_count, available_ids)
 
 
 def find_files(top_dir, sub_dirs, extensions):
@@ -121,10 +128,12 @@ def find_ids_in_test_file(file_name):
 
 
 def find_ids_in_test_files(file_names):
-    used_ids = set()
+    """Returns a set containing all ids in tests"""
+
+    ids = set()
     for file_name in file_names:
-        used_ids |= find_ids_in_test_file(file_name)
-    return used_ids
+        ids |= find_ids_in_test_file(file_name)
+    return ids
 
 
 def find_ids_in_cmdline_test_err(file_name):
@@ -142,7 +151,23 @@ def print_ids(ids):
         print(id, end="")
 
 
-def examine_id_coverage(top_dir, used_ids):
+def print_ids_per_file(ids, id_to_file_names, top_dir):
+    file_name_to_ids = {}
+    for id in ids:
+        for file_name in id_to_file_names[id]:
+            relpath = path.relpath(file_name, top_dir)
+            if relpath not in file_name_to_ids:
+                file_name_to_ids[relpath] = []
+            file_name_to_ids[relpath].append(id)
+
+    for file_name in sorted(file_name_to_ids):
+        print(file_name)
+        for id in sorted(file_name_to_ids[file_name]):
+            print(f" {id}", end="")
+        print()
+
+
+def examine_id_coverage(top_dir, source_id_to_file_names):
     test_sub_dirs = [
         path.join("test", "libsolidity", "errorRecoveryTests"),
         path.join("test", "libsolidity", "smtCheckerTests"),
@@ -153,27 +178,28 @@ def examine_id_coverage(top_dir, used_ids):
         test_sub_dirs,
         [".sol"]
     )
-    covered_ids = find_ids_in_test_files(test_file_names)
+    source_ids = source_id_to_file_names.keys()
+    test_ids = find_ids_in_test_files(test_file_names)
 
     # special case, we are interested in warnings which are ignored by regular tests:
     # Warning (1878): SPDX license identifier not provided in source file. ....
     # Warning (3420): Source file does not specify required compiler version!
-    covered_ids |= find_ids_in_cmdline_test_err(path.join(top_dir, "test", "cmdlineTests", "error_codes", "err"))
+    test_ids |= find_ids_in_cmdline_test_err(path.join(top_dir, "test", "cmdlineTests", "error_codes", "err"))
 
-    print(f"IDs in source files: {len(used_ids)}")
-    print(f"IDs in test files  : {len(covered_ids)} ({len(covered_ids) - len(used_ids)})")
+    print(f"IDs in source files: {len(source_ids)}")
+    print(f"IDs in test files  : {len(test_ids)} ({len(test_ids) - len(source_ids)})")
     print()
 
-    unused_covered_ids = covered_ids - used_ids
-    if len(unused_covered_ids) != 0:
+    test_only_ids = test_ids - source_ids
+    if len(test_only_ids) != 0:
         print("Error. The following error codes found in tests, but not in sources:")
-        print_ids(unused_covered_ids)
+        print_ids(test_only_ids)
         return 1
 
-    used_uncovered_ids = used_ids - covered_ids
-    if len(used_uncovered_ids) != 0:
+    source_only_ids = source_ids - test_ids
+    if len(source_only_ids) != 0:
         print("The following error codes found in sources, but not in tests:")
-        print_ids(used_uncovered_ids)
+        print_ids_per_file(source_only_ids, source_id_to_file_names, top_dir)
         print("\n\nPlease make sure to add appropriate tests.")
         return 1
 
@@ -187,22 +213,22 @@ def main(argv):
     fix = False
     no_confirm = False
     examine_coverage = False
-    next = False
+    next_id = False
     opts, args = getopt.getopt(argv, "", ["check", "fix", "no-confirm", "examine-coverage", "next"])
 
     for opt, arg in opts:
-        if opt == '--check':
+        if opt == "--check":
             check = True
         elif opt == "--fix":
             fix = True
-        elif opt == '--no-confirm':
+        elif opt == "--no-confirm":
             no_confirm = True
-        elif opt == '--examine-coverage':
+        elif opt == "--examine-coverage":
             examine_coverage = True
-        elif opt == '--next':
-            next = True
+        elif opt == "--next":
+            next_id = True
 
-    if [check, fix, examine_coverage, next].count(True) != 1:
+    if [check, fix, examine_coverage, next_id].count(True) != 1:
         print("usage: python error_codes.py --check | --fix [--no-confirm] | --examine-coverage | --next")
         exit(1)
 
@@ -213,32 +239,34 @@ def main(argv):
         ["libevmasm", "liblangutil", "libsolc", "libsolidity", "libsolutil", "libyul", "solc"],
         [".h", ".cpp"]
     )
-    used_ids = get_used_ids(source_file_names)
+    source_id_to_file_names = find_ids_in_source_files(source_file_names)
 
     ok = True
-    for id in sorted(used_ids):
+    for id in sorted(source_id_to_file_names):
         if len(id) != 4:
             print(f"ID {id} length != 4")
             ok = False
         if id[0] == "0":
             print(f"ID {id} starts with zero")
             ok = False
-        if used_ids[id] > 1:
-            print(f"ID {id} appears {used_ids[id]} times")
+        if len(source_id_to_file_names[id]) > 1:
+            print(f"ID {id} appears {len(source_id_to_file_names[id])} times")
             ok = False
 
     if examine_coverage:
         if not ok:
             print("Incorrect IDs have to be fixed before applying --examine-coverage")
-        res = examine_id_coverage(cwd, used_ids.keys())
+            exit(1)
+        res = examine_id_coverage(cwd, source_id_to_file_names)
         exit(res)
 
     random.seed()
 
-    if next:
+    if next_id:
         if not ok:
             print("Incorrect IDs have to be fixed before applying --next")
-        available_ids = {str(id) for id in range(1000, 10000)} - used_ids.keys()
+            exit(1)
+        available_ids = {str(id) for id in range(1000, 10000)} - source_id_to_file_names.keys()
         next_id = get_next_id(available_ids)
         print(f"Next ID: {next_id}")
         exit(0)
@@ -263,7 +291,10 @@ def main(argv):
         if answer not in "yY":
             exit(1)
 
-    fix_ids(used_ids, source_file_names)
+    # number of appearances for every id
+    source_id_to_count = { id: len(file_names) for id, file_names in source_id_to_file_names.items() }
+
+    fix_ids_in_source_files(source_file_names, source_id_to_count)
     print("Fixing completed")
     exit(2)
 
