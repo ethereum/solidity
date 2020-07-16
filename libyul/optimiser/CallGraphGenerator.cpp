@@ -30,6 +30,47 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
+namespace
+{
+// TODO: This algorithm is non-optimal.
+struct CallGraphCycleFinder
+{
+	CallGraph const& callGraph;
+	set<YulString> containedInCycle{};
+	set<YulString> visited{};
+	vector<YulString> currentPath{};
+
+	void visit(YulString _function)
+	{
+		if (visited.count(_function))
+			return;
+		if (
+			auto it = find(currentPath.begin(), currentPath.end(), _function);
+			it != currentPath.end()
+		)
+			containedInCycle.insert(it, currentPath.end());
+		else
+		{
+			currentPath.emplace_back(_function);
+			if (callGraph.functionCalls.count(_function))
+				for (auto const& child: callGraph.functionCalls.at(_function))
+					visit(child);
+			currentPath.pop_back();
+			visited.insert(_function);
+		}
+	}
+};
+}
+
+set<YulString> CallGraph::recursiveFunctions() const
+{
+	CallGraphCycleFinder cycleFinder{*this};
+	// Visiting the root only is not enough, since there may be disconnected recursive functions.
+	for (auto const& call: functionCalls)
+		cycleFinder.visit(call.first);
+	return cycleFinder.containedInCycle;
+}
+
 CallGraph CallGraphGenerator::callGraph(Block const& _ast)
 {
 	CallGraphGenerator gen;

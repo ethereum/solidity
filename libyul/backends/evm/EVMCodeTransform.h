@@ -161,8 +161,9 @@ protected:
 	bool unreferenced(Scope::Variable const& _var) const;
 	/// Marks slots of variables that are not used anymore
 	/// and were defined in the current scope for reuse.
-	/// Also POPs unused topmost stack slots.
-	void freeUnusedVariables();
+	/// Also POPs unused topmost stack slots,
+	/// unless @a _popUnusedSlotsAtStackTop is set to false.
+	void freeUnusedVariables(bool _popUnusedSlotsAtStackTop = true);
 	/// Marks the stack slot of @a _var to be reused.
 	void deleteVariable(Scope::Variable const& _var);
 

@@ -102,7 +102,7 @@ void EVMAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _
 {
 	if (m_evm15)
 	{
-		m_bytecode.push_back(uint8_t(evmasm::Instruction::JUMPTO));
+		m_bytecode.push_back(uint8_t(evmasm::Instruction::EIP615_JUMPTO));
 		appendLabelReferenceInternal(_labelId);
 		m_stackHeight += _stackDiffAfter;
 	}
@@ -117,7 +117,7 @@ void EVMAssembly::appendJumpToIf(LabelID _labelId, JumpType)
 {
 	if (m_evm15)
 	{
-		m_bytecode.push_back(uint8_t(evmasm::Instruction::JUMPIF));
+		m_bytecode.push_back(uint8_t(evmasm::Instruction::EIP615_JUMPIF));
 		appendLabelReferenceInternal(_labelId);
 		m_stackHeight--;
 	}
@@ -133,7 +133,7 @@ void EVMAssembly::appendBeginsub(LabelID _labelId, int _arguments)
 	yulAssert(m_evm15, "BEGINSUB used for EVM 1.0");
 	yulAssert(_arguments >= 0, "");
 	setLabelToCurrentPosition(_labelId);
-	m_bytecode.push_back(uint8_t(evmasm::Instruction::BEGINSUB));
+	m_bytecode.push_back(uint8_t(evmasm::Instruction::EIP615_BEGINSUB));
 	m_stackHeight += _arguments;
 }
 
@@ -141,7 +141,7 @@ void EVMAssembly::appendJumpsub(LabelID _labelId, int _arguments, int _returns)
 {
 	yulAssert(m_evm15, "JUMPSUB used for EVM 1.0");
 	yulAssert(_arguments >= 0 && _returns >= 0, "");
-	m_bytecode.push_back(uint8_t(evmasm::Instruction::JUMPSUB));
+	m_bytecode.push_back(uint8_t(evmasm::Instruction::EIP615_JUMPSUB));
 	appendLabelReferenceInternal(_labelId);
 	m_stackHeight += _returns - _arguments;
 }
@@ -150,7 +150,7 @@ void EVMAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 {
 	yulAssert(m_evm15, "RETURNSUB used for EVM 1.0");
 	yulAssert(_returns >= 0, "");
-	m_bytecode.push_back(uint8_t(evmasm::Instruction::RETURNSUB));
+	m_bytecode.push_back(uint8_t(evmasm::Instruction::EIP615_RETURNSUB));
 	m_stackHeight += _stackDiffAfter - _returns;
 }
 

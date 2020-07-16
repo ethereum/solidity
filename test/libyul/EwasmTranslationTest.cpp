@@ -99,11 +99,9 @@ string EwasmTranslationTest::interpret()
 	InterpreterState state;
 	state.maxTraceSize = 10000;
 	state.maxSteps = 100000;
-	WasmDialect dialect;
-	Interpreter interpreter(state, dialect);
 	try
 	{
-		interpreter(*m_object->code);
+		Interpreter::run(state, WasmDialect{}, *m_object->code);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{

@@ -1,0 +1,54 @@
+
+======= dup_opt_peephole/input.sol:C =======
+EVM assembly:
+    /* "dup_opt_peephole/input.sol":0:111  contract C {... */
+  mstore(0x40, 0x80)
+  callvalue
+  dup1
+  iszero
+  tag_1
+  jumpi
+  0x00
+  dup1
+  revert
+tag_1:
+  pop
+  dataSize(sub_0)
+  dup1
+  dataOffset(sub_0)
+  0x00
+  codecopy
+  0x00
+  return
+stop
+
+sub_0: assembly {
+        /* "dup_opt_peephole/input.sol":0:111  contract C {... */
+      mstore(0x40, 0x80)
+      callvalue
+      dup1
+      iszero
+      tag_3
+      jumpi
+      0x00
+      dup1
+      revert
+    tag_3:
+      pop
+        /* "dup_opt_peephole/input.sol":74:75  0 */
+      0x00
+        /* "dup_opt_peephole/input.sol":61:76  calldataload(0) */
+      calldataload
+        /* "dup_opt_peephole/input.sol":100:101  x */
+      dup1
+        /* "dup_opt_peephole/input.sol":97:98  0 */
+      0x00
+        /* "dup_opt_peephole/input.sol":90:102  sstore(0, x) */
+      sstore
+        /* "dup_opt_peephole/input.sol":47:106  {... */
+      pop
+        /* "dup_opt_peephole/input.sol":0:111  contract C {... */
+      stop
+
+    auxdata: AUXDATA REMOVED
+}

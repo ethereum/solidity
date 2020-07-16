@@ -441,7 +441,11 @@ optional<smtutil::Expression> symbolicTypeConversion(TypePointer _from, TypePoin
 		// case they'd need to be encoded as numbers.
 		if (auto strType = dynamic_cast<StringLiteralType const*>(_from))
 			if (_to->category() == frontend::Type::Category::FixedBytes)
+			{
+				if (strType->value().empty())
+					return smtutil::Expression(size_t(0));
 				return smtutil::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
+			}
 
 	return std::nullopt;
 }

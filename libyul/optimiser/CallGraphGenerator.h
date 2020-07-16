@@ -35,6 +35,10 @@ struct CallGraph
 {
 	std::map<YulString, std::set<YulString>> functionCalls;
 	std::set<YulString> functionsWithLoops;
+	/// @returns the set of functions contained in cycles in the call graph, i.e.
+	/// functions that are part of a (mutual) recursion.
+	/// Note that this does not include functions that merely call recursive functions.
+	std::set<YulString> recursiveFunctions() const;
 };
 
 /**

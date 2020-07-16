@@ -92,19 +92,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	for (auto const& n: _contract.subNodes())
 		n->accept(*this);
 
-	bigint size = 0;
-	vector<VariableDeclaration const*> variables;
-	for (ContractDefinition const* contract: boost::adaptors::reverse(m_currentContract->annotation().linearizedBaseContracts))
-		for (VariableDeclaration const* variable: contract->stateVariables())
-			if (!(variable->isConstant() || variable->immutable()))
-			{
-				size += storageSizeUpperBound(*(variable->annotation().type));
-				if (size >= bigint(1) << 256)
-				{
-					m_errorReporter.typeError(7676_error, m_currentContract->location(), "Contract too large for storage.");
-					break;
-				}
-			}
+	m_currentContract = nullptr;
 
 	return false;
 }
@@ -353,7 +341,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.libraryFunction())
 			m_errorReporter.typeError(7708_error, _function.location(), "Library functions cannot be payable.");
 		if (_function.isOrdinary() && !_function.isPartOfExternalInterface())
-			m_errorReporter.typeError(5587_error, _function.location(), "Internal functions cannot be payable.");
+			m_errorReporter.typeError(5587_error, _function.location(), "\"internal\" and \"private\" functions cannot be payable.");
 	}
 
 	vector<VariableDeclaration const*> internalParametersInConstructor;
@@ -598,12 +586,16 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 				" in small quantities per transaction.";
 		};
 
-		if (storageSizeUpperBound(*varType) >= bigint(1) << 64)
+		if (varType->storageSizeUpperBound() >= bigint(1) << 64)
 		{
 			if (_variable.isStateVariable())
 				m_errorReporter.warning(3408_error, _variable.location(), collisionMessage(_variable.name(), true));
 			else
-				m_errorReporter.warning(2332_error, _variable.typeName()->location(), collisionMessage(varType->canonicalName(), false));
+				m_errorReporter.warning(
+					2332_error,
+					_variable.typeName() ? _variable.typeName()->location() : _variable.location(),
+					collisionMessage(varType->canonicalName(), false)
+				);
 		}
 		vector<Type const*> oversizedSubtypes = frontend::oversizedSubtypes(*varType);
 		for (Type const* subtype: oversizedSubtypes)

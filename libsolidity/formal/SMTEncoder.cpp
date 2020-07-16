@@ -1376,9 +1376,11 @@ void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
 		bvSize = fixedType->numBits();
 		isSigned = fixedType->isSigned();
 	}
+	else if (auto const* fixedBytesType = dynamic_cast<FixedBytesType const*>(commonType))
+		bvSize = fixedBytesType->numBytes() * 8;
 
-	auto bvLeft = smtutil::Expression::int2bv(expr(_op.leftExpression()), bvSize);
-	auto bvRight = smtutil::Expression::int2bv(expr(_op.rightExpression()), bvSize);
+	auto bvLeft = smtutil::Expression::int2bv(expr(_op.leftExpression(), commonType), bvSize);
+	auto bvRight = smtutil::Expression::int2bv(expr(_op.rightExpression(), commonType), bvSize);
 
 	optional<smtutil::Expression> result;
 	if (_op.getOperator() == Token::BitAnd)

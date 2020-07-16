@@ -44,12 +44,11 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 		0xc7, 0x60, 0x5f, 0x7c, 0xcd, 0xfb, 0x92, 0xcd,
 		0x8e, 0xf3, 0x9b, 0xe4, 0x4f, 0x6c, 0x14, 0xde
 	};
-	Interpreter interpreter(state, _dialect);
 
 	TerminationReason reason = TerminationReason::None;
 	try
 	{
-		interpreter(*_ast);
+		Interpreter::run(state, _dialect, *_ast);
 	}
 	catch (StepLimitReached const&)
 	{

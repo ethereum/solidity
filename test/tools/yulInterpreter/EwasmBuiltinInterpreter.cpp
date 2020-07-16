@@ -67,6 +67,50 @@ uint64_t clz64(uint64_t _v)
 	return r;
 }
 
+/// Count trailing zeros for uint32. Following WebAssembly rules, it returns 32 for @a _v being zero.
+/// NOTE: the ctz builtin of the compiler may or may not do this
+uint32_t ctz32(uint32_t _v)
+{
+	if (_v == 0)
+		return 32;
+
+	uint32_t r = 0;
+	while (!(_v & 1))
+	{
+		r++;
+		_v >>= 1;
+	}
+	return r;
+}
+
+/// Count trailing zeros for uint64. Following WebAssembly rules, it returns 64 for @a _v being zero.
+/// NOTE: the ctz builtin of the compiler may or may not do this
+uint64_t ctz64(uint64_t _v)
+{
+	if (_v == 0)
+		return 64;
+
+	uint64_t r = 0;
+	while (!(_v & 1))
+	{
+		r++;
+		_v >>= 1;
+	}
+	return r;
+}
+
+/// Count number of bits set for uint64
+uint64_t popcnt(uint64_t _v)
+{
+	uint64_t r = 0;
+	while (_v)
+	{
+		r += (_v & 1);
+		_v >>= 1;
+	}
+	return r;
+}
+
 }
 
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
@@ -77,11 +121,12 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	for (u256 const& a: _arguments)
 		arg.emplace_back(uint64_t(a & uint64_t(-1)));
 
-	if (_fun == "datasize"_yulstring)
+	string fun = _fun.str();
+	if (fun == "datasize")
 		return u256(keccak256(h256(_arguments.at(0)))) & 0xfff;
-	else if (_fun == "dataoffset"_yulstring)
+	else if (fun == "dataoffset")
 		return u256(keccak256(h256(_arguments.at(0) + 2))) & 0xfff;
-	else if (_fun == "datacopy"_yulstring)
+	else if (fun == "datacopy")
 	{
 		// This is identical to codecopy.
 		if (accessMemory(_arguments.at(0), _arguments.at(2)))
@@ -94,42 +139,42 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 			);
 		return 0;
 	}
-	else if (_fun == "i32.drop"_yulstring || _fun == "i64.drop"_yulstring || _fun == "nop"_yulstring)
+	else if (fun == "i32.drop" || fun == "i64.drop" || fun == "nop")
 		return {};
-	else if (_fun == "i32.wrap_i64"_yulstring)
+	else if (fun == "i32.wrap_i64")
 		return arg.at(0) & uint32_t(-1);
-	else if (_fun == "i64.extend_i32_u"_yulstring)
+	else if (fun == "i64.extend_i32_u")
 		// Return the same as above because everything is u256 anyway.
 		return arg.at(0) & uint32_t(-1);
-	else if (_fun == "unreachable"_yulstring)
+	else if (fun == "unreachable")
 	{
 		logTrace(evmasm::Instruction::INVALID, {});
 		throw ExplicitlyTerminated();
 	}
-	else if (_fun == "i64.store"_yulstring)
+	else if (fun == "i64.store")
 	{
 		accessMemory(arg[0], 8);
 		writeMemoryWord(arg[0], arg[1]);
 		return 0;
 	}
-	else if (_fun == "i64.store8"_yulstring || _fun == "i32.store8"_yulstring)
+	else if (fun == "i64.store8" || fun == "i32.store8")
 	{
 		accessMemory(arg[0], 1);
 		writeMemoryByte(arg[0], static_cast<uint8_t>(arg[1] & 0xff));
 		return 0;
 	}
-	else if (_fun == "i64.load"_yulstring)
+	else if (fun == "i64.load")
 	{
 		accessMemory(arg[0], 8);
 		return readMemoryWord(arg[0]);
 	}
-	else if (_fun == "i32.store"_yulstring)
+	else if (fun == "i32.store")
 	{
 		accessMemory(arg[0], 4);
 		writeMemoryHalfWord(arg[0], arg[1]);
 		return 0;
 	}
-	else if (_fun == "i32.load"_yulstring)
+	else if (fun == "i32.load")
 	{
 		accessMemory(arg[0], 4);
 		return readMemoryHalfWord(arg[0]);
@@ -139,8 +184,12 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		return clz64(arg[0] & uint32_t(-1)) - 32;
 	else if (_fun == "i64.clz"_yulstring)
 		return clz64(arg[0]);
+	else if (_fun == "i32.ctz"_yulstring)
+		return ctz32(uint32_t(arg[0] & uint32_t(-1)));
+	else if (_fun == "i64.ctz"_yulstring)
+		return ctz64(arg[0]);
 
-	string prefix = _fun.str();
+	string prefix = fun;
 	string suffix;
 	auto dot = prefix.find(".");
 	if (dot != string::npos)
@@ -207,6 +256,8 @@ u256 EwasmBuiltinInterpreter::evalWasmBuiltin(string const& _fun, vector<Word> c
 		return arg[0] != arg[1] ? 1 : 0;
 	else if (_fun == "eqz")
 		return arg[0] == 0 ? 1 : 0;
+	else if (_fun == "popcnt")
+		return popcnt(arg[0]);
 	else if (_fun == "lt_u")
 		return arg[0] < arg[1] ? 1 : 0;
 	else if (_fun == "gt_u")

@@ -31,16 +31,24 @@ Bugfixes:
 
 ### 0.6.12 (unreleased)
 
+Language Features:
+ * Wasm backend: Add ``i32.ctz``, ``i64.ctz``, ``i32.popcnt``, and ``i64.popcnt``.
+
 Compiler Features:
  * Code Generator: Evaluate ``keccak256`` of string literals at compile-time.
+ * Peephole Optimizer: Remove unnecessary masking of tags.
+ * Yul EVM Code Transform: Free stack slots directly after visiting the right-hand-side of variable declarations instead of at the end of the statement only.
 
 Bugfixes:
+ * SMTChecker: Fix internal error when using bitwise operators on fixed bytes type.
  * Type Checker: Fix overload resolution in combination with ``{value: ...}``.
  * Type Checker: Fix internal compiler error related to oversized types.
+ * Code Generator: Avoid double cleanup when copying to memory.
 
 Compiler Features:
  * Build System: Update internal dependency of jsoncpp to 1.9.3.
  * Optimizer: Add rule to remove shifts inside the byte opcode.
+ * Peephole Optimizer: Add rule to remove swap after dup.
 
 
 ### 0.6.11 (2020-07-07)
