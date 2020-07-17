@@ -223,6 +223,10 @@ private:
 	/// with the concrete values for value type parameters and
 	/// the parameter name for reference types.
 	std::string formatFunctionCallCounterexample(std::vector<VariableDeclaration const*> const& _stateVariables, FunctionDefinition const& _function, std::vector<std::string> const& _summaryValues);
+
+	/// @returns a DAG in the dot format.
+	/// Used for debugging purposes.
+	std::string cex2dot(smtutil::CHCSolverInterface::CexGraph const& _graph);
 	//@}
 
 	/// Misc.

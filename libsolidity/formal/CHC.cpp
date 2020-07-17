@@ -1471,6 +1471,22 @@ string CHC::formatFunctionCallCounterexample(vector<VariableDeclaration const*> 
 	return fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")";
 }
 
+string CHC::cex2dot(smtutil::CHCSolverInterface::CexGraph const& _cex)
+{
+	string dot = "digraph {\n";
+
+	auto pred = [&](CHCSolverInterface::CexNode const& _node) {
+		return "\"" + _node.first + "(" + boost::algorithm::join(_node.second, ", ") + ")\"";
+	};
+
+	for (auto const& [u, vs]: _cex.edges)
+		for (auto v: vs)
+			dot += pred(_cex.nodes.at(v)) + " -> " + pred(_cex.nodes.at(u)) + "\n";
+
+	dot += "}";
+	return dot;
+}
+
 string CHC::uniquePrefix()
 {
 	return to_string(m_blockCounter++);
