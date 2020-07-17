@@ -10,6 +10,7 @@ Compiler Features:
 
 Bugfixes:
  * SMTChecker: Fix internal error when using bitwise operators on fixed bytes type.
+ * SMTChecker: Fix internal error when using compound bitwise operator assignments on array indices inside branches.
  * Type Checker: Fix overload resolution in combination with ``{value: ...}``.
  * Type Checker: Fix internal compiler error related to oversized types.
  * Code Generator: Avoid double cleanup when copying to memory.
