@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
  * Ewasm as output.
