@@ -664,7 +664,7 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 		m_errorReporter.typeError(8598_error, _eventDef.location(), "More than 4 indexed arguments for anonymous event.");
 	else if (!_eventDef.isAnonymous() && numIndexed > 3)
 		m_errorReporter.typeError(7249_error, _eventDef.location(), "More than 3 indexed arguments for event.");
-	return false;
+	return true;
 }
 
 void TypeChecker::endVisit(FunctionTypeName const& _funType)
