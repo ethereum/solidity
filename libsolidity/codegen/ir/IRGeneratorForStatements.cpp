@@ -311,7 +311,31 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 {
 	if (_tuple.isInlineArray())
-		solUnimplementedAssert(false, "");
+	{
+		auto const& arrayType = dynamic_cast<ArrayType const&>(*_tuple.annotation().type);
+		solAssert(!arrayType.isDynamicallySized(), "Cannot create dynamically sized inline array.");
+		define(_tuple) <<
+			m_utils.allocateMemoryArrayFunction(arrayType) <<
+			"(" <<
+			_tuple.components().size() <<
+			")\n";
+
+		string mpos = IRVariable(_tuple).part("mpos").name();
+		Type const& baseType = *arrayType.baseType();
+		for (size_t i = 0; i < _tuple.components().size(); i++)
+		{
+			Expression const& component = *_tuple.components()[i];
+			component.accept(*this);
+			IRVariable converted = convert(component, baseType);
+			m_code <<
+				m_utils.writeToMemoryFunction(baseType) <<
+				"(" <<
+				("add(" + mpos + ", " + to_string(i * arrayType.memoryStride()) + ")") <<
+				", " <<
+				converted.name() <<
+				")\n";
+		}
+	}
 	else
 	{
 		bool willBeWrittenTo = _tuple.annotation().willBeWrittenTo;

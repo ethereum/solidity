@@ -4,6 +4,7 @@ contract C {
         return [4][0];
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // f() -> 4
