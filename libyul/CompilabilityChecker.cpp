@@ -59,14 +59,7 @@ map<YulString, int> CompilabilityChecker::run(
 			builtinContext,
 			_optimizeStackAllocation
 		);
-		try
-		{
-			transform(*_object.code);
-		}
-		catch (StackTooDeepError const&)
-		{
-			yulAssert(!transform.stackErrors().empty(), "Got stack too deep exception that was not stored.");
-		}
+		transform(*_object.code);
 
 		std::map<YulString, int> functions;
 		for (StackTooDeepError const& error: transform.stackErrors())

@@ -183,6 +183,11 @@ void EthAssemblyAdapter::appendImmutableAssignment(std::string const& _identifie
 	m_assembly.appendImmutableAssignment(_identifier);
 }
 
+void EthAssemblyAdapter::markAsInvalid()
+{
+	m_assembly.markAsInvalid();
+}
+
 EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag)
 {
 	u256 id = _tag.data();
@@ -232,18 +237,12 @@ void CodeGenerator::assemble(
 		_identifierAccess,
 		_useNamedLabelsForFunctions
 	);
-	try
-	{
-		transform(_parsedData);
-	}
-	catch (StackTooDeepError const& _e)
-	{
+	transform(_parsedData);
+	if (!transform.stackErrors().empty())
 		assertThrow(
 			false,
 			langutil::StackTooDeepError,
 			"Stack too deep when compiling inline assembly" +
-			(_e.comment() ? ": " + *_e.comment() : ".")
+			(transform.stackErrors().front().comment() ? ": " + *transform.stackErrors().front().comment() : ".")
 		);
-	}
-	yulAssert(transform.stackErrors().empty(), "Stack errors present but not thrown.");
 }

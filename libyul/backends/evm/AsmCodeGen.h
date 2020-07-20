@@ -65,6 +65,8 @@ public:
 	void appendImmutable(std::string const& _identifier) override;
 	void appendImmutableAssignment(std::string const& _identifier) override;
 
+	void markAsInvalid() override;
+
 private:
 	static LabelID assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag);
 	void appendJumpInstruction(evmasm::Instruction _instruction, JumpType _jumpType);

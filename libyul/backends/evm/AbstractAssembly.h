@@ -112,6 +112,9 @@ public:
 	virtual void appendImmutable(std::string const& _identifier) = 0;
 	/// Appends an assignment to an immutable variable.
 	virtual void appendImmutableAssignment(std::string const& _identifier) = 0;
+
+	/// Mark this assembly as invalid. Any attempt to request bytecode from it should throw.
+	virtual void markAsInvalid() = 0;
 };
 
 enum class IdentifierContext { LValue, RValue, VariableDeclaration };

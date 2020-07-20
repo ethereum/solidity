@@ -75,6 +75,8 @@ public:
 	void appendImmutable(std::string const& _identifier) override;
 	void appendImmutableAssignment(std::string const& _identifier) override;
 
+	void markAsInvalid() override {}
+
 private:
 	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
 	int m_stackHeight = 0;
