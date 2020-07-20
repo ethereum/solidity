@@ -29,23 +29,30 @@ namespace solidity::frontend
 {
 
 /**
- * Analyses and validates the doc strings.
+ * Parses the doc tags and does basic validity checks.
  * Stores the parsing results in the AST annotations and reports errors.
  */
-class DocStringAnalyser: private ASTConstVisitor
+class DocStringTagParser: private ASTConstVisitor
 {
 public:
-	DocStringAnalyser(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
-	bool analyseDocStrings(SourceUnit const& _sourceUnit);
+	explicit DocStringTagParser(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	bool parseDocStrings(SourceUnit const& _sourceUnit);
 
 private:
+	bool visit(ContractDefinition const& _contract) override;
 	bool visit(FunctionDefinition const& _function) override;
 	bool visit(VariableDeclaration const& _variable) override;
 	bool visit(ModifierDefinition const& _modifier) override;
 	bool visit(EventDefinition const& _event) override;
 
-	CallableDeclaration const* resolveInheritDoc(
-		std::set<CallableDeclaration const*> const& _baseFunctions,
+	void checkParameters(
+		CallableDeclaration const& _callable,
+		StructurallyDocumented const& _node,
+		StructurallyDocumentedAnnotation& _annotation
+	);
+
+	void handleConstructor(
+		CallableDeclaration const& _callable,
 		StructurallyDocumented const& _node,
 		StructurallyDocumentedAnnotation& _annotation
 	);
@@ -54,6 +61,13 @@ private:
 		CallableDeclaration const& _callable,
 		StructurallyDocumented const& _node,
 		StructurallyDocumentedAnnotation& _annotation
+	);
+
+	void parseDocStrings(
+		StructurallyDocumented const& _node,
+		StructurallyDocumentedAnnotation& _annotation,
+		std::set<std::string> const& _validTags,
+		std::string const& _nodeName
 	);
 
 	langutil::ErrorReporter& m_errorReporter;

@@ -79,6 +79,8 @@ struct StructurallyDocumentedAnnotation
 
 	/// Mapping docstring tag name -> content.
 	std::multimap<std::string, DocTag> docTags;
+	/// contract that @inheritdoc references if it exists
+	ContractDefinition const* inheritdocReference = nullptr;
 };
 
 struct SourceUnitAnnotation: ASTAnnotation

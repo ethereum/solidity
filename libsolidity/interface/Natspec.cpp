@@ -58,28 +58,22 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 	for (auto const& it: _contractDef.interfaceFunctions())
 		if (it.second->hasDeclaration())
 		{
+			string value;
+
 			if (auto const* f = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
-			{
-				string value = extractDoc(f->annotation().docTags, "notice");
-				if (!value.empty())
-				{
-					Json::Value user;
-					// since @notice is the only user tag if missing function should not appear
-					user["notice"] = Json::Value(value);
-					methods[it.second->externalSignature()] = user;
-				}
-			}
+				value = extractDoc(f->annotation().docTags, "notice");
 			else if (auto var = dynamic_cast<VariableDeclaration const*>(&it.second->declaration()))
 			{
 				solAssert(var->isStateVariable() && var->isPublic(), "");
-				string value = extractDoc(var->annotation().docTags, "notice");
-				if (!value.empty())
-				{
-					Json::Value user;
-					// since @notice is the only user tag if missing function should not appear
-					user["notice"] = Json::Value(value);
-					methods[it.second->externalSignature()] = user;
-				}
+				value = extractDoc(var->annotation().docTags, "notice");
+			}
+
+			if (!value.empty())
+			{
+				Json::Value user;
+				// since @notice is the only user tag if missing function should not appear
+				user["notice"] = Json::Value(value);
+				methods[it.second->externalSignature()] = user;
 			}
 		}
 
