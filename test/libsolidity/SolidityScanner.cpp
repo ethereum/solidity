@@ -81,6 +81,45 @@ BOOST_AUTO_TEST_CASE(assembly_multiple_assign)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
+BOOST_AUTO_TEST_CASE(string_printable)
+{
+	for (unsigned v = 0x20; v < 0x7e; v++) {
+		string lit{static_cast<char>(v)};
+		// Escape \ and " (since we are quoting with ")
+		if (v == '\\' || v == '"')
+			lit = string{'\\'} + lit;
+		Scanner scanner(CharStream("  { \"" + lit + "\"", ""));
+		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+		BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
+		BOOST_CHECK_EQUAL(scanner.currentLiteral(), string{static_cast<char>(v)});
+		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	}
+	// Special case of unescaped " for strings quoted with '
+	Scanner scanner(CharStream("  { '\"'", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "\"");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(string_nonprintable)
+{
+	for (unsigned v = 0; v < 0xff; v++) {
+		// Skip the valid ones
+		if (v >= 0x20 && v <= 0x7e)
+			continue;
+		string lit{static_cast<char>(v)};
+		Scanner scanner(CharStream("  { \"" + lit + "\"", ""));
+		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+		BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+		if (v == '\n' || v == '\v' || v == '\f' || v == '\r')
+			BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalStringEndQuote);
+		else
+			BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalCharacterInString);
+		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "");
+	}
+}
+
 BOOST_AUTO_TEST_CASE(string_escapes)
 {
 	Scanner scanner(CharStream("  { \"a\\x61\"", ""));
