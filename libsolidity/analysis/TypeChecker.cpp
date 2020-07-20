@@ -1306,7 +1306,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 				1719_error,
 				_statement.location(),
 				"Use of the \"var\" keyword is disallowed. "
-				"Use explicit declaration `" + createTupleDecl(variables) + " = ...´ instead."
+				"Use explicit declaration `" + createTupleDecl(variables) + " = ...` instead."
 			);
 	}
 
