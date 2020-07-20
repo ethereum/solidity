@@ -289,7 +289,7 @@ StateMutability OverrideProxy::stateMutability() const
 	return std::visit(GenericVisitor{
 		[&](FunctionDefinition const* _item) { return _item->stateMutability(); },
 		[&](ModifierDefinition const*) { solAssert(false, "Requested state mutability from modifier."); return StateMutability{}; },
-		[&](VariableDeclaration const*) { return StateMutability::View; }
+		[&](VariableDeclaration const* _var) { return _var->isConstant() ? StateMutability::Pure : StateMutability::View; }
 	}, m_item);
 }
 
@@ -584,35 +584,35 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 				"Overridden " + _overriding.astNodeName() + " is here:"
 			);
 
-		// This is only relevant for a function overriding a function.
-		if (_overriding.isFunction())
-		{
-			// Stricter mutability is always okay except when super is Payable
-			if ((
+		// Stricter mutability is always okay except when super is Payable
+		if (
+			(_overriding.isFunction() || _overriding.isVariable()) &&
+			(
 				_overriding.stateMutability() > _super.stateMutability() ||
 				_super.stateMutability() == StateMutability::Payable
-				) &&
-				_overriding.stateMutability() != _super.stateMutability()
-			)
-				overrideError(
-					_overriding,
-					_super,
-					6959_error,
-					"Overriding function changes state mutability from \"" +
-					stateMutabilityToString(_super.stateMutability()) +
-					"\" to \"" +
-					stateMutabilityToString(_overriding.stateMutability()) +
-					"\"."
-				);
+			) &&
+			_overriding.stateMutability() != _super.stateMutability()
+		)
+			overrideError(
+				_overriding,
+				_super,
+				6959_error,
+				"Overriding " +
+				_overriding.astNodeName() +
+				" changes state mutability from \"" +
+				stateMutabilityToString(_super.stateMutability()) +
+				"\" to \"" +
+				stateMutabilityToString(_overriding.stateMutability()) +
+				"\"."
+			);
 
-			if (_overriding.unimplemented() && !_super.unimplemented())
-				overrideError(
-					_overriding,
-					_super,
-					4593_error,
-					"Overriding an implemented function with an unimplemented function is not allowed."
-				);
-		}
+		if (_overriding.unimplemented() && !_super.unimplemented())
+			overrideError(
+				_overriding,
+				_super,
+				4593_error,
+				"Overriding an implemented function with an unimplemented function is not allowed."
+			);
 	}
 }
 
