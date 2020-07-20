@@ -614,9 +614,8 @@ bool VariableDeclaration::isEventParameter() const
 
 bool VariableDeclaration::hasReferenceOrMappingType() const
 {
-	solAssert(typeName(), "");
-	solAssert(typeName()->annotation().type, "Can only be called after reference resolution");
-	Type const* type = typeName()->annotation().type;
+	solAssert(typeName().annotation().type, "Can only be called after reference resolution");
+	Type const* type = typeName().annotation().type;
 	return type->category() == Type::Category::Mapping || dynamic_cast<ReferenceType const*>(type);
 }
 
@@ -642,22 +641,8 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 		return locations;
 	}
 	else if (isLocalVariable())
-	{
-		solAssert(typeName(), "");
-		auto dataLocations = [](TypePointer _type, auto&& _recursion) -> set<Location> {
-			solAssert(_type, "Can only be called after reference resolution");
-			switch (_type->category())
-			{
-				case Type::Category::Array:
-					return _recursion(dynamic_cast<ArrayType const*>(_type)->baseType(), _recursion);
-				case Type::Category::Mapping:
-					return set<Location>{ Location::Storage };
-				default:
-					return set<Location>{ Location::Memory, Location::Storage, Location::CallData };
-			}
-		};
-		return dataLocations(typeName()->annotation().type, dataLocations);
-	}
+		// Further restrictions will be imposed later on.
+		return set<Location>{ Location::Memory, Location::Storage, Location::CallData };
 	else
 		// Struct members etc.
 		return set<Location>{ Location::Unspecified };

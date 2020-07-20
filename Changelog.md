@@ -25,6 +25,7 @@ Language Features:
  * Inheritance: Allow overrides to have stricter state mutability: ``view`` can override ``nonpayable`` and ``pure`` can override ``view``.
 
 Compiler Features:
+ * Variable declarations using the ``var`` keyword are not recognized anymore.
 
 
 Bugfixes:

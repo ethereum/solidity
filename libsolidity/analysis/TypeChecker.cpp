@@ -466,8 +466,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 bool TypeChecker::visit(VariableDeclaration const& _variable)
 {
-	if (_variable.typeName())
-		_variable.typeName()->accept(*this);
+	_variable.typeName().accept(*this);
 
 	// type is filled either by ReferencesResolver directly from the type name or by
 	// TypeChecker at the VariableDeclarationStatement level.
@@ -591,15 +590,11 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			if (_variable.isStateVariable())
 				m_errorReporter.warning(3408_error, _variable.location(), collisionMessage(_variable.name(), true));
 			else
-				m_errorReporter.warning(
-					2332_error,
-					_variable.typeName() ? _variable.typeName()->location() : _variable.location(),
-					collisionMessage(varType->canonicalName(), false)
-				);
+				m_errorReporter.warning(2332_error, _variable.typeName().location(), collisionMessage(varType->canonicalName(), false));
 		}
 		vector<Type const*> oversizedSubtypes = frontend::oversizedSubtypes(*varType);
 		for (Type const* subtype: oversizedSubtypes)
-			m_errorReporter.warning(7325_error, _variable.typeName()->location(), collisionMessage(subtype->canonicalName(), false));
+			m_errorReporter.warning(7325_error, _variable.typeName().location(), collisionMessage(subtype->canonicalName(), false));
 	}
 
 	return false;
@@ -1106,81 +1101,23 @@ void TypeChecker::endVisit(EmitStatement const& _emit)
 		m_errorReporter.typeError(9292_error, _emit.eventCall().expression().location(), "Expression has to be an event invocation.");
 }
 
-namespace
-{
-/**
- * @returns a suggested left-hand-side of a multi-variable declaration contairing
- * the variable declarations given in @a _decls.
- */
-string createTupleDecl(vector<ASTPointer<VariableDeclaration>> const& _decls)
-{
-	vector<string> components;
-	for (ASTPointer<VariableDeclaration> const& decl: _decls)
-		if (decl)
-		{
-			solAssert(decl->annotation().type, "");
-			components.emplace_back(decl->annotation().type->toString(false) + " " + decl->name());
-		}
-		else
-			components.emplace_back();
-
-	if (_decls.size() == 1)
-		return components.front();
-	else
-		return "(" + boost::algorithm::join(components, ", ") + ")";
-}
-
-bool typeCanBeExpressed(vector<ASTPointer<VariableDeclaration>> const& decls)
-{
-	for (ASTPointer<VariableDeclaration> const& decl: decls)
-	{
-		// skip empty tuples (they can be expressed of course)
-		if (!decl)
-			continue;
-
-		if (!decl->annotation().type)
-			return false;
-
-		if (auto functionType = dynamic_cast<FunctionType const*>(decl->annotation().type))
-			if (
-				functionType->kind() != FunctionType::Kind::Internal &&
-				functionType->kind() != FunctionType::Kind::External
-			)
-				return false;
-	}
-
-	return true;
-}
-}
-
 bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 {
 	if (!_statement.initialValue())
 	{
 		// No initial value is only permitted for single variables with specified type.
+		// This usually already results in a parser error.
 		if (_statement.declarations().size() != 1 || !_statement.declarations().front())
 		{
-			if (std::all_of(
-				_statement.declarations().begin(),
-				_statement.declarations().end(),
-				[](ASTPointer<VariableDeclaration> const& declaration) { return declaration == nullptr; }
-			))
-			{
-				// The syntax checker has already generated an error for this case (empty LHS tuple).
-				solAssert(m_errorReporter.hasErrors(), "");
+			solAssert(m_errorReporter.hasErrors(), "");
 
-				// It is okay to return here, as there are no named components on the
-				// left-hand-side that could cause any damage later.
-				return false;
-			}
-			else
-				// Bailing out *fatal* here, as those (untyped) vars may be used later, and diagnostics wouldn't be helpful then.
-				m_errorReporter.fatalTypeError(4626_error, _statement.location(), "Use of the \"var\" keyword is disallowed.");
+			// It is okay to return here, as there are no named components on the
+			// left-hand-side that could cause any damage later.
+			return false;
 		}
 
 		VariableDeclaration const& varDecl = *_statement.declarations().front();
-		if (!varDecl.annotation().type)
-			m_errorReporter.fatalTypeError(6983_error, _statement.location(), "Use of the \"var\" keyword is disallowed.");
+		solAssert(varDecl.annotation().type, "");
 
 		if (dynamic_cast<MappingType const*>(type(varDecl)))
 			m_errorReporter.typeError(
@@ -1217,8 +1154,6 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			")."
 		);
 
-	bool autoTypeDeductionNeeded = false;
-
 	for (size_t i = 0; i < min(variables.size(), valueTypes.size()); ++i)
 	{
 		if (!variables[i])
@@ -1227,95 +1162,45 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		solAssert(!var.value(), "Value has to be tied to statement.");
 		TypePointer const& valueComponentType = valueTypes[i];
 		solAssert(!!valueComponentType, "");
-		if (!var.annotation().type)
-		{
-			autoTypeDeductionNeeded = true;
+		solAssert(var.annotation().type, "");
 
-			// Infer type from value.
-			solAssert(!var.typeName(), "");
-			var.annotation().type = valueComponentType->mobileType();
-			if (!var.annotation().type)
-			{
-				if (valueComponentType->category() == Type::Category::RationalNumber)
-					m_errorReporter.fatalTypeError(
-						6963_error,
-						_statement.initialValue()->location(),
-						"Invalid rational " +
-						valueComponentType->toString() +
-						" (absolute value too large or division by zero)."
-					);
-				else
-					solAssert(false, "");
-			}
-			else if (*var.annotation().type == *TypeProvider::emptyTuple())
-				solAssert(false, "Cannot declare variable with void (empty tuple) type.");
-			else if (valueComponentType->category() == Type::Category::RationalNumber)
-			{
-				string typeName = var.annotation().type->toString(true);
-				string extension;
-				if (auto type = dynamic_cast<IntegerType const*>(var.annotation().type))
-				{
-					unsigned numBits = type->numBits();
-					bool isSigned = type->isSigned();
-					solAssert(numBits > 0, "");
-					string minValue;
-					string maxValue;
-					if (isSigned)
-					{
-						numBits--;
-						minValue = "-" + bigint(bigint(1) << numBits).str();
-					}
-					else
-						minValue = "0";
-					maxValue = bigint((bigint(1) << numBits) - 1).str();
-					extension = ", which can hold values between " + minValue + " and " + maxValue;
-				}
-				else
-					solAssert(dynamic_cast<FixedPointType const*>(var.annotation().type), "Unknown type.");
-			}
-
-			var.accept(*this);
-		}
-		else
+		var.accept(*this);
+		BoolResult result = valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type);
+		if (!result)
 		{
-			var.accept(*this);
-			BoolResult result = valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type);
-			if (!result)
+			auto errorMsg = "Type " +
+				valueComponentType->toString() +
+				" is not implicitly convertible to expected type " +
+				var.annotation().type->toString();
+			if (
+				valueComponentType->category() == Type::Category::RationalNumber &&
+				dynamic_cast<RationalNumberType const&>(*valueComponentType).isFractional() &&
+				valueComponentType->mobileType()
+			)
 			{
-				auto errorMsg = "Type " +
-					valueComponentType->toString() +
-					" is not implicitly convertible to expected type " +
-					var.annotation().type->toString();
-				if (
-					valueComponentType->category() == Type::Category::RationalNumber &&
-					dynamic_cast<RationalNumberType const&>(*valueComponentType).isFractional() &&
-					valueComponentType->mobileType()
-				)
-				{
-					if (var.annotation().type->operator==(*valueComponentType->mobileType()))
-						m_errorReporter.typeError(
-							5107_error,
-							_statement.location(),
-							errorMsg + ", but it can be explicitly converted."
-						);
-					else
-						m_errorReporter.typeError(
-							4486_error,
-							_statement.location(),
-							errorMsg +
-							". Try converting to type " +
-							valueComponentType->mobileType()->toString() +
-							" or use an explicit conversion."
-						);
-				}
-				else
-					m_errorReporter.typeErrorConcatenateDescriptions(
-						9574_error,
+				if (var.annotation().type->operator==(*valueComponentType->mobileType()))
+					m_errorReporter.typeError(
+						5107_error,
 						_statement.location(),
-						errorMsg + ".",
-						result.message()
+						errorMsg + ", but it can be explicitly converted."
+					);
+				else
+					m_errorReporter.typeError(
+						4486_error,
+						_statement.location(),
+						errorMsg +
+						". Try converting to type " +
+						valueComponentType->mobileType()->toString() +
+						" or use an explicit conversion."
 					);
 			}
+			else
+				m_errorReporter.typeErrorConcatenateDescriptions(
+					9574_error,
+					_statement.location(),
+					errorMsg + ".",
+					result.message()
+				);
 		}
 	}
 
@@ -1325,24 +1210,6 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		for (auto const& var: variables)
 			if (var && !var->annotation().type)
 				BOOST_THROW_EXCEPTION(FatalError());
-	}
-
-	if (autoTypeDeductionNeeded)
-	{
-		if (!typeCanBeExpressed(variables))
-			m_errorReporter.syntaxError(
-				3478_error,
-				_statement.location(),
-				"Use of the \"var\" keyword is disallowed. "
-				"Type cannot be expressed in syntax."
-			);
-		else
-			m_errorReporter.syntaxError(
-				1719_error,
-				_statement.location(),
-				"Use of the \"var\" keyword is disallowed. "
-				"Use explicit declaration `" + createTupleDecl(variables) + " = ...´ instead."
-			);
 	}
 
 	return false;
