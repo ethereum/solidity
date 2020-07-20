@@ -282,6 +282,12 @@ public:
 	/// signature: (dataStart, dataSizeInBytes) ->
 	std::string zeroComplexMemoryArrayFunction(ArrayType const& _type);
 
+	/// @returns the name of a function that allocates a memory array.
+	/// For dynamic arrays it adds space for length and stores it.
+	/// The contents of the data area are unspecified.
+	/// signature: (length) -> memPtr
+	std::string allocateMemoryArrayFunction(ArrayType const& _type);
+
 	/// @returns the name of a function that allocates and zeroes a memory array.
 	/// For dynamic arrays it adds space for length and stores it.
 	/// signature: (length) -> memPtr

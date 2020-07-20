@@ -1620,26 +1620,45 @@ string YulUtilFunctions::zeroComplexMemoryArrayFunction(ArrayType const& _type)
 	});
 }
 
+string YulUtilFunctions::allocateMemoryArrayFunction(ArrayType const& _type)
+{
+	string functionName = "allocate_memory_array_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+				function <functionName>(length) -> memPtr {
+					let allocSize := <allocSize>(length)
+					memPtr := <alloc>(allocSize)
+					<?dynamic>
+					mstore(memPtr, length)
+					</dynamic>
+				}
+			)")
+			("functionName", functionName)
+			("alloc", allocationFunction())
+			("allocSize", arrayAllocationSizeFunction(_type))
+			("dynamic", _type.isDynamicallySized())
+			.render();
+	});
+}
+
 string YulUtilFunctions::allocateAndInitializeMemoryArrayFunction(ArrayType const& _type)
 {
 	string functionName = "allocate_and_zero_memory_array_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
 				function <functionName>(length) -> memPtr {
-					let allocSize := <allocSize>(length)
-					memPtr := <alloc>(allocSize)
+					memPtr := <allocArray>(length)
 					let dataStart := memPtr
-					let dataSize := allocSize
+					let dataSize := <allocSize>(length)
 					<?dynamic>
 					dataStart := add(dataStart, 32)
 					dataSize := sub(dataSize, 32)
-					mstore(memPtr, length)
 					</dynamic>
 					<zeroArrayFunction>(dataStart, dataSize)
 				}
 			)")
 			("functionName", functionName)
-			("alloc", allocationFunction())
+			("allocArray", allocateMemoryArrayFunction(_type))
 			("allocSize", arrayAllocationSizeFunction(_type))
 			("zeroArrayFunction", zeroMemoryArrayFunction(_type))
 			("dynamic", _type.isDynamicallySized())
