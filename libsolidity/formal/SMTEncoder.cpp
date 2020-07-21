@@ -1077,7 +1077,7 @@ void SMTEncoder::arrayPush(FunctionCall const& _funCall)
 	m_context.addAssertion(symbArray->length() == oldLength + 1);
 
 	if (arguments.empty())
-		defineExpr(_funCall, element);
+		defineExpr(_funCall, smtutil::Expression::select(symbArray->elements(), oldLength));
 
 	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
 }
@@ -1119,6 +1119,28 @@ void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression
 	}
 	else if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(&_expr))
 		arrayIndexAssignment(*indexAccess, _array);
+	else if (auto const* funCall = dynamic_cast<FunctionCall const*>(&_expr))
+	{
+		FunctionType const& funType = dynamic_cast<FunctionType const&>(*funCall->expression().annotation().type);
+		if (funType.kind() == FunctionType::Kind::ArrayPush)
+		{
+			auto memberAccess = dynamic_cast<MemberAccess const*>(&funCall->expression());
+			solAssert(memberAccess, "");
+			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+			solAssert(symbArray, "");
+
+			auto oldLength = symbArray->length();
+			auto store = smtutil::Expression::store(
+				symbArray->elements(),
+				symbArray->length() - 1,
+				_array
+			);
+			symbArray->increaseIndex();
+			m_context.addAssertion(symbArray->elements() == store);
+			m_context.addAssertion(symbArray->length() == oldLength);
+			arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
+		}
+	}
 	else if (dynamic_cast<MemberAccess const*>(&_expr))
 		m_errorReporter.warning(
 			9599_error,
