@@ -38,6 +38,13 @@ TestCaseReader::TestCaseReader(string const& _filename):
 	m_unreadSettings = m_settings;
 }
 
+TestCaseReader::TestCaseReader(istringstream const& _str)
+{
+	tie(m_sources, m_lineNumber) = parseSourcesAndSettingsWithLineNumber(
+		static_cast<istream&>(const_cast<istringstream&>(_str))
+	);
+}
+
 string const& TestCaseReader::source() const
 {
 	if (m_sources.sources.size() != 1)
