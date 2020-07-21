@@ -60,7 +60,8 @@ private:
 		OverridingFunction,
 		VirtualFunction,
 		DotSyntax,
-		NowKeyword
+		NowKeyword,
+		ConstrutorVisibility
 	};
 
 	/// Upgrade suite that hosts all available modules.
@@ -88,6 +89,8 @@ private:
 				DotSyntax{m_changes}.analyze(_sourceUnit);
 			if (isActivated(Module::NowKeyword))
 				NowKeyword{m_changes}.analyze(_sourceUnit);
+			if (isActivated(Module::ConstrutorVisibility))
+				ConstructorVisibility{m_changes}.analyze(_sourceUnit);
 		}
 
 		void activateModule(Module _module) { m_modules.insert(_module); }
@@ -108,7 +111,8 @@ private:
 			Module::OverridingFunction,
 			Module::VirtualFunction,
 			Module::DotSyntax,
-			Module::NowKeyword
+			Module::NowKeyword,
+			Module::ConstrutorVisibility
 		};
 	};
 

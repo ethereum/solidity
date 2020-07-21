@@ -199,6 +199,8 @@ Allowed options)",
 				m_suite.activateModule(Module::DotSyntax);
 			else if (module == "now")
 				m_suite.activateModule(Module::NowKeyword);
+			else if (module == "constructor-visibility")
+				m_suite.activateModule(Module::ConstrutorVisibility);
 			else
 			{
 				error() << "Unknown upgrade module \"" + module + "\"" << endl;
