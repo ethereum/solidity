@@ -7,5 +7,7 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // f() -> 3, 6

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Assembly interface for EVM and EVM1.5.
  */
@@ -156,6 +157,7 @@ void EVMAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 
 evmasm::LinkerObject EVMAssembly::finalize()
 {
+	yulAssert(!m_invalid, "Attempted to finalize invalid assembly object.");
 	size_t bytecodeSize = m_bytecode.size();
 	for (auto const& ref: m_assemblySizePositions)
 		updateReference(ref, assemblySizeReferenceSize, u256(bytecodeSize));

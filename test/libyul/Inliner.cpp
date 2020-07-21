@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @date 2017
  * Unit tests for the Yul function inliner.

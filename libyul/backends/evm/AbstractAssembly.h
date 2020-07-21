@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @date 2017
  * Abstract assembly interface, subclasses of which are to be used with the generic
@@ -111,6 +112,9 @@ public:
 	virtual void appendImmutable(std::string const& _identifier) = 0;
 	/// Appends an assignment to an immutable variable.
 	virtual void appendImmutableAssignment(std::string const& _identifier) = 0;
+
+	/// Mark this assembly as invalid. Any attempt to request bytecode from it should throw.
+	virtual void markAsInvalid() = 0;
 };
 
 enum class IdentifierContext { LValue, RValue, VariableDeclaration };

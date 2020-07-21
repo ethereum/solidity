@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Assembly interface for EVM and EVM1.5.
  */
@@ -86,6 +87,8 @@ public:
 	void appendImmutable(std::string const& _identifier) override;
 	void appendImmutableAssignment(std::string const& _identifier) override;
 
+	void markAsInvalid() override { m_invalid = true; }
+
 	/// Resolves references inside the bytecode and returns the linker object.
 	evmasm::LinkerObject finalize();
 
@@ -102,6 +105,7 @@ private:
 	std::map<LabelID, size_t> m_labelPositions;
 	std::map<size_t, LabelID> m_labelReferences;
 	std::vector<size_t> m_assemblySizePositions;
+	bool m_invalid = false;
 };
 
 }

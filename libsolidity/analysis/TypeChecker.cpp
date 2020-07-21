@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -695,7 +696,7 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 		m_errorReporter.typeError(8598_error, _eventDef.location(), "More than 4 indexed arguments for anonymous event.");
 	else if (!_eventDef.isAnonymous() && numIndexed > 3)
 		m_errorReporter.typeError(7249_error, _eventDef.location(), "More than 3 indexed arguments for event.");
-	return false;
+	return true;
 }
 
 void TypeChecker::endVisit(FunctionTypeName const& _funType)

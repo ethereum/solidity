@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Compiler that transforms Yul Objects to EVM bytecode objects.
  */
@@ -59,5 +60,6 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 	// which should be native to this part of the code.
 	CodeTransform transform{m_assembly, *_object.analysisInfo, *_object.code, m_dialect, context, _optimize, m_evm15};
 	transform(*_object.code);
-	yulAssert(transform.stackErrors().empty(), "Stack errors present but not thrown.");
+	if (!transform.stackErrors().empty())
+		BOOST_THROW_EXCEPTION(transform.stackErrors().front());
 }

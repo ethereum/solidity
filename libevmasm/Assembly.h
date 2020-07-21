@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -142,6 +143,9 @@ public:
 		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>()
 	) const;
 
+	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.
+	void markAsInvalid() { m_invalid = true; }
+
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
@@ -161,6 +165,7 @@ private:
 	);
 	static std::string toStringInHex(u256 _value);
 
+	bool m_invalid = false;
 protected:
 	/// 0 is reserved for exception
 	unsigned m_usedTags = 1;

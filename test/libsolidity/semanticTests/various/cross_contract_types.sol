@@ -13,5 +13,7 @@ contract Test {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // f() -> 3

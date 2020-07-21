@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Yul interpreter module that evaluates EVM instructions.
  */
@@ -303,11 +304,11 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CREATE:
 		accessMemory(arg[1], arg[2]);
 		logTrace(_instruction, arg);
-		return 0xcccccc + arg[1];
+		return u160(0xcccccc + arg[1]);
 	case Instruction::CREATE2:
 		accessMemory(arg[2], arg[3]);
 		logTrace(_instruction, arg);
-		return 0xdddddd + arg[1];
+		return u160(0xdddddd + arg[1]);
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 		// TODO assign returndata

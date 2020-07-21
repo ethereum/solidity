@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file Assembly.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -521,6 +522,7 @@ map<u256, u256> Assembly::optimiseInternal(
 
 LinkerObject const& Assembly::assemble() const
 {
+	assertThrow(!m_invalid, AssemblyException, "Attempted to assemble invalid Assembly object.");
 	// Return the already assembled object, if present.
 	if (!m_assembledObject.bytecode.empty())
 		return m_assembledObject;

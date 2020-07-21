@@ -58,6 +58,7 @@ contract C {
         )
     {}
 }
-
+// ====
+// compileViaYul: false
 // ----
 // constructor() ->
