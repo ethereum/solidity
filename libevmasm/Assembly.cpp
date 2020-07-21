@@ -30,6 +30,8 @@
 #include <libevmasm/ConstantOptimiser.h>
 #include <libevmasm/GasMeter.h>
 
+#include <liblangutil/Exceptions.h>
+
 #include <fstream>
 #include <json/json.h>
 
@@ -699,12 +701,10 @@ LinkerObject const& Assembly::assemble() const
 		}
 	}
 
-	assertThrow(
-		immutableReferencesBySub.empty(),
-		AssemblyException,
-		"Some immutables were read from but never assigned."
-	);
-
+	if (!immutableReferencesBySub.empty())
+		throw
+			langutil::Error(1284_error, langutil::Error::Type::CodeGenerationError) <<
+			util::errinfo_comment("Some immutables were read from but never assigned, possibly because of optimization.");
 
 	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
 		// Append an INVALID here to help tests find miscompilation.

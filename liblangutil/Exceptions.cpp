@@ -33,6 +33,9 @@ Error::Error(ErrorId _errorId, Type _type, SourceLocation const& _location, stri
 {
 	switch (m_type)
 	{
+	case Type::CodeGenerationError:
+		m_typeName = "CodeGenerationError";
+		break;
 	case Type::DeclarationError:
 		m_typeName = "DeclarationError";
 		break;
