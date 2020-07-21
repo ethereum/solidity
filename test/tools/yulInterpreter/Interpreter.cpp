@@ -145,6 +145,11 @@ void Interpreter::operator()(ForLoop const& _forLoop)
 	}
 	while (evaluate(*_forLoop.condition) != 0)
 	{
+		// Increment step for each loop iteration for loops with
+		// an empty body and post blocks to prevent a deadlock.
+		if (_forLoop.body.statements.size() == 0 && _forLoop.post.statements.size() == 0)
+			incrementStep();
+
 		m_state.controlFlowState = ControlFlowState::Default;
 		(*this)(_forLoop.body);
 		if (m_state.controlFlowState == ControlFlowState::Break || m_state.controlFlowState == ControlFlowState::Leave)
@@ -176,12 +181,6 @@ void Interpreter::operator()(Leave const&)
 
 void Interpreter::operator()(Block const& _block)
 {
-	m_state.numSteps++;
-	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
-	{
-		m_state.trace.emplace_back("Interpreter execution step limit reached.");
-		throw StepLimitReached();
-	}
 	enterScope(_block);
 	// Register functions.
 	for (auto const& statement: _block.statements)
@@ -193,6 +192,7 @@ void Interpreter::operator()(Block const& _block)
 
 	for (auto const& statement: _block.statements)
 	{
+		incrementStep();
 		visit(statement);
 		if (m_state.controlFlowState != ControlFlowState::Default)
 			break;
@@ -233,6 +233,16 @@ void Interpreter::leaveScope()
 			m_variables.erase(var);
 	m_scope = m_scope->parent;
 	yulAssert(m_scope, "");
+}
+
+void Interpreter::incrementStep()
+{
+	m_state.numSteps++;
+	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
+	{
+		m_state.trace.emplace_back("Interpreter execution step limit reached.");
+		throw StepLimitReached();
+	}
 }
 
 void ExpressionEvaluator::operator()(Literal const& _literal)

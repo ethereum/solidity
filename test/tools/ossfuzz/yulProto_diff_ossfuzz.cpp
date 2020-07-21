@@ -97,15 +97,17 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 
-	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
+	if (
+		termReason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
+		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached
+	)
 		return;
 
 	stack.optimize();
-	termReason = yulFuzzerUtil::interpret(
+	yulFuzzerUtil::interpret(
 		os2,
 		stack.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(version),
-		(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 4)
+		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 
 	bool isTraceEq = (os1.str() == os2.str());
