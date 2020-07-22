@@ -277,6 +277,7 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 		solAssert(type(_assignment.leftHandSide()).isValueType(), "Compound operators only available for value types.");
 		solAssert(rightIntermediateType->isValueType(), "Compound operators only available for value types.");
 		IRVariable leftIntermediate = readFromLValue(*m_currentLValue);
+		solAssert(binaryOperator != Token::Exp, "");
 		if (TokenTraits::isShiftOp(binaryOperator))
 		{
 			solAssert(type(_assignment) == leftIntermediate.type(), "");
@@ -593,11 +594,17 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 			solAssert(false, "Unknown comparison operator.");
 		define(_binOp) << expr << "\n";
 	}
-	else if (TokenTraits::isShiftOp(op))
+	else if (TokenTraits::isShiftOp(op) || op == Token::Exp)
 	{
 		IRVariable left = convert(_binOp.leftExpression(), *commonType);
 		IRVariable right = convert(_binOp.rightExpression(), *type(_binOp.rightExpression()).mobileType());
-		define(_binOp) << shiftOperation(_binOp.getOperator(), left, right) << "\n";
+		if (op == Token::Exp)
+			define(_binOp) << m_utils.overflowCheckedIntExpFunction(
+				dynamic_cast<IntegerType const&>(left.type()),
+				dynamic_cast<IntegerType const&>(right.type())
+			) << "(" << left.name() << ", " << right.name() << ")\n";
+		else
+			define(_binOp) << shiftOperation(_binOp.getOperator(), left, right) << "\n";
 	}
 	else
 	{

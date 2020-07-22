@@ -125,6 +125,21 @@ public:
 	/// signature: (x, y) -> diff
 	std::string overflowCheckedIntSubFunction(IntegerType const& _type);
 
+	/// @returns the name of the exponentiation function.
+	/// signature: (base, exponent) -> power
+	std::string overflowCheckedIntExpFunction(IntegerType const& _type, IntegerType const& _exponentType);
+
+	/// Generic unsigned checked exponentiation function.
+	/// Reverts if the result is larger than max.
+	/// signature: (base, exponent, max) -> power
+	std::string overflowCheckedUnsignedExpFunction();
+
+	/// Generic signed checked exponentiation function.
+	/// Reverts if the result is smaller than min or larger than max.
+	/// The code relies on max <= |min| and min < 0.
+	/// signature: (base, exponent, min, max) -> power
+	std::string overflowCheckedSignedExpFunction();
+
 	/// @returns the name of a function that fetches the length of the given
 	/// array
 	/// signature: (array) -> length
