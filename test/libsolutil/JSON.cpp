@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @date 2018
  * Unit tests for JSON.h.
@@ -30,7 +31,7 @@ using namespace std;
 namespace solidity::util::test
 {
 
-BOOST_AUTO_TEST_SUITE(JsonTest)
+BOOST_AUTO_TEST_SUITE(JsonTest, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(json_pretty_print)
 {

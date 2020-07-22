@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -53,6 +54,13 @@ using TypePointers = std::vector<TypePointer>;
 using rational = boost::rational<bigint>;
 using TypeResult = util::Result<TypePointer>;
 using BoolResult = util::Result<bool>;
+
+}
+
+namespace solidity::frontend
+{
+
+std::vector<frontend::Type const*> oversizedSubtypes(frontend::Type const& _type);
 
 inline rational makeRational(bigint const& _numerator, bigint const& _denominator)
 {
@@ -243,6 +251,10 @@ public:
 	/// @returns the number of storage slots required to hold this value in storage.
 	/// For dynamically "allocated" types, it returns the size of the statically allocated head,
 	virtual u256 storageSize() const { return 1; }
+	/// @returns an upper bound on the total storage size required by this type, descending
+	/// into structs and statically-sized arrays. This is mainly to ensure that the storage
+	/// slot allocation algorithm does not overflow, it is not a protection against collisions.
+	virtual bigint storageSizeUpperBound() const { return 1; }
 	/// Multiple small types can be packed into a single storage slot. If such a packing is possible
 	/// this function @returns the size in bytes smaller than 32. Data is moved to the next slot if
 	/// it does not fit.
@@ -780,6 +792,7 @@ public:
 	unsigned calldataEncodedTailSize() const override;
 	bool isDynamicallySized() const override { return m_hasDynamicLength; }
 	bool isDynamicallyEncoded() const override;
+	bigint storageSizeUpperBound() const override;
 	u256 storageSize() const override;
 	bool canLiveOutsideStorage() const override { return m_baseType->canLiveOutsideStorage(); }
 	bool nameable() const override { return true; }
@@ -944,6 +957,7 @@ public:
 	unsigned calldataEncodedTailSize() const override;
 	bool isDynamicallyEncoded() const override;
 	u256 memoryDataSize() const override;
+	bigint storageSizeUpperBound() const override;
 	u256 storageSize() const override;
 	bool canLiveOutsideStorage() const override { return true; }
 	bool nameable() const override { return true; }

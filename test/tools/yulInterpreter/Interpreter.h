@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Yul interpreter.
  */
@@ -97,22 +98,36 @@ struct InterpreterState
 };
 
 /**
+ * Scope structure built and maintained during execution.
+ */
+struct Scope
+{
+	/// Used for variables and functions. Value is nullptr for variables.
+	std::map<YulString, FunctionDefinition const*> names;
+	std::map<Block const*, std::unique_ptr<Scope>> subScopes;
+	Scope* parent = nullptr;
+};
+
+/**
  * Yul interpreter.
  */
 class Interpreter: public ASTWalker
 {
 public:
+	static void run(InterpreterState& _state, Dialect const& _dialect, Block const& _ast);
+
 	Interpreter(
 		InterpreterState& _state,
 		Dialect const& _dialect,
-		std::map<YulString, u256> _variables = {},
-		std::vector<std::map<YulString, FunctionDefinition const*>> _scopes = {}
+		Scope& _scope,
+		std::map<YulString, u256> _variables = {}
 	):
 		m_dialect(_dialect),
 		m_state(_state),
 		m_variables(std::move(_variables)),
-		m_scopes(std::move(_scopes))
-	{}
+		m_scope(&_scope)
+	{
+	}
 
 	void operator()(ExpressionStatement const& _statement) override;
 	void operator()(Assignment const& _assignment) override;
@@ -136,18 +151,18 @@ private:
 	/// Evaluates the expression and returns its value.
 	std::vector<u256> evaluateMulti(Expression const& _expression);
 
-	void openScope() { m_scopes.emplace_back(); }
-	/// Unregisters variables and functions.
-	void closeScope();
+	void enterScope(Block const& _block);
+	void leaveScope();
+
+	/// Increment interpreter step count, throwing exception if step limit
+	/// is reached.
+	void incrementStep();
 
 	Dialect const& m_dialect;
 	InterpreterState& m_state;
 	/// Values of variables.
 	std::map<YulString, u256> m_variables;
-	/// Scopes of variables and functions. Used for lookup, clearing at end of blocks
-	/// and passing over the visible functions across function calls.
-	/// The pointer is nullptr if and only if the key is a variable.
-	std::vector<std::map<YulString, FunctionDefinition const*>> m_scopes;
+	Scope* m_scope;
 };
 
 /**
@@ -159,13 +174,13 @@ public:
 	ExpressionEvaluator(
 		InterpreterState& _state,
 		Dialect const& _dialect,
-		std::map<YulString, u256> const& _variables,
-		std::vector<std::map<YulString, FunctionDefinition const*>> const& _scopes
+		Scope& _scope,
+		std::map<YulString, u256> const& _variables
 	):
 		m_state(_state),
 		m_dialect(_dialect),
 		m_variables(_variables),
-		m_scopes(_scopes)
+		m_scope(_scope)
 	{}
 
 	void operator()(Literal const&) override;
@@ -184,19 +199,11 @@ private:
 	/// stores it in m_value.
 	void evaluateArgs(std::vector<Expression> const& _expr);
 
-	/// Finds the function called @a _functionName in the current scope stack and returns
-	/// the function's scope stack (with variables removed) and definition.
-	std::pair<
-		std::vector<std::map<YulString, FunctionDefinition const*>>,
-		FunctionDefinition const*
-	> findFunctionAndScope(YulString _functionName) const;
-
 	InterpreterState& m_state;
 	Dialect const& m_dialect;
 	/// Values of variables.
 	std::map<YulString, u256> const& m_variables;
-	/// Stack of scopes in the current context.
-	std::vector<std::map<YulString, FunctionDefinition const*>> const& m_scopes;
+	Scope& m_scope;
 	/// Current value of the expression
 	std::vector<u256> m_values;
 };

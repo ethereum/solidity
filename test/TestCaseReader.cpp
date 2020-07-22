@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/TestCaseReader.h>
 
@@ -35,6 +36,13 @@ TestCaseReader::TestCaseReader(string const& _filename):
 
 	tie(m_sources, m_lineNumber) = parseSourcesAndSettingsWithLineNumber(m_file);
 	m_unreadSettings = m_settings;
+}
+
+TestCaseReader::TestCaseReader(istringstream const& _str)
+{
+	tie(m_sources, m_lineNumber) = parseSourcesAndSettingsWithLineNumber(
+		static_cast<istream&>(const_cast<istringstream&>(_str))
+	);
 }
 
 string const& TestCaseReader::source() const

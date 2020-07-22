@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
  * Ewasm as output.
@@ -137,7 +138,7 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 		m_errorReporter,
 		languageToDialect(m_language, m_evmVersion),
 		{},
-		_object.dataNames()
+		_object.qualifiedDataNames()
 	);
 	bool success = analyzer.analyze(*_object.code);
 	for (auto& subNode: _object.subObjects)

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/tools/fuzzer_common.h>
 
@@ -71,16 +72,16 @@ void FuzzerUtil::testCompilerJsonInterface(string const& _input, bool _optimize,
 	runCompiler(jsonCompactPrint(config), _quiet);
 }
 
-void FuzzerUtil::testCompiler(string const& _input, bool _optimize)
+void FuzzerUtil::testCompiler(StringMap const& _input, bool _optimize, unsigned _rand)
 {
 	frontend::CompilerStack compiler;
-	EVMVersion evmVersion = s_evmVersions[_input.size() % s_evmVersions.size()];
+	EVMVersion evmVersion = s_evmVersions[_rand % s_evmVersions.size()];
 	frontend::OptimiserSettings optimiserSettings;
 	if (_optimize)
 		optimiserSettings = frontend::OptimiserSettings::standard();
 	else
 		optimiserSettings = frontend::OptimiserSettings::minimal();
-	compiler.setSources({{"", _input}});
+	compiler.setSources(_input);
 	compiler.setEVMVersion(evmVersion);
 	compiler.setOptimiserSettings(optimiserSettings);
 	try

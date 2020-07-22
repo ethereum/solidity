@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Adaptor between the abstract assembly and eth assembly.
  */
@@ -146,22 +147,28 @@ pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EthAssemblyAdapter::
 	return {make_shared<EthAssemblyAdapter>(*assembly), static_cast<size_t>(sub.data())};
 }
 
-void EthAssemblyAdapter::appendDataOffset(AbstractAssembly::SubID _sub)
+void EthAssemblyAdapter::appendDataOffset(vector<AbstractAssembly::SubID> const& _subPath)
 {
-	auto it = m_dataHashBySubId.find(_sub);
-	if (it == m_dataHashBySubId.end())
-		m_assembly.pushSubroutineOffset(_sub);
-	else
+	if (auto it = m_dataHashBySubId.find(_subPath[0]); it != m_dataHashBySubId.end())
+	{
+		yulAssert(_subPath.size() == 1, "");
 		m_assembly << evmasm::AssemblyItem(evmasm::PushData, it->second);
+		return;
+	}
+
+	m_assembly.pushSubroutineOffset(m_assembly.encodeSubPath(_subPath));
 }
 
-void EthAssemblyAdapter::appendDataSize(AbstractAssembly::SubID _sub)
+void EthAssemblyAdapter::appendDataSize(vector<AbstractAssembly::SubID> const& _subPath)
 {
-	auto it = m_dataHashBySubId.find(_sub);
-	if (it == m_dataHashBySubId.end())
-		m_assembly.pushSubroutineSize(static_cast<size_t>(_sub));
-	else
+	if (auto it = m_dataHashBySubId.find(_subPath[0]); it != m_dataHashBySubId.end())
+	{
+		yulAssert(_subPath.size() == 1, "");
 		m_assembly << u256(m_assembly.data(h256(it->second)).size());
+		return;
+	}
+
+	m_assembly.pushSubroutineSize(m_assembly.encodeSubPath(_subPath));
 }
 
 AbstractAssembly::SubID EthAssemblyAdapter::appendData(bytes const& _data)
@@ -180,6 +187,11 @@ void EthAssemblyAdapter::appendImmutable(std::string const& _identifier)
 void EthAssemblyAdapter::appendImmutableAssignment(std::string const& _identifier)
 {
 	m_assembly.appendImmutableAssignment(_identifier);
+}
+
+void EthAssemblyAdapter::markAsInvalid()
+{
+	m_assembly.markAsInvalid();
 }
 
 EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag)
@@ -231,18 +243,12 @@ void CodeGenerator::assemble(
 		_identifierAccess,
 		_useNamedLabelsForFunctions
 	);
-	try
-	{
-		transform(_parsedData);
-	}
-	catch (StackTooDeepError const& _e)
-	{
+	transform(_parsedData);
+	if (!transform.stackErrors().empty())
 		assertThrow(
 			false,
 			langutil::StackTooDeepError,
 			"Stack too deep when compiling inline assembly" +
-			(_e.comment() ? ": " + *_e.comment() : ".")
+			(transform.stackErrors().front().comment() ? ": " + *transform.stackErrors().front().comment() : ".")
 		);
-	}
-	yulAssert(transform.stackErrors().empty(), "Stack errors present but not thrown.");
 }

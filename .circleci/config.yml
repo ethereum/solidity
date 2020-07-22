@@ -7,18 +7,21 @@
 #     - ems: Emscripten
 version: 2.1
 parameters:
-  ubuntu-1804-docker-image-rev:
+  ubuntu-1804-docker-image:
     type: string
-    default: "4"
-  ubuntu-2004-docker-image-rev:
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:4484ac3da8fdc337cc77a7a7be1af71cd0f28f9c890d934f1d6ae7532beb66b1"
+  ubuntu-2004-docker-image:
     type: string
-    default: "2"
-  ubuntu-2004-clang-docker-image-rev:
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:48b5bb6b91ac7dddfe9345c88876ebed126c652258800f114caed69db73b29bf"
+  ubuntu-2004-clang-docker-image:
     type: string
-    default: "2"
-  ubuntu-1604-clang-ossfuzz-docker-image-rev:
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:d8775de58167db5a11690fdb6ef639317fe1e579ec5d46e9732d2d903b55d135"
+  ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    default: "2"
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:db52f3257396814215744a19904e42c07e040ab36b68be72a27ba71ad2f1083c"
+  emscripten-docker-image:
+    type: string
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:d557d015918c3cf68b0d22839bab41013f0757b651a7fef21595f89721dbebcc"
 
 defaults:
 
@@ -33,26 +36,11 @@ defaults:
 
   - run_build: &run_build
       name: Build
-      command: |
-        set -ex
-        if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" -o -n "$FORCE_RELEASE" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
-        echo -n "$CIRCLE_SHA1" > commit_hash.txt
-        mkdir -p build
-        cd build
-        [ -n "$COVERAGE" -a "$CIRCLE_BRANCH" != release -a -z "$CIRCLE_TAG" ] && CMAKE_OPTIONS="$CMAKE_OPTIONS -DCOVERAGE=ON"
-        cmake .. -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release} $CMAKE_OPTIONS -G "Unix Makefiles"
-        make -j4
+      command: scripts/ci/build.sh
 
   - run_build_ossfuzz: &run_build_ossfuzz
       name: Build_ossfuzz
-      command: |
-        mkdir -p build
-        cd build
-        protoc --proto_path=../test/tools/ossfuzz yulProto.proto --cpp_out=../test/tools/ossfuzz
-        protoc --proto_path=../test/tools/ossfuzz abiV2Proto.proto --cpp_out=../test/tools/ossfuzz
-        protoc --proto_path=../test/tools/ossfuzz solProto.proto --cpp_out=../test/tools/ossfuzz
-        cmake .. -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release} $CMAKE_OPTIONS
-        make ossfuzz ossfuzz_proto ossfuzz_abiv2 -j4
+      command: scripts/ci/build_ossfuzz.sh
 
   - run_proofs: &run_proofs
       name: Correctness proofs for optimization rules
@@ -97,6 +85,7 @@ defaults:
         - test/tools/ossfuzz/strictasm_diff_ossfuzz
         - test/tools/ossfuzz/strictasm_opt_ossfuzz
         - test/tools/ossfuzz/yul_proto_diff_ossfuzz
+        - test/tools/ossfuzz/yul_proto_diff_custom_mutate_ossfuzz
         - test/tools/ossfuzz/yul_proto_ossfuzz
         - test/tools/ossfuzz/sol_proto_ossfuzz
 
@@ -130,7 +119,7 @@ defaults:
 
   - test_ubuntu1604_clang: &test_ubuntu1604_clang
       docker:
-        - image: ethereum/solidity-buildpack-deps:ubuntu1604-clang-ossfuzz-<< pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image-rev >>
+        - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
       steps:
         - checkout
         - attach_workspace:
@@ -141,7 +130,7 @@ defaults:
 
   - test_ubuntu2004_clang: &test_ubuntu2004_clang
       docker:
-        - image: ethereum/solidity-buildpack-deps:ubuntu2004-clang-<< pipeline.parameters.ubuntu-2004-clang-docker-image-rev >>
+        - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
       steps:
         - checkout
         - attach_workspace:
@@ -152,7 +141,8 @@ defaults:
 
   - test_ubuntu2004: &test_ubuntu2004
       docker:
-        - image: ethereum/solidity-buildpack-deps:ubuntu2004-<< pipeline.parameters.ubuntu-2004-docker-image-rev >>
+        - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+      parallelism: 6
       steps:
         - checkout
         - attach_workspace:
@@ -387,7 +377,7 @@ jobs:
 
   chk_docs_pragma_min_version:
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu2004-<< pipeline.parameters.ubuntu-2004-docker-image-rev >>
+      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
     environment:
       TERM: xterm
     steps:
@@ -396,7 +386,7 @@ jobs:
 
   b_ubu_clang: &build_ubuntu2004_clang
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu2004-clang-<< pipeline.parameters.ubuntu-2004-clang-docker-image-rev >>
+      - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
     environment:
       CC: clang
       CXX: clang++
@@ -409,7 +399,7 @@ jobs:
 
   b_ubu_asan_clang: &build_ubuntu2004_clang
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu2004-clang-<< pipeline.parameters.ubuntu-2004-clang-docker-image-rev >>
+      - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
     environment:
       CC: clang
       CXX: clang++
@@ -421,8 +411,11 @@ jobs:
       - persist_to_workspace: *artifacts_executables
 
   b_ubu: &build_ubuntu2004
+    resource_class: xlarge
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu2004-<< pipeline.parameters.ubuntu-2004-docker-image-rev >>
+      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+    environment:
+      MAKEFLAGS: -j 10
     steps:
       - checkout
       - run: *run_build
@@ -437,7 +430,7 @@ jobs:
 
   b_ubu18: &build_ubuntu1804
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1804-<< pipeline.parameters.ubuntu-1804-docker-image-rev >>
+      - image: << pipeline.parameters.ubuntu-1804-docker-image >>
     environment:
       CMAKE_OPTIONS: -DCMAKE_CXX_FLAGS=-O2
       CMAKE_BUILD_TYPE: RelWithDebugInfo
@@ -491,7 +484,7 @@ jobs:
 
   b_ubu_ossfuzz: &build_ubuntu1604_clang
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu1604-clang-ossfuzz-<< pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image-rev >>
+      - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
     environment:
       CC: clang
       CXX: clang++
@@ -597,9 +590,11 @@ jobs:
       - store_artifacts: *artifacts_test_results
 
   b_ems:
+    resource_class: xlarge
     docker:
-      - image: ethereum/solidity-buildpack-deps:emsdk-1.39.15-2
+      - image: << pipeline.parameters.emscripten-docker-image >>
     environment:
+      MAKEFLAGS: -j 10
       TERM: xterm
     steps:
       - checkout
@@ -633,7 +628,7 @@ jobs:
 
   b_docs:
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu2004-<< pipeline.parameters.ubuntu-2004-docker-image-rev >>
+      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash
@@ -649,7 +644,7 @@ jobs:
 
   t_ubu_soltest_enforce_yul: &t_ubu_soltest_enforce_yul
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu2004-<< pipeline.parameters.ubuntu-2004-docker-image-rev >>
+      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
     environment:
       EVM: constantinople
       SOLTEST_FLAGS: --enforce-via-yul
@@ -675,7 +670,7 @@ jobs:
 
   t_ubu_cli: &t_ubu_cli
     docker:
-      - image: ethereum/solidity-buildpack-deps:ubuntu2004-<< pipeline.parameters.ubuntu-2004-docker-image-rev >>
+      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
     environment:
       TERM: xterm
     steps:

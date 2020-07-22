@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <fstream>
 
@@ -43,7 +44,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		// With libFuzzer binary run this to generate a YUL source file x.yul:
 		// PROTO_FUZZER_DUMP_PATH=x.yul ./a.out proto-input
 		ofstream of(dump_path);
-		of.write(yul_source.data(), yul_source.size());
+		of.write(yul_source.data(), static_cast<streamsize>(yul_source.size()));
 	}
 
 	if (yul_source.size() > 1200)

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Common code generator for translating Yul / inline assembly to EVM and EVM1.5.
  */
@@ -141,7 +142,7 @@ bool CodeTransform::unreferenced(Scope::Variable const& _var) const
 	return !m_context->variableReferences.count(&_var) || m_context->variableReferences[&_var] == 0;
 }
 
-void CodeTransform::freeUnusedVariables()
+void CodeTransform::freeUnusedVariables(bool _popUnusedSlotsAtStackTop)
 {
 	if (!m_allowStackOpt)
 		return;
@@ -154,18 +155,19 @@ void CodeTransform::freeUnusedVariables()
 				deleteVariable(var);
 		}
 
-	while (m_unusedStackSlots.count(m_assembly.stackHeight() - 1))
-	{
-		yulAssert(m_unusedStackSlots.erase(m_assembly.stackHeight() - 1), "");
-		m_assembly.appendInstruction(evmasm::Instruction::POP);
-	}
+	if (_popUnusedSlotsAtStackTop)
+		while (m_unusedStackSlots.count(m_assembly.stackHeight() - 1))
+		{
+			yulAssert(m_unusedStackSlots.erase(m_assembly.stackHeight() - 1), "");
+			m_assembly.appendInstruction(evmasm::Instruction::POP);
+		}
 }
 
 void CodeTransform::deleteVariable(Scope::Variable const& _var)
 {
 	yulAssert(m_allowStackOpt, "");
 	yulAssert(m_context->variableStackHeights.count(&_var) > 0, "");
-	m_unusedStackSlots.insert(m_context->variableStackHeights[&_var]);
+	m_unusedStackSlots.insert(static_cast<int>(m_context->variableStackHeights[&_var]));
 	m_context->variableStackHeights.erase(&_var);
 	m_context->variableReferences.erase(&_var);
 	m_variablesScheduledForDeletion.erase(&_var);
@@ -181,6 +183,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	{
 		std::visit(*this, *_varDecl.value);
 		expectDeposit(static_cast<int>(numVariables), static_cast<int>(heightAtStart));
+		freeUnusedVariables(false);
 	}
 	else
 	{
@@ -235,6 +238,7 @@ void CodeTransform::stackError(StackTooDeepError _error, int _targetStackHeight)
 		m_assembly.appendConstant(u256(0));
 	// Store error.
 	m_stackErrors.emplace_back(std::move(_error));
+	m_assembly.markAsInvalid();
 }
 
 void CodeTransform::operator()(Assignment const& _assignment)
@@ -402,7 +406,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	yulAssert(m_scope->identifiers.count(_function.name), "");
 	Scope::Function& function = std::get<Scope::Function>(m_scope->identifiers.at(_function.name));
 
-	int height = m_evm15 ? 0 : 1;
+	size_t height = m_evm15 ? 0 : 1;
 	yulAssert(m_info.scopes.at(&_function.body), "");
 	Scope* varScope = m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()).get();
 	yulAssert(varScope, "");
@@ -420,7 +424,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	else
 		m_assembly.appendLabel(functionEntryID(_function.name, function));
 
-	m_assembly.setStackHeight(height);
+	m_assembly.setStackHeight(static_cast<int>(height));
 
 	for (auto const& v: _function.returnVariables)
 	{
@@ -433,31 +437,28 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	m_context->functionExitPoints.push(
 		CodeTransformContext::JumpInfo{m_assembly.newLabelId(), m_assembly.stackHeight()}
 	);
-	try
+	CodeTransform subTransform(
+		m_assembly,
+		m_info,
+		_function.body,
+		m_allowStackOpt,
+		m_dialect,
+		m_builtinContext,
+		m_evm15,
+		m_identifierAccess,
+		m_useNamedLabelsForFunctions,
+		m_context
+	);
+	subTransform(_function.body);
+	if (!subTransform.m_stackErrors.empty())
 	{
-		CodeTransform(
-			m_assembly,
-			m_info,
-			_function.body,
-			m_allowStackOpt,
-			m_dialect,
-			m_builtinContext,
-			m_evm15,
-			m_identifierAccess,
-			m_useNamedLabelsForFunctions,
-			m_context
-		)(_function.body);
-	}
-	catch (StackTooDeepError const& _error)
-	{
-		// This exception will be re-thrown after the end of the surrounding block.
-		// It enables us to see which functions compiled successfully and which did not.
-		// Even if we emit actual code, add an illegal instruction to make sure that tests
-		// will catch it.
-		StackTooDeepError error(_error);
-		if (error.functionName.empty())
-			error.functionName = _function.name;
-		stackError(std::move(error), height);
+		m_assembly.markAsInvalid();
+		for (StackTooDeepError& stackError: subTransform.m_stackErrors)
+		{
+			if (stackError.functionName.empty())
+				stackError.functionName = _function.name;
+			m_stackErrors.emplace_back(std::move(stackError));
+		}
 	}
 
 	m_assembly.appendLabel(m_context->functionExitPoints.top().label);
@@ -502,7 +503,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 				}
 				else
 				{
-					m_assembly.appendInstruction(evmasm::swapInstruction(stackLayout.size() - static_cast<size_t>(stackLayout.back()) - 1));
+					m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(stackLayout.size()) - static_cast<unsigned>(stackLayout.back()) - 1u));
 					swap(stackLayout[static_cast<size_t>(stackLayout.back())], stackLayout.back());
 				}
 			for (size_t i = 0; i < stackLayout.size(); ++i)
@@ -603,9 +604,6 @@ void CodeTransform::operator()(Block const& _block)
 
 	finalizeBlock(_block, blockStartStackHeight);
 	m_scope = originalScope;
-
-	if (!m_stackErrors.empty())
-		BOOST_THROW_EXCEPTION(m_stackErrors.front());
 }
 
 AbstractAssembly::LabelID CodeTransform::functionEntryID(YulString _name, Scope::Function const& _function)
@@ -726,7 +724,8 @@ size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString 
 			to_string(heightDiff - limit) +
 			" slot(s) too deep inside the stack."
 		);
-		BOOST_THROW_EXCEPTION(m_stackErrors.back());
+		m_assembly.markAsInvalid();
+		return _forSwap ? 2 : 1;
 	}
 	return heightDiff;
 }

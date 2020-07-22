@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Analyzer part of inline assembly.
  */
@@ -71,7 +72,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 		errors,
 		_dialect,
 		{},
-		_object.dataNames()
+		_object.qualifiedDataNames()
 	).analyze(*_object.code);
 	yulAssert(success && !errors.hasErrors(), "Invalid assembly/yul code.");
 	return analysisInfo;
@@ -234,7 +235,7 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 				m_errorReporter.typeError(
 					3947_error,
 					variable.location,
-					"Assigning value of type \"" + givenType.str() + "\" to variable of type \"" + variable.type.str() + "."
+					"Assigning value of type \"" + givenType.str() + "\" to variable of type \"" + variable.type.str() + "\"."
 				);
 		}
 	}

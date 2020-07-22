@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -646,7 +647,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 		}
 		else
 		{
-			m_context << swapInstruction(stackLayout.size() - static_cast<size_t>(stackLayout.back()) - 1);
+			m_context << swapInstruction(stackLayout.size() - static_cast<unsigned>(stackLayout.back()) - 1u);
 			swap(stackLayout[static_cast<size_t>(stackLayout.back())], stackLayout.back());
 		}
 	for (size_t i = 0; i < stackLayout.size(); ++i)

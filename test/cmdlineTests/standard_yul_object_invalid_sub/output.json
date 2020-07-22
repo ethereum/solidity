@@ -1,0 +1,4 @@
+{"errors":[{"component":"general","formattedMessage":"A:1:40: TypeError: Unknown data object \"NamedObject.\".
+object \"NamedObject\" { code { let x := dataoffset(\"NamedObject.\") sstore(add(x, 0), 0) } object \"OtherObject\" { code { revert(0, 0) } } }
+                                       ^--------^
+","message":"Unknown data object \"NamedObject.\".","severity":"error","sourceLocation":{"end":49,"file":"A","start":39},"type":"TypeError"}]}

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <cstdint>
 #include <cstddef>
@@ -120,6 +121,8 @@ private:
 	void closeFunctionScope();
 	/// Adds @a _vars to current scope
 	void addVarsToScope(std::vector<std::string> const& _vars);
+	/// @returns number of variables that are in scope
+	unsigned numVarsInScope();
 
 	std::string createHex(std::string const& _hexBytes);
 

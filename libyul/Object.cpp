@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Yul code and data object container.
  */
@@ -23,9 +24,10 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/Exceptions.h>
 
-#include <libsolutil/Visitor.h>
 #include <libsolutil/CommonData.h>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
@@ -61,13 +63,54 @@ string Object::toString(Dialect const* _dialect) const
 	return "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }
 
-set<YulString> Object::dataNames() const
+set<YulString> Object::qualifiedDataNames() const
 {
-	set<YulString> names;
-	names.insert(name);
-	for (auto const& subObject: subIndexByName)
-		names.insert(subObject.first);
-	// The empty name is not valid
-	names.erase(YulString{});
-	return names;
+	set<YulString> qualifiedNames = name.empty() ? set<YulString>{} : set<YulString>{name};
+	for (shared_ptr<ObjectNode> const& subObjectNode: subObjects)
+	{
+		yulAssert(qualifiedNames.count(subObjectNode->name) == 0, "");
+		qualifiedNames.insert(subObjectNode->name);
+		if (auto const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
+			for (YulString const& subSubObj: subObject->qualifiedDataNames())
+				if (subObject->name != subSubObj)
+				{
+					yulAssert(qualifiedNames.count(YulString{subObject->name.str() + "." + subSubObj.str()}) == 0, "");
+					qualifiedNames.insert(YulString{subObject->name.str() + "." + subSubObj.str()});
+				}
+	}
+
+	yulAssert(qualifiedNames.count(YulString{}) == 0, "");
+	qualifiedNames.erase(YulString{});
+	return qualifiedNames;
+}
+
+vector<size_t> Object::pathToSubObject(YulString _qualifiedName) const
+{
+	yulAssert(_qualifiedName != name, "");
+	yulAssert(subIndexByName.count(name) == 0, "");
+
+	if (boost::algorithm::starts_with(_qualifiedName.str(), name.str() + "."))
+		_qualifiedName = YulString{_qualifiedName.str().substr(name.str().length() + 1)};
+	yulAssert(!_qualifiedName.empty(), "");
+
+	vector<string> subObjectPathComponents;
+	boost::algorithm::split(subObjectPathComponents, _qualifiedName.str(), boost::is_any_of("."));
+
+	vector<size_t> path;
+	Object const* object = this;
+	for (string const& currentSubObjectName: subObjectPathComponents)
+	{
+		yulAssert(!currentSubObjectName.empty(), "");
+		auto subIndexIt = object->subIndexByName.find(YulString{currentSubObjectName});
+		yulAssert(
+			subIndexIt != object->subIndexByName.end(),
+			"Assembly object <" + _qualifiedName.str() + "> not found or does not contain code."
+		);
+		object = dynamic_cast<Object const*>(object->subObjects[subIndexIt->second].get());
+		yulAssert(object, "Assembly object <" + _qualifiedName.str() + "> not found or does not contain code.");
+		yulAssert(object->subId != numeric_limits<size_t>::max(), "");
+		path.push_back({object->subId});
+	}
+
+	return path;
 }

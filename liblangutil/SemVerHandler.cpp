@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <chris@ethereum.org>
  * @date 2016
@@ -245,14 +246,14 @@ unsigned SemVerMatchExpressionParser::parseVersionPart()
 		return 0;
 	else if ('1' <= c && c <= '9')
 	{
-		unsigned v(c - '0');
+		auto v = static_cast<unsigned>(c - '0');
 		// If we skip to the next token, the current number is terminated.
 		while (m_pos == startPos && '0' <= currentChar() && currentChar() <= '9')
 		{
 			c = currentChar();
-			if (v * 10 < v || v * 10 + unsigned(c - '0') < v * 10)
+			if (v * 10 < v || v * 10 + static_cast<unsigned>(c - '0') < v * 10)
 				throw SemVerError();
-			v = v * 10 + unsigned(c - '0');
+			v = v * 10 + static_cast<unsigned>(c - '0');
 			nextChar();
 		}
 		return v;

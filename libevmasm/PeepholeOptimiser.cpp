@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @file PeepholeOptimiser.cpp
  * Performs local optimising code changes to assembly.
@@ -205,6 +206,30 @@ struct SwapComparison: SimplePeepholeOptimizerMethod<SwapComparison, 2>
 	}
 };
 
+/// Remove swapN after dupN
+struct DupSwap: SimplePeepholeOptimizerMethod<DupSwap, 2>
+{
+	static size_t applySimple(
+		AssemblyItem const& _dupN,
+		AssemblyItem const& _swapN,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			SemanticInformation::isDupInstruction(_dupN) &&
+			SemanticInformation::isSwapInstruction(_swapN) &&
+			getDupNumber(_dupN.instruction()) == getSwapNumber(_swapN.instruction())
+		)
+		{
+			*_out = _dupN;
+			return true;
+		}
+		else
+			return false;
+	}
+};
+
+
 struct IsZeroIsZeroJumpI: SimplePeepholeOptimizerMethod<IsZeroIsZeroJumpI, 4>
 {
 	static size_t applySimple(
@@ -266,14 +291,25 @@ struct TagConjunctions: SimplePeepholeOptimizerMethod<TagConjunctions, 3>
 		std::back_insert_iterator<AssemblyItems> _out
 	)
 	{
+		if (_and != Instruction::AND)
+			return false;
 		if (
 			_pushTag.type() == PushTag &&
-			_and == Instruction::AND &&
 			_pushConstant.type() == Push &&
 			(_pushConstant.data() & u256(0xFFFFFFFF)) == u256(0xFFFFFFFF)
 		)
 		{
 			*_out = _pushTag;
+			return true;
+		}
+		else if (
+			// tag and constant are swapped
+			_pushConstant.type() == PushTag &&
+			_pushTag.type() == Push &&
+			(_pushTag.data() & u256(0xFFFFFFFF)) == u256(0xFFFFFFFF)
+		)
+		{
+			*_out = _pushConstant;
 			return true;
 		}
 		else
@@ -357,7 +393,7 @@ bool PeepholeOptimiser::optimise()
 		applyMethods(
 			state,
 			PushPop(), OpPop(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
-			IsZeroIsZeroJumpI(), JumpToNext(), UnreachableCode(),
+			DupSwap(), IsZeroIsZeroJumpI(), JumpToNext(), UnreachableCode(),
 			TagConjunctions(), TruthyAnd(), Identity()
 		);
 	if (m_optimisedItems.size() < m_items.size() || (

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @date 2018
  * Templatized list of simplification rules.
@@ -569,6 +570,20 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		[=]() -> Pattern { return Builtins::SHR(B, X); },
 		false,
 		feasibilityFunction
+	});
+
+	rules.push_back({
+		Builtins::BYTE(A, Builtins::SHL(B, X)),
+		[=]() -> Pattern { return Builtins::BYTE(A.d() + B.d() / 8, X); },
+		false,
+		[=] { return B.d() % 8 == 0 && A.d() <= 32 && B.d() <= 256; }
+	});
+
+	rules.push_back({
+		Builtins::BYTE(A, Builtins::SHR(B, X)),
+		[=]() -> Pattern { return A.d() < B.d() / 8 ? Word(0) : Builtins::BYTE(A.d() - B.d() / 8, X); },
+		false,
+		[=] { return B.d() % 8 == 0 && A.d() < Pattern::WordSize / 8 && B.d() <= Pattern::WordSize; }
 	});
 
 	return rules;

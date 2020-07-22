@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -792,20 +793,24 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			TypePointer const& argType = arguments.front()->annotation().type;
 			solAssert(argType, "");
 			arguments.front()->accept(*this);
-			// Optimization: If type is bytes or string, then do not encode,
-			// but directly compute keccak256 on memory.
-			if (*argType == *TypeProvider::bytesMemory() || *argType == *TypeProvider::stringMemory())
+			if (auto const* stringLiteral = dynamic_cast<StringLiteralType const*>(argType))
+				// Optimization: Compute keccak256 on string literals at compile-time.
+				m_context << u256(keccak256(stringLiteral->value()));
+			else if (*argType == *TypeProvider::bytesMemory() || *argType == *TypeProvider::stringMemory())
 			{
+				// Optimization: If type is bytes or string, then do not encode,
+				// but directly compute keccak256 on memory.
 				ArrayUtils(m_context).retrieveLength(*TypeProvider::bytesMemory());
 				m_context << Instruction::SWAP1 << u256(0x20) << Instruction::ADD;
+				m_context << Instruction::KECCAK256;
 			}
 			else
 			{
 				utils().fetchFreeMemoryPointer();
 				utils().packedEncode({argType}, TypePointers());
 				utils().toSizeAfterFreeMemoryPointer();
+				m_context << Instruction::KECCAK256;
 			}
-			m_context << Instruction::KECCAK256;
 			break;
 		}
 		case FunctionType::Kind::Log0:

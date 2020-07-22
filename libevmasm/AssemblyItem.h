@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file AssemblyItem.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -151,7 +152,7 @@ public:
 	void setPushedValue(u256 const& _value) const { m_pushedValue = std::make_shared<u256>(_value); }
 	u256 const* pushedValue() const { return m_pushedValue.get(); }
 
-	std::string toAssemblyText() const;
+	std::string toAssemblyText(Assembly const& _assembly) const;
 
 	size_t m_modifierDepth = 0;
 

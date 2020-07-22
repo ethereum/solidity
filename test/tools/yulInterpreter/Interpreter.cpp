@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Yul interpreter.
  */
@@ -64,6 +65,12 @@ void InterpreterState::dumpTraceAndState(ostream& _out) const
 			_out << "  " << slot.first.hex() << ": " << slot.second.hex() << endl;
 }
 
+void Interpreter::run(InterpreterState& _state, Dialect const& _dialect, Block const& _ast)
+{
+	Scope scope;
+	Interpreter{_state, _dialect, scope}(_ast);
+}
+
 void Interpreter::operator()(ExpressionStatement const& _expressionStatement)
 {
 	evaluateMulti(_expressionStatement.expression);
@@ -94,8 +101,7 @@ void Interpreter::operator()(VariableDeclaration const& _declaration)
 		YulString varName = _declaration.variables.at(i).name;
 		solAssert(!m_variables.count(varName), "");
 		m_variables[varName] = values.at(i);
-		solAssert(!m_scopes.back().count(varName), "");
-		m_scopes.back().emplace(varName, nullptr);
+		m_scope->names.emplace(varName, nullptr);
 	}
 }
 
@@ -128,8 +134,8 @@ void Interpreter::operator()(ForLoop const& _forLoop)
 {
 	solAssert(_forLoop.condition, "");
 
-	openScope();
-	ScopeGuard g([this]{ closeScope(); });
+	enterScope(_forLoop.pre);
+	ScopeGuard g([this]{ leaveScope(); });
 
 	for (auto const& statement: _forLoop.pre.statements)
 	{
@@ -139,6 +145,11 @@ void Interpreter::operator()(ForLoop const& _forLoop)
 	}
 	while (evaluate(*_forLoop.condition) != 0)
 	{
+		// Increment step for each loop iteration for loops with
+		// an empty body and post blocks to prevent a deadlock.
+		if (_forLoop.body.statements.size() == 0 && _forLoop.post.statements.size() == 0)
+			incrementStep();
+
 		m_state.controlFlowState = ControlFlowState::Default;
 		(*this)(_forLoop.body);
 		if (m_state.controlFlowState == ControlFlowState::Break || m_state.controlFlowState == ControlFlowState::Leave)
@@ -170,52 +181,68 @@ void Interpreter::operator()(Leave const&)
 
 void Interpreter::operator()(Block const& _block)
 {
-	m_state.numSteps++;
-	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
-	{
-		m_state.trace.emplace_back("Interpreter execution step limit reached.");
-		throw StepLimitReached();
-	}
-	openScope();
+	enterScope(_block);
 	// Register functions.
 	for (auto const& statement: _block.statements)
 		if (holds_alternative<FunctionDefinition>(statement))
 		{
 			FunctionDefinition const& funDef = std::get<FunctionDefinition>(statement);
-			solAssert(!m_scopes.back().count(funDef.name), "");
-			m_scopes.back().emplace(funDef.name, &funDef);
+			m_scope->names.emplace(funDef.name, &funDef);
 		}
 
 	for (auto const& statement: _block.statements)
 	{
+		incrementStep();
 		visit(statement);
 		if (m_state.controlFlowState != ControlFlowState::Default)
 			break;
 	}
 
-	closeScope();
+	leaveScope();
 }
 
 u256 Interpreter::evaluate(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_scopes);
+	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 vector<u256> Interpreter::evaluateMulti(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, m_variables, m_scopes);
+	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables);
 	ev.visit(_expression);
 	return ev.values();
 }
 
-void Interpreter::closeScope()
+void Interpreter::enterScope(Block const& _block)
 {
-	for (auto const& [var, funDeclaration]: m_scopes.back())
+	if (!m_scope->subScopes.count(&_block))
+		m_scope->subScopes[&_block] = make_unique<Scope>(Scope{
+			{},
+			{},
+			m_scope
+		});
+	m_scope = m_scope->subScopes[&_block].get();
+}
+
+void Interpreter::leaveScope()
+{
+	for (auto const& [var, funDeclaration]: m_scope->names)
 		if (!funDeclaration)
-			solAssert(m_variables.erase(var) == 1, "");
-	m_scopes.pop_back();
+			m_variables.erase(var);
+	m_scope = m_scope->parent;
+	yulAssert(m_scope, "");
+}
+
+void Interpreter::incrementStep()
+{
+	m_state.numSteps++;
+	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
+	{
+		m_state.trace.emplace_back("Interpreter execution step limit reached.");
+		throw StepLimitReached();
+	}
 }
 
 void ExpressionEvaluator::operator()(Literal const& _literal)
@@ -253,10 +280,15 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 			return;
 		}
 
-	auto [functionScopes, fun] = findFunctionAndScope(_funCall.functionName.name);
+	Scope* scope = &m_scope;
+	for (; scope; scope = scope->parent)
+		if (scope->names.count(_funCall.functionName.name))
+			break;
+	yulAssert(scope, "");
 
-	solAssert(fun, "Function not found.");
-	solAssert(m_values.size() == fun->parameters.size(), "");
+	FunctionDefinition const* fun = scope->names.at(_funCall.functionName.name);
+	yulAssert(fun, "Function not found.");
+	yulAssert(m_values.size() == fun->parameters.size(), "");
 	map<YulString, u256> variables;
 	for (size_t i = 0; i < fun->parameters.size(); ++i)
 		variables[fun->parameters.at(i).name] = m_values.at(i);
@@ -264,7 +296,7 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 		variables[fun->returnVariables.at(i).name] = 0;
 
 	m_state.controlFlowState = ControlFlowState::Default;
-	Interpreter interpreter(m_state, m_dialect, variables, functionScopes);
+	Interpreter interpreter(m_state, m_dialect, *scope, std::move(variables));
 	interpreter(fun->body);
 	m_state.controlFlowState = ControlFlowState::Default;
 
@@ -296,28 +328,4 @@ void ExpressionEvaluator::evaluateArgs(vector<Expression> const& _expr)
 	}
 	m_values = std::move(values);
 	std::reverse(m_values.begin(), m_values.end());
-}
-
-pair<
-	vector<map<YulString, FunctionDefinition const*>>,
-	FunctionDefinition const*
-> ExpressionEvaluator::findFunctionAndScope(YulString _functionName) const
-{
-	FunctionDefinition const* fun = nullptr;
-	std::vector<std::map<YulString, FunctionDefinition const*>> newScopes;
-	for (auto const& scope: m_scopes)
-	{
-		// Copy over all functions.
-		newScopes.emplace_back();
-		for (auto const& [name, funDef]: scope)
-			if (funDef)
-				newScopes.back().emplace(name, funDef);
-		// Stop at the called function.
-		if (scope.count(_functionName))
-		{
-			fun = scope.at(_functionName);
-			break;
-		}
-	}
-	return {move(newScopes), fun};
 }

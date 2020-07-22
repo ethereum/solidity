@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Analysis part of inline assembly.
  */
@@ -101,7 +102,6 @@ private:
 	/// Vists the expression and expects it to return a single boolean value.
 	/// Reports an error otherwise.
 	void expectBoolExpression(Expression const& _expr);
-	bool expectDeposit(int _deposit, int _oldHeight, langutil::SourceLocation const& _location);
 
 	/// Verifies that a variable to be assigned to exists, can be assigned to
 	/// and has the same type as the value.

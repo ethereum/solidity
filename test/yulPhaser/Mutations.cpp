@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
 
@@ -33,7 +34,7 @@ using namespace solidity::util;
 namespace solidity::phaser::test
 {
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(MutationsTest)
 BOOST_AUTO_TEST_SUITE(GeneRandomisationTest)
 
@@ -179,8 +180,8 @@ BOOST_AUTO_TEST_CASE(alternativeMutations_should_choose_between_mutations_with_g
 	for (size_t i = 0; i < 10; ++i)
 	{
 		Chromosome mutatedChromosome = mutation(chromosome);
-		cCount += (mutatedChromosome == Chromosome("c") ? 1 : 0);
-		fCount += (mutatedChromosome == Chromosome("f") ? 1 : 0);
+		cCount += (mutatedChromosome == Chromosome("c") ? 1u : 0u);
+		fCount += (mutatedChromosome == Chromosome("f") ? 1u : 0u);
 	}
 
 	// This particular seed results in 7 "c"s out of 10 which looks plausible given the 80% chance.

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -59,10 +60,10 @@ class Expression
 public:
 	explicit Expression(bool _v): Expression(_v ? "true" : "false", Kind::Bool) {}
 	explicit Expression(std::shared_ptr<SortSort> _sort, std::string _name = ""): Expression(std::move(_name), {}, _sort) {}
-	Expression(size_t _number): Expression(std::to_string(_number), Kind::Int) {}
-	Expression(u256 const& _number): Expression(_number.str(), Kind::Int) {}
-	Expression(s256 const& _number): Expression(_number.str(), Kind::Int) {}
-	Expression(bigint const& _number): Expression(_number.str(), Kind::Int) {}
+	Expression(size_t _number): Expression(std::to_string(_number), {}, SortProvider::sintSort) {}
+	Expression(u256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
+	Expression(s256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
+	Expression(bigint const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
 
 	Expression(Expression const&) = default;
 	Expression(Expression&&) = default;
@@ -262,23 +263,28 @@ public:
 	}
 	friend Expression operator+(Expression _a, Expression _b)
 	{
-		return Expression("+", std::move(_a), std::move(_b), Kind::Int);
+		auto intSort = _a.sort;
+		return Expression("+", {std::move(_a), std::move(_b)}, intSort);
 	}
 	friend Expression operator-(Expression _a, Expression _b)
 	{
-		return Expression("-", std::move(_a), std::move(_b), Kind::Int);
+		auto intSort = _a.sort;
+		return Expression("-", {std::move(_a), std::move(_b)}, intSort);
 	}
 	friend Expression operator*(Expression _a, Expression _b)
 	{
-		return Expression("*", std::move(_a), std::move(_b), Kind::Int);
+		auto intSort = _a.sort;
+		return Expression("*", {std::move(_a), std::move(_b)}, intSort);
 	}
 	friend Expression operator/(Expression _a, Expression _b)
 	{
-		return Expression("/", std::move(_a), std::move(_b), Kind::Int);
+		auto intSort = _a.sort;
+		return Expression("/", {std::move(_a), std::move(_b)}, intSort);
 	}
 	friend Expression operator%(Expression _a, Expression _b)
 	{
-		return Expression("mod", std::move(_a), std::move(_b), Kind::Int);
+		auto intSort = _a.sort;
+		return Expression("mod", {std::move(_a), std::move(_b)}, intSort);
 	}
 	friend Expression operator&(Expression _a, Expression _b)
 	{

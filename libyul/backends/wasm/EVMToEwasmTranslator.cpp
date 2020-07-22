@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Translates Yul code from EVM dialect to Ewasm dialect.
  */
@@ -1248,7 +1249,7 @@ Object EVMToEwasmTranslator::run(Object const& _object)
 
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	AsmAnalyzer analyzer(*ret.analysisInfo, errorReporter, WasmDialect::instance(), {}, _object.dataNames());
+	AsmAnalyzer analyzer(*ret.analysisInfo, errorReporter, WasmDialect::instance(), {}, _object.qualifiedDataNames());
 	if (!analyzer.analyze(*ret.code))
 	{
 		string message = "Invalid code generated after EVM to wasm translation.\n";

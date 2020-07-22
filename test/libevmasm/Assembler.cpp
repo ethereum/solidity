@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Alex Beregszaszi
  * @date 2018
@@ -28,6 +29,7 @@
 #include <string>
 #include <tuple>
 #include <memory>
+#include <libyul/Exceptions.h>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -251,6 +253,24 @@ BOOST_AUTO_TEST_CASE(immutable)
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someImmutable\"}"
 		"]}}}"
 	);
+}
+
+BOOST_AUTO_TEST_CASE(subobject_encode_decode)
+{
+	Assembly assembly;
+
+	shared_ptr<Assembly> subAsmPtr = make_shared<Assembly>();
+	shared_ptr<Assembly> subSubAsmPtr = make_shared<Assembly>();
+
+	assembly.appendSubroutine(subAsmPtr);
+	subAsmPtr->appendSubroutine(subSubAsmPtr);
+
+	BOOST_CHECK(assembly.encodeSubPath({0}) == 0);
+	BOOST_REQUIRE_THROW(assembly.encodeSubPath({1}), solidity::evmasm::AssemblyException);
+	BOOST_REQUIRE_THROW(assembly.decodeSubPath(1), solidity::evmasm::AssemblyException);
+
+	vector<size_t> subPath{0, 0};
+	BOOST_CHECK(assembly.decodeSubPath(assembly.encodeSubPath(subPath)) == subPath);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @date 2017
  * Abstract assembly interface, subclasses of which are to be used with the generic
@@ -101,9 +102,9 @@ public:
 	/// Creates a new sub-assembly, which can be referenced using dataSize and dataOffset.
 	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() = 0;
 	/// Appends the offset of the given sub-assembly or data.
-	virtual void appendDataOffset(SubID _sub) = 0;
+	virtual void appendDataOffset(std::vector<SubID> const& _subPath) = 0;
 	/// Appends the size of the given sub-assembly or data.
-	virtual void appendDataSize(SubID _sub) = 0;
+	virtual void appendDataSize(std::vector<SubID> const& _subPath) = 0;
 	/// Appends the given data to the assembly and returns its ID.
 	virtual SubID appendData(bytes const& _data) = 0;
 
@@ -111,6 +112,9 @@ public:
 	virtual void appendImmutable(std::string const& _identifier) = 0;
 	/// Appends an assignment to an immutable variable.
 	virtual void appendImmutableAssignment(std::string const& _identifier) = 0;
+
+	/// Mark this assembly as invalid. Any attempt to request bytecode from it should throw.
+	virtual void markAsInvalid() = 0;
 };
 
 enum class IdentifierContext { LValue, RValue, VariableDeclaration };

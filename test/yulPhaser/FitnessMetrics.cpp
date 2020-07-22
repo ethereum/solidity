@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/FitnessMetrics.h>
 
@@ -95,7 +96,7 @@ protected:
 	};
 };
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(FitnessMetricsTest)
 BOOST_AUTO_TEST_SUITE(ProgramBasedMetricTest)
 

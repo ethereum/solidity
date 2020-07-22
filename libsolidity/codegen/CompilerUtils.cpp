@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -180,7 +181,7 @@ void CompilerUtils::storeInMemory(unsigned _offset)
 		m_context << u256(_offset) << Instruction::MSTORE;
 }
 
-void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries)
+void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries, bool _cleanup)
 {
 	// process special types (Reference, StringLiteral, Function)
 	if (auto ref = dynamic_cast<ReferenceType const*>(&_type))
@@ -189,7 +190,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 			ref->location() == DataLocation::Memory,
 			"Only in-memory reference type can be stored."
 		);
-		storeInMemoryDynamic(*TypeProvider::uint256(), _padToWordBoundaries);
+		storeInMemoryDynamic(*TypeProvider::uint256(), _padToWordBoundaries, _cleanup);
 	}
 	else if (auto str = dynamic_cast<StringLiteralType const*>(&_type))
 	{
@@ -212,7 +213,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 	}
 	else if (_type.isValueType())
 	{
-		unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
+		unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries, _cleanup);
 		m_context << Instruction::DUP2 << Instruction::MSTORE;
 		m_context << u256(numBytes) << Instruction::ADD;
 	}
@@ -463,6 +464,7 @@ void CompilerUtils::encodeToMemory(
 		}
 		else
 		{
+			bool needCleanup = true;
 			copyToStackTop(argSize - stackPos + dynPointers + 2, _givenTypes[i]->sizeOnStack());
 			solAssert(!!targetType, "Externalable type expected.");
 			TypePointer type = targetType;
@@ -481,7 +483,11 @@ void CompilerUtils::encodeToMemory(
 			)
 				type = _givenTypes[i]; // delay conversion
 			else
+			{
 				convertType(*_givenTypes[i], *targetType, true);
+				needCleanup = false;
+			}
+
 			if (auto arrayType = dynamic_cast<ArrayType const*>(type))
 				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries);
 			else if (auto arraySliceType = dynamic_cast<ArraySliceType const*>(type))
@@ -495,7 +501,7 @@ void CompilerUtils::encodeToMemory(
 				ArrayUtils(m_context).copyArrayToMemory(arraySliceType->arrayType(), _padToWordBoundaries);
 			}
 			else
-				storeInMemoryDynamic(*type, _padToWordBoundaries);
+				storeInMemoryDynamic(*type, _padToWordBoundaries, needCleanup);
 		}
 		stackPos += _givenTypes[i]->sizeOnStack();
 	}
@@ -1499,7 +1505,7 @@ void CompilerUtils::rightShiftNumberOnStack(unsigned _bits)
 		m_context << (u256(1) << _bits) << Instruction::SWAP1 << Instruction::DIV;
 }
 
-unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
+unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords, bool _cleanup)
 {
 	solAssert(
 		_type.sizeOnStack() == 1,
@@ -1522,7 +1528,9 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
 
 	bool leftAligned = _type.category() == Type::Category::FixedBytes;
 
-	convertType(_type, _type, true);
+	if (_cleanup)
+		convertType(_type, _type, true);
+
 	if (numBytes != 32 && !leftAligned && !_padToWords)
 		// shift the value accordingly before storing
 		leftShiftNumberOnStack((32 - numBytes) * 8);

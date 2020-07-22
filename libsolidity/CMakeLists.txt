@@ -16,6 +16,8 @@ set(sources
 	analysis/DeclarationTypeChecker.h
 	analysis/DocStringAnalyser.cpp
 	analysis/DocStringAnalyser.h
+	analysis/DocStringTagParser.cpp
+	analysis/DocStringTagParser.h
 	analysis/ImmutableValidator.cpp
 	analysis/ImmutableValidator.h
 	analysis/GlobalContext.cpp

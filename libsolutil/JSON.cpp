@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file JSON.cpp
  * @author Alexander Arlt <alexander.arlt@arlt-labs.com>
  * @date 2018
@@ -32,8 +33,8 @@
 using namespace std;
 
 static_assert(
-	(JSONCPP_VERSION_MAJOR == 1) && (JSONCPP_VERSION_MINOR == 9) && (JSONCPP_VERSION_PATCH == 2),
-	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.9.2."
+	(JSONCPP_VERSION_MAJOR == 1) && (JSONCPP_VERSION_MINOR == 9) && (JSONCPP_VERSION_PATCH == 3),
+	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.9.3."
 );
 
 namespace solidity::util

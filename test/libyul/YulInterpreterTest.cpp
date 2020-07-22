@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libyul/YulInterpreterTest.h>
 
@@ -88,10 +89,9 @@ string YulInterpreterTest::interpret()
 	InterpreterState state;
 	state.maxTraceSize = 10000;
 	state.maxSteps = 10000;
-	Interpreter interpreter(state, EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
 	try
 	{
-		interpreter(*m_ast);
+		Interpreter::run(state, EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}), *m_ast);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{

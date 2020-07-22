@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/ModelChecker.h>
 
@@ -41,7 +42,12 @@ void ModelChecker::analyze(SourceUnit const& _source)
 		return;
 
 	m_chc.analyze(_source);
-	m_bmc.analyze(_source, m_chc.safeAssertions());
+
+	auto solvedTargets = m_chc.safeTargets();
+	for (auto const& target: m_chc.unsafeTargets())
+		solvedTargets[target.first] += target.second;
+
+	m_bmc.analyze(_source, solvedTargets);
 }
 
 vector<string> ModelChecker::unhandledQueries()

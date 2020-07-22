@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Yul code and data object container.
  */
@@ -43,6 +44,8 @@ struct ObjectNode
 	virtual std::string toString(Dialect const* _dialect) const = 0;
 	std::string toString() { return toString(nullptr); }
 
+	/// Name of the object.
+	/// Can be empty since .yul files can also just contain code, without explicitly placing it in an object.
 	YulString name;
 };
 
@@ -67,8 +70,23 @@ public:
 	std::string toString(Dialect const* _dialect) const override;
 
 	/// @returns the set of names of data objects accessible from within the code of
-	/// this object.
-	std::set<YulString> dataNames() const;
+	/// this object, including the name of object itself
+	std::set<YulString> qualifiedDataNames() const;
+
+	/// @returns vector of subIDs if possible to reach subobject with @a _qualifiedName, throws otherwise
+	/// For "B.C" should return vector of two values if success (subId of B and subId of C in B).
+	/// In object "A" if called for "A.B" will return only one value (subId for B)
+	/// will return empty vector for @a _qualifiedName that equals to object name.
+	/// Example:
+	/// A1{ B2{ C3, D3 }, E2{ F3{ G4, K4, H4{ I5 } } } }
+	/// pathToSubObject("A1.E2.F3.H4") == {1, 0, 2}
+	/// pathToSubObject("E2.F3.H4") == {1, 0, 2}
+	/// pathToSubObject("A1.E2") == {1}
+	/// The path must not lead to a @a Data object (will throw in that case).
+	std::vector<size_t> pathToSubObject(YulString _qualifiedName) const;
+
+	/// sub id for object if it is subobject of another object, max value if it is not subobject
+	size_t subId = std::numeric_limits<size_t>::max();
 
 	std::shared_ptr<Block> code;
 	std::vector<std::shared_ptr<ObjectNode>> subObjects;

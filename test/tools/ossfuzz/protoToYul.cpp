@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/tools/ossfuzz/protoToYul.h>
 #include <test/tools/ossfuzz/yulOptimizerFuzzDictionary.h>
@@ -178,19 +179,27 @@ bool ProtoConverter::functionCallNotPossible(FunctionCall_Returns _type)
 		(_type == FunctionCall::MULTIASSIGN && !varDeclAvailable());
 }
 
+unsigned ProtoConverter::numVarsInScope()
+{
+	if (m_inFunctionDef)
+		return m_currentFuncVars.size();
+	else
+		return m_currentGlobalVars.size();
+}
+
 void ProtoConverter::visit(VarRef const& _x)
 {
 	if (m_inFunctionDef)
 	{
 		// Ensure that there is at least one variable declaration to reference in function scope.
 		yulAssert(m_currentFuncVars.size() > 0, "Proto fuzzer: No variables to reference.");
-		m_output << *m_currentFuncVars[_x.varnum() % m_currentFuncVars.size()];
+		m_output << *m_currentFuncVars[static_cast<size_t>(_x.varnum()) % m_currentFuncVars.size()];
 	}
 	else
 	{
 		// Ensure that there is at least one variable declaration to reference in nested scopes.
 		yulAssert(m_currentGlobalVars.size() > 0, "Proto fuzzer: No global variables to reference.");
-		m_output << *m_currentGlobalVars[_x.varnum() % m_currentGlobalVars.size()];
+		m_output << *m_currentGlobalVars[static_cast<size_t>(_x.varnum()) % m_currentGlobalVars.size()];
 	}
 }
 
@@ -830,18 +839,18 @@ void ProtoConverter::visitFunctionInputParams(FunctionCall const& _x, unsigned _
 	case 4:
 		visit(_x.in_param4());
 		m_output << ", ";
-		BOOST_FALLTHROUGH;
+		[[fallthrough]];
 	case 3:
 		visit(_x.in_param3());
 		m_output << ", ";
-		BOOST_FALLTHROUGH;
+		[[fallthrough]];
 	case 2:
 		visit(_x.in_param2());
 		m_output << ", ";
-		BOOST_FALLTHROUGH;
+		[[fallthrough]];
 	case 1:
 		visit(_x.in_param1());
-		BOOST_FALLTHROUGH;
+		[[fallthrough]];
 	case 0:
 		break;
 	default:
@@ -966,23 +975,43 @@ void ProtoConverter::visit(FunctionCall const& _x)
 			"Proto fuzzer: Function call with too many output params encountered."
 		);
 
+		// Return early if numOutParams > number of available variables
+		if (numOutParams > numVarsInScope())
+			return;
+
+		// Copy variables in scope in order to prevent repeated references
+		vector<string> variables;
+		if (m_inFunctionDef)
+			for (auto var: m_currentFuncVars)
+				variables.push_back(*var);
+		else
+			for (auto var: m_currentGlobalVars)
+				variables.push_back(*var);
+
+		auto refVar = [](vector<string>& _var, unsigned _rand, bool _comma = true) -> string
+			{
+				auto index = _rand % _var.size();
+				string ref = _var[index];
+				_var.erase(_var.begin() + index);
+				if (_comma)
+					ref += ", ";
+				return ref;
+			};
+
 		// Convert LHS of multi assignment
 		// We reverse the order of out param visits since the order does not matter.
 		// This helps reduce the size of this switch statement.
 		switch (numOutParams)
 		{
 		case 4:
-			visit(_x.out_param4());
-			m_output << ", ";
-			BOOST_FALLTHROUGH;
+			m_output << refVar(variables, _x.out_param4().varnum());
+			[[fallthrough]];
 		case 3:
-			visit(_x.out_param3());
-			m_output << ", ";
-			BOOST_FALLTHROUGH;
+			m_output << refVar(variables, _x.out_param3().varnum());
+			[[fallthrough]];
 		case 2:
-			visit(_x.out_param2());
-			m_output << ", ";
-			visit(_x.out_param1());
+			m_output << refVar(variables, _x.out_param2().varnum());
+			m_output << refVar(variables, _x.out_param1().varnum(), false);
 			break;
 		default:
 			yulAssert(false, "Proto fuzzer: Function call with too many or too few input parameters.");

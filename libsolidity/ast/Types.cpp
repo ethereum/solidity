@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -52,6 +53,57 @@ using namespace solidity::frontend;
 
 namespace
 {
+
+struct TypeComp
+{
+	bool operator()(Type const* lhs, Type const* rhs) const
+	{
+		solAssert(lhs && rhs, "");
+		return lhs->richIdentifier() < rhs->richIdentifier();
+	}
+};
+using TypeSet = std::set<Type const*, TypeComp>;
+
+void oversizedSubtypesInner(
+	Type const& _type,
+	bool _includeType,
+	set<StructDefinition const*>& _structsSeen,
+	TypeSet& _oversizedSubtypes
+)
+{
+	switch (_type.category())
+	{
+	case Type::Category::Array:
+	{
+		auto const& t = dynamic_cast<ArrayType const&>(_type);
+		if (_includeType && t.storageSizeUpperBound() >= bigint(1) << 64)
+			_oversizedSubtypes.insert(&t);
+		oversizedSubtypesInner(*t.baseType(), t.isDynamicallySized(), _structsSeen, _oversizedSubtypes);
+		break;
+	}
+	case Type::Category::Struct:
+	{
+		auto const& t = dynamic_cast<StructType const&>(_type);
+		if (_structsSeen.count(&t.structDefinition()))
+			return;
+		if (_includeType && t.storageSizeUpperBound() >= bigint(1) << 64)
+			_oversizedSubtypes.insert(&t);
+		_structsSeen.insert(&t.structDefinition());
+		for (auto const& m: t.members(nullptr))
+			oversizedSubtypesInner(*m.type, false, _structsSeen, _oversizedSubtypes);
+		_structsSeen.erase(&t.structDefinition());
+		break;
+	}
+	case Type::Category::Mapping:
+	{
+		auto const* valueType = dynamic_cast<MappingType const&>(_type).valueType();
+		oversizedSubtypesInner(*valueType, true, _structsSeen, _oversizedSubtypes);
+		break;
+	}
+	default:
+		break;
+	}
+}
 
 /// Check whether (_base ** _exp) fits into 4096 bits.
 bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
@@ -147,6 +199,16 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 	return transformed;
 }
 
+}
+
+vector<frontend::Type const*> solidity::frontend::oversizedSubtypes(frontend::Type const& _type)
+{
+	set<StructDefinition const*> structsSeen;
+	TypeSet oversized;
+	oversizedSubtypesInner(_type, false, structsSeen, oversized);
+	vector<frontend::Type const*> res;
+	copy(oversized.cbegin(), oversized.cend(), back_inserter(res));
+	return res;
 }
 
 void Type::clearCache() const
@@ -1749,6 +1811,8 @@ BoolResult ArrayType::validForLocation(DataLocation _loc) const
 			break;
 		}
 		case DataLocation::Storage:
+			if (storageSizeUpperBound() >= bigint(1) << 256)
+				return BoolResult::err("Type too large for storage.");
 			break;
 	}
 	return true;
@@ -1786,6 +1850,14 @@ unsigned ArrayType::calldataEncodedTailSize() const
 bool ArrayType::isDynamicallyEncoded() const
 {
 	return isDynamicallySized() || baseType()->isDynamicallyEncoded();
+}
+
+bigint ArrayType::storageSizeUpperBound() const
+{
+	if (isDynamicallySized())
+		return 1;
+	else
+		return length() * baseType()->storageSizeUpperBound();
 }
 
 u256 ArrayType::storageSize() const
@@ -2247,6 +2319,14 @@ u256 StructType::memoryDataSize() const
 	return size;
 }
 
+bigint StructType::storageSizeUpperBound() const
+{
+	bigint size = 1;
+	for (auto const& member: members(nullptr))
+		size += member.type->storageSizeUpperBound();
+	return size;
+}
+
 u256 StructType::storageSize() const
 {
 	return max<u256>(1, members(nullptr).storageSize());
@@ -2388,6 +2468,13 @@ BoolResult StructType::validForLocation(DataLocation _loc) const
 			if (!result)
 				return result;
 		}
+
+	if (
+		_loc == DataLocation::Storage &&
+		storageSizeUpperBound() >= bigint(1) << 256
+	)
+		return BoolResult::err("Type too large for storage.");
+
 	return true;
 }
 

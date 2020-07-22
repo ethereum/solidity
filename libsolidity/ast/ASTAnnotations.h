@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -78,6 +79,8 @@ struct StructurallyDocumentedAnnotation
 
 	/// Mapping docstring tag name -> content.
 	std::multimap<std::string, DocTag> docTags;
+	/// contract that @inheritdoc references if it exists
+	ContractDefinition const* inheritdocReference = nullptr;
 };
 
 struct SourceUnitAnnotation: ASTAnnotation

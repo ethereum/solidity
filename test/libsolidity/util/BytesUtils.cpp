@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/util/BytesUtils.h>
 
@@ -22,6 +23,7 @@
 
 #include <liblangutil/Common.h>
 
+#include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
@@ -198,8 +200,7 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 				if (isprint(v))
 					os << v;
 				else
-					os << "\\x" << setw(2) << setfill('0') << hex << v;
-
+					os << "\\x" << toHex(v);
 		}
 	}
 	os << "\"";

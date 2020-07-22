@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file boostTest.cpp
  * @author Marko Simovic <markobarko@gmail.com>
  * @date 2014
@@ -65,6 +66,7 @@ int registerTests(
 	boost::filesystem::path const& _basepath,
 	boost::filesystem::path const& _path,
 	bool _enforceViaYul,
+	vector<string> const& _labels,
 	TestCase::TestCaseCreator _testCaseCreator
 )
 {
@@ -83,6 +85,7 @@ int registerTests(
 					*sub_suite,
 					_basepath, _path / entry.path().filename(),
 					_enforceViaYul,
+					_labels,
 					_testCaseCreator
 				);
 		_suite.add(sub_suite);
@@ -95,7 +98,7 @@ int registerTests(
 		static vector<unique_ptr<string const>> filenames;
 
 		filenames.emplace_back(make_unique<string>(_path.string()));
-		_suite.add(make_test_case(
+		auto test_case = make_test_case(
 			[config, _testCaseCreator]
 			{
 				BOOST_REQUIRE_NO_THROW({
@@ -125,7 +128,10 @@ int registerTests(
 			_path.stem().string(),
 			*filenames.back(),
 			0
-		));
+		);
+		for (auto const& _label: _labels)
+			test_case->add_label(_label);
+		_suite.add(test_case);
 		numTestsAdded = 1;
 	}
 	return numTestsAdded;
@@ -174,6 +180,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			options.testPath / ts.path,
 			ts.subpath,
 			options.enforceViaYul,
+			ts.labels,
 			ts.testCaseCreator
 		) > 0, std::string("no ") + ts.title + " tests found");
 	}

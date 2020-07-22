@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsmtutil/Z3Interface.h>
 
@@ -184,7 +185,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			return arguments[0] & arguments[1];
 		else if (n == "int2bv")
 		{
-			size_t size = std::stoi(_expr.arguments[1].name);
+			size_t size = std::stoul(_expr.arguments[1].name);
 			return z3::int2bv(size, arguments[0]);
 		}
 		else if (n == "bv2int")

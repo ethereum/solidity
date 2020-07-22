@@ -20,11 +20,11 @@ contract C {
     }
 }
 // ----
-// SyntaxError 1719: (224-238): Use of the "var" keyword is disallowed. Use explicit declaration `int16 s = ...´ instead.
-// SyntaxError 1719: (248-261): Use of the "var" keyword is disallowed. Use explicit declaration `uint16 i = ...´ instead.
-// SyntaxError 1719: (271-287): Use of the "var" keyword is disallowed. Use explicit declaration `string memory t = ...´ instead.
-// SyntaxError 1719: (297-307): Use of the "var" keyword is disallowed. Use explicit declaration `function (uint256) pure returns (uint256) g2 = ...´ instead.
+// SyntaxError 1719: (224-238): Use of the "var" keyword is disallowed. Use explicit declaration `int16 s = ...` instead.
+// SyntaxError 1719: (248-261): Use of the "var" keyword is disallowed. Use explicit declaration `uint16 i = ...` instead.
+// SyntaxError 1719: (271-287): Use of the "var" keyword is disallowed. Use explicit declaration `string memory t = ...` instead.
+// SyntaxError 1719: (297-307): Use of the "var" keyword is disallowed. Use explicit declaration `function (uint256) pure returns (uint256) g2 = ...` instead.
 // SyntaxError 3478: (317-350): Use of the "var" keyword is disallowed. Type cannot be expressed in syntax.
-// SyntaxError 1719: (360-384): Use of the "var" keyword is disallowed. Use explicit declaration `(uint8 a, string memory b) = ...´ instead.
-// SyntaxError 1719: (394-411): Use of the "var" keyword is disallowed. Use explicit declaration `(uint256 x, , uint256 z) = ...´ instead.
+// SyntaxError 1719: (360-384): Use of the "var" keyword is disallowed. Use explicit declaration `(uint8 a, string memory b) = ...` instead.
+// SyntaxError 1719: (394-411): Use of the "var" keyword is disallowed. Use explicit declaration `(uint256 x, , uint256 z) = ...` instead.
 // TypeError 7364: (421-438): Different number of components on the left hand side (2) than on the right hand side (1).

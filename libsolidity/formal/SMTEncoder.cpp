@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/SMTEncoder.h>
 
@@ -363,8 +364,12 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 	Token op = _assignment.assignmentOperator();
 	if (op != Token::Assign && !compoundOps.count(op))
 	{
+		Expression const* identifier = &_assignment.leftHandSide();
+		if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(identifier))
+			identifier = leftmostBase(*indexAccess);
 		// Give it a new index anyway to keep the SSA scheme sound.
-		if (auto varDecl = identifierToVariable(_assignment.leftHandSide()))
+		solAssert(identifier, "");
+		if (auto varDecl = identifierToVariable(*identifier))
 			m_context.newValue(*varDecl);
 
 		m_errorReporter.warning(
@@ -1072,7 +1077,7 @@ void SMTEncoder::arrayPush(FunctionCall const& _funCall)
 	m_context.addAssertion(symbArray->length() == oldLength + 1);
 
 	if (arguments.empty())
-		defineExpr(_funCall, element);
+		defineExpr(_funCall, smtutil::Expression::select(symbArray->elements(), oldLength));
 
 	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
 }
@@ -1114,6 +1119,28 @@ void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression
 	}
 	else if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(&_expr))
 		arrayIndexAssignment(*indexAccess, _array);
+	else if (auto const* funCall = dynamic_cast<FunctionCall const*>(&_expr))
+	{
+		FunctionType const& funType = dynamic_cast<FunctionType const&>(*funCall->expression().annotation().type);
+		if (funType.kind() == FunctionType::Kind::ArrayPush)
+		{
+			auto memberAccess = dynamic_cast<MemberAccess const*>(&funCall->expression());
+			solAssert(memberAccess, "");
+			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+			solAssert(symbArray, "");
+
+			auto oldLength = symbArray->length();
+			auto store = smtutil::Expression::store(
+				symbArray->elements(),
+				symbArray->length() - 1,
+				_array
+			);
+			symbArray->increaseIndex();
+			m_context.addAssertion(symbArray->elements() == store);
+			m_context.addAssertion(symbArray->length() == oldLength);
+			arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
+		}
+	}
 	else if (dynamic_cast<MemberAccess const*>(&_expr))
 		m_errorReporter.warning(
 			9599_error,
@@ -1253,7 +1280,7 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 		// - RHS is -1
 		// the result is then -(type.min), which wraps back to type.min
 		smtutil::Expression maxLeft = _left == smt::minValue(*intType);
-		smtutil::Expression minusOneRight = _right == -1;
+		smtutil::Expression minusOneRight = _right == numeric_limits<size_t >::max();
 		smtutil::Expression wrap = smtutil::Expression::ite(maxLeft && minusOneRight, smt::minValue(*intType), valueUnbounded);
 		return {wrap, valueUnbounded};
 	}
@@ -1262,7 +1289,7 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 	auto symbMax = smt::maxValue(*intType);
 
 	smtutil::Expression intValueRange = (0 - symbMin) + symbMax + 1;
-	string suffix = to_string(_operation.id()) + "_" + to_string(m_context.newSlackId());
+	string suffix = to_string(_operation.id()) + "_" + to_string(m_context.newUniqueId());
 	smt::SymbolicIntVariable k(intType, intType, "k_" + suffix, m_context);
 	smt::SymbolicIntVariable m(intType, intType, "m_" + suffix, m_context);
 
@@ -1376,9 +1403,11 @@ void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
 		bvSize = fixedType->numBits();
 		isSigned = fixedType->isSigned();
 	}
+	else if (auto const* fixedBytesType = dynamic_cast<FixedBytesType const*>(commonType))
+		bvSize = fixedBytesType->numBytes() * 8;
 
-	auto bvLeft = smtutil::Expression::int2bv(expr(_op.leftExpression()), bvSize);
-	auto bvRight = smtutil::Expression::int2bv(expr(_op.rightExpression()), bvSize);
+	auto bvLeft = smtutil::Expression::int2bv(expr(_op.leftExpression(), commonType), bvSize);
+	auto bvRight = smtutil::Expression::int2bv(expr(_op.rightExpression(), commonType), bvSize);
 
 	optional<smtutil::Expression> result;
 	if (_op.getOperator() == Token::BitAnd)

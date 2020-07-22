@@ -29,6 +29,7 @@
 #   make version=1.39.15 build
 #
 FROM emscripten/emsdk:1.39.15 AS base
+LABEL version="1"
 
 ADD emscripten.jam /usr/src
 RUN set -ex; \
@@ -63,3 +64,4 @@ RUN set -ex; \
 		cxxflags="-s DISABLE_EXCEPTION_CATCHING=0 -Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
 	       --prefix=/emsdk/emscripten/sdk/system install; \
 	rm -r /usr/src/boost_1_73_0
+

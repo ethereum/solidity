@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Adaptor between the abstract assembly and eth assembly.
  */
@@ -57,12 +58,14 @@ public:
 	void appendReturnsub(int, int) override;
 	void appendAssemblySize() override;
 	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() override;
-	void appendDataOffset(SubID _sub) override;
-	void appendDataSize(SubID _sub) override;
+	void appendDataOffset(std::vector<SubID> const& _subPath) override;
+	void appendDataSize(std::vector<SubID> const& _subPath) override;
 	SubID appendData(bytes const& _data) override;
 
 	void appendImmutable(std::string const& _identifier) override;
 	void appendImmutableAssignment(std::string const& _identifier) override;
+
+	void markAsInvalid() override;
 
 private:
 	static LabelID assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag);

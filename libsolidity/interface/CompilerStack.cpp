@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @author Gav Wood <g@ethdev.com>
@@ -29,6 +30,7 @@
 #include <libsolidity/analysis/ContractLevelChecker.h>
 #include <libsolidity/analysis/DeclarationTypeChecker.h>
 #include <libsolidity/analysis/DocStringAnalyser.h>
+#include <libsolidity/analysis/DocStringTagParser.h>
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/PostTypeChecker.h>
@@ -307,6 +309,11 @@ bool CompilerStack::analyze()
 			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;
 
+		DocStringTagParser DocStringTagParser(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !DocStringTagParser.parseDocStrings(*source->ast))
+				noErrors = false;
+
 		m_globalContext = make_shared<GlobalContext>();
 		// We need to keep the same resolver during the whole process.
 		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter);
@@ -362,6 +369,7 @@ bool CompilerStack::analyze()
 						if (!contractLevelChecker.check(*contract))
 							noErrors = false;
 
+		// Requires ContractLevelChecker
 		DocStringAnalyser docStringAnalyser(m_errorReporter);
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !docStringAnalyser.analyseDocStrings(*source->ast))

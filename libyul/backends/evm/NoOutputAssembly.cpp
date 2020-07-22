@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Assembly interface that ignores everything. Can be used as a backend for a compilation dry-run.
  */
@@ -131,12 +132,12 @@ pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::cr
 	return {};
 }
 
-void NoOutputAssembly::appendDataOffset(AbstractAssembly::SubID)
+void NoOutputAssembly::appendDataOffset(std::vector<AbstractAssembly::SubID> const&)
 {
 	appendInstruction(evmasm::Instruction::PUSH1);
 }
 
-void NoOutputAssembly::appendDataSize(AbstractAssembly::SubID)
+void NoOutputAssembly::appendDataSize(std::vector<AbstractAssembly::SubID> const&)
 {
 	appendInstruction(evmasm::Instruction::PUSH1);
 }

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Class that implements an SMT-based Bounded Model Checker (BMC).
  * Traverses the AST such that:
@@ -63,7 +64,7 @@ public:
 		smtutil::SMTSolverChoice _enabledSolvers
 	);
 
-	void analyze(SourceUnit const& _sources, std::set<Expression const*> _safeAssertions);
+	void analyze(SourceUnit const& _sources, std::map<ASTNode const*, std::set<VerificationTarget::Type>> _solvedTargets);
 
 	/// This is used if the SMT solver is not directly linked into this binary.
 	/// @returns a list of inputs to the SMT solver that were not part of the argument to
@@ -180,8 +181,8 @@ private:
 
 	std::vector<BMCVerificationTarget> m_verificationTargets;
 
-	/// Assertions that are known to be safe.
-	std::set<Expression const*> m_safeAssertions;
+	/// Targets that were already proven.
+	std::map<ASTNode const*, std::set<VerificationTarget::Type>> m_solvedTargets;
 };
 
 }

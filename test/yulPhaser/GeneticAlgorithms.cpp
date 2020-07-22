@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
 
@@ -56,7 +57,7 @@ protected:
 	};
 };
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(GeneticAlgorithmsTest)
 BOOST_AUTO_TEST_SUITE(RandomAlgorithmTest)
 
@@ -212,7 +213,8 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_generate_individuals_in_the_crossove
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(ClassicGeneticAlgorithmTest)
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_individuals_with_probability_proportional_to_fitness, ClassicGeneticAlgorithmFixture)
+// FIXME: This test runs *very* slowly (tens of seconds). Investigate, fix and re-enable.
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_individuals_with_probability_proportional_to_fitness, ClassicGeneticAlgorithmFixture, *boost::unit_test::disabled())
 {
 	constexpr double relativeTolerance = 0.1;
 	constexpr size_t populationSize = 1000;
@@ -253,7 +255,8 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_individuals_with_probability_
 	BOOST_TEST(abs(meanSquaredError(newFitness, expectedValue) - variance) < variance * relativeTolerance);
 }
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_only_individuals_existing_in_the_original_population, ClassicGeneticAlgorithmFixture)
+// FIXME: This test runs *very* slowly (tens of seconds). Investigate, fix and re-enable.
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_only_individuals_existing_in_the_original_population, ClassicGeneticAlgorithmFixture, *boost::unit_test::disabled())
 {
 	constexpr size_t populationSize = 1000;
 	auto population = Population::makeRandom(m_fitnessMetric, populationSize, 1, 10);
@@ -297,7 +300,8 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_crossover, ClassicGeneticAlgorith
 	BOOST_TEST(totalCrossed >= 2);
 }
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_mutation, ClassicGeneticAlgorithmFixture)
+// FIXME: This test runs *very* slowly (tens of seconds). Investigate, fix and re-enable.
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_mutation, ClassicGeneticAlgorithmFixture, *boost::unit_test::disabled())
 {
 	m_options.mutationChance = 0.6;
 	ClassicGeneticAlgorithm algorithm(m_options);
@@ -326,7 +330,8 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_mutation, ClassicGeneticAlgorithm
 	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
 }
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_deletion, ClassicGeneticAlgorithmFixture)
+// FIXME: This test runs *very* slowly (tens of seconds). Investigate, fix and re-enable.
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_deletion, ClassicGeneticAlgorithmFixture, *boost::unit_test::disabled())
 {
 	m_options.deletionChance = 0.6;
 	ClassicGeneticAlgorithm algorithm(m_options);
@@ -355,7 +360,8 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_deletion, ClassicGeneticAlgorithm
 	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
 }
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_addition, ClassicGeneticAlgorithmFixture)
+// FIXME: This test runs *very* slowly (tens of seconds). Investigate, fix and re-enable.
+BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_addition, ClassicGeneticAlgorithmFixture, *boost::unit_test::disabled())
 {
 	m_options.additionChance = 0.6;
 	ClassicGeneticAlgorithm algorithm(m_options);

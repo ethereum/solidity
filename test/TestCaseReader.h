@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <fstream>
 #include <map>
@@ -41,6 +42,7 @@ class TestCaseReader
 public:
 	TestCaseReader() = default;
 	explicit TestCaseReader(std::string const& _filename);
+	explicit TestCaseReader(std::istringstream const& _testCode);
 
 	SourceMap const& sources() const { return m_sources; }
 	std::string const& source() const;

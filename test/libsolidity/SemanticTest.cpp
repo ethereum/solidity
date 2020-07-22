@@ -46,7 +46,7 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	m_lineOffset(m_reader.lineNumber()),
 	m_enforceViaYul(enforceViaYul)
 {
-	string choice = m_reader.stringSetting("compileViaYul", "false");
+	string choice = m_reader.stringSetting("compileViaYul", "default");
 	if (choice == "also")
 	{
 		m_runWithYul = true;
@@ -63,6 +63,11 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 		m_runWithoutYul = true;
 		// Do not try to run via yul if explicitly denied.
 		m_enforceViaYul = false;
+	}
+	else if (choice == "default")
+	{
+		m_runWithYul = false;
+		m_runWithoutYul = true;
 	}
 	else
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid compileViaYul value: " + choice + "."));

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libyul/EwasmTranslationTest.h>
 
@@ -98,12 +99,10 @@ string EwasmTranslationTest::interpret()
 {
 	InterpreterState state;
 	state.maxTraceSize = 10000;
-	state.maxSteps = 100000;
-	WasmDialect dialect;
-	Interpreter interpreter(state, dialect);
+	state.maxSteps = 1000000;
 	try
 	{
-		interpreter(*m_object->code);
+		Interpreter::run(state, WasmDialect{}, *m_object->code);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/EncodingContext.h>
 
@@ -32,21 +33,21 @@ EncodingContext::EncodingContext():
 void EncodingContext::reset()
 {
 	resetAllVariables();
-	resetSlackId();
+	resetUniqueId();
 	m_expressions.clear();
 	m_globalContext.clear();
 	m_state.reset();
 	m_assertions.clear();
 }
 
-void EncodingContext::resetSlackId()
+void EncodingContext::resetUniqueId()
 {
-	m_nextSlackId = 0;
+	m_nextUniqueId = 0;
 }
 
-unsigned EncodingContext::newSlackId()
+unsigned EncodingContext::newUniqueId()
 {
-	return m_nextSlackId++;
+	return m_nextUniqueId++;
 }
 
 void EncodingContext::clear()

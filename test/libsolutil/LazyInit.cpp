@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolutil/LazyInit.h>
 
@@ -59,7 +60,7 @@ T valueOf(LazyInit<T> _lazyInit)
 
 }
 
-BOOST_AUTO_TEST_SUITE(LazyInitTests)
+BOOST_AUTO_TEST_SUITE(LazyInitTests, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(default_constructed_is_empty)
 {

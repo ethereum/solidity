@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -41,9 +42,9 @@ public:
 	/// To be used in the beginning of a root function visit.
 	void reset();
 	/// Resets the fresh id for slack variables.
-	void resetSlackId();
+	void resetUniqueId();
 	/// Returns the current fresh slack id and increments it.
-	unsigned newSlackId();
+	unsigned newUniqueId();
 	/// Clears the entire context, erasing everything.
 	/// To be used before a model checking engine starts.
 	void clear();
@@ -173,8 +174,8 @@ private:
 	bool m_accumulateAssertions = true;
 	//@}
 
-	/// Fresh ids for slack variables to be created deterministically.
-	unsigned m_nextSlackId = 0;
+	/// Central source of unique ids.
+	unsigned m_nextUniqueId = 0;
 };
 
 }

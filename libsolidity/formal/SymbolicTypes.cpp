@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/SymbolicTypes.h>
 
@@ -441,7 +442,11 @@ optional<smtutil::Expression> symbolicTypeConversion(TypePointer _from, TypePoin
 		// case they'd need to be encoded as numbers.
 		if (auto strType = dynamic_cast<StringLiteralType const*>(_from))
 			if (_to->category() == frontend::Type::Category::FixedBytes)
+			{
+				if (strType->value().empty())
+					return smtutil::Expression(size_t(0));
 				return smtutil::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
+			}
 
 	return std::nullopt;
 }

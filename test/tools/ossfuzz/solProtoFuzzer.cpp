@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/tools/ossfuzz/protoToSol.h>
 #include <test/tools/ossfuzz/solProto.pb.h>
@@ -202,7 +203,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		// With libFuzzer binary run this to generate a YUL source file x.yul:
 		// PROTO_FUZZER_DUMP_PATH=x.yul ./a.out proto-input
 		ofstream of(dump_path);
-		of.write(sol_source.data(), sol_source.size());
+		of.write(sol_source.data(), static_cast<streamsize>(sol_source.size()));
 	}
 
 	if (char const* dump_path = getenv("SOL_DEBUG_FILE"))

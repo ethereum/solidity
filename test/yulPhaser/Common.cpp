@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
 
@@ -66,7 +67,7 @@ map<string, TestEnum> const StringToTestEnumMap = invertMap(TestEnumToStringMap)
 
 }
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(CommonTest)
 
 BOOST_FIXTURE_TEST_CASE(readLinesFromFile_should_return_all_lines_from_a_text_file_as_strings_without_newlines, ReadLinesFromFileFixture)
