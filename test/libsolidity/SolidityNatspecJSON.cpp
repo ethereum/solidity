@@ -918,18 +918,7 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 		}
 	)";
 
-	char const* natspec = "{"
-	"    \"author\": \"Lefteris\","
-	"    \"title\": \"Just a test contract\","
-	"    \"methods\":{"
-	"        \"mul(uint256,uint256)\":{ \n"
-	"            \"details\": \"Mul function\",\n"
-	"            \"author\": \"John Doe\",\n"
-	"        }\n"
-	"    }\n"
-	"}";
-
-	checkNatspec(sourceCode, "test", natspec, false);
+	expectNatspecError(sourceCode);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
@@ -1114,7 +1103,6 @@ BOOST_AUTO_TEST_CASE(dev_constructor)
 {
 	char const *sourceCode = R"(
 		contract test {
-			/// @author Alex
 			/// @param a the parameter a is really nice and very useful
 			/// @param second the second parameter is not very useful, it just provides additional confusion
 			constructor(uint a, uint second) { }
@@ -1124,7 +1112,6 @@ BOOST_AUTO_TEST_CASE(dev_constructor)
 	char const *natspec = R"ABCDEF({
 	"methods" : {
 		"constructor" : {
-			"author" : "Alex",
 			"params" : {
 				"a" : "the parameter a is really nice and very useful",
 				"second" : "the second parameter is not very useful, it just provides additional confusion"
@@ -1140,7 +1127,6 @@ BOOST_AUTO_TEST_CASE(dev_constructor_return)
 {
 	char const* sourceCode = R"(
 		contract test {
-			/// @author Alex
 			/// @param a the parameter a is really nice and very useful
 			/// @param second the second parameter is not very useful, it just provides additional confusion
 			/// @return return should not work within constructors
@@ -1155,7 +1141,6 @@ BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
 {
 	char const *sourceCode = R"(
 		contract test {
-			/// @author Alex
 			/// @param a the parameter a is really nice and very useful
 			/// @param second the second parameter is not very useful, it just provides additional confusion
 			constructor(uint a, uint second) { }
@@ -1184,7 +1169,6 @@ BOOST_AUTO_TEST_CASE(dev_constructor_and_function)
 			}
 		},
 		"constructor" : {
-			"author" : "Alex",
 			"params" : {
 				"a" : "the parameter a is really nice and very useful",
 				"second" : "the second parameter is not very useful, it just provides additional confusion"
@@ -1402,7 +1386,6 @@ BOOST_AUTO_TEST_CASE(dev_default_inherit)
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
 			/// Second line.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1429,7 +1412,6 @@ BOOST_AUTO_TEST_CASE(dev_default_inherit)
 		{
 			"transfer(address,uint256)":
 			{
-				"author": "Programmer",
 				"details": "test",
 				"params":
 				{
@@ -1451,7 +1433,6 @@ BOOST_AUTO_TEST_CASE(user_default_inherit)
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
 			/// Second line.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1493,7 +1474,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit)
 	char const *sourceCode = R"(
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1519,7 +1499,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit)
 		{
 			"transfer(address,uint256)":
 			{
-				"author": "Programmer",
 				"details": "test",
 				"params":
 				{
@@ -1539,7 +1518,6 @@ BOOST_AUTO_TEST_CASE(user_explicit_inherit)
 	char const *sourceCode = R"(
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1579,7 +1557,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit2)
 	char const *sourceCode = R"(
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1605,7 +1582,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit2)
 		{
 			"transfer(address,uint256)":
 			{
-				"author": "Programmer",
 				"details": "test",
 				"params":
 				{
@@ -1626,7 +1602,6 @@ BOOST_AUTO_TEST_CASE(user_explicit_inherit2)
 	char const *sourceCode = R"(
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1667,7 +1642,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit_partial2)
 	char const *sourceCode = R"(
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1695,7 +1669,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit_partial2)
 		{
 			"transfer(address,uint256)":
 			{
-				"author": "Programmer",
 				"details": "test",
 				"params":
 				{
@@ -1711,7 +1684,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit_partial2)
 		{
 			"transfer(address,uint256)":
 			{
-				"author": "Programmer",
 				"details": "override dev comment",
 				"params":
 				{
@@ -1731,7 +1703,6 @@ BOOST_AUTO_TEST_CASE(user_explicit_inherit_partial2)
 	char const *sourceCode = R"(
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1782,7 +1753,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit_partial)
 	char const *sourceCode = R"(
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1810,7 +1780,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit_partial)
 		{
 			"transfer(address,uint256)":
 			{
-				"author": "Programmer",
 				"details": "test",
 				"params":
 				{
@@ -1826,7 +1795,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit_partial)
 		{
 			"transfer(address,uint256)":
 			{
-				"author": "Programmer",
 				"details": "override dev comment",
 				"params":
 				{
@@ -1846,7 +1814,6 @@ BOOST_AUTO_TEST_CASE(user_explicit_inherit_partial)
 	char const *sourceCode = R"(
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1898,7 +1865,6 @@ BOOST_AUTO_TEST_CASE(dev_inherit_parameter_mismatch)
 	char const *sourceCode = R"(
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1923,7 +1889,6 @@ BOOST_AUTO_TEST_CASE(dev_inherit_parameter_mismatch)
 		{
 			"transfer(address,uint256)":
 			{
-				"author": "Programmer",
 				"details": "test",
 				"params":
 				{
@@ -1948,7 +1913,6 @@ BOOST_AUTO_TEST_CASE(user_inherit_parameter_mismatch)
 	char const *sourceCode = R"(
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -1992,7 +1956,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inehrit_complex)
 	char const *sourceCode1 = R"(
 		interface ERC20 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer
 			/// @dev test
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -2001,7 +1964,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inehrit_complex)
 
 		interface ERC21 {
 			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @author Programmer2
 			/// @dev test2
 			/// @param to address to transfer to
 			/// @param amount amount to transfer
@@ -2026,7 +1988,6 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inehrit_complex)
 		{
 			"transfer(address,uint256)":
 			{
-				"author": "Programmer",
 				"details": "test",
 				"params":
 				{
