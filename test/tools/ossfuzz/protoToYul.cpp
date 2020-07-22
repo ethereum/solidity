@@ -1848,8 +1848,12 @@ void ProtoConverter::visit(LeaveStmt const&)
 string ProtoConverter::getObjectIdentifier(unsigned _x)
 {
 	unsigned currentId = currentObjectId();
-	yulAssert(m_objectScopeTree.size() > currentId, "Proto fuzzer: Error referencing object");
-	std::vector<std::string> objectIdsInScope = m_objectScopeTree[currentId];
+	string currentObjName = "object" + to_string(currentId);
+	yulAssert(
+		m_objectScope.count(currentObjName) && m_objectScope.at(currentObjName).size() > 0,
+		"Yul proto fuzzer: Error referencing object"
+	);
+	vector<string> objectIdsInScope = m_objectScope.at(currentObjName);
 	return objectIdsInScope[_x % objectIdsInScope.size()];
 }
 
@@ -1875,31 +1879,33 @@ void ProtoConverter::visit(Object const& _x)
 	visit(_x.code());
 	if (_x.has_data())
 		visit(_x.data());
-	if (_x.has_sub_obj())
-		visit(_x.sub_obj());
+	for (auto const& subObj: _x.sub_obj())
+		visit(subObj);
 	m_output << "}\n";
 }
 
 void ProtoConverter::buildObjectScopeTree(Object const& _x)
 {
 	// Identifies object being visited
-	string objectId = newObjectId(false);
-	vector<string> node{objectId};
+	string objectName = newObjectId(false);
+	vector<string> node{objectName};
 	if (_x.has_data())
 		node.push_back(s_dataIdentifier);
-	if (_x.has_sub_obj())
+	for (auto const& subObj: _x.sub_obj())
 	{
 		// Identifies sub object whose numeric suffix is
 		// m_objectId
-		string subObjectId = "object" + to_string(m_objectId);
-		node.push_back(subObjectId);
-		// TODO: Add sub-object to object's ancestors once
-		// nested access is implemented.
-		m_objectScopeTree.push_back(node);
-		buildObjectScopeTree(_x.sub_obj());
+		unsigned subObjectId = m_objectId;
+		string subObjectName = "object" + to_string(subObjectId);
+		node.push_back(subObjectName);
+		buildObjectScopeTree(subObj);
+		// Add sub-object to object's ancestors
+		yulAssert(m_objectScope.count(subObjectName), "Yul proto fuzzer: Invalid object hierarchy");
+		for (string const& item: m_objectScope.at(subObjectName))
+			if (item != subObjectName)
+				node.push_back(subObjectName + "." + item);
 	}
-	else
-		m_objectScopeTree.push_back(node);
+	m_objectScope.emplace(objectName, node);
 }
 
 void ProtoConverter::visit(Program const& _x)
