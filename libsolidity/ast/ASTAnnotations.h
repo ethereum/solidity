@@ -138,6 +138,11 @@ struct StructDeclarationAnnotation: TypeDeclarationAnnotation
 	std::optional<bool> recursive;
 };
 
+struct ErrorDeclarationAnnotation: TypeDeclarationAnnotation
+{
+	// currently no annotations
+};
+
 struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 	/// List of functions and modifiers without a body. Can also contain functions from base classes.

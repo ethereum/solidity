@@ -171,10 +171,11 @@ public:
 	enum class Category
 	{
 		Address, Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array, ArraySlice,
-		FixedBytes, Contract, Struct, Function, Enum, Tuple,
+		FixedBytes, Contract, Struct, Error, Function, Enum, Tuple,
 		Mapping, TypeType, Modifier, Magic, Module,
 		InaccessibleDynamic
 	};
+
 
 	/// @returns a pointer to _a or _b if the other is implicitly convertible to it or nullptr otherwise
 	static TypePointer commonType(Type const* _a, Type const* _b);
@@ -1000,6 +1001,14 @@ private:
 	// Caches for interfaceType(bool)
 	mutable std::optional<TypeResult> m_interfaceType;
 	mutable std::optional<TypeResult> m_interfaceType_library;
+};
+
+class ErrorType: public StructType
+{
+public:
+	explicit ErrorType(ErrorDefinition const& _def):
+		StructType{_def, DataLocation::Memory}
+	{}
 };
 
 /**

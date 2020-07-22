@@ -594,6 +594,47 @@ private:
 	ASTPointer<TypeName> m_typeName;
 };
 
+template <typename AnnotationT>
+class CompositeType: public Declaration
+{
+public:
+	CompositeType(
+		int64_t _id,
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		std::vector<ASTPointer<VariableDeclaration>> _members
+	):
+		Declaration(_id, _location, _name), m_members(std::move(_members)) {}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	std::vector<ASTPointer<VariableDeclaration>> const& members() const { return m_members; }
+
+	TypePointer type() const override
+	{
+		return TypeProvider::typeType(TypeProvider::errorType(*this, DataLocation::Storage));
+	}
+
+	bool isVisibleInDerivedContracts() const override { return true; }
+	bool isVisibleViaContractTypeAccess() const override { return true; }
+
+	AnnotationT& annotation() const override;
+
+private:
+	std::vector<ASTPointer<VariableDeclaration>> m_members;
+};
+using ErrorDefinition = CompositeType<ErrorDeclarationAnnotation>;
+TypePointer ErrorDefinition::type() const
+{
+}
+
+ErrorDeclarationAnnotation& ErrorDefinition::annotation() const
+{
+	return initAnnotation<ErrorDeclarationAnnotation>();
+}
+
+
 class StructDefinition: public Declaration
 {
 public:

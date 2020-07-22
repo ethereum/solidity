@@ -47,6 +47,7 @@ class ContractDefinition;
 class InheritanceSpecifier;
 class UsingForDirective;
 class StructDefinition;
+class ErrorDefinition;
 class EnumDefinition;
 class EnumValue;
 class ParameterList;
