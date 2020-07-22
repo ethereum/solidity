@@ -1,4 +1,10 @@
 cd "$PSScriptRoot\.."
+
+if ("$Env:FORCE_RELEASE") {
+	New-Item prerelease.txt -type file
+	Write-Host "Building release version."
+}
+
 mkdir build
 cd build
 $boost_dir=(Resolve-Path $PSScriptRoot\..\deps\boost\lib\cmake\Boost-*)

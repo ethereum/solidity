@@ -25,7 +25,8 @@
  - [ ] Create a pull request from ``develop`` to ``release``, wait for the tests, then merge it.
  - [ ] Make a final check that there are no platform-dependency issues in the ``solidity-test-bytecode`` repository.
  - [ ] Wait for the tests for the commit on ``release``, create a release in Github, creating the tag (click the `PUBLISH RELEASE` button on the release page.)
- - [ ] Wait for the CI runs on the tag itself (travis and appveyor should push artifacts onto the Github release page).
+ - [ ] Wait for the CI runs on the tag itself (travis should push artifacts onto the Github release page).
+ - [ ] Take the ``solc.exe`` binary from the ``b_win_release`` run of the released commit in circle-ci and add it to the release page as ``solc-windows.exe``.
  - [ ] Run ``scripts/create_source_tarball.sh`` while being on the tag to create the source tarball. Make sure to create ``prerelease.txt`` before: (``echo -n > prerelease.txt``). This will create the tarball in a directory called ``upload``.
  - [ ] Take the tarball from the upload directory (its name should be ``solidity_x.x.x.tar.gz``, otherwise ``prerelease.txt`` was missing in the step before) and upload the source tarball to the release page.
 
