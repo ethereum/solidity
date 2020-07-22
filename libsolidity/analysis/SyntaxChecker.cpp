@@ -190,6 +190,28 @@ void SyntaxChecker::endVisit(ForStatement const&)
 	m_inLoopDepth--;
 }
 
+bool SyntaxChecker::visit(Block const& _block)
+{
+	if (_block.unchecked())
+	{
+		if (m_uncheckedArithmetic)
+			m_errorReporter.syntaxError(
+				1941_error,
+				_block.location(),
+				"\"unchecked\" blocks cannot be nested."
+			);
+
+		m_uncheckedArithmetic = true;
+	}
+	return true;
+}
+
+void SyntaxChecker::endVisit(Block const& _block)
+{
+	if (_block.unchecked())
+		m_uncheckedArithmetic = false;
+}
+
 bool SyntaxChecker::visit(Continue const& _continueStatement)
 {
 	if (m_inLoopDepth <= 0)
@@ -288,8 +310,15 @@ bool SyntaxChecker::visit(InlineAssembly const& _inlineAssembly)
 	return false;
 }
 
-bool SyntaxChecker::visit(PlaceholderStatement const&)
+bool SyntaxChecker::visit(PlaceholderStatement const& _placeholder)
 {
+	if (m_uncheckedArithmetic)
+		m_errorReporter.syntaxError(
+			2573_error,
+			_placeholder.location(),
+			"The placeholder statement \"_\" cannot be used inside an \"unchecked\" block."
+		);
+
 	m_placeholderFound = true;
 	return true;
 }

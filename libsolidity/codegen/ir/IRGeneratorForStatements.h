@@ -66,6 +66,8 @@ public:
 	bool visit(Conditional const& _conditional) override;
 	bool visit(Assignment const& _assignment) override;
 	bool visit(TupleExpression const& _tuple) override;
+	bool visit(Block const& _block) override;
+	void endVisit(Block const& _block) override;
 	bool visit(IfStatement const& _ifStatement) override;
 	bool visit(ForStatement const& _forStatement) override;
 	bool visit(WhileStatement const& _whileStatement) override;

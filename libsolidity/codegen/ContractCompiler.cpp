@@ -1247,19 +1247,31 @@ bool ContractCompiler::visit(PlaceholderStatement const& _placeholderStatement)
 {
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _placeholderStatement);
+	solAssert(m_context.arithmetic() == Arithmetic::Checked, "Placeholder cannot be used inside checked block.");
 	appendModifierOrFunctionCode();
+	solAssert(m_context.arithmetic() == Arithmetic::Checked, "Arithmetic not reset to 'checked'.");
 	checker.check();
 	return true;
 }
 
 bool ContractCompiler::visit(Block const& _block)
 {
+	if (_block.unchecked())
+	{
+		solAssert(m_context.arithmetic() == Arithmetic::Checked, "");
+		m_context.setArithmetic(Arithmetic::Wrapping);
+	}
 	storeStackHeight(&_block);
 	return true;
 }
 
 void ContractCompiler::endVisit(Block const& _block)
 {
+	if (_block.unchecked())
+	{
+		solAssert(m_context.arithmetic() == Arithmetic::Wrapping, "");
+		m_context.setArithmetic(Arithmetic::Checked);
+	}
 	// Frees local variables declared in the scope of this block.
 	popScopedVariables(&_block);
 }
@@ -1327,6 +1339,8 @@ void ContractCompiler::appendModifierOrFunctionCode()
 
 	if (codeBlock)
 	{
+		m_context.setArithmetic(Arithmetic::Checked);
+
 		std::set<ExperimentalFeature> experimentalFeaturesOutside = m_context.experimentalFeaturesActive();
 		m_context.setExperimentalFeatures(codeBlock->sourceUnit().annotation().experimentalFeatures);
 

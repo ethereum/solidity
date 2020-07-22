@@ -139,6 +139,7 @@ bytes compileFirstExpression(
 			);
 			context.resetVisitedNodes(contract);
 			context.setMostDerivedContract(*contract);
+			context.setArithmetic(Arithmetic::Wrapping);
 			size_t parametersSize = _localVariables.size(); // assume they are all one slot on the stack
 			context.adjustStackOffset(static_cast<int>(parametersSize));
 			for (vector<string> const& variable: _localVariables)

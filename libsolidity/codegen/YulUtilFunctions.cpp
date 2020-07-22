@@ -483,6 +483,22 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 	});
 }
 
+string YulUtilFunctions::wrappingIntAddFunction(IntegerType const& _type)
+{
+	string functionName = "wrapping_add_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> sum {
+				sum := <cleanupFunction>(add(x, y))
+			}
+			)")
+			("functionName", functionName)
+			("cleanupFunction", cleanupFunction(_type))
+			.render();
+	});
+}
+
 string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 {
 	string functionName = "checked_mul_" + _type.identifier();
@@ -519,6 +535,22 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 	});
 }
 
+string YulUtilFunctions::wrappingIntMulFunction(IntegerType const& _type)
+{
+	string functionName = "wrapping_mul_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> product {
+				product := <cleanupFunction>(mul(x, y))
+			}
+			)")
+			("functionName", functionName)
+			("cleanupFunction", cleanupFunction(_type))
+			.render();
+	});
+}
+
 string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 {
 	string functionName = "checked_div_" + _type.identifier();
@@ -548,9 +580,30 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 	});
 }
 
-string YulUtilFunctions::checkedIntModFunction(IntegerType const& _type)
+string YulUtilFunctions::wrappingIntDivFunction(IntegerType const& _type)
 {
-	string functionName = "checked_mod_" + _type.identifier();
+	string functionName = "wrapping_div_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> r {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
+				if iszero(y) { <error>() }
+				r := <?signed>s</signed>div(x, y)
+			}
+			)")
+			("functionName", functionName)
+			("cleanupFunction", cleanupFunction(_type))
+			("signed", _type.isSigned())
+			("error", panicFunction())
+			.render();
+	});
+}
+
+string YulUtilFunctions::intModFunction(IntegerType const& _type)
+{
+	string functionName = "mod_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
@@ -595,6 +648,22 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
 			("panic", panicFunction())
+			.render();
+	});
+}
+
+string YulUtilFunctions::wrappingIntSubFunction(IntegerType const& _type)
+{
+	string functionName = "wrapping_sub_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&] {
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> diff {
+				diff := <cleanupFunction>(sub(x, y))
+			}
+			)")
+			("functionName", functionName)
+			("cleanupFunction", cleanupFunction(_type))
 			.render();
 	});
 }
@@ -890,6 +959,30 @@ string YulUtilFunctions::overflowCheckedExpLoopFunction()
 			("functionName", functionName)
 			("panic", panicFunction())
 			("shr_1", shiftRightFunction(1))
+			.render();
+	});
+}
+
+string YulUtilFunctions::wrappingIntExpFunction(
+	IntegerType const& _type,
+	IntegerType const& _exponentType
+)
+{
+	solAssert(!_exponentType.isSigned(), "");
+
+	string functionName = "wrapping_exp_" + _type.identifier() + "_" + _exponentType.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(base, exponent) -> power {
+				base := <baseCleanupFunction>(base)
+				exponent := <exponentCleanupFunction>(exponent)
+				power := <baseCleanupFunction>(exp(base, exponent))
+			}
+			)")
+			("functionName", functionName)
+			("baseCleanupFunction", cleanupFunction(_type))
+			("exponentCleanupFunction", cleanupFunction(_exponentType))
 			.render();
 	});
 }
@@ -2951,26 +3044,35 @@ std::string YulUtilFunctions::decrementCheckedFunction(Type const& _type)
 	string const functionName = "decrement_" + _type.identifier();
 
 	return m_functionCollector.createFunction(functionName, [&]() {
-		u256 minintval;
-
-		// Smallest admissible value to decrement
-		if (type.isSigned())
-			minintval = 0 - (u256(1) << (type.numBits() - 1)) + 1;
-		else
-			minintval = 1;
-
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
 				value := <cleanupFunction>(value)
-				if <lt>(value, <minval>) { <panic>() }
+				if eq(value, <minval>) { <panic>() }
 				ret := sub(value, 1)
 			}
 		)")
 		("functionName", functionName)
 		("panic", panicFunction())
-		("minval", toCompactHexWithPrefix(minintval))
-		("lt", type.isSigned() ? "slt" : "lt")
+		("minval", toCompactHexWithPrefix(type.min()))
 		("cleanupFunction", cleanupFunction(_type))
+		.render();
+	});
+}
+
+std::string YulUtilFunctions::decrementWrappingFunction(Type const& _type)
+{
+	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+
+	string const functionName = "decrement_wrapping_" + _type.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(value) -> ret {
+				ret := <cleanupFunction>(sub(value, 1))
+			}
+		)")
+		("functionName", functionName)
+		("cleanupFunction", cleanupFunction(type))
 		.render();
 	});
 }
@@ -2982,26 +3084,35 @@ std::string YulUtilFunctions::incrementCheckedFunction(Type const& _type)
 	string const functionName = "increment_" + _type.identifier();
 
 	return m_functionCollector.createFunction(functionName, [&]() {
-		u256 maxintval;
-
-		// Biggest admissible value to increment
-		if (type.isSigned())
-			maxintval = (u256(1) << (type.numBits() - 1)) - 2;
-		else
-			maxintval = (u256(1) << type.numBits()) - 2;
-
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
 				value := <cleanupFunction>(value)
-				if <gt>(value, <maxval>) { <panic>() }
+				if eq(value, <maxval>) { <panic>() }
 				ret := add(value, 1)
 			}
 		)")
 		("functionName", functionName)
-		("maxval", toCompactHexWithPrefix(maxintval))
-		("gt", type.isSigned() ? "sgt" : "gt")
+		("maxval", toCompactHexWithPrefix(type.max()))
 		("panic", panicFunction())
 		("cleanupFunction", cleanupFunction(_type))
+		.render();
+	});
+}
+
+std::string YulUtilFunctions::incrementWrappingFunction(Type const& _type)
+{
+	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+
+	string const functionName = "increment_wrapping_" + _type.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(value) -> ret {
+				ret := <cleanupFunction>(add(value, 1))
+			}
+		)")
+		("functionName", functionName)
+		("cleanupFunction", cleanupFunction(type))
 		.render();
 	});
 }
@@ -3012,21 +3123,36 @@ string YulUtilFunctions::negateNumberCheckedFunction(Type const& _type)
 	solAssert(type.isSigned(), "Expected signed type!");
 
 	string const functionName = "negate_" + _type.identifier();
-
-	u256 const minintval = 0 - (u256(1) << (type.numBits() - 1)) + 1;
-
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
 				value := <cleanupFunction>(value)
-				if slt(value, <minval>) { <panic>() }
+				if eq(value, <minval>) { <panic>() }
 				ret := sub(0, value)
 			}
 		)")
 		("functionName", functionName)
-		("minval", toCompactHexWithPrefix(minintval))
+		("minval", toCompactHexWithPrefix(type.min()))
 		("cleanupFunction", cleanupFunction(_type))
 		("panic", panicFunction())
+		.render();
+	});
+}
+
+string YulUtilFunctions::negateNumberWrappingFunction(Type const& _type)
+{
+	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+	solAssert(type.isSigned(), "Expected signed type!");
+
+	string const functionName = "negate_" + _type.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(value) -> ret {
+				value := <cleanupFunction>(sub(0, value)))
+			}
+		)")
+		("functionName", functionName)
+		("cleanupFunction", cleanupFunction(type))
 		.render();
 	});
 }

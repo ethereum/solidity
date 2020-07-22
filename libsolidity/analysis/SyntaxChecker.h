@@ -71,6 +71,9 @@ private:
 	bool visit(ForStatement const& _forStatement) override;
 	void endVisit(ForStatement const& _forStatement) override;
 
+	bool visit(Block const& _block) override;
+	void endVisit(Block const& _block) override;
+
 	bool visit(Continue const& _continueStatement) override;
 	bool visit(Break const& _breakStatement) override;
 
@@ -99,6 +102,9 @@ private:
 
 	/// Flag that indicates whether some version pragma was present.
 	bool m_versionPragmaFound = false;
+
+	/// Flag that indicates whether we are inside an unchecked block.
+	bool m_uncheckedArithmetic = false;
 
 	int m_inLoopDepth = 0;
 	std::optional<ContractKind> m_currentContractKind;

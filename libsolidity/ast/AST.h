@@ -1384,18 +1384,24 @@ public:
 		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
+		bool _unchecked,
 		std::vector<ASTPointer<Statement>> _statements
 	):
-		Statement(_id, _location, _docString), m_statements(std::move(_statements)) {}
+		Statement(_id, _location, _docString),
+		m_statements(std::move(_statements)),
+		m_unchecked(_unchecked)
+	{}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	std::vector<ASTPointer<Statement>> const& statements() const { return m_statements; }
+	bool unchecked() const { return m_unchecked; }
 
 	BlockAnnotation& annotation() const override;
 
 private:
 	std::vector<ASTPointer<Statement>> m_statements;
+	bool m_unchecked;
 };
 
 /**

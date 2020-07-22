@@ -15,6 +15,9 @@ Language Features:
  * New AST Node ``IdentifierPath`` replacing in many places the ``UserDefinedTypeName``
 
 
+AST Changes:
+ * New node type: unchecked block - used for ``unchecked { ... }``.
+
 ### 0.7.4 (unreleased)
 
 Important Bugfixes:
