@@ -91,24 +91,21 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	ostringstream os1;
 	ostringstream os2;
-	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
+	yulFuzzerUtil::interpret(
 		os1,
 		stack.parserResult()->code,
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 
-	if (
-		termReason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
-		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached
-	)
-		return;
-
 	stack.optimize();
-	yulFuzzerUtil::interpret(
+	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os2,
 		stack.parserResult()->code,
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
+
+	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
+		return;
 
 	bool isTraceEq = (os1.str() == os2.str());
 	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");
