@@ -152,7 +152,7 @@ public:
 	void setPushedValue(u256 const& _value) const { m_pushedValue = std::make_shared<u256>(_value); }
 	u256 const* pushedValue() const { return m_pushedValue.get(); }
 
-	std::string toAssemblyText() const;
+	std::string toAssemblyText(Assembly const& _assembly) const;
 
 	size_t m_modifierDepth = 0;
 

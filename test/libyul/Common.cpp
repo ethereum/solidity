@@ -90,7 +90,7 @@ pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(
 	if (!parserResult->code || errorReporter.hasErrors())
 		return {};
 	shared_ptr<AsmAnalysisInfo> analysisInfo = make_shared<AsmAnalysisInfo>();
-	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect, {}, parserResult->dataNames());
+	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect, {}, parserResult->qualifiedDataNames());
 	// TODO this should be done recursively.
 	if (!analyzer.analyze(*parserResult->code) || errorReporter.hasErrors())
 		return {};

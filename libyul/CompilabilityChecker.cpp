@@ -39,7 +39,7 @@ map<YulString, int> CompilabilityChecker::run(
 	bool _optimizeStackAllocation
 )
 {
-	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
+	if (auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{
 		NoOutputEVMDialect noOutputDialect(*evmDialect);
 
@@ -48,8 +48,10 @@ map<YulString, int> CompilabilityChecker::run(
 
 		BuiltinContext builtinContext;
 		builtinContext.currentObject = &_object;
-		for (auto name: _object.dataNames())
-			builtinContext.subIDs[name] = 1;
+		if (!_object.name.empty())
+			builtinContext.subIDs[_object.name] = 1;
+		for (auto const& subNode: _object.subObjects)
+			builtinContext.subIDs[subNode->name] = 1;
 		NoOutputAssembly assembly;
 		CodeTransform transform(
 			assembly,
