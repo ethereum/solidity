@@ -36,7 +36,8 @@ contract C {
         return true;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // testRuntime() -> true
 // testCreation() -> true

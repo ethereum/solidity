@@ -102,9 +102,9 @@ public:
 	/// Creates a new sub-assembly, which can be referenced using dataSize and dataOffset.
 	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() = 0;
 	/// Appends the offset of the given sub-assembly or data.
-	virtual void appendDataOffset(SubID _sub) = 0;
+	virtual void appendDataOffset(std::vector<SubID> const& _subPath) = 0;
 	/// Appends the size of the given sub-assembly or data.
-	virtual void appendDataSize(SubID _sub) = 0;
+	virtual void appendDataSize(std::vector<SubID> const& _subPath) = 0;
 	/// Appends the given data to the assembly and returns its ID.
 	virtual SubID appendData(bytes const& _data) = 0;
 

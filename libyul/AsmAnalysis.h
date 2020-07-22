@@ -102,7 +102,6 @@ private:
 	/// Vists the expression and expects it to return a single boolean value.
 	/// Reports an error otherwise.
 	void expectBoolExpression(Expression const& _expr);
-	bool expectDeposit(int _deposit, int _oldHeight, langutil::SourceLocation const& _location);
 
 	/// Verifies that a variable to be assigned to exists, can be assigned to
 	/// and has the same type as the value.

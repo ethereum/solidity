@@ -34,29 +34,33 @@ Bugfixes:
  * State Mutability: Constant public state variables are considered ``pure`` functions.
 
 
-### 0.6.12 (unreleased)
+### 0.6.12 (2020-07-22)
 
 Language Features:
+ * NatSpec: Implement tag ``@inheritdoc`` to copy documentation from a specific base contract.
  * Wasm backend: Add ``i32.ctz``, ``i64.ctz``, ``i32.popcnt``, and ``i64.popcnt``.
 
-Compiler Features:
- * Code Generator: Evaluate ``keccak256`` of string literals at compile-time.
- * Peephole Optimizer: Remove unnecessary masking of tags.
- * Yul EVM Code Transform: Free stack slots directly after visiting the right-hand-side of variable declarations instead of at the end of the statement only.
- * NatSpec: Implement tag ``@inheritdoc`` to copy documentation from a specific contract.
 
-Bugfixes:
- * SMTChecker: Fix internal error when using bitwise operators on fixed bytes type.
- * SMTChecker: Fix internal error when using compound bitwise operator assignments on array indices inside branches.
- * SMTChecker: Fix error in events with indices of type static array.
- * Type Checker: Fix overload resolution in combination with ``{value: ...}``.
- * Type Checker: Fix internal compiler error related to oversized types.
+Compiler Features:
  * Code Generator: Avoid double cleanup when copying to memory.
-
-Compiler Features:
- * Build System: Update internal dependency of jsoncpp to 1.9.3.
+ * Code Generator: Evaluate ``keccak256`` of string literals at compile-time.
  * Optimizer: Add rule to remove shifts inside the byte opcode.
  * Peephole Optimizer: Add rule to remove swap after dup.
+ * Peephole Optimizer: Remove unnecessary masking of tags.
+ * Yul EVM Code Transform: Free stack slots directly after visiting the right-hand-side of variable declarations instead of at the end of the statement only.
+
+
+Bugfixes:
+ * SMTChecker: Fix error in events with indices of type static array.
+ * SMTChecker: Fix internal error in sequential storage array pushes (``push().push()``).
+ * SMTChecker: Fix internal error when using bitwise operators on fixed bytes type.
+ * SMTChecker: Fix internal error when using compound bitwise operator assignments on array indices inside branches.
+ * Type Checker: Fix internal compiler error related to oversized types.
+ * Type Checker: Fix overload resolution in combination with ``{value: ...}``.
+
+
+Build System:
+ * Update internal dependency of jsoncpp to 1.9.3.
 
 
 ### 0.6.11 (2020-07-07)

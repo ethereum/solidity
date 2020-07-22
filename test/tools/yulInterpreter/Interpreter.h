@@ -154,6 +154,10 @@ private:
 	void enterScope(Block const& _block);
 	void leaveScope();
 
+	/// Increment interpreter step count, throwing exception if step limit
+	/// is reached.
+	void incrementStep();
+
 	Dialect const& m_dialect;
 	InterpreterState& m_state;
 	/// Values of variables.

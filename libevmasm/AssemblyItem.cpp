@@ -18,7 +18,10 @@
 
 #include <libevmasm/AssemblyItem.h>
 
+#include <libevmasm/Assembly.h>
+
 #include <libsolutil/CommonData.h>
+#include <libsolutil/StringUtils.h>
 #include <libsolutil/FixedHash.h>
 #include <liblangutil/SourceLocation.h>
 
@@ -170,7 +173,7 @@ string AssemblyItem::getJumpTypeAsString() const
 	}
 }
 
-string AssemblyItem::toAssemblyText() const
+string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 {
 	string text;
 	switch (type())
@@ -208,11 +211,18 @@ string AssemblyItem::toAssemblyText() const
 		text = string("data_") + util::toHex(data());
 		break;
 	case PushSub:
-		text = string("dataOffset(sub_") + to_string(static_cast<size_t>(data())) + ")";
-		break;
 	case PushSubSize:
-		text = string("dataSize(sub_") + to_string(static_cast<size_t>(data())) + ")";
+	{
+		vector<string> subPathComponents;
+		for (size_t subPathComponentId: _assembly.decodeSubPath(static_cast<size_t>(data())))
+			subPathComponents.emplace_back("sub_" + to_string(subPathComponentId));
+		text =
+			(type() == PushSub ? "dataOffset"s : "dataSize"s) +
+			"(" +
+			solidity::util::joinHumanReadable(subPathComponents, ".") +
+			")";
 		break;
+	}
 	case PushProgramSize:
 		text = string("bytecodeSize");
 		break;

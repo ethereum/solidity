@@ -23,11 +23,11 @@ if (OSSFUZZ)
 endif()
 
 if (OSSFUZZ)
-    add_executable(solc_opt_ossfuzz solc_opt_ossfuzz.cpp ../fuzzer_common.cpp)
+    add_executable(solc_opt_ossfuzz solc_opt_ossfuzz.cpp ../fuzzer_common.cpp ../../TestCaseReader.cpp)
     target_link_libraries(solc_opt_ossfuzz PRIVATE libsolc evmasm)
     set_target_properties(solc_opt_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
-    add_executable(solc_noopt_ossfuzz solc_noopt_ossfuzz.cpp ../fuzzer_common.cpp)
+    add_executable(solc_noopt_ossfuzz solc_noopt_ossfuzz.cpp ../fuzzer_common.cpp ../../TestCaseReader.cpp)
     target_link_libraries(solc_noopt_ossfuzz PRIVATE libsolc evmasm)
     set_target_properties(solc_noopt_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 

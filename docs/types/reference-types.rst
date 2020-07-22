@@ -237,6 +237,23 @@ memory arrays, i.e. the following is not possible:
 It is planned to remove this restriction in the future, but it creates some
 complications because of how arrays are passed in the ABI.
 
+If you want to initialize dynamically-sized arrays, you have to assign the
+individual elements:
+
+::
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.7.0;
+
+    contract C {
+        function f() public pure {
+            uint[] memory x = new uint[](3);
+            x[0] = 1;
+            x[1] = 3;
+            x[2] = 4;
+        }
+    }
+
 .. index:: ! array;length, length, push, pop, !array;push, !array;pop
 
 .. _array-members:
