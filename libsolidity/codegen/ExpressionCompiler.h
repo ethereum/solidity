@@ -101,6 +101,7 @@ private:
 	void appendArithmeticOperatorCode(Token _operator, Type const& _type);
 	void appendBitOperatorCode(Token _operator);
 	void appendShiftOperatorCode(Token _operator, Type const& _valueType, Type const& _shiftAmountType);
+	void appendExpOperatorCode(Type const& _valueType, Type const& _exponentType);
 	/// @}
 
 	/// Appends code to call a function of the given type with the given arguments.

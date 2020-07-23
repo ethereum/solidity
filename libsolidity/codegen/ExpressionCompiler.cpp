@@ -286,6 +286,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		m_currentLValue->storeValue(*rightIntermediateType, _assignment.location());
 	else  // compound assignment
 	{
+		solAssert(binOp != Token::Exp, "Compound exp is not possible.");
 		solAssert(leftType.isValueType(), "Compound operators only available for value types.");
 		unsigned lvalueSize = m_currentLValue->sizeOnStack();
 		unsigned itemSize = _assignment.annotation().type->sizeOnStack();
@@ -452,7 +453,10 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		bool cleanupNeeded = cleanupNeededForOp(commonType->category(), c_op);
 
 		TypePointer leftTargetType = commonType;
-		TypePointer rightTargetType = TokenTraits::isShiftOp(c_op) ? rightExpression.annotation().type->mobileType() : commonType;
+		TypePointer rightTargetType =
+			TokenTraits::isShiftOp(c_op) || c_op == Token::Exp ?
+			rightExpression.annotation().type->mobileType() :
+			commonType;
 		solAssert(rightTargetType, "");
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
@@ -474,6 +478,8 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		if (TokenTraits::isShiftOp(c_op))
 			// shift only cares about the signedness of both sides
 			appendShiftOperatorCode(c_op, *leftTargetType, *rightTargetType);
+		else if (c_op == Token::Exp)
+			appendExpOperatorCode(*leftTargetType, *rightTargetType);
 		else if (TokenTraits::isCompareOp(c_op))
 			appendCompareOperatorCode(c_op, *commonType);
 		else
@@ -2080,9 +2086,6 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token _operator, Type cons
 			m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
 		break;
 	}
-	case Token::Exp:
-		m_context << Instruction::EXP;
-		break;
 	default:
 		solAssert(false, "Unknown arithmetic operator.");
 	}
@@ -2175,6 +2178,14 @@ void ExpressionCompiler::appendShiftOperatorCode(Token _operator, Type const& _v
 	default:
 		solAssert(false, "Unknown shift operator.");
 	}
+}
+
+void ExpressionCompiler::appendExpOperatorCode(Type const& _valueType, Type const& _exponentType)
+{
+	solAssert(_valueType.category() == Type::Category::Integer, "");
+	solAssert(!dynamic_cast<IntegerType const&>(_exponentType).isSigned(), "");
+
+	m_context << Instruction::EXP;
 }
 
 void ExpressionCompiler::appendExternalFunctionCall(
