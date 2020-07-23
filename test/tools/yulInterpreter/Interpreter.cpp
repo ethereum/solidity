@@ -247,6 +247,7 @@ void Interpreter::incrementStep()
 
 void ExpressionEvaluator::operator()(Literal const& _literal)
 {
+	incrementStep();
 	static YulString const trueString("true");
 	static YulString const falseString("false");
 
@@ -256,6 +257,7 @@ void ExpressionEvaluator::operator()(Literal const& _literal)
 void ExpressionEvaluator::operator()(Identifier const& _identifier)
 {
 	solAssert(m_variables.count(_identifier.name), "");
+	incrementStep();
 	setValue(m_variables.at(_identifier.name));
 }
 
@@ -319,6 +321,7 @@ void ExpressionEvaluator::setValue(u256 _value)
 
 void ExpressionEvaluator::evaluateArgs(vector<Expression> const& _expr)
 {
+	incrementStep();
 	vector<u256> values;
 	/// Function arguments are evaluated in reverse.
 	for (auto const& expr: _expr | boost::adaptors::reversed)
@@ -328,4 +331,14 @@ void ExpressionEvaluator::evaluateArgs(vector<Expression> const& _expr)
 	}
 	m_values = std::move(values);
 	std::reverse(m_values.begin(), m_values.end());
+}
+
+void ExpressionEvaluator::incrementStep()
+{
+	m_nestingLevel++;
+	if (m_state.maxExprNesting > 0 && m_nestingLevel > m_state.maxExprNesting)
+	{
+		m_state.trace.emplace_back("Maximum expression nesting level reached.");
+		throw ExpressionNestingLimitReached();
+	}
 }

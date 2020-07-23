@@ -89,6 +89,7 @@ string YulInterpreterTest::interpret()
 	InterpreterState state;
 	state.maxTraceSize = 10;
 	state.maxSteps = 150;
+	state.maxExprNesting = 60;
 	try
 	{
 		Interpreter::run(state, EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}), *m_ast);

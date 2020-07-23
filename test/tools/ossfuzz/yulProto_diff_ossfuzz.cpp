@@ -91,19 +91,25 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	ostringstream os1;
 	ostringstream os2;
-	yulFuzzerUtil::interpret(
+	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
 		stack.parserResult()->code,
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 
+	if (
+		termReason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
+		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached ||
+		termReason == yulFuzzerUtil::TerminationReason::ExpresionNestingLimitReached
+	)
+		return;
+
 	stack.optimize();
-	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
+	termReason = yulFuzzerUtil::interpret(
 		os2,
 		stack.parserResult()->code,
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
-
 	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
 		return;
 
