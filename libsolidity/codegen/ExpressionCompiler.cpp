@@ -2117,7 +2117,6 @@ void ExpressionCompiler::appendShiftOperatorCode(Token _operator, Type const& _v
 		solAssert(dynamic_cast<FixedBytesType const*>(&_valueType), "Only integer and fixed bytes type supported for shifts.");
 
 	// The amount can be a RationalNumberType too.
-	bool c_amountSigned = false;
 	if (auto amountType = dynamic_cast<RationalNumberType const*>(&_shiftAmountType))
 	{
 		// This should be handled by the type checker.
@@ -2125,16 +2124,9 @@ void ExpressionCompiler::appendShiftOperatorCode(Token _operator, Type const& _v
 		solAssert(!amountType->integerType()->isSigned(), "");
 	}
 	else if (auto amountType = dynamic_cast<IntegerType const*>(&_shiftAmountType))
-		c_amountSigned = amountType->isSigned();
+		solAssert(!amountType->isSigned(), "");
 	else
 		solAssert(false, "Invalid shift amount type.");
-
-	// shift by negative amount throws exception
-	if (c_amountSigned)
-	{
-		m_context << u256(0) << Instruction::DUP3 << Instruction::SLT;
-		m_context.appendConditionalInvalid();
-	}
 
 	m_context << Instruction::SWAP1;
 	// stack: value_to_shift shift_amount
