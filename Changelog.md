@@ -1,36 +1,38 @@
 ### 0.7.0 (unreleased)
 
 Breaking changes:
- * Type Checker: Disallow virtual for library functions.
- * Constructors should not have visibility.
- * Deprecated dot syntax for `value` and `gas`.
- * Deprecated the identifier `now`.
- * Disallow `gwei` as identifier.
- * JSON AST: Removes members with ``null`` value from JSON output.
+ * Inline Assembly: Disallow ``.`` in user-defined function and variable names.
+ * Inline Assembly: Slot and offset of storage pointer variable ``x`` are accessed via ``x.slot`` and ``x.offset`` instead of ``x_slot`` and ``x_offset``.
+ * JSON AST: Remove members with ``null`` value from JSON output.
+ * Parser: Disallow ``gwei`` as identifier.
+ * Parser: Disallow dot syntax for ``value`` and ``gas``.
  * Parser: NatSpec comments on variables are only allowed for public state variables.
- * Type Checker: Disallow shifts by signed types.
- * Type Checker: Exponentiation and shifts of literals by non-literals will always use ``uint256`` or ``int256`` as a type.
- * Type Checker: Disallow structs and arrays in memory or calldata if they contain nested mappings.
+ * Parser: Remove the ``finney`` and ``szabo`` denominations.
+ * Parser: Remove the identifier ``now`` (replaced by ``block.timestamp``).
+ * Reference Resolver: ``using A for B`` only affects the contract it is mentioned in and not all derived contracts
+ * Type Checker: Disallow ``virtual`` for library functions.
  * Type Checker: Disallow assignments to state variables that contain nested mappings.
  * Type checker: Disallow events with same name and parameter types in inheritance hierarchy.
- * ``using A for B`` only affects the contract it is mentioned in and not all derived contracts
- * Inline Assembly: Disallow `.` in user-defined function and variable names.
- * Inline Assembly: Slot and offset of storage pointer variable ``x`` are accessed via ``x.slot`` and ``x.offset`` instead of ``x_slot`` and ``x_offset``.
- * Remove the finney and szabo denominations.
+ * Type Checker: Disallow shifts by signed types.
+ * Type Checker: Disallow structs and arrays in memory or calldata if they contain nested mappings.
+ * Type Checker: Exponentiation and shifts of literals by non-literals will always use ``uint256`` or ``int256`` as a type.
+ * Yul: Disallow consecutive and trailing dots in identifiers. Leading dots were already disallowed.
+ * Yul: Disallow EVM instruction `pc()`.
+
 
 Language Features:
- * State mutability: Do not issue recommendation for stricter mutability for virtual functions but do issue it for functions that override.
- * Yul: Disallow EVM instruction `pc()`.
- * Yul: Disallow consecutive and trailing dots in identifiers. Leading dots were already disallowed.
  * Inheritance: Allow overrides to have stricter state mutability: ``view`` can override ``nonpayable`` and ``pure`` can override ``view``.
+ * Parser: Deprecate visibility for constructors.
+ * State mutability: Do not issue recommendation for stricter mutability for virtual functions but do issue it for functions that override.
+
 
 Compiler Features:
  * Variable declarations using the ``var`` keyword are not recognized anymore.
 
 
 Bugfixes:
- * NatSpec: Constructors and functions have consistent userdoc output.
  * Inheritance: Disallow public state variables overwriting ``pure`` functions.
+ * NatSpec: Constructors and functions have consistent userdoc output.
  * SMTChecker: Fix internal error when assigning to a 1-tuple.
  * State Mutability: Constant public state variables are considered ``pure`` functions.
  * Type Checker: Fixing deduction issues on function types when function call has named arguments.
