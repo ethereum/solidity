@@ -34,6 +34,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when assigning to a 1-tuple.
  * State Mutability: Constant public state variables are considered ``pure`` functions.
  * Type Checker: Fixing deduction issues on function types when function call has named arguments.
+ * Immutables: Fix internal compiler error when immutables are not assigned.
 
 
 ### 0.6.12 (2020-07-22)

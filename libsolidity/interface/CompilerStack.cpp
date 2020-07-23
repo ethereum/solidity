@@ -516,7 +516,17 @@ bool CompilerStack::compile()
 			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
 				if (isRequestedContract(*contract))
 				{
-					compileContract(*contract, otherCompilers);
+					try
+					{
+						compileContract(*contract, otherCompilers);
+					}
+					catch (Error const& _error)
+					{
+						if (_error.type() != Error::Type::CodeGenerationError)
+							throw;
+						m_errorReporter.error(_error.errorId(), _error.type(), SourceLocation(), _error.what());
+						return false;
+					}
 					if (m_generateIR || m_generateEwasm)
 						generateIR(*contract);
 					if (m_generateEwasm)

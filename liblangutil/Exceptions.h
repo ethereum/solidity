@@ -78,6 +78,7 @@ class Error: virtual public util::Exception
 public:
 	enum class Type
 	{
+		CodeGenerationError,
 		DeclarationError,
 		DocstringParsingError,
 		ParserError,
