@@ -25,7 +25,7 @@ to receive their money - contracts cannot activate themselves.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract SimpleAuction {
         // Parameters of the auction. Times are either
@@ -60,9 +60,9 @@ to receive their money - contracts cannot activate themselves.
         constructor(
             uint _biddingTime,
             address payable _beneficiary
-        ) public {
+        ) {
             beneficiary = _beneficiary;
-            auctionEndTime = now + _biddingTime;
+            auctionEndTime = block.timestamp + _biddingTime;
         }
 
         /// Bid on the auction with the value sent
@@ -79,7 +79,7 @@ to receive their money - contracts cannot activate themselves.
             // Revert the call if the bidding
             // period is over.
             require(
-                now <= auctionEndTime,
+                block.timestamp <= auctionEndTime,
                 "Auction already ended."
             );
 
@@ -141,7 +141,7 @@ to receive their money - contracts cannot activate themselves.
             // external contracts.
 
             // 1. Conditions
-            require(now >= auctionEndTime, "Auction not yet ended.");
+            require(block.timestamp >= auctionEndTime, "Auction not yet ended.");
             require(!ended, "auctionEnd has already been called.");
 
             // 2. Effects
@@ -186,7 +186,7 @@ invalid bids.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract BlindAuction {
         struct Bid {
@@ -213,16 +213,16 @@ invalid bids.
         /// functions. `onlyBefore` is applied to `bid` below:
         /// The new function body is the modifier's body where
         /// `_` is replaced by the old function body.
-        modifier onlyBefore(uint _time) { require(now < _time); _; }
-        modifier onlyAfter(uint _time) { require(now > _time); _; }
+        modifier onlyBefore(uint _time) { require(block.timestamp < _time); _; }
+        modifier onlyAfter(uint _time) { require(block.timestamp > _time); _; }
 
         constructor(
             uint _biddingTime,
             uint _revealTime,
             address payable _beneficiary
-        ) public {
+        ) {
             beneficiary = _beneficiary;
-            biddingEnd = now + _biddingTime;
+            biddingEnd = block.timestamp + _biddingTime;
             revealEnd = biddingEnd + _revealTime;
         }
 

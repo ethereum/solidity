@@ -10,7 +10,7 @@ contract C {
     }
     S s;
 
-    constructor() public {
+    constructor() {
         uint256[3] memory s2;
         s2[1] = 9;
         s = S(1, s2, X(4, 5));

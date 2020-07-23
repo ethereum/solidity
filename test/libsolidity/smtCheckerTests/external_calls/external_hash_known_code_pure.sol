@@ -12,7 +12,7 @@ contract C {
 	bytes32 sig_2;
 	Crypto d;
 
-	constructor() public {
+	constructor() {
 		owner = msg.sender;
 	}
 
@@ -28,4 +28,4 @@ contract C {
 	}
 }
 // ----
-// Warning 4661: (438-460): Assertion violation happens here
+// Warning 4661: (431-453): Assertion violation happens here

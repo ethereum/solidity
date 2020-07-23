@@ -8,7 +8,6 @@
     ]
   },
   "id": 7,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -17,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 6,
       "linearizedBaseContracts":
@@ -70,7 +68,6 @@
               }
             ]
           },
-          "documentation": null,
           "functionSelector": "ece866b9",
           "id": 5,
           "implemented": true,
@@ -78,7 +75,6 @@
           "modifiers": [],
           "name": "l",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,

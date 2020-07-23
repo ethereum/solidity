@@ -42,7 +42,7 @@ without a compiler change.
 .. code::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
     library GetCode {
         function at(address _addr) public view returns (bytes memory o_code) {
@@ -68,7 +68,7 @@ efficient code, for example:
 .. code::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
 
     library VectorSum {
@@ -132,14 +132,15 @@ For local storage variables or state variables, a single Yul identifier
 is not sufficient, since they do not necessarily occupy a single full storage slot.
 Therefore, their "address" is composed of a slot and a byte-offset
 inside that slot. To retrieve the slot pointed to by the variable ``x``, you
-use ``x_slot``, and to retrieve the byte-offset you use ``x_offset``.
+use ``x.slot``, and to retrieve the byte-offset you use ``x.offset``.
+Using ``x`` itself will result in an error.
 
 Local Solidity variables are available for assignments, for example:
 
 .. code::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract C {
         uint b;
@@ -147,7 +148,7 @@ Local Solidity variables are available for assignments, for example:
             assembly {
                 // We ignore the storage slot offset, we know it is zero
                 // in this special case.
-                r := mul(x, sload(b_slot))
+                r := mul(x, sload(b.slot))
             }
         }
     }
@@ -164,20 +165,21 @@ Local Solidity variables are available for assignments, for example:
     ``assembly { signextend(<num_bytes_of_x_minus_one>, x) }``
 
 
-Since Solidity 0.6.0 the name of a inline assembly variable may not end in ``_offset`` or ``_slot``
-and it may not shadow any declaration visible in the scope of the inline assembly block
-(including variable, contract and function declarations). Similarly, if the name of a declared
-variable contains a dot ``.``, the prefix up to the ``.`` may not conflict with any
-declaration visible in the scope of the inline assembly block.
+Since Solidity 0.6.0 the name of a inline assembly variable may not
+shadow any declaration visible in the scope of the inline assembly block
+(including variable, contract and function declarations).
 
+Since Solidity 0.7.0, variables and functions declared inside the
+inline assembly block may not contain ``.``, but using ``.`` is
+valid to access Solidity variables from outside the inline assembly block.
 
 Assignments are possible to assembly-local variables and to function-local
 variables. Take care that when you assign to variables that point to
 memory or storage, you will only change the pointer and not the data.
 
-You can assign to the ``_slot`` part of a local storage variable pointer.
-For these (structs, arrays or mappings), the ``_offset`` part is always zero.
-It is not possible to assign to the ``_slot`` or ``_offset`` part of a state variable,
+You can assign to the ``.slot`` part of a local storage variable pointer.
+For these (structs, arrays or mappings), the ``.offset`` part is always zero.
+It is not possible to assign to the ``.slot`` or ``.offset`` part of a state variable,
 though.
 
 

@@ -6,7 +6,7 @@ contract CopyTest {
     Tree storageTree;
     Tree childStorageTree;
 
-    constructor() public {
+    constructor() {
         storageTree.data = 0x42;
         for (uint i = 0; i < 2; i++)
             storageTree.children.push(childStorageTree);

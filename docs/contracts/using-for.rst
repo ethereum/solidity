@@ -30,7 +30,7 @@ Let us rewrite the set example from the
 :ref:`libraries` in this way::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
 
     // This is the same code as before, just without comments
@@ -83,7 +83,7 @@ Let us rewrite the set example from the
 It is also possible to extend elementary types in that way::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
     library Search {
         function indexOf(uint[] storage self, uint value)

@@ -45,7 +45,6 @@ JSON AST:
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -59,7 +58,6 @@ JSON AST:
         {
           "attributes":
           {
-            "documentation": null,
             "implemented": true,
             "isConstructor": true,
             "kind": "constructor",
@@ -68,7 +66,6 @@ JSON AST:
               null
             ],
             "name": "",
-            "overrides": null,
             "scope": 18,
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -100,7 +97,7 @@ JSON AST:
               "children": [],
               "id": 3,
               "name": "ParameterList",
-              "src": "103:0:0"
+              "src": "96:0:0"
             },
             {
               "attributes":
@@ -113,17 +110,16 @@ JSON AST:
               "children": [],
               "id": 8,
               "name": "Block",
-              "src": "103:49:0"
+              "src": "96:49:0"
             }
           ],
           "id": 9,
           "name": "FunctionDefinition",
-          "src": "82:70:0"
+          "src": "82:63:0"
         },
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "af11c34c",
             "implemented": true,
             "isConstructor": false,
@@ -133,7 +129,6 @@ JSON AST:
               null
             ],
             "name": "five",
-            "overrides": null,
             "scope": 18,
             "stateMutability": "view",
             "virtual": false,
@@ -152,7 +147,7 @@ JSON AST:
               "children": [],
               "id": 10,
               "name": "ParameterList",
-              "src": "418:2:0"
+              "src": "411:2:0"
             },
             {
               "children":
@@ -163,12 +158,10 @@ JSON AST:
                     "constant": false,
                     "mutability": "mutable",
                     "name": "",
-                    "overrides": null,
                     "scope": 17,
                     "stateVariable": false,
                     "storageLocation": "default",
                     "type": "uint256",
-                    "value": null,
                     "visibility": "internal"
                   },
                   "children":
@@ -181,17 +174,17 @@ JSON AST:
                       },
                       "id": 11,
                       "name": "ElementaryTypeName",
-                      "src": "441:4:0"
+                      "src": "434:4:0"
                     }
                   ],
                   "id": 12,
                   "name": "VariableDeclaration",
-                  "src": "441:4:0"
+                  "src": "434:4:0"
                 }
               ],
               "id": 13,
               "name": "ParameterList",
-              "src": "440:6:0"
+              "src": "433:6:0"
             },
             {
               "children":
@@ -206,43 +199,41 @@ JSON AST:
                     {
                       "attributes":
                       {
-                        "argumentTypes": null,
                         "hexvalue": "35",
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "lValueRequested": false,
-                        "subdenomination": null,
                         "token": "number",
                         "type": "int_const 5",
                         "value": "5"
                       },
                       "id": 14,
                       "name": "Literal",
-                      "src": "460:1:0"
+                      "src": "453:1:0"
                     }
                   ],
                   "id": 15,
                   "name": "Return",
-                  "src": "453:8:0"
+                  "src": "446:8:0"
                 }
               ],
               "id": 16,
               "name": "Block",
-              "src": "447:19:0"
+              "src": "440:19:0"
             }
           ],
           "id": 17,
           "name": "FunctionDefinition",
-          "src": "405:61:0"
+          "src": "398:61:0"
         }
       ],
       "id": 18,
       "name": "ContractDefinition",
-      "src": "62:406:0"
+      "src": "62:399:0"
     }
   ],
   "id": 19,
   "name": "SourceUnit",
-  "src": "36:433:0"
+  "src": "36:426:0"
 }

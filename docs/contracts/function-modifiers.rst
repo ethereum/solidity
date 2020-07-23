@@ -18,10 +18,10 @@ if they are marked ``virtual``. For details, please see
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract owned {
-        constructor() public { owner = msg.sender; }
+        constructor() { owner = msg.sender; }
         address payable owner;
 
         // This contract only defines a modifier but does not use
@@ -63,7 +63,7 @@ if they are marked ``virtual``. For details, please see
         mapping (address => bool) registeredAddresses;
         uint price;
 
-        constructor(uint initialPrice) public { price = initialPrice; }
+        constructor(uint initialPrice) { price = initialPrice; }
 
         // It is important to also provide the
         // `payable` keyword here, otherwise the function will

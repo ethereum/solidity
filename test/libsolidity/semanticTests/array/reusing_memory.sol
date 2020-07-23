@@ -2,7 +2,7 @@
 contract Helper {
     uint256 public flag;
 
-    constructor(uint256 x) public {
+    constructor(uint256 x) {
         flag = x;
     }
 }

@@ -8,7 +8,7 @@ contract C {
 contract D {
     C c = new C();
 
-    constructor() public payable {}
+    constructor() payable {}
 
     function f() public view returns (uint256) {
         return c.f();

@@ -1,5 +1,5 @@
 contract Base {
-    constructor(uint256 i) public {
+    constructor(uint256 i) {
         m_i = i;
     }
 
@@ -8,12 +8,12 @@ contract Base {
 
 
 abstract contract Base1 is Base {
-    constructor(uint256 k) public {}
+    constructor(uint256 k) {}
 }
 
 
 contract Derived is Base, Base1 {
-    constructor(uint256 i) public Base(i) Base1(7) {}
+    constructor(uint256 i) Base(i) Base1(7) {}
 }
 
 

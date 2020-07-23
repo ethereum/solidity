@@ -566,27 +566,40 @@ the latest version of the compiler.
 Available upgrade modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+-----------------+---------+--------------------------------------------------+
-| Module          | Version | Description                                      |
-+=================+=========+==================================================+
-| ``constructor`` | 0.5.0   | Constructors must now be defined using the       |
-|                 |         | ``constructor`` keyword.                         |
-+-----------------+---------+--------------------------------------------------+
-| ``visibility``  | 0.5.0   | Explicit function visibility is now mandatory,   |
-|                 |         | defaults to ``public``.                          |
-+-----------------+---------+--------------------------------------------------+
-| ``abstract``    | 0.6.0   | The keyword ``abstract`` has to be used if a     |
-|                 |         | contract does not implement all its functions.   |
-+-----------------+---------+--------------------------------------------------+
-| ``virtual``     | 0.6.0   | Functions without implementation outside an      |
-|                 |         | interface have to be marked ``virtual``.         |
-+-----------------+---------+--------------------------------------------------+
-| ``override``    | 0.6.0   | When overriding a function or modifier, the new  |
-|                 |         | keyword ``override`` must be used.               |
-+-----------------+---------+--------------------------------------------------+
++----------------------------+---------+--------------------------------------------------+
+| Module                     | Version | Description                                      |
++============================+=========+==================================================+
+| ``constructor``            | 0.5.0   | Constructors must now be defined using the       |
+|                            |         | ``constructor`` keyword.                         |
++----------------------------+---------+--------------------------------------------------+
+| ``visibility``             | 0.5.0   | Explicit function visibility is now mandatory,   |
+|                            |         | defaults to ``public``.                          |
++----------------------------+---------+--------------------------------------------------+
+| ``abstract``               | 0.6.0   | The keyword ``abstract`` has to be used if a     |
+|                            |         | contract does not implement all its functions.   |
++----------------------------+---------+--------------------------------------------------+
+| ``virtual``                | 0.6.0   | Functions without implementation outside an      |
+|                            |         | interface have to be marked ``virtual``.         |
++----------------------------+---------+--------------------------------------------------+
+| ``override``               | 0.6.0   | When overriding a function or modifier, the new  |
+|                            |         | keyword ``override`` must be used.               |
++----------------------------+---------+--------------------------------------------------+
+| ``dotsyntax``              | 0.7.0   | The following syntax is deprecated:              |
+|                            |         | ``f.gas(...)()``, ``f.value(...)()`` and         |
+|                            |         | ``(new C).value(...)()``. Replace these calls by |
+|                            |         | ``f{gas: ..., value: ...}()`` and                |
+|                            |         | ``(new C){value: ...}()``.                       |
++----------------------------+---------+--------------------------------------------------+
+| ``now``                    | 0.7.0   | The ``now`` keyword is deprecated. Use           |
+|                            |         | ``block.timestamp`` instead.                     |
++----------------------------+---------+--------------------------------------------------+
+| ``constructor-visibility`` | 0.7.0   | Removes visibility of constructors.              |
+|                            |         |                                                  |
++----------------------------+---------+--------------------------------------------------+
 
-Please read :doc:`0.5.0 release notes <050-breaking-changes>` and
-:doc:`0.6.0 release notes <060-breaking-changes>` for further details.
+Please read :doc:`0.5.0 release notes <050-breaking-changes>`,
+:doc:`0.6.0 release notes <060-breaking-changes>` and
+:doc:`0.7.0 release notes <070-breaking-changes>` for further details.
 
 Synopsis
 ~~~~~~~~
@@ -622,115 +635,88 @@ If you found a bug or if you have a feature request, please
 Example
 ~~~~~~~
 
-Assume you have the following contracts you want to update declared in ``Source.sol``:
+Assume that you have the following contract in ``Source.sol``:
 
-.. code-block:: none
+.. code-block:: solidity
 
-    // This will not compile after 0.5.0
+    pragma solidity >=0.6.0 <0.6.4;
+    // This will not compile after 0.7.0
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.4.23 <0.5.0;
-
-    contract Updateable {
-        function run() public view returns (bool);
-        function update() public;
+    contract C {
+        // FIXME: remove constructor visibility and make the contract abstract
+        constructor() internal {}
     }
 
-    contract Upgradable {
-        function run() public view returns (bool);
-        function upgrade();
+    contract D {
+        uint time;
+
+        function f() public payable {
+            // FIXME: change now to block.timestamp
+            time = now;
+        }
     }
 
-    contract Source is Updateable, Upgradable {
-        function Source() public {}
+    contract E {
+        D d;
 
-        function run()
-            public
-            view
-            returns (bool) {}
+        // FIXME: remove constructor visibility
+        constructor() public {}
 
-        function update() {}
-        function upgrade() {}
+        function g() public {
+            // FIXME: change .value(5) =>  {value: 5}
+            d.f.value(5)();
+        }
     }
+
 
 
 Required changes
 ^^^^^^^^^^^^^^^^
 
-To bring the contracts up to date with the current Solidity version, the
-following upgrade modules have to be executed: ``constructor``,
-``visibility``, ``abstract``, ``override`` and ``virtual``. Please read the
-documentation on :ref:`available modules <upgrade-modules>` for further details.
+The above contract will not compile starting from 0.7.0. To bring the contract up to date with the
+current Solidity version, the following upgrade modules have to be executed:
+``constructor-visibility``, ``now`` and ``dotsyntax``. Please read the documentation on
+:ref:`available modules <upgrade-modules>` for further details.
+
 
 Running the upgrade
 ^^^^^^^^^^^^^^^^^^^
 
-In this example, all modules needed to upgrade the contracts above,
-are available and all of them are activated by default. Therefore you
-do not need to specify the ``--modules`` option.
+It is recommended to explicitly specify the upgrade modules by using ``--modules`` argument.
 
 .. code-block:: none
 
-    $ solidity-upgrade Source.sol --dry-run
+   $ solidity-upgrade --modules constructor-visibility,now,dotsyntax Source.sol
 
-.. code-block:: none
-
-    Running analysis (and upgrade) on given source files.
-    ..............
-
-    After upgrade:
-
-    Found 0 errors.
-    Found 0 upgrades.
-
-The above performs a dry-ran upgrade on the given file and logs statistics after all.
-In this case, the upgrade was successful and no further adjustments are needed.
-
-Finally, you can run the upgrade and also write to the source file.
-
-.. code-block:: none
-
-    $ solidity-upgrade Source.sol
-
-.. code-block:: none
-
-    Running analysis (and upgrade) on given source files.
-    ..............
-
-    After upgrade:
-
-    Found 0 errors.
-    Found 0 upgrades.
-
-
-Review changes
-^^^^^^^^^^^^^^
-
-The command above applies all changes as shown below. Please review them carefully.
+The command above applies all changes as shown below. Please review them carefully (the pragmas will
+have to be updated manually.)
 
 .. code-block:: solidity
 
+    pragma solidity >0.6.99 <0.8.0;
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.7.0;
-
-    abstract contract Updateable {
-        function run() public view virtual returns (bool);
-        function update() public virtual;
+    abstract contract C {
+        // FIXME: remove constructor visibility and make the contract abstract
+        constructor() {}
     }
 
-    abstract contract Upgradable {
-        function run() public view virtual returns (bool);
-        function upgrade() public virtual;
+    contract D {
+        uint time;
+
+        function f() public payable {
+            // FIXME: change now to block.timestamp
+            time = block.timestamp;
+        }
     }
 
-    contract Source is Updateable, Upgradable {
-        constructor() public {}
+    contract E {
+        D d;
 
-        function run()
-            public
-            view
-            override(Updateable,Upgradable)
-            returns (bool) {}
+        // FIXME: remove constructor visibility
+        constructor() {}
 
-        function update() public override {}
-        function upgrade() public override {}
+        function g() public {
+            // FIXME: change .value(5) =>  {value: 5}
+            d.f{value: 5}();
+        }
     }

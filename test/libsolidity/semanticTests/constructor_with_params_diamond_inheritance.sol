@@ -2,22 +2,22 @@ contract A {
     uint public i;
     uint public k;
 
-    constructor(uint newI, uint newK) public {
+    constructor(uint newI, uint newK) {
         i = newI;
         k = newK;
     }
 }
 abstract contract B is A {
     uint public j;
-    constructor(uint newJ) public {
+    constructor(uint newJ) {
         j = newJ;
     }
 }
 contract C is A {
-    constructor(uint newI, uint newK) A(newI, newK) public {}
+    constructor(uint newI, uint newK) A(newI, newK) {}
 }
 contract D is B, C {
-    constructor(uint newI, uint newK) B(newI) C(newI, newK + 1) public {}
+    constructor(uint newI, uint newK) B(newI) C(newI, newK + 1) {}
 }
 // ====
 // compileViaYul: also

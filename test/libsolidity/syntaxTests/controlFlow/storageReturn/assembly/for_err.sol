@@ -3,22 +3,22 @@ contract C {
     S s;
     function f() internal pure returns (S storage c) {
         assembly {
-            for {} eq(0,0) { c_slot := s_slot } {}
+            for {} eq(0,0) { c.slot := s.slot } {}
         }
     }
     function g() internal pure returns (S storage c) {
         assembly {
-            for {} eq(0,1) { c_slot := s_slot } {}
+            for {} eq(0,1) { c.slot := s.slot } {}
         }
     }
     function h() internal pure returns (S storage c) {
         assembly {
-            for {} eq(0,0) {} { c_slot := s_slot }
+            for {} eq(0,0) {} { c.slot := s.slot }
         }
     }
     function i() internal pure returns (S storage c) {
         assembly {
-            for {} eq(0,1) {} { c_slot := s_slot }
+            for {} eq(0,1) {} { c.slot := s.slot }
         }
     }
 }

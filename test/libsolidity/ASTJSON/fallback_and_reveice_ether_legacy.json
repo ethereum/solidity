@@ -8,8 +8,7 @@
       [
         9
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -40,7 +38,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "implemented": true,
             "isConstructor": false,
             "kind": "receive",
@@ -49,7 +46,6 @@
               null
             ],
             "name": "",
-            "overrides": null,
             "scope": 9,
             "stateMutability": "payable",
             "virtual": false,
@@ -104,7 +100,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "implemented": true,
             "isConstructor": false,
             "kind": "fallback",
@@ -113,7 +108,6 @@
               null
             ],
             "name": "",
-            "overrides": null,
             "scope": 9,
             "stateMutability": "payable",
             "virtual": false,

@@ -16,8 +16,7 @@
       [
         22
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -34,7 +33,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -48,7 +46,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
@@ -58,7 +55,6 @@
               null
             ],
             "name": "f",
-            "overrides": null,
             "scope": 5,
             "stateMutability": "nonpayable",
             "virtual": true,
@@ -128,7 +124,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -142,7 +137,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
@@ -152,7 +146,6 @@
               null
             ],
             "name": "f",
-            "overrides": null,
             "scope": 10,
             "stateMutability": "nonpayable",
             "virtual": true,
@@ -219,7 +212,6 @@
           10
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -233,16 +225,12 @@
       "children":
       [
         {
-          "attributes":
-          {
-            "arguments": null
-          },
+          "attributes": {},
           "children":
           [
             {
               "attributes":
               {
-                "contractScope": null,
                 "name": "A",
                 "referencedDeclaration": 5,
                 "type": "contract A"
@@ -257,16 +245,12 @@
           "src": "114:1:1"
         },
         {
-          "attributes":
-          {
-            "arguments": null
-          },
+          "attributes": {},
           "children":
           [
             {
               "attributes":
               {
-                "contractScope": null,
                 "name": "B",
                 "referencedDeclaration": 10,
                 "type": "contract B"
@@ -288,7 +272,6 @@
               4,
               9
             ],
-            "documentation": null,
             "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
@@ -311,7 +294,6 @@
                 {
                   "attributes":
                   {
-                    "contractScope": null,
                     "name": "A",
                     "referencedDeclaration": 5,
                     "type": "contract A"
@@ -323,7 +305,6 @@
                 {
                   "attributes":
                   {
-                    "contractScope": null,
                     "name": "B",
                     "referencedDeclaration": 10,
                     "type": "contract B"

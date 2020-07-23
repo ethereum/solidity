@@ -4,7 +4,7 @@ contract C {
 
   bool flag;
 
-  constructor() public {
+  constructor() {
     if (!flag) {
       flag = true;
       function() internal invalid;

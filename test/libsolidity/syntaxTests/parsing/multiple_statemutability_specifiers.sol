@@ -17,10 +17,7 @@ contract c6 {
     function f() pure payable {}
 }
 contract c7 {
-    function f() pure constant {}
-}
-contract c8 {
-    function f() view constant {}
+    function f() view payable {}
 }
 // ----
 // ParserError 9680: (39-46): State mutability already specified as "payable".
@@ -29,5 +26,4 @@ contract c8 {
 // ParserError 9680: (180-184): State mutability already specified as "pure".
 // ParserError 9680: (229-233): State mutability already specified as "payable".
 // ParserError 9680: (275-282): State mutability already specified as "pure".
-// ParserError 9680: (324-332): State mutability already specified as "pure".
-// ParserError 9680: (374-382): State mutability already specified as "view".
+// ParserError 9680: (324-331): State mutability already specified as "view".

@@ -1,5 +1,5 @@
 contract Foo {
-/* ©©©©ﾩ©©©©© 2017 */ constructor () public { "©©©©ﾩ©©©©©" ; }
+/* ©©©©ﾩ©©©©© 2017 */ constructor () { "©©©©ﾩ©©©©©" ; }
 
     function f() public pure {
 

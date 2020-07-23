@@ -6,7 +6,7 @@ contract C {
         uint d;
     }
     mapping(uint => mapping(uint => S)) public x;
-    constructor() public {
+    constructor() {
         x[1][2].a = 3;
         x[1][2].b = 4;
         x[1][2].c = 5;

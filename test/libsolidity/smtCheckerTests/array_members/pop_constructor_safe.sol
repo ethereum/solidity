@@ -2,7 +2,7 @@ pragma experimental SMTChecker;
 
 contract C {
 	uint[] a;
-	constructor() public {
+	constructor() {
 		a.push();
 		a.pop();
 	}

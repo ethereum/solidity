@@ -1,7 +1,7 @@
 contract test {
     enum ActionChoices {GoLeft, GoRight, GoStraight}
 
-    constructor() public {}
+    constructor() {}
 
     function getChoiceExp(uint256 x) public returns (uint256 d) {
         choice = ActionChoices(x);

@@ -11,6 +11,12 @@ contract thirdPartyPContractAbstract {
 
 contract ptokenDB is tokenDB {}
 
+/**
+ *
+ * @title Corion Platform Premium Token
+ * @author iFA @ Corion Platform
+ *
+ */
 contract premium is module, safeMath {
     function replaceModule(address payable addr) external override returns (bool success) {
         require( super.isModuleHandler(msg.sender) );
@@ -23,12 +29,6 @@ contract premium is module, safeMath {
         require( _success && _active );
         _;
     }
-    /**
-    *
-    * @title Corion Platform Premium Token
-    * @author iFA @ Corion Platform
-    *
-    */
 
     string public name = "Corion Premium";
     string public symbol = "CORP";
@@ -40,7 +40,7 @@ contract premium is module, safeMath {
 
     mapping(address => bool) public genesis;
 
-    constructor(bool forReplace, address payable moduleHandler, address dbAddress, address icoContractAddr, address[] memory genesisAddr, uint256[] memory genesisValue) public {
+    constructor(bool forReplace, address payable moduleHandler, address dbAddress, address icoContractAddr, address[] memory genesisAddr, uint256[] memory genesisValue) {
         /*
             Setup function.
             If an ICOaddress is defined then the balance of the genesis addresses will be set as well.

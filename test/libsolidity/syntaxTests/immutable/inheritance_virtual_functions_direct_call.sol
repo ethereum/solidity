@@ -7,7 +7,7 @@ contract B {
 }
 
 contract C is B {
-    constructor() public {
+    constructor() {
         B.readX;
     }
 

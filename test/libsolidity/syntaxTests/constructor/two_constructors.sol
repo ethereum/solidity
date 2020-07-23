@@ -1,6 +1,6 @@
 contract test {
-	constructor(uint) public { }
-	constructor() public {}
+	constructor(uint) { }
+	constructor() {}
 }
 // ----
-// DeclarationError 7997: (47-70): More than one constructor defined.
+// DeclarationError 7997: (40-56): More than one constructor defined.

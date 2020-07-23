@@ -631,9 +631,6 @@ void ProtoConverter::visit(NullaryOp const& _x)
 {
 	switch (_x.op())
 	{
-	case NullaryOp::PC:
-		m_output << "pc()";
-		break;
 	case NullaryOp::MSIZE:
 		m_output << "msize()";
 		break;

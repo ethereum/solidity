@@ -327,10 +327,14 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	if (_function.markedVirtual())
 	{
-		if (_function.annotation().contract->isInterface())
+		if (_function.isConstructor())
+			m_errorReporter.typeError(7001_error, _function.location(), "Constructors cannot be virtual.");
+		else if (_function.annotation().contract->isInterface())
 			m_errorReporter.warning(5815_error, _function.location(), "Interface functions are implicitly \"virtual\"");
-		if (_function.visibility() == Visibility::Private)
+		else if (_function.visibility() == Visibility::Private)
 			m_errorReporter.typeError(3942_error, _function.location(), "\"virtual\" and \"private\" cannot be used together.");
+		else if (_function.libraryFunction())
+			m_errorReporter.typeError(7801_error, _function.location(), "Library functions cannot be \"virtual\".");
 	}
 
 	if (_function.isPayable())
@@ -340,45 +344,62 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.isOrdinary() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(5587_error, _function.location(), "\"internal\" and \"private\" functions cannot be payable.");
 	}
-	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& var) {
-		if (type(var)->category() == Type::Category::Mapping)
-		{
-			if (var.referenceLocation() != VariableDeclaration::Location::Storage)
-			{
-				if (!_function.libraryFunction() && _function.isPublic())
-					m_errorReporter.typeError(3442_error, var.location(), "Mapping types can only have a data location of \"storage\" and thus only be parameters or return variables for internal or library functions.");
-				else
-					m_errorReporter.typeError(5380_error, var.location(), "Mapping types can only have a data location of \"storage\"." );
-			}
-			else
-				solAssert(_function.libraryFunction() || !_function.isPublic(), "Mapping types for parameters or return variables can only be used in internal or library functions.");
-		}
-		else
-		{
-			if (!type(var)->canLiveOutsideStorage() && _function.isPublic())
-				m_errorReporter.typeError(3312_error, var.location(), "Type is required to live outside storage.");
-			if (_function.isPublic())
-			{
-				auto iType = type(var)->interfaceType(_function.libraryFunction());
 
-				if (!iType)
-				{
-					solAssert(!iType.message().empty(), "Expected detailed error message!");
-					m_errorReporter.fatalTypeError(4103_error, var.location(), iType.message());
-				}
-			}
-		}
+	vector<VariableDeclaration const*> internalParametersInConstructor;
+
+	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& _var) {
+		if (type(_var)->containsNestedMapping())
+			if (_var.referenceLocation() == VariableDeclaration::Location::Storage)
+				solAssert(
+					_function.libraryFunction() || _function.isConstructor() || !_function.isPublic(),
+					"Mapping types for parameters or return variables "
+					"can only be used in internal or library functions."
+				);
+		bool functionIsExternallyVisible =
+			(!_function.isConstructor() && _function.isPublic()) ||
+			(_function.isConstructor() && !m_currentContract->abstract());
 		if (
-			_function.isPublic() &&
-			!experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2) &&
-			!typeSupportedByOldABIEncoder(*type(var), _function.libraryFunction())
+			_function.isConstructor() &&
+			_var.referenceLocation() == VariableDeclaration::Location::Storage &&
+			!m_currentContract->abstract()
 		)
 			m_errorReporter.typeError(
-				4957_error,
-				var.location(),
-				"This type is only supported in ABIEncoderV2. "
-				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+				3644_error,
+				_var.location(),
+				"This parameter has a type that can only be used internally. "
+				"You can make the contract abstract to avoid this problem."
 			);
+		else if (functionIsExternallyVisible)
+		{
+			auto iType = type(_var)->interfaceType(_function.libraryFunction());
+
+			if (!iType)
+			{
+				string message = iType.message();
+				solAssert(!message.empty(), "Expected detailed error message!");
+				if (_function.isConstructor())
+					message += " You can make the contract abstract to avoid this problem.";
+				m_errorReporter.typeError(4103_error, _var.location(), message);
+			}
+			else if (
+				!experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2) &&
+				!typeSupportedByOldABIEncoder(*type(_var), _function.libraryFunction())
+			)
+			{
+				string message =
+					"This type is only supported in ABIEncoderV2. "
+					"Use \"pragma experimental ABIEncoderV2;\" to enable the feature.";
+				if (_function.isConstructor())
+					message +=
+						" Alternatively, make the contract abstract and supply the "
+						"constructor arguments from a derived contract.";
+				m_errorReporter.typeError(
+					4957_error,
+					_var.location(),
+					message
+				);
+			}
+		}
 	};
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
 	{
@@ -390,6 +411,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		checkArgumentAndReturnParameter(*var);
 		var->accept(*this);
 	}
+
 	set<Declaration const*> modifiers;
 	for (ASTPointer<ModifierInvocation> const& modifier: _function.modifiers())
 	{
@@ -415,11 +437,10 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (_function.isImplemented())
 			m_errorReporter.typeError(4726_error, _function.location(), "Functions in interfaces cannot have an implementation.");
 
-		if (_function.visibility() != Visibility::External)
-			m_errorReporter.typeError(1560_error, _function.location(), "Functions in interfaces must be declared external.");
-
 		if (_function.isConstructor())
 			m_errorReporter.typeError(6482_error, _function.location(), "Constructor cannot be defined in interfaces.");
+		else if (_function.visibility() != Visibility::External)
+			m_errorReporter.typeError(1560_error, _function.location(), "Functions in interfaces must be declared external.");
 	}
 	else if (m_currentContract->contractKind() == ContractKind::Library)
 		if (_function.isConstructor())
@@ -446,8 +467,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 bool TypeChecker::visit(VariableDeclaration const& _variable)
 {
-	if (_variable.typeName())
-		_variable.typeName()->accept(*this);
+	_variable.typeName().accept(*this);
 
 	// type is filled either by ReferencesResolver directly from the type name or by
 	// TypeChecker at the VariableDeclarationStatement level.
@@ -459,9 +479,13 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			m_errorReporter.typeError(1273_error, _variable.location(), "The type of a variable cannot be a library.");
 	if (_variable.value())
 	{
-		if (_variable.isStateVariable() && dynamic_cast<MappingType const*>(varType))
+		if (_variable.isStateVariable() && varType->containsNestedMapping())
 		{
-			m_errorReporter.typeError(6280_error, _variable.location(), "Mappings cannot be assigned to.");
+			m_errorReporter.typeError(
+				6280_error,
+				_variable.location(),
+				"Types in storage containing (nested) mappings cannot be assigned to."
+			);
 			_variable.value()->accept(*this);
 		}
 		else
@@ -501,9 +525,16 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 
 	if (!_variable.isStateVariable())
 	{
-		if (varType->dataStoredIn(DataLocation::Memory) || varType->dataStoredIn(DataLocation::CallData))
-			if (!varType->canLiveOutsideStorage())
-				m_errorReporter.typeError(4061_error, _variable.location(), "Type " + varType->toString() + " is only valid in storage.");
+		if (
+			_variable.referenceLocation() == VariableDeclaration::Location::CallData ||
+			_variable.referenceLocation() == VariableDeclaration::Location::Memory
+		)
+			if (varType->containsNestedMapping())
+				m_errorReporter.fatalTypeError(
+					4061_error,
+					_variable.location(),
+					"Type " + varType->toString(true) + " is only valid in storage because it contains a (nested) mapping."
+				);
 	}
 	else if (_variable.visibility() >= Visibility::Public)
 	{
@@ -534,7 +565,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
 	{
 		auto result = referenceType->validForLocation(referenceType->location());
-		if (result && _variable.isPublicCallableParameter())
+		if (result && (_variable.isConstructorParameter() || _variable.isPublicCallableParameter()))
 			result = referenceType->validForLocation(DataLocation::CallData);
 		if (!result)
 		{
@@ -560,15 +591,11 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			if (_variable.isStateVariable())
 				m_errorReporter.warning(3408_error, _variable.location(), collisionMessage(_variable.name(), true));
 			else
-				m_errorReporter.warning(
-					2332_error,
-					_variable.typeName() ? _variable.typeName()->location() : _variable.location(),
-					collisionMessage(varType->canonicalName(), false)
-				);
+				m_errorReporter.warning(2332_error, _variable.typeName().location(), collisionMessage(varType->canonicalName(), false));
 		}
 		vector<Type const*> oversizedSubtypes = frontend::oversizedSubtypes(*varType);
 		for (Type const* subtype: oversizedSubtypes)
-			m_errorReporter.warning(7325_error, _variable.typeName()->location(), collisionMessage(subtype->canonicalName(), false));
+			m_errorReporter.warning(7325_error, _variable.typeName().location(), collisionMessage(subtype->canonicalName(), false));
 	}
 
 	return false;
@@ -646,8 +673,12 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 	{
 		if (var->isIndexed())
 			numIndexed++;
-		if (!type(*var)->canLiveOutsideStorage())
-			m_errorReporter.typeError(3448_error, var->location(), "Type is required to live outside storage.");
+		if (type(*var)->containsNestedMapping())
+			m_errorReporter.typeError(
+				3448_error,
+				var->location(),
+				"Type containing a (nested) mapping is not allowed as event parameter type."
+			);
 		if (!type(*var)->interfaceType(false))
 			m_errorReporter.typeError(3417_error, var->location(), "Internal or recursive type is not allowed as event parameter type.");
 		if (
@@ -724,7 +755,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				}
 				else if (requiresStorage)
 				{
-					m_errorReporter.typeError(6617_error, _identifier.location, "The suffixes _offset and _slot can only be used on non-constant storage variables.");
+					m_errorReporter.typeError(6617_error, _identifier.location, "The suffixes .offset and .slot can only be used on non-constant storage variables.");
 					return false;
 				}
 				else if (var && var->value() && !var->value()->annotation().type && !dynamic_cast<Literal const*>(var->value().get()))
@@ -752,7 +783,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			{
 				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
 				{
-					m_errorReporter.typeError(3622_error, _identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
+					m_errorReporter.typeError(3622_error, _identifier.location, "The suffixes .offset and .slot can only be used on storage variables.");
 					return false;
 				}
 				else if (_context == yul::IdentifierContext::LValue)
@@ -764,7 +795,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					}
 					else if (identifierInfo.isOffset)
 					{
-						m_errorReporter.typeError(9739_error, _identifier.location, "Only _slot can be assigned to.");
+						m_errorReporter.typeError(9739_error, _identifier.location, "Only .slot can be assigned to.");
 						return false;
 					}
 					else
@@ -773,12 +804,12 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else if (!var->isConstant() && var->isStateVariable())
 			{
-				m_errorReporter.typeError(1408_error, _identifier.location, "Only local variables are supported. To access storage variables, use the _slot and _offset suffixes.");
+				m_errorReporter.typeError(1408_error, _identifier.location, "Only local variables are supported. To access storage variables, use the .slot and .offset suffixes.");
 				return false;
 			}
 			else if (var->type()->dataStoredIn(DataLocation::Storage))
 			{
-				m_errorReporter.typeError(9068_error, _identifier.location, "You have to use the _slot or _offset suffix to access storage reference variables.");
+				m_errorReporter.typeError(9068_error, _identifier.location, "You have to use the .slot or .offset suffix to access storage reference variables.");
 				return false;
 			}
 			else if (var->type()->sizeOnStack() != 1)
@@ -792,7 +823,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		}
 		else if (requiresStorage)
 		{
-			m_errorReporter.typeError(7944_error, _identifier.location, "The suffixes _offset and _slot can only be used on storage variables.");
+			m_errorReporter.typeError(7944_error, _identifier.location, "The suffixes .offset and .slot can only be used on storage variables.");
 			return false;
 		}
 		else if (_context == yul::IdentifierContext::LValue)
@@ -1071,81 +1102,23 @@ void TypeChecker::endVisit(EmitStatement const& _emit)
 		m_errorReporter.typeError(9292_error, _emit.eventCall().expression().location(), "Expression has to be an event invocation.");
 }
 
-namespace
-{
-/**
- * @returns a suggested left-hand-side of a multi-variable declaration contairing
- * the variable declarations given in @a _decls.
- */
-string createTupleDecl(vector<ASTPointer<VariableDeclaration>> const& _decls)
-{
-	vector<string> components;
-	for (ASTPointer<VariableDeclaration> const& decl: _decls)
-		if (decl)
-		{
-			solAssert(decl->annotation().type, "");
-			components.emplace_back(decl->annotation().type->toString(false) + " " + decl->name());
-		}
-		else
-			components.emplace_back();
-
-	if (_decls.size() == 1)
-		return components.front();
-	else
-		return "(" + boost::algorithm::join(components, ", ") + ")";
-}
-
-bool typeCanBeExpressed(vector<ASTPointer<VariableDeclaration>> const& decls)
-{
-	for (ASTPointer<VariableDeclaration> const& decl: decls)
-	{
-		// skip empty tuples (they can be expressed of course)
-		if (!decl)
-			continue;
-
-		if (!decl->annotation().type)
-			return false;
-
-		if (auto functionType = dynamic_cast<FunctionType const*>(decl->annotation().type))
-			if (
-				functionType->kind() != FunctionType::Kind::Internal &&
-				functionType->kind() != FunctionType::Kind::External
-			)
-				return false;
-	}
-
-	return true;
-}
-}
-
 bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 {
 	if (!_statement.initialValue())
 	{
 		// No initial value is only permitted for single variables with specified type.
+		// This usually already results in a parser error.
 		if (_statement.declarations().size() != 1 || !_statement.declarations().front())
 		{
-			if (std::all_of(
-				_statement.declarations().begin(),
-				_statement.declarations().end(),
-				[](ASTPointer<VariableDeclaration> const& declaration) { return declaration == nullptr; }
-			))
-			{
-				// The syntax checker has already generated an error for this case (empty LHS tuple).
-				solAssert(m_errorReporter.hasErrors(), "");
+			solAssert(m_errorReporter.hasErrors(), "");
 
-				// It is okay to return here, as there are no named components on the
-				// left-hand-side that could cause any damage later.
-				return false;
-			}
-			else
-				// Bailing out *fatal* here, as those (untyped) vars may be used later, and diagnostics wouldn't be helpful then.
-				m_errorReporter.fatalTypeError(4626_error, _statement.location(), "Use of the \"var\" keyword is disallowed.");
+			// It is okay to return here, as there are no named components on the
+			// left-hand-side that could cause any damage later.
+			return false;
 		}
 
 		VariableDeclaration const& varDecl = *_statement.declarations().front();
-		if (!varDecl.annotation().type)
-			m_errorReporter.fatalTypeError(6983_error, _statement.location(), "Use of the \"var\" keyword is disallowed.");
+		solAssert(varDecl.annotation().type, "");
 
 		if (dynamic_cast<MappingType const*>(type(varDecl)))
 			m_errorReporter.typeError(
@@ -1182,8 +1155,6 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			")."
 		);
 
-	bool autoTypeDeductionNeeded = false;
-
 	for (size_t i = 0; i < min(variables.size(), valueTypes.size()); ++i)
 	{
 		if (!variables[i])
@@ -1192,95 +1163,45 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		solAssert(!var.value(), "Value has to be tied to statement.");
 		TypePointer const& valueComponentType = valueTypes[i];
 		solAssert(!!valueComponentType, "");
-		if (!var.annotation().type)
-		{
-			autoTypeDeductionNeeded = true;
+		solAssert(var.annotation().type, "");
 
-			// Infer type from value.
-			solAssert(!var.typeName(), "");
-			var.annotation().type = valueComponentType->mobileType();
-			if (!var.annotation().type)
-			{
-				if (valueComponentType->category() == Type::Category::RationalNumber)
-					m_errorReporter.fatalTypeError(
-						6963_error,
-						_statement.initialValue()->location(),
-						"Invalid rational " +
-						valueComponentType->toString() +
-						" (absolute value too large or division by zero)."
-					);
-				else
-					solAssert(false, "");
-			}
-			else if (*var.annotation().type == *TypeProvider::emptyTuple())
-				solAssert(false, "Cannot declare variable with void (empty tuple) type.");
-			else if (valueComponentType->category() == Type::Category::RationalNumber)
-			{
-				string typeName = var.annotation().type->toString(true);
-				string extension;
-				if (auto type = dynamic_cast<IntegerType const*>(var.annotation().type))
-				{
-					unsigned numBits = type->numBits();
-					bool isSigned = type->isSigned();
-					solAssert(numBits > 0, "");
-					string minValue;
-					string maxValue;
-					if (isSigned)
-					{
-						numBits--;
-						minValue = "-" + bigint(bigint(1) << numBits).str();
-					}
-					else
-						minValue = "0";
-					maxValue = bigint((bigint(1) << numBits) - 1).str();
-					extension = ", which can hold values between " + minValue + " and " + maxValue;
-				}
-				else
-					solAssert(dynamic_cast<FixedPointType const*>(var.annotation().type), "Unknown type.");
-			}
-
-			var.accept(*this);
-		}
-		else
+		var.accept(*this);
+		BoolResult result = valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type);
+		if (!result)
 		{
-			var.accept(*this);
-			BoolResult result = valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type);
-			if (!result)
+			auto errorMsg = "Type " +
+				valueComponentType->toString() +
+				" is not implicitly convertible to expected type " +
+				var.annotation().type->toString();
+			if (
+				valueComponentType->category() == Type::Category::RationalNumber &&
+				dynamic_cast<RationalNumberType const&>(*valueComponentType).isFractional() &&
+				valueComponentType->mobileType()
+			)
 			{
-				auto errorMsg = "Type " +
-					valueComponentType->toString() +
-					" is not implicitly convertible to expected type " +
-					var.annotation().type->toString();
-				if (
-					valueComponentType->category() == Type::Category::RationalNumber &&
-					dynamic_cast<RationalNumberType const&>(*valueComponentType).isFractional() &&
-					valueComponentType->mobileType()
-				)
-				{
-					if (var.annotation().type->operator==(*valueComponentType->mobileType()))
-						m_errorReporter.typeError(
-							5107_error,
-							_statement.location(),
-							errorMsg + ", but it can be explicitly converted."
-						);
-					else
-						m_errorReporter.typeError(
-							4486_error,
-							_statement.location(),
-							errorMsg +
-							". Try converting to type " +
-							valueComponentType->mobileType()->toString() +
-							" or use an explicit conversion."
-						);
-				}
-				else
-					m_errorReporter.typeErrorConcatenateDescriptions(
-						9574_error,
+				if (var.annotation().type->operator==(*valueComponentType->mobileType()))
+					m_errorReporter.typeError(
+						5107_error,
 						_statement.location(),
-						errorMsg + ".",
-						result.message()
+						errorMsg + ", but it can be explicitly converted."
+					);
+				else
+					m_errorReporter.typeError(
+						4486_error,
+						_statement.location(),
+						errorMsg +
+						". Try converting to type " +
+						valueComponentType->mobileType()->toString() +
+						" or use an explicit conversion."
 					);
 			}
+			else
+				m_errorReporter.typeErrorConcatenateDescriptions(
+					9574_error,
+					_statement.location(),
+					errorMsg + ".",
+					result.message()
+				);
 		}
 	}
 
@@ -1290,24 +1211,6 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		for (auto const& var: variables)
 			if (var && !var->annotation().type)
 				BOOST_THROW_EXCEPTION(FatalError());
-	}
-
-	if (autoTypeDeductionNeeded)
-	{
-		if (!typeCanBeExpressed(variables))
-			m_errorReporter.syntaxError(
-				3478_error,
-				_statement.location(),
-				"Use of the \"var\" keyword is disallowed. "
-				"Type cannot be expressed in syntax."
-			);
-		else
-			m_errorReporter.syntaxError(
-				1719_error,
-				_statement.location(),
-				"Use of the \"var\" keyword is disallowed. "
-				"Use explicit declaration `" + createTupleDecl(variables) + " = ...` instead."
-			);
 	}
 
 	return false;
@@ -1420,7 +1323,7 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 				checkExpressionAssignment(*types[i], *tupleExpression->components()[i]);
 			}
 	}
-	else if (_type.category() == Type::Category::Mapping)
+	else if (_type.nameable() && _type.containsNestedMapping())
 	{
 		bool isLocalOrReturn = false;
 		if (auto const* identifier = dynamic_cast<Identifier const*>(&_expression))
@@ -1428,7 +1331,7 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 				if (variableDeclaration->isLocalOrReturn())
 					isLocalOrReturn = true;
 		if (!isLocalOrReturn)
-			m_errorReporter.typeError(9214_error, _expression.location(), "Mappings cannot be assigned to.");
+			m_errorReporter.typeError(9214_error, _expression.location(), "Types in storage containing (nested) mappings cannot be assigned to.");
 	}
 }
 
@@ -1564,8 +1467,12 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 					_tuple.location(),
 					"Unable to deduce nameable type for array elements. Try adding explicit type conversion for the first element."
 				);
-			else if (!inlineArrayType->canLiveOutsideStorage())
-				m_errorReporter.fatalTypeError(1545_error, _tuple.location(), "Type " + inlineArrayType->toString() + " is only valid in storage.");
+			else if (inlineArrayType->containsNestedMapping())
+				m_errorReporter.fatalTypeError(
+					1545_error,
+					_tuple.location(),
+					"Type " + inlineArrayType->toString(true) + " is only valid in storage."
+				);
 
 			_tuple.annotation().type = TypeProvider::array(DataLocation::Memory, inlineArrayType, types.size());
 		}
@@ -1906,8 +1813,6 @@ void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
 void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 {
 	solAssert(_function.isConstructor(), "");
-	if (_function.markedVirtual())
-		m_errorReporter.typeError(7001_error, _function.location(), "Constructors cannot be virtual.");
 	if (_function.overrides())
 		m_errorReporter.typeError(1209_error, _function.location(), "Constructors cannot override.");
 	if (!_function.returnParameters().empty())
@@ -1920,8 +1825,30 @@ void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 			stateMutabilityToString(_function.stateMutability()) +
 			"\"."
 		);
-	if (_function.visibility() != Visibility::Public && _function.visibility() != Visibility::Internal)
-		m_errorReporter.typeError(9239_error, _function.location(), "Constructor must be public or internal.");
+	if (!_function.noVisibilitySpecified())
+	{
+		auto const& contract = dynamic_cast<ContractDefinition const&>(*_function.scope());
+		if (_function.visibility() != Visibility::Public && _function.visibility() != Visibility::Internal)
+			m_errorReporter.typeError(9239_error, _function.location(), "Constructor cannot have visibility.");
+		else if (_function.isPublic() && contract.abstract())
+			m_errorReporter.declarationError(
+				8295_error,
+				_function.location(),
+				"Abstract contracts cannot have public constructors. Remove the \"public\" keyword to fix this."
+			);
+		else if (!_function.isPublic() && !contract.abstract())
+			m_errorReporter.declarationError(
+				1845_error,
+				_function.location(),
+				"Non-abstract contracts cannot have internal constructors. Remove the \"internal\" keyword and make the contract abstract to fix this."
+			);
+		else
+			m_errorReporter.warning(
+				2462_error,
+				_function.location(),
+				"Visibility for constructor is ignored. If you want the contract to be non-deployable, making it \"abstract\" is sufficient."
+			);
+	}
 }
 
 void TypeChecker::typeCheckABIEncodeFunctions(
@@ -2066,24 +1993,8 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				toString(parameterTypes.size()) +
 				".";
 
-			// Extend error message in case we try to construct a struct with mapping member.
 			if (isStructConstructorCall)
-			{
-				/// For error message: Struct members that were removed during conversion to memory.
-				TypePointer const expressionType = type(_functionCall.expression());
-				auto const& t = dynamic_cast<TypeType const&>(*expressionType);
-				auto const& structType = dynamic_cast<StructType const&>(*t.actualType());
-				set<string> membersRemovedForStructConstructor = structType.membersMissingInMemory();
-
-				if (!membersRemovedForStructConstructor.empty())
-				{
-					msg += " Members that have to be skipped in memory:";
-					for (auto const& member: membersRemovedForStructConstructor)
-						msg += " " + member;
-				}
-
 				return { isVariadic ? 1123_error : 9755_error, msg };
-			}
 			else if (
 				_functionType->kind() == FunctionType::Kind::BareCall ||
 				_functionType->kind() == FunctionType::Kind::BareCallCode ||
@@ -2303,6 +2214,12 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 		if (actualType->category() == Type::Category::Struct)
 		{
+			if (actualType->containsNestedMapping())
+				m_errorReporter.fatalTypeError(
+					9515_error,
+					_functionCall.location(),
+					"Struct containing a (nested) mapping cannot be constructed."
+				);
 			functionType = dynamic_cast<StructType const&>(*actualType).constructorType();
 			funcCallAnno.kind = FunctionCallKind::StructConstructorCall;
 			funcCallAnno.isPure = argumentsArePure;
@@ -2532,8 +2449,6 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			m_errorReporter.fatalTypeError(5540_error, _newExpression.location(), "Identifier is not a contract.");
 		if (contract->isInterface())
 			m_errorReporter.fatalTypeError(2971_error, _newExpression.location(), "Cannot instantiate an interface.");
-		if (!contract->constructorIsPublic())
-			m_errorReporter.typeError(9054_error, _newExpression.location(), "Contract with internal constructor cannot be created directly.");
 		if (contract->abstract())
 			m_errorReporter.typeError(4614_error, _newExpression.location(), "Cannot instantiate an abstract contract.");
 
@@ -2554,11 +2469,11 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 	}
 	else if (type->category() == Type::Category::Array)
 	{
-		if (!type->canLiveOutsideStorage())
+		if (type->containsNestedMapping())
 			m_errorReporter.fatalTypeError(
 				1164_error,
 				_newExpression.typeName().location(),
-				"Type cannot live outside storage."
+				"Array containing a (nested) mapping cannot be constructed in memory."
 			);
 		if (!type->isDynamicallySized())
 			m_errorReporter.typeError(
@@ -2716,7 +2631,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			!annotation.referencedDeclaration &&
 			(memberName == "value" || memberName == "gas")
 		)
-			m_errorReporter.warning(
+			m_errorReporter.typeError(
 				1621_error,
 				_memberAccess.location(),
 				"Using \"." + memberName + "(...)\" is deprecated. Use \"{" + memberName + ": ...}\" instead."
@@ -3113,6 +3028,20 @@ bool TypeChecker::visit(Identifier const& _identifier)
 				"\"suicide\" has been deprecated in favour of \"selfdestruct\"."
 			);
 	}
+
+	if (
+		MagicVariableDeclaration const* magicVar =
+		dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration)
+	)
+		if (magicVar->type()->category() == Type::Category::Integer)
+		{
+			solAssert(_identifier.name() == "now", "");
+			m_errorReporter.typeError(
+				7359_error,
+				_identifier.location(),
+				"\"now\" has been deprecated. Use \"block.timestamp\" instead."
+			);
+		}
 
 	return false;
 }

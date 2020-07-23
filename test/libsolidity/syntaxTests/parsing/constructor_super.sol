@@ -3,7 +3,7 @@ contract A {
 }
 
 contract B is A {
-  constructor() public {
+  constructor() {
     // used to trigger warning about using ``this`` in constructor
     super.x();
   }

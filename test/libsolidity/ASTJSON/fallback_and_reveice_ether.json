@@ -8,7 +8,6 @@
     ]
   },
   "id": 10,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -17,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 9,
       "linearizedBaseContracts":
@@ -36,14 +34,12 @@
             "src": "42:5:1",
             "statements": []
           },
-          "documentation": null,
           "id": 4,
           "implemented": true,
           "kind": "receive",
           "modifiers": [],
           "name": "",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -72,14 +68,12 @@
             "src": "78:5:1",
             "statements": []
           },
-          "documentation": null,
           "id": 8,
           "implemented": true,
           "kind": "fallback",
           "modifiers": [],
           "name": "",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 5,

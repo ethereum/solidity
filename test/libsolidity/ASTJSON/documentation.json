@@ -9,7 +9,6 @@
     ]
   },
   "id": 3,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -50,7 +49,6 @@
     ]
   },
   "id": 6,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -91,7 +89,6 @@
     ]
   },
   "id": 24,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -100,7 +97,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 23,
       "linearizedBaseContracts":
@@ -125,7 +121,6 @@
           "mutability": "mutable",
           "name": "state",
           "nodeType": "VariableDeclaration",
-          "overrides": null,
           "scope": 23,
           "src": "48:17:3",
           "stateVariable": true,
@@ -147,7 +142,6 @@
               "typeString": "uint256"
             }
           },
-          "value": null,
           "visibility": "public"
         },
         {
@@ -196,7 +190,6 @@
           "id": 17,
           "name": "mod",
           "nodeType": "ModifierDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 14,
@@ -230,7 +223,6 @@
           "modifiers": [],
           "name": "fn",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 19,

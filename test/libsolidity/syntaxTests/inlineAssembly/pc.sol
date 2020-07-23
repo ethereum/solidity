@@ -6,4 +6,4 @@ contract C {
 	}
 }
 // ----
-// Warning 2450: (61-63): The "pc" instruction is deprecated and will be removed in the next breaking release.
+// SyntaxError 2450: (61-63): PC instruction is a low-level EVM feature. Because of that PC is disallowed in strict assembly.

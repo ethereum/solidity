@@ -5,7 +5,6 @@ contract c {
     }
     struct Struct {
         uint256 a;
-        mapping(uint256 => Struct) b;
         Nested nested;
         uint256 c;
     }

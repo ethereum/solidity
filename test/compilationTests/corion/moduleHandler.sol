@@ -36,7 +36,7 @@ contract moduleHandler is multiOwner, announcementTypes {
     uint256 debugModeUntil = block.number + 1000000;
 
 
-    constructor(address[] memory newOwners) multiOwner(newOwners) public {}
+    constructor(address[] memory newOwners) multiOwner(newOwners) {}
     function load(address payable foundation, bool forReplace, address payable Token, address payable Premium, address payable Publisher, address payable Schelling, address payable Provider) public {
         /*
             Loading modulest to ModuleHandler.

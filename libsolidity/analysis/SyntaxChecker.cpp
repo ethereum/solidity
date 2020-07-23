@@ -302,7 +302,7 @@ bool SyntaxChecker::visit(ContractDefinition const& _contract)
 
 bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
-	if (_function.noVisibilitySpecified())
+	if (!_function.isConstructor() && _function.noVisibilitySpecified())
 	{
 		string suggestedVisibility = _function.isFallback() || _function.isReceive() || m_isInterface ? "external" : "public";
 		m_errorReporter.syntaxError(

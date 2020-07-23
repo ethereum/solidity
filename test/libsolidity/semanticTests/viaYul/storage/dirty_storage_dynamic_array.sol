@@ -3,7 +3,7 @@ contract C {
     function f() public returns (bool correct) {
         s.push();
         assembly {
-            mstore(0, s_slot)
+            mstore(0, s.slot)
             sstore(keccak256(0, 0x20), 257)
         }
         uint8 x = s[0];

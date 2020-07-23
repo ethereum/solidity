@@ -8,8 +8,7 @@
       [
         8
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -40,7 +38,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
@@ -50,7 +47,6 @@
               null
             ],
             "name": "f",
-            "overrides": null,
             "scope": 8,
             "stateMutability": "pure",
             "virtual": false,
@@ -80,12 +76,9 @@
                     "constant": false,
                     "mutability": "mutable",
                     "name": "x",
-                    "overrides": null,
                     "scope": 7,
                     "stateVariable": false,
                     "storageLocation": "default",
-                    "type": null,
-                    "value": null,
                     "visibility": "internal"
                   },
                   "children":
@@ -93,8 +86,7 @@
                     {
                       "attributes":
                       {
-                        "name": "uint",
-                        "type": null
+                        "name": "uint"
                       },
                       "id": 2,
                       "name": "ElementaryTypeName",

@@ -5,6 +5,7 @@ add_executable(solidity-upgrade
     solidityUpgrade/UpgradeSuite.h
     solidityUpgrade/Upgrade050.cpp
     solidityUpgrade/Upgrade060.cpp
+    solidityUpgrade/Upgrade070.cpp
     solidityUpgrade/SourceTransform.h
     solidityUpgrade/SourceUpgrade.cpp
 )

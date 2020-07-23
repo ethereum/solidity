@@ -14,7 +14,7 @@ contract C {
 	uint y;
 	State s;
 
-	constructor() public {
+	constructor() {
 		owner = msg.sender;
 	}
 
@@ -35,5 +35,5 @@ contract C {
 }
 // ----
 // Warning 5084: (116-126): Type conversion is not yet fully supported and might yield false positives.
-// Warning 4661: (388-402): Assertion violation happens here
-// Warning 4661: (406-432): Assertion violation happens here
+// Warning 4661: (381-395): Assertion violation happens here
+// Warning 4661: (399-425): Assertion violation happens here

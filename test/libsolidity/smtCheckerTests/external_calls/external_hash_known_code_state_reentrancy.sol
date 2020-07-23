@@ -13,7 +13,7 @@ contract C {
 	uint y;
 	State s;
 
-	constructor() public {
+	constructor() {
 		owner = msg.sender;
 	}
 
@@ -29,4 +29,4 @@ contract C {
 	}
 }
 // ----
-// Warning 4661: (306-320): Assertion violation happens here
+// Warning 4661: (299-313): Assertion violation happens here

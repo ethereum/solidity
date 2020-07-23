@@ -1915,10 +1915,6 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 			if (!dynamic_cast<ContractType const&>(*magicVar->type()).isSuper())
 				m_context << Instruction::ADDRESS;
 			break;
-		case Type::Category::Integer:
-			// "now"
-			m_context << Instruction::TIMESTAMP;
-			break;
 		default:
 			break;
 		}

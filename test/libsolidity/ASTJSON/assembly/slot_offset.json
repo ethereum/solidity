@@ -8,7 +8,6 @@
     ]
   },
   "id": 12,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -17,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 11,
       "linearizedBaseContracts":
@@ -39,7 +37,6 @@
               "mutability": "mutable",
               "name": "x",
               "nodeType": "VariableDeclaration",
-              "overrides": null,
               "scope": 3,
               "src": "28:6:1",
               "stateVariable": false,
@@ -61,7 +58,6 @@
                   "typeString": "uint256"
                 }
               },
-              "value": null,
               "visibility": "internal"
             }
           ],
@@ -77,7 +73,6 @@
           "mutability": "mutable",
           "name": "s",
           "nodeType": "VariableDeclaration",
-          "overrides": null,
           "scope": 11,
           "src": "42:3:1",
           "stateVariable": true,
@@ -89,7 +84,6 @@
           },
           "typeName":
           {
-            "contractScope": null,
             "id": 4,
             "name": "S",
             "nodeType": "UserDefinedTypeName",
@@ -101,7 +95,6 @@
               "typeString": "struct C.S"
             }
           },
-          "value": null,
           "visibility": "internal"
         },
         {
@@ -124,7 +117,7 @@
                       "src": "97:17:1",
                       "value":
                       {
-                        "name": "s_offset",
+                        "name": "s.offset",
                         "nodeType": "YulIdentifier",
                         "src": "106:8:1"
                       },
@@ -146,7 +139,7 @@
                         "arguments":
                         [
                           {
-                            "name": "s_slot",
+                            "name": "s.slot",
                             "nodeType": "YulIdentifier",
                             "src": "128:6:1"
                           },
@@ -203,7 +196,6 @@
               }
             ]
           },
-          "documentation": null,
           "functionSelector": "ffae15ba",
           "id": 10,
           "implemented": true,
@@ -211,7 +203,6 @@
           "modifiers": [],
           "name": "e",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 6,

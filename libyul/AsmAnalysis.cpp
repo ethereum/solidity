@@ -209,7 +209,10 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 				m_currentScope->insideFunction()
 			);
 	for (auto const& variable: _varDecl.variables)
+	{
+		expectValidIdentifier(variable.name, variable.location);
 		expectValidType(variable.type, variable.location);
+	}
 
 	if (_varDecl.value)
 	{
@@ -249,11 +252,13 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 void AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 {
 	yulAssert(!_funDef.name.empty(), "");
+	expectValidIdentifier(_funDef.name, _funDef.location);
 	Block const* virtualBlock = m_info.virtualBlocks.at(&_funDef).get();
 	yulAssert(virtualBlock, "");
 	Scope& varScope = scope(virtualBlock);
 	for (auto const& var: _funDef.parameters + _funDef.returnVariables)
 	{
+		expectValidIdentifier(var.name, var.location);
 		expectValidType(var.type, var.location);
 		m_activeVariables.insert(&std::get<Scope::Variable>(varScope.identifiers.at(var.name)));
 	}
@@ -529,6 +534,26 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 	return *scopePtr;
 }
 
+void AsmAnalyzer::expectValidIdentifier(YulString _identifier, SourceLocation const& _location)
+{
+	// NOTE: the leading dot case is handled by the parser not allowing it.
+
+	if (boost::ends_with(_identifier.str(), "."))
+		m_errorReporter.syntaxError(
+			3384_error,
+			_location,
+			"\"" + _identifier.str() + "\" is not a valid identifier (ends with a dot)."
+		);
+
+	if (_identifier.str().find("..") != std::string::npos)
+		m_errorReporter.syntaxError(
+			7771_error,
+			_location,
+			"\"" + _identifier.str() + "\" is not a valid identifier (contains consecutive dots)."
+		);
+
+}
+
 void AsmAnalyzer::expectValidType(YulString _type, SourceLocation const& _location)
 {
 	if (!m_dialect.types.count(_type))
@@ -611,13 +636,15 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		errorForVM(7110_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::CHAINID && !m_evmVersion.hasChainID())
 		errorForVM(1561_error, "only available for Istanbul-compatible");
+	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
+		errorForVM(7721_error, "only available for Istanbul-compatible");
 	else if (_instr == evmasm::Instruction::PC)
-		m_errorReporter.warning(
+		m_errorReporter.error(
 			2450_error,
+			Error::Type::SyntaxError,
 			_location,
-			"The \"" +
-			boost::to_lower_copy(instructionInfo(_instr).name) +
-			"\" instruction is deprecated and will be removed in the next breaking release."
+			"PC instruction is a low-level EVM feature. "
+			"Because of that PC is disallowed in strict assembly."
 		);
 	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
 		errorForVM(3672_error, "only available for Istanbul-compatible");

@@ -33,10 +33,10 @@ function gnosis_safe_test
     OPTIMIZER_LEVEL=1
     CONFIG="truffle.js"
 
-    truffle_setup https://github.com/solidity-external-tests/safe-contracts.git development_060
+    truffle_setup https://github.com/solidity-external-tests/safe-contracts.git development_070
 
     force_truffle_version
-    sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_060|g' package.json
+    sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_070|g' package.json
 
     run_install install_fn
     replace_libsolc_call

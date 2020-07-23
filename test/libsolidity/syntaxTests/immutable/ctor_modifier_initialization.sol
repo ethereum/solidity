@@ -1,6 +1,6 @@
 contract C {
     uint immutable x;
-    constructor() initX public {
+    constructor() initX {
     }
 
     modifier initX() {
@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError 1581: (109-110): Immutable variables can only be initialized inline or assigned directly in the constructor.
+// TypeError 1581: (102-103): Immutable variables can only be initialized inline or assigned directly in the constructor.

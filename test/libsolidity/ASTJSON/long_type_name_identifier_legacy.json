@@ -8,8 +8,7 @@
       [
         15
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -43,12 +41,10 @@
             "constant": false,
             "mutability": "mutable",
             "name": "a",
-            "overrides": null,
             "scope": 15,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "uint256[]",
-            "value": null,
             "visibility": "internal"
           },
           "children":
@@ -56,7 +52,6 @@
             {
               "attributes":
               {
-                "length": null,
                 "type": "uint256[]"
               },
               "children":
@@ -84,7 +79,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
@@ -94,7 +88,6 @@
               null
             ],
             "name": "f",
-            "overrides": null,
             "scope": 15,
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -147,12 +140,10 @@
                         "constant": false,
                         "mutability": "mutable",
                         "name": "b",
-                        "overrides": null,
                         "scope": 13,
                         "stateVariable": false,
                         "storageLocation": "storage",
                         "type": "uint256[]",
-                        "value": null,
                         "visibility": "internal"
                       },
                       "children":
@@ -160,7 +151,6 @@
                         {
                           "attributes":
                           {
-                            "length": null,
                             "type": "uint256[]"
                           },
                           "children":
@@ -188,7 +178,6 @@
                     {
                       "attributes":
                       {
-                        "argumentTypes": null,
                         "overloadedDeclarations":
                         [
                           null

@@ -1,5 +1,5 @@
 abstract contract C {
-	constructor() public {
+	constructor() {
 	}
 }
 

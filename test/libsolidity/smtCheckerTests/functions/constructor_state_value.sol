@@ -3,7 +3,7 @@ pragma experimental SMTChecker;
 contract C {
 	uint x = 5;
 
-	constructor() public {
+	constructor() {
 		assert(x == 5);
 		x = 10;
 	}
@@ -13,4 +13,4 @@ contract C {
 	}
 }
 // ----
-// Warning 4661: (152-166): Assertion violation happens here
+// Warning 4661: (145-159): Assertion violation happens here

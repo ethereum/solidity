@@ -12,8 +12,7 @@
       [
         1
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -30,7 +29,6 @@
           null
         ],
         "contractKind": "library",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -60,7 +58,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -77,7 +74,6 @@
             {
               "attributes":
               {
-                "contractScope": null,
                 "name": "L",
                 "referencedDeclaration": 1,
                 "type": "library L"

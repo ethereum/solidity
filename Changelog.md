@@ -1,3 +1,39 @@
+### 0.7.0 (unreleased)
+
+Breaking changes:
+ * Type Checker: Disallow virtual for library functions.
+ * Constructors should not have visibility.
+ * Deprecated dot syntax for `value` and `gas`.
+ * Deprecated the identifier `now`.
+ * Disallow `gwei` as identifier.
+ * JSON AST: Removes members with ``null`` value from JSON output.
+ * Parser: NatSpec comments on variables are only allowed for public state variables.
+ * Type Checker: Disallow shifts by signed types.
+ * Type Checker: Exponentiation and shifts of literals by non-literals will always use ``uint256`` or ``int256`` as a type.
+ * Type Checker: Disallow structs and arrays in memory or calldata if they contain nested mappings.
+ * Type Checker: Disallow assignments to state variables that contain nested mappings.
+ * Type checker: Disallow events with same name and parameter types in inheritance hierarchy.
+ * ``using A for B`` only affects the contract it is mentioned in and not all derived contracts
+ * Inline Assembly: Disallow `.` in user-defined function and variable names.
+ * Inline Assembly: Slot and offset of storage pointer variable ``x`` are accessed via ``x.slot`` and ``x.offset`` instead of ``x_slot`` and ``x_offset``.
+ * Remove the finney and szabo denominations.
+
+Language Features:
+ * State mutability: Do not issue recommendation for stricter mutability for virtual functions but do issue it for functions that override.
+ * Yul: Disallow EVM instruction `pc()`.
+ * Yul: Disallow consecutive and trailing dots in identifiers. Leading dots were already disallowed.
+ * Inheritance: Allow overrides to have stricter state mutability: ``view`` can override ``nonpayable`` and ``pure`` can override ``view``.
+
+Compiler Features:
+ * Variable declarations using the ``var`` keyword are not recognized anymore.
+
+
+Bugfixes:
+ * NatSpec: Constructors and functions have consistent userdoc output.
+ * Inheritance: Disallow public state variables overwriting ``pure`` functions.
+ * State Mutability: Constant public state variables are considered ``pure`` functions.
+
+
 ### 0.6.12 (2020-07-22)
 
 Language Features:
@@ -28,6 +64,7 @@ Build System:
 
 
 ### 0.6.11 (2020-07-07)
+
 
 Language Features:
  * General: Add unit denomination ``gwei``

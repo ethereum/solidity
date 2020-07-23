@@ -63,7 +63,7 @@ Data locations are not only relevant for persistency of data, but also for the s
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract C {
         // The data location of x is storage.
@@ -174,7 +174,7 @@ or create a new memory array and copy every element.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract C {
         function f(uint len) public pure {
@@ -206,7 +206,7 @@ the first element to ``uint``.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract C {
         function f() public pure {
@@ -223,7 +223,7 @@ memory arrays, i.e. the following is not possible:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     // This will not compile.
     contract C {
@@ -243,7 +243,7 @@ individual elements:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract C {
         function f() public pure {
@@ -301,7 +301,7 @@ Array Members
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract ArrayContract {
         uint[2**20] m_aLotOfIntegers;
@@ -434,13 +434,13 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract Proxy {
         /// @dev Address of the client contract managed by proxy i.e., this contract
         address client;
 
-        constructor(address _client) public {
+        constructor(address _client) {
             client = _client;
         }
 
@@ -478,7 +478,7 @@ shown in the following example:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     // Defines a new type with two fields.
     // Declaring a struct outside of a contract allows
@@ -505,12 +505,11 @@ shown in the following example:
 
         function newCampaign(address payable beneficiary, uint goal) public returns (uint campaignID) {
             campaignID = numCampaigns++; // campaignID is return variable
-            // Creates new struct in memory and copies it to storage.
-            // We leave out the mapping type, because it is not valid in memory.
-            // If structs are copied (even from storage to storage),
-            // types that are not valid outside of storage (ex. mappings and array of mappings)
-            // are always omitted, because they cannot be enumerated.
-            campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0);
+            // We cannot use "campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0)"
+            // because the RHS creates a memory-struct "Campaign" that contains a mapping.
+            Campaign storage c = campaigns[campaignID];
+            c.beneficiary = beneficiary;
+            c.fundingGoal = goal;
         }
 
         function contribute(uint campaignID) public payable {
