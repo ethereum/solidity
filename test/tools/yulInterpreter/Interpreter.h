@@ -55,6 +55,10 @@ class TraceLimitReached: public InterpreterTerminatedGeneric
 {
 };
 
+class ExpressionNestingLimitReached: public InterpreterTerminatedGeneric
+{
+};
+
 enum class ControlFlowState
 {
 	Default,
@@ -92,6 +96,7 @@ struct InterpreterState
 	size_t maxTraceSize = 0;
 	size_t maxSteps = 0;
 	size_t numSteps = 0;
+	size_t maxExprNesting = 0;
 	ControlFlowState controlFlowState = ControlFlowState::Default;
 
 	void dumpTraceAndState(std::ostream& _out) const;
@@ -202,6 +207,11 @@ private:
 		std::vector<std::optional<LiteralKind>> const* _literalArguments
 	);
 
+	/// Increment evaluation count, throwing exception if the
+	/// nesting level is beyond the upper bound configured in
+	/// the interpreter state.
+	void incrementStep();
+
 	InterpreterState& m_state;
 	Dialect const& m_dialect;
 	/// Values of variables.
@@ -209,6 +219,8 @@ private:
 	Scope& m_scope;
 	/// Current value of the expression
 	std::vector<u256> m_values;
+	/// Current expression nesting level
+	unsigned m_nestingLevel = 0;
 };
 
 }
