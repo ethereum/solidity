@@ -3241,7 +3241,7 @@ vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 	case Kind::DelegateCall:
 		slots = {
 			make_tuple("address", TypeProvider::address()),
-			make_tuple("functionIdentifier", TypeProvider::uint(32))
+			make_tuple("functionSelector", TypeProvider::uint(32))
 		};
 		break;
 	case Kind::BareCall:
