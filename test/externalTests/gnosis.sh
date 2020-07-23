@@ -24,7 +24,7 @@ source test/externalTests/common.sh
 verify_input "$1"
 SOLJSON="$1"
 
-function install_fn { npm install; }
+function install_fn { npm install --package-lock; }
 function compile_fn { npx truffle compile; }
 function test_fn { npm test; }
 
@@ -37,6 +37,8 @@ function gnosis_safe_test
 
     force_truffle_version
     sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_070|g' package.json
+    rm -f package-lock.json
+    rm -rf node_modules/
 
     run_install install_fn
     replace_libsolc_call
