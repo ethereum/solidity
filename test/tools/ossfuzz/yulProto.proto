@@ -388,7 +388,7 @@ message Block {
 message Object {
   required Code code = 1;
   optional Data data = 2;
-  optional Object sub_obj = 3;
+  repeated Object sub_obj = 3;
 }
 
 message Code {
