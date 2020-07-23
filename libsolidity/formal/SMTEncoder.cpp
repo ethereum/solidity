@@ -425,17 +425,13 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_tuple));
 		solAssert(symbTuple, "");
 		auto const& symbComponents = symbTuple->components();
-		auto const* tupleComponents = &_tuple.components();
-		while (tupleComponents->size() == 1)
-		{
-			auto innerTuple = dynamic_pointer_cast<TupleExpression>(tupleComponents->front());
-			solAssert(innerTuple, "");
-			tupleComponents = &innerTuple->components();
-		}
-		solAssert(symbComponents.size() == tupleComponents->size(), "");
+		auto const* tuple = dynamic_cast<TupleExpression const*>(innermostTuple(_tuple));
+		solAssert(tuple, "");
+		auto const& tupleComponents = tuple->components();
+		solAssert(symbComponents.size() == tupleComponents.size(), "");
 		for (unsigned i = 0; i < symbComponents.size(); ++i)
 		{
-			auto tComponent = tupleComponents->at(i);
+			auto tComponent = tupleComponents.at(i);
 			if (tComponent)
 			{
 				if (auto varDecl = identifierToVariable(*tComponent))
@@ -454,8 +450,7 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 		/// Parenthesized expressions are also TupleExpression regardless their type.
 		auto const& components = _tuple.components();
 		solAssert(components.size() == 1, "");
-		if (smt::isSupportedType(components.front()->annotation().type->category()))
-			defineExpr(_tuple, expr(*components.front()));
+		defineExpr(_tuple, expr(*components.front()));
 	}
 }
 
@@ -729,11 +724,7 @@ void SMTEncoder::visitGasLeft(FunctionCall const& _funCall)
 
 void SMTEncoder::endVisit(Identifier const& _identifier)
 {
-	if (_identifier.annotation().willBeWrittenTo)
-	{
-		// Will be translated as part of the node that requested the lvalue.
-	}
-	else if (auto decl = identifierToVariable(_identifier))
+	if (auto decl = identifierToVariable(_identifier))
 		defineExpr(_identifier, currentValue(*decl));
 	else if (_identifier.annotation().type->category() == Type::Category::Function)
 		visitFunctionIdentifier(_identifier);
@@ -1449,10 +1440,14 @@ void SMTEncoder::assignment(
 		"Tuple assignments should be handled by tupleAssignment."
 	);
 
+	Expression const* left = &_left;
+	if (auto const* tuple = dynamic_cast<TupleExpression const*>(left))
+		left = innermostTuple(*tuple);
+
 	if (!smt::isSupportedType(_type->category()))
 	{
 		// Give it a new index anyway to keep the SSA scheme sound.
-		if (auto varDecl = identifierToVariable(_left))
+		if (auto varDecl = identifierToVariable(*left))
 			m_context.newValue(*varDecl);
 
 		m_errorReporter.warning(
@@ -1461,10 +1456,10 @@ void SMTEncoder::assignment(
 			"Assertion checker does not yet implement type " + _type->toString()
 		);
 	}
-	else if (auto varDecl = identifierToVariable(_left))
+	else if (auto varDecl = identifierToVariable(*left))
 		assignment(*varDecl, _right);
-	else if (dynamic_cast<IndexAccess const*>(&_left))
-		arrayIndexAssignment(_left, _right);
+	else if (dynamic_cast<IndexAccess const*>(left))
+		arrayIndexAssignment(*left, _right);
 	else
 		m_errorReporter.warning(
 			8182_error,
@@ -1899,6 +1894,20 @@ Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)
 	while (auto access = dynamic_cast<IndexAccess const*>(base))
 		base = &access->baseExpression();
 	return base;
+}
+
+Expression const* SMTEncoder::innermostTuple(TupleExpression const& _tuple)
+{
+	solAssert(!_tuple.isInlineArray(), "");
+	TupleExpression const* tuple = &_tuple;
+	Expression const* expr = tuple;
+	while (tuple && !tuple->isInlineArray() && tuple->components().size() == 1)
+	{
+		expr = tuple->components().front().get();
+		tuple = dynamic_cast<TupleExpression const*>(expr);
+	}
+	solAssert(expr, "");
+	return expr;
 }
 
 set<VariableDeclaration const*> SMTEncoder::touchedVariables(ASTNode const& _node)
