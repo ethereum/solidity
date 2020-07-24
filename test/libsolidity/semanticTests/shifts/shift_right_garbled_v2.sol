@@ -11,6 +11,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f(uint8,uint8): 0x00, 0x04 -> 0x0f

@@ -8,6 +8,7 @@ contract Test {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // set(bytes,uint256): 0x40, 0x03, 0x08, "abcdefgh" -> 0x08, "d"

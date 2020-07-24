@@ -19,6 +19,7 @@ contract C {
 	}
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: true
 // ----
 // call_deleted_internal_func() -> FAILURE

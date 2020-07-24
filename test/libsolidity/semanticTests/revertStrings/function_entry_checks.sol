@@ -3,6 +3,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
+// compileToEwasm: also
 // compileViaYul: true
 // revertStrings: debug
 // ----

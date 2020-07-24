@@ -4,6 +4,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // EVMVersion: >=constantinople
 // ----

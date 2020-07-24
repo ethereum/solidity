@@ -20,6 +20,7 @@ contract C {
         return x[2];
     }}
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f() -> FAILURE

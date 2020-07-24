@@ -13,6 +13,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // e(bytes): 32, 3, hex"AB33BB" -> 32, 3, left(0xAB33BB)

@@ -6,6 +6,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=petersburg
+// compileToEwasm: also
 // compileViaYul: true
 // ----
 // popEmpty() -> FAILURE

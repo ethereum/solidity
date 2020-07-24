@@ -34,6 +34,7 @@ contract c {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // setIDStatic(uint256): 0xb ->

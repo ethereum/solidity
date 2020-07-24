@@ -4,6 +4,7 @@ contract C {
 	}
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f(string): 32, 5, "Hello" -> 32, 5, "Hello"

@@ -13,6 +13,7 @@ contract A {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // test() -> false

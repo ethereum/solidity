@@ -288,6 +288,7 @@ contract Test {
 /// testMul() -> true
 //
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // EVMVersion: >=constantinople
 // ----

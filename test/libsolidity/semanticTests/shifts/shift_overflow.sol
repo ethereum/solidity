@@ -9,6 +9,7 @@ contract C {
 }
 
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // leftU(uint8,uint8): 255, 8 -> 0

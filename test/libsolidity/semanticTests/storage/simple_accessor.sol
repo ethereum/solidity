@@ -5,6 +5,7 @@ contract test {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // data() -> 8

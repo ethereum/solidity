@@ -15,6 +15,7 @@ contract D {
 }
 // ====
 // EVMVersion: >=constantinople
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // constructor(): 2 ->

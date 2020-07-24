@@ -4,6 +4,7 @@ contract test {
 	function h() public { assert(false); }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f() ->
