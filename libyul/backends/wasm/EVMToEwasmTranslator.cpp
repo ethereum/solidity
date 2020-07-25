@@ -853,12 +853,22 @@ function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 function calldatasize() -> z1, z2, z3, z4 {
 	z4 := i64.extend_i32_u(eth.getCallDataSize())
 }
+// calldatacopy(t, f, s): copy s bytes from calldata at position f to mem at position t
 function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
-	eth.callDataCopy(
-		to_internal_i32ptr(x1, x2, x3, x4),
-		u256_to_i32(y1, y2, y3, y4),
-		u256_to_i32(z1, z2, z3, z4)
-	)
+	let offset:i32 := u256_to_i32(y1, y2, y3, y4)
+	let cds:i32 := eth.getCallDataSize()
+	let size:i32 := u256_to_i32(z1, z2, z3, z4)
+	if i32.gt_u(size, cds) {
+		size := i32.sub(cds, offset)
+	}
+	if i32.gt_u(size, 0:i32) {
+		size := i32.sub(cds, offset)
+		eth.callDataCopy(
+			to_internal_i32ptr(x1, x2, x3, x4),
+			offset,
+			size
+		)
+	}
 }
 
 // Needed?
