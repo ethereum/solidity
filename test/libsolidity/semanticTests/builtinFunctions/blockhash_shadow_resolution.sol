@@ -3,6 +3,7 @@ contract C {
     function f() public returns(bytes32) { return blockhash(3); }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f() -> 0

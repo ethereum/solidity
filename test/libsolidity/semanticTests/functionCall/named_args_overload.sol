@@ -25,6 +25,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // call(uint256): 0 -> 0

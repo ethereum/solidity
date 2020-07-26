@@ -5,6 +5,7 @@ contract C {
 	function h() external pure returns (bytes4) { return 0xcafecafe; }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: true
 // ----
 // f1() -> 0x20, 6, left(0x616263616263)

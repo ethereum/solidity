@@ -12,6 +12,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // intern() -> FAILURE # This should throw exceptions #

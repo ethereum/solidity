@@ -32,6 +32,7 @@ contract D {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // EVMVersion: <byzantium
 // ----

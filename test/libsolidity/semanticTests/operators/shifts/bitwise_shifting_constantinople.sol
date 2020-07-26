@@ -19,6 +19,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=constantinople
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // shl(uint256,uint256): 0x01, 0x02 -> 0x04

@@ -1,6 +1,7 @@
 contract test {
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // allowNonExistingFunctions: true
 // ----

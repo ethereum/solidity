@@ -812,13 +812,14 @@ function keccak256(x1, x2, x3, x4, y1, y2, y3, y4) -> z1, z2, z3, z4 {
 }
 
 function address() -> z1, z2, z3, z4 {
-	eth.getAddress(0:i32)
-	z1, z2, z3, z4 := mload_internal(0:i32)
+	eth.getAddress(4:i32)
+	z2, z3, z4 := mload_address(0:i32)
 }
 function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	mstore_address(0:i32, x1, x2, x3, x4)
-	eth.getExternalBalance(12:i32, 48:i32)
-	z1, z2, z3, z4 := mload_internal(32:i32)
+	eth.getExternalBalance(12:i32, 32:i32)
+	z4 := i64.load(32:i32)
+	z3 := i64.load(40:i32)
 }
 function selfbalance() -> z1, z2, z3, z4 {
 	// TODO: not part of current Ewasm spec
@@ -829,30 +830,44 @@ function chainid() -> z1, z2, z3, z4 {
 	unreachable()
 }
 function origin() -> z1, z2, z3, z4 {
-	eth.getTxOrigin(0:i32)
-	z1, z2, z3, z4 := mload_internal(0:i32)
+	eth.getTxOrigin(4:i32)
+	z2, z3, z4 := mload_address(0:i32)
 }
 function caller() -> z1, z2, z3, z4 {
-	eth.getCaller(0:i32)
-	z1, z2, z3, z4 := mload_internal(0:i32)
+	eth.getCaller(4:i32)
+	z2, z3, z4 := mload_address(0:i32)
 }
 function callvalue() -> z1, z2, z3, z4 {
 	eth.getCallValue(0:i32)
 	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	eth.callDataCopy(0:i32, u256_to_i32(x1, x2, x3, x4), 32:i32)
+	mstore_internal(0:i32, 0, 0, 0, 0)
+	calldatacopy(0, 0, 0, 0, x1, x2, x3, x4, 0, 0, 0, 32:i64)
 	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 function calldatasize() -> z1, z2, z3, z4 {
 	z4 := i64.extend_i32_u(eth.getCallDataSize())
 }
+// calldatacopy(t, f, s): copy s bytes from calldata at position f to mem at position t
 function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
-	eth.callDataCopy(
-		to_internal_i32ptr(x1, x2, x3, x4),
-		u256_to_i32(y1, y2, y3, y4),
-		u256_to_i32(z1, z2, z3, z4)
-	)
+	let cds:i32 := eth.getCallDataSize()
+	let offset:i32 := u256_to_i32(y1, y2, y3, y4)
+	let size:i32 := u256_to_i32(z1, z2, z3, z4)
+	// overflowed?
+	if i32.gt_u(offset, i32.sub(0xffffffff:i32, size)) {
+		eth.revert(0:i32, 0:i32)
+	}
+	if i32.gt_u(i32.add(size, offset), cds) {
+		size := i32.sub(cds, offset)
+	}
+	if i32.gt_u(size, 0:i32) {
+		eth.callDataCopy(
+			u256_to_i32(x1, x2, x3, x4),
+			offset,
+			size
+		)
+	}
 }
 
 // Needed?
@@ -911,8 +926,8 @@ function blockhash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	}
 }
 function coinbase() -> z1, z2, z3, z4 {
-	eth.getBlockCoinbase(0:i32)
-	z1, z2, z3, z4 := mload_internal(0:i32)
+	eth.getBlockCoinbase(4:i32)
+	z2, z3, z4 := mload_address(0:i32)
 }
 function timestamp() -> z1, z2, z3, z4 {
 	z4 := eth.getBlockTimestamp()
@@ -932,21 +947,21 @@ function pop(x1, x2, x3, x4) {
 }
 
 
-function endian_swap_16(x) -> y {
+function bswap16(x) -> y {
 	let hi := i64.and(i64.shl(x, 8), 0xff00)
 	let lo := i64.and(i64.shr_u(x, 8), 0xff)
 	y := i64.or(hi, lo)
 }
 
-function endian_swap_32(x) -> y {
-	let hi := i64.shl(endian_swap_16(x), 16)
-	let lo := endian_swap_16(i64.shr_u(x, 16))
+function bswap32(x) -> y {
+	let hi := i64.shl(bswap16(x), 16)
+	let lo := bswap16(i64.shr_u(x, 16))
 	y := i64.or(hi, lo)
 }
 
-function endian_swap(x) -> y {
-	let hi := i64.shl(endian_swap_32(x), 32)
-	let lo := endian_swap_32(i64.shr_u(x, 32))
+function bswap64(x) -> y {
+	let hi := i64.shl(bswap32(x), 32)
+	let lo := bswap32(i64.shr_u(x, 32))
 	y := i64.or(hi, lo)
 }
 function save_temp_mem_32() -> t1, t2, t3, t4 {
@@ -985,19 +1000,24 @@ function mload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := mload_internal(to_internal_i32ptr(x1, x2, x3, x4))
 }
 function mload_internal(pos:i32) -> z1, z2, z3, z4 {
-	z1 := endian_swap(i64.load(pos))
-	z2 := endian_swap(i64.load(i32.add(pos, 8:i32)))
-	z3 := endian_swap(i64.load(i32.add(pos, 16:i32)))
-	z4 := endian_swap(i64.load(i32.add(pos, 24:i32)))
+	z1 := bswap64(i64.load(pos))
+	z2 := bswap64(i64.load(i32.add(pos, 8:i32)))
+	z3 := bswap64(i64.load(i32.add(pos, 16:i32)))
+	z4 := bswap64(i64.load(i32.add(pos, 24:i32)))
+}
+function mload_address(pos:i32) -> z2, z3, z4 {
+	z2 := i64.and(bswap64(i64.load(pos)), 0x00000000ffffffff)
+	z3 := bswap64(i64.load(i32.add(pos, 8:i32)))
+	z4 := bswap64(i64.load(i32.add(pos, 16:i32)))
 }
 function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {
 	mstore_internal(to_internal_i32ptr(x1, x2, x3, x4), y1, y2, y3, y4)
 }
 function mstore_internal(pos:i32, y1, y2, y3, y4) {
-	i64.store(pos, endian_swap(y1))
-	i64.store(i32.add(pos, 8:i32), endian_swap(y2))
-	i64.store(i32.add(pos, 16:i32), endian_swap(y3))
-	i64.store(i32.add(pos, 24:i32), endian_swap(y4))
+	i64.store(pos, bswap64(y1))
+	i64.store(i32.add(pos, 8:i32), bswap64(y2))
+	i64.store(i32.add(pos, 16:i32), bswap64(y3))
+	i64.store(i32.add(pos, 24:i32), bswap64(y4))
 }
 function mstore_address(pos:i32, a1, a2, a3, a4) {
 	a1, a2, a3 := u256_to_address(a1, a2, a3, a4)

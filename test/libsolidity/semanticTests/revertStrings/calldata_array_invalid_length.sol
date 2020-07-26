@@ -7,6 +7,7 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // revertStrings: debug
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f(uint256[][]): 0x20, 1, 0x20, 0x0100000000000000000000 -> FAILURE, hex"08c379a0", 0x20, 28, "Invalid calldata tail length"
