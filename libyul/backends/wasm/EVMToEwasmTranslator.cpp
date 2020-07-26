@@ -841,7 +841,13 @@ function callvalue() -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	eth.callDataCopy(0:i32, u256_to_i32(x1, x2, x3, x4), 32:i32)
+	mstore_internal(0:i32, 0, 0, 0, 0)
+	let offset:i32 := u256_to_i32(x1, x2, x3, x4)
+	eth.callDataCopy(
+		u256_to_i32(0, 0, 0, 0),
+		offset,
+		i32.sub(eth.getCallDataSize(), offset)
+	)
 	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 function calldatasize() -> z1, z2, z3, z4 {
