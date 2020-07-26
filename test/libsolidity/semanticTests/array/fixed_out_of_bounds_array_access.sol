@@ -16,6 +16,7 @@ contract c {
 }
 
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // length() -> 4

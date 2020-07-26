@@ -18,6 +18,7 @@ contract A {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // EVMVersion: >=constantinople
 // ----

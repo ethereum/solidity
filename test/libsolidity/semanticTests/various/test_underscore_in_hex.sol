@@ -6,6 +6,7 @@ contract test {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f(bool): true -> 0x1234ab

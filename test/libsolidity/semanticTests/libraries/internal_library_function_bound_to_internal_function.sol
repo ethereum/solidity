@@ -17,6 +17,7 @@ contract C {
 }
 
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // test(uint256): 5 -> 10

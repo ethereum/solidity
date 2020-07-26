@@ -16,6 +16,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // secondItem() -> 0x22

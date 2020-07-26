@@ -23,6 +23,7 @@ contract Derived is Base {
 }
 
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // setData(uint256,uint256): 1, 2 -> true

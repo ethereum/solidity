@@ -7,6 +7,7 @@ contract test {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f(uint256): 1001 -> 1000

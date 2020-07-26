@@ -7,6 +7,7 @@ contract C {
 // ====
 // EVMVersion: >=byzantium
 // revertStrings: debug
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f(uint256[][]): 0x20, 1 -> FAILURE, hex"08c379a0", 0x20, 43, "ABI decoding: invalid calldata a", "rray stride"

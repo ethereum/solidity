@@ -11,6 +11,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: true
 // ----
 // setX(uint256): 6 -> 6

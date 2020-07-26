@@ -20,6 +20,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f() -> 0x26121ff000000000000000000000000000000000000000000000000000000000

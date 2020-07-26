@@ -22,16 +22,16 @@
         (local.set $r (i32.add (local.get $p) (i32.const 64)))
         (if (i32.lt_u (local.get $r) (local.get $p)) (then
             (unreachable)))
-        (local.set $_2 (call $endian_swap (local.get $_1)))
+        (local.set $_2 (call $bswap64 (local.get $_1)))
         (i64.store (local.get $r) (local.get $_2))
         (i64.store (i32.add (local.get $r) (i32.const 8)) (local.get $_2))
         (i64.store (i32.add (local.get $r) (i32.const 16)) (local.get $_2))
-        (i64.store (i32.add (local.get $r) (i32.const 24)) (call $endian_swap (i64.const 128)))
+        (i64.store (i32.add (local.get $r) (i32.const 24)) (call $bswap64 (i64.const 128)))
         (call $eth.getCallValue (i32.const 0))
-        (local.set $z1 (call $endian_swap (i64.load (i32.const 0))))
-        (local.set $z2 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 8)))))
-        (local.set $z3 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 16)))))
-        (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $z1) (local.get $z2)) (i64.or (local.get $z3) (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 24)))))))) (then
+        (local.set $z1 (call $bswap64 (i64.load (i32.const 0))))
+        (local.set $z2 (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 8)))))
+        (local.set $z3 (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 16)))))
+        (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $z1) (local.get $z2)) (i64.or (local.get $z3) (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 24)))))))) (then
             (call $revert (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1))))
         (local.set $_3 (datasize \"C_2_deployed\"))
         (call $codecopy (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (dataoffset \"C_2_deployed\") (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3))
@@ -93,7 +93,7 @@
     )
 )
 
-(func $endian_swap_16
+(func $bswap16
     (param $x i64)
     (result i64)
     (local $y i64)
@@ -104,27 +104,27 @@
     (local.get $y)
 )
 
-(func $endian_swap_32
+(func $bswap32
     (param $x i64)
     (result i64)
     (local $y i64)
     (local $hi i64)
     (block $label__5
-        (local.set $hi (i64.shl (call $endian_swap_16 (local.get $x)) (i64.const 16)))
-        (local.set $y (i64.or (local.get $hi) (call $endian_swap_16 (i64.shr_u (local.get $x) (i64.const 16)))))
+        (local.set $hi (i64.shl (call $bswap16 (local.get $x)) (i64.const 16)))
+        (local.set $y (i64.or (local.get $hi) (call $bswap16 (i64.shr_u (local.get $x) (i64.const 16)))))
 
     )
     (local.get $y)
 )
 
-(func $endian_swap
+(func $bswap64
     (param $x i64)
     (result i64)
     (local $y i64)
     (local $hi i64)
     (block $label__6
-        (local.set $hi (i64.shl (call $endian_swap_32 (local.get $x)) (i64.const 32)))
-        (local.set $y (i64.or (local.get $hi) (call $endian_swap_32 (i64.shr_u (local.get $x) (i64.const 32)))))
+        (local.set $hi (i64.shl (call $bswap32 (local.get $x)) (i64.const 32)))
+        (local.set $y (i64.or (local.get $hi) (call $bswap32 (i64.shr_u (local.get $x) (i64.const 32)))))
 
     )
     (local.get $y)

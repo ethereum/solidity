@@ -26,6 +26,7 @@ contract Test {
 }
 
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // getName() -> "def\x00\x00\x00"

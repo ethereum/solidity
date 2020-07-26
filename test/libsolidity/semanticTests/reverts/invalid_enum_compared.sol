@@ -23,6 +23,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // test_eq_ok() -> 1

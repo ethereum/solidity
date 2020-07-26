@@ -22,6 +22,7 @@ contract C {
 	}
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: true
 // ----
 // index(uint256): 0 -> true

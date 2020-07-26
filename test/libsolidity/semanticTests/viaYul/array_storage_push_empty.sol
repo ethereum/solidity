@@ -9,6 +9,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: true
 // EVMVersion: >=petersburg
 // ----

@@ -5,6 +5,7 @@ contract C {
 }
 
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f(uint32,uint32): 0x4266, 0x0 -> 0x4266

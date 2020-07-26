@@ -11,6 +11,7 @@ contract test {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // get(uint8): 0x00 -> 0
