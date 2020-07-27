@@ -82,7 +82,6 @@ void CHC::analyze(SourceUnit const& _source)
 	}
 	m_context.clear();
 	m_context.setAssertionAccumulation(false);
-	m_variableUsage.setFunctionInlining(false);
 
 	resetSourceAnalysis();
 
