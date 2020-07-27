@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libyul/AsmDataForward.h>
+#include <libyul/AsmData.h>
 #include <libyul/optimiser/ASTWalker.h>
 
 #include <libsolutil/FixedHash.h>
@@ -197,7 +197,10 @@ private:
 
 	/// Evaluates the given expression from right to left and
 	/// stores it in m_value.
-	void evaluateArgs(std::vector<Expression> const& _expr);
+	void evaluateArgs(
+		std::vector<Expression> const& _expr,
+		std::vector<std::optional<LiteralKind>> const* _literalArguments
+	);
 
 	InterpreterState& m_state;
 	Dialect const& m_dialect;
