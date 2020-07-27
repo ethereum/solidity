@@ -923,6 +923,15 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 
 	if (_indexAccess.annotation().type->category() == Type::Category::TypeType)
 		return;
+	if (_indexAccess.baseExpression().annotation().type->category() == Type::Category::FixedBytes)
+	{
+		m_errorReporter.warning(
+			7989_error,
+			_indexAccess.location(),
+			"Assertion checker does not yet support index accessing fixed bytes."
+		);
+		return;
+	}
 
 	shared_ptr<smt::SymbolicVariable> array;
 	if (auto const* id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
@@ -930,16 +939,6 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 		auto varDecl = identifierToVariable(*id);
 		solAssert(varDecl, "");
 		array = m_context.variable(*varDecl);
-
-		if (varDecl->type()->category() == Type::Category::FixedBytes)
-		{
-			m_errorReporter.warning(
-				7989_error,
-				_indexAccess.location(),
-				"Assertion checker does not yet support index accessing fixed bytes."
-			);
-			return;
-		}
 	}
 	else if (auto const* innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
 	{
