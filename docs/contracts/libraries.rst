@@ -229,7 +229,9 @@ The following identifiers are used for the types in the signatures:
  - Non-storage array types follow the same convention as in the contract ABI, i.e. ``<type>[]`` for dynamic arrays and
    ``<type>[M]`` for fixed-size arrays of ``M`` elements.
  - Non-storage structs are referred to by their fully qualified name, i.e. ``C.S`` for ``contract C { struct S { ... } }``.
- - Storage pointer types use the type identifier of their corresponding non-storage type, but append a single space
+ - Storage pointer mappings use ``mapping(<keyType> => <valueType>) storage`` where ``<keyType>`` and ``<valueType>`` are
+   the identifiers for the key and value types of the mapping, respectively.
+ - Other storage pointer types use the type identifier of their corresponding non-storage type, but append a single space
    followed by ``storage`` to it.
 
 The argument encoding is the same as for the regular contract ABI, except for storage pointers, which are encoded as a
