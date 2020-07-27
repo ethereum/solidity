@@ -11,4 +11,3 @@ contract C {
 }
 // ----
 // Warning 4984: (160-165): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 4281: (177-182): CHC: Division by zero happens here.

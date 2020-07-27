@@ -11,6 +11,7 @@ Compiler Features:
  * SMTChecker: Support named arguments in function calls.
  * SMTChecker: Support struct constructor.
  * SMTChecker: Support getters.
+ * SMTChecker: Support early returns in the CHC engine.
 
 Bugfixes:
  * Code generator: Do not pad empty string literals with a single 32-byte zero field in the ABI coder v1.
