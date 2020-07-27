@@ -166,7 +166,58 @@ BOOST_AUTO_TEST_CASE(scientific_notation)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
-BOOST_AUTO_TEST_CASE(trailing_dot)
+BOOST_AUTO_TEST_CASE(leading_dot_in_identifier)
+{
+	Scanner scanner(CharStream("function .a(", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Function);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Period);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::LParen);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream("function .a(", ""));
+	scanner.supportPeriodInIdentifier(true);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Function);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Period);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::LParen);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(middle_dot_in_identifier)
+{
+	Scanner scanner(CharStream("function a..a(", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Function);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Period);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Period);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::LParen);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream("function a...a(", ""));
+	scanner.supportPeriodInIdentifier(true);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Function);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::LParen);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(trailing_dot_in_identifier)
+{
+	Scanner scanner(CharStream("function a.(", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Function);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Period);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::LParen);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream("function a.(", ""));
+	scanner.supportPeriodInIdentifier(true);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Function);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::LParen);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(trailing_dot_in_numbers)
 {
 	Scanner scanner(CharStream("2.5", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
