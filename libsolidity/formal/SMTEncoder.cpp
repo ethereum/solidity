@@ -1470,7 +1470,7 @@ void SMTEncoder::assignment(
 
 void SMTEncoder::tupleAssignment(Expression const& _left, Expression const& _right)
 {
-	auto lTuple = dynamic_cast<TupleExpression const*>(&_left);
+	auto lTuple = dynamic_cast<TupleExpression const*>(innermostTuple(dynamic_cast<TupleExpression const&>(_left)));
 	solAssert(lTuple, "");
 
 	auto const& lComponents = lTuple->components();
