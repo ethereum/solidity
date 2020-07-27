@@ -126,16 +126,14 @@ Statement Parser::parseStatement()
 		advance();
 		return stmt;
 	}
-	case Token::Identifier:
-		if (currentLiteral() == "leave")
-		{
-			Statement stmt{createWithLocation<Leave>()};
-			if (!m_insideFunction)
-				m_errorReporter.syntaxError(8149_error, currentLocation(), "Keyword \"leave\" can only be used inside a function.");
-			advance();
-			return stmt;
-		}
-		break;
+	case Token::Leave:
+	{
+		Statement stmt{createWithLocation<Leave>()};
+		if (!m_insideFunction)
+			m_errorReporter.syntaxError(8149_error, currentLocation(), "Keyword \"leave\" can only be used inside a function.");
+		advance();
+		return stmt;
+	}
 	default:
 		break;
 	}

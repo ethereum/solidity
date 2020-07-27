@@ -972,6 +972,9 @@ tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	auto const token = TokenTraits::fromIdentifierOrKeyword(m_tokens[NextNext].literal);
 	if (m_kind == ScannerKind::Yul)
 	{
+		// Turn Solidity identifier into a Yul keyword
+		if (m_tokens[NextNext].literal == "leave")
+			return std::make_tuple(Token::Leave, 0, 0);
 		// Turn non-Yul keywords into identifiers.
 		if (!TokenTraits::isYulKeyword(std::get<0>(token)))
 			return std::make_tuple(Token::Identifier, 0, 0);
