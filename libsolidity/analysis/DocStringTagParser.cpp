@@ -165,12 +165,7 @@ void DocStringTagParser::parseDocStrings(
 			returnTagsVisited++;
 			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(&_node))
 			{
-				if (!varDecl->isPublic())
-					m_errorReporter.docstringParsingError(
-						9440_error,
-						_node.documentation()->location(),
-						"Documentation tag \"@" + docTag.first + "\" is only allowed on public state-variables."
-					);
+				solAssert(varDecl->isPublic(), "@return is only allowed on public state-variables.");
 				if (returnTagsVisited > 1)
 					m_errorReporter.docstringParsingError(
 						5256_error,
