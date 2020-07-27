@@ -3,6 +3,7 @@
 Breaking changes:
  * Inline Assembly: Disallow ``.`` in user-defined function and variable names.
  * Inline Assembly: Slot and offset of storage pointer variable ``x`` are accessed via ``x.slot`` and ``x.offset`` instead of ``x_slot`` and ``x_offset``.
+ * JSON AST: Mark hex string literals with ``kind: "hexString"``.
  * JSON AST: Remove members with ``null`` value from JSON output.
  * Parser: Disallow ``gwei`` as identifier.
  * Parser: Disallow dot syntax for ``value`` and ``gas``.
