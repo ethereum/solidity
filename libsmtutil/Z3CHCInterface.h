@@ -25,6 +25,8 @@
 #include <libsmtutil/CHCSolverInterface.h>
 #include <libsmtutil/Z3Interface.h>
 
+#include <vector>
+
 namespace solidity::smtutil
 {
 
@@ -40,11 +42,22 @@ public:
 
 	void addRule(Expression const& _expr, std::string const& _name) override;
 
-	std::pair<CheckResult, std::vector<std::string>> query(Expression const& _expr) override;
+	std::pair<CheckResult, CexGraph> query(Expression const& _expr) override;
 
 	Z3Interface* z3Interface() const { return m_z3Interface.get(); }
 
+	void setSpacerOptions(bool _preProcessing = true);
+
 private:
+	/// Constructs a nonlinear counterexample graph from the refutation.
+	CHCSolverInterface::CexGraph cexGraph(z3::expr const& _proof);
+	/// @returns the fact from a proof node.
+	z3::expr fact(z3::expr const& _node);
+	/// @returns @a _predicate's name.
+	std::string name(z3::expr const& _predicate);
+	/// @returns the arguments of @a _predicate.
+	std::vector<std::string> arguments(z3::expr const& _predicate);
+
 	// Used to handle variables.
 	std::unique_ptr<Z3Interface> m_z3Interface;
 

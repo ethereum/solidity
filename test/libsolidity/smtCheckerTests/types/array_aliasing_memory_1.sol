@@ -26,4 +26,4 @@ contract C
 	}
 }
 // ----
-// Warning 4661: (400-457): Assertion violation happens here
+// Warning 6328: (400-457): Assertion violation happens here

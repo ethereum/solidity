@@ -19,4 +19,4 @@ contract C {
 // ----
 // Warning 5740: (128-133): Unreachable code.
 // Warning 5740: (147-151): Unreachable code.
-// Warning 4661: (180-194): Assertion violation happens here
+// Warning 6328: (180-194): Assertion violation happens here

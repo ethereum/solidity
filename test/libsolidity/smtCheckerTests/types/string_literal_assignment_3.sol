@@ -11,4 +11,4 @@ contract C {
 	}
 }
 // ----
-// Warning 4661: (186-201): Assertion violation happens here
+// Warning 6328: (186-201): Assertion violation happens here

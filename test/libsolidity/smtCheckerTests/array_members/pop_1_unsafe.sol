@@ -7,4 +7,4 @@ contract C {
 	}
 }
 // ----
-// Warning 2529: (82-89): Empty array "pop" detected here.
+// Warning 2529: (82-89): Empty array "pop" detected here

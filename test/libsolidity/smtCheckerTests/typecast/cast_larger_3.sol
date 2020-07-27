@@ -12,6 +12,6 @@ contract C
 	}
 }
 // ----
+// Warning 6328: (207-230): Assertion violation happens here
+// Warning 6328: (273-287): Assertion violation happens here
 // Warning 5084: (108-117): Type conversion is not yet fully supported and might yield false positives.
-// Warning 4661: (207-230): Assertion violation happens here
-// Warning 4661: (273-287): Assertion violation happens here

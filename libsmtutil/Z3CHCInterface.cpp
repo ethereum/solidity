@@ -20,6 +20,9 @@
 
 #include <libsolutil/CommonIO.h>
 
+#include <set>
+#include <stack>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::smtutil;
@@ -33,17 +36,7 @@ Z3CHCInterface::Z3CHCInterface():
 	z3::set_param("rewriter.pull_cheap_ite", true);
 	z3::set_param("rlimit", Z3Interface::resourceLimit);
 
-	// Spacer options.
-	// These needs to be set in the solver.
-	// https://github.com/Z3Prover/z3/blob/master/src/muz/base/fp_params.pyg
-	z3::params p(*m_context);
-	// These are useful for solving problems with arrays and loops.
-	// Use quantified lemma generalizer.
-	p.set("fp.spacer.q3.use_qgen", true);
-	p.set("fp.spacer.mbqi", false);
-	// Ground pobs by using values from a model.
-	p.set("fp.spacer.ground_pobs", false);
-	m_solver.set(p);
+	setSpacerOptions();
 }
 
 void Z3CHCInterface::declareVariable(string const& _name, SortPointer const& _sort)
@@ -72,10 +65,10 @@ void Z3CHCInterface::addRule(Expression const& _expr, string const& _name)
 	}
 }
 
-pair<CheckResult, vector<string>> Z3CHCInterface::query(Expression const& _expr)
+pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
 {
 	CheckResult result;
-	vector<string> values;
+	CHCSolverInterface::CexGraph cex;
 	try
 	{
 		z3::expr z3Expr = m_z3Interface->toZ3Expr(_expr);
@@ -84,8 +77,9 @@ pair<CheckResult, vector<string>> Z3CHCInterface::query(Expression const& _expr)
 		case z3::check_result::sat:
 		{
 			result = CheckResult::SATISFIABLE;
-			// TODO retrieve model.
-			break;
+			auto proof = m_solver.get_answer();
+			auto cex = cexGraph(proof);
+			return {result, cex};
 		}
 		case z3::check_result::unsat:
 		{
@@ -104,8 +98,119 @@ pair<CheckResult, vector<string>> Z3CHCInterface::query(Expression const& _expr)
 	catch (z3::exception const&)
 	{
 		result = CheckResult::ERROR;
-		values.clear();
+		cex = {};
 	}
 
-	return make_pair(result, values);
+	return {result, cex};
+}
+
+void Z3CHCInterface::setSpacerOptions(bool _preProcessing)
+{
+	// Spacer options.
+	// These needs to be set in the solver.
+	// https://github.com/Z3Prover/z3/blob/master/src/muz/base/fp_params.pyg
+	z3::params p(*m_context);
+	// These are useful for solving problems with arrays and loops.
+	// Use quantified lemma generalizer.
+	p.set("fp.spacer.q3.use_qgen", true);
+	p.set("fp.spacer.mbqi", false);
+	// Ground pobs by using values from a model.
+	p.set("fp.spacer.ground_pobs", false);
+
+	// Spacer optimization should be
+	// - enabled for better solving (default)
+	// - disable for counterexample generation
+	p.set("fp.xform.slice", _preProcessing);
+	p.set("fp.xform.inline_linear", _preProcessing);
+	p.set("fp.xform.inline_eager", _preProcessing);
+
+	m_solver.set(p);
+}
+
+/**
+Convert a ground refutation into a linear or nonlinear counterexample.
+The counterexample is given as an implication graph of the form
+`premises => conclusion` where `premises` are the predicates
+from the body of nonlinear clauses, representing the proof graph.
+
+This function is based on and similar to
+https://github.com/Z3Prover/z3/blob/z3-4.8.8/src/muz/spacer/spacer_context.cpp#L2919
+(spacer::context::get_ground_sat_answer)
+which generates linear counterexamples.
+It is modified here to accept nonlinear CHCs as well, generating a DAG
+instead of a path.
+*/
+CHCSolverInterface::CexGraph Z3CHCInterface::cexGraph(z3::expr const& _proof)
+{
+	CexGraph graph;
+
+	/// The root fact of the refutation proof is `false`.
+	/// The node itself is not a hyper resolution, so we need to
+	/// extract the `query` hyper resolution node from the
+	/// `false` node (the first child).
+	smtAssert(_proof.is_app(), "");
+	smtAssert(fact(_proof).decl().decl_kind() == Z3_OP_FALSE, "");
+
+	stack<z3::expr> proofStack;
+	proofStack.push(_proof.arg(0));
+
+	auto const& root = proofStack.top();
+	graph.nodes[root.id()] = {name(fact(root)), arguments(fact(root))};
+
+	set<unsigned> visited;
+	visited.insert(root.id());
+
+	while (!proofStack.empty())
+	{
+		z3::expr proofNode = proofStack.top();
+		smtAssert(graph.nodes.count(proofNode.id()), "");
+		proofStack.pop();
+
+		if (proofNode.is_app() && proofNode.decl().decl_kind() == Z3_OP_PR_HYPER_RESOLVE)
+		{
+			smtAssert(proofNode.num_args() > 0, "");
+			for (unsigned i = 1; i < proofNode.num_args() - 1; ++i)
+			{
+				z3::expr child = proofNode.arg(i);
+				if (!visited.count(child.id()))
+				{
+					visited.insert(child.id());
+					proofStack.push(child);
+				}
+
+				if (!graph.nodes.count(child.id()))
+				{
+					graph.nodes[child.id()] = {name(fact(child)), arguments(fact(child))};
+					graph.edges[child.id()] = {};
+				}
+
+				graph.edges[proofNode.id()].push_back(child.id());
+			}
+		}
+	}
+
+	return graph;
+}
+
+z3::expr Z3CHCInterface::fact(z3::expr const& _node)
+{
+	smtAssert(_node.is_app(), "");
+	if (_node.num_args() == 0)
+		return _node;
+	return _node.arg(_node.num_args() - 1);
+}
+
+string Z3CHCInterface::name(z3::expr const& _predicate)
+{
+	smtAssert(_predicate.is_app(), "");
+	return _predicate.decl().name().str();
+}
+
+vector<string> Z3CHCInterface::arguments(z3::expr const& _predicate)
+{
+	smtAssert(_predicate.is_app(), "");
+	vector<string> args;
+	for (unsigned i = 0; i < _predicate.num_args(); ++i)
+		args.emplace_back(_predicate.arg(i).to_string());
+	return args;
 }

@@ -38,6 +38,7 @@
 #include <libsmtutil/CHCSolverInterface.h>
 
 #include <map>
+#include <optional>
 #include <set>
 
 namespace solidity::frontend
@@ -102,6 +103,7 @@ private:
 	void setCurrentBlock(smt::SymbolicFunctionVariable const& _block, std::vector<smtutil::Expression> const* _arguments = nullptr);
 	std::set<Expression const*, IdCompare> transactionAssertions(ASTNode const* _txRoot);
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
+	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function);
 	//@}
 
 	/// Sort helpers.
@@ -164,6 +166,9 @@ private:
 	/// @returns the current symbolic values of the current function's
 	/// input and output parameters.
 	std::vector<smtutil::Expression> currentFunctionVariables();
+	std::vector<smtutil::Expression> currentFunctionVariables(FunctionDefinition const& _function);
+	std::vector<smtutil::Expression> currentFunctionVariables(ContractDefinition const& _contract);
+
 	/// @returns the same as currentFunctionVariables plus
 	/// local variables.
 	std::vector<smtutil::Expression> currentBlockVariables();
@@ -189,7 +194,7 @@ private:
 	void addRule(smtutil::Expression const& _rule, std::string const& _ruleName);
 	/// @returns <true, empty> if query is unsatisfiable (safe).
 	/// @returns <false, model> otherwise.
-	std::pair<smtutil::CheckResult, std::vector<std::string>> query(smtutil::Expression const& _query, langutil::SourceLocation const& _location);
+	std::pair<smtutil::CheckResult, smtutil::CHCSolverInterface::CexGraph> query(smtutil::Expression const& _query, langutil::SourceLocation const& _location);
 
 	void addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId);
 	void addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId);
@@ -203,9 +208,25 @@ private:
 		ASTNode const* _scope,
 		CHCVerificationTarget const& _target,
 		unsigned _errorId,
+		langutil::ErrorId _errorReporterId,
 		std::string _satMsg,
-		std::string _unknownMsg
+		std::string _unknownMsg = ""
 	);
+
+	std::optional<std::string> generateCounterexample(smtutil::CHCSolverInterface::CexGraph const& _graph, std::string const& _root);
+	/// @returns values for the _stateVariables after a transaction calling
+	/// _function was executed.
+	/// _function = nullptr means the transaction was the deployment of a
+	/// contract without an explicit constructor.
+	std::string formatStateCounterexample(std::vector<VariableDeclaration const*> const& _stateVariables, FunctionDefinition const* _function, std::vector<std::string> const& _summaryValues);
+	/// @returns a formatted text representing a call to _function
+	/// with the concrete values for value type parameters and
+	/// the parameter name for reference types.
+	std::string formatFunctionCallCounterexample(std::vector<VariableDeclaration const*> const& _stateVariables, FunctionDefinition const& _function, std::vector<std::string> const& _summaryValues);
+
+	/// @returns a DAG in the dot format.
+	/// Used for debugging purposes.
+	std::string cex2dot(smtutil::CHCSolverInterface::CexGraph const& _graph);
 	//@}
 
 	/// Misc.
@@ -255,6 +276,9 @@ private:
 		"error",
 		m_context
 	};
+
+	/// Maps predicate names to the ASTNodes they came from.
+	std::map<std::string, ASTNode const*> m_symbolFunction;
 	//@}
 
 	/// Variables.

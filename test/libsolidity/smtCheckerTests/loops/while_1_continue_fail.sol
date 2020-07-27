@@ -21,4 +21,4 @@ contract C
 // SMTSolvers: z3
 // ----
 // Warning 5740: (169-176): Unreachable code.
-// Warning 4661: (227-242): Assertion violation happens here
+// Warning 6328: (227-242): Assertion violation happens here
