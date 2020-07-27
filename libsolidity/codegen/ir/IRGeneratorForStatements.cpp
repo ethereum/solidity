@@ -314,9 +314,9 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 
 	writeToLValue(*m_currentLValue, value);
 
-	m_currentLValue.reset();
-	if (*_assignment.annotation().type != *TypeProvider::emptyTuple())
+	if (m_currentLValue->type.category() != Type::Category::Struct && *_assignment.annotation().type != *TypeProvider::emptyTuple())
 		define(_assignment, value);
+	m_currentLValue.reset();
 
 	return false;
 }
@@ -2486,7 +2486,7 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 					offset = std::get<unsigned>(_storage.offset);
 
 				m_code <<
-					m_utils.updateStorageValueFunction(_lvalue.type, offset) <<
+					m_utils.updateStorageValueFunction(_lvalue.type, &_value.type(), offset) <<
 					"(" <<
 					_storage.slot <<
 					(

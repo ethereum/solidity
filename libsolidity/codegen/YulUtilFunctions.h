@@ -248,7 +248,11 @@ public:
 	/// the specified slot and offset. If offset is not given, it is expected as
 	/// runtime parameter.
 	/// signature: (slot, [offset,] value)
-	std::string updateStorageValueFunction(Type const& _type, std::optional<unsigned> const& _offset = std::optional<unsigned>());
+	std::string updateStorageValueFunction(
+		Type const& _toType,
+		Type const* _fromType = nullptr,
+		std::optional<unsigned> const& _offset = std::optional<unsigned>()
+	);
 
 	/// Returns the name of a function that will write the given value to
 	/// the specified address.
