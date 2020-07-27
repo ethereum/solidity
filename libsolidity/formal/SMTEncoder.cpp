@@ -1100,7 +1100,11 @@ void SMTEncoder::arrayPop(FunctionCall const& _funCall)
 
 void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression const& _array)
 {
-	if (auto const* id = dynamic_cast<Identifier const*>(&_expr))
+	Expression const* expr = &_expr;
+	if (auto const* tupleExpr = dynamic_cast<TupleExpression const*>(expr))
+		expr = innermostTuple(*tupleExpr);
+
+	if (auto const* id = dynamic_cast<Identifier const*>(expr))
 	{
 		auto varDecl = identifierToVariable(*id);
 		solAssert(varDecl, "");
@@ -1108,9 +1112,9 @@ void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression
 			resetReferences(*varDecl);
 		m_context.addAssertion(m_context.newValue(*varDecl) == _array);
 	}
-	else if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(&_expr))
+	else if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(expr))
 		arrayIndexAssignment(*indexAccess, _array);
-	else if (auto const* funCall = dynamic_cast<FunctionCall const*>(&_expr))
+	else if (auto const* funCall = dynamic_cast<FunctionCall const*>(expr))
 	{
 		FunctionType const& funType = dynamic_cast<FunctionType const&>(*funCall->expression().annotation().type);
 		if (funType.kind() == FunctionType::Kind::ArrayPush)
@@ -1132,7 +1136,7 @@ void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression
 			arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
 		}
 	}
-	else if (dynamic_cast<MemberAccess const*>(&_expr))
+	else if (dynamic_cast<MemberAccess const*>(expr))
 		m_errorReporter.warning(
 			9599_error,
 			_expr.location(),
