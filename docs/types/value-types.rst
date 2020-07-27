@@ -484,7 +484,9 @@ String literals are written with either double or single-quotes (``"foo"`` or ``
 
 For example, with ``bytes32 samevar = "stringliteral"`` the string literal is interpreted in its raw byte form when assigned to a ``bytes32`` type.
 
-String literals support the following escape characters:
+String literals can only contain printable ASCII characters, which means the characters between and including 0x1F .. 0x7E.
+
+Additionally, string literals also support the following escape characters:
 
  - ``\<newline>`` (escapes an actual newline)
  - ``\\`` (backslash)
@@ -511,8 +513,18 @@ character sequence ``abcdef``.
     "\n\"\'\\abc\
     def"
 
-Any unicode line terminator which is not a newline (i.e. LF, VF, FF, CR, NEL, LS, PS) is considered to
+Any Unicode line terminator which is not a newline (i.e. LF, VF, FF, CR, NEL, LS, PS) is considered to
 terminate the string literal. Newline only terminates the string literal if it is not preceded by a ``\``.
+
+Unicode Literals
+----------------
+
+While regular string literals can only contain ASCII, Unicode literals – prefixed with the keyword ``unicode`` – can contain any valid UTF-8 sequence.
+They also support the very same escape sequences as regular string literals.
+
+::
+
+    string memory a = unicode"Hello 😃";
 
 .. index:: literal, bytes
 

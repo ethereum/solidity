@@ -25,15 +25,23 @@ Changes to the Syntax
 * In external function and contract creation calls, Ether and gas is now specified using a new syntax:
   ``x.f{gas: 10000, value: 2 ether}(arg1, arg2)``.
   The old syntax -- ``x.f.gas(10000).value(2 ether)(arg1, arg2)`` -- will cause an error.
+
 * The global variable ``now`` is deprecated, ``block.timestamp`` should be used instead.
   The single identifier ``now`` is too generic for a global variable and could give the impression
   that it changes during transaction processing, whereas ``block.timestamp`` correctly
   reflects the fact that it is just a property of the block.
+
 * NatSpec comments on variables are only allowed for public state variables and not
   for local or internal variables.
 
 * The token ``gwei`` is a keyword now (used to specify, e.g. ``2 gwei`` as a number)
   and cannot be used as an identifier.
+
+* String literals now can only contain printable ASCII characters and this also includes a variety of
+  escape sequences, such as hexadecimal (``\xff``) and unicode escapes (``\u20ac``).
+
+* Unicode string literals are supported now to accommodate valid UTF-8 sequences. They are identified
+  with the ``unicode`` prefix: ``unicode"Hello 😃"``.
 
 * State Mutability: The state mutability of functions can now be restricted during inheritance:
   Functions with default state mutability can be overridden by ``pure`` and ``view`` functions
