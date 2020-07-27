@@ -535,7 +535,6 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 		"apply",
 		"auto",
 		"case",
-		"catch",
 		"copyof",
 		"default",
 		"define",
@@ -558,7 +557,6 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 		"static",
 		"supports",
 		"switch",
-		"try",
 		"typedef",
 		"typeof",
 		"unchecked"

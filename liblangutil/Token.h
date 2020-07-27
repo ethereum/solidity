@@ -148,6 +148,7 @@ namespace solidity::langutil
 	K(As, "as", 0)                                                     \
 	K(Assembly, "assembly", 0)                                         \
 	K(Break, "break", 0)                                               \
+	K(Catch, "catch", 0)                                               \
 	K(Constant, "constant", 0)                                         \
 	K(Constructor, "constructor", 0)                                   \
 	K(Continue, "continue", 0)                                         \
@@ -187,6 +188,7 @@ namespace solidity::langutil
 	K(CallData, "calldata", 0)                                         \
 	K(Struct, "struct", 0)                                             \
 	K(Throw, "throw", 0)                                               \
+	K(Try, "try", 0)                                                   \
 	K(Type, "type", 0)                                                 \
 	K(Using, "using", 0)                                               \
 	K(View, "view", 0)                                                 \
@@ -237,7 +239,6 @@ namespace solidity::langutil
 	K(Apply, "apply", 0)                                               \
 	K(Auto, "auto", 0)                                                 \
 	K(Case, "case", 0)                                                 \
-	K(Catch, "catch", 0)                                               \
 	K(CopyOf, "copyof", 0)                                             \
 	K(Default, "default", 0)                                           \
 	K(Define, "define", 0)                                             \
@@ -260,7 +261,6 @@ namespace solidity::langutil
 	K(Static, "static", 0)                                             \
 	K(Supports, "supports", 0)                                         \
 	K(Switch, "switch", 0)                                             \
-	K(Try, "try", 0)                                                   \
 	K(Typedef, "typedef", 0)                                           \
 	K(TypeOf, "typeof", 0)                                             \
 	K(Unchecked, "unchecked", 0)                                       \
