@@ -92,13 +92,35 @@ SortPointer smtSort(frontend::Type const& _type)
 		string tupleName;
 		if (
 			auto arrayType = dynamic_cast<ArrayType const*>(&_type);
-			(arrayType && arrayType->isString()) ||
+			(arrayType && (arrayType->isString() || arrayType->isByteArray())) ||
 			_type.category() == frontend::Type::Category::ArraySlice ||
 			_type.category() == frontend::Type::Category::StringLiteral
 		)
-			tupleName = "bytes_tuple";
+			tupleName = "bytes";
+		else if (auto arrayType = dynamic_cast<ArrayType const*>(&_type))
+		{
+			auto baseType = arrayType->baseType();
+			// Solidity allows implicit conversion also when assigning arrays.
+			// So if the base type potentially has a size, that size cannot go
+			// in the tuple's name.
+			if (auto tupleSort = dynamic_pointer_cast<TupleSort>(array->range))
+				tupleName = tupleSort->name;
+			else if (
+				baseType->category() == frontend::Type::Category::Integer ||
+				baseType->category() == frontend::Type::Category::FixedPoint
+			)
+				tupleName = "uint";
+			else if (baseType->category() == frontend::Type::Category::FixedBytes)
+				tupleName = "fixedbytes";
+			else
+				tupleName = arrayType->baseType()->toString(true);
+
+			tupleName += "[]";
+		}
 		else
-			tupleName = _type.toString(true) + "_tuple";
+			tupleName = _type.toString(true);
+
+		tupleName += "_tuple";
 
 		return make_shared<TupleSort>(
 			tupleName,
