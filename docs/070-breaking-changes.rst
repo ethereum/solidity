@@ -104,6 +104,7 @@ Declarations
 Interface Changes
 =================
 
+* JSON AST: Mark hex string literals with ``kind: "hexString"``.
 * JSON AST: Members with value ``null`` are removed from JSON output.
 * NatSpec: Constructors and functions have consistent userdoc output.
 

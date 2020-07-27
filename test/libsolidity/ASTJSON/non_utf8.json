@@ -79,7 +79,7 @@
                   "isConstant": false,
                   "isLValue": false,
                   "isPure": true,
-                  "kind": "string",
+                  "kind": "hexString",
                   "lValueRequested": false,
                   "nodeType": "Literal",
                   "src": "53:7:1",

@@ -919,8 +919,9 @@ string ASTJsonConverter::literalTokenKind(Token _token)
 	case Token::Number:
 		return "number";
 	case Token::StringLiteral:
-	case Token::HexStringLiteral:
 		return "string";
+	case Token::HexStringLiteral:
+		return "hexString";
 	case Token::TrueLiteral:
 	case Token::FalseLiteral:
 		return "bool";

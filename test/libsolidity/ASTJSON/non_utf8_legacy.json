@@ -130,7 +130,7 @@
                         "isLValue": false,
                         "isPure": true,
                         "lValueRequested": false,
-                        "token": "string",
+                        "token": "hexString",
                         "type": "literal_string (contains invalid UTF-8 sequence at position 0)"
                       },
                       "id": 5,
