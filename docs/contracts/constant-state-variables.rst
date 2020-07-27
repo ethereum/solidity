@@ -12,6 +12,14 @@ for ``immutable``, it can still be assigned at construction time.
 The compiler does not reserve a storage slot for these variables, and every occurrence is
 replaced by the respective value.
 
+Compared to regular state variables, the gas costs of constant and immutable variables
+are much lower. For a constant variable, the expression assigned to it is copied to
+all the places where it is accessed and also re-evaluated each time. This allows for local
+optimizations. Immutable variables are evaluated once at construction time and their value
+is copied to all the places in the code where they are accessed. For these values,
+32 bytes are reserved, even if they would fit in fewer bytes. Due to this, constant values
+can sometimes be cheaper than immutable values.
+
 Not all types for constants and immutables are implemented at this time. The only supported types are
 `strings <strings>`_ (only for constants) and `value types <value-types>`_.
 
