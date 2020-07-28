@@ -389,11 +389,13 @@ jobs:
       - run: *run_docs_pragma_min_version
 
   b_ubu_clang: &build_ubuntu2004_clang
+    resource_class: xlarge
     docker:
       - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
     environment:
       CC: clang
       CXX: clang++
+      MAKEFLAGS: -j 10
     steps:
       - checkout
       - run: *run_build
