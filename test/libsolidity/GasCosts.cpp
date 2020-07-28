@@ -39,18 +39,18 @@ namespace solidity::frontend::test
 #define CHECK_DEPLOY_GAS(_gasNoOpt, _gasOpt, _evmVersion) \
 	do \
 	{ \
-		u256 ipfsCost = GasMeter::dataGas(util::ipfsHash(m_compiler.metadata(m_compiler.lastContractName())), true, _evmVersion); \
+		u256 metaCost = GasMeter::dataGas(m_compiler.cborMetadata(m_compiler.lastContractName()), true, _evmVersion); \
 		u256 gasOpt{_gasOpt}; \
 		u256 gasNoOpt{_gasNoOpt}; \
 		u256 gas = m_optimiserSettings == OptimiserSettings::minimal() ? gasNoOpt : gasOpt; \
 		BOOST_CHECK_MESSAGE( \
-			m_gasUsed >= ipfsCost, \
+			m_gasUsed >= metaCost, \
 			"Gas used: " + \
 			m_gasUsed.str() + \
-			" is less than the data cost for the IPFS hash: " + \
-			u256(ipfsCost).str() \
+			" is less than the data cost for the cbor metadata: " + \
+			u256(metaCost).str() \
 		); \
-		u256 gasUsed = m_gasUsed - ipfsCost; \
+		u256 gasUsed = m_gasUsed - metaCost; \
 		BOOST_CHECK_MESSAGE( \
 			gas == gasUsed, \
 			"Gas used: " + \
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	auto evmVersion = solidity::test::CommonOptions::get().evmVersion();
 
 	if (evmVersion <= EVMVersion::byzantium())
-		CHECK_DEPLOY_GAS(134145, 130831, evmVersion);
+		CHECK_DEPLOY_GAS(133045, 129731, evmVersion);
 	// This is only correct on >=Constantinople.
 	else if (CommonOptions::get().useABIEncoderV2)
 	{
@@ -105,22 +105,22 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		{
 			// Costs with 0 are cases which cannot be triggered in tests.
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(0, 123969, evmVersion);
+				CHECK_DEPLOY_GAS(0, 122869, evmVersion);
 			else
-				CHECK_DEPLOY_GAS(0, 110969, evmVersion);
+				CHECK_DEPLOY_GAS(0, 110701, evmVersion);
 		}
 		else
 		{
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(147835, 123969, evmVersion);
+				CHECK_DEPLOY_GAS(146671, 123969, evmVersion);
 			else
-				CHECK_DEPLOY_GAS(131871, 110969, evmVersion);
+				CHECK_DEPLOY_GAS(131591, 110969, evmVersion);
 		}
 	}
 	else if (evmVersion < EVMVersion::istanbul())
-		CHECK_DEPLOY_GAS(126929, 119659, evmVersion);
+		CHECK_DEPLOY_GAS(125829, 118559, evmVersion);
 	else
-		CHECK_DEPLOY_GAS(114345, 107335, evmVersion);
+		CHECK_DEPLOY_GAS(114077, 107067, evmVersion);
 
 	if (evmVersion >= EVMVersion::byzantium())
 	{
