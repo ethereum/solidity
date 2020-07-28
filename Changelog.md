@@ -1,4 +1,4 @@
-### 0.7.0 (unreleased)
+### 0.7.0 (2020-07-28)
 
 Breaking changes:
  * Inline Assembly: Disallow ``.`` in user-defined function and variable names.
@@ -30,17 +30,18 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Report multi-transaction counterexamples including the function calls that initiate the transactions. This does not include concrete values for reference types and reentrant calls.
  * Variable declarations using the ``var`` keyword are not recognized anymore.
 
 
 Bugfixes:
+ * Immutables: Fix internal compiler error when immutables are not assigned.
  * Inheritance: Disallow public state variables overwriting ``pure`` functions.
  * NatSpec: Constructors and functions have consistent userdoc output.
  * SMTChecker: Fix internal error when assigning to a 1-tuple.
  * SMTChecker: Fix internal error when tuples have extra effectless parenthesis.
  * State Mutability: Constant public state variables are considered ``pure`` functions.
  * Type Checker: Fixing deduction issues on function types when function call has named arguments.
- * Immutables: Fix internal compiler error when immutables are not assigned.
 
 
 ### 0.6.12 (2020-07-22)
