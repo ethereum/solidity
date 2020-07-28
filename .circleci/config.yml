@@ -540,6 +540,7 @@ jobs:
     environment:
       TERM: xterm
       CMAKE_BUILD_TYPE: Release
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - restore_cache:
