@@ -4,4 +4,4 @@ contract C {
 	function f() public { (((((a))))).pop();}
 }
 // ----
-// Warning 2529: (78-95): Empty array "pop" detected here.
+// Warning 2529: (78-95): Empty array "pop" detected here
