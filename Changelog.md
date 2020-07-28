@@ -30,6 +30,7 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Report multi-transaction counterexamples including the function calls that initiate the transactions. This does not include concrete values for reference types and reentrant calls.
  * Variable declarations using the ``var`` keyword are not recognized anymore.
 
 
