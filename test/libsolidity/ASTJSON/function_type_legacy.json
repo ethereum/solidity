@@ -8,8 +8,7 @@
       [
         17
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -40,7 +38,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "d6cd4974",
             "implemented": true,
             "isConstructor": false,
@@ -50,7 +47,6 @@
               null
             ],
             "name": "f",
-            "overrides": null,
             "scope": 17,
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -67,12 +63,10 @@
                     "constant": false,
                     "mutability": "mutable",
                     "name": "x",
-                    "overrides": null,
                     "scope": 16,
                     "stateVariable": false,
                     "storageLocation": "default",
                     "type": "function () payable external returns (uint256)",
-                    "value": null,
                     "visibility": "internal"
                   },
                   "children":
@@ -108,12 +102,10 @@
                                 "constant": false,
                                 "mutability": "mutable",
                                 "name": "",
-                                "overrides": null,
                                 "scope": 5,
                                 "stateVariable": false,
                                 "storageLocation": "default",
                                 "type": "uint256",
-                                "value": null,
                                 "visibility": "internal"
                               },
                               "children":
@@ -162,12 +154,10 @@
                     "constant": false,
                     "mutability": "mutable",
                     "name": "",
-                    "overrides": null,
                     "scope": 16,
                     "stateVariable": false,
                     "storageLocation": "default",
                     "type": "function () view external returns (uint256)",
-                    "value": null,
                     "visibility": "internal"
                   },
                   "children":
@@ -203,12 +193,10 @@
                                 "constant": false,
                                 "mutability": "mutable",
                                 "name": "",
-                                "overrides": null,
                                 "scope": 12,
                                 "stateVariable": false,
                                 "storageLocation": "default",
                                 "type": "uint256",
-                                "value": null,
                                 "visibility": "internal"
                               },
                               "children":

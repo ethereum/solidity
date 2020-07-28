@@ -1395,7 +1395,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				solAssert(false, "Contract member is neither variable nor function.");
 
 			define(IRVariable(_memberAccess).part("address"), _memberAccess.expression());
-			define(IRVariable(_memberAccess).part("functionIdentifier")) << formatNumber(identifier) << "\n";
+			define(IRVariable(_memberAccess).part("functionSelector")) << formatNumber(identifier) << "\n";
 		}
 		else
 			solAssert(false, "Invalid member access in contract");
@@ -1431,7 +1431,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				*_memberAccess.expression().annotation().type
 			);
 			if (functionType.kind() == FunctionType::Kind::External)
-				define(IRVariable{_memberAccess}, IRVariable(_memberAccess.expression()).part("functionIdentifier"));
+				define(IRVariable{_memberAccess}, IRVariable(_memberAccess.expression()).part("functionSelector"));
 			else if (functionType.kind() == FunctionType::Kind::Declaration)
 			{
 				solAssert(functionType.hasDeclaration(), "");
@@ -1683,7 +1683,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 					break;
 				case FunctionType::Kind::DelegateCall:
 					define(IRVariable(_memberAccess).part("address"), _memberAccess.expression());
-					define(IRVariable(_memberAccess).part("functionIdentifier")) << formatNumber(memberFunctionType->externalIdentifier()) << "\n";
+					define(IRVariable(_memberAccess).part("functionSelector")) << formatNumber(memberFunctionType->externalIdentifier()) << "\n";
 					break;
 				case FunctionType::Kind::External:
 				case FunctionType::Kind::Creation:
@@ -2077,7 +2077,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 
 		// storage for arguments and returned data
 		let <pos> := <freeMemory>
-		mstore(<pos>, <shl28>(<funId>))
+		mstore(<pos>, <shl28>(<funSel>))
 		let <end> := <encodeArgs>(add(<pos>, 4) <argumentString>)
 
 		let <success> := <call>(<gas>, <address>, <?hasValue> <value>, </hasValue> <pos>, sub(<end>, <pos>), <pos>, <reservedReturnSize>)
@@ -2107,7 +2107,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	templ("freeMemory", freeMemory());
 	templ("shl28", m_utils.shiftLeftFunction(8 * (32 - 4)));
 
-	templ("funId", IRVariable(_functionCall.expression()).part("functionIdentifier").name());
+	templ("funSel", IRVariable(_functionCall.expression()).part("functionSelector").name());
 	templ("address", IRVariable(_functionCall.expression()).part("address").name());
 
 	// Always use the actual return length, and not our calculated expected length, if returndatacopy is supported.

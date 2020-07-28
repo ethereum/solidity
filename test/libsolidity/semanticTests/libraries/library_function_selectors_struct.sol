@@ -6,11 +6,11 @@ library L {
 }
 contract C {
     L.S s;
-    constructor() public { s.a = 42; }
+    constructor() { s.a = 42; }
 
     function f() public returns (bool, bool, uint256) {
 		uint256 s_ptr;
-		assembly { s_ptr := s_slot }
+		assembly { s_ptr := s.slot }
 		(bool success, bytes memory data) = address(L).delegatecall(abi.encodeWithSelector(L.f.selector, s_ptr));
 		return (L.f.selector == bytes4(keccak256("f(L.S storage)")), success, abi.decode(data, (uint256)));
     }

@@ -381,7 +381,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
             revert();
         if (address(DAOrewardAccount) == 0x0000000000000000000000000000000000000000)
             revert();
-        lastTimeMinQuorumMet = now;
+        lastTimeMinQuorumMet = block.timestamp;
         minQuorumDivisor = 5; // sets the minimal quorum to 20%
         proposals.push(); // avoids a proposal with ID 0 because it is used
 
@@ -390,7 +390,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
     }
 
     receive() external payable override(DAOInterface, TokenCreation) {
-        if (now < closingTime + creationGracePeriod && msg.sender != address(extraBalance))
+        if (block.timestamp < closingTime + creationGracePeriod && msg.sender != address(extraBalance))
             createTokenProxy(msg.sender);
         else
             receiveEther();
@@ -430,13 +430,13 @@ contract DAO is DAOInterface, Token, TokenCreation {
             revert();
 
         if (!isFueled
-            || now < closingTime
+            || block.timestamp < closingTime
             || (msg.value < proposalDeposit && !_newCurator)) {
 
             revert();
         }
 
-        if (now + _debatingPeriod < now) // prevents overflow
+        if (block.timestamp + _debatingPeriod < block.timestamp) // prevents overflow
             revert();
 
         // to prevent a 51% attacker to convert the ether into deposit
@@ -445,7 +445,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
 
         // to prevent curator from halving quorum before first proposal
         if (proposals.length == 1) // initial length is 1 (see constructor)
-            lastTimeMinQuorumMet = now;
+            lastTimeMinQuorumMet = block.timestamp;
 
         Proposal storage p = proposals.push();
          _proposalID = proposals.length - 1;
@@ -453,7 +453,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
         p.amount = _amount;
         p.description = _description;
         p.proposalHash = keccak256(abi.encodePacked(_recipient, _amount, _transactionData));
-        p.votingDeadline = now + _debatingPeriod;
+        p.votingDeadline = block.timestamp + _debatingPeriod;
         p.open = true;
         //p.proposalPassed = False; // that's default
         p.newCurator = _newCurator;
@@ -493,7 +493,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
         Proposal storage p = proposals[_proposalID];
         if (p.votedYes[msg.sender]
             || p.votedNo[msg.sender]
-            || now >= p.votingDeadline) {
+            || block.timestamp >= p.votingDeadline) {
 
             revert();
         }
@@ -529,13 +529,13 @@ contract DAO is DAOInterface, Token, TokenCreation {
             ? splitExecutionPeriod
             : executeProposalPeriod;
         // If we are over deadline and waiting period, assert proposal is closed
-        if (p.open && now > p.votingDeadline + waitPeriod) {
+        if (p.open && block.timestamp > p.votingDeadline + waitPeriod) {
             closeProposal(_proposalID);
             return false;
         }
 
         // Check if the proposal can be executed
-        if (now < p.votingDeadline  // has the voting deadline arrived?
+        if (block.timestamp < p.votingDeadline  // has the voting deadline arrived?
             // Have the votes been counted?
             || !p.open
             || p.proposalPassed // anyone trying to call us recursively?
@@ -573,7 +573,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
             if (!p.creator.send(p.proposalDeposit))
                 revert();
 
-            lastTimeMinQuorumMet = now;
+            lastTimeMinQuorumMet = block.timestamp;
             // set the minQuorum to 20% again, in the case it has been reached
             if (quorum > totalSupply / 5)
                 minQuorumDivisor = 5;
@@ -587,7 +587,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
             // multiple times out of the DAO
             p.proposalPassed = true;
 
-            (bool success,) = p.recipient.call.value(p.amount)(_transactionData);
+            (bool success,) = p.recipient.call{value: p.amount}(_transactionData);
             if (!success)
                 revert();
 
@@ -628,9 +628,9 @@ contract DAO is DAOInterface, Token, TokenCreation {
 
         // Sanity check
 
-        if (now < p.votingDeadline  // has the voting deadline arrived?
+        if (block.timestamp < p.votingDeadline  // has the voting deadline arrived?
             //The request for a split expires XX days after the voting deadline
-            || now > p.votingDeadline + splitExecutionPeriod
+            || block.timestamp > p.votingDeadline + splitExecutionPeriod
             // Does the new Curator address match?
             || p.recipient != _newCurator
             // Is it a new curator proposal?
@@ -663,7 +663,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
         uint fundsToBeMoved =
             (balances[msg.sender] * p.splitData[0].splitBalance) /
             p.splitData[0].totalSupply;
-        if (p.splitData[0].newDAO.createTokenProxy.value(fundsToBeMoved)(msg.sender) == false)
+        if (p.splitData[0].newDAO.createTokenProxy{value: fundsToBeMoved}(msg.sender) == false)
             revert();
 
 
@@ -697,7 +697,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
     function newContract(address payable _newContract) public override {
         if (msg.sender != address(this) || !allowedRecipients[_newContract]) return;
         // move all ether
-        (bool success,) = _newContract.call.value(address(this).balance)("");
+        (bool success,) = _newContract.call{value: address(this).balance}("");
         if (!success) {
             revert();
         }
@@ -759,7 +759,7 @@ override returns (bool _success) {
 
     function transfer(address _to, uint256 _value) public override returns (bool success) {
         if (isFueled
-            && now > closingTime
+            && block.timestamp > closingTime
             && !isBlocked(msg.sender)
             && _to != address(this)
             && transferPaidOut(msg.sender, _to, _value)
@@ -782,7 +782,7 @@ override returns (bool _success) {
     function transferFrom(address _from, address _to, uint256 _value) public
 override returns (bool success) {
         if (isFueled
-            && now > closingTime
+            && block.timestamp > closingTime
             && !isBlocked(_from)
             && _to != address(this)
             && transferPaidOut(_from, _to, _value)
@@ -869,11 +869,11 @@ override returns (bool _success) {
         // this can only be called after `quorumHalvingPeriod` has passed or at anytime after
         // fueling by the curator with a delay of at least `minProposalDebatePeriod`
         // between the calls
-        if ((lastTimeMinQuorumMet < (now - quorumHalvingPeriod) || msg.sender == curator)
-            && lastTimeMinQuorumMet < (now - minProposalDebatePeriod)
-            && now >= closingTime
+        if ((lastTimeMinQuorumMet < (block.timestamp - quorumHalvingPeriod) || msg.sender == curator)
+            && lastTimeMinQuorumMet < (block.timestamp - minProposalDebatePeriod)
+            && block.timestamp >= closingTime
             && proposals.length > 1) {
-            lastTimeMinQuorumMet = now;
+            lastTimeMinQuorumMet = block.timestamp;
             minQuorumDivisor *= 2;
             return true;
         } else {
@@ -887,7 +887,7 @@ override returns (bool _success) {
             _newCurator,
             0,
             0,
-            now + splitExecutionPeriod,
+            block.timestamp + splitExecutionPeriod,
             name,
             symbol,
             decimals
@@ -907,7 +907,7 @@ override returns (bool _success) {
         if (blocked[_account] == 0)
             return false;
         Proposal storage p = proposals[blocked[_account]];
-        if (now > p.votingDeadline) {
+        if (block.timestamp > p.votingDeadline) {
             blocked[_account] = 0;
             return false;
         } else {

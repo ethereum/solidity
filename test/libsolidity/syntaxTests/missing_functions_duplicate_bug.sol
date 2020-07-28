@@ -1,5 +1,3 @@
-pragma solidity ^0.6.0;
-
 pragma experimental ABIEncoderV2;
 
 contract Ownable {
@@ -20,9 +18,9 @@ library VoteTiming {
 }
 
 contract Voting is Ownable {
-    constructor() public {
+    constructor() {
         VoteTiming.init(1);
     }
 }
 // ----
-// Warning 5667: (324-340): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 5667: (299-315): Unused function parameter. Remove or comment out the variable name to silence this warning.

@@ -347,20 +347,17 @@ string YulUtilFunctions::typedShiftLeftFunction(Type const& _type, Type const& _
 {
 	solAssert(_type.category() == Type::Category::FixedBytes || _type.category() == Type::Category::Integer, "");
 	solAssert(_amountType.category() == Type::Category::Integer, "");
+	solAssert(!dynamic_cast<IntegerType const&>(_amountType).isSigned(), "");
 	string const functionName = "shift_left_" + _type.identifier() + "_" + _amountType.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
 			function <functionName>(value, bits) -> result {
 				bits := <cleanAmount>(bits)
-				<?amountSigned>
-					if slt(bits, 0) { invalid() }
-				</amountSigned>
 				result := <cleanup>(<shift>(bits, value))
 			}
 			)")
 			("functionName", functionName)
-			("amountSigned", dynamic_cast<IntegerType const&>(_amountType).isSigned())
 			("cleanAmount", cleanupFunction(_amountType))
 			("shift", shiftLeftFunctionDynamic())
 			("cleanup", cleanupFunction(_type))
@@ -372,6 +369,7 @@ string YulUtilFunctions::typedShiftRightFunction(Type const& _type, Type const& 
 {
 	solAssert(_type.category() == Type::Category::FixedBytes || _type.category() == Type::Category::Integer, "");
 	solAssert(_amountType.category() == Type::Category::Integer, "");
+	solAssert(!dynamic_cast<IntegerType const&>(_amountType).isSigned(), "");
 	IntegerType const* integerType = dynamic_cast<IntegerType const*>(&_type);
 	bool valueSigned = integerType && integerType->isSigned();
 
@@ -381,14 +379,10 @@ string YulUtilFunctions::typedShiftRightFunction(Type const& _type, Type const& 
 			Whiskers(R"(
 			function <functionName>(value, bits) -> result {
 				bits := <cleanAmount>(bits)
-				<?amountSigned>
-					if slt(bits, 0) { invalid() }
-				</amountSigned>
 				result := <cleanup>(<shift>(bits, <cleanup>(value)))
 			}
 			)")
 			("functionName", functionName)
-			("amountSigned", dynamic_cast<IntegerType const&>(_amountType).isSigned())
 			("cleanAmount", cleanupFunction(_amountType))
 			("shift", valueSigned ? shiftRightSignedFunctionDynamic() : shiftRightFunctionDynamic())
 			("cleanup", cleanupFunction(_type))
@@ -2410,6 +2404,29 @@ string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const
 			("converted", suffixedVariableNameList("converted", 0, destStackSize))
 			("conversions", conversions)
 			.render();
+		}
+
+		if (_from.category() == Type::Category::Array && _to.category() == Type::Category::Array)
+		{
+			auto const& fromArrayType = dynamic_cast<ArrayType const&>(_from);
+			auto const& toArrayType = dynamic_cast<ArrayType const&>(_to);
+
+			solAssert(!fromArrayType.baseType()->isDynamicallyEncoded(), "");
+			solUnimplementedAssert(fromArrayType.isByteArray() && toArrayType.isByteArray(), "");
+			solUnimplementedAssert(toArrayType.location() == DataLocation::Memory, "");
+			solUnimplementedAssert(fromArrayType.location() == DataLocation::CallData, "");
+			solUnimplementedAssert(toArrayType.isDynamicallySized(), "");
+
+			Whiskers templ(R"(
+				function <functionName>(offset, length) -> converted {
+					converted := <allocateMemoryArray>(length)
+					<copyToMemory>(offset, add(converted, 0x20), length)
+				}
+			)");
+			templ("functionName", functionName);
+			templ("allocateMemoryArray", allocateMemoryArrayFunction(toArrayType));
+			templ("copyToMemory", copyToMemoryFunction(fromArrayType.location() == DataLocation::CallData));
+			return templ.render();
 		}
 
 		solUnimplementedAssert(

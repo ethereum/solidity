@@ -34,7 +34,6 @@ contract ScalarEvent is Event {
         int _lowerBound,
         int _upperBound
     )
-        public
         Event(_collateralToken, _oracle, 2)
     {
         // Validate bounds

@@ -26,6 +26,7 @@ are allowed for state variables, as storage reference types
 in functions, or as parameters for library functions.
 They cannot be used as parameters or return parameters
 of contract functions that are publicly visible.
+These restrictions are also true for arrays and structs that contain mappings.
 
 You can mark state variables of mapping type as ``public`` and Solidity creates a
 :ref:`getter <visibility-and-getters>` for you. The ``_KeyType`` becomes a parameter for the getter.
@@ -42,7 +43,7 @@ contract that returns the value at the specified address.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract MappingExample {
         mapping(address => uint) public balances;
@@ -68,7 +69,7 @@ The example below uses ``_allowances`` to record the amount someone else is allo
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     contract MappingExample {
 
@@ -123,7 +124,7 @@ the ``sum`` function iterates over to sum all the values.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.7.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     struct IndexValue { uint keyIndex; uint value; }
     struct KeyFlag { uint key; bool deleted; }

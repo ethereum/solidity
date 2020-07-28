@@ -1,10 +1,10 @@
-{"errors":[{"component":"general","errorCode":"3364","formattedMessage":"A:2:112: DeclarationError: Base constructor arguments given twice.
-pragma solidity >=0.0; contract A { constructor(uint) public {} } contract B is A(2) { } contract C is A(3) {} contract D is B, C {}
-                                                                                                               ^-------------------^
-A:2:81: First constructor call is here:
-pragma solidity >=0.0; contract A { constructor(uint) public {} } contract B is A(2) { } contract C is A(3) {} contract D is B, C {}
-                                                                                ^--^
-A:2:104: Second constructor call is here:
-pragma solidity >=0.0; contract A { constructor(uint) public {} } contract B is A(2) { } contract C is A(3) {} contract D is B, C {}
-                                                                                                       ^--^
-","message":"Base constructor arguments given twice.","secondarySourceLocations":[{"end":119,"file":"A","message":"First constructor call is here:","start":115},{"end":142,"file":"A","message":"Second constructor call is here:","start":138}],"severity":"error","sourceLocation":{"end":167,"file":"A","start":146},"type":"DeclarationError"}],"sources":{}}
+{"errors":[{"component":"general","errorCode":"3364","formattedMessage":"A:2:105: DeclarationError: Base constructor arguments given twice.
+pragma solidity >=0.0; contract A { constructor(uint) {} } contract B is A(2) { } contract C is A(3) {} contract D is B, C {}
+                                                                                                        ^-------------------^
+A:2:74: First constructor call is here:
+pragma solidity >=0.0; contract A { constructor(uint) {} } contract B is A(2) { } contract C is A(3) {} contract D is B, C {}
+                                                                         ^--^
+A:2:97: Second constructor call is here:
+pragma solidity >=0.0; contract A { constructor(uint) {} } contract B is A(2) { } contract C is A(3) {} contract D is B, C {}
+                                                                                                ^--^
+","message":"Base constructor arguments given twice.","secondarySourceLocations":[{"end":112,"file":"A","message":"First constructor call is here:","start":108},{"end":135,"file":"A","message":"Second constructor call is here:","start":131}],"severity":"error","sourceLocation":{"end":160,"file":"A","start":139},"type":"DeclarationError"}],"sources":{}}

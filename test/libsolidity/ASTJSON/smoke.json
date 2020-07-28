@@ -8,7 +8,6 @@
     ]
   },
   "id": 2,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -17,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 1,
       "linearizedBaseContracts":

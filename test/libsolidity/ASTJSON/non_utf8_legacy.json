@@ -6,10 +6,9 @@
     {
       "C":
       [
-        8
+        9
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,21 +25,19 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
-          8
+          9
         ],
         "name": "C",
-        "scope": 9
+        "scope": 10
       },
       "children":
       [
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "26121ff0",
             "implemented": true,
             "isConstructor": false,
@@ -50,8 +47,7 @@
               null
             ],
             "name": "f",
-            "overrides": null,
-            "scope": 8,
+            "scope": 9,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "public"
@@ -92,7 +88,7 @@
                   {
                     "assignments":
                     [
-                      3
+                      4
                     ]
                   },
                   "children":
@@ -103,60 +99,66 @@
                         "constant": false,
                         "mutability": "mutable",
                         "name": "x",
-                        "overrides": null,
-                        "scope": 6,
+                        "scope": 7,
                         "stateVariable": false,
-                        "storageLocation": "default",
+                        "storageLocation": "memory",
                         "type": "string",
-                        "typeName": null,
-                        "value": null,
                         "visibility": "internal"
                       },
-                      "children": [],
-                      "id": 3,
+                      "children":
+                      [
+                        {
+                          "attributes":
+                          {
+                            "name": "string",
+                            "type": "string"
+                          },
+                          "id": 3,
+                          "name": "ElementaryTypeName",
+                          "src": "35:6:1"
+                        }
+                      ],
+                      "id": 4,
                       "name": "VariableDeclaration",
-                      "src": "35:5:1"
+                      "src": "35:15:1"
                     },
                     {
                       "attributes":
                       {
-                        "argumentTypes": null,
                         "hexvalue": "ff",
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "lValueRequested": false,
-                        "subdenomination": null,
-                        "token": "string",
-                        "type": "literal_string (contains invalid UTF-8 sequence at position 0)",
-                        "value": null
+                        "token": "hexString",
+                        "type": "literal_string (contains invalid UTF-8 sequence at position 0)"
                       },
-                      "id": 4,
+                      "id": 5,
                       "name": "Literal",
-                      "src": "43:7:1"
+                      "src": "53:7:1"
                     }
                   ],
-                  "id": 5,
+                  "id": 6,
                   "name": "VariableDeclarationStatement",
-                  "src": "35:15:1"
+                  "src": "35:25:1"
                 }
               ],
-              "id": 6,
+              "id": 7,
               "name": "Block",
-              "src": "33:20:1"
+              "src": "33:30:1"
             }
           ],
-          "id": 7,
+          "id": 8,
           "name": "FunctionDefinition",
-          "src": "13:40:1"
+          "src": "13:50:1"
         }
       ],
-      "id": 8,
+      "id": 9,
       "name": "ContractDefinition",
-      "src": "0:55:1"
+      "src": "0:65:1"
     }
   ],
-  "id": 9,
+  "id": 10,
   "name": "SourceUnit",
-  "src": "0:56:1"
+  "src": "0:66:1"
 }

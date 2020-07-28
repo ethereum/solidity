@@ -64,11 +64,11 @@ Shifts
 ^^^^^^
 
 The result of a shift operation has the type of the left operand, truncating the result to match the type.
+Right operand must be unsigned type. Trying to shift by signed type will produce a compilation error.
 
 - For positive and negative ``x`` values, ``x << y`` is equivalent to ``x * 2**y``.
 - For positive ``x`` values,  ``x >> y`` is equivalent to ``x / 2**y``.
 - For negative ``x`` values, ``x >> y`` is equivalent to ``(x + 1) / 2**y - 1`` (which is the same as dividing ``x`` by ``2**y`` while rounding down towards negative infinity).
-- In all cases, shifting by a negative ``y`` throws a runtime exception.
 
 .. warning::
     Before version ``0.5.0`` a right shift ``x >> y`` for negative ``x`` was equivalent to ``x / 2**y``,
@@ -370,9 +370,9 @@ Operators:
 * Shift operators: ``<<`` (left shift), ``>>`` (right shift)
 * Index access: If ``x`` is of type ``bytesI``, then ``x[k]`` for ``0 <= k < I`` returns the ``k`` th byte (read-only).
 
-The shifting operator works with any integer type as right operand (but
+The shifting operator works with unsigned integer type as right operand (but
 returns the type of the left operand), which denotes the number of bits to shift by.
-Shifting by a negative amount causes a runtime exception.
+Shifting by a signed type will produce a compilation error.
 
 Members:
 
@@ -444,6 +444,11 @@ long as the operands are integers. If any of the two is fractional, bit operatio
 and exponentiation is disallowed if the exponent is fractional (because that might result in
 a non-rational number).
 
+Shifts and exponentiation with literal numbers as left (or base) operand and integer types
+as the right (exponent) operand are always performed
+in the ``uint256`` (for non-negative literals) or ``int256`` (for a negative literals) type,
+regardless of the type of the right (exponent) operand.
+
 .. warning::
     Division on integer literals used to truncate in Solidity prior to version 0.4.0, but it now converts into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
 
@@ -479,7 +484,9 @@ String literals are written with either double or single-quotes (``"foo"`` or ``
 
 For example, with ``bytes32 samevar = "stringliteral"`` the string literal is interpreted in its raw byte form when assigned to a ``bytes32`` type.
 
-String literals support the following escape characters:
+String literals can only contain printable ASCII characters, which means the characters between and including 0x1F .. 0x7E.
+
+Additionally, string literals also support the following escape characters:
 
  - ``\<newline>`` (escapes an actual newline)
  - ``\\`` (backslash)
@@ -506,8 +513,18 @@ character sequence ``abcdef``.
     "\n\"\'\\abc\
     def"
 
-Any unicode line terminator which is not a newline (i.e. LF, VF, FF, CR, NEL, LS, PS) is considered to
+Any Unicode line terminator which is not a newline (i.e. LF, VF, FF, CR, NEL, LS, PS) is considered to
 terminate the string literal. Newline only terminates the string literal if it is not preceded by a ``\``.
+
+Unicode Literals
+----------------
+
+While regular string literals can only contain ASCII, Unicode literals – prefixed with the keyword ``unicode`` – can contain any valid UTF-8 sequence.
+They also support the very same escape sequences as regular string literals.
+
+::
+
+    string memory a = unicode"Hello 😃";
 
 .. index:: literal, bytes
 
@@ -544,7 +561,7 @@ subsequent unsigned integer values starting from ``0``.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract test {
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
@@ -645,18 +662,19 @@ External (or public) functions have the following members:
 
 * ``.address`` returns the address of the contract of the function.
 * ``.selector`` returns the :ref:`ABI function selector <abi_function_selector>`
-* ``.gas(uint)`` returns a callable function object which, when called, will send
-  the specified amount of gas to the target function. Deprecated - use ``{gas: ...}`` instead.
-  See :ref:`External Function Calls <external-function-calls>` for more information.
-* ``.value(uint)`` returns a callable function object which, when called, will
-  send the specified amount of wei to the target function. Deprecated - use ``{value: ...}`` instead.
-  See :ref:`External Function Calls <external-function-calls>` for more information.
+
+.. note::
+  External (or public) functions used to have the additional members
+  ``.gas(uint)`` and ``.value(uint)``. These were deprecated in Solidity 0.6.2
+  and removed in Solidity 0.7.0. Instead use ``{gas: ...}`` and ``{value: ...}``
+  to specify the amount of gas or the amount of wei sent to a function,
+  respectively. See :ref:`External Function Calls <external-function-calls>` for
+  more information.
 
 Example that shows how to use the members::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.7.0;
-    // This will report a warning
+    pragma solidity >=0.6.4 <0.8.0;
 
     contract Example {
         function f() public payable returns (bytes4) {
@@ -665,16 +683,14 @@ Example that shows how to use the members::
         }
 
         function g() public {
-            this.f.gas(10).value(800)();
-            // New syntax:
-            // this.f{gas: 10, value: 800}()
+            this.f{gas: 10, value: 800}();
         }
     }
 
 Example that shows how to use internal function types::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.7.0;
+    pragma solidity >=0.4.16 <0.8.0;
 
     library ArrayUtils {
         // internal functions can be used in internal library functions because
@@ -732,7 +748,7 @@ Example that shows how to use internal function types::
 Another example that uses external function types::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
 
     contract Oracle {

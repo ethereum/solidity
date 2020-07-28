@@ -7,10 +7,10 @@ contract Test {
     }
 }
 contract C {
-    constructor() public { assembly {} }
+    constructor() { assembly {} }
 }
 contract D is C {
-    constructor() public {}
+    constructor() {}
 }
 // ----
 // Warning 6417: (77-96): The constructor of the contract (or its base) uses inline assembly. Because of that, it might be that the deployed bytecode is different from type(...).runtimeCode.

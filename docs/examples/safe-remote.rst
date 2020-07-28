@@ -26,7 +26,7 @@ you can use state machine-like constructs inside a contract.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract Purchase {
         uint public value;
@@ -74,7 +74,7 @@ you can use state machine-like constructs inside a contract.
         // Ensure that `msg.value` is an even number.
         // Division will truncate if it is an odd number.
         // Check via multiplication that it wasn't an odd number.
-        constructor() public payable {
+        constructor() payable {
             seller = msg.sender;
             value = msg.value / 2;
             require((2 * value) == msg.value, "Value has to be even.");

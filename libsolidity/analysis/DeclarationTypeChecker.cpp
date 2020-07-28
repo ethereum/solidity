@@ -113,18 +113,16 @@ bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 		for (ASTPointer<VariableDeclaration> const& member: _struct.members())
 		{
 			Type const* memberType = member->annotation().type;
-			while (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
-			{
-				if (arrayType->isDynamicallySized())
-					break;
-				memberType = arrayType->baseType();
-			}
+
+			if (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
+				memberType = arrayType->finalBaseType(true);
+
 			if (auto structType = dynamic_cast<StructType const*>(memberType))
 				if (_cycleDetector.run(structType->structDefinition()))
 					return;
 		}
 	};
-	if (util::CycleDetector<StructDefinition>(visitor).run(_struct) != nullptr)
+	if (util::CycleDetector<StructDefinition>(visitor).run(_struct))
 		m_errorReporter.fatalTypeError(2046_error, _struct.location(), "Recursive struct definition.");
 
 	return false;
@@ -296,15 +294,6 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 			"The \"immutable\" keyword can only be used for state variables."
 		);
 
-	if (!_variable.typeName())
-	{
-		// This can still happen in very unusual cases where a developer uses constructs, such as
-		// `var a;`, however, such code will have generated errors already.
-		// However, we cannot blindingly solAssert() for that here, as the TypeChecker (which is
-		// invoking ReferencesResolver) is generating it, so the error is most likely(!) generated
-		// after this step.
-		return;
-	}
 	using Location = VariableDeclaration::Location;
 	Location varLoc = _variable.referenceLocation();
 	DataLocation typeLoc = DataLocation::Memory;
@@ -335,7 +324,9 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 					", ",
 					" or "
 				);
-			if (_variable.isCallableOrCatchParameter())
+			if (_variable.isConstructorParameter())
+				errorString += " for constructor parameter";
+			else if (_variable.isCallableOrCatchParameter())
 				errorString +=
 					" for " +
 					string(_variable.isReturnParameter() ? "return " : "") +
@@ -385,7 +376,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 				solAssert(!_variable.hasReferenceOrMappingType(), "Data location not properly set.");
 		}
 
-	TypePointer type = _variable.typeName()->annotation().type;
+	TypePointer type = _variable.typeName().annotation().type;
 	if (auto ref = dynamic_cast<ReferenceType const*>(type))
 	{
 		bool isPointer = !_variable.isStateVariable();

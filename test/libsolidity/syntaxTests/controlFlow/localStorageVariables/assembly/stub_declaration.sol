@@ -4,7 +4,7 @@ contract C {
     function f() internal pure {
         S storage c;
         assembly {
-            c_slot := s_slot
+            c.slot := s.slot
         }
         c;
     }

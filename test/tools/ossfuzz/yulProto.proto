@@ -215,24 +215,23 @@ message ExtCodeCopy {
 
 message NullaryOp {
   enum NOp {
-    PC = 1;
-    MSIZE = 2;
-    GAS = 3;
-    CALLDATASIZE = 4;
-    CODESIZE = 5;
-    RETURNDATASIZE = 6;
-    ADDRESS = 7;
-    ORIGIN = 8;
-    CALLER = 9;
-    CALLVALUE = 10;
-    GASPRICE = 11;
-    COINBASE = 12;
-    TIMESTAMP = 13;
-    NUMBER = 14;
-    DIFFICULTY = 15;
-    GASLIMIT = 16;
-    SELFBALANCE = 17;
-    CHAINID = 18;
+    MSIZE = 1;
+    GAS = 2;
+    CALLDATASIZE = 3;
+    CODESIZE = 4;
+    RETURNDATASIZE = 5;
+    ADDRESS = 6;
+    ORIGIN = 7;
+    CALLER = 8;
+    CALLVALUE = 9;
+    GASPRICE = 10;
+    COINBASE = 11;
+    TIMESTAMP = 12;
+    NUMBER = 13;
+    DIFFICULTY = 14;
+    GASLIMIT = 15;
+    SELFBALANCE = 16;
+    CHAINID = 17;
   }
   required NOp op = 1;
 }
@@ -389,7 +388,7 @@ message Block {
 message Object {
   required Code code = 1;
   optional Data data = 2;
-  optional Object sub_obj = 3;
+  repeated Object sub_obj = 3;
 }
 
 message Code {

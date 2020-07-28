@@ -1,7 +1,7 @@
 contract A {
     uint256 data;
 
-    constructor() public mod1 {
+    constructor() mod1 {
         f1();
     }
 

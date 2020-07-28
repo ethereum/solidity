@@ -1,7 +1,7 @@
 contract C {
     function(uint256) returns (uint256) internal x;
 
-    constructor() public {
+    constructor() {
         x = double;
     }
 

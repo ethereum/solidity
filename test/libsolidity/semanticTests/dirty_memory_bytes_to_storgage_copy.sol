@@ -8,7 +8,7 @@ contract C {
         }
         x = m;
         assembly {
-            r := sload(x_slot)
+            r := sload(x.slot)
         }
     }
 }

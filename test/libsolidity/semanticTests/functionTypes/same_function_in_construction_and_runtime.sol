@@ -1,7 +1,7 @@
 contract C {
     uint256 public initial;
 
-    constructor() public {
+    constructor() {
         initial = double(2);
     }
 

@@ -123,15 +123,9 @@ FunctionDefinition const* ContractDefinition::constructor() const
 	return nullptr;
 }
 
-bool ContractDefinition::constructorIsPublic() const
-{
-	FunctionDefinition const* f = constructor();
-	return !f || f->isPublic();
-}
-
 bool ContractDefinition::canBeDeployed() const
 {
-	return constructorIsPublic() && !abstract() && !isInterface();
+	return !abstract() && !isInterface();
 }
 
 FunctionDefinition const* ContractDefinition::fallbackFunction() const
@@ -293,6 +287,12 @@ bool FunctionDefinition::libraryFunction() const
 	if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(scope()))
 		return contractDef->isLibrary();
 	return false;
+}
+
+Visibility FunctionDefinition::defaultVisibility() const
+{
+	solAssert(!isConstructor(), "");
+	return Declaration::defaultVisibility();
 }
 
 FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
@@ -615,9 +615,8 @@ bool VariableDeclaration::isEventParameter() const
 
 bool VariableDeclaration::hasReferenceOrMappingType() const
 {
-	solAssert(typeName(), "");
-	solAssert(typeName()->annotation().type, "Can only be called after reference resolution");
-	Type const* type = typeName()->annotation().type;
+	solAssert(typeName().annotation().type, "Can only be called after reference resolution");
+	Type const* type = typeName().annotation().type;
 	return type->category() == Type::Category::Mapping || dynamic_cast<ReferenceType const*>(type);
 }
 
@@ -630,7 +629,12 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 	else if (isCallableOrCatchParameter())
 	{
 		set<Location> locations{ Location::Memory };
-		if (isInternalCallableParameter() || isLibraryFunctionParameter() || isTryCatchParameter())
+		if (
+			isConstructorParameter() ||
+			isInternalCallableParameter() ||
+			isLibraryFunctionParameter() ||
+			isTryCatchParameter()
+		)
 			locations.insert(Location::Storage);
 		if (!isTryCatchParameter() && !isConstructorParameter())
 			locations.insert(Location::CallData);
@@ -638,22 +642,8 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 		return locations;
 	}
 	else if (isLocalVariable())
-	{
-		solAssert(typeName(), "");
-		auto dataLocations = [](TypePointer _type, auto&& _recursion) -> set<Location> {
-			solAssert(_type, "Can only be called after reference resolution");
-			switch (_type->category())
-			{
-				case Type::Category::Array:
-					return _recursion(dynamic_cast<ArrayType const*>(_type)->baseType(), _recursion);
-				case Type::Category::Mapping:
-					return set<Location>{ Location::Storage };
-				default:
-					return set<Location>{ Location::Memory, Location::Storage, Location::CallData };
-			}
-		};
-		return dataLocations(typeName()->annotation().type, dataLocations);
-	}
+		// Further restrictions will be imposed later on.
+		return set<Location>{ Location::Memory, Location::Storage, Location::CallData };
 	else
 		// Struct members etc.
 		return set<Location>{ Location::Unspecified };

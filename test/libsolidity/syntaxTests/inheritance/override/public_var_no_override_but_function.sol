@@ -1,5 +1,5 @@
 contract A {
-	function foo() internal virtual pure returns(uint) { return 5; }
+	function foo() internal virtual view returns(uint) { return 5; }
 }
 contract X is A {
 	uint public foo;

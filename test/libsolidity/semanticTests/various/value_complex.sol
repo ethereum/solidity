@@ -8,16 +8,18 @@ contract helper {
 contract test {
     helper h;
 
-    constructor() public payable {
+    constructor() payable {
         h = new helper();
     }
 
     function sendAmount(uint256 amount) public payable returns (uint256 bal) {
         uint256 someStackElement = 20;
-        return h.getBalance.value(amount).gas(1000).value(amount + 3)();
+        return h.getBalance{value: amount + 3, gas: 1000}();
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // constructor(), 20 wei ->
 // sendAmount(uint256): 5 -> 8

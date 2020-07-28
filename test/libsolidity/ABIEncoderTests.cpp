@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor)
 				string c;
 			}
 			S public x;
-			constructor(S memory s) public { x = s; }
+			constructor(S memory s) { x = s; }
 		}
 	)";
 
@@ -739,7 +739,7 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor_indirect)
 				string c;
 			}
 			S public x;
-			constructor(S memory s) public { x = s; }
+			constructor(S memory s) { x = s; }
 		}
 
 		contract D {
@@ -772,7 +772,7 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor_data_short)
 				string c;
 			}
 			S public x;
-			constructor(S memory s) public { x = s; }
+			constructor(S memory s) { x = s; }
 		}
 	)";
 

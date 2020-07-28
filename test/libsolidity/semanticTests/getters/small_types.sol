@@ -3,7 +3,7 @@ contract C {
     uint16 public b;
     uint128 public c;
     uint public d;
-    constructor() public {
+    constructor() {
         a = 3;
         b = 4;
         c = 5;

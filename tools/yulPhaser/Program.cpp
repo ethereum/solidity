@@ -120,7 +120,7 @@ ostream& phaser::operator<<(ostream& _stream, Program const& _program)
 string Program::toJson() const
 {
 	Json::Value serializedAst = AsmJsonConverter(0)(*m_ast);
-	return jsonPrettyPrint(serializedAst);
+	return jsonPrettyPrint(removeNullMembers(std::move(serializedAst)));
 }
 
 variant<unique_ptr<Block>, ErrorList> Program::parseObject(Dialect const& _dialect, CharStream _source)

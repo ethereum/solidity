@@ -58,7 +58,6 @@ private:
 		// https://stackoverflow.com/questions/17430377
 		VarDeclParserOptions() {}
 
-		bool allowVar = false;
 		bool isStateVariable = false;
 		bool allowIndexed = false;
 		bool allowEmptyName = false;
@@ -108,7 +107,7 @@ private:
 	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<UserDefinedTypeName> parseUserDefinedTypeName();
 	ASTPointer<TypeName> parseTypeNameSuffix(ASTPointer<TypeName> type, ASTNodeFactory& nodeFactory);
-	ASTPointer<TypeName> parseTypeName(bool _allowVar);
+	ASTPointer<TypeName> parseTypeName();
 	ASTPointer<FunctionTypeName> parseFunctionType();
 	ASTPointer<Mapping> parseMapping();
 	ASTPointer<ParameterList> parseParameterList(

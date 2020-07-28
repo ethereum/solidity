@@ -24,7 +24,6 @@
     ]
   },
   "id": 14,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -33,7 +32,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 1,
       "linearizedBaseContracts":
@@ -51,10 +49,8 @@
       "baseContracts":
       [
         {
-          "arguments": null,
           "baseName":
           {
-            "contractScope": null,
             "id": 2,
             "name": "A",
             "nodeType": "UserDefinedTypeName",
@@ -76,7 +72,6 @@
         1
       ],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 4,
       "linearizedBaseContracts":
@@ -95,10 +90,8 @@
       "baseContracts":
       [
         {
-          "arguments": null,
           "baseName":
           {
-            "contractScope": null,
             "id": 5,
             "name": "B",
             "nodeType": "UserDefinedTypeName",
@@ -121,7 +114,6 @@
         4
       ],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 7,
       "linearizedBaseContracts":
@@ -141,10 +133,8 @@
       "baseContracts":
       [
         {
-          "arguments": null,
           "baseName":
           {
-            "contractScope": null,
             "id": 8,
             "name": "C",
             "nodeType": "UserDefinedTypeName",
@@ -168,7 +158,6 @@
         7
       ],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 10,
       "linearizedBaseContracts":
@@ -189,10 +178,8 @@
       "baseContracts":
       [
         {
-          "arguments": null,
           "baseName":
           {
-            "contractScope": null,
             "id": 11,
             "name": "D",
             "nodeType": "UserDefinedTypeName",
@@ -217,7 +204,6 @@
         10
       ],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 13,
       "linearizedBaseContracts":

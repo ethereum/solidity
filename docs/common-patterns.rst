@@ -28,7 +28,7 @@ you receive the funds of the person who is now the richest.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract WithdrawalContract {
         address public richest;
@@ -36,7 +36,7 @@ you receive the funds of the person who is now the richest.
 
         mapping (address => uint) pendingWithdrawals;
 
-        constructor() public payable {
+        constructor() payable {
             richest = msg.sender;
             mostSent = msg.value;
         }
@@ -62,13 +62,13 @@ This is as opposed to the more intuitive sending pattern:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract SendContract {
         address payable public richest;
         uint public mostSent;
 
-        constructor() public payable {
+        constructor() payable {
             richest = msg.sender;
             mostSent = msg.value;
         }
@@ -124,14 +124,14 @@ restrictions highly readable.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     contract AccessRestriction {
         // These will be assigned at the construction
         // phase, where `msg.sender` is the account
         // creating this contract.
         address public owner = msg.sender;
-        uint public creationTime = now;
+        uint public creationTime = block.timestamp;
 
         // Modifiers can be used to change
         // the body of a function.
@@ -162,7 +162,7 @@ restrictions highly readable.
 
         modifier onlyAfter(uint _time) {
             require(
-                now >= _time,
+                block.timestamp >= _time,
                 "Function called too early."
             );
             _;
@@ -277,7 +277,7 @@ function finishes.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     contract StateMachine {
         enum Stages {
@@ -291,7 +291,7 @@ function finishes.
         // This is the current stage.
         Stages public stage = Stages.AcceptingBlindedBids;
 
-        uint public creationTime = now;
+        uint public creationTime = block.timestamp;
 
         modifier atStage(Stages _stage) {
             require(
@@ -310,10 +310,10 @@ function finishes.
         // will not take the new stage into account.
         modifier timedTransitions() {
             if (stage == Stages.AcceptingBlindedBids &&
-                        now >= creationTime + 10 days)
+                        block.timestamp >= creationTime + 10 days)
                 nextStage();
             if (stage == Stages.RevealBids &&
-                    now >= creationTime + 12 days)
+                    block.timestamp >= creationTime + 12 days)
                 nextStage();
             // The other stages transition by transaction
             _;

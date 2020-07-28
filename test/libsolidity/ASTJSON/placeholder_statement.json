@@ -8,7 +8,6 @@
     ]
   },
   "id": 6,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -17,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 5,
       "linearizedBaseContracts":
@@ -43,11 +41,9 @@
               }
             ]
           },
-          "documentation": null,
           "id": 4,
           "name": "M",
           "nodeType": "ModifierDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,

@@ -143,14 +143,14 @@ The full contract
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.24 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract ReceiverPays {
         address owner = msg.sender;
 
         mapping(uint256 => bool) usedNonces;
 
-        constructor() public payable {}
+        constructor() payable {}
 
         function claimPayment(uint256 amount, uint256 nonce, bytes memory signature) public {
             require(!usedNonces[nonce]);
@@ -340,7 +340,7 @@ The full contract
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract SimplePaymentChannel {
         address payable public sender;      // The account sending payments.
@@ -348,12 +348,11 @@ The full contract
         uint256 public expiration;  // Timeout in case the recipient never closes.
 
         constructor (address payable _recipient, uint256 duration)
-            public
             payable
         {
             sender = msg.sender;
             recipient = _recipient;
-            expiration = now + duration;
+            expiration = block.timestamp + duration;
         }
 
         /// the recipient can close the channel at any time by presenting a
@@ -378,7 +377,7 @@ The full contract
         /// if the timeout is reached without the recipient closing the channel,
         /// then the Ether is released back to the sender.
         function claimTimeout() public {
-            require(now >= expiration);
+            require(block.timestamp >= expiration);
             selfdestruct(sender);
         }
 

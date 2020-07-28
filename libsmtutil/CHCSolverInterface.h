@@ -24,6 +24,9 @@
 
 #include <libsmtutil/SolverInterface.h>
 
+#include <map>
+#include <vector>
+
 namespace solidity::smtutil
 {
 
@@ -41,9 +44,18 @@ public:
 	/// Needs to bound all vars as universally quantified.
 	virtual void addRule(Expression const& _expr, std::string const& _name) = 0;
 
-	/// Takes a function application and checks
-	/// for reachability.
-	virtual std::pair<CheckResult, std::vector<std::string>> query(
+	/// first: predicate name
+	/// second: predicate arguments
+	using CexNode = std::pair<std::string, std::vector<std::string>>;
+	struct CexGraph
+	{
+		std::map<unsigned, CexNode> nodes;
+		std::map<unsigned, std::vector<unsigned>> edges;
+	};
+
+	/// Takes a function application _expr and checks for reachability.
+	/// @returns solving result and a counterexample graph, if possible.
+	virtual std::pair<CheckResult, CexGraph> query(
 		Expression const& _expr
 	) = 0;
 };

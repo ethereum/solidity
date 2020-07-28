@@ -8,15 +8,17 @@ contract helper {
 contract test {
     helper h;
 
-    constructor() public payable {
+    constructor() payable {
         h = new helper();
     }
 
     function sendAmount(uint256 amount) public returns (uint256 bal) {
-        return h.getBalance.value(amount).gas(1000).value(amount + 3)(); // overwrite value
+        return h.getBalance{value: amount + 3, gas: 1000}();
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // constructor(), 20 wei ->
 // sendAmount(uint256): 5 -> 8

@@ -4,4 +4,5 @@ contract C {
     uint private state;
 }
 // ----
-// Warning 8532: (17-56): Documentation tag @title and @author is only allowed on contract definitions. It will be disallowed in 0.7.0.
+// DocstringParsingError 6546: (17-56): Documentation tag @author not valid for non-public state variables.
+// DocstringParsingError 6546: (17-56): Documentation tag @title not valid for non-public state variables.

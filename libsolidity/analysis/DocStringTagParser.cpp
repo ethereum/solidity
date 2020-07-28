@@ -61,25 +61,12 @@ bool DocStringTagParser::visit(VariableDeclaration const& _variable)
 {
 	if (_variable.isStateVariable())
 	{
-		static set<string> const validPublicTags = set<string>{"dev", "notice", "return", "title", "author", "inheritdoc"};
+		static set<string> const validPublicTags = set<string>{"dev", "notice", "return", "inheritdoc"};
+		static set<string> const validNonPublicTags = set<string>{"dev", "inheritdoc"};
 		if (_variable.isPublic())
 			parseDocStrings(_variable, _variable.annotation(), validPublicTags, "public state variables");
 		else
-		{
-			parseDocStrings(_variable, _variable.annotation(), validPublicTags, "non-public state variables");
-			if (_variable.annotation().docTags.count("notice") > 0)
-				m_errorReporter.warning(
-					7816_error, _variable.documentation()->location(),
-					"Documentation tag on non-public state variables will be disallowed in 0.7.0. "
-					"You will need to use the @dev tag explicitly."
-				);
-		}
-		if (_variable.annotation().docTags.count("title") > 0 || _variable.annotation().docTags.count("author") > 0)
-			m_errorReporter.warning(
-				8532_error, _variable.documentation()->location(),
-				"Documentation tag @title and @author is only allowed on contract definitions. "
-				"It will be disallowed in 0.7.0."
-			);
+			parseDocStrings(_variable, _variable.annotation(), validNonPublicTags, "non-public state variables");
 	}
 	return false;
 }
@@ -139,8 +126,8 @@ void DocStringTagParser::handleCallable(
 	StructurallyDocumentedAnnotation& _annotation
 )
 {
-	static set<string> const validEventTags = set<string>{"author", "dev", "notice", "return", "param"};
-	static set<string> const validTags = set<string>{"author", "dev", "notice", "return", "param", "inheritdoc"};
+	static set<string> const validEventTags = set<string>{"dev", "notice", "return", "param"};
+	static set<string> const validTags = set<string>{"dev", "notice", "return", "param", "inheritdoc"};
 
 	if (dynamic_cast<EventDefinition const*>(&_callable))
 		parseDocStrings(_node, _annotation, validEventTags, "events");
@@ -148,13 +135,6 @@ void DocStringTagParser::handleCallable(
 		parseDocStrings(_node, _annotation, validTags, "functions");
 
 	checkParameters(_callable, _node, _annotation);
-
-	if (_node.documentation() && _annotation.docTags.count("author") > 0)
-		m_errorReporter.warning(
-			9843_error, _node.documentation()->location(),
-			"Documentation tag @author is only allowed on contract definitions. "
-			"It will be disallowed in 0.7.0."
-		);
 }
 
 void DocStringTagParser::parseDocStrings(

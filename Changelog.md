@@ -1,3 +1,49 @@
+### 0.7.0 (2020-07-28)
+
+Breaking changes:
+ * Inline Assembly: Disallow ``.`` in user-defined function and variable names.
+ * Inline Assembly: Slot and offset of storage pointer variable ``x`` are accessed via ``x.slot`` and ``x.offset`` instead of ``x_slot`` and ``x_offset``.
+ * JSON AST: Mark hex string literals with ``kind: "hexString"``.
+ * JSON AST: Remove members with ``null`` value from JSON output.
+ * Parser: Disallow ``gwei`` as identifier.
+ * Parser: Disallow dot syntax for ``value`` and ``gas``.
+ * Parser: Disallow non-printable characters in string literals.
+ * Parser: Introduce Unicode string literals: ``unicode"😃"``.
+ * Parser: NatSpec comments on variables are only allowed for public state variables.
+ * Parser: Remove the ``finney`` and ``szabo`` denominations.
+ * Parser: Remove the identifier ``now`` (replaced by ``block.timestamp``).
+ * Reference Resolver: ``using A for B`` only affects the contract it is mentioned in and not all derived contracts
+ * Type Checker: Disallow ``virtual`` for library functions.
+ * Type Checker: Disallow assignments to state variables that contain nested mappings.
+ * Type checker: Disallow events with same name and parameter types in inheritance hierarchy.
+ * Type Checker: Disallow shifts by signed types.
+ * Type Checker: Disallow structs and arrays in memory or calldata if they contain nested mappings.
+ * Type Checker: Exponentiation and shifts of literals by non-literals will always use ``uint256`` or ``int256`` as a type.
+ * Yul: Disallow consecutive and trailing dots in identifiers. Leading dots were already disallowed.
+ * Yul: Disallow EVM instruction `pc()`.
+
+
+Language Features:
+ * Inheritance: Allow overrides to have stricter state mutability: ``view`` can override ``nonpayable`` and ``pure`` can override ``view``.
+ * Parser: Deprecate visibility for constructors.
+ * State mutability: Do not issue recommendation for stricter mutability for virtual functions but do issue it for functions that override.
+
+
+Compiler Features:
+ * SMTChecker: Report multi-transaction counterexamples including the function calls that initiate the transactions. This does not include concrete values for reference types and reentrant calls.
+ * Variable declarations using the ``var`` keyword are not recognized anymore.
+
+
+Bugfixes:
+ * Immutables: Fix internal compiler error when immutables are not assigned.
+ * Inheritance: Disallow public state variables overwriting ``pure`` functions.
+ * NatSpec: Constructors and functions have consistent userdoc output.
+ * SMTChecker: Fix internal error when assigning to a 1-tuple.
+ * SMTChecker: Fix internal error when tuples have extra effectless parenthesis.
+ * State Mutability: Constant public state variables are considered ``pure`` functions.
+ * Type Checker: Fixing deduction issues on function types when function call has named arguments.
+
+
 ### 0.6.12 (2020-07-22)
 
 Language Features:
@@ -28,6 +74,7 @@ Build System:
 
 
 ### 0.6.11 (2020-07-07)
+
 
 Language Features:
  * General: Add unit denomination ``gwei``

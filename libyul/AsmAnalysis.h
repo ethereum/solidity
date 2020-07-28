@@ -108,6 +108,7 @@ private:
 	void checkAssignment(Identifier const& _variable, YulString _valueType);
 
 	Scope& scope(Block const* _block);
+	void expectValidIdentifier(YulString _identifier, langutil::SourceLocation const& _location);
 	void expectValidType(YulString _type, langutil::SourceLocation const& _location);
 	void expectType(YulString _expectedType, YulString _givenType, langutil::SourceLocation const& _location);
 

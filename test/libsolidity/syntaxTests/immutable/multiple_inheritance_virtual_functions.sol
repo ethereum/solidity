@@ -5,7 +5,7 @@ contract A {
 contract B {
     uint immutable x;
 
-    constructor() public {
+    constructor() {
         x = xInit();
     }
 
@@ -26,4 +26,4 @@ contract C is A, B {
     }
 }
 // ----
-// TypeError 7733: (496-497): Immutable variables cannot be read during contract creation time, which means they cannot be read in the constructor or any function or modifier called from it.
+// TypeError 7733: (489-490): Immutable variables cannot be read during contract creation time, which means they cannot be read in the constructor or any function or modifier called from it.

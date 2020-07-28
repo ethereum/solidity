@@ -1,6 +1,6 @@
 contract C {
 	function() internal view returns(uint256) immutable z;
-	constructor() public {
+	constructor() {
 		z = f;
 	}
 	function f() public view returns (uint256) {

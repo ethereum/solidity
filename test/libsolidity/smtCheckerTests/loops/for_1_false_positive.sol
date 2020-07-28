@@ -13,7 +13,8 @@ contract C
 		assert(x > 0);
 	}
 }
+// ====
+// SMTSolvers: cvc4
 // ----
-// Warning 1218: (296-309): Error trying to invoke SMT solver.
 // Warning 2661: (176-181): Overflow (resulting value larger than 2**256 - 1) happens here
 // Warning 4661: (296-309): Assertion violation happens here

@@ -169,7 +169,7 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 		!_funDef.isConstructor() &&
 		!_funDef.isFallback() &&
 		!_funDef.isReceive() &&
-		!_funDef.overrides()
+		!_funDef.virtualSemantics()
 	)
 		m_errorReporter.warning(
 			2018_error,

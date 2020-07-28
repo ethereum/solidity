@@ -42,7 +42,7 @@ Functions of the current contract can be called directly ("internally"), also re
 this nonsensical example::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     contract C {
         function g(uint a) public pure returns (uint ret) { return a + f(); }
@@ -84,7 +84,7 @@ to the total balance of that contract:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.7.0;
+    pragma solidity >=0.6.2 <0.8.0;
 
     contract InfoFeed {
         function info() public payable returns (uint ret) { return 42; }
@@ -125,9 +125,9 @@ throws an exception or goes out of gas.
     so your contract is not vulnerable to a reentrancy exploit.
 
 .. note::
-    Before Solidity 0.6.2, the recommended way to specify the value and gas
-    was to use ``f.value(x).gas(g)()``. This is still possible but deprecated
-    and will be removed with Solidity 0.7.0.
+    Before Solidity 0.6.2, the recommended way to specify the value and gas was to
+    use ``f.value(x).gas(g)()``. This was deprecated in Solidity 0.6.2 and is no
+    longer possible since Solidity 0.7.0.
 
 Named Calls and Anonymous Function Parameters
 ---------------------------------------------
@@ -140,7 +140,7 @@ parameters from the function declaration, but can be in arbitrary order.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.7.0;
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract C {
         mapping(uint => uint) data;
@@ -164,7 +164,7 @@ Those parameters will still be present on the stack, but they are inaccessible.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     contract C {
         // omitted name for parameter
@@ -188,11 +188,11 @@ is compiled so recursive creation-dependencies are not possible.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract D {
         uint public x;
-        constructor(uint a) public payable {
+        constructor(uint a) payable {
             x = a;
         }
     }
@@ -244,11 +244,11 @@ which only need to be created if there is a dispute.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.7.0;
+    pragma solidity >0.6.99 <0.8.0;
 
     contract D {
         uint public x;
-        constructor(uint a) public {
+        constructor(uint a) {
             x = a;
         }
     }
@@ -314,7 +314,7 @@ groupings of expressions.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract C {
         uint index;
@@ -360,7 +360,7 @@ because only a reference and not a copy is passed.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.7.0;
+    pragma solidity >=0.4.22 <0.8.0;
 
     contract C {
         uint[20] x;
@@ -419,7 +419,7 @@ the two variables have the same name but disjoint scopes.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
     contract C {
         function minimalScoping() pure public {
             {
@@ -441,7 +441,7 @@ In any case, you will get a warning about the outer variable being shadowed.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
     // This will report a warning
     contract C {
         function f() pure public returns (uint) {
@@ -463,7 +463,7 @@ In any case, you will get a warning about the outer variable being shadowed.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
     // This will not compile
     contract C {
         function f() pure public returns (uint) {
@@ -552,7 +552,7 @@ and ``assert`` for internal error checking.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract Sharer {
         function sendHalf(address payable addr) public payable returns (uint balance) {
@@ -597,7 +597,7 @@ The following example shows how to use an error string together with ``revert`` 
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.7.0;
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract VendingMachine {
         function buy(uint amount) public payable {
@@ -641,7 +641,7 @@ A failure in an external call can be caught using a try/catch statement, as foll
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.6.0;
+    pragma solidity >=0.6.0 <0.8.0;
 
     interface DataFeed { function getData(address token) external returns (uint value); }
 

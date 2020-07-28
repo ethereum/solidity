@@ -61,7 +61,7 @@ contract publisher is announcementTypes, module, safeMath {
 
     mapping (address => uint256[]) public opponents;
 
-    constructor(address payable moduleHandler) public {
+    constructor(address payable moduleHandler) {
         /*
             Installation function.  The installer will be registered in the admin list automatically
 

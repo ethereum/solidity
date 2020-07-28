@@ -1,7 +1,7 @@
 contract D {
     uint256 x;
 
-    constructor() public {
+    constructor() {
         x = 7;
     }
 

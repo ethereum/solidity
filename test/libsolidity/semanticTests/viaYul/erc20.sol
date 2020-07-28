@@ -1,4 +1,4 @@
-pragma solidity >=0.4.0 <0.7.0;
+pragma solidity >=0.4.0 <0.8.0;
 
 contract ERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -8,7 +8,7 @@ contract ERC20 {
     mapping (address => mapping (address => uint256)) private _allowances;
     uint256 private _totalSupply;
 
-    constructor() public {
+    constructor() {
         _mint(msg.sender, 20);
     }
 

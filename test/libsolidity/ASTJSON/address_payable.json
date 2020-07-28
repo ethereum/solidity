@@ -8,7 +8,6 @@
     ]
   },
   "id": 40,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -17,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 39,
       "linearizedBaseContracts":
@@ -35,7 +33,6 @@
           "mutability": "mutable",
           "name": "m",
           "nodeType": "VariableDeclaration",
-          "overrides": null,
           "scope": 39,
           "src": "17:44:1",
           "stateVariable": true,
@@ -81,7 +78,6 @@
               }
             }
           },
-          "value": null,
           "visibility": "public"
         },
         {
@@ -105,7 +101,6 @@
                     "mutability": "mutable",
                     "name": "a",
                     "nodeType": "VariableDeclaration",
-                    "overrides": null,
                     "scope": 37,
                     "src": "144:17:1",
                     "stateVariable": false,
@@ -128,17 +123,14 @@
                         "typeString": "address payable"
                       }
                     },
-                    "value": null,
                     "visibility": "internal"
                   }
                 ],
                 "id": 16,
                 "initialValue":
                 {
-                  "argumentTypes": null,
                   "baseExpression":
                   {
-                    "argumentTypes": null,
                     "id": 13,
                     "name": "m",
                     "nodeType": "Identifier",
@@ -154,7 +146,6 @@
                   "id": 15,
                   "indexExpression":
                   {
-                    "argumentTypes": null,
                     "id": 14,
                     "name": "arg",
                     "nodeType": "Identifier",
@@ -185,7 +176,6 @@
               {
                 "expression":
                 {
-                  "argumentTypes": null,
                   "id": 19,
                   "isConstant": false,
                   "isLValue": false,
@@ -193,7 +183,6 @@
                   "lValueRequested": false,
                   "leftHandSide":
                   {
-                    "argumentTypes": null,
                     "id": 17,
                     "name": "r",
                     "nodeType": "Identifier",
@@ -210,7 +199,6 @@
                   "operator": "=",
                   "rightHandSide":
                   {
-                    "argumentTypes": null,
                     "id": 18,
                     "name": "arg",
                     "nodeType": "Identifier",
@@ -247,7 +235,6 @@
                     "mutability": "mutable",
                     "name": "c",
                     "nodeType": "VariableDeclaration",
-                    "overrides": null,
                     "scope": 37,
                     "src": "197:9:1",
                     "stateVariable": false,
@@ -270,18 +257,15 @@
                         "typeString": "address"
                       }
                     },
-                    "value": null,
                     "visibility": "internal"
                   }
                 ],
                 "id": 27,
                 "initialValue":
                 {
-                  "argumentTypes": null,
                   "arguments":
                   [
                     {
-                      "argumentTypes": null,
                       "id": 25,
                       "name": "this",
                       "nodeType": "Identifier",
@@ -322,11 +306,7 @@
                       "name": "address",
                       "nodeType": "ElementaryTypeName",
                       "src": "209:7:1",
-                      "typeDescriptions":
-                      {
-                        "typeIdentifier": null,
-                        "typeString": null
-                      }
+                      "typeDescriptions": {}
                     }
                   },
                   "id": 26,
@@ -351,7 +331,6 @@
               {
                 "expression":
                 {
-                  "argumentTypes": null,
                   "id": 35,
                   "isConstant": false,
                   "isLValue": false,
@@ -359,10 +338,8 @@
                   "lValueRequested": false,
                   "leftHandSide":
                   {
-                    "argumentTypes": null,
                     "baseExpression":
                     {
-                      "argumentTypes": null,
                       "id": 28,
                       "name": "m",
                       "nodeType": "Identifier",
@@ -378,7 +355,6 @@
                     "id": 30,
                     "indexExpression":
                     {
-                      "argumentTypes": null,
                       "id": 29,
                       "name": "c",
                       "nodeType": "Identifier",
@@ -407,11 +383,9 @@
                   "operator": "=",
                   "rightHandSide":
                   {
-                    "argumentTypes": null,
                     "arguments":
                     [
                       {
-                        "argumentTypes": null,
                         "hexValue": "30",
                         "id": 33,
                         "isConstant": false,
@@ -421,7 +395,6 @@
                         "lValueRequested": false,
                         "nodeType": "Literal",
                         "src": "247:1:1",
-                        "subdenomination": null,
                         "typeDescriptions":
                         {
                           "typeIdentifier": "t_rational_0_by_1",
@@ -457,11 +430,7 @@
                         "name": "address",
                         "nodeType": "ElementaryTypeName",
                         "src": "239:7:1",
-                        "typeDescriptions":
-                        {
-                          "typeIdentifier": null,
-                          "typeString": null
-                        }
+                        "typeDescriptions": {}
                       }
                     },
                     "id": 34,
@@ -493,7 +462,6 @@
               }
             ]
           },
-          "documentation": null,
           "functionSelector": "fc68521a",
           "id": 38,
           "implemented": true,
@@ -501,7 +469,6 @@
           "modifiers": [],
           "name": "f",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 7,
@@ -514,7 +481,6 @@
                 "mutability": "mutable",
                 "name": "arg",
                 "nodeType": "VariableDeclaration",
-                "overrides": null,
                 "scope": 38,
                 "src": "78:19:1",
                 "stateVariable": false,
@@ -537,7 +503,6 @@
                     "typeString": "address payable"
                   }
                 },
-                "value": null,
                 "visibility": "internal"
               }
             ],
@@ -555,7 +520,6 @@
                 "mutability": "mutable",
                 "name": "r",
                 "nodeType": "VariableDeclaration",
-                "overrides": null,
                 "scope": 38,
                 "src": "115:17:1",
                 "stateVariable": false,
@@ -578,7 +542,6 @@
                     "typeString": "address payable"
                   }
                 },
-                "value": null,
                 "visibility": "internal"
               }
             ],

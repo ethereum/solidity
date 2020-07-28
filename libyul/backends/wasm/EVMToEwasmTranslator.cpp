@@ -1024,11 +1024,6 @@ function sstore(x1, x2, x3, x4, y1, y2, y3, y4) {
 	eth.storageStore(0:i32, 32:i32)
 }
 
-// Needed?
-function pc() -> z1, z2, z3, z4 {
-	// TODO implement
-	unreachable()
-}
 function gas() -> z1, z2, z3, z4 {
 	z4 := eth.getGasLeft()
 }

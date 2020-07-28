@@ -8,7 +8,6 @@
     ]
   },
   "id": 15,
-  "license": null,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -17,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 14,
       "linearizedBaseContracts":
@@ -43,11 +41,9 @@
               }
             ]
           },
-          "documentation": null,
           "id": 6,
           "name": "M",
           "nodeType": "ModifierDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 3,
@@ -60,7 +56,6 @@
                 "mutability": "mutable",
                 "name": "i",
                 "nodeType": "VariableDeclaration",
-                "overrides": null,
                 "scope": 6,
                 "src": "24:6:1",
                 "stateVariable": false,
@@ -82,7 +77,6 @@
                     "typeString": "uint256"
                   }
                 },
-                "value": null,
                 "visibility": "internal"
               }
             ],
@@ -100,7 +94,6 @@
             "src": "64:2:1",
             "statements": []
           },
-          "documentation": null,
           "functionSelector": "28811f59",
           "id": 13,
           "implemented": true,
@@ -111,7 +104,6 @@
               "arguments":
               [
                 {
-                  "argumentTypes": null,
                   "hexValue": "31",
                   "id": 9,
                   "isConstant": false,
@@ -121,7 +113,6 @@
                   "lValueRequested": false,
                   "nodeType": "Literal",
                   "src": "54:1:1",
-                  "subdenomination": null,
                   "typeDescriptions":
                   {
                     "typeIdentifier": "t_rational_1_by_1",
@@ -133,7 +124,6 @@
               "id": 10,
               "modifierName":
               {
-                "argumentTypes": null,
                 "id": 8,
                 "name": "M",
                 "nodeType": "Identifier",
@@ -152,7 +142,6 @@
           ],
           "name": "F",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 7,

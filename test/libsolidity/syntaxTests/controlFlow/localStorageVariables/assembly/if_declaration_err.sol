@@ -4,7 +4,7 @@ contract C {
     function f(bool flag) internal pure {
         S storage c;
         assembly {
-            if flag { c_slot := s_slot }
+            if flag { c.slot := s.slot }
         }
         c;
     }

@@ -43,6 +43,7 @@ contract C {
     }
 }
 // ====
+// compileViaYul: also
 // EVMVersion: >homestead
 // ----
 // g() -> 32, 196, hex"eccb829a", 32, 1, 32, 32, 1, 42, hex"00000000000000000000000000000000000000000000000000000000"

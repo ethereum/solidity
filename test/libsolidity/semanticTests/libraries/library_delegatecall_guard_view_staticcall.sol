@@ -1,6 +1,6 @@
 contract D {
     uint public x;
-    constructor() public { x = 42; }
+    constructor() { x = 42; }
 }
 library L {
     function f(D d) public view returns (uint256) {
@@ -9,7 +9,7 @@ library L {
 }
 contract C {
     D d;
-    constructor() public { d = new D(); }
+    constructor() { d = new D(); }
     function f() public view returns (uint256) {
         return L.f(d);
     }

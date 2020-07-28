@@ -8,11 +8,11 @@ interface ERC165 {
     function supportsInterface(bytes4 interfaceID) external view returns (bool);
 }
 
-contract ERC165MappingImplementation is ERC165 {
+abstract contract ERC165MappingImplementation is ERC165 {
     /// @dev You must not set element 0xffffffff to true
     mapping(bytes4 => bool) internal supportedInterfaces;
 
-    constructor() internal {
+    constructor() {
         supportedInterfaces[this.supportsInterface.selector] = true;
     }
 
@@ -27,7 +27,7 @@ interface Simpson {
 }
 
 contract Lisa is ERC165MappingImplementation, Simpson {
-    constructor() public {
+    constructor() {
         supportedInterfaces[type(Simpson).interfaceId] = true;
     }
 

@@ -2,7 +2,7 @@ contract Main {
     bytes3 name;
     bool flag;
 
-    constructor(bytes3 x, bool f) public {
+    constructor(bytes3 x, bool f) {
         name = x;
         flag = f;
     }

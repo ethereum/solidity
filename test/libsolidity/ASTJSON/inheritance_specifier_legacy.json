@@ -12,8 +12,7 @@
       [
         4
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -30,7 +29,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -56,7 +54,6 @@
           1
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -73,16 +70,12 @@
       "children":
       [
         {
-          "attributes":
-          {
-            "arguments": null
-          },
+          "attributes": {},
           "children":
           [
             {
               "attributes":
               {
-                "contractScope": null,
                 "name": "C1",
                 "referencedDeclaration": 1,
                 "type": "contract C1"

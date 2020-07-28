@@ -8,8 +8,7 @@
       [
         23
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -44,12 +42,10 @@
             "functionSelector": "c19d93fb",
             "mutability": "mutable",
             "name": "state",
-            "overrides": null,
             "scope": 23,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "uint256",
-            "value": null,
             "visibility": "public"
           },
           "children":
@@ -117,7 +113,6 @@
           "attributes":
           {
             "name": "mod",
-            "overrides": null,
             "virtual": false,
             "visibility": "internal"
           },
@@ -175,7 +170,6 @@
               null
             ],
             "name": "fn",
-            "overrides": null,
             "scope": 23,
             "stateMutability": "nonpayable",
             "virtual": false,

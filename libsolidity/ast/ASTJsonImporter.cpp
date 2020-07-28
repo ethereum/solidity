@@ -400,7 +400,7 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 	return createASTNode<FunctionDefinition>(
 		_node,
 		memberAsASTString(_node, "name"),
-		visibility(_node),
+		kind == Token::Constructor ? Visibility::Default : visibility(_node),
 		stateMutability(_node),
 		kind,
 		memberAsBool(_node, "virtual"),
@@ -886,7 +886,8 @@ ASTPointer<StructuredDocumentation> ASTJsonImporter::createDocumentation(Json::V
 
 Json::Value ASTJsonImporter::member(Json::Value const& _node, string const& _name)
 {
-	astAssert(_node.isMember(_name), "Node '" + _node["nodeType"].asString() + "' (id " + _node["id"].asString() + ") is missing field '" + _name + "'.");
+	if (!_node.isMember(_name))
+		return Json::nullValue;
 	return _node[_name];
 }
 
@@ -942,6 +943,10 @@ Token ASTJsonImporter::literalTokenKind(Json::Value const& _node)
 		tok = Token::Number;
 	else if (_node["kind"].asString() == "string")
 		tok = Token::StringLiteral;
+	else if (_node["kind"].asString() == "unicodeString")
+		tok = Token::UnicodeStringLiteral;
+	else if (_node["kind"].asString() == "hexString")
+		tok = Token::HexStringLiteral;
 	else if (_node["kind"].asString() == "bool")
 		tok = (member(_node, "value").asString() == "true") ? Token::TrueLiteral : Token::FalseLiteral;
 	else
@@ -1004,10 +1009,6 @@ Literal::SubDenomination ASTJsonImporter::subdenomination(Json::Value const& _no
 		return Literal::SubDenomination::Wei;
 	else if (subDenStr == "gwei")
 		return Literal::SubDenomination::Gwei;
-	else if (subDenStr == "szabo")
-		return Literal::SubDenomination::Szabo;
-	else if (subDenStr == "finney")
-		return Literal::SubDenomination::Finney;
 	else if (subDenStr == "ether")
 		return Literal::SubDenomination::Ether;
 	else if (subDenStr == "seconds")

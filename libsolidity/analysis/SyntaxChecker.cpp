@@ -28,6 +28,8 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SemVerHandler.h>
 
+#include <libsolutil/UTF8.h>
+
 #include <boost/algorithm/string.hpp>
 
 #include <memory>
@@ -37,7 +39,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
-
+using namespace solidity::util;
 
 bool SyntaxChecker::checkSyntax(ASTNode const& _astRoot)
 {
@@ -217,6 +219,13 @@ bool SyntaxChecker::visit(Throw const& _throwStatement)
 
 bool SyntaxChecker::visit(Literal const& _literal)
 {
+	if ((_literal.token() == Token::UnicodeStringLiteral) && !validateUTF8(_literal.value()))
+		m_errorReporter.syntaxError(
+			8452_error,
+			_literal.location(),
+			"Invalid UTF-8 sequence found"
+		);
+
 	if (_literal.token() != Token::Number)
 		return true;
 
@@ -302,7 +311,7 @@ bool SyntaxChecker::visit(ContractDefinition const& _contract)
 
 bool SyntaxChecker::visit(FunctionDefinition const& _function)
 {
-	if (_function.noVisibilitySpecified())
+	if (!_function.isConstructor() && _function.noVisibilitySpecified())
 	{
 		string suggestedVisibility = _function.isFallback() || _function.isReceive() || m_isInterface ? "external" : "public";
 		m_errorReporter.syntaxError(

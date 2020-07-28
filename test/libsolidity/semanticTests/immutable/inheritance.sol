@@ -1,25 +1,25 @@
 contract A {
 	uint8 immutable a;
-	constructor() public {
+	constructor() {
 		a = 4;
 	}
 }
 contract B is A {
 	uint8 immutable b;
-	constructor() public {
+	constructor() {
 		b = 3;
 	}
 }
 contract C is A {
 	uint8 immutable c;
-	constructor() public {
+	constructor() {
 		c = 2;
 	}
 }
 contract D is B, C {
 	uint8 immutable d;
 
-	constructor() public {
+	constructor() {
 		d = 1;
 	}
 	function f() public view returns (uint256, uint256, uint, uint) {

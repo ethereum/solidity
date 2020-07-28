@@ -8,8 +8,7 @@
       [
         17
       ]
-    },
-    "license": null
+    }
   },
   "children":
   [
@@ -26,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -83,12 +81,10 @@
             "constant": false,
             "mutability": "mutable",
             "name": "a",
-            "overrides": null,
             "scope": 17,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "mapping(contract C => bool)",
-            "value": null,
             "visibility": "internal"
           },
           "children":
@@ -103,7 +99,6 @@
                 {
                   "attributes":
                   {
-                    "contractScope": null,
                     "name": "C",
                     "referencedDeclaration": 17,
                     "type": "contract C"
@@ -138,12 +133,10 @@
             "constant": false,
             "mutability": "mutable",
             "name": "b",
-            "overrides": null,
             "scope": 17,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "mapping(address => bool)",
-            "value": null,
             "visibility": "internal"
           },
           "children":
@@ -191,12 +184,10 @@
             "constant": false,
             "mutability": "mutable",
             "name": "c",
-            "overrides": null,
             "scope": 17,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "mapping(enum C.E => bool)",
-            "value": null,
             "visibility": "internal"
           },
           "children":
@@ -211,7 +202,6 @@
                 {
                   "attributes":
                   {
-                    "contractScope": null,
                     "name": "E",
                     "referencedDeclaration": 4,
                     "type": "enum C.E"
