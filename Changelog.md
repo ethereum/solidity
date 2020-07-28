@@ -14,7 +14,7 @@ Compiler Features:
  * Yul Optimizer: Inline into functions further down in the call graph first.
  * Yul Optimizer: Try to simplify function names.
  * Yul IR Generator: Report source locations related to unimplemented features.
-
+ * Optimizer: Optimize ``exp`` when base is 0, 1 or 2.
 
 Bugfixes:
  * Code generator: Fix internal error on stripping dynamic types from return parameters on EVM versions without ``RETURNDATACOPY``.
