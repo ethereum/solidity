@@ -314,6 +314,9 @@ public:
 	/// @returns the Contract Metadata
 	std::string const& metadata(std::string const& _contractName) const;
 
+	/// @returns the cbor-encoded metadata.
+	bytes cborMetadata(std::string const& _contractName) const;
+
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
 	Json::Value gasEstimates(std::string const& _contractName) const;
 
@@ -402,7 +405,7 @@ private:
 	std::string createMetadata(Contract const& _contract) const;
 
 	/// @returns the metadata CBOR for the given serialised metadata JSON.
-	bytes createCBORMetadata(std::string const& _metadata, bool _experimentalMode);
+	bytes createCBORMetadata(Contract const& _contract) const;
 
 	/// @returns the contract ABI as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
