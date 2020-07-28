@@ -544,10 +544,11 @@ jobs:
   b_osx:
     macos:
       xcode: "11.0.0"
+    resource_class: large
     environment:
       TERM: xterm
       CMAKE_BUILD_TYPE: Release
-      MAKEFLAGS: -j 5
+      MAKEFLAGS: -j 10
     steps:
       - checkout
       - restore_cache:
