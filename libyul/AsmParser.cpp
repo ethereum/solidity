@@ -42,8 +42,8 @@ unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 {
 	m_recursionDepth = 0;
 
-	_scanner->supportPeriodInIdentifier(true);
-	ScopeGuard resetScanner([&]{ _scanner->supportPeriodInIdentifier(false); });
+	_scanner->setScannerMode(ScannerKind::Yul);
+	ScopeGuard resetScanner([&]{ _scanner->setScannerMode(ScannerKind::Solidity); });
 
 	try
 	{
