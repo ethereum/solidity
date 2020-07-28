@@ -7,7 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
-
+ * SMTChecker: Fix internal error on fixed bytes index access.
 
 
 ### 0.7.0 (2020-07-28)
