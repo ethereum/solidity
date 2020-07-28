@@ -253,6 +253,7 @@ primaryExpression
   | numberLiteral
   | hexLiteral
   | stringLiteral
+  | unicodeStringLiteral
   | identifier ('[' ']')?
   | TypeKeyword
   | tupleExpression
@@ -460,6 +461,13 @@ stringLiteral
 StringLiteralFragment
   : '"' DoubleQuotedStringCharacter* '"'
   | '\'' SingleQuotedStringCharacter* '\'' ;
+
+unicodeStringLiteral
+  : UnicodeStringLiteralFragment+ ;
+
+UnicodeStringLiteralFragment
+  : 'unicode"' DoubleQuotedStringCharacter* '"'
+  | 'unicode\'' SingleQuotedStringCharacter* '\'' ;
 
 fragment
 DoubleQuotedStringCharacter

@@ -1408,7 +1408,7 @@ BoolResult StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) 
 		return
 			arrayType->isByteArray() &&
 			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer()) &&
-			!(arrayType->isString() && !isValidUTF8());
+			!(arrayType->isString() && !util::validateUTF8(value()));
 	else
 		return false;
 }
@@ -1440,11 +1440,6 @@ std::string StringLiteralType::toString(bool) const
 TypePointer StringLiteralType::mobileType() const
 {
 	return TypeProvider::stringMemory();
-}
-
-bool StringLiteralType::isValidUTF8() const
-{
-	return util::validateUTF8(m_value);
 }
 
 FixedBytesType::FixedBytesType(unsigned _bytes): m_bytes(_bytes)

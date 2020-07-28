@@ -190,6 +190,7 @@ namespace solidity::langutil
 	K(Throw, "throw", 0)                                               \
 	K(Try, "try", 0)                                                   \
 	K(Type, "type", 0)                                                 \
+	K(Unicode, "unicode", 0)                                           \
 	K(Using, "using", 0)                                               \
 	K(View, "view", 0)                                                 \
 	K(Virtual, "virtual", 0)                                           \
@@ -227,6 +228,7 @@ namespace solidity::langutil
 	K(FalseLiteral, "false", 0)                                        \
 	T(Number, nullptr, 0)                                              \
 	T(StringLiteral, nullptr, 0)                                       \
+	T(UnicodeStringLiteral, nullptr, 0)                                \
 	T(HexStringLiteral, nullptr, 0)                                    \
 	T(CommentLiteral, nullptr, 0)                                      \
 	\

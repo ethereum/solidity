@@ -73,6 +73,7 @@ string to_string(ScannerError _errorCode)
 		case ScannerError::IllegalHexDigit: return "Hexadecimal digit missing or invalid.";
 		case ScannerError::IllegalCommentTerminator: return "Expected multi-line comment-terminator.";
 		case ScannerError::IllegalEscapeSequence: return "Invalid escape sequence.";
+		case ScannerError::IllegalCharacterInString: return "Invalid character in string.";
 		case ScannerError::IllegalStringEndQuote: return "Expected string end-quote.";
 		case ScannerError::IllegalNumberSeparator: return "Invalid use of number separator '_'.";
 		case ScannerError::IllegalExponent: return "Invalid exponent.";
@@ -508,7 +509,7 @@ void Scanner::scanToken()
 		{
 		case '"':
 		case '\'':
-			token = scanString();
+			token = scanString(false);
 			break;
 		case '<':
 			// < <= << <<=
@@ -683,6 +684,18 @@ void Scanner::scanToken()
 					else
 						token = setError(ScannerError::IllegalToken);
 				}
+				else if (token == Token::Unicode)
+				{
+					// reset
+					m = 0;
+					n = 0;
+
+					// Special quoted hex string must follow
+					if (m_char == '"' || m_char == '\'')
+						token = scanString(true);
+					else
+						token = setError(ScannerError::IllegalToken);
+				}
 			}
 			else if (isDecimalDigit(m_char))
 				token = scanNumber();
@@ -774,7 +787,7 @@ bool Scanner::isUnicodeLinebreak()
 	return false;
 }
 
-Token Scanner::scanString()
+Token Scanner::scanString(bool const _isUnicode)
 {
 	char const quote = m_char;
 	advance();  // consume quote
@@ -789,13 +802,23 @@ Token Scanner::scanString()
 				return setError(ScannerError::IllegalEscapeSequence);
 		}
 		else
+		{
+			// Report error on non-printable characters in string literals, however
+			// allow anything for unicode string literals, because their validity will
+			// be verified later (in the syntax checker).
+			//
+			// We are using a manual range and not isprint() to avoid
+			// any potential complications with locale.
+			if (!_isUnicode && (static_cast<unsigned>(c) <= 0x1f || static_cast<unsigned>(c) >= 0x7f))
+				return setError(ScannerError::IllegalCharacterInString);
 			addLiteralChar(c);
+		}
 	}
 	if (m_char != quote)
 		return setError(ScannerError::IllegalStringEndQuote);
 	literal.complete();
 	advance();  // consume quote
-	return Token::StringLiteral;
+	return _isUnicode ? Token::UnicodeStringLiteral : Token::StringLiteral;
 }
 
 Token Scanner::scanHexString()
